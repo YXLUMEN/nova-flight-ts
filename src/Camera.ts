@@ -16,6 +16,10 @@ export class Camera {
     private maxShake = 48;         // 最大像素抖动
     private shakeOffset = new Vec2(0, 0);
 
+    // UI 微偏移配置
+    private uiMaxDrift = 12;      // UI 最大漂移像素(镜头快速移动时)
+    private uiShakeFactor = 0.5;
+
     public update(target: Vec2, dt: number) {
         this.follow(target, dt);
         this.updateShake(dt);
@@ -25,8 +29,43 @@ export class Camera {
         this.shakeTrauma = Math.min(1, this.shakeTrauma + amount);
     }
 
-    get viewOffset(): Vec2 {
+    public get cameraOffset() {
+        return this.offset;
+    }
+
+    public get viewOffset(): Vec2 {
         return this.offset.add(this.shakeOffset);
+    }
+
+    public get viewRect() {
+        const off = this.viewOffset;
+        return {
+            left: off.x,
+            top: off.y,
+            right: off.x + Game.W,
+            bottom: off.y + Game.H,
+            width: Game.W,
+            height: Game.H,
+        };
+    }
+
+    public get uiOffset(): Vec2 {
+        // 基于相机速度方向的微漂移
+        const vx = this.velocity.x, vy = this.velocity.y;
+        const speed = Math.hypot(vx, vy);
+        let dx = 0, dy = 0;
+
+        if (speed > 1e-3) {
+            const k = Math.min(1, speed / this.followSpeed);
+            const s = this.uiMaxDrift * k;
+            dx = -(vx / speed) * s;
+            dy = -(vy / speed) * s;
+        }
+
+        return new Vec2(
+            dx + this.shakeOffset.x * this.uiShakeFactor,
+            dy + this.shakeOffset.y * this.uiShakeFactor
+        );
     }
 
     private follow(target: Vec2, dt: number) {

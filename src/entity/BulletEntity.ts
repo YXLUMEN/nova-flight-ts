@@ -2,10 +2,10 @@ import {Game} from "../Game.ts";
 import type {Vec2} from "../math/Vec2.ts";
 import {Entity} from "./Entity.ts";
 
-export class Bullet extends Entity {
-    vel: Vec2;
-    color = "#8cf5ff";
-    owner: Entity;
+export class BulletEntity extends Entity {
+    public vel: Vec2;
+    public color = "#8cf5ff";
+    public owner: Entity;
 
     constructor(pos: Vec2, vel: Vec2, owner: Entity) {
         super(pos.clone(), 4);
@@ -13,7 +13,9 @@ export class Bullet extends Entity {
         this.owner = owner;
     }
 
-    public update(dt: number) {
+    public override update(dt: number) {
+        super.update(dt);
+
         this.pos.x += this.vel.x * dt;
         this.pos.y += this.vel.y * dt;
 
@@ -22,7 +24,7 @@ export class Bullet extends Entity {
         }
     }
 
-    public render(ctx: CanvasRenderingContext2D) {
+    public override render(ctx: CanvasRenderingContext2D) {
         ctx.save();
         ctx.fillStyle = this.color;
         ctx.beginPath();

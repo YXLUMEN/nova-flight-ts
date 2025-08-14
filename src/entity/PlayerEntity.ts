@@ -7,23 +7,31 @@ import {BulletGun} from "../weapon/BulletGun.ts";
 import {BombWeapon} from "../weapon/BombWeapon.ts";
 import {LivingEntity} from "./LivingEntity.ts";
 import {ScreenFlash} from "../effect/ScreenFlash.ts";
+import {EMPWeapon} from "../weapon/EMPWeapon.ts";
 
-export class Player extends LivingEntity {
+export class PlayerEntity extends LivingEntity {
     public readonly input: Input;
-    public readonly weapons: Weapon[] = [];
-    public speed = 300;
+    public readonly weapons = new Map<string, Weapon>();
+
+    public override speed = 300;
+
+    public score: number;
 
     private _invincible = false;
 
     constructor(input: Input) {
         super(new Vec2(Game.W / 2, Game.H - 80), 18, 3);
         this.input = input;
+        this.score = 0;
 
-        this.weapons.push(new BulletGun(this));
-        this.weapons.push(new BombWeapon(this));
+        this.weapons.set('g', new BulletGun(this));
+        this.weapons.set('b', new BombWeapon(this));
+        this.weapons.set('e', new EMPWeapon(this));
     }
 
-    public update(dt: number) {
+    public override update(dt: number) {
+        super.update(dt);
+
         // 键盘移动
         let dx = 0, dy = 0;
         if (this.input.isDown("arrowleft", "a")) dx -= 1;
@@ -46,13 +54,13 @@ export class Player extends LivingEntity {
         this.pos.y = clamp(this.pos.y, 20, Game.H - 20);
 
         // 射击
-        for (const w of this.weapons) {
+        for (const w of this.weapons.values()) {
             w.update(dt);
-            w.tryFire();
+            w.tryFire(Game.instance, !this.invincible);
         }
     }
 
-    public onDamage(damage: number) {
+    public override onDamage(damage: number) {
         super.onDamage(damage);
 
         const center = this.pos.clone();
@@ -61,11 +69,11 @@ export class Player extends LivingEntity {
             pos: center,
             radius: 240,
             shake: 0.4,
-            flash: new ScreenFlash(0.08, 0.25)
+            flash: new ScreenFlash(0.2, 0.25, '#ff5151')
         });
     }
 
-    public render(ctx: CanvasRenderingContext2D) {
+    public override render(ctx: CanvasRenderingContext2D) {
         ctx.save();
         ctx.translate(this.pos.x, this.pos.y);
         // 机身

@@ -1,7 +1,7 @@
 import {Weapon} from "./Weapon.ts";
 import {Game} from "../Game.ts";
 import {Vec2} from "../math/Vec2.ts";
-import {Player} from "../entity/Player.ts";
+import {PlayerEntity} from "../entity/PlayerEntity.ts";
 import {rand} from "../math/uit.ts";
 import {Particle} from "../effect/Particle.ts";
 import {RadialRing} from "../effect/RadialRing.ts";
@@ -17,23 +17,34 @@ type ExplosionOpts = {
 };
 
 export class BombWeapon extends Weapon {
-    public bombCD = 6;
-    public cooldown = 0;
+    public readonly CD = 16;
     public radius = 180;
     public damage = 10;
 
-    public tryFire() {
-        if (this.cooldown > 0) return;
-        if (this.owner instanceof Player && !this.owner.input.isDown("1")) return;
+    public override tryFire(game: Game, cd: boolean) {
+        if (this.getCooldown > 0) return;
+        if (this.owner instanceof PlayerEntity && !this.owner.input.isDown("1")) return;
 
         const center = this.owner.pos.clone();
-        BombWeapon.applyBombDamage(Game.instance, center, this.radius, this.damage);
-        Game.instance.events.emit('bomb-detonate', {
+        BombWeapon.applyBombDamage(game, center, this.radius, this.damage);
+        game.events.emit('bomb-detonate', {
             pos: center,
             radius: this.radius,
             shake: 0.4
         });
-        this.cooldown = this.bombCD;
+        this.cooldown = cd ? this.CD : 0.5;
+    }
+
+    public override get getMaxCooldown(): number {
+        return this.CD;
+    }
+
+    public override get displayName(): string {
+        return '炸弹';
+    }
+
+    public override get uiColor(): string {
+        return '#ff9f43';
     }
 
     public static applyBombDamage(game: Game, center: Vec2, radius: number, damage: number) {

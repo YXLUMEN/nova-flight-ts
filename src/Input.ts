@@ -14,6 +14,7 @@ export class Input {
             const key = e.key.toLowerCase();
             this.keys.add(key);
             if (key === "l") this.followMouse = !this.followMouse;
+            else if (key === 'r') this.shoot = !this.shoot;
         });
         window.addEventListener("keyup", (e) => this.keys.delete(e.key.toLowerCase()));
         window.addEventListener("blur", () => this.keys.clear());

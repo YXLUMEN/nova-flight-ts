@@ -3,6 +3,8 @@ html, body {
     height: 100%;
     background: #050915;
     overflow: hidden;
+    user-select: none;
+    -webkit-user-drag: none;
 }
 
 canvas {
