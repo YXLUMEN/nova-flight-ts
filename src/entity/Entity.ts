@@ -1,6 +1,7 @@
 import type {Vec2} from "../math/Vec2.ts";
 import type {Status} from "../status/Status.ts";
 import {SlowStatus} from "../status/SlowStatus.ts";
+import type {World} from "../World.ts";
 
 export abstract class Entity {
     public pos: Vec2;
@@ -18,7 +19,7 @@ export abstract class Entity {
         this.dead = false;
     }
 
-    public update(dt: number): void {
+    public update(_world: World, dt: number): void {
         this.updateStatuses(dt);
     };
 
@@ -40,7 +41,7 @@ export abstract class Entity {
         this.dead = true;
     }
 
-    get isDead(): boolean {
+    public get isDead(): boolean {
         return this.dead;
     }
 

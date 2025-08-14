@@ -1,24 +1,14 @@
-import type {Vec2} from "./Vec2.ts";
-import type {Entity} from "../entity/Entity.ts";
-
 export const DPR = Math.max(1, Math.min(2, globalThis.devicePixelRatio || 1));
 
-export const clamp = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));
-
-export const rand = (a: number, b: number) => a + Math.random() * (b - a);
-
-export const collideCircle = (a: Entity, b: Entity) =>
-    dist2(a.pos, b.pos) < (a.radius + b.radius) ** 2;
-
-export function dist2(a: Vec2, b: Vec2) {
-    const dx = a.x - b.x, dy = a.y - b.y;
-    return dx * dx + dy * dy;
-}
-
-export function deepFreeze(obj: any): any {
-    if (obj === null || typeof obj !== 'object') return obj;
+export function deepFreeze<T>(obj: T): T {
+    if (obj === null ||
+        obj === undefined ||
+        typeof obj === 'string' ||
+        typeof obj !== 'object'
+    ) return obj;
 
     Object.getOwnPropertyNames(obj).forEach((key) => {
+        // @ts-ignore
         const value = obj[key];
 
         if (
@@ -52,5 +42,15 @@ export async function playSound(url: string): Promise<void> {
         source.addEventListener('ended', () => audioContext.close(), {once: true});
     } catch (err) {
         console.error(err);
+    }
+}
+
+export function throttleTimeOut<T extends (...args: any[]) => any>(func: T, wait: number = 200) {
+    let timer: number | null = null;
+    return function (...args: Parameters<T>) {
+        if (timer) return;
+        // @ts-ignore
+        func.apply(this, args);
+        timer = setTimeout((): any => timer = null, wait);
     }
 }

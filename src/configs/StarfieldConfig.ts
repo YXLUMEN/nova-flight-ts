@@ -1,7 +1,7 @@
-import type {StarLayer} from "./apis/IStarLayer.ts";
-import {createCleanObj} from "./math/uit.ts";
+import type {StarLayer} from "../apis/IStarLayer.ts";
+import {createCleanObj, deepFreeze} from "../utils/uit.ts";
 
-const layers: StarLayer[] = [
+const layers: StarLayer[] = deepFreeze([
     createCleanObj({
         count: 10,
         alpha: 0.9,
@@ -42,7 +42,7 @@ const layers: StarLayer[] = [
         shakeFactor: 0,
         parallax: 0.08
     }),
-];
+]);
 
 export {
     layers,

@@ -1,18 +1,19 @@
-import {MobEntity} from "./MobEntity.ts";
-import {Vec2} from "../math/Vec2.ts";
-import {BulletGun} from "../weapon/BulletGun.ts";
+import {MobEntity} from "../MobEntity.ts";
+import {Vec2} from "../../math/Vec2.ts";
+import {Cannon40Weapon} from "../../weapon/Cannon40Weapon.ts";
+import type {World} from "../../World.ts";
 
 export class GunEnemyEntity extends MobEntity {
     public override speed = 80;
-    private readonly gun: BulletGun;
+    private readonly gun: Cannon40Weapon;
 
     constructor(pos: Vec2) {
         super(pos, 16, 2, 5);
-        this.gun = new BulletGun(this);
+        this.gun = new Cannon40Weapon(this);
     }
 
-    public override update(dt: number) {
-        super.update(dt);
+    public override update(world: World, dt: number) {
+        super.update(world, dt);
 
         this.gun.tryFire();
     }

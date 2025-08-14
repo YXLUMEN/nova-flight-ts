@@ -1,36 +1,41 @@
-import {clamp} from "../math/uit.ts";
 import {type Input} from "../Input.ts";
-import {Game} from "../Game.ts";
+import {World} from "../World.ts";
 import {Vec2} from "../math/Vec2.ts";
 import {type Weapon} from "../weapon/Weapon.ts";
-import {BulletGun} from "../weapon/BulletGun.ts";
 import {BombWeapon} from "../weapon/BombWeapon.ts";
 import {LivingEntity} from "./LivingEntity.ts";
 import {ScreenFlash} from "../effect/ScreenFlash.ts";
 import {EMPWeapon} from "../weapon/EMPWeapon.ts";
+import {clamp} from "../math/math.ts";
+import {Cannon40Weapon} from "../weapon/Cannon40Weapon.ts";
+import {throttleTimeOut} from "../utils/uit.ts";
+import {isBaseWeapon} from "../weapon/IBaseWeapon.ts";
 
 export class PlayerEntity extends LivingEntity {
     public readonly input: Input;
     public readonly weapons = new Map<string, Weapon>();
+    private readonly baseWeapons: Weapon[] = [];
 
     public override speed = 300;
-
     public score: number;
 
+    private currentBaseIndex: number = 0;
     private _invincible = false;
 
     constructor(input: Input) {
-        super(new Vec2(Game.W / 2, Game.H - 80), 18, 3);
+        super(new Vec2(World.W / 2, World.H - 80), 18, 3);
         this.input = input;
         this.score = 0;
 
-        this.weapons.set('g', new BulletGun(this));
-        this.weapons.set('b', new BombWeapon(this));
-        this.weapons.set('e', new EMPWeapon(this));
+        this.baseWeapons.push(new Cannon40Weapon(this));
+        this.weapons.set('40', this.baseWeapons[0]);
+
+        this.weapons.set('bomb', new BombWeapon(this));
+        this.weapons.set('emp', new EMPWeapon(this));
     }
 
-    public override update(dt: number) {
-        super.update(dt);
+    public override update(world: World, dt: number) {
+        super.update(world, dt);
 
         // 键盘移动
         let dx = 0, dy = 0;
@@ -50,13 +55,27 @@ export class PlayerEntity extends LivingEntity {
         this.pos.y += (dy / len) * this.speed * dt;
 
         // 边界
-        this.pos.x = clamp(this.pos.x, 20, Game.W - 20);
-        this.pos.y = clamp(this.pos.y, 20, Game.H - 20);
+        this.pos.x = clamp(this.pos.x, 20, World.W - 20);
+        this.pos.y = clamp(this.pos.y, 20, World.H - 20);
 
-        // 射击
+        // 武器冷却
         for (const w of this.weapons.values()) {
             w.update(dt);
-            w.tryFire(Game.instance, !this.invincible);
+        }
+
+        if (this.input.isDown('r')) {
+            this.switchWeapon();
+            return;
+        }
+        // 射击
+        if (this.input.isDown(" ", "space") || this.input.shoot) {
+            this.baseWeapons[this.currentBaseIndex].tryFire(world, !this.invincible);
+        }
+        if (this.input.isDown('1')) {
+            this.weapons.get('bomb')?.tryFire(world, !this.invincible);
+        }
+        if (this.input.isDown('2')) {
+            this.weapons.get('emp')?.tryFire(world, !this.invincible);
         }
     }
 
@@ -64,8 +83,8 @@ export class PlayerEntity extends LivingEntity {
         super.onDamage(damage);
 
         const center = this.pos.clone();
-        BombWeapon.applyBombDamage(Game.instance, center, 240, 12);
-        Game.instance.events.emit('bomb-detonate', {
+        BombWeapon.applyBombDamage(World.instance, center, 240, 12);
+        World.instance.events.emit('bomb-detonate', {
             pos: center,
             radius: 240,
             shake: 0.4,
@@ -105,11 +124,24 @@ export class PlayerEntity extends LivingEntity {
         ctx.restore();
     }
 
-    get invincible(): boolean {
+    public addWeapon(name: string, weapon: Weapon): void {
+        if (isBaseWeapon(weapon)) this.baseWeapons.push(weapon);
+        this.weapons.set(name, weapon);
+    }
+
+    public get invincible(): boolean {
         return this._invincible;
     }
 
-    set invincible(value: boolean) {
+    public set invincible(value: boolean) {
         this._invincible = value;
     }
+
+    public getCurrentWeapon(): Weapon {
+        return this.baseWeapons[this.currentBaseIndex];
+    }
+
+    private switchWeapon = throttleTimeOut(() => {
+        this.currentBaseIndex = (this.currentBaseIndex + 1) % this.baseWeapons.length;
+    }, 200);
 }

@@ -1,6 +1,6 @@
 import {LivingEntity} from "./LivingEntity.ts";
 import type {Vec2} from "../math/Vec2.ts";
-import {Game} from "../Game.ts";
+import {World} from "../World.ts";
 
 export abstract class MobEntity extends LivingEntity {
     protected readonly worth: number;
@@ -11,15 +11,15 @@ export abstract class MobEntity extends LivingEntity {
         this.worth = worth;
     }
 
-    public override update(dt: number) {
-        super.update(dt);
+    public override update(world: World, dt: number) {
+        super.update(world, dt);
 
         dt *= this.speedMul;
         this.t += dt;
         this.pos.y += this.speed * dt;
         this.pos.x += Math.sin(this.t * 3) * 40 * dt;
 
-        if (this.pos.y > Game.H + 40) this.dead = true;
+        if (this.pos.y > World.H + 40) this.dead = true;
     }
 
     public get getWorth(): number {

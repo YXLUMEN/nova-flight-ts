@@ -1,3 +1,3 @@
-import {Game} from "./Game.ts";
+import {World} from "./World.ts";
 
-Game.instance = new Game();
+World.instance = new World();

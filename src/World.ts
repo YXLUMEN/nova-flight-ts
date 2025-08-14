@@ -1,42 +1,45 @@
 import {Input} from "./Input.ts";
 import {PlayerEntity} from "./entity/PlayerEntity.ts";
-import {BulletEntity} from "./entity/BulletEntity.ts";
 import {Camera} from "./Camera.ts";
-import {Vec2} from "./math/Vec2.ts";
-import {collideCircle, DPR, playSound, rand} from "./math/uit.ts";
 import type {MobEntity} from "./entity/MobEntity.ts";
 import {EventBus} from "./event/EventBus.ts";
 import type {Effect} from "./effect/Effect.ts";
 import {BombWeapon} from "./weapon/BombWeapon.ts";
 import {ScreenFlash} from "./effect/ScreenFlash.ts";
 import {StarField} from "./effect/StarField.ts";
-import {layers} from "./configs.ts";
+import {layers} from "./configs/StarfieldConfig.ts";
 import {UI} from "./ui/UI.ts";
-import {BaseEnemy} from "./entity/BaseEnemy.ts";
+import {STAGE} from "./configs/StageConfig.ts";
+import {DPR} from "./utils/uit.ts";
+import {collideCircle} from "./math/math.ts";
+import type {ProjectileEntity} from "./entity/ProjectileEntity.ts";
+import {MiniGunWeapon} from "./weapon/MiniGunWeapon.ts";
+import {Cannon90Weapon} from "./weapon/Cannon90Weapon.ts";
 
-export class Game {
-    public static instance: Game;
+export class World {
+    public static instance: World;
     public static canvas = document.getElementById("game") as HTMLCanvasElement;
-    public static ctx = Game.canvas.getContext("2d")!;
+    public static ctx = World.canvas.getContext("2d")!;
     public static W = 800;
     public static H = 600;
 
-    public readonly ui: UI;
+    public readonly ui: UI = new UI(this);
     public readonly camera: Camera = new Camera();
     public readonly events: EventBus = new EventBus();
 
     private last = 0;
     private accumulator = 0;
     private readonly fixedDt = 1 / 120;
+    private readonly stage = STAGE;
 
-    public input = new Input(Game.canvas);
+    public input = new Input(World.canvas);
     public player = new PlayerEntity(this.input);
 
     public effects: Effect[] = [];
     public mobs: MobEntity[] = [];
-    public bullets: BulletEntity[] = [];
+    public bullets: ProjectileEntity[] = [];
 
-    private starField: StarField;
+    private starField: StarField = new StarField(128, layers, 8);
 
     public over = false;
     public ticking = true;
@@ -44,10 +47,11 @@ export class Game {
     public spawnTimer = 0;
 
     constructor() {
+        if (World.instance) return World.instance;
+
         this.resize();
         this.registryEvents();
 
-        this.starField = new StarField(128, layers, 8);
         this.starField.init(this.camera);
 
         window.addEventListener("resize", () => this.resize());
@@ -57,6 +61,7 @@ export class Game {
             if (k === "enter" && this.over) this.reset();
             else if (k === "p" || k === 'escape') this.togglePause();
             else if (k === "v") this.player.invincible = !this.player.invincible;
+            else if (k === 'k' && this.player.invincible) this.player.score += 10;
         });
 
         document.addEventListener('visibilitychange', () => {
@@ -70,19 +75,7 @@ export class Game {
 
         window.addEventListener('contextmenu', event => event.preventDefault());
 
-        this.ui = new UI(this, {
-            pauseHint: "按 P/Esc 继续",
-            getWeaponUI: (w, key) => ({
-                label: (w.displayName ?? key).toUpperCase(),
-                color: w.uiColor ?? "#a0a0a0",
-                cooldown: w.cooldown,
-                maxCooldown: w.CD,
-                order: w.uiOrder ?? 99,
-            }),
-        });
-
         this.loop(0);
-        playSound('/public/audio/successful_hit.wav').catch();
     }
 
     public reset() {
@@ -94,9 +87,9 @@ export class Game {
         this.ticking = true;
         this.rendering = true;
         this.spawnTimer = 0;
+        this.stage.reset();
 
         this.starField.init(this.camera);
-        playSound('/public/audio/successful_hit.wav').catch();
     }
 
     public togglePause() {
@@ -105,15 +98,15 @@ export class Game {
     }
 
     public resize() {
-        const rect = Game.canvas.getBoundingClientRect();
+        const rect = World.canvas.getBoundingClientRect();
 
-        Game.canvas.width = Math.floor(rect.width * DPR);
-        Game.canvas.height = Math.floor(rect.height * DPR);
+        World.canvas.width = Math.floor(rect.width * DPR);
+        World.canvas.height = Math.floor(rect.height * DPR);
 
-        Game.W = Math.floor(rect.width);
-        Game.H = Math.floor(rect.height);
+        World.W = Math.floor(rect.width);
+        World.H = Math.floor(rect.height);
 
-        Game.ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        World.ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     }
 
     public loop(ts: number) {
@@ -139,18 +132,13 @@ export class Game {
         this.starField.update(dt, this.camera);
 
         // 玩家
-        this.player.update(dt);
+        this.player.update(this, dt);
 
         // 敌人生成
-        this.spawnTimer -= dt;
-        const spawnInterval = Math.max(0.25, 1.1 - this.player.score * 0.01);
-        if (this.spawnTimer <= 0) {
-            this.mobs.push(new BaseEnemy(new Vec2(rand(24, Game.W - 24), -30)));
-            this.spawnTimer = spawnInterval;
-        }
+        this.stage.update(this, dt);
 
-        this.mobs.forEach(mob => mob.update(dt));
-        this.bullets.forEach(b => b.update(dt));
+        this.mobs.forEach(mob => mob.update(this, dt));
+        this.bullets.forEach(b => b.update(this, dt));
         this.effects.forEach(e => e.update(dt));
 
         // 碰撞: 子弹
@@ -161,7 +149,7 @@ export class Game {
                 if (bullet.owner && (mob === bullet.owner)) continue;
 
                 mob.onDamage(1);
-                bullet.onDeath();
+                bullet.onHit(this);
                 if (mob.isDead) this.events.emit('mob-killed', mob);
                 break;
             }
@@ -191,14 +179,14 @@ export class Game {
         this.effects.push(new ScreenFlash(1, 0.25, '#ff0000'));
         setTimeout(() => {
             this.ticking = false;
-        }, 500);
+        }, 1000);
     }
 
     public render() {
         if (!this.rendering) return;
 
-        const ctx = Game.ctx;
-        ctx.clearRect(0, 0, Game.W, Game.H);
+        const ctx = World.ctx;
+        ctx.clearRect(0, 0, World.W, World.H);
 
         this.starField.render(ctx, this.camera);
 
@@ -220,38 +208,36 @@ export class Game {
     }
 
     public drawBackground(ctx: CanvasRenderingContext2D) {
-        ctx.save();
-
         const v = this.camera.viewRect;
 
         // 网格
-        ctx.globalAlpha = 0.06;
-        ctx.strokeStyle = "#89b7ff";
         const gridSize = 80;
 
         const startX = Math.floor(v.left / gridSize) * gridSize;
         const endX = Math.ceil(v.right / gridSize) * gridSize;
-        for (let x = startX; x <= endX; x += gridSize) {
-            ctx.beginPath();
-            ctx.moveTo(x, v.top);
-            ctx.lineTo(x, v.bottom);
-            ctx.stroke();
-        }
-
         const startY = Math.floor(v.top / gridSize) * gridSize;
         const endY = Math.ceil(v.bottom / gridSize) * gridSize;
+
+        ctx.save();
+        ctx.globalAlpha = 0.06;
+        ctx.strokeStyle = "#89b7ff";
+
+        ctx.beginPath();
+        for (let x = startX; x <= endX; x += gridSize) {
+            ctx.moveTo(x, v.top);
+            ctx.lineTo(x, v.bottom);
+        }
         for (let y = startY; y <= endY; y += gridSize) {
-            ctx.beginPath();
             ctx.moveTo(v.left, y);
             ctx.lineTo(v.right, y);
-            ctx.stroke();
         }
+        ctx.stroke();
 
         // 边界线
         ctx.globalAlpha = 0.3;
         ctx.strokeStyle = "#e6f0ff";
         ctx.beginPath();
-        ctx.rect(0, 0, Game.W, Game.H);
+        ctx.rect(0, 0, World.W, World.H);
         ctx.stroke();
 
         ctx.restore();
@@ -264,14 +250,23 @@ export class Game {
             this.player.score += event.getWorth;
         });
 
-        this.events.on('bomb-detonate', ({pos, radius, shake, sparks, flash}) => {
-            BombWeapon.spawnExplosionVisual(this, pos, {radius, sparks});
+        this.events.on('bomb-detonate', (event) => {
+            const {pos, shake, flash} = event;
+            BombWeapon.spawnExplosionVisual(this, pos, event);
             if (shake) this.camera.addShake(shake);
             if (flash) this.effects.push(flash);
         });
 
         this.events.on('emp-detonate', () => {
             this.effects.push(new ScreenFlash(0.5, 0.18, '#5ec8ff'));
+        });
+
+        this.events.on('stage-enter', ({name}) => {
+            if (name === 'Intro') return;
+
+            this.effects.push(new ScreenFlash(1.0, 0.5, '#ffa600'));
+            if (name === 'Mid') this.player.addWeapon('mini', new MiniGunWeapon(this.player));
+            if (name === 'End') this.player.addWeapon('90', new Cannon90Weapon(this.player));
         });
     }
 }

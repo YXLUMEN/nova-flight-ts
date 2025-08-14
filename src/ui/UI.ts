@@ -1,12 +1,12 @@
-import type {UIOptions, WeaponUIInfo} from "../apis/IUIInfo.ts";
-import {Game} from "../Game.ts";
-import type {Weapon} from "../weapon/Weapon.ts";
+import type {UIOptions, WeaponUIInfo} from '../apis/IUIInfo.ts';
+import {World} from '../World.ts';
+import type {Weapon} from '../weapon/Weapon.ts';
+import {isBaseWeapon} from "../weapon/IBaseWeapon.ts";
 
 export class UI {
-    private readonly game: Game;
+    private readonly world: World;
     private readonly font: string;
     private readonly hudColor: string;
-    private readonly pauseHint: string;
     private readonly getWeaponUI: (weapon: any, key: string) => WeaponUIInfo | null;
 
     // HUD 布局参数
@@ -16,40 +16,40 @@ export class UI {
     private readonly barWidth = 140;
     private readonly barHeight = 10;
 
-    constructor(game: Game, opts: UIOptions = {}) {
-        this.game = game;
-        this.font = opts.font ?? "14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-        this.hudColor = opts.hudColor ?? "#ffffff";
-        this.pauseHint = opts.pauseHint ?? "按 P 继续";
+    constructor(world: World, opts: UIOptions = {}) {
+        this.world = world;
+        this.font = opts.font ?? '14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+        this.hudColor = opts.hudColor ?? '#ffffff';
         this.getWeaponUI = opts.getWeaponUI ?? this.defaultWeaponAdapter;
     }
 
     private defaultWeaponAdapter(weapon: Weapon, key: string): WeaponUIInfo | null {
-        const cd = weapon.getCooldown ?? 0;
-        const max = weapon.getMaxCooldown ?? 1;
-        const label = weapon.displayName ?? key.toUpperCase();
-        const color = weapon.uiColor ?? "#5ec8ff";
-        if (max <= 0) return null;
+        const cd = weapon.getCooldown() ?? 0;
+        const max = weapon.getMaxCooldown() ?? 1;
+        const label = weapon.getDisplayName() ?? key.toUpperCase();
+        const color = weapon.getUiColor() ?? '#5ec8ff';
+
+        if (max <= 0 || isBaseWeapon(weapon)) return null;
         return {label, color, cooldown: Math.max(0, cd), maxCooldown: Math.max(0.001, max)};
     }
 
     public render(ctx: CanvasRenderingContext2D) {
-        if (this.game.over) {
+        if (this.world.over) {
             UI.renderEndOverlay(ctx);
             return;
         }
 
-        const player = this.game.player;
+        const player = this.world.player;
         if (!player) return;
 
         ctx.save();
         ctx.font = this.font;
-        ctx.textBaseline = "top";
+        ctx.textBaseline = 'top';
         ctx.fillStyle = this.hudColor;
 
         let x = this.marginX;
         let y = this.marginY;
-        const uo = this.game.camera.uiOffset;
+        const uo = this.world.camera.uiOffset;
 
         ctx.translate(uo.x, uo.y);
         ctx.fillText(`分数: ${player.score}`, x, y);
@@ -67,7 +67,6 @@ export class UI {
         const items: WeaponUIInfo[] = [];
         if (player.weapons) {
             for (const [key, w] of player.weapons) {
-                if (w.getMaxCooldown === 0) continue;
                 const info = this.getWeaponUI(w, key);
                 if (info) items.push(info);
             }
@@ -80,9 +79,39 @@ export class UI {
 
         ctx.restore();
 
-        if (!this.game.ticking) {
-            this.renderPauseOverlay(ctx);
+        this.drawPrimaryWeaponsAnchored(ctx);
+
+        if (!this.world.ticking) {
+            UI.renderPauseOverlay(ctx);
         }
+    }
+
+    private drawPrimaryWeaponsAnchored(ctx: CanvasRenderingContext2D) {
+        const player = this.world.player;
+        if (!player) return;
+
+        const cam = this.world.camera.viewOffset;
+        const px = player.pos.x - cam.x;
+        const py = player.pos.y - cam.y;
+
+        const w = player.getCurrentWeapon();
+        const anchorX = Math.floor(px + player.radius / 2 + 12);
+        const ratio = Math.max(0, Math.min(1, 1 - w.getCooldown() / w.getMaxCooldown()));
+
+        ctx.save();
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.font = this.font;
+
+        ctx.fillStyle = w.getUiColor() ?? '#5ec8ff';
+        ctx.globalAlpha = 0.6;
+        ctx.fillRect(anchorX, py, Math.floor(64 * ratio), 2);
+
+        ctx.globalAlpha = 1.0;
+        ctx.fillStyle = this.hudColor;
+        ctx.fillText(w.getDisplayName(), anchorX, py - 16);
+
+        ctx.restore();
     }
 
     private drawCooldownBar(
@@ -96,7 +125,7 @@ export class UI {
         const ratio = Math.max(0, Math.min(1, 1 - info.cooldown / info.maxCooldown));
 
         // 背景槽
-        ctx.fillStyle = "rgba(255,255,255,0.12)";
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
         ctx.fillRect(Math.floor(x), Math.floor(y), Math.floor(w), Math.floor(h));
 
         // 进度
@@ -108,52 +137,52 @@ export class UI {
         ctx.fillText(info.label, Math.floor(x + w + 8), Math.floor(y - 1));
     }
 
-    private renderPauseOverlay(ctx: CanvasRenderingContext2D) {
-        const width = Game.W;
-        const height = Game.H;
+    private static renderPauseOverlay(ctx: CanvasRenderingContext2D) {
+        const width = World.W;
+        const height = World.H;
 
         // 半透明遮罩
         ctx.save();
-        ctx.fillStyle = "rgba(0,0,0,0.45)";
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
         ctx.fillRect(0, 0, width, height);
 
         // 轻微脉冲
         const t = Date.now() * 0.002;
         const pulse = 0.75 + 0.25 * Math.sin(t);
 
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
 
         // 主标题
         ctx.fillStyle = `rgba(255,255,255,${pulse.toFixed(3)})`;
-        ctx.font = "bold 32px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-        ctx.fillText("已暂停", width / 2, height / 2);
+        ctx.font = 'bold 32px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+        ctx.fillText('已暂停', width / 2, height / 2);
 
         // 副提示
-        ctx.fillStyle = "rgba(255,255,255,0.9)";
-        ctx.font = "16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-        ctx.fillText(this.pauseHint, width / 2, height / 2 + 30);
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+        ctx.fillText('按 P/Esc 继续', width / 2, height / 2 + 30);
 
         ctx.restore();
     }
 
     private static renderEndOverlay(ctx: CanvasRenderingContext2D) {
-        const width = Game.W;
-        const height = Game.H;
+        const width = World.W;
+        const height = World.H;
 
         ctx.save();
-        ctx.fillStyle = "rgba(255,0,0,0.3)";
+        ctx.fillStyle = 'rgba(255,0,0,0.3)';
         ctx.fillRect(0, 0, width, height);
 
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
 
         ctx.fillStyle = 'rgb(255,255,255)';
-        ctx.font = "bold 32px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-        ctx.fillText("游戏结束", width / 2, height / 2);
+        ctx.font = 'bold 32px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+        ctx.fillText('游戏结束', width / 2, height / 2);
 
-        ctx.font = "16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-        ctx.fillText("按 Enter 键重新开始", width / 2, height / 2 + 30);
+        ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+        ctx.fillText('按 Enter 键重新开始', width / 2, height / 2 + 30);
 
         ctx.restore();
     }

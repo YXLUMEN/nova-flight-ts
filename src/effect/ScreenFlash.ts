@@ -1,5 +1,5 @@
 import type {Effect} from "./Effect.ts";
-import {Game} from "../Game.ts";
+import {World} from "../World.ts";
 
 export class ScreenFlash implements Effect {
     public alive = true;
@@ -25,7 +25,7 @@ export class ScreenFlash implements Effect {
         ctx.save();
         ctx.globalAlpha = (1 - k) * this.maxAlpha;
         ctx.fillStyle = this.color;
-        ctx.fillRect(0, 0, Game.W, Game.H);
+        ctx.fillRect(0, 0, World.W, World.H);
         ctx.restore();
     }
 }

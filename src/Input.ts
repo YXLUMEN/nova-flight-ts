@@ -1,4 +1,4 @@
-import {Game} from "./Game.ts";
+import {World} from "./World.ts";
 import {Vec2} from "./math/Vec2.ts";
 
 export class Input {
@@ -14,7 +14,7 @@ export class Input {
             const key = e.key.toLowerCase();
             this.keys.add(key);
             if (key === "l") this.followMouse = !this.followMouse;
-            else if (key === 'r') this.shoot = !this.shoot;
+            else if (key === 't') this.shoot = !this.shoot;
         });
         window.addEventListener("keyup", (e) => this.keys.delete(e.key.toLowerCase()));
         window.addEventListener("blur", () => this.keys.clear());
@@ -26,8 +26,8 @@ export class Input {
 
         target.addEventListener("pointermove", (e) => {
             if (this.followMouse) this.pointer = new Vec2(
-                e.offsetX + Game.instance.camera.viewOffset.x,
-                e.offsetY + Game.instance.camera.viewOffset.y
+                e.offsetX + World.instance.camera.viewOffset.x,
+                e.offsetY + World.instance.camera.viewOffset.y
             );
         }, {passive: true});
 

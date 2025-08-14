@@ -1,27 +1,47 @@
 import {type Entity} from "../entity/Entity.ts";
-import {type Game} from "../Game.ts";
+import {type World} from "../World.ts";
+import {clamp} from "../math/math.ts";
 
 export abstract class Weapon {
-    protected cooldown = 0;
-    public owner: Entity;
+    public readonly owner: Entity;
 
-    constructor(owner: Entity) {
+    private readonly damage: number;
+    private maxCooldown: number;
+    private cooldown: number = 0;
+
+    protected constructor(owner: Entity, damage: number, maxCooldown: number) {
         this.owner = owner;
+        this.damage = damage;
+        this.maxCooldown = maxCooldown;
     }
 
     public update(delta: number) {
-        if (this.cooldown > 0) this.cooldown = Math.max(0, this.cooldown - delta);
+        if (this.cooldown > 0) this.setCooldown(this.cooldown - delta);
     }
 
-    public abstract tryFire(game: Game, cd: boolean): void;
+    public abstract tryFire(world: World, cd: boolean): void;
 
-    public abstract get getMaxCooldown(): number;
+    public getDamage(): number {
+        return this.damage;
+    }
 
-    public get getCooldown(): number {
+    public getMaxCooldown(): number {
+        return this.maxCooldown;
+    }
+
+    public setMaxCooldown(value: number) {
+        this.maxCooldown = clamp(value, 0, 256)
+    }
+
+    public getCooldown(): number {
         return this.cooldown;
     }
 
-    public abstract get displayName(): string;
+    public setCooldown(value: number) {
+        this.cooldown = clamp(value, 0, this.maxCooldown);
+    }
 
-    public abstract get uiColor(): string;
+    public abstract getDisplayName(): string;
+
+    public abstract getUiColor(): string;
 }

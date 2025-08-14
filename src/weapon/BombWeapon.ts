@@ -1,88 +1,79 @@
 import {Weapon} from "./Weapon.ts";
-import {Game} from "../Game.ts";
+import {World} from "../World.ts";
 import {Vec2} from "../math/Vec2.ts";
-import {PlayerEntity} from "../entity/PlayerEntity.ts";
-import {rand} from "../math/uit.ts";
 import {Particle} from "../effect/Particle.ts";
 import {RadialRing} from "../effect/RadialRing.ts";
+import {rand} from "../math/math.ts";
+import type {Entity} from "../entity/Entity.ts";
+import type {ExplosionOpts} from "../apis/IExplosionOpts.ts";
 
-type ExplosionOpts = {
-    radius?: number;        // 视觉半径
-    ring?: boolean;
-    smoke?: boolean;
-    screenFlash?: boolean;
-    shake?: number;         // 摄像机震动强度
-    sparks?: number;        // 火花数量
-    damage?: number;        // AoE 伤害
-};
 
 export class BombWeapon extends Weapon {
-    public readonly CD = 16;
     public radius = 180;
-    public damage = 10;
 
-    public override tryFire(game: Game, cd: boolean) {
-        if (this.getCooldown > 0) return;
-        if (this.owner instanceof PlayerEntity && !this.owner.input.isDown("1")) return;
+    constructor(owner: Entity) {
+        super(owner, 10, 16);
+    }
+
+    public override tryFire(world: World, cd: boolean) {
+        if (this.getCooldown() > 0) return;
 
         const center = this.owner.pos.clone();
-        BombWeapon.applyBombDamage(game, center, this.radius, this.damage);
-        game.events.emit('bomb-detonate', {
+        BombWeapon.applyBombDamage(world, center, this.radius, this.getDamage());
+        world.events.emit('bomb-detonate', {
             pos: center,
             radius: this.radius,
             shake: 0.4
         });
-        this.cooldown = cd ? this.CD : 0.5;
+
+        this.setCooldown(cd ? this.getMaxCooldown() : 0.5);
     }
 
-    public override get getMaxCooldown(): number {
-        return this.CD;
-    }
-
-    public override get displayName(): string {
+    public override getDisplayName(): string {
         return '炸弹';
     }
 
-    public override get uiColor(): string {
+    public override getUiColor(): string {
         return '#ff9f43';
     }
 
-    public static applyBombDamage(game: Game, center: Vec2, radius: number, damage: number) {
+    public static applyBombDamage(world: World, center: Vec2, radius: number, damage: number) {
         const r2 = radius * radius;
-        for (const mob of game.mobs) {
+        for (const mob of world.mobs) {
             if (mob.isDead) continue;
             const d2 = Vec2.distSq(mob.pos, center);
             if (d2 <= r2) {
                 mob.onDamage(damage);
-                if (mob.isDead) game.events.emit('mob-killed', mob);
+                if (mob.isDead) world.events.emit('mob-killed', mob);
             }
         }
     }
 
-    public static spawnExplosionVisual(game: Game, pos: Vec2, opts: ExplosionOpts = {}) {
+    public static spawnExplosionVisual(world: World, pos: Vec2, opts: ExplosionOpts = {}) {
         const radius = opts.radius ?? 90;
         const sparks = opts.sparks ?? 26;
+        const fastSparks = opts.fastSparks ?? 10;
 
         for (let i = 0; i < sparks; i++) {
             const a = rand(0, Math.PI * 2);
             const speed = rand(120, 360);
             const vel = new Vec2(Math.cos(a) * speed, Math.sin(a) * speed);
-            game.effects.push(new Particle(
+            world.effects.push(new Particle(
                 pos.clone(), vel, rand(0.25, 0.6), rand(3, 8),
                 "#ffd966", "rgba(255,69,0,0)"
             ));
         }
 
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < fastSparks; i++) {
             const a = rand(0, Math.PI * 2);
             const speed = rand(80, 180);
             const vel = new Vec2(Math.cos(a) * speed, Math.sin(a) * speed);
-            game.effects.push(new Particle(
+            world.effects.push(new Particle(
                 pos.clone(), vel, rand(0.6, 1.2), rand(4, 10),
                 "#ffaa33", "rgba(255,140,0,0)", 0.6, 80
             ));
         }
 
-        game.effects.push(new RadialRing(pos.clone(), radius * 0.2, radius * 1.1, 0.35, "#e3e3e3"));
+        world.effects.push(new RadialRing(pos.clone(), radius * 0.2, radius * 1.1, 0.35, "#e3e3e3"));
     }
 }

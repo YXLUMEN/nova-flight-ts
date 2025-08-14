@@ -1,14 +1,14 @@
-import {Game} from "../Game.ts";
-import {Vec2} from "../math/Vec2.ts";
-import {MobEntity} from "./MobEntity.ts";
-import {Particle} from "../effect/Particle.ts";
-import {rand} from "../math/uit.ts";
+import {World} from "../../World.ts";
+import {Vec2} from "../../math/Vec2.ts";
+import {MobEntity} from "../MobEntity.ts";
+import {Particle} from "../../effect/Particle.ts";
+import {rand} from "../../math/math.ts";
 
 export class BaseEnemy extends MobEntity {
     public override speed = 110;
 
-    constructor(pos: Vec2) {
-        super(pos, 16, 1, 1);
+    constructor(pos: Vec2, health: number, worth: number) {
+        super(pos, 16, health, worth);
     }
 
     public override render(ctx: CanvasRenderingContext2D) {
@@ -33,7 +33,8 @@ export class BaseEnemy extends MobEntity {
 
     public override onDamage(damage: number) {
         super.onDamage(damage);
-        Game.instance.effects.push(new Particle(
+
+        World.instance.effects.push(new Particle(
             this.pos.clone(), new Vec2(0, 0), rand(0.6, 0.8), rand(4, 6),
             "#ffaa33", "#ff5454", 0.6, 80
         ));
@@ -47,7 +48,7 @@ export class BaseEnemy extends MobEntity {
             const a = rand(0, Math.PI * 2);
             const speed = rand(80, 180);
             const vel = new Vec2(Math.cos(a) * speed, Math.sin(a) * speed);
-            Game.instance.effects.push(new Particle(
+            World.instance.effects.push(new Particle(
                 pos.clone(), vel, rand(0.6, 0.8), rand(4, 6),
                 "#ffaa33", "#ff5454", 0.6, 80
             ));

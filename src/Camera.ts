@@ -1,4 +1,4 @@
-import {Game} from "./Game.ts";
+import {World} from "./World.ts";
 import {Vec2} from "./math/Vec2.ts";
 
 export class Camera {
@@ -16,8 +16,7 @@ export class Camera {
     private maxShake = 48;         // 最大像素抖动
     private shakeOffset = new Vec2(0, 0);
 
-    // UI 微偏移配置
-    private uiMaxDrift = 12;      // UI 最大漂移像素(镜头快速移动时)
+    private uiMaxDrift = 36;      // UI 最大漂移像素(镜头快速移动时)
     private uiShakeFactor = 0.5;
 
     public update(target: Vec2, dt: number) {
@@ -42,10 +41,10 @@ export class Camera {
         return {
             left: off.x,
             top: off.y,
-            right: off.x + Game.W,
-            bottom: off.y + Game.H,
-            width: Game.W,
-            height: Game.H,
+            right: off.x + World.W,
+            bottom: off.y + World.H,
+            width: World.W,
+            height: World.H,
         };
     }
 
@@ -71,7 +70,7 @@ export class Camera {
     private follow(target: Vec2, dt: number) {
         if (!this.isOutsideDeadZone(target)) return;
 
-        const desired = new Vec2(target.x - Game.W / 2, target.y - Game.H / 2);
+        const desired = new Vec2(target.x - World.W / 2, target.y - World.H / 2);
         const delta = desired.sub(this.offset);
 
         // 使用阻尼速度, 限制最大变化
@@ -119,7 +118,7 @@ export class Camera {
     }
 
     private isOutsideDeadZone(target: Vec2): boolean {
-        const screenCenter = new Vec2(Game.W / 2, Game.H / 2);
+        const screenCenter = new Vec2(World.W / 2, World.H / 2);
         const playerOffset = target.sub(this.offset.add(screenCenter));
         return playerOffset.lengthSq() > this.deadZoneRadius * this.deadZoneRadius;
     }

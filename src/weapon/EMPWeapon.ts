@@ -1,36 +1,33 @@
 import {Weapon} from "./Weapon.ts";
-import {PlayerEntity} from "../entity/PlayerEntity.ts";
-import {Game} from "../Game.ts";
+import {World} from "../World.ts";
 import {SlowStatus} from "../status/SlowStatus.ts";
+import type {Entity} from "../entity/Entity.ts";
 
 export class EMPWeapon extends Weapon {
-    public readonly CD = 10;
+    constructor(owner: Entity) {
+        super(owner, 0, 10);
+    }
 
-    public override tryFire(game: Game, cd: boolean): void {
-        if (this.getCooldown > 0) return;
-        if (this.owner instanceof PlayerEntity && !this.owner.input.isDown("2")) return;
+    public override tryFire(world: World, cd: boolean): void {
+        if (this.getCooldown() > 0) return;
 
-        EMPWeapon.applyEMPEffect(game);
-        game.events.emit('emp-detonate', {
+        EMPWeapon.applyEMPEffect(world);
+        world.events.emit('emp-detonate', {
             pos: this.owner.pos.clone(),
         });
-        this.cooldown = cd ? this.CD : 0.5;
+        this.setCooldown(cd ? this.getMaxCooldown() : 0.5);
     }
 
-    public override get getMaxCooldown(): number {
-        return this.CD;
-    }
-
-    public get displayName(): string {
+    public getDisplayName(): string {
         return 'EMP';
     }
 
-    public get uiColor(): string {
+    public getUiColor(): string {
         return '#5ec8ff'
     }
 
-    public static applyEMPEffect(game: Game) {
-        for (const mob of game.mobs) {
+    public static applyEMPEffect(world: World) {
+        for (const mob of world.mobs) {
             if (!mob.isDead) mob.addStatus(new SlowStatus(6, 0.35));
         }
     }
