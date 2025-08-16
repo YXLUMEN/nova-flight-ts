@@ -1,7 +1,7 @@
 import {Input} from "./Input.ts";
 import {PlayerEntity} from "./entity/PlayerEntity.ts";
 import {Camera} from "./Camera.ts";
-import type {MobEntity} from "./entity/MobEntity.ts";
+import {MobEntity} from "./entity/MobEntity.ts";
 import {EventBus} from "./event/EventBus.ts";
 import type {Effect} from "./effect/Effect.ts";
 import {BombWeapon} from "./weapon/BombWeapon.ts";
@@ -10,11 +10,11 @@ import {StarField} from "./effect/StarField.ts";
 import {layers} from "./configs/StarfieldConfig.ts";
 import {UI} from "./ui/UI.ts";
 import {STAGE} from "./configs/StageConfig.ts";
-import {DPR} from "./utils/uit.ts";
+import {DPR, isMobile} from "./utils/uit.ts";
 import {collideCircle} from "./math/math.ts";
 import type {ProjectileEntity} from "./entity/ProjectileEntity.ts";
-import {MiniGunWeapon} from "./weapon/MiniGunWeapon.ts";
-import {Cannon90Weapon} from "./weapon/Cannon90Weapon.ts";
+import {EdgeGlowEffect} from "./effect/EdgeGlowEffect.ts";
+import {M_STAGE} from "./configs/MobileConfig.ts";
 
 export class World {
     public static instance: World;
@@ -29,13 +29,13 @@ export class World {
 
     private last = 0;
     private accumulator = 0;
-    private readonly fixedDt = 1 / 120;
-    private readonly stage = STAGE;
+    private readonly fixedDt = 0.02;
+    private readonly stage = isMobile() ? M_STAGE : STAGE;
 
-    public input = new Input(World.canvas);
+    private input = new Input(World.canvas);
     public player = new PlayerEntity(this.input);
 
-    public effects: Effect[] = [];
+    private effects: Effect[] = [];
     public mobs: MobEntity[] = [];
     public bullets: ProjectileEntity[] = [];
 
@@ -43,37 +43,16 @@ export class World {
 
     public over = false;
     public ticking = true;
-    public rendering = true;
-    public spawnTimer = 0;
+    private rendering = true;
 
     constructor() {
         if (World.instance) return World.instance;
 
         this.resize();
+        this.registryListeners();
         this.registryEvents();
 
         this.starField.init(this.camera);
-
-        window.addEventListener("resize", () => this.resize());
-
-        window.addEventListener("keydown", (e) => {
-            const k = e.key.toLowerCase();
-            if (k === "enter" && this.over) this.reset();
-            else if (k === "p" || k === 'escape') this.togglePause();
-            else if (k === "v") this.player.invincible = !this.player.invincible;
-            else if (k === 'k' && this.player.invincible) this.player.score += 10;
-        });
-
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') {
-                this.ticking = false;
-                this.rendering = false;
-            } else if (document.visibilityState === 'visible') {
-                this.rendering = true;
-            }
-        });
-
-        window.addEventListener('contextmenu', event => event.preventDefault());
 
         this.loop(0);
     }
@@ -81,12 +60,12 @@ export class World {
     public reset() {
         this.mobs = [];
         this.bullets = [];
+        this.effects = [];
         this.player = new PlayerEntity(this.input);
 
         this.over = false;
         this.ticking = true;
         this.rendering = true;
-        this.spawnTimer = 0;
         this.stage.reset();
 
         this.starField.init(this.camera);
@@ -110,7 +89,7 @@ export class World {
     }
 
     public loop(ts: number) {
-        const dt = Math.min(0.033, (ts - this.last) / 1000 || 0);
+        const dt = Math.min(0.05, (ts - this.last) / 1000 || 0);
         this.last = ts;
         this.accumulator += dt;
 
@@ -125,16 +104,11 @@ export class World {
     public update(dt: number) {
         if (!this.ticking) return;
 
-        // 镜头跟随
         this.camera.update(this.player.pos, dt);
-
-        // 背景
         this.starField.update(dt, this.camera);
 
-        // 玩家
-        this.player.update(this, dt);
+        if (!this.over) this.player.update(this, dt);
 
-        // 敌人生成
         this.stage.update(this, dt);
 
         this.mobs.forEach(mob => mob.update(this, dt));
@@ -144,14 +118,25 @@ export class World {
         // 碰撞: 子弹
         for (const bullet of this.bullets) {
             if (bullet.isDead) continue;
-            for (const mob of this.mobs) {
-                if (mob.isDead || !collideCircle(bullet, mob)) continue;
-                if (bullet.owner && (mob === bullet.owner)) continue;
 
-                mob.onDamage(1);
+            if (bullet.owner instanceof MobEntity) {
+                if (this.player.invincible || !collideCircle(this.player, bullet)) continue;
+
+                this.player.onDamage(this, 1);
                 bullet.onHit(this);
-                if (mob.isDead) this.events.emit('mob-killed', mob);
-                break;
+                if (this.player.isDead) {
+                    this.gameOver();
+                    break;
+                }
+            } else if (bullet.owner instanceof PlayerEntity) {
+                for (const mob of this.mobs) {
+                    if (mob.isDead || !collideCircle(bullet, mob)) continue;
+
+                    mob.onDamage(this, bullet.damage);
+                    bullet.onHit(this);
+                    if (mob.isDead) this.events.emit('mob-killed', mob);
+                    break;
+                }
             }
         }
 
@@ -160,8 +145,8 @@ export class World {
             if (mob.isDead || !collideCircle(this.player, mob)) continue;
             if (this.player.invincible) break;
 
-            mob.onDeath();
-            this.player.onDamage(1);
+            mob.onDeath(this);
+            this.player.onDamage(this, 1);
             if (this.player.isDead) {
                 this.gameOver();
                 break;
@@ -172,6 +157,8 @@ export class World {
         this.mobs = this.mobs.filter(e => !e.isDead);
         this.bullets = this.bullets.filter(b => !b.isDead);
         this.effects = this.effects.filter(e => e.alive);
+
+        this.input.updateEndFrame();
     }
 
     public gameOver() {
@@ -180,6 +167,10 @@ export class World {
         setTimeout(() => {
             this.ticking = false;
         }, 1000);
+    }
+
+    public addEffect(effect: Effect) {
+        this.effects.push(effect);
     }
 
     public render() {
@@ -199,8 +190,9 @@ export class World {
         // 实体
         this.mobs.forEach((e) => e.render(ctx));
         this.bullets.forEach((b) => b.render(ctx));
-        if (!this.player.isDead) this.player.render(ctx);
         this.effects.forEach(e => e.render(ctx));
+
+        if (!this.player.isDead) this.player.render(ctx);
 
         ctx.restore();
 
@@ -247,7 +239,7 @@ export class World {
         this.events.clear();
 
         this.events.on('mob-killed', (event: MobEntity) => {
-            this.player.score += event.getWorth;
+            this.player.score += event.getWorth();
         });
 
         this.events.on('bomb-detonate', (event) => {
@@ -262,11 +254,85 @@ export class World {
         });
 
         this.events.on('stage-enter', ({name}) => {
-            if (name === 'Intro') return;
+            if (name === 'P1') return;
 
-            this.effects.push(new ScreenFlash(1.0, 0.5, '#ffa600'));
-            if (name === 'Mid') this.player.addWeapon('mini', new MiniGunWeapon(this.player));
-            if (name === 'End') this.player.addWeapon('90', new Cannon90Weapon(this.player));
+            this.effects.push(new EdgeGlowEffect({
+                color: '#00b973',
+                duration: 0.8,
+                thickness: 16
+            }));
+
+            if (name === 'P2') import('./weapon/EMPWeapon.ts').then(mod => {
+                this.player.addWeapon('emp', new mod.EMPWeapon(this.player));
+            });
+            else if (name === 'P3') import('./weapon/MiniGunWeapon.ts').then(mod => {
+                this.player.addWeapon('mini', new mod.MiniGunWeapon(this.player));
+            });
+            else if (name === 'P4') import('./weapon/LaserWeapon.ts').then(mod => {
+                this.player.addWeapon('laser', new mod.LaserWeapon(this.player));
+            });
+            else if (name === 'P5') import('./weapon/Cannon90Weapon.ts').then(mod => {
+                this.player.addWeapon('90', new mod.Cannon90Weapon(this.player));
+                return import('./weapon/IntoVoidWeapon.ts');
+            }).then(mod => {
+                this.player.addWeapon('void', new mod.IntoVoidWeapon(this.player));
+            });
         });
+    }
+
+    private registryListeners() {
+        window.addEventListener("resize", () => this.resize());
+
+        window.addEventListener("keydown", e => {
+            const code = e.code;
+
+            if (code === "Enter" && this.over) this.reset();
+            else if (code === "KeyP" || code === 'Escape') this.togglePause();
+
+            // Dev mode
+            if (e.ctrlKey && code === "KeyV") this.player.devMode = this.player.invincible = !this.player.devMode;
+            if (this.player.devMode) this.devMode(code);
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                this.ticking = false;
+                this.rendering = false;
+            } else {
+                this.rendering = true;
+            }
+        });
+
+        window.addEventListener('contextmenu', event => event.preventDefault());
+    }
+
+    private devMode(code: string) {
+        switch (code) {
+            case 'KeyK':
+                this.player.score += 10;
+                break;
+            case 'KeyO':
+                import('./weapon/MiniGunWeapon.ts').then(mod => {
+                    this.player.addWeapon('mini', new mod.MiniGunWeapon(this.player));
+                    return import('./weapon/Cannon90Weapon.ts');
+                }).then(mod => {
+                    this.player.addWeapon('90', new mod.Cannon90Weapon(this.player));
+                    return import('./weapon/EMPWeapon.ts')
+                }).then(mod => {
+                    this.player.addWeapon('emp', new mod.EMPWeapon(this.player));
+                    return import('./weapon/LaserWeapon.ts');
+                }).then(mod => {
+                    this.player.addWeapon('laser', new mod.LaserWeapon(this.player));
+                    return import('./weapon/IntoVoidWeapon.ts');
+                }).then(mod => {
+                    this.player.addWeapon('void', new mod.IntoVoidWeapon(this.player));
+                });
+                break;
+            case 'KeyC':
+                this.mobs = [];
+                break;
+            case 'KeyH':
+                this.player.setHealth(this.player.getMaxHealth());
+        }
     }
 }

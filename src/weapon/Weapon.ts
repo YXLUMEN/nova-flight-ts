@@ -19,7 +19,7 @@ export abstract class Weapon {
         if (this.cooldown > 0) this.setCooldown(this.cooldown - delta);
     }
 
-    public abstract tryFire(world: World, cd: boolean): void;
+    public abstract tryFire(world: World): void;
 
     public getDamage(): number {
         return this.damage;

@@ -6,27 +6,32 @@ import {RadialRing} from "../effect/RadialRing.ts";
 import {rand} from "../math/math.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {ExplosionOpts} from "../apis/IExplosionOpts.ts";
+import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
 
 
-export class BombWeapon extends Weapon {
-    public radius = 180;
+export class BombWeapon extends Weapon implements ISpecialWeapon{
+    public damageRadius = 200;
 
     constructor(owner: Entity) {
-        super(owner, 10, 16);
+        super(owner, 24, 16);
     }
 
-    public override tryFire(world: World, cd: boolean) {
+    public override tryFire(world: World) {
         if (this.getCooldown() > 0) return;
 
         const center = this.owner.pos.clone();
-        BombWeapon.applyBombDamage(world, center, this.radius, this.getDamage());
+        BombWeapon.applyBombDamage(world, center, this.damageRadius, this.getDamage());
         world.events.emit('bomb-detonate', {
             pos: center,
-            radius: this.radius,
-            shake: 0.4
+            visionRadius: this.damageRadius,
+            shake: 0.3
         });
 
-        this.setCooldown(cd ? this.getMaxCooldown() : 0.5);
+        this.setCooldown(this.getMaxCooldown());
+    }
+
+    public bindKey(): string {
+        return 'Digit1';
     }
 
     public override getDisplayName(): string {
@@ -43,14 +48,14 @@ export class BombWeapon extends Weapon {
             if (mob.isDead) continue;
             const d2 = Vec2.distSq(mob.pos, center);
             if (d2 <= r2) {
-                mob.onDamage(damage);
+                mob.onDamage(world, damage);
                 if (mob.isDead) world.events.emit('mob-killed', mob);
             }
         }
     }
 
     public static spawnExplosionVisual(world: World, pos: Vec2, opts: ExplosionOpts = {}) {
-        const radius = opts.radius ?? 90;
+        const radius = opts.visionRadius ?? 90;
         const sparks = opts.sparks ?? 26;
         const fastSparks = opts.fastSparks ?? 10;
 
@@ -58,7 +63,7 @@ export class BombWeapon extends Weapon {
             const a = rand(0, Math.PI * 2);
             const speed = rand(120, 360);
             const vel = new Vec2(Math.cos(a) * speed, Math.sin(a) * speed);
-            world.effects.push(new Particle(
+            world.addEffect(new Particle(
                 pos.clone(), vel, rand(0.25, 0.6), rand(3, 8),
                 "#ffd966", "rgba(255,69,0,0)"
             ));
@@ -68,12 +73,12 @@ export class BombWeapon extends Weapon {
             const a = rand(0, Math.PI * 2);
             const speed = rand(80, 180);
             const vel = new Vec2(Math.cos(a) * speed, Math.sin(a) * speed);
-            world.effects.push(new Particle(
+            world.addEffect(new Particle(
                 pos.clone(), vel, rand(0.6, 1.2), rand(4, 10),
                 "#ffaa33", "rgba(255,140,0,0)", 0.6, 80
             ));
         }
 
-        world.effects.push(new RadialRing(pos.clone(), radius * 0.2, radius * 1.1, 0.35, "#e3e3e3"));
+        world.addEffect(new RadialRing(pos.clone(), radius * 0.2, radius * 1.1, 0.35, "#e3e3e3"));
     }
 }

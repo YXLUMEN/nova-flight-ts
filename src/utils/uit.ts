@@ -54,3 +54,7 @@ export function throttleTimeOut<T extends (...args: any[]) => any>(func: T, wait
         timer = setTimeout((): any => timer = null, wait);
     }
 }
+
+export function isMobile() {
+    return /Mobile|Android|iPhone/.test(navigator.userAgent);
+}

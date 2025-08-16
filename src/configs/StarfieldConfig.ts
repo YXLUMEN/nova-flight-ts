@@ -1,7 +1,7 @@
 import type {StarLayer} from "../apis/IStarLayer.ts";
-import {createCleanObj, deepFreeze} from "../utils/uit.ts";
+import {createCleanObj, deepFreeze, isMobile} from "../utils/uit.ts";
 
-const layers: StarLayer[] = deepFreeze([
+const desktopLayers: StarLayer[] = deepFreeze([
     createCleanObj({
         count: 10,
         alpha: 0.9,
@@ -11,16 +11,6 @@ const layers: StarLayer[] = deepFreeze([
         speedMax: 85,
         shakeFactor: 0.9,
         parallax: 0.8
-    }),
-    createCleanObj({
-        count: 20,
-        alpha: 0.75,
-        radiusMin: 1.0,
-        radiusMax: 1.6,
-        speedMin: 35,
-        speedMax: 60,
-        shakeFactor: 0.5,
-        parallax: 0.7
     }),
     createCleanObj({
         count: 40,
@@ -44,6 +34,27 @@ const layers: StarLayer[] = deepFreeze([
     }),
 ]);
 
-export {
-    layers,
-}
+const mobilLayers: StarLayer[] = deepFreeze([
+    createCleanObj({
+        count: 20,
+        alpha: 0.9,
+        radiusMin: 1.4,
+        radiusMax: 2.2,
+        speedMin: 50,
+        speedMax: 85,
+        shakeFactor: 0.9,
+        parallax: 0.8
+    }),
+    createCleanObj({
+        count: 60,
+        alpha: 0.35,
+        radiusMin: 0.5,
+        radiusMax: 1,
+        speedMin: 10,
+        speedMax: 25,
+        shakeFactor: 0,
+        parallax: 0.08
+    }),
+]);
+
+export const layers = isMobile() ? mobilLayers : desktopLayers;

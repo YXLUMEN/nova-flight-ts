@@ -5,7 +5,8 @@ import type {World} from "../World.ts";
 
 export abstract class Entity {
     public pos: Vec2;
-    public radius: number;
+    public boxRadius: number;
+
     public speed: number = 0;
     public speedMul: number = 1;
 
@@ -13,9 +14,9 @@ export abstract class Entity {
 
     protected dead: boolean;
 
-    protected constructor(pos: Vec2, radius: number) {
+    protected constructor(pos: Vec2, boxRadius: number) {
         this.pos = pos;
-        this.radius = radius;
+        this.boxRadius = boxRadius;
         this.dead = false;
     }
 
@@ -37,7 +38,7 @@ export abstract class Entity {
         }
     }
 
-    public onDeath(): void {
+    public onDeath(_world: World): void {
         this.dead = true;
     }
 

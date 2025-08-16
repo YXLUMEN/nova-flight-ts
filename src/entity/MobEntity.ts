@@ -1,6 +1,9 @@
 import {LivingEntity} from "./LivingEntity.ts";
-import type {Vec2} from "../math/Vec2.ts";
+import {Vec2} from "../math/Vec2.ts";
 import {World} from "../World.ts";
+import {Particle} from "../effect/Particle.ts";
+import {rand} from "../math/math.ts";
+import {ImmutVec2} from "../math/ImmutVec2.ts";
 
 export abstract class MobEntity extends LivingEntity {
     protected readonly worth: number;
@@ -22,7 +25,31 @@ export abstract class MobEntity extends LivingEntity {
         if (this.pos.y > World.H + 40) this.dead = true;
     }
 
-    public get getWorth(): number {
+    public override onDamage(world: World, damage: number) {
+        super.onDamage(world, damage);
+
+        world.addEffect(new Particle(
+            this.pos.clone(), ImmutVec2.ZERO, rand(0.6, 0.8), rand(4, 6),
+            "#ffaa33", "#ff5454", 0.6, 80
+        ));
+    }
+
+    public override onDeath(world: World): void {
+        super.onDeath(world);
+
+        const pos = this.pos.clone();
+        for (let i = 0; i < 4; i++) {
+            const a = rand(0, Math.PI * 2);
+            const speed = rand(80, 180);
+            const vel = new Vec2(Math.cos(a) * speed, Math.sin(a) * speed);
+            world.addEffect(new Particle(
+                pos.clone(), vel, rand(0.6, 0.8), rand(4, 6),
+                "#ffaa33", "#ff5454", 0.6, 80
+            ));
+        }
+    }
+
+    public getWorth(): number {
         return this.worth;
     }
 }

@@ -26,7 +26,7 @@ export interface SpawnRuleConfig {
     every?: number | ((ctx: SpawnCtx) => number);
     // 0..1，时间抖动比例
     jitter?: number;
-    // 同屏上限（可选）
+    // 同屏上限
     cap?: number;
     enabled?: (ctx: SpawnCtx) => boolean;
     factory: MobFactory;
@@ -42,4 +42,17 @@ export interface PhaseConfig {
     onExit?: (ctx: SpawnCtx) => void;
     // 生成规则
     rules: SpawnRuleConfig[];
+}
+
+export type SamplerKind = 'best' | 'golden' | 'strata';
+
+export interface TopSpawnOpts {
+    sampler?: SamplerKind;   // 'best'（默认）| 'golden' | 'strata'
+    margin?: number;         // 左右安全边距
+    // best-candidate 相关
+    candidates?: number;     // 候选样本数（越大越均匀，成本线性）
+    history?: number;        // 记忆窗口大小（保持局部均匀）
+    minGap?: number;         // 期望最小间距（软约束）
+    // strata 相关
+    bins?: number;           // 分层数量
 }

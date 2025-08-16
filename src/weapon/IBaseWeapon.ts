@@ -1,10 +1,9 @@
 export interface IBaseWeapon {
-    fireRate: number;
+    getFireRate(): number;
 }
 
 export function isBaseWeapon(weapon: unknown): weapon is IBaseWeapon {
     return typeof weapon === 'object'
         && weapon !== null
-        && typeof (weapon as IBaseWeapon).fireRate === 'number';
+        && typeof (weapon as IBaseWeapon).getFireRate === 'function';
 }
-

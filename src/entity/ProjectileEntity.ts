@@ -17,9 +17,7 @@ export abstract class ProjectileEntity extends Entity {
         this.owner = owner;
     }
 
-    public override update(world: World, dt: number) {
-        super.update(world, dt);
-
+    public override update(_world: World, dt: number) {
         this.pos.x += this.vel.x * dt;
         this.pos.y += this.vel.y * dt;
 

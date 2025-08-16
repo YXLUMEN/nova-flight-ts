@@ -16,7 +16,7 @@ export class Camera {
     private maxShake = 48;         // 最大像素抖动
     private shakeOffset = new Vec2(0, 0);
 
-    private uiMaxDrift = 36;      // UI 最大漂移像素(镜头快速移动时)
+    private uiMaxDrift = 64;      // UI 最大漂移像素(镜头快速移动时)
     private uiShakeFactor = 0.5;
 
     public update(target: Vec2, dt: number) {
@@ -24,12 +24,13 @@ export class Camera {
         this.updateShake(dt);
     }
 
-    public addShake(amount: number) {
+    public addShake(amount: number, limit = 1) {
+        if (this.shakeTrauma >= limit) return;
         this.shakeTrauma = Math.min(1, this.shakeTrauma + amount);
     }
 
-    public get cameraOffset() {
-        return this.offset;
+    public get cameraOffset(): Vec2 {
+        return this.offset.clone();
     }
 
     public get viewOffset(): Vec2 {

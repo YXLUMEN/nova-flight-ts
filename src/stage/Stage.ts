@@ -66,7 +66,7 @@ export class Stage {
     }
 
     private computeDifficulty(): number {
-        return 0.5; // 占位
+        return 1; // 占位
     }
 
     public get currentName(): string | null {

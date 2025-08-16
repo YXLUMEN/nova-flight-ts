@@ -54,9 +54,9 @@ export class UI {
         ctx.translate(uo.x, uo.y);
         ctx.fillText(`分数: ${player.score}`, x, y);
         y += 20;
-        ctx.fillText(`生命: ${player.getHealth} / ${player.getMaxHealth}`, x, y);
+        ctx.fillText(`生命: ${player.getHealth()} / ${player.getMaxHealth()}`, x, y);
         y += 20;
-        if (player.invincible) {
+        if (player.devMode) {
             ctx.fillText('已启用dev模式,将不再记录成绩', x, y);
             y += 20;
         }
@@ -79,14 +79,14 @@ export class UI {
 
         ctx.restore();
 
-        this.drawPrimaryWeaponsAnchored(ctx);
+        this.drawPrimaryWeapons(ctx);
 
         if (!this.world.ticking) {
             UI.renderPauseOverlay(ctx);
         }
     }
 
-    private drawPrimaryWeaponsAnchored(ctx: CanvasRenderingContext2D) {
+    private drawPrimaryWeapons(ctx: CanvasRenderingContext2D) {
         const player = this.world.player;
         if (!player) return;
 
@@ -95,7 +95,7 @@ export class UI {
         const py = player.pos.y - cam.y;
 
         const w = player.getCurrentWeapon();
-        const anchorX = Math.floor(px + player.radius / 2 + 12);
+        const anchorX = Math.floor(px + player.boxRadius / 2 + 12);
         const ratio = Math.max(0, Math.min(1, 1 - w.getCooldown() / w.getMaxCooldown()));
 
         ctx.save();
