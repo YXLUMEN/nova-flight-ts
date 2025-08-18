@@ -1,6 +1,6 @@
-import {ProjectileEntity} from "../ProjectileEntity.ts";
-import {PI2} from "../../math/math.ts";
-import type {World} from "../../World.ts";
+import {ProjectileEntity} from "./ProjectileEntity.ts";
+import {PI2} from "../math/math.ts";
+import type {World} from "../World.ts";
 
 export class BulletEntity extends ProjectileEntity {
     public override render(ctx: CanvasRenderingContext2D) {

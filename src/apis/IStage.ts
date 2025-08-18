@@ -3,6 +3,8 @@ import type {MobEntity} from "../entity/MobEntity.ts";
 
 export type RNG = () => number;
 
+export type MobFactory = (ctx: SpawnCtx) => MobEntity | MobEntity[] | null;
+
 export interface SpawnCtx {
     world: World;
     // 全局舞台时间
@@ -14,8 +16,6 @@ export interface SpawnCtx {
     rng: RNG;
     difficulty: number;
 }
-
-export type MobFactory = (ctx: SpawnCtx) => MobEntity | MobEntity[] | null;
 
 export interface SpawnRuleConfig {
     label?: string;
@@ -47,12 +47,16 @@ export interface PhaseConfig {
 export type SamplerKind = 'best' | 'golden' | 'strata';
 
 export interface TopSpawnOpts {
-    sampler?: SamplerKind;   // 'best'（默认）| 'golden' | 'strata'
-    margin?: number;         // 左右安全边距
-    // best-candidate 相关
-    candidates?: number;     // 候选样本数（越大越均匀，成本线性）
-    history?: number;        // 记忆窗口大小（保持局部均匀）
-    minGap?: number;         // 期望最小间距（软约束）
-    // strata 相关
-    bins?: number;           // 分层数量
+    // 'best'（默认）| 'golden' | 'strata'
+    sampler?: SamplerKind;
+    // 左右安全边距
+    margin?: number;
+    // 候选样本数（越大越均匀，成本线性）
+    candidates?: number;
+    // 记忆窗口大小（保持局部均匀）
+    history?: number;
+    // 期望最小间距（软约束）
+    minGap?: number;
+    // 分层数量
+    bins?: number;
 }

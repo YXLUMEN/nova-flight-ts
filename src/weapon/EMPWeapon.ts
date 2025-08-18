@@ -1,22 +1,28 @@
 import {Weapon} from "./Weapon.ts";
 import {World} from "../World.ts";
-import {SlowStatus} from "../status/SlowStatus.ts";
+import {EMCStatus} from "../status/EMCStatus.ts";
 import type {Entity} from "../entity/Entity.ts";
 import {PlayerEntity} from "../entity/PlayerEntity.ts";
 import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
+import {EMPBurst} from "../effect/EMPBurst.ts";
+import {pointInCircleVec2} from "../math/math.ts";
+import type {MutVec2} from "../math/MutVec2.ts";
+import {ScreenFlash} from "../effect/ScreenFlash.ts";
 
 export class EMPWeapon extends Weapon implements ISpecialWeapon {
+    public radius: number = 480;
+
     constructor(owner: Entity) {
         super(owner, 0, 10);
     }
 
     public override tryFire(world: World): void {
-        if (this.getCooldown() > 0) return;
-
-        EMPWeapon.applyEMPEffect(world);
-        world.events.emit('emp-detonate', {
-            pos: this.owner.pos.clone(),
-        });
+        EMPWeapon.applyEMPEffect(world, this.owner.pos, this.radius);
+        world.addEffect(new ScreenFlash(0.5, 0.18, '#5ec8ff'));
+        world.addEffect(new EMPBurst(
+            this.owner.getPos(),
+            this.radius
+        ));
 
         for (const b of world.bullets) {
             if (!(b.owner instanceof PlayerEntity)) b.onDeath(world);
@@ -29,17 +35,21 @@ export class EMPWeapon extends Weapon implements ISpecialWeapon {
         return 'Digit2';
     }
 
-    public getDisplayName(): string {
+    public override getDisplayName(): string {
         return 'EMP';
     }
 
-    public getUiColor(): string {
+    public override getUiColor(): string {
         return '#5ec8ff'
     }
 
-    public static applyEMPEffect(world: World) {
+    public static applyEMPEffect(world: World, center: MutVec2, radius: number) {
+        world.events.emit('emp-burst', {duration: 12});
+
         for (const mob of world.mobs) {
-            if (!mob.isDead) mob.addStatus(new SlowStatus(6, 0.35));
+            if (!mob.isDead && pointInCircleVec2(mob.pos, center, radius)) {
+                mob.addStatus(new EMCStatus(12, 0.1));
+            }
         }
     }
 }

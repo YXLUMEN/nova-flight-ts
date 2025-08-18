@@ -4,6 +4,12 @@ import {createCleanObj, deepFreeze} from "../utils/uit.ts";
 import {randInt} from "../math/math.ts";
 import {spawnBase, spawnBaseS, spawnGun, spawnLineBase} from "../utils/PresetsSpawn.ts";
 
+const p0: PhaseConfig = deepFreeze(createCleanObj({
+    name: "P0",
+    duration: 3,
+    rules: []
+}));
+
 const p1: PhaseConfig = deepFreeze(createCleanObj({
     name: "P1",
     duration: 120,
@@ -26,11 +32,11 @@ const p2: PhaseConfig = deepFreeze(createCleanObj({
 
 const p3: PhaseConfig = deepFreeze(createCleanObj({
     name: "P3",
-    until: ({score}) => score >= 480,
+    until: ({score}) => score >= 640,
     onEnter: ({world}) => world.events.emit('stage-enter', {name: 'P3'}),
     rules: [
         {
-            rate: ({score}) => 1.0 + 0.3 * Math.floor(score / 40),
+            rate: ({score}) => 1.0 + 0.3 * (score / 40) | 0,
             jitter: 0.4,
             factory: spawnBase(110, 3, 2, '#ff2121'),
             cap: 64,
@@ -42,11 +48,11 @@ const p3: PhaseConfig = deepFreeze(createCleanObj({
 
 const p4: PhaseConfig = deepFreeze(createCleanObj({
     name: "P4",
-    until: ({score}) => score >= 640,
+    until: ({score}) => score >= 1024,
     onEnter: ({world}) => world.events.emit('stage-enter', {name: 'P4'}),
     rules: [
         {
-            rate: ({score}) => 1.0 + 0.3 * Math.floor(score / 60),
+            rate: ({score}) => 1.0 + 0.3 * (score / 60) | 0,
             jitter: 0.4,
             factory: spawnBaseS(110, randInt(3, 6), 3, '#ff2121'),
             cap: 32,
@@ -61,13 +67,23 @@ const p5: PhaseConfig = deepFreeze(createCleanObj({
     onEnter: ({world}) => world.events.emit('stage-enter', {name: 'P5'}),
     rules: [
         {
-            rate: ({score}) => 1.0 + 0.3 * Math.floor(score / 120),
+            every: 0.4,
             jitter: 0.4,
-            factory: spawnBaseS(randInt(90, 160), randInt(8, 16), 10, '#910000'),
+            factory: spawnBaseS(
+                140, 8, 8,
+                '#910000',
+                (ctx) => 1 + (ctx.score / 1000) | 0),
+            cap: 90
         },
-        {every: 0.9, jitter: 0.5, factory: spawnGun(80, 6), cap: 72},
-        {every: 4.0, jitter: 0.35, factory: spawnLineBase(6, 64, 140, 4, 2)},
+        {
+            rate: 8,
+            jitter: 0.9,
+            factory: spawnBaseS(110, 8, 3, '#ff2121'),
+            cap: 96,
+        },
+        {every: 0.9, jitter: 0.5, factory: spawnGun(80, 6, 2), cap: 96},
+        {every: 4.0, jitter: 0.35, factory: spawnLineBase(6, 64, 150, 4, 2)},
     ],
 }));
 
-export const STAGE = new Stage([p1, p2, p3, p4, p5]);
+export const STAGE = new Stage([p0, p1, p2, p3, p4, p5]);

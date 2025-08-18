@@ -1,6 +1,6 @@
-import type {MobFactory} from "../apis/IStage.ts";
-import {BaseEnemy} from "../entity/mob/BaseEnemy.ts";
-import {GunEnemyEntity} from "../entity/mob/GunEnemyEntity.ts";
+import type {MobFactory, SpawnCtx} from "../apis/IStage.ts";
+import {BaseEnemy} from "../entity/BaseEnemy.ts";
+import {GunEnemyEntity} from "../entity/GunEnemyEntity.ts";
 import {spawnLineCtor, spawnTopRandomCtor, spawnTopRandomCtorS} from "../registry/SpawnFactories.ts";
 
 const spawnBase = (speed = 120, hp = 1, worth = 1, color = '#ff6b6b'): MobFactory =>
@@ -9,11 +9,18 @@ const spawnBase = (speed = 120, hp = 1, worth = 1, color = '#ff6b6b'): MobFactor
         m.color = color;
     });
 
-const spawnBaseS = (speed = 120, hp = 1, worth = 1, color = '#ff6b6b'): MobFactory =>
-    spawnTopRandomCtorS(BaseEnemy, [hp, worth], (m) => {
+const spawnBaseS = (
+    speed = 120, hp = 1, worth = 1,
+    color = '#ff6b6b',
+    hpScaleFn: (ctx: SpawnCtx) => number = () => 1
+): MobFactory => (ctx) => {
+    const scaledHp = (hp * hpScaleFn(ctx)) | 0;
+    return spawnTopRandomCtorS(BaseEnemy, [scaledHp, worth], (m) => {
         m.speed = speed;
         m.color = color;
-    }, {sampler: 'best', candidates: 8, history: 16, minGap: 64, margin: 24});
+    }, {sampler: 'best', candidates: 8, history: 16, minGap: 64, margin: 24})(ctx)
+};
+
 
 const spawnLineBase = (
     count: number,
@@ -35,7 +42,7 @@ const spawnLineBase = (
     );
 
 const spawnGun = (speed = 120, hp = 1, worth = 1, color = '#ff6b6b'): MobFactory =>
-    spawnTopRandomCtor(GunEnemyEntity, [hp, worth], (m) => {
+    spawnTopRandomCtorS(GunEnemyEntity, [hp, worth], (m) => {
         m.speed = speed;
         m.color = color;
     });

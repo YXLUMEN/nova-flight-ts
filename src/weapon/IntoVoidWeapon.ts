@@ -3,13 +3,17 @@ import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
 import {type Entity} from "../entity/Entity.ts";
 import {World} from "../World.ts";
 import {WindowOverlay} from "../effect/WindowOverlay.ts";
+import {PlayerEntity} from "../entity/PlayerEntity.ts";
+import {pointInCircleVec2} from "../math/math.ts";
+import {EMPWeapon} from "./EMPWeapon.ts";
+import {LaserWeapon} from "./LaserWeapon.ts";
 
 export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
     public static readonly displayName = "遁入虚空";
     public static readonly uiColor = "#7945ff";
 
-    private readonly duration = 5;
-
+    public radius = 32;
+    public duration = 5;
     private active = false;
     private timeLeft = 0;
     private prevInvincible = false;
@@ -21,23 +25,33 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
     }
 
     public override tryFire(world: World): void {
-        if (this.active || this.getCooldown() > 0) return;
+        if (this.active) return;
 
         this.active = true;
         this.timeLeft = this.duration;
 
-        // 只覆盖本次之前的无敌, 退出时恢复
-        this.prevInvincible = world.player.invincible;
-        world.player.invincible = true;
+        if (this.owner instanceof PlayerEntity) {
+            this.prevInvincible = this.owner.invincible;
+            this.owner.invincible = true;
 
-        this.mask = new WindowOverlay({
-            color: IntoVoidWeapon.uiColor,
-            maxAlpha: 0.28,
-            fadeIn: 0.2,
-            fadeOut: 0.4,
-            composite: "screen",
-        });
-        world.addEffect(this.mask);
+            this.mask = new WindowOverlay({
+                color: IntoVoidWeapon.uiColor,
+                maxAlpha: 0.28,
+                fadeIn: 0.2,
+                fadeOut: 0.4,
+                composite: "screen",
+            });
+            world.addEffect(this.mask);
+
+            if (this.owner.techTree.isUnlocked('void_energy_extraction')) {
+                const emp = this.owner.weapons.get('emp');
+                if (emp instanceof EMPWeapon) emp.setCooldown(0);
+            }
+        }
+    }
+
+    public override canFire(): boolean {
+        return !this.active && this.getCooldown() <= 0;
     }
 
     public override update(dt: number): void {
@@ -48,16 +62,16 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
         if (this.timeLeft <= 0) {
             this.exitVoid(World.instance);
         }
+        if (this.owner instanceof PlayerEntity && this.owner.techTree.isUnlocked('void_energy_extraction')) {
+            const laser = this.owner.weapons.get('laser');
+            if (laser instanceof LaserWeapon) laser.instantCooldown();
+        }
     }
 
     private exitVoid(world: World, keepCooldown = true): void {
         this.active = false;
         this.timeLeft = 0;
         this.setCooldown(this.getMaxCooldown());
-
-        // 恢复之前的无敌状态,不覆盖其他来源
-        world.player.invincible = this.prevInvincible;
-        this.prevInvincible = false;
 
         if (this.mask) {
             this.mask.end();
@@ -68,6 +82,28 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
             const used = this.getMaxCooldown() - this.getCooldown();
             const refund = 0;
             this.setCooldown(Math.max(0, this.getMaxCooldown() - Math.max(used, refund)));
+        }
+
+        const owner = this.owner;
+        if (!(owner instanceof PlayerEntity)) return;
+
+        // 恢复之前的无敌状态,不覆盖其他来源
+        world.player.invincible = this.prevInvincible;
+        this.prevInvincible = false;
+
+        const box = this.owner.boxRadius + this.radius;
+        for (const mob of world.mobs) {
+            if (mob.isDead || !pointInCircleVec2(this.owner.pos, mob.pos, box + mob.boxRadius)) continue;
+            mob.onDeath(world);
+        }
+
+        if (owner.techTree.isUnlocked('void_disturbance')) {
+            const emp = owner.weapons.get('emp');
+            if (emp) {
+                const cd = emp.getCooldown();
+                emp.tryFire(world);
+                emp.setCooldown(cd);
+            }
         }
     }
 
@@ -81,6 +117,10 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
 
     public override getMaxCooldown(): number {
         return this.active ? this.duration : super.getMaxCooldown();
+    }
+
+    public trueMaxCooldown(): number {
+        return super.getMaxCooldown();
     }
 
     public override getDisplayName(): string {

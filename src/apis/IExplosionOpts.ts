@@ -1,5 +1,5 @@
 export type ExplosionOpts = {
-    visionRadius?: number;        // 视觉半径
+    explosionRadius?: number;        // 视觉半径
     ring?: boolean;
     screenFlash?: boolean;
     // 摄像机震动强度
@@ -8,4 +8,5 @@ export type ExplosionOpts = {
     sparks?: number;
     fastSparks?: number,
     damage?: number;        // AoE 伤害
+    important?: boolean
 };

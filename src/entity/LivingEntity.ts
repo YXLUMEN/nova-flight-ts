@@ -1,13 +1,13 @@
 import {Entity} from "./Entity.ts";
-import type {Vec2} from "../math/Vec2.ts";
+import type {MutVec2} from "../math/MutVec2.ts";
 import type {World} from "../World.ts";
 import {clamp} from "../math/math.ts";
 
 export abstract class LivingEntity extends Entity {
-    private readonly maxHealth: number;
+    private maxHealth: number;
     private health: number;
 
-    protected constructor(pos: Vec2, radius: number, health: number) {
+    protected constructor(pos: MutVec2, radius: number, health: number) {
         super(pos, radius);
 
         this.maxHealth = health;
@@ -21,6 +21,10 @@ export abstract class LivingEntity extends Entity {
 
     public getMaxHealth(): number {
         return this.maxHealth;
+    }
+
+    public setMaxHealth(value: number) {
+        this.maxHealth = clamp(value, 0, 256);
     }
 
     public getHealth() {

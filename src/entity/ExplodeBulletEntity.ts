@@ -1,20 +1,20 @@
-import {ProjectileEntity} from "../ProjectileEntity.ts";
-import {BombWeapon} from "../../weapon/BombWeapon.ts";
-import type {World} from "../../World.ts";
-import type {Vec2} from "../../math/Vec2.ts";
-import {Entity} from "../Entity.ts";
-import {PI2} from "../../math/math.ts";
-import type {ExplosionOpts} from "../../apis/IExplosionOpts.ts";
+import {ProjectileEntity} from "./ProjectileEntity.ts";
+import {BombWeapon} from "../weapon/BombWeapon.ts";
+import type {World} from "../World.ts";
+import type {MutVec2} from "../math/MutVec2.ts";
+import {Entity} from "./Entity.ts";
+import {PI2} from "../math/math.ts";
+import type {ExplosionOpts} from "../apis/IExplosionOpts.ts";
 
 export class ExplodeBulletEntity extends ProjectileEntity {
     private readonly explosionOpts: ExplosionOpts
 
-    public constructor(pos: Vec2, vel: Vec2, owner: Entity, damage: number, radius: number, explosionOpts: ExplosionOpts = {}) {
+    public constructor(pos: MutVec2, vel: MutVec2, owner: Entity, damage: number, radius: number, explosionOpts: ExplosionOpts = {}) {
         super(pos, vel, owner, damage, radius);
 
         this.explosionOpts = {
             damage: damage,
-            visionRadius: radius,
+            explosionRadius: radius,
             ...explosionOpts
         }
     }
@@ -32,7 +32,7 @@ export class ExplodeBulletEntity extends ProjectileEntity {
         this.onDeath(world);
 
         const center = this.pos.clone();
-        BombWeapon.applyBombDamage(world, center, this.explosionOpts.visionRadius!, this.explosionOpts.damage!);
+        BombWeapon.applyBombDamage(world, center, this.explosionOpts.explosionRadius!, this.explosionOpts.damage!);
         world.events.emit('bomb-detonate', {
             pos: center,
             ...this.explosionOpts
@@ -40,7 +40,7 @@ export class ExplodeBulletEntity extends ProjectileEntity {
     }
 
     public static spawnExplodeBullet(
-        world: World, pos: Vec2, vel: Vec2,
+        world: World, pos: MutVec2, vel: MutVec2,
         own: Entity, damage: number, radius: number,
         explosionOpts?: ExplosionOpts
     ): void {

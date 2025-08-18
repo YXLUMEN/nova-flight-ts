@@ -58,3 +58,21 @@ export function throttleTimeOut<T extends (...args: any[]) => any>(func: T, wait
 export function isMobile() {
     return /Mobile|Android|iPhone/.test(navigator.userAgent);
 }
+
+export function groupBy<T>(arr: T[], keyFn: (t: T) => string) {
+    const m = new Map<string, T[]>();
+    for (const item of arr) {
+        const k = keyFn(item);
+        if (!m.has(k)) m.set(k, []);
+        m.get(k)!.push(item);
+    }
+    return m;
+}
+
+export function appendChildren(parentEle: HTMLElement | DocumentFragment, ...children: HTMLElement[]): void {
+    children.forEach(item => parentEle.append(item));
+}
+
+export function isNonEmptyString(v: unknown): v is string {
+    return typeof v === 'string' && v.trim().length > 0;
+}

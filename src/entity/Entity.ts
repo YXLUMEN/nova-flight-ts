@@ -1,41 +1,45 @@
-import type {Vec2} from "../math/Vec2.ts";
-import type {Status} from "../status/Status.ts";
-import {SlowStatus} from "../status/SlowStatus.ts";
-import type {World} from "../World.ts";
+import {type MutVec2} from "../math/MutVec2.ts";
+import {type Status} from "../status/Status.ts";
+import {type World} from "../World.ts";
+import {Vec2} from "../math/Vec2.ts";
 
 export abstract class Entity {
-    public pos: Vec2;
-    public boxRadius: number;
+    private readonly _pos: MutVec2;
+    private readonly _boxRadius: number;
 
     public speed: number = 0;
-    public speedMul: number = 1;
 
     private statuses: Status[] = [];
 
     protected dead: boolean;
 
-    protected constructor(pos: Vec2, boxRadius: number) {
-        this.pos = pos;
-        this.boxRadius = boxRadius;
+    protected constructor(pos: MutVec2, boxRadius: number) {
+        this._pos = pos;
+        this._boxRadius = boxRadius;
         this.dead = false;
     }
 
-    public update(_world: World, dt: number): void {
-        this.updateStatuses(dt);
+    public update(world: World, dt: number): void {
+        this.updateStatuses(world, dt);
     };
 
     public addStatus(status: Status) {
         this.statuses.push(status);
     }
 
-    public updateStatuses(dt: number) {
+    public updateStatuses(world: World, dt: number) {
         for (const s of this.statuses) {
-            s.update(this, dt);
+            s.update(world, this, dt);
         }
         this.statuses = this.statuses.filter(s => !s.expired);
-        if (!this.statuses.some(s => s instanceof SlowStatus)) {
-            this.speedMul = 1;
-        }
+    }
+
+    public hasStatus(tag: string): boolean {
+        return this.statuses.some(s => s.getTag() === tag);
+    }
+
+    public getStatus(tag: string): Status | undefined {
+        return this.statuses.find(s => s.getTag() === tag);
     }
 
     public onDeath(_world: World): void {
@@ -44,6 +48,18 @@ export abstract class Entity {
 
     public get isDead(): boolean {
         return this.dead;
+    }
+
+    public get pos(): MutVec2 {
+        return this._pos;
+    }
+
+    public getPos(): Vec2 {
+        return Vec2.formVec(this._pos);
+    }
+
+    public get boxRadius(): number {
+        return this._boxRadius;
     }
 
     public abstract render(ctx: CanvasRenderingContext2D): void;

@@ -1,6 +1,7 @@
 import {Entity} from "./Entity.ts";
-import type {Vec2} from "../math/Vec2.ts";
+import type {MutVec2} from "../math/MutVec2.ts";
 import {World} from "../World.ts";
+import type {Vec2} from "../math/Vec2.ts";
 
 export abstract class ProjectileEntity extends Entity {
     public color = "#8cf5ff";
@@ -9,10 +10,10 @@ export abstract class ProjectileEntity extends Entity {
 
     private vel: Vec2;
 
-    public constructor(pos: Vec2, vel: Vec2, owner: Entity, damage: number, radius: number) {
+    public constructor(pos: MutVec2, vel: Vec2, owner: Entity, damage: number, radius: number) {
         super(pos.clone(), radius);
 
-        this.vel = vel.clone();
+        this.vel = vel;
         this.damage = damage;
         this.owner = owner;
     }

@@ -1,5 +1,5 @@
 import type {Effect} from "./Effect.ts";
-import {Vec2} from "../math/Vec2.ts";
+import {MutVec2} from "../math/MutVec2.ts";
 
 export class LaserBeamEffect implements Effect {
     public alive = true;
@@ -7,8 +7,8 @@ export class LaserBeamEffect implements Effect {
     private readonly color: string;
     private readonly baseWidth: number;
 
-    private start = new Vec2(0, 0);
-    private end = new Vec2(0, 0);
+    private readonly start = new MutVec2(0, 0);
+    private readonly end = new MutVec2(0, 0);
     private t = 0;
 
     constructor(color: string, baseWidth: number) {
@@ -16,7 +16,7 @@ export class LaserBeamEffect implements Effect {
         this.color = color;
     }
 
-    public set(start: Vec2, end: Vec2) {
+    public set(start: MutVec2, end: MutVec2) {
         this.start.x = start.x;
         this.start.y = start.y;
         this.end.x = end.x;
@@ -29,7 +29,6 @@ export class LaserBeamEffect implements Effect {
     }
 
     public update(dt: number) {
-        // 若一段时间未刷新则移除
         this.t += dt;
         if (this.t > 0.15) this.alive = false;
     }

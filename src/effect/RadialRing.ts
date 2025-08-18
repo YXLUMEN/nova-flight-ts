@@ -1,13 +1,14 @@
-import type {Vec2} from "../math/Vec2.ts";
 import type {Effect} from "./Effect.ts";
+import type {Vec2} from "../math/Vec2.ts";
 
 export class RadialRing implements Effect {
     public alive = true;
-    public center: Vec2;
-    public r0: number;
-    public r1: number;
-    public life: number;
-    public color: string;
+
+    private readonly center: Vec2;
+    private readonly r0: number;
+    private readonly r1: number;
+    private readonly life: number;
+    private readonly color: string;
 
     private t = 0;
 

@@ -1,11 +1,11 @@
-import {Vec2} from "../../math/Vec2.ts";
-import {MobEntity} from "../MobEntity.ts";
+import {MutVec2} from "../math/MutVec2.ts";
+import {MobEntity} from "./MobEntity.ts";
 
 export class BaseEnemy extends MobEntity {
     public override speed = 110;
     public color = '#ff6b6b';
 
-    constructor(pos: Vec2, health: number, worth: number) {
+    constructor(pos: MutVec2, health: number, worth: number) {
         super(pos, 16, health, worth);
     }
 

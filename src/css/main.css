@@ -16,14 +16,30 @@ canvas {
 
 .overlay {
     position: fixed;
-    left: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     right: 0;
     top: 0;
-    padding: 10px 14px;
-    color: #cfe3ff;
-    font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.overlay.hidden {
+    display: none;
+}
+
+.help {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    margin: 10% 25%;
+    background-color: #fff;
+    white-space: pre-wrap;
+    z-index: 50;
     pointer-events: none;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, .4);
+}
+
+.help.hidden {
+    display: none;
 }
 
 .action-bar {

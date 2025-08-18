@@ -4,11 +4,53 @@
     <meta charset="UTF-8"/>
     <title>小游戏</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <link rel="stylesheet" href="/src/css/style.css"/>
+    <link rel="stylesheet" href="/src/css/main.css"/>
+    <link rel="stylesheet" href="/src/css/tech.css"/>
 </head>
 <body>
+<div class="help hidden" id="help">
+    1. 按 M 显示此教程;
+    2. wasd/方向键,鼠标/屏幕滑动: 移动;
+    3. 鼠标点击/按下空格 开火, 或者按下 T 键自动开火;
+    4. 数字键 1 释放炸弹, 2 释放EMP, 3 切换激光, 4 遁入虚空;
+    5. 按 G 显示科技树;
+    6. 按 Esc/P 切换暂停;
+    7. 游戏结束后, 按 Enter 重新开始;
+    8. 按 R 切换主武器;
+</div>
+
 <canvas id="game"></canvas>
-<div class="overlay" id="ui"></div>
+
+<div class="tech-shell hidden" id="tech-shell">
+    <div class="player-money" id="player-money">点数: 0</div>
+    <div class="tech-tree" id="tree">
+        <div class="viewport" id="viewport"></div>
+    </div>
+    <aside class="details" id="details">
+        <div class="toolbar">
+            <div class="legend">
+                <span class="sample"></span>前置
+                <span class="sample req"></span>已达成前置
+                <span class="sample conflict"></span>冲突
+            </div>
+        </div>
+        <div>
+            <h2 id="d-title">选择一个节点</h2>
+        </div>
+        <div>
+            <div class="list" id="d-meta"></div>
+        </div>
+        <div>
+            <button class="action primary" id="d-unlock" disabled>解锁</button>
+        </div>
+    </aside>
+</div>
+
+<div class="overlay hidden" id="ui">
+    <div class="skill" id="pause-play">Pause/Play</div>
+    <div class="skill" id="tech-tree">Tech Tree</div>
+    <div class="skill" id="restart">Restart</div>
+</div>
 <div class="action-bar hidden" id="action-bar">
     <div class="skill" id="bomb">Bomb</div>
     <div class="skill" id="emp">EMP</div>

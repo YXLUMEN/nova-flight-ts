@@ -1,9 +1,13 @@
 import {World} from "./World.ts";
+import {MutVec2} from "./math/MutVec2.ts";
 import {Vec2} from "./math/Vec2.ts";
+import {WorldConfig} from "./configs/WorldConfig.ts";
 
 export class Camera {
-    private offset = new Vec2(0, 0);
-    private velocity = new Vec2(0, 0);
+    private offset = new MutVec2(0, 0);
+    private velocity = new MutVec2(0, 0);
+    private viewOffsetCache = new MutVec2(0, 0);
+    private uiOffsetCache = new MutVec2(0, 0);
 
     private deadZoneRadius = 30;
     private followSpeed = 2400;
@@ -14,13 +18,13 @@ export class Camera {
     private traumaPower = 2;       // 非线性放大, 常用 2 或 3
     private shakeDecay = 0.8;      // 每秒衰减量
     private maxShake = 48;         // 最大像素抖动
-    private shakeOffset = new Vec2(0, 0);
+    private shakeOffset = new MutVec2(0, 0);
 
     private uiMaxDrift = 64;      // UI 最大漂移像素(镜头快速移动时)
     private uiShakeFactor = 0.5;
 
     public update(target: Vec2, dt: number) {
-        this.follow(target, dt);
+        if (WorldConfig.enableCameraOffset) this.follow(target, dt);
         this.updateShake(dt);
     }
 
@@ -29,12 +33,22 @@ export class Camera {
         this.shakeTrauma = Math.min(1, this.shakeTrauma + amount);
     }
 
-    public get cameraOffset(): Vec2 {
-        return this.offset.clone();
+    public get cameraOffset(): MutVec2 {
+        return this.offset;
     }
 
-    public get viewOffset(): Vec2 {
-        return this.offset.add(this.shakeOffset);
+    public getCameraOffset(): Vec2 {
+        return Vec2.formVec(this.offset);
+    }
+
+    public get viewOffset(): MutVec2 {
+        this.viewOffsetCache.x = this.offset.x + this.shakeOffset.x;
+        this.viewOffsetCache.y = this.offset.y + this.shakeOffset.y;
+        return this.viewOffsetCache;
+    }
+
+    public getViewOffset(): Vec2 {
+        return Vec2.formVec(this.viewOffset);
     }
 
     public get viewRect() {
@@ -49,7 +63,7 @@ export class Camera {
         };
     }
 
-    public get uiOffset(): Vec2 {
+    public get uiOffset(): MutVec2 {
         // 基于相机速度方向的微漂移
         const vx = this.velocity.x, vy = this.velocity.y;
         const speed = Math.hypot(vx, vy);
@@ -62,13 +76,16 @@ export class Camera {
             dy = -(vy / speed) * s;
         }
 
-        return new Vec2(
-            dx + this.shakeOffset.x * this.uiShakeFactor,
-            dy + this.shakeOffset.y * this.uiShakeFactor
-        );
+        this.uiOffsetCache.x = dx + this.shakeOffset.x * this.uiShakeFactor;
+        this.uiOffsetCache.y = dy + this.shakeOffset.y * this.uiShakeFactor;
+        return this.uiOffsetCache;
     }
 
-    private follow(target: Vec2, dt: number) {
+    public getUiOffset(): Vec2 {
+        return Vec2.formVec(this.uiOffsetCache);
+    }
+
+    private follow(target: Vec2, dt: number): void {
         if (!this.isOutsideDeadZone(target)) return;
 
         const desired = new Vec2(target.x - World.W / 2, target.y - World.H / 2);

@@ -4,6 +4,12 @@ import {createCleanObj, deepFreeze} from "../utils/uit.ts";
 import {randInt} from "../math/math.ts";
 import {spawnBase, spawnBaseS, spawnGun, spawnLineBase} from "../utils/PresetsSpawn.ts";
 
+const p0: PhaseConfig = deepFreeze(createCleanObj({
+    name: "P0",
+    duration: 4,
+    rules: []
+}));
+
 const p1: PhaseConfig = deepFreeze(createCleanObj({
     name: "P1",
     duration: 120,
@@ -46,13 +52,13 @@ const p4: PhaseConfig = deepFreeze(createCleanObj({
     onEnter: ({world}) => world.events.emit('stage-enter', {name: 'P4'}),
     rules: [
         {
-            every: 0.6,
+            every: 0.7,
             jitter: 0.4,
             factory: spawnBaseS(110, randInt(3, 6), 3, '#ff2121'),
-            cap: 32,
+            cap: 46,
         },
-        {every: 1.2, jitter: 0.5, factory: spawnGun(100, 2, 2), cap: 48},
-        {every: 2.0, jitter: 0.35, factory: spawnLineBase(6, 72, 140)},
+        {every: 1.2, jitter: 0.5, factory: spawnGun(100, 2, 2), cap: 32},
+        {every: 3.0, jitter: 0.35, factory: spawnLineBase(6, 72, 120)},
     ],
 }));
 
@@ -61,13 +67,14 @@ const p5: PhaseConfig = deepFreeze(createCleanObj({
     onEnter: ({world}) => world.events.emit('stage-enter', {name: 'P5'}),
     rules: [
         {
-            every: 0.4,
+            every: 0.5,
             jitter: 0.4,
             factory: spawnBaseS(randInt(90, 160), randInt(8, 16), 10, '#910000'),
+            cap: 64,
         },
-        {every: 0.9, jitter: 0.5, factory: spawnGun(80, 6), cap: 64},
+        {every: 1.0, jitter: 0.5, factory: spawnGun(80, 6), cap: 58},
         {every: 4.0, jitter: 0.35, factory: spawnLineBase(6, 64, 140, 4, 2)},
     ],
 }));
 
-export const M_STAGE = new Stage([p1, p2, p3, p4, p5]);
+export const M_STAGE = new Stage([p0, p1, p2, p3, p4, p5]);

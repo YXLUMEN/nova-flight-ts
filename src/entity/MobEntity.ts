@@ -1,15 +1,14 @@
 import {LivingEntity} from "./LivingEntity.ts";
-import {Vec2} from "../math/Vec2.ts";
+import {MutVec2} from "../math/MutVec2.ts";
 import {World} from "../World.ts";
-import {Particle} from "../effect/Particle.ts";
 import {rand} from "../math/math.ts";
-import {ImmutVec2} from "../math/ImmutVec2.ts";
+import {EMCStatus} from "../status/EMCStatus.ts";
 
 export abstract class MobEntity extends LivingEntity {
     protected readonly worth: number;
     protected t = Math.random() * 1000;
 
-    protected constructor(pos: Vec2, radius: number, health: number, worth: number) {
+    protected constructor(pos: MutVec2, radius: number, health: number, worth: number) {
         super(pos, radius, health);
         this.worth = worth;
     }
@@ -17,7 +16,9 @@ export abstract class MobEntity extends LivingEntity {
     public override update(world: World, dt: number) {
         super.update(world, dt);
 
-        dt *= this.speedMul;
+        const emc = this.getStatus('EMC');
+        if (emc instanceof EMCStatus) dt *= emc.factor;
+
         this.t += dt;
         this.pos.y += this.speed * dt;
         this.pos.x += Math.sin(this.t * 3) * 40 * dt;
@@ -28,24 +29,22 @@ export abstract class MobEntity extends LivingEntity {
     public override onDamage(world: World, damage: number) {
         super.onDamage(world, damage);
 
-        world.addEffect(new Particle(
-            this.pos.clone(), ImmutVec2.ZERO, rand(0.6, 0.8), rand(4, 6),
-            "#ffaa33", "#ff5454", 0.6, 80
-        ));
+        world.spawnParticle(this.pos, new MutVec2(0, 0), rand(0.6, 0.8), rand(4, 6),
+            "#ffaa33", "#ff5454", 0.6, 80);
     }
 
     public override onDeath(world: World): void {
         super.onDeath(world);
 
-        const pos = this.pos.clone();
         for (let i = 0; i < 4; i++) {
             const a = rand(0, Math.PI * 2);
             const speed = rand(80, 180);
-            const vel = new Vec2(Math.cos(a) * speed, Math.sin(a) * speed);
-            world.addEffect(new Particle(
-                pos.clone(), vel, rand(0.6, 0.8), rand(4, 6),
+            const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
+
+            world.spawnParticle(
+                this.pos, vel, rand(0.6, 0.8), rand(4, 6),
                 "#ffaa33", "#ff5454", 0.6, 80
-            ));
+            );
         }
     }
 

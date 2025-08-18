@@ -1,22 +1,24 @@
 import type {Entity} from "../entity/Entity.ts";
+import type {World} from "../World.ts";
 
 export abstract class Status {
-    protected duration: number;
+    protected readonly duration: number;
     protected elapsed = 0;
 
     protected constructor(duration: number) {
         this.duration = duration;
     }
 
-    public update(entity: Entity, dt: number) {
+    public update(world: World, entity: Entity, dt: number) {
         this.elapsed += dt;
-        this.apply(entity, dt);
+        this.apply(world, entity, dt);
     }
 
     public get expired() {
         return this.elapsed >= this.duration;
     }
 
-    // 子类实现具体效果
-    protected abstract apply(entity: Entity, dt: number): void;
+    public abstract getTag(): string;
+
+    protected abstract apply(world: World, entity: Entity, dt: number): void;
 }

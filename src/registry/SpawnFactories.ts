@@ -1,10 +1,10 @@
-import {Vec2} from "../math/Vec2.ts";
+import {MutVec2} from "../math/MutVec2.ts";
 import type {MobEntity} from "../entity/MobEntity.ts";
 import type {MobFactory, SamplerKind, SpawnCtx, TopSpawnOpts} from "../apis/IStage.ts";
 import {World} from "../World.ts";
 import {rand} from "../math/math.ts";
 
-type Ctor<T> = new (pos: Vec2, ...args: any[]) => T;
+type Ctor<T> = new (pos: MutVec2, ...args: any[]) => T;
 
 // 顶部随机生成
 function spawnTopRandomCtor<T extends MobEntity>(
@@ -14,13 +14,12 @@ function spawnTopRandomCtor<T extends MobEntity>(
 ): MobFactory {
     return (ctx) => {
         const x = rand(24, World.W - 24);
-        const mob = new C(new Vec2(x, -30), ...args);
+        const mob = new C(new MutVec2(x, -30), ...args);
         init?.(mob, ctx);
         return mob;
     };
 }
 
-// 顶部随机生成,均匀分布
 function spawnTopRandomCtorS<T extends MobEntity>(
     C: Ctor<T>,
     args: readonly unknown[] = [],
@@ -96,7 +95,7 @@ function spawnTopRandomCtorS<T extends MobEntity>(
         const minX = margin;
         const maxX = World.W - margin;
         const x = sampleX(minX, maxX);
-        const mob = new C(new Vec2(x, -30), ...args);
+        const mob = new C(new MutVec2(x, -30), ...args);
         init?.(mob as T, ctx);
         return mob;
     };
@@ -114,7 +113,7 @@ function spawnLineCtor<T extends MobEntity>(
         const startX = rand(24, World.W - 24 - gap * (count - 1));
         const arr: MobEntity[] = [];
         for (let i = 0; i < count; i++) {
-            const pos = new Vec2(startX + i * gap, startY);
+            const pos = new MutVec2(startX + i * gap, startY);
             const mob = new C(pos, ...args);
             init?.(mob, i, ctx);
             arr.push(mob);

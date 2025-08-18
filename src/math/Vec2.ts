@@ -1,23 +1,25 @@
-import type {IVec2} from "./IVec2.ts";
+import type {MutVec2} from "./MutVec2.ts";
 
-export class Vec2 implements IVec2 {
-    public x: number;
-    public y: number;
+export class Vec2 {
+    public static readonly ZERO = new Vec2(0, 0);
+
+    public readonly x: number;
+    public readonly y: number;
 
     constructor(x: number, y: number) {
-        this.y = y;
         this.x = x;
+        this.y = y;
     }
 
-    public clone(): Vec2 {
+    public clone() {
         return new Vec2(this.x, this.y);
     }
 
-    public add(v: Vec2): Vec2 {
+    public add(v: Vec2) {
         return new Vec2(this.x + v.x, this.y + v.y);
     }
 
-    public sub(v: Vec2): Vec2 {
+    public sub(v: Vec2) {
         return new Vec2(this.x - v.x, this.y - v.y);
     }
 
@@ -25,26 +27,24 @@ export class Vec2 implements IVec2 {
         return new Vec2(this.x * k, this.y * k);
     }
 
-    public scale(s: number): Vec2 {
+    public scale(s: number) {
         return new Vec2(this.x * s, this.y * s);
     }
 
-    public lengthSq(): number {
+    public lengthSq() {
         return this.x * this.x + this.y * this.y;
     }
 
-    public length(): number {
+    public length() {
         return Math.sqrt(this.lengthSq());
     }
 
-    public normalize(): Vec2 {
+    public normalize() {
         const len = this.length();
-        return len === 0 ? new Vec2(0, 0) : this.scale(1 / len);
+        return len === 0 ? Vec2.ZERO : this.scale(1 / len);
     }
 
-    public static distSq(a: Vec2, b: Vec2): number {
-        const dx = a.x - b.x;
-        const dy = a.y - b.y;
-        return dx * dx + dy * dy;
+    public static formVec(vel: MutVec2 | Vec2): Vec2 {
+        return new Vec2(vel.x, vel.y);
     }
 }

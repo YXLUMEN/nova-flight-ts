@@ -1,38 +1,53 @@
-import type {Vec2} from "../math/Vec2.ts";
+import type {MutVec2} from "../math/MutVec2.ts";
 import type {Effect} from "./Effect.ts";
+import {PI2} from "../math/math.ts";
 
 export class Particle implements Effect {
     public alive = true;
 
-    public pos: Vec2;
-    public vel: Vec2;
-    public life: number;
-    public size: number;
-    public colorFrom: string;
-    public colorTo: string;
-    public drag = 0.0;
-    public gravity = 0.0;
+    private pos: MutVec2;
+    private vel: MutVec2;
+    private life: number;
+    private size: number;
+    private colorFrom: string;
+    private colorTo: string;
+    private drag;
+    private gravity;
 
     private t = 0;
 
-    constructor(
-        pos: Vec2,
-        vel: Vec2,
-        life: number,
-        size: number,
-        colorFrom: string,
-        colorTo: string,
-        drag = 0.0,
-        gravity = 0.0
+    public constructor(
+        pos: MutVec2, vel: MutVec2,
+        life: number, size: number,
+        colorFrom: string, colorTo: string,
+        drag = 0.0, gravity = 0.0
     ) {
+        this.vel = vel;
+        this.pos = pos;
         this.gravity = gravity;
         this.drag = drag;
         this.colorTo = colorTo;
         this.colorFrom = colorFrom;
         this.size = size;
         this.life = life;
-        this.vel = vel;
+    }
+
+    public reset(
+        pos: MutVec2, vel: MutVec2,
+        life: number, size: number,
+        colorFrom: string, colorTo: string,
+        drag = 0.0, gravity = 0.0
+    ) {
         this.pos = pos;
+        this.vel = vel;
+        this.life = life;
+        this.size = size;
+        this.colorFrom = colorFrom;
+        this.colorTo = colorTo;
+        this.drag = drag;
+        this.gravity = gravity;
+        this.t = 0;
+        this.alive = true;
     }
 
     public update(dt: number) {
@@ -56,7 +71,7 @@ export class Particle implements Effect {
         g.addColorStop(1, this.colorTo);
         ctx.fillStyle = g;
         ctx.beginPath();
-        ctx.arc(this.pos.x, this.pos.y, r, 0, Math.PI * 2);
+        ctx.arc(this.pos.x, this.pos.y, r, 0, PI2);
         ctx.fill();
         ctx.globalAlpha = 1;
     }

@@ -4,8 +4,8 @@ import {clamp} from "../math/math.ts";
 
 export abstract class Weapon {
     public readonly owner: Entity;
+    public damage: number;
 
-    private readonly damage: number;
     private maxCooldown: number;
     private cooldown: number = 0;
 
@@ -19,7 +19,12 @@ export abstract class Weapon {
         if (this.cooldown > 0) this.setCooldown(this.cooldown - delta);
     }
 
+    // 不会检查冷却
     public abstract tryFire(world: World): void;
+
+    public canFire(): boolean {
+        return this.getCooldown() <= 0;
+    }
 
     public getDamage(): number {
         return this.damage;
@@ -30,7 +35,7 @@ export abstract class Weapon {
     }
 
     public setMaxCooldown(value: number) {
-        this.maxCooldown = clamp(value, 0, 256)
+        this.maxCooldown = clamp(value, 0, 256);
     }
 
     public getCooldown(): number {

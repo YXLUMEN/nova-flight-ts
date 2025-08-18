@@ -1,8 +1,8 @@
 import {LaserBeamEffect} from '../effect/LaserBeamEffect.ts';
 import {Weapon} from './Weapon.ts';
 import {World} from '../World.ts';
-import {Vec2} from '../math/Vec2.ts';
-import {lineCircleHit} from '../math/math.ts';
+import {MutVec2} from '../math/MutVec2.ts';
+import {clamp, lineCircleHit} from '../math/math.ts';
 import type {Entity} from "../entity/Entity.ts";
 import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
 
@@ -13,18 +13,14 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
 
     // 过热参数
     private heat = 0;
-    private readonly maxHeat = 8.0;        // 满热前可持续秒数
+    public maxHeat = 8.0;        // 满热前可持续秒数
     private readonly drainRate = 1.2;     // 开火每秒升温
-    private readonly coolRate = 0.6;      // 松开每秒降温
+    public coolRate = 0.6;      // 松开每秒降温
 
     private active = false;
     private overheated = false;
 
-    // 伤害与形态
-    private readonly dps = 1;              // 每秒总伤害
-    private readonly tick = 0.01;        // 伤害抽样间隔,避免每帧多次扣血
-
-    private readonly range = 720;        // 光束长度
+    private readonly range = World.H;        // 光束长度
     private readonly width = 6;            // 视觉宽度
 
     // 缓存一个短寿命的光束效果
@@ -36,6 +32,10 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
 
     public override tryFire(_world: World): void {
         this.active = this.active ? false : !this.overheated;
+    }
+
+    public override canFire(): boolean {
+        return true;
     }
 
     public override update(dt: number): void {
@@ -73,13 +73,13 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
         // 光束端点
         const world = World.instance;
         const start = this.owner.pos;
-        const end = new Vec2(start.x, start.y - this.range);
+        const end = new MutVec2(start.x, start.y - this.range);
 
         for (const mob of world.mobs) {
             if (mob.isDead) continue;
             if (!lineCircleHit(start.x, start.y, end.x, end.y, mob.pos.x, mob.pos.y, mob.boxRadius ?? 16)) continue;
-            // 将连续伤害离散为每 tick 的伤害包
-            const damage = Math.max(1, Math.round((this.dps * this.tick) | 0));
+
+            const damage = Math.max(1, Math.round(this.damage | 0));
             mob.onDamage(world, damage);
             if (mob.isDead) world.events.emit('mob-killed', mob);
         }
@@ -91,11 +91,16 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
         }
         this.beamFx.set(start, end);
 
-        world.camera.addShake(0.04, 0.1);
+        world.camera.addShake(0.04, 0.2);
+    }
+
+    public instantCooldown() {
+        this.heat = 0;
+        this.overheated = false;
     }
 
     public override setCooldown(value: number) {
-        this.heat = value;
+        this.heat = clamp(value, 0, this.maxHeat);
     }
 
     public override getCooldown(): number {

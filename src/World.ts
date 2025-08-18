@@ -11,10 +11,16 @@ import {layers} from "./configs/StarfieldConfig.ts";
 import {UI} from "./ui/UI.ts";
 import {STAGE} from "./configs/StageConfig.ts";
 import {DPR, isMobile} from "./utils/uit.ts";
-import {collideCircle} from "./math/math.ts";
-import type {ProjectileEntity} from "./entity/ProjectileEntity.ts";
-import {EdgeGlowEffect} from "./effect/EdgeGlowEffect.ts";
+import {collideEntityCircle} from "./math/math.ts";
+import {type ProjectileEntity} from "./entity/ProjectileEntity.ts";
 import {M_STAGE} from "./configs/MobileConfig.ts";
+import techs from "./configs/tech-data.json";
+import {TechTree} from "./tech_tree/TechTree.ts";
+import {applyTech} from "./tech_tree/apply_tech.ts";
+import {WorldConfig} from "./configs/WorldConfig.ts";
+import type {MutVec2} from "./math/MutVec2.ts";
+import {ParticlePool} from "./effect/ParticlePool.ts";
+import {LaserWeapon} from "./weapon/LaserWeapon.ts";
 
 export class World {
     public static instance: World;
@@ -27,25 +33,28 @@ export class World {
     public readonly camera: Camera = new Camera();
     public readonly events: EventBus = new EventBus();
 
+    public empBurst: number = 0
+
     private last = 0;
+    private fixedDt = WorldConfig.lowPowerMode ? WorldConfig.lowMbps : WorldConfig.mbps;
     private accumulator = 0;
-    private readonly fixedDt = 0.02;
-    private readonly stage = isMobile() ? M_STAGE : STAGE;
 
     private input = new Input(World.canvas);
     public player = new PlayerEntity(this.input);
 
+    private readonly stage = isMobile() ? M_STAGE : STAGE;
     private effects: Effect[] = [];
+    private particlePool: ParticlePool = new ParticlePool(128);
     public mobs: MobEntity[] = [];
     public bullets: ProjectileEntity[] = [];
 
     private starField: StarField = new StarField(128, layers, 8);
 
-    public over = false;
-    public ticking = true;
+    private over = false;
+    private ticking = true;
     private rendering = true;
 
-    constructor() {
+    public constructor() {
         if (World.instance) return World.instance;
 
         this.resize();
@@ -58,9 +67,11 @@ export class World {
     }
 
     public reset() {
-        this.mobs = [];
-        this.bullets = [];
-        this.effects = [];
+        this.mobs.length = 0;
+        this.bullets.length = 0;
+        this.effects.length = 0;
+
+        this.player.techTree.destroy();
         this.player = new PlayerEntity(this.input);
 
         this.over = false;
@@ -74,6 +85,11 @@ export class World {
     public togglePause() {
         if (this.over) return;
         this.ticking = !this.ticking;
+    }
+
+    public toggleTechTree() {
+        const techShell = document.getElementById('tech-shell')!;
+        this.rendering = this.ticking = techShell.classList.toggle('hidden');
     }
 
     public resize() {
@@ -114,13 +130,14 @@ export class World {
         this.mobs.forEach(mob => mob.update(this, dt));
         this.bullets.forEach(b => b.update(this, dt));
         this.effects.forEach(e => e.update(dt));
+        this.particlePool.update(dt);
 
         // 碰撞: 子弹
         for (const bullet of this.bullets) {
             if (bullet.isDead) continue;
 
             if (bullet.owner instanceof MobEntity) {
-                if (this.player.invincible || !collideCircle(this.player, bullet)) continue;
+                if (this.player.invincible || WorldConfig.devMode || !collideEntityCircle(this.player, bullet)) continue;
 
                 this.player.onDamage(this, 1);
                 bullet.onHit(this);
@@ -130,7 +147,7 @@ export class World {
                 }
             } else if (bullet.owner instanceof PlayerEntity) {
                 for (const mob of this.mobs) {
-                    if (mob.isDead || !collideCircle(bullet, mob)) continue;
+                    if (mob.isDead || !collideEntityCircle(bullet, mob)) continue;
 
                     mob.onDamage(this, bullet.damage);
                     bullet.onHit(this);
@@ -139,11 +156,12 @@ export class World {
                 }
             }
         }
+        if (this.empBurst > 0) this.empBurst -= dt;
 
         // 碰撞: 玩家
         for (const mob of this.mobs) {
-            if (mob.isDead || !collideCircle(this.player, mob)) continue;
-            if (this.player.invincible) break;
+            if (this.player.invincible || WorldConfig.devMode) break;
+            if (mob.isDead || !collideEntityCircle(this.player, mob)) continue;
 
             mob.onDeath(this);
             this.player.onDamage(this, 1);
@@ -173,6 +191,15 @@ export class World {
         this.effects.push(effect);
     }
 
+    public spawnParticle(
+        pos: MutVec2, vel: MutVec2,
+        life: number, size: number,
+        colorFrom: string, colorTo: string,
+        drag = 0.0, gravity = 0.0
+    ): void {
+        this.particlePool.spawn(pos.clone(), vel.clone(), life, size, colorFrom, colorTo, drag, gravity);
+    }
+
     public render() {
         if (!this.rendering) return;
 
@@ -182,15 +209,17 @@ export class World {
         this.starField.render(ctx, this.camera);
 
         ctx.save();
-        ctx.translate(-Math.floor(this.camera.viewOffset.x), -Math.floor(this.camera.viewOffset.y));
+        const offset = this.camera.viewOffset;
+        ctx.translate(-Math.floor(offset.x), -Math.floor(offset.y));
 
         // 背景层
         this.drawBackground(ctx);
 
         // 实体
-        this.mobs.forEach((e) => e.render(ctx));
-        this.bullets.forEach((b) => b.render(ctx));
+        this.mobs.forEach(e => e.render(ctx));
+        this.bullets.forEach(b => b.render(ctx));
         this.effects.forEach(e => e.render(ctx));
+        this.particlePool.render(ctx);
 
         if (!this.player.isDead) this.player.render(ctx);
 
@@ -235,11 +264,24 @@ export class World {
         ctx.restore();
     }
 
+    public static initTechTree() {
+        const viewport = document.getElementById('viewport') as HTMLElement;
+        return new TechTree(viewport, techs);
+    }
+
     private registryEvents() {
         this.events.clear();
 
+        this.events.on('unlock-tech', ({id}) => applyTech(this, id));
+
         this.events.on('mob-killed', (event: MobEntity) => {
-            this.player.score += event.getWorth();
+            this.player.addPhaseScore(event.getWorth());
+            if (this.player.techTree.isUnlocked('energy_recovery')) {
+                const laser = this.player.weapons.get('laser');
+                if (laser instanceof LaserWeapon) {
+                    laser.setCooldown(laser.getCooldown() - 0.8);
+                }
+            }
         });
 
         this.events.on('bomb-detonate', (event) => {
@@ -249,34 +291,10 @@ export class World {
             if (flash) this.effects.push(flash);
         });
 
-        this.events.on('emp-detonate', () => {
-            this.effects.push(new ScreenFlash(0.5, 0.18, '#5ec8ff'));
-        });
-
-        this.events.on('stage-enter', ({name}) => {
-            if (name === 'P1') return;
-
-            this.effects.push(new EdgeGlowEffect({
-                color: '#00b973',
-                duration: 0.8,
-                thickness: 16
-            }));
-
-            if (name === 'P2') import('./weapon/EMPWeapon.ts').then(mod => {
-                this.player.addWeapon('emp', new mod.EMPWeapon(this.player));
-            });
-            else if (name === 'P3') import('./weapon/MiniGunWeapon.ts').then(mod => {
-                this.player.addWeapon('mini', new mod.MiniGunWeapon(this.player));
-            });
-            else if (name === 'P4') import('./weapon/LaserWeapon.ts').then(mod => {
-                this.player.addWeapon('laser', new mod.LaserWeapon(this.player));
-            });
-            else if (name === 'P5') import('./weapon/Cannon90Weapon.ts').then(mod => {
-                this.player.addWeapon('90', new mod.Cannon90Weapon(this.player));
-                return import('./weapon/IntoVoidWeapon.ts');
-            }).then(mod => {
-                this.player.addWeapon('void', new mod.IntoVoidWeapon(this.player));
-            });
+        this.events.on('emp-burst', ({duration}) => {
+            if (this.player.techTree.isUnlocked('ele_oscillation')) {
+                this.empBurst = duration;
+            }
         });
     }
 
@@ -288,10 +306,17 @@ export class World {
 
             if (code === "Enter" && this.over) this.reset();
             else if (code === "KeyP" || code === 'Escape') this.togglePause();
+            else if (code === 'KeyG') this.toggleTechTree();
+            else if (code === 'KeyM') {
+                document.getElementById('help')?.classList.toggle('hidden');
+                this.ticking = false;
+            }
 
             // Dev mode
-            if (e.ctrlKey && code === "KeyV") this.player.devMode = this.player.invincible = !this.player.devMode;
-            if (this.player.devMode) this.devMode(code);
+            if (e.ctrlKey && code === "KeyV") {
+                WorldConfig.devMode = !WorldConfig.devMode;
+            }
+            if (WorldConfig.devMode) this.devMode(code);
         });
 
         document.addEventListener('visibilitychange', () => {
@@ -309,30 +334,25 @@ export class World {
     private devMode(code: string) {
         switch (code) {
             case 'KeyK':
-                this.player.score += 10;
-                break;
-            case 'KeyO':
-                import('./weapon/MiniGunWeapon.ts').then(mod => {
-                    this.player.addWeapon('mini', new mod.MiniGunWeapon(this.player));
-                    return import('./weapon/Cannon90Weapon.ts');
-                }).then(mod => {
-                    this.player.addWeapon('90', new mod.Cannon90Weapon(this.player));
-                    return import('./weapon/EMPWeapon.ts')
-                }).then(mod => {
-                    this.player.addWeapon('emp', new mod.EMPWeapon(this.player));
-                    return import('./weapon/LaserWeapon.ts');
-                }).then(mod => {
-                    this.player.addWeapon('laser', new mod.LaserWeapon(this.player));
-                    return import('./weapon/IntoVoidWeapon.ts');
-                }).then(mod => {
-                    this.player.addWeapon('void', new mod.IntoVoidWeapon(this.player));
-                });
+                this.player.addPhaseScore(20);
                 break;
             case 'KeyC':
-                this.mobs = [];
+                this.mobs.length = 0;
                 break;
             case 'KeyH':
                 this.player.setHealth(this.player.getMaxHealth());
+                break
+            case 'KeyO':
+                this.player.techTree.unlockAll(this);
+                break;
         }
+    }
+
+    public get isTicking(): boolean {
+        return this.ticking;
+    }
+
+    public get isOver(): boolean {
+        return this.over;
     }
 }

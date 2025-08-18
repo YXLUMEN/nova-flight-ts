@@ -7,29 +7,31 @@ import {ScreenFlash} from "../effect/ScreenFlash.ts";
 import {clamp} from "../math/math.ts";
 import {Cannon40Weapon} from "../weapon/Cannon40Weapon.ts";
 import {throttleTimeOut} from "../utils/uit.ts";
-import {isBaseWeapon} from "../weapon/IBaseWeapon.ts";
 import {isSpecialWeapon} from "../weapon/ISpecialWeapon.ts";
-import {Vec2} from "../math/Vec2.ts";
-import {ImmutVec2} from "../math/ImmutVec2.ts";
+import {MutVec2} from "../math/MutVec2.ts";
 import {EdgeGlowEffect} from "../effect/EdgeGlowEffect.ts";
+import {TechTree} from "../tech_tree/TechTree.ts";
+import {BaseWeapon} from "../weapon/BaseWeapon.ts";
+import {WorldConfig} from "../configs/WorldConfig.ts";
 
 export class PlayerEntity extends LivingEntity {
     public readonly input: Input;
     public readonly weapons = new Map<string, Weapon>();
+    public readonly techTree: TechTree = World.initTechTree();
 
     public override speed = 300;
-    public score: number;
     public invincible = false;
-    public devMode = false;
 
     private readonly baseWeapons: Weapon[] = [];
     private currentBaseIndex: number = 0;
+    private phaseScore: number;
+    private score: number = 0;
 
     constructor(input: Input) {
-        super(new Vec2(World.W / 2, World.H - 80), 18, 3);
+        super(new MutVec2(World.W / 2, World.H - 80), 18, 3);
 
         this.input = input;
-        this.score = 0;
+        this.phaseScore = 0;
 
         this.baseWeapons.push(new Cannon40Weapon(this));
         this.weapons.set('40', this.baseWeapons[0]);
@@ -47,7 +49,7 @@ export class PlayerEntity extends LivingEntity {
         if (this.input.isDown("ArrowDown", "KeyS")) dy += 1;
 
         // 指针移动
-        if (this.input.followMouse) {
+        if (WorldConfig.followPointer) {
             this.pos.x += (this.input.pointer.x - this.pos.x) * Math.min(1, dt * 10);
             this.pos.y += (this.input.pointer.y - this.pos.y) * Math.min(1, dt * 10);
         }
@@ -66,38 +68,56 @@ export class PlayerEntity extends LivingEntity {
         }
 
         // 射击
-        if (this.input.isDown("Space") || this.input.shoot) {
-            this.baseWeapons[this.currentBaseIndex].tryFire(world);
+        if (this.input.isDown("Space") || WorldConfig.autoShoot) {
+            const w = this.baseWeapons[this.currentBaseIndex];
+            if (w.canFire()) w.tryFire(world);
         }
 
         for (const w of this.weapons.values()) {
             if (isSpecialWeapon(w)) {
-                if (this.devMode && w.getCooldown() > 0.5) w.setCooldown(0.5);
-                if (this.input.wasPressed(w.bindKey())) w.tryFire(world);
+                if (WorldConfig.devMode && w.getCooldown() > 0.5) w.setCooldown(0.5);
+                if (w.canFire() && this.input.wasPressed(w.bindKey())) w.tryFire(world);
             }
             w.update(dt);
         }
     }
 
     public override onDamage(world: World, damage: number) {
-        super.onDamage(world, damage);
-        this.invincible = true;
-        setTimeout(() => this.invincible = false, 400);
-
-        const center = new ImmutVec2(this.pos.x, this.pos.y);
+        const center = this.getPos();
         BombWeapon.applyBombDamage(world, center, 320, 32);
         world.events.emit('bomb-detonate', {
             pos: center,
-            visionRadius: 320,
+            explosionRadius: 320,
             shake: 0.4,
-            flash: new ScreenFlash(0.2, 0.25, '#ff5151')
+            flash: new ScreenFlash(0.2, 0.25, '#ff5151'),
+            important: true
         });
+
+        if (this.techTree.isUnlocked('ele_shield')) {
+            const emp = this.weapons.get('emp');
+            if (emp && emp.canFire()) {
+                emp.tryFire(world);
+                return;
+            }
+        }
+
+        super.onDamage(world, damage);
+
         if (this.getHealth() === 1) {
             world.addEffect(new EdgeGlowEffect({
                 color: '#ff5151',
                 duration: 5.0,
                 intensity: 0.5
             }));
+        }
+
+        if (this.techTree.isUnlocked('electrical_energy_surges')) {
+            const emp = this.weapons.get('emp');
+            if (emp) {
+                const cd = emp.getCooldown();
+                emp.tryFire(world);
+                emp.setCooldown(cd);
+            }
         }
     }
 
@@ -136,7 +156,7 @@ export class PlayerEntity extends LivingEntity {
     public addWeapon(name: string, weapon: Weapon): void {
         if (this.weapons.has(name)) return;
 
-        if (isBaseWeapon(weapon)) this.baseWeapons.push(weapon);
+        if (weapon instanceof BaseWeapon) this.baseWeapons.push(weapon);
         this.weapons.set(name, weapon);
     }
 
@@ -147,4 +167,33 @@ export class PlayerEntity extends LivingEntity {
     public switchWeapon = throttleTimeOut(() => {
         this.currentBaseIndex = (this.currentBaseIndex + 1) % this.baseWeapons.length;
     }, 200);
+
+    public getPhaseScore() {
+        return this.phaseScore;
+    }
+
+    public getScore() {
+        return this.score;
+    }
+
+    public setPhaseScore(score: number) {
+        this.phaseScore = Math.max(0, score);
+    }
+
+    public addPhaseScore(score: number) {
+        this.setPhaseScore(this.phaseScore + score);
+        this.setScore(this.score + score);
+    }
+
+    public setScore(score: number) {
+        this.score = Math.max(0, score);
+        TechTree.playerScore.textContent = `点数: ${this.score}`;
+    }
+
+    public consumeScore(value: number): boolean {
+        const remain = this.score - value;
+        if (remain < 0) return false;
+        this.setScore(remain);
+        return true;
+    }
 }

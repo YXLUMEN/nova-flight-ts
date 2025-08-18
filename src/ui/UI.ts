@@ -1,7 +1,8 @@
 import type {UIOptions, WeaponUIInfo} from '../apis/IUIInfo.ts';
 import {World} from '../World.ts';
 import type {Weapon} from '../weapon/Weapon.ts';
-import {isBaseWeapon} from "../weapon/IBaseWeapon.ts";
+import {BaseWeapon} from "../weapon/BaseWeapon.ts";
+import {WorldConfig} from "../configs/WorldConfig.ts";
 
 export class UI {
     private readonly world: World;
@@ -29,12 +30,12 @@ export class UI {
         const label = weapon.getDisplayName() ?? key.toUpperCase();
         const color = weapon.getUiColor() ?? '#5ec8ff';
 
-        if (max <= 0 || isBaseWeapon(weapon)) return null;
+        if (max <= 0 || weapon instanceof BaseWeapon) return null;
         return {label, color, cooldown: Math.max(0, cd), maxCooldown: Math.max(0.001, max)};
     }
 
     public render(ctx: CanvasRenderingContext2D) {
-        if (this.world.over) {
+        if (this.world.isOver) {
             UI.renderEndOverlay(ctx);
             return;
         }
@@ -52,11 +53,11 @@ export class UI {
         const uo = this.world.camera.uiOffset;
 
         ctx.translate(uo.x, uo.y);
-        ctx.fillText(`分数: ${player.score}`, x, y);
+        ctx.fillText(`分数: ${player.getPhaseScore()}`, x, y);
         y += 20;
         ctx.fillText(`生命: ${player.getHealth()} / ${player.getMaxHealth()}`, x, y);
         y += 20;
-        if (player.devMode) {
+        if (WorldConfig.devMode) {
             ctx.fillText('已启用dev模式,将不再记录成绩', x, y);
             y += 20;
         }
@@ -81,7 +82,7 @@ export class UI {
 
         this.drawPrimaryWeapons(ctx);
 
-        if (!this.world.ticking) {
+        if (!this.world.isTicking) {
             UI.renderPauseOverlay(ctx);
         }
     }
@@ -105,7 +106,7 @@ export class UI {
 
         ctx.fillStyle = w.getUiColor() ?? '#5ec8ff';
         ctx.globalAlpha = 0.6;
-        ctx.fillRect(anchorX, py, Math.floor(64 * ratio), 2);
+        ctx.fillRect(anchorX, py, (64 * ratio) | 0, 2);
 
         ctx.globalAlpha = 1.0;
         ctx.fillStyle = this.hudColor;
@@ -126,15 +127,15 @@ export class UI {
 
         // 背景槽
         ctx.fillStyle = 'rgba(255,255,255,0.12)';
-        ctx.fillRect(Math.floor(x), Math.floor(y), Math.floor(w), Math.floor(h));
+        ctx.fillRect(x | 0, y | 0, w | 0, h | 0);
 
         // 进度
         ctx.fillStyle = info.color;
-        ctx.fillRect(Math.floor(x), Math.floor(y), Math.floor(w * ratio), Math.floor(h));
+        ctx.fillRect(x | 0, y | 0, (w * ratio) | 0, h | 0);
 
         // 文本标签
         ctx.fillStyle = this.hudColor;
-        ctx.fillText(info.label, Math.floor(x + w + 8), Math.floor(y - 1));
+        ctx.fillText(info.label, (x + w + 8) | 0, Math.floor(y - 1));
     }
 
     private static renderPauseOverlay(ctx: CanvasRenderingContext2D) {
