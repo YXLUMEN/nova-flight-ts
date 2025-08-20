@@ -9,7 +9,7 @@ import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
 import {Particle} from "../effect/Particle.ts";
 
 
-export class BombWeapon extends Weapon implements ISpecialWeapon{
+export class BombWeapon extends Weapon implements ISpecialWeapon {
     public damageRadius = 200;
 
     constructor(owner: Entity) {
@@ -17,10 +17,9 @@ export class BombWeapon extends Weapon implements ISpecialWeapon{
     }
 
     public override tryFire(world: World) {
-        const center = this.owner.pos.clone();
-        BombWeapon.applyBombDamage(world, center, this.damageRadius, this.getDamage());
         world.events.emit('bomb-detonate', {
-            pos: center,
+            pos: this.owner.getPos(),
+            damage: this.getDamage(),
             explosionRadius: this.damageRadius,
             shake: 0.3
         });

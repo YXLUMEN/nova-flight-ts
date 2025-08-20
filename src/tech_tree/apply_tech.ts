@@ -126,5 +126,8 @@ export function applyTech(world: World, id: string) {
             }
             break;
         }
+        case 'explosive_armor':
+            player.onDamageExplosionRadius *= 1.4;
+            break;
     }
 }

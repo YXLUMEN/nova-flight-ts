@@ -1,5 +1,4 @@
 import {ProjectileEntity} from "./ProjectileEntity.ts";
-import {BombWeapon} from "../weapon/BombWeapon.ts";
 import type {World} from "../World.ts";
 import type {MutVec2} from "../math/MutVec2.ts";
 import {Entity} from "./Entity.ts";
@@ -31,10 +30,8 @@ export class ExplodeBulletEntity extends ProjectileEntity {
     public override onHit(world: World): void {
         this.onDeath(world);
 
-        const center = this.pos.clone();
-        BombWeapon.applyBombDamage(world, center, this.explosionOpts.explosionRadius!, this.explosionOpts.damage!);
         world.events.emit('bomb-detonate', {
-            pos: center,
+            pos: this.pos.clone(),
             ...this.explosionOpts
         });
     }

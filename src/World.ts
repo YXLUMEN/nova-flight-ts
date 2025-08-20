@@ -21,6 +21,7 @@ import {WorldConfig} from "./configs/WorldConfig.ts";
 import type {MutVec2} from "./math/MutVec2.ts";
 import {ParticlePool} from "./effect/ParticlePool.ts";
 import {LaserWeapon} from "./weapon/LaserWeapon.ts";
+import type {TimerTask} from "./apis/ITimer.ts";
 
 export class World {
     public static instance: World;
@@ -29,30 +30,32 @@ export class World {
     public static W = 800;
     public static H = 600;
 
-    public readonly ui: UI = new UI(this);
     public readonly camera: Camera = new Camera();
     public readonly events: EventBus = new EventBus();
+    private readonly ui: UI = new UI(this);
+    private readonly input = new Input(World.canvas);
 
-    public empBurst: number = 0
-
+    // ticking
     private last = 0;
-    private fixedDt = WorldConfig.lowPowerMode ? WorldConfig.lowMbps : WorldConfig.mbps;
     private accumulator = 0;
-
-    private input = new Input(World.canvas);
-    public player = new PlayerEntity(this.input);
-
-    private readonly stage = isMobile() ? M_STAGE : STAGE;
-    private effects: Effect[] = [];
-    private particlePool: ParticlePool = new ParticlePool(128);
-    public mobs: MobEntity[] = [];
-    public bullets: ProjectileEntity[] = [];
-
-    private starField: StarField = new StarField(128, layers, 8);
-
     private over = false;
     private ticking = true;
     private rendering = true;
+
+    private time = 0;
+    private nextTimerId = 1;
+    private timers: TimerTask[] = [];
+
+    private readonly stage = isMobile() ? M_STAGE : STAGE;
+    public empBurst: number = 0
+
+    private effects: Effect[] = [];
+    private readonly particlePool: ParticlePool = new ParticlePool(128);
+    private readonly starField: StarField = new StarField(128, layers, 8);
+
+    public player = new PlayerEntity(this.input);
+    public mobs: MobEntity[] = [];
+    public bullets: ProjectileEntity[] = [];
 
     public constructor() {
         if (World.instance) return World.instance;
@@ -64,6 +67,11 @@ export class World {
         this.starField.init(this.camera);
 
         this.loop(0);
+    }
+
+    public static initTechTree() {
+        const viewport = document.getElementById('viewport') as HTMLElement;
+        return new TechTree(viewport, techs);
     }
 
     public reset() {
@@ -89,7 +97,8 @@ export class World {
 
     public toggleTechTree() {
         const techShell = document.getElementById('tech-shell')!;
-        this.rendering = this.ticking = techShell.classList.toggle('hidden');
+        this.rendering = techShell.classList.toggle('hidden');
+        this.ticking = false;
     }
 
     public resize() {
@@ -109,17 +118,15 @@ export class World {
         this.last = ts;
         this.accumulator += dt;
 
-        while (this.accumulator >= this.fixedDt) {
-            this.update(this.fixedDt);
-            this.accumulator -= this.fixedDt;
+        while (this.accumulator >= WorldConfig.mbps) {
+            if (this.ticking) this.update(WorldConfig.mbps);
+            this.accumulator -= WorldConfig.mbps;
         }
         this.render();
-        requestAnimationFrame((t) => this.loop(t));
+        requestAnimationFrame(t => this.loop(t));
     }
 
     public update(dt: number) {
-        if (!this.ticking) return;
-
         this.camera.update(this.player.pos, dt);
         this.starField.update(dt, this.camera);
 
@@ -148,8 +155,12 @@ export class World {
             } else if (bullet.owner instanceof PlayerEntity) {
                 for (const mob of this.mobs) {
                     if (mob.isDead || !collideEntityCircle(bullet, mob)) continue;
+                    if (this.player.techTree.isUnlocked('apfs_discarding_sabot')) {
+                        mob.onDamage(this, bullet.damage + (mob.getMaxHealth() * 0.3) | 0);
+                    } else {
+                        mob.onDamage(this, bullet.damage);
+                    }
 
-                    mob.onDamage(this, bullet.damage);
                     bullet.onHit(this);
                     if (mob.isDead) this.events.emit('mob-killed', mob);
                     break;
@@ -177,14 +188,17 @@ export class World {
         this.effects = this.effects.filter(e => e.alive);
 
         this.input.updateEndFrame();
+
+        this.time += dt;
+        this.processTimers();
     }
 
     public gameOver() {
         this.over = true;
         this.effects.push(new ScreenFlash(1, 0.25, '#ff0000'));
-        setTimeout(() => {
-            this.ticking = false;
-        }, 1000);
+        this.schedule(1, () => {
+            this.ticking = false
+        });
     }
 
     public addEffect(effect: Effect) {
@@ -198,6 +212,185 @@ export class World {
         drag = 0.0, gravity = 0.0
     ): void {
         this.particlePool.spawn(pos.clone(), vel.clone(), life, size, colorFrom, colorTo, drag, gravity);
+    }
+
+    // 二分插入 保持 timers 按 at 升序
+    private insertTimer(t: TimerTask) {
+        let lo = 0, hi = this.timers.length;
+        while (lo < hi) {
+            const mid = (lo + hi) >>> 1;
+            if (this.timers[mid].at <= t.at) lo = mid + 1;
+            else hi = mid;
+        }
+        this.timers.splice(lo, 0, t);
+    }
+
+    private processTimers() {
+        while (this.timers.length && this.timers[0].at <= this.time) {
+            const t = this.timers.shift()!;
+            if (t.canceled) continue;
+
+            if (!t.repeat) {
+                t.fn();
+                continue;
+            }
+
+            // 重复任务,补齐到当前世界时间; 可能在长时间卡顿时触发多次
+            if (t.interval! <= 0) {
+                t.fn();
+                continue;
+            } // 容错
+            do {
+                t.fn();
+                t.at += t.interval!;
+            } while (t.at <= this.time && !t.canceled);
+
+            if (!t.canceled) this.insertTimer(t);
+        }
+    }
+
+    public schedule(delaySec: number, fn: () => void): { id: number; cancel: () => void } {
+        const t: TimerTask = {
+            id: this.nextTimerId++,
+            at: this.time + Math.max(0, delaySec),
+            fn,
+            repeat: false,
+            canceled: false
+        };
+        this.insertTimer(t);
+        return {
+            id: t.id,
+            cancel: () => {
+                t.canceled = true;
+            }
+        };
+    }
+
+    public scheduleInterval(intervalSec: number, fn: () => void): { id: number; cancel: () => void } {
+        const t: TimerTask = {
+            id: this.nextTimerId++,
+            at: this.time + Math.max(0, intervalSec),
+            fn,
+            repeat: true,
+            interval: Math.max(0, intervalSec),
+            canceled: false
+        };
+        this.insertTimer(t);
+        return {
+            id: t.id,
+            cancel: () => {
+                t.canceled = true;
+            }
+        };
+    }
+
+    public getTime(): number {
+        return this.time;
+    }
+
+    private registryEvents() {
+        this.events.clear();
+
+        this.events.on('unlock-tech', ({id}) => applyTech(this, id));
+
+        const techTree = this.player.techTree;
+        this.events.on('mob-killed', (event: MobEntity) => {
+            this.player.addPhaseScore(event.getWorth());
+            if (techTree.isUnlocked('energy_recovery')) {
+                const laser = this.player.weapons.get('laser');
+                if (laser instanceof LaserWeapon) {
+                    laser.setCooldown(laser.getCooldown() - 0.5);
+                }
+            }
+            if (techTree.isUnlocked('emergency_repair')) {
+                if (Math.random() >= 0.92) this.player.setHealth(this.player.getHealth() + 1);
+            }
+        });
+
+        const applyExplosion = (event: any) => {
+            const {pos, shake, flash} = event;
+
+            BombWeapon.applyBombDamage(this, event.pos, event.explosionRadius, event.damage);
+            BombWeapon.spawnExplosionVisual(this, pos, event);
+            if (shake) this.camera.addShake(shake, 0.5);
+            if (flash) this.effects.push(flash);
+        }
+
+        this.events.on('bomb-detonate', (event) => {
+            applyExplosion(event);
+            if (techTree.isUnlocked('serial_warhead')) {
+                let counts = 0;
+                const task = this.scheduleInterval(0.2, () => {
+                    event.pos.y -= (event.explosionRadius / 2) | 0;
+                    applyExplosion(event);
+                    if (counts++ === 1) task.cancel();
+                });
+            }
+        });
+
+        this.events.on('emp-burst', ({duration}) => {
+            if (this.player.techTree.isUnlocked('ele_oscillation')) {
+                this.empBurst = duration;
+            }
+        });
+    }
+
+    private registryListeners() {
+        window.addEventListener("resize", () => this.resize());
+
+        window.addEventListener("keydown", e => {
+            const code = e.code;
+
+            if (code === "Enter" && this.over) this.reset();
+            else if (code === "KeyP" || code === 'Escape') this.togglePause();
+            else if (code === 'KeyG') this.toggleTechTree();
+            else if (code === 'KeyM') {
+                document.getElementById('help')?.classList.toggle('hidden');
+                this.ticking = false;
+            }
+
+            // Dev mode
+            if (e.ctrlKey && code === "KeyV") {
+                WorldConfig.devMode = !WorldConfig.devMode;
+            }
+            if (WorldConfig.devMode) this.devMode(code);
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                this.ticking = false;
+                this.rendering = false;
+            } else {
+                this.rendering = true;
+            }
+        });
+
+        window.addEventListener('contextmenu', event => event.preventDefault());
+    }
+
+    private devMode(code: string) {
+        switch (code) {
+            case 'KeyK':
+                this.player.addPhaseScore(200);
+                break;
+            case 'KeyC':
+                this.mobs.length = 0;
+                break;
+            case 'KeyH':
+                this.player.setHealth(this.player.getMaxHealth());
+                break
+            case 'KeyO':
+                this.player.techTree.unlockAll(this);
+                break;
+        }
+    }
+
+    public get isTicking(): boolean {
+        return this.ticking;
+    }
+
+    public get isOver(): boolean {
+        return this.over;
     }
 
     public render() {
@@ -262,97 +455,5 @@ export class World {
         ctx.stroke();
 
         ctx.restore();
-    }
-
-    public static initTechTree() {
-        const viewport = document.getElementById('viewport') as HTMLElement;
-        return new TechTree(viewport, techs);
-    }
-
-    private registryEvents() {
-        this.events.clear();
-
-        this.events.on('unlock-tech', ({id}) => applyTech(this, id));
-
-        this.events.on('mob-killed', (event: MobEntity) => {
-            this.player.addPhaseScore(event.getWorth());
-            if (this.player.techTree.isUnlocked('energy_recovery')) {
-                const laser = this.player.weapons.get('laser');
-                if (laser instanceof LaserWeapon) {
-                    laser.setCooldown(laser.getCooldown() - 0.8);
-                }
-            }
-        });
-
-        this.events.on('bomb-detonate', (event) => {
-            const {pos, shake, flash} = event;
-            BombWeapon.spawnExplosionVisual(this, pos, event);
-            if (shake) this.camera.addShake(shake);
-            if (flash) this.effects.push(flash);
-        });
-
-        this.events.on('emp-burst', ({duration}) => {
-            if (this.player.techTree.isUnlocked('ele_oscillation')) {
-                this.empBurst = duration;
-            }
-        });
-    }
-
-    private registryListeners() {
-        window.addEventListener("resize", () => this.resize());
-
-        window.addEventListener("keydown", e => {
-            const code = e.code;
-
-            if (code === "Enter" && this.over) this.reset();
-            else if (code === "KeyP" || code === 'Escape') this.togglePause();
-            else if (code === 'KeyG') this.toggleTechTree();
-            else if (code === 'KeyM') {
-                document.getElementById('help')?.classList.toggle('hidden');
-                this.ticking = false;
-            }
-
-            // Dev mode
-            if (e.ctrlKey && code === "KeyV") {
-                WorldConfig.devMode = !WorldConfig.devMode;
-            }
-            if (WorldConfig.devMode) this.devMode(code);
-        });
-
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') {
-                this.ticking = false;
-                this.rendering = false;
-            } else {
-                this.rendering = true;
-            }
-        });
-
-        window.addEventListener('contextmenu', event => event.preventDefault());
-    }
-
-    private devMode(code: string) {
-        switch (code) {
-            case 'KeyK':
-                this.player.addPhaseScore(20);
-                break;
-            case 'KeyC':
-                this.mobs.length = 0;
-                break;
-            case 'KeyH':
-                this.player.setHealth(this.player.getMaxHealth());
-                break
-            case 'KeyO':
-                this.player.techTree.unlockAll(this);
-                break;
-        }
-    }
-
-    public get isTicking(): boolean {
-        return this.ticking;
-    }
-
-    public get isOver(): boolean {
-        return this.over;
     }
 }

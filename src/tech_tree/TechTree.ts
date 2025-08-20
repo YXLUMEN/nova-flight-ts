@@ -16,6 +16,7 @@ export class TechTree {
     public static readonly playerScore = document.getElementById('player-money')!;
 
     private static readonly submitBtn = document.getElementById('d-unlock') as HTMLButtonElement;
+    private static readonly resetBtn = document.getElementById('reset') as HTMLButtonElement;
     private static readonly techTitle = document.getElementById('d-title')!;
     private static readonly metaShow = document.getElementById('d-meta')!;
     private static readonly nodeWidth = 144;
@@ -38,6 +39,7 @@ export class TechTree {
         this.adj = this.buildAdjacency(techState);
 
         this.tryApply = this.tryApply.bind(this);
+        this.resetTech = this.resetTech.bind(this);
 
         container.textContent = '';
         const svgNS = 'http://www.w3.org/2000/svg';
@@ -149,6 +151,7 @@ export class TechTree {
 
         this.nodesLayer.addEventListener('dblclick', this.tryApply, {signal: this.abortCtrl.signal});
         TechTree.submitBtn.addEventListener('click', this.tryApply, {signal: this.abortCtrl.signal});
+        TechTree.resetBtn.addEventListener('click', this.resetTech, {signal: this.abortCtrl.signal});
 
         TechTree.setupPanZoom(this.container, this.abortCtrl);
     }
@@ -227,6 +230,9 @@ export class TechTree {
 
         TechTree.techTitle.textContent = tech.name;
         TechTree.metaShow.replaceChildren(frag);
+    }
+
+    private resetTech() {
     }
 
     // -------- Incremental updates --------
@@ -346,12 +352,14 @@ export class TechTree {
         let panX = 0, panY = 0, scale = 1;
         let isDragging = false, lastX = 0, lastY = 0;
 
+        const dragStop = () => isDragging = false;
+
         parent.addEventListener('pointerdown', e => {
             isDragging = true;
             lastX = e.clientX;
             lastY = e.clientY;
         }, {signal: abortCtrl.signal});
-        parent.addEventListener('pointerup', () => isDragging = false, {signal: abortCtrl.signal});
+        parent.addEventListener('pointerup', dragStop, {signal: abortCtrl.signal});
         parent.addEventListener('pointermove', e => {
             if (!isDragging) return;
             panX += e.clientX - lastX;
@@ -360,7 +368,8 @@ export class TechTree {
             lastY = e.clientY;
             applyTransform();
         }, {signal: abortCtrl.signal});
-        parent.addEventListener('blur', () => isDragging = false, {signal: abortCtrl.signal});
+        parent.addEventListener('pointerout', dragStop, {signal: abortCtrl.signal});
+        parent.addEventListener('blur', dragStop, {signal: abortCtrl.signal});
         parent.addEventListener('wheel', e => {
             scale = clamp(scale * Math.pow(1.1, -e.deltaY / 100), 0.5, 2);
             applyTransform();

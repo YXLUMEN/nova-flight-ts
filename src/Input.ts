@@ -10,7 +10,7 @@ export class Input {
     private readonly keys = new Set<string>();
     private prevKeys = new Set<string>();
 
-    constructor(target: HTMLElement) {
+    public constructor(target: HTMLElement) {
         this.registryListener(target);
     }
 
@@ -42,8 +42,6 @@ export class Input {
     }
 
     private registryMobile() {
-        WorldConfig.autoShoot = true;
-
         const controlUi = document.getElementById('ui');
         controlUi?.classList.remove('hidden');
         controlUi?.addEventListener('click', event => {

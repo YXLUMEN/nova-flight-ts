@@ -6,12 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "legacy": "tsc && vite build && node build.cjs",
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@vitejs/plugin-legacy": "^7.2.1",
-    "terser": "^5.43.1",
     "typescript": "~5.8.3",
     "vite": "^7.1.0"
   }

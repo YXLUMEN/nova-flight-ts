@@ -54,6 +54,10 @@ export class TechState {
         this.unlocked.add(id);
     }
 
+    public reset(): void {
+        this.unlocked.clear();
+    }
+
     public static normalizeTechs(raw: unknown): Tech[] {
         if (!Array.isArray(raw)) {
             throw new Error('Tech JSON must be an array');

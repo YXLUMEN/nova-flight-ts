@@ -42,6 +42,8 @@
     background: radial-gradient(1200px 800px at 40% 30%, #1a2032 0%, transparent 60%),
     radial-gradient(900px 900px at 70% 70%, #121827 0%, transparent 60%), #0e1220;
     border-right: 1px solid #20273a;
+    user-select: none;
+    touch-action: none;
 }
 
 .viewport {
@@ -155,6 +157,7 @@ svg.edges {
     background: var(--panel);
     display: flex;
     flex-direction: column;
+    width: 20%;
     gap: 8px;
     padding: 14px;
 }
@@ -213,9 +216,17 @@ svg.edges {
     color: var(--branch);
 }
 
-.details button.action {
+.details .actions {
     position: absolute;
-    bottom: 12px;
+    display: flex;
+    align-items: center;
+    bottom: 0;
+    height: 30px;
+    gap: 16px;
+    padding: 16px 8px;
+}
+
+.details button.action {
     padding: 8px 12px;
     border-radius: 8px;
     border: 1px solid #2a3553;

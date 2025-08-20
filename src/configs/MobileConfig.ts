@@ -54,7 +54,7 @@ const p4: PhaseConfig = deepFreeze(createCleanObj({
         {
             every: 0.7,
             jitter: 0.4,
-            factory: spawnBaseS(110, randInt(3, 6), 3, '#ff2121'),
+            factory: spawnBaseS(110, 5, 3, '#ff2121'),
             cap: 46,
         },
         {every: 1.2, jitter: 0.5, factory: spawnGun(100, 2, 2), cap: 32},
@@ -69,7 +69,11 @@ const p5: PhaseConfig = deepFreeze(createCleanObj({
         {
             every: 0.5,
             jitter: 0.4,
-            factory: spawnBaseS(randInt(90, 160), randInt(8, 16), 10, '#910000'),
+            factory: spawnBaseS(
+                randInt(90, 160), 6,
+                10, '#910000',
+                (ctx) => 1 + Math.log2(1 + ctx.score) | 0
+            ),
             cap: 64,
         },
         {every: 1.0, jitter: 0.5, factory: spawnGun(80, 6), cap: 58},

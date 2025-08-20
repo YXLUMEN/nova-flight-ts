@@ -21,6 +21,7 @@ export class PlayerEntity extends LivingEntity {
 
     public override speed = 300;
     public invincible = false;
+    public onDamageExplosionRadius = 320;
 
     private readonly baseWeapons: Weapon[] = [];
     private currentBaseIndex: number = 0;
@@ -83,11 +84,10 @@ export class PlayerEntity extends LivingEntity {
     }
 
     public override onDamage(world: World, damage: number) {
-        const center = this.getPos();
-        BombWeapon.applyBombDamage(world, center, 320, 32);
         world.events.emit('bomb-detonate', {
-            pos: center,
-            explosionRadius: 320,
+            pos: this.getPos(),
+            damage: 32,
+            explosionRadius: this.onDamageExplosionRadius,
             shake: 0.4,
             flash: new ScreenFlash(0.2, 0.25, '#ff5151'),
             important: true

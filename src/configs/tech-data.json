@@ -11,7 +11,7 @@
     "id": "electrical_energy_surges",
     "name": "电能激荡",
     "x": 560,
-    "y": 160,
+    "y": 240,
     "desc": "受击时立即触发EMP",
     "cost": 120,
     "requires": [
@@ -22,7 +22,7 @@
     "id": "ad_capacitance",
     "name": "强化电容",
     "x": 740,
-    "y": 80,
+    "y": 160,
     "branchGroup": "emp_radius",
     "desc": "EMP范围 +50%, 冷却速度 -20%",
     "cost": 180,
@@ -34,7 +34,7 @@
     "id": "ele_oscillation",
     "name": "电磁震荡",
     "x": 900,
-    "y": 80,
+    "y": 160,
     "desc": "EMP持续期间清除敌方子弹",
     "cost": 250,
     "requires": [
@@ -45,7 +45,7 @@
     "id": "quick_charge",
     "name": "快充电容",
     "x": 740,
-    "y": 0,
+    "y": 80,
     "branchGroup": "emp_radius",
     "desc": "EMP范围 -50%, 冷却速度 +50%",
     "cost": 180,
@@ -57,7 +57,7 @@
     "id": "ele_shield",
     "name": "电磁护盾",
     "x": 740,
-    "y": 160,
+    "y": 240,
     "desc": "受击触发EMP并抵消伤害,EMP进入冷却",
     "cost": 180,
     "requires": [
@@ -113,6 +113,7 @@
     "name": "能量回收",
     "x": 1200,
     "y": 320,
+    "branchGroup": "apex_upgrade",
     "desc": "击败敌舰增加激光持续时间",
     "cost": 640,
     "requires": [
@@ -151,6 +152,18 @@
     ]
   },
   {
+    "id": "apfs_discarding_sabot",
+    "name": "钢芯穿甲弹",
+    "x": 880,
+    "y": 380,
+    "branchGroup": "apex_upgrade",
+    "desc": "造成目标最大生命30%的伤害",
+    "cost": 600,
+    "requires": [
+      "ad_loading"
+    ]
+  },
+  {
     "id": "90_cannon",
     "name": "90机炮",
     "x": 560,
@@ -182,6 +195,18 @@
     "cost": 180,
     "requires": [
       "hv_warhead"
+    ]
+  },
+  {
+    "id": "serial_warhead",
+    "name": "串联战斗部",
+    "x": 1040,
+    "y": 460,
+    "branchGroup": "apex_upgrade",
+    "desc": "爆炸次数 +2",
+    "cost": 600,
+    "requires": [
+      "hd_explosives"
     ]
   },
   {
@@ -260,14 +285,26 @@
     "cost": 180
   },
   {
-    "id": "ship_ot",
-    "name": "",
+    "id": "explosive_armor",
+    "name": "爆炸装甲",
     "x": 560,
     "y": 720,
-    "desc": "生命值提升至 5",
-    "cost": -1,
+    "desc": "受伤时爆炸范围 +40%",
+    "cost": 160,
     "requires": [
       "ship_opt"
+    ]
+  },
+  {
+    "id": "emergency_repair",
+    "name": "紧急维修",
+    "x": 720,
+    "y": 720,
+    "branchGroup": "apex_upgrade",
+    "desc": "击毁敌舰8%概率修复船体",
+    "cost": 320,
+    "requires": [
+      "explosive_armor"
     ]
   }
 ]

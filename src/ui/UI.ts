@@ -170,6 +170,11 @@ export class UI {
     private static renderEndOverlay(ctx: CanvasRenderingContext2D) {
         const width = World.W;
         const height = World.H;
+        let y = height / 2 - 64;
+
+        const world = World.instance;
+        const time = world.getTime() | 0;
+        const score = world.player.getPhaseScore();
 
         ctx.save();
         ctx.fillStyle = 'rgba(255,0,0,0.3)';
@@ -180,10 +185,14 @@ export class UI {
 
         ctx.fillStyle = 'rgb(255,255,255)';
         ctx.font = 'bold 32px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
-        ctx.fillText('游戏结束', width / 2, height / 2);
+        ctx.fillText('游戏结束', width / 2, y);
+        y += 48;
 
         ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
-        ctx.fillText('按 Enter 键重新开始', width / 2, height / 2 + 30);
+        ctx.fillText(`游戏时长: ${time}, 得分: ${score}, 击杀效率: ${(score / time).toFixed(2)}`, width / 2, y);
+        y += 32;
+
+        ctx.fillText('按 Enter 键重新开始', width / 2, y);
 
         ctx.restore();
     }

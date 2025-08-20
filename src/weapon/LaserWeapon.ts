@@ -90,8 +90,6 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
             world.addEffect(this.beamFx);
         }
         this.beamFx.set(start, end);
-
-        world.camera.addShake(0.04, 0.2);
     }
 
     public instantCooldown() {
