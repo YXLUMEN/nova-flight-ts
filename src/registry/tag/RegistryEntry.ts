@@ -39,6 +39,10 @@ export class RegistryEntry<T> {
         }
     }
 
+    public matchesKey(key: RegistryKey<T>): boolean {
+        return this.getRegistryKey() === key;
+    }
+
     public setTags(tags: Set<TagKey<T>>): void {
         this.tags = tags;
     }

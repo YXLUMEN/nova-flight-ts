@@ -12,7 +12,7 @@ export class StatusEffects {
     );
 
     public static readonly BurningStatus = this.register(
-        "burning_status", new BurningEffect(1)
+        "burning_status", new BurningEffect(0.5)
     );
 
     private static register(id: string, statusEffect: StatusEffect): RegistryEntry<StatusEffect> {

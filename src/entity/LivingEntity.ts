@@ -21,7 +21,7 @@ export abstract class LivingEntity extends Entity {
 
     public override tick(dt: number) {
         super.tick(dt);
-        this.tickStatusEffects(dt);
+        this.tickStatusEffects();
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
@@ -48,11 +48,11 @@ export abstract class LivingEntity extends Entity {
         this.health = clamp(health, 0, this.maxHealth);
     }
 
-    public tickStatusEffects(dt: number): void {
+    public tickStatusEffects(): void {
         if (this.activeStatusEffects.size === 0) return;
 
         for (const effect of this.activeStatusEffects.values()) {
-            effect.update(this, dt);
+            effect.update(this);
         }
     }
 

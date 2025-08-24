@@ -1,7 +1,7 @@
 import type {PhaseConfig} from "../apis/IStage.ts";
 import {Stage} from "../stage/Stage.ts";
 import {createCleanObj, deepFreeze} from "../utils/uit.ts";
-import {spawnBase, spawnBaseS, spawnGun, spawnLineBase} from "../utils/PresetsSpawn.ts";
+import {spawnBase, spawnBaseS, spawnGun, spawnLineBase, spawnTank} from "../utils/PresetsSpawn.ts";
 
 const p0: PhaseConfig = deepFreeze(createCleanObj({
     name: "P0",
@@ -63,13 +63,14 @@ const p4: PhaseConfig = deepFreeze(createCleanObj({
 
 const p5: PhaseConfig = deepFreeze(createCleanObj({
     name: "P5",
+    until: ({score}) => score >= 8192,
     onEnter: ({world}) => world.events.emit('stage-enter', {name: 'P5'}),
     rules: [
         {
-            every: 0.4,
+            every: 0.6,
             jitter: 0.4,
             factory: spawnBaseS(
-                140, 8, 8,
+                110, 8, 8,
                 '#910000',
                 (ctx) => 1 + (ctx.score / 1000) | 0
             ),
@@ -77,9 +78,9 @@ const p5: PhaseConfig = deepFreeze(createCleanObj({
         },
         {
             rate: 8,
-            jitter: 0.9,
+            jitter: 0.8,
             factory: spawnBaseS(
-                110, 4, 3,
+                120, 4, 3,
                 '#ff2121',
                 (ctx) => 1 + Math.log10(1 + ctx.score) | 0
             ),
@@ -90,4 +91,58 @@ const p5: PhaseConfig = deepFreeze(createCleanObj({
     ],
 }));
 
-export const STAGE = new Stage([p0, p1, p2, p3, p4, p5]);
+const p6: PhaseConfig = deepFreeze(createCleanObj({
+    name: "P6",
+    onEnter: ({world}) => world.events.emit('stage-enter', {name: 'P6'}),
+    rules: [
+        {
+            every: 0.4,
+            jitter: 0.4,
+            factory: spawnBaseS(
+                110, 16, 8,
+                '#910000'
+            ),
+            cap: 94
+        },
+        {every: 0.6, jitter: 0.5, factory: spawnGun(80, 6, 6), cap: 96},
+    ],
+}));
+
+const p7: PhaseConfig = deepFreeze(createCleanObj({
+    name: "P7",
+    onEnter: ({world}) => world.events.emit('stage-enter', {name: 'P7'}),
+    rules: [
+        {
+            every: 0.4,
+            jitter: 0.4,
+            factory: spawnBaseS(
+                110, 8, 8,
+                '#910000',
+                (ctx) => 1 + (ctx.score / 1000) | 0
+            ),
+            cap: 94
+        },
+        {
+            rate: 4,
+            jitter: 0.5,
+            factory: spawnBaseS(
+                120, 4, 3,
+                '#ff2121',
+                (ctx) => 1 + Math.log10(1 + ctx.score) | 0
+            ),
+            cap: 96,
+        },
+        {
+            every: 0.3,
+            jitter: 0.4,
+            factory: spawnTank(
+                60, 32, 5,
+                '#9f3b00',
+            ),
+            cap: 64,
+        },
+        {every: 0.9, jitter: 0.5, factory: spawnGun(80, 6, 2), cap: 96},
+    ],
+}));
+
+export const STAGE = new Stage([p0, p1, p2, p3, p4, p5, p6, p7]);

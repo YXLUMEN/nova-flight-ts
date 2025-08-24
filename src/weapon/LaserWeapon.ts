@@ -11,11 +11,12 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
     public static readonly DISPLAY_NAME = 'LASER';
     public static readonly COLOR = '#8bff5e';
     public static readonly OVERHEAT_COLOR = '#ff5e5e';
+    public laserColor = LaserWeapon.COLOR;
 
     // 过热参数
     private heat = 0;
     public maxHeat = 8.0;        // 满热前可持续秒数
-    private readonly drainRate = 1.2;     // 开火每秒升温
+    public drainRate = 1.2;     // 开火每秒升温
     public coolRate = 0.6;      // 松开每秒降温
 
     private active = false;
@@ -87,7 +88,7 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
 
         // 刷新/创建光束效果
         if (!this.beamFx || !this.beamFx.alive) {
-            this.beamFx = new LaserBeamEffect(LaserWeapon.COLOR, this.width);
+            this.beamFx = new LaserBeamEffect(this.laserColor, this.width);
             world.addEffect(this.beamFx);
         }
         this.beamFx.set(start, end);
@@ -108,6 +109,10 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
 
     public override getMaxCooldown(): number {
         return this.maxHeat;
+    }
+
+    public isOverHeat(): boolean {
+        return this.overheated;
     }
 
     public bindKey(): string {

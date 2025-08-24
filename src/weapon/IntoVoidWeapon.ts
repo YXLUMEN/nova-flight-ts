@@ -6,6 +6,7 @@ import {PlayerEntity} from "../entity/PlayerEntity.ts";
 import {pointInCircleVec2} from "../math/math.ts";
 import {EMPWeapon} from "./EMPWeapon.ts";
 import {LaserWeapon} from "./LaserWeapon.ts";
+import {BossEntity} from "../entity/BossEntity.ts";
 
 export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
     public static readonly displayName = "遁入虚空";
@@ -86,13 +87,13 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
         const owner = this.owner;
         if (!(owner instanceof PlayerEntity)) return;
 
-        // 恢复之前的无敌状态,不覆盖其他来源
         world.player.invulnerable = this.prevInvincible;
         this.prevInvincible = false;
 
         const box = this.owner.boxRadius + this.radius;
         for (const mob of world.mobs) {
             if (mob.isDead() || !pointInCircleVec2(this.owner.pos, mob.pos, box + mob.boxRadius)) continue;
+            if (mob instanceof BossEntity) continue;
             mob.onDeath(world.getDamageSources().void(this.owner as PlayerEntity));
         }
 

@@ -12,12 +12,12 @@ export class RegistryManager {
 
     public registerAll(): void {
         const damage = new Registry<DamageType>(RegistryKey.ofRegistry(Identifier.ofVanilla("damage_type")));
-        damage.add(DamageTypes.LASER, 'laser', [DamageTypeTags.GAIN_SCORE]);
+        damage.add(DamageTypes.LASER, 'laser', [DamageTypeTags.GAIN_SCORE, DamageTypeTags.REPLY_LASER]);
         damage.add(DamageTypes.PLAYER_ATTACK, 'player_attack', [DamageTypeTags.GAIN_SCORE]);
         damage.add(DamageTypes.EXPLOSION, 'explosion', [DamageTypeTags.GAIN_SCORE]);
         damage.add(DamageTypes.VOID, 'void');
         damage.add(DamageTypes.GENERIC, 'generic');
-        damage.add(DamageTypes.ON_FIRE, 'on_fire');
+        damage.add(DamageTypes.ON_FIRE, 'on_fire', [DamageTypeTags.REPLY_LASER]);
         damage.add(DamageTypes.REMOVED, 'removed', [DamageTypeTags.BYPASSES_INVULNERABLE]);
         damage.add(DamageTypes.MOB_PROJECTILE, 'mob_projectile');
         damage.add(DamageTypes.PLAYER_IMPACT, 'player_impact');

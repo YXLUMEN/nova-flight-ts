@@ -23,7 +23,7 @@ export class PlayerEntity extends LivingEntity {
     public override speed = 300;
     public onDamageExplosionRadius = 320;
 
-    private readonly baseWeapons: Weapon[] = [];
+    public readonly baseWeapons: Weapon[] = [];
     private currentBaseIndex: number = 0;
     private phaseScore: number;
     private score: number = 0;
@@ -95,7 +95,9 @@ export class PlayerEntity extends LivingEntity {
             explosionRadius: this.onDamageExplosionRadius,
             shake: 0.4,
             flash: new ScreenFlash(0.2, 0.25, '#ff5151'),
-            important: true
+            important: true,
+            source: this,
+            attacker: this
         });
 
         if (this.techTree.isUnlocked('ele_shield')) {

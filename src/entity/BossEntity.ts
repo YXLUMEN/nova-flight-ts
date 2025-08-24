@@ -1,0 +1,103 @@
+import {MobEntity} from "./MobEntity.ts";
+import type {World} from "../World.ts";
+import {MutVec2} from "../math/MutVec2.ts";
+import {type DamageSource} from "./damage/DamageSource.ts";
+import {clamp, PI2, rand} from "../math/math.ts";
+import {BulletEntity} from "./BulletEntity.ts";
+import {Vec2} from "../math/Vec2.ts";
+import {PlayerEntity} from "./PlayerEntity.ts";
+import type {StatusEffectInstance} from "../status/StatusEffectInstance.ts";
+
+export class BossEntity extends MobEntity {
+    public override speed = 0;
+    public color = '#b30000';
+
+    private cooldown = 0;
+    private readonly interval = 1;
+    private damageCooldown: number = 0;
+
+    public constructor(world: World, pos: MutVec2, health: number, worth: number) {
+        super(world, pos, 148, health, worth);
+    }
+
+    public override tick(dt: number) {
+        super.tick(dt);
+
+        if (this.damageCooldown > 0) this.damageCooldown -= 1;
+        this.cooldown -= dt;
+        if (this.cooldown > 0) return;
+        this.cooldown = this.interval;
+
+        const count = 16;
+        const speed = 200;
+        const startAngle = 0.4537722; // 26
+        const endAngle = 2.6859825; // 154
+        const step = (endAngle - startAngle) / (count - 1);
+
+        const world = this.getWorld();
+        for (let i = count; i--;) {
+            const angle = startAngle + step * i;
+            const vel = new Vec2(Math.cos(angle) * speed, Math.sin(angle) * speed);
+            const b = new BulletEntity(world, this.pos, vel, this, 1, 6);
+            b.color = '#ff0000'
+            world.bullets.push(b);
+        }
+    }
+
+    public override takeDamage(damageSource: DamageSource, damage: number): boolean {
+        if (this.damageCooldown > 0) return false;
+
+        damage = clamp((damage * 0.1) | 0, 1, 4);
+        if (super.takeDamage(damageSource, damage)) {
+            this.damageCooldown = 16;
+            return true;
+        }
+        return false;
+    }
+
+    public override onDeath(damageSource: DamageSource) {
+        super.onDeath(damageSource);
+
+        const world = this.getWorld();
+        world.events.emit('boss-killed', {mob: this, damageSource});
+
+        for (let i = 32; i--;) {
+            const a = rand(0, PI2);
+            const speed = rand(240, 360);
+            const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
+
+            world.spawnParticle(
+                this.pos, vel, rand(0.8, 1.4), rand(12, 24),
+                "#ffaa33", "#ff5454", 0.6, 80
+            );
+        }
+    }
+
+    public override addStatusEffect(_effect: StatusEffectInstance) {
+        return false;
+    }
+
+    public override attack(player: PlayerEntity) {
+        player.getWorld().gameOver();
+        this.discard();
+    }
+
+    public override render(ctx: CanvasRenderingContext2D) {
+        ctx.save();
+        ctx.translate(this.pos.x, this.pos.y);
+
+        ctx.fillStyle = this.color;
+        ctx.strokeStyle = "rgba(0,0,0,.2)";
+
+        ctx.beginPath();
+        ctx.moveTo(0, 144);
+        ctx.lineTo(-112, -48);
+        ctx.lineTo(0, -96);
+        ctx.lineTo(122, -48);
+        ctx.closePath();
+
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+    }
+}

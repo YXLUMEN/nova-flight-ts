@@ -32,11 +32,11 @@ export class DamageSources {
         return new DamageSource(this.registry.getEntryByKey(key));
     }
 
-    public createWithAttacker(key: RegistryKey<DamageType>, attacker: Entity): DamageSource {
+    public createWithAttacker(key: RegistryKey<DamageType>, attacker: LivingEntity): DamageSource {
         return new DamageSource(this.registry.getEntryByKey(key), attacker);
     }
 
-    public createWithSource(key: RegistryKey<DamageType>, source: Entity, attacker: Entity | null): DamageSource {
+    public createWithSource(key: RegistryKey<DamageType>, source: Entity, attacker: LivingEntity | null): DamageSource {
         return new DamageSource(this.registry.getEntryByKey(key), attacker, source);
     }
 

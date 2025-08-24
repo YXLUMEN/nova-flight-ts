@@ -77,7 +77,7 @@ export class Input {
                     player.weapons.get('laser')?.tryFire(world);
                     break;
                 case 'into-void':
-                    player.weapons.get('into-void')?.tryFire(world);
+                    player.weapons.get('into_void')?.tryFire(world);
                     break;
             }
         });

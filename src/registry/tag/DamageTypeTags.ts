@@ -8,6 +8,7 @@ export class DamageTypeTags {
     public static readonly BYPASSES_EFFECTS = DamageTypeTags.of("bypasses_effects");
     public static readonly GAIN_SCORE = DamageTypeTags.of("gain_score");
     public static readonly INCENDIARY = DamageTypeTags.of("incendiary");
+    public static readonly REPLY_LASER = DamageTypeTags.of("reply_laser");
 
     private static of(id: string): TagKey<DamageType> {
         return TagKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.ofVanilla(id));

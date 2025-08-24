@@ -2,6 +2,7 @@ import {type MutVec2} from "../math/MutVec2.ts";
 import {type World} from "../World.ts";
 import {Vec2} from "../math/Vec2.ts";
 import type {DamageSource} from "./damage/DamageSource.ts";
+import type {Weapon} from "../weapon/Weapon.ts";
 
 export abstract class Entity {
     private readonly world: World;
@@ -46,6 +47,10 @@ export abstract class Entity {
 
     public isDead(): boolean {
         return this.dead;
+    }
+
+    public getWeaponStack(): Weapon | null {
+        return null;
     }
 
     public get pos(): MutVec2 {

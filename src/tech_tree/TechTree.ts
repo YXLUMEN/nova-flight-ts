@@ -4,6 +4,8 @@ import {World} from "../World.ts";
 import {applyTech} from "./apply_tech.ts";
 import {clamp} from "../math/math.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
+import {Cannon40Weapon} from "../weapon/Cannon40Weapon.ts";
+import {BombWeapon} from "../weapon/BombWeapon.ts";
 
 type Adjacency = {
     out: Map<string, string[]>; // id -> successors
@@ -57,6 +59,7 @@ export class TechTree {
     public destroy() {
         this.container.replaceChildren();
         this.abortCtrl.abort();
+        TechTree.playerScore.textContent = '0';
     }
 
     // -------- Rendering --------
@@ -232,9 +235,6 @@ export class TechTree {
         TechTree.metaShow.replaceChildren(frag);
     }
 
-    private resetTech() {
-    }
-
     // -------- Incremental updates --------
     public applyUnlockUpdates(id: string) {
         const affected = new Set<string>();
@@ -399,6 +399,31 @@ export class TechTree {
             applyTech(world, nid);
         }
         this.updateEdgesAround(all);
+    }
+
+    private resetTech() {
+        const allTech = this.state.techById;
+        const unlocked: Tech[] = [];
+        for (const [nid, tech] of allTech) {
+            if (this.state.isUnlocked(nid)) unlocked.push(tech);
+        }
+
+        const player = World.instance.player;
+        let backScore = 0;
+        for (const tech of unlocked) {
+            const cost = tech.cost;
+            if (cost) backScore += cost;
+        }
+        player.setScore(player.getScore() + (backScore * 0.8) | 0);
+        player.baseWeapons.length = 0;
+        player.weapons.clear();
+
+        player.baseWeapons.push(new Cannon40Weapon(player));
+        player.weapons.set('40', player.baseWeapons[0]);
+        player.weapons.set('bomb', new BombWeapon(player));
+
+        this.state.reset();
+        this.renderNodes();
     }
 
     public getSelected() {

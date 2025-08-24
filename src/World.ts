@@ -14,11 +14,11 @@ import {DPR, isMobile} from "./utils/uit.ts";
 import {collideEntityCircle} from "./math/math.ts";
 import {type ProjectileEntity} from "./entity/ProjectileEntity.ts";
 import {M_STAGE} from "./configs/MobileConfig.ts";
-import techs from "../public/data/nova-flight/tech-data.json";
+import techs from "../public/data/tech-data.json";
 import {TechTree} from "./tech_tree/TechTree.ts";
 import {applyTech} from "./tech_tree/apply_tech.ts";
 import {WorldConfig} from "./configs/WorldConfig.ts";
-import type {MutVec2} from "./math/MutVec2.ts";
+import {MutVec2} from "./math/MutVec2.ts";
 import {ParticlePool} from "./effect/ParticlePool.ts";
 import {LaserWeapon} from "./weapon/LaserWeapon.ts";
 import type {TimerTask} from "./apis/ITimer.ts";
@@ -26,6 +26,7 @@ import {DamageSources} from "./entity/damage/DamageSources.ts";
 import type {DamageSource} from "./entity/damage/DamageSource.ts";
 import {DamageTypeTags} from "./registry/tag/DamageTypeTags.ts";
 import {RegistryManager} from "./registry/RegistryManager.ts";
+import {BossEntity} from "./entity/BossEntity.ts";
 
 export class World {
     public static instance: World;
@@ -56,7 +57,7 @@ export class World {
     public empBurst: number = 0
 
     private effects: Effect[] = [];
-    private readonly particlePool: ParticlePool = new ParticlePool(128);
+    private readonly particlePool: ParticlePool = new ParticlePool(256);
     private readonly starField: StarField = new StarField(128, layers, 8);
 
     public player = new PlayerEntity(this, this.input);
@@ -104,8 +105,7 @@ export class World {
 
     public toggleTechTree() {
         const techShell = document.getElementById('tech-shell')!;
-        this.rendering = techShell.classList.toggle('hidden');
-        this.ticking = false;
+        this.ticking = this.rendering = techShell.classList.toggle('hidden');
     }
 
     public resize() {
@@ -289,17 +289,27 @@ export class World {
         this.events.on('unlock-tech', ({id}) => applyTech(this, id));
 
         const techTree = this.player.techTree;
+
+        this.events.on('boss-killed', (event) => {
+            const boss = event.mob;
+            this.stage.nextPhase();
+            if (boss instanceof MobEntity) {
+                this.player.addPhaseScore(boss.getWorth());
+            }
+        });
+
         this.events.on('mob-killed', (event) => {
             const mob = event.mob as MobEntity;
             const damageSource = event.damageSource as DamageSource;
+
             if (damageSource.isIn(DamageTypeTags.GAIN_SCORE)) {
                 this.player.addPhaseScore(mob.getWorth());
             }
 
-            if (techTree.isUnlocked('energy_recovery')) {
+            if (damageSource.isIn(DamageTypeTags.REPLY_LASER) && techTree.isUnlocked('energy_recovery')) {
                 const laser = this.player.weapons.get('laser');
                 if (laser instanceof LaserWeapon) {
-                    laser.setCooldown(laser.getCooldown() - 0.5);
+                    if (!laser.isOverHeat()) laser.setCooldown(laser.getCooldown() - 0.5);
                 }
             }
 
@@ -312,7 +322,7 @@ export class World {
         const applyExplosion = (event: any) => {
             const {pos, shake, flash} = event;
 
-            BombWeapon.applyBombDamage(this, event.pos, event.explosionRadius, event.damage);
+            BombWeapon.applyBombDamage(this, event.pos, event.explosionRadius, event.damage, event.source ?? null, event.attacker ?? null);
             BombWeapon.spawnExplosionVisual(this, pos, event);
             if (shake) this.camera.addShake(shake, 0.5);
             if (flash) this.effects.push(flash);
@@ -333,6 +343,13 @@ export class World {
         this.events.on('emp-burst', ({duration}) => {
             if (techTree.isUnlocked('ele_oscillation')) {
                 this.empBurst = duration;
+            }
+        });
+
+        this.events.on('stage-enter', ({name}) => {
+            if (name === 'P6') {
+                const boss = new BossEntity(this, new MutVec2(World.W / 2, 64), 160, 64);
+                this.mobs.push(boss);
             }
         });
     }
@@ -380,9 +397,12 @@ export class World {
                 break;
             case 'KeyH':
                 this.player.setHealth(this.player.getMaxHealth());
-                break
+                break;
             case 'KeyO':
                 this.player.techTree.unlockAll(this);
+                break;
+            case 'KeyL':
+                this.stage.nextPhase();
                 break;
         }
     }

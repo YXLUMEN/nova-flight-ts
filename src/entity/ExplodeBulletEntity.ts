@@ -38,6 +38,8 @@ export class ExplodeBulletEntity extends ProjectileEntity {
         entity.takeDamage(this.getWorld().getDamageSources().explosion(this, attacker), this.damage);
         this.getWorld().events.emit('bomb-detonate', {
             pos: this.pos.clone(),
+            source: this,
+            attacker,
             ...this.explosionOpts
         });
     }

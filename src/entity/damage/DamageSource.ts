@@ -3,14 +3,16 @@ import type {Entity} from "../Entity.ts";
 import type {Vec2} from "../../math/Vec2.ts";
 import type {TagKey} from "../../registry/tag/TagKey.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import type {RegistryKey} from "../../registry/RegistryKey.ts";
+import type {LivingEntity} from "../LivingEntity.ts";
 
 export class DamageSource {
     private readonly type: RegistryEntry<DamageType>;
-    private readonly attacker: Entity | null;
+    private readonly attacker: LivingEntity | null;
     private readonly source: Entity | null;
     private readonly position: Vec2 | null;
 
-    public constructor(type: RegistryEntry<DamageType>, attacker: Entity | null = null, source: Entity | null = null, position: Vec2 | null = null) {
+    public constructor(type: RegistryEntry<DamageType>, attacker: LivingEntity | null = null, source: Entity | null = null, position: Vec2 | null = null) {
         this.type = type;
         this.attacker = attacker;
         this.source = source;
@@ -45,7 +47,11 @@ export class DamageSource {
         return type.some((v: TagKey<DamageType>) => this.type.isIn(v));
     }
 
-    public getType(): RegistryEntry<DamageType> {
-        return this.type;
+    public isOf(typeKey: RegistryKey<DamageType>) {
+        return this.type.matchesKey(typeKey);
+    }
+
+    public getType(): DamageType {
+        return this.type.getValue();
     }
 }

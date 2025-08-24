@@ -129,5 +129,14 @@ export function applyTech(world: World, id: string) {
         case 'explosive_armor':
             player.onDamageExplosionRadius *= 1.4;
             break;
+        case 'meltdown': {
+            const laser = player.weapons.get('laser');
+            if (laser instanceof LaserWeapon) {
+                laser.damage = 0;
+                laser.laserColor = '#ff0000'
+                laser.drainRate *= 2.5;
+            }
+            break;
+        }
     }
 }

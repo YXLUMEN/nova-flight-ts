@@ -65,6 +65,12 @@ export class Stage {
         }
     }
 
+    public nextPhase() {
+        const index = this.index + 1;
+        if (index >= this.phases.length) return;
+        this.loadPhase(index);
+    }
+
     private computeDifficulty(): number {
         return 1; // 占位
     }

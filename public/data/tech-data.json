@@ -161,6 +161,9 @@
     "cost": 600,
     "requires": [
       "ad_loading"
+    ],
+    "conflicts": [
+      "incendiary_bullet"
     ]
   },
   {
@@ -313,6 +316,21 @@
     "x": 340,
     "y": 240,
     "desc": "对敌舰造成伤害附加燃烧",
-    "cost": 240
+    "cost": 240,
+    "conflicts": [
+      "apfs_discarding_sabot"
+    ]
+  },
+  {
+    "id": "meltdown",
+    "name": "融毁",
+    "x": 160,
+    "y": 240,
+    "desc": "燃烧效果可以叠加,最多 10 层; 激光直接伤害降为0,同时更容易过热",
+    "cost": 320,
+    "requires": [
+      "incendiary_bullet",
+      "laser"
+    ]
   }
 ]

@@ -7,6 +7,7 @@ import type {Entity} from "../entity/Entity.ts";
 import type {ExplosionOpts} from "../apis/IExplosionOpts.ts";
 import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
 import {Particle} from "../effect/Particle.ts";
+import type {LivingEntity} from "../entity/LivingEntity.ts";
 
 
 export class BombWeapon extends Weapon implements ISpecialWeapon {
@@ -21,7 +22,9 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
             pos: this.owner.getPos(),
             damage: this.getDamage(),
             explosionRadius: this.damageRadius,
-            shake: 0.3
+            shake: 0.3,
+            source: this.owner,
+            attacker: this.owner,
         });
 
         this.setCooldown(this.getMaxCooldown());
@@ -39,13 +42,16 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
         return '#ff9f43';
     }
 
-    public static applyBombDamage(world: World, center: MutVec2, radius: number, damage: number) {
+    public static applyBombDamage(
+        world: World, center: MutVec2, radius: number,
+        damage: number,
+        source: Entity | null = null, attacker: LivingEntity | null = null) {
         const r2 = radius * radius;
         for (const mob of world.mobs) {
             if (mob.isDead()) continue;
             const d2 = MutVec2.distSq(mob.pos, center);
             if (d2 <= r2) {
-                mob.takeDamage(world.getDamageSources().explosion(null, null), damage);
+                mob.takeDamage(world.getDamageSources().explosion(source, attacker), damage);
             }
         }
     }

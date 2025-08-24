@@ -15,14 +15,18 @@ export class StatusEffectInstance {
     public constructor(type: RegistryEntry<StatusEffect>, duration: number, amplifier: number = 0) {
         this.type = type;
         this.duration = duration;
-        this.amplifier = clamp(amplifier, 0, 255);
+        this.amplifier = clamp(Math.floor(amplifier), 0, 255);
     }
 
-    public update(entity: LivingEntity, dt: number): boolean {
-        this.type.getValue().apply(entity.getWorld(), entity, dt);
+    public update(entity: LivingEntity): boolean {
+        const effect = this.type.getValue();
+        if (effect.canApplyUpdateEffect(this.duration, this.amplifier) && !effect.applyUpdateEffect(entity, this.amplifier)) {
+            entity.removeStatusEffect(this.type);
+        }
 
         if (this.isInfinite()) return true;
-        this.duration -= dt;
+
+        this.duration -= 1;
         if (this.duration <= 0) {
             entity.removeStatusEffect(this.type);
         }

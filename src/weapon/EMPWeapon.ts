@@ -9,6 +9,7 @@ import type {MutVec2} from "../math/MutVec2.ts";
 import {ScreenFlash} from "../effect/ScreenFlash.ts";
 import {StatusEffectInstance} from "../status/StatusEffectInstance.ts";
 import {StatusEffects} from "../status/StatusEffects.ts";
+import {WorldConfig} from "../configs/WorldConfig.ts";
 
 export class EMPWeapon extends Weapon implements ISpecialWeapon {
     public radius: number = 480;
@@ -47,9 +48,10 @@ export class EMPWeapon extends Weapon implements ISpecialWeapon {
     public static applyEMPEffect(world: World, center: MutVec2, radius: number) {
         world.events.emit('emp-burst', {duration: 12});
 
+        const duration = 12 * WorldConfig.tick;
         for (const mob of world.mobs) {
             if (!mob.isDead() && pointInCircleVec2(mob.pos, center, radius)) {
-                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EMCStatus, 12, 0.1));
+                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EMCStatus, duration, 1));
             }
         }
     }
