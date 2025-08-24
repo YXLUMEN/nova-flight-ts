@@ -306,5 +306,13 @@
     "requires": [
       "explosive_armor"
     ]
+  },
+  {
+    "id": "incendiary_bullet",
+    "name": "燃烧弹",
+    "x": 340,
+    "y": 240,
+    "desc": "对敌舰造成伤害附加燃烧",
+    "cost": 240
   }
 ]

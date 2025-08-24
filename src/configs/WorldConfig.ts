@@ -1,12 +1,12 @@
 import {createCleanObj, isMobile} from "../utils/uit.ts";
 
 const WorldConfig = Object.preventExtensions(createCleanObj({
-    devMode: true,
+    devMode: false,
     lowPowerMode: false,
 
     mbps: 1 / 50,
 
-    enableCameraOffset: true,
+    enableCameraOffset: false,
 
     autoShoot: false,
     followPointer: true,

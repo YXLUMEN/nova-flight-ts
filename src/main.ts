@@ -1,3 +1,6 @@
 import {World} from "./World.ts";
+import {RegistryManager} from "./registry/RegistryManager.ts";
 
-World.instance = new World();
+const manager = new RegistryManager();
+manager.registerAll();
+World.instance = new World(manager);

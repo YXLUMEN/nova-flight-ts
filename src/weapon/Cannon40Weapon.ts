@@ -27,7 +27,7 @@ export class Cannon40Weapon extends BaseWeapon {
     }
 
     public static spawnBullet(world: World, pos: MutVec2, vel: MutVec2, own: Entity, damage: number, radius: number) {
-        const b = new BulletEntity(pos, vel, own, damage, radius);
+        const b = new BulletEntity(world, pos, vel, own, damage, radius);
         world.bullets.push(b);
     }
 }

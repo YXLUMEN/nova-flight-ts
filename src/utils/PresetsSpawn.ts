@@ -1,7 +1,7 @@
 import type {MobFactory, SpawnCtx} from "../apis/IStage.ts";
 import {BaseEnemy} from "../entity/BaseEnemy.ts";
 import {GunEnemyEntity} from "../entity/GunEnemyEntity.ts";
-import {spawnLineCtor, spawnTopRandomCtor, spawnTopRandomCtorS} from "../registry/SpawnFactories.ts";
+import {spawnLineCtor, spawnTopRandomCtor, spawnTopRandomCtorS} from "../stage/SpawnFactories.ts";
 
 const spawnBase = (speed = 120, hp = 1, worth = 1, color = '#ff6b6b'): MobFactory =>
     spawnTopRandomCtor(BaseEnemy, [hp, worth], (m) => {

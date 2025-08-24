@@ -13,7 +13,7 @@ const p0: PhaseConfig = deepFreeze(createCleanObj({
 const p1: PhaseConfig = deepFreeze(createCleanObj({
     name: "P1",
     duration: 120,
-    until: ({score}) => score >= 64,
+    until: ({score}) => score >= 32,
     onEnter: ({world}) => world.events.emit('stage-enter', {name: 'P1'}),
     rules: [
         {every: 0.6, jitter: 0.3, factory: spawnBase(100, 2), cap: 30},
@@ -48,7 +48,7 @@ const p3: PhaseConfig = deepFreeze(createCleanObj({
 
 const p4: PhaseConfig = deepFreeze(createCleanObj({
     name: "P4",
-    until: ({score}) => score >= 640,
+    until: ({score}) => score >= 720,
     onEnter: ({world}) => world.events.emit('stage-enter', {name: 'P4'}),
     rules: [
         {
@@ -67,16 +67,26 @@ const p5: PhaseConfig = deepFreeze(createCleanObj({
     onEnter: ({world}) => world.events.emit('stage-enter', {name: 'P5'}),
     rules: [
         {
-            every: 0.5,
+            every: 0.8,
             jitter: 0.4,
             factory: spawnBaseS(
-                randInt(90, 160), 6,
-                10, '#910000',
+                140, 2, 8,
+                '#910000',
                 (ctx) => 1 + Math.log2(1 + ctx.score) | 0
+            ),
+            cap: 60
+        },
+        {
+            rate: 6,
+            jitter: 0.9,
+            factory: spawnBaseS(
+                110, 1, 3,
+                '#ff2121',
+                (ctx) => 1 + Math.log10(1 + ctx.score) | 0
             ),
             cap: 64,
         },
-        {every: 1.0, jitter: 0.5, factory: spawnGun(80, 6), cap: 58},
+        {every: 1.2, jitter: 0.5, factory: spawnGun(80, randInt(3, 6)), cap: 58},
         {every: 4.0, jitter: 0.35, factory: spawnLineBase(6, 64, 140, 4, 2)},
     ],
 }));

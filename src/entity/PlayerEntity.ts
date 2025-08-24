@@ -13,6 +13,7 @@ import {EdgeGlowEffect} from "../effect/EdgeGlowEffect.ts";
 import {TechTree} from "../tech_tree/TechTree.ts";
 import {BaseWeapon} from "../weapon/BaseWeapon.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
+import {type DamageSource} from "./damage/DamageSource.ts";
 
 export class PlayerEntity extends LivingEntity {
     public readonly input: Input;
@@ -20,7 +21,6 @@ export class PlayerEntity extends LivingEntity {
     public readonly techTree: TechTree = World.initTechTree();
 
     public override speed = 300;
-    public invincible = false;
     public onDamageExplosionRadius = 320;
 
     private readonly baseWeapons: Weapon[] = [];
@@ -28,8 +28,8 @@ export class PlayerEntity extends LivingEntity {
     private phaseScore: number;
     private score: number = 0;
 
-    constructor(input: Input) {
-        super(new MutVec2(World.W / 2, World.H - 80), 18, 3);
+    public constructor(world: World, input: Input) {
+        super(world, new MutVec2(World.W / 2, World.H - 80), 18, 3);
 
         this.input = input;
         this.phaseScore = 0;
@@ -39,9 +39,10 @@ export class PlayerEntity extends LivingEntity {
         this.weapons.set('bomb', new BombWeapon(this));
     }
 
-    public override update(world: World, dt: number) {
-        super.update(world, dt);
+    public override tick(dt: number) {
+        super.tick(dt);
 
+        const world = this.getWorld();
         // 键盘移动
         let dx = 0, dy = 0;
         if (this.input.isDown("ArrowLeft", "KeyA")) dx -= 1;
@@ -83,7 +84,11 @@ export class PlayerEntity extends LivingEntity {
         }
     }
 
-    public override onDamage(world: World, damage: number) {
+    public override takeDamage(damageSource: DamageSource, damage: number): boolean {
+        if (this.isInvulnerableTo(damageSource)) return false;
+
+        const world = this.getWorld();
+
         world.events.emit('bomb-detonate', {
             pos: this.getPos(),
             damage: 32,
@@ -97,11 +102,9 @@ export class PlayerEntity extends LivingEntity {
             const emp = this.weapons.get('emp');
             if (emp && emp.canFire()) {
                 emp.tryFire(world);
-                return;
+                return false;
             }
         }
-
-        super.onDamage(world, damage);
 
         if (this.getHealth() === 1) {
             world.addEffect(new EdgeGlowEffect({
@@ -119,6 +122,13 @@ export class PlayerEntity extends LivingEntity {
                 emp.setCooldown(cd);
             }
         }
+
+        return super.takeDamage(damageSource, damage);
+    }
+
+    public override onDeath(_damageSource: DamageSource) {
+        super.onDeath(_damageSource);
+        this.getWorld().gameOver();
     }
 
     public override render(ctx: CanvasRenderingContext2D) {

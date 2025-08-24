@@ -14,7 +14,7 @@ import {DPR, isMobile} from "./utils/uit.ts";
 import {collideEntityCircle} from "./math/math.ts";
 import {type ProjectileEntity} from "./entity/ProjectileEntity.ts";
 import {M_STAGE} from "./configs/MobileConfig.ts";
-import techs from "./configs/tech-data.json";
+import techs from "../public/data/nova-flight/tech-data.json";
 import {TechTree} from "./tech_tree/TechTree.ts";
 import {applyTech} from "./tech_tree/apply_tech.ts";
 import {WorldConfig} from "./configs/WorldConfig.ts";
@@ -22,6 +22,10 @@ import type {MutVec2} from "./math/MutVec2.ts";
 import {ParticlePool} from "./effect/ParticlePool.ts";
 import {LaserWeapon} from "./weapon/LaserWeapon.ts";
 import type {TimerTask} from "./apis/ITimer.ts";
+import {DamageSources} from "./entity/damage/DamageSources.ts";
+import type {DamageSource} from "./entity/damage/DamageSource.ts";
+import {DamageTypeTags} from "./registry/tag/DamageTypeTags.ts";
+import {RegistryManager} from "./registry/RegistryManager.ts";
 
 export class World {
     public static instance: World;
@@ -32,8 +36,10 @@ export class World {
 
     public readonly camera: Camera = new Camera();
     public readonly events: EventBus = new EventBus();
+    private readonly registryManager: RegistryManager;
     private readonly ui: UI = new UI(this);
     private readonly input = new Input(World.canvas);
+    private readonly damageSources: DamageSources;
 
     // ticking
     private last = 0;
@@ -53,12 +59,13 @@ export class World {
     private readonly particlePool: ParticlePool = new ParticlePool(128);
     private readonly starField: StarField = new StarField(128, layers, 8);
 
-    public player = new PlayerEntity(this.input);
+    public player = new PlayerEntity(this, this.input);
     public mobs: MobEntity[] = [];
     public bullets: ProjectileEntity[] = [];
 
-    public constructor() {
-        if (World.instance) return World.instance;
+    public constructor(registryManager: RegistryManager) {
+        this.registryManager = registryManager;
+        this.damageSources = new DamageSources(registryManager);
 
         this.resize();
         this.registryListeners();
@@ -80,7 +87,7 @@ export class World {
         this.effects.length = 0;
 
         this.player.techTree.destroy();
-        this.player = new PlayerEntity(this.input);
+        this.player = new PlayerEntity(this, this.input);
 
         this.over = false;
         this.ticking = true;
@@ -130,39 +137,28 @@ export class World {
         this.camera.update(this.player.pos, dt);
         this.starField.update(dt, this.camera);
 
-        if (!this.over) this.player.update(this, dt);
+        if (!this.over) this.player.tick(dt);
 
         this.stage.update(this, dt);
 
-        this.mobs.forEach(mob => mob.update(this, dt));
-        this.bullets.forEach(b => b.update(this, dt));
+        this.mobs.forEach(mob => mob.tick(dt));
+        this.bullets.forEach(b => b.tick(dt));
         this.effects.forEach(e => e.update(dt));
         this.particlePool.update(dt);
 
         // 碰撞: 子弹
         for (const bullet of this.bullets) {
-            if (bullet.isDead) continue;
+            if (bullet.isDead()) continue;
 
             if (bullet.owner instanceof MobEntity) {
-                if (this.player.invincible || WorldConfig.devMode || !collideEntityCircle(this.player, bullet)) continue;
+                if (this.player.invulnerable || WorldConfig.devMode || !collideEntityCircle(this.player, bullet)) continue;
 
-                this.player.onDamage(this, 1);
-                bullet.onHit(this);
-                if (this.player.isDead) {
-                    this.gameOver();
-                    break;
-                }
-            } else if (bullet.owner instanceof PlayerEntity) {
+                bullet.onEntityHit(this.player);
+                if (this.isOver) break;
+            } else {
                 for (const mob of this.mobs) {
-                    if (mob.isDead || !collideEntityCircle(bullet, mob)) continue;
-                    if (this.player.techTree.isUnlocked('apfs_discarding_sabot')) {
-                        mob.onDamage(this, bullet.damage + (mob.getMaxHealth() * 0.3) | 0);
-                    } else {
-                        mob.onDamage(this, bullet.damage);
-                    }
-
-                    bullet.onHit(this);
-                    if (mob.isDead) this.events.emit('mob-killed', mob);
+                    if (mob.isDead() || !collideEntityCircle(bullet, mob)) continue;
+                    bullet.onEntityHit(mob);
                     break;
                 }
             }
@@ -171,20 +167,15 @@ export class World {
 
         // 碰撞: 玩家
         for (const mob of this.mobs) {
-            if (this.player.invincible || WorldConfig.devMode) break;
-            if (mob.isDead || !collideEntityCircle(this.player, mob)) continue;
+            if (this.player.invulnerable || WorldConfig.devMode) break;
+            if (mob.isDead() || !collideEntityCircle(this.player, mob)) continue;
 
-            mob.onDeath(this);
-            this.player.onDamage(this, 1);
-            if (this.player.isDead) {
-                this.gameOver();
-                break;
-            }
+            mob.attack(this.player);
+            if (this.isOver) break;
         }
 
-        // 清理
-        this.mobs = this.mobs.filter(e => !e.isDead);
-        this.bullets = this.bullets.filter(b => !b.isDead);
+        this.mobs = this.mobs.filter(e => !e.isDead());
+        this.bullets = this.bullets.filter(b => !b.isDead());
         this.effects = this.effects.filter(e => e.alive);
 
         this.input.updateEndFrame();
@@ -203,6 +194,14 @@ export class World {
 
     public addEffect(effect: Effect) {
         this.effects.push(effect);
+    }
+
+    public getDamageSources(): DamageSources {
+        return this.damageSources;
+    }
+
+    public getRegistryManager(): RegistryManager {
+        return this.registryManager;
     }
 
     public spawnParticle(
@@ -260,9 +259,7 @@ export class World {
         this.insertTimer(t);
         return {
             id: t.id,
-            cancel: () => {
-                t.canceled = true;
-            }
+            cancel: () => t.canceled = true
         };
     }
 
@@ -278,9 +275,7 @@ export class World {
         this.insertTimer(t);
         return {
             id: t.id,
-            cancel: () => {
-                t.canceled = true;
-            }
+            cancel: () => t.canceled = true
         };
     }
 
@@ -294,14 +289,21 @@ export class World {
         this.events.on('unlock-tech', ({id}) => applyTech(this, id));
 
         const techTree = this.player.techTree;
-        this.events.on('mob-killed', (event: MobEntity) => {
-            this.player.addPhaseScore(event.getWorth());
+        this.events.on('mob-killed', (event) => {
+            const mob = event.mob as MobEntity;
+            const damageSource = event.damageSource as DamageSource;
+            if (damageSource.isIn(DamageTypeTags.GAIN_SCORE)) {
+                this.player.addPhaseScore(mob.getWorth());
+            }
+
             if (techTree.isUnlocked('energy_recovery')) {
                 const laser = this.player.weapons.get('laser');
                 if (laser instanceof LaserWeapon) {
                     laser.setCooldown(laser.getCooldown() - 0.5);
                 }
             }
+
+            // TODO
             if (techTree.isUnlocked('emergency_repair')) {
                 if (Math.random() >= 0.92) this.player.setHealth(this.player.getHealth() + 1);
             }
@@ -329,7 +331,7 @@ export class World {
         });
 
         this.events.on('emp-burst', ({duration}) => {
-            if (this.player.techTree.isUnlocked('ele_oscillation')) {
+            if (techTree.isUnlocked('ele_oscillation')) {
                 this.empBurst = duration;
             }
         });
@@ -414,7 +416,7 @@ export class World {
         this.effects.forEach(e => e.render(ctx));
         this.particlePool.render(ctx);
 
-        if (!this.player.isDead) this.player.render(ctx);
+        if (!this.player.isDead()) this.player.render(ctx);
 
         ctx.restore();
 

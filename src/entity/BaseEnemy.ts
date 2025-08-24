@@ -1,12 +1,13 @@
 import {MutVec2} from "../math/MutVec2.ts";
 import {MobEntity} from "./MobEntity.ts";
+import type {World} from "../World.ts";
 
 export class BaseEnemy extends MobEntity {
     public override speed = 110;
     public color = '#ff6b6b';
 
-    constructor(pos: MutVec2, health: number, worth: number) {
-        super(pos, 16, health, worth);
+    public constructor(world: World, pos: MutVec2, health: number, worth: number) {
+        super(world, pos, 16, health, worth);
     }
 
     public override render(ctx: CanvasRenderingContext2D) {

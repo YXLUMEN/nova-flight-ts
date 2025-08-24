@@ -1,6 +1,5 @@
 import {Weapon} from "./Weapon.ts";
 import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
-import {type Entity} from "../entity/Entity.ts";
 import {World} from "../World.ts";
 import {WindowOverlay} from "../effect/WindowOverlay.ts";
 import {PlayerEntity} from "../entity/PlayerEntity.ts";
@@ -20,7 +19,7 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
 
     private mask: WindowOverlay | null = null;
 
-    public constructor(owner: Entity) {
+    public constructor(owner: PlayerEntity) {
         super(owner, 0, 30);
     }
 
@@ -31,8 +30,8 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
         this.timeLeft = this.duration;
 
         if (this.owner instanceof PlayerEntity) {
-            this.prevInvincible = this.owner.invincible;
-            this.owner.invincible = true;
+            this.prevInvincible = this.owner.invulnerable;
+            this.owner.invulnerable = true;
 
             this.mask = new WindowOverlay({
                 color: IntoVoidWeapon.uiColor,
@@ -60,7 +59,7 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
 
         this.timeLeft -= dt;
         if (this.timeLeft <= 0) {
-            this.exitVoid(World.instance);
+            this.exitVoid(this.owner.getWorld());
         }
         if (this.owner instanceof PlayerEntity && this.owner.techTree.isUnlocked('void_energy_extraction')) {
             const laser = this.owner.weapons.get('laser');
@@ -88,13 +87,13 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
         if (!(owner instanceof PlayerEntity)) return;
 
         // 恢复之前的无敌状态,不覆盖其他来源
-        world.player.invincible = this.prevInvincible;
+        world.player.invulnerable = this.prevInvincible;
         this.prevInvincible = false;
 
         const box = this.owner.boxRadius + this.radius;
         for (const mob of world.mobs) {
-            if (mob.isDead || !pointInCircleVec2(this.owner.pos, mob.pos, box + mob.boxRadius)) continue;
-            mob.onDeath(world);
+            if (mob.isDead() || !pointInCircleVec2(this.owner.pos, mob.pos, box + mob.boxRadius)) continue;
+            mob.onDeath(world.getDamageSources().void(this.owner as PlayerEntity));
         }
 
         if (owner.techTree.isUnlocked('void_disturbance')) {

@@ -1,61 +1,59 @@
 import {type MutVec2} from "../math/MutVec2.ts";
-import {type Status} from "../status/Status.ts";
 import {type World} from "../World.ts";
 import {Vec2} from "../math/Vec2.ts";
+import type {DamageSource} from "./damage/DamageSource.ts";
 
 export abstract class Entity {
-    private readonly _pos: MutVec2;
+    private readonly world: World;
+    private readonly position: MutVec2;
     private readonly _boxRadius: number;
 
     public speed: number = 0;
 
-    private statuses: Status[] = [];
+    public invulnerable: boolean = false;
+    private dead: boolean;
 
-    protected dead: boolean;
-
-    protected constructor(pos: MutVec2, boxRadius: number) {
-        this._pos = pos;
-        this._boxRadius = boxRadius;
+    protected constructor(world: World, pos: MutVec2, boxRadius: number) {
+        this.world = world;
         this.dead = false;
+
+        this.position = pos;
+        this._boxRadius = boxRadius;
     }
 
-    public update(world: World, dt: number): void {
-        this.updateStatuses(world, dt);
-    };
-
-    public addStatus(status: Status) {
-        this.statuses.push(status);
+    public getWorld(): World {
+        return this.world;
     }
 
-    public updateStatuses(world: World, dt: number) {
-        for (const s of this.statuses) {
-            s.update(world, this, dt);
-        }
-        this.statuses = this.statuses.filter(s => !s.expired);
+    public tick(_dt: number): void {
     }
 
-    public hasStatus(tag: string): boolean {
-        return this.statuses.some(s => s.getTag() === tag);
+    public isInvulnerableTo(damageSource: DamageSource): boolean {
+        return this.dead || this.invulnerable && !damageSource.isIn();
     }
 
-    public getStatus(tag: string): Status | undefined {
-        return this.statuses.find(s => s.getTag() === tag);
+    public takeDamage(damageSource: DamageSource, _amount: number): boolean {
+        return this.isInvulnerableTo(damageSource);
     }
 
-    public onDeath(_world: World): void {
+    public onDeath(_damageSource: DamageSource): void {
+        this.discard();
+    }
+
+    public discard(): void {
         this.dead = true;
     }
 
-    public get isDead(): boolean {
+    public isDead(): boolean {
         return this.dead;
     }
 
     public get pos(): MutVec2 {
-        return this._pos;
+        return this.position;
     }
 
     public getPos(): Vec2 {
-        return Vec2.formVec(this._pos);
+        return Vec2.formVec(this.position);
     }
 
     public get boxRadius(): number {

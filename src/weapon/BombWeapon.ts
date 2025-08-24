@@ -42,11 +42,10 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
     public static applyBombDamage(world: World, center: MutVec2, radius: number, damage: number) {
         const r2 = radius * radius;
         for (const mob of world.mobs) {
-            if (mob.isDead) continue;
+            if (mob.isDead()) continue;
             const d2 = MutVec2.distSq(mob.pos, center);
             if (d2 <= r2) {
-                mob.onDamage(world, damage);
-                if (mob.isDead) world.events.emit('mob-killed', mob);
+                mob.takeDamage(world.getDamageSources().explosion(null, null), damage);
             }
         }
     }

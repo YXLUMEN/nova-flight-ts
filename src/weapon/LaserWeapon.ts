@@ -5,6 +5,7 @@ import {MutVec2} from '../math/MutVec2.ts';
 import {clamp, lineCircleHit} from '../math/math.ts';
 import type {Entity} from "../entity/Entity.ts";
 import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
+import {PlayerEntity} from "../entity/PlayerEntity.ts";
 
 export class LaserWeapon extends Weapon implements ISpecialWeapon {
     public static readonly DISPLAY_NAME = 'LASER';
@@ -74,14 +75,14 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
         const world = World.instance;
         const start = this.owner.pos;
         const end = new MutVec2(start.x, start.y - this.range);
+        const attacker = this.owner instanceof PlayerEntity ? this.owner : null;
 
         for (const mob of world.mobs) {
-            if (mob.isDead) continue;
+            if (mob.isDead()) continue;
             if (!lineCircleHit(start.x, start.y, end.x, end.y, mob.pos.x, mob.pos.y, mob.boxRadius ?? 16)) continue;
 
             const damage = Math.max(1, Math.round(this.damage | 0));
-            mob.onDamage(world, damage);
-            if (mob.isDead) world.events.emit('mob-killed', mob);
+            mob.takeDamage(world.getDamageSources().laser(attacker), damage);
         }
 
         // 刷新/创建光束效果

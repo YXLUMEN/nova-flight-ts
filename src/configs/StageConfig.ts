@@ -79,7 +79,7 @@ const p5: PhaseConfig = deepFreeze(createCleanObj({
             rate: 8,
             jitter: 0.9,
             factory: spawnBaseS(
-                110, 8, 3,
+                110, 4, 3,
                 '#ff2121',
                 (ctx) => 1 + Math.log10(1 + ctx.score) | 0
             ),

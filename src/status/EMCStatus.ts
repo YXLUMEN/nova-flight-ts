@@ -1,22 +1,18 @@
-import {Status} from "./Status.ts";
+import {StatusEffect} from "./StatusEffect.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {World} from "../World.ts";
 import {PI2} from "../math/math.ts";
 import {MutVec2} from "../math/MutVec2.ts";
 
-export class EMCStatus extends Status {
-    public static readonly TAG = 'EMC';
-    public readonly factor: number;
-
+export class EMCStatus extends StatusEffect {
     private cooldown = 0;
     private readonly interval = 0.05;
 
-    constructor(duration: number, factor: number) {
-        super(duration);
-        this.factor = factor;
+    public constructor() {
+        super();
     }
 
-    protected apply(world: World, entity: Entity, dt: number) {
+    public apply(world: World, entity: Entity, dt: number) {
         this.cooldown -= dt;
         if (this.cooldown > 0) return;
         this.cooldown = this.interval;
@@ -35,9 +31,5 @@ export class EMCStatus extends Status {
             1.5,
             0.0
         );
-    }
-
-    public override getTag(): string {
-        return EMCStatus.TAG;
     }
 }
