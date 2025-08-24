@@ -1,7 +1,7 @@
 import {createCleanObj, isMobile} from "../utils/uit.ts";
 
 const WorldConfig = Object.preventExtensions(createCleanObj({
-    devMode: true,
+    devMode: false,
     lowPowerMode: false,
 
     tick: 50,
