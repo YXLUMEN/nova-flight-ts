@@ -1,5 +1,5 @@
 import {Entity} from "../Entity.ts";
-import {World} from "../../World.ts";
+import {World} from "../../world/World.ts";
 import type {IOwnable} from "../IOwnable.ts";
 import type {EntityType} from "../EntityType.ts";
 import type {DataEntry} from "../data/DataEntry.ts";
@@ -33,6 +33,10 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
 
     public getOwner(): Entity {
         return this.owner;
+    }
+
+    public getBoxRadius() {
+        return this.boxRadius;
     }
 
     protected initDataTracker(_builder: InstanceType<typeof DataTracker.Builder>): void {

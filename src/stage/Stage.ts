@@ -1,6 +1,6 @@
 import {SpawnRule} from "./SpawnRule.ts";
 import type {PhaseConfig, RNG, SpawnCtx} from "../apis/IStage.ts";
-import type {World} from "../World.ts";
+import type {World} from "../world/World.ts";
 
 export class Stage {
     private readonly rng: RNG;

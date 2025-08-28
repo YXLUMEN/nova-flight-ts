@@ -1,13 +1,13 @@
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import type {MobFactory, SamplerKind, SpawnCtx, TopSpawnOpts} from "../apis/IStage.ts";
-import {World} from "../World.ts";
+import {World} from "../world/World.ts";
 import {rand} from "../utils/math/math.ts";
 import type {EntityType} from "../entity/EntityType.ts";
 
 // 顶部随机生成
 function spawnTopRandomCtor<T extends MobEntity>(
     type: EntityType<T>,
-    args: any[] = [],
+    args: readonly unknown[] = [],
     init?: (mob: T, ctx: SpawnCtx) => void
 ): MobFactory {
     return (ctx) => {
@@ -17,6 +17,13 @@ function spawnTopRandomCtor<T extends MobEntity>(
         init?.(mob, ctx);
         return mob;
     };
+}
+
+export interface spawnConfig<T extends MobEntity> {
+    type: EntityType<T>,
+    args: readonly unknown[],
+    init?: (mob: T, ctx: SpawnCtx) => void,
+    opts?: TopSpawnOpts
 }
 
 function spawnTopRandomCtorS<T extends MobEntity>(
@@ -122,9 +129,25 @@ function spawnLineCtor<T extends MobEntity>(
     };
 }
 
+function spawnFormation(configs: spawnConfig<any>[]): MobFactory {
+    return (ctx) => {
+        const arr = [];
+        let gap = 0;
+        const x = rand(24, World.W - 24);
+        for (const config of configs) {
+            const mob = config.type.create(World.instance, ...config.args) as MobEntity;
+            mob.setPos(x, -30 + gap);
+            gap += -16 - mob.getEntityHeight();
+            config.init?.(mob, ctx);
+            arr.push(mob);
+        }
+        return arr;
+    }
+}
 
 export {
     spawnTopRandomCtor,
     spawnTopRandomCtorS,
     spawnLineCtor,
+    spawnFormation,
 }

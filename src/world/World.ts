@@ -1,33 +1,34 @@
-import {Input} from "./Input.ts";
-import type {Entity} from "./entity/Entity.ts";
-import {PlayerEntity} from "./entity/PlayerEntity.ts";
-import {Camera} from "./render/Camera.ts";
-import {MobEntity} from "./entity/mob/MobEntity.ts";
-import {EventBus} from "./event/EventBus.ts";
-import type {Effect} from "./effect/Effect.ts";
-import {BombWeapon} from "./weapon/BombWeapon.ts";
-import {ScreenFlash} from "./effect/ScreenFlash.ts";
-import {StarField} from "./effect/StarField.ts";
-import {UI} from "./ui/UI.ts";
-import {STAGE} from "./configs/StageConfig.ts";
-import {DPR} from "./utils/uit.ts";
-import {ProjectileEntity} from "./entity/projectile/ProjectileEntity.ts";
-import techs from "./data/tech-data.json";
-import {TechTree} from "./tech_tree/TechTree.ts";
-import {applyTech} from "./tech_tree/apply_tech.ts";
-import {WorldConfig} from "./configs/WorldConfig.ts";
-import {MutVec2} from "./utils/math/MutVec2.ts";
-import {ParticlePool} from "./effect/ParticlePool.ts";
-import {LaserWeapon} from "./weapon/LaserWeapon.ts";
-import type {TimerTask} from "./apis/ITimer.ts";
-import {DamageSources} from "./entity/damage/DamageSources.ts";
-import type {DamageSource} from "./entity/damage/DamageSource.ts";
-import {DamageTypeTags} from "./registry/tag/DamageTypeTags.ts";
-import {RegistryManager} from "./registry/RegistryManager.ts";
-import {BossEntity} from "./entity/mob/BossEntity.ts";
-import {collideEntityBox, collideEntityCircle} from "./utils/math/math.ts";
-import {EntityTypes} from "./entity/EntityTypes.ts";
-import {defaultLayers} from "./configs/StarfieldConfig.ts";
+import {Input} from "../Input.ts";
+import {type Entity} from "../entity/Entity.ts";
+import {PlayerEntity} from "../entity/PlayerEntity.ts";
+import {Camera} from "../render/Camera.ts";
+import {MobEntity} from "../entity/mob/MobEntity.ts";
+import {EventBus} from "../event/EventBus.ts";
+import type {Effect} from "../effect/Effect.ts";
+import {BombWeapon} from "../weapon/BombWeapon.ts";
+import {ScreenFlash} from "../effect/ScreenFlash.ts";
+import {StarField} from "../effect/StarField.ts";
+import {UI} from "../ui/UI.ts";
+import {STAGE} from "../configs/StageConfig.ts";
+import {DPR} from "../utils/uit.ts";
+import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
+import techs from "../data/tech-data.json";
+import {TechTree} from "../tech_tree/TechTree.ts";
+import {applyTech} from "../tech_tree/apply_tech.ts";
+import {WorldConfig} from "../configs/WorldConfig.ts";
+import {MutVec2} from "../utils/math/MutVec2.ts";
+import {ParticlePool} from "../effect/ParticlePool.ts";
+import {LaserWeapon} from "../weapon/LaserWeapon.ts";
+import type {TimerTask} from "../apis/ITimer.ts";
+import {DamageSources} from "../entity/damage/DamageSources.ts";
+import type {DamageSource} from "../entity/damage/DamageSource.ts";
+import {DamageTypeTags} from "../registry/tag/DamageTypeTags.ts";
+import {RegistryManager} from "../registry/RegistryManager.ts";
+import {BossEntity} from "../entity/mob/BossEntity.ts";
+import {collideEntityBox, collideEntityCircle} from "../utils/math/math.ts";
+import {EntityTypes} from "../entity/EntityTypes.ts";
+import {defaultLayers} from "../configs/StarfieldConfig.ts";
+import {EntityRenderers} from "../render/entity/EntityRenderers.ts";
 
 export class World {
     public static instance: World;
@@ -152,7 +153,7 @@ export class World {
 
         // 碰撞: 子弹
         for (const bullet of this.bullets) {
-            if (bullet.isDead()) continue;
+            if (bullet.isRemoved()) continue;
 
             if (bullet.owner instanceof MobEntity) {
                 if (this.player.invulnerable || WorldConfig.devMode || !collideEntityBox(this.player, bullet)) continue;
@@ -161,7 +162,7 @@ export class World {
                 if (this.isOver) break;
             } else {
                 for (const mob of this.mobs) {
-                    if (mob.isDead() || !collideEntityCircle(bullet, mob)) continue;
+                    if (mob.isRemoved() || !collideEntityCircle(bullet, mob)) continue;
                     bullet.onEntityHit(mob);
                     break;
                 }
@@ -172,14 +173,14 @@ export class World {
         // 碰撞: 玩家
         for (const mob of this.mobs) {
             if (this.player.invulnerable || WorldConfig.devMode) break;
-            if (mob.isDead() || !collideEntityBox(this.player, mob)) continue;
+            if (mob.isRemoved() || !collideEntityBox(this.player, mob)) continue;
 
             mob.attack(this.player);
             if (this.isOver) break;
         }
 
-        this.mobs = this.mobs.filter(e => !e.isDead());
-        this.bullets = this.bullets.filter(b => !b.isDead());
+        this.mobs = this.mobs.filter(e => !e.isRemoved());
+        this.bullets = this.bullets.filter(b => !b.isRemoved());
         this.effects = this.effects.filter(e => e.alive);
 
         this.input.updateEndFrame();
@@ -461,16 +462,21 @@ export class World {
         this.drawBackground(ctx);
 
         // 实体
-        this.mobs.forEach(e => e.render(ctx));
-        this.bullets.forEach(b => b.render(ctx));
+        this.mobs.forEach(World.renderEntity);
+        this.bullets.forEach(World.renderEntity);
+
         this.effects.forEach(e => e.render(ctx));
         this.particlePool.render(ctx);
 
-        if (!this.player.isDead()) this.player.render(ctx);
+        if (!this.player.isRemoved()) World.renderEntity(this.player);
 
         ctx.restore();
 
         this.ui.render(ctx);
+    }
+
+    private static renderEntity(entity: Entity): void {
+        EntityRenderers.getRenderer(entity).render(entity, World.ctx);
     }
 
     public drawBackground(ctx: CanvasRenderingContext2D) {

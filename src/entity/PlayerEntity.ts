@@ -1,5 +1,5 @@
 import {type Input} from "../Input.ts";
-import {World} from "../World.ts";
+import {World} from "../world/World.ts";
 import {type Weapon} from "../weapon/Weapon.ts";
 import {BombWeapon} from "../weapon/BombWeapon.ts";
 import {LivingEntity} from "./LivingEntity.ts";
@@ -134,38 +134,6 @@ export class PlayerEntity extends LivingEntity {
     public override onDeath(_damageSource: DamageSource) {
         super.onDeath(_damageSource);
         this.getWorld().gameOver();
-    }
-
-    public override render(ctx: CanvasRenderingContext2D) {
-        ctx.save();
-        ctx.translate(this.getMutPos.x, this.getMutPos.y);
-        // 机身
-        const grad = ctx.createLinearGradient(0, -20, 0, 20);
-        grad.addColorStop(0, "#7ee3ff");
-        grad.addColorStop(1, "#2aa9ff");
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.moveTo(0, -20);
-        ctx.lineTo(14, 8);
-        ctx.lineTo(0, 16);
-        ctx.lineTo(-14, 8);
-        ctx.closePath();
-        ctx.fill();
-
-        // 发光
-        ctx.strokeStyle = "rgba(140,245,255,.6)";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // 喷口
-        ctx.fillStyle = "rgba(255,200,120,.9)";
-        ctx.beginPath();
-        ctx.moveTo(-6, 16);
-        ctx.lineTo(0, 24 + Math.random() * 6);
-        ctx.lineTo(6, 16);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
     }
 
     public addWeapon(name: string, weapon: Weapon): void {

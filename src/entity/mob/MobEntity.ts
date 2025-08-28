@@ -1,6 +1,6 @@
 import {LivingEntity} from "../LivingEntity.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
-import {World} from "../../World.ts";
+import {World} from "../../world/World.ts";
 import {PI2, rand} from "../../utils/math/math.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import {PlayerEntity} from "../PlayerEntity.ts";

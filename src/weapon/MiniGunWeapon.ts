@@ -1,6 +1,6 @@
 import type {Entity} from "../entity/Entity.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
-import type {World} from "../World.ts";
+import type {World} from "../world/World.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";

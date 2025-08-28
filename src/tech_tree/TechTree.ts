@@ -1,6 +1,6 @@
 import {TechState} from "./TechState.ts";
 import type {Tech} from "../apis/ITech.ts";
-import {World} from "../World.ts";
+import {World} from "../world/World.ts";
 import {applyTech} from "./apply_tech.ts";
 import {clamp} from "../utils/math/math.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";

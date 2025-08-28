@@ -7,6 +7,7 @@ import {BossEntity} from "./mob/BossEntity.ts";
 import {BaseEnemy} from "./mob/BaseEnemy.ts";
 import {EntityType} from "./EntityType.ts";
 import {MiniBulletEntity} from "./projectile/MiniBulletEntity.ts";
+import {MiniGunEnemyEntity} from "./mob/MiniGunEnemyEntity.ts";
 
 export class EntityTypes {
     public static readonly BASE_ENEMY = EntityType.register("base_enemy",
@@ -20,6 +21,10 @@ export class EntityTypes {
     public static readonly GUN_ENEMY_ENTITY = EntityType.register("gun_enemy",
         EntityType.Builder.create(GunEnemyEntity)
             .setDimensions(20, 20)
+    );
+    public static readonly MINIGUN_ENEMY_ENTITY = EntityType.register("minigun_enemy",
+        EntityType.Builder.create(MiniGunEnemyEntity)
+            .setDimensions(32, 32)
     );
     public static readonly TANK_ENEMY_ENTITY = EntityType.register("tank_enemy",
         EntityType.Builder.create(TankEnemy)
@@ -35,7 +40,7 @@ export class EntityTypes {
     );
     public static readonly EXPLODE_BULLET_ENTITY = EntityType.register("explode_bullet",
         EntityType.Builder.create(ExplodeBulletEntity)
-            .setDimensions(6, 6)
+            .setDimensions(12, 12)
     );
     public static PLAYER_ENTITY: EntityType<PlayerEntity>;
 

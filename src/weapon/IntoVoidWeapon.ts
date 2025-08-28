@@ -1,6 +1,6 @@
 import {Weapon} from "./Weapon.ts";
 import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
-import {World} from "../World.ts";
+import {World} from "../world/World.ts";
 import {WindowOverlay} from "../effect/WindowOverlay.ts";
 import {PlayerEntity} from "../entity/PlayerEntity.ts";
 import {pointInCircleVec2} from "../utils/math/math.ts";
@@ -92,7 +92,7 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
 
         const box = this.owner.getEntityWidth() + this.radius;
         for (const mob of world.getMobs()) {
-            if (mob.isDead() || !pointInCircleVec2(this.owner.getMutPos, mob.getMutPos, box + mob.getEntityWidth())) continue;
+            if (mob.isRemoved() || !pointInCircleVec2(this.owner.getMutPos, mob.getMutPos, box + mob.getEntityWidth())) continue;
             if (mob instanceof BossEntity) continue;
             mob.onDeath(world.getDamageSources().void(this.owner as PlayerEntity));
         }

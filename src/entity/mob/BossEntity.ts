@@ -1,5 +1,5 @@
 import {MobEntity} from "./MobEntity.ts";
-import type {World} from "../../World.ts";
+import type {World} from "../../world/World.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {type DamageSource} from "../damage/DamageSource.ts";
 import {clamp, PI2, rand} from "../../utils/math/math.ts";
@@ -84,24 +84,5 @@ export class BossEntity extends MobEntity {
     public override attack(player: PlayerEntity) {
         player.getWorld().gameOver();
         this.discard();
-    }
-
-    public override render(ctx: CanvasRenderingContext2D) {
-        ctx.save();
-        ctx.translate(this.getMutPos.x, this.getMutPos.y);
-
-        ctx.fillStyle = this.color;
-        ctx.strokeStyle = "rgba(0,0,0,.2)";
-
-        ctx.beginPath();
-        ctx.moveTo(0, 144);
-        ctx.lineTo(-112, -48);
-        ctx.lineTo(0, -96);
-        ctx.lineTo(122, -48);
-        ctx.closePath();
-
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
     }
 }

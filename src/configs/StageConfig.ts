@@ -1,7 +1,7 @@
 import type {PhaseConfig} from "../apis/IStage.ts";
 import {Stage} from "../stage/Stage.ts";
 import {createCleanObj, deepFreeze} from "../utils/uit.ts";
-import {spawnBase, spawnBaseS, spawnGun, spawnLineBase, spawnTank} from "../utils/PresetsSpawn.ts";
+import {spawnBase, spawnBaseS, spawnGun, spawnLineBase, spawnMiniGun, spawnTank} from "../utils/PresetsSpawn.ts";
 
 const p0: PhaseConfig = deepFreeze(createCleanObj({
     name: "P0",
@@ -80,14 +80,14 @@ const p5: PhaseConfig = deepFreeze(createCleanObj({
             rate: 2,
             jitter: 0.8,
             factory: spawnBaseS(
-                120, 4, 3,
+                120, 4, 4,
                 '#ff2121',
                 (ctx) => 1 + Math.log10(1 + ctx.score) | 0
             ),
             cap: 96,
         },
         {every: 0.9, jitter: 0.5, factory: spawnGun(80, 6, 2), cap: 96},
-        {every: 4.0, jitter: 0.35, factory: spawnLineBase(6, 64, 150, 4, 2)},
+        {every: 4.0, jitter: 0.35, factory: spawnLineBase(6, 64, 150, 4, 1)},
     ],
 }));
 
@@ -126,12 +126,13 @@ const p7: PhaseConfig = deepFreeze(createCleanObj({
             rate: 3,
             jitter: 0.6,
             factory: spawnTank(
-                60, 32, 5,
+                60, 32, 8,
                 '#9f3b00',
             ),
             cap: 72,
         },
-        {every: 0.9, jitter: 0.5, factory: spawnGun(80, 6, 2), cap: 96},
+        {every: 0.9, jitter: 0.5, factory: spawnGun(80, 6, 4), cap: 96},
+        {every: 2.0, jitter: 0.4, factory: spawnMiniGun(40, 128, 12), cap: 96},
     ],
 }));
 

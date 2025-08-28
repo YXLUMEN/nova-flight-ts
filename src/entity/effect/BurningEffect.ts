@@ -14,7 +14,7 @@ export class BurningEffect extends StatusEffect {
         const world = entity.getWorld();
 
         let damage: number = this.baseDps * amplifier;
-        if (amplifier > 4 && entity instanceof LivingEntity) {
+        if (amplifier > 8 && entity instanceof LivingEntity) {
             damage += entity.getMaxHealth() * 0.1;
         }
         entity.takeDamage(world.getDamageSources().onFire(), damage);

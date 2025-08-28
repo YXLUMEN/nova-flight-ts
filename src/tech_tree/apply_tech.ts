@@ -2,7 +2,7 @@ import {EMPWeapon} from "../weapon/EMPWeapon.ts";
 import {LaserWeapon} from "../weapon/LaserWeapon.ts";
 import {BaseWeapon} from "../weapon/BaseWeapon.ts";
 import {Cannon90Weapon} from "../weapon/Cannon90Weapon.ts";
-import {World} from "../World.ts";
+import {World} from "../world/World.ts";
 import {BombWeapon} from "../weapon/BombWeapon.ts";
 import {IntoVoidWeapon} from "../weapon/IntoVoidWeapon.ts";
 import {MiniGunWeapon} from "../weapon/MiniGunWeapon.ts";

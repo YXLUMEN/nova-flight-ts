@@ -1,5 +1,5 @@
 import {Weapon} from "./Weapon.ts";
-import {World} from "../World.ts";
+import {World} from "../world/World.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {RadialRing} from "../effect/RadialRing.ts";
 import {rand} from "../utils/math/math.ts";
@@ -48,7 +48,7 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
         source: Entity | null = null, attacker: LivingEntity | null = null) {
         const r2 = radius * radius;
         for (const mob of world.getMobs()) {
-            if (mob.isDead()) continue;
+            if (mob.isRemoved()) continue;
             const d2 = MutVec2.distSq(mob.getMutPos, center);
             if (d2 <= r2) {
                 mob.takeDamage(world.getDamageSources().explosion(source, attacker), damage);

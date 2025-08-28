@@ -1,5 +1,5 @@
 import type {UIOptions, WeaponUIInfo} from '../apis/IUIInfo.ts';
-import {World} from '../World.ts';
+import {World} from '../world/World.ts';
 import type {Weapon} from '../weapon/Weapon.ts';
 import {BaseWeapon} from "../weapon/BaseWeapon.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";

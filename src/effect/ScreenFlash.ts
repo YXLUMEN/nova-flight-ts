@@ -1,5 +1,5 @@
 import type {Effect} from "./Effect.ts";
-import {World} from "../World.ts";
+import {World} from "../world/World.ts";
 
 export class ScreenFlash implements Effect {
     public alive = true;

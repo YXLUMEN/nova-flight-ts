@@ -1,5 +1,5 @@
 import {Entity} from "./Entity.ts";
-import type {World} from "../World.ts";
+import type {World} from "../world/World.ts";
 import {clamp} from "../utils/math/math.ts";
 import type {DamageSource} from "./damage/DamageSource.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";

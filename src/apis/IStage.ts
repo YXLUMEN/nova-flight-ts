@@ -1,4 +1,4 @@
-import type {World} from "../World.ts";
+import type {World} from "../world/World.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
 
 export type RNG = () => number;

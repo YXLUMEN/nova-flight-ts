@@ -1,6 +1,6 @@
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import type {TrackedData} from "./data/TrackedData.ts";
-import {type World} from "../World.ts";
+import {type World} from "../world/World.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 import type {DamageSource} from "./damage/DamageSource.ts";
 import type {Weapon} from "../weapon/Weapon.ts";
@@ -22,7 +22,7 @@ export abstract class Entity implements DataTracked {
 
     public speed: number = 0;
     public invulnerable: boolean = false;
-    private dead: boolean = false;
+    private removed: boolean = false;
 
     protected constructor(type: EntityType<any>, world: World) {
         this.type = type;
@@ -44,7 +44,7 @@ export abstract class Entity implements DataTracked {
     }
 
     public isInvulnerableTo(damageSource: DamageSource): boolean {
-        return this.dead || this.invulnerable && !damageSource.isIn();
+        return this.removed || this.invulnerable && !damageSource.isIn();
     }
 
     public takeDamage(damageSource: DamageSource, _amount: number): boolean {
@@ -56,11 +56,11 @@ export abstract class Entity implements DataTracked {
     }
 
     public discard(): void {
-        this.dead = true;
+        this.removed = true;
     }
 
-    public isDead(): boolean {
-        return this.dead;
+    public isRemoved(): boolean {
+        return this.removed;
     }
 
     public getWeaponStack(): Weapon | null {
@@ -108,8 +108,6 @@ export abstract class Entity implements DataTracked {
     public getType(): EntityType<any> {
         return this.type;
     }
-
-    public abstract render(ctx: CanvasRenderingContext2D): void;
 
     protected abstract initDataTracker(builder: InstanceType<typeof DataTracker.Builder>): void;
 

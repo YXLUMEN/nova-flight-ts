@@ -1,6 +1,6 @@
 import {LaserBeamEffect} from '../effect/LaserBeamEffect.ts';
 import {Weapon} from './Weapon.ts';
-import {World} from '../World.ts';
+import {World} from '../world/World.ts';
 import {clamp} from '../utils/math/math.ts';
 import type {Entity} from "../entity/Entity.ts";
 import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
@@ -83,7 +83,7 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
         const attacker = this.owner instanceof PlayerEntity ? this.owner : null;
 
         for (const mob of world.getMobs()) {
-            if (mob.isDead()) continue;
+            if (mob.isRemoved()) continue;
             const mobBox = mob.calculateBoundingBox();
             if (!mobBox.intersectsByBox(box)) continue;
 

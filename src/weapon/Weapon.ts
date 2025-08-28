@@ -1,5 +1,5 @@
 import {type Entity} from "../entity/Entity.ts";
-import {type World} from "../World.ts";
+import {type World} from "../world/World.ts";
 import {clamp} from "../utils/math/math.ts";
 
 export abstract class Weapon {

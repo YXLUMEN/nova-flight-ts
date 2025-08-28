@@ -1,5 +1,5 @@
 import type {MobFactory, SpawnCtx} from "../apis/IStage.ts";
-import {spawnLineCtor, spawnTopRandomCtor, spawnTopRandomCtorS} from "../stage/SpawnFactories.ts";
+import {spawnFormation, spawnLineCtor, spawnTopRandomCtor, spawnTopRandomCtorS} from "../stage/SpawnFactories.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 
 const spawnBase = (speed = 120, hp = 1, worth = 1, color = '#ff6b6b'): MobFactory =>
@@ -51,10 +51,32 @@ const spawnGun = (speed = 120, hp = 1, worth = 1, color = '#ff6b6b'): MobFactory
         m.color = color;
     });
 
+const spawnMiniGun = (speed = 120, hp = 16, worth = 8, color = '#ac0000'): MobFactory =>
+    spawnFormation([
+        {
+            type: EntityTypes.TANK_ENEMY_ENTITY,
+            args: [(hp / 2) | 0, worth],
+            init: (m) => {
+                m.speed = speed;
+                m.color = color;
+            }
+        },
+        {
+            type: EntityTypes.MINIGUN_ENEMY_ENTITY,
+            args: [hp, worth],
+            init: (m) => {
+                m.speed = speed;
+                m.color = color;
+            }
+        }
+    ]);
+
+
 export {
     spawnBase,
     spawnBaseS,
     spawnLineBase,
     spawnGun,
-    spawnTank
+    spawnTank,
+    spawnMiniGun
 }

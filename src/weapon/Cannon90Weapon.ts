@@ -1,4 +1,4 @@
-import {World} from "../World.ts";
+import {World} from "../world/World.ts";
 import type {Entity} from "../entity/Entity.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {ExplodeBulletEntity} from "../entity/projectile/ExplodeBulletEntity.ts";
