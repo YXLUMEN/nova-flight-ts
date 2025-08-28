@@ -20,7 +20,7 @@ const spawnBaseS = (
     }, {sampler: 'best', candidates: 8, history: 16, minGap: 64, margin: 24})(ctx)
 };
 
-const spawnTank = (speed = 120, hp = 1, worth = 1, color = '#ff6b6b'): MobFactory =>
+const spawnTank = (speed = 120, hp = 32, worth = 1, color = '#ff6b6b'): MobFactory =>
     spawnTopRandomCtor(EntityTypes.TANK_ENEMY_ENTITY, [hp, worth], (m) => {
         m.speed = speed;
         m.color = color;

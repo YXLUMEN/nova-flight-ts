@@ -27,7 +27,7 @@ export class WindowOverlay implements Effect {
         this.composite = opts.composite ?? "screen";
     }
 
-    public update(dt: number): void {
+    public tick(dt: number): void {
         if (!this.alive) return;
         this.t += dt;
 

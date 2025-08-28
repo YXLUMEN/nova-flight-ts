@@ -31,10 +31,10 @@ export class ParticlePool {
         return p;
     }
 
-    public update(dt: number) {
+    public tick(tickDelta: number) {
         for (let i = this.active.length - 1; i >= 0; i--) {
             const p = this.active[i];
-            p.update(dt);
+            p.tick(tickDelta);
             if (!p.alive) {
                 this.active[i] = this.active[this.active.length - 1];
                 this.active.pop();

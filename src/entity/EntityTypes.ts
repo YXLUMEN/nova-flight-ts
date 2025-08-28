@@ -11,7 +11,7 @@ import {MiniBulletEntity} from "./projectile/MiniBulletEntity.ts";
 export class EntityTypes {
     public static readonly BASE_ENEMY = EntityType.register("base_enemy",
         EntityType.Builder.create(BaseEnemy)
-            .setDimensions(18, 18)
+            .setDimensions(28, 24)
     );
     public static readonly BOSS_ENTITY = EntityType.register("boss",
         EntityType.Builder.create(BossEntity)
@@ -40,9 +40,10 @@ export class EntityTypes {
     public static PLAYER_ENTITY: EntityType<PlayerEntity>;
 
     public static init() {
+        // 避免提前引用
         this.PLAYER_ENTITY = EntityType.register("player",
             EntityType.Builder.create(PlayerEntity)
-                .setDimensions(18, 18)
+                .setDimensions(24, 28)
         );
     }
 }

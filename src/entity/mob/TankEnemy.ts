@@ -12,7 +12,7 @@ export class TankEnemy extends BaseEnemy {
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (this.damageCooldown > 0) return false;
 
-        damage = Math.max(1, (damage * 0.6) | 0);
+        damage = Math.min(8, damage);
         if (super.takeDamage(damageSource, damage)) {
             this.damageCooldown = 8;
             return true;

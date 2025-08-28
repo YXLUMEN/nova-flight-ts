@@ -50,7 +50,7 @@ export class Particle implements Effect {
         this.alive = true;
     }
 
-    public update(dt: number) {
+    public tick(dt: number) {
         this.t += dt;
         if (this.t >= this.life) {
             this.alive = false;

@@ -15,8 +15,8 @@ export abstract class Weapon {
         this.maxCooldown = maxCooldown;
     }
 
-    public update(delta: number) {
-        if (this.cooldown > 0) this.setCooldown(this.cooldown - delta);
+    public update(tickDelta: number) {
+        if (this.cooldown > 0) this.setCooldown(this.cooldown - tickDelta);
     }
 
     // 不会检查冷却

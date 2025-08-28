@@ -16,7 +16,7 @@ export class Cannon40Weapon extends BaseWeapon {
         const pos = this.owner.getPos();
         const bullet = new BulletEntity(EntityTypes.BULLET_ENTITY, world, this.owner, this.getDamage());
         bullet.setVelocity(this.bulletVel);
-        bullet.setPos(pos.x, pos.y - this.owner.getDimensions().height - 6);
+        bullet.setPos(pos.x, pos.y - this.owner.getEntityWidth() - 6);
         world.spawnEntity(bullet);
 
         this.setCooldown(this.getFireRate());

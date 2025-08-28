@@ -42,8 +42,8 @@ export class PlayerEntity extends LivingEntity {
         this.weapons.set('bomb', new BombWeapon(this));
     }
 
-    public override tick(dt: number) {
-        super.tick(dt);
+    public override tick(tickDelta: number) {
+        super.tick(tickDelta);
 
         const world = this.getWorld();
         // 键盘移动
@@ -55,13 +55,13 @@ export class PlayerEntity extends LivingEntity {
 
         // 指针移动
         if (WorldConfig.followPointer) {
-            this.getMutPos.x += (this.input.pointer.x - this.getMutPos.x) * Math.min(1, dt * 10);
-            this.getMutPos.y += (this.input.pointer.y - this.getMutPos.y) * Math.min(1, dt * 10);
+            this.getMutPos.x += (this.input.pointer.x - this.getMutPos.x) * Math.min(1, tickDelta * 10);
+            this.getMutPos.y += (this.input.pointer.y - this.getMutPos.y) * Math.min(1, tickDelta * 10);
         }
 
         const len = Math.hypot(dx, dy) || 1;
-        this.getMutPos.x += (dx / len) * this.speed * dt;
-        this.getMutPos.y += (dy / len) * this.speed * dt;
+        this.getMutPos.x += (dx / len) * this.speed * tickDelta;
+        this.getMutPos.y += (dy / len) * this.speed * tickDelta;
 
         // 边界
         this.getMutPos.x = clamp(this.getMutPos.x, 20, World.W - 20);
@@ -83,7 +83,7 @@ export class PlayerEntity extends LivingEntity {
                 if (WorldConfig.devMode && w.getCooldown() > 0.5) w.setCooldown(0.5);
                 if (w.canFire() && this.input.wasPressed(w.bindKey())) w.tryFire(world);
             }
-            w.update(dt);
+            w.update(tickDelta);
         }
     }
 

@@ -14,15 +14,15 @@ export function randInt(min: number, max: number) {
 }
 
 export function collideEntityBox(a: Entity, b: Entity): boolean {
-    const boxA = a.getDimensions().getBoxAtByVec(a.getMutPos);
-    const boxB = b.getDimensions().getBoxAtByVec(b.getMutPos);
+    const boxA = a.calculateBoundingBox();
+    const boxB = b.calculateBoundingBox();
 
     return boxA.intersectsByBox(boxB);
 }
 
 export function collideEntityCircle(a: Entity, b: Entity) {
-    const aRadius = a.getDimensions().width;
-    const bRadius = b.getDimensions().width;
+    const aRadius = a.getEntityWidth();
+    const bRadius = b.getEntityWidth();
     return dist2(a.getMutPos, b.getMutPos) < (aRadius + bRadius) ** 2;
 }
 

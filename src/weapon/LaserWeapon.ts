@@ -84,7 +84,7 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
 
         for (const mob of world.getMobs()) {
             if (mob.isDead()) continue;
-            const mobBox = mob.getDimensions().getBoxAtByVec(mob.getMutPos);
+            const mobBox = mob.calculateBoundingBox();
             if (!mobBox.intersectsByBox(box)) continue;
 
             const damage = Math.max(1, Math.round(this.damage | 0));

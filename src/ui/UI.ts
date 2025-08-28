@@ -96,7 +96,7 @@ export class UI {
         const py = player.getMutPos.y - cam.y;
 
         const w = player.getCurrentWeapon();
-        const anchorX = Math.floor(px + player.getDimensions().width / 2 + 12);
+        const anchorX = Math.floor(px + player.getEntityWidth() / 2 + 12);
         const ratio = Math.max(0, Math.min(1, 1 - w.getCooldown() / w.getMaxCooldown()));
 
         ctx.save();

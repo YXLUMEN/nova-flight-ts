@@ -1,5 +1,5 @@
 import type {StarLayer} from "../apis/IStarLayer.ts";
-import type {Camera} from "../Camera.ts";
+import type {Camera} from "../render/Camera.ts";
 import {rand} from "../utils/math/math.ts";
 
 

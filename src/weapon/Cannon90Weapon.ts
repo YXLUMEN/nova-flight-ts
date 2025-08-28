@@ -24,7 +24,7 @@ export class Cannon90Weapon extends BaseWeapon {
                 sparks: 4,
                 fastSparks: 2,
             });
-        bullet.setPos(pos.x, pos.y - this.owner.getDimensions().height - 12);
+        bullet.setPos(pos.x, pos.y - this.owner.getEntityHeight() - 12);
         bullet.setVelocity(Vec2.formVec(this.bulletVel));
         world.spawnEntity(bullet);
 

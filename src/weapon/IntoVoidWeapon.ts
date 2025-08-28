@@ -54,11 +54,11 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
         return !this.active && this.getCooldown() <= 0;
     }
 
-    public override update(dt: number): void {
-        if (this.getCooldown() > 0) this.setCooldown(Math.max(0, this.getCooldown() - dt));
+    public override update(tickDelta: number): void {
+        if (this.getCooldown() > 0) this.setCooldown(Math.max(0, this.getCooldown() - tickDelta));
         if (!this.active) return;
 
-        this.timeLeft -= dt;
+        this.timeLeft -= tickDelta;
         if (this.timeLeft <= 0) {
             this.exitVoid(this.owner.getWorld());
         }
@@ -90,9 +90,9 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
         world.player.invulnerable = this.prevInvincible;
         this.prevInvincible = false;
 
-        const box = this.owner.getDimensions().width + this.radius;
+        const box = this.owner.getEntityWidth() + this.radius;
         for (const mob of world.getMobs()) {
-            if (mob.isDead() || !pointInCircleVec2(this.owner.getMutPos, mob.getMutPos, box + mob.getDimensions().width)) continue;
+            if (mob.isDead() || !pointInCircleVec2(this.owner.getMutPos, mob.getMutPos, box + mob.getEntityWidth())) continue;
             if (mob instanceof BossEntity) continue;
             mob.onDeath(world.getDamageSources().void(this.owner as PlayerEntity));
         }

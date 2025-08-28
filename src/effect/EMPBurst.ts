@@ -41,7 +41,7 @@ export class EMPBurst implements Effect {
         this.pos = pos
     }
 
-    public update(dt: number): void {
+    public tick(dt: number): void {
         if (!this.alive) return;
         this.t += dt;
         if (this.t >= this.duration) this.alive = false;

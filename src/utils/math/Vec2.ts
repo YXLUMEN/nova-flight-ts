@@ -1,6 +1,6 @@
-import type {MutVec2} from "./MutVec2.ts";
+import type {IVec} from "./IVec.ts";
 
-export class Vec2 {
+export class Vec2 implements IVec {
     public static readonly ZERO = new Vec2(0, 0);
 
     public readonly x: number;
@@ -15,20 +15,24 @@ export class Vec2 {
         return new Vec2(this.x, this.y);
     }
 
-    public add(v: Vec2) {
-        return new Vec2(this.x + v.x, this.y + v.y);
+    public add(x: number, y: number): IVec {
+        return new Vec2(this.x + x, this.y + y);
     }
 
-    public sub(v: Vec2) {
-        return new Vec2(this.x - v.x, this.y - v.y);
+    public addVec(v: IVec) {
+        return this.add(v.x, v.y);
+    }
+
+    public sub(x: number, y: number): IVec {
+        return new Vec2(this.x - x, this.y - y);
+    }
+
+    public subVec(v: IVec) {
+        return this.sub(v.x, v.y);
     }
 
     public mul(k: number): Vec2 {
         return new Vec2(this.x * k, this.y * k);
-    }
-
-    public scale(s: number) {
-        return new Vec2(this.x * s, this.y * s);
     }
 
     public lengthSq() {
@@ -39,12 +43,22 @@ export class Vec2 {
         return Math.sqrt(this.lengthSq());
     }
 
-    public normalize() {
-        const len = this.length();
-        return len === 0 ? Vec2.ZERO : this.scale(1 / len);
+    public equals(v: IVec, epsilon = 1e-6): boolean {
+        return Math.abs(this.x - v.x) <= epsilon && Math.abs(this.y - v.y) <= epsilon;
     }
 
-    public static formVec(vel: MutVec2 | Vec2): Vec2 {
+    public equalsSq(v: IVec, epsilon = 1e-6): boolean {
+        const dx = this.x - v.x;
+        const dy = this.y - v.y;
+        return (dx * dx + dy * dy) <= (epsilon * epsilon);
+    }
+
+    public normalize() {
+        const len = this.length();
+        return len === 0 ? Vec2.ZERO : this.mul(1 / len);
+    }
+
+    public static formVec(vel: IVec): Vec2 {
         return new Vec2(vel.x, vel.y);
     }
 }

@@ -4,7 +4,6 @@ import {World} from "../../World.ts";
 import {PI2, rand} from "../../utils/math/math.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import {PlayerEntity} from "../PlayerEntity.ts";
-import {Vec2} from "../../utils/math/Vec2.ts";
 import {DamageTypes} from "../damage/DamageTypes.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
@@ -54,7 +53,7 @@ export abstract class MobEntity extends LivingEntity {
             }
         }
 
-        this.getWorld().spawnParticle(this.getMutPos, Vec2.ZERO, rand(0.2, 0.6), rand(4, 6),
+        this.getWorld().spawnParticle(this.getMutPos, MutVec2.zero(), rand(0.2, 0.6), rand(4, 6),
             "#ffaa33", "#ff5454", 0.6, 80);
         return true;
     }

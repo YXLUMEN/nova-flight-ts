@@ -67,8 +67,12 @@ export abstract class Entity implements DataTracked {
         return null;
     }
 
-    public getDimensions(): EntityDimensions {
-        return this.dimensions;
+    public getEntityWidth(): number {
+        return this.dimensions.width;
+    }
+
+    public getEntityHeight(): number {
+        return this.dimensions.height;
     }
 
     public calculateBoundingBox() {

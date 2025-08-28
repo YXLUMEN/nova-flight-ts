@@ -15,7 +15,7 @@ export class ScreenFlash implements Effect {
         this.color = color;
     }
 
-    public update(dt: number) {
+    public tick(dt: number) {
         this.t += dt;
         if (this.t >= this.life) this.alive = false;
     }

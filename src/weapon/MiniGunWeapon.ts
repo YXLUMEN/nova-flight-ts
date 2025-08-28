@@ -17,7 +17,7 @@ export class MiniGunWeapon extends BaseWeapon {
         const pos = this.owner.getMutPos;
         const bullet = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, this.owner, this.getDamage());
         bullet.setVelocity(Vec2.formVec(this.bulletVel));
-        bullet.setPos(pos.x, pos.y - this.owner.getDimensions().height - 4);
+        bullet.setPos(pos.x, pos.y - this.owner.getEntityHeight() - 4);
         world.spawnEntity(bullet);
 
         this.setCooldown(this.getFireRate());

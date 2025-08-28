@@ -1,7 +1,9 @@
-import {World} from "./World.ts";
-import {MutVec2} from "./utils/math/MutVec2.ts";
-import {Vec2} from "./utils/math/Vec2.ts";
-import {WorldConfig} from "./configs/WorldConfig.ts";
+import {World} from "../World.ts";
+import {MutVec2} from "../utils/math/MutVec2.ts";
+import {Vec2} from "../utils/math/Vec2.ts";
+import {WorldConfig} from "../configs/WorldConfig.ts";
+import {PI2} from "../utils/math/math.ts";
+import type {IVec} from "../utils/math/IVec.ts";
 
 export class Camera {
     private offset = new MutVec2(0, 0);
@@ -9,7 +11,7 @@ export class Camera {
     private viewOffsetCache = new MutVec2(0, 0);
     private uiOffsetCache = new MutVec2(0, 0);
 
-    private deadZoneRadius = 30;
+    private deadZoneRadius = 40;
     private followSpeed = 2400;
     private smoothing = 20;
     private friction = 12;
@@ -23,9 +25,9 @@ export class Camera {
     private uiMaxDrift = 64;      // UI 最大漂移像素(镜头快速移动时)
     private uiShakeFactor = 0.5;
 
-    public update(target: Vec2, dt: number) {
-        if (WorldConfig.enableCameraOffset) this.follow(target, dt);
-        this.updateShake(dt);
+    public update(target: Vec2, tickDelta: number) {
+        if (WorldConfig.enableCameraOffset) this.follow(target, tickDelta);
+        this.updateShake(tickDelta);
     }
 
     public addShake(amount: number, limit = 1) {
@@ -42,9 +44,7 @@ export class Camera {
     }
 
     public get viewOffset(): MutVec2 {
-        this.viewOffsetCache.x = this.offset.x + this.shakeOffset.x;
-        this.viewOffsetCache.y = this.offset.y + this.shakeOffset.y;
-        return this.viewOffsetCache;
+        return this.viewOffsetCache.set(this.offset.x + this.shakeOffset.x, this.offset.y + this.shakeOffset.y);
     }
 
     public getViewOffset(): Vec2 {
@@ -76,24 +76,22 @@ export class Camera {
             dy = -(vy / speed) * s;
         }
 
-        this.uiOffsetCache.x = dx + this.shakeOffset.x * this.uiShakeFactor;
-        this.uiOffsetCache.y = dy + this.shakeOffset.y * this.uiShakeFactor;
-        return this.uiOffsetCache;
+        return this.uiOffsetCache.set(dx + this.shakeOffset.x * this.uiShakeFactor, dy + this.shakeOffset.y * this.uiShakeFactor);
     }
 
     public getUiOffset(): Vec2 {
-        return Vec2.formVec(this.uiOffsetCache);
+        return Vec2.formVec(this.uiOffset);
     }
 
-    private follow(target: Vec2, dt: number): void {
+    private follow(target: Vec2, tickDelta: number): void {
         if (!this.isOutsideDeadZone(target)) return;
 
-        const desired = new Vec2(target.x - World.W / 2, target.y - World.H / 2);
-        const delta = desired.sub(this.offset);
+        const desired = new MutVec2(target.x - World.W / 2, target.y - World.H / 2);
+        const delta = desired.subVec(this.offset);
 
         // 使用阻尼速度, 限制最大变化
-        this.velocity.x += delta.x * this.smoothing * dt;
-        this.velocity.y += delta.y * this.smoothing * dt;
+        this.velocity.x += delta.x * this.smoothing * tickDelta;
+        this.velocity.y += delta.y * this.smoothing * tickDelta;
 
         // 按向量长度限速
         const len = Math.hypot(this.velocity.x, this.velocity.y);
@@ -103,27 +101,27 @@ export class Camera {
             this.velocity.y *= scale;
         }
 
-        // 位置积分: offset += v * dt
-        this.offset.x += this.velocity.x * dt;
-        this.offset.y += this.velocity.y * dt;
+        // 位置积分: offset += v * tickDelta
+        this.offset.x += this.velocity.x * tickDelta;
+        this.offset.y += this.velocity.y * tickDelta;
 
-        // 帧率无关的指数阻尼: v *= exp(-friction * dt)
-        const damping = Math.exp(-this.friction * dt);
+        // 帧率无关的指数阻尼: v *= exp(-friction * tickDelta)
+        const damping = Math.exp(-this.friction * tickDelta);
         this.velocity.x *= damping;
         this.velocity.y *= damping;
     }
 
-    private updateShake(dt: number) {
+    private updateShake(tickDelta: number) {
         // 衰减创伤
         if (this.shakeTrauma > 0) {
-            this.shakeTrauma = Math.max(0, this.shakeTrauma - this.shakeDecay * dt);
+            this.shakeTrauma = Math.max(0, this.shakeTrauma - this.shakeDecay * tickDelta);
 
             // 非线性放大
             const t = Math.pow(this.shakeTrauma, this.traumaPower);
             const r = this.maxShake * t;
 
             // 生成随机方向的位移
-            const theta = Math.random() * Math.PI * 2;
+            const theta = Math.random() * PI2;
             this.shakeOffset.x = Math.cos(theta) * r;
             this.shakeOffset.y = Math.sin(theta) * r;
         } else {
@@ -135,9 +133,10 @@ export class Camera {
         }
     }
 
-    private isOutsideDeadZone(target: Vec2): boolean {
-        const screenCenter = new Vec2(World.W / 2, World.H / 2);
-        const playerOffset = target.sub(this.offset.add(screenCenter));
+    private isOutsideDeadZone(target: IVec): boolean {
+        const x = this.offset.x + World.W / 2;
+        const y = this.offset.y + World.H / 2;
+        const playerOffset = target.sub(x, y);
         return playerOffset.lengthSq() > this.deadZoneRadius * this.deadZoneRadius;
     }
 }

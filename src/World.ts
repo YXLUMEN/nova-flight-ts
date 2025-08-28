@@ -1,7 +1,7 @@
 import {Input} from "./Input.ts";
 import type {Entity} from "./entity/Entity.ts";
 import {PlayerEntity} from "./entity/PlayerEntity.ts";
-import {Camera} from "./Camera.ts";
+import {Camera} from "./render/Camera.ts";
 import {MobEntity} from "./entity/mob/MobEntity.ts";
 import {EventBus} from "./event/EventBus.ts";
 import type {Effect} from "./effect/Effect.ts";
@@ -27,7 +27,7 @@ import type {DamageSource} from "./entity/damage/DamageSource.ts";
 import {DamageTypeTags} from "./registry/tag/DamageTypeTags.ts";
 import {RegistryManager} from "./registry/RegistryManager.ts";
 import {BossEntity} from "./entity/mob/BossEntity.ts";
-import {collideEntityCircle} from "./utils/math/math.ts";
+import {collideEntityBox, collideEntityCircle} from "./utils/math/math.ts";
 import {EntityTypes} from "./entity/EntityTypes.ts";
 
 export class World {
@@ -48,6 +48,7 @@ export class World {
     private last = 0;
     private accumulator = 0;
     private over = false;
+    private freeze = false;
     private ticking = true;
     private rendering = true;
 
@@ -123,9 +124,9 @@ export class World {
     }
 
     public loop(ts: number) {
-        const dt = Math.min(0.05, (ts - this.last) / 1000 || 0);
+        const tickDelta = Math.min(0.05, (ts - this.last) / 1000 || 0);
         this.last = ts;
-        this.accumulator += dt;
+        this.accumulator += tickDelta;
 
         while (this.accumulator >= WorldConfig.mbps) {
             if (this.ticking) this.update(WorldConfig.mbps);
@@ -135,25 +136,27 @@ export class World {
         requestAnimationFrame(t => this.loop(t));
     }
 
-    public update(dt: number) {
-        this.camera.update(this.player.getMutPos, dt);
+    public update(tickDelta: number) {
+        const dt = this.freeze ? 0 : tickDelta;
+
+        this.camera.update(this.player.getPos(), tickDelta);
         this.starField.update(dt, this.camera);
 
-        if (!this.over) this.player.tick(dt);
+        if (!this.over) this.player.tick(tickDelta);
 
         this.stage.update(this, dt);
 
         this.mobs.forEach(mob => mob.tick(dt));
         this.bullets.forEach(b => b.tick(dt));
-        this.effects.forEach(e => e.update(dt));
-        this.particlePool.update(dt);
+        this.effects.forEach(e => e.tick(dt));
+        this.particlePool.tick(dt);
 
         // 碰撞: 子弹
         for (const bullet of this.bullets) {
             if (bullet.isDead()) continue;
 
             if (bullet.owner instanceof MobEntity) {
-                if (this.player.invulnerable || WorldConfig.devMode || !collideEntityCircle(this.player, bullet)) continue;
+                if (this.player.invulnerable || WorldConfig.devMode || !collideEntityBox(this.player, bullet)) continue;
 
                 bullet.onEntityHit(this.player);
                 if (this.isOver) break;
@@ -165,12 +168,12 @@ export class World {
                 }
             }
         }
-        if (this.empBurst > 0) this.empBurst -= dt;
+        if (this.empBurst > 0) this.empBurst -= 1;
 
         // 碰撞: 玩家
         for (const mob of this.mobs) {
             if (this.player.invulnerable || WorldConfig.devMode) break;
-            if (mob.isDead() || !collideEntityCircle(this.player, mob)) continue;
+            if (mob.isDead() || !collideEntityBox(this.player, mob)) continue;
 
             mob.attack(this.player);
             if (this.isOver) break;
@@ -379,6 +382,14 @@ export class World {
         window.addEventListener("keydown", e => {
             const code = e.code;
 
+            // Dev mode
+            if (e.ctrlKey) {
+                e.preventDefault();
+                if (code === "KeyV") WorldConfig.devMode = !WorldConfig.devMode;
+                if (WorldConfig.devMode) this.devMode(code);
+                return;
+            }
+
             if (code === "Enter" && this.over) this.reset();
             else if (code === "KeyP" || code === 'Escape') this.togglePause();
             else if (code === 'KeyG') this.toggleTechTree();
@@ -386,12 +397,6 @@ export class World {
                 document.getElementById('help')?.classList.toggle('hidden');
                 this.ticking = false;
             }
-
-            // Dev mode
-            if (e.ctrlKey && code === "KeyV") {
-                WorldConfig.devMode = !WorldConfig.devMode;
-            }
-            if (WorldConfig.devMode) this.devMode(code);
         });
 
         document.addEventListener('visibilitychange', () => {
@@ -422,6 +427,13 @@ export class World {
                 break;
             case 'KeyL':
                 this.stage.nextPhase();
+                break;
+            case 'KeyF':
+                this.freeze = !this.freeze;
+                break;
+            case 'NumpadSubtract':
+                WorldConfig.enableCameraOffset = !WorldConfig.enableCameraOffset;
+                this.camera.cameraOffset.set(0, 0);
                 break;
         }
     }

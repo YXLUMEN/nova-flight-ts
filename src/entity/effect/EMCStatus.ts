@@ -12,7 +12,8 @@ export class EMCStatus extends StatusEffect {
 
     public override applyUpdateEffect(entity: Entity, _amplifier: number): boolean {
         const angle = Math.random() * PI2;
-        const pos = entity.getMutPos.add(new MutVec2(Math.cos(angle), Math.sin(angle)).mul(16));
+        const pos = entity.getMutPos.clone()
+            .addVec(new MutVec2(Math.cos(angle), Math.sin(angle)).mul(16));
 
         const speed = 100 + Math.random() * 50;
         const vel = new MutVec2(Math.cos(angle), Math.sin(angle)).mul(speed);

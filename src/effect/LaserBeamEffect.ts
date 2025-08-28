@@ -1,5 +1,6 @@
 import type {Effect} from "./Effect.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
+import type {IVec} from "../utils/math/IVec.ts";
 
 export class LaserBeamEffect implements Effect {
     public alive = true;
@@ -16,7 +17,7 @@ export class LaserBeamEffect implements Effect {
         this.color = color;
     }
 
-    public set(start: MutVec2, end: MutVec2) {
+    public set(start: IVec, end: IVec) {
         this.start.x = start.x;
         this.start.y = start.y;
         this.end.x = end.x;
@@ -28,7 +29,7 @@ export class LaserBeamEffect implements Effect {
         this.alive = false;
     }
 
-    public update(dt: number) {
+    public tick(dt: number) {
         this.t += dt;
         if (this.t > 0.15) this.alive = false;
     }

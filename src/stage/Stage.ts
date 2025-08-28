@@ -31,11 +31,11 @@ export class Stage {
         for (const r of this.rules) r.reset();
     }
 
-    public update(world: World, dt: number) {
+    public update(world: World, tickDelta: number) {
         if (this.index >= this.phases.length) return;
 
-        this.t += dt;
-        this.phaseTime += dt;
+        this.t += tickDelta;
+        this.phaseTime += tickDelta;
 
         const ctx: SpawnCtx = {
             world,
@@ -49,9 +49,9 @@ export class Stage {
 
         const phase = this.phases[this.index];
 
-        if (this.phaseTime === dt && phase.onEnter) phase.onEnter(ctx);
+        if (this.phaseTime === tickDelta && phase.onEnter) phase.onEnter(ctx);
 
-        for (const r of this.rules) r.update(dt, ctx);
+        for (const r of this.rules) r.update(tickDelta, ctx);
 
         const timeUp = phase.duration !== undefined && this.phaseTime >= phase.duration;
         const until = phase.until ? phase.until(ctx) : false;

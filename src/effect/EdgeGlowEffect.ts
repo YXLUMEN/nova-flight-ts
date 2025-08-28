@@ -37,7 +37,7 @@ export class EdgeGlowEffect implements Effect {
         this.opts.composite = this.opts.composite ?? "lighter";
     }
 
-    public update(dt: number) {
+    public tick(dt: number) {
         if (!this.alive) return;
         this.t += dt;
         const {duration} = this.opts;

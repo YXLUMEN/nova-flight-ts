@@ -11,14 +11,13 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
     public readonly owner: Entity;
     public color = "#8cf5ff";
 
-    protected boxRadius: number = this.getDimensions().width;
+    protected boxRadius: number = this.getEntityWidth();
 
     public constructor(type: EntityType<ProjectileEntity>, world: World, owner: Entity, damage: number) {
         super(type, world);
 
         this.damage = damage;
         this.owner = owner;
-        this.getDimensions().height = this.boxRadius;
     }
 
     public override tick(dt: number) {

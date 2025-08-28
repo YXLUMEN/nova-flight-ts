@@ -20,7 +20,7 @@ export class RadialRing implements Effect {
         this.center = center;
     }
 
-    public update(dt: number) {
+    public tick(dt: number) {
         this.t += dt;
         if (this.t >= this.life) {
             this.alive = false;

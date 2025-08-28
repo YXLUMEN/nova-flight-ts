@@ -5,7 +5,7 @@ import {Vec2} from "./utils/math/Vec2.ts";
 import {WorldConfig} from "./configs/WorldConfig.ts";
 
 export class Input {
-    private _pointer: MutVec2 = new MutVec2(World.W / 2, World.H - 80);
+    private worldPointer = new MutVec2(World.W / 2, World.H - 80);
 
     private readonly keys = new Set<string>();
     private prevKeys = new Set<string>();
@@ -26,11 +26,10 @@ export class Input {
         window.addEventListener("blur", () => this.keys.clear());
 
         target.addEventListener("pointermove", (e) => {
-            if (!WorldConfig.followPointer) return;
-
-            const viewOffset = World.instance.camera.viewOffset;
-            this._pointer.x = e.offsetX + viewOffset.x;
-            this._pointer.y = e.offsetY + viewOffset.y;
+            if (WorldConfig.followPointer) {
+                const offset = World.instance.camera.viewOffset;
+                this.worldPointer.set(e.offsetX + offset.x, e.offsetY + offset.y);
+            }
         }, {passive: true});
 
         isMobile() ? this.registryMobile() : this.registryDesktop(target);
@@ -84,11 +83,11 @@ export class Input {
     }
 
     public get pointer(): MutVec2 {
-        return this._pointer;
+        return this.worldPointer;
     }
 
     public getPointer(): Vec2 {
-        return Vec2.formVec(this._pointer)
+        return Vec2.formVec(this.pointer);
     }
 
     public updateEndFrame(): void {

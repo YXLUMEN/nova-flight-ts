@@ -407,6 +407,7 @@ export class TechTree {
         for (const [nid, tech] of allTech) {
             if (this.state.isUnlocked(nid)) unlocked.push(tech);
         }
+        if (unlocked.length === 0) return;
 
         const player = World.instance.player;
         let backScore = 0;
