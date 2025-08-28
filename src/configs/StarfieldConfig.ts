@@ -1,7 +1,7 @@
 import type {StarLayer} from "../apis/IStarLayer.ts";
-import {createCleanObj, deepFreeze, isMobile} from "../utils/uit.ts";
+import {createCleanObj, deepFreeze} from "../utils/uit.ts";
 
-const desktopLayers: StarLayer[] = deepFreeze([
+export const defaultLayers: StarLayer[] = deepFreeze([
     createCleanObj({
         count: 10,
         alpha: 0.9,
@@ -34,7 +34,7 @@ const desktopLayers: StarLayer[] = deepFreeze([
     }),
 ]);
 
-const mobilLayers: StarLayer[] = deepFreeze([
+export const lowPowerLayers: StarLayer[] = deepFreeze([
     createCleanObj({
         count: 20,
         alpha: 0.9,
@@ -56,5 +56,3 @@ const mobilLayers: StarLayer[] = deepFreeze([
         parallax: 0.08
     }),
 ]);
-
-export const layers = isMobile() ? mobilLayers : desktopLayers;

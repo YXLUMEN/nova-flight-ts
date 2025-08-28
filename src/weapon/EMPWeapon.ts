@@ -48,7 +48,7 @@ export class EMPWeapon extends Weapon implements ISpecialWeapon {
     }
 
     public setDuration(duration: number): void {
-        this.duration = duration * WorldConfig.tick;
+        this.duration = duration;
     }
 
     public static applyEMPEffect(world: World, center: MutVec2, radius: number, duration: number): void {

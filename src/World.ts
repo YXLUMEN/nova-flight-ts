@@ -8,12 +8,10 @@ import type {Effect} from "./effect/Effect.ts";
 import {BombWeapon} from "./weapon/BombWeapon.ts";
 import {ScreenFlash} from "./effect/ScreenFlash.ts";
 import {StarField} from "./effect/StarField.ts";
-import {layers} from "./configs/StarfieldConfig.ts";
 import {UI} from "./ui/UI.ts";
 import {STAGE} from "./configs/StageConfig.ts";
-import {DPR, isMobile} from "./utils/uit.ts";
+import {DPR} from "./utils/uit.ts";
 import {ProjectileEntity} from "./entity/projectile/ProjectileEntity.ts";
-import {M_STAGE} from "./configs/MobileConfig.ts";
 import techs from "./data/tech-data.json";
 import {TechTree} from "./tech_tree/TechTree.ts";
 import {applyTech} from "./tech_tree/apply_tech.ts";
@@ -29,6 +27,7 @@ import {RegistryManager} from "./registry/RegistryManager.ts";
 import {BossEntity} from "./entity/mob/BossEntity.ts";
 import {collideEntityBox, collideEntityCircle} from "./utils/math/math.ts";
 import {EntityTypes} from "./entity/EntityTypes.ts";
+import {defaultLayers} from "./configs/StarfieldConfig.ts";
 
 export class World {
     public static instance: World;
@@ -56,12 +55,12 @@ export class World {
     private nextTimerId = 1;
     private timers: TimerTask[] = [];
 
-    private readonly stage = isMobile() ? M_STAGE : STAGE;
+    private readonly stage = STAGE;
     public empBurst: number = 0
 
     private effects: Effect[] = [];
     private readonly particlePool: ParticlePool = new ParticlePool(256);
-    private readonly starField: StarField = new StarField(128, layers, 8);
+    private readonly starField: StarField = new StarField(128, defaultLayers, 8);
 
     public player = new PlayerEntity(EntityTypes.PLAYER_ENTITY, this, this.input);
     private mobs: MobEntity[] = [];

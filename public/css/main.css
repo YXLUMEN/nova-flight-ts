@@ -14,19 +14,6 @@ canvas {
     touch-action: none;
 }
 
-.overlay {
-    position: fixed;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    right: 0;
-    top: 0;
-}
-
-.overlay.hidden {
-    display: none;
-}
-
 .help {
     position: absolute;
     width: 50%;
@@ -39,21 +26,6 @@ canvas {
 }
 
 .help.hidden {
-    display: none;
-}
-
-.action-bar {
-    position: fixed;
-    display: flex;
-    align-items: center;
-    bottom: 0;
-    height: 60px;
-    width: 100%;
-    gap: 3px;
-    background-color: rgba(201, 201, 201, 0.2);
-}
-
-.action-bar.hidden {
     display: none;
 }
 

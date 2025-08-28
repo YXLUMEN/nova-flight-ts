@@ -5,7 +5,6 @@ import {PI2, rand} from "../../utils/math/math.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import {PlayerEntity} from "../PlayerEntity.ts";
 import {DamageTypes} from "../damage/DamageTypes.ts";
-import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
 import {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
 import type {EntityType} from "../EntityType.ts";
@@ -41,15 +40,14 @@ export abstract class MobEntity extends LivingEntity {
         const attacker = damageSource.getAttacker();
         if (attacker instanceof PlayerEntity && !damageSource.isOf(DamageTypes.ON_FIRE)) {
             if (attacker.techTree.isUnlocked('incendiary_bullet')) {
-                const duration = 8 * WorldConfig.tick;
                 if (attacker.techTree.isUnlocked('meltdown')) {
                     const effect = this.getStatusEffect(StatusEffects.BurningStatus);
                     if (effect) {
                         const amplifier = Math.min(10, effect.getAmplifier() + 1);
-                        this.addStatusEffect(new StatusEffectInstance(StatusEffects.BurningStatus, duration, amplifier));
+                        this.addStatusEffect(new StatusEffectInstance(StatusEffects.BurningStatus, 400, amplifier));
                     }
                 }
-                this.addStatusEffect(new StatusEffectInstance(StatusEffects.BurningStatus, duration, 1));
+                this.addStatusEffect(new StatusEffectInstance(StatusEffects.BurningStatus, 400, 1));
             }
         }
 
