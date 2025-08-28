@@ -1,5 +1,5 @@
 import type {World} from "../World.ts";
-import type {MobEntity} from "../entity/MobEntity.ts";
+import type {MobEntity} from "../entity/mob/MobEntity.ts";
 
 export type RNG = () => number;
 

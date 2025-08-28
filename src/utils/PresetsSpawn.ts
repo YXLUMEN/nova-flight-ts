@@ -1,11 +1,9 @@
 import type {MobFactory, SpawnCtx} from "../apis/IStage.ts";
-import {BaseEnemy} from "../entity/BaseEnemy.ts";
-import {GunEnemyEntity} from "../entity/GunEnemyEntity.ts";
 import {spawnLineCtor, spawnTopRandomCtor, spawnTopRandomCtorS} from "../stage/SpawnFactories.ts";
-import {TankEnemy} from "../entity/TankEnemy.ts";
+import {EntityTypes} from "../entity/EntityTypes.ts";
 
 const spawnBase = (speed = 120, hp = 1, worth = 1, color = '#ff6b6b'): MobFactory =>
-    spawnTopRandomCtor(BaseEnemy, [hp, worth], (m) => {
+    spawnTopRandomCtor(EntityTypes.BASE_ENEMY, [hp, worth], (m) => {
         m.speed = speed;
         m.color = color;
     });
@@ -16,14 +14,14 @@ const spawnBaseS = (
     hpScaleFn: (ctx: SpawnCtx) => number = () => 1
 ): MobFactory => (ctx) => {
     const scaledHp = (hp * hpScaleFn(ctx)) | 0;
-    return spawnTopRandomCtorS(BaseEnemy, [scaledHp, worth], (m) => {
+    return spawnTopRandomCtorS(EntityTypes.BASE_ENEMY, [scaledHp, worth], (m) => {
         m.speed = speed;
         m.color = color;
     }, {sampler: 'best', candidates: 8, history: 16, minGap: 64, margin: 24})(ctx)
 };
 
 const spawnTank = (speed = 120, hp = 1, worth = 1, color = '#ff6b6b'): MobFactory =>
-    spawnTopRandomCtor(TankEnemy, [hp, worth], (m) => {
+    spawnTopRandomCtor(EntityTypes.TANK_ENEMY_ENTITY, [hp, worth], (m) => {
         m.speed = speed;
         m.color = color;
     });
@@ -37,7 +35,7 @@ const spawnLineBase = (
     color = '#ff6b6b'
 ): MobFactory =>
     spawnLineCtor(
-        BaseEnemy,
+        EntityTypes.BASE_ENEMY,
         count,
         [health, worth],
         (m) => {
@@ -48,7 +46,7 @@ const spawnLineBase = (
     );
 
 const spawnGun = (speed = 120, hp = 1, worth = 1, color = '#ff6b6b'): MobFactory =>
-    spawnTopRandomCtorS(GunEnemyEntity, [hp, worth], (m) => {
+    spawnTopRandomCtorS(EntityTypes.GUN_ENEMY_ENTITY, [hp, worth], (m) => {
         m.speed = speed;
         m.color = color;
     });

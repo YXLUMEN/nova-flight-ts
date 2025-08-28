@@ -1,6 +1,6 @@
 import {type Entity} from "../entity/Entity.ts";
 import {type World} from "../World.ts";
-import {clamp} from "../math/math.ts";
+import {clamp} from "../utils/math/math.ts";
 
 export abstract class Weapon {
     public readonly owner: Entity;

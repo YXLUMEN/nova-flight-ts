@@ -1,7 +1,7 @@
 import type {PhaseConfig} from "../apis/IStage.ts";
 import {Stage} from "../stage/Stage.ts";
 import {createCleanObj, deepFreeze} from "../utils/uit.ts";
-import {randInt} from "../math/math.ts";
+import {randInt} from "../utils/math/math.ts";
 import {spawnBase, spawnBaseS, spawnGun, spawnLineBase} from "../utils/PresetsSpawn.ts";
 
 const p0: PhaseConfig = deepFreeze(createCleanObj({

@@ -63,11 +63,11 @@ const p4: PhaseConfig = deepFreeze(createCleanObj({
 
 const p5: PhaseConfig = deepFreeze(createCleanObj({
     name: "P5",
-    until: ({score}) => score >= 8192,
+    until: ({score}) => score >= 4096,
     onEnter: ({world}) => world.events.emit('stage-enter', {name: 'P5'}),
     rules: [
         {
-            every: 0.6,
+            rate: 1,
             jitter: 0.4,
             factory: spawnBaseS(
                 110, 8, 8,
@@ -77,7 +77,7 @@ const p5: PhaseConfig = deepFreeze(createCleanObj({
             cap: 90
         },
         {
-            rate: 8,
+            rate: 2,
             jitter: 0.8,
             factory: spawnBaseS(
                 120, 4, 3,
@@ -98,13 +98,13 @@ const p6: PhaseConfig = deepFreeze(createCleanObj({
         {
             every: 0.4,
             jitter: 0.4,
-            factory: spawnBaseS(
+            factory: spawnBase(
                 110, 16, 8,
                 '#910000'
             ),
             cap: 94
         },
-        {every: 0.6, jitter: 0.5, factory: spawnGun(80, 6, 6), cap: 96},
+        {rate: 3, jitter: 0.5, factory: spawnGun(80, 6, 6), cap: 96},
     ],
 }));
 
@@ -113,7 +113,7 @@ const p7: PhaseConfig = deepFreeze(createCleanObj({
     onEnter: ({world}) => world.events.emit('stage-enter', {name: 'P7'}),
     rules: [
         {
-            every: 0.4,
+            rate: 1,
             jitter: 0.4,
             factory: spawnBaseS(
                 110, 8, 8,
@@ -123,23 +123,13 @@ const p7: PhaseConfig = deepFreeze(createCleanObj({
             cap: 94
         },
         {
-            rate: 4,
-            jitter: 0.5,
-            factory: spawnBaseS(
-                120, 4, 3,
-                '#ff2121',
-                (ctx) => 1 + Math.log10(1 + ctx.score) | 0
-            ),
-            cap: 96,
-        },
-        {
-            every: 0.3,
-            jitter: 0.4,
+            rate: 3,
+            jitter: 0.6,
             factory: spawnTank(
                 60, 32, 5,
                 '#9f3b00',
             ),
-            cap: 64,
+            cap: 72,
         },
         {every: 0.9, jitter: 0.5, factory: spawnGun(80, 6, 2), cap: 96},
     ],

@@ -5,9 +5,11 @@ import {Identifier} from "./Identifier.ts";
 
 export class Registries {
     private static readonly ROOT = new Registry(RegistryKey.ofRegistry(Identifier.ROOT));
-    private static readonly DEFAULT_ENTRIES = new Map();
+    private static readonly DEFAULT_ENTRIES = new Map<Identifier, CallableFunction>();
 
     public static readonly STATUS_EFFECT = this.simpleCreate(RegistryKeys.STATUS_EFFECT, () => {
+    });
+    public static readonly ENTITY_TYPE = this.simpleCreate(RegistryKeys.ENTITY_TYPE, () => {
     });
 
     private static simpleCreate<T>(key: RegistryKey<Registry<T>>, initializer: CallableFunction): Registry<T> {

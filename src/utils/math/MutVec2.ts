@@ -45,4 +45,8 @@ export class MutVec2 {
         const dy = a.y - b.y;
         return dx * dx + dy * dy;
     }
+
+    public static zero() {
+        return new MutVec2(0, 0);
+    }
 }

@@ -1,15 +1,15 @@
 import {ProjectileEntity} from "./ProjectileEntity.ts";
-import {PI2} from "../math/math.ts";
-import {Entity} from "./Entity.ts";
-import {PlayerEntity} from "./PlayerEntity.ts";
-import {LivingEntity} from "./LivingEntity.ts";
+import {PI2} from "../../utils/math/math.ts";
+import {Entity} from "../Entity.ts";
+import {PlayerEntity} from "../PlayerEntity.ts";
+import {LivingEntity} from "../LivingEntity.ts";
 
 export class BulletEntity extends ProjectileEntity {
     public override render(ctx: CanvasRenderingContext2D) {
         ctx.save();
         ctx.fillStyle = this.color;
         ctx.beginPath();
-        ctx.arc(this.pos.x, this.pos.y, this.boxRadius, 0, PI2);
+        ctx.arc(this.getMutPos.x, this.getMutPos.y, this.boxRadius, 0, PI2);
         ctx.fill();
         ctx.restore();
     }

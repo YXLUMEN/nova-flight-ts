@@ -1,11 +1,16 @@
 import {createCleanObj, isMobile} from "../utils/uit.ts";
 
+const freezeConfig = createCleanObj({
+    tick: 50,
+    mbps: 0.02,
+} as const);
+
 const WorldConfig = Object.preventExtensions(createCleanObj({
-    devMode: false,
+    devMode: true,
     lowPowerMode: false,
 
-    tick: 50,
-    mbps: 1 / 50,
+    tick: freezeConfig.tick.valueOf(),
+    mbps: freezeConfig.mbps.valueOf(),
 
     enableCameraOffset: false,
 
@@ -20,4 +25,4 @@ if (isMobile()) {
     WorldConfig.autoShoot = true;
 }
 
-export {WorldConfig}
+export {freezeConfig, WorldConfig}

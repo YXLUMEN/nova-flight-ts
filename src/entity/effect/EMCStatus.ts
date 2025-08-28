@@ -1,7 +1,7 @@
 import {StatusEffect} from "./StatusEffect.ts";
-import type {Entity} from "../entity/Entity.ts";
-import {PI2} from "../math/math.ts";
-import {MutVec2} from "../math/MutVec2.ts";
+import type {Entity} from "../Entity.ts";
+import {PI2} from "../../utils/math/math.ts";
+import {MutVec2} from "../../utils/math/MutVec2.ts";
 
 export class EMCStatus extends StatusEffect {
     private cooldown = 0;
@@ -12,7 +12,7 @@ export class EMCStatus extends StatusEffect {
 
     public override applyUpdateEffect(entity: Entity, _amplifier: number): boolean {
         const angle = Math.random() * PI2;
-        const pos = entity.pos.add(new MutVec2(Math.cos(angle), Math.sin(angle)).mul(16));
+        const pos = entity.getMutPos.add(new MutVec2(Math.cos(angle), Math.sin(angle)).mul(16));
 
         const speed = 100 + Math.random() * 50;
         const vel = new MutVec2(Math.cos(angle), Math.sin(angle)).mul(speed);

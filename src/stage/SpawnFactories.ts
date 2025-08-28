@@ -1,27 +1,26 @@
-import {MutVec2} from "../math/MutVec2.ts";
-import type {MobEntity} from "../entity/MobEntity.ts";
+import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import type {MobFactory, SamplerKind, SpawnCtx, TopSpawnOpts} from "../apis/IStage.ts";
 import {World} from "../World.ts";
-import {rand} from "../math/math.ts";
-
-type Ctor<T> = new (world: World, pos: MutVec2, ...args: any[]) => T;
+import {rand} from "../utils/math/math.ts";
+import type {EntityType} from "../entity/EntityType.ts";
 
 // 顶部随机生成
 function spawnTopRandomCtor<T extends MobEntity>(
-    C: Ctor<T>,
+    type: EntityType<T>,
     args: any[] = [],
     init?: (mob: T, ctx: SpawnCtx) => void
 ): MobFactory {
     return (ctx) => {
         const x = rand(24, World.W - 24);
-        const mob = new C(World.instance, new MutVec2(x, -30), ...args);
+        const mob = type.create(World.instance, ...args);
+        mob.setPos(x, -30);
         init?.(mob, ctx);
         return mob;
     };
 }
 
 function spawnTopRandomCtorS<T extends MobEntity>(
-    C: Ctor<T>,
+    type: EntityType<T>,
     args: readonly unknown[] = [],
     init?: (mob: T, ctx: SpawnCtx) => void,
     opts: TopSpawnOpts = {}
@@ -95,14 +94,15 @@ function spawnTopRandomCtorS<T extends MobEntity>(
         const minX = margin;
         const maxX = World.W - margin;
         const x = sampleX(minX, maxX);
-        const mob = new C(World.instance, new MutVec2(x, -30), ...args);
+        const mob = type.create(World.instance, ...args);
+        mob.setPos(x, -30);
         init?.(mob as T, ctx);
         return mob;
     };
 }
 
 function spawnLineCtor<T extends MobEntity>(
-    C: Ctor<T>,
+    type: EntityType<T>,
     count: number,
     args: any[] = [],
     init?: (mob: T, i: number, ctx: SpawnCtx) => void,
@@ -113,8 +113,8 @@ function spawnLineCtor<T extends MobEntity>(
         const startX = rand(24, World.W - 24 - gap * (count - 1));
         const arr: MobEntity[] = [];
         for (let i = 0; i < count; i++) {
-            const pos = new MutVec2(startX + i * gap, startY);
-            const mob = new C(World.instance, pos, ...args);
+            const mob = type.create(World.instance, ...args);
+            mob.setPos(startX + i * gap, startY);
             init?.(mob, i, ctx);
             arr.push(mob);
         }

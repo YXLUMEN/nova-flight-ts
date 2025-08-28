@@ -1,5 +1,5 @@
 import {BaseEnemy} from "./BaseEnemy.ts";
-import type {DamageSource} from "./damage/DamageSource.ts";
+import type {DamageSource} from "../damage/DamageSource.ts";
 
 export class TankEnemy extends BaseEnemy {
     private damageCooldown: number = 0;

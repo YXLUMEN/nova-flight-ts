@@ -1,6 +1,6 @@
-import type {MutVec2} from "../math/MutVec2.ts";
+import type {MutVec2} from "../utils/math/MutVec2.ts";
 import type {Effect} from "./Effect.ts";
-import {PI2} from "../math/math.ts";
+import {PI2} from "../utils/math/math.ts";
 
 export class Particle implements Effect {
     public alive = true;

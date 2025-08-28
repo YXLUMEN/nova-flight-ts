@@ -17,7 +17,7 @@ export class SpawnRule {
     public update(dt: number, ctx: SpawnCtx) {
         const {cfg} = this;
         if (cfg.enabled && !cfg.enabled(ctx)) return;
-        if (cfg.cap && ctx.world.mobs.length >= cfg.cap) return;
+        if (cfg.cap && ctx.world.getMobs().length >= cfg.cap) return;
 
         this.t += dt;
 
@@ -54,10 +54,16 @@ export class SpawnRule {
     private spawn(ctx: SpawnCtx) {
         const out = this.cfg.factory(ctx);
         if (!out) return;
+
+        // 再次防洪
+        const cap = this.cfg.cap ?? Infinity;
+        const remain = cap - ctx.world.getMobs().length;
+        if (remain <= 0) return;
+
         if (Array.isArray(out)) {
-            for (const m of out) ctx.world.mobs.push(m);
+            for (const m of out) ctx.world.spawnEntity(m);
         } else {
-            ctx.world.mobs.push(out);
+            ctx.world.spawnEntity(out);
         }
     }
 }

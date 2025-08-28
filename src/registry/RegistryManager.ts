@@ -6,6 +6,7 @@ import {DamageTypes} from "../entity/damage/DamageTypes.ts";
 import type {DamageType} from "../entity/damage/DamageType.ts";
 import {DamageTypeTags} from "./tag/DamageTypeTags.ts";
 import {Registries} from "./Registries.ts";
+import {EntityTypes} from "../entity/EntityTypes.ts";
 
 export class RegistryManager {
     private readonly registers = new Map<RegistryKey<any>, Registry<any>>();
@@ -24,6 +25,8 @@ export class RegistryManager {
 
         this.registers.set(RegistryKeys.DAMAGE_TYPE, damage);
         this.registers.set(RegistryKeys.STATUS_EFFECT, Registries.STATUS_EFFECT);
+        this.registers.set(RegistryKeys.ENTITY_TYPE, Registries.ENTITY_TYPE);
+        EntityTypes.init();
     }
 
     public get<E>(key: RegistryKey<Registry<E>>): Registry<E> {

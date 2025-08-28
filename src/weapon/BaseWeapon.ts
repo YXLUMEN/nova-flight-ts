@@ -1,5 +1,5 @@
 import {Weapon} from "./Weapon.ts";
-import {clamp} from "../math/math.ts";
+import {clamp} from "../utils/math/math.ts";
 import type {Entity} from "../entity/Entity.ts";
 
 export abstract class BaseWeapon extends Weapon {

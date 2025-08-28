@@ -1,7 +1,7 @@
-import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
+import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {StatusEffect} from "./StatusEffect.ts";
-import type {LivingEntity} from "../entity/LivingEntity.ts";
-import {clamp} from "../math/math.ts";
+import type {LivingEntity} from "../LivingEntity.ts";
+import {clamp} from "../../utils/math/math.ts";
 
 export class StatusEffectInstance {
     public static readonly INFINITE = -1;

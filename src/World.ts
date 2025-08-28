@@ -1,7 +1,8 @@
 import {Input} from "./Input.ts";
+import type {Entity} from "./entity/Entity.ts";
 import {PlayerEntity} from "./entity/PlayerEntity.ts";
 import {Camera} from "./Camera.ts";
-import {MobEntity} from "./entity/MobEntity.ts";
+import {MobEntity} from "./entity/mob/MobEntity.ts";
 import {EventBus} from "./event/EventBus.ts";
 import type {Effect} from "./effect/Effect.ts";
 import {BombWeapon} from "./weapon/BombWeapon.ts";
@@ -11,14 +12,13 @@ import {layers} from "./configs/StarfieldConfig.ts";
 import {UI} from "./ui/UI.ts";
 import {STAGE} from "./configs/StageConfig.ts";
 import {DPR, isMobile} from "./utils/uit.ts";
-import {collideEntityCircle} from "./math/math.ts";
-import {type ProjectileEntity} from "./entity/ProjectileEntity.ts";
+import {ProjectileEntity} from "./entity/projectile/ProjectileEntity.ts";
 import {M_STAGE} from "./configs/MobileConfig.ts";
-import techs from "../public/data/tech-data.json";
+import techs from "./data/tech-data.json";
 import {TechTree} from "./tech_tree/TechTree.ts";
 import {applyTech} from "./tech_tree/apply_tech.ts";
 import {WorldConfig} from "./configs/WorldConfig.ts";
-import {MutVec2} from "./math/MutVec2.ts";
+import {MutVec2} from "./utils/math/MutVec2.ts";
 import {ParticlePool} from "./effect/ParticlePool.ts";
 import {LaserWeapon} from "./weapon/LaserWeapon.ts";
 import type {TimerTask} from "./apis/ITimer.ts";
@@ -26,7 +26,9 @@ import {DamageSources} from "./entity/damage/DamageSources.ts";
 import type {DamageSource} from "./entity/damage/DamageSource.ts";
 import {DamageTypeTags} from "./registry/tag/DamageTypeTags.ts";
 import {RegistryManager} from "./registry/RegistryManager.ts";
-import {BossEntity} from "./entity/BossEntity.ts";
+import {BossEntity} from "./entity/mob/BossEntity.ts";
+import {collideEntityCircle} from "./utils/math/math.ts";
+import {EntityTypes} from "./entity/EntityTypes.ts";
 
 export class World {
     public static instance: World;
@@ -60,9 +62,9 @@ export class World {
     private readonly particlePool: ParticlePool = new ParticlePool(256);
     private readonly starField: StarField = new StarField(128, layers, 8);
 
-    public player = new PlayerEntity(this, this.input);
-    public mobs: MobEntity[] = [];
-    public bullets: ProjectileEntity[] = [];
+    public player = new PlayerEntity(EntityTypes.PLAYER_ENTITY, this, this.input);
+    private mobs: MobEntity[] = [];
+    private bullets: ProjectileEntity[] = [];
 
     public constructor(registryManager: RegistryManager) {
         this.registryManager = registryManager;
@@ -88,7 +90,7 @@ export class World {
         this.effects.length = 0;
 
         this.player.techTree.destroy();
-        this.player = new PlayerEntity(this, this.input);
+        this.player = new PlayerEntity(EntityTypes.PLAYER_ENTITY, this, this.input);
 
         this.over = false;
         this.ticking = true;
@@ -134,7 +136,7 @@ export class World {
     }
 
     public update(dt: number) {
-        this.camera.update(this.player.pos, dt);
+        this.camera.update(this.player.getMutPos, dt);
         this.starField.update(dt, this.camera);
 
         if (!this.over) this.player.tick(dt);
@@ -211,6 +213,22 @@ export class World {
         drag = 0.0, gravity = 0.0
     ): void {
         this.particlePool.spawn(pos.clone(), vel.clone(), life, size, colorFrom, colorTo, drag, gravity);
+    }
+
+    public spawnEntity(entity: Entity) {
+        if (entity instanceof ProjectileEntity) {
+            this.bullets.push(entity);
+        } else if (entity instanceof MobEntity) {
+            this.mobs.push(entity);
+        }
+    }
+
+    public getMobs(): MobEntity[] {
+        return this.mobs;
+    }
+
+    public getProjectiles(): ProjectileEntity[] {
+        return this.bullets;
     }
 
     // 二分插入 保持 timers 按 at 升序
@@ -348,8 +366,9 @@ export class World {
 
         this.events.on('stage-enter', ({name}) => {
             if (name === 'P6') {
-                const boss = new BossEntity(this, new MutVec2(World.W / 2, 64), 160, 64);
-                this.mobs.push(boss);
+                const boss = new BossEntity(EntityTypes.BOSS_ENTITY, this, 160, 64);
+                boss.setPos(World.W / 2, 64);
+                this.spawnEntity(boss)
             }
         });
     }

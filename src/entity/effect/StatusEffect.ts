@@ -1,4 +1,4 @@
-import type {Entity} from "../entity/Entity.ts";
+import type {Entity} from "../Entity.ts";
 
 export abstract class StatusEffect {
     protected constructor() {

@@ -92,11 +92,11 @@ export class UI {
         if (!player) return;
 
         const cam = this.world.camera.viewOffset;
-        const px = player.pos.x - cam.x;
-        const py = player.pos.y - cam.y;
+        const px = player.getMutPos.x - cam.x;
+        const py = player.getMutPos.y - cam.y;
 
         const w = player.getCurrentWeapon();
-        const anchorX = Math.floor(px + player.boxRadius / 2 + 12);
+        const anchorX = Math.floor(px + player.getDimensions().width / 2 + 12);
         const ratio = Math.max(0, Math.min(1, 1 - w.getCooldown() / w.getMaxCooldown()));
 
         ctx.save();

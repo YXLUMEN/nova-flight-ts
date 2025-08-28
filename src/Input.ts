@@ -1,7 +1,7 @@
 import {World} from "./World.ts";
-import {MutVec2} from "./math/MutVec2.ts";
+import {MutVec2} from "./utils/math/MutVec2.ts";
 import {isMobile} from "./utils/uit.ts";
-import {Vec2} from "./math/Vec2.ts";
+import {Vec2} from "./utils/math/Vec2.ts";
 import {WorldConfig} from "./configs/WorldConfig.ts";
 
 export class Input {

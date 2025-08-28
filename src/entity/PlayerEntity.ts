@@ -4,16 +4,18 @@ import {type Weapon} from "../weapon/Weapon.ts";
 import {BombWeapon} from "../weapon/BombWeapon.ts";
 import {LivingEntity} from "./LivingEntity.ts";
 import {ScreenFlash} from "../effect/ScreenFlash.ts";
-import {clamp} from "../math/math.ts";
+import {clamp} from "../utils/math/math.ts";
 import {Cannon40Weapon} from "../weapon/Cannon40Weapon.ts";
 import {throttleTimeOut} from "../utils/uit.ts";
 import {isSpecialWeapon} from "../weapon/ISpecialWeapon.ts";
-import {MutVec2} from "../math/MutVec2.ts";
 import {EdgeGlowEffect} from "../effect/EdgeGlowEffect.ts";
 import {TechTree} from "../tech_tree/TechTree.ts";
 import {BaseWeapon} from "../weapon/BaseWeapon.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {type DamageSource} from "./damage/DamageSource.ts";
+import type {DataEntry} from "./data/DataEntry.ts";
+import type {TrackedData} from "./data/TrackedData.ts";
+import type {EntityType} from "./EntityType.ts";
 
 export class PlayerEntity extends LivingEntity {
     public readonly input: Input;
@@ -28,8 +30,9 @@ export class PlayerEntity extends LivingEntity {
     private phaseScore: number;
     private score: number = 0;
 
-    public constructor(world: World, input: Input) {
-        super(world, new MutVec2(World.W / 2, World.H - 80), 18, 3);
+    public constructor(type: EntityType<PlayerEntity>, world: World, input: Input) {
+        super(type, world, 3);
+        this.setPos(World.W / 2, World.H - 80);
 
         this.input = input;
         this.phaseScore = 0;
@@ -52,17 +55,17 @@ export class PlayerEntity extends LivingEntity {
 
         // 指针移动
         if (WorldConfig.followPointer) {
-            this.pos.x += (this.input.pointer.x - this.pos.x) * Math.min(1, dt * 10);
-            this.pos.y += (this.input.pointer.y - this.pos.y) * Math.min(1, dt * 10);
+            this.getMutPos.x += (this.input.pointer.x - this.getMutPos.x) * Math.min(1, dt * 10);
+            this.getMutPos.y += (this.input.pointer.y - this.getMutPos.y) * Math.min(1, dt * 10);
         }
 
         const len = Math.hypot(dx, dy) || 1;
-        this.pos.x += (dx / len) * this.speed * dt;
-        this.pos.y += (dy / len) * this.speed * dt;
+        this.getMutPos.x += (dx / len) * this.speed * dt;
+        this.getMutPos.y += (dy / len) * this.speed * dt;
 
         // 边界
-        this.pos.x = clamp(this.pos.x, 20, World.W - 20);
-        this.pos.y = clamp(this.pos.y, 20, World.H - 20);
+        this.getMutPos.x = clamp(this.getMutPos.x, 20, World.W - 20);
+        this.getMutPos.y = clamp(this.getMutPos.y, 20, World.H - 20);
 
         if (this.input.isDown('KeyR')) {
             this.switchWeapon();
@@ -135,7 +138,7 @@ export class PlayerEntity extends LivingEntity {
 
     public override render(ctx: CanvasRenderingContext2D) {
         ctx.save();
-        ctx.translate(this.pos.x, this.pos.y);
+        ctx.translate(this.getMutPos.x, this.getMutPos.y);
         // 机身
         const grad = ctx.createLinearGradient(0, -20, 0, 20);
         grad.addColorStop(0, "#7ee3ff");
@@ -207,5 +210,11 @@ export class PlayerEntity extends LivingEntity {
         if (remain < 0) return false;
         this.setScore(remain);
         return true;
+    }
+
+    public onDataTrackerUpdate(_entries: DataEntry<any>): void {
+    }
+
+    public onTrackedDataSet(_data: TrackedData<any>): void {
     }
 }

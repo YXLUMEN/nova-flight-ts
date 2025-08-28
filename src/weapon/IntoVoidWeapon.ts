@@ -3,10 +3,10 @@ import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
 import {World} from "../World.ts";
 import {WindowOverlay} from "../effect/WindowOverlay.ts";
 import {PlayerEntity} from "../entity/PlayerEntity.ts";
-import {pointInCircleVec2} from "../math/math.ts";
+import {pointInCircleVec2} from "../utils/math/math.ts";
 import {EMPWeapon} from "./EMPWeapon.ts";
 import {LaserWeapon} from "./LaserWeapon.ts";
-import {BossEntity} from "../entity/BossEntity.ts";
+import {BossEntity} from "../entity/mob/BossEntity.ts";
 
 export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
     public static readonly displayName = "遁入虚空";
@@ -90,9 +90,9 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
         world.player.invulnerable = this.prevInvincible;
         this.prevInvincible = false;
 
-        const box = this.owner.boxRadius + this.radius;
-        for (const mob of world.mobs) {
-            if (mob.isDead() || !pointInCircleVec2(this.owner.pos, mob.pos, box + mob.boxRadius)) continue;
+        const box = this.owner.getDimensions().width + this.radius;
+        for (const mob of world.getMobs()) {
+            if (mob.isDead() || !pointInCircleVec2(this.owner.getMutPos, mob.getMutPos, box + mob.getDimensions().width)) continue;
             if (mob instanceof BossEntity) continue;
             mob.onDeath(world.getDamageSources().void(this.owner as PlayerEntity));
         }

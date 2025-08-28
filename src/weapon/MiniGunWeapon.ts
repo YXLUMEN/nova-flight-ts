@@ -1,8 +1,10 @@
 import type {Entity} from "../entity/Entity.ts";
-import {Cannon40Weapon} from "./Cannon40Weapon.ts";
-import {MutVec2} from "../math/MutVec2.ts";
+import {MutVec2} from "../utils/math/MutVec2.ts";
 import type {World} from "../World.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
+import {Vec2} from "../utils/math/Vec2.ts";
+import {EntityTypes} from "../entity/EntityTypes.ts";
+import {MiniBulletEntity} from "../entity/projectile/MiniBulletEntity.ts";
 
 export class MiniGunWeapon extends BaseWeapon {
     public bulletVel = new MutVec2(0, -520);
@@ -12,8 +14,11 @@ export class MiniGunWeapon extends BaseWeapon {
     }
 
     public tryFire(world: World): void {
-        const pos = new MutVec2(this.owner.pos.x, this.owner.pos.y - this.owner.boxRadius - 4);
-        Cannon40Weapon.spawnBullet(world, pos, this.bulletVel, this.owner, this.getDamage(), 4);
+        const pos = this.owner.getMutPos;
+        const bullet = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, this.owner, this.getDamage());
+        bullet.setVelocity(Vec2.formVec(this.bulletVel));
+        bullet.setPos(pos.x, pos.y - this.owner.getDimensions().height - 4);
+        world.spawnEntity(bullet);
 
         this.setCooldown(this.getFireRate());
     }

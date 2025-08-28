@@ -1,5 +1,5 @@
 import type {Effect} from "./Effect.ts";
-import type {Vec2} from "../math/Vec2.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
 
 export class RadialRing implements Effect {
     public alive = true;

@@ -1,5 +1,5 @@
 import type {Effect} from "./Effect.ts";
-import {MutVec2} from "../math/MutVec2.ts";
+import {MutVec2} from "../utils/math/MutVec2.ts";
 
 export class LaserBeamEffect implements Effect {
     public alive = true;

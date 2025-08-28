@@ -1,6 +1,6 @@
 import type {StarLayer} from "../apis/IStarLayer.ts";
 import type {Camera} from "../Camera.ts";
-import {rand} from "../math/math.ts";
+import {rand} from "../utils/math/math.ts";
 
 
 export class StarField {

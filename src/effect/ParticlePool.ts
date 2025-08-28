@@ -1,5 +1,5 @@
 import {Particle} from "./Particle.ts";
-import type {MutVec2} from "../math/MutVec2.ts";
+import type {MutVec2} from "../utils/math/MutVec2.ts";
 
 export class ParticlePool {
     private readonly active: Particle[] = [];

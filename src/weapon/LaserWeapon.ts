@@ -1,11 +1,12 @@
 import {LaserBeamEffect} from '../effect/LaserBeamEffect.ts';
 import {Weapon} from './Weapon.ts';
 import {World} from '../World.ts';
-import {MutVec2} from '../math/MutVec2.ts';
-import {clamp, lineCircleHit} from '../math/math.ts';
+import {clamp} from '../utils/math/math.ts';
 import type {Entity} from "../entity/Entity.ts";
 import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
 import {PlayerEntity} from "../entity/PlayerEntity.ts";
+import {Box} from "../utils/math/Box.ts";
+import {Vec2} from "../utils/math/Vec2.ts";
 
 export class LaserWeapon extends Weapon implements ISpecialWeapon {
     public static readonly DISPLAY_NAME = 'LASER';
@@ -22,8 +23,9 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
     private active = false;
     private overheated = false;
 
-    private readonly range = World.H;        // 光束长度
-    private readonly width = 6;            // 视觉宽度
+    private readonly height = World.H;        // 长度
+    private readonly width = 6;            // 宽度
+    private readonly halfWidth = Math.floor(this.width / 2);
 
     // 缓存一个短寿命的光束效果
     private beamFx: LaserBeamEffect | null = null;
@@ -74,13 +76,16 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
 
         // 光束端点
         const world = World.instance;
-        const start = this.owner.pos;
-        const end = new MutVec2(start.x, start.y - this.range);
+        const start = this.owner.getPos();
+        const end = new Vec2(start.x, start.y - this.height);
+        const box = new Box(start.x - this.halfWidth, start.y, end.x + this.halfWidth, end.y);
+
         const attacker = this.owner instanceof PlayerEntity ? this.owner : null;
 
-        for (const mob of world.mobs) {
+        for (const mob of world.getMobs()) {
             if (mob.isDead()) continue;
-            if (!lineCircleHit(start.x, start.y, end.x, end.y, mob.pos.x, mob.pos.y, mob.boxRadius ?? 16)) continue;
+            const mobBox = mob.getDimensions().getBoxAtByVec(mob.getMutPos);
+            if (!mobBox.intersectsByBox(box)) continue;
 
             const damage = Math.max(1, Math.round(this.damage | 0));
             mob.takeDamage(world.getDamageSources().laser(attacker), damage);

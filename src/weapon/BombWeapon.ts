@@ -1,8 +1,8 @@
 import {Weapon} from "./Weapon.ts";
 import {World} from "../World.ts";
-import {MutVec2} from "../math/MutVec2.ts";
+import {MutVec2} from "../utils/math/MutVec2.ts";
 import {RadialRing} from "../effect/RadialRing.ts";
-import {rand} from "../math/math.ts";
+import {rand} from "../utils/math/math.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {ExplosionOpts} from "../apis/IExplosionOpts.ts";
 import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
@@ -47,9 +47,9 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
         damage: number,
         source: Entity | null = null, attacker: LivingEntity | null = null) {
         const r2 = radius * radius;
-        for (const mob of world.mobs) {
+        for (const mob of world.getMobs()) {
             if (mob.isDead()) continue;
-            const d2 = MutVec2.distSq(mob.pos, center);
+            const d2 = MutVec2.distSq(mob.getMutPos, center);
             if (d2 <= r2) {
                 mob.takeDamage(world.getDamageSources().explosion(source, attacker), damage);
             }

@@ -1,8 +1,9 @@
 import {World} from "../World.ts";
-import {MutVec2} from "../math/MutVec2.ts";
-import {BulletEntity} from "../entity/BulletEntity.ts";
+import {MutVec2} from "../utils/math/MutVec2.ts";
 import type {Entity} from "../entity/Entity.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
+import {BulletEntity} from "../entity/projectile/BulletEntity.ts";
+import {EntityTypes} from "../entity/EntityTypes.ts";
 
 export class Cannon40Weapon extends BaseWeapon {
     public bulletVel = new MutVec2(0, -500);
@@ -12,8 +13,11 @@ export class Cannon40Weapon extends BaseWeapon {
     }
 
     public override tryFire(world: World) {
-        const pos = new MutVec2(this.owner.pos.x, this.owner.pos.y - this.owner.boxRadius - 6);
-        Cannon40Weapon.spawnBullet(world, pos, this.bulletVel, this.owner, this.getDamage(), 6);
+        const pos = this.owner.getPos();
+        const bullet = new BulletEntity(EntityTypes.BULLET_ENTITY, world, this.owner, this.getDamage());
+        bullet.setVelocity(this.bulletVel);
+        bullet.setPos(pos.x, pos.y - this.owner.getDimensions().height - 6);
+        world.spawnEntity(bullet);
 
         this.setCooldown(this.getFireRate());
     }
@@ -24,10 +28,5 @@ export class Cannon40Weapon extends BaseWeapon {
 
     public getUiColor(): string {
         return '#fff';
-    }
-
-    public static spawnBullet(world: World, pos: MutVec2, vel: MutVec2, own: Entity, damage: number, radius: number) {
-        const b = new BulletEntity(world, pos, vel, own, damage, radius);
-        world.bullets.push(b);
     }
 }

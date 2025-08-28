@@ -7,3 +7,5 @@ export interface SpawnRuleConfigJSON extends Omit<SpawnRuleConfig, 'factory'> {
 export interface PhaseConfigJSON extends Omit<PhaseConfig, 'rules'> {
     rules: SpawnRuleConfigJSON[];
 }
+
+export type Constructor<T = any> = new (...args: any[]) => T;

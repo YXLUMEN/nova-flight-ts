@@ -1,5 +1,5 @@
-import type {Entity} from "../entity/Entity.ts";
 import type {MutVec2} from "./MutVec2.ts";
+import type {Entity} from "../../entity/Entity.ts";
 
 export function clamp(value: number, min: number, max: number) {
     return Math.max(min, Math.min(max, value));
@@ -13,8 +13,17 @@ export function randInt(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+export function collideEntityBox(a: Entity, b: Entity): boolean {
+    const boxA = a.getDimensions().getBoxAtByVec(a.getMutPos);
+    const boxB = b.getDimensions().getBoxAtByVec(b.getMutPos);
+
+    return boxA.intersectsByBox(boxB);
+}
+
 export function collideEntityCircle(a: Entity, b: Entity) {
-    return dist2(a.pos, b.pos) < (a.boxRadius + b.boxRadius) ** 2;
+    const aRadius = a.getDimensions().width;
+    const bRadius = b.getDimensions().width;
+    return dist2(a.getMutPos, b.getMutPos) < (aRadius + bRadius) ** 2;
 }
 
 export function dist2(a: MutVec2, b: MutVec2) {

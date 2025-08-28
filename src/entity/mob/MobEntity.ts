@@ -1,21 +1,24 @@
-import {LivingEntity} from "./LivingEntity.ts";
-import {MutVec2} from "../math/MutVec2.ts";
-import {World} from "../World.ts";
-import {PI2, rand} from "../math/math.ts";
-import type {DamageSource} from "./damage/DamageSource.ts";
-import {PlayerEntity} from "./PlayerEntity.ts";
-import {StatusEffects} from "../status/StatusEffects.ts";
-import {StatusEffectInstance} from "../status/StatusEffectInstance.ts";
-import {Vec2} from "../math/Vec2.ts";
-import {DamageTypes} from "./damage/DamageTypes.ts";
-import {WorldConfig} from "../configs/WorldConfig.ts";
+import {LivingEntity} from "../LivingEntity.ts";
+import {MutVec2} from "../../utils/math/MutVec2.ts";
+import {World} from "../../World.ts";
+import {PI2, rand} from "../../utils/math/math.ts";
+import type {DamageSource} from "../damage/DamageSource.ts";
+import {PlayerEntity} from "../PlayerEntity.ts";
+import {Vec2} from "../../utils/math/Vec2.ts";
+import {DamageTypes} from "../damage/DamageTypes.ts";
+import {WorldConfig} from "../../configs/WorldConfig.ts";
+import {StatusEffects} from "../effect/StatusEffects.ts";
+import {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
+import type {EntityType} from "../EntityType.ts";
+import type {TrackedData} from "../data/TrackedData.ts";
+import type {DataEntry} from "../data/DataEntry.ts";
 
 export abstract class MobEntity extends LivingEntity {
-    protected readonly worth: number;
+    private readonly worth: number;
     protected t = Math.random() * 1000;
 
-    protected constructor(world: World, pos: MutVec2, radius: number, health: number, worth: number) {
-        super(world, pos, radius, health);
+    protected constructor(type: EntityType<MobEntity>, world: World, maxHealth: number, worth: number) {
+        super(type, world, maxHealth);
         this.worth = worth;
     }
 
@@ -26,10 +29,10 @@ export abstract class MobEntity extends LivingEntity {
         if (emc) dt *= emc.getAmplifier() * 0.1;
 
         this.t += dt;
-        this.pos.y += this.speed * dt;
-        this.pos.x += Math.sin(this.t * 3) * 40 * dt;
+        this.getMutPos.y += this.speed * dt;
+        this.getMutPos.x += Math.sin(this.t * 3) * 40 * dt;
 
-        if (this.pos.y > World.H + 40) this.discard();
+        if (this.getMutPos.y > World.H + 40) this.discard();
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
@@ -39,7 +42,7 @@ export abstract class MobEntity extends LivingEntity {
         const attacker = damageSource.getAttacker();
         if (attacker instanceof PlayerEntity && !damageSource.isOf(DamageTypes.ON_FIRE)) {
             if (attacker.techTree.isUnlocked('incendiary_bullet')) {
-                const duration = 3 * WorldConfig.tick;
+                const duration = 8 * WorldConfig.tick;
                 if (attacker.techTree.isUnlocked('meltdown')) {
                     const effect = this.getStatusEffect(StatusEffects.BurningStatus);
                     if (effect) {
@@ -51,7 +54,7 @@ export abstract class MobEntity extends LivingEntity {
             }
         }
 
-        this.getWorld().spawnParticle(this.pos, Vec2.ZERO, rand(0.2, 0.6), rand(4, 6),
+        this.getWorld().spawnParticle(this.getMutPos, Vec2.ZERO, rand(0.2, 0.6), rand(4, 6),
             "#ffaa33", "#ff5454", 0.6, 80);
         return true;
     }
@@ -68,7 +71,7 @@ export abstract class MobEntity extends LivingEntity {
             const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
 
             world.spawnParticle(
-                this.pos, vel, rand(0.6, 0.8), rand(4, 6),
+                this.getMutPos, vel, rand(0.6, 0.8), rand(4, 6),
                 "#ffaa33", "#ff5454", 0.6, 80
             );
         }
@@ -82,5 +85,11 @@ export abstract class MobEntity extends LivingEntity {
 
     public getWorth(): number {
         return this.worth;
+    }
+
+    public onDataTrackerUpdate(_entries: DataEntry<any>): void {
+    }
+
+    public onTrackedDataSet(_data: TrackedData<any>): void {
     }
 }

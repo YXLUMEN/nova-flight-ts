@@ -1,23 +1,24 @@
 import {MobEntity} from "./MobEntity.ts";
-import type {World} from "../World.ts";
-import {MutVec2} from "../math/MutVec2.ts";
-import {type DamageSource} from "./damage/DamageSource.ts";
-import {clamp, PI2, rand} from "../math/math.ts";
-import {BulletEntity} from "./BulletEntity.ts";
-import {Vec2} from "../math/Vec2.ts";
-import {PlayerEntity} from "./PlayerEntity.ts";
-import type {StatusEffectInstance} from "../status/StatusEffectInstance.ts";
+import type {World} from "../../World.ts";
+import {MutVec2} from "../../utils/math/MutVec2.ts";
+import {type DamageSource} from "../damage/DamageSource.ts";
+import {clamp, PI2, rand} from "../../utils/math/math.ts";
+import {BulletEntity} from "../projectile/BulletEntity.ts";
+import {Vec2} from "../../utils/math/Vec2.ts";
+import {PlayerEntity} from "../PlayerEntity.ts";
+import type {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
+import {EntityType} from "../EntityType.ts";
+import {EntityTypes} from "../EntityTypes.ts";
 
 export class BossEntity extends MobEntity {
     public override speed = 0;
     public color = '#b30000';
 
     private cooldown = 0;
-    private readonly interval = 1;
     private damageCooldown: number = 0;
 
-    public constructor(world: World, pos: MutVec2, health: number, worth: number) {
-        super(world, pos, 148, health, worth);
+    public constructor(type: EntityType<BossEntity>, world: World, health: number, worth: number) {
+        super(type, world, health, worth);
     }
 
     public override tick(dt: number) {
@@ -26,7 +27,7 @@ export class BossEntity extends MobEntity {
         if (this.damageCooldown > 0) this.damageCooldown -= 1;
         this.cooldown -= dt;
         if (this.cooldown > 0) return;
-        this.cooldown = this.interval;
+        this.cooldown = rand(0.2, 2);
 
         const count = 16;
         const speed = 200;
@@ -35,12 +36,15 @@ export class BossEntity extends MobEntity {
         const step = (endAngle - startAngle) / (count - 1);
 
         const world = this.getWorld();
+        const pos = this.getMutPos.clone();
         for (let i = count; i--;) {
             const angle = startAngle + step * i;
             const vel = new Vec2(Math.cos(angle) * speed, Math.sin(angle) * speed);
-            const b = new BulletEntity(world, this.pos, vel, this, 1, 6);
+            const b = new BulletEntity(EntityTypes.BULLET_ENTITY, world, this, 1);
+            b.setVelocity(vel);
+            b.setPosByVec(pos);
             b.color = '#ff0000'
-            world.bullets.push(b);
+            world.spawnEntity(b);
         }
     }
 
@@ -67,7 +71,7 @@ export class BossEntity extends MobEntity {
             const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
 
             world.spawnParticle(
-                this.pos, vel, rand(0.8, 1.4), rand(12, 24),
+                this.getMutPos, vel, rand(0.8, 1.4), rand(12, 24),
                 "#ffaa33", "#ff5454", 0.6, 80
             );
         }
@@ -84,7 +88,7 @@ export class BossEntity extends MobEntity {
 
     public override render(ctx: CanvasRenderingContext2D) {
         ctx.save();
-        ctx.translate(this.pos.x, this.pos.y);
+        ctx.translate(this.getMutPos.x, this.getMutPos.y);
 
         ctx.fillStyle = this.color;
         ctx.strokeStyle = "rgba(0,0,0,.2)";

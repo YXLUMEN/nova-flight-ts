@@ -134,7 +134,7 @@ export function applyTech(world: World, id: string) {
             if (laser instanceof LaserWeapon) {
                 laser.damage = 0;
                 laser.laserColor = '#ff0000'
-                laser.drainRate *= 2.5;
+                laser.drainRate *= 1.5;
             }
             break;
         }
