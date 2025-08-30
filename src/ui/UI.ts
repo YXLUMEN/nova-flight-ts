@@ -17,7 +17,7 @@ export class UI {
     private readonly barWidth = 140;
     private readonly barHeight = 10;
 
-    constructor(world: World, opts: UIOptions = {}) {
+    public constructor(world: World, opts: UIOptions = {}) {
         this.world = world;
         this.font = opts.font ?? '14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
         this.hudColor = opts.hudColor ?? '#ffffff';

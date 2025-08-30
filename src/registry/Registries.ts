@@ -11,6 +11,8 @@ export class Registries {
     });
     public static readonly ENTITY_TYPE = this.simpleCreate(RegistryKeys.ENTITY_TYPE, () => {
     });
+    public static readonly ATTRIBUTE = this.simpleCreate(RegistryKeys.ATTRIBUTE, () => {
+    });
 
     private static simpleCreate<T>(key: RegistryKey<Registry<T>>, initializer: CallableFunction): Registry<T> {
         return this.create(key, new Registry(key), initializer);
@@ -21,5 +23,11 @@ export class Registries {
         this.DEFAULT_ENTRIES.set(id, initializer);
         this.ROOT.add(key, registry);
         return registry;
+    }
+
+    public static complete() {
+        import("../entity/attribute/EntityAttributes.ts").then(mod => {
+            this.DEFAULT_ENTRIES.set(RegistryKeys.ATTRIBUTE.getValue(), mod.EntityAttributes.registerAndGetDefault)
+        }).then(() => Object.freeze(this));
     }
 }

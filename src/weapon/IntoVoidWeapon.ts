@@ -2,7 +2,7 @@ import {Weapon} from "./Weapon.ts";
 import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
 import {World} from "../world/World.ts";
 import {WindowOverlay} from "../effect/WindowOverlay.ts";
-import {PlayerEntity} from "../entity/PlayerEntity.ts";
+import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {pointInCircleVec2} from "../utils/math/math.ts";
 import {EMPWeapon} from "./EMPWeapon.ts";
 import {LaserWeapon} from "./LaserWeapon.ts";

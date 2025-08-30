@@ -37,10 +37,10 @@ const p3: PhaseConfig = deepFreeze(createCleanObj({
         {
             rate: ({score}) => 1.0 + 0.3 * (score / 40) | 0,
             jitter: 0.4,
-            factory: spawnBase(110, 3, 2, '#ff2121'),
+            factory: spawnBase(110, 1, 2, '#ff2121'),
             cap: 64,
         },
-        {every: 1.2, jitter: 0.5, factory: spawnGun(100, 2, 2)},
+        {every: 1.2, jitter: 0.5, factory: spawnGun(100, 2)},
         {every: 2.0, jitter: 0.35, factory: spawnLineBase(4, 64, 120)},
     ],
 }));
@@ -53,7 +53,7 @@ const p4: PhaseConfig = deepFreeze(createCleanObj({
         {
             rate: ({score}) => 1.0 + 0.3 * (score / 60) | 0,
             jitter: 0.4,
-            factory: spawnBaseS(110, 6, 3, '#ff2121'),
+            factory: spawnBaseS(110, 4, 3, '#ff2121'),
             cap: 32,
         },
         {every: 1.2, jitter: 0.5, factory: spawnGun(100, 2, 2)},
@@ -70,9 +70,8 @@ const p5: PhaseConfig = deepFreeze(createCleanObj({
             rate: 1,
             jitter: 0.4,
             factory: spawnBaseS(
-                110, 8, 8,
-                '#910000',
-                (ctx) => 1 + (ctx.score / 1000) | 0
+                110, 6, 8,
+                '#910000'
             ),
             cap: 90
         },
@@ -80,14 +79,13 @@ const p5: PhaseConfig = deepFreeze(createCleanObj({
             rate: 2,
             jitter: 0.8,
             factory: spawnBaseS(
-                120, 4, 4,
+                120, 2, 4,
                 '#ff2121',
-                (ctx) => 1 + Math.log10(1 + ctx.score) | 0
             ),
             cap: 96,
         },
-        {every: 0.9, jitter: 0.5, factory: spawnGun(80, 6, 2), cap: 96},
-        {every: 4.0, jitter: 0.35, factory: spawnLineBase(6, 64, 150, 4, 1)},
+        {every: 0.9, jitter: 0.5, factory: spawnGun(80, 2), cap: 96},
+        {every: 4.0, jitter: 0.35, factory: spawnLineBase(6, 64, 150, 1)},
     ],
 }));
 
@@ -99,12 +97,12 @@ const p6: PhaseConfig = deepFreeze(createCleanObj({
             every: 0.4,
             jitter: 0.4,
             factory: spawnBase(
-                110, 16, 8,
+                110, 14, 8,
                 '#910000'
             ),
             cap: 94
         },
-        {rate: 3, jitter: 0.5, factory: spawnGun(80, 6, 6), cap: 96},
+        {rate: 3, jitter: 0.5, factory: spawnGun(80, 6), cap: 96},
     ],
 }));
 
@@ -116,7 +114,7 @@ const p7: PhaseConfig = deepFreeze(createCleanObj({
             rate: 1,
             jitter: 0.4,
             factory: spawnBaseS(
-                110, 8, 8,
+                110, 6, 8,
                 '#910000',
                 (ctx) => 1 + (ctx.score / 1000) | 0
             ),
@@ -126,13 +124,13 @@ const p7: PhaseConfig = deepFreeze(createCleanObj({
             rate: 3,
             jitter: 0.6,
             factory: spawnTank(
-                60, 32, 8,
+                60, 0, 8,
                 '#9f3b00',
             ),
             cap: 72,
         },
-        {every: 0.9, jitter: 0.5, factory: spawnGun(80, 6, 4), cap: 96},
-        {every: 2.0, jitter: 0.4, factory: spawnMiniGun(40, 128, 12), cap: 96},
+        {every: 0.9, jitter: 0.5, factory: spawnGun(80, 4, 4), cap: 96},
+        {every: 2.0, jitter: 0.4, factory: spawnMiniGun(40, 0, 12), cap: 96},
     ],
 }));
 

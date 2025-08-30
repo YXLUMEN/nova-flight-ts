@@ -11,3 +11,5 @@ export interface PhaseConfigJSON extends Omit<PhaseConfig, 'rules'> {
 export type Constructor<T = any> = new (...args: any[]) => T;
 
 export type UUID = `${string}-${string}-${string}-${string}-${string}`;
+
+export type Consumer<T> = (val: T) => void;

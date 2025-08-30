@@ -6,7 +6,7 @@ import type {RegistryKey} from "../../registry/RegistryKey.ts";
 import {Registry} from "../../registry/Registry.ts";
 import {RegistryManager} from "../../registry/RegistryManager.ts";
 import {RegistryKeys} from "../../registry/RegistryKeys.ts";
-import type {PlayerEntity} from "../PlayerEntity.ts";
+import type {PlayerEntity} from "../player/PlayerEntity.ts";
 import type {LivingEntity} from "../LivingEntity.ts";
 
 export class DamageSources {

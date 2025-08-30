@@ -39,11 +39,19 @@ export class RegistryEntry<T> {
         }
     }
 
+    public matches(entry: RegistryEntry<T>) {
+        return entry.matchesKey(this.getRegistryKey());
+    }
+
     public matchesKey(key: RegistryKey<T>): boolean {
         return this.getRegistryKey() === key;
     }
 
     public setTags(tags: Set<TagKey<T>>): void {
         this.tags = tags;
+    }
+
+    public toString() {
+        return this.registryKey === null ? 'unregistered' : this.registryKey.getValue().toString();
     }
 }

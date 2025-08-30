@@ -4,7 +4,7 @@ import {World} from '../world/World.ts';
 import {clamp} from '../utils/math/math.ts';
 import type {Entity} from "../entity/Entity.ts";
 import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
-import {PlayerEntity} from "../entity/PlayerEntity.ts";
+import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {Box} from "../utils/math/Box.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 

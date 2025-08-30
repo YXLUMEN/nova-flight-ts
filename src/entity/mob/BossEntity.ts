@@ -5,7 +5,7 @@ import {type DamageSource} from "../damage/DamageSource.ts";
 import {clamp, PI2, rand} from "../../utils/math/math.ts";
 import {BulletEntity} from "../projectile/BulletEntity.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
-import {PlayerEntity} from "../PlayerEntity.ts";
+import {PlayerEntity} from "../player/PlayerEntity.ts";
 import type {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
 import {EntityType} from "../EntityType.ts";
 import {EntityTypes} from "../EntityTypes.ts";
@@ -17,8 +17,8 @@ export class BossEntity extends MobEntity {
     private cooldown = 0;
     private damageCooldown: number = 0;
 
-    public constructor(type: EntityType<BossEntity>, world: World, health: number, worth: number) {
-        super(type, world, health, worth);
+    public constructor(type: EntityType<BossEntity>, world: World, worth: number) {
+        super(type, world, worth);
     }
 
     public override tick(dt: number) {

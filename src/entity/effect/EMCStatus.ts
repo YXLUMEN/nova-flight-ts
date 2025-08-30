@@ -7,7 +7,7 @@ export class EMCStatus extends StatusEffect {
     private cooldown = 0;
 
     public constructor() {
-        super();
+        super(2, '#0033ff');
     }
 
     public override applyUpdateEffect(entity: Entity, _amplifier: number): boolean {

@@ -1,8 +1,15 @@
-import {BaseEnemy} from "./BaseEnemy.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
+import type {World} from "../../world/World.ts";
+import {MobEntity} from "./MobEntity.ts";
+import type {EntityType} from "../EntityType.ts";
 
-export class TankEnemy extends BaseEnemy {
+export class TankEnemy extends MobEntity {
     private damageCooldown: number = 0;
+    public color = '#ff6b6b';
+
+    public constructor(type: EntityType<TankEnemy>, world: World, worth: number) {
+        super(type, world, worth);
+    }
 
     public override tick(dt: number) {
         super.tick(dt);

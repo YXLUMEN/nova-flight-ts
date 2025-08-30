@@ -1,34 +1,36 @@
 type EventType = string;
-type EventPayload = any;
-
+type EventPayload = unknown;
 type Listener = (payload: EventPayload) => void;
 
 export class EventBus {
-    private readonly listeners: Map<EventType, Listener[]> = new Map();
+    private readonly listeners: Map<EventType, Set<Listener>> = new Map();
 
-    public on(type: EventType, listener: Listener) {
-        if (!this.listeners.has(type)) {
-            this.listeners.set(type, []);
+    public on(type: EventType, listener: Listener): void {
+        let set = this.listeners.get(type);
+        if (!set) {
+            set = new Set();
+            this.listeners.set(type, set);
         }
-        this.listeners.get(type)!.push(listener);
+        set.add(listener);
     }
 
-    public off(type: EventType, listener: Listener) {
-        const list = this.listeners.get(type);
-        if (list) {
-            const index = list.indexOf(listener);
-            if (index >= 0) list.splice(index, 1);
+    public off(type: EventType, listener: Listener): void {
+        const set = this.listeners.get(type);
+        if (!set) return;
+        set.delete(listener);
+        if (set.size === 0) {
+            this.listeners.delete(type);
         }
     }
 
     public emit(type: EventType, payload: EventPayload) {
-        const list = this.listeners.get(type);
-        if (!list) return;
-        for (const fn of list) {
+        const set = this.listeners.get(type);
+        if (!set) return;
+        for (const fn of set) {
             try {
                 fn(payload);
             } catch (err) {
-                console.warn("EventBus error:", err);
+                console.warn(`EventBus listener for "${type}" threw:`, err);
             }
         }
     }

@@ -15,7 +15,7 @@ export class GunEnemyEntity extends MobEntity {
     private static readonly bulletVel = new Vec2(0, 200);
 
     public constructor(type: EntityType<GunEnemyEntity>, world: World) {
-        super(type, world, 2, 5);
+        super(type, world, 5);
     }
 
     public override tick(dt: number) {
@@ -26,12 +26,12 @@ export class GunEnemyEntity extends MobEntity {
         this.cooldown = 150;
         const world = this.getWorld();
 
-        if (world.empBurst > 0 || this.hasStatusEffect(StatusEffects.EMCStatus)) return;
+        if (world.empBurst > 0 || this.hasStatusEffect(StatusEffects.EMC_STATUS)) return;
 
         const pos = this.getMutPos;
         const b = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, this, 1);
         b.setVelocity(GunEnemyEntity.bulletVel);
-        b.setPos(pos.x + this.getEntityWidth() / 2, pos.y);
+        b.setPos(pos.x, pos.y);
 
         b.color = '#ff0000'
         world.spawnEntity(b);

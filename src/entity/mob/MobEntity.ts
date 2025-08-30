@@ -3,10 +3,8 @@ import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {World} from "../../world/World.ts";
 import {PI2, rand} from "../../utils/math/math.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
-import {PlayerEntity} from "../PlayerEntity.ts";
-import {DamageTypes} from "../damage/DamageTypes.ts";
+import {PlayerEntity} from "../player/PlayerEntity.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
-import {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
 import type {EntityType} from "../EntityType.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import type {DataEntry} from "../data/DataEntry.ts";
@@ -15,15 +13,15 @@ export abstract class MobEntity extends LivingEntity {
     private readonly worth: number;
     protected t = Math.random() * 1000;
 
-    protected constructor(type: EntityType<MobEntity>, world: World, maxHealth: number, worth: number) {
-        super(type, world, maxHealth);
+    protected constructor(type: EntityType<MobEntity>, world: World, worth: number) {
+        super(type, world);
         this.worth = worth;
     }
 
     public override tick(dt: number): void {
         super.tick(dt);
 
-        const emc = this.getStatusEffect(StatusEffects.EMCStatus);
+        const emc = this.getStatusEffect(StatusEffects.EMC_STATUS);
         if (emc) dt *= emc.getAmplifier() * 0.1;
 
         this.t += dt;
@@ -36,22 +34,9 @@ export abstract class MobEntity extends LivingEntity {
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         const result = super.takeDamage(damageSource, damage);
         if (!result) return false;
-
-        const attacker = damageSource.getAttacker();
-        if (attacker instanceof PlayerEntity && !damageSource.isOf(DamageTypes.ON_FIRE)) {
-            if (attacker.techTree.isUnlocked('incendiary_bullet')) {
-                if (attacker.techTree.isUnlocked('meltdown')) {
-                    const effect = this.getStatusEffect(StatusEffects.BurningStatus);
-                    if (effect) {
-                        const amplifier = Math.min(10, effect.getAmplifier() + 1);
-                        this.addStatusEffect(new StatusEffectInstance(StatusEffects.BurningStatus, 400, amplifier));
-                    }
-                }
-                this.addStatusEffect(new StatusEffectInstance(StatusEffects.BurningStatus, 400, 1));
-            }
-        }
-
-        this.getWorld().spawnParticle(this.getMutPos, MutVec2.zero(), rand(0.2, 0.6), rand(4, 6),
+        const world = this.getWorld();
+        world.events.emit('mob-damaged', {mob: this, damageSource});
+        world.spawnParticle(this.getMutPos, MutVec2.zero(), rand(0.2, 0.6), rand(4, 6),
             "#ffaa33", "#ff5454", 0.6, 80);
         return true;
     }

@@ -1,5 +1,5 @@
 import type {EntityRenderer} from "./EntityRenderer.ts";
-import {type PlayerEntity} from "../../entity/PlayerEntity.ts";
+import {type PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 
 export class PlayerEntityRender implements EntityRenderer<PlayerEntity> {
     public render(entity: PlayerEntity, ctx: CanvasRenderingContext2D) {

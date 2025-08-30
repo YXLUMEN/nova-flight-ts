@@ -6,7 +6,7 @@ export class BaseEnemy extends MobEntity {
     public override speed = 110;
     public color = '#ff6b6b';
 
-    public constructor(type: EntityType<BaseEnemy>, world: World, maxHealth: number, worth: number) {
-        super(type, world, maxHealth, worth);
+    public constructor(type: EntityType<BaseEnemy>, world: World, worth: number) {
+        super(type, world, worth);
     }
 }

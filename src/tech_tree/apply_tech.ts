@@ -6,6 +6,8 @@ import {World} from "../world/World.ts";
 import {BombWeapon} from "../weapon/BombWeapon.ts";
 import {IntoVoidWeapon} from "../weapon/IntoVoidWeapon.ts";
 import {MiniGunWeapon} from "../weapon/MiniGunWeapon.ts";
+import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
+import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 
 export function applyTech(world: World, id: string) {
     const player = world.player;
@@ -97,7 +99,7 @@ export function applyTech(world: World, id: string) {
             break;
         }
         case 'ship_opt':
-            player.setMaxHealth(5);
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.HEALTH_BOOST, -1, 0), null);
             player.setHealth(player.getMaxHealth());
             break;
         case 'into_void':

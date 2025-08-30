@@ -409,13 +409,14 @@ export class TechTree {
         }
         if (unlocked.length === 0) return;
 
-        const player = World.instance.player;
+        const player = World.instance.player;   
         let backScore = 0;
         for (const tech of unlocked) {
             const cost = tech.cost;
             if (cost) backScore += cost;
         }
         player.setScore(player.getScore() + (backScore * 0.8) | 0);
+        player.currentBaseIndex = 0;
         player.baseWeapons.length = 0;
         player.weapons.clear();
 

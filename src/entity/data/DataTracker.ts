@@ -4,6 +4,7 @@ import {ClassToNum} from "../../utils/ClassToNum.ts";
 import {TrackedData} from "./TrackedData.ts";
 import type {Constructor} from "../../apis/registry.ts";
 
+type Serializable = number | string | number[] | string[];
 
 export class DataTracker {
     public static readonly CLASS_TP_ID = new ClassToNum();
@@ -17,7 +18,7 @@ export class DataTracker {
         this.entries = entries;
     }
 
-    public static registerData<T>(entityClass: Constructor<DataTracked>, handler: T): TrackedData<T> {
+    public static registerData<T extends Serializable>(entityClass: Constructor<DataTracked>, handler: T): TrackedData<T> {
         const id = this.CLASS_TP_ID.put(entityClass);
         if (id > 254) {
             throw new RangeError(`Data value id is too big with ${id}; Max is 254`);

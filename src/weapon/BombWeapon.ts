@@ -8,6 +8,7 @@ import type {ExplosionOpts} from "../apis/IExplosionOpts.ts";
 import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
 import {Particle} from "../effect/Particle.ts";
 import type {LivingEntity} from "../entity/LivingEntity.ts";
+import type {IVec} from "../utils/math/IVec.ts";
 
 
 export class BombWeapon extends Weapon implements ISpecialWeapon {
@@ -43,7 +44,7 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
     }
 
     public static applyBombDamage(
-        world: World, center: MutVec2, radius: number,
+        world: World, center: IVec, radius: number,
         damage: number,
         source: Entity | null = null, attacker: LivingEntity | null = null) {
         const r2 = radius * radius;
@@ -56,7 +57,7 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
         }
     }
 
-    public static spawnExplosionVisual(world: World, pos: MutVec2, opts: ExplosionOpts = {}) {
+    public static spawnExplosionVisual(world: World, pos: IVec, opts: ExplosionOpts = {}) {
         const radius = opts.explosionRadius ?? 90;
         const sparks = opts.sparks ?? 26;
         const fastSparks = opts.fastSparks ?? 10;
@@ -66,12 +67,13 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
             const a = rand(0, Math.PI * 2);
             const speed = rand(120, 360);
             const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
+            const ePos = new MutVec2(pos.x, pos.y);
 
-            if (important) world.addEffect(new Particle(pos.clone(), vel.clone(),
+            if (important) world.addEffect(new Particle(ePos, vel.clone(),
                 rand(0.25, 0.6), rand(3, 8),
                 "#ffd966", "rgba(255,69,0,0)"
             )); else world.spawnParticle(
-                pos, vel, rand(0.25, 0.6), rand(3, 8),
+                ePos, vel, rand(0.25, 0.6), rand(3, 8),
                 "#ffd966", "rgba(255,69,0,0)");
         }
 
@@ -79,12 +81,13 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
             const a = rand(0, Math.PI * 2);
             const speed = rand(80, 180);
             const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
+            const ePos = new MutVec2(pos.x, pos.y);
 
             if (important) world.addEffect(new Particle(
-                pos.clone(), vel.clone(), rand(0.6, 1.2), rand(4, 10),
+                ePos, vel.clone(), rand(0.6, 1.2), rand(4, 10),
                 "#ffaa33", "rgba(255,140,0,0)", 0.6, 80
             )); else world.spawnParticle(
-                pos, vel, rand(0.6, 1.2), rand(4, 10),
+                ePos, vel, rand(0.6, 1.2), rand(4, 10),
                 "#ffaa33", "rgba(255,140,0,0)", 0.6, 80
             );
         }

@@ -7,18 +7,24 @@ import type {StatusEffectInstance} from "./effect/StatusEffectInstance.ts";
 import type {StatusEffect} from "./effect/StatusEffect.ts";
 import type {EntityType} from "./EntityType.ts";
 import {DataTracker} from "./data/DataTracker.ts";
+import {AttributeContainer} from "./attribute/AttributeContainer.ts";
+import type {EntityAttribute} from "./attribute/EntityAttribute.ts";
+import {EntityAttributes} from "./attribute/EntityAttributes.ts";
+import {DefaultAttributeRegistry} from "./attribute/DefaultAttributeRegistry.ts";
+import type {EntityAttributeInstance} from "./attribute/EntityAttributeInstance.ts";
 
 
 export abstract class LivingEntity extends Entity {
     private static readonly HEALTH = DataTracker.registerData(Object(LivingEntity), 0);
 
-    private maxHealth: number;
+    private readonly attributes: AttributeContainer;
     private readonly activeStatusEffects = new Map<RegistryEntry<StatusEffect>, StatusEffectInstance>();
 
-    protected constructor(type: EntityType<LivingEntity>, world: World, maxHealth: number) {
+    protected constructor(type: EntityType<LivingEntity>, world: World) {
         super(type, world);
-        this.maxHealth = maxHealth;
-        this.setHealth(maxHealth);
+
+        this.attributes = new AttributeContainer(DefaultAttributeRegistry.get(type.getEntityClassName()));
+        this.setHealth(this.getMaxHealth());
     }
 
     public override tick(dt: number) {
@@ -26,24 +32,40 @@ export abstract class LivingEntity extends Entity {
         this.tickStatusEffects();
     }
 
+    protected tickStatusEffects(): void {
+        if (this.activeStatusEffects.size === 0) return;
+        const effectKeys = [...this.activeStatusEffects.keys()];
+
+        for (const effect of effectKeys) {
+            const instance = this.activeStatusEffects.get(effect)!;
+            if (!instance.update(this)) {
+                this.onStatusEffectRemoved(instance);
+            }
+        }
+    }
+
     protected override initDataTracker(builder: InstanceType<typeof DataTracker.Builder>) {
         builder.add(LivingEntity.HEALTH, 1);
     }
 
-    public override takeDamage(damageSource: DamageSource, damage: number): boolean {
-        if (this.isInvulnerableTo(damageSource)) return false;
+    public getAttributes() {
+        return this.attributes;
+    }
 
-        this.setHealth(clamp(this.getHealth() - damage, 0, this.maxHealth));
-        if (this.getHealth() <= 0) this.onDeath(damageSource);
-        return true;
+    public getAttributeInstance(attribute: RegistryEntry<EntityAttribute>): EntityAttributeInstance | null {
+        return this.attributes.getCustomInstance(attribute);
+    }
+
+    public getAttributeValue(attribute: RegistryEntry<EntityAttribute>) {
+        return this.attributes.getValue(attribute);
+    }
+
+    public getAttributeBaseValue(attribute: RegistryEntry<EntityAttribute>) {
+        return this.attributes.getBaseValue(attribute);
     }
 
     public getMaxHealth(): number {
-        return this.maxHealth;
-    }
-
-    public setMaxHealth(value: number): void {
-        this.maxHealth = clamp(value, 0, 256);
+        return this.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH);
     }
 
     public getHealth(): number {
@@ -51,40 +73,109 @@ export abstract class LivingEntity extends Entity {
     }
 
     public setHealth(health: number): void {
-        this.dataTracker.set(LivingEntity.HEALTH, clamp(health, 0, this.maxHealth));
+        this.dataTracker.set(LivingEntity.HEALTH, clamp(health, 0, this.getMaxHealth()));
     }
 
-    public tickStatusEffects(): void {
-        if (this.activeStatusEffects.size === 0) return;
+    public override takeDamage(damageSource: DamageSource, damage: number): boolean {
+        if (this.isInvulnerableTo(damageSource)) return false;
 
-        for (const effect of this.activeStatusEffects.values()) {
-            effect.update(this);
-        }
-    }
-
-    public addStatusEffect(effect: StatusEffectInstance): boolean {
-        const type = effect.getEffectType();
-        const statusEffect = this.activeStatusEffects.get(type);
-        if (statusEffect) {
-            return statusEffect.upgrade(effect);
-        }
-        this.activeStatusEffects.set(type, effect);
+        this.setHealth(clamp(this.getHealth() - damage, 0, this.getMaxHealth()));
+        if (this.getHealth() <= 0) this.onDeath(damageSource);
         return true;
     }
 
-    public setStatusEffect(effect: StatusEffectInstance): void {
-        this.activeStatusEffects.set(effect.getEffectType(), effect);
+    public getActiveStatusEffects(): Map<RegistryEntry<StatusEffect>, StatusEffectInstance> {
+        return this.activeStatusEffects;
     }
 
     public hasStatusEffect(effect: RegistryEntry<StatusEffect>): boolean {
         return this.activeStatusEffects.has(effect);
     }
 
-    public removeStatusEffect(effect: RegistryEntry<StatusEffect>): boolean {
+    public getStatusEffect(effect: RegistryEntry<StatusEffect>): StatusEffectInstance {
+        return this.activeStatusEffects.get(effect)!;
+    }
+
+    public addStatusEffect(effect: StatusEffectInstance, source: Entity | null): boolean {
+        if (!this.canHaveStatusEffect(effect)) return false;
+
+        const type = effect.getEffectType();
+        const instance = this.activeStatusEffects.get(type);
+        let result = false;
+
+        if (instance === undefined) {
+            this.activeStatusEffects.set(type, effect);
+            this.onStatusEffectApplied(effect, source);
+            result = true;
+        } else if (instance.upgrade(effect)) {
+            this.onStatusEffectUpgraded(instance, true, source);
+            result = true;
+        }
+
+        effect.onApplied(this);
+        return result;
+    }
+
+    public canHaveStatusEffect(_effect: StatusEffectInstance): boolean {
+        return true;
+    }
+
+    public setStatusEffect(effect: StatusEffectInstance, source: Entity | null): void {
+        if (!this.canHaveStatusEffect(effect)) return;
+        const instance = this.activeStatusEffects.get(effect.getEffectType());
+        if (!instance) {
+            this.onStatusEffectApplied(effect, source);
+        } else {
+            this.onStatusEffectUpgraded(effect, true, source);
+        }
+    }
+
+    public removeStatusEffectInternal(effect: RegistryEntry<StatusEffect>): boolean {
         return this.activeStatusEffects.delete(effect);
     }
 
-    public getStatusEffect(effect: RegistryEntry<StatusEffect>) {
-        return this.activeStatusEffects.get(effect);
+    public removeStatusEffect(effect: RegistryEntry<StatusEffect>): boolean {
+        if (this.removeStatusEffectInternal(effect)) {
+            effect.getValue().onRemoved(this.attributes);
+            this.updateAttributes();
+            return true;
+        }
+        return false;
+    }
+
+    public onStatusEffectApplied(effect: StatusEffectInstance, _source: Entity | null): void {
+        effect.getEffectType().getValue().onApplied(this.attributes, effect.getAmplifier());
+    }
+
+    protected onStatusEffectUpgraded(effect: StatusEffectInstance, reapplyEffect: boolean, _source: Entity | null): void {
+        if (reapplyEffect) {
+            const statusEffect = effect.getEffectType().getValue();
+            statusEffect.onRemoved(this.attributes);
+            statusEffect.onApplied(this.attributes, effect.getAmplifier());
+            this.updateAttributes();
+        }
+    }
+
+    protected onStatusEffectRemoved(effect: StatusEffectInstance): void {
+        effect.getEffectType().getValue().onRemoved(this.attributes);
+        this.updateAttributes();
+    }
+
+    private updateAttributes(): void {
+        const pendingAttr = this.attributes.getPendingUpdate();
+        for (const attr of pendingAttr) {
+            this.updateAttribute(attr.getAttribute());
+        }
+
+        pendingAttr.clear();
+    }
+
+    private updateAttribute(attribute: RegistryEntry<EntityAttribute>): void {
+        if (attribute.matches(EntityAttributes.GENERIC_MAX_HEALTH)) {
+            const maxHealth = this.getMaxHealth();
+            if (this.getHealth() > maxHealth) {
+                this.setHealth(maxHealth);
+            }
+        }
     }
 }

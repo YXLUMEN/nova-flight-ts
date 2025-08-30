@@ -5,14 +5,21 @@ import {BurningEffect} from "./BurningEffect.ts";
 import {StatusEffect} from "./StatusEffect.ts";
 import {Registries} from "../../registry/Registries.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 
 export class StatusEffects {
-    public static readonly EMCStatus = this.register(
+    public static readonly EMC_STATUS = this.register(
         "emc_status", new EMCStatus()
     );
 
-    public static readonly BurningStatus = this.register(
+    public static readonly BURNING = this.register(
         "burning_status", new BurningEffect(1)
+    );
+
+    public static readonly HEALTH_BOOST = this.register(
+        "health_boost",
+        new StatusEffect(0, '#ff3333')
+            .addAttributeModifier(EntityAttributes.GENERIC_MAX_HEALTH, Identifier.ofVanilla("effect.health_boost"), 4)
     );
 
     private static register(id: string, statusEffect: StatusEffect): RegistryEntry<StatusEffect> {

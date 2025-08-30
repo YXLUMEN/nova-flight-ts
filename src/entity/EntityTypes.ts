@@ -1,4 +1,4 @@
-import {PlayerEntity} from "./PlayerEntity.ts";
+import {PlayerEntity} from "./player/PlayerEntity.ts";
 import {ExplodeBulletEntity} from "./projectile/ExplodeBulletEntity.ts";
 import {BulletEntity} from "./projectile/BulletEntity.ts";
 import {TankEnemy} from "./mob/TankEnemy.ts";
@@ -50,5 +50,6 @@ export class EntityTypes {
             EntityType.Builder.create(PlayerEntity)
                 .setDimensions(24, 28)
         );
+        Object.freeze(this);
     }
 }

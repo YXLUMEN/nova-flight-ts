@@ -1,7 +1,7 @@
 import {Weapon} from "./Weapon.ts";
 import {World} from "../world/World.ts";
 import type {Entity} from "../entity/Entity.ts";
-import {PlayerEntity} from "../entity/PlayerEntity.ts";
+import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
 import {EMPBurst} from "../effect/EMPBurst.ts";
 import {pointInCircleVec2} from "../utils/math/math.ts";
@@ -57,7 +57,7 @@ export class EMPWeapon extends Weapon implements ISpecialWeapon {
         const mobs = world.getMobs();
         for (const mob of mobs) {
             if (!mob.isRemoved() && pointInCircleVec2(mob.getMutPos, center, radius)) {
-                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EMCStatus, duration, 1));
+                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, duration, 1), null);
             }
         }
     }

@@ -1,34 +1,26 @@
 import {Input} from "../Input.ts";
 import {type Entity} from "../entity/Entity.ts";
-import {PlayerEntity} from "../entity/PlayerEntity.ts";
+import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {Camera} from "../render/Camera.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {EventBus} from "../event/EventBus.ts";
 import type {Effect} from "../effect/Effect.ts";
-import {BombWeapon} from "../weapon/BombWeapon.ts";
 import {ScreenFlash} from "../effect/ScreenFlash.ts";
 import {StarField} from "../effect/StarField.ts";
 import {UI} from "../ui/UI.ts";
 import {STAGE} from "../configs/StageConfig.ts";
 import {DPR} from "../utils/uit.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
-import techs from "../data/tech-data.json";
-import {TechTree} from "../tech_tree/TechTree.ts";
-import {applyTech} from "../tech_tree/apply_tech.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {ParticlePool} from "../effect/ParticlePool.ts";
-import {LaserWeapon} from "../weapon/LaserWeapon.ts";
 import type {TimerTask} from "../apis/ITimer.ts";
 import {DamageSources} from "../entity/damage/DamageSources.ts";
-import type {DamageSource} from "../entity/damage/DamageSource.ts";
-import {DamageTypeTags} from "../registry/tag/DamageTypeTags.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
-import {BossEntity} from "../entity/mob/BossEntity.ts";
 import {collideEntityBox, collideEntityCircle} from "../utils/math/math.ts";
-import {EntityTypes} from "../entity/EntityTypes.ts";
 import {defaultLayers} from "../configs/StarfieldConfig.ts";
 import {EntityRenderers} from "../render/entity/EntityRenderers.ts";
+import {DefaultEvents} from "../event/DefaultEvents.ts";
 
 export class World {
     public static instance: World;
@@ -63,13 +55,14 @@ export class World {
     private readonly particlePool: ParticlePool = new ParticlePool(256);
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
 
-    public player = new PlayerEntity(EntityTypes.PLAYER_ENTITY, this, this.input);
+    public player: PlayerEntity;
     private mobs: MobEntity[] = [];
     private bullets: ProjectileEntity[] = [];
 
-    public constructor(registryManager: RegistryManager) {
+    private constructor(registryManager: RegistryManager) {
         this.registryManager = registryManager;
         this.damageSources = new DamageSources(registryManager);
+        this.player = new PlayerEntity(this, this.input);
 
         this.resize();
         this.registryListeners();
@@ -80,9 +73,10 @@ export class World {
         this.loop(0);
     }
 
-    public static initTechTree() {
-        const viewport = document.getElementById('viewport') as HTMLElement;
-        return new TechTree(viewport, techs);
+    public static createWorld(registryManager: RegistryManager) {
+        if (this.instance) return this.instance;
+        this.instance = new World(registryManager);
+        return this.instance;
     }
 
     public reset() {
@@ -91,7 +85,7 @@ export class World {
         this.effects.length = 0;
 
         this.player.techTree.destroy();
-        this.player = new PlayerEntity(EntityTypes.PLAYER_ENTITY, this, this.input);
+        this.player = new PlayerEntity(this, this.input);
 
         this.over = false;
         this.ticking = true;
@@ -107,8 +101,7 @@ export class World {
     }
 
     public toggleTechTree() {
-        const techShell = document.getElementById('tech-shell')!;
-        this.ticking = this.rendering = techShell.classList.toggle('hidden');
+        this.ticking = this.rendering = document.getElementById('tech-shell')!.classList.toggle('hidden');
     }
 
     public resize() {
@@ -307,73 +300,15 @@ export class World {
     private registryEvents() {
         this.events.clear();
 
-        this.events.on('unlock-tech', ({id}) => applyTech(this, id));
-
-        const techTree = this.player.techTree;
-
         this.events.on('boss-killed', (event) => {
-            const boss = event.mob;
+            const boss = (event as any).mob;
             this.stage.nextPhase();
             if (boss instanceof MobEntity) {
                 this.player.addPhaseScore(boss.getWorth());
             }
         });
 
-        this.events.on('mob-killed', (event) => {
-            const mob = event.mob as MobEntity;
-            const damageSource = event.damageSource as DamageSource;
-
-            if (damageSource.isIn(DamageTypeTags.GAIN_SCORE)) {
-                this.player.addPhaseScore(mob.getWorth());
-            }
-
-            if (damageSource.isIn(DamageTypeTags.REPLY_LASER) && techTree.isUnlocked('energy_recovery')) {
-                const laser = this.player.weapons.get('laser');
-                if (laser instanceof LaserWeapon) {
-                    if (!laser.isOverHeat()) laser.setCooldown(laser.getCooldown() - 0.5);
-                }
-            }
-
-            // TODO
-            if (techTree.isUnlocked('emergency_repair')) {
-                if (Math.random() >= 0.92) this.player.setHealth(this.player.getHealth() + 1);
-            }
-        });
-
-        const applyExplosion = (event: any) => {
-            const {pos, shake, flash} = event;
-
-            BombWeapon.applyBombDamage(this, event.pos, event.explosionRadius, event.damage, event.source ?? null, event.attacker ?? null);
-            BombWeapon.spawnExplosionVisual(this, pos, event);
-            if (shake) this.camera.addShake(shake, 0.5);
-            if (flash) this.effects.push(flash);
-        }
-
-        this.events.on('bomb-detonate', (event) => {
-            applyExplosion(event);
-            if (techTree.isUnlocked('serial_warhead')) {
-                let counts = 0;
-                const task = this.scheduleInterval(0.2, () => {
-                    event.pos.y -= (event.explosionRadius / 2) | 0;
-                    applyExplosion(event);
-                    if (counts++ === 1) task.cancel();
-                });
-            }
-        });
-
-        this.events.on('emp-burst', ({duration}) => {
-            if (techTree.isUnlocked('ele_oscillation')) {
-                this.empBurst = duration;
-            }
-        });
-
-        this.events.on('stage-enter', ({name}) => {
-            if (name === 'P6') {
-                const boss = new BossEntity(EntityTypes.BOSS_ENTITY, this, 160, 64);
-                boss.setPos(World.W / 2, 64);
-                this.spawnEntity(boss)
-            }
-        });
+        DefaultEvents.registryEvents(this);
     }
 
     private registryListeners() {

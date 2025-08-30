@@ -28,6 +28,10 @@ export class EntityType<T extends Entity> {
         return new this.factory(this, world, ...args);
     }
 
+    public getEntityClassName(): string {
+        return this.factory.name;
+    }
+
     public static Builder = class Builder<T extends Entity> {
         private readonly factory: Constructor<T>;
         private dimensions = EntityDimensions.changing(1, 1);

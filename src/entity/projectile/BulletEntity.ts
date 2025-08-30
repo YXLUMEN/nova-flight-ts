@@ -1,6 +1,6 @@
 import {ProjectileEntity} from "./ProjectileEntity.ts";
 import {Entity} from "../Entity.ts";
-import {PlayerEntity} from "../PlayerEntity.ts";
+import {PlayerEntity} from "../player/PlayerEntity.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 
 export class BulletEntity extends ProjectileEntity {

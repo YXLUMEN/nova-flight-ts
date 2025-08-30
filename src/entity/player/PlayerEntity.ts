@@ -1,37 +1,42 @@
-import {type Input} from "../Input.ts";
-import {World} from "../world/World.ts";
-import {type Weapon} from "../weapon/Weapon.ts";
-import {BombWeapon} from "../weapon/BombWeapon.ts";
-import {LivingEntity} from "./LivingEntity.ts";
-import {ScreenFlash} from "../effect/ScreenFlash.ts";
-import {clamp} from "../utils/math/math.ts";
-import {Cannon40Weapon} from "../weapon/Cannon40Weapon.ts";
-import {throttleTimeOut} from "../utils/uit.ts";
-import {isSpecialWeapon} from "../weapon/ISpecialWeapon.ts";
-import {EdgeGlowEffect} from "../effect/EdgeGlowEffect.ts";
-import {TechTree} from "../tech_tree/TechTree.ts";
-import {BaseWeapon} from "../weapon/BaseWeapon.ts";
-import {WorldConfig} from "../configs/WorldConfig.ts";
-import {type DamageSource} from "./damage/DamageSource.ts";
-import type {DataEntry} from "./data/DataEntry.ts";
-import type {TrackedData} from "./data/TrackedData.ts";
-import type {EntityType} from "./EntityType.ts";
+import {type Input} from "../../Input.ts";
+import {World} from "../../world/World.ts";
+import {type Weapon} from "../../weapon/Weapon.ts";
+import {BombWeapon} from "../../weapon/BombWeapon.ts";
+import {LivingEntity} from "../LivingEntity.ts";
+import {ScreenFlash} from "../../effect/ScreenFlash.ts";
+import {clamp} from "../../utils/math/math.ts";
+import {Cannon40Weapon} from "../../weapon/Cannon40Weapon.ts";
+import {throttleTimeOut} from "../../utils/uit.ts";
+import {isSpecialWeapon} from "../../weapon/ISpecialWeapon.ts";
+import {EdgeGlowEffect} from "../../effect/EdgeGlowEffect.ts";
+import {TechTree} from "../../tech_tree/TechTree.ts";
+import {BaseWeapon} from "../../weapon/BaseWeapon.ts";
+import {WorldConfig} from "../../configs/WorldConfig.ts";
+import {type DamageSource} from "../damage/DamageSource.ts";
+import type {DataEntry} from "../data/DataEntry.ts";
+import type {TrackedData} from "../data/TrackedData.ts";
+import {DataLoader} from "../../DataLoader.ts";
+import {EntityTypes} from "../EntityTypes.ts";
 
 export class PlayerEntity extends LivingEntity {
     public readonly input: Input;
     public readonly weapons = new Map<string, Weapon>();
-    public readonly techTree: TechTree = World.initTechTree();
+    public readonly techTree: TechTree;
 
     public override speed = 300;
     public onDamageExplosionRadius = 320;
 
     public readonly baseWeapons: Weapon[] = [];
-    private currentBaseIndex: number = 0;
+    public currentBaseIndex: number = 0;
     private phaseScore: number;
     private score: number = 0;
 
-    public constructor(type: EntityType<PlayerEntity>, world: World, input: Input) {
-        super(type, world, 3);
+    public constructor(world: World, input: Input) {
+        super(EntityTypes.PLAYER_ENTITY, world);
+
+        const viewport = document.getElementById('viewport') as HTMLElement;
+        this.techTree = new TechTree(viewport, DataLoader.get('tech-data'));
+
         this.setPos(World.W / 2, World.H - 80);
 
         this.input = input;
@@ -111,14 +116,6 @@ export class PlayerEntity extends LivingEntity {
             }
         }
 
-        if (this.getHealth() === 1) {
-            world.addEffect(new EdgeGlowEffect({
-                color: '#ff5151',
-                duration: 5.0,
-                intensity: 0.5
-            }));
-        }
-
         if (this.techTree.isUnlocked('electrical_energy_surges')) {
             const emp = this.weapons.get('emp');
             if (emp) {
@@ -128,7 +125,17 @@ export class PlayerEntity extends LivingEntity {
             }
         }
 
-        return super.takeDamage(damageSource, damage);
+        const damageResult = super.takeDamage(damageSource, damage);
+
+        if (this.getHealth() === 1) {
+            world.addEffect(new EdgeGlowEffect({
+                color: '#ff5151',
+                duration: 5.0,
+                intensity: 0.5
+            }));
+        }
+
+        return damageResult;
     }
 
     public override onDeath(_damageSource: DamageSource) {

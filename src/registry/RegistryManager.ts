@@ -26,7 +26,9 @@ export class RegistryManager {
         this.registers.set(RegistryKeys.DAMAGE_TYPE, damage);
         this.registers.set(RegistryKeys.STATUS_EFFECT, Registries.STATUS_EFFECT);
         this.registers.set(RegistryKeys.ENTITY_TYPE, Registries.ENTITY_TYPE);
+
         EntityTypes.init();
+        Registries.complete();
     }
 
     public get<E>(key: RegistryKey<Registry<E>>): Registry<E> {

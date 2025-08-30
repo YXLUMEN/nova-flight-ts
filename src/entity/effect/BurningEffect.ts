@@ -6,7 +6,7 @@ export class BurningEffect extends StatusEffect {
     private readonly baseDps: number;
 
     public constructor(baseDps: number) {
-        super();
+        super(2, '#ff8000');
         this.baseDps = baseDps;
     }
 
