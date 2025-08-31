@@ -10,8 +10,8 @@ import {DataTracker} from "./data/DataTracker.ts";
 import {AttributeContainer} from "./attribute/AttributeContainer.ts";
 import type {EntityAttribute} from "./attribute/EntityAttribute.ts";
 import {EntityAttributes} from "./attribute/EntityAttributes.ts";
-import {DefaultAttributeRegistry} from "./attribute/DefaultAttributeRegistry.ts";
 import type {EntityAttributeInstance} from "./attribute/EntityAttributeInstance.ts";
+import {DefaultAttributeContainer} from "./attribute/DefaultAttributeContainer.ts";
 
 
 export abstract class LivingEntity extends Entity {
@@ -23,29 +23,18 @@ export abstract class LivingEntity extends Entity {
     protected constructor(type: EntityType<LivingEntity>, world: World) {
         super(type, world);
 
-        this.attributes = new AttributeContainer(DefaultAttributeRegistry.get(type.getEntityClassName()));
+        this.attributes = new AttributeContainer(this.createLivingAttributes().build(type));
         this.setHealth(this.getMaxHealth());
+    }
+
+    public createLivingAttributes(): InstanceType<typeof DefaultAttributeContainer.Builder> {
+        return DefaultAttributeContainer.builder()
+            .add(EntityAttributes.GENERIC_MAX_HEALTH);
     }
 
     public override tick(dt: number) {
         super.tick(dt);
         this.tickStatusEffects();
-    }
-
-    protected tickStatusEffects(): void {
-        if (this.activeStatusEffects.size === 0) return;
-        const effectKeys = [...this.activeStatusEffects.keys()];
-
-        for (const effect of effectKeys) {
-            const instance = this.activeStatusEffects.get(effect)!;
-            if (!instance.update(this)) {
-                this.onStatusEffectRemoved(instance);
-            }
-        }
-    }
-
-    protected override initDataTracker(builder: InstanceType<typeof DataTracker.Builder>) {
-        builder.add(LivingEntity.HEALTH, 1);
     }
 
     public getAttributes() {
@@ -145,6 +134,22 @@ export abstract class LivingEntity extends Entity {
 
     public onStatusEffectApplied(effect: StatusEffectInstance, _source: Entity | null): void {
         effect.getEffectType().getValue().onApplied(this.attributes, effect.getAmplifier());
+    }
+
+    protected tickStatusEffects(): void {
+        if (this.activeStatusEffects.size === 0) return;
+        const effectKeys = [...this.activeStatusEffects.keys()];
+
+        for (const effect of effectKeys) {
+            const instance = this.activeStatusEffects.get(effect)!;
+            if (!instance.update(this)) {
+                this.onStatusEffectRemoved(instance);
+            }
+        }
+    }
+
+    protected override initDataTracker(builder: InstanceType<typeof DataTracker.Builder>) {
+        builder.add(LivingEntity.HEALTH, 1);
     }
 
     protected onStatusEffectUpgraded(effect: StatusEffectInstance, reapplyEffect: boolean, _source: Entity | null): void {

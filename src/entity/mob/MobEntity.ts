@@ -10,8 +10,8 @@ import type {TrackedData} from "../data/TrackedData.ts";
 import type {DataEntry} from "../data/DataEntry.ts";
 
 export abstract class MobEntity extends LivingEntity {
-    private readonly worth: number;
     protected t = Math.random() * 1000;
+    private readonly worth: number;
 
     protected constructor(type: EntityType<MobEntity>, world: World, worth: number) {
         super(type, world);

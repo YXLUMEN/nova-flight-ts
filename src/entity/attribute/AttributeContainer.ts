@@ -15,13 +15,6 @@ export class AttributeContainer {
         this.fallback = defaultAttributes;
     }
 
-    private updateTrackedStatus(instance: EntityAttributeInstance): void {
-        this.pendingUpdate.add(instance);
-        if (instance.getAttribute().getValue().isTracked()) {
-            this.tracked.add(instance);
-        }
-    }
-
     public getTracked() {
         return this.tracked;
     }
@@ -81,5 +74,12 @@ export class AttributeContainer {
                 instance.removeModifierById(modifier.id);
             }
         });
+    }
+
+    private updateTrackedStatus(instance: EntityAttributeInstance): void {
+        this.pendingUpdate.add(instance);
+        if (instance.getAttribute().getValue().isTracked()) {
+            this.tracked.add(instance);
+        }
     }
 }

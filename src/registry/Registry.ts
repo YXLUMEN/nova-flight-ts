@@ -17,6 +17,18 @@ export class Registry<T> {
         this.valueToEntry = new Map<T, RegistryEntry<T>>();
     }
 
+    public static registerReference<T>(registry: Registry<T>, key: RegistryKey<T>, entry: T): RegistryEntry<T> {
+        return registry.add(key, entry);
+    }
+
+    public static registerReferenceById<T>(registry: Registry<T>, id: Identifier, entry: T): RegistryEntry<T> {
+        return this.registerReference(registry, RegistryKey.of(registry.getKey(), id), entry);
+    }
+
+    private static getValue<T>(entry: RegistryEntry<T> | null): T | null {
+        return entry !== null ? entry.getValue() : null;
+    }
+
     public getKey(): RegistryKey<T> {
         return this.key;
     }
@@ -42,11 +54,13 @@ export class Registry<T> {
         return entry;
     }
 
-    public static registerReference<T>(registry: Registry<T>, key: RegistryKey<T>, entry: T): RegistryEntry<T> {
-        return registry.add(key, entry);
+    public getId(value: T): Identifier | null {
+        const entry = this.valueToEntry.get(value);
+        return entry !== undefined ? entry.getRegistryKey().getValue() : null
     }
 
-    public static registerReferenceById<T>(registry: Registry<T>, id: Identifier, entry: T): RegistryEntry<T> {
-        return this.registerReference(registry, RegistryKey.of(registry.getKey(), id), entry);
+    public getById(id: Identifier | null): T | null {
+        if (!id) return null;
+        return Registry.getValue(this.idToEntry.get(id) ?? null);
     }
 }

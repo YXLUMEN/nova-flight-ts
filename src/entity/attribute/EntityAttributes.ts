@@ -12,11 +12,11 @@ export class EntityAttributes {
         new ClampedEntityAttribute(1, 0, 2048)
     );
 
-    private static register(id: string, attribute: EntityAttribute) {
-        return Registry.registerReferenceById(Registries.ATTRIBUTE, Identifier.ofVanilla(id), attribute);
-    }
-
     public static registerAndGetDefault(_registry: Registry<EntityAttribute>) {
         return this.GENERIC_MAX_HEALTH;
+    }
+
+    private static register(id: string, attribute: EntityAttribute) {
+        return Registry.registerReferenceById(Registries.ATTRIBUTE, Identifier.ofVanilla(id), attribute);
     }
 }

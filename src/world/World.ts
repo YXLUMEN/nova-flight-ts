@@ -31,11 +31,12 @@ export class World {
 
     public readonly camera: Camera = new Camera();
     public readonly events: EventBus = new EventBus();
+    public empBurst: number = 0
+    public player: PlayerEntity;
     private readonly registryManager: RegistryManager;
     private readonly ui: UI = new UI(this);
     private readonly input = new Input(World.canvas);
     private readonly damageSources: DamageSources;
-
     // ticking
     private last = 0;
     private accumulator = 0;
@@ -43,19 +44,13 @@ export class World {
     private freeze = false;
     private ticking = true;
     private rendering = true;
-
     private time = 0;
     private nextTimerId = 1;
     private timers: TimerTask[] = [];
-
     private readonly stage = STAGE;
-    public empBurst: number = 0
-
     private effects: Effect[] = [];
     private readonly particlePool: ParticlePool = new ParticlePool(256);
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
-
-    public player: PlayerEntity;
     private mobs: MobEntity[] = [];
     private bullets: ProjectileEntity[] = [];
 
@@ -73,10 +68,22 @@ export class World {
         this.loop(0);
     }
 
+    public get isTicking(): boolean {
+        return this.ticking;
+    }
+
+    public get isOver(): boolean {
+        return this.over;
+    }
+
     public static createWorld(registryManager: RegistryManager) {
         if (this.instance) return this.instance;
         this.instance = new World(registryManager);
         return this.instance;
+    }
+
+    private static renderEntity(entity: Entity): void {
+        EntityRenderers.getRenderer(entity).render(entity, World.ctx);
     }
 
     public reset() {
@@ -227,41 +234,6 @@ export class World {
         return this.bullets;
     }
 
-    // 二分插入 保持 timers 按 at 升序
-    private insertTimer(t: TimerTask) {
-        let lo = 0, hi = this.timers.length;
-        while (lo < hi) {
-            const mid = (lo + hi) >>> 1;
-            if (this.timers[mid].at <= t.at) lo = mid + 1;
-            else hi = mid;
-        }
-        this.timers.splice(lo, 0, t);
-    }
-
-    private processTimers() {
-        while (this.timers.length && this.timers[0].at <= this.time) {
-            const t = this.timers.shift()!;
-            if (t.canceled) continue;
-
-            if (!t.repeat) {
-                t.fn();
-                continue;
-            }
-
-            // 重复任务,补齐到当前世界时间; 可能在长时间卡顿时触发多次
-            if (t.interval! <= 0) {
-                t.fn();
-                continue;
-            } // 容错
-            do {
-                t.fn();
-                t.at += t.interval!;
-            } while (t.at <= this.time && !t.canceled);
-
-            if (!t.canceled) this.insertTimer(t);
-        }
-    }
-
     public schedule(delaySec: number, fn: () => void): { id: number; cancel: () => void } {
         const t: TimerTask = {
             id: this.nextTimerId++,
@@ -295,6 +267,106 @@ export class World {
 
     public getTime(): number {
         return this.time;
+    }
+
+    public render() {
+        if (!this.rendering) return;
+
+        const ctx = World.ctx;
+        ctx.clearRect(0, 0, World.W, World.H);
+
+        this.starField.render(ctx, this.camera);
+
+        ctx.save();
+        const offset = this.camera.viewOffset;
+        ctx.translate(-Math.floor(offset.x), -Math.floor(offset.y));
+
+        // 背景层
+        this.drawBackground(ctx);
+
+        // 实体
+        this.mobs.forEach(World.renderEntity);
+        this.bullets.forEach(World.renderEntity);
+
+        this.effects.forEach(e => e.render(ctx));
+        this.particlePool.render(ctx);
+
+        if (!this.player.isRemoved()) World.renderEntity(this.player);
+
+        ctx.restore();
+
+        this.ui.render(ctx);
+    }
+
+    public drawBackground(ctx: CanvasRenderingContext2D) {
+        const v = this.camera.viewRect;
+
+        // 网格
+        const gridSize = 80;
+
+        const startX = Math.floor(v.left / gridSize) * gridSize;
+        const endX = Math.ceil(v.right / gridSize) * gridSize;
+        const startY = Math.floor(v.top / gridSize) * gridSize;
+        const endY = Math.ceil(v.bottom / gridSize) * gridSize;
+
+        ctx.save();
+        ctx.globalAlpha = 0.06;
+        ctx.strokeStyle = "#89b7ff";
+
+        ctx.beginPath();
+        for (let x = startX; x <= endX; x += gridSize) {
+            ctx.moveTo(x, v.top);
+            ctx.lineTo(x, v.bottom);
+        }
+        for (let y = startY; y <= endY; y += gridSize) {
+            ctx.moveTo(v.left, y);
+            ctx.lineTo(v.right, y);
+        }
+        ctx.stroke();
+
+        // 边界线
+        ctx.globalAlpha = 0.3;
+        ctx.strokeStyle = "#e6f0ff";
+        ctx.beginPath();
+        ctx.rect(0, 0, World.W, World.H);
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    // 二分插入 保持 timers 按 at 升序
+    private insertTimer(t: TimerTask) {
+        let lo = 0, hi = this.timers.length;
+        while (lo < hi) {
+            const mid = (lo + hi) >>> 1;
+            if (this.timers[mid].at <= t.at) lo = mid + 1;
+            else hi = mid;
+        }
+        this.timers.splice(lo, 0, t);
+    }
+
+    private processTimers() {
+        while (this.timers.length && this.timers[0].at <= this.time) {
+            const t = this.timers.shift()!;
+            if (t.canceled) continue;
+
+            if (!t.repeat) {
+                t.fn();
+                continue;
+            }
+
+            // 重复任务,补齐到当前世界时间; 可能在长时间卡顿时触发多次
+            if (t.interval! <= 0) {
+                t.fn();
+                continue;
+            } // 容错
+            do {
+                t.fn();
+                t.at += t.interval!;
+            } while (t.at <= this.time && !t.canceled);
+
+            if (!t.canceled) this.insertTimer(t);
+        }
     }
 
     private registryEvents() {
@@ -371,82 +443,5 @@ export class World {
                 this.camera.cameraOffset.set(0, 0);
                 break;
         }
-    }
-
-    public get isTicking(): boolean {
-        return this.ticking;
-    }
-
-    public get isOver(): boolean {
-        return this.over;
-    }
-
-    public render() {
-        if (!this.rendering) return;
-
-        const ctx = World.ctx;
-        ctx.clearRect(0, 0, World.W, World.H);
-
-        this.starField.render(ctx, this.camera);
-
-        ctx.save();
-        const offset = this.camera.viewOffset;
-        ctx.translate(-Math.floor(offset.x), -Math.floor(offset.y));
-
-        // 背景层
-        this.drawBackground(ctx);
-
-        // 实体
-        this.mobs.forEach(World.renderEntity);
-        this.bullets.forEach(World.renderEntity);
-
-        this.effects.forEach(e => e.render(ctx));
-        this.particlePool.render(ctx);
-
-        if (!this.player.isRemoved()) World.renderEntity(this.player);
-
-        ctx.restore();
-
-        this.ui.render(ctx);
-    }
-
-    private static renderEntity(entity: Entity): void {
-        EntityRenderers.getRenderer(entity).render(entity, World.ctx);
-    }
-
-    public drawBackground(ctx: CanvasRenderingContext2D) {
-        const v = this.camera.viewRect;
-
-        // 网格
-        const gridSize = 80;
-
-        const startX = Math.floor(v.left / gridSize) * gridSize;
-        const endX = Math.ceil(v.right / gridSize) * gridSize;
-        const startY = Math.floor(v.top / gridSize) * gridSize;
-        const endY = Math.ceil(v.bottom / gridSize) * gridSize;
-
-        ctx.save();
-        ctx.globalAlpha = 0.06;
-        ctx.strokeStyle = "#89b7ff";
-
-        ctx.beginPath();
-        for (let x = startX; x <= endX; x += gridSize) {
-            ctx.moveTo(x, v.top);
-            ctx.lineTo(x, v.bottom);
-        }
-        for (let y = startY; y <= endY; y += gridSize) {
-            ctx.moveTo(v.left, y);
-            ctx.lineTo(v.right, y);
-        }
-        ctx.stroke();
-
-        // 边界线
-        ctx.globalAlpha = 0.3;
-        ctx.strokeStyle = "#e6f0ff";
-        ctx.beginPath();
-        ctx.rect(0, 0, World.W, World.H);
-        ctx.stroke();
-
-        ctx.restore();
     }
 }

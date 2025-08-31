@@ -5,17 +5,21 @@ import {StatusEffects} from "../effect/StatusEffects.ts";
 import {EntityType} from "../EntityType.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {MiniBulletEntity} from "../projectile/MiniBulletEntity.ts";
+import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 
 export class GunEnemyEntity extends MobEntity {
+    private static readonly bulletVel = new Vec2(0, 200);
     public override speed = 80;
     public color = "#ff6b6b";
-
     protected cooldown = 0;
-
-    private static readonly bulletVel = new Vec2(0, 200);
 
     public constructor(type: EntityType<GunEnemyEntity>, world: World) {
         super(type, world, 5);
+    }
+
+    public override createLivingAttributes() {
+        return super.createLivingAttributes()
+            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 4);
     }
 
     public override tick(dt: number) {

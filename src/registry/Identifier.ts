@@ -14,16 +14,40 @@ export class Identifier {
         this.path = path;
     }
 
-    private static ofValidated(namespace: string, path: string): Identifier {
-        return new Identifier(Identifier.validateNamespace(namespace, path), Identifier.validatePath(namespace, path));
-    }
-
     public static of(namespace: string, path: string): Identifier {
         return Identifier.ofValidated(namespace, path);
     }
 
     public static ofVanilla(path: string): Identifier {
         return new Identifier(Identifier.DEFAULT_NAMESPACE, Identifier.validatePath(Identifier.DEFAULT_NAMESPACE, path));
+    }
+
+    public static isNamespaceValid(namespace: string): boolean {
+        return /^[a-z0-9_.-]+$/.test(namespace);
+    }
+
+    public static isPathValid(path: string): boolean {
+        return /^[a-z0-9_.\/-]+$/.test(path);
+    }
+
+    private static ofValidated(namespace: string, path: string): Identifier {
+        return new Identifier(Identifier.validateNamespace(namespace, path), Identifier.validatePath(namespace, path));
+    }
+
+    private static validateNamespace(namespace: string, path: string): string {
+        if (Identifier.isNamespaceValid(namespace)) {
+            return namespace;
+        } else {
+            throw new SyntaxError(`Non [a-z0-9_.-] character in namespace of location: ${namespace}:${path}`);
+        }
+    }
+
+    private static validatePath(namespace: string, path: string): string {
+        if (Identifier.isPathValid(path)) {
+            return path;
+        } else {
+            throw new SyntaxError("Non [a-z0-9/._-] character in path of location: " + namespace + ":" + path);
+        }
     }
 
     public getPath(): string {
@@ -43,30 +67,6 @@ export class Identifier {
             return true;
         } else {
             return !(o instanceof Identifier) ? false : this.namespace === o.namespace && this.path === o.path;
-        }
-    }
-
-    private static validateNamespace(namespace: string, path: string): string {
-        if (Identifier.isNamespaceValid(namespace)) {
-            return namespace;
-        } else {
-            throw new SyntaxError(`Non [a-z0-9_.-] character in namespace of location: ${namespace}:${path}`);
-        }
-    }
-
-    public static isNamespaceValid(namespace: string): boolean {
-        return /^[a-z0-9_.-]+$/.test(namespace);
-    }
-
-    public static isPathValid(path: string): boolean {
-        return /^[a-z0-9_.\/-]+$/.test(path);
-    }
-
-    private static validatePath(namespace: string, path: string): string {
-        if (Identifier.isPathValid(path)) {
-            return path;
-        } else {
-            throw new SyntaxError("Non [a-z0-9/._-] character in path of location: " + namespace + ":" + path);
         }
     }
 }

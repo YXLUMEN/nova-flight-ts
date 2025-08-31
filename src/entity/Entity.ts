@@ -12,16 +12,14 @@ import type {DataEntry} from "./data/DataEntry.ts";
 
 
 export abstract class Entity implements DataTracked {
+    public speed: number = 0;
+    public invulnerable: boolean = false;
+    protected readonly dataTracker: DataTracker;
     private readonly type: EntityType<any>
     private readonly world: World;
     private readonly pos: MutVec2;
     private readonly dimensions: EntityDimensions;
     private velocity: Vec2 = Vec2.ZERO;
-
-    protected readonly dataTracker: DataTracker;
-
-    public speed: number = 0;
-    public invulnerable: boolean = false;
     private removed: boolean = false;
 
     protected constructor(type: EntityType<any>, world: World) {
@@ -34,6 +32,10 @@ export abstract class Entity implements DataTracked {
         const builder = new DataTracker.Builder(this);
         this.initDataTracker(builder);
         this.dataTracker = builder.build();
+    }
+
+    public get getMutPos(): MutVec2 {
+        return this.pos;
     }
 
     public getWorld(): World {
@@ -79,10 +81,6 @@ export abstract class Entity implements DataTracked {
         return this.dimensions.getBoxAtByVec(this.pos);
     }
 
-    public get getMutPos(): MutVec2 {
-        return this.pos;
-    }
-
     public setPosByVec(pos: Vec2 | MutVec2): void {
         this.pos.x = pos.x;
         this.pos.y = pos.y;
@@ -109,9 +107,9 @@ export abstract class Entity implements DataTracked {
         return this.type;
     }
 
-    protected abstract initDataTracker(builder: InstanceType<typeof DataTracker.Builder>): void;
-
     public abstract onDataTrackerUpdate(entries: DataEntry<any>): void;
 
     public abstract onTrackedDataSet(data: TrackedData<any>): void;
+
+    protected abstract initDataTracker(builder: InstanceType<typeof DataTracker.Builder>): void;
 }

@@ -15,7 +15,7 @@ const p1: PhaseConfig = deepFreeze(createCleanObj({
     until: ({score}) => score >= 64,
     onEnter: ({world}) => world.events.emit('stage-enter', {name: 'P1'}),
     rules: [
-        {every: 0.6, jitter: 0.3, factory: spawnBase(100, 2), cap: 30},
+        {every: 0.6, jitter: 0.3, factory: spawnBase(100, 0), cap: 30},
     ],
 }));
 

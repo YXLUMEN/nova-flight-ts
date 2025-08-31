@@ -56,10 +56,126 @@ export class TechTree {
         this.bindInteractions();
     }
 
+    private static linkTo(from: Tech, to: Tech) {
+        const fx = from.x + TechTree.nodeWidth / 2;
+        const fy = from.y + TechTree.nodeHeight / 2;
+        const tx = to.x + TechTree.nodeWidth / 2;
+        const ty = to.y + TechTree.nodeHeight / 2;
+
+        const dx = tx - fx;
+
+        let x1: number, y1: number, x2: number, y2: number;
+
+        if (dx >= 0) {
+            // from -> 右边缘, to -> 左边缘
+            x1 = from.x + TechTree.nodeWidth;
+            y1 = fy;
+            x2 = to.x;
+            y2 = ty;
+        } else {
+            // from -> 左边缘, to -> 右边缘
+            x1 = from.x;
+            y1 = fy;
+            x2 = to.x + TechTree.nodeWidth;
+            y2 = ty;
+        }
+
+        return {x1, y1, x2, y2};
+    }
+
+    private static setupPanZoom(container: HTMLElement, abortCtrl: AbortController): void {
+        const parent = container.parentElement as HTMLElement;
+        if (!parent) return;
+
+        let panX = 0, panY = 0, scale = 1;
+        let isDragging = false, lastX = 0, lastY = 0;
+
+        const dragStop = () => isDragging = false;
+
+        parent.addEventListener('pointerdown', e => {
+            isDragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+        }, {signal: abortCtrl.signal});
+        parent.addEventListener('pointerup', dragStop, {signal: abortCtrl.signal});
+        parent.addEventListener('pointermove', e => {
+            if (!isDragging) return;
+            panX += e.clientX - lastX;
+            panY += e.clientY - lastY;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            applyTransform();
+        }, {signal: abortCtrl.signal});
+        parent.addEventListener('pointerout', dragStop, {signal: abortCtrl.signal});
+        parent.addEventListener('blur', dragStop, {signal: abortCtrl.signal});
+        parent.addEventListener('wheel', e => {
+            scale = clamp(scale * Math.pow(1.1, -e.deltaY / 100), 0.5, 2);
+            applyTransform();
+        }, {passive: true, signal: abortCtrl.signal});
+
+        const applyTransform = () =>
+            container.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    }
+
     public destroy() {
         this.container.replaceChildren();
         this.abortCtrl.abort();
         TechTree.playerScore.textContent = '0';
+    }
+
+    // -------- Incremental updates --------
+    public applyUnlockUpdates(id: string) {
+        const affected = new Set<string>();
+
+        const add = (ids: Iterable<string>) => {
+            for (const x of ids) affected.add(x);
+        };
+
+        // 自身 + 自身后继
+        affected.add(id);
+        add(this.successorsClosure(id));
+
+        // 分支互斥节点 + 它们的后继
+        const branchPeers = this.branchPeers(id);
+        add(branchPeers);
+        for (const p of branchPeers) add(this.successorsClosure(p));
+
+        // 冲突节点 + 它们的后继
+        const conflictPeers = this.conflictPeers(id);
+        add(conflictPeers);
+        for (const p of conflictPeers) add(this.successorsClosure(p));
+
+        // 更新节点
+        for (const nid of affected) this.updateNodeClass(nid);
+
+        // 更新相关边
+        this.updateEdgesAround(Array.from(affected));
+    }
+
+    public getTech(id: string): Tech | undefined {
+        const tech = this.state.getTech(id);
+        if (tech === undefined) return undefined;
+        return {...tech};
+    }
+
+    public isUnlocked(id: string): boolean {
+        return this.state.isUnlocked(id);
+    }
+
+    public unlockAll(world: World) {
+        const all = Array.from(this.state.techById.keys());
+        for (const nid of all) {
+            if (this.state.isUnlocked(nid)) continue;
+
+            this.state.forceUnlock(nid);
+            this.updateNodeClass(nid);
+            applyTech(world, nid);
+        }
+        this.updateEdgesAround(all);
+    }
+
+    public getSelected() {
+        return this.selectNodeId;
     }
 
     // -------- Rendering --------
@@ -87,33 +203,6 @@ export class TechTree {
         });
 
         this.updateAllEdgeClasses();
-    }
-
-    private static linkTo(from: Tech, to: Tech) {
-        const fx = from.x + TechTree.nodeWidth / 2;
-        const fy = from.y + TechTree.nodeHeight / 2;
-        const tx = to.x + TechTree.nodeWidth / 2;
-        const ty = to.y + TechTree.nodeHeight / 2;
-
-        const dx = tx - fx;
-
-        let x1: number, y1: number, x2: number, y2: number;
-
-        if (dx >= 0) {
-            // from -> 右边缘, to -> 左边缘
-            x1 = from.x + TechTree.nodeWidth;
-            y1 = fy;
-            x2 = to.x;
-            y2 = ty;
-        } else {
-            // from -> 左边缘, to -> 右边缘
-            x1 = from.x;
-            y1 = fy;
-            x2 = to.x + TechTree.nodeWidth;
-            y2 = ty;
-        }
-
-        return {x1, y1, x2, y2};
     }
 
     private renderNodes() {
@@ -235,35 +324,6 @@ export class TechTree {
         TechTree.metaShow.replaceChildren(frag);
     }
 
-    // -------- Incremental updates --------
-    public applyUnlockUpdates(id: string) {
-        const affected = new Set<string>();
-
-        const add = (ids: Iterable<string>) => {
-            for (const x of ids) affected.add(x);
-        };
-
-        // 自身 + 自身后继
-        affected.add(id);
-        add(this.successorsClosure(id));
-
-        // 分支互斥节点 + 它们的后继
-        const branchPeers = this.branchPeers(id);
-        add(branchPeers);
-        for (const p of branchPeers) add(this.successorsClosure(p));
-
-        // 冲突节点 + 它们的后继
-        const conflictPeers = this.conflictPeers(id);
-        add(conflictPeers);
-        for (const p of conflictPeers) add(this.successorsClosure(p));
-
-        // 更新节点
-        for (const nid of affected) this.updateNodeClass(nid);
-
-        // 更新相关边
-        this.updateEdgesAround(Array.from(affected));
-    }
-
     private updateNodeClass(id: string) {
         const el = this.nodesLayer.querySelector<HTMLElement>(`.node[data-id="${CSS.escape(id)}"]`);
         if (!el) return;
@@ -345,62 +405,6 @@ export class TechTree {
         return this.adj.conflicts.get(id) || [];
     }
 
-    private static setupPanZoom(container: HTMLElement, abortCtrl: AbortController): void {
-        const parent = container.parentElement as HTMLElement;
-        if (!parent) return;
-
-        let panX = 0, panY = 0, scale = 1;
-        let isDragging = false, lastX = 0, lastY = 0;
-
-        const dragStop = () => isDragging = false;
-
-        parent.addEventListener('pointerdown', e => {
-            isDragging = true;
-            lastX = e.clientX;
-            lastY = e.clientY;
-        }, {signal: abortCtrl.signal});
-        parent.addEventListener('pointerup', dragStop, {signal: abortCtrl.signal});
-        parent.addEventListener('pointermove', e => {
-            if (!isDragging) return;
-            panX += e.clientX - lastX;
-            panY += e.clientY - lastY;
-            lastX = e.clientX;
-            lastY = e.clientY;
-            applyTransform();
-        }, {signal: abortCtrl.signal});
-        parent.addEventListener('pointerout', dragStop, {signal: abortCtrl.signal});
-        parent.addEventListener('blur', dragStop, {signal: abortCtrl.signal});
-        parent.addEventListener('wheel', e => {
-            scale = clamp(scale * Math.pow(1.1, -e.deltaY / 100), 0.5, 2);
-            applyTransform();
-        }, {passive: true, signal: abortCtrl.signal});
-
-        const applyTransform = () =>
-            container.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-    }
-
-    public getTech(id: string): Tech | undefined {
-        const tech = this.state.getTech(id);
-        if (tech === undefined) return undefined;
-        return {...tech};
-    }
-
-    public isUnlocked(id: string): boolean {
-        return this.state.isUnlocked(id);
-    }
-
-    public unlockAll(world: World) {
-        const all = Array.from(this.state.techById.keys());
-        for (const nid of all) {
-            if (this.state.isUnlocked(nid)) continue;
-
-            this.state.forceUnlock(nid);
-            this.updateNodeClass(nid);
-            applyTech(world, nid);
-        }
-        this.updateEdgesAround(all);
-    }
-
     private resetTech() {
         const allTech = this.state.techById;
         const unlocked: Tech[] = [];
@@ -409,7 +413,7 @@ export class TechTree {
         }
         if (unlocked.length === 0) return;
 
-        const player = World.instance.player;   
+        const player = World.instance.player;
         let backScore = 0;
         for (const tech of unlocked) {
             const cost = tech.cost;
@@ -426,9 +430,5 @@ export class TechTree {
 
         this.state.reset();
         this.renderNodes();
-    }
-
-    public getSelected() {
-        return this.selectNodeId;
     }
 }

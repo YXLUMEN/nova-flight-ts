@@ -4,43 +4,19 @@ import {Registry} from "../registry/Registry.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {EntityDimensions} from "./EntityDimensions.ts";
 import type {World} from "../world/World.ts";
-import type {Constructor} from "../apis/registry.ts";
 
+type EntityFactory<T extends Entity> = new (...args: any[]) => T;
 
 export class EntityType<T extends Entity> {
-    private readonly factory: Constructor<T>;
-    private readonly dimensions: EntityDimensions;
-
-    public static register<T extends Entity>(id: string, type: InstanceType<typeof EntityType.Builder<T>>): EntityType<T> {
-        return Registry.registerReferenceById(Registries.ENTITY_TYPE, Identifier.ofVanilla(id), type.build(id)).getValue();
-    }
-
-    public constructor(factory: Constructor<T>, dimensions: EntityDimensions) {
-        this.factory = factory;
-        this.dimensions = dimensions;
-    }
-
-    public getDimensions(): EntityDimensions {
-        return this.dimensions;
-    }
-
-    public create(world: World, ...args: any[]): T {
-        return new this.factory(this, world, ...args);
-    }
-
-    public getEntityClassName(): string {
-        return this.factory.name;
-    }
-
     public static Builder = class Builder<T extends Entity> {
-        private readonly factory: Constructor<T>;
+        private readonly factory: EntityFactory<T>;
         private dimensions = EntityDimensions.changing(1, 1);
 
-        public constructor(factory: Constructor<T>) {
+        public constructor(factory: EntityFactory<T>) {
             this.factory = factory;
         }
 
-        public static create<T extends Entity>(factory: Constructor<T>): Builder<T> {
+        public static create<T extends Entity>(factory: EntityFactory<T>): Builder<T> {
             return new Builder(factory);
         }
 
@@ -52,6 +28,25 @@ export class EntityType<T extends Entity> {
         public build(_id: string) {
             return new EntityType(this.factory, this.dimensions);
         }
+    }
+    private readonly factory: EntityFactory<T>;
+    private readonly dimensions: EntityDimensions;
+
+    public constructor(factory: EntityFactory<T>, dimensions: EntityDimensions) {
+        this.factory = factory;
+        this.dimensions = dimensions;
+    }
+
+    public static register<T extends Entity>(id: string, type: InstanceType<typeof EntityType.Builder<T>>): EntityType<T> {
+        return Registry.registerReferenceById(Registries.ENTITY_TYPE, Identifier.ofVanilla(id), type.build(id)).getValue();
+    }
+
+    public getDimensions(): EntityDimensions {
+        return this.dimensions;
+    }
+
+    public create(world: World, ...args: any[]): T {
+        return new this.factory(this, world, ...args);
     }
 }
 

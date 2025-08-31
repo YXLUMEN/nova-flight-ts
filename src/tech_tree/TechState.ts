@@ -1,5 +1,5 @@
-import {deepFreeze, groupBy, isNonEmptyString} from "../utils/uit.ts";
-import type {RawTech, Tech, TechAvailable} from "../apis/ITech.ts";
+import {deepFreeze, groupBy, isNonEmptyString} from '../utils/uit.ts';
+import type {RawTech, Tech, TechAvailable} from '../apis/ITech.ts';
 
 export class TechState {
     public readonly techById: Map<string, Tech>;
@@ -9,6 +9,60 @@ export class TechState {
     public constructor(techs: Tech[]) {
         this.techById = new Map(techs.map(t => [t.id, t]));
         this.branchGroups = groupBy(techs.filter(t => t.branchGroup), t => t.branchGroup!);
+    }
+
+    public static normalizeTechs(raw: unknown): Tech[] {
+        if (!Array.isArray(raw)) {
+            throw new Error('Tech JSON must be an array');
+        }
+        const out: Map<string, Tech> = new Map();
+
+        raw.forEach((item, idx) => {
+            if (item == null || typeof item !== 'object') {
+                throw new Error(`Tech[${idx}] must be an object`);
+            }
+
+            const rawTech = item as RawTech;
+
+            if (!isNonEmptyString(rawTech['id'])) {
+                throw new Error(`Tech[${idx}]: 'id' is required and must be a non-empty string`);
+            }
+
+            const id = rawTech['id'].trim();
+            if (out.has(id)) {
+                throw new Error(`Duplicate tech id: '${id}'`);
+            }
+
+            const name = isNonEmptyString(rawTech['name']) ? rawTech['name'].trim() : id;
+            if (typeof rawTech['x'] !== 'number' || !isFinite(rawTech['x']) ||
+                typeof rawTech['y'] !== 'number' || !isFinite(rawTech['y'])) {
+                throw new Error(`Tech[${idx}]: invalid position (${rawTech.x}, ${rawTech.y})`);
+            }
+
+            if (typeof rawTech['cost'] !== 'number' || !isFinite(rawTech['cost'])) {
+                throw new Error(`Tech[${idx}]: invalid cost '${rawTech.cost}'`);
+            }
+
+            const branchGroup = isNonEmptyString(rawTech['branchGroup']) ? rawTech['branchGroup'].trim() : undefined;
+            const desc = isNonEmptyString(rawTech['desc']) ? rawTech['desc'].trim() : undefined;
+
+            const requires = Array.isArray(rawTech['requires']) ? rawTech['requires'] : undefined;
+            const conflicts = Array.isArray(rawTech['conflicts']) ? rawTech['conflicts'] : undefined;
+
+            out.set(id, {
+                id,
+                name,
+                x: rawTech.x,
+                y: rawTech.y,
+                cost: rawTech['cost'],
+                branchGroup,
+                desc,
+                requires,
+                conflicts
+            });
+        });
+
+        return deepFreeze(Array.from(out.values()));
     }
 
     public computeStatus(id: string): TechAvailable {
@@ -56,49 +110,5 @@ export class TechState {
 
     public reset(): void {
         this.unlocked.clear();
-    }
-
-    public static normalizeTechs(raw: unknown): Tech[] {
-        if (!Array.isArray(raw)) {
-            throw new Error('Tech JSON must be an array');
-        }
-        const out: Map<string, Tech> = new Map();
-
-        raw.forEach((item, idx) => {
-            if (item == null || typeof item !== 'object') {
-                throw new Error(`Tech[${idx}] must be an object`);
-            }
-
-            const r = item as RawTech;
-
-            if (!isNonEmptyString(r.id)) {
-                throw new Error(`Tech[${idx}]: "id" is required and must be a non-empty string`);
-            }
-
-            const id = r.id.trim();
-            if (out.has(id)) {
-                throw new Error(`Duplicate tech id: "${id}"`);
-            }
-
-            const name = isNonEmptyString(r.name) ? r.name.trim() : id;
-            if (typeof r.x !== 'number' || !isFinite(r.x) ||
-                typeof r.y !== 'number' || !isFinite(r.y)) {
-                throw new Error(`Tech[${idx}]: invalid position (${r.x}, ${r.y})`);
-            }
-
-            if (typeof r.cost !== 'number' || !isFinite(r.cost)) {
-                throw new Error(`Tech[${idx}]: invalid cost "${r.cost}"`);
-            }
-
-            const branchGroup = isNonEmptyString(r.branchGroup) ? r.branchGroup.trim() : undefined;
-            const desc = isNonEmptyString(r.desc) ? r.desc.trim() : undefined;
-
-            const requires = Array.isArray(r.requires) ? r.requires : undefined;
-            const conflicts = Array.isArray(r.conflicts) ? r.conflicts : undefined;
-
-            out.set(id, {id, name, x: r.x, y: r.y, cost: r.cost, branchGroup, desc, requires, conflicts});
-        });
-
-        return deepFreeze(Array.from(out.values()));
     }
 }

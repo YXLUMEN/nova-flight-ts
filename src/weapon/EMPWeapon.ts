@@ -19,6 +19,17 @@ export class EMPWeapon extends Weapon implements ISpecialWeapon {
         super(owner, 0, 10);
     }
 
+    public static applyEMPEffect(world: World, center: MutVec2, radius: number, duration: number): void {
+        world.events.emit('emp-burst', {duration: duration});
+
+        const mobs = world.getMobs();
+        for (const mob of mobs) {
+            if (!mob.isRemoved() && pointInCircleVec2(mob.getMutPos, center, radius)) {
+                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, duration, 1), null);
+            }
+        }
+    }
+
     public override tryFire(world: World): void {
         EMPWeapon.applyEMPEffect(world, this.owner.getMutPos, this.radius, this.duration);
         world.addEffect(new ScreenFlash(0.5, 0.18, '#5ec8ff'));
@@ -49,16 +60,5 @@ export class EMPWeapon extends Weapon implements ISpecialWeapon {
 
     public setDuration(duration: number): void {
         this.duration = duration;
-    }
-
-    public static applyEMPEffect(world: World, center: MutVec2, radius: number, duration: number): void {
-        world.events.emit('emp-burst', {duration: duration});
-
-        const mobs = world.getMobs();
-        for (const mob of mobs) {
-            if (!mob.isRemoved() && pointInCircleVec2(mob.getMutPos, center, radius)) {
-                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, duration, 1), null);
-            }
-        }
     }
 }

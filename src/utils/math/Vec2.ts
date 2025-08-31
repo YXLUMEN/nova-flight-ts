@@ -11,6 +11,10 @@ export class Vec2 implements IVec {
         this.y = y;
     }
 
+    public static formVec(vel: IVec): Vec2 {
+        return new Vec2(vel.x, vel.y);
+    }
+
     public clone() {
         return new Vec2(this.x, this.y);
     }
@@ -56,9 +60,5 @@ export class Vec2 implements IVec {
     public normalize() {
         const len = this.length();
         return len === 0 ? Vec2.ZERO : this.mul(1 / len);
-    }
-
-    public static formVec(vel: IVec): Vec2 {
-        return new Vec2(vel.x, vel.y);
     }
 }

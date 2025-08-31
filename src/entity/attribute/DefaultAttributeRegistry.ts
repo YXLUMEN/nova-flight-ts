@@ -1,32 +1,15 @@
 import {DefaultAttributeContainer} from "./DefaultAttributeContainer.ts";
-import {EntityAttributes} from "./EntityAttributes.ts";
+import type {EntityType} from "../EntityType.ts";
+import type {LivingEntity} from "../LivingEntity.ts";
 
 export class DefaultAttributeRegistry {
-    private static readonly DEFAULT_ATTRIBUTE_REGISTRY = new Map<string, DefaultAttributeContainer>([
-        ['BaseEnemy', createBaseEnemyAttribute(2).build()],
-        ['BossEntity', createBaseEnemyAttribute(160).build()],
-        ['GunEnemyEntity', createBaseEnemyAttribute(4).build()],
-        ['MiniGunEnemyEntity', createBaseEnemyAttribute(64).build()],
-        ['TankEnemy', createBaseEnemyAttribute(32).build()],
-        ['PlayerEntity', createPlayerAttribute().build()]
-    ]);
+    private static readonly DEFAULT_ATTRIBUTE_REGISTRY = new Map<EntityType<LivingEntity>, DefaultAttributeContainer>();
 
-    public static get(type: string): DefaultAttributeContainer {
-        return this.DEFAULT_ATTRIBUTE_REGISTRY.get(type)!;
+    public static get(type: EntityType<LivingEntity>): DefaultAttributeContainer | undefined {
+        return this.DEFAULT_ATTRIBUTE_REGISTRY.get(type);
     }
-}
 
-function createLivingAttributes() {
-    return DefaultAttributeContainer.builder()
-        .add(EntityAttributes.GENERIC_MAX_HEALTH);
-}
-
-function createPlayerAttribute() {
-    return createLivingAttributes()
-        .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 3);
-}
-
-function createBaseEnemyAttribute(hp: number) {
-    return createLivingAttributes()
-        .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, hp);
+    public static set(type: EntityType<LivingEntity>, attr: DefaultAttributeContainer) {
+        this.DEFAULT_ATTRIBUTE_REGISTRY.set(type, attr);
+    }
 }

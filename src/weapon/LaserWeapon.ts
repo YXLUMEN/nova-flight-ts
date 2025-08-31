@@ -13,13 +13,11 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
     public static readonly COLOR = '#8bff5e';
     public static readonly OVERHEAT_COLOR = '#ff5e5e';
     public laserColor = LaserWeapon.COLOR;
-
-    // 过热参数
-    private heat = 0;
     public maxHeat = 8.0;        // 满热前可持续秒数
     public drainRate = 1.2;     // 开火每秒升温
     public coolRate = 0.6;      // 松开每秒降温
-
+    // 过热参数
+    private heat = 0;
     private active = false;
     private overheated = false;
 

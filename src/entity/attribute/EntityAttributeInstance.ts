@@ -67,11 +67,6 @@ export class EntityAttributeInstance {
         }
     }
 
-    private onUpdate() {
-        this.dirty = true;
-        this.updateCallback(this);
-    }
-
     public removeModifier(modifier: EntityAttributeModifier) {
         this.removeModifierById(modifier.id);
     }
@@ -98,15 +93,6 @@ export class EntityAttributeInstance {
         return this.value;
     }
 
-    private computeValue() {
-        let value = this.baseValue;
-        for (const modifier of this.idToModifiers.values()) {
-            value += modifier.value;
-        }
-
-        return this.type.getValue().clamp(value);
-    }
-
     public setFrom(other: EntityAttributeInstance): void {
         this.baseValue = other.baseValue;
         this.idToModifiers.clear();
@@ -114,5 +100,19 @@ export class EntityAttributeInstance {
             this.idToModifiers.set(id, modifier);
         });
         this.onUpdate();
+    }
+
+    private onUpdate() {
+        this.dirty = true;
+        this.updateCallback(this);
+    }
+
+    private computeValue() {
+        let value = this.baseValue;
+        for (const modifier of this.idToModifiers.values()) {
+            value += modifier.value;
+        }
+
+        return this.type.getValue().clamp(value);
     }
 }

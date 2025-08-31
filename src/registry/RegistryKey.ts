@@ -16,6 +16,14 @@ export class RegistryKey<T> {
         this.value = value;
     }
 
+    public static of<T>(registry: RegistryKey<Registry<T>>, value: Identifier) {
+        return RegistryKey.ofKey(registry.getValue(), value) as RegistryKey<T>;
+    }
+
+    public static ofRegistry<T>(registry: Identifier): RegistryKey<T> {
+        return RegistryKey.ofKey(Identifier.ROOT, registry);
+    }
+
     private static ofKey<T>(registry: Identifier, id: Identifier): RegistryKey<T> {
         const pair: RegistryIdPair = createCleanObj({registry, id});
         const existKey = RegistryKey.REGISTRY.get(pair);
@@ -25,14 +33,6 @@ export class RegistryKey<T> {
         RegistryKey.REGISTRY.set(pair, key);
 
         return key as RegistryKey<T>;
-    }
-
-    public static of<T>(registry: RegistryKey<Registry<T>>, value: Identifier) {
-        return RegistryKey.ofKey(registry.getValue(), value) as RegistryKey<T>;
-    }
-
-    public static ofRegistry<T>(registry: Identifier): RegistryKey<T> {
-        return RegistryKey.ofKey(Identifier.ROOT, registry);
     }
 
     public isOf(registry: RegistryKey<any>) {

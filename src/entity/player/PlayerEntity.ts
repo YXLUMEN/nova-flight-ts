@@ -17,6 +17,7 @@ import type {DataEntry} from "../data/DataEntry.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import {DataLoader} from "../../DataLoader.ts";
 import {EntityTypes} from "../EntityTypes.ts";
+import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 
 export class PlayerEntity extends LivingEntity {
     public readonly input: Input;
@@ -28,6 +29,9 @@ export class PlayerEntity extends LivingEntity {
 
     public readonly baseWeapons: Weapon[] = [];
     public currentBaseIndex: number = 0;
+    public switchWeapon = throttleTimeOut(() => {
+        this.currentBaseIndex = (this.currentBaseIndex + 1) % this.baseWeapons.length;
+    }, 200);
     private phaseScore: number;
     private score: number = 0;
 
@@ -45,6 +49,11 @@ export class PlayerEntity extends LivingEntity {
         this.baseWeapons.push(new Cannon40Weapon(this));
         this.weapons.set('40', this.baseWeapons[0]);
         this.weapons.set('bomb', new BombWeapon(this));
+    }
+
+    public override createLivingAttributes() {
+        return super.createLivingAttributes()
+            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 3);
     }
 
     public override tick(tickDelta: number) {
@@ -153,10 +162,6 @@ export class PlayerEntity extends LivingEntity {
     public getCurrentWeapon(): Weapon {
         return this.baseWeapons[this.currentBaseIndex];
     }
-
-    public switchWeapon = throttleTimeOut(() => {
-        this.currentBaseIndex = (this.currentBaseIndex + 1) % this.baseWeapons.length;
-    }, 200);
 
     public getPhaseScore() {
         return this.phaseScore;

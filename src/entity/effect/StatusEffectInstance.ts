@@ -36,14 +36,6 @@ export class StatusEffectInstance {
         return false;
     }
 
-    private lastsShorterThan(effect: StatusEffectInstance): boolean {
-        return !this.isInfinite() && (this.duration < effect.duration || effect.isInfinite());
-    }
-
-    private isActive(): boolean {
-        return this.isInfinite() || this.duration > 0;
-    }
-
     public isInfinite(): boolean {
         return this.duration === -1;
     }
@@ -88,5 +80,13 @@ export class StatusEffectInstance {
 
     public onEntityDamage(entity: LivingEntity, source: DamageSource, amount: number) {
         this.type.getValue().onEntityDamage(entity, this.amplifier, source, amount);
+    }
+
+    private lastsShorterThan(effect: StatusEffectInstance): boolean {
+        return !this.isInfinite() && (this.duration < effect.duration || effect.isInfinite());
+    }
+
+    private isActive(): boolean {
+        return this.isInfinite() || this.duration > 0;
     }
 }

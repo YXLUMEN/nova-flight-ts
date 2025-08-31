@@ -18,31 +18,6 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
         super(owner, 24, 16);
     }
 
-    public override tryFire(world: World) {
-        world.events.emit('bomb-detonate', {
-            pos: this.owner.getPos(),
-            damage: this.getDamage(),
-            explosionRadius: this.damageRadius,
-            shake: 0.3,
-            source: this.owner,
-            attacker: this.owner,
-        });
-
-        this.setCooldown(this.getMaxCooldown());
-    }
-
-    public bindKey(): string {
-        return 'Digit1';
-    }
-
-    public override getDisplayName(): string {
-        return '炸弹';
-    }
-
-    public override getUiColor(): string {
-        return '#ff9f43';
-    }
-
     public static applyBombDamage(
         world: World, center: IVec, radius: number,
         damage: number,
@@ -93,5 +68,30 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
         }
 
         world.addEffect(new RadialRing(pos, radius * 0.2, radius * 1.1, 0.35, "#e3e3e3"));
+    }
+
+    public override tryFire(world: World) {
+        world.events.emit('bomb-detonate', {
+            pos: this.owner.getPos(),
+            damage: this.getDamage(),
+            explosionRadius: this.damageRadius,
+            shake: 0.3,
+            source: this.owner,
+            attacker: this.owner,
+        });
+
+        this.setCooldown(this.getMaxCooldown());
+    }
+
+    public bindKey(): string {
+        return 'Digit1';
+    }
+
+    public override getDisplayName(): string {
+        return '炸弹';
+    }
+
+    public override getUiColor(): string {
+        return '#ff9f43';
     }
 }

@@ -13,4 +13,4 @@ async function main() {
     World.createWorld(manager);
 }
 
-main().catch(console.error);
+main().then();

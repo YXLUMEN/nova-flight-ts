@@ -25,30 +25,12 @@ export class Camera {
     private uiMaxDrift = 64;      // UI 最大漂移像素(镜头快速移动时)
     private uiShakeFactor = 0.5;
 
-    public update(target: Vec2, tickDelta: number) {
-        if (WorldConfig.enableCameraOffset) this.follow(target, tickDelta);
-        this.updateShake(tickDelta);
-    }
-
-    public addShake(amount: number, limit = 1) {
-        if (this.shakeTrauma >= limit) return;
-        this.shakeTrauma = Math.min(1, this.shakeTrauma + amount);
-    }
-
     public get cameraOffset(): MutVec2 {
         return this.offset;
     }
 
-    public getCameraOffset(): Vec2 {
-        return Vec2.formVec(this.offset);
-    }
-
     public get viewOffset(): MutVec2 {
         return this.viewOffsetCache.set(this.offset.x + this.shakeOffset.x, this.offset.y + this.shakeOffset.y);
-    }
-
-    public getViewOffset(): Vec2 {
-        return Vec2.formVec(this.viewOffset);
     }
 
     public get viewRect() {
@@ -77,6 +59,24 @@ export class Camera {
         }
 
         return this.uiOffsetCache.set(dx + this.shakeOffset.x * this.uiShakeFactor, dy + this.shakeOffset.y * this.uiShakeFactor);
+    }
+
+    public update(target: Vec2, tickDelta: number) {
+        if (WorldConfig.enableCameraOffset) this.follow(target, tickDelta);
+        this.updateShake(tickDelta);
+    }
+
+    public addShake(amount: number, limit = 1) {
+        if (this.shakeTrauma >= limit) return;
+        this.shakeTrauma = Math.min(1, this.shakeTrauma + amount);
+    }
+
+    public getCameraOffset(): Vec2 {
+        return Vec2.formVec(this.offset);
+    }
+
+    public getViewOffset(): Vec2 {
+        return Vec2.formVec(this.viewOffset);
     }
 
     public getUiOffset(): Vec2 {

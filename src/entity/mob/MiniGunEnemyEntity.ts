@@ -5,18 +5,23 @@ import {Vec2} from "../../utils/math/Vec2.ts";
 import {MobEntity} from "./MobEntity.ts";
 import {EntityType} from "../EntityType.ts";
 import type {World} from "../../world/World.ts";
+import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 
 export class MiniGunEnemyEntity extends MobEntity {
+    private static readonly bulletVel = new Vec2(0, 240);
     public color = "#ac0000";
     public override speed = 60;
     private cooldown = 0;
     private fireCount = 0;
     private fireCD = 0;
 
-    private static readonly bulletVel = new Vec2(0, 240);
-
     public constructor(type: EntityType<MiniGunEnemyEntity>, world: World) {
         super(type, world, 10);
+    }
+
+    public override createLivingAttributes() {
+        return super.createLivingAttributes()
+            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 64);
     }
 
     public override tick(dt: number) {

@@ -68,6 +68,30 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
         }
     }
 
+    public bindKey(): string {
+        return "Digit4";
+    }
+
+    public override getCooldown(): number {
+        return this.active ? (this.duration - this.timeLeft) : super.getCooldown();
+    }
+
+    public override getMaxCooldown(): number {
+        return this.active ? this.duration : super.getMaxCooldown();
+    }
+
+    public trueMaxCooldown(): number {
+        return super.getMaxCooldown();
+    }
+
+    public override getDisplayName(): string {
+        return IntoVoidWeapon.displayName;
+    }
+
+    public override getUiColor(): string {
+        return IntoVoidWeapon.uiColor;
+    }
+
     private exitVoid(world: World, keepCooldown = true): void {
         this.active = false;
         this.timeLeft = 0;
@@ -105,29 +129,5 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
                 emp.setCooldown(cd);
             }
         }
-    }
-
-    public bindKey(): string {
-        return "Digit4";
-    }
-
-    public override getCooldown(): number {
-        return this.active ? (this.duration - this.timeLeft) : super.getCooldown();
-    }
-
-    public override getMaxCooldown(): number {
-        return this.active ? this.duration : super.getMaxCooldown();
-    }
-
-    public trueMaxCooldown(): number {
-        return super.getMaxCooldown();
-    }
-
-    public override getDisplayName(): string {
-        return IntoVoidWeapon.displayName;
-    }
-
-    public override getUiColor(): string {
-        return IntoVoidWeapon.uiColor;
     }
 }

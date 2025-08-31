@@ -17,18 +17,15 @@ export class Stage {
         this.loadPhase(0);
     }
 
+    public get currentName(): string | null {
+        return this.index < this.phases.length ? this.phases[this.index].name : null;
+    }
+
     public reset() {
         this.t = 0;
         this.phaseTime = 0;
         this.index = 0;
         this.loadPhase(0);
-    }
-
-    private loadPhase(index: number) {
-        this.index = index;
-        this.phaseTime = 0;
-        this.rules = this.phases[index].rules.map(r => new SpawnRule(r));
-        for (const r of this.rules) r.reset();
     }
 
     public update(world: World, tickDelta: number) {
@@ -71,11 +68,14 @@ export class Stage {
         this.loadPhase(index);
     }
 
-    private computeDifficulty(): number {
-        return 1; // 占位
+    private loadPhase(index: number) {
+        this.index = index;
+        this.phaseTime = 0;
+        this.rules = this.phases[index].rules.map(r => new SpawnRule(r));
+        for (const r of this.rules) r.reset();
     }
 
-    public get currentName(): string | null {
-        return this.index < this.phases.length ? this.phases[this.index].name : null;
+    private computeDifficulty(): number {
+        return 1; // 占位
     }
 }

@@ -42,6 +42,23 @@ export class StarField {
         }
     }
 
+    private static resolveCounts(total: number, layers: StarLayer[]): number[] {
+        const fixed = layers.map(l => l.count ?? 0);
+        const fixedSum = fixed.reduce((s, c) => s + c, 0);
+        const remain = Math.max(0, total - fixedSum);
+
+        const weights = layers.map(l => l.weight ?? 0);
+        const wSum = weights.reduce((s, w) => s + w, 0) || 1;
+
+        // 基于权重分配余量
+        const extra = weights.map(w => Math.floor(remain * (w / wSum)));
+        // 把四舍五入误差向前层补齐
+        let used = extra.reduce((s, c) => s + c, 0);
+        for (let i = 0; used < remain && i < extra.length; i++, used++) extra[i]++;
+
+        return layers.map((_, i) => fixed[i] + extra[i]);
+    }
+
     public init(cam: Camera) {
         const v = cam.viewRect;
         for (let li = 0; li < this.layers.length; li++) {
@@ -114,23 +131,6 @@ export class StarField {
         this.y[i] = y;
         this.r[i] = rand(L.radiusMin, L.radiusMax);
         this.speed[i] = rand(L.speedMin, L.speedMax);
-    }
-
-    private static resolveCounts(total: number, layers: StarLayer[]): number[] {
-        const fixed = layers.map(l => l.count ?? 0);
-        const fixedSum = fixed.reduce((s, c) => s + c, 0);
-        const remain = Math.max(0, total - fixedSum);
-
-        const weights = layers.map(l => l.weight ?? 0);
-        const wSum = weights.reduce((s, w) => s + w, 0) || 1;
-
-        // 基于权重分配余量
-        const extra = weights.map(w => Math.floor(remain * (w / wSum)));
-        // 把四舍五入误差向前层补齐
-        let used = extra.reduce((s, c) => s + c, 0);
-        for (let i = 0; used < remain && i < extra.length; i++, used++) extra[i]++;
-
-        return layers.map((_, i) => fixed[i] + extra[i]);
     }
 }
 

@@ -9,6 +9,7 @@ import {PlayerEntity} from "../player/PlayerEntity.ts";
 import type {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
 import {EntityType} from "../EntityType.ts";
 import {EntityTypes} from "../EntityTypes.ts";
+import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 
 export class BossEntity extends MobEntity {
     public override speed = 0;
@@ -19,6 +20,11 @@ export class BossEntity extends MobEntity {
 
     public constructor(type: EntityType<BossEntity>, world: World, worth: number) {
         super(type, world, worth);
+    }
+
+    public override createLivingAttributes() {
+        return super.createLivingAttributes()
+            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 160);
     }
 
     public override tick(dt: number) {

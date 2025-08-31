@@ -2,6 +2,7 @@ import {RegistryKey} from "./RegistryKey.ts";
 import {Registry} from "./Registry.ts";
 import {RegistryKeys} from "./RegistryKeys.ts";
 import {Identifier} from "./Identifier.ts";
+import {EntityAttributes} from "../entity/attribute/EntityAttributes.ts";
 
 export class Registries {
     private static readonly ROOT = new Registry(RegistryKey.ofRegistry(Identifier.ROOT));
@@ -14,6 +15,12 @@ export class Registries {
     public static readonly ATTRIBUTE = this.simpleCreate(RegistryKeys.ATTRIBUTE, () => {
     });
 
+
+    public static complete() {
+        this.DEFAULT_ENTRIES.set(RegistryKeys.ATTRIBUTE.getValue(), EntityAttributes.registerAndGetDefault);
+        Object.freeze(this);
+    }
+
     private static simpleCreate<T>(key: RegistryKey<Registry<T>>, initializer: CallableFunction): Registry<T> {
         return this.create(key, new Registry(key), initializer);
     }
@@ -23,11 +30,5 @@ export class Registries {
         this.DEFAULT_ENTRIES.set(id, initializer);
         this.ROOT.add(key, registry);
         return registry;
-    }
-
-    public static complete() {
-        import("../entity/attribute/EntityAttributes.ts").then(mod => {
-            this.DEFAULT_ENTRIES.set(RegistryKeys.ATTRIBUTE.getValue(), mod.EntityAttributes.registerAndGetDefault)
-        }).then(() => Object.freeze(this));
     }
 }

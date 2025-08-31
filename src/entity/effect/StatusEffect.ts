@@ -12,6 +12,22 @@ import type {LivingEntity} from "../LivingEntity.ts";
 export type StatusEffectCategory = 0 | 1 | 2;
 
 export class StatusEffect {
+    public static EffectAttributeModifierCreator = class EffectAttributeModifierCreator {
+        public readonly id: Identifier;
+        public readonly baseValue: number;
+
+        public constructor(id: Identifier, baseValue: number) {
+            this.id = id;
+            this.baseValue = baseValue;
+        }
+
+        public createAttributeModifier(amplifier: number): EntityAttributeModifier {
+            return createCleanObj({
+                id: this.id,
+                value: this.baseValue * (amplifier + 1)
+            });
+        }
+    }
     private readonly attributeModifiers = new Map<RegistryEntry<EntityAttribute>, InstanceType<typeof StatusEffect.EffectAttributeModifierCreator>>();
     private readonly category: StatusEffectCategory;
     private readonly color: string;
@@ -83,22 +99,5 @@ export class StatusEffect {
 
     public isBeneficial() {
         return this.category === 0;
-    }
-
-    public static EffectAttributeModifierCreator = class EffectAttributeModifierCreator {
-        public readonly id: Identifier;
-        public readonly baseValue: number;
-
-        public constructor(id: Identifier, baseValue: number) {
-            this.id = id;
-            this.baseValue = baseValue;
-        }
-
-        public createAttributeModifier(amplifier: number): EntityAttributeModifier {
-            return createCleanObj({
-                id: this.id,
-                value: this.baseValue * (amplifier + 1)
-            });
-        }
     }
 }

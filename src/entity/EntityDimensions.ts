@@ -10,6 +10,10 @@ export class EntityDimensions {
         this.height = height;
     }
 
+    public static changing(width: number, height: number) {
+        return new EntityDimensions(width, height);
+    }
+
     public getBoxAt(x: number, y: number): Box {
         const f = this.width / 2.0;
         const g = this.height;
@@ -18,9 +22,5 @@ export class EntityDimensions {
 
     public getBoxAtByVec(pos: Vec2) {
         return this.getBoxAt(pos.x, pos.y);
-    }
-
-    public static changing(width: number, height: number) {
-        return new EntityDimensions(width, height);
     }
 }

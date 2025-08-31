@@ -13,6 +13,26 @@ export class Input {
         this.registryListener(target);
     }
 
+    public get pointer(): MutVec2 {
+        return this.worldPointer;
+    }
+
+    public getPointer(): Vec2 {
+        return Vec2.formVec(this.pointer);
+    }
+
+    public updateEndFrame(): void {
+        this.prevKeys = new Set(this.keys);
+    }
+
+    public isDown(...ks: string[]) {
+        return ks.some(k => this.keys.has(k));
+    }
+
+    public wasPressed(key: string): boolean {
+        return this.keys.has(key) && !this.prevKeys.has(key);
+    }
+
     private registryListener(target: HTMLElement) {
         window.addEventListener("keydown", (e) => {
             const code = e.code;
@@ -37,25 +57,5 @@ export class Input {
     private registryDesktop(target: HTMLElement) {
         target.addEventListener("pointerdown", () => WorldConfig.autoShoot = true);
         window.addEventListener("pointerup", () => WorldConfig.autoShoot = false);
-    }
-
-    public get pointer(): MutVec2 {
-        return this.worldPointer;
-    }
-
-    public getPointer(): Vec2 {
-        return Vec2.formVec(this.pointer);
-    }
-
-    public updateEndFrame(): void {
-        this.prevKeys = new Set(this.keys);
-    }
-
-    public isDown(...ks: string[]) {
-        return ks.some(k => this.keys.has(k));
-    }
-
-    public wasPressed(key: string): boolean {
-        return this.keys.has(key) && !this.prevKeys.has(key);
     }
 }

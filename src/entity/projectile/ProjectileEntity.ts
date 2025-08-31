@@ -39,12 +39,12 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
         return this.boxRadius;
     }
 
-    protected initDataTracker(_builder: InstanceType<typeof DataTracker.Builder>): void {
-    }
-
     public onDataTrackerUpdate(_entries: DataEntry<any>): void {
     }
 
     public onTrackedDataSet(_data: TrackedData<any>): void {
+    }
+
+    protected initDataTracker(_builder: InstanceType<typeof DataTracker.Builder>): void {
     }
 }

@@ -3,8 +3,8 @@ import type {TrackedData} from "./TrackedData.ts";
 export class DataEntry<T> {
     public readonly data: TrackedData<T>;
     public value: T;
-    private readonly initialValue: T;
     public dirty: boolean = false;
+    private readonly initialValue: T;
 
     public constructor(data: TrackedData<T>, value: T) {
         this.data = data;

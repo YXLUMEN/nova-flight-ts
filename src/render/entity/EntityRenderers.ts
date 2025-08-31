@@ -12,10 +12,6 @@ import {MiniGunEnemyEntityRender} from "./MiniGunEnemyEntityRender.ts";
 export class EntityRenderers {
     private static readonly RENDERER_FACTORIES = new Map<EntityType<any>, EntityRenderer<any>>();
 
-    private static register<T extends Entity>(type: EntityType<T>, renderer: EntityRenderer<T>): void {
-        this.RENDERER_FACTORIES.set(type, renderer);
-    }
-
     public static getRenderer<T extends Entity>(entity: T): EntityRenderer<T> {
         return this.RENDERER_FACTORIES.get(entity.getType())!;
     }
@@ -33,6 +29,10 @@ export class EntityRenderers {
         this.register(EntityTypes.EXPLODE_BULLET_ENTITY, bullet);
         this.register(EntityTypes.PLAYER_ENTITY, new PlayerEntityRender());
         this.compileRenders();
+    }
+
+    private static register<T extends Entity>(type: EntityType<T>, renderer: EntityRenderer<T>): void {
+        this.RENDERER_FACTORIES.set(type, renderer);
     }
 
     private static compileRenders() {

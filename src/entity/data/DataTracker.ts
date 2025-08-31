@@ -8,7 +8,38 @@ type Serializable = number | string | number[] | string[];
 
 export class DataTracker {
     public static readonly CLASS_TP_ID = new ClassToNum();
+    public static Builder = class Builder {
+        private readonly entity: DataTracked;
+        private readonly entries: DataEntry<any>[];
 
+        public constructor(entity: DataTracked) {
+            this.entity = entity;
+            const length = DataTracker.CLASS_TP_ID.getNext(Object(entity).constructor);
+            this.entries = new Array(length);
+        }
+
+        public add<T>(data: TrackedData<T>, value: T): Builder {
+            const id = data.id;
+            if (id > this.entries.length) {
+                throw new RangeError(`Data value id is too big with ${id}; Max is ${this.entries.length}`);
+            } else if (this.entries[id] !== undefined) {
+                throw new Error(`Duplicate value id: ${id}`);
+            } else {
+                this.entries[id] = new DataEntry(data, value);
+                return this;
+            }
+        }
+
+        public build(): DataTracker {
+            for (let i = 0; i < this.entries.length; i++) {
+                if (this.entries[i] === undefined) {
+                    throw new ReferenceError(`Entity ${Object(this.entity).constructor} has not defined data value ${i}`);
+                }
+            }
+
+            return new DataTracker(this.entity, this.entries);
+        }
+    }
     private readonly trackedEntity: DataTracked;
     private readonly entries: DataEntry<any>[];
     private dirty: boolean = false;
@@ -50,39 +81,6 @@ export class DataTracker {
 
     public isDirty() {
         return this.dirty;
-    }
-
-    public static Builder = class Builder {
-        private readonly entity: DataTracked;
-        private readonly entries: DataEntry<any>[];
-
-        public constructor(entity: DataTracked) {
-            this.entity = entity;
-            const length = DataTracker.CLASS_TP_ID.getNext(Object(entity).constructor);
-            this.entries = new Array(length);
-        }
-
-        public add<T>(data: TrackedData<T>, value: T): Builder {
-            const id = data.id;
-            if (id > this.entries.length) {
-                throw new RangeError(`Data value id is too big with ${id}; Max is ${this.entries.length}`);
-            } else if (this.entries[id] !== undefined) {
-                throw new Error(`Duplicate value id: ${id}`);
-            } else {
-                this.entries[id] = new DataEntry(data, value);
-                return this;
-            }
-        }
-
-        public build(): DataTracker {
-            for (let i = 0; i < this.entries.length; i++) {
-                if (this.entries[i] === undefined) {
-                    throw new ReferenceError(`Entity ${Object(this.entity).constructor} has not defined data value ${i}`);
-                }
-            }
-
-            return new DataTracker(this.entity, this.entries);
-        }
     }
 }
 
