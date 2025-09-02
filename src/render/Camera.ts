@@ -3,7 +3,6 @@ import {MutVec2} from "../utils/math/MutVec2.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {PI2} from "../utils/math/math.ts";
-import type {IVec} from "../utils/math/IVec.ts";
 
 export class Camera {
     private offset = new MutVec2(0, 0);
@@ -25,65 +24,22 @@ export class Camera {
     private uiMaxDrift = 64;      // UI 最大漂移像素(镜头快速移动时)
     private uiShakeFactor = 0.5;
 
-    public get cameraOffset(): MutVec2 {
-        return this.offset;
-    }
-
-    public get viewOffset(): MutVec2 {
-        return this.viewOffsetCache.set(this.offset.x + this.shakeOffset.x, this.offset.y + this.shakeOffset.y);
-    }
-
-    public get viewRect() {
-        const off = this.viewOffset;
-        return {
-            left: off.x,
-            top: off.y,
-            right: off.x + World.W,
-            bottom: off.y + World.H,
-            width: World.W,
-            height: World.H,
-        };
-    }
-
-    public get uiOffset(): MutVec2 {
-        // 基于相机速度方向的微漂移
-        const vx = this.velocity.x, vy = this.velocity.y;
-        const speed = Math.hypot(vx, vy);
-        let dx = 0, dy = 0;
-
-        if (speed > 1e-3) {
-            const k = Math.min(1, speed / this.followSpeed);
-            const s = this.uiMaxDrift * k;
-            dx = -(vx / speed) * s;
-            dy = -(vy / speed) * s;
-        }
-
-        return this.uiOffsetCache.set(dx + this.shakeOffset.x * this.uiShakeFactor, dy + this.shakeOffset.y * this.uiShakeFactor);
-    }
-
-    public update(target: Vec2, tickDelta: number) {
+    public update(target: MutVec2, tickDelta: number): void {
         if (WorldConfig.enableCameraOffset) this.follow(target, tickDelta);
         this.updateShake(tickDelta);
+
+        this.viewOffsetCache.set(
+            this.offset.x + this.shakeOffset.x,
+            this.offset.y + this.shakeOffset.y
+        );
     }
 
-    public addShake(amount: number, limit = 1) {
+    public addShake(amount: number, limit = 1): void {
         if (this.shakeTrauma >= limit) return;
         this.shakeTrauma = Math.min(1, this.shakeTrauma + amount);
     }
 
-    public getCameraOffset(): Vec2 {
-        return Vec2.formVec(this.offset);
-    }
-
-    public getViewOffset(): Vec2 {
-        return Vec2.formVec(this.viewOffset);
-    }
-
-    public getUiOffset(): Vec2 {
-        return Vec2.formVec(this.uiOffset);
-    }
-
-    private follow(target: Vec2, tickDelta: number): void {
+    private follow(target: MutVec2, tickDelta: number): void {
         if (!this.isOutsideDeadZone(target)) return;
 
         const desired = new MutVec2(target.x - World.W / 2, target.y - World.H / 2);
@@ -133,11 +89,60 @@ export class Camera {
         }
     }
 
-    private isOutsideDeadZone(target: IVec): boolean {
+    private isOutsideDeadZone(target: MutVec2): boolean {
         const x = this.offset.x + World.W / 2;
         const y = this.offset.y + World.H / 2;
-        const playerOffset = target.sub(x, y);
-        return playerOffset.lengthSq() > this.deadZoneRadius * this.deadZoneRadius;
+        const dx = target.x - x;
+        const dy = target.y - y;
+        return dx * dx + dy * dy > this.deadZoneRadius * this.deadZoneRadius;
+    }
+
+    public getCameraOffset(): Vec2 {
+        return Vec2.formVec(this.offset);
+    }
+
+    public getViewOffset(): Vec2 {
+        return Vec2.formVec(this.viewOffset);
+    }
+
+    public getUiOffset(): Vec2 {
+        return Vec2.formVec(this.uiOffset);
+    }
+
+    public get cameraOffset(): MutVec2 {
+        return this.offset;
+    }
+
+    public get viewOffset(): MutVec2 {
+        return this.viewOffsetCache;
+    }
+
+    public get viewRect() {
+        const off = this.viewOffset;
+        return {
+            left: off.x,
+            top: off.y,
+            right: off.x + World.W,
+            bottom: off.y + World.H,
+            width: World.W,
+            height: World.H,
+        };
+    }
+
+    public get uiOffset(): MutVec2 {
+        // 基于相机速度方向的微漂移
+        const vx = this.velocity.x, vy = this.velocity.y;
+        const speed = Math.hypot(vx, vy);
+        let dx = 0, dy = 0;
+
+        if (speed > 1e-3) {
+            const k = Math.min(1, speed / this.followSpeed);
+            const s = this.uiMaxDrift * k;
+            dx = -(vx / speed) * s;
+            dy = -(vy / speed) * s;
+        }
+
+        return this.uiOffsetCache.set(dx + this.shakeOffset.x * this.uiShakeFactor, dy + this.shakeOffset.y * this.uiShakeFactor);
     }
 }
 

@@ -1,11 +1,16 @@
-type EventType = string;
-type EventPayload = unknown;
-type Listener = (payload: EventPayload) => void;
+type Listener<Payload> = (payload: Payload) => void;
 
-export class EventBus {
-    private readonly listeners: Map<EventType, Set<Listener>> = new Map();
+export class EventBus<Events extends Record<string, any>> {
+    private static GLOBAL_EVENT: EventBus<any> | null = null;
 
-    public on(type: EventType, listener: Listener): void {
+    private readonly listeners: Map<keyof Events, Set<Listener<any>>> = new Map();
+
+    public static getEventBus<E extends Record<string, any>>(): EventBus<E> {
+        if (!this.GLOBAL_EVENT) this.GLOBAL_EVENT = new EventBus<E>();
+        return this.GLOBAL_EVENT as EventBus<E>;
+    }
+
+    public on<K extends keyof Events>(type: K, listener: Listener<Events[K]>): void {
         let set = this.listeners.get(type);
         if (!set) {
             set = new Set();
@@ -14,7 +19,7 @@ export class EventBus {
         set.add(listener);
     }
 
-    public off(type: EventType, listener: Listener): void {
+    public off<K extends keyof Events>(type: K, listener: Listener<Events[K]>): void {
         const set = this.listeners.get(type);
         if (!set) return;
         set.delete(listener);
@@ -23,14 +28,14 @@ export class EventBus {
         }
     }
 
-    public emit(type: EventType, payload: EventPayload) {
+    public emit<K extends keyof Events>(type: K, payload: Events[K]): void {
         const set = this.listeners.get(type);
         if (!set) return;
         for (const fn of set) {
             try {
                 fn(payload);
             } catch (err) {
-                console.warn(`EventBus listener for "${type}" threw:`, err);
+                console.warn(`EventBus listener for "${String(type)}" threw:`, err);
             }
         }
     }

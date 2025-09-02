@@ -20,5 +20,5 @@ export interface ExpendExplosionOpts extends ExplosionOpts {
     pos: IVec;
     source: Entity;
     attacker: LivingEntity | null;
-    flash: Effect
+    flash?: Effect
 }

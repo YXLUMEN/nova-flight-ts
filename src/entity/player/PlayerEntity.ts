@@ -18,13 +18,14 @@ import type {TrackedData} from "../data/TrackedData.ts";
 import {DataLoader} from "../../DataLoader.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
+import {EVENTS} from "../../apis/IEvents.ts";
 
 export class PlayerEntity extends LivingEntity {
     public readonly input: Input;
     public readonly weapons = new Map<string, Weapon>();
     public readonly techTree: TechTree;
 
-    public override speed = 300;
+    public override speed = 6;
     public onDamageExplosionRadius = 320;
 
     public readonly baseWeapons: Weapon[] = [];
@@ -60,26 +61,38 @@ export class PlayerEntity extends LivingEntity {
         super.tick(tickDelta);
 
         const world = this.getWorld();
-        // 键盘移动
-        let dx = 0, dy = 0;
-        if (this.input.isDown("ArrowLeft", "KeyA")) dx -= 1;
-        if (this.input.isDown("ArrowRight", "KeyD")) dx += 1;
-        if (this.input.isDown("ArrowUp", "KeyW")) dy -= 1;
-        if (this.input.isDown("ArrowDown", "KeyS")) dy += 1;
+        const pos = this.getMutPos;
 
         // 指针移动
         if (WorldConfig.followPointer) {
-            this.getMutPos.x += (this.input.pointer.x - this.getMutPos.x) * Math.min(1, tickDelta * 10);
-            this.getMutPos.y += (this.input.pointer.y - this.getMutPos.y) * Math.min(1, tickDelta * 10);
+            const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+            const worldMouse = this.input.pointer;
+            const completeDt = Math.min(1, tickDelta * 6) * speedMultiplier;
+            pos.add(
+                (worldMouse.x - pos.x) * completeDt,
+                (worldMouse.y - pos.y) * completeDt
+            );
+        } else {
+            // 键盘移动
+            let dx = 0, dy = 0;
+            if (this.input.isDown("ArrowLeft", "KeyA")) dx -= 1;
+            if (this.input.isDown("ArrowRight", "KeyD")) dx += 1;
+            if (this.input.isDown("ArrowUp", "KeyW")) dy -= 1;
+            if (this.input.isDown("ArrowDown", "KeyS")) dy += 1;
+
+            const len = Math.hypot(dx, dy);
+            if (len > 0) {
+                const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+                pos.add(
+                    (dx / len) * this.speed * speedMultiplier,
+                    (dy / len) * this.speed * speedMultiplier
+                );
+            }
         }
 
-        const len = Math.hypot(dx, dy) || 1;
-        this.getMutPos.x += (dx / len) * this.speed * tickDelta;
-        this.getMutPos.y += (dy / len) * this.speed * tickDelta;
-
         // 边界
-        this.getMutPos.x = clamp(this.getMutPos.x, 20, World.W - 20);
-        this.getMutPos.y = clamp(this.getMutPos.y, 20, World.H - 20);
+        pos.x = clamp(pos.x, 20, World.W - 20);
+        pos.y = clamp(pos.y, 20, World.H - 20);
 
         if (this.input.isDown('KeyR')) {
             this.switchWeapon();
@@ -97,7 +110,7 @@ export class PlayerEntity extends LivingEntity {
                 if (WorldConfig.devMode && w.getCooldown() > 0.5) w.setCooldown(0.5);
                 if (w.canFire() && this.input.wasPressed(w.bindKey())) w.tryFire(world);
             }
-            w.update(tickDelta);
+            w.tick();
         }
     }
 
@@ -106,7 +119,7 @@ export class PlayerEntity extends LivingEntity {
 
         const world = this.getWorld();
 
-        world.events.emit('bomb-detonate', {
+        world.events.emit(EVENTS.BOMB_DETONATE, {
             pos: this.getPos(),
             damage: 32,
             explosionRadius: this.onDamageExplosionRadius,

@@ -10,16 +10,20 @@ import type {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
 import {EntityType} from "../EntityType.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
+import {EVENTS} from "../../apis/IEvents.ts";
 
 export class BossEntity extends MobEntity {
-    public override speed = 0;
+    public static exist: BossEntity | null = null;
     public color = '#b30000';
+    protected override speed = 0;
 
     private cooldown = 0;
     private damageCooldown: number = 0;
 
     public constructor(type: EntityType<BossEntity>, world: World, worth: number) {
+        if (BossEntity.exist) return BossEntity.exist;
         super(type, world, worth);
+        BossEntity.exist = this;
     }
 
     public override createLivingAttributes() {
@@ -31,12 +35,12 @@ export class BossEntity extends MobEntity {
         super.tick(dt);
 
         if (this.damageCooldown > 0) this.damageCooldown -= 1;
-        this.cooldown -= dt;
+        this.cooldown -= 1;
         if (this.cooldown > 0) return;
-        this.cooldown = rand(0.2, 2);
+        this.cooldown = rand(10, 100);
 
         const count = 16;
-        const speed = 200;
+        const speed = 4;
         const startAngle = 0.4537722; // 26
         const endAngle = 2.6859825; // 154
         const step = (endAngle - startAngle) / (count - 1);
@@ -69,7 +73,7 @@ export class BossEntity extends MobEntity {
         super.onDeath(damageSource);
 
         const world = this.getWorld();
-        world.events.emit('boss-killed', {mob: this, damageSource});
+        world.events.emit(EVENTS.BOSS_KILLED, {mob: this, damageSource});
 
         for (let i = 32; i--;) {
             const a = rand(0, PI2);
@@ -81,6 +85,11 @@ export class BossEntity extends MobEntity {
                 "#ffaa33", "#ff5454", 0.6, 80
             );
         }
+    }
+
+    public override discard() {
+        super.discard();
+        BossEntity.exist = null;
     }
 
     public override addStatusEffect(_effect: StatusEffectInstance) {

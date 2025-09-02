@@ -1,4 +1,4 @@
-import type {Constructor} from "../apis/registry.ts";
+import type {Constructor} from "../../apis/registry.ts";
 
 export class ClassToNum {
     private static readonly MISSING = -1;

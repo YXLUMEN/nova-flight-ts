@@ -1,14 +1,14 @@
-import type {UIOptions, WeaponUIInfo} from '../apis/IUIInfo.ts';
-import {World} from '../world/World.ts';
-import type {Weapon} from '../weapon/Weapon.ts';
-import {BaseWeapon} from "../weapon/BaseWeapon.ts";
-import {WorldConfig} from "../configs/WorldConfig.ts";
+import type {UIOptions, WeaponUIInfo} from '../../apis/IUIInfo.ts';
+import {World} from '../../world/World.ts';
+import type {Weapon} from '../../weapon/Weapon.ts';
+import {BaseWeapon} from "../../weapon/BaseWeapon.ts";
+import {WorldConfig} from "../../configs/WorldConfig.ts";
 
 export class UI {
     private readonly world: World;
     private readonly font: string;
     private readonly hudColor: string;
-    private readonly getWeaponUI: (weapon: any, key: string) => WeaponUIInfo | null;
+    private readonly getWeaponUI: (weapon: Weapon, key: string) => WeaponUIInfo | null;
 
     // HUD 布局参数
     private readonly marginX = 20;
@@ -114,17 +114,14 @@ export class UI {
         // 武器冷却条
         y += 4;
 
-        const items: WeaponUIInfo[] = [];
-        if (player.weapons) {
+        if (player.weapons.size > 0) {
             for (const [key, w] of player.weapons) {
                 const info = this.getWeaponUI(w, key);
-                if (info) items.push(info);
+                if (info) {
+                    this.drawCooldownBar(ctx, x, y, this.barWidth, this.barHeight, info);
+                    y += this.barHeight + this.lineGap;
+                }
             }
-        }
-
-        for (const info of items) {
-            this.drawCooldownBar(ctx, x, y, this.barWidth, this.barHeight, info);
-            y += this.barHeight + this.lineGap;
         }
 
         ctx.restore();

@@ -1,4 +1,6 @@
-export class Identifier {
+import type {Comparable} from "../utils/collection/HashMap.ts";
+
+export class Identifier implements Comparable {
     public static readonly ROOT: Identifier = Identifier.ofVanilla("root");
     public static readonly NAMESPACE_SEPARATOR: string = ':';
     public static readonly DEFAULT_NAMESPACE: string = 'nova-flight';
@@ -63,10 +65,14 @@ export class Identifier {
     }
 
     public equals(o: Object): boolean {
-        if (this == o) {
+        if (this === o) {
             return true;
         } else {
             return !(o instanceof Identifier) ? false : this.namespace === o.namespace && this.path === o.path;
         }
+    }
+
+    public hashCode(): string {
+        return this.toString();
     }
 }

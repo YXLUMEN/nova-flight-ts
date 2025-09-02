@@ -4,7 +4,6 @@ import {type EntityType} from "../EntityType.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 
 export class BaseEnemy extends MobEntity {
-    public override speed = 110;
     public color = '#ff6b6b';
 
     public constructor(type: EntityType<BaseEnemy>, world: World, worth: number) {

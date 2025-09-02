@@ -7,13 +7,16 @@ import {pointInCircleVec2} from "../utils/math/math.ts";
 import {EMPWeapon} from "./EMPWeapon.ts";
 import {LaserWeapon} from "./LaserWeapon.ts";
 import {BossEntity} from "../entity/mob/BossEntity.ts";
+import {EntityAttributes} from "../entity/attribute/EntityAttributes.ts";
+import {Identifier} from "../registry/Identifier.ts";
 
 export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
     public static readonly displayName = "遁入虚空";
     public static readonly uiColor = "#7945ff";
 
+    public readonly modifier = {id: Identifier.ofVanilla('weapon.into_void'), value: 0.4};
     public radius = 32;
-    public duration = 5;
+    public duration = 250;
     private active = false;
     private timeLeft = 0;
     private prevInvincible = false;
@@ -21,7 +24,7 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
     private mask: WindowOverlay | null = null;
 
     public constructor(owner: PlayerEntity) {
-        super(owner, 0, 30);
+        super(owner, 0, 1500);
     }
 
     public override tryFire(world: World): void {
@@ -33,6 +36,7 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
         if (this.owner instanceof PlayerEntity) {
             this.prevInvincible = this.owner.invulnerable;
             this.owner.invulnerable = true;
+            this.owner.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.addModifier(this.modifier);
 
             this.mask = new WindowOverlay({
                 color: IntoVoidWeapon.uiColor,
@@ -54,11 +58,11 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
         return !this.active && this.getCooldown() <= 0;
     }
 
-    public override update(tickDelta: number): void {
-        if (this.getCooldown() > 0) this.setCooldown(Math.max(0, this.getCooldown() - tickDelta));
+    public override tick(): void {
+        if (this.getCooldown() > 0) this.setCooldown(Math.max(0, this.getCooldown() - 1));
         if (!this.active) return;
 
-        this.timeLeft -= tickDelta;
+        this.timeLeft -= 1;
         if (this.timeLeft <= 0) {
             this.exitVoid(this.owner.getWorld());
         }
@@ -93,6 +97,7 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
     }
 
     private exitVoid(world: World, keepCooldown = true): void {
+        this.owner.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.removeModifierById(this.modifier.id);
         this.active = false;
         this.timeLeft = 0;
         this.setCooldown(this.getMaxCooldown());

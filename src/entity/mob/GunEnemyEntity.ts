@@ -8,8 +8,7 @@ import {MiniBulletEntity} from "../projectile/MiniBulletEntity.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 
 export class GunEnemyEntity extends MobEntity {
-    private static readonly bulletVel = new Vec2(0, 200);
-    public override speed = 80;
+    private static readonly bulletVel = new Vec2(0, 4);
     public color = "#ff6b6b";
     protected cooldown = 0;
 

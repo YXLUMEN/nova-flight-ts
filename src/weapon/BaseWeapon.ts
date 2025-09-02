@@ -1,11 +1,11 @@
 import {Weapon} from "./Weapon.ts";
 import {clamp} from "../utils/math/math.ts";
-import type {Entity} from "../entity/Entity.ts";
+import type {LivingEntity} from "../entity/LivingEntity.ts";
 
 export abstract class BaseWeapon extends Weapon {
     private fireRate: number;
 
-    protected constructor(owner: Entity, damage: number, fireRate: number) {
+    protected constructor(owner: LivingEntity, damage: number, fireRate: number) {
         super(owner, damage, fireRate);
         this.fireRate = fireRate;
     }

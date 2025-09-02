@@ -1,6 +1,6 @@
 import {DataEntry} from "./DataEntry.ts";
 import type {DataTracked} from "./DataTracked.ts";
-import {ClassToNum} from "../../utils/ClassToNum.ts";
+import {ClassToNum} from "../../utils/collection/ClassToNum.ts";
 import {TrackedData} from "./TrackedData.ts";
 import type {Constructor} from "../../apis/registry.ts";
 

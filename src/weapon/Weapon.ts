@@ -1,22 +1,22 @@
-import {type Entity} from "../entity/Entity.ts";
 import {type World} from "../world/World.ts";
 import {clamp} from "../utils/math/math.ts";
+import type {LivingEntity} from "../entity/LivingEntity.ts";
 
 export abstract class Weapon {
-    public readonly owner: Entity;
+    public readonly owner: LivingEntity;
     public damage: number;
 
     private maxCooldown: number;
     private cooldown: number = 0;
 
-    protected constructor(owner: Entity, damage: number, maxCooldown: number) {
+    protected constructor(owner: LivingEntity, damage: number, maxCooldown: number) {
         this.owner = owner;
         this.damage = damage;
         this.maxCooldown = maxCooldown;
     }
 
-    public update(tickDelta: number) {
-        if (this.cooldown > 0) this.setCooldown(this.cooldown - tickDelta);
+    public tick() {
+        if (this.cooldown > 0) this.setCooldown(this.cooldown - 1);
     }
 
     // 不会检查冷却

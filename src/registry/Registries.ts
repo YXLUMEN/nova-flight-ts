@@ -14,7 +14,8 @@ export class Registries {
     });
     public static readonly ATTRIBUTE = this.simpleCreate(RegistryKeys.ATTRIBUTE, () => {
     });
-
+    public static readonly SOUND_EVENT = this.simpleCreate(RegistryKeys.SOUND_EVENT, () => {
+    });
 
     public static complete() {
         this.DEFAULT_ENTRIES.set(RegistryKeys.ATTRIBUTE.getValue(), EntityAttributes.registerAndGetDefault);

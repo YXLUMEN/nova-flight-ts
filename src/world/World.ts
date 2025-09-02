@@ -7,7 +7,7 @@ import {EventBus} from "../event/EventBus.ts";
 import type {Effect} from "../effect/Effect.ts";
 import {ScreenFlash} from "../effect/ScreenFlash.ts";
 import {StarField} from "../effect/StarField.ts";
-import {UI} from "../ui/UI.ts";
+import {UI} from "../render/ui/UI.ts";
 import {STAGE} from "../configs/StageConfig.ts";
 import {DPR} from "../utils/uit.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
@@ -21,18 +21,21 @@ import {collideEntityBox, collideEntityCircle} from "../utils/math/math.ts";
 import {defaultLayers} from "../configs/StarfieldConfig.ts";
 import {EntityRenderers} from "../render/entity/EntityRenderers.ts";
 import {DefaultEvents} from "../event/DefaultEvents.ts";
+import {EVENTS, type IEvents} from "../apis/IEvents.ts";
+import {mainWindow} from "../main.ts";
 
 export class World {
-    public static instance: World;
-    public static canvas = document.getElementById("game") as HTMLCanvasElement;
-    public static ctx = World.canvas.getContext("2d")!;
+    private static worldInstance: World;
+    private static canvas = document.getElementById("game") as HTMLCanvasElement;
+    private static ctx = World.canvas.getContext("2d")!;
+
     public static W = 800;
     public static H = 600;
 
     public readonly camera: Camera = new Camera();
-    public readonly events: EventBus = new EventBus();
+    public readonly events: EventBus<IEvents> = EventBus.getEventBus();
     public empBurst: number = 0
-    public player: PlayerEntity;
+
     private readonly registryManager: RegistryManager;
     private readonly ui: UI = new UI(this);
     private readonly input = new Input(World.canvas);
@@ -44,13 +47,17 @@ export class World {
     private freeze = false;
     private ticking = true;
     private rendering = true;
+    // schedule
     private time = 0;
     private nextTimerId = 1;
     private timers: TimerTask[] = [];
+    // game
     private readonly stage = STAGE;
     private effects: Effect[] = [];
     private readonly particlePool: ParticlePool = new ParticlePool(256);
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
+    // entity
+    public player: PlayerEntity;
     private mobs: MobEntity[] = [];
     private bullets: ProjectileEntity[] = [];
 
@@ -64,7 +71,9 @@ export class World {
         this.registryEvents();
 
         this.starField.init(this.camera);
+    }
 
+    public start() {
         this.loop(0);
     }
 
@@ -77,9 +86,14 @@ export class World {
     }
 
     public static createWorld(registryManager: RegistryManager) {
-        if (this.instance) return this.instance;
-        this.instance = new World(registryManager);
-        return this.instance;
+        if (this.worldInstance) return this.worldInstance;
+        this.worldInstance = new World(registryManager);
+        this.worldInstance.ticking = false;
+        return this.worldInstance;
+    }
+
+    public static get instance() {
+        return this.worldInstance;
     }
 
     private static renderEntity(entity: Entity): void {
@@ -139,16 +153,16 @@ export class World {
     public update(tickDelta: number) {
         const dt = this.freeze ? 0 : tickDelta;
 
-        this.camera.update(this.player.getPos(), tickDelta);
+        this.camera.update(this.player.getMutPos, tickDelta);
         this.starField.update(dt, this.camera);
 
         if (!this.over) this.player.tick(tickDelta);
 
         this.stage.update(this, dt);
 
-        this.mobs.forEach(mob => mob.tick(dt));
-        this.bullets.forEach(b => b.tick(dt));
-        this.effects.forEach(e => e.tick(dt));
+        for (let i = 0; i < this.mobs.length; i++) this.mobs[i].tick(dt);
+        for (let i = 0; i < this.bullets.length; i++) this.bullets[i].tick();
+        for (let i = 0; i < this.effects.length; i++) this.effects[i].tick(dt);
         this.particlePool.tick(dt);
 
         // 碰撞: 子弹
@@ -279,16 +293,16 @@ export class World {
 
         ctx.save();
         const offset = this.camera.viewOffset;
-        ctx.translate(-Math.floor(offset.x), -Math.floor(offset.y));
+        ctx.translate(-offset.x, -offset.y);
 
         // 背景层
         this.drawBackground(ctx);
 
         // 实体
-        this.mobs.forEach(World.renderEntity);
-        this.bullets.forEach(World.renderEntity);
+        for (let i = 0; i < this.mobs.length; i++) World.renderEntity(this.mobs[i]);
+        for (let i = 0; i < this.bullets.length; i++) World.renderEntity(this.bullets[i]);
 
-        this.effects.forEach(e => e.render(ctx));
+        for (let i = 0; i < this.effects.length; i++) this.effects[i].render(ctx);
         this.particlePool.render(ctx);
 
         if (!this.player.isRemoved()) World.renderEntity(this.player);
@@ -372,24 +386,26 @@ export class World {
     private registryEvents() {
         this.events.clear();
 
-        this.events.on('boss-killed', (event) => {
-            const boss = (event as any).mob;
+        this.events.on(EVENTS.BOSS_KILLED, (event) => {
             this.stage.nextPhase();
-            if (boss instanceof MobEntity) {
-                this.player.addPhaseScore(boss.getWorth());
-            }
+            this.player.addPhaseScore(event.mob.getWorth());
         });
 
         DefaultEvents.registryEvents(this);
     }
 
     private registryListeners() {
+        mainWindow.listen('tauri://blur', () => this.ticking = false).then();
+        mainWindow.listen('tauri://resize', async () => {
+            this.rendering = !await mainWindow.isMinimized();
+        }).then();
+
+        // 实际可视页面变化
         window.addEventListener("resize", () => this.resize());
 
         window.addEventListener("keydown", e => {
             const code = e.code;
 
-            // Dev mode
             if (e.ctrlKey) {
                 e.preventDefault();
                 if (code === "KeyV") WorldConfig.devMode = !WorldConfig.devMode;
@@ -403,15 +419,6 @@ export class World {
             else if (code === 'KeyM') {
                 document.getElementById('help')?.classList.toggle('hidden');
                 this.ticking = false;
-            }
-        });
-
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') {
-                this.ticking = false;
-                this.rendering = false;
-            } else {
-                this.rendering = true;
             }
         });
 

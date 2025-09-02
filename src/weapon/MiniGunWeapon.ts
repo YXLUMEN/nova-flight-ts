@@ -1,16 +1,18 @@
-import type {Entity} from "../entity/Entity.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import type {World} from "../world/World.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {MiniBulletEntity} from "../entity/projectile/MiniBulletEntity.ts";
+import type {LivingEntity} from "../entity/LivingEntity.ts";
+import {SoundSystem} from "../sound/SoundSystem.ts";
+import {SoundEvents} from "../sound/SoundEvents.ts";
 
 export class MiniGunWeapon extends BaseWeapon {
-    public bulletVel = new MutVec2(0, -520);
+    public bulletVel = new MutVec2(0, -10.4);
 
-    constructor(owner: Entity) {
-        super(owner, 1, 0.05);
+    constructor(owner: LivingEntity) {
+        super(owner, 1, 3);
     }
 
     public tryFire(world: World): void {
@@ -19,6 +21,7 @@ export class MiniGunWeapon extends BaseWeapon {
         bullet.setVelocity(Vec2.formVec(this.bulletVel));
         bullet.setPos(pos.x, pos.y - this.owner.getEntityHeight() - 4);
         world.spawnEntity(bullet);
+        SoundSystem.playSound(SoundEvents.MINIGUN_FIRE);
 
         this.setCooldown(this.getFireRate());
     }

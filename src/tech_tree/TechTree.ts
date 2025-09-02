@@ -6,6 +6,7 @@ import {clamp} from "../utils/math/math.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {Cannon40Weapon} from "../weapon/Cannon40Weapon.ts";
 import {BombWeapon} from "../weapon/BombWeapon.ts";
+import {EVENTS} from "../apis/IEvents.ts";
 
 type Adjacency = {
     out: Map<string, string[]>; // id -> successors
@@ -261,7 +262,7 @@ export class TechTree {
         if (this.state.unlock(id)) {
             player.setScore(score);
             this.applyUnlockUpdates(id);
-            World.instance.events.emit('unlock-tech', {id});
+            World.instance.events.emit(EVENTS.UNLOCK_TECH, {id});
         }
     }
 

@@ -11,6 +11,9 @@ export class EntityAttributes {
     public static readonly GENERIC_ATTACK_DAMAGE = this.register('generic.attack_damage',
         new ClampedEntityAttribute(1, 0, 2048)
     );
+    public static readonly GENERIC_MOVEMENT_SPEED = this.register('generic.speed',
+        new ClampedEntityAttribute(1, 0, 256)
+    );
 
     public static registerAndGetDefault(_registry: Registry<EntityAttribute>) {
         return this.GENERIC_MAX_HEALTH;

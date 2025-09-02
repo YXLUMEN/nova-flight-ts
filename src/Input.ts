@@ -2,6 +2,7 @@ import {World} from "./world/World.ts";
 import {MutVec2} from "./utils/math/MutVec2.ts";
 import {Vec2} from "./utils/math/Vec2.ts";
 import {WorldConfig} from "./configs/WorldConfig.ts";
+import {mainWindow} from "./main.ts";
 
 export class Input {
     private worldPointer = new MutVec2(World.W / 2, World.H - 80);
@@ -34,17 +35,29 @@ export class Input {
     }
 
     private registryListener(target: HTMLElement) {
-        window.addEventListener("keydown", (e) => {
+        window.addEventListener("keydown", async (e) => {
+            if (
+                e.key === 'F5' ||
+                (e.ctrlKey && e.key === 'r') ||
+                (e.metaKey && e.key === 'r')
+            ) {
+                e.preventDefault();
+                return;
+            }
+
             const code = e.code;
             this.keys.add(code);
 
+            if (code === 'F11') {
+                await mainWindow.setFullscreen(!await mainWindow.isFullscreen());
+            }
             if (code === "KeyL") WorldConfig.followPointer = !WorldConfig.followPointer;
             if (code === 'KeyT') WorldConfig.autoShoot = !WorldConfig.autoShoot;
         });
-        window.addEventListener("keyup", (e) => this.keys.delete(e.code));
+        window.addEventListener("keyup", e => this.keys.delete(e.code));
         window.addEventListener("blur", () => this.keys.clear());
 
-        target.addEventListener("pointermove", (e) => {
+        target.addEventListener("mousemove", e => {
             if (WorldConfig.followPointer) {
                 const offset = World.instance.camera.viewOffset;
                 this.worldPointer.set(e.offsetX + offset.x, e.offsetY + offset.y);
@@ -55,7 +68,7 @@ export class Input {
     }
 
     private registryDesktop(target: HTMLElement) {
-        target.addEventListener("pointerdown", () => WorldConfig.autoShoot = true);
-        window.addEventListener("pointerup", () => WorldConfig.autoShoot = false);
+        target.addEventListener("mousedown", () => WorldConfig.autoShoot = true);
+        target.addEventListener("mouseup", () => WorldConfig.autoShoot = false);
     }
 }

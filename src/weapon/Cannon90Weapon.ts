@@ -1,18 +1,20 @@
 import {World} from "../world/World.ts";
-import type {Entity} from "../entity/Entity.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {ExplodeBulletEntity} from "../entity/projectile/ExplodeBulletEntity.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
+import type {LivingEntity} from "../entity/LivingEntity.ts";
+import {SoundSystem} from "../sound/SoundSystem.ts";
+import {SoundEvents} from "../sound/SoundEvents.ts";
 
 export class Cannon90Weapon extends BaseWeapon {
-    public bulletVel = new MutVec2(0, -320);
+    public bulletVel = new MutVec2(0, -6.4);
     public explosionDamage = 5;
     public explosionRadius = 96;
 
-    public constructor(owner: Entity) {
-        super(owner, 4, 0.85);
+    public constructor(owner: LivingEntity) {
+        super(owner, 4, 42);
     }
 
     public override tryFire(world: World): void {
@@ -27,6 +29,7 @@ export class Cannon90Weapon extends BaseWeapon {
         bullet.setPos(pos.x, pos.y - this.owner.getEntityHeight() - 12);
         bullet.setVelocity(Vec2.formVec(this.bulletVel));
         world.spawnEntity(bullet);
+        SoundSystem.playSound(SoundEvents.CANNON90_FIRE);
 
         this.setCooldown(this.getFireRate());
     }

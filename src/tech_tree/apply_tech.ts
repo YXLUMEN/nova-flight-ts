@@ -110,6 +110,7 @@ export function applyTech(world: World, id: string) {
             if (intoVoid instanceof IntoVoidWeapon) {
                 intoVoid.duration *= 0.1;
                 intoVoid.setMaxCooldown(intoVoid.trueMaxCooldown() * 0.2);
+                intoVoid.modifier.value = 1.5;
             }
             break;
         }

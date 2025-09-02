@@ -6,13 +6,13 @@ const freezeConfig = createCleanObj({
 } as const);
 
 const WorldConfig = Object.preventExtensions(createCleanObj({
-    devMode: false,
+    devMode: true,
     lowPowerMode: false,
 
     tick: freezeConfig.tick,
     mbps: freezeConfig.mbps.valueOf(),
 
-    enableCameraOffset: true,
+    enableCameraOffset: false,
 
     autoShoot: false,
     followPointer: true,

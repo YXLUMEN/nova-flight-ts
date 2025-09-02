@@ -8,16 +8,27 @@ import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 
 export class StatusEffects {
-    public static readonly EMC_STATUS = this.register(
-        "emc_status", new EMCStatus()
+    public static readonly SPEED = this.register("speed",
+        new StatusEffect(0, '#73c4ff')
+            .addAttributeModifier(
+                EntityAttributes.GENERIC_MOVEMENT_SPEED, Identifier.ofVanilla("effect.speed"), 0.2)
     );
 
-    public static readonly BURNING = this.register(
-        "burning_status", new BurningEffect(1)
+    public static readonly SLOWNESS = this.register("slowness",
+        new StatusEffect(1, '#555555')
+            .addAttributeModifier(EntityAttributes.GENERIC_MOVEMENT_SPEED, Identifier.ofVanilla("effect.slowness"), 0.2)
     );
 
-    public static readonly HEALTH_BOOST = this.register(
-        "health_boost",
+    public static readonly EMC_STATUS = this.register("emc_status",
+        new EMCStatus()
+            .addAttributeModifier(EntityAttributes.GENERIC_MOVEMENT_SPEED, Identifier.ofVanilla("effect.emc_status"), -0.8)
+    );
+
+    public static readonly BURNING = this.register("burning_status",
+        new BurningEffect(1)
+    );
+
+    public static readonly HEALTH_BOOST = this.register("health_boost",
         new StatusEffect(0, '#ff3333')
             .addAttributeModifier(EntityAttributes.GENERIC_MAX_HEALTH, Identifier.ofVanilla("effect.health_boost"), 4)
     );

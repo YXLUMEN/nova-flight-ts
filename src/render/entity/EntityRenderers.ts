@@ -10,7 +10,7 @@ import {BossEntityRender} from "./BossEntityRender.ts";
 import {MiniGunEnemyEntityRender} from "./MiniGunEnemyEntityRender.ts";
 
 export class EntityRenderers {
-    private static readonly RENDERER_FACTORIES = new Map<EntityType<any>, EntityRenderer<any>>();
+    private static readonly RENDERER_FACTORIES = new Map<EntityType<Entity>, EntityRenderer<Entity>>();
 
     public static getRenderer<T extends Entity>(entity: T): EntityRenderer<T> {
         return this.RENDERER_FACTORIES.get(entity.getType())!;

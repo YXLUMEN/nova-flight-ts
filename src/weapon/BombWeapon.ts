@@ -7,15 +7,16 @@ import type {Entity} from "../entity/Entity.ts";
 import type {ExplosionOpts} from "../apis/IExplosionOpts.ts";
 import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
 import {Particle} from "../effect/Particle.ts";
-import type {LivingEntity} from "../entity/LivingEntity.ts";
+import {LivingEntity} from "../entity/LivingEntity.ts";
 import type {IVec} from "../utils/math/IVec.ts";
+import {EVENTS} from "../apis/IEvents.ts";
 
 
 export class BombWeapon extends Weapon implements ISpecialWeapon {
     public damageRadius = 200;
 
-    constructor(owner: Entity) {
-        super(owner, 24, 16);
+    constructor(owner: LivingEntity) {
+        super(owner, 24, 800);
     }
 
     public static applyBombDamage(
@@ -71,7 +72,7 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
     }
 
     public override tryFire(world: World) {
-        world.events.emit('bomb-detonate', {
+        world.events.emit(EVENTS.BOMB_DETONATE, {
             pos: this.owner.getPos(),
             damage: this.getDamage(),
             explosionRadius: this.damageRadius,

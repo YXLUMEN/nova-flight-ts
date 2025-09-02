@@ -8,9 +8,8 @@ import type {World} from "../../world/World.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 
 export class MiniGunEnemyEntity extends MobEntity {
-    private static readonly bulletVel = new Vec2(0, 240);
+    private static readonly bulletVel = new Vec2(0, 5);
     public color = "#ac0000";
-    public override speed = 60;
     private cooldown = 0;
     private fireCount = 0;
     private fireCD = 0;

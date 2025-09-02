@@ -4,13 +4,14 @@ import {World} from "../../world/World.ts";
 import {PI2, rand} from "../../utils/math/math.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
-import {StatusEffects} from "../effect/StatusEffects.ts";
 import type {EntityType} from "../EntityType.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import type {DataEntry} from "../data/DataEntry.ts";
+import {EVENTS} from "../../apis/IEvents.ts";
+import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 
 export abstract class MobEntity extends LivingEntity {
-    protected t = Math.random() * 1000;
+    protected t = Math.random();
     private readonly worth: number;
 
     protected constructor(type: EntityType<MobEntity>, world: World, worth: number) {
@@ -18,15 +19,13 @@ export abstract class MobEntity extends LivingEntity {
         this.worth = worth;
     }
 
-    public override tick(dt: number): void {
-        super.tick(dt);
+    public override tick(tickDelta: number): void {
+        super.tick(tickDelta);
 
-        const emc = this.getStatusEffect(StatusEffects.EMC_STATUS);
-        if (emc) dt *= emc.getAmplifier() * 0.1;
-
-        this.t += dt;
-        this.getMutPos.y += this.speed * dt;
-        this.getMutPos.x += Math.sin(this.t * 3) * 40 * dt;
+        this.t += tickDelta;
+        const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        this.getMutPos.y += this.speed * speedMultiplier;
+        this.getMutPos.x += Math.sin(this.t * 2) * 40 * tickDelta * speedMultiplier;
 
         if (this.getMutPos.y > World.H + 40) this.discard();
     }
@@ -34,8 +33,9 @@ export abstract class MobEntity extends LivingEntity {
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         const result = super.takeDamage(damageSource, damage);
         if (!result) return false;
+
         const world = this.getWorld();
-        world.events.emit('mob-damaged', {mob: this, damageSource});
+        world.events.emit(EVENTS.MOB_DAMAGE, {mob: this, damageSource});
         world.spawnParticle(this.getMutPos, MutVec2.zero(), rand(0.2, 0.6), rand(4, 6),
             "#ffaa33", "#ff5454", 0.6, 80);
         return true;
@@ -45,7 +45,7 @@ export abstract class MobEntity extends LivingEntity {
         super.onDeath(damageSource);
 
         const world = this.getWorld();
-        world.events.emit('mob-killed', {mob: this, damageSource});
+        world.events.emit(EVENTS.MOB_KILLED, {mob: this, damageSource});
 
         for (let i = 0; i < 4; i++) {
             const a = rand(0, PI2);

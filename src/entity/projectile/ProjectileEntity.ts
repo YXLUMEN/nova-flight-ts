@@ -5,33 +5,34 @@ import type {EntityType} from "../EntityType.ts";
 import type {DataEntry} from "../data/DataEntry.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import {DataTracker} from "../data/DataTracker.ts";
+import type {LivingEntity} from "../LivingEntity.ts";
 
 export abstract class ProjectileEntity extends Entity implements IOwnable {
     public readonly damage: number;
-    public readonly owner: Entity;
+    public readonly owner: LivingEntity;
     public color = "#8cf5ff";
 
     protected boxRadius: number = this.getEntityWidth();
 
-    public constructor(type: EntityType<ProjectileEntity>, world: World, owner: Entity, damage: number) {
+    public constructor(type: EntityType<ProjectileEntity>, world: World, owner: LivingEntity, damage: number) {
         super(type, world);
 
         this.damage = damage;
         this.owner = owner;
     }
 
-    public override tick(dt: number) {
-        this.getMutPos.x += this.getVelocity().x * dt;
-        this.getMutPos.y += this.getVelocity().y * dt;
+    public override tick() {
+        const pos = this.getMutPos;
+        pos.addVec(this.getVelocity());
 
-        if (this.getMutPos.y < -20 || this.getMutPos.y > World.H + 20 || this.getMutPos.x < -20 || this.getMutPos.x > World.W + 20) {
+        if (pos.y < -20 || pos.y > World.H + 20 || pos.x < -20 || pos.x > World.W + 20) {
             this.discard();
         }
     }
 
     public abstract onEntityHit(entity: Entity): void;
 
-    public getOwner(): Entity {
+    public getOwner(): LivingEntity {
         return this.owner;
     }
 

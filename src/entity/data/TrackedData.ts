@@ -1,4 +1,6 @@
-export class TrackedData<T> {
+import type {Comparable} from "../../utils/collection/HashMap.ts";
+
+export class TrackedData<T> implements Comparable {
     public id: number;
     public dataType: T;
 
@@ -15,5 +17,9 @@ export class TrackedData<T> {
             return this.id === other.id;
         }
         return false;
+    }
+
+    public hashCode(): string {
+        return `TrackedData:${this.dataType}:${this.id}}`;
     }
 }

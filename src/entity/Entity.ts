@@ -9,11 +9,12 @@ import type {EntityDimensions} from "./EntityDimensions.ts";
 import {DataTracker} from "./data/DataTracker.ts";
 import type {DataTracked} from "./data/DataTracked.ts";
 import type {DataEntry} from "./data/DataEntry.ts";
+import {clamp} from "../utils/math/math.ts";
 
 
 export abstract class Entity implements DataTracked {
-    public speed: number = 0;
     public invulnerable: boolean = false;
+    protected speed: number = 5;
     protected readonly dataTracker: DataTracker;
     private readonly type: EntityType<any>
     private readonly world: World;
@@ -101,6 +102,10 @@ export abstract class Entity implements DataTracked {
 
     public setVelocity(velocity: Vec2): void {
         this.velocity = velocity;
+    }
+
+    public setSpeed(speed: number): void {
+        this.speed = clamp(speed, 0, 256);
     }
 
     public getType(): EntityType<any> {

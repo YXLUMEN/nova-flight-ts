@@ -1,7 +1,5 @@
 import {Weapon} from "./Weapon.ts";
 import {World} from "../world/World.ts";
-import type {Entity} from "../entity/Entity.ts";
-import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
 import {EMPBurst} from "../effect/EMPBurst.ts";
 import {pointInCircleVec2} from "../utils/math/math.ts";
@@ -10,17 +8,22 @@ import {ScreenFlash} from "../effect/ScreenFlash.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
+import {EVENTS} from "../apis/IEvents.ts";
+import type {LivingEntity} from "../entity/LivingEntity.ts";
+import {MobEntity} from "../entity/mob/MobEntity.ts";
+import {SoundSystem} from "../sound/SoundSystem.ts";
+import {SoundEvents} from "../sound/SoundEvents.ts";
 
 export class EMPWeapon extends Weapon implements ISpecialWeapon {
     public radius: number = 480;
     private duration = 12 * WorldConfig.tick;
 
-    constructor(owner: Entity) {
-        super(owner, 0, 10);
+    constructor(owner: LivingEntity) {
+        super(owner, 0, 500);
     }
 
     public static applyEMPEffect(world: World, center: MutVec2, radius: number, duration: number): void {
-        world.events.emit('emp-burst', {duration: duration});
+        world.events.emit(EVENTS.EMP_BURST, {duration: duration});
 
         const mobs = world.getMobs();
         for (const mob of mobs) {
@@ -31,17 +34,25 @@ export class EMPWeapon extends Weapon implements ISpecialWeapon {
     }
 
     public override tryFire(world: World): void {
-        EMPWeapon.applyEMPEffect(world, this.owner.getMutPos, this.radius, this.duration);
+        world.events.emit(EVENTS.EMP_BURST, {duration: this.duration});
+        const bullets = world.getProjectiles();
+        for (const b of bullets) {
+            if (b.owner instanceof MobEntity) b.discard();
+        }
+
+        const mobs = world.getMobs();
+        for (const mob of mobs) {
+            if (!mob.isRemoved() && pointInCircleVec2(mob.getMutPos, this.owner.getMutPos, this.radius)) {
+                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, this.duration, 1), null);
+            }
+        }
+
         world.addEffect(new ScreenFlash(0.5, 0.18, '#5ec8ff'));
         world.addEffect(new EMPBurst(
             this.owner.getPos(),
             this.radius
         ));
-
-        const bullets = world.getProjectiles();
-        for (const b of bullets) {
-            if (!(b.owner instanceof PlayerEntity)) b.discard();
-        }
+        SoundSystem.playSound(SoundEvents.EMP_BURST);
 
         this.setCooldown(this.getMaxCooldown());
     }

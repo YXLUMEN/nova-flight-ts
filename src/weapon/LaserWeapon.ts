@@ -2,24 +2,29 @@ import {LaserBeamEffect} from '../effect/LaserBeamEffect.ts';
 import {Weapon} from './Weapon.ts';
 import {World} from '../world/World.ts';
 import {clamp} from '../utils/math/math.ts';
-import type {Entity} from "../entity/Entity.ts";
 import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
 import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {Box} from "../utils/math/Box.ts";
-import {Vec2} from "../utils/math/Vec2.ts";
+import {SoundSystem} from "../sound/SoundSystem.ts";
+import {SoundEvents} from "../sound/SoundEvents.ts";
+import type {LivingEntity} from "../entity/LivingEntity.ts";
+import {MutVec2} from "../utils/math/MutVec2.ts";
 
 export class LaserWeapon extends Weapon implements ISpecialWeapon {
     public static readonly DISPLAY_NAME = 'LASER';
     public static readonly COLOR = '#8bff5e';
     public static readonly OVERHEAT_COLOR = '#ff5e5e';
     public laserColor = LaserWeapon.COLOR;
-    public maxHeat = 8.0;        // 满热前可持续秒数
-    public drainRate = 1.2;     // 开火每秒升温
-    public coolRate = 0.6;      // 松开每秒降温
+
+    public maxHeat = 400;        // 满热前可持续tick数
+    public drainRate = 2;     // 开火每tick升温
+    public coolRate = 1;      // 松开每tick降温
     // 过热参数
     private heat = 0;
     private active = false;
     private overheated = false;
+    private playSound = true;
+    private soundCooldown = 0;
 
     private readonly height = World.H;        // 长度
     private readonly width = 6;            // 宽度
@@ -28,35 +33,52 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
     // 缓存一个短寿命的光束效果
     private beamFx: LaserBeamEffect | null = null;
 
-    constructor(owner: Entity) {
+    public constructor(owner: LivingEntity) {
         super(owner, 1, 4);
     }
 
     public override tryFire(_world: World): void {
         this.active = this.active ? false : !this.overheated;
+        if (this.active) {
+            this.soundCooldown = 0;
+            SoundSystem.playSound(SoundEvents.LASER_TRIGGER);
+        }
+        if (!this.active && !this.overheated) SoundSystem.playSound(SoundEvents.LASER_COOLDOWN);
     }
 
     public override canFire(): boolean {
         return true;
     }
 
-    public override update(dt: number): void {
+    public override tick(): void {
         if (this.heat === 0 && !this.active) return;
 
         // 升温/降温
         if (this.active) {
-            this.heat = Math.min(this.maxHeat, this.heat + this.drainRate * dt);
+            this.heat = Math.min(this.maxHeat, this.heat + this.drainRate);
+            if (this.soundCooldown-- <= 0) {
+                SoundSystem.playSound(SoundEvents.LASER_BEAM);
+                this.soundCooldown = 25;
+            }
         } else {
-            this.heat = Math.max(0, this.heat - this.coolRate * dt);
+            this.heat = Math.max(0, this.heat - this.coolRate);
         }
+        const heatLeft = this.maxHeat - this.heat;
+        if (heatLeft > 120) this.playSound = true;
 
         // 触发过热: 立即停火并锁定
-        if (!this.overheated && this.heat >= this.maxHeat - 1e-6) {
-            this.heat = this.maxHeat;
-            this.overheated = true;
-            this.active = false;
-            if (this.beamFx) this.beamFx.kill();
-            this.beamFx = null;
+        if (!this.overheated) {
+            if (this.heat >= this.maxHeat - 1e-6) {
+                this.heat = this.maxHeat;
+                this.overheated = true;
+                this.active = false;
+                if (this.beamFx) this.beamFx.kill();
+                this.beamFx = null;
+            }
+            if (this.playSound && heatLeft <= 100) {
+                SoundSystem.playSound(SoundEvents.LASER_OVERHEAT);
+                this.playSound = false;
+            }
         }
 
         // 过热解锁: 必须完全冷却到 0
@@ -73,9 +95,9 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
         }
 
         // 光束端点
-        const world = World.instance;
-        const start = this.owner.getPos();
-        const end = new Vec2(start.x, start.y - this.height);
+        const world = this.owner.getWorld();
+        const start = this.owner.getMutPos;
+        const end = new MutVec2(start.x, start.y - this.height);
         const box = new Box(start.x - this.halfWidth, start.y, end.x + this.halfWidth, end.y);
 
         const attacker = this.owner instanceof PlayerEntity ? this.owner : null;

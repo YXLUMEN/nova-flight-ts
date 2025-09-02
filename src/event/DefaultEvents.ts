@@ -1,6 +1,4 @@
 import {applyTech} from "../tech_tree/apply_tech.ts";
-import {MobEntity} from "../entity/mob/MobEntity.ts";
-import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import {DamageTypeTags} from "../registry/tag/DamageTypeTags.ts";
 import {LaserWeapon} from "../weapon/LaserWeapon.ts";
 import {BombWeapon} from "../weapon/BombWeapon.ts";
@@ -12,30 +10,31 @@ import {DamageTypes} from "../entity/damage/DamageTypes.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
+import {EventBus} from "./EventBus.ts";
+import {EVENTS} from "../apis/IEvents.ts";
+
 
 export class DefaultEvents {
     public static registryEvents(world: World) {
-        const eventBus = world.events;
+        const eventBus = EventBus.getEventBus();
         const techTree = world.player.techTree;
         const player = world.player;
 
-        eventBus.on('unlock-tech', (event) => {
-            const id = (event as any).id as string;
-            applyTech(world, id);
+        eventBus.on(EVENTS.UNLOCK_TECH, (event) => {
+            applyTech(world, event.id);
         });
 
-        eventBus.on('mob-killed', (event) => {
-            const mob = (event as any).mob as MobEntity;
-            const damageSource = (event as any).damageSource as DamageSource;
+        eventBus.on(EVENTS.MOB_KILLED, (event) => {
+            const damageSource = event.damageSource;
 
-            if (damageSource.isIn(DamageTypeTags.GAIN_SCORE)) {
-                player.addPhaseScore(mob.getWorth());
+            if (!damageSource.isIn(DamageTypeTags.NOT_GAIN_SCORE)) {
+                player.addPhaseScore(event.mob.getWorth());
             }
 
             if (damageSource.isIn(DamageTypeTags.REPLY_LASER) && techTree.isUnlocked('energy_recovery')) {
                 const laser = player.weapons.get('laser');
                 if (laser instanceof LaserWeapon) {
-                    if (!laser.isOverHeat()) laser.setCooldown(laser.getCooldown() - 0.5);
+                    if (!laser.isOverHeat()) laser.setCooldown(laser.getCooldown() - 25);
                 }
             }
 
@@ -45,9 +44,9 @@ export class DefaultEvents {
             }
         });
 
-        eventBus.on('mob-damaged', (event) => {
-            const mob = (event as any).mob as MobEntity;
-            const damageSource = (event as any).damageSource as DamageSource;
+        eventBus.on(EVENTS.MOB_DAMAGE, (event) => {
+            const mob = event.mob;
+            const damageSource = event.damageSource;
 
             const attacker = damageSource.getAttacker();
             if (attacker instanceof PlayerEntity && !damageSource.isOf(DamageTypes.ON_FIRE)) {
@@ -73,31 +72,37 @@ export class DefaultEvents {
             if (flash) world.addEffect(flash);
         }
 
-        eventBus.on('bomb-detonate', (event) => {
-            const opts = event as ExpendExplosionOpts;
-
-            applyExplosion(opts);
+        eventBus.on(EVENTS.BOMB_DETONATE, (event) => {
+            applyExplosion(event);
             if (techTree.isUnlocked('serial_warhead')) {
                 let counts = 0;
                 const task = world.scheduleInterval(0.2, () => {
-                    opts.pos.y -= (opts.explosionRadius ?? 16 / 2) | 0;
-                    applyExplosion(opts);
+                    event.pos.y -= (event.explosionRadius ?? 16 / 2) | 0;
+                    applyExplosion(event);
                     if (counts++ === 1) task.cancel();
                 });
             }
         });
 
-        eventBus.on('emp-burst', (event) => {
+        eventBus.on(EVENTS.EMP_BURST, (event) => {
             if (techTree.isUnlocked('ele_oscillation')) {
-                world.empBurst = (event as any).duration as number;
+                world.empBurst = event.duration;
             }
         });
 
-        eventBus.on('stage-enter', (event) => {
-            if ((event as any).name === 'P6') {
+        eventBus.on(EVENTS.STAGE_ENTER, (event) => {
+            if (event.name === 'P6') {
                 const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 64);
                 boss.setPos(World.W / 2, 64);
-                world.spawnEntity(boss)
+                world.spawnEntity(boss);
+            } else if (event.name === 'P7') {
+                world.scheduleInterval(48, () => {
+                    if (BossEntity.exist) return;
+
+                    const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 64);
+                    boss.setPos(World.W / 2, 64);
+                    world.spawnEntity(boss);
+                });
             }
         });
     }

@@ -112,7 +112,7 @@ export class StarField {
 
                 // 小星用 fillRect 而不是 arc
                 if (this.r[i] <= 1) {
-                    ctx.fillRect(px, py, 1, 1);
+                    ctx.rect(px, py, 1, 1);
                 } else {
                     ctx.moveTo(px + this.r[i], py);
                     ctx.arc(px, py, this.r[i], 0, StarField.TWO_PI);

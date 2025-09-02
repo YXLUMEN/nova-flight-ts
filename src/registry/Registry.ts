@@ -2,17 +2,18 @@ import {RegistryKey} from "./RegistryKey.ts";
 import {RegistryEntry} from "./tag/RegistryEntry.ts";
 import type {Identifier} from "./Identifier.ts";
 import type {TagKey} from "./tag/TagKey.ts";
+import {HashMap} from "../utils/collection/HashMap.ts";
 
 export class Registry<T> {
     public readonly key: RegistryKey<T>;
 
-    private readonly idToEntry: Map<Identifier, RegistryEntry<T>>;
+    private readonly idToEntry: HashMap<Identifier, RegistryEntry<T>>;
     private readonly keyToEntry: Map<RegistryKey<T>, RegistryEntry<T>>;
     private readonly valueToEntry: Map<T, RegistryEntry<T>>;
 
     public constructor(key: RegistryKey<Registry<T>>) {
         this.key = key;
-        this.idToEntry = new Map<Identifier, RegistryEntry<T>>();
+        this.idToEntry = new HashMap<Identifier, RegistryEntry<T>>();
         this.keyToEntry = new Map<RegistryKey<T>, RegistryEntry<T>>();
         this.valueToEntry = new Map<T, RegistryEntry<T>>();
     }
@@ -62,5 +63,9 @@ export class Registry<T> {
     public getById(id: Identifier | null): T | null {
         if (!id) return null;
         return Registry.getValue(this.idToEntry.get(id) ?? null);
+    }
+
+    public getIds(): Set<Identifier> {
+        return new Set(this.idToEntry.keys());
     }
 }

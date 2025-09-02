@@ -29,7 +29,8 @@ export abstract class LivingEntity extends Entity {
 
     public createLivingAttributes(): InstanceType<typeof DefaultAttributeContainer.Builder> {
         return DefaultAttributeContainer.builder()
-            .add(EntityAttributes.GENERIC_MAX_HEALTH);
+            .add(EntityAttributes.GENERIC_MAX_HEALTH)
+            .add(EntityAttributes.GENERIC_MOVEMENT_SPEED);
     }
 
     public override tick(dt: number) {

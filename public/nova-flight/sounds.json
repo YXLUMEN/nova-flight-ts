@@ -1,0 +1,42 @@
+{
+  "laser.overheat_alarm": {
+    "subtitle": "sound.nova-flight.laser.overheat_alarm",
+    "sounds": "nova-flight:laser/overheat_alarm"
+  },
+  "laser.cooldown": {
+    "subtitle": "sound.nova-flight.laser.cooldown",
+    "sounds": "nova-flight:laser/cooldown"
+  },
+  "laser.trigger": {
+    "subtitle": "sound.nova-flight.laser.trigger",
+    "sounds": "nova-flight:laser/trigger"
+  },
+  "laser.beam": {
+    "subtitle": "sound.nova-flight.laser.beam",
+    "sounds": "nova-flight:laser/beam"
+  },
+  "cannon40.fire": {
+    "subtitle": "sound.nova-flight.cannon40.fire",
+    "sounds": "nova-flight:cannon40/fire_core"
+  },
+  "cannon40.fire_nx": {
+    "subtitle": "sound.nova-flight.cannon40.fire",
+    "sounds": "nova-flight:cannon40/fire_core_nx"
+  },
+  "cannon40.fire_mech": {
+    "subtitle": "sound.nova-flight.cannon40.fire_mech",
+    "sounds": "nova-flight:cannon40/fire_mech"
+  },
+  "minigun.fire": {
+    "subtitle": "sound.nova-flight.minigun.fire",
+    "sounds": "nova-flight:minigun/fire"
+  },
+  "emp.burst": {
+    "subtitle": "sound.nova-flight.emp.burst",
+    "sounds": "nova-flight:emp/burst"
+  },
+  "cannon90.fire": {
+    "subtitle": "sound.nova-flight.cannon90.fire",
+    "sounds": "nova-flight:cannon90/fire"
+  }
+}
