@@ -6,6 +6,7 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             window::show_window(app);
         }))
+        .plugin(tauri_plugin_fs::init())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(

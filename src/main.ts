@@ -11,7 +11,7 @@ async function main() {
     manager.registerAll();
     EntityRenderers.init();
 
-    await DataLoader.init('', manager);
+    await DataLoader.init(manager);
 
     const world = World.createWorld(manager);
     world.start();

@@ -8,6 +8,7 @@ export class SoundEvents {
     public static readonly LASER_COOLDOWN = this.registerSound("laser.cooldown");
     public static readonly LASER_TRIGGER = this.registerSound("laser.trigger");
     public static readonly LASER_BEAM = this.registerSound("laser.beam");
+    public static readonly LASER_CHARGE_DOWN = this.registerSound("laser.charge_down");
 
     public static readonly CANNON40_FIRE = this.registerSound("cannon40.fire");
     public static readonly CANNON40_FIRE_NX = this.registerSound("cannon40.fire_nx");

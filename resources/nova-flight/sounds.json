@@ -15,6 +15,10 @@
     "subtitle": "sound.nova-flight.laser.beam",
     "sounds": "nova-flight:laser/beam"
   },
+  "laser.charge_down": {
+    "subtitle": "sound.nova-flight.laser.charge_down",
+    "sounds": "nova-flight:laser/charge_down"
+  },
   "cannon40.fire": {
     "subtitle": "sound.nova-flight.cannon40.fire",
     "sounds": "nova-flight:cannon40/fire_core"

@@ -408,7 +408,10 @@ export class World {
 
             if (e.ctrlKey) {
                 e.preventDefault();
-                if (code === "KeyV") WorldConfig.devMode = !WorldConfig.devMode;
+                if (code === "KeyV") {
+                    WorldConfig.devMode = !WorldConfig.devMode;
+                    WorldConfig.usedDevMode = true;
+                }
                 if (WorldConfig.devMode) this.devMode(code);
                 return;
             }

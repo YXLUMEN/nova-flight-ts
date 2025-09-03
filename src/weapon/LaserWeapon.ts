@@ -43,7 +43,7 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
             this.soundCooldown = 0;
             SoundSystem.playSound(SoundEvents.LASER_TRIGGER);
         }
-        if (!this.active && !this.overheated) SoundSystem.playSound(SoundEvents.LASER_COOLDOWN);
+        if (!this.active && !this.overheated) SoundSystem.playSound(SoundEvents.LASER_CHARGE_DOWN);
     }
 
     public override canFire(): boolean {

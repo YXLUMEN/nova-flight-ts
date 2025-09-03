@@ -24,11 +24,6 @@ export default defineConfig({
             compress: {
                 drop_console: true,
                 ecma: 2020
-            },
-            mangle: {
-                properties: {
-                    keep_quoted: 'strict',
-                }
             }
         },
     },

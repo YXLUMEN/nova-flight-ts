@@ -9,6 +9,9 @@
     "core:default",
     "core:window:allow-is-minimized",
     "core:window:allow-is-fullscreen",
-    "core:window:allow-set-fullscreen"
+    "core:window:allow-set-fullscreen",
+    "fs:default",
+    "fs:allow-read",
+    "fs:allow-resource-read-recursive"
   ]
 }
