@@ -39,7 +39,7 @@ export class Stage {
             time: this.t,
             phaseTime: this.phaseTime,
             phaseIndex: this.index,
-            score: world.player.getPhaseScore(),
+            score: world.player?.getPhaseScore() ?? 0,
             rng: this.rng,
             difficulty: this.computeDifficulty(),
         };

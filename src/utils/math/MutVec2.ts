@@ -52,9 +52,15 @@ export class MutVec2 implements IVec {
         return this.sub(v.x, v.y);
     }
 
-    public mul(k: number): MutVec2 {
+    public multiply(k: number): MutVec2 {
         this.x *= k;
         this.y *= k;
+        return this;
+    }
+
+    public multiplyEach(a: number, b: number): IVec {
+        this.x *= a;
+        this.y *= b;
         return this;
     }
 
@@ -68,7 +74,7 @@ export class MutVec2 implements IVec {
 
     public normalize(): MutVec2 {
         const len = this.length();
-        return len === 0 ? this.set(0, 0) : this.mul(1 / len);
+        return len === 0 ? this.set(0, 0) : this.multiply(1 / len);
     }
 
     public equals(v: IVec, epsilon = 1e-6): boolean {

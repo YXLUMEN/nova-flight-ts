@@ -13,26 +13,24 @@ import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
 
 export class BossEntity extends MobEntity {
-    public static exist: BossEntity | null = null;
     public color = '#b30000';
-    protected override speed = 0;
 
     private cooldown = 0;
     private damageCooldown: number = 0;
 
     public constructor(type: EntityType<BossEntity>, world: World, worth: number) {
-        if (BossEntity.exist) return BossEntity.exist;
         super(type, world, worth);
-        BossEntity.exist = this;
+        this.setMovementSpeed(0);
     }
 
     public override createLivingAttributes() {
         return super.createLivingAttributes()
-            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 160);
+            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 160)
+            .addWithBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE, 100);
     }
 
-    public override tick(dt: number) {
-        super.tick(dt);
+    public override tick() {
+        super.tick();
 
         if (this.damageCooldown > 0) this.damageCooldown -= 1;
         this.cooldown -= 1;
@@ -46,13 +44,13 @@ export class BossEntity extends MobEntity {
         const step = (endAngle - startAngle) / (count - 1);
 
         const world = this.getWorld();
-        const pos = this.getMutPos.clone();
+        const pos = this.getMutPosition.clone();
         for (let i = count; i--;) {
             const angle = startAngle + step * i;
             const vel = new Vec2(Math.cos(angle) * speed, Math.sin(angle) * speed);
             const b = new BulletEntity(EntityTypes.BULLET_ENTITY, world, this, 1);
-            b.setVelocity(vel);
-            b.setPosByVec(pos);
+            b.setVelocityByVec(vel);
+            b.setPositionByVec(pos);
             b.color = '#ff0000'
             world.spawnEntity(b);
         }
@@ -81,7 +79,7 @@ export class BossEntity extends MobEntity {
             const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
 
             world.spawnParticle(
-                this.getMutPos, vel, rand(0.8, 1.4), rand(12, 24),
+                this.getMutPosition, vel, rand(0.8, 1.4), rand(12, 24),
                 "#ffaa33", "#ff5454", 0.6, 80
             );
         }
@@ -89,7 +87,6 @@ export class BossEntity extends MobEntity {
 
     public override discard() {
         super.discard();
-        BossEntity.exist = null;
     }
 
     public override addStatusEffect(_effect: StatusEffectInstance) {

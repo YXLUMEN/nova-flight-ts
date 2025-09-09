@@ -1,9 +1,9 @@
 import {Box} from "../utils/math/Box.ts";
-import type {Vec2} from "../utils/math/Vec2.ts";
+import type {IVec} from "../utils/math/IVec.ts";
 
 export class EntityDimensions {
-    public width: number;
-    public height: number;
+    public readonly width: number;
+    public readonly height: number;
 
     private constructor(width: number, height: number) {
         this.width = width;
@@ -20,7 +20,7 @@ export class EntityDimensions {
         return new Box(x - f, y, x + f, y + g);
     }
 
-    public getBoxAtByVec(pos: Vec2) {
+    public getBoxAtByVec(pos: IVec) {
         return this.getBoxAt(pos.x, pos.y);
     }
 }

@@ -35,8 +35,12 @@ export class Vec2 implements IVec {
         return this.sub(v.x, v.y);
     }
 
-    public mul(k: number): Vec2 {
+    public multiply(k: number): Vec2 {
         return new Vec2(this.x * k, this.y * k);
+    }
+
+    public multiplyEach(a: number, b: number): Vec2 {
+        return new Vec2(this.x * a, this.y * b);
     }
 
     public lengthSq() {
@@ -59,6 +63,6 @@ export class Vec2 implements IVec {
 
     public normalize() {
         const len = this.length();
-        return len === 0 ? Vec2.ZERO : this.mul(1 / len);
+        return len === 0 ? Vec2.ZERO : this.multiply(1 / len);
     }
 }

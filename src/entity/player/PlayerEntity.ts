@@ -1,15 +1,13 @@
 import {type Input} from "../../Input.ts";
 import {World} from "../../world/World.ts";
 import {type Weapon} from "../../weapon/Weapon.ts";
-import {BombWeapon} from "../../weapon/BombWeapon.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 import {ScreenFlash} from "../../effect/ScreenFlash.ts";
-import {clamp} from "../../utils/math/math.ts";
 import {Cannon40Weapon} from "../../weapon/Cannon40Weapon.ts";
 import {throttleTimeOut} from "../../utils/uit.ts";
 import {isSpecialWeapon} from "../../weapon/ISpecialWeapon.ts";
 import {EdgeGlowEffect} from "../../effect/EdgeGlowEffect.ts";
-import {TechTree} from "../../tech_tree/TechTree.ts";
+import {TechTree} from "../../tech/TechTree.ts";
 import {BaseWeapon} from "../../weapon/BaseWeapon.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {type DamageSource} from "../damage/DamageSource.ts";
@@ -19,30 +17,41 @@ import {DataLoader} from "../../DataLoader.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
+import {SoundSystem} from "../../sound/SoundSystem.ts";
+import {SoundEvents} from "../../sound/SoundEvents.ts";
+import {AutoAim} from "../../tech/AutoAim.ts";
+import {clamp} from "../../utils/math/math.ts";
+import {BombWeapon} from "../../weapon/BombWeapon.ts";
 
 export class PlayerEntity extends LivingEntity {
     public readonly input: Input;
     public readonly weapons = new Map<string, Weapon>();
     public readonly techTree: TechTree;
 
-    public override speed = 6;
     public onDamageExplosionRadius = 320;
 
-    public readonly baseWeapons: Weapon[] = [];
+    public readonly baseWeapons: BaseWeapon[] = [];
     public currentBaseIndex: number = 0;
     public switchWeapon = throttleTimeOut(() => {
         this.currentBaseIndex = (this.currentBaseIndex + 1) % this.baseWeapons.length;
     }, 200);
+
     private phaseScore: number;
     private score: number = 0;
+    private autoAimEnable: boolean = false;
+
+    private readonly autoAim: AutoAim;
 
     public constructor(world: World, input: Input) {
         super(EntityTypes.PLAYER_ENTITY, world);
 
+        this.autoAim = new AutoAim(this);
+
         const viewport = document.getElementById('viewport') as HTMLElement;
         this.techTree = new TechTree(viewport, DataLoader.get('tech-data'));
 
-        this.setPos(World.W / 2, World.H - 80);
+        this.setPosition(World.W / 2, World.H - 80);
+        this.setMovementSpeed(6);
 
         this.input = input;
         this.phaseScore = 0;
@@ -54,45 +63,47 @@ export class PlayerEntity extends LivingEntity {
 
     public override createLivingAttributes() {
         return super.createLivingAttributes()
-            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 3);
+            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 20);
     }
 
-    public override tick(tickDelta: number) {
-        super.tick(tickDelta);
+    public override tick() {
+        super.tick();
 
         const world = this.getWorld();
-        const pos = this.getMutPos;
+        const pos = this.getMutPosition;
 
-        // 指针移动
-        if (WorldConfig.followPointer) {
-            const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-            const worldMouse = this.input.pointer;
-            const completeDt = Math.min(1, tickDelta * 6) * speedMultiplier;
-            pos.add(
-                (worldMouse.x - pos.x) * completeDt,
-                (worldMouse.y - pos.y) * completeDt
-            );
-        } else {
-            // 键盘移动
-            let dx = 0, dy = 0;
-            if (this.input.isDown("ArrowLeft", "KeyA")) dx -= 1;
-            if (this.input.isDown("ArrowRight", "KeyD")) dx += 1;
-            if (this.input.isDown("ArrowUp", "KeyW")) dy -= 1;
-            if (this.input.isDown("ArrowDown", "KeyS")) dy += 1;
-
-            const len = Math.hypot(dx, dy);
-            if (len > 0) {
-                const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-                pos.add(
-                    (dx / len) * this.speed * speedMultiplier,
-                    (dy / len) * this.speed * speedMultiplier
-                );
-            }
+        // 移动
+        let dx = 0, dy = 0;
+        if (this.input.isDown("ArrowLeft", "KeyA")) dx -= 1;
+        if (this.input.isDown("ArrowRight", "KeyD")) dx += 1;
+        if (this.input.isDown("ArrowUp", "KeyW")) dy -= 1;
+        if (this.input.isDown("ArrowDown", "KeyS")) dy += 1;
+        if (this.input.wasPressed('AltRight')) {
+            this.autoAimEnable = !this.autoAimEnable;
+            this.autoAim.setTarget(null);
         }
 
-        // 边界
-        pos.x = clamp(pos.x, 20, World.W - 20);
-        pos.y = clamp(pos.y, 20, World.H - 20);
+        const len = Math.hypot(dx, dy);
+        if (len > 0) {
+            const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+            const speed = this.getMovementSpeed() * speedMultiplier;
+            this.updateVelocity(speed, dx / len, dy / len);
+            this.moveByVec(this.getVelocity());
+            pos.x = clamp(pos.x, 20, World.W - 20);
+            pos.y = clamp(pos.y, 20, World.H - 20);
+        } else {
+            this.updateVelocity(0, 0, 0);
+        }
+
+        if (this.autoAimEnable) {
+            this.autoAim.tick();
+        } else {
+            const yaw = Math.atan2(
+                this.input.getWorldPointer.y - pos.y,
+                this.input.getWorldPointer.x - pos.x
+            );
+            this.setClampYaw(yaw, 0.157075)
+        }
 
         if (this.input.isDown('KeyR')) {
             this.switchWeapon();
@@ -120,7 +131,7 @@ export class PlayerEntity extends LivingEntity {
         const world = this.getWorld();
 
         world.events.emit(EVENTS.BOMB_DETONATE, {
-            pos: this.getPos(),
+            pos: this.getPosition(),
             damage: 32,
             explosionRadius: this.onDamageExplosionRadius,
             shake: 0.4,
@@ -134,6 +145,7 @@ export class PlayerEntity extends LivingEntity {
             const emp = this.weapons.get('emp');
             if (emp && emp.canFire()) {
                 emp.tryFire(world);
+                SoundSystem.playSound(SoundEvents.SHIELD_CRASH);
                 return false;
             }
         }
@@ -149,7 +161,7 @@ export class PlayerEntity extends LivingEntity {
 
         const damageResult = super.takeDamage(damageSource, damage);
 
-        if (this.getHealth() === 1) {
+        if (this.getHealth() <= 5) {
             world.addEffect(new EdgeGlowEffect({
                 color: '#ff5151',
                 duration: 5.0,
@@ -172,7 +184,7 @@ export class PlayerEntity extends LivingEntity {
         this.weapons.set(name, weapon);
     }
 
-    public getCurrentWeapon(): Weapon {
+    public getCurrentWeapon(): BaseWeapon {
         return this.baseWeapons[this.currentBaseIndex];
     }
 

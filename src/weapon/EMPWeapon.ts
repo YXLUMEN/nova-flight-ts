@@ -13,6 +13,7 @@ import type {LivingEntity} from "../entity/LivingEntity.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
+import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 
 export class EMPWeapon extends Weapon implements ISpecialWeapon {
     public radius: number = 480;
@@ -25,9 +26,8 @@ export class EMPWeapon extends Weapon implements ISpecialWeapon {
     public static applyEMPEffect(world: World, center: MutVec2, radius: number, duration: number): void {
         world.events.emit(EVENTS.EMP_BURST, {duration: duration});
 
-        const mobs = world.getMobs();
-        for (const mob of mobs) {
-            if (!mob.isRemoved() && pointInCircleVec2(mob.getMutPos, center, radius)) {
+        for (const mob of world.getLoadMobs()) {
+            if (!mob.isRemoved() && pointInCircleVec2(mob.getMutPosition, center, radius)) {
                 mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, duration, 1), null);
             }
         }
@@ -35,21 +35,20 @@ export class EMPWeapon extends Weapon implements ISpecialWeapon {
 
     public override tryFire(world: World): void {
         world.events.emit(EVENTS.EMP_BURST, {duration: this.duration});
-        const bullets = world.getProjectiles();
-        for (const b of bullets) {
-            if (b.owner instanceof MobEntity) b.discard();
-        }
 
-        const mobs = world.getMobs();
-        for (const mob of mobs) {
-            if (!mob.isRemoved() && pointInCircleVec2(mob.getMutPos, this.owner.getMutPos, this.radius)) {
-                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, this.duration, 1), null);
+        world.getEntities().forEach(entity => {
+            if (entity instanceof ProjectileEntity) {
+                if (entity.owner instanceof MobEntity) entity.discard();
+            } else if (entity instanceof MobEntity) {
+                if (!entity.isRemoved() && pointInCircleVec2(entity.getMutPosition, this.owner.getMutPosition, this.radius)) {
+                    entity.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, this.duration, 1), null);
+                }
             }
-        }
+        });
 
         world.addEffect(new ScreenFlash(0.5, 0.18, '#5ec8ff'));
         world.addEffect(new EMPBurst(
-            this.owner.getPos(),
+            this.owner.getPosition(),
             this.radius
         ));
         SoundSystem.playSound(SoundEvents.EMP_BURST);

@@ -5,7 +5,7 @@ import {WorldConfig} from "./configs/WorldConfig.ts";
 import {mainWindow} from "./main.ts";
 
 export class Input {
-    private worldPointer = new MutVec2(World.W / 2, World.H - 80);
+    private worldPointer = MutVec2.zero();
 
     private readonly keys = new Set<string>();
     private prevKeys = new Set<string>();
@@ -14,12 +14,12 @@ export class Input {
         this.registryListener(target);
     }
 
-    public get pointer(): MutVec2 {
+    public get getWorldPointer(): MutVec2 {
         return this.worldPointer;
     }
 
     public getPointer(): Vec2 {
-        return Vec2.formVec(this.pointer);
+        return Vec2.formVec(this.getWorldPointer);
     }
 
     public updateEndFrame(): void {
@@ -36,14 +36,7 @@ export class Input {
 
     private registryListener(target: HTMLElement) {
         window.addEventListener("keydown", async (e) => {
-            if (
-                e.key === 'F5' ||
-                (e.ctrlKey && e.key === 'r') ||
-                (e.metaKey && e.key === 'r')
-            ) {
-                e.preventDefault();
-                return;
-            }
+            e.preventDefault();
 
             const code = e.code;
             this.keys.add(code);
@@ -51,17 +44,14 @@ export class Input {
             if (code === 'F11') {
                 await mainWindow.setFullscreen(!await mainWindow.isFullscreen());
             }
-            if (code === "KeyL") WorldConfig.followPointer = !WorldConfig.followPointer;
             if (code === 'KeyT') WorldConfig.autoShoot = !WorldConfig.autoShoot;
         });
         window.addEventListener("keyup", e => this.keys.delete(e.code));
         window.addEventListener("blur", () => this.keys.clear());
 
         target.addEventListener("mousemove", e => {
-            if (WorldConfig.followPointer) {
-                const offset = World.instance.camera.viewOffset;
-                this.worldPointer.set(e.offsetX + offset.x, e.offsetY + offset.y);
-            }
+            const offset = World.instance.camera.viewOffset;
+            this.worldPointer.set(e.offsetX + offset.x, e.offsetY + offset.y);
         }, {passive: true});
 
         this.registryDesktop(target);

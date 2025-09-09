@@ -25,7 +25,7 @@ export class ExplodeBulletEntity extends ProjectileEntity {
         const attacker = this.owner;
         entity.takeDamage(this.getWorld().getDamageSources().explosion(this, attacker), this.damage);
         this.getWorld().events.emit(EVENTS.BOMB_DETONATE, {
-            pos: this.getMutPos.clone(),
+            pos: this.getMutPosition.clone(),
             source: this,
             attacker,
             ...this.explosionOpts

@@ -19,6 +19,7 @@ export class SoundEvents {
     public static readonly CANNON90_FIRE = this.registerSound("cannon90.fire");
 
     public static readonly EMP_BURST = this.registerSound("emp.burst");
+    public static readonly SHIELD_CRASH = this.registerSound("shield.crash");
 
     private static registerSound(id: string) {
         const identifier = Identifier.ofVanilla(id);

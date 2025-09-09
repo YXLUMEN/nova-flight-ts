@@ -116,12 +116,12 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
         const owner = this.owner;
         if (!(owner instanceof PlayerEntity)) return;
 
-        world.player.invulnerable = this.prevInvincible;
+        this.owner.invulnerable = this.prevInvincible;
         this.prevInvincible = false;
 
-        const box = this.owner.getEntityWidth() + this.radius;
-        for (const mob of world.getMobs()) {
-            if (mob.isRemoved() || !pointInCircleVec2(this.owner.getMutPos, mob.getMutPos, box + mob.getEntityWidth())) continue;
+        const box = this.owner.getEntityDimension().width + this.radius;
+        for (const mob of world.getLoadMobs()) {
+            if (mob.isRemoved() || !pointInCircleVec2(this.owner.getMutPosition, mob.getMutPosition, box + mob.getEntityDimension().width)) continue;
             if (mob instanceof BossEntity) continue;
             mob.onDeath(world.getDamageSources().void(this.owner as PlayerEntity));
         }

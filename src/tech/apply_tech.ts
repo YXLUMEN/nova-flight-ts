@@ -8,9 +8,11 @@ import {IntoVoidWeapon} from "../weapon/IntoVoidWeapon.ts";
 import {MiniGunWeapon} from "../weapon/MiniGunWeapon.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
+import {MissileWeapon} from "../weapon/MissileWeapon.ts";
 
 export function applyTech(world: World, id: string) {
     const player = world.player;
+    if (!player) return;
     switch (id) {
         case 'energy_focus':
             player.addWeapon('emp', new EMPWeapon(player));
@@ -140,6 +142,10 @@ export function applyTech(world: World, id: string) {
                 laser.drainRate *= 1.5;
             }
             break;
+        }
+        case 'missile': {
+            player.weapons.delete('bomb');
+            player.weapons.set('missile', new MissileWeapon(player));
         }
     }
 }

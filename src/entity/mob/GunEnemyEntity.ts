@@ -18,11 +18,12 @@ export class GunEnemyEntity extends MobEntity {
 
     public override createLivingAttributes() {
         return super.createLivingAttributes()
-            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 4);
+            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 4)
+            .addWithBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE, 3);
     }
 
-    public override tick(dt: number) {
-        super.tick(dt);
+    public override tick() {
+        super.tick();
 
         this.cooldown--;
         if (this.cooldown > 0) return;
@@ -31,10 +32,10 @@ export class GunEnemyEntity extends MobEntity {
 
         if (world.empBurst > 0 || this.hasStatusEffect(StatusEffects.EMC_STATUS)) return;
 
-        const pos = this.getMutPos;
+        const pos = this.getMutPosition;
         const b = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, this, 1);
-        b.setVelocity(GunEnemyEntity.bulletVel);
-        b.setPos(pos.x, pos.y);
+        b.setVelocityByVec(GunEnemyEntity.bulletVel);
+        b.setPosition(pos.x, pos.y);
 
         b.color = '#ff0000'
         world.spawnEntity(b);

@@ -12,7 +12,9 @@ export interface IVec {
 
     subVec(v: IVec): IVec
 
-    mul(k: number): IVec
+    multiply(k: number): IVec
+
+    multiplyEach(a: number, b: number): IVec
 
     lengthSq(): number
 

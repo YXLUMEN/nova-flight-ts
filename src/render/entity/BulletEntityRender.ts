@@ -7,7 +7,7 @@ export class BulletEntityRender implements EntityRenderer<BulletEntity> {
         ctx.save();
         ctx.fillStyle = entity.color;
         ctx.beginPath();
-        ctx.arc(entity.getMutPos.x, entity.getMutPos.y, entity.getBoxRadius(), 0, PI2);
+        ctx.arc(entity.getMutPosition.x, entity.getMutPosition.y, entity.getBoxRadius(), 0, PI2);
         ctx.fill();
         ctx.restore();
     }

@@ -43,6 +43,7 @@
         "type": "downloadBootstrapper"
       }
     },
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -50,5 +51,16 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+    "plugins": {
+    "updater": {
+      "windows": {
+        "installMode": "basicUi"
+      },
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEI2REU3QUJBRUEwRjJFRkQKUldUOUxnL3F1bnJldGpncXQweDZyUGw4TUJhVDdYMXRHc2dTTWZlL2NFVlh6NjdPckVDcnlia2IK",
+      "endpoints": [
+        "https://www.yangandxu.asia/app/nova-flight/latest.json"
+      ]
+    }
   }
 }

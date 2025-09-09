@@ -19,7 +19,6 @@ const WorldConfig = Object.preventExtensions(createCleanObj({
     enableCameraOffset: !isDev,
 
     autoShoot: false,
-    followPointer: true,
 }));
 
 export {freezeConfig, WorldConfig}

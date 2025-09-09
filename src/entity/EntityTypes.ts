@@ -8,6 +8,7 @@ import {BaseEnemy} from "./mob/BaseEnemy.ts";
 import {EntityType} from "./EntityType.ts";
 import {MiniBulletEntity} from "./projectile/MiniBulletEntity.ts";
 import {MiniGunEnemyEntity} from "./mob/MiniGunEnemyEntity.ts";
+import {MissileEntity} from "./projectile/MissileEntity.ts";
 
 export class EntityTypes {
     public static readonly BASE_ENEMY = EntityType.register("base_enemy",
@@ -43,6 +44,10 @@ export class EntityTypes {
             .setDimensions(12, 12)
     );
     public static PLAYER_ENTITY: EntityType<PlayerEntity>;
+    public static readonly MISSILE_ENTITY = EntityType.register("missile_entity",
+        EntityType.Builder.create(MissileEntity)
+            .setDimensions(8, 8)
+    );
 
     public static init() {
         // 避免提前引用

@@ -5,7 +5,7 @@ export class MiniGunEnemyEntityRender implements EntityRenderer<MiniGunEnemyEnti
     public render(entity: MiniGunEnemyEntity, ctx: CanvasRenderingContext2D) {
         ctx.save();
         ctx.fillStyle = entity.color;
-        ctx.fillRect(entity.getMutPos.x - 16, entity.getMutPos.y - 16, 32, 32);
+        ctx.fillRect(entity.getMutPosition.x - 16, entity.getMutPosition.y - 16, 32, 32);
         ctx.restore();
     }
 }

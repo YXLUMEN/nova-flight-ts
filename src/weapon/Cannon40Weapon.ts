@@ -1,5 +1,4 @@
 import {World} from "../world/World.ts";
-import {MutVec2} from "../utils/math/MutVec2.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
 import {BulletEntity} from "../entity/projectile/BulletEntity.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
@@ -8,18 +7,15 @@ import {SoundSystem} from "../sound/SoundSystem.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 
 export class Cannon40Weapon extends BaseWeapon {
-    public bulletVel = new MutVec2(0, -10);
+    private speed = 14;
 
     public constructor(owner: LivingEntity) {
         super(owner, 2, 8);
     }
 
     public override tryFire(world: World) {
-        const pos = this.owner.getPos();
-
         const bullet = new BulletEntity(EntityTypes.BULLET_ENTITY, world, this.owner, this.getDamage());
-        bullet.setVelocity(this.bulletVel);
-        bullet.setPos(pos.x, pos.y - this.owner.getEntityWidth() - 6);
+        this.setBullet(bullet, this.speed, 6);
         world.spawnEntity(bullet);
 
         this.setCooldown(this.getFireRate());
@@ -34,5 +30,9 @@ export class Cannon40Weapon extends BaseWeapon {
 
     public getUiColor(): string {
         return '#fff';
+    }
+
+    public override getBallisticSpeed(): number {
+        return this.speed;
     }
 }

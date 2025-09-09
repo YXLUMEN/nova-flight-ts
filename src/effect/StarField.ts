@@ -1,6 +1,7 @@
 import type {StarLayer} from "../apis/IStarLayer.ts";
 import type {Camera} from "../render/Camera.ts";
 import {rand} from "../utils/math/math.ts";
+import {World} from "../world/World.ts";
 
 
 export class StarField {
@@ -18,7 +19,7 @@ export class StarField {
     private readonly start: Uint32Array;
     private readonly end: Uint32Array;
 
-    constructor(totalCount: number, layers: StarLayer[], margin: number = 8) {
+    public constructor(totalCount: number, layers: StarLayer[], margin: number = 8) {
         this.layers = layers;
         this.margin = margin;
 
@@ -59,13 +60,12 @@ export class StarField {
         return layers.map((_, i) => fixed[i] + extra[i]);
     }
 
-    public init(cam: Camera) {
-        const v = cam.viewRect;
+    public init() {
         for (let li = 0; li < this.layers.length; li++) {
             const L = this.layers[li];
             for (let i = this.start[li]; i < this.end[li]; i++) {
-                this.x[i] = rand(v.left, v.right);
-                this.y[i] = rand(v.top, v.bottom);
+                this.x[i] = rand(0, World.W);
+                this.y[i] = rand(0, World.H);
                 this.r[i] = rand(L.radiusMin, L.radiusMax);
                 this.speed[i] = rand(L.speedMin, L.speedMax);
             }
@@ -103,6 +103,7 @@ export class StarField {
             const sx = (view.x - base.x) * L.shakeFactor;
             const sy = (view.y - base.y) * L.shakeFactor;
 
+            ctx.save();
             ctx.translate(-ox, -oy);
 
             for (let i = this.start[li]; i < this.end[li]; i++) {
@@ -118,7 +119,7 @@ export class StarField {
                     ctx.arc(px, py, this.r[i], 0, StarField.TWO_PI);
                 }
             }
-            ctx.translate(ox, oy);
+            ctx.restore();
         }
 
         ctx.fill();

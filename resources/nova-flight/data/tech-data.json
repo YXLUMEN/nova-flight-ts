@@ -332,5 +332,13 @@
       "incendiary_bullet",
       "laser"
     ]
+  },
+  {
+    "id": "missile",
+    "name": "导弹",
+    "x": 160,
+    "y": 320,
+    "desc": "炸弹替换为释放6枚追踪导弹",
+    "cost": 320
   }
 ]

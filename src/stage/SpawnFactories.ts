@@ -13,7 +13,7 @@ function spawnTopRandomCtor<T extends MobEntity>(
     return (ctx) => {
         const x = rand(24, World.W - 24);
         const mob = type.create(World.instance, ...args);
-        mob.setPos(x, -30);
+        mob.setPosition(x, -30);
         init?.(mob, ctx);
         return mob;
     };
@@ -102,7 +102,7 @@ function spawnTopRandomCtorS<T extends MobEntity>(
         const maxX = World.W - margin;
         const x = sampleX(minX, maxX);
         const mob = type.create(World.instance, ...args);
-        mob.setPos(x, -30);
+        mob.setPosition(x, -30);
         init?.(mob as T, ctx);
         return mob;
     };
@@ -121,7 +121,7 @@ function spawnLineCtor<T extends MobEntity>(
         const arr: MobEntity[] = [];
         for (let i = 0; i < count; i++) {
             const mob = type.create(World.instance, ...args);
-            mob.setPos(startX + i * gap, startY);
+            mob.setPosition(startX + i * gap, startY);
             init?.(mob, i, ctx);
             arr.push(mob);
         }
@@ -136,8 +136,8 @@ function spawnFormation(configs: spawnConfig<any>[]): MobFactory {
         const x = rand(24, World.W - 24);
         for (const config of configs) {
             const mob = config.type.create(World.instance, ...config.args) as MobEntity;
-            mob.setPos(x, -30 + gap);
-            gap += -16 - mob.getEntityHeight();
+            mob.setPosition(x, -30 + gap);
+            gap += -16 - mob.getEntityDimension().height;
             config.init?.(mob, ctx);
             arr.push(mob);
         }

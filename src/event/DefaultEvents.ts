@@ -1,4 +1,4 @@
-import {applyTech} from "../tech_tree/apply_tech.ts";
+import {applyTech} from "../tech/apply_tech.ts";
 import {DamageTypeTags} from "../registry/tag/DamageTypeTags.ts";
 import {LaserWeapon} from "../weapon/LaserWeapon.ts";
 import {BombWeapon} from "../weapon/BombWeapon.ts";
@@ -17,8 +17,9 @@ import {EVENTS} from "../apis/IEvents.ts";
 export class DefaultEvents {
     public static registryEvents(world: World) {
         const eventBus = EventBus.getEventBus();
-        const techTree = world.player.techTree;
         const player = world.player;
+        if (!player) return;
+        const techTree = player.techTree;
 
         eventBus.on(EVENTS.UNLOCK_TECH, (event) => {
             applyTech(world, event.id);
@@ -77,7 +78,10 @@ export class DefaultEvents {
             if (techTree.isUnlocked('serial_warhead')) {
                 let counts = 0;
                 const task = world.scheduleInterval(0.2, () => {
-                    event.pos.y -= (event.explosionRadius ?? 16 / 2) | 0;
+                    const yaw = event.source.getYaw();
+                    const xOffset = Math.cos(yaw) * (event.explosionRadius ?? 16 / 2) | 0;
+                    const yOffset = Math.sin(yaw) * (event.explosionRadius ?? 16 / 2) | 0;
+                    event.pos = event.pos.add(xOffset, yOffset);
                     applyExplosion(event);
                     if (counts++ === 1) task.cancel();
                 });
@@ -93,16 +97,8 @@ export class DefaultEvents {
         eventBus.on(EVENTS.STAGE_ENTER, (event) => {
             if (event.name === 'P6') {
                 const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 64);
-                boss.setPos(World.W / 2, 64);
+                boss.setPosition(World.W / 2, 64);
                 world.spawnEntity(boss);
-            } else if (event.name === 'P7') {
-                world.scheduleInterval(48, () => {
-                    if (BossEntity.exist) return;
-
-                    const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 64);
-                    boss.setPos(World.W / 2, 64);
-                    world.spawnEntity(boss);
-                });
             }
         });
     }

@@ -256,6 +256,7 @@ export class TechTree {
         if (cost === undefined) return;
 
         const player = World.instance.player;
+        if (!player) return;
         const score = player.getScore() - cost;
         if (score < 0 && !WorldConfig.devMode) return;
 
@@ -407,6 +408,9 @@ export class TechTree {
     }
 
     private resetTech() {
+        const player = World.instance.player;
+        if (!player) return;
+
         const allTech = this.state.techById;
         const unlocked: Tech[] = [];
         for (const [nid, tech] of allTech) {
@@ -414,7 +418,6 @@ export class TechTree {
         }
         if (unlocked.length === 0) return;
 
-        const player = World.instance.player;
         let backScore = 0;
         for (const tech of unlocked) {
             const cost = tech.cost;

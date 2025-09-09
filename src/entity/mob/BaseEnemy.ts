@@ -12,6 +12,7 @@ export class BaseEnemy extends MobEntity {
 
     public override createLivingAttributes() {
         return super.createLivingAttributes()
-            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 2);
+            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 2)
+            .addWithBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE, 3);
     }
 }

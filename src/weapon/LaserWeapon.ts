@@ -1,10 +1,9 @@
 import {LaserBeamEffect} from '../effect/LaserBeamEffect.ts';
 import {Weapon} from './Weapon.ts';
 import {World} from '../world/World.ts';
-import {clamp} from '../utils/math/math.ts';
+import {clamp, lineCircleHit} from '../utils/math/math.ts';
 import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
 import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
-import {Box} from "../utils/math/Box.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import type {LivingEntity} from "../entity/LivingEntity.ts";
@@ -28,7 +27,6 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
 
     private readonly height = World.H;        // 长度
     private readonly width = 6;            // 宽度
-    private readonly halfWidth = Math.floor(this.width / 2);
 
     // 缓存一个短寿命的光束效果
     private beamFx: LaserBeamEffect | null = null;
@@ -96,16 +94,22 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
 
         // 光束端点
         const world = this.owner.getWorld();
-        const start = this.owner.getMutPos;
-        const end = new MutVec2(start.x, start.y - this.height);
-        const box = new Box(start.x - this.halfWidth, start.y, end.x + this.halfWidth, end.y);
+
+        const start = this.owner.getMutPosition;
+
+        const yaw = this.owner.getYaw();
+        const f = Math.cos(yaw);
+        const g = Math.sin(yaw);
+        const end = new MutVec2(
+            start.x + f * this.height,
+            start.y + g * this.height
+        );
 
         const attacker = this.owner instanceof PlayerEntity ? this.owner : null;
 
-        for (const mob of world.getMobs()) {
-            if (mob.isRemoved()) continue;
-            const mobBox = mob.calculateBoundingBox();
-            if (!mobBox.intersectsByBox(box)) continue;
+        for (const mob of world.getLoadMobs()) {
+            if (mob.isRemoved() ||
+                !lineCircleHit(start.x, start.y, end.x, end.y, mob.getMutPosition.x, mob.getMutPosition.y, mob.getEntityDimension().width)) continue;
 
             const damage = Math.max(1, Math.round(this.damage | 0));
             mob.takeDamage(world.getDamageSources().laser(attacker), damage);

@@ -1,25 +1,24 @@
-import {MutVec2} from "../utils/math/MutVec2.ts";
 import type {World} from "../world/World.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
-import {Vec2} from "../utils/math/Vec2.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {MiniBulletEntity} from "../entity/projectile/MiniBulletEntity.ts";
 import type {LivingEntity} from "../entity/LivingEntity.ts";
+import {SoundSystem} from "../sound/SoundSystem.ts";
+import {SoundEvents} from "../sound/SoundEvents.ts";
 
 export class MiniGunWeapon extends BaseWeapon {
-    public bulletVel = new MutVec2(0, -10.4);
+    private speed = 18;
 
     constructor(owner: LivingEntity) {
         super(owner, 1, 3);
     }
 
     public tryFire(world: World): void {
-        const pos = this.owner.getMutPos;
         const bullet = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, this.owner, this.getDamage());
-        bullet.setVelocity(Vec2.formVec(this.bulletVel));
-        bullet.setPos(pos.x, pos.y - this.owner.getEntityHeight() - 4);
+        this.setBullet(bullet, this.speed, 4);
         world.spawnEntity(bullet);
 
+        SoundSystem.playSound(SoundEvents.MINIGUN_FIRE);
         this.setCooldown(this.getFireRate());
     }
 
@@ -29,5 +28,9 @@ export class MiniGunWeapon extends BaseWeapon {
 
     public getUiColor(): string {
         return '#dcdcdc';
+    }
+
+    public override getBallisticSpeed(): number {
+        return this.speed;
     }
 }

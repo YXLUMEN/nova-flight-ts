@@ -9,10 +9,10 @@ import type {LivingEntity} from "../LivingEntity.ts";
 
 export abstract class ProjectileEntity extends Entity implements IOwnable {
     public readonly damage: number;
-    public readonly owner: LivingEntity;
+    public readonly owner: LivingEntity | null;
     public color = "#8cf5ff";
 
-    protected boxRadius: number = this.getEntityWidth();
+    protected boxRadius: number = this.getEntityDimension().width;
 
     public constructor(type: EntityType<ProjectileEntity>, world: World, owner: LivingEntity, damage: number) {
         super(type, world);
@@ -22,7 +22,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
     }
 
     public override tick() {
-        const pos = this.getMutPos;
+        const pos = this.getMutPosition;
         pos.addVec(this.getVelocity());
 
         if (pos.y < -20 || pos.y > World.H + 20 || pos.x < -20 || pos.x > World.W + 20) {
@@ -32,7 +32,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
 
     public abstract onEntityHit(entity: Entity): void;
 
-    public getOwner(): LivingEntity {
+    public getOwner(): LivingEntity | null {
         return this.owner;
     }
 

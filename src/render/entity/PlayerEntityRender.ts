@@ -1,10 +1,12 @@
 import type {EntityRenderer} from "./EntityRenderer.ts";
 import {type PlayerEntity} from "../../entity/player/PlayerEntity.ts";
+import {HALF_PI} from "../../utils/math/math.ts";
 
 export class PlayerEntityRender implements EntityRenderer<PlayerEntity> {
-    public render(entity: PlayerEntity, ctx: CanvasRenderingContext2D) {
+    public render(player: PlayerEntity, ctx: CanvasRenderingContext2D) {
         ctx.save();
-        ctx.translate(entity.getMutPos.x, entity.getMutPos.y);
+        ctx.translate(player.getMutPosition.x, player.getMutPosition.y);
+        ctx.rotate(player.getYaw() + HALF_PI);
         // 机身
         const grad = ctx.createLinearGradient(0, -20, 0, 20);
         grad.addColorStop(0, "#7ee3ff");

@@ -10,7 +10,6 @@ import {StarField} from "../effect/StarField.ts";
 import {UI} from "../render/ui/UI.ts";
 import {STAGE} from "../configs/StageConfig.ts";
 import {DPR} from "../utils/uit.ts";
-import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {ParticlePool} from "../effect/ParticlePool.ts";
@@ -23,6 +22,11 @@ import {EntityRenderers} from "../render/entity/EntityRenderers.ts";
 import {DefaultEvents} from "../event/DefaultEvents.ts";
 import {EVENTS, type IEvents} from "../apis/IEvents.ts";
 import {mainWindow} from "../main.ts";
+import {EntityList} from "../entity/EntityList.ts";
+import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
+import {BossEntity} from "../entity/mob/BossEntity.ts";
+import {EntityTypes} from "../entity/EntityTypes.ts";
+import type {IVec} from "../utils/math/IVec.ts";
 
 export class World {
     private static worldInstance: World;
@@ -57,11 +61,11 @@ export class World {
     private readonly particlePool: ParticlePool = new ParticlePool(256);
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
     // entity
-    public player: PlayerEntity;
-    private mobs: MobEntity[] = [];
-    private bullets: ProjectileEntity[] = [];
+    public player: PlayerEntity | null;
+    private loadedMobs = new Set<MobEntity>();
+    private entities: EntityList = new EntityList();
 
-    private constructor(registryManager: RegistryManager) {
+    protected constructor(registryManager: RegistryManager) {
         this.registryManager = registryManager;
         this.damageSources = new DamageSources(registryManager);
         this.player = new PlayerEntity(this, this.input);
@@ -70,11 +74,104 @@ export class World {
         this.registryListeners();
         this.registryEvents();
 
-        this.starField.init(this.camera);
+        this.starField.init();
     }
 
-    public start() {
-        this.loop(0);
+    public start(): void {
+        this.tick(0);
+    }
+
+    public static createWorld(registryManager: RegistryManager): World {
+        if (this.worldInstance) return this.worldInstance;
+        this.worldInstance = new World(registryManager);
+        this.worldInstance.ticking = false;
+        return this.worldInstance;
+    }
+
+    public static get instance(): World {
+        return this.worldInstance;
+    }
+
+    private tick(ts: number) {
+        const tickDelta = Math.min(0.05, (ts - this.last) / 1000 || 0);
+        this.last = ts;
+        this.accumulator += tickDelta;
+
+        while (this.accumulator >= WorldConfig.mbps) {
+            if (this.ticking) this.update(WorldConfig.mbps);
+            this.accumulator -= WorldConfig.mbps;
+        }
+        this.render();
+        requestAnimationFrame(t => this.tick(t));
+    }
+
+    private update(tickDelta: number) {
+        const dt = this.freeze ? 0 : tickDelta;
+        const player = this.player!;
+
+        this.ui.tick(tickDelta);
+
+        const yaw = player.getYaw();
+        const forwardX = Math.cos(yaw) * 200;
+        const forwardY = Math.sin(yaw) * 200;
+        this.camera.update(player.getMutPosition.clone().add(forwardX, forwardY), tickDelta);
+
+        // 阶段更新
+        this.stage.update(this, dt);
+
+        // 更新实体
+        if (!this.over) player.tick();
+
+        for (const entity of this.entities.iterate()) {
+            if (entity.isRemoved()) continue;
+            if (dt > 0) entity.tick();
+
+            // 敌方碰撞
+            if (entity instanceof MobEntity) {
+                if (player.invulnerable || WorldConfig.devMode || !collideEntityBox(player, entity)) continue;
+                entity.attack(player);
+                if (this.over) break;
+                continue;
+            }
+
+            // 弹射物碰撞
+            if (entity instanceof ProjectileEntity) {
+                if (entity.owner instanceof MobEntity) {
+                    if (player.invulnerable || WorldConfig.devMode || !collideEntityBox(player, entity)) continue;
+
+                    entity.onEntityHit(player);
+                    if (this.isOver) break;
+                    continue;
+                }
+                for (const mob of this.loadedMobs) {
+                    if (collideEntityCircle(entity, mob)) {
+                        entity.onEntityHit(mob);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (this.empBurst > 0) this.empBurst -= 1;
+
+        // 效果更新
+        this.effects.forEach(effect => effect.tick(dt));
+        if (this.effects.length > 0) {
+            for (let i = this.effects.length; i--;) {
+                if (!this.effects[i].alive) {
+                    this.effects.splice(i, 1);
+                }
+            }
+        }
+
+        this.particlePool.tick(dt);
+        this.starField.update(dt, this.camera);
+
+        this.input.updateEndFrame();
+
+        this.time += dt;
+        this.processTimers();
+        // console.log('All', this.entities.size, 'mobs', this.loadedMobs.size);
     }
 
     public get isTicking(): boolean {
@@ -85,27 +182,12 @@ export class World {
         return this.over;
     }
 
-    public static createWorld(registryManager: RegistryManager) {
-        if (this.worldInstance) return this.worldInstance;
-        this.worldInstance = new World(registryManager);
-        this.worldInstance.ticking = false;
-        return this.worldInstance;
-    }
-
-    public static get instance() {
-        return this.worldInstance;
-    }
-
-    private static renderEntity(entity: Entity): void {
-        EntityRenderers.getRenderer(entity).render(entity, World.ctx);
-    }
-
-    public reset() {
-        this.mobs.length = 0;
-        this.bullets.length = 0;
+    public reset(): void {
+        this.entities.clear();
+        this.loadedMobs.clear();
         this.effects.length = 0;
 
-        this.player.techTree.destroy();
+        this.player?.techTree.destroy();
         this.player = new PlayerEntity(this, this.input);
 
         this.over = false;
@@ -113,19 +195,19 @@ export class World {
         this.rendering = true;
         this.stage.reset();
 
-        this.starField.init(this.camera);
+        this.starField.init();
     }
 
-    public togglePause() {
+    public togglePause(): void {
         if (this.over) return;
         this.ticking = !this.ticking;
     }
 
-    public toggleTechTree() {
+    private toggleTechTree() {
         this.ticking = this.rendering = document.getElementById('tech-shell')!.classList.toggle('hidden');
     }
 
-    public resize() {
+    private resize() {
         const rect = World.canvas.getBoundingClientRect();
 
         World.canvas.width = Math.floor(rect.width * DPR);
@@ -135,72 +217,6 @@ export class World {
         World.H = Math.floor(rect.height);
 
         World.ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    }
-
-    public loop(ts: number) {
-        const tickDelta = Math.min(0.05, (ts - this.last) / 1000 || 0);
-        this.last = ts;
-        this.accumulator += tickDelta;
-
-        while (this.accumulator >= WorldConfig.mbps) {
-            if (this.ticking) this.update(WorldConfig.mbps);
-            this.accumulator -= WorldConfig.mbps;
-        }
-        this.render();
-        requestAnimationFrame(t => this.loop(t));
-    }
-
-    public update(tickDelta: number) {
-        const dt = this.freeze ? 0 : tickDelta;
-
-        this.camera.update(this.player.getMutPos, tickDelta);
-        this.starField.update(dt, this.camera);
-
-        if (!this.over) this.player.tick(tickDelta);
-
-        this.stage.update(this, dt);
-
-        for (let i = 0; i < this.mobs.length; i++) this.mobs[i].tick(dt);
-        for (let i = 0; i < this.bullets.length; i++) this.bullets[i].tick();
-        for (let i = 0; i < this.effects.length; i++) this.effects[i].tick(dt);
-        this.particlePool.tick(dt);
-
-        // 碰撞: 子弹
-        for (const bullet of this.bullets) {
-            if (bullet.isRemoved()) continue;
-
-            if (bullet.owner instanceof MobEntity) {
-                if (this.player.invulnerable || WorldConfig.devMode || !collideEntityBox(this.player, bullet)) continue;
-
-                bullet.onEntityHit(this.player);
-                if (this.isOver) break;
-            } else {
-                for (const mob of this.mobs) {
-                    if (mob.isRemoved() || !collideEntityCircle(bullet, mob)) continue;
-                    bullet.onEntityHit(mob);
-                    break;
-                }
-            }
-        }
-        if (this.empBurst > 0) this.empBurst -= 1;
-
-        // 碰撞: 玩家
-        for (const mob of this.mobs) {
-            if (this.player.invulnerable || WorldConfig.devMode) break;
-            if (mob.isRemoved() || !collideEntityBox(this.player, mob)) continue;
-
-            mob.attack(this.player);
-            if (this.isOver) break;
-        }
-
-        this.mobs = this.mobs.filter(e => !e.isRemoved());
-        this.bullets = this.bullets.filter(b => !b.isRemoved());
-        this.effects = this.effects.filter(e => e.alive);
-
-        this.input.updateEndFrame();
-
-        this.time += dt;
-        this.processTimers();
     }
 
     public gameOver() {
@@ -224,28 +240,27 @@ export class World {
     }
 
     public spawnParticle(
-        pos: MutVec2, vel: MutVec2,
+        pos: IVec, vel: IVec,
         life: number, size: number,
         colorFrom: string, colorTo: string,
         drag = 0.0, gravity = 0.0
     ): void {
-        this.particlePool.spawn(pos.clone(), vel.clone(), life, size, colorFrom, colorTo, drag, gravity);
+        this.particlePool.spawn(pos.clone() as MutVec2, vel.clone() as MutVec2, life, size, colorFrom, colorTo, drag, gravity);
     }
 
     public spawnEntity(entity: Entity) {
-        if (entity instanceof ProjectileEntity) {
-            this.bullets.push(entity);
-        } else if (entity instanceof MobEntity) {
-            this.mobs.push(entity);
+        if (entity instanceof MobEntity) {
+            this.loadedMobs.add(entity);
         }
+        this.entities.add(entity);
     }
 
-    public getMobs(): MobEntity[] {
-        return this.mobs;
+    public getEntities(): EntityList {
+        return this.entities;
     }
 
-    public getProjectiles(): ProjectileEntity[] {
-        return this.bullets;
+    public getLoadMobs(): Set<MobEntity> {
+        return this.loadedMobs;
     }
 
     public schedule(delaySec: number, fn: () => void): { id: number; cancel: () => void } {
@@ -298,14 +313,19 @@ export class World {
         // 背景层
         this.drawBackground(ctx);
 
-        // 实体
-        for (let i = 0; i < this.mobs.length; i++) World.renderEntity(this.mobs[i]);
-        for (let i = 0; i < this.bullets.length; i++) World.renderEntity(this.bullets[i]);
+        // 其他实体
+        this.entities.forEach(entity => {
+            EntityRenderers.getRenderer(entity).render(entity, ctx);
+        });
 
+        // 特效
         for (let i = 0; i < this.effects.length; i++) this.effects[i].render(ctx);
         this.particlePool.render(ctx);
 
-        if (!this.player.isRemoved()) World.renderEntity(this.player);
+        // 玩家
+        if (!this.over && this.player) {
+            EntityRenderers.getRenderer(this.player).render(this.player, ctx);
+        }
 
         ctx.restore();
 
@@ -386,9 +406,22 @@ export class World {
     private registryEvents() {
         this.events.clear();
 
-        this.events.on(EVENTS.BOSS_KILLED, (event) => {
+        this.events.on(EVENTS.ENTITY_REMOVED, event => {
+            const entity = event.entity;
+            this.entities.remove(entity);
+            if (entity instanceof MobEntity) {
+                this.loadedMobs.delete(entity);
+            }
+        });
+
+        this.events.on(EVENTS.BOSS_KILLED, () => {
             this.stage.nextPhase();
-            this.player.addPhaseScore(event.mob.getWorth());
+
+            this.schedule(50, () => {
+                const boss = new BossEntity(EntityTypes.BOSS_ENTITY, this, 64);
+                boss.setPosition(World.W / 2, 64);
+                this.spawnEntity(boss);
+            });
         });
 
         DefaultEvents.registryEvents(this);
@@ -429,18 +462,20 @@ export class World {
     }
 
     private devMode(code: string) {
+        const player = this.player;
+        if (!player) return;
         switch (code) {
             case 'KeyK':
-                this.player.addPhaseScore(200);
+                player.addPhaseScore(200);
                 break;
             case 'KeyC':
-                this.mobs.length = 0;
+                this.loadedMobs.forEach(mob => mob.discard());
                 break;
             case 'KeyH':
-                this.player.setHealth(this.player.getMaxHealth());
+                player.setHealth(player.getMaxHealth());
                 break;
             case 'KeyO':
-                this.player.techTree.unlockAll(this);
+                player.techTree.unlockAll(this);
                 break;
             case 'KeyL':
                 this.stage.nextPhase();

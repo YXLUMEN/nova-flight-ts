@@ -5,7 +5,7 @@ export class GunEnemyEntityRender implements EntityRenderer<GunEnemyEntity> {
     public render(entity: GunEnemyEntity, ctx: CanvasRenderingContext2D) {
         ctx.save();
         ctx.fillStyle = entity.color;
-        ctx.fillRect(entity.getMutPos.x - 10, entity.getMutPos.y - 10, 20, 20);
+        ctx.fillRect(entity.getMutPosition.x - 10, entity.getMutPosition.y - 10, 20, 20);
         ctx.restore();
     }
 }

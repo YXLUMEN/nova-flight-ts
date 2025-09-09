@@ -35,7 +35,7 @@ export class DamageSource {
         if (this.position != null) {
             return this.position;
         } else {
-            return this.source != null ? this.source.getPos() : null;
+            return this.source != null ? this.source.getPosition() : null;
         }
     }
 

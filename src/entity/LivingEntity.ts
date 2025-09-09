@@ -33,8 +33,8 @@ export abstract class LivingEntity extends Entity {
             .add(EntityAttributes.GENERIC_MOVEMENT_SPEED);
     }
 
-    public override tick(dt: number) {
-        super.tick(dt);
+    public override tick() {
+        super.tick();
         this.tickStatusEffects();
     }
 

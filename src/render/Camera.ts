@@ -4,13 +4,30 @@ import {Vec2} from "../utils/math/Vec2.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {PI2} from "../utils/math/math.ts";
 
+interface ViewRect {
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+    width: number;
+    height: number;
+}
+
 export class Camera {
     private offset = new MutVec2(0, 0);
     private velocity = new MutVec2(0, 0);
     private viewOffsetCache = new MutVec2(0, 0);
     private uiOffsetCache = new MutVec2(0, 0);
+    private viewRectCache: ViewRect = {
+        top: 0,
+        bottom: World.H,
+        left: World.W,
+        right: 0,
+        width: World.W,
+        height: World.H
+    };
 
-    private deadZoneRadius = 40;
+    private deadZoneRadius = 60;
     private followSpeed = 2400;
     private smoothing = 20;
     private friction = 12;
@@ -32,6 +49,16 @@ export class Camera {
             this.offset.x + this.shakeOffset.x,
             this.offset.y + this.shakeOffset.y
         );
+
+        const off = this.viewOffsetCache;
+        this.viewRectCache = {
+            left: off.x,
+            top: off.y,
+            right: off.x + World.W,
+            bottom: off.y + World.H,
+            width: World.W,
+            height: World.H,
+        };
     }
 
     public addShake(amount: number, limit = 1): void {
@@ -42,7 +69,7 @@ export class Camera {
     private follow(target: MutVec2, tickDelta: number): void {
         if (!this.isOutsideDeadZone(target)) return;
 
-        const desired = new MutVec2(target.x - World.W / 2, target.y - World.H / 2);
+        const desired = target.sub(World.W / 2, World.H / 2);
         const delta = desired.subVec(this.offset);
 
         // 使用阻尼速度, 限制最大变化
@@ -97,18 +124,6 @@ export class Camera {
         return dx * dx + dy * dy > this.deadZoneRadius * this.deadZoneRadius;
     }
 
-    public getCameraOffset(): Vec2 {
-        return Vec2.formVec(this.offset);
-    }
-
-    public getViewOffset(): Vec2 {
-        return Vec2.formVec(this.viewOffset);
-    }
-
-    public getUiOffset(): Vec2 {
-        return Vec2.formVec(this.uiOffset);
-    }
-
     public get cameraOffset(): MutVec2 {
         return this.offset;
     }
@@ -117,16 +132,24 @@ export class Camera {
         return this.viewOffsetCache;
     }
 
-    public get viewRect() {
-        const off = this.viewOffset;
-        return {
-            left: off.x,
-            top: off.y,
-            right: off.x + World.W,
-            bottom: off.y + World.H,
-            width: World.W,
-            height: World.H,
-        };
+    public get viewRect(): ViewRect {
+        return this.viewRectCache!;
+    }
+
+    public getCameraOffset(): Vec2 {
+        return Vec2.formVec(this.offset);
+    }
+
+    public getViewOffset(): Vec2 {
+        return Vec2.formVec(this.viewOffset);
+    }
+
+    public getViewRect(): ViewRect {
+        return {...this.viewRectCache!};
+    }
+
+    public getUiOffset(): Vec2 {
+        return Vec2.formVec(this.uiOffset);
     }
 
     public get uiOffset(): MutVec2 {
@@ -145,5 +168,4 @@ export class Camera {
         return this.uiOffsetCache.set(dx + this.shakeOffset.x * this.uiShakeFactor, dy + this.shakeOffset.y * this.uiShakeFactor);
     }
 }
-
 

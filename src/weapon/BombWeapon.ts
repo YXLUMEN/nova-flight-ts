@@ -24,9 +24,9 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
         damage: number,
         source: Entity | null = null, attacker: LivingEntity | null = null) {
         const r2 = radius * radius;
-        for (const mob of world.getMobs()) {
+        for (const mob of world.getLoadMobs()) {
             if (mob.isRemoved()) continue;
-            const d2 = MutVec2.distSq(mob.getMutPos, center);
+            const d2 = MutVec2.distSq(mob.getMutPosition, center);
             if (d2 <= r2) {
                 mob.takeDamage(world.getDamageSources().explosion(source, attacker), damage);
             }
@@ -73,7 +73,7 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
 
     public override tryFire(world: World) {
         world.events.emit(EVENTS.BOMB_DETONATE, {
-            pos: this.owner.getPos(),
+            pos: this.owner.getPosition(),
             damage: this.getDamage(),
             explosionRadius: this.damageRadius,
             shake: 0.3,

@@ -31,6 +31,10 @@
     "subtitle": "sound.nova-flight.cannon40.fire_mech",
     "sounds": "nova-flight:cannon40/fire_mech"
   },
+  "cannon40.fire_mix": {
+    "subtitle": "sound.nova-flight.cannon40.fire",
+    "sounds": "nova-flight:cannon40/fire_mix"
+  },
   "minigun.fire": {
     "subtitle": "sound.nova-flight.minigun.fire",
     "sounds": "nova-flight:minigun/fire"
@@ -42,5 +46,9 @@
   "cannon90.fire": {
     "subtitle": "sound.nova-flight.cannon90.fire",
     "sounds": "nova-flight:cannon90/fire"
+  },
+  "shield.crash": {
+    "subtitle": "sound.nova-flight.shield.crash",
+    "sounds": "nova-flight:/shield_crash"
   }
 }

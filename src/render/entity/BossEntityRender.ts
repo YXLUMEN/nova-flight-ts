@@ -4,7 +4,7 @@ import type {BossEntity} from "../../entity/mob/BossEntity.ts";
 export class BossEntityRender implements EntityRenderer<BossEntity> {
     public render(bossEntity: BossEntity, ctx: CanvasRenderingContext2D) {
         ctx.save();
-        ctx.translate(bossEntity.getMutPos.x, bossEntity.getMutPos.y);
+        ctx.translate(bossEntity.getMutPosition.x, bossEntity.getMutPosition.y);
 
         ctx.fillStyle = bossEntity.color;
         ctx.strokeStyle = "rgba(0,0,0,.2)";

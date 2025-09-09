@@ -1,7 +1,7 @@
 import {LivingEntity} from "../LivingEntity.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {World} from "../../world/World.ts";
-import {PI2, rand} from "../../utils/math/math.ts";
+import {clamp, PI2, rand} from "../../utils/math/math.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import type {EntityType} from "../EntityType.ts";
@@ -11,7 +11,7 @@ import {EVENTS} from "../../apis/IEvents.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 
 export abstract class MobEntity extends LivingEntity {
-    protected t = Math.random();
+    protected ticks = Math.random() * 10;
     private readonly worth: number;
 
     protected constructor(type: EntityType<MobEntity>, world: World, worth: number) {
@@ -19,15 +19,21 @@ export abstract class MobEntity extends LivingEntity {
         this.worth = worth;
     }
 
-    public override tick(tickDelta: number): void {
-        super.tick(tickDelta);
+    public override tick(): void {
+        super.tick();
 
-        this.t += tickDelta;
+        this.ticks++;
         const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-        this.getMutPos.y += this.speed * speedMultiplier;
-        this.getMutPos.x += Math.sin(this.t * 2) * 40 * tickDelta * speedMultiplier;
+        const speed = this.getMovementSpeed() * speedMultiplier;
+        const swingValue = Math.sin(this.ticks * 0.1) * 0.5 * speedMultiplier
 
-        if (this.getMutPos.y > World.H + 40) this.discard();
+        this.updateVelocity(speed, swingValue, 1);
+        this.moveByVec(this.getVelocity());
+
+        const pos = this.getMutPosition;
+        pos.x = clamp(pos.x, 20, World.W);
+
+        if (pos.y > World.H + 40) this.discard();
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
@@ -36,7 +42,7 @@ export abstract class MobEntity extends LivingEntity {
 
         const world = this.getWorld();
         world.events.emit(EVENTS.MOB_DAMAGE, {mob: this, damageSource});
-        world.spawnParticle(this.getMutPos, MutVec2.zero(), rand(0.2, 0.6), rand(4, 6),
+        world.spawnParticle(this.getMutPosition, MutVec2.zero(), rand(0.2, 0.6), rand(4, 6),
             "#ffaa33", "#ff5454", 0.6, 80);
         return true;
     }
@@ -53,7 +59,7 @@ export abstract class MobEntity extends LivingEntity {
             const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
 
             world.spawnParticle(
-                this.getMutPos, vel, rand(0.6, 0.8), rand(4, 6),
+                this.getMutPosition, vel, rand(0.6, 0.8), rand(4, 6),
                 "#ffaa33", "#ff5454", 0.6, 80
             );
         }
@@ -61,7 +67,7 @@ export abstract class MobEntity extends LivingEntity {
 
     public attack(player: PlayerEntity) {
         const world = this.getWorld();
-        player.takeDamage(world.getDamageSources().mobAttack(this), 1);
+        player.takeDamage(world.getDamageSources().mobAttack(this), this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE));
         this.onDeath(world.getDamageSources().playerImpact(player));
     }
 

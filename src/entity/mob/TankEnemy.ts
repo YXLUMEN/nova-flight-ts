@@ -14,11 +14,12 @@ export class TankEnemy extends MobEntity {
 
     public override createLivingAttributes() {
         return super.createLivingAttributes()
-            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 32);
+            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 32)
+            .addWithBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE, 10);
     }
 
-    public override tick(dt: number) {
-        super.tick(dt);
+    public override tick() {
+        super.tick();
         if (this.damageCooldown > 0) this.damageCooldown -= 1;
     }
 

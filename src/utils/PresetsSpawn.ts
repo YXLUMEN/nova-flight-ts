@@ -15,7 +15,7 @@ function getHealth(value: number): EntityAttributeModifier {
 
 const spawnBase = (speed = 3, extraHp = 0, worth = 1, color = '#ff6b6b'): MobFactory =>
     spawnTopRandomCtor(EntityTypes.BASE_ENEMY, [worth], (m) => {
-        m.setSpeed(speed);
+        m.setMovementSpeed(speed);
         m.color = color;
         m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(extraHp));
         m.setHealth(m.getMaxHealth());
@@ -28,7 +28,7 @@ const spawnBaseS = (
 ): MobFactory => (ctx) => {
     return spawnTopRandomCtorS(EntityTypes.BASE_ENEMY, [worth], (m) => {
         const scaledHp = (extraHp * hpScaleFn(ctx)) | 0;
-        m.setSpeed(speed);
+        m.setMovementSpeed(speed);
         m.color = color;
         m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(scaledHp));
         m.setHealth(m.getMaxHealth());
@@ -37,7 +37,7 @@ const spawnBaseS = (
 
 const spawnTank = (speed = 3, extraHp = 0, worth = 1, color = '#ff6b6b'): MobFactory =>
     spawnTopRandomCtor(EntityTypes.TANK_ENEMY_ENTITY, [worth], (m) => {
-        m.setSpeed(speed);
+        m.setMovementSpeed(speed);
         m.color = color;
         m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(extraHp));
     });
@@ -55,7 +55,7 @@ const spawnLineBase = (
         count,
         [worth],
         (m) => {
-            m.setSpeed(speed);
+            m.setMovementSpeed(speed);
             m.color = color;
             m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(extraHp));
             m.setHealth(m.getMaxHealth());
@@ -65,7 +65,7 @@ const spawnLineBase = (
 
 const spawnGun = (speed = 3, extraHp = 0, worth = 1, color = '#ff6b6b'): MobFactory =>
     spawnTopRandomCtorS(EntityTypes.GUN_ENEMY_ENTITY, [worth], (m) => {
-        m.setSpeed(speed);
+        m.setMovementSpeed(speed);
         m.color = color;
         m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(extraHp));
         m.setHealth(m.getMaxHealth());
@@ -77,7 +77,7 @@ const spawnMiniGun = (speed = 3, extraHp = 0, worth = 8, color = '#ac0000'): Mob
             type: EntityTypes.TANK_ENEMY_ENTITY,
             args: [worth],
             init: (m) => {
-                m.setSpeed(speed);
+                m.setMovementSpeed(speed);
                 m.color = color;
                 m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(extraHp));
                 m.setHealth(m.getMaxHealth());
@@ -87,7 +87,7 @@ const spawnMiniGun = (speed = 3, extraHp = 0, worth = 8, color = '#ac0000'): Mob
             type: EntityTypes.MINIGUN_ENEMY_ENTITY,
             args: [worth],
             init: (m) => {
-                m.setSpeed(speed);
+                m.setMovementSpeed(speed);
                 m.color = color;
                 m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(extraHp));
                 m.setHealth(m.getMaxHealth());
