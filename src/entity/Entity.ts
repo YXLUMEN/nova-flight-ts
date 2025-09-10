@@ -1,7 +1,7 @@
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import type {TrackedData} from "./data/TrackedData.ts";
 import {World} from "../world/World.ts";
-import {Vec2} from "../utils/math/Vec2.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
 import type {DamageSource} from "./damage/DamageSource.ts";
 import type {EntityType} from "./EntityType.ts";
 import type {EntityDimensions} from "./EntityDimensions.ts";
@@ -11,6 +11,7 @@ import type {DataEntry} from "./data/DataEntry.ts";
 import {AtomicInteger} from "../utils/math/AtomicInteger.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import type {IVec} from "../utils/math/IVec.ts";
+import type {Box} from "../utils/math/Box.ts";
 
 
 export abstract class Entity implements DataTracked {
@@ -19,12 +20,12 @@ export abstract class Entity implements DataTracked {
 
     private static readonly CURRENT_ID = new AtomicInteger();
 
-    private readonly type: EntityType<any>
+    private readonly type: EntityType<any>;
     private readonly world: World;
 
-    private movementSpeed: number = 5;
     private readonly pos: MutVec2;
     private readonly velocity: MutVec2 = MutVec2.zero();
+    private movementSpeed: number = 5;
     private yaw: number = 0;
 
     private readonly dimensions: EntityDimensions;
@@ -92,7 +93,7 @@ export abstract class Entity implements DataTracked {
         return this.dimensions;
     }
 
-    public calculateBoundingBox() {
+    public calculateBoundingBox(): Box {
         return this.dimensions.getBoxAtByVec(this.pos);
     }
 
@@ -106,12 +107,12 @@ export abstract class Entity implements DataTracked {
         this.pos.y = y;
     }
 
-    public get getMutPosition(): MutVec2 {
+    public get getPositionRef(): MutVec2 {
         return this.pos;
     }
 
     public getPosition(): Vec2 {
-        return Vec2.formVec(this.pos);
+        return this.pos.toImmutable();
     }
 
     public updateVelocity(speed: number, x: number, y: number): void {
@@ -122,7 +123,7 @@ export abstract class Entity implements DataTracked {
         this.updateVelocity(speed, movementInput.x, movementInput.y);
     }
 
-    public getMovementSpeed() {
+    public getMovementSpeed(): number {
         return this.movementSpeed;
     }
 
@@ -130,12 +131,12 @@ export abstract class Entity implements DataTracked {
         this.movementSpeed = speed | 0;
     }
 
-    public get getMutVelocity(): MutVec2 {
+    public get getVelocityRef(): MutVec2 {
         return this.velocity;
     }
 
     public getVelocity(): Vec2 {
-        return Vec2.formVec(this.velocity);
+        return this.velocity.toImmutable();
     }
 
     public setVelocityByVec(velocity: IVec): void {

@@ -95,7 +95,7 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
         // 光束端点
         const world = this.owner.getWorld();
 
-        const start = this.owner.getMutPosition;
+        const start = this.owner.getPositionRef;
 
         const yaw = this.owner.getYaw();
         const f = Math.cos(yaw);
@@ -109,7 +109,7 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
 
         for (const mob of world.getLoadMobs()) {
             if (mob.isRemoved() ||
-                !lineCircleHit(start.x, start.y, end.x, end.y, mob.getMutPosition.x, mob.getMutPosition.y, mob.getEntityDimension().width)) continue;
+                !lineCircleHit(start.x, start.y, end.x, end.y, mob.getPositionRef.x, mob.getPositionRef.y, mob.getEntityDimension().width)) continue;
 
             const damage = Math.max(1, Math.round(this.damage | 0));
             mob.takeDamage(world.getDamageSources().laser(attacker), damage);

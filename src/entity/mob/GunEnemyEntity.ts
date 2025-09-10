@@ -32,7 +32,7 @@ export class GunEnemyEntity extends MobEntity {
 
         if (world.empBurst > 0 || this.hasStatusEffect(StatusEffects.EMC_STATUS)) return;
 
-        const pos = this.getMutPosition;
+        const pos = this.getPositionRef;
         const b = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, this, 1);
         b.setVelocityByVec(GunEnemyEntity.bulletVel);
         b.setPosition(pos.x, pos.y);

@@ -6,13 +6,9 @@ export class Vec2 implements IVec {
     public readonly x: number;
     public readonly y: number;
 
-    constructor(x: number, y: number) {
+    public constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
-    }
-
-    public static formVec(vel: IVec): Vec2 {
-        return new Vec2(vel.x, vel.y);
     }
 
     public clone() {
@@ -64,5 +60,9 @@ export class Vec2 implements IVec {
     public normalize() {
         const len = this.length();
         return len === 0 ? Vec2.ZERO : this.multiply(1 / len);
+    }
+
+    public static formVec(vel: IVec): Vec2 {
+        return new Vec2(vel.x, vel.y);
     }
 }

@@ -114,7 +114,7 @@ export class World {
         const yaw = player.getYaw();
         const forwardX = Math.cos(yaw) * 200;
         const forwardY = Math.sin(yaw) * 200;
-        this.camera.update(player.getMutPosition.clone().add(forwardX, forwardY), tickDelta);
+        this.camera.update(player.getPositionRef.clone().add(forwardX, forwardY), tickDelta);
 
         // 阶段更新
         this.stage.update(this, dt);
@@ -245,7 +245,12 @@ export class World {
         colorFrom: string, colorTo: string,
         drag = 0.0, gravity = 0.0
     ): void {
-        this.particlePool.spawn(pos.clone() as MutVec2, vel.clone() as MutVec2, life, size, colorFrom, colorTo, drag, gravity);
+        this.particlePool.spawn(
+            new MutVec2(pos.x, pos.y), new MutVec2(vel.x, vel.y),
+            life, size,
+            colorFrom, colorTo,
+            drag, gravity
+        );
     }
 
     public spawnEntity(entity: Entity) {
@@ -450,7 +455,7 @@ export class World {
             }
 
             if (code === "Enter" && this.over) this.reset();
-            else if (code === "KeyP" || code === 'Escape') this.togglePause();
+            else if (code === 'Escape') this.togglePause();
             else if (code === 'KeyG') this.toggleTechTree();
             else if (code === 'KeyM') {
                 document.getElementById('help')?.classList.toggle('hidden');

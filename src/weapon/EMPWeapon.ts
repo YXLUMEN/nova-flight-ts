@@ -27,7 +27,7 @@ export class EMPWeapon extends Weapon implements ISpecialWeapon {
         world.events.emit(EVENTS.EMP_BURST, {duration: duration});
 
         for (const mob of world.getLoadMobs()) {
-            if (!mob.isRemoved() && pointInCircleVec2(mob.getMutPosition, center, radius)) {
+            if (!mob.isRemoved() && pointInCircleVec2(mob.getPositionRef, center, radius)) {
                 mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, duration, 1), null);
             }
         }
@@ -40,7 +40,7 @@ export class EMPWeapon extends Weapon implements ISpecialWeapon {
             if (entity instanceof ProjectileEntity) {
                 if (entity.owner instanceof MobEntity) entity.discard();
             } else if (entity instanceof MobEntity) {
-                if (!entity.isRemoved() && pointInCircleVec2(entity.getMutPosition, this.owner.getMutPosition, this.radius)) {
+                if (!entity.isRemoved() && pointInCircleVec2(entity.getPositionRef, this.owner.getPositionRef, this.radius)) {
                     entity.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, this.duration, 1), null);
                 }
             }

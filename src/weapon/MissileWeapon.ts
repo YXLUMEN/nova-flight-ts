@@ -12,7 +12,7 @@ export class MissileWeapon extends Weapon implements ISpecialWeapon {
     }
 
     public tryFire(world: World): void {
-        const pos = this.owner.getMutPosition;
+        const pos = this.owner.getPositionRef;
         const yaw = this.owner.getYaw();
 
         const dim = this.owner.getEntityDimension();

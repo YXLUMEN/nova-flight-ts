@@ -9,6 +9,7 @@ import {MiniGunWeapon} from "../weapon/MiniGunWeapon.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {MissileWeapon} from "../weapon/MissileWeapon.ts";
+import {AutoAim} from "./AutoAim.ts";
 
 export function applyTech(world: World, id: string) {
     const player = world.player;
@@ -146,6 +147,13 @@ export function applyTech(world: World, id: string) {
         case 'missile': {
             player.weapons.delete('bomb');
             player.weapons.set('missile', new MissileWeapon(player));
+            break;
         }
+        case 'steering_gear':
+            player.steeringGear = true;
+            break;
+        case 'auto_aim':
+            player.autoAim = new AutoAim(player);
+            break;
     }
 }

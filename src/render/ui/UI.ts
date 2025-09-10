@@ -129,8 +129,8 @@ export class UI {
         if (!player) return;
 
         const cam = this.world.camera.viewOffset;
-        const px = player.getMutPosition.x - cam.x;
-        const py = player.getMutPosition.y - cam.y;
+        const px = player.getPositionRef.x - cam.x;
+        const py = player.getPositionRef.y - cam.y;
 
         const w = player.getCurrentWeapon();
         const anchorX = Math.floor(px + player.getEntityDimension().width / 2 + 12);
@@ -174,6 +174,21 @@ export class UI {
         ctx.fillText(info.label, (x + w + 8) | 0, (y | 0) - 1);
     }
 
+    // private static renderHelpOverlay(ctx: CanvasRenderingContext2D) {
+    //     const width = World.W / 2;
+    //     const height = World.H / 2;
+    //
+    //     ctx.save();
+    //     ctx.textAlign = 'center';
+    //     ctx.textBaseline = 'middle';
+    //
+    //     ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    //     ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+    //     ctx.fillText('', width, height);
+    //
+    //     ctx.restore();
+    // }
+
     private static renderPauseOverlay(ctx: CanvasRenderingContext2D) {
         const width = World.W / 2;
         const height = World.H / 2;
@@ -198,7 +213,7 @@ export class UI {
         // 副提示
         ctx.fillStyle = 'rgba(255,255,255,0.9)';
         ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
-        ctx.fillText('按 P/Esc 继续', width, height + 30);
+        ctx.fillText('按 Esc 继续', width, height + 30);
 
         ctx.restore();
     }

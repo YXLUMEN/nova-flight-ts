@@ -340,5 +340,24 @@
     "y": 320,
     "desc": "炸弹替换为释放6枚追踪导弹",
     "cost": 320
+  },
+  {
+    "id": "steering_gear",
+    "name": "方向机",
+    "x": 160,
+    "y": 380,
+    "desc": "舰艇可以全向瞄准",
+    "cost": 220
+  },
+  {
+    "id": "auto_aim",
+    "name": "自动瞄准",
+    "x": 0,
+    "y": 380,
+    "desc": "自动计算并瞄准",
+    "cost": 320,
+    "requires": [
+      "steering_gear"
+    ]
   }
 ]

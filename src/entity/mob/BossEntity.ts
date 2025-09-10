@@ -44,7 +44,7 @@ export class BossEntity extends MobEntity {
         const step = (endAngle - startAngle) / (count - 1);
 
         const world = this.getWorld();
-        const pos = this.getMutPosition.clone();
+        const pos = this.getPositionRef.clone();
         for (let i = count; i--;) {
             const angle = startAngle + step * i;
             const vel = new Vec2(Math.cos(angle) * speed, Math.sin(angle) * speed);
@@ -79,7 +79,7 @@ export class BossEntity extends MobEntity {
             const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
 
             world.spawnParticle(
-                this.getMutPosition, vel, rand(0.8, 1.4), rand(12, 24),
+                this.getPositionRef, vel, rand(0.8, 1.4), rand(12, 24),
                 "#ffaa33", "#ff5454", 0.6, 80
             );
         }

@@ -17,11 +17,11 @@ export class AutoAim {
         const mobs = world.getLoadMobs();
         if (mobs.size === 0) return;
 
-        const pos = this.owner.getMutPosition;
+        const pos = this.owner.getPositionRef;
         const target = this.acquireTarget(mobs, pos);
         if (!target) return;
 
-        const mobPos = target.getMutPosition;
+        const mobPos = target.getPositionRef;
         const mobVel = target.getVelocity();
         const bulletSpeed = this.owner.getCurrentWeapon().getBallisticSpeed();
 
@@ -42,7 +42,7 @@ export class AutoAim {
         for (const mob of mobs) {
             if (mob.isRemoved()) continue;
 
-            const mobPos = mob.getMutPosition;
+            const mobPos = mob.getPositionRef;
             const dx = mobPos.x - pos.x;
             const dy = mobPos.y - pos.y;
             const dist2 = dx * dx + dy * dy;

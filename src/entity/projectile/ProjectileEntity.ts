@@ -22,7 +22,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
     }
 
     public override tick() {
-        const pos = this.getMutPosition;
+        const pos = this.getPositionRef;
         pos.addVec(this.getVelocity());
 
         if (pos.y < -20 || pos.y > World.H + 20 || pos.x < -20 || pos.x > World.W + 20) {

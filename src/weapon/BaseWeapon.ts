@@ -24,7 +24,7 @@ export abstract class BaseWeapon extends Weapon {
 
     protected setBullet(bullet: ProjectileEntity, speed: number, offset: number) {
         const world = bullet.getWorld();
-        const pos = this.owner.getMutPosition;
+        const pos = this.owner.getPositionRef;
         const yaw = this.owner.getYaw();
         const f = Math.cos(yaw);
         const g = Math.sin(yaw);
@@ -45,7 +45,7 @@ export abstract class BaseWeapon extends Weapon {
             const vel = new MutVec2((a + f) * speed, (a + g) * speed);
 
             world.spawnParticle(
-                bullet.getMutPosition, vel, rand(0.4, 0.6), rand(2, 3),
+                bullet.getPositionRef, vel, rand(0.4, 0.6), rand(2, 3),
                 "#ffaa33", "#ff5454", 0.6, 80
             );
         }

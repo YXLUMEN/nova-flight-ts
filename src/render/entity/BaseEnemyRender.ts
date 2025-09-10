@@ -4,7 +4,7 @@ import type {BaseEnemy} from "../../entity/mob/BaseEnemy.ts";
 export class BaseEnemyRender implements EntityRenderer<BaseEnemy> {
     public render(baseEnemy: BaseEnemy, ctx: CanvasRenderingContext2D) {
         ctx.save();
-        ctx.translate(baseEnemy.getMutPosition.x, baseEnemy.getMutPosition.y);
+        ctx.translate(baseEnemy.getPositionRef.x, baseEnemy.getPositionRef.y);
 
         ctx.fillStyle = baseEnemy.color;
         ctx.strokeStyle = "rgba(0,0,0,.2)";

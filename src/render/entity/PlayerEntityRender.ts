@@ -5,7 +5,7 @@ import {HALF_PI} from "../../utils/math/math.ts";
 export class PlayerEntityRender implements EntityRenderer<PlayerEntity> {
     public render(player: PlayerEntity, ctx: CanvasRenderingContext2D) {
         ctx.save();
-        ctx.translate(player.getMutPosition.x, player.getMutPosition.y);
+        ctx.translate(player.getPositionRef.x, player.getPositionRef.y);
         ctx.rotate(player.getYaw() + HALF_PI);
         // 机身
         const grad = ctx.createLinearGradient(0, -20, 0, 20);

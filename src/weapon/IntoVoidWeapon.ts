@@ -121,7 +121,7 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
 
         const box = this.owner.getEntityDimension().width + this.radius;
         for (const mob of world.getLoadMobs()) {
-            if (mob.isRemoved() || !pointInCircleVec2(this.owner.getMutPosition, mob.getMutPosition, box + mob.getEntityDimension().width)) continue;
+            if (mob.isRemoved() || !pointInCircleVec2(this.owner.getPositionRef, mob.getPositionRef, box + mob.getEntityDimension().width)) continue;
             if (mob instanceof BossEntity) continue;
             mob.onDeath(world.getDamageSources().void(this.owner as PlayerEntity));
         }

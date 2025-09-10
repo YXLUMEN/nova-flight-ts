@@ -23,7 +23,7 @@ export function collideEntityBox(a: Entity, b: Entity): boolean {
 export function collideEntityCircle(a: Entity, b: Entity) {
     const aRadius = a.getEntityDimension().width;
     const bRadius = b.getEntityDimension().width;
-    return dist2(a.getMutPosition, b.getMutPosition) < (aRadius + bRadius) ** 2;
+    return dist2(a.getPositionRef, b.getPositionRef) < (aRadius + bRadius) ** 2;
 }
 
 export function dist2(a: MutVec2, b: MutVec2) {

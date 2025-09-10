@@ -30,7 +30,7 @@ export class BallisticCalculator {
         let nearestDist2 = Infinity;
 
         for (const mob of mobs.values()) {
-            const mobPos = mob.getMutPosition;
+            const mobPos = mob.getPositionRef;
             const dx = mobPos.x - cursorWorldPos.x;
             const dy = mobPos.y - cursorWorldPos.y;
             const dist2 = dx * dx + dy * dy;
@@ -49,9 +49,9 @@ export class BallisticCalculator {
             return;
         }
 
-        const tPos = target.getMutPosition;
+        const tPos = target.getPositionRef;
         const tVelocity = target.getVelocity();
-        const oPos = this.owner.getMutPosition;
+        const oPos = this.owner.getPositionRef;
 
         const dx = tPos.x - oPos.x;
         const dy = tPos.y - oPos.y;

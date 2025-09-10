@@ -30,7 +30,7 @@ export abstract class MobEntity extends LivingEntity {
         this.updateVelocity(speed, swingValue, 1);
         this.moveByVec(this.getVelocity());
 
-        const pos = this.getMutPosition;
+        const pos = this.getPositionRef;
         pos.x = clamp(pos.x, 20, World.W);
 
         if (pos.y > World.H + 40) this.discard();
@@ -42,7 +42,7 @@ export abstract class MobEntity extends LivingEntity {
 
         const world = this.getWorld();
         world.events.emit(EVENTS.MOB_DAMAGE, {mob: this, damageSource});
-        world.spawnParticle(this.getMutPosition, MutVec2.zero(), rand(0.2, 0.6), rand(4, 6),
+        world.spawnParticle(this.getPositionRef, MutVec2.zero(), rand(0.2, 0.6), rand(4, 6),
             "#ffaa33", "#ff5454", 0.6, 80);
         return true;
     }
@@ -59,7 +59,7 @@ export abstract class MobEntity extends LivingEntity {
             const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
 
             world.spawnParticle(
-                this.getMutPosition, vel, rand(0.6, 0.8), rand(4, 6),
+                this.getPositionRef, vel, rand(0.6, 0.8), rand(4, 6),
                 "#ffaa33", "#ff5454", 0.6, 80
             );
         }

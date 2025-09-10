@@ -26,7 +26,7 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
         const r2 = radius * radius;
         for (const mob of world.getLoadMobs()) {
             if (mob.isRemoved()) continue;
-            const d2 = MutVec2.distSq(mob.getMutPosition, center);
+            const d2 = MutVec2.distSq(mob.getPositionRef, center);
             if (d2 <= r2) {
                 mob.takeDamage(world.getDamageSources().explosion(source, attacker), damage);
             }
