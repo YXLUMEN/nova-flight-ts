@@ -149,12 +149,13 @@ export class PlayerEntity extends LivingEntity {
         if (this.techTree.isUnlocked('electrical_energy_surges')) {
             const emp = this.weapons.get('emp');
             if (emp) {
-                const cd = emp.getCooldown();
-                emp.tryFire(world);
                 if (emp.canFire() && this.techTree.isUnlocked('ele_shield')) {
+                    emp.tryFire(world);
                     SoundSystem.playSound(SoundEvents.SHIELD_CRASH);
                     return false;
                 }
+                const cd = emp.getCooldown();
+                emp.tryFire(world);
                 emp.setCooldown(cd);
             }
         }
