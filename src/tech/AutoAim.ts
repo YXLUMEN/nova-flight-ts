@@ -22,11 +22,18 @@ export class AutoAim {
         if (!target) return;
 
         const mobPos = target.getPositionRef;
-        const mobVel = target.getVelocity();
+        const mobVel = target.getVelocityRef;
         const bulletSpeed = this.owner.getCurrentWeapon().getBallisticSpeed();
 
         const targetYaw = AutoAim.getLeadYaw(pos, mobPos, mobVel, bulletSpeed);
         this.owner.setClampYaw(targetYaw);
+
+        const angleDiff = Math.abs(((targetYaw - this.owner.getYaw() + Math.PI) % PI2) - Math.PI);
+
+        if (angleDiff < 0.0349) {
+            const w = this.owner.getCurrentWeapon();
+            if (w.canFire()) w.tryFire(world);
+        }
     }
 
     private acquireTarget(mobs: Set<MobEntity>, pos: IVec) {
@@ -47,7 +54,7 @@ export class AutoAim {
             const dy = mobPos.y - pos.y;
             const dist2 = dx * dx + dy * dy;
 
-            const mobVel = mob.getVelocity();
+            const mobVel = mob.getPositionRef;
             const relSpeed = ((dx * mobVel.x) + (dy * mobVel.y)) / Math.sqrt(dist2);
             const approaching = relSpeed < 0;
 
@@ -90,7 +97,7 @@ export class AutoAim {
             t = -c / b;
         } else {
             const disc = b * b - 4 * a * c;
-            if (disc < 0) return Math.atan2(dy, dx); // 无解，直接瞄准当前
+            if (disc < 0) return Math.atan2(dy, dx); // 无解, 直接瞄准当前
             const sqrtDisc = Math.sqrt(disc);
             const t1 = (-b - sqrtDisc) / (2 * a);
             const t2 = (-b + sqrtDisc) / (2 * a);

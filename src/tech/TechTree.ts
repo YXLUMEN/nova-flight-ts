@@ -432,6 +432,9 @@ export class TechTree {
         player.weapons.set('40', player.baseWeapons[0]);
         player.weapons.set('bomb', new BombWeapon(player));
 
+        player.steeringGear = false;
+        player.setYaw(-1.55);
+
         this.state.reset();
         this.renderNodes();
     }

@@ -18,7 +18,7 @@ export class EMCStatus extends StatusEffect {
         const speed = 100 + Math.random() * 50;
         const vel = new MutVec2(Math.cos(angle), Math.sin(angle)).multiply(speed);
 
-        entity.getWorld().spawnParticle(
+        entity.getWorld().spawnParticleByVec(
             pos, vel,
             0.3,
             1.5,

@@ -11,24 +11,25 @@ import {EVENTS} from "../../apis/IEvents.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 
 export abstract class MobEntity extends LivingEntity {
-    protected ticks = Math.random() * 10;
     private readonly worth: number;
+    protected yStep = 1;
 
     protected constructor(type: EntityType<MobEntity>, world: World, worth: number) {
         super(type, world);
         this.worth = worth;
+        this.age += (Math.random() * 10) | 0;
+        this.setYaw(1.55);
     }
 
     public override tick(): void {
         super.tick();
 
-        this.ticks++;
         const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
         const speed = this.getMovementSpeed() * speedMultiplier;
-        const swingValue = Math.sin(this.ticks * 0.1) * 0.5 * speedMultiplier
+        const swingValue = Math.sin(this.age * 0.1) * 0.5 * speedMultiplier
 
-        this.updateVelocity(speed, swingValue, 1);
-        this.moveByVec(this.getVelocity());
+        this.updateVelocity(speed, swingValue, this.yStep);
+        this.moveByVec(this.getVelocityRef);
 
         const pos = this.getPositionRef;
         pos.x = clamp(pos.x, 20, World.W);
@@ -42,7 +43,7 @@ export abstract class MobEntity extends LivingEntity {
 
         const world = this.getWorld();
         world.events.emit(EVENTS.MOB_DAMAGE, {mob: this, damageSource});
-        world.spawnParticle(this.getPositionRef, MutVec2.zero(), rand(0.2, 0.6), rand(4, 6),
+        world.spawnParticleByVec(this.getPositionRef, MutVec2.zero(), rand(0.2, 0.6), rand(4, 6),
             "#ffaa33", "#ff5454", 0.6, 80);
         return true;
     }
@@ -58,7 +59,7 @@ export abstract class MobEntity extends LivingEntity {
             const speed = rand(80, 180);
             const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
 
-            world.spawnParticle(
+            world.spawnParticleByVec(
                 this.getPositionRef, vel, rand(0.6, 0.8), rand(4, 6),
                 "#ffaa33", "#ff5454", 0.6, 80
             );
@@ -67,8 +68,12 @@ export abstract class MobEntity extends LivingEntity {
 
     public attack(player: PlayerEntity) {
         const world = this.getWorld();
-        player.takeDamage(world.getDamageSources().mobAttack(this), this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE));
-        this.onDeath(world.getDamageSources().playerImpact(player));
+        const result = player.takeDamage(
+            world.getDamageSources().mobAttack(this), this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE));
+
+        if (result) {
+            this.onDeath(world.getDamageSources().playerImpact(player));
+        }
     }
 
     public getWorth(): number {

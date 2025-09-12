@@ -32,6 +32,7 @@ export abstract class Entity implements DataTracked {
     private removed: boolean = false;
 
     private readonly id: number = Entity.CURRENT_ID.incrementAndGet();
+    protected age: number = 0;
 
     protected constructor(type: EntityType<any>, world: World) {
         this.type = type;
@@ -54,6 +55,7 @@ export abstract class Entity implements DataTracked {
     }
 
     public tick(): void {
+        this.age++;
     }
 
     public move(x: number, y: number): void {

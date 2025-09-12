@@ -174,21 +174,6 @@ export class UI {
         ctx.fillText(info.label, (x + w + 8) | 0, (y | 0) - 1);
     }
 
-    // private static renderHelpOverlay(ctx: CanvasRenderingContext2D) {
-    //     const width = World.W / 2;
-    //     const height = World.H / 2;
-    //
-    //     ctx.save();
-    //     ctx.textAlign = 'center';
-    //     ctx.textBaseline = 'middle';
-    //
-    //     ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    //     ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
-    //     ctx.fillText('', width, height);
-    //
-    //     ctx.restore();
-    // }
-
     private static renderPauseOverlay(ctx: CanvasRenderingContext2D) {
         const width = World.W / 2;
         const height = World.H / 2;

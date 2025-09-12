@@ -32,6 +32,7 @@ export class PlayerEntity extends LivingEntity {
     public readonly weapons = new Map<string, Weapon>();
     public readonly baseWeapons: BaseWeapon[] = [];
     public currentBaseIndex: number = 0;
+    private lastDamageTime = 0;
 
     private switchWeapon = throttleTimeOut(() => {
         this.currentBaseIndex = (this.currentBaseIndex + 1) % this.baseWeapons.length;
@@ -82,6 +83,7 @@ export class PlayerEntity extends LivingEntity {
         if (this.input.wasPressed('AltRight') && this.autoAim) {
             this.autoAimEnable = !this.autoAimEnable;
             this.autoAim.setTarget(null);
+            if (this.autoAimEnable) WorldConfig.autoShoot = false;
         }
 
         const len = Math.hypot(dx, dy);
@@ -128,6 +130,9 @@ export class PlayerEntity extends LivingEntity {
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (this.isInvulnerableTo(damageSource)) return false;
 
+        if (this.age - this.lastDamageTime < 50) return false;
+        this.lastDamageTime = this.age;
+
         const world = this.getWorld();
 
         world.events.emit(EVENTS.BOMB_DETONATE, {
@@ -141,20 +146,15 @@ export class PlayerEntity extends LivingEntity {
             attacker: this
         });
 
-        if (this.techTree.isUnlocked('ele_shield')) {
-            const emp = this.weapons.get('emp');
-            if (emp && emp.canFire()) {
-                emp.tryFire(world);
-                SoundSystem.playSound(SoundEvents.SHIELD_CRASH);
-                return false;
-            }
-        }
-
         if (this.techTree.isUnlocked('electrical_energy_surges')) {
             const emp = this.weapons.get('emp');
             if (emp) {
                 const cd = emp.getCooldown();
                 emp.tryFire(world);
+                if (emp.canFire() && this.techTree.isUnlocked('ele_shield')) {
+                    SoundSystem.playSound(SoundEvents.SHIELD_CRASH);
+                    return false;
+                }
                 emp.setCooldown(cd);
             }
         }

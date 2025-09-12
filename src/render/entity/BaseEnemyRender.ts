@@ -1,19 +1,21 @@
 import type {EntityRenderer} from "./EntityRenderer.ts";
 import type {BaseEnemy} from "../../entity/mob/BaseEnemy.ts";
+import {HALF_PI} from "../../utils/math/math.ts";
 
 export class BaseEnemyRender implements EntityRenderer<BaseEnemy> {
-    public render(baseEnemy: BaseEnemy, ctx: CanvasRenderingContext2D) {
+    public render(entity: BaseEnemy, ctx: CanvasRenderingContext2D) {
         ctx.save();
-        ctx.translate(baseEnemy.getPositionRef.x, baseEnemy.getPositionRef.y);
+        ctx.translate(entity.getPositionRef.x, entity.getPositionRef.y);
+        ctx.rotate(entity.getYaw() + HALF_PI);
 
-        ctx.fillStyle = baseEnemy.color;
+        ctx.fillStyle = entity.color;
         ctx.strokeStyle = "rgba(0,0,0,.2)";
 
         ctx.beginPath();
-        ctx.moveTo(0, 18);
-        ctx.lineTo(-14, -6);
-        ctx.lineTo(0, -12);
-        ctx.lineTo(14, -6);
+        ctx.moveTo(0, -18);
+        ctx.lineTo(14, 6);
+        ctx.lineTo(0, 12);
+        ctx.lineTo(-14, 6);
         ctx.closePath();
 
         ctx.fill();

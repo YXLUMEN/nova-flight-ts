@@ -44,7 +44,7 @@ export abstract class BaseWeapon extends Weapon {
             const speed = randInt(100, 210);
             const vel = new MutVec2((a + f) * speed, (a + g) * speed);
 
-            world.spawnParticle(
+            world.spawnParticleByVec(
                 bullet.getPositionRef, vel, rand(0.4, 0.6), rand(2, 3),
                 "#ffaa33", "#ff5454", 0.6, 80
             );

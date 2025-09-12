@@ -342,6 +342,17 @@
     "cost": 320
   },
   {
+    "id": "honeycomb_missile",
+    "name": "蜂巢导弹",
+    "x": 0,
+    "y": 320,
+    "desc": "释放24枚伤害较低的导弹",
+    "cost": 160,
+    "requires": [
+      "missile"
+    ]
+  },
+  {
     "id": "steering_gear",
     "name": "方向机",
     "x": 160,

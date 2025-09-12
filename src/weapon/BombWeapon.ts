@@ -48,7 +48,7 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
             if (important) world.addEffect(new Particle(ePos, vel.clone(),
                 rand(0.25, 0.6), rand(3, 8),
                 "#ffd966", "rgba(255,69,0,0)"
-            )); else world.spawnParticle(
+            )); else world.spawnParticleByVec(
                 ePos, vel, rand(0.25, 0.6), rand(3, 8),
                 "#ffd966", "rgba(255,69,0,0)");
         }
@@ -62,7 +62,7 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
             if (important) world.addEffect(new Particle(
                 ePos, vel.clone(), rand(0.6, 1.2), rand(4, 10),
                 "#ffaa33", "rgba(255,140,0,0)", 0.6, 80
-            )); else world.spawnParticle(
+            )); else world.spawnParticleByVec(
                 ePos, vel, rand(0.6, 1.2), rand(4, 10),
                 "#ffaa33", "rgba(255,140,0,0)", 0.6, 80
             );

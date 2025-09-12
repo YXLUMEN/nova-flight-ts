@@ -4,16 +4,19 @@ import {EntityRenderers} from "./render/entity/EntityRenderers.ts";
 import {DataLoader} from "./DataLoader.ts";
 import {Window} from "@tauri-apps/api/window";
 import {check} from "@tauri-apps/plugin-updater";
+import {WorldConfig} from "./configs/WorldConfig.ts";
 
 export const mainWindow = new Window('main');
 
 async function main() {
     try {
-        const update = await check();
-        if (update && confirm('发现更新')) {
-            alert('开始下载, 请等待');
-            await update.downloadAndInstall();
-            return;
+        if (!WorldConfig.devMode) {
+            const update = await check();
+            if (update && confirm('发现更新')) {
+                alert('开始下载, 请等待');
+                await update.downloadAndInstall();
+                return;
+            }
         }
     } catch (error) {
         console.error(error);
@@ -26,6 +29,8 @@ async function main() {
     await DataLoader.init(manager);
 
     const world = World.createWorld(manager);
+    if (!WorldConfig.devMode) await mainWindow.setFullscreen(true);
+
     world.start();
 }
 

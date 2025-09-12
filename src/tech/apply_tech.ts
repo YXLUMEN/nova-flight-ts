@@ -149,6 +149,16 @@ export function applyTech(world: World, id: string) {
             player.weapons.set('missile', new MissileWeapon(player));
             break;
         }
+        case 'honeycomb_missile': {
+            const missile = player.weapons.get('missile');
+            if (missile instanceof MissileWeapon) {
+                missile.missileCounts = 24;
+                missile.damage = 3;
+                missile.explosionDamage = 6;
+                missile.explosionRadius = 48;
+            }
+            break;
+        }
         case 'steering_gear':
             player.steeringGear = true;
             break;

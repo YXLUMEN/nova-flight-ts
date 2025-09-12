@@ -19,6 +19,17 @@ export class MissileEntityRender implements EntityRenderer<MissileEntity> {
         ctx.closePath();
 
         ctx.fill();
+
+        if (entity.isIgnite()) {
+            ctx.fillStyle = "rgba(255,200,120,.9)";
+            ctx.beginPath();
+            ctx.moveTo(-3, 8);
+            ctx.lineTo(0, 12 + Math.random() * 3);
+            ctx.lineTo(3, 8);
+            ctx.closePath();
+            ctx.fill();
+        }
+
         ctx.stroke();
         ctx.restore();
     }

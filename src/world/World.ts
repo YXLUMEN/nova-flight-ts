@@ -239,7 +239,7 @@ export class World {
         return this.registryManager;
     }
 
-    public spawnParticle(
+    public spawnParticleByVec(
         pos: IVec, vel: IVec,
         life: number, size: number,
         colorFrom: string, colorTo: string,
@@ -247,6 +247,20 @@ export class World {
     ): void {
         this.particlePool.spawn(
             new MutVec2(pos.x, pos.y), new MutVec2(vel.x, vel.y),
+            life, size,
+            colorFrom, colorTo,
+            drag, gravity
+        );
+    }
+
+    public spawnParticle(
+        posX: number, posY: number, velX: number, velY: number,
+        life: number, size: number,
+        colorFrom: string, colorTo: string,
+        drag = 0.0, gravity = 0.0
+    ) {
+        this.particlePool.spawn(
+            new MutVec2(posX, posY), new MutVec2(velX, velY),
             life, size,
             colorFrom, colorTo,
             drag, gravity
