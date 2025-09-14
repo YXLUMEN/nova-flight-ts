@@ -1,7 +1,7 @@
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import type {TrackedData} from "./data/TrackedData.ts";
 import {World} from "../world/World.ts";
-import type {Vec2} from "../utils/math/Vec2.ts";
+import {Vec2} from "../utils/math/Vec2.ts";
 import type {DamageSource} from "./damage/DamageSource.ts";
 import type {EntityType} from "./EntityType.ts";
 import type {EntityDimensions} from "./EntityDimensions.ts";
@@ -12,13 +12,18 @@ import {AtomicInteger} from "../utils/math/AtomicInteger.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {Box} from "../utils/math/Box.ts";
+import type {Comparable} from "../utils/collection/HashMap.ts";
+import {clamp} from "../utils/math/math.ts";
 
 
-export abstract class Entity implements DataTracked {
-    public invulnerable: boolean = false;
-    protected readonly dataTracker: DataTracker;
-
+export abstract class Entity implements DataTracked, Comparable {
     private static readonly CURRENT_ID = new AtomicInteger();
+
+    public invulnerable: boolean = false;
+
+    protected readonly dataTracker: DataTracker;
+    private readonly id: number = Entity.CURRENT_ID.incrementAndGet();
+    private readonly normalTags = new Set<string>();
 
     private readonly type: EntityType<any>;
     private readonly world: World;
@@ -31,8 +36,7 @@ export abstract class Entity implements DataTracked {
     private readonly dimensions: EntityDimensions;
     private removed: boolean = false;
 
-    private readonly id: number = Entity.CURRENT_ID.incrementAndGet();
-    protected age: number = 0;
+    public age: number = 0;
 
     protected constructor(type: EntityType<any>, world: World) {
         this.type = type;
@@ -54,16 +58,114 @@ export abstract class Entity implements DataTracked {
         return this.id;
     }
 
+    public getNormalTags(): Set<string> {
+        return this.normalTags;
+    }
+
+    public addNormalTag(tag: string): boolean {
+        if (this.normalTags.size > 1024) return false;
+        this.normalTags.add(tag);
+        return true;
+    }
+
+    public removeNormalTag(tag: string): boolean {
+        return this.normalTags.delete(tag);
+    }
+
+    public discard(): void {
+        if (this.removed) return;
+        this.removed = true;
+        this.world.events.emit(EVENTS.ENTITY_REMOVED, {entity: this});
+    }
+
+    protected abstract initDataTracker(builder: InstanceType<typeof DataTracker.Builder>): void;
+
+    public getDataTracker(): DataTracker {
+        return this.dataTracker;
+    }
+
+    public equals(other: Object): boolean {
+        if (other instanceof Entity) {
+            return other.id === this.id
+        }
+        return false;
+    }
+
+    public hashCode(): string {
+        return this.id.toString();
+    }
+
+    public setPosition(x: number, y: number): void {
+        this.pos.x = x;
+        this.pos.y = y;
+    }
+
+    public setPositionByVec(pos: IVec): void {
+        this.pos.x = pos.x;
+        this.pos.y = pos.y;
+    }
+
+    public setYaw(yaw: number): void {
+        this.yaw = yaw;
+    }
+
+    public setClampYaw(target: number, maxStep: number = 0.0785375): void {
+        let delta = target - this.yaw;
+        delta = Math.atan2(Math.sin(delta), Math.cos(delta));
+
+        if (delta > maxStep) delta = maxStep;
+        if (delta < -maxStep) delta = -maxStep;
+
+        this.yaw += delta;
+    }
+
+    public getEntityDimension(): EntityDimensions {
+        return this.dimensions;
+    }
+
+    public calculateBoundingBox(): Box {
+        return this.dimensions.getBoxAtByVec(this.pos);
+    }
+
     public tick(): void {
-        this.age++;
+    }
+
+    public updateVelocityByVec(speed: number, movementInput: IVec): void {
+        if (movementInput.lengthSquared() < 1e-6) return;
+        const dir = movementInput.length() > 1 ? movementInput.normalize() : movementInput;
+        this.velocity.addVec(dir.multiply(speed));
+    }
+
+    public updateVelocity(speed: number, x: number, y: number): void {
+        const len = Math.hypot(x, y);
+        if (len > 1E-6) {
+            const nx = x / len;
+            const ny = y / len;
+            this.velocity.add(nx * speed, ny * speed);
+        }
+    }
+
+    public moveByVec(vec: IVec): void {
+        this.move(vec.x, vec.y);
     }
 
     public move(x: number, y: number): void {
         this.pos.add(x, y);
     }
 
-    public moveByVec(vec: IVec): void {
-        this.move(vec.x, vec.y);
+    protected adjustPosition(): boolean {
+        const pos = this.pos;
+        pos.x = clamp(pos.x, 20, World.W - 20);
+        pos.y = clamp(pos.y, 20, World.H - 20);
+        return true;
+    }
+
+    public get getPositionRef(): MutVec2 {
+        return this.pos;
+    }
+
+    public getPosition(): Vec2 {
+        return this.pos.toImmutable();
     }
 
     public getWorld(): World {
@@ -82,47 +184,8 @@ export abstract class Entity implements DataTracked {
         this.discard();
     }
 
-    public discard(): void {
-        this.removed = true;
-        this.world.events.emit(EVENTS.ENTITY_REMOVED, {entity: this});
-    }
-
     public isRemoved(): boolean {
         return this.removed;
-    }
-
-    public getEntityDimension(): EntityDimensions {
-        return this.dimensions;
-    }
-
-    public calculateBoundingBox(): Box {
-        return this.dimensions.getBoxAtByVec(this.pos);
-    }
-
-    public setPositionByVec(pos: IVec): void {
-        this.pos.x = pos.x;
-        this.pos.y = pos.y;
-    }
-
-    public setPosition(x: number, y: number): void {
-        this.pos.x = x;
-        this.pos.y = y;
-    }
-
-    public get getPositionRef(): MutVec2 {
-        return this.pos;
-    }
-
-    public getPosition(): Vec2 {
-        return this.pos.toImmutable();
-    }
-
-    public updateVelocity(speed: number, x: number, y: number): void {
-        this.setVelocityByVec(this.velocity.set(x * speed, y * speed));
-    }
-
-    public updateVelocityByVec(speed: number, movementInput: IVec): void {
-        this.updateVelocity(speed, movementInput.x, movementInput.y);
     }
 
     public getMovementSpeed(): number {
@@ -130,7 +193,7 @@ export abstract class Entity implements DataTracked {
     }
 
     public setMovementSpeed(speed: number): void {
-        this.movementSpeed = speed | 0;
+        this.movementSpeed = speed;
     }
 
     public get getVelocityRef(): MutVec2 {
@@ -153,23 +216,7 @@ export abstract class Entity implements DataTracked {
         return this.yaw
     }
 
-    public setYaw(yaw: number): void {
-        this.yaw = yaw;
-    }
-
-    public setClampYaw(target: number, maxStep: number = 0.0785375): void {
-        let delta = target - this.yaw;
-        delta = Math.atan2(Math.sin(delta), Math.cos(delta));
-
-        if (delta > maxStep) delta = maxStep;
-        if (delta < -maxStep) delta = -maxStep;
-
-        this.yaw += delta;
-    }
-
     public abstract onDataTrackerUpdate(entries: DataEntry<any>): void;
 
     public abstract onTrackedDataSet(data: TrackedData<any>): void;
-
-    protected abstract initDataTracker(builder: InstanceType<typeof DataTracker.Builder>): void;
 }

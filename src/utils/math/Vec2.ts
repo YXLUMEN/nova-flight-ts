@@ -39,12 +39,12 @@ export class Vec2 implements IVec {
         return new Vec2(this.x * a, this.y * b);
     }
 
-    public lengthSq() {
+    public lengthSquared() {
         return this.x * this.x + this.y * this.y;
     }
 
     public length() {
-        return Math.sqrt(this.lengthSq());
+        return Math.sqrt(this.lengthSquared());
     }
 
     public equals(v: IVec, epsilon = 1e-6): boolean {

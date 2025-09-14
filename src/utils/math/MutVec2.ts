@@ -55,12 +55,12 @@ export class MutVec2 implements IVec {
         return this;
     }
 
-    public lengthSq(): number {
+    public lengthSquared(): number {
         return this.x * this.x + this.y * this.y;
     }
 
     public length(): number {
-        return Math.sqrt(this.lengthSq());
+        return Math.sqrt(this.lengthSquared());
     }
 
     public normalize(): this {

@@ -20,7 +20,6 @@ export class BulletEntity extends ProjectileEntity {
             return;
         }
 
-        const attacker = this.owner instanceof LivingEntity ? this.owner : null
-        entity.takeDamage(sources.mobProjectile(this, attacker), this.damage);
+        entity.takeDamage(sources.mobProjectile(this, this.owner), this.damage);
     };
 }

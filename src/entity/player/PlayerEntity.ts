@@ -3,12 +3,11 @@ import {World} from "../../world/World.ts";
 import {type Weapon} from "../../weapon/Weapon.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 import {ScreenFlash} from "../../effect/ScreenFlash.ts";
-import {Cannon40Weapon} from "../../weapon/Cannon40Weapon.ts";
+import {Cannon40Weapon} from "../../weapon/BaseWeapon/Cannon40Weapon.ts";
 import {throttleTimeOut} from "../../utils/uit.ts";
-import {isSpecialWeapon} from "../../weapon/ISpecialWeapon.ts";
 import {EdgeGlowEffect} from "../../effect/EdgeGlowEffect.ts";
 import {TechTree} from "../../tech/TechTree.ts";
-import {BaseWeapon} from "../../weapon/BaseWeapon.ts";
+import {BaseWeapon} from "../../weapon/BaseWeapon/BaseWeapon.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {type DamageSource} from "../damage/DamageSource.ts";
 import type {DataEntry} from "../data/DataEntry.ts";
@@ -17,11 +16,11 @@ import {DataLoader} from "../../DataLoader.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
-import {SoundSystem} from "../../sound/SoundSystem.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {AutoAim} from "../../tech/AutoAim.ts";
-import {clamp} from "../../utils/math/math.ts";
 import {BombWeapon} from "../../weapon/BombWeapon.ts";
+import {SpecialWeapon} from "../../weapon/SpecialWeapon.ts";
+import {SoundSystem} from "../../sound/SoundSystem.ts";
 
 export class PlayerEntity extends LivingEntity {
     public readonly input: Input;
@@ -35,12 +34,15 @@ export class PlayerEntity extends LivingEntity {
     private lastDamageTime = 0;
 
     private switchWeapon = throttleTimeOut(() => {
+        this.getCurrentWeapon().onEndFire(this.getWorld());
+        this.wasFire = false;
         this.currentBaseIndex = (this.currentBaseIndex + 1) % this.baseWeapons.length;
     }, 200);
 
     private phaseScore: number;
     private score: number = 0;
     private autoAimEnable: boolean = false;
+    private wasFire = false
     public steeringGear: boolean = false;
 
     public autoAim: AutoAim | null = null;
@@ -52,14 +54,13 @@ export class PlayerEntity extends LivingEntity {
         this.techTree = new TechTree(viewport, DataLoader.get('tech-data'));
 
         this.setPosition(World.W / 2, World.H - 80);
-        this.setMovementSpeed(6);
-        this.setYaw(-1.55);
+        this.setMovementSpeed(0.8);
+        this.setYaw(-1.57079);
 
         this.input = input;
         this.phaseScore = 0;
 
-        this.baseWeapons.push(new Cannon40Weapon(this));
-        this.weapons.set('40', this.baseWeapons[0]);
+        this.addWeapon('40', new Cannon40Weapon(this));
         this.weapons.set('bomb', new BombWeapon(this));
     }
 
@@ -86,17 +87,14 @@ export class PlayerEntity extends LivingEntity {
             if (this.autoAimEnable) WorldConfig.autoShoot = false;
         }
 
-        const len = Math.hypot(dx, dy);
-        if (len > 0) {
+        if (dx !== 0 || dy !== 0) {
             const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
             const speed = this.getMovementSpeed() * speedMultiplier;
-            this.updateVelocity(speed, dx / len, dy / len);
-            this.moveByVec(this.getVelocity());
-            posRef.x = clamp(posRef.x, 20, World.W - 20);
-            posRef.y = clamp(posRef.y, 20, World.H - 20);
-        } else {
-            this.updateVelocity(0, 0, 0);
+            this.updateVelocity(speed, dx, dy);
         }
+        this.moveByVec(this.getVelocityRef);
+        this.adjustPosition();
+        this.getVelocityRef.multiply(0.9);
 
         if (this.autoAimEnable && this.autoAim) {
             this.autoAim.tick();
@@ -113,13 +111,23 @@ export class PlayerEntity extends LivingEntity {
         }
 
         // 射击
-        if (this.input.isDown("Space") || WorldConfig.autoShoot) {
-            const w = this.baseWeapons[this.currentBaseIndex];
-            if (w.canFire()) w.tryFire(world);
+        const fire = this.input.isDown("Space") || WorldConfig.autoShoot;
+        const w = this.baseWeapons[this.currentBaseIndex];
+
+        if (fire !== this.wasFire) {
+            if (!this.wasFire) {
+                w.onStartFire(world);
+            } else {
+                w.onEndFire(world);
+            }
+            this.wasFire = fire;
+        }
+        if (fire && w.canFire()) {
+            w.tryFire(world);
         }
 
         for (const w of this.weapons.values()) {
-            if (isSpecialWeapon(w)) {
+            if (w instanceof SpecialWeapon) {
                 if (WorldConfig.devMode && w.getCooldown() > 0.5) w.setCooldown(0.5);
                 if (w.canFire() && this.input.wasPressed(w.bindKey())) w.tryFire(world);
             }
@@ -139,8 +147,8 @@ export class PlayerEntity extends LivingEntity {
             pos: this.getPosition(),
             damage: 32,
             explosionRadius: this.onDamageExplosionRadius,
-            shake: 0.4,
-            flash: new ScreenFlash(0.2, 0.25, '#ff5151'),
+            shake: 0.5,
+            flash: new ScreenFlash(0.3, 0.25, '#ff5151'),
             important: true,
             source: this,
             attacker: this

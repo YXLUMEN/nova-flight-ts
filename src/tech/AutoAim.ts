@@ -27,19 +27,12 @@ export class AutoAim {
 
         const targetYaw = AutoAim.getLeadYaw(pos, mobPos, mobVel, bulletSpeed);
         this.owner.setClampYaw(targetYaw);
-
-        const angleDiff = Math.abs(((targetYaw - this.owner.getYaw() + Math.PI) % PI2) - Math.PI);
-
-        if (angleDiff < 0.0349) {
-            const w = this.owner.getCurrentWeapon();
-            if (w.canFire()) w.tryFire(world);
-        }
     }
 
     private acquireTarget(mobs: Set<MobEntity>, pos: IVec) {
         const now = performance.now();
 
-        if (this.currentTarget && !this.currentTarget.isRemoved() && this.targetLockTime > now - 500) {
+        if (this.currentTarget && !this.currentTarget.isRemoved() && now - this.targetLockTime < 500) {
             return this.currentTarget;
         }
 
@@ -53,21 +46,22 @@ export class AutoAim {
             const dx = mobPos.x - pos.x;
             const dy = mobPos.y - pos.y;
             const dist2 = dx * dx + dy * dy;
+            if (dist2 < 1e-6) continue;
 
             const mobVel = mob.getPositionRef;
             const relSpeed = ((dx * mobVel.x) + (dy * mobVel.y)) / Math.sqrt(dist2);
             const approaching = relSpeed < 0;
 
-            const targetYaw = Math.atan2(dy, dx);
-            let angleDiff = targetYaw - ownerYaw;
-
+            let angleDiff = Math.atan2(dy, dx) - ownerYaw;
             angleDiff = ((angleDiff + Math.PI) % PI2) - Math.PI;
+
             const absAngleDiff = Math.abs(angleDiff);
 
             if (!best ||
-                (approaching && !best.approaching) ||
-                (approaching === best.approaching && dist2 < best.dist2) ||
-                (approaching === best.approaching && dist2 === best.dist2 && absAngleDiff < best.angleDiff)) {
+                (dist2 < best.dist2) ||
+                (dist2 === best.dist2 && approaching && !best.approaching) ||
+                (dist2 === best.dist2 && approaching === best.approaching && absAngleDiff < best.angleDiff)
+            ) {
                 best = {mob, dist2, angleDiff: absAngleDiff, approaching};
             }
         }

@@ -24,6 +24,7 @@ export class RegistryManager {
         damage.add(DamageTypes.REMOVED, 'removed', [DamageTypeTags.BYPASSES_INVULNERABLE]);
         damage.add(DamageTypes.MOB_PROJECTILE, 'mob_projectile');
         damage.add(DamageTypes.PLAYER_IMPACT, 'player_impact', [DamageTypeTags.NOT_GAIN_SCORE]);
+        damage.add(DamageTypes.AP_DAMAGE, 'app_damage', [DamageTypeTags.BYPASSES_INVULNERABLE]);
 
         this.registers.set(RegistryKeys.DAMAGE_TYPE, damage);
         this.registers.set(RegistryKeys.STATUS_EFFECT, Registries.STATUS_EFFECT);

@@ -5,6 +5,8 @@ import type {ExplosionOpts} from "../../apis/IExplosionOpts.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
+import {SoundSystem} from "../../sound/SoundSystem.ts";
+import {SoundEvents} from "../../sound/SoundEvents.ts";
 
 export class ExplodeBulletEntity extends ProjectileEntity {
     public override color = '#ffae00';
@@ -30,5 +32,7 @@ export class ExplodeBulletEntity extends ProjectileEntity {
             attacker,
             ...this.explosionOpts
         });
+
+        SoundSystem.playSound(SoundEvents.MISSILE_EXPLOSION, 0.3);
     }
 }

@@ -6,3 +6,8 @@ export type TimerTask = {
     interval?: number;          // repeat 时必填
     canceled: boolean;
 };
+
+export interface Schedule {
+    id: number;
+    cancel: () => void
+}

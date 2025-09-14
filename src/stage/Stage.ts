@@ -6,37 +6,37 @@ export class Stage {
     private readonly rng: RNG;
     private readonly phases: PhaseConfig[];
 
-    private t = 0;
+    private ticks = 0;
     private phaseTime = 0;
     private index = 0;
     private rules: SpawnRule[] = [];
 
-    constructor(phases: PhaseConfig[], rng?: RNG) {
+    public constructor(phases: PhaseConfig[], rng?: RNG) {
         this.phases = phases;
         this.rng = rng ?? Math.random;
         this.loadPhase(0);
     }
 
-    public get currentName(): string | null {
+    public getCurrentName(): string | null {
         return this.index < this.phases.length ? this.phases[this.index].name : null;
     }
 
     public reset() {
-        this.t = 0;
+        this.ticks = 0;
         this.phaseTime = 0;
         this.index = 0;
         this.loadPhase(0);
     }
 
-    public update(world: World, tickDelta: number) {
+    public tick(world: World) {
         if (this.index >= this.phases.length) return;
 
-        this.t += tickDelta;
-        this.phaseTime += tickDelta;
+        this.ticks++;
+        this.phaseTime++;
 
         const ctx: SpawnCtx = {
             world,
-            time: this.t,
+            time: this.ticks,
             phaseTime: this.phaseTime,
             phaseIndex: this.index,
             score: world.player?.getPhaseScore() ?? 0,
@@ -46,12 +46,17 @@ export class Stage {
 
         const phase = this.phases[this.index];
 
-        if (this.phaseTime === tickDelta && phase.onEnter) phase.onEnter(ctx);
+        if (this.phaseTime === 1 && phase.onEnter) {
+            phase.onEnter(ctx);
+        }
 
-        for (const r of this.rules) r.update(tickDelta, ctx);
+        for (const r of this.rules) {
+            r.tick(ctx);
+        }
 
         const timeUp = phase.duration !== undefined && this.phaseTime >= phase.duration;
         const until = phase.until ? phase.until(ctx) : false;
+
         if (timeUp || until) {
             if (phase.onExit) phase.onExit(ctx);
             if (this.index + 1 < this.phases.length) {
@@ -71,6 +76,7 @@ export class Stage {
     private loadPhase(index: number) {
         this.index = index;
         this.phaseTime = 0;
+
         this.rules = this.phases[index].rules.map(r => new SpawnRule(r));
         for (const r of this.rules) r.reset();
     }

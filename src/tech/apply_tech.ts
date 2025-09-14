@@ -1,15 +1,16 @@
 import {EMPWeapon} from "../weapon/EMPWeapon.ts";
 import {LaserWeapon} from "../weapon/LaserWeapon.ts";
-import {BaseWeapon} from "../weapon/BaseWeapon.ts";
-import {Cannon90Weapon} from "../weapon/Cannon90Weapon.ts";
+import {BaseWeapon} from "../weapon/BaseWeapon/BaseWeapon.ts";
+import {Cannon90Weapon} from "../weapon/BaseWeapon/Cannon90Weapon.ts";
 import {World} from "../world/World.ts";
 import {BombWeapon} from "../weapon/BombWeapon.ts";
 import {IntoVoidWeapon} from "../weapon/IntoVoidWeapon.ts";
-import {MiniGunWeapon} from "../weapon/MiniGunWeapon.ts";
+import {MiniGunWeapon} from "../weapon/BaseWeapon/MiniGunWeapon.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {MissileWeapon} from "../weapon/MissileWeapon.ts";
 import {AutoAim} from "./AutoAim.ts";
+import {RocketWeapon} from "../weapon/BaseWeapon/RocketWeapon.ts";
 
 export function applyTech(world: World, id: string) {
     const player = world.player;
@@ -165,5 +166,15 @@ export function applyTech(world: World, id: string) {
         case 'auto_aim':
             player.autoAim = new AutoAim(player);
             break;
+        case 'rocket_launcher':
+            player.addWeapon('rocket', new RocketWeapon(player));
+            break;
+        case 'random_rocket': {
+            const rocket = player.weapons.get('rocket');
+            if (rocket instanceof RocketWeapon) {
+                rocket.randomRocketEnable = true;
+            }
+            break;
+        }
     }
 }

@@ -9,6 +9,10 @@ import {EntityType} from "./EntityType.ts";
 import {MiniBulletEntity} from "./projectile/MiniBulletEntity.ts";
 import {MiniGunEnemyEntity} from "./mob/MiniGunEnemyEntity.ts";
 import {MissileEntity} from "./projectile/MissileEntity.ts";
+import {RocketEntity} from "./projectile/RocketEntity.ts";
+import {EMPRocketEntity} from "./projectile/EMPRocketEntity.ts";
+import {BurstRocketEntity} from "./projectile/BurstRocketEntity.ts";
+import {APRocketEntity} from "./projectile/APRocketEntity.ts";
 
 export class EntityTypes {
     public static readonly BASE_ENEMY = EntityType.register("base_enemy",
@@ -46,6 +50,22 @@ export class EntityTypes {
     public static PLAYER_ENTITY: EntityType<PlayerEntity>;
     public static readonly MISSILE_ENTITY = EntityType.register("missile_entity",
         EntityType.Builder.create(MissileEntity)
+            .setDimensions(8, 8)
+    );
+    public static readonly ROCKET_ENTITY = EntityType.register("rocket_entity",
+        EntityType.Builder.create(RocketEntity)
+            .setDimensions(8, 8)
+    );
+    public static readonly EMP_ROCKET_ENTITY = EntityType.register("emp_rocket_entity",
+        EntityType.Builder.create(EMPRocketEntity)
+            .setDimensions(8, 8)
+    );
+    public static readonly BURST_ROCKET_ENTITY = EntityType.register("burst_rocket_entity",
+        EntityType.Builder.create(BurstRocketEntity)
+            .setDimensions(8, 8)
+    );
+    public static readonly AP_ROCKET_ENTITY = EntityType.register("ap_rocket_entity",
+        EntityType.Builder.create(APRocketEntity)
             .setDimensions(8, 8)
     );
 

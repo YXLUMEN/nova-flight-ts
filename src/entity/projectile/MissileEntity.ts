@@ -1,38 +1,32 @@
-import {ProjectileEntity} from "./ProjectileEntity.ts";
 import {type Entity} from "../Entity.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
 import {PI2, rand} from "../../utils/math/math.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
-import {EVENTS} from "../../apis/IEvents.ts";
 import {AutoAim} from "../../tech/AutoAim.ts";
+import {RocketEntity} from "./RocketEntity.ts";
 
-export class MissileEntity extends ProjectileEntity {
+export class MissileEntity extends RocketEntity {
     public static lockedEntity = new WeakMap<Entity, number>();
-
-    public explosionRadius = 64;
-    public explosionDamage = 10;
 
     private target: Entity | null = null;
 
-    private igniteDelayTicks = 30;
-    private lockDelayTicks = 80;
+    private igniteDelayTicks = 80;
+    private lockDelayTicks = 150;
     private maxLifetimeTicks = 1000;
 
-    private driftSpeed = 1;
-    private trackingSpeed = 6;
-    private accSpeed = 0;
+    private driftSpeed = 0.8;
+    private trackingSpeed = 1.6;
     private readonly turnRate = Math.PI / 60;
-    private readonly hoverDir = (Math.random() >= 0.5 ? -1 : 1);
+    private hoverDir: number = 1;
 
     private readonly driftAngle: number;
     private readonly lockeType: string;
 
-    public constructor(type: EntityType<MissileEntity>, world: World, owner: LivingEntity, yaw: number, driftAngle: number, lockType = 'mobs') {
-        super(type, world, owner, 5);
+    public constructor(type: EntityType<MissileEntity>, world: World, owner: LivingEntity, driftAngle: number, lockType = 'mobs', damage = 5) {
+        super(type, world, owner, damage);
         this.driftAngle = driftAngle;
-        this.setYaw(yaw);
         this.lockeType = lockType;
     }
 
@@ -40,12 +34,10 @@ export class MissileEntity extends ProjectileEntity {
         this.age++;
 
         const pos = this.getPositionRef;
-        pos.addVec(this.getVelocity());
+        this.moveByVec(this.getVelocityRef);
+        this.getVelocityRef.multiply(0.8);
 
-        if (pos.y < -400 || pos.y > World.H + 400 || pos.x < -400 || pos.x > World.W + 400) {
-            this.discard();
-            return;
-        }
+        if (!this.adjustPosition()) return;
 
         if (this.age > this.maxLifetimeTicks) {
             const yaw = this.getYaw();
@@ -54,17 +46,12 @@ export class MissileEntity extends ProjectileEntity {
             return;
         }
 
-        if (this.age < this.igniteDelayTicks) {
+        if (this.age <= this.igniteDelayTicks) {
+            if (this.driftSpeed > 0.01) this.driftSpeed *= 0.98;
             const vx1 = Math.cos(this.driftAngle);
             const vy1 = Math.sin(this.driftAngle);
             this.updateVelocity(this.driftSpeed, vx1, vy1);
             return;
-        }
-
-        if (this.accSpeed < this.trackingSpeed) {
-            this.accSpeed += 0.08;
-            const yaw = this.getYaw();
-            this.updateVelocity(this.accSpeed, Math.cos(yaw), Math.sin(yaw));
         }
 
         const cd = (this.age & 3) === 0;
@@ -74,7 +61,11 @@ export class MissileEntity extends ProjectileEntity {
             "#986900", "#575757", 0.6, 80
         );
 
-        if (this.age < this.lockDelayTicks) return;
+        if (this.age < this.lockDelayTicks) {
+            const yaw = this.getYaw();
+            this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
+            return;
+        }
 
         if (!this.target || this.target.isRemoved()) {
             if (cd) this.target = this.acquireTarget();
@@ -116,9 +107,9 @@ export class MissileEntity extends ProjectileEntity {
             if (mob.isRemoved() || mob === this.owner) continue;
 
             const currentLocks = MissileEntity.lockedEntity.get(mob) ?? 0;
-            const isElite = mob.getMaxHealth() > this.damage + this.explosionDamage;
+            const totalDamage = this.damage + this.explosionDamage;
 
-            if (currentLocks > 0 && !isElite) continue;
+            if (currentLocks * totalDamage >= mob.getMaxHealth()) continue;
 
             const mobPos = mob.getPositionRef;
             const dx = mobPos.x - pos.x;
@@ -139,14 +130,6 @@ export class MissileEntity extends ProjectileEntity {
         return best;
     }
 
-    public onEntityHit(entity: Entity): void {
-        this.discard();
-
-        const sources = this.getWorld().getDamageSources();
-        const attacker = this.owner instanceof LivingEntity ? this.owner : null;
-        entity.takeDamage(sources.mobProjectile(this, attacker), this.damage);
-    }
-
     public override discard(): void {
         super.discard();
 
@@ -159,17 +142,15 @@ export class MissileEntity extends ProjectileEntity {
             }
             this.target = null;
         }
+    }
 
-        const attacker = this.owner instanceof LivingEntity ? this.owner : null;
-        this.getWorld().events.emit(EVENTS.BOMB_DETONATE, {
-            source: this,
-            damage: this.explosionDamage,
-            attacker,
-            pos: this.getPositionRef,
-            explosionRadius: this.explosionRadius,
-            fastSparks: 2,
-            sparks: 5
-        });
+    protected override adjustPosition(): boolean {
+        const pos = this.getPositionRef;
+        if (pos.y < -400 || pos.y > World.H + 400 || pos.x < -400 || pos.x > World.W + 400) {
+            this.discard();
+            return false;
+        }
+        return true;
     }
 
     public isIgnite(): boolean {
@@ -190,5 +171,9 @@ export class MissileEntity extends ProjectileEntity {
 
     public setTrackingSpeed(value: number): void {
         this.trackingSpeed = value;
+    }
+
+    public setHoverDir(value: 1 | -1) {
+        this.hoverDir = value;
     }
 }

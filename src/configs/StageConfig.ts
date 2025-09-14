@@ -6,17 +6,17 @@ import {EVENTS} from "../apis/IEvents.ts";
 
 const p0: PhaseConfig = deepFreeze(createCleanObj({
     name: "P0",
-    duration: 3,
+    duration: 150,
     rules: []
 }));
 
 const p1: PhaseConfig = deepFreeze(createCleanObj({
     name: "P1",
-    duration: 120,
+    duration: 6000,
     until: ({score}) => score >= 64,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P1'}),
     rules: [
-        {every: 0.6, jitter: 0.3, factory: spawnBase(2, 0), cap: 30},
+        {every: 30, jitter: 0.3, factory: spawnBase(0.2, 0), cap: 30},
     ],
 }));
 
@@ -25,8 +25,8 @@ const p2: PhaseConfig = deepFreeze(createCleanObj({
     until: ({score}) => score >= 320,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P2'}),
     rules: [
-        {every: 1.2, jitter: 0.3, factory: spawnBase(2, 2), cap: 48},
-        {every: 5.0, jitter: 0.2, factory: spawnLineBase(4, 56, 2.4)},
+        {every: 60, jitter: 0.3, factory: spawnBase(0.2, 2), cap: 48},
+        {every: 250, jitter: 0.2, factory: spawnLineBase(4, 56, 0.24)},
     ],
 }));
 
@@ -36,13 +36,13 @@ const p3: PhaseConfig = deepFreeze(createCleanObj({
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P3'}),
     rules: [
         {
-            rate: ({score}) => 1.0 + 0.3 * (score / 40) | 0,
+            every: 35,
             jitter: 0.4,
-            factory: spawnBase(2.2, 1, 2, '#ff2121'),
+            factory: spawnBase(0.22, 1, 2, '#ff2121'),
             cap: 64,
         },
-        {every: 1.2, jitter: 0.5, factory: spawnGun(2, 2)},
-        {every: 2.0, jitter: 0.35, factory: spawnLineBase(4, 64, 2.4)},
+        {every: 60, jitter: 0.5, factory: spawnGun(0.2, 2)},
+        {every: 100, jitter: 0.35, factory: spawnLineBase(4, 64, 0.24)},
     ],
 }));
 
@@ -52,13 +52,13 @@ const p4: PhaseConfig = deepFreeze(createCleanObj({
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P4'}),
     rules: [
         {
-            rate: ({score}) => 1.0 + 0.3 * (score / 60) | 0,
+            every: 40,
             jitter: 0.4,
-            factory: spawnBaseS(2.2, 4, 3, '#ff2121'),
+            factory: spawnBaseS(0.22, 4, 3, '#ff2121'),
             cap: 32,
         },
-        {every: 1.2, jitter: 0.5, factory: spawnGun(2, 2, 2)},
-        {every: 2.0, jitter: 0.35, factory: spawnLineBase(6, 72, 2.8)},
+        {every: 60, jitter: 0.5, factory: spawnGun(0.2, 2, 2)},
+        {every: 100, jitter: 0.35, factory: spawnLineBase(6, 72, 0.28)},
     ],
 }));
 
@@ -68,25 +68,25 @@ const p5: PhaseConfig = deepFreeze(createCleanObj({
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P5'}),
     rules: [
         {
-            rate: 1,
+            every: 50,
             jitter: 0.4,
             factory: spawnBaseS(
-                2.2, 6, 8,
+                0.22, 6, 8,
                 '#910000'
             ),
             cap: 90
         },
         {
-            rate: 2,
+            every: 25,
             jitter: 0.8,
             factory: spawnBaseS(
-                2.4, 2, 4,
+                0.24, 2, 4,
                 '#ff2121',
             ),
             cap: 96,
         },
-        {every: 0.9, jitter: 0.5, factory: spawnGun(1.6, 2), cap: 96},
-        {every: 4.0, jitter: 0.35, factory: spawnLineBase(6, 64, 2.6, 1)},
+        {every: 45, jitter: 0.5, factory: spawnGun(0.16, 2), cap: 96},
+        {every: 200, jitter: 0.35, factory: spawnLineBase(6, 64, 0.26, 1)},
     ],
 }));
 
@@ -95,15 +95,15 @@ const p6: PhaseConfig = deepFreeze(createCleanObj({
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P6'}),
     rules: [
         {
-            every: 0.4,
+            every: 20,
             jitter: 0.4,
             factory: spawnBase(
-                2.2, 14, 8,
+                0.22, 14, 8,
                 '#910000'
             ),
             cap: 94
         },
-        {rate: 3, jitter: 0.5, factory: spawnGun(1.6, 6), cap: 96},
+        {every: 18, jitter: 0.5, factory: spawnGun(0.16, 6), cap: 96},
     ],
 }));
 
@@ -112,26 +112,26 @@ const p7: PhaseConfig = deepFreeze(createCleanObj({
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P7'}),
     rules: [
         {
-            rate: 1,
+            every: 50,
             jitter: 0.4,
             factory: spawnBaseS(
-                2.2, 6, 8,
+                0.22, 6, 8,
                 '#910000',
                 (ctx) => 1 + (ctx.score / 1000) | 0
             ),
             cap: 94
         },
         {
-            rate: 3,
+            every: 18,
             jitter: 0.6,
             factory: spawnTank(
-                1.2, 0, 8,
+                0.12, 0, 8,
                 '#9f3b00',
             ),
             cap: 72,
         },
-        {every: 0.9, jitter: 0.5, factory: spawnGun(1.6, 4, 4), cap: 96},
-        {every: 2.0, jitter: 0.4, factory: spawnMiniGun(0.8, 0, 12), cap: 96},
+        {every: 45, jitter: 0.5, factory: spawnGun(0.16, 4, 4), cap: 96},
+        {every: 100, jitter: 0.4, factory: spawnMiniGun(0.08, 0, 12), cap: 98},
     ],
 }));
 

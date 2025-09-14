@@ -1,23 +1,21 @@
-import {Weapon} from "./Weapon.ts";
 import {World} from "../world/World.ts";
-import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
 import {EMPBurst} from "../effect/EMPBurst.ts";
 import {pointInCircleVec2} from "../utils/math/math.ts";
 import type {MutVec2} from "../utils/math/MutVec2.ts";
 import {ScreenFlash} from "../effect/ScreenFlash.ts";
-import {WorldConfig} from "../configs/WorldConfig.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import type {LivingEntity} from "../entity/LivingEntity.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
-import {SoundSystem} from "../sound/SoundSystem.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
+import {SpecialWeapon} from "./SpecialWeapon.ts";
+import {SoundSystem} from "../sound/SoundSystem.ts";
 
-export class EMPWeapon extends Weapon implements ISpecialWeapon {
+export class EMPWeapon extends SpecialWeapon {
     public radius: number = 480;
-    private duration = 12 * WorldConfig.tick;
+    private duration = 600;
 
     constructor(owner: LivingEntity) {
         super(owner, 0, 500);

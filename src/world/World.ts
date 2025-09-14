@@ -3,7 +3,7 @@ import {type Entity} from "../entity/Entity.ts";
 import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {Camera} from "../render/Camera.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
-import {EventBus} from "../event/EventBus.ts";
+import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 import type {Effect} from "../effect/Effect.ts";
 import {ScreenFlash} from "../effect/ScreenFlash.ts";
 import {StarField} from "../effect/StarField.ts";
@@ -13,7 +13,7 @@ import {DPR} from "../utils/uit.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {ParticlePool} from "../effect/ParticlePool.ts";
-import type {TimerTask} from "../apis/ITimer.ts";
+import type {Schedule, TimerTask} from "../apis/ITimer.ts";
 import {DamageSources} from "../entity/damage/DamageSources.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import {collideEntityBox, collideEntityCircle} from "../utils/math/math.ts";
@@ -27,6 +27,8 @@ import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 import {BossEntity} from "../entity/mob/BossEntity.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import type {IVec} from "../utils/math/IVec.ts";
+import {SoundSystem} from "../sound/SoundSystem.ts";
+import {SoundEvents} from "../sound/SoundEvents.ts";
 
 export class World {
     private static worldInstance: World;
@@ -37,7 +39,7 @@ export class World {
     public static H = 600;
 
     public readonly camera: Camera = new Camera();
-    public readonly events: EventBus<IEvents> = EventBus.getEventBus();
+    public readonly events: GeneralEventBus<IEvents> = GeneralEventBus.getEventBus();
     public empBurst: number = 0
 
     private readonly registryManager: RegistryManager;
@@ -84,7 +86,7 @@ export class World {
     public static createWorld(registryManager: RegistryManager): World {
         if (this.worldInstance) return this.worldInstance;
         this.worldInstance = new World(registryManager);
-        this.worldInstance.ticking = false;
+        this.worldInstance.setTicking(false);
         return this.worldInstance;
     }
 
@@ -117,7 +119,7 @@ export class World {
         this.camera.update(player.getPositionRef.clone().add(forwardX, forwardY), tickDelta);
 
         // 阶段更新
-        this.stage.update(this, dt);
+        this.stage.tick(this);
 
         // 更新实体
         if (!this.over) player.tick();
@@ -171,7 +173,6 @@ export class World {
 
         this.time += dt;
         this.processTimers();
-        // console.log('All', this.entities.size, 'mobs', this.loadedMobs.size);
     }
 
     public get isTicking(): boolean {
@@ -200,11 +201,12 @@ export class World {
 
     public togglePause(): void {
         if (this.over) return;
-        this.ticking = !this.ticking;
+        this.setTicking(!this.ticking);
     }
 
     private toggleTechTree() {
-        this.ticking = this.rendering = document.getElementById('tech-shell')!.classList.toggle('hidden');
+        const ticking = this.rendering = document.getElementById('tech-shell')!.classList.toggle('hidden');
+        this.setTicking(ticking);
     }
 
     private resize() {
@@ -223,7 +225,7 @@ export class World {
         this.over = true;
         this.effects.push(new ScreenFlash(1, 0.25, '#ff0000'));
         this.schedule(1, () => {
-            this.ticking = false
+            this.setTicking(false);
         });
     }
 
@@ -282,7 +284,7 @@ export class World {
         return this.loadedMobs;
     }
 
-    public schedule(delaySec: number, fn: () => void): { id: number; cancel: () => void } {
+    public schedule(delaySec: number, fn: () => void): Schedule {
         const t: TimerTask = {
             id: this.nextTimerId++,
             at: this.time + Math.max(0, delaySec),
@@ -297,7 +299,7 @@ export class World {
         };
     }
 
-    public scheduleInterval(intervalSec: number, fn: () => void): { id: number; cancel: () => void } {
+    public scheduleInterval(intervalSec: number, fn: () => void): Schedule {
         const t: TimerTask = {
             id: this.nextTimerId++,
             at: this.time + Math.max(0, intervalSec),
@@ -315,6 +317,16 @@ export class World {
 
     public getTime(): number {
         return this.time;
+    }
+
+    public setTicking(ticking = true): void {
+        if (ticking) {
+            SoundSystem.resumeAll().catch(console.error);
+            SoundSystem.playSound(SoundEvents.UI_WARN);
+        } else {
+            SoundSystem.pauseAll().catch(console.error);
+        }
+        this.ticking = ticking;
     }
 
     public render() {
@@ -447,7 +459,7 @@ export class World {
     }
 
     private registryListeners() {
-        mainWindow.listen('tauri://blur', () => this.ticking = false).then();
+        mainWindow.listen('tauri://blur', () => this.setTicking(false)).then();
         mainWindow.listen('tauri://resize', async () => {
             this.rendering = !await mainWindow.isMinimized();
         }).then();
@@ -473,7 +485,7 @@ export class World {
             else if (code === 'KeyG') this.toggleTechTree();
             else if (code === 'KeyM') {
                 document.getElementById('help')?.classList.toggle('hidden');
-                this.ticking = false;
+                this.setTicking(false);
             }
         });
 

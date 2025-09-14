@@ -1,5 +1,3 @@
-import {Weapon} from "./Weapon.ts";
-import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
 import {World} from "../world/World.ts";
 import {WindowOverlay} from "../effect/WindowOverlay.ts";
 import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
@@ -9,8 +7,9 @@ import {LaserWeapon} from "./LaserWeapon.ts";
 import {BossEntity} from "../entity/mob/BossEntity.ts";
 import {EntityAttributes} from "../entity/attribute/EntityAttributes.ts";
 import {Identifier} from "../registry/Identifier.ts";
+import {SpecialWeapon} from "./SpecialWeapon.ts";
 
-export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
+export class IntoVoidWeapon extends SpecialWeapon {
     public static readonly displayName = "遁入虚空";
     public static readonly uiColor = "#7945ff";
 
@@ -59,7 +58,7 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
     }
 
     public override tick(): void {
-        if (this.getCooldown() > 0) this.setCooldown(Math.max(0, this.getCooldown() - 1));
+        super.tick();
         if (!this.active) return;
 
         this.timeLeft -= 1;
@@ -72,7 +71,7 @@ export class IntoVoidWeapon extends Weapon implements ISpecialWeapon {
         }
     }
 
-    public bindKey(): string {
+    public override bindKey(): string {
         return "Digit4";
     }
 

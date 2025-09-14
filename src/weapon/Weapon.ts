@@ -16,11 +16,17 @@ export abstract class Weapon {
     }
 
     public tick() {
-        if (this.cooldown > 0) this.setCooldown(this.cooldown - 1);
+        if (this.cooldown > 0 && this.shouldCooldown()) this.setCooldown(this.cooldown - 1);
     }
 
     // 不会检查冷却
     public abstract tryFire(world: World): void;
+
+    public onStartFire(_world: World): void {
+    }
+
+    public onEndFire(_world: World): void {
+    }
 
     public canFire(): boolean {
         return this.getCooldown() <= 0;
@@ -44,6 +50,10 @@ export abstract class Weapon {
 
     public setCooldown(value: number) {
         this.cooldown = clamp(value, 0, this.maxCooldown);
+    }
+
+    public shouldCooldown(): boolean {
+        return true;
     }
 
     public abstract getDisplayName(): string;

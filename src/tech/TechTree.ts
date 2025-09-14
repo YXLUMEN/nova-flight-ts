@@ -4,7 +4,7 @@ import {World} from "../world/World.ts";
 import {applyTech} from "./apply_tech.ts";
 import {clamp} from "../utils/math/math.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
-import {Cannon40Weapon} from "../weapon/Cannon40Weapon.ts";
+import {Cannon40Weapon} from "../weapon/BaseWeapon/Cannon40Weapon.ts";
 import {BombWeapon} from "../weapon/BombWeapon.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 
@@ -433,7 +433,7 @@ export class TechTree {
         player.weapons.set('bomb', new BombWeapon(player));
 
         player.steeringGear = false;
-        player.setYaw(-1.55);
+        player.setYaw(-1.57079);
 
         this.state.reset();
         this.renderNodes();

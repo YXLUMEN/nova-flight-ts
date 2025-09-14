@@ -9,6 +9,7 @@ import {PlayerEntityRender} from "./PlayerEntityRender.ts";
 import {BossEntityRender} from "./BossEntityRender.ts";
 import {MiniGunEnemyEntityRender} from "./MiniGunEnemyEntityRender.ts";
 import {MissileEntityRender} from "./MissileEntityRender.ts";
+import {RocketEntityRender} from "./RocketEntityRender.ts";
 
 export class EntityRenderers {
     private static readonly RENDERER_FACTORIES = new Map<EntityType<Entity>, EntityRenderer<Entity>>();
@@ -20,6 +21,7 @@ export class EntityRenderers {
     public static registryRenders(): void {
         const baseEnemy = new BaseEnemyRender();
         const bullet = new BulletEntityRender();
+        const rocket = new RocketEntityRender();
         this.register(EntityTypes.BASE_ENEMY, baseEnemy);
         this.register(EntityTypes.TANK_ENEMY_ENTITY, baseEnemy);
         this.register(EntityTypes.BOSS_ENTITY, new BossEntityRender());
@@ -29,6 +31,10 @@ export class EntityRenderers {
         this.register(EntityTypes.MINI_BULLET_ENTITY, bullet);
         this.register(EntityTypes.EXPLODE_BULLET_ENTITY, bullet);
         this.register(EntityTypes.PLAYER_ENTITY, new PlayerEntityRender());
+        this.register(EntityTypes.ROCKET_ENTITY, rocket);
+        this.register(EntityTypes.EMP_ROCKET_ENTITY, rocket);
+        this.register(EntityTypes.BURST_ROCKET_ENTITY, rocket);
+        this.register(EntityTypes.AP_ROCKET_ENTITY, rocket);
         this.register(EntityTypes.MISSILE_ENTITY, new MissileEntityRender());
         this.compileRenders();
     }

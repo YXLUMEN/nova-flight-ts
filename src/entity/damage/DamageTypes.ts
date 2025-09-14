@@ -13,5 +13,6 @@ export class DamageTypes {
     public static readonly PLAYER_IMPACT = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.ofVanilla("player_impact"));
     public static readonly VOID = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.ofVanilla("void"));
     public static readonly ON_FIRE = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.ofVanilla("on_fire"));
+    public static readonly AP_DAMAGE = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.ofVanilla("ap_damage"));
 }
 

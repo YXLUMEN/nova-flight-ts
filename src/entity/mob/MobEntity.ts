@@ -18,7 +18,7 @@ export abstract class MobEntity extends LivingEntity {
         super(type, world);
         this.worth = worth;
         this.age += (Math.random() * 10) | 0;
-        this.setYaw(1.55);
+        this.setYaw(1.57079);
     }
 
     public override tick(): void {
@@ -26,15 +26,23 @@ export abstract class MobEntity extends LivingEntity {
 
         const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
         const speed = this.getMovementSpeed() * speedMultiplier;
-        const swingValue = Math.sin(this.age * 0.1) * 0.5 * speedMultiplier
+        const vx = Math.sin(this.age * 0.05) * 0.8 * speedMultiplier;
 
-        this.updateVelocity(speed, swingValue, this.yStep);
+        this.updateVelocity(speed, vx, this.yStep);
         this.moveByVec(this.getVelocityRef);
+        this.getVelocityRef.multiply(0.8);
+        this.adjustPosition();
+    }
 
+    protected override adjustPosition(): boolean {
         const pos = this.getPositionRef;
         pos.x = clamp(pos.x, 20, World.W);
 
-        if (pos.y > World.H + 40) this.discard();
+        if (pos.y > World.H + 40) {
+            this.discard();
+            return false;
+        }
+        return true;
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
@@ -43,8 +51,12 @@ export abstract class MobEntity extends LivingEntity {
 
         const world = this.getWorld();
         world.events.emit(EVENTS.MOB_DAMAGE, {mob: this, damageSource});
-        world.spawnParticleByVec(this.getPositionRef, MutVec2.zero(), rand(0.2, 0.6), rand(4, 6),
-            "#ffaa33", "#ff5454", 0.6, 80);
+        world.spawnParticleByVec(
+            this.getPositionRef, MutVec2.zero(),
+            rand(0.2, 0.6), rand(4, 6),
+            "#ffaa33", "#ff5454",
+            0.6, 80
+        );
         return true;
     }
 

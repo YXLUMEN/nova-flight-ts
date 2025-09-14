@@ -1,54 +1,177 @@
 {
+  "ui.type": {
+    "subtitle": "sound.nova-flight.ui.type",
+    "sounds": [
+      "nova-flight:ui/ui_type"
+    ]
+  },
+  "ui.warn": {
+    "subtitle": "sound.nova-flight.ui.warn",
+    "sounds": [
+      "nova-flight:ui/ui_warn"
+    ]
+  },
   "laser.overheat_alarm": {
     "subtitle": "sound.nova-flight.laser.overheat_alarm",
-    "sounds": "nova-flight:laser/overheat_alarm"
+    "sounds": [
+      "nova-flight:laser/overheat_alarm"
+    ]
   },
   "laser.cooldown": {
     "subtitle": "sound.nova-flight.laser.cooldown",
-    "sounds": "nova-flight:laser/cooldown"
+    "sounds": [
+      "nova-flight:laser/cooldown"
+    ]
   },
   "laser.trigger": {
     "subtitle": "sound.nova-flight.laser.trigger",
-    "sounds": "nova-flight:laser/trigger"
+    "sounds": [
+      "nova-flight:laser/trigger"
+    ]
   },
   "laser.beam": {
     "subtitle": "sound.nova-flight.laser.beam",
-    "sounds": "nova-flight:laser/beam"
+    "sounds": [
+      "nova-flight:laser/beam"
+    ]
   },
   "laser.charge_down": {
     "subtitle": "sound.nova-flight.laser.charge_down",
-    "sounds": "nova-flight:laser/charge_down"
+    "sounds": [
+      "nova-flight:laser/charge_down"
+    ]
   },
   "cannon40.fire": {
     "subtitle": "sound.nova-flight.cannon40.fire",
-    "sounds": "nova-flight:cannon40/fire_core"
+    "sounds": [
+      "nova-flight:cannon40/fire_core"
+    ]
   },
   "cannon40.fire_nx": {
     "subtitle": "sound.nova-flight.cannon40.fire",
-    "sounds": "nova-flight:cannon40/fire_core_nx"
+    "sounds": [
+      "nova-flight:cannon40/fire_core_nx"
+    ]
   },
   "cannon40.fire_mech": {
     "subtitle": "sound.nova-flight.cannon40.fire_mech",
-    "sounds": "nova-flight:cannon40/fire_mech"
+    "sounds": [
+      "nova-flight:cannon40/fire_mech"
+    ]
   },
-  "cannon40.fire_mix": {
+  "cannon40.fire_loop": {
     "subtitle": "sound.nova-flight.cannon40.fire",
-    "sounds": "nova-flight:cannon40/fire_mix"
+    "sounds": [
+      "nova-flight:cannon40/fire_loop"
+    ]
+  },
+  "cannon40.fire_tail": {
+    "subtitle": "sound.nova-flight.cannon40.fire",
+    "sounds": [
+      "nova-flight:cannon40/fire_tail"
+    ]
   },
   "minigun.fire": {
     "subtitle": "sound.nova-flight.minigun.fire",
-    "sounds": "nova-flight:minigun/fire"
+    "sounds": [
+      "nova-flight:minigun/fire_01",
+      "nova-flight:minigun/fire_02",
+      "nova-flight:minigun/fire_03",
+      "nova-flight:minigun/fire_04"
+    ]
+  },
+  "minigun.fire_tail": {
+    "subtitle": "sound.nova-flight.minigun.fire_tail",
+    "sounds": [
+      "nova-flight:minigun/fire_tail_01",
+      "nova-flight:minigun/fire_tail_02",
+      "nova-flight:minigun/fire_tail_03",
+      "nova-flight:minigun/fire_tail_04"
+    ]
+  },
+  "minigun.fire_loop": {
+    "subtitle": "sound.nova-flight.minigun.fire",
+    "sounds": [
+      "nova-flight:minigun/fire_loop"
+    ]
   },
   "emp.burst": {
     "subtitle": "sound.nova-flight.emp.burst",
-    "sounds": "nova-flight:emp/burst"
+    "sounds": [
+      "nova-flight:emp/burst_01",
+      "nova-flight:emp/burst_02",
+      "nova-flight:emp/burst_03",
+      "nova-flight:emp/burst_04"
+    ]
   },
   "cannon90.fire": {
     "subtitle": "sound.nova-flight.cannon90.fire",
-    "sounds": "nova-flight:cannon90/fire"
+    "sounds": [
+      "nova-flight:cannon90/fire_01",
+      "nova-flight:cannon90/fire_02",
+      "nova-flight:cannon90/fire_03",
+      "nova-flight:cannon90/fire_04",
+      "nova-flight:cannon90/fire_05",
+      "nova-flight:cannon90/fire_06"
+    ]
   },
   "shield.crash": {
     "subtitle": "sound.nova-flight.shield.crash",
-    "sounds": "nova-flight:/shield_crash"
+    "sounds": [
+      "nova-flight:/shield_crash"
+    ]
+  },
+  "missile.launch": {
+    "subtitle": "sound.nova-flight.missile.launch",
+    "sounds": [
+      "nova-flight:missile/launch"
+    ]
+  },
+  "missile.launch_comp": {
+    "subtitle": "sound.nova-flight.missile.launch",
+    "sounds": [
+      "nova-flight:missile/missile_launch"
+    ]
+  },
+  "missile.launch_loop": {
+    "subtitle": "sound.nova-flight.missile.launch",
+    "sounds": [
+      "nova-flight:missile/missile_launch_loop"
+    ]
+  },
+  "missile.blastoff": {
+    "subtitle": "sound.nova-flight.missile.blastoff",
+    "sounds": [
+      "nova-flight:missile/blastoff_01",
+      "nova-flight:missile/blastoff_02",
+      "nova-flight:missile/blastoff_03",
+      "nova-flight:missile/blastoff_04"
+    ]
+  },
+  "missile.explosion": {
+    "subtitle": "sound.nova-flight.missile.explosion",
+    "sounds": [
+      "nova-flight:missile/explosion_01",
+      "nova-flight:missile/explosion_02",
+      "nova-flight:missile/explosion_03"
+    ]
+  },
+  "missile.pitched": {
+    "subtitle": "sound.nova-flight.missile.pitch",
+    "sounds": [
+      "nova-flight:missile/pitched_whine"
+    ]
+  },
+  "weapon.ready": {
+    "subtitle": "sound.nova-flight.weapon.ready",
+    "sounds": [
+      "nova-flight:/charge_ready"
+    ]
+  },
+  "explosion.normal": {
+    "subtitle": "sound.nova-flight.explosion.normal",
+    "sounds": [
+      "nova-flight:/explosion_01"
+    ]
   }
 }

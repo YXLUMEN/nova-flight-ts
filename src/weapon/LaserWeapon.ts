@@ -1,15 +1,14 @@
 import {LaserBeamEffect} from '../effect/LaserBeamEffect.ts';
-import {Weapon} from './Weapon.ts';
 import {World} from '../world/World.ts';
 import {clamp, lineCircleHit} from '../utils/math/math.ts';
-import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
 import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
-import {SoundSystem} from "../sound/SoundSystem.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import type {LivingEntity} from "../entity/LivingEntity.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
+import {SpecialWeapon} from "./SpecialWeapon.ts";
+import {SoundSystem} from "../sound/SoundSystem.ts";
 
-export class LaserWeapon extends Weapon implements ISpecialWeapon {
+export class LaserWeapon extends SpecialWeapon {
     public static readonly DISPLAY_NAME = 'LASER';
     public static readonly COLOR = '#8bff5e';
     public static readonly OVERHEAT_COLOR = '#ff5e5e';
@@ -23,7 +22,6 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
     private active = false;
     private overheated = false;
     private playSound = true;
-    private soundCooldown = 0;
 
     private readonly height = World.H;        // 长度
     private readonly width = 6;            // 宽度
@@ -35,13 +33,10 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
         super(owner, 1, 4);
     }
 
-    public override tryFire(_world: World): void {
+    public override tryFire(world: World): void {
         this.active = this.active ? false : !this.overheated;
-        if (this.active) {
-            this.soundCooldown = 0;
-            SoundSystem.playSound(SoundEvents.LASER_TRIGGER);
-        }
-        if (!this.active && !this.overheated) SoundSystem.playSound(SoundEvents.LASER_CHARGE_DOWN);
+        if (this.active) this.onStartFire(world);
+        if (!this.active && !this.overheated) this.onEndFire(world);
     }
 
     public override canFire(): boolean {
@@ -54,10 +49,6 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
         // 升温/降温
         if (this.active) {
             this.heat = Math.min(this.maxHeat, this.heat + this.drainRate);
-            if (this.soundCooldown-- <= 0) {
-                SoundSystem.playSound(SoundEvents.LASER_BEAM);
-                this.soundCooldown = 25;
-            }
         } else {
             this.heat = Math.max(0, this.heat - this.coolRate);
         }
@@ -72,6 +63,7 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
                 this.active = false;
                 if (this.beamFx) this.beamFx.kill();
                 this.beamFx = null;
+                this.onEndFire(this.owner.getWorld());
             }
             if (this.playSound && heatLeft <= 100) {
                 SoundSystem.playSound(SoundEvents.LASER_OVERHEAT);
@@ -83,6 +75,7 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
         if (this.overheated && this.heat <= 0) {
             this.heat = 0;
             this.overheated = false;
+            SoundSystem.playSound(SoundEvents.WEAPON_READY);
         }
 
         if (!this.active) {
@@ -96,7 +89,6 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
         const world = this.owner.getWorld();
 
         const start = this.owner.getPositionRef;
-
         const yaw = this.owner.getYaw();
         const f = Math.cos(yaw);
         const g = Math.sin(yaw);
@@ -109,7 +101,9 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
 
         for (const mob of world.getLoadMobs()) {
             if (mob.isRemoved() ||
-                !lineCircleHit(start.x, start.y, end.x, end.y, mob.getPositionRef.x, mob.getPositionRef.y, mob.getEntityDimension().width)) continue;
+                !lineCircleHit(
+                    start.x, start.y, end.x, end.y,
+                    mob.getPositionRef.x, mob.getPositionRef.y, mob.getEntityDimension().width)) continue;
 
             const damage = Math.max(1, Math.round(this.damage | 0));
             mob.takeDamage(world.getDamageSources().laser(attacker), damage);
@@ -123,9 +117,24 @@ export class LaserWeapon extends Weapon implements ISpecialWeapon {
         this.beamFx.set(start, end);
     }
 
+    public override onStartFire(_world: World) {
+        SoundSystem.playSound(SoundEvents.LASER_TRIGGER);
+        SoundSystem.playLoopSound(SoundEvents.LASER_BEAM);
+    }
+
+    public override onEndFire(_world: World) {
+        if (SoundSystem.stopLoopSound(SoundEvents.LASER_BEAM)) {
+            SoundSystem.playSound(SoundEvents.LASER_CHARGE_DOWN);
+        }
+    }
+
     public instantCooldown() {
         this.heat = 0;
         this.overheated = false;
+    }
+
+    public override isReady(): boolean {
+        return false;
     }
 
     public override setCooldown(value: number) {

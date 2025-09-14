@@ -10,13 +10,13 @@ import {DamageTypes} from "../entity/damage/DamageTypes.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
-import {EventBus} from "./EventBus.ts";
+import {GeneralEventBus} from "./GeneralEventBus.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 
 
 export class DefaultEvents {
     public static registryEvents(world: World) {
-        const eventBus = EventBus.getEventBus();
+        const eventBus = GeneralEventBus.getEventBus();
         const player = world.player;
         if (!player) return;
         const techTree = player.techTree;
@@ -65,9 +65,9 @@ export class DefaultEvents {
         });
 
         const applyExplosion = (event: ExpendExplosionOpts) => {
-            const {pos, shake, flash, explosionRadius = 16, damage = 2} = event;
+            const {pos, shake, flash} = event;
 
-            BombWeapon.applyBombDamage(world, event.pos, explosionRadius, damage, event.source, event.attacker);
+            BombWeapon.summonExplosion(world, event.pos, event);
             BombWeapon.spawnExplosionVisual(world, pos, event);
             if (shake) world.camera.addShake(shake, 0.5);
             if (flash) world.addEffect(flash);

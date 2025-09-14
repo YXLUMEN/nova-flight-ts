@@ -3,6 +3,7 @@ import type {World} from "../../world/World.ts";
 import {MobEntity} from "./MobEntity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
+import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 
 export class TankEnemy extends MobEntity {
     public color = '#ff6b6b';
@@ -24,9 +25,10 @@ export class TankEnemy extends MobEntity {
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
-        if (this.damageCooldown > 0) return false;
+        const bypass = damageSource.isIn(DamageTypeTags.BYPASSES_INVULNERABLE);
+        if (this.damageCooldown > 0 && !bypass) return false;
 
-        damage = Math.min(8, damage);
+        if (!bypass) damage = Math.min(8, damage);
         if (super.takeDamage(damageSource, damage)) {
             this.damageCooldown = 8;
             return true;

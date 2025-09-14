@@ -10,6 +10,7 @@ export const EVENTS = createCleanObj({
     BOSS_KILLED: "entity:boss:killed",
     MOB_KILLED: "entity:mob:killed",
     MOB_DAMAGE: "entity:mob:damage",
+    ENTITY_DIE: "entity:die",
     UNLOCK_TECH: "player:tech:unlock",
     BOMB_DETONATE: "world:bomb_detonate",
     EMP_BURST: "world:emp_burst",

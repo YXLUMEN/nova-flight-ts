@@ -21,4 +21,4 @@ const WorldConfig = Object.preventExtensions(createCleanObj({
     autoShoot: false,
 }));
 
-export {freezeConfig, WorldConfig}
+export {freezeConfig, WorldConfig, isDev}

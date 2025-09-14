@@ -2,6 +2,8 @@ import type {IVec} from "../utils/math/IVec.ts";
 import type {LivingEntity} from "../entity/LivingEntity.ts";
 import type {Effect} from "../effect/Effect.ts";
 import type {Entity} from "../entity/Entity.ts";
+import type {StatusEffect} from "../entity/effect/StatusEffect.ts";
+import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 
 export interface ExplosionOpts {
     explosionRadius?: number;        // 视觉半径
@@ -11,9 +13,11 @@ export interface ExplosionOpts {
     shake?: number;
     // 火花数量
     sparks?: number;
-    fastSparks?: number,
+    fastSparks?: number;
     damage?: number;        // AoE 伤害
-    important?: boolean
+    important?: boolean;
+    explodeColor?: string;
+    statusEffect?: { effect: RegistryEntry<StatusEffect>; duration: number, amplifier: number };
 }
 
 export interface ExpendExplosionOpts extends ExplosionOpts {

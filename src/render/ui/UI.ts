@@ -1,7 +1,7 @@
 import type {UIOptions, WeaponUIInfo} from '../../apis/IUIInfo.ts';
 import {World} from '../../world/World.ts';
 import type {Weapon} from '../../weapon/Weapon.ts';
-import {BaseWeapon} from "../../weapon/BaseWeapon.ts";
+import {BaseWeapon} from "../../weapon/BaseWeapon/BaseWeapon.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {clamp} from "../../utils/math/math.ts";
 import type {PlayerEntity} from "../../entity/player/PlayerEntity.ts";

@@ -56,6 +56,10 @@ export class DamageSources {
         return this.createWithSource(DamageTypes.MOB_PROJECTILE, source, attacker);
     }
 
+    public apDamage(source: Entity, attacker: LivingEntity | null): DamageSource {
+        return this.createWithSource(DamageTypes.AP_DAMAGE, source, attacker);
+    }
+
     public explosion(source: Entity | null, attacker: LivingEntity | null) {
         if (source) {
             return this.createWithSource(DamageTypes.EXPLOSION, source, attacker);

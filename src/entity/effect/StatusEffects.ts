@@ -16,7 +16,7 @@ export class StatusEffects {
 
     public static readonly SLOWNESS = this.register("slowness",
         new StatusEffect(1, '#555555')
-            .addAttributeModifier(EntityAttributes.GENERIC_MOVEMENT_SPEED, Identifier.ofVanilla("effect.slowness"), 0.2)
+            .addAttributeModifier(EntityAttributes.GENERIC_MOVEMENT_SPEED, Identifier.ofVanilla("effect.slowness"), -0.2)
     );
 
     public static readonly EMC_STATUS = this.register("emc_status",

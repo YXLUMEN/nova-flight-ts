@@ -16,7 +16,7 @@ export interface IVec {
 
     multiplyEach(a: number, b: number): IVec
 
-    lengthSq(): number
+    lengthSquared(): number
 
     length(): number
 

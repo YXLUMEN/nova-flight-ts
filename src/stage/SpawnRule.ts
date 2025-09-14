@@ -1,48 +1,55 @@
 import type {SpawnCtx, SpawnRuleConfig} from "../apis/IStage.ts";
+import {clamp} from "../utils/math/math.ts";
 
 export class SpawnRule {
-    private t = 0;
+    private ticks = 0;
     private next = 0;
-    private cfg: SpawnRuleConfig;
+    private readonly cfg: SpawnRuleConfig;
 
-    constructor(cfg: SpawnRuleConfig) {
+    public constructor(cfg: SpawnRuleConfig) {
         this.cfg = cfg;
     }
 
     public reset() {
-        this.t = 0;
+        this.ticks = 0;
         this.next = 0;
     }
 
-    public update(dt: number, ctx: SpawnCtx) {
-        const {cfg} = this;
+    public tick(ctx: SpawnCtx) {
+        const cfg = this.cfg;
+
         if (cfg.enabled && !cfg.enabled(ctx)) return;
         if (cfg.cap && ctx.world.getLoadMobs().size >= cfg.cap) return;
 
-        this.t += dt;
+        this.ticks++;
 
         // 计算下一次间隔
-        const period = this.resolvePeriod(ctx);
-        if (this.next === 0) this.next = this.t + period;
+        if (this.next === 0) {
+            this.next = this.ticks + this.resolvePeriodTicks(ctx);
+        }
 
-        if (this.t >= this.next) {
+        while (this.ticks >= this.next) {
             this.spawn(ctx);
-            const p2 = this.resolvePeriod(ctx);
-            this.next += p2;
-            // 防止长时间卡顿导致的多次触发洪泛
-            if (this.t - this.next > 1.0) this.next = this.t + p2;
+            this.next += this.resolvePeriodTicks(ctx);
         }
     }
 
-    private resolvePeriod(ctx: SpawnCtx): number {
-        const j = Math.max(0, Math.min(1, this.cfg.jitter ?? 0));
+    private resolvePeriodTicks(ctx: SpawnCtx): number {
+        const j = clamp(this.cfg.jitter ?? 0, 0, 1);
+        const jitterMul = this.jitterMul(ctx.rng(), j);
+
         if (this.cfg.every !== undefined) {
-            const base = typeof this.cfg.every === 'function' ? this.cfg.every(ctx) : this.cfg.every;
-            return Math.max(0.001, base * this.jitterMul(ctx.rng(), j));
+            const baseTicks = typeof this.cfg.every === 'function'
+                ? this.cfg.every(ctx)
+                : this.cfg.every;
+            return Math.max(1, (baseTicks * jitterMul) | 0);
         }
-        const r = typeof this.cfg.rate === 'function' ? this.cfg.rate(ctx) : (this.cfg.rate ?? 0);
-        const base = r > 0 ? 1 / r : 999999;
-        return base * this.jitterMul(ctx.rng(), j);
+
+        const r = typeof this.cfg.rate === 'function'
+            ? this.cfg.rate(ctx)
+            : (this.cfg.rate ?? 0);
+        const baseTicks = r > 0 ? (1 / r) | 0 : Number.MAX_SAFE_INTEGER;
+        return Math.max(1, (baseTicks * jitterMul) | 0);
     }
 
     private jitterMul(u: number, j: number): number {

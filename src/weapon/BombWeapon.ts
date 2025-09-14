@@ -1,34 +1,40 @@
-import {Weapon} from "./Weapon.ts";
 import {World} from "../world/World.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {RadialRing} from "../effect/RadialRing.ts";
 import {rand} from "../utils/math/math.ts";
-import type {Entity} from "../entity/Entity.ts";
-import type {ExplosionOpts} from "../apis/IExplosionOpts.ts";
-import type {ISpecialWeapon} from "./ISpecialWeapon.ts";
+import type {ExpendExplosionOpts, ExplosionOpts} from "../apis/IExplosionOpts.ts";
 import {Particle} from "../effect/Particle.ts";
 import {LivingEntity} from "../entity/LivingEntity.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import {EVENTS} from "../apis/IEvents.ts";
+import {SpecialWeapon} from "./SpecialWeapon.ts";
+import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
+import {SoundEvents} from "../sound/SoundEvents.ts";
+import {SoundSystem} from "../sound/SoundSystem.ts";
 
 
-export class BombWeapon extends Weapon implements ISpecialWeapon {
+export class BombWeapon extends SpecialWeapon {
     public damageRadius = 200;
 
-    constructor(owner: LivingEntity) {
+    public constructor(owner: LivingEntity) {
         super(owner, 24, 800);
     }
 
-    public static applyBombDamage(
-        world: World, center: IVec, radius: number,
-        damage: number,
-        source: Entity | null = null, attacker: LivingEntity | null = null) {
+    public static summonExplosion(
+        world: World, center: IVec, opts: ExpendExplosionOpts) {
+        const radius = opts.explosionRadius ?? 16;
+        const damage = opts.damage ?? 6;
+
         const r2 = radius * radius;
         for (const mob of world.getLoadMobs()) {
             if (mob.isRemoved()) continue;
             const d2 = MutVec2.distSq(mob.getPositionRef, center);
             if (d2 <= r2) {
-                mob.takeDamage(world.getDamageSources().explosion(source, attacker), damage);
+                mob.takeDamage(world.getDamageSources().explosion(opts.source, opts.attacker), damage);
+                if (opts.statusEffect) {
+                    const {effect, duration, amplifier} = opts.statusEffect;
+                    mob.addStatusEffect(new StatusEffectInstance(effect, duration, amplifier), opts.source);
+                }
             }
         }
     }
@@ -38,6 +44,7 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
         const sparks = opts.sparks ?? 26;
         const fastSparks = opts.fastSparks ?? 10;
         const important = opts.important ?? false;
+        const color = opts.explodeColor ?? '#e3e3e3';
 
         for (let i = 0; i < sparks; i++) {
             const a = rand(0, Math.PI * 2);
@@ -68,7 +75,7 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
             );
         }
 
-        world.addEffect(new RadialRing(pos, radius * 0.2, radius * 1.1, 0.35, "#e3e3e3"));
+        world.addEffect(new RadialRing(pos, radius * 0.2, radius * 1.1, 0.35, color));
     }
 
     public override tryFire(world: World) {
@@ -81,6 +88,7 @@ export class BombWeapon extends Weapon implements ISpecialWeapon {
             attacker: this.owner,
         });
 
+        SoundSystem.playSound(SoundEvents.EXPLOSION);
         this.setCooldown(this.getMaxCooldown());
     }
 

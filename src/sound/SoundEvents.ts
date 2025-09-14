@@ -4,6 +4,9 @@ import {Identifier} from "../registry/Identifier.ts";
 import {SoundEvent} from "./SoundEvent.ts";
 
 export class SoundEvents {
+    public static readonly UI_TYPE = this.registerSound("ui.type");
+    public static readonly UI_WARN = this.registerSound("ui.warn");
+
     public static readonly LASER_OVERHEAT = this.registerSound("laser.overheat_alarm");
     public static readonly LASER_COOLDOWN = this.registerSound("laser.cooldown");
     public static readonly LASER_TRIGGER = this.registerSound("laser.trigger");
@@ -13,13 +16,27 @@ export class SoundEvents {
     public static readonly CANNON40_FIRE = this.registerSound("cannon40.fire");
     public static readonly CANNON40_FIRE_NX = this.registerSound("cannon40.fire_nx");
     public static readonly CANNON40_FIRE_MECH = this.registerSound("cannon40.fire_mech");
+    public static readonly CANNON40_FIRE_LOOP = this.registerSound("cannon40.fire_loop");
+    public static readonly CANNON40_FIRE_TAIL = this.registerSound("cannon40.fire_tail");
 
     public static readonly MINIGUN_FIRE = this.registerSound("minigun.fire");
+    public static readonly MINIGUN_FIRE_TAIL = this.registerSound("minigun.fire_tail");
+    public static readonly MINIGUN_FIRE_LOOP = this.registerSound("minigun.fire_loop");
 
     public static readonly CANNON90_FIRE = this.registerSound("cannon90.fire");
 
     public static readonly EMP_BURST = this.registerSound("emp.burst");
     public static readonly SHIELD_CRASH = this.registerSound("shield.crash");
+
+    public static readonly MISSILE_LAUNCH = this.registerSound("missile.launch");
+    public static readonly MISSILE_LAUNCH_COMP = this.registerSound("missile.launch_comp");
+    public static readonly MISSILE_LAUNCH_LOOP = this.registerSound("missile.launch_loop");
+    public static readonly MISSILE_BLASTOFF = this.registerSound("missile.blastoff");
+    public static readonly MISSILE_EXPLOSION = this.registerSound("missile.explosion");
+    public static readonly MISSILE_PITCHED = this.registerSound("missile.pitched");
+
+    public static readonly WEAPON_READY = this.registerSound("weapon.ready");
+    public static readonly EXPLOSION = this.registerSound("explosion.normal");
 
     private static registerSound(id: string) {
         const identifier = Identifier.ofVanilla(id);

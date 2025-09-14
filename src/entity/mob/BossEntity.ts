@@ -16,22 +16,22 @@ import {MissileEntity} from "../projectile/MissileEntity.ts";
 export class BossEntity extends MobEntity {
     public color = '#b30000';
 
-    private maxDamageCanTake: number;
-    private maxKillCounts = 64;
+    private readonly maxDamageCanTake: number;
+    private maxKillCounts = 48;
     private cooldown = 0;
     private damageCooldown: number = 0;
     protected yStep = 0;
 
     public constructor(type: EntityType<BossEntity>, world: World, worth: number) {
         super(type, world, worth);
-        this.maxDamageCanTake = this.getMaxHealth() / this.maxKillCounts;
+        this.maxDamageCanTake = Math.floor(this.getMaxHealth() / this.maxKillCounts);
+        this.setMovementSpeed(0.08);
     }
 
     public override createLivingAttributes() {
         return super.createLivingAttributes()
             .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 160)
-            .addWithBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE, 100)
-            .addWithBaseValue(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.3);
+            .addWithBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE, 10);
     }
 
     public override tick() {
@@ -40,16 +40,17 @@ export class BossEntity extends MobEntity {
         if (this.damageCooldown > 0) this.damageCooldown -= 1;
         this.cooldown -= 1;
         if (this.cooldown > 0) return;
-        this.cooldown = rand(10, 100);
+        this.cooldown = rand(20, 100);
 
         const count = 16;
         const speed = 4;
         const startAngle = 0.4537722; // 26
         const endAngle = 2.6859825; // 154
         const step = (endAngle - startAngle) / (count - 1);
+        const yOffset = this.getEntityDimension().height / 2;
 
         const world = this.getWorld();
-        const pos = this.getPositionRef.clone();
+        const pos = this.getPositionRef.clone().add(0, yOffset);
         for (let i = count; i--;) {
             const angle = startAngle + step * i;
             const vel = new Vec2(Math.cos(angle) * speed, Math.sin(angle) * speed);
@@ -60,34 +61,34 @@ export class BossEntity extends MobEntity {
             world.spawnEntity(b);
         }
 
-        if (this.age % 20 === 0) {
-            let i = 1;
-            const schedule = world.scheduleInterval(0.3, () => {
-                if (i++ > 8) {
-                    schedule.cancel();
-                    return;
-                }
-                const side = (i % 2 === 0) ? 1 : -1;
-                const yaw = this.getYaw();
+        if (this.age % 12 !== 0) return;
 
-                const driftAngle = yaw + side * (HALF_PI + (Math.random() - 0.5) * 0.2);
+        let i = 1;
+        const schedule = world.scheduleInterval(0.3, () => {
+            if (i++ > 8) {
+                schedule.cancel();
+                return;
+            }
+            const side = (i % 2 === 0) ? 1 : -1;
+            const yaw = this.getYaw();
 
-                const missile = new MissileEntity(EntityTypes.MISSILE_ENTITY, world, this, yaw, driftAngle, 'player');
-                missile.color = '#ff7777'
-                missile.setMaxLifeTick(400);
-                missile.setDriftSpeed(5);
-                missile.setTrackingSpeed(2);
-                missile.setPosition(pos.x, pos.y);
-                world.spawnEntity(missile);
-            });
-        }
+            const driftAngle = yaw + side * (HALF_PI + (Math.random() - 0.5) * 0.2);
+
+            const missile = new MissileEntity(EntityTypes.MISSILE_ENTITY, world, this, driftAngle, 'player');
+            missile.color = '#ff7777'
+            missile.setMaxLifeTick(400);
+            missile.setTrackingSpeed(0.6);
+            missile.setPosition(pos.x, pos.y);
+            missile.setYaw(yaw);
+            world.spawnEntity(missile);
+        });
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (this.damageCooldown > 0) return false;
 
-        damage = clamp((damage * 0.1) | 0, 1, this.maxDamageCanTake);
-        if (super.takeDamage(damageSource, damage)) {
+        const clampDamage = clamp((damage * 0.1) | 0, 1, this.maxDamageCanTake);
+        if (super.takeDamage(damageSource, clampDamage)) {
             this.damageCooldown = 16;
             return true;
         }
@@ -121,7 +122,8 @@ export class BossEntity extends MobEntity {
     }
 
     public override attack(player: PlayerEntity) {
-        player.getWorld().gameOver();
-        this.discard();
+        const world = this.getWorld();
+        player.takeDamage(
+            world.getDamageSources().mobAttack(this), this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE));
     }
 }

@@ -178,6 +178,28 @@
     ]
   },
   {
+    "id": "rocket_launcher",
+    "name": "火箭发射器",
+    "x": 340,
+    "y": 460,
+    "desc": "解锁火箭发射器",
+    "cost": 320,
+    "requires": [
+      "90_cannon"
+    ]
+  },
+  {
+    "id": "random_rocket",
+    "name": "随机炮弹",
+    "x": 160,
+    "y": 460,
+    "desc": "随机发射4种火箭",
+    "cost": 480,
+    "requires": [
+      "rocket_launcher"
+    ]
+  },
+  {
     "id": "hv_warhead",
     "name": "高爆战斗部",
     "x": 720,
