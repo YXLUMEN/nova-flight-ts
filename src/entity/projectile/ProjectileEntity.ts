@@ -5,16 +5,15 @@ import type {EntityType} from "../EntityType.ts";
 import type {DataEntry} from "../data/DataEntry.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import {DataTracker} from "../data/DataTracker.ts";
-import type {LivingEntity} from "../LivingEntity.ts";
 
 export abstract class ProjectileEntity extends Entity implements IOwnable {
     public readonly damage: number;
-    public readonly owner: LivingEntity | null;
+    public readonly owner: Entity | null;
     public color = "#8cf5ff";
 
     protected boxRadius: number = this.getEntityDimension().width;
 
-    public constructor(type: EntityType<ProjectileEntity>, world: World, owner: LivingEntity, damage: number) {
+    public constructor(type: EntityType<ProjectileEntity>, world: World, owner: Entity | null, damage: number) {
         super(type, world);
 
         this.damage = damage;
@@ -34,7 +33,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
 
     public abstract onEntityHit(entity: Entity): void;
 
-    public getOwner(): LivingEntity | null {
+    public getOwner(): Entity | null {
         return this.owner;
     }
 

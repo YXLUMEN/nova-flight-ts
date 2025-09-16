@@ -8,6 +8,7 @@ import {BurstRocketEntity} from "../../entity/projectile/BurstRocketEntity.ts";
 import {APRocketEntity} from "../../entity/projectile/APRocketEntity.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {SoundSystem} from "../../sound/SoundSystem.ts";
+import {ClusterRocketEntity} from "../../entity/projectile/ClusterRocketEntity.ts";
 
 export class RocketWeapon extends BaseWeapon {
     private speed: number = 6;
@@ -19,7 +20,7 @@ export class RocketWeapon extends BaseWeapon {
     public explosionRadius = 72;
 
     public constructor(owner: LivingEntity) {
-        super(owner, 8, 100);
+        super(owner, 8, 120);
     }
 
     public override tryFire(world: World): void {
@@ -57,11 +58,13 @@ export class RocketWeapon extends BaseWeapon {
     private randomRocket(world: World) {
         const rnd = Math.random();
         if (rnd < 0.1) {
-            return new EMPRocketEntity(EntityTypes.EMP_ROCKET_ENTITY, world, this.owner);
+            return new EMPRocketEntity(EntityTypes.ROCKET_ENTITY, world, this.owner, 1);
         } else if (rnd < 0.3) {
-            return new BurstRocketEntity(EntityTypes.BURST_ROCKET_ENTITY, world, this.owner);
+            return new BurstRocketEntity(EntityTypes.ROCKET_ENTITY, world, this.owner, 4);
         } else if (rnd < 0.4) {
-            return new APRocketEntity(EntityTypes.AP_ROCKET_ENTITY, world, this.owner);
+            return new APRocketEntity(EntityTypes.ROCKET_ENTITY, world, this.owner);
+        } else if (rnd < 0.6) {
+            return new ClusterRocketEntity(EntityTypes.ROCKET_ENTITY, world, this.owner, 6, 100);
         } else {
             const rocket = new RocketEntity(EntityTypes.ROCKET_ENTITY, world, this.owner);
             rocket.explosionDamage = this.explosionDamage;

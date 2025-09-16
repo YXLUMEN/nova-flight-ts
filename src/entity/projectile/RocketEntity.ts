@@ -13,7 +13,7 @@ export class RocketEntity extends ProjectileEntity {
     public override color = "#ffaa4d";
     protected explodeColor = "#e3e3e3";
 
-    public constructor(type: EntityType<RocketEntity>, world: World, owner: LivingEntity, damage: number = 8) {
+    public constructor(type: EntityType<RocketEntity>, world: World, owner: Entity | null, damage: number = 8) {
         super(type, world, owner, damage);
     }
 
@@ -25,7 +25,7 @@ export class RocketEntity extends ProjectileEntity {
         if (entity instanceof LivingEntity) {
             damage += Math.max(1, (entity.getMaxHealth() - entity.getHealth()) * 0.3);
         }
-        entity.takeDamage(sources.mobProjectile(this, this.owner), damage);
+        entity.takeDamage(sources.projectile(this, this.owner), damage);
 
         this.discard();
     }

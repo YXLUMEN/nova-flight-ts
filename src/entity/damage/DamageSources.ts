@@ -36,7 +36,7 @@ export class DamageSources {
         return new DamageSource(this.registry.getEntryByKey(key), attacker);
     }
 
-    public createWithSource(key: RegistryKey<DamageType>, source: Entity, attacker: LivingEntity | null): DamageSource {
+    public createWithSource(key: RegistryKey<DamageType>, source: Entity, attacker: Entity | null): DamageSource {
         return new DamageSource(this.registry.getEntryByKey(key), attacker, source);
     }
 
@@ -52,15 +52,15 @@ export class DamageSources {
         return this.createWithAttacker(DamageTypes.PLAYER_ATTACK, attacker);
     }
 
-    public mobProjectile(source: Entity, attacker: LivingEntity | null) {
+    public projectile(source: Entity, attacker: Entity | null) {
         return this.createWithSource(DamageTypes.MOB_PROJECTILE, source, attacker);
     }
 
-    public apDamage(source: Entity, attacker: LivingEntity | null): DamageSource {
+    public apDamage(source: Entity, attacker: Entity | null): DamageSource {
         return this.createWithSource(DamageTypes.AP_DAMAGE, source, attacker);
     }
 
-    public explosion(source: Entity | null, attacker: LivingEntity | null) {
+    public explosion(source: Entity | null, attacker: Entity | null) {
         if (source) {
             return this.createWithSource(DamageTypes.EXPLOSION, source, attacker);
         }

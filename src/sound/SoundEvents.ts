@@ -4,9 +4,6 @@ import {Identifier} from "../registry/Identifier.ts";
 import {SoundEvent} from "./SoundEvent.ts";
 
 export class SoundEvents {
-    public static readonly UI_TYPE = this.registerSound("ui.type");
-    public static readonly UI_WARN = this.registerSound("ui.warn");
-
     public static readonly LASER_OVERHEAT = this.registerSound("laser.overheat_alarm");
     public static readonly LASER_COOLDOWN = this.registerSound("laser.cooldown");
     public static readonly LASER_TRIGGER = this.registerSound("laser.trigger");

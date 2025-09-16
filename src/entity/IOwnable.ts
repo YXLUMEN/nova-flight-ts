@@ -1,5 +1,5 @@
-import type {LivingEntity} from "./LivingEntity.ts";
+import type {Entity} from "./Entity.ts";
 
 export interface IOwnable {
-    getOwner(): LivingEntity | null;
+    getOwner(): Entity | null;
 }
