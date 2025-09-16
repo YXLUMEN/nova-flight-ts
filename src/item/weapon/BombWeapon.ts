@@ -1,25 +1,20 @@
-import {World} from "../world/World.ts";
-import {MutVec2} from "../utils/math/MutVec2.ts";
-import {RadialRing} from "../effect/RadialRing.ts";
-import {rand} from "../utils/math/math.ts";
-import type {ExpendExplosionOpts, ExplosionOpts} from "../apis/IExplosionOpts.ts";
-import {Particle} from "../effect/Particle.ts";
-import {LivingEntity} from "../entity/LivingEntity.ts";
-import type {IVec} from "../utils/math/IVec.ts";
-import {EVENTS} from "../apis/IEvents.ts";
+import {World} from "../../world/World.ts";
+import {MutVec2} from "../../utils/math/MutVec2.ts";
+import {RadialRing} from "../../effect/RadialRing.ts";
+import {rand} from "../../utils/math/math.ts";
+import type {ExpendExplosionOpts, ExplosionOpts} from "../../apis/IExplosionOpts.ts";
+import {Particle} from "../../effect/Particle.ts";
+import type {IVec} from "../../utils/math/IVec.ts";
+import {EVENTS} from "../../apis/IEvents.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
-import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
-import {SoundEvents} from "../sound/SoundEvents.ts";
-import {SoundSystem} from "../sound/SoundSystem.ts";
-
+import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
+import {SoundEvents} from "../../sound/SoundEvents.ts";
+import {SoundSystem} from "../../sound/SoundSystem.ts";
+import type {Entity} from "../../entity/Entity.ts";
+import type {ItemStack} from "../ItemStack.ts";
+import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 
 export class BombWeapon extends SpecialWeapon {
-    public damageRadius = 200;
-
-    public constructor(owner: LivingEntity) {
-        super(owner, 24, 800);
-    }
-
     public static summonExplosion(
         world: World, center: IVec, opts: ExpendExplosionOpts) {
         const radius = opts.explosionRadius ?? 16;
@@ -78,18 +73,18 @@ export class BombWeapon extends SpecialWeapon {
         world.addEffect(new RadialRing(pos, radius * 0.2, radius * 1.1, 0.35, color));
     }
 
-    public override tryFire(world: World) {
+    public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
         world.events.emit(EVENTS.BOMB_DETONATE, {
-            pos: this.owner.getPosition(),
-            damage: this.getDamage(),
-            explosionRadius: this.damageRadius,
+            pos: attacker.getPosition(),
+            damage: stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1),
+            explosionRadius: stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 200),
             shake: 0.3,
-            source: this.owner,
-            attacker: this.owner,
+            source: attacker,
+            attacker: attacker,
         });
 
         SoundSystem.playSound(SoundEvents.EXPLOSION);
-        this.setCooldown(this.getMaxCooldown());
+        this.setCooldown(stack, this.getMaxCooldown(stack));
     }
 
     public bindKey(): string {

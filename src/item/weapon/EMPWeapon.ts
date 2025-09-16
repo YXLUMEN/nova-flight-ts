@@ -1,25 +1,22 @@
-import {World} from "../world/World.ts";
-import {EMPBurst} from "../effect/EMPBurst.ts";
-import {pointInCircleVec2} from "../utils/math/math.ts";
-import type {MutVec2} from "../utils/math/MutVec2.ts";
-import {ScreenFlash} from "../effect/ScreenFlash.ts";
-import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
-import {StatusEffects} from "../entity/effect/StatusEffects.ts";
-import {EVENTS} from "../apis/IEvents.ts";
-import type {LivingEntity} from "../entity/LivingEntity.ts";
-import {MobEntity} from "../entity/mob/MobEntity.ts";
-import {SoundEvents} from "../sound/SoundEvents.ts";
-import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
+import {World} from "../../world/World.ts";
+import {EMPBurst} from "../../effect/EMPBurst.ts";
+import {pointInCircleVec2} from "../../utils/math/math.ts";
+import type {MutVec2} from "../../utils/math/MutVec2.ts";
+import {ScreenFlash} from "../../effect/ScreenFlash.ts";
+import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
+import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
+import {EVENTS} from "../../apis/IEvents.ts";
+import {MobEntity} from "../../entity/mob/MobEntity.ts";
+import {SoundEvents} from "../../sound/SoundEvents.ts";
+import {ProjectileEntity} from "../../entity/projectile/ProjectileEntity.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
-import {SoundSystem} from "../sound/SoundSystem.ts";
+import {SoundSystem} from "../../sound/SoundSystem.ts";
+import type {Entity} from "../../entity/Entity.ts";
+import type {ItemStack} from "../ItemStack.ts";
 
 export class EMPWeapon extends SpecialWeapon {
     public radius: number = 480;
     private duration = 600;
-
-    constructor(owner: LivingEntity) {
-        super(owner, 0, 500);
-    }
 
     public static applyEMPEffect(world: World, center: MutVec2, radius: number, duration: number): void {
         world.events.emit(EVENTS.EMP_BURST, {duration: duration});
@@ -31,14 +28,14 @@ export class EMPWeapon extends SpecialWeapon {
         }
     }
 
-    public override tryFire(world: World): void {
+    public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         world.events.emit(EVENTS.EMP_BURST, {duration: this.duration});
 
         world.getEntities().forEach(entity => {
             if (entity instanceof ProjectileEntity) {
                 if (entity.owner instanceof MobEntity) entity.discard();
             } else if (entity instanceof MobEntity) {
-                if (!entity.isRemoved() && pointInCircleVec2(entity.getPositionRef, this.owner.getPositionRef, this.radius)) {
+                if (!entity.isRemoved() && pointInCircleVec2(entity.getPositionRef, attacker.getPositionRef, this.radius)) {
                     entity.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, this.duration, 1), null);
                 }
             }
@@ -46,12 +43,12 @@ export class EMPWeapon extends SpecialWeapon {
 
         world.addEffect(new ScreenFlash(0.5, 0.18, '#5ec8ff'));
         world.addEffect(new EMPBurst(
-            this.owner.getPosition(),
+            attacker.getPositionRef,
             this.radius
         ));
         SoundSystem.playSound(SoundEvents.EMP_BURST);
 
-        this.setCooldown(this.getMaxCooldown());
+        this.setCooldown(stack, this.getMaxCooldown(stack));
     }
 
     public bindKey(): string {

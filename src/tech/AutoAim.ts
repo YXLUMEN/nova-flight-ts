@@ -2,6 +2,7 @@ import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import {PI2} from "../utils/math/math.ts";
+import type {BaseWeapon} from "../item/weapon/BaseWeapon/BaseWeapon.ts";
 
 export class AutoAim {
     private readonly owner: PlayerEntity;
@@ -23,7 +24,7 @@ export class AutoAim {
 
         const mobPos = target.getPositionRef;
         const mobVel = target.getVelocityRef;
-        const bulletSpeed = this.owner.getCurrentWeapon().getBallisticSpeed();
+        const bulletSpeed = (this.owner.getCurrentItemStack().getItem() as BaseWeapon).getBallisticSpeed();
 
         const targetYaw = AutoAim.getLeadYaw(pos, mobPos, mobVel, bulletSpeed);
         this.owner.setClampYaw(targetYaw);

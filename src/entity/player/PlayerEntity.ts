@@ -1,13 +1,11 @@
 import {type Input} from "../../Input.ts";
 import {World} from "../../world/World.ts";
-import {type Weapon} from "../../weapon/Weapon.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 import {ScreenFlash} from "../../effect/ScreenFlash.ts";
-import {Cannon40Weapon} from "../../weapon/BaseWeapon/Cannon40Weapon.ts";
 import {throttleTimeOut} from "../../utils/uit.ts";
 import {EdgeGlowEffect} from "../../effect/EdgeGlowEffect.ts";
 import {TechTree} from "../../tech/TechTree.ts";
-import {BaseWeapon} from "../../weapon/BaseWeapon/BaseWeapon.ts";
+import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {type DamageSource} from "../damage/DamageSource.ts";
 import type {DataEntry} from "../data/DataEntry.ts";
@@ -18,9 +16,12 @@ import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {AutoAim} from "../../tech/AutoAim.ts";
-import {BombWeapon} from "../../weapon/BombWeapon.ts";
-import {SpecialWeapon} from "../../weapon/SpecialWeapon.ts";
+import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import {SoundSystem} from "../../sound/SoundSystem.ts";
+import type {Item} from "../../item/Item.ts";
+import {ItemStack} from "../../item/ItemStack.ts";
+import {Items} from "../../item/items.ts";
+import type {EMPWeapon} from "../../item/weapon/EMPWeapon.ts";
 
 export class PlayerEntity extends LivingEntity {
     public readonly input: Input;
@@ -28,13 +29,14 @@ export class PlayerEntity extends LivingEntity {
 
     public onDamageExplosionRadius = 320;
 
-    public readonly weapons = new Map<string, Weapon>();
+    public readonly weapons = new Map<Item, ItemStack>();
     public readonly baseWeapons: BaseWeapon[] = [];
     public currentBaseIndex: number = 0;
     private lastDamageTime = 0;
 
     private switchWeapon = throttleTimeOut(() => {
-        this.getCurrentWeapon().onEndFire(this.getWorld());
+        const current = this.getCurrentItemStack().getItem() as BaseWeapon;
+        current.onEndFire(this.getWorld());
         this.wasFire = false;
         this.currentBaseIndex = (this.currentBaseIndex + 1) % this.baseWeapons.length;
     }, 200);
@@ -60,8 +62,8 @@ export class PlayerEntity extends LivingEntity {
         this.input = input;
         this.phaseScore = 0;
 
-        this.addWeapon('40', new Cannon40Weapon(this));
-        this.weapons.set('bomb', new BombWeapon(this));
+        this.addWeapon(Items.CANNON40_WEAPON, new ItemStack(Items.CANNON40_WEAPON));
+        this.weapons.set(Items.BOMB_WEAPON, new ItemStack(Items.BOMB_WEAPON));
     }
 
     public override createLivingAttributes() {
@@ -112,26 +114,27 @@ export class PlayerEntity extends LivingEntity {
 
         // 射击
         const fire = this.input.isDown("Space") || WorldConfig.autoShoot;
-        const w = this.baseWeapons[this.currentBaseIndex];
+        const baseWeapon = this.baseWeapons[this.currentBaseIndex];
+        const stack = this.weapons.get(baseWeapon)!;
 
         if (fire !== this.wasFire) {
             if (!this.wasFire) {
-                w.onStartFire(world);
+                baseWeapon.onStartFire(world);
             } else {
-                w.onEndFire(world);
+                baseWeapon.onEndFire(world);
             }
             this.wasFire = fire;
         }
-        if (fire && w.canFire()) {
-            w.tryFire(world);
+        if (fire && baseWeapon.canFire(stack)) {
+            baseWeapon.tryFire(stack, world, this);
         }
 
-        for (const w of this.weapons.values()) {
+        for (const [w, stack] of this.weapons) {
             if (w instanceof SpecialWeapon) {
-                if (WorldConfig.devMode && w.getCooldown() > 0.5) w.setCooldown(0.5);
-                if (w.canFire() && this.input.wasPressed(w.bindKey())) w.tryFire(world);
+                if (WorldConfig.devMode && w.getCooldown(stack) > 0.5) w.setCooldown(stack, 0.5);
+                if (w.canFire(stack) && this.input.wasPressed(w.bindKey())) w.tryFire(stack, world, this);
             }
-            w.tick();
+            w.inventoryTick(stack, world, this);
         }
     }
 
@@ -155,16 +158,17 @@ export class PlayerEntity extends LivingEntity {
         });
 
         if (this.techTree.isUnlocked('electrical_energy_surges')) {
-            const emp = this.weapons.get('emp');
-            if (emp) {
-                if (emp.canFire() && this.techTree.isUnlocked('ele_shield')) {
-                    emp.tryFire(world);
+            const stack = this.weapons.get(Items.EMP_WEAPON);
+            if (stack) {
+                const emp = stack.getItem() as EMPWeapon;
+                if (emp.canFire(stack) && this.techTree.isUnlocked('ele_shield')) {
+                    emp.tryFire(stack, world, this);
                     SoundSystem.playSound(SoundEvents.SHIELD_CRASH);
                     return false;
                 }
-                const cd = emp.getCooldown();
-                emp.tryFire(world);
-                emp.setCooldown(cd);
+                const cd = emp.getCooldown(stack);
+                emp.tryFire(stack, world, this);
+                emp.setCooldown(stack, cd);
             }
         }
 
@@ -186,15 +190,15 @@ export class PlayerEntity extends LivingEntity {
         this.getWorld().gameOver();
     }
 
-    public addWeapon(name: string, weapon: Weapon): void {
-        if (this.weapons.has(name)) return;
+    public addWeapon(item: Item, stack: ItemStack): void {
+        if (this.weapons.has(item)) return;
 
-        if (weapon instanceof BaseWeapon) this.baseWeapons.push(weapon);
-        this.weapons.set(name, weapon);
+        if (item instanceof BaseWeapon) this.baseWeapons.push(item);
+        this.weapons.set(item, stack);
     }
 
-    public getCurrentWeapon(): BaseWeapon {
-        return this.baseWeapons[this.currentBaseIndex];
+    public getCurrentItemStack(): ItemStack {
+        return this.weapons.get(this.baseWeapons[this.currentBaseIndex])!;
     }
 
     public getPhaseScore(): number {

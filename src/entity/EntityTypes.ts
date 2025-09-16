@@ -19,10 +19,7 @@ export class EntityTypes {
         EntityType.Builder.create(BaseEnemy)
             .setDimensions(28, 24)
     );
-    public static readonly BOSS_ENTITY = EntityType.register("boss",
-        EntityType.Builder.create(BossEntity)
-            .setDimensions(148, 160)
-    );
+    public static BOSS_ENTITY: EntityType<BossEntity>;
     public static readonly GUN_ENEMY_ENTITY = EntityType.register("gun_enemy",
         EntityType.Builder.create(GunEnemyEntity)
             .setDimensions(20, 20)
@@ -71,6 +68,10 @@ export class EntityTypes {
 
     public static init() {
         // 避免提前引用
+        this.BOSS_ENTITY = EntityType.register("boss",
+            EntityType.Builder.create(BossEntity)
+                .setDimensions(148, 160)
+        );
         this.PLAYER_ENTITY = EntityType.register("player",
             EntityType.Builder.create(PlayerEntity)
                 .setDimensions(24, 28)

@@ -1,7 +1,7 @@
 import {applyTech} from "../tech/apply_tech.ts";
 import {DamageTypeTags} from "../registry/tag/DamageTypeTags.ts";
-import {LaserWeapon} from "../weapon/LaserWeapon.ts";
-import {BombWeapon} from "../weapon/BombWeapon.ts";
+import {LaserWeapon} from "../item/weapon/LaserWeapon.ts";
+import {BombWeapon} from "../item/weapon/BombWeapon.ts";
 import {BossEntity} from "../entity/mob/BossEntity.ts";
 import {World} from "../world/World.ts";
 import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
@@ -12,6 +12,7 @@ import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {GeneralEventBus} from "./GeneralEventBus.ts";
 import {EVENTS} from "../apis/IEvents.ts";
+import {Items} from "../item/items.ts";
 
 
 export class DefaultEvents {
@@ -33,9 +34,10 @@ export class DefaultEvents {
             }
 
             if (damageSource.isIn(DamageTypeTags.REPLY_LASER) && techTree.isUnlocked('energy_recovery')) {
-                const laser = player.weapons.get('laser');
-                if (laser instanceof LaserWeapon) {
-                    if (!laser.isOverHeat()) laser.setCooldown(laser.getCooldown() - 25);
+                const laser = Items.LASER_WEAPON as LaserWeapon;
+                const stack = player.weapons.get(laser);
+                if (stack) {
+                    if (!laser.getOverheated(stack)) laser.setCooldown(stack, laser.getCooldown(stack) - 25);
                 }
             }
 

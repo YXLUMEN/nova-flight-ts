@@ -1,16 +1,17 @@
 import type {UIOptions, WeaponUIInfo} from '../../apis/IUIInfo.ts';
 import {World} from '../../world/World.ts';
-import type {Weapon} from '../../weapon/Weapon.ts';
-import {BaseWeapon} from "../../weapon/BaseWeapon/BaseWeapon.ts";
+import type {Weapon} from '../../item/weapon/Weapon.ts';
+import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {clamp} from "../../utils/math/math.ts";
 import type {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
+import type {ItemStack} from "../../item/ItemStack.ts";
 
 export class UI {
     private readonly world: World;
     private readonly font: string;
     private readonly hudColor: string;
-    private readonly getWeaponUI: (weapon: Weapon, key: string) => WeaponUIInfo | null;
+    private readonly getWeaponUI: (stack: ItemStack) => WeaponUIInfo | null;
 
     // HUD 布局参数
     private readonly marginX = 20;
@@ -73,8 +74,8 @@ export class UI {
 
         // 武器冷却条
         if (player.weapons.size > 0) {
-            for (const [key, w] of player.weapons) {
-                const info = this.getWeaponUI(w, key);
+            for (const stack of player.weapons.values()) {
+                const info = this.getWeaponUI(stack);
                 if (info) {
                     this.drawBar(ctx, x, y, this.barWidth, this.barHeight, info);
                     y += this.barHeight + this.lineGap;
@@ -114,11 +115,12 @@ export class UI {
         ctx.fillText('船体值', (x + this.barWidth + 8) | 0, (y | 0) - 1);
     }
 
-    private defaultWeaponAdapter(weapon: Weapon, key: string): WeaponUIInfo | null {
-        const cd = weapon.getCooldown() ?? 0;
-        const max = weapon.getMaxCooldown() ?? 1;
-        const label = weapon.getDisplayName() ?? key.toUpperCase();
-        const color = weapon.getUiColor() ?? '#5ec8ff';
+    private defaultWeaponAdapter(stack: ItemStack): WeaponUIInfo | null {
+        const weapon = stack.getItem() as Weapon;
+        const cd = weapon.getCooldown(stack) ?? 0;
+        const max = weapon.getMaxCooldown(stack) ?? 1;
+        const label = weapon.getDisplayName() ?? weapon.getDisplayName().toUpperCase();
+        const color = weapon.getUiColor(stack) ?? '#5ec8ff';
 
         if (max <= 0 || weapon instanceof BaseWeapon) return null;
         return {label, color, cooldown: Math.max(0, cd), maxCooldown: Math.max(0.001, max)};
@@ -132,22 +134,24 @@ export class UI {
         const px = player.getPositionRef.x - cam.x;
         const py = player.getPositionRef.y - cam.y;
 
-        const w = player.getCurrentWeapon();
+        const stack = player.getCurrentItemStack();
+        const weapon = stack.getItem() as BaseWeapon;
+
         const anchorX = Math.floor(px + player.getEntityDimension().width / 2 + 12);
-        const ratio = Math.max(0, Math.min(1, 1 - w.getCooldown() / w.getMaxCooldown()));
+        const ratio = Math.max(0, Math.min(1, 1 - weapon.getCooldown(stack) / weapon.getMaxCooldown(stack)));
 
         ctx.save();
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.font = this.font;
 
-        ctx.fillStyle = w.getUiColor() ?? '#5ec8ff';
+        ctx.fillStyle = weapon.getUiColor(stack) ?? '#5ec8ff';
         ctx.globalAlpha = 0.6;
         ctx.fillRect(anchorX, py, (64 * ratio) | 0, 2);
 
         ctx.globalAlpha = 1.0;
         ctx.fillStyle = this.hudColor;
-        ctx.fillText(w.getDisplayName(), anchorX, py - 16);
+        ctx.fillText(weapon.getDisplayName(), anchorX, py - 16);
 
         ctx.restore();
     }

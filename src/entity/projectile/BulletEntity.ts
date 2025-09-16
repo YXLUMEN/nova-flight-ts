@@ -20,6 +20,6 @@ export class BulletEntity extends ProjectileEntity {
             return;
         }
 
-        entity.takeDamage(sources.mobProjectile(this, this.owner), this.damage);
+        entity.takeDamage(sources.projectile(this, this.owner), this.damage);
     };
 }

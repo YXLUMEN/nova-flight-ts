@@ -1,16 +1,4 @@
 {
-  "ui.type": {
-    "subtitle": "sound.nova-flight.ui.type",
-    "sounds": [
-      "nova-flight:ui/ui_type"
-    ]
-  },
-  "ui.warn": {
-    "subtitle": "sound.nova-flight.ui.warn",
-    "sounds": [
-      "nova-flight:ui/ui_warn"
-    ]
-  },
   "laser.overheat_alarm": {
     "subtitle": "sound.nova-flight.laser.overheat_alarm",
     "sounds": [

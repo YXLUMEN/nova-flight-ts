@@ -23,7 +23,7 @@ async function main() {
     }
 
     const manager = new RegistryManager();
-    manager.registerAll();
+    await manager.registerAll();
     EntityRenderers.registryRenders();
 
     await DataLoader.init(manager);

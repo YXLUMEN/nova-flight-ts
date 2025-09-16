@@ -7,7 +7,7 @@ import {Registry} from "../../registry/Registry.ts";
 import {RegistryManager} from "../../registry/RegistryManager.ts";
 import {RegistryKeys} from "../../registry/RegistryKeys.ts";
 import type {PlayerEntity} from "../player/PlayerEntity.ts";
-import type {LivingEntity} from "../LivingEntity.ts";
+import type {MobEntity} from "../mob/MobEntity.ts";
 
 export class DamageSources {
     private readonly registry: Registry<DamageType>;
@@ -32,11 +32,11 @@ export class DamageSources {
         return new DamageSource(this.registry.getEntryByKey(key));
     }
 
-    public createWithAttacker(key: RegistryKey<DamageType>, attacker: LivingEntity): DamageSource {
+    public createWithAttacker(key: RegistryKey<DamageType>, attacker: Entity): DamageSource {
         return new DamageSource(this.registry.getEntryByKey(key), attacker);
     }
 
-    public createWithSource(key: RegistryKey<DamageType>, source: Entity, attacker: LivingEntity | null): DamageSource {
+    public createWithSource(key: RegistryKey<DamageType>, source: Entity, attacker: Entity | null): DamageSource {
         return new DamageSource(this.registry.getEntryByKey(key), attacker, source);
     }
 
@@ -44,7 +44,7 @@ export class DamageSources {
         return this._generic;
     }
 
-    public mobAttack(attacker: LivingEntity): DamageSource {
+    public mobAttack(attacker: MobEntity): DamageSource {
         return this.createWithAttacker(DamageTypes.MOB_ATTACK, attacker);
     }
 
@@ -52,22 +52,22 @@ export class DamageSources {
         return this.createWithAttacker(DamageTypes.PLAYER_ATTACK, attacker);
     }
 
-    public mobProjectile(source: Entity, attacker: LivingEntity | null) {
+    public projectile(source: Entity, attacker: Entity | null) {
         return this.createWithSource(DamageTypes.MOB_PROJECTILE, source, attacker);
     }
 
-    public apDamage(source: Entity, attacker: LivingEntity | null): DamageSource {
+    public apDamage(source: Entity, attacker: Entity | null): DamageSource {
         return this.createWithSource(DamageTypes.AP_DAMAGE, source, attacker);
     }
 
-    public explosion(source: Entity | null, attacker: LivingEntity | null) {
+    public explosion(source: Entity | null, attacker: Entity | null) {
         if (source) {
             return this.createWithSource(DamageTypes.EXPLOSION, source, attacker);
         }
         return this._explosion;
     }
 
-    public laser(attacker: LivingEntity | null) {
+    public laser(attacker: Entity | null) {
         if (attacker) {
             return this.createWithAttacker(DamageTypes.LASER, attacker);
         }

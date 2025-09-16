@@ -4,9 +4,9 @@ import {World} from "../world/World.ts";
 import {applyTech} from "./apply_tech.ts";
 import {clamp} from "../utils/math/math.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
-import {Cannon40Weapon} from "../weapon/BaseWeapon/Cannon40Weapon.ts";
-import {BombWeapon} from "../weapon/BombWeapon.ts";
 import {EVENTS} from "../apis/IEvents.ts";
+import {Items} from "../item/items.ts";
+import {ItemStack} from "../item/ItemStack.ts";
 
 type Adjacency = {
     out: Map<string, string[]>; // id -> successors
@@ -428,9 +428,8 @@ export class TechTree {
         player.baseWeapons.length = 0;
         player.weapons.clear();
 
-        player.baseWeapons.push(new Cannon40Weapon(player));
-        player.weapons.set('40', player.baseWeapons[0]);
-        player.weapons.set('bomb', new BombWeapon(player));
+        player.addWeapon(Items.CANNON40_WEAPON, new ItemStack(Items.CANNON40_WEAPON));
+        player.weapons.set(Items.BOMB_WEAPON, new ItemStack(Items.BOMB_WEAPON));
 
         player.steeringGear = false;
         player.setYaw(-1.57079);

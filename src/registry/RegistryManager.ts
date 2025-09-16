@@ -11,7 +11,7 @@ import {EntityTypes} from "../entity/EntityTypes.ts";
 export class RegistryManager {
     private readonly registers = new Map<RegistryKey<any>, Registry<any>>();
 
-    public registerAll(): void {
+    public async registerAll(): Promise<void> {
         this.registers.set(RegistryKeys.SOUND_EVENT, Registries.SOUND_EVENT);
 
         const damage = new Registry<DamageType>(RegistryKey.ofRegistry(Identifier.ofVanilla("damage_type")));
@@ -30,9 +30,11 @@ export class RegistryManager {
         this.registers.set(RegistryKeys.STATUS_EFFECT, Registries.STATUS_EFFECT);
         this.registers.set(RegistryKeys.ENTITY_TYPE, Registries.ENTITY_TYPE);
         this.registers.set(RegistryKeys.ATTRIBUTE, Registries.ATTRIBUTE);
+        this.registers.set(RegistryKeys.ITEM, Registries.ITEM);
+        this.registers.set(RegistryKeys.GAME_EVENT, Registries.GAME_EVENT);
 
         EntityTypes.init();
-        Registries.complete();
+        await Registries.complete();
     }
 
     public get<E>(key: RegistryKey<Registry<E>>): Registry<E> {

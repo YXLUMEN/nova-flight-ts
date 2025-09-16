@@ -1,5 +1,4 @@
 import {type Entity} from "../Entity.ts";
-import {LivingEntity} from "../LivingEntity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
 import {PI2, rand} from "../../utils/math/math.ts";
@@ -24,7 +23,7 @@ export class MissileEntity extends RocketEntity {
     private readonly driftAngle: number;
     private readonly lockeType: string;
 
-    public constructor(type: EntityType<MissileEntity>, world: World, owner: LivingEntity, driftAngle: number, lockType = 'mobs', damage = 5) {
+    public constructor(type: EntityType<MissileEntity>, world: World, owner: Entity, driftAngle: number, lockType = 'mobs', damage = 5) {
         super(type, world, owner, damage);
         this.driftAngle = driftAngle;
         this.lockeType = lockType;

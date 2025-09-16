@@ -1,6 +1,7 @@
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import {PI2} from "../utils/math/math.ts";
+import type {BaseWeapon} from "../item/weapon/BaseWeapon/BaseWeapon.ts";
 
 export class BallisticCalculator {
     private owner: PlayerEntity;
@@ -57,7 +58,7 @@ export class BallisticCalculator {
         const dy = tPos.y - oPos.y;
         const dist = Math.hypot(dx, dy);
 
-        const bulletSpeed = this.owner.getCurrentWeapon().getBallisticSpeed();
+        const bulletSpeed = (this.owner.getCurrentItemStack().getItem() as BaseWeapon).getBallisticSpeed();
         const t = dist / bulletSpeed;
 
         const leadX = tPos.x + tVelocity.x * t;

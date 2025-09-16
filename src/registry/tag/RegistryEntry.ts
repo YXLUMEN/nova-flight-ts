@@ -31,6 +31,10 @@ export class RegistryEntry<T> {
         return this.tags.has(tag);
     }
 
+    public getTagValues() {
+        return this.tags.values();
+    }
+
     public setRegistryKey(registryKey: RegistryKey<T>): void {
         if (this.registryKey !== null && this.registryKey !== registryKey) {
             throw new Error(`Can't change holder key: existing=${this.registryKey} new=${registryKey}`);

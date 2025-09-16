@@ -28,7 +28,6 @@ import {BossEntity} from "../entity/mob/BossEntity.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
-import {SoundEvents} from "../sound/SoundEvents.ts";
 
 export class World {
     private static worldInstance: World;
@@ -322,7 +321,6 @@ export class World {
     public setTicking(ticking = true): void {
         if (ticking) {
             SoundSystem.resumeAll().catch(console.error);
-            SoundSystem.playSound(SoundEvents.UI_WARN);
         } else {
             SoundSystem.pauseAll().catch(console.error);
         }
