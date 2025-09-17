@@ -13,7 +13,7 @@ export class RocketEntity extends ProjectileEntity {
     public override color = "#ffaa4d";
     protected explodeColor = "#e3e3e3";
 
-    public constructor(type: EntityType<RocketEntity>, world: World, owner: Entity, damage: number = 8) {
+    public constructor(type: EntityType<RocketEntity>, world: World, owner: Entity | null, damage: number = 8) {
         super(type, world, owner, damage);
     }
 

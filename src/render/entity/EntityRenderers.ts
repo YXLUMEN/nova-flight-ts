@@ -32,9 +32,6 @@ export class EntityRenderers {
         this.register(EntityTypes.EXPLODE_BULLET_ENTITY, bullet);
         this.register(EntityTypes.PLAYER_ENTITY, new PlayerEntityRender());
         this.register(EntityTypes.ROCKET_ENTITY, rocket);
-        this.register(EntityTypes.EMP_ROCKET_ENTITY, rocket);
-        this.register(EntityTypes.BURST_ROCKET_ENTITY, rocket);
-        this.register(EntityTypes.AP_ROCKET_ENTITY, rocket);
         this.register(EntityTypes.MISSILE_ENTITY, new MissileEntityRender());
         this.compileRenders();
     }

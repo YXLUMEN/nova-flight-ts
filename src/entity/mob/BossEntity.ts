@@ -77,7 +77,7 @@ export class BossEntity extends MobEntity {
             const missile = new MissileEntity(EntityTypes.MISSILE_ENTITY, world, this, driftAngle, 'player');
             missile.color = '#ff7777'
             missile.setMaxLifeTick(400);
-            missile.setTrackingSpeed(0.6);
+            missile.setTrackingSpeed(0.4);
             missile.setPosition(pos.x, pos.y);
             missile.setYaw(yaw);
             world.spawnEntity(missile);

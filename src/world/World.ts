@@ -446,7 +446,7 @@ export class World {
         this.events.on(EVENTS.BOSS_KILLED, () => {
             this.stage.nextPhase();
 
-            this.schedule(50, () => {
+            this.schedule(80, () => {
                 const boss = new BossEntity(EntityTypes.BOSS_ENTITY, this, 64);
                 boss.setPosition(World.W / 2, 64);
                 this.spawnEntity(boss);
