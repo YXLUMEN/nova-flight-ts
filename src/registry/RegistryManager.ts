@@ -7,6 +7,7 @@ import type {DamageType} from "../entity/damage/DamageType.ts";
 import {DamageTypeTags} from "./tag/DamageTypeTags.ts";
 import {Registries} from "./Registries.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
+import {Items} from "../item/items.ts";
 
 export class RegistryManager {
     private readonly registers = new Map<RegistryKey<any>, Registry<any>>();
@@ -34,6 +35,7 @@ export class RegistryManager {
         this.registers.set(RegistryKeys.GAME_EVENT, Registries.GAME_EVENT);
 
         EntityTypes.init();
+        Items.init();
         await Registries.complete();
     }
 

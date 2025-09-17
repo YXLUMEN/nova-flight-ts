@@ -14,11 +14,9 @@ export class LaserWeapon extends SpecialWeapon {
     public static readonly COLOR = '#8bff5e';
     public static readonly OVERHEAT_COLOR = '#ff5e5e';
 
-    public laserColor = LaserWeapon.COLOR;
-
     private playSound = true;
 
-    private readonly height = World.H;        // 长度
+    private readonly height = World.H * 2;        // 长度
     private readonly width = 6;            // 宽度
 
     // 缓存一个短寿命的光束效果
@@ -31,8 +29,8 @@ export class LaserWeapon extends SpecialWeapon {
         if (!this.getActive(stack) && !this.getOverheated(stack)) this.onEndFire(world);
     }
 
-    public override canFire(): boolean {
-        return true;
+    public override canFire(stack: ItemStack): boolean {
+        return !this.getOverheated(stack);
     }
 
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity): void {
@@ -40,14 +38,14 @@ export class LaserWeapon extends SpecialWeapon {
         if (lastHeat === 0 && !this.getActive(stack)) return;
 
         // 升温/降温
+        const maxHeat = this.getMaxHeat(stack);
         if (this.getActive(stack)) {
-            this.setHeat(stack, Math.min(this.getHeat(stack), lastHeat + this.getDrainRate(stack)));
+            this.setHeat(stack, Math.min(maxHeat, lastHeat + this.getDrainRate(stack)));
         } else {
             this.setHeat(stack, Math.max(0, lastHeat - this.getCoolRate(stack)));
         }
 
         const heat = this.getHeat(stack);
-        const maxHeat = this.getMaxHeat(stack);
         const heatLeft = maxHeat - heat;
         if (heatLeft > 120) this.playSound = true;
 
@@ -103,7 +101,7 @@ export class LaserWeapon extends SpecialWeapon {
 
         // 刷新/创建光束效果
         if (!this.beamFx || !this.beamFx.alive) {
-            this.beamFx = new LaserBeamEffect(this.laserColor, this.width);
+            this.beamFx = new LaserBeamEffect(stack.getOrDefault(DataComponentTypes.UI_COLOR, LaserWeapon.COLOR), this.width);
             world.addEffect(this.beamFx);
         }
         this.beamFx.set(start, end);
@@ -149,7 +147,7 @@ export class LaserWeapon extends SpecialWeapon {
     }
 
     public override getUiColor(stack: ItemStack): string {
-        return this.getOverheated(stack) ? LaserWeapon.OVERHEAT_COLOR : LaserWeapon.COLOR;
+        return this.getOverheated(stack) ? LaserWeapon.OVERHEAT_COLOR : stack.getOrDefault(DataComponentTypes.UI_COLOR, LaserWeapon.COLOR);
     }
 
     public setActive(stack: ItemStack, active: boolean): void {
@@ -177,7 +175,7 @@ export class LaserWeapon extends SpecialWeapon {
     }
 
     public getDrainRate(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponentTypes.DRAIN_RATE, 0);
+        return stack.getOrDefault(DataComponentTypes.DRAIN_RATE, 2);
     }
 
     public setDrainRate(stack: ItemStack, value: number) {
@@ -185,7 +183,7 @@ export class LaserWeapon extends SpecialWeapon {
     }
 
     public getCoolRate(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponentTypes.COOLDOWN_RATE, 0);
+        return stack.getOrDefault(DataComponentTypes.COOLDOWN_RATE, 1);
     }
 
     public setCoolRate(stack: ItemStack, value: number) {

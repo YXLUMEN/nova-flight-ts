@@ -1,10 +1,12 @@
 import {type Entity} from "../Entity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
-import {PI2, rand} from "../../utils/math/math.ts";
-import {Vec2} from "../../utils/math/Vec2.ts";
+import {PI2, rand, randInt} from "../../utils/math/math.ts";
 import {AutoAim} from "../../tech/AutoAim.ts";
 import {RocketEntity} from "./RocketEntity.ts";
+import {MutVec2} from "../../utils/math/MutVec2.ts";
+import {DecoyEntity} from "../DecoyEntity.ts";
+import {EVENTS} from "../../apis/IEvents.ts";
 
 export class MissileEntity extends RocketEntity {
     public static lockedEntity = new WeakMap<Entity, number>();
@@ -14,6 +16,7 @@ export class MissileEntity extends RocketEntity {
     private igniteDelayTicks = 80;
     private lockDelayTicks = 150;
     private maxLifetimeTicks = 1000;
+    private reLockCD = 0;
 
     private driftSpeed = 0.8;
     private trackingSpeed = 1.6;
@@ -55,7 +58,7 @@ export class MissileEntity extends RocketEntity {
 
         const cd = (this.age & 3) === 0;
 
-        if (cd) this.getWorld().spawnParticleByVec(pos, Vec2.ZERO,
+        if (cd) this.getWorld().spawnParticleByVec(pos.clone(), MutVec2.zero(),
             rand(1, 1.5), rand(4, 6),
             "#986900", "#575757", 0.6, 80
         );
@@ -66,14 +69,32 @@ export class MissileEntity extends RocketEntity {
             return;
         }
 
+        // 干扰逻辑
+        if (this.lockeType === 'player' && this.age % 5 === 0) {
+            const decoyEntities = DecoyEntity.Entities;
+            if (decoyEntities.length > 0) {
+                const rand = Math.random();
+                if (rand < 0.2) {
+                    this.target = null;
+                    this.getWorld().events.emit(EVENTS.PLAYER_UNLOCKED, null);
+                } else if (rand < 0.8) {
+                    this.target = decoyEntities[randInt(0, decoyEntities.length)];
+                    this.getWorld().events.emit(EVENTS.PLAYER_UNLOCKED, null);
+                }
+                this.reLockCD = 100;
+            }
+        }
+
+        this.reLockCD--;
         if (!this.target || this.target.isRemoved()) {
-            if (cd) this.target = this.acquireTarget();
+            if (cd && this.reLockCD <= 0) this.target = this.acquireTarget();
             if (!this.target) {
                 const yaw = this.getYaw();
                 this.setYaw(yaw + this.turnRate * this.hoverDir);
                 this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
                 return;
             }
+            this.reLockCD = 25;
             const count = MissileEntity.lockedEntity.get(this.target) ?? 0;
             MissileEntity.lockedEntity.set(this.target, count + 1);
         }
@@ -91,6 +112,7 @@ export class MissileEntity extends RocketEntity {
 
     private acquireTarget(): Entity | null {
         if (this.lockeType === 'player') {
+            this.getWorld().events.emit(EVENTS.PLAYER_LOCKED, {missile: this});
             return this.getWorld().player;
         }
 
@@ -139,8 +161,9 @@ export class MissileEntity extends RocketEntity {
             } else {
                 MissileEntity.lockedEntity.delete(this.target);
             }
-            this.target = null;
         }
+        this.target = null;
+        this.getWorld().events.emit(EVENTS.PLAYER_UNLOCKED, null);
     }
 
     protected override adjustPosition(): boolean {

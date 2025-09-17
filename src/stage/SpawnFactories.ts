@@ -1,8 +1,10 @@
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import type {MobFactory, SamplerKind, SpawnCtx, TopSpawnOpts} from "../apis/IStage.ts";
 import {World} from "../world/World.ts";
-import {rand} from "../utils/math/math.ts";
+import {randInt} from "../utils/math/math.ts";
 import type {EntityType} from "../entity/EntityType.ts";
+import {SpawnMarkerEntity} from "../entity/SpawnMarkerEntity.ts";
+import {EntityTypes} from "../entity/EntityTypes.ts";
 
 // 顶部随机生成
 function spawnTopRandomCtor<T extends MobEntity>(
@@ -11,7 +13,7 @@ function spawnTopRandomCtor<T extends MobEntity>(
     init?: (mob: T, ctx: SpawnCtx) => void
 ): MobFactory {
     return (ctx) => {
-        const x = rand(24, World.W - 24);
+        const x = randInt(24, World.W - 24);
         const mob = type.create(World.instance, ...args);
         mob.setPosition(x, -30);
         init?.(mob, ctx);
@@ -68,13 +70,13 @@ function spawnTopRandomCtorS<T extends MobEntity>(
             }
             default: { // 'best': Mitchell best-candidate(1D 近似蓝噪声)
                 if (recent.length === 0) {
-                    const x0 = rand(minX, maxX);
+                    const x0 = randInt(minX, maxX);
                     recent.push(x0);
                     return x0;
                 }
                 let bestX = minX, bestD = -Infinity;
                 for (let c = 0; c < kCandidates; c++) {
-                    const x = rand(minX, maxX);
+                    const x = randInt(minX, maxX);
                     // 与历史最近点的距离(软性加入 minGap)
                     let d = Infinity;
                     for (let i = 0; i < recent.length; i++) {
@@ -117,7 +119,7 @@ function spawnLineCtor<T extends MobEntity>(
 ): MobFactory {
     const {gap = 48, startY = -30} = opts;
     return (ctx) => {
-        const startX = rand(24, World.W - 24 - gap * (count - 1));
+        const startX = randInt(24, World.W - 24 - gap * (count - 1));
         const arr: MobEntity[] = [];
         for (let i = 0; i < count; i++) {
             const mob = type.create(World.instance, ...args);
@@ -133,7 +135,7 @@ function spawnFormation(configs: spawnConfig<any>[]): MobFactory {
     return (ctx) => {
         const arr = [];
         let gap = 0;
-        const x = rand(24, World.W - 24);
+        const x = randInt(24, World.W - 24);
         for (const config of configs) {
             const mob = config.type.create(World.instance, ...config.args) as MobEntity;
             mob.setPosition(x, -30 + gap);
@@ -145,9 +147,85 @@ function spawnFormation(configs: spawnConfig<any>[]): MobFactory {
     }
 }
 
+function spawnInMapCtor<T extends MobEntity>(
+    type: EntityType<T>,
+    args: readonly unknown[] = [],
+    init?: (mob: T, ctx: SpawnCtx) => void,
+    opts: { margin?: number; farPower?: number } = {}
+): MobFactory {
+    const margin = opts.margin ?? 24;
+    const farPower = opts.farPower ?? 0; // 距离权重指数
+
+    return (ctx) => {
+        const minX = margin;
+        const maxX = World.W - margin;
+        const minY = margin;
+        const maxY = World.H - margin;
+        const playerPos = World.instance.player!.getPositionRef;
+
+        // 多次采样，选距离玩家最远的点
+        let bestX = minX, bestY = minY;
+        let bestScore = -Infinity;
+        for (let i = 0; i < 8; i++) {
+            const x = randInt(minX, maxX);
+            const y = randInt(minY, maxY);
+            const dx = x - playerPos.x;
+            const dy = y - playerPos.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const score = Math.pow(dist, farPower);
+            if (score > bestScore) {
+                bestScore = score;
+                bestX = x;
+                bestY = y;
+            }
+        }
+
+        const mob = type.create(World.instance, ...args);
+        mob.setPosition(bestX, bestY);
+        init?.(mob as T, ctx);
+        return mob;
+    };
+}
+
+function spawnAvoidPlayerCtor<T extends MobEntity>(
+    type: EntityType<T>,
+    args: readonly unknown[] = [],
+    init?: (mob: T, ctx: SpawnCtx) => void,
+    opts: { margin?: number; safeRadius?: number } = {}
+): MobFactory {
+    const margin = opts.margin ?? 24;
+    const safeRadius = opts.safeRadius ?? 128; // 玩家周围禁止刷怪的半径
+
+    return (ctx) => {
+        const minX = margin;
+        const maxX = World.W - margin;
+        const minY = margin;
+        const maxY = World.H - margin;
+        const playerPos = World.instance.player!.getPositionRef;
+
+        let x: number, y: number;
+        let tries = 0;
+        do {
+            x = randInt(minX, maxX);
+            y = randInt(minY, maxY);
+            tries++;
+            if (tries > 20) break;
+        } while (Math.hypot(x - playerPos.x, y - playerPos.y) < safeRadius);
+
+        const mob = type.create(World.instance, ...args);
+        mob.setPosition(x, y);
+        init?.(mob as T, ctx);
+        const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, World.instance, mob);
+        mark.setPosition(x, y);
+        return mark;
+    };
+}
+
 export {
     spawnTopRandomCtor,
     spawnTopRandomCtorS,
     spawnLineCtor,
     spawnFormation,
+    spawnInMapCtor,
+    spawnAvoidPlayerCtor
 }

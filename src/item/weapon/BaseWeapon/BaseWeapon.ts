@@ -16,16 +16,20 @@ export abstract class BaseWeapon extends Weapon {
         stack.set(DataComponentTypes.MAX_COOLDOWN, clamp(fireRate, 0, 256));
     }
 
-    protected setBullet(bullet: ProjectileEntity, attacker: Entity, speed: number, offset: number) {
+    protected setBullet(bullet: ProjectileEntity, attacker: Entity, speed: number, offset: number, maxSpread = 1) {
         const world = bullet.getWorld();
         const pos = attacker.getPositionRef;
+
         const yaw = attacker.getYaw();
-        const f = Math.cos(yaw);
-        const g = Math.sin(yaw);
+
+        const spread = Math.max(maxSpread, 1) * 0.01745329;
+        const offsetYaw = yaw + rand(-spread, spread);
+        const f = Math.cos(offsetYaw);
+        const g = Math.sin(offsetYaw);
 
         const vel = new Vec2(f * speed, g * speed);
         bullet.setVelocityByVec(vel);
-        bullet.setYaw(yaw);
+        bullet.setYaw(offsetYaw);
 
         const completeOffset = attacker.getEntityDimension().width / 2 + offset;
         bullet.setPosition(
@@ -34,12 +38,17 @@ export abstract class BaseWeapon extends Weapon {
         );
 
         for (let i = 0; i < 4; i++) {
-            const a = rand(-0.41886, 0.41886);
+            const angleOffset = rand(-0.41886, 0.41886);
+            const particleYaw = Math.atan2(g, f) + angleOffset;
+
+            const px = Math.cos(particleYaw);
+            const py = Math.sin(particleYaw);
+
             const speed = randInt(100, 210);
-            const vel = new MutVec2((a + f) * speed, (a + g) * speed);
+            const vel = new MutVec2(px * speed, py * speed);
 
             world.spawnParticleByVec(
-                bullet.getPositionRef, vel, rand(0.4, 0.6), rand(2, 3),
+                bullet.getPositionRef.clone(), vel, rand(0.4, 0.6), rand(2, 3),
                 "#ffaa33", "#ff5454", 0.6, 80
             );
         }

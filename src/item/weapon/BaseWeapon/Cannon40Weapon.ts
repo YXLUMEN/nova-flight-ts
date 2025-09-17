@@ -13,7 +13,7 @@ export class Cannon40Weapon extends BaseWeapon {
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
         const bullet = new BulletEntity(EntityTypes.BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1));
-        this.setBullet(bullet, attacker, this.speed, 6);
+        this.setBullet(bullet, attacker, this.speed, 6, 2);
         world.spawnEntity(bullet);
 
         this.setCooldown(stack, this.getFireRate(stack));

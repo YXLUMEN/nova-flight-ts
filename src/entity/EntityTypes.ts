@@ -10,6 +10,8 @@ import {MiniBulletEntity} from "./projectile/MiniBulletEntity.ts";
 import {MiniGunEnemyEntity} from "./mob/MiniGunEnemyEntity.ts";
 import {MissileEntity} from "./projectile/MissileEntity.ts";
 import {RocketEntity} from "./projectile/RocketEntity.ts";
+import {SpawnMarkerEntity} from "./SpawnMarkerEntity.ts";
+import {DecoyEntity} from "./DecoyEntity.ts";
 
 export class EntityTypes {
     public static readonly BASE_ENEMY = EntityType.register("base_enemy",
@@ -49,6 +51,14 @@ export class EntityTypes {
     public static readonly ROCKET_ENTITY = EntityType.register("rocket_entity",
         EntityType.Builder.create(RocketEntity)
             .setDimensions(8, 8)
+    );
+    public static readonly SPAWN_MARK_ENTITY = EntityType.register("spawn_marker_entity",
+        EntityType.Builder.create(SpawnMarkerEntity)
+            .setDimensions(24, 24)
+    );
+    public static readonly DECOY_ENTITY = EntityType.register("decoy_entity",
+        EntityType.Builder.create(DecoyEntity)
+            .setDimensions(6, 6)
     );
 
     public static init() {

@@ -1,9 +1,10 @@
 import type {World} from "../world/World.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
+import type {SpawnMarkerEntity} from "../entity/SpawnMarkerEntity.ts";
 
 export type RNG = () => number;
 
-export type MobFactory = (ctx: SpawnCtx) => MobEntity | MobEntity[] | null;
+export type MobFactory = (ctx: SpawnCtx) => MobEntity | MobEntity[] | SpawnMarkerEntity | SpawnMarkerEntity[] | null;
 
 export interface SpawnCtx {
     world: World;

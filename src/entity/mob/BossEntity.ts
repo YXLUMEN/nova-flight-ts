@@ -14,13 +14,14 @@ import {EVENTS} from "../../apis/IEvents.ts";
 import {MissileEntity} from "../projectile/MissileEntity.ts";
 
 export class BossEntity extends MobEntity {
-    public color = '#b30000';
+    public override color = '#b30000';
+    public override yStep = 0;
 
     private readonly maxDamageCanTake: number;
     private maxKillCounts = 48;
     private cooldown = 0;
     private damageCooldown: number = 0;
-    protected yStep = 0;
+    private releasingMissile: boolean = false;
 
     public constructor(type: EntityType<BossEntity>, world: World, worth: number) {
         super(type, world, worth);
@@ -61,12 +62,14 @@ export class BossEntity extends MobEntity {
             world.spawnEntity(b);
         }
 
-        if (this.age % 12 !== 0) return;
+        if (this.age % 12 !== 0 || this.releasingMissile) return;
 
         let i = 1;
+        this.releasingMissile = true;
         const schedule = world.scheduleInterval(0.3, () => {
             if (i++ > 8) {
                 schedule.cancel();
+                this.releasingMissile = false;
                 return;
             }
             const side = (i % 2 === 0) ? 1 : -1;
@@ -76,8 +79,8 @@ export class BossEntity extends MobEntity {
 
             const missile = new MissileEntity(EntityTypes.MISSILE_ENTITY, world, this, driftAngle, 'player');
             missile.color = '#ff7777'
-            missile.setMaxLifeTick(400);
-            missile.setTrackingSpeed(0.4);
+            missile.setMaxLifeTick(1000);
+            missile.setTrackingSpeed(0.55);
             missile.setPosition(pos.x, pos.y);
             missile.setYaw(yaw);
             world.spawnEntity(missile);
@@ -107,7 +110,7 @@ export class BossEntity extends MobEntity {
             const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
 
             world.spawnParticleByVec(
-                this.getPositionRef, vel, rand(0.8, 1.4), rand(12, 24),
+                this.getPositionRef.clone(), vel, rand(0.8, 1.4), rand(12, 24),
                 "#ffaa33", "#ff5454", 0.6, 80
             );
         }

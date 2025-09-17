@@ -1,7 +1,4 @@
 import {RocketEntity} from "./RocketEntity.ts";
-import type {EntityType} from "../EntityType.ts";
-import {World} from "../../world/World.ts";
-import {LivingEntity} from "../LivingEntity.ts";
 import {ProjectileEntity} from "./ProjectileEntity.ts";
 import {MobEntity} from "../mob/MobEntity.ts";
 import {pointInCircleVec2} from "../../utils/math/math.ts";
@@ -16,9 +13,6 @@ export class EMPRocketEntity extends RocketEntity {
     private duration = 300;
     public override color = "#4b8bff";
 
-    public constructor(type: EntityType<EMPRocketEntity>, world: World, owner: LivingEntity) {
-        super(type, world, owner, 0);
-    }
 
     public override explode() {
         const world = this.getWorld();

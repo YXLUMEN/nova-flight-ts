@@ -12,25 +12,23 @@ import {type Entity} from "../../entity/Entity.ts";
 import {LivingEntity} from "../../entity/LivingEntity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {Items} from "../items.ts";
+import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 
 export class IntoVoidWeapon extends SpecialWeapon {
     public static readonly displayName = "遁入虚空";
     public static readonly uiColor = "#7945ff";
 
     public readonly modifier = {id: Identifier.ofVanilla('weapon.into_void'), value: 0.4};
-    public radius = 32;
-    public duration = 250;
-    private active = false;
-    private timeLeft = 0;
+
     private prevInvincible = false;
 
     private mask: WindowOverlay | null = null;
 
-    public override tryFire(_stack: ItemStack, world: World, attacker: Entity): void {
-        if (this.active) return;
+    public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
+        if (this.getActive(stack)) return;
 
-        this.active = true;
-        this.timeLeft = this.duration;
+        this.setActive(stack, true);
+        this.setTimeLeft(stack, this.getDuration(stack));
 
         if (attacker instanceof PlayerEntity) {
             this.prevInvincible = attacker.invulnerable;
@@ -55,16 +53,16 @@ export class IntoVoidWeapon extends SpecialWeapon {
     }
 
     public override canFire(stack: ItemStack): boolean {
-        return !this.active && this.getCooldown(stack) <= 0;
+        return !this.getActive(stack) && this.getCooldown(stack) <= 0;
     }
 
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity): void {
         super.inventoryTick(stack, world, holder);
 
-        if (!this.active) return;
+        if (!this.getActive(stack)) return;
 
-        this.timeLeft -= 1;
-        if (this.timeLeft <= 0 && holder instanceof LivingEntity) {
+        this.setTimeLeft(stack, this.getTimeLeft(stack) - 1);
+        if (this.getTimeLeft(stack) <= 0 && holder instanceof LivingEntity) {
             this.exitVoid(stack, holder.getWorld(), holder);
         }
         if (holder instanceof PlayerEntity && holder.techTree.isUnlocked('void_energy_extraction')) {
@@ -79,11 +77,35 @@ export class IntoVoidWeapon extends SpecialWeapon {
     }
 
     public override getCooldown(stack: ItemStack): number {
-        return this.active ? (this.duration - this.timeLeft) : super.getCooldown(stack);
+        return this.getActive(stack) ? (this.getDuration(stack) - this.getTimeLeft(stack)) : super.getCooldown(stack);
     }
 
     public override getMaxCooldown(stack: ItemStack): number {
-        return this.active ? this.duration : super.getMaxCooldown(stack);
+        return this.getActive(stack) ? this.getDuration(stack) : super.getMaxCooldown(stack);
+    }
+
+    public getActive(stack: ItemStack): boolean {
+        return stack.getOrDefault(DataComponentTypes.ACTIVE, true);
+    }
+
+    public setActive(stack: ItemStack, value: boolean): void {
+        stack.set(DataComponentTypes.ACTIVE, value);
+    }
+
+    public getDuration(stack: ItemStack): number {
+        return stack.getOrDefault(DataComponentTypes.EFFECT_DURATION, 0);
+    }
+
+    public setDuration(stack: ItemStack, value: number): void {
+        stack.set(DataComponentTypes.EFFECT_DURATION, value);
+    }
+
+    public getTimeLeft(stack: ItemStack): number {
+        return stack.getOrDefault(DataComponentTypes.EFFECT_TIME_LEFT, 0);
+    }
+
+    public setTimeLeft(stack: ItemStack, value: number): void {
+        stack.set(DataComponentTypes.EFFECT_TIME_LEFT, value);
     }
 
     public trueMaxCooldown(stack: ItemStack): number {
@@ -100,8 +122,8 @@ export class IntoVoidWeapon extends SpecialWeapon {
 
     private exitVoid(stack: ItemStack, world: World, owner: LivingEntity, keepCooldown = true): void {
         owner.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.removeModifierById(this.modifier.id);
-        this.active = false;
-        this.timeLeft = 0;
+        this.setActive(stack, false);
+        this.setTimeLeft(stack, 0);
         this.setCooldown(stack, this.getMaxCooldown(stack));
 
         if (this.mask) {
@@ -120,7 +142,7 @@ export class IntoVoidWeapon extends SpecialWeapon {
         owner.invulnerable = this.prevInvincible;
         this.prevInvincible = false;
 
-        const box = owner.getEntityDimension().width + this.radius;
+        const box = owner.getEntityDimension().width + stack.getOrDefault(DataComponentTypes.VOID_DAMAGE_RANGE, 32);
         for (const mob of world.getLoadMobs()) {
             if (mob.isRemoved() || !pointInCircleVec2(owner.getPositionRef, mob.getPositionRef, box + mob.getEntityDimension().width)) continue;
             if (mob instanceof BossEntity) continue;

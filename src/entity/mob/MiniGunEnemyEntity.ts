@@ -1,14 +1,13 @@
 import {StatusEffects} from "../effect/StatusEffects.ts";
 import {MiniBulletEntity} from "../projectile/MiniBulletEntity.ts";
 import {EntityTypes} from "../EntityTypes.ts";
-import {Vec2} from "../../utils/math/Vec2.ts";
 import {MobEntity} from "./MobEntity.ts";
 import {EntityType} from "../EntityType.ts";
 import type {World} from "../../world/World.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 
 export class MiniGunEnemyEntity extends MobEntity {
-    private static readonly bulletVel = new Vec2(0, 5);
+    private static readonly bulletSpeed = 4;
     public color = "#ac0000";
     private cooldown = 0;
     private fireCount = 0;
@@ -32,8 +31,7 @@ export class MiniGunEnemyEntity extends MobEntity {
             return;
         }
 
-        this.fireCD--;
-        if (this.fireCD > 0) return;
+        if (this.fireCD-- > 0) return;
         this.fireCD = 10;
 
         if (this.fireCount > 16) {
@@ -46,9 +44,10 @@ export class MiniGunEnemyEntity extends MobEntity {
         if (world.empBurst > 0 || this.hasStatusEffect(StatusEffects.EMC_STATUS)) return;
 
         const pos = this.getPositionRef;
+        const yaw = this.getYaw();
         const b = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, this, 1);
-        b.setVelocityByVec(MiniGunEnemyEntity.bulletVel);
-        b.setPosition(pos.x, pos.y + this.getEntityDimension().height);
+        b.setVelocity(Math.cos(yaw) * MiniGunEnemyEntity.bulletSpeed, Math.sin(yaw) * MiniGunEnemyEntity.bulletSpeed);
+        b.setPosition(pos.x, pos.y);
 
         b.color = '#ff0000'
         world.spawnEntity(b);

@@ -26,8 +26,8 @@ import {EntityList} from "../entity/EntityList.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 import {BossEntity} from "../entity/mob/BossEntity.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
-import type {IVec} from "../utils/math/IVec.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
+import type {Stage} from "../stage/Stage.ts";
 
 export class World {
     private static worldInstance: World;
@@ -57,7 +57,7 @@ export class World {
     private nextTimerId = 1;
     private timers: TimerTask[] = [];
     // game
-    private readonly stage = STAGE;
+    private stage = STAGE;
     private effects: Effect[] = [];
     private readonly particlePool: ParticlePool = new ParticlePool(256);
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
@@ -232,6 +232,12 @@ export class World {
         this.effects.push(effect);
     }
 
+    public setStage(stage: Stage) {
+        this.loadedMobs.forEach(m => m.discard());
+        this.stage.reset();
+        this.stage = stage;
+    }
+
     public getDamageSources(): DamageSources {
         return this.damageSources;
     }
@@ -241,13 +247,13 @@ export class World {
     }
 
     public spawnParticleByVec(
-        pos: IVec, vel: IVec,
+        pos: MutVec2, vel: MutVec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
         drag = 0.0, gravity = 0.0
     ): void {
         this.particlePool.spawn(
-            new MutVec2(pos.x, pos.y), new MutVec2(vel.x, vel.y),
+            pos, vel,
             life, size,
             colorFrom, colorTo,
             drag, gravity
@@ -446,7 +452,15 @@ export class World {
         this.events.on(EVENTS.BOSS_KILLED, () => {
             this.stage.nextPhase();
 
-            this.schedule(80, () => {
+            this.schedule(120, () => {
+                const stage = this.stage;
+                stage.reset();
+                while (true) {
+                    const stageName = stage.getCurrentName();
+                    if (stageName === 'P6' || stageName === 'mP3' || stageName === null) break;
+                    stage.nextPhase();
+                }
+
                 const boss = new BossEntity(EntityTypes.BOSS_ENTITY, this, 64);
                 boss.setPosition(World.W / 2, 64);
                 this.spawnEntity(boss);

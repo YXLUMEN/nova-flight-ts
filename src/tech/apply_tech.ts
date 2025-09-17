@@ -63,7 +63,7 @@ export function applyTech(world: World, id: string) {
             break;
         }
         case 'gunboat_focus':
-            player.addWeapon(Items.MINIGUN_WEAPON, new ItemStack(Items.MISSILE_WEAPON));
+            player.addWeapon(Items.MINIGUN_WEAPON, new ItemStack(Items.MINIGUN_WEAPON));
             break;
         case 'hd_bullet':
             player.weapons.values().forEach(stack => {
@@ -127,7 +127,7 @@ export function applyTech(world: World, id: string) {
             const intoVoid = Items.INTO_VOID_WEAPON as IntoVoidWeapon;
             const stack = player.weapons.get(Items.INTO_VOID_WEAPON);
             if (stack) {
-                stack.set(DataComponentTypes.VOID_DURATION, stack.getOrDefault(DataComponentTypes.VOID_DURATION, 1) * 0.1);
+                stack.set(DataComponentTypes.EFFECT_DURATION, stack.getOrDefault(DataComponentTypes.EFFECT_DURATION, 1) * 0.1);
                 intoVoid.setMaxCooldown(stack, intoVoid.trueMaxCooldown(stack) * 0.2);
                 intoVoid.modifier.value = 1.5;
             }
@@ -137,7 +137,7 @@ export function applyTech(world: World, id: string) {
             const intoVoid = Items.INTO_VOID_WEAPON as IntoVoidWeapon;
             const stack = player.weapons.get(Items.INTO_VOID_WEAPON);
             if (stack) {
-                stack.set(DataComponentTypes.VOID_DURATION, stack.getOrDefault(DataComponentTypes.VOID_DURATION, 1) * 2);
+                stack.set(DataComponentTypes.EFFECT_DURATION, stack.getOrDefault(DataComponentTypes.EFFECT_DURATION, 1) * 2);
                 intoVoid.setMaxCooldown(stack, intoVoid.trueMaxCooldown(stack) * 1.4);
             }
             break;
@@ -164,7 +164,8 @@ export function applyTech(world: World, id: string) {
         }
         case 'missile': {
             player.weapons.delete(Items.BOMB_WEAPON);
-            player.weapons.set(Items.MISSILE_WEAPON, new ItemStack(Items.MISSILE_WEAPON));
+            player.addWeapon(Items.MISSILE_WEAPON, new ItemStack(Items.MISSILE_WEAPON));
+            player.addWeapon(Items.JAMMER_WEAPON, new ItemStack(Items.JAMMER_WEAPON));
             break;
         }
         case 'honeycomb_missile': {

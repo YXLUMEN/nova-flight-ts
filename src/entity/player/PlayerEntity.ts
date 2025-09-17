@@ -28,6 +28,7 @@ export class PlayerEntity extends LivingEntity {
     public readonly techTree: TechTree;
 
     public onDamageExplosionRadius = 320;
+    public lockedCount = 0;
 
     public readonly weapons = new Map<Item, ItemStack>();
     public readonly baseWeapons: BaseWeapon[] = [];

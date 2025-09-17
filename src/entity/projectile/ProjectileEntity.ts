@@ -8,7 +8,7 @@ import {DataTracker} from "../data/DataTracker.ts";
 
 export abstract class ProjectileEntity extends Entity implements IOwnable {
     public readonly damage: number;
-    public readonly owner: Entity | null;
+    public owner: Entity | null;
     public color = "#8cf5ff";
 
     protected boxRadius: number = this.getEntityDimension().width;

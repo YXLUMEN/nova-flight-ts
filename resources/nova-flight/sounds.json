@@ -161,5 +161,11 @@
     "sounds": [
       "nova-flight:/explosion_01"
     ]
+  },
+  "decoy.fire": {
+    "subtitle": "sound.nova-flight.decoy.fire",
+    "sounds": [
+      "nova-flight:/decoy_fire"
+    ]
   }
 }

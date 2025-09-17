@@ -3,7 +3,7 @@ import {World} from '../../world/World.ts';
 import type {Weapon} from '../../item/weapon/Weapon.ts';
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
-import {clamp} from "../../utils/math/math.ts";
+import {clamp, PI2} from "../../utils/math/math.ts";
 import type {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import type {ItemStack} from "../../item/ItemStack.ts";
 
@@ -90,6 +90,7 @@ export class UI {
         if (!this.world.isTicking) {
             UI.renderPauseOverlay(ctx);
         }
+        if (player.lockedCount > 0) UI.renderLockAlert(ctx);
     }
 
     private renderHealth(ctx: CanvasRenderingContext2D, player: PlayerEntity, x: number, y: number) {
@@ -188,7 +189,7 @@ export class UI {
         ctx.fillRect(0, 0, World.W, World.H);
 
         // 轻微脉冲
-        const t = Date.now() * 0.002;
+        const t = performance.now() * 0.002;
         const pulse = 0.75 + 0.25 * Math.sin(t);
 
         ctx.textAlign = 'center';
@@ -233,6 +234,59 @@ export class UI {
         y += 32;
 
         ctx.fillText('按 Enter 键重新开始', width / 2, y);
+
+        ctx.restore();
+    }
+
+    public static renderLockAlert(ctx: CanvasRenderingContext2D) {
+        const width = World.W;
+        const height = World.H;
+
+        const barW = 150;
+        const barH = 40;
+        const x = (width - barW) / 2;
+        const y = height - barH - 28;
+        const radius = 10;
+
+        // 脉动闪烁
+        const t = performance.now() * 0.004;
+        const pulse = (Math.sin(t * PI2) + 1) / 2;
+        const borderAlpha = 0.35 + 0.45 * pulse;
+        const fillAlpha = 0.6;
+
+        ctx.save();
+
+        // 背景板
+        ctx.fillStyle = `rgba(10,10,12,${fillAlpha})`;
+        ctx.shadowColor = `rgba(255,70,70,${0.35 + 0.45 * pulse})`;
+        ctx.shadowBlur = 16;
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + barW - radius, y);
+        ctx.quadraticCurveTo(x + barW, y, x + barW, y + radius);
+        ctx.lineTo(x + barW, y + barH - radius);
+        ctx.quadraticCurveTo(x + barW, y + barH, x + barW - radius, y + barH);
+        ctx.lineTo(x + radius, y + barH);
+        ctx.quadraticCurveTo(x, y + barH, x, y + barH - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+        ctx.fill();
+
+        // 外边框
+        ctx.shadowBlur = 0;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = `rgba(255,80,80,${borderAlpha})`;
+        ctx.stroke();
+
+        // 文案
+        ctx.font = `bold 14px ui-monospace, Menlo, Consolas, monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "rgba(255,255,255,0.92)";
+        ctx.shadowColor = "rgba(255,60,60,0.4)";
+        ctx.shadowBlur = 6;
+        ctx.fillText("MISSILE LOCK", x + barW / 2, y + barH / 2);
 
         ctx.restore();
     }

@@ -7,18 +7,18 @@ import {SpecialWeapon} from "./SpecialWeapon.ts";
 import {SoundSystem} from "../../sound/SoundSystem.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
+import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 
 export class MissileWeapon extends SpecialWeapon {
-    public missileCounts = 8;
-    public explosionRadius = 64;
-    public explosionDamage = 10;
-
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         const pos = attacker.getPositionRef;
+        const missileCounts = stack.getOrDefault(DataComponentTypes.MISSILE_COUNT, 8);
+        const explosionDamage = stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 10);
+        const explosionRadius = stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 72);
         let i = 1;
 
         const schedule = world.scheduleInterval(0.1, () => {
-            if (i++ > this.missileCounts) {
+            if (i++ > missileCounts) {
                 schedule.cancel();
                 SoundSystem.stopLoopSound(SoundEvents.MISSILE_LAUNCH_LOOP);
                 return;
@@ -30,8 +30,8 @@ export class MissileWeapon extends SpecialWeapon {
             const driftAngle = yaw + side * (HALF_PI + (Math.random() - 0.5) * 0.2);
 
             const missile = new MissileEntity(EntityTypes.MISSILE_ENTITY, world, attacker, driftAngle);
-            missile.explosionDamage = this.explosionDamage;
-            missile.explosionRadius = this.explosionRadius;
+            missile.explosionDamage = explosionDamage;
+            missile.explosionRadius = explosionRadius;
             missile.setHoverDir(side);
             missile.setYaw(yaw);
             missile.setPosition(pos.x, pos.y);
@@ -40,7 +40,7 @@ export class MissileWeapon extends SpecialWeapon {
 
         world.schedule(1.6, () => SoundSystem.playSound(SoundEvents.MISSILE_BLASTOFF));
 
-        if (this.missileCounts > 8) {
+        if (missileCounts > 8) {
             SoundSystem.playLoopSound(SoundEvents.MISSILE_LAUNCH_LOOP);
         } else {
             SoundSystem.playSound(SoundEvents.MISSILE_LAUNCH_COMP);

@@ -35,6 +35,8 @@ export class SoundEvents {
     public static readonly WEAPON_READY = this.registerSound("weapon.ready");
     public static readonly EXPLOSION = this.registerSound("explosion.normal");
 
+    public static readonly DECOY_FIRE = this.registerSound("decoy.fire");
+
     private static registerSound(id: string) {
         const identifier = Identifier.ofVanilla(id);
         return Registry.registerReferenceById(Registries.SOUND_EVENT, identifier, SoundEvent.of(identifier)).getValue();

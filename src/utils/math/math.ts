@@ -13,6 +13,14 @@ export function randInt(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+export function randNormal(mean = 0, stdDev = 1) {
+    let u = 0, v = 0;
+    while (u === 0) u = Math.random(); // 避免 log(0)
+    while (v === 0) v = Math.random();
+    const num = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    return num * stdDev + mean;
+}
+
 export function collideEntityBox(a: Entity, b: Entity): boolean {
     const boxA = a.calculateBoundingBox();
     const boxB = b.calculateBoundingBox();

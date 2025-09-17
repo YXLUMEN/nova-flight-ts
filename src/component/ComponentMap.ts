@@ -8,6 +8,7 @@ export class ComponentMap {
     public constructor(components: ComponentMap | null = null) {
         if (components) {
             this.components = components.components;
+            return;
         }
         this.components = new Map<ComponentType<any>, any>();
     }

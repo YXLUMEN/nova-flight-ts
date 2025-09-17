@@ -70,7 +70,7 @@ export class Item {
 
         public component<T>(type: ComponentType<T>, value: T): this {
             if (this.components === null) {
-                this.components = new ComponentMap();
+                this.components = this.getComponents();
             }
 
             this.components.set(type, value);
@@ -80,7 +80,6 @@ export class Item {
         private getComponents() {
             if (this.components === null) {
                 const com = new ComponentMap();
-                com.set(DataComponentTypes.DAMAGE, 0);
                 com.set(DataComponentTypes.MAX_STACK_SIZE, 1);
                 this.components = com;
             }

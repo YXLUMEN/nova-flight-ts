@@ -387,7 +387,7 @@
     "name": "自动瞄准",
     "x": 0,
     "y": 380,
-    "desc": "自动计算并瞄准",
+    "desc": "自动计算并瞄准, 点击左Alt开关",
     "cost": 320,
     "requires": [
       "steering_gear"

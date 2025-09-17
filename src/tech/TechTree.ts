@@ -7,6 +7,7 @@ import {WorldConfig} from "../configs/WorldConfig.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import {Items} from "../item/items.ts";
 import {ItemStack} from "../item/ItemStack.ts";
+import {STAGE} from "../configs/StageConfig.ts";
 
 type Adjacency = {
     out: Map<string, string[]>; // id -> successors
@@ -422,7 +423,11 @@ export class TechTree {
         for (const tech of unlocked) {
             const cost = tech.cost;
             if (cost) backScore += cost;
+            if (tech.id === 'steering_gear') {
+                player.getWorld().setStage(STAGE);
+            }
         }
+
         player.setScore(player.getScore() + (backScore * 0.8) | 0);
         player.currentBaseIndex = 0;
         player.baseWeapons.length = 0;

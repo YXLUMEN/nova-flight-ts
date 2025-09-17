@@ -9,29 +9,35 @@ import type {TrackedData} from "../data/TrackedData.ts";
 import type {DataEntry} from "../data/DataEntry.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
+import type {MobAI} from "../ai/MobAI.ts";
+import {SimpleForwardAI} from "../ai/SimpleForwardAI.ts";
 
 export abstract class MobEntity extends LivingEntity {
-    private readonly worth: number;
-    protected yStep = 1;
+    public color = '#ff6b6b';
+    public yStep = 1;
 
-    protected constructor(type: EntityType<MobEntity>, world: World, worth: number) {
+    private readonly worth: number;
+    private AI: MobAI;
+
+    protected constructor(type: EntityType<MobEntity>, world: World, worth: number, ai?: MobAI) {
         super(type, world);
         this.worth = worth;
         this.age += (Math.random() * 10) | 0;
         this.setYaw(1.57079);
+        this.AI = ai === undefined ? new SimpleForwardAI() : ai;
     }
 
     public override tick(): void {
         super.tick();
 
-        const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-        const speed = this.getMovementSpeed() * speedMultiplier;
-        const vx = Math.sin(this.age * 0.05) * 0.8 * speedMultiplier;
-
-        this.updateVelocity(speed, vx, this.yStep);
+        this.AI.updateVelocity(this);
         this.moveByVec(this.getVelocityRef);
         this.getVelocityRef.multiply(0.8);
         this.adjustPosition();
+    }
+
+    public setAI(ai: MobAI) {
+        this.AI = ai;
     }
 
     protected override adjustPosition(): boolean {
@@ -52,7 +58,7 @@ export abstract class MobEntity extends LivingEntity {
         const world = this.getWorld();
         world.events.emit(EVENTS.MOB_DAMAGE, {mob: this, damageSource});
         world.spawnParticleByVec(
-            this.getPositionRef, MutVec2.zero(),
+            this.getPositionRef.clone(), MutVec2.zero(),
             rand(0.2, 0.6), rand(4, 6),
             "#ffaa33", "#ff5454",
             0.6, 80
@@ -72,7 +78,7 @@ export abstract class MobEntity extends LivingEntity {
             const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
 
             world.spawnParticleByVec(
-                this.getPositionRef, vel, rand(0.6, 0.8), rand(4, 6),
+                this.getPositionRef.clone(), vel, rand(0.6, 0.8), rand(4, 6),
                 "#ffaa33", "#ff5454", 0.6, 80
             );
         }

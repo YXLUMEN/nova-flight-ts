@@ -37,11 +37,11 @@ export abstract class Weapon extends Item {
     }
 
     public getCooldown(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponentTypes.COOLDOWN, 0);
+        return stack.getOrDefault(DataComponentTypes.COOLDOWN, 10);
     }
 
     public setCooldown(stack: ItemStack, value: number) {
-        stack.getOrDefault(DataComponentTypes.COOLDOWN, clamp(value, 0, this.getMaxCooldown(stack)));
+        stack.set(DataComponentTypes.COOLDOWN, clamp(value, 0, this.getMaxCooldown(stack)));
     }
 
     public shouldCooldown(_stack: ItemStack): boolean {

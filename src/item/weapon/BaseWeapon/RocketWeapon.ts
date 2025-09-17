@@ -10,6 +10,7 @@ import {SoundSystem} from "../../../sound/SoundSystem.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {ItemStack} from "../../ItemStack.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import {ClusterRocketEntity} from "../../../entity/projectile/ClusterRocketEntity.ts";
 
 export class RocketWeapon extends BaseWeapon {
     private speed: number = 6;
@@ -19,8 +20,6 @@ export class RocketWeapon extends BaseWeapon {
 
         const rocketCounts = stack.getOrDefault(DataComponentTypes.MISSILE_COUNT, 8);
         const randomRocketEnable = stack.getOrDefault(DataComponentTypes.MISSILE_RANDOM_ENABLE, false);
-        const explosionDamage = stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 12);
-        const explosionRadius = stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 72);
 
         let i = 1;
         const schedule = world.scheduleInterval(0.1, () => {
@@ -32,15 +31,16 @@ export class RocketWeapon extends BaseWeapon {
 
             const yaw = attacker.getYaw();
 
-            let rocket;
+            let rocket = null;
             if (randomRocketEnable) {
-                rocket = this.randomRocket(world, attacker, explosionDamage, explosionRadius);
-            } else {
-                rocket = new RocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker);
-                rocket.explosionDamage = stack.getOrDefault(explosionDamage, 12);
-                rocket.explosionRadius = stack.getOrDefault(explosionRadius, 72);
+                rocket = this.randomRocket(world, attacker);
             }
-            this.setBullet(rocket, attacker, 6, yaw);
+            if (rocket === null) {
+                rocket = new RocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker);
+                rocket.explosionDamage = stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 12);
+                rocket.explosionRadius = stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 72);
+            }
+            this.setBullet(rocket, attacker, this.speed, yaw, 2);
             world.spawnEntity(rocket);
 
             attacker.updateVelocity(-0.6, Math.cos(yaw), Math.sin(yaw));
@@ -50,20 +50,18 @@ export class RocketWeapon extends BaseWeapon {
         this.setCooldown(stack, this.getMaxCooldown(stack));
     }
 
-    private randomRocket(world: World, attacker: Entity, explosionDamage: number, explosionRadius: number) {
+    private randomRocket(world: World, attacker: Entity): RocketEntity | null {
         const rnd = Math.random();
         if (rnd < 0.1) {
-            return new EMPRocketEntity(EntityTypes.EMP_ROCKET_ENTITY, world, attacker);
+            return new EMPRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker, 1);
         } else if (rnd < 0.3) {
-            return new BurstRocketEntity(EntityTypes.BURST_ROCKET_ENTITY, world, attacker);
+            return new BurstRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker, 4);
         } else if (rnd < 0.4) {
-            return new APRocketEntity(EntityTypes.AP_ROCKET_ENTITY, world, attacker);
-        } else {
-            const rocket = new RocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker);
-            rocket.explosionDamage = explosionDamage;
-            rocket.explosionRadius = explosionRadius;
-            return rocket;
+            return new APRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker);
+        } else if (rnd < 0.6) {
+            return new ClusterRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker, 8, 100);
         }
+        return null;
     }
 
     public override getDisplayName(): string {

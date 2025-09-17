@@ -6,7 +6,7 @@ export class Box {
     public readonly maxX: number;
     public readonly maxY: number;
 
-    public constructor(x1: number, y1: number, x2: number, y2: number) {
+    public constructor(x1: number, y1: number, x2 = x1, y2 = y1) {
         this.minX = Math.min(x1, x2);
         this.minY = Math.min(y1, y2);
         this.maxX = Math.max(x1, x2);
@@ -23,5 +23,18 @@ export class Box {
 
     public intersects(minX: number, minY: number, maxX: number, maxY: number) {
         return this.minX < maxX && this.maxX > minX && this.minY < maxY && this.maxY > minY;
+    }
+
+    public expand(x: number, y: number) {
+        return new Box(
+            this.minX - x,
+            this.minY - y,
+            this.maxX + x,
+            this.maxY + y
+        );
+    }
+
+    public expandAll(value: number) {
+        return this.expand(value, value);
     }
 }
