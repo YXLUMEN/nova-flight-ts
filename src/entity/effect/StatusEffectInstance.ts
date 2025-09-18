@@ -20,7 +20,7 @@ export class StatusEffectInstance {
     }
 
     public upgrade(effect: StatusEffectInstance): boolean {
-        if (!Object.is(this.type, effect.type)) {
+        if (this.type !== effect.type) {
             console.warn("This method should only be called for matching effects!");
         }
 

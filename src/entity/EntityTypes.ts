@@ -12,13 +12,14 @@ import {MissileEntity} from "./projectile/MissileEntity.ts";
 import {RocketEntity} from "./projectile/RocketEntity.ts";
 import {SpawnMarkerEntity} from "./SpawnMarkerEntity.ts";
 import {DecoyEntity} from "./DecoyEntity.ts";
+import {MissileEnemyEntity} from "./mob/MissileEnemyEntity.ts";
 
 export class EntityTypes {
     public static readonly BASE_ENEMY = EntityType.register("base_enemy",
         EntityType.Builder.create(BaseEnemy)
             .setDimensions(28, 24)
     );
-    public static BOSS_ENTITY: EntityType<BossEntity>;
+    public static readonly BOSS_ENTITY: EntityType<BossEntity>;
     public static readonly GUN_ENEMY_ENTITY = EntityType.register("gun_enemy",
         EntityType.Builder.create(GunEnemyEntity)
             .setDimensions(20, 20)
@@ -26,6 +27,10 @@ export class EntityTypes {
     public static readonly MINIGUN_ENEMY_ENTITY = EntityType.register("minigun_enemy",
         EntityType.Builder.create(MiniGunEnemyEntity)
             .setDimensions(32, 32)
+    );
+    public static readonly MISSILE_ENEMY_ENTITY = EntityType.register("missile_enemy",
+        EntityType.Builder.create(MissileEnemyEntity)
+            .setDimensions(24, 24)
     );
     public static readonly TANK_ENEMY_ENTITY = EntityType.register("tank_enemy",
         EntityType.Builder.create(TankEnemy)
@@ -43,7 +48,7 @@ export class EntityTypes {
         EntityType.Builder.create(ExplodeBulletEntity)
             .setDimensions(12, 12)
     );
-    public static PLAYER_ENTITY: EntityType<PlayerEntity>;
+    public static readonly PLAYER_ENTITY: EntityType<PlayerEntity>;
     public static readonly MISSILE_ENTITY = EntityType.register("missile_entity",
         EntityType.Builder.create(MissileEntity)
             .setDimensions(8, 8)
@@ -62,15 +67,13 @@ export class EntityTypes {
     );
 
     public static init() {
-        // 避免提前引用
-        this.BOSS_ENTITY = EntityType.register("boss",
+        (this.BOSS_ENTITY as any) = EntityType.register("boss",
             EntityType.Builder.create(BossEntity)
                 .setDimensions(148, 160)
         );
-        this.PLAYER_ENTITY = EntityType.register("player",
+        (this.PLAYER_ENTITY as any) = EntityType.register("player",
             EntityType.Builder.create(PlayerEntity)
                 .setDimensions(24, 28)
         );
-        Object.freeze(this);
     }
 }

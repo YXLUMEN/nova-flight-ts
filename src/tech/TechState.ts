@@ -6,12 +6,12 @@ export class TechState {
     private readonly branchGroups: Map<string, Tech[]>;
     private readonly unlocked = new Set<string>();
 
-    public constructor(techs: Tech[]) {
+    public constructor(techs: Tech[] | Readonly<Tech[]>) {
         this.techById = new Map(techs.map(t => [t.id, t]));
         this.branchGroups = groupBy(techs.filter(t => t.branchGroup), t => t.branchGroup!);
     }
 
-    public static normalizeTechs(raw: unknown): Tech[] {
+    public static normalizeTechs(raw: unknown): Readonly<Tech[]> {
         if (!Array.isArray(raw)) {
             throw new Error('Tech JSON must be an array');
         }

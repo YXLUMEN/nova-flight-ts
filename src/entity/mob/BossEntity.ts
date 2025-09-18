@@ -58,7 +58,8 @@ export class BossEntity extends MobEntity {
             const b = new BulletEntity(EntityTypes.BULLET_ENTITY, world, this, 1);
             b.setVelocityByVec(vel);
             b.setPositionByVec(pos);
-            b.color = '#ff0000'
+            b.color = '#b10000';
+            b.edgeColor = '#ff0000';
             world.spawnEntity(b);
         }
 
@@ -78,8 +79,8 @@ export class BossEntity extends MobEntity {
             const driftAngle = yaw + side * (HALF_PI + (Math.random() - 0.5) * 0.2);
 
             const missile = new MissileEntity(EntityTypes.MISSILE_ENTITY, world, this, driftAngle, 'player');
-            missile.color = '#ff7777'
-            missile.setMaxLifeTick(1000);
+            missile.color = '#ff7777';
+            missile.setMaxLifeTick(400);
             missile.setTrackingSpeed(0.55);
             missile.setPosition(pos.x, pos.y);
             missile.setYaw(yaw);
@@ -114,10 +115,6 @@ export class BossEntity extends MobEntity {
                 "#ffaa33", "#ff5454", 0.6, 80
             );
         }
-    }
-
-    public override discard() {
-        super.discard();
     }
 
     public override addStatusEffect(_effect: StatusEffectInstance) {

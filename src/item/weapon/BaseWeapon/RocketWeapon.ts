@@ -16,7 +16,7 @@ export class RocketWeapon extends BaseWeapon {
     private speed: number = 6;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
-        stack.set(DataComponentTypes.MISSILE_FINISH_SHOOTING, false);
+        stack.set(DataComponentTypes.WEAPON_CAN_COOLDOWN, false);
 
         const rocketCounts = stack.getOrDefault(DataComponentTypes.MISSILE_COUNT, 8);
         const randomRocketEnable = stack.getOrDefault(DataComponentTypes.MISSILE_RANDOM_ENABLE, false);
@@ -25,7 +25,7 @@ export class RocketWeapon extends BaseWeapon {
         const schedule = world.scheduleInterval(0.1, () => {
             if (i++ > rocketCounts) {
                 schedule.cancel();
-                stack.set(DataComponentTypes.MISSILE_FINISH_SHOOTING, true);
+                stack.set(DataComponentTypes.WEAPON_CAN_COOLDOWN, true);
                 return;
             }
 
@@ -77,6 +77,6 @@ export class RocketWeapon extends BaseWeapon {
     }
 
     public override shouldCooldown(stack: ItemStack): boolean {
-        return stack.getOrDefault(DataComponentTypes.MISSILE_FINISH_SHOOTING, false);
+        return stack.getOrDefault(DataComponentTypes.WEAPON_CAN_COOLDOWN, false);
     }
 }

@@ -36,7 +36,8 @@ export class GunEnemyEntity extends MobEntity {
         b.setVelocity(Math.cos(yaw) * GunEnemyEntity.bulletSpeed, Math.sin(yaw) * GunEnemyEntity.bulletSpeed);
         b.setPosition(pos.x, pos.y);
 
-        b.color = '#ff0000'
+        b.color = '#b10000';
+        b.edgeColor = '#ff0000';
         world.spawnEntity(b);
     }
 }

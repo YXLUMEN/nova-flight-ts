@@ -12,7 +12,7 @@ import {RocketWeapon} from "./weapon/BaseWeapon/RocketWeapon.ts";
 import {DataComponentTypes} from "../component/DataComponentTypes.ts";
 import {IntoVoidWeapon} from "./weapon/IntoVoidWeapon.ts";
 import {LaserWeapon} from "./weapon/LaserWeapon.ts";
-import {Jammer} from "./weapon/Jammer.ts";
+import {DecoyReleaser} from "./weapon/DecoyReleaser.ts";
 
 export class Items {
     public static AIR = this.register("air", new Item(new Item.Settings()));
@@ -48,9 +48,9 @@ export class Items {
         .maxCooldown(100)
     ));
     public static readonly LASER_WEAPON: Item;
-    public static readonly JAMMER_WEAPON = this.register("jammer_weapon", new Jammer(new Item.Settings()
+    public static readonly DECOY_RELEASER = this.register("decoy_releaser", new DecoyReleaser(new Item.Settings()
         .attackDamage(0)
-        .maxCooldown(60)
+        .maxCooldown(500)
     ));
 
     private static register(id: string, item: Item): Item {
@@ -74,6 +74,5 @@ export class Items {
             .component(DataComponentTypes.DRAIN_RATE, 2)
             .component(DataComponentTypes.COOLDOWN_RATE, 1)
         ));
-        Object.freeze(this);
     }
 }

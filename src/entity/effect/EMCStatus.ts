@@ -4,8 +4,6 @@ import {PI2} from "../../utils/math/math.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 
 export class EMCStatus extends StatusEffect {
-    private cooldown = 0;
-
     public constructor() {
         super(2, '#0033ff');
     }
@@ -30,9 +28,7 @@ export class EMCStatus extends StatusEffect {
         return true;
     }
 
-    public override canApplyUpdateEffect(_duration: number, _amplifier: number): boolean {
-        if (this.cooldown++ < 20) return false;
-        this.cooldown = 0;
-        return true;
+    public override canApplyUpdateEffect(duration: number, _amplifier: number): boolean {
+        return duration % 40 === 0;
     }
 }

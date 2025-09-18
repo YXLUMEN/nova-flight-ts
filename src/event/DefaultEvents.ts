@@ -13,8 +13,10 @@ import {EntityTypes} from "../entity/EntityTypes.ts";
 import {GeneralEventBus} from "./GeneralEventBus.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import {Items} from "../item/items.ts";
-import {STAGE2} from "../configs/StageConfig2.ts";
 import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
+import type {Entity} from "../entity/Entity.ts";
+import {SpawnMarkerEntity} from "../entity/SpawnMarkerEntity.ts";
+import {STAGE2} from "../configs/StageConfig2.ts";
 
 
 export class DefaultEvents {
@@ -26,9 +28,6 @@ export class DefaultEvents {
 
         eventBus.on(EVENTS.UNLOCK_TECH, (event) => {
             applyTech(world, event.id);
-            if (event.id === 'steering_gear') {
-                world.setStage(STAGE2);
-            }
         });
 
         eventBus.on(EVENTS.MOB_KILLED, (event) => {
@@ -105,18 +104,30 @@ export class DefaultEvents {
             if (event.name === 'P6' || event.name === 'mP3') {
                 const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 64);
                 boss.setPosition(World.W / 2, 64);
-                world.spawnEntity(boss);
+
+                const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
+                mark.setPositionByVec(boss.getPositionRef);
+                world.spawnEntity(mark);
             }
         });
 
-        eventBus.on(EVENTS.PLAYER_LOCKED, (event) => {
+        eventBus.on(EVENTS.STAGE_EXIT, (event) => {
+            if (event.name === 'p9') {
+                world.setStage(STAGE2);
+            }
+        });
+
+        eventBus.on(EVENTS.ENTITY_LOCKED, (event) => {
             const missile = event.missile as MissileEntity;
-            if (missile.isRemoved()) return;
+            if (missile.isRemoved() || !missile.getTarget()?.isPlayer()) return;
             player.lockedCount++;
         });
 
-        eventBus.on(EVENTS.PLAYER_UNLOCKED, () => {
-            if (player.lockedCount > 0) player.lockedCount--;
+        eventBus.on(EVENTS.ENTITY_UNLOCKED, (event) => {
+            const target = event.lastTarget as Entity | null;
+            if (target && target.isPlayer() && player.lockedCount > 0) {
+                player.lockedCount--;
+            }
         });
     }
 }

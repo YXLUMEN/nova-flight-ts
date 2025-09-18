@@ -1,7 +1,8 @@
 import {Registry} from "../registry/Registry.ts";
 import {Registries} from "../registry/Registries.ts";
 import {Identifier} from "../registry/Identifier.ts";
-import {ComponentType, type Types} from "./ComponentType.ts";
+import {ComponentType} from "./ComponentType.ts";
+import {AttributeModifiersComponent} from "./type/AttributeModifiersComponent.ts";
 
 export class DataComponentTypes {
     public static readonly MAX_STACK_SIZE: ComponentType<number> = this.register("max_stack_size", new ComponentType(1));
@@ -26,14 +27,17 @@ export class DataComponentTypes {
     public static readonly EXPLOSION_DAMAGE: ComponentType<number> = this.register("explosion_damage", new ComponentType(0));
 
     public static readonly EFFECT_DURATION: ComponentType<number> = this.register("void_duration", new ComponentType(0));
-    public static readonly VOID_DAMAGE_RANGE: ComponentType<number> = this.register("void_damage_range", new ComponentType(0));
     public static readonly EFFECT_TIME_LEFT: ComponentType<number> = this.register("void_time_left", new ComponentType(0));
+    public static readonly VOID_DAMAGE_RANGE: ComponentType<number> = this.register("void_damage_range", new ComponentType(0));
+    public static readonly ANY_BOOLEAN: ComponentType<boolean> = this.register("void_prev_invincible", new ComponentType(false));
 
     public static readonly MISSILE_COUNT: ComponentType<number> = this.register("missile_count", new ComponentType(8));
     public static readonly MISSILE_RANDOM_ENABLE: ComponentType<boolean> = this.register("random_enable", new ComponentType(false));
-    public static readonly MISSILE_FINISH_SHOOTING: ComponentType<boolean> = this.register("finished_shooting", new ComponentType(false));
+    public static readonly WEAPON_CAN_COOLDOWN: ComponentType<boolean> = this.register("finished_shooting", new ComponentType(false));
 
-    private static register<T extends Types>(id: string, type: ComponentType<T>): ComponentType<T> {
+    public static readonly ATTRIBUTE_MODIFIERS = this.register("attribute_modifiers", new ComponentType(AttributeModifiersComponent.DEFAULT));
+
+    private static register<T>(id: string, type: ComponentType<T>): ComponentType<T> {
         return Registry.registerReferenceById(Registries.DATA_COMPONENT_TYPE, Identifier.ofVanilla(id), type).getValue();
     }
 }

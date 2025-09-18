@@ -110,6 +110,14 @@ const spawnGun = (speed = 3, extraHp = 0, worth = 1, color = '#ff6b6b'): MobFact
         m.setHealth(m.getMaxHealth());
     });
 
+const spawnMiEn = (speed = 3, extraHp = 0, worth = 1, color = '#ff6b6b'): MobFactory =>
+    spawnTopRandomCtorS(EntityTypes.MISSILE_ENEMY_ENTITY, [worth], (m) => {
+        m.setMovementSpeed(speed);
+        m.color = color;
+        m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(extraHp));
+        m.setHealth(m.getMaxHealth());
+    });
+
 const spawnMiniGun = (speed = 3, extraHp = 0, worth = 8, color = '#ac0000'): MobFactory =>
     spawnFormation([
         {
@@ -142,5 +150,6 @@ export {
     spawnLineBase,
     spawnGun,
     spawnTank,
-    spawnMiniGun
+    spawnMiniGun,
+    spawnMiEn
 }

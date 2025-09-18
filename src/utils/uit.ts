@@ -1,24 +1,28 @@
 export const DPR = Math.max(1, Math.min(2, globalThis.devicePixelRatio || 1));
 
-export function deepFreeze<T>(obj: T): T {
-    if (obj === null ||
-        obj === undefined ||
-        typeof obj === 'string' ||
-        typeof obj !== 'object'
-    ) return obj;
+export function deepFreeze<T>(obj: T, seen = new WeakSet()): Readonly<T> {
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (seen.has(obj)) return obj;
+    seen.add(obj);
 
-    Object.getOwnPropertyNames(obj).forEach((key) => {
-        // @ts-ignore
-        const value = obj[key];
-
-        if (
-            typeof value === 'object' &&
-            value !== null &&
-            !Object.isFrozen(value)
-        ) {
-            deepFreeze(value);
+    if (obj instanceof Map) {
+        for (const [k, v] of obj) {
+            deepFreeze(k as any, seen);
+            deepFreeze(v as any, seen);
         }
-    });
+    } else if (obj instanceof Set) {
+        for (const v of obj) {
+            deepFreeze(v as any, seen);
+        }
+    } else {
+        for (const key of Reflect.ownKeys(obj)) {
+            // @ts-ignore
+            const value = obj[key];
+            if (typeof value === 'object' && value !== null && !Object.isFrozen(value)) {
+                deepFreeze(value, seen);
+            }
+        }
+    }
 
     return Object.freeze(obj);
 }
@@ -27,6 +31,12 @@ export function createCleanObj<T>(obj: T): T {
     return Object.assign(Object.create(null), obj);
 }
 
+// 不要在游戏循环里调用
+export function sleep(time: number) {
+    return new Promise(resolve => setTimeout(resolve, time));
+}
+
+// 独立的音频加载播放方法
 export async function playSound(url: string): Promise<void> {
     try {
         const audioContext = new AudioContext();
@@ -55,10 +65,6 @@ export function throttleTimeOut<T extends (...args: any[]) => any>(func: T, wait
     }
 }
 
-export function isMobile() {
-    return /Mobile|Android|iPhone/.test(navigator.userAgent);
-}
-
 export function groupBy<T>(arr: T[], keyFn: (t: T) => string) {
     const m = new Map<string, T[]>();
     for (const item of arr) {
@@ -67,10 +73,6 @@ export function groupBy<T>(arr: T[], keyFn: (t: T) => string) {
         m.get(k)!.push(item);
     }
     return m;
-}
-
-export function appendChildren(parentEle: HTMLElement | DocumentFragment, ...children: HTMLElement[]): void {
-    children.forEach(item => parentEle.append(item));
 }
 
 export function isNonEmptyString(v: unknown): v is string {

@@ -49,7 +49,8 @@ export class MiniGunEnemyEntity extends MobEntity {
         b.setVelocity(Math.cos(yaw) * MiniGunEnemyEntity.bulletSpeed, Math.sin(yaw) * MiniGunEnemyEntity.bulletSpeed);
         b.setPosition(pos.x, pos.y);
 
-        b.color = '#ff0000'
+        b.color = '#b10000';
+        b.edgeColor = '#ff0000';
         world.spawnEntity(b);
         this.fireCount++;
     }

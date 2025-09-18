@@ -2,7 +2,6 @@ import {RegistryKey} from "./RegistryKey.ts";
 import {Registry} from "./Registry.ts";
 import {RegistryKeys} from "./RegistryKeys.ts";
 import {Identifier} from "./Identifier.ts";
-import {deepFreeze} from "../utils/uit.ts";
 
 export class Registries {
     private static readonly ROOT = new Registry(RegistryKey.ofRegistry(Identifier.ROOT));
@@ -26,7 +25,6 @@ export class Registries {
     public static async complete() {
         const attr = await import('../entity/attribute/EntityAttributes.ts');
         this.DEFAULT_ENTRIES.set(RegistryKeys.ATTRIBUTE.getValue(), attr.EntityAttributes.registerAndGetDefault);
-        deepFreeze(this);
     }
 
     private static simpleCreate<T>(key: RegistryKey<Registry<T>>, initializer: CallableFunction): Registry<T> {

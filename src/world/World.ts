@@ -22,12 +22,13 @@ import {EntityRenderers} from "../render/entity/EntityRenderers.ts";
 import {DefaultEvents} from "../event/DefaultEvents.ts";
 import {EVENTS, type IEvents} from "../apis/IEvents.ts";
 import {mainWindow} from "../main.ts";
-import {EntityList} from "../entity/EntityList.ts";
+import {EntityList} from "./EntityList.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 import {BossEntity} from "../entity/mob/BossEntity.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
 import type {Stage} from "../stage/Stage.ts";
+import {SpawnMarkerEntity} from "../entity/SpawnMarkerEntity.ts";
 
 export class World {
     private static worldInstance: World;
@@ -65,13 +66,16 @@ export class World {
     public player: PlayerEntity | null;
     private loadedMobs = new Set<MobEntity>();
     private entities: EntityList = new EntityList();
+    private peaceMod = false;
 
     protected constructor(registryManager: RegistryManager) {
         this.registryManager = registryManager;
         this.damageSources = new DamageSources(registryManager);
-        this.player = new PlayerEntity(this, this.input);
 
-        this.resize();
+        World.resize();
+        this.player = new PlayerEntity(this, this.input);
+        this.player?.setPosition(World.W / 2, World.H);
+
         this.registryListeners();
         this.registryEvents();
 
@@ -91,6 +95,22 @@ export class World {
 
     public static get instance(): World {
         return this.worldInstance;
+    }
+
+    public static getCtx() {
+        return this.ctx;
+    }
+
+    public static resize() {
+        const rect = this.canvas.getBoundingClientRect();
+
+        this.canvas.width = Math.floor(rect.width * DPR);
+        this.canvas.height = Math.floor(rect.height * DPR);
+
+        this.W = Math.floor(rect.width);
+        this.H = Math.floor(rect.height);
+
+        this.ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     }
 
     private tick(ts: number) {
@@ -122,36 +142,11 @@ export class World {
 
         // 更新实体
         if (!this.over) player.tick();
-
-        for (const entity of this.entities.iterate()) {
-            if (entity.isRemoved()) continue;
-            if (dt > 0) entity.tick();
-
-            // 敌方碰撞
-            if (entity instanceof MobEntity) {
-                if (player.invulnerable || WorldConfig.devMode || !collideEntityBox(player, entity)) continue;
-                entity.attack(player);
-                if (this.over) break;
-                continue;
-            }
-
-            // 弹射物碰撞
-            if (entity instanceof ProjectileEntity) {
-                if (entity.owner instanceof MobEntity) {
-                    if (player.invulnerable || WorldConfig.devMode || !collideEntityBox(player, entity)) continue;
-
-                    entity.onEntityHit(player);
-                    if (this.isOver) break;
-                    continue;
-                }
-                for (const mob of this.loadedMobs) {
-                    if (collideEntityCircle(entity, mob)) {
-                        entity.onEntityHit(mob);
-                        break;
-                    }
-                }
-            }
-        }
+        this.entities.forEach(entity => {
+            if (!entity.isRemoved() && !this.freeze) this.tickEntity(entity, player);
+            if (this.over) return;
+        });
+        this.entities.processRemovals();
 
         if (this.empBurst > 0) this.empBurst -= 1;
 
@@ -174,6 +169,33 @@ export class World {
         this.processTimers();
     }
 
+    private tickEntity(entity: Entity, player: PlayerEntity) {
+        entity.tick();
+
+        // 敌方碰撞
+        if (entity instanceof MobEntity) {
+            if (player.invulnerable || WorldConfig.devMode || !collideEntityBox(player, entity)) return;
+            entity.attack(player);
+            return;
+        }
+
+        // 弹射物碰撞
+        if (entity instanceof ProjectileEntity) {
+            if (entity.owner instanceof MobEntity) {
+                if (player.invulnerable || WorldConfig.devMode || !collideEntityBox(player, entity)) return;
+
+                entity.onEntityHit(player);
+                if (this.over) return;
+            }
+            for (const mob of this.loadedMobs) {
+                if (collideEntityCircle(entity, mob)) {
+                    entity.onEntityHit(mob);
+                    break;
+                }
+            }
+        }
+    }
+
     public get isTicking(): boolean {
         return this.ticking;
     }
@@ -189,6 +211,7 @@ export class World {
 
         this.player?.techTree.destroy();
         this.player = new PlayerEntity(this, this.input);
+        this.player.setPosition(World.W / 2, World.H);
 
         this.over = false;
         this.ticking = true;
@@ -206,18 +229,6 @@ export class World {
     private toggleTechTree() {
         const ticking = this.rendering = document.getElementById('tech-shell')!.classList.toggle('hidden');
         this.setTicking(ticking);
-    }
-
-    private resize() {
-        const rect = World.canvas.getBoundingClientRect();
-
-        World.canvas.width = Math.floor(rect.width * DPR);
-        World.canvas.height = Math.floor(rect.height * DPR);
-
-        World.W = Math.floor(rect.width);
-        World.H = Math.floor(rect.height);
-
-        World.ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     }
 
     public gameOver() {
@@ -276,6 +287,7 @@ export class World {
 
     public spawnEntity(entity: Entity) {
         if (entity instanceof MobEntity) {
+            if (this.peaceMod) return;
             this.loadedMobs.add(entity);
         }
         this.entities.add(entity);
@@ -322,6 +334,10 @@ export class World {
 
     public getTime(): number {
         return this.time;
+    }
+
+    public isPeaceMode(): boolean {
+        return this.peaceMod;
     }
 
     public setTicking(ticking = true): void {
@@ -444,6 +460,7 @@ export class World {
         this.events.on(EVENTS.ENTITY_REMOVED, event => {
             const entity = event.entity;
             this.entities.remove(entity);
+
             if (entity instanceof MobEntity) {
                 this.loadedMobs.delete(entity);
             }
@@ -463,7 +480,10 @@ export class World {
 
                 const boss = new BossEntity(EntityTypes.BOSS_ENTITY, this, 64);
                 boss.setPosition(World.W / 2, 64);
-                this.spawnEntity(boss);
+
+                const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, this, boss, true);
+                mark.setPositionByVec(boss.getPositionRef);
+                this.spawnEntity(mark);
             });
         });
 
@@ -477,7 +497,7 @@ export class World {
         }).then();
 
         // 实际可视页面变化
-        window.addEventListener("resize", () => this.resize());
+        window.addEventListener("resize", () => World.resize());
 
         window.addEventListener("keydown", e => {
             const code = e.code;
@@ -512,6 +532,7 @@ export class World {
                 player.addPhaseScore(200);
                 break;
             case 'KeyC':
+                this.peaceMod = !this.peaceMod;
                 this.loadedMobs.forEach(mob => mob.discard());
                 break;
             case 'KeyH':

@@ -10,6 +10,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
     public readonly damage: number;
     public owner: Entity | null;
     public color = "#8cf5ff";
+    public edgeColor = '';
 
     protected boxRadius: number = this.getEntityDimension().width;
 

@@ -90,14 +90,14 @@ const p4: PhaseConfig = deepFreeze(createCleanObj({
             cap: 64,
         },
         {
-            every: 150, jitter: 0.5, factory: spawnInMap(EntityTypes.GUN_ENEMY_ENTITY,
-                0.16, 4, 4,
+            every: 200, jitter: 0.5, factory: spawnInMap(EntityTypes.MISSILE_ENEMY_ENTITY,
+                0.1, 4, 4,
                 '#ac0000',
                 {safeRadius: 480}
             ),
-            cap: 64
+            cap: 32
         },
-        {every: 200, jitter: 0.4, factory: spawnInMap(EntityTypes.MINIGUN_ENEMY_ENTITY, 0.08, 0, 12), cap: 32},
+        {every: 250, jitter: 0.4, factory: spawnInMap(EntityTypes.MINIGUN_ENEMY_ENTITY, 0.08, 0, 12), cap: 8},
     ],
 }));
 

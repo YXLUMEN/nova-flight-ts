@@ -18,8 +18,8 @@ export class DecoyEntity extends Entity implements IOwnable {
 
     public override tick() {
         if (this.age++ >= 250) {
-            this.discard();
             DecoyEntity.Entities.shift();
+            this.discard();
             return;
         }
 

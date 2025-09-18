@@ -1,7 +1,7 @@
 import type {StarLayer} from "../apis/IStarLayer.ts";
 import {createCleanObj, deepFreeze} from "../utils/uit.ts";
 
-export const defaultLayers: StarLayer[] = deepFreeze([
+export const defaultLayers: Readonly<StarLayer[]> = deepFreeze([
     createCleanObj({
         count: 10,
         alpha: 0.9,
@@ -34,7 +34,7 @@ export const defaultLayers: StarLayer[] = deepFreeze([
     }),
 ]);
 
-export const lowPowerLayers: StarLayer[] = deepFreeze([
+export const lowPowerLayers: Readonly<StarLayer[]> = deepFreeze([
     createCleanObj({
         count: 20,
         alpha: 0.9,

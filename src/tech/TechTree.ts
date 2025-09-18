@@ -361,7 +361,7 @@ export class TechTree {
     }
 
     // -------- Adjacency helpers --------
-    private buildAdjacency(techs: Tech[]): Adjacency {
+    private buildAdjacency(techs: Tech[] | Readonly<Tech[]>): Adjacency {
         const out = new Map<string, string[]>();
         const conflicts = new Map<string, string[]>();
         const branchOf = new Map<string, string | undefined>();

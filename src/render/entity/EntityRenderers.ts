@@ -12,6 +12,8 @@ import {MissileEntityRender} from "./MissileEntityRender.ts";
 import {RocketEntityRender} from "./RocketEntityRender.ts";
 import {SpawnMarkerEntityRender} from "./SpawnMarkerEntityRender.ts";
 import {DecoyEntityRender} from "./DecoyEntityRender.ts";
+import {MissileEnemyEntityRender} from "./MissileEnemyEntityRender.ts";
+import {deepFreeze} from "../../utils/uit.ts";
 
 export class EntityRenderers {
     private static readonly RENDERER_FACTORIES = new Map<EntityType<Entity>, EntityRenderer<Entity>>();
@@ -37,6 +39,7 @@ export class EntityRenderers {
         this.register(EntityTypes.MISSILE_ENTITY, new MissileEntityRender());
         this.register(EntityTypes.SPAWN_MARK_ENTITY, new SpawnMarkerEntityRender());
         this.register(EntityTypes.DECOY_ENTITY, new DecoyEntityRender());
+        this.register(EntityTypes.MISSILE_ENEMY_ENTITY, new MissileEnemyEntityRender());
         this.compileRenders();
     }
 
@@ -45,6 +48,6 @@ export class EntityRenderers {
     }
 
     private static compileRenders() {
-        Object.freeze(this.RENDERER_FACTORIES);
+        deepFreeze(this);
     }
 }

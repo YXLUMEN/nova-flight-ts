@@ -13,7 +13,6 @@ export class EMPRocketEntity extends RocketEntity {
     private duration = 300;
     public override color = "#4b8bff";
 
-
     public override explode() {
         const world = this.getWorld();
         world.getEntities().forEach(entity => {

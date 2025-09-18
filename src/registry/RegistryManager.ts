@@ -8,6 +8,7 @@ import {DamageTypeTags} from "./tag/DamageTypeTags.ts";
 import {Registries} from "./Registries.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {Items} from "../item/items.ts";
+import {deepFreeze} from "../utils/uit.ts";
 
 export class RegistryManager {
     private readonly registers = new Map<RegistryKey<any>, Registry<any>>();
@@ -46,5 +47,9 @@ export class RegistryManager {
         } else {
             throw new ReferenceError(`Missing registry: ${key}`);
         }
+    }
+
+    public frozen() {
+        deepFreeze(this);
     }
 }

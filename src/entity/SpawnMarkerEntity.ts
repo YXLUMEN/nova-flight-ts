@@ -9,23 +9,29 @@ import type {MobEntity} from "./mob/MobEntity.ts";
 export class SpawnMarkerEntity extends Entity {
     public readonly invulnerable = true;
     private readonly spawnMob: MobEntity;
+    private readonly force;
 
-    public constructor(type: EntityType<SpawnMarkerEntity>, world: World, mob: MobEntity) {
+    public constructor(type: EntityType<SpawnMarkerEntity>, world: World, mob: MobEntity, force = false) {
         super(type, world);
         this.spawnMob = mob;
+        this.force = force;
     }
 
     public override tick() {
         super.tick();
         if (this.age++ >= 200) {
             this.discard();
-            const player = World.instance.player;
-            if (!player) return;
+            if (this.getWorld().isPeaceMode()) return;
 
-            const dx = this.spawnMob.getPositionRef.x - player.getPositionRef.x;
-            const dy = this.spawnMob.getPositionRef.y - player.getPositionRef.y;
-            const distSq = dx * dx + dy * dy;
-            if (distSq < 4096) return false;
+            if (!this.force) {
+                const player = World.instance.player;
+                if (!player) return;
+
+                const dx = this.spawnMob.getPositionRef.x - player.getPositionRef.x;
+                const dy = this.spawnMob.getPositionRef.y - player.getPositionRef.y;
+                const distSq = dx * dx + dy * dy;
+                if (distSq < 4096) return;
+            }
 
             this.getWorld().spawnEntity(this.spawnMob);
         }

@@ -23,7 +23,7 @@ export abstract class Entity implements DataTracked, Comparable {
 
     protected readonly dataTracker: DataTracker;
     private readonly id: number = Entity.CURRENT_ID.incrementAndGet();
-    private readonly normalTags = new Set<string>();
+    private readonly normalTags: Set<string> = new Set<string>();
 
     private readonly type: EntityType<any>;
     private readonly world: World;
@@ -58,6 +58,10 @@ export abstract class Entity implements DataTracked, Comparable {
         return this.id;
     }
 
+    public isPlayer() {
+        return false;
+    }
+
     public getNormalTags(): Set<string> {
         return this.normalTags;
     }
@@ -72,6 +76,7 @@ export abstract class Entity implements DataTracked, Comparable {
         return this.normalTags.delete(tag);
     }
 
+    // 极其不推荐重写, 如果重写必须调用基方法
     public discard(): void {
         if (this.removed) return;
         this.removed = true;

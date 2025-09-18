@@ -4,11 +4,21 @@ import {PI2} from "../../utils/math/math.ts";
 
 export class BulletEntityRender implements EntityRenderer<BulletEntity> {
     public render(entity: BulletEntity, ctx: CanvasRenderingContext2D) {
+        const {x, y} = entity.getPositionRef;
+        const radius = entity.getBoxRadius();
+
         ctx.save();
         ctx.fillStyle = entity.color;
         ctx.beginPath();
-        ctx.arc(entity.getPositionRef.x, entity.getPositionRef.y, entity.getBoxRadius(), 0, PI2);
+        ctx.arc(x, y, radius, 0, PI2);
         ctx.fill();
+
+        if (entity.edgeColor) {
+            ctx.strokeStyle = entity.edgeColor;
+            ctx.arc(x, y, radius + 1, 0, PI2);
+        }
+
+        ctx.stroke();
         ctx.restore();
     }
 }

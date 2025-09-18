@@ -9,18 +9,15 @@ import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 
+let beamFx: LaserBeamEffect | null = null;
+
 export class LaserWeapon extends SpecialWeapon {
     public static readonly DISPLAY_NAME = 'LASER';
     public static readonly COLOR = '#8bff5e';
     public static readonly OVERHEAT_COLOR = '#ff5e5e';
 
-    private playSound = true;
-
     private readonly height = World.H * 2;        // 长度
     private readonly width = 6;            // 宽度
-
-    // 缓存一个短寿命的光束效果
-    private beamFx: LaserBeamEffect | null = null;
 
     public override tryFire(stack: ItemStack, world: World, _attacker: Entity): void {
         this.setActive(stack, this.getActive(stack) ? false : !this.getOverheated(stack));
@@ -47,7 +44,7 @@ export class LaserWeapon extends SpecialWeapon {
 
         const heat = this.getHeat(stack);
         const heatLeft = maxHeat - heat;
-        if (heatLeft > 120) this.playSound = true;
+        if (heatLeft > 120) stack.set(DataComponentTypes.ANY_BOOLEAN, true);
 
         // 触发过热: 立即停火并锁定
         if (!this.getOverheated(stack)) {
@@ -55,13 +52,13 @@ export class LaserWeapon extends SpecialWeapon {
                 this.setHeat(stack, maxHeat);
                 this.setOverheat(stack, true);
                 this.setActive(stack, false);
-                if (this.beamFx) this.beamFx.kill();
-                this.beamFx = null;
+                if (beamFx) beamFx.kill();
+                beamFx = null;
                 this.onEndFire(holder.getWorld());
             }
-            if (this.playSound && heatLeft <= 100) {
+            if (stack.getOrDefault(DataComponentTypes.ANY_BOOLEAN, false) && heatLeft <= 100) {
                 SoundSystem.playSound(SoundEvents.LASER_OVERHEAT);
-                this.playSound = false;
+                stack.set(DataComponentTypes.ANY_BOOLEAN, false);
             }
         }
 
@@ -74,8 +71,8 @@ export class LaserWeapon extends SpecialWeapon {
 
         if (!this.getActive(stack)) {
             // 停火时移除效果
-            if (this.beamFx) this.beamFx.kill();
-            this.beamFx = null;
+            if (beamFx) beamFx.kill();
+            beamFx = null;
             return;
         }
 
@@ -100,11 +97,11 @@ export class LaserWeapon extends SpecialWeapon {
         }
 
         // 刷新/创建光束效果
-        if (!this.beamFx || !this.beamFx.alive) {
-            this.beamFx = new LaserBeamEffect(stack.getOrDefault(DataComponentTypes.UI_COLOR, LaserWeapon.COLOR), this.width);
-            world.addEffect(this.beamFx);
+        if (!beamFx || !beamFx.alive) {
+            beamFx = new LaserBeamEffect(stack.getOrDefault(DataComponentTypes.UI_COLOR, LaserWeapon.COLOR), this.width);
+            world.addEffect(beamFx);
         }
-        this.beamFx.set(start, end);
+        beamFx.set(start, end);
     }
 
     public override onStartFire(_world: World) {
@@ -147,7 +144,7 @@ export class LaserWeapon extends SpecialWeapon {
     }
 
     public override getUiColor(stack: ItemStack): string {
-        return this.getOverheated(stack) ? LaserWeapon.OVERHEAT_COLOR : stack.getOrDefault(DataComponentTypes.UI_COLOR, LaserWeapon.COLOR);
+        return this.getOverheated(stack) ? LaserWeapon.OVERHEAT_COLOR : LaserWeapon.COLOR;
     }
 
     public setActive(stack: ItemStack, active: boolean): void {

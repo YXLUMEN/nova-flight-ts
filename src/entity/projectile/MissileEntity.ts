@@ -41,13 +41,19 @@ export class MissileEntity extends RocketEntity {
 
         if (!this.adjustPosition()) return;
 
+        // 燃料耗尽
         if (this.age > this.maxLifetimeTicks) {
+            if (this.target) {
+                this.getWorld().events.emit(EVENTS.ENTITY_UNLOCKED, {lastTarget: this.target});
+                this.target = null;
+            }
             const yaw = this.getYaw();
             this.setYaw(yaw);
             this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
             return;
         }
 
+        // 点燃延迟
         if (this.age <= this.igniteDelayTicks) {
             if (this.driftSpeed > 0.01) this.driftSpeed *= 0.98;
             const vx1 = Math.cos(this.driftAngle);
@@ -57,12 +63,14 @@ export class MissileEntity extends RocketEntity {
         }
 
         const cd = (this.age & 3) === 0;
+        const world = this.getWorld();
 
-        if (cd) this.getWorld().spawnParticleByVec(pos.clone(), MutVec2.zero(),
+        if (cd) world.spawnParticleByVec(pos.clone(), MutVec2.zero(),
             rand(1, 1.5), rand(4, 6),
-            "#986900", "#575757", 0.6, 80
+            "#986900", "#575757", 0.3, 0
         );
 
+        // 开始锁定
         if (this.age < this.lockDelayTicks) {
             const yaw = this.getYaw();
             this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
@@ -74,18 +82,21 @@ export class MissileEntity extends RocketEntity {
             const decoyEntities = DecoyEntity.Entities;
             if (decoyEntities.length > 0) {
                 const rand = Math.random();
+
                 if (rand < 0.2) {
+                    this.reLockCD = 100;
+                    world.events.emit(EVENTS.ENTITY_UNLOCKED, {lastTarget: this.target});
                     this.target = null;
-                    this.getWorld().events.emit(EVENTS.PLAYER_UNLOCKED, null);
                 } else if (rand < 0.8) {
+                    this.reLockCD = 200;
+                    world.events.emit(EVENTS.ENTITY_UNLOCKED, {lastTarget: this.target});
                     this.target = decoyEntities[randInt(0, decoyEntities.length)];
-                    this.getWorld().events.emit(EVENTS.PLAYER_UNLOCKED, null);
                 }
-                this.reLockCD = 100;
             }
         }
 
-        this.reLockCD--;
+        // 重新锁定
+        if (this.reLockCD > 0) this.reLockCD--;
         if (!this.target || this.target.isRemoved()) {
             if (cd && this.reLockCD <= 0) this.target = this.acquireTarget();
             if (!this.target) {
@@ -97,6 +108,8 @@ export class MissileEntity extends RocketEntity {
             this.reLockCD = 25;
             const count = MissileEntity.lockedEntity.get(this.target) ?? 0;
             MissileEntity.lockedEntity.set(this.target, count + 1);
+
+            world.events.emit(EVENTS.ENTITY_LOCKED, {missile: this});
         }
 
         // 追踪
@@ -106,14 +119,17 @@ export class MissileEntity extends RocketEntity {
 
         this.setClampYaw(desiredYaw, this.turnRate);
 
-        const yaw2 = this.getYaw();
-        this.updateVelocity(this.trackingSpeed, Math.cos(yaw2), Math.sin(yaw2));
+        const yaw = this.getYaw();
+        this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
     }
 
     private acquireTarget(): Entity | null {
         if (this.lockeType === 'player') {
-            this.getWorld().events.emit(EVENTS.PLAYER_LOCKED, {missile: this});
-            return this.getWorld().player;
+            const player = this.getWorld().player;
+            if (player && player.invulnerable) {
+                return null;
+            }
+            return player;
         }
 
         const mobs = this.getWorld().getLoadMobs();
@@ -162,8 +178,9 @@ export class MissileEntity extends RocketEntity {
                 MissileEntity.lockedEntity.delete(this.target);
             }
         }
+
+        this.getWorld().events.emit(EVENTS.ENTITY_UNLOCKED, {lastTarget: this.target});
         this.target = null;
-        this.getWorld().events.emit(EVENTS.PLAYER_UNLOCKED, null);
     }
 
     protected override adjustPosition(): boolean {
@@ -197,5 +214,9 @@ export class MissileEntity extends RocketEntity {
 
     public setHoverDir(value: 1 | -1) {
         this.hoverDir = value;
+    }
+
+    public getTarget(): Entity | null {
+        return this.target;
     }
 }

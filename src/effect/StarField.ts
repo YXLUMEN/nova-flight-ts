@@ -13,13 +13,13 @@ export class StarField {
     private readonly r: Float32Array;
     private readonly speed: Float32Array;
 
-    private readonly layers: StarLayer[];
+    private readonly layers: StarLayer[] | Readonly<StarLayer[]>;
     private readonly margin: number;
 
     private readonly start: Uint32Array;
     private readonly end: Uint32Array;
 
-    public constructor(totalCount: number, layers: StarLayer[], margin: number = 8) {
+    public constructor(totalCount: number, layers: StarLayer[] | Readonly<StarLayer[]>, margin: number = 8) {
         this.layers = layers;
         this.margin = margin;
 
@@ -43,7 +43,7 @@ export class StarField {
         }
     }
 
-    private static resolveCounts(total: number, layers: StarLayer[]): number[] {
+    private static resolveCounts(total: number, layers: StarLayer[] | Readonly<StarLayer[]>): number[] {
         const fixed = layers.map(l => l.count ?? 0);
         const fixedSum = fixed.reduce((s, c) => s + c, 0);
         const remain = Math.max(0, total - fixedSum);

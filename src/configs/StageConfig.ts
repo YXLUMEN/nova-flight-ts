@@ -1,8 +1,18 @@
 import type {PhaseConfig} from "../apis/IStage.ts";
 import {Stage} from "../stage/Stage.ts";
 import {createCleanObj, deepFreeze} from "../utils/uit.ts";
-import {spawnBase, spawnBaseS, spawnGun, spawnLineBase, spawnMiniGun, spawnTank} from "../utils/PresetsSpawn.ts";
+import {
+    spawnBase,
+    spawnBaseS,
+    spawnGun,
+    spawnInMap,
+    spawnLineBase,
+    spawnMiEn,
+    spawnMiniGun,
+    spawnTank
+} from "../utils/PresetsSpawn.ts";
 import {EVENTS} from "../apis/IEvents.ts";
+import {EntityTypes} from "../entity/EntityTypes.ts";
 
 const p0: PhaseConfig = deepFreeze(createCleanObj({
     name: "P0",
@@ -109,7 +119,9 @@ const p6: PhaseConfig = deepFreeze(createCleanObj({
 
 const p7: PhaseConfig = deepFreeze(createCleanObj({
     name: "P7",
+    until: ({score}) => score >= 8196,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P7'}),
+    onExit: ({world}) => world.events.emit(EVENTS.STAGE_EXIT, {name: 'P7'}),
     rules: [
         {
             every: 50,
@@ -131,9 +143,74 @@ const p7: PhaseConfig = deepFreeze(createCleanObj({
             ),
             cap: 72,
         },
-        {every: 100, jitter: 0.5, factory: spawnGun(0.16, 4, 4), cap: 96},
+        {every: 100, jitter: 0.5, factory: spawnMiEn(0.1, 4, 4, '#ac0000'), cap: 32},
         {every: 150, jitter: 0.4, factory: spawnMiniGun(0.08, 0, 12), cap: 96},
     ],
 }));
 
-export const STAGE = new Stage([p0, p1, p2, p3, p4, p5, p6, p7]);
+const p8: PhaseConfig = deepFreeze(createCleanObj({
+    name: "P8",
+    until: ({score}) => score >= 2048,
+    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P8'}),
+    rules: [
+        {
+            every: 50,
+            jitter: 0.4,
+            factory: spawnInMap(EntityTypes.BASE_ENEMY,
+                0.2, 6, 8,
+                '#910000'
+            ),
+            cap: 64
+        },
+        {
+            every: 30,
+            jitter: 0.8,
+            factory: spawnInMap(EntityTypes.BASE_ENEMY,
+                0.22, 2, 4,
+                '#ff2121',
+            ),
+            cap: 66,
+        },
+        {every: 60, jitter: 0.5, factory: spawnInMap(EntityTypes.GUN_ENEMY_ENTITY, 0.16, 2), cap: 32},
+    ],
+}));
+
+const p9: PhaseConfig = deepFreeze(createCleanObj({
+    name: "P9",
+    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P9'}),
+    rules: [
+        {
+            every: 80,
+            jitter: 0.4,
+            factory: spawnInMap(EntityTypes.BASE_ENEMY,
+                0.22, 6, 8,
+                '#910000',
+                {},
+                (ctx) => 1 + (ctx.score / 1000) | 0
+            ),
+            cap: 72
+        },
+        {
+            every: 50,
+            jitter: 0.6,
+            factory: spawnInMap(EntityTypes.TANK_ENEMY_ENTITY,
+                0.12, 0, 8,
+                '#9f3b00',
+                {safeRadius: 248},
+                (ctx) => 1 + Math.log2(ctx.score) | 0
+            ),
+            cap: 64,
+        },
+        {
+            every: 200, jitter: 0.5, factory: spawnInMap(EntityTypes.MISSILE_ENEMY_ENTITY,
+                0.1, 4, 4,
+                '#ac0000',
+                {safeRadius: 480}
+            ),
+            cap: 32
+        },
+        {every: 250, jitter: 0.4, factory: spawnInMap(EntityTypes.MINIGUN_ENEMY_ENTITY, 0.08, 0, 12), cap: 8},
+    ],
+}));
+
+export const STAGE = new Stage([p0, p1, p2, p3, p4, p5, p6, p7, p8, p9]);

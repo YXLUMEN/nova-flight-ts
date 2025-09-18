@@ -129,7 +129,10 @@ export function applyTech(world: World, id: string) {
             if (stack) {
                 stack.set(DataComponentTypes.EFFECT_DURATION, stack.getOrDefault(DataComponentTypes.EFFECT_DURATION, 1) * 0.1);
                 intoVoid.setMaxCooldown(stack, intoVoid.trueMaxCooldown(stack) * 0.2);
-                intoVoid.modifier.value = 1.5;
+                const modifier = stack.get(DataComponentTypes.ATTRIBUTE_MODIFIERS);
+                if (modifier) {
+                    modifier.value = 1.5;
+                }
             }
             break;
         }
@@ -149,9 +152,10 @@ export function applyTech(world: World, id: string) {
             }
             break;
         }
-        case 'explosive_armor':
+        case 'explosive_armor': {
             player.onDamageExplosionRadius *= 1.4;
             break;
+        }
         case 'meltdown': {
             const stack = player.weapons.get(Items.LASER_WEAPON);
             if (stack) {
@@ -165,7 +169,6 @@ export function applyTech(world: World, id: string) {
         case 'missile': {
             player.weapons.delete(Items.BOMB_WEAPON);
             player.addWeapon(Items.MISSILE_WEAPON, new ItemStack(Items.MISSILE_WEAPON));
-            player.addWeapon(Items.JAMMER_WEAPON, new ItemStack(Items.JAMMER_WEAPON));
             break;
         }
         case 'honeycomb_missile': {
@@ -184,15 +187,19 @@ export function applyTech(world: World, id: string) {
         case 'auto_aim':
             player.autoAim = new AutoAim(player);
             break;
-        case 'rocket_launcher':
+        case 'rocket_launcher': {
             player.addWeapon(Items.ROCKET_WEAPON, new ItemStack(Items.ROCKET_WEAPON));
             break;
+        }
         case 'random_rocket': {
             const rocket = player.weapons.get(Items.ROCKET_WEAPON);
             if (rocket) {
                 rocket.set(DataComponentTypes.MISSILE_RANDOM_ENABLE, true);
             }
             break;
+        }
+        case 'decoy_releaser': {
+            player.addWeapon(Items.DECOY_RELEASER, new ItemStack(Items.DECOY_RELEASER));
         }
     }
 }

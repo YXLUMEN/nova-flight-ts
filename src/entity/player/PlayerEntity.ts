@@ -56,7 +56,6 @@ export class PlayerEntity extends LivingEntity {
         const viewport = document.getElementById('viewport') as HTMLElement;
         this.techTree = new TechTree(viewport, DataLoader.get('tech-data'));
 
-        this.setPosition(World.W / 2, World.H - 80);
         this.setMovementSpeed(0.8);
         this.setYaw(-1.57079);
 
@@ -189,6 +188,10 @@ export class PlayerEntity extends LivingEntity {
     public override onDeath(damageSource: DamageSource) {
         super.onDeath(damageSource);
         this.getWorld().gameOver();
+    }
+
+    public override isPlayer() {
+        return true;
     }
 
     public addWeapon(item: Item, stack: ItemStack): void {

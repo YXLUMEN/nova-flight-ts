@@ -13,16 +13,18 @@ import {LivingEntity} from "../../entity/LivingEntity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {Items} from "../items.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import {AttributeModifiersComponent} from "../../component/type/AttributeModifiersComponent.ts";
+
+let mask: WindowOverlay | null = null;
 
 export class IntoVoidWeapon extends SpecialWeapon {
     public static readonly displayName = "遁入虚空";
     public static readonly uiColor = "#7945ff";
 
-    public readonly modifier = {id: Identifier.ofVanilla('weapon.into_void'), value: 0.4};
-
-    private prevInvincible = false;
-
-    private mask: WindowOverlay | null = null;
+    public static readonly DEFAULT_MODIFIER = new AttributeModifiersComponent(
+        Identifier.ofVanilla('weapon.into_void'),
+        0.4
+    );
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         if (this.getActive(stack)) return;
@@ -31,18 +33,23 @@ export class IntoVoidWeapon extends SpecialWeapon {
         this.setTimeLeft(stack, this.getDuration(stack));
 
         if (attacker instanceof PlayerEntity) {
-            this.prevInvincible = attacker.invulnerable;
+            stack.set(DataComponentTypes.ANY_BOOLEAN, attacker.invulnerable);
             attacker.invulnerable = true;
-            attacker.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.addModifier(this.modifier);
 
-            this.mask = new WindowOverlay({
+            const modifier = stack.getOrDefault(
+                DataComponentTypes.ATTRIBUTE_MODIFIERS,
+                IntoVoidWeapon.DEFAULT_MODIFIER
+            );
+            attacker.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.addModifier(modifier);
+
+            mask = new WindowOverlay({
                 color: IntoVoidWeapon.uiColor,
                 maxAlpha: 0.28,
                 fadeIn: 0.2,
                 fadeOut: 0.4,
                 composite: "screen",
             });
-            world.addEffect(this.mask);
+            world.addEffect(mask);
 
             if (attacker.techTree.isUnlocked('void_energy_extraction')) {
                 const emp = Items.EMP_WEAPON as EMPWeapon;
@@ -121,14 +128,14 @@ export class IntoVoidWeapon extends SpecialWeapon {
     }
 
     private exitVoid(stack: ItemStack, world: World, owner: LivingEntity, keepCooldown = true): void {
-        owner.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.removeModifierById(this.modifier.id);
+        owner.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.removeModifierById(IntoVoidWeapon.DEFAULT_MODIFIER.id);
         this.setActive(stack, false);
         this.setTimeLeft(stack, 0);
         this.setCooldown(stack, this.getMaxCooldown(stack));
 
-        if (this.mask) {
-            this.mask.end();
-            this.mask = null;
+        if (mask) {
+            mask.end();
+            mask = null;
         }
 
         if (!keepCooldown) {
@@ -139,8 +146,8 @@ export class IntoVoidWeapon extends SpecialWeapon {
 
         if (!(owner instanceof PlayerEntity)) return;
 
-        owner.invulnerable = this.prevInvincible;
-        this.prevInvincible = false;
+        owner.invulnerable = stack.getOrDefault(DataComponentTypes.ANY_BOOLEAN, false);
+        stack.set(DataComponentTypes.ANY_BOOLEAN, false);
 
         const box = owner.getEntityDimension().width + stack.getOrDefault(DataComponentTypes.VOID_DAMAGE_RANGE, 32);
         for (const mob of world.getLoadMobs()) {

@@ -1,14 +1,15 @@
-import type {Entity} from "./Entity.ts";
+import type {Entity} from "../entity/Entity.ts";
 
 export class EntityList {
     private entities = new Map<number, Entity>();
+    private pendingRemoval: number[] = [];
 
     public add(entity: Entity): void {
         this.entities.set(entity.getId(), entity);
     }
 
     public remove(entity: Entity): void {
-        this.entities.delete(entity.getId());
+        this.pendingRemoval.push(entity.getId());
     }
 
     public has(entity: Entity): boolean {
@@ -21,8 +22,11 @@ export class EntityList {
         }
     }
 
-    public iterate() {
-        return this.entities.values();
+    public processRemovals(): void {
+        for (const id of this.pendingRemoval) {
+            this.entities.delete(id);
+        }
+        this.pendingRemoval.length = 0;
     }
 
     public clear(): void {
