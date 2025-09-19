@@ -4,7 +4,6 @@ import {clamp, lineCircleHit} from '../../utils/math/math.ts';
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
-import {SoundSystem} from "../../sound/SoundSystem.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
@@ -60,7 +59,7 @@ export class LaserWeapon extends SpecialWeapon {
                 this.onEndFire(holder.getWorld());
             }
             if (stack.getOrDefault(DataComponentTypes.ANY_BOOLEAN, false) && heatLeft <= 100) {
-                SoundSystem.playSound(SoundEvents.LASER_OVERHEAT);
+                world.playSound(SoundEvents.LASER_OVERHEAT);
                 stack.set(DataComponentTypes.ANY_BOOLEAN, false);
             }
         }
@@ -69,7 +68,7 @@ export class LaserWeapon extends SpecialWeapon {
         if (this.getOverheated(stack) && this.getHeat(stack) <= 0) {
             this.setHeat(stack, 0);
             this.setOverheat(stack, false);
-            SoundSystem.playSound(SoundEvents.WEAPON_READY);
+            world.playSound(SoundEvents.WEAPON_READY);
         }
 
         if (!this.getActive(stack)) {
@@ -112,14 +111,14 @@ export class LaserWeapon extends SpecialWeapon {
         }
     }
 
-    public override onStartFire(_world: World) {
-        SoundSystem.playSound(SoundEvents.LASER_TRIGGER);
-        SoundSystem.playLoopSound(SoundEvents.LASER_BEAM);
+    public override onStartFire(world: World) {
+        world.playSound(SoundEvents.LASER_TRIGGER);
+        world.playLoopSound(SoundEvents.LASER_BEAM);
     }
 
-    public override onEndFire(_world: World) {
-        if (SoundSystem.stopLoopSound(SoundEvents.LASER_BEAM)) {
-            SoundSystem.playSound(SoundEvents.LASER_CHARGE_DOWN);
+    public override onEndFire(world: World) {
+        if (world.stopLoopSound(SoundEvents.LASER_BEAM)) {
+            world.playSound(SoundEvents.LASER_CHARGE_DOWN);
         }
     }
 

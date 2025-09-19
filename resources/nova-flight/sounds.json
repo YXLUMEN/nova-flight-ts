@@ -1,4 +1,40 @@
 {
+  "ui.apply": {
+    "subtitle": "sound.nova-flight.ui.apply",
+    "sounds": [
+      "nova-flight:ui/apply"
+    ]
+  },
+  "ui.button_press": {
+    "subtitle": "sound.nova-flight.ui.button_press",
+    "sounds": [
+      "nova-flight:ui/button_press"
+    ]
+  },
+  "ui.hover": {
+    "subtitle": "sound.nova-flight.ui.hover",
+    "sounds": [
+      "nova-flight:ui/hover"
+    ]
+  },
+  "ui.menu_hover": {
+    "subtitle": "sound.nova-flight.ui.menu_hover",
+    "sounds": [
+      "nova-flight:ui/menu_hover"
+    ]
+  },
+  "ui.page_switch": {
+    "subtitle": "sound.nova-flight.ui.page_switch",
+    "sounds": [
+      "nova-flight:ui/page_switch"
+    ]
+  },
+  "ui.select": {
+    "subtitle": "sound.nova-flight.ui.select",
+    "sounds": [
+      "nova-flight:ui/select"
+    ]
+  },
   "laser.overheat_alarm": {
     "subtitle": "sound.nova-flight.laser.overheat_alarm",
     "sounds": [

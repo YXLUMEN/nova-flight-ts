@@ -6,12 +6,12 @@ import {clamp, HALF_PI, PI2, rand} from "../../utils/math/math.ts";
 import {BulletEntity} from "../projectile/BulletEntity.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
-import type {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
 import {EntityType} from "../EntityType.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
 import {MissileEntity} from "../projectile/MissileEntity.ts";
+import {StatusEffects} from "../effect/StatusEffects.ts";
 
 export class BossEntity extends MobEntity {
     public override color = '#b30000';
@@ -43,7 +43,8 @@ export class BossEntity extends MobEntity {
         if (this.damageCooldown > 0) this.damageCooldown -= 1;
         this.cooldown -= 1;
         if (this.cooldown > 0) return;
-        this.cooldown = rand(20, 100);
+        const extraCD = this.hasStatusEffect(StatusEffects.EMC_STATUS) ? 100 : 0;
+        this.cooldown = rand(30, 100) + extraCD;
 
         const count = 16;
         const speed = 4;
@@ -118,10 +119,6 @@ export class BossEntity extends MobEntity {
                 "#ffaa33", "#ff5454", 0.6, 80
             );
         }
-    }
-
-    public override addStatusEffect(_effect: StatusEffectInstance) {
-        return false;
     }
 
     public override attack(player: PlayerEntity) {

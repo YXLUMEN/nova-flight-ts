@@ -6,7 +6,6 @@ import {EMPRocketEntity} from "../../../entity/projectile/EMPRocketEntity.ts";
 import {BurstRocketEntity} from "../../../entity/projectile/BurstRocketEntity.ts";
 import {APRocketEntity} from "../../../entity/projectile/APRocketEntity.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
-import {SoundSystem} from "../../../sound/SoundSystem.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {ItemStack} from "../../ItemStack.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
@@ -46,7 +45,7 @@ export class RocketWeapon extends BaseWeapon {
             attacker.updateVelocity(-0.6, Math.cos(yaw), Math.sin(yaw));
         });
 
-        SoundSystem.playSound(SoundEvents.MISSILE_LAUNCH, 0.2);
+        world.playSound(SoundEvents.MISSILE_LAUNCH, 0.5);
         this.setCooldown(stack, this.getMaxCooldown(stack));
     }
 

@@ -10,7 +10,6 @@ import {MobEntity} from "../../entity/mob/MobEntity.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {ProjectileEntity} from "../../entity/projectile/ProjectileEntity.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
-import {SoundSystem} from "../../sound/SoundSystem.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 
@@ -46,7 +45,7 @@ export class EMPWeapon extends SpecialWeapon {
             attacker.getPositionRef,
             this.radius
         ));
-        SoundSystem.playSound(SoundEvents.EMP_BURST);
+        world.playSound(SoundEvents.EMP_BURST);
 
         this.setCooldown(stack, this.getMaxCooldown(stack));
     }

@@ -3,7 +3,6 @@ import {ExplodeBulletEntity} from "../../../entity/projectile/ExplodeBulletEntit
 import {BaseWeapon} from "./BaseWeapon.ts";
 import {EntityTypes} from "../../../entity/EntityTypes.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
-import {SoundSystem} from "../../../sound/SoundSystem.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {ItemStack} from "../../ItemStack.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
@@ -22,7 +21,7 @@ export class Cannon90Weapon extends BaseWeapon {
 
         this.setBullet(bullet, attacker, this.speed, 12);
         world.spawnEntity(bullet);
-        SoundSystem.playSound(SoundEvents.CANNON90_FIRE, 0.5);
+        world.playSound(SoundEvents.CANNON90_FIRE, 0.5);
 
         this.setCooldown(stack, this.getFireRate(stack));
     }

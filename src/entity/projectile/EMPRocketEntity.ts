@@ -6,7 +6,6 @@ import {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
 import {EMPBurst} from "../../effect/EMPBurst.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
-import {SoundSystem} from "../../sound/SoundSystem.ts";
 
 export class EMPRocketEntity extends RocketEntity {
     public override explosionRadius = 160;
@@ -29,6 +28,6 @@ export class EMPRocketEntity extends RocketEntity {
             this.getPosition(),
             this.explosionRadius,
         ));
-        SoundSystem.playSound(SoundEvents.EMP_BURST);
+        world.playSound(SoundEvents.EMP_BURST);
     }
 }

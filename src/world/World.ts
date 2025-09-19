@@ -29,8 +29,11 @@ import {EntityTypes} from "../entity/EntityTypes.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
 import type {Stage} from "../stage/Stage.ts";
 import {SpawnMarkerEntity} from "../entity/SpawnMarkerEntity.ts";
+import {SoundEvents} from "../sound/SoundEvents.ts";
+import type {SoundEvent} from "../sound/SoundEvent.ts";
 
 export class World {
+    public static readonly globalSound = new SoundSystem();
     private static worldInstance: World;
     private static canvas = document.getElementById("game") as HTMLCanvasElement;
     private static ctx = World.canvas.getContext("2d")!;
@@ -45,6 +48,8 @@ export class World {
     private readonly registryManager: RegistryManager;
     private readonly ui: UI = new UI(this);
     private readonly input = new KeyboardInput(World.canvas);
+    private readonly worldSound = new SoundSystem();
+
     private readonly damageSources: DamageSources;
     // ticking
     private last = 0;
@@ -110,6 +115,7 @@ export class World {
     }
 
     public start(): void {
+        World.globalSound.playSound(SoundEvents.UI_APPLY);
         this.tick(0);
     }
 
@@ -301,7 +307,7 @@ export class World {
         );
     }
 
-    public spawnEntity(entity: Entity) {
+    public spawnEntity(entity: Entity): void {
         if (entity instanceof MobEntity) {
             if (this.peaceMod) return;
             this.loadedMobs.add(entity);
@@ -313,7 +319,7 @@ export class World {
         return this.entities;
     }
 
-    public getLoadMobs(): Set<MobEntity> {
+    public getLoadMobs(): Readonly<Set<MobEntity>> {
         return this.loadedMobs;
     }
 
@@ -358,11 +364,25 @@ export class World {
 
     public setTicking(ticking = true): void {
         if (ticking) {
-            SoundSystem.resumeAll().catch(console.error);
+            World.globalSound.playSound(SoundEvents.UI_PAGE_SWITCH);
+            this.worldSound.resumeAll().catch(console.error);
         } else {
-            SoundSystem.pauseAll().catch(console.error);
+            World.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
+            this.worldSound.pauseAll().catch(console.error);
         }
         this.ticking = ticking;
+    }
+
+    public playSound(event: SoundEvent, volume: number = 1, pitch: number = 1): void {
+        this.worldSound.playSound(event, volume, pitch);
+    }
+
+    public playLoopSound(event: SoundEvent, volume: number = 1, pitch: number = 1): void {
+        this.worldSound.playLoopSound(event, volume, pitch);
+    }
+
+    public stopLoopSound(event: SoundEvent): boolean {
+        return this.worldSound.stopLoopSound(event);
     }
 
     public render() {

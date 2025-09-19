@@ -4,7 +4,6 @@ import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {HALF_PI} from "../../utils/math/math.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
-import {SoundSystem} from "../../sound/SoundSystem.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
@@ -20,7 +19,7 @@ export class MissileWeapon extends SpecialWeapon {
         const schedule = world.scheduleInterval(0.1, () => {
             if (i++ > missileCounts) {
                 schedule.cancel();
-                SoundSystem.stopLoopSound(SoundEvents.MISSILE_LAUNCH_LOOP);
+                world.stopLoopSound(SoundEvents.MISSILE_LAUNCH_LOOP);
                 return;
             }
 
@@ -38,12 +37,12 @@ export class MissileWeapon extends SpecialWeapon {
             world.spawnEntity(missile);
         });
 
-        world.schedule(1.6, () => SoundSystem.playSound(SoundEvents.MISSILE_BLASTOFF));
+        world.schedule(1.6, () => world.playSound(SoundEvents.MISSILE_BLASTOFF));
 
         if (missileCounts > 8) {
-            SoundSystem.playLoopSound(SoundEvents.MISSILE_LAUNCH_LOOP);
+            world.playLoopSound(SoundEvents.MISSILE_LAUNCH_LOOP);
         } else {
-            SoundSystem.playSound(SoundEvents.MISSILE_LAUNCH_COMP);
+            world.playSound(SoundEvents.MISSILE_LAUNCH_COMP);
         }
         this.setCooldown(stack, this.getMaxCooldown(stack));
     }

@@ -16,7 +16,6 @@ import {EVENTS} from "../../apis/IEvents.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {AutoAim} from "../../tech/AutoAim.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
-import {SoundSystem} from "../../sound/SoundSystem.ts";
 import type {Item} from "../../item/Item.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
 import {Items} from "../../item/items.ts";
@@ -163,7 +162,7 @@ export class PlayerEntity extends LivingEntity {
                 const emp = stack.getItem() as EMPWeapon;
                 if (emp.canFire(stack) && this.techTree.isUnlocked('ele_shield')) {
                     emp.tryFire(stack, world, this);
-                    SoundSystem.playSound(SoundEvents.SHIELD_CRASH);
+                    world.playSound(SoundEvents.SHIELD_CRASH);
                     return false;
                 }
                 const cd = emp.getCooldown(stack);

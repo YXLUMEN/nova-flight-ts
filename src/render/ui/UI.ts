@@ -188,20 +188,16 @@ export class UI {
         ctx.fillStyle = 'rgba(0,0,0,0.45)';
         ctx.fillRect(0, 0, World.W, World.H);
 
-        // 轻微脉冲
-        const t = performance.now() * 0.002;
-        const pulse = 0.75 + 0.25 * Math.sin(t);
-
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         // 主标题
-        ctx.fillStyle = `rgba(255,255,255,${pulse.toFixed(3)})`;
+        ctx.fillStyle = `#fff`;
         ctx.font = 'bold 32px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
         ctx.fillText('已暂停', width, height);
 
         // 副提示
-        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
         ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
         ctx.fillText('按 Esc 继续', width, height + 30);
 

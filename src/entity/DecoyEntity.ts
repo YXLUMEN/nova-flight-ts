@@ -20,7 +20,6 @@ export class DecoyEntity extends Entity implements IOwnable {
 
     public override tick() {
         if (this.age++ >= this.life) {
-            DecoyEntity.Entities.shift();
             this.discard();
             return;
         }
@@ -30,10 +29,20 @@ export class DecoyEntity extends Entity implements IOwnable {
         this.updateVelocity(0.02, Math.cos(yaw), Math.sin(yaw));
         this.moveByVec(velocity);
         velocity.multiply(0.98);
+
+        const pos = this.getPositionRef;
+        if (pos.y < -20 || pos.y > World.H + 20 || pos.x < -20 || pos.x > World.W + 20) {
+            this.discard();
+        }
     }
 
     public getOwner(): Entity | null {
         return this.owner;
+    }
+
+    public override onRemove() {
+        super.onRemove();
+        DecoyEntity.Entities.shift();
     }
 
     protected override initDataTracker(_builder: InstanceType<typeof DataTracker.Builder>): void {

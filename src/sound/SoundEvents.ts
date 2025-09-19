@@ -4,6 +4,13 @@ import {Identifier} from "../registry/Identifier.ts";
 import {SoundEvent} from "./SoundEvent.ts";
 
 export class SoundEvents {
+    public static readonly UI_APPLY = this.registerSound("ui.apply");
+    public static readonly UI_BUTTON_PRESSED = this.registerSound("ui.button_press");
+    public static readonly UI_HOVER = this.registerSound("ui.hover");
+    public static readonly UI_MENU_HOVER = this.registerSound("ui.menu_hover");
+    public static readonly UI_PAGE_SWITCH = this.registerSound("ui.page_switch");
+    public static readonly UI_SELECT = this.registerSound("ui.select");
+
     public static readonly LASER_OVERHEAT = this.registerSound("laser.overheat_alarm");
     public static readonly LASER_COOLDOWN = this.registerSound("laser.cooldown");
     public static readonly LASER_TRIGGER = this.registerSound("laser.trigger");

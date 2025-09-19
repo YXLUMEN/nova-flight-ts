@@ -8,6 +8,7 @@ import {EVENTS} from "../apis/IEvents.ts";
 import {Items} from "../item/items.ts";
 import {ItemStack} from "../item/ItemStack.ts";
 import {STAGE} from "../configs/StageConfig.ts";
+import {SoundEvents} from "../sound/SoundEvents.ts";
 
 type Adjacency = {
     out: Map<string, string[]>; // id -> successors
@@ -113,6 +114,7 @@ export class TechTree {
         parent.addEventListener('wheel', e => {
             scale = clamp(scale * Math.pow(1.1, -e.deltaY / 100), 0.5, 2);
             applyTransform();
+            World.globalSound.playSound(SoundEvents.UI_HOVER);
         }, {passive: true, signal: abortCtrl.signal});
 
         const applyTransform = () =>
@@ -131,7 +133,6 @@ export class TechTree {
         TechTree.playerScore.textContent = '0';
     }
 
-    // -------- Incremental updates --------
     public applyUnlockUpdates(id: string) {
         const affected = new Set<string>();
 
@@ -234,6 +235,7 @@ export class TechTree {
     // -------- Interactions --------
     private bindInteractions() {
         this.nodesLayer.addEventListener('click', event => {
+            World.globalSound.playSound(SoundEvents.UI_SELECT);
             this.nodesLayer.querySelector('.node.selected')?.classList.remove('selected');
             const target = (event.target as HTMLElement).closest<HTMLElement>('.node');
             this.selectNodeId = null;
@@ -271,6 +273,7 @@ export class TechTree {
             player.setScore(score);
             this.applyUnlockUpdates(id);
             World.instance.events.emit(EVENTS.UNLOCK_TECH, {id});
+            World.globalSound.playSound(SoundEvents.UI_APPLY, 1.5);
         }
     }
 

@@ -3,7 +3,6 @@ import {BaseWeapon} from "./BaseWeapon.ts";
 import {BulletEntity} from "../../../entity/projectile/BulletEntity.ts";
 import {EntityTypes} from "../../../entity/EntityTypes.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
-import {SoundSystem} from "../../../sound/SoundSystem.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {ItemStack} from "../../ItemStack.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
@@ -19,13 +18,13 @@ export class Cannon40Weapon extends BaseWeapon {
         this.setCooldown(stack, this.getFireRate(stack));
     }
 
-    public override onStartFire(_world: World) {
-        SoundSystem.playLoopSound(SoundEvents.CANNON40_FIRE_LOOP, 0.3);
+    public override onStartFire(world: World) {
+        world.playLoopSound(SoundEvents.CANNON40_FIRE_LOOP, 0.3);
     }
 
-    public override onEndFire(_world: World) {
-        if (SoundSystem.stopLoopSound(SoundEvents.CANNON40_FIRE_LOOP)) {
-            SoundSystem.playSound(SoundEvents.CANNON40_FIRE_TAIL, 0.3);
+    public override onEndFire(world: World) {
+        if (world.stopLoopSound(SoundEvents.CANNON40_FIRE_LOOP)) {
+            world.playSound(SoundEvents.CANNON40_FIRE_TAIL, 0.3);
         }
     }
 

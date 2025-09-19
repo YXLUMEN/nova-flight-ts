@@ -4,7 +4,6 @@ import {Entity} from "../Entity.ts";
 import type {ExplosionOpts} from "../../apis/IExplosionOpts.ts";
 import type {EntityType} from "../EntityType.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
-import {SoundSystem} from "../../sound/SoundSystem.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 
 export class ExplodeBulletEntity extends ProjectileEntity {
@@ -23,15 +22,16 @@ export class ExplodeBulletEntity extends ProjectileEntity {
     public override onEntityHit(entity: Entity): void {
         this.discard();
 
+        const world = this.getWorld();
         const attacker = this.owner;
         entity.takeDamage(this.getWorld().getDamageSources().explosion(this, attacker), this.damage);
-        this.getWorld().events.emit(EVENTS.BOMB_DETONATE, {
+        world.events.emit(EVENTS.BOMB_DETONATE, {
             pos: this.getPositionRef.clone(),
             source: this,
             attacker,
             ...this.explosionOpts
         });
 
-        SoundSystem.playSound(SoundEvents.MISSILE_EXPLOSION, 0.3);
+        world.playSound(SoundEvents.MISSILE_EXPLOSION, 0.3);
     }
 }

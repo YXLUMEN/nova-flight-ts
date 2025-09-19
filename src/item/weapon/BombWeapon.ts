@@ -9,7 +9,6 @@ import {EVENTS} from "../../apis/IEvents.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
-import {SoundSystem} from "../../sound/SoundSystem.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
@@ -83,7 +82,7 @@ export class BombWeapon extends SpecialWeapon {
             attacker: attacker,
         });
 
-        SoundSystem.playSound(SoundEvents.EXPLOSION);
+        world.playSound(SoundEvents.EXPLOSION);
         this.setCooldown(stack, this.getMaxCooldown(stack));
     }
 

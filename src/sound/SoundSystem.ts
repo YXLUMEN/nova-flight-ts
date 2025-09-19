@@ -9,12 +9,13 @@ import {clamp} from "../utils/math/math.ts";
 
 // noinspection DuplicatedCode
 export class SoundSystem {
-    private static audioContext = new AudioContext();
-    private static gainNode = this.audioContext.createGain();
     private static readonly loadedSounds = new HashMap<Identifier, AudioBuffer[]>();
-    private static readonly activeLoops = new HashMap<Identifier, AudioBufferSourceNode>();
 
-    static {
+    private readonly activeLoops = new HashMap<Identifier, AudioBufferSourceNode>();
+    private audioContext = new AudioContext();
+    private gainNode = this.audioContext.createGain();
+
+    public constructor() {
         this.gainNode.connect(this.audioContext.destination);
     }
 
@@ -24,6 +25,7 @@ export class SoundSystem {
 
         const soundJson = await resolveResource('resources/nova-flight/sounds.json');
         const json = JSON.parse(await readTextFile(soundJson));
+        const audioContext = new AudioContext();
 
         for (const soundId of sounds) {
             try {
@@ -42,7 +44,7 @@ export class SoundSystem {
                 for (const soundEntry of col.sounds) {
                     const soundPath = soundEntry.split(':').pop();
                     if (!soundPath) continue;
-                    const buffer = await this.loadStatic(soundPath);
+                    const buffer = await this.loadStatic(soundPath, audioContext);
                     if (buffer) buffers.push(buffer);
                 }
 
@@ -55,19 +57,19 @@ export class SoundSystem {
         }
     }
 
-    public static async loadStatic(path: string): Promise<AudioBuffer | null> {
+    public static async loadStatic(path: string, audioContext: AudioContext): Promise<AudioBuffer | null> {
         try {
             const res = await resolveResource(`resources/nova-flight/sounds/${path}.wav`);
             const fileData = await readFile(res);
-            return await this.audioContext.decodeAudioData(fileData.buffer);
+            return await audioContext.decodeAudioData(fileData.buffer);
         } catch (e) {
             console.warn(`Failed to load sound: ${path}`, e);
             return null;
         }
     }
 
-    public static playSound(event: SoundEvent, volume: number = 1, pitch: number = 1): void {
-        const buffers = this.loadedSounds.get(event.getId());
+    public playSound(event: SoundEvent, volume: number = 1, pitch: number = 1): void {
+        const buffers = SoundSystem.loadedSounds.get(event.getId());
         if (!buffers || buffers.length === 0) return;
 
         const buffer = buffers[(Math.random() * buffers.length) | 0];
@@ -84,11 +86,11 @@ export class SoundSystem {
         source.start(0);
     }
 
-    public static playLoopSound(event: SoundEvent, volume: number = 1, pitch: number = 1): void {
+    public playLoopSound(event: SoundEvent, volume: number = 1, pitch: number = 1): void {
         const key = event.getId();
         if (this.activeLoops.has(key)) return;
 
-        const buffers = this.loadedSounds.get(event.getId());
+        const buffers = SoundSystem.loadedSounds.get(event.getId());
         if (!buffers || buffers.length === 0) return;
 
         const buffer = buffers[(Math.random() * buffers.length) | 0];
@@ -109,7 +111,7 @@ export class SoundSystem {
         this.activeLoops.set(key, source);
     }
 
-    public static stopLoopSound(event: SoundEvent): boolean {
+    public stopLoopSound(event: SoundEvent): boolean {
         const key = event.getId();
         const source = this.activeLoops.get(key);
         if (source) {
@@ -120,11 +122,11 @@ export class SoundSystem {
         return false;
     }
 
-    public static pauseAll(): Promise<void> {
+    public pauseAll(): Promise<void> {
         return this.audioContext.suspend();
     }
 
-    public static resumeAll(): Promise<void> {
+    public resumeAll(): Promise<void> {
         return this.audioContext.resume();
     }
 }

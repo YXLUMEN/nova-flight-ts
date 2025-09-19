@@ -5,7 +5,6 @@ import type {Entity} from "../../entity/Entity.ts";
 import {DecoyEntity} from "../../entity/DecoyEntity.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {HALF_PI, rand} from "../../utils/math/math.ts";
-import {SoundSystem} from "../../sound/SoundSystem.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 
@@ -64,7 +63,7 @@ export class DecoyReleaser extends SpecialWeapon {
 
             world.spawnEntity(decoy);
         }
-        SoundSystem.playSound(SoundEvents.DECOY_FIRE);
+        world.playSound(SoundEvents.DECOY_FIRE);
     }
 
     public override bindKey(): string {

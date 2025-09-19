@@ -2,7 +2,6 @@ import {RocketEntity} from "./RocketEntity.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
-import {SoundSystem} from "../../sound/SoundSystem.ts";
 
 export class BurstRocketEntity extends RocketEntity {
     public override explosionDamage = 1;
@@ -11,7 +10,8 @@ export class BurstRocketEntity extends RocketEntity {
     protected override explodeColor = "#ff6161";
 
     public override explode() {
-        this.getWorld().events.emit(EVENTS.BOMB_DETONATE, {
+        const world = this.getWorld();
+        world.events.emit(EVENTS.BOMB_DETONATE, {
             source: this,
             damage: this.explosionDamage,
             attacker: this.owner,
@@ -22,6 +22,6 @@ export class BurstRocketEntity extends RocketEntity {
             explodeColor: this.explodeColor,
             statusEffect: {effect: StatusEffects.BURNING, duration: 100, amplifier: 1}
         });
-        SoundSystem.playSound(SoundEvents.MISSILE_EXPLOSION, 0.4);
+        world.playSound(SoundEvents.MISSILE_EXPLOSION, 0.4);
     }
 }
