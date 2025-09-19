@@ -1,4 +1,4 @@
-import {type Input} from "../../Input.ts";
+import {type KeyboardInput} from "../../input/KeyboardInput.ts";
 import {World} from "../../world/World.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 import {ScreenFlash} from "../../effect/ScreenFlash.ts";
@@ -23,7 +23,7 @@ import {Items} from "../../item/items.ts";
 import type {EMPWeapon} from "../../item/weapon/EMPWeapon.ts";
 
 export class PlayerEntity extends LivingEntity {
-    public readonly input: Input;
+    public readonly input: KeyboardInput;
     public readonly techTree: TechTree;
 
     public onDamageExplosionRadius = 320;
@@ -42,7 +42,7 @@ export class PlayerEntity extends LivingEntity {
 
     public autoAim: AutoAim | null = null;
 
-    public constructor(world: World, input: Input) {
+    public constructor(world: World, input: KeyboardInput) {
         super(EntityTypes.PLAYER_ENTITY, world);
 
         const viewport = document.getElementById('viewport') as HTMLElement;
@@ -93,9 +93,10 @@ export class PlayerEntity extends LivingEntity {
         if (this.autoAimEnable && this.autoAim) {
             this.autoAim.tick();
         } else if (this.steeringGear) {
+            const pointer = this.input.getPointer;
             this.setClampYaw(Math.atan2(
-                this.input.getWorldPointer.y - posRef.y,
-                this.input.getWorldPointer.x - posRef.x
+                pointer.y - posRef.y,
+                pointer.x - posRef.x
             ), 0.157075);
         }
 

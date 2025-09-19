@@ -78,7 +78,7 @@ export class MissileEntity extends RocketEntity {
         }
 
         // 干扰逻辑
-        if (this.lockeType === 'player' && (this.age & 7) === 0) {
+        if (this.lockeType === 'player' && (this.age & 7) === 0 && !(this.target instanceof DecoyEntity)) {
             const decoyEntities = DecoyEntity.Entities;
             if (decoyEntities.length > 0) {
                 const rand = Math.random();

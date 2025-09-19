@@ -5,10 +5,12 @@ import type {TrackedData} from "./data/TrackedData.ts";
 import type {EntityType} from "./EntityType.ts";
 import {World} from "../world/World.ts";
 import type {IOwnable} from "./IOwnable.ts";
+import {randInt} from "../utils/math/math.ts";
 
 export class DecoyEntity extends Entity implements IOwnable {
     public static readonly Entities: DecoyEntity[] = [];
     private readonly owner: Entity | null = null;
+    private readonly life = randInt(250, 320);
 
     public constructor(type: EntityType<DecoyEntity>, world: World, owner: Entity | null) {
         super(type, world);
@@ -17,7 +19,7 @@ export class DecoyEntity extends Entity implements IOwnable {
     }
 
     public override tick() {
-        if (this.age++ >= 250) {
+        if (this.age++ >= this.life) {
             DecoyEntity.Entities.shift();
             this.discard();
             return;

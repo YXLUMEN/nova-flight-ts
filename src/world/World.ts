@@ -1,4 +1,4 @@
-import {Input} from "../Input.ts";
+import {KeyboardInput} from "../input/KeyboardInput.ts";
 import {type Entity} from "../entity/Entity.ts";
 import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {Camera} from "../render/Camera.ts";
@@ -44,7 +44,7 @@ export class World {
 
     private readonly registryManager: RegistryManager;
     private readonly ui: UI = new UI(this);
-    private readonly input = new Input(World.canvas);
+    private readonly input = new KeyboardInput(World.canvas);
     private readonly damageSources: DamageSources;
     // ticking
     private last = 0;
@@ -127,11 +127,10 @@ export class World {
     }
 
     private tickWorld(tickDelta: number) {
-        const dt = this.freeze ? 0 : tickDelta;
-        const player = this.player!;
-
         this.ui.tick(tickDelta);
 
+        const dt = this.freeze ? 0 : tickDelta;
+        const player = this.player!;
         const yaw = player.getYaw();
         const forwardX = Math.cos(yaw) * 200;
         const forwardY = Math.sin(yaw) * 200;
@@ -244,6 +243,15 @@ export class World {
         this.schedule(1, () => {
             this.setTicking(false);
             this.rendering = false;
+
+            const ctrl = new AbortController();
+            window.addEventListener('keypress', ({code}) => {
+                if (code === "Enter" && this.over && !this.ticking && !this.rendering) {
+                    ctrl.abort();
+                    this.reset();
+                    return;
+                }
+            }, {signal: ctrl.signal});
         });
     }
 
@@ -499,50 +507,56 @@ export class World {
         DefaultEvents.registryEvents(this);
     }
 
-    private registryListeners() {
-        mainWindow.listen('tauri://blur', () => this.setTicking(false)).then();
-        mainWindow.listen('tauri://resize', async () => {
-            this.rendering = !await mainWindow.isMinimized();
-        }).then();
+    private registryInput(event: KeyboardEvent) {
+        const code = event.code;
 
-        // 实际可视页面变化
-        window.addEventListener("resize", () => World.resize());
-
-        window.addEventListener("keydown", e => {
-            const code = e.code;
-
-            if (e.ctrlKey) {
-                e.preventDefault();
-                if (code === "KeyV") {
-                    WorldConfig.devMode = !WorldConfig.devMode;
-                    WorldConfig.usedDevMode = true;
-                }
-                if (WorldConfig.devMode) this.devMode(code);
-                return;
+        if (event.ctrlKey) {
+            if (code === 'KeyV') {
+                WorldConfig.devMode = !WorldConfig.devMode;
+                WorldConfig.usedDevMode = true;
             }
+            if (WorldConfig.devMode) this.devMode(code);
+            return;
+        }
 
-            if (code === "Enter" && this.over && !this.ticking && !this.rendering) {
-                this.reset();
-                return;
-            }
-            if (code === 'Escape') {
+        switch (code) {
+            case 'F11':
+                mainWindow.isFullscreen()
+                    .then(isFull => mainWindow.setFullscreen(!isFull))
+                    .catch(console.error);
+                break;
+            case 'KeyT':
+                WorldConfig.autoShoot = !WorldConfig.autoShoot;
+                break;
+            case 'Escape': {
                 const techTree = document.getElementById('tech-shell')!;
                 if (!techTree.classList.contains('hidden')) {
                     this.toggleTechTree();
                     return;
                 }
                 this.togglePause();
-                return;
+                break;
             }
-            if (code === 'KeyG') {
+            case 'KeyG':
                 this.toggleTechTree();
-                return;
-            }
-            if (code === 'KeyM') {
+                break;
+            case 'KeyM':
                 document.getElementById('help')?.classList.toggle('hidden');
                 this.setTicking(false);
-            }
-        });
+                break;
+        }
+    }
+
+    private registryListeners() {
+        mainWindow.listen('tauri://blur', () => this.setTicking(false)).then();
+        mainWindow.listen('tauri://resize', async () => {
+            this.rendering = !await mainWindow.isMinimized();
+        }).then();
+
+        this.input.onKeyDown(this.registryInput.bind(this));
+
+        // 实际可视页面变化
+        window.addEventListener("resize", () => World.resize());
 
         window.addEventListener('contextmenu', event => event.preventDefault());
     }
