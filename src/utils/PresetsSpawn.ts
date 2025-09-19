@@ -11,12 +11,8 @@ import {EntityAttributes} from "../entity/attribute/EntityAttributes.ts";
 import {createCleanObj} from "./uit.ts";
 import type {EntityAttributeModifier} from "../entity/attribute/EntityAttributeModifier.ts";
 import {Identifier} from "../registry/Identifier.ts";
-import {ChasePlayerAI} from "../entity/ai/ChasePlayerAI.ts";
 import type {EntityType} from "../entity/EntityType.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
-import {GunEnemyEntity} from "../entity/mob/GunEnemyEntity.ts";
-import {MiniGunEnemyEntity} from "../entity/mob/MiniGunEnemyEntity.ts";
-import {WanderAI} from "../entity/ai/WanderAI.ts";
 
 function getHealth(value: number): EntityAttributeModifier {
     return createCleanObj({
@@ -25,20 +21,24 @@ function getHealth(value: number): EntityAttributeModifier {
     });
 }
 
-const spawnBase = (speed = 3, extraHp = 0, worth = 1, color = '#ff6b6b'): MobFactory =>
-    spawnTopRandomCtor(EntityTypes.BASE_ENEMY, [worth], (m) => {
+const spawnAtTop = (
+    type: EntityType<MobEntity>,
+    speed = 3, extraHp = 0, worth = 1,
+    color = '#ff6b6b'): MobFactory =>
+    spawnTopRandomCtor(type, [worth], (m) => {
         m.setMovementSpeed(speed);
         m.color = color;
         m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(extraHp));
         m.setHealth(m.getMaxHealth());
     });
 
-const spawnBaseS = (
+const spawnAtTopS = (
+    type: EntityType<MobEntity>,
     speed = 3, extraHp = 0, worth = 1,
     color = '#ff6b6b',
     hpScaleFn: (ctx: SpawnCtx) => number = () => 1
 ): MobFactory => (ctx) => {
-    return spawnTopRandomCtorS(EntityTypes.BASE_ENEMY, [worth], (m) => {
+    return spawnTopRandomCtorS(type, [worth], (m) => {
         const scaledHp = (extraHp * hpScaleFn(ctx)) | 0;
         m.setMovementSpeed(speed);
         m.color = color;
@@ -60,28 +60,12 @@ const spawnInMap = (
         m.color = color;
         m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(scaledHp));
         m.setHealth(m.getMaxHealth());
-        if (m instanceof GunEnemyEntity || m instanceof MiniGunEnemyEntity) {
-            m.setAI(new WanderAI());
-        } else {
-            m.setAI(new ChasePlayerAI());
-        }
+        m.setBehavior(0);
     }, opts)(ctx);
 }
 
-const spawnTank = (
-    speed = 3, extraHp = 0, worth = 1,
-    color = '#ff6b6b',
-    hpScaleFn: (ctx: SpawnCtx) => number = () => 1
-): MobFactory => (ctx) => {
-    return spawnTopRandomCtor(EntityTypes.TANK_ENEMY_ENTITY, [worth], (m) => {
-        const scaledHp = (extraHp * hpScaleFn(ctx)) | 0;
-        m.setMovementSpeed(speed);
-        m.color = color;
-        m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(scaledHp));
-    })(ctx);
-}
-
-const spawnLineBase = (
+const spawnAtTopInLine = (
+    type: EntityType<MobEntity>,
     count: number,
     gap = 48,
     speed = 130,
@@ -89,10 +73,7 @@ const spawnLineBase = (
     worth = 1,
     color = '#ff6b6b',
 ): MobFactory =>
-    spawnLineCtor(
-        EntityTypes.BASE_ENEMY,
-        count,
-        [worth],
+    spawnLineCtor(type, count, [worth],
         (m) => {
             m.setMovementSpeed(speed);
             m.color = color;
@@ -101,22 +82,6 @@ const spawnLineBase = (
         },
         {gap}
     );
-
-const spawnGun = (speed = 3, extraHp = 0, worth = 1, color = '#ff6b6b'): MobFactory =>
-    spawnTopRandomCtorS(EntityTypes.GUN_ENEMY_ENTITY, [worth], (m) => {
-        m.setMovementSpeed(speed);
-        m.color = color;
-        m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(extraHp));
-        m.setHealth(m.getMaxHealth());
-    });
-
-const spawnMiEn = (speed = 3, extraHp = 0, worth = 1, color = '#ff6b6b'): MobFactory =>
-    spawnTopRandomCtorS(EntityTypes.MISSILE_ENEMY_ENTITY, [worth], (m) => {
-        m.setMovementSpeed(speed);
-        m.color = color;
-        m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(extraHp));
-        m.setHealth(m.getMaxHealth());
-    });
 
 const spawnMiniGun = (speed = 3, extraHp = 0, worth = 8, color = '#ac0000'): MobFactory =>
     spawnFormation([
@@ -144,12 +109,9 @@ const spawnMiniGun = (speed = 3, extraHp = 0, worth = 8, color = '#ac0000'): Mob
 
 
 export {
-    spawnBase,
-    spawnBaseS,
+    spawnAtTop,
+    spawnAtTopS,
     spawnInMap,
-    spawnLineBase,
-    spawnGun,
-    spawnTank,
+    spawnAtTopInLine,
     spawnMiniGun,
-    spawnMiEn
 }

@@ -22,7 +22,6 @@ async function main() {
         await sleep(200);
         const update = await check();
         if (update && confirm('发现更新')) {
-
             let contentLength: number = 0;
             let downloaded = 0;
             await update.downloadAndInstall(event => {
@@ -60,7 +59,7 @@ async function main() {
 
     loadingScreen.setProgress(0.6, '加载数据');
     await DataLoader.init(manager);
-    await sleep(400);
+    await sleep(300);
 
     loadingScreen.setProgress(0.8, '冻结资源');
     manager.frozen();
@@ -71,19 +70,17 @@ async function main() {
     await loadingScreen.setDone();
 
     await mainWindow.setFullscreen(true);
-    const world = World.createWorld(manager);
 
+    World.resize();
     const startScreen = new StartScreen(World.getCtx(), World.W, World.H, {
         title: 'Nova Flight',
         subtitle: '按 任意键 或 点击按钮 开始',
         buttonText: '开始游戏'
     });
-    await new Promise<void>(resolve => {
-        startScreen.onConfirm(() => resolve());
-        startScreen.loop();
-    });
+    startScreen.loop();
+    await startScreen.onConfirm();
 
-    World.resize();
+    const world = World.createWorld(manager);
     world.start();
     world.setTicking(true);
     world.player?.setVelocity(0, -24);
@@ -101,18 +98,16 @@ async function mainDev() {
 
     manager.frozen();
 
-    const world = World.createWorld(manager);
+    World.resize();
     const startScreen = new StartScreen(World.getCtx(), World.W, World.H, {
         title: 'Nova Flight(Debug)',
         subtitle: '按 任意键 或 点击按钮 开始',
         buttonText: '开始游戏'
     });
-    await new Promise<void>(resolve => {
-        startScreen.onConfirm(() => resolve());
-        startScreen.loop();
-    });
+    startScreen.loop();
+    await startScreen.onConfirm();
 
-    World.resize();
+    const world = World.createWorld(manager);
     world.start();
     world.setTicking(true);
     world.player?.setVelocity(0, -24);
@@ -120,7 +115,11 @@ async function mainDev() {
 
 
 if (isDev) {
-    mainDev().then();
+    mainDev().then(() => {
+        const date = new Date();
+        const time = date.toLocaleString('zh-CN', {timeZone: 'Asia/ShangHai'});
+        console.log('Game started', time);
+    });
 } else {
     main().then();
 }

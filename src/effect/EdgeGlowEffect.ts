@@ -25,7 +25,7 @@ export class EdgeGlowEffect implements Effect {
 
     private readonly opts: EdgeGlowOpts = {};
 
-    constructor(opts: EdgeGlowOpts = {}) {
+    public constructor(opts: EdgeGlowOpts = {}) {
         this.opts = opts;
         this.opts.color = this.opts.color ?? "#5ec8ff";
         this.opts.thickness = this.opts.thickness ?? 48;
@@ -82,6 +82,14 @@ export class EdgeGlowEffect implements Effect {
         this.linearGlow(ctx, W - th, 0, th, H, col, alpha, "horizontal-rev");
 
         ctx.restore();
+    }
+
+    public isAlive(): boolean {
+        return this.alive;
+    }
+
+    public kill() {
+        this.alive = false;
     }
 
     private currentAlpha(): number {

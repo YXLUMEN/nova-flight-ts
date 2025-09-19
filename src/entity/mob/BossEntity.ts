@@ -22,11 +22,13 @@ export class BossEntity extends MobEntity {
     private cooldown = 0;
     private damageCooldown: number = 0;
     private releasingMissile: boolean = false;
+    public static hasBoss: boolean = false;
 
     public constructor(type: EntityType<BossEntity>, world: World, worth: number) {
         super(type, world, worth);
         this.maxDamageCanTake = Math.floor(this.getMaxHealth() / this.maxKillCounts);
         this.setMovementSpeed(0.08);
+        BossEntity.hasBoss = true;
     }
 
     public override createLivingAttributes() {
@@ -101,6 +103,7 @@ export class BossEntity extends MobEntity {
 
     public override onDeath(damageSource: DamageSource) {
         super.onDeath(damageSource);
+        BossEntity.hasBoss = false;
 
         const world = this.getWorld();
         world.events.emit(EVENTS.BOSS_KILLED, {mob: this, damageSource});

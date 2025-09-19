@@ -24,6 +24,10 @@ export class LaserBeamEffect implements Effect {
         this.t = 0; // 刷新寿命,保持常驻
     }
 
+    public isAlive(): boolean {
+        return this.alive;
+    }
+
     public kill() {
         this.alive = false;
     }

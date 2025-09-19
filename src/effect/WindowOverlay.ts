@@ -13,7 +13,7 @@ export class WindowOverlay implements Effect {
     private state: "in" | "steady" | "out" = "in";
     private t = 0;
 
-    constructor(opts: {
+    public constructor(opts: {
         color: string;
         maxAlpha?: number;           // 遮罩峰值透明度(0~1)
         fadeIn?: number;             // 淡入时长(s)
@@ -77,5 +77,13 @@ export class WindowOverlay implements Effect {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         ctx.restore();
+    }
+
+    public isAlive(): boolean {
+        return this.alive;
+    }
+
+    public kill() {
+        this.alive = false;
     }
 }

@@ -111,4 +111,10 @@ export class TechState {
     public reset(): void {
         this.unlocked.clear();
     }
+
+    public clear(): void {
+        this.techById.clear();
+        this.unlocked.clear();
+        this.branchGroups.clear();
+    }
 }

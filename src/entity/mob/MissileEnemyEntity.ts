@@ -40,4 +40,8 @@ export class MissileEnemyEntity extends MobEntity {
         missile.setYaw(yaw);
         world.spawnEntity(missile);
     }
+
+    public override isRangedAttacker(): boolean {
+        return true;
+    }
 }

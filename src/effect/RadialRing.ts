@@ -12,7 +12,7 @@ export class RadialRing implements Effect {
 
     private t = 0;
 
-    constructor(center: Vec2, r0: number, r1: number, life: number, color: string) {
+    public constructor(center: Vec2, r0: number, r1: number, life: number, color: string) {
         this.color = color;
         this.life = life;
         this.r1 = r1;
@@ -39,5 +39,13 @@ export class RadialRing implements Effect {
         ctx.arc(this.center.x, this.center.y, r, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
+    }
+
+    public isAlive(): boolean {
+        return this.alive;
+    }
+
+    public kill() {
+        this.alive = false;
     }
 }

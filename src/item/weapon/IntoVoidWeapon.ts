@@ -15,7 +15,7 @@ import {Items} from "../items.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 import {AttributeModifiersComponent} from "../../component/type/AttributeModifiersComponent.ts";
 
-let mask: WindowOverlay | null = null;
+const id2EffectMap = new Map<number, WindowOverlay>();
 
 export class IntoVoidWeapon extends SpecialWeapon {
     public static readonly displayName = "遁入虚空";
@@ -42,7 +42,7 @@ export class IntoVoidWeapon extends SpecialWeapon {
             );
             attacker.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.addModifier(modifier);
 
-            mask = new WindowOverlay({
+            const mask = new WindowOverlay({
                 color: IntoVoidWeapon.uiColor,
                 maxAlpha: 0.28,
                 fadeIn: 0.2,
@@ -50,6 +50,7 @@ export class IntoVoidWeapon extends SpecialWeapon {
                 composite: "screen",
             });
             world.addEffect(mask);
+            id2EffectMap.set(attacker.getId(), mask);
 
             if (attacker.techTree.isUnlocked('void_energy_extraction')) {
                 const emp = Items.EMP_WEAPON as EMPWeapon;
@@ -127,15 +128,16 @@ export class IntoVoidWeapon extends SpecialWeapon {
         return IntoVoidWeapon.uiColor;
     }
 
-    private exitVoid(stack: ItemStack, world: World, owner: LivingEntity, keepCooldown = true): void {
-        owner.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.removeModifierById(IntoVoidWeapon.DEFAULT_MODIFIER.id);
+    private exitVoid(stack: ItemStack, world: World, attacker: LivingEntity, keepCooldown = true): void {
+        attacker.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.removeModifierById(IntoVoidWeapon.DEFAULT_MODIFIER.id);
         this.setActive(stack, false);
         this.setTimeLeft(stack, 0);
         this.setCooldown(stack, this.getMaxCooldown(stack));
 
+        const mask = id2EffectMap.get(attacker.getId());
         if (mask) {
             mask.end();
-            mask = null;
+            id2EffectMap.delete(attacker.getId());
         }
 
         if (!keepCooldown) {
@@ -144,24 +146,24 @@ export class IntoVoidWeapon extends SpecialWeapon {
             this.setCooldown(stack, Math.max(0, this.getMaxCooldown(stack) - Math.max(used, refund)));
         }
 
-        if (!(owner instanceof PlayerEntity)) return;
+        if (!(attacker instanceof PlayerEntity)) return;
 
-        owner.invulnerable = stack.getOrDefault(DataComponentTypes.ANY_BOOLEAN, false);
+        attacker.invulnerable = stack.getOrDefault(DataComponentTypes.ANY_BOOLEAN, false);
         stack.set(DataComponentTypes.ANY_BOOLEAN, false);
 
-        const box = owner.getEntityDimension().width + stack.getOrDefault(DataComponentTypes.VOID_DAMAGE_RANGE, 32);
+        const box = attacker.getEntityDimension().width + stack.getOrDefault(DataComponentTypes.VOID_DAMAGE_RANGE, 32);
         for (const mob of world.getLoadMobs()) {
-            if (mob.isRemoved() || !pointInCircleVec2(owner.getPositionRef, mob.getPositionRef, box + mob.getEntityDimension().width)) continue;
+            if (mob.isRemoved() || !pointInCircleVec2(attacker.getPositionRef, mob.getPositionRef, box + mob.getEntityDimension().width)) continue;
             if (mob instanceof BossEntity) continue;
-            mob.onDeath(world.getDamageSources().void(owner as PlayerEntity));
+            mob.onDeath(world.getDamageSources().void(attacker as PlayerEntity));
         }
 
-        if (owner.techTree.isUnlocked('void_disturbance')) {
+        if (attacker.techTree.isUnlocked('void_disturbance')) {
             const emp = Items.EMP_WEAPON as EMPWeapon;
-            const stack = owner.weapons.get(emp);
+            const stack = attacker.weapons.get(emp);
             if (stack) {
                 const cd = emp.getCooldown(stack);
-                emp.tryFire(stack, world, owner);
+                emp.tryFire(stack, world, attacker);
                 emp.setCooldown(stack, cd);
             }
         }

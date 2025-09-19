@@ -5,11 +5,12 @@ import {EntityType} from "../EntityType.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {MiniBulletEntity} from "../projectile/MiniBulletEntity.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
+import {randInt} from "../../utils/math/math.ts";
 
 export class GunEnemyEntity extends MobEntity {
     private static readonly bulletSpeed = 2;
     public color = "#ff6b6b";
-    protected cooldown = 0;
+    protected cooldown = randInt(10, 100);
 
     public constructor(type: EntityType<GunEnemyEntity>, world: World) {
         super(type, world, 5);
@@ -39,5 +40,9 @@ export class GunEnemyEntity extends MobEntity {
         b.color = '#b10000';
         b.edgeColor = '#ff0000';
         world.spawnEntity(b);
+    }
+
+    public override isRangedAttacker(): boolean {
+        return true;
     }
 }

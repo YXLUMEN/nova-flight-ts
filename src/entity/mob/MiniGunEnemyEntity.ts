@@ -5,11 +5,12 @@ import {MobEntity} from "./MobEntity.ts";
 import {EntityType} from "../EntityType.ts";
 import type {World} from "../../world/World.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
+import {randInt} from "../../utils/math/math.ts";
 
 export class MiniGunEnemyEntity extends MobEntity {
     private static readonly bulletSpeed = 4;
     public color = "#ac0000";
-    private cooldown = 0;
+    private cooldown = randInt(0, 100);
     private fireCount = 0;
     private fireCD = 0;
 
@@ -35,7 +36,7 @@ export class MiniGunEnemyEntity extends MobEntity {
         this.fireCD = 10;
 
         if (this.fireCount > 16) {
-            this.cooldown = 300;
+            this.cooldown = 400;
             this.fireCount = 0;
             return;
         }
@@ -53,5 +54,9 @@ export class MiniGunEnemyEntity extends MobEntity {
         b.edgeColor = '#ff0000';
         world.spawnEntity(b);
         this.fireCount++;
+    }
+
+    public override isRangedAttacker(): boolean {
+        return true;
     }
 }

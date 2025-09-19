@@ -2,7 +2,6 @@ import {type Input} from "../../Input.ts";
 import {World} from "../../world/World.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 import {ScreenFlash} from "../../effect/ScreenFlash.ts";
-import {throttleTimeOut} from "../../utils/uit.ts";
 import {EdgeGlowEffect} from "../../effect/EdgeGlowEffect.ts";
 import {TechTree} from "../../tech/TechTree.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
@@ -34,13 +33,6 @@ export class PlayerEntity extends LivingEntity {
     public readonly baseWeapons: BaseWeapon[] = [];
     public currentBaseIndex: number = 0;
     private lastDamageTime = 0;
-
-    private switchWeapon = throttleTimeOut(() => {
-        const current = this.getCurrentItemStack().getItem() as BaseWeapon;
-        current.onEndFire(this.getWorld());
-        this.wasFire = false;
-        this.currentBaseIndex = (this.currentBaseIndex + 1) % this.baseWeapons.length;
-    }, 200);
 
     private phaseScore: number;
     private score: number = 0;
@@ -107,7 +99,7 @@ export class PlayerEntity extends LivingEntity {
             ), 0.157075);
         }
 
-        if (this.input.isDown('KeyR')) {
+        if (this.input.wasPressed('KeyR')) {
             this.switchWeapon();
             return;
         }
@@ -136,6 +128,13 @@ export class PlayerEntity extends LivingEntity {
             }
             w.inventoryTick(stack, world, this);
         }
+    }
+
+    private switchWeapon() {
+        const current = this.getCurrentItemStack().getItem() as BaseWeapon;
+        current.onEndFire(this.getWorld());
+        this.wasFire = false;
+        this.currentBaseIndex = (this.currentBaseIndex + 1) % this.baseWeapons.length;
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
@@ -188,6 +187,13 @@ export class PlayerEntity extends LivingEntity {
     public override onDeath(damageSource: DamageSource) {
         super.onDeath(damageSource);
         this.getWorld().gameOver();
+    }
+
+    public override onRemove() {
+        super.onRemove();
+        this.techTree.destroy();
+        this.weapons.clear();
+        this.baseWeapons.length = 0;
     }
 
     public override isPlayer() {

@@ -9,7 +9,7 @@ export class ScreenFlash implements Effect {
 
     private t = 0;
 
-    constructor(life: number = 0.08, maxAlpha: number = 0.25, color: string = '#ffffff') {
+    public constructor(life: number = 0.08, maxAlpha: number = 0.25, color: string = '#ffffff') {
         this.maxAlpha = maxAlpha;
         this.life = life;
         this.color = color;
@@ -27,5 +27,13 @@ export class ScreenFlash implements Effect {
         ctx.fillStyle = this.color;
         ctx.fillRect(0, 0, World.W, World.H);
         ctx.restore();
+    }
+
+    public isAlive(): boolean {
+        return this.alive;
+    }
+
+    public kill() {
+        this.alive = false;
     }
 }

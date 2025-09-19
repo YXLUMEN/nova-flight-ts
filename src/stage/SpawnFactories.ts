@@ -194,7 +194,7 @@ function spawnAvoidPlayerCtor<T extends MobEntity>(
     opts: { margin?: number; safeRadius?: number } = {}
 ): MobFactory {
     const margin = opts.margin ?? 24;
-    const safeRadius = opts.safeRadius ?? 128; // 玩家周围禁止刷怪的半径
+    const safeRadius = opts.safeRadius ? opts.safeRadius * opts.safeRadius : 16384;
 
     return (ctx) => {
         const minX = margin;
@@ -210,7 +210,7 @@ function spawnAvoidPlayerCtor<T extends MobEntity>(
             y = randInt(minY, maxY);
             tries++;
             if (tries > 20) break;
-        } while (Math.hypot(x - playerPos.x, y - playerPos.y) < safeRadius);
+        } while (((x - playerPos.x) ** 2 + (y - playerPos.y) ** 2) < safeRadius);
 
         const mob = type.create(World.instance, ...args);
         mob.setPosition(x, y);

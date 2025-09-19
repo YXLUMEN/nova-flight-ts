@@ -9,8 +9,7 @@ import type {TrackedData} from "../data/TrackedData.ts";
 import type {DataEntry} from "../data/DataEntry.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
-import type {MobAI} from "../ai/MobAI.ts";
-import {SimpleForwardAI} from "../ai/SimpleForwardAI.ts";
+import {MobAI} from "../ai/MobAI.ts";
 
 export abstract class MobEntity extends LivingEntity {
     public color = '#ff6b6b';
@@ -19,25 +18,25 @@ export abstract class MobEntity extends LivingEntity {
     private readonly worth: number;
     private AI: MobAI;
 
-    protected constructor(type: EntityType<MobEntity>, world: World, worth: number, ai?: MobAI) {
+    protected constructor(type: EntityType<MobEntity>, world: World, worth: number) {
         super(type, world);
         this.worth = worth;
         this.age += (Math.random() * 10) | 0;
         this.setYaw(1.57079);
-        this.AI = ai === undefined ? new SimpleForwardAI() : ai;
+        this.AI = new MobAI();
     }
 
     public override tick(): void {
         super.tick();
 
-        this.AI.updateVelocity(this);
+        this.AI.action(this);
         this.moveByVec(this.getVelocityRef);
         this.getVelocityRef.multiply(0.8);
         this.adjustPosition();
     }
 
-    public setAI(ai: MobAI) {
-        this.AI = ai;
+    public setBehavior(behavior: number): void {
+        this.AI.setBehavior(behavior);
     }
 
     protected override adjustPosition(): boolean {
@@ -96,6 +95,10 @@ export abstract class MobEntity extends LivingEntity {
 
     public getWorth(): number {
         return this.worth;
+    }
+
+    public isRangedAttacker(): boolean {
+        return false;
     }
 
     public onDataTrackerUpdate(_entries: DataEntry<any>): void {

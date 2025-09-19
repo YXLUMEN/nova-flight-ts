@@ -78,7 +78,7 @@ export class MissileEntity extends RocketEntity {
         }
 
         // 干扰逻辑
-        if (this.lockeType === 'player' && this.age % 5 === 0) {
+        if (this.lockeType === 'player' && (this.age & 7) === 0) {
             const decoyEntities = DecoyEntity.Entities;
             if (decoyEntities.length > 0) {
                 const rand = Math.random();
@@ -167,8 +167,8 @@ export class MissileEntity extends RocketEntity {
         return best;
     }
 
-    public override discard(): void {
-        super.discard();
+    public override onRemove() {
+        super.onRemove();
 
         if (this.target) {
             const count = MissileEntity.lockedEntity.get(this.target) ?? 0;

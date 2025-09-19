@@ -13,6 +13,7 @@ export class StartScreen {
     private readonly ctx: CanvasRenderingContext2D;
     private readonly width: number;
     private readonly height: number;
+
     private readonly tempCamera: Camera = new Camera();
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
 
@@ -21,7 +22,7 @@ export class StartScreen {
     private onConfirmCallback?: () => void;
     private options: Required<StartScreenOptions>;
 
-    private tickInterval = 1000 / 20;
+    private tickInterval = 1000 / 50;
     private lastTickTime = 0;
 
     public constructor(ctx: CanvasRenderingContext2D, width: number, height: number, options?: StartScreenOptions) {
@@ -37,8 +38,13 @@ export class StartScreen {
         this.starField.init();
     }
 
-    public onConfirm(cb: () => void) {
-        this.onConfirmCallback = cb;
+    public onConfirm(cb?: () => void) {
+        return new Promise<void>(resolve => {
+            this.onConfirmCallback = () => {
+                resolve();
+                if (cb) cb();
+            }
+        });
     }
 
     public loop() {
@@ -54,7 +60,7 @@ export class StartScreen {
 
             let elapsed = time - this.lastTickTime;
             while (elapsed >= this.tickInterval) {
-                this.starField.update(1 / 20, this.tempCamera);
+                this.starField.update(1 / 50, this.tempCamera);
                 this.lastTickTime += this.tickInterval;
                 elapsed -= this.tickInterval;
             }

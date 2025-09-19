@@ -17,6 +17,9 @@ import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
 import type {Entity} from "../entity/Entity.ts";
 import {SpawnMarkerEntity} from "../entity/SpawnMarkerEntity.ts";
 import {STAGE2} from "../configs/StageConfig2.ts";
+import {SoundSystem} from "../sound/SoundSystem.ts";
+import {SoundEvents} from "../sound/SoundEvents.ts";
+import {throttleTimeOut} from "../utils/uit.ts";
 
 
 export class DefaultEvents {
@@ -100,8 +103,13 @@ export class DefaultEvents {
             }
         });
 
+        const phaseSound = throttleTimeOut(() => {
+            SoundSystem.playSound(SoundEvents.PHASE_CHANGE);
+        }, 500);
+
         eventBus.on(EVENTS.STAGE_ENTER, (event) => {
             if (event.name === 'P6' || event.name === 'mP3') {
+                if (BossEntity.hasBoss) return;
                 const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 64);
                 boss.setPosition(World.W / 2, 64);
 
@@ -109,6 +117,7 @@ export class DefaultEvents {
                 mark.setPositionByVec(boss.getPositionRef);
                 world.spawnEntity(mark);
             }
+            phaseSound();
         });
 
         eventBus.on(EVENTS.STAGE_EXIT, (event) => {

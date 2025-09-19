@@ -17,7 +17,8 @@ import {clamp} from "../utils/math/math.ts";
 
 
 export abstract class Entity implements DataTracked, Comparable {
-    private static readonly CURRENT_ID = new AtomicInteger();
+    // 除了全局EntityList, 禁止使用
+    public static readonly CURRENT_ID = new AtomicInteger();
 
     public invulnerable: boolean = false;
 
@@ -76,11 +77,20 @@ export abstract class Entity implements DataTracked, Comparable {
         return this.normalTags.delete(tag);
     }
 
-    // 极其不推荐重写, 如果重写必须调用基方法
+    /**
+     * 禁止重写
+     *
+     * 如需清理工作, 考虑 onRemove
+     * @see onRemove
+     * */
     public discard(): void {
         if (this.removed) return;
         this.removed = true;
+        this.onRemove();
         this.world.events.emit(EVENTS.ENTITY_REMOVED, {entity: this});
+    }
+
+    public onRemove() {
     }
 
     protected abstract initDataTracker(builder: InstanceType<typeof DataTracker.Builder>): void;

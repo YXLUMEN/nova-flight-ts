@@ -9,7 +9,7 @@ import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 
-let beamFx: LaserBeamEffect | null = null;
+const id2EffectMap = new Map<number, LaserBeamEffect>();
 
 export class LaserWeapon extends SpecialWeapon {
     public static readonly DISPLAY_NAME = 'LASER';
@@ -52,8 +52,11 @@ export class LaserWeapon extends SpecialWeapon {
                 this.setHeat(stack, maxHeat);
                 this.setOverheat(stack, true);
                 this.setActive(stack, false);
-                if (beamFx) beamFx.kill();
-                beamFx = null;
+                const beamFx = id2EffectMap.get(holder.getId());
+                if (beamFx) {
+                    beamFx.kill();
+                    id2EffectMap.delete(holder.getId());
+                }
                 this.onEndFire(holder.getWorld());
             }
             if (stack.getOrDefault(DataComponentTypes.ANY_BOOLEAN, false) && heatLeft <= 100) {
@@ -70,9 +73,11 @@ export class LaserWeapon extends SpecialWeapon {
         }
 
         if (!this.getActive(stack)) {
-            // 停火时移除效果
-            if (beamFx) beamFx.kill();
-            beamFx = null;
+            const beamFx = id2EffectMap.get(holder.getId());
+            if (beamFx) {
+                beamFx.kill();
+                id2EffectMap.delete(holder.getId());
+            }
             return;
         }
 
@@ -97,11 +102,14 @@ export class LaserWeapon extends SpecialWeapon {
         }
 
         // 刷新/创建光束效果
-        if (!beamFx || !beamFx.alive) {
-            beamFx = new LaserBeamEffect(stack.getOrDefault(DataComponentTypes.UI_COLOR, LaserWeapon.COLOR), this.width);
-            world.addEffect(beamFx);
+        const beamFx = id2EffectMap.get(holder.getId());
+        if (beamFx !== undefined && beamFx.alive) {
+            beamFx.set(start, end);
+        } else {
+            const newBeamFx = new LaserBeamEffect(stack.getOrDefault(DataComponentTypes.UI_COLOR, LaserWeapon.COLOR), this.width);
+            world.addEffect(newBeamFx);
+            id2EffectMap.set(holder.getId(), newBeamFx);
         }
-        beamFx.set(start, end);
     }
 
     public override onStartFire(_world: World) {

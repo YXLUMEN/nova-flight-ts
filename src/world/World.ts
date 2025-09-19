@@ -82,10 +82,6 @@ export class World {
         this.starField.init();
     }
 
-    public start(): void {
-        this.tick(0);
-    }
-
     public static createWorld(registryManager: RegistryManager): World {
         if (this.worldInstance) return this.worldInstance;
         this.worldInstance = new World(registryManager);
@@ -113,20 +109,24 @@ export class World {
         this.ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     }
 
+    public start(): void {
+        this.tick(0);
+    }
+
     private tick(ts: number) {
         const tickDelta = Math.min(0.05, (ts - this.last) / 1000 || 0);
         this.last = ts;
         this.accumulator += tickDelta;
 
         while (this.accumulator >= WorldConfig.mbps) {
-            if (this.ticking) this.update(WorldConfig.mbps);
+            if (this.ticking) this.tickWorld(WorldConfig.mbps);
             this.accumulator -= WorldConfig.mbps;
         }
         this.render();
         requestAnimationFrame(t => this.tick(t));
     }
 
-    private update(tickDelta: number) {
+    private tickWorld(tickDelta: number) {
         const dt = this.freeze ? 0 : tickDelta;
         const player = this.player!;
 
@@ -154,7 +154,7 @@ export class World {
         this.effects.forEach(effect => effect.tick(dt));
         if (this.effects.length > 0) {
             for (let i = this.effects.length; i--;) {
-                if (!this.effects[i].alive) {
+                if (!this.effects[i].isAlive()) {
                     this.effects.splice(i, 1);
                 }
             }
@@ -205,18 +205,25 @@ export class World {
     }
 
     public reset(): void {
-        this.entities.clear();
+        this.player!.discard();
         this.loadedMobs.clear();
+
+        // 安全起见
+        this.entities.forEach(entity => entity.discard());
+        this.entities.clear();
+
+        this.effects.forEach(effect => effect.kill());
         this.effects.length = 0;
 
-        this.player?.techTree.destroy();
+        this.stage.reset();
+
         this.player = new PlayerEntity(this, this.input);
         this.player.setPosition(World.W / 2, World.H);
+        this.player.setVelocity(0, -24);
 
         this.over = false;
-        this.ticking = true;
         this.rendering = true;
-        this.stage.reset();
+        this.setTicking(true);
 
         this.starField.init();
     }
@@ -236,6 +243,7 @@ export class World {
         this.effects.push(new ScreenFlash(1, 0.25, '#ff0000'));
         this.schedule(1, () => {
             this.setTicking(false);
+            this.rendering = false;
         });
     }
 
@@ -478,6 +486,7 @@ export class World {
                     stage.nextPhase();
                 }
 
+                if (BossEntity.hasBoss) return;
                 const boss = new BossEntity(EntityTypes.BOSS_ENTITY, this, 64);
                 boss.setPosition(World.W / 2, 64);
 
@@ -512,10 +521,24 @@ export class World {
                 return;
             }
 
-            if (code === "Enter" && this.over) this.reset();
-            else if (code === 'Escape') this.togglePause();
-            else if (code === 'KeyG') this.toggleTechTree();
-            else if (code === 'KeyM') {
+            if (code === "Enter" && this.over && !this.ticking && !this.rendering) {
+                this.reset();
+                return;
+            }
+            if (code === 'Escape') {
+                const techTree = document.getElementById('tech-shell')!;
+                if (!techTree.classList.contains('hidden')) {
+                    this.toggleTechTree();
+                    return;
+                }
+                this.togglePause();
+                return;
+            }
+            if (code === 'KeyG') {
+                this.toggleTechTree();
+                return;
+            }
+            if (code === 'KeyM') {
                 document.getElementById('help')?.classList.toggle('hidden');
                 this.setTicking(false);
             }

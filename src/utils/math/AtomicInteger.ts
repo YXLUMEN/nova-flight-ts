@@ -1,7 +1,7 @@
 export class AtomicInteger {
     private value: number;
 
-    public constructor(initial = 0) {
+    public constructor(initial = 1) {
         this.value = initial;
     }
 
@@ -32,5 +32,9 @@ export class AtomicInteger {
     public addAndGet(delta: number): number {
         this.value += delta;
         return this.value;
+    }
+
+    public reset() {
+        this.value = 1;
     }
 }

@@ -167,5 +167,11 @@
     "sounds": [
       "nova-flight:/decoy_fire"
     ]
+  },
+  "phase.change": {
+    "subtitle": "sound.nova-flight.phase.change",
+    "sounds": [
+      "nova-flight:/phase_change"
+    ]
   }
 }

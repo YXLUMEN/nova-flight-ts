@@ -120,6 +120,12 @@ export class TechTree {
     }
 
     public destroy() {
+        this.adj.out.clear();
+        this.adj.branchMembers.clear();
+        this.adj.branchOf.clear();
+        this.adj.conflicts.clear();
+        this.state.clear();
+
         this.container.replaceChildren();
         this.abortCtrl.abort();
         TechTree.playerScore.textContent = '0';

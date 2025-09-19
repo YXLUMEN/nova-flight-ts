@@ -17,7 +17,7 @@ export class EMPBurst implements Effect {
     private readonly glow: number;
     private readonly drawRing: boolean;
 
-    constructor(
+    public constructor(
         pos: Vec2,
         radius: number,
         duration = 0.6,
@@ -93,6 +93,14 @@ export class EMPBurst implements Effect {
         }
 
         ctx.restore();
+    }
+
+    public isAlive(): boolean {
+        return this.alive;
+    }
+
+    public kill() {
+        this.alive = false;
     }
 
     private withAlpha(hex: string, a: number): string {

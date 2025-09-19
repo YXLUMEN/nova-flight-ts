@@ -75,4 +75,12 @@ export class Particle implements Effect {
         ctx.fill();
         ctx.globalAlpha = 1;
     }
+
+    public isAlive(): boolean {
+        return this.alive;
+    }
+
+    public kill() {
+        this.alive = false;
+    }
 }
