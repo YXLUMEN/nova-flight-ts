@@ -12,7 +12,7 @@ import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
 import {ClusterRocketEntity} from "../../../entity/projectile/ClusterRocketEntity.ts";
 
 export class RocketWeapon extends BaseWeapon {
-    private speed: number = 6;
+    private static readonly BULLET_SPEED: number = 6;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         stack.set(DataComponentTypes.WEAPON_CAN_COOLDOWN, false);
@@ -39,7 +39,7 @@ export class RocketWeapon extends BaseWeapon {
                 rocket.explosionDamage = stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 12);
                 rocket.explosionRadius = stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 72);
             }
-            this.setBullet(rocket, attacker, this.speed, yaw, 2);
+            this.setBullet(rocket, attacker, RocketWeapon.BULLET_SPEED, yaw, 2);
             world.spawnEntity(rocket);
 
             attacker.updateVelocity(-0.6, Math.cos(yaw), Math.sin(yaw));
@@ -72,7 +72,7 @@ export class RocketWeapon extends BaseWeapon {
     }
 
     public override getBallisticSpeed(): number {
-        return this.speed;
+        return RocketWeapon.BULLET_SPEED;
     }
 
     public override shouldCooldown(stack: ItemStack): boolean {

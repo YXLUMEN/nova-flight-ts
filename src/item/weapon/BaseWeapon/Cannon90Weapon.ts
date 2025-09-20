@@ -13,8 +13,8 @@ export class Cannon90Weapon extends BaseWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         const bullet = new ExplodeBulletEntity(EntityTypes.EXPLODE_BULLET_ENTITY,
             world, attacker, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1), {
-                explosionRadius: stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 1),
-                damage: stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1),
+                explosionRadius: stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 16),
+                damage: stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 5),
                 sparks: 4,
                 fastSparks: 2,
             });

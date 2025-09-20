@@ -6,6 +6,7 @@ import {readFile, readTextFile} from "@tauri-apps/plugin-fs";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import {RegistryKeys} from "../registry/RegistryKeys.ts";
 import {clamp} from "../utils/math/math.ts";
+import {deepFreeze} from "../utils/uit.ts";
 
 // noinspection DuplicatedCode
 export class SoundSystem {
@@ -55,6 +56,9 @@ export class SoundSystem {
                 console.warn(error);
             }
         }
+
+        deepFreeze(this.loadedSounds);
+        await audioContext.close();
     }
 
     public static async loadStatic(path: string, audioContext: AudioContext): Promise<AudioBuffer | null> {
@@ -120,6 +124,13 @@ export class SoundSystem {
             return true;
         }
         return false;
+    }
+
+    public stopAll() {
+        for (const sound of this.activeLoops.values()) {
+            sound.stop();
+        }
+        this.activeLoops.clear();
     }
 
     public pauseAll(): Promise<void> {

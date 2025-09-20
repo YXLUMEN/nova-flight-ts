@@ -16,7 +16,7 @@ export abstract class BaseWeapon extends Weapon {
         stack.set(DataComponentTypes.MAX_COOLDOWN, clamp(fireRate, 0, 256));
     }
 
-    protected setBullet(bullet: ProjectileEntity, attacker: Entity, speed: number, offset: number, maxSpread = 1) {
+    protected setBullet(bullet: ProjectileEntity, attacker: Entity, speed: number, offset: number, maxSpread = 1, maxParticle = 4) {
         const world = bullet.getWorld();
         const pos = attacker.getPositionRef;
 
@@ -37,7 +37,8 @@ export abstract class BaseWeapon extends Weapon {
             pos.y + g * completeOffset
         );
 
-        for (let i = 0; i < 4; i++) {
+        if (maxParticle <= 0) return;
+        for (let i = 0; i < maxParticle; i++) {
             const angleOffset = rand(-0.41886, 0.41886);
             const particleYaw = Math.atan2(g, f) + angleOffset;
 

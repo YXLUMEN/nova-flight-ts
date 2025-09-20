@@ -92,27 +92,52 @@ export function applyTech(world: World, id: string) {
         case 'hv_warhead': {
             const c90Stack = player.weapons.get(Items.CANNON90_WEAPON);
             if (c90Stack) {
-                const base = c90Stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 1);
+                const base = c90Stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 96);
                 c90Stack.set(DataComponentTypes.EXPLOSION_RADIUS, base * 1.5);
             }
 
             const bombStack = player.weapons.get(Items.BOMB_WEAPON);
             if (bombStack) {
-                const base = bombStack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 1);
+                const base = bombStack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 128);
                 bombStack.set(DataComponentTypes.EXPLOSION_RADIUS, base * 1.5);
+            }
+
+            const missileStack = player.weapons.get(Items.MISSILE_WEAPON);
+            if (missileStack) {
+                const base = missileStack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 72);
+                missileStack.set(DataComponentTypes.EXPLOSION_RADIUS, base * 1.5);
+            }
+
+            const rocketStack = player.weapons.get(Items.ROCKET_WEAPON);
+            if (rocketStack) {
+                const base = rocketStack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 72);
+                rocketStack.set(DataComponentTypes.EXPLOSION_RADIUS, base * 1.5);
             }
             break;
         }
         case 'hd_explosives': {
             const c90Stack = player.weapons.get(Items.CANNON90_WEAPON);
             if (c90Stack) {
-                const base = c90Stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 1);
+                const base = c90Stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 5);
                 c90Stack.set(DataComponentTypes.EXPLOSION_DAMAGE, base * 1.4);
             }
+
             const bombStack = player.weapons.get(Items.BOMB_WEAPON);
             if (bombStack) {
-                const base = bombStack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 1);
+                const base = bombStack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 16);
                 bombStack.set(DataComponentTypes.EXPLOSION_DAMAGE, base * 1.4);
+            }
+
+            const missileStack = player.weapons.get(Items.MISSILE_WEAPON);
+            if (missileStack) {
+                const base = missileStack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 12);
+                missileStack.set(DataComponentTypes.EXPLOSION_DAMAGE, base * 1.4);
+            }
+
+            const rocketStack = player.weapons.get(Items.ROCKET_WEAPON);
+            if (rocketStack) {
+                const base = rocketStack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 8);
+                rocketStack.set(DataComponentTypes.EXPLOSION_DAMAGE, base * 1.4);
             }
             break;
         }
@@ -181,12 +206,14 @@ export function applyTech(world: World, id: string) {
             }
             break;
         }
-        case 'steering_gear':
+        case 'steering_gear': {
             player.steeringGear = true;
             break;
-        case 'auto_aim':
+        }
+        case 'auto_aim': {
             player.autoAim = new AutoAim(player);
             break;
+        }
         case 'rocket_launcher': {
             player.addWeapon(Items.ROCKET_WEAPON, new ItemStack(Items.ROCKET_WEAPON));
             break;
@@ -200,6 +227,11 @@ export function applyTech(world: World, id: string) {
         }
         case 'decoy_releaser': {
             player.addWeapon(Items.DECOY_RELEASER, new ItemStack(Items.DECOY_RELEASER));
+            break;
+        }
+        case 'ciws': {
+            player.addWeapon(Items.CIWS_WEAPON, new ItemStack(Items.CIWS_WEAPON));
+            break;
         }
     }
 }

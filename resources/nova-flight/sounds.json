@@ -209,5 +209,11 @@
     "sounds": [
       "nova-flight:/phase_change"
     ]
+  },
+  "ciws.fire": {
+    "subtitle": "sound.nova-flight.ciws.fire",
+    "sounds": [
+      "nova-flight:ciws/fire"
+    ]
   }
 }

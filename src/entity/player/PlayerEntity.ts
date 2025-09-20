@@ -36,7 +36,7 @@ export class PlayerEntity extends LivingEntity {
     private phaseScore: number;
     private score: number = 0;
     private autoAimEnable: boolean = false;
-    private wasFire = false
+    public wasFire = false
     public steeringGear: boolean = false;
 
     public autoAim: AutoAim | null = null;
@@ -105,34 +105,40 @@ export class PlayerEntity extends LivingEntity {
         }
 
         // 射击
-        const fire = this.input.isDown("Space") || WorldConfig.autoShoot;
         const baseWeapon = this.baseWeapons[this.currentBaseIndex];
         const stack = this.weapons.get(baseWeapon)!;
+        const canFire = baseWeapon.canFire(stack);
+        const fire = this.input.isDown("Space") || WorldConfig.autoShoot;
 
         if (fire !== this.wasFire) {
             if (!this.wasFire) {
-                baseWeapon.onStartFire(world);
+                baseWeapon.onStartFire(world, stack);
             } else {
-                baseWeapon.onEndFire(world);
+                baseWeapon.onEndFire(world, stack);
             }
             this.wasFire = fire;
         }
-        if (fire && baseWeapon.canFire(stack)) {
+        if (fire && canFire) {
             baseWeapon.tryFire(stack, world, this);
         }
 
         for (const [w, stack] of this.weapons) {
             if (w instanceof SpecialWeapon) {
-                if (WorldConfig.devMode && w.getCooldown(stack) > 0.5) w.setCooldown(stack, 0.5);
-                if (w.canFire(stack) && this.input.wasPressed(w.bindKey())) w.tryFire(stack, world, this);
+                if (WorldConfig.devMode && w.getCooldown(stack) > 0.5) {
+                    w.setCooldown(stack, 0.5);
+                }
+                if (w.canFire(stack) && this.input.wasPressed(w.bindKey())) {
+                    w.tryFire(stack, world, this);
+                }
             }
             w.inventoryTick(stack, world, this);
         }
     }
 
     private switchWeapon() {
-        const current = this.getCurrentItemStack().getItem() as BaseWeapon;
-        current.onEndFire(this.getWorld());
+        const stack = this.getCurrentItemStack();
+        const current = stack.getItem() as BaseWeapon;
+        current.onEndFire(this.getWorld(), stack);
         this.wasFire = false;
         this.currentBaseIndex = (this.currentBaseIndex + 1) % this.baseWeapons.length;
     }

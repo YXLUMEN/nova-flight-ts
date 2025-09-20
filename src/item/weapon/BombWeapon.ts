@@ -75,8 +75,8 @@ export class BombWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
         world.events.emit(EVENTS.BOMB_DETONATE, {
             pos: attacker.getPosition(),
-            damage: stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1),
-            explosionRadius: stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 200),
+            damage: stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 16),
+            explosionRadius: stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 256),
             shake: 0.3,
             source: attacker,
             attacker: attacker,

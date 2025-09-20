@@ -14,10 +14,10 @@ export abstract class Weapon extends Item {
     // 不会检查冷却
     public abstract tryFire(stack: ItemStack, world: World, attacker: Entity): void;
 
-    public onStartFire(_world: World): void {
+    public onStartFire(_world: World, _stack: ItemStack): void {
     }
 
-    public onEndFire(_world: World): void {
+    public onEndFire(_world: World, _stack: ItemStack): void {
     }
 
     public canFire(stack: ItemStack): boolean {

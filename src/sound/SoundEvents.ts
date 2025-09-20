@@ -39,6 +39,8 @@ export class SoundEvents {
     public static readonly MISSILE_EXPLOSION = this.registerSound("missile.explosion");
     public static readonly MISSILE_PITCHED = this.registerSound("missile.pitched");
 
+    public static readonly CIWS_FIRE_LOOP = this.registerSound("ciws.fire");
+
     public static readonly WEAPON_READY = this.registerSound("weapon.ready");
     public static readonly EXPLOSION = this.registerSound("explosion.normal");
 

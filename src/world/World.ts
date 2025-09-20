@@ -31,6 +31,7 @@ import type {Stage} from "../stage/Stage.ts";
 import {SpawnMarkerEntity} from "../entity/SpawnMarkerEntity.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
+import {AtomicInteger} from "../utils/math/AtomicInteger.ts";
 
 export class World {
     public static readonly globalSound = new SoundSystem();
@@ -60,7 +61,7 @@ export class World {
     private rendering = true;
     // schedule
     private time = 0;
-    private nextTimerId = 1;
+    private nextTimerId = new AtomicInteger();
     private timers: TimerTask[] = [];
     // game
     private stage = STAGE;
@@ -210,21 +211,29 @@ export class World {
     }
 
     public reset(): void {
+        this.timers.length = 0;
+        this.time = 0;
+        this.nextTimerId.reset();
+        this.stage.reset();
+
         this.player!.discard();
         this.loadedMobs.clear();
 
-        // 安全起见
         this.entities.forEach(entity => entity.discard());
         this.entities.clear();
 
         this.effects.forEach(effect => effect.kill());
         this.effects.length = 0;
 
-        this.stage.reset();
+        this.worldSound.stopAll();
+        World.globalSound.stopAll();
 
+        // 初始化
         this.player = new PlayerEntity(this, this.input);
         this.player.setPosition(World.W / 2, World.H);
         this.player.setVelocity(0, -24);
+
+        this.input.onKeyDown(this.registryInput.bind(this));
 
         this.over = false;
         this.rendering = true;
@@ -245,13 +254,14 @@ export class World {
 
     public gameOver() {
         this.over = true;
+        this.input.clearHandler();
         this.effects.push(new ScreenFlash(1, 0.25, '#ff0000'));
         this.schedule(1, () => {
             this.setTicking(false);
             this.rendering = false;
 
             const ctrl = new AbortController();
-            window.addEventListener('keypress', ({code}) => {
+            window.addEventListener('keydown', ({code}) => {
                 if (code === "Enter" && this.over && !this.ticking && !this.rendering) {
                     ctrl.abort();
                     this.reset();
@@ -325,7 +335,7 @@ export class World {
 
     public schedule(delaySec: number, fn: () => void): Schedule {
         const t: TimerTask = {
-            id: this.nextTimerId++,
+            id: this.nextTimerId.incrementAndGet(),
             at: this.time + Math.max(0, delaySec),
             fn,
             repeat: false,
@@ -340,7 +350,7 @@ export class World {
 
     public scheduleInterval(intervalSec: number, fn: () => void): Schedule {
         const t: TimerTask = {
-            id: this.nextTimerId++,
+            id: this.nextTimerId.incrementAndGet(),
             at: this.time + Math.max(0, intervalSec),
             fn,
             repeat: true,
@@ -573,12 +583,11 @@ export class World {
             this.rendering = !await mainWindow.isMinimized();
         }).then();
 
-        this.input.onKeyDown(this.registryInput.bind(this));
-
         // 实际可视页面变化
         window.addEventListener("resize", () => World.resize());
-
         window.addEventListener('contextmenu', event => event.preventDefault());
+
+        this.input.onKeyDown(this.registryInput.bind(this));
     }
 
     private devMode(code: string) {
@@ -607,6 +616,11 @@ export class World {
             case 'NumpadSubtract':
                 WorldConfig.enableCameraOffset = !WorldConfig.enableCameraOffset;
                 this.camera.cameraOffset.set(0, 0);
+                break;
+            case 'KeyP':
+                this.player?.discard();
+                this.gameOver();
+                this.reset();
                 break;
         }
     }
