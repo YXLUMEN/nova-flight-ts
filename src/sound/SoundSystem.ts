@@ -31,18 +31,18 @@ export class SoundSystem {
         for (const soundId of sounds) {
             try {
                 const id = soundId.getPath();
-                const col = json[id];
-                if (!col) {
+                const entry = json[id];
+                if (!entry) {
                     console.warn(`SoundID ${id} not found in sounds.json`);
                     continue;
                 }
-                if (!Array.isArray(col.sounds)) {
+                if (!Array.isArray(entry.sounds)) {
                     console.warn(`SoundID ${id} has invalid sounds format (must be array)`);
                     continue;
                 }
 
                 const buffers: AudioBuffer[] = [];
-                for (const soundEntry of col.sounds) {
+                for (const soundEntry of entry.sounds) {
                     const soundPath = soundEntry.split(':').pop();
                     if (!soundPath) continue;
                     const buffer = await this.loadStatic(soundPath, audioContext);

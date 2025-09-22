@@ -44,7 +44,7 @@ export class MissileEntity extends RocketEntity {
         // 燃料耗尽
         if (this.age > this.maxLifetimeTicks) {
             if (this.target) {
-                this.getWorld().events.emit(EVENTS.ENTITY_UNLOCKED, {lastTarget: this.target});
+                this.getWorld().events.emit(EVENTS.ENTITY_UNLOCKED, {missile: this, lastTarget: this.target});
                 this.target = null;
             }
             const yaw = this.getYaw();
@@ -85,11 +85,11 @@ export class MissileEntity extends RocketEntity {
 
                 if (rand < 0.2) {
                     this.reLockCD = 100;
-                    world.events.emit(EVENTS.ENTITY_UNLOCKED, {lastTarget: this.target});
+                    world.events.emit(EVENTS.ENTITY_UNLOCKED, {missile: this, lastTarget: this.target});
                     this.target = null;
                 } else if (rand < 0.8) {
                     this.reLockCD = 200;
-                    world.events.emit(EVENTS.ENTITY_UNLOCKED, {lastTarget: this.target});
+                    world.events.emit(EVENTS.ENTITY_UNLOCKED, {missile: this, lastTarget: this.target});
                     this.target = decoyEntities[randInt(0, decoyEntities.length)];
                 }
             }
@@ -179,7 +179,7 @@ export class MissileEntity extends RocketEntity {
             }
         }
 
-        this.getWorld().events.emit(EVENTS.ENTITY_UNLOCKED, {lastTarget: this.target});
+        this.getWorld().events.emit(EVENTS.ENTITY_UNLOCKED, {missile: this, lastTarget: this.target});
         this.target = null;
     }
 

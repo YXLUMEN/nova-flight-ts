@@ -1,0 +1,14 @@
+{
+  "bgm.1": {
+    "file": "nova-flight:/space_walk.ogg"
+  },
+  "bgm.2": {
+    "file": "nova-flight:/no_more_mabo.ogg"
+  },
+  "bgm.3": {
+    "file": "nova-flight:/sometime_hjm.ogg"
+  },
+  "bgm.4": {
+    "file": "nova-flight:/delta_force_main.ogg"
+  }
+}

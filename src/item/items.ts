@@ -20,6 +20,7 @@ export class Items {
     public static readonly EMP_WEAPON = this.register("emp_weapon", new EMPWeapon(new Item.Settings()
         .attackDamage(0)
         .maxCooldown(500)
+        .component(DataComponentTypes.EFFECT_RANGE, 480)
     ));
     public static readonly INTO_VOID_WEAPON: Item;
     public static readonly CANNON40_WEAPON = this.register("cannon40_weapon", new Cannon40Weapon(new Item.Settings()
@@ -56,6 +57,7 @@ export class Items {
     public static readonly CIWS_WEAPON = this.register("ciws_weapon", new CIWS(new Item.Settings()
         .attackDamage(2)
         .maxCooldown(1)
+        .component(DataComponentTypes.MAX_HEAT, 360)
     ));
     public static readonly LASER_WEAPON: Item;
     public static readonly DECOY_RELEASER = this.register("decoy_releaser", new DecoyReleaser(new Item.Settings()
@@ -67,19 +69,19 @@ export class Items {
         return Registry.registerReferenceById(Registries.ITEM, Identifier.ofVanilla(id), item).getValue();
     }
 
+    // 避免引用问题
     public static init() {
         (this.INTO_VOID_WEAPON as any) = this.register("into_void_weapon", new IntoVoidWeapon(new Item.Settings()
             .attackDamage(0)
             .maxCooldown(1500)
             .component(DataComponentTypes.ACTIVE, false)
-            .component(DataComponentTypes.VOID_DAMAGE_RANGE, 32)
+            .component(DataComponentTypes.EFFECT_RANGE, 32)
             .component(DataComponentTypes.EFFECT_DURATION, 250)
         ));
         (this.LASER_WEAPON as any) = this.register("laser_weapon", new LaserWeapon(new Item.Settings()
             .attackDamage(1)
             .component(DataComponentTypes.MAX_HEAT, 400)
             .component(DataComponentTypes.ACTIVE, false)
-            .component(DataComponentTypes.OVERHEAT, false)
             .component(DataComponentTypes.HEAT, 0)
             .component(DataComponentTypes.DRAIN_RATE, 2)
             .component(DataComponentTypes.COOLDOWN_RATE, 1)

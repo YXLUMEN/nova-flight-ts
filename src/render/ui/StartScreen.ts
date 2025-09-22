@@ -2,6 +2,8 @@ import {StarField} from "../../effect/StarField.ts";
 import {defaultLayers} from "../../configs/StarfieldConfig.ts";
 import {Camera} from "../Camera.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
+import type {IUi} from "./IUi.ts";
+import {World} from "../../world/World.ts";
 
 type StartScreenOptions = {
     title?: string;
@@ -9,10 +11,10 @@ type StartScreenOptions = {
     buttonText?: string;
 };
 
-export class StartScreen {
+export class StartScreen implements IUi {
     private readonly ctx: CanvasRenderingContext2D;
-    private readonly width: number;
-    private readonly height: number;
+    private width: number = 0;
+    private height: number = 0;
 
     private readonly tempCamera: Camera = new Camera();
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
@@ -25,10 +27,8 @@ export class StartScreen {
     private tickInterval = 1000 / 50;
     private lastTickTime = 0;
 
-    public constructor(ctx: CanvasRenderingContext2D, width: number, height: number, options?: StartScreenOptions) {
+    public constructor(ctx: CanvasRenderingContext2D, options?: StartScreenOptions) {
         this.ctx = ctx;
-        this.width = width;
-        this.height = height;
         this.options = {
             title: options?.title ?? '我的小游戏',
             subtitle: options?.subtitle ?? '按下开始键进入游戏',
@@ -36,74 +36,50 @@ export class StartScreen {
         };
 
         this.starField.init();
+
     }
 
-    public onConfirm(cb?: () => void) {
-        return new Promise<void>(resolve => {
-            this.onConfirmCallback = () => {
-                resolve();
-                if (cb) cb();
-            }
-        });
-    }
-
-    public loop() {
+    public start() {
         this.running = true;
         this.tempCamera.update(MutVec2.zero(), 0);
+        this.tick(0);
 
-        const render = (time: number) => {
-            if (!this.running) return;
-
-            if (!this.lastTickTime) {
-                this.lastTickTime = time;
-            }
-
-            let elapsed = time - this.lastTickTime;
-            while (elapsed >= this.tickInterval) {
-                this.starField.update(1 / 50, this.tempCamera);
-                this.lastTickTime += this.tickInterval;
-                elapsed -= this.tickInterval;
-            }
-
-            this.draw();
-            requestAnimationFrame(render);
-        };
-        requestAnimationFrame(render);
-
-        window.addEventListener('keydown', () => this.confirm(), {signal: this.ctrl.signal});
+        window.addEventListener('keydown', event => {
+            if (event.code === 'Space' || event.code === 'Enter') this.confirm();
+        }, {signal: this.ctrl.signal});
         window.addEventListener('click', this.handleClick, {signal: this.ctrl.signal});
+        window.addEventListener('resize', () => {
+            World.resize();
+            this.setWorldSize(World.W, World.H);
+        }, {signal: this.ctrl.signal});
     }
 
-    public stop() {
-        this.running = false;
-        this.ctrl.abort();
-        this.ctx.reset();
-
-        (this.ctx as any) = null;
-        (this.starField as any) = null;
-        (this.tempCamera as any) = null;
+    public setWorldSize(w: number, h: number) {
+        this.width = w;
+        this.height = h;
     }
 
-    private handleClick = (e: MouseEvent) => {
-        const btnW = 200;
-        const btnH = 50;
-        const btnX = (this.width - btnW) / 2;
-        const btnY = this.height / 2 + 50;
-        if (e.offsetX >= btnX && e.offsetX <= btnX + btnW &&
-            e.offsetY >= btnY && e.offsetY <= btnY + btnH) {
-            this.confirm();
+    private bindTick = this.tick.bind(this);
+
+    public tick(tickDelta: number) {
+        if (!this.running) return;
+
+        if (!this.lastTickTime) {
+            this.lastTickTime = tickDelta;
         }
-    };
 
-    private confirm() {
-        this.stop();
-        if (this.onConfirmCallback) {
-            this.onConfirmCallback();
+        let elapsed = tickDelta - this.lastTickTime;
+        while (elapsed >= this.tickInterval) {
+            this.starField.update(1 / 50, this.tempCamera);
+            this.lastTickTime += this.tickInterval;
+            elapsed -= this.tickInterval;
         }
+
+        this.render(this.ctx);
+        requestAnimationFrame(this.bindTick);
     }
 
-    private draw() {
-        const ctx = this.ctx;
+    public render(ctx: CanvasRenderingContext2D) {
         ctx.clearRect(0, 0, this.width, this.height);
 
         this.starField.render(ctx, this.tempCamera);
@@ -132,5 +108,42 @@ export class StartScreen {
         ctx.fillStyle = '#fff';
         ctx.font = '20px sans-serif';
         ctx.fillText(this.options.buttonText, this.width / 2, btnY + btnH / 2 + 7);
+    }
+
+    public destroy() {
+        this.running = false;
+        this.ctrl.abort();
+        this.ctx.reset();
+
+        (this.ctx as any) = null;
+        (this.starField as any) = null;
+        (this.tempCamera as any) = null;
+    }
+
+    private handleClick = (e: MouseEvent) => {
+        const btnW = 200;
+        const btnH = 50;
+        const btnX = (this.width - btnW) / 2;
+        const btnY = this.height / 2 + 50;
+        if (e.offsetX >= btnX && e.offsetX <= btnX + btnW &&
+            e.offsetY >= btnY && e.offsetY <= btnY + btnH) {
+            this.confirm();
+        }
+    }
+
+    public onConfirm(cb?: () => void) {
+        return new Promise<void>(resolve => {
+            this.onConfirmCallback = () => {
+                resolve();
+                if (cb) cb();
+            }
+        });
+    }
+
+    private confirm() {
+        this.destroy();
+        if (this.onConfirmCallback) {
+            this.onConfirmCallback();
+        }
     }
 }

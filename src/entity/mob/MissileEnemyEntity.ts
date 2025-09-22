@@ -4,7 +4,7 @@ import type {World} from "../../world/World.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
 import {EntityTypes} from "../EntityTypes.ts";
-import {MissileEntity} from "../projectile/MissileEntity.ts";
+import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
 
 export class MissileEnemyEntity extends MobEntity {
     private static readonly bulletSpeed = 0.5;
@@ -32,7 +32,7 @@ export class MissileEnemyEntity extends MobEntity {
 
         const pos = this.getPositionRef;
         const yaw = this.getYaw();
-        const missile = new MissileEntity(EntityTypes.MISSILE_ENTITY, world, this, yaw, 'player');
+        const missile = new MobMissileEntity(EntityTypes.MISSILE_ENTITY, world, this, yaw);
         missile.color = '#ff7777';
         missile.setMaxLifeTick(500);
         missile.setTrackingSpeed(MissileEnemyEntity.bulletSpeed);

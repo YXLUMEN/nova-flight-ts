@@ -7,8 +7,9 @@ import {WorldConfig} from "../configs/WorldConfig.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import {Items} from "../item/items.ts";
 import {ItemStack} from "../item/ItemStack.ts";
-import {STAGE} from "../configs/StageConfig.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
+import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
+import {type NbtCompound} from "../nbt/NbtCompound.ts";
 
 type Adjacency = {
     out: Map<string, string[]>; // id -> successors
@@ -17,7 +18,7 @@ type Adjacency = {
     branchMembers: Map<string, string[]>; // branchGroup -> ids
 };
 
-export class TechTree {
+export class TechTree implements NbtSerializable {
     public static readonly playerScore = document.getElementById('player-money')!;
 
     private static readonly submitBtn = document.getElementById('d-unlock') as HTMLButtonElement;
@@ -432,9 +433,6 @@ export class TechTree {
         for (const tech of unlocked) {
             const cost = tech.cost;
             if (cost) backScore += cost;
-            if (tech.id === 'steering_gear') {
-                player.getWorld().setStage(STAGE);
-            }
         }
 
         player.setScore(player.getScore() + (backScore * 0.8) | 0);
@@ -450,5 +448,19 @@ export class TechTree {
 
         this.state.reset();
         this.renderNodes();
+    }
+
+    public writeNBT(nbt: NbtCompound): NbtCompound {
+        nbt.putStringArray('Techs', ...this.state.techById.keys());
+        return nbt
+    }
+
+    public readNBT(nbt: NbtCompound) {
+        const techs = nbt.getStringArray('Techs');
+        if (techs.length === 0) return;
+        for (const tech of techs) {
+            this.state.unlock(tech);
+            this.applyUnlockUpdates(tech);
+        }
     }
 }

@@ -14,8 +14,7 @@ export class ComponentMap {
     }
 
     public get<T>(type: ComponentType<T>): T | null {
-        const component = this.components.get(type);
-        return component !== undefined ? component : null;
+        return this.components.get(type) ?? null;
     }
 
     public set<T>(type: ComponentType<T>, value: T | null): void {

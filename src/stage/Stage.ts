@@ -6,6 +6,7 @@ export class Stage {
     private readonly rng: RNG;
     private readonly phases: PhaseConfig[];
 
+    private paused = false;
     private ticks = 0;
     private phaseTime = 0;
     private index = 0;
@@ -25,11 +26,21 @@ export class Stage {
         this.ticks = 0;
         this.phaseTime = 0;
         this.index = 0;
+        this.paused = false;
         this.loadPhase(0);
+    }
+
+    public pause(): void {
+        this.paused = true;
+    }
+
+    public resume(): void {
+        this.paused = false;
     }
 
     public tick(world: World) {
         if (this.index >= this.phases.length) return;
+        if (this.paused) return;
 
         this.ticks++;
         this.phaseTime++;

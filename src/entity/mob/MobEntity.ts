@@ -42,6 +42,7 @@ export abstract class MobEntity extends LivingEntity {
     protected override adjustPosition(): boolean {
         const pos = this.getPositionRef;
         pos.x = clamp(pos.x, 20, World.W);
+        pos.y = Math.max(pos.y, 0);
 
         if (pos.y > World.H + 40) {
             this.discard();

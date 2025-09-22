@@ -1,4 +1,4 @@
-import type {Effect} from "./Effect.ts";
+import type {IEffect} from "./IEffect.ts";
 
 export interface EdgeGlowOpts {
     // 发光颜色
@@ -19,7 +19,7 @@ export interface EdgeGlowOpts {
     composite?: GlobalCompositeOperation;
 }
 
-export class EdgeGlowEffect implements Effect {
+export class EdgeGlowEffect implements IEffect {
     public alive = true;
     private t = 0;
 

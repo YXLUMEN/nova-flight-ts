@@ -8,10 +8,14 @@ import {LoadingScreen} from "./render/ui/LoadingScreen.ts";
 import {sleep} from "./utils/uit.ts";
 import {StartScreen} from "./render/ui/StartScreen.ts";
 import {isDev} from "./configs/WorldConfig.ts";
+import {NovaFlightServer} from "./NovaFlightServer.ts";
+import {AudioManager} from "./sound/AudioManager.ts";
+import {Audios} from "./sound/Audios.ts";
 
 export const mainWindow = new Window('main');
 
 async function main() {
+    window.oncontextmenu = event => event.preventDefault();
     World.resize();
 
     const loadingScreen = new LoadingScreen(World.getCtx(), World.W, World.H);
@@ -72,21 +76,26 @@ async function main() {
     await mainWindow.setFullscreen(true);
 
     World.resize();
-    const startScreen = new StartScreen(World.getCtx(), World.W, World.H, {
-        title: 'Nova Flight',
+    const startScreen = new StartScreen(World.getCtx(), {
+        title: 'Nova Flight(先行测试版)',
         subtitle: '按 任意键 或 点击按钮 开始',
         buttonText: '开始游戏'
     });
-    startScreen.loop();
-    await startScreen.onConfirm();
+    startScreen.setWorldSize(World.W, World.H);
+    startScreen.start();
 
-    const world = World.createWorld(manager);
-    world.start();
-    world.setTicking(true);
-    world.player?.setVelocity(0, -24);
+    AudioManager.randomPlay(true, Audios.NO_MORE_MABO, Audios.SOME_TIME_HJM);
+    await startScreen.onConfirm();
+    if (localStorage.getItem('guided') !== undefined) {
+        AudioManager.playAudio(Audios.SPACE_WALK);
+    }
+
+    await NovaFlightServer.startGame(manager);
 }
 
 async function mainDev() {
+    window.oncontextmenu = event => event.preventDefault();
+
     console.warn('当前为开发者模式');
 
     const manager = new RegistryManager();
@@ -99,18 +108,21 @@ async function mainDev() {
     manager.frozen();
 
     World.resize();
-    const startScreen = new StartScreen(World.getCtx(), World.W, World.H, {
+    const startScreen = new StartScreen(World.getCtx(), {
         title: 'Nova Flight(Debug)',
-        subtitle: '按 任意键 或 点击按钮 开始',
+        subtitle: '按 回车/空格 或 点击按钮 开始',
         buttonText: '开始游戏'
     });
-    startScreen.loop();
-    await startScreen.onConfirm();
+    startScreen.setWorldSize(World.W, World.H);
+    startScreen.start();
 
-    const world = World.createWorld(manager);
-    world.start();
-    world.setTicking(true);
-    world.player?.setVelocity(0, -24);
+    AudioManager.randomPlay(true, Audios.NO_MORE_MABO, Audios.SOME_TIME_HJM);
+    await startScreen.onConfirm();
+    if (localStorage.getItem('guided') !== undefined) {
+        AudioManager.playAudio(Audios.SPACE_WALK);
+    }
+
+    await NovaFlightServer.startGame(manager);
 }
 
 

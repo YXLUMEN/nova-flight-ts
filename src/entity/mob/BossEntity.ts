@@ -10,8 +10,8 @@ import {EntityType} from "../EntityType.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
-import {MissileEntity} from "../projectile/MissileEntity.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
+import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
 
 export class BossEntity extends MobEntity {
     public override color = '#b30000';
@@ -51,7 +51,7 @@ export class BossEntity extends MobEntity {
         const startAngle = 0.4537722; // 26
         const endAngle = 2.6859825; // 154
         const step = (endAngle - startAngle) / (count - 1);
-        const yOffset = this.getEntityDimension().height / 2;
+        const yOffset = this.getHeight() / 2;
 
         const world = this.getWorld();
         const pos = this.getPositionRef.clone().add(0, yOffset);
@@ -81,7 +81,7 @@ export class BossEntity extends MobEntity {
 
             const driftAngle = yaw + side * (HALF_PI + (Math.random() - 0.5) * 0.2);
 
-            const missile = new MissileEntity(EntityTypes.MISSILE_ENTITY, world, this, driftAngle, 'player');
+            const missile = new MobMissileEntity(EntityTypes.MISSILE_ENTITY, world, this, driftAngle);
             missile.color = '#ff7777';
             missile.setMaxLifeTick(400);
             missile.setTrackingSpeed(0.55);

@@ -1,10 +1,12 @@
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
-import {PI2} from "../utils/math/math.ts";
+import {PI2, wrapRadians} from "../utils/math/math.ts";
 import type {BaseWeapon} from "../item/weapon/BaseWeapon/BaseWeapon.ts";
+import {WorldConfig} from "../configs/WorldConfig.ts";
 
 export class AutoAim {
+    public static readonly FIRE_THRESHOLD = Math.PI / 90;
     private readonly owner: PlayerEntity;
     private currentTarget: MobEntity | null = null;
     private targetLockTime = 0;
@@ -28,6 +30,11 @@ export class AutoAim {
 
         const targetYaw = AutoAim.getLeadYaw(pos, mobPos, mobVel, bulletSpeed);
         this.owner.setClampYaw(targetYaw);
+
+        const currentYaw = this.owner.getYaw();
+        const yawDiff = Math.abs(wrapRadians(targetYaw - currentYaw));
+
+        WorldConfig.autoShoot = yawDiff <= AutoAim.FIRE_THRESHOLD;
     }
 
     private acquireTarget(mobs: Set<MobEntity>, pos: IVec) {

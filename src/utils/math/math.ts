@@ -21,6 +21,10 @@ export function randNormal(mean = 0, stdDev = 1) {
     return num * stdDev + mean;
 }
 
+export function shortUUID(): string {
+    return Math.random().toString(36).slice(2, 10);
+}
+
 export function collideEntityBox(a: Entity, b: Entity): boolean {
     const boxA = a.calculateBoundingBox();
     const boxB = b.calculateBoundingBox();
@@ -29,9 +33,22 @@ export function collideEntityBox(a: Entity, b: Entity): boolean {
 }
 
 export function collideEntityCircle(a: Entity, b: Entity) {
-    const aRadius = a.getEntityDimension().width;
-    const bRadius = b.getEntityDimension().width;
-    return dist2(a.getPositionRef, b.getPositionRef) < (aRadius + bRadius) ** 2;
+    const ax = a.getPositionRef.x, ay = a.getPositionRef.y;
+    const bx = b.getPositionRef.x, by = b.getPositionRef.y;
+
+    const dx = ax - bx;
+    const dy = ay - by;
+
+    const r = a.getWidth() + b.getWidth();
+    return dx * dx + dy * dy < r * r;
+}
+
+export function collideCircle(ax: number, ay: number, ar: number,
+                              bx: number, by: number, br: number) {
+    const dx = ax - bx;
+    const dy = ay - by;
+    const r = ar + br;
+    return dx * dx + dy * dy < r * r;
 }
 
 export function dist2(a: MutVec2, b: MutVec2) {
@@ -98,6 +115,12 @@ export function circleIntersectsAABB(
     return dx * dx + dy * dy <= r * r;
 }
 
+export function wrapRadians(angle: number) {
+    angle = angle % (Math.PI * 2);
+    if (angle > Math.PI) angle -= Math.PI * 2;
+    if (angle < -Math.PI) angle += Math.PI * 2;
+    return angle;
+}
 
 export const PI2 = Math.PI * 2;
 export const HALF_PI = Math.PI / 2;

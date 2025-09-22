@@ -31,7 +31,7 @@ export abstract class BaseWeapon extends Weapon {
         bullet.setVelocityByVec(vel);
         bullet.setYaw(offsetYaw);
 
-        const completeOffset = attacker.getEntityDimension().width / 2 + offset;
+        const completeOffset = attacker.getWidth() / 2 + offset;
         bullet.setPosition(
             pos.x + f * completeOffset,
             pos.y + g * completeOffset

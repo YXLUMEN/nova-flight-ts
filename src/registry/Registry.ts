@@ -61,8 +61,7 @@ export class Registry<T> {
     }
 
     public getEntryByValue(value: T): RegistryEntry<T> | null {
-        const entry = this.valueToEntry.get(value);
-        return entry !== undefined ? entry : null;
+        return this.valueToEntry.get(value) ?? null;
     }
 
     public getById(id: Identifier | null): T | null {

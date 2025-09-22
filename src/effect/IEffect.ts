@@ -1,4 +1,4 @@
-export interface Effect {
+export interface IEffect {
     isAlive(): boolean;
 
     tick(tickDelta: number): void;

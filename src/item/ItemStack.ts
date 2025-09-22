@@ -78,20 +78,28 @@ export class ItemStack {
         this.getItem().leftClick(world, user);
     }
 
+    public isAvailable(): boolean {
+        return this.getOrDefault(DataComponentTypes.ITEM_AVAILABLE, true);
+    }
+
+    public setAvailable(value: boolean): void {
+        this.set(DataComponentTypes.ITEM_AVAILABLE, value);
+    }
+
     public isDamageable() {
-        return this.has(DataComponentTypes.MAX_DAMAGE) && !this.has(DataComponentTypes.UNBREAKABLE) && this.has(DataComponentTypes.DAMAGE);
+        return this.has(DataComponentTypes.MAX_DURABILITY) && !this.has(DataComponentTypes.UNBREAKABLE) && this.has(DataComponentTypes.DURABILITY);
     }
 
     public getDamage(): number {
-        return clamp(this.components.getOrDefault(DataComponentTypes.DAMAGE, 0), 0, this.getMaxDamage());
+        return clamp(this.components.getOrDefault(DataComponentTypes.DURABILITY, 0), 0, this.getMaxDamage());
     }
 
     public setDamage(damage: number) {
-        this.components.set(DataComponentTypes.DAMAGE, clamp(damage, 0, this.getMaxCount()));
+        this.components.set(DataComponentTypes.DURABILITY, clamp(damage, 0, this.getMaxCount()));
     }
 
     public getMaxDamage(): number {
-        return this.components.getOrDefault(DataComponentTypes.MAX_DAMAGE, 0);
+        return this.components.getOrDefault(DataComponentTypes.MAX_DURABILITY, 0);
     }
 
     public damage(amount: number, breakCallback: (item: Item) => void): void {

@@ -12,9 +12,9 @@ import {ProjectileEntity} from "../../entity/projectile/ProjectileEntity.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
+import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 
 export class EMPWeapon extends SpecialWeapon {
-    public radius: number = 480;
     private duration = 600;
 
     public static applyEMPEffect(world: World, center: MutVec2, radius: number, duration: number): void {
@@ -29,12 +29,13 @@ export class EMPWeapon extends SpecialWeapon {
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         world.events.emit(EVENTS.EMP_BURST, {duration: this.duration});
+        const radius = stack.getOrDefault(DataComponentTypes.EFFECT_RANGE, 480);
 
         world.getEntities().forEach(entity => {
             if (entity instanceof ProjectileEntity) {
                 if (entity.owner instanceof MobEntity) entity.discard();
             } else if (entity instanceof MobEntity) {
-                if (!entity.isRemoved() && pointInCircleVec2(entity.getPositionRef, attacker.getPositionRef, this.radius)) {
+                if (!entity.isRemoved() && pointInCircleVec2(entity.getPositionRef, attacker.getPositionRef, radius)) {
                     entity.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, this.duration, 1), null);
                 }
             }
@@ -43,7 +44,7 @@ export class EMPWeapon extends SpecialWeapon {
         world.addEffect(new ScreenFlash(0.5, 0.18, '#5ec8ff'));
         world.addEffect(new EMPBurst(
             attacker.getPositionRef,
-            this.radius
+            radius
         ));
         world.playSound(SoundEvents.EMP_BURST);
 

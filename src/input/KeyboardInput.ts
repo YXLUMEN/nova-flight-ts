@@ -6,7 +6,7 @@ import type {IInput} from "./IInput.ts";
 export class KeyboardInput implements IInput {
     private readonly keys = new Set<string>();
     private readonly bindings = new Map<string, string[]>();
-    private readonly registryHandler: ((event: KeyboardEvent) => void)[] = [];
+    private readonly keyHandler = new Map<string, (event: KeyboardEvent) => void>();
     private prevKeys = new Set<string>();
 
     private pointer = MutVec2.zero();
@@ -46,12 +46,16 @@ export class KeyboardInput implements IInput {
         return keys ? this.wasComboPressed(...keys) : false;
     }
 
-    public onKeyDown(handler: (event: KeyboardEvent) => void): void {
-        this.registryHandler.push(handler);
+    public onKeyDown(name: string, handler: (event: KeyboardEvent) => void): void {
+        this.keyHandler.set(name, handler);
     }
 
-    public clearHandler(): void {
-        this.registryHandler.length = 0;
+    public delKeyDown(name: string): void {
+        this.keyHandler.delete(name);
+    }
+
+    public clearKeyHandler(): void {
+        this.keyHandler.clear();
     }
 
     public get getPointer(): MutVec2 {
@@ -62,7 +66,7 @@ export class KeyboardInput implements IInput {
         window.addEventListener("keydown", e => {
             e.preventDefault();
             this.keys.add(e.code);
-            for (const h of this.registryHandler) h(e);
+            for (const h of this.keyHandler.values()) h(e);
         });
         window.addEventListener("keyup", e => this.keys.delete(e.code));
         window.addEventListener("blur", () => this.keys.clear());

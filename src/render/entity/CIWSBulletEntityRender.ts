@@ -1,10 +1,9 @@
-import type {BulletEntity} from "../../entity/projectile/BulletEntity.ts";
 import type {EntityRenderer} from "./EntityRenderer.ts";
+import type {CIWSBulletEntity} from "../../entity/projectile/CIWSBulletEntity.ts";
 
-export class CIWSBulletEntityRender implements EntityRenderer<BulletEntity> {
-    public render(entity: BulletEntity, ctx: CanvasRenderingContext2D) {
+export class CIWSBulletEntityRender implements EntityRenderer<CIWSBulletEntity> {
+    public render(entity: CIWSBulletEntity, ctx: CanvasRenderingContext2D) {
         const {x, y} = entity.getPositionRef;
-        const radius = entity.getBoxRadius();
 
         ctx.save();
 
@@ -18,7 +17,7 @@ export class CIWSBulletEntityRender implements EntityRenderer<BulletEntity> {
         gradient.addColorStop(1, entity.color);
 
         ctx.strokeStyle = gradient;
-        ctx.lineWidth = radius * 1.2;
+        ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.moveTo(tailX, tailY);
         ctx.lineTo(x, y);

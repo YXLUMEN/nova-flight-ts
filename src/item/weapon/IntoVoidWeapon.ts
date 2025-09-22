@@ -76,7 +76,7 @@ export class IntoVoidWeapon extends SpecialWeapon {
         if (holder instanceof PlayerEntity && holder.techTree.isUnlocked('void_energy_extraction')) {
             const laser = Items.LASER_WEAPON as LaserWeapon;
             const stack = holder.weapons.get(laser);
-            if (stack) laser.instantCooldown(stack);
+            if (stack) stack.setAvailable(true);
         }
     }
 
@@ -151,9 +151,9 @@ export class IntoVoidWeapon extends SpecialWeapon {
         attacker.invulnerable = stack.getOrDefault(DataComponentTypes.ANY_BOOLEAN, false);
         stack.set(DataComponentTypes.ANY_BOOLEAN, false);
 
-        const box = attacker.getEntityDimension().width + stack.getOrDefault(DataComponentTypes.VOID_DAMAGE_RANGE, 32);
+        const box = attacker.getWidth() + stack.getOrDefault(DataComponentTypes.EFFECT_RANGE, 32);
         for (const mob of world.getLoadMobs()) {
-            if (mob.isRemoved() || !pointInCircleVec2(attacker.getPositionRef, mob.getPositionRef, box + mob.getEntityDimension().width)) continue;
+            if (mob.isRemoved() || !pointInCircleVec2(attacker.getPositionRef, mob.getPositionRef, box + mob.getWidth())) continue;
             if (mob instanceof BossEntity) continue;
             mob.onDeath(world.getDamageSources().void(attacker as PlayerEntity));
         }

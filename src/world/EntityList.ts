@@ -22,6 +22,10 @@ export class EntityList {
         }
     }
 
+    public getValues() {
+        return this.entities.values();
+    }
+
     public processRemovals(): void {
         for (const id of this.pendingRemoval) {
             this.entities.delete(id);

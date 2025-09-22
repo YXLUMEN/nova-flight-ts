@@ -2,6 +2,7 @@ import {RegistryManager} from "./registry/RegistryManager.ts";
 import {SoundSystem} from "./sound/SoundSystem.ts";
 import {readTextFile,} from "@tauri-apps/plugin-fs";
 import {resolveResource} from "@tauri-apps/api/path";
+import {AudioManager} from "./sound/AudioManager.ts";
 
 export class DataLoader {
     private static readonly DATA_MAP = new Map<string, any>();
@@ -13,6 +14,7 @@ export class DataLoader {
         this.DATA_MAP.set('tech-data', techData);
 
         await SoundSystem.loadSounds(manager);
+        await AudioManager.loadFiles(manager);
     }
 
 

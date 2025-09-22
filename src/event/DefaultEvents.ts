@@ -18,6 +18,9 @@ import type {Entity} from "../entity/Entity.ts";
 import {SpawnMarkerEntity} from "../entity/SpawnMarkerEntity.ts";
 import {STAGE2} from "../configs/StageConfig2.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
+import {AudioManager} from "../sound/AudioManager.ts";
+import {Audios} from "../sound/Audios.ts";
+import {STAGE} from "../configs/StageConfig.ts";
 
 
 export class DefaultEvents {
@@ -26,6 +29,7 @@ export class DefaultEvents {
         const player = world.player;
         if (!player) return;
         const techTree = player.techTree;
+        const guided = localStorage.getItem('guided') ?? false;
 
         eventBus.on(EVENTS.UNLOCK_TECH, (event) => {
             applyTech(world, event.id);
@@ -41,8 +45,8 @@ export class DefaultEvents {
             if (damageSource.isIn(DamageTypeTags.REPLY_LASER) && techTree.isUnlocked('energy_recovery')) {
                 const laser = Items.LASER_WEAPON as LaserWeapon;
                 const stack = player.weapons.get(laser);
-                if (stack) {
-                    if (!laser.getOverheated(stack)) laser.setCooldown(stack, laser.getCooldown(stack) - 25);
+                if (stack && stack.isAvailable()) {
+                    laser.setCooldown(stack, laser.getCooldown(stack) - 25);
                 }
             }
 
@@ -102,6 +106,8 @@ export class DefaultEvents {
         });
 
         eventBus.on(EVENTS.STAGE_ENTER, (event) => {
+            if (!guided) this.guide(event, player);
+
             if (event.name === 'P6' || event.name === 'mP3') {
                 if (BossEntity.hasBoss) return;
                 const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 64);
@@ -111,6 +117,7 @@ export class DefaultEvents {
                 mark.setPositionByVec(boss.getPositionRef);
                 world.spawnEntity(mark);
             }
+
             world.playSound(SoundEvents.PHASE_CHANGE);
         });
 
@@ -123,14 +130,105 @@ export class DefaultEvents {
         eventBus.on(EVENTS.ENTITY_LOCKED, (event) => {
             const missile = event.missile as MissileEntity;
             if (missile.isRemoved() || !missile.getTarget()?.isPlayer()) return;
-            player.lockedCount++;
+            player.lockedMissile.add(missile);
         });
 
         eventBus.on(EVENTS.ENTITY_UNLOCKED, (event) => {
             const target = event.lastTarget as Entity | null;
-            if (target && target.isPlayer() && player.lockedCount > 0) {
-                player.lockedCount--;
+            if (target && target.isPlayer() && player.lockedMissile.size > 0) {
+                player.lockedMissile.delete(event.missile);
             }
         });
+    }
+
+    private static guide(event: any, player: PlayerEntity) {
+        const name: string = event.name as string;
+        const world = player.getWorld();
+
+        if (name === 'g_move') {
+            alert('w/s/a/d 或 方向键 移动');
+            AudioManager.setVolume(0.5);
+
+            let time = 0;
+            const ctrl = new AbortController();
+            window.addEventListener('keydown', () => {
+                if (player.getVelocityRef.length() > 0) time++;
+                if (time > 30) {
+                    world.nextPhase();
+                    ctrl.abort();
+                }
+            }, {signal: ctrl.signal});
+            return;
+        }
+
+        if (name === 'g_fire') {
+            alert('空格/鼠标左键 开火, 或者按下 T 键持续开火');
+
+            const ctrl = new AbortController();
+            window.addEventListener('keydown', event => {
+                if (ctrl.signal.aborted) return;
+                const code = event.code;
+                if (code === 'Space') {
+                    world.schedule(1, () => {
+                        world.nextPhase();
+                    });
+                    ctrl.abort();
+                }
+            }, {signal: ctrl.signal});
+            return;
+        }
+
+        if (name === 'g_enemy') {
+            alert('小心, 敌人来袭!');
+            return;
+        }
+
+        if (name === 'g_tech') {
+            AudioManager.playAudio(Audios.SPACE_WALK);
+
+            alert('敌人派出了精英单位');
+            world.getEntities().forEach(entity => entity.discard());
+            world.schedule(2, () => {
+                alert('按下 G 打开科技界面, 选择一个升级路径');
+                alert('我们先从 "炮艇专精" 开始, 并研究至 "钢芯穿甲弹"');
+            });
+            return;
+        }
+
+        if (name === 'g_boss') {
+            AudioManager.playAudio(Audios.DELTA_FORCE_MAIN);
+            AudioManager.setVolume(1);
+            AudioManager.leap(60);
+
+            alert('敌方出动重型单位, 尽可能解锁科技!');
+            world.getEntities().forEach(entity => entity.discard());
+
+            player.addPhaseScore(8192);
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.HEALTH_BOOST, -1, 255), null);
+            player.setHealth(player.getMaxHealth());
+
+            const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 4096);
+            boss.setPosition(World.W / 2, 64);
+            boss.invulnerable = true;
+
+            const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
+            mark.setPositionByVec(boss.getPositionRef);
+            world.spawnEntity(mark);
+
+            const ctrl = new AbortController();
+            AudioManager.AUDIO_PLAYER.addEventListener('timeupdate', event => {
+                const currentTime = (event.target as HTMLAudioElement).currentTime;
+                if (106 - currentTime < 0.01) {
+                    boss.onDeath(world.getDamageSources().removed());
+                    ctrl.abort();
+                    world.schedule(5, () => {
+                        world.reset();
+                        world.init();
+                        world.setStage(STAGE);
+                    });
+                    localStorage.setItem('guided', 'true');
+                }
+            }, {signal: ctrl.signal});
+        }
     }
 }

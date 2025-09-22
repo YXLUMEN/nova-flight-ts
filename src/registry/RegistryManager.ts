@@ -15,6 +15,7 @@ export class RegistryManager {
 
     public async registerAll(): Promise<void> {
         this.registers.set(RegistryKeys.SOUND_EVENT, Registries.SOUND_EVENT);
+        this.registers.set(RegistryKeys.AUDIOS, Registries.AUDIOS);
 
         const damage = new Registry<DamageType>(RegistryKey.ofRegistry(Identifier.ofVanilla("damage_type")));
         damage.add(DamageTypes.LASER, 'laser', [DamageTypeTags.REPLY_LASER]);

@@ -1,7 +1,7 @@
-import type {Effect} from "./Effect.ts";
+import type {IEffect} from "./IEffect.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 
-export class RadialRing implements Effect {
+export class RadialRing implements IEffect {
     public alive = true;
 
     private readonly center: Vec2;

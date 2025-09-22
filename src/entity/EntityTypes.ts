@@ -68,7 +68,7 @@ export class EntityTypes {
     );
     public static readonly CIWS_BULLET_ENTITY = EntityType.register("ciws_bullet",
         EntityType.Builder.create(CIWSBulletEntity)
-            .setDimensions(2, 2)
+            .setDimensions(4, 4)
     );
 
     public static init() {

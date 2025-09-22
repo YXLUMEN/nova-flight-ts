@@ -4,7 +4,7 @@ import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {Camera} from "../render/Camera.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
-import type {Effect} from "../effect/Effect.ts";
+import type {IEffect} from "../effect/IEffect.ts";
 import {ScreenFlash} from "../effect/ScreenFlash.ts";
 import {StarField} from "../effect/StarField.ts";
 import {UI} from "../render/ui/UI.ts";
@@ -16,7 +16,7 @@ import {ParticlePool} from "../effect/ParticlePool.ts";
 import type {Schedule, TimerTask} from "../apis/ITimer.ts";
 import {DamageSources} from "../entity/damage/DamageSources.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
-import {collideEntityBox, collideEntityCircle} from "../utils/math/math.ts";
+import {collideEntityCircle, HALF_PI} from "../utils/math/math.ts";
 import {defaultLayers} from "../configs/StarfieldConfig.ts";
 import {EntityRenderers} from "../render/entity/EntityRenderers.ts";
 import {DefaultEvents} from "../event/DefaultEvents.ts";
@@ -32,8 +32,14 @@ import {SpawnMarkerEntity} from "../entity/SpawnMarkerEntity.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import {AtomicInteger} from "../utils/math/AtomicInteger.ts";
+import {CIWSBulletEntity} from "../entity/projectile/CIWSBulletEntity.ts";
+import {NbtCompound} from "../nbt/NbtCompound.ts";
+import type {UnlistenFn} from "@tauri-apps/api/event";
+import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
+import {GuideStage} from "../configs/GuideStage.ts";
+import {AudioManager} from "../sound/AudioManager.ts";
 
-export class World {
+export class World implements NbtSerializable {
     public static readonly globalSound = new SoundSystem();
     private static worldInstance: World;
     private static canvas = document.getElementById("game") as HTMLCanvasElement;
@@ -42,19 +48,20 @@ export class World {
     public static W = 800;
     public static H = 600;
 
-    public readonly camera: Camera = new Camera();
     public readonly events: GeneralEventBus<IEvents> = GeneralEventBus.getEventBus();
+    private readonly listener: Promise<UnlistenFn>[] = [];
+    private readonly ctrl = new AbortController();
+
     public empBurst: number = 0
 
     private readonly registryManager: RegistryManager;
+    public readonly camera: Camera = new Camera();
     private readonly ui: UI = new UI(this);
     private readonly input = new KeyboardInput(World.canvas);
     private readonly worldSound = new SoundSystem();
 
     private readonly damageSources: DamageSources;
     // ticking
-    private last = 0;
-    private accumulator = 0;
     private over = false;
     private freeze = false;
     private ticking = true;
@@ -65,7 +72,7 @@ export class World {
     private timers: TimerTask[] = [];
     // game
     private stage = STAGE;
-    private effects: Effect[] = [];
+    private effects: IEffect[] = [];
     private readonly particlePool: ParticlePool = new ParticlePool(256);
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
     // entity
@@ -79,6 +86,8 @@ export class World {
         this.damageSources = new DamageSources(registryManager);
 
         World.resize();
+        this.ui.setWorldSize(World.W, World.H);
+
         this.player = new PlayerEntity(this, this.input);
         this.player?.setPosition(World.W / 2, World.H);
 
@@ -86,6 +95,10 @@ export class World {
         this.registryEvents();
 
         this.starField.init();
+
+        if (!localStorage.getItem('guided')) {
+            this.setStage(GuideStage);
+        }
     }
 
     public static createWorld(registryManager: RegistryManager): World {
@@ -113,27 +126,53 @@ export class World {
         this.H = Math.floor(rect.height);
 
         this.ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        World.instance?.ui.setWorldSize(this.W, this.H);
     }
 
-    public start(): void {
-        World.globalSound.playSound(SoundEvents.UI_APPLY);
-        this.tick(0);
+    public destroy(): void {
+        this.reset();
+
+        this.input.clearKeyHandler();
+        this.listener.forEach(async (unListen) => {
+            const fn = await unListen;
+            fn();
+        });
+        this.ctrl.abort();
     }
 
-    private tick(ts: number) {
-        const tickDelta = Math.min(0.05, (ts - this.last) / 1000 || 0);
-        this.last = ts;
-        this.accumulator += tickDelta;
+    public reset(): void {
+        this.timers.length = 0;
+        this.time = 0;
+        this.nextTimerId.reset();
+        this.stage.reset();
 
-        while (this.accumulator >= WorldConfig.mbps) {
-            if (this.ticking) this.tickWorld(WorldConfig.mbps);
-            this.accumulator -= WorldConfig.mbps;
-        }
-        this.render();
-        requestAnimationFrame(t => this.tick(t));
+        this.player!.discard();
+        this.loadedMobs.clear();
+
+        this.entities.forEach(entity => entity.discard());
+        this.entities.clear();
+
+        this.effects.forEach(effect => effect.kill());
+        this.effects.length = 0;
+
+        this.worldSound.stopAll();
+        World.globalSound.stopAll();
     }
 
-    private tickWorld(tickDelta: number) {
+    public init(): void {
+        this.player = new PlayerEntity(this, this.input);
+        this.player.setPosition(World.W / 2, World.H);
+        this.player.setVelocity(0, -24);
+
+        this.over = false;
+        this.rendering = true;
+
+        this.starField.init();
+    }
+
+    public tickWorld(tickDelta: number) {
+        if (!this.ticking) return;
+
         this.ui.tick(tickDelta);
 
         const dt = this.freeze ? 0 : tickDelta;
@@ -180,19 +219,45 @@ export class World {
 
         // 敌方碰撞
         if (entity instanceof MobEntity) {
-            if (player.invulnerable || WorldConfig.devMode || !collideEntityBox(player, entity)) return;
+            if (player.invulnerable || WorldConfig.devMode || !collideEntityCircle(player, entity)) return;
             entity.attack(player);
             return;
         }
 
         // 弹射物碰撞
         if (entity instanceof ProjectileEntity) {
+            // 敌方命中
             if (entity.owner instanceof MobEntity) {
-                if (player.invulnerable || WorldConfig.devMode || !collideEntityBox(player, entity)) return;
+                if (player.invulnerable || WorldConfig.devMode || !collideEntityCircle(player, entity)) return;
 
                 entity.onEntityHit(player);
-                if (this.over) return;
+                return;
             }
+
+            // 近防炮命中
+            if (entity instanceof CIWSBulletEntity) {
+                for (const entity2 of this.entities.getValues()) {
+                    if (entity2 === entity.owner) continue;
+                    // 抵消弹射物
+                    if (entity2 instanceof ProjectileEntity) {
+                        if (entity2.invulnerable || entity2.owner === entity.owner) continue;
+                        if (collideEntityCircle(entity, entity2)) {
+                            entity.onEntityHit(entity2);
+                            entity2.onEntityHit(entity);
+                            break;
+                        }
+                        continue;
+                    }
+                    // 正常命中
+                    if (collideEntityCircle(entity, entity2)) {
+                        entity.onEntityHit(entity2);
+                        break;
+                    }
+                }
+                return;
+            }
+
+            // 玩家命中
             for (const mob of this.loadedMobs) {
                 if (collideEntityCircle(entity, mob)) {
                     entity.onEntityHit(mob);
@@ -210,38 +275,6 @@ export class World {
         return this.over;
     }
 
-    public reset(): void {
-        this.timers.length = 0;
-        this.time = 0;
-        this.nextTimerId.reset();
-        this.stage.reset();
-
-        this.player!.discard();
-        this.loadedMobs.clear();
-
-        this.entities.forEach(entity => entity.discard());
-        this.entities.clear();
-
-        this.effects.forEach(effect => effect.kill());
-        this.effects.length = 0;
-
-        this.worldSound.stopAll();
-        World.globalSound.stopAll();
-
-        // 初始化
-        this.player = new PlayerEntity(this, this.input);
-        this.player.setPosition(World.W / 2, World.H);
-        this.player.setVelocity(0, -24);
-
-        this.input.onKeyDown(this.registryInput.bind(this));
-
-        this.over = false;
-        this.rendering = true;
-        this.setTicking(true);
-
-        this.starField.init();
-    }
-
     public togglePause(): void {
         if (this.over) return;
         this.setTicking(!this.ticking);
@@ -254,7 +287,6 @@ export class World {
 
     public gameOver() {
         this.over = true;
-        this.input.clearHandler();
         this.effects.push(new ScreenFlash(1, 0.25, '#ff0000'));
         this.schedule(1, () => {
             this.setTicking(false);
@@ -265,13 +297,14 @@ export class World {
                 if (code === "Enter" && this.over && !this.ticking && !this.rendering) {
                     ctrl.abort();
                     this.reset();
+                    this.init();
                     return;
                 }
             }, {signal: ctrl.signal});
         });
     }
 
-    public addEffect(effect: Effect) {
+    public addEffect(effect: IEffect) {
         this.effects.push(effect);
     }
 
@@ -374,9 +407,11 @@ export class World {
 
     public setTicking(ticking = true): void {
         if (ticking) {
+            AudioManager.resume();
             World.globalSound.playSound(SoundEvents.UI_PAGE_SWITCH);
             this.worldSound.resumeAll().catch(console.error);
         } else {
+            AudioManager.pause();
             World.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
             this.worldSound.pauseAll().catch(console.error);
         }
@@ -393,6 +428,14 @@ export class World {
 
     public stopLoopSound(event: SoundEvent): boolean {
         return this.worldSound.stopLoopSound(event);
+    }
+
+    public nextPhase() {
+        this.stage.nextPhase();
+    }
+
+    public pausePhase() {
+        this.stage.pause();
     }
 
     public render() {
@@ -422,6 +465,22 @@ export class World {
         // 玩家
         if (!this.over && this.player) {
             EntityRenderers.getRenderer(this.player).render(this.player, ctx);
+
+            if (this.player.lockedMissile.size > 0) {
+                for (const missile of this.player.missilePos) {
+                    ctx.save();
+                    ctx.translate(missile.x, missile.y);
+                    ctx.rotate(missile.angle + HALF_PI);
+                    ctx.beginPath();
+                    ctx.moveTo(0, -10);
+                    ctx.lineTo(6, 8);
+                    ctx.lineTo(-6, 8);
+                    ctx.closePath();
+                    ctx.fillStyle = `#FF5050`;
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
         }
 
         ctx.restore();
@@ -578,16 +637,20 @@ export class World {
     }
 
     private registryListeners() {
-        mainWindow.listen('tauri://blur', () => this.setTicking(false)).then();
-        mainWindow.listen('tauri://resize', async () => {
+        const onBlur = mainWindow.listen('tauri://blur', () => this.setTicking(false));
+        const onResize = mainWindow.listen('tauri://resize', async () => {
             this.rendering = !await mainWindow.isMinimized();
-        }).then();
+        });
+        this.listener.push(onBlur, onResize);
 
         // 实际可视页面变化
-        window.addEventListener("resize", () => World.resize());
-        window.addEventListener('contextmenu', event => event.preventDefault());
+        window.addEventListener("resize", () => World.resize(), {signal: this.ctrl.signal});
 
-        this.input.onKeyDown(this.registryInput.bind(this));
+        World.canvas.addEventListener('click', event => {
+            if (!this.isTicking) this.ui.pauseOverlay.handleClick(event.offsetX, event.offsetY);
+        }, {signal: this.ctrl.signal});
+
+        this.input.onKeyDown('default_input', this.registryInput.bind(this));
     }
 
     private devMode(code: string) {
@@ -617,11 +680,43 @@ export class World {
                 WorldConfig.enableCameraOffset = !WorldConfig.enableCameraOffset;
                 this.camera.cameraOffset.set(0, 0);
                 break;
-            case 'KeyP':
+            case 'KeyS':
+                this.saveAll();
                 this.player?.discard();
                 this.gameOver();
                 this.reset();
+                this.init();
+                break;
+            case 'KeyP':
+                localStorage.removeItem('guided');
                 break;
         }
+    }
+
+    public writeNBT(root: NbtCompound): NbtCompound {
+        const playerNbt = new NbtCompound();
+        this.player!.writeNBT(playerNbt);
+        root.putCompound('Player', playerNbt);
+
+        const entityNbt = new NbtCompound();
+        this.entities.forEach(entity => {
+            const nbt = new NbtCompound();
+            entity.writeNBT(nbt);
+            entityNbt.putCompound(entity.getUuid(), nbt);
+        });
+        root.putCompound('Entities', entityNbt);
+        return root;
+    }
+
+    public readNBT(nbt: NbtCompound) {
+        const playerNbt = nbt.getCompound('Player');
+        if (playerNbt) this.player!.readNBT(playerNbt);
+        console.log(playerNbt);
+    }
+
+    public saveAll(): NbtCompound {
+        const root = new NbtCompound();
+        this.writeNBT(root);
+        return root;
     }
 }

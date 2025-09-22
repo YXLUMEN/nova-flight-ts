@@ -20,13 +20,17 @@ import type {Item} from "../../item/Item.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
 import {Items} from "../../item/items.ts";
 import type {EMPWeapon} from "../../item/weapon/EMPWeapon.ts";
+import type {MissileEntity} from "../projectile/MissileEntity.ts";
+import {type NbtCompound} from "../../nbt/NbtCompound.ts";
 
 export class PlayerEntity extends LivingEntity {
     public readonly input: KeyboardInput;
     public readonly techTree: TechTree;
 
     public onDamageExplosionRadius = 320;
-    public lockedCount = 0;
+
+    public lockedMissile = new Set<MissileEntity>();
+    public missilePos: { x: number, y: number, angle: number }[] = [];
 
     public readonly weapons = new Map<Item, ItemStack>();
     public readonly baseWeapons: BaseWeapon[] = [];
@@ -36,7 +40,7 @@ export class PlayerEntity extends LivingEntity {
     private phaseScore: number;
     private score: number = 0;
     private autoAimEnable: boolean = false;
-    public wasFire = false
+    private wasActive = false;
     public steeringGear: boolean = false;
 
     public autoAim: AutoAim | null = null;
@@ -74,10 +78,10 @@ export class PlayerEntity extends LivingEntity {
         if (this.input.isDown("ArrowRight", "KeyD")) dx += 1;
         if (this.input.isDown("ArrowUp", "KeyW")) dy -= 1;
         if (this.input.isDown("ArrowDown", "KeyS")) dy += 1;
-        if (this.input.wasPressed('AltRight') && this.autoAim) {
+        if (this.input.wasPressed('AltLeft') && this.autoAim) {
             this.autoAimEnable = !this.autoAimEnable;
             this.autoAim.setTarget(null);
-            if (this.autoAimEnable) WorldConfig.autoShoot = false;
+            WorldConfig.autoShoot = false;
         }
 
         if (dx !== 0 || dy !== 0) {
@@ -99,26 +103,42 @@ export class PlayerEntity extends LivingEntity {
             ), 0.157075);
         }
 
+        // 锁定
+        this.missilePos.length = 0;
+        if (this.lockedMissile.size > 0) {
+            for (const missile of this.lockedMissile) {
+                const dx = missile.getPositionRef.x - posRef.x;
+                const dy = missile.getPositionRef.y - posRef.y;
+                const angle = Math.atan2(dy, dx);
+                const arrowX = posRef.x + Math.cos(angle) * 64;
+                const arrowY = posRef.y + Math.sin(angle) * 64;
+                this.missilePos.push({x: arrowX, y: arrowY, angle});
+            }
+        }
+
         if (this.input.wasPressed('KeyR')) {
             this.switchWeapon();
             return;
         }
 
-        // 射击
+        this.handlerFire(world);
+    }
+
+    private handlerFire(world: World) {
         const baseWeapon = this.baseWeapons[this.currentBaseIndex];
         const stack = this.weapons.get(baseWeapon)!;
-        const canFire = baseWeapon.canFire(stack);
         const fire = this.input.isDown("Space") || WorldConfig.autoShoot;
+        const active = stack.isAvailable() && fire;
 
-        if (fire !== this.wasFire) {
-            if (!this.wasFire) {
+        if (active !== this.wasActive) {
+            if (!this.wasActive) {
                 baseWeapon.onStartFire(world, stack);
             } else {
                 baseWeapon.onEndFire(world, stack);
             }
-            this.wasFire = fire;
+            this.wasActive = active;
         }
-        if (fire && canFire) {
+        if (active && baseWeapon.canFire(stack)) {
             baseWeapon.tryFire(stack, world, this);
         }
 
@@ -139,7 +159,7 @@ export class PlayerEntity extends LivingEntity {
         const stack = this.getCurrentItemStack();
         const current = stack.getItem() as BaseWeapon;
         current.onEndFire(this.getWorld(), stack);
-        this.wasFire = false;
+        this.wasActive = false;
         this.currentBaseIndex = (this.currentBaseIndex + 1) % this.baseWeapons.length;
     }
 
@@ -200,6 +220,8 @@ export class PlayerEntity extends LivingEntity {
         this.techTree.destroy();
         this.weapons.clear();
         this.baseWeapons.length = 0;
+        this.lockedMissile.clear();
+        this.missilePos.length = 0;
     }
 
     public override isPlayer() {
@@ -244,6 +266,23 @@ export class PlayerEntity extends LivingEntity {
         if (remain < 0) return false;
         this.setScore(remain);
         return true;
+    }
+
+    public override writeNBT(nbt: NbtCompound): NbtCompound {
+        super.writeNBT(nbt);
+        nbt.putInt('Score', this.score);
+        nbt.putInt('PhaseScore', this.phaseScore);
+        this.techTree.writeNBT(nbt);
+
+        return nbt
+    }
+
+    public override readNBT(nbt: NbtCompound) {
+        super.readNBT(nbt);
+        this.setScore(nbt.getInt('Score'));
+        this.setPhaseScore(nbt.getInt('PhaseScore'));
+
+        this.techTree.readNBT(nbt);
     }
 
     public onDataTrackerUpdate(_entries: DataEntry<any>): void {

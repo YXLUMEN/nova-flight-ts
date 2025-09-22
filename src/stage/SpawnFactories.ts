@@ -139,7 +139,7 @@ function spawnFormation(configs: spawnConfig<any>[]): MobFactory {
         for (const config of configs) {
             const mob = config.type.create(World.instance, ...config.args) as MobEntity;
             mob.setPosition(x, -30 + gap);
-            gap += -16 - mob.getEntityDimension().height;
+            gap += -16 - mob.getHeight();
             config.init?.(mob, ctx);
             arr.push(mob);
         }

@@ -53,10 +53,10 @@ export class Item {
             return this.component(DataComponentTypes.MAX_STACK_SIZE, maxCount);
         }
 
-        public maxDamage(maxDamage: number): this {
-            this.component(DataComponentTypes.MAX_DAMAGE, maxDamage);
+        public maxDurability(maxDamage: number): this {
+            this.component(DataComponentTypes.MAX_DURABILITY, maxDamage);
             this.component(DataComponentTypes.MAX_STACK_SIZE, 1);
-            return this.component(DataComponentTypes.DAMAGE, 0);
+            return this.component(DataComponentTypes.DURABILITY, 0);
         }
 
         public attackDamage(damage: number): this {
@@ -81,6 +81,7 @@ export class Item {
             if (this.components === null) {
                 const com = new ComponentMap();
                 com.set(DataComponentTypes.MAX_STACK_SIZE, 1);
+                com.set(DataComponentTypes.ITEM_AVAILABLE, true);
                 this.components = com;
             }
             return this.components;
@@ -88,7 +89,7 @@ export class Item {
 
         public getValidatedComponents(): ComponentMap {
             const componentMap = this.getComponents();
-            if (componentMap.has(DataComponentTypes.DAMAGE) &&
+            if (componentMap.has(DataComponentTypes.DURABILITY) &&
                 componentMap.getOrDefault(DataComponentTypes.MAX_STACK_SIZE, 1) > 1) {
                 throw Error("Item cannot have both durability and be stackable");
             }

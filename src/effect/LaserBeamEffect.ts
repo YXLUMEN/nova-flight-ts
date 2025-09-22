@@ -1,7 +1,7 @@
-import type {Effect} from "./Effect.ts";
+import type {IEffect} from "./IEffect.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 
-export class LaserBeamEffect implements Effect {
+export class LaserBeamEffect implements IEffect {
     public alive = true;
 
     private readonly color: string;

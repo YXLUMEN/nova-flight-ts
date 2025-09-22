@@ -12,8 +12,6 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
     public color = "#8cf5ff";
     public edgeColor = '';
 
-    protected boxRadius: number = this.getEntityDimension().width;
-
     public constructor(type: EntityType<ProjectileEntity>, world: World, owner: Entity | null, damage: number) {
         super(type, world);
 
@@ -42,10 +40,6 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
 
     public getOwner(): Entity | null {
         return this.owner;
-    }
-
-    public getBoxRadius() {
-        return this.boxRadius;
     }
 
     public onDataTrackerUpdate(_entries: DataEntry<any>): void {

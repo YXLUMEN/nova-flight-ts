@@ -27,8 +27,8 @@ export class Camera {
         height: World.H
     };
 
-    private deadZoneRadius = 60;
-    private followSpeed = 2400;
+    private deadZoneRadius = 40;
+    private followSpeed = 2000;
     private smoothing = 20;
     private friction = 12;
 

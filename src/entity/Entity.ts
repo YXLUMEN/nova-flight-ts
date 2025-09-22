@@ -13,16 +13,19 @@ import {EVENTS} from "../apis/IEvents.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {Box} from "../utils/math/Box.ts";
 import type {Comparable} from "../utils/collection/HashMap.ts";
-import {clamp} from "../utils/math/math.ts";
+import {clamp, shortUUID} from "../utils/math/math.ts";
+import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
+import type {NbtCompound} from "../nbt/NbtCompound.ts";
 
 
-export abstract class Entity implements DataTracked, Comparable {
+export abstract class Entity implements DataTracked, Comparable, NbtSerializable {
     // 除了全局EntityList, 禁止使用
     public static readonly CURRENT_ID = new AtomicInteger();
 
     public invulnerable: boolean = false;
 
     protected readonly dataTracker: DataTracker;
+    private uuid = shortUUID();
     private readonly id: number = Entity.CURRENT_ID.incrementAndGet();
     private readonly normalTags: Set<string> = new Set<string>();
 
@@ -57,6 +60,14 @@ export abstract class Entity implements DataTracked, Comparable {
 
     public getId(): number {
         return this.id;
+    }
+
+    public setUuid(uuid: string): void {
+        this.uuid = uuid;
+    }
+
+    public getUuid(): string {
+        return this.uuid;
     }
 
     public isPlayer() {
@@ -134,8 +145,12 @@ export abstract class Entity implements DataTracked, Comparable {
         this.yaw += delta;
     }
 
-    public getEntityDimension(): EntityDimensions {
-        return this.dimensions;
+    public getWidth(): number {
+        return this.dimensions.width;
+    }
+
+    public getHeight(): number {
+        return this.dimensions.height;
     }
 
     public calculateBoundingBox(): Box {
@@ -229,6 +244,52 @@ export abstract class Entity implements DataTracked, Comparable {
 
     public getYaw(): number {
         return this.yaw
+    }
+
+    public writeNBT(nbt: NbtCompound): NbtCompound {
+        try {
+            const pos = this.pos;
+            nbt.putNumberArray('Pos', pos.x, pos.y);
+
+            const velocity = this.velocity;
+            nbt.putNumberArray('Velocity', velocity.x, velocity.y);
+            nbt.putDouble('Yaw', this.yaw);
+            nbt.putBoolean('Invulnerable', this.invulnerable);
+            nbt.putString('UUID', this.uuid);
+
+            if (this.normalTags.size > 0) {
+                nbt.putStringArray('Tags', ...this.normalTags);
+            }
+
+            return nbt;
+        } catch (err) {
+            console.error(`Error when write Entity NBT: ${err}`);
+            throw err;
+        }
+    }
+
+    public readNBT(nbt: NbtCompound): void {
+        try {
+            const posNbt = nbt.getNumberArray('Pos');
+            this.setPosition(posNbt[0], posNbt[1]);
+
+            const velocity = nbt.getNumberArray('Velocity');
+            this.setVelocity(velocity[0], velocity[1]);
+            this.setYaw(nbt.getDouble('Yaw'));
+            this.invulnerable = nbt.getBoolean('Invulnerable');
+            this.uuid = nbt.getString('UUID');
+
+            const tags = nbt.getStringArray('Tags');
+            if (tags.length > 0) {
+                this.normalTags.clear();
+                for (const tag of tags) {
+                    this.normalTags.add(tag);
+                }
+            }
+        } catch (err) {
+            console.error(`Error when readNBT: ${err}`);
+            throw err;
+        }
     }
 
     public abstract onDataTrackerUpdate(entries: DataEntry<any>): void;

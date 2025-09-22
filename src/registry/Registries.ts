@@ -15,6 +15,8 @@ export class Registries {
     });
     public static readonly SOUND_EVENT = this.simpleCreate(RegistryKeys.SOUND_EVENT, () => {
     });
+    public static readonly AUDIOS = this.simpleCreate(RegistryKeys.AUDIOS, () => {
+    });
     public static readonly GAME_EVENT = this.simpleCreate(RegistryKeys.GAME_EVENT, () => {
     });
     public static readonly ITEM = this.simpleCreate(RegistryKeys.ITEM, () => {

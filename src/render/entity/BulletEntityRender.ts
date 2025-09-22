@@ -5,7 +5,7 @@ import {PI2} from "../../utils/math/math.ts";
 export class BulletEntityRender implements EntityRenderer<BulletEntity> {
     public render(entity: BulletEntity, ctx: CanvasRenderingContext2D) {
         const {x, y} = entity.getPositionRef;
-        const radius = entity.getBoxRadius();
+        const radius = entity.getWidth();
 
         ctx.save();
         ctx.fillStyle = entity.color;

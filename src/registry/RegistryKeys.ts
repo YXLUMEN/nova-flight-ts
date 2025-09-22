@@ -16,6 +16,7 @@ export class RegistryKeys {
     public static readonly ENTITY_TYPE: RegistryKey<Registry<EntityType<any>>> = this.of("entity_type");
     public static readonly ATTRIBUTE: RegistryKey<Registry<EntityAttribute>> = this.of("attribute");
     public static readonly SOUND_EVENT: RegistryKey<Registry<SoundEvent>> = this.of("sound_event");
+    public static readonly AUDIOS: RegistryKey<Registry<SoundEvent>> = this.of("audios");
     public static readonly GAME_EVENT: RegistryKey<Registry<GameEvent>> = this.of("game_event");
     public static readonly ITEM: RegistryKey<Registry<Item>> = this.of("item");
     public static readonly DATA_COMPONENT_TYPE: RegistryKey<Registry<ComponentType<any>>> = this.of("data_component_type");

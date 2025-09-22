@@ -1,7 +1,7 @@
-import type {Effect} from "./Effect.ts";
+import type {IEffect} from "./IEffect.ts";
 import {World} from "../world/World.ts";
 
-export class ScreenFlash implements Effect {
+export class ScreenFlash implements IEffect {
     public alive = true;
     public readonly life: number;
     public readonly maxAlpha: number;

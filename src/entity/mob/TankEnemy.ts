@@ -26,9 +26,15 @@ export class TankEnemy extends MobEntity {
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         const bypass = damageSource.isIn(DamageTypeTags.BYPASSES_INVULNERABLE);
-        if (this.damageCooldown > 0 && !bypass) return false;
+        if (!bypass) {
+            if (this.damageCooldown > 0) {
+                damage *= 1 - (this.damageCooldown / 8) * 0.8;
+            }
 
-        if (!bypass) damage = Math.min(8, damage);
+            // 限制单次最大伤害
+            damage = Math.min(8, damage);
+        }
+
         if (super.takeDamage(damageSource, damage)) {
             this.damageCooldown = 8;
             return true;

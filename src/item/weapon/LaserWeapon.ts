@@ -19,14 +19,14 @@ export class LaserWeapon extends SpecialWeapon {
     private readonly width = 6;            // 宽度
 
     public override tryFire(stack: ItemStack, world: World, _attacker: Entity): void {
-        this.setActive(stack, this.getActive(stack) ? false : !this.getOverheated(stack));
+        this.setActive(stack, this.getActive(stack) ? false : stack.isAvailable());
 
         if (this.getActive(stack)) this.onStartFire(world);
-        if (!this.getActive(stack) && !this.getOverheated(stack)) this.onEndFire(world);
+        if (!this.getActive(stack) && stack.isAvailable()) this.onEndFire(world);
     }
 
     public override canFire(stack: ItemStack): boolean {
-        return !this.getOverheated(stack);
+        return stack.isAvailable();
     }
 
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity): void {
@@ -46,10 +46,10 @@ export class LaserWeapon extends SpecialWeapon {
         if (heatLeft > 120) stack.set(DataComponentTypes.ANY_BOOLEAN, true);
 
         // 触发过热: 立即停火并锁定
-        if (!this.getOverheated(stack)) {
+        if (stack.isAvailable()) {
             if (heat >= maxHeat - 1e-6) {
                 this.setHeat(stack, maxHeat);
-                this.setOverheat(stack, true);
+                stack.setAvailable(false);
                 this.setActive(stack, false);
                 const beamFx = id2EffectMap.get(holder.getId());
                 if (beamFx) {
@@ -65,9 +65,9 @@ export class LaserWeapon extends SpecialWeapon {
         }
 
         // 过热解锁: 必须完全冷却到 0
-        if (this.getOverheated(stack) && this.getHeat(stack) <= 0) {
+        if (!stack.isAvailable() && this.getHeat(stack) <= 0) {
             this.setHeat(stack, 0);
-            this.setOverheat(stack, false);
+            stack.setAvailable(true);
             world.playSound(SoundEvents.WEAPON_READY);
         }
 
@@ -94,7 +94,7 @@ export class LaserWeapon extends SpecialWeapon {
             if (mob.isRemoved() ||
                 !lineCircleHit(
                     start.x, start.y, end.x, end.y,
-                    mob.getPositionRef.x, mob.getPositionRef.y, mob.getEntityDimension().width)) continue;
+                    mob.getPositionRef.x, mob.getPositionRef.y, mob.getWidth())) continue;
 
             const damage = Math.max(1, Math.round(stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1) | 0));
             mob.takeDamage(world.getDamageSources().laser(holder), damage);
@@ -122,10 +122,6 @@ export class LaserWeapon extends SpecialWeapon {
         }
     }
 
-    public instantCooldown(stack: ItemStack) {
-        this.setOverheat(stack, false);
-    }
-
     public override isReady(): boolean {
         return false;
     }
@@ -151,7 +147,7 @@ export class LaserWeapon extends SpecialWeapon {
     }
 
     public override getUiColor(stack: ItemStack): string {
-        return this.getOverheated(stack) ? LaserWeapon.OVERHEAT_COLOR : LaserWeapon.COLOR;
+        return stack.isAvailable() ? LaserWeapon.COLOR : LaserWeapon.OVERHEAT_COLOR;
     }
 
     public setActive(stack: ItemStack, active: boolean): void {
@@ -192,13 +188,5 @@ export class LaserWeapon extends SpecialWeapon {
 
     public setCoolRate(stack: ItemStack, value: number) {
         stack.set(DataComponentTypes.COOLDOWN_RATE, value);
-    }
-
-    public setOverheat(stack: ItemStack, override: boolean): void {
-        stack.set(DataComponentTypes.OVERHEAT, override);
-    }
-
-    public getOverheated(stack: ItemStack): boolean {
-        return stack.getOrDefault(DataComponentTypes.OVERHEAT, false);
     }
 }

@@ -1,6 +1,6 @@
-import type {Effect} from "./Effect.ts";
+import type {IEffect} from "./IEffect.ts";
 
-export class WindowOverlay implements Effect {
+export class WindowOverlay implements IEffect {
     public alive = true;
 
     private readonly color: string;

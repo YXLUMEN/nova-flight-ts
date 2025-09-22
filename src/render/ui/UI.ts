@@ -6,14 +6,20 @@ import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {clamp, PI2} from "../../utils/math/math.ts";
 import type {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import type {ItemStack} from "../../item/ItemStack.ts";
+import {PauseOverlay} from "./PauseOverlay.ts";
+import type {IUi} from "./IUi.ts";
 
-export class UI {
+export class UI implements IUi {
     private readonly world: World;
     private readonly font: string;
     private readonly hudColor: string;
     private readonly getWeaponUI: (stack: ItemStack) => WeaponUIInfo | null;
 
+    public readonly pauseOverlay: PauseOverlay;
+
     // HUD 布局参数
+    private worldW: number = 0;
+    private worldH: number = 0;
     private readonly marginX = 20;
     private readonly marginY = 20;
     private readonly lineGap = 8;
@@ -26,6 +32,14 @@ export class UI {
         this.font = opts.font ?? '14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
         this.hudColor = opts.hudColor ?? '#ffffff';
         this.getWeaponUI = opts.getWeaponUI ?? this.defaultWeaponAdapter;
+
+        this.pauseOverlay = new PauseOverlay(world);
+    }
+
+    public setWorldSize(w: number, h: number) {
+        this.worldW = w;
+        this.worldH = h;
+        this.pauseOverlay.setWorldSize(w, h);
     }
 
     public tick(tickDelta: number) {
@@ -43,7 +57,7 @@ export class UI {
 
     public render(ctx: CanvasRenderingContext2D) {
         if (this.world.isOver) {
-            UI.renderEndOverlay(ctx);
+            this.renderEndOverlay(ctx);
             return;
         }
 
@@ -88,9 +102,12 @@ export class UI {
         this.drawPrimaryWeapons(ctx);
 
         if (!this.world.isTicking) {
-            UI.renderPauseOverlay(ctx);
+            this.pauseOverlay.render(ctx);
+            return;
         }
-        if (player.lockedCount > 0) UI.renderLockAlert(ctx);
+        if (player.lockedMissile.size > 0) {
+            this.renderLockAlert(ctx);
+        }
     }
 
     private renderHealth(ctx: CanvasRenderingContext2D, player: PlayerEntity, x: number, y: number) {
@@ -138,7 +155,7 @@ export class UI {
         const stack = player.getCurrentItemStack();
         const weapon = stack.getItem() as BaseWeapon;
 
-        const anchorX = Math.floor(px + player.getEntityDimension().width / 2 + 12);
+        const anchorX = Math.floor(px + player.getWidth() / 2 + 12);
         const ratio = Math.max(0, Math.min(1, 1 - weapon.getCooldown(stack) / weapon.getMaxCooldown(stack)));
 
         ctx.save();
@@ -179,39 +196,13 @@ export class UI {
         ctx.fillText(info.label, (x + w + 8) | 0, (y | 0) - 1);
     }
 
-    private static renderPauseOverlay(ctx: CanvasRenderingContext2D) {
-        const width = World.W / 2;
-        const height = World.H / 2;
-
-        // 半透明遮罩
-        ctx.save();
-        ctx.fillStyle = 'rgba(0,0,0,0.45)';
-        ctx.fillRect(0, 0, World.W, World.H);
-
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        // 主标题
-        ctx.fillStyle = `#fff`;
-        ctx.font = 'bold 32px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
-        ctx.fillText('已暂停', width, height);
-
-        // 副提示
-        ctx.fillStyle = 'rgba(255,255,255,0.8)';
-        ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
-        ctx.fillText('按 Esc 继续', width, height + 30);
-
-        ctx.restore();
-    }
-
-    private static renderEndOverlay(ctx: CanvasRenderingContext2D) {
-        const width = World.W;
-        const height = World.H;
+    private renderEndOverlay(ctx: CanvasRenderingContext2D) {
+        const width = this.worldW;
+        const height = this.worldH;
         let y = height / 2 - 64;
 
-        const world = World.instance;
-        const time = world.getTime() | 0;
-        const score = world.player?.getPhaseScore() ?? 0;
+        const time = this.world.getTime() | 0;
+        const score = this.world.player?.getPhaseScore() ?? 0;
 
         ctx.save();
         ctx.fillStyle = 'rgba(255,0,0,0.3)';
@@ -234,18 +225,14 @@ export class UI {
         ctx.restore();
     }
 
-    public static renderLockAlert(ctx: CanvasRenderingContext2D) {
-        const width = World.W;
-        const height = World.H;
-
-        const barW = 150;
-        const barH = 40;
-        const x = (width - barW) / 2;
-        const y = height - barH - 28;
-        const radius = 10;
+    public renderLockAlert(ctx: CanvasRenderingContext2D) {
+        const barW = 120;
+        const barH = 32;
+        const x = (this.worldW - barW) / 2;
+        const y = this.worldH - barH - 28;
 
         // 脉动闪烁
-        const t = performance.now() * 0.004;
+        const t = performance.now() * 0.01;
         const pulse = (Math.sin(t * PI2) + 1) / 2;
         const borderAlpha = 0.35 + 0.45 * pulse;
         const fillAlpha = 0.6;
@@ -257,15 +244,7 @@ export class UI {
         ctx.shadowColor = `rgba(255,70,70,${0.35 + 0.45 * pulse})`;
         ctx.shadowBlur = 16;
         ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.lineTo(x + barW - radius, y);
-        ctx.quadraticCurveTo(x + barW, y, x + barW, y + radius);
-        ctx.lineTo(x + barW, y + barH - radius);
-        ctx.quadraticCurveTo(x + barW, y + barH, x + barW - radius, y + barH);
-        ctx.lineTo(x + radius, y + barH);
-        ctx.quadraticCurveTo(x, y + barH, x, y + barH - radius);
-        ctx.lineTo(x, y + radius);
-        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.rect(x, y, barW, barH);
         ctx.closePath();
         ctx.fill();
 
@@ -282,8 +261,13 @@ export class UI {
         ctx.fillStyle = "rgba(255,255,255,0.92)";
         ctx.shadowColor = "rgba(255,60,60,0.4)";
         ctx.shadowBlur = 6;
-        ctx.fillText("MISSILE LOCK", x + barW / 2, y + barH / 2);
+        ctx.fillText("敌锁定", x + barW / 2, y + barH / 2);
 
         ctx.restore();
+    }
+
+    public destroy() {
+        (this.getWeaponUI as any) = null;
+        this.pauseOverlay.destroy();
     }
 }

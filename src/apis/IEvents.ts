@@ -32,5 +32,5 @@ export type IEvents = {
     [EVENTS.STAGE_ENTER]: { name: string };
     [EVENTS.STAGE_EXIT]: { name: string };
     [EVENTS.ENTITY_LOCKED]: { missile: MissileEntity };
-    [EVENTS.ENTITY_UNLOCKED]: { lastTarget: Entity | null };
+    [EVENTS.ENTITY_UNLOCKED]: { missile: MissileEntity, lastTarget: Entity | null };
 }

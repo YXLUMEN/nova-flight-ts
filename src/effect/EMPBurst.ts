@@ -1,8 +1,8 @@
-import type {Effect} from "./Effect.ts";
+import type {IEffect} from "./IEffect.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import {PI2} from "../utils/math/math.ts";
 
-export class EMPBurst implements Effect {
+export class EMPBurst implements IEffect {
     public alive = true;
     private t = 0;
 
