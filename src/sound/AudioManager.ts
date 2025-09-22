@@ -5,6 +5,7 @@ import {resolveResource} from "@tauri-apps/api/path";
 import {RegistryKeys} from "../registry/RegistryKeys.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {SoundEvent} from "./SoundEvent.ts";
+import {convertFileSrc} from "@tauri-apps/api/core";
 
 export class AudioManager {
     public static readonly AUDIO_PLAYER = new Audio();
@@ -31,8 +32,8 @@ export class AudioManager {
                 const audioPath = audioEntry.split(':').pop();
                 if (!audioPath) continue;
 
-                const url = `resources/nova-flight/audios${audioPath}`;
-                this.audioMap.set(audioId, url);
+                const url = await resolveResource(`resources/nova-flight/audios${audioPath}`);
+                this.audioMap.set(audioId, convertFileSrc(url));
             } catch (err) {
                 console.warn(err);
             }
