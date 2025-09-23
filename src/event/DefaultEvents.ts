@@ -206,7 +206,6 @@ export class DefaultEvents {
         if (name === 'g_boss') {
             AudioManager.playAudio(Audios.DELTA_FORCE_MAIN);
             AudioManager.setVolume(1);
-            AudioManager.leap(60);
 
             notify.show('敌方出动重型单位, 尽可能解锁科技!', 8);
             world.getEntities().forEach(entity => entity.discard());
@@ -227,6 +226,7 @@ export class DefaultEvents {
             const ctrl = AudioManager.addListener('guide_audio', 'timeupdate', event => {
                 const currentTime = (event.target as HTMLAudioElement).currentTime;
                 if (106 - currentTime < 0.01) {
+                    notify.show('干得好, 接下来就靠你自己了');
                     boss.onDeath(world.getDamageSources().removed());
                     ctrl!.abort();
                     world.schedule(5, () => {

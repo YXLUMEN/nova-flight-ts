@@ -87,7 +87,7 @@ export class NotificationManager implements IUi {
             ctx.fillStyle = 'white';
             ctx.fillText(n.text, x, y + 15);
 
-            offsetY += 90; // 多个通知向上堆叠
+            offsetY += 50; // 多个通知向上堆叠
         }
 
         ctx.restore();
