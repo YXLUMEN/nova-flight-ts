@@ -8,8 +8,9 @@ import type {SoundEvent} from "./SoundEvent.ts";
 import {convertFileSrc} from "@tauri-apps/api/core";
 
 export class AudioManager {
-    public static readonly AUDIO_PLAYER = new Audio();
+    private static readonly AUDIO_PLAYER = new Audio();
     private static readonly audioMap = new Map<Identifier, string>();
+    private static readonly eventMap = new Map<string, AbortController>();
 
     public static async loadFiles(manager: RegistryManager): Promise<void> {
         const audioRegister = manager.get(RegistryKeys.AUDIOS);
@@ -54,8 +55,8 @@ export class AudioManager {
         player.play().catch(console.error);
     }
 
-    public static randomPlay(loop = false, ...event: SoundEvent[]) {
-        this.playAudio(event[Math.floor(Math.random() * event.length)], loop);
+    public static randomPlay(...event: SoundEvent[]) {
+        this.playAudio(event[Math.floor(Math.random() * event.length)]);
     }
 
     public static leap(time: number) {
@@ -71,6 +72,7 @@ export class AudioManager {
     }
 
     public static stop(): void {
+        this.AUDIO_PLAYER.pause();
         this.AUDIO_PLAYER.src = '';
     }
 
@@ -81,5 +83,35 @@ export class AudioManager {
 
     public static setVolume(volume: number): void {
         this.AUDIO_PLAYER.volume = clamp(volume, 0, 1);
+    }
+
+    public static addListener(
+        name: string,
+        type: keyof HTMLMediaElementEventMap,
+        listener: (ev: Event) => void,
+        options?: AddEventListenerOptions
+    ): AbortController | null {
+        if (this.eventMap.has(name)) {
+            console.warn(`Already added listener for event ${type} for ${name}`);
+            return null;
+        }
+
+        const ctrl = new AbortController();
+        const opts: AddEventListenerOptions = {
+            ...options,
+            signal: ctrl.signal
+        }
+
+        this.AUDIO_PLAYER.addEventListener(type, listener, opts);
+        this.eventMap.set(name, ctrl);
+
+        return ctrl;
+    }
+
+    public static removeListener(name: string, reason?: any): void {
+        const ctrl = this.eventMap.get(name);
+        if (!ctrl) return;
+
+        ctrl.abort(reason);
     }
 }

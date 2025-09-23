@@ -26,17 +26,15 @@ import {STAGE} from "../configs/StageConfig.ts";
 export class DefaultEvents {
     public static registryEvents(world: World) {
         const eventBus = GeneralEventBus.getEventBus();
-        const player = world.player;
-        if (!player) return;
-        const techTree = player.techTree;
-        const guided = localStorage.getItem('guided') ?? false;
 
         eventBus.on(EVENTS.UNLOCK_TECH, (event) => {
             applyTech(world, event.id);
         });
 
-        eventBus.on(EVENTS.MOB_KILLED, (event) => {
+        eventBus.on(EVENTS.MOB_KILLED, event => {
             const damageSource = event.damageSource;
+            const player = world.player!;
+            const techTree = player.techTree;
 
             if (!damageSource.isIn(DamageTypeTags.NOT_GAIN_SCORE)) {
                 player.addPhaseScore(event.mob.getWorth());
@@ -52,7 +50,7 @@ export class DefaultEvents {
 
             // TODO
             if (techTree.isUnlocked('emergency_repair')) {
-                if (Math.random() >= 0.92) player.setHealth(player.getHealth() + 1);
+                if (Math.random() <= 0.008) player.setHealth(player.getHealth() + 5);
             }
         });
 
@@ -86,6 +84,9 @@ export class DefaultEvents {
 
         eventBus.on(EVENTS.BOMB_DETONATE, (event) => {
             applyExplosion(event);
+            const player = world.player!;
+            const techTree = player.techTree;
+
             if (techTree.isUnlocked('serial_warhead')) {
                 let counts = 0;
                 const task = world.scheduleInterval(0.2, () => {
@@ -100,13 +101,40 @@ export class DefaultEvents {
         });
 
         eventBus.on(EVENTS.EMP_BURST, (event) => {
+            const player = world.player!;
+            const techTree = player.techTree;
             if (techTree.isUnlocked('ele_oscillation')) {
                 world.empBurst = event.duration;
             }
         });
 
+        eventBus.on(EVENTS.STAGE_EXIT, (event) => {
+            if (event.name === 'p9') {
+                world.setStage(STAGE2);
+            }
+        });
+
+        eventBus.on(EVENTS.ENTITY_LOCKED, (event) => {
+            const missile = event.missile as MissileEntity;
+            if (missile.isRemoved() || !missile.getTarget()?.isPlayer()) return;
+            const player = world.player!;
+            player.lockedMissile.add(missile);
+        });
+
+        eventBus.on(EVENTS.ENTITY_UNLOCKED, (event) => {
+            const target = event.lastTarget as Entity | null;
+            const player = world.player!;
+
+            if (target && target.isPlayer() && player.lockedMissile.size > 0) {
+                player.lockedMissile.delete(event.missile);
+            }
+        });
+
         eventBus.on(EVENTS.STAGE_ENTER, (event) => {
-            if (!guided) this.guide(event, player);
+            if (!localStorage.getItem('guided')) {
+                this.guide(event, world.player!);
+                return;
+            }
 
             if (event.name === 'P6' || event.name === 'mP3') {
                 if (BossEntity.hasBoss) return;
@@ -120,34 +148,15 @@ export class DefaultEvents {
 
             world.playSound(SoundEvents.PHASE_CHANGE);
         });
-
-        eventBus.on(EVENTS.STAGE_EXIT, (event) => {
-            if (event.name === 'p9') {
-                world.setStage(STAGE2);
-            }
-        });
-
-        eventBus.on(EVENTS.ENTITY_LOCKED, (event) => {
-            const missile = event.missile as MissileEntity;
-            if (missile.isRemoved() || !missile.getTarget()?.isPlayer()) return;
-            player.lockedMissile.add(missile);
-        });
-
-        eventBus.on(EVENTS.ENTITY_UNLOCKED, (event) => {
-            const target = event.lastTarget as Entity | null;
-            if (target && target.isPlayer() && player.lockedMissile.size > 0) {
-                player.lockedMissile.delete(event.missile);
-            }
-        });
     }
 
-    private static guide(event: any, player: PlayerEntity) {
+    private static guide(event: any, player: PlayerEntity): void {
         const name: string = event.name as string;
         const world = player.getWorld();
+        const notify = world.getNotify();
 
         if (name === 'g_move') {
-            alert('w/s/a/d 或 方向键 移动');
-            AudioManager.setVolume(0.5);
+            notify.show('w/s/a/d 或 方向键 移动', 8);
 
             let time = 0;
             const ctrl = new AbortController();
@@ -162,7 +171,7 @@ export class DefaultEvents {
         }
 
         if (name === 'g_fire') {
-            alert('空格/鼠标左键 开火, 或者按下 T 键持续开火');
+            notify.show('空格/鼠标左键 开火, 或者按下 T 键持续开火', 8);
 
             const ctrl = new AbortController();
             window.addEventListener('keydown', event => {
@@ -179,18 +188,17 @@ export class DefaultEvents {
         }
 
         if (name === 'g_enemy') {
-            alert('小心, 敌人来袭!');
+            notify.show('小心, 敌人来袭!', 8);
             return;
         }
 
         if (name === 'g_tech') {
-            AudioManager.playAudio(Audios.SPACE_WALK);
+            notify.show('敌人派出了精英单位', 8);
 
-            alert('敌人派出了精英单位');
             world.getEntities().forEach(entity => entity.discard());
-            world.schedule(2, () => {
-                alert('按下 G 打开科技界面, 选择一个升级路径');
-                alert('我们先从 "炮艇专精" 开始, 并研究至 "钢芯穿甲弹"');
+            world.schedule(6, () => {
+                notify.show('按下 G 打开科技界面, 选择一个升级路径', 4);
+                notify.show('我们先从 "炮艇专精" 开始, 并研究至 "钢芯穿甲弹"', 8);
             });
             return;
         }
@@ -200,7 +208,7 @@ export class DefaultEvents {
             AudioManager.setVolume(1);
             AudioManager.leap(60);
 
-            alert('敌方出动重型单位, 尽可能解锁科技!');
+            notify.show('敌方出动重型单位, 尽可能解锁科技!', 8);
             world.getEntities().forEach(entity => entity.discard());
 
             player.addPhaseScore(8192);
@@ -215,20 +223,19 @@ export class DefaultEvents {
             mark.setPositionByVec(boss.getPositionRef);
             world.spawnEntity(mark);
 
-            const ctrl = new AbortController();
-            AudioManager.AUDIO_PLAYER.addEventListener('timeupdate', event => {
+            AudioManager.removeListener('guide_audio');
+            const ctrl = AudioManager.addListener('guide_audio', 'timeupdate', event => {
                 const currentTime = (event.target as HTMLAudioElement).currentTime;
                 if (106 - currentTime < 0.01) {
                     boss.onDeath(world.getDamageSources().removed());
-                    ctrl.abort();
+                    ctrl!.abort();
                     world.schedule(5, () => {
                         world.reset();
-                        world.init();
                         world.setStage(STAGE);
                     });
                     localStorage.setItem('guided', 'true');
                 }
-            }, {signal: ctrl.signal});
+            });
         }
     }
 }

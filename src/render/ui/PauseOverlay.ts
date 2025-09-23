@@ -1,6 +1,6 @@
 import {World} from "../../world/World.ts";
 import type {IUi} from "./IUi.ts";
-import {NovaFlightServer} from "../../NovaFlightServer.ts";
+import {NovaFlightServer} from "../../server/NovaFlightServer.ts";
 
 interface UIButton {
     x: number;

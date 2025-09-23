@@ -122,18 +122,6 @@ export class TechTree implements NbtSerializable {
             container.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
     }
 
-    public destroy() {
-        this.adj.out.clear();
-        this.adj.branchMembers.clear();
-        this.adj.branchOf.clear();
-        this.adj.conflicts.clear();
-        this.state.clear();
-
-        this.container.replaceChildren();
-        this.abortCtrl.abort();
-        TechTree.playerScore.textContent = '0';
-    }
-
     public applyUnlockUpdates(id: string) {
         const affected = new Set<string>();
 
@@ -448,6 +436,18 @@ export class TechTree implements NbtSerializable {
 
         this.state.reset();
         this.renderNodes();
+    }
+
+    public destroy() {
+        this.adj.out.clear();
+        this.adj.branchMembers.clear();
+        this.adj.branchOf.clear();
+        this.adj.conflicts.clear();
+        this.state.clear();
+
+        this.container.replaceChildren();
+        this.abortCtrl.abort();
+        TechTree.playerScore.textContent = '0';
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {

@@ -36,7 +36,6 @@ import {CIWSBulletEntity} from "../entity/projectile/CIWSBulletEntity.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {UnlistenFn} from "@tauri-apps/api/event";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
-import {GuideStage} from "../configs/GuideStage.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 
 export class World implements NbtSerializable {
@@ -55,6 +54,7 @@ export class World implements NbtSerializable {
     public empBurst: number = 0
 
     private readonly registryManager: RegistryManager;
+
     public readonly camera: Camera = new Camera();
     private readonly ui: UI = new UI(this);
     private readonly input = new KeyboardInput(World.canvas);
@@ -95,10 +95,6 @@ export class World implements NbtSerializable {
         this.registryEvents();
 
         this.starField.init();
-
-        if (!localStorage.getItem('guided')) {
-            this.setStage(GuideStage);
-        }
     }
 
     public static createWorld(registryManager: RegistryManager): World {
@@ -130,25 +126,26 @@ export class World implements NbtSerializable {
     }
 
     public destroy(): void {
-        this.reset();
+        this.clear();
 
         this.input.clearKeyHandler();
         this.listener.forEach(async (unListen) => {
             const fn = await unListen;
             fn();
         });
+        this.events.clear();
         this.ctrl.abort();
     }
 
-    public reset(): void {
+    public clear(): void {
         this.timers.length = 0;
         this.time = 0;
         this.nextTimerId.reset();
         this.stage.reset();
 
         this.player!.discard();
+        this.player = null;
         this.loadedMobs.clear();
-
         this.entities.forEach(entity => entity.discard());
         this.entities.clear();
 
@@ -159,7 +156,9 @@ export class World implements NbtSerializable {
         World.globalSound.stopAll();
     }
 
-    public init(): void {
+    public reset(): void {
+        this.clear();
+
         this.player = new PlayerEntity(this, this.input);
         this.player.setPosition(World.W / 2, World.H);
         this.player.setVelocity(0, -24);
@@ -177,10 +176,8 @@ export class World implements NbtSerializable {
 
         const dt = this.freeze ? 0 : tickDelta;
         const player = this.player!;
-        const yaw = player.getYaw();
-        const forwardX = Math.cos(yaw) * 200;
-        const forwardY = Math.sin(yaw) * 200;
-        this.camera.update(player.getPositionRef.clone().add(forwardX, forwardY), tickDelta);
+
+        this.camera.update(player.getPositionRef.clone(), tickDelta);
 
         // 阶段更新
         this.stage.tick(this);
@@ -197,11 +194,9 @@ export class World implements NbtSerializable {
 
         // 效果更新
         this.effects.forEach(effect => effect.tick(dt));
-        if (this.effects.length > 0) {
-            for (let i = this.effects.length; i--;) {
-                if (!this.effects[i].isAlive()) {
-                    this.effects.splice(i, 1);
-                }
+        if (this.effects.length > 0) for (let i = this.effects.length; i--;) {
+            if (!this.effects[i].isAlive()) {
+                this.effects.splice(i, 1);
             }
         }
 
@@ -297,7 +292,6 @@ export class World implements NbtSerializable {
                 if (code === "Enter" && this.over && !this.ticking && !this.rendering) {
                     ctrl.abort();
                     this.reset();
-                    this.init();
                     return;
                 }
             }, {signal: ctrl.signal});
@@ -486,6 +480,10 @@ export class World implements NbtSerializable {
         ctx.restore();
 
         this.ui.render(ctx);
+    }
+
+    public getNotify() {
+        return this.ui.notify;
     }
 
     public drawBackground(ctx: CanvasRenderingContext2D) {
@@ -682,10 +680,8 @@ export class World implements NbtSerializable {
                 break;
             case 'KeyS':
                 this.saveAll();
-                this.player?.discard();
                 this.gameOver();
                 this.reset();
-                this.init();
                 break;
             case 'KeyP':
                 localStorage.removeItem('guided');
@@ -717,6 +713,7 @@ export class World implements NbtSerializable {
     public saveAll(): NbtCompound {
         const root = new NbtCompound();
         this.writeNBT(root);
+        console.log(root);
         return root;
     }
 }

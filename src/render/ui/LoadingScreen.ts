@@ -46,14 +46,14 @@ export class LoadingScreen {
 
             // 背景条
             ctx.fillStyle = '#333';
-            this.roundRect(ctx, barX, barY, barWidth, barHeight, radius);
+            LoadingScreen.roundRect(ctx, barX, barY, barWidth, barHeight, radius);
             ctx.fill();
 
             // 前景条
             const filledWidth = barWidth * this.currentProgress;
             if (filledWidth > 0) {
                 ctx.fillStyle = '#fff';
-                this.roundRect(ctx, barX, barY, filledWidth, barHeight, radius);
+                LoadingScreen.roundRect(ctx, barX, barY, filledWidth, barHeight, radius);
                 ctx.fill();
             }
 
@@ -81,7 +81,7 @@ export class LoadingScreen {
         requestAnimationFrame(() => this.loop());
     }
 
-    private roundRect(
+    public static roundRect(
         ctx: CanvasRenderingContext2D,
         x: number,
         y: number,

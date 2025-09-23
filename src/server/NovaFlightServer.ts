@@ -1,17 +1,20 @@
-import {NbtCompound} from "./nbt/NbtCompound.ts";
+import {NbtCompound} from "../nbt/NbtCompound.ts";
 import {BaseDirectory, exists, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs";
-import {mainWindow} from "./main.ts";
-import {World} from "./world/World.ts";
-import type {RegistryManager} from "./registry/RegistryManager.ts";
-import {WorldConfig} from "./configs/WorldConfig.ts";
-import {SoundEvents} from "./sound/SoundEvents.ts";
+import {mainWindow} from "../main.ts";
+import {World} from "../world/World.ts";
+import type {RegistryManager} from "../registry/RegistryManager.ts";
+import {WorldConfig} from "../configs/WorldConfig.ts";
+import {SoundEvents} from "../sound/SoundEvents.ts";
+import {GuideStage} from "../configs/GuideStage.ts";
+import {AudioManager} from "../sound/AudioManager.ts";
+import {Audios} from "../sound/Audios.ts";
 
 export class NovaFlightServer {
     private static running = false;
     private static worldInstance: World | null = null;
     private static last = 0;
     private static accumulator = 0;
-    private static stopResolve?: (nbt: NbtCompound) => void;
+    private static stopResolve: (nbt: NbtCompound) => void;
 
     public static async startGame(manager: RegistryManager) {
         if (this.running) return;
@@ -23,6 +26,11 @@ export class NovaFlightServer {
         World.globalSound.playSound(SoundEvents.UI_APPLY);
         world.setTicking(true);
         world.player?.setVelocity(0, -24);
+
+        if (!localStorage.getItem('guided')) {
+            world.setStage(GuideStage);
+            AudioManager.playAudio(Audios.SPACE_WALK, true);
+        }
         this.tick(0);
     }
 

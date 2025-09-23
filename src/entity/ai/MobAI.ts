@@ -1,8 +1,8 @@
-import type {MobEntity} from "../mob/MobEntity.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
-import {MutVec2} from "../../utils/math/MutVec2.ts";
-import {EntityAttributes} from "../attribute/EntityAttributes.ts";
-import {createCleanObj} from "../../utils/uit.ts";
+import type { MobEntity } from "../mob/MobEntity.ts";
+import type { IVec } from "../../utils/math/IVec.ts";
+import { MutVec2 } from "../../utils/math/MutVec2.ts";
+import { EntityAttributes } from "../attribute/EntityAttributes.ts";
+import { createCleanObj } from "../../utils/uit.ts";
 
 export const Behavior = createCleanObj({
     Wander: 0,
@@ -40,7 +40,7 @@ export class MobAI {
                 break;
         }
 
-        if (!isSimple) this.faceTarget(mob, this.targetPos);
+        if (!isSimple) this.faceTarget(mob, this.targetPos); 
     }
 
     public chooseTarget(mob: MobEntity) {

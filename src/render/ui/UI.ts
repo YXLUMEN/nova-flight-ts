@@ -8,6 +8,7 @@ import type {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import type {ItemStack} from "../../item/ItemStack.ts";
 import {PauseOverlay} from "./PauseOverlay.ts";
 import type {IUi} from "./IUi.ts";
+import {NotificationManager} from "./NotificationManager.ts";
 
 export class UI implements IUi {
     private readonly world: World;
@@ -16,6 +17,8 @@ export class UI implements IUi {
     private readonly getWeaponUI: (stack: ItemStack) => WeaponUIInfo | null;
 
     public readonly pauseOverlay: PauseOverlay;
+    public readonly notify: NotificationManager;
+
 
     // HUD 布局参数
     private worldW: number = 0;
@@ -34,12 +37,14 @@ export class UI implements IUi {
         this.getWeaponUI = opts.getWeaponUI ?? this.defaultWeaponAdapter;
 
         this.pauseOverlay = new PauseOverlay(world);
+        this.notify = new NotificationManager(world);
     }
 
     public setWorldSize(w: number, h: number) {
         this.worldW = w;
         this.worldH = h;
         this.pauseOverlay.setWorldSize(w, h);
+        this.notify.setWorldSize(w, h);
     }
 
     public tick(tickDelta: number) {
@@ -101,10 +106,13 @@ export class UI implements IUi {
 
         this.drawPrimaryWeapons(ctx);
 
+        this.notify.render(ctx);
+
         if (!this.world.isTicking) {
             this.pauseOverlay.render(ctx);
             return;
         }
+
         if (player.lockedMissile.size > 0) {
             this.renderLockAlert(ctx);
         }

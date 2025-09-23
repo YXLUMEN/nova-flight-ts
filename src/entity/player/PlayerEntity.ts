@@ -37,7 +37,7 @@ export class PlayerEntity extends LivingEntity {
     public currentBaseIndex: number = 0;
     private lastDamageTime = 0;
 
-    private phaseScore: number;
+    private phaseScore: number = 0;
     private score: number = 0;
     private autoAimEnable: boolean = false;
     private wasActive = false;
@@ -55,7 +55,6 @@ export class PlayerEntity extends LivingEntity {
         this.setYaw(-1.57079);
 
         this.input = input;
-        this.phaseScore = 0;
 
         this.addWeapon(Items.CANNON40_WEAPON, new ItemStack(Items.CANNON40_WEAPON));
         this.weapons.set(Items.BOMB_WEAPON, new ItemStack(Items.BOMB_WEAPON));
@@ -218,8 +217,10 @@ export class PlayerEntity extends LivingEntity {
     public override onRemove() {
         super.onRemove();
         this.techTree.destroy();
+
         this.weapons.clear();
         this.baseWeapons.length = 0;
+
         this.lockedMissile.clear();
         this.missilePos.length = 0;
     }
