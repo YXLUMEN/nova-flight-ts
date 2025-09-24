@@ -11,7 +11,6 @@ import {WorldConfig} from "../../configs/WorldConfig.ts";
 type StartScreenOptions = {
     title: string;
     subtitle: string;
-    buttonText: string;
 };
 
 export class StartScreen implements IUi {
@@ -30,21 +29,28 @@ export class StartScreen implements IUi {
     private tickInterval = 1000 / 50;
     private lastTickTime = 0;
 
-    private button: UIButton;
+    private buttons: UIButton[] = [];
 
     public constructor(ctx: CanvasRenderingContext2D, options: StartScreenOptions) {
         this.ctx = ctx;
         this.options = {
             title: options.title,
-            subtitle: options.subtitle,
-            buttonText: options.buttonText
+            subtitle: options.subtitle
         };
 
-        this.button = new UIButton(
-            (this.width - 200) / 2, this.height / 2 + 50,
-            200, 50,
-            options.buttonText,
-            this.confirm.bind(this),
+        this.buttons.push(
+            new UIButton(
+                (this.width - 200) / 2, this.height / 2,
+                200, 50,
+                '开始游戏',
+                this.confirm.bind(this),
+            ),
+            new UIButton(
+                (this.width - 200) / 2, this.height / 2 + 60,
+                200, 50,
+                '读取存档',
+                this.confirmAndReadSave.bind(this),
+            )
         );
 
         this.starField.init();
@@ -60,8 +66,10 @@ export class StartScreen implements IUi {
         }, {signal: this.ctrl.signal});
 
         window.addEventListener('click', (event) => {
-            if (this.button.hitTest(event.offsetX, event.offsetY)) {
-                this.button.onClick();
+            for (const btn of this.buttons) {
+                if (btn.hitTest(event.offsetX, event.offsetY)) {
+                    btn.onClick();
+                }
             }
         }, {signal: this.ctrl.signal});
 
@@ -74,8 +82,14 @@ export class StartScreen implements IUi {
     public setSize(w: number, h: number) {
         this.width = w;
         this.height = h;
-        this.button.x = (this.width - 200) / 2;
-        this.button.y = this.height / 2 + 50;
+
+        const btn1 = this.buttons[0];
+        btn1.x = (this.width - 200) / 2;
+        btn1.y = this.height / 2;
+
+        const btn2 = this.buttons[1];
+        btn2.x = (this.width - 200) / 2;
+        btn2.y = this.height / 2 + 60;
     }
 
     private bindTick = this.tick.bind(this);
@@ -115,7 +129,9 @@ export class StartScreen implements IUi {
 
         // 按钮
         ctx.font = UITheme.font;
-        this.button.render(ctx);
+        for (const btn of this.buttons) {
+            btn.render(ctx);
+        }
     }
 
     public destroy() {
@@ -142,5 +158,10 @@ export class StartScreen implements IUi {
         if (this.onConfirmCallback) {
             this.onConfirmCallback();
         }
+    }
+
+    private confirmAndReadSave() {
+        this.confirm();
+        WorldConfig.readSave = true;
     }
 }

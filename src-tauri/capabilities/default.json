@@ -14,7 +14,6 @@
     "fs:default",
     "fs:allow-read",
     "fs:allow-resource-read-recursive",
-    "fs:allow-appdata-read-recursive",
-    "fs:allow-appdata-write"
+    "fs:allow-resource-write"
   ]
 }

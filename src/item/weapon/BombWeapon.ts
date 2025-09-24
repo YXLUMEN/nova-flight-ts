@@ -12,6 +12,7 @@ import {SoundEvents} from "../../sound/SoundEvents.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import {MobEntity} from "../../entity/mob/MobEntity.ts";
 
 export class BombWeapon extends SpecialWeapon {
     public static summonExplosion(
@@ -20,6 +21,16 @@ export class BombWeapon extends SpecialWeapon {
         const damage = opts.damage ?? 6;
 
         const r2 = radius * radius;
+
+        if (opts.attacker instanceof MobEntity) {
+            const player = world.player!;
+            const d2 = MutVec2.distSq(player.getPositionRef, center);
+            if (d2 <= r2) {
+                player.takeDamage(world.getDamageSources().explosion(opts.source, opts.attacker), damage);
+            }
+            return;
+        }
+
         for (const mob of world.getLoadMobs()) {
             if (mob.isRemoved()) continue;
             const d2 = MutVec2.distSq(mob.getPositionRef, center);

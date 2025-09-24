@@ -162,6 +162,10 @@ export class PlayerEntity extends LivingEntity {
         this.currentBaseIndex = (this.currentBaseIndex + 1) % this.baseWeapons.length;
     }
 
+    public override isInvulnerableTo(damageSource: DamageSource): boolean {
+        return super.isInvulnerableTo(damageSource) || WorldConfig.devMode;
+    }
+
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (this.isInvulnerableTo(damageSource)) return false;
 
@@ -271,8 +275,8 @@ export class PlayerEntity extends LivingEntity {
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
-        nbt.putInt('Score', this.score);
-        nbt.putInt('PhaseScore', this.phaseScore);
+        nbt.putUint('Score', this.score);
+        nbt.putUint('PhaseScore', this.phaseScore);
         this.techTree.writeNBT(nbt);
 
         return nbt
@@ -280,9 +284,8 @@ export class PlayerEntity extends LivingEntity {
 
     public override readNBT(nbt: NbtCompound) {
         super.readNBT(nbt);
-        this.setScore(nbt.getInt('Score'));
-        this.setPhaseScore(nbt.getInt('PhaseScore'));
-
+        this.setScore(nbt.getUint('Score'));
+        this.setPhaseScore(nbt.getUint('PhaseScore'));
         this.techTree.readNBT(nbt);
     }
 

@@ -1,8 +1,11 @@
 import {SpawnRule} from "./SpawnRule.ts";
 import type {PhaseConfig, RNG, SpawnCtx} from "../apis/IStage.ts";
 import type {World} from "../world/World.ts";
+import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
+import {type NbtCompound} from "../nbt/NbtCompound.ts";
+import {clamp} from "../utils/math/math.ts";
 
-export class Stage {
+export class Stage implements NbtSerializable {
     private readonly rng: RNG;
     private readonly phases: PhaseConfig[];
 
@@ -61,9 +64,7 @@ export class Stage {
             phase.onEnter(ctx);
         }
 
-        for (const r of this.rules) {
-            r.tick(ctx);
-        }
+        for (const r of this.rules) r.tick(ctx);
 
         const timeUp = phase.duration !== undefined && this.phaseTime >= phase.duration;
         const until = phase.until ? phase.until(ctx) : false;
@@ -93,6 +94,15 @@ export class Stage {
     }
 
     private computeDifficulty(): number {
-        return 1; // 占位
+        return 1;
+    }
+
+    public writeNBT(nbt: NbtCompound): NbtCompound {
+        return nbt.putInt8('StageIndex', this.index);
+    }
+
+    public readNBT(nbt: NbtCompound) {
+        const index = clamp(nbt.getInt8('StageIndex'), 0, this.phases.length);
+        this.loadPhase(index);
     }
 }

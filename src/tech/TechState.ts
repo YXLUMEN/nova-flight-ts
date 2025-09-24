@@ -3,8 +3,8 @@ import type {RawTech, Tech, TechAvailable} from '../apis/ITech.ts';
 
 export class TechState {
     public readonly techById: Map<string, Tech>;
-    private readonly branchGroups: Map<string, Tech[]>;
-    private readonly unlocked = new Set<string>();
+    public readonly branchGroups: Map<string, Tech[]>;
+    public readonly unlocked = new Set<string>();
 
     public constructor(techs: Tech[] | Readonly<Tech[]>) {
         this.techById = new Map(techs.map(t => [t.id, t]));

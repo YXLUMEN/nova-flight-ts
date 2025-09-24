@@ -32,14 +32,13 @@ export async function runDevServer() {
 
     const startScreen = new StartScreen(ctx, {
         title: 'Nova Flight(Debug)',
-        subtitle: '按 回车/空格 或 点击按钮 开始',
-        buttonText: '开始游戏'
+        subtitle: '按 回车/空格 或 点击按钮 开始'
     });
     startScreen.setSize(World.W, World.H);
     startScreen.start();
 
     AudioManager.randomPlay(Audios.NO_MORE_MABO, Audios.SOME_TIME_HJM);
-    AudioManager.setVolume(0.5);
+    AudioManager.setVolume(0.3);
 
     await startScreen.onConfirm();
 

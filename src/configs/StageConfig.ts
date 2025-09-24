@@ -138,7 +138,7 @@ const p6: PhaseConfig = deepFreeze(createCleanObj({
 
 const p7: PhaseConfig = deepFreeze(createCleanObj({
     name: "P7",
-    until: ({score}) => score >= 4096,
+    until: ({score}) => score >= 6144,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P7'}),
     onExit: ({world}) => world.events.emit(EVENTS.STAGE_EXIT, {name: 'P7'}),
     rules: [

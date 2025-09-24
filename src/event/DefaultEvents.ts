@@ -33,7 +33,9 @@ export class DefaultEvents {
 
         eventBus.on(EVENTS.MOB_KILLED, event => {
             const damageSource = event.damageSource;
-            const player = world.player!;
+            const player = world.player;
+            if (!player) return;
+
             const techTree = player.techTree;
 
             if (!damageSource.isIn(DamageTypeTags.NOT_GAIN_SCORE)) {
@@ -84,7 +86,8 @@ export class DefaultEvents {
 
         eventBus.on(EVENTS.BOMB_DETONATE, (event) => {
             applyExplosion(event);
-            const player = world.player!;
+            const player = world.player;
+            if (!player) return;
             const techTree = player.techTree;
 
             if (techTree.isUnlocked('serial_warhead')) {
@@ -101,7 +104,8 @@ export class DefaultEvents {
         });
 
         eventBus.on(EVENTS.EMP_BURST, (event) => {
-            const player = world.player!;
+            const player = world.player;
+            if (!player) return;
             const techTree = player.techTree;
             if (techTree.isUnlocked('ele_oscillation')) {
                 world.empBurst = event.duration;
@@ -117,13 +121,15 @@ export class DefaultEvents {
         eventBus.on(EVENTS.ENTITY_LOCKED, (event) => {
             const missile = event.missile as MissileEntity;
             if (missile.isRemoved() || !missile.getTarget()?.isPlayer()) return;
-            const player = world.player!;
+            const player = world.player;
+            if (!player) return;
             player.lockedMissile.add(missile);
         });
 
         eventBus.on(EVENTS.ENTITY_UNLOCKED, (event) => {
             const target = event.lastTarget as Entity | null;
-            const player = world.player!;
+            const player = world.player;
+            if (!player) return;
 
             if (target && target.isPlayer() && player.lockedMissile.size > 0) {
                 player.lockedMissile.delete(event.missile);

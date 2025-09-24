@@ -57,13 +57,12 @@ export async function runInnerServer() {
     const startScreen = new StartScreen(ctx, {
         title: 'Nova Flight(先行测试版)',
         subtitle: '按 任意键 或 点击按钮 开始',
-        buttonText: '开始游戏'
     });
     startScreen.setSize(World.W, World.H);
     startScreen.start();
 
     AudioManager.randomPlay(Audios.NO_MORE_MABO, Audios.SOME_TIME_HJM);
-    AudioManager.setVolume(0.5);
+    AudioManager.setVolume(0.3);
 
     await startScreen.onConfirm();
 

@@ -451,7 +451,7 @@ export class TechTree implements NbtSerializable {
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
-        nbt.putStringArray('Techs', ...this.state.techById.keys());
+        nbt.putStringArray('Techs', ...this.state.unlocked);
         return nbt
     }
 
@@ -461,6 +461,7 @@ export class TechTree implements NbtSerializable {
         for (const tech of techs) {
             this.state.unlock(tech);
             this.applyUnlockUpdates(tech);
+            World.instance.events.emit(EVENTS.UNLOCK_TECH, {id: tech});
         }
     }
 }

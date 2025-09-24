@@ -10,6 +10,8 @@ import {AudioManager} from "../sound/AudioManager.ts";
 import {Audios} from "../sound/Audios.ts";
 
 export class NovaFlightServer {
+    public static readonly SAVE_PATH = `saves/save-${NbtCompound.VERSION}.dat`;
+
     private static running = false;
     private static worldInstance: World | null = null;
     private static last = 0;
@@ -23,13 +25,19 @@ export class NovaFlightServer {
         const world = World.createWorld(manager);
         this.worldInstance = world;
 
+        if (WorldConfig.readSave) {
+            const saves = await this.loadSaves();
+            if (saves) world.readNBT(saves);
+            else world.getNotify().show('无存档');
+        }
+
         World.globalSound.playSound(SoundEvents.UI_APPLY);
         world.setTicking(true);
         world.player?.setVelocity(0, -24);
 
         if (!localStorage.getItem('guided')) {
             world.setStage(GuideStage);
-            AudioManager.playAudio(Audios.SPACE_WALK, true);
+            AudioManager.playAudio(Audios.SPACE_WALK);
         }
         this.tick(0);
     }
@@ -60,21 +68,19 @@ export class NovaFlightServer {
             await mkdir('saves', {baseDir: BaseDirectory.Resource, recursive: true});
 
             const bytes = compound.toBinary();
-            await writeFile('saves/save.dat', bytes, {baseDir: BaseDirectory.Resource});
-
-            await mainWindow.close();
+            await writeFile(this.SAVE_PATH, bytes, {baseDir: BaseDirectory.Resource});
         } catch (err) {
             console.log(err);
             alert('保存时出错');
         }
     }
 
-    public static async loadGame(): Promise<NbtCompound | null> {
+    public static async loadSaves(): Promise<NbtCompound | null> {
         try {
-            const available = await exists('saves/save.dat', {baseDir: BaseDirectory.Resource});
+            const available = await exists(this.SAVE_PATH, {baseDir: BaseDirectory.Resource});
             if (!available) return null;
 
-            const bytes = await readFile('saves/save.dat', {baseDir: BaseDirectory.Resource});
+            const bytes = await readFile(this.SAVE_PATH, {baseDir: BaseDirectory.Resource});
             if (!bytes || bytes.length === 0) return null;
             return NbtCompound.fromBinary(bytes);
         } catch (err) {

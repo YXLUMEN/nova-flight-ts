@@ -12,6 +12,7 @@ import type {EntityAttribute} from "./attribute/EntityAttribute.ts";
 import {EntityAttributes} from "./attribute/EntityAttributes.ts";
 import type {EntityAttributeInstance} from "./attribute/EntityAttributeInstance.ts";
 import {DefaultAttributeContainer} from "./attribute/DefaultAttributeContainer.ts";
+import {type NbtCompound} from "../nbt/NbtCompound.ts";
 
 
 export abstract class LivingEntity extends Entity {
@@ -185,5 +186,18 @@ export abstract class LivingEntity extends Entity {
                 this.setHealth(maxHealth);
             }
         }
+    }
+
+    public override writeNBT(nbt: NbtCompound): NbtCompound {
+        super.writeNBT(nbt);
+        nbt.putUint('Health', this.getHealth());
+
+        return nbt
+    }
+
+    public readNBT(nbt: NbtCompound) {
+        super.readNBT(nbt);
+
+        this.setHealth(nbt.getUint('Health'));
     }
 }

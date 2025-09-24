@@ -37,6 +37,7 @@ import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {UnlistenFn} from "@tauri-apps/api/event";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
+import {NovaFlightServer} from "../server/NovaFlightServer.ts";
 
 export class World implements NbtSerializable {
     public static readonly globalSound = new SoundSystem();
@@ -232,10 +233,10 @@ export class World implements NbtSerializable {
             // 近防炮命中
             if (entity instanceof CIWSBulletEntity) {
                 for (const entity2 of this.entities.getValues()) {
-                    if (entity2 === entity.owner) continue;
+                    if (entity2.invulnerable || entity2 === entity.owner) continue;
                     // 抵消弹射物
                     if (entity2 instanceof ProjectileEntity) {
-                        if (entity2.invulnerable || entity2.owner === entity.owner) continue;
+                        if (entity2.owner === entity.owner) continue;
                         if (collideEntityCircle(entity, entity2)) {
                             entity.onEntityHit(entity2);
                             entity2.onEntityHit(entity);
@@ -573,6 +574,8 @@ export class World implements NbtSerializable {
             this.stage.nextPhase();
 
             this.schedule(120, () => {
+                if (BossEntity.hasBoss) return;
+
                 const stage = this.stage;
                 stage.reset();
                 while (true) {
@@ -581,7 +584,6 @@ export class World implements NbtSerializable {
                     stage.nextPhase();
                 }
 
-                if (BossEntity.hasBoss) return;
                 const boss = new BossEntity(EntityTypes.BOSS_ENTITY, this, 64);
                 boss.setPosition(World.W / 2, 64);
 
@@ -679,9 +681,11 @@ export class World implements NbtSerializable {
                 this.camera.cameraOffset.set(0, 0);
                 break;
             case 'KeyS':
-                this.saveAll();
-                this.gameOver();
-                this.reset();
+                NovaFlightServer.saveGame(this.saveAll())
+                    .then(() => {
+                        this.gameOver();
+                        this.reset();
+                    });
                 break;
             case 'KeyP':
                 localStorage.removeItem('guided');
@@ -694,20 +698,19 @@ export class World implements NbtSerializable {
         this.player!.writeNBT(playerNbt);
         root.putCompound('Player', playerNbt);
 
-        const entityNbt = new NbtCompound();
-        this.entities.forEach(entity => {
-            const nbt = new NbtCompound();
-            entity.writeNBT(nbt);
-            entityNbt.putCompound(entity.getUuid(), nbt);
-        });
-        root.putCompound('Entities', entityNbt);
+        const stageNbt = new NbtCompound();
+        this.stage.writeNBT(stageNbt);
+        root.putCompound('Stage', stageNbt);
+
         return root;
     }
 
     public readNBT(nbt: NbtCompound) {
         const playerNbt = nbt.getCompound('Player');
         if (playerNbt) this.player!.readNBT(playerNbt);
-        console.log(playerNbt);
+
+        const stageNbt = nbt.getCompound('Stage');
+        if (stageNbt) this.stage.readNBT(stageNbt);
     }
 
     public saveAll(): NbtCompound {
