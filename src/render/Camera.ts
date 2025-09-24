@@ -38,7 +38,7 @@ export class Camera {
     private maxShake = 48;         // 最大像素抖动
     private shakeOffset = new MutVec2(0, 0);
 
-    private uiMaxDrift = 64;      // UI 最大漂移像素(镜头快速移动时)
+    private uiMaxDrift = 64;      // HUD 最大漂移像素(镜头快速移动时)
     private uiShakeFactor = 0.5;
 
     public update(target: MutVec2, tickDelta: number): void {

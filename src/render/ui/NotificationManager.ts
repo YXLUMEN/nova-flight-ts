@@ -1,16 +1,17 @@
 import type {IUi} from "./IUi.ts";
-import {LoadingScreen} from "./LoadingScreen.ts";
 import type {World} from "../../world/World.ts";
+import {UiTools} from "./UiTools.ts";
+import {UITheme} from "./theme.ts";
 
 interface Notification {
     text: string;
     startTime: number;
-    duration: number; // 停留时间
+    duration: number; // 停留时间 秒,基于世界时间
     fadeTime: number; // 淡入淡出时间
 }
 
 export class NotificationManager implements IUi {
-    private world: World;
+    private readonly world: World;
     private notifications: Notification[] = [];
     private worldW = 0;
     private worldH = 0;
@@ -19,7 +20,7 @@ export class NotificationManager implements IUi {
         this.world = world;
     }
 
-    public setWorldSize(w: number, h: number) {
+    public setSize(w: number, h: number) {
         this.worldW = w;
         this.worldH = h;
     }
@@ -38,9 +39,7 @@ export class NotificationManager implements IUi {
 
         const now = this.world.getTime();
         ctx.save();
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+        ctx.font = UITheme.font;
 
         let offsetY = 0;
         for (let i = 0; i < this.notifications.length; i++) {
@@ -75,7 +74,7 @@ export class NotificationManager implements IUi {
 
             ctx.fillStyle = 'rgba(0,0,0,0.6)';
             ctx.beginPath();
-            LoadingScreen.roundRect(ctx, x - boxW / 2, y - 6, boxW, 40, 6);
+            UiTools.roundRect(ctx, x - boxW / 2, y - 6, boxW, 40, 6);
             ctx.fill();
 
             // 边框
@@ -84,10 +83,10 @@ export class NotificationManager implements IUi {
             ctx.stroke();
 
             // 文本
-            ctx.fillStyle = 'white';
+            ctx.fillStyle = '#fff';
             ctx.fillText(n.text, x, y + 15);
 
-            offsetY += 50; // 多个通知向上堆叠
+            offsetY += 50;
         }
 
         ctx.restore();
@@ -95,5 +94,6 @@ export class NotificationManager implements IUi {
 
     public destroy(): void {
         this.notifications.length = 0;
+        (this.world as any) = null;
     }
 }

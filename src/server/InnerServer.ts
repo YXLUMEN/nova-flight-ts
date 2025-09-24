@@ -12,12 +12,18 @@ import {AudioManager} from "../sound/AudioManager.ts";
 import {Audios} from "../sound/Audios.ts";
 import {mainWindow} from "../main.ts";
 import {check} from "@tauri-apps/plugin-updater";
+import {UITheme} from "../render/ui/theme.ts";
 
 export async function runInnerServer() {
     window.oncontextmenu = event => event.preventDefault();
+    const ctrl = new AbortController();
+    window.addEventListener('keydown', event => event.preventDefault(), {signal: ctrl.signal});
 
     World.resize();
-    const loadingScreen = new LoadingScreen(World.getCtx(), World.W, World.H);
+    const ctx = World.getCtx();
+    ctx.font = UITheme.font;
+
+    const loadingScreen = new LoadingScreen(ctx, World.W, World.H);
     loadingScreen.loop();
 
     await update(loadingScreen);
@@ -46,12 +52,14 @@ export async function runInnerServer() {
     await mainWindow.setFullscreen(true);
 
     World.resize();
-    const startScreen = new StartScreen(World.getCtx(), {
+    ctx.font = UITheme.font;
+
+    const startScreen = new StartScreen(ctx, {
         title: 'Nova Flight(先行测试版)',
         subtitle: '按 任意键 或 点击按钮 开始',
         buttonText: '开始游戏'
     });
-    startScreen.setWorldSize(World.W, World.H);
+    startScreen.setSize(World.W, World.H);
     startScreen.start();
 
     AudioManager.randomPlay(Audios.NO_MORE_MABO, Audios.SOME_TIME_HJM);
@@ -60,6 +68,7 @@ export async function runInnerServer() {
     await startScreen.onConfirm();
 
     await NovaFlightServer.startGame(manager);
+    ctrl.abort();
 }
 
 async function update(loadingScreen: LoadingScreen): Promise<void> {

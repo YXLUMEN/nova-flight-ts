@@ -7,7 +7,7 @@ import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 import type {IEffect} from "../effect/IEffect.ts";
 import {ScreenFlash} from "../effect/ScreenFlash.ts";
 import {StarField} from "../effect/StarField.ts";
-import {UI} from "../render/ui/UI.ts";
+import {HUD} from "../render/ui/HUD.ts";
 import {STAGE} from "../configs/StageConfig.ts";
 import {DPR} from "../utils/uit.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
@@ -56,7 +56,7 @@ export class World implements NbtSerializable {
     private readonly registryManager: RegistryManager;
 
     public readonly camera: Camera = new Camera();
-    private readonly ui: UI = new UI(this);
+    private readonly ui: HUD = new HUD(this);
     private readonly input = new KeyboardInput(World.canvas);
     private readonly worldSound = new SoundSystem();
 
@@ -86,7 +86,7 @@ export class World implements NbtSerializable {
         this.damageSources = new DamageSources(registryManager);
 
         World.resize();
-        this.ui.setWorldSize(World.W, World.H);
+        this.ui.setSize(World.W, World.H);
 
         this.player = new PlayerEntity(this, this.input);
         this.player?.setPosition(World.W / 2, World.H);
@@ -122,7 +122,7 @@ export class World implements NbtSerializable {
         this.H = Math.floor(rect.height);
 
         this.ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-        World.instance?.ui.setWorldSize(this.W, this.H);
+        World.instance?.ui.setSize(this.W, this.H);
     }
 
     public destroy(): void {

@@ -1,15 +1,7 @@
 import {World} from "../../world/World.ts";
 import type {IUi} from "./IUi.ts";
 import {NovaFlightServer} from "../../server/NovaFlightServer.ts";
-
-interface UIButton {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-    label: string;
-    onClick: () => void;
-}
+import {UIButton} from "./UIButton.ts";
 
 export class PauseOverlay implements IUi {
     private readonly world: World;
@@ -23,7 +15,7 @@ export class PauseOverlay implements IUi {
         this.world = world;
     }
 
-    public setWorldSize(w: number, h: number) {
+    public setSize(w: number, h: number) {
         this.worldW = w;
         this.worldH = h;
         this.layoutButtons();
@@ -34,31 +26,23 @@ export class PauseOverlay implements IUi {
         const centerY = this.worldH / 2;
         this.buttons.length = 0;
         this.buttons.push(
-            {
-                x: centerX - 60,
-                y: centerY - 50,
-                w: 120,
-                h: 36,
-                label: '继续游戏',
-                onClick: () => this.world.togglePause()
-            },
-            {
-                x: centerX - 60,
-                y: centerY,
-                w: 120,
-                h: 36,
-                label: '设置',
-                onClick: () => {
-                }
-            },
-            {
-                x: centerX - 60,
-                y: centerY + 50,
-                w: 120,
-                h: 36,
-                label: '保存并退出',
-                onClick: () => NovaFlightServer.stopGame()
-            }
+            new UIButton(
+                centerX - 60, centerY - 50,
+                120, 36,
+                '继续游戏',
+                () => this.world.togglePause()),
+            new UIButton(
+                centerX - 60, centerY,
+                120, 36,
+                '设置',
+                () => {
+                    this.world.getNotify().show('正在制作');
+                }),
+            new UIButton(
+                centerX - 60, centerY + 50,
+                120, 36,
+                '保存并退出',
+                () => NovaFlightServer.stopGame()),
         );
     }
 
@@ -74,53 +58,27 @@ export class PauseOverlay implements IUi {
         const t = performance.now() * 0.002;
         this.pulse = 0.75 + 0.25 * Math.sin(t);
 
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
         // 主标题
         ctx.fillStyle = `rgba(255,255,255,${this.pulse.toFixed(3)})`;
-        ctx.font = 'bold 32px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+        ctx.font = 'bold 32px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
         ctx.fillText('已暂停', width, height - 100);
 
         // 副提示
         ctx.fillStyle = 'rgba(255,255,255,0.9)';
-        ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+        ctx.font = '16px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
         ctx.fillText('按 Esc 继续', width, height - 70);
 
         // 按钮
-        this.renderButtons(ctx);
+        for (const btn of this.buttons) {
+            btn.render(ctx);
+        }
 
         ctx.restore();
     }
 
-    private renderButtons(ctx: CanvasRenderingContext2D) {
-        ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        for (const btn of this.buttons) {
-            // 背景
-            ctx.fillStyle = 'rgba(255,255,255,0.15)';
-            ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
-
-            // 边框
-            ctx.strokeStyle = 'rgba(255,255,255,0.6)';
-            ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
-
-            // 文本
-            ctx.fillStyle = 'white';
-            ctx.fillText(btn.label, btn.x + btn.w / 2, btn.y + btn.h / 2);
-        }
-    }
-
     public handleClick(mouseX: number, mouseY: number) {
         for (const btn of this.buttons) {
-            if (
-                mouseX >= btn.x &&
-                mouseX <= btn.x + btn.w &&
-                mouseY >= btn.y &&
-                mouseY <= btn.y + btn.h
-            ) {
+            if (btn.hitTest(mouseX, mouseY)) {
                 btn.onClick();
                 return true;
             }

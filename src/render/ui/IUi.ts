@@ -3,7 +3,7 @@ export interface IUi {
 
     render(ctx: CanvasRenderingContext2D): void;
 
-    setWorldSize(w: number, h: number): void;
+    setSize(w: number, h: number): void;
 
     destroy(): void;
 }

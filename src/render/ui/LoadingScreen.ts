@@ -1,10 +1,13 @@
 import {clamp} from "../../utils/math/math.ts";
 import {sleep} from "../../utils/uit.ts";
+import {UITheme} from "./theme.ts";
+import {UiTools} from "./UiTools.ts";
 
 export class LoadingScreen {
     private readonly width: number;
     private readonly height: number;
     private readonly ctx: CanvasRenderingContext2D;
+
     private currentProgress: number = 0;
     private targetProgress: number = 0;
     private message: string = '';
@@ -46,20 +49,19 @@ export class LoadingScreen {
 
             // 背景条
             ctx.fillStyle = '#333';
-            LoadingScreen.roundRect(ctx, barX, barY, barWidth, barHeight, radius);
+            UiTools.roundRect(ctx, barX, barY, barWidth, barHeight, radius);
             ctx.fill();
 
             // 前景条
             const filledWidth = barWidth * this.currentProgress;
             if (filledWidth > 0) {
-                ctx.fillStyle = '#fff';
-                LoadingScreen.roundRect(ctx, barX, barY, filledWidth, barHeight, radius);
+                ctx.fillStyle = UITheme.foreground;
+                UiTools.roundRect(ctx, barX, barY, filledWidth, barHeight, radius);
                 ctx.fill();
             }
 
             // 百分比文字
-            ctx.fillStyle = '#fff';
-            ctx.font = '16px sans-serif';
+            ctx.fillStyle = UITheme.foreground;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(`${Math.floor(this.currentProgress * 100)}%`, width / 2, barY - 20);
@@ -79,27 +81,6 @@ export class LoadingScreen {
         this.update();
         this.render();
         requestAnimationFrame(() => this.loop());
-    }
-
-    public static roundRect(
-        ctx: CanvasRenderingContext2D,
-        x: number,
-        y: number,
-        w: number,
-        h: number,
-        r: number
-    ) {
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.lineTo(x + w - r, y);
-        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-        ctx.lineTo(x + w, y + h - r);
-        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-        ctx.lineTo(x + r, y + h);
-        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-        ctx.lineTo(x, y + r);
-        ctx.quadraticCurveTo(x, y, x + r, y);
-        ctx.closePath();
     }
 
     public async setDone() {

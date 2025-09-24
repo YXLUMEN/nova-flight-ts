@@ -4,11 +4,14 @@ import {Camera} from "../Camera.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import type {IUi} from "./IUi.ts";
 import {World} from "../../world/World.ts";
+import {UIButton} from "./UIButton.ts";
+import {UITheme} from "./theme.ts";
+import {WorldConfig} from "../../configs/WorldConfig.ts";
 
 type StartScreenOptions = {
-    title?: string;
-    subtitle?: string;
-    buttonText?: string;
+    title: string;
+    subtitle: string;
+    buttonText: string;
 };
 
 export class StartScreen implements IUi {
@@ -27,16 +30,24 @@ export class StartScreen implements IUi {
     private tickInterval = 1000 / 50;
     private lastTickTime = 0;
 
-    public constructor(ctx: CanvasRenderingContext2D, options?: StartScreenOptions) {
+    private button: UIButton;
+
+    public constructor(ctx: CanvasRenderingContext2D, options: StartScreenOptions) {
         this.ctx = ctx;
         this.options = {
-            title: options?.title ?? '我的小游戏',
-            subtitle: options?.subtitle ?? '按下开始键进入游戏',
-            buttonText: options?.buttonText ?? '开始游戏'
+            title: options.title,
+            subtitle: options.subtitle,
+            buttonText: options.buttonText
         };
 
-        this.starField.init();
+        this.button = new UIButton(
+            (this.width - 200) / 2, this.height / 2 + 50,
+            200, 50,
+            options.buttonText,
+            this.confirm.bind(this),
+        );
 
+        this.starField.init();
     }
 
     public start() {
@@ -47,16 +58,24 @@ export class StartScreen implements IUi {
         window.addEventListener('keydown', event => {
             if (event.code === 'Space' || event.code === 'Enter') this.confirm();
         }, {signal: this.ctrl.signal});
-        window.addEventListener('click', this.handleClick, {signal: this.ctrl.signal});
+
+        window.addEventListener('click', (event) => {
+            if (this.button.hitTest(event.offsetX, event.offsetY)) {
+                this.button.onClick();
+            }
+        }, {signal: this.ctrl.signal});
+
         window.addEventListener('resize', () => {
             World.resize();
-            this.setWorldSize(World.W, World.H);
+            this.setSize(World.W, World.H);
         }, {signal: this.ctrl.signal});
     }
 
-    public setWorldSize(w: number, h: number) {
+    public setSize(w: number, h: number) {
         this.width = w;
         this.height = h;
+        this.button.x = (this.width - 200) / 2;
+        this.button.y = this.height / 2 + 50;
     }
 
     private bindTick = this.tick.bind(this);
@@ -70,7 +89,7 @@ export class StartScreen implements IUi {
 
         let elapsed = tickDelta - this.lastTickTime;
         while (elapsed >= this.tickInterval) {
-            this.starField.update(1 / 50, this.tempCamera);
+            this.starField.update(WorldConfig.mbps, this.tempCamera);
             this.lastTickTime += this.tickInterval;
             elapsed -= this.tickInterval;
         }
@@ -87,6 +106,7 @@ export class StartScreen implements IUi {
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 48px sans-serif';
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.fillText(this.options.title, this.width / 2, this.height / 2 - 100);
 
         // 副标题
@@ -94,20 +114,8 @@ export class StartScreen implements IUi {
         ctx.fillText(this.options.subtitle, this.width / 2, this.height / 2 - 50);
 
         // 按钮
-        const btnW = 200;
-        const btnH = 50;
-        const btnX = (this.width - btnW) / 2;
-        const btnY = this.height / 2 + 50;
-
-        ctx.fillStyle = '#444';
-        ctx.fillRect(btnX, btnY, btnW, btnH);
-
-        ctx.strokeStyle = '#fff';
-        ctx.strokeRect(btnX, btnY, btnW, btnH);
-
-        ctx.fillStyle = '#fff';
-        ctx.font = '20px sans-serif';
-        ctx.fillText(this.options.buttonText, this.width / 2, btnY + btnH / 2 + 7);
+        ctx.font = UITheme.font;
+        this.button.render(ctx);
     }
 
     public destroy() {
@@ -118,17 +126,6 @@ export class StartScreen implements IUi {
         (this.ctx as any) = null;
         (this.starField as any) = null;
         (this.tempCamera as any) = null;
-    }
-
-    private handleClick = (e: MouseEvent) => {
-        const btnW = 200;
-        const btnH = 50;
-        const btnX = (this.width - btnW) / 2;
-        const btnY = this.height / 2 + 50;
-        if (e.offsetX >= btnX && e.offsetX <= btnX + btnW &&
-            e.offsetY >= btnY && e.offsetY <= btnY + btnH) {
-            this.confirm();
-        }
     }
 
     public onConfirm(cb?: () => void) {

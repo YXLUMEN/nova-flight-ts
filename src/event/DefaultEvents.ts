@@ -50,7 +50,7 @@ export class DefaultEvents {
 
             // TODO
             if (techTree.isUnlocked('emergency_repair')) {
-                if (Math.random() <= 0.008) player.setHealth(player.getHealth() + 5);
+                if (Math.random() <= 0.08) player.setHealth(player.getHealth() + 5);
             }
         });
 
@@ -197,7 +197,7 @@ export class DefaultEvents {
 
             world.getEntities().forEach(entity => entity.discard());
             world.schedule(6, () => {
-                notify.show('按下 G 打开科技界面, 选择一个升级路径', 4);
+                notify.show('按下 G 打开科技界面, 选择一个升级路径', 8);
                 notify.show('我们先从 "炮艇专精" 开始, 并研究至 "钢芯穿甲弹"', 8);
             });
             return;
@@ -205,7 +205,6 @@ export class DefaultEvents {
 
         if (name === 'g_boss') {
             AudioManager.playAudio(Audios.DELTA_FORCE_MAIN);
-            AudioManager.setVolume(1);
 
             notify.show('敌方出动重型单位, 尽可能解锁科技!', 8);
             world.getEntities().forEach(entity => entity.discard());
@@ -225,16 +224,15 @@ export class DefaultEvents {
             AudioManager.removeListener('guide_audio');
             const ctrl = AudioManager.addListener('guide_audio', 'timeupdate', event => {
                 const currentTime = (event.target as HTMLAudioElement).currentTime;
-                if (106 - currentTime < 0.01) {
-                    notify.show('干得好, 接下来就靠你自己了');
-                    boss.onDeath(world.getDamageSources().removed());
-                    ctrl!.abort();
-                    world.schedule(5, () => {
-                        world.reset();
-                        world.setStage(STAGE);
-                    });
-                    localStorage.setItem('guided', 'true');
-                }
+                if (106 - currentTime >= 0.01) return;
+                notify.show('干得好, 接下来就靠你自己了');
+                boss.onDeath(world.getDamageSources().removed());
+                ctrl!.abort();
+                world.schedule(5, () => {
+                    world.reset();
+                    world.setStage(STAGE);
+                });
+                localStorage.setItem('guided', 'true');
             });
         }
     }

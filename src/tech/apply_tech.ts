@@ -181,7 +181,7 @@ export function applyTech(world: World, id: string) {
             player.steeringGear = true;
             break;
         }
-        case 'auto_aim': {
+        case 'fire_control_computer': {
             player.autoAim = new AutoAim(player);
             break;
         }

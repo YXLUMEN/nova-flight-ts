@@ -1,4 +1,4 @@
-import type {UIOptions, WeaponUIInfo} from '../../apis/IUIInfo.ts';
+import type {WeaponUIInfo} from '../../apis/IUIInfo.ts';
 import {World} from '../../world/World.ts';
 import type {Weapon} from '../../item/weapon/Weapon.ts';
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
@@ -10,15 +10,14 @@ import {PauseOverlay} from "./PauseOverlay.ts";
 import type {IUi} from "./IUi.ts";
 import {NotificationManager} from "./NotificationManager.ts";
 
-export class UI implements IUi {
+export class HUD implements IUi {
     private readonly world: World;
-    private readonly font: string;
-    private readonly hudColor: string;
-    private readonly getWeaponUI: (stack: ItemStack) => WeaponUIInfo | null;
+
+    private readonly font: string = '14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+    private readonly hudColor: string = '#fff';
 
     public readonly pauseOverlay: PauseOverlay;
     public readonly notify: NotificationManager;
-
 
     // HUD 布局参数
     private worldW: number = 0;
@@ -30,21 +29,18 @@ export class UI implements IUi {
     private readonly barHeight = 10;
     private displayHealth: number = 0;
 
-    public constructor(world: World, opts: UIOptions = {}) {
+    public constructor(world: World) {
         this.world = world;
-        this.font = opts.font ?? '14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
-        this.hudColor = opts.hudColor ?? '#ffffff';
-        this.getWeaponUI = opts.getWeaponUI ?? this.defaultWeaponAdapter;
 
         this.pauseOverlay = new PauseOverlay(world);
         this.notify = new NotificationManager(world);
     }
 
-    public setWorldSize(w: number, h: number) {
+    public setSize(w: number, h: number) {
         this.worldW = w;
         this.worldH = h;
-        this.pauseOverlay.setWorldSize(w, h);
-        this.notify.setWorldSize(w, h);
+        this.pauseOverlay.setSize(w, h);
+        this.notify.setSize(w, h);
     }
 
     public tick(tickDelta: number) {
@@ -71,6 +67,7 @@ export class UI implements IUi {
 
         ctx.save();
         ctx.font = this.font;
+        ctx.textAlign = "left";
         ctx.textBaseline = 'top';
         ctx.fillStyle = this.hudColor;
 
@@ -106,6 +103,8 @@ export class UI implements IUi {
 
         this.drawPrimaryWeapons(ctx);
 
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         this.notify.render(ctx);
 
         if (!this.world.isTicking) {
@@ -129,7 +128,7 @@ export class UI implements IUi {
         ctx.fillRect(x | 0, y | 0, this.barWidth | 0, this.barHeight | 0);
 
         // 白色缓冲条
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = '#fff';
         ctx.fillRect(x | 0, y | 0, (this.barWidth * displayRatio) | 0, this.barHeight | 0);
 
         // 红色当前血条
@@ -141,7 +140,7 @@ export class UI implements IUi {
         ctx.fillText('船体值', (x + this.barWidth + 8) | 0, (y | 0) - 1);
     }
 
-    private defaultWeaponAdapter(stack: ItemStack): WeaponUIInfo | null {
+    private getWeaponUI(stack: ItemStack): WeaponUIInfo | null {
         const weapon = stack.getItem() as Weapon;
         const cd = weapon.getCooldown(stack) ?? 0;
         const max = weapon.getMaxCooldown(stack) ?? 1;
@@ -220,11 +219,11 @@ export class UI implements IUi {
         ctx.textBaseline = 'middle';
 
         ctx.fillStyle = 'rgb(255,255,255)';
-        ctx.font = 'bold 32px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+        ctx.font = 'bold 32px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
         ctx.fillText('游戏结束', width / 2, y);
         y += 48;
 
-        ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+        ctx.font = '16px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
         ctx.fillText(`游戏时长: ${time}, 得分: ${score}, 击杀效率: ${(score / time).toFixed(2)}`, width / 2, y);
         y += 32;
 
@@ -264,12 +263,10 @@ export class UI implements IUi {
 
         // 文案
         ctx.font = `bold 14px ui-monospace, Menlo, Consolas, monospace`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
         ctx.fillStyle = "rgba(255,255,255,0.92)";
         ctx.shadowColor = "rgba(255,60,60,0.4)";
         ctx.shadowBlur = 6;
-        ctx.fillText("敌锁定", x + barW / 2, y + barH / 2);
+        ctx.fillText("敌导弹", x + barW / 2, y + barH / 2);
 
         ctx.restore();
     }

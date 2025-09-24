@@ -57,10 +57,10 @@ export class NovaFlightServer {
 
     public static async saveGame(compound: NbtCompound): Promise<void> {
         try {
-            await mkdir('saves', {baseDir: BaseDirectory.AppData, recursive: true});
+            await mkdir('saves', {baseDir: BaseDirectory.Resource, recursive: true});
 
             const bytes = compound.toBinary();
-            await writeFile('saves/save.dat', bytes, {baseDir: BaseDirectory.AppData});
+            await writeFile('saves/save.dat', bytes, {baseDir: BaseDirectory.Resource});
 
             await mainWindow.close();
         } catch (err) {
@@ -71,10 +71,10 @@ export class NovaFlightServer {
 
     public static async loadGame(): Promise<NbtCompound | null> {
         try {
-            const available = await exists('saves/save.dat', {baseDir: BaseDirectory.AppData});
+            const available = await exists('saves/save.dat', {baseDir: BaseDirectory.Resource});
             if (!available) return null;
 
-            const bytes = await readFile('saves/save.dat', {baseDir: BaseDirectory.AppData});
+            const bytes = await readFile('saves/save.dat', {baseDir: BaseDirectory.Resource});
             if (!bytes || bytes.length === 0) return null;
             return NbtCompound.fromBinary(bytes);
         } catch (err) {
