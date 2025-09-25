@@ -21,10 +21,11 @@ export class SpawnMarkerEntity extends Entity {
         super.tick();
         if (this.age++ >= 200) {
             this.discard();
-            if (this.getWorld().isPeaceMode()) return;
+            const world = this.getWorld();
+            if (world.isPeaceMode()) return;
 
             if (!this.force) {
-                const player = World.instance.player;
+                const player = world.player;
                 if (!player) return;
 
                 const dx = this.spawnMob.getPositionRef.x - player.getPositionRef.x;

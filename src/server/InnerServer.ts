@@ -1,7 +1,6 @@
 // noinspection DuplicatedCode
 
 import {NovaFlightServer} from "./NovaFlightServer.ts";
-import {World} from "../world/World.ts";
 import {LoadingScreen} from "../render/ui/LoadingScreen.ts";
 import {sleep} from "../utils/uit.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
@@ -13,17 +12,18 @@ import {Audios} from "../sound/Audios.ts";
 import {mainWindow} from "../main.ts";
 import {check} from "@tauri-apps/plugin-updater";
 import {UITheme} from "../render/ui/theme.ts";
+import {WorldScreen} from "../render/WorldScreen.ts";
 
 export async function runInnerServer() {
     window.oncontextmenu = event => event.preventDefault();
     const ctrl = new AbortController();
     window.addEventListener('keydown', event => event.preventDefault(), {signal: ctrl.signal});
+    NovaFlightServer.registryListener();
 
-    World.resize();
-    const ctx = World.getCtx();
-    ctx.font = UITheme.font;
+    WorldScreen.resize();
+    WorldScreen.ctx.font = UITheme.font;
 
-    const loadingScreen = new LoadingScreen(ctx, World.W, World.H);
+    const loadingScreen = new LoadingScreen(WorldScreen.ctx, WorldScreen.VIEW_W, WorldScreen.VIEW_H);
     loadingScreen.loop();
 
     await update(loadingScreen);
@@ -51,18 +51,18 @@ export async function runInnerServer() {
 
     await mainWindow.setFullscreen(true);
 
-    World.resize();
-    ctx.font = UITheme.font;
+    WorldScreen.resize();
+    WorldScreen.ctx.font = UITheme.font;
 
-    const startScreen = new StartScreen(ctx, {
+    const startScreen = new StartScreen(WorldScreen.ctx, {
         title: 'Nova Flight(先行测试版)',
         subtitle: '按 任意键 或 点击按钮 开始',
     });
-    startScreen.setSize(World.W, World.H);
+    startScreen.setSize(WorldScreen.VIEW_W, WorldScreen.VIEW_H);
     startScreen.start();
 
-    AudioManager.randomPlay(Audios.NO_MORE_MABO, Audios.SOME_TIME_HJM);
-    AudioManager.setVolume(0.3);
+    AudioManager.randomPlay(Audios.NO_MORE_MABO, Audios.SOME_TIME_HJM, Audios.SPACE_WALK, Audios.COME_ON_MABO);
+    AudioManager.setVolume(0.5);
 
     await startScreen.onConfirm();
 

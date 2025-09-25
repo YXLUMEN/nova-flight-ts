@@ -1,15 +1,12 @@
 import {KeyboardInput} from "../input/KeyboardInput.ts";
 import {type Entity} from "../entity/Entity.ts";
 import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
-import {Camera} from "../render/Camera.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 import type {IEffect} from "../effect/IEffect.ts";
 import {ScreenFlash} from "../effect/ScreenFlash.ts";
 import {StarField} from "../effect/StarField.ts";
-import {HUD} from "../render/ui/HUD.ts";
 import {STAGE} from "../configs/StageConfig.ts";
-import {DPR} from "../utils/uit.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {ParticlePool} from "../effect/ParticlePool.ts";
@@ -34,31 +31,23 @@ import type {SoundEvent} from "../sound/SoundEvent.ts";
 import {AtomicInteger} from "../utils/math/AtomicInteger.ts";
 import {CIWSBulletEntity} from "../entity/projectile/CIWSBulletEntity.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
-import type {UnlistenFn} from "@tauri-apps/api/event";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {NovaFlightServer} from "../server/NovaFlightServer.ts";
+import {WorldScreen} from "../render/WorldScreen.ts";
 
 export class World implements NbtSerializable {
     public static readonly globalSound = new SoundSystem();
     private static worldInstance: World;
-    private static canvas = document.getElementById("game") as HTMLCanvasElement;
-    private static ctx = World.canvas.getContext("2d")!;
 
-    public static W = 800;
-    public static H = 600;
+    public static readonly WORLD_W = 1692;
+    public static readonly WORLD_H = 1030;
 
     public readonly events: GeneralEventBus<IEvents> = GeneralEventBus.getEventBus();
-    private readonly listener: Promise<UnlistenFn>[] = [];
-    private readonly ctrl = new AbortController();
-
     public empBurst: number = 0
 
     private readonly registryManager: RegistryManager;
-
-    public readonly camera: Camera = new Camera();
-    private readonly ui: HUD = new HUD(this);
-    private readonly input = new KeyboardInput(World.canvas);
+    private readonly input = new KeyboardInput(WorldScreen.canvas);
     private readonly worldSound = new SoundSystem();
 
     private readonly damageSources: DamageSources;
@@ -66,7 +55,7 @@ export class World implements NbtSerializable {
     private over = false;
     private freeze = false;
     private ticking = true;
-    private rendering = true;
+    public rendering = true;
     // schedule
     private time = 0;
     private nextTimerId = new AtomicInteger();
@@ -86,11 +75,8 @@ export class World implements NbtSerializable {
         this.registryManager = registryManager;
         this.damageSources = new DamageSources(registryManager);
 
-        World.resize();
-        this.ui.setSize(World.W, World.H);
-
         this.player = new PlayerEntity(this, this.input);
-        this.player?.setPosition(World.W / 2, World.H);
+        this.player?.setPosition(World.WORLD_W / 2, World.WORLD_H);
 
         this.registryListeners();
         this.registryEvents();
@@ -105,37 +91,15 @@ export class World implements NbtSerializable {
         return this.worldInstance;
     }
 
-    public static get instance(): World {
+    public static get instance(): World | null {
         return this.worldInstance;
-    }
-
-    public static getCtx() {
-        return this.ctx;
-    }
-
-    public static resize() {
-        const rect = this.canvas.getBoundingClientRect();
-
-        this.canvas.width = Math.floor(rect.width * DPR);
-        this.canvas.height = Math.floor(rect.height * DPR);
-
-        this.W = Math.floor(rect.width);
-        this.H = Math.floor(rect.height);
-
-        this.ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-        World.instance?.ui.setSize(this.W, this.H);
     }
 
     public destroy(): void {
         this.clear();
 
         this.input.clearKeyHandler();
-        this.listener.forEach(async (unListen) => {
-            const fn = await unListen;
-            fn();
-        });
         this.events.clear();
-        this.ctrl.abort();
     }
 
     public clear(): void {
@@ -161,7 +125,7 @@ export class World implements NbtSerializable {
         this.clear();
 
         this.player = new PlayerEntity(this, this.input);
-        this.player.setPosition(World.W / 2, World.H);
+        this.player.setPosition(World.WORLD_W / 2, World.WORLD_H);
         this.player.setVelocity(0, -24);
 
         this.over = false;
@@ -173,12 +137,12 @@ export class World implements NbtSerializable {
     public tickWorld(tickDelta: number) {
         if (!this.ticking) return;
 
-        this.ui.tick(tickDelta);
+        WorldScreen.hud.tick(tickDelta);
 
         const dt = this.freeze ? 0 : tickDelta;
         const player = this.player!;
 
-        this.camera.update(player.getPositionRef.clone(), tickDelta);
+        WorldScreen.camera.update(player.getPositionRef.clone(), tickDelta);
 
         // 阶段更新
         this.stage.tick(this);
@@ -202,7 +166,7 @@ export class World implements NbtSerializable {
         }
 
         this.particlePool.tick(dt);
-        this.starField.update(dt, this.camera);
+        this.starField.update(dt, WorldScreen.camera);
 
         this.input.updateEndFrame();
 
@@ -232,7 +196,7 @@ export class World implements NbtSerializable {
 
             // 近防炮命中
             if (entity instanceof CIWSBulletEntity) {
-                for (const entity2 of this.entities.getValues()) {
+                for (const entity2 of this.entities.values()) {
                     if (entity2.invulnerable || entity2 === entity.owner) continue;
                     // 抵消弹射物
                     if (entity2 instanceof ProjectileEntity) {
@@ -436,13 +400,13 @@ export class World implements NbtSerializable {
     public render() {
         if (!this.rendering) return;
 
-        const ctx = World.ctx;
-        ctx.clearRect(0, 0, World.W, World.H);
+        const ctx = WorldScreen.ctx;
+        ctx.clearRect(0, 0, WorldScreen.VIEW_W, WorldScreen.VIEW_H);
 
-        this.starField.render(ctx, this.camera);
+        this.starField.render(ctx, WorldScreen.camera);
 
         ctx.save();
-        const offset = this.camera.viewOffset;
+        const offset = WorldScreen.camera.viewOffset;
         ctx.translate(-offset.x, -offset.y);
 
         // 背景层
@@ -451,7 +415,7 @@ export class World implements NbtSerializable {
         // 其他实体
         this.entities.forEach(entity => {
             EntityRenderers.getRenderer(entity).render(entity, ctx);
-        });
+        })
 
         // 特效
         for (let i = 0; i < this.effects.length; i++) this.effects[i].render(ctx);
@@ -480,15 +444,13 @@ export class World implements NbtSerializable {
 
         ctx.restore();
 
-        this.ui.render(ctx);
-    }
-
-    public getNotify() {
-        return this.ui.notify;
+        WorldScreen.hud.render(ctx);
+        WorldScreen.notify.render(ctx);
+        if (!this.ticking) WorldScreen.pauseOverlay.render(ctx);
     }
 
     public drawBackground(ctx: CanvasRenderingContext2D) {
-        const v = this.camera.viewRect;
+        const v = WorldScreen.camera.viewRect;
 
         // 网格
         const gridSize = 80;
@@ -499,8 +461,7 @@ export class World implements NbtSerializable {
         const endY = Math.ceil(v.bottom / gridSize) * gridSize;
 
         ctx.save();
-        ctx.globalAlpha = 0.06;
-        ctx.strokeStyle = "#89b7ff";
+        ctx.strokeStyle = "rgba(137,183,255,0.06)";
 
         ctx.beginPath();
         for (let x = startX; x <= endX; x += gridSize) {
@@ -514,10 +475,9 @@ export class World implements NbtSerializable {
         ctx.stroke();
 
         // 边界线
-        ctx.globalAlpha = 0.3;
-        ctx.strokeStyle = "#e6f0ff";
+        ctx.strokeStyle = "rgba(230,240,255,0.3)";
         ctx.beginPath();
-        ctx.rect(0, 0, World.W, World.H);
+        ctx.rect(0, 0, World.WORLD_W, World.WORLD_H);
         ctx.stroke();
 
         ctx.restore();
@@ -585,7 +545,7 @@ export class World implements NbtSerializable {
                 }
 
                 const boss = new BossEntity(EntityTypes.BOSS_ENTITY, this, 64);
-                boss.setPosition(World.W / 2, 64);
+                boss.setPosition(World.WORLD_W / 2, 64);
 
                 const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, this, boss, true);
                 mark.setPositionByVec(boss.getPositionRef);
@@ -637,20 +597,9 @@ export class World implements NbtSerializable {
     }
 
     private registryListeners() {
-        const onBlur = mainWindow.listen('tauri://blur', () => this.setTicking(false));
-        const onResize = mainWindow.listen('tauri://resize', async () => {
-            this.rendering = !await mainWindow.isMinimized();
-        });
-        this.listener.push(onBlur, onResize);
 
-        // 实际可视页面变化
-        window.addEventListener("resize", () => World.resize(), {signal: this.ctrl.signal});
 
-        World.canvas.addEventListener('click', event => {
-            if (!this.isTicking) this.ui.pauseOverlay.handleClick(event.offsetX, event.offsetY);
-        }, {signal: this.ctrl.signal});
-
-        this.input.onKeyDown('default_input', this.registryInput.bind(this));
+        this.input.onKeyDown('world_input', this.registryInput.bind(this));
     }
 
     private devMode(code: string) {
@@ -662,6 +611,7 @@ export class World implements NbtSerializable {
                 break;
             case 'KeyC':
                 this.peaceMod = !this.peaceMod;
+                this.peaceMod ? this.stage.pause() : this.stage.resume();
                 this.loadedMobs.forEach(mob => mob.discard());
                 break;
             case 'KeyH':
@@ -678,7 +628,7 @@ export class World implements NbtSerializable {
                 break;
             case 'NumpadSubtract':
                 WorldConfig.enableCameraOffset = !WorldConfig.enableCameraOffset;
-                this.camera.cameraOffset.set(0, 0);
+                WorldScreen.camera.cameraOffset.set(0, 0);
                 break;
             case 'KeyS':
                 NovaFlightServer.saveGame(this.saveAll())
@@ -716,7 +666,6 @@ export class World implements NbtSerializable {
     public saveAll(): NbtCompound {
         const root = new NbtCompound();
         this.writeNBT(root);
-        console.log(root);
         return root;
     }
 }

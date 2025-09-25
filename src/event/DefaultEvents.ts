@@ -21,6 +21,7 @@ import {SoundEvents} from "../sound/SoundEvents.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {Audios} from "../sound/Audios.ts";
 import {STAGE} from "../configs/StageConfig.ts";
+import {WorldScreen} from "../render/WorldScreen.ts";
 
 
 export class DefaultEvents {
@@ -80,7 +81,7 @@ export class DefaultEvents {
 
             BombWeapon.summonExplosion(world, event.pos, event);
             BombWeapon.spawnExplosionVisual(world, pos, event);
-            if (shake) world.camera.addShake(shake, 0.5);
+            if (shake) WorldScreen.camera.addShake(shake, 0.5);
             if (flash) world.addEffect(flash);
         }
 
@@ -145,7 +146,7 @@ export class DefaultEvents {
             if (event.name === 'P6' || event.name === 'mP3') {
                 if (BossEntity.hasBoss) return;
                 const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 64);
-                boss.setPosition(World.W / 2, 64);
+                boss.setPosition(World.WORLD_W / 2, 64);
 
                 const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
                 mark.setPositionByVec(boss.getPositionRef);
@@ -159,7 +160,7 @@ export class DefaultEvents {
     private static guide(event: any, player: PlayerEntity): void {
         const name: string = event.name as string;
         const world = player.getWorld();
-        const notify = world.getNotify();
+        const notify = WorldScreen.notify;
 
         if (name === 'g_move') {
             notify.show('w/s/a/d 或 方向键 移动', 8);
@@ -199,12 +200,13 @@ export class DefaultEvents {
         }
 
         if (name === 'g_tech') {
-            notify.show('敌人派出了精英单位', 8);
+            notify.show('敌人派出了精英单位, 他们拥有高额伤害抗性', 8);
 
             world.getEntities().forEach(entity => entity.discard());
             world.schedule(6, () => {
-                notify.show('按下 G 打开科技界面, 选择一个升级路径', 8);
-                notify.show('我们先从 "炮艇专精" 开始, 并研究至 "钢芯穿甲弹"', 8);
+                notify.show('按下 G键 打开科技界面, 选择一个升级路径', 8);
+                notify.show('我们先从 "炮艇专精" 开始, 并研究至 "钢芯穿甲弹"', 10);
+                notify.show('按 R键 或者 鼠标滚轮 切换主武器', 12);
             });
             return;
         }
@@ -220,7 +222,7 @@ export class DefaultEvents {
             player.setHealth(player.getMaxHealth());
 
             const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 4096);
-            boss.setPosition(World.W / 2, 64);
+            boss.setPosition(World.WORLD_W / 2, 64);
             boss.invulnerable = true;
 
             const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);

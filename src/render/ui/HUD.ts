@@ -6,18 +6,12 @@ import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {clamp, PI2} from "../../utils/math/math.ts";
 import type {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import type {ItemStack} from "../../item/ItemStack.ts";
-import {PauseOverlay} from "./PauseOverlay.ts";
 import type {IUi} from "./IUi.ts";
-import {NotificationManager} from "./NotificationManager.ts";
+import {WorldScreen} from "../WorldScreen.ts";
 
 export class HUD implements IUi {
-    private readonly world: World;
-
     private readonly font: string = '14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
     private readonly hudColor: string = '#fff';
-
-    public readonly pauseOverlay: PauseOverlay;
-    public readonly notify: NotificationManager;
 
     // HUD 布局参数
     private worldW: number = 0;
@@ -29,22 +23,13 @@ export class HUD implements IUi {
     private readonly barHeight = 10;
     private displayHealth: number = 0;
 
-    public constructor(world: World) {
-        this.world = world;
-
-        this.pauseOverlay = new PauseOverlay(world);
-        this.notify = new NotificationManager(world);
-    }
-
     public setSize(w: number, h: number) {
         this.worldW = w;
         this.worldH = h;
-        this.pauseOverlay.setSize(w, h);
-        this.notify.setSize(w, h);
     }
 
     public tick(tickDelta: number) {
-        const player = this.world.player;
+        const player = World.instance!.player;
         if (!player) return;
 
         const realHealth = player.getHealth();
@@ -57,12 +42,15 @@ export class HUD implements IUi {
     }
 
     public render(ctx: CanvasRenderingContext2D) {
-        if (this.world.isOver) {
-            this.renderEndOverlay(ctx);
+        const world = World.instance;
+        if (!world) return;
+
+        if (world.isOver) {
+            this.renderEndOverlay(ctx, world);
             return;
         }
 
-        const player = this.world.player;
+        const player = world.player;
         if (!player) return;
 
         ctx.save();
@@ -73,7 +61,7 @@ export class HUD implements IUi {
 
         let x = this.marginX;
         let y = this.marginY;
-        const uo = this.world.camera.uiOffset;
+        const uo = WorldScreen.camera.uiOffset;
 
         ctx.translate(uo.x, uo.y);
         ctx.fillText(`分数: ${player.getPhaseScore()}`, x, y);
@@ -101,16 +89,7 @@ export class HUD implements IUi {
 
         ctx.restore();
 
-        this.drawPrimaryWeapons(ctx);
-
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        this.notify.render(ctx);
-
-        if (!this.world.isTicking) {
-            this.pauseOverlay.render(ctx);
-            return;
-        }
+        this.drawPrimaryWeapons(ctx, world);
 
         if (player.lockedMissile.size > 0) {
             this.renderLockAlert(ctx);
@@ -151,11 +130,11 @@ export class HUD implements IUi {
         return {label, color, cooldown: Math.max(0, cd), maxCooldown: Math.max(0.001, max)};
     }
 
-    private drawPrimaryWeapons(ctx: CanvasRenderingContext2D) {
-        const player = this.world.player;
+    private drawPrimaryWeapons(ctx: CanvasRenderingContext2D, world: World) {
+        const player = world.player;
         if (!player) return;
 
-        const cam = this.world.camera.viewOffset;
+        const cam = WorldScreen.camera.viewOffset;
         const px = player.getPositionRef.x - cam.x;
         const py = player.getPositionRef.y - cam.y;
 
@@ -174,7 +153,6 @@ export class HUD implements IUi {
         ctx.globalAlpha = 0.6;
         ctx.fillRect(anchorX, py, (64 * ratio) | 0, 2);
 
-        ctx.globalAlpha = 1.0;
         ctx.fillStyle = this.hudColor;
         ctx.fillText(weapon.getDisplayName(), anchorX, py - 16);
 
@@ -203,13 +181,13 @@ export class HUD implements IUi {
         ctx.fillText(info.label, (x + w + 8) | 0, (y | 0) - 1);
     }
 
-    private renderEndOverlay(ctx: CanvasRenderingContext2D) {
+    private renderEndOverlay(ctx: CanvasRenderingContext2D, world: World) {
         const width = this.worldW;
         const height = this.worldH;
         let y = height / 2 - 64;
 
-        const time = this.world.getTime() | 0;
-        const score = this.world.player?.getPhaseScore() ?? 0;
+        const time = world.getTime() | 0;
+        const score = world.player?.getPhaseScore() ?? 0;
 
         ctx.save();
         ctx.fillStyle = 'rgba(255,0,0,0.3)';
@@ -233,12 +211,9 @@ export class HUD implements IUi {
     }
 
     public renderLockAlert(ctx: CanvasRenderingContext2D) {
-        const barW = 120;
-        const barH = 32;
-        const x = (this.worldW - barW) / 2;
-        const y = this.worldH - barH - 28;
+        const x = (this.worldW - 120) / 2;
+        const y = this.worldH - 60;
 
-        // 脉动闪烁
         const t = performance.now() * 0.01;
         const pulse = (Math.sin(t * PI2) + 1) / 2;
         const borderAlpha = 0.35 + 0.45 * pulse;
@@ -251,7 +226,7 @@ export class HUD implements IUi {
         ctx.shadowColor = `rgba(255,70,70,${0.35 + 0.45 * pulse})`;
         ctx.shadowBlur = 16;
         ctx.beginPath();
-        ctx.rect(x, y, barW, barH);
+        ctx.rect(x, y, 120, 32);
         ctx.closePath();
         ctx.fill();
 
@@ -263,16 +238,15 @@ export class HUD implements IUi {
 
         // 文案
         ctx.font = `bold 14px ui-monospace, Menlo, Consolas, monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.fillStyle = "rgba(255,255,255,0.92)";
         ctx.shadowColor = "rgba(255,60,60,0.4)";
-        ctx.shadowBlur = 6;
-        ctx.fillText("敌导弹", x + barW / 2, y + barH / 2);
+        ctx.fillText("敌导弹", x + 60, y + 16);
 
         ctx.restore();
     }
 
     public destroy() {
-        (this.getWeaponUI as any) = null;
-        this.pauseOverlay.destroy();
     }
 }

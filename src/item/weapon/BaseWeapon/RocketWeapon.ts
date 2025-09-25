@@ -28,8 +28,6 @@ export class RocketWeapon extends BaseWeapon {
                 return;
             }
 
-            const yaw = attacker.getYaw();
-
             let rocket = null;
             if (randomRocketEnable) {
                 rocket = this.randomRocket(world, attacker);
@@ -39,9 +37,10 @@ export class RocketWeapon extends BaseWeapon {
                 rocket.explosionDamage = stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 12);
                 rocket.explosionRadius = stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 72);
             }
-            this.setBullet(rocket, attacker, RocketWeapon.BULLET_SPEED, yaw, 2);
+            this.setBullet(rocket, attacker, RocketWeapon.BULLET_SPEED, 4, 2);
             world.spawnEntity(rocket);
 
+            const yaw = attacker.getYaw();
             attacker.updateVelocity(-0.6, Math.cos(yaw), Math.sin(yaw));
         });
 

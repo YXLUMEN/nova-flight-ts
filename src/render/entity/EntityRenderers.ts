@@ -15,6 +15,7 @@ import {DecoyEntityRender} from "./DecoyEntityRender.ts";
 import {MissileEnemyEntityRender} from "./MissileEnemyEntityRender.ts";
 import {deepFreeze} from "../../utils/uit.ts";
 import {CIWSBulletEntityRender} from "./CIWSBulletEntityRender.ts";
+import {ADSEntityRender} from "./ADSEntityRender.ts";
 
 export class EntityRenderers {
     private static readonly RENDERER_FACTORIES = new Map<EntityType<Entity>, EntityRenderer<Entity>>();
@@ -42,6 +43,7 @@ export class EntityRenderers {
         this.register(EntityTypes.DECOY_ENTITY, new DecoyEntityRender());
         this.register(EntityTypes.MISSILE_ENEMY_ENTITY, new MissileEnemyEntityRender());
         this.register(EntityTypes.CIWS_BULLET_ENTITY, new CIWSBulletEntityRender());
+        this.register(EntityTypes.ADS_ENTITY, new ADSEntityRender());
         this.compileRenders();
     }
 

@@ -31,7 +31,7 @@ export class DecoyEntity extends Entity implements IOwnable {
         velocity.multiply(0.98);
 
         const pos = this.getPositionRef;
-        if (pos.y < -20 || pos.y > World.H + 20 || pos.x < -20 || pos.x > World.W + 20) {
+        if (pos.y < -20 || pos.y > World.WORLD_H + 20 || pos.x < -20 || pos.x > World.WORLD_W + 20) {
             this.discard();
         }
     }

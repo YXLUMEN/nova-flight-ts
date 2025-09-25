@@ -13,8 +13,8 @@ function spawnTopRandomCtor<T extends MobEntity>(
     init?: (mob: T, ctx: SpawnCtx) => void
 ): MobFactory {
     return (ctx) => {
-        const x = randInt(24, World.W - 24);
-        const mob = type.create(World.instance, ...args);
+        const x = randInt(24, World.WORLD_W - 24);
+        const mob = type.create(World.instance!, ...args);
         mob.setPosition(x, -30);
         init?.(mob, ctx);
         return mob;
@@ -101,9 +101,9 @@ function spawnTopRandomCtorS<T extends MobEntity>(
 
     return (ctx) => {
         const minX = margin;
-        const maxX = World.W - margin;
+        const maxX = World.WORLD_W - margin;
         const x = sampleX(minX, maxX);
-        const mob = type.create(World.instance, ...args);
+        const mob = type.create(World.instance!, ...args);
         mob.setPosition(x, -30);
         init?.(mob as T, ctx);
         return mob;
@@ -119,10 +119,10 @@ function spawnLineCtor<T extends MobEntity>(
 ): MobFactory {
     const {gap = 48, startY = -30} = opts;
     return (ctx) => {
-        const startX = randInt(24, World.W - 24 - gap * (count - 1));
+        const startX = randInt(24, World.WORLD_W - 24 - gap * (count - 1));
         const arr: MobEntity[] = [];
         for (let i = 0; i < count; i++) {
-            const mob = type.create(World.instance, ...args);
+            const mob = type.create(World.instance!, ...args);
             mob.setPosition(startX + i * gap, startY);
             init?.(mob, i, ctx);
             arr.push(mob);
@@ -135,10 +135,10 @@ function spawnFormation(configs: spawnConfig<any>[]): MobFactory {
     return (ctx) => {
         const arr = [];
         let gap = 0;
-        const x = randInt(24, World.W - 24);
+        const x = randInt(24, World.WORLD_W - 24);
         for (const config of configs) {
-            const mob = config.type.create(World.instance, ...config.args) as MobEntity;
-            mob.setPosition(x, -30 + gap);
+            const mob = config.type.create(World.instance!, ...config.args) as MobEntity;
+            mob.setPosition(x, gap);
             gap += -16 - mob.getHeight();
             config.init?.(mob, ctx);
             arr.push(mob);
@@ -158,10 +158,10 @@ function spawnInMapCtor<T extends MobEntity>(
 
     return (ctx) => {
         const minX = margin;
-        const maxX = World.W - margin;
+        const maxX = World.WORLD_W - margin;
         const minY = margin;
-        const maxY = World.H - margin;
-        const playerPos = World.instance.player!.getPositionRef;
+        const maxY = World.WORLD_H - margin;
+        const playerPos = World.instance!.player!.getPositionRef;
 
         // 多次采样，选距离玩家最远的点
         let bestX = minX, bestY = minY;
@@ -180,7 +180,7 @@ function spawnInMapCtor<T extends MobEntity>(
             }
         }
 
-        const mob = type.create(World.instance, ...args);
+        const mob = type.create(World.instance!, ...args);
         mob.setPosition(bestX, bestY);
         init?.(mob as T, ctx);
         return mob;
@@ -198,10 +198,10 @@ function spawnAvoidPlayerCtor<T extends MobEntity>(
 
     return (ctx) => {
         const minX = margin;
-        const maxX = World.W - margin;
+        const maxX = World.WORLD_W - margin;
         const minY = margin;
-        const maxY = World.H - margin;
-        const playerPos = World.instance.player!.getPositionRef;
+        const maxY = World.WORLD_H - margin;
+        const playerPos = World.instance!.player!.getPositionRef;
 
         let x: number, y: number;
         let tries = 0;
@@ -212,10 +212,10 @@ function spawnAvoidPlayerCtor<T extends MobEntity>(
             if (tries > 20) break;
         } while (((x - playerPos.x) ** 2 + (y - playerPos.y) ** 2) < safeRadius);
 
-        const mob = type.create(World.instance, ...args);
+        const mob = type.create(World.instance!, ...args);
         mob.setPosition(x, y);
         init?.(mob as T, ctx);
-        const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, World.instance, mob);
+        const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, World.instance!, mob);
         mark.setPosition(x, y);
         return mark;
     };

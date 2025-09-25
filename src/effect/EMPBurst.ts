@@ -1,12 +1,12 @@
 import type {IEffect} from "./IEffect.ts";
-import type {Vec2} from "../utils/math/Vec2.ts";
 import {PI2} from "../utils/math/math.ts";
+import type {IVec} from "../utils/math/IVec.ts";
 
 export class EMPBurst implements IEffect {
     public alive = true;
     private t = 0;
 
-    private pos: Vec2
+    private pos: IVec;
     private readonly radius: number;
     private readonly duration: number;
     private readonly bolts: number;
@@ -18,7 +18,7 @@ export class EMPBurst implements IEffect {
     private readonly drawRing: boolean;
 
     public constructor(
-        pos: Vec2,
+        pos: IVec,
         radius: number,
         duration = 0.6,
         bolts = 8,

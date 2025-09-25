@@ -1,10 +1,10 @@
 import type {IEffect} from "./IEffect.ts";
-import type {Vec2} from "../utils/math/Vec2.ts";
+import type {IVec} from "../utils/math/IVec.ts";
 
 export class RadialRing implements IEffect {
     public alive = true;
 
-    private readonly center: Vec2;
+    private readonly center: IVec;
     private readonly r0: number;
     private readonly r1: number;
     private readonly life: number;
@@ -12,7 +12,7 @@ export class RadialRing implements IEffect {
 
     private t = 0;
 
-    public constructor(center: Vec2, r0: number, r1: number, life: number, color: string) {
+    public constructor(center: IVec, r0: number, r1: number, life: number, color: string) {
         this.color = color;
         this.life = life;
         this.r1 = r1;

@@ -21,7 +21,7 @@ export class DecoyReleaser extends SpecialWeapon {
         let quickReCount = 0;
         let sustainReCount = 0;
 
-        const sustainSchedule = world.scheduleInterval(1.2, () => {
+        const sustainSchedule = world.scheduleInterval(1.0, () => {
             if (sustainReCount++ > this.sustainReleaseTimes) {
                 sustainSchedule.cancel();
                 stack.set(DataComponentTypes.WEAPON_CAN_COOLDOWN, true);

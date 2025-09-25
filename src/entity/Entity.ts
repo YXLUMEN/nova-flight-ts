@@ -185,8 +185,8 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
 
     protected adjustPosition(): boolean {
         const pos = this.pos;
-        pos.x = clamp(pos.x, 20, World.W - 20);
-        pos.y = clamp(pos.y, 20, World.H - 20);
+        pos.x = clamp(pos.x, 20, World.WORLD_W - 20);
+        pos.y = clamp(pos.y, 20, World.WORLD_H - 20);
         return true;
     }
 

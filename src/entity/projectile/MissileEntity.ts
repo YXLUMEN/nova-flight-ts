@@ -1,22 +1,21 @@
 import {type Entity} from "../Entity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
-import {PI2, rand, randInt} from "../../utils/math/math.ts";
+import {PI2, rand} from "../../utils/math/math.ts";
 import {AutoAim} from "../../tech/AutoAim.ts";
 import {RocketEntity} from "./RocketEntity.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
-import {DecoyEntity} from "../DecoyEntity.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
 
 export class MissileEntity extends RocketEntity {
     public static lockedEntity = new WeakMap<Entity, number>();
 
-    private target: Entity | null = null;
+    protected target: Entity | null = null;
 
     private igniteDelayTicks = 80;
     private lockDelayTicks = 150;
     private maxLifetimeTicks = 1000;
-    private reLockCD = 0;
+    protected reLockCD = 0;
 
     private driftSpeed = 0.8;
     private trackingSpeed = 1.6;
@@ -78,21 +77,8 @@ export class MissileEntity extends RocketEntity {
         }
 
         // 干扰逻辑
-        if (this.lockeType === 'player' && (this.age & 7) === 0 && !(this.target instanceof DecoyEntity)) {
-            const decoyEntities = DecoyEntity.Entities;
-            if (decoyEntities.length > 0) {
-                const rand = Math.random();
-
-                if (rand < 0.2) {
-                    this.reLockCD = 100;
-                    world.events.emit(EVENTS.ENTITY_UNLOCKED, {missile: this, lastTarget: this.target});
-                    this.target = null;
-                } else if (rand < 0.8) {
-                    this.reLockCD = 200;
-                    world.events.emit(EVENTS.ENTITY_UNLOCKED, {missile: this, lastTarget: this.target});
-                    this.target = decoyEntities[randInt(0, decoyEntities.length)];
-                }
-            }
+        if (this.shouldApplyDecoy()) {
+            this.applyDecoy();
         }
 
         // 重新锁定
@@ -167,6 +153,13 @@ export class MissileEntity extends RocketEntity {
         return best;
     }
 
+    public shouldApplyDecoy(): boolean {
+        return false;
+    }
+
+    public applyDecoy(): void {
+    }
+
     public override onRemove() {
         super.onRemove();
 
@@ -185,7 +178,7 @@ export class MissileEntity extends RocketEntity {
 
     protected override adjustPosition(): boolean {
         const pos = this.getPositionRef;
-        if (pos.y < -400 || pos.y > World.H + 400 || pos.x < -400 || pos.x > World.W + 400) {
+        if (pos.y < -400 || pos.y > World.WORLD_H + 400 || pos.x < -400 || pos.x > World.WORLD_W + 400) {
             this.discard();
             return false;
         }

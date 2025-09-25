@@ -2,18 +2,14 @@ import {World} from "../../world/World.ts";
 import type {IUi} from "./IUi.ts";
 import {NovaFlightServer} from "../../server/NovaFlightServer.ts";
 import {UIButton} from "./UIButton.ts";
+import {WorldScreen} from "../WorldScreen.ts";
 
 export class PauseOverlay implements IUi {
-    private readonly world: World;
     private buttons: UIButton[] = [];
     private pulse = 1;
 
     private worldW: number = 0;
     private worldH: number = 0;
-
-    public constructor(world: World) {
-        this.world = world;
-    }
 
     public setSize(w: number, h: number) {
         this.worldW = w;
@@ -30,16 +26,21 @@ export class PauseOverlay implements IUi {
                 centerX - 60, centerY - 50,
                 120, 36,
                 '继续游戏',
-                () => this.world.togglePause()),
+                () => World.instance?.togglePause()),
             new UIButton(
                 centerX - 60, centerY,
                 120, 36,
                 '设置',
                 () => {
-                    this.world.getNotify().show('正在制作');
+                    WorldScreen.notify.show('正在制作');
                 }),
             new UIButton(
                 centerX - 60, centerY + 50,
+                120, 36,
+                '保存',
+                () => NovaFlightServer.saveGame(World.instance!.saveAll())),
+            new UIButton(
+                centerX - 60, centerY + 100,
                 120, 36,
                 '保存并退出',
                 () => NovaFlightServer.stopGame()),
@@ -51,6 +52,8 @@ export class PauseOverlay implements IUi {
         const height = this.worldH / 2;
 
         ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         ctx.fillStyle = 'rgba(0,0,0,0.45)';
         ctx.fillRect(0, 0, this.worldW, this.worldH);
 
@@ -87,7 +90,6 @@ export class PauseOverlay implements IUi {
     }
 
     public destroy() {
-        (this.world as any) = null;
         this.buttons.length = 0;
     }
 }

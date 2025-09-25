@@ -3,10 +3,10 @@ import {defaultLayers} from "../../configs/StarfieldConfig.ts";
 import {Camera} from "../Camera.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import type {IUi} from "./IUi.ts";
-import {World} from "../../world/World.ts";
 import {UIButton} from "./UIButton.ts";
 import {UITheme} from "./theme.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
+import {WorldScreen} from "../WorldScreen.ts";
 
 type StartScreenOptions = {
     title: string;
@@ -74,8 +74,8 @@ export class StartScreen implements IUi {
         }, {signal: this.ctrl.signal});
 
         window.addEventListener('resize', () => {
-            World.resize();
-            this.setSize(World.W, World.H);
+            WorldScreen.resize();
+            this.setSize(WorldScreen.VIEW_W, WorldScreen.VIEW_H);
         }, {signal: this.ctrl.signal});
     }
 

@@ -22,7 +22,7 @@ export class EntityList {
         }
     }
 
-    public getValues() {
+    public values() {
         return this.entities.values();
     }
 

@@ -1,8 +1,7 @@
-import {World} from "../world/World.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
-import {Vec2} from "../utils/math/Vec2.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {PI2} from "../utils/math/math.ts";
+import {WorldScreen} from "./WorldScreen.ts";
 
 interface ViewRect {
     top: number;
@@ -20,11 +19,11 @@ export class Camera {
     private uiOffsetCache = new MutVec2(0, 0);
     private viewRectCache: ViewRect = {
         top: 0,
-        bottom: World.H,
-        left: World.W,
+        bottom: 0,
+        left: 0,
         right: 0,
-        width: World.W,
-        height: World.H
+        width: 0,
+        height: 0,
     };
 
     private deadZoneRadius = 40;
@@ -54,10 +53,10 @@ export class Camera {
         this.viewRectCache = {
             left: off.x,
             top: off.y,
-            right: off.x + World.W,
-            bottom: off.y + World.H,
-            width: World.W,
-            height: World.H,
+            right: off.x + WorldScreen.VIEW_W,
+            bottom: off.y + WorldScreen.VIEW_H,
+            width: WorldScreen.VIEW_W,
+            height: WorldScreen.VIEW_H,
         };
     }
 
@@ -69,7 +68,7 @@ export class Camera {
     private follow(target: MutVec2, tickDelta: number): void {
         if (!this.isOutsideDeadZone(target)) return;
 
-        const desired = target.sub(World.W / 2, World.H / 2);
+        const desired = target.subtract(WorldScreen.VIEW_W / 2, WorldScreen.VIEW_H / 2);
         const delta = desired.subVec(this.offset);
 
         // 使用阻尼速度, 限制最大变化
@@ -117,8 +116,8 @@ export class Camera {
     }
 
     private isOutsideDeadZone(target: MutVec2): boolean {
-        const x = this.offset.x + World.W / 2;
-        const y = this.offset.y + World.H / 2;
+        const x = this.offset.x + WorldScreen.VIEW_W / 2;
+        const y = this.offset.y + WorldScreen.VIEW_H / 2;
         const dx = target.x - x;
         const dy = target.y - y;
         return dx * dx + dy * dy > this.deadZoneRadius * this.deadZoneRadius;
@@ -136,24 +135,7 @@ export class Camera {
         return this.viewRectCache!;
     }
 
-    public getCameraOffset(): Vec2 {
-        return Vec2.formVec(this.offset);
-    }
-
-    public getViewOffset(): Vec2 {
-        return Vec2.formVec(this.viewOffset);
-    }
-
-    public getViewRect(): ViewRect {
-        return {...this.viewRectCache!};
-    }
-
-    public getUiOffset(): Vec2 {
-        return Vec2.formVec(this.uiOffset);
-    }
-
     public get uiOffset(): MutVec2 {
-        // 基于相机速度方向的微漂移
         const vx = this.velocity.x, vy = this.velocity.y;
         const speed = Math.hypot(vx, vy);
         let dx = 0, dy = 0;

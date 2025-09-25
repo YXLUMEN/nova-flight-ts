@@ -253,7 +253,8 @@ export class TechTree implements NbtSerializable {
         const cost = this.state.getTech(id)?.cost;
         if (cost === undefined) return;
 
-        const player = World.instance.player;
+        const world = World.instance!;
+        const player = world.player;
         if (!player) return;
         const score = player.getScore() - cost;
         if (score < 0 && !WorldConfig.devMode) return;
@@ -261,7 +262,7 @@ export class TechTree implements NbtSerializable {
         if (this.state.unlock(id)) {
             player.setScore(score);
             this.applyUnlockUpdates(id);
-            World.instance.events.emit(EVENTS.UNLOCK_TECH, {id});
+            world.events.emit(EVENTS.UNLOCK_TECH, {id});
             World.globalSound.playSound(SoundEvents.UI_APPLY, 1.5);
         }
     }
@@ -407,7 +408,7 @@ export class TechTree implements NbtSerializable {
     }
 
     private resetTech() {
-        const player = World.instance.player;
+        const player = World.instance!.player;
         if (!player) return;
 
         const allTech = this.state.techById;
@@ -461,7 +462,7 @@ export class TechTree implements NbtSerializable {
         for (const tech of techs) {
             this.state.unlock(tech);
             this.applyUnlockUpdates(tech);
-            World.instance.events.emit(EVENTS.UNLOCK_TECH, {id: tech});
+            World.instance!.events.emit(EVENTS.UNLOCK_TECH, {id: tech});
         }
     }
 }

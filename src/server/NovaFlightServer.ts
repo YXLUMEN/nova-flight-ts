@@ -8,6 +8,7 @@ import {SoundEvents} from "../sound/SoundEvents.ts";
 import {GuideStage} from "../configs/GuideStage.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {Audios} from "../sound/Audios.ts";
+import {WorldScreen} from "../render/WorldScreen.ts";
 
 export class NovaFlightServer {
     public static readonly SAVE_PATH = `saves/save-${NbtCompound.VERSION}.dat`;
@@ -22,13 +23,14 @@ export class NovaFlightServer {
         if (this.running) return;
         this.running = true;
 
+        WorldScreen.resize();
         const world = World.createWorld(manager);
         this.worldInstance = world;
 
         if (WorldConfig.readSave) {
             const saves = await this.loadSaves();
             if (saves) world.readNBT(saves);
-            else world.getNotify().show('无存档');
+            else WorldScreen.notify.show('无存档');
         }
 
         World.globalSound.playSound(SoundEvents.UI_APPLY);
@@ -106,5 +108,26 @@ export class NovaFlightServer {
 
     public static get isRunning() {
         return this.running;
+    }
+
+    public static registryListener() {
+        mainWindow.listen('tauri://blur', () => {
+            World.instance?.setTicking(false);
+        }).catch(console.error);
+
+        mainWindow.listen('tauri://resize', async () => {
+            const world = World.instance;
+            if (!world) return;
+            world.rendering = !await mainWindow.isMinimized();
+        }).catch(console.error);
+
+        window.addEventListener("resize", () => WorldScreen.resize());
+
+        WorldScreen.canvas.addEventListener('click', event => {
+            const world = World.instance;
+            if (world && !world.isTicking) {
+                WorldScreen.pauseOverlay.handleClick(event.offsetX, event.offsetY);
+            }
+        });
     }
 }

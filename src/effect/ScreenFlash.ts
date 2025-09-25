@@ -1,5 +1,5 @@
 import type {IEffect} from "./IEffect.ts";
-import {World} from "../world/World.ts";
+import {WorldScreen} from "../render/WorldScreen.ts";
 
 export class ScreenFlash implements IEffect {
     public alive = true;
@@ -25,7 +25,7 @@ export class ScreenFlash implements IEffect {
         ctx.save();
         ctx.globalAlpha = (1 - k) * this.maxAlpha;
         ctx.fillStyle = this.color;
-        ctx.fillRect(0, 0, World.W, World.H);
+        ctx.fillRect(0, 0, WorldScreen.VIEW_W, WorldScreen.VIEW_H);
         ctx.restore();
     }
 

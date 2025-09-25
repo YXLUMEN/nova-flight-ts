@@ -1,4 +1,5 @@
 import type {IVec} from "./IVec.ts";
+import {MutVec2} from "./MutVec2.ts";
 
 export class Vec2 implements IVec {
     public static readonly ZERO = new Vec2(0, 0);
@@ -15,7 +16,7 @@ export class Vec2 implements IVec {
         return new Vec2(this.x, this.y);
     }
 
-    public add(x: number, y: number): IVec {
+    public add(x: number, y: number): Vec2 {
         return new Vec2(this.x + x, this.y + y);
     }
 
@@ -23,12 +24,12 @@ export class Vec2 implements IVec {
         return this.add(v.x, v.y);
     }
 
-    public sub(x: number, y: number): IVec {
+    public subtract(x: number, y: number): Vec2 {
         return new Vec2(this.x - x, this.y - y);
     }
 
-    public subVec(v: IVec) {
-        return this.sub(v.x, v.y);
+    public subVec(v: IVec): Vec2 {
+        return this.subtract(v.x, v.y);
     }
 
     public multiply(k: number): Vec2 {
@@ -60,6 +61,10 @@ export class Vec2 implements IVec {
     public normalize() {
         const len = this.length();
         return len === 0 ? Vec2.ZERO : this.multiply(1 / len);
+    }
+
+    public toMut(): MutVec2 {
+        return new MutVec2(this.x, this.y);
     }
 
     public static formVec(vel: IVec): Vec2 {

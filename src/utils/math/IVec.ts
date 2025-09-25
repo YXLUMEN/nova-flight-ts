@@ -8,7 +8,7 @@ export interface IVec {
 
     addVec(v: IVec): IVec;
 
-    sub(x: number, y: number): IVec;
+    subtract(x: number, y: number): IVec;
 
     subVec(v: IVec): IVec
 

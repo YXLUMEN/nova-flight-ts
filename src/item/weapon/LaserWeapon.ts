@@ -15,7 +15,7 @@ export class LaserWeapon extends SpecialWeapon {
     public static readonly COLOR = '#8bff5e';
     public static readonly OVERHEAT_COLOR = '#ff5e5e';
 
-    private readonly height = World.H * 2;        // 长度
+    private readonly height = World.WORLD_H * 2;        // 长度
     private readonly width = 6;            // 宽度
 
     public override tryFire(stack: ItemStack, world: World, _attacker: Entity): void {

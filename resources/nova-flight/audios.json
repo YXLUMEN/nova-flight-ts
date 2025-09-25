@@ -10,5 +10,8 @@
   },
   "bgm.4": {
     "file": "nova-flight:/delta_force_main.ogg"
+  },
+  "bgm.5": {
+    "file": "nova-flight:/come_on_mabo.ogg"
   }
 }

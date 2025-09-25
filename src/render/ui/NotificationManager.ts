@@ -1,5 +1,5 @@
 import type {IUi} from "./IUi.ts";
-import type {World} from "../../world/World.ts";
+import {World} from "../../world/World.ts";
 import {UiTools} from "./UiTools.ts";
 import {UITheme} from "./theme.ts";
 
@@ -11,14 +11,9 @@ interface Notification {
 }
 
 export class NotificationManager implements IUi {
-    private readonly world: World;
     private notifications: Notification[] = [];
     private worldW = 0;
     private worldH = 0;
-
-    public constructor(world: World) {
-        this.world = world;
-    }
 
     public setSize(w: number, h: number) {
         this.worldW = w;
@@ -28,7 +23,7 @@ export class NotificationManager implements IUi {
     public show(text: string, duration = 2, fadeTime = 0.3) {
         this.notifications.push({
             text,
-            startTime: this.world.getTime(),
+            startTime: World.instance!.getTime(),
             duration,
             fadeTime
         });
@@ -37,9 +32,11 @@ export class NotificationManager implements IUi {
     public render(ctx: CanvasRenderingContext2D) {
         if (this.notifications.length === 0) return;
 
-        const now = this.world.getTime();
+        const now = World.instance!.getTime();
         ctx.save();
         ctx.font = UITheme.font;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
 
         let offsetY = 0;
         for (let i = 0; i < this.notifications.length; i++) {
@@ -48,18 +45,17 @@ export class NotificationManager implements IUi {
             const totalTime = n.duration + n.fadeTime * 2;
 
             if (elapsed > totalTime) {
-                // 移除已过期通知
                 this.notifications.splice(i, 1);
                 i--;
                 continue;
             }
 
-            // 计算透明度
+            // ease
             let alpha = 1;
             if (elapsed < n.fadeTime) {
-                alpha = elapsed / n.fadeTime; // 淡入
+                alpha = elapsed / n.fadeTime;
             } else if (elapsed > n.fadeTime + n.duration) {
-                alpha = 1 - (elapsed - n.fadeTime - n.duration) / n.fadeTime; // 淡出
+                alpha = 1 - (elapsed - n.fadeTime - n.duration) / n.fadeTime;
             }
 
             ctx.globalAlpha = alpha;
@@ -94,6 +90,5 @@ export class NotificationManager implements IUi {
 
     public destroy(): void {
         this.notifications.length = 0;
-        (this.world as any) = null;
     }
 }

@@ -154,12 +154,14 @@ export class PlayerEntity extends LivingEntity {
         }
     }
 
-    private switchWeapon() {
+    public switchWeapon(dir = 1) {
         const stack = this.getCurrentItemStack();
         const current = stack.getItem() as BaseWeapon;
         current.onEndFire(this.getWorld(), stack);
+
         this.wasActive = false;
-        this.currentBaseIndex = (this.currentBaseIndex + 1) % this.baseWeapons.length;
+        const next = (this.currentBaseIndex + dir) % this.baseWeapons.length;
+        this.currentBaseIndex = next < 0 ? this.baseWeapons.length - 1 : next;
     }
 
     public override isInvulnerableTo(damageSource: DamageSource): boolean {

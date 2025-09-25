@@ -33,14 +33,14 @@ export class MutVec2 implements IVec {
         return this.add(v.x, v.y);
     }
 
-    public sub(x: number, y: number): this {
+    public subtract(x: number, y: number): this {
         this.x -= x;
         this.y -= y;
         return this;
     }
 
     public subVec(v: IVec): this {
-        return this.sub(v.x, v.y);
+        return this.subtract(v.x, v.y);
     }
 
     public multiply(k: number): this {
