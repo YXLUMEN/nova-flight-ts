@@ -3,6 +3,7 @@ import {HUD} from "./ui/HUD.ts";
 import {Camera} from "./Camera.ts";
 import {PauseOverlay} from "./ui/PauseOverlay.ts";
 import {NotificationManager} from "./ui/NotificationManager.ts";
+import {UITheme} from "./ui/theme.ts";
 
 export class WorldScreen {
     public static readonly canvas = document.getElementById("game") as HTMLCanvasElement;
@@ -15,6 +16,12 @@ export class WorldScreen {
     public static readonly hud: HUD = new HUD();
     public static readonly pauseOverlay = new PauseOverlay();
     public static readonly notify = new NotificationManager();
+
+    static {
+        this.ctx.font = UITheme.font;
+        this.ctx.textAlign = "center";
+        this.ctx.textBaseline = "middle";
+    }
 
     public static resize(w?: number, h?: number) {
         const rect = this.canvas.getBoundingClientRect();

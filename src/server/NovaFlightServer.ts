@@ -9,47 +9,70 @@ import {GuideStage} from "../configs/GuideStage.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {Audios} from "../sound/Audios.ts";
 import {WorldScreen} from "../render/WorldScreen.ts";
+import {SoundSystem} from "../sound/SoundSystem.ts";
 
-export class NovaFlightServer {
+export abstract class NovaFlightServer {
     public static readonly SAVE_PATH = `saves/save-${NbtCompound.VERSION}.dat`;
+    public static serverStart = false;
 
     private static running = false;
     private static worldInstance: World | null = null;
     private static last = 0;
     private static accumulator = 0;
-    private static stopResolve: (nbt: NbtCompound) => void;
 
-    public static async startGame(manager: RegistryManager) {
+    private static waitGameStop: Promise<void> | null = null;
+    private static onGameStop: (nbt: NbtCompound) => void;
+
+    public static async startGame(manager: RegistryManager, readSave = false): Promise<void> {
         if (this.running) return;
         this.running = true;
 
-        WorldScreen.resize();
+        this.waitGameStop = new Promise<void>(resolve => {
+            this.onGameStop = async (nbt: NbtCompound) => {
+                try {
+                    await this.saveGame(nbt);
+                } finally {
+                    this.worldInstance?.destroy();
+                    this.worldInstance = null;
+                    this.waitGameStop = null;
+                    resolve();
+                }
+            };
+        });
+
         const world = World.createWorld(manager);
         this.worldInstance = world;
 
-        if (WorldConfig.readSave) {
+        if (readSave) {
             const saves = await this.loadSaves();
             if (saves) world.readNBT(saves);
-            else WorldScreen.notify.show('无存档');
+            else {
+                WorldScreen.notify.show('无存档');
+                world.player?.setVelocity(0, -24);
+            }
         }
 
-        World.globalSound.playSound(SoundEvents.UI_APPLY);
-        world.setTicking(true);
-        world.player?.setVelocity(0, -24);
-
+        SoundSystem.globalSound.playSound(SoundEvents.UI_APPLY);
         if (!localStorage.getItem('guided')) {
             world.setStage(GuideStage);
             AudioManager.playAudio(Audios.SPACE_WALK);
         }
+
+        world.setTicking(true);
         this.tick(0);
     }
 
-    private static bindTick = this.tick.bind(this);
+    public static async stopGame(): Promise<void> {
+        if (!this.running || this.waitGameStop === null) return;
+        this.running = false;
 
-    public static tick(ts: number) {
+        await this.waitGameStop;
+    }
+
+    private static tick(ts: number) {
         const world = this.worldInstance!;
         if (!this.running) {
-            this.stopResolve!(world.saveAll());
+            this.onGameStop(world.saveAll());
             return;
         }
 
@@ -65,6 +88,8 @@ export class NovaFlightServer {
         requestAnimationFrame(this.bindTick);
     }
 
+    private static bindTick = this.tick.bind(this);
+
     public static async saveGame(compound: NbtCompound): Promise<void> {
         try {
             await mkdir('saves', {baseDir: BaseDirectory.Resource, recursive: true});
@@ -72,7 +97,7 @@ export class NovaFlightServer {
             const bytes = compound.toBinary();
             await writeFile(this.SAVE_PATH, bytes, {baseDir: BaseDirectory.Resource});
         } catch (err) {
-            console.log(err);
+            console.error(err);
             alert('保存时出错');
         }
     }
@@ -86,24 +111,13 @@ export class NovaFlightServer {
             if (!bytes || bytes.length === 0) return null;
             return NbtCompound.fromBinary(bytes);
         } catch (err) {
-            console.log(err);
+            console.error(err);
             return null;
         }
     }
 
-    public static async stopGame(): Promise<void> {
-        if (!this.running) return;
-        this.running = false;
-
-        const result = await new Promise<NbtCompound>(resolve => {
-            this.stopResolve = resolve;
-        });
-
-        await this.saveGame(result);
-        this.worldInstance!.destroy();
-        this.worldInstance = null;
-
-        await mainWindow.close();
+    public static async waitForStop(): Promise<void> {
+        await this.waitGameStop;
     }
 
     public static get isRunning() {
@@ -121,7 +135,7 @@ export class NovaFlightServer {
             world.rendering = !await mainWindow.isMinimized();
         }).catch(console.error);
 
-        window.addEventListener("resize", () => WorldScreen.resize());
+        window.onresize = () => WorldScreen.resize();
 
         WorldScreen.canvas.addEventListener('click', event => {
             const world = World.instance;

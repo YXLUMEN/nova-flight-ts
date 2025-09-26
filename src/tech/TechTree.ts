@@ -10,6 +10,7 @@ import {ItemStack} from "../item/ItemStack.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import {type NbtCompound} from "../nbt/NbtCompound.ts";
+import {SoundSystem} from "../sound/SoundSystem.ts";
 
 type Adjacency = {
     out: Map<string, string[]>; // id -> successors
@@ -115,7 +116,7 @@ export class TechTree implements NbtSerializable {
         parent.addEventListener('wheel', e => {
             scale = clamp(scale * Math.pow(1.1, -e.deltaY / 100), 0.5, 2);
             applyTransform();
-            World.globalSound.playSound(SoundEvents.UI_HOVER);
+            SoundSystem.globalSound.playSound(SoundEvents.UI_HOVER);
         }, {passive: true, signal: abortCtrl.signal});
 
         const applyTransform = () =>
@@ -224,7 +225,7 @@ export class TechTree implements NbtSerializable {
     // -------- Interactions --------
     private bindInteractions() {
         this.nodesLayer.addEventListener('click', event => {
-            World.globalSound.playSound(SoundEvents.UI_SELECT);
+            SoundSystem.globalSound.playSound(SoundEvents.UI_SELECT);
             this.nodesLayer.querySelector('.node.selected')?.classList.remove('selected');
             const target = (event.target as HTMLElement).closest<HTMLElement>('.node');
             this.selectNodeId = null;
@@ -263,7 +264,7 @@ export class TechTree implements NbtSerializable {
             player.setScore(score);
             this.applyUnlockUpdates(id);
             world.events.emit(EVENTS.UNLOCK_TECH, {id});
-            World.globalSound.playSound(SoundEvents.UI_APPLY, 1.5);
+            SoundSystem.globalSound.playSound(SoundEvents.UI_APPLY, 1.5);
         }
     }
 

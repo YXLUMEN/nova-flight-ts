@@ -190,7 +190,10 @@ export abstract class LivingEntity extends Entity {
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
-        nbt.putUint('Health', this.getHealth());
+
+        let health = this.getHealth();
+        if (!Number.isInteger(health)) health = 5;
+        nbt.putUint('Health', health);
 
         return nbt
     }

@@ -108,6 +108,10 @@ export class AudioManager {
         return ctrl;
     }
 
+    public static setAudio() {
+        return this.AUDIO_PLAYER;
+    }
+
     public static removeListener(name: string, reason?: any): void {
         const ctrl = this.eventMap.get(name);
         if (!ctrl) return;

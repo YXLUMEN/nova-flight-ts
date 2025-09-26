@@ -34,7 +34,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
 
     private readonly pos: MutVec2;
     private readonly velocity: MutVec2 = MutVec2.zero();
-    private movementSpeed: number = 5;
+    private movementSpeed: number = 0.2;
     private yaw: number = 0;
 
     private readonly dimensions: EntityDimensions;
@@ -254,13 +254,13 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
             const velocity = this.velocity;
             nbt.putNumberArray('Velocity', velocity.x, velocity.y);
             nbt.putDouble('Yaw', this.yaw);
+            nbt.putDouble('Speed', this.movementSpeed);
             nbt.putBoolean('Invulnerable', this.invulnerable);
             nbt.putString('UUID', this.uuid);
 
             if (this.normalTags.size > 0) {
                 nbt.putStringArray('Tags', ...this.normalTags);
             }
-
             return nbt;
         } catch (err) {
             console.error(`Error when write Entity NBT: ${err}`);
@@ -275,8 +275,10 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
 
             const velocity = nbt.getNumberArray('Velocity');
             this.setVelocity(velocity[0], velocity[1]);
+
             this.setYaw(nbt.getDouble('Yaw'));
-            this.invulnerable = nbt.getBoolean('Invulnerable');
+            this.setMovementSpeed(nbt.getDouble('Speed'));
+            this.invulnerable = nbt.getBoolean('Invulnerable', false);
             this.uuid = nbt.getString('UUID');
 
             const tags = nbt.getStringArray('Tags');

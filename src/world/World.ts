@@ -1,4 +1,3 @@
-import {KeyboardInput} from "../input/KeyboardInput.ts";
 import {type Entity} from "../entity/Entity.ts";
 import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
@@ -18,7 +17,6 @@ import {defaultLayers} from "../configs/StarfieldConfig.ts";
 import {EntityRenderers} from "../render/entity/EntityRenderers.ts";
 import {DefaultEvents} from "../event/DefaultEvents.ts";
 import {EVENTS, type IEvents} from "../apis/IEvents.ts";
-import {mainWindow} from "../main.ts";
 import {EntityList} from "./EntityList.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 import {BossEntity} from "../entity/mob/BossEntity.ts";
@@ -33,12 +31,13 @@ import {CIWSBulletEntity} from "../entity/projectile/CIWSBulletEntity.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
-import {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import {WorldScreen} from "../render/WorldScreen.ts";
+import {ClientWorld} from "../client/ClientWorld.ts";
+import {RegistryKeys} from "../registry/RegistryKeys.ts";
+import {Identifier} from "../registry/Identifier.ts";
 
 export class World implements NbtSerializable {
-    public static readonly globalSound = new SoundSystem();
-    private static worldInstance: World;
+    private static worldInstance: World | null;
 
     public static readonly WORLD_W = 1692;
     public static readonly WORLD_H = 1030;
@@ -47,21 +46,21 @@ export class World implements NbtSerializable {
     public empBurst: number = 0
 
     private readonly registryManager: RegistryManager;
-    private readonly input = new KeyboardInput(WorldScreen.canvas);
     private readonly worldSound = new SoundSystem();
 
     private readonly damageSources: DamageSources;
     // ticking
     private over = false;
-    private freeze = false;
-    private ticking = true;
+    public freeze = false;
+    private ticking = false;
     public rendering = true;
+    public peaceMod = false;
     // schedule
     private time = 0;
     private nextTimerId = new AtomicInteger();
     private timers: TimerTask[] = [];
     // game
-    private stage = STAGE;
+    public stage = STAGE;
     private effects: IEffect[] = [];
     private readonly particlePool: ParticlePool = new ParticlePool(256);
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
@@ -69,16 +68,14 @@ export class World implements NbtSerializable {
     public player: PlayerEntity | null;
     private loadedMobs = new Set<MobEntity>();
     private entities: EntityList = new EntityList();
-    private peaceMod = false;
 
     protected constructor(registryManager: RegistryManager) {
         this.registryManager = registryManager;
         this.damageSources = new DamageSources(registryManager);
 
-        this.player = new PlayerEntity(this, this.input);
-        this.player?.setPosition(World.WORLD_W / 2, World.WORLD_H);
+        this.player = new PlayerEntity(this, ClientWorld.input);
+        this.player?.setPosition(WorldScreen.VIEW_W / 2, WorldScreen.VIEW_H);
 
-        this.registryListeners();
         this.registryEvents();
 
         this.starField.init();
@@ -87,7 +84,6 @@ export class World implements NbtSerializable {
     public static createWorld(registryManager: RegistryManager): World {
         if (this.worldInstance) return this.worldInstance;
         this.worldInstance = new World(registryManager);
-        this.worldInstance.setTicking(false);
         return this.worldInstance;
     }
 
@@ -98,8 +94,8 @@ export class World implements NbtSerializable {
     public destroy(): void {
         this.clear();
 
-        this.input.clearKeyHandler();
         this.events.clear();
+        World.worldInstance = null;
     }
 
     public clear(): void {
@@ -118,13 +114,13 @@ export class World implements NbtSerializable {
         this.effects.length = 0;
 
         this.worldSound.stopAll();
-        World.globalSound.stopAll();
+        SoundSystem.globalSound.stopAll();
     }
 
     public reset(): void {
         this.clear();
 
-        this.player = new PlayerEntity(this, this.input);
+        this.player = new PlayerEntity(this, ClientWorld.input);
         this.player.setPosition(World.WORLD_W / 2, World.WORLD_H);
         this.player.setVelocity(0, -24);
 
@@ -168,7 +164,7 @@ export class World implements NbtSerializable {
         this.particlePool.tick(dt);
         this.starField.update(dt, WorldScreen.camera);
 
-        this.input.updateEndFrame();
+        ClientWorld.input.updateEndFrame();
 
         this.time += dt;
         this.processTimers();
@@ -240,7 +236,7 @@ export class World implements NbtSerializable {
         this.setTicking(!this.ticking);
     }
 
-    private toggleTechTree() {
+    public toggleTechTree() {
         const ticking = this.rendering = document.getElementById('tech-shell')!.classList.toggle('hidden');
         this.setTicking(ticking);
     }
@@ -367,11 +363,11 @@ export class World implements NbtSerializable {
     public setTicking(ticking = true): void {
         if (ticking) {
             AudioManager.resume();
-            World.globalSound.playSound(SoundEvents.UI_PAGE_SWITCH);
+            SoundSystem.globalSound.playSound(SoundEvents.UI_PAGE_SWITCH);
             this.worldSound.resumeAll().catch(console.error);
         } else {
             AudioManager.pause();
-            World.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
+            SoundSystem.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
             this.worldSound.pauseAll().catch(console.error);
         }
         this.ticking = ticking;
@@ -556,97 +552,21 @@ export class World implements NbtSerializable {
         DefaultEvents.registryEvents(this);
     }
 
-    private registryInput(event: KeyboardEvent) {
-        const code = event.code;
-
-        if (event.ctrlKey) {
-            if (code === 'KeyV') {
-                WorldConfig.devMode = !WorldConfig.devMode;
-                WorldConfig.usedDevMode = true;
-            }
-            if (WorldConfig.devMode) this.devMode(code);
-            return;
-        }
-
-        switch (code) {
-            case 'F11':
-                mainWindow.isFullscreen()
-                    .then(isFull => mainWindow.setFullscreen(!isFull))
-                    .catch(console.error);
-                break;
-            case 'KeyT':
-                WorldConfig.autoShoot = !WorldConfig.autoShoot;
-                break;
-            case 'Escape': {
-                const techTree = document.getElementById('tech-shell')!;
-                if (!techTree.classList.contains('hidden')) {
-                    this.toggleTechTree();
-                    return;
-                }
-                this.togglePause();
-                break;
-            }
-            case 'KeyG':
-                this.toggleTechTree();
-                break;
-            case 'KeyM':
-                document.getElementById('help')?.classList.toggle('hidden');
-                this.setTicking(false);
-                break;
-        }
-    }
-
-    private registryListeners() {
-
-
-        this.input.onKeyDown('world_input', this.registryInput.bind(this));
-    }
-
-    private devMode(code: string) {
-        const player = this.player;
-        if (!player) return;
-        switch (code) {
-            case 'KeyK':
-                player.addPhaseScore(200);
-                break;
-            case 'KeyC':
-                this.peaceMod = !this.peaceMod;
-                this.peaceMod ? this.stage.pause() : this.stage.resume();
-                this.loadedMobs.forEach(mob => mob.discard());
-                break;
-            case 'KeyH':
-                player.setHealth(player.getMaxHealth());
-                break;
-            case 'KeyO':
-                player.techTree.unlockAll(this);
-                break;
-            case 'KeyL':
-                this.stage.nextPhase();
-                break;
-            case 'KeyF':
-                this.freeze = !this.freeze;
-                break;
-            case 'NumpadSubtract':
-                WorldConfig.enableCameraOffset = !WorldConfig.enableCameraOffset;
-                WorldScreen.camera.cameraOffset.set(0, 0);
-                break;
-            case 'KeyS':
-                NovaFlightServer.saveGame(this.saveAll())
-                    .then(() => {
-                        this.gameOver();
-                        this.reset();
-                    });
-                break;
-            case 'KeyP':
-                localStorage.removeItem('guided');
-                break;
-        }
-    }
-
     public writeNBT(root: NbtCompound): NbtCompound {
         const playerNbt = new NbtCompound();
         this.player!.writeNBT(playerNbt);
         root.putCompound('Player', playerNbt);
+
+        const entityTypes = this.registryManager.get(RegistryKeys.ENTITY_TYPE);
+        const entityList: NbtCompound[] = [];
+        this.entities.forEach(entity => {
+            const nbt = new NbtCompound();
+            const type = entityTypes.getId(entity.getType())!;
+            nbt.putString('Type', type.toString());
+            entity.writeNBT(nbt);
+            entityList.push(nbt);
+        });
+        root.putNbtList('Entities', entityList);
 
         const stageNbt = new NbtCompound();
         this.stage.writeNBT(stageNbt);
@@ -659,8 +579,26 @@ export class World implements NbtSerializable {
         const playerNbt = nbt.getCompound('Player');
         if (playerNbt) this.player!.readNBT(playerNbt);
 
+        const entityNbt = nbt.getNbtList('Entities');
+        if (entityNbt) this.loadEntity(entityNbt);
+
         const stageNbt = nbt.getCompound('Stage');
         if (stageNbt) this.stage.readNBT(stageNbt);
+    }
+
+    private loadEntity(nbtList: NbtCompound[]) {
+        const entityTypes = this.registryManager.get(RegistryKeys.ENTITY_TYPE);
+        for (const nbt of nbtList) {
+            const entryType = nbt.getString('Type').split(':');
+            const id = Identifier.of(entryType[0], entryType[1]);
+
+            const entityType = entityTypes.getById(id);
+            if (!entityType) continue;
+
+            const entity = entityType.create(this) as Entity;
+            entity.readNBT(nbt);
+            this.spawnEntity(entity);
+        }
     }
 
     public saveAll(): NbtCompound {

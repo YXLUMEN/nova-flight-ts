@@ -1,9 +1,9 @@
 export class NbtBinaryWriter {
     private chunks: number[] = [];
 
-    private pushBytes(buf: ArrayBuffer) {
+    public pushBytes(buf: ArrayBuffer | Uint8Array) {
         const bytes = new Uint8Array(buf);
-        for (let i = 0; i < bytes.length; i++) this.chunks.push(bytes[i]);
+        this.chunks.push(...bytes);
     }
 
     public writeInt8(v: number): void {

@@ -51,7 +51,7 @@ export class BallisticCalculator {
         }
 
         const tPos = target.getPositionRef;
-        const tVelocity = target.getVelocity();
+        const tVelocity = target.getVelocityRef;
         const oPos = this.owner.getPositionRef;
 
         const dx = tPos.x - oPos.x;

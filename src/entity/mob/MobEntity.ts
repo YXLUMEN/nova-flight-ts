@@ -10,15 +10,16 @@ import type {DataEntry} from "../data/DataEntry.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {MobAI} from "../ai/MobAI.ts";
+import type {NbtCompound} from "../../nbt/NbtCompound.ts";
 
 export abstract class MobEntity extends LivingEntity {
     public color = '#ff6b6b';
     public yStep = 1;
 
-    private readonly worth: number;
+    private worth: number;
     private AI: MobAI;
 
-    protected constructor(type: EntityType<MobEntity>, world: World, worth: number) {
+    protected constructor(type: EntityType<MobEntity>, world: World, worth: number = 1) {
         super(type, world);
         this.worth = worth;
         this.age += (Math.random() * 10) | 0;
@@ -96,6 +97,18 @@ export abstract class MobEntity extends LivingEntity {
 
     public getWorth(): number {
         return this.worth;
+    }
+
+    public override writeNBT(nbt: NbtCompound): NbtCompound {
+        super.writeNBT(nbt);
+        nbt.putUint('Worth', this.worth);
+
+        return nbt;
+    }
+
+    public override readNBT(nbt: NbtCompound): void {
+        super.readNBT(nbt);
+        this.worth = nbt.getUint('Worth', 1);
     }
 
     public isRangedAttacker(): boolean {

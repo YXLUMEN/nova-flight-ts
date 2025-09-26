@@ -1,6 +1,6 @@
 import type {NbtCompound} from "./NbtCompound";
 
-export type NbtValue = number | string | boolean | number[] | string[] | NbtCompound;
+export type NbtValue = number | string | boolean | number[] | string[] | NbtCompound | NbtCompound[];
 
 export const NbtType = {
     End: 0,
@@ -15,6 +15,7 @@ export const NbtType = {
     NumberArray: 9,
     StringArray: 10,
     Compound: 11,
+    NbtList: 12
 }
 
 export interface Nbt {

@@ -1,3 +1,3 @@
-## nova-flight
+## nova-flight-ts
 
-简单的ts飞机小游戏
+简单的 ts 飞机小游戏

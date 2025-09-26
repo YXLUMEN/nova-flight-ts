@@ -76,7 +76,7 @@ export class KeyboardInput implements IInput {
         window.addEventListener("keydown", e => {
             e.preventDefault();
             this.keys.add(e.code);
-            for (const h of this.keyHandler.values()) h(e);
+            for (const fn of this.keyHandler.values()) fn(e);
         });
         window.addEventListener("keyup", e => this.keys.delete(e.code));
         window.addEventListener("blur", () => this.keys.clear());

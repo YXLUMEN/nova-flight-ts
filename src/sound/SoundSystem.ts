@@ -10,6 +10,7 @@ import {deepFreeze} from "../utils/uit.ts";
 
 // noinspection DuplicatedCode
 export class SoundSystem {
+    public static readonly globalSound = new SoundSystem();
     private static readonly loadedSounds = new HashMap<Identifier, AudioBuffer[]>();
 
     private readonly activeLoops = new HashMap<Identifier, AudioBufferSourceNode>();

@@ -19,39 +19,30 @@ export class StartScreen implements IUi {
     private height: number = 0;
 
     private readonly tempCamera: Camera = new Camera();
-    private readonly starField: StarField = new StarField(128, defaultLayers, 8);
+    private readonly starField: StarField = new StarField(96, defaultLayers, 8);
 
     private ctrl = new AbortController();
-    private running = false;
-    private onConfirmCallback?: () => void;
+    private running = false
     private options: Required<StartScreenOptions>;
 
     private tickInterval = 1000 / 50;
     private lastTickTime = 0;
 
+    private readonly waitConfirm: Promise<number>;
+    private readonly onConfirmCallback: (action: number) => void;
+
     private buttons: UIButton[] = [];
 
     public constructor(ctx: CanvasRenderingContext2D, options: StartScreenOptions) {
+        const {promise, resolve} = Promise.withResolvers<number>();
+        this.waitConfirm = promise;
+        this.onConfirmCallback = resolve;
+
         this.ctx = ctx;
         this.options = {
             title: options.title,
             subtitle: options.subtitle
         };
-
-        this.buttons.push(
-            new UIButton(
-                (this.width - 200) / 2, this.height / 2,
-                200, 50,
-                '开始游戏',
-                this.confirm.bind(this),
-            ),
-            new UIButton(
-                (this.width - 200) / 2, this.height / 2 + 60,
-                200, 50,
-                '读取存档',
-                this.confirmAndReadSave.bind(this),
-            )
-        );
 
         this.starField.init();
     }
@@ -62,7 +53,7 @@ export class StartScreen implements IUi {
         this.tick(0);
 
         window.addEventListener('keydown', event => {
-            if (event.code === 'Space' || event.code === 'Enter') this.confirm();
+            if (event.code === 'Space' || event.code === 'Enter') this.newGame();
         }, {signal: this.ctrl.signal});
 
         window.addEventListener('click', (event) => {
@@ -82,17 +73,35 @@ export class StartScreen implements IUi {
     public setSize(w: number, h: number) {
         this.width = w;
         this.height = h;
-
-        const btn1 = this.buttons[0];
-        btn1.x = (this.width - 200) / 2;
-        btn1.y = this.height / 2;
-
-        const btn2 = this.buttons[1];
-        btn2.x = (this.width - 200) / 2;
-        btn2.y = this.height / 2 + 60;
+        this.layoutButtons();
     }
 
-    private bindTick = this.tick.bind(this);
+    private layoutButtons() {
+        const startX = (this.width - 200) / 2;
+        const startY = this.height / 2;
+
+        this.buttons.length = 0;
+        this.buttons.push(
+            new UIButton(
+                startX, startY,
+                200, 50,
+                '开始游戏',
+                this.newGame.bind(this),
+            ),
+            new UIButton(
+                startX, startY + 60,
+                200, 50,
+                '读取存档',
+                this.readSave.bind(this),
+            ),
+            new UIButton(
+                startX, startY + 120,
+                200, 50,
+                '退出游戏',
+                this.exitGame.bind(this),
+            )
+        );
+    }
 
     public tick(tickDelta: number) {
         if (!this.running) return;
@@ -111,6 +120,8 @@ export class StartScreen implements IUi {
         this.render(this.ctx);
         requestAnimationFrame(this.bindTick);
     }
+
+    private bindTick = this.tick.bind(this);
 
     public render(ctx: CanvasRenderingContext2D) {
         ctx.clearRect(0, 0, this.width, this.height);
@@ -137,31 +148,28 @@ export class StartScreen implements IUi {
     public destroy() {
         this.running = false;
         this.ctrl.abort();
-        this.ctx.reset();
 
         (this.ctx as any) = null;
         (this.starField as any) = null;
         (this.tempCamera as any) = null;
     }
 
-    public onConfirm(cb?: () => void) {
-        return new Promise<void>(resolve => {
-            this.onConfirmCallback = () => {
-                resolve();
-                if (cb) cb();
-            }
-        });
+    public onConfirm() {
+        return this.waitConfirm;
     }
 
-    private confirm() {
+    private exitGame(): void {
         this.destroy();
-        if (this.onConfirmCallback) {
-            this.onConfirmCallback();
-        }
+        this.onConfirmCallback(-1);
     }
 
-    private confirmAndReadSave() {
-        this.confirm();
-        WorldConfig.readSave = true;
+    private newGame(): void {
+        this.destroy();
+        this.onConfirmCallback(0);
+    }
+
+    private readSave(): void {
+        this.destroy();
+        this.onConfirmCallback(1);
     }
 }

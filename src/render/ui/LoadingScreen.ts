@@ -2,10 +2,11 @@ import {clamp} from "../../utils/math/math.ts";
 import {sleep} from "../../utils/uit.ts";
 import {UITheme} from "./theme.ts";
 import {UiTools} from "./UiTools.ts";
+import type {IUi} from "./IUi.ts";
 
-export class LoadingScreen {
-    private readonly width: number;
-    private readonly height: number;
+export class LoadingScreen implements IUi {
+    private width: number = 0;
+    private height: number = 0;
     private readonly ctx: CanvasRenderingContext2D;
 
     private currentProgress: number = 0;
@@ -13,9 +14,7 @@ export class LoadingScreen {
     private message: string = '';
     private done: boolean = false;
 
-    public constructor(ctx: CanvasRenderingContext2D, width: number, height: number) {
-        this.width = width;
-        this.height = height;
+    public constructor(ctx: CanvasRenderingContext2D) {
         this.ctx = ctx;
     }
 
@@ -31,7 +30,7 @@ export class LoadingScreen {
         this.currentProgress += (this.targetProgress - this.currentProgress) * speed;
     }
 
-    private render() {
+    public render() {
         try {
             const ctx = this.ctx;
             const {width, height} = this;
@@ -62,8 +61,6 @@ export class LoadingScreen {
 
             // 百分比文字
             ctx.fillStyle = UITheme.foreground;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
             ctx.fillText(`${Math.floor(this.currentProgress * 100)}%`, width / 2, barY - 20);
 
             // 提示文字
@@ -90,7 +87,15 @@ export class LoadingScreen {
         await sleep(300);
 
         this.done = true;
-        this.ctx.reset();
+        this.destroy();
+    }
+
+    public setSize(w: number, h: number): void {
+        this.width = w;
+        this.height = h;
+    }
+
+    public destroy(): void {
         (this.ctx as any) = null;
     }
 }
