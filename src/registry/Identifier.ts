@@ -24,6 +24,26 @@ export class Identifier implements Comparable {
         return new Identifier(Identifier.DEFAULT_NAMESPACE, Identifier.validatePath(Identifier.DEFAULT_NAMESPACE, path));
     }
 
+    public static tryParse(id: string): Identifier | null {
+        const sep = id.indexOf(':');
+
+        if (sep >= 0) {
+            const namespace = id.substring(0, sep);
+            const path = id.substring(sep + 1);
+
+            if (!this.isPathValid(path)) return null;
+
+            if (namespace.length === 0) {
+                return new Identifier("nova-flight", path);
+            }
+
+            return this.isNamespaceValid(namespace) ? new Identifier(namespace, path) : null;
+        }
+
+        return this.isPathValid(id) ? new Identifier("nova-flight", id) : null;
+    }
+
+
     public static isNamespaceValid(namespace: string): boolean {
         return /^[a-z0-9_.-]+$/.test(namespace);
     }

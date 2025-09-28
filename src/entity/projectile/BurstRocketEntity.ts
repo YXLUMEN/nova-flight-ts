@@ -14,7 +14,7 @@ export class BurstRocketEntity extends RocketEntity {
         world.events.emit(EVENTS.BOMB_DETONATE, {
             source: this,
             damage: this.explosionDamage,
-            attacker: this.owner,
+            attacker: this.getOwner(),
             pos: this.getPositionRef,
             explosionRadius: this.explosionRadius,
             fastSparks: 2,

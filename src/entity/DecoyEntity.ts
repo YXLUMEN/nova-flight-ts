@@ -45,6 +45,10 @@ export class DecoyEntity extends Entity implements IOwnable {
         DecoyEntity.Entities.shift();
     }
 
+    public override shouldSave(): boolean {
+        return false;
+    }
+
     protected override initDataTracker(_builder: InstanceType<typeof DataTracker.Builder>): void {
     }
 

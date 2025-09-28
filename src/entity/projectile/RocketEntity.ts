@@ -24,7 +24,7 @@ export class RocketEntity extends ProjectileEntity {
         if (entity instanceof LivingEntity) {
             damage += Math.max(1, (entity.getMaxHealth() - entity.getHealth()) * 0.3);
         }
-        entity.takeDamage(sources.projectile(this, this.owner), damage);
+        entity.takeDamage(sources.projectile(this, this.getOwner()), damage);
 
         this.discard();
     }
@@ -34,7 +34,7 @@ export class RocketEntity extends ProjectileEntity {
         world.events.emit(EVENTS.BOMB_DETONATE, {
             source: this,
             damage: this.explosionDamage,
-            attacker: this.owner,
+            attacker: this.getOwner(),
             pos: this.getPositionRef,
             explosionRadius: this.explosionRadius,
             fastSparks: 2,

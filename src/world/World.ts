@@ -34,7 +34,8 @@ import {AudioManager} from "../sound/AudioManager.ts";
 import {WorldScreen} from "../render/WorldScreen.ts";
 import {ClientWorld} from "../client/ClientWorld.ts";
 import {RegistryKeys} from "../registry/RegistryKeys.ts";
-import {Identifier} from "../registry/Identifier.ts";
+import {ServerEntityManager} from "./ServerEntityManager.ts";
+import {EntityType} from "../entity/EntityType.ts";
 
 export class World implements NbtSerializable {
     private static worldInstance: World | null;
@@ -66,12 +67,14 @@ export class World implements NbtSerializable {
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
     // entity
     public player: PlayerEntity | null;
-    private loadedMobs = new Set<MobEntity>();
-    private entities: EntityList = new EntityList();
+    private readonly loadedMobs = new Set<MobEntity>();
+    private readonly entities: EntityList = new EntityList();
+    private readonly entityManager: ServerEntityManager<Entity>;
 
     protected constructor(registryManager: RegistryManager) {
         this.registryManager = registryManager;
         this.damageSources = new DamageSources(registryManager);
+        this.entityManager = new ServerEntityManager(this.ServerEntityHandler);
 
         this.player = new PlayerEntity(this, ClientWorld.input);
         this.player?.setPosition(WorldScreen.VIEW_W / 2, WorldScreen.VIEW_H);
@@ -145,10 +148,11 @@ export class World implements NbtSerializable {
 
         // 更新实体
         if (!this.over) player.tick();
-        this.entities.forEach(entity => {
-            if (!entity.isRemoved() && !this.freeze) this.tickEntity(entity, player);
-            if (this.over) return;
-        });
+        for (const entity of this.entities.values()) {
+            if (entity.isRemoved() || this.freeze) continue;
+            this.tickEntity(entity, player);
+            if (this.over) break;
+        }
         this.entities.processRemovals();
 
         if (this.empBurst > 0) this.empBurst -= 1;
@@ -183,7 +187,7 @@ export class World implements NbtSerializable {
         // 弹射物碰撞
         if (entity instanceof ProjectileEntity) {
             // 敌方命中
-            if (entity.owner instanceof MobEntity) {
+            if (entity.getOwner() instanceof MobEntity) {
                 if (player.invulnerable || WorldConfig.devMode || !collideEntityCircle(player, entity)) return;
 
                 entity.onEntityHit(player);
@@ -193,10 +197,10 @@ export class World implements NbtSerializable {
             // 近防炮命中
             if (entity instanceof CIWSBulletEntity) {
                 for (const entity2 of this.entities.values()) {
-                    if (entity2.invulnerable || entity2 === entity.owner) continue;
+                    if (entity2.invulnerable || entity2 === entity.getOwner()) continue;
                     // 抵消弹射物
                     if (entity2 instanceof ProjectileEntity) {
-                        if (entity2.owner === entity.owner) continue;
+                        if (entity2.getOwner() === entity.getOwner()) continue;
                         if (collideEntityCircle(entity, entity2)) {
                             entity.onEntityHit(entity2);
                             entity2.onEntityHit(entity);
@@ -305,12 +309,16 @@ export class World implements NbtSerializable {
         );
     }
 
-    public spawnEntity(entity: Entity): void {
-        if (entity instanceof MobEntity) {
-            if (this.peaceMod) return;
-            this.loadedMobs.add(entity);
+    public spawnEntity(entity: Entity): boolean {
+        if (this.peaceMod && entity instanceof MobEntity) {
+            return false;
         }
-        this.entities.add(entity);
+        if (entity.isRemoved()) {
+            console.warn(`Tried to add entity ${EntityType.getId(entity.getType())} but it was marked as removed already`);
+            return false;
+        }
+
+        return this.entityManager.addEntity(entity);
     }
 
     public getEntities(): EntityList {
@@ -319,6 +327,14 @@ export class World implements NbtSerializable {
 
     public getLoadMobs(): Readonly<Set<MobEntity>> {
         return this.loadedMobs;
+    }
+
+    public getEntity(uuid: string): Entity | null {
+        return this.entityManager.getIndex().getByUUID(uuid);
+    }
+
+    public addEntities(entity: Iterable<Entity>): void {
+        this.entityManager.addEntities(entity);
     }
 
     public schedule(delaySec: number, fn: () => void): Schedule {
@@ -519,6 +535,8 @@ export class World implements NbtSerializable {
 
         this.events.on(EVENTS.ENTITY_REMOVED, event => {
             const entity = event.entity;
+            // 应该更安全一点
+            this.entityManager.remove(entity);
             this.entities.remove(entity);
 
             if (entity instanceof MobEntity) {
@@ -560,6 +578,8 @@ export class World implements NbtSerializable {
         const entityTypes = this.registryManager.get(RegistryKeys.ENTITY_TYPE);
         const entityList: NbtCompound[] = [];
         this.entities.forEach(entity => {
+            if (!entity.shouldSave()) return;
+
             const nbt = new NbtCompound();
             const type = entityTypes.getId(entity.getType())!;
             nbt.putString('Type', type.toString());
@@ -587,12 +607,9 @@ export class World implements NbtSerializable {
     }
 
     private loadEntity(nbtList: NbtCompound[]) {
-        const entityTypes = this.registryManager.get(RegistryKeys.ENTITY_TYPE);
         for (const nbt of nbtList) {
-            const entryType = nbt.getString('Type').split(':');
-            const id = Identifier.of(entryType[0], entryType[1]);
-
-            const entityType = entityTypes.getById(id);
+            const typeName = nbt.getString('Type');
+            const entityType = EntityType.get(typeName);
             if (!entityType) continue;
 
             const entity = entityType.create(this) as Entity;
@@ -606,4 +623,20 @@ export class World implements NbtSerializable {
         this.writeNBT(root);
         return root;
     }
+
+    public readonly ServerEntityHandler = {
+        startTicking: (entity: Entity) => {
+            this.entities.add(entity);
+            if (entity instanceof MobEntity) {
+                this.loadedMobs.add(entity);
+            }
+        },
+
+        stopTicking: (entity: Entity) => {
+            this.entities.remove(entity);
+            if (entity instanceof MobEntity) {
+                this.loadedMobs.delete(entity);
+            }
+        },
+    };
 }

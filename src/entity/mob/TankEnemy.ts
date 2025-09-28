@@ -6,8 +6,8 @@ import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 
 export class TankEnemy extends MobEntity {
-    public color = '#ff6b6b';
-    private damageCooldown: number = 0;
+    public override color = '#ff6b6b';
+    private toughness: number = 0;
 
     public constructor(type: EntityType<TankEnemy>, world: World, worth: number) {
         super(type, world, worth);
@@ -21,24 +21,17 @@ export class TankEnemy extends MobEntity {
 
     public override tick() {
         super.tick();
-        if (this.damageCooldown > 0) this.damageCooldown -= 1;
+        if (this.toughness > 0) this.toughness -= 0.05;
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         const bypass = damageSource.isIn(DamageTypeTags.BYPASSES_INVULNERABLE);
         if (!bypass) {
-            if (this.damageCooldown > 0) {
-                damage *= 1 - (this.damageCooldown / 8) * 0.8;
-            }
-
-            // 限制单次最大伤害
-            damage = Math.min(8, damage);
+            const reduction = Math.min(0.9, this.toughness * 0.1);
+            damage *= 1 - reduction;
+            this.toughness = Math.min(10, this.toughness + 1);
         }
 
-        if (super.takeDamage(damageSource, damage)) {
-            this.damageCooldown = 8;
-            return true;
-        }
-        return false;
+        return super.takeDamage(damageSource, damage);
     }
 }

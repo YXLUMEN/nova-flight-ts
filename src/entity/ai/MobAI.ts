@@ -104,6 +104,10 @@ export class MobAI {
         this.behavior = behavior;
     }
 
+    public getBehavior(): number {
+        return this.behavior;
+    }
+
     public static simpleMove(mob: MobEntity) {
         const speedMultiplier = mob.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
         if (speedMultiplier <= 0) return;

@@ -28,7 +28,7 @@ export class ADSEntity extends Entity implements IOwnable {
         const entities = world.getEntities().values();
 
         for (const entity of entities) {
-            if (entity instanceof ProjectileEntity && entity.owner !== this.owner) {
+            if (entity instanceof ProjectileEntity && entity.getOwner() !== this.owner) {
                 if (dist2(entity.getPositionRef, this.getPositionRef) > ADSEntity.RADIUS) continue;
                 ADSEntity.spawnInterceptPathParticles(world, this.getPositionRef.clone(), entity.getPositionRef.clone());
                 entity.discard();

@@ -31,6 +31,8 @@ export abstract class NovaFlightServer {
             this.onGameStop = async (nbt: NbtCompound) => {
                 try {
                     await this.saveGame(nbt);
+                } catch (error) {
+                    console.error(`Error while saving game: ${error}`);
                 } finally {
                     this.worldInstance?.destroy();
                     this.worldInstance = null;
@@ -70,22 +72,27 @@ export abstract class NovaFlightServer {
     }
 
     private static tick(ts: number) {
-        const world = this.worldInstance!;
-        if (!this.running) {
-            this.onGameStop(world.saveAll());
-            return;
-        }
+        try {
+            const world = this.worldInstance!;
+            if (!this.running) {
+                this.onGameStop(world.saveAll());
+                return;
+            }
 
-        const tickDelta = Math.min(0.05, (ts - this.last) / 1000 || 0);
-        this.last = ts;
-        this.accumulator += tickDelta;
+            const tickDelta = Math.min(0.05, (ts - this.last) / 1000 || 0);
+            this.last = ts;
+            this.accumulator += tickDelta;
 
-        while (this.accumulator >= WorldConfig.mbps) {
-            world.tickWorld(WorldConfig.mbps);
-            this.accumulator -= WorldConfig.mbps;
+            while (this.accumulator >= WorldConfig.mbps) {
+                world.tickWorld(WorldConfig.mbps);
+                this.accumulator -= WorldConfig.mbps;
+            }
+            world.render();
+            requestAnimationFrame(this.bindTick);
+        } catch (error) {
+            console.error(`Runtime error: ${error}`);
+            this.stopGame().catch(error => console.error(error));
         }
-        world.render();
-        requestAnimationFrame(this.bindTick);
     }
 
     private static bindTick = this.tick.bind(this);

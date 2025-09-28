@@ -5,10 +5,12 @@ import type {EntityType} from "../EntityType.ts";
 import type {DataEntry} from "../data/DataEntry.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import {DataTracker} from "../data/DataTracker.ts";
+import {type NbtCompound} from "../../nbt/NbtCompound.ts";
 
 export abstract class ProjectileEntity extends Entity implements IOwnable {
     public readonly damage: number;
-    public owner: Entity | null;
+    private ownerUuid: string | null = null;
+    private owner: Entity | null = null;
     public color = "#8cf5ff";
     public edgeColor = '';
 
@@ -16,7 +18,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
         super(type, world);
 
         this.damage = damage;
-        this.owner = owner;
+        this.setOwner(owner);
     }
 
     public override tick() {
@@ -33,13 +35,44 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
     public abstract onEntityHit(entity: Entity): void;
 
     public setOwner(entity: Entity | null): void {
-        if (entity !== null) {
+        if (entity) {
+            this.ownerUuid = entity.getUuid();
             this.owner = entity;
         }
     }
 
     public getOwner(): Entity | null {
-        return this.owner;
+        if (this.owner && !this.owner.isRemoved()) {
+            return this.owner;
+        }
+        if (this.ownerUuid) {
+            this.owner = this.getWorld().getEntity(this.ownerUuid);
+            return this.owner;
+        }
+        return null;
+    }
+
+    protected isOwner(entity: Entity) {
+        return entity.getUuid() === this.ownerUuid;
+    }
+
+    public override writeNBT(nbt: NbtCompound): NbtCompound {
+        super.writeNBT(nbt);
+        if (this.ownerUuid) {
+            nbt.putString('Owner', this.ownerUuid);
+        }
+        nbt.putString('Color', this.color);
+        nbt.putString('EdgeColor', this.edgeColor);
+
+        return nbt
+    }
+
+    public override readNBT(nbt: NbtCompound) {
+        super.readNBT(nbt);
+        const ownerUuid = nbt.getString('Owner');
+        this.ownerUuid = ownerUuid.length > 0 ? ownerUuid : null;
+        this.color = nbt.getString('Color');
+        this.edgeColor = nbt.getString('EdgeColor');
     }
 
     public onDataTrackerUpdate(_entries: DataEntry<any>): void {

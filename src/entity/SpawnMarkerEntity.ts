@@ -38,6 +38,10 @@ export class SpawnMarkerEntity extends Entity {
         }
     }
 
+    public override shouldSave(): boolean {
+        return false;
+    }
+
     protected override initDataTracker(_builder: InstanceType<typeof DataTracker.Builder>): void {
     }
 

@@ -138,7 +138,7 @@ const p6: PhaseConfig = deepFreeze(createCleanObj({
 
 const p7: PhaseConfig = deepFreeze(createCleanObj({
     name: "P7",
-    until: ({score}) => score >= 6144,
+    until: ({score}) => score >= 7168,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P7'}),
     onExit: ({world}) => world.events.emit(EVENTS.STAGE_EXIT, {name: 'P7'}),
     rules: [
@@ -148,7 +148,7 @@ const p7: PhaseConfig = deepFreeze(createCleanObj({
             factory: spawnAtTopS(EntityTypes.BASE_ENEMY,
                 0.22, 8, 10,
                 '#910000',
-                (ctx) => 1 + (ctx.score / 1000) | 0
+                (ctx) => 1 + (ctx.score / 600) | 0
             ),
             cap: 94
         },
@@ -158,7 +158,7 @@ const p7: PhaseConfig = deepFreeze(createCleanObj({
             factory: spawnAtTopS(EntityTypes.TANK_ENEMY_ENTITY,
                 0.12, 0, 16,
                 '#9f3b00',
-                (ctx) => 1 + Math.log2(ctx.score) | 0
+                (ctx) => 1 + (ctx.score / 800) | 0
             ),
             cap: 72,
         },
@@ -209,7 +209,7 @@ const p9: PhaseConfig = deepFreeze(createCleanObj({
                 0.22, 6, 8,
                 '#910000',
                 {},
-                (ctx) => 1 + (ctx.score / 1000) | 0
+                (ctx) => 1 + (ctx.score / 500) | 0
             ),
             cap: 72
         },
@@ -220,7 +220,7 @@ const p9: PhaseConfig = deepFreeze(createCleanObj({
                 0.12, 0, 8,
                 '#9f3b00',
                 {safeRadius: 248},
-                (ctx) => 1 + Math.log2(ctx.score) | 0
+                (ctx) => 1 + (ctx.score / 700) | 0
             ),
             cap: 64,
         },

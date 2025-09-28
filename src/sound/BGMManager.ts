@@ -3,7 +3,7 @@ import {AudioManager} from "./AudioManager.ts";
 import {sleep} from "../utils/uit.ts";
 
 export class BGMManager {
-    private static playList = [Audios.COME_ON_MABO, Audios.SOME_TIME_HJM, Audios.SOME_TIME_HJM, Audios.SPACE_WALK];
+    private static playList = [Audios.COME_ON_MABO, Audios.SOME_TIME_HJM, Audios.NO_MORE_MABO, Audios.SPACE_WALK];
     private static current = 0;
 
     public static init() {
@@ -11,7 +11,6 @@ export class BGMManager {
         AudioManager.playAudio(this.playList[this.current]);
         AudioManager.setVolume(0.5);
 
-        AudioManager.setAudio().loop = false;
         AudioManager.addListener('bgm', 'ended', async () => {
             this.current = (this.current + 1) % this.playList.length;
             await sleep(1000);

@@ -2,7 +2,6 @@ import {World} from "../../world/World.ts";
 import {EMPBurst} from "../../effect/EMPBurst.ts";
 import {pointInCircleVec2} from "../../utils/math/math.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
-import {ScreenFlash} from "../../effect/ScreenFlash.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
@@ -33,7 +32,7 @@ export class EMPWeapon extends SpecialWeapon {
 
         world.getEntities().forEach(entity => {
             if (entity instanceof ProjectileEntity) {
-                if (entity.owner instanceof MobEntity) entity.discard();
+                if (entity.getOwner() instanceof MobEntity) entity.discard();
             } else if (entity instanceof MobEntity) {
                 if (!entity.isRemoved() && pointInCircleVec2(entity.getPositionRef, attacker.getPositionRef, radius)) {
                     entity.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, this.duration, 1), null);
@@ -41,7 +40,6 @@ export class EMPWeapon extends SpecialWeapon {
             }
         });
 
-        world.addEffect(new ScreenFlash(0.5, 0.18, '#5ec8ff'));
         world.addEffect(new EMPBurst(
             attacker.getPositionRef,
             radius

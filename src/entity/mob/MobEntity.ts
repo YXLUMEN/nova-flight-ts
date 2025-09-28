@@ -102,6 +102,8 @@ export abstract class MobEntity extends LivingEntity {
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
         nbt.putUint('Worth', this.worth);
+        nbt.putString('Color', this.color);
+        nbt.putInt8('AiBehavior', this.AI.getBehavior());
 
         return nbt;
     }
@@ -109,6 +111,8 @@ export abstract class MobEntity extends LivingEntity {
     public override readNBT(nbt: NbtCompound): void {
         super.readNBT(nbt);
         this.worth = nbt.getUint('Worth', 1);
+        this.color = nbt.getString('Color', this.color);
+        this.AI.setBehavior(nbt.getInt8('AiBehavior', 0));
     }
 
     public isRangedAttacker(): boolean {

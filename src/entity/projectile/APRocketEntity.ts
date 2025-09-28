@@ -15,7 +15,7 @@ export class APRocketEntity extends RocketEntity {
         if (entity instanceof LivingEntity) {
             damaged += entity.getMaxHealth() * 0.4;
         }
-        entity.takeDamage(sources.apDamage(this, this.owner), damaged);
+        entity.takeDamage(sources.apDamage(this, this.getOwner()), damaged);
         this.damagedEntity.add(entity);
     }
 

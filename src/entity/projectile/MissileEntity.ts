@@ -127,7 +127,7 @@ export class MissileEntity extends RocketEntity {
         let bestScore = -Infinity;
 
         for (const mob of mobs) {
-            if (mob.isRemoved() || mob === this.owner) continue;
+            if (mob.isRemoved() || mob === this.getOwner()) continue;
 
             const currentLocks = MissileEntity.lockedEntity.get(mob) ?? 0;
             const totalDamage = this.damage + this.explosionDamage;
@@ -211,5 +211,9 @@ export class MissileEntity extends RocketEntity {
 
     public getTarget(): Entity | null {
         return this.target;
+    }
+
+    public override shouldSave(): boolean {
+        return false;
     }
 }

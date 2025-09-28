@@ -55,7 +55,7 @@ export class HUD implements IUi {
 
         ctx.save();
         ctx.font = this.font;
-        ctx.textAlign = "left";
+        ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
         ctx.fillStyle = this.hudColor;
 
