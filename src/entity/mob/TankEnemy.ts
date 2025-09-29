@@ -29,7 +29,7 @@ export class TankEnemy extends MobEntity {
         if (!bypass) {
             const reduction = Math.min(0.9, this.toughness * 0.1);
             damage *= 1 - reduction;
-            this.toughness = Math.min(10, this.toughness + 1);
+            this.toughness = Math.min(10, this.toughness + (damage / 2) | 0);
         }
 
         return super.takeDamage(damageSource, damage);

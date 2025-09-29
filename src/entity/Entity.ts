@@ -16,7 +16,6 @@ import type {Comparable} from "../utils/collection/HashMap.ts";
 import {clamp, shortUUID} from "../utils/math/math.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import type {NbtCompound} from "../nbt/NbtCompound.ts";
-import {EntityGCWatchdog} from "../../test-src/debug.ts";
 
 
 export abstract class Entity implements DataTracked, Comparable, NbtSerializable {
@@ -53,7 +52,6 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         const builder = new DataTracker.Builder(this);
         this.initDataTracker(builder);
         this.dataTracker = builder.build();
-        EntityGCWatchdog.watch(this);
     }
 
     public getType(): EntityType<any> {

@@ -4,7 +4,6 @@ import type {DataEntry} from "./data/DataEntry.ts";
 import type {TrackedData} from "./data/TrackedData.ts";
 import type {EntityType} from "./EntityType.ts";
 import {World} from "../world/World.ts";
-import {ProjectileEntity} from "./projectile/ProjectileEntity.ts";
 import type {IOwnable} from "./IOwnable.ts";
 import type {LivingEntity} from "./LivingEntity.ts";
 import {dist2} from "../utils/math/math.ts";
@@ -25,13 +24,13 @@ export class ADSEntity extends Entity implements IOwnable {
 
         if ((this.age & 7) !== 0) return;
         const world = this.getWorld();
-        const entities = world.getEntities().values();
+        const projectiles = world.getProjectiles();
 
-        for (const entity of entities) {
-            if (entity instanceof ProjectileEntity && entity.getOwner() !== this.owner) {
-                if (dist2(entity.getPositionRef, this.getPositionRef) > ADSEntity.RADIUS) continue;
-                ADSEntity.spawnInterceptPathParticles(world, this.getPositionRef.clone(), entity.getPositionRef.clone());
-                entity.discard();
+        for (const projectile of projectiles) {
+            if (projectile.getOwner() !== this.owner) {
+                if (dist2(projectile.getPositionRef, this.getPositionRef) > ADSEntity.RADIUS) continue;
+                ADSEntity.spawnInterceptPathParticles(world, this.getPositionRef.clone(), projectile.getPositionRef.clone());
+                projectile.discard();
                 break;
             }
         }

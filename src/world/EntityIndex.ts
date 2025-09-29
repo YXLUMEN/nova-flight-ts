@@ -4,14 +4,15 @@ export class EntityIndex<T extends Entity> {
     private readonly idToEntity = new Map<number, T>;
     private readonly uuidToEntity = new Map<string, T>();
 
-    public add(entity: T) {
+    public add(entity: T): boolean {
         const uuid = entity.getUuid();
         if (this.uuidToEntity.has(uuid)) {
             console.warn(`Duplicate entity UUID ${uuid}: ${entity}`);
-        } else {
-            this.uuidToEntity.set(uuid, entity);
-            this.idToEntity.set(entity.getId(), entity);
+            return false;
         }
+        this.uuidToEntity.set(uuid, entity);
+        this.idToEntity.set(entity.getId(), entity);
+        return true;
     }
 
     public remove(entity: T) {
@@ -25,6 +26,10 @@ export class EntityIndex<T extends Entity> {
 
     public getByUUID(uuid: string): T | null {
         return this.uuidToEntity.get(uuid) ?? null;
+    }
+
+    public uuidValues() {
+        return this.uuidToEntity.keys();
     }
 
     public get size() {

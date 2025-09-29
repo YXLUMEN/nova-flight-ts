@@ -6,7 +6,6 @@ import type {IEffect} from "../effect/IEffect.ts";
 import {ScreenFlash} from "../effect/ScreenFlash.ts";
 import {StarField} from "../effect/StarField.ts";
 import {STAGE} from "../configs/StageConfig.ts";
-import {WorldConfig} from "../configs/WorldConfig.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {ParticlePool} from "../effect/ParticlePool.ts";
 import type {Schedule, TimerTask} from "../apis/ITimer.ts";
@@ -18,7 +17,6 @@ import {EntityRenderers} from "../render/entity/EntityRenderers.ts";
 import {DefaultEvents} from "../event/DefaultEvents.ts";
 import {EVENTS, type IEvents} from "../apis/IEvents.ts";
 import {EntityList} from "./EntityList.ts";
-import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 import {BossEntity} from "../entity/mob/BossEntity.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
@@ -27,18 +25,20 @@ import {SpawnMarkerEntity} from "../entity/SpawnMarkerEntity.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import {AtomicInteger} from "../utils/math/AtomicInteger.ts";
-import {CIWSBulletEntity} from "../entity/projectile/CIWSBulletEntity.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {WorldScreen} from "../render/WorldScreen.ts";
 import {ClientWorld} from "../client/ClientWorld.ts";
 import {RegistryKeys} from "../registry/RegistryKeys.ts";
-import {ServerEntityManager} from "./ServerEntityManager.ts";
+import {type EntityHandler, ServerEntityManager} from "./ServerEntityManager.ts";
 import {EntityType} from "../entity/EntityType.ts";
+import {WorldConfig} from "../configs/WorldConfig.ts";
+import {CIWSBulletEntity} from "../entity/projectile/CIWSBulletEntity.ts";
+import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 
 export class World implements NbtSerializable {
-    private static worldInstance: World | null;
+    public static instance: World | null;
 
     public static readonly WORLD_W = 1692;
     public static readonly WORLD_H = 1030;
@@ -67,7 +67,6 @@ export class World implements NbtSerializable {
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
     // entity
     public player: PlayerEntity | null;
-    private readonly loadedMobs = new Set<MobEntity>();
     private readonly entities: EntityList = new EntityList();
     private readonly entityManager: ServerEntityManager<Entity>;
 
@@ -77,7 +76,8 @@ export class World implements NbtSerializable {
         this.entityManager = new ServerEntityManager(this.ServerEntityHandler);
 
         this.player = new PlayerEntity(this, ClientWorld.input);
-        this.player?.setPosition(WorldScreen.VIEW_W / 2, WorldScreen.VIEW_H);
+        this.player.setPosition(WorldScreen.VIEW_W / 2, WorldScreen.VIEW_H);
+        this.entityManager.addEntity(this.player, true);
 
         this.registryEvents();
 
@@ -85,20 +85,16 @@ export class World implements NbtSerializable {
     }
 
     public static createWorld(registryManager: RegistryManager): World {
-        if (this.worldInstance) return this.worldInstance;
-        this.worldInstance = new World(registryManager);
-        return this.worldInstance;
-    }
-
-    public static get instance(): World | null {
-        return this.worldInstance;
+        if (this.instance) return this.instance;
+        this.instance = new World(registryManager);
+        return this.instance;
     }
 
     public destroy(): void {
         this.clear();
 
         this.events.clear();
-        World.worldInstance = null;
+        World.instance = null;
     }
 
     public clear(): void {
@@ -109,9 +105,9 @@ export class World implements NbtSerializable {
 
         this.player!.discard();
         this.player = null;
-        this.loadedMobs.clear();
         this.entities.forEach(entity => entity.discard());
         this.entities.clear();
+        this.entityManager.clear();
 
         this.effects.forEach(effect => effect.kill());
         this.effects.length = 0;
@@ -124,8 +120,9 @@ export class World implements NbtSerializable {
         this.clear();
 
         this.player = new PlayerEntity(this, ClientWorld.input);
-        this.player.setPosition(World.WORLD_W / 2, World.WORLD_H);
+        this.player.setPosition(WorldScreen.VIEW_W / 2, WorldScreen.VIEW_H);
         this.player.setVelocity(0, -24);
+        this.entityManager.addEntity(this.player, true);
 
         this.over = false;
         this.rendering = true;
@@ -186,42 +183,31 @@ export class World implements NbtSerializable {
 
         // 弹射物碰撞
         if (entity instanceof ProjectileEntity) {
+            const owner = entity.getOwner();
             // 敌方命中
-            if (entity.getOwner() instanceof MobEntity) {
+            if (owner instanceof MobEntity) {
                 if (player.invulnerable || WorldConfig.devMode || !collideEntityCircle(player, entity)) return;
 
                 entity.onEntityHit(player);
                 return;
             }
 
-            // 近防炮命中
+            // 玩家近防炮命中
             if (entity instanceof CIWSBulletEntity) {
-                for (const entity2 of this.entities.values()) {
-                    if (entity2.invulnerable || entity2 === entity.getOwner()) continue;
-                    // 抵消弹射物
-                    if (entity2 instanceof ProjectileEntity) {
-                        if (entity2.getOwner() === entity.getOwner()) continue;
-                        if (collideEntityCircle(entity, entity2)) {
-                            entity.onEntityHit(entity2);
-                            entity2.onEntityHit(entity);
-                            break;
-                        }
-                        continue;
-                    }
-                    // 正常命中
-                    if (collideEntityCircle(entity, entity2)) {
-                        entity.onEntityHit(entity2);
-                        break;
+                for (const projectile of this.getProjectiles()) {
+                    if (projectile.getOwner() !== owner && collideEntityCircle(entity, projectile)) {
+                        entity.onEntityHit(projectile);
+                        projectile.onEntityHit(entity);
+                        return;
                     }
                 }
-                return;
             }
 
             // 玩家命中
-            for (const mob of this.loadedMobs) {
+            for (const mob of this.getMobs()) {
                 if (collideEntityCircle(entity, mob)) {
                     entity.onEntityHit(mob);
-                    break;
+                    return;
                 }
             }
         }
@@ -268,7 +254,7 @@ export class World implements NbtSerializable {
     }
 
     public setStage(stage: Stage) {
-        this.loadedMobs.forEach(m => m.discard());
+        this.getMobs().forEach(m => m.discard());
         this.stage.reset();
         this.stage = stage;
     }
@@ -325,8 +311,12 @@ export class World implements NbtSerializable {
         return this.entities;
     }
 
-    public getLoadMobs(): Readonly<Set<MobEntity>> {
-        return this.loadedMobs;
+    public getMobs(): ReadonlySet<MobEntity> {
+        return this.entities.getMobs();
+    }
+
+    public getProjectiles(): ReadonlySet<ProjectileEntity> {
+        return this.entities.getProjectiles();
     }
 
     public getEntity(uuid: string): Entity | null {
@@ -534,14 +524,7 @@ export class World implements NbtSerializable {
         this.events.clear();
 
         this.events.on(EVENTS.ENTITY_REMOVED, event => {
-            const entity = event.entity;
-            // 应该更安全一点
-            this.entityManager.remove(entity);
-            this.entities.remove(entity);
-
-            if (entity instanceof MobEntity) {
-                this.loadedMobs.delete(entity);
-            }
+            this.entityManager.remove(event.entity);
         });
 
         this.events.on(EVENTS.BOSS_KILLED, () => {
@@ -624,19 +607,13 @@ export class World implements NbtSerializable {
         return root;
     }
 
-    public readonly ServerEntityHandler = {
+    public readonly ServerEntityHandler: EntityHandler<Entity> = {
         startTicking: (entity: Entity) => {
             this.entities.add(entity);
-            if (entity instanceof MobEntity) {
-                this.loadedMobs.add(entity);
-            }
         },
 
         stopTicking: (entity: Entity) => {
             this.entities.remove(entity);
-            if (entity instanceof MobEntity) {
-                this.loadedMobs.delete(entity);
-            }
         },
     };
 }

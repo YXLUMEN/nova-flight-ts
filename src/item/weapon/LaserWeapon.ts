@@ -90,7 +90,7 @@ export class LaserWeapon extends SpecialWeapon {
             start.y + g * this.height
         );
 
-        for (const mob of world.getLoadMobs()) {
+        for (const mob of world.getMobs()) {
             if (mob.isRemoved() ||
                 !lineCircleHit(
                     start.x, start.y, end.x, end.y,

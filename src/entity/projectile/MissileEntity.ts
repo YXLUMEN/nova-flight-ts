@@ -118,7 +118,7 @@ export class MissileEntity extends RocketEntity {
             return player;
         }
 
-        const mobs = this.getWorld().getLoadMobs();
+        const mobs = this.getWorld().getMobs();
         if (mobs.size === 0) return null;
 
         const pos = this.getPositionRef;

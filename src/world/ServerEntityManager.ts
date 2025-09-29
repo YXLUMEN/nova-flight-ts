@@ -1,14 +1,13 @@
 import {EntityIndex} from "./EntityIndex.ts";
 import type {Entity} from "../entity/Entity.ts";
 
-interface EntityHandler<T extends Entity> {
+export interface EntityHandler<T extends Entity> {
     startTicking(entity: T): void;
 
     stopTicking(entity: T): void;
 }
 
 export class ServerEntityManager<T extends Entity> {
-    private readonly entityUUIDs = new Set<string>();
     private readonly index: EntityIndex<T>;
     private readonly handler: EntityHandler<T>;
 
@@ -17,24 +16,14 @@ export class ServerEntityManager<T extends Entity> {
         this.handler = handler;
     }
 
-    private addEntityUuid(entity: T): boolean {
-        const uuid = entity.getUuid();
-        if (this.entityUUIDs.has(uuid)) {
+    public addEntity(entity: T, existed = false): boolean {
+        if (!this.index.add(entity)) {
             return false;
         }
 
-        this.entityUUIDs.add(uuid);
-        return true;
-    }
-
-    public addEntity(entity: T): boolean {
-        if (!this.addEntityUuid(entity)) {
-            return false;
-        }
-
-        this.index.add(entity);
+        if (existed) return true;
         this.handler.startTicking(entity);
-        return true
+        return true;
     }
 
     public addEntities(entities: Iterable<T>): void {
@@ -44,9 +33,15 @@ export class ServerEntityManager<T extends Entity> {
     }
 
     public remove(entity: T) {
-        this.entityUUIDs.delete(entity.getUuid());
         this.index.remove(entity);
         this.handler.stopTicking(entity);
+    }
+
+    public clear() {
+        this.index.uuidValues().forEach(uuid => {
+            const entity = this.index.getByUUID(uuid);
+            if (entity) this.remove(entity);
+        });
     }
 
     public getIndex() {

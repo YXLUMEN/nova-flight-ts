@@ -37,6 +37,8 @@ export abstract class NovaFlightServer {
                     this.worldInstance?.destroy();
                     this.worldInstance = null;
                     this.waitGameStop = null;
+                    this.last = 0;
+                    this.accumulator = 0;
                     resolve();
                 }
             };
@@ -47,8 +49,11 @@ export abstract class NovaFlightServer {
 
         if (readSave) {
             const saves = await this.loadSaves();
-            if (saves) world.readNBT(saves);
-            else {
+            if (saves) {
+                world.readNBT(saves);
+                world.player!.invulnerable = true;
+                world.schedule(1, () => world.player!.invulnerable = false);
+            } else {
                 WorldScreen.notify.show('无存档');
                 world.player?.setVelocity(0, -24);
             }
@@ -65,11 +70,20 @@ export abstract class NovaFlightServer {
     }
 
     public static async stopGame(): Promise<void> {
-        if (!this.running || this.waitGameStop === null) return;
+        if (!this.running) {
+            // 避免ts抱怨
+            return this.waitGameStop ? this.waitGameStop : Promise.resolve();
+        }
+
         this.running = false;
 
-        await this.waitGameStop;
+        try {
+            await this.waitGameStop;
+        } catch (err) {
+            console.error("Error during stopGame:", err);
+        }
     }
+
 
     private static tick(ts: number) {
         try {
@@ -92,6 +106,7 @@ export abstract class NovaFlightServer {
         } catch (error) {
             console.error(`Runtime error: ${error}`);
             this.stopGame().catch(error => console.error(error));
+            throw error;
         }
     }
 
@@ -105,7 +120,6 @@ export abstract class NovaFlightServer {
             await writeFile(this.SAVE_PATH, bytes, {baseDir: BaseDirectory.Resource});
         } catch (err) {
             console.error(err);
-            alert('保存时出错');
         }
     }
 

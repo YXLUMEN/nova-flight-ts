@@ -31,7 +31,7 @@ export class BombWeapon extends SpecialWeapon {
             return;
         }
 
-        for (const mob of world.getLoadMobs()) {
+        for (const mob of world.getMobs()) {
             if (mob.isRemoved()) continue;
             const d2 = MutVec2.distSq(mob.getPositionRef, center);
             if (d2 <= r2) {

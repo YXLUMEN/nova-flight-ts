@@ -23,7 +23,7 @@ export class BallisticCalculator {
 
     private findTargetUnderCursor(): MobEntity | null {
         const world = this.owner.getWorld();
-        const mobs = world.getLoadMobs();
+        const mobs = world.getMobs();
         if (mobs.size === 0) return null;
 
         const cursorWorldPos = this.owner.input.getPointer;

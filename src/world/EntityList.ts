@@ -1,11 +1,25 @@
 import {Entity} from "../entity/Entity.ts";
+import {MobEntity} from "../entity/mob/MobEntity.ts";
+import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 
 export class EntityList {
-    private entities = new Map<number, Entity>();
-    private pendingRemoval: number[] = [];
+    private readonly entities = new Map<number, Entity>();
+    private readonly mobs = new Set<MobEntity>();
+    private readonly projectiles = new Set<ProjectileEntity>();
+
+    private readonly pendingRemoval: number[] = [];
 
     public add(entity: Entity): void {
         this.entities.set(entity.getId(), entity);
+
+        if (entity instanceof MobEntity) {
+            this.mobs.add(entity);
+            return;
+        }
+        if (entity instanceof ProjectileEntity) {
+            this.projectiles.add(entity);
+            return;
+        }
     }
 
     public remove(entity: Entity): void {
@@ -22,12 +36,29 @@ export class EntityList {
         }
     }
 
-    public values() {
+    public values(): MapIterator<Entity> {
         return this.entities.values();
+    }
+
+    public getMobs(): ReadonlySet<MobEntity> {
+        return this.mobs;
+    }
+
+    public getProjectiles(): ReadonlySet<ProjectileEntity> {
+        return this.projectiles;
     }
 
     public processRemovals(): void {
         for (const id of this.pendingRemoval) {
+            const entity = this.entities.get(id);
+            if (!entity) continue;
+
+            if (entity instanceof MobEntity) {
+                this.mobs.delete(entity);
+            } else if (entity instanceof ProjectileEntity) {
+                this.projectiles.delete(entity);
+            }
+
             this.entities.delete(id);
         }
         this.pendingRemoval.length = 0;
@@ -42,6 +73,9 @@ export class EntityList {
     public clear(): void {
         this.processRemovals();
         this.entities.clear();
+        this.mobs.clear();
+        this.projectiles.clear();
+
         this.pendingRemoval.length = 0;
         Entity.CURRENT_ID.reset();
     }

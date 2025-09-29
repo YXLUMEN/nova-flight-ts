@@ -19,7 +19,7 @@ export class SpawnRule {
         const cfg = this.cfg;
 
         if (cfg.enabled && !cfg.enabled(ctx)) return;
-        if (cfg.cap && ctx.world.getLoadMobs().size >= cfg.cap) return;
+        if (cfg.cap && ctx.world.getMobs().size >= cfg.cap) return;
 
         this.ticks++;
 
@@ -64,7 +64,7 @@ export class SpawnRule {
 
         // 再次防洪
         const cap = this.cfg.cap ?? Infinity;
-        const remain = cap - ctx.world.getLoadMobs().size;
+        const remain = cap - ctx.world.getMobs().size;
         if (remain <= 0) return;
 
         if (Array.isArray(out)) {

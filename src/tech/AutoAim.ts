@@ -17,7 +17,7 @@ export class AutoAim {
 
     public tick() {
         const world = this.owner.getWorld();
-        const mobs = world.getLoadMobs();
+        const mobs = world.getMobs();
         if (mobs.size === 0) return;
 
         const pos = this.owner.getPositionRef;
@@ -37,7 +37,7 @@ export class AutoAim {
         WorldConfig.autoShoot = yawDiff <= AutoAim.FIRE_THRESHOLD;
     }
 
-    private acquireTarget(mobs: Set<MobEntity>, pos: IVec) {
+    private acquireTarget(mobs: ReadonlySet<MobEntity>, pos: IVec) {
         const now = performance.now();
 
         if (this.currentTarget && !this.currentTarget.isRemoved() && now - this.targetLockTime < 500) {

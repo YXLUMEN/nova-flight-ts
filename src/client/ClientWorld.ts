@@ -71,7 +71,7 @@ export class ClientWorld {
             case 'KeyC':
                 world.peaceMod = !world.peaceMod;
                 world.peaceMod ? world.stage.pause() : world.stage.resume();
-                world.getLoadMobs().forEach(mob => mob.discard());
+                world.getMobs().forEach(mob => mob.discard());
                 break;
             case 'KeyH':
                 player.setHealth(player.getMaxHealth());

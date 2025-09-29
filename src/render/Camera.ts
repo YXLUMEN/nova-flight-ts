@@ -13,10 +13,10 @@ interface ViewRect {
 }
 
 export class Camera {
-    private offset = new MutVec2(0, 0);
-    private velocity = new MutVec2(0, 0);
-    private viewOffsetCache = new MutVec2(0, 0);
-    private uiOffsetCache = new MutVec2(0, 0);
+    private offset = MutVec2.zero();
+    private velocity = MutVec2.zero();
+    private viewOffsetCache = MutVec2.zero();
+    private uiOffsetCache = MutVec2.zero();
     private viewRectCache: ViewRect = {
         top: 0,
         bottom: 0,
@@ -35,7 +35,7 @@ export class Camera {
     private traumaPower = 2;       // 非线性放大, 常用 2 或 3
     private shakeDecay = 0.8;      // 每秒衰减量
     private maxShake = 48;         // 最大像素抖动
-    private shakeOffset = new MutVec2(0, 0);
+    private shakeOffset = MutVec2.zero();
 
     private uiMaxDrift = 64;      // HUD 最大漂移像素(镜头快速移动时)
     private uiShakeFactor = 0.5;

@@ -104,6 +104,7 @@ export abstract class MobEntity extends LivingEntity {
         nbt.putUint('Worth', this.worth);
         nbt.putString('Color', this.color);
         nbt.putInt8('AiBehavior', this.AI.getBehavior());
+        nbt.putUint('Age', this.age);
 
         return nbt;
     }
@@ -113,6 +114,7 @@ export abstract class MobEntity extends LivingEntity {
         this.worth = nbt.getUint('Worth', 1);
         this.color = nbt.getString('Color', this.color);
         this.AI.setBehavior(nbt.getInt8('AiBehavior', 0));
+        this.age = nbt.getUint('Age', 0);
     }
 
     public isRangedAttacker(): boolean {

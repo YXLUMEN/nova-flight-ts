@@ -152,7 +152,7 @@ export class IntoVoidWeapon extends SpecialWeapon {
         stack.set(DataComponentTypes.ANY_BOOLEAN, false);
 
         const box = attacker.getWidth() + stack.getOrDefault(DataComponentTypes.EFFECT_RANGE, 32);
-        for (const mob of world.getLoadMobs()) {
+        for (const mob of world.getMobs()) {
             if (mob.isRemoved() || !pointInCircleVec2(attacker.getPositionRef, mob.getPositionRef, box + mob.getWidth())) continue;
             if (mob instanceof BossEntity) continue;
             mob.onDeath(world.getDamageSources().void(attacker as PlayerEntity));
