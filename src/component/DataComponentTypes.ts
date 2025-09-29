@@ -13,6 +13,8 @@ export class DataComponentTypes {
     public static readonly DURABILITY: ComponentType<number> = this.register("durability", new ComponentType(0));
     public static readonly UNBREAKABLE: ComponentType<boolean> = this.register("unbreakable", new ComponentType(false));
 
+    public static readonly CUSTOM_NAME: ComponentType<string> = this.register("custom_name", new ComponentType(''));
+
     public static readonly ITEM_AVAILABLE: ComponentType<boolean> = this.register("item_available", new ComponentType(true));
     public static readonly ATTRIBUTE_MODIFIERS = this.register("attribute_modifiers", new ComponentType(AttributeModifiersComponent.DEFAULT));
 

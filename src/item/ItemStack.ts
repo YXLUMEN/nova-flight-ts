@@ -34,6 +34,13 @@ export class ItemStack {
         return this === ItemStack.EMPTY || this.item === Items.AIR || this.count <= 0;
     }
 
+    public split(amount: number): ItemStack {
+        const i = Math.min(amount, this.getCount());
+        const itemStack = this.copyWithCount(i);
+        this.decrement(i);
+        return itemStack;
+    }
+
     public getItem(): Item {
         return this.isEmpty() ? Items.AIR : this.item!;
     }
@@ -70,6 +77,10 @@ export class ItemStack {
         return this.getItem() === item;
     }
 
+    public contains<T>(type: ComponentType<T>): boolean {
+        return this.getComponents().contains(type);
+    }
+
     public rightClick(world: World, user: PlayerEntity) {
         this.getItem().rightClick(world, user);
     }
@@ -88,6 +99,10 @@ export class ItemStack {
 
     public isDamageable() {
         return this.has(DataComponentTypes.MAX_DURABILITY) && !this.has(DataComponentTypes.UNBREAKABLE) && this.has(DataComponentTypes.DURABILITY);
+    }
+
+    public isDamaged() {
+        return this.isDamageable() && this.getDamage() > 0;
     }
 
     public getDamage(): number {
@@ -124,6 +139,33 @@ export class ItemStack {
         return new ItemStack(this.getItem(), this.count, this.components.copy());
     }
 
+    public copyWithCount(count: number): ItemStack {
+        if (this.isEmpty()) {
+            return ItemStack.EMPTY;
+        } else {
+            const itemStack = this.copy();
+            itemStack.setCount(count);
+            return itemStack;
+        }
+    }
+
+    public static areItemsAndComponentsEqual(stack: ItemStack, other: ItemStack): boolean {
+        if (!stack.isOf(other.getItem())) {
+            return false;
+        }
+        return stack.isEmpty() && other.isEmpty() ? true : stack.components.equals(other.components);
+    }
+
+    public toString(): string {
+        return `${this.getCount()} ${this.getItem()}`
+    }
+
+    public inventoryTick(world: World, entity: Entity, slot: number, selected: boolean): void {
+        if (this.getItem() !== null) {
+            this.getItem().inventoryTick(this, world, entity, slot, selected);
+        }
+    }
+
     public setHolder(holder: Entity | null): void {
         if (!this.isEmpty()) {
             this.holder = holder;
@@ -144,6 +186,10 @@ export class ItemStack {
 
     public getMaxCount(): number {
         return this.components.getOrDefault(DataComponentTypes.MAX_STACK_SIZE, 1);
+    }
+
+    public isStackable(): boolean {
+        return this.getMaxCount() > 1 && (!this.isDamageable() || !this.isDamaged());
     }
 
     public increment(amount: number) {

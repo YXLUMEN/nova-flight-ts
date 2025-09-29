@@ -13,7 +13,7 @@ import type {ItemStack} from "../ItemStack.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 
 export class EMPWeapon extends SpecialWeapon {
-    private duration = 600;
+    private readonly duration = 600;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         world.events.emit(EVENTS.EMP_BURST, {duration: this.duration});
@@ -49,9 +49,5 @@ export class EMPWeapon extends SpecialWeapon {
 
     public override getUiColor(): string {
         return '#5ec8ff'
-    }
-
-    public setDuration(duration: number): void {
-        this.duration = duration;
     }
 }

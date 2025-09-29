@@ -1,7 +1,7 @@
 import type {StarLayer} from "../apis/IStarLayer.ts";
 import type {Camera} from "../render/Camera.ts";
 import {rand} from "../utils/math/math.ts";
-import {WorldScreen} from "../render/WorldScreen.ts";
+import {World} from "../world/World.ts";
 
 
 export class StarField {
@@ -64,8 +64,8 @@ export class StarField {
         for (let li = 0; li < this.layers.length; li++) {
             const L = this.layers[li];
             for (let i = this.start[li]; i < this.end[li]; i++) {
-                this.x[i] = rand(0, WorldScreen.VIEW_W);
-                this.y[i] = rand(0, WorldScreen.VIEW_H);
+                this.x[i] = rand(0, World.WORLD_W);
+                this.y[i] = rand(0, World.WORLD_H);
                 this.r[i] = rand(L.radiusMin, L.radiusMax);
                 this.speed[i] = rand(L.speedMin, L.speedMax);
             }

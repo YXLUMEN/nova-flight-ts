@@ -16,7 +16,7 @@ export class EMPRocketEntity extends RocketEntity {
         const world = this.getWorld();
         world.getEntities().forEach(entity => {
             if (entity instanceof ProjectileEntity) {
-                if (!this.isOwner(entity)) entity.discard();
+                if (entity.getOwner() !== this.getOwner()) entity.discard();
             } else if (entity instanceof MobEntity) {
                 if (!entity.isRemoved() &&
                     pointInCircleVec2(entity.getPositionRef, this.getPositionRef, this.explosionRadius)) {

@@ -77,8 +77,9 @@ export class HUD implements IUi {
         y += this.barHeight + this.lineGap;
 
         // 武器冷却条
-        if (player.weapons.size > 0) {
-            for (const stack of player.weapons.values()) {
+        const items = player.getInventory();
+        if (items.size > 0) {
+            for (const stack of items.values()) {
                 const info = this.getWeaponUI(stack);
                 if (info) {
                     this.drawBar(ctx, x, y, this.barWidth, this.barHeight, info);

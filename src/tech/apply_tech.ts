@@ -15,14 +15,14 @@ export function applyTech(world: World, id: string) {
     if (!player) return;
     switch (id) {
         case 'energy_focus':
-            player.addWeapon(Items.EMP_WEAPON, new ItemStack(Items.EMP_WEAPON));
+            player.addItem(Items.EMP_WEAPON);
             break;
         case 'laser':
-            player.addWeapon(Items.LASER_WEAPON, new ItemStack(Items.LASER_WEAPON));
+            player.addItem(Items.LASER_WEAPON);
             break;
         case 'high_efficiency_coolant': {
             const laser = Items.LASER_WEAPON as LaserWeapon;
-            const stack = player.weapons.get(laser);
+            const stack = player.getItem(laser);
             if (stack) {
                 laser.setCoolRate(stack, laser.getCoolRate(stack) * 1.5);
             }
@@ -30,7 +30,7 @@ export function applyTech(world: World, id: string) {
         }
         case 'ad_capacitance': {
             const emp = Items.EMP_WEAPON as EMPWeapon;
-            const stack = player.weapons.get(emp);
+            const stack = player.getItem(emp);
             if (stack) {
                 const base = stack.getOrDefault(DataComponentTypes.EFFECT_RANGE, 480);
                 stack.set(DataComponentTypes.EFFECT_RANGE, base * 1.5);
@@ -40,7 +40,7 @@ export function applyTech(world: World, id: string) {
         }
         case 'quick_charge': {
             const emp = Items.EMP_WEAPON as EMPWeapon;
-            const stack = player.weapons.get(emp);
+            const stack = player.getItem(emp);
             if (stack) {
                 const base = stack.getOrDefault(DataComponentTypes.EFFECT_RANGE, 480);
                 stack.set(DataComponentTypes.EFFECT_RANGE, base * 0.5);
@@ -49,15 +49,14 @@ export function applyTech(world: World, id: string) {
             break;
         }
         case 'harmonic_analysis': {
-            const laser = Items.LASER_WEAPON;
-            const stack = player.weapons.get(laser);
+            const stack = player.getItem(Items.LASER_WEAPON);
             if (stack) {
                 stack.set(DataComponentTypes.ATTACK_DAMAGE, 2);
             }
             break;
         }
         case 'high_temperature_alloy': {
-            player.weapons.values().forEach(stack => {
+            player.getInventory().values().forEach(stack => {
                 const base = stack.get(DataComponentTypes.MAX_HEAT);
                 if (base) {
                     stack.set(DataComponentTypes.MAX_HEAT, Math.ceil(base * 1.5));
@@ -66,11 +65,11 @@ export function applyTech(world: World, id: string) {
             break;
         }
         case 'gunboat_focus': {
-            player.addWeapon(Items.MINIGUN_WEAPON, new ItemStack(Items.MINIGUN_WEAPON));
+            player.addItem(Items.MINIGUN_WEAPON);
             break;
         }
         case 'hd_bullet':
-            player.weapons.values().forEach(stack => {
+            player.getInventory().values().forEach(stack => {
                 const item = stack.getItem();
                 if (item instanceof BaseWeapon) {
                     const base = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
@@ -79,7 +78,7 @@ export function applyTech(world: World, id: string) {
             });
             break;
         case 'ad_loading': {
-            player.weapons.values().forEach(stack => {
+            player.getInventory().values().forEach(stack => {
                 const item = stack.getItem();
                 if (item instanceof BaseWeapon) item.setFireRate(stack, item.getFireRate(stack) * 0.8);
             });
@@ -87,7 +86,8 @@ export function applyTech(world: World, id: string) {
         }
         case '90_cannon': {
             const c90 = new ItemStack(Items.CANNON90_WEAPON);
-            player.addWeapon(Items.CANNON90_WEAPON, c90);
+            player.addItem(Items.CANNON90_WEAPON, c90);
+
             if (player.techTree.isUnlocked('hd_bullet')) {
                 const base = c90.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
                 c90.set(DataComponentTypes.ATTACK_DAMAGE, base * 2);
@@ -95,7 +95,7 @@ export function applyTech(world: World, id: string) {
             break;
         }
         case 'hv_warhead': {
-            player.weapons.values().forEach(stack => {
+            player.getInventory().values().forEach(stack => {
                 const base = stack.get(DataComponentTypes.EXPLOSION_RADIUS);
                 if (base) {
                     stack.set(DataComponentTypes.EXPLOSION_RADIUS, base * 1.5);
@@ -104,7 +104,7 @@ export function applyTech(world: World, id: string) {
             break;
         }
         case 'hd_explosives': {
-            player.weapons.values().forEach(stack => {
+            player.getInventory().values().forEach(stack => {
                 const base = stack.get(DataComponentTypes.EXPLOSION_DAMAGE);
                 if (base) {
                     stack.set(DataComponentTypes.EXPLOSION_DAMAGE, base * 1.4);
@@ -112,40 +112,41 @@ export function applyTech(world: World, id: string) {
             });
             break;
         }
-        case 'ship_opt':
+        case 'ship_opt': {
             player.addStatusEffect(new StatusEffectInstance(StatusEffects.HEALTH_BOOST, -1, 0), null);
+
+            if (player.getNormalTags().has('Repaired')) return;
+            player.addNormalTag('Repaired');
             player.setHealth(player.getMaxHealth());
             break;
-        case 'into_void':
-            player.addWeapon(Items.INTO_VOID_WEAPON, new ItemStack(Items.INTO_VOID_WEAPON));
+        }
+        case 'into_void': {
+            player.addItem(Items.INTO_VOID_WEAPON);
             break;
+        }
         case 'void_leap': {
             const intoVoid = Items.INTO_VOID_WEAPON as IntoVoidWeapon;
-            const stack = player.weapons.get(Items.INTO_VOID_WEAPON);
+            const stack = player.getItem(intoVoid);
             if (stack) {
                 stack.set(DataComponentTypes.EFFECT_DURATION, stack.getOrDefault(DataComponentTypes.EFFECT_DURATION, 1) * 0.1);
-                intoVoid.setMaxCooldown(stack, intoVoid.trueMaxCooldown(stack) * 0.2);
+                intoVoid.setMaxCooldown(stack, intoVoid.accuratelyMaxCooldown(stack) * 0.2);
                 const modifier = stack.get(DataComponentTypes.ATTRIBUTE_MODIFIERS);
-                if (modifier) {
-                    modifier.value = 1.5;
-                }
+                if (modifier) modifier.value = 1.5;
             }
             break;
         }
         case 'void_dweller': {
             const intoVoid = Items.INTO_VOID_WEAPON as IntoVoidWeapon;
-            const stack = player.weapons.get(Items.INTO_VOID_WEAPON);
+            const stack = player.getItem(intoVoid);
             if (stack) {
                 stack.set(DataComponentTypes.EFFECT_DURATION, stack.getOrDefault(DataComponentTypes.EFFECT_DURATION, 1) * 2);
-                intoVoid.setMaxCooldown(stack, intoVoid.trueMaxCooldown(stack) * 1.4);
+                intoVoid.setMaxCooldown(stack, intoVoid.accuratelyMaxCooldown(stack) * 1.4);
             }
             break;
         }
         case 'space_tear': {
-            const stack = player.weapons.get(Items.INTO_VOID_WEAPON);
-            if (stack) {
-                stack.set(DataComponentTypes.EFFECT_RANGE, 128);
-            }
+            const stack = player.getItem(Items.INTO_VOID_WEAPON);
+            if (stack) stack.set(DataComponentTypes.EFFECT_RANGE, 128);
             break;
         }
         case 'explosive_armor': {
@@ -153,7 +154,7 @@ export function applyTech(world: World, id: string) {
             break;
         }
         case 'meltdown': {
-            const stack = player.weapons.get(Items.LASER_WEAPON);
+            const stack = player.getItem(Items.LASER_WEAPON);
             if (stack) {
                 stack.set(DataComponentTypes.ATTACK_DAMAGE, 0);
                 stack.set(DataComponentTypes.UI_COLOR, '#ff0000');
@@ -163,12 +164,12 @@ export function applyTech(world: World, id: string) {
             break;
         }
         case 'missile': {
-            player.weapons.delete(Items.BOMB_WEAPON);
-            player.addWeapon(Items.MISSILE_WEAPON, new ItemStack(Items.MISSILE_WEAPON));
+            player.removeItem(Items.BOMB_WEAPON);
+            player.addItem(Items.MISSILE_WEAPON);
             break;
         }
         case 'honeycomb_missile': {
-            const stack = player.weapons.get(Items.MISSILE_WEAPON);
+            const stack = player.getItem(Items.MISSILE_WEAPON);
             if (stack) {
                 stack.set(DataComponentTypes.MISSILE_COUNT, 24);
                 stack.set(DataComponentTypes.ATTACK_DAMAGE, 3);
@@ -186,22 +187,22 @@ export function applyTech(world: World, id: string) {
             break;
         }
         case 'rocket_launcher': {
-            player.addWeapon(Items.ROCKET_WEAPON, new ItemStack(Items.ROCKET_WEAPON));
+            player.addItem(Items.ROCKET_WEAPON);
             break;
         }
         case 'random_rocket': {
-            const rocket = player.weapons.get(Items.ROCKET_WEAPON);
+            const rocket = player.getItem(Items.ROCKET_WEAPON);
             if (rocket) {
                 rocket.set(DataComponentTypes.MISSILE_RANDOM_ENABLE, true);
             }
             break;
         }
         case 'decoy_releaser': {
-            player.addWeapon(Items.DECOY_RELEASER, new ItemStack(Items.DECOY_RELEASER));
+            player.addItem(Items.DECOY_RELEASER);
             break;
         }
         case 'ciws': {
-            player.addWeapon(Items.CIWS_WEAPON, new ItemStack(Items.CIWS_WEAPON));
+            player.addItem(Items.CIWS_WEAPON);
             break;
         }
         case 'void_edge' : {

@@ -54,7 +54,7 @@ export class IntoVoidWeapon extends SpecialWeapon {
 
             if (attacker.techTree.isUnlocked('void_energy_extraction')) {
                 const emp = Items.EMP_WEAPON as EMPWeapon;
-                const stack = attacker.weapons.get(emp);
+                const stack = attacker.getItem(emp);
                 if (stack) emp.setCooldown(stack, 0);
             }
         }
@@ -75,7 +75,7 @@ export class IntoVoidWeapon extends SpecialWeapon {
         }
         if (holder instanceof PlayerEntity && holder.techTree.isUnlocked('void_energy_extraction')) {
             const laser = Items.LASER_WEAPON as LaserWeapon;
-            const stack = holder.weapons.get(laser);
+            const stack = holder.getItem(laser);
             if (stack) stack.setAvailable(true);
         }
     }
@@ -116,7 +116,7 @@ export class IntoVoidWeapon extends SpecialWeapon {
         stack.set(DataComponentTypes.EFFECT_TIME_LEFT, value);
     }
 
-    public trueMaxCooldown(stack: ItemStack): number {
+    public accuratelyMaxCooldown(stack: ItemStack): number {
         return super.getMaxCooldown(stack);
     }
 
@@ -160,7 +160,7 @@ export class IntoVoidWeapon extends SpecialWeapon {
 
         if (attacker.techTree.isUnlocked('void_disturbance')) {
             const emp = Items.EMP_WEAPON as EMPWeapon;
-            const stack = attacker.weapons.get(emp);
+            const stack = attacker.getItem(emp);
             if (stack) {
                 const cd = emp.getCooldown(stack);
                 emp.tryFire(stack, world, attacker);

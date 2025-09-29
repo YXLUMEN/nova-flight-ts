@@ -32,34 +32,32 @@ export class PlayerEntity extends LivingEntity {
     public lockedMissile = new Set<MissileEntity>();
     public missilePos: { x: number, y: number, angle: number }[] = [];
 
-    public readonly weapons = new Map<Item, ItemStack>();
-    public readonly baseWeapons: BaseWeapon[] = [];
+    private readonly weapons = new Map<Item, ItemStack>();
+    private readonly baseWeapons: BaseWeapon[] = [];
     public currentBaseIndex: number = 0;
-    private lastDamageTime = 0;
 
+    private lastDamageTime = 0;
     private phaseScore: number = 0;
     private score: number = 0;
     private autoAimEnable: boolean = false;
     private wasActive = false;
-    public steeringGear: boolean = false;
 
     public autoAim: AutoAim | null = null;
-
+    public steeringGear: boolean = false;
     public voidEdge = false;
 
     public constructor(world: World, input: KeyboardInput) {
         super(EntityTypes.PLAYER_ENTITY, world);
 
+        this.input = input;
         const viewport = document.getElementById('viewport') as HTMLElement;
         this.techTree = new TechTree(viewport, DataLoader.get('tech-data'));
 
         this.setMovementSpeed(0.8);
         this.setYaw(-1.57079);
 
-        this.input = input;
-
-        this.addWeapon(Items.CANNON40_WEAPON, new ItemStack(Items.CANNON40_WEAPON));
-        this.weapons.set(Items.BOMB_WEAPON, new ItemStack(Items.BOMB_WEAPON));
+        this.addItem(Items.CANNON40_WEAPON);
+        this.addItem(Items.BOMB_WEAPON);
     }
 
     public override createLivingAttributes() {
@@ -152,7 +150,7 @@ export class PlayerEntity extends LivingEntity {
                     w.tryFire(stack, world, this);
                 }
             }
-            w.inventoryTick(stack, world, this);
+            w.inventoryTick(stack, world, this, 0, true);
         }
     }
 
@@ -250,11 +248,31 @@ export class PlayerEntity extends LivingEntity {
         return true;
     }
 
-    public addWeapon(item: Item, stack: ItemStack): void {
+    public getItem(item: Item): ItemStack | null {
+        return this.weapons.get(item) ?? null;
+    }
+
+    public getInventory(): ReadonlyMap<Item, ItemStack> {
+        return this.weapons;
+    }
+
+    public addItem(item: Item, stack?: ItemStack): void {
         if (this.weapons.has(item)) return;
 
         if (item instanceof BaseWeapon) this.baseWeapons.push(item);
+        if (!stack) stack = new ItemStack(item);
+        stack.setHolder(this);
         this.weapons.set(item, stack);
+    }
+
+    public removeItem(item: Item): boolean {
+        return this.weapons.delete(item);
+    }
+
+    public clearItems(): void {
+        this.currentBaseIndex = 0;
+        this.baseWeapons.length = 0;
+        this.weapons.clear();
     }
 
     public getCurrentItemStack(): ItemStack {

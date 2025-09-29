@@ -45,7 +45,7 @@ export class DefaultEvents {
 
             if (damageSource.isIn(DamageTypeTags.REPLY_LASER) && techTree.isUnlocked('energy_recovery')) {
                 const laser = Items.LASER_WEAPON as LaserWeapon;
-                const stack = player.weapons.get(laser);
+                const stack = player.getItem(laser);
                 if (stack && stack.isAvailable()) {
                     laser.setCooldown(stack, laser.getCooldown(stack) - 25);
                 }

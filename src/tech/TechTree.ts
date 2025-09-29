@@ -6,7 +6,6 @@ import {clamp} from "../utils/math/math.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import {Items} from "../item/items.ts";
-import {ItemStack} from "../item/ItemStack.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import {type NbtCompound} from "../nbt/NbtCompound.ts";
@@ -426,12 +425,10 @@ export class TechTree implements NbtSerializable {
         }
 
         player.setScore(player.getScore() + (backScore * 0.8) | 0);
-        player.currentBaseIndex = 0;
-        player.baseWeapons.length = 0;
-        player.weapons.clear();
+        player.clearItems();
 
-        player.addWeapon(Items.CANNON40_WEAPON, new ItemStack(Items.CANNON40_WEAPON));
-        player.weapons.set(Items.BOMB_WEAPON, new ItemStack(Items.BOMB_WEAPON));
+        player.addItem(Items.CANNON40_WEAPON);
+        player.addItem(Items.BOMB_WEAPON);
 
         player.voidEdge = false;
         player.steeringGear = false;

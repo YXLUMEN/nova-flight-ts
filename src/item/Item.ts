@@ -19,7 +19,7 @@ export class Item {
         this.components = settings.getValidatedComponents();
     }
 
-    public inventoryTick(_stack: ItemStack, _world: World, _holder: Entity): void {
+    public inventoryTick(_stack: ItemStack, _world: World, _holder: Entity, _slot: number, _selected: boolean): void {
     }
 
     public getRegistryEntry(): RegistryEntry<Item> {

@@ -1,13 +1,14 @@
 import type {ComponentType} from "./ComponentType.ts";
+import {Compare} from "../utils/collection/Compare.ts";
 
 export class ComponentMap {
     public static readonly EMPTY = new ComponentMap(null);
 
-    private readonly components: Map<ComponentType<any>, any>;
+    protected readonly components: Map<ComponentType<any>, any>;
 
     public constructor(components: ComponentMap | null = null) {
         if (components) {
-            this.components = components.components;
+            this.components = new Map(components.components);
             return;
         }
         this.components = new Map<ComponentType<any>, any>();
@@ -30,11 +31,21 @@ export class ComponentMap {
         return component !== undefined ? component : fallback;
     }
 
+    public contains(type: ComponentType<any>): boolean {
+        return this.get(type) != null;
+    }
+
     public size(): number {
         return this.components.size;
     }
 
     public copy() {
         return new ComponentMap(this);
+    }
+
+    public equals(o: Object): boolean {
+        return this === o ? true :
+            o instanceof ComponentMap &&
+            Compare.mapsEqual(this.components, o.components);
     }
 }
