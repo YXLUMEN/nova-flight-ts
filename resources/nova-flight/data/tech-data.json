@@ -324,6 +324,17 @@
     ]
   },
   {
+    "id": "void_edge",
+    "name": "空间连接",
+    "x": 720,
+    "y": 700,
+    "desc": "地图将连接",
+    "cost": 120,
+    "requires": [
+      "void_leap"
+    ]
+  },
+  {
     "id": "ship_opt",
     "name": "船体强化",
     "x": 340,

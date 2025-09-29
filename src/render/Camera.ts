@@ -2,6 +2,7 @@ import {MutVec2} from "../utils/math/MutVec2.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {PI2} from "../utils/math/math.ts";
 import {WorldScreen} from "./WorldScreen.ts";
+import {World} from "../world/World.ts";
 
 interface ViewRect {
     top: number;
@@ -12,6 +13,7 @@ interface ViewRect {
     height: number;
 }
 
+// noinspection DuplicatedCode
 export class Camera {
     private offset = MutVec2.zero();
     private velocity = MutVec2.zero();
@@ -40,8 +42,10 @@ export class Camera {
     private uiMaxDrift = 64;      // HUD 最大漂移像素(镜头快速移动时)
     private uiShakeFactor = 0.5;
 
-    public update(target: MutVec2, tickDelta: number): void {
-        if (WorldConfig.enableCameraOffset) this.follow(target, tickDelta);
+    public update(target: MutVec2, tickDelta: number, leap = false): void {
+        if (WorldConfig.enableCameraOffset) {
+            leap ? this.leapFollow(target, tickDelta) : this.follow(target, tickDelta);
+        }
         this.updateShake(tickDelta);
 
         this.viewOffsetCache.set(
@@ -83,11 +87,41 @@ export class Camera {
             this.velocity.y *= scale;
         }
 
-        // 位置积分: offset += v * tickDelta
         this.offset.x += this.velocity.x * tickDelta;
         this.offset.y += this.velocity.y * tickDelta;
 
-        // 帧率无关的指数阻尼: v *= exp(-friction * tickDelta)
+        const damping = Math.exp(-this.friction * tickDelta);
+        this.velocity.x *= damping;
+        this.velocity.y *= damping;
+    }
+
+    private leapFollow(target: MutVec2, tickDelta: number): void {
+        const desired = target.subtract(WorldScreen.VIEW_W / 2, WorldScreen.VIEW_H / 2);
+
+        let dx = desired.x - this.offset.x;
+        let dy = desired.y - this.offset.y;
+
+        if (Math.abs(dx) > World.WORLD_W / 2 || Math.abs(dy) > World.WORLD_H / 2) {
+            this.offset.x = desired.x;
+            this.offset.y = desired.y;
+            return;
+        }
+
+        // 使用阻尼速度, 限制最大变化
+        this.velocity.x += dx * this.smoothing * tickDelta;
+        this.velocity.y += dy * this.smoothing * tickDelta;
+
+        // 按向量长度限速
+        const len = Math.hypot(this.velocity.x, this.velocity.y);
+        if (len > this.followSpeed) {
+            const scale = this.followSpeed / len;
+            this.velocity.x *= scale;
+            this.velocity.y *= scale;
+        }
+
+        this.offset.x += this.velocity.x * tickDelta;
+        this.offset.y += this.velocity.y * tickDelta;
+
         const damping = Math.exp(-this.friction * tickDelta);
         this.velocity.x *= damping;
         this.velocity.y *= damping;

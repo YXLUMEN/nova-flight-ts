@@ -45,6 +45,8 @@ export class PlayerEntity extends LivingEntity {
 
     public autoAim: AutoAim | null = null;
 
+    public voidEdge = false;
+
     public constructor(world: World, input: KeyboardInput) {
         super(EntityTypes.PLAYER_ENTITY, world);
 
@@ -162,6 +164,19 @@ export class PlayerEntity extends LivingEntity {
         this.wasActive = false;
         const next = (this.currentBaseIndex + dir) % this.baseWeapons.length;
         this.currentBaseIndex = next < 0 ? this.baseWeapons.length - 1 : next;
+    }
+
+    protected override adjustPosition(): boolean {
+        if (this.voidEdge) {
+            const pos = this.getPositionRef;
+            const W = World.WORLD_W;
+            const H = World.WORLD_H;
+
+            pos.x = ((pos.x % W) + W) % W;
+            pos.y = ((pos.y % H) + H) % H;
+            return true;
+        }
+        return super.adjustPosition();
     }
 
     public override isInvulnerableTo(damageSource: DamageSource): boolean {

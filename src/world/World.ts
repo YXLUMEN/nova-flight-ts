@@ -138,7 +138,7 @@ export class World implements NbtSerializable {
         const dt = this.freeze ? 0 : tickDelta;
         const player = this.player!;
 
-        WorldScreen.camera.update(player.getPositionRef.clone(), tickDelta);
+        WorldScreen.camera.update(player.getPositionRef.clone(), tickDelta, player.voidEdge);
 
         // 阶段更新
         this.stage.tick(this);
@@ -415,9 +415,13 @@ export class World implements NbtSerializable {
         this.drawBackground(ctx);
 
         // 其他实体
-        this.entities.forEach(entity => {
-            EntityRenderers.getRenderer(entity).render(entity, ctx);
-        })
+        if (this.player?.voidEdge) {
+            this.wrapEntityRender(ctx);
+        } else {
+            this.entities.forEach(entity => {
+                EntityRenderers.getRenderer(entity).render(entity, ctx);
+            });
+        }
 
         // 特效
         for (let i = 0; i < this.effects.length; i++) this.effects[i].render(ctx);
@@ -449,6 +453,69 @@ export class World implements NbtSerializable {
         WorldScreen.hud.render(ctx);
         WorldScreen.notify.render(ctx);
         if (!this.ticking) WorldScreen.pauseOverlay.render(ctx);
+    }
+
+    private wrapEntityRender(ctx: CanvasRenderingContext2D) {
+        this.entities.forEach(entity => {
+            const renderer = EntityRenderers.getRenderer(entity);
+            const pos = entity.getPositionRef;
+            const W = World.WORLD_W;
+            const H = World.WORLD_H;
+            const margin = 256;
+
+            renderer.render(entity, ctx);
+
+            if (pos.x < margin) {
+                ctx.save();
+                ctx.translate(W, 0);
+                renderer.render(entity, ctx);
+                ctx.restore();
+            }
+            if (pos.x > W - margin) {
+                ctx.save();
+                ctx.translate(-W, 0);
+                renderer.render(entity, ctx);
+                ctx.restore();
+            }
+
+            if (pos.y < margin) {
+                ctx.save();
+                ctx.translate(0, H);
+                renderer.render(entity, ctx);
+                ctx.restore();
+            }
+            if (pos.y > H - margin) {
+                ctx.save();
+                ctx.translate(0, -H);
+                renderer.render(entity, ctx);
+                ctx.restore();
+            }
+
+            if (pos.x < margin && pos.y < margin) {
+                ctx.save();
+                ctx.translate(W, H);
+                renderer.render(entity, ctx);
+                ctx.restore();
+            }
+            if (pos.x < margin && pos.y > H - margin) {
+                ctx.save();
+                ctx.translate(W, -H);
+                renderer.render(entity, ctx);
+                ctx.restore();
+            }
+            if (pos.x > W - margin && pos.y < margin) {
+                ctx.save();
+                ctx.translate(-W, H);
+                renderer.render(entity, ctx);
+                ctx.restore();
+            }
+            if (pos.x > W - margin && pos.y > H - margin) {
+                ctx.save();
+                ctx.translate(-W, -H);
+                renderer.render(entity, ctx);
+                ctx.restore();
+            }
+        });
     }
 
     public drawBackground(ctx: CanvasRenderingContext2D) {

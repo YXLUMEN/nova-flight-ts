@@ -433,6 +433,7 @@ export class TechTree implements NbtSerializable {
         player.addWeapon(Items.CANNON40_WEAPON, new ItemStack(Items.CANNON40_WEAPON));
         player.weapons.set(Items.BOMB_WEAPON, new ItemStack(Items.BOMB_WEAPON));
 
+        player.voidEdge = false;
         player.steeringGear = false;
         player.setYaw(-1.57079);
 

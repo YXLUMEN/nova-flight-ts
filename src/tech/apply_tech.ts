@@ -204,5 +204,9 @@ export function applyTech(world: World, id: string) {
             player.addWeapon(Items.CIWS_WEAPON, new ItemStack(Items.CIWS_WEAPON));
             break;
         }
+        case 'void_edge' : {
+            player.voidEdge = true;
+            break;
+        }
     }
 }
