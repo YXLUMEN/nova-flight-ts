@@ -24,7 +24,7 @@ export class PlayerInventory implements Inventory {
     }
 
     public static getHotBarSize() {
-        return 9;
+        return 6;
     }
 
     public static isValidHotbarIndex(slot: number): boolean {
@@ -99,7 +99,7 @@ export class PlayerInventory implements Inventory {
     }
 
     public getMaxCountPerStack(): number {
-        return 99;
+        return 64;
     }
 
     public getMaxCount(stack: ItemStack): number {

@@ -89,7 +89,7 @@ export class PlayerEntity extends LivingEntity {
             this.updateVelocity(speed, dx, dy);
         }
         this.moveByVec(this.getVelocityRef);
-        this.adjustPosition();
+        this.shouldWrap() ? this.wrapPosition() : this.adjustPosition();
         this.getVelocityRef.multiply(0.9);
 
         if (this.autoAimEnable && this.autoAim) {
@@ -164,19 +164,6 @@ export class PlayerEntity extends LivingEntity {
         this.currentBaseIndex = next < 0 ? this.baseWeapons.length - 1 : next;
     }
 
-    protected override adjustPosition(): boolean {
-        if (this.voidEdge) {
-            const pos = this.getPositionRef;
-            const W = World.WORLD_W;
-            const H = World.WORLD_H;
-
-            pos.x = ((pos.x % W) + W) % W;
-            pos.y = ((pos.y % H) + H) % H;
-            return true;
-        }
-        return super.adjustPosition();
-    }
-
     public override isInvulnerableTo(damageSource: DamageSource): boolean {
         return super.isInvulnerableTo(damageSource) || WorldConfig.devMode;
     }
@@ -246,6 +233,10 @@ export class PlayerEntity extends LivingEntity {
 
     public override isPlayer() {
         return true;
+    }
+
+    public override shouldWrap(): boolean {
+        return this.voidEdge;
     }
 
     public getItem(item: Item): ItemStack | null {

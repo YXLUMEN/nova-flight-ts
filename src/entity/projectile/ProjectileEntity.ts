@@ -9,8 +9,10 @@ import {type NbtCompound} from "../../nbt/NbtCompound.ts";
 
 export abstract class ProjectileEntity extends Entity implements IOwnable {
     public readonly damage: number;
+
     private ownerUuid: string | null = null;
     private owner: Entity | null = null;
+
     public color = "#8cf5ff";
     public edgeColor = '';
 
@@ -26,6 +28,16 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
 
         const pos = this.getPositionRef;
         pos.addVec(this.getVelocityRef);
+
+        if (this.shouldWrap()) {
+            if (this.age++ > 200 || pos.y < -20 || pos.y > World.WORLD_H + 20) {
+                this.discard();
+                return;
+            }
+
+            this.wrapPosition();
+            return;
+        }
 
         if (pos.y < -20 || pos.y > World.WORLD_H + 20 || pos.x < -20 || pos.x > World.WORLD_W + 20) {
             this.discard();
@@ -54,6 +66,17 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
 
     protected isOwner(entity: Entity) {
         return entity.getUuid() === this.ownerUuid;
+    }
+
+    protected wrapPosition(): boolean {
+        const pos = this.getPositionRef;
+        const W = World.WORLD_W;
+        pos.x = ((pos.x % W) + W) % W;
+        return true;
+    }
+
+    public override shouldWrap(): boolean {
+        return this.getOwner()?.shouldWrap() ?? false;
     }
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {

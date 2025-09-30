@@ -190,6 +190,19 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         return true;
     }
 
+    protected wrapPosition(): boolean {
+        const pos = this.getPositionRef;
+        const W = World.WORLD_W;
+
+        pos.x = ((pos.x % W) + W) % W;
+        pos.y = clamp(pos.y, 20, World.WORLD_H - 20);
+        return true;
+    }
+
+    public shouldWrap(): boolean {
+        return false;
+    }
+
     public get getPositionRef(): MutVec2 {
         return this.pos;
     }

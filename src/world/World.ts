@@ -456,12 +456,12 @@ export class World implements NbtSerializable {
     }
 
     private wrapEntityRender(ctx: CanvasRenderingContext2D) {
+        const W = World.WORLD_W;
+        const margin = WorldScreen.VIEW_W / 2;
+
         this.entities.forEach(entity => {
             const renderer = EntityRenderers.getRenderer(entity);
             const pos = entity.getPositionRef;
-            const W = World.WORLD_W;
-            const H = World.WORLD_H;
-            const margin = 256;
 
             renderer.render(entity, ctx);
 
@@ -474,44 +474,6 @@ export class World implements NbtSerializable {
             if (pos.x > W - margin) {
                 ctx.save();
                 ctx.translate(-W, 0);
-                renderer.render(entity, ctx);
-                ctx.restore();
-            }
-
-            if (pos.y < margin) {
-                ctx.save();
-                ctx.translate(0, H);
-                renderer.render(entity, ctx);
-                ctx.restore();
-            }
-            if (pos.y > H - margin) {
-                ctx.save();
-                ctx.translate(0, -H);
-                renderer.render(entity, ctx);
-                ctx.restore();
-            }
-
-            if (pos.x < margin && pos.y < margin) {
-                ctx.save();
-                ctx.translate(W, H);
-                renderer.render(entity, ctx);
-                ctx.restore();
-            }
-            if (pos.x < margin && pos.y > H - margin) {
-                ctx.save();
-                ctx.translate(W, -H);
-                renderer.render(entity, ctx);
-                ctx.restore();
-            }
-            if (pos.x > W - margin && pos.y < margin) {
-                ctx.save();
-                ctx.translate(-W, H);
-                renderer.render(entity, ctx);
-                ctx.restore();
-            }
-            if (pos.x > W - margin && pos.y > H - margin) {
-                ctx.save();
-                ctx.translate(-W, -H);
                 renderer.render(entity, ctx);
                 ctx.restore();
             }
@@ -545,9 +507,18 @@ export class World implements NbtSerializable {
 
         // 边界线
         ctx.strokeStyle = "rgba(230,240,255,0.3)";
-        ctx.beginPath();
-        ctx.rect(0, 0, World.WORLD_W, World.WORLD_H);
-        ctx.stroke();
+        if (this.player?.voidEdge) {
+            ctx.beginPath();
+            ctx.moveTo(-World.WORLD_W, 0);
+            ctx.lineTo(World.WORLD_W * 2, 0);
+            ctx.moveTo(-World.WORLD_W, World.WORLD_H);
+            ctx.lineTo(World.WORLD_W * 2, World.WORLD_H);
+            ctx.stroke();
+        } else {
+            ctx.beginPath();
+            ctx.rect(0, 0, World.WORLD_W, World.WORLD_H);
+            ctx.stroke();
+        }
 
         ctx.restore();
     }
