@@ -45,7 +45,7 @@ export class Vec2 implements IVec {
     }
 
     public length() {
-        return Math.sqrt(this.lengthSquared());
+        return Math.hypot(this.x, this.y);
     }
 
     public equals(v: IVec, epsilon = 1e-6): boolean {

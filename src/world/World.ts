@@ -456,26 +456,20 @@ export class World implements NbtSerializable {
     }
 
     private wrapEntityRender(ctx: CanvasRenderingContext2D) {
-        const W = World.WORLD_W;
         const margin = WorldScreen.VIEW_W / 2;
 
         this.entities.forEach(entity => {
             const renderer = EntityRenderers.getRenderer(entity);
             const pos = entity.getPositionRef;
+            const width = entity.getWidth();
 
             renderer.render(entity, ctx);
 
-            if (pos.x < margin) {
-                ctx.save();
-                ctx.translate(W, 0);
-                renderer.render(entity, ctx);
-                ctx.restore();
+            if (pos.x < margin + width) {
+                renderer.render(entity, ctx, World.WORLD_W);
             }
-            if (pos.x > W - margin) {
-                ctx.save();
-                ctx.translate(-W, 0);
-                renderer.render(entity, ctx);
-                ctx.restore();
+            if (pos.x > World.WORLD_W - margin - width) {
+                renderer.render(entity, ctx, -World.WORLD_W);
             }
         });
     }

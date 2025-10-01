@@ -60,7 +60,7 @@ export class MutVec2 implements IVec {
     }
 
     public length(): number {
-        return Math.sqrt(this.lengthSquared());
+        return Math.hypot(this.x, this.y);
     }
 
     public normalize(): this {

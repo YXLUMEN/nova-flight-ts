@@ -44,7 +44,11 @@ export class Camera {
 
     public update(target: MutVec2, tickDelta: number, leap = false): void {
         if (WorldConfig.enableCameraOffset) {
-            leap ? this.leapFollow(target, tickDelta) : this.follow(target, tickDelta);
+            if (leap) {
+                this.leapFollow(target, tickDelta);
+            } else {
+                this.follow(target, tickDelta);
+            }
         }
         this.updateShake(tickDelta);
 
@@ -75,12 +79,10 @@ export class Camera {
         const desired = target.subtract(WorldScreen.VIEW_W / 2, WorldScreen.VIEW_H / 2);
         const delta = desired.subVec(this.offset);
 
-        // 使用阻尼速度, 限制最大变化
         this.velocity.x += delta.x * this.smoothing * tickDelta;
         this.velocity.y += delta.y * this.smoothing * tickDelta;
 
-        // 按向量长度限速
-        const len = Math.hypot(this.velocity.x, this.velocity.y);
+        const len = this.velocity.length();
         if (len > this.followSpeed) {
             const scale = this.followSpeed / len;
             this.velocity.x *= scale;
@@ -101,17 +103,14 @@ export class Camera {
         let dx = desired.x - this.offset.x;
         let dy = desired.y - this.offset.y;
 
-        if (Math.abs(dx) > World.WORLD_W / 2 || Math.abs(dy) > World.WORLD_H / 2) {
+        if (Math.abs(dx) > World.WORLD_W / 2) {
             this.offset.x = desired.x;
-            this.offset.y = desired.y;
             return;
         }
 
-        // 使用阻尼速度, 限制最大变化
         this.velocity.x += dx * this.smoothing * tickDelta;
         this.velocity.y += dy * this.smoothing * tickDelta;
 
-        // 按向量长度限速
         const len = Math.hypot(this.velocity.x, this.velocity.y);
         if (len > this.followSpeed) {
             const scale = this.followSpeed / len;

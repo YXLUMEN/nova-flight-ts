@@ -2,7 +2,7 @@ import type {EntityRenderer} from "./EntityRenderer.ts";
 import type {DecoyEntity} from "../../entity/DecoyEntity.ts";
 
 export class DecoyEntityRender implements EntityRenderer<DecoyEntity> {
-    public render(entity: DecoyEntity, ctx: CanvasRenderingContext2D) {
+    public render(entity: DecoyEntity, ctx: CanvasRenderingContext2D, offsetX: number = 0, offsetY: number = 0) {
         const pos = entity.getPositionRef;
         const size = entity.getWidth();
         const glowColor = 'rgba(255,254,183,0.8)';
@@ -10,7 +10,7 @@ export class DecoyEntityRender implements EntityRenderer<DecoyEntity> {
         const pulse = 1 + Math.sin(entity.age * 0.1) * 0.1;
 
         ctx.save();
-        ctx.translate(pos.x, pos.y);
+        ctx.translate(pos.x + offsetX, pos.y + offsetY);
         ctx.rotate(entity.age * 0.01);
         ctx.scale(pulse, pulse);
 

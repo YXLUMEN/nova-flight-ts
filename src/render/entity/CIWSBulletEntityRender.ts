@@ -2,8 +2,9 @@ import type {EntityRenderer} from "./EntityRenderer.ts";
 import type {CIWSBulletEntity} from "../../entity/projectile/CIWSBulletEntity.ts";
 
 export class CIWSBulletEntityRender implements EntityRenderer<CIWSBulletEntity> {
-    public render(entity: CIWSBulletEntity, ctx: CanvasRenderingContext2D) {
-        const {x, y} = entity.getPositionRef;
+    public render(entity: CIWSBulletEntity, ctx: CanvasRenderingContext2D, offsetX: number = 0, offsetY: number = 0) {
+        const x = entity.getPositionRef.x + offsetX;
+        const y = entity.getPositionRef.y + offsetY;
 
         ctx.save();
 

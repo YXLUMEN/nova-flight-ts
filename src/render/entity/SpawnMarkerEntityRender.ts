@@ -2,7 +2,7 @@ import type {EntityRenderer} from "./EntityRenderer.ts";
 import type {SpawnMarkerEntity} from "../../entity/SpawnMarkerEntity.ts";
 
 export class SpawnMarkerEntityRender implements EntityRenderer<SpawnMarkerEntity> {
-    public render(entity: SpawnMarkerEntity, ctx: CanvasRenderingContext2D) {
+    public render(entity: SpawnMarkerEntity, ctx: CanvasRenderingContext2D, offsetX: number = 0, offsetY: number = 0) {
         const pos = entity.getPositionRef;
         const size = entity.getWidth();
         const gapRatio = 0.3;
@@ -16,7 +16,7 @@ export class SpawnMarkerEntityRender implements EntityRenderer<SpawnMarkerEntity
         }
 
         ctx.save();
-        ctx.translate(pos.x, pos.y);
+        ctx.translate(pos.x + offsetX, pos.y + offsetY);
         ctx.lineWidth = 2;
         ctx.strokeStyle = `rgba(255,95,66,${alpha})`;
 

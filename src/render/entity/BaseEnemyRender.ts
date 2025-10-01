@@ -3,9 +3,9 @@ import type {BaseEnemy} from "../../entity/mob/BaseEnemy.ts";
 import {HALF_PI} from "../../utils/math/math.ts";
 
 export class BaseEnemyRender implements EntityRenderer<BaseEnemy> {
-    public render(entity: BaseEnemy, ctx: CanvasRenderingContext2D) {
+    public render(entity: BaseEnemy, ctx: CanvasRenderingContext2D, offsetX: number = 0, offsetY: number = 0) {
         ctx.save();
-        ctx.translate(entity.getPositionRef.x, entity.getPositionRef.y);
+        ctx.translate(entity.getPositionRef.x + offsetX, entity.getPositionRef.y + offsetY);
         ctx.rotate(entity.getYaw() + HALF_PI);
 
         ctx.fillStyle = entity.color;

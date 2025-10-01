@@ -4,7 +4,7 @@ import {NbtBinaryReader} from "./NbtBinaryReader";
 
 export class NbtCompound {
     public static readonly MAGIC = 0x6E627430;
-    public static readonly VERSION = 1;
+    public static readonly VERSION = 2;
 
     private entries: Map<string, Nbt> = new Map();
 
@@ -214,7 +214,7 @@ export class NbtCompound {
         return writer.toUint8Array();
     }
 
-    public static fromBinary(buffer: Uint8Array): NbtCompound {
+    public static fromBinary(buffer: Uint8Array): NbtCompound | null {
         const reader = new NbtBinaryReader(buffer);
 
         const magic = reader.readInt32();
@@ -224,7 +224,8 @@ export class NbtCompound {
 
         const version = reader.readInt16();
         if (version !== NbtCompound.VERSION) {
-            throw new Error(`Unsupported version: ${version}`);
+            console.warn(`Unsupported version: ${version}`);
+            return null;
         }
 
         const compound = new NbtCompound();
@@ -278,7 +279,7 @@ export class NbtCompound {
                     console.assert(reader.bytesRemaining() >= nestedLen, `[NBT] nested length overflow for key "${key}"`);
                     const nestedBuf = reader.readSlice(nestedLen);
                     const nested = NbtCompound.fromBinary(nestedBuf);
-                    compound.putCompound(key, nested);
+                    compound.putCompound(key, nested!);
                     break;
                 }
                 case NbtType.NbtList: {
@@ -289,7 +290,7 @@ export class NbtCompound {
                         console.assert(reader.bytesRemaining() >= nestedLen, `[NBT] nested length overflow in list for key "${key}"`);
                         const nestedBuf = reader.readSlice(nestedLen);
                         const nested = NbtCompound.fromBinary(nestedBuf);
-                        list.push(nested);
+                        list.push(nested!);
                     }
                     compound.putNbtList(key, list);
                     break;

@@ -16,6 +16,7 @@ import type {Comparable} from "../utils/collection/HashMap.ts";
 import {clamp, shortUUID} from "../utils/math/math.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import type {NbtCompound} from "../nbt/NbtCompound.ts";
+import type {UUID} from "../apis/registry.ts";
 
 
 export abstract class Entity implements DataTracked, Comparable, NbtSerializable {
@@ -25,7 +26,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     public invulnerable: boolean = false;
 
     protected readonly dataTracker: DataTracker;
-    private uuid = shortUUID();
+    private uuid: string = shortUUID();// crypto.randomUUID();
     private readonly id: number = Entity.CURRENT_ID.incrementAndGet();
     private readonly normalTags: Set<string> = new Set<string>();
 
@@ -62,7 +63,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         return this.id;
     }
 
-    public setUuid(uuid: string): void {
+    public setUuid(uuid: UUID): void {
         this.uuid = uuid;
     }
 
@@ -296,7 +297,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
             this.setYaw(nbt.getDouble('Yaw'));
             this.setMovementSpeed(nbt.getDouble('Speed'));
             this.invulnerable = nbt.getBoolean('Invulnerable', false);
-            this.uuid = nbt.getString('UUID');
+            this.uuid = nbt.getString('UUID') as UUID;
 
             const tags = nbt.getStringArray('Tags');
             if (tags.length > 0) {

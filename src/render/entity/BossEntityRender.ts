@@ -2,9 +2,9 @@ import type {EntityRenderer} from "./EntityRenderer.ts";
 import type {BossEntity} from "../../entity/mob/BossEntity.ts";
 
 export class BossEntityRender implements EntityRenderer<BossEntity> {
-    public render(bossEntity: BossEntity, ctx: CanvasRenderingContext2D) {
+    public render(bossEntity: BossEntity, ctx: CanvasRenderingContext2D, offsetX: number = 0, offsetY: number = 0) {
         ctx.save();
-        ctx.translate(bossEntity.getPositionRef.x, bossEntity.getPositionRef.y);
+        ctx.translate(bossEntity.getPositionRef.x + offsetX, bossEntity.getPositionRef.y + offsetY);
 
         ctx.fillStyle = bossEntity.color;
         ctx.strokeStyle = "rgba(0,0,0,.2)";

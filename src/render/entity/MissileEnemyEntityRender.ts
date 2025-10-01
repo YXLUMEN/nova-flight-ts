@@ -3,9 +3,9 @@ import type {MissileEnemyEntity} from "../../entity/mob/MissileEnemyEntity.ts";
 import {HALF_PI} from "../../utils/math/math.ts";
 
 export class MissileEnemyEntityRender implements EntityRenderer<MissileEnemyEntity> {
-    public render(entity: MissileEnemyEntity, ctx: CanvasRenderingContext2D) {
+    public render(entity: MissileEnemyEntity, ctx: CanvasRenderingContext2D, offsetX: number = 0, offsetY: number = 0) {
         ctx.save();
-        ctx.translate(entity.getPositionRef.x, entity.getPositionRef.y);
+        ctx.translate(entity.getPositionRef.x + offsetX, entity.getPositionRef.y + offsetY);
         ctx.rotate(entity.getYaw() + HALF_PI);
 
         ctx.fillStyle = entity.color;

@@ -122,5 +122,9 @@ export function wrapRadians(angle: number) {
     return angle;
 }
 
+export function lerp(a: number, b: number, t: number): number {
+    return a + (b - a) * t;
+}
+
 export const PI2 = Math.PI * 2;
 export const HALF_PI = Math.PI / 2;

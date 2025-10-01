@@ -2,6 +2,7 @@ import type {StarLayer} from "../apis/IStarLayer.ts";
 import type {Camera} from "../render/Camera.ts";
 import {rand} from "../utils/math/math.ts";
 import {World} from "../world/World.ts";
+import {MutVec2} from "../utils/math/MutVec2.ts";
 
 
 export class StarField {
@@ -13,13 +14,14 @@ export class StarField {
     private readonly r: Float32Array;
     private readonly speed: Float32Array;
 
-    private readonly layers: StarLayer[] | Readonly<StarLayer[]>;
+    private readonly layers: ReadonlyArray<StarLayer>;
     private readonly margin: number;
 
     private readonly start: Uint32Array;
     private readonly end: Uint32Array;
+    private readonly lastCamPos = MutVec2.zero();
 
-    public constructor(totalCount: number, layers: StarLayer[] | Readonly<StarLayer[]>, margin: number = 8) {
+    public constructor(totalCount: number, layers: ReadonlyArray<StarLayer>, margin: number = 0) {
         this.layers = layers;
         this.margin = margin;
 
@@ -43,7 +45,7 @@ export class StarField {
         }
     }
 
-    private static resolveCounts(total: number, layers: StarLayer[] | Readonly<StarLayer[]>): number[] {
+    private static resolveCounts(total: number, layers: ReadonlyArray<StarLayer>): number[] {
         const fixed = layers.map(l => l.count ?? 0);
         const fixedSum = fixed.reduce((s, c) => s + c, 0);
         const remain = Math.max(0, total - fixedSum);
@@ -74,6 +76,22 @@ export class StarField {
 
     public update(dt: number, cam: Camera) {
         const v = cam.viewRect, m = this.margin;
+
+        const jumpX = cam.viewOffset.x - this.lastCamPos.x;
+        const jumpY = cam.viewOffset.y - this.lastCamPos.y;
+
+        if (Math.abs(jumpX) > World.WORLD_W / 2 || Math.abs(jumpY) > World.WORLD_H / 2) {
+            for (let li = 0; li < this.layers.length; li++) {
+                const L = this.layers[li];
+                for (let i = this.start[li]; i < this.end[li]; i++) {
+                    this.x[i] += jumpX * L.parallax;
+                    this.y[i] += jumpY * L.parallax;
+                }
+            }
+        }
+
+        this.lastCamPos.x = cam.viewOffset.x;
+        this.lastCamPos.y = cam.viewOffset.y;
 
         for (let li = 0; li < this.layers.length; li++) {
             for (let i = this.start[li]; i < this.end[li]; i++) {
