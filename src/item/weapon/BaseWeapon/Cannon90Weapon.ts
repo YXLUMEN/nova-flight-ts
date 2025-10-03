@@ -8,7 +8,7 @@ import type {ItemStack} from "../../ItemStack.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
 
 export class Cannon90Weapon extends BaseWeapon {
-    private speed = 6.4;
+    private readonly speed = 6.4;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         const bullet = new ExplodeBulletEntity(EntityTypes.EXPLODE_BULLET_ENTITY,

@@ -6,7 +6,7 @@ import type {EntityType} from "./EntityType.ts";
 import {World} from "../world/World.ts";
 import type {IOwnable} from "./IOwnable.ts";
 import type {LivingEntity} from "./LivingEntity.ts";
-import {dist2} from "../utils/math/math.ts";
+import {distance2} from "../utils/math/math.ts";
 import type {MutVec2} from "../utils/math/MutVec2.ts";
 
 export class ADSEntity extends Entity implements IOwnable {
@@ -28,7 +28,7 @@ export class ADSEntity extends Entity implements IOwnable {
 
         for (const projectile of projectiles) {
             if (projectile.getOwner() !== this.owner) {
-                if (dist2(projectile.getPositionRef, this.getPositionRef) > ADSEntity.RADIUS) continue;
+                if (distance2(projectile.getPositionRef, this.getPositionRef) > ADSEntity.RADIUS) continue;
                 ADSEntity.spawnInterceptPathParticles(world, this.getPositionRef.clone(), projectile.getPositionRef.clone());
                 projectile.discard();
                 break;

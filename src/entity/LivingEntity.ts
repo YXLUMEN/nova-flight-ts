@@ -3,7 +3,7 @@ import type {World} from "../world/World.ts";
 import {clamp} from "../utils/math/math.ts";
 import type {DamageSource} from "./damage/DamageSource.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
-import type {StatusEffectInstance} from "./effect/StatusEffectInstance.ts";
+import {StatusEffectInstance} from "./effect/StatusEffectInstance.ts";
 import type {StatusEffect} from "./effect/StatusEffect.ts";
 import type {EntityType} from "./EntityType.ts";
 import {DataTracker} from "./data/DataTracker.ts";
@@ -192,8 +192,18 @@ export abstract class LivingEntity extends Entity {
         super.writeNBT(nbt);
 
         let health = this.getHealth();
-        if (!Number.isInteger(health)) health = 5;
-        nbt.putUint('Health', health);
+        if (Number.isNaN(health)) health = 5;
+        nbt.putFloat('Health', health);
+        nbt.putCompoundList("attributes", this.getAttributes().toNbt());
+
+        if (this.activeStatusEffects.size > 0) {
+            const nbtList: NbtCompound[] = [];
+            for (const effect of this.activeStatusEffects.values()) {
+                nbtList.push(effect.toNbt());
+            }
+
+            nbt.putCompoundList('active_effects', nbtList);
+        }
 
         return nbt
     }
@@ -201,6 +211,20 @@ export abstract class LivingEntity extends Entity {
     public readNBT(nbt: NbtCompound) {
         super.readNBT(nbt);
 
-        this.setHealth(nbt.getUint('Health'));
+        const attributes = nbt.getCompoundList('attributes');
+        if (attributes && attributes.length > 0) {
+            this.getAttributes().readNbt(attributes);
+        }
+
+        const effects = nbt.getCompoundList('active_effects');
+        if (effects && effects.length > 0) {
+            for (const effectNbt of effects) {
+                const effect = StatusEffectInstance.fromNbt(effectNbt);
+                if (!effect) continue;
+                this.activeStatusEffects.set(effect.getEffectType(), effect);
+            }
+        }
+
+        this.setHealth(nbt.getFloat('Health'));
     }
 }

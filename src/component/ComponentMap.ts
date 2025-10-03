@@ -1,5 +1,8 @@
 import type {ComponentType} from "./ComponentType.ts";
 import {Compare} from "../utils/collection/Compare.ts";
+import {NbtCompound} from "../nbt/NbtCompound.ts";
+import {Identifier} from "../registry/Identifier.ts";
+import {Registries} from "../registry/Registries.ts";
 
 export class ComponentMap {
     public static readonly EMPTY = new ComponentMap(null);
@@ -47,5 +50,28 @@ export class ComponentMap {
         return this === o ? true :
             o instanceof ComponentMap &&
             Compare.mapsEqual(this.components, o.components);
+    }
+
+    public toNbt(): NbtCompound {
+        const nbt = new NbtCompound();
+        for (const [type, value] of this.components) {
+            nbt.putCompound(type.id.toString(), type.codec.toNbt(value));
+        }
+        return nbt;
+    }
+
+    public static fromNbt(nbt: NbtCompound): ComponentMap {
+        const map = new ComponentMap();
+        for (const key of nbt.getKeys()) {
+            const id = Identifier.tryParse(key);
+            if (!id) continue;
+
+            const entry = Registries.DATA_COMPONENT_TYPE.getEntryById(id);
+            if (!entry) continue;
+            const type = entry.getValue();
+            const compound = type.codec.toNbt(id);
+            map.set(type, compound);
+        }
+        return map;
     }
 }

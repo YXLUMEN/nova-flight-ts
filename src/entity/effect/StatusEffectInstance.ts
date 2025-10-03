@@ -3,6 +3,9 @@ import type {StatusEffect} from "./StatusEffect.ts";
 import type {LivingEntity} from "../LivingEntity.ts";
 import {clamp} from "../../utils/math/math.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
+import {NbtCompound} from "../../nbt/NbtCompound.ts";
+import {Registries} from "../../registry/Registries.ts";
+import {Identifier} from "../../registry/Identifier.ts";
 
 export class StatusEffectInstance {
     public static readonly INFINITE = -1;
@@ -88,5 +91,25 @@ export class StatusEffectInstance {
 
     private isActive(): boolean {
         return this.isInfinite() || this.duration > 0;
+    }
+
+    public toNbt(): NbtCompound {
+        const nbt = new NbtCompound();
+        nbt.putString('type', this.type.getRegistryKey().getValue().toString());
+        nbt.putDouble('duration', this.duration);
+        nbt.putUint('amplifier', this.amplifier);
+
+        return nbt
+    }
+
+    public static fromNbt(nbt: NbtCompound): StatusEffectInstance | null {
+        const id = Identifier.tryParse(nbt.getString('type'));
+        if (!id) return null;
+
+        const type = Registries.STATUS_EFFECT.getEntryById(id);
+        if (!type) return null;
+        const duration = nbt.getDouble('duration');
+        const amplifier = nbt.getUint('amplifier');
+        return new StatusEffectInstance(type, duration, amplifier);
     }
 }

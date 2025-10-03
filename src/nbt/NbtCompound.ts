@@ -1,137 +1,145 @@
-import {type Nbt, NbtType} from "./NbtValue";
+import {type Nbt, NbtTypes} from "./NbtValue";
 import {NbtBinaryWriter} from "./NbtBinaryWriter";
 import {NbtBinaryReader} from "./NbtBinaryReader";
 
 export class NbtCompound {
     public static readonly MAGIC = 0x6E627430;
-    public static readonly VERSION = 2;
+    public static readonly VERSION = 3;
 
     private entries: Map<string, Nbt> = new Map();
 
+    public getKeys(): Set<string> {
+        return new Set<string>(this.entries.keys());
+    }
+
+    public getSize(): number {
+        return this.entries.size;
+    }
+
     public putInt8(key: string, value: number): this {
         console.assert(Number.isInteger(value) && value >= -128 && value <= 127, "Int8 out of range");
-        this.entries.set(key, {type: NbtType.Int8, value});
+        this.entries.set(key, {type: NbtTypes.Int8, value});
         return this;
     }
 
     public putInt16(key: string, value: number): this {
         console.assert(Number.isInteger(value) && value >= -32768 && value <= 32767, "Int16 out of range");
-        this.entries.set(key, {type: NbtType.Int16, value});
+        this.entries.set(key, {type: NbtTypes.Int16, value});
         return this;
     }
 
     public putInt32(key: string, value: number): this {
         console.assert(Number.isInteger(value) && value >= -2147483648 && value <= 2147483647, "Int32 out of range");
-        this.entries.set(key, {type: NbtType.Int32, value});
+        this.entries.set(key, {type: NbtTypes.Int32, value});
         return this;
     }
 
     public putFloat(key: string, value: number): this {
         console.assert(Number.isFinite(value), "Float must be finite");
-        this.entries.set(key, {type: NbtType.Float, value});
+        this.entries.set(key, {type: NbtTypes.Float, value});
         return this;
     }
 
     public putDouble(key: string, value: number): this {
         console.assert(Number.isFinite(value), "Double must be finite");
-        this.entries.set(key, {type: NbtType.Double, value});
+        this.entries.set(key, {type: NbtTypes.Double, value});
         return this;
     }
 
     public putUint(key: string, value: number): this {
         console.assert(Number.isInteger(value) && value >= 0, `[NBT] ${key} expected integer, got ${value}`);
-        this.entries.set(key, {type: NbtType.Uint, value: value | 0});
+        this.entries.set(key, {type: NbtTypes.Uint, value: value | 0});
         return this;
     }
 
     public putString(key: string, value: string): this {
-        this.entries.set(key, {type: NbtType.String, value});
+        this.entries.set(key, {type: NbtTypes.String, value});
         return this;
     }
 
     public putBoolean(key: string, value: boolean): this {
-        this.entries.set(key, {type: NbtType.Boolean, value});
+        this.entries.set(key, {type: NbtTypes.Boolean, value});
         return this;
     }
 
     public putNumberArray(key: string, ...value: number[]): this {
-        this.entries.set(key, {type: NbtType.NumberArray, value});
+        this.entries.set(key, {type: NbtTypes.NumberArray, value});
         return this;
     }
 
     public putStringArray(key: string, ...value: string[]): this {
-        this.entries.set(key, {type: NbtType.StringArray, value});
+        this.entries.set(key, {type: NbtTypes.StringArray, value});
         return this;
     }
 
     public putCompound(key: string, value: NbtCompound): this {
-        this.entries.set(key, {type: NbtType.Compound, value});
+        this.entries.set(key, {type: NbtTypes.Compound, value});
         return this;
     }
 
-    public putNbtList(key: string, value: NbtCompound[]) {
-        this.entries.set(key, {type: NbtType.NbtList, value});
+    public putCompoundList(key: string, value: NbtCompound[]) {
+        this.entries.set(key, {type: NbtTypes.NbtList, value});
         return this;
     }
 
     public getInt8(key: string, d = 0): number {
         const v = this.entries.get(key);
-        return v && v.type === NbtType.Int8 ? (v.value as number) : d;
+        return v && v.type === NbtTypes.Int8 ? (v.value as number) : d;
     }
 
     public getInt16(key: string, d = 0): number {
         const v = this.entries.get(key);
-        return v && v.type === NbtType.Int16 ? (v.value as number) : d;
+        return v && v.type === NbtTypes.Int16 ? (v.value as number) : d;
     }
 
     public getInt32(key: string, d = 0): number {
         const v = this.entries.get(key);
-        return v && v.type === NbtType.Int32 ? (v.value as number) : d;
+        return v && v.type === NbtTypes.Int32 ? (v.value as number) : d;
     }
 
     public getFloat(key: string, d = 0): number {
         const v = this.entries.get(key);
-        return v && v.type === NbtType.Float ? (v.value as number) : d;
+        return v && v.type === NbtTypes.Float ? (v.value as number) : d;
     }
 
     public getDouble(key: string, d = 0): number {
         const v = this.entries.get(key);
-        return v && v.type === NbtType.Double ? (v.value as number) : d;
+        return v && v.type === NbtTypes.Double ? (v.value as number) : d;
     }
 
     public getUint(key: string, d = 0): number {
         const v = this.entries.get(key);
-        return v && v.type === NbtType.Uint ? (v.value as number) : d;
+        return v && v.type === NbtTypes.Uint ? (v.value as number) : d;
     }
 
     public getString(key: string, d = ""): string {
         const v = this.entries.get(key);
-        return v && v.type === NbtType.String ? (v.value as string) : d;
+        return v && v.type === NbtTypes.String ? (v.value as string) : d;
     }
 
     public getBoolean(key: string, d = false): boolean {
         const v = this.entries.get(key);
-        return v && v.type === NbtType.Boolean ? (v.value as boolean) : d;
+        return v && v.type === NbtTypes.Boolean ? (v.value as boolean) : d;
     }
 
     public getNumberArray(key: string, d: number[] = []): number[] {
         const v = this.entries.get(key);
-        return v && v.type === NbtType.NumberArray ? (v.value as number[]) : d;
+        return v && v.type === NbtTypes.NumberArray ? (v.value as number[]) : d;
     }
 
     public getStringArray(key: string, d: string[] = []): string[] {
         const v = this.entries.get(key);
-        return v && v.type === NbtType.StringArray ? (v.value as string[]) : d;
+        return v && v.type === NbtTypes.StringArray ? (v.value as string[]) : d;
     }
 
     public getCompound(key: string): NbtCompound | null {
         const v = this.entries.get(key);
-        return v && v.type === NbtType.Compound ? (v.value as NbtCompound) : null;
+        return v && v.type === NbtTypes.Compound ? (v.value as NbtCompound) : null;
     }
 
-    public getNbtList(key: string): NbtCompound[] | null {
+    public getCompoundList(key: string): NbtCompound[] | null {
         const nbtList = this.entries.get(key);
-        return nbtList && nbtList.type === NbtType.NbtList ? (nbtList.value as NbtCompound[]) : null;
+        return nbtList && nbtList.type === NbtTypes.NbtList ? (nbtList.value as NbtCompound[]) : null;
     }
 
     public remove(key: string): this {
@@ -141,6 +149,10 @@ export class NbtCompound {
 
     public has(key: string): boolean {
         return this.entries.has(key);
+    }
+
+    public isEmpty(): boolean {
+        return this.entries.size === 0;
     }
 
     public toBinary(): Uint8Array {
@@ -154,50 +166,50 @@ export class NbtCompound {
             writer.writeString(key);
 
             switch (type) {
-                case NbtType.Int8:
+                case NbtTypes.Int8:
                     writer.writeInt8(value as number);
                     break;
-                case NbtType.Int16:
+                case NbtTypes.Int16:
                     writer.writeInt16(value as number);
                     break;
-                case NbtType.Int32:
+                case NbtTypes.Int32:
                     writer.writeInt32(value as number);
                     break;
-                case NbtType.Float:
+                case NbtTypes.Float:
                     writer.writeFloat(value as number);
                     break;
-                case NbtType.Double:
+                case NbtTypes.Double:
                     writer.writeDouble(value as number);
                     break;
-                case NbtType.Uint:
+                case NbtTypes.Uint:
                     writer.writeUint32(value as number);
                     break;
-                case NbtType.String:
+                case NbtTypes.String:
                     writer.writeString(value as string);
                     break;
-                case NbtType.Boolean:
+                case NbtTypes.Boolean:
                     writer.writeInt8(value ? 1 : 0);
                     break;
-                case NbtType.NumberArray: {
+                case NbtTypes.NumberArray: {
                     const values = value as number[];
                     writer.writeInt32(values.length);
                     for (const n of values) writer.writeDouble(n);
                     break;
                 }
-                case NbtType.StringArray: {
+                case NbtTypes.StringArray: {
                     const values = value as string[];
                     writer.writeInt32(values.length);
                     for (const s of values) writer.writeString(s);
                     break;
                 }
-                case NbtType.Compound: {
+                case NbtTypes.Compound: {
                     const values = value as NbtCompound;
                     const nested = values.toBinary();
                     writer.writeInt32(nested.length);
                     writer.pushBytes(nested);
                     break;
                 }
-                case NbtType.NbtList: {
+                case NbtTypes.NbtList: {
                     const list = value as NbtCompound[];
                     writer.writeInt32(list.length);
                     for (const compound of list) {
@@ -210,7 +222,7 @@ export class NbtCompound {
             }
         }
 
-        writer.writeInt8(NbtType.End);
+        writer.writeInt8(NbtTypes.End);
         return writer.toUint8Array();
     }
 
@@ -232,49 +244,49 @@ export class NbtCompound {
 
         while (true) {
             const type = reader.readInt8();
-            if (type === NbtType.End) break;
+            if (type === NbtTypes.End) break;
 
             const key = reader.readString();
             switch (type) {
-                case NbtType.Int8:
+                case NbtTypes.Int8:
                     compound.putInt8(key, reader.readInt8());
                     break;
-                case NbtType.Int16:
+                case NbtTypes.Int16:
                     compound.putInt16(key, reader.readInt16());
                     break;
-                case NbtType.Int32:
+                case NbtTypes.Int32:
                     compound.putInt32(key, reader.readInt32());
                     break;
-                case NbtType.Float:
+                case NbtTypes.Float:
                     compound.putFloat(key, reader.readFloat());
                     break;
-                case NbtType.Double:
+                case NbtTypes.Double:
                     compound.putDouble(key, reader.readDouble());
                     break;
-                case NbtType.Uint:
+                case NbtTypes.Uint:
                     compound.putUint(key, reader.readUint32());
                     break;
-                case NbtType.String:
+                case NbtTypes.String:
                     compound.putString(key, reader.readString());
                     break;
-                case NbtType.Boolean:
+                case NbtTypes.Boolean:
                     compound.putBoolean(key, reader.readInt8() !== 0);
                     break;
-                case NbtType.NumberArray: {
+                case NbtTypes.NumberArray: {
                     const len = reader.readInt32();
                     const arr: number[] = new Array(len);
                     for (let i = 0; i < len; i++) arr[i] = reader.readDouble();
                     compound.putNumberArray(key, ...arr);
                     break;
                 }
-                case NbtType.StringArray: {
+                case NbtTypes.StringArray: {
                     const len = reader.readInt32();
                     const arr: string[] = new Array(len);
                     for (let i = 0; i < len; i++) arr[i] = reader.readString();
                     compound.putStringArray(key, ...arr);
                     break;
                 }
-                case NbtType.Compound: {
+                case NbtTypes.Compound: {
                     const nestedLen = reader.readInt32();
                     console.assert(reader.bytesRemaining() >= nestedLen, `[NBT] nested length overflow for key "${key}"`);
                     const nestedBuf = reader.readSlice(nestedLen);
@@ -282,7 +294,7 @@ export class NbtCompound {
                     compound.putCompound(key, nested!);
                     break;
                 }
-                case NbtType.NbtList: {
+                case NbtTypes.NbtList: {
                     const count = reader.readInt32();
                     const list: NbtCompound[] = [];
                     for (let i = 0; i < count; i++) {
@@ -292,7 +304,7 @@ export class NbtCompound {
                         const nested = NbtCompound.fromBinary(nestedBuf);
                         list.push(nested!);
                     }
-                    compound.putNbtList(key, list);
+                    compound.putCompoundList(key, list);
                     break;
                 }
                 default:

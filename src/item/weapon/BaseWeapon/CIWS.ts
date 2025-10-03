@@ -68,7 +68,7 @@ export class CIWS extends BaseWeapon {
     }
 
     public setMaxHeat(stack: ItemStack, value: number): void {
-        stack.set(DataComponentTypes.MAX_HEAT, value);
+        stack.set(DataComponentTypes.MAX_HEAT, Math.floor(value));
     }
 
     public getHeat(stack: ItemStack): number {

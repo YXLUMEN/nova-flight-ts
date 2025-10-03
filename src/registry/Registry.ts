@@ -34,8 +34,8 @@ export class Registry<T> {
         return this.key;
     }
 
-    public getEntryById(id: Identifier): RegistryEntry<T> {
-        return this.idToEntry.get(id)!;
+    public getEntryById(id: Identifier): RegistryEntry<T> | null {
+        return this.idToEntry.get(id) ?? null;
     }
 
     public getEntryByKey(key: RegistryKey<T>) {

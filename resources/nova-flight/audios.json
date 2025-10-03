@@ -13,5 +13,14 @@
   },
   "bgm.5": {
     "file": "nova-flight:/come_on_mabo.ogg"
+  },
+  "bgm.6": {
+    "file": "nova-flight:/2_23mabo.ogg"
+  },
+  "bgm.7": {
+    "file": "nova-flight:/3_30am.ogg"
+  },
+  "bgm.8": {
+    "file": "nova-flight:/ele_mabo.ogg"
   }
 }

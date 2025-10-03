@@ -85,10 +85,15 @@ export class ClientWorld {
             case 'KeyF':
                 world.freeze = !world.freeze;
                 break;
-            case 'NumpadSubtract':
+            case 'NumpadSubtract': {
                 WorldConfig.enableCameraOffset = !WorldConfig.enableCameraOffset;
                 WorldScreen.camera.cameraOffset.set(0, 0);
                 break;
+            }
+            case 'NumpadAdd': {
+                BGMManager.next();
+                break;
+            }
             case 'KeyS':
                 NovaFlightServer.saveGame(world.saveAll())
                     .then(() => {

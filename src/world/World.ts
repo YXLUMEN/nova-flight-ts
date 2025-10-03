@@ -30,7 +30,6 @@ import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {WorldScreen} from "../render/WorldScreen.ts";
 import {ClientWorld} from "../client/ClientWorld.ts";
-import {RegistryKeys} from "../registry/RegistryKeys.ts";
 import {type EntityHandler, ServerEntityManager} from "./ServerEntityManager.ts";
 import {EntityType} from "../entity/EntityType.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
@@ -323,10 +322,6 @@ export class World implements NbtSerializable {
         return this.entityManager.getIndex().getByUUID(uuid);
     }
 
-    public addEntities(entity: Iterable<Entity>): void {
-        this.entityManager.addEntities(entity);
-    }
-
     public schedule(delaySec: number, fn: () => void): Schedule {
         const t: TimerTask = {
             id: this.nextTimerId.incrementAndGet(),
@@ -559,8 +554,12 @@ export class World implements NbtSerializable {
             this.entityManager.remove(event.entity);
         });
 
-        this.events.on(EVENTS.BOSS_KILLED, () => {
-            this.stage.nextPhase();
+        let bossEvent = false;
+        this.events.on(EVENTS.BOSS_KILLED, event => {
+            if (bossEvent || BossEntity.hasBoss) return;
+            bossEvent = true;
+
+            if (event.mob) this.stage.nextPhase();
 
             this.schedule(120, () => {
                 if (BossEntity.hasBoss) return;
@@ -579,6 +578,7 @@ export class World implements NbtSerializable {
                 const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, this, boss, true);
                 mark.setPositionByVec(boss.getPositionRef);
                 this.spawnEntity(mark);
+                bossEvent = false;
             });
         });
 
@@ -590,18 +590,17 @@ export class World implements NbtSerializable {
         this.player!.writeNBT(playerNbt);
         root.putCompound('Player', playerNbt);
 
-        const entityTypes = this.registryManager.get(RegistryKeys.ENTITY_TYPE);
         const entityList: NbtCompound[] = [];
         this.entities.forEach(entity => {
             if (!entity.shouldSave()) return;
 
             const nbt = new NbtCompound();
-            const type = entityTypes.getId(entity.getType())!;
+            const type = EntityType.getId(entity.getType())!;
             nbt.putString('Type', type.toString());
             entity.writeNBT(nbt);
             entityList.push(nbt);
         });
-        root.putNbtList('Entities', entityList);
+        root.putCompoundList('Entities', entityList);
 
         const stageNbt = new NbtCompound();
         this.stage.writeNBT(stageNbt);
@@ -614,11 +613,15 @@ export class World implements NbtSerializable {
         const playerNbt = nbt.getCompound('Player');
         if (playerNbt) this.player!.readNBT(playerNbt);
 
-        const entityNbt = nbt.getNbtList('Entities');
+        const entityNbt = nbt.getCompoundList('Entities');
         if (entityNbt) this.loadEntity(entityNbt);
 
         const stageNbt = nbt.getCompound('Stage');
         if (stageNbt) this.stage.readNBT(stageNbt);
+
+        if (this.player!.getPhaseScore() >= 2048) {
+            this.events.emit(EVENTS.BOSS_KILLED, {mob: null, damageSource: this.damageSources.generic()});
+        }
     }
 
     private loadEntity(nbtList: NbtCompound[]) {

@@ -163,7 +163,7 @@ export class LaserWeapon extends SpecialWeapon {
     }
 
     public setMaxHeat(stack: ItemStack, maxHeat: number): void {
-        stack.set(DataComponentTypes.MAX_HEAT, maxHeat);
+        stack.set(DataComponentTypes.MAX_HEAT, Math.floor(maxHeat));
     }
 
     public getHeat(stack: ItemStack): number {

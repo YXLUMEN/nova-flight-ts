@@ -10,7 +10,7 @@ import {randInt} from "../../utils/math/math.ts";
 export class MiniGunEnemyEntity extends MobEntity {
     private static readonly bulletSpeed = 4;
     public color = "#ac0000";
-    private cooldown = randInt(0, 100);
+    private cooldown = randInt(0, 200);
     private fireCount = 0;
     private fireCD = 0;
 
@@ -36,7 +36,7 @@ export class MiniGunEnemyEntity extends MobEntity {
         this.fireCD = 10;
 
         if (this.fireCount > 16) {
-            this.cooldown = 400;
+            this.cooldown = 500;
             this.fireCount = 0;
             return;
         }

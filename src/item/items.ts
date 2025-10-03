@@ -66,7 +66,9 @@ export class Items {
     ));
 
     private static register(id: string, item: Item): Item {
-        return Registry.registerReferenceById(Registries.ITEM, Identifier.ofVanilla(id), item).getValue();
+        const entry = Registry.registerReferenceById(Registries.ITEM, Identifier.ofVanilla(id), item).getValue();
+        (item.registryEntry as any) = Registries.ITEM.getEntryByValue(item);
+        return entry;
     }
 
     // 避免引用问题

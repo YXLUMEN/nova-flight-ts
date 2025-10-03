@@ -51,7 +51,7 @@ export function collideCircle(ax: number, ay: number, ar: number,
     return dx * dx + dy * dy < r * r;
 }
 
-export function dist2(a: MutVec2, b: MutVec2) {
+export function distance2(a: MutVec2, b: MutVec2) {
     const dx = a.x - b.x, dy = a.y - b.y;
     return dx * dx + dy * dy;
 }
@@ -120,6 +120,13 @@ export function wrapRadians(angle: number) {
     if (angle > Math.PI) angle -= Math.PI * 2;
     if (angle < -Math.PI) angle += Math.PI * 2;
     return angle;
+}
+
+export function wrappedDelta(a: number, b: number, size: number): number {
+    let d = a - b;
+    if (d > size / 2) d -= size;
+    if (d < -size / 2) d += size;
+    return d;
 }
 
 export function lerp(a: number, b: number, t: number): number {

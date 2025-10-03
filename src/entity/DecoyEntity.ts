@@ -8,14 +8,15 @@ import type {IOwnable} from "./IOwnable.ts";
 import {randInt} from "../utils/math/math.ts";
 
 export class DecoyEntity extends Entity implements IOwnable {
-    public static readonly Entities: DecoyEntity[] = [];
-    private readonly owner: Entity | null = null;
+    public static readonly Entities = new Set<DecoyEntity>();
+    private owner: Entity | null = null;
+    private ownerUuid: string | null = null;
     private readonly life = randInt(250, 320);
 
     public constructor(type: EntityType<DecoyEntity>, world: World, owner: Entity | null) {
         super(type, world);
-        this.owner = owner;
-        DecoyEntity.Entities.push(this);
+        this.setOwner(owner);
+        DecoyEntity.Entities.add(this);
     }
 
     public override tick() {
@@ -30,19 +31,47 @@ export class DecoyEntity extends Entity implements IOwnable {
         this.moveByVec(velocity);
         velocity.multiply(0.98);
 
+        if (this.shouldWrap()) {
+            const pos = this.getPositionRef;
+            if (pos.y < -20 || pos.y > World.WORLD_H + 20) {
+                this.discard();
+                return;
+            }
+            this.wrapPosition();
+            return;
+        }
+
         const pos = this.getPositionRef;
-        if (pos.y < -20 || pos.y > World.WORLD_H + 20 || pos.x < -20 || pos.x > World.WORLD_W + 20) {
+        if (pos.x < -20 || pos.x > World.WORLD_W + 20) {
             this.discard();
         }
     }
 
+    public override shouldWrap(): boolean {
+        return this.getOwner()?.shouldWrap() ?? false;
+    }
+
     public getOwner(): Entity | null {
-        return this.owner;
+        if (this.owner && !this.owner.isRemoved()) {
+            return this.owner;
+        }
+        if (this.ownerUuid) {
+            this.owner = this.getWorld().getEntity(this.ownerUuid);
+            return this.owner;
+        }
+        return null;
+    }
+
+    public setOwner(entity: Entity | null): void {
+        if (entity) {
+            this.ownerUuid = entity.getUuid();
+            this.owner = entity;
+        }
     }
 
     public override onRemove() {
         super.onRemove();
-        DecoyEntity.Entities.shift();
+        DecoyEntity.Entities.delete(this);
     }
 
     public override shouldSave(): boolean {

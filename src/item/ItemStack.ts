@@ -10,6 +10,9 @@ import {DataComponentTypes} from "../component/DataComponentTypes.ts";
 import {clamp} from "../utils/math/math.ts";
 import type {ComponentType} from "../component/ComponentType.ts";
 import type {LivingEntity} from "../entity/LivingEntity.ts";
+import {NbtCompound} from "../nbt/NbtCompound.ts";
+import {Identifier} from "../registry/Identifier.ts";
+import {Registries} from "../registry/Registries.ts";
 
 export class ItemStack {
     // @ts-ignore
@@ -20,9 +23,9 @@ export class ItemStack {
     private count: number;
     private holder: Entity | null = null;
 
-    public constructor(item: Item, count: number = 1, components?: ComponentMap) {
+    public constructor(item: Item, count: number = 1, components: ComponentMap | null = null) {
         this.item = item;
-        if (components === undefined) {
+        if (!components) {
             this.components = new ComponentMap(item.getComponents());
         } else {
             this.components = components;
@@ -198,5 +201,31 @@ export class ItemStack {
 
     public decrement(amount: number) {
         this.increment(-amount);
+    }
+
+    public toNbt(): NbtCompound {
+        const nbt = new NbtCompound();
+        nbt.putString('type', this.getItem().getRegistryEntry().getRegistryKey().getValue().toString());
+        nbt.putInt8('counts', this.getCount());
+        nbt.putCompound('compounds', this.components.toNbt());
+
+        return nbt
+    }
+
+    public static readNBT(nbt: NbtCompound) {
+        const typeName = nbt.getString('type');
+        const id = Identifier.tryParse(typeName);
+        if (!id) return null;
+
+        const type = Registries.ITEM.getEntryById(id);
+        if (!type) return null;
+
+        const counts = nbt.getInt8('counts');
+
+        let compounds: ComponentMap | null = null;
+        const compoundsNbt = nbt.getCompound('compounds');
+        if (compoundsNbt) compounds = ComponentMap.fromNbt(compoundsNbt);
+
+        return new ItemStack(type.getValue(), counts, compounds);
     }
 }

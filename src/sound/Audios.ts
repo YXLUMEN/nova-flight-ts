@@ -9,6 +9,9 @@ export class Audios {
     public static readonly SOME_TIME_HJM = this.register('bgm.3');
     public static readonly DELTA_FORCE_MAIN = this.register('bgm.4');
     public static readonly COME_ON_MABO = this.register('bgm.5');
+    public static readonly MABO_2_23 = this.register('bgm.6');
+    public static readonly MABO_3_30 = this.register('bgm.7');
+    public static readonly ELE_MABO = this.register('bgm.8');
 
     private static register(id: string) {
         const identifier = Identifier.ofVanilla(id);

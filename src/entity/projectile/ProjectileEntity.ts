@@ -16,6 +16,8 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
     public color = "#8cf5ff";
     public edgeColor = '';
 
+    private wrapTime = 0;
+
     public constructor(type: EntityType<ProjectileEntity>, world: World, owner: Entity | null, damage: number) {
         super(type, world);
 
@@ -30,11 +32,6 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
         pos.addVec(this.getVelocityRef);
 
         if (this.shouldWrap()) {
-            if (this.age++ > 200 || pos.y < -20 || pos.y > World.WORLD_H + 20) {
-                this.discard();
-                return;
-            }
-
             this.wrapPosition();
             return;
         }
@@ -71,6 +68,13 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
     protected wrapPosition(): boolean {
         const pos = this.getPositionRef;
         const W = World.WORLD_W;
+
+        if (this.wrapTime > 4 || pos.y < -20 || pos.y > World.WORLD_H + 20) {
+            this.discard();
+            return false;
+        }
+        if (pos.x < 0 || pos.x > World.WORLD_W) this.wrapTime++;
+
         pos.x = ((pos.x % W) + W) % W;
         return true;
     }

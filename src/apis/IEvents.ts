@@ -23,7 +23,7 @@ export const EVENTS = createCleanObj({
 
 export type IEvents = {
     [EVENTS.ENTITY_REMOVED]: { entity: Entity; };
-    [EVENTS.BOSS_KILLED]: { mob: BossEntity; damageSource: DamageSource };
+    [EVENTS.BOSS_KILLED]: { mob: BossEntity | null; damageSource: DamageSource };
     [EVENTS.MOB_KILLED]: { mob: MobEntity; damageSource: DamageSource };
     [EVENTS.MOB_DAMAGE]: { mob: MobEntity; damageSource: DamageSource };
     [EVENTS.UNLOCK_TECH]: { id: string };

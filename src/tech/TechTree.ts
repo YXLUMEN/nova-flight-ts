@@ -461,7 +461,7 @@ export class TechTree implements NbtSerializable {
         for (const tech of techs) {
             this.state.unlock(tech);
             this.applyUnlockUpdates(tech);
-            World.instance!.events.emit(EVENTS.UNLOCK_TECH, {id: tech});
+            // World.instance!.events.emit(EVENTS.UNLOCK_TECH, {id: tech});
         }
     }
 }

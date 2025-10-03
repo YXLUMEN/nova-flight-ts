@@ -2,7 +2,7 @@ import type {NbtCompound} from "./NbtCompound";
 
 export type NbtValue = number | string | boolean | number[] | string[] | NbtCompound | NbtCompound[];
 
-export const NbtType = {
+export const NbtTypes = {
     End: 0,
     Int8: 1,
     Int16: 2,
@@ -16,9 +16,11 @@ export const NbtType = {
     StringArray: 10,
     Compound: 11,
     NbtList: 12
-}
+} as const;
+
+export type NbtType = typeof NbtTypes[keyof typeof NbtTypes];
 
 export interface Nbt {
-    type: number,
+    type: NbtType,
     value: NbtValue
 }

@@ -2,8 +2,10 @@ import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {EntityAttribute} from "./EntityAttribute.ts";
 import type {EntityAttributeInstance} from "./EntityAttributeInstance.ts";
 import type {DefaultAttributeContainer} from "./DefaultAttributeContainer.ts";
-import type {Identifier} from "../../registry/Identifier.ts";
+import {Identifier} from "../../registry/Identifier.ts";
 import type {EntityAttributeModifier} from "./EntityAttributeModifier.ts";
+import type {NbtCompound} from "../../nbt/NbtCompound.ts";
+import {Registries} from "../../registry/Registries.ts";
 
 export class AttributeContainer {
     private readonly custom = new Map<RegistryEntry<EntityAttribute>, EntityAttributeInstance>();
@@ -80,6 +82,31 @@ export class AttributeContainer {
         this.pendingUpdate.add(instance);
         if (instance.getAttribute().getValue().isTracked()) {
             this.tracked.add(instance);
+        }
+    }
+
+    public toNbt(): NbtCompound[] {
+        const nbtList: NbtCompound[] = [];
+
+        for (const entityAttributeInstance of this.custom.values()) {
+            nbtList.push(entityAttributeInstance.toNbt());
+        }
+
+        return nbtList;
+    }
+
+    public readNbt(nbtList: NbtCompound[]): void {
+        for (const nbt of nbtList) {
+            const id = Identifier.tryParse(nbt.getString('id'));
+            if (!id) continue;
+
+            const entry = Registries.ATTRIBUTE.getEntryById(id);
+            if (!entry) continue;
+
+            const instance = this.getCustomInstance(entry);
+            if (instance) {
+                instance.readNbt(nbt);
+            }
         }
     }
 }

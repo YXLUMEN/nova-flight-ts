@@ -16,6 +16,7 @@ export class MissileEntity extends RocketEntity {
     private lockDelayTicks = 150;
     private maxLifetimeTicks = 1000;
     protected reLockCD = 0;
+    protected maxReLockCD = 5;
 
     private driftSpeed = 0.8;
     private trackingSpeed = 1.6;
@@ -23,12 +24,10 @@ export class MissileEntity extends RocketEntity {
     private hoverDir: number = 1;
 
     private readonly driftAngle: number;
-    private readonly lockeType: string;
 
-    public constructor(type: EntityType<MissileEntity>, world: World, owner: Entity, driftAngle: number, lockType = 'mobs', damage = 5) {
+    public constructor(type: EntityType<MissileEntity>, world: World, owner: Entity, driftAngle: number, damage = 5) {
         super(type, world, owner, damage);
         this.driftAngle = driftAngle;
-        this.lockeType = lockType;
     }
 
     public override tick() {
@@ -38,7 +37,9 @@ export class MissileEntity extends RocketEntity {
         this.moveByVec(this.getVelocityRef);
         this.getVelocityRef.multiply(0.8);
 
-        if (!this.adjustPosition()) return;
+        if (this.shouldWrap()) {
+            if (!this.wrapPosition()) return;
+        } else if (!this.adjustPosition()) return;
 
         // 燃料耗尽
         if (this.age > this.maxLifetimeTicks) {
@@ -91,7 +92,7 @@ export class MissileEntity extends RocketEntity {
                 this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
                 return;
             }
-            this.reLockCD = 25;
+            this.reLockCD = this.maxReLockCD;
             const count = MissileEntity.lockedEntity.get(this.target) ?? 0;
             MissileEntity.lockedEntity.set(this.target, count + 1);
 
@@ -109,15 +110,7 @@ export class MissileEntity extends RocketEntity {
         this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
     }
 
-    private acquireTarget(): Entity | null {
-        if (this.lockeType === 'player') {
-            const player = this.getWorld().player;
-            if (player && player.invulnerable) {
-                return null;
-            }
-            return player;
-        }
-
+    protected acquireTarget(): Entity | null {
         const mobs = this.getWorld().getMobs();
         if (mobs.size === 0) return null;
 

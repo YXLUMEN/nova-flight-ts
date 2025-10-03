@@ -1,6 +1,5 @@
 import type {World} from "../world/World.ts";
 import type {Entity} from "../entity/Entity.ts";
-import {Registries} from "../registry/Registries.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import type {ItemStack} from "./ItemStack.ts";
@@ -12,7 +11,7 @@ import type {ComponentType} from "../component/ComponentType.ts";
 export type ItemSettings = InstanceType<typeof Item.Settings>;
 
 export class Item {
-    private readonly registryEntry = Registries.ITEM.getEntryByValue(this)!;
+    public readonly registryEntry: RegistryEntry<Item> | null = null;
     private readonly components: ComponentMap;
 
     public constructor(settings: ItemSettings) {
@@ -23,7 +22,7 @@ export class Item {
     }
 
     public getRegistryEntry(): RegistryEntry<Item> {
-        return this.registryEntry;
+        return this.registryEntry!;
     }
 
     public getComponents(): ComponentMap {
