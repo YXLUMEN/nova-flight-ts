@@ -234,6 +234,7 @@ export class DefaultEvents {
                 const currentTime = (event.target as HTMLAudioElement).currentTime;
                 if (106 - currentTime >= 0.01) return;
                 notify.show('干得好, 接下来就靠你自己了');
+                notify.show('如果需要, 按下 M 键查看教程');
                 boss.onDeath(world.getDamageSources().removed());
                 ctrl!.abort();
                 world.schedule(5, () => {

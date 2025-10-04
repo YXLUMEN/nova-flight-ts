@@ -199,7 +199,7 @@ export class ItemStack {
         this.setCount(this.getCount() + amount);
     }
 
-    public decrement(amount: number) {
+    public decrement(amount: number): void {
         this.increment(-amount);
     }
 
@@ -212,7 +212,7 @@ export class ItemStack {
         return nbt
     }
 
-    public static readNBT(nbt: NbtCompound) {
+    public static readNBT(nbt: NbtCompound): ItemStack | null {
         const typeName = nbt.getString('type');
         const id = Identifier.tryParse(typeName);
         if (!id) return null;

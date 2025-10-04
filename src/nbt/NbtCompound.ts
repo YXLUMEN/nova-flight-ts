@@ -12,6 +12,10 @@ export class NbtCompound {
         return new Set<string>(this.entries.keys());
     }
 
+    public getEntrySet(): Set<[string, Nbt]> {
+        return new Set(this.entries.entries());
+    }
+
     public getSize(): number {
         return this.entries.size;
     }

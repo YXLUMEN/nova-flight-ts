@@ -7,6 +7,8 @@ export class Registries {
     private static readonly ROOT = new Registry(RegistryKey.ofRegistry(Identifier.ROOT));
     private static readonly DEFAULT_ENTRIES = new Map<Identifier, CallableFunction>();
 
+    public static readonly DAMAGE_TYPE = this.simpleCreate(RegistryKeys.DAMAGE_TYPE, () => {
+    });
     public static readonly STATUS_EFFECT = this.simpleCreate(RegistryKeys.STATUS_EFFECT, () => {
     });
     public static readonly ENTITY_TYPE = this.simpleCreate(RegistryKeys.ENTITY_TYPE, () => {

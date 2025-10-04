@@ -25,11 +25,10 @@ export class GunEnemyEntity extends MobEntity {
     public override tick() {
         super.tick();
 
+        const world = this.getWorld();
+        if (world.empBurst > 0 || this.hasStatusEffect(StatusEffects.EMC_STATUS)) return;
         if (this.cooldown-- > 0) return;
         this.cooldown = 150;
-        const world = this.getWorld();
-
-        if (world.empBurst > 0 || this.hasStatusEffect(StatusEffects.EMC_STATUS)) return;
 
         const pos = this.getPositionRef;
         const yaw = this.getYaw();

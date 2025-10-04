@@ -51,8 +51,8 @@ export class RegistryEntry<T> {
         return this.getRegistryKey() === key;
     }
 
-    public setTags(tags: Set<TagKey<T>>): void {
-        this.tags = tags;
+    public setTags(tags: Iterable<TagKey<T>>): void {
+        this.tags = new Set(tags);
     }
 
     public toString() {

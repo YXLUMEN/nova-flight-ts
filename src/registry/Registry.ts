@@ -42,12 +42,12 @@ export class Registry<T> {
         return this.keyToEntry.get(key)!;
     }
 
-    public add(key: RegistryKey<T>, value: T, tags?: TagKey<T>[]): RegistryEntry<T> {
+    public add(key: RegistryKey<T>, value: T, ...tags: TagKey<T>[]): RegistryEntry<T> {
         if (this.idToEntry.has(key.getValue())) throw new Error(`ID is already registered: ${key.getValue()}`);
         if (this.valueToEntry.has(value)) throw new Error(`Value is already registered: ${value}`);
 
         const entry = new RegistryEntry(key, value);
-        if (tags) entry.setTags(new Set(tags));
+        if (tags && tags.length > 0) entry.setTags(new Set(tags));
 
         this.keyToEntry.set(key, entry);
         this.idToEntry.set(key.getValue(), entry);

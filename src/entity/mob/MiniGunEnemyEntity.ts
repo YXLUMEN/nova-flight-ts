@@ -27,6 +27,8 @@ export class MiniGunEnemyEntity extends MobEntity {
     public override tick() {
         super.tick();
 
+        const world = this.getWorld();
+        if (world.empBurst > 0 || this.hasStatusEffect(StatusEffects.EMC_STATUS)) return;
         if (this.cooldown > 0) {
             this.cooldown--;
             return;
@@ -40,9 +42,6 @@ export class MiniGunEnemyEntity extends MobEntity {
             this.fireCount = 0;
             return;
         }
-
-        const world = this.getWorld();
-        if (world.empBurst > 0 || this.hasStatusEffect(StatusEffects.EMC_STATUS)) return;
 
         const pos = this.getPositionRef;
         const yaw = this.getYaw();

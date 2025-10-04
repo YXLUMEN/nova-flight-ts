@@ -55,7 +55,7 @@ export class ComponentMap {
     public toNbt(): NbtCompound {
         const nbt = new NbtCompound();
         for (const [type, value] of this.components) {
-            nbt.putCompound(type.id.toString(), type.codec.toNbt(value));
+            nbt.putCompound(type.id.toString(), type.codec.encode(value));
         }
         return nbt;
     }
@@ -65,11 +65,13 @@ export class ComponentMap {
         for (const key of nbt.getKeys()) {
             const id = Identifier.tryParse(key);
             if (!id) continue;
-
             const entry = Registries.DATA_COMPONENT_TYPE.getEntryById(id);
             if (!entry) continue;
+            const nbtEntry = nbt.getCompound(key);
+            if (!nbtEntry) continue;
+
             const type = entry.getValue();
-            const compound = type.codec.toNbt(id);
+            const compound = type.codec.decode(nbtEntry);
             map.set(type, compound);
         }
         return map;

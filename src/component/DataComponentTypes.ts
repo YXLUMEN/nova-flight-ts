@@ -7,9 +7,9 @@ import {type Codec, Codecs} from "../codec/Codec.ts";
 export class DataComponentTypes {
     // public static readonly CUSTOM_DATA = this.register("custom_data", new ComponentType(CustomData));
 
-    public static readonly MAX_STACK_SIZE: ComponentType<number> = this.register("max_stack_size", Codecs.INT);
-    public static readonly MAX_DURABILITY: ComponentType<number> = this.register("max_durability", Codecs.INT);
-    public static readonly DURABILITY: ComponentType<number> = this.register("durability", Codecs.INT);
+    public static readonly MAX_STACK_SIZE: ComponentType<number> = this.register("max_stack_size", Codecs.UINT);
+    public static readonly MAX_DURABILITY: ComponentType<number> = this.register("max_durability", Codecs.UINT);
+    public static readonly DURABILITY: ComponentType<number> = this.register("durability", Codecs.UINT);
     public static readonly UNBREAKABLE: ComponentType<boolean> = this.register("unbreakable", Codecs.BOOLEAN);
 
     public static readonly CUSTOM_NAME: ComponentType<string> = this.register("custom_name", Codecs.STRING);

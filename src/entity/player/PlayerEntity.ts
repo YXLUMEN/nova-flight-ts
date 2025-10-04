@@ -23,8 +23,6 @@ import type {EMPWeapon} from "../../item/weapon/EMPWeapon.ts";
 import type {MissileEntity} from "../projectile/MissileEntity.ts";
 import {type NbtCompound} from "../../nbt/NbtCompound.ts";
 import {clamp} from "../../utils/math/math.ts";
-import {Registries} from "../../registry/Registries.ts";
-import {Identifier} from "../../registry/Identifier.ts";
 
 export class PlayerEntity extends LivingEntity {
     public readonly input: KeyboardInput;
@@ -264,6 +262,10 @@ export class PlayerEntity extends LivingEntity {
     }
 
     public clearItems(): void {
+        const stack = this.getCurrentItemStack();
+        const current = stack.getItem() as BaseWeapon;
+        current.onEndFire(this.getWorld(), stack);
+
         this.currentBaseIndex = 0;
         this.baseWeapons.length = 0;
         this.weapons.clear();
@@ -308,15 +310,11 @@ export class PlayerEntity extends LivingEntity {
         nbt.putUint('PhaseScore', this.phaseScore);
         nbt.putInt8('SlotIndex', this.currentBaseIndex);
 
-        const weapons = this.weapons.keys()
-            .map(item => item.getRegistryEntry())
-            .filter(entry => entry !== null)
-            .map(entry => entry
-                .getRegistryKey()
-                .getValue()
-                .toString())
-            .toArray();
-        nbt.putStringArray('Weapons', ...weapons);
+        const weapons: NbtCompound[] = [];
+        this.weapons.values().forEach(stack => {
+            weapons.push(stack.toNbt());
+        });
+        nbt.putCompoundList('Weapons', weapons);
 
         this.techTree.writeNBT(nbt);
 
@@ -328,17 +326,16 @@ export class PlayerEntity extends LivingEntity {
         this.setScore(nbt.getUint('Score'));
         this.setPhaseScore(nbt.getUint('PhaseScore'));
 
-        const weapons = nbt.getStringArray('Weapons');
-        if (weapons && weapons.length > 0) {
-            for (const idStr of weapons) {
-                const id = Identifier.tryParse(idStr);
-                if (!id) continue;
-                const entry = Registries.ITEM.getEntryById(id);
-                if (!entry) continue;
-                this.addItem(entry.getValue());
+        this.techTree.readNBT(nbt);
+        const weaponsNbt = nbt.getCompoundList('Weapons');
+        if (weaponsNbt && weaponsNbt.length > 0) {
+            this.weapons.clear();
+            this.baseWeapons.length = 0;
+            for (const wpn of weaponsNbt) {
+                const stack = ItemStack.readNBT(wpn);
+                if (stack) this.addItem(stack.getItem(), stack);
             }
         }
-        this.techTree.readNBT(nbt);
         this.currentBaseIndex = clamp(nbt.getInt8('SlotIndex'), 0, this.baseWeapons.length);
     }
 
