@@ -29,12 +29,14 @@ import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {WorldScreen} from "../render/WorldScreen.ts";
-import {ClientWorld} from "../client/ClientWorld.ts";
+import {NovaFlightClient} from "../client/NovaFlightClient.ts";
 import {type EntityHandler, ServerEntityManager} from "./ServerEntityManager.ts";
 import {EntityType} from "../entity/EntityType.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {CIWSBulletEntity} from "../entity/projectile/CIWSBulletEntity.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
+import type {NetworkChannel} from "../network/NetworkChannel.ts";
+import type {Payload} from "../network/Payload.ts";
 
 export class World implements NbtSerializable {
     public static instance: World | null;
@@ -46,6 +48,7 @@ export class World implements NbtSerializable {
     public empBurst: number = 0
 
     private readonly registryManager: RegistryManager;
+    private readonly networkHandler: NetworkChannel;
     private readonly worldSound = new SoundSystem();
 
     private readonly damageSources: DamageSources;
@@ -71,10 +74,12 @@ export class World implements NbtSerializable {
 
     protected constructor(registryManager: RegistryManager) {
         this.registryManager = registryManager;
+
+        this.networkHandler = NovaFlightClient.networkHandler;
         this.damageSources = new DamageSources(registryManager);
         this.entityManager = new ServerEntityManager(this.ServerEntityHandler);
 
-        this.player = new PlayerEntity(this, ClientWorld.input);
+        this.player = new PlayerEntity(this, NovaFlightClient.input);
         this.player.setPosition(WorldScreen.VIEW_W / 2, WorldScreen.VIEW_H);
         this.entityManager.addEntity(this.player, true);
 
@@ -118,7 +123,7 @@ export class World implements NbtSerializable {
     public reset(): void {
         this.clear();
 
-        this.player = new PlayerEntity(this, ClientWorld.input);
+        this.player = new PlayerEntity(this, NovaFlightClient.input);
         this.player.setPosition(WorldScreen.VIEW_W / 2, WorldScreen.VIEW_H);
         this.player.setVelocity(0, -24);
         this.entityManager.addEntity(this.player, true);
@@ -164,7 +169,7 @@ export class World implements NbtSerializable {
         this.particlePool.tick(dt);
         this.starField.update(dt, WorldScreen.camera);
 
-        ClientWorld.input.updateEndFrame();
+        NovaFlightClient.input.updateEndFrame();
 
         this.time += dt;
         this.processTimers();
@@ -264,6 +269,14 @@ export class World implements NbtSerializable {
 
     public getRegistryManager(): RegistryManager {
         return this.registryManager;
+    }
+
+    public getNetworkHandler() {
+        return this.networkHandler;
+    }
+
+    public sendPacket(payload: Payload) {
+        this.networkHandler.send(payload);
     }
 
     public spawnParticleByVec(

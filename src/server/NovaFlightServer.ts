@@ -1,6 +1,5 @@
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import {BaseDirectory, exists, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs";
-import {mainWindow} from "../main.ts";
 import {World} from "../world/World.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
@@ -10,10 +9,15 @@ import {AudioManager} from "../sound/AudioManager.ts";
 import {Audios} from "../sound/Audios.ts";
 import {WorldScreen} from "../render/WorldScreen.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
+import {PayloadTypeRegistry} from "../network/PayloadTypeRegistry.ts";
+import {ServerNetwork} from "./network/ServerNetwork.ts";
+import {NetworkChannel} from "../network/NetworkChannel.ts";
+import {ServerNetworkChannel} from "./network/ServerNetworkChannel.ts";
 
-export abstract class NovaFlightServer {
+export class NovaFlightServer {
     public static readonly SAVE_PATH = `saves/save-${NbtCompound.VERSION}.dat`;
-    public static serverStart = false;
+    private static serverStart = false;
+    public static networkHandler: NetworkChannel;
 
     private static running = false;
     private static worldInstance: World | null = null;
@@ -22,6 +26,19 @@ export abstract class NovaFlightServer {
 
     private static waitGameStop: Promise<void> | null = null;
     private static onGameStop: (nbt: NbtCompound) => void;
+
+    public static startServer(): void {
+        if (this.serverStart) return;
+        this.serverStart = true;
+
+        ServerNetwork.registerNetwork();
+
+        const ws = new WebSocket("ws://127.0.0.1:25566");
+        this.networkHandler = new ServerNetworkChannel(ws, PayloadTypeRegistry.PLAY_S2C);
+        this.networkHandler.init();
+
+        return;
+    }
 
     public static async startGame(manager: RegistryManager, readSave = false): Promise<void> {
         if (this.running) return;
@@ -84,7 +101,6 @@ export abstract class NovaFlightServer {
         }
     }
 
-
     private static tick(ts: number) {
         try {
             const world = this.worldInstance!;
@@ -143,26 +159,5 @@ export abstract class NovaFlightServer {
 
     public static get isRunning() {
         return this.running;
-    }
-
-    public static registryListener() {
-        mainWindow.listen('tauri://blur', () => {
-            World.instance?.setTicking(false);
-        }).catch(console.error);
-
-        mainWindow.listen('tauri://resize', async () => {
-            const world = World.instance;
-            if (!world) return;
-            world.rendering = !await mainWindow.isMinimized();
-        }).catch(console.error);
-
-        window.onresize = () => WorldScreen.resize();
-
-        WorldScreen.canvas.addEventListener('click', event => {
-            const world = World.instance;
-            if (world && !world.isTicking) {
-                WorldScreen.pauseOverlay.handleClick(event.offsetX, event.offsetY);
-            }
-        });
     }
 }

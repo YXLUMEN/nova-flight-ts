@@ -13,3 +13,5 @@ export type Constructor<T = any> = new (...args: any[]) => T;
 export type UUID = `${string}-${string}-${string}-${string}-${string}`;
 
 export type Consumer<T> = (val: T) => void;
+
+export type UnaryOperator<T> = (val: T) => T;

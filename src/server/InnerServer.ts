@@ -11,15 +11,10 @@ import {AudioManager} from "../sound/AudioManager.ts";
 import {Audios} from "../sound/Audios.ts";
 import {check} from "@tauri-apps/plugin-updater";
 import {WorldScreen} from "../render/WorldScreen.ts";
-import {ClientWorld} from "../client/ClientWorld.ts";
 import {mainWindow} from "../main.ts";
 
 export class InnerServer {
     public static async runServer(): Promise<void> {
-        if (NovaFlightServer.serverStart) return;
-        NovaFlightServer.serverStart = true;
-
-        NovaFlightServer.registryListener();
         WorldScreen.resize();
 
         const loadingScreen = new LoadingScreen(WorldScreen.ctx);
@@ -49,7 +44,7 @@ export class InnerServer {
         await sleep(400);
         await loadingScreen.setDone();
 
-        ClientWorld.startClient();
+        NovaFlightServer.startServer();
         while (true) {
             const startScreen = new StartScreen(WorldScreen.ctx, {
                 title: 'Nova Flight(先行测试版)',

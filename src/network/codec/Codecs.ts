@@ -1,14 +1,7 @@
-import {NbtCompound} from "../nbt/NbtCompound.ts";
-import {Identifier} from "../registry/Identifier.ts";
-import {AttributeModifiersComponent} from "../component/type/AttributeModifiersComponent.ts";
-import type {IVec} from "../utils/math/IVec.ts";
-import {Vec2} from "../utils/math/Vec2.ts";
-
-export interface Codec<T> {
-    encode(value: T): NbtCompound;
-
-    decode(nbt: NbtCompound): T | null;
-}
+import {NbtCompound} from "../../nbt/NbtCompound.ts";
+import type {IVec} from "../../utils/math/IVec.ts";
+import {Vec2} from "../../utils/math/Vec2.ts";
+import type {Codec} from "./Codec.ts";
 
 export class Codecs {
     public static readonly INT: Codec<number> = {
@@ -80,22 +73,6 @@ export class Codecs {
         },
         decode(nbt: NbtCompound): string[] {
             return nbt.getStringArray("value");
-        }
-    };
-
-    public static readonly ATTRIBUTE_MODIFIERS: Codec<AttributeModifiersComponent> = {
-        encode(value: { id: Identifier; value: number }): NbtCompound {
-            const nbt = new NbtCompound();
-            nbt.putString('id', value.id.toString());
-            nbt.putDouble('value', value.value);
-
-            return nbt
-        },
-        decode(nbt: NbtCompound): AttributeModifiersComponent | null {
-            const id = Identifier.tryParse(nbt.getString("id"));
-            if (!id) return null;
-
-            return new AttributeModifiersComponent(id, nbt.getDouble("value"));
         }
     };
 

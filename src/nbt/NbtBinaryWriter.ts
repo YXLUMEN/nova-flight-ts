@@ -43,7 +43,7 @@ export class NbtBinaryWriter {
     public writeString(s: string): void {
         const utf8 = new TextEncoder().encode(s);
         this.writeInt16(utf8.length);
-        for (let i = 0; i < utf8.length; i++) this.chunks.push(utf8[i]);
+        this.pushBytes(utf8);
     }
 
     public toUint8Array(): Uint8Array {
