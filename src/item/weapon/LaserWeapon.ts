@@ -7,6 +7,7 @@ import {SpecialWeapon} from "./SpecialWeapon.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 const id2EffectMap = new Map<number, LaserBeamEffect>();
 
@@ -90,24 +91,26 @@ export class LaserWeapon extends SpecialWeapon {
             start.y + g * this.height
         );
 
-        for (const mob of world.getMobs()) {
-            if (mob.isRemoved() ||
-                !lineCircleHit(
-                    start.x, start.y, end.x, end.y,
-                    mob.getPositionRef.x, mob.getPositionRef.y, mob.getWidth())) continue;
-
-            const damage = Math.max(1, Math.round(stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1) | 0));
-            mob.takeDamage(world.getDamageSources().laser(holder), damage);
-        }
-
-        // 刷新/创建光束效果
-        const beamFx = id2EffectMap.get(holder.getId());
-        if (beamFx !== undefined && beamFx.alive) {
-            beamFx.set(start, end);
+        if (world.isClient) {
+            // 刷新/创建光束效果
+            const beamFx = id2EffectMap.get(holder.getId());
+            if (beamFx !== undefined && beamFx.alive) {
+                beamFx.set(start, end);
+            } else {
+                const newBeamFx = new LaserBeamEffect(stack.getOrDefault(DataComponentTypes.UI_COLOR, LaserWeapon.COLOR), this.width);
+                world.addEffect(newBeamFx);
+                id2EffectMap.set(holder.getId(), newBeamFx);
+            }
         } else {
-            const newBeamFx = new LaserBeamEffect(stack.getOrDefault(DataComponentTypes.UI_COLOR, LaserWeapon.COLOR), this.width);
-            world.addEffect(newBeamFx);
-            id2EffectMap.set(holder.getId(), newBeamFx);
+            for (const mob of (world as ServerWorld).getMobs()) {
+                if (mob.isRemoved() ||
+                    !lineCircleHit(
+                        start.x, start.y, end.x, end.y,
+                        mob.getPositionRef.x, mob.getPositionRef.y, mob.getWidth())) continue;
+
+                const damage = Math.max(1, Math.round(stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1) | 0));
+                mob.takeDamage(world.getDamageSources().laser(holder), damage);
+            }
         }
     }
 

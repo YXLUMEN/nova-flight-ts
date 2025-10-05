@@ -5,6 +5,7 @@ import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export class MissileEnemyEntity extends MobEntity {
     private static readonly bulletSpeed = 0.5;
@@ -24,7 +25,9 @@ export class MissileEnemyEntity extends MobEntity {
     public override tick() {
         super.tick();
 
-        const world = this.getWorld();
+        const world = this.getWorld() as ServerWorld;
+        if (world.isClient) return;
+
         if (world.empBurst > 0 || this.hasStatusEffect(StatusEffects.EMC_STATUS)) return;
         if (this.cooldown-- > 0) return;
         this.cooldown = 500;

@@ -1,7 +1,6 @@
 import {EMPWeapon} from "../item/weapon/EMPWeapon.ts";
 import {LaserWeapon} from "../item/weapon/LaserWeapon.ts";
 import {BaseWeapon} from "../item/weapon/BaseWeapon/BaseWeapon.ts";
-import {World} from "../world/World.ts";
 import {IntoVoidWeapon} from "../item/weapon/IntoVoidWeapon.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
@@ -9,9 +8,10 @@ import {AutoAim} from "./AutoAim.ts";
 import {Items} from "../item/items.ts";
 import {ItemStack} from "../item/ItemStack.ts";
 import {DataComponentTypes} from "../component/DataComponentTypes.ts";
+import {NovaFlightClient} from "../client/NovaFlightClient.ts";
 
-export function applyTech(world: World, id: string) {
-    const player = world.player;
+export function applyTech(id: string) {
+    const player = NovaFlightClient.getInstance().player;
     if (!player) return;
     switch (id) {
         case 'energy_focus':

@@ -33,7 +33,7 @@ export abstract class MobEntity extends LivingEntity {
         this.AI.action(this);
         this.moveByVec(this.getVelocityRef);
         this.getVelocityRef.multiply(0.8);
-        (this.getWorld().player?.voidEdge && this.AI.getBehavior() !== 3) ? this.wrapPosition() : this.adjustPosition();
+        this.adjustPosition();
     }
 
     public setBehavior(behavior: number): void {

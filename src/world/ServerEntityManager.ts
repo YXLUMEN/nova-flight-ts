@@ -1,11 +1,7 @@
 import {EntityIndex} from "./EntityIndex.ts";
 import type {Entity} from "../entity/Entity.ts";
+import type {EntityHandler} from "./EntityHandler.ts";
 
-export interface EntityHandler<T extends Entity> {
-    startTicking(entity: T): void;
-
-    stopTicking(entity: T): void;
-}
 
 export class ServerEntityManager<T extends Entity> {
     private readonly index: EntityIndex<T>;

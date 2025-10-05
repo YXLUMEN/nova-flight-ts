@@ -6,6 +6,7 @@ import type {DataEntry} from "../data/DataEntry.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import {DataTracker} from "../data/DataTracker.ts";
 import {type NbtCompound} from "../../nbt/NbtCompound.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export abstract class ProjectileEntity extends Entity implements IOwnable {
     public readonly damage: number;
@@ -54,8 +55,9 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
         if (this.owner && !this.owner.isRemoved()) {
             return this.owner;
         }
-        if (this.ownerUuid) {
-            this.owner = this.getWorld().getEntity(this.ownerUuid);
+        const world = this.getWorld() as ServerWorld;
+        if (this.ownerUuid && !world.isClient) {
+            this.owner = world.getEntity(this.ownerUuid);
             return this.owner;
         }
         return null;

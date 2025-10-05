@@ -6,6 +6,7 @@ import {AutoAim} from "../../tech/AutoAim.ts";
 import {RocketEntity} from "./RocketEntity.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export class MissileEntity extends RocketEntity {
     public static lockedEntity = new WeakMap<Entity, number>();
@@ -31,8 +32,6 @@ export class MissileEntity extends RocketEntity {
     }
 
     public override tick() {
-        this.age++;
-
         const pos = this.getPositionRef;
         this.moveByVec(this.getVelocityRef);
         this.getVelocityRef.multiply(0.8);
@@ -111,7 +110,10 @@ export class MissileEntity extends RocketEntity {
     }
 
     protected acquireTarget(): Entity | null {
-        const mobs = this.getWorld().getMobs();
+        const world = this.getWorld() as ServerWorld;
+        if (world.isClient) return null;
+
+        const mobs = world.getMobs();
         if (mobs.size === 0) return null;
 
         const pos = this.getPositionRef;

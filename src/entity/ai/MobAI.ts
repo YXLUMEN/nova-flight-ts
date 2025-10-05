@@ -5,6 +5,7 @@ import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {createCleanObj} from "../../utils/uit.ts";
 import {wrappedDelta} from "../../utils/math/math.ts";
 import {World} from "../../world/World.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export const Behavior = createCleanObj({
     Wander: 0,
@@ -23,14 +24,13 @@ export class MobAI {
         const speedMultiplier = mob.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
         if (speedMultiplier <= 0) return;
         const speed = mob.getMovementSpeed() * speedMultiplier;
-        const wrap = mob.getWorld().player?.voidEdge;
 
         const isSimple = this.behavior === Behavior.Simple;
         if (!isSimple && (mob.age & 63) !== 0) this.chooseTarget(mob);
 
         switch (this.behavior) {
             case Behavior.Chase:
-                this.moveToward(mob, this.targetPos, speed, wrap);
+                this.moveToward(mob, this.targetPos, speed, false);
                 break;
             case Behavior.Flee:
                 this.moveAway(mob, this.targetPos, speed);
@@ -43,11 +43,14 @@ export class MobAI {
                 break;
         }
 
-        if (!isSimple) this.faceTarget(mob, this.targetPos, 0.0785375, wrap);
+        if (!isSimple) this.faceTarget(mob, this.targetPos, 0.0785375, false);
     }
 
     public chooseTarget(mob: MobEntity) {
-        const player = mob.getWorld().player;
+        const world = mob.getWorld();
+        if (!world.isClient) return;
+
+        const player = (world as ServerWorld).getPlayers().values().next().value;
         if (!player) {
             this.behavior = Behavior.Wander;
             return;

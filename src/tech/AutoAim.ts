@@ -4,6 +4,7 @@ import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import {PI2, wrapRadians} from "../utils/math/math.ts";
 import type {BaseWeapon} from "../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
+import type {ClientWorld} from "../client/ClientWorld.ts";
 
 export class AutoAim {
     public static readonly FIRE_THRESHOLD = Math.PI / 90;
@@ -16,7 +17,9 @@ export class AutoAim {
     }
 
     public tick() {
-        const world = this.owner.getWorld();
+        const world = this.owner.getWorld() as ClientWorld;
+        if (!world.isClient) return;
+
         const mobs = world.getMobs();
         if (mobs.size === 0) return;
 

@@ -1,58 +1,43 @@
-import {type KeyboardInput} from "../../input/KeyboardInput.ts";
 import {World} from "../../world/World.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 import {ScreenFlash} from "../../effect/ScreenFlash.ts";
 import {EdgeGlowEffect} from "../../effect/EdgeGlowEffect.ts";
-import {TechTree} from "../../tech/TechTree.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {type DamageSource} from "../damage/DamageSource.ts";
 import type {DataEntry} from "../data/DataEntry.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
-import {DataLoader} from "../../DataLoader.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
-import {AutoAim} from "../../tech/AutoAim.ts";
-import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import type {Item} from "../../item/Item.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
 import {Items} from "../../item/items.ts";
 import type {EMPWeapon} from "../../item/weapon/EMPWeapon.ts";
-import type {MissileEntity} from "../projectile/MissileEntity.ts";
 import {type NbtCompound} from "../../nbt/NbtCompound.ts";
 import {clamp} from "../../utils/math/math.ts";
+import type {TechTree} from "../../tech/TechTree.ts";
+import type {NetworkChannel} from "../../network/NetworkChannel.ts";
 
-export class PlayerEntity extends LivingEntity {
-    public readonly input: KeyboardInput;
-    public readonly techTree: TechTree;
-
+export abstract class PlayerEntity extends LivingEntity {
     public onDamageExplosionRadius = 320;
 
-    public lockedMissile = new Set<MissileEntity>();
-    public missilePos: { x: number, y: number, angle: number }[] = [];
-
-    private readonly weapons = new Map<Item, ItemStack>();
-    private readonly baseWeapons: BaseWeapon[] = [];
+    public techTree!: TechTree;
+    protected readonly weapons = new Map<Item, ItemStack>();
+    protected readonly baseWeapons: BaseWeapon[] = [];
     public currentBaseIndex: number = 0;
+
+    protected wasActive: boolean = false;
 
     private lastDamageTime = 0;
     private phaseScore: number = 0;
     private score: number = 0;
-    private autoAimEnable: boolean = false;
-    private wasActive = false;
 
-    public autoAim: AutoAim | null = null;
-    public steeringGear: boolean = false;
     public voidEdge = false;
 
-    public constructor(world: World, input: KeyboardInput) {
+    protected constructor(world: World) {
         super(EntityTypes.PLAYER_ENTITY, world);
-
-        this.input = input;
-        const viewport = document.getElementById('viewport') as HTMLElement;
-        this.techTree = new TechTree(viewport, DataLoader.get('tech-data'));
 
         this.setMovementSpeed(0.8);
         this.setYaw(-1.57079);
@@ -69,90 +54,13 @@ export class PlayerEntity extends LivingEntity {
     public override tick() {
         super.tick();
 
-        const world = this.getWorld();
-        const posRef = this.getPositionRef;
-
-        // 移动
-        let dx = 0, dy = 0;
-        if (this.input.isDown("ArrowLeft", "KeyA")) dx -= 1;
-        if (this.input.isDown("ArrowRight", "KeyD")) dx += 1;
-        if (this.input.isDown("ArrowUp", "KeyW")) dy -= 1;
-        if (this.input.isDown("ArrowDown", "KeyS")) dy += 1;
-        if (this.input.wasPressed('AltLeft') && this.autoAim) {
-            this.autoAimEnable = !this.autoAimEnable;
-            this.autoAim.setTarget(null);
-            WorldConfig.autoShoot = false;
-        }
-
-        if (dx !== 0 || dy !== 0) {
-            const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-            const speed = this.getMovementSpeed() * speedMultiplier;
-            this.updateVelocity(speed, dx, dy);
-        }
         this.moveByVec(this.getVelocityRef);
         this.shouldWrap() ? this.wrapPosition() : this.adjustPosition();
         this.getVelocityRef.multiply(0.9);
-
-        if (this.autoAimEnable && this.autoAim) {
-            this.autoAim.tick();
-        } else if (this.steeringGear) {
-            const pointer = this.input.getPointer;
-            this.setClampYaw(Math.atan2(
-                pointer.y - posRef.y,
-                pointer.x - posRef.x
-            ), 0.157075);
-        }
-
-        // 锁定
-        this.missilePos.length = 0;
-        if (this.lockedMissile.size > 0) {
-            for (const missile of this.lockedMissile) {
-                const dx = missile.getPositionRef.x - posRef.x;
-                const dy = missile.getPositionRef.y - posRef.y;
-                const angle = Math.atan2(dy, dx);
-                const arrowX = posRef.x + Math.cos(angle) * 64;
-                const arrowY = posRef.y + Math.sin(angle) * 64;
-                this.missilePos.push({x: arrowX, y: arrowY, angle});
-            }
-        }
-
-        if (this.input.wasPressed('KeyR')) {
-            this.switchWeapon();
-            return;
-        }
-
-        this.handlerFire(world);
     }
 
-    private handlerFire(world: World) {
-        const baseWeapon = this.baseWeapons[this.currentBaseIndex];
-        const stack = this.weapons.get(baseWeapon)!;
-        const fire = this.input.isDown("Space") || WorldConfig.autoShoot;
-        const active = stack.isAvailable() && fire;
-
-        if (active !== this.wasActive) {
-            if (!this.wasActive) {
-                baseWeapon.onStartFire(world, stack);
-            } else {
-                baseWeapon.onEndFire(world, stack);
-            }
-            this.wasActive = active;
-        }
-        if (active && baseWeapon.canFire(stack)) {
-            baseWeapon.tryFire(stack, world, this);
-        }
-
-        for (const [w, stack] of this.weapons) {
-            if (w instanceof SpecialWeapon) {
-                if (WorldConfig.devMode && w.getCooldown(stack) > 0.5) {
-                    w.setCooldown(stack, 0.5);
-                }
-                if (w.canFire(stack) && this.input.wasPressed(w.bindKey())) {
-                    w.tryFire(stack, world, this);
-                }
-            }
-            w.inventoryTick(stack, world, this, 0, true);
-        }
+    public getNetworkHandler(): NetworkChannel {
+        return this.getWorld().getNetworkHandler();
     }
 
     public switchWeapon(dir = 1) {
@@ -223,13 +131,8 @@ export class PlayerEntity extends LivingEntity {
 
     public override onRemove() {
         super.onRemove();
-        this.techTree.destroy();
-
         this.weapons.clear();
         this.baseWeapons.length = 0;
-
-        this.lockedMissile.clear();
-        this.missilePos.length = 0;
     }
 
     public override isPlayer() {
@@ -294,7 +197,6 @@ export class PlayerEntity extends LivingEntity {
 
     public setScore(score: number): void {
         this.score = Math.max(0, score);
-        TechTree.playerScore.textContent = `点数: ${this.score}`;
     }
 
     public consumeScore(value: number): boolean {

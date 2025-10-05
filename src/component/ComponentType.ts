@@ -1,4 +1,4 @@
-import type {Codec} from "../network/codec/Codec.ts";
+import type {Codec} from "../serialization/Codec.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 
 export class ComponentType<T> {

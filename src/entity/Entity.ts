@@ -13,7 +13,7 @@ import {EVENTS} from "../apis/IEvents.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {Box} from "../utils/math/Box.ts";
 import type {Comparable} from "../utils/collection/HashMap.ts";
-import {clamp, shortUUID} from "../utils/math/math.ts";
+import {clamp} from "../utils/math/math.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import type {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {UUID} from "../apis/registry.ts";
@@ -26,7 +26,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     public invulnerable: boolean = false;
 
     protected readonly dataTracker: DataTracker;
-    private uuid: string = shortUUID();// crypto.randomUUID();
+    private uuid: UUID = crypto.randomUUID();
     private readonly id: number = Entity.CURRENT_ID.incrementAndGet();
     private readonly normalTags: Set<string> = new Set<string>();
 
@@ -67,7 +67,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         this.uuid = uuid;
     }
 
-    public getUuid(): string {
+    public getUuid(): UUID {
         return this.uuid;
     }
 

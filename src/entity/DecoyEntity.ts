@@ -6,6 +6,7 @@ import type {EntityType} from "./EntityType.ts";
 import {World} from "../world/World.ts";
 import type {IOwnable} from "./IOwnable.ts";
 import {randInt} from "../utils/math/math.ts";
+import type {ServerWorld} from "../server/ServerWorld.ts";
 
 export class DecoyEntity extends Entity implements IOwnable {
     public static readonly Entities = new Set<DecoyEntity>();
@@ -20,7 +21,7 @@ export class DecoyEntity extends Entity implements IOwnable {
     }
 
     public override tick() {
-        if (this.age++ >= this.life) {
+        if (this.age >= this.life) {
             this.discard();
             return;
         }
@@ -55,8 +56,9 @@ export class DecoyEntity extends Entity implements IOwnable {
         if (this.owner && !this.owner.isRemoved()) {
             return this.owner;
         }
-        if (this.ownerUuid) {
-            this.owner = this.getWorld().getEntity(this.ownerUuid);
+        const world = this.getWorld();
+        if (this.ownerUuid && !world.isClient) {
+            this.owner = (world as ServerWorld).getEntity(this.ownerUuid);
             return this.owner;
         }
         return null;

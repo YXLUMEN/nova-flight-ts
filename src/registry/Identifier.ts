@@ -1,6 +1,25 @@
 import type {Comparable} from "../utils/collection/HashMap.ts";
+import type {Codec} from "../serialization/Codec.ts";
+import {PacketCodec} from "../network/codec/PacketCodec.ts";
+import {NbtCompound} from "../nbt/NbtCompound.ts";
 
 export class Identifier implements Comparable {
+    public static readonly CODEC: Codec<Identifier> = {
+        encode(value: Identifier): NbtCompound {
+            const nbt = new NbtCompound();
+            nbt.putString('id', value.toString());
+            return nbt;
+        },
+
+        decode(nbt: NbtCompound): Identifier | null {
+            return Identifier.tryParse(nbt.getString('id'));
+        }
+    };
+    public static readonly PACKET_CODEC: PacketCodec<Identifier> = PacketCodec.of(
+        (value, writer) => writer.writeString(value.toString()),
+        reader => this.splitOn(reader.readString())
+    );
+
     public static readonly ROOT: Identifier = Identifier.ofVanilla("root");
     public static readonly NAMESPACE_SEPARATOR: string = ':';
     public static readonly DEFAULT_NAMESPACE: string = 'nova-flight';
@@ -43,6 +62,18 @@ export class Identifier implements Comparable {
         return this.isPathValid(id) ? new Identifier("nova-flight", id) : null;
     }
 
+    public static splitOn(id: string, delimiter = ':') {
+        const sep = id.indexOf(delimiter);
+        if (sep >= 0) {
+            const path = id.substring(sep + 1);
+            if (sep !== 0) {
+                const namespace = id.substring(0, sep);
+                return this.ofValidated(namespace, path);
+            }
+            return this.ofVanilla(path);
+        }
+        return this.ofVanilla(id);
+    }
 
     public static isNamespaceValid(namespace: string): boolean {
         return /^[a-z0-9_.-]+$/.test(namespace);

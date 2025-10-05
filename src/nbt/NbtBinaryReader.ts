@@ -61,4 +61,8 @@ export class NbtBinaryReader {
         this.offset += len;
         return bytes;
     }
+
+    public getBuffer() {
+        return new Uint8Array(this.view.buffer);
+    }
 }

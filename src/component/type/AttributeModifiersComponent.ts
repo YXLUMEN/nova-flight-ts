@@ -1,20 +1,18 @@
 import type {EntityAttributeModifier} from "../../entity/attribute/EntityAttributeModifier.ts";
 import {Identifier} from "../../registry/Identifier.ts";
-import type {Codec} from "../../network/codec/Codec.ts";
+import type {Codec} from "../../serialization/Codec.ts";
 import {NbtCompound} from "../../nbt/NbtCompound.ts";
 import {PacketCodec} from "../../network/codec/PacketCodec.ts";
 
 export class AttributeModifiersComponent implements EntityAttributeModifier {
     public static readonly CODEC: Codec<AttributeModifiersComponent> = {
         encode(value: { id: Identifier; value: number }): NbtCompound {
-            const nbt = new NbtCompound();
-            nbt.putString('id', value.id.toString());
+            const nbt = Identifier.CODEC.encode(value.id);
             nbt.putDouble('value', value.value);
-
             return nbt
         },
         decode(nbt: NbtCompound): AttributeModifiersComponent | null {
-            const id = Identifier.tryParse(nbt.getString("id"));
+            const id = Identifier.CODEC.decode(nbt);
             if (!id) return null;
 
             return new AttributeModifiersComponent(id, nbt.getDouble("value"));

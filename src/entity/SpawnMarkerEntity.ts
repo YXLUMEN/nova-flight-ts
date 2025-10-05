@@ -5,6 +5,7 @@ import type {TrackedData} from "./data/TrackedData.ts";
 import type {EntityType} from "./EntityType.ts";
 import {World} from "../world/World.ts";
 import type {MobEntity} from "./mob/MobEntity.ts";
+import type {ServerWorld} from "../server/ServerWorld.ts";
 
 export class SpawnMarkerEntity extends Entity {
     public readonly invulnerable = true;
@@ -19,22 +20,24 @@ export class SpawnMarkerEntity extends Entity {
 
     public override tick() {
         super.tick();
-        if (this.age++ >= 200) {
+        if (this.age >= 200) {
             this.discard();
-            const world = this.getWorld();
-            if (world.isPeaceMode()) return;
+            const world = this.getWorld() as ServerWorld;
+            if (world.isPeaceMode() || world.isClient) return;
 
             if (!this.force) {
-                const player = world.player;
-                if (!player) return;
-
-                const dx = this.spawnMob.getPositionRef.x - player.getPositionRef.x;
-                const dy = this.spawnMob.getPositionRef.y - player.getPositionRef.y;
-                const distSq = dx * dx + dy * dy;
-                if (distSq < 4096) return;
+                const {x, y} = this.spawnMob.getPositionRef;
+                const canSpawn = world.getPlayers().values().every(player => {
+                    if (player.isRemoved()) return true;
+                    const dx = x - player.getPositionRef.x;
+                    const dy = y - player.getPositionRef.y;
+                    const distSq = dx * dx + dy * dy;
+                    return distSq >= 6144;
+                });
+                if (!canSpawn) return;
             }
 
-            this.getWorld().spawnEntity(this.spawnMob);
+            world.spawnEntity(this.spawnMob);
         }
     }
 

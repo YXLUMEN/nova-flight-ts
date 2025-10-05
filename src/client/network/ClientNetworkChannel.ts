@@ -1,6 +1,5 @@
 import {NetworkChannel} from "../../network/NetworkChannel.ts";
 import type {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
-import {ClientReceive} from "./ClientReceive.ts";
 
 export class ClientNetworkChannel extends NetworkChannel {
     private readonly clientId: string;
@@ -24,7 +23,6 @@ export class ClientNetworkChannel extends NetworkChannel {
         buf[0] = 0x02;
         buf.set(idBytes, 1);
         this.ws.send(buf);
-        ClientReceive.registryNetworkHandler(this);
         console.log(`Client ${this.clientId} registered`);
     }
 }

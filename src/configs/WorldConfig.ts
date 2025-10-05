@@ -3,6 +3,8 @@ import {createCleanObj} from "../utils/uit.ts";
 // @ts-expect-error
 const isDev = import.meta.env.MODE === "development";
 
+const isServer = typeof window === 'undefined';
+
 const freezeConfig = createCleanObj({
     tick: 50,
     mbps: 0.02,
@@ -22,4 +24,4 @@ const WorldConfig = Object.preventExtensions(createCleanObj({
     readSave: false,
 }));
 
-export {freezeConfig, WorldConfig, isDev}
+export {freezeConfig, WorldConfig, isDev, isServer};

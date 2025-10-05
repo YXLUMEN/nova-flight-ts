@@ -21,7 +21,7 @@ import {SoundEvents} from "../sound/SoundEvents.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {Audios} from "../sound/Audios.ts";
 import {STAGE} from "../configs/StageConfig.ts";
-import {WorldScreen} from "../render/WorldScreen.ts";
+import {Window} from "../client/render/Window.ts";
 
 
 export class DefaultEvents {
@@ -81,7 +81,7 @@ export class DefaultEvents {
 
             BombWeapon.summonExplosion(world, event.pos, event);
             BombWeapon.spawnExplosionVisual(world, pos, event);
-            if (shake) WorldScreen.camera.addShake(shake, 0.5);
+            if (shake) Window.camera.addShake(shake, 0.5);
             if (flash) world.addEffect(flash);
         }
 
@@ -160,7 +160,7 @@ export class DefaultEvents {
     private static guide(event: any, player: PlayerEntity): void {
         const name: string = event.name as string;
         const world = player.getWorld();
-        const notify = WorldScreen.notify;
+        const notify = Window.notify;
 
         if (name === 'g_move') {
             notify.show('w/s/a/d 或 方向键 移动', 8);

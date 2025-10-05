@@ -1,58 +1,52 @@
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import {BaseDirectory, exists, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs";
-import {World} from "../world/World.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
-import {WorldConfig} from "../configs/WorldConfig.ts";
-import {SoundEvents} from "../sound/SoundEvents.ts";
-import {GuideStage} from "../configs/GuideStage.ts";
-import {AudioManager} from "../sound/AudioManager.ts";
-import {Audios} from "../sound/Audios.ts";
-import {WorldScreen} from "../render/WorldScreen.ts";
-import {SoundSystem} from "../sound/SoundSystem.ts";
 import {PayloadTypeRegistry} from "../network/PayloadTypeRegistry.ts";
 import {ServerNetwork} from "./network/ServerNetwork.ts";
-import {NetworkChannel} from "../network/NetworkChannel.ts";
 import {ServerNetworkChannel} from "./network/ServerNetworkChannel.ts";
+import type {Consumer, UUID} from "../apis/registry.ts";
+import {ServerReceive} from "./network/ServerReceive.ts";
+import type {ServerWorld} from "./ServerWorld.ts";
 
-export class NovaFlightServer {
+export abstract class NovaFlightServer {
+    public static instance: NovaFlightServer;
     public static readonly SAVE_PATH = `saves/save-${NbtCompound.VERSION}.dat`;
-    private static serverStart = false;
-    public static networkHandler: NetworkChannel;
 
-    private static running = false;
-    private static worldInstance: World | null = null;
-    private static last = 0;
-    private static accumulator = 0;
+    public networkHandler: ServerNetworkChannel;
+    private readonly serverId: UUID;
+    public world: ServerWorld | null = null;
 
-    private static waitGameStop: Promise<void> | null = null;
-    private static onGameStop: (nbt: NbtCompound) => void;
+    private tickInterval: number | null = null;
+    private last = 0;
+    private accumulator = 0;
 
-    public static startServer(): void {
-        if (this.serverStart) return;
-        this.serverStart = true;
+    private running = false;
+    private waitGameStop: Promise<void> | null = null;
+    private onGameStop: Consumer<NbtCompound> | null = null;
 
+    protected constructor() {
+        this.serverId = crypto.randomUUID();
+        console.log(this.serverId);
+
+        this.networkHandler = new ServerNetworkChannel(new WebSocket("ws://127.0.0.1:25566"), PayloadTypeRegistry.PLAY_S2C);
         ServerNetwork.registerNetwork();
-
-        const ws = new WebSocket("ws://127.0.0.1:25566");
-        this.networkHandler = new ServerNetworkChannel(ws, PayloadTypeRegistry.PLAY_S2C);
+        ServerReceive.registryNetworkHandler(this.networkHandler);
         this.networkHandler.init();
-
-        return;
     }
 
-    public static async startGame(manager: RegistryManager, readSave = false): Promise<void> {
+    public async startGame(manager: RegistryManager, readSave = false): Promise<void> {
         if (this.running) return;
         this.running = true;
 
         this.waitGameStop = new Promise<void>(resolve => {
             this.onGameStop = async (nbt: NbtCompound) => {
                 try {
-                    await this.saveGame(nbt);
+                    await NovaFlightServer.saveGame(nbt);
                 } catch (error) {
                     console.error(`Error while saving game: ${error}`);
                 } finally {
-                    this.worldInstance?.destroy();
-                    this.worldInstance = null;
+                    this.world?.close();
+                    this.world = null;
                     this.waitGameStop = null;
                     this.last = 0;
                     this.accumulator = 0;
@@ -61,38 +55,33 @@ export class NovaFlightServer {
             };
         });
 
-        const world = World.createWorld(manager);
-        this.worldInstance = world;
+        const mod = await import("./ServerWorld.ts");
+        this.world = new mod.ServerWorld(manager, this);
 
         if (readSave) {
-            const saves = await this.loadSaves();
+            const saves = await NovaFlightServer.loadSaves();
             if (saves) {
-                world.readNBT(saves);
-                world.player!.invulnerable = true;
-                world.schedule(1, () => world.player!.invulnerable = false);
-            } else {
-                WorldScreen.notify.show('无存档');
-                world.player?.setVelocity(0, -24);
+                this.world.readNBT(saves);
             }
         }
 
-        SoundSystem.globalSound.playSound(SoundEvents.UI_APPLY);
-        if (!localStorage.getItem('guided')) {
-            world.setStage(GuideStage);
-            AudioManager.playAudio(Audios.SPACE_WALK);
-        }
+        this.world.setTicking(true);
 
-        world.setTicking(true);
-        this.tick(0);
+        this.last = performance.now();
+        this.tickInterval = setInterval(this.bindTick, 50);
     }
 
-    public static async stopGame(): Promise<void> {
+    public async stopGame(): Promise<void> {
         if (!this.running) {
             // 避免ts抱怨
             return this.waitGameStop ? this.waitGameStop : Promise.resolve();
         }
 
         this.running = false;
+        if (this.tickInterval) {
+            clearInterval(this.tickInterval);
+            this.tickInterval = null;
+        }
 
         try {
             await this.waitGameStop;
@@ -101,24 +90,23 @@ export class NovaFlightServer {
         }
     }
 
-    private static tick(ts: number) {
+    private tick() {
         try {
-            const world = this.worldInstance!;
+            const now = performance.now();
+            const world = this.world!;
             if (!this.running) {
-                this.onGameStop(world.saveAll());
+                this.onGameStop!(world.saveAll());
                 return;
             }
 
-            const tickDelta = Math.min(0.05, (ts - this.last) / 1000 || 0);
-            this.last = ts;
+            const tickDelta = Math.min(0.1, (now - this.last) / 1000 || 0);
+            this.last = now;
             this.accumulator += tickDelta;
 
-            while (this.accumulator >= WorldConfig.mbps) {
-                world.tickWorld(WorldConfig.mbps);
-                this.accumulator -= WorldConfig.mbps;
+            while (this.accumulator >= 0.05) {
+                if (world.isTicking) world.tick(0.05);
+                this.accumulator -= 0.05;
             }
-            world.render();
-            requestAnimationFrame(this.bindTick);
         } catch (error) {
             console.error(`Runtime error: ${error}`);
             this.stopGame().catch(error => console.error(error));
@@ -126,7 +114,7 @@ export class NovaFlightServer {
         }
     }
 
-    private static bindTick = this.tick.bind(this);
+    private bindTick = this.tick.bind(this);
 
     public static async saveGame(compound: NbtCompound): Promise<void> {
         try {
@@ -153,11 +141,15 @@ export class NovaFlightServer {
         }
     }
 
-    public static async waitForStop(): Promise<void> {
+    public async waitForStop(): Promise<void> {
         await this.waitGameStop;
     }
 
-    public static get isRunning() {
+    public static getInstance(): NovaFlightServer {
+        return this.instance;
+    }
+
+    public get isRunning() {
         return this.running;
     }
 }

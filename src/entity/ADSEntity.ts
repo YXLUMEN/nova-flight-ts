@@ -8,6 +8,7 @@ import type {IOwnable} from "./IOwnable.ts";
 import type {LivingEntity} from "./LivingEntity.ts";
 import {distance2} from "../utils/math/math.ts";
 import type {MutVec2} from "../utils/math/MutVec2.ts";
+import type {ServerWorld} from "../server/ServerWorld.ts";
 
 export class ADSEntity extends Entity implements IOwnable {
     private static readonly RADIUS = 256 * 256;
@@ -20,10 +21,10 @@ export class ADSEntity extends Entity implements IOwnable {
 
     public override tick() {
         super.tick();
-        this.age++;
 
         if ((this.age & 7) !== 0) return;
-        const world = this.getWorld();
+        const world = this.getWorld() as ServerWorld;
+        if (world.isClient) return;
         const projectiles = world.getProjectiles();
 
         for (const projectile of projectiles) {

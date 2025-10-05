@@ -17,7 +17,6 @@ export class DataLoader {
         await AudioManager.loadFiles(manager);
     }
 
-
     public static get(dataName: string): any {
         return this.DATA_MAP.get(dataName);
     }

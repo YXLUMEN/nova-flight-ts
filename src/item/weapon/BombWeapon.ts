@@ -13,21 +13,23 @@ import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 import {MobEntity} from "../../entity/mob/MobEntity.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export class BombWeapon extends SpecialWeapon {
     public static summonExplosion(
-        world: World, center: IVec, opts: ExpendExplosionOpts) {
+        world: ServerWorld, center: IVec, opts: ExpendExplosionOpts) {
         const radius = opts.explosionRadius ?? 16;
         const damage = opts.damage ?? 6;
 
         const r2 = radius * radius;
 
         if (opts.attacker instanceof MobEntity) {
-            const player = world.player!;
-            const d2 = MutVec2.distSq(player.getPositionRef, center);
-            if (d2 <= r2) {
-                player.takeDamage(world.getDamageSources().explosion(opts.source, opts.attacker), damage);
-            }
+            world.getPlayers().forEach(player => {
+                const d2 = MutVec2.distSq(player.getPositionRef, center);
+                if (d2 <= r2) {
+                    player.takeDamage(world.getDamageSources().explosion(opts.source, opts.attacker), damage);
+                }
+            });
             return;
         }
 

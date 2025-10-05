@@ -36,8 +36,6 @@ export abstract class LivingEntity extends Entity {
 
     public override tick() {
         super.tick();
-
-        this.age++;
         this.tickStatusEffects();
     }
 

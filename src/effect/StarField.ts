@@ -1,5 +1,5 @@
 import type {StarLayer} from "../apis/IStarLayer.ts";
-import type {Camera} from "../render/Camera.ts";
+import type {Camera} from "../client/render/Camera.ts";
 import {rand} from "../utils/math/math.ts";
 import {World} from "../world/World.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";

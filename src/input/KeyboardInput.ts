@@ -1,8 +1,10 @@
-import {World} from "../world/World.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import type {IInput} from "./IInput.ts";
-import {WorldScreen} from "../render/WorldScreen.ts";
+// @ts-ignore
+import {World} from "../world/World.ts";
+import {NovaFlightClient} from "../client/NovaFlightClient.ts";
+import {PlayerAimC2SPacket} from "../network/packet/PlayerAimC2SPacket.ts";
 
 export class KeyboardInput implements IInput {
     private readonly keys = new Set<string>();
@@ -81,13 +83,15 @@ export class KeyboardInput implements IInput {
         window.addEventListener("keyup", e => this.keys.delete(e.code));
         window.addEventListener("blur", () => this.keys.clear());
         window.addEventListener('wheel', e => {
-            const player = World.instance!.player;
+            const player = NovaFlightClient.getInstance()!.player;
             if (player) player.switchWeapon(e.deltaY > 0 ? 1 : -1);
         }, {passive: true});
 
         target.addEventListener("mousemove", e => {
-            const offset = WorldScreen.camera.cameraOffset;
+            const offset = NovaFlightClient.getInstance().window.camera.cameraOffset;
             this.pointer.set(e.offsetX + offset.x, e.offsetY + offset.y);
+            const player = NovaFlightClient.getInstance()!.player;
+            if (player) player.getNetworkHandler().send(new PlayerAimC2SPacket(this.pointer));
         }, {passive: true});
 
         target.addEventListener("mousedown", () => WorldConfig.autoShoot = true);

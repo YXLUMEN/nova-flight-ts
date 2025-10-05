@@ -2,7 +2,7 @@ import {Registry} from "../registry/Registry.ts";
 import {Registries} from "../registry/Registries.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {ComponentType, ComponentTypeBuilder} from "./ComponentType.ts";
-import {Codecs} from "../network/codec/Codecs.ts";
+import {Codecs} from "../serialization/Codecs.ts";
 import type {UnaryOperator} from "../apis/registry.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {AttributeModifiersComponent} from "./type/AttributeModifiersComponent.ts";

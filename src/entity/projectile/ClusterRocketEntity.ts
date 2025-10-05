@@ -2,6 +2,7 @@ import {EntityTypes} from "../EntityTypes.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import {FuseRocketEntity} from "./FuseRocketEntity.ts";
 import {randInt} from "../../utils/math/math.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export class ClusterRocketEntity extends FuseRocketEntity {
     public override color = "#ff5d2a";
@@ -11,7 +12,9 @@ export class ClusterRocketEntity extends FuseRocketEntity {
     public override explode() {
         super.explode();
 
-        const world = this.getWorld();
+        const world = this.getWorld() as ServerWorld;
+        if (world.isClient) return;
+
         const yaw = this.getYaw();
         const pos = this.getPositionRef;
 

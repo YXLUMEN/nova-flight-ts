@@ -10,11 +10,13 @@ import type {Entity} from "../../../entity/Entity.ts";
 import type {ItemStack} from "../../ItemStack.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
 import {ClusterRocketEntity} from "../../../entity/projectile/ClusterRocketEntity.ts";
+import type {ServerWorld} from "../../../server/ServerWorld.ts";
 
 export class RocketWeapon extends BaseWeapon {
     private static readonly BULLET_SPEED: number = 6;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
+        if (world.isClient) return;
         stack.set(DataComponentTypes.WEAPON_CAN_COOLDOWN, false);
 
         const rocketCounts = stack.getOrDefault(DataComponentTypes.MISSILE_COUNT, 8);
@@ -38,7 +40,7 @@ export class RocketWeapon extends BaseWeapon {
                 rocket.explosionRadius = stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 72);
             }
             this.setBullet(rocket, attacker, RocketWeapon.BULLET_SPEED, 4, 2);
-            world.spawnEntity(rocket);
+            (world as ServerWorld).spawnEntity(rocket);
 
             const yaw = attacker.getYaw();
             attacker.updateVelocity(-0.6, Math.cos(yaw), Math.sin(yaw));
