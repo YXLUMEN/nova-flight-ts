@@ -1,5 +1,5 @@
 import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
-import type {KeyboardInput} from "../../input/KeyboardInput.ts";
+import type {KeyboardInput} from "../input/KeyboardInput.ts";
 import {ClientTechTree} from "../../tech/ClientTechTree.ts";
 import {DataLoader} from "../../DataLoader.ts";
 import type {World} from "../../world/World.ts";
@@ -8,8 +8,11 @@ import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import type {AutoAim} from "../../tech/AutoAim.ts";
 import type {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
-import {PlayerMoveC2SPacket} from "../../network/packet/PlayerMoveC2SPacket.ts";
-import {Vec2} from "../../utils/math/Vec2.ts";
+import {PlayerMoveC2SPacket} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
+import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
+import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
+import {PlayerAimC2SPacket} from "../../network/packet/c2s/PlayerAimC2SPacket.ts";
+import type {UUID} from "../../apis/registry.ts";
 
 export class ClientPlayerEntity extends PlayerEntity {
     public readonly input: KeyboardInput;
@@ -32,8 +35,8 @@ export class ClientPlayerEntity extends PlayerEntity {
     public override tick() {
         super.tick();
 
-        const world = this.getWorld();
         const posRef = this.getPositionRef;
+        const uuid: UUID = this.getUuid();
 
         let dx = 0, dy = 0;
         if (this.input.isDown("ArrowLeft", "KeyA")) dx -= 1;
@@ -50,7 +53,7 @@ export class ClientPlayerEntity extends PlayerEntity {
             const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
             const speed = this.getMovementSpeed() * speedMultiplier;
             this.updateVelocity(speed, dx, dy);
-            this.getNetworkHandler().send(new PlayerMoveC2SPacket(new Vec2(dx, dy)));
+            this.getNetworkHandler().send(new PlayerMoveC2SPacket(uuid, dx, dy));
         }
 
         if (this.autoAimEnable && this.autoAim) {
@@ -61,6 +64,7 @@ export class ClientPlayerEntity extends PlayerEntity {
                 pointer.y - posRef.y,
                 pointer.x - posRef.x
             ), 0.157075);
+            this.getNetworkHandler().send(new PlayerAimC2SPacket(uuid, pointer));
         }
 
         // 锁定
@@ -78,13 +82,12 @@ export class ClientPlayerEntity extends PlayerEntity {
 
         if (this.input.wasPressed('KeyR')) {
             this.switchWeapon();
+            this.getNetworkHandler().send(new PlayerInputC2SPacket(uuid, 'KeyR'));
             return;
         }
-
-        this.handlerFire(world);
     }
 
-    protected handlerFire(world: World) {
+    protected override tickInventory(world: World) {
         const baseWeapon = this.baseWeapons[this.currentBaseIndex];
         const stack = this.weapons.get(baseWeapon)!;
         const fire = this.input.isDown("Space") || WorldConfig.autoShoot;
@@ -92,8 +95,10 @@ export class ClientPlayerEntity extends PlayerEntity {
 
         if (active !== this.wasActive) {
             if (!this.wasActive) {
+                this.getNetworkHandler().send(new PlayerFireC2SPacket(this.getUuid(), true));
                 baseWeapon.onStartFire(world, stack);
             } else {
+                this.getNetworkHandler().send(new PlayerFireC2SPacket(this.getUuid(), false));
                 baseWeapon.onEndFire(world, stack);
             }
             this.wasActive = active;
@@ -109,6 +114,7 @@ export class ClientPlayerEntity extends PlayerEntity {
                 }
                 if (w.canFire(stack) && this.input.wasPressed(w.bindKey())) {
                     w.tryFire(stack, world, this);
+                    this.getNetworkHandler().send(new PlayerInputC2SPacket(this.getUuid(), w.bindKey()));
                 }
             }
             w.inventoryTick(stack, world, this, 0, true);

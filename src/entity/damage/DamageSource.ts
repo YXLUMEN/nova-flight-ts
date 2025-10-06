@@ -4,8 +4,22 @@ import type {Vec2} from "../../utils/math/Vec2.ts";
 import type {TagKey} from "../../registry/tag/TagKey.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {RegistryKey} from "../../registry/RegistryKey.ts";
+import {PacketCodec} from "../../network/codec/PacketCodec.ts";
+import {Identifier} from "../../registry/Identifier.ts";
+import {Registries} from "../../registry/Registries.ts";
 
 export class DamageSource {
+    public static readonly PACKET_CODE = PacketCodec.of<DamageSource>(
+        (value, writer) => {
+            writer.writeString(value.getType());
+        },
+        reader => {
+            const typeId = Identifier.PACKET_CODEC.decode(reader);
+            const type = Registries.DAMAGE_TYPE.getEntryById(typeId)!;
+            return new DamageSource(type);
+        }
+    );
+
     private readonly type: RegistryEntry<DamageType>;
     private readonly attacker: Entity | null;
     private readonly source: Entity | null;

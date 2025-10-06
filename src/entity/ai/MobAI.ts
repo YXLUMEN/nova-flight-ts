@@ -50,7 +50,7 @@ export class MobAI {
         const world = mob.getWorld();
         if (!world.isClient) return;
 
-        const player = (world as ServerWorld).getPlayers().values().next().value;
+        const player = (world as ServerWorld).getPlayers().next().value;
         if (!player) {
             this.behavior = Behavior.Wander;
             return;

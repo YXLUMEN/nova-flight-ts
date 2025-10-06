@@ -1,11 +1,11 @@
 import {NetworkChannel} from "../../network/NetworkChannel.ts";
-import type {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
+import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
 
 export class ClientNetworkChannel extends NetworkChannel {
     private readonly clientId: string;
 
-    public constructor(ws: WebSocket, registry: PayloadTypeRegistry, clientId: string) {
-        super(ws, registry);
+    public constructor(ws: WebSocket, clientId: string) {
+        super(ws, PayloadTypeRegistry.playC2S());
         this.clientId = clientId;
     }
 

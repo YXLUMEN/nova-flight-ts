@@ -6,8 +6,8 @@ import type {MutVec2} from "../utils/math/MutVec2.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
-import {SoundEventS2CPacket} from "../network/packet/SoundEventS2CPacket.ts";
-import {StopSoundS2CPacket} from "../network/packet/StopSoundS2CPacket.ts";
+import {SoundEventS2CPacket} from "../network/packet/s2c/SoundEventS2CPacket.ts";
+import {StopSoundS2CPacket} from "../network/packet/s2c/StopSoundS2CPacket.ts";
 import type {Entity} from "../entity/Entity.ts";
 import {EntityType} from "../entity/EntityType.ts";
 import {EntityList} from "../world/EntityList.ts";
@@ -19,10 +19,12 @@ import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {collideEntityCircle} from "../utils/math/math.ts";
 import {CIWSBulletEntity} from "../entity/projectile/CIWSBulletEntity.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
-import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import type {Stage} from "../stage/Stage.ts";
 import type {ServerNetworkChannel} from "./network/ServerNetworkChannel.ts";
 import {STAGE} from "../configs/StageConfig.ts";
+import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import {EVENTS} from "../apis/IEvents.ts";
+import {EntityRemoveS2CPacket} from "../network/packet/s2c/EntityRemoveS2CPacket.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
@@ -39,20 +41,22 @@ export class ServerWorld extends World implements NbtSerializable {
         this.server = server;
         this.entityManager = new ServerEntityManager(this.ServerEntityHandler);
         this.stage = STAGE;
+
+        this.onEvent();
     }
 
     public override tick(dt: number) {
         super.tick(dt);
 
         for (const entity of this.entities.values()) {
-            if (entity.isRemoved() || this.freeze) continue;
-            this.tickEntity(this.ServerTickEntity, entity);
+            if (entity.isRemoved()) continue;
+            this.serverTickEntity(entity);
             if (this.over) break;
         }
         this.entities.processRemovals();
     }
 
-    public ServerTickEntity(entity: Entity): void {
+    public serverTickEntity(entity: Entity): void {
         entity.age++;
         entity.tick();
 
@@ -102,8 +106,8 @@ export class ServerWorld extends World implements NbtSerializable {
         }
     }
 
-    public override getNetworkHandler(): ServerNetworkChannel {
-        return this.server.networkHandler;
+    public override getNetworkChannel(): ServerNetworkChannel {
+        return this.server.networkChannel;
     }
 
     public spawnEntity(entity: Entity): boolean {
@@ -116,6 +120,11 @@ export class ServerWorld extends World implements NbtSerializable {
         }
 
         return this.entityManager.addEntity(entity);
+    }
+
+    public spawnPlayer(player: ServerPlayerEntity): void {
+        this.players.set(player.getUuid(), player);
+        this.entityManager.addEntity(player);
     }
 
     public override addEntity(entity: Entity): void {
@@ -145,8 +154,8 @@ export class ServerWorld extends World implements NbtSerializable {
         return this.entities;
     }
 
-    public getPlayers(): ReadonlyMap<UUID, PlayerEntity> {
-        return this.players;
+    public getPlayers() {
+        return this.players.values();
     }
 
     public getMobs(): ReadonlySet<MobEntity> {
@@ -161,37 +170,35 @@ export class ServerWorld extends World implements NbtSerializable {
         return this.entityManager.getIndex().getByUUID(uuid);
     }
 
-    public spawnPlayer(player: ServerPlayerEntity): void {
-        this.players.set(player.getUuid(), player);
-        this.entityManager.addEntity(player, true);
-    }
-
     public playSound(sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
-        this.getNetworkHandler().send(new SoundEventS2CPacket(sound, volume, pitch));
+        this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, false));
     }
 
     public playLoopSound(sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
-        this.getNetworkHandler().send(new SoundEventS2CPacket(sound, volume, pitch));
+        this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, true));
     }
 
     public stopLoopSound(sounds: SoundEvent): boolean {
-        this.getNetworkHandler().send(new StopSoundS2CPacket(sounds));
+        this.getNetworkChannel().send(new StopSoundS2CPacket(sounds));
         return true;
     }
 
     // @ts-ignore
     public addEffect(effect: IEffect): void {
-        throw new Error("Method not implemented.");
     }
 
     // @ts-ignore
     public spawnParticleByVec(pos: MutVec2, vel: MutVec2, life: number, size: number, colorFrom: string, colorTo: string, drag: number, gravity: number): void {
-        throw new Error("Method not implemented.");
     }
 
     // @ts-ignore
     public spawnParticle(posX: number, posY: number, velX: number, velY: number, life: number, size: number, colorFrom: string, colorTo: string, drag: number, gravity: number): void {
-        throw new Error("Method not implemented.");
+    }
+
+    private onEvent() {
+        this.events.on(EVENTS.ENTITY_REMOVED, event => {
+            this.entityManager.remove(event.entity);
+        });
     }
 
     public writeNBT(root: NbtCompound): NbtCompound {
@@ -243,10 +250,12 @@ export class ServerWorld extends World implements NbtSerializable {
     public readonly ServerEntityHandler: EntityHandler<Entity> = {
         startTicking: (entity: Entity) => {
             this.entities.add(entity);
+            this.getNetworkChannel().send(EntitySpawnS2CPacket.create(entity));
         },
 
         stopTicking: (entity: Entity) => {
             this.entities.remove(entity);
+            this.getNetworkChannel().send(new EntityRemoveS2CPacket(entity.getId(), entity.getUuid()));
         },
     };
 }

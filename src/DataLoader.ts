@@ -1,7 +1,7 @@
 import {RegistryManager} from "./registry/RegistryManager.ts";
-import {SoundSystem} from "./sound/SoundSystem.ts";
-import {readTextFile,} from "@tauri-apps/plugin-fs";
+import {readTextFile} from "@tauri-apps/plugin-fs";
 import {resolveResource} from "@tauri-apps/api/path";
+import {SoundSystem} from "./sound/SoundSystem.ts";
 import {AudioManager} from "./sound/AudioManager.ts";
 
 export class DataLoader {

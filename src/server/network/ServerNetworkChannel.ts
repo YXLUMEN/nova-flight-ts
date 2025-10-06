@@ -1,9 +1,9 @@
 import {NetworkChannel} from "../../network/NetworkChannel.ts";
-import type {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
+import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
 
 export class ServerNetworkChannel extends NetworkChannel {
-    public constructor(ws: WebSocket, registry: PayloadTypeRegistry) {
-        super(ws, registry);
+    public constructor(ws: WebSocket) {
+        super(ws, PayloadTypeRegistry.playS2C());
     }
 
     protected override getSide() {

@@ -6,14 +6,17 @@ import {EntityTypes} from "../../../entity/EntityTypes.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {CIWSBulletEntity} from "../../../entity/projectile/CIWSBulletEntity.ts";
+import type {ServerWorld} from "../../../server/ServerWorld.ts";
 
 export class CIWS extends BaseWeapon {
     private static readonly BULLET_SPEED = 24;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
-        const bullet = new CIWSBulletEntity(EntityTypes.CIWS_BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1));
-        this.setBullet(bullet, attacker, CIWS.BULLET_SPEED, 2, 2, 1);
-        world.spawnEntity(bullet);
+        if (!world.isClient) {
+            const bullet = new CIWSBulletEntity(EntityTypes.CIWS_BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1));
+            this.setBullet(bullet, attacker, CIWS.BULLET_SPEED, 2, 2, 1);
+            (world as ServerWorld).spawnEntity(bullet);
+        }
 
         const increaseHeat = this.getHeat(stack) + 3;
         this.setHeat(stack, increaseHeat);

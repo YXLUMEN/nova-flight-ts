@@ -7,15 +7,22 @@ import type {RegistryManager} from "../registry/RegistryManager.ts";
 import {RegistryKeys} from "../registry/RegistryKeys.ts";
 import {clamp} from "../utils/math/math.ts";
 import {deepFreeze} from "../utils/uit.ts";
+import {isServer} from "../configs/WorldConfig.ts";
 
 // noinspection DuplicatedCode
 export class SoundSystem {
-    public static readonly globalSound = new SoundSystem();
+    public static readonly globalSound: SoundSystem;
     private static readonly loadedSounds = new HashMap<Identifier, AudioBuffer[]>();
 
     private readonly activeLoops = new HashMap<Identifier, AudioBufferSourceNode>();
     private audioContext = new AudioContext();
     private gainNode = this.audioContext.createGain();
+
+    static {
+        if (!isServer) {
+            (this.globalSound as any) = new SoundSystem();
+        }
+    }
 
     public constructor() {
         this.gainNode.connect(this.audioContext.destination);

@@ -6,23 +6,25 @@ import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {ItemStack} from "../../ItemStack.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import type {ServerWorld} from "../../../server/ServerWorld.ts";
 
 export class Cannon90Weapon extends BaseWeapon {
     private readonly speed = 6.4;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
-        const bullet = new ExplodeBulletEntity(EntityTypes.EXPLODE_BULLET_ENTITY,
-            world, attacker, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1), {
-                explosionRadius: stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 16),
-                damage: stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 5),
-                sparks: 4,
-                fastSparks: 2,
-            });
+        if (!world.isClient) {
+            const bullet = new ExplodeBulletEntity(EntityTypes.EXPLODE_BULLET_ENTITY,
+                world, attacker, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1), {
+                    explosionRadius: stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 16),
+                    damage: stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 5),
+                    sparks: 4,
+                    fastSparks: 2,
+                });
 
-        this.setBullet(bullet, attacker, this.speed, 12);
-        world.spawnEntity(bullet);
-        world.playSound(SoundEvents.CANNON90_FIRE, 0.5);
-
+            this.setBullet(bullet, attacker, this.speed, 12);
+            (world as ServerWorld).spawnEntity(bullet);
+            world.playSound(SoundEvents.CANNON90_FIRE, 0.5);
+        }
         this.setCooldown(stack, this.getFireRate(stack));
     }
 

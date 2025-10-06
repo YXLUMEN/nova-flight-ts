@@ -1,12 +1,12 @@
-import type {Payload} from "../Payload.ts";
-import {Identifier} from "../../registry/Identifier.ts";
-import {PacketCodec} from "../codec/PacketCodec.ts";
-import {PacketCodecs} from "../codec/PacketCodecs.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
-import type {UUID} from "../../apis/registry.ts";
+import type {Payload, PayloadId} from "../../Payload.ts";
+import {Identifier} from "../../../registry/Identifier.ts";
+import {PacketCodec} from "../../codec/PacketCodec.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import type {IVec} from "../../../utils/math/IVec.ts";
+import type {UUID} from "../../../apis/registry.ts";
 
 export class PlayerAimC2SPacket implements Payload {
-    public static readonly ID = Identifier.ofVanilla('player_aim');
+    public static readonly ID: PayloadId<PlayerAimC2SPacket> = {id: Identifier.ofVanilla('player_aim')};
 
     public static readonly CODEC: PacketCodec<PlayerAimC2SPacket> = PacketCodec.of<PlayerAimC2SPacket>(
         (value, writer) => {
@@ -28,7 +28,7 @@ export class PlayerAimC2SPacket implements Payload {
         this.aim = aim;
     }
 
-    public getId(): Identifier {
+    public getId(): PayloadId<PlayerAimC2SPacket> {
         return PlayerAimC2SPacket.ID;
     }
 }

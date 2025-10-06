@@ -1,5 +1,5 @@
 import type {Identifier} from "../registry/Identifier.ts";
-import type {Payload} from "./Payload.ts";
+import type {Payload, PayloadId} from "./Payload.ts";
 import {HashMap} from "../utils/collection/HashMap.ts";
 import {createCleanObj} from "../utils/uit.ts";
 import type {PacketCodec} from "./codec/PacketCodec.ts";
@@ -15,14 +15,6 @@ export class PayloadTypeRegistry {
     public static readonly PLAY_S2C = new PayloadTypeRegistry('server');
     public static readonly PLAY_C2S = new PayloadTypeRegistry('client');
 
-    public static playS2C() {
-        return this.PLAY_S2C;
-    }
-
-    public static playC2S() {
-        return this.PLAY_C2S;
-    }
-
     private readonly packetTypes = new HashMap<Identifier, PayloadType<any>>();
     private readonly side: Side;
 
@@ -30,12 +22,13 @@ export class PayloadTypeRegistry {
         this.side = side;
     }
 
-    public register(id: Identifier, codec: PacketCodec<any>): PayloadType<any> {
+    public register<T extends Payload>(payloadId: PayloadId<T>, codec: PacketCodec<T>): PayloadType<T> {
+        const id = payloadId.id;
         if (this.packetTypes.has(id)) {
             throw new ReferenceError(`Packet type ${id} is already registered!`);
         }
 
-        const payload = createCleanObj({id, codec});
+        const payload = createCleanObj({id, codec}) as PayloadType<T>;
         this.packetTypes.set(id, payload);
         return payload;
     }
@@ -44,7 +37,19 @@ export class PayloadTypeRegistry {
         return this.packetTypes.get(id) ?? null;
     }
 
-    public getSide() {
+    public static getGlobal(id: Identifier): PayloadType<any> | null {
+        return this.PLAY_C2S.get(id) ?? this.PLAY_S2C.get(id);
+    }
+
+    public static playS2C() {
+        return this.PLAY_S2C;
+    }
+
+    public static playC2S() {
+        return this.PLAY_C2S;
+    }
+
+    public getSide(): Side {
         return this.side;
     }
 }

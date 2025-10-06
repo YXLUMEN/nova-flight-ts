@@ -6,11 +6,16 @@ import {RegistryKeys} from "../registry/RegistryKeys.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {SoundEvent} from "./SoundEvent.ts";
 import {convertFileSrc} from "@tauri-apps/api/core";
+import {isServer} from "../configs/WorldConfig.ts";
 
 export class AudioManager {
-    private static readonly AUDIO_PLAYER = new Audio();
+    private static readonly AUDIO_PLAYER: HTMLAudioElement;
     private static readonly audioMap = new Map<Identifier, string>();
     private static readonly eventMap = new Map<string, AbortController>();
+
+    static {
+        if (!isServer) (this.AUDIO_PLAYER as any) = new Audio();
+    }
 
     public static async loadFiles(manager: RegistryManager): Promise<void> {
         const audioRegister = manager.get(RegistryKeys.AUDIOS);

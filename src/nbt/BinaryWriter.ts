@@ -1,4 +1,4 @@
-export class NbtBinaryWriter {
+export class BinaryWriter {
     private chunks: number[] = [];
 
     public pushBytes(buf: ArrayBuffer | Uint8Array) {
@@ -38,6 +38,15 @@ export class NbtBinaryWriter {
         const buf = new ArrayBuffer(4);
         new DataView(buf).setUint32(0, v, true);
         this.pushBytes(buf);
+    }
+
+    public writeVarInt(v: number): void {
+        let i = v >>> 0;
+        while ((i & ~0x7F) !== 0) {
+            this.chunks.push((i & 0x7F) | 0x80);
+            i >>>= 7;
+        }
+        this.chunks.push(i);
     }
 
     public writeString(s: string): void {

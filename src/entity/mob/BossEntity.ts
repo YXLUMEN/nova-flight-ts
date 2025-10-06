@@ -12,6 +12,7 @@ import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
 import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export class BossEntity extends MobEntity {
     public override color = '#b30000';
@@ -40,6 +41,9 @@ export class BossEntity extends MobEntity {
     public override tick() {
         super.tick();
 
+        const world = this.getWorld() as ServerWorld;
+        if (world.isClient) return;
+
         if (this.damageCooldown > 0) this.damageCooldown -= 1;
         this.cooldown -= 1;
         if (this.cooldown > 0) return;
@@ -53,7 +57,7 @@ export class BossEntity extends MobEntity {
         const step = (endAngle - startAngle) / (count - 1);
         const yOffset = this.getHeight() / 2;
 
-        const world = this.getWorld();
+
         const pos = this.getPositionRef.clone().add(0, yOffset);
         for (let i = count; i--;) {
             const angle = startAngle + step * i;

@@ -7,9 +7,12 @@ import {SpecialWeapon} from "./SpecialWeapon.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export class MissileWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
+        if (world.isClient) return;
+
         const pos = attacker.getPositionRef;
         const missileCounts = stack.getOrDefault(DataComponentTypes.MISSILE_COUNT, 8);
         const explosionDamage = stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 10);
@@ -34,7 +37,7 @@ export class MissileWeapon extends SpecialWeapon {
             missile.setHoverDir(side);
             missile.setYaw(yaw);
             missile.setPosition(pos.x, pos.y);
-            world.spawnEntity(missile);
+            (world as ServerWorld).spawnEntity(missile);
         });
 
         world.schedule(1.6, () => world.playSound(SoundEvents.MISSILE_BLASTOFF));

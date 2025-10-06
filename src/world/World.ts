@@ -5,15 +5,15 @@ import {MutVec2} from "../utils/math/MutVec2.ts";
 import type {Schedule, TimerTask} from "../apis/ITimer.ts";
 import {DamageSources} from "../entity/damage/DamageSources.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
-import type {IEvents} from "../apis/IEvents.ts";
+import {type IEvents} from "../apis/IEvents.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import {AtomicInteger} from "../utils/math/AtomicInteger.ts";
 import type {NetworkChannel} from "../network/NetworkChannel.ts";
 import type {Payload} from "../network/Payload.ts";
-import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import type {Consumer} from "../apis/registry.ts";
 import type {EntityList} from "./EntityList.ts";
 import type {EntityIndex} from "./EntityIndex.ts";
+import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 
 export abstract class World {
     public static readonly WORLD_W = 1692;
@@ -45,7 +45,7 @@ export abstract class World {
         this.damageSources = new DamageSources(registryManager);
     }
 
-    public getServer(): NovaFlightServer | null {
+    public getServer(): Worker | null {
         return null;
     }
 
@@ -106,6 +106,8 @@ export abstract class World {
 
     public abstract getEntities(): EntityList;
 
+    public abstract getPlayers(): Iterable<PlayerEntity>;
+
     public abstract addEntity(entity: Entity): void;
 
     public abstract removeEntity(entityId: number): void;
@@ -142,10 +144,10 @@ export abstract class World {
         return this.registryManager;
     }
 
-    public abstract getNetworkHandler(): NetworkChannel;
+    public abstract getNetworkChannel(): NetworkChannel;
 
     public sendPacket(payload: Payload) {
-        this.getNetworkHandler().send(payload);
+        this.getNetworkChannel().send(payload);
     }
 
     public schedule(delaySec: number, fn: () => void): Schedule {

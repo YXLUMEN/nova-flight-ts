@@ -1,19 +1,18 @@
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import {BaseDirectory, exists, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
-import {PayloadTypeRegistry} from "../network/PayloadTypeRegistry.ts";
-import {ServerNetwork} from "./network/ServerNetwork.ts";
 import {ServerNetworkChannel} from "./network/ServerNetworkChannel.ts";
-import type {Consumer, UUID} from "../apis/registry.ts";
+import type {Consumer} from "../apis/registry.ts";
 import {ServerReceive} from "./network/ServerReceive.ts";
 import type {ServerWorld} from "./ServerWorld.ts";
+import {JoinGameS2CPacket} from "../network/packet/s2c/JoinGameS2CPacket.ts";
+import {WorldConfig} from "../configs/WorldConfig.ts";
 
 export abstract class NovaFlightServer {
     public static instance: NovaFlightServer;
     public static readonly SAVE_PATH = `saves/save-${NbtCompound.VERSION}.dat`;
 
-    public networkHandler: ServerNetworkChannel;
-    private readonly serverId: UUID;
+    public networkChannel: ServerNetworkChannel;
     public world: ServerWorld | null = null;
 
     private tickInterval: number | null = null;
@@ -25,16 +24,14 @@ export abstract class NovaFlightServer {
     private onGameStop: Consumer<NbtCompound> | null = null;
 
     protected constructor() {
-        this.serverId = crypto.randomUUID();
-        console.log(this.serverId);
-
-        this.networkHandler = new ServerNetworkChannel(new WebSocket("ws://127.0.0.1:25566"), PayloadTypeRegistry.PLAY_S2C);
-        ServerNetwork.registerNetwork();
-        ServerReceive.registryNetworkHandler(this.networkHandler);
-        this.networkHandler.init();
+        this.networkChannel = new ServerNetworkChannel(new WebSocket("ws://127.0.0.1:25566"));
+        ServerReceive.registryNetworkHandler(this.networkChannel);
+        this.networkChannel.init();
     }
 
-    public async startGame(manager: RegistryManager, readSave = false): Promise<void> {
+    public abstract runServer(action: number): Promise<void>;
+
+    protected async startGame(manager: RegistryManager, readSave = false): Promise<void> {
         if (this.running) return;
         this.running = true;
 
@@ -66,6 +63,7 @@ export abstract class NovaFlightServer {
         }
 
         this.world.setTicking(true);
+        this.networkChannel.send(new JoinGameS2CPacket());
 
         this.last = performance.now();
         this.tickInterval = setInterval(this.bindTick, 50);
@@ -103,9 +101,9 @@ export abstract class NovaFlightServer {
             this.last = now;
             this.accumulator += tickDelta;
 
-            while (this.accumulator >= 0.05) {
-                if (world.isTicking) world.tick(0.05);
-                this.accumulator -= 0.05;
+            while (this.accumulator >= WorldConfig.mbps) {
+                if (world.isTicking) world.tick(WorldConfig.mbps);
+                this.accumulator -= WorldConfig.mbps;
             }
         } catch (error) {
             console.error(`Runtime error: ${error}`);

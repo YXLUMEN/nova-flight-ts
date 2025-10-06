@@ -7,6 +7,7 @@ import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {HALF_PI, rand} from "../../utils/math/math.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export class DecoyReleaser extends SpecialWeapon {
     private readonly countPerRelease = 8;
@@ -44,6 +45,8 @@ export class DecoyReleaser extends SpecialWeapon {
     }
 
     private static releaseDecoy(perRelease: number, world: World, attacker: Entity): void {
+        if (world.isClient) return;
+
         const pos = attacker.getPositionRef;
         const yaw = attacker.getYaw();
 
@@ -61,7 +64,7 @@ export class DecoyReleaser extends SpecialWeapon {
             decoy.setYaw(sideAngle);
             decoy.updateVelocity(8, Math.cos(sideAngle), Math.sin(sideAngle));
 
-            world.spawnEntity(decoy);
+            (world as ServerWorld).spawnEntity(decoy);
         }
         world.playSound(SoundEvents.DECOY_FIRE);
     }

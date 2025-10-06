@@ -25,7 +25,7 @@ export class Items {
     public static readonly INTO_VOID_WEAPON: Item;
     public static readonly CANNON40_WEAPON = this.register("cannon40_weapon", new Cannon40Weapon(new Item.Settings()
         .attackDamage(3)
-        .maxCooldown(8))
+        .maxCooldown(7))
     );
     public static readonly MINIGUN_WEAPON = this.register("minigun_weapon", new MiniGunWeapon(new Item.Settings()
         .attackDamage(1)

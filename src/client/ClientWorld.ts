@@ -1,6 +1,6 @@
 import {World} from "../world/World.ts";
 import {type Entity} from "../entity/Entity.ts";
-import {ClientEntityHandler} from "../world/ClientEntityHandler.ts";
+import {ClientEntityManager} from "../world/ClientEntityManager.ts";
 import {EntityList} from "../world/EntityList.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import type {EntityHandler} from "../world/EntityHandler.ts";
@@ -17,16 +17,19 @@ import {AudioManager} from "../sound/AudioManager.ts";
 import {EntityRenderers} from "./render/entity/EntityRenderers.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {ClientPlayerEntity} from "./entity/ClientPlayerEntity.ts";
-import {HALF_PI} from "../utils/math/math.ts";
+import {HALF_PI, PI2, rand} from "../utils/math/math.ts";
 import type {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
 import {StringPacket} from "../network/packet/StringPacket.ts";
+import {PlayerLoginC2SPayload} from "../network/packet/c2s/PlayerLoginC2SPayload.ts";
+import {EVENTS} from "../apis/IEvents.ts";
+import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 
 export class ClientWorld extends World {
     private readonly client: NovaFlightClient = NovaFlightClient.getInstance();
 
     private readonly players = new Set<ClientPlayerEntity>();
     private readonly entities: EntityList = new EntityList();
-    private readonly entityManager: ClientEntityHandler<Entity>;
+    private readonly entityManager: ClientEntityManager<Entity>;
 
     private readonly worldSound = new SoundSystem();
 
@@ -39,31 +42,47 @@ export class ClientWorld extends World {
     public constructor(registryManager: RegistryManager) {
         super(registryManager, true);
 
-        this.entityManager = new ClientEntityHandler(this.ClientEntityHandler);
+        this.entityManager = new ClientEntityManager(this.ClientEntityHandler);
         this.starField.init();
+        this.onEvent();
 
         const player = new ClientPlayerEntity(this, this.client.input);
+        this.client.player = player;
+        this.getNetworkChannel().send(new PlayerLoginC2SPayload(player.getUuid()));
         this.addEntity(player);
     }
 
     public override tick(dt: number) {
         super.tick(dt);
 
+        const camera = this.client.window.camera;
+        camera.update(this.client.player!.getPositionRef.clone(), dt);
+
         this.tickEntities();
-        this.starField.update(dt, this.client.window.camera);
+
+        this.effects.forEach(effect => effect.tick(dt));
+        this.particlePool.tick(dt);
+        this.starField.update(dt, camera);
     }
 
     public tickEntities() {
-        this.players.values().forEach(player => {
-            if (!player.isRemoved()) this.tickEntity(this.clientTickEntity, player);
+        this.players.forEach(player => {
+            if (player.isRemoved()) return;
+            this.tickEntity(this.clientTickEntity, player);
         })
         this.entities.forEach(entity => {
-            if (!entity.isRemoved()) this.tickEntity(this.clientTickEntity, entity);
+            if (entity.isRemoved()) return;
+            this.tickEntity(this.clientTickEntity, entity);
         });
+        this.entities.processRemovals();
     }
 
     public getEntities() {
         return this.entities;
+    }
+
+    public override getPlayers(): Iterable<PlayerEntity> {
+        return this.players;
     }
 
     public getMobs() {
@@ -75,16 +94,24 @@ export class ClientWorld extends World {
         entity.tick();
     }
 
-    public override getNetworkHandler(): ClientNetworkChannel {
-        return this.client.networkHandler;
+    public override getNetworkChannel(): ClientNetworkChannel {
+        return this.client.networkChannel;
+    }
+
+    public override getServer(): Worker | null {
+        return this.client.getServer();
     }
 
     public override setTicking(ticking: boolean) {
         if (ticking && !this.isTicking) {
+            this.getServer()?.postMessage({type: 'start_ticking'});
+
             AudioManager.resume();
             SoundSystem.globalSound.playSound(SoundEvents.UI_PAGE_SWITCH);
             this.worldSound.resumeAll().catch(console.error);
         } else if (this.isTicking) {
+            this.getServer()?.postMessage({type: 'stop_ticking'});
+
             AudioManager.pause();
             SoundSystem.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
             this.worldSound.pauseAll().catch(console.error);
@@ -155,6 +182,27 @@ export class ClientWorld extends World {
         this.effects.push(effect);
     }
 
+    private onEvent() {
+        this.events.on(EVENTS.ENTITY_REMOVED, event => {
+            this.entityManager.remove(event.entity);
+        });
+
+        this.events.on(EVENTS.MOB_KILLED, event => {
+            const mob = event.mob;
+
+            for (let i = 0; i < 4; i++) {
+                const a = rand(0, PI2);
+                const speed = rand(80, 180);
+                const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
+
+                this.spawnParticleByVec(
+                    mob.getPositionRef.clone(), vel, rand(0.6, 0.8), rand(4, 6),
+                    "#ffaa33", "#ff5454", 0.6, 80
+                );
+            }
+        });
+    }
+
     public toggleTechTree() {
         const ticking = this.rendering = document.getElementById('tech-shell')!.classList.toggle('hidden');
         this.setTicking(ticking);
@@ -181,10 +229,10 @@ export class ClientWorld extends World {
         } else {
             this.players.forEach(player => {
                 if (player === this.client.player) return;
-                EntityRenderers.getRenderer(player).render(player, ctx);
+                EntityRenderers.getRenderer(player).render(player, ctx, 0, 0);
             })
             this.entities.forEach(entity => {
-                EntityRenderers.getRenderer(entity).render(entity, ctx);
+                EntityRenderers.getRenderer(entity).render(entity, ctx, 0, 0);
             });
         }
 
@@ -195,7 +243,7 @@ export class ClientWorld extends World {
         // 玩家
         const player = this.client.player;
         if (!this.over && player) {
-            EntityRenderers.getRenderer(player).render(player, ctx);
+            EntityRenderers.getRenderer(player).render(player, ctx, 0, 0);
 
             if (player.lockedMissile.size > 0) {
                 for (const missile of player.missilePos) {
@@ -229,13 +277,13 @@ export class ClientWorld extends World {
             const pos = entity.getPositionRef;
             const width = entity.getWidth();
 
-            renderer.render(entity, ctx);
+            renderer.render(entity, ctx, 0, 0);
 
             if (pos.x < margin + width) {
-                renderer.render(entity, ctx, World.WORLD_W);
+                renderer.render(entity, ctx, World.WORLD_W, 0);
             }
             if (pos.x > World.WORLD_W - margin - width) {
-                renderer.render(entity, ctx, -World.WORLD_W);
+                renderer.render(entity, ctx, -World.WORLD_W, 0);
             }
         });
     }
@@ -284,11 +332,11 @@ export class ClientWorld extends World {
     }
 
     public saveAll() {
-        this.getNetworkHandler().send(new StringPacket('SaveAll'));
+        this.getNetworkChannel().send(new StringPacket('SaveAll'));
     }
 
     public stopServer() {
-        this.getNetworkHandler().send(new StringPacket('StopServer'));
+        this.getNetworkChannel().send(new StringPacket('StopServer'));
     }
 
     public readonly ClientEntityHandler: EntityHandler<Entity> = {
@@ -298,6 +346,7 @@ export class ClientWorld extends World {
                 return;
             }
             this.entities.add(entity);
+            console.log(this.entities);
         },
 
         stopTicking: (entity: Entity) => {

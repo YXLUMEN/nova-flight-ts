@@ -17,6 +17,7 @@ import {clamp} from "../utils/math/math.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import type {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {UUID} from "../apis/registry.ts";
+import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
 
 
 export abstract class Entity implements DataTracked, Comparable, NbtSerializable {
@@ -27,7 +28,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
 
     protected readonly dataTracker: DataTracker;
     private uuid: UUID = crypto.randomUUID();
-    private readonly id: number = Entity.CURRENT_ID.incrementAndGet();
+    private id: number = Entity.CURRENT_ID.incrementAndGet();
     private readonly normalTags: Set<string> = new Set<string>();
 
     private readonly type: EntityType<any>;
@@ -57,6 +58,10 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
 
     public getType(): EntityType<any> {
         return this.type;
+    }
+
+    public setId(id: number): void {
+        this.id = id;
     }
 
     public getId(): number {
@@ -146,12 +151,28 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         this.yaw += delta;
     }
 
+    public createSpawnPacket() {
+        return EntitySpawnS2CPacket.create(this);
+    }
+
+    public onSpawnPacket(packet: EntitySpawnS2CPacket) {
+        this.setId(packet.entityId);
+        this.setUuid(packet.uuid);
+        this.setPosition(packet.x, packet.y);
+        this.setVelocity(packet.velocityX, packet.velocityY);
+        this.setYaw(packet.yaw);
+    }
+
     public getWidth(): number {
         return this.dimensions.width;
     }
 
     public getHeight(): number {
         return this.dimensions.height;
+    }
+
+    public getDimensions(): EntityDimensions {
+        return this.dimensions;
     }
 
     public calculateBoundingBox(): Box {
@@ -230,6 +251,10 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
 
     public isRemoved(): boolean {
         return this.removed;
+    }
+
+    public isAlive(): boolean {
+        return !this.isRemoved();
     }
 
     public getMovementSpeed(): number {

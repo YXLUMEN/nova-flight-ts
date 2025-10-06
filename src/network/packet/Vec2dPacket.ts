@@ -1,11 +1,11 @@
-import type {Payload} from "../Payload.ts";
+import type {Payload, PayloadId} from "../Payload.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
 import {PacketCodec} from "../codec/PacketCodec.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 
 export class Vec2dPacket implements Payload {
-    public static readonly ID = Identifier.ofVanilla('position');
+    public static readonly ID: PayloadId<Vec2dPacket> = {id: Identifier.ofVanilla('vec2')};
 
     public static readonly CODEC: PacketCodec<Vec2dPacket> = PacketCodec.of<Vec2dPacket>(
         (value, writer) => {
@@ -25,7 +25,7 @@ export class Vec2dPacket implements Payload {
         this.value = value;
     }
 
-    public getId(): Identifier {
+    public getId(): PayloadId<Vec2dPacket> {
         return Vec2dPacket.ID;
     }
 }

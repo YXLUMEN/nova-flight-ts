@@ -14,6 +14,7 @@ import type {ItemStack} from "../ItemStack.ts";
 import {Items} from "../items.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 import {AttributeModifiersComponent} from "../../component/type/AttributeModifiersComponent.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 const id2EffectMap = new Map<number, WindowOverlay>();
 
@@ -151,11 +152,13 @@ export class IntoVoidWeapon extends SpecialWeapon {
         attacker.invulnerable = stack.getOrDefault(DataComponentTypes.ANY_BOOLEAN, false);
         stack.set(DataComponentTypes.ANY_BOOLEAN, false);
 
-        const box = attacker.getWidth() + stack.getOrDefault(DataComponentTypes.EFFECT_RANGE, 32);
-        for (const mob of world.getMobs()) {
-            if (mob.isRemoved() || !pointInCircleVec2(attacker.getPositionRef, mob.getPositionRef, box + mob.getWidth())) continue;
-            if (mob instanceof BossEntity) continue;
-            mob.onDeath(world.getDamageSources().void(attacker as PlayerEntity));
+        if (!world.isClient) {
+            const box = attacker.getWidth() + stack.getOrDefault(DataComponentTypes.EFFECT_RANGE, 32);
+            for (const mob of (world as ServerWorld).getMobs()) {
+                if (mob.isRemoved() || !pointInCircleVec2(attacker.getPositionRef, mob.getPositionRef, box + mob.getWidth())) continue;
+                if (mob instanceof BossEntity) continue;
+                mob.onDeath(world.getDamageSources().void(attacker as PlayerEntity));
+            }
         }
 
         if (attacker.techTree.isUnlocked('void_disturbance')) {

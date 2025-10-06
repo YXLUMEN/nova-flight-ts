@@ -14,11 +14,12 @@ export class MobMissileEntity extends MissileEntity {
     }
 
     protected override acquireTarget(): Entity | null {
-        const player = this.getWorld().player;
-        if (player && player.invulnerable) {
-            return null;
+        const players = this.getWorld().getPlayers();
+        for (const player of players) {
+            if (player.invulnerable) continue;
+            return player;
         }
-        return player;
+        return null;
     }
 
     protected override adjustPosition(): boolean {

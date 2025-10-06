@@ -1,10 +1,9 @@
-import {MutVec2} from "../utils/math/MutVec2.ts";
-import {WorldConfig} from "../configs/WorldConfig.ts";
+import {MutVec2} from "../../utils/math/MutVec2.ts";
+import {WorldConfig} from "../../configs/WorldConfig.ts";
 import type {IInput} from "./IInput.ts";
 // @ts-ignore
-import {World} from "../world/World.ts";
-import {NovaFlightClient} from "../client/NovaFlightClient.ts";
-import {PlayerAimC2SPacket} from "../network/packet/PlayerAimC2SPacket.ts";
+import {World} from "../../world/World.ts";
+import {NovaFlightClient} from "../NovaFlightClient.ts";
 
 export class KeyboardInput implements IInput {
     private readonly keys = new Set<string>();
@@ -90,8 +89,6 @@ export class KeyboardInput implements IInput {
         target.addEventListener("mousemove", e => {
             const offset = NovaFlightClient.getInstance().window.camera.cameraOffset;
             this.pointer.set(e.offsetX + offset.x, e.offsetY + offset.y);
-            const player = NovaFlightClient.getInstance()!.player;
-            if (player) player.getNetworkHandler().send(new PlayerAimC2SPacket(this.pointer));
         }, {passive: true});
 
         target.addEventListener("mousedown", () => WorldConfig.autoShoot = true);

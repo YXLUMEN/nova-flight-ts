@@ -1,5 +1,6 @@
 import type {MutVec2} from "./MutVec2.ts";
 import type {Entity} from "../../entity/Entity.ts";
+import type {IVec} from "./IVec.ts";
 
 export function clamp(value: number, min: number, max: number) {
     return Math.max(min, Math.min(max, value));
@@ -131,6 +132,13 @@ export function wrappedDelta(a: number, b: number, size: number): number {
 
 export function lerp(a: number, b: number, t: number): number {
     return a + (b - a) * t;
+}
+
+export function lerpVec2(prev: IVec, curr: IVec, alpha: number) {
+    return {
+        x: lerp(prev.x, curr.x, alpha),
+        y: lerp(prev.y, curr.y, alpha),
+    }
 }
 
 export const PI2 = Math.PI * 2;

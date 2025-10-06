@@ -1,7 +1,7 @@
 import {LivingEntity} from "../LivingEntity.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {World} from "../../world/World.ts";
-import {clamp, PI2, rand} from "../../utils/math/math.ts";
+import {clamp, rand} from "../../utils/math/math.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import type {EntityType} from "../EntityType.ts";
@@ -58,12 +58,14 @@ export abstract class MobEntity extends LivingEntity {
 
         const world = this.getWorld();
         world.events.emit(EVENTS.MOB_DAMAGE, {mob: this, damageSource});
-        world.spawnParticleByVec(
-            this.getPositionRef.clone(), MutVec2.zero(),
-            rand(0.2, 0.6), rand(4, 6),
-            "#ffaa33", "#ff5454",
-            0.6, 80
-        );
+        if (world.isClient) {
+            world.spawnParticleByVec(
+                this.getPositionRef.clone(), MutVec2.zero(),
+                rand(0.2, 0.6), rand(4, 6),
+                "#ffaa33", "#ff5454",
+                0.6, 80
+            );
+        }
         return true;
     }
 
@@ -72,17 +74,6 @@ export abstract class MobEntity extends LivingEntity {
 
         const world = this.getWorld();
         world.events.emit(EVENTS.MOB_KILLED, {mob: this, damageSource});
-
-        for (let i = 0; i < 4; i++) {
-            const a = rand(0, PI2);
-            const speed = rand(80, 180);
-            const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
-
-            world.spawnParticleByVec(
-                this.getPositionRef.clone(), vel, rand(0.6, 0.8), rand(4, 6),
-                "#ffaa33", "#ff5454", 0.6, 80
-            );
-        }
     }
 
     public attack(player: PlayerEntity) {

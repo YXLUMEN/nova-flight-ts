@@ -13,10 +13,12 @@ import {EntityAttributes} from "./attribute/EntityAttributes.ts";
 import type {EntityAttributeInstance} from "./attribute/EntityAttributeInstance.ts";
 import {DefaultAttributeContainer} from "./attribute/DefaultAttributeContainer.ts";
 import {type NbtCompound} from "../nbt/NbtCompound.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import {createTrackDataHandler} from "./data/TrackedDataHandler.ts";
 
 
 export abstract class LivingEntity extends Entity {
-    private static readonly HEALTH = DataTracker.registerData(Object(LivingEntity), 0);
+    private static readonly HEALTH = DataTracker.registerData(Object(LivingEntity), createTrackDataHandler(PacketCodecs.FLOAT));
 
     private readonly attributes: AttributeContainer;
     private readonly activeStatusEffects = new Map<RegistryEntry<StatusEffect>, StatusEffectInstance>();
@@ -65,6 +67,10 @@ export abstract class LivingEntity extends Entity {
 
     public setHealth(health: number): void {
         this.dataTracker.set(LivingEntity.HEALTH, clamp(health, 0, this.getMaxHealth()));
+    }
+
+    public override isAlive() {
+        return !this.isRemoved() && this.getHealth() > 0.0;
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {

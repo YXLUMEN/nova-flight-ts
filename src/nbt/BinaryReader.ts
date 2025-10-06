@@ -1,4 +1,4 @@
-export class NbtBinaryReader {
+export class BinaryReader {
     private view: DataView;
     private offset = 0;
 
@@ -44,6 +44,31 @@ export class NbtBinaryReader {
         const v = this.view.getUint32(this.offset, true);
         this.offset += 4;
         return v;
+    }
+
+    public readVarInt(): number {
+        let num = 0;
+        let shift = 0;
+
+        while (true) {
+            if (this.offset >= this.view.byteLength) {
+                throw new Error("Buffer underflow while reading VarInt");
+            }
+
+            const b = this.view.getUint8(this.offset++);
+            num |= (b & 0x7F) << shift;
+
+            if ((b & 0x80) === 0) {
+                break;
+            }
+
+            shift += 7;
+            if (shift > 35) {
+                throw new Error("VarInt too big");
+            }
+        }
+
+        return num;
     }
 
     public readString(): string {

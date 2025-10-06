@@ -10,7 +10,11 @@ export class DevServer extends NovaFlightServer {
         return NovaFlightServer.instance;
     }
 
-    public async runServer(manager: RegistryManager, action: number): Promise<void> {
+    public override async runServer(action: number): Promise<void> {
+        const manager = new RegistryManager();
+        await manager.registerAll();
+        manager.frozen();
+
         await this.startGame(manager, action === 1);
         await this.waitForStop();
     }

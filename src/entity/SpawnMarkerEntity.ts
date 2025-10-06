@@ -27,7 +27,7 @@ export class SpawnMarkerEntity extends Entity {
 
             if (!this.force) {
                 const {x, y} = this.spawnMob.getPositionRef;
-                const canSpawn = world.getPlayers().values().every(player => {
+                const canSpawn = world.getPlayers().every(player => {
                     if (player.isRemoved()) return true;
                     const dx = x - player.getPositionRef.x;
                     const dy = y - player.getPositionRef.y;

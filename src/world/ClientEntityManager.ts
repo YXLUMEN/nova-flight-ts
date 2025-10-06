@@ -2,7 +2,7 @@ import type {Entity} from "../entity/Entity.ts";
 import {EntityIndex} from "./EntityIndex.ts";
 import type {EntityHandler} from "./EntityHandler.ts";
 
-export class ClientEntityHandler<T extends Entity> {
+export class ClientEntityManager<T extends Entity> {
     private readonly index: EntityIndex<T>;
     private readonly handler: EntityHandler<T>;
 

@@ -1,7 +1,7 @@
 import type {IUi} from "./IUi.ts";
-import {World} from "../../../world/World.ts";
 import {UiTools} from "./UiTools.ts";
 import {UITheme} from "./theme.ts";
+import {NovaFlightClient} from "../../NovaFlightClient.ts";
 
 interface Notification {
     text: string;
@@ -23,7 +23,7 @@ export class NotificationManager implements IUi {
     public show(text: string, duration = 2, fadeTime = 0.3) {
         this.notifications.push({
             text,
-            startTime: World.instance!.getTime(),
+            startTime: NovaFlightClient.getInstance().world!.getTime(),
             duration,
             fadeTime
         });
@@ -32,7 +32,7 @@ export class NotificationManager implements IUi {
     public render(ctx: CanvasRenderingContext2D) {
         if (this.notifications.length === 0) return;
 
-        const now = World.instance!.getTime();
+        const now = NovaFlightClient.getInstance().world!.getTime();
         ctx.save();
         ctx.font = UITheme.font;
         ctx.textAlign = "center";

@@ -1,6 +1,6 @@
 import {type Nbt, NbtTypes} from "./NbtValue";
-import {NbtBinaryWriter} from "./NbtBinaryWriter";
-import {NbtBinaryReader} from "./NbtBinaryReader";
+import {BinaryWriter} from "./BinaryWriter.ts";
+import {BinaryReader} from "./BinaryReader.ts";
 
 export class NbtCompound {
     public static readonly MAGIC = 0x6E627430;
@@ -160,7 +160,7 @@ export class NbtCompound {
     }
 
     public toBinary(): Uint8Array {
-        const writer = new NbtBinaryWriter();
+        const writer = new BinaryWriter();
 
         writer.writeInt32(NbtCompound.MAGIC);
         writer.writeInt16(NbtCompound.VERSION);
@@ -231,7 +231,7 @@ export class NbtCompound {
     }
 
     public static fromBinary(buffer: Uint8Array): NbtCompound | null {
-        const reader = new NbtBinaryReader(buffer);
+        const reader = new BinaryReader(buffer);
 
         const magic = reader.readInt32();
         if (magic !== NbtCompound.MAGIC) {

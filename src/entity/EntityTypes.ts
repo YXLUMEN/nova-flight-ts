@@ -82,6 +82,7 @@ export class EntityTypes {
                 .setDimensions(148, 160)
         );
         (this.PLAYER_ENTITY as any) = EntityType.register("player",
+            // @ts-ignore
             EntityType.Builder.create(PlayerEntity)
                 .setDimensions(24, 28)
         );

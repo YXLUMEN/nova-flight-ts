@@ -1,6 +1,5 @@
 import {World} from "../../world/World.ts";
 import {LivingEntity} from "../LivingEntity.ts";
-import {ScreenFlash} from "../../effect/ScreenFlash.ts";
 import {EdgeGlowEffect} from "../../effect/EdgeGlowEffect.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
@@ -9,7 +8,6 @@ import type {DataEntry} from "../data/DataEntry.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
-import {EVENTS} from "../../apis/IEvents.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import type {Item} from "../../item/Item.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
@@ -57,10 +55,17 @@ export abstract class PlayerEntity extends LivingEntity {
         this.moveByVec(this.getVelocityRef);
         this.shouldWrap() ? this.wrapPosition() : this.adjustPosition();
         this.getVelocityRef.multiply(0.9);
+        this.tickInventory(this.getWorld());
+    }
+
+    protected tickInventory(world: World) {
+        for (const [w, stack] of this.weapons) {
+            w.inventoryTick(stack, world, this, 0, true);
+        }
     }
 
     public getNetworkHandler(): NetworkChannel {
-        return this.getWorld().getNetworkHandler();
+        return this.getWorld().getNetworkChannel();
     }
 
     public switchWeapon(dir = 1) {
@@ -84,7 +89,7 @@ export abstract class PlayerEntity extends LivingEntity {
         this.lastDamageTime = this.age;
 
         const world = this.getWorld();
-
+        /*
         world.events.emit(EVENTS.BOMB_DETONATE, {
             pos: this.getPosition(),
             damage: 32,
@@ -94,7 +99,7 @@ export abstract class PlayerEntity extends LivingEntity {
             important: true,
             source: this,
             attacker: this
-        });
+        });*/
 
         if (this.techTree.isUnlocked('electrical_energy_surges')) {
             const stack = this.weapons.get(Items.EMP_WEAPON);
