@@ -5,7 +5,8 @@ import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {createCleanObj} from "../../utils/uit.ts";
 import {wrappedDelta} from "../../utils/math/math.ts";
 import {World} from "../../world/World.ts";
-import type {ServerWorld} from "../../server/ServerWorld.ts";
+import type {PlayerEntity} from "../player/PlayerEntity.ts";
+import {MobAiS2CPacket} from "../../network/packet/s2c/MobAiS2CPacket.ts";
 
 export const Behavior = createCleanObj({
     Wander: 0,
@@ -15,10 +16,15 @@ export const Behavior = createCleanObj({
 } as const);
 
 export class MobAI {
+    private readonly entity: MobEntity;
     private readonly dir = new MutVec2(1, 0);
     private targetPos = MutVec2.zero();
     private changeTimer = 0;
     private behavior: number = Behavior.Simple;
+
+    public constructor(entity: MobEntity) {
+        this.entity = entity;
+    }
 
     public action(mob: MobEntity) {
         const speedMultiplier = mob.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
@@ -26,7 +32,7 @@ export class MobAI {
         const speed = mob.getMovementSpeed() * speedMultiplier;
 
         const isSimple = this.behavior === Behavior.Simple;
-        if (!isSimple && (mob.age & 63) !== 0) this.chooseTarget(mob);
+        if (!isSimple && (mob.age & 23) !== 0) this.chooseTarget(mob);
 
         switch (this.behavior) {
             case Behavior.Chase:
@@ -43,21 +49,24 @@ export class MobAI {
                 break;
         }
 
-        if (!isSimple) this.faceTarget(mob, this.targetPos, 0.0785375, false);
+        if (!isSimple) this.faceTarget(mob, this.targetPos, 0.19634375, false);
     }
 
     public chooseTarget(mob: MobEntity) {
         const world = mob.getWorld();
         if (!world.isClient) return;
 
-        const player = (world as ServerWorld).getPlayers().next().value;
-        if (!player) {
-            this.behavior = Behavior.Wander;
-            return;
+        let target: PlayerEntity | null = null;
+        for (const player of world.getPlayers()) {
+            if (!player.invulnerable) {
+                target = player;
+                break;
+            }
         }
+        if (!target) return;
 
         const pos = mob.getPositionRef;
-        const playerPos = player.getPositionRef;
+        const playerPos = target.getPositionRef;
         this.targetPos.set(playerPos.x, playerPos.y);
 
         const dx = playerPos.x - pos.x;
@@ -99,7 +108,7 @@ export class MobAI {
         mob.updateVelocity(speed, this.dir.x, this.dir.y);
     }
 
-    private faceTarget(mob: MobEntity, target: IVec, maxStep: number = 0.0785375, wrap = false): void {
+    private faceTarget(mob: MobEntity, target: IVec, maxStep: number = 0.19634375, wrap = false): void {
         const pos = mob.getPositionRef;
         const dx = wrap ? wrappedDelta(target.x, pos.x, World.WORLD_W) : target.x - pos.x;
         const dy = target.y - pos.y;
@@ -108,6 +117,9 @@ export class MobAI {
 
     public setBehavior(behavior: number): void {
         this.behavior = behavior;
+        const world = this.entity.getWorld();
+        if (world.isClient) return;
+        world.getNetworkChannel().send(new MobAiS2CPacket(this.entity.getId(), behavior));
     }
 
     public getBehavior(): number {
@@ -119,7 +131,7 @@ export class MobAI {
         if (speedMultiplier <= 0) return;
 
         const speed = mob.getMovementSpeed() * speedMultiplier;
-        const vx = Math.sin(mob.age * 0.05) * 0.8 * speedMultiplier;
+        const vx = Math.sin(mob.age * 0.1) * 0.8 * speedMultiplier;
 
         mob.updateVelocity(speed, vx, mob.yStep);
     }

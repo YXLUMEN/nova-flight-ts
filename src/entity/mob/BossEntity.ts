@@ -118,7 +118,7 @@ export class BossEntity extends MobEntity {
             const speed = rand(240, 360);
             const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
 
-            world.spawnParticleByVec(
+            world.addParticleByVec(
                 this.getPositionRef.clone(), vel, rand(0.8, 1.4), rand(12, 24),
                 "#ffaa33", "#ff5454", 0.6, 80
             );

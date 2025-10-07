@@ -1,5 +1,9 @@
 import {NetworkChannel} from "../../network/NetworkChannel.ts";
 import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
+import type {Payload} from "../../network/Payload.ts";
+import type {UUID} from "../../apis/registry.ts";
+import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
+import {UUIDUtil} from "../../utils/UUIDUtil.ts";
 
 export class ServerNetworkChannel extends NetworkChannel {
     public constructor(ws: WebSocket) {
@@ -17,5 +21,23 @@ export class ServerNetworkChannel extends NetworkChannel {
     protected register() {
         this.ws.send(new Uint8Array([0x01]));
         console.log("Server registered");
+    }
+
+    public override send<T extends Payload>(payload: T, exclude: UUID | null = null) {
+        const type = this.registry.get(payload.getId().id);
+        if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
+
+        const writer = new BinaryWriter();
+        writer.writeInt8(this.getHeader());
+        if (exclude !== null) {
+            writer.writeUUID(exclude);
+        } else {
+            writer.pushBytes(UUIDUtil.EMPTY_UUID);
+        }
+
+        writer.writeString(type.id.toString());
+        type.codec.encode(payload, writer);
+
+        this.ws.send(writer.toUint8Array());
     }
 }

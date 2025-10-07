@@ -19,11 +19,11 @@ export class LaserWeapon extends SpecialWeapon {
     private readonly height = World.WORLD_H * 2;        // 长度
     private readonly width = 6;            // 宽度
 
-    public override tryFire(stack: ItemStack, world: World, _attacker: Entity): void {
+    public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         this.setActive(stack, this.getActive(stack) ? false : stack.isAvailable());
 
-        if (this.getActive(stack)) this.onStartFire(world);
-        if (!this.getActive(stack) && stack.isAvailable()) this.onEndFire(world);
+        if (this.getActive(stack)) this.onStartFire(stack, world, attacker);
+        if (!this.getActive(stack) && stack.isAvailable()) this.onEndFire(stack, world, attacker);
     }
 
     public override canFire(stack: ItemStack): boolean {
@@ -57,10 +57,10 @@ export class LaserWeapon extends SpecialWeapon {
                     beamFx.kill();
                     id2EffectMap.delete(holder.getId());
                 }
-                this.onEndFire(holder.getWorld());
+                this.onEndFire(stack, world, holder);
             }
             if (stack.getOrDefault(DataComponentTypes.ANY_BOOLEAN, false) && heatLeft <= 100) {
-                world.playSound(SoundEvents.LASER_OVERHEAT);
+                world.playSound(holder, SoundEvents.LASER_OVERHEAT);
                 stack.set(DataComponentTypes.ANY_BOOLEAN, false);
             }
         }
@@ -69,7 +69,7 @@ export class LaserWeapon extends SpecialWeapon {
         if (!stack.isAvailable() && this.getHeat(stack) <= 0) {
             this.setHeat(stack, 0);
             stack.setAvailable(true);
-            world.playSound(SoundEvents.WEAPON_READY);
+            world.playSound(holder, SoundEvents.WEAPON_READY);
         }
 
         if (!this.getActive(stack)) {
@@ -114,14 +114,14 @@ export class LaserWeapon extends SpecialWeapon {
         }
     }
 
-    public override onStartFire(world: World) {
-        world.playSound(SoundEvents.LASER_TRIGGER);
-        world.playLoopSound(SoundEvents.LASER_BEAM);
+    public override onStartFire(_stack: ItemStack, world: World, attacker: Entity) {
+        world.playSound(attacker, SoundEvents.LASER_TRIGGER);
+        world.playLoopSound(attacker, SoundEvents.LASER_BEAM);
     }
 
-    public override onEndFire(world: World) {
-        if (world.stopLoopSound(SoundEvents.LASER_BEAM)) {
-            world.playSound(SoundEvents.LASER_CHARGE_DOWN);
+    public override onEndFire(_stack: ItemStack, world: World, attacker: Entity) {
+        if (world.stopLoopSound(attacker, SoundEvents.LASER_BEAM)) {
+            world.playSound(attacker, SoundEvents.LASER_CHARGE_DOWN);
         }
     }
 

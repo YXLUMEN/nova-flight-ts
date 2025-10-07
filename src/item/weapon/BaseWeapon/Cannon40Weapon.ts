@@ -9,7 +9,7 @@ import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 
 export class Cannon40Weapon extends BaseWeapon {
-    private readonly speed = 14;
+    private readonly speed = 35;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
         const bullet = new BulletEntity(EntityTypes.BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 3));
@@ -19,13 +19,13 @@ export class Cannon40Weapon extends BaseWeapon {
         this.setCooldown(stack, this.getFireRate(stack));
     }
 
-    public override onStartFire(world: World) {
-        world.playLoopSound(SoundEvents.CANNON40_FIRE_LOOP, 0.3);
+    public override onStartFire(_stack: ItemStack, world: World, attacker: Entity) {
+        world.playLoopSound(attacker, SoundEvents.CANNON40_FIRE_LOOP, 0.3);
     }
 
-    public override onEndFire(world: World) {
-        if (world.stopLoopSound(SoundEvents.CANNON40_FIRE_LOOP)) {
-            world.playSound(SoundEvents.CANNON40_FIRE_TAIL, 0.3);
+    public override onEndFire(_stack: ItemStack, world: World, attacker: Entity) {
+        if (world.stopLoopSound(attacker, SoundEvents.CANNON40_FIRE_LOOP)) {
+            world.playSound(attacker, SoundEvents.CANNON40_FIRE_TAIL, 0.3);
         }
     }
 

@@ -21,8 +21,10 @@ export class EntitySpawnS2CPacket implements Payload {
     public readonly velocityX: number;
     public readonly velocityY: number;
     public readonly yaw: number;
+    public readonly color: string;
+    public readonly edgeColor: string;
 
-    public constructor(entityId: number, uuid: UUID, x: number, y: number, yaw: number, entityType: EntityType<any>, velocityX: number, velocityY: number) {
+    public constructor(entityId: number, uuid: UUID, x: number, y: number, yaw: number, entityType: EntityType<any>, velocityX: number, velocityY: number, color: string, edgeColor: string) {
         this.entityId = entityId;
         this.uuid = uuid;
         this.entityType = entityType;
@@ -31,6 +33,8 @@ export class EntitySpawnS2CPacket implements Payload {
         this.velocityX = velocityX;
         this.velocityY = velocityY;
         this.yaw = yaw;
+        this.color = color;
+        this.edgeColor = edgeColor;
     }
 
     public static create(entity: Entity): EntitySpawnS2CPacket {
@@ -43,6 +47,8 @@ export class EntitySpawnS2CPacket implements Payload {
             entity.getType(),
             entity.getVelocityRef.x,
             entity.getVelocityRef.y,
+            entity.color,
+            entity.edgeColor
         );
     }
 
@@ -57,8 +63,10 @@ export class EntitySpawnS2CPacket implements Payload {
         const yaw = reader.readFloat();
         const velocityX = reader.readDouble();
         const velocityY = reader.readDouble();
+        const color = reader.readString();
+        const edgeColor = reader.readString();
 
-        return new EntitySpawnS2CPacket(entityId, uuid, x, y, yaw, entityType, velocityX, velocityY);
+        return new EntitySpawnS2CPacket(entityId, uuid, x, y, yaw, entityType, velocityX, velocityY, color, edgeColor);
     }
 
     private static write(value: EntitySpawnS2CPacket, writer: BinaryWriter): void {
@@ -71,6 +79,8 @@ export class EntitySpawnS2CPacket implements Payload {
         writer.writeFloat(value.yaw);
         writer.writeDouble(value.velocityX);
         writer.writeDouble(value.velocityY);
+        writer.writeString(value.color);
+        writer.writeString(value.edgeColor);
     }
 
     public getId(): PayloadId<EntitySpawnS2CPacket> {

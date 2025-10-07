@@ -1,9 +1,9 @@
 import {SpawnRule} from "./SpawnRule.ts";
 import type {PhaseConfig, RNG, SpawnCtx} from "../apis/IStage.ts";
-import type {World} from "../world/World.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import {type NbtCompound} from "../nbt/NbtCompound.ts";
 import {clamp} from "../utils/math/math.ts";
+import type {ServerWorld} from "../server/ServerWorld.ts";
 
 export class Stage implements NbtSerializable {
     private readonly rng: RNG;
@@ -41,7 +41,7 @@ export class Stage implements NbtSerializable {
         this.paused = false;
     }
 
-    public tick(world: World) {
+    public tick(world: ServerWorld) {
         if (this.index >= this.phases.length) return;
         if (this.paused) return;
 
@@ -53,7 +53,9 @@ export class Stage implements NbtSerializable {
             time: this.ticks,
             phaseTime: this.phaseTime,
             phaseIndex: this.index,
-            score: world.player?.getPhaseScore() ?? 0,
+            score: world.getPlayers().reduce((prev, curr) =>
+                curr.getPhaseScore() > prev.getPhaseScore() ? curr : prev
+            ).getPhaseScore(),
             rng: this.rng,
             difficulty: this.computeDifficulty(),
         };

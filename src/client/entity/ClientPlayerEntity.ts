@@ -13,6 +13,7 @@ import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacke
 import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
 import {PlayerAimC2SPacket} from "../../network/packet/c2s/PlayerAimC2SPacket.ts";
 import type {UUID} from "../../apis/registry.ts";
+import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
 
 export class ClientPlayerEntity extends PlayerEntity {
     public readonly input: KeyboardInput;
@@ -63,7 +64,7 @@ export class ClientPlayerEntity extends PlayerEntity {
             this.setClampYaw(Math.atan2(
                 pointer.y - posRef.y,
                 pointer.x - posRef.x
-            ), 0.157075);
+            ), 0.3926875);
             this.getNetworkHandler().send(new PlayerAimC2SPacket(uuid, pointer));
         }
 
@@ -82,7 +83,6 @@ export class ClientPlayerEntity extends PlayerEntity {
 
         if (this.input.wasPressed('KeyR')) {
             this.switchWeapon();
-            this.getNetworkHandler().send(new PlayerInputC2SPacket(uuid, 'KeyR'));
             return;
         }
     }
@@ -96,10 +96,10 @@ export class ClientPlayerEntity extends PlayerEntity {
         if (active !== this.wasActive) {
             if (!this.wasActive) {
                 this.getNetworkHandler().send(new PlayerFireC2SPacket(this.getUuid(), true));
-                baseWeapon.onStartFire(world, stack);
+                baseWeapon.onStartFire(stack, world, this);
             } else {
                 this.getNetworkHandler().send(new PlayerFireC2SPacket(this.getUuid(), false));
-                baseWeapon.onEndFire(world, stack);
+                baseWeapon.onEndFire(stack, world, this);
             }
             this.wasActive = active;
         }
@@ -119,6 +119,11 @@ export class ClientPlayerEntity extends PlayerEntity {
             }
             w.inventoryTick(stack, world, this, 0, true);
         }
+    }
+
+    public override switchWeapon(dir: number = 1) {
+        super.switchWeapon(dir);
+        this.getNetworkHandler().send(new PlayerSwitchSlotC2SPacket(this.getUuid(), this.currentBaseIndex));
     }
 
     public override setScore(score: number) {

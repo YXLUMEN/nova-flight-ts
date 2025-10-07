@@ -1,7 +1,6 @@
 import type {BossEntity} from "../entity/mob/BossEntity.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
-import type {ExpendExplosionOpts} from "./IExplosionOpts.ts";
 import {createCleanObj} from "../utils/uit.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
@@ -27,7 +26,7 @@ export type IEvents = {
     [EVENTS.MOB_KILLED]: { mob: MobEntity; damageSource: DamageSource };
     [EVENTS.MOB_DAMAGE]: { mob: MobEntity; damageSource: DamageSource };
     [EVENTS.UNLOCK_TECH]: { id: string };
-    [EVENTS.BOMB_DETONATE]: ExpendExplosionOpts;
+    [EVENTS.BOMB_DETONATE]: { entity: Entity };
     [EVENTS.EMP_BURST]: { duration: number };
     [EVENTS.STAGE_ENTER]: { name: string };
     [EVENTS.STAGE_EXIT]: { name: string };

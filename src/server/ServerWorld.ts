@@ -1,14 +1,12 @@
 import {World} from "../world/World.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import type {NovaFlightServer} from "./NovaFlightServer.ts";
-import type {IEffect} from "../effect/IEffect.ts";
-import type {MutVec2} from "../utils/math/MutVec2.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import {SoundEventS2CPacket} from "../network/packet/s2c/SoundEventS2CPacket.ts";
 import {StopSoundS2CPacket} from "../network/packet/s2c/StopSoundS2CPacket.ts";
-import type {Entity} from "../entity/Entity.ts";
+import {type Entity} from "../entity/Entity.ts";
 import {EntityType} from "../entity/EntityType.ts";
 import {EntityList} from "../world/EntityList.ts";
 import {ServerEntityManager} from "../world/ServerEntityManager.ts";
@@ -22,9 +20,17 @@ import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 import type {Stage} from "../stage/Stage.ts";
 import type {ServerNetworkChannel} from "./network/ServerNetworkChannel.ts";
 import {STAGE} from "../configs/StageConfig.ts";
-import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import {EntityRemoveS2CPacket} from "../network/packet/s2c/EntityRemoveS2CPacket.ts";
+import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
+import {DamageTypes} from "../entity/damage/DamageTypes.ts";
+import {StatusEffects} from "../entity/effect/StatusEffects.ts";
+import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
+import {EntityTrackerEntry} from "./network/EntityTrackerEntry.ts";
+import type {DamageSource} from "../entity/damage/DamageSource.ts";
+import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
+import type {Explosion} from "../world/Explosion.ts";
+import {ExplosionS2CPacket} from "../network/packet/s2c/ExplosionS2CPacket.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
@@ -34,6 +40,7 @@ export class ServerWorld extends World implements NbtSerializable {
     private readonly players = new Map<UUID, ServerPlayerEntity>();
     private readonly entities: EntityList = new EntityList();
     private readonly entityManager: ServerEntityManager<Entity>;
+    private readonly trackedEntities = new Map<number, EntityTrackerEntry>();
 
     public constructor(registryManager: RegistryManager, server: NovaFlightServer) {
         super(registryManager, false);
@@ -41,6 +48,10 @@ export class ServerWorld extends World implements NbtSerializable {
         this.server = server;
         this.entityManager = new ServerEntityManager(this.ServerEntityHandler);
         this.stage = STAGE;
+        while (true) {
+            this.stage.nextPhase();
+            if (this.stage.getCurrentName() === 'P9'||this.stage.getCurrentName() === null) break;
+        }
 
         this.onEvent();
     }
@@ -48,12 +59,17 @@ export class ServerWorld extends World implements NbtSerializable {
     public override tick(dt: number) {
         super.tick(dt);
 
+        this.stage.tick(this);
+
         for (const entity of this.entities.values()) {
             if (entity.isRemoved()) continue;
             this.serverTickEntity(entity);
             if (this.over) break;
         }
         this.entities.processRemovals();
+        for (const entry of this.trackedEntities.values()) {
+            entry.tick();
+        }
     }
 
     public serverTickEntity(entity: Entity): void {
@@ -123,6 +139,7 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public spawnPlayer(player: ServerPlayerEntity): void {
+        player.setPosition(World.WORLD_W / 2, World.WORLD_H);
         this.players.set(player.getUuid(), player);
         this.entityManager.addEntity(player);
     }
@@ -170,34 +187,69 @@ export class ServerWorld extends World implements NbtSerializable {
         return this.entityManager.getIndex().getByUUID(uuid);
     }
 
-    public playSound(sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
-        this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, false));
+    public override playSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
+        let exclude: UUID | null = null;
+        if (entity instanceof PlayerEntity) {
+            exclude = entity.getUuid();
+        }
+        this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, false), exclude);
     }
 
-    public playLoopSound(sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
-        this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, true));
+    public override playLoopSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
+        let exclude: UUID | null = null;
+        if (entity instanceof PlayerEntity) {
+            exclude = entity.getUuid();
+        }
+        this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, true), exclude);
     }
 
-    public stopLoopSound(sounds: SoundEvent): boolean {
+    public override stopLoopSound(_: Entity | null, sounds: SoundEvent): boolean {
         this.getNetworkChannel().send(new StopSoundS2CPacket(sounds));
         return true;
     }
 
-    // @ts-ignore
-    public addEffect(effect: IEffect): void {
+    public override addEffect(): void {
     }
 
-    // @ts-ignore
-    public spawnParticleByVec(pos: MutVec2, vel: MutVec2, life: number, size: number, colorFrom: string, colorTo: string, drag: number, gravity: number): void {
+    public override createExplosion(entity: Entity | null, damage: DamageSource | null, x: number, y: number, opts: ExpendExplosionOpts): Explosion {
+        const explosion = super.createExplosion(entity, damage, x, y, opts);
+
+        this.getNetworkChannel().send(new ExplosionS2CPacket(x, y, opts.explosionRadius ?? 64));
+        return explosion;
     }
 
-    // @ts-ignore
-    public spawnParticle(posX: number, posY: number, velX: number, velY: number, life: number, size: number, colorFrom: string, colorTo: string, drag: number, gravity: number): void {
+    public spawnParticle(): void {
+
+    }
+
+    public override addParticleByVec(): void {
+    }
+
+    public override addParticle(): void {
     }
 
     private onEvent() {
         this.events.on(EVENTS.ENTITY_REMOVED, event => {
             this.entityManager.remove(event.entity);
+        });
+
+        this.events.on(EVENTS.MOB_DAMAGE, event => {
+            const mob = event.mob;
+            const damageSource = event.damageSource;
+
+            const attacker = damageSource.getAttacker();
+            if (attacker instanceof PlayerEntity && !damageSource.isOf(DamageTypes.ON_FIRE)) {
+                if (!attacker.techTree.isUnlocked('incendiary_bullet')) return;
+
+                if (attacker.techTree.isUnlocked('meltdown')) {
+                    const effect = mob.getStatusEffect(StatusEffects.BURNING);
+                    if (effect) {
+                        const amplifier = Math.min(10, effect.getAmplifier() + 1);
+                        mob.addStatusEffect(new StatusEffectInstance(StatusEffects.BURNING, 400, amplifier), null);
+                    }
+                }
+                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.BURNING, 400, 1), null);
+            }
         });
     }
 
@@ -250,12 +302,22 @@ export class ServerWorld extends World implements NbtSerializable {
     public readonly ServerEntityHandler: EntityHandler<Entity> = {
         startTicking: (entity: Entity) => {
             this.entities.add(entity);
-            this.getNetworkChannel().send(EntitySpawnS2CPacket.create(entity));
+
+            const tracker = new EntityTrackerEntry(this, entity, 0, false);
+            this.trackedEntities.set(entity.getId(), tracker);
+            this.getNetworkChannel().send(entity.createSpawnPacket());
         },
 
         stopTicking: (entity: Entity) => {
             this.entities.remove(entity);
+            this.trackedEntities.delete(entity.getId());
             this.getNetworkChannel().send(new EntityRemoveS2CPacket(entity.getId(), entity.getUuid()));
         },
+
+        startTracking: (_entity: Entity) => {
+        },
+
+        stopTracking: (_entity: Entity) => {
+        }
     };
 }

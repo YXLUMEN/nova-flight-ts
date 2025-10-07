@@ -1,4 +1,5 @@
 import type {TrackedData} from "./TrackedData.ts";
+import {DataTracker, type DataTrackerSerializedEntry} from "./DataTracker.ts";
 
 export class DataEntry<T> {
     public readonly data: TrackedData<T>;
@@ -14,5 +15,9 @@ export class DataEntry<T> {
 
     public isUnchanged(): boolean {
         return this.initialValue === this.value;
+    }
+
+    public toSerialized(): DataTrackerSerializedEntry<T> {
+        return DataTracker.SerializedEntry.of(this.data, this.value);
     }
 }

@@ -5,8 +5,8 @@ import type {TrackedData} from "./data/TrackedData.ts";
 import type {EntityType} from "./EntityType.ts";
 import {World} from "../world/World.ts";
 import type {IOwnable} from "./IOwnable.ts";
-import {randInt} from "../utils/math/math.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
+import {randInt} from "../utils/math/math.ts";
 
 export class DecoyEntity extends Entity implements IOwnable {
     public static readonly Entities = new Set<DecoyEntity>();
@@ -28,7 +28,7 @@ export class DecoyEntity extends Entity implements IOwnable {
 
         const yaw = this.getYaw();
         const velocity = this.getVelocityRef;
-        this.updateVelocity(0.02, Math.cos(yaw), Math.sin(yaw));
+        this.updateVelocity(0.05, Math.cos(yaw), Math.sin(yaw));
         this.moveByVec(velocity);
         velocity.multiply(0.98);
 

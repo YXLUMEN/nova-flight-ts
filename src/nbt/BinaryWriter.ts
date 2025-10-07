@@ -1,3 +1,6 @@
+import type {UUID} from "../apis/registry.ts";
+import {UUIDUtil} from "../utils/UUIDUtil.ts";
+
 export class BinaryWriter {
     private chunks: number[] = [];
 
@@ -53,6 +56,10 @@ export class BinaryWriter {
         const utf8 = new TextEncoder().encode(s);
         this.writeInt16(utf8.length);
         this.pushBytes(utf8);
+    }
+
+    public writeUUID(uuid: UUID): void {
+        this.pushBytes(UUIDUtil.parse(uuid));
     }
 
     public toUint8Array(): Uint8Array {

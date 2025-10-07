@@ -3,20 +3,25 @@ import {Identifier} from "../../../registry/Identifier.ts";
 import {PacketCodec} from "../../codec/PacketCodec.ts";
 import type {SoundEvent} from "../../../sound/SoundEvent.ts";
 import {Registries} from "../../../registry/Registries.ts";
+import {SoundEvents} from "../../../sound/SoundEvents.ts";
 
 export class SoundEventS2CPacket implements Payload {
     public static readonly ID: PayloadId<SoundEventS2CPacket> = {id: Identifier.ofVanilla('sound_event')};
 
     public static readonly CODEC: PacketCodec<SoundEventS2CPacket> = PacketCodec.of<SoundEventS2CPacket>(
         (value, writer) => {
-            Identifier.PACKET_CODEC.encode(value.getId().id, writer);
+            Identifier.PACKET_CODEC.encode(value.soundEvent.getId(), writer);
             writer.writeFloat(value.volume);
             writer.writeFloat(value.pitch);
             writer.writeInt8(value.loop ? 1 : 0);
         },
         (reader) => {
             const id = Identifier.PACKET_CODEC.decode(reader);
-            const sound = Registries.SOUND_EVENT.getById(id)!;
+            const sound = Registries.SOUND_EVENT.getById(id);
+            if (!sound) {
+                return new SoundEventS2CPacket(SoundEvents.UI_APPLY, 0, 1, false);
+            }
+
             return new SoundEventS2CPacket(sound, reader.readFloat(), reader.readFloat(), reader.readInt8() === 1);
         }
     );

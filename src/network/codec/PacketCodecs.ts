@@ -38,6 +38,11 @@ export class PacketCodecs {
         reader => reader.readDouble()
     );
 
+    public static readonly VAR_INT: PacketCodec<number> = PacketCodec.of(
+        (value, writer) => writer.writeVarInt(value),
+        reader => reader.readVarInt()
+    );
+
     public static readonly STRING: PacketCodec<string> = PacketCodec.of(
         (value, writer) => writer.writeString(value),
         reader => reader.readString()

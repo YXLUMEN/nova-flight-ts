@@ -1,4 +1,3 @@
-import type {IVec} from "../utils/math/IVec.ts";
 import type {IEffect} from "../effect/IEffect.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {StatusEffect} from "../entity/effect/StatusEffect.ts";
@@ -20,8 +19,6 @@ export interface ExplosionOpts {
 }
 
 export interface ExpendExplosionOpts extends ExplosionOpts {
-    pos: IVec;
-    source: Entity;
     attacker: Entity | null;
     flash?: IEffect
 }

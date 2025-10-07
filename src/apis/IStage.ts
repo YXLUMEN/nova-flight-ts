@@ -1,13 +1,13 @@
-import type {World} from "../world/World.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import type {SpawnMarkerEntity} from "../entity/SpawnMarkerEntity.ts";
+import type {ServerWorld} from "../server/ServerWorld.ts";
 
 export type RNG = () => number;
 
 export type MobFactory = (ctx: SpawnCtx) => MobEntity | MobEntity[] | SpawnMarkerEntity | SpawnMarkerEntity[] | null;
 
 export interface SpawnCtx {
-    world: World;
+    world: ServerWorld;
     // 全局舞台时间
     time: number;
     // 当前阶段已用时间

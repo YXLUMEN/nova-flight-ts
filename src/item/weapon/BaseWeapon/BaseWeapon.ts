@@ -16,7 +16,7 @@ export abstract class BaseWeapon extends Weapon {
         stack.set(DataComponentTypes.MAX_COOLDOWN, clamp(fireRate, 0, 256));
     }
 
-    protected setBullet(bullet: ProjectileEntity, attacker: Entity, speed: number, offset: number, maxSpread = 1, maxParticle = 4) {
+    protected setBullet(bullet: ProjectileEntity, attacker: Entity, speed: number, offset: number, maxSpread = 1, maxParticle = 4, margin = 0): void {
         const world = bullet.getWorld();
         const pos = attacker.getPositionRef;
 
@@ -33,11 +33,11 @@ export abstract class BaseWeapon extends Weapon {
 
         const completeOffset = attacker.getWidth() / 2 + offset;
         bullet.setPosition(
-            pos.x + f * completeOffset,
-            pos.y + g * completeOffset
+            pos.x + f * completeOffset + f * margin,
+            pos.y + g * completeOffset + g * margin,
         );
 
-        if (maxParticle <= 0) return;
+        if (maxParticle <= 0 || !world.isClient) return;
         for (let i = 0; i < maxParticle; i++) {
             const angleOffset = rand(-0.41886, 0.41886);
             const particleYaw = Math.atan2(g, f) + angleOffset;
@@ -48,7 +48,7 @@ export abstract class BaseWeapon extends Weapon {
             const speed = randInt(100, 210);
             const vel = new MutVec2(px * speed, py * speed);
 
-            world.spawnParticleByVec(
+            world.addParticleByVec(
                 bullet.getPositionRef.clone(), vel, rand(0.4, 0.6), rand(2, 3),
                 "#ffaa33", "#ff5454", 0.6, 80
             );

@@ -11,8 +11,6 @@ import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export class MissileWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
-        if (world.isClient) return;
-
         const pos = attacker.getPositionRef;
         const missileCounts = stack.getOrDefault(DataComponentTypes.MISSILE_COUNT, 8);
         const explosionDamage = stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 10);
@@ -22,10 +20,11 @@ export class MissileWeapon extends SpecialWeapon {
         const schedule = world.scheduleInterval(0.1, () => {
             if (i++ > missileCounts) {
                 schedule.cancel();
-                world.stopLoopSound(SoundEvents.MISSILE_LAUNCH_LOOP);
+                world.stopLoopSound(attacker, SoundEvents.MISSILE_LAUNCH_LOOP);
                 return;
             }
 
+            if (world.isClient) return;
             const side = (i % 2 === 0) ? 1 : -1;
             const yaw = attacker.getYaw();
 
@@ -40,12 +39,12 @@ export class MissileWeapon extends SpecialWeapon {
             (world as ServerWorld).spawnEntity(missile);
         });
 
-        world.schedule(1.6, () => world.playSound(SoundEvents.MISSILE_BLASTOFF));
+        world.schedule(1.6, () => world.playSound(attacker, SoundEvents.MISSILE_BLASTOFF));
 
         if (missileCounts > 8) {
-            world.playLoopSound(SoundEvents.MISSILE_LAUNCH_LOOP);
+            world.playLoopSound(attacker, SoundEvents.MISSILE_LAUNCH_LOOP);
         } else {
-            world.playSound(SoundEvents.MISSILE_LAUNCH_COMP);
+            world.playSound(attacker, SoundEvents.MISSILE_LAUNCH_COMP);
         }
         this.setCooldown(stack, this.getMaxCooldown(stack));
     }

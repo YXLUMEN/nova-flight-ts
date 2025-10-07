@@ -26,7 +26,7 @@ export class NovaFlightClient {
     public readonly networkChannel: ClientNetworkChannel;
     public networkHandler: ClientPlayNetworkHandler | null = null;
 
-    private readonly clientId: UUID;
+    public readonly clientId: UUID;
     public readonly registryManager: RegistryManager;
 
     public world: ClientWorld | null = null;
@@ -137,7 +137,9 @@ export class NovaFlightClient {
                 this.tick(WorldConfig.mbps);
                 this.accumulator -= WorldConfig.mbps;
             }
-            world.render();
+
+            const alpha = world.isTicking ? this.accumulator / WorldConfig.mbps : 1;
+            world.render(alpha);
             requestAnimationFrame(this.bindRender);
         } catch (error) {
             console.error(`Runtime error: ${error}`);

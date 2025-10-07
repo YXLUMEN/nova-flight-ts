@@ -67,7 +67,7 @@ export abstract class NetworkChannel {
 
     public send<T extends Payload>(payload: T) {
         const type = this.registry.get(payload.getId().id);
-        if (!type) throw new Error("Unknown payload type");
+        if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
 
         const writer = new BinaryWriter();
 

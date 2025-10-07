@@ -9,34 +9,34 @@ import {CIWSBulletEntity} from "../../../entity/projectile/CIWSBulletEntity.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 
 export class CIWS extends BaseWeapon {
-    private static readonly BULLET_SPEED = 24;
+    private static readonly BULLET_SPEED = 60;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
-        if (!world.isClient) {
+        for (let i = 4; i--;) {
             const bullet = new CIWSBulletEntity(EntityTypes.CIWS_BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1));
-            this.setBullet(bullet, attacker, CIWS.BULLET_SPEED, 2, 2, 1);
-            (world as ServerWorld).spawnEntity(bullet);
+            this.setBullet(bullet, attacker, CIWS.BULLET_SPEED, 2, 2, 1, i * 20);
+            if (!world.isClient) (world as ServerWorld).spawnEntity(bullet);
         }
 
         const increaseHeat = this.getHeat(stack) + 3;
         this.setHeat(stack, increaseHeat);
         if (increaseHeat > this.getMaxHeat(stack)) {
             stack.setAvailable(false);
-            this.onEndFire(world, stack);
+            this.onEndFire(stack, world, attacker);
             return;
         }
 
         this.setCooldown(stack, this.getFireRate(stack));
     }
 
-    public override onStartFire(world: World, stack: ItemStack): void {
+    public override onStartFire(stack: ItemStack, world: World, attacker: Entity): void {
         if (!stack.isAvailable()) return;
-        world.playLoopSound(SoundEvents.CIWS_FIRE_LOOP);
+        world.playLoopSound(attacker, SoundEvents.CIWS_FIRE_LOOP, 0.8);
         stack.set(DataComponentTypes.ACTIVE, true);
     }
 
-    public override onEndFire(world: World, stack: ItemStack): void {
-        world.stopLoopSound(SoundEvents.CIWS_FIRE_LOOP);
+    public override onEndFire(stack: ItemStack, world: World, attacker: Entity): void {
+        world.stopLoopSound(attacker, SoundEvents.CIWS_FIRE_LOOP);
         stack.set(DataComponentTypes.ACTIVE, false);
     }
 

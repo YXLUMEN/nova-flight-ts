@@ -17,7 +17,8 @@ export abstract class SpecialWeapon extends Weapon {
     }
 
     public onReady(world: World): void {
-        world.playSound(SoundEvents.WEAPON_READY);
+        if (!world.isClient) return;
+        world.playSound(null, SoundEvents.WEAPON_READY);
     }
 
     public abstract bindKey(): string;

@@ -2,8 +2,8 @@ import type {EntityRenderer} from "./EntityRenderer.ts";
 import type {DecoyEntity} from "../../../entity/DecoyEntity.ts";
 
 export class DecoyEntityRender implements EntityRenderer<DecoyEntity> {
-    public render(entity: DecoyEntity, ctx: CanvasRenderingContext2D, offsetX: number = 0, offsetY: number = 0) {
-        const pos = entity.getPositionRef;
+    public render(entity: DecoyEntity, ctx: CanvasRenderingContext2D, tickDelta: number, offsetX: number = 0, offsetY: number = 0) {
+        const pos = entity.getLerpPos(tickDelta);
         const size = entity.getWidth();
         const glowColor = 'rgba(255,254,183,0.8)';
 

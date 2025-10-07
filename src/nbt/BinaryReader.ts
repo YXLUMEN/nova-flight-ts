@@ -1,3 +1,6 @@
+import type {UUID} from "../apis/registry.ts";
+import {UUIDUtil} from "../utils/UUIDUtil.ts";
+
 export class BinaryReader {
     private view: DataView;
     private offset = 0;
@@ -79,6 +82,15 @@ export class BinaryReader {
         const str = new TextDecoder("utf-8", {fatal: true}).decode(bytes);
         this.offset += len;
         return str;
+    }
+
+    public readUUID(): UUID {
+        if (this.offset + 16 > this.view.byteLength) {
+            throw new Error("Buffer underflow while reading UUID");
+        }
+        const bytes = new Uint8Array(this.view.buffer, this.view.byteOffset + this.offset, 16);
+        this.offset += 16;
+        return UUIDUtil.stringify(bytes);
     }
 
     public readSlice(len: number): Uint8Array {

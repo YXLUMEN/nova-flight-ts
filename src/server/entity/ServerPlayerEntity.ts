@@ -2,8 +2,13 @@ import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import type {ServerWorld} from "../ServerWorld.ts";
 import {ServerTechTree} from "../../tech/ServerTechTree.ts";
 import type {Tech} from "../../apis/ITech.ts";
+import type {World} from "../../world/World.ts";
+import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
+import {WorldConfig} from "../../configs/WorldConfig.ts";
 
 export class ServerPlayerEntity extends PlayerEntity {
+    private readonly inputKeys = new Set<string>();
+
     public constructor(world: ServerWorld, tech: Tech[]) {
         super(world);
 
@@ -13,6 +18,7 @@ export class ServerPlayerEntity extends PlayerEntity {
     public override tick() {
         super.tick();
         if (this.wasActive) this.handleFire();
+        this.inputKeys.clear();
     }
 
     public setFiring(bl: boolean) {
@@ -27,6 +33,20 @@ export class ServerPlayerEntity extends PlayerEntity {
         }
     }
 
+    protected override tickInventory(world: World) {
+        for (const [w, stack] of this.weapons) {
+            if (w instanceof SpecialWeapon) {
+                if (WorldConfig.devMode && w.getCooldown(stack) > 0.5) {
+                    w.setCooldown(stack, 0.5);
+                }
+                if (w.canFire(stack) && this.inputKeys.delete(w.bindKey())) {
+                    w.tryFire(stack, world, this);
+                }
+            }
+            w.inventoryTick(stack, world, this, 0, true);
+        }
+    }
+
     public handlerInput(key: string) {
         switch (key) {
             case 'KeyR':
@@ -34,6 +54,9 @@ export class ServerPlayerEntity extends PlayerEntity {
                 break;
             case 'Space':
                 this.handleFire();
+                break;
+            default:
+                this.inputKeys.add(key);
                 break;
         }
     }

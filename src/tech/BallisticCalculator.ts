@@ -1,13 +1,13 @@
-import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import {PI2} from "../utils/math/math.ts";
 import type {BaseWeapon} from "../item/weapon/BaseWeapon/BaseWeapon.ts";
+import type {ClientPlayerEntity} from "../client/entity/ClientPlayerEntity.ts";
 
 export class BallisticCalculator {
-    private owner: PlayerEntity;
+    private owner: ClientPlayerEntity;
     private lockedTarget: MobEntity | null = null;
 
-    public constructor(owner: PlayerEntity) {
+    public constructor(owner: ClientPlayerEntity) {
         this.owner = owner;
     }
 
@@ -35,7 +35,7 @@ export class BallisticCalculator {
             const dx = mobPos.x - cursorWorldPos.x;
             const dy = mobPos.y - cursorWorldPos.y;
             const dist2 = dx * dx + dy * dy;
-            if (dist2 < nearestDist2 && dist2 < 60 * 60) { // 20 像素内
+            if (dist2 < nearestDist2 && dist2 < 60 * 60) {
                 nearestDist2 = dist2;
                 nearest = mob;
             }

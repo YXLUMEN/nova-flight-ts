@@ -6,8 +6,8 @@ const isDev = import.meta.env.MODE === "development";
 const isServer = typeof window === 'undefined';
 
 const freezeConfig = createCleanObj({
-    tick: 50,
-    mbps: 0.02,
+    tick: 20,
+    mbps: 0.05,
 } as const);
 
 const WorldConfig = Object.preventExtensions(createCleanObj({

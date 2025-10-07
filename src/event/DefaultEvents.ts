@@ -1,12 +1,8 @@
-import {applyTech} from "../tech/apply_tech.ts";
 import {DamageTypeTags} from "../registry/tag/DamageTypeTags.ts";
 import {LaserWeapon} from "../item/weapon/LaserWeapon.ts";
-import {BombWeapon} from "../item/weapon/BombWeapon.ts";
 import {BossEntity} from "../entity/mob/BossEntity.ts";
 import {World} from "../world/World.ts";
-import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
 import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
-import {DamageTypes} from "../entity/damage/DamageTypes.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
@@ -27,10 +23,6 @@ import {Window} from "../client/render/Window.ts";
 export class DefaultEvents {
     public static registryEvents(world: World) {
         const eventBus = GeneralEventBus.getEventBus();
-
-        eventBus.on(EVENTS.UNLOCK_TECH, (event) => {
-            applyTech(world, event.id);
-        });
 
         eventBus.on(EVENTS.MOB_KILLED, event => {
             const damageSource = event.damageSource;
@@ -54,53 +46,6 @@ export class DefaultEvents {
             // TODO
             if (techTree.isUnlocked('emergency_repair')) {
                 if (Math.random() <= 0.08) player.setHealth(player.getHealth() + 5);
-            }
-        });
-
-        eventBus.on(EVENTS.MOB_DAMAGE, (event) => {
-            const mob = event.mob;
-            const damageSource = event.damageSource;
-
-            const attacker = damageSource.getAttacker();
-            if (attacker instanceof PlayerEntity && !damageSource.isOf(DamageTypes.ON_FIRE)) {
-                if (!attacker.techTree.isUnlocked('incendiary_bullet')) return;
-
-                if (attacker.techTree.isUnlocked('meltdown')) {
-                    const effect = mob.getStatusEffect(StatusEffects.BURNING);
-                    if (effect) {
-                        const amplifier = Math.min(10, effect.getAmplifier() + 1);
-                        mob.addStatusEffect(new StatusEffectInstance(StatusEffects.BURNING, 400, amplifier), null);
-                    }
-                }
-                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.BURNING, 400, 1), null);
-            }
-        });
-
-        const applyExplosion = (event: ExpendExplosionOpts) => {
-            const {pos, shake, flash} = event;
-
-            BombWeapon.summonExplosion(world, event.pos, event);
-            BombWeapon.spawnExplosionVisual(world, pos, event);
-            if (shake) Window.camera.addShake(shake, 0.5);
-            if (flash) world.addEffect(flash);
-        }
-
-        eventBus.on(EVENTS.BOMB_DETONATE, (event) => {
-            applyExplosion(event);
-            const player = world.player;
-            if (!player) return;
-            const techTree = player.techTree;
-
-            if (techTree.isUnlocked('serial_warhead')) {
-                let counts = 0;
-                const task = world.scheduleInterval(0.2, () => {
-                    const yaw = event.source.getYaw();
-                    const xOffset = Math.cos(yaw) * (event.explosionRadius ?? 16 / 2) | 0;
-                    const yOffset = Math.sin(yaw) * (event.explosionRadius ?? 16 / 2) | 0;
-                    event.pos = event.pos.add(xOffset, yOffset);
-                    applyExplosion(event);
-                    if (counts++ === 1) task.cancel();
-                });
             }
         });
 

@@ -29,6 +29,6 @@ export class EMPRocketEntity extends RocketEntity {
             this.getPosition(),
             this.explosionRadius,
         ));
-        world.playSound(SoundEvents.EMP_BURST);
+        world.playSound(null, SoundEvents.EMP_BURST);
     }
 }

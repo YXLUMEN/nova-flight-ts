@@ -43,7 +43,7 @@ export class ParticlePool {
         }
     }
 
-    render(ctx: CanvasRenderingContext2D) {
+    public render(ctx: CanvasRenderingContext2D) {
         for (let i = 0; i < this.active.length; i++) {
             this.active[i].render(ctx);
         }

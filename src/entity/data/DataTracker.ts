@@ -4,6 +4,9 @@ import {ClassToNum} from "../../utils/collection/ClassToNum.ts";
 import {TrackedData} from "./TrackedData.ts";
 import type {Constructor} from "../../apis/registry.ts";
 import type {TrackedDataHandler} from "./TrackedDataHandler.ts";
+import type {BinaryWriter} from "../../nbt/BinaryWriter.ts";
+import {TrackedDataHandlerRegistry} from "./TrackedDataHandlerRegistry.ts";
+import type {BinaryReader} from "../../nbt/BinaryReader.ts";
 
 export class DataTracker {
     public static readonly CLASS_TP_ID = new ClassToNum();
@@ -39,6 +42,7 @@ export class DataTracker {
             return new DataTracker(this.entity, this.entries);
         }
     }
+
     private readonly trackedEntity: DataTracked;
     private readonly entries: DataEntry<any>[];
     private dirty: boolean = false;
@@ -78,8 +82,74 @@ export class DataTracker {
         }
     }
 
+    public getChangedEntries(): DataTrackerSerializedEntry<any>[] | null {
+        let list: DataTrackerSerializedEntry<any>[] | null = null;
+
+        for (const entry of this.entries) {
+            if (entry.isUnchanged()) continue;
+            if (list === null) list = [];
+
+            list.push(entry.toSerialized());
+        }
+
+        return list;
+    }
+
     public isDirty() {
         return this.dirty;
     }
+
+    public getDirtyEntries(): DataTrackerSerializedEntry<any>[] | null {
+        if (!this.dirty) return null;
+
+        this.dirty = false;
+        const list = [];
+        for (const entry of this.entries) {
+            if (entry.dirty) {
+                entry.dirty = false;
+                list.push(entry.toSerialized());
+            }
+        }
+
+        return list;
+    }
+
+    public static SerializedEntry = class SerializedEntry<T> {
+        public readonly id: number;
+        public readonly handler: TrackedDataHandler<T>;
+        public readonly value: T;
+
+        public constructor(id: number, handler: TrackedDataHandler<T>, value: T) {
+            this.id = id;
+            this.handler = handler;
+            this.value = value;
+        }
+
+        public static of<T>(data: TrackedData<T>, value: T): DataTrackerSerializedEntry<T> {
+            const handler = data.dataType;
+            return new SerializedEntry(data.id, handler, value);
+        }
+
+        public write(writer: BinaryWriter): void {
+            const index = TrackedDataHandlerRegistry.getId(this.handler);
+            if (index === null) {
+                throw new RangeError(`Unknown serializer type ${this.handler}`);
+            }
+            writer.writeInt8(this.id);
+            writer.writeVarInt(index);
+            this.handler.codec().encode(this.value, writer);
+        }
+
+        public static read(reader: BinaryReader, id: number): SerializedEntry<any> {
+            const index = reader.readVarInt();
+            const handler = TrackedDataHandlerRegistry.getHandler(index);
+            if (handler === null) {
+                throw new RangeError(`Unknown serializer type ${id}`);
+            }
+
+            return new SerializedEntry(id, handler, handler.codec().decode(reader));
+        }
+    }
 }
 
+export type DataTrackerSerializedEntry<T> = InstanceType<typeof DataTracker.SerializedEntry<T>>;

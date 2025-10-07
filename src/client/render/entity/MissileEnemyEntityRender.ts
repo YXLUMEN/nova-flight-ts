@@ -3,10 +3,11 @@ import type {MissileEnemyEntity} from "../../../entity/mob/MissileEnemyEntity.ts
 import {HALF_PI} from "../../../utils/math/math.ts";
 
 export class MissileEnemyEntityRender implements EntityRenderer<MissileEnemyEntity> {
-    public render(entity: MissileEnemyEntity, ctx: CanvasRenderingContext2D, offsetX: number = 0, offsetY: number = 0) {
+    public render(entity: MissileEnemyEntity, ctx: CanvasRenderingContext2D, tickDelta: number, offsetX: number = 0, offsetY: number = 0) {
         ctx.save();
-        ctx.translate(entity.getPositionRef.x + offsetX, entity.getPositionRef.y + offsetY);
-        ctx.rotate(entity.getYaw() + HALF_PI);
+        const pos = entity.getLerpPos(tickDelta);
+        ctx.translate(pos.x + offsetX, pos.y + offsetY);
+        ctx.rotate(entity.getLerpYaw(tickDelta) + HALF_PI);
 
         ctx.fillStyle = entity.color;
         ctx.strokeStyle = "rgba(0,0,0,.2)";

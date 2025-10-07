@@ -22,7 +22,9 @@ import type {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
 import {StringPacket} from "../network/packet/StringPacket.ts";
 import {PlayerLoginC2SPayload} from "../network/packet/c2s/PlayerLoginC2SPayload.ts";
 import {EVENTS} from "../apis/IEvents.ts";
-import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
+import {applyTech} from "../tech/apply_tech.ts";
+import {PlayerUnlockTechC2SPacket} from "../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
+import {MobEntity} from "../entity/mob/MobEntity.ts";
 
 export class ClientWorld extends World {
     private readonly client: NovaFlightClient = NovaFlightClient.getInstance();
@@ -47,8 +49,9 @@ export class ClientWorld extends World {
         this.onEvent();
 
         const player = new ClientPlayerEntity(this, this.client.input);
+        player.setUuid(this.client.clientId);
         this.client.player = player;
-        this.getNetworkChannel().send(new PlayerLoginC2SPayload(player.getUuid()));
+        this.getNetworkChannel().send(new PlayerLoginC2SPayload(this.client.clientId));
         this.addEntity(player);
     }
 
@@ -56,7 +59,7 @@ export class ClientWorld extends World {
         super.tick(dt);
 
         const camera = this.client.window.camera;
-        camera.update(this.client.player!.getPositionRef.clone(), dt);
+        camera.update(this.client.player!.getLerpPos(dt), dt);
 
         this.tickEntities();
 
@@ -81,11 +84,11 @@ export class ClientWorld extends World {
         return this.entities;
     }
 
-    public override getPlayers(): Iterable<PlayerEntity> {
+    public override getPlayers() {
         return this.players;
     }
 
-    public getMobs() {
+    public getMobs(): ReadonlySet<MobEntity> {
         return this.entities.getMobs();
     }
 
@@ -138,19 +141,19 @@ export class ClientWorld extends World {
         return this.entityManager.getIndex();
     }
 
-    public override playSound(sounds: SoundEvent, volume: number = 1, pitch: number = 1): void {
+    public override playSound(_: Entity | null, sounds: SoundEvent, volume: number = 1, pitch: number = 1): void {
         this.worldSound.playSound(sounds, volume, pitch);
     }
 
-    public override playLoopSound(sounds: SoundEvent, volume: number = 1, pitch: number = 1): void {
+    public override playLoopSound(_: Entity | null, sounds: SoundEvent, volume: number = 1, pitch: number = 1): void {
         this.worldSound.playLoopSound(sounds, volume, pitch);
     }
 
-    public override stopLoopSound(event: SoundEvent): boolean {
+    public override stopLoopSound(_: Entity | null, event: SoundEvent): boolean {
         return this.worldSound.stopLoopSound(event);
     }
 
-    public spawnParticleByVec(
+    public addParticleByVec(
         pos: MutVec2, vel: MutVec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
@@ -164,7 +167,7 @@ export class ClientWorld extends World {
         );
     }
 
-    public spawnParticle(
+    public addParticle(
         posX: number, posY: number, velX: number, velY: number,
         life: number, size: number,
         colorFrom: string, colorTo: string,
@@ -183,6 +186,11 @@ export class ClientWorld extends World {
     }
 
     private onEvent() {
+        this.events.on(EVENTS.UNLOCK_TECH, event => {
+            this.getNetworkChannel().send(new PlayerUnlockTechC2SPacket(this.client.player!.getUuid(), event.id))
+            applyTech(event.id);
+        });
+
         this.events.on(EVENTS.ENTITY_REMOVED, event => {
             this.entityManager.remove(event.entity);
         });
@@ -195,7 +203,7 @@ export class ClientWorld extends World {
                 const speed = rand(80, 180);
                 const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
 
-                this.spawnParticleByVec(
+                this.addParticleByVec(
                     mob.getPositionRef.clone(), vel, rand(0.6, 0.8), rand(4, 6),
                     "#ffaa33", "#ff5454", 0.6, 80
                 );
@@ -208,7 +216,7 @@ export class ClientWorld extends World {
         this.setTicking(ticking);
     }
 
-    public render() {
+    public render(tickDelta: number) {
         if (!this.rendering) return;
 
         const ctx = this.client.window.ctx;
@@ -223,27 +231,28 @@ export class ClientWorld extends World {
         // 背景层
         this.drawBackground(ctx);
 
+        this.particlePool.render(ctx);
+
         // 其他实体
         if (this.client.player?.voidEdge) {
-            this.wrapEntityRender(ctx);
+            this.wrapEntityRender(ctx, tickDelta);
         } else {
             this.players.forEach(player => {
                 if (player === this.client.player) return;
-                EntityRenderers.getRenderer(player).render(player, ctx, 0, 0);
+                EntityRenderers.getRenderer(player).render(player, ctx, tickDelta, 0, 0);
             })
             this.entities.forEach(entity => {
-                EntityRenderers.getRenderer(entity).render(entity, ctx, 0, 0);
+                EntityRenderers.getRenderer(entity).render(entity, ctx, tickDelta, 0, 0);
             });
         }
 
         // 特效
-        for (let i = 0; i < this.effects.length; i++) this.effects[i].render(ctx);
-        this.particlePool.render(ctx);
+        for (let i = 0; i < this.effects.length; i++) this.effects[i].render(ctx, tickDelta);
 
         // 玩家
         const player = this.client.player;
         if (!this.over && player) {
-            EntityRenderers.getRenderer(player).render(player, ctx, 0, 0);
+            EntityRenderers.getRenderer(player).render(player, ctx, tickDelta, 0, 0);
 
             if (player.lockedMissile.size > 0) {
                 for (const missile of player.missilePos) {
@@ -264,12 +273,12 @@ export class ClientWorld extends World {
 
         ctx.restore();
 
-        this.client.window.hud.render(ctx);
+        this.client.window.hud.render(ctx, tickDelta);
         this.client.window.notify.render(ctx);
         if (!this.ticking) this.client.window.pauseOverlay.render(ctx);
     }
 
-    private wrapEntityRender(ctx: CanvasRenderingContext2D) {
+    private wrapEntityRender(ctx: CanvasRenderingContext2D, tickDelta: number) {
         const margin = Window.VIEW_W / 2;
 
         this.entities.forEach(entity => {
@@ -277,13 +286,13 @@ export class ClientWorld extends World {
             const pos = entity.getPositionRef;
             const width = entity.getWidth();
 
-            renderer.render(entity, ctx, 0, 0);
+            renderer.render(entity, ctx, tickDelta, 0, 0);
 
             if (pos.x < margin + width) {
-                renderer.render(entity, ctx, World.WORLD_W, 0);
+                renderer.render(entity, ctx, tickDelta, World.WORLD_W, 0);
             }
             if (pos.x > World.WORLD_W - margin - width) {
-                renderer.render(entity, ctx, -World.WORLD_W, 0);
+                renderer.render(entity, ctx, tickDelta, -World.WORLD_W, 0);
             }
         });
     }
@@ -346,7 +355,6 @@ export class ClientWorld extends World {
                 return;
             }
             this.entities.add(entity);
-            console.log(this.entities);
         },
 
         stopTicking: (entity: Entity) => {
@@ -356,5 +364,11 @@ export class ClientWorld extends World {
             }
             this.entities.remove(entity);
         },
+
+        stopTracking: (_entity: Entity) => {
+        },
+
+        startTracking: (_entity: Entity) => {
+        }
     };
 }

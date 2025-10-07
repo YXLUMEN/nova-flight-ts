@@ -2,7 +2,7 @@ import type {EntityRenderer} from "./EntityRenderer.ts";
 import type {SpawnMarkerEntity} from "../../../entity/SpawnMarkerEntity.ts";
 
 export class SpawnMarkerEntityRender implements EntityRenderer<SpawnMarkerEntity> {
-    public render(entity: SpawnMarkerEntity, ctx: CanvasRenderingContext2D, offsetX: number = 0, offsetY: number = 0) {
+    public render(entity: SpawnMarkerEntity, ctx: CanvasRenderingContext2D, _: number, offsetX: number = 0, offsetY: number = 0) {
         const pos = entity.getPositionRef;
         const size = entity.getWidth();
         const gapRatio = 0.3;
@@ -10,8 +10,8 @@ export class SpawnMarkerEntityRender implements EntityRenderer<SpawnMarkerEntity
         const gap = size * gapRatio;
 
         let alpha = 1;
-        if (entity.age > 80) {
-            const speed = 0.3 + (1 - entity.age / 180);
+        if (entity.age > 32) {
+            const speed = 0.3 + (1 - entity.age / 72);
             alpha = 0.5 + 0.5 * Math.sin(entity.age * speed);
         }
 

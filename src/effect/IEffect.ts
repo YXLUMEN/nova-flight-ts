@@ -3,7 +3,7 @@ export interface IEffect {
 
     tick(tickDelta: number): void;
 
-    render(ctx: CanvasRenderingContext2D): void;
+    render(ctx: CanvasRenderingContext2D, tickDelta: number): void;
 
     kill(): void;
 }

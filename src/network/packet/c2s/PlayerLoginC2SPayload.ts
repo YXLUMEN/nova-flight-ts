@@ -8,10 +8,10 @@ export class PlayerLoginC2SPayload implements Payload {
 
     public static readonly CODEC: PacketCodec<PlayerLoginC2SPayload> = PacketCodec.of<PlayerLoginC2SPayload>(
         (value, writer) => {
-            writer.writeString(value.uuid);
+            writer.writeUUID(value.uuid);
         },
         (reader) => {
-            return new PlayerLoginC2SPayload(reader.readString() as UUID);
+            return new PlayerLoginC2SPayload(reader.readUUID());
         }
     );
 

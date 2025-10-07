@@ -3,7 +3,6 @@ import type {World} from "../../world/World.ts";
 import {Entity} from "../Entity.ts";
 import type {ExplosionOpts} from "../../apis/IExplosionOpts.ts";
 import type {EntityType} from "../EntityType.ts";
-import {EVENTS} from "../../apis/IEvents.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 
 export class ExplodeBulletEntity extends ProjectileEntity {
@@ -24,14 +23,12 @@ export class ExplodeBulletEntity extends ProjectileEntity {
 
         const world = this.getWorld();
         const attacker = this.getOwner();
-        entity.takeDamage(this.getWorld().getDamageSources().explosion(this, attacker), this.damage);
-        world.events.emit(EVENTS.BOMB_DETONATE, {
-            pos: this.getPositionRef.clone(),
-            source: this,
+        entity.takeDamage(this.getWorld().getDamageSources().projectile(this, attacker), this.damage);
+        world.createExplosion(this, null, this.getX(), this.getY(), {
             attacker,
             ...this.explosionOpts
         });
 
-        world.playSound(SoundEvents.MISSILE_EXPLOSION, 0.3);
+        world.playSound(this.getOwner(), SoundEvents.MISSILE_EXPLOSION, 0.3);
     }
 }

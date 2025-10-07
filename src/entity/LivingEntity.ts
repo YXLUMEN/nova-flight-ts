@@ -13,12 +13,11 @@ import {EntityAttributes} from "./attribute/EntityAttributes.ts";
 import type {EntityAttributeInstance} from "./attribute/EntityAttributeInstance.ts";
 import {DefaultAttributeContainer} from "./attribute/DefaultAttributeContainer.ts";
 import {type NbtCompound} from "../nbt/NbtCompound.ts";
-import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
-import {createTrackDataHandler} from "./data/TrackedDataHandler.ts";
+import {TrackedDataHandlerRegistry} from "./data/TrackedDataHandlerRegistry.ts";
 
 
 export abstract class LivingEntity extends Entity {
-    private static readonly HEALTH = DataTracker.registerData(Object(LivingEntity), createTrackDataHandler(PacketCodecs.FLOAT));
+    private static readonly HEALTH = DataTracker.registerData(Object(LivingEntity), TrackedDataHandlerRegistry.FLOAT);
 
     private readonly attributes: AttributeContainer;
     private readonly activeStatusEffects = new Map<RegistryEntry<StatusEffect>, StatusEffectInstance>();

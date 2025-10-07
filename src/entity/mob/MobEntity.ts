@@ -11,8 +11,9 @@ import {EVENTS} from "../../apis/IEvents.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {MobAI} from "../ai/MobAI.ts";
 import type {NbtCompound} from "../../nbt/NbtCompound.ts";
+import type {IColorEntity} from "../IColorEntity.ts";
 
-export abstract class MobEntity extends LivingEntity {
+export abstract class MobEntity extends LivingEntity implements IColorEntity {
     public color = '#ff6b6b';
     public yStep = 1;
 
@@ -24,7 +25,7 @@ export abstract class MobEntity extends LivingEntity {
         this.worth = worth;
         this.age += (Math.random() * 10) | 0;
         this.setYaw(1.57079);
-        this.AI = new MobAI();
+        this.AI = new MobAI(this);
     }
 
     public override tick(): void {
@@ -42,13 +43,12 @@ export abstract class MobEntity extends LivingEntity {
 
     protected override adjustPosition(): boolean {
         const pos = this.getPositionRef;
-        pos.x = clamp(pos.x, 20, World.WORLD_W);
-        pos.y = Math.max(pos.y, 0);
-
         if (pos.y > World.WORLD_H + 40) {
             this.discard();
             return false;
         }
+
+        this.setPosition(clamp(pos.x, 20, World.WORLD_W), Math.max(pos.y, 0));
         return true;
     }
 
@@ -58,14 +58,13 @@ export abstract class MobEntity extends LivingEntity {
 
         const world = this.getWorld();
         world.events.emit(EVENTS.MOB_DAMAGE, {mob: this, damageSource});
-        if (world.isClient) {
-            world.spawnParticleByVec(
-                this.getPositionRef.clone(), MutVec2.zero(),
-                rand(0.2, 0.6), rand(4, 6),
-                "#ffaa33", "#ff5454",
-                0.6, 80
-            );
-        }
+
+        world.addParticleByVec(
+            this.getPositionRef.clone(), MutVec2.zero(),
+            rand(0.2, 0.6), rand(4, 6),
+            "#ffaa33", "#ff5454",
+            0.6, 80
+        );
         return true;
     }
 

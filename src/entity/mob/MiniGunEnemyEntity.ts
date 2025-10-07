@@ -5,18 +5,19 @@ import {MobEntity} from "./MobEntity.ts";
 import {EntityType} from "../EntityType.ts";
 import type {World} from "../../world/World.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
-import {randInt} from "../../utils/math/math.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
+import {randInt} from "../../utils/math/math.ts";
 
 export class MiniGunEnemyEntity extends MobEntity {
     private static readonly bulletSpeed = 4;
     public color = "#ac0000";
-    private cooldown = randInt(0, 200);
+    private cooldown: number;
     private fireCount = 0;
     private fireCD = 0;
 
     public constructor(type: EntityType<MiniGunEnemyEntity>, world: World) {
         super(type, world, 10);
+        this.cooldown = randInt(0, 200);
     }
 
     public override createLivingAttributes() {

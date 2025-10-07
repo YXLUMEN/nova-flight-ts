@@ -23,7 +23,7 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public techTree!: TechTree;
     protected readonly weapons = new Map<Item, ItemStack>();
-    protected readonly baseWeapons: BaseWeapon[] = [];
+    public readonly baseWeapons: BaseWeapon[] = [];
     public currentBaseIndex: number = 0;
 
     protected wasActive: boolean = false;
@@ -37,7 +37,7 @@ export abstract class PlayerEntity extends LivingEntity {
     protected constructor(world: World) {
         super(EntityTypes.PLAYER_ENTITY, world);
 
-        this.setMovementSpeed(0.8);
+        this.setMovementSpeed(2);
         this.setYaw(-1.57079);
 
         this.addItem(Items.CANNON40_WEAPON);
@@ -71,7 +71,7 @@ export abstract class PlayerEntity extends LivingEntity {
     public switchWeapon(dir = 1) {
         const stack = this.getCurrentItemStack();
         const current = stack.getItem() as BaseWeapon;
-        current.onEndFire(this.getWorld(), stack);
+        current.onEndFire(stack, this.getWorld(), this);
 
         this.wasActive = false;
         const next = (this.currentBaseIndex + dir) % this.baseWeapons.length;
@@ -89,17 +89,13 @@ export abstract class PlayerEntity extends LivingEntity {
         this.lastDamageTime = this.age;
 
         const world = this.getWorld();
-        /*
-        world.events.emit(EVENTS.BOMB_DETONATE, {
-            pos: this.getPosition(),
+        world.createExplosion(this, null, this.getX(), this.getY(), {
             damage: 32,
             explosionRadius: this.onDamageExplosionRadius,
             shake: 0.5,
-            flash: new ScreenFlash(0.3, 0.25, '#ff5151'),
             important: true,
-            source: this,
             attacker: this
-        });*/
+        });
 
         if (this.techTree.isUnlocked('electrical_energy_surges')) {
             const stack = this.weapons.get(Items.EMP_WEAPON);
@@ -107,7 +103,7 @@ export abstract class PlayerEntity extends LivingEntity {
                 const emp = stack.getItem() as EMPWeapon;
                 if (emp.canFire(stack) && this.techTree.isUnlocked('ele_shield')) {
                     emp.tryFire(stack, world, this);
-                    world.playSound(SoundEvents.SHIELD_CRASH);
+                    world.playSound(this, SoundEvents.SHIELD_CRASH);
                     return false;
                 }
                 const cd = emp.getCooldown(stack);
@@ -172,7 +168,7 @@ export abstract class PlayerEntity extends LivingEntity {
     public clearItems(): void {
         const stack = this.getCurrentItemStack();
         const current = stack.getItem() as BaseWeapon;
-        current.onEndFire(this.getWorld(), stack);
+        current.onEndFire(stack, this.getWorld(), this);
 
         this.currentBaseIndex = 0;
         this.baseWeapons.length = 0;

@@ -34,7 +34,7 @@ export class EMPWeapon extends SpecialWeapon {
             attacker.getPositionRef,
             radius
         ));
-        world.playSound(SoundEvents.EMP_BURST);
+        world.playSound(attacker, SoundEvents.EMP_BURST);
 
         this.setCooldown(stack, this.getMaxCooldown(stack));
     }

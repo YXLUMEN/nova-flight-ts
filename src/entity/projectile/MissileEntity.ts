@@ -6,7 +6,6 @@ import {AutoAim} from "../../tech/AutoAim.ts";
 import {RocketEntity} from "./RocketEntity.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
-import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export class MissileEntity extends RocketEntity {
     public static lockedEntity = new WeakMap<Entity, number>();
@@ -64,7 +63,7 @@ export class MissileEntity extends RocketEntity {
         const cd = (this.age & 3) === 0;
         const world = this.getWorld();
 
-        if (cd) world.spawnParticleByVec(pos.clone(), MutVec2.zero(),
+        if (cd) world.addParticleByVec(pos.clone(), MutVec2.zero(),
             rand(1, 1.5), rand(4, 6),
             "#986900", "#575757", 0.3, 0
         );
@@ -110,8 +109,7 @@ export class MissileEntity extends RocketEntity {
     }
 
     protected acquireTarget(): Entity | null {
-        const world = this.getWorld() as ServerWorld;
-        if (world.isClient) return null;
+        const world = this.getWorld();
 
         const mobs = world.getMobs();
         if (mobs.size === 0) return null;

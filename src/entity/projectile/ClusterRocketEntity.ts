@@ -1,8 +1,7 @@
 import {EntityTypes} from "../EntityTypes.ts";
-import {Vec2} from "../../utils/math/Vec2.ts";
 import {FuseRocketEntity} from "./FuseRocketEntity.ts";
-import {randInt} from "../../utils/math/math.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
+import {randInt} from "../../utils/math/math.ts";
 
 export class ClusterRocketEntity extends FuseRocketEntity {
     public override color = "#ff5d2a";
@@ -19,7 +18,7 @@ export class ClusterRocketEntity extends FuseRocketEntity {
         const pos = this.getPositionRef;
 
         for (let i = this.rocketCounts; i--;) {
-            const rocket = new FuseRocketEntity(EntityTypes.ROCKET_ENTITY, world, this.getOwner(), 8, randInt(20, 60));
+            const rocket = new FuseRocketEntity(EntityTypes.ROCKET_ENTITY, world, this.getOwner(), 8, randInt(8, 30));
             rocket.explosionDamage = 6;
 
             const angleOffset = -Math.PI / 2 + (Math.PI / (this.rocketCounts - 1)) * i;
@@ -32,7 +31,7 @@ export class ClusterRocketEntity extends FuseRocketEntity {
                 pos.x + dirX * 10,
                 pos.y + dirY * 10
             );
-            rocket.setVelocityByVec(new Vec2(dirX * 8, dirY * 8));
+            rocket.setVelocity(dirX * 20, dirY * 20);
 
             rocket.setYaw(bulletYaw);
             world.spawnEntity(rocket);

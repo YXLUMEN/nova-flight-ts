@@ -6,7 +6,7 @@ import type {Entity} from "../Entity.ts";
 export class FuseRocketEntity extends RocketEntity {
     private fuse: number;
 
-    public constructor(type: EntityType<RocketEntity>, world: World, owner: Entity | null, damage: number = 8, fuse: number = 50) {
+    public constructor(type: EntityType<RocketEntity>, world: World, owner: Entity | null, damage: number = 8, fuse: number = 20) {
         super(type, world, owner, damage);
         this.fuse = fuse;
     }

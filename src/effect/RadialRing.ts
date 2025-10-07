@@ -1,5 +1,6 @@
 import type {IEffect} from "./IEffect.ts";
 import type {IVec} from "../utils/math/IVec.ts";
+import {lerp, PI2} from "../utils/math/math.ts";
 
 export class RadialRing implements IEffect {
     public alive = true;
@@ -10,6 +11,7 @@ export class RadialRing implements IEffect {
     private readonly life: number;
     private readonly color: string;
 
+    private preT = 0;
     private t = 0;
 
     public constructor(center: IVec, r0: number, r1: number, life: number, color: string) {
@@ -21,14 +23,16 @@ export class RadialRing implements IEffect {
     }
 
     public tick(dt: number) {
+        this.preT = this.t;
         this.t += dt;
         if (this.t >= this.life) {
             this.alive = false;
         }
     }
 
-    public render(ctx: CanvasRenderingContext2D) {
-        const k = Math.min(1, this.t / this.life);
+    public render(ctx: CanvasRenderingContext2D, tickDelta: number) {
+        const lerpT = lerp(tickDelta, this.preT, this.t);
+        const k = Math.min(1, lerpT / this.life);
         const r = this.r0 + (this.r1 - this.r0) * k;
         const alpha = 1 - k;
         ctx.save();
@@ -36,7 +40,7 @@ export class RadialRing implements IEffect {
         ctx.strokeStyle = this.color;
         ctx.lineWidth = Math.max(1, (this.r1 - this.r0) * 0.04 * (1 - k));
         ctx.beginPath();
-        ctx.arc(this.center.x, this.center.y, r, 0, Math.PI * 2);
+        ctx.arc(this.center.x, this.center.y, r, 0, PI2);
         ctx.stroke();
         ctx.restore();
     }

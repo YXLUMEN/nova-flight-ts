@@ -20,7 +20,7 @@ export class SpawnMarkerEntity extends Entity {
 
     public override tick() {
         super.tick();
-        if (this.age >= 200) {
+        if (this.age >= 80) {
             this.discard();
             const world = this.getWorld() as ServerWorld;
             if (world.isPeaceMode() || world.isClient) return;

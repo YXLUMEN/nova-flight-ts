@@ -11,7 +11,7 @@ type Tx = mpsc::UnboundedSender<Bytes>;
 #[derive(Default)]
 struct State {
     server: Option<Tx>,
-    clients: HashMap<String, Tx>,
+    clients: HashMap<[u8; 16], Tx>,
 }
 
 pub async fn start_ws_server(addr: &str) {
@@ -85,7 +85,7 @@ pub async fn start_ws_server(addr: &str) {
                 st.clients.retain(|id, c| {
                     let keep = !c.same_channel(&tx);
                     if !keep {
-                        println!("[INFO] Client {} disconnected", id);
+                        println!("[INFO] Client {} disconnected", format_uuid(&id));
                     }
                     keep
                 });
@@ -116,10 +116,19 @@ async fn handle_message(state: &Arc<Mutex<State>>, tx: &Tx, data: Bytes) {
         }
         0x02 => {
             // 注册 Client
-            let id = String::from_utf8_lossy(&data[1..]).to_string();
+            if data.len() < 17 {
+                eprintln!("[WARN] Invalid client register packet");
+                return;
+            }
+
+            let mut id_bytes = [0u8; 16];
+            id_bytes.copy_from_slice(&data[1..17]);
+
             let mut st = state.lock().await;
-            st.clients.insert(id.clone(), tx.clone());
-            println!("[INFO] Client {} registered", id);
+            st.clients.insert(id_bytes, tx.clone());
+
+            let id_str = format_uuid(&id_bytes);
+            println!("[INFO] Client {} registered", id_str);
         }
         0x10 => {
             // Client → Server
@@ -130,10 +139,29 @@ async fn handle_message(state: &Arc<Mutex<State>>, tx: &Tx, data: Bytes) {
         }
         0x11 => {
             // Server → 广播给所有 Client
+            if data.len() < 17 {
+                eprintln!("[WARN] Invalid server packet");
+                return;
+            }
+            let exclude_uuid = &data[1..17];
+
+            // 截断UUID
+            let rest = data.slice(17..);
+            let mut buf = Vec::with_capacity(1 + rest.len());
+            buf.push(0x11);
+            buf.extend_from_slice(&rest);
+            let forwarded = Bytes::from(buf);
+
             let mut st = state.lock().await;
             st.clients.retain(|id, client| {
-                if client.send(data.clone()).is_err() {
-                    println!("[WARN] Client {} dropped", id);
+                // 排除
+                if !is_nil_uuid(exclude_uuid) && id == exclude_uuid {
+                    return true;
+                }
+
+                // 转发
+                if client.send(forwarded.clone()).is_err() {
+                    println!("[WARN] Client {} dropped", format_uuid(&id));
                     false
                 } else {
                     true
@@ -144,4 +172,22 @@ async fn handle_message(state: &Arc<Mutex<State>>, tx: &Tx, data: Bytes) {
             eprintln!("[WARN] Unknown opcode: {}", data[0]);
         }
     }
+}
+
+fn is_nil_uuid(uuid: &[u8]) -> bool {
+    uuid.iter().all(|&b| b == 0)
+}
+
+fn format_uuid(bytes: &[u8; 16]) -> String {
+    assert_eq!(bytes.len(), 16);
+    let hex: Vec<String> = bytes.iter().map(|b| format!("{:02x}", b)).collect();
+    let s = hex.join("");
+    format!(
+        "{}-{}-{}-{}-{}",
+        &s[0..8],
+        &s[8..12],
+        &s[12..16],
+        &s[16..20],
+        &s[20..32]
+    )
 }

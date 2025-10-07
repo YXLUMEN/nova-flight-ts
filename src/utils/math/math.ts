@@ -1,6 +1,5 @@
 import type {MutVec2} from "./MutVec2.ts";
 import type {Entity} from "../../entity/Entity.ts";
-import type {IVec} from "./IVec.ts";
 
 export function clamp(value: number, min: number, max: number) {
     return Math.max(min, Math.min(max, value));
@@ -52,8 +51,14 @@ export function collideCircle(ax: number, ay: number, ar: number,
     return dx * dx + dy * dy < r * r;
 }
 
-export function distance2(a: MutVec2, b: MutVec2) {
+export function distanceVec2(a: MutVec2, b: MutVec2) {
     const dx = a.x - b.x, dy = a.y - b.y;
+    return dx * dx + dy * dy;
+}
+
+export function distance2(aX: number, aY: number, bX: number, bY: number) {
+    const dx = aX - bX;
+    const dy = aY - bY;
     return dx * dx + dy * dy;
 }
 
@@ -130,15 +135,8 @@ export function wrappedDelta(a: number, b: number, size: number): number {
     return d;
 }
 
-export function lerp(a: number, b: number, t: number): number {
-    return a + (b - a) * t;
-}
-
-export function lerpVec2(prev: IVec, curr: IVec, alpha: number) {
-    return {
-        x: lerp(prev.x, curr.x, alpha),
-        y: lerp(prev.y, curr.y, alpha),
-    }
+export function lerp(delta: number, start: number, end: number): number {
+    return start + delta * (end - start);
 }
 
 export const PI2 = Math.PI * 2;

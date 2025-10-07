@@ -10,6 +10,10 @@ import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {StringPacket} from "../../network/packet/StringPacket.ts";
 import {BaseEnemy} from "../../entity/mob/BaseEnemy.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
+import {PlayerUnlockTechC2SPacket} from "../../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
+import {applyServerTech} from "../../tech/applyServerTech.ts";
+import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
+import {clamp} from "../../utils/math/math.ts";
 
 export class ServerReceive {
     public static registryNetworkHandler(channel: ServerNetworkChannel) {
@@ -34,7 +38,7 @@ export class ServerReceive {
             player.setClampYaw(Math.atan2(
                 pointer.y - posRef.y,
                 pointer.x - posRef.x
-            ), 0.157075);
+            ), 0.3926875);
         });
 
         channel.receive(PlayerInputC2SPacket.ID, payload => {
@@ -83,9 +87,33 @@ export class ServerReceive {
 
             const player = world.getEntity(uuid) as ServerPlayerEntity | null;
             if (!player) return;
+
             const speedMultiplier = player.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
             const speed = player.getMovementSpeed() * speedMultiplier;
             player.updateVelocity(speed, payload.velocityX, payload.velocityY);
+        });
+
+        channel.receive(PlayerUnlockTechC2SPacket.ID, payload => {
+            const uuid = payload.uuid;
+            const name = payload.techName;
+
+            const world = NovaFlightServer.getInstance().world;
+            if (!world) return;
+            const player = world.getEntity(uuid) as ServerPlayerEntity | null;
+            if (!player) return;
+            applyServerTech(name, player);
+        });
+
+        channel.receive(PlayerSwitchSlotC2SPacket.ID, payload => {
+            const uuid = payload.uuid;
+            const slot = payload.slot;
+
+            const world = NovaFlightServer.getInstance().world;
+            if (!world) return;
+            const player = world.getEntity(uuid) as ServerPlayerEntity | null;
+            if (!player) return;
+
+            player.currentBaseIndex = clamp(slot, 0, player.baseWeapons.length - 1);
         });
     }
 }

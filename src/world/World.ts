@@ -14,6 +14,10 @@ import type {Consumer} from "../apis/registry.ts";
 import type {EntityList} from "./EntityList.ts";
 import type {EntityIndex} from "./EntityIndex.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
+import {Explosion} from "./Explosion.ts";
+import type {DamageSource} from "../entity/damage/DamageSource.ts";
+import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
+import type {MobEntity} from "../entity/mob/MobEntity.ts";
 
 export abstract class World {
     public static readonly WORLD_W = 1692;
@@ -49,20 +53,20 @@ export abstract class World {
         return null;
     }
 
-    public abstract playSound(sound: SoundEvent, volume?: number, pitch?: number): void;
+    public abstract playSound(entity: Entity | null, sound: SoundEvent, volume?: number, pitch?: number): void;
 
-    public abstract playLoopSound(sound: SoundEvent, volume?: number, pitch?: number): void;
+    public abstract playLoopSound(entity: Entity | null, sound: SoundEvent, volume?: number, pitch?: number): void;
 
-    public abstract stopLoopSound(sound: SoundEvent): boolean;
+    public abstract stopLoopSound(entity: Entity | null, sound: SoundEvent): boolean;
 
-    public abstract spawnParticleByVec(
+    public abstract addParticleByVec(
         pos: MutVec2, vel: MutVec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
         drag?: number, gravity?: number
     ): void;
 
-    public abstract spawnParticle(
+    public abstract addParticle(
         posX: number, posY: number, velX: number, velY: number,
         life: number, size: number,
         colorFrom: string, colorTo: string,
@@ -71,8 +75,13 @@ export abstract class World {
 
     public abstract addEffect(effect: IEffect): void;
 
-    // public createExplosion(entity: Entity | null, x: number, y: number) {
-    // }
+    public createExplosion(entity: Entity | null, damage: DamageSource | null, x: number, y: number, opts: ExpendExplosionOpts) {
+        if (!damage) damage = this.getDamageSources().explosion(null, entity);
+
+        const explosion = new Explosion(this, x, y, entity, damage, opts);
+        explosion.apply();
+        return explosion;
+    }
 
     public close(): void {
         this.clear();
@@ -107,6 +116,8 @@ export abstract class World {
     public abstract getEntities(): EntityList;
 
     public abstract getPlayers(): Iterable<PlayerEntity>;
+
+    public abstract getMobs(): ReadonlySet<MobEntity>;
 
     public abstract addEntity(entity: Entity): void;
 

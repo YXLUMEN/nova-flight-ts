@@ -13,10 +13,9 @@ import {ClusterRocketEntity} from "../../../entity/projectile/ClusterRocketEntit
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 
 export class RocketWeapon extends BaseWeapon {
-    private static readonly BULLET_SPEED: number = 6;
+    private static readonly BULLET_SPEED: number = 15;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
-        if (world.isClient) return;
         stack.set(DataComponentTypes.WEAPON_CAN_COOLDOWN, false);
 
         const rocketCounts = stack.getOrDefault(DataComponentTypes.MISSILE_COUNT, 8);
@@ -39,14 +38,14 @@ export class RocketWeapon extends BaseWeapon {
                 rocket.explosionDamage = stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 12);
                 rocket.explosionRadius = stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 72);
             }
-            this.setBullet(rocket, attacker, RocketWeapon.BULLET_SPEED, 4, 2);
-            (world as ServerWorld).spawnEntity(rocket);
 
+            this.setBullet(rocket, attacker, RocketWeapon.BULLET_SPEED, 4, 2);
+            if (!world.isClient) (world as ServerWorld).spawnEntity(rocket);
             const yaw = attacker.getYaw();
             attacker.updateVelocity(-0.6, Math.cos(yaw), Math.sin(yaw));
         });
 
-        world.playSound(SoundEvents.MISSILE_LAUNCH, 0.5);
+        world.playSound(attacker, SoundEvents.MISSILE_LAUNCH, 0.5);
         this.setCooldown(stack, this.getMaxCooldown(stack));
     }
 
@@ -59,7 +58,7 @@ export class RocketWeapon extends BaseWeapon {
         } else if (rnd < 0.4) {
             return new APRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker);
         } else if (rnd < 0.6) {
-            return new ClusterRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker, 8, 100);
+            return new ClusterRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker, 8, 40);
         }
         return null;
     }

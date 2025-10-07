@@ -7,8 +7,9 @@ import type {TrackedData} from "../data/TrackedData.ts";
 import {DataTracker} from "../data/DataTracker.ts";
 import {type NbtCompound} from "../../nbt/NbtCompound.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
+import type {IColorEntity} from "../IColorEntity.ts";
 
-export abstract class ProjectileEntity extends Entity implements IOwnable {
+export abstract class ProjectileEntity extends Entity implements IOwnable, IColorEntity {
     public readonly damage: number;
 
     private ownerUuid: string | null = null;
@@ -30,7 +31,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
         super.tick();
 
         const pos = this.getPositionRef;
-        pos.addVec(this.getVelocityRef);
+        this.moveByVec(this.getVelocityRef);
 
         if (this.shouldWrap()) {
             this.wrapPosition();
@@ -77,7 +78,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable {
         }
         if (pos.x < 0 || pos.x > World.WORLD_W) this.wrapTime++;
 
-        pos.x = ((pos.x % W) + W) % W;
+        this.setPosition(((pos.x % W) + W) % W, pos.y);
         return true;
     }
 

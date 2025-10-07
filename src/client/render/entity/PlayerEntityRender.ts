@@ -3,10 +3,11 @@ import {type PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import {HALF_PI} from "../../../utils/math/math.ts";
 
 export class PlayerEntityRender implements EntityRenderer<PlayerEntity> {
-    public render(player: PlayerEntity, ctx: CanvasRenderingContext2D, offsetX: number = 0, offsetY: number = 0) {
+    public render(player: PlayerEntity, ctx: CanvasRenderingContext2D, tickDelta: number, offsetX: number = 0, offsetY: number = 0) {
         ctx.save();
-        ctx.translate(player.getPositionRef.x + offsetX, player.getPositionRef.y + offsetY);
-        ctx.rotate(player.getYaw() + HALF_PI);
+        const pos = player.getLerpPos(tickDelta);
+        ctx.translate(pos.x + offsetX, pos.y + offsetY);
+        ctx.rotate(player.getLerpYaw(tickDelta) + HALF_PI);
         // 机身
         const grad = ctx.createLinearGradient(0, -20, 0, 20);
         grad.addColorStop(0, "#7ee3ff");

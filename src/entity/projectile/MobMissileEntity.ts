@@ -4,10 +4,10 @@ import type {EntityType} from "../EntityType.ts";
 import type {Entity} from "../Entity.ts";
 import {DecoyEntity} from "../DecoyEntity.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
-import {distance2} from "../../utils/math/math.ts";
+import {distanceVec2} from "../../utils/math/math.ts";
 
 export class MobMissileEntity extends MissileEntity {
-    protected override maxReLockCD = 30;
+    protected override maxReLockCD = 15;
 
     public constructor(type: EntityType<MissileEntity>, world: World, owner: Entity, driftAngle: number) {
         super(type, world, owner, driftAngle, 5);
@@ -42,17 +42,17 @@ export class MobMissileEntity extends MissileEntity {
         const world = this.getWorld();
 
         if (rand < 0.2) {
-            this.reLockCD = 100;
+            this.reLockCD = 40;
             world.events.emit(EVENTS.ENTITY_UNLOCKED, {missile: this, lastTarget: this.target});
             this.target = null;
         } else if (rand < 0.8) {
-            this.reLockCD = 250;
+            this.reLockCD = 100;
             world.events.emit(EVENTS.ENTITY_UNLOCKED, {missile: this, lastTarget: this.target});
             let closest = null;
             let minDist = Infinity;
 
             for (const decoyEntity of decoyEntities) {
-                const d = distance2(decoyEntity.getPositionRef, this.getPositionRef);
+                const d = distanceVec2(decoyEntity.getPositionRef, this.getPositionRef);
                 if (d < minDist) {
                     minDist = d;
                     closest = decoyEntity;

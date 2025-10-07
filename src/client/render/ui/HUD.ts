@@ -41,7 +41,7 @@ export class HUD implements IUi {
         }
     }
 
-    public render(ctx: CanvasRenderingContext2D) {
+    public render(ctx: CanvasRenderingContext2D, tickDelta: number) {
         const world = NovaFlightClient.getInstance().world;
         if (!world) return;
 
@@ -90,7 +90,7 @@ export class HUD implements IUi {
 
         ctx.restore();
 
-        this.drawPrimaryWeapons(ctx);
+        this.drawPrimaryWeapons(ctx, tickDelta);
 
         if (player.lockedMissile.size > 0) {
             this.renderLockAlert(ctx);
@@ -131,19 +131,20 @@ export class HUD implements IUi {
         return {label, color, cooldown: Math.max(0, cd), maxCooldown: Math.max(0.001, max)};
     }
 
-    private drawPrimaryWeapons(ctx: CanvasRenderingContext2D) {
+    private drawPrimaryWeapons(ctx: CanvasRenderingContext2D, tickDelta: number) {
         const player = NovaFlightClient.getInstance().player;
         if (!player) return;
 
         const cam = NovaFlightClient.getInstance().window.camera.viewOffset;
-        const px = player.getPositionRef.x - cam.x;
-        const py = player.getPositionRef.y - cam.y;
+        const pos = player.getLerpPos(tickDelta);
+        const px = pos.x - cam.x;
+        const py = pos.y - cam.y;
 
         const stack = player.getCurrentItemStack();
         const weapon = stack.getItem() as BaseWeapon;
 
         const anchorX = Math.floor(px + player.getWidth() / 2 + 12);
-        const ratio = Math.max(0, Math.min(1, 1 - weapon.getCooldown(stack) / weapon.getMaxCooldown(stack)));
+        const ratio = clamp(1 - weapon.getCooldown(stack) / weapon.getMaxCooldown(stack), 0, 1);
 
         ctx.save();
         ctx.textAlign = 'left';
