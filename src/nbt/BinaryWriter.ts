@@ -13,6 +13,10 @@ export class BinaryWriter {
         this.chunks.push(v & 0xff);
     }
 
+    public writeUint8(v: number): void {
+        this.chunks.push(v & 0xff);
+    }
+
     public writeInt16(v: number): void {
         const buf = new ArrayBuffer(2);
         new DataView(buf).setInt16(0, v, true);

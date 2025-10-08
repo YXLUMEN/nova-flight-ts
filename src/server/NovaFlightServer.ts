@@ -2,11 +2,11 @@ import {NbtCompound} from "../nbt/NbtCompound.ts";
 import {BaseDirectory, exists, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import {ServerNetworkChannel} from "./network/ServerNetworkChannel.ts";
-import type {Consumer} from "../apis/registry.ts";
+import type {Consumer, UUID} from "../apis/registry.ts";
 import {ServerReceive} from "./network/ServerReceive.ts";
 import type {ServerWorld} from "./ServerWorld.ts";
-import {JoinGameS2CPacket} from "../network/packet/s2c/JoinGameS2CPacket.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
+import {ServerReadyS2CPacket} from "../network/packet/s2c/ServerReadyS2CPacket.ts";
 
 export abstract class NovaFlightServer {
     public static instance: NovaFlightServer;
@@ -14,6 +14,7 @@ export abstract class NovaFlightServer {
 
     public networkChannel: ServerNetworkChannel;
     public world: ServerWorld | null = null;
+    public readonly loginPlayers = new Set<UUID>();
 
     private tickInterval: number | null = null;
     private last = 0;
@@ -35,38 +36,35 @@ export abstract class NovaFlightServer {
         if (this.running) return;
         this.running = true;
 
-        this.waitGameStop = new Promise<void>(resolve => {
-            this.onGameStop = async (nbt: NbtCompound) => {
-                try {
-                    await NovaFlightServer.saveGame(nbt);
-                } catch (error) {
-                    console.error(`Error while saving game: ${error}`);
-                } finally {
-                    this.world?.close();
-                    this.world = null;
-                    this.waitGameStop = null;
-                    this.last = 0;
-                    this.accumulator = 0;
-                    resolve();
-                }
-            };
-        });
+        const {promise, resolve} = Promise.withResolvers<void>();
+        this.waitGameStop = promise;
+        this.onGameStop = async (nbt: NbtCompound) => {
+            try {
+                await NovaFlightServer.saveGame(nbt);
+            } catch (error) {
+                console.error(`Error while saving game: ${error}`);
+            } finally {
+                this.world?.close();
+                this.world = null;
+                this.waitGameStop = null;
+                this.last = 0;
+                this.accumulator = 0;
+                resolve();
+            }
+        };
 
         const mod = await import("./ServerWorld.ts");
         this.world = new mod.ServerWorld(manager, this);
 
         if (readSave) {
             const saves = await NovaFlightServer.loadSaves();
-            if (saves) {
-                this.world.readNBT(saves);
-            }
+            if (saves) this.world.readNBT(saves);
         }
 
+        this.networkChannel.send(new ServerReadyS2CPacket());
         this.world.setTicking(true);
-        this.networkChannel.send(new JoinGameS2CPacket());
-
         this.last = performance.now();
-        this.tickInterval = setInterval(this.bindTick, 50);
+        this.tickInterval = setInterval(this.bindTick, 25);
     }
 
     public async stopGame(): Promise<void> {
@@ -80,6 +78,8 @@ export abstract class NovaFlightServer {
             clearInterval(this.tickInterval);
             this.tickInterval = null;
         }
+
+        this.networkChannel.disconnect();
 
         try {
             await this.waitGameStop;

@@ -4,14 +4,21 @@ import {ClientWorld} from "../ClientWorld.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
-import type {UUID} from "../../apis/registry.ts";
-import {EntityHealthS2CPacket} from "../../network/packet/s2c/EntityHealthS2CPacket.ts";
-import type {LivingEntity} from "../../entity/LivingEntity.ts";
+import type {Consumer, UUID} from "../../apis/registry.ts";
 import {EntityRemoveS2CPacket} from "../../network/packet/s2c/EntityRemoveS2CPacket.ts";
 import {EntityPositionS2CPacket} from "../../network/packet/s2c/EntityPositionS2CPacket.ts";
 import {MobAiS2CPacket} from "../../network/packet/s2c/MobAiS2CPacket.ts";
 import type {MobEntity} from "../../entity/mob/MobEntity.ts";
 import {ExplosionS2CPacket} from "../../network/packet/s2c/ExplosionS2CPacket.ts";
+import {EntityVelocityUpdateS2CPacket} from "../../network/packet/s2c/EntityVelocityUpdateS2CPacket.ts";
+import {EntityTrackerUpdateS2CPacket} from "../../network/packet/s2c/EntityTrackerUpdateS2CPacket.ts";
+import {EntityS2CPacket, MoveRelative, Rotate} from "../../network/packet/s2c/EntityS2CPacket.ts";
+import {decodeYaw} from "../../utils/NetUtil.ts";
+import type {Payload, PayloadId} from "../../network/Payload.ts";
+import type {NetworkChannel} from "../../network/NetworkChannel.ts";
+import {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
+import {ServerReadyS2CPacket} from "../../network/packet/s2c/ServerReadyS2CPacket.ts";
+import {PlayerAttemptLoginC2SPacket} from "../../network/packet/c2s/PlayerAttemptLoginC2SPacket.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer = new Set<UUID>();
@@ -20,57 +27,96 @@ export class ClientPlayNetworkHandler {
 
     public constructor(client: NovaFlightClient) {
         this.client = client;
+        this.loginPlayer.add(this.client.clientId);
     }
 
-    public onGameJoin() {
-        console.log("Client joined");
+    public onServerReady(_packet: ServerReadyS2CPacket) {
+        this.client.networkChannel.send(new PlayerAttemptLoginC2SPacket(this.client.clientId));
+    }
+
+    public onGameJoin(packet: JoinGameS2CPacket) {
         this.world = new ClientWorld(this.client.registryManager);
         this.client.joinGame(this.world);
+        if (this.client.player === null) {
+            this.client.player = new ClientPlayerEntity(this.world, this.client.input);
+            this.client.player.setYaw(-1.57079);
+        }
+
+        this.client.player.setUuid(this.client.clientId);
+        this.client.player.setId(packet.playerEntityId);
+        this.world.addEntity(this.client.player);
         this.world.setTicking(true);
-        if (this.client.player) {
-            this.loginPlayer.add(this.client.player.getUuid());
+    }
+
+    public onEntity(packet: EntityS2CPacket) {
+        const entity = this.world?.getEntityById(packet.entityId);
+        if (!entity) return;
+        if (!entity.isLogicalSideForUpdatingMovement()) return;
+
+        if (packet.positionChanged) {
+            const trackedPos = entity.getTrackedPosition();
+            const deltaPos = trackedPos.withDelta(packet.deltaX, packet.deltaY);
+            trackedPos.setPos(deltaPos.x, deltaPos.y);
+            const yaw = packet.rotate ? packet.yaw : entity.getLerpTargetYaw();
+
+            entity.updateTrackedPositionAndAngles(deltaPos.x, deltaPos.y, yaw, 3);
+            return;
+        }
+        if (packet.rotate) {
+            const yaw = decodeYaw(packet.yaw);
+            entity.updateTrackedPositionAndAngles(entity.getLerpTargetX(), entity.getLerpTargetY(), yaw, 3);
+        }
+    }
+
+    public onEntityPosition(packet: EntityPositionS2CPacket): void {
+        const entity = this.world?.getEntityById(packet.entityId);
+        if (!entity) return;
+
+        entity.updateTrackedPosition(packet.x, packet.y);
+        if (!entity.isLogicalSideForUpdatingMovement()) {
+            entity.updateTrackedPositionAndAngles(packet.x, packet.y, decodeYaw(packet.yaw), 3);
         }
     }
 
     public onEntitySpawn(packet: EntitySpawnS2CPacket): void {
         const entity = this.createEntity(packet);
         if (!entity) return;
+
         entity.onSpawnPacket(packet);
-        entity.updatePosAndYaw();
         this.world!.addEntity(entity);
     }
 
     private createEntity(packet: EntitySpawnS2CPacket): Entity | null {
         const entityType = packet.entityType;
-        if (entityType === EntityTypes.PLAYER_ENTITY) {
+        if (entityType === EntityTypes.PLAYER) {
             if (this.loginPlayer.has(packet.uuid)) return null;
         }
 
-        return entityType.create(this.world!);
-    }
-
-    public onEntityHealthChange(packet: EntityHealthS2CPacket): void {
-        const entity = this.world!.getEntityById(packet.id);
-        if (!entity) return;
-        (entity as LivingEntity).setHealth(packet.amount);
-        if (!entity.isAlive()) entity.discard();
+        const world = this.world;
+        if (!world) return null;
+        return entityType.create(world);
     }
 
     public onEntityRemove(packet: EntityRemoveS2CPacket): void {
         this.world?.removeEntity(packet.id);
     }
 
-    public onEntityPosition(packet: EntityPositionS2CPacket): void {
-        const entity = this.world!.getEntityById(packet.entityId);
-        if (!entity) return;
+    public onEntityVelocityUpdate(packet: EntityVelocityUpdateS2CPacket) {
+        const entity = this.world?.getEntityById(packet.entityId);
+        if (entity) {
+            entity.setVelocityClient(packet.velocityX, packet.velocityY);
+        }
+    }
 
-        entity.setPosition(packet.x, packet.y);
-        entity.setYaw(packet.yaw);
-        entity.updatePosAndYaw();
+    public onEntityTrackerUpdate(packet: EntityTrackerUpdateS2CPacket): void {
+        const entity = this.world?.getEntityById(packet.entityId);
+        if (entity) {
+            entity.getDataTracker().writeUpdatedEntries(packet.trackedValues);
+        }
     }
 
     public onMobAiBehavior(packet: MobAiS2CPacket): void {
-        const entity = this.world!.getEntityById(packet.id);
+        const entity = this.world?.getEntityById(packet.id);
         if (!entity) return;
         (entity as MobEntity).setBehavior(packet.behavior);
     }
@@ -83,12 +129,33 @@ export class ClientPlayNetworkHandler {
     }
 
     public registryHandler() {
-        this.client.networkChannel.receive(JoinGameS2CPacket.ID, this.onGameJoin.bind(this));
-        this.client.networkChannel.receive(EntitySpawnS2CPacket.ID, this.onEntitySpawn.bind(this));
-        this.client.networkChannel.receive(EntityRemoveS2CPacket.ID, this.onEntityRemove.bind(this));
-        this.client.networkChannel.receive(EntityPositionS2CPacket.ID, this.onEntityPosition.bind(this));
-        this.client.networkChannel.receive(EntityHealthS2CPacket.ID, this.onEntityHealthChange.bind(this));
-        this.client.networkChannel.receive(MobAiS2CPacket.ID, this.onMobAiBehavior.bind(this));
-        this.client.networkChannel.receive(ExplosionS2CPacket.ID, this.onExplosion.bind(this));
+        new PacketHandlerBuilder()
+            .add(ServerReadyS2CPacket.ID, this.onServerReady)
+            .add(JoinGameS2CPacket.ID, this.onGameJoin)
+            .add(EntitySpawnS2CPacket.ID, this.onEntitySpawn)
+            .add(EntityRemoveS2CPacket.ID, this.onEntityRemove)
+            .add(EntityPositionS2CPacket.ID, this.onEntityPosition)
+            .add(MobAiS2CPacket.ID, this.onMobAiBehavior)
+            .add(ExplosionS2CPacket.ID, this.onExplosion)
+            .add(EntityVelocityUpdateS2CPacket.ID, this.onEntityVelocityUpdate)
+            .add(EntityTrackerUpdateS2CPacket.ID, this.onEntityTrackerUpdate)
+            .add(Rotate.ID, this.onEntity)
+            .add(MoveRelative.ID, this.onEntity)
+            .register(this.client.networkChannel, this);
+    }
+}
+
+class PacketHandlerBuilder {
+    private handlers: Array<[PayloadId<any>, Consumer<any>]> = [];
+
+    public add<T extends Payload>(packetType: PayloadId<any>, handler: Consumer<T>): this {
+        this.handlers.push([packetType, handler]);
+        return this;
+    }
+
+    public register(channel: NetworkChannel, context: any): void {
+        for (const [id, handler] of this.handlers) {
+            channel.receive(id, handler.bind(context));
+        }
     }
 }

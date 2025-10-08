@@ -4,7 +4,6 @@ import {EdgeGlowEffect} from "../../effect/EdgeGlowEffect.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {type DamageSource} from "../damage/DamageSource.ts";
-import type {DataEntry} from "../data/DataEntry.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
@@ -17,6 +16,7 @@ import {type NbtCompound} from "../../nbt/NbtCompound.ts";
 import {clamp} from "../../utils/math/math.ts";
 import type {TechTree} from "../../tech/TechTree.ts";
 import type {NetworkChannel} from "../../network/NetworkChannel.ts";
+import type {DataTrackerSerializedEntry} from "../data/DataTracker.ts";
 
 export abstract class PlayerEntity extends LivingEntity {
     public onDamageExplosionRadius = 320;
@@ -35,10 +35,11 @@ export abstract class PlayerEntity extends LivingEntity {
     public voidEdge = false;
 
     protected constructor(world: World) {
-        super(EntityTypes.PLAYER_ENTITY, world);
+        super(EntityTypes.PLAYER, world);
 
         this.setMovementSpeed(2);
         this.setYaw(-1.57079);
+        this.setPosition(World.WORLD_W / 2, World.WORLD_H);
 
         this.addItem(Items.CANNON40_WEAPON);
         this.addItem(Items.BOMB_WEAPON);
@@ -54,8 +55,11 @@ export abstract class PlayerEntity extends LivingEntity {
 
         this.moveByVec(this.getVelocityRef);
         this.shouldWrap() ? this.wrapPosition() : this.adjustPosition();
-        this.getVelocityRef.multiply(0.9);
         this.tickInventory(this.getWorld());
+    }
+
+    public override tickMovement() {
+        this.getVelocityRef.multiply(0.9);
     }
 
     protected tickInventory(world: World) {
@@ -242,7 +246,7 @@ export abstract class PlayerEntity extends LivingEntity {
         this.currentBaseIndex = clamp(nbt.getInt8('SlotIndex'), 0, this.baseWeapons.length);
     }
 
-    public onDataTrackerUpdate(_entries: DataEntry<any>): void {
+    public onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {
     }
 
     public onTrackedDataSet(_data: TrackedData<any>): void {

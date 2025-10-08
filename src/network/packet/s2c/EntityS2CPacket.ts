@@ -1,0 +1,77 @@
+import type {Payload, PayloadId} from "../../Payload.ts";
+import {PacketCodec} from "../../codec/PacketCodec.ts";
+import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
+import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
+import {Identifier} from "../../../registry/Identifier.ts";
+
+export abstract class EntityS2CPacket implements Payload {
+    public readonly entityId: number;
+    public readonly deltaX: number;
+    public readonly deltaY: number;
+    public readonly yaw: number;
+    public readonly rotate: boolean;
+    public readonly positionChanged: boolean;
+
+    protected constructor(entityId: number, deltaX: number, deltaY: number, yaw: number, rotate: boolean, positionChanged: boolean) {
+        this.entityId = entityId;
+        this.deltaX = deltaX;
+        this.deltaY = deltaY;
+        this.yaw = yaw;
+        this.rotate = rotate;
+        this.positionChanged = positionChanged;
+    }
+
+    abstract getId(): PayloadId<any>;
+}
+
+export class MoveRelative extends EntityS2CPacket {
+    public static readonly ID: PayloadId<EntityS2CPacket> = {id: Identifier.ofVanilla('entity_move_pos')};
+    public static readonly CODEC = PacketCodec.of(this.write, this.read);
+
+    public constructor(entityId: number, deltaX: number, deltaY: number) {
+        super(entityId, deltaX, deltaY, 0, false, true);
+    }
+
+    private static write(value: EntityS2CPacket, writer: BinaryWriter): void {
+        writer.writeVarInt(value.entityId);
+        writer.writeInt16(value.deltaX);
+        writer.writeInt16(value.deltaY);
+    }
+
+    private static read(reader: BinaryReader): MoveRelative {
+        return new MoveRelative(
+            reader.readVarInt(),
+            reader.readInt16(),
+            reader.readInt16()
+        )
+    }
+
+    public getId(): PayloadId<any> {
+        return MoveRelative.ID;
+    }
+}
+
+export class Rotate extends EntityS2CPacket {
+    public static readonly ID: PayloadId<Rotate> = {id: Identifier.ofVanilla('entity_move_rotate')};
+    public static readonly CODEC = PacketCodec.of(this.write, this.read);
+
+    public constructor(entityId: number, yaw: number) {
+        super(entityId, 0, 0, yaw, true, false);
+    }
+
+    private static write(value: EntityS2CPacket, writer: BinaryWriter): void {
+        writer.writeVarInt(value.entityId);
+        writer.writeUint8(value.yaw);
+    }
+
+    private static read(reader: BinaryReader): Rotate {
+        return new Rotate(
+            reader.readVarInt(),
+            reader.readUint8()
+        )
+    }
+
+    public getId(): PayloadId<any> {
+        return Rotate.ID;
+    }
+}

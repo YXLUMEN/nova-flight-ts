@@ -38,6 +38,6 @@ export class RocketEntity extends ProjectileEntity {
             sparks: 5,
             explodeColor: this.explodeColor,
         });
-        world.playSound(this.getOwner(), SoundEvents.MISSILE_EXPLOSION, 0.4);
+        world.playSound(null, SoundEvents.MISSILE_EXPLOSION, 0.4);
     }
 }

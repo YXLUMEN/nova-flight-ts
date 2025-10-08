@@ -1,6 +1,5 @@
 import {Entity} from "./Entity.ts";
-import {DataTracker} from "./data/DataTracker.ts";
-import type {DataEntry} from "./data/DataEntry.ts";
+import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
 import type {TrackedData} from "./data/TrackedData.ts";
 import type {EntityType} from "./EntityType.ts";
 import {World} from "../world/World.ts";
@@ -48,7 +47,7 @@ export class SpawnMarkerEntity extends Entity {
     protected override initDataTracker(_builder: InstanceType<typeof DataTracker.Builder>): void {
     }
 
-    public override onDataTrackerUpdate(_entries: DataEntry<any>): void {
+    public override onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {
     }
 
     public override onTrackedDataSet(_data: TrackedData<any>): void {

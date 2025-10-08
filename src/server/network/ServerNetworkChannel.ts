@@ -40,4 +40,18 @@ export class ServerNetworkChannel extends NetworkChannel {
 
         this.ws.send(writer.toUint8Array());
     }
+
+    public sendTo<T extends Payload>(payload: T, target: UUID) {
+        const type = this.registry.get(payload.getId().id);
+        if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
+
+        const writer = new BinaryWriter();
+        writer.writeInt8(0x12); // 单发指令
+        writer.writeUUID(target);
+
+        writer.writeString(type.id.toString());
+        type.codec.encode(payload, writer);
+
+        this.ws.send(writer.toUint8Array());
+    }
 }

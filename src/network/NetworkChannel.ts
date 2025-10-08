@@ -97,5 +97,9 @@ export abstract class NetworkChannel {
 
         return type.codec.decode(reader);
     }
+
+    public disconnect(): void {
+        this.ws.close();
+    }
 }
 

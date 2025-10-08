@@ -99,8 +99,9 @@ pub async fn start_ws_server(addr: &str) {
 /// 协议说明：
 /// 0x01 = 注册为 Server
 /// 0x02 = 注册为 Client + 后续字节是 client_id
-/// 0x10 = Client → Server
-/// 0x11 = Server → Client (广播)
+/// 0x10 = Client -> Server
+/// 0x11 = Server -> Client 广播 + 单个排除
+/// 0x12 = Server -> Client 单发
 async fn handle_message(state: &Arc<Mutex<State>>, tx: &Tx, data: Bytes) {
     if data.is_empty() {
         eprintln!("[WARN] Empty message received");
@@ -167,6 +168,27 @@ async fn handle_message(state: &Arc<Mutex<State>>, tx: &Tx, data: Bytes) {
                     true
                 }
             });
+        }
+        0x12 => {
+            // Server → 指定 Client
+            if data.len() < 17 {
+                eprintln!("[WARN] Invalid unicast packet");
+                return;
+            }
+            let mut id = [0u8; 16];
+            id.copy_from_slice(&data[1..17]);
+            let rest = data.slice(17..);
+            let mut buf = Vec::with_capacity(1 + rest.len());
+            buf.push(0x11);
+            buf.extend_from_slice(&rest);
+            let forwarded = Bytes::from(buf);
+
+            let st = state.lock().await;
+            if let Some(client) = st.clients.get(&id) {
+                if client.send(forwarded.clone()).is_err() {
+                    println!("[WARN] Client {} dropped", format_uuid(&id));
+                }
+            }
         }
         _ => {
             eprintln!("[WARN] Unknown opcode: {}", data[0]);

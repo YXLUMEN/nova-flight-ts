@@ -35,7 +35,7 @@ import {ExplosionS2CPacket} from "../network/packet/s2c/ExplosionS2CPacket.ts";
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
 
-    private stage!: Stage;
+    private stage: Stage;
 
     private readonly players = new Map<UUID, ServerPlayerEntity>();
     private readonly entities: EntityList = new EntityList();
@@ -48,10 +48,10 @@ export class ServerWorld extends World implements NbtSerializable {
         this.server = server;
         this.entityManager = new ServerEntityManager(this.ServerEntityHandler);
         this.stage = STAGE;
-        while (true) {
-            this.stage.nextPhase();
-            if (this.stage.getCurrentName() === 'P9'||this.stage.getCurrentName() === null) break;
-        }
+        // while (true) {
+        //     this.stage.nextPhase();
+        //     if (this.stage.getCurrentName() === 'P9'||this.stage.getCurrentName() === null) break;
+        // }
 
         this.onEvent();
     }
@@ -73,6 +73,7 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public serverTickEntity(entity: Entity): void {
+        entity.resetPosition();
         entity.age++;
         entity.tick();
 
@@ -139,7 +140,6 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public spawnPlayer(player: ServerPlayerEntity): void {
-        player.setPosition(World.WORLD_W / 2, World.WORLD_H);
         this.players.set(player.getUuid(), player);
         this.entityManager.addEntity(player);
     }
@@ -183,7 +183,7 @@ export class ServerWorld extends World implements NbtSerializable {
         return this.entities.getProjectiles();
     }
 
-    public getEntity(uuid: string): Entity | null {
+    public getEntity(uuid: UUID): Entity | null {
         return this.entityManager.getIndex().getByUUID(uuid);
     }
 
@@ -303,7 +303,7 @@ export class ServerWorld extends World implements NbtSerializable {
         startTicking: (entity: Entity) => {
             this.entities.add(entity);
 
-            const tracker = new EntityTrackerEntry(this, entity, 0, false);
+            const tracker = new EntityTrackerEntry(this, entity, entity.getType().getTrackingTickInterval(), false);
             this.trackedEntities.set(entity.getId(), tracker);
             this.getNetworkChannel().send(entity.createSpawnPacket());
         },

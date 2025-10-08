@@ -12,15 +12,15 @@ export class MissileEntity extends RocketEntity {
 
     protected target: Entity | null = null;
 
-    private igniteDelayTicks = 80;
-    private lockDelayTicks = 150;
-    private maxLifetimeTicks = 1000;
+    private igniteDelayTicks = 16;
+    private lockDelayTicks = 60;
+    private maxLifetimeTicks = 400;
     protected reLockCD = 0;
     protected maxReLockCD = 5;
 
-    private driftSpeed = 0.8;
-    private trackingSpeed = 1.6;
-    private readonly turnRate = Math.PI / 60;
+    private driftSpeed = 2;
+    private trackingSpeed = 4;
+    private readonly turnRate = Math.PI / 24;
     private hoverDir: number = 1;
 
     private readonly driftAngle: number;
@@ -31,6 +31,8 @@ export class MissileEntity extends RocketEntity {
     }
 
     public override tick() {
+        this.prevYaw = this.getYaw();
+
         const pos = this.getPositionRef;
         this.moveByVec(this.getVelocityRef);
         this.getVelocityRef.multiply(0.8);

@@ -1,17 +1,17 @@
 import {Entity} from "./Entity.ts";
-import {DataTracker} from "./data/DataTracker.ts";
-import type {DataEntry} from "./data/DataEntry.ts";
+import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
 import type {TrackedData} from "./data/TrackedData.ts";
 import type {EntityType} from "./EntityType.ts";
 import {World} from "../world/World.ts";
 import type {IOwnable} from "./IOwnable.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import {randInt} from "../utils/math/math.ts";
+import type {UUID} from "../apis/registry.ts";
 
 export class DecoyEntity extends Entity implements IOwnable {
     public static readonly Entities = new Set<DecoyEntity>();
     private owner: Entity | null = null;
-    private ownerUuid: string | null = null;
+    private ownerUuid: UUID | null = null;
     private readonly life = randInt(250, 320);
 
     public constructor(type: EntityType<DecoyEntity>, world: World, owner: Entity | null) {
@@ -83,7 +83,7 @@ export class DecoyEntity extends Entity implements IOwnable {
     protected override initDataTracker(_builder: InstanceType<typeof DataTracker.Builder>): void {
     }
 
-    public override onDataTrackerUpdate(_entries: DataEntry<any>): void {
+    public override onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {
     }
 
     public override onTrackedDataSet(_data: TrackedData<any>): void {

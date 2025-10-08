@@ -1,8 +1,9 @@
 import type {Entity} from "../entity/Entity.ts";
+import type {UUID} from "../apis/registry.ts";
 
 export class EntityIndex<T extends Entity> {
     private readonly idToEntity = new Map<number, T>;
-    private readonly uuidToEntity = new Map<string, T>();
+    private readonly uuidToEntity = new Map<UUID, T>();
 
     public add(entity: T): boolean {
         const uuid = entity.getUuid();
@@ -24,7 +25,7 @@ export class EntityIndex<T extends Entity> {
         return this.idToEntity.get(id) ?? null;
     }
 
-    public getByUUID(uuid: string): T | null {
+    public getByUUID(uuid: UUID): T | null {
         return this.uuidToEntity.get(uuid) ?? null;
     }
 

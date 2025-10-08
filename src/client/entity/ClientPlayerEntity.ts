@@ -130,4 +130,8 @@ export class ClientPlayerEntity extends PlayerEntity {
         super.setScore(score);
         (this.techTree as ClientTechTree).playerScore.textContent = `点数: ${this.getScore()}`;
     }
+
+    public override canMoveVoluntarily(): boolean {
+        return true;
+    }
 }

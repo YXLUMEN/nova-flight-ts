@@ -4,6 +4,7 @@ import {PacketCodec} from "../../codec/PacketCodec.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
+import {encodeYaw} from "../../../utils/NetUtil.ts";
 
 export class EntityPositionS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityPositionS2CPacket> = {id: Identifier.ofVanilla('entity_posture')};
@@ -25,7 +26,8 @@ export class EntityPositionS2CPacket implements Payload {
         const pos = entity.getPositionRef;
         const x = pos.x;
         const y = pos.y;
-        return new EntityPositionS2CPacket(entity.getId(), x, y, entity.getYaw());
+        const yaw = encodeYaw(entity.getYaw());
+        return new EntityPositionS2CPacket(entity.getId(), x, y, yaw);
     }
 
     private static reader(reader: BinaryReader) {
@@ -33,7 +35,7 @@ export class EntityPositionS2CPacket implements Payload {
             reader.readVarInt(),
             reader.readDouble(),
             reader.readDouble(),
-            reader.readFloat()
+            reader.readUint8()
         )
     }
 
@@ -41,7 +43,7 @@ export class EntityPositionS2CPacket implements Payload {
         writer.writeVarInt(value.entityId);
         writer.writeDouble(value.x);
         writer.writeDouble(value.y);
-        writer.writeFloat(value.yaw);
+        writer.writeUint8(value.yaw);
     }
 
     public getId(): PayloadId<EntityPositionS2CPacket> {

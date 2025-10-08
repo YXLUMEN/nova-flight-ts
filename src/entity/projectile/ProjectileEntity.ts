@@ -2,17 +2,18 @@ import {Entity} from "../Entity.ts";
 import {World} from "../../world/World.ts";
 import type {IOwnable} from "../IOwnable.ts";
 import type {EntityType} from "../EntityType.ts";
-import type {DataEntry} from "../data/DataEntry.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
-import {DataTracker} from "../data/DataTracker.ts";
+import {DataTracker, type DataTrackerSerializedEntry} from "../data/DataTracker.ts";
 import {type NbtCompound} from "../../nbt/NbtCompound.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {IColorEntity} from "../IColorEntity.ts";
+import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import type {UUID} from "../../apis/registry.ts";
 
 export abstract class ProjectileEntity extends Entity implements IOwnable, IColorEntity {
     public readonly damage: number;
 
-    private ownerUuid: string | null = null;
+    private ownerUuid: UUID | null = null;
     private owner: Entity | null = null;
 
     public color = "#8cf5ff";
@@ -68,6 +69,23 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
         return entity.getUuid() === this.ownerUuid;
     }
 
+    public override setVelocity(x: number, y: number) {
+        super.setVelocity(x, y);
+        this.velocityDirty = true;
+    }
+
+    public override onSpawnPacket(packet: EntitySpawnS2CPacket) {
+        super.onSpawnPacket(packet);
+        this.setVelocity(packet.velocityX, packet.velocityY);
+        const owner = this.getWorld().getEntityById(packet.ownerId);
+        if (owner) this.setOwner(owner);
+    }
+
+    public override createSpawnPacket(): EntitySpawnS2CPacket {
+        const ownerId = this.getOwner()?.getId() ?? 0;
+        return EntitySpawnS2CPacket.create(this, ownerId);
+    }
+
     protected wrapPosition(): boolean {
         const pos = this.getPositionRef;
         const W = World.WORLD_W;
@@ -99,13 +117,13 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
 
     public override readNBT(nbt: NbtCompound) {
         super.readNBT(nbt);
-        const ownerUuid = nbt.getString('Owner');
+        const ownerUuid = nbt.getString('Owner') as UUID;
         this.ownerUuid = ownerUuid.length > 0 ? ownerUuid : null;
         this.color = nbt.getString('Color');
         this.edgeColor = nbt.getString('EdgeColor');
     }
 
-    public onDataTrackerUpdate(_entries: DataEntry<any>): void {
+    public onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {
     }
 
     public onTrackedDataSet(_data: TrackedData<any>): void {

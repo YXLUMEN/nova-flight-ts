@@ -39,7 +39,7 @@ export class MissileWeapon extends SpecialWeapon {
             (world as ServerWorld).spawnEntity(missile);
         });
 
-        world.schedule(1.6, () => world.playSound(attacker, SoundEvents.MISSILE_BLASTOFF));
+        world.schedule(0.8, () => world.playSound(attacker, SoundEvents.MISSILE_BLASTOFF));
 
         if (missileCounts > 8) {
             world.playLoopSound(attacker, SoundEvents.MISSILE_LAUNCH_LOOP);

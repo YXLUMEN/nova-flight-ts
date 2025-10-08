@@ -5,13 +5,12 @@ import {clamp, rand} from "../../utils/math/math.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import type {EntityType} from "../EntityType.ts";
-import type {TrackedData} from "../data/TrackedData.ts";
-import type {DataEntry} from "../data/DataEntry.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {MobAI} from "../ai/MobAI.ts";
 import type {NbtCompound} from "../../nbt/NbtCompound.ts";
 import type {IColorEntity} from "../IColorEntity.ts";
+import type {DataTrackerSerializedEntry} from "../data/DataTracker.ts";
 
 export abstract class MobEntity extends LivingEntity implements IColorEntity {
     public color = '#ff6b6b';
@@ -33,7 +32,6 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
 
         this.AI.action(this);
         this.moveByVec(this.getVelocityRef);
-        this.getVelocityRef.multiply(0.8);
         this.adjustPosition();
     }
 
@@ -111,9 +109,10 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         return false;
     }
 
-    public onDataTrackerUpdate(_entries: DataEntry<any>): void {
+    public canMoveVoluntarily(): boolean {
+        return super.canMoveVoluntarily() && !this.AI.disable;
     }
 
-    public onTrackedDataSet(_data: TrackedData<any>): void {
+    public onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {
     }
 }

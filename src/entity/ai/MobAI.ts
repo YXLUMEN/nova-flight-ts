@@ -16,6 +16,7 @@ export const Behavior = createCleanObj({
 } as const);
 
 export class MobAI {
+    public disable = false;
     private readonly entity: MobEntity;
     private readonly dir = new MutVec2(1, 0);
     private targetPos = MutVec2.zero();
@@ -27,6 +28,8 @@ export class MobAI {
     }
 
     public action(mob: MobEntity) {
+        if (this.disable) return;
+
         const speedMultiplier = mob.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
         if (speedMultiplier <= 0) return;
         const speed = mob.getMovementSpeed() * speedMultiplier;

@@ -8,6 +8,7 @@ const isServer = typeof window === 'undefined';
 const freezeConfig = createCleanObj({
     tick: 20,
     mbps: 0.05,
+    per: 50
 } as const);
 
 const WorldConfig = Object.preventExtensions(createCleanObj({
@@ -16,7 +17,8 @@ const WorldConfig = Object.preventExtensions(createCleanObj({
     lowPowerMode: false,
 
     tick: freezeConfig.tick,
-    mbps: freezeConfig.mbps.valueOf(),
+    mbps: freezeConfig.mbps,
+    per: freezeConfig.per,
 
     enableCameraOffset: !isDev,
 

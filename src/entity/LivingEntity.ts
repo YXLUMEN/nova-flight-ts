@@ -14,9 +14,16 @@ import type {EntityAttributeInstance} from "./attribute/EntityAttributeInstance.
 import {DefaultAttributeContainer} from "./attribute/DefaultAttributeContainer.ts";
 import {type NbtCompound} from "../nbt/NbtCompound.ts";
 import {TrackedDataHandlerRegistry} from "./data/TrackedDataHandlerRegistry.ts";
+import type {TrackedData} from "./data/TrackedData.ts";
+import type {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
 
 
 export abstract class LivingEntity extends Entity {
+    protected bodyTrackingIncrements: number;
+    protected serverX: number = 0;
+    protected serverY: number = 0;
+    protected serverYaw: number = 0;
+
     private static readonly HEALTH = DataTracker.registerData(Object(LivingEntity), TrackedDataHandlerRegistry.FLOAT);
 
     private readonly attributes: AttributeContainer;
@@ -27,6 +34,8 @@ export abstract class LivingEntity extends Entity {
 
         this.attributes = new AttributeContainer(this.createLivingAttributes().build(type));
         this.setHealth(this.getMaxHealth());
+
+        this.bodyTrackingIncrements = 0;
     }
 
     public createLivingAttributes(): InstanceType<typeof DefaultAttributeContainer.Builder> {
@@ -38,6 +47,26 @@ export abstract class LivingEntity extends Entity {
     public override tick() {
         super.tick();
         this.tickStatusEffects();
+        this.tickMovement();
+    }
+
+    public tickMovement() {
+        if (this.isLogicalSideForUpdatingMovement()) {
+            this.bodyTrackingIncrements = 0;
+            this.updateTrackedPosition(this.getX(), this.getY());
+        }
+
+        if (this.bodyTrackingIncrements > 0) {
+            this.lerpPosAndRotation(this.bodyTrackingIncrements, this.serverX, this.serverY, this.serverYaw);
+            this.bodyTrackingIncrements--;
+        }
+        const velocity = this.getVelocityRef.multiply(0.9);
+
+        let vx = velocity.x;
+        let vy = velocity.y;
+        if (Math.abs(vx) < 0.003) vx = 0;
+        if (Math.abs(vy) < 0.003) vy = 0;
+        velocity.set(vx, vy);
     }
 
     public getAttributes() {
@@ -159,6 +188,25 @@ export abstract class LivingEntity extends Entity {
         builder.add(LivingEntity.HEALTH, 1);
     }
 
+    public override onTrackedDataSet(_data: TrackedData<any>) {
+    }
+
+    public override onSpawnPacket(packet: EntitySpawnS2CPacket) {
+        const x = packet.x;
+        const y = packet.y;
+        const yaw = packet.getYaw();
+        this.updateTrackedPosition(x, y);
+        this.setId(packet.entityId);
+        this.setUuid(packet.uuid);
+        this.updatePosition(x, y);
+        this.updateYaw(yaw);
+        this.setVelocity(packet.velocityX, packet.velocityY);
+        this.serverX = packet.x;
+        this.serverY = packet.y;
+        this.color = packet.color;
+        this.edgeColor = packet.edgeColor;
+    }
+
     protected onStatusEffectUpgraded(effect: StatusEffectInstance, reapplyEffect: boolean, _source: Entity | null): void {
         if (reapplyEffect) {
             const statusEffect = effect.getEffectType().getValue();
@@ -189,6 +237,25 @@ export abstract class LivingEntity extends Entity {
                 this.setHealth(maxHealth);
             }
         }
+    }
+
+    public override updateTrackedPositionAndAngles(x: number, y: number, yaw: number, interpolationSteps: number) {
+        this.serverX = x;
+        this.serverY = y;
+        this.serverYaw = yaw;
+        this.bodyTrackingIncrements = interpolationSteps;
+    }
+
+    public getLerpTargetX() {
+        return this.bodyTrackingIncrements > 0 ? this.serverX : this.getX();
+    }
+
+    public getLerpTargetY() {
+        return this.bodyTrackingIncrements > 0 ? this.serverY : this.getY();
+    }
+
+    public getLerpTargetYaw() {
+        return this.bodyTrackingIncrements > 0 ? this.serverYaw : this.getYaw();
     }
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {

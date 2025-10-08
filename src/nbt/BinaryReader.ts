@@ -19,6 +19,12 @@ export class BinaryReader {
         return v;
     }
 
+    public readUint8(): number {
+        const v = this.view.getUint8(this.offset);
+        this.offset += 1;
+        return v;
+    }
+
     public readInt16(): number {
         const v = this.view.getInt16(this.offset, true);
         this.offset += 2;

@@ -82,6 +82,18 @@ export class DataTracker {
         }
     }
 
+    public writeUpdatedEntries(entries: DataTrackerSerializedEntry<any>[]): void {
+        for (const serializedEntry of entries) {
+            const entry = this.entries[serializedEntry.id];
+            entry.value = serializedEntry.value;
+            this.trackedEntity.onTrackedDataSet(entry.data);
+        }
+
+        this.trackedEntity.onDataTrackerUpdate(entries);
+    }
+
+    // public copyToFrom<T>(to: DataEntry<T>, from: DataTrackerSerializedEntry<any>) {}
+
     public getChangedEntries(): DataTrackerSerializedEntry<any>[] | null {
         let list: DataTrackerSerializedEntry<any>[] | null = null;
 

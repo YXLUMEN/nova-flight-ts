@@ -3,28 +3,38 @@ import {PlayerAimC2SPacket} from "../../network/packet/c2s/PlayerAimC2SPacket.ts
 import {NovaFlightServer} from "../NovaFlightServer.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
-import {PlayerLoginC2SPayload} from "../../network/packet/c2s/PlayerLoginC2SPayload.ts";
+import {PlayerAttemptLoginC2SPacket} from "../../network/packet/c2s/PlayerAttemptLoginC2SPacket.ts";
 import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
 import {PlayerMoveC2SPacket} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
 import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
-import {StringPacket} from "../../network/packet/StringPacket.ts";
-import {BaseEnemy} from "../../entity/mob/BaseEnemy.ts";
-import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {PlayerUnlockTechC2SPacket} from "../../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
 import {applyServerTech} from "../../tech/applyServerTech.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
 import {clamp} from "../../utils/math/math.ts";
+import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
+import {RequestPositionC2SPacket} from "../../network/packet/c2s/RequestPositionC2SPacket.ts";
+import {EntityPositionS2CPacket} from "../../network/packet/s2c/EntityPositionS2CPacket.ts";
 
 export class ServerReceive {
     public static registryNetworkHandler(channel: ServerNetworkChannel) {
-        channel.receive(StringPacket.ID, payload => {
-            if (payload.value !== 'Hello Server!') return;
+        channel.receive(PlayerAttemptLoginC2SPacket.ID, async payload => {
+            const clientId = payload.clientId;
 
-            const world = NovaFlightServer.getInstance().world;
+            const server = NovaFlightServer.getInstance();
+            const world = server.world;
             if (!world) return;
-            const mob = new BaseEnemy(EntityTypes.BASE_ENEMY, world, 1);
-            mob.setPosition(64, 0);
-            world.spawnEntity(mob);
+
+            if (server.loginPlayers.has(clientId)) {
+                console.warn(`Server attempted to add player prior to sending player info (Player id ${clientId})`);
+                return;
+            }
+
+            const res = await fetch('/resources/nova-flight/data/tech-data.json');
+            const text = await res.json();
+            const player = new ServerPlayerEntity(world, text);
+            player.setUuid(clientId);
+            world.spawnPlayer(player);
+            channel.sendTo(new JoinGameS2CPacket(player.getId()), clientId);
         });
 
         channel.receive(PlayerAimC2SPacket.ID, payload => {
@@ -63,23 +73,6 @@ export class ServerReceive {
             player.setFiring(start);
         });
 
-        channel.receive(PlayerLoginC2SPayload.ID, async payload => {
-            const uuid = payload.uuid;
-            const world = NovaFlightServer.getInstance().world;
-            if (!world) return;
-
-            if (world.getEntity(uuid) !== null) {
-                console.warn(`Player multi login ${uuid}`);
-                return;
-            }
-
-            const res = await fetch('/resources/nova-flight/data/tech-data.json');
-            const text = await res.json();
-            const player = new ServerPlayerEntity(world, text);
-            player.setUuid(uuid);
-            world.spawnPlayer(player);
-        });
-
         channel.receive(PlayerMoveC2SPacket.ID, payload => {
             const uuid = payload.uuid;
             const world = NovaFlightServer.getInstance().world;
@@ -90,7 +83,7 @@ export class ServerReceive {
 
             const speedMultiplier = player.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
             const speed = player.getMovementSpeed() * speedMultiplier;
-            player.updateVelocity(speed, payload.velocityX, payload.velocityY);
+            player.updateVelocity(speed, payload.dx, payload.dy);
         });
 
         channel.receive(PlayerUnlockTechC2SPacket.ID, payload => {
@@ -114,6 +107,16 @@ export class ServerReceive {
             if (!player) return;
 
             player.currentBaseIndex = clamp(slot, 0, player.baseWeapons.length - 1);
+        });
+
+        channel.receive(RequestPositionC2SPacket.ID, payload => {
+            const uuid = payload.playerId;
+            const world = NovaFlightServer.getInstance().world;
+            if (!world) return;
+            const player = world.getEntity(uuid) as ServerPlayerEntity | null;
+            if (!player) return;
+
+            channel.sendTo(EntityPositionS2CPacket.create(player), payload.playerId);
         });
     }
 }

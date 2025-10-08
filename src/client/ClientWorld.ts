@@ -20,7 +20,6 @@ import {ClientPlayerEntity} from "./entity/ClientPlayerEntity.ts";
 import {HALF_PI, PI2, rand} from "../utils/math/math.ts";
 import type {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
 import {StringPacket} from "../network/packet/StringPacket.ts";
-import {PlayerLoginC2SPayload} from "../network/packet/c2s/PlayerLoginC2SPayload.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import {applyTech} from "../tech/apply_tech.ts";
 import {PlayerUnlockTechC2SPacket} from "../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
@@ -47,19 +46,15 @@ export class ClientWorld extends World {
         this.entityManager = new ClientEntityManager(this.ClientEntityHandler);
         this.starField.init();
         this.onEvent();
-
-        const player = new ClientPlayerEntity(this, this.client.input);
-        player.setUuid(this.client.clientId);
-        this.client.player = player;
-        this.getNetworkChannel().send(new PlayerLoginC2SPayload(this.client.clientId));
-        this.addEntity(player);
     }
 
     public override tick(dt: number) {
         super.tick(dt);
 
         const camera = this.client.window.camera;
-        camera.update(this.client.player!.getLerpPos(dt), dt);
+        if (this.client.player) {
+            camera.update(this.client.player.getLerpPos(dt), dt);
+        }
 
         this.tickEntities();
 
@@ -93,6 +88,7 @@ export class ClientWorld extends World {
     }
 
     public clientTickEntity(entity: Entity) {
+        entity.resetPosition();
         entity.age++;
         entity.tick();
     }
@@ -128,9 +124,7 @@ export class ClientWorld extends World {
 
     public override removeEntity(entityId: number): void {
         const entity = this.getEntityLookup().get(entityId);
-        if (entity) {
-            entity.discard();
-        }
+        if (entity) entity.discard();
     }
 
     public override getEntityById(id: number): Entity | null {

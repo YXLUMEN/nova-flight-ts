@@ -1,9 +1,10 @@
 import type {IEffect} from "./IEffect.ts";
-import {PI2} from "../utils/math/math.ts";
+import {lerp, PI2} from "../utils/math/math.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 
 export class EMPBurst implements IEffect {
     public alive = true;
+    private preT = 0;
     private t = 0;
 
     private pos: IVec;
@@ -43,14 +44,16 @@ export class EMPBurst implements IEffect {
 
     public tick(dt: number): void {
         if (!this.alive) return;
+        this.preT = this.t;
         this.t += dt;
         if (this.t >= this.duration) this.alive = false;
     }
 
-    public render(ctx: CanvasRenderingContext2D): void {
+    public render(ctx: CanvasRenderingContext2D, tickDelta: number): void {
         if (!this.alive) return;
 
-        const p = this.t / this.duration;
+        const lerpT = lerp(tickDelta, this.preT, this.t);
+        const p = lerpT / this.duration;
         const easeOut = 1 - (1 - p) * (1 - p);
         const rNow = this.radius * easeOut;
         const alpha = 1 - p;

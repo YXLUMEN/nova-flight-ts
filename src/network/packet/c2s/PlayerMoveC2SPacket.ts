@@ -8,23 +8,23 @@ export class PlayerMoveC2SPacket implements Payload {
 
     public static readonly CODEC: PacketCodec<PlayerMoveC2SPacket> = PacketCodec.of<PlayerMoveC2SPacket>(
         (value, writer) => {
-            writer.writeString(value.uuid);
-            writer.writeDouble(value.velocityX);
-            writer.writeDouble(value.velocityY);
+            writer.writeUUID(value.uuid);
+            writer.writeInt8(value.dx);
+            writer.writeInt8(value.dy);
         },
         (reader) => {
-            return new PlayerMoveC2SPacket(reader.readString() as UUID, reader.readDouble(), reader.readDouble());
+            return new PlayerMoveC2SPacket(reader.readUUID(), reader.readInt8(), reader.readInt8());
         }
     );
 
     public readonly uuid: UUID;
-    public readonly velocityX: number;
-    public readonly velocityY: number;
+    public readonly dx: number;
+    public readonly dy: number;
 
-    public constructor(uuid: UUID, velocityX: number, velocityY: number) {
+    public constructor(uuid: UUID, dx: number, dy: number) {
         this.uuid = uuid;
-        this.velocityX = velocityX;
-        this.velocityY = velocityY;
+        this.dx = dx;
+        this.dy = dy;
     }
 
     public getId(): PayloadId<PlayerMoveC2SPacket> {

@@ -70,6 +70,7 @@ export class NovaFlightClient {
         this.waitStop = promise;
         this.onStop = () => {
             resolve();
+            this.server?.postMessage({type: 'stop'});
             this.waitStop = null;
         };
     }
@@ -96,6 +97,7 @@ export class NovaFlightClient {
 
             await this.waitStop;
         }
+        this.networkChannel.disconnect();
     }
 
     public startIntegratedServer(action: number) {
@@ -111,7 +113,7 @@ export class NovaFlightClient {
             console.log("Worker:", event.data);
         };
         this.server.onerror = error => {
-            console.log("Worker:", error);
+            console.error("Worker:", error);
             this.onStop();
         }
     }
@@ -129,7 +131,7 @@ export class NovaFlightClient {
                 return;
             }
 
-            const tickDelta = Math.min(0.05, (ts - this.last) / 1000 || 0);
+            const tickDelta = Math.min(0.1, (ts - this.last) / 1000 || 0);
             this.last = ts;
             this.accumulator += tickDelta;
 
@@ -143,6 +145,7 @@ export class NovaFlightClient {
             requestAnimationFrame(this.bindRender);
         } catch (error) {
             console.error(`Runtime error: ${error}`);
+            console.error(error);
             this.onStop();
         }
     }
@@ -168,22 +171,22 @@ export class NovaFlightClient {
         loadingScreen.setProgress(0.2, '注册资源');
         const manager = this.registryManager;
         await manager.registerAll();
-        await sleep(400);
+        // await sleep(400);
 
         loadingScreen.setProgress(0.4, '初始化渲染器');
         EntityRenderers.registryRenders();
-        await sleep(400);
+        // await sleep(400);
 
         loadingScreen.setProgress(0.6, '加载数据');
         await DataLoader.init(manager);
-        await sleep(300);
+        // await sleep(300);
 
         loadingScreen.setProgress(0.8, '冻结资源');
         manager.frozen();
-        await sleep(400);
+        // await sleep(400);
 
         loadingScreen.setProgress(1, '创建世界');
-        await sleep(400);
+        // await sleep(400);
         await loadingScreen.setDone();
     }
 

@@ -22,6 +22,7 @@ export class EntityType<T extends Entity> {
 
     public static Builder = class Builder<T extends Entity> {
         private readonly factory: EntityFactory<T>;
+        private trackTickInterval =3;
         private dimensions = EntityDimensions.changing(1, 1);
 
         public constructor(factory: EntityFactory<T>) {
@@ -37,20 +38,31 @@ export class EntityType<T extends Entity> {
             return this;
         }
 
+        public setTrackingTickInterval(interval: number) {
+            this.trackTickInterval = interval;
+            return this;
+        }
+
         public build(_id: string) {
-            return new EntityType(this.factory, this.dimensions);
+            return new EntityType(this.factory, this.dimensions, this.trackTickInterval);
         }
     }
     private readonly factory: EntityFactory<T>;
+    private readonly trackTickInterval: number;
     private readonly dimensions: EntityDimensions;
 
-    public constructor(factory: EntityFactory<T>, dimensions: EntityDimensions) {
+    public constructor(factory: EntityFactory<T>, dimensions: EntityDimensions, trackTickInterval: number) {
         this.factory = factory;
         this.dimensions = dimensions;
+        this.trackTickInterval = trackTickInterval;
     }
 
     public getDimensions(): EntityDimensions {
         return this.dimensions;
+    }
+
+    public getTrackingTickInterval(): number {
+        return this.trackTickInterval;
     }
 
     public create(world: World, ...args: any[]): T {

@@ -5,9 +5,8 @@ import {Vec2} from "../utils/math/Vec2.ts";
 import type {DamageSource} from "./damage/DamageSource.ts";
 import type {EntityType} from "./EntityType.ts";
 import type {EntityDimensions} from "./EntityDimensions.ts";
-import {DataTracker} from "./data/DataTracker.ts";
+import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
 import type {DataTracked} from "./data/DataTracked.ts";
-import type {DataEntry} from "./data/DataEntry.ts";
 import {AtomicInteger} from "../utils/math/AtomicInteger.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import type {IVec} from "../utils/math/IVec.ts";
@@ -18,6 +17,7 @@ import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import type {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {UUID} from "../apis/registry.ts";
 import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import {TrackedPosition} from "./TrackedPosition.ts";
 
 
 export abstract class Entity implements DataTracked, Comparable, NbtSerializable {
@@ -25,6 +25,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     public static readonly CURRENT_ID = new AtomicInteger();
 
     public invulnerable: boolean = false;
+    public velocityDirty: boolean = false;
 
     protected readonly dataTracker: DataTracker;
     private uuid: UUID = crypto.randomUUID();
@@ -34,14 +35,15 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     private readonly type: EntityType<any>;
     private readonly world: World;
 
+    private readonly trackedPosition = new TrackedPosition();
     private readonly pos: MutVec2;
-    private preX: number = 0;
-    private preY: number = 0;
+    public prevX: number = 0;
+    public prevY: number = 0;
 
     private readonly velocity: MutVec2 = MutVec2.zero();
     private movementSpeed: number = 0.2;
     private yaw: number = 0;
-    private preYaw: number = 0;
+    public prevYaw: number = 0;
 
     private readonly dimensions: EntityDimensions;
     private removed: boolean = false;
@@ -55,13 +57,21 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         this.world = world;
 
         this.pos = MutVec2.zero();
-        this.preX = 0;
-        this.preY = 0;
+        this.prevX = 0;
+        this.prevY = 0;
         this.dimensions = type.getDimensions();
 
         const builder = new DataTracker.Builder(this);
         this.initDataTracker(builder);
         this.dataTracker = builder.build();
+    }
+
+    public updateTrackedPosition(x: number, y: number): void {
+        this.trackedPosition.setPos(x, y);
+    }
+
+    public getTrackedPosition() {
+        return this.trackedPosition;
     }
 
     public getType(): EntityType<any> {
@@ -135,18 +145,36 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         return this.id.toString();
     }
 
-    public updatePosAndYaw(): void {
-        this.preYaw = this.yaw;
-        this.preX = this.getX();
-        this.preY = this.getY();
+    public updateTrackedPositionAndAngles(x: number, y: number, yaw: number, _interpolationSteps: number): void {
+        this.setPosition(x, y);
+        this.setYaw(yaw);
+    }
+
+    public resetPosition() {
+        this.prevX = this.getX();
+        this.prevY = this.getY();
+        this.prevYaw = this.getYaw();
     }
 
     public setPosition(x: number, y: number): void {
         if (this.pos.x !== x || this.pos.y !== y) {
-            this.preX = this.pos.x;
-            this.preY = this.pos.y;
             this.pos.set(x, y);
         }
+    }
+
+    public updatePosition(x: number, y: number): void {
+        const d = clamp(x, -3.0E7, 3.0E7);
+        const e = clamp(y, -3.0E7, 3.0E7);
+        this.prevX = d;
+        this.prevY = e;
+        this.setPosition(d, e);
+    }
+
+    public refreshPosition(x: number, y: number, yaw = this.getYaw()): void {
+        this.setPosition(x, y);
+        this.setYaw(yaw);
+        this.resetPosition();
+        this.setPosition(x, y);
     }
 
     public setPositionByVec(pos: IVec): void {
@@ -154,8 +182,12 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     }
 
     public setYaw(yaw: number): void {
-        this.preYaw = this.yaw;
         this.yaw = yaw;
+    }
+
+    public updateYaw(yaw: number): void {
+        this.yaw = yaw;
+        this.prevY = yaw;
     }
 
     public setClampYaw(target: number, maxStep: number = 0.0785375): void {
@@ -168,16 +200,27 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         this.setYaw(this.yaw + delta);
     }
 
+    protected lerpPosAndRotation(step: number, x: number, y: number, yaw: number): void {
+        const d = 1 / step;
+        const dx = lerp(d, this.getX(), x);
+        const dy = lerp(d, this.getY(), y);
+        const dYaw = lerp(d, this.getYaw(), yaw);
+        this.pos.set(dx, dy);
+        this.setYaw(dYaw);
+    }
+
     public createSpawnPacket() {
         return EntitySpawnS2CPacket.create(this);
     }
 
     public onSpawnPacket(packet: EntitySpawnS2CPacket) {
+        const yaw = packet.getYaw();
+
+        this.updateTrackedPosition(packet.x, packet.y);
+        this.refreshPosition(packet.x, packet.y);
+        this.setYaw(yaw);
         this.setId(packet.entityId);
         this.setUuid(packet.uuid);
-        this.setPosition(packet.x, packet.y);
-        this.setVelocity(packet.velocityX, packet.velocityY);
-        this.setYaw(packet.yaw);
         this.color = packet.color;
         this.edgeColor = packet.edgeColor;
     }
@@ -260,8 +303,8 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     }
 
     public getLerpPos(tickDelta: number): MutVec2 {
-        const x = lerp(tickDelta, this.preX, this.getX());
-        const y = lerp(tickDelta, this.preY, this.getY());
+        const x = lerp(tickDelta, this.prevX, this.getX());
+        const y = lerp(tickDelta, this.prevY, this.getY());
         return new MutVec2(x, y);
     }
 
@@ -306,11 +349,20 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     }
 
     public setVelocityByVec(velocity: IVec): void {
-        this.velocity.set(velocity.x, velocity.y);
+        this.setVelocity(velocity.x, velocity.y);
     }
 
     public setVelocity(x: number, y: number): void {
         this.velocity.set(x, y);
+    }
+
+    public setVelocityClient(x: number, y: number): void {
+        this.setVelocity(x, y);
+    }
+
+    public addVelocity(deltaX: number, deltaY: number): void {
+        this.setVelocity(this.velocity.x + deltaX, this.velocity.y + deltaY);
+        this.velocityDirty = true;
     }
 
     public getYaw(): number {
@@ -318,11 +370,31 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     }
 
     public getLerpYaw(tickDelta: number): number {
-        return tickDelta === 1.0 ? this.yaw : lerp(tickDelta, this.preYaw, this.yaw);
+        return tickDelta === 1.0 ? this.yaw : lerp(tickDelta, this.prevYaw, this.yaw);
+    }
+
+    public getLerpTargetX() {
+        return this.getX();
+    }
+
+    public getLerpTargetY() {
+        return this.getY();
+    }
+
+    public getLerpTargetYaw() {
+        return this.getYaw();
     }
 
     public shouldSave(): boolean {
         return true;
+    }
+
+    public isLogicalSideForUpdatingMovement() {
+        return this.canMoveVoluntarily();
+    }
+
+    public canMoveVoluntarily() {
+        return !this.world.isClient;
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
@@ -373,7 +445,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         }
     }
 
-    public abstract onDataTrackerUpdate(entries: DataEntry<any>): void;
+    public abstract onDataTrackerUpdate(entries: DataTrackerSerializedEntry<any>[]): void;
 
     public abstract onTrackedDataSet(data: TrackedData<any>): void;
 }

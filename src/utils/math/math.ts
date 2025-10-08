@@ -122,9 +122,9 @@ export function circleIntersectsAABB(
 }
 
 export function wrapRadians(angle: number) {
-    angle = angle % (Math.PI * 2);
-    if (angle > Math.PI) angle -= Math.PI * 2;
-    if (angle < -Math.PI) angle += Math.PI * 2;
+    angle = angle % (PI2);
+    if (angle > Math.PI) angle -= PI2;
+    if (angle < -Math.PI) angle += PI2;
     return angle;
 }
 
@@ -137,6 +137,10 @@ export function wrappedDelta(a: number, b: number, size: number): number {
 
 export function lerp(delta: number, start: number, end: number): number {
     return start + delta * (end - start);
+}
+
+export function doubleEquals(a: number, b: number, epsilon = 1E-6): boolean {
+    return Math.abs(a - b) <= epsilon;
 }
 
 export const PI2 = Math.PI * 2;

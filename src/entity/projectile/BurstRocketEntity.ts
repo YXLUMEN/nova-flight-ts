@@ -20,6 +20,6 @@ export class BurstRocketEntity extends RocketEntity {
             statusEffect: {effect: StatusEffects.BURNING, duration: 100, amplifier: 1}
         });
 
-        world.playSound(this.getOwner(), SoundEvents.MISSILE_EXPLOSION, 0.4);
+        world.playSound(null, SoundEvents.MISSILE_EXPLOSION, 0.4);
     }
 }
