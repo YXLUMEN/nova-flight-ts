@@ -53,7 +53,7 @@ export abstract class LivingEntity extends Entity {
     public tickMovement() {
         if (this.isLogicalSideForUpdatingMovement()) {
             this.bodyTrackingIncrements = 0;
-            this.updateTrackedPosition(this.getX(), this.getY());
+            this.setTrackedPosition(this.getX(), this.getY());
         }
 
         if (this.bodyTrackingIncrements > 0) {
@@ -184,29 +184,6 @@ export abstract class LivingEntity extends Entity {
         }
     }
 
-    protected override initDataTracker(builder: InstanceType<typeof DataTracker.Builder>) {
-        builder.add(LivingEntity.HEALTH, 1);
-    }
-
-    public override onTrackedDataSet(_data: TrackedData<any>) {
-    }
-
-    public override onSpawnPacket(packet: EntitySpawnS2CPacket) {
-        const x = packet.x;
-        const y = packet.y;
-        const yaw = packet.getYaw();
-        this.updateTrackedPosition(x, y);
-        this.setId(packet.entityId);
-        this.setUuid(packet.uuid);
-        this.updatePosition(x, y);
-        this.updateYaw(yaw);
-        this.setVelocity(packet.velocityX, packet.velocityY);
-        this.serverX = packet.x;
-        this.serverY = packet.y;
-        this.color = packet.color;
-        this.edgeColor = packet.edgeColor;
-    }
-
     protected onStatusEffectUpgraded(effect: StatusEffectInstance, reapplyEffect: boolean, _source: Entity | null): void {
         if (reapplyEffect) {
             const statusEffect = effect.getEffectType().getValue();
@@ -237,6 +214,29 @@ export abstract class LivingEntity extends Entity {
                 this.setHealth(maxHealth);
             }
         }
+    }
+
+    protected override initDataTracker(builder: InstanceType<typeof DataTracker.Builder>) {
+        builder.add(LivingEntity.HEALTH, 1);
+    }
+
+    public override onTrackedDataSet(_data: TrackedData<any>) {
+    }
+
+    public override onSpawnPacket(packet: EntitySpawnS2CPacket) {
+        const x = packet.x;
+        const y = packet.y;
+        const yaw = packet.yaw;
+        this.setTrackedPosition(x, y);
+        this.setId(packet.entityId);
+        this.setUuid(packet.uuid);
+        this.updatePosition(x, y);
+        this.updateYaw(yaw);
+        this.setVelocity(packet.velocityX, packet.velocityY);
+        this.serverX = packet.x;
+        this.serverY = packet.y;
+        this.color = packet.color;
+        this.edgeColor = packet.edgeColor;
     }
 
     public override updateTrackedPositionAndAngles(x: number, y: number, yaw: number, interpolationSteps: number) {

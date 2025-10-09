@@ -13,7 +13,7 @@ export class SoundEventS2CPacket implements Payload {
             Identifier.PACKET_CODEC.encode(value.soundEvent.getId(), writer);
             writer.writeFloat(value.volume);
             writer.writeFloat(value.pitch);
-            writer.writeInt8(value.loop ? 1 : 0);
+            writer.writeByte(value.loop ? 1 : 0);
         },
         (reader) => {
             const id = Identifier.PACKET_CODEC.decode(reader);
@@ -22,7 +22,7 @@ export class SoundEventS2CPacket implements Payload {
                 return new SoundEventS2CPacket(SoundEvents.UI_APPLY, 0, 1, false);
             }
 
-            return new SoundEventS2CPacket(sound, reader.readFloat(), reader.readFloat(), reader.readInt8() === 1);
+            return new SoundEventS2CPacket(sound, reader.readFloat(), reader.readFloat(), reader.readByte() === 1);
         }
     );
 

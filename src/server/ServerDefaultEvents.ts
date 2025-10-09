@@ -1,0 +1,101 @@
+import type {ServerWorld} from "./ServerWorld.ts";
+import {EVENTS} from "../apis/IEvents.ts";
+import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
+import {DamageTypes} from "../entity/damage/DamageTypes.ts";
+import {StatusEffects} from "../entity/effect/StatusEffects.ts";
+import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
+import {DamageTypeTags} from "../registry/tag/DamageTypeTags.ts";
+import {Items} from "../item/items.ts";
+import {LaserWeapon} from "../item/weapon/LaserWeapon.ts";
+import type {Entity} from "../entity/Entity.ts";
+import {BossEntity} from "../entity/mob/BossEntity.ts";
+import {EntityTypes} from "../entity/EntityTypes.ts";
+import {World} from "../world/World.ts";
+import {SpawnMarkerEntity} from "../entity/SpawnMarkerEntity.ts";
+import {SoundEvents} from "../sound/SoundEvents.ts";
+import {GeneralEventBus} from "../event/GeneralEventBus.ts";
+import type {DamageSource} from "../entity/damage/DamageSource.ts";
+import {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
+import {NovaFlightServer} from "./NovaFlightServer.ts";
+import {EntityDamageS2CPacket} from "../network/packet/s2c/EntityDamageS2CPacket.ts";
+import {MobEntity} from "../entity/mob/MobEntity.ts";
+import {EntityKilledS2CPacket} from "../network/packet/s2c/EntityKilledS2CPacket.ts";
+
+export class ServerDefaultEvents {
+    public static registerEvent(world: ServerWorld) {
+        const eventBus = GeneralEventBus.getEventBus();
+
+        eventBus.on(EVENTS.MOB_DAMAGE, event => {
+            const mob = event.mob as MobEntity;
+            const damageSource = event.damageSource;
+
+            const attacker = damageSource.getAttacker();
+            if (attacker instanceof PlayerEntity && !damageSource.isOf(DamageTypes.ON_FIRE)) {
+                if (!attacker.techTree.isUnlocked('incendiary_bullet')) return;
+
+                if (attacker.techTree.isUnlocked('meltdown')) {
+                    const effect = mob.getStatusEffect(StatusEffects.BURNING);
+                    if (effect) {
+                        const amplifier = Math.min(10, effect.getAmplifier() + 1);
+                        mob.addStatusEffect(new StatusEffectInstance(StatusEffects.BURNING, 400, amplifier), null);
+                    }
+                }
+                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.BURNING, 400, 1), null);
+            }
+
+            world.getNetworkChannel().send(new EntityDamageS2CPacket(mob.getId()));
+        });
+
+        eventBus.on(EVENTS.MOB_KILLED, event => {
+            const mob = event.mob;
+            const damageSource = event.damageSource as DamageSource;
+            if (mob instanceof MobEntity) {
+                world.getNetworkChannel().send(new EntityKilledS2CPacket(mob.getId()));
+            }
+
+            const player = damageSource.getAttacker();
+            if (!(player instanceof ServerPlayerEntity)) return;
+
+            const techTree = player.techTree;
+
+            if (!damageSource.isIn(DamageTypeTags.NOT_GAIN_SCORE)) {
+                player.addPhaseScore(event.mob.getWorth());
+            }
+
+            if (damageSource.isIn(DamageTypeTags.REPLY_LASER) && techTree.isUnlocked('energy_recovery')) {
+                const laser = Items.LASER_WEAPON as LaserWeapon;
+                const stack = player.getItem(laser);
+                if (stack && stack.isAvailable()) {
+                    laser.setCooldown(stack, laser.getCooldown(stack) - 25);
+                }
+            }
+
+            if (techTree.isUnlocked('emergency_repair')) {
+                if (Math.random() <= 0.08) player.setHealth(player.getHealth() + 5);
+            }
+        });
+
+        eventBus.on(EVENTS.EMP_BURST, event => {
+            const player = event.entity as Entity;
+            if (!(player instanceof ServerPlayerEntity)) return;
+            const techTree = player.techTree;
+            if (techTree.isUnlocked('ele_oscillation')) {
+                world.empBurst = event.duration;
+            }
+        });
+
+        eventBus.on(EVENTS.STAGE_ENTER, (event) => {
+            if (event.name === 'P6' || event.name === 'mP3') {
+                if (BossEntity.hasBoss) return;
+                const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 64);
+                boss.setPosition(World.WORLD_W / 2, 64);
+
+                const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
+                mark.setPositionByVec(boss.getPositionRef);
+                world.spawnEntity(mark);
+            }
+
+            NovaFlightServer.getInstance().world?.playSound(null, SoundEvents.PHASE_CHANGE);
+        });
+    }
+}

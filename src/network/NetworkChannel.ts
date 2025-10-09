@@ -43,6 +43,10 @@ export abstract class NetworkChannel {
                 if (handler) handler(payload);
             }
         };
+
+        this.ws.onerror = (event) => {
+            console.error(this.registry.getSide(), event);
+        }
     }
 
     protected abstract getSide(): string;
@@ -71,7 +75,7 @@ export abstract class NetworkChannel {
 
         const writer = new BinaryWriter();
 
-        writer.writeInt8(this.getHeader());
+        writer.writeByte(this.getHeader());
         writer.writeString(type.id.toString());
 
         type.codec.encode(payload, writer);
@@ -82,7 +86,7 @@ export abstract class NetworkChannel {
     private decodePayload(buf: Uint8Array): Payload | null {
         const reader = new BinaryReader(buf);
 
-        const header = reader.readInt8();
+        const header = reader.readByte();
         if (header !== 0x10 && header !== 0x11) {
             console.warn("Unknown header:", header);
             return null;

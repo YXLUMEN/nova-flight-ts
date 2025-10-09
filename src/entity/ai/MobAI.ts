@@ -120,6 +120,7 @@ export class MobAI {
 
     public setBehavior(behavior: number): void {
         this.behavior = behavior;
+
         const world = this.entity.getWorld();
         if (world.isClient) return;
         world.getNetworkChannel().send(new MobAiS2CPacket(this.entity.getId(), behavior));

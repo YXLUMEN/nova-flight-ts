@@ -9,11 +9,7 @@ export class BinaryWriter {
         this.chunks.push(...bytes);
     }
 
-    public writeInt8(v: number): void {
-        this.chunks.push(v & 0xff);
-    }
-
-    public writeUint8(v: number): void {
+    public writeByte(v: number): void {
         this.chunks.push(v & 0xff);
     }
 

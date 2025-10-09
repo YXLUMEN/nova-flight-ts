@@ -12,8 +12,10 @@ import {ExplosionS2CPacket} from "../../network/packet/s2c/ExplosionS2CPacket.ts
 import {MobAiS2CPacket} from "../../network/packet/s2c/MobAiS2CPacket.ts";
 import {EntityVelocityUpdateS2CPacket} from "../../network/packet/s2c/EntityVelocityUpdateS2CPacket.ts";
 import {EntityTrackerUpdateS2CPacket} from "../../network/packet/s2c/EntityTrackerUpdateS2CPacket.ts";
-import {MoveRelative, Rotate} from "../../network/packet/s2c/EntityS2CPacket.ts";
+import {MoveRelative, Rotate, RotateAndMoveRelative} from "../../network/packet/s2c/EntityS2CPacket.ts";
 import {ServerReadyS2CPacket} from "../../network/packet/s2c/ServerReadyS2CPacket.ts";
+import {EntityKilledS2CPacket} from "../../network/packet/s2c/EntityKilledS2CPacket.ts";
+import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
 
 export class ServerNetwork {
     public static registerNetworkPacket() {
@@ -31,6 +33,9 @@ export class ServerNetwork {
         this.register(EntityTrackerUpdateS2CPacket.ID, EntityTrackerUpdateS2CPacket.CODEC);
         this.register(Rotate.ID, Rotate.CODEC);
         this.register(MoveRelative.ID, MoveRelative.CODEC);
+        this.register(RotateAndMoveRelative.ID, RotateAndMoveRelative.CODEC);
+        this.register(EntityKilledS2CPacket.ID, EntityKilledS2CPacket.CODEC);
+        this.register(EntityDamageS2CPacket.ID, EntityDamageS2CPacket.CODEC);
     }
 
     private static register<T extends Payload>(payloadId: PayloadId<T>, codec: PacketCodec<T>): void {

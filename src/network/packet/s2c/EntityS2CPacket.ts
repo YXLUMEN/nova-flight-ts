@@ -61,17 +61,46 @@ export class Rotate extends EntityS2CPacket {
 
     private static write(value: EntityS2CPacket, writer: BinaryWriter): void {
         writer.writeVarInt(value.entityId);
-        writer.writeUint8(value.yaw);
+        writer.writeByte(value.yaw);
     }
 
     private static read(reader: BinaryReader): Rotate {
         return new Rotate(
             reader.readVarInt(),
-            reader.readUint8()
+            reader.readUnsignByte()
         )
     }
 
     public getId(): PayloadId<any> {
         return Rotate.ID;
+    }
+}
+
+export class RotateAndMoveRelative extends EntityS2CPacket {
+    public static readonly ID: PayloadId<Rotate> = {id: Identifier.ofVanilla('entity_move_pos_rotate')};
+    public static readonly CODEC = PacketCodec.of(this.write, this.read);
+
+    public constructor(entityId: number, deltaX: number, deltaY: number, yaw: number) {
+        super(entityId, deltaX, deltaY, yaw, true, true);
+    }
+
+    private static write(value: EntityS2CPacket, writer: BinaryWriter): void {
+        writer.writeVarInt(value.entityId);
+        writer.writeInt16(value.deltaX);
+        writer.writeInt16(value.deltaY);
+        writer.writeByte(value.yaw);
+    }
+
+    private static read(reader: BinaryReader): RotateAndMoveRelative {
+        return new RotateAndMoveRelative(
+            reader.readVarInt(),
+            reader.readInt16(),
+            reader.readInt16(),
+            reader.readUnsignByte()
+        )
+    }
+
+    public getId(): PayloadId<any> {
+        return RotateAndMoveRelative.ID;
     }
 }

@@ -4,13 +4,13 @@ import {Vec2} from "../../utils/math/Vec2.ts";
 
 export class PacketCodecs {
     public static readonly BOOL: PacketCodec<boolean> = PacketCodec.of(
-        (value, writer) => writer.writeInt8(value ? 1 : 0),
-        reader => reader.readInt8() !== 0
+        (value, writer) => writer.writeByte(value ? 1 : 0),
+        reader => reader.readByte() !== 0
     );
 
     public static readonly INT8: PacketCodec<number> = PacketCodec.of(
-        (value, writer) => writer.writeInt8(value),
-        reader => reader.readInt8()
+        (value, writer) => writer.writeByte(value),
+        reader => reader.readByte()
     );
 
     public static readonly INT16: PacketCodec<number> = PacketCodec.of(

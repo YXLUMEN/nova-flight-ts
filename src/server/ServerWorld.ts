@@ -23,14 +23,12 @@ import {STAGE} from "../configs/StageConfig.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import {EntityRemoveS2CPacket} from "../network/packet/s2c/EntityRemoveS2CPacket.ts";
 import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
-import {DamageTypes} from "../entity/damage/DamageTypes.ts";
-import {StatusEffects} from "../entity/effect/StatusEffects.ts";
-import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {EntityTrackerEntry} from "./network/EntityTrackerEntry.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
 import type {Explosion} from "../world/Explosion.ts";
 import {ExplosionS2CPacket} from "../network/packet/s2c/ExplosionS2CPacket.ts";
+import {ServerDefaultEvents} from "./ServerDefaultEvents.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
@@ -41,6 +39,7 @@ export class ServerWorld extends World implements NbtSerializable {
     private readonly entities: EntityList = new EntityList();
     private readonly entityManager: ServerEntityManager<Entity>;
     private readonly trackedEntities = new Map<number, EntityTrackerEntry>();
+    private finishInit = false;
 
     public constructor(registryManager: RegistryManager, server: NovaFlightServer) {
         super(registryManager, false);
@@ -54,6 +53,7 @@ export class ServerWorld extends World implements NbtSerializable {
         // }
 
         this.onEvent();
+        this.finishInit = true;
     }
 
     public override tick(dt: number) {
@@ -192,7 +192,7 @@ export class ServerWorld extends World implements NbtSerializable {
         if (entity instanceof PlayerEntity) {
             exclude = entity.getUuid();
         }
-        this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, false), exclude);
+        this.getNetworkChannel().sendExclude(new SoundEventS2CPacket(sound, volume, pitch, false), exclude);
     }
 
     public override playLoopSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
@@ -200,7 +200,7 @@ export class ServerWorld extends World implements NbtSerializable {
         if (entity instanceof PlayerEntity) {
             exclude = entity.getUuid();
         }
-        this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, true), exclude);
+        this.getNetworkChannel().sendExclude(new SoundEventS2CPacket(sound, volume, pitch, true), exclude);
     }
 
     public override stopLoopSound(_: Entity | null, sounds: SoundEvent): boolean {
@@ -229,28 +229,13 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     private onEvent() {
+        if (this.finishInit) return;
+
         this.events.on(EVENTS.ENTITY_REMOVED, event => {
             this.entityManager.remove(event.entity);
         });
 
-        this.events.on(EVENTS.MOB_DAMAGE, event => {
-            const mob = event.mob;
-            const damageSource = event.damageSource;
-
-            const attacker = damageSource.getAttacker();
-            if (attacker instanceof PlayerEntity && !damageSource.isOf(DamageTypes.ON_FIRE)) {
-                if (!attacker.techTree.isUnlocked('incendiary_bullet')) return;
-
-                if (attacker.techTree.isUnlocked('meltdown')) {
-                    const effect = mob.getStatusEffect(StatusEffects.BURNING);
-                    if (effect) {
-                        const amplifier = Math.min(10, effect.getAmplifier() + 1);
-                        mob.addStatusEffect(new StatusEffectInstance(StatusEffects.BURNING, 400, amplifier), null);
-                    }
-                }
-                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.BURNING, 400, 1), null);
-            }
-        });
+        ServerDefaultEvents.registerEvent(this);
     }
 
     public writeNBT(root: NbtCompound): NbtCompound {

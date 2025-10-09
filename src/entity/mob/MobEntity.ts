@@ -1,7 +1,6 @@
 import {LivingEntity} from "../LivingEntity.ts";
-import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {World} from "../../world/World.ts";
-import {clamp, rand} from "../../utils/math/math.ts";
+import {clamp} from "../../utils/math/math.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import type {EntityType} from "../EntityType.ts";
@@ -56,13 +55,6 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
 
         const world = this.getWorld();
         world.events.emit(EVENTS.MOB_DAMAGE, {mob: this, damageSource});
-
-        world.addParticleByVec(
-            this.getPositionRef.clone(), MutVec2.zero(),
-            rand(0.2, 0.6), rand(4, 6),
-            "#ffaa33", "#ff5454",
-            0.6, 80
-        );
         return true;
     }
 

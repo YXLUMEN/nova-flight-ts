@@ -1,12 +1,13 @@
-import type {MutVec2} from "../utils/math/MutVec2.ts";
+import {MutVec2} from "../utils/math/MutVec2.ts";
 import type {IEffect} from "./IEffect.ts";
-import {PI2} from "../utils/math/math.ts";
+import {lerp, PI2} from "../utils/math/math.ts";
 
 export class Particle implements IEffect {
     public alive = true;
 
-    private pos: MutVec2;
-    private vel: MutVec2;
+    private prevPos = MutVec2.zero();
+    private pos = MutVec2.zero();
+    private vel = MutVec2.zero();
     private life: number;
     private size: number;
     private colorFrom: string;
@@ -22,8 +23,9 @@ export class Particle implements IEffect {
         colorFrom: string, colorTo: string,
         drag = 0.0, gravity = 0.0
     ) {
-        this.vel = vel;
-        this.pos = pos;
+        this.vel.set(vel.x, vel.y);
+        this.prevPos.set(pos.x, pos.y);
+        this.pos.set(pos.x, pos.y);
         this.gravity = gravity;
         this.drag = drag;
         this.colorTo = colorTo;
@@ -38,8 +40,9 @@ export class Particle implements IEffect {
         colorFrom: string, colorTo: string,
         drag = 0.0, gravity = 0.0
     ) {
-        this.pos = pos;
-        this.vel = vel;
+        this.vel.set(vel.x, vel.y);
+        this.prevPos.set(pos.x, pos.y);
+        this.pos.set(pos.x, pos.y);
         this.life = life;
         this.size = size;
         this.colorFrom = colorFrom;
@@ -58,20 +61,26 @@ export class Particle implements IEffect {
         }
         this.vel.x *= (1 - this.drag * dt);
         this.vel.y = this.vel.y * (1 - this.drag * dt) + this.gravity * dt;
+
+        this.prevPos.set(this.pos.x, this.pos.y);
         this.pos.x += this.vel.x * dt;
         this.pos.y += this.vel.y * dt;
     }
 
-    public render(ctx: CanvasRenderingContext2D) {
+    public render(ctx: CanvasRenderingContext2D, tickDelta: number) {
+        const x = lerp(tickDelta, this.prevPos.x, this.pos.x);
+        const y = lerp(tickDelta, this.prevPos.y, this.pos.y);
+
         const k = this.t / this.life;
         const r = this.size * (1 - 0.6 * k);
+
         ctx.globalAlpha = 1 - k;
-        const g = ctx.createRadialGradient(this.pos.x, this.pos.y, 0, this.pos.x, this.pos.y, r);
+        const g = ctx.createRadialGradient(x, y, 0, x, y, r);
         g.addColorStop(0, this.colorFrom);
         g.addColorStop(1, this.colorTo);
         ctx.fillStyle = g;
         ctx.beginPath();
-        ctx.arc(this.pos.x, this.pos.y, r, 0, PI2);
+        ctx.arc(x, y, r, 0, PI2);
         ctx.fill();
         ctx.globalAlpha = 1;
     }

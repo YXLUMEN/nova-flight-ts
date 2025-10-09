@@ -10,7 +10,7 @@ import {EntityVelocityUpdateS2CPacket} from "../../network/packet/s2c/EntityVelo
 import {EntityTrackerUpdateS2CPacket} from "../../network/packet/s2c/EntityTrackerUpdateS2CPacket.ts";
 import {TrackedPosition} from "../../entity/TrackedPosition.ts";
 import {encodeYaw} from "../../utils/NetUtil.ts";
-import {MoveRelative, Rotate} from "../../network/packet/s2c/EntityS2CPacket.ts";
+import {MoveRelative, Rotate, RotateAndMoveRelative} from "../../network/packet/s2c/EntityS2CPacket.ts";
 
 export class EntityTrackerEntry {
     private readonly world: ServerWorld;
@@ -65,9 +65,17 @@ export class EntityTrackerEntry {
             } else if (yawDelta) {
                 packet = new Rotate(this.entity.getId(), byteYaw);
                 syncYaw = true;
+            } else {
+                const smallPos = Math.abs(dx) <= 1 && Math.abs(dy) <= 1;
+                const smallYaw = Math.abs(byteYaw - this.lastYaw) <= 2;
+                if (!smallPos || !smallYaw) {
+                    packet = new RotateAndMoveRelative(this.entity.getId(), dx, dy, byteYaw);
+                    syncPos = true;
+                    syncYaw = true;
+                }
             }
 
-            if (this.alwaysUpdateVelocity || this.entity.velocityDirty && this.trackingTick > 0) {
+            if (this.alwaysUpdateVelocity || this.entity.velocityDirty) {
                 const velocity = this.entity.getVelocityRef;
                 const delta = distanceVec2(velocity, this.velocity);
 

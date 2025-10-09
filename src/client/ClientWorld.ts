@@ -17,13 +17,12 @@ import {AudioManager} from "../sound/AudioManager.ts";
 import {EntityRenderers} from "./render/entity/EntityRenderers.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {ClientPlayerEntity} from "./entity/ClientPlayerEntity.ts";
-import {HALF_PI, PI2, rand} from "../utils/math/math.ts";
+import {HALF_PI} from "../utils/math/math.ts";
 import type {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
 import {StringPacket} from "../network/packet/StringPacket.ts";
 import {EVENTS} from "../apis/IEvents.ts";
-import {applyTech} from "../tech/apply_tech.ts";
-import {PlayerUnlockTechC2SPacket} from "../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
+import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
 
 export class ClientWorld extends World {
     private readonly client: NovaFlightClient = NovaFlightClient.getInstance();
@@ -40,12 +39,15 @@ export class ClientWorld extends World {
     private readonly particlePool: ParticlePool = new ParticlePool(256);
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
 
+    private finishInit = false;
+
     public constructor(registryManager: RegistryManager) {
         super(registryManager, true);
 
         this.entityManager = new ClientEntityManager(this.ClientEntityHandler);
         this.starField.init();
         this.onEvent();
+        this.finishInit = true;
     }
 
     public override tick(dt: number) {
@@ -180,29 +182,13 @@ export class ClientWorld extends World {
     }
 
     private onEvent() {
-        this.events.on(EVENTS.UNLOCK_TECH, event => {
-            this.getNetworkChannel().send(new PlayerUnlockTechC2SPacket(this.client.player!.getUuid(), event.id))
-            applyTech(event.id);
-        });
+        if (this.finishInit) return;
 
         this.events.on(EVENTS.ENTITY_REMOVED, event => {
             this.entityManager.remove(event.entity);
         });
 
-        this.events.on(EVENTS.MOB_KILLED, event => {
-            const mob = event.mob;
-
-            for (let i = 0; i < 4; i++) {
-                const a = rand(0, PI2);
-                const speed = rand(80, 180);
-                const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
-
-                this.addParticleByVec(
-                    mob.getPositionRef.clone(), vel, rand(0.6, 0.8), rand(4, 6),
-                    "#ffaa33", "#ff5454", 0.6, 80
-                );
-            }
-        });
+        ClientDefaultEvents.registryEvents(this);
     }
 
     public toggleTechTree() {
@@ -225,7 +211,7 @@ export class ClientWorld extends World {
         // 背景层
         this.drawBackground(ctx);
 
-        this.particlePool.render(ctx);
+        this.particlePool.render(ctx, tickDelta);
 
         // 其他实体
         if (this.client.player?.voidEdge) {

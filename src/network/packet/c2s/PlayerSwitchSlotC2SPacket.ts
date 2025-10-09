@@ -9,10 +9,10 @@ export class PlayerSwitchSlotC2SPacket implements Payload {
     public static readonly CODEC: PacketCodec<PlayerSwitchSlotC2SPacket> = PacketCodec.of<PlayerSwitchSlotC2SPacket>(
         (value, writer) => {
             writer.writeUUID(value.uuid);
-            writer.writeInt8(value.slot);
+            writer.writeByte(value.slot);
         },
         (reader) => {
-            return new PlayerSwitchSlotC2SPacket(reader.readUUID(), reader.readInt8());
+            return new PlayerSwitchSlotC2SPacket(reader.readUUID(), reader.readByte());
         }
     );
 

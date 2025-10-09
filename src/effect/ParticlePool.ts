@@ -43,9 +43,9 @@ export class ParticlePool {
         }
     }
 
-    public render(ctx: CanvasRenderingContext2D) {
+    public render(ctx: CanvasRenderingContext2D, tickDelta: number) {
         for (let i = 0; i < this.active.length; i++) {
-            this.active[i].render(ctx);
+            this.active[i].render(ctx, tickDelta);
         }
     }
 }

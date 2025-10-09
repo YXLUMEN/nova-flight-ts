@@ -3,7 +3,7 @@ import {Identifier} from "../../../registry/Identifier.ts";
 import {PacketCodec} from "../../codec/PacketCodec.ts";
 
 export class EntityHealthS2CPacket implements Payload {
-    public static readonly ID: PayloadId<EntityHealthS2CPacket> = {id: Identifier.ofVanilla('entity_damage')};
+    public static readonly ID: PayloadId<EntityHealthS2CPacket> = {id: Identifier.ofVanilla('entity_health')};
     public static readonly CODEC: PacketCodec<EntityHealthS2CPacket> = PacketCodec.of(
         (value, writer) => {
             writer.writeVarInt(value.id);

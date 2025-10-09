@@ -10,17 +10,17 @@ export class TrackedPosition {
             return this.pos.toImmutable();
         }
 
-        const x = dx === 0 ? this.pos.x : unpack(pack(this.pos.x) + dx);
-        const y = dy === 0 ? this.pos.y : unpack(pack(this.pos.y) + dy);
+        const x = dx === 0 ? this.pos.x : dequantize(quantize(this.pos.x) + dx);
+        const y = dy === 0 ? this.pos.y : dequantize(quantize(this.pos.y) + dy);
         return new Vec2(x, y);
     }
 
     public getDeltaX(pos: IVec): number {
-        return pack(pos.x) - pack(this.pos.x);
+        return quantize(pos.x) - quantize(this.pos.x);
     }
 
     public getDeltaY(pos: IVec): number {
-        return pack(pos.y) - pack(this.pos.y);
+        return quantize(pos.y) - quantize(this.pos.y);
     }
 
     public subtract(pos: IVec): IVec {
@@ -36,10 +36,10 @@ export class TrackedPosition {
     }
 }
 
-function pack(value: number) {
+function quantize(value: number) {
     return Math.round(value * 4096);
 }
 
-function unpack(value: number) {
+function dequantize(value: number) {
     return value / 4096;
 }

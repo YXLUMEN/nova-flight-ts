@@ -4,7 +4,7 @@ import {PacketCodec} from "../../codec/PacketCodec.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
-import {encodeYaw} from "../../../utils/NetUtil.ts";
+import {decodeYaw, encodeYaw} from "../../../utils/NetUtil.ts";
 
 export class EntityPositionS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityPositionS2CPacket> = {id: Identifier.ofVanilla('entity_posture')};
@@ -13,13 +13,13 @@ export class EntityPositionS2CPacket implements Payload {
     public readonly entityId: number;
     public readonly x: number;
     public readonly y: number;
-    public readonly yaw: number;
+    private readonly yawInt8: number;
 
-    public constructor(entityId: number, x: number, y: number, yaw: number) {
+    public constructor(entityId: number, x: number, y: number, yawInt8: number) {
         this.entityId = entityId;
         this.x = x;
         this.y = y;
-        this.yaw = yaw;
+        this.yawInt8 = yawInt8;
     }
 
     public static create(entity: Entity) {
@@ -35,7 +35,7 @@ export class EntityPositionS2CPacket implements Payload {
             reader.readVarInt(),
             reader.readDouble(),
             reader.readDouble(),
-            reader.readUint8()
+            reader.readUnsignByte()
         )
     }
 
@@ -43,10 +43,14 @@ export class EntityPositionS2CPacket implements Payload {
         writer.writeVarInt(value.entityId);
         writer.writeDouble(value.x);
         writer.writeDouble(value.y);
-        writer.writeUint8(value.yaw);
+        writer.writeByte(value.yawInt8);
     }
 
     public getId(): PayloadId<EntityPositionS2CPacket> {
         return EntityPositionS2CPacket.ID;
+    }
+
+    public get yaw() {
+        return decodeYaw(this.yawInt8);
     }
 }

@@ -27,7 +27,7 @@ export type IEvents = {
     [EVENTS.MOB_DAMAGE]: { mob: MobEntity; damageSource: DamageSource };
     [EVENTS.UNLOCK_TECH]: { id: string };
     [EVENTS.BOMB_DETONATE]: { entity: Entity };
-    [EVENTS.EMP_BURST]: { duration: number };
+    [EVENTS.EMP_BURST]: { entity: Entity, duration: number };
     [EVENTS.STAGE_ENTER]: { name: string };
     [EVENTS.STAGE_EXIT]: { name: string };
     [EVENTS.ENTITY_LOCKED]: { missile: MissileEntity };

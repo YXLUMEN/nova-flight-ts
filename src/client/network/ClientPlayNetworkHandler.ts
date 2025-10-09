@@ -8,17 +8,26 @@ import type {Consumer, UUID} from "../../apis/registry.ts";
 import {EntityRemoveS2CPacket} from "../../network/packet/s2c/EntityRemoveS2CPacket.ts";
 import {EntityPositionS2CPacket} from "../../network/packet/s2c/EntityPositionS2CPacket.ts";
 import {MobAiS2CPacket} from "../../network/packet/s2c/MobAiS2CPacket.ts";
-import type {MobEntity} from "../../entity/mob/MobEntity.ts";
+import {MobEntity} from "../../entity/mob/MobEntity.ts";
 import {ExplosionS2CPacket} from "../../network/packet/s2c/ExplosionS2CPacket.ts";
 import {EntityVelocityUpdateS2CPacket} from "../../network/packet/s2c/EntityVelocityUpdateS2CPacket.ts";
 import {EntityTrackerUpdateS2CPacket} from "../../network/packet/s2c/EntityTrackerUpdateS2CPacket.ts";
-import {EntityS2CPacket, MoveRelative, Rotate} from "../../network/packet/s2c/EntityS2CPacket.ts";
+import {
+    EntityS2CPacket,
+    MoveRelative,
+    Rotate,
+    RotateAndMoveRelative
+} from "../../network/packet/s2c/EntityS2CPacket.ts";
 import {decodeYaw} from "../../utils/NetUtil.ts";
 import type {Payload, PayloadId} from "../../network/Payload.ts";
 import type {NetworkChannel} from "../../network/NetworkChannel.ts";
 import {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
 import {ServerReadyS2CPacket} from "../../network/packet/s2c/ServerReadyS2CPacket.ts";
 import {PlayerAttemptLoginC2SPacket} from "../../network/packet/c2s/PlayerAttemptLoginC2SPacket.ts";
+import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
+import {MutVec2} from "../../utils/math/MutVec2.ts";
+import {PI2, rand} from "../../utils/math/math.ts";
+import {EntityKilledS2CPacket} from "../../network/packet/s2c/EntityKilledS2CPacket.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer = new Set<UUID>();
@@ -72,9 +81,9 @@ export class ClientPlayNetworkHandler {
         const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
 
-        entity.updateTrackedPosition(packet.x, packet.y);
+        entity.setTrackedPosition(packet.x, packet.y);
         if (!entity.isLogicalSideForUpdatingMovement()) {
-            entity.updateTrackedPositionAndAngles(packet.x, packet.y, decodeYaw(packet.yaw), 3);
+            entity.updateTrackedPositionAndAngles(packet.x, packet.y, packet.yaw, 3);
         }
     }
 
@@ -95,6 +104,41 @@ export class ClientPlayNetworkHandler {
         const world = this.world;
         if (!world) return null;
         return entityType.create(world);
+    }
+
+    public onEntityDamage(packet: EntityDamageS2CPacket): void {
+        const world = this.world;
+        if (!world) return;
+        const entity = world.getEntityById(packet.entityId);
+
+        if (entity instanceof MobEntity) {
+            world.addParticleByVec(
+                entity.getPositionRef, MutVec2.zero(),
+                rand(0.2, 0.6), rand(4, 6),
+                "#ffaa33", "#ff5454",
+                0.6, 80
+            );
+        }
+    }
+
+    public onEntityKilled(packet: EntityKilledS2CPacket) {
+        const world = this.world;
+        if (!world) return;
+        const entity = world.getEntityById(packet.entityId);
+        if (!entity) return;
+
+        if (entity instanceof MobEntity) {
+            for (let i = 0; i < 4; i++) {
+                const a = rand(0, PI2);
+                const speed = rand(80, 180);
+                const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
+
+                world.addParticleByVec(
+                    entity.getPositionRef, vel, rand(0.6, 0.8), rand(4, 6),
+                    "#ffaa33", "#ff5454", 0.6, 80
+                );
+            }
+        }
     }
 
     public onEntityRemove(packet: EntityRemoveS2CPacket): void {
@@ -141,6 +185,9 @@ export class ClientPlayNetworkHandler {
             .add(EntityTrackerUpdateS2CPacket.ID, this.onEntityTrackerUpdate)
             .add(Rotate.ID, this.onEntity)
             .add(MoveRelative.ID, this.onEntity)
+            .add(RotateAndMoveRelative.ID, this.onEntity)
+            .add(EntityKilledS2CPacket.ID, this.onEntityKilled)
+            .add(EntityDamageS2CPacket.ID, this.onEntityDamage)
             .register(this.client.networkChannel, this);
     }
 }

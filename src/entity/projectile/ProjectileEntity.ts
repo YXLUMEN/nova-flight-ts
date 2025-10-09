@@ -77,7 +77,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
     public override onSpawnPacket(packet: EntitySpawnS2CPacket) {
         super.onSpawnPacket(packet);
         this.setVelocity(packet.velocityX, packet.velocityY);
-        const owner = this.getWorld().getEntityById(packet.ownerId);
+        const owner = this.getWorld().getEntityById(packet.entityData);
         if (owner) this.setOwner(owner);
     }
 

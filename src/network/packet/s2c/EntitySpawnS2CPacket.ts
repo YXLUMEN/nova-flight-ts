@@ -7,7 +7,7 @@ import type {EntityType} from "../../../entity/EntityType.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import type {Entity} from "../../../entity/Entity.ts";
-import {decodeYaw, encodeYaw} from "../../../utils/NetUtil.ts";
+import {decodeVelocity, decodeYaw, encodeVelocity, encodeYaw} from "../../../utils/NetUtil.ts";
 
 export class EntitySpawnS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntitySpawnS2CPacket> = {id: Identifier.ofVanilla('spawn_entity')};
@@ -19,45 +19,49 @@ export class EntitySpawnS2CPacket implements Payload {
     public readonly entityType: EntityType<any>;
     public readonly x: number;
     public readonly y: number;
-    public readonly velocityX: number;
-    public readonly velocityY: number;
-    private readonly yaw: number;
+    private readonly velocityXInt16: number;
+    private readonly velocityYInt16: number;
+    private readonly yawInt8: number;
     public readonly color: string;
     public readonly edgeColor: string;
-    public readonly ownerId: number;
+    public readonly entityData: number;
 
     public constructor(
         entityId: number,
         uuid: UUID,
-        x: number, y: number, yaw: number,
+        x: number, y: number, yawInt8: number,
         entityType: EntityType<any>,
-        velocityX: number, velocityY: number,
+        velocityXInt16: number, velocityYInt16: number,
         color: string, edgeColor: string,
-        ownerId: number,
+        entityData: number,
     ) {
         this.entityId = entityId;
         this.uuid = uuid;
         this.entityType = entityType;
         this.x = x;
         this.y = y;
-        this.velocityX = velocityX;
-        this.velocityY = velocityY;
-        this.yaw = encodeYaw(yaw);
+        this.velocityXInt16 = velocityXInt16;
+        this.velocityYInt16 = velocityYInt16;
+        this.yawInt8 = yawInt8;
         this.color = color;
         this.edgeColor = edgeColor;
-        this.ownerId = ownerId;
+        this.entityData = entityData;
     }
 
     public static create(entity: Entity, ownerId = 0): EntitySpawnS2CPacket {
+        const yaw = encodeYaw(entity.getYaw());
+        const vx = encodeVelocity(entity.getVelocityRef.x);
+        const vy = encodeVelocity(entity.getVelocityRef.y);
+
         return new this(
             entity.getId(),
             entity.getUuid(),
             entity.getPositionRef.x,
             entity.getPositionRef.y,
-            entity.getYaw(),
+            yaw,
             entity.getType(),
-            entity.getVelocityRef.x,
-            entity.getVelocityRef.y,
+            vx,
+            vy,
             entity.color,
             entity.edgeColor,
             ownerId
@@ -72,9 +76,9 @@ export class EntitySpawnS2CPacket implements Payload {
         const entityType = Registries.ENTITY_TYPE.getEntryById(typeId)!.getValue();
         const x = reader.readDouble();
         const y = reader.readDouble();
-        const yaw = reader.readUint8();
-        const velocityX = reader.readFloat();
-        const velocityY = reader.readFloat();
+        const yaw = reader.readUnsignByte();
+        const velocityX = reader.readInt16();
+        const velocityY = reader.readInt16();
         const color = reader.readString();
         const edgeColor = reader.readString();
         const ownerId = reader.readVarInt();
@@ -89,19 +93,27 @@ export class EntitySpawnS2CPacket implements Payload {
         Identifier.PACKET_CODEC.encode(typeEntry, writer);
         writer.writeDouble(value.x);
         writer.writeDouble(value.y);
-        writer.writeUint8(value.yaw);
-        writer.writeFloat(value.velocityX);
-        writer.writeFloat(value.velocityY);
+        writer.writeByte(value.yawInt8);
+        writer.writeInt16(value.velocityXInt16);
+        writer.writeInt16(value.velocityYInt16);
         writer.writeString(value.color);
         writer.writeString(value.edgeColor);
-        writer.writeVarInt(value.ownerId);
+        writer.writeVarInt(value.entityData);
     }
 
     public getId(): PayloadId<EntitySpawnS2CPacket> {
         return EntitySpawnS2CPacket.ID;
     }
 
-    public getYaw() {
-        return decodeYaw(this.yaw);
+    public get yaw() {
+        return decodeYaw(this.yawInt8);
+    }
+
+    public get velocityX() {
+        return decodeVelocity(this.velocityXInt16);
+    }
+
+    public get velocityY() {
+        return decodeVelocity(this.velocityYInt16);
     }
 }

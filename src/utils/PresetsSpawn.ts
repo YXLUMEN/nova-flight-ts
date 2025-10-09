@@ -15,6 +15,7 @@ import type {EntityType} from "../entity/EntityType.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
+import {Behavior} from "../entity/ai/MobAI.ts";
 
 function getHealth(value: number): EntityAttributeModifier {
     return createCleanObj({
@@ -62,7 +63,7 @@ const spawnInMap = (
         m.color = color;
         m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(scaledHp));
         m.setHealth(m.getMaxHealth());
-        m.setBehavior(0);
+        m.setBehavior(Behavior.Wander);
     }, opts)(ctx);
 }
 

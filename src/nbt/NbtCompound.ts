@@ -166,12 +166,12 @@ export class NbtCompound {
         writer.writeInt16(NbtCompound.VERSION);
 
         for (const [key, {type, value}] of this.entries) {
-            writer.writeInt8(type);
+            writer.writeByte(type);
             writer.writeString(key);
 
             switch (type) {
                 case NbtTypes.Int8:
-                    writer.writeInt8(value as number);
+                    writer.writeByte(value as number);
                     break;
                 case NbtTypes.Int16:
                     writer.writeInt16(value as number);
@@ -192,7 +192,7 @@ export class NbtCompound {
                     writer.writeString(value as string);
                     break;
                 case NbtTypes.Boolean:
-                    writer.writeInt8(value ? 1 : 0);
+                    writer.writeByte(value ? 1 : 0);
                     break;
                 case NbtTypes.NumberArray: {
                     const values = value as number[];
@@ -226,7 +226,7 @@ export class NbtCompound {
             }
         }
 
-        writer.writeInt8(NbtTypes.End);
+        writer.writeByte(NbtTypes.End);
         return writer.toUint8Array();
     }
 
@@ -247,13 +247,13 @@ export class NbtCompound {
         const compound = new NbtCompound();
 
         while (true) {
-            const type = reader.readInt8();
+            const type = reader.readByte();
             if (type === NbtTypes.End) break;
 
             const key = reader.readString();
             switch (type) {
                 case NbtTypes.Int8:
-                    compound.putInt8(key, reader.readInt8());
+                    compound.putInt8(key, reader.readByte());
                     break;
                 case NbtTypes.Int16:
                     compound.putInt16(key, reader.readInt16());
@@ -274,7 +274,7 @@ export class NbtCompound {
                     compound.putString(key, reader.readString());
                     break;
                 case NbtTypes.Boolean:
-                    compound.putBoolean(key, reader.readInt8() !== 0);
+                    compound.putBoolean(key, reader.readByte() !== 0);
                     break;
                 case NbtTypes.NumberArray: {
                     const len = reader.readInt32();

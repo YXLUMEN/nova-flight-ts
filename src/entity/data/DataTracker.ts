@@ -147,7 +147,7 @@ export class DataTracker {
             if (index === null) {
                 throw new RangeError(`Unknown serializer type ${this.handler}`);
             }
-            writer.writeInt8(this.id);
+            writer.writeByte(this.id);
             writer.writeVarInt(index);
             this.handler.codec().encode(this.value, writer);
         }

@@ -23,17 +23,13 @@ export class ServerNetworkChannel extends NetworkChannel {
         console.log("Server registered");
     }
 
-    public override send<T extends Payload>(payload: T, exclude: UUID | null = null) {
+    public sendTo<T extends Payload>(payload: T, target: UUID) {
         const type = this.registry.get(payload.getId().id);
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
 
         const writer = new BinaryWriter();
-        writer.writeInt8(this.getHeader());
-        if (exclude !== null) {
-            writer.writeUUID(exclude);
-        } else {
-            writer.pushBytes(UUIDUtil.EMPTY_UUID);
-        }
+        writer.writeByte(0x12);
+        writer.writeUUID(target);
 
         writer.writeString(type.id.toString());
         type.codec.encode(payload, writer);
@@ -41,13 +37,17 @@ export class ServerNetworkChannel extends NetworkChannel {
         this.ws.send(writer.toUint8Array());
     }
 
-    public sendTo<T extends Payload>(payload: T, target: UUID) {
+    public sendExclude<T extends Payload>(payload: T, exclude: UUID | null) {
         const type = this.registry.get(payload.getId().id);
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
 
         const writer = new BinaryWriter();
-        writer.writeInt8(0x12); // 单发指令
-        writer.writeUUID(target);
+        writer.writeByte(0x13);
+        if (exclude !== null) {
+            writer.writeUUID(exclude);
+        } else {
+            writer.pushBytes(UUIDUtil.EMPTY_UUID);
+        }
 
         writer.writeString(type.id.toString());
         type.codec.encode(payload, writer);

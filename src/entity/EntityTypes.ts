@@ -80,6 +80,7 @@ export class EntityTypes {
     public static readonly ADS_ENTITY = EntityType.register("ads_entity",
         EntityType.Builder.create(ADSEntity)
             .setDimensions(16, 16)
+            .setTrackingTickInterval(20)
     );
 
     public static init() {

@@ -8,7 +8,7 @@ import {MissileWeapon} from "./weapon/MissileWeapon.ts";
 import {Cannon40Weapon} from "./weapon/BaseWeapon/Cannon40Weapon.ts";
 import {Cannon90Weapon} from "./weapon/BaseWeapon/Cannon90Weapon.ts";
 import {MiniGunWeapon} from "./weapon/BaseWeapon/MiniGunWeapon.ts";
-import {RocketWeapon} from "./weapon/BaseWeapon/RocketWeapon.ts";
+import {RocketLauncherWeapon} from "./weapon/BaseWeapon/RocketLauncherWeapon.ts";
 import {DataComponentTypes} from "../component/DataComponentTypes.ts";
 import {IntoVoidWeapon} from "./weapon/IntoVoidWeapon.ts";
 import {LaserWeapon} from "./weapon/LaserWeapon.ts";
@@ -42,7 +42,7 @@ export class Items {
         .component(DataComponentTypes.EXPLOSION_RADIUS, 96)
         .component(DataComponentTypes.EXPLOSION_DAMAGE, 5)
     ));
-    public static readonly ROCKET_WEAPON = this.register("rocket_weapon", new RocketWeapon(new Item.Settings()
+    public static readonly ROCKET_WEAPON = this.register("rocket_weapon", new RocketLauncherWeapon(new Item.Settings()
         .attackDamage(8)
         .maxCooldown(40)
         .component(DataComponentTypes.EXPLOSION_RADIUS, 72)
@@ -57,7 +57,7 @@ export class Items {
     public static readonly CIWS_WEAPON = this.register("ciws_weapon", new CIWS(new Item.Settings()
         .attackDamage(2)
         .maxCooldown(0)
-        .component(DataComponentTypes.MAX_HEAT, 360)
+        .component(DataComponentTypes.MAX_HEAT, 144)
     ));
     public static readonly LASER_WEAPON: Item;
     public static readonly DECOY_RELEASER = this.register("decoy_releaser", new DecoyReleaser(new Item.Settings()

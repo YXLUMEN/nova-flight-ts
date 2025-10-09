@@ -9,11 +9,11 @@ export class PlayerMoveC2SPacket implements Payload {
     public static readonly CODEC: PacketCodec<PlayerMoveC2SPacket> = PacketCodec.of<PlayerMoveC2SPacket>(
         (value, writer) => {
             writer.writeUUID(value.uuid);
-            writer.writeInt8(value.dx);
-            writer.writeInt8(value.dy);
+            writer.writeByte(value.dx);
+            writer.writeByte(value.dy);
         },
         (reader) => {
-            return new PlayerMoveC2SPacket(reader.readUUID(), reader.readInt8(), reader.readInt8());
+            return new PlayerMoveC2SPacket(reader.readUUID(), reader.readByte(), reader.readByte());
         }
     );
 

@@ -140,28 +140,9 @@ async fn handle_message(state: &Arc<Mutex<State>>, tx: &Tx, data: Bytes) {
         }
         0x11 => {
             // Server → 广播给所有 Client
-            if data.len() < 17 {
-                eprintln!("[WARN] Invalid server packet");
-                return;
-            }
-            let exclude_uuid = &data[1..17];
-
-            // 截断UUID
-            let rest = data.slice(17..);
-            let mut buf = Vec::with_capacity(1 + rest.len());
-            buf.push(0x11);
-            buf.extend_from_slice(&rest);
-            let forwarded = Bytes::from(buf);
-
             let mut st = state.lock().await;
             st.clients.retain(|id, client| {
-                // 排除
-                if !is_nil_uuid(exclude_uuid) && id == exclude_uuid {
-                    return true;
-                }
-
-                // 转发
-                if client.send(forwarded.clone()).is_err() {
+                if client.send(data.clone()).is_err() {
                     println!("[WARN] Client {} dropped", format_uuid(&id));
                     false
                 } else {
@@ -175,20 +156,52 @@ async fn handle_message(state: &Arc<Mutex<State>>, tx: &Tx, data: Bytes) {
                 eprintln!("[WARN] Invalid unicast packet");
                 return;
             }
-            let mut id = [0u8; 16];
-            id.copy_from_slice(&data[1..17]);
+
+            let mut  target = [0u8; 16];
+            target.copy_from_slice(&data[1..17]);
             let rest = data.slice(17..);
+
             let mut buf = Vec::with_capacity(1 + rest.len());
             buf.push(0x11);
             buf.extend_from_slice(&rest);
             let forwarded = Bytes::from(buf);
 
-            let st = state.lock().await;
-            if let Some(client) = st.clients.get(&id) {
-                if client.send(forwarded.clone()).is_err() {
-                    println!("[WARN] Client {} dropped", format_uuid(&id));
+            let mut st = state.lock().await;
+            if let Some(client) = st.clients.get(&target) {
+                if client.send(forwarded).is_err() {
+                    println!("[WARN] Client {} dropped", format_uuid(&target));
+                    st.clients.remove(&target);
                 }
             }
+        }
+        0x13 => {
+            // Server → 广播给未被排除的 Client
+            if data.len() < 17 {
+                eprintln!("[WARN] Invalid server packet");
+                return;
+            }
+
+            let exclude = &data[1..17];
+            let rest = data.slice(17..);
+
+            let mut buf = Vec::with_capacity(1 + rest.len());
+            buf.push(0x11);
+            buf.extend_from_slice(&rest);
+            let forwarded = Bytes::from(buf);
+
+            let mut st = state.lock().await;
+            st.clients.retain(|id, client| {
+                if !is_nil_uuid(exclude) && id == exclude {
+                    return true;
+                }
+
+                if client.send(forwarded.clone()).is_err() {
+                    println!("[WARN] Client {} dropped", format_uuid(&id));
+                    false
+                } else {
+                    true
+                }
+            });
         }
         _ => {
             eprintln!("[WARN] Unknown opcode: {}", data[0]);
