@@ -8,7 +8,7 @@ export class PlayerSwitchSlotC2SPacket implements Payload {
     public static readonly ID: PayloadId<PlayerSwitchSlotC2SPacket> = {id: Identifier.ofVanilla('player_switch_slot')};
 
     public static readonly CODEC: PacketCodec<PlayerSwitchSlotC2SPacket> = PacketCodecs.of<PlayerSwitchSlotC2SPacket>(
-        (value, writer) => {
+        (writer, value) => {
             writer.writeUUID(value.uuid);
             writer.writeByte(value.slot);
         },

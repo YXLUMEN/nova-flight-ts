@@ -7,7 +7,7 @@ export class ExplosionS2CPacket implements Payload {
     public static readonly ID: PayloadId<ExplosionS2CPacket> = {id: Identifier.ofVanilla('explosion')};
 
     public static readonly CODEC: PacketCodec<ExplosionS2CPacket> = PacketCodecs.of<ExplosionS2CPacket>(
-        (value, writer) => {
+        (writer, value) => {
             writer.writeDouble(value.x);
             writer.writeDouble(value.y);
             writer.writeFloat(value.radius);

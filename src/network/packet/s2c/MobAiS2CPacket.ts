@@ -7,7 +7,7 @@ export class MobAiS2CPacket implements Payload {
     public static readonly ID: PayloadId<MobAiS2CPacket> = {id: Identifier.ofVanilla('mob_ai')};
 
     public static readonly CODEC: PacketCodec<MobAiS2CPacket> = PacketCodecs.of<MobAiS2CPacket>(
-        (value, writer) => {
+        (writer, value) => {
             writer.writeVarUInt(value.id);
             writer.writeByte(value.behavior);
         },

@@ -49,13 +49,7 @@ export abstract class NetworkChannel {
     }
 
     public init() {
-        this.ws.onopen = () => {
-            this.register();
-        };
-    }
-
-    public async waitConnect(): Promise<void> {
-        return this.ready;
+        this.ws.onopen = () => this.register();
     }
 
     public receive<T extends Payload>(id: PayloadId<T>, handler: (payload: T) => void) {
@@ -71,27 +65,17 @@ export abstract class NetworkChannel {
         writer.writeByte(this.getHeader());
         writer.writeString(type.id.toString());
 
-        type.codec.encode(payload, writer);
+        type.codec.encode(writer, payload);
 
         this.ws.send(writer.toUint8Array());
     }
-
-    public disconnect(): void {
-        this.ws.close();
-    }
-
-    protected abstract getSide(): string;
-
-    protected abstract getHeader(): number;
-
-    protected abstract register(): void;
 
     private decodePayload(buf: Uint8Array): Payload | null {
         const reader = new BinaryReader(buf);
 
         const header = reader.readByte();
         if (header !== 0x10 && header !== 0x11) {
-            console.warn("Unknown header:", header);
+            console.warn(`${this.getSide().toUpperCase()} -> Unknown header: ${header}`);
             return null;
         }
 
@@ -104,5 +88,19 @@ export abstract class NetworkChannel {
 
         return type.codec.decode(reader);
     }
+
+    public async waitConnect(): Promise<void> {
+        return this.ready;
+    }
+
+    public disconnect(): void {
+        this.ws.close();
+    }
+
+    protected abstract getSide(): string;
+
+    protected abstract getHeader(): number;
+
+    protected abstract register(): void;
 }
 

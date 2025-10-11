@@ -8,7 +8,6 @@ import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export class MissileEnemyEntity extends MobEntity {
-    private static readonly bulletSpeed = 0.5;
     public color = "#ff6b6b";
     protected cooldown = 0;
 
@@ -37,7 +36,6 @@ export class MissileEnemyEntity extends MobEntity {
         const missile = new MobMissileEntity(EntityTypes.MISSILE_ENTITY, world, this, yaw);
         missile.color = '#ff7777';
         missile.setMaxLifeTick(500);
-        missile.setTrackingSpeed(MissileEnemyEntity.bulletSpeed);
         missile.setPosition(pos.x, pos.y);
         missile.setYaw(yaw);
         world.spawnEntity(missile);

@@ -2,14 +2,13 @@ import type {Identifier} from "../registry/Identifier.ts";
 import type {Payload, PayloadId} from "./Payload.ts";
 import {HashMap} from "../utils/collection/HashMap.ts";
 import {createCleanObj} from "../utils/uit.ts";
-import type {PacketCodecUtil} from "./codec/PacketCodecUtil.ts";
 import type {PacketCodec} from "./codec/PacketCodec.ts";
 
 type Side = 'server' | 'client';
 
 export interface PayloadType<T extends Payload> {
     readonly id: Identifier;
-    readonly codec: PacketCodecUtil<T>;
+    readonly codec: PacketCodec<T>;
 }
 
 export class PayloadTypeRegistry {

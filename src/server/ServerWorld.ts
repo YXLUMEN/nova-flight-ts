@@ -190,7 +190,10 @@ export class ServerWorld extends World implements NbtSerializable {
         if (entity instanceof PlayerEntity) {
             exclude = entity.getUuid();
         }
-        this.getNetworkChannel().sendExclude(new SoundEventS2CPacket(sound, volume, pitch, false), exclude);
+        if (exclude) {
+            this.getNetworkChannel().sendExclude(new SoundEventS2CPacket(sound, volume, pitch, false), exclude);
+        }
+        this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, false));
     }
 
     public override playLoopSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
@@ -198,7 +201,10 @@ export class ServerWorld extends World implements NbtSerializable {
         if (entity instanceof PlayerEntity) {
             exclude = entity.getUuid();
         }
-        this.getNetworkChannel().sendExclude(new SoundEventS2CPacket(sound, volume, pitch, true), exclude);
+        if (exclude) {
+            this.getNetworkChannel().sendExclude(new SoundEventS2CPacket(sound, volume, pitch, true), exclude);
+        }
+        this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, false));
     }
 
     public override stopLoopSound(_: Entity | null, sounds: SoundEvent): boolean {

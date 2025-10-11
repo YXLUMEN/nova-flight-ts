@@ -7,7 +7,7 @@ export class StringPacket implements Payload {
     public static readonly ID: PayloadId<StringPacket> = {id: Identifier.ofVanilla('string')};
 
     public static readonly CODEC: PacketCodec<StringPacket> = PacketCodecs.of<StringPacket>(
-        (value, writer) => {
+        (writer, value) => {
             writer.writeString(value.value);
         },
         (reader) => {

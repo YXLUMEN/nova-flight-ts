@@ -16,8 +16,8 @@ export class LaserWeapon extends SpecialWeapon {
     public static readonly COLOR = '#8bff5e';
     public static readonly OVERHEAT_COLOR = '#ff5e5e';
 
-    private readonly height = World.WORLD_H * 2;        // 长度
-    private readonly width = 6;            // 宽度
+    private readonly height = World.WORLD_H * 2;
+    private readonly width = 6;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         this.setActive(stack, this.getActive(stack) ? false : stack.isAvailable());
@@ -98,6 +98,7 @@ export class LaserWeapon extends SpecialWeapon {
                 beamFx.set(start, end);
             } else {
                 const newBeamFx = new LaserBeamEffect(stack.getOrDefault(DataComponentTypes.UI_COLOR, LaserWeapon.COLOR), this.width);
+                newBeamFx.reset(start, end);
                 world.addEffect(newBeamFx);
                 id2EffectMap.set(holder.getId(), newBeamFx);
             }

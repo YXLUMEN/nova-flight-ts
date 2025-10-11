@@ -14,6 +14,7 @@ import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.
 import {PlayerAimC2SPacket} from "../../network/packet/c2s/PlayerAimC2SPacket.ts";
 import type {UUID} from "../../apis/registry.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
+import {wrapRadians} from "../../utils/math/math.ts";
 
 export class ClientPlayerEntity extends PlayerEntity {
     public readonly input: KeyboardInput;
@@ -59,13 +60,19 @@ export class ClientPlayerEntity extends PlayerEntity {
 
         if (this.autoAimEnable && this.autoAim) {
             this.autoAim.tick();
+            const pos = this.autoAim.getLockTargetPos();
+            if (pos) this.getNetworkHandler().send(new PlayerAimC2SPacket(uuid, pos));
         } else if (this.steeringGear) {
             const pointer = this.input.getPointer;
-            this.setClampYaw(Math.atan2(
+            const yaw = Math.atan2(
                 pointer.y - posRef.y,
                 pointer.x - posRef.x
-            ), 0.3926875);
-            this.getNetworkHandler().send(new PlayerAimC2SPacket(uuid, pointer));
+            );
+
+            if (Math.abs(wrapRadians(yaw - this.getYaw())) > 0.02) {
+                this.setClampYaw(yaw, 0.3926875);
+                this.getNetworkHandler().send(new PlayerAimC2SPacket(uuid, pointer));
+            }
         }
 
         // 锁定

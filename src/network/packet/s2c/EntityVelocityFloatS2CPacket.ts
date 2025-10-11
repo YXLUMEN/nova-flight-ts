@@ -33,7 +33,7 @@ export class EntityVelocityFloatS2CPacket implements Payload {
         )
     }
 
-    private static write(value: EntityVelocityFloatS2CPacket, writer: BinaryWriter): void {
+    private static write(writer: BinaryWriter, value: EntityVelocityFloatS2CPacket): void {
         writer.writeVarUInt(value.entityId);
         writer.writeFloat(value.velocityX);
         writer.writeFloat(value.velocityY);

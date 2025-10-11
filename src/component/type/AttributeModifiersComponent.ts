@@ -21,7 +21,7 @@ export class AttributeModifiersComponent implements EntityAttributeModifier {
     };
 
     public static readonly PACKET_CODEC: PacketCodec<AttributeModifiersComponent> = PacketCodecs.of(
-        (value, writer) => {
+        (writer, value) => {
             writer.writeString(value.id.toString());
             writer.writeDouble(value.value);
         },

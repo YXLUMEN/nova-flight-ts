@@ -29,6 +29,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     public prevX: number = 0;
     public prevY: number = 0;
     public prevYaw: number = 0;
+
     public age: number = 0;
     public color = '';
     public edgeColor = '';
@@ -58,14 +59,6 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         const builder = new DataTracker.Builder(this);
         this.initDataTracker(builder);
         this.dataTracker = builder.build();
-    }
-
-    public get getPositionRef(): Readonly<MutVec2> {
-        return this.pos;
-    }
-
-    public get getVelocityRef(): MutVec2 {
-        return this.velocity;
     }
 
     public getType(): EntityType<any> {
@@ -159,6 +152,10 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         this.setPosition(x, y);
     }
 
+    public get getPositionRef(): Readonly<MutVec2> {
+        return this.pos;
+    }
+
     public getPosition(): Vec2 {
         return this.pos.toImmutable();
     }
@@ -212,18 +209,8 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         this.setYaw(this.yaw + delta);
     }
 
-    public createSpawnPacket() {
-        return EntitySpawnS2CPacket.create(this);
-    }
-
-    public onSpawnPacket(packet: EntitySpawnS2CPacket) {
-        this.setTrackedPosition(packet.x, packet.y);
-        this.refreshPosition(packet.x, packet.y);
-        this.setYaw(packet.yaw);
-        this.setId(packet.entityId);
-        this.setUuid(packet.uuid);
-        this.color = packet.color;
-        this.edgeColor = packet.edgeColor;
+    public get getVelocityRef(): MutVec2 {
+        return this.velocity;
     }
 
     public updateVelocityByVec(speed: number, movementInput: IVec): void {
@@ -288,6 +275,20 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
 
     public shouldWrap(): boolean {
         return false;
+    }
+
+    public createSpawnPacket() {
+        return EntitySpawnS2CPacket.create(this);
+    }
+
+    public onSpawnPacket(packet: EntitySpawnS2CPacket) {
+        this.setTrackedPosition(packet.x, packet.y);
+        this.refreshPosition(packet.x, packet.y);
+        this.setYaw(packet.yaw);
+        this.setId(packet.entityId);
+        this.setUuid(packet.uuid);
+        this.color = packet.color;
+        this.edgeColor = packet.edgeColor;
     }
 
     public getWorld(): World {

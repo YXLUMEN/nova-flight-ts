@@ -17,7 +17,7 @@ export class Identifier implements Comparable {
         }
     };
     public static readonly PACKET_CODEC: PacketCodec<Identifier> = PacketCodecs.of(
-        (value, writer) => writer.writeString(value.toString()),
+        (writer, value) => writer.writeString(value.toString()),
         reader => this.splitOn(reader.readString())
     );
 

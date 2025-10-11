@@ -1,7 +1,6 @@
 import type {Entity} from "../entity/Entity.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 import type {IEffect} from "../effect/IEffect.ts";
-import {MutVec2} from "../utils/math/MutVec2.ts";
 import type {Schedule, TimerTask} from "../apis/ITimer.ts";
 import {DamageSources} from "../entity/damage/DamageSources.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
@@ -18,6 +17,7 @@ import {Explosion} from "./Explosion.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
+import type {IVec} from "../utils/math/IVec.ts";
 
 export abstract class World {
     public static readonly WORLD_W = 1692;
@@ -66,7 +66,7 @@ export abstract class World {
     public abstract stopLoopSound(entity: Entity | null, sound: SoundEvent): boolean;
 
     public abstract addParticleByVec(
-        pos: MutVec2, vel: MutVec2,
+        pos: IVec, vel: IVec,
         life: number, size: number,
         colorFrom: string, colorTo: string,
         drag?: number, gravity?: number

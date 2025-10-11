@@ -3,7 +3,6 @@ import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
 import type {Payload} from "../../network/Payload.ts";
 import type {UUID} from "../../apis/registry.ts";
 import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
-import {UUIDUtil} from "../../utils/UUIDUtil.ts";
 
 export class ServerNetworkChannel extends NetworkChannel {
     public constructor(ws: WebSocket) {
@@ -19,25 +18,25 @@ export class ServerNetworkChannel extends NetworkChannel {
         writer.writeUUID(target);
 
         writer.writeString(type.id.toString());
-        type.codec.encode(payload, writer);
+        type.codec.encode(writer, payload);
 
         this.ws.send(writer.toUint8Array());
     }
 
-    public sendExclude<T extends Payload>(payload: T, exclude: UUID | null) {
+    public sendExclude<T extends Payload>(payload: T, ...excludes: UUID[]) {
         const type = this.registry.get(payload.getId().id);
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
 
         const writer = new BinaryWriter();
         writer.writeByte(0x13);
-        if (exclude !== null) {
-            writer.writeUUID(exclude);
-        } else {
-            writer.pushBytes(UUIDUtil.EMPTY_UUID);
+
+        writer.writeVarUInt(excludes.length);
+        for (const id of excludes) {
+            writer.writeUUID(id);
         }
 
         writer.writeString(type.id.toString());
-        type.codec.encode(payload, writer);
+        type.codec.encode(writer, payload);
 
         this.ws.send(writer.toUint8Array());
     }

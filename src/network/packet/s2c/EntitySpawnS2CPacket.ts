@@ -27,7 +27,7 @@ export class EntitySpawnS2CPacket implements Payload {
     private readonly velocityYInt16: number;
     private readonly yawInt8: number;
 
-    public constructor(
+    protected constructor(
         entityId: number,
         uuid: UUID,
         x: number, y: number, yawInt8: number,
@@ -47,18 +47,6 @@ export class EntitySpawnS2CPacket implements Payload {
         this.color = color;
         this.edgeColor = edgeColor;
         this.entityData = entityData;
-    }
-
-    public get yaw() {
-        return decodeYaw(this.yawInt8);
-    }
-
-    public get velocityX() {
-        return decodeVelocity(this.velocityXInt16);
-    }
-
-    public get velocityY() {
-        return decodeVelocity(this.velocityYInt16);
     }
 
     public static create(entity: Entity, ownerId = 0): EntitySpawnS2CPacket {
@@ -81,7 +69,7 @@ export class EntitySpawnS2CPacket implements Payload {
         );
     }
 
-    private static read(reader: BinaryReader): EntitySpawnS2CPacket {
+    protected static read(reader: BinaryReader): EntitySpawnS2CPacket {
         const entityId = reader.readVarUInt();
         const uuid = reader.readUUID();
 
@@ -99,11 +87,11 @@ export class EntitySpawnS2CPacket implements Payload {
         return new EntitySpawnS2CPacket(entityId, uuid, x, y, yaw, entityType, velocityX, velocityY, color, edgeColor, ownerId);
     }
 
-    private static write(value: EntitySpawnS2CPacket, writer: BinaryWriter): void {
+    protected static write(writer: BinaryWriter, value: EntitySpawnS2CPacket): void {
         writer.writeVarUInt(value.entityId);
         writer.writeUUID(value.uuid);
         const typeEntry = Registries.ENTITY_TYPE.getId(value.entityType)!;
-        Identifier.PACKET_CODEC.encode(typeEntry, writer);
+        Identifier.PACKET_CODEC.encode(writer, typeEntry);
         writer.writeDouble(value.x);
         writer.writeDouble(value.y);
         writer.writeByte(value.yawInt8);
@@ -116,5 +104,17 @@ export class EntitySpawnS2CPacket implements Payload {
 
     public getId(): PayloadId<EntitySpawnS2CPacket> {
         return EntitySpawnS2CPacket.ID;
+    }
+
+    public get yaw() {
+        return decodeYaw(this.yawInt8);
+    }
+
+    public get velocityX() {
+        return decodeVelocity(this.velocityXInt16);
+    }
+
+    public get velocityY() {
+        return decodeVelocity(this.velocityYInt16);
     }
 }

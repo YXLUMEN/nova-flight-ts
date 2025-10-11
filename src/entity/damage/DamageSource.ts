@@ -10,7 +10,7 @@ import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
 
 export class DamageSource {
     public static readonly PACKET_CODE = PacketCodecs.of<DamageSource>(
-        (value, writer) => {
+        (writer, value) => {
             writer.writeString(value.getType());
         },
         reader => {

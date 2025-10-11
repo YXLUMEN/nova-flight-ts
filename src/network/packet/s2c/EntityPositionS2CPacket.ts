@@ -23,10 +23,6 @@ export class EntityPositionS2CPacket implements Payload {
         this.yawInt8 = yawInt8;
     }
 
-    public get yaw() {
-        return decodeYaw(this.yawInt8);
-    }
-
     public static create(entity: Entity) {
         const pos = entity.getPositionRef;
         const x = pos.x;
@@ -44,7 +40,7 @@ export class EntityPositionS2CPacket implements Payload {
         )
     }
 
-    private static write(value: EntityPositionS2CPacket, writer: BinaryWriter): void {
+    private static write(writer: BinaryWriter, value: EntityPositionS2CPacket): void {
         writer.writeVarUInt(value.entityId);
         writer.writeDouble(value.x);
         writer.writeDouble(value.y);
@@ -53,5 +49,9 @@ export class EntityPositionS2CPacket implements Payload {
 
     public getId(): PayloadId<EntityPositionS2CPacket> {
         return EntityPositionS2CPacket.ID;
+    }
+
+    public get yaw() {
+        return decodeYaw(this.yawInt8);
     }
 }

@@ -75,7 +75,7 @@ export class Items {
             .component(DataComponentTypes.EFFECT_DURATION, 100)
         ));
         (this.LASER_WEAPON as any) = this.register("laser_weapon", new LaserWeapon(new Item.Settings()
-            .attackDamage(1)
+            .attackDamage(3)
             .component(DataComponentTypes.MAX_HEAT, 320)
             .component(DataComponentTypes.ACTIVE, false)
             .component(DataComponentTypes.HEAT, 0)

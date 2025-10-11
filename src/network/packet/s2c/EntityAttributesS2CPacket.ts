@@ -11,9 +11,9 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 export class EntityAttributesS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityAttributesS2CPacket> = {id: Identifier.ofVanilla('entity_attr')}
     public static readonly CODEC: PacketCodec<EntityAttributesS2CPacket> = PacketCodecs.of(
-        (value, writer) => {
+        (writer, value) => {
             writer.writeVarUInt(value.entityId);
-            PacketCodecs.collection(Entry.CODEC).encode(value.entries, writer);
+            PacketCodecs.collection(Entry.CODEC).encode(writer, value.entries);
         },
         reader => {
             const entityId = reader.readVarUInt();
@@ -30,7 +30,7 @@ export class EntityAttributesS2CPacket implements Payload {
         this.entries = entries;
     }
 
-    public static create(entityId: number, attributes: Iterable<EntityAttributeInstance>) {
+    public static create(entityId: number, attributes: Iterable<EntityAttributeInstance>): EntityAttributesS2CPacket {
         const entries: Entry[] = [];
         for (const entry of attributes) {
             entries.push(new Entry(entry.getAttribute(), entry.getBaseValue(), entry.getModifiers() as Set<EntityAttributeModifier>));
@@ -46,8 +46,8 @@ export class EntityAttributesS2CPacket implements Payload {
 
 class Entry {
     public static readonly MODIFIER_CODEC: PacketCodec<EntityAttributeModifier> = PacketCodecs.of(
-        (value, writer) => {
-            Identifier.PACKET_CODEC.encode(value.id, writer);
+        (writer, value) => {
+            Identifier.PACKET_CODEC.encode(writer, value.id);
             writer.writeDouble(value.value);
         },
         reader => {
@@ -59,10 +59,10 @@ class Entry {
     );
 
     public static readonly CODEC: PacketCodec<Entry> = PacketCodecs.of(
-        (value, writer) => {
-            EntityAttribute.PACKET_CODEC.encode(value.attribute.getValue(), writer);
+        (writer, value) => {
+            EntityAttribute.PACKET_CODEC.encode(writer, value.attribute.getValue());
             writer.writeDouble(value.base);
-            PacketCodecs.collectionSet(Entry.MODIFIER_CODEC).encode(value.modifiers, writer);
+            PacketCodecs.collectionSet(Entry.MODIFIER_CODEC).encode(writer, value.modifiers);
         },
         reader => {
             const attr = EntityAttribute.PACKET_CODEC.decode(reader);

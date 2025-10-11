@@ -30,7 +30,6 @@ export class NovaFlightClient {
 
     public world: ClientWorld | null = null;
     public player: ClientPlayerEntity | null = null;
-    // @ts-ignore
     private server: Worker | null = null;
 
     private running: boolean;

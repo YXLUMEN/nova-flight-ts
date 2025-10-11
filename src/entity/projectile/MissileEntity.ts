@@ -4,7 +4,6 @@ import {World} from "../../world/World.ts";
 import {PI2, rand} from "../../utils/math/math.ts";
 import {AutoAim} from "../../tech/AutoAim.ts";
 import {RocketEntity} from "./RocketEntity.ts";
-import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
 
 export class MissileEntity extends RocketEntity {
@@ -19,9 +18,9 @@ export class MissileEntity extends RocketEntity {
     private driftSpeed = 2;
     private trackingSpeed = 4;
     private readonly turnRate = Math.PI / 24;
-    private hoverDir: number = 1;
 
-    private readonly driftAngle: number;
+    public hoverDir: number = 1;
+    public driftAngle: number;
 
     public constructor(type: EntityType<MissileEntity>, world: World, owner: Entity, driftAngle: number, damage = 5) {
         super(type, world, owner, damage);
@@ -63,10 +62,15 @@ export class MissileEntity extends RocketEntity {
         const cd = (this.age & 3) === 0;
         const world = this.getWorld();
 
-        if (cd) world.addParticleByVec(pos.clone(), MutVec2.zero(),
-            rand(1, 1.5), rand(4, 6),
-            "#986900", "#575757", 0.3
-        );
+        if (cd) {
+            const yaw = this.getYaw();
+            const dx = Math.cos(yaw) * 32;
+            const dy = Math.sin(yaw) * 32;
+            world.addParticle(pos.x - dx, pos.y - dy, 0, 0,
+                rand(1, 1.5), rand(4, 6),
+                "#986900", "#575757", 0.3
+            );
+        }
 
         // 开始锁定
         if (this.age < this.lockDelayTicks) {
@@ -149,10 +153,6 @@ export class MissileEntity extends RocketEntity {
 
     public setTrackingSpeed(value: number): void {
         this.trackingSpeed = value;
-    }
-
-    public setHoverDir(value: 1 | -1) {
-        this.hoverDir = value;
     }
 
     public getTarget(): Entity | null {

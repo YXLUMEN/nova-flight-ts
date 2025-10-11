@@ -68,7 +68,7 @@ export class ParticleS2CPacket implements Payload {
         return new ParticleS2CPacket(posX, posY, offsetXInt16, offsetYInt16, count, speed, life, size, colorFrom, colorTo);
     }
 
-    public static write(value: ParticleS2CPacket, writer: BinaryWriter): void {
+    public static write(writer: BinaryWriter, value: ParticleS2CPacket): void {
         writer.writeDouble(value.posX);
         writer.writeDouble(value.posY);
         writer.writeInt16(value.offsetXInt16);

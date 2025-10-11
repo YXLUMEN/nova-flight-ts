@@ -13,6 +13,7 @@ import {EVENTS} from "../../apis/IEvents.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
 import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
+import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.ts";
 
 export class BossEntity extends MobEntity {
     public static hasBoss: boolean = false;
@@ -87,10 +88,10 @@ export class BossEntity extends MobEntity {
             const missile = new MobMissileEntity(EntityTypes.MISSILE_ENTITY, world, this, driftAngle);
             missile.color = '#ff7777';
             missile.setMaxLifeTick(400);
-            missile.setTrackingSpeed(0.55);
             missile.setPosition(pos.x, pos.y);
             missile.setYaw(yaw);
             world.spawnEntity(missile);
+            world.getNetworkChannel().send(new MissileSetS2CPacket(missile.getId(), missile.driftAngle, missile.hoverDir));
         });
     }
 

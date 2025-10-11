@@ -31,7 +31,7 @@ export class EntityTrackerUpdateS2CPacket implements Payload {
         return new EntityTrackerUpdateS2CPacket(entityId, list);
     }
 
-    private static write(value: EntityTrackerUpdateS2CPacket, writer: BinaryWriter): void {
+    private static write(writer: BinaryWriter, value: EntityTrackerUpdateS2CPacket): void {
         writer.writeVarUInt(value.entityId);
         for (const entry of value.trackedValues) {
             entry.write(writer);

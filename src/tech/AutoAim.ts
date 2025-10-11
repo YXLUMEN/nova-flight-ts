@@ -1,18 +1,23 @@
-import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import {PI2, wrapRadians} from "../utils/math/math.ts";
 import type {BaseWeapon} from "../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import type {ClientWorld} from "../client/ClientWorld.ts";
+import type {ClientPlayerEntity} from "../client/entity/ClientPlayerEntity.ts";
+import {MutVec2} from "../utils/math/MutVec2.ts";
 
 export class AutoAim {
     public static readonly FIRE_THRESHOLD = Math.PI / 90;
-    private readonly owner: PlayerEntity;
+    private readonly owner: ClientPlayerEntity;
+
+    private readonly lockTargetPos = MutVec2.zero();
+    private readonly lastTargetPos = MutVec2.zero();
+
     private currentTarget: MobEntity | null = null;
     private targetLockTime = 0;
 
-    public constructor(owner: PlayerEntity) {
+    public constructor(owner: ClientPlayerEntity) {
         this.owner = owner;
     }
 
@@ -50,7 +55,7 @@ export class AutoAim {
         return Math.atan2(leadY - shooterPos.y, leadX - shooterPos.x);
     }
 
-    public tick() {
+    public tick(): void {
         const world = this.owner.getWorld() as ClientWorld;
         if (!world.isClient) return;
 
@@ -65,7 +70,9 @@ export class AutoAim {
         const mobVel = target.getVelocityRef;
         const bulletSpeed = (this.owner.getCurrentItemStack().getItem() as BaseWeapon).getBallisticSpeed();
 
+        this.lastTargetPos.set(this.lockTargetPos.x, this.lockTargetPos.y);
         const targetYaw = AutoAim.getLeadYaw(pos, mobPos, mobVel, bulletSpeed);
+        this.lockTargetPos.set(Math.cos(targetYaw), Math.sin(targetYaw)).normalize().add(pos.x, pos.y);
         this.owner.setClampYaw(targetYaw);
 
         const currentYaw = this.owner.getYaw();
@@ -124,5 +131,9 @@ export class AutoAim {
             this.targetLockTime = now;
         }
         return this.currentTarget;
+    }
+
+    public getLockTargetPos(): Readonly<MutVec2> | null {
+        return this.lockTargetPos.equalsSq(this.lastTargetPos) ? null : this.lastTargetPos;
     }
 }

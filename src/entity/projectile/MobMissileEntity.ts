@@ -11,6 +11,7 @@ export class MobMissileEntity extends MissileEntity {
 
     public constructor(type: EntityType<MissileEntity>, world: World, owner: Entity, driftAngle: number) {
         super(type, world, owner, driftAngle, 5);
+        this.setTrackingSpeed(0.52);
     }
 
     public override shouldApplyDecoy(): boolean {

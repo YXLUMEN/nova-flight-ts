@@ -1,3 +1,4 @@
+use bytes::{BufMut, BytesMut};
 use futures_util::{SinkExt, StreamExt};
 use std::{collections::HashMap, sync::Arc};
 use tokio::net::TcpListener;
@@ -157,14 +158,14 @@ async fn handle_message(state: &Arc<Mutex<State>>, tx: &Tx, data: Bytes) {
                 return;
             }
 
-            let mut  target = [0u8; 16];
+            let mut target = [0u8; 16];
             target.copy_from_slice(&data[1..17]);
             let rest = data.slice(17..);
 
-            let mut buf = Vec::with_capacity(1 + rest.len());
-            buf.push(0x11);
+            let mut buf = BytesMut::with_capacity(1 + rest.len());
+            buf.put_u8(0x11);
             buf.extend_from_slice(&rest);
-            let forwarded = Bytes::from(buf);
+            let forwarded = buf.freeze();
 
             let mut st = state.lock().await;
             if let Some(client) = st.clients.get(&target) {
@@ -181,17 +182,32 @@ async fn handle_message(state: &Arc<Mutex<State>>, tx: &Tx, data: Bytes) {
                 return;
             }
 
-            let exclude = &data[1..17];
-            let rest = data.slice(17..);
+            let mut cursor = &data[1..];
 
-            let mut buf = Vec::with_capacity(1 + rest.len());
-            buf.push(0x11);
-            buf.extend_from_slice(&rest);
-            let forwarded = Bytes::from(buf);
+            let (count, rest) = read_var_uint(cursor);
+            cursor = rest;
+
+            let mut excludes = Vec::with_capacity(count as usize);
+            for _ in 0..count {
+                if cursor.len() < 16 {
+                    eprintln!("[WARN] Invalid exclude UUID");
+                    return;
+                }
+                let (uuid_bytes, next) = cursor.split_at(16);
+                excludes.push(uuid_bytes);
+                cursor = next;
+            }
+
+            let rest = cursor;
+
+            let mut buf = BytesMut::with_capacity(1 + rest.len());
+            buf.put_u8(0x11);
+            buf.extend_from_slice(rest);
+            let forwarded = buf.freeze();
 
             let mut st = state.lock().await;
             st.clients.retain(|id, client| {
-                if !is_nil_uuid(exclude) && id == exclude {
+                if excludes.iter().any(|ex| !is_nil_uuid(ex) && ex == id) {
                     return true;
                 }
 
@@ -225,4 +241,29 @@ fn format_uuid(bytes: &[u8; 16]) -> String {
         &s[16..20],
         &s[20..32]
     )
+}
+
+fn read_var_uint(mut buf: &[u8]) -> (u32, &[u8]) {
+    let mut result: u32 = 0;
+    let mut shift = 0;
+
+    loop {
+        if buf.is_empty() {
+            panic!("Unexpected end of buffer while reading VarUInt");
+        }
+        let byte = buf[0];
+        buf = &buf[1..];
+
+        result |= ((byte & 0x7F) as u32) << shift;
+
+        if (byte & 0x80) == 0 {
+            break;
+        }
+        shift += 7;
+        if shift > 35 {
+            panic!("VarUInt is too big");
+        }
+    }
+
+    (result, buf)
 }

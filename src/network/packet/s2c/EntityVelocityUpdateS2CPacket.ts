@@ -21,14 +21,6 @@ export class EntityVelocityUpdateS2CPacket implements Payload {
         this.velocityYInt16 = velocityYInt16;
     }
 
-    public get velocityX() {
-        return decodeVelocity(this.velocityXInt16);
-    }
-
-    public get velocityY() {
-        return decodeVelocity(this.velocityYInt16);
-    }
-
     public static create(entity: Entity) {
         const vel = entity.getVelocityRef;
         return new EntityVelocityUpdateS2CPacket(entity.getId(), encodeVelocity(vel.x), encodeVelocity(vel.y));
@@ -42,7 +34,7 @@ export class EntityVelocityUpdateS2CPacket implements Payload {
         )
     }
 
-    private static write(value: EntityVelocityUpdateS2CPacket, writer: BinaryWriter): void {
+    private static write(writer: BinaryWriter, value: EntityVelocityUpdateS2CPacket): void {
         writer.writeVarUInt(value.entityId);
         writer.writeInt16(value.velocityXInt16);
         writer.writeInt16(value.velocityYInt16);
@@ -50,5 +42,13 @@ export class EntityVelocityUpdateS2CPacket implements Payload {
 
     public getId(): PayloadId<EntityVelocityUpdateS2CPacket> {
         return EntityVelocityUpdateS2CPacket.ID;
+    }
+
+    public get velocityX() {
+        return decodeVelocity(this.velocityXInt16);
+    }
+
+    public get velocityY() {
+        return decodeVelocity(this.velocityYInt16);
     }
 }

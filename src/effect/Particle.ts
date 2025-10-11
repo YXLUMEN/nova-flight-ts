@@ -1,6 +1,7 @@
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import type {IEffect} from "./IEffect.ts";
 import {lerp, PI2} from "../utils/math/math.ts";
+import type {IVec} from "../utils/math/IVec.ts";
 
 export class Particle implements IEffect {
     public alive = true;
@@ -18,7 +19,7 @@ export class Particle implements IEffect {
     private t = 0;
 
     public constructor(
-        pos: MutVec2, vel: MutVec2,
+        pos: IVec, vel: IVec,
         life: number, size: number,
         colorFrom: string, colorTo: string,
         drag = 0.0, gravity = 0.0
@@ -35,7 +36,7 @@ export class Particle implements IEffect {
     }
 
     public reset(
-        pos: MutVec2, vel: MutVec2,
+        pos: IVec, vel: IVec,
         life: number, size: number,
         colorFrom: string, colorTo: string,
         drag = 0.0, gravity = 0.0

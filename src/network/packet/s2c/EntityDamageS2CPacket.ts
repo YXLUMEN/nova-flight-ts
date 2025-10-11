@@ -6,7 +6,7 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 export class EntityDamageS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityDamageS2CPacket> = {id: Identifier.ofVanilla('entity_damage')};
     public static readonly CODEC: PacketCodec<EntityDamageS2CPacket> = PacketCodecs.of(
-        (value, writer) => {
+        (writer, value) => {
             writer.writeVarUInt(value.entityId);
         },
         reader => {

@@ -24,15 +24,11 @@ self.onmessage = async (event: MessageEvent) => {
             break;
         }
         case 'start_ticking': {
-            if (server) {
-                server.world?.setTicking(true);
-            }
+            server?.world?.setTicking(true);
             break;
         }
         case "stop_ticking": {
-            if (server) {
-                server.world?.setTicking(false);
-            }
+            server?.world?.setTicking(false);
             break;
         }
         case 'switch_dev_mode': {
@@ -41,25 +37,29 @@ self.onmessage = async (event: MessageEvent) => {
             break;
         }
         case 'dev_mode': {
-            switch (payload.code) {
-                case 'KeyF': {
-                    const world = server?.world;
-                    if (!world) return;
-                    world.freeze = !world.freeze;
-                    break;
-                }
-                case 'KeyL': {
-                    const world = server?.world;
-                    if (!world) return;
-                    world.stage.nextPhase();
-                }
-            }
+            handleDev(payload.code);
             break;
         }
         default:
             console.warn("Unknown message:", type);
     }
 };
+
+function handleDev(key: string) {
+    switch (key) {
+        case 'KeyF': {
+            const world = server?.world;
+            if (!world) return;
+            world.freeze = !world.freeze;
+            break;
+        }
+        case 'KeyL': {
+            const world = server?.world;
+            if (!world) return;
+            world.stage.nextPhase();
+        }
+    }
+}
 
 ClientNetwork.registerNetworkPacket();
 ServerNetwork.registerNetworkPacket();

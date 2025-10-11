@@ -2,7 +2,7 @@ import type {WeaponUIInfo} from '../../../apis/IUIInfo.ts';
 import type {Weapon} from '../../../item/weapon/Weapon.ts';
 import {BaseWeapon} from "../../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {WorldConfig} from "../../../configs/WorldConfig.ts";
-import {clamp, PI2} from "../../../utils/math/math.ts";
+import {clamp, lerp, PI2} from "../../../utils/math/math.ts";
 import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import type {ItemStack} from "../../../item/ItemStack.ts";
 import type {IUi} from "./IUi.ts";
@@ -22,6 +22,7 @@ export class HUD implements IUi {
     private readonly barWidth = 140;
     private readonly barHeight = 10;
     private displayHealth: number = 0;
+    private displayRatio: number = 0;
 
     public setSize(w: number, h: number) {
         this.worldW = w;
@@ -145,6 +146,7 @@ export class HUD implements IUi {
 
         const anchorX = Math.floor(px + player.getWidth() / 2 + 12);
         const ratio = clamp(1 - weapon.getCooldown(stack) / weapon.getMaxCooldown(stack), 0, 1);
+        this.displayRatio = lerp(tickDelta, this.displayRatio, ratio);
 
         ctx.save();
         ctx.textAlign = 'left';
@@ -153,7 +155,7 @@ export class HUD implements IUi {
 
         ctx.fillStyle = weapon.getUiColor(stack) ?? '#5ec8ff';
         ctx.globalAlpha = 0.6;
-        ctx.fillRect(anchorX, py, (64 * ratio) | 0, 2);
+        ctx.fillRect(anchorX, py, (64 * this.displayRatio) | 0, 2);
 
         ctx.fillStyle = this.hudColor;
         ctx.fillText(weapon.getDisplayName(), anchorX, py - 16);

@@ -9,12 +9,12 @@ export class PlayerAimC2SPacket implements Payload {
     public static readonly ID: PayloadId<PlayerAimC2SPacket> = {id: Identifier.ofVanilla('player_aim')};
 
     public static readonly CODEC: PacketCodec<PlayerAimC2SPacket> = PacketCodecs.of<PlayerAimC2SPacket>(
-        (value, writer) => {
-            writer.writeString(value.uuid);
-            PacketCodecs.VECTOR2D.encode(value.aim, writer);
+        (writer, value) => {
+            writer.writeUUID(value.uuid);
+            PacketCodecs.VECTOR2D.encode(writer, value.aim);
         },
         (reader) => {
-            const uuid = reader.readString() as UUID;
+            const uuid = reader.readUUID();
             const move = PacketCodecs.VECTOR2D.decode(reader);
             return new PlayerAimC2SPacket(uuid, move);
         }

@@ -26,7 +26,7 @@ export class PacketCodecUtil<T> implements PacketCodec<T> {
         }, () => new decoder());
     }
 
-    public encode(value: T, writer: BinaryWriter): Uint8Array {
+    public encode(writer: BinaryWriter, value: T): Uint8Array {
         this.encoder(value, writer);
         return writer.toUint8Array();
     }

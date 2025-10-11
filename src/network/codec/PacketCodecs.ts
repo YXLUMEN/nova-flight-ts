@@ -8,52 +8,52 @@ import {type BinaryWriter} from "../../nbt/BinaryWriter.ts";
 
 export class PacketCodecs {
     public static readonly BOOL: PacketCodec<boolean> = PacketCodecs.of(
-        (value, writer) => writer.writeByte(value ? 1 : 0),
+        (writer, value) => writer.writeByte(value ? 1 : 0),
         reader => reader.readByte() !== 0
     );
 
     public static readonly BYTE: PacketCodec<number> = PacketCodecs.of(
-        (value, writer) => writer.writeByte(value),
+        (writer, value) => writer.writeByte(value),
         reader => reader.readByte()
     );
 
     public static readonly INT16: PacketCodec<number> = PacketCodecs.of(
-        (value, writer) => writer.writeInt16(value),
+        (writer, value) => writer.writeInt16(value),
         reader => reader.readInt16()
     );
 
     public static readonly INT32: PacketCodec<number> = PacketCodecs.of(
-        (value, writer) => writer.writeInt32(value),
+        (writer, value) => writer.writeInt32(value),
         reader => reader.readInt32()
     );
 
     public static readonly UINT32: PacketCodec<number> = PacketCodecs.of(
-        (value, writer) => writer.writeUint32(value),
+        (writer, value) => writer.writeUint32(value),
         reader => reader.readUint32()
     );
 
     public static readonly FLOAT: PacketCodec<number> = PacketCodecs.of(
-        (value, writer) => writer.writeFloat(value),
+        (writer, value) => writer.writeFloat(value),
         reader => reader.readFloat()
     );
 
     public static readonly DOUBLE: PacketCodec<number> = PacketCodecs.of(
-        (value, writer) => writer.writeDouble(value),
+        (writer, value) => writer.writeDouble(value),
         reader => reader.readDouble()
     );
 
     public static readonly VAR_INT: PacketCodec<number> = PacketCodecs.of(
-        (value, writer) => writer.writeVarUInt(value),
+        (writer, value) => writer.writeVarUInt(value),
         reader => reader.readVarUInt()
     );
 
     public static readonly STRING: PacketCodec<string> = PacketCodecs.of(
-        (value, writer) => writer.writeString(value),
+        (writer, value) => writer.writeString(value),
         reader => reader.readString()
     );
 
     public static readonly VECTOR2D: PacketCodec<IVec> = PacketCodecs.of(
-        (value, writer) => {
+        (writer, value) => {
             writer.writeDouble(value.x);
             writer.writeDouble(value.y);
         },
@@ -61,12 +61,12 @@ export class PacketCodecs {
     );
 
     public static of<T>(
-        encoder: (value: T, writer: BinaryWriter) => void,
+        encoder: (writer: BinaryWriter, value: T) => void,
         decoder: (reader: BinaryReader) => T
     ): PacketCodec<T> {
         return {
-            encode(value: T, writer: BinaryWriter): Uint8Array {
-                encoder(value, writer);
+            encode(writer: BinaryWriter, value: T): Uint8Array {
+                encoder(writer, value);
                 return writer.toUint8Array();
             },
             decode: decoder
@@ -75,7 +75,7 @@ export class PacketCodecs {
 
     public static empty<T>(decoder: new () => T): PacketCodec<T> {
         return {
-            encode(_: T, writer: BinaryWriter): Uint8Array {
+            encode(writer: BinaryWriter): Uint8Array {
                 return writer.toUint8Array();
             },
             decode(): T {
@@ -86,10 +86,10 @@ export class PacketCodecs {
 
     public static collection<V>(elementCodec: PacketCodec<V>, maxSize: number = 2147483647): PacketCodec<V[]> {
         return PacketCodecs.of<V[]>(
-            (values, writer) => {
+            (writer, values) => {
                 this.writeCollectionSize(writer, values.length, maxSize);
                 for (const v of values) {
-                    elementCodec.encode(v, writer);
+                    elementCodec.encode(writer, v);
                 }
             },
             reader => {
@@ -105,10 +105,10 @@ export class PacketCodecs {
 
     public static collectionSet<V>(elementCodec: PacketCodec<V>, maxSize: number = 2147483647): PacketCodec<Set<V>> {
         return PacketCodecs.of<Set<V>>(
-            (values, writer) => {
+            (writer, values) => {
                 this.writeCollectionSize(writer, values.size, maxSize);
                 for (const v of values) {
-                    elementCodec.encode(v, writer);
+                    elementCodec.encode(writer, v);
                 }
             },
             reader => {
@@ -146,7 +146,7 @@ export class PacketCodecs {
         registryTransformer: (r: Registry<T>) => IndexedIterable<R>
     ): PacketCodec<R> {
         return {
-            encode(object: R, writer: BinaryWriter) {
+            encode(writer: BinaryWriter, object: R) {
                 const iterable = registryTransformer(registry);
                 const id = iterable.getRawId(object);
                 if (id === undefined) throw new Error(`Object not registered`);

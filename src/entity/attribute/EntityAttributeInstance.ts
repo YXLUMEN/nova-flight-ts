@@ -99,6 +99,10 @@ export class EntityAttributeInstance {
         this.updateCallback(this);
     }
 
+    public isDirty(): boolean {
+        return this.dirty;
+    }
+
     private computeValue() {
         let value = this.baseValue;
         for (const modifier of this.idToModifiers.values()) {

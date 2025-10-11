@@ -8,7 +8,7 @@ export class RequestPositionC2SPacket implements Payload {
     public static readonly ID: PayloadId<RequestPositionC2SPacket> = {id: Identifier.ofVanilla('request_position')};
 
     public static readonly CODEC: PacketCodec<RequestPositionC2SPacket> = PacketCodecs.of<RequestPositionC2SPacket>(
-        (value, writer) => {
+        (writer, value) => {
             writer.writeUUID(value.playerId);
         },
         (reader) => {

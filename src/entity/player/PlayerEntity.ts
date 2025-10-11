@@ -35,7 +35,7 @@ export abstract class PlayerEntity extends LivingEntity {
 
         this.setMovementSpeed(2);
         this.setYaw(-1.57079);
-        this.setPosition(World.WORLD_W / 2, World.WORLD_H);
+        this.setPosition(World.WORLD_W / 2, World.WORLD_H - 100);
 
         this.addItem(Items.CANNON40_WEAPON);
         this.addItem(Items.BOMB_WEAPON);

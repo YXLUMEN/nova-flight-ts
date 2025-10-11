@@ -6,7 +6,7 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 export class JoinGameS2CPacket implements Payload {
     public static readonly ID: PayloadId<JoinGameS2CPacket> = {id: Identifier.ofVanilla('join_game')};
     public static readonly CODEC: PacketCodec<JoinGameS2CPacket> = PacketCodecs.of(
-        (value, writer) => writer.writeVarUInt(value.playerEntityId),
+        (writer, value) => writer.writeVarUInt(value.playerEntityId),
         reader => new JoinGameS2CPacket(reader.readVarUInt())
     );
 

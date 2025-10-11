@@ -8,7 +8,7 @@ export class PlayerAttemptLoginC2SPacket implements Payload {
     public static readonly ID: PayloadId<PlayerAttemptLoginC2SPacket> = {id: Identifier.ofVanilla('player_login')};
 
     public static readonly CODEC: PacketCodec<PlayerAttemptLoginC2SPacket> = PacketCodecs.of<PlayerAttemptLoginC2SPacket>(
-        (value, writer) => {
+        (writer, value) => {
             writer.writeUUID(value.clientId);
         },
         (reader) => {

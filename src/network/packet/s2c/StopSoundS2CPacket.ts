@@ -10,8 +10,8 @@ export class StopSoundS2CPacket implements Payload {
     public static readonly ID: PayloadId<StopSoundS2CPacket> = {id: Identifier.ofVanilla('stop_sound')};
 
     public static readonly CODEC: PacketCodec<StopSoundS2CPacket> = PacketCodecs.of<StopSoundS2CPacket>(
-        (value, writer) => {
-            Identifier.PACKET_CODEC.encode(value.soundEvent.getId(), writer);
+        (writer, value) => {
+            Identifier.PACKET_CODEC.encode(writer, value.soundEvent.getId());
         },
         (reader) => {
             const id = Identifier.PACKET_CODEC.decode(reader);

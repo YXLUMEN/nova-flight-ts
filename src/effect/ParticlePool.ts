@@ -1,5 +1,5 @@
 import {Particle} from "./Particle.ts";
-import type {MutVec2} from "../utils/math/MutVec2.ts";
+import type {IVec} from "../utils/math/IVec.ts";
 
 export class ParticlePool {
     private readonly active: Particle[] = [];
@@ -12,7 +12,7 @@ export class ParticlePool {
     }
 
     public spawn(
-        pos: MutVec2, vel: MutVec2,
+        pos: IVec, vel: IVec,
         life: number, size: number,
         colorFrom: string, colorTo: string,
         drag = 0.0, gravity = 0.0

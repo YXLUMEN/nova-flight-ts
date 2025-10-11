@@ -8,7 +8,7 @@ export class PlayerFireC2SPacket implements Payload {
     public static readonly ID: PayloadId<PlayerFireC2SPacket> = {id: Identifier.ofVanilla('player_fire')};
 
     public static readonly CODEC: PacketCodec<PlayerFireC2SPacket> = PacketCodecs.of<PlayerFireC2SPacket>(
-        (value, writer) => {
+        (writer, value) => {
             writer.writeString(value.uuid);
             writer.writeByte(value.start ? 1 : 0)
         },

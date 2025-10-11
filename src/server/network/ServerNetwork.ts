@@ -18,6 +18,7 @@ import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPac
 import {ParticleS2CPacket} from "../../network/packet/s2c/ParticleS2CPacket.ts";
 import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 import {EntityAttributesS2CPacket} from "../../network/packet/s2c/EntityAttributesS2CPacket.ts";
+import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.ts";
 
 export class ServerNetwork {
     public static registerNetworkPacket() {
@@ -40,6 +41,7 @@ export class ServerNetwork {
         this.register(EntityDamageS2CPacket.ID, EntityDamageS2CPacket.CODEC);
         this.register(ParticleS2CPacket.ID, ParticleS2CPacket.CODEC);
         this.register(EntityAttributesS2CPacket.ID, EntityAttributesS2CPacket.CODEC);
+        this.register(MissileSetS2CPacket.ID, MissileSetS2CPacket.CODEC);
     }
 
     private static register<T extends Payload>(payloadId: PayloadId<T>, codec: PacketCodec<T>): void {

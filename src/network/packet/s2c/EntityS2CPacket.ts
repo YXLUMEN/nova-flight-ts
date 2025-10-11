@@ -33,7 +33,7 @@ export class MoveRelative extends EntityS2CPacket {
         super(entityId, deltaX, deltaY, 0, false, true);
     }
 
-    private static write(value: EntityS2CPacket, writer: BinaryWriter): void {
+    private static write(writer: BinaryWriter, value: EntityS2CPacket): void {
         writer.writeVarUInt(value.entityId);
         writer.writeInt16(value.deltaX);
         writer.writeInt16(value.deltaY);

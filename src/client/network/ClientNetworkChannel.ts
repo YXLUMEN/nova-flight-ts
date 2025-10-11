@@ -15,11 +15,11 @@ export class ClientNetworkChannel extends NetworkChannel {
         return 'client';
     }
 
-    protected override getHeader() {
+    protected override getHeader(): number {
         return 0x10;
     }
 
-    protected override register() {
+    protected override register(): void {
         const idBytes = UUIDUtil.parse(this.clientId);
         const buf = new Uint8Array(1 + idBytes.length);
         buf[0] = 0x02;

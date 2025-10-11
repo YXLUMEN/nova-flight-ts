@@ -10,8 +10,8 @@ export class SoundEventS2CPacket implements Payload {
     public static readonly ID: PayloadId<SoundEventS2CPacket> = {id: Identifier.ofVanilla('sound_event')};
 
     public static readonly CODEC: PacketCodec<SoundEventS2CPacket> = PacketCodecs.of<SoundEventS2CPacket>(
-        (value, writer) => {
-            Identifier.PACKET_CODEC.encode(value.soundEvent.getId(), writer);
+        (writer, value) => {
+            Identifier.PACKET_CODEC.encode(writer, value.soundEvent.getId());
             writer.writeFloat(value.volume);
             writer.writeFloat(value.pitch);
             writer.writeByte(value.loop ? 1 : 0);

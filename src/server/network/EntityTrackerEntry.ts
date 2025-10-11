@@ -116,7 +116,8 @@ export class EntityTrackerEntry {
         if (this.entity instanceof LivingEntity) {
             const trackedSet = this.entity.getAttributes().getTracked();
             if (trackedSet.size > 0) {
-                this.sendSync(EntityAttributesS2CPacket.create(this.entity.getId(), trackedSet));
+                const packet = EntityAttributesS2CPacket.create(this.entity.getId(), trackedSet);
+                if (packet.entries.length > 0) this.sendSync(packet);
             }
         }
     }

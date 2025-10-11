@@ -26,6 +26,7 @@ import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
 import type {Explosion} from "../world/Explosion.ts";
+import type {IVec} from "../utils/math/IVec.ts";
 
 export class ClientWorld extends World {
     private readonly client: NovaFlightClient = NovaFlightClient.getInstance();
@@ -153,7 +154,7 @@ export class ClientWorld extends World {
     }
 
     public override addParticleByVec(
-        pos: MutVec2, vel: MutVec2,
+        pos: IVec, vel: IVec,
         life: number, size: number,
         colorFrom: string, colorTo: string,
         drag = 0.0, gravity = 0.0

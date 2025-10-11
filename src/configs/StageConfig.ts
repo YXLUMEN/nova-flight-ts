@@ -17,7 +17,7 @@ const p1: PhaseConfig = deepFreeze(createCleanObj({
     until: ({score}) => score >= 64,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P1'}),
     rules: [
-        {every: 30, jitter: 0.3, factory: spawnAtTop(EntityTypes.BASE_ENEMY, 0.2, 0), cap: 32},
+        {every: 30, jitter: 0.3, factory: spawnAtTop(EntityTypes.BASE_ENEMY, 0.9, 0), cap: 32},
     ],
 }));
 
@@ -26,10 +26,10 @@ const p2: PhaseConfig = deepFreeze(createCleanObj({
     until: ({score}) => score >= 200,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P2'}),
     rules: [
-        {every: 30, jitter: 0.3, factory: spawnAtTop(EntityTypes.BASE_ENEMY, 0.2, 2, 4), cap: 16},
+        {every: 30, jitter: 0.3, factory: spawnAtTop(EntityTypes.BASE_ENEMY, 0.9, 2, 4), cap: 16},
         {
             every: 150, jitter: 0.2, factory: spawnAtTopInLine(EntityTypes.BASE_ENEMY,
-                4, 56, 0.3, 0, 2),
+                4, 56, 0.9, 0, 2),
             cap: 48
         },
     ],
@@ -43,17 +43,17 @@ const p3: PhaseConfig = deepFreeze(createCleanObj({
         {
             every: 35,
             jitter: 0.4,
-            factory: spawnAtTop(EntityTypes.BASE_ENEMY, 0.22, 2, 6, '#ff2121'),
+            factory: spawnAtTop(EntityTypes.BASE_ENEMY, 1.1, 2, 6, '#ff2121'),
             cap: 64,
         },
         {
             every: 60, jitter: 0.5, factory: spawnAtTopS(EntityTypes.GUN_ENEMY_ENTITY,
-                0.2, 1, 4),
+                0.9, 1, 4),
             cap: 24
         },
         {
             every: 100, jitter: 0.35, factory: spawnAtTopInLine(EntityTypes.BASE_ENEMY,
-                4, 64, 0.32, 0, 2),
+                4, 64, 1.4, 0, 2),
             cap: 48
         },
     ],
@@ -67,17 +67,17 @@ const p4: PhaseConfig = deepFreeze(createCleanObj({
         {
             every: 40,
             jitter: 0.4,
-            factory: spawnAtTopS(EntityTypes.BASE_ENEMY, 0.22, 4, 8, '#c10000'),
+            factory: spawnAtTopS(EntityTypes.BASE_ENEMY, 0.92, 4, 8, '#c10000'),
             cap: 64,
         },
         {
             every: 60, jitter: 0.5, factory: spawnAtTopS(EntityTypes.GUN_ENEMY_ENTITY,
-                0.2, 2, 6),
+                0.9, 2, 6),
             cap: 32
         },
         {
             every: 100, jitter: 0.35, factory: spawnAtTopInLine(EntityTypes.BASE_ENEMY,
-                6, 72, 0.33, 1, 4),
+                6, 72, 1.4, 1, 4),
             cap: 64
         },
     ],
@@ -92,7 +92,7 @@ const p5: PhaseConfig = deepFreeze(createCleanObj({
             every: 50,
             jitter: 0.4,
             factory: spawnAtTopS(EntityTypes.BASE_ENEMY,
-                0.2, 6, 10,
+                0.9, 6, 10,
                 '#910000'
             ),
             cap: 90
@@ -101,19 +101,19 @@ const p5: PhaseConfig = deepFreeze(createCleanObj({
             every: 25,
             jitter: 0.8,
             factory: spawnAtTopS(EntityTypes.BASE_ENEMY,
-                0.24, 4, 7,
+                0.98, 4, 7,
                 '#ff2121',
             ),
             cap: 96,
         },
         {
             every: 45, jitter: 0.5, factory: spawnAtTopInLine(EntityTypes.GUN_ENEMY_ENTITY,
-                3, 72, 0.16, 2, 6),
+                3, 72, 0.82, 2, 6),
             cap: 64
         },
         {
             every: 200, jitter: 0.35, factory: spawnAtTopInLine(EntityTypes.BASE_ENEMY,
-                6, 64, 0.26, 1, 4),
+                6, 64, 1, 1, 4),
             cap: 72
         },
     ],
@@ -127,12 +127,12 @@ const p6: PhaseConfig = deepFreeze(createCleanObj({
             every: 50,
             jitter: 0.4,
             factory: spawnAtTop(EntityTypes.BASE_ENEMY,
-                0.22, 14, 8,
+                0.98, 14, 8,
                 '#910000'
             ),
             cap: 32
         },
-        {every: 80, jitter: 0.5, factory: spawnAtTopS(EntityTypes.GUN_ENEMY_ENTITY, 0.16, 6), cap: 32},
+        {every: 80, jitter: 0.5, factory: spawnAtTopS(EntityTypes.GUN_ENEMY_ENTITY, 0.83, 6), cap: 32},
     ],
 }));
 
@@ -146,7 +146,7 @@ const p7: PhaseConfig = deepFreeze(createCleanObj({
             every: 50,
             jitter: 0.4,
             factory: spawnAtTopS(EntityTypes.BASE_ENEMY,
-                0.22, 8, 10,
+                0.98, 8, 10,
                 '#910000',
                 (ctx) => 1 + (ctx.score / 600) | 0
             ),
@@ -156,7 +156,7 @@ const p7: PhaseConfig = deepFreeze(createCleanObj({
             every: 18,
             jitter: 0.6,
             factory: spawnAtTopS(EntityTypes.TANK_ENEMY_ENTITY,
-                0.12, 0, 16,
+                0.84, 0, 16,
                 '#9f3b00',
                 (ctx) => 1 + (ctx.score / 800) | 0
             ),
@@ -164,7 +164,7 @@ const p7: PhaseConfig = deepFreeze(createCleanObj({
         },
         {
             every: 100, jitter: 0.5, factory: spawnAtTopS(EntityTypes.MISSILE_ENEMY_ENTITY,
-                0.1, 4, 4, '#ac0000'),
+                0.8, 4, 4, '#ac0000'),
             cap: 70
         },
         {every: 150, jitter: 0.4, factory: spawnMiniGun(0.08, 0, 12), cap: 96},
@@ -180,7 +180,7 @@ const p8: PhaseConfig = deepFreeze(createCleanObj({
             every: 80,
             jitter: 0.4,
             factory: spawnInMap(EntityTypes.BASE_ENEMY,
-                0.2, 6, 8,
+                0.9, 6, 8,
                 '#910000'
             ),
             cap: 64
@@ -189,12 +189,12 @@ const p8: PhaseConfig = deepFreeze(createCleanObj({
             every: 60,
             jitter: 0.8,
             factory: spawnInMap(EntityTypes.BASE_ENEMY,
-                0.22, 2, 4,
+                0.96, 2, 4,
                 '#ff2121',
             ),
             cap: 66,
         },
-        {every: 150, jitter: 0.5, factory: spawnInMap(EntityTypes.GUN_ENEMY_ENTITY, 0.16, 2), cap: 48},
+        {every: 150, jitter: 0.5, factory: spawnInMap(EntityTypes.GUN_ENEMY_ENTITY, 0.84, 2), cap: 48},
     ],
 }));
 
@@ -206,7 +206,7 @@ const p9: PhaseConfig = deepFreeze(createCleanObj({
             every: 80,
             jitter: 0.4,
             factory: spawnInMap(EntityTypes.BASE_ENEMY,
-                0.22, 6, 8,
+                0.96, 6, 8,
                 '#910000',
                 {},
                 (ctx) => 1 + (ctx.score / 500) | 0
@@ -217,7 +217,7 @@ const p9: PhaseConfig = deepFreeze(createCleanObj({
             every: 50,
             jitter: 0.6,
             factory: spawnInMap(EntityTypes.TANK_ENEMY_ENTITY,
-                0.12, 0, 8,
+                0.82, 0, 8,
                 '#9f3b00',
                 {safeRadius: 248},
                 (ctx) => 1 + (ctx.score / 700) | 0
@@ -226,14 +226,14 @@ const p9: PhaseConfig = deepFreeze(createCleanObj({
         },
         {
             every: 200, jitter: 0.5, factory: spawnInMap(EntityTypes.MISSILE_ENEMY_ENTITY,
-                0.1, 4, 4,
+                0.8, 4, 4,
                 '#ac0000',
                 {safeRadius: 480}
             ),
             cap: 48
         },
         {
-            every: 250, jitter: 0.4, factory: spawnInMap(EntityTypes.MINIGUN_ENEMY_ENTITY, 0.08, 0, 12),
+            every: 250, jitter: 0.4, factory: spawnInMap(EntityTypes.MINIGUN_ENEMY_ENTITY, 0.72, 0, 12),
             cap: 46
         },
     ],

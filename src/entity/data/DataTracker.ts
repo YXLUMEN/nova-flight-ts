@@ -149,7 +149,7 @@ export class DataTracker {
             }
             writer.writeByte(this.id);
             writer.writeVarUInt(index);
-            this.handler.codec().encode(this.value, writer);
+            this.handler.codec().encode(writer, this.value);
         }
 
         public static read(reader: BinaryReader, id: number): SerializedEntry<any> {

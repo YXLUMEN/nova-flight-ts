@@ -30,6 +30,8 @@ import {ParticleS2CPacket} from "../../network/packet/s2c/ParticleS2CPacket.ts";
 import {EntityAttributesS2CPacket} from "../../network/packet/s2c/EntityAttributesS2CPacket.ts";
 import {LivingEntity} from "../../entity/LivingEntity.ts";
 import {GaussianRandom} from "../../utils/math/GaussianRandom.ts";
+import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.ts";
+import {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer = new Set<UUID>();
@@ -96,6 +98,17 @@ export class ClientPlayNetworkHandler {
 
         entity.onSpawnPacket(packet);
         this.world!.addEntity(entity);
+    }
+
+    private createEntity(packet: EntitySpawnS2CPacket): Entity | null {
+        const entityType = packet.entityType;
+        if (entityType === EntityTypes.PLAYER) {
+            if (this.loginPlayer.has(packet.uuid)) return null;
+        }
+
+        const world = this.world;
+        if (!world) return null;
+        return entityType.create(world);
     }
 
     public onEntityDamage(): void {
@@ -176,6 +189,15 @@ export class ClientPlayNetworkHandler {
         }
     }
 
+    public onMissileSet(packet: MissileSetS2CPacket): void {
+        const missile = this.world?.getEntityById(packet.entityID);
+        if (!missile) return;
+        if (missile instanceof MissileEntity) {
+            missile.driftAngle = packet.driftAngle;
+            missile.hoverDir = packet.hoverDir;
+        }
+    }
+
     public registryHandler() {
         new PacketHandlerBuilder()
             .add(ServerReadyS2CPacket.ID, this.onServerReady)
@@ -194,18 +216,8 @@ export class ClientPlayNetworkHandler {
             .add(EntityDamageS2CPacket.ID, this.onEntityDamage)
             .add(ParticleS2CPacket.ID, this.onParticle)
             .add(EntityAttributesS2CPacket.ID, this.onEntityAttributes)
+            .add(MissileSetS2CPacket.ID, this.onMissileSet)
             .register(this.client.networkChannel, this);
-    }
-
-    private createEntity(packet: EntitySpawnS2CPacket): Entity | null {
-        const entityType = packet.entityType;
-        if (entityType === EntityTypes.PLAYER) {
-            if (this.loginPlayer.has(packet.uuid)) return null;
-        }
-
-        const world = this.world;
-        if (!world) return null;
-        return entityType.create(world);
     }
 }
 
