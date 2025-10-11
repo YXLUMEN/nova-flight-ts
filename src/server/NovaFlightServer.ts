@@ -23,6 +23,7 @@ export abstract class NovaFlightServer {
     private running = false;
     private waitGameStop: Promise<void> | null = null;
     private onGameStop: Consumer<NbtCompound> | null = null;
+    private bindTick = this.tick.bind(this);
 
     protected constructor() {
         this.networkChannel = new ServerNetworkChannel(new WebSocket("ws://127.0.0.1:25566"));
@@ -30,7 +31,65 @@ export abstract class NovaFlightServer {
         this.networkChannel.init();
     }
 
+    public get isRunning() {
+        return this.running;
+    }
+
+    public static async saveGame(compound: NbtCompound): Promise<void> {
+        try {
+            await mkdir('saves', {baseDir: BaseDirectory.Resource, recursive: true});
+
+            const bytes = compound.toBinary();
+            await writeFile(this.SAVE_PATH, bytes, {baseDir: BaseDirectory.Resource});
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    public static async loadSaves(): Promise<NbtCompound | null> {
+        try {
+            const available = await exists(this.SAVE_PATH, {baseDir: BaseDirectory.Resource});
+            if (!available) return null;
+
+            const bytes = await readFile(this.SAVE_PATH, {baseDir: BaseDirectory.Resource});
+            if (!bytes || bytes.length === 0) return null;
+            return NbtCompound.fromBinary(bytes);
+        } catch (err) {
+            console.error(err);
+            return null;
+        }
+    }
+
+    public static getInstance(): NovaFlightServer {
+        return this.instance;
+    }
+
     public abstract runServer(action: number): Promise<void>;
+
+    public async stopGame(): Promise<void> {
+        if (!this.running) {
+            // 避免ts抱怨
+            return this.waitGameStop ? this.waitGameStop : Promise.resolve();
+        }
+
+        this.running = false;
+        if (this.tickInterval) {
+            clearInterval(this.tickInterval);
+            this.tickInterval = null;
+        }
+
+        this.networkChannel.disconnect();
+
+        try {
+            await this.waitGameStop;
+        } catch (err) {
+            console.error("Error during stopGame:", err);
+        }
+    }
+
+    public async waitForStop(): Promise<void> {
+        await this.waitGameStop;
+    }
 
     protected async startGame(manager: RegistryManager, readSave = false): Promise<void> {
         if (this.running) return;
@@ -67,27 +126,6 @@ export abstract class NovaFlightServer {
         this.tickInterval = setInterval(this.bindTick, 25);
     }
 
-    public async stopGame(): Promise<void> {
-        if (!this.running) {
-            // 避免ts抱怨
-            return this.waitGameStop ? this.waitGameStop : Promise.resolve();
-        }
-
-        this.running = false;
-        if (this.tickInterval) {
-            clearInterval(this.tickInterval);
-            this.tickInterval = null;
-        }
-
-        this.networkChannel.disconnect();
-
-        try {
-            await this.waitGameStop;
-        } catch (err) {
-            console.error("Error during stopGame:", err);
-        }
-    }
-
     private tick() {
         try {
             const now = performance.now();
@@ -110,44 +148,5 @@ export abstract class NovaFlightServer {
             this.stopGame().catch(error => console.error(error));
             throw error;
         }
-    }
-
-    private bindTick = this.tick.bind(this);
-
-    public static async saveGame(compound: NbtCompound): Promise<void> {
-        try {
-            await mkdir('saves', {baseDir: BaseDirectory.Resource, recursive: true});
-
-            const bytes = compound.toBinary();
-            await writeFile(this.SAVE_PATH, bytes, {baseDir: BaseDirectory.Resource});
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
-    public static async loadSaves(): Promise<NbtCompound | null> {
-        try {
-            const available = await exists(this.SAVE_PATH, {baseDir: BaseDirectory.Resource});
-            if (!available) return null;
-
-            const bytes = await readFile(this.SAVE_PATH, {baseDir: BaseDirectory.Resource});
-            if (!bytes || bytes.length === 0) return null;
-            return NbtCompound.fromBinary(bytes);
-        } catch (err) {
-            console.error(err);
-            return null;
-        }
-    }
-
-    public async waitForStop(): Promise<void> {
-        await this.waitGameStop;
-    }
-
-    public static getInstance(): NovaFlightServer {
-        return this.instance;
-    }
-
-    public get isRunning() {
-        return this.running;
     }
 }

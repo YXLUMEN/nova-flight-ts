@@ -1,17 +1,18 @@
 import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
-import {PacketCodec} from "../../codec/PacketCodec.ts";
+import type {PacketCodec} from "../../codec/PacketCodec.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class MobAiS2CPacket implements Payload {
     public static readonly ID: PayloadId<MobAiS2CPacket> = {id: Identifier.ofVanilla('mob_ai')};
 
-    public static readonly CODEC: PacketCodec<MobAiS2CPacket> = PacketCodec.of<MobAiS2CPacket>(
+    public static readonly CODEC: PacketCodec<MobAiS2CPacket> = PacketCodecs.of<MobAiS2CPacket>(
         (value, writer) => {
-            writer.writeVarInt(value.id);
+            writer.writeVarUInt(value.id);
             writer.writeByte(value.behavior);
         },
         (reader) => {
-            return new MobAiS2CPacket(reader.readVarInt(), reader.readByte());
+            return new MobAiS2CPacket(reader.readVarUInt(), reader.readByte());
         }
     );
 

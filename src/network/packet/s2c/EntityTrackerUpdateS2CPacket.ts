@@ -1,13 +1,14 @@
 import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
-import {PacketCodec} from "../../codec/PacketCodec.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import {DataTracker, type DataTrackerSerializedEntry} from "../../../entity/data/DataTracker.ts";
+import type {PacketCodec} from "../../codec/PacketCodec.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class EntityTrackerUpdateS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityTrackerUpdateS2CPacket> = {id: Identifier.ofVanilla('entity_tracker_update')};
-    public static readonly CODEC: PacketCodec<EntityTrackerUpdateS2CPacket> = PacketCodec.of<EntityTrackerUpdateS2CPacket>(this.write, this.reader);
+    public static readonly CODEC: PacketCodec<EntityTrackerUpdateS2CPacket> = PacketCodecs.of<EntityTrackerUpdateS2CPacket>(this.write, this.reader);
 
     public readonly entityId: number;
     public readonly trackedValues: DataTrackerSerializedEntry<any>[];
@@ -18,7 +19,7 @@ export class EntityTrackerUpdateS2CPacket implements Payload {
     }
 
     private static reader(reader: BinaryReader) {
-        const entityId = reader.readVarInt();
+        const entityId = reader.readVarUInt();
 
         const list: DataTrackerSerializedEntry<any>[] = [];
         let i = reader.readUnsignByte();
@@ -31,7 +32,7 @@ export class EntityTrackerUpdateS2CPacket implements Payload {
     }
 
     private static write(value: EntityTrackerUpdateS2CPacket, writer: BinaryWriter): void {
-        writer.writeVarInt(value.entityId);
+        writer.writeVarUInt(value.entityId);
         for (const entry of value.trackedValues) {
             entry.write(writer);
         }

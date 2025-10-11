@@ -2,13 +2,14 @@ import type {Identifier} from "../registry/Identifier.ts";
 import type {Payload, PayloadId} from "./Payload.ts";
 import {HashMap} from "../utils/collection/HashMap.ts";
 import {createCleanObj} from "../utils/uit.ts";
+import type {PacketCodecUtil} from "./codec/PacketCodecUtil.ts";
 import type {PacketCodec} from "./codec/PacketCodec.ts";
 
 type Side = 'server' | 'client';
 
 export interface PayloadType<T extends Payload> {
     readonly id: Identifier;
-    readonly codec: PacketCodec<T>;
+    readonly codec: PacketCodecUtil<T>;
 }
 
 export class PayloadTypeRegistry {
@@ -20,6 +21,18 @@ export class PayloadTypeRegistry {
 
     public constructor(side: Side) {
         this.side = side;
+    }
+
+    public static getGlobal(id: Identifier): PayloadType<any> | null {
+        return this.PLAY_C2S.get(id) ?? this.PLAY_S2C.get(id);
+    }
+
+    public static playS2C() {
+        return this.PLAY_S2C;
+    }
+
+    public static playC2S() {
+        return this.PLAY_C2S;
     }
 
     public register<T extends Payload>(payloadId: PayloadId<T>, codec: PacketCodec<T>): PayloadType<T> {
@@ -35,18 +48,6 @@ export class PayloadTypeRegistry {
 
     public get(id: Identifier): PayloadType<any> | null {
         return this.packetTypes.get(id) ?? null;
-    }
-
-    public static getGlobal(id: Identifier): PayloadType<any> | null {
-        return this.PLAY_C2S.get(id) ?? this.PLAY_S2C.get(id);
-    }
-
-    public static playS2C() {
-        return this.PLAY_S2C;
-    }
-
-    public static playC2S() {
-        return this.PLAY_C2S;
     }
 
     public getSide(): Side {

@@ -80,12 +80,12 @@ export class DecoyEntity extends Entity implements IOwnable {
         return false;
     }
 
-    protected override initDataTracker(_builder: InstanceType<typeof DataTracker.Builder>): void {
-    }
-
     public override onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {
     }
 
     public override onTrackedDataSet(_data: TrackedData<any>): void {
+    }
+
+    protected override initDataTracker(_builder: InstanceType<typeof DataTracker.Builder>): void {
     }
 }

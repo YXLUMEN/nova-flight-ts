@@ -9,7 +9,7 @@ import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {randInt} from "../../utils/math/math.ts";
 
 export class GunEnemyEntity extends MobEntity {
-    private static readonly bulletSpeed = 2;
+    private static readonly bulletSpeed = 5;
     public color = "#ff6b6b";
     protected cooldown;
 

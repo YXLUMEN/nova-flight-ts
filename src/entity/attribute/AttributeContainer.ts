@@ -31,8 +31,7 @@ export class AttributeContainer {
             return instance;
         }
 
-        const callback = this.updateTrackedStatus.bind(this);
-        const newInstance = this.fallback.createOverride(callback, attribute);
+        const newInstance = this.fallback.createOverride(this.updateTrackedStatus.bind(this), attribute);
         if (newInstance) {
             this.custom.set(attribute, newInstance);
             return newInstance;

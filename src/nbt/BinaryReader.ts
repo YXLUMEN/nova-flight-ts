@@ -55,7 +55,7 @@ export class BinaryReader {
         return v;
     }
 
-    public readVarInt(): number {
+    public readVarUInt(): number {
         let num = 0;
         let shift = 0;
 

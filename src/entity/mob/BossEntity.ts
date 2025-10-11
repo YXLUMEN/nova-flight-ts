@@ -15,15 +15,14 @@ import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export class BossEntity extends MobEntity {
+    public static hasBoss: boolean = false;
     public override color = '#b30000';
     public override yStep = 0;
-
     private readonly maxDamageCanTake: number;
     private maxKillCounts = 48;
     private cooldown = 0;
     private damageCooldown: number = 0;
     private releasingMissile: boolean = false;
-    public static hasBoss: boolean = false;
 
     public constructor(type: EntityType<BossEntity>, world: World, worth: number) {
         super(type, world, worth);

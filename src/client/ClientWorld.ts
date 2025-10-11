@@ -23,6 +23,9 @@ import {StringPacket} from "../network/packet/StringPacket.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
+import type {DamageSource} from "../entity/damage/DamageSource.ts";
+import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
+import type {Explosion} from "../world/Explosion.ts";
 
 export class ClientWorld extends World {
     private readonly client: NovaFlightClient = NovaFlightClient.getInstance();
@@ -149,7 +152,7 @@ export class ClientWorld extends World {
         return this.worldSound.stopLoopSound(event);
     }
 
-    public addParticleByVec(
+    public override addParticleByVec(
         pos: MutVec2, vel: MutVec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
@@ -163,7 +166,7 @@ export class ClientWorld extends World {
         );
     }
 
-    public addParticle(
+    public override addParticle(
         posX: number, posY: number, velX: number, velY: number,
         life: number, size: number,
         colorFrom: string, colorTo: string,
@@ -177,8 +180,15 @@ export class ClientWorld extends World {
         );
     }
 
-    public addEffect(effect: IEffect) {
+    public override addEffect(effect: IEffect) {
         this.effects.push(effect);
+    }
+
+    public override createExplosion(entity: Entity | null, damage: DamageSource | null, x: number, y: number, opts: ExpendExplosionOpts): Explosion {
+        if (opts.shake) {
+            this.client.window.camera.addShake(opts.shake);
+        }
+        return super.createExplosion(entity, damage, x, y, opts);
     }
 
     private onEvent() {
@@ -211,8 +221,6 @@ export class ClientWorld extends World {
         // 背景层
         this.drawBackground(ctx);
 
-        this.particlePool.render(ctx, tickDelta);
-
         // 其他实体
         if (this.client.player?.voidEdge) {
             this.wrapEntityRender(ctx, tickDelta);
@@ -228,6 +236,7 @@ export class ClientWorld extends World {
 
         // 特效
         for (let i = 0; i < this.effects.length; i++) this.effects[i].render(ctx, tickDelta);
+        this.particlePool.render(ctx, tickDelta);
 
         // 玩家
         const player = this.client.player;

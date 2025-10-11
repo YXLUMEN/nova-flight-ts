@@ -7,13 +7,13 @@ import {EntityTypes} from "../entity/EntityTypes.ts";
 
 const p0: PhaseConfig = deepFreeze(createCleanObj({
     name: "P0",
-    duration: 150,
+    duration: 60,
     rules: []
 }));
 
 const p1: PhaseConfig = deepFreeze(createCleanObj({
     name: "P1",
-    duration: 6000,
+    duration: 2400,
     until: ({score}) => score >= 64,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P1'}),
     rules: [

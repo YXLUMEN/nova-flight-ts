@@ -18,6 +18,22 @@ export class ADSEntity extends Entity implements IOwnable {
         this.owner = owner;
     }
 
+    public static spawnInterceptPathParticles(world: World, start: MutVec2, end: MutVec2) {
+        const diff = end.subVec(start);
+        const length = diff.length();
+        if (length < 0.001) return;
+
+        const steps = length | 0;
+        const dir = diff.normalize();
+
+        for (let i = 0; i <= steps; i++) {
+            world.addParticle(start.x, start.y, 0, 0,
+                0.5, 2, '#fff', '#fff'
+            );
+            start.add(dir.x, dir.y);
+        }
+    }
+
     public override tick() {
         super.tick();
 
@@ -36,32 +52,16 @@ export class ADSEntity extends Entity implements IOwnable {
         }
     }
 
-    public static spawnInterceptPathParticles(world: World, start: MutVec2, end: MutVec2) {
-        const diff = end.subVec(start);
-        const length = diff.length();
-        if (length < 0.001) return;
-
-        const steps = length | 0;
-        const dir = diff.normalize();
-
-        for (let i = 0; i <= steps; i++) {
-            world.addParticle(start.x, start.y, 0, 0,
-                0.5, 2, '#fff', '#fff'
-            );
-            start.add(dir.x, dir.y);
-        }
-    }
-
     public getOwner(): Entity | null {
         return this.owner;
-    }
-
-    protected initDataTracker(_builder: InstanceType<typeof DataTracker.Builder>): void {
     }
 
     public onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {
     }
 
     public onTrackedDataSet(_data: TrackedData<any>): void {
+    }
+
+    protected initDataTracker(_builder: InstanceType<typeof DataTracker.Builder>): void {
     }
 }

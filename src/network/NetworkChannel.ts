@@ -6,11 +6,10 @@ import {Identifier} from "../registry/Identifier.ts";
 import {HashMap} from "../utils/collection/HashMap.ts";
 
 export abstract class NetworkChannel {
-    private readonly ready: Promise<void>;
-    private readonly handlers = new HashMap<Identifier, (payload: Payload) => void>();
-
     protected readonly ws: WebSocket;
     protected readonly registry: PayloadTypeRegistry;
+    private readonly ready: Promise<void>;
+    private readonly handlers = new HashMap<Identifier, (payload: Payload) => void>();
 
     protected constructor(ws: WebSocket, registry: PayloadTypeRegistry) {
         ws.binaryType = "arraybuffer";
@@ -49,12 +48,6 @@ export abstract class NetworkChannel {
         }
     }
 
-    protected abstract getSide(): string;
-
-    protected abstract getHeader(): number;
-
-    protected abstract register(): void;
-
     public init() {
         this.ws.onopen = () => {
             this.register();
@@ -83,6 +76,16 @@ export abstract class NetworkChannel {
         this.ws.send(writer.toUint8Array());
     }
 
+    public disconnect(): void {
+        this.ws.close();
+    }
+
+    protected abstract getSide(): string;
+
+    protected abstract getHeader(): number;
+
+    protected abstract register(): void;
+
     private decodePayload(buf: Uint8Array): Payload | null {
         const reader = new BinaryReader(buf);
 
@@ -100,10 +103,6 @@ export abstract class NetworkChannel {
         if (!type) return null;
 
         return type.codec.decode(reader);
-    }
-
-    public disconnect(): void {
-        this.ws.close();
     }
 }
 

@@ -25,16 +25,14 @@ export abstract class World {
 
     public readonly events: GeneralEventBus<IEvents> = GeneralEventBus.getEventBus();
     public empBurst: number = 0
-
-    private readonly registryManager: RegistryManager;
-
-    private readonly damageSources: DamageSources;
     // ticking
     public readonly isClient: boolean;
-    protected over = false;
-    protected ticking = false;
     public peaceMod = false;
     public freeze = false;
+    protected over = false;
+    protected ticking = false;
+    private readonly registryManager: RegistryManager;
+    private readonly damageSources: DamageSources;
     // schedule
     private time = 0;
     private nextTimerId = new AtomicInteger();
@@ -47,6 +45,14 @@ export abstract class World {
         this.isClient = isClient;
         this.registryManager = registryManager;
         this.damageSources = new DamageSources(registryManager);
+    }
+
+    public get isTicking(): boolean {
+        return this.ticking;
+    }
+
+    public get isOver(): boolean {
+        return this.over;
     }
 
     public getServer(): Worker | null {
@@ -126,14 +132,6 @@ export abstract class World {
     public abstract getEntityById(id: number): Entity | null;
 
     public abstract getEntityLookup(): EntityIndex<Entity>;
-
-    public get isTicking(): boolean {
-        return this.ticking;
-    }
-
-    public get isOver(): boolean {
-        return this.over;
-    }
 
     public togglePause(): void {
         if (this.over) return;

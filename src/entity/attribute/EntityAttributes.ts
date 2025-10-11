@@ -6,13 +6,13 @@ import {ClampedEntityAttribute} from "./ClampedEntityAttribute.ts";
 
 export class EntityAttributes {
     public static readonly GENERIC_MAX_HEALTH = this.register('generic.max_health',
-        new ClampedEntityAttribute(1, 1, 1024)
+        new ClampedEntityAttribute(1, 1, 1024).setTracked(true)
     );
     public static readonly GENERIC_ATTACK_DAMAGE = this.register('generic.attack_damage',
         new ClampedEntityAttribute(1, 0, 2048)
     );
     public static readonly GENERIC_MOVEMENT_SPEED = this.register('generic.speed',
-        new ClampedEntityAttribute(1, 0, 256)
+        new ClampedEntityAttribute(1, 0, 256).setTracked(true)
     );
 
     public static registerAndGetDefault(_registry: Registry<EntityAttribute>) {

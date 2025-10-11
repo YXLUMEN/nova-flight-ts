@@ -1,12 +1,5 @@
 import type {ServerWorld} from "./ServerWorld.ts";
 import {EVENTS} from "../apis/IEvents.ts";
-import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
-import {DamageTypes} from "../entity/damage/DamageTypes.ts";
-import {StatusEffects} from "../entity/effect/StatusEffects.ts";
-import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
-import {DamageTypeTags} from "../registry/tag/DamageTypeTags.ts";
-import {Items} from "../item/items.ts";
-import {LaserWeapon} from "../item/weapon/LaserWeapon.ts";
 import type {Entity} from "../entity/Entity.ts";
 import {BossEntity} from "../entity/mob/BossEntity.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
@@ -14,12 +7,17 @@ import {World} from "../world/World.ts";
 import {SpawnMarkerEntity} from "../entity/SpawnMarkerEntity.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
-import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
 import {NovaFlightServer} from "./NovaFlightServer.ts";
-import {EntityDamageS2CPacket} from "../network/packet/s2c/EntityDamageS2CPacket.ts";
-import {MobEntity} from "../entity/mob/MobEntity.ts";
-import {EntityKilledS2CPacket} from "../network/packet/s2c/EntityKilledS2CPacket.ts";
+import {StatusEffects} from "../entity/effect/StatusEffects.ts";
+import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
+import type {MobEntity} from "../entity/mob/MobEntity.ts";
+import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
+import {DamageTypes} from "../entity/damage/DamageTypes.ts";
+import type {DamageSource} from "../entity/damage/DamageSource.ts";
+import {DamageTypeTags} from "../registry/tag/DamageTypeTags.ts";
+import {Items} from "../item/items.ts";
+import type {LaserWeapon} from "../item/weapon/LaserWeapon.ts";
 
 export class ServerDefaultEvents {
     public static registerEvent(world: ServerWorld) {
@@ -42,16 +40,10 @@ export class ServerDefaultEvents {
                 }
                 mob.addStatusEffect(new StatusEffectInstance(StatusEffects.BURNING, 400, 1), null);
             }
-
-            world.getNetworkChannel().send(new EntityDamageS2CPacket(mob.getId()));
         });
 
         eventBus.on(EVENTS.MOB_KILLED, event => {
-            const mob = event.mob;
             const damageSource = event.damageSource as DamageSource;
-            if (mob instanceof MobEntity) {
-                world.getNetworkChannel().send(new EntityKilledS2CPacket(mob.getId()));
-            }
 
             const player = damageSource.getAttacker();
             if (!(player instanceof ServerPlayerEntity)) return;

@@ -17,10 +17,6 @@ export class DamageTypes {
     public static readonly ON_FIRE = this.registry("on_fire");
     public static readonly AP_DAMAGE = this.registry("ap_damage");
 
-    private static registry(id: string) {
-        return RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.ofVanilla(id));
-    }
-
     public static async init() {
         const damage = Registries.DAMAGE_TYPE;
         damage.add(this.GENERIC, 'generic');
@@ -34,5 +30,9 @@ export class DamageTypes {
         damage.add(this.VOID, 'void', DamageTypeTags.NOT_GAIN_SCORE);
         damage.add(this.ON_FIRE, 'onFire', DamageTypeTags.REPLY_LASER);
         damage.add(this.AP_DAMAGE, 'apDamage', DamageTypeTags.BYPASSES_INVULNERABLE);
+    }
+
+    private static registry(id: string) {
+        return RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.ofVanilla(id));
     }
 }

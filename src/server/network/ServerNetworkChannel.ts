@@ -10,19 +10,6 @@ export class ServerNetworkChannel extends NetworkChannel {
         super(ws, PayloadTypeRegistry.playS2C());
     }
 
-    protected override getSide() {
-        return 'server';
-    }
-
-    protected override getHeader() {
-        return 0x11;
-    }
-
-    protected register() {
-        this.ws.send(new Uint8Array([0x01]));
-        console.log("Server registered");
-    }
-
     public sendTo<T extends Payload>(payload: T, target: UUID) {
         const type = this.registry.get(payload.getId().id);
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
@@ -53,5 +40,18 @@ export class ServerNetworkChannel extends NetworkChannel {
         type.codec.encode(payload, writer);
 
         this.ws.send(writer.toUint8Array());
+    }
+
+    protected override getSide() {
+        return 'server';
+    }
+
+    protected override getHeader() {
+        return 0x11;
+    }
+
+    protected register() {
+        this.ws.send(new Uint8Array([0x01]));
+        console.log("Server registered");
     }
 }

@@ -11,13 +11,11 @@ export class MissileEntity extends RocketEntity {
     public static lockedEntity = new WeakMap<Entity, number>();
 
     protected target: Entity | null = null;
-
+    protected reLockCD = 0;
+    protected maxReLockCD = 5;
     private igniteDelayTicks = 16;
     private lockDelayTicks = 60;
     private maxLifetimeTicks = 400;
-    protected reLockCD = 0;
-    protected maxReLockCD = 5;
-
     private driftSpeed = 2;
     private trackingSpeed = 4;
     private readonly turnRate = Math.PI / 24;
@@ -67,7 +65,7 @@ export class MissileEntity extends RocketEntity {
 
         if (cd) world.addParticleByVec(pos.clone(), MutVec2.zero(),
             rand(1, 1.5), rand(4, 6),
-            "#986900", "#575757", 0.3, 0
+            "#986900", "#575757", 0.3
         );
 
         // 开始锁定
@@ -110,6 +108,61 @@ export class MissileEntity extends RocketEntity {
         this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
     }
 
+    public shouldApplyDecoy(): boolean {
+        return false;
+    }
+
+    public applyDecoy(): void {
+    }
+
+    public override onRemove() {
+        super.onRemove();
+
+        if (this.target) {
+            const count = MissileEntity.lockedEntity.get(this.target) ?? 0;
+            if (count > 1) {
+                MissileEntity.lockedEntity.set(this.target, count - 1);
+            } else {
+                MissileEntity.lockedEntity.delete(this.target);
+            }
+        }
+
+        this.getWorld().events.emit(EVENTS.ENTITY_UNLOCKED, {missile: this, lastTarget: this.target});
+        this.target = null;
+    }
+
+    public isIgnite(): boolean {
+        return this.age > this.igniteDelayTicks && this.age <= this.maxLifetimeTicks;
+    }
+
+    public setLockedDelay(value: number): void {
+        this.lockDelayTicks = value;
+    }
+
+    public setMaxLifeTick(value: number): void {
+        this.maxLifetimeTicks = value;
+    }
+
+    public setDriftSpeed(value: number): void {
+        this.driftSpeed = value;
+    }
+
+    public setTrackingSpeed(value: number): void {
+        this.trackingSpeed = value;
+    }
+
+    public setHoverDir(value: 1 | -1) {
+        this.hoverDir = value;
+    }
+
+    public getTarget(): Entity | null {
+        return this.target;
+    }
+
+    public override shouldSave(): boolean {
+        return false;
+    }
+
     protected acquireTarget(): Entity | null {
         const world = this.getWorld();
 
@@ -148,29 +201,6 @@ export class MissileEntity extends RocketEntity {
         return best;
     }
 
-    public shouldApplyDecoy(): boolean {
-        return false;
-    }
-
-    public applyDecoy(): void {
-    }
-
-    public override onRemove() {
-        super.onRemove();
-
-        if (this.target) {
-            const count = MissileEntity.lockedEntity.get(this.target) ?? 0;
-            if (count > 1) {
-                MissileEntity.lockedEntity.set(this.target, count - 1);
-            } else {
-                MissileEntity.lockedEntity.delete(this.target);
-            }
-        }
-
-        this.getWorld().events.emit(EVENTS.ENTITY_UNLOCKED, {missile: this, lastTarget: this.target});
-        this.target = null;
-    }
-
     protected override adjustPosition(): boolean {
         const pos = this.getPositionRef;
         if (pos.y < -400 || pos.y > World.WORLD_H + 400 || pos.x < -400 || pos.x > World.WORLD_W + 400) {
@@ -178,37 +208,5 @@ export class MissileEntity extends RocketEntity {
             return false;
         }
         return true;
-    }
-
-    public isIgnite(): boolean {
-        return this.age > this.igniteDelayTicks && this.age <= this.maxLifetimeTicks;
-    }
-
-    public setLockedDelay(value: number): void {
-        this.lockDelayTicks = value;
-    }
-
-    public setMaxLifeTick(value: number): void {
-        this.maxLifetimeTicks = value;
-    }
-
-    public setDriftSpeed(value: number): void {
-        this.driftSpeed = value;
-    }
-
-    public setTrackingSpeed(value: number): void {
-        this.trackingSpeed = value;
-    }
-
-    public setHoverDir(value: 1 | -1) {
-        this.hoverDir = value;
-    }
-
-    public getTarget(): Entity | null {
-        return this.target;
-    }
-
-    public override shouldSave(): boolean {
-        return false;
     }
 }

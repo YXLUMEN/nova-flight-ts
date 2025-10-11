@@ -1,13 +1,14 @@
 import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
-import {PacketCodec} from "../../codec/PacketCodec.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
+import type {PacketCodec} from "../../codec/PacketCodec.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class EntityVelocityFloatS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityVelocityFloatS2CPacket> = {id: Identifier.ofVanilla('entity_velocity_float')};
-    public static readonly CODEC: PacketCodec<EntityVelocityFloatS2CPacket> = PacketCodec.of<EntityVelocityFloatS2CPacket>(this.write, this.reader);
+    public static readonly CODEC: PacketCodec<EntityVelocityFloatS2CPacket> = PacketCodecs.of<EntityVelocityFloatS2CPacket>(this.write, this.reader);
 
     public readonly entityId: number;
     public readonly velocityX: number;
@@ -26,14 +27,14 @@ export class EntityVelocityFloatS2CPacket implements Payload {
 
     private static reader(reader: BinaryReader) {
         return new EntityVelocityFloatS2CPacket(
-            reader.readVarInt(),
+            reader.readVarUInt(),
             reader.readFloat(),
             reader.readFloat(),
         )
     }
 
     private static write(value: EntityVelocityFloatS2CPacket, writer: BinaryWriter): void {
-        writer.writeVarInt(value.entityId);
+        writer.writeVarUInt(value.entityId);
         writer.writeFloat(value.velocityX);
         writer.writeFloat(value.velocityY);
     }

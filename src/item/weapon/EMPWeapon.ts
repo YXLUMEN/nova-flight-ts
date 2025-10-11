@@ -16,7 +16,7 @@ export class EMPWeapon extends SpecialWeapon {
     private readonly duration = 600;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
-        world.events.emit(EVENTS.EMP_BURST, {duration: this.duration});
+        world.events.emit(EVENTS.EMP_BURST, {entity: attacker, duration: this.duration});
         const radius = stack.getOrDefault(DataComponentTypes.EFFECT_RANGE, 480);
 
         world.getEntities().forEach(entity => {

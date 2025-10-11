@@ -1,8 +1,9 @@
 import type {Payload, PayloadId} from "../../Payload.ts";
-import {PacketCodec} from "../../codec/PacketCodec.ts";
+import {PacketCodecUtil} from "../../codec/PacketCodecUtil.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export abstract class EntityS2CPacket implements Payload {
     public readonly entityId: number;
@@ -26,21 +27,21 @@ export abstract class EntityS2CPacket implements Payload {
 
 export class MoveRelative extends EntityS2CPacket {
     public static readonly ID: PayloadId<EntityS2CPacket> = {id: Identifier.ofVanilla('entity_move_pos')};
-    public static readonly CODEC = PacketCodec.of(this.write, this.read);
+    public static readonly CODEC = PacketCodecs.of(this.write, this.read);
 
     public constructor(entityId: number, deltaX: number, deltaY: number) {
         super(entityId, deltaX, deltaY, 0, false, true);
     }
 
     private static write(value: EntityS2CPacket, writer: BinaryWriter): void {
-        writer.writeVarInt(value.entityId);
+        writer.writeVarUInt(value.entityId);
         writer.writeInt16(value.deltaX);
         writer.writeInt16(value.deltaY);
     }
 
     private static read(reader: BinaryReader): MoveRelative {
         return new MoveRelative(
-            reader.readVarInt(),
+            reader.readVarUInt(),
             reader.readInt16(),
             reader.readInt16()
         )
@@ -53,20 +54,20 @@ export class MoveRelative extends EntityS2CPacket {
 
 export class Rotate extends EntityS2CPacket {
     public static readonly ID: PayloadId<Rotate> = {id: Identifier.ofVanilla('entity_move_rotate')};
-    public static readonly CODEC = PacketCodec.of(this.write, this.read);
+    public static readonly CODEC = PacketCodecUtil.of(this.write, this.read);
 
     public constructor(entityId: number, yaw: number) {
         super(entityId, 0, 0, yaw, true, false);
     }
 
     private static write(value: EntityS2CPacket, writer: BinaryWriter): void {
-        writer.writeVarInt(value.entityId);
+        writer.writeVarUInt(value.entityId);
         writer.writeByte(value.yaw);
     }
 
     private static read(reader: BinaryReader): Rotate {
         return new Rotate(
-            reader.readVarInt(),
+            reader.readVarUInt(),
             reader.readUnsignByte()
         )
     }
@@ -78,14 +79,14 @@ export class Rotate extends EntityS2CPacket {
 
 export class RotateAndMoveRelative extends EntityS2CPacket {
     public static readonly ID: PayloadId<Rotate> = {id: Identifier.ofVanilla('entity_move_pos_rotate')};
-    public static readonly CODEC = PacketCodec.of(this.write, this.read);
+    public static readonly CODEC = PacketCodecUtil.of(this.write, this.read);
 
     public constructor(entityId: number, deltaX: number, deltaY: number, yaw: number) {
         super(entityId, deltaX, deltaY, yaw, true, true);
     }
 
     private static write(value: EntityS2CPacket, writer: BinaryWriter): void {
-        writer.writeVarInt(value.entityId);
+        writer.writeVarUInt(value.entityId);
         writer.writeInt16(value.deltaX);
         writer.writeInt16(value.deltaY);
         writer.writeByte(value.yaw);
@@ -93,7 +94,7 @@ export class RotateAndMoveRelative extends EntityS2CPacket {
 
     private static read(reader: BinaryReader): RotateAndMoveRelative {
         return new RotateAndMoveRelative(
-            reader.readVarInt(),
+            reader.readVarUInt(),
             reader.readInt16(),
             reader.readInt16(),
             reader.readUnsignByte()

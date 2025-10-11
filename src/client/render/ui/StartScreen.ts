@@ -33,6 +33,7 @@ export class StartScreen implements IUi {
     private readonly onConfirmCallback: (action: number) => void;
 
     private buttons: UIButton[] = [];
+    private bindTick = this.tick.bind(this);
 
     public constructor(ctx: CanvasRenderingContext2D, options: StartScreenOptions) {
         const {promise, resolve} = Promise.withResolvers<number>();
@@ -77,39 +78,6 @@ export class StartScreen implements IUi {
         this.layoutButtons();
     }
 
-    private layoutButtons() {
-        const startX = (this.width - 200) / 2;
-        const startY = this.height / 2;
-
-        this.buttons.length = 0;
-        this.buttons.push(
-            new UIButton(
-                startX, startY,
-                200, 50,
-                '开始游戏',
-                this.newGame.bind(this),
-            ),
-            new UIButton(
-                startX, startY + 60,
-                200, 50,
-                '读取存档',
-                this.readSave.bind(this),
-            ),
-            new UIButton(
-                startX, startY + 120,
-                200, 50,
-                '加入游戏',
-                this.joinGame.bind(this),
-            ),
-            new UIButton(
-                startX, startY + 180,
-                200, 50,
-                '退出游戏',
-                this.exitGame.bind(this),
-            )
-        );
-    }
-
     public tick(tickDelta: number) {
         if (!this.running) return;
 
@@ -127,8 +95,6 @@ export class StartScreen implements IUi {
         this.render(this.ctx);
         requestAnimationFrame(this.bindTick);
     }
-
-    private bindTick = this.tick.bind(this);
 
     public render(ctx: CanvasRenderingContext2D) {
         ctx.clearRect(0, 0, this.width, this.height);
@@ -163,6 +129,39 @@ export class StartScreen implements IUi {
 
     public onConfirm() {
         return this.waitConfirm;
+    }
+
+    private layoutButtons() {
+        const startX = (this.width - 200) / 2;
+        const startY = this.height / 2;
+
+        this.buttons.length = 0;
+        this.buttons.push(
+            new UIButton(
+                startX, startY,
+                200, 50,
+                '开始游戏',
+                this.newGame.bind(this),
+            ),
+            new UIButton(
+                startX, startY + 60,
+                200, 50,
+                '读取存档',
+                this.readSave.bind(this),
+            ),
+            new UIButton(
+                startX, startY + 120,
+                200, 50,
+                '加入游戏',
+                this.joinGame.bind(this),
+            ),
+            new UIButton(
+                startX, startY + 180,
+                200, 50,
+                '退出游戏',
+                this.exitGame.bind(this),
+            )
+        );
     }
 
     private exitGame(): void {

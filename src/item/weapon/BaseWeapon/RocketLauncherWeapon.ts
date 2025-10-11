@@ -49,20 +49,6 @@ export class RocketLauncherWeapon extends BaseWeapon {
         this.setCooldown(stack, this.getMaxCooldown(stack));
     }
 
-    private randomRocket(world: World, attacker: Entity): RocketEntity | null {
-        const rnd = Math.random();
-        if (rnd < 0.1) {
-            return new EMPRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker, 1);
-        } else if (rnd < 0.3) {
-            return new BurstRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker, 4);
-        } else if (rnd < 0.4) {
-            return new APRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker);
-        } else if (rnd < 0.6) {
-            return new ClusterRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker, 8, 40);
-        }
-        return null;
-    }
-
     public override getDisplayName(): string {
         return "火箭发射器";
     }
@@ -77,5 +63,19 @@ export class RocketLauncherWeapon extends BaseWeapon {
 
     public override shouldCooldown(stack: ItemStack): boolean {
         return stack.getOrDefault(DataComponentTypes.WEAPON_CAN_COOLDOWN, false);
+    }
+
+    private randomRocket(world: World, attacker: Entity): RocketEntity | null {
+        const rnd = Math.random();
+        if (rnd < 0.1) {
+            return new EMPRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker, 1);
+        } else if (rnd < 0.3) {
+            return new BurstRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker, 4);
+        } else if (rnd < 0.4) {
+            return new APRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker);
+        } else if (rnd < 0.6) {
+            return new ClusterRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker, 8, 40);
+        }
+        return null;
     }
 }

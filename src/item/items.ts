@@ -65,12 +65,6 @@ export class Items {
         .maxCooldown(200)
     ));
 
-    private static register(id: string, item: Item): Item {
-        const entry = Registry.registerReferenceById(Registries.ITEM, Identifier.ofVanilla(id), item).getValue();
-        (item.registryEntry as any) = Registries.ITEM.getEntryByValue(item);
-        return entry;
-    }
-
     // 避免引用问题
     public static init() {
         (this.INTO_VOID_WEAPON as any) = this.register("into_void_weapon", new IntoVoidWeapon(new Item.Settings()
@@ -88,5 +82,11 @@ export class Items {
             .component(DataComponentTypes.DRAIN_RATE, 2)
             .component(DataComponentTypes.COOLDOWN_RATE, 1)
         ));
+    }
+
+    private static register(id: string, item: Item): Item {
+        const entry = Registry.registerReferenceById(Registries.ITEM, Identifier.ofVanilla(id), item).getValue();
+        (item.registryEntry as any) = Registries.ITEM.getEntryByValue(item);
+        return entry;
     }
 }

@@ -1,11 +1,12 @@
 import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
-import {PacketCodec} from "../../codec/PacketCodec.ts";
+import type {PacketCodec} from "../../codec/PacketCodec.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class ExplosionS2CPacket implements Payload {
     public static readonly ID: PayloadId<ExplosionS2CPacket> = {id: Identifier.ofVanilla('explosion')};
 
-    public static readonly CODEC: PacketCodec<ExplosionS2CPacket> = PacketCodec.of<ExplosionS2CPacket>(
+    public static readonly CODEC: PacketCodec<ExplosionS2CPacket> = PacketCodecs.of<ExplosionS2CPacket>(
         (value, writer) => {
             writer.writeDouble(value.x);
             writer.writeDouble(value.y);

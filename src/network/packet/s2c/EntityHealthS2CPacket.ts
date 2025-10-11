@@ -1,17 +1,18 @@
 import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
-import {PacketCodec} from "../../codec/PacketCodec.ts";
+import type {PacketCodec} from "../../codec/PacketCodec.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class EntityHealthS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityHealthS2CPacket> = {id: Identifier.ofVanilla('entity_health')};
-    public static readonly CODEC: PacketCodec<EntityHealthS2CPacket> = PacketCodec.of(
+    public static readonly CODEC: PacketCodec<EntityHealthS2CPacket> = PacketCodecs.of(
         (value, writer) => {
-            writer.writeVarInt(value.id);
+            writer.writeVarUInt(value.id);
             writer.writeFloat(value.amount);
         },
         reader => {
             return new EntityHealthS2CPacket(
-                reader.readVarInt(),
+                reader.readVarUInt(),
                 reader.readFloat()
             )
         }

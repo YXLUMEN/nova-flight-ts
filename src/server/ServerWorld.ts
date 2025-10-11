@@ -29,11 +29,13 @@ import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
 import type {Explosion} from "../world/Explosion.ts";
 import {ExplosionS2CPacket} from "../network/packet/s2c/ExplosionS2CPacket.ts";
 import {ServerDefaultEvents} from "./ServerDefaultEvents.ts";
+import type {MutVec2} from "../utils/math/MutVec2.ts";
+import {ParticleS2CPacket} from "../network/packet/s2c/ParticleS2CPacket.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
 
-    private stage: Stage;
+    public stage: Stage;
 
     private readonly players = new Map<UUID, ServerPlayerEntity>();
     private readonly entities: EntityList = new EntityList();
@@ -47,10 +49,6 @@ export class ServerWorld extends World implements NbtSerializable {
         this.server = server;
         this.entityManager = new ServerEntityManager(this.ServerEntityHandler);
         this.stage = STAGE;
-        // while (true) {
-        //     this.stage.nextPhase();
-        //     if (this.stage.getCurrentName() === 'P9'||this.stage.getCurrentName() === null) break;
-        // }
 
         this.onEvent();
         this.finishInit = true;
@@ -218,8 +216,22 @@ export class ServerWorld extends World implements NbtSerializable {
         return explosion;
     }
 
-    public spawnParticle(): void {
+    public spawnParticle(
+        posX: number, posY: number, offsetX: number, offsetY: number,
+        count: number, speed: number, life: number, size: number,
+        colorFrom: string, colorTo: string): void {
+        this.getNetworkChannel().send(ParticleS2CPacket.create(
+            posX, posY, offsetX, offsetY, count, speed, life, size, colorFrom, colorTo
+        ));
+    }
 
+    public spawnParticleVec(
+        pos: MutVec2, offsetX: number, offsetY: number,
+        count: number, speed: number, life: number, size: number,
+        colorFrom: string, colorTo: string): void {
+        this.getNetworkChannel().send(ParticleS2CPacket.create(
+            pos.x, pos.y, offsetX, offsetY, count, speed, life, size, colorFrom, colorTo
+        ));
     }
 
     public override addParticleByVec(): void {

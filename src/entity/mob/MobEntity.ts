@@ -1,6 +1,6 @@
 import {LivingEntity} from "../LivingEntity.ts";
 import {World} from "../../world/World.ts";
-import {clamp} from "../../utils/math/math.ts";
+import {clamp, rand} from "../../utils/math/math.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import type {EntityType} from "../EntityType.ts";
@@ -10,6 +10,8 @@ import {MobAI} from "../ai/MobAI.ts";
 import type {NbtCompound} from "../../nbt/NbtCompound.ts";
 import type {IColorEntity} from "../IColorEntity.ts";
 import type {DataTrackerSerializedEntry} from "../data/DataTracker.ts";
+import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export abstract class MobEntity extends LivingEntity implements IColorEntity {
     public color = '#ff6b6b';
@@ -23,7 +25,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         this.worth = worth;
         this.age += (Math.random() * 10) | 0;
         this.setYaw(1.57079);
-        this.AI = new MobAI(this);
+        this.AI = new MobAI();
     }
 
     public override tick(): void {
@@ -35,34 +37,39 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
     }
 
     public setBehavior(behavior: number): void {
-        this.AI.setBehavior(behavior);
-    }
-
-    protected override adjustPosition(): boolean {
-        const pos = this.getPositionRef;
-        if (pos.y > World.WORLD_H + 40) {
-            this.discard();
-            return false;
-        }
-
-        this.setPosition(clamp(pos.x, 20, World.WORLD_W), Math.max(pos.y, 0));
-        return true;
+        this.AI.setBehavior(this, behavior);
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         const result = super.takeDamage(damageSource, damage);
         if (!result) return false;
 
-        const world = this.getWorld();
+        const world = this.getWorld() as ServerWorld;
+        if (world.isClient) return true;
+
         world.events.emit(EVENTS.MOB_DAMAGE, {mob: this, damageSource});
+        world.spawnParticleVec(
+            this.getPositionRef, 1, 1, 1, rand(20, 60),
+            rand(0.2, 0.6), rand(4, 6),
+            "#ffaa33", "#ff5454"
+        );
         return true;
     }
 
     public override onDeath(damageSource: DamageSource): void {
         super.onDeath(damageSource);
 
-        const world = this.getWorld();
-        world.events.emit(EVENTS.MOB_KILLED, {mob: this, damageSource});
+        const world = this.getWorld() as ServerWorld;
+        if (world.isClient) return;
+
+        world.events.emit(EVENTS.MOB_KILLED, {mob: this, damageSource, pos: this.getPositionRef});
+
+        world.spawnParticle(
+            this.getPositionRef.x, this.getPositionRef.y,
+            1, 1, 4, rand(120, 240),
+            rand(0.6, 0.8), rand(4, 6),
+            "#ffaa33", "#ff5454"
+        );
     }
 
     public attack(player: PlayerEntity) {
@@ -79,6 +86,16 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         return this.worth;
     }
 
+    public override createSpawnPacket(): EntitySpawnS2CPacket {
+        return EntitySpawnS2CPacket.create(this, this.worth);
+    }
+
+    public override onSpawnPacket(packet: EntitySpawnS2CPacket) {
+        super.onSpawnPacket(packet);
+        const worth = packet.entityData;
+        if (worth > 0) this.worth = worth;
+    }
+
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
         nbt.putUint('Worth', this.worth);
@@ -93,7 +110,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         super.readNBT(nbt);
         this.worth = nbt.getUint('Worth', 1);
         this.color = nbt.getString('Color', this.color);
-        this.AI.setBehavior(nbt.getInt8('AiBehavior', 0));
+        this.AI.setBehavior(this, nbt.getInt8('AiBehavior', 0));
         this.age = nbt.getUint('Age', 0);
     }
 
@@ -106,5 +123,16 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
     }
 
     public onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {
+    }
+
+    protected override adjustPosition(): boolean {
+        const pos = this.getPositionRef;
+        if (pos.y > World.WORLD_H + 40) {
+            this.discard();
+            return false;
+        }
+
+        this.setPosition(clamp(pos.x, 20, World.WORLD_W), Math.max(pos.y, 0));
+        return true;
     }
 }

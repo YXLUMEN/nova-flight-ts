@@ -2,7 +2,8 @@ import type {EntityAttributeModifier} from "../../entity/attribute/EntityAttribu
 import {Identifier} from "../../registry/Identifier.ts";
 import type {Codec} from "../../serialization/Codec.ts";
 import {NbtCompound} from "../../nbt/NbtCompound.ts";
-import {PacketCodec} from "../../network/codec/PacketCodec.ts";
+import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
+import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
 
 export class AttributeModifiersComponent implements EntityAttributeModifier {
     public static readonly CODEC: Codec<AttributeModifiersComponent> = {
@@ -19,7 +20,7 @@ export class AttributeModifiersComponent implements EntityAttributeModifier {
         }
     };
 
-    public static readonly PACKET_CODEC: PacketCodec<AttributeModifiersComponent> = PacketCodec.of(
+    public static readonly PACKET_CODEC: PacketCodec<AttributeModifiersComponent> = PacketCodecs.of(
         (value, writer) => {
             writer.writeString(value.id.toString());
             writer.writeDouble(value.value);

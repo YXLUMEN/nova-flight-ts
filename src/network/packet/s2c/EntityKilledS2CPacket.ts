@@ -1,17 +1,18 @@
 import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
-import {PacketCodec} from "../../codec/PacketCodec.ts";
 import {EntityDamageS2CPacket} from "./EntityDamageS2CPacket.ts";
+import type {PacketCodec} from "../../codec/PacketCodec.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class EntityKilledS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityKilledS2CPacket> = {id: Identifier.ofVanilla('entity_killed')};
-    public static readonly CODEC: PacketCodec<EntityKilledS2CPacket> = PacketCodec.of(
+    public static readonly CODEC: PacketCodec<EntityKilledS2CPacket> = PacketCodecs.of(
         (value, writer) => {
-            writer.writeVarInt(value.entityId);
+            writer.writeVarUInt(value.entityId);
         },
         reader => {
             return new EntityKilledS2CPacket(
-                reader.readVarInt()
+                reader.readVarUInt()
             )
         }
     );

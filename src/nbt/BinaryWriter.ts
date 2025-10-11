@@ -43,7 +43,7 @@ export class BinaryWriter {
         this.pushBytes(buf);
     }
 
-    public writeVarInt(v: number): void {
+    public writeVarUInt(v: number): void {
         let i = v >>> 0;
         while ((i & ~0x7F) !== 0) {
             this.chunks.push((i & 0x7F) | 0x80);

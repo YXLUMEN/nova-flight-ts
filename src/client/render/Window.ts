@@ -6,12 +6,10 @@ import {NotificationManager} from "./ui/NotificationManager.ts";
 import {UITheme} from "./ui/theme.ts";
 
 export class Window {
-    public readonly canvas = document.getElementById("game") as HTMLCanvasElement;
-    public readonly ctx = this.canvas.getContext("2d")!;
-
     public static VIEW_W = 800;
     public static VIEW_H = 600;
-
+    public readonly canvas = document.getElementById("game") as HTMLCanvasElement;
+    public readonly ctx = this.canvas.getContext("2d")!;
     public readonly camera: Camera = new Camera();
     public readonly hud: HUD = new HUD();
     public readonly pauseOverlay = new PauseOverlay();

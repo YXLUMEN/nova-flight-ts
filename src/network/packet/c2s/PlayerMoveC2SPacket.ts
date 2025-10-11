@@ -1,12 +1,13 @@
 import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
-import {PacketCodec} from "../../codec/PacketCodec.ts";
 import type {UUID} from "../../../apis/registry.ts";
+import type {PacketCodec} from "../../codec/PacketCodec.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class PlayerMoveC2SPacket implements Payload {
     public static readonly ID: PayloadId<PlayerMoveC2SPacket> = {id: Identifier.ofVanilla('player_move')};
 
-    public static readonly CODEC: PacketCodec<PlayerMoveC2SPacket> = PacketCodec.of<PlayerMoveC2SPacket>(
+    public static readonly CODEC: PacketCodec<PlayerMoveC2SPacket> = PacketCodecs.of<PlayerMoveC2SPacket>(
         (value, writer) => {
             writer.writeUUID(value.uuid);
             writer.writeByte(value.dx);

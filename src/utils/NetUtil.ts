@@ -19,3 +19,30 @@ export function encodeVelocity(v: number): number {
 export function decodeVelocity(i: number): number {
     return i / VELOCITY_SCALE;
 }
+
+export function encodeToInt16(value: number, maxValue: number = 20): number {
+    const clamped = clamp(value, -maxValue, maxValue);
+    return Math.round(clamped * (32767 / maxValue));
+}
+
+export function decodeFromInt16(value: number, maxValue: number = 20): number {
+    return value * (maxValue / 32767);
+}
+
+export function encodeToByte(value: number, maxValue: number = 5): number {
+    const clamped = clamp(value, -maxValue, maxValue);
+    return Math.round(clamped * (127 / maxValue));
+}
+
+export function decodeFromByte(value: number, maxValue: number = 5): number {
+    return value * (maxValue / 127);
+}
+
+export function encodeToUnsignedByte(value: number, maxValue: number = 10): number {
+    const clamped = clamp(value, 0, maxValue);
+    return Math.round(clamped * (255 / maxValue));
+}
+
+export function decodeFromUnsignedByte(value: number, maxValue: number = 10): number {
+    return value * (maxValue / 255);
+}

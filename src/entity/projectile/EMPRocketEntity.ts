@@ -9,8 +9,8 @@ import {SoundEvents} from "../../sound/SoundEvents.ts";
 
 export class EMPRocketEntity extends RocketEntity {
     public override explosionRadius = 160;
-    private duration = 300;
     public override color = "#4b8bff";
+    private duration = 300;
 
     public override explode() {
         const world = this.getWorld();

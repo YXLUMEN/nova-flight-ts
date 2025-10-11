@@ -22,6 +22,17 @@ export class StatusEffectInstance {
         this.amplifier = clamp(Math.floor(amplifier), 0, 255);
     }
 
+    public static fromNbt(nbt: NbtCompound): StatusEffectInstance | null {
+        const id = Identifier.tryParse(nbt.getString('type'));
+        if (!id) return null;
+
+        const type = Registries.STATUS_EFFECT.getEntryById(id);
+        if (!type) return null;
+        const duration = nbt.getDouble('duration');
+        const amplifier = nbt.getUint('amplifier');
+        return new StatusEffectInstance(type, duration, amplifier);
+    }
+
     public upgrade(effect: StatusEffectInstance): boolean {
         if (this.type !== effect.type) {
             console.warn("This method should only be called for matching effects!");
@@ -55,7 +66,7 @@ export class StatusEffectInstance {
         return this.amplifier;
     }
 
-    public update(entity: LivingEntity): boolean {
+    public update(entity: LivingEntity,): boolean {
         if (this.isActive()) {
             const effect = this.type.getValue();
             if (effect.canApplyUpdateEffect(this.duration, this.amplifier) && !effect.applyUpdateEffect(entity, this.amplifier)) {
@@ -85,12 +96,26 @@ export class StatusEffectInstance {
         this.type.getValue().onEntityDamage(entity, this.amplifier, source, amount);
     }
 
-    private lastsShorterThan(effect: StatusEffectInstance): boolean {
-        return !this.isInfinite() && (this.duration < effect.duration || effect.isInfinite());
+    public toString(): string {
+        if (this.amplifier > 0) {
+            return `${this.type.toString()} x ${this.amplifier + 1}, duration: ${this.getDurationString()}`;
+        } else {
+            return `${this.type.toString()}, duration: ${this.getDurationString()}`;
+        }
     }
 
-    private isActive(): boolean {
-        return this.isInfinite() || this.duration > 0;
+    public getDurationString(): string {
+        return this.isInfinite() ? 'infinite' : this.duration.toFixed(2);
+    }
+
+    public equals(o: Object): boolean {
+        if (o === this) return true;
+        if (o instanceof StatusEffectInstance) {
+            return this.duration === o.duration &&
+                this.amplifier === o.amplifier &&
+                this.type === o.type;
+        }
+        return false;
     }
 
     public toNbt(): NbtCompound {
@@ -102,14 +127,11 @@ export class StatusEffectInstance {
         return nbt
     }
 
-    public static fromNbt(nbt: NbtCompound): StatusEffectInstance | null {
-        const id = Identifier.tryParse(nbt.getString('type'));
-        if (!id) return null;
+    private lastsShorterThan(effect: StatusEffectInstance): boolean {
+        return !this.isInfinite() && (this.duration < effect.duration || effect.isInfinite());
+    }
 
-        const type = Registries.STATUS_EFFECT.getEntryById(id);
-        if (!type) return null;
-        const duration = nbt.getDouble('duration');
-        const amplifier = nbt.getUint('amplifier');
-        return new StatusEffectInstance(type, duration, amplifier);
+    private isActive(): boolean {
+        return this.isInfinite() || this.duration > 0;
     }
 }

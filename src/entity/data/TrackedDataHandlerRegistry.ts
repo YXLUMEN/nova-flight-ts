@@ -1,15 +1,15 @@
-import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 import {TrackedData} from "./TrackedData.ts";
 import type {TrackedDataHandler} from "./TrackedDataHandler.ts";
 import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
 import {createCleanObj} from "../../utils/uit.ts";
+import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 
 export class TrackedDataHandlerRegistry {
     private static readonly DATA_HANDLERS_ID = new Map<TrackedDataHandler<any>, number>();
     private static readonly DATA_ID_HANDLERS = new Map<number, TrackedDataHandler<any>>();
 
     public static readonly BOOL = this.create(PacketCodecs.BOOL);
-    public static readonly INT8 = this.create(PacketCodecs.INT8);
+    public static readonly INT8 = this.create(PacketCodecs.BYTE);
     public static readonly INTEGER = this.create(PacketCodecs.VAR_INT);
     public static readonly FLOAT = this.create(PacketCodecs.FLOAT);
     public static readonly DOUBLE = this.create(PacketCodecs.DOUBLE);

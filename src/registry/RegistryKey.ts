@@ -5,7 +5,6 @@ import type {Registry} from "./Registry.ts";
 
 // @ts-ignore
 export class RegistryKey<T> {
-
     private static readonly REGISTRY = new Map<RegistryIdPair, RegistryKey<any>>();
 
     private readonly registry: Identifier;

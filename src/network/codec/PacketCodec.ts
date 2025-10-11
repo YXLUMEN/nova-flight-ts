@@ -1,36 +1,8 @@
 import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 import {BinaryReader} from "../../nbt/BinaryReader.ts";
 
-export class PacketCodec<T> {
-    private readonly encoder: (value: T, writer: BinaryWriter) => void;
-    private readonly decoder: (reader: BinaryReader) => T;
+export interface PacketCodec<T> {
+    encode(value: T, writer: BinaryWriter): Uint8Array;
 
-    private constructor(
-        encoder: (value: T, writer: BinaryWriter) => void,
-        decoder: (reader: BinaryReader) => T
-    ) {
-        this.encoder = encoder;
-        this.decoder = decoder;
-    }
-
-    public static of<T>(
-        encoder: (value: T, writer: BinaryWriter) => void,
-        decoder: (reader: BinaryReader) => T
-    ): PacketCodec<T> {
-        return new PacketCodec(encoder, decoder);
-    }
-
-    public static empty<T>(decoder: new () => T): PacketCodec<T> {
-        return new PacketCodec(() => {
-        }, () => new decoder());
-    }
-
-    public encode(value: T, writer: BinaryWriter): Uint8Array {
-        this.encoder(value, writer);
-        return writer.toUint8Array();
-    }
-
-    public decode(reader: BinaryReader): T {
-        return this.decoder(reader);
-    }
+    decode(reader: BinaryReader): T;
 }

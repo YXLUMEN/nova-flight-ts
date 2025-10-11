@@ -5,6 +5,10 @@ export class EntityIndex<T extends Entity> {
     private readonly idToEntity = new Map<number, T>;
     private readonly uuidToEntity = new Map<UUID, T>();
 
+    public get size() {
+        return this.uuidToEntity.size;
+    }
+
     public add(entity: T): boolean {
         const uuid = entity.getUuid();
         if (this.uuidToEntity.has(uuid)) {
@@ -31,9 +35,5 @@ export class EntityIndex<T extends Entity> {
 
     public uuidValues() {
         return this.uuidToEntity.keys();
-    }
-
-    public get size() {
-        return this.uuidToEntity.size;
     }
 }

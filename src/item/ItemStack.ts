@@ -33,6 +33,30 @@ export class ItemStack {
         this.count = count;
     }
 
+    public static areItemsAndComponentsEqual(stack: ItemStack, other: ItemStack): boolean {
+        if (!stack.isOf(other.getItem())) {
+            return false;
+        }
+        return stack.isEmpty() && other.isEmpty() ? true : stack.components.equals(other.components);
+    }
+
+    public static readNBT(nbt: NbtCompound): ItemStack | null {
+        const typeName = nbt.getString('type');
+        const id = Identifier.tryParse(typeName);
+        if (!id) return null;
+
+        const type = Registries.ITEM.getEntryById(id);
+        if (!type) return null;
+
+        const counts = nbt.getInt8('counts');
+
+        let compounds: ComponentMap | null = null;
+        const compoundsNbt = nbt.getCompound('compounds');
+        if (compoundsNbt) compounds = ComponentMap.fromNbt(compoundsNbt);
+
+        return new ItemStack(type.getValue(), counts, compounds);
+    }
+
     public isEmpty(): boolean {
         return this === ItemStack.EMPTY || this.item === Items.AIR || this.count <= 0;
     }
@@ -152,13 +176,6 @@ export class ItemStack {
         }
     }
 
-    public static areItemsAndComponentsEqual(stack: ItemStack, other: ItemStack): boolean {
-        if (!stack.isOf(other.getItem())) {
-            return false;
-        }
-        return stack.isEmpty() && other.isEmpty() ? true : stack.components.equals(other.components);
-    }
-
     public toString(): string {
         return `${this.getCount()} ${this.getItem()}`
     }
@@ -210,22 +227,5 @@ export class ItemStack {
         nbt.putCompound('compounds', this.components.toNbt());
 
         return nbt
-    }
-
-    public static readNBT(nbt: NbtCompound): ItemStack | null {
-        const typeName = nbt.getString('type');
-        const id = Identifier.tryParse(typeName);
-        if (!id) return null;
-
-        const type = Registries.ITEM.getEntryById(id);
-        if (!type) return null;
-
-        const counts = nbt.getInt8('counts');
-
-        let compounds: ComponentMap | null = null;
-        const compoundsNbt = nbt.getCompound('compounds');
-        if (compoundsNbt) compounds = ComponentMap.fromNbt(compoundsNbt);
-
-        return new ItemStack(type.getValue(), counts, compounds);
     }
 }

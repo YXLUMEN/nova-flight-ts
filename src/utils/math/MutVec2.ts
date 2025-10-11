@@ -13,6 +13,16 @@ export class MutVec2 implements IVec {
         this.x = x;
     }
 
+    public static distSq(a: IVec, b: IVec): number {
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
+        return dx * dx + dy * dy;
+    }
+
+    public static zero(): MutVec2 {
+        return new MutVec2(0, 0);
+    }
+
     public clone(): MutVec2 {
         return new MutVec2(this.x, this.y);
     }
@@ -80,15 +90,5 @@ export class MutVec2 implements IVec {
         const dx = this.x - v.x;
         const dy = this.y - v.y;
         return (dx * dx + dy * dy) <= (epsilon * epsilon);
-    }
-
-    public static distSq(a: IVec, b: IVec): number {
-        const dx = a.x - b.x;
-        const dy = a.y - b.y;
-        return dx * dx + dy * dy;
-    }
-
-    public static zero(): MutVec2 {
-        return new MutVec2(0, 0);
     }
 }

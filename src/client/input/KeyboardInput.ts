@@ -18,6 +18,10 @@ export class KeyboardInput implements IInput {
         this.registryListener(target);
     }
 
+    public get getPointer(): MutVec2 {
+        return this.pointer;
+    }
+
     public updateEndFrame(): void {
         this.prevKeys = new Set(this.keys);
     }
@@ -67,10 +71,6 @@ export class KeyboardInput implements IInput {
 
     public clearKeyHandler(): void {
         this.keyHandler.clear();
-    }
-
-    public get getPointer(): MutVec2 {
-        return this.pointer;
     }
 
     private registryListener(target: HTMLElement) {

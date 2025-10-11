@@ -25,13 +25,16 @@ import {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
 import {ServerReadyS2CPacket} from "../../network/packet/s2c/ServerReadyS2CPacket.ts";
 import {PlayerAttemptLoginC2SPacket} from "../../network/packet/c2s/PlayerAttemptLoginC2SPacket.ts";
 import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
-import {MutVec2} from "../../utils/math/MutVec2.ts";
-import {PI2, rand} from "../../utils/math/math.ts";
 import {EntityKilledS2CPacket} from "../../network/packet/s2c/EntityKilledS2CPacket.ts";
+import {ParticleS2CPacket} from "../../network/packet/s2c/ParticleS2CPacket.ts";
+import {EntityAttributesS2CPacket} from "../../network/packet/s2c/EntityAttributesS2CPacket.ts";
+import {LivingEntity} from "../../entity/LivingEntity.ts";
+import {GaussianRandom} from "../../utils/math/GaussianRandom.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer = new Set<UUID>();
     private readonly client: NovaFlightClient;
+    private readonly random = new GaussianRandom();
     private world: ClientWorld | null = null;
 
     public constructor(client: NovaFlightClient) {
@@ -95,50 +98,10 @@ export class ClientPlayNetworkHandler {
         this.world!.addEntity(entity);
     }
 
-    private createEntity(packet: EntitySpawnS2CPacket): Entity | null {
-        const entityType = packet.entityType;
-        if (entityType === EntityTypes.PLAYER) {
-            if (this.loginPlayer.has(packet.uuid)) return null;
-        }
-
-        const world = this.world;
-        if (!world) return null;
-        return entityType.create(world);
+    public onEntityDamage(): void {
     }
 
-    public onEntityDamage(packet: EntityDamageS2CPacket): void {
-        const world = this.world;
-        if (!world) return;
-        const entity = world.getEntityById(packet.entityId);
-
-        if (entity instanceof MobEntity) {
-            world.addParticleByVec(
-                entity.getPositionRef, MutVec2.zero(),
-                rand(0.2, 0.6), rand(4, 6),
-                "#ffaa33", "#ff5454",
-                0.6, 80
-            );
-        }
-    }
-
-    public onEntityKilled(packet: EntityKilledS2CPacket) {
-        const world = this.world;
-        if (!world) return;
-        const entity = world.getEntityById(packet.entityId);
-        if (!entity) return;
-
-        if (entity instanceof MobEntity) {
-            for (let i = 0; i < 4; i++) {
-                const a = rand(0, PI2);
-                const speed = rand(80, 180);
-                const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
-
-                world.addParticleByVec(
-                    entity.getPositionRef, vel, rand(0.6, 0.8), rand(4, 6),
-                    "#ffaa33", "#ff5454", 0.6, 80
-                );
-            }
-        }
+    public onEntityKilled() {
     }
 
     public onEntityRemove(packet: EntityRemoveS2CPacket): void {
@@ -172,6 +135,47 @@ export class ClientPlayNetworkHandler {
         });
     }
 
+    public onParticle(packet: ParticleS2CPacket): void {
+        const world = this.world;
+        if (!world) return;
+
+        if (packet.count === 0) {
+            const vx = packet.speed * packet.offsetX;
+            const vy = packet.speed * packet.offsetY;
+            world.addParticle(packet.posX, packet.posY, vx, vy, packet.life, packet.size, packet.colorFrom, packet.colorTo);
+            return;
+        }
+
+        for (let i = packet.count; i--;) {
+            const ox = this.random.nextGaussian() * packet.offsetX;
+            const oy = this.random.nextGaussian() * packet.offsetY;
+            const vx = this.random.nextGaussian() * packet.speed;
+            const vy = this.random.nextGaussian() * packet.speed;
+            world.addParticle(packet.posX + ox, packet.posY + oy, vx, vy, packet.life, packet.size, packet.colorFrom, packet.colorTo);
+        }
+    }
+
+    public onEntityAttributes(packet: EntityAttributesS2CPacket): void {
+        const entity = this.world?.getEntityById(packet.entityId);
+        if (!entity) return;
+        if (!(entity instanceof LivingEntity)) throw new Error(`Server tried to update attributes of a non-living entity: ${entity}`);
+        const container = entity.getAttributes();
+
+        for (const entry of packet.entries) {
+            const instance = container.getCustomInstance(entry.attribute);
+            if (!instance) {
+                console.warn(`Entity ${entity} does not have attribute ${entry.attribute.getRegistryKey().getValue().toString()}`);
+                continue;
+            }
+            instance.setBaseValue(entry.base);
+            instance.clearModifiers();
+
+            for (const modifier of entry.modifiers) {
+                instance.addModifier(modifier);
+            }
+        }
+    }
+
     public registryHandler() {
         new PacketHandlerBuilder()
             .add(ServerReadyS2CPacket.ID, this.onServerReady)
@@ -188,7 +192,20 @@ export class ClientPlayNetworkHandler {
             .add(RotateAndMoveRelative.ID, this.onEntity)
             .add(EntityKilledS2CPacket.ID, this.onEntityKilled)
             .add(EntityDamageS2CPacket.ID, this.onEntityDamage)
+            .add(ParticleS2CPacket.ID, this.onParticle)
+            .add(EntityAttributesS2CPacket.ID, this.onEntityAttributes)
             .register(this.client.networkChannel, this);
+    }
+
+    private createEntity(packet: EntitySpawnS2CPacket): Entity | null {
+        const entityType = packet.entityType;
+        if (entityType === EntityTypes.PLAYER) {
+            if (this.loginPlayer.has(packet.uuid)) return null;
+        }
+
+        const world = this.world;
+        if (!world) return null;
+        return entityType.create(world);
     }
 }
 

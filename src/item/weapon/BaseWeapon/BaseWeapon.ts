@@ -16,6 +16,10 @@ export abstract class BaseWeapon extends Weapon {
         stack.set(DataComponentTypes.MAX_COOLDOWN, clamp(fireRate, 0, 256));
     }
 
+    public getBallisticSpeed(): number {
+        return 0;
+    }
+
     protected setBullet(bullet: ProjectileEntity, attacker: Entity, speed: number, offset: number, maxSpread = 1, maxParticle = 4, margin = 0): void {
         const world = bullet.getWorld();
         const pos = attacker.getPositionRef;
@@ -53,9 +57,5 @@ export abstract class BaseWeapon extends Weapon {
                 "#ffaa33", "#ff5454", 0.6, 80
             );
         }
-    }
-
-    public getBallisticSpeed(): number {
-        return 0;
     }
 }

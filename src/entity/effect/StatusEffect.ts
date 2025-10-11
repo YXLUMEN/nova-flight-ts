@@ -28,6 +28,7 @@ export class StatusEffect {
             });
         }
     }
+
     private readonly attributeModifiers = new Map<RegistryEntry<EntityAttribute>, InstanceType<typeof StatusEffect.EffectAttributeModifierCreator>>();
     private readonly category: StatusEffectCategory;
     private readonly color: string;

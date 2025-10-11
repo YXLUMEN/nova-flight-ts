@@ -1,7 +1,8 @@
 import type {Comparable} from "../utils/collection/HashMap.ts";
 import type {Codec} from "../serialization/Codec.ts";
-import {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
+import type {PacketCodec} from "../network/codec/PacketCodec.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 
 export class Identifier implements Comparable {
     public static readonly CODEC: Codec<Identifier> = {
@@ -15,7 +16,7 @@ export class Identifier implements Comparable {
             return Identifier.tryParse(nbt.getString('id'));
         }
     };
-    public static readonly PACKET_CODEC: PacketCodec<Identifier> = PacketCodec.of(
+    public static readonly PACKET_CODEC: PacketCodec<Identifier> = PacketCodecs.of(
         (value, writer) => writer.writeString(value.toString()),
         reader => this.splitOn(reader.readString())
     );

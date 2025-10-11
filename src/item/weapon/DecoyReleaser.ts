@@ -16,6 +16,31 @@ export class DecoyReleaser extends SpecialWeapon {
     private readonly sustainPerRelease = 2;
     private readonly sustainReleaseTimes = 8;
 
+    private static releaseDecoy(perRelease: number, world: World, attacker: Entity): void {
+        if (!world.isClient) {
+            const pos = attacker.getPositionRef;
+            const yaw = attacker.getYaw();
+
+            for (let i = 0; i < perRelease; i++) {
+                const t = (i / (perRelease - 1)) - 0.5;
+                const angle = yaw + t * Math.PI / 3;
+
+                const offsetX = Math.cos(angle) * 1.5 + Math.cos(yaw) * -0.5;
+                const offsetY = Math.sin(angle) * 1.5 + Math.sin(yaw) * -0.5;
+
+                const decoy = new DecoyEntity(EntityTypes.DECOY_ENTITY, world, attacker);
+                decoy.setPosition(pos.x + offsetX, pos.y + offsetY);
+
+                const sideAngle = yaw + rand(-0.26179935, 0.26179935) + HALF_PI * (t >= 0 ? 1 : -1);
+                decoy.setYaw(sideAngle);
+                decoy.updateVelocity(8, Math.cos(sideAngle), Math.sin(sideAngle));
+
+                (world as ServerWorld).spawnEntity(decoy);
+            }
+        }
+        world.playSound(attacker, SoundEvents.DECOY_FIRE);
+    }
+
     public tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         stack.set(DataComponentTypes.WEAPON_CAN_COOLDOWN, false);
 
@@ -42,31 +67,6 @@ export class DecoyReleaser extends SpecialWeapon {
         });
 
         this.setCooldown(stack, this.getMaxCooldown(stack));
-    }
-
-    private static releaseDecoy(perRelease: number, world: World, attacker: Entity): void {
-        if (!world.isClient) {
-            const pos = attacker.getPositionRef;
-            const yaw = attacker.getYaw();
-
-            for (let i = 0; i < perRelease; i++) {
-                const t = (i / (perRelease - 1)) - 0.5;
-                const angle = yaw + t * Math.PI / 3;
-
-                const offsetX = Math.cos(angle) * 1.5 + Math.cos(yaw) * -0.5;
-                const offsetY = Math.sin(angle) * 1.5 + Math.sin(yaw) * -0.5;
-
-                const decoy = new DecoyEntity(EntityTypes.DECOY_ENTITY, world, attacker);
-                decoy.setPosition(pos.x + offsetX, pos.y + offsetY);
-
-                const sideAngle = yaw + rand(-0.26179935, 0.26179935) + HALF_PI * (t >= 0 ? 1 : -1);
-                decoy.setYaw(sideAngle);
-                decoy.updateVelocity(8, Math.cos(sideAngle), Math.sin(sideAngle));
-
-                (world as ServerWorld).spawnEntity(decoy);
-            }
-        }
-        world.playSound(attacker, SoundEvents.DECOY_FIRE);
     }
 
     public override bindKey(): string {

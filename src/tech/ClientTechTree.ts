@@ -1,6 +1,6 @@
 import {TechState} from "./TechState.ts";
 import type {Tech} from "../apis/ITech.ts";
-import {applyTech} from "./apply_tech.ts";
+import {applyClientTech} from "./apply_tech.ts";
 import {clamp} from "../utils/math/math.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {EVENTS} from "../apis/IEvents.ts";
@@ -59,6 +59,90 @@ export class ClientTechTree implements TechTree {
         this.renderEdges();
         this.renderNodes();
         this.bindInteractions();
+    }
+
+    public applyUnlockUpdates(id: string) {
+        const affected = new Set<string>();
+
+        const add = (ids: Iterable<string>) => {
+            for (const x of ids) affected.add(x);
+        };
+
+        // 自身 + 自身后继
+        affected.add(id);
+        add(this.successorsClosure(id));
+
+        // 分支互斥节点 + 它们的后继
+        const branchPeers = this.branchPeers(id);
+        add(branchPeers);
+        for (const p of branchPeers) add(this.successorsClosure(p));
+
+        // 冲突节点 + 它们的后继
+        const conflictPeers = this.conflictPeers(id);
+        add(conflictPeers);
+        for (const p of conflictPeers) add(this.successorsClosure(p));
+
+        // 更新节点
+        for (const nid of affected) this.updateNodeClass(nid);
+
+        // 更新相关边
+        this.updateEdgesAround(Array.from(affected));
+    }
+
+    public getTech(id: string): Tech | undefined {
+        const tech = this.state.getTech(id);
+        if (tech === undefined) return undefined;
+        return {...tech};
+    }
+
+    public isUnlocked(id: string): boolean {
+        return this.state.isUnlocked(id);
+    }
+
+    public unlockAll() {
+        const all = Array.from(this.state.techById.keys());
+        for (const nid of all) {
+            if (this.state.isUnlocked(nid)) continue;
+
+            this.state.forceUnlock(nid);
+            this.updateNodeClass(nid);
+            applyClientTech(nid);
+        }
+        this.updateEdgesAround(all);
+    }
+
+    public getSelected() {
+        return this.selectNodeId;
+    }
+
+    public destroy() {
+        this.adj.out.clear();
+        this.adj.branchMembers.clear();
+        this.adj.branchOf.clear();
+        this.adj.conflicts.clear();
+        this.state.clear();
+
+        this.container.replaceChildren();
+        this.abortCtrl.abort();
+        this.playerScore.textContent = '0';
+    }
+
+    public writeNBT(nbt: NbtCompound): NbtCompound {
+        nbt.putStringArray('Techs', ...this.state.unlocked);
+        return nbt
+    }
+
+    public readNBT(nbt: NbtCompound) {
+        const techs = nbt.getStringArray('Techs');
+        if (techs.length === 0) return;
+        const world = NovaFlightClient.getInstance().world;
+        if (!world) return;
+
+        for (const tech of techs) {
+            this.state.unlock(tech);
+            this.applyUnlockUpdates(tech);
+            world.events.emit(EVENTS.UNLOCK_TECH, {id: tech});
+        }
     }
 
     private linkTo(from: Tech, to: Tech) {
@@ -121,60 +205,6 @@ export class ClientTechTree implements TechTree {
 
         const applyTransform = () =>
             container.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-    }
-
-    public applyUnlockUpdates(id: string) {
-        const affected = new Set<string>();
-
-        const add = (ids: Iterable<string>) => {
-            for (const x of ids) affected.add(x);
-        };
-
-        // 自身 + 自身后继
-        affected.add(id);
-        add(this.successorsClosure(id));
-
-        // 分支互斥节点 + 它们的后继
-        const branchPeers = this.branchPeers(id);
-        add(branchPeers);
-        for (const p of branchPeers) add(this.successorsClosure(p));
-
-        // 冲突节点 + 它们的后继
-        const conflictPeers = this.conflictPeers(id);
-        add(conflictPeers);
-        for (const p of conflictPeers) add(this.successorsClosure(p));
-
-        // 更新节点
-        for (const nid of affected) this.updateNodeClass(nid);
-
-        // 更新相关边
-        this.updateEdgesAround(Array.from(affected));
-    }
-
-    public getTech(id: string): Tech | undefined {
-        const tech = this.state.getTech(id);
-        if (tech === undefined) return undefined;
-        return {...tech};
-    }
-
-    public isUnlocked(id: string): boolean {
-        return this.state.isUnlocked(id);
-    }
-
-    public unlockAll() {
-        const all = Array.from(this.state.techById.keys());
-        for (const nid of all) {
-            if (this.state.isUnlocked(nid)) continue;
-
-            this.state.forceUnlock(nid);
-            this.updateNodeClass(nid);
-            applyTech(nid);
-        }
-        this.updateEdgesAround(all);
-    }
-
-    public getSelected() {
-        return this.selectNodeId;
     }
 
     // -------- Rendering --------
@@ -437,35 +467,5 @@ export class ClientTechTree implements TechTree {
 
         this.state.reset();
         this.renderNodes();
-    }
-
-    public destroy() {
-        this.adj.out.clear();
-        this.adj.branchMembers.clear();
-        this.adj.branchOf.clear();
-        this.adj.conflicts.clear();
-        this.state.clear();
-
-        this.container.replaceChildren();
-        this.abortCtrl.abort();
-        this.playerScore.textContent = '0';
-    }
-
-    public writeNBT(nbt: NbtCompound): NbtCompound {
-        nbt.putStringArray('Techs', ...this.state.unlocked);
-        return nbt
-    }
-
-    public readNBT(nbt: NbtCompound) {
-        const techs = nbt.getStringArray('Techs');
-        if (techs.length === 0) return;
-        const world = NovaFlightClient.getInstance().world;
-        if (!world) return;
-
-        for (const tech of techs) {
-            this.state.unlock(tech);
-            this.applyUnlockUpdates(tech);
-            world.events.emit(EVENTS.UNLOCK_TECH, {id: tech});
-        }
     }
 }

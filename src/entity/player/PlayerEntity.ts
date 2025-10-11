@@ -1,6 +1,5 @@
 import {World} from "../../world/World.ts";
 import {LivingEntity} from "../LivingEntity.ts";
-import {EdgeGlowEffect} from "../../effect/EdgeGlowEffect.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {type DamageSource} from "../damage/DamageSource.ts";
@@ -22,17 +21,14 @@ export abstract class PlayerEntity extends LivingEntity {
     public onDamageExplosionRadius = 320;
 
     public techTree!: TechTree;
-    protected readonly weapons = new Map<Item, ItemStack>();
     public readonly baseWeapons: BaseWeapon[] = [];
     public currentBaseIndex: number = 0;
-
+    public voidEdge = false;
+    protected readonly weapons = new Map<Item, ItemStack>();
     protected wasActive: boolean = false;
-
     private lastDamageTime = 0;
     private phaseScore: number = 0;
     private score: number = 0;
-
-    public voidEdge = false;
 
     protected constructor(world: World) {
         super(EntityTypes.PLAYER, world);
@@ -60,12 +56,6 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public override tickMovement() {
         this.getVelocityRef.multiply(0.9);
-    }
-
-    protected tickInventory(world: World) {
-        for (const [w, stack] of this.weapons) {
-            w.inventoryTick(stack, world, this, 0, true);
-        }
     }
 
     public getNetworkHandler(): NetworkChannel {
@@ -96,7 +86,6 @@ export abstract class PlayerEntity extends LivingEntity {
         world.createExplosion(this, null, this.getX(), this.getY(), {
             damage: 32,
             explosionRadius: this.onDamageExplosionRadius,
-            shake: 0.5,
             important: true,
             attacker: this
         });
@@ -116,17 +105,7 @@ export abstract class PlayerEntity extends LivingEntity {
             }
         }
 
-        const damageResult = super.takeDamage(damageSource, damage);
-
-        if (this.getHealth() <= 5) {
-            world.addEffect(new EdgeGlowEffect({
-                color: '#ff5151',
-                duration: 5.0,
-                intensity: 0.5
-            }));
-        }
-
-        return damageResult;
+        return super.takeDamage(damageSource, damage);
     }
 
     public override onDeath(damageSource: DamageSource) {
@@ -250,5 +229,11 @@ export abstract class PlayerEntity extends LivingEntity {
     }
 
     public onTrackedDataSet(_data: TrackedData<any>): void {
+    }
+
+    protected tickInventory(world: World) {
+        for (const [w, stack] of this.weapons) {
+            w.inventoryTick(stack, world, this, 0, true);
+        }
     }
 }

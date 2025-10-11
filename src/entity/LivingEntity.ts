@@ -19,13 +19,12 @@ import type {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPac
 
 
 export abstract class LivingEntity extends Entity {
+    private static readonly HEALTH = DataTracker.registerData(Object(LivingEntity), TrackedDataHandlerRegistry.FLOAT);
+
     protected bodyTrackingIncrements: number;
     protected serverX: number = 0;
     protected serverY: number = 0;
     protected serverYaw: number = 0;
-
-    private static readonly HEALTH = DataTracker.registerData(Object(LivingEntity), TrackedDataHandlerRegistry.FLOAT);
-
     private readonly attributes: AttributeContainer;
     private readonly activeStatusEffects = new Map<RegistryEntry<StatusEffect>, StatusEffectInstance>();
 
@@ -42,6 +41,10 @@ export abstract class LivingEntity extends Entity {
         return DefaultAttributeContainer.builder()
             .add(EntityAttributes.GENERIC_MAX_HEALTH)
             .add(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+    }
+
+    protected override initDataTracker(builder: InstanceType<typeof DataTracker.Builder>) {
+        builder.add(LivingEntity.HEALTH, 1);
     }
 
     public override tick() {
@@ -67,6 +70,19 @@ export abstract class LivingEntity extends Entity {
         if (Math.abs(vx) < 0.003) vx = 0;
         if (Math.abs(vy) < 0.003) vy = 0;
         velocity.set(vx, vy);
+    }
+
+    protected override onRemove(): void {
+        this.onRemoval();
+        super.onRemove();
+    }
+
+    protected onRemoval(): void {
+        for (const instance of this.getStatusEffects()) {
+            instance.onEntityRemoval(this);
+        }
+
+        this.activeStatusEffects.clear();
     }
 
     public getAttributes() {
@@ -104,9 +120,19 @@ export abstract class LivingEntity extends Entity {
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (this.isInvulnerableTo(damageSource)) return false;
 
-        this.setHealth(clamp(this.getHealth() - damage, 0, this.getMaxHealth()));
+        this.setHealth(this.getHealth() - damage);
+        if (damage > 0) {
+            for (const effect of this.getStatusEffects()) {
+                effect.onEntityDamage(this, damageSource, damage);
+            }
+        }
+
         if (this.getHealth() <= 0) this.onDeath(damageSource);
         return true;
+    }
+
+    public getStatusEffects(): MapIterator<StatusEffectInstance> {
+        return this.activeStatusEffects.values();
     }
 
     public getActiveStatusEffects(): Map<RegistryEntry<StatusEffect>, StatusEffectInstance> {
@@ -168,24 +194,26 @@ export abstract class LivingEntity extends Entity {
         return false;
     }
 
-    public onStatusEffectApplied(effect: StatusEffectInstance, _source: Entity | null): void {
+    protected onStatusEffectApplied(effect: StatusEffectInstance, _source: Entity | null): void {
+        if (this.getWorld().isClient) return;
         effect.getEffectType().getValue().onApplied(this.attributes, effect.getAmplifier());
     }
 
     protected tickStatusEffects(): void {
         if (this.activeStatusEffects.size === 0) return;
-        const effectKeys = [...this.activeStatusEffects.keys()];
 
-        for (const effect of effectKeys) {
+        for (const effect of this.activeStatusEffects.keys()) {
             const instance = this.activeStatusEffects.get(effect)!;
             if (!instance.update(this)) {
-                this.onStatusEffectRemoved(instance);
+                if (!this.getWorld().isClient) {
+                    this.onStatusEffectRemoved(instance);
+                }
             }
         }
     }
 
     protected onStatusEffectUpgraded(effect: StatusEffectInstance, reapplyEffect: boolean, _source: Entity | null): void {
-        if (reapplyEffect) {
+        if (reapplyEffect && !this.getWorld().isClient) {
             const statusEffect = effect.getEffectType().getValue();
             statusEffect.onRemoved(this.attributes);
             statusEffect.onApplied(this.attributes, effect.getAmplifier());
@@ -214,10 +242,6 @@ export abstract class LivingEntity extends Entity {
                 this.setHealth(maxHealth);
             }
         }
-    }
-
-    protected override initDataTracker(builder: InstanceType<typeof DataTracker.Builder>) {
-        builder.add(LivingEntity.HEALTH, 1);
     }
 
     public override onTrackedDataSet(_data: TrackedData<any>) {

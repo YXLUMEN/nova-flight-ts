@@ -13,24 +13,6 @@ export class MobMissileEntity extends MissileEntity {
         super(type, world, owner, driftAngle, 5);
     }
 
-    protected override acquireTarget(): Entity | null {
-        const players = this.getWorld().getPlayers();
-        for (const player of players) {
-            if (player.invulnerable) continue;
-            return player;
-        }
-        return null;
-    }
-
-    protected override adjustPosition(): boolean {
-        const pos = this.getPositionRef;
-        if (pos.y < -20 || pos.y > World.WORLD_H + 20 || pos.x < -20 || pos.x > World.WORLD_W + 20) {
-            this.discard();
-            return false;
-        }
-        return true;
-    }
-
     public override shouldApplyDecoy(): boolean {
         return (this.age & 7) === 0 && !(this.target instanceof DecoyEntity);
     }
@@ -61,5 +43,23 @@ export class MobMissileEntity extends MissileEntity {
 
             this.target = closest;
         }
+    }
+
+    protected override acquireTarget(): Entity | null {
+        const players = this.getWorld().getPlayers();
+        for (const player of players) {
+            if (player.invulnerable) continue;
+            return player;
+        }
+        return null;
+    }
+
+    protected override adjustPosition(): boolean {
+        const pos = this.getPositionRef;
+        if (pos.y < -20 || pos.y > World.WORLD_H + 20 || pos.x < -20 || pos.x > World.WORLD_W + 20) {
+            this.discard();
+            return false;
+        }
+        return true;
     }
 }

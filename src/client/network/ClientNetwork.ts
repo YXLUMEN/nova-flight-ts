@@ -4,11 +4,11 @@ import {PlayerMoveC2SPacket} from "../../network/packet/c2s/PlayerMoveC2SPacket.
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import {PlayerAttemptLoginC2SPacket} from "../../network/packet/c2s/PlayerAttemptLoginC2SPacket.ts";
 import type {Payload, PayloadId} from "../../network/Payload.ts";
-import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
 import {PlayerUnlockTechC2SPacket} from "../../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
 import {RequestPositionC2SPacket} from "../../network/packet/c2s/RequestPositionC2SPacket.ts";
+import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 
 export class ClientNetwork {
     public static registerNetworkPacket(): void {

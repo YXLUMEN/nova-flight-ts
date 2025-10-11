@@ -9,6 +9,10 @@ export class EntityList {
 
     private readonly pendingRemoval: number[] = [];
 
+    public get size(): number {
+        return this.entities.size;
+    }
+
     public add(entity: Entity): void {
         this.entities.set(entity.getId(), entity);
 
@@ -78,9 +82,5 @@ export class EntityList {
 
         this.pendingRemoval.length = 0;
         Entity.CURRENT_ID.reset();
-    }
-
-    public get size(): number {
-        return this.entities.size;
     }
 }

@@ -1,14 +1,15 @@
 import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
-import {PacketCodec} from "../../codec/PacketCodec.ts";
 import {Registries} from "../../../registry/Registries.ts";
 import type {SoundEvent} from "../../../sound/SoundEvent.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
+import type {PacketCodec} from "../../codec/PacketCodec.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class StopSoundS2CPacket implements Payload {
     public static readonly ID: PayloadId<StopSoundS2CPacket> = {id: Identifier.ofVanilla('stop_sound')};
 
-    public static readonly CODEC: PacketCodec<StopSoundS2CPacket> = PacketCodec.of<StopSoundS2CPacket>(
+    public static readonly CODEC: PacketCodec<StopSoundS2CPacket> = PacketCodecs.of<StopSoundS2CPacket>(
         (value, writer) => {
             Identifier.PACKET_CODEC.encode(value.soundEvent.getId(), writer);
         },

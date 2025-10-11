@@ -21,28 +21,6 @@ export class BallisticCalculator {
         }
     }
 
-    private findTargetUnderCursor(): MobEntity | null {
-        const world = this.owner.getWorld();
-        const mobs = world.getMobs();
-        if (mobs.size === 0) return null;
-
-        const cursorWorldPos = this.owner.input.getPointer;
-        let nearest: MobEntity | null = null;
-        let nearestDist2 = Infinity;
-
-        for (const mob of mobs.values()) {
-            const mobPos = mob.getPositionRef;
-            const dx = mobPos.x - cursorWorldPos.x;
-            const dy = mobPos.y - cursorWorldPos.y;
-            const dist2 = dx * dx + dy * dy;
-            if (dist2 < nearestDist2 && dist2 < 60 * 60) {
-                nearestDist2 = dist2;
-                nearest = mob;
-            }
-        }
-        return nearest;
-    }
-
     public drawAimIndicator(ctx: CanvasRenderingContext2D) {
         const target = this.lockedTarget;
         if (!target || target.isRemoved()) {
@@ -81,5 +59,27 @@ export class BallisticCalculator {
 
     public getTarget() {
         return this.lockedTarget;
+    }
+
+    private findTargetUnderCursor(): MobEntity | null {
+        const world = this.owner.getWorld();
+        const mobs = world.getMobs();
+        if (mobs.size === 0) return null;
+
+        const cursorWorldPos = this.owner.input.getPointer;
+        let nearest: MobEntity | null = null;
+        let nearestDist2 = Infinity;
+
+        for (const mob of mobs.values()) {
+            const mobPos = mob.getPositionRef;
+            const dx = mobPos.x - cursorWorldPos.x;
+            const dy = mobPos.y - cursorWorldPos.y;
+            const dist2 = dx * dx + dy * dy;
+            if (dist2 < nearestDist2 && dist2 < 60 * 60) {
+                nearestDist2 = dist2;
+                nearest = mob;
+            }
+        }
+        return nearest;
     }
 }

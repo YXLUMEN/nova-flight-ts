@@ -1,1 +1,2 @@
-export class IntegratedServer {}
+export class IntegratedServer {
+}

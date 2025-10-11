@@ -10,7 +10,7 @@ import {ItemStack} from "../item/ItemStack.ts";
 import {DataComponentTypes} from "../component/DataComponentTypes.ts";
 import {NovaFlightClient} from "../client/NovaFlightClient.ts";
 
-export function applyTech(id: string): void {
+export function applyClientTech(id: string): void {
     const player = NovaFlightClient.getInstance().player;
     if (!player) return;
 

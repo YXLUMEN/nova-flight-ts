@@ -9,18 +9,13 @@ import {Inventories} from "../../inventory/Inventories.ts";
 export class PlayerInventory implements Inventory {
     public readonly main = DefaultedList.ofSizeAndValue(36, ItemStack.EMPTY);
     public readonly refit = DefaultedList.ofSizeAndValue(6, ItemStack.EMPTY);
-    private readonly combinedInventory: ReadonlyArray<DefaultedList<ItemStack>> = [this.main, this.refit];
-
     public selectedSlot: number = 0;
     public readonly player: PlayerEntity;
+    private readonly combinedInventory: ReadonlyArray<DefaultedList<ItemStack>> = [this.main, this.refit];
     private changeCount: number = 0;
 
     public constructor(player: PlayerEntity) {
         this.player = player;
-    }
-
-    public getCurrentStack(): ItemStack {
-        return PlayerInventory.isValidHotbarIndex(this.selectedSlot) ? this.main.get(this.selectedSlot) : ItemStack.EMPTY;
     }
 
     public static getHotBarSize() {
@@ -29,6 +24,10 @@ export class PlayerInventory implements Inventory {
 
     public static isValidHotbarIndex(slot: number): boolean {
         return slot >= 0 && slot < 9;
+    }
+
+    public getCurrentStack(): ItemStack {
+        return PlayerInventory.isValidHotbarIndex(this.selectedSlot) ? this.main.get(this.selectedSlot) : ItemStack.EMPTY;
     }
 
     // private canStackAddMore(existingStack: ItemStack, stack: ItemStack): boolean {

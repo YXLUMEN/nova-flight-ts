@@ -87,6 +87,15 @@ export class Stage implements NbtSerializable {
         this.loadPhase(index);
     }
 
+    public writeNBT(nbt: NbtCompound): NbtCompound {
+        return nbt.putInt8('StageIndex', this.index);
+    }
+
+    public readNBT(nbt: NbtCompound) {
+        const index = clamp(nbt.getInt8('StageIndex'), 0, this.phases.length);
+        this.loadPhase(index);
+    }
+
     private loadPhase(index: number) {
         this.index = index;
         this.phaseTime = 0;
@@ -97,14 +106,5 @@ export class Stage implements NbtSerializable {
 
     private computeDifficulty(): number {
         return 1;
-    }
-
-    public writeNBT(nbt: NbtCompound): NbtCompound {
-        return nbt.putInt8('StageIndex', this.index);
-    }
-
-    public readNBT(nbt: NbtCompound) {
-        const index = clamp(nbt.getInt8('StageIndex'), 0, this.phases.length);
-        this.loadPhase(index);
     }
 }

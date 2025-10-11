@@ -33,20 +33,6 @@ export class ServerPlayerEntity extends PlayerEntity {
         }
     }
 
-    protected override tickInventory(world: World) {
-        for (const [w, stack] of this.weapons) {
-            if (w instanceof SpecialWeapon) {
-                if (WorldConfig.devMode && w.getCooldown(stack) > 0.5) {
-                    w.setCooldown(stack, 0.5);
-                }
-                if (w.canFire(stack) && this.inputKeys.delete(w.bindKey())) {
-                    w.tryFire(stack, world, this);
-                }
-            }
-            w.inventoryTick(stack, world, this, 0, true);
-        }
-    }
-
     public handlerInput(key: string) {
         switch (key) {
             case 'KeyR':
@@ -58,6 +44,20 @@ export class ServerPlayerEntity extends PlayerEntity {
             default:
                 this.inputKeys.add(key);
                 break;
+        }
+    }
+
+    protected override tickInventory(world: World) {
+        for (const [w, stack] of this.weapons) {
+            if (w instanceof SpecialWeapon) {
+                if (WorldConfig.devMode && w.getCooldown(stack) > 0.5) {
+                    w.setCooldown(stack, 0.5);
+                }
+                if (w.canFire(stack) && this.inputKeys.delete(w.bindKey())) {
+                    w.tryFire(stack, world, this);
+                }
+            }
+            w.inventoryTick(stack, world, this, 0, true);
         }
     }
 }

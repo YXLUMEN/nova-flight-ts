@@ -23,6 +23,6 @@ export class BurningEffect extends StatusEffect {
 
     public override canApplyUpdateEffect(duration: number, _amplifier: number): boolean {
         // 有意为之
-        return duration % 25 === 0;
+        return duration % 10 === 0;
     }
 }

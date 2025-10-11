@@ -26,31 +26,25 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
 
     public invulnerable: boolean = false;
     public velocityDirty: boolean = false;
-
+    public prevX: number = 0;
+    public prevY: number = 0;
+    public prevYaw: number = 0;
+    public age: number = 0;
+    public color = '';
+    public edgeColor = '';
     protected readonly dataTracker: DataTracker;
     private uuid: UUID = crypto.randomUUID();
     private id: number = Entity.CURRENT_ID.incrementAndGet();
     private readonly normalTags: Set<string> = new Set<string>();
-
     private readonly type: EntityType<any>;
     private readonly world: World;
-
     private readonly trackedPosition = new TrackedPosition();
     private readonly pos: MutVec2;
-    public prevX: number = 0;
-    public prevY: number = 0;
-
     private readonly velocity: MutVec2 = MutVec2.zero();
     private movementSpeed: number = 0.2;
     private yaw: number = 0;
-    public prevYaw: number = 0;
-
     private readonly dimensions: EntityDimensions;
     private removed: boolean = false;
-
-    public age: number = 0;
-    public color = '';
-    public edgeColor = '';
 
     protected constructor(type: EntityType<any>, world: World) {
         this.type = type;
@@ -64,6 +58,14 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         const builder = new DataTracker.Builder(this);
         this.initDataTracker(builder);
         this.dataTracker = builder.build();
+    }
+
+    public get getPositionRef(): Readonly<MutVec2> {
+        return this.pos;
+    }
+
+    public get getVelocityRef(): MutVec2 {
+        return this.velocity;
     }
 
     public getType(): EntityType<any> {
@@ -102,7 +104,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         this.world.events.emit(EVENTS.ENTITY_REMOVED, {entity: this});
     }
 
-    public onRemove() {
+    protected onRemove() {
     }
 
     public getNormalTags(): Set<string> {
@@ -155,10 +157,6 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         this.setYaw(yaw);
         this.resetPosition();
         this.setPosition(x, y);
-    }
-
-    public get getPositionRef(): Readonly<MutVec2> {
-        return this.pos;
     }
 
     public getPosition(): Vec2 {
@@ -214,15 +212,6 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         this.setYaw(this.yaw + delta);
     }
 
-    protected lerpPosAndRotation(step: number, x: number, y: number, yaw: number): void {
-        const d = 1 / step;
-        const dx = lerp(d, this.getX(), x);
-        const dy = lerp(d, this.getY(), y);
-        const dYaw = lerp(d, this.getYaw(), yaw);
-        this.pos.set(dx, dy);
-        this.setYaw(dYaw);
-    }
-
     public createSpawnPacket() {
         return EntitySpawnS2CPacket.create(this);
     }
@@ -250,10 +239,6 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
             const ny = y / len;
             this.velocity.add(nx * speed, ny * speed);
         }
-    }
-
-    public get getVelocityRef(): MutVec2 {
-        return this.velocity;
     }
 
     public getVelocity(): Vec2 {
@@ -299,21 +284,6 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
 
     public calculateBoundingBox(): Box {
         return this.dimensions.getBoxAtByVec(this.pos);
-    }
-
-    protected adjustPosition(): boolean {
-        const pos = this.pos;
-        pos.x = clamp(pos.x, 20, World.WORLD_W - 20);
-        pos.y = clamp(pos.y, 20, World.WORLD_H - 20);
-        return true;
-    }
-
-    protected wrapPosition(): boolean {
-        const pos = this.getPositionRef;
-        const W = World.WORLD_W;
-
-        this.setPosition(((pos.x % W) + W) % W, clamp(pos.y, 20, World.WORLD_H - 20));
-        return true;
     }
 
     public shouldWrap(): boolean {
@@ -390,8 +360,6 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         return false;
     }
 
-    protected abstract initDataTracker(builder: InstanceType<typeof DataTracker.Builder>): void;
-
     public getDataTracker(): DataTracker {
         return this.dataTracker;
     }
@@ -447,4 +415,30 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     public abstract onDataTrackerUpdate(entries: DataTrackerSerializedEntry<any>[]): void;
 
     public abstract onTrackedDataSet(data: TrackedData<any>): void;
+
+    protected lerpPosAndRotation(step: number, x: number, y: number, yaw: number): void {
+        const d = 1 / step;
+        const dx = lerp(d, this.getX(), x);
+        const dy = lerp(d, this.getY(), y);
+        const dYaw = lerp(d, this.getYaw(), yaw);
+        this.pos.set(dx, dy);
+        this.setYaw(dYaw);
+    }
+
+    protected adjustPosition(): boolean {
+        const pos = this.pos;
+        pos.x = clamp(pos.x, 20, World.WORLD_W - 20);
+        pos.y = clamp(pos.y, 20, World.WORLD_H - 20);
+        return true;
+    }
+
+    protected wrapPosition(): boolean {
+        const pos = this.getPositionRef;
+        const W = World.WORLD_W;
+
+        this.setPosition(((pos.x % W) + W) % W, clamp(pos.y, 20, World.WORLD_H - 20));
+        return true;
+    }
+
+    protected abstract initDataTracker(builder: InstanceType<typeof DataTracker.Builder>): void;
 }

@@ -7,6 +7,7 @@ import {wrappedDelta} from "../../utils/math/math.ts";
 import {World} from "../../world/World.ts";
 import type {PlayerEntity} from "../player/PlayerEntity.ts";
 import {MobAiS2CPacket} from "../../network/packet/s2c/MobAiS2CPacket.ts";
+import type {Entity} from "../Entity.ts";
 
 export const Behavior = createCleanObj({
     Wander: 0,
@@ -17,14 +18,19 @@ export const Behavior = createCleanObj({
 
 export class MobAI {
     public disable = false;
-    private readonly entity: MobEntity;
     private readonly dir = new MutVec2(1, 0);
     private targetPos = MutVec2.zero();
     private changeTimer = 0;
     private behavior: number = Behavior.Simple;
 
-    public constructor(entity: MobEntity) {
-        this.entity = entity;
+    public static simpleMove(mob: MobEntity) {
+        const speedMultiplier = mob.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        if (speedMultiplier <= 0) return;
+
+        const speed = mob.getMovementSpeed() * speedMultiplier;
+        const vx = Math.sin(mob.age * 0.1) * 0.8 * speedMultiplier;
+
+        mob.updateVelocity(speed, vx, mob.yStep);
     }
 
     public action(mob: MobEntity) {
@@ -95,6 +101,18 @@ export class MobAI {
         mob.updateVelocity(speed, this.dir.x, this.dir.y);
     }
 
+    public setBehavior(entity: Entity, behavior: number): void {
+        this.behavior = behavior;
+
+        const world = entity.getWorld();
+        if (world.isClient) return;
+        world.getNetworkChannel().send(new MobAiS2CPacket(entity.getId(), behavior));
+    }
+
+    public getBehavior(): number {
+        return this.behavior;
+    }
+
     private moveToward(mob: MobEntity, target: IVec, speed: number, wrap = false): void {
         const pos = mob.getPositionRef;
         const dx = wrap ? wrappedDelta(target.x, pos.x, World.WORLD_W) : target.x - pos.x;
@@ -116,27 +134,5 @@ export class MobAI {
         const dx = wrap ? wrappedDelta(target.x, pos.x, World.WORLD_W) : target.x - pos.x;
         const dy = target.y - pos.y;
         mob.setClampYaw(Math.atan2(dy, dx), maxStep);
-    }
-
-    public setBehavior(behavior: number): void {
-        this.behavior = behavior;
-
-        const world = this.entity.getWorld();
-        if (world.isClient) return;
-        world.getNetworkChannel().send(new MobAiS2CPacket(this.entity.getId(), behavior));
-    }
-
-    public getBehavior(): number {
-        return this.behavior;
-    }
-
-    public static simpleMove(mob: MobEntity) {
-        const speedMultiplier = mob.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-        if (speedMultiplier <= 0) return;
-
-        const speed = mob.getMovementSpeed() * speedMultiplier;
-        const vx = Math.sin(mob.age * 0.1) * 0.8 * speedMultiplier;
-
-        mob.updateVelocity(speed, vx, mob.yStep);
     }
 }

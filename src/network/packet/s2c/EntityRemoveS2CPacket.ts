@@ -1,19 +1,20 @@
 import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
-import {PacketCodec} from "../../codec/PacketCodec.ts";
 import type {UUID} from "../../../apis/registry.ts";
+import type {PacketCodec} from "../../codec/PacketCodec.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class EntityRemoveS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityRemoveS2CPacket> = {id: Identifier.ofVanilla('entity_remove')};
-    public static readonly CODEC: PacketCodec<EntityRemoveS2CPacket> = PacketCodec.of(
+    public static readonly CODEC: PacketCodec<EntityRemoveS2CPacket> = PacketCodecs.of(
         (value, writer) => {
-            writer.writeVarInt(value.id);
-            writer.writeString(value.uuid);
+            writer.writeVarUInt(value.id);
+            writer.writeUUID(value.uuid);
         },
         reader => {
             return new EntityRemoveS2CPacket(
-                reader.readVarInt(),
-                reader.readString() as UUID
+                reader.readVarUInt(),
+                reader.readUUID()
             )
         }
     );

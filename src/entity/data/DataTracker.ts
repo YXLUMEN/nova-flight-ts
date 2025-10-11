@@ -82,6 +82,8 @@ export class DataTracker {
         }
     }
 
+    // public copyToFrom<T>(to: DataEntry<T>, from: DataTrackerSerializedEntry<any>) {}
+
     public writeUpdatedEntries(entries: DataTrackerSerializedEntry<any>[]): void {
         for (const serializedEntry of entries) {
             const entry = this.entries[serializedEntry.id];
@@ -91,8 +93,6 @@ export class DataTracker {
 
         this.trackedEntity.onDataTrackerUpdate(entries);
     }
-
-    // public copyToFrom<T>(to: DataEntry<T>, from: DataTrackerSerializedEntry<any>) {}
 
     public getChangedEntries(): DataTrackerSerializedEntry<any>[] | null {
         let list: DataTrackerSerializedEntry<any>[] | null = null;
@@ -148,12 +148,12 @@ export class DataTracker {
                 throw new RangeError(`Unknown serializer type ${this.handler}`);
             }
             writer.writeByte(this.id);
-            writer.writeVarInt(index);
+            writer.writeVarUInt(index);
             this.handler.codec().encode(this.value, writer);
         }
 
         public static read(reader: BinaryReader, id: number): SerializedEntry<any> {
-            const index = reader.readVarInt();
+            const index = reader.readVarUInt();
             const handler = TrackedDataHandlerRegistry.getHandler(index);
             if (handler === null) {
                 throw new RangeError(`Unknown serializer type ${id}`);

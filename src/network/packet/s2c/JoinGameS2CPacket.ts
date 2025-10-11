@@ -1,12 +1,13 @@
 import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
-import {PacketCodec} from "../../codec/PacketCodec.ts";
+import type {PacketCodec} from "../../codec/PacketCodec.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class JoinGameS2CPacket implements Payload {
     public static readonly ID: PayloadId<JoinGameS2CPacket> = {id: Identifier.ofVanilla('join_game')};
-    public static readonly CODEC: PacketCodec<JoinGameS2CPacket> = PacketCodec.of(
-        (value, writer) => writer.writeVarInt(value.playerEntityId),
-        reader => new JoinGameS2CPacket(reader.readVarInt())
+    public static readonly CODEC: PacketCodec<JoinGameS2CPacket> = PacketCodecs.of(
+        (value, writer) => writer.writeVarUInt(value.playerEntityId),
+        reader => new JoinGameS2CPacket(reader.readVarUInt())
     );
 
     public playerEntityId: number;

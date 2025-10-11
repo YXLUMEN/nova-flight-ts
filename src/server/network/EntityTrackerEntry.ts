@@ -11,6 +11,7 @@ import {EntityTrackerUpdateS2CPacket} from "../../network/packet/s2c/EntityTrack
 import {TrackedPosition} from "../../entity/TrackedPosition.ts";
 import {encodeYaw} from "../../utils/NetUtil.ts";
 import {MoveRelative, Rotate, RotateAndMoveRelative} from "../../network/packet/s2c/EntityS2CPacket.ts";
+import {EntityAttributesS2CPacket} from "../../network/packet/s2c/EntityAttributesS2CPacket.ts";
 
 export class EntityTrackerEntry {
     private readonly world: ServerWorld;
@@ -115,6 +116,7 @@ export class EntityTrackerEntry {
         if (this.entity instanceof LivingEntity) {
             const trackedSet = this.entity.getAttributes().getTracked();
             if (trackedSet.size > 0) {
+                this.sendSync(EntityAttributesS2CPacket.create(this.entity.getId(), trackedSet));
             }
         }
     }

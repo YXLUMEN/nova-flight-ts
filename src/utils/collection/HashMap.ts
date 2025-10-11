@@ -1,5 +1,14 @@
 export class HashMap<K extends Comparable, V> implements Map<K, V> {
+    public readonly [Symbol.toStringTag]: string = 'HashMap';
     private readonly buckets: Map<string, Array<{ key: K, value: V }>> = new Map();
+
+    public get size(): number {
+        let count = 0;
+        for (const bucket of this.buckets.values()) {
+            count += bucket.length;
+        }
+        return count;
+    }
 
     public set(key: K, value: V) {
         const hash = key.hashCode();
@@ -52,14 +61,6 @@ export class HashMap<K extends Comparable, V> implements Map<K, V> {
         return false;
     }
 
-    public get size(): number {
-        let count = 0;
-        for (const bucket of this.buckets.values()) {
-            count += bucket.length;
-        }
-        return count;
-    }
-
     public clear(): void {
         this.buckets.clear();
     }
@@ -89,8 +90,6 @@ export class HashMap<K extends Comparable, V> implements Map<K, V> {
             callback(value, key, this);
         }
     }
-
-    public readonly [Symbol.toStringTag]: string = 'HashMap';
 
     public [Symbol.iterator](): MapIterator<[K, V]> {
         return this.entries();

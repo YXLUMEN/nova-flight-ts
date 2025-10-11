@@ -8,21 +8,9 @@ import type {World} from "../world/World.ts";
 type EntityFactory<T extends Entity> = new (...args: any[]) => T;
 
 export class EntityType<T extends Entity> {
-    public static register<T extends Entity>(id: string, type: InstanceType<typeof EntityType.Builder<T>>): EntityType<T> {
-        return Registry.registerReferenceById(Registries.ENTITY_TYPE, Identifier.ofVanilla(id), type.build(id)).getValue();
-    }
-
-    public static getId(type: EntityType<any>) {
-        return Registries.ENTITY_TYPE.getId(type);
-    }
-
-    public static get(id: string) {
-        return Registries.ENTITY_TYPE.getById(Identifier.tryParse(id));
-    }
-
     public static Builder = class Builder<T extends Entity> {
         private readonly factory: EntityFactory<T>;
-        private trackTickInterval =3;
+        private trackTickInterval = 3;
         private dimensions = EntityDimensions.changing(1, 1);
 
         public constructor(factory: EntityFactory<T>) {
@@ -47,6 +35,7 @@ export class EntityType<T extends Entity> {
             return new EntityType(this.factory, this.dimensions, this.trackTickInterval);
         }
     }
+
     private readonly factory: EntityFactory<T>;
     private readonly trackTickInterval: number;
     private readonly dimensions: EntityDimensions;
@@ -55,6 +44,18 @@ export class EntityType<T extends Entity> {
         this.factory = factory;
         this.dimensions = dimensions;
         this.trackTickInterval = trackTickInterval;
+    }
+
+    public static register<T extends Entity>(id: string, type: InstanceType<typeof EntityType.Builder<T>>): EntityType<T> {
+        return Registry.registerReferenceById(Registries.ENTITY_TYPE, Identifier.ofVanilla(id), type.build(id)).getValue();
+    }
+
+    public static getId(type: EntityType<any>) {
+        return Registries.ENTITY_TYPE.getId(type);
+    }
+
+    public static get(id: string) {
+        return Registries.ENTITY_TYPE.getById(Identifier.tryParse(id));
     }
 
     public getDimensions(): EntityDimensions {

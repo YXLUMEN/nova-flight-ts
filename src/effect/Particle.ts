@@ -30,8 +30,8 @@ export class Particle implements IEffect {
         this.drag = drag;
         this.colorTo = colorTo;
         this.colorFrom = colorFrom;
-        this.size = size;
-        this.life = life;
+        this.size = Math.max(0, size);
+        this.life = Math.max(0, life);
     }
 
     public reset(
@@ -43,8 +43,8 @@ export class Particle implements IEffect {
         this.vel.set(vel.x, vel.y);
         this.prevPos.set(pos.x, pos.y);
         this.pos.set(pos.x, pos.y);
-        this.life = life;
-        this.size = size;
+        this.size = Math.max(0, size);
+        this.life = Math.max(0, life);
         this.colorFrom = colorFrom;
         this.colorTo = colorTo;
         this.drag = drag;

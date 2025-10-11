@@ -13,8 +13,6 @@ import type {EntityAttributeModifier} from "../entity/attribute/EntityAttributeM
 import {Identifier} from "../registry/Identifier.ts";
 import type {EntityType} from "../entity/EntityType.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
-import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
-import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {Behavior} from "../entity/ai/MobAI.ts";
 
 function getHealth(value: number): EntityAttributeModifier {
@@ -30,8 +28,8 @@ const spawnAtTop = (
     color = '#ff6b6b'): MobFactory =>
     spawnTopRandomCtor(type, [worth], (m) => {
         m.color = color;
+        m.setMovementSpeed(speed);
         m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(extraHp));
-        m.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, -1, speed), null);
         m.setHealth(m.getMaxHealth());
     });
 

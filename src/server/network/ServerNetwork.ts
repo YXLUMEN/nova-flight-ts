@@ -3,7 +3,6 @@ import {SoundEventS2CPacket} from "../../network/packet/s2c/SoundEventS2CPacket.
 import {StopSoundS2CPacket} from "../../network/packet/s2c/StopSoundS2CPacket.ts";
 import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
-import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 import type {Payload, PayloadId} from "../../network/Payload.ts";
 import {EntityHealthS2CPacket} from "../../network/packet/s2c/EntityHealthS2CPacket.ts";
 import {EntityRemoveS2CPacket} from "../../network/packet/s2c/EntityRemoveS2CPacket.ts";
@@ -16,6 +15,9 @@ import {MoveRelative, Rotate, RotateAndMoveRelative} from "../../network/packet/
 import {ServerReadyS2CPacket} from "../../network/packet/s2c/ServerReadyS2CPacket.ts";
 import {EntityKilledS2CPacket} from "../../network/packet/s2c/EntityKilledS2CPacket.ts";
 import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
+import {ParticleS2CPacket} from "../../network/packet/s2c/ParticleS2CPacket.ts";
+import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
+import {EntityAttributesS2CPacket} from "../../network/packet/s2c/EntityAttributesS2CPacket.ts";
 
 export class ServerNetwork {
     public static registerNetworkPacket() {
@@ -36,6 +38,8 @@ export class ServerNetwork {
         this.register(RotateAndMoveRelative.ID, RotateAndMoveRelative.CODEC);
         this.register(EntityKilledS2CPacket.ID, EntityKilledS2CPacket.CODEC);
         this.register(EntityDamageS2CPacket.ID, EntityDamageS2CPacket.CODEC);
+        this.register(ParticleS2CPacket.ID, ParticleS2CPacket.CODEC);
+        this.register(EntityAttributesS2CPacket.ID, EntityAttributesS2CPacket.CODEC);
     }
 
     private static register<T extends Payload>(payloadId: PayloadId<T>, codec: PacketCodec<T>): void {

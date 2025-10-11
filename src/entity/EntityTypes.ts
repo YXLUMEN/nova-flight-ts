@@ -20,6 +20,7 @@ export class EntityTypes {
     public static readonly BASE_ENEMY = EntityType.register("base_enemy",
         EntityType.Builder.create(BaseEnemy)
             .setDimensions(28, 24)
+            .setTrackingTickInterval(4)
     );
     public static readonly BOSS_ENTITY: EntityType<BossEntity>;
     public static readonly GUN_ENEMY_ENTITY = EntityType.register("gun_enemy",
@@ -56,7 +57,6 @@ export class EntityTypes {
     public static readonly MISSILE_ENTITY = EntityType.register("missile_entity",
         EntityType.Builder.create(MissileEntity)
             .setDimensions(8, 8)
-            .setTrackingTickInterval(2)
     );
     public static readonly ROCKET_ENTITY = EntityType.register("rocket_entity",
         EntityType.Builder.create(RocketEntity)

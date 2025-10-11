@@ -8,6 +8,95 @@ export class NbtCompound {
 
     private entries: Map<string, Nbt> = new Map();
 
+    public static fromBinary(buffer: Uint8Array): NbtCompound | null {
+        const reader = new BinaryReader(buffer);
+
+        const magic = reader.readInt32();
+        if (magic !== NbtCompound.MAGIC) {
+            throw new Error('Invalid magic number');
+        }
+
+        const version = reader.readInt16();
+        if (version !== NbtCompound.VERSION) {
+            console.warn(`Unsupported version: ${version}`);
+            return null;
+        }
+
+        const compound = new NbtCompound();
+
+        while (true) {
+            const type = reader.readByte();
+            if (type === NbtTypes.End) break;
+
+            const key = reader.readString();
+            switch (type) {
+                case NbtTypes.Int8:
+                    compound.putInt8(key, reader.readByte());
+                    break;
+                case NbtTypes.Int16:
+                    compound.putInt16(key, reader.readInt16());
+                    break;
+                case NbtTypes.Int32:
+                    compound.putInt32(key, reader.readInt32());
+                    break;
+                case NbtTypes.Float:
+                    compound.putFloat(key, reader.readFloat());
+                    break;
+                case NbtTypes.Double:
+                    compound.putDouble(key, reader.readDouble());
+                    break;
+                case NbtTypes.Uint:
+                    compound.putUint(key, reader.readUint32());
+                    break;
+                case NbtTypes.String:
+                    compound.putString(key, reader.readString());
+                    break;
+                case NbtTypes.Boolean:
+                    compound.putBoolean(key, reader.readByte() !== 0);
+                    break;
+                case NbtTypes.NumberArray: {
+                    const len = reader.readInt32();
+                    const arr: number[] = new Array(len);
+                    for (let i = 0; i < len; i++) arr[i] = reader.readDouble();
+                    compound.putNumberArray(key, ...arr);
+                    break;
+                }
+                case NbtTypes.StringArray: {
+                    const len = reader.readInt32();
+                    const arr: string[] = new Array(len);
+                    for (let i = 0; i < len; i++) arr[i] = reader.readString();
+                    compound.putStringArray(key, ...arr);
+                    break;
+                }
+                case NbtTypes.Compound: {
+                    const nestedLen = reader.readInt32();
+                    console.assert(reader.bytesRemaining() >= nestedLen, `[NBT] nested length overflow for key "${key}"`);
+                    const nestedBuf = reader.readSlice(nestedLen);
+                    const nested = NbtCompound.fromBinary(nestedBuf);
+                    compound.putCompound(key, nested!);
+                    break;
+                }
+                case NbtTypes.NbtList: {
+                    const count = reader.readInt32();
+                    const list: NbtCompound[] = [];
+                    for (let i = 0; i < count; i++) {
+                        const nestedLen = reader.readInt32();
+                        console.assert(reader.bytesRemaining() >= nestedLen, `[NBT] nested length overflow in list for key "${key}"`);
+                        const nestedBuf = reader.readSlice(nestedLen);
+                        const nested = NbtCompound.fromBinary(nestedBuf);
+                        list.push(nested!);
+                    }
+                    compound.putCompoundList(key, list);
+                    break;
+                }
+                default:
+                    throw new Error(`Unknown NbtType: ${type}`);
+            }
+        }
+
+        return compound;
+    }
+
     public getKeys(): Set<string> {
         return new Set<string>(this.entries.keys());
     }
@@ -228,94 +317,5 @@ export class NbtCompound {
 
         writer.writeByte(NbtTypes.End);
         return writer.toUint8Array();
-    }
-
-    public static fromBinary(buffer: Uint8Array): NbtCompound | null {
-        const reader = new BinaryReader(buffer);
-
-        const magic = reader.readInt32();
-        if (magic !== NbtCompound.MAGIC) {
-            throw new Error('Invalid magic number');
-        }
-
-        const version = reader.readInt16();
-        if (version !== NbtCompound.VERSION) {
-            console.warn(`Unsupported version: ${version}`);
-            return null;
-        }
-
-        const compound = new NbtCompound();
-
-        while (true) {
-            const type = reader.readByte();
-            if (type === NbtTypes.End) break;
-
-            const key = reader.readString();
-            switch (type) {
-                case NbtTypes.Int8:
-                    compound.putInt8(key, reader.readByte());
-                    break;
-                case NbtTypes.Int16:
-                    compound.putInt16(key, reader.readInt16());
-                    break;
-                case NbtTypes.Int32:
-                    compound.putInt32(key, reader.readInt32());
-                    break;
-                case NbtTypes.Float:
-                    compound.putFloat(key, reader.readFloat());
-                    break;
-                case NbtTypes.Double:
-                    compound.putDouble(key, reader.readDouble());
-                    break;
-                case NbtTypes.Uint:
-                    compound.putUint(key, reader.readUint32());
-                    break;
-                case NbtTypes.String:
-                    compound.putString(key, reader.readString());
-                    break;
-                case NbtTypes.Boolean:
-                    compound.putBoolean(key, reader.readByte() !== 0);
-                    break;
-                case NbtTypes.NumberArray: {
-                    const len = reader.readInt32();
-                    const arr: number[] = new Array(len);
-                    for (let i = 0; i < len; i++) arr[i] = reader.readDouble();
-                    compound.putNumberArray(key, ...arr);
-                    break;
-                }
-                case NbtTypes.StringArray: {
-                    const len = reader.readInt32();
-                    const arr: string[] = new Array(len);
-                    for (let i = 0; i < len; i++) arr[i] = reader.readString();
-                    compound.putStringArray(key, ...arr);
-                    break;
-                }
-                case NbtTypes.Compound: {
-                    const nestedLen = reader.readInt32();
-                    console.assert(reader.bytesRemaining() >= nestedLen, `[NBT] nested length overflow for key "${key}"`);
-                    const nestedBuf = reader.readSlice(nestedLen);
-                    const nested = NbtCompound.fromBinary(nestedBuf);
-                    compound.putCompound(key, nested!);
-                    break;
-                }
-                case NbtTypes.NbtList: {
-                    const count = reader.readInt32();
-                    const list: NbtCompound[] = [];
-                    for (let i = 0; i < count; i++) {
-                        const nestedLen = reader.readInt32();
-                        console.assert(reader.bytesRemaining() >= nestedLen, `[NBT] nested length overflow in list for key "${key}"`);
-                        const nestedBuf = reader.readSlice(nestedLen);
-                        const nested = NbtCompound.fromBinary(nestedBuf);
-                        list.push(nested!);
-                    }
-                    compound.putCompoundList(key, list);
-                    break;
-                }
-                default:
-                    throw new Error(`Unknown NbtType: ${type}`);
-            }
-        }
-
-        return compound;
     }
 }

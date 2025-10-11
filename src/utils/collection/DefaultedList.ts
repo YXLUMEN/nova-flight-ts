@@ -2,6 +2,15 @@ export class DefaultedList<E> implements ArrayLike<E>, Iterable<E> {
     private readonly delegate: E[];
     private readonly initialElement: E | null;
 
+    protected constructor(delegate: E[], initialElement: E | null) {
+        this.delegate = delegate;
+        this.initialElement = initialElement;
+    }
+
+    public get length(): number {
+        return this.delegate.length;
+    }
+
     public static of<E>(): DefaultedList<E> {
         return new DefaultedList<E>([], null);
     }
@@ -21,11 +30,6 @@ export class DefaultedList<E> implements ArrayLike<E>, Iterable<E> {
         return new DefaultedList<E>(Array.from(values), defaultValue);
     }
 
-    protected constructor(delegate: E[], initialElement: E | null) {
-        this.delegate = delegate;
-        this.initialElement = initialElement;
-    }
-
     public get(index: number): E {
         return this.delegate[index];
     }
@@ -40,10 +44,6 @@ export class DefaultedList<E> implements ArrayLike<E>, Iterable<E> {
 
     public remove(index: number): void {
         this.delegate.splice(index, 1);
-    }
-
-    public get length(): number {
-        return this.delegate.length;
     }
 
     public clear(): void {
