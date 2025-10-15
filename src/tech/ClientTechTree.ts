@@ -10,6 +10,7 @@ import {type NbtCompound} from "../nbt/NbtCompound.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
 import {NovaFlightClient} from "../client/NovaFlightClient.ts";
 import type {TechTree} from "./TechTree.ts";
+import tech from "./tech-data.json";
 
 type Adjacency = {
     out: Map<string, string[]>; // id -> successors
@@ -38,10 +39,10 @@ export class ClientTechTree implements TechTree {
 
     private selectNodeId: string | null = null;
 
-    public constructor(container: HTMLElement, techs: Tech[]) {
+    public constructor(container: HTMLElement) {
         this.container = container;
 
-        const techState = TechState.normalizeTechs(techs);
+        const techState = TechState.normalizeTechs(tech);
         this.state = new TechState(techState);
         this.adj = this.buildAdjacency(techState);
 
@@ -93,6 +94,10 @@ export class ClientTechTree implements TechTree {
         const tech = this.state.getTech(id);
         if (tech === undefined) return undefined;
         return {...tech};
+    }
+
+    public unlock(id: string): boolean {
+        return this.state.unlock(id);
     }
 
     public isUnlocked(id: string): boolean {
@@ -290,7 +295,7 @@ export class ClientTechTree implements TechTree {
         const score = player.getScore() - cost;
         if (score < 0 && !WorldConfig.devMode) return;
 
-        if (this.state.unlock(id)) {
+        if (this.unlock(id)) {
             player.setScore(score);
             this.applyUnlockUpdates(id);
             world.events.emit(EVENTS.UNLOCK_TECH, {id});

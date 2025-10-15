@@ -18,6 +18,7 @@ import type {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {UUID} from "../apis/registry.ts";
 import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {TrackedPosition} from "./TrackedPosition.ts";
+import type {PlayerEntity} from "./player/PlayerEntity.ts";
 
 
 export abstract class Entity implements DataTracked, Comparable, NbtSerializable {
@@ -114,7 +115,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         return this.normalTags.delete(tag);
     }
 
-    public equals(other: Object): boolean {
+    public equals(other: any): boolean {
         if (other instanceof Entity) {
             return other.id === this.id
         }
@@ -357,7 +358,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         return !this.world.isClient;
     }
 
-    public isPlayer() {
+    public isPlayer(): this is PlayerEntity {
         return false;
     }
 

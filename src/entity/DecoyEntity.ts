@@ -7,6 +7,7 @@ import type {IOwnable} from "./IOwnable.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import {randInt} from "../utils/math/math.ts";
 import type {UUID} from "../apis/registry.ts";
+import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
 
 export class DecoyEntity extends Entity implements IOwnable {
     public static readonly Entities = new Set<DecoyEntity>();
@@ -21,6 +22,8 @@ export class DecoyEntity extends Entity implements IOwnable {
     }
 
     public override tick() {
+        super.tick();
+
         if (this.age >= this.life) {
             this.discard();
             return;
@@ -32,8 +35,8 @@ export class DecoyEntity extends Entity implements IOwnable {
         this.moveByVec(velocity);
         velocity.multiply(0.98);
 
+        const pos = this.getPositionRef;
         if (this.shouldWrap()) {
-            const pos = this.getPositionRef;
             if (pos.y < -20 || pos.y > World.WORLD_H + 20) {
                 this.discard();
                 return;
@@ -42,7 +45,6 @@ export class DecoyEntity extends Entity implements IOwnable {
             return;
         }
 
-        const pos = this.getPositionRef;
         if (pos.x < -20 || pos.x > World.WORLD_W + 20) {
             this.discard();
         }
@@ -69,6 +71,17 @@ export class DecoyEntity extends Entity implements IOwnable {
             this.ownerUuid = entity.getUuid();
             this.owner = entity;
         }
+    }
+
+    public override createSpawnPacket(): EntitySpawnS2CPacket {
+        return EntitySpawnS2CPacket.create(this, this.getOwner()?.getId());
+    }
+
+    public override onSpawnPacket(packet: EntitySpawnS2CPacket) {
+        super.onSpawnPacket(packet);
+        this.setVelocity(packet.velocityX, packet.velocityY);
+        const owner = this.getWorld().getEntityById(packet.entityData);
+        if (owner) this.setOwner(owner);
     }
 
     public override onRemove() {

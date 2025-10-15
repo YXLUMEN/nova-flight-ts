@@ -31,13 +31,17 @@ import {ExplosionS2CPacket} from "../network/packet/s2c/ExplosionS2CPacket.ts";
 import {ServerDefaultEvents} from "./ServerDefaultEvents.ts";
 import type {MutVec2} from "../utils/math/MutVec2.ts";
 import {ParticleS2CPacket} from "../network/packet/s2c/ParticleS2CPacket.ts";
+import {EntityTypes} from "../entity/EntityTypes.ts";
+import {encodeToUnsignedByte} from "../utils/NetUtil.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
 
     public stage: Stage;
 
-    private readonly players = new Map<UUID, ServerPlayerEntity>();
+    private readonly players: Map<UUID, ServerPlayerEntity> = new Map<UUID, ServerPlayerEntity>();
+    private readonly playerData: Map<UUID, NbtCompound> = new Map<UUID, NbtCompound>();
+
     private readonly entities: EntityList = new EntityList();
     private readonly entityManager: ServerEntityManager<Entity>;
     private readonly trackedEntities = new Map<number, EntityTrackerEntry>();
@@ -138,7 +142,15 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public spawnPlayer(player: ServerPlayerEntity): void {
-        this.players.set(player.getUuid(), player);
+        const playerUUID: UUID = player.getUuid();
+
+        if (this.playerData.has(playerUUID)) {
+            const nbt = this.playerData.get(playerUUID);
+            if (nbt) player.readNBT(nbt);
+            this.playerData.delete(playerUUID);
+        }
+
+        this.players.set(playerUUID, player);
         this.entityManager.addEntity(player);
     }
 
@@ -218,7 +230,8 @@ export class ServerWorld extends World implements NbtSerializable {
     public override createExplosion(entity: Entity | null, damage: DamageSource | null, x: number, y: number, opts: ExpendExplosionOpts): Explosion {
         const explosion = super.createExplosion(entity, damage, x, y, opts);
 
-        this.getNetworkChannel().send(new ExplosionS2CPacket(x, y, opts.explosionRadius ?? 64));
+        const shack = encodeToUnsignedByte(opts.shake ?? 0, 1);
+        this.getNetworkChannel().send(new ExplosionS2CPacket(x, y, opts.explosionRadius ?? 64, shack));
         return explosion;
     }
 
@@ -238,6 +251,9 @@ export class ServerWorld extends World implements NbtSerializable {
         this.getNetworkChannel().send(ParticleS2CPacket.create(
             pos.x, pos.y, offsetX, offsetY, count, speed, life, size, colorFrom, colorTo
         ));
+    }
+
+    public override addImportantParticle() {
     }
 
     public override addParticleByVec(): void {
@@ -279,6 +295,8 @@ export class ServerWorld extends World implements NbtSerializable {
     public readNBT(nbt: NbtCompound) {
         const entityNbt = nbt.getCompoundList('Entities');
         if (entityNbt) this.loadEntity(entityNbt);
+        // TODO
+        setTimeout(() => this.playerData.clear(), 20000);
 
         const stageNbt = nbt.getCompound('Stage');
         if (stageNbt) this.stage.readNBT(stageNbt);
@@ -288,12 +306,29 @@ export class ServerWorld extends World implements NbtSerializable {
         for (const nbt of nbtList) {
             const typeName = nbt.getString('Type');
             const entityType = EntityType.get(typeName);
+
             if (!entityType) continue;
+            if (entityType === EntityTypes.PLAYER) {
+                const uuid = nbt.getString('UUID') as UUID;
+                this.playerData.set(uuid, nbt);
+                continue;
+            }
 
             const entity = entityType.create(this) as Entity;
             entity.readNBT(nbt);
             this.spawnEntity(entity);
         }
+    }
+
+    public override clear(): void {
+        super.clear();
+
+        this.players.forEach(player => player.discard());
+        this.playerData.clear();
+        this.entities.forEach(entity => entity.discard());
+        this.entities.clear();
+        this.trackedEntities.clear();
+        this.entityManager.clear();
     }
 
     public saveAll(): NbtCompound {

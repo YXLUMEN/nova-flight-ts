@@ -66,7 +66,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
 
         world.spawnParticle(
             this.getPositionRef.x, this.getPositionRef.y,
-            1, 1, 4, rand(120, 240),
+            1, 1, 4, rand(80, 100),
             rand(0.6, 0.8), rand(4, 6),
             "#ffaa33", "#ff5454"
         );
@@ -100,7 +100,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         super.writeNBT(nbt);
         nbt.putUint('Worth', this.worth);
         nbt.putString('Color', this.color);
-        nbt.putInt8('AiBehavior', this.AI.getBehavior());
+        nbt.putByte('AiBehavior', this.AI.getBehavior());
         nbt.putUint('Age', this.age);
 
         return nbt;
@@ -110,16 +110,12 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         super.readNBT(nbt);
         this.worth = nbt.getUint('Worth', 1);
         this.color = nbt.getString('Color', this.color);
-        this.AI.setBehavior(this, nbt.getInt8('AiBehavior', 0));
+        this.AI.setBehavior(this, nbt.getByte('AiBehavior', 0));
         this.age = nbt.getUint('Age', 0);
     }
 
     public isRangedAttacker(): boolean {
         return false;
-    }
-
-    public canMoveVoluntarily(): boolean {
-        return super.canMoveVoluntarily() && !this.AI.disable;
     }
 
     public onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {

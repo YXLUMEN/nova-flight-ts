@@ -1,15 +1,15 @@
 import type {Payload, PayloadId} from "../../Payload.ts";
-import {PacketCodecUtil} from "../../codec/PacketCodecUtil.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import {decodeYaw, encodeYaw} from "../../../utils/NetUtil.ts";
 
 export abstract class EntityS2CPacket implements Payload {
     public readonly entityId: number;
     public readonly deltaX: number;
     public readonly deltaY: number;
-    public readonly yaw: number;
+    private readonly yawByte: number;
     public readonly rotate: boolean;
     public readonly positionChanged: boolean;
 
@@ -17,12 +17,16 @@ export abstract class EntityS2CPacket implements Payload {
         this.entityId = entityId;
         this.deltaX = deltaX;
         this.deltaY = deltaY;
-        this.yaw = yaw;
+        this.yawByte = encodeYaw(yaw);
         this.rotate = rotate;
         this.positionChanged = positionChanged;
     }
 
     abstract getId(): PayloadId<any>;
+
+    public get yaw() {
+        return decodeYaw(this.yawByte);
+    }
 }
 
 export class MoveRelative extends EntityS2CPacket {
@@ -54,13 +58,13 @@ export class MoveRelative extends EntityS2CPacket {
 
 export class Rotate extends EntityS2CPacket {
     public static readonly ID: PayloadId<Rotate> = {id: Identifier.ofVanilla('entity_move_rotate')};
-    public static readonly CODEC = PacketCodecUtil.of(this.write, this.read);
+    public static readonly CODEC = PacketCodecs.of(this.write, this.read);
 
     public constructor(entityId: number, yaw: number) {
         super(entityId, 0, 0, yaw, true, false);
     }
 
-    private static write(value: EntityS2CPacket, writer: BinaryWriter): void {
+    private static write(writer: BinaryWriter, value: EntityS2CPacket,): void {
         writer.writeVarUInt(value.entityId);
         writer.writeByte(value.yaw);
     }
@@ -79,13 +83,13 @@ export class Rotate extends EntityS2CPacket {
 
 export class RotateAndMoveRelative extends EntityS2CPacket {
     public static readonly ID: PayloadId<Rotate> = {id: Identifier.ofVanilla('entity_move_pos_rotate')};
-    public static readonly CODEC = PacketCodecUtil.of(this.write, this.read);
+    public static readonly CODEC = PacketCodecs.of(this.write, this.read);
 
     public constructor(entityId: number, deltaX: number, deltaY: number, yaw: number) {
         super(entityId, deltaX, deltaY, yaw, true, true);
     }
 
-    private static write(value: EntityS2CPacket, writer: BinaryWriter): void {
+    private static write(writer: BinaryWriter, value: EntityS2CPacket): void {
         writer.writeVarUInt(value.entityId);
         writer.writeInt16(value.deltaX);
         writer.writeInt16(value.deltaY);
@@ -97,7 +101,7 @@ export class RotateAndMoveRelative extends EntityS2CPacket {
             reader.readVarUInt(),
             reader.readInt16(),
             reader.readInt16(),
-            reader.readUnsignByte()
+            reader.readByte()
         )
     }
 

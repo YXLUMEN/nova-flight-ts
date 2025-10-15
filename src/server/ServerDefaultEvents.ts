@@ -35,10 +35,10 @@ export class ServerDefaultEvents {
                     const effect = mob.getStatusEffect(StatusEffects.BURNING);
                     if (effect) {
                         const amplifier = Math.min(10, effect.getAmplifier() + 1);
-                        mob.addStatusEffect(new StatusEffectInstance(StatusEffects.BURNING, 400, amplifier), null);
+                        mob.addStatusEffect(new StatusEffectInstance(StatusEffects.BURNING, 400, amplifier), attacker);
                     }
                 }
-                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.BURNING, 400, 1), null);
+                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.BURNING, 400, 1), attacker);
             }
         });
 

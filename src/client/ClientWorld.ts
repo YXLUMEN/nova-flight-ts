@@ -17,9 +17,9 @@ import {AudioManager} from "../sound/AudioManager.ts";
 import {EntityRenderers} from "./render/entity/EntityRenderers.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {ClientPlayerEntity} from "./entity/ClientPlayerEntity.ts";
-import {HALF_PI} from "../utils/math/math.ts";
+import {HALF_PI, lerp} from "../utils/math/math.ts";
 import type {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
-import {StringPacket} from "../network/packet/StringPacket.ts";
+import {DebugStringPacket} from "../network/packet/DebugStringPacket.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
@@ -27,6 +27,7 @@ import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
 import type {Explosion} from "../world/Explosion.ts";
 import type {IVec} from "../utils/math/IVec.ts";
+import {Particle} from "../effect/Particle.ts";
 
 export class ClientWorld extends World {
     private readonly client: NovaFlightClient = NovaFlightClient.getInstance();
@@ -181,6 +182,20 @@ export class ClientWorld extends World {
         );
     }
 
+    public override addImportantParticle(
+        posX: number, posY: number, velX: number, velY: number,
+        life: number, size: number,
+        colorFrom: string, colorTo: string,
+        drag = 0.0, gravity = 0.0
+    ) {
+        this.addEffect(new Particle(
+            new MutVec2(posX, posY), new MutVec2(velX, velY),
+            life, size,
+            colorFrom, colorTo,
+            drag, gravity
+        ));
+    }
+
     public override addEffect(effect: IEffect) {
         this.effects.push(effect);
     }
@@ -215,9 +230,13 @@ export class ClientWorld extends World {
 
         this.starField.render(ctx, this.client.window.camera);
 
-        ctx.save();
         const offset = this.client.window.camera.viewOffset;
-        ctx.translate(-offset.x, -offset.y);
+        const lastOffset = this.client.window.camera.lastViewOffset;
+        const ox = lerp(tickDelta, lastOffset.x, offset.x);
+        const oy = lerp(tickDelta, lastOffset.y, offset.y);
+
+        ctx.save();
+        ctx.translate(-ox, -oy);
 
         // 背景层
         this.drawBackground(ctx);
@@ -245,10 +264,18 @@ export class ClientWorld extends World {
             EntityRenderers.getRenderer(player).render(player, ctx, tickDelta, 0, 0);
 
             if (player.lockedMissile.size > 0) {
-                for (const missile of player.missilePos) {
+                const posRef = player.getLerpPos(tickDelta);
+                for (const missile of player.lockedMissile) {
+                    const mPos = missile.getLerpPos(tickDelta);
+                    const dx = mPos.x - posRef.x;
+                    const dy = mPos.y - posRef.y;
+                    const angle = Math.atan2(dy, dx);
+                    const arrowX = posRef.x + Math.cos(angle) * 64;
+                    const arrowY = posRef.y + Math.sin(angle) * 64;
+
                     ctx.save();
-                    ctx.translate(missile.x, missile.y);
-                    ctx.rotate(missile.angle + HALF_PI);
+                    ctx.translate(arrowX, arrowY);
+                    ctx.rotate(angle + HALF_PI);
                     ctx.beginPath();
                     ctx.moveTo(0, -10);
                     ctx.lineTo(6, 8);
@@ -261,9 +288,10 @@ export class ClientWorld extends World {
             }
         }
 
+        this.client.window.hud.drawPrimaryWeapons(ctx, tickDelta);
         ctx.restore();
 
-        this.client.window.hud.render(ctx, tickDelta);
+        this.client.window.hud.render(ctx);
         this.client.window.notify.render(ctx);
         if (!this.ticking) this.client.window.pauseOverlay.render(ctx);
     }
@@ -330,12 +358,22 @@ export class ClientWorld extends World {
         ctx.restore();
     }
 
+    public override clear() {
+        super.clear();
+
+        this.effects.forEach(effect => effect.kill());
+        this.players.forEach(player => player.discard());
+        this.entities.forEach(entity => entity.discard());
+        this.entities.clear();
+        this.entityManager.clear();
+    }
+
     public saveAll() {
-        this.getNetworkChannel().send(new StringPacket('SaveAll'));
+        this.getNetworkChannel().send(new DebugStringPacket('SaveAll'));
     }
 
     public stopServer() {
-        this.getNetworkChannel().send(new StringPacket('StopServer'));
+        this.getNetworkChannel().send(new DebugStringPacket('StopServer'));
     }
 
     public readonly ClientEntityHandler: EntityHandler<Entity> = {

@@ -14,7 +14,7 @@ export class ParticleS2CPacket implements Payload {
     public readonly posY: number;
     private readonly offsetXInt16: number;
     private readonly offsetYInt16: number;
-    private readonly speedInt16: number
+    public readonly speed: number
     public readonly count: number;
 
     private readonly lifeByte: number;
@@ -28,7 +28,7 @@ export class ParticleS2CPacket implements Payload {
         this.offsetXInt16 = offsetXInt16;
         this.offsetYInt16 = offsetYInt16;
         this.count = count;
-        this.speedInt16 = speedInt16;
+        this.speed = speedInt16;
 
         this.lifeByte = life;
         this.sizeInt16 = size;
@@ -43,7 +43,7 @@ export class ParticleS2CPacket implements Payload {
             encodeToInt16(offsetX),
             encodeToInt16(offsetY),
             count,
-            encodeToInt16(speed),
+            speed,
             encodeToUnsignedByte(life),
             encodeToInt16(size),
             colorFrom,
@@ -59,7 +59,7 @@ export class ParticleS2CPacket implements Payload {
         const offsetYInt16 = reader.readInt16();
 
         const count = reader.readUnsignByte();
-        const speed = reader.readInt16();
+        const speed = reader.readFloat();
 
         const life = reader.readUnsignByte();
         const size = reader.readInt16();
@@ -74,7 +74,7 @@ export class ParticleS2CPacket implements Payload {
         writer.writeInt16(value.offsetXInt16);
         writer.writeInt16(value.offsetYInt16);
         writer.writeByte(value.count);
-        writer.writeInt16(value.speedInt16);
+        writer.writeFloat(value.speed);
         writer.writeByte(value.lifeByte);
         writer.writeInt16(value.sizeInt16);
         writer.writeString(value.colorFrom);
@@ -91,10 +91,6 @@ export class ParticleS2CPacket implements Payload {
 
     public get offsetY() {
         return decodeFromInt16(this.offsetYInt16);
-    }
-
-    public get speed() {
-        return decodeFromInt16(this.speedInt16);
     }
 
     public get life() {

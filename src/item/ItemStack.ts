@@ -48,7 +48,7 @@ export class ItemStack {
         const type = Registries.ITEM.getEntryById(id);
         if (!type) return null;
 
-        const counts = nbt.getInt8('counts');
+        const counts = nbt.getByte('counts');
 
         let compounds: ComponentMap | null = null;
         const compoundsNbt = nbt.getCompound('compounds');
@@ -223,7 +223,7 @@ export class ItemStack {
     public toNbt(): NbtCompound {
         const nbt = new NbtCompound();
         nbt.putString('type', this.getItem().getRegistryEntry().getRegistryKey().getValue().toString());
-        nbt.putInt8('counts', this.getCount());
+        nbt.putByte('counts', this.getCount());
         nbt.putCompound('compounds', this.components.toNbt());
 
         return nbt

@@ -27,6 +27,11 @@ export class UUIDUtil {
         return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
     }
 
+    public static isValidUUID(uuid: string): uuid is UUID {
+        const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
+        return uuidRegex.test(uuid);
+    }
+
     public static nil(): Uint8Array {
         return new Uint8Array(16);
     }

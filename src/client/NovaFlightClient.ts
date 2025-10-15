@@ -1,6 +1,6 @@
 import {KeyboardInput} from "./input/KeyboardInput.ts";
 import {Window} from "./render/Window.ts";
-import {WorldConfig} from "../configs/WorldConfig.ts";
+import {isDev, WorldConfig} from "../configs/WorldConfig.ts";
 import {mainWindow} from "../main.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
 import {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
@@ -16,6 +16,12 @@ import {DataLoader} from "../DataLoader.ts";
 import {check} from "@tauri-apps/plugin-updater";
 import {StartScreen} from "./render/ui/StartScreen.ts";
 import {ClientPlayNetworkHandler} from "./network/ClientPlayNetworkHandler.ts";
+import {RequestPositionC2SPacket} from "../network/packet/c2s/RequestPositionC2SPacket.ts";
+import {NbtCompound} from "../nbt/NbtCompound.ts";
+import {BaseDirectory, exists, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs";
+import {NovaFlightServer} from "../server/NovaFlightServer.ts";
+import {error} from "@tauri-apps/plugin-log";
+import {UUIDUtil} from "../utils/UUIDUtil.ts";
 
 export class NovaFlightClient {
     private static instance: NovaFlightClient;
@@ -36,21 +42,28 @@ export class NovaFlightClient {
     private last = 0;
     private accumulator = 0;
 
-    private waitStop!: Promise<void> | null;
-    private onStop!: () => void;
+    private waitWorldStop: Promise<void> | null = null;
+    private onWorldStop!: () => void;
     private bindRender = this.render.bind(this);
 
     public constructor() {
         NovaFlightClient.instance = this;
 
-        this.clientId = crypto.randomUUID();
+        const clientId = localStorage.getItem("clientId");
+        if (clientId && UUIDUtil.isValidUUID(clientId)) {
+            this.clientId = clientId;
+        } else {
+            alert('ID 不合法或不存在,将重新生成');
+            this.clientId = crypto.randomUUID();
+            localStorage.setItem('clientId', this.clientId);
+        }
         this.registryManager = new RegistryManager();
 
         this.window = new Window();
         this.input = new KeyboardInput(this.window.canvas);
 
         this.networkChannel = new ClientNetworkChannel(
-            new WebSocket("ws://localhost:25566"),
+            new WebSocket('ws://localhost:25566'),
             this.clientId
         );
         ClientReceive.registryNetworkHandler(this.networkChannel);
@@ -65,14 +78,18 @@ export class NovaFlightClient {
     }
 
     public async startClient() {
-        if (this.waitStop === null) this.createPromise();
-
         this.window.resize();
         await this.initResources();
+        if (!isDev) await mainWindow.setFullscreen(true);
+
+        this.networkHandler = new ClientPlayNetworkHandler(this);
 
         while (true) {
+            if (this.waitWorldStop === null) this.createPromise();
+            this.networkHandler.registryHandler();
+
             const startScreen = new StartScreen(this.window.ctx, {
-                title: 'Nova Flight (25w07a)',
+                title: `Nova Flight (${WorldConfig.version})`,
                 subtitle: '按 任意键 或 点击按钮 开始',
             });
             startScreen.setSize(Window.VIEW_W, Window.VIEW_H);
@@ -84,27 +101,14 @@ export class NovaFlightClient {
                 this.startIntegratedServer(action);
             }
 
-            await this.waitStop;
+            await this.waitWorldStop;
+            this.networkHandler.clear();
         }
+
+        this.networkHandler.clear();
+        this.networkHandler = null;
         this.networkChannel.disconnect();
-    }
-
-    public startIntegratedServer(action: number) {
-        this.networkHandler = new ClientPlayNetworkHandler(this);
-        this.networkHandler.registryHandler();
-
-        this.server = new Worker(new URL('../worker/server.worker.ts', import.meta.url), {
-            type: 'module',
-            name: 'server',
-        });
-        this.server.postMessage({type: "start", payload: {action}});
-        this.server.onmessage = event => {
-            console.log("Worker:", event.data);
-        };
-        this.server.onerror = error => {
-            console.error("Worker:", error);
-            this.onStop();
-        }
+        this.scheduleStop();
     }
 
     public joinGame(world: ClientWorld) {
@@ -114,9 +118,10 @@ export class NovaFlightClient {
 
     private render(ts: number) {
         try {
-            const world = this.world!;
+            const world = this.world;
+            if (!world) return;
             if (!this.running) {
-                this.onStop();
+                this.onWorldStop();
                 return;
             }
 
@@ -125,21 +130,21 @@ export class NovaFlightClient {
             this.accumulator += tickDelta;
 
             while (this.accumulator >= WorldConfig.mbps) {
-                this.tick(WorldConfig.mbps);
+                this.tickWorld(WorldConfig.mbps);
                 this.accumulator -= WorldConfig.mbps;
             }
 
             const alpha = world.isTicking ? this.accumulator / WorldConfig.mbps : 1;
             world.render(alpha);
             requestAnimationFrame(this.bindRender);
-        } catch (error) {
-            console.error(`Runtime error: ${error}`);
-            console.error(error);
-            this.onStop();
+        } catch (err) {
+            console.error(`Client runtime error: ${err}`);
+            error(String(err)).catch(err => console.error(err));
+            this.onWorldStop();
         }
     }
 
-    private tick(dt: number) {
+    private tickWorld(dt: number) {
         if (this.world && this.world.isTicking) {
             this.world.tick(dt);
         }
@@ -148,129 +153,97 @@ export class NovaFlightClient {
         this.input.updateEndFrame();
     }
 
-    public async initResources(): Promise<void> {
-        const loadingScreen = new LoadingScreen(this.window.ctx);
-        loadingScreen.setSize(Window.VIEW_W, Window.VIEW_H);
-        loadingScreen.loop();
+    private createPromise(): void {
+        const {promise, resolve} = Promise.withResolvers<void>();
+        this.waitWorldStop = promise;
+        this.onWorldStop = () => {
+            if (!this.waitWorldStop) return;
 
-        await this.update(loadingScreen);
-
-        loadingScreen.setProgress(0.2, '注册资源');
-        const manager = this.registryManager;
-        await manager.registerAll();
-        // await sleep(400);
-
-        loadingScreen.setProgress(0.4, '初始化渲染器');
-        EntityRenderers.registryRenders();
-        // await sleep(400);
-
-        loadingScreen.setProgress(0.6, '加载数据');
-        await DataLoader.init(manager);
-        // await sleep(300);
-
-        loadingScreen.setProgress(0.8, '冻结资源');
-        manager.frozen();
-        // await sleep(400);
-
-        loadingScreen.setProgress(1, '创建世界');
-        // await sleep(400);
-        await loadingScreen.setDone();
+            resolve();
+            this.clearWorld();
+            this.last = 0;
+            this.accumulator = 0;
+            this.server?.postMessage({type: 'stop_server'});
+            this.waitWorldStop = null;
+        };
     }
 
-    private registryInput(event: KeyboardEvent): void {
-        const code = event.code;
+    public startIntegratedServer(action: number) {
+        if (this.server) return;
+
+        this.server = new Worker(new URL('../worker/dev.worker.ts', import.meta.url), {
+            type: 'module',
+            name: 'server',
+        });
+
+        this.server.postMessage({type: 'start_server', payload: {action}});
+
+        this.server.onmessage = async (event) => {
+            const {type, payload} = event.data;
+
+            if (type === 'save_game') {
+                return this.saveGame(payload);
+            }
+            if (type === 'load_save') {
+                const nbt = await this.loadSave();
+                if (!nbt) return;
+                this.server!.postMessage({type: 'loaded_save_data', data: nbt.toBinary()});
+                return;
+            }
+            if (type === 'server_shutdown') {
+                this.onWorldStop();
+                return;
+            }
+            if (type === 'stopped') {
+                if (!this.server) return;
+                this.server.terminate();
+                this.server = null;
+                return;
+            }
+        };
+
+        this.server.onerror = async err => {
+            console.error('Server Thread:', err);
+
+            let stack = '';
+            if (err.error instanceof Error) {
+                stack = err.error.stack ?? '';
+            }
+            await error(`${err.type}: ${err.message} at ${stack}`);
+            this.onWorldStop();
+        }
+    }
+
+    private clearWorld() {
         const world = this.world;
         if (!world) return;
 
-        if (event.ctrlKey) {
-            if (code === 'KeyV') {
-                WorldConfig.devMode = !WorldConfig.devMode;
-                WorldConfig.usedDevMode = true;
-                this.server?.postMessage({type: 'switch_dev_mode'});
-            }
-            if (WorldConfig.devMode) this.devMode(code, world);
-            return;
-        }
+        world.close();
+        this.world = null;
+        this.player = null;
+    }
 
-        switch (code) {
-            case 'F11':
-                mainWindow.isFullscreen()
-                    .then(isFull => mainWindow.setFullscreen(!isFull))
-                    .catch(console.error);
-                break;
-            case 'KeyT':
-                WorldConfig.autoShoot = !WorldConfig.autoShoot;
-                break;
-            case 'Escape': {
-                const techTree = document.getElementById('tech-shell')!;
-                if (!techTree.classList.contains('hidden')) {
-                    world.toggleTechTree();
-                    return;
-                }
-                world.togglePause();
-                break;
-            }
-            case 'KeyG':
-                world.toggleTechTree();
-                break;
-            case 'KeyM':
-                document.getElementById('help')?.classList.toggle('hidden');
-                world.setTicking(false);
-                break;
+    private async saveGame(buffer: Uint8Array): Promise<void> {
+        try {
+            await mkdir('saves', {baseDir: BaseDirectory.Resource, recursive: true});
+            await writeFile(NovaFlightServer.SAVE_PATH, buffer, {baseDir: BaseDirectory.Resource});
+        } catch (err) {
+            console.error(err);
         }
     }
 
-    private devMode(code: string, world: ClientWorld): void {
-        const player = this.player;
-        if (!player) return;
-        this.server?.postMessage({type: 'dev_mode', payload: {code}});
-        switch (code) {
-            case 'KeyK':
-                player.addPhaseScore(200);
-                break;
-            case 'KeyH':
-                player.setHealth(player.getMaxHealth());
-                break;
-            case 'KeyO':
-                player.techTree.unlockAll();
-                break;
-            case 'KeyF':
-                world.freeze = !world.freeze;
-                break;
-            case 'NumpadSubtract': {
-                WorldConfig.enableCameraOffset = !WorldConfig.enableCameraOffset;
-                this.window.camera.cameraOffset.set(0, 0);
-                break;
-            }
-            case 'NumpadAdd': {
-                BGMManager.next();
-                break;
-            }
-            case 'KeyP':
-                localStorage.removeItem('guided');
-                break;
+    private async loadSave(): Promise<NbtCompound | null> {
+        try {
+            const available = await exists(NovaFlightServer.SAVE_PATH, {baseDir: BaseDirectory.Resource});
+            if (!available) return null;
+
+            const bytes = await readFile(NovaFlightServer.SAVE_PATH, {baseDir: BaseDirectory.Resource});
+            if (!bytes || bytes.length === 0) return null;
+            return NbtCompound.fromBinary(bytes);
+        } catch (err) {
+            console.error(err);
+            return null;
         }
-    }
-
-    private registryListener(): void {
-        mainWindow.listen('tauri://blur', () => {
-            this.world?.setTicking(false);
-        }).catch(console.error);
-
-        mainWindow.listen('tauri://resize', async () => {
-            const world = this.world;
-            if (!world) return;
-            world.rendering = !await mainWindow.isMinimized();
-        }).catch(console.error);
-
-        window.addEventListener('resize', () => this.window.resize());
-
-        this.window.canvas.addEventListener('click', event => {
-            const world = this.world;
-            if (world && !world.isTicking) {
-                this.window.pauseOverlay.handleClick(event.offsetX, event.offsetY);
-            }
-        });
     }
 
     public getServer(): Worker | null {
@@ -289,14 +262,32 @@ export class NovaFlightClient {
         return this.instance;
     }
 
-    private createPromise(): void {
-        const {promise, resolve} = Promise.withResolvers<void>();
-        this.waitStop = promise;
-        this.onStop = () => {
-            resolve();
-            this.server?.postMessage({type: 'stop'});
-            this.waitStop = null;
-        };
+    public async initResources(): Promise<void> {
+        const loadingScreen = new LoadingScreen(this.window.ctx);
+        loadingScreen.setSize(Window.VIEW_W, Window.VIEW_H);
+        loadingScreen.loop();
+
+        await this.update(loadingScreen);
+
+        loadingScreen.setProgress(0.2, '注册资源');
+        const manager = this.registryManager;
+        await manager.registerAll();
+        await sleep(200);
+
+        loadingScreen.setProgress(0.4, '初始化渲染器');
+        EntityRenderers.registryRenders();
+        await sleep(200);
+
+        loadingScreen.setProgress(0.6, '加载数据');
+        await DataLoader.init(manager);
+
+        loadingScreen.setProgress(0.8, '冻结资源');
+        manager.frozen();
+        await sleep(200);
+
+        loadingScreen.setProgress(1, '创建世界');
+        await sleep(200);
+        await loadingScreen.setDone();
     }
 
     private async update(loadingScreen: LoadingScreen): Promise<void> {
@@ -330,5 +321,107 @@ export class NovaFlightClient {
             loadingScreen.setProgress(0, '下载失败');
             await sleep(300);
         }
+    }
+
+    private registryInput(event: KeyboardEvent): void {
+        const code = event.code;
+        const world = this.world;
+
+        if (event.ctrlKey) {
+            if (code === 'KeyV') {
+                WorldConfig.devMode = !WorldConfig.devMode;
+                WorldConfig.usedDevMode = true;
+                this.server?.postMessage({type: 'switch_dev_mode'});
+            }
+            if (WorldConfig.devMode && world) this.devMode(code, world);
+            return;
+        }
+
+        switch (code) {
+            case 'F11':
+                mainWindow.isFullscreen()
+                    .then(isFull => mainWindow.setFullscreen(!isFull))
+                    .catch(console.error);
+                break;
+            case 'KeyT':
+                WorldConfig.autoShoot = !WorldConfig.autoShoot;
+                break;
+            case 'Escape': {
+                const techTree = document.getElementById('tech-shell')!;
+                if (!techTree.classList.contains('hidden')) {
+                    world?.toggleTechTree();
+                    return;
+                }
+                world?.togglePause();
+                break;
+            }
+            case 'KeyG':
+                world?.toggleTechTree();
+                break;
+            case 'KeyM':
+                document.getElementById('help')?.classList.toggle('hidden');
+                world?.setTicking(false);
+                break;
+        }
+    }
+
+    private devMode(code: string, world: ClientWorld): void {
+        const player = this.player;
+        if (!player) return;
+        this.server?.postMessage({type: 'dev_mode', payload: {code}});
+        switch (code) {
+            case 'KeyK':
+                player.addPhaseScore(200);
+                break;
+            case 'KeyH':
+                player.setHealth(player.getMaxHealth());
+                break;
+            case 'KeyO':
+                player.techTree.unlockAll();
+                break;
+            case 'KeyF':
+                world.freeze = !world.freeze;
+                break;
+            case 'NumpadSubtract': {
+                WorldConfig.enableCameraOffset = !WorldConfig.enableCameraOffset;
+                this.window.camera.cameraOffset.set(0, 0);
+                break;
+            }
+            case 'NumpadAdd': {
+                BGMManager.next();
+                break;
+            }
+            case 'KeyP':
+                localStorage.removeItem('guided');
+                break;
+            case 'F8':
+                this.server?.postMessage({type: 'crash_the_server'});
+                break;
+        }
+    }
+
+    private registryListener(): void {
+        mainWindow.listen('tauri://blur', () => {
+            this.world?.setTicking(false);
+        }).catch(console.error);
+
+        mainWindow.listen('tauri://resize', async () => {
+            const world = this.world;
+            if (!world) return;
+            world.rendering = !await mainWindow.isMinimized();
+        }).catch(console.error);
+
+        window.addEventListener('resize', () => {
+            this.window.resize();
+            if (!this.player) return;
+            this.networkChannel.send(new RequestPositionC2SPacket(this.player.getUuid()));
+        });
+
+        this.window.canvas.addEventListener('click', event => {
+            const world = this.world;
+            if (world && !world.isTicking) {
+                this.window.pauseOverlay.handleClick(event.offsetX, event.offsetY);
+            }
+        });
     }
 }

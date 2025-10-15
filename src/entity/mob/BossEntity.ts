@@ -85,9 +85,8 @@ export class BossEntity extends MobEntity {
 
             const driftAngle = yaw + side * (HALF_PI + (Math.random() - 0.5) * 0.2);
 
-            const missile = new MobMissileEntity(EntityTypes.MISSILE_ENTITY, world, this, driftAngle);
+            const missile = new MobMissileEntity(EntityTypes.MOB_MISSILE_ENTITY, world, this, driftAngle);
             missile.color = '#ff7777';
-            missile.setMaxLifeTick(400);
             missile.setPosition(pos.x, pos.y);
             missile.setYaw(yaw);
             world.spawnEntity(missile);

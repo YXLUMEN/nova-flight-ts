@@ -82,12 +82,16 @@ export abstract class PlayerEntity extends LivingEntity {
         if (this.age - this.lastDamageTime < 50) return false;
         this.lastDamageTime = this.age;
 
+        const raw = Math.pow(damage * 0.3, 0.8);
+        const shake = clamp(raw, 0.4, 0.9);
+
         const world = this.getWorld();
         world.createExplosion(this, null, this.getX(), this.getY(), {
             damage: 32,
             explosionRadius: this.onDamageExplosionRadius,
             important: true,
-            attacker: this
+            attacker: this,
+            shake
         });
 
         if (this.techTree.isUnlocked('electrical_energy_surges')) {
@@ -119,7 +123,7 @@ export abstract class PlayerEntity extends LivingEntity {
         this.baseWeapons.length = 0;
     }
 
-    public override isPlayer() {
+    public override isPlayer(): this is PlayerEntity {
         return true;
     }
 
@@ -194,7 +198,7 @@ export abstract class PlayerEntity extends LivingEntity {
         super.writeNBT(nbt);
         nbt.putUint('Score', this.score);
         nbt.putUint('PhaseScore', this.phaseScore);
-        nbt.putInt8('SlotIndex', this.currentBaseIndex);
+        nbt.putByte('SlotIndex', this.currentBaseIndex);
 
         const weapons: NbtCompound[] = [];
         this.weapons.values().forEach(stack => {
@@ -222,7 +226,7 @@ export abstract class PlayerEntity extends LivingEntity {
                 if (stack) this.addItem(stack.getItem(), stack);
             }
         }
-        this.currentBaseIndex = clamp(nbt.getInt8('SlotIndex'), 0, this.baseWeapons.length);
+        this.currentBaseIndex = clamp(nbt.getByte('SlotIndex'), 0, this.baseWeapons.length);
     }
 
     public onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {

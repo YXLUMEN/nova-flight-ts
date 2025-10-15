@@ -167,7 +167,7 @@ const p7: PhaseConfig = deepFreeze(createCleanObj({
                 0.8, 4, 4, '#ac0000'),
             cap: 70
         },
-        {every: 150, jitter: 0.4, factory: spawnMiniGun(0.08, 0, 12), cap: 96},
+        {every: 150, jitter: 0.4, factory: spawnMiniGun(0.5, 0, 12), cap: 96},
     ],
 }));
 

@@ -1,18 +1,18 @@
 import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import type {ServerWorld} from "../ServerWorld.ts";
 import {ServerTechTree} from "../../tech/ServerTechTree.ts";
-import type {Tech} from "../../apis/ITech.ts";
 import type {World} from "../../world/World.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 
+
 export class ServerPlayerEntity extends PlayerEntity {
     private readonly inputKeys = new Set<string>();
 
-    public constructor(world: ServerWorld, tech: Tech[]) {
+    public constructor(world: ServerWorld) {
         super(world);
 
-        this.techTree = new ServerTechTree(tech);
+        this.techTree = new ServerTechTree();
     }
 
     public override tick() {

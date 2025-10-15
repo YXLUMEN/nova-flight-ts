@@ -18,6 +18,8 @@ import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import type {IVec} from "../utils/math/IVec.ts";
+import type {ClientWorld} from "../client/ClientWorld.ts";
+import {EntityType} from "../entity/EntityType.ts";
 
 export abstract class World {
     public static readonly WORLD_W = 1692;
@@ -55,6 +57,10 @@ export abstract class World {
         return this.over;
     }
 
+    public getIsClient(): this is ClientWorld {
+        return this.isClient;
+    }
+
     public getServer(): Worker | null {
         return null;
     }
@@ -73,6 +79,13 @@ export abstract class World {
     ): void;
 
     public abstract addParticle(
+        posX: number, posY: number, velX: number, velY: number,
+        life: number, size: number,
+        colorFrom: string, colorTo: string,
+        drag?: number, gravity?: number
+    ): void;
+
+    public abstract addImportantParticle(
         posX: number, posY: number, velX: number, velY: number,
         life: number, size: number,
         colorFrom: string, colorTo: string,
@@ -114,7 +127,9 @@ export abstract class World {
         try {
             tickConsumer(entity);
         } catch (err) {
-            console.error(`Tick Entity with id:${entity.getUuid()} at ${entity.getPosition()}`);
+            const type = EntityType.getId(entity.getType())?.toString() ?? 'UnknownType';
+            console.error(`Tick Entity with id:${entity.getUuid()} at ${type}`);
+            console.error(err);
             throw err;
         }
     }

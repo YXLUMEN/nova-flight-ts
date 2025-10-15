@@ -9,11 +9,11 @@ export class PlayerFireC2SPacket implements Payload {
 
     public static readonly CODEC: PacketCodec<PlayerFireC2SPacket> = PacketCodecs.of<PlayerFireC2SPacket>(
         (writer, value) => {
-            writer.writeString(value.uuid);
+            writer.writeUUID(value.uuid);
             writer.writeByte(value.start ? 1 : 0)
         },
         (reader) => {
-            return new PlayerFireC2SPacket(reader.readString() as UUID, reader.readByte() === 1);
+            return new PlayerFireC2SPacket(reader.readUUID(), reader.readByte() === 1);
         }
     );
 

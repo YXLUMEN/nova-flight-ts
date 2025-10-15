@@ -15,6 +15,8 @@ export type UUID = `${string}-${string}-${string}-${string}-${string}`;
 
 export type Consumer<T> = (val: T) => void;
 
+export type AsyncConsumer<T> = (val: T) => Promise<void>;
+
 export type UnaryOperator<T> = (val: T) => T;
 
 export type Field<C, F> = [PacketCodec<F>, (c: C) => F];

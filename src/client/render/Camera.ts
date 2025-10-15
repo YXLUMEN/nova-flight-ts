@@ -17,6 +17,7 @@ interface ViewRect {
 export class Camera {
     private offset = MutVec2.zero();
     private velocity = MutVec2.zero();
+    private lastViewOffsetCache = MutVec2.zero();
     private viewOffsetCache = MutVec2.zero();
     private uiOffsetCache = MutVec2.zero();
     private viewRectCache: ViewRect = {
@@ -52,6 +53,7 @@ export class Camera {
         }
         this.updateShake(tickDelta);
 
+        this.lastViewOffsetCache.set(this.viewOffsetCache.x, this.viewOffsetCache.y);
         this.viewOffsetCache.set(
             this.offset.x + this.shakeOffset.x,
             this.offset.y + this.shakeOffset.y
@@ -162,6 +164,10 @@ export class Camera {
 
     public get viewOffset(): MutVec2 {
         return this.viewOffsetCache;
+    }
+
+    public get lastViewOffset(): MutVec2 {
+        return this.lastViewOffsetCache;
     }
 
     public get viewRect(): ViewRect {

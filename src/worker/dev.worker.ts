@@ -1,7 +1,7 @@
-import {DevServer} from "../server/DevServer.ts";
 import {ClientNetwork} from "../client/network/ClientNetwork.ts";
 import {ServerNetwork} from "../server/network/ServerNetwork.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
+import {DevServer} from "../server/DevServer.ts";
 
 let server: DevServer | null = null;
 
@@ -9,25 +9,24 @@ self.onmessage = async (event: MessageEvent) => {
     const {type, payload} = event.data;
 
     switch (type) {
-        case "start": {
+        case 'start_server': {
+            if (server) return;
             server = DevServer.startServer() as DevServer;
-            await server.runServer(payload.action);
-            self.postMessage({type: "started"});
-            break;
+            return server.runServer(payload.action);
         }
-        case "stop": {
+        case 'stop_server': {
             if (server) {
                 await server.stopGame();
-                self.postMessage({type: "stopped"});
+                server = null;
+                self.postMessage({type: 'stopped'});
             }
-            server = null;
             break;
         }
         case 'start_ticking': {
             server?.world?.setTicking(true);
             break;
         }
-        case "stop_ticking": {
+        case 'stop_ticking': {
             server?.world?.setTicking(false);
             break;
         }
@@ -40,8 +39,13 @@ self.onmessage = async (event: MessageEvent) => {
             handleDev(payload.code);
             break;
         }
+        case 'loaded_save_data':
+            break;
+        case 'crash_the_server':
+            server?.debugCrash();
+            break;
         default:
-            console.warn("Unknown message:", type);
+            console.warn('Unknown message: ', type);
     }
 };
 
@@ -57,6 +61,13 @@ function handleDev(key: string) {
             const world = server?.world;
             if (!world) return;
             world.stage.nextPhase();
+            break;
+        }
+        case 'KeyC': {
+            const world = server?.world;
+            if (!world) return;
+            world.peaceMod = !world.peaceMod;
+            world.getMobs().forEach(mob => mob.discard());
         }
     }
 }

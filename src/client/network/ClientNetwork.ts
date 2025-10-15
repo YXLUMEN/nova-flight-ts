@@ -9,6 +9,8 @@ import {PlayerUnlockTechC2SPacket} from "../../network/packet/c2s/PlayerUnlockTe
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
 import {RequestPositionC2SPacket} from "../../network/packet/c2s/RequestPositionC2SPacket.ts";
 import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
+import {DebugStringPacket} from "../../network/packet/DebugStringPacket.ts";
+import {PlayerFinishLoginC2SPacket} from "../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
 
 export class ClientNetwork {
     public static registerNetworkPacket(): void {
@@ -20,6 +22,8 @@ export class ClientNetwork {
         this.register(PlayerUnlockTechC2SPacket.ID, PlayerUnlockTechC2SPacket.CODEC);
         this.register(PlayerSwitchSlotC2SPacket.ID, PlayerSwitchSlotC2SPacket.CODEC);
         this.register(RequestPositionC2SPacket.ID, RequestPositionC2SPacket.CODEC);
+        this.register(DebugStringPacket.ID, DebugStringPacket.CODEC);
+        this.register(PlayerFinishLoginC2SPacket.ID, PlayerFinishLoginC2SPacket.CODEC);
     }
 
     private static register<T extends Payload>(payloadId: PayloadId<T>, codec: PacketCodec<T>): void {

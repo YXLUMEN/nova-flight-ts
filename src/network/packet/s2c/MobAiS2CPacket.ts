@@ -8,7 +8,7 @@ export class MobAiS2CPacket implements Payload {
 
     public static readonly CODEC: PacketCodec<MobAiS2CPacket> = PacketCodecs.of<MobAiS2CPacket>(
         (writer, value) => {
-            writer.writeVarUInt(value.id);
+            writer.writeVarUInt(value.entityId);
             writer.writeByte(value.behavior);
         },
         (reader) => {
@@ -16,11 +16,11 @@ export class MobAiS2CPacket implements Payload {
         }
     );
 
-    public readonly id: number;
+    public readonly entityId: number;
     public readonly behavior: number;
 
     public constructor(id: number, behavior: number) {
-        this.id = id;
+        this.entityId = id;
         this.behavior = behavior;
     }
 

@@ -19,6 +19,11 @@ import {ParticleS2CPacket} from "../../network/packet/s2c/ParticleS2CPacket.ts";
 import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 import {EntityAttributesS2CPacket} from "../../network/packet/s2c/EntityAttributesS2CPacket.ts";
 import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.ts";
+import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
+import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacket.ts";
+import {ServerShutdownS2CPacket} from "../../network/packet/s2c/ServerShutdownS2CPacket.ts";
+import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
+import {EntityNbtS2CPacket} from "../../network/packet/s2c/EntityNbtS2CPacket.ts";
 
 export class ServerNetwork {
     public static registerNetworkPacket() {
@@ -42,6 +47,11 @@ export class ServerNetwork {
         this.register(ParticleS2CPacket.ID, ParticleS2CPacket.CODEC);
         this.register(EntityAttributesS2CPacket.ID, EntityAttributesS2CPacket.CODEC);
         this.register(MissileSetS2CPacket.ID, MissileSetS2CPacket.CODEC);
+        this.register(EntityPositionForceS2CPacket.ID, EntityPositionForceS2CPacket.CODEC);
+        this.register(MissileLockS2CPacket.ID, MissileLockS2CPacket.CODEC);
+        this.register(ServerShutdownS2CPacket.ID, ServerShutdownS2CPacket.CODEC);
+        this.register(EntityBatchSpawnS2CPacket.ID, EntityBatchSpawnS2CPacket.CODEC);
+        this.register(EntityNbtS2CPacket.ID, EntityNbtS2CPacket.CODEC);
     }
 
     private static register<T extends Payload>(payloadId: PayloadId<T>, codec: PacketCodec<T>): void {

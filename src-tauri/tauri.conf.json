@@ -26,7 +26,8 @@
     ],
     "security": {
       "csp": {
-        "default-src": "'self' asset: http://asset.localhost ipc: http://ipc.localhost"
+        "default-src": "'self' asset: http://asset.localhost",
+        "connect-src": "'self' ipc: http://ipc.localhost ws://localhost:25566 asset: http://asset.localhost"
       },
       "assetProtocol": {
         "enable": true,

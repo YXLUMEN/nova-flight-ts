@@ -4,7 +4,7 @@ import {ClientWorld} from "../ClientWorld.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
-import type {Consumer, UUID} from "../../apis/registry.ts";
+import type {UUID} from "../../apis/registry.ts";
 import {EntityRemoveS2CPacket} from "../../network/packet/s2c/EntityRemoveS2CPacket.ts";
 import {EntityPositionS2CPacket} from "../../network/packet/s2c/EntityPositionS2CPacket.ts";
 import {MobAiS2CPacket} from "../../network/packet/s2c/MobAiS2CPacket.ts";
@@ -18,9 +18,6 @@ import {
     Rotate,
     RotateAndMoveRelative
 } from "../../network/packet/s2c/EntityS2CPacket.ts";
-import {decodeYaw} from "../../utils/NetUtil.ts";
-import type {Payload, PayloadId} from "../../network/Payload.ts";
-import type {NetworkChannel} from "../../network/NetworkChannel.ts";
 import {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
 import {ServerReadyS2CPacket} from "../../network/packet/s2c/ServerReadyS2CPacket.ts";
 import {PlayerAttemptLoginC2SPacket} from "../../network/packet/c2s/PlayerAttemptLoginC2SPacket.ts";
@@ -32,6 +29,13 @@ import {LivingEntity} from "../../entity/LivingEntity.ts";
 import {GaussianRandom} from "../../utils/math/GaussianRandom.ts";
 import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.ts";
 import {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
+import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
+import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacket.ts";
+import {PacketHandlerBuilder} from "../../network/PacketHandlerBuilder.ts";
+import {PlayerFinishLoginC2SPacket} from "../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
+import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
+import {EVENTS} from "../../apis/IEvents.ts";
+import {EntityNbtS2CPacket} from "../../network/packet/s2c/EntityNbtS2CPacket.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer = new Set<UUID>();
@@ -41,10 +45,10 @@ export class ClientPlayNetworkHandler {
 
     public constructor(client: NovaFlightClient) {
         this.client = client;
-        this.loginPlayer.add(this.client.clientId);
     }
 
     public onServerReady(_packet: ServerReadyS2CPacket) {
+        this.loginPlayer.add(this.client.clientId);
         this.client.networkChannel.send(new PlayerAttemptLoginC2SPacket(this.client.clientId));
     }
 
@@ -60,6 +64,7 @@ export class ClientPlayNetworkHandler {
         this.client.player.setId(packet.playerEntityId);
         this.world.addEntity(this.client.player);
         this.world.setTicking(true);
+        this.client.networkChannel.send(new PlayerFinishLoginC2SPacket(this.client.clientId));
     }
 
     public onEntity(packet: EntityS2CPacket) {
@@ -77,8 +82,7 @@ export class ClientPlayNetworkHandler {
             return;
         }
         if (packet.rotate) {
-            const yaw = decodeYaw(packet.yaw);
-            entity.updateTrackedPositionAndAngles(entity.getLerpTargetX(), entity.getLerpTargetY(), yaw, 3);
+            entity.updateTrackedPositionAndAngles(entity.getLerpTargetX(), entity.getLerpTargetY(), packet.yaw, 3);
         }
     }
 
@@ -92,12 +96,21 @@ export class ClientPlayNetworkHandler {
         }
     }
 
+    public onEntityPositionForce(packet: EntityPositionForceS2CPacket): void {
+        const entity = this.world?.getEntityById(packet.entityId);
+        if (!entity) return;
+        entity.setTrackedPosition(packet.x, packet.y);
+        entity.updateTrackedPositionAndAngles(packet.x, packet.y, packet.yaw, 3);
+        entity.updatePosition(packet.x, packet.y);
+        entity.updateYaw(packet.yaw);
+    }
+
     public onEntitySpawn(packet: EntitySpawnS2CPacket): void {
         const entity = this.createEntity(packet);
         if (!entity) return;
 
         entity.onSpawnPacket(packet);
-        this.world!.addEntity(entity);
+        this.world?.addEntity(entity);
     }
 
     private createEntity(packet: EntitySpawnS2CPacket): Entity | null {
@@ -109,6 +122,12 @@ export class ClientPlayNetworkHandler {
         const world = this.world;
         if (!world) return null;
         return entityType.create(world);
+    }
+
+    public onEntityBatchSpawn(packet: EntityBatchSpawnS2CPacket): void {
+        for (const entry of packet.entities) {
+            this.onEntitySpawn(entry);
+        }
     }
 
     public onEntityDamage(): void {
@@ -136,7 +155,7 @@ export class ClientPlayNetworkHandler {
     }
 
     public onMobAiBehavior(packet: MobAiS2CPacket): void {
-        const entity = this.world?.getEntityById(packet.id);
+        const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
         (entity as MobEntity).setBehavior(packet.behavior);
     }
@@ -144,7 +163,8 @@ export class ClientPlayNetworkHandler {
     public onExplosion(packet: ExplosionS2CPacket) {
         this.world?.createExplosion(null, null, packet.x, packet.y, {
             attacker: null,
-            explosionRadius: packet.radius
+            explosionRadius: packet.radius,
+            shake: packet.shack
         });
     }
 
@@ -190,12 +210,42 @@ export class ClientPlayNetworkHandler {
     }
 
     public onMissileSet(packet: MissileSetS2CPacket): void {
-        const missile = this.world?.getEntityById(packet.entityID);
+        const missile = this.world?.getEntityById(packet.entityId);
         if (!missile) return;
         if (missile instanceof MissileEntity) {
             missile.driftAngle = packet.driftAngle;
             missile.hoverDir = packet.hoverDir;
         }
+    }
+
+    public onMissileLock(packet: MissileLockS2CPacket): void {
+        const world = this.world;
+        if (!world) return;
+
+        const missile = world.getEntityById(packet.entityId);
+        const locked = world.getEntityById(packet.lockEntityId);
+        if (missile && missile instanceof MissileEntity) {
+            missile.setTarget(locked);
+            world.events.emit(EVENTS.ENTITY_LOCKED, {missile});
+            if (missile.getLastTarget() !== locked) {
+                world.events.emit(EVENTS.ENTITY_UNLOCKED, {missile, lastTarget: missile.getLastTarget()});
+            }
+        }
+    }
+
+    public onEntityNbt(packet: EntityNbtS2CPacket) {
+        const world = this.world;
+        if (!world || packet.nbt === null) return;
+
+        const entity = world.getEntityLookup().getByUUID(packet.entityUUID);
+        if (!entity) return;
+        entity.readNBT(packet.nbt);
+    }
+
+    public clear(): void {
+        this.loginPlayer.clear();
+        this.world = null;
+        this.client.networkChannel.clearHandlers();
     }
 
     public registryHandler() {
@@ -205,6 +255,7 @@ export class ClientPlayNetworkHandler {
             .add(EntitySpawnS2CPacket.ID, this.onEntitySpawn)
             .add(EntityRemoveS2CPacket.ID, this.onEntityRemove)
             .add(EntityPositionS2CPacket.ID, this.onEntityPosition)
+            .add(EntityPositionForceS2CPacket.ID, this.onEntityPositionForce)
             .add(MobAiS2CPacket.ID, this.onMobAiBehavior)
             .add(ExplosionS2CPacket.ID, this.onExplosion)
             .add(EntityVelocityUpdateS2CPacket.ID, this.onEntityVelocityUpdate)
@@ -217,21 +268,9 @@ export class ClientPlayNetworkHandler {
             .add(ParticleS2CPacket.ID, this.onParticle)
             .add(EntityAttributesS2CPacket.ID, this.onEntityAttributes)
             .add(MissileSetS2CPacket.ID, this.onMissileSet)
+            .add(MissileLockS2CPacket.ID, this.onMissileLock)
+            .add(EntityBatchSpawnS2CPacket.ID, this.onEntityBatchSpawn)
+            .add(EntityNbtS2CPacket.ID, this.onEntityNbt)
             .register(this.client.networkChannel, this);
-    }
-}
-
-class PacketHandlerBuilder {
-    private handlers: Array<[PayloadId<any>, Consumer<any>]> = [];
-
-    public add<T extends Payload>(packetType: PayloadId<any>, handler: Consumer<T>): this {
-        this.handlers.push([packetType, handler]);
-        return this;
-    }
-
-    public register(channel: NetworkChannel, context: any): void {
-        for (const [id, handler] of this.handlers) {
-            channel.receive(id, handler.bind(context));
-        }
     }
 }

@@ -4,12 +4,13 @@ import {BinaryWriter} from "../nbt/BinaryWriter.ts";
 import {BinaryReader} from "../nbt/BinaryReader.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {HashMap} from "../utils/collection/HashMap.ts";
+import type {Consumer} from "../apis/registry.ts";
 
 export abstract class NetworkChannel {
     protected readonly ws: WebSocket;
     protected readonly registry: PayloadTypeRegistry;
     private readonly ready: Promise<void>;
-    private readonly handlers = new HashMap<Identifier, (payload: Payload) => void>();
+    private readonly handlers = new HashMap<Identifier, Consumer<Payload>>();
 
     protected constructor(ws: WebSocket, registry: PayloadTypeRegistry) {
         ws.binaryType = "arraybuffer";
@@ -87,6 +88,10 @@ export abstract class NetworkChannel {
         if (!type) return null;
 
         return type.codec.decode(reader);
+    }
+
+    public clearHandlers(): void {
+        this.handlers.clear();
     }
 
     public async waitConnect(): Promise<void> {

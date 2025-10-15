@@ -3,11 +3,9 @@ import type {IVec} from "../../utils/math/IVec.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {createCleanObj} from "../../utils/uit.ts";
-import {wrappedDelta} from "../../utils/math/math.ts";
+import {getNearestEntity, wrappedDelta} from "../../utils/math/math.ts";
 import {World} from "../../world/World.ts";
-import type {PlayerEntity} from "../player/PlayerEntity.ts";
 import {MobAiS2CPacket} from "../../network/packet/s2c/MobAiS2CPacket.ts";
-import type {Entity} from "../Entity.ts";
 
 export const Behavior = createCleanObj({
     Wander: 0,
@@ -63,18 +61,11 @@ export class MobAI {
 
     public chooseTarget(mob: MobEntity) {
         const world = mob.getWorld();
-        if (!world.isClient) return;
-
-        let target: PlayerEntity | null = null;
-        for (const player of world.getPlayers()) {
-            if (!player.invulnerable) {
-                target = player;
-                break;
-            }
-        }
-        if (!target) return;
 
         const pos = mob.getPositionRef;
+        const target = getNearestEntity(pos, world.getPlayers());
+        if (!target) return;
+
         const playerPos = target.getPositionRef;
         this.targetPos.set(playerPos.x, playerPos.y);
 
@@ -84,12 +75,12 @@ export class MobAI {
 
         if (mob.isRangedAttacker()) {
             if (distSq < 230400) {
-                this.behavior = Behavior.Flee;
+                this.setBehavior(mob, Behavior.Flee);
             } else {
-                this.behavior = Behavior.Wander;
+                this.setBehavior(mob, Behavior.Wander);
             }
         } else {
-            this.behavior = Behavior.Chase;
+            this.setBehavior(mob, Behavior.Chase);
         }
     }
 
@@ -101,12 +92,12 @@ export class MobAI {
         mob.updateVelocity(speed, this.dir.x, this.dir.y);
     }
 
-    public setBehavior(entity: Entity, behavior: number): void {
+    public setBehavior(mob: MobEntity, behavior: number): void {
         this.behavior = behavior;
 
-        const world = entity.getWorld();
+        const world = mob.getWorld();
         if (world.isClient) return;
-        world.getNetworkChannel().send(new MobAiS2CPacket(entity.getId(), behavior));
+        world.getNetworkChannel().send(new MobAiS2CPacket(mob.getId(), behavior));
     }
 
     public getBehavior(): number {

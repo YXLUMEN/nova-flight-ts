@@ -28,6 +28,7 @@ export class EntityRenderers {
         const baseEnemy = new BaseEnemyRender();
         const bullet = new BulletEntityRender();
         const rocket = new RocketEntityRender();
+        const missile = new MissileEntityRender();
         this.register(EntityTypes.BASE_ENEMY, baseEnemy);
         this.register(EntityTypes.TANK_ENEMY_ENTITY, baseEnemy);
         this.register(EntityTypes.BOSS_ENTITY, new BossEntityRender());
@@ -38,7 +39,8 @@ export class EntityRenderers {
         this.register(EntityTypes.EXPLODE_BULLET_ENTITY, bullet);
         this.register(EntityTypes.PLAYER, new PlayerEntityRender());
         this.register(EntityTypes.ROCKET_ENTITY, rocket);
-        this.register(EntityTypes.MISSILE_ENTITY, new MissileEntityRender());
+        this.register(EntityTypes.MISSILE_ENTITY, missile);
+        this.register(EntityTypes.MOB_MISSILE_ENTITY, missile);
         this.register(EntityTypes.SPAWN_MARK_ENTITY, new SpawnMarkerEntityRender());
         this.register(EntityTypes.DECOY_ENTITY, new DecoyEntityRender());
         this.register(EntityTypes.MISSILE_ENEMY_ENTITY, new MissileEnemyEntityRender());

@@ -15,6 +15,7 @@ import {DecoyEntity} from "./DecoyEntity.ts";
 import {MissileEnemyEntity} from "./mob/MissileEnemyEntity.ts";
 import {CIWSBulletEntity} from "./projectile/CIWSBulletEntity.ts";
 import {ADSEntity} from "./ADSEntity.ts";
+import {MobMissileEntity} from "./projectile/MobMissileEntity.ts";
 
 export class EntityTypes {
     public static readonly BASE_ENEMY = EntityType.register("base_enemy",
@@ -33,6 +34,7 @@ export class EntityTypes {
     public static readonly MISSILE_ENEMY_ENTITY = EntityType.register("missile_enemy",
         EntityType.Builder.create(MissileEnemyEntity)
             .setDimensions(24, 24)
+            .setTrackingTickInterval(4)
     );
     public static readonly TANK_ENEMY_ENTITY = EntityType.register("tank_enemy",
         EntityType.Builder.create(TankEnemy)
@@ -56,11 +58,17 @@ export class EntityTypes {
     public static readonly MISSILE_ENTITY = EntityType.register("missile_entity",
         EntityType.Builder.create(MissileEntity)
             .setDimensions(8, 8)
-            .setTrackingTickInterval(5)
+            .setTrackingTickInterval(20)
+    );
+    public static readonly MOB_MISSILE_ENTITY = EntityType.register("mob_missile_entity",
+        EntityType.Builder.create(MobMissileEntity)
+            .setDimensions(8, 8)
+            .setTrackingTickInterval(6)
     );
     public static readonly ROCKET_ENTITY = EntityType.register("rocket_entity",
         EntityType.Builder.create(RocketEntity)
             .setDimensions(8, 8)
+            .setTrackingTickInterval(5)
     );
     public static readonly SPAWN_MARK_ENTITY = EntityType.register("spawn_marker_entity",
         EntityType.Builder.create(SpawnMarkerEntity)

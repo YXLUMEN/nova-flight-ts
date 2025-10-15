@@ -6,6 +6,7 @@ import {StatusEffects} from "../effect/StatusEffects.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
+import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.ts";
 
 export class MissileEnemyEntity extends MobEntity {
     public color = "#ff6b6b";
@@ -33,12 +34,12 @@ export class MissileEnemyEntity extends MobEntity {
 
         const pos = this.getPositionRef;
         const yaw = this.getYaw();
-        const missile = new MobMissileEntity(EntityTypes.MISSILE_ENTITY, world, this, yaw);
+        const missile = new MobMissileEntity(EntityTypes.MOB_MISSILE_ENTITY, world, this, yaw);
         missile.color = '#ff7777';
-        missile.setMaxLifeTick(500);
         missile.setPosition(pos.x, pos.y);
         missile.setYaw(yaw);
         world.spawnEntity(missile);
+        world.getNetworkChannel().send(new MissileSetS2CPacket(missile.getId(), missile.driftAngle, missile.hoverDir));
     }
 
     public override isRangedAttacker(): boolean {

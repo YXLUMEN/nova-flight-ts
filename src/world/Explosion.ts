@@ -3,7 +3,6 @@ import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {distance2, PI2, rand} from "../utils/math/math.ts";
-import {Particle} from "../effect/Particle.ts";
 import {RadialRing} from "../effect/RadialRing.ts";
 import type {ClientWorld} from "../client/ClientWorld.ts";
 import type {World} from "./World.ts";
@@ -65,9 +64,14 @@ export class Explosion {
     }
 
     public summonExplosionVisual(world: ClientWorld) {
+        const damage = this.opts.damage ?? 0;
         const radius = this.opts.explosionRadius ?? 90;
-        const sparks = this.opts.sparks ?? 26;
-        const fastSparks = this.opts.fastSparks ?? 10;
+
+        const defaultSparks = Math.max(8, Math.floor(damage * 0.8));
+        const defaultFastSparks = Math.max(4, Math.floor(damage * 0.2));
+        const sparks = this.opts.sparks ?? defaultSparks;
+        const fastSparks = this.opts.fastSparks ?? defaultFastSparks;
+
         const important = this.opts.important ?? false;
         const color = this.opts.explodeColor ?? '#e3e3e3';
 
@@ -77,12 +81,15 @@ export class Explosion {
             const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
             const ePos = new MutVec2(this.x, this.y);
 
-            if (important) world.addEffect(new Particle(ePos, vel.clone(),
-                rand(0.25, 0.6), rand(3, 8),
-                "#ffd966", "rgba(255,69,0,0)"
-            )); else world.addParticleByVec(
-                ePos, vel, rand(0.25, 0.6), rand(3, 8),
-                "#ffd966", "rgba(255,69,0,0)");
+            if (important) {
+                world.addImportantParticle(ePos.x, ePos.y, vel.x, vel.y,
+                    rand(0.25, 0.6), rand(3, 8),
+                    "#ffd966", "rgba(255,69,0,0)")
+            } else {
+                world.addParticleByVec(
+                    ePos, vel, rand(0.25, 0.6), rand(3, 8),
+                    "#ffd966", "rgba(255,69,0,0)");
+            }
         }
 
         for (let i = 0; i < fastSparks; i++) {
@@ -91,13 +98,17 @@ export class Explosion {
             const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
             const ePos = new MutVec2(this.x, this.y);
 
-            if (important) world.addEffect(new Particle(
-                ePos, vel.clone(), rand(0.6, 1.2), rand(4, 10),
-                "#ffaa33", "rgba(255,140,0,0)", 0.6, 80
-            )); else world.addParticleByVec(
-                ePos, vel, rand(0.6, 1.2), rand(4, 10),
-                "#ffaa33", "rgba(255,140,0,0)", 0.6, 80
-            );
+            if (important) {
+                world.addImportantParticle(ePos.x, ePos.y, vel.x, vel.y,
+                    rand(0.6, 1.2), rand(4, 10),
+                    "#ffaa33", "rgba(255,140,0,0)", 0.6, 80
+                );
+            } else {
+                world.addParticleByVec(
+                    ePos, vel, rand(0.6, 1.2), rand(4, 10),
+                    "#ffaa33", "rgba(255,140,0,0)", 0.6, 80
+                );
+            }
         }
 
         world.addEffect(new RadialRing(new Vec2(this.x, this.y), radius * 0.2, radius * 1.1, 0.35, color));

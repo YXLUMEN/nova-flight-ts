@@ -72,8 +72,8 @@ export class AutoAim {
 
         this.lastTargetPos.set(this.lockTargetPos.x, this.lockTargetPos.y);
         const targetYaw = AutoAim.getLeadYaw(pos, mobPos, mobVel, bulletSpeed);
-        this.lockTargetPos.set(Math.cos(targetYaw), Math.sin(targetYaw)).normalize().add(pos.x, pos.y);
-        this.owner.setClampYaw(targetYaw);
+        this.lockTargetPos.set(Math.cos(targetYaw) + pos.x, Math.sin(targetYaw) + pos.y);
+        this.owner.setClampYaw(targetYaw, 0.1963);
 
         const currentYaw = this.owner.getYaw();
         const yawDiff = Math.abs(wrapRadians(targetYaw - currentYaw));
@@ -106,7 +106,7 @@ export class AutoAim {
             const dx = mobPos.x - pos.x;
             const dy = mobPos.y - pos.y;
             const dist2 = dx * dx + dy * dy;
-            if (dist2 < 1e-6) continue;
+            if (dist2 < 1E-6) continue;
 
             const mobVel = mob.getPositionRef;
             const relSpeed = ((dx * mobVel.x) + (dy * mobVel.y)) / Math.sqrt(dist2);
@@ -134,6 +134,6 @@ export class AutoAim {
     }
 
     public getLockTargetPos(): Readonly<MutVec2> | null {
-        return this.lockTargetPos.equalsSq(this.lastTargetPos) ? null : this.lastTargetPos;
+        return this.lockTargetPos.equalsSq(this.lastTargetPos) ? null : this.lockTargetPos;
     }
 }

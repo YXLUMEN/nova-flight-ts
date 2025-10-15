@@ -1,18 +1,22 @@
 import type {TechTree} from "./TechTree.ts";
 import {TechState} from "./TechState.ts";
-import type {Tech} from "../apis/ITech.ts";
 import type {NbtCompound} from "../nbt/NbtCompound.ts";
+import tech from "./tech-data.json";
 
 export class ServerTechTree implements TechTree {
     private readonly state: TechState;
 
-    public constructor(techs: Tech[]) {
-        const techState = TechState.normalizeTechs(techs);
+    public constructor() {
+        const techState = TechState.normalizeTechs(tech);
         this.state = new TechState(techState);
     }
 
     public isUnlocked(id: string): boolean {
         return this.state.isUnlocked(id);
+    }
+
+    public unlock(id: string): boolean {
+        return this.state.unlock(id);
     }
 
     public unlockAll() {

@@ -1,7 +1,6 @@
 import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import type {KeyboardInput} from "../input/KeyboardInput.ts";
 import {ClientTechTree} from "../../tech/ClientTechTree.ts";
-import {DataLoader} from "../../DataLoader.ts";
 import type {World} from "../../world/World.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
@@ -24,14 +23,13 @@ export class ClientPlayerEntity extends PlayerEntity {
     public steeringGear: boolean = false;
 
     public lockedMissile = new Set<MissileEntity>();
-    public missilePos: { x: number, y: number, angle: number }[] = [];
 
     public constructor(world: World, input: KeyboardInput) {
         super(world);
 
         this.input = input;
         const viewport = document.getElementById('viewport') as HTMLElement;
-        this.techTree = new ClientTechTree(viewport, DataLoader.get('tech-data'));
+        this.techTree = new ClientTechTree(viewport);
     }
 
     public override tick() {
@@ -76,15 +74,9 @@ export class ClientPlayerEntity extends PlayerEntity {
         }
 
         // 锁定
-        this.missilePos.length = 0;
         if (this.lockedMissile.size > 0) {
             for (const missile of this.lockedMissile) {
-                const dx = missile.getPositionRef.x - posRef.x;
-                const dy = missile.getPositionRef.y - posRef.y;
-                const angle = Math.atan2(dy, dx);
-                const arrowX = posRef.x + Math.cos(angle) * 64;
-                const arrowY = posRef.y + Math.sin(angle) * 64;
-                this.missilePos.push({x: arrowX, y: arrowY, angle});
+                if (missile.isRemoved()) this.lockedMissile.delete(missile);
             }
         }
 

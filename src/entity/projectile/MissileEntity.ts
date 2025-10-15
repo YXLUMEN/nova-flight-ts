@@ -5,18 +5,24 @@ import {PI2, rand} from "../../utils/math/math.ts";
 import {AutoAim} from "../../tech/AutoAim.ts";
 import {RocketEntity} from "./RocketEntity.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
+import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacket.ts";
 
 export class MissileEntity extends RocketEntity {
     public static lockedEntity = new WeakMap<Entity, number>();
 
     protected target: Entity | null = null;
+    protected lastTarget: Entity | null = null;
+
     protected reLockCD = 0;
     protected maxReLockCD = 5;
+
     private igniteDelayTicks = 16;
-    private lockDelayTicks = 60;
-    private maxLifetimeTicks = 400;
+    private lockDelayTicks = 40;
+    protected maxLifetimeTicks = 400;
+
     private driftSpeed = 2;
-    private trackingSpeed = 4;
+    protected trackingSpeed = 4;
+
     private readonly turnRate = Math.PI / 24;
 
     public hoverDir: number = 1;
@@ -38,10 +44,17 @@ export class MissileEntity extends RocketEntity {
             if (!this.wrapPosition()) return;
         } else if (!this.adjustPosition()) return;
 
+        const world = this.getWorld();
+        if (!world.isClient && this.lastTarget !== this.target) {
+            const packet = new MissileLockS2CPacket(this.getId(), this.target?.getId() ?? 0);
+            world.getNetworkChannel().send(packet);
+        }
+        this.lastTarget = this.target;
+
         // 燃料耗尽
         if (this.age > this.maxLifetimeTicks) {
             if (this.target) {
-                this.getWorld().events.emit(EVENTS.ENTITY_UNLOCKED, {missile: this, lastTarget: this.target});
+                world.events.emit(EVENTS.ENTITY_UNLOCKED, {missile: this, lastTarget: this.target});
                 this.target = null;
             }
             const yaw = this.getYaw();
@@ -60,13 +73,12 @@ export class MissileEntity extends RocketEntity {
         }
 
         const cd = (this.age & 3) === 0;
-        const world = this.getWorld();
 
         if (cd) {
             const yaw = this.getYaw();
             const dx = Math.cos(yaw) * 32;
             const dy = Math.sin(yaw) * 32;
-            world.addParticle(pos.x - dx, pos.y - dy, 0, 0,
+            world.addParticle(pos.x - dx, pos.y - dy, rand(-1, 1), rand(-1, 1),
                 rand(1, 1.5), rand(4, 6),
                 "#986900", "#575757", 0.3
             );
@@ -151,12 +163,16 @@ export class MissileEntity extends RocketEntity {
         this.driftSpeed = value;
     }
 
-    public setTrackingSpeed(value: number): void {
-        this.trackingSpeed = value;
-    }
-
     public getTarget(): Entity | null {
         return this.target;
+    }
+
+    public setTarget(target: Entity | null): void {
+        this.target = target;
+    }
+
+    public getLastTarget(): Entity | null {
+        return this.lastTarget;
     }
 
     public override shouldSave(): boolean {

@@ -7,7 +7,7 @@ export class MissileSetS2CPacket implements Payload {
     public static readonly ID: PayloadId<MissileSetS2CPacket> = {id: Identifier.ofVanilla('missile_set')};
     public static readonly CODEC: PacketCodec<MissileSetS2CPacket> = PacketCodecs.of(
         (writer, value) => {
-            writer.writeVarUInt(value.entityID);
+            writer.writeVarUInt(value.entityId);
             writer.writeFloat(value.driftAngle);
             writer.writeByte(value.hoverDir);
         },
@@ -20,12 +20,12 @@ export class MissileSetS2CPacket implements Payload {
         }
     );
 
-    public readonly entityID: number;
+    public readonly entityId: number;
     public readonly driftAngle: number;
     public readonly hoverDir: number;
 
     public constructor(entityID: number, driftAngle: number, hoverDir: number) {
-        this.entityID = entityID;
+        this.entityId = entityID;
         this.driftAngle = driftAngle;
         this.hoverDir = hoverDir;
     }

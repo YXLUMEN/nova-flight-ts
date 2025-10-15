@@ -1,5 +1,6 @@
 import type {EntityRenderer} from "./EntityRenderer.ts";
 import type {DecoyEntity} from "../../../entity/DecoyEntity.ts";
+import {PI2} from "../../../utils/math/math.ts";
 
 export class DecoyEntityRender implements EntityRenderer<DecoyEntity> {
     public render(entity: DecoyEntity, ctx: CanvasRenderingContext2D, tickDelta: number, offsetX: number = 0, offsetY: number = 0) {
@@ -7,16 +8,12 @@ export class DecoyEntityRender implements EntityRenderer<DecoyEntity> {
         const size = entity.getWidth();
         const glowColor = 'rgba(255,254,183,0.8)';
 
-        const pulse = 1 + Math.sin(entity.age * 0.1) * 0.1;
+        const pulse = 1 + Math.sin(entity.age * 0.25) * 0.1;
 
         ctx.save();
         ctx.translate(pos.x + offsetX, pos.y + offsetY);
-        ctx.rotate(entity.age * 0.01);
+        ctx.rotate(entity.age * 0.02);
         ctx.scale(pulse, pulse);
-
-        // 阴影发光
-        ctx.shadowBlur = 25;
-        ctx.shadowColor = glowColor;
 
         // 渐变描边
         const gradient = ctx.createLinearGradient(-size, -size, size, size);
@@ -40,7 +37,7 @@ export class DecoyEntityRender implements EntityRenderer<DecoyEntity> {
         coreGradient.addColorStop(1, 'rgba(255,255,200,0)');
         ctx.fillStyle = coreGradient;
         ctx.beginPath();
-        ctx.arc(0, 0, size * 0.6, 0, Math.PI * 2);
+        ctx.arc(0, 0, size * 0.6, 0, PI2);
         ctx.fill();
 
         ctx.restore();

@@ -4,14 +4,15 @@ import type {EntityType} from "../EntityType.ts";
 import type {Entity} from "../Entity.ts";
 import {DecoyEntity} from "../DecoyEntity.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
-import {distanceVec2} from "../../utils/math/math.ts";
+import {distanceVec2, getNearestEntity} from "../../utils/math/math.ts";
 
 export class MobMissileEntity extends MissileEntity {
     protected override maxReLockCD = 15;
+    protected override trackingSpeed = 1;
+    protected override maxLifetimeTicks = 180;
 
-    public constructor(type: EntityType<MissileEntity>, world: World, owner: Entity, driftAngle: number) {
+    public constructor(type: EntityType<MobMissileEntity>, world: World, owner: Entity, driftAngle: number) {
         super(type, world, owner, driftAngle, 5);
-        this.setTrackingSpeed(0.52);
     }
 
     public override shouldApplyDecoy(): boolean {
@@ -48,11 +49,7 @@ export class MobMissileEntity extends MissileEntity {
 
     protected override acquireTarget(): Entity | null {
         const players = this.getWorld().getPlayers();
-        for (const player of players) {
-            if (player.invulnerable) continue;
-            return player;
-        }
-        return null;
+        return getNearestEntity(this.getPositionRef, players);
     }
 
     protected override adjustPosition(): boolean {

@@ -1,5 +1,6 @@
 import type {MutVec2} from "./MutVec2.ts";
 import type {Entity} from "../../entity/Entity.ts";
+import type {IVec} from "./IVec.ts";
 
 export function clamp(value: number, min: number, max: number) {
     return Math.max(min, Math.min(max, value));
@@ -141,6 +142,28 @@ export function lerp(delta: number, start: number, end: number): number {
 
 export function doubleEquals(a: number, b: number, epsilon = 1E-6): boolean {
     return Math.abs(a - b) <= epsilon;
+}
+
+export function getNearestEntity(center: IVec, entities: Iterable<Entity>, maxDistance?: number): Entity | null {
+    let nearest = null;
+    let nearestDistSq = maxDistance !== undefined
+        ? maxDistance * maxDistance
+        : Infinity;
+
+    for (const entity of entities) {
+        if (entity.isRemoved()) continue;
+        const pos = entity.getPositionRef;
+        const dx = pos.x - center.x;
+        const dy = pos.y - center.y;
+        const distSq = dx * dx + dy * dy;
+
+        if (distSq <= nearestDistSq) {
+            nearestDistSq = distSq;
+            nearest = entity;
+        }
+    }
+
+    return nearest;
 }
 
 export const PI2 = Math.PI * 2;

@@ -42,7 +42,7 @@ export class HUD implements IUi {
         }
     }
 
-    public render(ctx: CanvasRenderingContext2D, tickDelta: number) {
+    public render(ctx: CanvasRenderingContext2D) {
         const world = NovaFlightClient.getInstance().world;
         if (!world) return;
 
@@ -91,8 +91,6 @@ export class HUD implements IUi {
 
         ctx.restore();
 
-        this.drawPrimaryWeapons(ctx, tickDelta);
-
         if (player.lockedMissile.size > 0) {
             this.renderLockAlert(ctx);
         }
@@ -132,19 +130,16 @@ export class HUD implements IUi {
         return {label, color, cooldown: Math.max(0, cd), maxCooldown: Math.max(0.001, max)};
     }
 
-    private drawPrimaryWeapons(ctx: CanvasRenderingContext2D, tickDelta: number) {
+    public drawPrimaryWeapons(ctx: CanvasRenderingContext2D, tickDelta: number) {
         const player = NovaFlightClient.getInstance().player;
         if (!player) return;
 
-        const cam = NovaFlightClient.getInstance().window.camera.viewOffset;
         const pos = player.getLerpPos(tickDelta);
-        const px = pos.x - cam.x;
-        const py = pos.y - cam.y;
 
         const stack = player.getCurrentItemStack();
         const weapon = stack.getItem() as BaseWeapon;
 
-        const anchorX = Math.floor(px + player.getWidth() / 2 + 12);
+        const anchorX = Math.floor(pos.x + player.getWidth() / 2 + 12);
         const ratio = clamp(1 - weapon.getCooldown(stack) / weapon.getMaxCooldown(stack), 0, 1);
         this.displayRatio = lerp(tickDelta, this.displayRatio, ratio);
 
@@ -155,10 +150,10 @@ export class HUD implements IUi {
 
         ctx.fillStyle = weapon.getUiColor(stack) ?? '#5ec8ff';
         ctx.globalAlpha = 0.6;
-        ctx.fillRect(anchorX, py, (64 * this.displayRatio) | 0, 2);
+        ctx.fillRect(anchorX, pos.y, (64 * this.displayRatio) | 0, 2);
 
         ctx.fillStyle = this.hudColor;
-        ctx.fillText(weapon.getDisplayName(), anchorX, py - 16);
+        ctx.fillText(weapon.getDisplayName(), anchorX, pos.y - 16);
 
         ctx.restore();
     }

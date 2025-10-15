@@ -8,7 +8,8 @@ const isServer = typeof window === 'undefined';
 const freezeConfig = createCleanObj({
     tick: 20,
     mbps: 0.05,
-    per: 50
+    per: 50,
+    version: '25w08b'
 } as const);
 
 const WorldConfig = Object.preventExtensions(createCleanObj({
@@ -23,7 +24,7 @@ const WorldConfig = Object.preventExtensions(createCleanObj({
     enableCameraOffset: !isDev,
 
     autoShoot: false,
-    readSave: false,
+    version: freezeConfig.version
 }));
 
 export {freezeConfig, WorldConfig, isDev, isServer};
