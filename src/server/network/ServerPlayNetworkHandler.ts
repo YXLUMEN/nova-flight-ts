@@ -13,7 +13,6 @@ import {RequestPositionC2SPacket} from "../../network/packet/c2s/RequestPosition
 import {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
 import type {UUID} from "../../apis/registry.ts";
 import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
-import {clamp} from "../../utils/math/math.ts";
 import {applyServerTech} from "../../tech/applyServerTech.ts";
 import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
 import type {ServerNetworkChannel} from "./ServerNetworkChannel.ts";
@@ -103,13 +102,13 @@ export class ServerPlayNetworkHandler {
     }
 
     public onPlayerSwitchSlot(packet: PlayerSwitchSlotC2SPacket) {
-        const uuid = packet.uuid;
+        const uuid: UUID = packet.uuid;
         const slot = packet.slot;
 
-        const player = this.world.getEntity(uuid)
+        const player = this.world.getEntity(uuid);
         if (!player || !player.isPlayer()) return;
 
-        player.currentBaseIndex = clamp(slot, 0, player.baseWeapons.length - 1);
+        (player as ServerPlayerEntity).setCurrentItem(slot);
     }
 
     public onPlayerFire(packet: PlayerFireC2SPacket) {

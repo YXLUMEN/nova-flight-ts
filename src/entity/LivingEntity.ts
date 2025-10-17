@@ -50,10 +50,13 @@ export abstract class LivingEntity extends Entity {
     public override tick() {
         super.tick();
         this.tickStatusEffects();
-        this.tickMovement();
+
+        if (!this.isRemoved()) {
+            this.tickMovement();
+        }
     }
 
-    public tickMovement() {
+    protected tickMovement() {
         if (this.isLogicalSideForUpdatingMovement()) {
             this.bodyTrackingIncrements = 0;
             this.setTrackedPosition(this.getX(), this.getY());

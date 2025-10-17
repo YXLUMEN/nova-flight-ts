@@ -20,10 +20,12 @@ export class MiniGunWeapon extends BaseWeapon {
     }
 
     public override onStartFire(_stack: ItemStack, world: World, attacker: Entity) {
+        if (!world.isClient) return;
         world.playLoopSound(attacker, SoundEvents.MINIGUN_FIRE_LOOP);
     }
 
     public override onEndFire(_stack: ItemStack, world: World, attacker: Entity) {
+        if (!world.isClient) return;
         if (world.stopLoopSound(attacker, SoundEvents.MINIGUN_FIRE_LOOP)) {
             world.playSound(attacker, SoundEvents.MINIGUN_FIRE_TAIL);
         }

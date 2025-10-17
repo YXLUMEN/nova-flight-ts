@@ -3,7 +3,7 @@ import type {Entity} from "../entity/Entity.ts";
 import {Items} from "./items.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import type {TagKey} from "../registry/tag/TagKey.ts";
-import {ComponentMap} from "../component/ComponentMap.ts";
+import {SimpleComponentMap} from "../component/SimpleComponentMap.ts";
 import type {World} from "../world/World.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {DataComponentTypes} from "../component/DataComponentTypes.ts";
@@ -13,20 +13,53 @@ import type {LivingEntity} from "../entity/LivingEntity.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {Registries} from "../registry/Registries.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import type {PacketCodec} from "../network/codec/PacketCodec.ts";
+import type {BinaryWriter} from "../nbt/BinaryWriter.ts";
+import type {BinaryReader} from "../nbt/BinaryReader.ts";
+import {ComponentChanges} from "../component/ComponentChanges.ts";
+import {ComponentMapImpl} from "../component/ComponentMapImpl.ts";
 
 export class ItemStack {
+    public static readonly ITEM_PACKET_CODEC = PacketCodecs.registryEntry(Registries.ITEM);
+    public static readonly PACKET_CODEC: PacketCodec<ItemStack> = {
+        encode(writer: BinaryWriter, itemStack: ItemStack): Uint8Array {
+            if (itemStack.isEmpty()) {
+                writer.writeVarUInt(0);
+            } else {
+                writer.writeVarUInt(itemStack.getCount());
+                ItemStack.ITEM_PACKET_CODEC.encode(writer, itemStack.getRegistryEntry().getValue());
+                ComponentChanges.PACKET_CODEC.encode(writer, itemStack.components.getChanges());
+            }
+            return writer.toUint8Array();
+        },
+        decode(reader: BinaryReader): ItemStack {
+            const count = reader.readVarUInt();
+            if (count <= 0) {
+                return ItemStack.EMPTY;
+            }
+            const item = ItemStack.ITEM_PACKET_CODEC.decode(reader);
+            const componentChanges = ComponentChanges.PACKET_CODEC.decode(reader);
+            return new ItemStack(item, count, ComponentMapImpl.create(item.getComponents(), componentChanges));
+        }
+    };
+    public static readonly LIST_PACKET_CODEC = PacketCodecs.collectionSet(this.PACKET_CODEC);
+
+
     // @ts-ignore
-    public static readonly EMPTY = new ItemStack(null, 0, ComponentMap.EMPTY);
+    public static readonly EMPTY = new ItemStack(null, 0, SimpleComponentMap.EMPTY);
 
     private readonly item: Item | null;
-    private readonly components: ComponentMap;
+    private readonly components: ComponentMapImpl;
     private count: number;
     private holder: Entity | null = null;
 
-    public constructor(item: Item, count: number = 1, components: ComponentMap | null = null) {
+    public constructor(item: Item, count: number = 1, components: ComponentMapImpl | ComponentChanges | null = null) {
         this.item = item;
         if (!components) {
-            this.components = new ComponentMap(item.getComponents());
+            this.components = new ComponentMapImpl(item.getComponents());
+        } else if (components instanceof ComponentChanges) {
+            this.components = ComponentMapImpl.create(item.getComponents(), components);
         } else {
             this.components = components;
         }
@@ -50,9 +83,9 @@ export class ItemStack {
 
         const counts = nbt.getByte('counts');
 
-        let compounds: ComponentMap | null = null;
+        let compounds: ComponentMapImpl | null = null;
         const compoundsNbt = nbt.getCompound('compounds');
-        if (compoundsNbt) compounds = ComponentMap.fromNbt(compoundsNbt);
+        if (compoundsNbt) compounds = ComponentMapImpl.fromNbt(compoundsNbt);
 
         return new ItemStack(type.getValue(), counts, compounds);
     }
@@ -90,6 +123,10 @@ export class ItemStack {
 
     public getOrDefault<T>(type: ComponentType<T>, fallback: T): T {
         return this.components.getOrDefault(type, fallback);
+    }
+
+    public applyChanges(changes: ComponentChanges): void {
+        this.components.applyChanges(changes);
     }
 
     public getRegistryEntry(): RegistryEntry<Item> {

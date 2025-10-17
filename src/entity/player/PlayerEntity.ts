@@ -21,8 +21,8 @@ export abstract class PlayerEntity extends LivingEntity {
     public onDamageExplosionRadius = 320;
 
     public techTree!: TechTree;
-    public readonly baseWeapons: BaseWeapon[] = [];
-    public currentBaseIndex: number = 0;
+    protected readonly baseWeapons: BaseWeapon[] = [];
+    protected currentBaseIndex: number = 0;
     public voidEdge = false;
     protected readonly weapons = new Map<Item, ItemStack>();
     protected wasActive: boolean = false;
@@ -58,7 +58,7 @@ export abstract class PlayerEntity extends LivingEntity {
         this.getVelocityRef.multiply(0.9);
     }
 
-    public getNetworkHandler(): NetworkChannel {
+    public getNetworkChannel(): NetworkChannel {
         return this.getWorld().getNetworkChannel();
     }
 
@@ -160,6 +160,10 @@ export abstract class PlayerEntity extends LivingEntity {
         this.currentBaseIndex = 0;
         this.baseWeapons.length = 0;
         this.weapons.clear();
+    }
+
+    public getCurrentItem(): BaseWeapon {
+        return this.baseWeapons[this.currentBaseIndex];
     }
 
     public getCurrentItemStack(): ItemStack {

@@ -4,15 +4,16 @@ import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import type {ItemStack} from "./ItemStack.ts";
 import type {LivingEntity} from "../entity/LivingEntity.ts";
-import {ComponentMap} from "../component/ComponentMap.ts";
+import {SimpleComponentMap} from "../component/SimpleComponentMap.ts";
 import {DataComponentTypes} from "../component/DataComponentTypes.ts";
 import type {ComponentType} from "../component/ComponentType.ts";
+import type {ComponentMap} from "../component/ComponentMap.ts";
 
 export type ItemSettings = InstanceType<typeof Item.Settings>;
 
 export class Item {
     public static readonly Settings = class Settings {
-        private components: ComponentMap | null = null;
+        private components: SimpleComponentMap | null = null;
 
         public maxCount(maxCount: number): this {
             return this.component(DataComponentTypes.MAX_STACK_SIZE, maxCount);
@@ -42,7 +43,7 @@ export class Item {
             return this;
         }
 
-        public getValidatedComponents(): ComponentMap {
+        public getValidatedComponents(): SimpleComponentMap {
             const componentMap = this.getComponents();
             if (componentMap.has(DataComponentTypes.DURABILITY) &&
                 componentMap.getOrDefault(DataComponentTypes.MAX_STACK_SIZE, 1) > 1) {
@@ -53,7 +54,7 @@ export class Item {
 
         private getComponents() {
             if (this.components === null) {
-                const com = new ComponentMap();
+                const com = new SimpleComponentMap();
                 com.set(DataComponentTypes.MAX_STACK_SIZE, 1);
                 com.set(DataComponentTypes.ITEM_AVAILABLE, true);
                 this.components = com;
@@ -62,7 +63,7 @@ export class Item {
         }
     }
     public readonly registryEntry: RegistryEntry<Item> | null = null;
-    private readonly components: ComponentMap;
+    private readonly components: SimpleComponentMap;
 
     public constructor(settings: ItemSettings) {
         this.components = settings.getValidatedComponents();

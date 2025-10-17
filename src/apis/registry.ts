@@ -1,5 +1,4 @@
 import type {PhaseConfig, SpawnRuleConfig} from "./IStage.ts";
-import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 
 export interface SpawnRuleConfigJSON extends Omit<SpawnRuleConfig, 'factory'> {
     factory: [string, ...any[]]; // [函数名, 参数...]
@@ -19,4 +18,6 @@ export type AsyncConsumer<T> = (val: T) => Promise<void>;
 
 export type UnaryOperator<T> = (val: T) => T;
 
-export type Field<C, F> = [PacketCodec<F>, (c: C) => F];
+export type Supplier<T> = () => T;
+
+export type Predicate<T> = (val: T) => boolean;

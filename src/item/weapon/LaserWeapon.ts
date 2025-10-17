@@ -44,7 +44,7 @@ export class LaserWeapon extends SpecialWeapon {
 
         const heat = this.getHeat(stack);
         const heatLeft = maxHeat - heat;
-        if (heatLeft > 120) stack.set(DataComponentTypes.ANY_BOOLEAN, true);
+        if (heatLeft > 60) stack.set(DataComponentTypes.ANY_BOOLEAN, true);
 
         // 触发过热: 立即停火并锁定
         if (stack.isAvailable()) {
@@ -59,7 +59,7 @@ export class LaserWeapon extends SpecialWeapon {
                 }
                 this.onEndFire(stack, world, holder);
             }
-            if (stack.getOrDefault(DataComponentTypes.ANY_BOOLEAN, false) && heatLeft <= 100) {
+            if (stack.getOrDefault(DataComponentTypes.ANY_BOOLEAN, false) && heatLeft <= 40) {
                 world.playSound(holder, SoundEvents.LASER_OVERHEAT);
                 stack.set(DataComponentTypes.ANY_BOOLEAN, false);
             }
@@ -116,11 +116,13 @@ export class LaserWeapon extends SpecialWeapon {
     }
 
     public override onStartFire(_stack: ItemStack, world: World, attacker: Entity) {
+        if (!world.isClient) return;
         world.playSound(attacker, SoundEvents.LASER_TRIGGER);
         world.playLoopSound(attacker, SoundEvents.LASER_BEAM);
     }
 
     public override onEndFire(_stack: ItemStack, world: World, attacker: Entity) {
+        if (!world.isClient) return;
         if (world.stopLoopSound(attacker, SoundEvents.LASER_BEAM)) {
             world.playSound(attacker, SoundEvents.LASER_CHARGE_DOWN);
         }

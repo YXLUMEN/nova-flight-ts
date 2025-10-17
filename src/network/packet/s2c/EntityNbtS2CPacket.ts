@@ -11,20 +11,17 @@ export class EntityNbtS2CPacket implements Payload {
     public static readonly CODEC: PacketCodec<EntityNbtS2CPacket> = PacketCodecs.of(
         (writer, value) => {
             writer.writeUUID(value.entityUUID);
-            if (value.nbt) writer.pushBytes(value.nbt.toBinary());
+            writer.pushBytes(value.nbt.toBinary());
         },
         reader => {
-            return new EntityNbtS2CPacket(
-                reader.readUUID(),
-                NbtCompound.fromReader(reader)
-            )
+            return new EntityNbtS2CPacket(reader.readUUID(), NbtCompound.fromReader(reader));
         }
     );
 
     public readonly entityUUID: UUID;
-    public readonly nbt: NbtCompound | null;
+    public readonly nbt: NbtCompound;
 
-    public constructor(entityUUID: UUID, nbt: NbtCompound | null) {
+    public constructor(entityUUID: UUID, nbt: NbtCompound) {
         this.entityUUID = entityUUID;
         this.nbt = nbt;
     }

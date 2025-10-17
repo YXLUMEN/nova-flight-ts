@@ -159,7 +159,9 @@ export class NbtCompound {
         return this.entries.size;
     }
 
-    public static fromReader(reader: BinaryReader) {
+    public static fromRootBinary(buffer: Uint8Array): NbtCompound | null {
+        const reader = new BinaryReader(buffer);
+
         const magic = reader.readInt32();
         if (magic !== NbtCompound.MAGIC) {
             throw new Error('Invalid magic number');
@@ -171,10 +173,19 @@ export class NbtCompound {
             return null;
         }
 
+        return this.fromReader(reader);
+    }
+
+    public static fromBinary(buffer: Uint8Array): NbtCompound {
+        const reader = new BinaryReader(buffer);
+        return this.fromReader(reader);
+    }
+
+    public static fromReader(reader: BinaryReader): NbtCompound {
         const compound = new NbtCompound();
 
         while (true) {
-            const type = reader.readByte();
+            const type = reader.readUnsignByte();
             if (type === NbtTypes.End) break;
 
             const key = reader.readString();
@@ -204,21 +215,21 @@ export class NbtCompound {
                     compound.putBoolean(key, reader.readByte() !== 0);
                     break;
                 case NbtTypes.NumberArray: {
-                    const len = reader.readInt32();
+                    const len = reader.readVarUInt();
                     const arr: number[] = new Array(len);
                     for (let i = 0; i < len; i++) arr[i] = reader.readDouble();
                     compound.putNumberArray(key, ...arr);
                     break;
                 }
                 case NbtTypes.StringArray: {
-                    const len = reader.readInt32();
+                    const len = reader.readVarUInt();
                     const arr: string[] = new Array(len);
                     for (let i = 0; i < len; i++) arr[i] = reader.readString();
                     compound.putStringArray(key, ...arr);
                     break;
                 }
                 case NbtTypes.Compound: {
-                    const nestedLen = reader.readInt32();
+                    const nestedLen = reader.readVarUInt();
                     console.assert(reader.bytesRemaining() >= nestedLen, `[NBT] nested length overflow for key "${key}"`);
                     const nestedBuf = reader.readSlice(nestedLen);
                     const nested = NbtCompound.fromBinary(nestedBuf);
@@ -226,10 +237,10 @@ export class NbtCompound {
                     break;
                 }
                 case NbtTypes.NbtList: {
-                    const count = reader.readInt32();
+                    const count = reader.readVarUInt();
                     const list: NbtCompound[] = [];
                     for (let i = 0; i < count; i++) {
-                        const nestedLen = reader.readInt32();
+                        const nestedLen = reader.readVarUInt();
                         console.assert(reader.bytesRemaining() >= nestedLen, `[NBT] nested length overflow in list for key "${key}"`);
                         const nestedBuf = reader.readSlice(nestedLen);
                         const nested = NbtCompound.fromBinary(nestedBuf);
@@ -246,16 +257,19 @@ export class NbtCompound {
         return compound;
     }
 
-    public static fromBinary(buffer: Uint8Array): NbtCompound | null {
-        const reader = new BinaryReader(buffer);
-        return this.fromReader(reader);
-    }
-
-    public toBinary(): Uint8Array {
+    public toRootBinary(): Uint8Array {
         const writer = new BinaryWriter();
 
         writer.writeInt32(NbtCompound.MAGIC);
         writer.writeInt16(NbtCompound.VERSION);
+
+        return this.toBinary(writer);
+    }
+
+    public toBinary(writer?: BinaryWriter): Uint8Array {
+        if (!writer) {
+            writer = new BinaryWriter();
+        }
 
         for (const [key, {type, value}] of this.entries) {
             writer.writeByte(type);
@@ -288,29 +302,29 @@ export class NbtCompound {
                     break;
                 case NbtTypes.NumberArray: {
                     const values = value as number[];
-                    writer.writeInt32(values.length);
+                    writer.writeVarUInt(values.length);
                     for (const n of values) writer.writeDouble(n);
                     break;
                 }
                 case NbtTypes.StringArray: {
                     const values = value as string[];
-                    writer.writeInt32(values.length);
+                    writer.writeVarUInt(values.length);
                     for (const s of values) writer.writeString(s);
                     break;
                 }
                 case NbtTypes.Compound: {
                     const values = value as NbtCompound;
                     const nested = values.toBinary();
-                    writer.writeInt32(nested.length);
+                    writer.writeVarUInt(nested.length);
                     writer.pushBytes(nested);
                     break;
                 }
                 case NbtTypes.NbtList: {
                     const list = value as NbtCompound[];
-                    writer.writeInt32(list.length);
+                    writer.writeVarUInt(list.length);
                     for (const compound of list) {
                         const nested = compound.toBinary();
-                        writer.writeInt32(nested.length);
+                        writer.writeVarUInt(nested.length);
                         writer.pushBytes(nested);
                     }
                     break;

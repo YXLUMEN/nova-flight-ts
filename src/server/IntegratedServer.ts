@@ -40,7 +40,7 @@ export class IntegratedServer extends NovaFlightServer {
             const {type, data} = event.data;
             if (type !== 'loaded_save_data') return;
 
-            const nbt = data !== undefined ? NbtCompound.fromBinary(data) : null;
+            const nbt = data !== undefined ? NbtCompound.fromRootBinary(data) : null;
             endLoad(nbt);
         }, {signal: ctrl.signal});
 
@@ -54,6 +54,7 @@ export class IntegratedServer extends NovaFlightServer {
     }
 
     public override async saveGame(compound: NbtCompound): Promise<void> {
-        self.postMessage({type: "save_game", payload: compound.toBinary()});
+        const bytes = compound.toRootBinary();
+        self.postMessage({type: "save_game", payload: bytes});
     }
 }

@@ -19,6 +19,9 @@ export class TrackedDataHandlerRegistry {
             codec: () => codec,
             createData(id: number): TrackedData<T> {
                 return new TrackedData(id, this);
+            },
+            copy(data: T): T {
+                return data;
             }
         });
 

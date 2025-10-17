@@ -1,13 +1,10 @@
 import type {Codec} from "../serialization/Codec.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import {Registries} from "../registry/Registries.ts";
 
 export class ComponentType<T> {
-    // public static readonly PACKET_CODEC: PacketCodec<ComponentType<any>> = PacketCodec.of(
-    //     (value, writer) => {
-    //     },
-    //     reader => {
-    //     }
-    // );
+    public static readonly PACKET_CODEC: PacketCodec<ComponentType<any>> = PacketCodecs.registryEntry(Registries.DATA_COMPONENT_TYPE);
 
     public readonly codec: Codec<T>
     public readonly packetCodec: PacketCodec<T>;

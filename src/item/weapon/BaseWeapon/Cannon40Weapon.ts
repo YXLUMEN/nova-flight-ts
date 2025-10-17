@@ -20,10 +20,12 @@ export class Cannon40Weapon extends BaseWeapon {
     }
 
     public override onStartFire(_stack: ItemStack, world: World, attacker: Entity) {
+        if (!world.isClient) return;
         world.playLoopSound(attacker, SoundEvents.CANNON40_FIRE_LOOP, 0.3);
     }
 
     public override onEndFire(_stack: ItemStack, world: World, attacker: Entity) {
+        if (!world.isClient) return;
         if (world.stopLoopSound(attacker, SoundEvents.CANNON40_FIRE_LOOP)) {
             world.playSound(attacker, SoundEvents.CANNON40_FIRE_TAIL, 0.3);
         }

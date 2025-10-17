@@ -36,6 +36,7 @@ import {PlayerFinishLoginC2SPacket} from "../../network/packet/c2s/PlayerFinishL
 import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
 import {EntityNbtS2CPacket} from "../../network/packet/s2c/EntityNbtS2CPacket.ts";
+import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer = new Set<UUID>();
@@ -100,7 +101,7 @@ export class ClientPlayNetworkHandler {
         const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
         entity.setTrackedPosition(packet.x, packet.y);
-        entity.updateTrackedPositionAndAngles(packet.x, packet.y, packet.yaw, 3);
+        entity.updateTrackedPositionAndAngles(packet.x, packet.y, packet.yaw, 0);
         entity.updatePosition(packet.x, packet.y);
         entity.updateYaw(packet.yaw);
     }
@@ -235,11 +236,16 @@ export class ClientPlayNetworkHandler {
 
     public onEntityNbt(packet: EntityNbtS2CPacket) {
         const world = this.world;
-        if (!world || packet.nbt === null) return;
+        if (!world) return;
 
         const entity = world.getEntityLookup().getByUUID(packet.entityUUID);
         if (!entity) return;
         entity.readNBT(packet.nbt);
+    }
+
+    public onInventory(packet: InventoryS2CPacket): void {
+        const player = this.client.player!;
+        player.updateSlotStacks(packet.revision, packet.contents);
     }
 
     public clear(): void {
@@ -271,6 +277,7 @@ export class ClientPlayNetworkHandler {
             .add(MissileLockS2CPacket.ID, this.onMissileLock)
             .add(EntityBatchSpawnS2CPacket.ID, this.onEntityBatchSpawn)
             .add(EntityNbtS2CPacket.ID, this.onEntityNbt)
+            .add(InventoryS2CPacket.ID, this.onInventory)
             .register(this.client.networkChannel, this);
     }
 }

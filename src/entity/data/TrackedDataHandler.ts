@@ -5,4 +5,6 @@ export interface TrackedDataHandler<T> {
     codec(): PacketCodec<T>;
 
     createData(id: number): TrackedData<T>;
+
+    copy(data: T): T;
 }

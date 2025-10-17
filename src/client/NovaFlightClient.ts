@@ -187,7 +187,7 @@ export class NovaFlightClient {
             if (type === 'load_save') {
                 const nbt = await this.loadSave();
                 if (!nbt) return;
-                this.server!.postMessage({type: 'loaded_save_data', data: nbt.toBinary()});
+                this.server!.postMessage({type: 'loaded_save_data', data: nbt.toRootBinary()});
                 return;
             }
             if (type === 'server_shutdown') {
@@ -239,7 +239,7 @@ export class NovaFlightClient {
 
             const bytes = await readFile(NovaFlightServer.SAVE_PATH, {baseDir: BaseDirectory.Resource});
             if (!bytes || bytes.length === 0) return null;
-            return NbtCompound.fromBinary(bytes);
+            return NbtCompound.fromRootBinary(bytes);
         } catch (err) {
             console.error(err);
             return null;

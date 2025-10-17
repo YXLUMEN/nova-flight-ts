@@ -14,6 +14,7 @@ import {PlayerAimC2SPacket} from "../../network/packet/c2s/PlayerAimC2SPacket.ts
 import type {UUID} from "../../apis/registry.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
 import {wrapRadians} from "../../utils/math/math.ts";
+import type {ItemStack} from "../../item/ItemStack.ts";
 
 export class ClientPlayerEntity extends PlayerEntity {
     public readonly input: KeyboardInput;
@@ -23,6 +24,7 @@ export class ClientPlayerEntity extends PlayerEntity {
     public steeringGear: boolean = false;
 
     public lockedMissile = new Set<MissileEntity>();
+    private revision: number = 0;
 
     public constructor(world: World, input: KeyboardInput) {
         super(world);
@@ -53,13 +55,13 @@ export class ClientPlayerEntity extends PlayerEntity {
             const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
             const speed = this.getMovementSpeed() * speedMultiplier;
             this.updateVelocity(speed, dx, dy);
-            this.getNetworkHandler().send(new PlayerMoveC2SPacket(uuid, dx, dy));
+            this.getNetworkChannel().send(new PlayerMoveC2SPacket(uuid, dx, dy));
         }
 
         if (this.autoAimEnable && this.autoAim) {
             this.autoAim.tick();
             const pos = this.autoAim.getLockTargetPos();
-            if (pos) this.getNetworkHandler().send(new PlayerAimC2SPacket(uuid, pos));
+            if (pos) this.getNetworkChannel().send(new PlayerAimC2SPacket(uuid, pos));
         } else if (this.steeringGear) {
             const pointer = this.input.getPointer;
             const yaw = Math.atan2(
@@ -69,7 +71,7 @@ export class ClientPlayerEntity extends PlayerEntity {
 
             if (Math.abs(wrapRadians(yaw - this.getYaw())) > 0.02) {
                 this.setClampYaw(yaw, 0.3926875);
-                this.getNetworkHandler().send(new PlayerAimC2SPacket(uuid, pointer));
+                this.getNetworkChannel().send(new PlayerAimC2SPacket(uuid, pointer));
             }
         }
 
@@ -94,10 +96,10 @@ export class ClientPlayerEntity extends PlayerEntity {
 
         if (active !== this.wasActive) {
             if (!this.wasActive) {
-                this.getNetworkHandler().send(new PlayerFireC2SPacket(this.getUuid(), true));
+                this.getNetworkChannel().send(new PlayerFireC2SPacket(this.getUuid(), true));
                 baseWeapon.onStartFire(stack, world, this);
             } else {
-                this.getNetworkHandler().send(new PlayerFireC2SPacket(this.getUuid(), false));
+                this.getNetworkChannel().send(new PlayerFireC2SPacket(this.getUuid(), false));
                 baseWeapon.onEndFire(stack, world, this);
             }
             this.wasActive = active;
@@ -113,16 +115,34 @@ export class ClientPlayerEntity extends PlayerEntity {
                 }
                 if (w.canFire(stack) && this.input.wasPressed(w.bindKey())) {
                     w.tryFire(stack, world, this);
-                    this.getNetworkHandler().send(new PlayerInputC2SPacket(this.getUuid(), w.bindKey()));
+                    this.getNetworkChannel().send(new PlayerInputC2SPacket(this.getUuid(), w.bindKey()));
                 }
             }
             w.inventoryTick(stack, world, this, 0, true);
         }
     }
 
+    public getRevision(): number {
+        return this.revision;
+    }
+
+    public updateSlotStacks(revision: number, stacks: Iterable<ItemStack>) {
+        for (const itemStack of stacks) {
+            const item = itemStack.getItem();
+            const playerItemStack = this.weapons.get(item);
+            if (playerItemStack) {
+                playerItemStack.applyChanges(itemStack.getComponents().getChanges());
+            } else {
+                this.weapons.set(item, itemStack);
+            }
+        }
+
+        this.revision = revision;
+    }
+
     public override switchWeapon(dir: number = 1) {
         super.switchWeapon(dir);
-        this.getNetworkHandler().send(new PlayerSwitchSlotC2SPacket(this.getUuid(), this.currentBaseIndex));
+        this.getNetworkChannel().send(new PlayerSwitchSlotC2SPacket(this.getUuid(), this.currentBaseIndex));
     }
 
     public override setScore(score: number) {
