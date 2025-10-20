@@ -25,6 +25,7 @@ import {ServerShutdownS2CPacket} from "../../network/packet/s2c/ServerShutdownS2
 import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
 import {EntityNbtS2CPacket} from "../../network/packet/s2c/EntityNbtS2CPacket.ts";
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
+import {EffectCreateS2CPacket} from "../../network/packet/s2c/EffectCreateS2CPacket.ts";
 
 export class ServerNetwork {
     public static registerNetworkPacket() {
@@ -54,6 +55,7 @@ export class ServerNetwork {
         this.register(EntityBatchSpawnS2CPacket.ID, EntityBatchSpawnS2CPacket.CODEC);
         this.register(EntityNbtS2CPacket.ID, EntityNbtS2CPacket.CODEC);
         this.register(InventoryS2CPacket.ID, InventoryS2CPacket.CODEC);
+        this.register(EffectCreateS2CPacket.ID, EffectCreateS2CPacket.CODEC);
     }
 
     private static register<T extends Payload>(payloadId: PayloadId<T>, codec: PacketCodec<T>): void {

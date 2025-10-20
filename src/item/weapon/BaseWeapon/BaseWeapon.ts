@@ -2,7 +2,6 @@ import {Weapon} from "../Weapon.ts";
 import {clamp, rand, randInt} from "../../../utils/math/math.ts";
 import {Vec2} from "../../../utils/math/Vec2.ts";
 import type {ProjectileEntity} from "../../../entity/projectile/ProjectileEntity.ts";
-import {MutVec2} from "../../../utils/math/MutVec2.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {ItemStack} from "../../ItemStack.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
@@ -42,6 +41,8 @@ export abstract class BaseWeapon extends Weapon {
         );
 
         if (maxParticle <= 0 || !world.isClient) return;
+
+        const {x: bx, y: by} = bullet.getPositionRef;
         for (let i = 0; i < maxParticle; i++) {
             const angleOffset = rand(-0.41886, 0.41886);
             const particleYaw = Math.atan2(g, f) + angleOffset;
@@ -50,10 +51,9 @@ export abstract class BaseWeapon extends Weapon {
             const py = Math.sin(particleYaw);
 
             const speed = randInt(100, 210);
-            const vel = new MutVec2(px * speed, py * speed);
 
-            world.addParticleByVec(
-                bullet.getPositionRef.clone(), vel, rand(0.4, 0.6), rand(2, 3),
+            world.addParticle(
+                bx, by, px * speed, py * speed, rand(0.4, 0.6), rand(2, 3),
                 "#ffaa33", "#ff5454", 0.6, 80
             );
         }

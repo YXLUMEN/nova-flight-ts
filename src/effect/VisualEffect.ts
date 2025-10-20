@@ -1,4 +1,8 @@
-export interface IEffect {
+import type {VisualEffectType} from "./VisualEffectType.ts";
+
+export interface VisualEffect {
+    getType(): VisualEffectType<any>;
+
     isAlive(): boolean;
 
     tick(tickDelta: number): void;

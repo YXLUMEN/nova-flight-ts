@@ -17,11 +17,18 @@ export class AttributeContainer {
         this.fallback = defaultAttributes;
     }
 
-    public getTracked() {
+    private updateTrackedStatus(instance: EntityAttributeInstance): void {
+        this.pendingUpdate.add(instance);
+        if (instance.getAttribute().getValue().isTracked()) {
+            this.tracked.add(instance);
+        }
+    }
+
+    public getTracked(): ReadonlySet<EntityAttributeInstance> {
         return this.tracked;
     }
 
-    public getPendingUpdate() {
+    public getPendingUpdate(): Set<EntityAttributeInstance> {
         return this.pendingUpdate;
     }
 
@@ -58,7 +65,7 @@ export class AttributeContainer {
         return instance !== undefined ? instance.getModifier(id).value : this.fallback.getModifierValue(attribute, id);
     }
 
-    public addModifiers(modifiersMap: Map<RegistryEntry<EntityAttribute>, EntityAttributeModifier>) {
+    public addModifiers(modifiersMap: Map<RegistryEntry<EntityAttribute>, EntityAttributeModifier>): void {
         modifiersMap.forEach((modifier, attribute) => {
             const instance = this.getCustomInstance(attribute);
             if (instance) {
@@ -68,20 +75,13 @@ export class AttributeContainer {
         });
     }
 
-    public removeModifiers(modifiersMap: Map<RegistryEntry<EntityAttribute>, EntityAttributeModifier>) {
+    public removeModifiers(modifiersMap: Map<RegistryEntry<EntityAttribute>, EntityAttributeModifier>): void {
         modifiersMap.forEach((modifier, attribute) => {
             const instance = this.custom.get(attribute);
             if (instance) {
                 instance.removeModifierById(modifier.id);
             }
         });
-    }
-
-    private updateTrackedStatus(instance: EntityAttributeInstance): void {
-        this.pendingUpdate.add(instance);
-        if (instance.getAttribute().getValue().isTracked()) {
-            this.tracked.add(instance);
-        }
     }
 
     public toNbt(): NbtCompound[] {

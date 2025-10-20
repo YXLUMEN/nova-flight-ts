@@ -1,9 +1,31 @@
-import type {IEffect} from "./IEffect.ts";
+import {type VisualEffect} from "./VisualEffect.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {lerp} from "../utils/math/math.ts";
+import type {PacketCodec} from "../network/codec/PacketCodec.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import type {IVec} from "../utils/math/IVec.ts";
+import type {VisualEffectType} from "./VisualEffectType.ts";
+import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 
-export class LaserBeamEffect implements IEffect {
-    public alive = true;
+export class LaserBeamEffect implements VisualEffect {
+    public static readonly PACKET_CODEC: PacketCodec<LaserBeamEffect> = PacketCodecs.of(
+        (writer, value) => {
+            writer.writeString(value.color);
+            writer.writeVarUInt(value.baseWidth);
+            PacketCodecs.VECTOR2D.encode(writer, value.start);
+            PacketCodecs.VECTOR2D.encode(writer, value.end);
+        },
+        reader => {
+            const laser = new LaserBeamEffect(
+                reader.readString(),
+                reader.readVarUInt()
+            );
+            laser.set(PacketCodecs.VECTOR2D.decode(reader), PacketCodecs.VECTOR2D.decode(reader));
+            return laser;
+        }
+    );
+
+    private alive = true;
 
     private readonly color: string;
     private readonly baseWidth: number;
@@ -21,7 +43,7 @@ export class LaserBeamEffect implements IEffect {
         this.color = color;
     }
 
-    public set(start: MutVec2, end: MutVec2) {
+    public set(start: IVec, end: IVec) {
         this.prevStart.set(this.start.x, this.start.y);
         this.prevEnd.set(this.end.x, this.end.y);
         this.start.x = start.x;
@@ -84,5 +106,9 @@ export class LaserBeamEffect implements IEffect {
         ctx.stroke();
 
         ctx.restore();
+    }
+
+    public getType(): VisualEffectType<LaserBeamEffect> {
+        return VisualEffectTypes.LASER_BEAM;
     }
 }

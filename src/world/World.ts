@@ -1,6 +1,6 @@
 import type {Entity} from "../entity/Entity.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
-import type {IEffect} from "../effect/IEffect.ts";
+import type {VisualEffect} from "../effect/VisualEffect.ts";
 import type {Schedule, TimerTask} from "../apis/ITimer.ts";
 import {DamageSources} from "../entity/damage/DamageSources.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
@@ -92,7 +92,7 @@ export abstract class World {
         drag?: number, gravity?: number
     ): void;
 
-    public abstract addEffect(effect: IEffect): void;
+    public abstract addEffect(source: Entity | null, effect: VisualEffect): void;
 
     public createExplosion(entity: Entity | null, damage: DamageSource | null, x: number, y: number, opts: ExpendExplosionOpts) {
         if (!damage) damage = this.getDamageSources().explosion(null, entity);

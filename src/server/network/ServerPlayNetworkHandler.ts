@@ -60,7 +60,7 @@ export class ServerPlayNetworkHandler {
     }
 
     public onPlayerDisconnect(packet: PlayerDisconnectC2SPacket) {
-        const uuid = packet.uuid;
+        const uuid: UUID = packet.uuid;
         if (!this.loginPlayers.has(uuid)) {
             return;
         }
@@ -84,7 +84,6 @@ export class ServerPlayNetworkHandler {
         const uuid = packet.uuid;
 
         const player = this.world.getEntity(uuid);
-
         if (!player || !player.isPlayer()) return;
 
         const speedMultiplier = player.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
@@ -93,7 +92,7 @@ export class ServerPlayNetworkHandler {
     }
 
     public onPlayerInput(packet: PlayerInputC2SPacket) {
-        const uuid = packet.uuid;
+        const uuid: UUID = packet.uuid;
         const key = packet.key;
 
         const player = this.world.getEntity(uuid) as ServerPlayerEntity | null;
@@ -137,10 +136,6 @@ export class ServerPlayNetworkHandler {
         if (!player) return;
 
         this.channel.sendTo(EntityPositionForceS2CPacket.create(player), packet.playerId);
-    }
-
-    public clear() {
-        this.loginPlayers.clear();
     }
 
     public registryHandler() {

@@ -37,6 +37,9 @@ import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpa
 import {EVENTS} from "../../apis/IEvents.ts";
 import {EntityNbtS2CPacket} from "../../network/packet/s2c/EntityNbtS2CPacket.ts";
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
+import {EffectCreateS2CPacket} from "../../network/packet/s2c/EffectCreateS2CPacket.ts";
+import {SoundEventS2CPacket} from "../../network/packet/s2c/SoundEventS2CPacket.ts";
+import {StopSoundS2CPacket} from "../../network/packet/s2c/StopSoundS2CPacket.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer = new Set<UUID>();
@@ -248,6 +251,27 @@ export class ClientPlayNetworkHandler {
         player.updateSlotStacks(packet.revision, packet.contents);
     }
 
+    public onEffectCreate(packet: EffectCreateS2CPacket) {
+        this.world?.addEffect(null, packet.effect);
+    }
+
+    public onPlaySound(packet: SoundEventS2CPacket): void {
+        const world = this.world;
+        if (!world) return;
+
+        if (packet.loop) {
+            world.playLoopSound(null, packet.soundEvent, packet.volume, packet.pitch);
+        } else {
+            world.playSound(null, packet.soundEvent, packet.volume, packet.pitch);
+        }
+    }
+
+    public onStopSound(packet: SoundEventS2CPacket): void {
+        const world = this.world;
+        if (!world) return;
+        world.stopLoopSound(null, packet.soundEvent);
+    }
+
     public clear(): void {
         this.loginPlayer.clear();
         this.world = null;
@@ -255,7 +279,7 @@ export class ClientPlayNetworkHandler {
     }
 
     public registryHandler() {
-        new PacketHandlerBuilder()
+        PacketHandlerBuilder.create()
             .add(ServerReadyS2CPacket.ID, this.onServerReady)
             .add(JoinGameS2CPacket.ID, this.onGameJoin)
             .add(EntitySpawnS2CPacket.ID, this.onEntitySpawn)
@@ -278,6 +302,9 @@ export class ClientPlayNetworkHandler {
             .add(EntityBatchSpawnS2CPacket.ID, this.onEntityBatchSpawn)
             .add(EntityNbtS2CPacket.ID, this.onEntityNbt)
             .add(InventoryS2CPacket.ID, this.onInventory)
+            .add(EffectCreateS2CPacket.ID, this.onEffectCreate)
+            .add(SoundEventS2CPacket.ID, this.onPlaySound)
+            .add(StopSoundS2CPacket.ID, this.onStopSound)
             .register(this.client.networkChannel, this);
     }
 }

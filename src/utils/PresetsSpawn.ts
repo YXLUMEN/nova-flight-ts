@@ -8,19 +8,9 @@ import {
 } from "../stage/SpawnFactories.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {EntityAttributes} from "../entity/attribute/EntityAttributes.ts";
-import {createCleanObj} from "./uit.ts";
-import type {EntityAttributeModifier} from "../entity/attribute/EntityAttributeModifier.ts";
-import {Identifier} from "../registry/Identifier.ts";
 import type {EntityType} from "../entity/EntityType.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import {Behavior} from "../entity/ai/MobAI.ts";
-
-function getHealth(value: number): EntityAttributeModifier {
-    return createCleanObj({
-        id: Identifier.ofVanilla('spawn.health'),
-        value: value
-    });
-}
 
 const spawnAtTop = (
     type: EntityType<MobEntity>,
@@ -29,7 +19,9 @@ const spawnAtTop = (
     spawnTopRandomCtor(type, [worth], (m) => {
         m.color = color;
         m.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.setBaseValue(speed);
-        m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(extraHp));
+
+        const maxHealth = m.getMaxHealth();
+        m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + extraHp);
         m.setHealth(m.getMaxHealth());
     });
 
@@ -40,10 +32,12 @@ const spawnAtTopS = (
     hpScaleFn: (ctx: SpawnCtx) => number = () => 1
 ): MobFactory => (ctx) => {
     return spawnTopRandomCtorS(type, [worth], (m) => {
-        const scaledHp = (extraHp * hpScaleFn(ctx)) | 0;
         m.color = color;
         m.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.setBaseValue(speed);
-        m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(scaledHp));
+
+        const scaledHp = (extraHp * hpScaleFn(ctx)) | 0;
+        const maxHealth = m.getMaxHealth();
+        m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + scaledHp);
         m.setHealth(m.getMaxHealth());
     }, {sampler: 'best', candidates: 8, history: 16, minGap: 64, margin: 24})(ctx)
 };
@@ -56,10 +50,12 @@ const spawnInMap = (
     hpScaleFn: (ctx: SpawnCtx) => number = () => 1
 ): MobFactory => (ctx) => {
     return spawnAvoidPlayerCtor(type, [worth], (m) => {
-        const scaledHp = (extraHp * hpScaleFn(ctx)) | 0;
         m.color = color;
         m.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.setBaseValue(speed);
-        m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(scaledHp));
+
+        const scaledHp = (extraHp * hpScaleFn(ctx)) | 0;
+        const maxHealth = m.getMaxHealth();
+        m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + scaledHp);
         m.setHealth(m.getMaxHealth());
         m.setBehavior(Behavior.Wander);
     }, opts)(ctx);
@@ -78,7 +74,9 @@ const spawnAtTopInLine = (
         (m) => {
             m.color = color;
             m.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.setBaseValue(speed);
-            m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(extraHp));
+
+            const maxHealth = m.getMaxHealth();
+            m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + extraHp);
             m.setHealth(m.getMaxHealth());
         },
         {gap}
@@ -92,7 +90,8 @@ const spawnMiniGun = (speed = 1, extraHp = 0, worth = 8, color = '#ac0000'): Mob
             init: (m) => {
                 m.color = color;
                 m.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.setBaseValue(speed);
-                m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(extraHp));
+                const maxHealth = m.getMaxHealth();
+                m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + extraHp);
                 m.setHealth(m.getMaxHealth());
             }
         },
@@ -102,7 +101,8 @@ const spawnMiniGun = (speed = 1, extraHp = 0, worth = 8, color = '#ac0000'): Mob
             init: (m) => {
                 m.color = color;
                 m.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.setBaseValue(speed);
-                m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.addModifier(getHealth(extraHp));
+                const maxHealth = m.getMaxHealth();
+                m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + extraHp);
                 m.setHealth(m.getMaxHealth());
             }
         }

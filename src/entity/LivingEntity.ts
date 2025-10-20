@@ -49,11 +49,12 @@ export abstract class LivingEntity extends Entity {
 
     public override tick() {
         super.tick();
-        this.tickStatusEffects();
 
         if (!this.isRemoved()) {
             this.tickMovement();
         }
+
+        this.tickStatusEffects();
     }
 
     protected tickMovement() {
@@ -88,7 +89,7 @@ export abstract class LivingEntity extends Entity {
         this.activeStatusEffects.clear();
     }
 
-    public getAttributes() {
+    public getAttributes(): AttributeContainer {
         return this.attributes;
     }
 
@@ -96,11 +97,11 @@ export abstract class LivingEntity extends Entity {
         return this.attributes.getCustomInstance(attribute);
     }
 
-    public getAttributeValue(attribute: RegistryEntry<EntityAttribute>) {
+    public getAttributeValue(attribute: RegistryEntry<EntityAttribute>): number {
         return this.attributes.getValue(attribute);
     }
 
-    public getAttributeBaseValue(attribute: RegistryEntry<EntityAttribute>) {
+    public getAttributeBaseValue(attribute: RegistryEntry<EntityAttribute>): number {
         return this.attributes.getBaseValue(attribute);
     }
 

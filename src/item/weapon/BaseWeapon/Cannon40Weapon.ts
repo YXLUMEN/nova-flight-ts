@@ -12,7 +12,9 @@ export class Cannon40Weapon extends BaseWeapon {
     private readonly speed = 35;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
-        const bullet = new BulletEntity(EntityTypes.BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 3));
+        const damage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 3);
+        const bullet = new BulletEntity(EntityTypes.BULLET_ENTITY, world, attacker, damage);
+
         this.setBullet(bullet, attacker, this.speed, 6, 2);
         if (!world.isClient) (world as ServerWorld).spawnEntity(bullet);
 

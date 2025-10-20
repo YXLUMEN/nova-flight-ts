@@ -1,47 +1,73 @@
-import type {IEffect} from "./IEffect.ts";
+import type {VisualEffect} from "./VisualEffect.ts";
+import type {PacketCodec} from "../network/codec/PacketCodec.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import {decodeFromByte, encodeToByte} from "../utils/NetUtil.ts";
+import {rgba} from "../utils/uit.ts";
+import type {VisualEffectType} from "./VisualEffectType.ts";
+import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 
-export interface EdgeGlowOpts {
-    // 发光颜色
-    color?: string;
-    // 边缘向内的厚度
-    thickness?: number;
-    // 强度(0..1)，会乘到颜色alpha
-    intensity?: number;
-    // 总时长(秒)。Infinity 表示常驻
-    duration?: number;
-    // 淡入时长(秒)
-    fadeIn?: number;
-    // 淡出时长(秒)
-    fadeOut?: number;
-    // 是否脉冲呼吸
-    pulse?: boolean;
-    // 'lighter' | 'screen' | ...
-    composite?: GlobalCompositeOperation;
-}
+export class EdgeGlowEffect implements VisualEffect {
+    public static readonly PACKET_CODEC: PacketCodec<EdgeGlowEffect> = PacketCodecs.of(
+        (writer, value) => {
+            writer.writeString(value.color);
+            writer.writeUint16(value.thickness);
+            writer.writeFloat(value.intensity);
+            writer.writeFloat(value.duration);
+            writer.writeByte(encodeToByte(value.fadeIn, 1));
+            writer.writeByte(encodeToByte(value.fadeOut, 1));
+            writer.writeByte(value.pulse ? 1 : 0);
+            writer.writeString(value.composite);
+        },
+        reader => {
+            return new EdgeGlowEffect(
+                reader.readString(),
+                reader.readUint16(),
+                reader.readFloat(),
+                reader.readFloat(),
+                decodeFromByte(reader.readUnsignByte(), 1),
+                decodeFromByte(reader.readUnsignByte(), 1),
+                reader.readByte() !== 0,
+                reader.readString() as GlobalCompositeOperation
+            );
+        }
+    );
 
-export class EdgeGlowEffect implements IEffect {
-    public alive = true;
+    private alive = true;
     private t = 0;
 
-    private readonly opts: EdgeGlowOpts = {};
+    private readonly color: string;
+    private readonly thickness: number;
+    private readonly intensity: number;
+    private readonly duration: number;
+    private readonly fadeIn: number;
+    private readonly fadeOut: number;
+    private readonly pulse: boolean;
+    private readonly composite: GlobalCompositeOperation;
 
-    public constructor(opts: EdgeGlowOpts = {}) {
-        this.opts = opts;
-        this.opts.color = this.opts.color ?? "#5ec8ff";
-        this.opts.thickness = this.opts.thickness ?? 48;
-        this.opts.intensity = this.opts.intensity ?? 0.8;
-        this.opts.duration = this.opts.duration ?? 0.5;
-        this.opts.fadeIn = this.opts.fadeIn ?? 0.06;
-        this.opts.fadeOut = this.opts.fadeOut ?? 0.2;
-        this.opts.pulse = this.opts.pulse ?? false;
-        this.opts.composite = this.opts.composite ?? "lighter";
+    public constructor(
+        color = '#5ec8ff',
+        thickness = 48,
+        intensity = 0.8,
+        duration = 0.5,
+        fadeIn = 0.06,
+        fadeOut = 0.2,
+        pulse = false,
+        composite: GlobalCompositeOperation = 'lighter',
+    ) {
+        this.color = color;
+        this.thickness = thickness;
+        this.intensity = intensity;
+        this.duration = duration;
+        this.fadeIn = fadeIn;
+        this.fadeOut = fadeOut;
+        this.pulse = pulse;
+        this.composite = composite;
     }
 
     public tick(dt: number) {
         if (!this.alive) return;
         this.t += dt;
-        const {duration} = this.opts;
-        if (isFinite(duration!) && this.t >= duration!) {
+        if (isFinite(this.duration!) && this.t >= this.duration!) {
             this.alive = false;
         }
     }
@@ -65,21 +91,19 @@ export class EdgeGlowEffect implements IEffect {
             return;
         }
 
-        const {thickness, composite} = this.opts;
-        const col = this.opts.color!;
-        const th = Math.max(1, thickness!);
+        const th = Math.max(1, this.thickness);
 
-        ctx.globalCompositeOperation = composite!;
+        ctx.globalCompositeOperation = this.composite;
         ctx.globalAlpha = 1;
 
         // 上
-        this.linearGlow(ctx, 0, 0, W, th, col, alpha, "vertical");
+        this.linearGlow(ctx, 0, 0, W, th, this.color, alpha, "vertical");
         // 下
-        this.linearGlow(ctx, 0, H - th, W, th, col, alpha, "vertical-rev");
+        this.linearGlow(ctx, 0, H - th, W, th, this.color, alpha, "vertical-rev");
         // 左
-        this.linearGlow(ctx, 0, 0, th, H, col, alpha, "horizontal");
+        this.linearGlow(ctx, 0, 0, th, H, this.color, alpha, "horizontal");
         // 右
-        this.linearGlow(ctx, W - th, 0, th, H, col, alpha, "horizontal-rev");
+        this.linearGlow(ctx, W - th, 0, th, H, this.color, alpha, "horizontal-rev");
 
         ctx.restore();
     }
@@ -93,29 +117,21 @@ export class EdgeGlowEffect implements IEffect {
     }
 
     private currentAlpha(): number {
-        const {intensity, duration, fadeIn, fadeOut, pulse} = this.opts;
-        const T = duration!;
-        const aIn = fadeIn!;
-        const aOut = fadeOut!;
-
-        // 包络：淡入 -> 保持 -> 淡出
         let env = 1;
-        if (isFinite(T)) {
-            if (this.t < aIn) {
-                const u = this.t / aIn;
+        if (isFinite(this.duration)) {
+            if (this.t < this.fadeIn) {
+                const u = this.t / this.fadeIn;
                 env = u * u * (3 - 2 * u); // smoothstep
-            } else if (this.t > T - aOut) {
-                const u = Math.max(0, (T - this.t) / aOut);
+            } else if (this.t > this.duration - this.fadeOut) {
+                const u = Math.max(0, (this.duration - this.t) / this.fadeOut);
                 env = u * u * (3 - 2 * u);
             } else {
                 env = 1;
             }
         }
 
-        // 脉冲：轻微呼吸
-        const pulseMul = pulse ? (0.85 + 0.15 * Math.sin(this.t * 2 * Math.PI * 2)) : 1;
-
-        return Math.max(0, Math.min(1, intensity! * env * pulseMul));
+        const pulseMul = this.pulse ? (0.85 + 0.15 * Math.sin(this.t * 2 * Math.PI * 2)) : 1;
+        return Math.max(0, Math.min(1, this.intensity * env * pulseMul));
     }
 
     private linearGlow(
@@ -128,38 +144,30 @@ export class EdgeGlowEffect implements IEffect {
         switch (dir) {
             case "vertical":
                 grad = ctx.createLinearGradient(0, y, 0, y + h);
-                grad.addColorStop(0, this.rgba(color, a));
-                grad.addColorStop(1, this.rgba(color, 0));
+                grad.addColorStop(0, rgba(color, a));
+                grad.addColorStop(1, rgba(color, 0));
                 break;
             case "vertical-rev":
                 grad = ctx.createLinearGradient(0, y, 0, y + h);
-                grad.addColorStop(0, this.rgba(color, 0));
-                grad.addColorStop(1, this.rgba(color, a));
+                grad.addColorStop(0, rgba(color, 0));
+                grad.addColorStop(1, rgba(color, a));
                 break;
             case "horizontal":
                 grad = ctx.createLinearGradient(x, 0, x + w, 0);
-                grad.addColorStop(0, this.rgba(color, a));
-                grad.addColorStop(1, this.rgba(color, 0));
+                grad.addColorStop(0, rgba(color, a));
+                grad.addColorStop(1, rgba(color, 0));
                 break;
             case "horizontal-rev":
                 grad = ctx.createLinearGradient(x, 0, x + w, 0);
-                grad.addColorStop(0, this.rgba(color, 0));
-                grad.addColorStop(1, this.rgba(color, a));
+                grad.addColorStop(0, rgba(color, 0));
+                grad.addColorStop(1, rgba(color, a));
                 break;
         }
         ctx.fillStyle = grad!;
         ctx.fillRect(Math.floor(x), Math.floor(y), Math.ceil(w), Math.ceil(h));
     }
 
-    private rgba(hex: string, a: number): string {
-        // 支持 #rgb / #rrggbb
-        const s = hex.replace("#", "");
-        const n = s.length === 3
-            ? s.split("").map(c => c + c).join("")
-            : s.padEnd(6, "0").slice(0, 6);
-        const r = parseInt(n.slice(0, 2), 16);
-        const g = parseInt(n.slice(2, 4), 16);
-        const b = parseInt(n.slice(4, 6), 16);
-        return `rgba(${r},${g},${b},${Math.max(0, Math.min(1, a)).toFixed(3)})`;
+    public getType(): VisualEffectType<EdgeGlowEffect> {
+        return VisualEffectTypes.EDGE_GLOW;
     }
 }

@@ -58,7 +58,6 @@ export class EntityTypes {
     public static readonly MISSILE_ENTITY = EntityType.register("missile_entity",
         EntityType.Builder.create(MissileEntity)
             .setDimensions(8, 8)
-            .setTrackingTickInterval(20)
     );
     public static readonly MOB_MISSILE_ENTITY = EntityType.register("mob_missile_entity",
         EntityType.Builder.create(MobMissileEntity)

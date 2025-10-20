@@ -5,9 +5,8 @@ import type {World} from "../../world/World.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import type {ItemStack} from "../../item/ItemStack.ts";
-import type {ServerNetworkChannel} from "../network/ServerNetworkChannel.ts";
-import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
 import {clamp} from "../../utils/math/math.ts";
+import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 
 
 export class ServerPlayerEntity extends PlayerEntity {
@@ -28,19 +27,21 @@ export class ServerPlayerEntity extends PlayerEntity {
         this.inputKeys.clear();
 
         if (this.changedItems.size > 0) {
-            const packet = new InventoryS2CPacket(0, this.nextRevision(), this.changedItems);
-            (this.getNetworkChannel() as ServerNetworkChannel).sendTo(packet, this.getUuid());
+            // const packet = new InventoryS2CPacket(0, this.nextRevision(), this.changedItems);
+            // (this.getNetworkChannel() as ServerNetworkChannel).sendTo(packet, this.getUuid());
             this.changedItems.clear();
         }
     }
 
     public setFiring(active: boolean) {
         this.wasActive = active;
+
         const current = this.getCurrentItemStack();
+        const item = current.getItem() as BaseWeapon;
         if (active) {
-            this.getCurrentItem().onStartFire(current, this.getWorld(), this);
+            item.onStartFire(current, this.getWorld(), this);
         } else {
-            this.getCurrentItem().onEndFire(current, this.getWorld(), this);
+            item.onEndFire(current, this.getWorld(), this);
         }
         this.changedItems.add(current);
     }

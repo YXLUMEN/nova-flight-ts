@@ -25,7 +25,8 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         this.worth = worth;
         this.age += (Math.random() * 10) | 0;
         this.setYaw(1.57079);
-        this.AI = new MobAI();
+
+        this.AI = new MobAI(this.getId());
     }
 
     public override tick(): void {
@@ -94,6 +95,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         super.onSpawnPacket(packet);
         const worth = packet.entityData;
         if (worth > 0) this.worth = worth;
+        this.AI.setSeed(this.getId());
     }
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {

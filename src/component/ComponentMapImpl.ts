@@ -132,18 +132,20 @@ export class ComponentMapImpl implements ComponentMap {
         if (this.changedComponents.size === 0) {
             return ComponentChanges.EMPTY;
         }
+        this.copyOnWrite = true;
         return new ComponentChanges(this.changedComponents);
     }
 
     private onWrite(): void {
         if (this.copyOnWrite) {
-            // this.changedComponents = new Map(this.changedComponents);
+            this.changedComponents = new Map(this.changedComponents);
             this.copyOnWrite = false;
         }
     }
 
     public copy() {
-        return new ComponentMapImpl(this, this.changedComponents);
+        this.copyOnWrite = true;
+        return new ComponentMapImpl(this, this.changedComponents, true);
     }
 
     public equals(o: Object): boolean {

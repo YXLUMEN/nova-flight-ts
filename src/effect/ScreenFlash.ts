@@ -1,11 +1,30 @@
-import type {IEffect} from "./IEffect.ts";
+import {type VisualEffect} from "./VisualEffect.ts";
 import {Window} from "../client/render/Window.ts";
+import type {PacketCodec} from "../network/codec/PacketCodec.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import type {VisualEffectType} from "./VisualEffectType.ts";
+import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 
-export class ScreenFlash implements IEffect {
-    public alive = true;
-    public readonly life: number;
-    public readonly maxAlpha: number;
-    public readonly color: string;
+export class ScreenFlash implements VisualEffect {
+    public static readonly PACKET_CODEC: PacketCodec<ScreenFlash> = PacketCodecs.of(
+        (writer, value) => {
+            writer.writeFloat(value.life);
+            writer.writeFloat(value.maxAlpha);
+            writer.writeString(value.color);
+        },
+        reader => {
+            return new ScreenFlash(
+                reader.readFloat(),
+                reader.readFloat(),
+                reader.readString()
+            );
+        }
+    );
+
+    private alive = true;
+    private readonly life: number;
+    private readonly maxAlpha: number;
+    private readonly color: string;
 
     private t = 0;
 
@@ -35,5 +54,9 @@ export class ScreenFlash implements IEffect {
 
     public kill() {
         this.alive = false;
+    }
+
+    public getType(): VisualEffectType<ScreenFlash> {
+        return VisualEffectTypes.SCREEN_FLASH;
     }
 }

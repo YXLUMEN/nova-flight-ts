@@ -1,4 +1,4 @@
-import type {IEffect} from "../effect/IEffect.ts";
+import type {VisualEffect} from "../effect/VisualEffect.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {StatusEffect} from "../entity/effect/StatusEffect.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
@@ -20,5 +20,5 @@ export interface ExplosionOpts {
 
 export interface ExpendExplosionOpts extends ExplosionOpts {
     attacker: Entity | null;
-    flash?: IEffect
+    flash?: VisualEffect
 }

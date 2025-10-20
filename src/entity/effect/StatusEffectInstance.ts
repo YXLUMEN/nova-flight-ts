@@ -33,19 +33,21 @@ export class StatusEffectInstance {
         return new StatusEffectInstance(type, duration, amplifier);
     }
 
-    public upgrade(effect: StatusEffectInstance): boolean {
-        if (this.type !== effect.type) {
+    public upgrade(that: StatusEffectInstance): boolean {
+        if (this.type !== that.type) {
             console.warn("This method should only be called for matching effects!");
         }
 
-        if (effect.amplifier > this.amplifier) {
-            this.amplifier = effect.amplifier;
-            this.duration = effect.duration;
+        if (that.amplifier > this.amplifier) {
+            this.amplifier = that.amplifier;
+            this.duration = that.duration;
             return true;
         }
-        if (this.lastsShorterThan(effect)) {
-            this.duration = effect.duration;
-            return true;
+        if (this.lastsShorterThan(that)) {
+            if (that.amplifier === that.amplifier) {
+                this.duration = that.duration;
+                return true;
+            }
         }
         return false;
     }

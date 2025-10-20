@@ -1,9 +1,42 @@
-import type {IEffect} from "./IEffect.ts";
+import {type VisualEffect} from "./VisualEffect.ts";
 import {lerp, PI2} from "../utils/math/math.ts";
 import type {IVec} from "../utils/math/IVec.ts";
+import {withAlpha} from "../utils/uit.ts";
+import type {PacketCodec} from "../network/codec/PacketCodec.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import {decodeFromByte, encodeToByte} from "../utils/NetUtil.ts";
+import type {VisualEffectType} from "./VisualEffectType.ts";
+import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 
-export class EMPBurst implements IEffect {
-    public alive = true;
+export class EMPBurst implements VisualEffect {
+    public static readonly PACKET_CODEC: PacketCodec<EMPBurst> = PacketCodecs.of(
+        (writer, value) => {
+            PacketCodecs.VECTOR2D.encode(writer, value.pos);
+            writer.writeUint16(value.radius);
+            writer.writeFloat(value.duration);
+            writer.writeByte(value.bolts);
+            writer.writeByte(value.segs);
+            writer.writeString(value.color);
+            writer.writeByte(value.thickness);
+            writer.writeByte(encodeToByte(value.jitter, 1));
+            writer.writeByte(value.glow);
+        },
+        reader => {
+            return new EMPBurst(
+                PacketCodecs.VECTOR2D.decode(reader),
+                reader.readUint16(),
+                reader.readFloat(),
+                reader.readUnsignByte(),
+                reader.readUnsignByte(),
+                reader.readString(),
+                reader.readUnsignByte(),
+                decodeFromByte(reader.readUnsignByte(), 1),
+                reader.readUnsignByte()
+            );
+        }
+    );
+
+    private alive = true;
     private preT = 0;
     private t = 0;
 
@@ -39,7 +72,7 @@ export class EMPBurst implements IEffect {
         this.bolts = bolts;
         this.duration = duration;
         this.radius = radius;
-        this.pos = pos
+        this.pos = pos;
     }
 
     public tick(dt: number): void {
@@ -67,7 +100,7 @@ export class EMPBurst implements IEffect {
 
         // 冲击环
         if (this.drawRing) {
-            ctx.strokeStyle = this.withAlpha(this.color, alpha * 0.6);
+            ctx.strokeStyle = withAlpha(this.color, alpha * 0.6);
             ctx.lineWidth = 6 * (1 - p * 0.5);
             ctx.beginPath();
             ctx.arc(this.pos.x, this.pos.y, rNow, 0, PI2);
@@ -78,7 +111,7 @@ export class EMPBurst implements IEffect {
         for (let b = 0; b < this.bolts; b++) {
             const a = (b / this.bolts) * PI2 + (Math.random() - 0.5) * 0.3;
             ctx.lineWidth = this.thickness;
-            ctx.strokeStyle = this.withAlpha(this.color, alpha);
+            ctx.strokeStyle = withAlpha(this.color, alpha);
 
             ctx.beginPath();
             ctx.moveTo(this.pos.x, this.pos.y);
@@ -106,17 +139,7 @@ export class EMPBurst implements IEffect {
         this.alive = false;
     }
 
-    private withAlpha(hex: string, a: number): string {
-        const c = this.hexToRgb(hex);
-        return `rgba(${c.r},${c.g},${c.b},${a.toFixed(3)})`;
-    }
-
-    private hexToRgb(hex: string) {
-        const s = hex.replace('#', '');
-        return {
-            r: parseInt(s.slice(0, 2), 16),
-            g: parseInt(s.slice(2, 4), 16),
-            b: parseInt(s.slice(4, 6), 16)
-        };
+    public getType(): VisualEffectType<EMPBurst> {
+        return VisualEffectTypes.EMP_BURST;
     }
 }

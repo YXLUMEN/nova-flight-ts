@@ -33,6 +33,8 @@ import type {MutVec2} from "../utils/math/MutVec2.ts";
 import {ParticleS2CPacket} from "../network/packet/s2c/ParticleS2CPacket.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {encodeToUnsignedByte} from "../utils/NetUtil.ts";
+import {type VisualEffect} from "../effect/VisualEffect.ts";
+import {EffectCreateS2CPacket} from "../network/packet/s2c/EffectCreateS2CPacket.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
@@ -169,7 +171,7 @@ export class ServerWorld extends World implements NbtSerializable {
         return this.getEntityLookup().get(id);
     }
 
-    public gerEntity(uuid: UUID): Entity | null {
+    public getEntity(uuid: UUID): Entity | null {
         return this.getEntityLookup().getByUUID(uuid);
     }
 
@@ -193,28 +195,16 @@ export class ServerWorld extends World implements NbtSerializable {
         return this.entities.getProjectiles();
     }
 
-    public getEntity(uuid: UUID): Entity | null {
-        return this.entityManager.getIndex().getByUUID(uuid);
-    }
-
     public override playSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
-        let exclude: UUID | null = null;
         if (entity instanceof PlayerEntity) {
-            exclude = entity.getUuid();
-        }
-        if (exclude) {
-            this.getNetworkChannel().sendExclude(new SoundEventS2CPacket(sound, volume, pitch, false), exclude);
+            this.getNetworkChannel().sendExclude(new SoundEventS2CPacket(sound, volume, pitch, false), entity.getUuid());
         }
         this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, false));
     }
 
     public override playLoopSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
-        let exclude: UUID | null = null;
         if (entity instanceof PlayerEntity) {
-            exclude = entity.getUuid();
-        }
-        if (exclude) {
-            this.getNetworkChannel().sendExclude(new SoundEventS2CPacket(sound, volume, pitch, true), exclude);
+            this.getNetworkChannel().sendExclude(new SoundEventS2CPacket(sound, volume, pitch, true), entity.getUuid());
         }
         this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, false));
     }
@@ -225,6 +215,14 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public override addEffect(): void {
+    }
+
+    public spawnEffect(source: Entity | null, effect: VisualEffect): void {
+        if (source instanceof PlayerEntity) {
+            this.getNetworkChannel().sendExclude(new EffectCreateS2CPacket(effect), source.getUuid());
+            return;
+        }
+        this.getNetworkChannel().send(new EffectCreateS2CPacket(effect));
     }
 
     public override createExplosion(entity: Entity | null, damage: DamageSource | null, x: number, y: number, opts: ExpendExplosionOpts): Explosion {
@@ -314,7 +312,7 @@ export class ServerWorld extends World implements NbtSerializable {
                 continue;
             }
 
-            const entity = entityType.create(this) as Entity;
+            const entity = entityType.create(this);
             entity.readNBT(nbt);
             this.spawnEntity(entity);
         }

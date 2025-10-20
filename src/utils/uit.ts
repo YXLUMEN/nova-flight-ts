@@ -1,3 +1,5 @@
+import {clamp} from "./math/math.ts";
+
 export const DPR = Math.max(1, Math.min(2, globalThis.devicePixelRatio || 1));
 
 export function deepFreeze<T>(obj: T, seen = new WeakSet()): Readonly<T> {
@@ -36,35 +38,6 @@ export function sleep(time: number) {
     return new Promise(resolve => setTimeout(resolve, time));
 }
 
-// 独立的音频加载播放方法
-export async function playSound(url: string): Promise<void> {
-    try {
-        const audioContext = new AudioContext();
-
-        const res = await fetch(url);
-        const buffer = await res.arrayBuffer();
-        const audioBuffer = await audioContext.decodeAudioData(buffer);
-
-        const source = audioContext.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(audioContext.destination);
-        source.start();
-        source.addEventListener('ended', () => audioContext.close(), {once: true});
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-export function throttleTimeOut<T extends (...args: any[]) => any>(func: T, wait: number = 200) {
-    let timer: number | null = null;
-    return function (...args: Parameters<T>) {
-        if (timer) return;
-        // @ts-ignore
-        func.apply(this, args);
-        timer = setTimeout((): any => timer = null, wait);
-    }
-}
-
 export function groupBy<T>(arr: T[], keyFn: (t: T) => string) {
     const m = new Map<string, T[]>();
     for (const item of arr) {
@@ -77,4 +50,29 @@ export function groupBy<T>(arr: T[], keyFn: (t: T) => string) {
 
 export function isNonEmptyString(v: unknown): v is string {
     return typeof v === 'string' && v.trim().length > 0;
+}
+
+export function hexToRgb(hex: string) {
+    const s = hex.replace('#', '');
+    return {
+        r: parseInt(s.slice(0, 2), 16),
+        g: parseInt(s.slice(2, 4), 16),
+        b: parseInt(s.slice(4, 6), 16)
+    };
+}
+
+export function withAlpha(hex: string, a: number): string {
+    const c = hexToRgb(hex);
+    return `rgba(${c.r},${c.g},${c.b},${a.toFixed(3)})`;
+}
+
+export function rgba(hex: string, a: number): string {
+    const s = hex.replace("#", "");
+    const n = s.length === 3
+        ? s.split("").map(c => c + c).join("")
+        : s.padEnd(6, "0").slice(0, 6);
+    const r = parseInt(n.slice(0, 2), 16);
+    const g = parseInt(n.slice(2, 4), 16);
+    const b = parseInt(n.slice(4, 6), 16);
+    return `rgba(${r},${g},${b},${clamp(a, 0, 1).toFixed(3)})`;
 }

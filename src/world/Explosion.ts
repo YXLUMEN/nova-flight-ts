@@ -3,7 +3,6 @@ import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {distance2, PI2, rand} from "../utils/math/math.ts";
-import {RadialRing} from "../effect/RadialRing.ts";
 import type {ClientWorld} from "../client/ClientWorld.ts";
 import type {World} from "./World.ts";
 import type {Entity} from "../entity/Entity.ts";
@@ -111,7 +110,12 @@ export class Explosion {
             }
         }
 
-        world.addEffect(new RadialRing(new Vec2(this.x, this.y), radius * 0.2, radius * 1.1, 0.35, color));
+        import('../effect/RadialRing.ts')
+            .then(mod => world.addEffect(null, new mod.RadialRing(
+                new Vec2(this.x, this.y),
+                radius * 0.2, radius * 1.1,
+                0.35, color
+            )));
     }
 
     public setPos(x: number, y: number) {

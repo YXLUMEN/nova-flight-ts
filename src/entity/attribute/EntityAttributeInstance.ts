@@ -21,15 +21,15 @@ export class EntityAttributeInstance {
         this.baseValue = type.getValue().getDefaultValue();
     }
 
-    public getAttribute() {
+    public getAttribute(): RegistryEntry<EntityAttribute> {
         return this.type;
     }
 
-    public getBaseValue() {
+    public getBaseValue(): number {
         return this.baseValue;
     }
 
-    public setBaseValue(baseValue: number) {
+    public setBaseValue(baseValue: number): void {
         if (this.baseValue !== baseValue) {
             this.baseValue = baseValue;
             this.onUpdate();
@@ -37,30 +37,28 @@ export class EntityAttributeInstance {
     }
 
     public getModifiers(): ReadonlySet<EntityAttributeModifier> {
-        const set = new Set<EntityAttributeModifier>(this.idToModifiers.values());
-        Object.freeze(set);
-        return set;
+        return new Set<EntityAttributeModifier>(this.idToModifiers.values());
     }
 
     public getModifier(id: Identifier) {
         return this.idToModifiers.get(id)!;
     }
 
-    public hasModifier(id: Identifier) {
+    public hasModifier(id: Identifier): boolean {
         return this.idToModifiers.has(id);
     }
 
-    public addModifier(modifier: EntityAttributeModifier) {
+    public addModifier(modifier: EntityAttributeModifier): void {
         const oldModifier = this.idToModifiers.get(modifier.id);
         if (oldModifier !== undefined) {
             throw new Error('Modifier is already applied on this attribute');
         }
-
         this.idToModifiers.set(modifier.id, modifier);
         this.onUpdate();
+
     }
 
-    public updateModifier(modifier: EntityAttributeModifier) {
+    public updateModifier(modifier: EntityAttributeModifier): void {
         const oldModifier = this.idToModifiers.get(modifier.id);
         this.idToModifiers.set(modifier.id, modifier);
         if (oldModifier !== modifier) {
@@ -68,33 +66,32 @@ export class EntityAttributeInstance {
         }
     }
 
-    public removeModifier(modifier: EntityAttributeModifier) {
+    public removeModifier(modifier: EntityAttributeModifier): void {
         this.removeModifierById(modifier.id);
     }
 
-    public removeModifierById(id: Identifier) {
+    public removeModifierById(id: Identifier): boolean {
         const result = this.idToModifiers.delete(id);
         if (!result) return false;
         this.onUpdate();
         return true;
     }
 
-    public clearModifiers() {
+    public clearModifiers(): void {
         if (this.idToModifiers.size === 0) return;
         this.idToModifiers.clear();
         this.onUpdate();
     }
 
-    public getValue() {
+    public getValue(): number {
         if (this.dirty) {
             this.value = this.computeValue();
             this.dirty = false;
         }
-
         return this.value;
     }
 
-    private onUpdate() {
+    private onUpdate(): void {
         this.dirty = true;
         this.updateCallback(this);
     }
@@ -103,12 +100,11 @@ export class EntityAttributeInstance {
         return this.dirty;
     }
 
-    private computeValue() {
+    private computeValue(): number {
         let value = this.baseValue;
         for (const modifier of this.idToModifiers.values()) {
             value += modifier.value;
         }
-
         return this.type.getValue().clamp(value);
     }
 
@@ -119,6 +115,7 @@ export class EntityAttributeInstance {
             this.idToModifiers.set(id, modifier);
         });
         this.onUpdate();
+
     }
 
     public toNbt(): NbtCompound {

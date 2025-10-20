@@ -63,7 +63,7 @@ export class NovaFlightClient {
         this.input = new KeyboardInput(this.window.canvas);
 
         this.networkChannel = new ClientNetworkChannel(
-            new WebSocket('ws://localhost:25566'),
+            new WebSocket('ws://127.0.0.1:25566'),
             this.clientId
         );
         ClientReceive.registryNetworkHandler(this.networkChannel);

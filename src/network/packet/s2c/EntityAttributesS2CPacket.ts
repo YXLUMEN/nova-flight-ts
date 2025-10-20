@@ -33,7 +33,11 @@ export class EntityAttributesS2CPacket implements Payload {
     public static create(entityId: number, attributes: Iterable<EntityAttributeInstance>): EntityAttributesS2CPacket {
         const entries: Entry[] = [];
         for (const entry of attributes) {
-            entries.push(new Entry(entry.getAttribute(), entry.getBaseValue(), entry.getModifiers() as Set<EntityAttributeModifier>));
+            entries.push(new Entry(
+                entry.getAttribute(),
+                entry.getBaseValue(),
+                entry.getModifiers() as Set<EntityAttributeModifier>
+            ));
         }
 
         return new EntityAttributesS2CPacket(entityId, entries);

@@ -132,8 +132,6 @@ export class ClientPlayerEntity extends PlayerEntity {
             const playerItemStack = this.weapons.get(item);
             if (playerItemStack) {
                 playerItemStack.applyChanges(itemStack.getComponents().getChanges());
-            } else {
-                this.weapons.set(item, itemStack);
             }
         }
 

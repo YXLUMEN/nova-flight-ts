@@ -4,7 +4,7 @@ import {ClientEntityManager} from "../world/ClientEntityManager.ts";
 import {EntityList} from "../world/EntityList.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import type {EntityHandler} from "../world/EntityHandler.ts";
-import type {IEffect} from "../effect/IEffect.ts";
+import type {VisualEffect} from "../effect/VisualEffect.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {defaultLayers} from "../configs/StarfieldConfig.ts";
@@ -40,7 +40,7 @@ export class ClientWorld extends World {
 
     // render
     public rendering = true;
-    private readonly effects: IEffect[] = [];
+    private readonly effects: VisualEffect[] = [];
     private readonly particlePool: ParticlePool = new ParticlePool(256);
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
 
@@ -188,7 +188,7 @@ export class ClientWorld extends World {
         colorFrom: string, colorTo: string,
         drag = 0.0, gravity = 0.0
     ) {
-        this.addEffect(new Particle(
+        this.addEffect(null, new Particle(
             new MutVec2(posX, posY), new MutVec2(velX, velY),
             life, size,
             colorFrom, colorTo,
@@ -196,7 +196,7 @@ export class ClientWorld extends World {
         ));
     }
 
-    public override addEffect(effect: IEffect) {
+    public override addEffect(_: Entity | null, effect: VisualEffect) {
         this.effects.push(effect);
     }
 

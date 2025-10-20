@@ -6,6 +6,7 @@ import {createCleanObj} from "../../utils/uit.ts";
 import {getNearestEntity, wrappedDelta} from "../../utils/math/math.ts";
 import {World} from "../../world/World.ts";
 import {MobAiS2CPacket} from "../../network/packet/s2c/MobAiS2CPacket.ts";
+import {Random} from "../../utils/math/Random.ts";
 
 export const Behavior = createCleanObj({
     Wander: 0,
@@ -17,7 +18,9 @@ export const Behavior = createCleanObj({
 export class MobAI {
     public disable = false;
     private readonly dir = new MutVec2(1, 0);
-    private targetPos = MutVec2.zero();
+    private readonly targetPos = MutVec2.zero();
+    private readonly random: Random;
+
     private changeTimer = 0;
     private behavior: number = Behavior.Simple;
 
@@ -29,6 +32,14 @@ export class MobAI {
         const vx = Math.sin(mob.age * 0.1) * 0.8 * speedMultiplier;
 
         mob.updateVelocity(speed, vx, mob.yStep);
+    }
+
+    public constructor(seed: number = 6) {
+        this.random = new Random(seed);
+    }
+
+    public setSeed(seed: number) {
+        this.random.setState(seed);
     }
 
     public action(mob: MobEntity) {
@@ -86,7 +97,7 @@ export class MobAI {
 
     public wander(mob: MobEntity, speed: number): void {
         if (this.changeTimer-- <= 0) {
-            this.dir.set(Math.random() - 0.5, Math.random() - 0.5);
+            this.dir.set(this.random.nextFloat() - 0.5, this.random.nextFloat() - 0.5);
             this.changeTimer = 50;
         }
         mob.updateVelocity(speed, this.dir.x, this.dir.y);

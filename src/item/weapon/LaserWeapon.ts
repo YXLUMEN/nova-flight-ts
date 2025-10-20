@@ -94,12 +94,12 @@ export class LaserWeapon extends SpecialWeapon {
         if (world.isClient) {
             // 刷新/创建光束效果
             const beamFx = id2EffectMap.get(holder.getId());
-            if (beamFx !== undefined && beamFx.alive) {
+            if (beamFx !== undefined && beamFx.isAlive()) {
                 beamFx.set(start, end);
             } else {
                 const newBeamFx = new LaserBeamEffect(stack.getOrDefault(DataComponentTypes.UI_COLOR, LaserWeapon.COLOR), this.width);
                 newBeamFx.reset(start, end);
-                world.addEffect(newBeamFx);
+                world.addEffect(null, newBeamFx);
                 id2EffectMap.set(holder.getId(), newBeamFx);
             }
         } else {

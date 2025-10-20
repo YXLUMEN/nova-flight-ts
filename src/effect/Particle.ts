@@ -1,9 +1,39 @@
 import {MutVec2} from "../utils/math/MutVec2.ts";
-import type {IEffect} from "./IEffect.ts";
+import {type VisualEffect} from "./VisualEffect.ts";
 import {lerp, PI2} from "../utils/math/math.ts";
 import type {IVec} from "../utils/math/IVec.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import type {PacketCodec} from "../network/codec/PacketCodec.ts";
+import {decodeFromInt16, decodeFromUnsignedByte, encodeToInt16, encodeToUnsignedByte} from "../utils/NetUtil.ts";
+import type {VisualEffectType} from "./VisualEffectType.ts";
+import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 
-export class Particle implements IEffect {
+export class Particle implements VisualEffect {
+    public static readonly PACKET_CODEC: PacketCodec<Particle> = PacketCodecs.of(
+        (writer, value) => {
+            PacketCodecs.VECTOR2D.encode(writer, value.pos);
+            PacketCodecs.VECTOR2D.encode(writer, value.vel);
+            writer.writeByte(encodeToUnsignedByte(value.life));
+            writer.writeInt16(encodeToInt16(value.size));
+            writer.writeString(value.colorFrom);
+            writer.writeString(value.colorTo);
+            writer.writeFloat(value.drag);
+            writer.writeFloat(value.gravity);
+        },
+        reader => {
+            return new Particle(
+                PacketCodecs.VECTOR2D.decode(reader),
+                PacketCodecs.VECTOR2D.decode(reader),
+                decodeFromUnsignedByte(reader.readUnsignByte()),
+                decodeFromInt16(reader.readInt16()),
+                reader.readString(),
+                reader.readString(),
+                reader.readFloat(),
+                reader.readFloat(),
+            );
+        }
+    );
+
     public alive = true;
 
     private prevPos = MutVec2.zero();
@@ -13,8 +43,8 @@ export class Particle implements IEffect {
     private size: number;
     private colorFrom: string;
     private colorTo: string;
-    private drag;
-    private gravity;
+    private drag: number;
+    private gravity: number;
 
     private t = 0;
 
@@ -92,5 +122,9 @@ export class Particle implements IEffect {
 
     public kill() {
         this.alive = false;
+    }
+
+    public getType(): VisualEffectType<Particle> {
+        return VisualEffectTypes.PARTICLE;
     }
 }

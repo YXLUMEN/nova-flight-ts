@@ -5,6 +5,10 @@ import type {NetworkChannel} from "./NetworkChannel.ts";
 export class PacketHandlerBuilder {
     private handlers: Array<[PayloadId<any>, Consumer<any>]> = [];
 
+    public static create() {
+        return new PacketHandlerBuilder();
+    }
+
     public add<T extends Payload>(packetType: PayloadId<any>, handler: Consumer<T>): this {
         this.handlers.push([packetType, handler]);
         return this;

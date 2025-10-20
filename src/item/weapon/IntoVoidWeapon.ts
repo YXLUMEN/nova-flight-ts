@@ -43,14 +43,14 @@ export class IntoVoidWeapon extends SpecialWeapon {
             );
             attacker.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.addModifier(modifier);
 
-            const mask = new WindowOverlay({
-                color: IntoVoidWeapon.uiColor,
-                maxAlpha: 0.28,
-                fadeIn: 0.2,
-                fadeOut: 0.4,
-                composite: "screen",
-            });
-            world.addEffect(mask);
+            const mask = new WindowOverlay(
+                IntoVoidWeapon.uiColor,
+                0.28,
+                0.2,
+                0.4,
+                "screen",
+            );
+            world.addEffect(null, mask);
             id2EffectMap.set(attacker.getId(), mask);
 
             if (attacker.techTree.isUnlocked('void_energy_extraction')) {

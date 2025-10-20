@@ -1,9 +1,32 @@
-import type {IEffect} from "./IEffect.ts";
+import {type VisualEffect} from "./VisualEffect.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import {lerp, PI2} from "../utils/math/math.ts";
+import type {PacketCodec} from "../network/codec/PacketCodec.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import type {VisualEffectType} from "./VisualEffectType.ts";
+import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 
-export class RadialRing implements IEffect {
-    public alive = true;
+export class RadialRing implements VisualEffect {
+    public static readonly PACKET_CODEC: PacketCodec<RadialRing> = PacketCodecs.of(
+        (writer, value) => {
+            PacketCodecs.VECTOR2D.encode(writer, value.center);
+            writer.writeFloat(value.r0);
+            writer.writeFloat(value.r1);
+            writer.writeFloat(value.life);
+            writer.writeString(value.color);
+        },
+        reader => {
+            return new RadialRing(
+                PacketCodecs.VECTOR2D.decode(reader),
+                reader.readFloat(),
+                reader.readFloat(),
+                reader.readFloat(),
+                reader.readString()
+            );
+        }
+    );
+
+    private alive = true;
 
     private readonly center: IVec;
     private readonly r0: number;
@@ -51,5 +74,9 @@ export class RadialRing implements IEffect {
 
     public kill() {
         this.alive = false;
+    }
+
+    public getType(): VisualEffectType<RadialRing> {
+        return VisualEffectTypes.RADIAL_RING
     }
 }

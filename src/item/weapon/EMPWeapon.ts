@@ -1,5 +1,4 @@
 import {World} from "../../world/World.ts";
-import {EMPBurst} from "../../effect/EMPBurst.ts";
 import {pointInCircleVec2} from "../../utils/math/math.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
@@ -11,6 +10,7 @@ import {SpecialWeapon} from "./SpecialWeapon.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import {VisualEffectTypes} from "../../effect/VisualEffectTypes.ts";
 
 export class EMPWeapon extends SpecialWeapon {
     private readonly duration = 600;
@@ -30,9 +30,9 @@ export class EMPWeapon extends SpecialWeapon {
             }
         });
 
-        world.addEffect(new EMPBurst(
+        world.addEffect(null, VisualEffectTypes.EMP_BURST.create(
             attacker.getPositionRef,
-            radius
+            radius,
         ));
         world.playSound(attacker, SoundEvents.EMP_BURST);
 

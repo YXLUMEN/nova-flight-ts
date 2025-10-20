@@ -7,9 +7,10 @@ import {isServer} from "./configs/WorldConfig.ts";
 export const mainWindow = new Window('main');
 
 function main() {
+    if (isServer) return;
+
     ClientNetwork.registerNetworkPacket();
     ServerNetwork.registerNetworkPacket();
-    if (isServer) return;
 
     window.oncontextmenu = event => event.preventDefault();
 

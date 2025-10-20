@@ -36,6 +36,8 @@ export class LoadingScreen implements IUi {
             const {width, height} = this;
 
             // 背景
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
             ctx.fillStyle = '#00050e';
             ctx.fillRect(0, 0, width, height);
 
@@ -77,8 +79,10 @@ export class LoadingScreen implements IUi {
 
         this.update();
         this.render();
-        requestAnimationFrame(() => this.loop());
+        requestAnimationFrame(this.bindLoop);
     }
+
+    private bindLoop = this.loop.bind(this);
 
     public async setDone() {
         if (this.done) return;

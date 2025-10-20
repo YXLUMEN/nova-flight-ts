@@ -6,6 +6,7 @@ import {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
 import {EMPBurst} from "../../effect/EMPBurst.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export class EMPRocketEntity extends RocketEntity {
     public override explosionRadius = 160;
@@ -25,10 +26,12 @@ export class EMPRocketEntity extends RocketEntity {
             }
         });
 
-        world.addEffect(new EMPBurst(
-            this.getPosition(),
-            this.explosionRadius,
-        ));
+        if (!world.isClient) {
+            (world as ServerWorld).spawnEffect(null, new EMPBurst(
+                this.getPosition(),
+                this.explosionRadius,
+            ));
+        }
         world.playSound(null, SoundEvents.EMP_BURST);
     }
 }
