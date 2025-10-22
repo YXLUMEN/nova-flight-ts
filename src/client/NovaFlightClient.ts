@@ -100,6 +100,10 @@ export class NovaFlightClient {
             if (action < 2) {
                 this.startIntegratedServer(action);
             }
+            if (action === 2) {
+                alert('正在制作');
+                this.onWorldStop();
+            }
 
             await this.waitWorldStop;
             this.networkHandler.clear();
@@ -361,6 +365,9 @@ export class NovaFlightClient {
             case 'KeyM':
                 document.getElementById('help')?.classList.toggle('hidden');
                 world?.setTicking(false);
+                break;
+            case 'KeyL':
+                WorldConfig.follow = !WorldConfig.follow;
                 break;
         }
     }

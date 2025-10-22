@@ -28,6 +28,7 @@ import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
 import type {Explosion} from "../world/Explosion.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import {Particle} from "../effect/Particle.ts";
+import {WorldConfig} from "../configs/WorldConfig.ts";
 
 export class ClientWorld extends World {
     private readonly client: NovaFlightClient = NovaFlightClient.getInstance();
@@ -228,7 +229,7 @@ export class ClientWorld extends World {
         const ctx = this.client.window.ctx;
         ctx.clearRect(0, 0, Window.VIEW_W, Window.VIEW_H);
 
-        this.starField.render(ctx, this.client.window.camera);
+        this.starField.render(ctx, this.client.window.camera, tickDelta);
 
         const offset = this.client.window.camera.viewOffset;
         const lastOffset = this.client.window.camera.lastViewOffset;
@@ -262,16 +263,16 @@ export class ClientWorld extends World {
         const player = this.client.player;
         if (!this.over && player) {
             EntityRenderers.getRenderer(player).render(player, ctx, tickDelta, 0, 0);
+            const playerPos = player.getLerpPos(tickDelta);
 
             if (player.lockedMissile.size > 0) {
-                const posRef = player.getLerpPos(tickDelta);
                 for (const missile of player.lockedMissile) {
                     const mPos = missile.getLerpPos(tickDelta);
-                    const dx = mPos.x - posRef.x;
-                    const dy = mPos.y - posRef.y;
+                    const dx = mPos.x - playerPos.x;
+                    const dy = mPos.y - playerPos.y;
                     const angle = Math.atan2(dy, dx);
-                    const arrowX = posRef.x + Math.cos(angle) * 64;
-                    const arrowY = posRef.y + Math.sin(angle) * 64;
+                    const arrowX = playerPos.x + Math.cos(angle) * 64;
+                    const arrowY = playerPos.y + Math.sin(angle) * 64;
 
                     ctx.save();
                     ctx.translate(arrowX, arrowY);
@@ -285,6 +286,15 @@ export class ClientWorld extends World {
                     ctx.fill();
                     ctx.restore();
                 }
+            }
+
+            if (player.followPointer && WorldConfig.follow) {
+                const pointer = player.input.getPointer;
+                ctx.strokeStyle = '#fff';
+                ctx.beginPath();
+                ctx.moveTo(playerPos.x, playerPos.y);
+                ctx.lineTo(pointer.x, pointer.y);
+                ctx.stroke();
             }
         }
 

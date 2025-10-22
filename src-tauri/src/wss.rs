@@ -2,8 +2,7 @@ use bytes::{BufMut, BytesMut};
 use futures_util::{SinkExt, StreamExt};
 use std::{collections::HashMap, sync::Arc};
 use tokio::net::TcpListener;
-use tokio::sync::mpsc;
-use tokio::sync::Mutex;
+use tokio::sync::{mpsc, RwLock};
 use tokio_tungstenite::accept_async;
 use tokio_tungstenite::tungstenite::{Bytes, Message};
 
@@ -19,7 +18,7 @@ pub async fn start_ws_server(addr: &str) {
     let listener = TcpListener::bind(addr)
         .await
         .expect("Failed to bind address");
-    let state = Arc::new(Mutex::new(State::default()));
+    let state = Arc::new(RwLock::new(State::default()));
 
     println!("[INFO] WebSocket server listening on {}", addr);
 
@@ -71,7 +70,7 @@ pub async fn start_ws_server(addr: &str) {
             }
 
             {
-                let mut st = state.lock().await;
+                let mut st = state.write().await;
                 // 如果是 server
                 if st
                     .server
@@ -92,7 +91,8 @@ pub async fn start_ws_server(addr: &str) {
                 });
             }
 
-            send_task.abort();
+            drop(tx);
+            send_task.await.ok();
         });
     }
 }
@@ -103,7 +103,7 @@ pub async fn start_ws_server(addr: &str) {
 /// 0x10 = Client -> Server
 /// 0x11 = Server -> Client 广播 + 单个排除
 /// 0x12 = Server -> Client 单发
-async fn handle_message(state: &Arc<Mutex<State>>, tx: &Tx, data: Bytes) {
+async fn handle_message(state: &Arc<RwLock<State>>, tx: &Tx, data: Bytes) {
     if data.is_empty() {
         eprintln!("[WARN] Empty message received");
         return;
@@ -112,7 +112,7 @@ async fn handle_message(state: &Arc<Mutex<State>>, tx: &Tx, data: Bytes) {
     match data[0] {
         0x01 => {
             // 注册 Server
-            let mut st = state.lock().await;
+            let mut st = state.write().await;
             st.server = Some(tx.clone());
             println!("[INFO] Server registered");
         }
@@ -123,33 +123,25 @@ async fn handle_message(state: &Arc<Mutex<State>>, tx: &Tx, data: Bytes) {
                 return;
             }
 
-            let mut id_bytes = [0u8; 16];
-            id_bytes.copy_from_slice(&data[1..17]);
+            let mut id = [0u8; 16];
+            id.copy_from_slice(&data[1..17]);
+            let mut st = state.write().await;
+            st.clients.insert(id, tx.clone());
 
-            let mut st = state.lock().await;
-            st.clients.insert(id_bytes, tx.clone());
-
-            let id_str = format_uuid(&id_bytes);
-            println!("[INFO] Client {} registered", id_str);
+            println!("[INFO] Client {} registered", format_uuid(&id));
         }
         0x10 => {
             // Client → Server
-            let st = state.lock().await;
+            let st = state.read().await;
             if let Some(server) = &st.server {
-                let _ = server.send(data.clone());
+                let _ = server.send(data);
             }
         }
         0x11 => {
             // Server → 广播给所有 Client
-            let mut st = state.lock().await;
-            st.clients.retain(|id, client| {
-                if client.send(data.clone()).is_err() {
-                    println!("[WARN] Client {} dropped", format_uuid(&id));
-                    false
-                } else {
-                    true
-                }
-            });
+            let mut st = state.write().await;
+            st.clients
+                .retain(|id, client| send_or_drop(id, client, &data));
         }
         0x12 => {
             // Server → 指定 Client
@@ -158,16 +150,19 @@ async fn handle_message(state: &Arc<Mutex<State>>, tx: &Tx, data: Bytes) {
                 return;
             }
 
+            // UUID截断
             let mut target = [0u8; 16];
             target.copy_from_slice(&data[1..17]);
             let rest = data.slice(17..);
 
             let mut buf = BytesMut::with_capacity(1 + rest.len());
+
+            // 服务器标头
             buf.put_u8(0x11);
             buf.extend_from_slice(&rest);
             let forwarded = buf.freeze();
 
-            let mut st = state.lock().await;
+            let mut st = state.write().await;
             if let Some(client) = st.clients.get(&target) {
                 if client.send(forwarded).is_err() {
                     println!("[WARN] Client {} dropped", format_uuid(&target));
@@ -184,44 +179,72 @@ async fn handle_message(state: &Arc<Mutex<State>>, tx: &Tx, data: Bytes) {
 
             let mut cursor = &data[1..];
 
-            let (count, rest) = read_var_uint(cursor);
-            cursor = rest;
-
-            let mut excludes = Vec::with_capacity(count as usize);
-            for _ in 0..count {
-                if cursor.len() < 16 {
-                    eprintln!("[WARN] Invalid exclude UUID");
+            let (count, rest) = match read_var_uint(cursor) {
+                Ok(v) => v,
+                Err(e) => {
+                    eprintln!("[WARN] VarUInt parse error: {}", e);
                     return;
                 }
-                let (uuid_bytes, next) = cursor.split_at(16);
-                excludes.push(uuid_bytes);
-                cursor = next;
-            }
+            };
+            cursor = rest;
 
-            let rest = cursor;
+            // 解析UUID
+            let (excludes, rest_payload) = match parse_excludes(cursor, count) {
+                Ok(v) => v,
+                Err(e) => {
+                    eprintln!("[WARN] {}", e);
+                    return;
+                }
+            };
 
-            let mut buf = BytesMut::with_capacity(1 + rest.len());
+            let mut buf = BytesMut::with_capacity(1 + rest_payload.len());
+
+            // 服务器标头
             buf.put_u8(0x11);
-            buf.extend_from_slice(rest);
+            buf.extend_from_slice(rest_payload);
             let forwarded = buf.freeze();
 
-            let mut st = state.lock().await;
+            let mut st = state.write().await;
             st.clients.retain(|id, client| {
-                if excludes.iter().any(|ex| !is_nil_uuid(ex) && ex == id) {
+                if excludes.iter().any(|ex| ex == id) {
                     return true;
                 }
-
-                if client.send(forwarded.clone()).is_err() {
-                    println!("[WARN] Client {} dropped", format_uuid(&id));
-                    false
-                } else {
-                    true
-                }
+                send_or_drop(id, client, &forwarded)
             });
         }
         _ => {
             eprintln!("[WARN] Unknown opcode: {}", data[0]);
         }
+    }
+}
+
+fn parse_excludes(mut cursor: &[u8], count: u32) -> Result<(Vec<[u8; 16]>, &[u8]), &'static str> {
+    // 总长检查
+    let needed = count as usize * 16;
+    if cursor.len() < needed {
+        return Err("Not enough bytes for excludes");
+    }
+
+    let mut excludes = Vec::with_capacity(count as usize);
+
+    for _ in 0..count {
+        let mut id = [0u8; 16];
+        id.copy_from_slice(&cursor[..16]);
+        cursor = &cursor[16..];
+
+        if !is_nil_uuid(&id) {
+            excludes.push(id);
+        }
+    }
+    Ok((excludes, cursor))
+}
+
+fn send_or_drop(id: &[u8; 16], client: &Tx, msg: &Bytes) -> bool {
+    if client.send(msg.clone()).is_err() {
+        println!("[WARN] Client {} dropped", format_uuid(id));
+        false
+    } else {
+        true
     }
 }
 
@@ -243,13 +266,13 @@ fn format_uuid(bytes: &[u8; 16]) -> String {
     )
 }
 
-fn read_var_uint(mut buf: &[u8]) -> (u32, &[u8]) {
+fn read_var_uint(mut buf: &[u8]) -> Result<(u32, &[u8]), &'static str> {
     let mut result: u32 = 0;
     let mut shift = 0;
 
     loop {
         if buf.is_empty() {
-            panic!("Unexpected end of buffer while reading VarUInt");
+            return Err("Unexpected end of buffer while reading VarUInt");
         }
         let byte = buf[0];
         buf = &buf[1..];
@@ -261,9 +284,9 @@ fn read_var_uint(mut buf: &[u8]) -> (u32, &[u8]) {
         }
         shift += 7;
         if shift > 35 {
-            panic!("VarUInt is too big");
+            return Err("VarUInt is too big");
         }
     }
 
-    (result, buf)
+    Ok((result, buf))
 }

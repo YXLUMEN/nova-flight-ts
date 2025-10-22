@@ -171,7 +171,7 @@ export class Camera {
     }
 
     public get viewRect(): ViewRect {
-        return this.viewRectCache!;
+        return this.viewRectCache;
     }
 
     public get uiOffset(): MutVec2 {

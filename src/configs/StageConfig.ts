@@ -17,7 +17,7 @@ const p1: PhaseConfig = deepFreeze(createCleanObj({
     until: ({score}) => score >= 64,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P1'}),
     rules: [
-        {every: 30, jitter: 0.3, factory: spawnAtTop(EntityTypes.BASE_ENEMY, 1, 0), cap: 32},
+        {every: 30, jitter: 0.3, factory: spawnAtTop(EntityTypes.BASE_ENEMY, 1.5, 0), cap: 32},
     ],
 }));
 
@@ -26,10 +26,10 @@ const p2: PhaseConfig = deepFreeze(createCleanObj({
     until: ({score}) => score >= 200,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P2'}),
     rules: [
-        {every: 30, jitter: 0.3, factory: spawnAtTop(EntityTypes.BASE_ENEMY, 1, 2, 4), cap: 16},
+        {every: 30, jitter: 0.3, factory: spawnAtTop(EntityTypes.BASE_ENEMY, 1.5, 2, 4), cap: 16},
         {
             every: 150, jitter: 0.2, factory: spawnAtTopInLine(EntityTypes.BASE_ENEMY,
-                4, 56, 1, 0, 2),
+                4, 56, 1.8, 0, 2),
             cap: 48
         },
     ],
@@ -43,17 +43,17 @@ const p3: PhaseConfig = deepFreeze(createCleanObj({
         {
             every: 35,
             jitter: 0.4,
-            factory: spawnAtTop(EntityTypes.BASE_ENEMY, 1.1, 2, 6, '#ff2121'),
+            factory: spawnAtTop(EntityTypes.BASE_ENEMY, 1.6, 2, 6, '#ff2121'),
             cap: 64,
         },
         {
             every: 60, jitter: 0.5, factory: spawnAtTopS(EntityTypes.GUN_ENEMY_ENTITY,
-                1, 1, 4),
+                1.5, 1, 4),
             cap: 24
         },
         {
             every: 100, jitter: 0.35, factory: spawnAtTopInLine(EntityTypes.BASE_ENEMY,
-                4, 64, 1.4, 0, 2),
+                4, 64, 1.9, 0, 2),
             cap: 48
         },
     ],
@@ -67,12 +67,12 @@ const p4: PhaseConfig = deepFreeze(createCleanObj({
         {
             every: 40,
             jitter: 0.4,
-            factory: spawnAtTopS(EntityTypes.BASE_ENEMY, 0.92, 4, 8, '#c10000'),
+            factory: spawnAtTopS(EntityTypes.BASE_ENEMY, 1.3, 4, 8, '#c10000'),
             cap: 64,
         },
         {
             every: 60, jitter: 0.5, factory: spawnAtTopS(EntityTypes.GUN_ENEMY_ENTITY,
-                1, 2, 6),
+                1.5, 2, 6),
             cap: 32
         },
         {

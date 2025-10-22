@@ -7,6 +7,8 @@ import {WorldConfig} from "../../configs/WorldConfig.ts";
 import type {ItemStack} from "../../item/ItemStack.ts";
 import {clamp} from "../../utils/math/math.ts";
 import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
+import type {ServerNetworkChannel} from "../network/ServerNetworkChannel.ts";
+import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
 
 
 export class ServerPlayerEntity extends PlayerEntity {
@@ -18,7 +20,7 @@ export class ServerPlayerEntity extends PlayerEntity {
     public constructor(world: ServerWorld) {
         super(world);
 
-        this.techTree = new ServerTechTree();
+        this.techTree = new ServerTechTree(this);
     }
 
     public override tick() {
@@ -77,6 +79,11 @@ export class ServerPlayerEntity extends PlayerEntity {
             }
             item.inventoryTick(stack, world, this, 0, true);
         }
+    }
+
+    public override setScore(score: number) {
+        super.setScore(score);
+        (this.getNetworkChannel() as ServerNetworkChannel).sendTo(new PlayerSetScoreS2CPacket(score), this.getUuid());
     }
 
     public nextRevision(): number {

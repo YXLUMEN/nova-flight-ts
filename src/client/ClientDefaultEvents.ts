@@ -5,7 +5,7 @@ import type {ClientWorld} from "./ClientWorld.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {PlayerUnlockTechC2SPacket} from "../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
-import {applyClientTech} from "../tech/apply_tech.ts";
+import {applyClientTech} from "../tech/applyClientTech.ts";
 
 export class ClientDefaultEvents {
     public static registryEvents(world: ClientWorld) {

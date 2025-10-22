@@ -20,6 +20,8 @@ import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
 import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
 import {EntityNbtS2CPacket} from "../../network/packet/s2c/EntityNbtS2CPacket.ts";
+import {PlayerTechResetC2SPacket} from "../../network/packet/c2s/PlayerTechResetC2SPacket.ts";
+import {PlayerMoveByPointerC2SPacket} from "../../network/packet/c2s/PlayerMoveByPointerC2SPacket.ts";
 
 export class ServerPlayNetworkHandler {
     private readonly server: NovaFlightServer;
@@ -80,8 +82,8 @@ export class ServerPlayNetworkHandler {
         ), 0.3926875);
     }
 
-    public onPlayerMove(packet: PlayerMoveC2SPacket) {
-        const uuid = packet.uuid;
+    public onPlayerMove(packet: PlayerMoveC2SPacket | PlayerMoveByPointerC2SPacket) {
+        const uuid: UUID = packet.uuid;
 
         const player = this.world.getEntity(uuid);
         if (!player || !player.isPlayer()) return;
@@ -91,7 +93,7 @@ export class ServerPlayNetworkHandler {
         player.updateVelocity(speed, packet.dx, packet.dy);
     }
 
-    public onPlayerInput(packet: PlayerInputC2SPacket) {
+    public onPlayerInput(packet: PlayerInputC2SPacket): void {
         const uuid: UUID = packet.uuid;
         const key = packet.key;
 
@@ -100,7 +102,7 @@ export class ServerPlayNetworkHandler {
         player.handlerInput(key);
     }
 
-    public onPlayerSwitchSlot(packet: PlayerSwitchSlotC2SPacket) {
+    public onPlayerSwitchSlot(packet: PlayerSwitchSlotC2SPacket): void {
         const uuid: UUID = packet.uuid;
         const slot = packet.slot;
 
@@ -110,7 +112,7 @@ export class ServerPlayNetworkHandler {
         (player as ServerPlayerEntity).setCurrentItem(slot);
     }
 
-    public onPlayerFire(packet: PlayerFireC2SPacket) {
+    public onPlayerFire(packet: PlayerFireC2SPacket): void {
         const uuid = packet.uuid;
         const start = packet.start;
 
@@ -119,8 +121,8 @@ export class ServerPlayNetworkHandler {
         player.setFiring(start);
     }
 
-    public onUnlockTech(packet: PlayerUnlockTechC2SPacket) {
-        const uuid = packet.uuid;
+    public onUnlockTech(packet: PlayerUnlockTechC2SPacket): void {
+        const uuid: UUID = packet.uuid;
         const name = packet.techName;
 
         const player = this.world.getEntity(uuid) as ServerPlayerEntity | null;
@@ -130,7 +132,14 @@ export class ServerPlayNetworkHandler {
         player.techTree.unlock(name);
     }
 
-    public onRequestPosition(packet: RequestPositionC2SPacket) {
+    public onTechRest(packet: PlayerTechResetC2SPacket): void {
+        const player = this.world.getEntity(packet.uuid);
+        if (!player || !player.isPlayer()) return;
+
+        player.techTree.resetTech();
+    }
+
+    public onRequestPosition(packet: RequestPositionC2SPacket): void {
         const uuid: UUID = packet.playerId;
         const player = this.world.getEntity(uuid) as ServerPlayerEntity | null;
         if (!player) return;
@@ -145,10 +154,12 @@ export class ServerPlayNetworkHandler {
             .add(PlayerDisconnectC2SPacket.ID, this.onPlayerDisconnect)
             .add(PlayerAimC2SPacket.ID, this.onPlayerAim)
             .add(PlayerMoveC2SPacket.ID, this.onPlayerMove)
+            .add(PlayerMoveByPointerC2SPacket.ID, this.onPlayerMove)
             .add(PlayerInputC2SPacket.ID, this.onPlayerInput)
             .add(PlayerSwitchSlotC2SPacket.ID, this.onPlayerSwitchSlot)
             .add(PlayerFireC2SPacket.ID, this.onPlayerFire)
             .add(PlayerUnlockTechC2SPacket.ID, this.onUnlockTech)
+            .add(PlayerTechResetC2SPacket.ID, this.onTechRest)
             .add(RequestPositionC2SPacket.ID, this.onRequestPosition)
             .register(this.server.networkChannel, this);
     }

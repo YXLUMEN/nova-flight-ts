@@ -65,7 +65,7 @@ export class HUD implements IUi {
         const uo = NovaFlightClient.getInstance().window.camera.uiOffset;
 
         ctx.translate(uo.x, uo.y);
-        ctx.fillText(`分数: ${player.getPhaseScore()}`, x, y);
+        ctx.fillText(`分数: ${player.getScore()}`, x, y);
         y += 20;
 
         if (WorldConfig.devMode) {

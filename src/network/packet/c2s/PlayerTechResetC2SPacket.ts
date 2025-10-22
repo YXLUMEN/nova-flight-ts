@@ -4,14 +4,14 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {UUID} from "../../../apis/registry.ts";
 
-export class TechResetC2SPacket implements Payload {
-    public static readonly ID: PayloadId<TechResetC2SPacket> = {id: Identifier.ofVanilla('reset_tech')};
+export class PlayerTechResetC2SPacket implements Payload {
+    public static readonly ID: PayloadId<PlayerTechResetC2SPacket> = {id: Identifier.ofVanilla('player_reset_tech')};
 
-    public static readonly CODEC: PacketCodec<TechResetC2SPacket> = PacketCodecs.of(
+    public static readonly CODEC: PacketCodec<PlayerTechResetC2SPacket> = PacketCodecs.of(
         (writer, value) => {
             writer.writeUUID(value.uuid);
         },
-        reader => new TechResetC2SPacket(reader.readUUID())
+        reader => new PlayerTechResetC2SPacket(reader.readUUID())
     );
 
     public readonly uuid: UUID;
@@ -20,7 +20,7 @@ export class TechResetC2SPacket implements Payload {
         this.uuid = uuid;
     }
 
-    public getId(): PayloadId<TechResetC2SPacket> {
-        return TechResetC2SPacket.ID;
+    public getId(): PayloadId<PlayerTechResetC2SPacket> {
+        return PlayerTechResetC2SPacket.ID;
     }
 }

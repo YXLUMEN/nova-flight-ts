@@ -40,6 +40,8 @@ import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts
 import {EffectCreateS2CPacket} from "../../network/packet/s2c/EffectCreateS2CPacket.ts";
 import {SoundEventS2CPacket} from "../../network/packet/s2c/SoundEventS2CPacket.ts";
 import {StopSoundS2CPacket} from "../../network/packet/s2c/StopSoundS2CPacket.ts";
+import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
+import {PlayerAddScoreS2CPacket} from "../../network/packet/s2c/PlayerAddScoreS2CPacket.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer = new Set<UUID>();
@@ -272,6 +274,18 @@ export class ClientPlayNetworkHandler {
         world.stopLoopSound(null, packet.soundEvent);
     }
 
+    public onPlayerScore(packet: PlayerSetScoreS2CPacket): void {
+        this.client.player?.setScore(packet.score);
+    }
+
+    public onPlayerAddScore(packet: PlayerAddScoreS2CPacket): void {
+        const score = packet.decrease ? -packet.score : packet.score;
+        const current = this.client.player?.getScore();
+        if (!current) return;
+
+        this.client.player?.setScore(current + score);
+    }
+
     public clear(): void {
         this.loginPlayer.clear();
         this.world = null;
@@ -305,6 +319,8 @@ export class ClientPlayNetworkHandler {
             .add(EffectCreateS2CPacket.ID, this.onEffectCreate)
             .add(SoundEventS2CPacket.ID, this.onPlaySound)
             .add(StopSoundS2CPacket.ID, this.onStopSound)
+            .add(PlayerSetScoreS2CPacket.ID, this.onPlayerScore)
+            .add(PlayerAddScoreS2CPacket.ID, this.onPlayerAddScore)
             .register(this.client.networkChannel, this);
     }
 }

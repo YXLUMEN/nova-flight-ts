@@ -210,5 +210,9 @@ export function applyClientTech(id: string): void {
             player.voidEdge = true;
             break;
         }
+        case 'instant_response': {
+            player.followPointer = true;
+            break;
+        }
     }
 }

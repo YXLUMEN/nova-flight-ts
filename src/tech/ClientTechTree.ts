@@ -1,6 +1,5 @@
 import {TechState} from "./TechState.ts";
 import type {Tech} from "../apis/ITech.ts";
-import {applyClientTech} from "./apply_tech.ts";
 import {clamp} from "../utils/math/math.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {EVENTS} from "../apis/IEvents.ts";
@@ -8,9 +7,11 @@ import {Items} from "../item/items.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import {type NbtCompound} from "../nbt/NbtCompound.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
-import {NovaFlightClient} from "../client/NovaFlightClient.ts";
 import type {TechTree} from "./TechTree.ts";
 import tech from "./tech-data.json";
+import type {ClientPlayerEntity} from "../client/entity/ClientPlayerEntity.ts";
+import {PlayerTechResetC2SPacket} from "../network/packet/c2s/PlayerTechResetC2SPacket.ts";
+import {applyClientTech} from "./applyClientTech.ts";
 
 type Adjacency = {
     out: Map<string, string[]>; // id -> successors
@@ -30,6 +31,7 @@ export class ClientTechTree implements TechTree {
     private readonly nodeWidth = 144;
     private readonly nodeHeight = 40;
 
+    private readonly player: ClientPlayerEntity;
     private readonly container: HTMLElement;
     private readonly svg: SVGSVGElement;
     private readonly nodesLayer: HTMLElement;
@@ -39,7 +41,8 @@ export class ClientTechTree implements TechTree {
 
     private selectNodeId: string | null = null;
 
-    public constructor(container: HTMLElement) {
+    public constructor(player: ClientPlayerEntity, container: HTMLElement) {
+        this.player = player;
         this.container = container;
 
         const techState = TechState.normalizeTechs(tech);
@@ -140,8 +143,7 @@ export class ClientTechTree implements TechTree {
     public readNBT(nbt: NbtCompound) {
         const techs = nbt.getStringArray('Techs');
         if (techs.length === 0) return;
-        const world = NovaFlightClient.getInstance().world;
-        if (!world) return;
+        const world = this.player.getWorld();
 
         for (const tech of techs) {
             this.state.unlock(tech);
@@ -289,14 +291,12 @@ export class ClientTechTree implements TechTree {
         const cost = this.state.getTech(id)?.cost;
         if (cost === undefined) return;
 
-        const world = NovaFlightClient.getInstance().world;
-        const player = NovaFlightClient.getInstance().player;
-        if (!player || !world) return;
-        const score = player.getScore() - cost;
+        const world = this.player.getWorld();
+        const score = this.player.getScore() - cost;
         if (score < 0 && !WorldConfig.devMode) return;
 
         if (this.unlock(id)) {
-            player.setScore(score);
+            this.player.setScore(score);
             this.applyUnlockUpdates(id);
             world.events.emit(EVENTS.UNLOCK_TECH, {id});
             SoundSystem.globalSound.playSound(SoundEvents.UI_APPLY, 1.5);
@@ -443,9 +443,9 @@ export class ClientTechTree implements TechTree {
         return this.adj.conflicts.get(id) || [];
     }
 
-    private resetTech() {
-        const player = NovaFlightClient.getInstance().player;
-        if (!player) return;
+    public resetTech() {
+        // noinspection DuplicatedCode
+        const player = this.player;
 
         const allTech = this.state.techById;
         const unlocked: Tech[] = [];
@@ -468,9 +468,12 @@ export class ClientTechTree implements TechTree {
 
         player.voidEdge = false;
         player.steeringGear = false;
+        player.followPointer = false;
         player.setYaw(-1.57079);
 
         this.state.reset();
         this.renderNodes();
+
+        player.getNetworkChannel().send(new PlayerTechResetC2SPacket(this.player.getUuid()));
     }
 }

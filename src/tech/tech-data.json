@@ -421,20 +421,30 @@
   {
     "id": "steering_gear",
     "name": "方向机",
-    "x": 160,
-    "y": 380,
+    "x": 340,
+    "y": 860,
     "desc": "舰艇可以全向瞄准, 飞行员们再也不用担心飞行和开炮之间的矛盾了, 不过千万要小心四面八方来的敌机!",
-    "cost": 220
+    "cost": 220,
+    "branchGroup": "directional_control"
   },
   {
     "id": "fire_control_computer",
     "name": "火控计算机",
-    "x": 0,
-    "y": 380,
+    "x": 160,
+    "y": 860,
     "desc": "自动计算并瞄准, “忘关了就是开了?” ——帝国旗舰指挥官“大姐头”凯瑟琳的嘲讽 (左Alt开启)",
     "cost": 320,
     "requires": [
       "steering_gear"
     ]
+  },
+  {
+    "id": "instant_response",
+    "name": "极速响应",
+    "x": 340,
+    "y": 940,
+    "desc": "舰艇将跟随鼠标位置",
+    "cost": 230,
+    "branchGroup": "directional_control"
   }
 ]

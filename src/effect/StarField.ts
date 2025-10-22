@@ -1,6 +1,6 @@
 import type {StarLayer} from "../apis/IStarLayer.ts";
 import type {Camera} from "../client/render/Camera.ts";
-import {rand} from "../utils/math/math.ts";
+import {lerp, rand} from "../utils/math/math.ts";
 import {World} from "../world/World.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 
@@ -9,8 +9,10 @@ export class StarField {
     public static readonly TWO_PI = Math.PI * 2;
 
     private readonly count: number;
-    private readonly x: Float32Array;
-    private readonly y: Float32Array;
+    private readonly currX: Float32Array;
+    private readonly currY: Float32Array;
+    private readonly prevX: Float32Array;
+    private readonly prevY: Float32Array;
     private readonly r: Float32Array;
     private readonly speed: Float32Array;
 
@@ -29,8 +31,10 @@ export class StarField {
         const counts = StarField.resolveCounts(totalCount, layers);
         this.count = counts.reduce((s, c) => s + c, 0);
 
-        this.x = new Float32Array(this.count);
-        this.y = new Float32Array(this.count);
+        this.currX = new Float32Array(this.count);
+        this.currY = new Float32Array(this.count);
+        this.prevX = new Float32Array(this.count);
+        this.prevY = new Float32Array(this.count);
         this.r = new Float32Array(this.count);
         this.speed = new Float32Array(this.count);
 
@@ -66,8 +70,8 @@ export class StarField {
         for (let li = 0; li < this.layers.length; li++) {
             const L = this.layers[li];
             for (let i = this.start[li]; i < this.end[li]; i++) {
-                this.x[i] = rand(0, World.WORLD_W);
-                this.y[i] = rand(0, World.WORLD_H);
+                this.currX[i] = rand(0, World.WORLD_W);
+                this.currY[i] = rand(0, World.WORLD_H);
                 this.r[i] = rand(L.radiusMin, L.radiusMax);
                 this.speed[i] = rand(L.speedMin, L.speedMax);
             }
@@ -84,8 +88,8 @@ export class StarField {
             for (let li = 0; li < this.layers.length; li++) {
                 const L = this.layers[li];
                 for (let i = this.start[li]; i < this.end[li]; i++) {
-                    this.x[i] += jumpX * L.parallax;
-                    this.y[i] += jumpY * L.parallax;
+                    this.currX[i] += jumpX * L.parallax;
+                    this.currY[i] += jumpY * L.parallax;
                 }
             }
         }
@@ -95,18 +99,21 @@ export class StarField {
 
         for (let li = 0; li < this.layers.length; li++) {
             for (let i = this.start[li]; i < this.end[li]; i++) {
-                this.y[i] += this.speed[i] * dt;
+                this.prevX[i] = this.currX[i];
+                this.prevY[i] = this.currY[i];
 
-                if (this.y[i] > v.bottom + m) this.reseed(li, i, rand(v.left, v.right), v.top - m);
-                if (this.x[i] < v.left - m) this.reseed(li, i, v.right + m, rand(v.top, v.bottom));
-                else if (this.x[i] > v.right + m) this.reseed(li, i, v.left - m, rand(v.top, v.bottom));
+                this.currY[i] += this.speed[i] * dt;
+
+                if (this.currY[i] > v.bottom + m) this.reseed(li, i, rand(v.left, v.right), v.top - m);
+                if (this.currX[i] < v.left - m) this.reseed(li, i, v.right + m, rand(v.top, v.bottom));
+                else if (this.currX[i] > v.right + m) this.reseed(li, i, v.left - m, rand(v.top, v.bottom));
             }
         }
     }
 
-    public render(ctx: CanvasRenderingContext2D, cam: Camera) {
+    public render(ctx: CanvasRenderingContext2D, cam: Camera, tickDelta: number) {
         const base = cam.cameraOffset;
-        const view = cam.viewOffset;
+        const view = cam.lastViewOffset;
         const vr = cam.viewRect;
         const m = this.margin, maxR = 2.5;
 
@@ -125,7 +132,8 @@ export class StarField {
             ctx.translate(-ox, -oy);
 
             for (let i = this.start[li]; i < this.end[li]; i++) {
-                const px = this.x[i] + sx, py = this.y[i] + sy;
+                const px = lerp(tickDelta, this.prevX[i], this.currX[i] + sx);
+                const py = lerp(tickDelta, this.prevY[i], this.currY[i] + sy);
                 if (px < vr.left - m - maxR || px > vr.right + m + maxR ||
                     py < vr.top - m - maxR || py > vr.bottom + m + maxR) continue;
 
@@ -146,8 +154,10 @@ export class StarField {
 
     private reseed(li: number, i: number, x: number, y: number) {
         const L = this.layers[li];
-        this.x[i] = x;
-        this.y[i] = y;
+        this.currX[i] = x;
+        this.currY[i] = y;
+        this.prevX[i] = x;
+        this.prevY[i] = y;
         this.r[i] = rand(L.radiusMin, L.radiusMax);
         this.speed[i] = rand(L.speedMin, L.speedMax);
     }

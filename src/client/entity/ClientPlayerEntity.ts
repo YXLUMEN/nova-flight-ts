@@ -15,6 +15,8 @@ import type {UUID} from "../../apis/registry.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
 import {wrapRadians} from "../../utils/math/math.ts";
 import type {ItemStack} from "../../item/ItemStack.ts";
+import {PlayerMoveByPointerC2SPacket} from "../../network/packet/c2s/PlayerMoveByPointerC2SPacket.ts";
+import {encodeVelocity} from "../../utils/NetUtil.ts";
 
 export class ClientPlayerEntity extends PlayerEntity {
     public readonly input: KeyboardInput;
@@ -22,6 +24,7 @@ export class ClientPlayerEntity extends PlayerEntity {
     private autoAimEnable: boolean = false;
     public autoAim: AutoAim | null = null;
     public steeringGear: boolean = false;
+    public followPointer: boolean = false;
 
     public lockedMissile = new Set<MissileEntity>();
     private revision: number = 0;
@@ -31,7 +34,7 @@ export class ClientPlayerEntity extends PlayerEntity {
 
         this.input = input;
         const viewport = document.getElementById('viewport') as HTMLElement;
-        this.techTree = new ClientTechTree(viewport);
+        this.techTree = new ClientTechTree(this, viewport);
     }
 
     public override tick() {
@@ -72,6 +75,19 @@ export class ClientPlayerEntity extends PlayerEntity {
             if (Math.abs(wrapRadians(yaw - this.getYaw())) > 0.02) {
                 this.setClampYaw(yaw, 0.3926875);
                 this.getNetworkChannel().send(new PlayerAimC2SPacket(uuid, pointer));
+            }
+        } else if (this.followPointer && WorldConfig.follow) {
+            const pointer = this.input.getPointer;
+            const dx = pointer.x - posRef.x;
+            const dy = pointer.y - posRef.y;
+
+            if (Math.abs(dx) > 32 || Math.abs(dy) > 32) {
+                const packet = new PlayerMoveByPointerC2SPacket(uuid, encodeVelocity(dx), encodeVelocity(dy));
+
+                const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+                const speed = this.getMovementSpeed() * speedMultiplier;
+                this.updateVelocity(speed, packet.dx, packet.dy);
+                this.getNetworkChannel().send(packet);
             }
         }
 

@@ -6,4 +6,6 @@ export interface TechTree extends NbtSerializable {
     unlockAll(): void;
 
     isUnlocked(id: string): boolean;
+
+    resetTech(): void;
 }

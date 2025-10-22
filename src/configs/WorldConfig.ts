@@ -9,7 +9,7 @@ const freezeConfig = createCleanObj({
     tick: 20,
     mbps: 0.05,
     per: 50,
-    version: '25w09a'
+    version: '25w09b'
 } as const);
 
 const WorldConfig = Object.preventExtensions(createCleanObj({
@@ -23,6 +23,7 @@ const WorldConfig = Object.preventExtensions(createCleanObj({
 
     enableCameraOffset: !isDev,
 
+    follow: true,
     autoShoot: false,
     version: freezeConfig.version
 }));

@@ -99,7 +99,7 @@ export class StartScreen implements IUi {
     public render(ctx: CanvasRenderingContext2D) {
         ctx.clearRect(0, 0, this.width, this.height);
 
-        this.starField.render(ctx, this.tempCamera);
+        this.starField.render(ctx, this.tempCamera, 1);
         // 标题
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 48px sans-serif';
