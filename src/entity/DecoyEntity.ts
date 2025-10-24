@@ -6,7 +6,7 @@ import {World} from "../world/World.ts";
 import type {IOwnable} from "./IOwnable.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import {randInt} from "../utils/math/math.ts";
-import type {UUID} from "../apis/registry.ts";
+import type {UUID} from "../apis/types.ts";
 import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
 
 export class DecoyEntity extends Entity implements IOwnable {

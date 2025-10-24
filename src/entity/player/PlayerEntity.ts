@@ -119,8 +119,7 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public override onRemove() {
         super.onRemove();
-        this.weapons.clear();
-        this.baseWeapons.length = 0;
+        this.clearItems();
     }
 
     public override isPlayer(): this is PlayerEntity {
@@ -154,8 +153,10 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public clearItems(): void {
         const stack = this.getCurrentItemStack();
-        const current = stack.getItem() as BaseWeapon;
-        current.onEndFire(stack, this.getWorld(), this);
+        if (stack) {
+            const current = stack.getItem() as BaseWeapon;
+            current.onEndFire(stack, this.getWorld(), this);
+        }
 
         this.currentBaseIndex = 0;
         this.baseWeapons.length = 0;
@@ -223,8 +224,7 @@ export abstract class PlayerEntity extends LivingEntity {
         this.techTree.readNBT(nbt);
         const weaponsNbt = nbt.getCompoundList('Weapons');
         if (weaponsNbt && weaponsNbt.length > 0) {
-            this.weapons.clear();
-            this.baseWeapons.length = 0;
+            this.clearItems();
             for (const wpn of weaponsNbt) {
                 const stack = ItemStack.readNBT(wpn);
                 if (stack) this.addItem(stack.getItem(), stack);

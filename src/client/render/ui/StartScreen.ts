@@ -5,7 +5,6 @@ import {MutVec2} from "../../../utils/math/MutVec2.ts";
 import type {IUi} from "./IUi.ts";
 import {UIButton} from "./UIButton.ts";
 import {UITheme} from "./theme.ts";
-import {WorldConfig} from "../../../configs/WorldConfig.ts";
 import {Window} from "../Window.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
 
@@ -55,7 +54,10 @@ export class StartScreen implements IUi {
         this.tick(0);
 
         window.addEventListener('keydown', event => {
-            if (event.code === 'Space' || event.code === 'Enter') this.newGame();
+            if (event.code === 'Space' || event.code === 'Enter') {
+                if (!document.getElementById('command-bar')?.classList.contains('hidden')) return;
+                this.newGame();
+            }
         }, {signal: this.ctrl.signal});
 
         window.addEventListener('click', (event) => {
@@ -87,7 +89,7 @@ export class StartScreen implements IUi {
 
         let elapsed = tickDelta - this.lastTickTime;
         while (elapsed >= this.tickInterval) {
-            this.starField.update(WorldConfig.mbps, this.tempCamera);
+            this.starField.update(0.02, this.tempCamera);
             this.lastTickTime += this.tickInterval;
             elapsed -= this.tickInterval;
         }

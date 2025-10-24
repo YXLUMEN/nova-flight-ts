@@ -1,7 +1,7 @@
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {EntityAttribute} from "./EntityAttribute.ts";
 import {Identifier} from "../../registry/Identifier.ts";
-import type {Consumer} from "../../apis/registry.ts";
+import type {Consumer} from "../../apis/types.ts";
 import type {EntityAttributeModifier} from "./EntityAttributeModifier.ts";
 import {NbtCompound} from "../../nbt/NbtCompound.ts";
 

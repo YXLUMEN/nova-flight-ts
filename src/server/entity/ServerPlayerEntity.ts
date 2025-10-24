@@ -9,6 +9,7 @@ import {clamp} from "../../utils/math/math.ts";
 import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import type {ServerNetworkChannel} from "../network/ServerNetworkChannel.ts";
 import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
+import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
 
 
 export class ServerPlayerEntity extends PlayerEntity {
@@ -29,8 +30,8 @@ export class ServerPlayerEntity extends PlayerEntity {
         this.inputKeys.clear();
 
         if (this.changedItems.size > 0) {
-            // const packet = new InventoryS2CPacket(0, this.nextRevision(), this.changedItems);
-            // (this.getNetworkChannel() as ServerNetworkChannel).sendTo(packet, this.getUuid());
+            const packet = new InventoryS2CPacket(0, this.nextRevision(), this.changedItems);
+            (this.getNetworkChannel() as ServerNetworkChannel).sendTo(packet, this.getUuid());
             this.changedItems.clear();
         }
     }
@@ -45,7 +46,6 @@ export class ServerPlayerEntity extends PlayerEntity {
         } else {
             item.onEndFire(current, this.getWorld(), this);
         }
-        this.changedItems.add(current);
     }
 
     public handleFire() {
@@ -53,15 +53,12 @@ export class ServerPlayerEntity extends PlayerEntity {
         const stack = this.weapons.get(item)!;
         if (item.canFire(stack)) {
             item.tryFire(stack, this.getWorld(), this);
-            this.changedItems.add(stack);
         }
     }
 
     public setCurrentItem(slot: number) {
         const current = this.getCurrentItemStack();
         this.getCurrentItem().onEndFire(current, this.getWorld(), this);
-
-        this.changedItems.add(current);
         this.currentBaseIndex = clamp(slot, 0, this.baseWeapons.length - 1);
     }
 
@@ -74,11 +71,14 @@ export class ServerPlayerEntity extends PlayerEntity {
                 }
                 if (item.canFire(stack) && this.inputKeys.delete(item.bindKey())) {
                     item.tryFire(stack, world, this);
-                    this.changedItems.add(stack);
                 }
             }
             item.inventoryTick(stack, world, this, 0, true);
         }
+    }
+
+    public addChange(itemStack: ItemStack): void {
+        this.changedItems.add(itemStack);
     }
 
     public override setScore(score: number) {

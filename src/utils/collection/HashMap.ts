@@ -1,3 +1,5 @@
+import type {Comparable} from "../../apis/types.ts";
+
 export class HashMap<K extends Comparable, V> implements Map<K, V> {
     public readonly [Symbol.toStringTag]: string = 'HashMap';
     private readonly buckets: Map<string, Array<{ key: K, value: V }>> = new Map();
@@ -94,10 +96,4 @@ export class HashMap<K extends Comparable, V> implements Map<K, V> {
     public [Symbol.iterator](): MapIterator<[K, V]> {
         return this.entries();
     }
-}
-
-export interface Comparable {
-    equals(other: Comparable): boolean;
-
-    hashCode(): string;
 }

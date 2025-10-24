@@ -1,5 +1,5 @@
 import type {Entity} from "../entity/Entity.ts";
-import type {UUID} from "../apis/registry.ts";
+import type {UUID} from "../apis/types.ts";
 
 export class EntityIndex<T extends Entity> {
     private readonly idToEntity = new Map<number, T>;

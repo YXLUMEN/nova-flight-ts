@@ -1,4 +1,4 @@
-import type {UUID} from "../apis/registry.ts";
+import type {UUID} from "../apis/types.ts";
 
 export class UUIDUtil {
     public static readonly EMPTY_UUID = new Uint8Array(16);

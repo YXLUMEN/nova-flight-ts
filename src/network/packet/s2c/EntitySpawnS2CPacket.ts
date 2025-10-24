@@ -1,7 +1,7 @@
 import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
 import {Registries} from "../../../registry/Registries.ts";
-import type {UUID} from "../../../apis/registry.ts";
+import type {UUID} from "../../../apis/types.ts";
 import type {EntityType} from "../../../entity/EntityType.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";

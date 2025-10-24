@@ -2,7 +2,7 @@ import {DataEntry} from "./DataEntry.ts";
 import type {DataTracked} from "./DataTracked.ts";
 import {ClassToNum} from "../../utils/collection/ClassToNum.ts";
 import {TrackedData} from "./TrackedData.ts";
-import type {Constructor} from "../../apis/registry.ts";
+import type {Constructor} from "../../apis/types.ts";
 import type {TrackedDataHandler} from "./TrackedDataHandler.ts";
 import type {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 import {TrackedDataHandlerRegistry} from "./TrackedDataHandlerRegistry.ts";

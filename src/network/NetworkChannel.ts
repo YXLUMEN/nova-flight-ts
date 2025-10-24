@@ -4,7 +4,7 @@ import {BinaryWriter} from "../nbt/BinaryWriter.ts";
 import {BinaryReader} from "../nbt/BinaryReader.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {HashMap} from "../utils/collection/HashMap.ts";
-import type {Consumer} from "../apis/registry.ts";
+import type {Consumer} from "../apis/types.ts";
 
 export abstract class NetworkChannel {
     protected readonly ws: WebSocket;

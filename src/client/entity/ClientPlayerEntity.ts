@@ -11,15 +11,18 @@ import {PlayerMoveC2SPacket} from "../../network/packet/c2s/PlayerMoveC2SPacket.
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
 import {PlayerAimC2SPacket} from "../../network/packet/c2s/PlayerAimC2SPacket.ts";
-import type {UUID} from "../../apis/registry.ts";
+import type {UUID} from "../../apis/types.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
 import {wrapRadians} from "../../utils/math/math.ts";
-import type {ItemStack} from "../../item/ItemStack.ts";
+import {type ItemStack} from "../../item/ItemStack.ts";
 import {PlayerMoveByPointerC2SPacket} from "../../network/packet/c2s/PlayerMoveByPointerC2SPacket.ts";
 import {encodeVelocity} from "../../utils/NetUtil.ts";
+import type {Item} from "../../item/Item.ts";
 
 export class ClientPlayerEntity extends PlayerEntity {
     public readonly input: KeyboardInput;
+    private specialWeapons: SpecialWeapon[];
+    private quickFireIndex = 0;
 
     private autoAimEnable: boolean = false;
     public autoAim: AutoAim | null = null;
@@ -35,6 +38,9 @@ export class ClientPlayerEntity extends PlayerEntity {
         this.input = input;
         const viewport = document.getElementById('viewport') as HTMLElement;
         this.techTree = new ClientTechTree(this, viewport);
+
+        this.specialWeapons = this.weapons.keys().filter(item => item instanceof SpecialWeapon).toArray();
+        this.switchQuickFire();
     }
 
     public override tick() {
@@ -135,6 +141,33 @@ export class ClientPlayerEntity extends PlayerEntity {
                 }
             }
             w.inventoryTick(stack, world, this, 0, true);
+        }
+    }
+
+    public override clearItems() {
+        super.clearItems();
+        this.specialWeapons.length = 0;
+    }
+
+    public override addItem(item: Item, stack?: ItemStack) {
+        super.addItem(item, stack);
+        this.specialWeapons = this.weapons.keys().filter(item => item instanceof SpecialWeapon).toArray();
+    }
+
+    public switchQuickFire(): void {
+        this.quickFireIndex = (this.quickFireIndex + 1) % this.specialWeapons.length;
+    }
+
+    public getQuickFire() {
+        return this.specialWeapons[this.quickFireIndex];
+    }
+
+    public launchQuickFire() {
+        const item = this.getQuickFire();
+        const stack = this.weapons.get(item);
+        if (stack && item.canFire(stack)) {
+            item.tryFire(stack, this.getWorld(), this);
+            this.getNetworkChannel().send(new PlayerInputC2SPacket(this.getUuid(), item.bindKey()));
         }
     }
 

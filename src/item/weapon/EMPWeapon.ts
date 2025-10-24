@@ -11,6 +11,8 @@ import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 import {VisualEffectTypes} from "../../effect/VisualEffectTypes.ts";
+import type {ServerPlayerEntity} from "../../server/entity/ServerPlayerEntity.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export class EMPWeapon extends SpecialWeapon {
     private readonly duration = 600;
@@ -30,13 +32,20 @@ export class EMPWeapon extends SpecialWeapon {
             }
         });
 
-        world.addEffect(null, VisualEffectTypes.EMP_BURST.create(
-            attacker.getPositionRef,
-            radius,
-        ));
+        if (!world.isClient) {
+            (world as ServerWorld).spawnEffect(null, VisualEffectTypes.EMP_BURST.create(
+                attacker.getPositionRef,
+                radius,
+            ));
+        }
+
         world.playSound(attacker, SoundEvents.EMP_BURST);
 
         this.setCooldown(stack, this.getMaxCooldown(stack));
+
+        if (attacker.isPlayer() && !world.isClient) {
+            (attacker as ServerPlayerEntity).addChange(stack);
+        }
     }
 
     public bindKey(): string {

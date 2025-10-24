@@ -2,7 +2,7 @@ import {EntityAttributeInstance} from "./EntityAttributeInstance.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {EntityAttribute} from "./EntityAttribute.ts";
 import type {Identifier} from "../../registry/Identifier.ts";
-import type {Consumer} from "../../apis/registry.ts";
+import type {Consumer} from "../../apis/types.ts";
 import type {EntityType} from "../EntityType.ts";
 import type {LivingEntity} from "../LivingEntity.ts";
 import {DefaultAttributeRegistry} from "./DefaultAttributeRegistry.ts";

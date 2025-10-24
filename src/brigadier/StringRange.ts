@@ -1,0 +1,29 @@
+export class StringRange {
+    public readonly start: number;
+    public readonly end: number;
+
+    public constructor(start: number, end: number) {
+        this.start = start;
+        this.end = end;
+    }
+
+    public static at(pos: number) {
+        return new StringRange(pos, pos);
+    }
+
+    public static between(start: number, end: number) {
+        return new StringRange(start, end);
+    }
+
+    public static encompassing(a: StringRange, b: StringRange) {
+        return new StringRange(Math.min(a.start, b.start), Math.max(a.end, b.end));
+    }
+
+    public isEmpty() {
+        return this.start === this.end;
+    }
+
+    public getLength() {
+        return this.end - this.start;
+    }
+}

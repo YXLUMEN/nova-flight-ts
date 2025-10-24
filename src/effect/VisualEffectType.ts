@@ -1,6 +1,6 @@
 import type {VisualEffect} from "./VisualEffect.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
-import type {Constructor} from "../apis/registry.ts";
+import type {Constructor} from "../apis/types.ts";
 
 
 export class VisualEffectType<T extends VisualEffect, F extends Constructor<T> = Constructor<T>> {

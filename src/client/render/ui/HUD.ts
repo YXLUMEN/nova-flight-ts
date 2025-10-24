@@ -80,12 +80,19 @@ export class HUD implements IUi {
         // 武器冷却条
         const items = player.getInventory();
         if (items.size > 0) {
+            const quickFire = player.getQuickFire();
             for (const stack of items.values()) {
                 const info = this.getWeaponUI(stack);
-                if (info) {
-                    this.drawBar(ctx, x, y, this.barWidth, this.barHeight, info);
-                    y += this.barHeight + this.lineGap;
+                if (!info) continue;
+
+                this.drawBar(ctx, x, y, this.barWidth, this.barHeight, info);
+                if (stack.getItem() === quickFire) {
+                    ctx.strokeStyle = "yellow";
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(x - 2, y - 2, this.barWidth + 4, this.barHeight + 4);
                 }
+
+                y += this.barHeight + this.lineGap;
             }
         }
 

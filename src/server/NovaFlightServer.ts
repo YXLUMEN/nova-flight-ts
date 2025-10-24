@@ -1,7 +1,7 @@
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import {ServerNetworkChannel} from "./network/ServerNetworkChannel.ts";
-import type {Consumer, UUID} from "../apis/registry.ts";
+import type {Consumer, UUID} from "../apis/types.ts";
 import {ServerReceive} from "./network/ServerReceive.ts";
 import type {ServerWorld} from "./ServerWorld.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
@@ -23,7 +23,7 @@ export abstract class NovaFlightServer {
 
     private running = false;
     private waitWorldStop: Promise<void> | null = null;
-    private resolveStop: Consumer<void> | null = null;
+    private stopWorld: Consumer<void> | null = null;
 
     private bindTick = this.tick.bind(this);
 
@@ -41,7 +41,7 @@ export abstract class NovaFlightServer {
 
         const {promise, resolve} = Promise.withResolvers<void>();
         this.waitWorldStop = promise;
-        this.resolveStop = () => resolve();
+        this.stopWorld = () => resolve();
 
         const mod = await import("./ServerWorld.ts");
         this.world = new mod.ServerWorld(manager, this);
@@ -105,7 +105,7 @@ export abstract class NovaFlightServer {
         this.world = null;
 
         await this.onWorldStop();
-        if (this.resolveStop) this.resolveStop();
+        if (this.stopWorld) this.stopWorld();
         this.waitWorldStop = null;
 
         this.networkChannel.disconnect();

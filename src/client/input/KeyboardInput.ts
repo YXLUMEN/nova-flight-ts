@@ -4,12 +4,15 @@ import type {IInput} from "./IInput.ts";
 // @ts-ignore
 import {World} from "../../world/World.ts";
 import {NovaFlightClient} from "../NovaFlightClient.ts";
+import type {Consumer} from "../../apis/types.ts";
 
 export class KeyboardInput implements IInput {
+    private showCommand = false;
+
     private readonly keys = new Set<string>();
     private readonly bindings = new Map<string, string[]>();
-    private readonly keyHandler = new Map<string, (event: KeyboardEvent) => void>();
-    private readonly wheelHandler = new Map<string, (event: WheelEvent) => void>();
+    private readonly keyHandler = new Map<string, Consumer<KeyboardEvent>>();
+    private readonly wheelHandler = new Map<string, Consumer<WheelEvent>>();
     private prevKeys = new Set<string>();
 
     private pointer = MutVec2.zero();
@@ -53,11 +56,11 @@ export class KeyboardInput implements IInput {
         return keys ? this.wasComboPressed(...keys) : false;
     }
 
-    public onKeyDown(name: string, handler: (event: KeyboardEvent) => void): void {
+    public onKeyDown(name: string, handler: Consumer<KeyboardEvent>): void {
         this.keyHandler.set(name, handler);
     }
 
-    public onWheeling(name: string, handler: (event: WheelEvent) => void): void {
+    public onWheeling(name: string, handler: Consumer<WheelEvent>): void {
         this.wheelHandler.set(name, handler);
     }
 
@@ -74,24 +77,59 @@ export class KeyboardInput implements IInput {
     }
 
     private registryListener(target: HTMLElement) {
-        window.addEventListener("keydown", e => {
-            e.preventDefault();
-            this.keys.add(e.code);
-            for (const fn of this.keyHandler.values()) fn(e);
+        const commandBar = document.getElementById('command-bar')!;
+        const commandInput = document.getElementById('command-input') as HTMLInputElement;
+
+        window.addEventListener('keydown', event => {
+            const code = event.code;
+
+            if (code === 'Slash') {
+                if (!commandBar.classList.toggle('hidden')) {
+                    event.preventDefault();
+                    commandInput.focus();
+                    this.showCommand = true;
+                } else {
+                    this.showCommand = false;
+                }
+            }
+
+            if (this.showCommand) {
+                if (code === 'F5' || ((event.ctrlKey || event.metaKey) && code === 'KeyR')) event.preventDefault();
+                return;
+            }
+
+            event.preventDefault();
+            this.keys.add(code);
+            for (const fn of this.keyHandler.values()) fn(event);
         });
-        window.addEventListener("keyup", e => this.keys.delete(e.code));
-        window.addEventListener("blur", () => this.keys.clear());
+        window.addEventListener('keyup', e => this.keys.delete(e.code));
+        window.addEventListener('blur', () => this.keys.clear());
         window.addEventListener('wheel', e => {
-            const player = NovaFlightClient.getInstance()!.player;
+            const player = NovaFlightClient.getInstance().player;
             if (player) player.switchWeapon(e.deltaY > 0 ? 1 : -1);
         }, {passive: true});
 
-        target.addEventListener("mousemove", e => {
+        target.addEventListener('mousemove', e => {
             const offset = NovaFlightClient.getInstance().window.camera.cameraOffset;
             this.pointer.set(e.offsetX + offset.x, e.offsetY + offset.y);
         }, {passive: true});
 
-        target.addEventListener("mousedown", () => WorldConfig.autoShoot = true);
-        target.addEventListener("mouseup", () => WorldConfig.autoShoot = false);
+        target.addEventListener('mousedown', e => {
+            if (e.button === 0) {
+                WorldConfig.autoShoot = true;
+            }
+            if (e.button === 1) {
+                NovaFlightClient.getInstance().player?.switchQuickFire();
+            }
+            if (e.button === 2) {
+                const player = NovaFlightClient.getInstance().player;
+                if (player) player.launchQuickFire();
+            }
+        });
+        target.addEventListener('mouseup', e => {
+            if (e.button === 0) {
+                WorldConfig.autoShoot = false;
+            }
+        });
     }
 }

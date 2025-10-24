@@ -1,0 +1,19 @@
+import type {CommandContextBuilder} from "./context/CommandContextBuilder.ts";
+import type {CommandNode} from "./CommandNode.ts";
+import {StringReader} from "./StringReader.ts";
+
+export class ParseResults<S> {
+    public readonly context: CommandContextBuilder<S>;
+    public readonly exceptions: Map<CommandNode<S>, Error>;
+    public readonly reader: StringReader;
+
+    public constructor(context: CommandContextBuilder<S>, reader: StringReader, exceptions: Map<CommandNode<S>, Error>) {
+        this.context = context;
+        this.exceptions = exceptions;
+        this.reader = reader;
+    }
+
+    public static empty<S>(context: CommandContextBuilder<S>) {
+        return new ParseResults(context, new StringReader(''), new Map());
+    }
+}

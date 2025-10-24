@@ -11,6 +11,7 @@ export class AttributeContainer {
     private readonly custom = new Map<RegistryEntry<EntityAttribute>, EntityAttributeInstance>();
     private readonly tracked = new Set<EntityAttributeInstance>();
     private readonly pendingUpdate = new Set<EntityAttributeInstance>();
+    private readonly pendingSync = new Set<EntityAttributeInstance>();
     private readonly fallback: DefaultAttributeContainer;
 
     public constructor(defaultAttributes: DefaultAttributeContainer) {
@@ -21,6 +22,7 @@ export class AttributeContainer {
         this.pendingUpdate.add(instance);
         if (instance.getAttribute().getValue().isTracked()) {
             this.tracked.add(instance);
+            this.pendingSync.add(instance);
         }
     }
 
@@ -30,6 +32,10 @@ export class AttributeContainer {
 
     public getPendingUpdate(): Set<EntityAttributeInstance> {
         return this.pendingUpdate;
+    }
+
+    public getPendingSync(): Set<EntityAttributeInstance> {
+        return this.pendingSync;
     }
 
     public getCustomInstance(attribute: RegistryEntry<EntityAttribute>): EntityAttributeInstance | null {

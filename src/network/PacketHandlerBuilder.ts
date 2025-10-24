@@ -1,5 +1,5 @@
 import type {Payload, PayloadId} from "./Payload.ts";
-import type {Consumer} from "../apis/registry.ts";
+import type {Consumer} from "../apis/types.ts";
 import type {NetworkChannel} from "./NetworkChannel.ts";
 
 export class PacketHandlerBuilder {

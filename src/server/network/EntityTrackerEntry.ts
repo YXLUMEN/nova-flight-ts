@@ -114,19 +114,12 @@ export class EntityTrackerEntry {
         }
 
         if (this.entity instanceof LivingEntity) {
-            const trackedSet = this.entity.getAttributes().getTracked();
-            if (trackedSet.size <= 0) return;
+            const pending = this.entity.getAttributes().getPendingSync();
+            if (pending.size <= 0) return;
 
-            const pending = this.entity.getAttributes().getPendingUpdate();
-            const shouldUpdate = trackedSet.intersection(pending);
-            if (shouldUpdate.size <= 0) return;
-            for (const entry of shouldUpdate) {
-                pending.delete(entry);
-            }
-
-            const packet = EntityAttributesS2CPacket.create(this.entity.getId(), shouldUpdate);
+            const packet = EntityAttributesS2CPacket.create(this.entity.getId(), pending);
             if (packet.entries.length > 0) this.sendSync(packet);
-
+            pending.clear();
         }
     }
 

@@ -34,3 +34,30 @@ canvas {
     background-color: #cfe3ff;
     border-radius: 3px;
 }
+
+.command-bar {
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    bottom: 0;
+    left: 0;
+    background-color: #fff;
+    transition: 100ms transform;
+}
+
+.command-bar.hidden {
+    pointer-events: none;
+    transform: translateY(100%);
+}
+
+.command-input {
+    z-index: 1000;
+    font-family: Consolas, Monaco, "Andale Mono", "Lucida Console", monospace;
+    font-size: 18px;
+    width: 100vw;
+    height: 24px;
+    border: none;
+    outline: none;
+    padding: 0 8px;
+}

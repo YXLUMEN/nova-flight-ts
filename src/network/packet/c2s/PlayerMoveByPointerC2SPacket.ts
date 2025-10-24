@@ -2,7 +2,7 @@ import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import type {UUID} from "../../../apis/registry.ts";
+import type {UUID} from "../../../apis/types.ts";
 import {decodeVelocity} from "../../../utils/NetUtil.ts";
 
 export class PlayerMoveByPointerC2SPacket implements Payload {

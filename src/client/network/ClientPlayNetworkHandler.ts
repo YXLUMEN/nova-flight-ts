@@ -4,7 +4,7 @@ import {ClientWorld} from "../ClientWorld.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
-import type {UUID} from "../../apis/registry.ts";
+import type {UUID} from "../../apis/types.ts";
 import {EntityRemoveS2CPacket} from "../../network/packet/s2c/EntityRemoveS2CPacket.ts";
 import {EntityPositionS2CPacket} from "../../network/packet/s2c/EntityPositionS2CPacket.ts";
 import {MobAiS2CPacket} from "../../network/packet/s2c/MobAiS2CPacket.ts";
@@ -42,20 +42,34 @@ import {SoundEventS2CPacket} from "../../network/packet/s2c/SoundEventS2CPacket.
 import {StopSoundS2CPacket} from "../../network/packet/s2c/StopSoundS2CPacket.ts";
 import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
 import {PlayerAddScoreS2CPacket} from "../../network/packet/s2c/PlayerAddScoreS2CPacket.ts";
+import {ClientCommandSource} from "../command/ClientCommandSource.ts";
+import {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
+import type {Payload} from "../../network/Payload.ts";
+import {CommandExecutionC2SPacket} from "../../network/packet/c2s/CommandExecutionC2SPacket.ts";
 
 export class ClientPlayNetworkHandler {
-    private readonly loginPlayer = new Set<UUID>();
+    private readonly loginPlayer: Set<UUID> = new Set();
+    private readonly commandSource: ClientCommandSource;
+    private commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
     private readonly client: NovaFlightClient;
     private readonly random = new GaussianRandom();
     private world: ClientWorld | null = null;
 
     public constructor(client: NovaFlightClient) {
         this.client = client;
+        this.commandSource = new ClientCommandSource(this, client);
+    }
+
+    public sendPacket(packet: Payload) {
+        this.client.networkChannel.send(packet);
+    }
+
+    public onDisconnect() {
     }
 
     public onServerReady(_packet: ServerReadyS2CPacket) {
         this.loginPlayer.add(this.client.clientId);
-        this.client.networkChannel.send(new PlayerAttemptLoginC2SPacket(this.client.clientId));
+        this.sendPacket(new PlayerAttemptLoginC2SPacket(this.client.clientId));
     }
 
     public onGameJoin(packet: JoinGameS2CPacket) {
@@ -70,7 +84,7 @@ export class ClientPlayNetworkHandler {
         this.client.player.setId(packet.playerEntityId);
         this.world.addEntity(this.client.player);
         this.world.setTicking(true);
-        this.client.networkChannel.send(new PlayerFinishLoginC2SPacket(this.client.clientId));
+        this.sendPacket(new PlayerFinishLoginC2SPacket(this.client.clientId));
     }
 
     public onEntity(packet: EntityS2CPacket) {
@@ -284,6 +298,30 @@ export class ClientPlayNetworkHandler {
         if (!current) return;
 
         this.client.player?.setScore(current + score);
+    }
+
+    public sendCommand(command: string): boolean {
+        if (this.parse(command).exceptions.size === 0) {
+            this.sendPacket(new CommandExecutionC2SPacket(command));
+            return true;
+        }
+        return false;
+    }
+
+    public parse(command: string) {
+        return this.commandDispatcher.parse(command, this.commandSource);
+    }
+
+    public getCommandDispatcher() {
+        return this.commandDispatcher;
+    }
+
+    public getCommandSource() {
+        return this.commandSource;
+    }
+
+    public getPlayerList() {
+        return this.loginPlayer.values();
     }
 
     public clear(): void {

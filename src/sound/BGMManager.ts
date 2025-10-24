@@ -7,6 +7,8 @@ export class BGMManager {
     private static current = 0;
 
     public static init() {
+        Object.freeze(this.playList);
+
         this.current = Math.floor(Math.random() * this.playList.length);
         AudioManager.playAudio(this.playList[this.current]);
         AudioManager.setVolume(0.5);

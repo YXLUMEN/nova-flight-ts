@@ -1,8 +1,8 @@
-import type {Comparable} from "../utils/collection/HashMap.ts";
 import type {Codec} from "../serialization/Codec.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import type {Comparable} from "../apis/types.ts";
 
 export class Identifier implements Comparable {
     public static readonly CODEC: Codec<Identifier> = {

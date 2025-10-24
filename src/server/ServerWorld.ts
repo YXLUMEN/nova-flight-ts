@@ -11,7 +11,7 @@ import {EntityType} from "../entity/EntityType.ts";
 import {EntityList} from "../world/EntityList.ts";
 import {ServerEntityManager} from "../world/ServerEntityManager.ts";
 import type {EntityHandler} from "../world/EntityHandler.ts";
-import type {UUID} from "../apis/registry.ts";
+import type {UUID} from "../apis/types.ts";
 import type {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {collideEntityCircle} from "../utils/math/math.ts";

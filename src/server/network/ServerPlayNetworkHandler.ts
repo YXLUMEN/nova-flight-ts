@@ -11,7 +11,7 @@ import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSl
 import {PlayerUnlockTechC2SPacket} from "../../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
 import {RequestPositionC2SPacket} from "../../network/packet/c2s/RequestPositionC2SPacket.ts";
 import {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
-import type {UUID} from "../../apis/registry.ts";
+import type {UUID} from "../../apis/types.ts";
 import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {applyServerTech} from "../../tech/applyServerTech.ts";
 import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";

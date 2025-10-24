@@ -3,7 +3,7 @@ import {Registries} from "../registry/Registries.ts";
 import {Registry} from "../registry/Registry.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {EntityDimensions} from "./EntityDimensions.ts";
-import type {Constructor} from "../apis/registry.ts";
+import type {Constructor} from "../apis/types.ts";
 
 export class EntityType<T extends Entity, F extends Constructor<T> = Constructor<T>> {
     private readonly id: Identifier;

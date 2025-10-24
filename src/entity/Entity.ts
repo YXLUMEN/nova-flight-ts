@@ -11,17 +11,17 @@ import {AtomicInteger} from "../utils/math/AtomicInteger.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {Box} from "../utils/math/Box.ts";
-import type {Comparable} from "../utils/collection/HashMap.ts";
 import {clamp, lerp} from "../utils/math/math.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import type {NbtCompound} from "../nbt/NbtCompound.ts";
-import type {UUID} from "../apis/registry.ts";
+import type {Comparable, UUID} from "../apis/types.ts";
 import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {TrackedPosition} from "./TrackedPosition.ts";
 import type {PlayerEntity} from "./player/PlayerEntity.ts";
+import type {CommandOutput} from "../server/command/CommandOutput.ts";
 
 
-export abstract class Entity implements DataTracked, Comparable, NbtSerializable {
+export abstract class Entity implements DataTracked, Comparable, NbtSerializable, CommandOutput {
     // 除了全局EntityList, 禁止使用
     public static readonly CURRENT_ID = new AtomicInteger();
 
@@ -364,6 +364,17 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
 
     public getDataTracker(): DataTracker {
         return this.dataTracker;
+    }
+
+    public shouldTrackOutput(): boolean {
+        return true;
+    }
+
+    public sendMessage(_msg: string): void {
+    }
+
+    public cannotBeSilenced(): boolean {
+        return false;
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {

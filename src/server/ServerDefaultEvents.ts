@@ -8,7 +8,6 @@ import {SpawnMarkerEntity} from "../entity/SpawnMarkerEntity.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 import {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
-import {NovaFlightServer} from "./NovaFlightServer.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
@@ -67,6 +66,33 @@ export class ServerDefaultEvents {
             }
         });
 
+        eventBus.on(EVENTS.BOSS_KILLED, event => {
+            if (!event.mob) {
+                world.stage.nextPhase();
+                return;
+            }
+
+            world.schedule(120, () => {
+                if (BossEntity.hasBoss) return;
+
+                world.stage.reset();
+                while (true) {
+                    const name = world.stage.getCurrentName();
+                    if (name === 'P6' || name === 'mP3' || name === null) break;
+                    world.stage.nextPhase();
+                }
+
+                const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 64);
+                boss.setPosition(World.WORLD_W / 2, 64);
+
+                const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
+                mark.setPositionByVec(boss.getPositionRef);
+                world.spawnEntity(mark);
+            });
+
+            world.stage.nextPhase();
+        });
+
         eventBus.on(EVENTS.EMP_BURST, event => {
             const player = event.entity as Entity;
             if (!(player instanceof ServerPlayerEntity)) return;
@@ -87,7 +113,7 @@ export class ServerDefaultEvents {
                 world.spawnEntity(mark);
             }
 
-            NovaFlightServer.getInstance().world?.playSound(null, SoundEvents.PHASE_CHANGE);
+            world.playSound(null, SoundEvents.PHASE_CHANGE);
         });
     }
 }

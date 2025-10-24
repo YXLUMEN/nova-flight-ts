@@ -444,7 +444,7 @@
     "x": 340,
     "y": 940,
     "desc": "舰艇将跟随鼠标位置",
-    "cost": 230,
+    "cost": 20,
     "branchGroup": "directional_control"
   }
 ]

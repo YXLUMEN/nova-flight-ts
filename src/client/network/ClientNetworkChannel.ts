@@ -1,6 +1,6 @@
 import {NetworkChannel} from "../../network/NetworkChannel.ts";
 import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
-import type {UUID} from "../../apis/registry.ts";
+import type {UUID} from "../../apis/types.ts";
 import {UUIDUtil} from "../../utils/UUIDUtil.ts";
 
 export class ClientNetworkChannel extends NetworkChannel {

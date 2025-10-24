@@ -8,7 +8,7 @@ import {type NbtCompound} from "../../nbt/NbtCompound.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {IColorEntity} from "../IColorEntity.ts";
 import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
-import type {UUID} from "../../apis/registry.ts";
+import type {UUID} from "../../apis/types.ts";
 
 export abstract class ProjectileEntity extends Entity implements IOwnable, IColorEntity {
     public readonly damage: number;

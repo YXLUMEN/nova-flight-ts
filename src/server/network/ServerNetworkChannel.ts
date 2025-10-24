@@ -1,7 +1,7 @@
 import {NetworkChannel} from "../../network/NetworkChannel.ts";
 import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
 import type {Payload} from "../../network/Payload.ts";
-import type {UUID} from "../../apis/registry.ts";
+import type {UUID} from "../../apis/types.ts";
 import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 
 export class ServerNetworkChannel extends NetworkChannel {

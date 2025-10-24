@@ -21,3 +21,9 @@ export type UnaryOperator<T> = (val: T) => T;
 export type Supplier<T> = () => T;
 
 export type Predicate<T> = (val: T) => boolean;
+
+export interface Comparable {
+    equals(other: Comparable): boolean;
+
+    hashCode(): string;
+}
