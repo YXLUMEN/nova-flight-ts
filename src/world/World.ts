@@ -7,7 +7,6 @@ import {RegistryManager} from "../registry/RegistryManager.ts";
 import {type IEvents} from "../apis/IEvents.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import {AtomicInteger} from "../utils/math/AtomicInteger.ts";
-import type {NetworkChannel} from "../network/NetworkChannel.ts";
 import type {Payload} from "../network/Payload.ts";
 import type {Consumer} from "../apis/types.ts";
 import type {EntityList} from "./EntityList.ts";
@@ -20,6 +19,8 @@ import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {ClientWorld} from "../client/ClientWorld.ts";
 import {EntityType} from "../entity/EntityType.ts";
+import type {INetworkChannel} from "../network/INetworkChannel.ts";
+import type {ServerWorker} from "../worker/ServerWorker.ts";
 
 export abstract class World {
     public static readonly WORLD_W = 1692;
@@ -29,6 +30,7 @@ export abstract class World {
     public empBurst: number = 0
     // ticking
     public readonly isClient: boolean;
+    protected isMultiPlayer: boolean = false;
     public peaceMod = false;
     public freeze = false;
     protected over = false;
@@ -61,7 +63,11 @@ export abstract class World {
         return this.isClient;
     }
 
-    public getServer(): Worker | null {
+    public isMultiPlayerWorld(): boolean {
+        return this.isMultiPlayer;
+    }
+
+    public getServer(): ServerWorker | null {
         return null;
     }
 
@@ -168,7 +174,7 @@ export abstract class World {
         return this.registryManager;
     }
 
-    public abstract getNetworkChannel(): NetworkChannel;
+    public abstract getNetworkChannel(): INetworkChannel;
 
     public sendPacket(payload: Payload) {
         this.getNetworkChannel().send(payload);

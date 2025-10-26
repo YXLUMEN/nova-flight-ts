@@ -22,6 +22,7 @@ import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpa
 import {EntityNbtS2CPacket} from "../../network/packet/s2c/EntityNbtS2CPacket.ts";
 import {PlayerTechResetC2SPacket} from "../../network/packet/c2s/PlayerTechResetC2SPacket.ts";
 import {PlayerMoveByPointerC2SPacket} from "../../network/packet/c2s/PlayerMoveByPointerC2SPacket.ts";
+import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 
 export class ServerPlayNetworkHandler {
     private readonly server: NovaFlightServer;
@@ -35,8 +36,14 @@ export class ServerPlayNetworkHandler {
         this.channel = server.networkChannel;
     }
 
+    public disconnectAllPlayer(): void {
+        for (const player of this.loginPlayers) {
+            this.channel.sendTo(new PlayerDisconnectS2CPacket(player, 'ServerClose'), player);
+        }
+    }
+
     public async onPlayerAttemptLogin(packet: PlayerAttemptLoginC2SPacket): Promise<void> {
-        const clientId = packet.clientId;
+        const clientId: UUID = packet.clientId;
 
         if (this.loginPlayers.has(clientId)) {
             console.warn(`Server attempted to add player prior to sending player info (Player id ${clientId})`);
@@ -46,7 +53,7 @@ export class ServerPlayNetworkHandler {
         const player = new ServerPlayerEntity(this.world);
         player.setUuid(clientId);
         this.world.spawnPlayer(player);
-        this.channel.sendTo(new JoinGameS2CPacket(player.getId()), player.getUuid());
+        this.channel.sendTo(new JoinGameS2CPacket(player.getId()), clientId);
         this.loginPlayers.add(clientId);
     }
 
@@ -68,6 +75,7 @@ export class ServerPlayNetworkHandler {
         }
 
         this.loginPlayers.delete(uuid);
+        this.channel.send(new PlayerDisconnectS2CPacket(uuid, 'Logout'));
     }
 
     public onPlayerAim(packet: PlayerAimC2SPacket) {

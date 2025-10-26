@@ -21,6 +21,7 @@ export function musicRegistry(dispatcher: CommandDispatcher<any>) {
                             .executes(ctx => {
                                 const arg = ctx.args.get('music_id');
                                 if (!arg) throw new Error("<music_id> is required");
+
                                 const event = Registries.AUDIOS.getById(arg.result);
                                 if (!event) throw new Error(`Music was not found with ID: "${arg.result}"`);
                                 AudioManager.playAudio(event);

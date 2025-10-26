@@ -46,6 +46,12 @@ import {ClientCommandSource} from "../command/ClientCommandSource.ts";
 import {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
 import type {Payload} from "../../network/Payload.ts";
 import {CommandExecutionC2SPacket} from "../../network/packet/c2s/CommandExecutionC2SPacket.ts";
+import {OtherClientPlayerEntity} from "../entity/OtherClientPlayerEntity.ts";
+import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
+import {PlayerDisconnectC2SPacket} from "../../network/packet/c2s/PlayerDisconnectC2SPacket.ts";
+import {ClientSniffingC2SPacket} from "../../network/packet/c2s/ClientSniffingC2SPacket.ts";
+import {EntityChooseTargetS2CPacket} from "../../network/packet/s2c/EntityChooseTargetS2CPacket.ts";
+import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer: Set<UUID> = new Set();
@@ -54,6 +60,9 @@ export class ClientPlayNetworkHandler {
     private readonly client: NovaFlightClient;
     private readonly random = new GaussianRandom();
     private world: ClientWorld | null = null;
+
+    private maxSniffTimes = 32;
+    private sniffInterval: number | undefined;
 
     public constructor(client: NovaFlightClient) {
         this.client = client;
@@ -64,17 +73,44 @@ export class ClientPlayNetworkHandler {
         this.client.networkChannel.send(packet);
     }
 
-    public onDisconnect() {
+    public onRelayServer(packet: RelayServerPacket) {
+        const [type, msg] = packet.msg.split(':');
+        if (type === 'ERR') {
+            this.stopSniff();
+            this.client.connectInfo?.setError(msg);
+        }
+        console.log(packet.msg);
+    }
+
+    public disconnect() {
+        const uuid = this.client.player!.getUuid();
+        if (!uuid) return;
+        this.sendPacket(new PlayerDisconnectC2SPacket(uuid));
+    }
+
+    public checkServer() {
+        if (this.sniffInterval !== undefined) return;
+
+        this.sendPacket(new ClientSniffingC2SPacket(this.client.clientId));
+
+        let times = 0;
+        this.sniffInterval = setInterval(() => {
+            times++;
+            this.sendPacket(new ClientSniffingC2SPacket(this.client.clientId));
+            if (times >= this.maxSniffTimes) this.stopSniff();
+        }, 2000);
     }
 
     public onServerReady(_packet: ServerReadyS2CPacket) {
+        this.stopSniff();
+
         this.loginPlayer.add(this.client.clientId);
         this.sendPacket(new PlayerAttemptLoginC2SPacket(this.client.clientId));
     }
 
-    public onGameJoin(packet: JoinGameS2CPacket) {
+    public async onGameJoin(packet: JoinGameS2CPacket) {
         this.world = new ClientWorld(this.client.registryManager);
-        this.client.joinGame(this.world);
+        await this.client.joinGame(this.world);
         if (this.client.player === null) {
             this.client.player = new ClientPlayerEntity(this.world, this.client.input);
             this.client.player.setYaw(-1.57079);
@@ -85,6 +121,21 @@ export class ClientPlayNetworkHandler {
         this.world.addEntity(this.client.player);
         this.world.setTicking(true);
         this.sendPacket(new PlayerFinishLoginC2SPacket(this.client.clientId));
+    }
+
+    public onDisconnect(packet: PlayerDisconnectS2CPacket) {
+        const world = this.world;
+        if (!world) return;
+
+        const player = world.getEntityLookup().getByUUID(packet.uuid);
+        if (!player) return;
+        this.loginPlayer.delete(packet.uuid);
+        this.world?.removeEntity(player.getId());
+
+        if (packet.uuid === this.client.clientId) {
+            this.client.window.notify.show(packet.reason);
+            this.client.scheduleStop();
+        }
     }
 
     public onEntity(packet: EntityS2CPacket) {
@@ -99,9 +150,7 @@ export class ClientPlayNetworkHandler {
             const yaw = packet.rotate ? packet.yaw : entity.getLerpTargetYaw();
 
             entity.updateTrackedPositionAndAngles(deltaPos.x, deltaPos.y, yaw, 3);
-            return;
-        }
-        if (packet.rotate) {
+        } else if (packet.rotate) {
             entity.updateTrackedPositionAndAngles(entity.getLerpTargetX(), entity.getLerpTargetY(), packet.yaw, 3);
         }
     }
@@ -137,6 +186,11 @@ export class ClientPlayNetworkHandler {
         const entityType = packet.entityType;
         if (entityType === EntityTypes.PLAYER) {
             if (this.loginPlayer.has(packet.uuid)) return null;
+            const world = this.world;
+            if (!world) return null;
+
+            this.loginPlayer.add(packet.uuid);
+            return new OtherClientPlayerEntity(world);
         }
 
         const world = this.world;
@@ -177,7 +231,13 @@ export class ClientPlayNetworkHandler {
     public onMobAiBehavior(packet: MobAiS2CPacket): void {
         const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
-        (entity as MobEntity).setBehavior(packet.behavior);
+        (entity as MobEntity).getAi().setBehavior((entity as MobEntity), packet.behavior);
+    }
+
+    public onMobChooseTarget(packet: EntityChooseTargetS2CPacket) {
+        const entity = this.world?.getEntityById(packet.entityId);
+        if (!entity) return;
+        (entity as MobEntity).getAi().setTarget(packet.target);
     }
 
     public onExplosion(packet: ExplosionS2CPacket) {
@@ -324,6 +384,11 @@ export class ClientPlayNetworkHandler {
         return this.loginPlayer.values();
     }
 
+    private stopSniff() {
+        clearInterval(this.sniffInterval);
+        this.sniffInterval = undefined;
+    }
+
     public clear(): void {
         this.loginPlayer.clear();
         this.world = null;
@@ -332,8 +397,10 @@ export class ClientPlayNetworkHandler {
 
     public registryHandler() {
         PacketHandlerBuilder.create()
+            .add(RelayServerPacket.ID, this.onRelayServer)
             .add(ServerReadyS2CPacket.ID, this.onServerReady)
             .add(JoinGameS2CPacket.ID, this.onGameJoin)
+            .add(PlayerDisconnectS2CPacket.ID, this.onDisconnect)
             .add(EntitySpawnS2CPacket.ID, this.onEntitySpawn)
             .add(EntityRemoveS2CPacket.ID, this.onEntityRemove)
             .add(EntityPositionS2CPacket.ID, this.onEntityPosition)
@@ -359,6 +426,7 @@ export class ClientPlayNetworkHandler {
             .add(StopSoundS2CPacket.ID, this.onStopSound)
             .add(PlayerSetScoreS2CPacket.ID, this.onPlayerScore)
             .add(PlayerAddScoreS2CPacket.ID, this.onPlayerAddScore)
+            .add(EntityChooseTargetS2CPacket.ID, this.onMobChooseTarget)
             .register(this.client.networkChannel, this);
     }
 }

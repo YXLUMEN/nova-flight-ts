@@ -85,14 +85,51 @@ export class StringReader {
         return this.string.substring(start, this.cursor);
     }
 
-    // todo
+    public readQuotedString(): string {
+        if (!this.canRead()) return '';
+
+        const next = this.peek();
+        if (!StringReader.isQuotedStringStart(next)) {
+            throw new Error("Char is not quoted");
+        }
+
+        this.skip();
+        return this.readStringUntil(next);
+    }
+
+    public readStringUntil(terminator: string): string {
+        const result: string[] = [];
+        let escaped = false;
+
+        while (this.canRead()) {
+            const char = this.read();
+            if (escaped) {
+                if (char === terminator || char === '\\') {
+                    result.push(char);
+                    escaped = false;
+                } else {
+                    this.setCursor(this.getCursor() - 1);
+                    throw new Error("Reader Invalid escape");
+                }
+            } else if (char === '\\') {
+                escaped = true;
+            } else if (char === terminator) {
+                return result.join('');
+            } else {
+                result.push(char);
+            }
+        }
+
+        throw new Error("Reader Expected end of quote");
+    }
+
     public readString(): string {
         if (!this.canRead()) return '';
 
         const next = this.peek();
         if (StringReader.isQuotedStringStart(next)) {
             this.skip();
-            return '';
+            return this.readStringUntil(next);
         }
 
         return this.readUnquotedString();

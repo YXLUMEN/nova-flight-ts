@@ -1,8 +1,8 @@
 use bytes::{BufMut, BytesMut};
 use futures_util::{SinkExt, StreamExt};
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, sync::Arc, sync::LazyLock};
 use tokio::net::TcpListener;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{mpsc, oneshot, Mutex, RwLock};
 use tokio_tungstenite::accept_async;
 use tokio_tungstenite::tungstenite::{Bytes, Message};
 
@@ -14,90 +14,134 @@ struct State {
     clients: HashMap<[u8; 16], Tx>,
 }
 
-pub async fn start_ws_server(addr: &str) {
-    let listener = TcpListener::bind(addr)
+static SERVER: LazyLock<Mutex<Option<Arc<RwLock<State>>>>> = LazyLock::new(|| Mutex::new(None));
+static STOP_TX: LazyLock<Mutex<Option<oneshot::Sender<()>>>> = LazyLock::new(|| Mutex::new(None));
+
+#[tauri::command]
+pub async fn start_server(port: u16) -> Result<(), String> {
+    let mut server_guard = SERVER.lock().await;
+    if server_guard.is_some() {
+        return Err(format!("Server already listen on \"{}\"", port));
+    }
+
+    let state = Arc::new(RwLock::new(State::default()));
+    let cloned = state.clone();
+
+    let (tx, rx) = oneshot::channel();
+    *STOP_TX.lock().await = Some(tx);
+
+    tokio::spawn(run_ws_server(port, cloned, rx));
+
+    *server_guard = Some(state);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn stop_server() -> Result<(), String> {
+    if let Some(tx) = STOP_TX.lock().await.take() {
+        let _ = tx.send(());
+    }
+    Ok(())
+}
+
+async fn run_ws_server(port: u16, state: Arc<RwLock<State>>, mut stop_rx: oneshot::Receiver<()>) {
+    let addr = format!("0.0.0.0:{}", port);
+
+    let listener = TcpListener::bind(&addr)
         .await
         .expect("Failed to bind address");
-    let state = Arc::new(RwLock::new(State::default()));
 
     println!("[INFO] WebSocket server listening on {}", addr);
 
     loop {
-        let (stream, _) = match listener.accept().await {
-            Ok(s) => s,
-            Err(e) => {
-                eprintln!("[ERROR] Accept error: {}", e);
-                continue;
-            }
-        };
-
-        let state = state.clone();
-
-        tokio::spawn(async move {
-            let ws_stream = match accept_async(stream).await {
-                Ok(ws) => ws,
-                Err(e) => {
-                    eprintln!("[ERROR] WebSocket handshake failed: {}", e);
-                    return;
+        tokio::select! {
+                _ = &mut stop_rx => {
+                    println!("[INFO] Shutting down server");
+                    break;
                 }
-            };
+                accept_res = listener.accept() => {
+                    let (stream, _) = match accept_res {
+                        Ok(s) => s,
+                        Err(e) => {
+                            eprintln!("[ERROR] Accept error: {}", e);
+                            continue;
+                        }
+                    };
 
-            let (mut write, mut read) = ws_stream.split();
-            let (tx, mut rx) = mpsc::unbounded_channel::<Bytes>();
+            let state = state.clone();
 
-            // 发送任务
-            let send_task = tokio::spawn(async move {
-                while let Some(msg) = rx.recv().await {
-                    if let Err(e) = write.send(Message::Binary(msg)).await {
-                        eprintln!("Send error: {}", e);
-                        break;
-                    }
-                }
-            });
-
-            // 接收任务
-            while let Some(msg) = read.next().await {
-                match msg {
-                    Ok(Message::Binary(data)) => {
-                        handle_message(&state, &tx, data).await;
-                    }
-                    Ok(_) => {}
+            tokio::spawn(async move {
+                let ws_stream = match accept_async(stream).await {
+                    Ok(ws) => ws,
                     Err(e) => {
-                        eprintln!("[ERROR] Read error: {}", e);
-                        break;
+                        eprintln!("[ERROR] WebSocket handshake failed: {}", e);
+                        return;
                     }
-                }
-            }
+                };
 
-            {
-                let mut st = state.write().await;
-                // 如果是 server
-                if st
-                    .server
-                    .as_ref()
-                    .map(|s| s.same_channel(&tx))
-                    .unwrap_or(false)
-                {
-                    st.server = None;
-                    println!("[INFO] Server disconnected");
-                }
-                // 如果是 client
-                st.clients.retain(|id, c| {
-                    let keep = !c.same_channel(&tx);
-                    if !keep {
-                        println!("[INFO] Client {} disconnected", format_uuid(&id));
+                let (mut write, mut read) = ws_stream.split();
+                let (tx, mut rx) = mpsc::unbounded_channel::<Bytes>();
+
+                // 发送任务
+                let send_task = tokio::spawn(async move {
+                    while let Some(msg) = rx.recv().await {
+                        if let Err(e) = write.send(Message::Binary(msg)).await {
+                            eprintln!("Send error: {}", e);
+                            break;
+                        }
                     }
-                    keep
                 });
-            }
 
-            drop(tx);
-            send_task.await.ok();
-        });
+                // 接收任务
+                while let Some(msg) = read.next().await {
+                    match msg {
+                        Ok(Message::Binary(data)) => {
+                            handle_message(&state, &tx, data).await;
+                        }
+                        Ok(_) => {}
+                        Err(e) => {
+                            eprintln!("[ERROR] Read error: {}", e);
+                            break;
+                        }
+                    }
+                }
+
+                {
+                    let mut st = state.write().await;
+                    // 如果是 server
+                    if st
+                        .server
+                        .as_ref()
+                        .map(|s| s.same_channel(&tx))
+                        .unwrap_or(false)
+                    {
+                        st.server = None;
+                        println!("[INFO] Server disconnected");
+                    }
+                    // 如果是 client
+                    st.clients.retain(|id, c| {
+                        let keep = !c.same_channel(&tx);
+                        if !keep {
+                            println!("[INFO] Client {} disconnected", format_uuid(&id));
+                        }
+                        keep
+                    });
+                }
+
+                drop(tx);
+                send_task.await.ok();
+            });
+        }}
     }
+
+    let mut global = SERVER.lock().await;
+    *global = None;
+    let mut stop = STOP_TX.lock().await;
+    *stop = None;
 }
 
-/// 协议说明：
+/// 协议说明:
+/// 0x00 = 中继服务器消息
 /// 0x01 = 注册为 Server
 /// 0x02 = 注册为 Client + 后续字节是 client_id
 /// 0x10 = Client -> Server
@@ -125,7 +169,20 @@ async fn handle_message(state: &Arc<RwLock<State>>, tx: &Tx, data: Bytes) {
 
             let mut id = [0u8; 16];
             id.copy_from_slice(&data[1..17]);
+
             let mut st = state.write().await;
+            // 重复检查
+            if st.clients.contains_key(&id) {
+                println!(
+                    "[WARN] Duplicate client UUID {}, registration rejected",
+                    format_uuid(&id)
+                );
+
+                relay_send(&tx, "ERR: Duplicate Player UUID");
+
+                return;
+            }
+
             st.clients.insert(id, tx.clone());
 
             println!("[INFO] Client {} registered", format_uuid(&id));
@@ -239,6 +296,19 @@ fn parse_excludes(mut cursor: &[u8], count: u32) -> Result<(Vec<[u8; 16]>, &[u8]
     Ok((excludes, cursor))
 }
 
+/// 中继服务器发送
+fn relay_send(tx: &Tx, msg: &str) {
+    let mut buf = BytesMut::new();
+    buf.put_u8(0x00);
+
+    let bytes = msg.as_bytes();
+    buf.put_u16_le(bytes.len() as u16);
+    buf.put_slice(bytes);
+
+    let _ = tx.send(buf.freeze());
+}
+
+/// 向指定 id 发送数据包
 fn send_or_drop(id: &[u8; 16], client: &Tx, msg: &Bytes) -> bool {
     if client.send(msg.clone()).is_err() {
         println!("[WARN] Client {} dropped", format_uuid(id));

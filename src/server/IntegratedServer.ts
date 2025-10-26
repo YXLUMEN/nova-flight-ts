@@ -1,6 +1,7 @@
 import {NovaFlightServer} from "./NovaFlightServer.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
+import {ServerReceive} from "./network/ServerReceive.ts";
 
 export class IntegratedServer extends NovaFlightServer {
     public static startServer() {
@@ -16,12 +17,13 @@ export class IntegratedServer extends NovaFlightServer {
         await manager.registerAll();
         manager.frozen();
 
+        ServerReceive.registryNetworkHandler(this.networkChannel);
         await this.startGame(manager, action === 1);
         await this.waitForStop();
     }
 
     public override onWorldStop(): Promise<void> {
-        self.postMessage({type: 'server_shutdown'});
+        self.postMessage({type: 'server_stop'});
         return Promise.resolve();
     }
 
@@ -44,7 +46,7 @@ export class IntegratedServer extends NovaFlightServer {
             endLoad(nbt);
         }, {signal: ctrl.signal});
 
-        self.postMessage({type: 'load_save'});
+        self.postMessage({type: 'read_file'});
 
         timeOut = setTimeout(() => {
             endLoad(null);
@@ -55,6 +57,6 @@ export class IntegratedServer extends NovaFlightServer {
 
     public override async saveGame(compound: NbtCompound): Promise<void> {
         const bytes = compound.toRootBinary();
-        self.postMessage({type: "save_game", payload: bytes});
+        self.postMessage({type: 'write_file', payload: bytes});
     }
 }

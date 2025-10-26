@@ -18,7 +18,6 @@ import {collideEntityCircle} from "../utils/math/math.ts";
 import {CIWSBulletEntity} from "../entity/projectile/CIWSBulletEntity.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 import type {Stage} from "../stage/Stage.ts";
-import type {ServerNetworkChannel} from "./network/ServerNetworkChannel.ts";
 import {STAGE} from "../configs/StageConfig.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import {EntityRemoveS2CPacket} from "../network/packet/s2c/EntityRemoveS2CPacket.ts";
@@ -35,11 +34,13 @@ import {EntityTypes} from "../entity/EntityTypes.ts";
 import {encodeToUnsignedByte} from "../utils/NetUtil.ts";
 import {type VisualEffect} from "../effect/VisualEffect.ts";
 import {EffectCreateS2CPacket} from "../network/packet/s2c/EffectCreateS2CPacket.ts";
+import type {IServerPlayNetwork} from "./network/IServerPlayNetwork.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
 
     public stage: Stage;
+    private phaseScore: number = 0;
 
     private readonly players: Map<UUID, ServerPlayerEntity> = new Map<UUID, ServerPlayerEntity>();
     private readonly playerData: Map<UUID, NbtCompound> = new Map<UUID, NbtCompound>();
@@ -127,7 +128,7 @@ export class ServerWorld extends World implements NbtSerializable {
         }
     }
 
-    public override getNetworkChannel(): ServerNetworkChannel {
+    public override getNetworkChannel(): IServerPlayNetwork {
         return this.server.networkChannel;
     }
 
@@ -153,6 +154,11 @@ export class ServerWorld extends World implements NbtSerializable {
         }
 
         this.players.set(playerUUID, player);
+        if (this.players.size > 1) {
+            this.setTicking(true);
+            this.isMultiPlayer = true;
+        }
+
         this.entityManager.addEntity(player);
     }
 
@@ -193,6 +199,18 @@ export class ServerWorld extends World implements NbtSerializable {
 
     public getProjectiles(): ReadonlySet<ProjectileEntity> {
         return this.entities.getProjectiles();
+    }
+
+    public getPhase(): number {
+        return this.phaseScore;
+    }
+
+    public setPhase(phase: number): void {
+        this.phaseScore = Math.max(0, phase);
+    }
+
+    public addPhase(phase: number): void {
+        this.setPhase(this.phaseScore + phase);
     }
 
     public override playSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
@@ -288,6 +306,7 @@ export class ServerWorld extends World implements NbtSerializable {
         const stageNbt = new NbtCompound();
         this.stage.writeNBT(stageNbt);
         root.putCompound('Stage', stageNbt);
+        root.putUint('PhaseScore', this.phaseScore);
 
         return root;
     }
@@ -300,6 +319,7 @@ export class ServerWorld extends World implements NbtSerializable {
 
         const stageNbt = nbt.getCompound('Stage');
         if (stageNbt) this.stage.readNBT(stageNbt);
+        this.phaseScore = nbt.getUint('PhaseScore');
     }
 
     private loadEntity(nbtList: NbtCompound[]) {

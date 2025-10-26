@@ -30,14 +30,15 @@ export abstract class NovaFlightServer {
     protected constructor() {
         this.serverId = crypto.randomUUID();
 
-        this.networkChannel = new ServerNetworkChannel(new WebSocket("ws://127.0.0.1:25566"));
+        this.networkChannel = new ServerNetworkChannel("127.0.0.1:25566");
         ServerReceive.registryNetworkHandler(this.networkChannel);
-        this.networkChannel.init();
     }
 
     protected async startGame(manager: RegistryManager, readSave = false): Promise<void> {
         if (this.running) return;
         this.running = true;
+
+        await this.networkChannel.connect();
 
         const {promise, resolve} = Promise.withResolvers<void>();
         this.waitWorldStop = promise;
@@ -101,6 +102,7 @@ export abstract class NovaFlightServer {
             console.error(`Error while saving game: ${error}`);
         }
 
+        this.networkHandler?.disconnectAllPlayer();
         this.world?.close();
         this.world = null;
 

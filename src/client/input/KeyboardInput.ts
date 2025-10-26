@@ -7,7 +7,7 @@ import {NovaFlightClient} from "../NovaFlightClient.ts";
 import type {Consumer} from "../../apis/types.ts";
 
 export class KeyboardInput implements IInput {
-    private showCommand = false;
+    private disableKey = false;
 
     private readonly keys = new Set<string>();
     private readonly bindings = new Map<string, string[]>();
@@ -76,6 +76,10 @@ export class KeyboardInput implements IInput {
         this.keyHandler.clear();
     }
 
+    public setDisabled(disabled: boolean): void {
+        this.disableKey = disabled;
+    }
+
     private registryListener(target: HTMLElement) {
         const commandBar = document.getElementById('command-bar')!;
         const commandInput = document.getElementById('command-input') as HTMLInputElement;
@@ -84,16 +88,15 @@ export class KeyboardInput implements IInput {
             const code = event.code;
 
             if (code === 'Slash') {
-                if (!commandBar.classList.toggle('hidden')) {
+                const commandShow = !commandBar.classList.toggle('hidden');
+                if (commandShow) {
                     event.preventDefault();
                     commandInput.focus();
-                    this.showCommand = true;
-                } else {
-                    this.showCommand = false;
                 }
+                this.setDisabled(commandShow);
             }
 
-            if (this.showCommand) {
+            if (this.disableKey) {
                 if (code === 'F5' || ((event.ctrlKey || event.metaKey) && code === 'KeyR')) event.preventDefault();
                 return;
             }

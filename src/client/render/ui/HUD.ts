@@ -193,7 +193,7 @@ export class HUD implements IUi {
         let y = height / 2 - 64;
 
         const time = world.getTime() | 0;
-        const score = NovaFlightClient.getInstance().player?.getPhaseScore() ?? 0;
+        const score = NovaFlightClient.getInstance().player?.getScore() ?? 0;
 
         ctx.save();
         ctx.fillStyle = 'rgba(255,0,0,0.3)';

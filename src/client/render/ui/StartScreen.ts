@@ -53,13 +53,6 @@ export class StartScreen implements IUi {
         this.tempCamera.update(MutVec2.zero(), 0);
         this.tick(0);
 
-        window.addEventListener('keydown', event => {
-            if (event.code === 'Space' || event.code === 'Enter') {
-                if (!document.getElementById('command-bar')?.classList.contains('hidden')) return;
-                this.newGame();
-            }
-        }, {signal: this.ctrl.signal});
-
         window.addEventListener('click', (event) => {
             for (const btn of this.buttons) {
                 if (btn.hitTest(event.offsetX, event.offsetY)) {
@@ -101,6 +94,7 @@ export class StartScreen implements IUi {
     public render(ctx: CanvasRenderingContext2D) {
         ctx.clearRect(0, 0, this.width, this.height);
 
+        ctx.save();
         this.starField.render(ctx, this.tempCamera, 1);
         // 标题
         ctx.fillStyle = '#fff';
@@ -118,6 +112,7 @@ export class StartScreen implements IUi {
         for (const btn of this.buttons) {
             btn.render(ctx);
         }
+        ctx.restore();
     }
 
     public destroy() {

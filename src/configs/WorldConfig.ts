@@ -9,7 +9,7 @@ const freezeConfig = createCleanObj({
     tick: 20,
     mbps: 0.05,
     per: 50,
-    version: '25w09c'
+    version: '25w09d'
 } as const);
 
 const WorldConfig = Object.preventExtensions(createCleanObj({
@@ -25,7 +25,9 @@ const WorldConfig = Object.preventExtensions(createCleanObj({
 
     follow: true,
     autoShoot: false,
-    version: freezeConfig.version
+    version: freezeConfig.version,
+    port: 25566,
+    serverUrl: '127.0.0.1:25566',
 }));
 
 export {freezeConfig, WorldConfig, isDev, isServer};

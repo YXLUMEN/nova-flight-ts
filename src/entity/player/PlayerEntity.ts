@@ -14,8 +14,8 @@ import type {EMPWeapon} from "../../item/weapon/EMPWeapon.ts";
 import {type NbtCompound} from "../../nbt/NbtCompound.ts";
 import {clamp} from "../../utils/math/math.ts";
 import type {TechTree} from "../../tech/TechTree.ts";
-import type {NetworkChannel} from "../../network/NetworkChannel.ts";
 import type {DataTrackerSerializedEntry} from "../data/DataTracker.ts";
+import type {INetworkChannel} from "../../network/INetworkChannel.ts";
 
 export abstract class PlayerEntity extends LivingEntity {
     public onDamageExplosionRadius = 320;
@@ -27,7 +27,7 @@ export abstract class PlayerEntity extends LivingEntity {
     protected readonly weapons = new Map<Item, ItemStack>();
     protected wasActive: boolean = false;
     private lastDamageTime = 0;
-    private phaseScore: number = 0;
+
     private score: number = 0;
 
     protected constructor(world: World) {
@@ -58,7 +58,7 @@ export abstract class PlayerEntity extends LivingEntity {
         this.getVelocityRef.multiply(0.9);
     }
 
-    public getNetworkChannel(): NetworkChannel {
+    public getNetworkChannel(): INetworkChannel {
         return this.getWorld().getNetworkChannel();
     }
 
@@ -171,20 +171,11 @@ export abstract class PlayerEntity extends LivingEntity {
         return this.weapons.get(this.baseWeapons[this.currentBaseIndex])!;
     }
 
-    public getPhaseScore(): number {
-        return this.phaseScore;
-    }
-
     public getScore(): number {
         return this.score;
     }
 
-    public setPhaseScore(score: number): void {
-        this.phaseScore = Math.max(0, score);
-    }
-
-    public addPhaseScore(score: number): void {
-        this.setPhaseScore(this.phaseScore + score);
+    public addScore(score: number): void {
         this.setScore(this.score + score);
     }
 
@@ -202,7 +193,6 @@ export abstract class PlayerEntity extends LivingEntity {
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
         nbt.putUint('Score', this.score);
-        nbt.putUint('PhaseScore', this.phaseScore);
         nbt.putByte('SlotIndex', this.currentBaseIndex);
 
         const weapons: NbtCompound[] = [];
@@ -219,7 +209,6 @@ export abstract class PlayerEntity extends LivingEntity {
     public override readNBT(nbt: NbtCompound) {
         super.readNBT(nbt);
         this.setScore(nbt.getUint('Score'));
-        this.setPhaseScore(nbt.getUint('PhaseScore'));
 
         this.techTree.readNBT(nbt);
         const weaponsNbt = nbt.getCompoundList('Weapons');

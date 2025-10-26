@@ -37,8 +37,8 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         this.adjustPosition();
     }
 
-    public setBehavior(behavior: number): void {
-        this.AI.setBehavior(this, behavior);
+    public getAi() {
+        return this.AI;
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {

@@ -205,21 +205,29 @@ function spawnAvoidPlayerCtor<T extends MobEntity>(
         const minY = margin;
         const maxY = World.WORLD_H - margin;
 
-        const playerPos = ctx.world.getPlayers().next().value?.getPositionRef;
+        const players = ctx.world.getPlayers();
 
         let x: number, y: number;
-        if (playerPos) {
-            let tries = 0;
-            do {
-                x = randInt(minX, maxX);
-                y = randInt(minY, maxY);
-                tries++;
-                if (tries > 20) break;
-            } while (((x - playerPos.x) ** 2 + (y - playerPos.y) ** 2) < safeRadius);
-        } else {
+        let tries = 0;
+        do {
             x = randInt(minX, maxX);
             y = randInt(minY, maxY);
-        }
+            tries++;
+            if (tries > 20) break;
+
+            let tooClose = false;
+            for (const p of players) {
+                const pos = p.getPositionRef;
+                const dx = x - pos.x;
+                const dy = y - pos.y;
+                if (dx * dx + dy * dy < safeRadius) {
+                    tooClose = true;
+                    break;
+                }
+            }
+
+            if (!tooClose) break;
+        } while (true);
 
         const mob = type.create(ctx.world, ...args);
         mob.setPosition(x, y);

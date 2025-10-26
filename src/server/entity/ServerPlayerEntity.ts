@@ -81,6 +81,11 @@ export class ServerPlayerEntity extends PlayerEntity {
         this.changedItems.add(itemStack);
     }
 
+    public override addScore(score: number) {
+        super.addScore(score);
+        (this.getWorld() as ServerWorld).addPhase(score);
+    }
+
     public override setScore(score: number) {
         super.setScore(score);
         (this.getNetworkChannel() as ServerNetworkChannel).sendTo(new PlayerSetScoreS2CPacket(score), this.getUuid());

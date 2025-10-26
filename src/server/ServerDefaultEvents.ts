@@ -50,7 +50,7 @@ export class ServerDefaultEvents {
             const techTree = player.techTree;
 
             if (!damageSource.isIn(DamageTypeTags.NOT_GAIN_SCORE)) {
-                player.addPhaseScore(event.mob.getWorth());
+                player.addScore(event.mob.getWorth());
             }
 
             if (damageSource.isIn(DamageTypeTags.REPLY_LASER) && techTree.isUnlocked('energy_recovery')) {

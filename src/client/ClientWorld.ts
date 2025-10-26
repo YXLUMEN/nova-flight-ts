@@ -29,6 +29,7 @@ import type {Explosion} from "../world/Explosion.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import {Particle} from "../effect/Particle.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
+import type {ServerWorker} from "../worker/ServerWorker.ts";
 
 export class ClientWorld extends World {
     private readonly client: NovaFlightClient = NovaFlightClient.getInstance();
@@ -105,7 +106,7 @@ export class ClientWorld extends World {
         return this.client.networkChannel;
     }
 
-    public override getServer(): Worker | null {
+    public override getServer(): ServerWorker | null {
         return this.client.getServer();
     }
 
@@ -123,6 +124,7 @@ export class ClientWorld extends World {
             SoundSystem.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
             this.worldSound.pauseAll().catch(console.error);
         }
+
         super.setTicking(ticking);
     }
 
@@ -382,14 +384,11 @@ export class ClientWorld extends World {
         this.getNetworkChannel().send(new DebugStringPacket('SaveAll'));
     }
 
-    public stopServer() {
-        this.getNetworkChannel().send(new DebugStringPacket('StopServer'));
-    }
-
     public readonly ClientEntityHandler: EntityHandler<Entity> = {
         startTicking: (entity: Entity) => {
             if (entity instanceof ClientPlayerEntity) {
                 this.players.add(entity);
+                if (this.players.size > 1) this.isMultiPlayer = true;
                 return;
             }
             this.entities.add(entity);

@@ -57,7 +57,7 @@ const spawnInMap = (
         const maxHealth = m.getMaxHealth();
         m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + scaledHp);
         m.setHealth(m.getMaxHealth());
-        m.setBehavior(Behavior.Wander);
+        m.getAi().setBehavior(m, Behavior.Wander);
     }, opts)(ctx);
 }
 

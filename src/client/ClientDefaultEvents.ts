@@ -21,10 +21,11 @@ export class ClientDefaultEvents {
 
         eventBus.on(EVENTS.ENTITY_LOCKED, event => {
             const missile = event.missile as MissileEntity;
-            if (missile.isRemoved() || !missile.getTarget()?.isPlayer()) return;
+            const target = missile.getTarget();
+            if (missile.isRemoved() || !target || !target.isPlayer()) return;
 
             const player = NovaFlightClient.getInstance().player;
-            if (!player) return;
+            if (!player || target.getId() !== player.getId()) return;
             player.lockedMissile.add(missile);
         });
 

@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="/css/main.css"/>
     <link rel="stylesheet" href="/css/tech.css"/>
+    <link rel="stylesheet" href="/css/multi-game.css"/>
 </head>
 <body>
 <div class="help hidden" id="help">
@@ -24,6 +25,18 @@
 <label class="command-bar hidden" id="command-bar">
     <input class="command-input" id="command-input" type="text" autocomplete="off" spellcheck="false">
 </label>
+
+<div class="multi-game hidden" id="multi-game">
+    <div class="server-list" id="server-list"></div>
+
+    <div class="server-input-box">
+        <label for="server-address"></label>
+        <input class="server-address" id="server-address" type="text" autocomplete="off" spellcheck="false"
+               placeholder="输入服务器地址 (ip:port)"/>
+        <button class="btn connect-btn" id="connect-btn">连接</button>
+        <button class="btn cancel-btn" id="cancel-btn">返回主页</button>
+    </div>
+</div>
 
 <div class="tech-shell hidden" id="tech-shell">
     <div class="player-money" id="player-money">点数: 0</div>

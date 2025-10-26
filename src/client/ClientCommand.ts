@@ -3,6 +3,7 @@ import {musicRegistry} from "../command/MusicCommand.ts";
 import {devModCommand} from "../command/DevModCommand.ts";
 import type {ClientCommandSource} from "./command/ClientCommandSource.ts";
 import type {Consumer} from "../apis/types.ts";
+import {clientSettingsCommand} from "../command/ClientSettingsCommand.ts";
 
 export class ClientCommand extends CommandManager {
     private readonly source: ClientCommandSource;
@@ -59,6 +60,7 @@ export class ClientCommand extends CommandManager {
     public override registry(): void {
         musicRegistry(this.dispatcher);
         devModCommand(this.dispatcher);
+        clientSettingsCommand(this.dispatcher);
     }
 
     private executeCommand(command: string) {

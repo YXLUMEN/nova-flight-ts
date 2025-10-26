@@ -72,6 +72,7 @@ export class MobAI {
 
     public chooseTarget(mob: MobEntity) {
         const world = mob.getWorld();
+        if (world.isClient) return;
 
         const pos = mob.getPositionRef;
         const target = getNearestEntity(pos, world.getPlayers());
@@ -93,6 +94,10 @@ export class MobAI {
         } else {
             this.setBehavior(mob, Behavior.Chase);
         }
+    }
+
+    public setTarget(pos: IVec) {
+        this.targetPos.set(pos.x, pos.y);
     }
 
     public wander(mob: MobEntity, speed: number): void {

@@ -350,11 +350,11 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         return true;
     }
 
-    public isLogicalSideForUpdatingMovement() {
+    public isLogicalSideForUpdatingMovement(): boolean {
         return this.canMoveVoluntarily();
     }
 
-    public canMoveVoluntarily() {
+    public canMoveVoluntarily(): boolean {
         return !this.world.isClient;
     }
 

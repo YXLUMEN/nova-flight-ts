@@ -3,6 +3,7 @@ import {NovaFlightClient} from "./client/NovaFlightClient.ts";
 import {ServerNetwork} from "./server/network/ServerNetwork.ts";
 import {ClientNetwork} from "./client/network/ClientNetwork.ts";
 import {isServer} from "./configs/WorldConfig.ts";
+import {UUIDUtil} from "./utils/UUIDUtil.ts";
 
 export const mainWindow = new Window('main');
 
@@ -14,9 +15,18 @@ function main() {
 
     window.oncontextmenu = event => event.preventDefault();
 
-    const client = new NovaFlightClient();
-    client.startClient()
-        .then(() => client.scheduleStop())
+    const username = localStorage.getItem('username');
+    if (!username) {
+        const client = new NovaFlightClient();
+        client.startClient()
+            .then(() => mainWindow.close());
+        return;
+    }
+
+    UUIDUtil.uuidFromUsername(username)
+        .then(uuid => localStorage.setItem('clientId', uuid))
+        .then(() => new NovaFlightClient())
+        .then(client => client.startClient())
         .then(() => mainWindow.close());
 }
 

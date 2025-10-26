@@ -5,7 +5,10 @@ import {DevServer} from "../server/DevServer.ts";
 
 let server: DevServer | null = null;
 
-self.onmessage = async (event: MessageEvent) => {
+self.addEventListener("message", handleEvent.bind(this));
+
+
+async function handleEvent(event: MessageEvent<any>) {
     const {type, payload} = event.data;
 
     switch (type) {
@@ -18,16 +21,20 @@ self.onmessage = async (event: MessageEvent) => {
             if (server) {
                 await server.stopGame();
                 server = null;
-                self.postMessage({type: 'stopped'});
+                self.postMessage({type: 'server_shutdown'});
             }
             break;
         }
         case 'start_ticking': {
-            server?.world?.setTicking(true);
+            const world = server?.world;
+            if (!world || world.isMultiPlayerWorld()) return;
+            world.setTicking(true);
             break;
         }
         case 'stop_ticking': {
-            server?.world?.setTicking(false);
+            const world = server?.world;
+            if (!world || world.isMultiPlayerWorld()) return;
+            world.setTicking(false);
             break;
         }
         case 'switch_dev_mode': {
@@ -47,7 +54,7 @@ self.onmessage = async (event: MessageEvent) => {
         default:
             console.warn('Unknown message: ', type);
     }
-};
+}
 
 function handleDev(key: string) {
     switch (key) {

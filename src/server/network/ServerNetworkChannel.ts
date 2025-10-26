@@ -3,10 +3,11 @@ import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
 import type {Payload} from "../../network/Payload.ts";
 import type {UUID} from "../../apis/types.ts";
 import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
+import type {IServerPlayNetwork} from "./IServerPlayNetwork.ts";
 
-export class ServerNetworkChannel extends NetworkChannel {
-    public constructor(ws: WebSocket) {
-        super(ws, PayloadTypeRegistry.playS2C());
+export class ServerNetworkChannel extends NetworkChannel implements IServerPlayNetwork {
+    public constructor(url: string) {
+        super(url, PayloadTypeRegistry.playS2C());
     }
 
     public sendTo<T extends Payload>(payload: T, target: UUID) {
@@ -20,7 +21,7 @@ export class ServerNetworkChannel extends NetworkChannel {
         writer.writeString(type.id.toString());
         type.codec.encode(writer, payload);
 
-        this.ws.send(writer.toUint8Array());
+        this.ws!.send(writer.toUint8Array());
     }
 
     public sendExclude<T extends Payload>(payload: T, ...excludes: UUID[]) {
@@ -38,7 +39,7 @@ export class ServerNetworkChannel extends NetworkChannel {
         writer.writeString(type.id.toString());
         type.codec.encode(writer, payload);
 
-        this.ws.send(writer.toUint8Array());
+        this.ws!.send(writer.toUint8Array());
     }
 
     protected override getSide() {
@@ -50,7 +51,7 @@ export class ServerNetworkChannel extends NetworkChannel {
     }
 
     protected register() {
-        this.ws.send(new Uint8Array([0x01]));
+        this.ws!.send(new Uint8Array([0x01]));
         console.log("Server registered");
     }
 }

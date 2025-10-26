@@ -6,8 +6,8 @@ import {UUIDUtil} from "../../utils/UUIDUtil.ts";
 export class ClientNetworkChannel extends NetworkChannel {
     private readonly clientId: UUID;
 
-    public constructor(ws: WebSocket, clientId: UUID) {
-        super(ws, PayloadTypeRegistry.playC2S());
+    public constructor(url: string, clientId: UUID) {
+        super(url, PayloadTypeRegistry.playC2S());
         this.clientId = clientId;
     }
 
@@ -25,7 +25,7 @@ export class ClientNetworkChannel extends NetworkChannel {
         buf[0] = 0x02;
         buf.set(idBytes, 1);
 
-        this.ws.send(buf);
+        this.ws!.send(buf);
         console.log(`Client ${this.clientId} registered`);
     }
 }

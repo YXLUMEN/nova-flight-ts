@@ -1,3 +1,5 @@
+use crate::wss::{start_server, stop_server};
+
 mod window;
 mod wss;
 
@@ -28,9 +30,9 @@ pub fn run() {
                         .build(),
                 )?;
             }
-            tauri::async_runtime::spawn(wss::start_ws_server("127.0.0.1:25566"));
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![start_server, stop_server])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

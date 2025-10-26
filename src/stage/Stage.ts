@@ -53,9 +53,7 @@ export class Stage implements NbtSerializable {
             time: this.ticks,
             phaseTime: this.phaseTime,
             phaseIndex: this.index,
-            score: world.getPlayers().reduce((prev, curr) =>
-                curr.getPhaseScore() > prev.getPhaseScore() ? curr : prev
-            ).getPhaseScore(),
+            score: world.getPhase(),
             rng: this.rng,
             difficulty: this.computeDifficulty(),
         };
