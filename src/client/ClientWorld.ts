@@ -16,7 +16,6 @@ import {SoundEvents} from "../sound/SoundEvents.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {EntityRenderers} from "./render/entity/EntityRenderers.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
-import {ClientPlayerEntity} from "./entity/ClientPlayerEntity.ts";
 import {HALF_PI, lerp} from "../utils/math/math.ts";
 import type {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
 import {DebugStringPacket} from "../network/packet/DebugStringPacket.ts";
@@ -30,11 +29,12 @@ import type {IVec} from "../utils/math/IVec.ts";
 import {Particle} from "../effect/Particle.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import type {ServerWorker} from "../worker/ServerWorker.ts";
+import {AbstractClientPlayerEntity} from "./entity/AbstractClientPlayerEntity.ts";
 
 export class ClientWorld extends World {
     private readonly client: NovaFlightClient = NovaFlightClient.getInstance();
 
-    private readonly players = new Set<ClientPlayerEntity>();
+    private readonly players = new Set<AbstractClientPlayerEntity>();
     private readonly entities: EntityList = new EntityList();
     private readonly entityManager: ClientEntityManager<Entity>;
 
@@ -220,6 +220,10 @@ export class ClientWorld extends World {
         ClientDefaultEvents.registryEvents(this);
     }
 
+    public setMultiPlayer() {
+        this.isMultiPlayer = true;
+    }
+
     public toggleTechTree() {
         const ticking = this.rendering = document.getElementById('tech-shell')!.classList.toggle('hidden');
         this.setTicking(ticking);
@@ -386,7 +390,7 @@ export class ClientWorld extends World {
 
     public readonly ClientEntityHandler: EntityHandler<Entity> = {
         startTicking: (entity: Entity) => {
-            if (entity instanceof ClientPlayerEntity) {
+            if (entity instanceof AbstractClientPlayerEntity) {
                 this.players.add(entity);
                 if (this.players.size > 1) this.isMultiPlayer = true;
                 return;
@@ -395,7 +399,7 @@ export class ClientWorld extends World {
         },
 
         stopTicking: (entity: Entity) => {
-            if (entity instanceof ClientPlayerEntity) {
+            if (entity instanceof AbstractClientPlayerEntity) {
                 this.players.delete(entity);
                 return;
             }

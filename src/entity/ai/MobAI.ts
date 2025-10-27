@@ -7,6 +7,7 @@ import {getNearestEntity, wrappedDelta} from "../../utils/math/math.ts";
 import {World} from "../../world/World.ts";
 import {MobAiS2CPacket} from "../../network/packet/s2c/MobAiS2CPacket.ts";
 import {Random} from "../../utils/math/Random.ts";
+import {EntityChooseTargetS2CPacket} from "../../network/packet/s2c/EntityChooseTargetS2CPacket.ts";
 
 export const Behavior = createCleanObj({
     Wander: 0,
@@ -80,6 +81,7 @@ export class MobAI {
 
         const playerPos = target.getPositionRef;
         this.targetPos.set(playerPos.x, playerPos.y);
+        world.getNetworkChannel().send(new EntityChooseTargetS2CPacket(mob.getId(), this.targetPos));
 
         const dx = playerPos.x - pos.x;
         const dy = playerPos.y - pos.y;

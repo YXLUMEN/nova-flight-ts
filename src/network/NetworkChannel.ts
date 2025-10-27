@@ -7,14 +7,16 @@ import {HashMap} from "../utils/collection/HashMap.ts";
 import type {Consumer, Supplier} from "../apis/types.ts";
 import type {INetworkChannel} from "./INetworkChannel.ts";
 import {RelayServerPacket} from "./packet/RelayServerPacket.ts";
+import {sleep} from "../utils/uit.ts";
 
 export abstract class NetworkChannel implements INetworkChannel {
     protected serverAddress: string;
     protected ws: WebSocket | null = null;
 
-    private ready: Promise<void> | null = null;
-    private resolve: Supplier<void> | null = null;
-    private reject: Consumer<any> | null = null;
+    private isConnected: boolean = false;
+    private readyPromise: Promise<void> | null = null;
+    private connectReady: Supplier<void> | null = null;
+    private connectFail: Consumer<any> | null = null;
 
     protected readonly registry: PayloadTypeRegistry;
     private readonly handlers = new HashMap<Identifier, Consumer<Payload>>();
@@ -25,29 +27,31 @@ export abstract class NetworkChannel implements INetworkChannel {
     }
 
     public async connect() {
-        if (this.ready === null) {
+        if (this.readyPromise === null) {
             const {promise, resolve, reject} = Promise.withResolvers<void>();
-            this.ready = promise;
-            this.resolve = resolve;
-            this.reject = reject;
+            this.readyPromise = promise;
+            this.connectReady = () => {
+                this.isConnected = true;
+                resolve();
+            };
+            this.connectFail = reject;
         }
 
         const ws = new WebSocket(`ws://${this.serverAddress}`);
         this.ws = ws;
-
         ws.binaryType = "arraybuffer";
 
         const ctrl = new AbortController();
         if (ws.readyState === WebSocket.OPEN) {
-            this.resolve?.();
+            this.connectReady?.();
             ctrl.abort();
         } else {
             ws.addEventListener("open", () => {
-                this.resolve?.();
+                this.connectReady?.();
                 ctrl.abort();
             }, {once: true, signal: ctrl.signal});
             ws.addEventListener("error", (err) => {
-                this.reject?.(err);
+                this.connectFail?.(err);
                 ctrl.abort();
             }, {once: true, signal: ctrl.signal});
         }
@@ -63,24 +67,24 @@ export abstract class NetworkChannel implements INetworkChannel {
             }
         };
 
-        this.ws.onerror = (event) => {
-            console.error(this.registry.getSide(), event);
-        }
+        this.ws.onerror = (event) => console.error(this.registry.getSide(), event);
 
-        await this.ready;
-        this.ready = null;
-        this.resolve = null;
-        this.reject = null;
+        await this.readyPromise;
+        this.readyPromise = null;
+        this.connectReady = null;
+        this.connectFail = null;
+    }
+
+    public disconnect(): void {
+        this.isConnected = false;
+        this.ws?.close();
     }
 
     public async sniff(url: string, retryDelay = 2000, maxRetries = 5): Promise<boolean> {
-        let attempts = 0;
-
-        const conn = () => {
-            const {promise, resolve} = Promise.withResolvers<boolean>();
-            attempts++;
-
+        for (let attempts = 0; attempts < maxRetries; attempts++) {
+            const {promise: ok, resolve} = Promise.withResolvers<boolean>();
             const test = new WebSocket(`ws://${url}`);
+
             test.onopen = () => {
                 console.log("Server reachable");
                 test.close();
@@ -88,22 +92,18 @@ export abstract class NetworkChannel implements INetworkChannel {
             };
 
             test.onerror = () => {
-                console.warn("Server not reachable");
+                console.warn(`Server not reachable (attempt ${attempts + 1}/${maxRetries})`);
                 test.close();
-                if (attempts < maxRetries) {
-                    setTimeout(() => conn()
-                            .then(resolve)
-                            .catch(() => resolve(false)),
-                        retryDelay);
-                } else {
-                    resolve(false);
-                }
+                resolve(false);
             };
 
-            return promise;
+            if (await ok) return true;
+            if (attempts < maxRetries - 1) {
+                await sleep(retryDelay);
+            }
         }
 
-        return conn();
+        return false;
     }
 
     public receive<T extends Payload>(id: PayloadId<T>, handler: Consumer<T>): void {
@@ -159,11 +159,13 @@ export abstract class NetworkChannel implements INetworkChannel {
     }
 
     public async waitConnect(): Promise<void> {
-        await this.ready;
-    }
+        if (this.isConnected) return;
 
-    public disconnect(): void {
-        this.ws?.close();
+        if (this.readyPromise === null) {
+            throw new Error("Wait before connect");
+        }
+
+        await this.readyPromise;
     }
 
     protected abstract getSide(): string;

@@ -1,4 +1,3 @@
-import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import type {KeyboardInput} from "../input/KeyboardInput.ts";
 import {ClientTechTree} from "../../tech/ClientTechTree.ts";
 import type {World} from "../../world/World.ts";
@@ -18,8 +17,9 @@ import {type ItemStack} from "../../item/ItemStack.ts";
 import {PlayerMoveByPointerC2SPacket} from "../../network/packet/c2s/PlayerMoveByPointerC2SPacket.ts";
 import {encodeVelocity} from "../../utils/NetUtil.ts";
 import type {Item} from "../../item/Item.ts";
+import {AbstractClientPlayerEntity} from "./AbstractClientPlayerEntity.ts";
 
-export class ClientPlayerEntity extends PlayerEntity {
+export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     public readonly input: KeyboardInput;
     private specialWeapons: SpecialWeapon[];
     private quickFireIndex = 0;

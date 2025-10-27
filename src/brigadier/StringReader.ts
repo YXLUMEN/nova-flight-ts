@@ -76,6 +76,61 @@ export class StringReader {
         }
     }
 
+    public readInt(): number {
+        const start = this.cursor;
+        while (this.canRead() && StringReader.isAllowedNumber(this.peek())) {
+            this.skip();
+        }
+
+        const number = this.string.substring(start, this.cursor);
+        if (number.length === 0) {
+            throw new Error("Nothing to pares as Integer");
+        }
+
+        const int = Number.parseInt(number);
+        if (Number.isSafeInteger(int)) return int;
+
+        this.cursor = start;
+        throw new Error("Not a integer");
+    }
+
+    public readLong(): BigInt {
+        const start = this.cursor;
+        while (this.canRead() && StringReader.isAllowedNumber(this.peek())) {
+            this.skip();
+        }
+
+        const number = this.string.substring(start, this.cursor);
+        if (number.length === 0) {
+            throw new Error("Nothing to pares as BigInt/Long");
+        }
+
+        try {
+            return BigInt(number);
+        } catch (e) {
+            this.cursor = start;
+            throw e;
+        }
+    }
+
+    public readDouble(): number {
+        const start = this.cursor;
+        while (this.canRead() && StringReader.isAllowedNumber(this.peek())) {
+            this.skip();
+        }
+
+        const number = this.string.substring(start, this.cursor);
+        if (number.length === 0) {
+            throw new Error("Nothing to pares as Double");
+        }
+
+        const int = Number.parseInt(number);
+        if (Number.isFinite(int)) return int;
+
+        this.cursor = start;
+        throw new Error("Not a integer");
+    }
+
     public readUnquotedString(): string {
         const start = this.cursor;
         while (this.canRead() && StringReader.isAllowedInUnquotedString(this.peek())) {

@@ -1,11 +1,8 @@
 export class ServerWorker {
     private readonly worker: Worker;
 
-    public constructor(scriptUrl: string) {
-        this.worker = new Worker(new URL(scriptUrl, import.meta.url), {
-            type: 'module',
-            name: 'server',
-        });
+    public constructor(worker: Worker) {
+        this.worker = worker;
     }
 
     public postMessage(message: any, options?: StructuredSerializeOptions): void {

@@ -39,10 +39,12 @@
 
     .name {
         font-size: 18px;
+        pointer-events: none;
     }
 
     .addr {
         color: #8a8a8a;
+        pointer-events: none;
     }
 }
 

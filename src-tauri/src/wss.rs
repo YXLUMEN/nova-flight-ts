@@ -14,25 +14,44 @@ struct State {
     clients: HashMap<[u8; 16], Tx>,
 }
 
-static SERVER: LazyLock<Mutex<Option<Arc<RwLock<State>>>>> = LazyLock::new(|| Mutex::new(None));
+struct ServerHandle {
+    port: u16,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Role {
+    Unknown,
+    Server,
+    Client,
+}
+
+static SERVER: LazyLock<Mutex<Option<ServerHandle>>> = LazyLock::new(|| Mutex::new(None));
 static STOP_TX: LazyLock<Mutex<Option<oneshot::Sender<()>>>> = LazyLock::new(|| Mutex::new(None));
 
 #[tauri::command]
 pub async fn start_server(port: u16) -> Result<(), String> {
+    // 单次启动
     let mut server_guard = SERVER.lock().await;
-    if server_guard.is_some() {
-        return Err(format!("Server already listen on \"{}\"", port));
+    if let Some(handle) = server_guard.as_ref() {
+        return Err(format!("Server already listen on \"{}\"", handle.port));
     }
 
     let state = Arc::new(RwLock::new(State::default()));
-    let cloned = state.clone();
-
     let (tx, rx) = oneshot::channel();
     *STOP_TX.lock().await = Some(tx);
 
-    tokio::spawn(run_ws_server(port, cloned, rx));
+    // 开始监听
+    let addr = format!("0.0.0.0:{}", port);
+    let listener = TcpListener::bind(&addr)
+        .await
+        .map_err(|e| format!("Failed to bind {}: {}", addr, e))?;
 
-    *server_guard = Some(state);
+    println!("[INFO] WebSocket server listening on {}", addr);
+
+    // 启动任务
+    tokio::spawn(run_ws_server(listener, state.clone(), rx));
+
+    *server_guard = Some(ServerHandle { port });
     Ok(())
 }
 
@@ -44,18 +63,14 @@ pub async fn stop_server() -> Result<(), String> {
     Ok(())
 }
 
-async fn run_ws_server(port: u16, state: Arc<RwLock<State>>, mut stop_rx: oneshot::Receiver<()>) {
-    let addr = format!("0.0.0.0:{}", port);
-
-    let listener = TcpListener::bind(&addr)
-        .await
-        .expect("Failed to bind address");
-
-    println!("[INFO] WebSocket server listening on {}", addr);
-
+async fn run_ws_server(
+    listener: TcpListener,
+    state: Arc<RwLock<State>>,
+    mut stop_receiver: oneshot::Receiver<()>,
+) {
     loop {
         tokio::select! {
-                _ = &mut stop_rx => {
+                _ = &mut stop_receiver => {
                     println!("[INFO] Shutting down server");
                     break;
                 }
@@ -79,13 +94,13 @@ async fn run_ws_server(port: u16, state: Arc<RwLock<State>>, mut stop_rx: onesho
                     }
                 };
 
-                let (mut write, mut read) = ws_stream.split();
+                let (mut writer, mut reader) = ws_stream.split();
                 let (tx, mut rx) = mpsc::unbounded_channel::<Bytes>();
 
                 // 发送任务
                 let send_task = tokio::spawn(async move {
                     while let Some(msg) = rx.recv().await {
-                        if let Err(e) = write.send(Message::Binary(msg)).await {
+                        if let Err(e) = writer.send(Message::Binary(msg)).await {
                             eprintln!("Send error: {}", e);
                             break;
                         }
@@ -93,10 +108,10 @@ async fn run_ws_server(port: u16, state: Arc<RwLock<State>>, mut stop_rx: onesho
                 });
 
                 // 接收任务
-                while let Some(msg) = read.next().await {
+                while let Some(msg) = reader.next().await {
                     match msg {
-                        Ok(Message::Binary(data)) => {
-                            handle_message(&state, &tx, data).await;
+                        Ok(Message::Binary(payload)) => {
+                            handle_incoming_message(&state, &tx, payload).await;
                         }
                         Ok(_) => {}
                         Err(e) => {
@@ -107,19 +122,19 @@ async fn run_ws_server(port: u16, state: Arc<RwLock<State>>, mut stop_rx: onesho
                 }
 
                 {
-                    let mut st = state.write().await;
-                    // 如果是 server
-                    if st
+                    let mut state_lock = state.write().await;
+
+                    if state_lock
                         .server
                         .as_ref()
                         .map(|s| s.same_channel(&tx))
                         .unwrap_or(false)
                     {
-                        st.server = None;
+                        state_lock.server = None;
                         println!("[INFO] Server disconnected");
                     }
-                    // 如果是 client
-                    st.clients.retain(|id, c| {
+
+                    state_lock.clients.retain(|id, c| {
                         let keep = !c.same_channel(&tx);
                         if !keep {
                             println!("[INFO] Client {} disconnected", format_uuid(&id));
@@ -134,10 +149,16 @@ async fn run_ws_server(port: u16, state: Arc<RwLock<State>>, mut stop_rx: onesho
         }}
     }
 
-    let mut global = SERVER.lock().await;
-    *global = None;
-    let mut stop = STOP_TX.lock().await;
-    *stop = None;
+    {
+        let mut state_lock = state.write().await;
+        state_lock.server = None;
+        state_lock.clients.clear();
+
+        let mut server = SERVER.lock().await;
+        *server = None;
+        let mut stop = STOP_TX.lock().await;
+        *stop = None;
+    }
 }
 
 /// 协议说明:
@@ -147,103 +168,151 @@ async fn run_ws_server(port: u16, state: Arc<RwLock<State>>, mut stop_rx: onesho
 /// 0x10 = Client -> Server
 /// 0x11 = Server -> Client 广播 + 单个排除
 /// 0x12 = Server -> Client 单发
-async fn handle_message(state: &Arc<RwLock<State>>, tx: &Tx, data: Bytes) {
-    if data.is_empty() {
-        eprintln!("[WARN] Empty message received");
+async fn handle_incoming_message(state: &Arc<RwLock<State>>, tx: &Tx, payload: Bytes) {
+    if payload.is_empty() {
+        println!("[WARN] Empty message received");
         return;
     }
 
-    match data[0] {
+    let role = {
+        let state_lock = state.read().await;
+        if state_lock
+            .server
+            .as_ref()
+            .map(|s| s.same_channel(tx))
+            .unwrap_or(false)
+        {
+            Role::Server
+        } else if state_lock.clients.values().any(|c| c.same_channel(tx)) {
+            Role::Client
+        } else {
+            Role::Unknown
+        }
+    };
+
+    match payload[0] {
         0x01 => {
             // 注册 Server
-            let mut st = state.write().await;
-            st.server = Some(tx.clone());
+            let mut state_lock = state.write().await;
+            if state_lock.server.is_some() {
+                return;
+            }
+
+            state_lock.server = Some(tx.clone());
             println!("[INFO] Server registered");
         }
         0x02 => {
             // 注册 Client
-            if data.len() < 17 {
+            if payload.len() < 17 {
                 eprintln!("[WARN] Invalid client register packet");
                 return;
             }
 
-            let mut id = [0u8; 16];
-            id.copy_from_slice(&data[1..17]);
+            let mut client_id = [0u8; 16];
+            client_id.copy_from_slice(&payload[1..17]);
 
-            let mut st = state.write().await;
-            // 重复检查
-            if st.clients.contains_key(&id) {
-                println!(
-                    "[WARN] Duplicate client UUID {}, registration rejected",
-                    format_uuid(&id)
-                );
+            let mut state_lock = state.write().await;
 
-                relay_send(&tx, "ERR: Duplicate Player UUID");
-
+            // 服务器连接不允许注册为 client
+            if state_lock
+                .server
+                .as_ref()
+                .map(|s| s.same_channel(tx))
+                .unwrap_or(false)
+            {
+                println!("[WARN] Server connection tried to register as client, rejected");
+                send_relay_message(tx, "ERR: Server cannot register as Client");
                 return;
             }
 
-            st.clients.insert(id, tx.clone());
+            // 重复检查
+            if state_lock.clients.contains_key(&client_id) {
+                println!(
+                    "[WARN] Duplicate client UUID {}, registration rejected",
+                    format_uuid(&client_id)
+                );
 
-            println!("[INFO] Client {} registered", format_uuid(&id));
+                send_relay_message(&tx, "ERR: Duplicate Player UUID");
+                return;
+            }
+
+            state_lock.clients.insert(client_id, tx.clone());
+            println!("[INFO] Client {} registered", format_uuid(&client_id));
         }
         0x10 => {
             // Client → Server
-            let st = state.read().await;
-            if let Some(server) = &st.server {
-                let _ = server.send(data);
+            if role != Role::Client {
+                return;
+            }
+
+            let state_lock = state.read().await;
+            if let Some(server) = &state_lock.server {
+                let _ = server.send(payload);
             }
         }
         0x11 => {
             // Server → 广播给所有 Client
-            let mut st = state.write().await;
-            st.clients
-                .retain(|id, client| send_or_drop(id, client, &data));
+            if role != Role::Server {
+                return;
+            }
+
+            let mut state_lock = state.write().await;
+            state_lock
+                .clients
+                .retain(|id, client| send_or_drop(id, client, &payload));
         }
         0x12 => {
             // Server → 指定 Client
-            if data.len() < 17 {
+            if role != Role::Server {
+                return;
+            }
+
+            if payload.len() < 17 {
                 eprintln!("[WARN] Invalid unicast packet");
                 return;
             }
 
             // UUID截断
-            let mut target = [0u8; 16];
-            target.copy_from_slice(&data[1..17]);
-            let rest = data.slice(17..);
+            let mut target_client_id = [0u8; 16];
+            target_client_id.copy_from_slice(&payload[1..17]);
 
-            let mut buf = BytesMut::with_capacity(1 + rest.len());
+            let remaining = payload.slice(17..);
+            let mut buf = BytesMut::with_capacity(1 + remaining.len());
 
             // 服务器标头
             buf.put_u8(0x11);
-            buf.extend_from_slice(&rest);
+            buf.extend_from_slice(&remaining);
             let forwarded = buf.freeze();
 
             let mut st = state.write().await;
-            if let Some(client) = st.clients.get(&target) {
+            if let Some(client) = st.clients.get(&target_client_id) {
                 if client.send(forwarded).is_err() {
-                    println!("[WARN] Client {} dropped", format_uuid(&target));
-                    st.clients.remove(&target);
+                    println!("[WARN] Client {} dropped", format_uuid(&target_client_id));
+                    st.clients.remove(&target_client_id);
                 }
             }
         }
         0x13 => {
             // Server → 广播给未被排除的 Client
-            if data.len() < 17 {
+            if role != Role::Server {
+                return;
+            }
+
+            if payload.len() < 17 {
                 eprintln!("[WARN] Invalid server packet");
                 return;
             }
 
-            let mut cursor = &data[1..];
+            let mut cursor = &payload[1..];
 
-            let (count, rest) = match read_var_uint(cursor) {
+            let (count, remaining) = match read_var_uint(cursor) {
                 Ok(v) => v,
                 Err(e) => {
                     eprintln!("[WARN] VarUInt parse error: {}", e);
                     return;
                 }
             };
-            cursor = rest;
+            cursor = remaining;
 
             // 解析UUID
             let (excludes, rest_payload) = match parse_excludes(cursor, count) {
@@ -255,14 +324,12 @@ async fn handle_message(state: &Arc<RwLock<State>>, tx: &Tx, data: Bytes) {
             };
 
             let mut buf = BytesMut::with_capacity(1 + rest_payload.len());
-
-            // 服务器标头
             buf.put_u8(0x11);
             buf.extend_from_slice(rest_payload);
             let forwarded = buf.freeze();
 
-            let mut st = state.write().await;
-            st.clients.retain(|id, client| {
+            let mut state_lock = state.write().await;
+            state_lock.clients.retain(|id, client| {
                 if excludes.iter().any(|ex| ex == id) {
                     return true;
                 }
@@ -270,7 +337,7 @@ async fn handle_message(state: &Arc<RwLock<State>>, tx: &Tx, data: Bytes) {
             });
         }
         _ => {
-            eprintln!("[WARN] Unknown opcode: {}", data[0]);
+            eprintln!("[WARN] Unknown opcode: {}", payload[0]);
         }
     }
 }
@@ -297,7 +364,7 @@ fn parse_excludes(mut cursor: &[u8], count: u32) -> Result<(Vec<[u8; 16]>, &[u8]
 }
 
 /// 中继服务器发送
-fn relay_send(tx: &Tx, msg: &str) {
+fn send_relay_message(tx: &Tx, msg: &str) {
     let mut buf = BytesMut::new();
     buf.put_u8(0x00);
 

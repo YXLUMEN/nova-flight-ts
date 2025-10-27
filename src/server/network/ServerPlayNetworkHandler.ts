@@ -55,6 +55,8 @@ export class ServerPlayNetworkHandler {
         this.world.spawnPlayer(player);
         this.channel.sendTo(new JoinGameS2CPacket(player.getId()), clientId);
         this.loginPlayers.add(clientId);
+
+        console.log(`Player ${packet.clientId} Login`);
     }
 
     public onPlayerFinishLogin(packet: PlayerFinishLoginC2SPacket) {
@@ -74,8 +76,14 @@ export class ServerPlayNetworkHandler {
             return;
         }
 
+        const player = this.world.getEntity(uuid);
+        if (!player || !player.isPlayer()) return;
+
+        this.world.removePlayer(player as ServerPlayerEntity);
         this.loginPlayers.delete(uuid);
         this.channel.send(new PlayerDisconnectS2CPacket(uuid, 'Logout'));
+
+        console.log(`Player disconnected with uuid: ${uuid}`);
     }
 
     public onPlayerAim(packet: PlayerAimC2SPacket) {

@@ -132,6 +132,11 @@ export class ServerWorld extends World implements NbtSerializable {
         return this.server.networkChannel;
     }
 
+    public override setTicking(ticking: boolean = true) {
+        if (this.isMultiPlayer) return;
+        super.setTicking(ticking);
+    }
+
     public spawnEntity(entity: Entity): boolean {
         if (this.peaceMod && entity instanceof MobEntity) {
             return false;
@@ -160,6 +165,12 @@ export class ServerWorld extends World implements NbtSerializable {
         }
 
         this.entityManager.addEntity(player);
+    }
+
+    public removePlayer(player: ServerPlayerEntity): void {
+        if (this.players.delete(player.getUuid())) {
+            this.entityManager.remove(player);
+        }
     }
 
     public override addEntity(entity: Entity): void {

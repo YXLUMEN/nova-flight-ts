@@ -7,7 +7,6 @@ let server: DevServer | null = null;
 
 self.addEventListener("message", handleEvent.bind(this));
 
-
 async function handleEvent(event: MessageEvent<any>) {
     const {type, payload} = event.data;
 
@@ -15,6 +14,7 @@ async function handleEvent(event: MessageEvent<any>) {
         case 'start_server': {
             if (server) return;
             server = DevServer.startServer() as DevServer;
+            server.networkChannel.setServerAddress(payload.addr);
             return server.runServer(payload.action);
         }
         case 'stop_server': {
@@ -27,13 +27,13 @@ async function handleEvent(event: MessageEvent<any>) {
         }
         case 'start_ticking': {
             const world = server?.world;
-            if (!world || world.isMultiPlayerWorld()) return;
+            if (!world) return;
             world.setTicking(true);
             break;
         }
         case 'stop_ticking': {
             const world = server?.world;
-            if (!world || world.isMultiPlayerWorld()) return;
+            if (!world) return;
             world.setTicking(false);
             break;
         }
