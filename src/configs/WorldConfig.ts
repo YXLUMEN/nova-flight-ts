@@ -9,7 +9,7 @@ const freezeConfig = createCleanObj({
     tick: 20,
     mbps: 0.05,
     per: 50,
-    version: '25w09d'
+    version: '25w10a'
 } as const);
 
 const WorldConfig = Object.preventExtensions(createCleanObj({

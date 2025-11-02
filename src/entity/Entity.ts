@@ -197,7 +197,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
 
     public updateYaw(yaw: number): void {
         this.yaw = yaw;
-        this.prevY = yaw;
+        this.prevYaw = yaw;
     }
 
     public setClampYaw(target: number, maxStep: number = 0.0785375): void {
@@ -430,10 +430,10 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     public abstract onTrackedDataSet(data: TrackedData<any>): void;
 
     protected lerpPosAndRotation(step: number, x: number, y: number, yaw: number): void {
-        const d = 1 / step;
-        const dx = lerp(d, this.getX(), x);
-        const dy = lerp(d, this.getY(), y);
-        const dYaw = lerp(d, this.getYaw(), yaw);
+        const t = 1 / step;
+        const dx = lerp(t, this.getX(), x);
+        const dy = lerp(t, this.getY(), y);
+        const dYaw = lerp(t, this.getYaw(), yaw);
         this.pos.set(dx, dy);
         this.setYaw(dYaw);
     }

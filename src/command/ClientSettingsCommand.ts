@@ -3,16 +3,17 @@ import {argument, literal} from "../brigadier/CommandNodeBuilder.ts";
 import type {StringReader} from "../brigadier/StringReader.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
+import {invoke} from "@tauri-apps/api/core";
 
-export function clientSettingsCommand(dispatcher: CommandDispatcher<any>) {
+export function clientSettingsCommand<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
     dispatcher.registry(
-        literal<ClientCommandSource>('client')
+        literal<T>('client')
             .then(
-                literal<ClientCommandSource>('set')
+                literal<T>('set')
                     .then(
-                        literal<ClientCommandSource>('serverAddr')
+                        literal<T>('serverAddr')
                             .then(
-                                argument<ClientCommandSource, string>('address', {
+                                argument<T, string>('address', {
                                     parse(reader: StringReader): string {
                                         return reader.readQuotedString().trim();
                                     }
@@ -28,9 +29,9 @@ export function clientSettingsCommand(dispatcher: CommandDispatcher<any>) {
                             )
                     )
                     .then(
-                        literal<ClientCommandSource>('port')
+                        literal<T>('port')
                             .then(
-                                argument<ClientCommandSource, number>('port', {
+                                argument<T, number>('port', {
                                     parse(reader: StringReader): number {
                                         return reader.readInt();
                                     }
@@ -52,9 +53,9 @@ export function clientSettingsCommand(dispatcher: CommandDispatcher<any>) {
                             )
                     )
                     .then(
-                        literal<ClientCommandSource>('username')
+                        literal<T>('username')
                             .then(
-                                argument<ClientCommandSource, string>('username', {
+                                argument<T, string>('username', {
                                     parse(reader: StringReader): string {
                                         return reader.readString().trim();
                                     }
@@ -70,21 +71,27 @@ export function clientSettingsCommand(dispatcher: CommandDispatcher<any>) {
                     )
             )
             .then(
-                literal<ClientCommandSource>('get')
+                literal<T>('get')
             )
             .then(
-                literal<ClientCommandSource>('clear')
+                literal<T>('clear')
                     .then(
-                        literal<ClientCommandSource>('username')
+                        literal<T>('username')
                             .executes(() => localStorage.removeItem('username'))
                     )
             )
             .then(
-                literal<ClientCommandSource>('force')
+                literal<T>('force')
                     .then(
-                        literal<ClientCommandSource>('shutdown')
+                        literal<T>('shutdown')
                             .executes(ctx => {
                                 ctx.source.getClient().scheduleStop();
+                            })
+                    )
+                    .then(
+                        literal<T>('shut_relay')
+                            .executes(() => {
+                                return invoke('stop_server');
                             })
                     )
             )

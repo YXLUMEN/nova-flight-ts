@@ -4,10 +4,11 @@ import {BinaryWriter} from "../nbt/BinaryWriter.ts";
 import {BinaryReader} from "../nbt/BinaryReader.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {HashMap} from "../utils/collection/HashMap.ts";
-import type {Consumer, Supplier} from "../apis/types.ts";
+import type {Consumer} from "../apis/types.ts";
 import type {INetworkChannel} from "./INetworkChannel.ts";
 import {RelayServerPacket} from "./packet/RelayServerPacket.ts";
 import {sleep} from "../utils/uit.ts";
+import {error} from "@tauri-apps/plugin-log";
 
 export abstract class NetworkChannel implements INetworkChannel {
     protected serverAddress: string;
@@ -15,8 +16,6 @@ export abstract class NetworkChannel implements INetworkChannel {
 
     private isConnected: boolean = false;
     private readyPromise: Promise<void> | null = null;
-    private connectReady: Supplier<void> | null = null;
-    private connectFail: Consumer<any> | null = null;
 
     protected readonly registry: PayloadTypeRegistry;
     private readonly handlers = new HashMap<Identifier, Consumer<Payload>>();
@@ -27,52 +26,59 @@ export abstract class NetworkChannel implements INetworkChannel {
     }
 
     public async connect() {
-        if (this.readyPromise === null) {
-            const {promise, resolve, reject} = Promise.withResolvers<void>();
-            this.readyPromise = promise;
-            this.connectReady = () => {
-                this.isConnected = true;
-                resolve();
-            };
-            this.connectFail = reject;
-        }
+        if (this.isConnected) return;
 
-        const ws = new WebSocket(`ws://${this.serverAddress}`);
-        this.ws = ws;
-        ws.binaryType = "arraybuffer";
+        const {promise, resolve, reject} = Promise.withResolvers<void>();
+        this.readyPromise = promise;
 
-        const ctrl = new AbortController();
-        if (ws.readyState === WebSocket.OPEN) {
-            this.connectReady?.();
-            ctrl.abort();
-        } else {
-            ws.addEventListener("open", () => {
-                this.connectReady?.();
-                ctrl.abort();
-            }, {once: true, signal: ctrl.signal});
-            ws.addEventListener("error", (err) => {
-                this.connectFail?.(err);
-                ctrl.abort();
-            }, {once: true, signal: ctrl.signal});
-        }
-
-        this.ws.onopen = () => this.register();
-
-        this.ws.onmessage = (event) => {
-            const binary = event.data as ArrayBuffer;
-            const payload = this.decodePayload(new Uint8Array(binary));
-            if (payload) {
-                const handler = this.handlers.get(payload.getId().id);
-                if (handler) handler(payload);
-            }
+        let timeout: number | undefined;
+        const connectReady = () => {
+            this.isConnected = true;
+            resolve();
+            clearTimeout(timeout);
+        };
+        const connectFail = (reason: any) => {
+            reject(reason);
+            clearTimeout(timeout);
         };
 
-        this.ws.onerror = (event) => console.error(this.registry.getSide(), event);
+        timeout = setTimeout(() => {
+            connectFail('Connected timeout');
+        }, 5000);
 
-        await this.readyPromise;
+        const ws = new WebSocket(`ws://${this.serverAddress}`);
+        ws.binaryType = "arraybuffer";
+
+        ws.onmessage = (event) => {
+            const binary = event.data as ArrayBuffer;
+            const payload = this.decodePayload(new Uint8Array(binary));
+
+            if (!(payload instanceof RelayServerPacket)) return;
+
+            const [type, msg] = payload.msg.split(":");
+            if (type === 'ERR') {
+                connectFail(msg);
+                return;
+            }
+            if (payload.msg !== 'INFO:REGISTERED') return;
+
+            connectReady();
+
+            ws.onmessage = this.handleMessage.bind(this);
+            ws.onerror = (err) => error(`${this.getSide()}: Connection Error: ${err}`);
+        };
+
+        ws.onerror = (err) => {
+            error(`${this.getSide()}: Connection Error: ${err}`);
+            connectFail(err);
+        }
+
+        ws.onopen = () => this.register();
+
+        this.ws = ws;
+
+        await promise;
         this.readyPromise = null;
-        this.connectReady = null;
-        this.connectFail = null;
     }
 
     public disconnect(): void {
@@ -144,6 +150,15 @@ export abstract class NetworkChannel implements INetworkChannel {
         if (!type) return null;
 
         return type.codec.decode(reader);
+    }
+
+    private handleMessage(event: MessageEvent) {
+        const binary = new Uint8Array(event.data as ArrayBuffer);
+        const payload = this.decodePayload(binary);
+        if (!payload) return;
+
+        const handler = this.handlers.get(payload.getId().id);
+        if (handler) handler(payload);
     }
 
     public setServerAddress(address: string): void {

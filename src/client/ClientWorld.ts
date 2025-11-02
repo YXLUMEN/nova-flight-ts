@@ -271,6 +271,10 @@ export class ClientWorld extends World {
             EntityRenderers.getRenderer(player).render(player, ctx, tickDelta, 0, 0);
             const playerPos = player.getLerpPos(tickDelta);
 
+            if (player.assistedAiming) {
+                player.bc.drawAimIndicator(ctx, tickDelta);
+            }
+
             if (player.lockedMissile.size > 0) {
                 for (const missile of player.lockedMissile) {
                     const mPos = missile.getLerpPos(tickDelta);

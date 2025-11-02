@@ -1,27 +1,35 @@
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
-import {PI2} from "../utils/math/math.ts";
+import {lerp, PI2} from "../utils/math/math.ts";
 import type {BaseWeapon} from "../item/weapon/BaseWeapon/BaseWeapon.ts";
 import type {ClientPlayerEntity} from "../client/entity/ClientPlayerEntity.ts";
 
 export class BallisticCalculator {
     private owner: ClientPlayerEntity;
     private lockedTarget: MobEntity | null = null;
+    private prevLeadX = 0;
+    private prevLeadY = 0;
 
     public constructor(owner: ClientPlayerEntity) {
         this.owner = owner;
     }
 
     public tick(): void {
-        if (this.owner.input.wasPressed('AltLeft')) {
+        if (!this.owner.input.wasPressed('ShiftLeft')) {
+            return;
+        }
+        if (this.lockedTarget) {
+            this.lockedTarget = null;
+        } else {
+            this.lockedTarget = this.findTargetUnderCursor();
             if (this.lockedTarget) {
-                this.lockedTarget = null;
-            } else {
-                this.lockedTarget = this.findTargetUnderCursor();
+                const {x, y} = this.lockedTarget.getPositionRef;
+                this.prevLeadX = x;
+                this.prevLeadY = y;
             }
         }
     }
 
-    public drawAimIndicator(ctx: CanvasRenderingContext2D) {
+    public drawAimIndicator(ctx: CanvasRenderingContext2D, tickDelta: number): void {
         const target = this.lockedTarget;
         if (!target || target.isRemoved()) {
             this.lockedTarget = null;
@@ -39,11 +47,15 @@ export class BallisticCalculator {
         const bulletSpeed = (this.owner.getCurrentItemStack().getItem() as BaseWeapon).getBallisticSpeed();
         const t = dist / bulletSpeed;
 
-        const leadX = tPos.x + tVelocity.x * t;
-        const leadY = tPos.y + tVelocity.y * t;
+        let leadX = tPos.x + tVelocity.x * t;
+        let leadY = tPos.y + tVelocity.y * t;
+
+        leadX = lerp(tickDelta, this.prevLeadX, leadX);
+        leadY = lerp(tickDelta, this.prevLeadY, leadY);
+        this.prevLeadX = leadX;
+        this.prevLeadY = leadY;
 
         ctx.save();
-        ctx.strokeStyle = 'red';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(tPos.x, tPos.y, 15, 0, PI2);

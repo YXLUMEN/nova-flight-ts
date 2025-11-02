@@ -5,7 +5,7 @@ import type {CommandSource} from "./CommandSource.ts";
 import type {Consumer} from "../apis/types.ts";
 
 export abstract class CommandManager {
-    protected readonly dispatcher: CommandDispatcher<ServerCommandSource> = new CommandDispatcher();
+    protected readonly dispatcher: CommandDispatcher<any> = new CommandDispatcher();
     private readonly callback: Consumer<Error[]>;
 
     protected constructor(callback: Consumer<Error[]>) {

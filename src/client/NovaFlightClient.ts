@@ -26,6 +26,7 @@ import {ServerWorker} from "../worker/ServerWorker.ts";
 import {ClientMultiGameManger} from "./ClientMultiGameManger.ts";
 import {ConnectInfo} from "./render/ui/ConnectInfo.ts";
 import {ClientReceive} from "./network/ClientReceive.ts";
+import {UUIDUtil} from "../utils/UUIDUtil.ts";
 
 export class NovaFlightClient {
     private static instance: NovaFlightClient;
@@ -57,16 +58,15 @@ export class NovaFlightClient {
 
     public constructor() {
         NovaFlightClient.instance = this;
-        /*
+
         const clientId = localStorage.getItem('clientId');
         if (clientId && UUIDUtil.isValidUUID(clientId)) {
             this.clientId = clientId;
         } else {
-            alert('ID 不合法或不存在,将重新生成');
             this.clientId = crypto.randomUUID();
             localStorage.setItem('clientId', this.clientId);
-        }*/
-        this.clientId = crypto.randomUUID();
+        }
+        // this.clientId = crypto.randomUUID();
 
         this.registryManager = new RegistryManager();
 
@@ -133,11 +133,11 @@ export class NovaFlightClient {
 
             await this.waitWorldStop;
 
+            this.networkChannel.disconnect();
+            this.networkHandler.clear();
             if (this.isIntegrated) {
                 await invoke('stop_server');
             }
-            this.networkChannel.disconnect();
-            this.networkHandler.clear();
         }
 
         this.networkChannel.disconnect();
@@ -164,7 +164,7 @@ export class NovaFlightClient {
                 return;
             }
 
-            const tickDelta = Math.min(0.1, (ts - this.last) / 1000 || 0);
+            const tickDelta = Math.min(0.25, (ts - this.last) / 1000 || 0);
             this.last = ts;
             this.accumulator += tickDelta;
 
@@ -231,8 +231,13 @@ export class NovaFlightClient {
         }
 
         connectInfo.setMessage('开始连接...');
-        await this.networkChannel.connect();
-        await this.networkChannel.waitConnect();
+
+        try {
+            await this.networkChannel.connect();
+        } catch (err) {
+            await connectInfo.setError(String(err));
+            return;
+        }
 
         this.networkHandler.checkServer();
 
@@ -249,9 +254,12 @@ export class NovaFlightClient {
 
         // 启动中继服务器
         try {
+            await invoke('stop_server');
             await invoke('start_server', {port: WorldConfig.port});
         } catch (err) {
-            console.log(err);
+            console.error(err);
+            await connectInfo.setError(String(err));
+            return;
         }
 
         await sleep(300);
@@ -265,10 +273,16 @@ export class NovaFlightClient {
             await this.connectInfo.setError('连接已丢失: 无法启动内置服务器');
             return;
         }
-        await this.networkChannel.connect();
+
+        try {
+            await this.networkChannel.connect();
+        } catch (err) {
+            await connectInfo.setError(String(err));
+            return;
+        }
 
         // Vite 规定的格式 integrated dev
-        this.server = new ServerWorker(new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
+        this.server = new ServerWorker(new Worker(new URL('../worker/dev.worker.ts', import.meta.url), {
             type: 'module',
             name: 'server',
         }));
@@ -367,8 +381,6 @@ export class NovaFlightClient {
         loadingScreen.setSize(Window.VIEW_W, Window.VIEW_H);
         loadingScreen.loop();
 
-        // await this.update(loadingScreen);
-
         loadingScreen.setProgress(0.2, '注册资源');
         const manager = this.registryManager;
         await manager.registerAll();
@@ -460,6 +472,9 @@ export class NovaFlightClient {
                 break;
             case 'KeyL':
                 WorldConfig.follow = !WorldConfig.follow;
+                break;
+            case 'KeyM':
+                if (this.player) this.player.assistedAiming = !this.player.assistedAiming;
                 break;
         }
     }

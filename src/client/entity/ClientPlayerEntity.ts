@@ -18,9 +18,11 @@ import {PlayerMoveByPointerC2SPacket} from "../../network/packet/c2s/PlayerMoveB
 import {encodeVelocity} from "../../utils/NetUtil.ts";
 import type {Item} from "../../item/Item.ts";
 import {AbstractClientPlayerEntity} from "./AbstractClientPlayerEntity.ts";
+import {BallisticCalculator} from "../../tech/BallisticCalculator.ts";
 
 export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     public readonly input: KeyboardInput;
+    public readonly bc: BallisticCalculator;
     private specialWeapons: SpecialWeapon[];
     private quickFireIndex = 0;
 
@@ -28,6 +30,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     public autoAim: AutoAim | null = null;
     public steeringGear: boolean = false;
     public followPointer: boolean = false;
+    public assistedAiming: boolean = false;
 
     public lockedMissile = new Set<MissileEntity>();
     private revision: number = 0;
@@ -38,6 +41,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         this.input = input;
         const viewport = document.getElementById('viewport') as HTMLElement;
         this.techTree = new ClientTechTree(this, viewport);
+        this.bc = new BallisticCalculator(this);
 
         this.specialWeapons = this.weapons.keys().filter(item => item instanceof SpecialWeapon).toArray();
         this.switchQuickFire();
@@ -82,6 +86,8 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
                 this.setClampYaw(yaw, 0.3926875);
                 this.getNetworkChannel().send(new PlayerAimC2SPacket(uuid, pointer));
             }
+
+            if (this.assistedAiming) this.bc.tick();
         } else if (this.followPointer && WorldConfig.follow) {
             const pointer = this.input.getPointer;
             const dx = pointer.x - posRef.x;

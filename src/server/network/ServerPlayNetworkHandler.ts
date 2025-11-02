@@ -53,8 +53,8 @@ export class ServerPlayNetworkHandler {
         const player = new ServerPlayerEntity(this.world);
         player.setUuid(clientId);
         this.world.spawnPlayer(player);
-        this.channel.sendTo(new JoinGameS2CPacket(player.getId()), clientId);
         this.loginPlayers.add(clientId);
+        this.channel.sendTo(new JoinGameS2CPacket(player.getId()), clientId);
 
         console.log(`Player ${packet.clientId} Login`);
     }

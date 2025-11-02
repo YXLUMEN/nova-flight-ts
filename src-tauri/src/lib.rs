@@ -1,6 +1,6 @@
-use crate::wss::{start_server, stop_server};
+use crate::network::wss::{start_server, stop_server};
 
-mod wss;
+mod network;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {

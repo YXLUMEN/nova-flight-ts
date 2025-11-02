@@ -85,6 +85,7 @@ export class ClientPlayNetworkHandler {
     public disconnect() {
         const uuid = this.client.player!.getUuid();
         if (!uuid) return;
+        this.client.connectInfo?.setMessage('等待连接关闭...');
         this.sendPacket(new PlayerDisconnectC2SPacket(uuid));
     }
 
@@ -97,7 +98,10 @@ export class ClientPlayNetworkHandler {
         this.sniffInterval = setInterval(() => {
             times++;
             this.sendPacket(new ClientSniffingC2SPacket(this.client.clientId));
-            if (times >= this.maxSniffTimes) this.stopSniff();
+            if (times >= this.maxSniffTimes) {
+                this.stopSniff();
+                this.client.connectInfo?.setError('无法连接至服务器');
+            }
         }, 2000);
     }
 

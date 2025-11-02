@@ -68,7 +68,7 @@ export abstract class NovaFlightServer {
             const now = performance.now();
             const world = this.world!;
 
-            const tickDelta = Math.min(0.1, (now - this.last) / 1000 || 0);
+            const tickDelta = Math.min(0.25, (now - this.last) / 1000 || 0);
             this.last = now;
             this.accumulator += tickDelta;
 
