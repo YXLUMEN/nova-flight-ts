@@ -90,7 +90,7 @@ export class NovaFlightClient {
             val => {
                 for (let i = 0; i < val.length; i++) {
                     const err = val[i].message;
-                    if (i < 3) this.window.notify.show(err, 4000);
+                    this.clientCommand.addPlainMessage(err);
                     warn(err).catch();
                 }
             }
@@ -222,7 +222,14 @@ export class NovaFlightClient {
         this.connectInfo = connectInfo;
         connectInfo.setMessage('尝试连接...');
 
-        const result = await this.networkChannel.sniff(address);
+        const result = await this.networkChannel.sniff(
+            address,
+            2000,
+            5,
+            (num, max) => {
+                connectInfo.setMessage(`尝试连接(${num + 1}/${max})...`);
+            });
+
         if (!result) {
             await connectInfo.setError('未能找到服务器');
             connectInfo.destroy();
@@ -253,9 +260,16 @@ export class NovaFlightClient {
         this.connectInfo.setMessage('启动内置服务器...');
 
         // 启动中继服务器
+        let key: number[];
         try {
             await invoke('stop_server');
-            await invoke('start_server', {port: WorldConfig.port});
+            const obj = await invoke('start_server', {port: WorldConfig.port});
+
+            if (!Array.isArray(obj)) {
+                // noinspection ExceptionCaughtLocallyJS
+                throw new Error("Key must be an number array");
+            }
+            key = obj;
         } catch (err) {
             console.error(err);
             await connectInfo.setError(String(err));
@@ -288,11 +302,21 @@ export class NovaFlightClient {
         }));
 
         this.connectInfo.setMessage('开始连接...');
-        this.server.postMessage({type: 'start_server', payload: {action, addr}});
+
+        this.server.postMessage({type: 'start_server', payload: {action, addr, key}});
+
+        const timeout = setTimeout(() => {
+            this.connectInfo?.setError('连接超时');
+            this.server?.terminate();
+        }, 8000);
 
         this.server.getWorker().onmessage = async (event) => {
             const {type, payload} = event.data;
 
+            if (type === 'server_start') {
+                clearTimeout(timeout);
+                return;
+            }
             if (type === 'write_file') {
                 return this.saveGame(payload);
             }
@@ -323,6 +347,7 @@ export class NovaFlightClient {
             }
             await error(`${err.type}: ${err.message} at ${stack}`);
             this.stopWorld();
+            this.server?.terminate();
         }
 
         await connectInfo.waitConfirm();

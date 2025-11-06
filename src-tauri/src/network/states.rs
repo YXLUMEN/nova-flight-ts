@@ -58,6 +58,7 @@ impl RelayState {
 
 pub struct ServerHandle {
     pub port: u16,
+    pub secret: [u8; 32],
 }
 
 pub struct ServerManager {

@@ -86,7 +86,13 @@ export abstract class NetworkChannel implements INetworkChannel {
         this.ws?.close();
     }
 
-    public async sniff(url: string, retryDelay = 2000, maxRetries = 5): Promise<boolean> {
+    public async sniff(
+        url: string,
+        retryDelay = 2000,
+        maxRetries = 5,
+        tryCallback?: (attempts: number, max: number) => void,
+        failCallback?: Consumer<void>
+    ): Promise<boolean> {
         for (let attempts = 0; attempts < maxRetries; attempts++) {
             const {promise: ok, resolve} = Promise.withResolvers<boolean>();
             const test = new WebSocket(`ws://${url}`);
@@ -104,11 +110,14 @@ export abstract class NetworkChannel implements INetworkChannel {
             };
 
             if (await ok) return true;
+
+            if (tryCallback) tryCallback(attempts, maxRetries);
             if (attempts < maxRetries - 1) {
                 await sleep(retryDelay);
             }
         }
 
+        if (failCallback) failCallback();
         return false;
     }
 

@@ -13,7 +13,7 @@ async function handleEvent(event: MessageEvent<any>) {
     switch (type) {
         case 'start_server': {
             if (server) return;
-            server = DevServer.startServer() as DevServer;
+            server = DevServer.startServer(payload.key) as DevServer;
             server.networkChannel.setServerAddress(payload.addr);
             return server.runServer(payload.action);
         }

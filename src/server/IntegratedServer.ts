@@ -4,9 +4,9 @@ import {NbtCompound} from "../nbt/NbtCompound.ts";
 import {ServerReceive} from "./network/ServerReceive.ts";
 
 export class IntegratedServer extends NovaFlightServer {
-    public static startServer() {
+    public static startServer(secretKey: Uint8Array) {
         if (!NovaFlightServer.instance) {
-            NovaFlightServer.instance = new IntegratedServer();
+            NovaFlightServer.instance = new IntegratedServer(secretKey);
         }
 
         return NovaFlightServer.instance;

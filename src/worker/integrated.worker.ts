@@ -13,7 +13,7 @@ async function handleEvent(event: MessageEvent) {
     switch (type) {
         case 'start_server': {
             if (server) return;
-            server = IntegratedServer.startServer() as IntegratedServer;
+            server = IntegratedServer.startServer(payload.key) as IntegratedServer;
             server.networkChannel.setServerAddress(payload.addr);
             return server.runServer(payload.action);
         }

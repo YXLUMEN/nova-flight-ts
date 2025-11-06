@@ -27,10 +27,10 @@ export abstract class NovaFlightServer {
 
     private bindTick = this.tick.bind(this);
 
-    protected constructor() {
+    protected constructor(secretKey: Uint8Array) {
         this.serverId = crypto.randomUUID();
 
-        this.networkChannel = new ServerNetworkChannel("127.0.0.1:25566");
+        this.networkChannel = new ServerNetworkChannel("127.0.0.1:25566", secretKey);
         ServerReceive.registryNetworkHandler(this.networkChannel);
     }
 
@@ -56,6 +56,8 @@ export abstract class NovaFlightServer {
         }
 
         this.networkChannel.send(new ServerReadyS2CPacket());
+        self.postMessage({type: 'server_start'});
+
         this.world.setTicking(true);
         this.last = performance.now();
         this.tickInterval = setInterval(this.bindTick, 25);

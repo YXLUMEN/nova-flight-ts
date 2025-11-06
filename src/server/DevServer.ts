@@ -5,9 +5,9 @@ export class DevServer extends IntegratedServer {
     private willCrash = 0;
     private restCrash: number | null = null;
 
-    public static startServer() {
+    public static startServer(secretKey: Uint8Array) {
         if (!NovaFlightServer.instance) {
-            NovaFlightServer.instance = new DevServer();
+            NovaFlightServer.instance = new DevServer(secretKey);
         }
 
         return NovaFlightServer.instance;

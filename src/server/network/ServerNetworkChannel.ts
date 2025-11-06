@@ -6,8 +6,11 @@ import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 import type {IServerPlayNetwork} from "./IServerPlayNetwork.ts";
 
 export class ServerNetworkChannel extends NetworkChannel implements IServerPlayNetwork {
-    public constructor(url: string) {
+    private readonly secretKey: Uint8Array;
+
+    public constructor(url: string, secretKey: Uint8Array) {
         super(url, PayloadTypeRegistry.playS2C());
+        this.secretKey = secretKey;
     }
 
     public sendTo<T extends Payload>(payload: T, target: UUID) {
@@ -51,7 +54,7 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
     }
 
     protected register() {
-        this.ws!.send(new Uint8Array([0x01]));
+        this.ws!.send(new Uint8Array([0x01, ...this.secretKey]));
         console.log("Server registered");
     }
 }

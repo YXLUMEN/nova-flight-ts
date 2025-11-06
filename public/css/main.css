@@ -7,6 +7,10 @@ html, body {
     -webkit-user-drag: none;
 }
 
+::-webkit-scrollbar {
+    display: none;
+}
+
 canvas {
     display: block;
     width: 100vw;
@@ -33,6 +37,38 @@ canvas {
     padding: 4px;
     background-color: #cfe3ff;
     border-radius: 3px;
+}
+
+.command-panel {
+    & {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        width: 60%;
+        max-height: 60%;
+        left: 0;
+        bottom: 24px;
+        padding: 12px 12px 0 0;
+        overflow: hidden;
+        overflow-y: auto;
+        overflow-wrap: break-word;
+    }
+
+    &.hidden {
+        display: none;
+    }
+
+    .notify {
+        color: #fff;
+        padding: 1px 0 1px 12px;
+        margin: 0;
+        outline: none;
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .notify.hidden {
+        display: none;
+    }
 }
 
 .command-bar {

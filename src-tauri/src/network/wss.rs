@@ -6,6 +6,7 @@ use dashmap::Entry;
 use futures_util::stream::SplitStream;
 use futures_util::{SinkExt, StreamExt};
 use log::{error, info, warn};
+use rand::RngCore;
 use std::sync::Arc;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{mpsc, oneshot, Mutex, OnceCell};
@@ -20,7 +21,7 @@ const MAX_EXCLUDES: u32 = 16; // exclude uuid count
 const MAX_BACKOFF: Duration = Duration::from_secs(5);
 
 #[tauri::command]
-pub async fn start_server(port: u16) -> Result<(), String> {
+pub async fn start_server(port: u16) -> Result<[u8; 32], String> {
     let state_cell = SERVER_MANAGER
         .get_or_init(|| async {
             Mutex::new(ServerManager {
@@ -50,11 +51,16 @@ pub async fn start_server(port: u16) -> Result<(), String> {
 
     info!("WebSocket server listening on {}", addr);
 
+    // 生成随机密钥
+    let mut secret = [0u8; 32];
+    rand::thread_rng().fill_bytes(&mut secret);
+
     let state = Arc::new(RelayState::new());
     tokio::spawn(run_ws_server(listener, state, rx));
 
-    guard.handle = Some(ServerHandle { port });
-    Ok(())
+    guard.handle = Some(ServerHandle { port, secret });
+
+    Ok(secret)
 }
 
 #[tauri::command]
@@ -246,10 +252,32 @@ async fn register_session(
     match payload[0] {
         0x01 => {
             // 注册服务端
+            if payload.len() < 33 {
+                return Err("Invalid server register packet");
+            }
+
             let server = state.get_server().await;
             if server.is_some() {
                 send_relay_try(&tx, "ERR:Server already registered");
                 return Err("Server already exists");
+            }
+
+            let provided_secret = &payload[1..33];
+
+            // 密钥校验
+            let state_cell = SERVER_MANAGER
+                .get()
+                .ok_or("Server manager not initialized")?;
+            let guard = state_cell.lock().await;
+            let expected_secret = guard
+                .handle
+                .as_ref()
+                .map(|h| &h.secret)
+                .ok_or("No server handle")?;
+
+            if provided_secret != expected_secret {
+                send_relay_try(&tx, "ERR:Invalid secret");
+                return Err("Server secret mismatch");
             }
 
             let session = Session::new(tx, Role::Server, None);
