@@ -35,7 +35,7 @@ const spawnAtTopS = (
         m.color = color;
         m.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.setBaseValue(speed);
 
-        const scaledHp = (extraHp * hpScaleFn(ctx)) | 0;
+        const scaledHp = (extraHp * hpScaleFn(ctx) * ctx.difficulty) | 0;
         const maxHealth = m.getMaxHealth();
         m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + scaledHp);
         m.setHealth(m.getMaxHealth());
@@ -53,7 +53,7 @@ const spawnInMap = (
         m.color = color;
         m.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.setBaseValue(speed);
 
-        const scaledHp = (extraHp * hpScaleFn(ctx)) | 0;
+        const scaledHp = (extraHp * hpScaleFn(ctx) * ctx.difficulty) | 0;
         const maxHealth = m.getMaxHealth();
         m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + scaledHp);
         m.setHealth(m.getMaxHealth());

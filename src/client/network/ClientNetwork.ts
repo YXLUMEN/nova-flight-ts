@@ -9,7 +9,6 @@ import {PlayerUnlockTechC2SPacket} from "../../network/packet/c2s/PlayerUnlockTe
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
 import {RequestPositionC2SPacket} from "../../network/packet/c2s/RequestPositionC2SPacket.ts";
 import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
-import {DebugStringPacket} from "../../network/packet/DebugStringPacket.ts";
 import {PlayerFinishLoginC2SPacket} from "../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
 import {PlayerTechResetC2SPacket} from "../../network/packet/c2s/PlayerTechResetC2SPacket.ts";
 import {PlayerMoveByPointerC2SPacket} from "../../network/packet/c2s/PlayerMoveByPointerC2SPacket.ts";
@@ -28,7 +27,6 @@ export class ClientNetwork {
         this.register(PlayerUnlockTechC2SPacket.ID, PlayerUnlockTechC2SPacket.CODEC);
         this.register(PlayerSwitchSlotC2SPacket.ID, PlayerSwitchSlotC2SPacket.CODEC);
         this.register(RequestPositionC2SPacket.ID, RequestPositionC2SPacket.CODEC);
-        this.register(DebugStringPacket.ID, DebugStringPacket.CODEC);
         this.register(PlayerFinishLoginC2SPacket.ID, PlayerFinishLoginC2SPacket.CODEC);
         this.register(PlayerTechResetC2SPacket.ID, PlayerTechResetC2SPacket.CODEC);
         this.register(CommandExecutionC2SPacket.ID, CommandExecutionC2SPacket.CODEC);

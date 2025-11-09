@@ -1,6 +1,6 @@
 import {World} from "../world/World.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
-import type {NovaFlightServer} from "./NovaFlightServer.ts";
+import {type NovaFlightServer} from "./NovaFlightServer.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
@@ -137,8 +137,12 @@ export class ServerWorld extends World implements NbtSerializable {
         super.setTicking(ticking);
     }
 
+    public isMainPlayer(player: ServerPlayerEntity): boolean {
+        return this.server.isMainPlayer(player.getUuid());
+    }
+
     public spawnEntity(entity: Entity): boolean {
-        if (this.peaceMod && entity instanceof MobEntity) {
+        if (this.isPeaceMode() && entity instanceof MobEntity) {
             return false;
         }
         if (entity.isRemoved()) {
@@ -222,6 +226,10 @@ export class ServerWorld extends World implements NbtSerializable {
 
     public addPhase(phase: number): void {
         this.setPhase(this.phaseScore + phase);
+    }
+
+    public override getServer(): NovaFlightServer | null {
+        return this.server;
     }
 
     public override playSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {

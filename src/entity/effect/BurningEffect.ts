@@ -6,7 +6,7 @@ export class BurningEffect extends StatusEffect {
     private readonly baseDps: number;
 
     public constructor(baseDps: number) {
-        super(2, '#ff8000');
+        super(1, '#ff8000');
         this.baseDps = baseDps;
     }
 
@@ -22,7 +22,6 @@ export class BurningEffect extends StatusEffect {
     }
 
     public override canApplyUpdateEffect(duration: number, _amplifier: number): boolean {
-        // 有意为之
         return duration % 10 === 0;
     }
 }

@@ -13,7 +13,7 @@ async function handleEvent(event: MessageEvent) {
     switch (type) {
         case 'start_server': {
             if (server) return;
-            server = IntegratedServer.startServer(payload.key) as IntegratedServer;
+            server = IntegratedServer.startServer(payload.key, payload.clientId) as IntegratedServer;
             server.networkChannel.setServerAddress(payload.addr);
             return server.runServer(payload.action);
         }
@@ -38,7 +38,7 @@ async function handleEvent(event: MessageEvent) {
             break;
         }
         case 'switch_dev_mode': {
-            WorldConfig.devMode = !WorldConfig.devMode;
+            WorldConfig.devMode = !payload.dev;
             WorldConfig.usedDevMode = true;
             break;
         }

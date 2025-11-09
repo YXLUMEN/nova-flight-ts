@@ -1,13 +1,14 @@
 import {NovaFlightServer} from "./NovaFlightServer.ts";
 import {IntegratedServer} from "./IntegratedServer.ts";
+import type {UUID} from "../apis/types.ts";
 
 export class DevServer extends IntegratedServer {
     private willCrash = 0;
     private restCrash: number | null = null;
 
-    public static startServer(secretKey: Uint8Array) {
+    public static startServer(secretKey: Uint8Array, mainClientUUID: UUID) {
         if (!NovaFlightServer.instance) {
-            NovaFlightServer.instance = new DevServer(secretKey);
+            NovaFlightServer.instance = new DevServer(secretKey, mainClientUUID);
         }
 
         return NovaFlightServer.instance;
@@ -15,7 +16,7 @@ export class DevServer extends IntegratedServer {
 
     public debugCrash() {
         if (this.willCrash++ >= 5) {
-            this.world = null;
+            (this.world as any) = null;
             return;
         }
         console.warn(`Will crash: ${this.willCrash}`);

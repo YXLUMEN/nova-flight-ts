@@ -198,6 +198,12 @@ export abstract class LivingEntity extends Entity {
         return false;
     }
 
+    public clearStatuesEffects(): void {
+        for (const effect of this.activeStatusEffects.values()) {
+            this.removeStatusEffect(effect.getEffectType());
+        }
+    }
+
     protected onStatusEffectApplied(effect: StatusEffectInstance, _source: Entity | null): void {
         if (this.getWorld().isClient) return;
         effect.getEffectType().getValue().onApplied(this.attributes, effect.getAmplifier());

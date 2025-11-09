@@ -19,6 +19,8 @@ import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.t
 import {TrackedPosition} from "./TrackedPosition.ts";
 import type {PlayerEntity} from "./player/PlayerEntity.ts";
 import type {CommandOutput} from "../server/command/CommandOutput.ts";
+import {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
+import type {ServerWorld} from "../server/ServerWorld.ts";
 
 
 export abstract class Entity implements DataTracked, Comparable, NbtSerializable, CommandOutput {
@@ -346,6 +348,30 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         return tickDelta === 1.0 ? this.yaw : lerp(tickDelta, this.prevYaw, this.yaw);
     }
 
+    protected lerpPosAndRotation(step: number, x: number, y: number, yaw: number): void {
+        const t = 1 / step;
+        const dx = lerp(t, this.getX(), x);
+        const dy = lerp(t, this.getY(), y);
+        const dYaw = lerp(t, this.getYaw(), yaw);
+        this.pos.set(dx, dy);
+        this.setYaw(dYaw);
+    }
+
+    protected adjustPosition(): boolean {
+        const pos = this.pos;
+        pos.x = clamp(pos.x, 20, World.WORLD_W - 20);
+        pos.y = clamp(pos.y, 20, World.WORLD_H - 20);
+        return true;
+    }
+
+    protected wrapPosition(): boolean {
+        const pos = this.getPositionRef;
+        const W = World.WORLD_W;
+
+        this.setPosition(((pos.x % W) + W) % W, clamp(pos.y, 20, World.WORLD_H - 20));
+        return true;
+    }
+
     public shouldSave(): boolean {
         return true;
     }
@@ -366,11 +392,33 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         return this.dataTracker;
     }
 
-    public shouldTrackOutput(): boolean {
-        return true;
+    public getCommandSource(): ServerCommandSource {
+        const serverWorld = this.getWorld();
+        return new ServerCommandSource(
+            this,
+            this.getPosition(),
+            serverWorld.isClient ? null : (serverWorld as ServerWorld),
+            this.getPermissionLevel(),
+            'Entity',
+            'Entity',
+            serverWorld.getServer(),
+            this
+        );
+    }
+
+    protected getPermissionLevel(): number {
+        return 0;
+    }
+
+    public hasPermissionLevel(permissionLevel: number): boolean {
+        return this.getPermissionLevel() >= permissionLevel;
     }
 
     public sendMessage(_msg: string): void {
+    }
+
+    public shouldTrackOutput(): boolean {
+        return true;
     }
 
     public cannotBeSilenced(): boolean {
@@ -428,30 +476,6 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     public abstract onDataTrackerUpdate(entries: DataTrackerSerializedEntry<any>[]): void;
 
     public abstract onTrackedDataSet(data: TrackedData<any>): void;
-
-    protected lerpPosAndRotation(step: number, x: number, y: number, yaw: number): void {
-        const t = 1 / step;
-        const dx = lerp(t, this.getX(), x);
-        const dy = lerp(t, this.getY(), y);
-        const dYaw = lerp(t, this.getYaw(), yaw);
-        this.pos.set(dx, dy);
-        this.setYaw(dYaw);
-    }
-
-    protected adjustPosition(): boolean {
-        const pos = this.pos;
-        pos.x = clamp(pos.x, 20, World.WORLD_W - 20);
-        pos.y = clamp(pos.y, 20, World.WORLD_H - 20);
-        return true;
-    }
-
-    protected wrapPosition(): boolean {
-        const pos = this.getPositionRef;
-        const W = World.WORLD_W;
-
-        this.setPosition(((pos.x % W) + W) % W, clamp(pos.y, 20, World.WORLD_H - 20));
-        return true;
-    }
 
     protected abstract initDataTracker(builder: InstanceType<typeof DataTracker.Builder>): void;
 }

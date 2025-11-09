@@ -7,15 +7,22 @@ import type {ServerWorld} from "./ServerWorld.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {ServerReadyS2CPacket} from "../network/packet/s2c/ServerReadyS2CPacket.ts";
 import {ServerPlayNetworkHandler} from "./network/ServerPlayNetworkHandler.ts";
+import {ServerCommandSource} from "./command/ServerCommandSource.ts";
+import type {CommandOutput} from "./command/CommandOutput.ts";
+import {Vec2} from "../utils/math/Vec2.ts";
+import {info} from "@tauri-apps/plugin-log";
+import {ServerCommandManager} from "./ServerCommandManager.ts";
 
-export abstract class NovaFlightServer {
+export abstract class NovaFlightServer implements CommandOutput {
     public static instance: NovaFlightServer;
     public static readonly SAVE_PATH = `saves/save-${NbtCompound.VERSION}.dat`;
 
     public readonly serverId: UUID;
     public readonly networkChannel: ServerNetworkChannel;
+    public readonly serverCommandManager: ServerCommandManager;
     public networkHandler: ServerPlayNetworkHandler | null = null;
-    public world: ServerWorld | null = null;
+    public world!: ServerWorld;
+    private readonly mainClientUUID: UUID | null;
 
     private tickInterval: number | null = null;
     private last = 0;
@@ -27,11 +34,13 @@ export abstract class NovaFlightServer {
 
     private bindTick = this.tick.bind(this);
 
-    protected constructor(secretKey: Uint8Array) {
+    protected constructor(secretKey: Uint8Array, mainClientUUID: UUID | null) {
         this.serverId = crypto.randomUUID();
+        this.mainClientUUID = mainClientUUID;
 
         this.networkChannel = new ServerNetworkChannel("127.0.0.1:25566", secretKey);
         ServerReceive.registryNetworkHandler(this.networkChannel);
+        this.serverCommandManager = new ServerCommandManager(this.getCommandSource());
     }
 
     protected async startGame(manager: RegistryManager, readSave = false): Promise<void> {
@@ -68,7 +77,7 @@ export abstract class NovaFlightServer {
             if (!this.running) return;
 
             const now = performance.now();
-            const world = this.world!;
+            const world = this.world;
 
             const tickDelta = Math.min(0.25, (now - this.last) / 1000 || 0);
             this.last = now;
@@ -106,7 +115,6 @@ export abstract class NovaFlightServer {
 
         this.networkHandler?.disconnectAllPlayer();
         this.world?.close();
-        this.world = null;
 
         await this.onWorldStop();
         if (this.stopWorld) this.stopWorld();
@@ -133,5 +141,34 @@ export abstract class NovaFlightServer {
 
     public async waitForStop(): Promise<void> {
         await this.waitWorldStop;
+    }
+
+    public isMainPlayer(uuid: UUID) {
+        return uuid === this.mainClientUUID;
+    }
+
+    public getCommandSource(): ServerCommandSource {
+        return new ServerCommandSource(
+            this,
+            Vec2.ZERO,
+            this.world,
+            10,
+            'Server',
+            'Server',
+            this,
+            null
+        );
+    }
+
+    public sendMessage(msg: string): void {
+        info(msg).catch(e => console.error(e));
+    }
+
+    public shouldTrackOutput(): boolean {
+        return true;
+    }
+
+    public cannotBeSilenced(): boolean {
+        return true;
     }
 }

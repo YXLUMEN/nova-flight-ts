@@ -14,6 +14,7 @@ export abstract class NetworkChannel implements INetworkChannel {
     protected serverAddress: string;
     protected ws: WebSocket | null = null;
 
+    private sessionId: number = 0;
     private isConnected: boolean = false;
     private readyPromise: Promise<void> | null = null;
 
@@ -60,7 +61,17 @@ export abstract class NetworkChannel implements INetworkChannel {
                 connectFail(msg);
                 return;
             }
-            if (payload.msg !== 'INFO:REGISTERED') return;
+
+            if (!payload.msg.startsWith('INFO:REGISTERED')) return;
+
+            const sessionId = payload.msg.split(':').at(-1);
+            if (!sessionId) return;
+
+            this.sessionId = Number(sessionId);
+            if (!Number.isSafeInteger(this.sessionId)) {
+                this.sessionId = 0;
+                return;
+            }
 
             connectReady();
 
@@ -132,6 +143,7 @@ export abstract class NetworkChannel implements INetworkChannel {
         const writer = new BinaryWriter();
 
         writer.writeByte(this.getHeader());
+        writer.writeUint16(this.sessionID);
         writer.writeString(type.id.toString());
 
         type.codec.encode(writer, payload);
@@ -151,6 +163,7 @@ export abstract class NetworkChannel implements INetworkChannel {
             return null;
         }
 
+        reader.readUint16();
         const idStr = reader.readString();
         const id = Identifier.tryParse(idStr);
         if (!id) return null;
@@ -190,6 +203,10 @@ export abstract class NetworkChannel implements INetworkChannel {
         }
 
         await this.readyPromise;
+    }
+
+    public get sessionID() {
+        return this.sessionId;
     }
 
     protected abstract getSide(): string;

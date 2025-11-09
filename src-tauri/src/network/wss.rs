@@ -1,7 +1,7 @@
 use crate::network::session::Session;
 use crate::network::states::{RelayState, Role, ServerHandle, ServerManager, Tx};
 use crate::network::util::{format_uuid, parse_excludes, read_var_uint};
-use bytes::{BufMut, BytesMut};
+use bytes::{Buf, BufMut, BytesMut};
 use dashmap::Entry;
 use futures_util::stream::SplitStream;
 use futures_util::{SinkExt, StreamExt};
@@ -146,7 +146,7 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
     };
 
     let (mut writer, mut reader) = ws_stream.split();
-    let (tx, mut rx) = mpsc::channel::<Bytes>(1024);
+    let (tx, mut rx) = mpsc::channel::<Bytes>(2048);
 
     // 发送任务
     let send_task = tokio::spawn(async move {
@@ -283,7 +283,8 @@ async fn register_session(
             let session = Session::new(tx, Role::Server, None);
             state.register_server(session.clone()).await?;
 
-            send_relay(&session.tx, "INFO:REGISTERED", Duration::from_secs(2)).await;
+            let registry_msg = format!("INFO:REGISTERED:{}", session.session_id);
+            send_relay(&session.tx, &registry_msg, Duration::from_secs(2)).await;
             info!("Server registered");
             Ok(session)
         }
@@ -308,7 +309,18 @@ async fn register_session(
                     let session = Session::new(tx, Role::Client, Some(client_id));
                     v.insert(session.clone());
 
-                    send_relay(&session.tx, "INFO:REGISTERED", Duration::from_secs(2)).await;
+                    let registry_msg = format!("INFO:REGISTERED:{}", session.session_id);
+                    send_relay(&session.tx, &registry_msg, Duration::from_secs(2)).await;
+
+                    if let Some(server) = state.get_server().await {
+                        let msg = format!(
+                            "INFO:CLIENT_REGISTERED:{}:{}",
+                            session.session_id,
+                            format_uuid(&client_id)
+                        );
+                        send_relay(&server.tx, &msg, Duration::from_secs(2)).await;
+                    }
+
                     info!("Client {} registered", format_uuid(&client_id));
                     Ok(session)
                 }
@@ -335,6 +347,19 @@ async fn relay_message(state: &Arc<RelayState>, session: &Arc<Session>, payload:
             let Some(server) = state.get_server().await else {
                 return;
             };
+
+            if payload.len() < 3 {
+                warn!("InvalidPacket: Client message too short");
+                return;
+            }
+
+            // 解析验证 sessionId
+            let mut cursor = &payload[1..3];
+            let session_id = cursor.get_u16_le();
+            if session_id != session.session_id {
+                warn!("Invalid sessionId from client, dropping connection");
+                return;
+            }
 
             if let Err(e) = server.tx.try_send(payload) {
                 error!(
@@ -368,18 +393,19 @@ async fn relay_message(state: &Arc<RelayState>, session: &Arc<Session>, payload:
         }
         (Role::Server, 0x12) => {
             // Server → 指定 Client
-            if payload.len() < 17 {
+            if payload.len() < 19 {
                 warn!("InvalidPacket: Unicast packet too short");
             }
 
             // UUID截断
             let mut target_client_id = [0u8; 16];
-            target_client_id.copy_from_slice(&payload[1..17]);
+            target_client_id.copy_from_slice(&payload[3..19]);
             let target_client_id = target_client_id;
 
-            let remaining = payload.slice(17..);
+            let remaining = payload.slice(19..);
             let mut buf = BytesMut::with_capacity(1 + remaining.len());
             buf.put_u8(0x11);
+            buf.put_u16_le(session.session_id);
             buf.extend_from_slice(&remaining);
             let forwarded = buf.freeze();
 
@@ -391,12 +417,12 @@ async fn relay_message(state: &Arc<RelayState>, session: &Arc<Session>, payload:
         }
         (Role::Server, 0x13) => {
             // Server → 广播给未被排除的 Client
-            if payload.len() < 17 {
+            if payload.len() < 4 {
                 warn!("InvalidPacket: BroadcastExcluding too short");
                 return;
             }
 
-            let mut cursor = &payload[1..];
+            let mut cursor = &payload[3..];
 
             let (count, remaining) = match read_var_uint(cursor) {
                 Ok(v) => v,
@@ -425,6 +451,7 @@ async fn relay_message(state: &Arc<RelayState>, session: &Arc<Session>, payload:
 
             let mut buf = BytesMut::with_capacity(1 + rest_payload.len());
             buf.put_u8(0x11);
+            buf.put_u16_le(session.session_id);
             buf.extend_from_slice(rest_payload);
             let forwarded = buf.freeze();
 

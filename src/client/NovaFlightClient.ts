@@ -19,8 +19,8 @@ import {RequestPositionC2SPacket} from "../network/packet/c2s/RequestPositionC2S
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import {BaseDirectory, exists, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs";
 import {NovaFlightServer} from "../server/NovaFlightServer.ts";
-import {error, warn} from "@tauri-apps/plugin-log";
-import {ClientCommand} from "./ClientCommand.ts";
+import {error} from "@tauri-apps/plugin-log";
+import {ClientCommandManager} from "./ClientCommandManager.ts";
 import {invoke} from "@tauri-apps/api/core";
 import {ServerWorker} from "../worker/ServerWorker.ts";
 import {ClientMultiGameManger} from "./ClientMultiGameManger.ts";
@@ -38,7 +38,8 @@ export class NovaFlightClient {
 
     public readonly clientId: UUID;
     public readonly registryManager: RegistryManager;
-    public readonly clientCommand: ClientCommand;
+    public readonly clientCommandManager: ClientCommandManager;
+    public readonly playerName: string;
 
     public world: ClientWorld | null = null;
     public player: ClientPlayerEntity | null = null;
@@ -68,6 +69,10 @@ export class NovaFlightClient {
         }
         // this.clientId = crypto.randomUUID();
 
+        const playerName = localStorage.getItem('playerName');
+        if (playerName === null) throw new Error("NovaFlightClient.playerName is required");
+        this.playerName = playerName;
+
         this.registryManager = new RegistryManager();
 
         this.window = new Window();
@@ -85,17 +90,7 @@ export class NovaFlightClient {
         this.networkHandler = new ClientPlayNetworkHandler(this);
         this.multiGameManager = new ClientMultiGameManger();
 
-        this.clientCommand = new ClientCommand(
-            this.networkHandler.getCommandSource(),
-            val => {
-                for (let i = 0; i < val.length; i++) {
-                    const err = val[i].message;
-                    this.clientCommand.addPlainMessage(err);
-                    warn(err).catch();
-                }
-            }
-        );
-        this.clientCommand.registry();
+        this.clientCommandManager = new ClientCommandManager(this.networkHandler.getCommandSource());
 
         this.createPromise();
     }
@@ -232,7 +227,6 @@ export class NovaFlightClient {
 
         if (!result) {
             await connectInfo.setError('未能找到服务器');
-            connectInfo.destroy();
             this.stopWorld();
             return;
         }
@@ -303,7 +297,7 @@ export class NovaFlightClient {
 
         this.connectInfo.setMessage('开始连接...');
 
-        this.server.postMessage({type: 'start_server', payload: {action, addr, key}});
+        this.server.postMessage({type: 'start_server', payload: {action, addr, key, clientId: this.clientId}});
 
         const timeout = setTimeout(() => {
             this.connectInfo?.setError('连接超时');
@@ -353,7 +347,7 @@ export class NovaFlightClient {
         await connectInfo.waitConfirm();
     }
 
-    private clearWorld() {
+    private clearWorld(): void {
         const world = this.world;
         if (!world) return;
 
@@ -385,7 +379,7 @@ export class NovaFlightClient {
         }
     }
 
-    public getServer(): ServerWorker | null {
+    public getServerWorker(): ServerWorker | null {
         return this.server;
     }
 
@@ -393,7 +387,7 @@ export class NovaFlightClient {
         return this.running;
     }
 
-    public scheduleStop() {
+    public scheduleStop(): void {
         this.running = false;
     }
 
@@ -405,6 +399,8 @@ export class NovaFlightClient {
         const loadingScreen = new LoadingScreen(this.window.ctx);
         loadingScreen.setSize(Window.VIEW_W, Window.VIEW_H);
         loadingScreen.loop();
+
+        await this.update(loadingScreen);
 
         loadingScreen.setProgress(0.2, '注册资源');
         const manager = this.registryManager;
@@ -427,13 +423,12 @@ export class NovaFlightClient {
         await loadingScreen.setDone();
     }
 
-    // @ts-ignore
     private async update(loadingScreen: LoadingScreen): Promise<void> {
         try {
             loadingScreen.setProgress(0, '检测更新');
             await sleep(200);
 
-            const update = await check();
+            const update = await check({timeout: 2000});
             if (!update || !confirm('是否更新')) return;
 
             let contentLength: number = 0;
@@ -453,12 +448,10 @@ export class NovaFlightClient {
                         loadingScreen.setDone();
                         break;
                 }
-            }, {
-                timeout: 3
             });
         } catch (error) {
             console.error(error);
-            loadingScreen.setProgress(0, '下载失败');
+            loadingScreen.setProgress(0, '检查更新失败');
             await sleep(300);
         }
     }
@@ -507,7 +500,7 @@ export class NovaFlightClient {
     public switchDevMode() {
         WorldConfig.devMode = !WorldConfig.devMode;
         WorldConfig.usedDevMode = true;
-        this.server?.postMessage({type: 'switch_dev_mode'});
+        this.server?.postMessage({type: 'switch_dev_mode', payload: {dev: WorldConfig.devMode}});
     }
 
     private devMode(code: string, world: ClientWorld): void {

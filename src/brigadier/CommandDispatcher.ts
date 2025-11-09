@@ -4,6 +4,7 @@ import type {LiteralBuilder} from "./LiteralBuilder.ts";
 import {CommandContextBuilder} from "./context/CommandContextBuilder.ts";
 import {ParseResults} from "./ParseResults.ts";
 import {RootCommandNode} from "./RootCommandNode.ts";
+import {CommandError} from "../apis/errors.ts";
 
 export class CommandDispatcher<S> {
     private readonly root: CommandNode<S>;
@@ -26,7 +27,7 @@ export class CommandDispatcher<S> {
         const cursor = originalReader.getCursor();
 
         const potentials: ParseResults<S>[] = [];
-        const errors: Map<CommandNode<S>, Error> = new Map();
+        const errors: Map<CommandNode<S>, CommandError> = new Map();
 
         for (const child of node.getRelevantNodes(originalReader)) {
             if (!child.canUse(source)) continue;
@@ -41,7 +42,13 @@ export class CommandDispatcher<S> {
                     throw new SyntaxError('Unexpected Char');
                 }
             } catch (err) {
-                if (err instanceof Error) errors.set(child, err);
+                if (err instanceof Error) {
+                    const commandError = new CommandError(`${err.name}: ${err.message}`, 'error');
+                    errors.set(child, commandError);
+                } else if (err instanceof CommandError) {
+                    errors.set(child, err);
+                }
+
                 reader.setCursor(cursor);
                 continue;
             }

@@ -18,7 +18,6 @@ import {EntityRenderers} from "./render/entity/EntityRenderers.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {HALF_PI, lerp} from "../utils/math/math.ts";
 import type {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
-import {DebugStringPacket} from "../network/packet/DebugStringPacket.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
@@ -28,8 +27,8 @@ import type {Explosion} from "../world/Explosion.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import {Particle} from "../effect/Particle.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
-import type {ServerWorker} from "../worker/ServerWorker.ts";
 import {AbstractClientPlayerEntity} from "./entity/AbstractClientPlayerEntity.ts";
+import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 
 export class ClientWorld extends World {
     private readonly client: NovaFlightClient = NovaFlightClient.getInstance();
@@ -106,19 +105,19 @@ export class ClientWorld extends World {
         return this.client.networkChannel;
     }
 
-    public override getServer(): ServerWorker | null {
-        return this.client.getServer();
+    public override getServer(): NovaFlightServer | null {
+        return null;
     }
 
     public override setTicking(ticking: boolean) {
         if (ticking && !this.isTicking) {
-            this.getServer()?.postMessage({type: 'start_ticking'});
+            this.client.getServerWorker()?.postMessage({type: 'start_ticking'});
 
             AudioManager.resume();
             SoundSystem.globalSound.playSound(SoundEvents.UI_PAGE_SWITCH);
             this.worldSound.resumeAll().catch(console.error);
         } else if (this.isTicking) {
-            this.getServer()?.postMessage({type: 'stop_ticking'});
+            this.client.getServerWorker()?.postMessage({type: 'stop_ticking'});
 
             AudioManager.pause();
             SoundSystem.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
@@ -389,7 +388,6 @@ export class ClientWorld extends World {
     }
 
     public saveAll() {
-        this.getNetworkChannel().send(new DebugStringPacket('SaveAll'));
     }
 
     public readonly ClientEntityHandler: EntityHandler<Entity> = {

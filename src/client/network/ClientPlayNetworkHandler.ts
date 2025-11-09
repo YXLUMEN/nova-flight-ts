@@ -52,11 +52,12 @@ import {PlayerDisconnectC2SPacket} from "../../network/packet/c2s/PlayerDisconne
 import {ClientSniffingC2SPacket} from "../../network/packet/c2s/ClientSniffingC2SPacket.ts";
 import {EntityChooseTargetS2CPacket} from "../../network/packet/s2c/EntityChooseTargetS2CPacket.ts";
 import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
+import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer: Set<UUID> = new Set();
     private readonly commandSource: ClientCommandSource;
-    private commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
+    private readonly commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
     private readonly client: NovaFlightClient;
     private readonly random = new GaussianRandom();
     private world: ClientWorld | null = null;
@@ -73,17 +74,25 @@ export class ClientPlayNetworkHandler {
         this.client.networkChannel.send(packet);
     }
 
-    public onRelayServer(packet: RelayServerPacket) {
-        const [type, msg] = packet.msg.split(':');
-        if (type === 'ERR') {
-            this.stopSniff();
-            this.client.connectInfo?.setError(msg);
-        }
-        console.log(packet.msg);
+    private onRelayServer(packet: RelayServerPacket) {
+        const parts = packet.msg.split(':');
+        const type = parts[0];
+        const msg = parts.slice(1).join(':');
+
+        if (type === 'INFO') this.relayInfoHandler(msg);
+        else if (type === 'ERR') this.relayErrorHandler(msg);
+    }
+
+    private relayInfoHandler(_message: string) {
+    }
+
+    private relayErrorHandler(message: string) {
+        this.stopSniff();
+        this.client.connectInfo?.setError(message);
     }
 
     public disconnect() {
-        const uuid = this.client.player!.getUuid();
+        const uuid: UUID = this.client.clientId;
         if (!uuid) return;
         this.client.connectInfo?.setMessage('等待连接关闭...');
         this.sendPacket(new PlayerDisconnectC2SPacket(uuid));
@@ -109,7 +118,11 @@ export class ClientPlayNetworkHandler {
         this.stopSniff();
 
         this.loginPlayer.add(this.client.clientId);
-        this.sendPacket(new PlayerAttemptLoginC2SPacket(this.client.clientId));
+        this.sendPacket(new PlayerAttemptLoginC2SPacket(
+            this.client.clientId,
+            this.client.networkChannel.sessionID,
+            this.client.playerName
+        ));
     }
 
     public async onGameJoin(packet: JoinGameS2CPacket) {
@@ -187,18 +200,17 @@ export class ClientPlayNetworkHandler {
     }
 
     private createEntity(packet: EntitySpawnS2CPacket): Entity | null {
+        const world = this.world;
+        if (!world) return null;
+
         const entityType = packet.entityType;
         if (entityType === EntityTypes.PLAYER) {
             if (this.loginPlayer.has(packet.uuid)) return null;
-            const world = this.world;
-            if (!world) return null;
 
             this.loginPlayer.add(packet.uuid);
             return new OtherClientPlayerEntity(world);
         }
 
-        const world = this.world;
-        if (!world) return null;
         return entityType.create(world);
     }
 
@@ -364,9 +376,14 @@ export class ClientPlayNetworkHandler {
         this.client.player?.setScore(current + score);
     }
 
+    public onGameMessage(packet: GameMessageS2CPacket): void {
+        const msg = packet.value;
+        this.client.clientCommandManager.addPlainMessage(msg);
+    }
+
     public sendCommand(command: string): boolean {
         if (this.parse(command).exceptions.size === 0) {
-            this.sendPacket(new CommandExecutionC2SPacket(command));
+            this.sendPacket(new CommandExecutionC2SPacket(command, this.client.clientId));
             return true;
         }
         return false;
@@ -431,6 +448,7 @@ export class ClientPlayNetworkHandler {
             .add(PlayerSetScoreS2CPacket.ID, this.onPlayerScore)
             .add(PlayerAddScoreS2CPacket.ID, this.onPlayerAddScore)
             .add(EntityChooseTargetS2CPacket.ID, this.onMobChooseTarget)
+            .add(GameMessageS2CPacket.ID, this.onGameMessage)
             .register(this.client.networkChannel, this);
     }
 }

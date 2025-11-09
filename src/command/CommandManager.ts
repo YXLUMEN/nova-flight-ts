@@ -2,15 +2,9 @@ import {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
 import type {ParseResults} from "../brigadier/ParseResults.ts";
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import type {CommandSource} from "./CommandSource.ts";
-import type {Consumer} from "../apis/types.ts";
 
 export abstract class CommandManager {
-    protected readonly dispatcher: CommandDispatcher<any> = new CommandDispatcher();
-    private readonly callback: Consumer<Error[]>;
-
-    protected constructor(callback: Consumer<Error[]>) {
-        this.callback = callback;
-    }
+    protected readonly dispatcher: CommandDispatcher<ServerCommandSource> = new CommandDispatcher();
 
     public executeWithPrefix(source: ServerCommandSource, input: string): void {
         const command = input.startsWith("/") ? input.slice(1) : input;
@@ -22,33 +16,32 @@ export abstract class CommandManager {
             const contextBuilder = parseResults.context;
 
             const context = contextBuilder.build(command);
-            const lastNode = context.nodes[context.nodes.length - 1];
+            const lastNode = context.nodes.at(-1);
             if (!lastNode) {
                 // noinspection ExceptionCaughtLocallyJS
-                throw Error(`No such command: "${command}"`);
+                throw Error(`\x1b[31mNo such command: "${command}"`);
             }
 
             const cmd = lastNode.getCommand();
             if (!cmd) {
                 // noinspection ExceptionCaughtLocallyJS
-                throw Error(`Command "${lastNode.getName()}" is not executable, with command: "${command}"`);
+                throw Error(`\x1b[31mCommand "${lastNode.getName()}" is not executable, with command: "${command}"`);
             }
             cmd(context);
         } catch (err) {
-            console.error(`Failed to execute command for command "${command}"`);
+            console.error(`Failed to execute command for command "${command}": ${err}`);
 
-            const errors: Error[] = [];
-            if (parseResults.exceptions.size > 0) {
-                for (const exception of parseResults.exceptions.values()) {
-                    console.warn(exception);
-                }
-                errors.push(...parseResults.exceptions.values());
+            const output = parseResults.context.source.outPut;
+            if (!output.shouldTrackOutput() && !output.cannotBeSilenced()) return;
+
+            for (const exception of parseResults.exceptions.values()) {
+                output.sendMessage(exception.message);
+                console.warn(exception);
             }
+
             if (err instanceof Error) {
-                errors.push(err);
+                output.sendMessage(err.message);
             }
-
-            if (errors.length > 0) this.callback(errors);
         }
     }
 

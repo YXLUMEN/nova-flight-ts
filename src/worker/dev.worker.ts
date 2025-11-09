@@ -13,7 +13,7 @@ async function handleEvent(event: MessageEvent<any>) {
     switch (type) {
         case 'start_server': {
             if (server) return;
-            server = DevServer.startServer(payload.key) as DevServer;
+            server = DevServer.startServer(payload.key, payload.clientId) as DevServer;
             server.networkChannel.setServerAddress(payload.addr);
             return server.runServer(payload.action);
         }
@@ -38,7 +38,7 @@ async function handleEvent(event: MessageEvent<any>) {
             break;
         }
         case 'switch_dev_mode': {
-            WorldConfig.devMode = !WorldConfig.devMode;
+            WorldConfig.devMode = payload.dev;
             WorldConfig.usedDevMode = true;
             break;
         }
@@ -70,11 +70,11 @@ function handleDev(key: string) {
             world.stage.nextPhase();
             break;
         }
-        case 'KeyC': {
+        case 'KeyH': {
             const world = server?.world;
             if (!world) return;
-            world.peaceMod = !world.peaceMod;
-            world.getMobs().forEach(mob => mob.discard());
+            for (const player of world.getPlayers()) player.setHealth(player.getMaxHealth());
+            break;
         }
     }
 }

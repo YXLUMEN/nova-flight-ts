@@ -89,7 +89,7 @@ export class KeyboardInput implements IInput {
 
             if (code === 'Slash') {
                 const commandShow = !commandBar.classList.toggle('hidden');
-                NovaFlightClient.getInstance().clientCommand.showPanel(commandShow);
+                NovaFlightClient.getInstance().clientCommandManager.showPanel(commandShow);
                 if (commandShow) {
                     event.preventDefault();
                     commandInput.focus();

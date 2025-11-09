@@ -43,7 +43,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         this.techTree = new ClientTechTree(this, viewport);
         this.bc = new BallisticCalculator(this);
 
-        this.specialWeapons = this.weapons.keys().filter(item => item instanceof SpecialWeapon).toArray();
+        this.specialWeapons = this.items.keys().filter(item => item instanceof SpecialWeapon).toArray();
         this.switchQuickFire();
     }
 
@@ -118,7 +118,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     protected override tickInventory(world: World) {
         const baseWeapon = this.baseWeapons[this.currentBaseIndex];
-        const stack = this.weapons.get(baseWeapon)!;
+        const stack = this.items.get(baseWeapon)!;
         const fire = this.input.isDown("Space") || WorldConfig.autoShoot;
         const active = stack.isAvailable() && fire;
 
@@ -136,7 +136,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             baseWeapon.tryFire(stack, world, this);
         }
 
-        for (const [w, stack] of this.weapons) {
+        for (const [w, stack] of this.items) {
             if (w instanceof SpecialWeapon) {
                 if (WorldConfig.devMode && w.getCooldown(stack) > 0.5) {
                     w.setCooldown(stack, 0.5);
@@ -157,7 +157,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     public override addItem(item: Item, stack?: ItemStack) {
         super.addItem(item, stack);
-        this.specialWeapons = this.weapons.keys().filter(item => item instanceof SpecialWeapon).toArray();
+        this.specialWeapons = this.items.keys().filter(item => item instanceof SpecialWeapon).toArray();
     }
 
     public switchQuickFire(): void {
@@ -170,7 +170,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     public launchQuickFire() {
         const item = this.getQuickFire();
-        const stack = this.weapons.get(item);
+        const stack = this.items.get(item);
         if (stack && item.canFire(stack)) {
             item.tryFire(stack, this.getWorld(), this);
             this.getNetworkChannel().send(new PlayerInputC2SPacket(this.getUuid(), item.bindKey()));
@@ -184,7 +184,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     public updateSlotStacks(revision: number, stacks: Iterable<ItemStack>) {
         for (const itemStack of stacks) {
             const item = itemStack.getItem();
-            const playerItemStack = this.weapons.get(item);
+            const playerItemStack = this.items.get(item);
             if (playerItemStack) {
                 playerItemStack.applyChanges(itemStack.getComponents().getChanges());
             }
@@ -205,5 +205,9 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     public override canMoveVoluntarily(): boolean {
         return true;
+    }
+
+    protected override getPermissionLevel(): number {
+        return 10;
     }
 }

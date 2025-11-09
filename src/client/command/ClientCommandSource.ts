@@ -24,4 +24,13 @@ export class ClientCommandSource implements CommandSource {
     public getClient() {
         return this.client;
     }
+
+    public addMessage(message: string): void {
+        this.client.clientCommandManager.addPlainMessage(message);
+    }
+
+    public hasPermissionLevel(level: number): boolean {
+        const player = this.client.player;
+        return player === null ? level === 0 : player.hasPermissionLevel(level);
+    }
 }

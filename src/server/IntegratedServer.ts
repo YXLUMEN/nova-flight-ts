@@ -2,11 +2,12 @@ import {NovaFlightServer} from "./NovaFlightServer.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import {ServerReceive} from "./network/ServerReceive.ts";
+import type {UUID} from "../apis/types.ts";
 
 export class IntegratedServer extends NovaFlightServer {
-    public static startServer(secretKey: Uint8Array) {
+    public static startServer(secretKey: Uint8Array, mainClientUUID: UUID) {
         if (!NovaFlightServer.instance) {
-            NovaFlightServer.instance = new IntegratedServer(secretKey);
+            NovaFlightServer.instance = new IntegratedServer(secretKey, mainClientUUID);
         }
 
         return NovaFlightServer.instance;

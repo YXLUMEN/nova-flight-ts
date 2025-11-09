@@ -10,6 +10,7 @@ import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import type {ServerNetworkChannel} from "../network/ServerNetworkChannel.ts";
 import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
+import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 
 
 export class ServerPlayerEntity extends PlayerEntity {
@@ -50,7 +51,7 @@ export class ServerPlayerEntity extends PlayerEntity {
 
     public handleFire() {
         const item = this.baseWeapons[this.currentBaseIndex];
-        const stack = this.weapons.get(item)!;
+        const stack = this.items.get(item)!;
         if (item.canFire(stack)) {
             item.tryFire(stack, this.getWorld(), this);
         }
@@ -63,7 +64,7 @@ export class ServerPlayerEntity extends PlayerEntity {
     }
 
     protected override tickInventory(world: World) {
-        for (const [item, stack] of this.weapons) {
+        for (const [item, stack] of this.items) {
             if (item instanceof SpecialWeapon) {
                 if (WorldConfig.devMode && item.getCooldown(stack) > 0.5) {
                     item.setCooldown(stack, 0.5);
@@ -108,5 +109,13 @@ export class ServerPlayerEntity extends PlayerEntity {
                 this.inputKeys.add(key);
                 break;
         }
+    }
+
+    protected override getPermissionLevel(): number {
+        return (this.getWorld() as ServerWorld).isMainPlayer(this) ? 9 : super.getPermissionLevel();
+    }
+
+    public override sendMessage(msg: string) {
+        (this.getNetworkChannel() as ServerNetworkChannel).sendTo(new GameMessageS2CPacket(msg), this.getUuid());
     }
 }

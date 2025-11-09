@@ -19,14 +19,15 @@ import type {INetworkChannel} from "../../network/INetworkChannel.ts";
 
 export abstract class PlayerEntity extends LivingEntity {
     public onDamageExplosionRadius = 320;
-
     public techTree!: TechTree;
+
+    protected readonly items = new Map<Item, ItemStack>();
     protected readonly baseWeapons: BaseWeapon[] = [];
     protected currentBaseIndex: number = 0;
-    public voidEdge = false;
-    protected readonly weapons = new Map<Item, ItemStack>();
+
     protected wasActive: boolean = false;
     private lastDamageTime = 0;
+    public voidEdge = false;
 
     private score: number = 0;
 
@@ -95,7 +96,7 @@ export abstract class PlayerEntity extends LivingEntity {
         });
 
         if (this.techTree.isUnlocked('electrical_energy_surges')) {
-            const stack = this.weapons.get(Items.EMP_WEAPON);
+            const stack = this.items.get(Items.EMP_WEAPON);
             if (stack) {
                 const emp = stack.getItem() as EMPWeapon;
                 if (emp.canFire(stack) && this.techTree.isUnlocked('ele_shield')) {
@@ -131,24 +132,24 @@ export abstract class PlayerEntity extends LivingEntity {
     }
 
     public getItem(item: Item): ItemStack | null {
-        return this.weapons.get(item) ?? null;
+        return this.items.get(item) ?? null;
     }
 
     public getInventory(): ReadonlyMap<Item, ItemStack> {
-        return this.weapons;
+        return this.items;
     }
 
     public addItem(item: Item, stack?: ItemStack): void {
-        if (this.weapons.has(item)) return;
+        if (this.items.has(item)) return;
 
         if (item instanceof BaseWeapon) this.baseWeapons.push(item);
         if (!stack) stack = new ItemStack(item);
         stack.setHolder(this);
-        this.weapons.set(item, stack);
+        this.items.set(item, stack);
     }
 
     public removeItem(item: Item): boolean {
-        return this.weapons.delete(item);
+        return this.items.delete(item);
     }
 
     public clearItems(): void {
@@ -160,7 +161,7 @@ export abstract class PlayerEntity extends LivingEntity {
 
         this.currentBaseIndex = 0;
         this.baseWeapons.length = 0;
-        this.weapons.clear();
+        this.items.clear();
     }
 
     public getCurrentItem(): BaseWeapon {
@@ -168,7 +169,7 @@ export abstract class PlayerEntity extends LivingEntity {
     }
 
     public getCurrentItemStack(): ItemStack {
-        return this.weapons.get(this.baseWeapons[this.currentBaseIndex])!;
+        return this.items.get(this.baseWeapons[this.currentBaseIndex])!;
     }
 
     public getScore(): number {
@@ -196,7 +197,7 @@ export abstract class PlayerEntity extends LivingEntity {
         nbt.putByte('SlotIndex', this.currentBaseIndex);
 
         const weapons: NbtCompound[] = [];
-        this.weapons.values().forEach(stack => {
+        this.items.values().forEach(stack => {
             weapons.push(stack.toNbt());
         });
         nbt.putCompoundList('Weapons', weapons);
@@ -210,15 +211,20 @@ export abstract class PlayerEntity extends LivingEntity {
         super.readNBT(nbt);
         this.setScore(nbt.getUint('Score'));
 
-        this.techTree.readNBT(nbt);
+        this.techTree.readNBT(nbt);/*
         const weaponsNbt = nbt.getCompoundList('Weapons');
         if (weaponsNbt && weaponsNbt.length > 0) {
-            this.clearItems();
+            const stacks: ItemStack[] = [];
             for (const wpn of weaponsNbt) {
                 const stack = ItemStack.readNBT(wpn);
-                if (stack) this.addItem(stack.getItem(), stack);
+                if (stack) stacks.push(stack);
             }
-        }
+
+            if (stacks.length > 0) {
+                this.clearItems();
+                stacks.forEach(stack => this.addItem(stack.getItem(), stack));
+            }
+        }*/
         this.currentBaseIndex = clamp(nbt.getByte('SlotIndex'), 0, this.baseWeapons.length);
     }
 
@@ -229,7 +235,7 @@ export abstract class PlayerEntity extends LivingEntity {
     }
 
     protected tickInventory(world: World) {
-        for (const [w, stack] of this.weapons) {
+        for (const [w, stack] of this.items) {
             w.inventoryTick(stack, world, this, 0, true);
         }
     }

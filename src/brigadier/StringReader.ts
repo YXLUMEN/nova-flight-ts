@@ -63,7 +63,7 @@ export class StringReader {
     }
 
     public static isAllowedInUnquotedString(c: string) {
-        return /^[0-9A-Za-z_\-.+:]$/.test(c);
+        return /^[0-9A-Za-z_\-.+:@]$/.test(c);
     }
 
     public static isQuotedStringStart(c: string): boolean {

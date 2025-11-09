@@ -135,23 +135,6 @@ export class ClientTechTree implements TechTree {
         this.playerScore.textContent = '0';
     }
 
-    public writeNBT(nbt: NbtCompound): NbtCompound {
-        nbt.putStringArray('Techs', ...this.state.unlocked);
-        return nbt
-    }
-
-    public readNBT(nbt: NbtCompound) {
-        const techs = nbt.getStringArray('Techs');
-        if (techs.length === 0) return;
-        const world = this.player.getWorld();
-
-        for (const tech of techs) {
-            this.state.unlock(tech);
-            this.applyUnlockUpdates(tech);
-            world.events.emit(EVENTS.UNLOCK_TECH, {id: tech});
-        }
-    }
-
     private linkTo(from: Tech, to: Tech) {
         const fx = from.x + this.nodeWidth / 2;
         const fy = from.y + this.nodeHeight / 2;
@@ -475,5 +458,22 @@ export class ClientTechTree implements TechTree {
         this.renderNodes();
 
         player.getNetworkChannel().send(new PlayerTechResetC2SPacket(this.player.getUuid()));
+    }
+
+    public writeNBT(nbt: NbtCompound): NbtCompound {
+        nbt.putStringArray('Techs', ...this.state.unlocked);
+        return nbt
+    }
+
+    public readNBT(nbt: NbtCompound) {
+        const techs = nbt.getStringArray('Techs');
+        if (techs.length === 0) return;
+        const world = this.player.getWorld();
+
+        for (const tech of techs) {
+            this.state.unlock(tech);
+            this.applyUnlockUpdates(tech);
+            world.events.emit(EVENTS.UNLOCK_TECH, {id: tech});
+        }
     }
 }

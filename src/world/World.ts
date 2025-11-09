@@ -20,7 +20,7 @@ import type {IVec} from "../utils/math/IVec.ts";
 import type {ClientWorld} from "../client/ClientWorld.ts";
 import {EntityType} from "../entity/EntityType.ts";
 import type {INetworkChannel} from "../network/INetworkChannel.ts";
-import type {ServerWorker} from "../worker/ServerWorker.ts";
+import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 
 export abstract class World {
     public static readonly WORLD_W = 1692;
@@ -31,7 +31,7 @@ export abstract class World {
     // ticking
     public readonly isClient: boolean;
     protected isMultiPlayer: boolean = false;
-    public peaceMod = false;
+    public stageDifficult = 1;
     public freeze = false;
     protected over = false;
     protected ticking = false;
@@ -67,7 +67,7 @@ export abstract class World {
         return this.isMultiPlayer;
     }
 
-    public getServer(): ServerWorker | null {
+    public getServer(): NovaFlightServer | null {
         return null;
     }
 
@@ -216,7 +216,7 @@ export abstract class World {
     }
 
     public isPeaceMode(): boolean {
-        return this.peaceMod;
+        return this.stageDifficult === 0;
     }
 
     public setTicking(ticking = true): void {

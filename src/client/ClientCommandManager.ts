@@ -1,12 +1,22 @@
 import {CommandManager} from "../command/CommandManager.ts";
-import {musicRegistry} from "../command/MusicCommand.ts";
-import {devModCommand} from "../command/DevModCommand.ts";
+import {MusicCommand} from "../command/MusicCommand.ts";
+import {DevModCommand} from "../command/DevModCommand.ts";
 import type {ClientCommandSource} from "./command/ClientCommandSource.ts";
-import type {Consumer} from "../apis/types.ts";
-import {clientSettingsCommand} from "../command/ClientSettingsCommand.ts";
-import {commandBarCommand} from "../command/CommandBarCommand.ts";
+import {ClientSettingsCommand} from "../command/ClientSettingsCommand.ts";
+import {CommandBarCommand} from "../command/CommandBarCommand.ts";
+import {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
+import type {CommandSource} from "../command/CommandSource.ts";
+import {KillCommand} from "../command/KillCommand.ts";
+import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
+import {WorldDifficultCommand} from "../command/WorldDifficultCommand.ts";
+import type {ParseResults} from "../brigadier/ParseResults.ts";
+import {AnsiParser} from "../utils/AnsiParser.ts";
+import {StatusEffectCommand} from "../command/StatusEffectCommand.ts";
 
-export class ClientCommand extends CommandManager {
+export type CommandNotifyCategory = 'info' | 'success' | 'warning' | 'error';
+
+export class ClientCommandManager extends CommandManager {
+    private readonly clientDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
     private readonly source: ClientCommandSource;
     private readonly usedCommands: string[] = [];
     private readonly commandPanel: HTMLDivElement;
@@ -14,8 +24,8 @@ export class ClientCommand extends CommandManager {
     private hiddenMessages = new Set<number>();
     private historyIndex = -1;
 
-    public constructor(source: ClientCommandSource, callback: Consumer<Error[]>) {
-        super(callback);
+    public constructor(source: ClientCommandSource) {
+        super();
         this.source = source;
 
         const commandBar = document.getElementById('command-bar')!;
@@ -59,12 +69,18 @@ export class ClientCommand extends CommandManager {
                 event.preventDefault();
                 return;
             }
+
+            if (event.code === 'Tab') {
+                event.preventDefault();
+                return;
+            }
         });
+
+        this.registry();
     }
 
     public addPlainMessage(msg: string) {
-        const div = document.createElement('div');
-        div.textContent = msg;
+        const div = AnsiParser.parseToElement(msg);
         div.classList.add('notify');
         this.addMessage(div);
     }
@@ -75,6 +91,7 @@ export class ClientCommand extends CommandManager {
         if (this.commandPanel.childElementCount > 64) {
             this.commandPanel.firstChild?.remove();
         }
+        this.commandPanel.scrollTop = this.commandPanel.scrollHeight;
 
         if (!this.commandPanel.classList.contains('hidden')) return;
 
@@ -88,7 +105,7 @@ export class ClientCommand extends CommandManager {
     public addMessageElement(msg: HTMLDivElement) {
         if (!msg.classList.contains('notify')) return;
 
-        if (ClientCommand.checkChildren(msg)) {
+        if (ClientCommandManager.checkChildren(msg)) {
             this.addMessage(msg);
         }
     }
@@ -146,14 +163,66 @@ export class ClientCommand extends CommandManager {
     }
 
     public override registry(): void {
-        musicRegistry(this.dispatcher);
-        devModCommand(this.dispatcher);
-        clientSettingsCommand(this.dispatcher);
-        commandBarCommand(this.dispatcher);
+        MusicCommand.registry(this.clientDispatcher);
+        DevModCommand.registry(this.clientDispatcher);
+        ClientSettingsCommand.registry(this.clientDispatcher);
+        CommandBarCommand.registry(this.clientDispatcher);
+
+        KillCommand.registry(this.dispatcher);
+        WorldDifficultCommand.registry(this.dispatcher);
+        StatusEffectCommand.registry(this.dispatcher);
+    }
+
+    public executeWithPrefix(source: CommandSource, input: string): void {
+        const command = input.startsWith("/") ? input.slice(1) : input;
+        if (command.length === 0) return;
+
+        // 尝试解析服务端命令
+        const serverResults = this.dispatcher.parse(command, source as ServerCommandSource);
+        const contextBuilder = serverResults.context;
+        const context = contextBuilder.build(command);
+        const lastNode = context.nodes.at(-1);
+        if (lastNode) {
+            this.source.getClient().networkHandler.sendCommand(command);
+            return;
+        }
+
+        const clientResults = this.clientDispatcher.parse(command, source as ClientCommandSource);
+        this.executeClient(clientResults, command);
     }
 
     private executeCommand(command: string) {
-        // @ts-ignore
         this.executeWithPrefix(this.source, command);
+    }
+
+    private executeClient(parseResults: ParseResults<ClientCommandSource>, command: string): void {
+        try {
+            const contextBuilder = parseResults.context;
+
+            const context = contextBuilder.build(command);
+            const lastNode = context.nodes.at(-1);
+            if (!lastNode) {
+                this.addPlainMessage(`\x1b[31mNo such command: "${command}"`);
+                return;
+            }
+
+            const cmd = lastNode.getCommand();
+            if (!cmd) {
+                this.addPlainMessage(`\x1b[31mCommand "${lastNode.getName()}" is not executable, with command: "${command}"`);
+                return
+            }
+            cmd(context);
+        } catch (err) {
+            console.error(`[Client] Failed to execute command for command "${command}": ${err}`);
+
+            for (const exception of parseResults.exceptions.values()) {
+                this.addPlainMessage(exception.message);
+                console.warn(exception);
+            }
+
+            if (err instanceof Error) {
+                this.addPlainMessage(err.message);
+            }
+        }
     }
 }

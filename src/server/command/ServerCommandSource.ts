@@ -3,18 +3,18 @@ import type {IVec} from "../../utils/math/IVec.ts";
 import type {ServerWorld} from "../ServerWorld.ts";
 import type {NovaFlightServer} from "../NovaFlightServer.ts";
 import type {Entity} from "../../entity/Entity.ts";
-import {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
+import type {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
 import type {CommandSource} from "../../command/CommandSource.ts";
 import type {World} from "../../world/World.ts";
 
 export class ServerCommandSource implements CommandSource {
     public readonly outPut: CommandOutput;
     public readonly position: IVec;
-    public readonly world: ServerWorld;
-    public readonly level: number;
+    private readonly world: ServerWorld | null;
+    private readonly level: number;
     public readonly name: string;
     public readonly displayName: string;
-    public readonly server: NovaFlightServer;
+    public readonly server: NovaFlightServer | null;
     public readonly silent: boolean;
 
     public readonly entity: Entity | null;
@@ -22,13 +22,14 @@ export class ServerCommandSource implements CommandSource {
     public constructor(
         outPut: CommandOutput,
         position: IVec,
-        world: ServerWorld,
+        world: ServerWorld | null,
         level: number,
         name: string,
         displayName: string,
-        server: NovaFlightServer,
-        silent: boolean,
-        entity: Entity | null) {
+        server: NovaFlightServer | null,
+        entity: Entity | null,
+        silent: boolean = false
+    ) {
         this.outPut = outPut;
         this.position = position;
         this.world = world;
@@ -41,14 +42,21 @@ export class ServerCommandSource implements CommandSource {
     }
 
     public getPlayer(): ServerPlayerEntity | null {
-        return this.entity instanceof ServerPlayerEntity ? this.entity : null;
+        if (this.entity?.isPlayer() && !this.entity.getWorld().isClient) {
+            return this.entity as ServerPlayerEntity;
+        }
+        return null;
     }
 
     public isExecutedByPlayer(): boolean {
-        return this.entity instanceof ServerPlayerEntity;
+        return !!this.entity && this.entity.isPlayer() && !this.entity.getWorld().isClient;
     }
 
     public getWorld(): World | null {
         return this.world;
+    }
+
+    public hasPermissionLevel(level: number): boolean {
+        return this.level >= level;
     }
 }

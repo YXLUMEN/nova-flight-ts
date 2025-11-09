@@ -16,6 +16,7 @@ export class SpawnRule {
     }
 
     public tick(ctx: SpawnCtx) {
+        if (ctx.difficulty === 0) return;
         const cfg = this.cfg;
 
         if (cfg.enabled && !cfg.enabled(ctx)) return;
