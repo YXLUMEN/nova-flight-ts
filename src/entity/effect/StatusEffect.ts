@@ -2,7 +2,7 @@ import type {Entity} from "../Entity.ts";
 import type {AttributeContainer} from "../attribute/AttributeContainer.ts";
 import type {Identifier} from "../../registry/Identifier.ts";
 import type {EntityAttributeModifier} from "../attribute/EntityAttributeModifier.ts";
-import {createCleanObj} from "../../utils/uit.ts";
+import {createClean} from "../../utils/uit.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {EntityAttribute} from "../attribute/EntityAttribute.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
@@ -22,7 +22,7 @@ export class StatusEffect {
         }
 
         public createAttributeModifier(amplifier: number): EntityAttributeModifier {
-            return createCleanObj({
+            return createClean({
                 id: this.id,
                 value: this.baseValue * (amplifier + 1)
             });

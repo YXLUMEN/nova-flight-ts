@@ -52,6 +52,7 @@ canvas {
         overflow: hidden;
         overflow-y: auto;
         overflow-wrap: break-word;
+        font-family: Consolas, Monaco, "Andale Mono", "Lucida Console", monospace;
     }
 
     &.hidden {
@@ -80,6 +81,7 @@ canvas {
     left: 0;
     background-color: #fff;
     transition: 100ms transform;
+    font-family: Consolas, Monaco, "Andale Mono", "Lucida Console", monospace;
 }
 
 .command-bar.hidden {
@@ -87,13 +89,40 @@ canvas {
     transform: translateY(100%);
 }
 
+.suggestion-popup {
+    position: absolute;
+    bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    max-height: 40vh;
+
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.05);
+    overflow-y: auto;
+    z-index: 50;
+    backdrop-filter: brightness(.4);
+}
+
+.suggestion-popup span {
+    & {
+        min-width: 80px;
+        padding: 6px 3px;
+    }
+
+    &.active {
+        color: #ffcc66;
+        background-color: rgba(255, 245, 223, 0.1);
+    }
+}
+
 .command-input {
     z-index: 1000;
-    font-family: Consolas, Monaco, "Andale Mono", "Lucida Console", monospace;
     font-size: 18px;
     width: 100vw;
     height: 24px;
     border: none;
     outline: none;
     padding: 0 8px;
+    font-family: Consolas, Monaco, "Andale Mono", "Lucida Console", monospace;
 }

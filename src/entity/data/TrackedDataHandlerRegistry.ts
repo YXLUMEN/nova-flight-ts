@@ -1,7 +1,7 @@
 import {TrackedData} from "./TrackedData.ts";
 import type {TrackedDataHandler} from "./TrackedDataHandler.ts";
 import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
-import {createCleanObj} from "../../utils/uit.ts";
+import {createClean} from "../../utils/uit.ts";
 import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 
 export class TrackedDataHandlerRegistry {
@@ -15,7 +15,7 @@ export class TrackedDataHandlerRegistry {
     public static readonly DOUBLE = this.create(PacketCodecs.DOUBLE);
 
     private static create<T>(codec: PacketCodec<T>): TrackedDataHandler<T> {
-        const handler = createCleanObj({
+        const handler = createClean({
             codec: () => codec,
             createData(id: number): TrackedData<T> {
                 return new TrackedData(id, this);

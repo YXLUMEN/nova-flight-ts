@@ -3,7 +3,10 @@ import type {Command} from "./Command.ts";
 import type {LiteralCommandNode} from "./LiteralCommandNode.ts";
 import type {ArgumentCommandNode} from "./ArgumentCommandNode.ts";
 import type {StringReader} from "./StringReader.ts";
-import type {CommandContextBuilder} from "./context/CommandContextBuilder.ts";
+import type {CommandContextBuilder} from "./builder/CommandContextBuilder.ts";
+import type {CommandContext} from "./context/CommandContext.ts";
+import type {SuggestionsBuilder} from "./suggestion/SuggestionsBuilder.ts";
+import type {Suggestions} from "./suggestion/Suggestions.ts";
 
 export abstract class CommandNode<S> {
     private readonly children: Map<string, CommandNode<S>> = new Map();
@@ -28,6 +31,10 @@ export abstract class CommandNode<S> {
 
     public getChildren() {
         return this.children.values();
+    }
+
+    public getOriginChildren() {
+        return this.children;
     }
 
     public getChild(name: string) {
@@ -70,6 +77,8 @@ export abstract class CommandNode<S> {
     public abstract getUsageText(): string;
 
     public abstract parse(reader: StringReader, contextBuilder: CommandContextBuilder<S>): void;
+
+    public abstract listSuggestions(context: CommandContext<S>, builder: SuggestionsBuilder): Promise<Suggestions>;
 
     public getRelevantNodes(input: StringReader): Iterable<CommandNode<S>> {
         if (this.literals.size <= 0) return this.arguments.values();

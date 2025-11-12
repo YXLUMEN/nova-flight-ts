@@ -1,14 +1,15 @@
 import type {ClientPlayNetworkHandler} from "../network/ClientPlayNetworkHandler.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import type {UUID} from "../../apis/types.ts";
-import type {CommandSource} from "../../command/CommandSource.ts";
+import {CommandSource} from "../../command/CommandSource.ts";
 import type {World} from "../../world/World.ts";
 
-export class ClientCommandSource implements CommandSource {
+export class ClientCommandSource extends CommandSource {
     private readonly networkHandler: ClientPlayNetworkHandler;
     private readonly client: NovaFlightClient;
 
     public constructor(networkHandler: ClientPlayNetworkHandler, client: NovaFlightClient) {
+        super();
         this.networkHandler = networkHandler;
         this.client = client;
     }

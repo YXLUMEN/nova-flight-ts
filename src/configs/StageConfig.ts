@@ -1,17 +1,17 @@
 import type {PhaseConfig} from "../apis/IStage.ts";
 import {Stage} from "../stage/Stage.ts";
-import {createCleanObj, deepFreeze} from "../utils/uit.ts";
+import {createClean, deepFreeze} from "../utils/uit.ts";
 import {spawnAtTop, spawnAtTopInLine, spawnAtTopS, spawnInMap, spawnMiniGun,} from "../utils/PresetsSpawn.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 
-const p0: PhaseConfig = deepFreeze(createCleanObj({
+const p0: PhaseConfig = deepFreeze(createClean({
     name: "P0",
     duration: 60,
     rules: []
 }));
 
-const p1: PhaseConfig = deepFreeze(createCleanObj({
+const p1: PhaseConfig = deepFreeze(createClean({
     name: "P1",
     duration: 2400,
     until: ({score}) => score >= 64,
@@ -21,7 +21,7 @@ const p1: PhaseConfig = deepFreeze(createCleanObj({
     ],
 }));
 
-const p2: PhaseConfig = deepFreeze(createCleanObj({
+const p2: PhaseConfig = deepFreeze(createClean({
     name: "P2",
     until: ({score}) => score >= 200,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P2'}),
@@ -35,7 +35,7 @@ const p2: PhaseConfig = deepFreeze(createCleanObj({
     ],
 }));
 
-const p3: PhaseConfig = deepFreeze(createCleanObj({
+const p3: PhaseConfig = deepFreeze(createClean({
     name: "P3",
     until: ({score}) => score >= 512,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P3'}),
@@ -59,7 +59,7 @@ const p3: PhaseConfig = deepFreeze(createCleanObj({
     ],
 }));
 
-const p4: PhaseConfig = deepFreeze(createCleanObj({
+const p4: PhaseConfig = deepFreeze(createClean({
     name: "P4",
     until: ({score}) => score >= 1024,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P4'}),
@@ -83,7 +83,7 @@ const p4: PhaseConfig = deepFreeze(createCleanObj({
     ],
 }));
 
-const p5: PhaseConfig = deepFreeze(createCleanObj({
+const p5: PhaseConfig = deepFreeze(createClean({
     name: "P5",
     until: ({score}) => score >= 2048,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P5'}),
@@ -119,7 +119,7 @@ const p5: PhaseConfig = deepFreeze(createCleanObj({
     ],
 }));
 
-const p6: PhaseConfig = deepFreeze(createCleanObj({
+const p6: PhaseConfig = deepFreeze(createClean({
     name: "P6",
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P6'}),
     rules: [
@@ -136,7 +136,7 @@ const p6: PhaseConfig = deepFreeze(createCleanObj({
     ],
 }));
 
-const p7: PhaseConfig = deepFreeze(createCleanObj({
+const p7: PhaseConfig = deepFreeze(createClean({
     name: "P7",
     until: ({score}) => score >= 7168,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P7'}),
@@ -171,7 +171,7 @@ const p7: PhaseConfig = deepFreeze(createCleanObj({
     ],
 }));
 
-const p8: PhaseConfig = deepFreeze(createCleanObj({
+const p8: PhaseConfig = deepFreeze(createClean({
     name: "P8",
     until: ({score}) => score >= 8192,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P8'}),
@@ -198,7 +198,7 @@ const p8: PhaseConfig = deepFreeze(createCleanObj({
     ],
 }));
 
-const p9: PhaseConfig = deepFreeze(createCleanObj({
+const p9: PhaseConfig = deepFreeze(createClean({
     name: "P9",
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P9'}),
     rules: [

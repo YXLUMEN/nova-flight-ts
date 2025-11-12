@@ -1,10 +1,11 @@
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import {argument, literal} from "../brigadier/CommandNodeBuilder.ts";
-import type {StringReader} from "../brigadier/StringReader.ts";
+import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
 import {invoke} from "@tauri-apps/api/core";
 import {CommandError, IllegalArgumentError} from "../apis/errors.ts";
+import {IntArgumentType} from "./argument/IntArgumentType.ts";
+import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
 
 export class ClientSettingsCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -15,11 +16,7 @@ export class ClientSettingsCommand {
                         .then(
                             literal<T>('server_addr')
                                 .then(
-                                    argument<T, string>('address', {
-                                        parse(reader: StringReader): string {
-                                            return reader.readQuotedString().trim();
-                                        }
-                                    })
+                                    argument<T, string>('address', NormalStringArgumentType.normalString())
                                         .executes(ctx => {
                                             const arg = ctx.args.get('address');
                                             if (!arg) throw new CommandError('Url cannot be empty');
@@ -39,11 +36,7 @@ export class ClientSettingsCommand {
                         .then(
                             literal<T>('port')
                                 .then(
-                                    argument<T, number>('port', {
-                                        parse(reader: StringReader): number {
-                                            return reader.readInt();
-                                        }
-                                    })
+                                    argument<T, number>('port', IntArgumentType.int())
                                         .executes(ctx => {
                                             const arg = ctx.args.get('port');
                                             if (!arg) throw new CommandError('\x1b[31m<port> is required', 'warning');
@@ -63,11 +56,7 @@ export class ClientSettingsCommand {
                         .then(
                             literal<T>('username')
                                 .then(
-                                    argument<T, string>('username', {
-                                        parse(reader: StringReader): string {
-                                            return reader.readString().trim();
-                                        }
-                                    })
+                                    argument<T, string>('username', NormalStringArgumentType.normalString())
                                         .executes(ctx => {
                                             const arg = ctx.args.get('username');
                                             if (!arg) return;

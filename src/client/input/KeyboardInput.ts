@@ -81,19 +81,12 @@ export class KeyboardInput implements IInput {
     }
 
     private registryListener(target: HTMLElement) {
-        const commandBar = document.getElementById('command-bar')!;
-        const commandInput = document.getElementById('command-input') as HTMLInputElement;
-
         window.addEventListener('keydown', event => {
             const code = event.code;
 
             if (code === 'Slash') {
-                const commandShow = !commandBar.classList.toggle('hidden');
-                NovaFlightClient.getInstance().clientCommandManager.showPanel(commandShow);
-                if (commandShow) {
-                    event.preventDefault();
-                    commandInput.focus();
-                }
+                const commandShow = NovaFlightClient.getInstance().clientCommandManager.showPanel();
+                if (commandShow) event.preventDefault();
                 this.setDisabled(commandShow);
             }
 

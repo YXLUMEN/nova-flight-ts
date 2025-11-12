@@ -1,29 +1,29 @@
-import {createCleanObj, deepFreeze} from "../utils/uit.ts";
+import {createClean, deepFreeze} from "../utils/uit.ts";
 import {Stage} from "../stage/Stage.ts";
 import type {PhaseConfig} from "../apis/IStage.ts";
 import {spawnAtTop} from "../utils/PresetsSpawn.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 
-const intro: PhaseConfig = deepFreeze(createCleanObj({
+const intro: PhaseConfig = deepFreeze(createClean({
     name: 'in',
     duration: 50,
     rules: [],
 }));
 
-const move: PhaseConfig = deepFreeze(createCleanObj({
+const move: PhaseConfig = deepFreeze(createClean({
     name: 'move',
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'g_move'}),
     rules: [],
 }));
 
-const fire: PhaseConfig = deepFreeze(createCleanObj({
+const fire: PhaseConfig = deepFreeze(createClean({
     name: 'fire',
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'g_fire'}),
     rules: [],
 }));
 
-const enemy: PhaseConfig = deepFreeze(createCleanObj({
+const enemy: PhaseConfig = deepFreeze(createClean({
     name: 'enemy',
     until: ({score}) => score > 900,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'g_enemy'}),
@@ -35,7 +35,7 @@ const enemy: PhaseConfig = deepFreeze(createCleanObj({
     }],
 }));
 
-const tech: PhaseConfig = deepFreeze(createCleanObj({
+const tech: PhaseConfig = deepFreeze(createClean({
     name: 'tech',
     until: ({score}) => score > 2000,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'g_tech'}),
@@ -47,13 +47,13 @@ const tech: PhaseConfig = deepFreeze(createCleanObj({
     }],
 }));
 
-const boss: PhaseConfig = deepFreeze(createCleanObj({
+const boss: PhaseConfig = deepFreeze(createClean({
     name: 'boss',
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'g_boss'}),
     rules: [],
 }));
 
-const end: PhaseConfig = deepFreeze(createCleanObj({
+const end: PhaseConfig = deepFreeze(createClean({
     name: 'end',
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'g_end'}),
     rules: [],

@@ -52,7 +52,7 @@ export function collideCircle(ax: number, ay: number, ar: number,
     return dx * dx + dy * dy < r * r;
 }
 
-export function distanceVec2(a: MutVec2, b: MutVec2) {
+export function distanceVec2(a: IVec, b: IVec) {
     const dx = a.x - b.x, dy = a.y - b.y;
     return dx * dx + dy * dy;
 }

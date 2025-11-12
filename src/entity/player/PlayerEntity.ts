@@ -16,12 +16,14 @@ import {clamp} from "../../utils/math/math.ts";
 import type {TechTree} from "../../tech/TechTree.ts";
 import type {DataTrackerSerializedEntry} from "../data/DataTracker.ts";
 import type {INetworkChannel} from "../../network/INetworkChannel.ts";
+import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 
 export abstract class PlayerEntity extends LivingEntity {
     public onDamageExplosionRadius = 320;
     public techTree!: TechTree;
 
     protected readonly items = new Map<Item, ItemStack>();
+    protected weaponKeys = new Map<SpecialWeapon, string>();
     protected readonly baseWeapons: BaseWeapon[] = [];
     protected currentBaseIndex: number = 0;
 
@@ -131,6 +133,15 @@ export abstract class PlayerEntity extends LivingEntity {
         return this.voidEdge;
     }
 
+    private assignKeys() {
+        let i = 0;
+        for (const w of this.items.keys()) {
+            if (!(w instanceof SpecialWeapon)) continue;
+            i++;
+            this.weaponKeys.set(w, `Digit${i}`);
+        }
+    }
+
     public getItem(item: Item): ItemStack | null {
         return this.items.get(item) ?? null;
     }
@@ -146,10 +157,13 @@ export abstract class PlayerEntity extends LivingEntity {
         if (!stack) stack = new ItemStack(item);
         stack.setHolder(this);
         this.items.set(item, stack);
+        this.assignKeys();
     }
 
     public removeItem(item: Item): boolean {
-        return this.items.delete(item);
+        const result = this.items.delete(item);
+        this.assignKeys();
+        return result;
     }
 
     public clearItems(): void {
@@ -162,6 +176,7 @@ export abstract class PlayerEntity extends LivingEntity {
         this.currentBaseIndex = 0;
         this.baseWeapons.length = 0;
         this.items.clear();
+        this.weaponKeys.clear();
     }
 
     public getCurrentItem(): BaseWeapon {

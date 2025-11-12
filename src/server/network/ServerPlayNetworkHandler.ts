@@ -76,7 +76,7 @@ export class ServerPlayNetworkHandler {
         this.uuidToPlayer.set(clientId, profile);
         this.sessionIdToPlayer.set(packet.sessionId, profile);
 
-        const player = new ServerPlayerEntity(this.world);
+        const player = new ServerPlayerEntity(this.world, profile);
         player.setUuid(clientId);
         this.world.spawnPlayer(player);
         this.channel.sendTo(new JoinGameS2CPacket(player.getId()), clientId);

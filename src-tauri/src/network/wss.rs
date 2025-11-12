@@ -402,14 +402,14 @@ async fn relay_message(state: &Arc<RelayState>, session: &Arc<Session>, payload:
             target_client_id.copy_from_slice(&payload[3..19]);
             let target_client_id = target_client_id;
 
-            let remaining = payload.slice(19..);
-            let mut buf = BytesMut::with_capacity(1 + remaining.len());
-            buf.put_u8(0x11);
-            buf.put_u16_le(session.session_id);
-            buf.extend_from_slice(&remaining);
-            let forwarded = buf.freeze();
-
             if let Some(client) = state.clients.get(&target_client_id) {
+                let remaining = payload.slice(19..);
+                let mut buf = BytesMut::with_capacity(1 + remaining.len());
+                buf.put_u8(0x11);
+                buf.put_u16_le(session.session_id);
+                buf.extend_from_slice(&remaining);
+                let forwarded = buf.freeze();
+
                 if client.tx.send(forwarded).await.is_err() {
                     state.clients.remove(&target_client_id);
                 }

@@ -1,4 +1,5 @@
 import {CommandNode} from "./CommandNode.ts";
+import {Suggestions} from "./suggestion/Suggestions.ts";
 
 export class RootCommandNode<S> extends CommandNode<S> {
     public constructor() {
@@ -18,5 +19,9 @@ export class RootCommandNode<S> extends CommandNode<S> {
     }
 
     public override parse() {
+    }
+
+    public override listSuggestions(): Promise<Suggestions> {
+        return Suggestions.empty();
     }
 }

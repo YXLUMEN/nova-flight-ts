@@ -1,5 +1,5 @@
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import {literal} from "../brigadier/CommandNodeBuilder.ts";
+import {literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
 
 export class CommandBarCommand {

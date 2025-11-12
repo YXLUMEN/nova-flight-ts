@@ -21,11 +21,11 @@ export abstract class CommandManager {
                 // noinspection ExceptionCaughtLocallyJS
                 throw Error(`\x1b[31mNo such command: "${command}"`);
             }
-
-            const cmd = lastNode.getCommand();
+            const node = lastNode.node;
+            const cmd = node.getCommand();
             if (!cmd) {
                 // noinspection ExceptionCaughtLocallyJS
-                throw Error(`\x1b[31mCommand "${lastNode.getName()}" is not executable, with command: "${command}"`);
+                throw Error(`\x1b[31mCommand "${node.getName()}" is not executable, with command: "${command}"`);
             }
             cmd(context);
         } catch (err) {

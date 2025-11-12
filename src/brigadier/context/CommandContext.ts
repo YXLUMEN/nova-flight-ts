@@ -1,7 +1,7 @@
-import type {CommandNode} from "../CommandNode.ts";
 import type {Command} from "../Command.ts";
 import type {StringRange} from "../StringRange.ts";
 import type {ParsedArgument} from "./ParsedArgument.ts";
+import type {ParsedCommandNode} from "./ParsedCommandNode.ts";
 
 export class CommandContext<S> {
     public readonly source: S;
@@ -9,9 +9,9 @@ export class CommandContext<S> {
     public readonly input: string;
     public readonly args: Map<string, ParsedArgument<S, any>>;
     public readonly range: StringRange;
-    public readonly nodes: CommandNode<S>[];
+    public readonly nodes: ParsedCommandNode<S>[];
 
-    public constructor(source: S, input: string, args: Map<string, ParsedArgument<S, any>>, command: Command<S>, nodes: CommandNode<S>[], range: StringRange) {
+    public constructor(source: S, input: string, args: Map<string, ParsedArgument<S, any>>, command: Command<S>, nodes: ParsedCommandNode<S>[], range: StringRange) {
         this.source = source;
         this.command = command;
         this.input = input;

@@ -1,5 +1,5 @@
 import {Identifier} from "./Identifier.ts";
-import {createCleanObj} from "../utils/uit.ts";
+import {createClean} from "../utils/uit.ts";
 import type {Registry} from "./Registry.ts";
 
 
@@ -24,7 +24,7 @@ export class RegistryKey<T> {
     }
 
     private static ofKey<T>(registry: Identifier, id: Identifier): RegistryKey<T> {
-        const pair: RegistryIdPair = createCleanObj({registry, id});
+        const pair: RegistryIdPair = createClean({registry, id});
         const existKey = RegistryKey.REGISTRY.get(pair);
         if (existKey) return existKey;
 

@@ -1,7 +1,7 @@
 import type {World} from "../world/World.ts";
 
-export interface CommandSource {
-    getWorld(): World | null;
+export abstract class CommandSource {
+    public abstract getWorld(): World | null;
 
-    hasPermissionLevel(level: number): boolean;
+    public abstract hasPermissionLevel(level: number): boolean;
 }

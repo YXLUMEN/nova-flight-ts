@@ -1,8 +1,8 @@
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import {argument, literal} from "../brigadier/CommandNodeBuilder.ts";
-import type {StringReader} from "../brigadier/StringReader.ts";
+import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import {IllegalArgumentError} from "../apis/errors.ts";
+import {IntArgumentType} from "./argument/IntArgumentType.ts";
 
 export class WorldDifficultCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -19,11 +19,7 @@ export class WorldDifficultCommand {
                 .then(
                     literal<T>('set')
                         .then(
-                            argument<T, number>('int', {
-                                parse(reader: StringReader): number {
-                                    return reader.readInt();
-                                }
-                            })
+                            argument<T, number>('int', IntArgumentType.int())
                                 .executes(ctx => {
                                     const arg = ctx.args.get('int');
                                     if (!arg) throw new Error('\x1b[31m<int> is required');
@@ -37,7 +33,7 @@ export class WorldDifficultCommand {
                                     ctx.source.outPut.sendMessage(`World difficult set to: \x1b[32m${int}`);
                                 })
                         )
-                        .withRequirement(source => source.hasPermissionLevel(6))
+                        .requires(source => source.hasPermissionLevel(6))
                 )
         );
     }

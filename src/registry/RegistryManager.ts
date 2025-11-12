@@ -6,6 +6,7 @@ import {EntityTypes} from "../entity/EntityTypes.ts";
 import {Items} from "../item/items.ts";
 import {deepFreeze} from "../utils/uit.ts";
 import {DamageTypes} from "../entity/damage/DamageTypes.ts";
+import {EntitySelectorOptions} from "../command/EntitySelectorOptions.ts";
 
 export class RegistryManager {
     private readonly registers = new Map<RegistryKey<any>, Registry<any>>();
@@ -24,6 +25,7 @@ export class RegistryManager {
         EntityTypes.init();
         Items.init();
         await Registries.complete();
+        EntitySelectorOptions.register();
     }
 
     public get<E>(key: RegistryKey<Registry<E>>): Registry<E> {

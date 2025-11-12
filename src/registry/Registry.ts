@@ -103,6 +103,10 @@ export class Registry<T> {
         return new Set(this.idToEntry.keys());
     }
 
+    public getIdValues() {
+        return this.idToEntry.keys();
+    }
+
     public getIndexedEntries(): IndexedIterable<T> {
         const self = this;
         return {

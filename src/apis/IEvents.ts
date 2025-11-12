@@ -1,12 +1,12 @@
 import type {BossEntity} from "../entity/mob/BossEntity.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
-import {createCleanObj} from "../utils/uit.ts";
+import {createClean} from "../utils/uit.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 
-export const EVENTS = createCleanObj({
+export const EVENTS = createClean({
     ENTITY_REMOVED: "entity:mob:removed",
     BOSS_KILLED: "entity:boss:killed",
     MOB_KILLED: "entity:mob:killed",

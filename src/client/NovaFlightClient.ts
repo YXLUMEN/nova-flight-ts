@@ -20,7 +20,7 @@ import {NbtCompound} from "../nbt/NbtCompound.ts";
 import {BaseDirectory, exists, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs";
 import {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import {error} from "@tauri-apps/plugin-log";
-import {ClientCommandManager} from "./ClientCommandManager.ts";
+import {ClientCommandManager} from "./command/ClientCommandManager.ts";
 import {invoke} from "@tauri-apps/api/core";
 import {ServerWorker} from "../worker/ServerWorker.ts";
 import {ClientMultiGameManger} from "./ClientMultiGameManger.ts";
@@ -497,8 +497,13 @@ export class NovaFlightClient {
         }
     }
 
-    public switchDevMode() {
-        WorldConfig.devMode = !WorldConfig.devMode;
+    public switchDevMode(bool?: boolean) {
+        if (bool === undefined) {
+            WorldConfig.devMode = !WorldConfig.devMode;
+        } else {
+            WorldConfig.devMode = bool;
+        }
+
         WorldConfig.usedDevMode = true;
         this.server?.postMessage({type: 'switch_dev_mode', payload: {dev: WorldConfig.devMode}});
     }

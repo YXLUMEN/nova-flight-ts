@@ -2,14 +2,14 @@ import type {MobEntity} from "../mob/MobEntity.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
-import {createCleanObj} from "../../utils/uit.ts";
+import {createClean} from "../../utils/uit.ts";
 import {getNearestEntity, wrappedDelta} from "../../utils/math/math.ts";
 import {World} from "../../world/World.ts";
 import {MobAiS2CPacket} from "../../network/packet/s2c/MobAiS2CPacket.ts";
 import {Random} from "../../utils/math/Random.ts";
 import {EntityChooseTargetS2CPacket} from "../../network/packet/s2c/EntityChooseTargetS2CPacket.ts";
 
-export const Behavior = createCleanObj({
+export const Behavior = createClean({
     Wander: 0,
     Chase: 1,
     Flee: 2,

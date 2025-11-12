@@ -3,8 +3,13 @@ import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {Comparable} from "../apis/types.ts";
+import {StringReader} from "../brigadier/StringReader.ts";
 
 export class Identifier implements Comparable {
+    private static readonly validNamespace = /^[a-z0-9_.-]+$/;
+    private static readonly validPath = /^[a-z0-9_.\/-]+$/;
+    private static readonly validCharReg = /[0-9a-z_\-.+\/:]/;
+
     public static readonly CODEC: Codec<Identifier> = {
         encode(value: Identifier): NbtCompound {
             const nbt = new NbtCompound();
@@ -77,11 +82,11 @@ export class Identifier implements Comparable {
     }
 
     public static isNamespaceValid(namespace: string): boolean {
-        return /^[a-z0-9_.-]+$/.test(namespace);
+        return this.validNamespace.test(namespace);
     }
 
     public static isPathValid(path: string): boolean {
-        return /^[a-z0-9_.\/-]+$/.test(path);
+        return this.validPath.test(path);
     }
 
     private static ofValidated(namespace: string, path: string): Identifier {
@@ -100,7 +105,33 @@ export class Identifier implements Comparable {
         if (Identifier.isPathValid(path)) {
             return path;
         } else {
-            throw new SyntaxError("Non [a-z0-9/._-] character in path of location: " + namespace + ":" + path);
+            throw new SyntaxError(`"Non [a-z0-9/._-] character in path of location: ${namespace}:${path}`);
+        }
+    }
+
+    private static isCharValid(char: string) {
+        return this.validCharReg.test(char);
+    }
+
+    private static readString(reader: StringReader): string {
+        const start = reader.getCursor();
+
+        while (reader.canRead() && this.isCharValid(reader.peek())) {
+            reader.skip();
+        }
+
+        return reader.getString().substring(start, reader.getCursor());
+    }
+
+    public static fromCommandInput(reader: StringReader): Identifier {
+        const start = reader.getCursor();
+        const text = this.readString(reader);
+
+        try {
+            return this.splitOn(text);
+        } catch (e) {
+            reader.setCursor(start);
+            throw e;
         }
     }
 

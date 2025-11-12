@@ -138,12 +138,13 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
         for (const [w, stack] of this.items) {
             if (w instanceof SpecialWeapon) {
+                const key = this.weaponKeys.get(w)!;
                 if (WorldConfig.devMode && w.getCooldown(stack) > 0.5) {
                     w.setCooldown(stack, 0.5);
                 }
-                if (w.canFire(stack) && this.input.wasPressed(w.bindKey())) {
+                if (w.canFire(stack) && this.input.wasPressed(key)) {
                     w.tryFire(stack, world, this);
-                    this.getNetworkChannel().send(new PlayerInputC2SPacket(this.getUuid(), w.bindKey()));
+                    this.getNetworkChannel().send(new PlayerInputC2SPacket(this.getUuid(), key));
                 }
             }
             w.inventoryTick(stack, world, this, 0, true);
@@ -173,7 +174,8 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         const stack = this.items.get(item);
         if (stack && item.canFire(stack)) {
             item.tryFire(stack, this.getWorld(), this);
-            this.getNetworkChannel().send(new PlayerInputC2SPacket(this.getUuid(), item.bindKey()));
+            const key = this.weaponKeys.get(item)!;
+            this.getNetworkChannel().send(new PlayerInputC2SPacket(this.getUuid(), key));
         }
     }
 

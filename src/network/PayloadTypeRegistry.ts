@@ -1,7 +1,7 @@
 import type {Identifier} from "../registry/Identifier.ts";
 import type {Payload, PayloadId} from "./Payload.ts";
 import {HashMap} from "../utils/collection/HashMap.ts";
-import {createCleanObj} from "../utils/uit.ts";
+import {createClean} from "../utils/uit.ts";
 import type {PacketCodec} from "./codec/PacketCodec.ts";
 
 type Side = 'server' | 'client';
@@ -40,7 +40,7 @@ export class PayloadTypeRegistry {
             throw new ReferenceError(`Packet type ${id} is already registered!`);
         }
 
-        const payload = createCleanObj({id, codec}) as PayloadType<T>;
+        const payload = createClean({id, codec}) as PayloadType<T>;
         this.packetTypes.set(id, payload);
         return payload;
     }

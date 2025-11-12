@@ -1,19 +1,16 @@
-import {ArgumentCommandNode} from "./ArgumentCommandNode.ts";
-import type {Command} from "./Command.ts";
-import type {LiteralBuilder} from "./LiteralBuilder.ts";
-import type {Predicate} from "../apis/types.ts";
-import type {ArgumentType} from "./ArgumentType.ts";
+import type {Command} from "../Command.ts";
+import {LiteralCommandNode} from "../LiteralCommandNode.ts";
+import type {ArgumentBuilder} from "./ArgumentBuilder.ts";
+import type {Predicate} from "../../apis/types.ts";
 
-export class ArgumentBuilder<S, T> {
+export class LiteralBuilder<S> {
     private readonly name: string;
-    private readonly parser: ArgumentType<T>;
     private command!: Command<S>;
     private requirement: Predicate<S> = () => true;
     private children: (LiteralBuilder<S> | ArgumentBuilder<S, any>)[] = [];
 
-    public constructor(name: string, parser: ArgumentType<T>) {
+    public constructor(name: string) {
         this.name = name;
-        this.parser = parser;
     }
 
     public then(child: LiteralBuilder<S> | ArgumentBuilder<S, any>): this {
@@ -31,8 +28,8 @@ export class ArgumentBuilder<S, T> {
         return this;
     }
 
-    public build(): ArgumentCommandNode<S, T> {
-        const node = new ArgumentCommandNode<S, T>(this.name, this.parser, this.command, this.requirement, null);
+    public build(): LiteralCommandNode<S> {
+        const node = new LiteralCommandNode<S>(this.name, this.command, this.requirement);
         for (const child of this.children) {
             node.addChild(child.build());
         }

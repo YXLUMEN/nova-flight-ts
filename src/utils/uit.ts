@@ -29,7 +29,7 @@ export function deepFreeze<T>(obj: T, seen = new WeakSet()): Readonly<T> {
     return Object.freeze(obj);
 }
 
-export function createCleanObj<T>(obj: T): T {
+export function createClean<T>(obj: T): T {
     return Object.assign(Object.create(null), obj);
 }
 
@@ -75,4 +75,21 @@ export function rgba(hex: string, a: number): string {
     const g = parseInt(n.slice(2, 4), 16);
     const b = parseInt(n.slice(4, 6), 16);
     return `rgba(${r},${g},${b},${clamp(a, 0, 1).toFixed(3)})`;
+}
+
+export function debounce<T extends (...args: any[]) => any>(func: T, wait: number = 50) {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    return function (...args: Parameters<T>) {
+        if (timer) clearTimeout(timer);
+        // @ts-ignore
+        timer = setTimeout(() => func.apply(this, args), wait);
+    }
+}
+
+export function shuffleArray<T>(array: T[]): T[] {
+    for (let i = array.length; i--;) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
 }

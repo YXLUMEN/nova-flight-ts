@@ -1,6 +1,9 @@
-import type {CommandNotifyCategory} from "../client/ClientCommandManager.ts";
+import type {CommandNotifyCategory} from "../client/command/ClientCommandManager.ts";
 
 export class IllegalArgumentError extends Error {
+}
+
+export class IllegalStateException extends Error {
 }
 
 export class CommandError extends Error {

@@ -1,18 +1,18 @@
-import {createCleanObj} from "../utils/uit.ts";
+import {createClean} from "../utils/uit.ts";
 
 // @ts-expect-error
 const isDev = import.meta.env.MODE === "development";
 
 const isServer = typeof window === 'undefined';
 
-const freezeConfig = createCleanObj({
+const freezeConfig = createClean({
     tick: 20,
     mbps: 0.05,
     per: 50,
-    version: '25w11b'
+    version: '25w12a'
 } as const);
 
-const WorldConfig = Object.preventExtensions(createCleanObj({
+const WorldConfig = Object.preventExtensions(createClean({
     devMode: isDev,
     usedDevMode: false,
     lowPowerMode: false,

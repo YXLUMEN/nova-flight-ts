@@ -11,17 +11,20 @@ import type {ServerNetworkChannel} from "../network/ServerNetworkChannel.ts";
 import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
+import type {PlayerProfile} from "./PlayerProfile.ts";
 
 
 export class ServerPlayerEntity extends PlayerEntity {
+    public readonly playerProfile: PlayerProfile;
     private readonly inputKeys = new Set<string>();
     private readonly changedItems: Set<ItemStack> = new Set();
 
     private revision = 0;
 
-    public constructor(world: ServerWorld) {
+    public constructor(world: ServerWorld, playerProfile: PlayerProfile) {
         super(world);
 
+        this.playerProfile = playerProfile;
         this.techTree = new ServerTechTree(this);
     }
 
@@ -66,11 +69,12 @@ export class ServerPlayerEntity extends PlayerEntity {
     protected override tickInventory(world: World) {
         for (const [item, stack] of this.items) {
             if (item instanceof SpecialWeapon) {
+                const key = this.weaponKeys.get(item)!;
                 if (WorldConfig.devMode && item.getCooldown(stack) > 0.5) {
                     item.setCooldown(stack, 0.5);
                     this.changedItems.add(stack);
                 }
-                if (item.canFire(stack) && this.inputKeys.delete(item.bindKey())) {
+                if (item.canFire(stack) && this.inputKeys.delete(key)) {
                     item.tryFire(stack, world, this);
                 }
             }

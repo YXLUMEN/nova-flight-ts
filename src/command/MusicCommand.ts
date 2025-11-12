@@ -1,12 +1,13 @@
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import type {StringReader} from "../brigadier/StringReader.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {Registries} from "../registry/Registries.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
-import {argument, literal} from "../brigadier/CommandNodeBuilder.ts";
+import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
 import {CommandError} from "../apis/errors.ts";
+import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
+import {CommandUtil} from "./CommandUtil.ts";
 
 export class MusicCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -15,11 +16,7 @@ export class MusicCommand {
                 .then(
                     literal<T>('play')
                         .then(
-                            argument<T, Identifier>('music_id', {
-                                parse(reader: StringReader): Identifier {
-                                    return Identifier.tryParse(reader.readUnquotedString())!;
-                                }
-                            })
+                            argument<T, Identifier>('music_id', IdentifierArgumentType.identifier())
                                 .executes(ctx => {
                                     const arg = ctx.args.get('music_id');
                                     if (!arg) throw new CommandError("\x1b[33m<music_id> is required");
@@ -31,6 +28,7 @@ export class MusicCommand {
                                     AudioManager.playAudio(event);
                                     ctx.source.addMessage(`Start to play \x1b[32m"${event.getId()}"\x1b[0m`);
                                 })
+                                .suggests(CommandUtil.createIdentifierSuggestion(Registries.AUDIOS))
                         )
                 )
                 .then(

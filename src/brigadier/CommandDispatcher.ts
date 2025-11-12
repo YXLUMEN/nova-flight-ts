@@ -1,10 +1,12 @@
 import {CommandNode} from "./CommandNode.ts";
 import {StringReader} from "./StringReader.ts";
-import type {LiteralBuilder} from "./LiteralBuilder.ts";
-import {CommandContextBuilder} from "./context/CommandContextBuilder.ts";
+import {CommandContextBuilder} from "./builder/CommandContextBuilder.ts";
 import {ParseResults} from "./ParseResults.ts";
 import {RootCommandNode} from "./RootCommandNode.ts";
 import {CommandError} from "../apis/errors.ts";
+import {Suggestions} from "./suggestion/Suggestions.ts";
+import {SuggestionsBuilder} from "./suggestion/SuggestionsBuilder.ts";
+import type {LiteralArgumentBuilder} from "./builder/LiteralArgumentBuilder.ts";
 
 export class CommandDispatcher<S> {
     private readonly root: CommandNode<S>;
@@ -22,7 +24,7 @@ export class CommandDispatcher<S> {
         return this.parseNodes(this.root, command, context);
     }
 
-    public parseNodes(node: CommandNode<S>, originalReader: StringReader, contextSoFar: CommandContextBuilder<S>): ParseResults<S> {
+    private parseNodes(node: CommandNode<S>, originalReader: StringReader, contextSoFar: CommandContextBuilder<S>): ParseResults<S> {
         const source = contextSoFar.source;
         const cursor = originalReader.getCursor();
 
@@ -88,8 +90,41 @@ export class CommandDispatcher<S> {
         return new ParseResults(contextSoFar, originalReader, errors);
     }
 
-    public registry<S>(command: LiteralBuilder<S>) {
-        // @ts-ignore
+    public getCompletionSuggestions(parse: ParseResults<S>) {
+        return this.getCompletionSuggestionsWithCursor(parse, parse.reader.getTotalLength());
+    }
+
+    public async getCompletionSuggestionsWithCursor(parse: ParseResults<S>, cursor: number): Promise<Suggestions> {
+        const context = parse.context;
+
+        const nodeBeforeCursor = context.findSuggestionContext(cursor);
+        const parent = nodeBeforeCursor.parent;
+        const start = Math.min(nodeBeforeCursor.startPos, cursor);
+
+        const fullInput = parse.reader.getString();
+        const truncatedInput = fullInput.substring(0, cursor);
+        const truncatedInputLowerCase = truncatedInput.toLowerCase();
+
+        const futures: Promise<Suggestions>[] = new Array(parent.getOriginChildren().size);
+
+        let i = 0;
+        for (const node of parent.getChildren()) {
+            let future: Promise<Suggestions> = Suggestions.empty();
+            try {
+                future = node.listSuggestions(
+                    context.build(truncatedInput),
+                    new SuggestionsBuilder(truncatedInput, truncatedInputLowerCase, start)
+                );
+            } catch {
+            }
+            futures[i++] = future;
+        }
+
+        const results = await Promise.all(futures);
+        return Suggestions.merge(fullInput, results);
+    }
+
+    public registry(command: LiteralArgumentBuilder<S>) {
         this.root.addChild(command.build());
     }
 }
