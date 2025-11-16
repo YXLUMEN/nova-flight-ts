@@ -1,5 +1,5 @@
 import {CommandNode} from "./CommandNode.ts";
-import {Suggestions} from "./suggestion/Suggestions.ts";
+import {Suggestions} from "../suggestion/Suggestions.ts";
 
 export class RootCommandNode<S> extends CommandNode<S> {
     public constructor() {

@@ -1,11 +1,11 @@
-import type {CommandNode} from "../CommandNode.ts";
+import type {CommandNode} from "../tree/CommandNode.ts";
 import type {Command} from "../Command.ts";
 import type {CommandDispatcher} from "../CommandDispatcher.ts";
-import {StringRange} from "../StringRange.ts";
-import {CommandContext} from "../context/CommandContext.ts";
-import type {ParsedArgument} from "../context/ParsedArgument.ts";
-import {SuggestionContext} from "../context/SuggestionContext.ts";
-import {ParsedCommandNode} from "../context/ParsedCommandNode.ts";
+import {StringRange} from "./StringRange.ts";
+import {CommandContext} from "./CommandContext.ts";
+import type {ParsedArgument} from "./ParsedArgument.ts";
+import {SuggestionContext} from "./SuggestionContext.ts";
+import {ParsedCommandNode} from "./ParsedCommandNode.ts";
 import {IllegalStateException} from "../../apis/errors.ts";
 
 export class CommandContextBuilder<S> {

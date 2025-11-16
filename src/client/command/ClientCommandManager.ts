@@ -10,60 +10,64 @@ import {KillCommand} from "../../command/KillCommand.ts";
 import type {ServerCommandSource} from "../../server/command/ServerCommandSource.ts";
 import {WorldDifficultCommand} from "../../command/WorldDifficultCommand.ts";
 import type {ParseResults} from "../../brigadier/ParseResults.ts";
-import {AnsiParser} from "../../utils/AnsiParser.ts";
 import {StatusEffectCommand} from "../../command/StatusEffectCommand.ts";
 import {ClientSuggestionPopup} from "./ClientSuggestionPopup.ts";
 import {debounce} from "../../utils/uit.ts";
+import {ClientCommandPanel} from "./ClientCommandPanel.ts";
+import type {Suggestion} from "../../brigadier/suggestion/Suggestion.ts";
+import {MemoryLRU} from "../../utils/collection/MemoryLRU.ts";
+import {StringReader} from "../../brigadier/StringReader.ts";
 
 export type CommandNotifyCategory = 'info' | 'success' | 'warning' | 'error';
 
 export class ClientCommandManager extends CommandManager {
     private readonly clientDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
     private readonly source: ClientCommandSource;
+
+    private historyIndex = -1;
     private readonly usedCommands: string[] = [];
 
     private readonly popup: ClientSuggestionPopup;
-    private readonly commandPanel: HTMLDivElement;
-    private readonly commandBar: HTMLLabelElement;
+    private readonly commandPanel: ClientCommandPanel;
+
     private readonly commandInput: HTMLInputElement;
 
-    private hiddenMessages = new Set<number>();
-    private historyIndex = -1;
+    private suggestionCache: MemoryLRU<string, Suggestion[]> = new MemoryLRU(12);
     private suggestionsLength = 0;
     private tokenStart = -1;
-    private tokenEnd = -1;
     private completionIndex = -1;
 
     public constructor(source: ClientCommandSource) {
         super();
         this.source = source;
 
-        this.popup = new ClientSuggestionPopup();
-
-        this.commandBar = document.getElementById('command-bar') as HTMLLabelElement;
         this.commandInput = document.getElementById('command-input') as HTMLInputElement;
-        this.commandPanel = document.getElementById('command-panel') as HTMLDivElement;
+        const commandBar = document.getElementById('command-bar') as HTMLLabelElement;
+        const commandPanel = document.getElementById('command-panel') as HTMLDivElement;
 
-        this.commandBar.addEventListener('keydown', event => {
+        this.popup = new ClientSuggestionPopup(commandBar, this.commandInput);
+        this.commandPanel = new ClientCommandPanel(commandPanel, commandBar, this.commandInput);
+
+        commandBar.addEventListener('keydown', event => {
             if (event.code === 'Enter') {
                 event.preventDefault();
+                const input = this.commandInput.value;
 
-                if (this.popup.popups) {
+                if (this.popup.getPopups()) {
                     const activeItem = this.popup.getActiveItem();
                     if (!activeItem) return;
                     this.popup.applySuggestion(
                         activeItem.textContent!,
                         this.tokenStart,
-                        this.tokenEnd
+                        input.length
                     );
                     this.popup.cleanPopup();
                     return;
                 }
 
-                if (this.commandInput.value.length <= 0) return;
-                const value = this.commandInput.value;
+                if (input.length <= 0) return;
 
-                this.usedCommands.push(value);
+                this.usedCommands.push(input);
                 if (this.usedCommands.length > 64) {
                     this.usedCommands.shift();
                 }
@@ -71,13 +75,13 @@ export class ClientCommandManager extends CommandManager {
                 this.commandInput.value = '';
                 this.resetSuggestionLen();
 
-                this.executeCommand(value);
+                this.executeCommand(input);
                 return;
             }
 
             if (event.code === 'ArrowUp') {
                 event.preventDefault();
-                if (this.popup.popups) {
+                if (this.popup.getPopups()) {
                     this.completionIndex = (this.completionIndex - 1 + this.suggestionsLength) % this.suggestionsLength;
                     this.popup.highlightPopupItem(this.completionIndex);
                     return;
@@ -95,7 +99,7 @@ export class ClientCommandManager extends CommandManager {
 
             if (event.code === 'ArrowDown') {
                 event.preventDefault();
-                if (this.popup.popups) {
+                if (this.popup.getPopups()) {
                     this.completionIndex = (this.completionIndex + 1) % this.suggestionsLength;
                     this.popup.highlightPopupItem(this.completionIndex);
                     return;
@@ -114,20 +118,19 @@ export class ClientCommandManager extends CommandManager {
 
             if (event.code === 'Tab') {
                 event.preventDefault();
+                if (!this.popup.getPopups()) return;
+                // 轮询并应用
+                this.completionIndex = (this.completionIndex + 1) % this.suggestionsLength;
+                this.popup.highlightPopupItem(this.completionIndex);
+
                 const activeItem = this.popup.getActiveItem();
                 if (!activeItem) return;
+
                 this.popup.applySuggestion(
                     activeItem.textContent!,
                     this.tokenStart,
-                    this.tokenEnd
+                    this.commandInput.value.length,
                 );
-                this.popup.cleanPopup();
-                return;
-            }
-
-            if (event.code === 'Escape') {
-                this.popup.cleanPopup();
-                this.resetSuggestionLen();
                 return;
             }
 
@@ -150,6 +153,7 @@ export class ClientCommandManager extends CommandManager {
                     end++;
                 }
                 this.commandInput.setSelectionRange(start, end);
+                return;
             }
         });
 
@@ -159,22 +163,53 @@ export class ClientCommandManager extends CommandManager {
         this.registry();
     }
 
+    public handlerEsp() {
+        if (this.popup.getPopups()) {
+            this.popup.cleanPopup();
+            this.resetSuggestionLen();
+            return false;
+        }
+        this.switchPanel(false);
+        return true;
+    }
+
     private async giveSuggestions() {
-        const value = this.commandInput.value;
-        const cursor = this.commandInput.selectionStart ?? value.length;
+        const command = this.commandInput.value;
+        if (!command.startsWith('/')) {
+            this.popup.cleanPopup();
+            return;
+        }
 
-        const clientResults = this.clientDispatcher.parse(value, this.source);
-        const clientSuggestions = await this.clientDispatcher.getCompletionSuggestionsWithCursor(clientResults, cursor);
+        const cache = this.suggestionCache.get(command);
+        if (cache) {
+            this.renderSuggestions(cache);
+            return;
+        }
 
+        const cursor = this.commandInput.selectionStart ?? command.length;
+
+        const reader = new StringReader(command);
+        reader.skip();
+        if (reader.peek() === '/') {
+            // throw new IllegalArgumentError(`Unknown or invalid command "${command}", can not be "//"`);
+            return;
+        }
+        const cloneReader = StringReader.fromReader(reader);
+
+        const clientResults = this.clientDispatcher.parseReader(reader, this.source);
         // @ts-expect-error 尝试服务端命令解析
-        const serverResults = this.dispatcher.parse(value, this.source);
+        const serverResults = this.dispatcher.parseReader(cloneReader, this.source);
+
+        const clientSuggestions = await this.clientDispatcher.getCompletionSuggestionsWithCursor(clientResults, cursor);
         const serverSuggestions = await this.dispatcher.getCompletionSuggestionsWithCursor(serverResults, cursor);
 
-        const suggestions = [
-            ...serverSuggestions.getList(),
-            ...clientSuggestions.getList()
-        ];
+        const suggestions = [...clientSuggestions.getList(), ...serverSuggestions.getList()];
+        this.suggestionCache.set(command, suggestions);
 
+        this.renderSuggestions(suggestions);
+    }
+
+    private renderSuggestions(suggestions: Suggestion[]) {
         if (suggestions.length > 0) {
             const texts = suggestions.map(s => s.getText());
             const range = suggestions[0].getRange();
@@ -183,7 +218,6 @@ export class ClientCommandManager extends CommandManager {
 
             this.suggestionsLength = texts.length;
             this.tokenStart = range.getStart();
-            this.tokenEnd = range.getEnd();
             this.completionIndex = 0;
 
             this.popup.highlightPopupItem(this.completionIndex);
@@ -196,119 +230,48 @@ export class ClientCommandManager extends CommandManager {
     private resetSuggestionLen() {
         this.suggestionsLength = 0;
         this.tokenStart = -1;
-        this.tokenEnd = -1;
         this.completionIndex = -1;
     }
 
-    public addPlainMessage(msg: string) {
-        const div = AnsiParser.parseToElement(msg);
-        div.classList.add('notify');
-        this.addMessage(div);
+    public getInput(): string {
+        return this.commandInput.value;
     }
 
-    private addMessage(msg: HTMLDivElement) {
-        this.commandPanel.append(msg);
-
-        if (this.commandPanel.childElementCount > 64) {
-            this.commandPanel.firstChild?.remove();
-        }
-        this.commandPanel.scrollTop = this.commandPanel.scrollHeight;
-
-        if (!this.commandPanel.classList.contains('hidden')) return;
-
-        const timer = setTimeout(() => {
-            msg.classList.add('hidden');
-            this.hiddenMessages.delete(timer);
-        }, 3000);
-        this.hiddenMessages.add(timer);
+    public addPlainMessage(msg: string): void {
+        this.commandPanel.addPlainMessage(msg);
     }
 
-    public addMessageElement(msg: HTMLDivElement) {
-        if (!msg.classList.contains('notify')) return;
-
-        if (ClientCommandManager.checkChildren(msg)) {
-            this.addMessage(msg);
-        }
+    public isShow() {
+        return this.commandPanel.isShowing();
     }
 
-    public showPanel(show?: boolean): boolean {
-        if (show === undefined) {
-            this.commandBar.classList.toggle('hidden');
-            const willHide = this.commandPanel.classList.toggle('hidden');
-            if (willHide) {
-                this.resetSuggestionLen();
-                this.popup.cleanPopup();
-                return false;
-            }
-
-            this.commandInput.focus();
-            this.showAllMessages();
-            return true;
+    public switchPanel(show?: boolean): boolean {
+        const isShow = this.commandPanel.switchPanel(show);
+        if (!isShow) {
+            this.resetSuggestionLen();
+            this.popup.cleanPopup();
         }
 
-        if (show) {
-            this.commandBar.classList.remove('hidden');
-            this.commandPanel.classList.remove('hidden');
-            this.commandInput.focus();
-            this.showAllMessages();
-            return true;
-        }
-
-        this.commandBar.classList.add('hidden');
-        this.commandPanel.classList.add('hidden');
-        this.resetSuggestionLen();
-        this.popup.cleanPopup();
-        return false;
-    }
-
-    private showAllMessages(): void {
-        this.hiddenMessages.forEach(timer => clearTimeout(timer));
-        for (const ele of this.commandPanel.children) {
-            ele.classList.remove('hidden');
-        }
-    }
-
-    public static checkChildren(
-        element: HTMLElement,
-        allowed: string[] = ["DIV", "P", "SPAN"],
-        maxDepth: number = 2,
-        currentDepth: number = 1) {
-        if (currentDepth > maxDepth) {
-            return false;
-        }
-
-        for (const child of Array.from(element.children)) {
-            const tag = child.tagName;
-
-            if (!allowed.includes(tag)) {
-                return false;
-            }
-
-            if (!this.checkChildren(child as HTMLElement, allowed, maxDepth, currentDepth + 1)) {
-                return false;
-            }
-        }
-
-        return true;
+        return isShow;
     }
 
     public clearAllMessages(): void {
-        this.commandPanel.textContent = '';
+        this.commandPanel.clearAllMessages();
     }
 
     public override registry(): void {
         MusicCommand.registry(this.clientDispatcher);
-        DevModCommand.registry(this.clientDispatcher);
         ClientSettingsCommand.registry(this.clientDispatcher);
         CommandBarCommand.registry(this.clientDispatcher);
 
         KillCommand.registry(this.dispatcher);
+        DevModCommand.registry(this.dispatcher);
         WorldDifficultCommand.registry(this.dispatcher);
         StatusEffectCommand.registry(this.dispatcher);
     }
 
     public executeWithPrefix(source: CommandSource, input: string): void {
-        const command = input.startsWith("/") ? input.slice(1) : input;
+        const command = input.startsWith('/') ? input.slice(1) : input;
         if (command.length === 0) return;
 
         // 尝试解析服务端命令
@@ -336,13 +299,13 @@ export class ClientCommandManager extends CommandManager {
             const context = contextBuilder.build(command);
             const lastNode = context.nodes.at(-1);
             if (!lastNode) {
-                this.addPlainMessage(`\x1b[31mNo such command: "${command}"`);
+                this.commandPanel.addPlainMessage(`\x1b[31mNo such command: "${command}"`);
                 return;
             }
             const node = lastNode.node;
             const cmd = node.getCommand();
             if (!cmd) {
-                this.addPlainMessage(`\x1b[31mCommand "${node.getName()}" is not executable, with command: "${command}"`);
+                this.commandPanel.addPlainMessage(`\x1b[31mCommand "${node.getName()}" is not executable, with command: "${command}"`);
                 return
             }
             cmd(context);
@@ -350,12 +313,12 @@ export class ClientCommandManager extends CommandManager {
             console.error(`[Client] Failed to execute command for command "${command}": ${err}`);
 
             for (const exception of parseResults.exceptions.values()) {
-                this.addPlainMessage(exception.message);
+                this.commandPanel.addPlainMessage(exception.message);
                 console.warn(exception);
             }
 
             if (err instanceof Error) {
-                this.addPlainMessage(err.message);
+                this.commandPanel.addPlainMessage(err.message);
             }
         }
     }

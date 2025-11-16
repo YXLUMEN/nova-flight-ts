@@ -74,18 +74,16 @@ export class EntitySelector {
 
         const limit = this.getAppendLimit();
         if (!this.includesNonPlayers) {
-            let i = 0;
-            for (const player of world.getPlayers()) {
-                if (!this.filters.every(f => f(player, source))) continue;
-                if (i >= limit) break;
-                i++;
-                yield player;
-            }
+            yield* this.iterEntities(source, world.getPlayers(), limit);
             return;
         }
 
+        yield* this.iterEntities(source, world.getEntities().values(), limit);
+    }
+
+    private* iterEntities(source: ServerCommandSource, entities: Iterable<Entity>, limit: number) {
         let i = 0;
-        for (const entity of world.getEntities().values()) {
+        for (const entity of entities) {
             if (!this.filters.every(f => f(entity, source))) continue;
             if (i >= limit) break;
             i++;

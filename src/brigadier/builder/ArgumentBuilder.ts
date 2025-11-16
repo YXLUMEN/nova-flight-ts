@@ -1,7 +1,7 @@
 import type {Command} from "../Command.ts";
 import type {Predicate} from "../../apis/types.ts";
-import type {CommandNode} from "../CommandNode.ts";
-import {RootCommandNode} from "../RootCommandNode.ts";
+import type {CommandNode} from "../tree/CommandNode.ts";
+import {RootCommandNode} from "../tree/RootCommandNode.ts";
 
 export abstract class ArgumentBuilder<S, T extends ArgumentBuilder<S, T>> {
     private readonly arguments = new RootCommandNode<S>();

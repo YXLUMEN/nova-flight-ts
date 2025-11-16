@@ -45,7 +45,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
 
     public setOwner(entity: Entity | null): void {
         if (entity) {
-            this.ownerUuid = entity.getUuid();
+            this.ownerUuid = entity.getUUID();
             this.owner = entity;
         }
     }
@@ -109,7 +109,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
     }
 
     protected isOwner(entity: Entity) {
-        return entity.getUuid() === this.ownerUuid;
+        return entity.getUUID() === this.ownerUuid;
     }
 
     protected wrapPosition(): boolean {

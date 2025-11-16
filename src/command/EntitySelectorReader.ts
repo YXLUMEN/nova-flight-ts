@@ -24,15 +24,15 @@ export class EntitySelectorReader {
     private sorter: BiConsumer<IVec, Entity[]> = EntitySelector.ARBITRARY;
 
     private startCursor: number = 0;
-    private limit!: number;
+    private limit: number = 1;
     public hasLimit: boolean = false;
-    public includesNonPlayers!: boolean;
+    public includesNonPlayers: boolean = false;
 
     private centerX: number | null = null;
     private centerY: number | null = null;
     private distance: [Optional<number>, Optional<number>] = [Optional.empty(), Optional.empty()];
     private entityType: EntityType<any> | null = null;
-    private excludesEntityType: boolean = false;
+    private excludeMode: boolean = false;
 
     private suggestionProvider: provider = EntitySelectorReader.DEFAULT_SUGGESTION_PROVIDER;
 
@@ -58,7 +58,7 @@ export class EntitySelectorReader {
         });
 
         if (this.entityType) {
-            if (this.excludesEntityType) {
+            if (this.excludeMode) {
                 this.filters.push(entity => this.entityType !== entity.getType());
             } else {
                 this.filters.push(entity => this.entityType === entity.getType());
@@ -74,14 +74,14 @@ export class EntitySelectorReader {
         );
     }
 
-    protected readRegular() {
+    protected readRegular(): void {
         if (this.reader.canRead()) {
             this.suggestionProvider = this.suggestNormal;
         }
         this.limit = 1;
     }
 
-    protected readAtVariable() {
+    protected readAtVariable(): void {
         this.suggestionProvider = this.suggestSelectorRest;
         if (!this.reader.canRead()) {
             throw new IllegalArgumentError("Can't read variable");
@@ -155,7 +155,7 @@ export class EntitySelectorReader {
         }
     }
 
-    protected readArguments() {
+    protected readArguments(): void {
         this.suggestionProvider = this.suggestOption;
         this.reader.skipWhitespace();
 
@@ -215,26 +215,24 @@ export class EntitySelectorReader {
         return this.build();
     }
 
-    public readNegationCharacter() {
+    public readNegationCharacter(): boolean {
         this.reader.skipWhitespace();
         if (this.reader.canRead() && this.reader.peek() == '!') {
             this.reader.skip();
             this.reader.skipWhitespace();
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
-    public readTagCharacter() {
+    public readTagCharacter(): boolean {
         this.reader.skipWhitespace();
         if (this.reader.canRead() && this.reader.peek() == '#') {
             this.reader.skip();
             this.reader.skipWhitespace();
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
     public listSuggestions(builder: SuggestionsBuilder, consumer: Consumer<SuggestionsBuilder>): Promise<Suggestions> {
@@ -324,11 +322,11 @@ export class EntitySelectorReader {
         return this.entityType !== null;
     }
 
-    public setExcludesEntityType() {
-        this.excludesEntityType = true;
+    public setExcludesEntityMode() {
+        this.excludeMode = true;
     }
 
-    public isExcludesEntityType() {
-        return this.excludesEntityType;
+    public isExcludesEntityMode() {
+        return this.excludeMode;
     }
 }

@@ -1,6 +1,6 @@
 import {ArgumentBuilder} from "./ArgumentBuilder.ts";
-import type {CommandNode} from "../CommandNode.ts";
-import {LiteralCommandNode} from "../LiteralCommandNode.ts";
+import type {CommandNode} from "../tree/CommandNode.ts";
+import {LiteralCommandNode} from "../tree/LiteralCommandNode.ts";
 
 export class LiteralArgumentBuilder<S> extends ArgumentBuilder<S, LiteralArgumentBuilder<S>> {
     public readonly literal: string;

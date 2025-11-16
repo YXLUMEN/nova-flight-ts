@@ -134,7 +134,7 @@ export abstract class World {
             tickConsumer(entity);
         } catch (err) {
             const type = EntityType.getId(entity.getType())?.toString() ?? 'UnknownType';
-            console.error(`Tick Entity with id:${entity.getUuid()} at ${type}`);
+            console.error(`Tick Entity with id:${entity.getUUID()} at ${type}`);
             console.error(err);
             throw err;
         }

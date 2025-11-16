@@ -1,7 +1,6 @@
 import type {WeaponUIInfo} from '../../../apis/IUIInfo.ts';
 import type {Weapon} from '../../../item/weapon/Weapon.ts';
 import {BaseWeapon} from "../../../item/weapon/BaseWeapon/BaseWeapon.ts";
-import {WorldConfig} from "../../../configs/WorldConfig.ts";
 import {clamp, lerp, PI2} from "../../../utils/math/math.ts";
 import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import type {ItemStack} from "../../../item/ItemStack.ts";
@@ -68,7 +67,7 @@ export class HUD implements IUi {
         ctx.fillText(`分数: ${player.getScore()}`, x, y);
         y += 20;
 
-        if (WorldConfig.devMode) {
+        if (player.profile.isDevMode()) {
             ctx.fillText('已启用dev模式,将不再记录成绩', x, y);
             y += 20;
         }

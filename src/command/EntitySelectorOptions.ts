@@ -55,7 +55,7 @@ export class EntitySelectorOptions {
 
         this.putOption('type', reader => {
             reader.setSuggestionProvider(async (builder, _) => {
-                if (reader.isExcludesEntityType()) {
+                if (reader.isExcludesEntityMode()) {
                     await CommandUtil.suggestIdentifiersPrefix(Registries.ENTITY_TYPE.getIdValues(), builder, '!');
                 } else {
                     await CommandUtil.suggestIdentifiers(Registries.ENTITY_TYPE.getIdValues(), builder);
@@ -65,14 +65,14 @@ export class EntitySelectorOptions {
             });
 
             const start = reader.getReader().getCursor();
-            const reserve = reader.readNegationCharacter();
+            const excludeMode = reader.readNegationCharacter();
 
-            if (reader.isExcludesEntityType() && !reserve) {
+            if (reader.isExcludesEntityMode() && !excludeMode) {
                 reader.getReader().setCursor(start);
                 throw new IllegalArgumentError('Inapplicable option at "type"');
             }
-            if (reserve) {
-                reader.setExcludesEntityType();
+            if (excludeMode) {
+                reader.setExcludesEntityMode();
             }
 
             const identifier = Identifier.fromCommandInput(reader.getReader());
@@ -82,13 +82,11 @@ export class EntitySelectorOptions {
                 throw new IllegalArgumentError(`Can not find entity with id: ${identifier}`);
             }
 
-            if ((EntityTypes.PLAYER === entityType) && !reserve) {
+            if ((EntityTypes.PLAYER === entityType) && !excludeMode) {
                 reader.includesNonPlayers = false;
             }
 
-            if (!reserve) {
-                reader.setEntityType(entityType);
-            }
+            reader.setEntityType(entityType);
         }, reader => !reader.selectsEntityType());
     }
 

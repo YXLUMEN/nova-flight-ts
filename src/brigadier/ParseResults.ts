@@ -1,5 +1,5 @@
-import type {CommandContextBuilder} from "./builder/CommandContextBuilder.ts";
-import type {CommandNode} from "./CommandNode.ts";
+import type {CommandContextBuilder} from "./context/CommandContextBuilder.ts";
+import type {CommandNode} from "./tree/CommandNode.ts";
 import {StringReader} from "./StringReader.ts";
 import type {CommandError} from "../apis/errors.ts";
 

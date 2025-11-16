@@ -12,6 +12,7 @@ import type {CommandOutput} from "./command/CommandOutput.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 import {info} from "@tauri-apps/plugin-log";
 import {ServerCommandManager} from "./ServerCommandManager.ts";
+import {PlayerManager} from "./entity/PlayerManager.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static instance: NovaFlightServer;
@@ -20,6 +21,8 @@ export abstract class NovaFlightServer implements CommandOutput {
     public readonly serverId: UUID;
     public readonly networkChannel: ServerNetworkChannel;
     public readonly serverCommandManager: ServerCommandManager;
+    public readonly playerManager: PlayerManager;
+
     public networkHandler: ServerPlayNetworkHandler | null = null;
     public world!: ServerWorld;
     private readonly mainClientUUID: UUID | null;
@@ -38,6 +41,7 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.serverId = crypto.randomUUID();
         this.mainClientUUID = mainClientUUID;
 
+        this.playerManager = new PlayerManager(this);
         this.networkChannel = new ServerNetworkChannel("127.0.0.1:25566", secretKey);
         ServerReceive.registryNetworkHandler(this.networkChannel);
         this.serverCommandManager = new ServerCommandManager(this.getCommandSource());
@@ -143,8 +147,8 @@ export abstract class NovaFlightServer implements CommandOutput {
         await this.waitWorldStop;
     }
 
-    public isMainPlayer(uuid: UUID) {
-        return uuid === this.mainClientUUID;
+    public getMainPlayerUUID(): UUID | null {
+        return this.mainClientUUID;
     }
 
     public getCommandSource(): ServerCommandSource {

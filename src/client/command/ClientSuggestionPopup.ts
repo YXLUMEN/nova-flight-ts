@@ -1,16 +1,19 @@
 export class ClientSuggestionPopup {
-    private readonly measureCtx: CanvasRenderingContext2D;
+    private readonly measureCtx: OffscreenCanvasRenderingContext2D;
+    private font: string = '';
 
     private readonly commandBar: HTMLLabelElement;
     private readonly commandInput: HTMLInputElement;
     private popupItems: HTMLSpanElement | null = null;
 
-    public constructor() {
-        this.measureCtx = document.createElement('canvas').getContext('2d', {
-            alpha: false,
-        })!;
-        this.commandBar = document.getElementById('command-bar') as HTMLLabelElement;
-        this.commandInput = document.getElementById('command-input') as HTMLInputElement;
+    public constructor(commandBar: HTMLLabelElement, commandInput: HTMLInputElement) {
+        const canvas = new OffscreenCanvas(1, 1);
+        this.measureCtx = canvas.getContext('2d')!;
+
+        this.commandBar = commandBar
+        this.commandInput = commandInput
+
+        this.changeFont();
     }
 
     public renderPopup(suggestions: string[], tokenStart: number, tokenEnd: number) {
@@ -37,28 +40,28 @@ export class ClientSuggestionPopup {
     public repositionPopup() {
         if (!this.popupItems) return;
 
-        const input = this.commandInput;
-        if (input.value.lastIndexOf(' ') === -1) {
+        const input = this.commandInput.value;
+        if (input.lastIndexOf(' ') === -1) {
             this.popupItems.style.left = '0px';
             return;
         }
 
-        const style = window.getComputedStyle(input);
+        this.changeFont();
 
-        this.measureCtx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-
-        const cursorPos = input.selectionStart;
-        if (!cursorPos) return;
-        const subText = input.value.slice(0, cursorPos);
-        const width = this.measureCtx.measureText(subText).width;
+        const width = this.measureCtx.measureText(input).width;
         this.popupItems.style.left = `${width}px`;
     }
 
     public highlightPopupItem(index: number) {
         const children = this.popupItems?.children;
         if (!children) return;
+
         for (let i = 0; i < children.length; i++) {
-            children[i].classList.toggle('active', i === index);
+            const isActive = i === index;
+            children[i].classList.toggle('active', isActive);
+            if (isActive) children[i].scrollIntoView({
+                block: "nearest"
+            });
         }
     }
 
@@ -82,12 +85,22 @@ export class ClientSuggestionPopup {
         return this.popupItems?.querySelector('.active') ?? null;
     }
 
-    public get popups() {
+    public getPopups() {
         return this.popupItems;
     }
 
     public cleanPopup() {
         this.popupItems?.remove();
         this.popupItems = null;
+    }
+
+    private changeFont() {
+        const style = window.getComputedStyle(this.commandInput);
+        const font = `${style.fontStyle} ${style.fontVariant} ${style.fontWeight} ${style.fontSize} / ${style.lineHeight} ${style.fontFamily}`;
+
+        if (this.font === font) return;
+
+        this.font = font;
+        this.measureCtx.font = font;
     }
 }

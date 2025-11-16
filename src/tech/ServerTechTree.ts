@@ -2,7 +2,6 @@ import type {TechTree} from "./TechTree.ts";
 import {TechState} from "./TechState.ts";
 import type {NbtCompound} from "../nbt/NbtCompound.ts";
 import tech from "./tech-data.json";
-import {WorldConfig} from "../configs/WorldConfig.ts";
 import type {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 import type {Tech} from "../apis/ITech.ts";
 import {Items} from "../item/items.ts";
@@ -27,8 +26,9 @@ export class ServerTechTree implements TechTree {
         const cost = this.state.getTech(id)?.cost;
         if (cost === undefined) return false;
 
+        const isDev = this.player.getProfile().isDevMode();
         const score = this.player.getScore() - cost;
-        if (score < 0 && !WorldConfig.devMode) return false;
+        if (score < 0 && !isDev) return false;
         if (this.state.unlock(id)) {
             this.player.setScore(score);
             return true;
@@ -76,7 +76,7 @@ export class ServerTechTree implements TechTree {
 
         this.state.reset();
 
-        (player.getNetworkChannel() as ServerNetworkChannel).sendTo(new PlayerSetScoreS2CPacket(finalScore), player.getUuid());
+        (player.getNetworkChannel() as ServerNetworkChannel).sendTo(new PlayerSetScoreS2CPacket(finalScore), player.getUUID());
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {

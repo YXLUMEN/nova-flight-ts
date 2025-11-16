@@ -7,6 +7,7 @@ import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 export class DamageTypes {
     public static readonly GENERIC = this.registry("generic");
     public static readonly REMOVED = this.registry("removed");
+    public static readonly KILL = this.registry("kill");
     public static readonly MOB_ATTACK = this.registry("mob_attack");
     public static readonly PLAYER_ATTACK = this.registry("player_attack");
     public static readonly MOB_PROJECTILE = this.registry("mob_projectile");
@@ -21,6 +22,7 @@ export class DamageTypes {
         const damage = Registries.DAMAGE_TYPE;
         damage.add(this.GENERIC, 'generic');
         damage.add(this.REMOVED, 'removed', DamageTypeTags.BYPASSES_INVULNERABLE, DamageTypeTags.NOT_GAIN_SCORE);
+        damage.add(this.KILL, 'kill', DamageTypeTags.BYPASSES_INVULNERABLE, DamageTypeTags.NOT_GAIN_SCORE);
         damage.add(this.MOB_ATTACK, 'mobAttack');
         damage.add(this.PLAYER_ATTACK, 'playerAttack');
         damage.add(this.MOB_PROJECTILE, 'mobProjectile');

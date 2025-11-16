@@ -29,7 +29,7 @@ export class ClientSettingsCommand {
                                                 throw new IllegalArgumentError(`\x1b[31mAddress length must be at least 9 characters, but current is ${ip.length}`);
                                             }
                                             WorldConfig.serverAddr = ip;
-                                            ctx.source.addMessage(`\x1b[32mSet address to: ${ip}`);
+                                            ctx.source.addMessage(`Set address to: \x1b[32m"${ip}"`);
                                         })
                                 )
                         )
@@ -43,13 +43,13 @@ export class ClientSettingsCommand {
 
                                             let port = Number(arg.result);
                                             if (!Number.isSafeInteger(port)) {
-                                                throw new IllegalArgumentError(`\x1b[31mInvalid argument: ${port}, port must be an integer`);
+                                                throw new IllegalArgumentError(`\x1b[31mInvalid argument: "${port}", port must be an integer`);
                                             }
                                             if (port < 0 || port > 65535) {
                                                 throw new IllegalArgumentError("\x1b[31mPort must in 0-65535");
                                             }
                                             WorldConfig.port = port;
-                                            ctx.source.addMessage(`\x1b[32mSet port: ${port}`);
+                                            ctx.source.addMessage(`Set port: \x1b[32m"${port}"`);
                                         })
                                 )
                         )
@@ -67,7 +67,7 @@ export class ClientSettingsCommand {
                                             }
 
                                             localStorage.setItem('username', username);
-                                            ctx.source.addMessage(`\x1b[32mSet username to: "${username}"`);
+                                            ctx.source.addMessage(`Set username to: \x1b[32m"${username}"`);
                                         })
                                 )
                         )
@@ -78,6 +78,19 @@ export class ClientSettingsCommand {
                             literal<T>('server_addr')
                                 .executes(ctx => {
                                     ctx.source.addMessage(`Current address \x1b[32m"${WorldConfig.serverAddr}"`);
+                                })
+                        )
+                        .then(
+                            literal<T>('port')
+                                .executes(ctx => {
+                                    ctx.source.addMessage(`Current port is: \x1b[32m"${WorldConfig.port}"`);
+                                })
+                        )
+                        .then(
+                            literal<T>('username')
+                                .executes(ctx => {
+                                    const username = localStorage.getItem('username') ?? '<null>';
+                                    ctx.source.addMessage(`Current username is: \x1b[32m"${username}"`);
                                 })
                         )
                 )

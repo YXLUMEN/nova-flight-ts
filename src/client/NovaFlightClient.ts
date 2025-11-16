@@ -76,7 +76,6 @@ export class NovaFlightClient {
         this.registryManager = new RegistryManager();
 
         this.window = new Window();
-        this.input = new KeyboardInput(this.window.canvas);
 
         this.networkChannel = new ClientNetworkChannel(
             `127.0.0.1:${WorldConfig.port}`,
@@ -84,13 +83,14 @@ export class NovaFlightClient {
         );
         ClientReceive.registryNetworkHandler(this.networkChannel);
 
-        this.input.onKeyDown('world_input', this.registryInput.bind(this));
-        this.registryListener();
-
         this.networkHandler = new ClientPlayNetworkHandler(this);
         this.multiGameManager = new ClientMultiGameManger();
 
         this.clientCommandManager = new ClientCommandManager(this.networkHandler.getCommandSource());
+
+        this.input = new KeyboardInput(this.window.canvas);
+        this.input.onKeyDown('world_input', this.registryInput.bind(this));
+        this.registryListener();
 
         this.createPromise();
     }
@@ -463,7 +463,7 @@ export class NovaFlightClient {
         // 开发者模式
         if (event.ctrlKey) {
             if (code === 'KeyV') this.switchDevMode();
-            if (WorldConfig.devMode && world) this.devMode(code, world);
+            if (this.player?.profile.isDevMode() && world) this.devFunc(code, world);
             return;
         }
 
@@ -473,7 +473,7 @@ export class NovaFlightClient {
                     .then(isFull => mainWindow.setFullscreen(!isFull))
                     .catch(console.error);
                 break;
-            case 'KeyT':
+            case 'KeyI':
                 WorldConfig.autoShoot = !WorldConfig.autoShoot;
                 break;
             case 'Escape': {
@@ -497,20 +497,17 @@ export class NovaFlightClient {
         }
     }
 
-    public switchDevMode(bool?: boolean) {
-        if (bool === undefined) {
-            WorldConfig.devMode = !WorldConfig.devMode;
-        } else {
-            WorldConfig.devMode = bool;
-        }
-
-        WorldConfig.usedDevMode = true;
-        this.server?.postMessage({type: 'switch_dev_mode', payload: {dev: WorldConfig.devMode}});
-    }
-
-    private devMode(code: string, world: ClientWorld): void {
+    public switchDevMode(bool?: boolean): void {
         const player = this.player;
         if (!player) return;
+
+        this.networkHandler.sendCommand(`/dev ${bool ?? !player.profile.isDevMode()}`);
+    }
+
+    private devFunc(code: string, world: ClientWorld): void {
+        const player = this.player;
+        if (!player) return;
+
         this.server?.postMessage({type: 'dev_mode', payload: {code}});
         switch (code) {
             case 'KeyH':
@@ -554,7 +551,7 @@ export class NovaFlightClient {
         window.addEventListener('resize', () => {
             this.window.resize();
             if (!this.player) return;
-            this.networkChannel.send(new RequestPositionC2SPacket(this.player.getUuid()));
+            this.networkChannel.send(new RequestPositionC2SPacket(this.player.getUUID()));
         });
 
         this.window.canvas.addEventListener('click', event => {

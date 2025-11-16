@@ -1,12 +1,12 @@
 import {CommandNode} from "./CommandNode.ts";
-import type {Command} from "./Command.ts";
-import type {Predicate} from "../apis/types.ts";
-import type {StringReader} from "./StringReader.ts";
-import type {CommandContextBuilder} from "./builder/CommandContextBuilder.ts";
-import {StringRange} from "./StringRange.ts";
-import type {CommandContext} from "./context/CommandContext.ts";
-import type {SuggestionsBuilder} from "./suggestion/SuggestionsBuilder.ts";
-import {Suggestions} from "./suggestion/Suggestions.ts";
+import type {Command} from "../Command.ts";
+import type {Predicate} from "../../apis/types.ts";
+import type {StringReader} from "../StringReader.ts";
+import type {CommandContextBuilder} from "../context/CommandContextBuilder.ts";
+import {StringRange} from "../context/StringRange.ts";
+import type {CommandContext} from "../context/CommandContext.ts";
+import type {SuggestionsBuilder} from "../suggestion/SuggestionsBuilder.ts";
+import {Suggestions} from "../suggestion/Suggestions.ts";
 
 export class LiteralCommandNode<S> extends CommandNode<S> {
     private readonly literal: string;

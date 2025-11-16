@@ -1,14 +1,14 @@
 import {CommandNode} from "./CommandNode.ts";
-import type {Command} from "./Command.ts";
-import type {StringReader} from "./StringReader.ts";
-import type {ArgumentType} from "./ArgumentType.ts";
-import {ParsedArgument} from "./context/ParsedArgument.ts";
-import type {Predicate} from "../apis/types.ts";
-import type {CommandContextBuilder} from "./builder/CommandContextBuilder.ts";
-import type {CommandContext} from "./context/CommandContext.ts";
-import type {SuggestionsBuilder} from "./suggestion/SuggestionsBuilder.ts";
-import type {Suggestions} from "./suggestion/Suggestions.ts";
-import type {SuggestionProvider} from "./suggestion/SuggestionProvider.ts";
+import type {Command} from "../Command.ts";
+import type {StringReader} from "../StringReader.ts";
+import type {ArgumentType} from "../ArgumentType.ts";
+import {ParsedArgument} from "../context/ParsedArgument.ts";
+import type {Predicate} from "../../apis/types.ts";
+import type {CommandContextBuilder} from "../context/CommandContextBuilder.ts";
+import type {CommandContext} from "../context/CommandContext.ts";
+import type {SuggestionsBuilder} from "../suggestion/SuggestionsBuilder.ts";
+import type {Suggestions} from "../suggestion/Suggestions.ts";
+import type {SuggestionProvider} from "../suggestion/SuggestionProvider.ts";
 
 export class ArgumentCommandNode<S, T> extends CommandNode<S> {
     private readonly name: string;

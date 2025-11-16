@@ -1,8 +1,8 @@
 import {ArgumentBuilder} from "./ArgumentBuilder.ts";
 import type {ArgumentType} from "../ArgumentType.ts";
 import type {SuggestionProvider} from "../suggestion/SuggestionProvider.ts";
-import type {CommandNode} from "../CommandNode.ts";
-import {ArgumentCommandNode} from "../ArgumentCommandNode.ts";
+import type {CommandNode} from "../tree/CommandNode.ts";
+import {ArgumentCommandNode} from "../tree/ArgumentCommandNode.ts";
 
 export class RequiredArgumentBuilder<S, T> extends ArgumentBuilder<S, RequiredArgumentBuilder<S, T>> {
     public readonly name: string;

@@ -87,7 +87,7 @@ export class StatusEffectCommand {
             if (entity instanceof LivingEntity) {
                 count++;
                 entity.addStatusEffect(new StatusEffectInstance(effect, duration, amplifier), null);
-                ctx.source.outPut.sendMessage(`Give effect ${effectIdResult.result} to \x1b[32m${entity.getUuid()}`);
+                ctx.source.outPut.sendMessage(`Give effect ${effectIdResult.result} to \x1b[32m${entity.getUUID()}`);
             }
         }
 
@@ -128,7 +128,7 @@ export class StatusEffectCommand {
             if (entity instanceof LivingEntity) {
                 count++;
                 entity.removeStatusEffect(effect);
-                ctx.source.outPut.sendMessage(`Remove effect ${effectIdResult.result} on \x1b[32m${entity.getUuid()}`);
+                ctx.source.outPut.sendMessage(`Remove effect ${effectIdResult.result} on \x1b[32m${entity.getUUID()}`);
             }
         }
         if (count === 0) {

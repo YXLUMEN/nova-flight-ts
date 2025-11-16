@@ -53,6 +53,8 @@ import {ClientSniffingC2SPacket} from "../../network/packet/c2s/ClientSniffingC2
 import {EntityChooseTargetS2CPacket} from "../../network/packet/s2c/EntityChooseTargetS2CPacket.ts";
 import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
+import {PlayerProfile} from "../../server/entity/PlayerProfile.ts";
+import {SyncPlayerProfileS2CPacket} from "../../network/packet/s2c/SyncPlayerProfileS2CPacket.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer: Set<UUID> = new Set();
@@ -129,7 +131,12 @@ export class ClientPlayNetworkHandler {
         this.world = new ClientWorld(this.client.registryManager);
         await this.client.joinGame(this.world);
         if (this.client.player === null) {
-            this.client.player = new ClientPlayerEntity(this.world, this.client.input);
+            const profile = new PlayerProfile(
+                this.client.networkChannel.sessionID,
+                this.client.clientId,
+                this.client.playerName
+            );
+            this.client.player = new ClientPlayerEntity(this.world, this.client.input, profile);
             this.client.player.setYaw(-1.57079);
         }
 
@@ -381,7 +388,15 @@ export class ClientPlayNetworkHandler {
         this.client.clientCommandManager.addPlainMessage(msg);
     }
 
-    public sendCommand(command: string): boolean {
+    public onSyncProfile(packet: SyncPlayerProfileS2CPacket) {
+        const player = this.client.player;
+        if (!player) return;
+
+        player.profile.setDevMode(packet.devMode);
+    }
+
+    public sendCommand(input: string): boolean {
+        const command = input.startsWith('/') ? input.slice(1) : input;
         if (this.parse(command).exceptions.size === 0) {
             this.sendPacket(new CommandExecutionC2SPacket(command, this.client.clientId));
             return true;
@@ -449,6 +464,7 @@ export class ClientPlayNetworkHandler {
             .add(PlayerAddScoreS2CPacket.ID, this.onPlayerAddScore)
             .add(EntityChooseTargetS2CPacket.ID, this.onMobChooseTarget)
             .add(GameMessageS2CPacket.ID, this.onGameMessage)
+            .add(SyncPlayerProfileS2CPacket.ID, this.onSyncProfile)
             .register(this.client.networkChannel, this);
     }
 }

@@ -10,7 +10,7 @@ export class EntityIndex<T extends Entity> {
     }
 
     public add(entity: T): boolean {
-        const uuid = entity.getUuid();
+        const uuid = entity.getUUID();
         if (this.uuidToEntity.has(uuid)) {
             console.warn(`Duplicate entity UUID ${uuid}: ${entity}`);
             return false;
@@ -21,7 +21,7 @@ export class EntityIndex<T extends Entity> {
     }
 
     public remove(entity: T) {
-        this.uuidToEntity.delete(entity.getUuid());
+        this.uuidToEntity.delete(entity.getUUID());
         this.idToEntity.delete(entity.getId());
     }
 

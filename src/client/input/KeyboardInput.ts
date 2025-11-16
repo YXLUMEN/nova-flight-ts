@@ -81,13 +81,20 @@ export class KeyboardInput implements IInput {
     }
 
     private registryListener(target: HTMLElement) {
+        const commandManager = NovaFlightClient.getInstance().clientCommandManager;
+
         window.addEventListener('keydown', event => {
             const code = event.code;
 
-            if (code === 'Slash') {
-                const commandShow = NovaFlightClient.getInstance().clientCommandManager.showPanel();
-                if (commandShow) event.preventDefault();
-                this.setDisabled(commandShow);
+            if (code === 'Escape' && commandManager.isShow()) {
+                const hide = commandManager.handlerEsp();
+                if (hide) this.setDisabled(false);
+                return;
+            }
+            if ((code === 'Slash' || code === 'KeyT') && !commandManager.isShow()) {
+                if (code==='KeyT') event.preventDefault();
+                commandManager.switchPanel(true);
+                this.setDisabled(true);
             }
 
             if (this.disableKey) {

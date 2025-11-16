@@ -1,5 +1,5 @@
-import type {CommandNode} from "../CommandNode.ts";
-import type {StringRange} from "../StringRange.ts";
+import type {CommandNode} from "../tree/CommandNode.ts";
+import type {StringRange} from "./StringRange.ts";
 
 export class ParsedCommandNode<S> {
     public readonly node: CommandNode<S>;

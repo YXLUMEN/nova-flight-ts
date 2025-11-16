@@ -1,11 +1,14 @@
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
 import {IllegalArgumentError} from "../apis/errors.ts";
 import {BoolArgumentType} from "./argument/BoolArgumentType.ts";
+import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
+import {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
+import type {ServerWorld} from "../server/ServerWorld.ts";
+import {SyncPlayerProfileS2CPacket} from "../network/packet/s2c/SyncPlayerProfileS2CPacket.ts";
 
 export class DevModCommand {
-    public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
+    public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {
         dispatcher.registry(
             literal<T>('dev')
                 .then(
@@ -15,20 +18,36 @@ export class DevModCommand {
                             if (arg === undefined) {
                                 throw new IllegalArgumentError('<bool> can not be empty');
                             }
-                            console.log(arg);
 
                             const bool = arg.result;
                             if (typeof bool !== 'boolean') {
                                 throw new IllegalArgumentError('Must provide a boolean');
                             }
 
-                            ctx.source.getClient().switchDevMode(bool);
+                            this.setMode(ctx.source, bool);
                         })
                 )
-                .executes(ctx => {
-                    ctx.source.getClient().switchDevMode();
-                })
+                .executes(ctx => this.setMode(ctx.source))
                 .requires(source => source.hasPermissionLevel(8))
         );
+    }
+
+    private static setMode(source: ServerCommandSource, bool?: boolean) {
+        const entity = source.entity;
+        if (!(entity instanceof ServerPlayerEntity)) {
+            throw new IllegalArgumentError('Target not a player');
+        }
+
+        const server = source.getWorld()!.getServer()!;
+        const profile = server.playerManager.getProfileByUUID(entity.getUUID());
+        if (!profile) throw new IllegalArgumentError('Target player no found');
+
+        profile.setDevMode(bool ?? !profile.isDevMode());
+        (source.getWorld() as ServerWorld)?.getNetworkChannel().sendTo(
+            new SyncPlayerProfileS2CPacket(profile.isDevMode()),
+            profile.clientId
+        );
+
+        source.outPut.sendMessage(`Set dev mode \x1b[32m${bool}`);
     }
 }

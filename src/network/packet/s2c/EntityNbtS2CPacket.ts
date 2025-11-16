@@ -29,7 +29,7 @@ export class EntityNbtS2CPacket implements Payload {
     public static create(entity: Entity) {
         const nbt = new NbtCompound();
         return new EntityNbtS2CPacket(
-            entity.getUuid(),
+            entity.getUUID(),
             entity.writeNBT(nbt)
         );
     }

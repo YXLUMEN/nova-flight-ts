@@ -1,4 +1,4 @@
-import type {StringRange} from "../StringRange.ts";
+import type {StringRange} from "../context/StringRange.ts";
 
 export class Suggestion {
     private readonly range: StringRange;

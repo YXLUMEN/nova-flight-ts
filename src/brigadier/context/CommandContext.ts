@@ -1,5 +1,5 @@
 import type {Command} from "../Command.ts";
-import type {StringRange} from "../StringRange.ts";
+import type {StringRange} from "./StringRange.ts";
 import type {ParsedArgument} from "./ParsedArgument.ts";
 import type {ParsedCommandNode} from "./ParsedCommandNode.ts";
 

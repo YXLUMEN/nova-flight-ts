@@ -1,7 +1,6 @@
 import {World} from "../../world/World.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
-import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {type DamageSource} from "../damage/DamageSource.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import {EntityTypes} from "../EntityTypes.ts";
@@ -23,7 +22,7 @@ export abstract class PlayerEntity extends LivingEntity {
     public techTree!: TechTree;
 
     protected readonly items = new Map<Item, ItemStack>();
-    protected weaponKeys = new Map<SpecialWeapon, string>();
+    protected readonly weaponKeys = new Map<SpecialWeapon, string>();
     protected readonly baseWeapons: BaseWeapon[] = [];
     protected currentBaseIndex: number = 0;
 
@@ -73,10 +72,6 @@ export abstract class PlayerEntity extends LivingEntity {
         this.wasActive = false;
         const next = (this.currentBaseIndex + dir) % this.baseWeapons.length;
         this.currentBaseIndex = next < 0 ? this.baseWeapons.length - 1 : next;
-    }
-
-    public override isInvulnerableTo(damageSource: DamageSource): boolean {
-        return super.isInvulnerableTo(damageSource) || WorldConfig.devMode;
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {

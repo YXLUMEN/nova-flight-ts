@@ -1,12 +1,12 @@
-import type {Predicate} from "../apis/types.ts";
-import type {Command} from "./Command.ts";
+import type {Predicate} from "../../apis/types.ts";
+import type {Command} from "../Command.ts";
 import type {LiteralCommandNode} from "./LiteralCommandNode.ts";
 import type {ArgumentCommandNode} from "./ArgumentCommandNode.ts";
-import type {StringReader} from "./StringReader.ts";
-import type {CommandContextBuilder} from "./builder/CommandContextBuilder.ts";
-import type {CommandContext} from "./context/CommandContext.ts";
-import type {SuggestionsBuilder} from "./suggestion/SuggestionsBuilder.ts";
-import type {Suggestions} from "./suggestion/Suggestions.ts";
+import type {StringReader} from "../StringReader.ts";
+import type {CommandContextBuilder} from "../context/CommandContextBuilder.ts";
+import type {CommandContext} from "../context/CommandContext.ts";
+import type {SuggestionsBuilder} from "../suggestion/SuggestionsBuilder.ts";
+import type {Suggestions} from "../suggestion/Suggestions.ts";
 
 export abstract class CommandNode<S> {
     private readonly children: Map<string, CommandNode<S>> = new Map();

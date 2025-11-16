@@ -19,8 +19,10 @@ import {encodeVelocity} from "../../utils/NetUtil.ts";
 import type {Item} from "../../item/Item.ts";
 import {AbstractClientPlayerEntity} from "./AbstractClientPlayerEntity.ts";
 import {BallisticCalculator} from "../../tech/BallisticCalculator.ts";
+import type {PlayerProfile} from "../../server/entity/PlayerProfile.ts";
 
 export class ClientPlayerEntity extends AbstractClientPlayerEntity {
+    public readonly profile: PlayerProfile;
     public readonly input: KeyboardInput;
     public readonly bc: BallisticCalculator;
     private specialWeapons: SpecialWeapon[];
@@ -35,10 +37,11 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     public lockedMissile = new Set<MissileEntity>();
     private revision: number = 0;
 
-    public constructor(world: World, input: KeyboardInput) {
+    public constructor(world: World, input: KeyboardInput, profile: PlayerProfile) {
         super(world);
 
         this.input = input;
+        this.profile = profile;
         const viewport = document.getElementById('viewport') as HTMLElement;
         this.techTree = new ClientTechTree(this, viewport);
         this.bc = new BallisticCalculator(this);
@@ -51,7 +54,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         super.tick();
 
         const posRef = this.getPositionRef;
-        const uuid: UUID = this.getUuid();
+        const uuid: UUID = this.getUUID();
 
         let dx = 0, dy = 0;
         if (this.input.isDown("ArrowLeft", "KeyA")) dx -= 1;
@@ -124,10 +127,10 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
         if (active !== this.wasActive) {
             if (!this.wasActive) {
-                this.getNetworkChannel().send(new PlayerFireC2SPacket(this.getUuid(), true));
+                this.getNetworkChannel().send(new PlayerFireC2SPacket(this.getUUID(), true));
                 baseWeapon.onStartFire(stack, world, this);
             } else {
-                this.getNetworkChannel().send(new PlayerFireC2SPacket(this.getUuid(), false));
+                this.getNetworkChannel().send(new PlayerFireC2SPacket(this.getUUID(), false));
                 baseWeapon.onEndFire(stack, world, this);
             }
             this.wasActive = active;
@@ -139,12 +142,12 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         for (const [w, stack] of this.items) {
             if (w instanceof SpecialWeapon) {
                 const key = this.weaponKeys.get(w)!;
-                if (WorldConfig.devMode && w.getCooldown(stack) > 0.5) {
+                if (this.profile.isDevMode() && w.getCooldown(stack) > 0.5) {
                     w.setCooldown(stack, 0.5);
                 }
                 if (w.canFire(stack) && this.input.wasPressed(key)) {
                     w.tryFire(stack, world, this);
-                    this.getNetworkChannel().send(new PlayerInputC2SPacket(this.getUuid(), key));
+                    this.getNetworkChannel().send(new PlayerInputC2SPacket(this.getUUID(), key));
                 }
             }
             w.inventoryTick(stack, world, this, 0, true);
@@ -175,7 +178,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         if (stack && item.canFire(stack)) {
             item.tryFire(stack, this.getWorld(), this);
             const key = this.weaponKeys.get(item)!;
-            this.getNetworkChannel().send(new PlayerInputC2SPacket(this.getUuid(), key));
+            this.getNetworkChannel().send(new PlayerInputC2SPacket(this.getUUID(), key));
         }
     }
 
@@ -197,7 +200,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     public override switchWeapon(dir: number = 1) {
         super.switchWeapon(dir);
-        this.getNetworkChannel().send(new PlayerSwitchSlotC2SPacket(this.getUuid(), this.currentBaseIndex));
+        this.getNetworkChannel().send(new PlayerSwitchSlotC2SPacket(this.getUUID(), this.currentBaseIndex));
     }
 
     public override setScore(score: number) {

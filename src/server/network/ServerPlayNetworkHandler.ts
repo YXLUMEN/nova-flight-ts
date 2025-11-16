@@ -28,14 +28,12 @@ import type {ParseResults} from "../../brigadier/ParseResults.ts";
 import type {ServerCommandSource} from "../command/ServerCommandSource.ts";
 import {PlayerProfile} from "../entity/PlayerProfile.ts";
 import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
+import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 
 export class ServerPlayNetworkHandler {
     private readonly server: NovaFlightServer;
     private readonly channel: ServerNetworkChannel;
     private readonly world: ServerWorld;
-
-    private readonly uuidToPlayer: Map<UUID, PlayerProfile> = new Map();
-    private readonly sessionIdToPlayer: Map<number, PlayerProfile> = new Map();
 
     public constructor(server: NovaFlightServer, world: ServerWorld) {
         this.server = server;
@@ -59,27 +57,31 @@ export class ServerPlayNetworkHandler {
     }
 
     public disconnectAllPlayer(): void {
-        for (const player of this.uuidToPlayer.keys()) {
-            this.disconnect(player, 'ServerClose');
+        for (const player of this.server.playerManager.getAllProfile()) {
+            this.disconnect(player.clientId, 'ServerClose');
         }
     }
 
     public async onPlayerAttemptLogin(packet: PlayerAttemptLoginC2SPacket): Promise<void> {
         const clientId: UUID = packet.clientId;
 
-        if (this.uuidToPlayer.has(clientId)) {
-            console.warn(`Server attempted to add player prior to sending player info (Player id ${clientId})`);
+        if (this.server.playerManager.isPlayerExists(clientId)) {
+            console.warn(`A duplicate player try to login with id ${clientId}`);
             return;
         }
 
         const profile = new PlayerProfile(packet.sessionId, packet.clientId, packet.playerName);
-        this.uuidToPlayer.set(clientId, profile);
-        this.sessionIdToPlayer.set(packet.sessionId, profile);
+        const success = this.server.playerManager.addPlayer(profile);
+        if (!success) {
+            console.warn(`Fail to login a player with id ${clientId}, check if id is duplicated`);
+            return;
+        }
 
         const player = new ServerPlayerEntity(this.world, profile);
         player.setUuid(clientId);
         this.world.spawnPlayer(player);
         this.channel.sendTo(new JoinGameS2CPacket(player.getId()), clientId);
+        this.channel.sendExclude(new GameMessageS2CPacket(`\x1b[32m${profile.playerName}\x1b[0m Join the game`), clientId);
 
         console.log(`Player ${packet.clientId} Login`);
     }
@@ -87,7 +89,7 @@ export class ServerPlayNetworkHandler {
     public onPlayerFinishLogin(packet: PlayerFinishLoginC2SPacket) {
         const uuid: UUID = packet.uuid;
         const player = this.world.getEntity(uuid);
-        if (!player || !this.uuidToPlayer.has(uuid)) return;
+        if (!player || !this.server.playerManager.isPlayerExists(uuid)) return;
 
         this.channel.sendTo(EntityNbtS2CPacket.create(player), uuid);
 
@@ -97,7 +99,7 @@ export class ServerPlayNetworkHandler {
 
     public onPlayerDisconnect(packet: PlayerDisconnectC2SPacket) {
         const uuid: UUID = packet.uuid;
-        if (!this.uuidToPlayer.has(uuid)) {
+        if (!this.server.playerManager.isPlayerExists(uuid)) {
             return;
         }
 
@@ -105,7 +107,7 @@ export class ServerPlayNetworkHandler {
         if (!player || !player.isPlayer()) return;
 
         this.world.removePlayer(player as ServerPlayerEntity);
-        this.uuidToPlayer.delete(uuid);
+        this.server.playerManager.removePlayer(uuid);
         this.channel.send(new PlayerDisconnectS2CPacket(uuid, 'Logout'));
 
         console.log(`Player disconnected with uuid: ${uuid}`);
@@ -224,14 +226,6 @@ export class ServerPlayNetworkHandler {
         }
 
         return false;
-    }
-
-    public getPlayerByUUID(uuid: UUID) {
-        return this.uuidToPlayer.get(uuid) ?? null;
-    }
-
-    public getPlayerBySessionId(id: number) {
-        return this.sessionIdToPlayer.get(id) ?? null;
     }
 
     public registryHandler() {

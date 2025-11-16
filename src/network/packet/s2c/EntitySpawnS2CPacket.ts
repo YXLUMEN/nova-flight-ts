@@ -56,7 +56,7 @@ export class EntitySpawnS2CPacket implements Payload {
 
         return new this(
             entity.getId(),
-            entity.getUuid(),
+            entity.getUUID(),
             entity.getPositionRef.x,
             entity.getPositionRef.y,
             yaw,

@@ -3,7 +3,6 @@ import type {ServerWorld} from "../ServerWorld.ts";
 import {ServerTechTree} from "../../tech/ServerTechTree.ts";
 import type {World} from "../../world/World.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
-import {WorldConfig} from "../../configs/WorldConfig.ts";
 import type {ItemStack} from "../../item/ItemStack.ts";
 import {clamp} from "../../utils/math/math.ts";
 import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
@@ -12,6 +11,7 @@ import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 import type {PlayerProfile} from "./PlayerProfile.ts";
+import {type DamageSource} from "../../entity/damage/DamageSource.ts";
 
 
 export class ServerPlayerEntity extends PlayerEntity {
@@ -35,7 +35,7 @@ export class ServerPlayerEntity extends PlayerEntity {
 
         if (this.changedItems.size > 0) {
             const packet = new InventoryS2CPacket(0, this.nextRevision(), this.changedItems);
-            (this.getNetworkChannel() as ServerNetworkChannel).sendTo(packet, this.getUuid());
+            (this.getNetworkChannel() as ServerNetworkChannel).sendTo(packet, this.getUUID());
             this.changedItems.clear();
         }
     }
@@ -67,10 +67,12 @@ export class ServerPlayerEntity extends PlayerEntity {
     }
 
     protected override tickInventory(world: World) {
+        const isDev = this.getProfile().isDevMode();
+
         for (const [item, stack] of this.items) {
             if (item instanceof SpecialWeapon) {
                 const key = this.weaponKeys.get(item)!;
-                if (WorldConfig.devMode && item.getCooldown(stack) > 0.5) {
+                if (isDev && item.getCooldown(stack) > 0.5) {
                     item.setCooldown(stack, 0.5);
                     this.changedItems.add(stack);
                 }
@@ -86,6 +88,15 @@ export class ServerPlayerEntity extends PlayerEntity {
         this.changedItems.add(itemStack);
     }
 
+    public override isInvulnerableTo(damageSource: DamageSource): boolean {
+        return super.isInvulnerableTo(damageSource) || this.getProfile().isDevMode();
+    }
+
+    public override kill() {
+        if (this.getProfile().isDevMode()) return;
+        super.kill();
+    }
+
     public override addScore(score: number) {
         super.addScore(score);
         (this.getWorld() as ServerWorld).addPhase(score);
@@ -93,7 +104,7 @@ export class ServerPlayerEntity extends PlayerEntity {
 
     public override setScore(score: number) {
         super.setScore(score);
-        (this.getNetworkChannel() as ServerNetworkChannel).sendTo(new PlayerSetScoreS2CPacket(score), this.getUuid());
+        (this.getNetworkChannel() as ServerNetworkChannel).sendTo(new PlayerSetScoreS2CPacket(score), this.getUUID());
     }
 
     public nextRevision(): number {
@@ -115,11 +126,15 @@ export class ServerPlayerEntity extends PlayerEntity {
         }
     }
 
+    public getProfile(): PlayerProfile {
+        return this.playerProfile;
+    }
+
     protected override getPermissionLevel(): number {
         return (this.getWorld() as ServerWorld).isMainPlayer(this) ? 9 : super.getPermissionLevel();
     }
 
     public override sendMessage(msg: string) {
-        (this.getNetworkChannel() as ServerNetworkChannel).sendTo(new GameMessageS2CPacket(msg), this.getUuid());
+        (this.getNetworkChannel() as ServerNetworkChannel).sendTo(new GameMessageS2CPacket(msg), this.getUUID());
     }
 }

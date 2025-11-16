@@ -68,7 +68,7 @@ export class DecoyEntity extends Entity implements IOwnable {
 
     public setOwner(entity: Entity | null): void {
         if (entity) {
-            this.ownerUuid = entity.getUuid();
+            this.ownerUuid = entity.getUUID();
             this.owner = entity;
         }
     }

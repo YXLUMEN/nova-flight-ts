@@ -1,4 +1,4 @@
-import {StringRange} from "../StringRange.ts";
+import {StringRange} from "../context/StringRange.ts";
 import type {Suggestion} from "./Suggestion.ts";
 
 export class Suggestions {

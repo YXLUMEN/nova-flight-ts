@@ -1,6 +1,5 @@
 import {ClientNetwork} from "../client/network/ClientNetwork.ts";
 import {ServerNetwork} from "../server/network/ServerNetwork.ts";
-import {WorldConfig} from "../configs/WorldConfig.ts";
 import {IntegratedServer} from "../server/IntegratedServer.ts";
 
 let server: IntegratedServer | null = null;
@@ -35,11 +34,6 @@ async function handleEvent(event: MessageEvent) {
             const world = server?.world;
             if (!world) return;
             world.setTicking(false);
-            break;
-        }
-        case 'switch_dev_mode': {
-            WorldConfig.devMode = !payload.dev;
-            WorldConfig.usedDevMode = true;
             break;
         }
         case 'loaded_save_data':

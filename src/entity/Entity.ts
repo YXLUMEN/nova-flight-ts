@@ -76,7 +76,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         this.id = id;
     }
 
-    public getUuid(): UUID {
+    public getUUID(): UUID {
         return this.uuid;
     }
 
@@ -101,6 +101,11 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     }
 
     protected onRemove() {
+    }
+
+    public kill(): void {
+        const damage = this.getWorld().getDamageSources().kill();
+        this.onDeath(damage);
     }
 
     public getNormalTags(): Set<string> {

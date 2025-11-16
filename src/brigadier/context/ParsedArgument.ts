@@ -1,4 +1,4 @@
-import {StringRange} from "../StringRange.ts";
+import {StringRange} from "./StringRange.ts";
 
 // @ts-ignore
 export class ParsedArgument<S, T> {

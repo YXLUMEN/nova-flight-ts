@@ -26,11 +26,10 @@ export class KillCommand {
 
                             let count = 0;
                             const entities = selector.getEntities(ctx.source);
-                            const damage = world.getDamageSources().removed();
                             for (const entity of entities) {
                                 if (!entity) continue;
                                 count++;
-                                entity.onDeath(damage);
+                                entity.kill();
                             }
 
                             if (count === 0) {
@@ -39,28 +38,18 @@ export class KillCommand {
 
                             ctx.source.outPut.sendMessage(`Kill ${count} entities`);
                         })
-                )
-                .then(
-                    literal<T>('mobs')
-                        .executes(ctx => {
-                            const world = ctx.source.getWorld();
-                            if (!world) throw new CommandError("No world was found.");
-                            if (world.isClient) return;
-
-                            let count = 0;
-                            world.getMobs().forEach(mob => {
-                                mob.discard();
-                                count++;
-                            });
-
-                            if (count === 0) {
-                                throw new CommandError('\x1b[33mNo target founded.', 'warning');
-                            }
-                            ctx.source.outPut.sendMessage(`Kill ${count} mobs`);
+                        .requires(source => {
+                            return source.hasPermissionLevel(8);
                         })
                 )
+                .executes(ctx => {
+                    const world = ctx.source.getWorld();
+                    const entity = ctx.source.entity;
+                    if (!world || world.isClient || !entity) return;
+                    entity.kill();
+                })
                 .requires(source => {
-                    return source.hasPermissionLevel(8);
+                    return source.hasPermissionLevel(5);
                 })
         );
     }

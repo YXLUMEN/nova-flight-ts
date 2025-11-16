@@ -12,8 +12,9 @@ import type {MobEntity} from "../mob/MobEntity.ts";
 export class DamageSources {
     private readonly registry: Registry<DamageType>;
     private readonly _generic: DamageSource;
-    private readonly _laser: DamageSource;
     private readonly _removed: DamageSource;
+    private readonly _kill: DamageSource;
+    private readonly _laser: DamageSource;
     private readonly _void: DamageSource;
     private readonly _onFire: DamageSource;
     private readonly _explosion: DamageSource;
@@ -21,8 +22,9 @@ export class DamageSources {
     public constructor(registryManager: RegistryManager) {
         this.registry = registryManager.get(RegistryKeys.DAMAGE_TYPE);
         this._generic = this.create(DamageTypes.GENERIC);
-        this._laser = this.create(DamageTypes.LASER);
         this._removed = this.create(DamageTypes.REMOVED);
+        this._kill = this.create(DamageTypes.KILL);
+        this._laser = this.create(DamageTypes.LASER);
         this._void = this.create(DamageTypes.VOID);
         this._onFire = this.create(DamageTypes.ON_FIRE);
         this._explosion = this.create(DamageTypes.EXPLOSION);
@@ -80,6 +82,10 @@ export class DamageSources {
 
     public removed() {
         return this._removed;
+    }
+
+    public kill() {
+        return this._kill;
     }
 
     public void(attacker: PlayerEntity | null) {

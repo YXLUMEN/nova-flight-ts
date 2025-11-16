@@ -138,7 +138,13 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public isMainPlayer(player: ServerPlayerEntity): boolean {
-        return this.server.isMainPlayer(player.getUuid());
+        return this.server.getMainPlayerUUID() === player.getUUID();
+    }
+
+    public getMainPlayer() {
+        const uuid: UUID | null = this.server.getMainPlayerUUID();
+        if (!uuid) return null;
+        return this.players.get(uuid) ?? null;
     }
 
     public spawnEntity(entity: Entity): boolean {
@@ -154,7 +160,7 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public spawnPlayer(player: ServerPlayerEntity): void {
-        const playerUUID: UUID = player.getUuid();
+        const playerUUID: UUID = player.getUUID();
 
         if (this.playerData.has(playerUUID)) {
             const nbt = this.playerData.get(playerUUID);
@@ -172,7 +178,7 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public removePlayer(player: ServerPlayerEntity): void {
-        if (this.players.delete(player.getUuid())) {
+        if (this.players.delete(player.getUUID())) {
             this.entityManager.remove(player);
         }
     }
@@ -234,7 +240,7 @@ export class ServerWorld extends World implements NbtSerializable {
 
     public override playSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
         if (entity instanceof PlayerEntity) {
-            this.getNetworkChannel().sendExclude(new SoundEventS2CPacket(sound, volume, pitch, false), entity.getUuid());
+            this.getNetworkChannel().sendExclude(new SoundEventS2CPacket(sound, volume, pitch, false), entity.getUUID());
             return;
         }
         this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, false));
@@ -242,7 +248,7 @@ export class ServerWorld extends World implements NbtSerializable {
 
     public override playLoopSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
         if (entity instanceof PlayerEntity) {
-            this.getNetworkChannel().sendExclude(new SoundEventS2CPacket(sound, volume, pitch, true), entity.getUuid());
+            this.getNetworkChannel().sendExclude(new SoundEventS2CPacket(sound, volume, pitch, true), entity.getUUID());
             return;
         }
         this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, false));
@@ -258,7 +264,7 @@ export class ServerWorld extends World implements NbtSerializable {
 
     public spawnEffect(source: Entity | null, effect: VisualEffect): void {
         if (source instanceof PlayerEntity) {
-            this.getNetworkChannel().sendExclude(new EffectCreateS2CPacket(effect), source.getUuid());
+            this.getNetworkChannel().sendExclude(new EffectCreateS2CPacket(effect), source.getUUID());
             return;
         }
         this.getNetworkChannel().send(new EffectCreateS2CPacket(effect));
@@ -388,7 +394,7 @@ export class ServerWorld extends World implements NbtSerializable {
         stopTicking: (entity: Entity) => {
             this.entities.remove(entity);
             this.trackedEntities.delete(entity.getId());
-            this.getNetworkChannel().send(new EntityRemoveS2CPacket(entity.getId(), entity.getUuid()));
+            this.getNetworkChannel().send(new EntityRemoveS2CPacket(entity.getId(), entity.getUUID()));
         },
 
         startTracking: (_entity: Entity) => {

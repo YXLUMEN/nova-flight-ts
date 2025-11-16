@@ -1,6 +1,6 @@
 import {Suggestion} from "./Suggestion.ts";
 import {Suggestions} from "./Suggestions.ts";
-import {StringRange} from "../StringRange.ts";
+import {StringRange} from "../context/StringRange.ts";
 
 export class SuggestionsBuilder {
     public readonly input: string;
