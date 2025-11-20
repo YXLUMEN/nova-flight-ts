@@ -67,7 +67,7 @@ export class HUD implements IUi {
         ctx.fillText(`分数: ${player.getScore()}`, x, y);
         y += 20;
 
-        if (player.profile.isDevMode()) {
+        if (player.isDevMode()) {
             ctx.fillText('已启用dev模式,将不再记录成绩', x, y);
             y += 20;
         }

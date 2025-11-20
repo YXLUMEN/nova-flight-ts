@@ -92,7 +92,11 @@ export class KeyboardInput implements IInput {
                 return;
             }
             if ((code === 'Slash' || code === 'KeyT') && !commandManager.isShow()) {
-                if (code==='KeyT') event.preventDefault();
+                if (code === 'Slash' && commandManager.getInput().length > 0) {
+                    event.preventDefault();
+                }
+                if (code === 'KeyT') event.preventDefault();
+
                 commandManager.switchPanel(true);
                 this.setDisabled(true);
             }

@@ -14,3 +14,6 @@ export class CommandError extends Error {
         this.category = category;
     }
 }
+
+export class PacketTooLargeError extends Error {
+}

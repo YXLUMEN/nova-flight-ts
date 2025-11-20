@@ -38,14 +38,10 @@ export class DevModCommand {
             throw new IllegalArgumentError('Target not a player');
         }
 
-        const server = source.getWorld()!.getServer()!;
-        const profile = server.playerManager.getProfileByUUID(entity.getUUID());
-        if (!profile) throw new IllegalArgumentError('Target player no found');
-
-        profile.setDevMode(bool ?? !profile.isDevMode());
+        entity.setDevMode(bool ?? !entity.isDevMode());
         (source.getWorld() as ServerWorld)?.getNetworkChannel().sendTo(
-            new SyncPlayerProfileS2CPacket(profile.isDevMode()),
-            profile.clientId
+            new SyncPlayerProfileS2CPacket(entity.isDevMode()),
+            entity.getProfile().clientId
         );
 
         source.outPut.sendMessage(`Set dev mode \x1b[32m${bool}`);

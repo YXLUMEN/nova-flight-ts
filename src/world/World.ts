@@ -19,7 +19,7 @@ import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {ClientWorld} from "../client/ClientWorld.ts";
 import {EntityType} from "../entity/EntityType.ts";
-import type {INetworkChannel} from "../network/INetworkChannel.ts";
+import type {Channel} from "../network/Channel.ts";
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 
 export abstract class World {
@@ -174,7 +174,7 @@ export abstract class World {
         return this.registryManager;
     }
 
-    public abstract getNetworkChannel(): INetworkChannel;
+    public abstract getNetworkChannel(): Channel;
 
     public sendPacket(payload: Payload) {
         this.getNetworkChannel().send(payload);

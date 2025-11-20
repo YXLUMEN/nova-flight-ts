@@ -29,6 +29,8 @@ export class ClientCommandPanel {
         }
         this.commandPanel.scrollTop = this.commandPanel.scrollHeight;
 
+        if (this.isShow) return;
+
         const timer = setTimeout(() => {
             msg.classList.add('hidden');
             this.hiddenTimer.delete(timer);

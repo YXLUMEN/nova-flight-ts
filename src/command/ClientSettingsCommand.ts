@@ -54,20 +54,25 @@ export class ClientSettingsCommand {
                                 )
                         )
                         .then(
-                            literal<T>('username')
+                            literal<T>('open')
+                                .executes(() => invoke('set_open'))
+                        )
+                        .then(
+                            literal<T>('playerName')
                                 .then(
-                                    argument<T, string>('username', NormalStringArgumentType.normalString())
+                                    argument<T, string>('playerName', NormalStringArgumentType.normalString())
                                         .executes(ctx => {
-                                            const arg = ctx.args.get('username');
+                                            const arg = ctx.args.get('playerName');
                                             if (!arg) return;
 
-                                            const username = String(arg.result);
-                                            if (username.length < 1) {
+                                            const playerName = String(arg.result);
+                                            if (playerName.length < 1) {
                                                 throw new IllegalArgumentError('\x1b[31mUsername cannot be empty');
                                             }
 
-                                            localStorage.setItem('username', username);
-                                            ctx.source.addMessage(`Set username to: \x1b[32m"${username}"`);
+                                            localStorage.setItem('playerName', playerName);
+                                            ctx.source.getClient().playerName = playerName;
+                                            ctx.source.addMessage(`Set playerName to: \x1b[32m"${playerName}"`);
                                         })
                                 )
                         )
@@ -87,21 +92,31 @@ export class ClientSettingsCommand {
                                 })
                         )
                         .then(
-                            literal<T>('username')
+                            literal<T>('open')
+                                .executes(async ctx => {
+                                    const isOpen = await invoke('is_open');
+                                    let message = isOpen ?
+                                        `World is open on \x1b[32m"${WorldConfig.port}"` :
+                                        `No open on web`;
+                                    ctx.source.addMessage(message);
+                                })
+                        )
+                        .then(
+                            literal<T>('playerName')
                                 .executes(ctx => {
-                                    const username = localStorage.getItem('username') ?? '<null>';
-                                    ctx.source.addMessage(`Current username is: \x1b[32m"${username}"`);
+                                    const playerName = localStorage.getItem('playerName') ?? '<null>';
+                                    ctx.source.addMessage(`Current playerName is: \x1b[32m"${playerName}"`);
                                 })
                         )
                 )
                 .then(
                     literal<T>('clear')
                         .then(
-                            literal<T>('username')
+                            literal<T>('playerName')
                                 .executes(ctx => {
-                                    const username = localStorage.getItem('username') ?? '<null>';
-                                    localStorage.removeItem('username');
-                                    ctx.source.addMessage(`\x1b[32mClear username, used be: ${username}`);
+                                    const playerName = localStorage.getItem('playerName') ?? '<null>';
+                                    localStorage.removeItem('playerName');
+                                    ctx.source.addMessage(`\x1b[32mClear playerName, used be: ${playerName}`);
                                 })
                         )
                 )

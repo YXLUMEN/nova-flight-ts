@@ -1,4 +1,4 @@
-use crate::network::session::Session;
+use crate::network::session::{Session, NEXT_SESSION_ID};
 use crate::network::states::{RelayState, Role, ServerHandle, ServerManager, Tx};
 use crate::network::util::{format_uuid, parse_excludes, read_var_uint};
 use bytes::{Buf, BufMut, BytesMut};
@@ -7,6 +7,7 @@ use futures_util::stream::SplitStream;
 use futures_util::{SinkExt, StreamExt};
 use log::{error, info, warn};
 use rand::RngCore;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{mpsc, oneshot, Mutex, OnceCell};
@@ -15,8 +16,9 @@ use tokio_tungstenite::tungstenite::{Bytes, Message};
 use tokio_tungstenite::{accept_async, WebSocketStream};
 
 static SERVER_MANAGER: OnceCell<Mutex<ServerManager>> = OnceCell::const_new();
+static OPEN_FLAG: OnceCell<AtomicBool> = OnceCell::const_new();
 
-const MAX_PAYLOAD_LEN: usize = 64 * 1024; // 64 KB upper bound for a single frame
+const MAX_PAYLOAD_LEN: usize = 4096; // 64 KB upper bound for a single frame
 const MAX_EXCLUDES: u32 = 16; // exclude uuid count
 const MAX_BACKOFF: Duration = Duration::from_secs(5);
 
@@ -30,6 +32,11 @@ pub async fn start_server(port: u16) -> Result<[u8; 32], String> {
             })
         })
         .await;
+
+    OPEN_FLAG
+        .get_or_init(|| async { AtomicBool::new(false) })
+        .await
+        .store(false, Ordering::SeqCst);
 
     let mut guard = state_cell.lock().await;
     if let Some(handle) = guard.handle.as_ref() {
@@ -81,6 +88,22 @@ pub async fn stop_server() -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+pub fn set_open() {
+    if let Some(flag) = OPEN_FLAG.get() {
+        flag.store(true, Ordering::SeqCst);
+    }
+}
+
+#[tauri::command]
+pub fn is_open() -> bool {
+    if let Some(flag) = OPEN_FLAG.get() {
+        return flag.load(Ordering::SeqCst);
+    }
+
+    false
+}
+
 async fn run_ws_server(
     listener: TcpListener,
     state: Arc<RelayState>,
@@ -98,9 +121,16 @@ async fn run_ws_server(
                 }
                 accept_res = listener.accept(), if !state.is_shutdown() => {
                     match accept_res {
-                    Ok((stream, _)) => {
+                    Ok((stream,address)) => {
                         consecutive_errors = 0;
                         backoff = Duration::from_millis(100);
+
+                        let is_local = address.ip().is_loopback();
+                        if !is_open() && !is_local {
+                            warn!("Rejected non-local connection from {}", address);
+                            continue;
+                        }
+
                         let state = state.clone();
                         tokio::spawn(async move { handle_connection(stream, state).await; });
                     }
@@ -119,7 +149,7 @@ async fn run_ws_server(
         }}
     }
 
-    // Global cleanup on server shutdown
+    // 兜底清理
     state.clear_server().await;
     state.clients.clear();
     info!("Relay server shutdown");
@@ -222,6 +252,7 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
         }
     }
 
+    NEXT_SESSION_ID.deallocate(session.session_id);
     drop(session);
     if let Err(e) = send_task.await {
         info!("Send task panicked: {}", e);
@@ -280,7 +311,12 @@ async fn register_session(
                 return Err("Server secret mismatch");
             }
 
-            let session = Session::new(tx, Role::Server, None);
+            let session_id = NEXT_SESSION_ID.allocate();
+            if session_id.is_none() {
+                return Err("No session id allocated");
+            }
+
+            let session = Session::new(tx, Role::Server, None, session_id.unwrap());
             state.register_server(session.clone()).await?;
 
             let registry_msg = format!("INFO:REGISTERED:{}", session.session_id);
@@ -306,7 +342,13 @@ async fn register_session(
                     Err("Duplicate client UUID")
                 }
                 Entry::Vacant(v) => {
-                    let session = Session::new(tx, Role::Client, Some(client_id));
+                    let session_id = NEXT_SESSION_ID.allocate();
+                    if session_id.is_none() {
+                        return Err("No session id allocated");
+                    }
+
+                    let session =
+                        Session::new(tx, Role::Client, Some(client_id), session_id.unwrap());
                     v.insert(session.clone());
 
                     let registry_msg = format!("INFO:REGISTERED:{}", session.session_id);

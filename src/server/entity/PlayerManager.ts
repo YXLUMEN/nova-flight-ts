@@ -1,18 +1,18 @@
 import type {UUID} from "../../apis/types.ts";
-import {PlayerProfile} from "./PlayerProfile.ts";
-import type {NovaFlightServer} from "../NovaFlightServer.ts";
+import {GameProfile} from "./GameProfile.ts";
+import {ServerPlayerEntity} from "./ServerPlayerEntity.ts";
+import {Optional} from "../../utils/Optional.ts";
+import {NbtCompound} from "../../nbt/NbtCompound.ts";
 
 export class PlayerManager {
-    // @ts-ignore
-    private readonly server: NovaFlightServer;
-    private readonly uuidToPlayer: Map<UUID, PlayerProfile> = new Map();
-    private readonly sessionIdToPlayer: Map<number, PlayerProfile> = new Map();
+    private readonly uuidToPlayer: Map<UUID, GameProfile> = new Map();
+    private readonly sessionIdToPlayer: Map<number, GameProfile> = new Map();
 
-    public constructor(server: NovaFlightServer) {
-        this.server = server;
+    public loadPlayerData(_player: ServerPlayerEntity): Optional<NbtCompound> {
+        return Optional.empty();
     }
 
-    public addPlayer(profile: PlayerProfile): boolean {
+    public addPlayer(profile: GameProfile): boolean {
         if (this.uuidToPlayer.has(profile.clientId)) return false;
 
         this.uuidToPlayer.set(profile.clientId, profile);
@@ -30,11 +30,11 @@ export class PlayerManager {
         return true;
     }
 
-    public getProfileByUUID(uuid: UUID): PlayerProfile | null {
+    public getProfileByUUID(uuid: UUID): GameProfile | null {
         return this.uuidToPlayer.get(uuid) ?? null;
     }
 
-    public getProfileBySessionId(sessionId: number): PlayerProfile | null {
+    public getProfileBySessionId(sessionId: number): GameProfile | null {
         return this.sessionIdToPlayer.get(sessionId) ?? null;
     }
 

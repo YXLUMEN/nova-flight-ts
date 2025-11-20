@@ -17,6 +17,7 @@ pub enum Role {
 pub struct RelayState {
     pub server: RwLock<Option<Arc<Session>>>,
     pub clients: DashMap<[u8; 16], Arc<Session>>,
+    // session_id_to_client
     shutting_down: AtomicBool,
 }
 

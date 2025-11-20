@@ -1,7 +1,8 @@
 use crate::network::states::{Role, Tx};
-use std::sync::atomic::{AtomicU16, Ordering};
-use std::sync::Arc;
-static NEXT_SESSION_ID: AtomicU16 = AtomicU16::new(1);
+use std::collections::VecDeque;
+use std::sync::{Arc, LazyLock, Mutex};
+
+pub static NEXT_SESSION_ID: LazyLock<SessionAllocator> = LazyLock::new(|| SessionAllocator::new());
 
 #[derive(Debug)]
 pub struct Session {
@@ -11,23 +12,61 @@ pub struct Session {
     pub session_id: u16,
 }
 
+#[derive(Default)]
+struct SessionAllocatorInner {
+    free_ids: VecDeque<u16>,
+    next_id: u16,
+}
+
+pub struct SessionAllocator {
+    inner: Arc<Mutex<SessionAllocatorInner>>,
+}
+
+impl SessionAllocator {
+    fn new() -> SessionAllocator {
+        Self {
+            inner: Arc::new(Mutex::new(SessionAllocatorInner::default())),
+        }
+    }
+
+    pub fn allocate(&self) -> Option<u16> {
+        let mut inner = self.inner.lock().unwrap();
+
+        if let Some(id) = inner.free_ids.pop_front() {
+            return Some(id);
+        }
+
+        if inner.next_id == u16::MAX {
+            return None;
+        }
+
+        let id = inner.next_id;
+        inner.next_id = inner.next_id.wrapping_add(1);
+
+        if inner.next_id == 0 {
+            inner.next_id = 1;
+        }
+
+        Some(id)
+    }
+
+    pub fn deallocate(&self, id: u16) {
+        if id == 0 {
+            return;
+        }
+
+        let mut inner = self.inner.lock().unwrap();
+        inner.free_ids.push_back(id);
+    }
+}
+
 impl Session {
-    pub fn new(tx: Tx, role: Role, client_id: Option<[u8; 16]>) -> Arc<Self> {
+    pub fn new(tx: Tx, role: Role, client_id: Option<[u8; 16]>, session_id: u16) -> Arc<Self> {
         Arc::new(Session {
             tx,
             role,
             client_id,
-            session_id: allocate_session_id(),
+            session_id,
         })
-    }
-}
-
-fn allocate_session_id() -> u16 {
-    let id = NEXT_SESSION_ID.fetch_add(1, Ordering::Relaxed);
-    if id == u16::MAX {
-        NEXT_SESSION_ID.store(1, Ordering::Relaxed);
-        1
-    } else {
-        id
     }
 }

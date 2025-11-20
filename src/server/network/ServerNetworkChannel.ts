@@ -1,12 +1,17 @@
 import {NetworkChannel} from "../../network/NetworkChannel.ts";
 import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
 import type {Payload} from "../../network/Payload.ts";
-import type {UUID} from "../../apis/types.ts";
+import type {Consumer, UUID} from "../../apis/types.ts";
 import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 import type {IServerPlayNetwork} from "./IServerPlayNetwork.ts";
+import {BinaryReader} from "../../nbt/BinaryReader.ts";
+import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
+import {Identifier} from "../../registry/Identifier.ts";
+import type {PayloadWithOrigin} from "../../network/codec/PayloadWithOrigin.ts";
 
 export class ServerNetworkChannel extends NetworkChannel implements IServerPlayNetwork {
     private readonly secretKey: Uint8Array;
+    private handler: Consumer<PayloadWithOrigin> | null = null;
 
     public constructor(url: string, secretKey: Uint8Array) {
         super(url, PayloadTypeRegistry.playS2C());
@@ -19,7 +24,7 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
 
         const writer = new BinaryWriter();
         writer.writeByte(0x12);
-        writer.writeUint16(this.sessionID);
+        writer.writeUint16(this.getSessionID());
         writer.writeUUID(target);
 
         writer.writeString(type.id.toString());
@@ -34,7 +39,7 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
 
         const writer = new BinaryWriter();
         writer.writeByte(0x13);
-        writer.writeUint16(this.sessionID);
+        writer.writeUint16(this.getSessionID());
 
         writer.writeVarUInt(excludes.length);
         for (const id of excludes) {
@@ -45,6 +50,44 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
         type.codec.encode(writer, payload);
 
         this.ws!.send(writer.toUint8Array());
+    }
+
+    private decodeWithOrigin(buf: Uint8Array): PayloadWithOrigin | null {
+        const reader = new BinaryReader(buf);
+
+        const header = reader.readByte();
+        if (header === 0x00) {
+            return {sessionId: 0, payload: RelayServerPacket.CODEC.decode(reader)}
+        }
+        if (header !== 0x10) {
+            console.warn(`${this.getSide().toUpperCase()} -> Unknown header: ${header}`);
+            return null;
+        }
+
+        const sessionId = reader.readUint16();
+        const idStr = reader.readString();
+        const id = Identifier.tryParse(idStr);
+        if (!id) return null;
+
+        const type = PayloadTypeRegistry.getGlobal(id);
+        if (!type) return null;
+
+        const payload = type.codec.decode(reader);
+        return {sessionId, payload};
+    }
+
+    protected override handleMessage(event: MessageEvent) {
+        const binary = new Uint8Array(event.data as ArrayBuffer);
+        const payload = this.decodeWithOrigin(binary);
+        if (payload && this.handler) this.handler(payload);
+    }
+
+    public setHandler(handler: Consumer<PayloadWithOrigin>) {
+        this.handler = handler;
+    }
+
+    public override clearHandlers() {
+        this.handler = null;
     }
 
     protected override getSide() {

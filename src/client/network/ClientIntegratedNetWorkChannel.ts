@@ -1,5 +1,5 @@
 import type {Consumer, UUID} from "../../apis/types.ts";
-import type {INetworkChannel} from "../../network/INetworkChannel.ts";
+import type {Channel} from "../../network/Channel.ts";
 import type {Payload, PayloadId} from "../../network/Payload.ts";
 import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
 import {HashMap} from "../../utils/collection/HashMap.ts";
@@ -7,7 +7,7 @@ import {Identifier} from "../../registry/Identifier.ts";
 import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 import {BinaryReader} from "../../nbt/BinaryReader.ts";
 
-export class ClientIntegratedNetWorkChannel implements INetworkChannel {
+export class ClientIntegratedNetWorkChannel implements Channel {
     private readonly clientId: UUID;
     private readonly worker: Worker;
 
@@ -98,5 +98,9 @@ export class ClientIntegratedNetWorkChannel implements INetworkChannel {
         } else if (event.type === "DISCONNECT") {
             this.worker.terminate();
         }
+    }
+
+    public isOpen(): boolean {
+        return true;
     }
 }

@@ -14,7 +14,7 @@ import {type NbtCompound} from "../../nbt/NbtCompound.ts";
 import {clamp} from "../../utils/math/math.ts";
 import type {TechTree} from "../../tech/TechTree.ts";
 import type {DataTrackerSerializedEntry} from "../data/DataTracker.ts";
-import type {INetworkChannel} from "../../network/INetworkChannel.ts";
+import type {Channel} from "../../network/Channel.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 
 export abstract class PlayerEntity extends LivingEntity {
@@ -31,6 +31,8 @@ export abstract class PlayerEntity extends LivingEntity {
     public voidEdge = false;
 
     private score: number = 0;
+    private isDev = false;
+    private usedDev = false;
 
     protected constructor(world: World) {
         super(EntityTypes.PLAYER, world);
@@ -60,7 +62,7 @@ export abstract class PlayerEntity extends LivingEntity {
         this.getVelocityRef.multiply(0.9);
     }
 
-    public getNetworkChannel(): INetworkChannel {
+    public getNetworkChannel(): Channel {
         return this.getWorld().getNetworkChannel();
     }
 
@@ -199,6 +201,19 @@ export abstract class PlayerEntity extends LivingEntity {
         if (remain < 0) return false;
         this.setScore(remain);
         return true;
+    }
+
+    public isDevMode(): boolean {
+        return this.isDev;
+    }
+
+    public setDevMode(value: boolean): void {
+        this.isDev = value;
+        if (value) this.usedDev = true;
+    }
+
+    public isUsedBeDev(): boolean {
+        return this.usedDev;
     }
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {

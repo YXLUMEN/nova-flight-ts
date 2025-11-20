@@ -10,18 +10,21 @@ import type {ServerNetworkChannel} from "../network/ServerNetworkChannel.ts";
 import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
-import type {PlayerProfile} from "./PlayerProfile.ts";
+import type {GameProfile} from "./GameProfile.ts";
 import {type DamageSource} from "../../entity/damage/DamageSource.ts";
+import type {ServerPlayNetworkHandler} from "../network/ServerPlayNetworkHandler.ts";
 
 
 export class ServerPlayerEntity extends PlayerEntity {
-    public readonly playerProfile: PlayerProfile;
+    public readonly playerProfile: GameProfile;
+
+    public networkHandler!: ServerPlayNetworkHandler;
     private readonly inputKeys = new Set<string>();
     private readonly changedItems: Set<ItemStack> = new Set();
 
     private revision = 0;
 
-    public constructor(world: ServerWorld, playerProfile: PlayerProfile) {
+    public constructor(world: ServerWorld, playerProfile: GameProfile) {
         super(world);
 
         this.playerProfile = playerProfile;
@@ -67,7 +70,7 @@ export class ServerPlayerEntity extends PlayerEntity {
     }
 
     protected override tickInventory(world: World) {
-        const isDev = this.getProfile().isDevMode();
+        const isDev = this.isDevMode();
 
         for (const [item, stack] of this.items) {
             if (item instanceof SpecialWeapon) {
@@ -89,11 +92,11 @@ export class ServerPlayerEntity extends PlayerEntity {
     }
 
     public override isInvulnerableTo(damageSource: DamageSource): boolean {
-        return super.isInvulnerableTo(damageSource) || this.getProfile().isDevMode();
+        return super.isInvulnerableTo(damageSource) || this.isDevMode();
     }
 
     public override kill() {
-        if (this.getProfile().isDevMode()) return;
+        if (this.isDevMode()) return;
         super.kill();
     }
 
@@ -126,12 +129,15 @@ export class ServerPlayerEntity extends PlayerEntity {
         }
     }
 
-    public getProfile(): PlayerProfile {
+    public getProfile(): GameProfile {
         return this.playerProfile;
     }
 
     protected override getPermissionLevel(): number {
-        return (this.getWorld() as ServerWorld).isMainPlayer(this) ? 9 : super.getPermissionLevel();
+        const server = this.getWorld().getServer();
+        if (!server) return 0;
+
+        return server.isHost(this.getProfile()) ? 9 : super.getPermissionLevel();
     }
 
     public override sendMessage(msg: string) {

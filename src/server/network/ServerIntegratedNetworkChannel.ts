@@ -85,4 +85,8 @@ export class ServerIntegratedNetworkChannel implements IServerPlayNetwork {
             }
         }
     }
+
+    public isOpen(): boolean {
+        return true;
+    }
 }

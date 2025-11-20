@@ -275,7 +275,7 @@ export class ClientTechTree implements TechTree {
 
         const world = this.player.getWorld();
         const score = this.player.getScore() - cost;
-        if (score < 0 && !this.player.profile.isDevMode()) return;
+        if (score < 0 && !this.player.isDevMode()) return;
 
         if (this.unlock(id)) {
             this.player.setScore(score);
@@ -456,7 +456,7 @@ export class ClientTechTree implements TechTree {
         this.state.reset();
         this.renderNodes();
 
-        player.getNetworkChannel().send(new PlayerTechResetC2SPacket(this.player.getUUID()));
+        player.getNetworkChannel().send(new PlayerTechResetC2SPacket());
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {

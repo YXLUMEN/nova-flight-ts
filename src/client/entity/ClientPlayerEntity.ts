@@ -19,10 +19,10 @@ import {encodeVelocity} from "../../utils/NetUtil.ts";
 import type {Item} from "../../item/Item.ts";
 import {AbstractClientPlayerEntity} from "./AbstractClientPlayerEntity.ts";
 import {BallisticCalculator} from "../../tech/BallisticCalculator.ts";
-import type {PlayerProfile} from "../../server/entity/PlayerProfile.ts";
+import type {GameProfile} from "../../server/entity/GameProfile.ts";
 
 export class ClientPlayerEntity extends AbstractClientPlayerEntity {
-    public readonly profile: PlayerProfile;
+    public readonly profile: GameProfile;
     public readonly input: KeyboardInput;
     public readonly bc: BallisticCalculator;
     private specialWeapons: SpecialWeapon[];
@@ -37,7 +37,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     public lockedMissile = new Set<MissileEntity>();
     private revision: number = 0;
 
-    public constructor(world: World, input: KeyboardInput, profile: PlayerProfile) {
+    public constructor(world: World, input: KeyboardInput, profile: GameProfile) {
         super(world);
 
         this.input = input;
@@ -142,7 +142,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         for (const [w, stack] of this.items) {
             if (w instanceof SpecialWeapon) {
                 const key = this.weaponKeys.get(w)!;
-                if (this.profile.isDevMode() && w.getCooldown(stack) > 0.5) {
+                if (this.isDevMode() && w.getCooldown(stack) > 0.5) {
                     w.setCooldown(stack, 0.5);
                 }
                 if (w.canFire(stack) && this.input.wasPressed(key)) {

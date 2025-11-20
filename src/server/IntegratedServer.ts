@@ -1,10 +1,17 @@
 import {NovaFlightServer} from "./NovaFlightServer.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
-import {ServerReceive} from "./network/ServerReceive.ts";
 import type {UUID} from "../apis/types.ts";
+import type {GameProfile} from "./entity/GameProfile.ts";
 
 export class IntegratedServer extends NovaFlightServer {
+    private readonly host: string;
+
+    public constructor(secretKey: Uint8Array, host: string) {
+        super(secretKey);
+        this.host = host;
+    }
+
     public static startServer(secretKey: Uint8Array, mainClientUUID: UUID) {
         if (!NovaFlightServer.instance) {
             NovaFlightServer.instance = new IntegratedServer(secretKey, mainClientUUID);
@@ -18,7 +25,6 @@ export class IntegratedServer extends NovaFlightServer {
         await manager.registerAll();
         manager.frozen();
 
-        ServerReceive.registryNetworkHandler(this.networkChannel);
         await this.startGame(manager, action === 1);
         await this.waitForStop();
     }
@@ -59,5 +65,9 @@ export class IntegratedServer extends NovaFlightServer {
     public override async saveGame(compound: NbtCompound): Promise<void> {
         const bytes = compound.toRootBinary();
         self.postMessage({type: 'write_file', payload: bytes});
+    }
+
+    public override isHost(profile: GameProfile): boolean {
+        return profile.clientId === this.host;
     }
 }

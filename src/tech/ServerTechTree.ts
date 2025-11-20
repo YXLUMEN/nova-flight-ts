@@ -26,7 +26,7 @@ export class ServerTechTree implements TechTree {
         const cost = this.state.getTech(id)?.cost;
         if (cost === undefined) return false;
 
-        const isDev = this.player.getProfile().isDevMode();
+        const isDev = this.player.isDevMode();
         const score = this.player.getScore() - cost;
         if (score < 0 && !isDev) return false;
         if (this.state.unlock(id)) {

@@ -1,7 +1,4 @@
 import type {NovaFlightServer} from "../NovaFlightServer.ts";
-import type {ServerWorld} from "../ServerWorld.ts";
-import {PacketHandlerBuilder} from "../../network/PacketHandlerBuilder.ts";
-import {PlayerAttemptLoginC2SPacket} from "../../network/packet/c2s/PlayerAttemptLoginC2SPacket.ts";
 import {PlayerFinishLoginC2SPacket} from "../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
 import {PlayerDisconnectC2SPacket} from "../../network/packet/c2s/PlayerDisconnectC2SPacket.ts";
 import {PlayerAimC2SPacket} from "../../network/packet/c2s/PlayerAimC2SPacket.ts";
@@ -17,7 +14,6 @@ import {applyServerTech} from "../../tech/applyServerTech.ts";
 import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
 import type {ServerNetworkChannel} from "./ServerNetworkChannel.ts";
 import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
-import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
 import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
 import {EntityNbtS2CPacket} from "../../network/packet/s2c/EntityNbtS2CPacket.ts";
 import {PlayerTechResetC2SPacket} from "../../network/packet/c2s/PlayerTechResetC2SPacket.ts";
@@ -26,87 +22,75 @@ import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconne
 import {CommandExecutionC2SPacket} from "../../network/packet/c2s/CommandExecutionC2SPacket.ts";
 import type {ParseResults} from "../../brigadier/ParseResults.ts";
 import type {ServerCommandSource} from "../command/ServerCommandSource.ts";
-import {PlayerProfile} from "../entity/PlayerProfile.ts";
-import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
+import {GameProfile} from "../entity/GameProfile.ts";
+import {ServerCommonNetworkHandler} from "./ServerCommonNetworkHandler.ts";
+import type {ServerWorld} from "../ServerWorld.ts";
+import {ChatMessageC2SPacket} from "../../network/packet/c2s/ChatMessageC2SPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 
-export class ServerPlayNetworkHandler {
-    private readonly server: NovaFlightServer;
-    private readonly channel: ServerNetworkChannel;
+export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
+    public readonly player: ServerPlayerEntity;
     private readonly world: ServerWorld;
+    private readonly clientId: UUID;
 
-    public constructor(server: NovaFlightServer, world: ServerWorld) {
-        this.server = server;
-        this.world = world;
-        this.channel = server.networkChannel;
+    private messageCooldown: number = 0;
+
+    private lastTickX!: number;
+    private lastTickY!: number;
+
+    public constructor(server: NovaFlightServer, channel: ServerNetworkChannel, player: ServerPlayerEntity) {
+        super(server, channel);
+
+        this.player = player;
+        player.networkHandler = this;
+
+        this.world = server.world;
+        this.clientId = player.getProfile().clientId;
+        this.syncWithPlayerPosition();
+        this.registryHandler();
     }
 
-    private onRelayServer(packet: RelayServerPacket) {
-        const parts = packet.msg.split(':');
-        const type = parts[0];
-        const msg = parts.slice(1).join(':');
+    public tick(): void {
+        this.syncWithPlayerPosition();
+        this.player.prevX = this.player.getX();
+        this.player.prevY = this.player.getY();
+        this.player.updatePosition(this.lastTickX, this.lastTickY);
+        this.player.updateYaw(this.player.getYaw());
 
-        if (type === 'INFO') this.relayInfoHandler(msg);
-    }
-
-    private relayInfoHandler(_message: string): void {
-    }
-
-    public disconnect(target: UUID, reason: string): void {
-        this.channel.sendTo(new PlayerDisconnectS2CPacket(target, reason), target);
-    }
-
-    public disconnectAllPlayer(): void {
-        for (const player of this.server.playerManager.getAllProfile()) {
-            this.disconnect(player.clientId, 'ServerClose');
+        this.baseTick();
+        if (this.messageCooldown > 0) {
+            this.messageCooldown--;
         }
     }
 
-    public async onPlayerAttemptLogin(packet: PlayerAttemptLoginC2SPacket): Promise<void> {
-        const clientId: UUID = packet.clientId;
+    private syncWithPlayerPosition() {
+        this.lastTickX = this.player.getX();
+        this.lastTickY = this.player.getY();
+    }
 
-        if (this.server.playerManager.isPlayerExists(clientId)) {
-            console.warn(`A duplicate player try to login with id ${clientId}`);
+    protected override getProfile(): GameProfile {
+        return this.player.getProfile();
+    }
+
+    public onPlayerFinishLogin(_: PlayerFinishLoginC2SPacket) {
+        const uuid: UUID = this.clientId;
+        if (this.server.playerManager.isPlayerExists(uuid)) {
             return;
         }
 
-        const profile = new PlayerProfile(packet.sessionId, packet.clientId, packet.playerName);
-        const success = this.server.playerManager.addPlayer(profile);
-        if (!success) {
-            console.warn(`Fail to login a player with id ${clientId}, check if id is duplicated`);
-            return;
-        }
-
-        const player = new ServerPlayerEntity(this.world, profile);
-        player.setUuid(clientId);
-        this.world.spawnPlayer(player);
-        this.channel.sendTo(new JoinGameS2CPacket(player.getId()), clientId);
-        this.channel.sendExclude(new GameMessageS2CPacket(`\x1b[32m${profile.playerName}\x1b[0m Join the game`), clientId);
-
-        console.log(`Player ${packet.clientId} Login`);
-    }
-
-    public onPlayerFinishLogin(packet: PlayerFinishLoginC2SPacket) {
-        const uuid: UUID = packet.uuid;
-        const player = this.world.getEntity(uuid);
-        if (!player || !this.server.playerManager.isPlayerExists(uuid)) return;
-
-        this.channel.sendTo(EntityNbtS2CPacket.create(player), uuid);
+        this.channel.sendTo(EntityNbtS2CPacket.create(this.player), uuid);
 
         const entities = this.world.getEntities().values();
         this.channel.sendTo(EntityBatchSpawnS2CPacket.create(entities), uuid);
     }
 
-    public onPlayerDisconnect(packet: PlayerDisconnectC2SPacket) {
-        const uuid: UUID = packet.uuid;
+    public onPlayerDisconnect(_: PlayerDisconnectC2SPacket) {
+        const uuid: UUID = this.clientId;
         if (!this.server.playerManager.isPlayerExists(uuid)) {
             return;
         }
 
-        const player = this.world.getEntity(uuid);
-        if (!player || !player.isPlayer()) return;
-
-        this.world.removePlayer(player as ServerPlayerEntity);
+        this.world.removePlayer(this.player);
         this.server.playerManager.removePlayer(uuid);
         this.channel.send(new PlayerDisconnectS2CPacket(uuid, 'Logout'));
 
@@ -114,89 +98,59 @@ export class ServerPlayNetworkHandler {
     }
 
     public onPlayerAim(packet: PlayerAimC2SPacket) {
-        const player = this.world.getEntity(packet.uuid);
-        if (!player) return;
-
         const pointer = packet.aim;
-        const posRef = player.getPositionRef;
-        player.setClampYaw(Math.atan2(
+        const posRef = this.player.getPositionRef;
+        this.player.setClampYaw(Math.atan2(
             pointer.y - posRef.y,
             pointer.x - posRef.x
         ), 0.3926875);
     }
 
     public onPlayerMove(packet: PlayerMoveC2SPacket | PlayerMoveByPointerC2SPacket) {
-        const uuid: UUID = packet.uuid;
-
-        const player = this.world.getEntity(uuid);
-        if (!player || !player.isPlayer()) return;
-
-        const speedMultiplier = player.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-        const speed = player.getMovementSpeed() * speedMultiplier;
-        player.updateVelocity(speed, packet.dx, packet.dy);
+        const speedMultiplier = this.player.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        const speed = this.player.getMovementSpeed() * speedMultiplier;
+        this.player.updateVelocity(speed, packet.dx, packet.dy);
     }
 
     public onPlayerInput(packet: PlayerInputC2SPacket): void {
-        const uuid: UUID = packet.uuid;
-        const key = packet.key;
-
-        const player = this.world.getEntity(uuid) as ServerPlayerEntity | null;
-        if (!player || !player.isPlayer()) return;
-        player.handlerInput(key);
+        this.player.handlerInput(packet.key);
     }
 
     public onPlayerSwitchSlot(packet: PlayerSwitchSlotC2SPacket): void {
-        const uuid: UUID = packet.uuid;
-        const slot = packet.slot;
-
-        const player = this.world.getEntity(uuid);
-        if (!player || !player.isPlayer()) return;
-
-        (player as ServerPlayerEntity).setCurrentItem(slot);
+        this.player.setCurrentItem(packet.slot);
     }
 
     public onPlayerFire(packet: PlayerFireC2SPacket): void {
-        const uuid = packet.uuid;
-        const start = packet.start;
-
-        const player = this.world.getEntity(uuid) as ServerPlayerEntity | null;
-        if (!player || !player.isPlayer()) return;
-        player.setFiring(start);
+        this.player.setFiring(packet.start);
     }
 
     public onUnlockTech(packet: PlayerUnlockTechC2SPacket): void {
-        const uuid: UUID = packet.uuid;
         const name = packet.techName;
 
-        const player = this.world.getEntity(uuid) as ServerPlayerEntity | null;
-        if (!player || !player.isPlayer()) return;
-
-        applyServerTech(name, player);
-        player.techTree.unlock(name);
+        applyServerTech(name, this.player);
+        this.player.techTree.unlock(name);
     }
 
-    public onTechRest(packet: PlayerTechResetC2SPacket): void {
-        const player = this.world.getEntity(packet.uuid);
-        if (!player || !player.isPlayer()) return;
-
-        player.techTree.resetTech();
+    public onTechRest(_: PlayerTechResetC2SPacket): void {
+        this.player.techTree.resetTech();
     }
 
-    public onRequestPosition(packet: RequestPositionC2SPacket): void {
-        const uuid: UUID = packet.playerId;
-        const player = this.world.getEntity(uuid) as ServerPlayerEntity | null;
-        if (!player) return;
-
-        this.channel.sendTo(EntityPositionForceS2CPacket.create(player), packet.playerId);
+    public onRequestPosition(_: RequestPositionC2SPacket): void {
+        this.channel.sendTo(EntityPositionForceS2CPacket.create(this.player), this.player.getUUID());
     }
 
     public onCommandExecution(packet: CommandExecutionC2SPacket): void {
-        if (this.validateMessage(packet.command, packet.uuid)) {
-            const player = this.world.getEntity(packet.uuid);
-            if (!player || !player.isPlayer()) return;
-
-            this.executeCommand(packet.command, player.getCommandSource());
+        if (this.validateMessage(packet.command)) {
+            this.executeCommand(packet.command, this.player.getCommandSource());
         }
+    }
+
+    public onChatMessage(packet: ChatMessageC2SPacket): void {
+        const message = packet.msg;
+        if (message.length > 64) return;
+        const name = this.getProfile().name;
+
+        this.channel.send(new GameMessageS2CPacket(`[${name}] ${message}`));
     }
 
     private executeCommand(command: string, source: ServerCommandSource): void {
@@ -209,9 +163,9 @@ export class ServerPlayNetworkHandler {
         return dispatcher.parse(command, source);
     }
 
-    private validateMessage(command: string, target: UUID): boolean {
+    private validateMessage(command: string): boolean {
         if (ServerPlayNetworkHandler.hasIllegalCharacter(command)) {
-            this.disconnect(target, 'Illegal Character');
+            this.disconnect('Illegal Character');
             return false;
         }
 
@@ -228,22 +182,19 @@ export class ServerPlayNetworkHandler {
         return false;
     }
 
-    public registryHandler() {
-        new PacketHandlerBuilder()
-            .add(RelayServerPacket.ID, this.onRelayServer)
-            .add(PlayerAttemptLoginC2SPacket.ID, this.onPlayerAttemptLogin)
-            .add(PlayerFinishLoginC2SPacket.ID, this.onPlayerFinishLogin)
-            .add(PlayerDisconnectC2SPacket.ID, this.onPlayerDisconnect)
-            .add(PlayerAimC2SPacket.ID, this.onPlayerAim)
-            .add(PlayerMoveC2SPacket.ID, this.onPlayerMove)
-            .add(PlayerMoveByPointerC2SPacket.ID, this.onPlayerMove)
-            .add(PlayerInputC2SPacket.ID, this.onPlayerInput)
-            .add(PlayerSwitchSlotC2SPacket.ID, this.onPlayerSwitchSlot)
-            .add(PlayerFireC2SPacket.ID, this.onPlayerFire)
-            .add(PlayerUnlockTechC2SPacket.ID, this.onUnlockTech)
-            .add(PlayerTechResetC2SPacket.ID, this.onTechRest)
-            .add(RequestPositionC2SPacket.ID, this.onRequestPosition)
-            .add(CommandExecutionC2SPacket.ID, this.onCommandExecution)
-            .register(this.server.networkChannel, this);
+    private registryHandler() {
+        this.register(PlayerFinishLoginC2SPacket.ID, this.onPlayerFinishLogin.bind(this));
+        this.register(PlayerDisconnectC2SPacket.ID, this.onPlayerDisconnect.bind(this));
+        this.register(PlayerAimC2SPacket.ID, this.onPlayerAim.bind(this));
+        this.register(PlayerMoveC2SPacket.ID, this.onPlayerMove.bind(this));
+        this.register(PlayerMoveByPointerC2SPacket.ID, this.onPlayerMove.bind(this));
+        this.register(PlayerInputC2SPacket.ID, this.onPlayerInput.bind(this));
+        this.register(PlayerSwitchSlotC2SPacket.ID, this.onPlayerSwitchSlot.bind(this));
+        this.register(PlayerFireC2SPacket.ID, this.onPlayerFire.bind(this));
+        this.register(PlayerUnlockTechC2SPacket.ID, this.onUnlockTech.bind(this));
+        this.register(PlayerTechResetC2SPacket.ID, this.onTechRest.bind(this));
+        this.register(RequestPositionC2SPacket.ID, this.onRequestPosition.bind(this));
+        this.register(CommandExecutionC2SPacket.ID, this.onCommandExecution.bind(this));
+        this.register(ChatMessageC2SPacket.ID, this.onChatMessage.bind(this));
     }
 }

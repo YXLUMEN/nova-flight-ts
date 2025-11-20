@@ -19,15 +19,22 @@ export class ClientSuggestionPopup {
     public renderPopup(suggestions: string[], tokenStart: number, tokenEnd: number) {
         const popup = document.createElement('span');
         popup.className = 'suggestion-popup';
+        popup.onclick = event => {
+            const target = event.target;
+            if (!(target instanceof HTMLElement)) return;
+
+            const item = target.closest('.suggestion-item');
+            if (!item) return;
+
+            this.applySuggestion(item.textContent!, tokenStart, tokenEnd);
+            this.popupItems = null;
+            popup.remove();
+        };
 
         suggestions.forEach(s => {
             const span = document.createElement('span');
+            span.className = 'suggestion-item';
             span.textContent = s;
-            span.onclick = () => {
-                this.applySuggestion(s, tokenStart, tokenEnd);
-                this.popupItems = null;
-                popup.remove();
-            };
             popup.appendChild(span);
         });
 

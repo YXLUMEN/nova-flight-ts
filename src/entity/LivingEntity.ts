@@ -121,6 +121,13 @@ export abstract class LivingEntity extends Entity {
         return !this.isRemoved() && this.getHealth() > 0.0;
     }
 
+    public heal(amount: number) {
+        const health = this.getHealth();
+        if (health > 0) {
+            this.setHealth(health + amount);
+        }
+    }
+
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (this.isInvulnerableTo(damageSource)) return false;
 

@@ -6,6 +6,7 @@ import {StatusEffect} from "./StatusEffect.ts";
 import {Registries} from "../../registry/Registries.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
+import {InstantHealthEffect} from "./InstantHealthEffect.ts";
 
 export class StatusEffects {
     public static readonly SPEED = this.register("speed",
@@ -31,6 +32,10 @@ export class StatusEffects {
     public static readonly HEALTH_BOOST = this.register("health_boost",
         new StatusEffect(0, '#ff3333')
             .addAttributeModifier(EntityAttributes.GENERIC_MAX_HEALTH, Identifier.ofVanilla("effect.health_boost"), 4)
+    );
+
+    public static readonly INSTANT_HEALTH = this.register("instant_health",
+        new InstantHealthEffect()
     );
 
     private static register(id: string, statusEffect: StatusEffect): RegistryEntry<StatusEffect> {

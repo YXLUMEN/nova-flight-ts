@@ -2,17 +2,17 @@ import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import {ServerNetworkChannel} from "./network/ServerNetworkChannel.ts";
 import type {Consumer, UUID} from "../apis/types.ts";
-import {ServerReceive} from "./network/ServerReceive.ts";
 import type {ServerWorld} from "./ServerWorld.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {ServerReadyS2CPacket} from "../network/packet/s2c/ServerReadyS2CPacket.ts";
-import {ServerPlayNetworkHandler} from "./network/ServerPlayNetworkHandler.ts";
 import {ServerCommandSource} from "./command/ServerCommandSource.ts";
 import type {CommandOutput} from "./command/CommandOutput.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 import {info} from "@tauri-apps/plugin-log";
 import {ServerCommandManager} from "./ServerCommandManager.ts";
 import {PlayerManager} from "./entity/PlayerManager.ts";
+import {GameProfile} from "./entity/GameProfile.ts";
+import {ServerConfigurationNetworkHandler} from "./network/ServerConfigurationNetworkHandler.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static instance: NovaFlightServer;
@@ -23,9 +23,8 @@ export abstract class NovaFlightServer implements CommandOutput {
     public readonly serverCommandManager: ServerCommandManager;
     public readonly playerManager: PlayerManager;
 
-    public networkHandler: ServerPlayNetworkHandler | null = null;
+    public networkHandler: ServerConfigurationNetworkHandler | null = null;
     public world!: ServerWorld;
-    private readonly mainClientUUID: UUID | null;
 
     private tickInterval: number | null = null;
     private last = 0;
@@ -37,13 +36,11 @@ export abstract class NovaFlightServer implements CommandOutput {
 
     private bindTick = this.tick.bind(this);
 
-    protected constructor(secretKey: Uint8Array, mainClientUUID: UUID | null) {
+    protected constructor(secretKey: Uint8Array) {
         this.serverId = crypto.randomUUID();
-        this.mainClientUUID = mainClientUUID;
 
-        this.playerManager = new PlayerManager(this);
+        this.playerManager = new PlayerManager();
         this.networkChannel = new ServerNetworkChannel("127.0.0.1:25566", secretKey);
-        ServerReceive.registryNetworkHandler(this.networkChannel);
         this.serverCommandManager = new ServerCommandManager(this.getCommandSource());
     }
 
@@ -60,9 +57,8 @@ export abstract class NovaFlightServer implements CommandOutput {
         const mod = await import("./ServerWorld.ts");
         this.world = new mod.ServerWorld(manager, this);
 
-        this.networkHandler = new ServerPlayNetworkHandler(this, this.world);
-        this.networkHandler.registryHandler();
-
+        const profile = new GameProfile(this.networkChannel.getSessionID(), this.serverId, 'Server');
+        this.networkHandler = new ServerConfigurationNetworkHandler(this, this.networkChannel, profile);
         if (readSave) {
             const saves = await this.loadSaves();
             if (saves) this.world.readNBT(saves);
@@ -71,7 +67,6 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.networkChannel.send(new ServerReadyS2CPacket());
         self.postMessage({type: 'server_start'});
 
-        this.world.setTicking(true);
         this.last = performance.now();
         this.tickInterval = setInterval(this.bindTick, 25);
     }
@@ -147,9 +142,7 @@ export abstract class NovaFlightServer implements CommandOutput {
         await this.waitWorldStop;
     }
 
-    public getMainPlayerUUID(): UUID | null {
-        return this.mainClientUUID;
-    }
+    public abstract isHost(profile: GameProfile): boolean;
 
     public getCommandSource(): ServerCommandSource {
         return new ServerCommandSource(

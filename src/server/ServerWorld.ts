@@ -137,16 +137,6 @@ export class ServerWorld extends World implements NbtSerializable {
         super.setTicking(ticking);
     }
 
-    public isMainPlayer(player: ServerPlayerEntity): boolean {
-        return this.server.getMainPlayerUUID() === player.getUUID();
-    }
-
-    public getMainPlayer() {
-        const uuid: UUID | null = this.server.getMainPlayerUUID();
-        if (!uuid) return null;
-        return this.players.get(uuid) ?? null;
-    }
-
     public spawnEntity(entity: Entity): boolean {
         if (this.isPeaceMode() && entity instanceof MobEntity) {
             return false;

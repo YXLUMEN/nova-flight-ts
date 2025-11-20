@@ -1,4 +1,4 @@
-use crate::network::wss::{start_server, stop_server};
+use crate::network::wss::{is_open, set_open, start_server, stop_server};
 
 mod network;
 mod window;
@@ -32,7 +32,12 @@ pub fn run() {
             }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![start_server, stop_server])
+        .invoke_handler(tauri::generate_handler![
+            start_server,
+            stop_server,
+            set_open,
+            is_open
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

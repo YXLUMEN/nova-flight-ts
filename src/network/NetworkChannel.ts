@@ -1,16 +1,19 @@
-import type {Payload, PayloadId} from "./Payload.ts";
+import type {Payload} from "./Payload.ts";
 import {PayloadTypeRegistry} from "./PayloadTypeRegistry.ts";
 import {BinaryWriter} from "../nbt/BinaryWriter.ts";
 import {BinaryReader} from "../nbt/BinaryReader.ts";
 import {Identifier} from "../registry/Identifier.ts";
-import {HashMap} from "../utils/collection/HashMap.ts";
 import type {Consumer} from "../apis/types.ts";
-import type {INetworkChannel} from "./INetworkChannel.ts";
+import type {Channel} from "./Channel.ts";
 import {RelayServerPacket} from "./packet/RelayServerPacket.ts";
 import {sleep} from "../utils/uit.ts";
 import {error} from "@tauri-apps/plugin-log";
+import {PacketTooLargeError} from "../apis/errors.ts";
 
-export abstract class NetworkChannel implements INetworkChannel {
+
+export abstract class NetworkChannel implements Channel {
+    public static readonly MAX_PACKET_SIZE = 4096;
+
     protected serverAddress: string;
     protected ws: WebSocket | null = null;
 
@@ -19,7 +22,6 @@ export abstract class NetworkChannel implements INetworkChannel {
     private readyPromise: Promise<void> | null = null;
 
     protected readonly registry: PayloadTypeRegistry;
-    private readonly handlers = new HashMap<Identifier, Consumer<Payload>>();
 
     protected constructor(address: string, registry: PayloadTypeRegistry) {
         this.serverAddress = address;
@@ -132,10 +134,6 @@ export abstract class NetworkChannel implements INetworkChannel {
         return false;
     }
 
-    public receive<T extends Payload>(id: PayloadId<T>, handler: Consumer<T>): void {
-        this.handlers.set(id.id, handler as Consumer<Payload>);
-    }
-
     public send<T extends Payload>(payload: T): void {
         const type = this.registry.get(payload.getId().id);
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
@@ -143,15 +141,20 @@ export abstract class NetworkChannel implements INetworkChannel {
         const writer = new BinaryWriter();
 
         writer.writeByte(this.getHeader());
-        writer.writeUint16(this.sessionID);
+        writer.writeUint16(this.getSessionID());
         writer.writeString(type.id.toString());
 
         type.codec.encode(writer, payload);
 
-        this.ws!.send(writer.toUint8Array());
+        const buffer = writer.toUint8Array();
+        if (buffer.length > NetworkChannel.MAX_PACKET_SIZE) {
+            throw new PacketTooLargeError(`Packet ${payload.getId().id} exceeds 2048 bytes`);
+        }
+
+        this.ws!.send(buffer);
     }
 
-    private decodePayload(buf: Uint8Array): Payload | null {
+    protected decodePayload(buf: Uint8Array): Payload | null {
         const reader = new BinaryReader(buf);
 
         const header = reader.readByte();
@@ -174,14 +177,9 @@ export abstract class NetworkChannel implements INetworkChannel {
         return type.codec.decode(reader);
     }
 
-    private handleMessage(event: MessageEvent) {
-        const binary = new Uint8Array(event.data as ArrayBuffer);
-        const payload = this.decodePayload(binary);
-        if (!payload) return;
+    protected abstract handleMessage(event: MessageEvent): void;
 
-        const handler = this.handlers.get(payload.getId().id);
-        if (handler) handler(payload);
-    }
+    public abstract clearHandlers(): void;
 
     public setServerAddress(address: string): void {
         this.serverAddress = address;
@@ -189,10 +187,6 @@ export abstract class NetworkChannel implements INetworkChannel {
 
     public getServerAddress() {
         return this.serverAddress;
-    }
-
-    public clearHandlers(): void {
-        this.handlers.clear();
     }
 
     public async waitConnect(): Promise<void> {
@@ -205,8 +199,12 @@ export abstract class NetworkChannel implements INetworkChannel {
         await this.readyPromise;
     }
 
-    public get sessionID() {
+    public getSessionID() {
         return this.sessionId;
+    }
+
+    public isOpen(): boolean {
+        return this.isConnected;
     }
 
     protected abstract getSide(): string;

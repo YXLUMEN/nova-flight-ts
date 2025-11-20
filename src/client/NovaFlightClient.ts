@@ -25,8 +25,8 @@ import {invoke} from "@tauri-apps/api/core";
 import {ServerWorker} from "../worker/ServerWorker.ts";
 import {ClientMultiGameManger} from "./ClientMultiGameManger.ts";
 import {ConnectInfo} from "./render/ui/ConnectInfo.ts";
-import {ClientReceive} from "./network/ClientReceive.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
+import {ClientChat} from "./command/ClientChat.ts";
 
 export class NovaFlightClient {
     private static instance: NovaFlightClient;
@@ -39,7 +39,8 @@ export class NovaFlightClient {
     public readonly clientId: UUID;
     public readonly registryManager: RegistryManager;
     public readonly clientCommandManager: ClientCommandManager;
-    public readonly playerName: string;
+    public readonly clientChat: ClientChat;
+    public playerName: string;
 
     public world: ClientWorld | null = null;
     public player: ClientPlayerEntity | null = null;
@@ -70,7 +71,7 @@ export class NovaFlightClient {
         // this.clientId = crypto.randomUUID();
 
         const playerName = localStorage.getItem('playerName');
-        if (playerName === null) throw new Error("NovaFlightClient.playerName is required");
+        if (playerName === null) throw new Error("Player name is required");
         this.playerName = playerName;
 
         this.registryManager = new RegistryManager();
@@ -81,12 +82,12 @@ export class NovaFlightClient {
             `127.0.0.1:${WorldConfig.port}`,
             this.clientId
         );
-        ClientReceive.registryNetworkHandler(this.networkChannel);
 
         this.networkHandler = new ClientPlayNetworkHandler(this);
         this.multiGameManager = new ClientMultiGameManger();
 
         this.clientCommandManager = new ClientCommandManager(this.networkHandler.getCommandSource());
+        this.clientChat = new ClientChat(this);
 
         this.input = new KeyboardInput(this.window.canvas);
         this.input.onKeyDown('world_input', this.registryInput.bind(this));
@@ -290,7 +291,7 @@ export class NovaFlightClient {
         }
 
         // Vite 规定的格式 integrated dev
-        this.server = new ServerWorker(new Worker(new URL('../worker/dev.worker.ts', import.meta.url), {
+        this.server = new ServerWorker(new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
             type: 'module',
             name: 'server',
         }));
@@ -463,7 +464,7 @@ export class NovaFlightClient {
         // 开发者模式
         if (event.ctrlKey) {
             if (code === 'KeyV') this.switchDevMode();
-            if (this.player?.profile.isDevMode() && world) this.devFunc(code, world);
+            if (this.player?.isDevMode() && world) this.devFunc(code, world);
             return;
         }
 
@@ -501,7 +502,7 @@ export class NovaFlightClient {
         const player = this.player;
         if (!player) return;
 
-        this.networkHandler.sendCommand(`/dev ${bool ?? !player.profile.isDevMode()}`);
+        this.networkHandler.sendCommand(`/dev ${bool ?? !player.isDevMode()}`);
     }
 
     private devFunc(code: string, world: ClientWorld): void {
@@ -551,7 +552,7 @@ export class NovaFlightClient {
         window.addEventListener('resize', () => {
             this.window.resize();
             if (!this.player) return;
-            this.networkChannel.send(new RequestPositionC2SPacket(this.player.getUUID()));
+            this.networkChannel.send(new RequestPositionC2SPacket());
         });
 
         this.window.canvas.addEventListener('click', event => {

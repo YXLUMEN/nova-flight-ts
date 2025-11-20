@@ -4,7 +4,7 @@ import {ClientWorld} from "../ClientWorld.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
-import type {UUID} from "../../apis/types.ts";
+import type {Consumer, UUID} from "../../apis/types.ts";
 import {EntityRemoveS2CPacket} from "../../network/packet/s2c/EntityRemoveS2CPacket.ts";
 import {EntityPositionS2CPacket} from "../../network/packet/s2c/EntityPositionS2CPacket.ts";
 import {MobAiS2CPacket} from "../../network/packet/s2c/MobAiS2CPacket.ts";
@@ -31,7 +31,6 @@ import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.
 import {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
 import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
 import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacket.ts";
-import {PacketHandlerBuilder} from "../../network/PacketHandlerBuilder.ts";
 import {PlayerFinishLoginC2SPacket} from "../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
 import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
@@ -44,7 +43,7 @@ import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2
 import {PlayerAddScoreS2CPacket} from "../../network/packet/s2c/PlayerAddScoreS2CPacket.ts";
 import {ClientCommandSource} from "../command/ClientCommandSource.ts";
 import {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
-import type {Payload} from "../../network/Payload.ts";
+import type {Payload, PayloadId} from "../../network/Payload.ts";
 import {CommandExecutionC2SPacket} from "../../network/packet/c2s/CommandExecutionC2SPacket.ts";
 import {OtherClientPlayerEntity} from "../entity/OtherClientPlayerEntity.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
@@ -53,7 +52,7 @@ import {ClientSniffingC2SPacket} from "../../network/packet/c2s/ClientSniffingC2
 import {EntityChooseTargetS2CPacket} from "../../network/packet/s2c/EntityChooseTargetS2CPacket.ts";
 import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
-import {PlayerProfile} from "../../server/entity/PlayerProfile.ts";
+import {GameProfile} from "../../server/entity/GameProfile.ts";
 import {SyncPlayerProfileS2CPacket} from "../../network/packet/s2c/SyncPlayerProfileS2CPacket.ts";
 
 export class ClientPlayNetworkHandler {
@@ -94,10 +93,8 @@ export class ClientPlayNetworkHandler {
     }
 
     public disconnect() {
-        const uuid: UUID = this.client.clientId;
-        if (!uuid) return;
         this.client.connectInfo?.setMessage('等待连接关闭...');
-        this.sendPacket(new PlayerDisconnectC2SPacket(uuid));
+        this.sendPacket(new PlayerDisconnectC2SPacket());
     }
 
     public checkServer() {
@@ -116,13 +113,13 @@ export class ClientPlayNetworkHandler {
         }, 2000);
     }
 
-    public onServerReady(_packet: ServerReadyS2CPacket) {
+    public onServerReady(_: ServerReadyS2CPacket) {
         this.stopSniff();
 
         this.loginPlayer.add(this.client.clientId);
         this.sendPacket(new PlayerAttemptLoginC2SPacket(
             this.client.clientId,
-            this.client.networkChannel.sessionID,
+            this.client.networkChannel.getSessionID(),
             this.client.playerName
         ));
     }
@@ -131,8 +128,8 @@ export class ClientPlayNetworkHandler {
         this.world = new ClientWorld(this.client.registryManager);
         await this.client.joinGame(this.world);
         if (this.client.player === null) {
-            const profile = new PlayerProfile(
-                this.client.networkChannel.sessionID,
+            const profile = new GameProfile(
+                this.client.networkChannel.getSessionID(),
                 this.client.clientId,
                 this.client.playerName
             );
@@ -144,7 +141,7 @@ export class ClientPlayNetworkHandler {
         this.client.player.setId(packet.playerEntityId);
         this.world.addEntity(this.client.player);
         this.world.setTicking(true);
-        this.sendPacket(new PlayerFinishLoginC2SPacket(this.client.clientId));
+        this.sendPacket(new PlayerFinishLoginC2SPacket());
     }
 
     public onDisconnect(packet: PlayerDisconnectS2CPacket) {
@@ -392,13 +389,13 @@ export class ClientPlayNetworkHandler {
         const player = this.client.player;
         if (!player) return;
 
-        player.profile.setDevMode(packet.devMode);
+        player.setDevMode(packet.devMode);
     }
 
     public sendCommand(input: string): boolean {
         const command = input.startsWith('/') ? input.slice(1) : input;
         if (this.parse(command).exceptions.size === 0) {
-            this.sendPacket(new CommandExecutionC2SPacket(command, this.client.clientId));
+            this.sendPacket(new CommandExecutionC2SPacket(command));
             return true;
         }
         return false;
@@ -431,40 +428,42 @@ export class ClientPlayNetworkHandler {
         this.client.networkChannel.clearHandlers();
     }
 
+    private register<T extends Payload>(id: PayloadId<T>, handler: Consumer<T>): void {
+        this.client.networkChannel.receive(id, handler as Consumer<Payload>);
+    }
+
     public registryHandler() {
-        PacketHandlerBuilder.create()
-            .add(RelayServerPacket.ID, this.onRelayServer)
-            .add(ServerReadyS2CPacket.ID, this.onServerReady)
-            .add(JoinGameS2CPacket.ID, this.onGameJoin)
-            .add(PlayerDisconnectS2CPacket.ID, this.onDisconnect)
-            .add(EntitySpawnS2CPacket.ID, this.onEntitySpawn)
-            .add(EntityRemoveS2CPacket.ID, this.onEntityRemove)
-            .add(EntityPositionS2CPacket.ID, this.onEntityPosition)
-            .add(EntityPositionForceS2CPacket.ID, this.onEntityPositionForce)
-            .add(MobAiS2CPacket.ID, this.onMobAiBehavior)
-            .add(ExplosionS2CPacket.ID, this.onExplosion)
-            .add(EntityVelocityUpdateS2CPacket.ID, this.onEntityVelocityUpdate)
-            .add(EntityTrackerUpdateS2CPacket.ID, this.onEntityTrackerUpdate)
-            .add(Rotate.ID, this.onEntity)
-            .add(MoveRelative.ID, this.onEntity)
-            .add(RotateAndMoveRelative.ID, this.onEntity)
-            .add(EntityKilledS2CPacket.ID, this.onEntityKilled)
-            .add(EntityDamageS2CPacket.ID, this.onEntityDamage)
-            .add(ParticleS2CPacket.ID, this.onParticle)
-            .add(EntityAttributesS2CPacket.ID, this.onEntityAttributes)
-            .add(MissileSetS2CPacket.ID, this.onMissileSet)
-            .add(MissileLockS2CPacket.ID, this.onMissileLock)
-            .add(EntityBatchSpawnS2CPacket.ID, this.onEntityBatchSpawn)
-            .add(EntityNbtS2CPacket.ID, this.onEntityNbt)
-            .add(InventoryS2CPacket.ID, this.onInventory)
-            .add(EffectCreateS2CPacket.ID, this.onEffectCreate)
-            .add(SoundEventS2CPacket.ID, this.onPlaySound)
-            .add(StopSoundS2CPacket.ID, this.onStopSound)
-            .add(PlayerSetScoreS2CPacket.ID, this.onPlayerScore)
-            .add(PlayerAddScoreS2CPacket.ID, this.onPlayerAddScore)
-            .add(EntityChooseTargetS2CPacket.ID, this.onMobChooseTarget)
-            .add(GameMessageS2CPacket.ID, this.onGameMessage)
-            .add(SyncPlayerProfileS2CPacket.ID, this.onSyncProfile)
-            .register(this.client.networkChannel, this);
+        this.register(RelayServerPacket.ID, this.onRelayServer.bind(this));
+        this.register(ServerReadyS2CPacket.ID, this.onServerReady.bind(this));
+        this.register(JoinGameS2CPacket.ID, this.onGameJoin.bind(this));
+        this.register(PlayerDisconnectS2CPacket.ID, this.onDisconnect.bind(this));
+        this.register(EntitySpawnS2CPacket.ID, this.onEntitySpawn.bind(this));
+        this.register(EntityRemoveS2CPacket.ID, this.onEntityRemove.bind(this));
+        this.register(EntityPositionS2CPacket.ID, this.onEntityPosition.bind(this));
+        this.register(EntityPositionForceS2CPacket.ID, this.onEntityPositionForce.bind(this));
+        this.register(MobAiS2CPacket.ID, this.onMobAiBehavior.bind(this));
+        this.register(ExplosionS2CPacket.ID, this.onExplosion.bind(this));
+        this.register(EntityVelocityUpdateS2CPacket.ID, this.onEntityVelocityUpdate.bind(this));
+        this.register(EntityTrackerUpdateS2CPacket.ID, this.onEntityTrackerUpdate.bind(this));
+        this.register(Rotate.ID, this.onEntity.bind(this));
+        this.register(MoveRelative.ID, this.onEntity.bind(this));
+        this.register(RotateAndMoveRelative.ID, this.onEntity.bind(this));
+        this.register(EntityKilledS2CPacket.ID, this.onEntityKilled.bind(this));
+        this.register(EntityDamageS2CPacket.ID, this.onEntityDamage.bind(this));
+        this.register(ParticleS2CPacket.ID, this.onParticle.bind(this));
+        this.register(EntityAttributesS2CPacket.ID, this.onEntityAttributes.bind(this));
+        this.register(MissileSetS2CPacket.ID, this.onMissileSet.bind(this));
+        this.register(MissileLockS2CPacket.ID, this.onMissileLock.bind(this));
+        this.register(EntityBatchSpawnS2CPacket.ID, this.onEntityBatchSpawn.bind(this));
+        this.register(EntityNbtS2CPacket.ID, this.onEntityNbt.bind(this));
+        this.register(InventoryS2CPacket.ID, this.onInventory.bind(this));
+        this.register(EffectCreateS2CPacket.ID, this.onEffectCreate.bind(this));
+        this.register(SoundEventS2CPacket.ID, this.onPlaySound.bind(this));
+        this.register(StopSoundS2CPacket.ID, this.onStopSound.bind(this));
+        this.register(PlayerSetScoreS2CPacket.ID, this.onPlayerScore.bind(this));
+        this.register(PlayerAddScoreS2CPacket.ID, this.onPlayerAddScore.bind(this));
+        this.register(EntityChooseTargetS2CPacket.ID, this.onMobChooseTarget.bind(this));
+        this.register(GameMessageS2CPacket.ID, this.onGameMessage.bind(this));
+        this.register(SyncPlayerProfileS2CPacket.ID, this.onSyncProfile.bind(this));
     }
 }

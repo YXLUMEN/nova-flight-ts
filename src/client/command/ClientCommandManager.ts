@@ -49,7 +49,7 @@ export class ClientCommandManager extends CommandManager {
         this.commandPanel = new ClientCommandPanel(commandPanel, commandBar, this.commandInput);
 
         commandBar.addEventListener('keydown', event => {
-            if (event.code === 'Enter') {
+            if (event.key === 'Enter') {
                 event.preventDefault();
                 const input = this.commandInput.value;
 
@@ -66,6 +66,11 @@ export class ClientCommandManager extends CommandManager {
                 }
 
                 if (input.length <= 0) return;
+                if (!input.startsWith('/')) {
+                    this.source.getClient().clientChat.sendMessage(input);
+                    this.commandInput.value = '';
+                    return;
+                }
 
                 this.usedCommands.push(input);
                 if (this.usedCommands.length > 64) {
@@ -119,11 +124,12 @@ export class ClientCommandManager extends CommandManager {
             if (event.code === 'Tab') {
                 event.preventDefault();
                 if (!this.popup.getPopups()) return;
-                // 轮询并应用
-                this.completionIndex = (this.completionIndex + 1) % this.suggestionsLength;
-                this.popup.highlightPopupItem(this.completionIndex);
 
+                // 轮询并应用
+                this.popup.highlightPopupItem(this.completionIndex);
                 const activeItem = this.popup.getActiveItem();
+                this.completionIndex = (this.completionIndex + 1) % this.suggestionsLength;
+
                 if (!activeItem) return;
 
                 this.popup.applySuggestion(
