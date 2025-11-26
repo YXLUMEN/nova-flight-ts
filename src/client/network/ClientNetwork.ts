@@ -16,6 +16,7 @@ import {CommandExecutionC2SPacket} from "../../network/packet/c2s/CommandExecuti
 import {PlayerDisconnectC2SPacket} from "../../network/packet/c2s/PlayerDisconnectC2SPacket.ts";
 import {ClientSniffingC2SPacket} from "../../network/packet/c2s/ClientSniffingC2SPacket.ts";
 import {ChatMessageC2SPacket} from "../../network/packet/c2s/ChatMessageC2SPacket.ts";
+import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPacket.ts";
 
 export class ClientNetwork {
     public static registerNetworkPacket(): void {
@@ -34,6 +35,7 @@ export class ClientNetwork {
         this.register(PlayerDisconnectC2SPacket.ID, PlayerDisconnectC2SPacket.CODEC);
         this.register(ClientSniffingC2SPacket.ID, ClientSniffingC2SPacket.CODEC);
         this.register(ChatMessageC2SPacket.ID, ChatMessageC2SPacket.CODEC);
+        this.register(PlayerReloadC2SPacket.ID, PlayerReloadC2SPacket.CODEC);
     }
 
     private static register<T extends Payload>(payloadId: PayloadId<T>, codec: PacketCodec<T>): void {

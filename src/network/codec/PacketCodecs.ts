@@ -5,6 +5,7 @@ import type {Registry} from "../../registry/Registry.ts";
 import type {IndexedIterable} from "../../utils/collection/IndexedIterable.ts";
 import {type BinaryReader} from "../../nbt/BinaryReader.ts";
 import {type BinaryWriter} from "../../nbt/BinaryWriter.ts";
+import type {FunctionReturn} from "../../apis/types.ts";
 
 export class PacketCodecs {
     public static readonly BOOL: PacketCodec<boolean> = PacketCodecs.of(
@@ -137,16 +138,16 @@ export class PacketCodecs {
         writer.writeVarUInt(size);
     }
 
-    public static registryEntry<T>(registry: Registry<T>) {
-        return this.registry(registry, (r: Registry<T>) => r.getIndexedEntries());
+    public static registryEntry<T>(registry: Registry<T>): PacketCodec<T> {
+        return this.registry(registry, (r) => r.getIndexedEntries());
     }
 
     public static registry<T, R>(
         registry: Registry<T>,
-        registryTransformer: (r: Registry<T>) => IndexedIterable<R>
+        registryTransformer: FunctionReturn<Registry<T>, IndexedIterable<R>>
     ): PacketCodec<R> {
         return {
-            encode(writer: BinaryWriter, object: R) {
+            encode(writer: BinaryWriter, object: R): Uint8Array<ArrayBufferLike> {
                 const iterable = registryTransformer(registry);
                 const id = iterable.getRawId(object);
                 if (id === undefined) throw new Error(`Object not registered`);
@@ -160,6 +161,6 @@ export class PacketCodecs {
                 if (value === null) throw new Error(`No entry at index ${i}`);
                 return value;
             }
-        }
+        } satisfies PacketCodec<R>;
     }
 }

@@ -6,7 +6,7 @@ import {RootCommandNode} from "../tree/RootCommandNode.ts";
 export abstract class ArgumentBuilder<S, T extends ArgumentBuilder<S, T>> {
     private readonly arguments = new RootCommandNode<S>();
 
-    public command!: Command<S>;
+    public command: Command<S> | null = null;
     private requirement: Predicate<S> = () => true;
 
     protected abstract getThis(): T;
@@ -27,7 +27,7 @@ export abstract class ArgumentBuilder<S, T extends ArgumentBuilder<S, T>> {
     }
 
     public getCommand(): Command<S> {
-        return this.command;
+        return this.command!;
     }
 
     public requires(requirement: Predicate<S>): T {

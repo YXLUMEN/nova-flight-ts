@@ -6,12 +6,11 @@ import type {ItemStack} from "../ItemStack.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 
 export abstract class Weapon extends Item {
-    public override inventoryTick(stack: ItemStack, _world: World, _holder: Entity): void {
+    public override inventoryTick(stack: ItemStack, _world: World, _holder: Entity, _slot: number, _selected: boolean): void {
         const cooldown = stack.getOrDefault(DataComponentTypes.COOLDOWN, 0);
         if (cooldown > 0 && this.shouldCooldown(stack)) this.setCooldown(stack, cooldown - 1);
     }
 
-    // 不会检查冷却
     public abstract tryFire(stack: ItemStack, world: World, attacker: Entity): void;
 
     public onStartFire(_stack: ItemStack, _world: World, _attacker: Entity): void {
@@ -29,7 +28,7 @@ export abstract class Weapon extends Item {
     }
 
     public getMaxCooldown(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponentTypes.MAX_COOLDOWN, 0);
+        return stack.getOrDefault(DataComponentTypes.MAX_COOLDOWN, 1);
     }
 
     public setMaxCooldown(stack: ItemStack, value: number) {

@@ -32,6 +32,8 @@ export class ClientCommandManager extends CommandManager {
 
     private readonly commandInput: HTMLInputElement;
 
+    // client + server
+    private parse: ParseResults<any>[] | null = null;
     private suggestionCache: MemoryLRU<string, Suggestion[]> = new MemoryLRU(12);
     private suggestionsLength = 0;
     private tokenStart = -1;
@@ -191,15 +193,13 @@ export class ClientCommandManager extends CommandManager {
             this.renderSuggestions(cache);
             return;
         }
+        this.parse = null;
 
         const cursor = this.commandInput.selectionStart ?? command.length;
 
         const reader = new StringReader(command);
         reader.skip();
-        if (reader.peek() === '/') {
-            // throw new IllegalArgumentError(`Unknown or invalid command "${command}", can not be "//"`);
-            return;
-        }
+        if (reader.peek() === '/') return;
         const cloneReader = StringReader.fromReader(reader);
 
         const clientResults = this.clientDispatcher.parseReader(reader, this.source);
@@ -211,8 +211,33 @@ export class ClientCommandManager extends CommandManager {
 
         const suggestions = [...clientSuggestions.getList(), ...serverSuggestions.getList()];
         this.suggestionCache.set(command, suggestions);
+        this.parse = [clientResults, serverResults];
 
         this.renderSuggestions(suggestions);
+    }
+
+    private showUsages() {
+        if (!this.parse) return;
+
+        const cursor = this.commandInput.selectionStart ?? this.commandInput.value.length;
+        const usage = [];
+
+        const clientCommandBuilder = this.parse[0].context;
+        const clientSuggestionContext = clientCommandBuilder.findSuggestionContext(cursor);
+        if (clientSuggestionContext.parent.getType() !== 0) {
+            usage.push(...this.clientDispatcher.getAllUsage(clientSuggestionContext.parent, this.source));
+        }
+
+        const commandBuilder = this.parse[1].context;
+        const suggestionContext = commandBuilder.findSuggestionContext(cursor);
+        if (suggestionContext.parent.getType() !== 0) {
+            // @ts-expect-error
+            usage.push(...this.dispatcher.getAllUsage(suggestionContext.parent, this.source));
+        }
+
+        if (usage.length > 0) {
+            this.popup.renderPopup(usage, cursor, cursor);
+        }
     }
 
     private renderSuggestions(suggestions: Suggestion[]) {
@@ -230,6 +255,10 @@ export class ClientCommandManager extends CommandManager {
         } else {
             this.resetSuggestionLen();
             this.popup.cleanPopup();
+        }
+
+        if (!this.popup.getPopups()) {
+            this.showUsages();
         }
     }
 
@@ -308,13 +337,26 @@ export class ClientCommandManager extends CommandManager {
                 this.commandPanel.addPlainMessage(`\x1b[31mNo such command: "${command}"`);
                 return;
             }
+
             const node = lastNode.node;
             const cmd = node.getCommand();
-            if (!cmd) {
-                this.commandPanel.addPlainMessage(`\x1b[31mCommand "${node.getName()}" is not executable, with command: "${command}"`);
-                return
+            if (cmd) {
+                cmd(context);
+                return;
             }
-            cmd(context);
+
+            const requiredArgs = node.getChildren()
+                .filter(child => child.getType() === 2)
+                .map(arg => arg.getName())
+                .toArray();
+
+            if (requiredArgs.length > 0) {
+                this.commandPanel.addPlainMessage(
+                    `\x1b[31mMust provide at least one argument: "${requiredArgs.join('|')}"`);
+                return;
+            }
+
+            this.commandPanel.addPlainMessage(`\x1b[31mCommand "${node.getName()}" is not executable, with command: "${command}"`);
         } catch (err) {
             console.error(`[Client] Failed to execute command for command "${command}": ${err}`);
 

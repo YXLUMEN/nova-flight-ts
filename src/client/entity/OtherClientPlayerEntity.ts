@@ -2,13 +2,14 @@ import type {World} from "../../world/World.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import type {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {AbstractClientPlayerEntity} from "./AbstractClientPlayerEntity.ts";
+import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
 
 export class OtherClientPlayerEntity extends AbstractClientPlayerEntity {
     private readonly clientVelocity = MutVec2.zero();
     private velocityLerpDivisor: number = 0;
 
     public constructor(world: World) {
-        super(world);
+        super(world, new ItemCooldownManager());
     }
 
     protected override tickInventory() {

@@ -3,7 +3,7 @@ import {InstantStatusEffect} from "./InstantStatusEffect.ts";
 
 export class InstantHealthEffect extends InstantStatusEffect {
     public constructor() {
-        super(2, '#ff2424');
+        super(0, '#ff2424');
     }
 
     public override applyUpdateEffect(entity: LivingEntity, amplifier: number): boolean {

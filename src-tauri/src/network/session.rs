@@ -9,13 +9,13 @@ pub struct Session {
     pub tx: Tx,
     pub role: Role,
     pub client_id: Option<[u8; 16]>,
-    pub session_id: u16,
+    pub session_id: u8,
 }
 
 #[derive(Default)]
 struct SessionAllocatorInner {
-    free_ids: VecDeque<u16>,
-    next_id: u16,
+    free_ids: VecDeque<u8>,
+    next_id: u8,
 }
 
 pub struct SessionAllocator {
@@ -29,14 +29,14 @@ impl SessionAllocator {
         }
     }
 
-    pub fn allocate(&self) -> Option<u16> {
+    pub fn allocate(&self) -> Option<u8> {
         let mut inner = self.inner.lock().unwrap();
 
         if let Some(id) = inner.free_ids.pop_front() {
             return Some(id);
         }
 
-        if inner.next_id == u16::MAX {
+        if inner.next_id == u8::MAX {
             return None;
         }
 
@@ -50,7 +50,7 @@ impl SessionAllocator {
         Some(id)
     }
 
-    pub fn deallocate(&self, id: u16) {
+    pub fn deallocate(&self, id: u8) {
         if id == 0 {
             return;
         }
@@ -61,7 +61,7 @@ impl SessionAllocator {
 }
 
 impl Session {
-    pub fn new(tx: Tx, role: Role, client_id: Option<[u8; 16]>, session_id: u16) -> Arc<Self> {
+    pub fn new(tx: Tx, role: Role, client_id: Option<[u8; 16]>, session_id: u8) -> Arc<Self> {
         Arc::new(Session {
             tx,
             role,

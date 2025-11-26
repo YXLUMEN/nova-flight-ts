@@ -1,7 +1,7 @@
 import {AnsiParser} from "../../utils/AnsiParser.ts";
 
 export class ClientCommandPanel {
-    private readonly hiddenTimer = new Set<number>();
+    private readonly hiddenTimer = new Set<NodeJS.Timeout>();
 
     private readonly commandPanel: HTMLDivElement;
     private readonly commandBar: HTMLLabelElement;

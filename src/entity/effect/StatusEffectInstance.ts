@@ -87,7 +87,7 @@ export class StatusEffectInstance {
     }
 
     public onApplied(entity: LivingEntity) {
-        this.type.getValue().onAppliedWithEntity(entity, this.amplifier);
+        this.type.getValue().onAppliedAt(entity, this.amplifier);
     }
 
     public onEntityRemoval(entity: LivingEntity) {

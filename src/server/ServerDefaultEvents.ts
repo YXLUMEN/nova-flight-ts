@@ -15,7 +15,7 @@ import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {DamageTypes} from "../entity/damage/DamageTypes.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import {DamageTypeTags} from "../registry/tag/DamageTypeTags.ts";
-import {Items} from "../item/items.ts";
+import {Items} from "../item/Items.ts";
 import type {LaserWeapon} from "../item/weapon/LaserWeapon.ts";
 
 export class ServerDefaultEvents {
@@ -28,9 +28,10 @@ export class ServerDefaultEvents {
 
             const attacker = damageSource.getAttacker();
             if (attacker instanceof PlayerEntity && !damageSource.isOf(DamageTypes.ON_FIRE)) {
-                if (!attacker.techTree.isUnlocked('incendiary_bullet')) return;
+                const techTree = attacker.getTechs();
+                if (!techTree.isUnlocked('incendiary_bullet')) return;
 
-                if (attacker.techTree.isUnlocked('meltdown')) {
+                if (techTree.isUnlocked('meltdown')) {
                     const effect = mob.getStatusEffect(StatusEffects.BURNING);
                     if (effect) {
                         const amplifier = Math.min(10, effect.getAmplifier() + 1);
@@ -47,7 +48,7 @@ export class ServerDefaultEvents {
             const player = damageSource.getAttacker();
             if (!(player instanceof ServerPlayerEntity)) return;
 
-            const techTree = player.techTree;
+            const techTree = player.getTechs();
 
             if (!damageSource.isIn(DamageTypeTags.NOT_GAIN_SCORE)) {
                 player.addScore(event.mob.getWorth());
@@ -95,9 +96,7 @@ export class ServerDefaultEvents {
 
         eventBus.on(EVENTS.EMP_BURST, event => {
             const player = event.entity as Entity;
-            if (!(player instanceof ServerPlayerEntity)) return;
-            const techTree = player.techTree;
-            if (techTree.isUnlocked('ele_oscillation')) {
+            if (player instanceof ServerPlayerEntity && player.getTechs().isUnlocked('ele_oscillation')) {
                 world.empBurst = event.duration;
             }
         });

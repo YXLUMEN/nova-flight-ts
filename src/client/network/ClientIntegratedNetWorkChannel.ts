@@ -32,7 +32,7 @@ export class ClientIntegratedNetWorkChannel implements Channel {
     public sniff(_url: string, retryDelay: number, maxRetries: number): Promise<boolean> {
         const {promise, resolve} = Promise.withResolvers<boolean>();
 
-        let timer: number;
+        let timer: NodeJS.Timeout;
         let retries = 1;
         const ctrl = new AbortController();
 

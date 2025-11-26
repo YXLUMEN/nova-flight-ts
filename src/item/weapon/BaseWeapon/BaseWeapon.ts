@@ -5,8 +5,82 @@ import type {ProjectileEntity} from "../../../entity/projectile/ProjectileEntity
 import type {Entity} from "../../../entity/Entity.ts";
 import type {ItemStack} from "../../ItemStack.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import type {World} from "../../../world/World.ts";
+import type {ClientWorld} from "../../../client/ClientWorld.ts";
+import type {ServerWorld} from "../../../server/ServerWorld.ts";
+import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
+import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
 
 export abstract class BaseWeapon extends Weapon {
+    public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
+        if (!attacker.isPlayer()) return;
+
+        const currentAmmo = stack.getDurability();
+        if (currentAmmo === 0) return;
+
+        if (world.isClient) {
+            this.spawnMuzzle(world as ClientWorld, attacker, this.getMuzzleParticles());
+            return;
+        }
+
+        const player = attacker as ServerPlayerEntity;
+        const manager = player.cooldownManager;
+        if (manager.isCoolingDown(this)) {
+            if (stack.getOrDefault(DataComponentTypes.RELOADING, false)) {
+                manager.set(this, 0);
+                stack.set(DataComponentTypes.RELOADING, false);
+            } else {
+                return;
+            }
+        }
+
+        stack.setDurability(currentAmmo - this.getAmmoConsume());
+        this.onFire(stack, world as ServerWorld, attacker);
+        this.setCooldown(stack, this.getFireRate(stack));
+        player.addChange(stack);
+    }
+
+    protected abstract onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void;
+
+    public onReload(player: ServerPlayerEntity, stack: ItemStack): void {
+        if (stack.getDamage() === 0) return;
+
+        const manager = player.cooldownManager;
+        if (manager.isCoolingDown(this)) return;
+
+        manager.set(this, this.getReloadTick(stack));
+        stack.set(DataComponentTypes.RELOADING, true);
+        player.addChange(stack);
+    }
+
+    protected restoreAmmo(stack: ItemStack, player: PlayerEntity) {
+        stack.set(DataComponentTypes.RELOADING, false);
+        player.cooldownManager.set(this, 0);
+        stack.setDamage(0);
+    }
+
+    private reloadAction(player: PlayerEntity, stack: ItemStack, selected: boolean): void {
+        const manager = player.cooldownManager;
+
+        if (!selected) {
+            manager.set(this, 0);
+            stack.set(DataComponentTypes.RELOADING, false);
+            return;
+        }
+
+        if (!manager.isCoolingDown(this)) {
+            this.restoreAmmo(stack, player);
+        }
+    }
+
+    public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean): void {
+        super.inventoryTick(stack, world, holder, slot, selected);
+
+        if (holder.isPlayer() && stack.getOrDefault(DataComponentTypes.RELOADING, false)) {
+            this.reloadAction(holder as PlayerEntity, stack, selected);
+        }
+    }
+
     public getFireRate(stack: ItemStack): number {
         return stack.getOrDefault(DataComponentTypes.MAX_COOLDOWN, 1);
     }
@@ -15,12 +89,46 @@ export abstract class BaseWeapon extends Weapon {
         stack.set(DataComponentTypes.MAX_COOLDOWN, clamp(fireRate, 0, 256));
     }
 
+    public getReloadTick(stack: ItemStack): number {
+        return stack.getOrDefault(DataComponentTypes.MAX_RELOAD_TIME, 0);
+    }
+
     public getBallisticSpeed(): number {
         return 0;
     }
 
-    protected setBullet(bullet: ProjectileEntity, attacker: Entity, speed: number, offset: number, maxSpread = 1, maxParticle = 4, margin = 0): void {
-        const world = bullet.getWorld();
+    protected getAmmoConsume(): number {
+        return 1;
+    }
+
+    protected getMuzzleParticles(): number {
+        return 4;
+    }
+
+    protected spawnMuzzle(world: ClientWorld, entity: Entity, particles: number): void {
+        const pos = entity.getPositionRef;
+        const yaw = entity.getYaw();
+
+        for (let i = 0; i < particles; i++) {
+            const angleOffset = rand(-0.41886, 0.41886);
+            const particleYaw = yaw + angleOffset;
+
+            const px = Math.cos(particleYaw);
+            const py = Math.sin(particleYaw);
+
+            const speed = randInt(100, 210);
+
+            world.addParticle(
+                pos.x, pos.y,
+                px * speed, py * speed,
+                rand(0.4, 0.6), rand(2, 3),
+                "#ffaa33", "#ff5454",
+                0.6, 80
+            );
+        }
+    }
+
+    protected setBullet(bullet: ProjectileEntity, attacker: Entity, speed: number, offset: number, maxSpread = 1, margin = 0): void {
         const pos = attacker.getPositionRef;
 
         const yaw = attacker.getYaw();
@@ -39,23 +147,5 @@ export abstract class BaseWeapon extends Weapon {
             pos.x + f * completeOffset + f * margin,
             pos.y + g * completeOffset + g * margin,
         );
-
-        if (maxParticle <= 0 || !world.isClient) return;
-
-        const {x: bx, y: by} = bullet.getPositionRef;
-        for (let i = 0; i < maxParticle; i++) {
-            const angleOffset = rand(-0.41886, 0.41886);
-            const particleYaw = Math.atan2(g, f) + angleOffset;
-
-            const px = Math.cos(particleYaw);
-            const py = Math.sin(particleYaw);
-
-            const speed = randInt(100, 210);
-
-            world.addParticle(
-                bx, by, px * speed, py * speed, rand(0.4, 0.6), rand(2, 3),
-                "#ffaa33", "#ff5454", 0.6, 80
-            );
-        }
     }
 }

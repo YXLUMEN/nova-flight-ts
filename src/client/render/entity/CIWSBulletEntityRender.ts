@@ -7,13 +7,10 @@ export class CIWSBulletEntityRender implements EntityRenderer<CIWSBulletEntity> 
         const x = pos.x + offsetX;
         const y = pos.y + offsetY;
 
+        const tailX = x - entity.getVelocityRef.x;
+        const tailY = y - entity.getVelocityRef.y;
+
         ctx.save();
-
-        const vx = entity.getVelocityRef.x;
-        const vy = entity.getVelocityRef.y;
-        const tailX = x - vx;
-        const tailY = y - vy;
-
         const gradient = ctx.createLinearGradient(tailX, tailY, x, y);
         gradient.addColorStop(0, "rgba(255, 200, 100, 0)");
         gradient.addColorStop(1, entity.color);

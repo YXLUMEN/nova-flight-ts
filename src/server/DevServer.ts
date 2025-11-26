@@ -4,11 +4,11 @@ import type {UUID} from "../apis/types.ts";
 
 export class DevServer extends IntegratedServer {
     private willCrash = 0;
-    private restCrash: number | null = null;
+    private restCrash: NodeJS.Timeout | null = null;
 
-    public static startServer(secretKey: Uint8Array, mainClientUUID: UUID) {
+    public static startServer(secretKey: Uint8Array, hostUUID: UUID, saveName: string) {
         if (!NovaFlightServer.instance) {
-            NovaFlightServer.instance = new DevServer(secretKey, mainClientUUID);
+            NovaFlightServer.instance = new DevServer(secretKey, hostUUID, saveName);
         }
 
         return NovaFlightServer.instance;

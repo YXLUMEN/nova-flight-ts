@@ -2,7 +2,7 @@ import {TechState} from "./TechState.ts";
 import type {Tech} from "../apis/ITech.ts";
 import {clamp} from "../utils/math/math.ts";
 import {EVENTS} from "../apis/IEvents.ts";
-import {Items} from "../item/items.ts";
+import {Items} from "../item/Items.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import {type NbtCompound} from "../nbt/NbtCompound.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";

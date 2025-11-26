@@ -66,11 +66,11 @@ export function withAlpha(hex: string, a: number): string {
     return `rgba(${c.r},${c.g},${c.b},${a.toFixed(3)})`;
 }
 
-export function rgba(hex: string, a: number): string {
-    const s = hex.replace("#", "");
+export function hexToRgba(hex: string, a: number): string {
+    const s = hex.replace('#', "");
     const n = s.length === 3
-        ? s.split("").map(c => c + c).join("")
-        : s.padEnd(6, "0").slice(0, 6);
+        ? s.split('').map(c => c + c).join("")
+        : s.padEnd(6, '0').slice(0, 6);
     const r = parseInt(n.slice(0, 2), 16);
     const g = parseInt(n.slice(2, 4), 16);
     const b = parseInt(n.slice(4, 6), 16);

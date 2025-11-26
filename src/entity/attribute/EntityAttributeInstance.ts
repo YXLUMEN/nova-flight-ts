@@ -4,6 +4,7 @@ import {Identifier} from "../../registry/Identifier.ts";
 import type {Consumer} from "../../apis/types.ts";
 import type {EntityAttributeModifier} from "./EntityAttributeModifier.ts";
 import {NbtCompound} from "../../nbt/NbtCompound.ts";
+import {HashMap} from "../../utils/collection/HashMap.ts";
 
 
 export class EntityAttributeInstance {
@@ -13,7 +14,7 @@ export class EntityAttributeInstance {
     private value: number = 0;
     private dirty: boolean = true;
 
-    private readonly idToModifiers = new Map<Identifier, EntityAttributeModifier>();
+    private readonly idToModifiers = new HashMap<Identifier, EntityAttributeModifier>();
 
     public constructor(type: RegistryEntry<EntityAttribute>, updateCallback: Consumer<EntityAttributeInstance>) {
         this.type = type;

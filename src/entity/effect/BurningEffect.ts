@@ -12,6 +12,7 @@ export class BurningEffect extends StatusEffect {
 
     public override applyUpdateEffect(entity: Entity, amplifier: number): boolean {
         const world = entity.getWorld();
+        if (world.isClient) return true;
 
         let damage: number = this.baseDps * amplifier;
         if (amplifier > 8 && entity instanceof LivingEntity) {

@@ -8,6 +8,10 @@ import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts
 import {CommandError} from "../apis/errors.ts";
 import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
 import {CommandUtil} from "./CommandUtil.ts";
+import {DoubleArgumentType} from "./argument/DoubleArgumentType.ts";
+import type {CommandContext} from "../brigadier/context/CommandContext.ts";
+import type {SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
+import type {Suggestions} from "../brigadier/suggestion/Suggestions.ts";
 
 export class MusicCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -29,6 +33,28 @@ export class MusicCommand {
                                     ctx.source.addMessage(`Start to play \x1b[32m"${event.getId()}"\x1b[0m`);
                                 })
                                 .suggests(CommandUtil.createIdentifierSuggestion(Registries.AUDIOS))
+                        )
+                )
+                .then(
+                    literal<T>('leap')
+                        .then(
+                            argument<T, number>('duration', DoubleArgumentType.double())
+                                .executes(ctx => {
+                                    const arg = ctx.args.get('duration');
+                                    if (!arg) throw new CommandError("\x1b[33m<duration> is required");
+
+                                    const time = arg.result as number;
+                                    AudioManager.leap(time);
+                                    ctx.source.addMessage(`Set music to \x1b[32m"${time.toFixed(2)}"`);
+                                })
+                                .suggests({
+                                    getSuggestions(_: CommandContext<T>, builder: SuggestionsBuilder): Promise<Suggestions> {
+                                        let duration = AudioManager.getDuration();
+                                        if (isNaN(duration)) duration = 0;
+                                        builder.suggest(duration.toString());
+                                        return builder.buildPromise();
+                                    }
+                                })
                         )
                 )
                 .then(

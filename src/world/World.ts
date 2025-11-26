@@ -28,15 +28,16 @@ export abstract class World {
 
     public readonly events: GeneralEventBus<IEvents> = GeneralEventBus.getEventBus();
     public empBurst: number = 0
+
     // ticking
     public readonly isClient: boolean;
-    protected isMultiPlayer: boolean = false;
     public stageDifficult = 1;
     public freeze = false;
     protected over = false;
     protected ticking = false;
     private readonly registryManager: RegistryManager;
     private readonly damageSources: DamageSources;
+
     // schedule
     private time = 0;
     private nextTimerId = new AtomicInteger();
@@ -63,10 +64,6 @@ export abstract class World {
         return this.isClient;
     }
 
-    public isMultiPlayerWorld(): boolean {
-        return this.isMultiPlayer;
-    }
-
     public getServer(): NovaFlightServer | null {
         return null;
     }
@@ -87,14 +84,14 @@ export abstract class World {
     public abstract addParticle(
         posX: number, posY: number, velX: number, velY: number,
         life: number, size: number,
-        colorFrom: string, colorTo: string,
+        colorFrom: string, colorTo?: string,
         drag?: number, gravity?: number
     ): void;
 
     public abstract addImportantParticle(
         posX: number, posY: number, velX: number, velY: number,
         life: number, size: number,
-        colorFrom: string, colorTo: string,
+        colorFrom: string, colorTo?: string,
         drag?: number, gravity?: number
     ): void;
 

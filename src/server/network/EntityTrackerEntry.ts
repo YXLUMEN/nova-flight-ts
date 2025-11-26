@@ -115,7 +115,7 @@ export class EntityTrackerEntry {
 
         if (this.entity instanceof LivingEntity) {
             const pending = this.entity.getAttributes().getPendingSync();
-            if (pending.size <= 0) return;
+            if (pending.size === 0) return;
 
             const packet = EntityAttributesS2CPacket.create(this.entity.getId(), pending);
             if (packet.entries.length > 0) this.sendSync(packet);

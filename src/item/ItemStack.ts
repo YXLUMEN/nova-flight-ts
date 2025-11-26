@@ -1,6 +1,6 @@
 import type {Item} from "./Item.ts";
 import type {Entity} from "../entity/Entity.ts";
-import {Items} from "./items.ts";
+import {Items} from "./Items.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import type {TagKey} from "../registry/tag/TagKey.ts";
 import {SimpleComponentMap} from "../component/SimpleComponentMap.ts";
@@ -19,6 +19,8 @@ import type {BinaryWriter} from "../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../nbt/BinaryReader.ts";
 import {ComponentChanges} from "../component/ComponentChanges.ts";
 import {ComponentMapImpl} from "../component/ComponentMapImpl.ts";
+import type {Consumer} from "../apis/types.ts";
+
 
 export class ItemStack {
     public static readonly ITEM_PACKET_CODEC = PacketCodecs.registryEntry(Registries.ITEM);
@@ -161,34 +163,42 @@ export class ItemStack {
         this.set(DataComponentTypes.ITEM_AVAILABLE, value);
     }
 
-    public isDamageable() {
+    public isDamageable(): boolean {
         return this.has(DataComponentTypes.MAX_DURABILITY) && !this.has(DataComponentTypes.UNBREAKABLE) && this.has(DataComponentTypes.DURABILITY);
     }
 
-    public isDamaged() {
-        return this.isDamageable() && this.getDamage() > 0;
+    public isDamaged(): boolean {
+        return this.isDamageable() && this.getDurability() !== this.getMaxDurability();
     }
 
     public getDamage(): number {
-        return clamp(this.components.getOrDefault(DataComponentTypes.DURABILITY, 0), 0, this.getMaxDamage());
+        return this.getMaxDurability() - this.getDurability();
     }
 
-    public setDamage(damage: number) {
-        this.components.set(DataComponentTypes.DURABILITY, clamp(damage, 0, this.getMaxCount()));
+    public setDamage(value: number): void {
+        this.setDurability(this.getMaxDurability() - value);
     }
 
-    public getMaxDamage(): number {
+    public getDurability(): number {
+        return clamp(this.components.getOrDefault(DataComponentTypes.DURABILITY, 0), 0, this.getMaxDurability());
+    }
+
+    public setDurability(value: number) {
+        this.components.set(DataComponentTypes.DURABILITY, clamp(value, 0, this.getMaxDurability()));
+    }
+
+    public getMaxDurability(): number {
         return this.components.getOrDefault(DataComponentTypes.MAX_DURABILITY, 0);
     }
 
-    public damage(amount: number, breakCallback: (item: Item) => void): void {
+    public damage(amount: number, breakCallback?: Consumer<Item>): void {
         if (!this.isDamageable() || amount <= 0) return;
 
-        const remain = this.getDamage() + amount;
-        this.setDamage(remain);
-        if (remain >= this.getMaxDamage()) {
+        const remain = this.getDurability() - amount;
+        this.setDurability(remain);
+        if (remain === 0) {
             this.decrement(1);
-            breakCallback(this.getItem());
+            if (breakCallback) breakCallback(this.getItem());
         }
     }
 

@@ -7,16 +7,17 @@ import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {CIWSBulletEntity} from "../../../entity/projectile/CIWSBulletEntity.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
+import type {ClientWorld} from "../../../client/ClientWorld.ts";
+import {clamp} from "../../../utils/math/math.ts";
 
 export class CIWS extends BaseWeapon {
     private static readonly BULLET_SPEED = 60;
 
-    public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
-        const damage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
-        for (let i = 4; i--;) {
-            const bullet = new CIWSBulletEntity(EntityTypes.CIWS_BULLET_ENTITY, world, attacker, damage);
-            this.setBullet(bullet, attacker, CIWS.BULLET_SPEED, 2, 2, 1, i * 20);
-            if (!world.isClient) (world as ServerWorld).spawnEntity(bullet);
+    public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
+        if (world.isClient) {
+            this.spawnMuzzle(world as ClientWorld, attacker, this.getMuzzleParticles());
+        } else {
+            this.onFire(stack, world as ServerWorld, attacker);
         }
 
         const increaseHeat = this.getHeat(stack) + 3;
@@ -26,8 +27,16 @@ export class CIWS extends BaseWeapon {
             this.onEndFire(stack, world, attacker);
             return;
         }
-
         this.setCooldown(stack, this.getFireRate(stack));
+    }
+
+    protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity) {
+        const damage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
+        for (let i = 4; i--;) {
+            const bullet = new CIWSBulletEntity(EntityTypes.CIWS_BULLET_ENTITY, world, attacker, damage);
+            this.setBullet(bullet, attacker, CIWS.BULLET_SPEED, 2, 2, i * 20);
+            world.spawnEntity(bullet);
+        }
     }
 
     public override onStartFire(stack: ItemStack, world: World, attacker: Entity): void {
@@ -41,8 +50,12 @@ export class CIWS extends BaseWeapon {
         stack.set(DataComponentTypes.ACTIVE, false);
     }
 
-    public override inventoryTick(stack: ItemStack, world: World, holder: Entity) {
-        super.inventoryTick(stack, world, holder);
+    protected override getMuzzleParticles(): number {
+        return 1;
+    }
+
+    public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean) {
+        super.inventoryTick(stack, world, holder, slot, selected);
 
         if (stack.getOrDefault(DataComponentTypes.ACTIVE, true)) return;
         const currentHeat = this.getHeat(stack);
@@ -80,7 +93,7 @@ export class CIWS extends BaseWeapon {
     }
 
     public setHeat(stack: ItemStack, value: number): void {
-        stack.set(DataComponentTypes.HEAT, Math.min(value, this.getMaxHeat(stack)));
+        stack.set(DataComponentTypes.HEAT, clamp(value, 0, this.getMaxHeat(stack)));
     }
 
     public override getDisplayName(): string {

@@ -92,13 +92,20 @@ export class StatusEffectCommand {
         }
 
         if (count === 0) {
-            throw new Error(`\x1b[33mTarget not found}`);
+            throw new Error(`\x1b[33mTarget not found`);
         }
     }
 
     private static removeStatus<T extends ServerCommandSource>(ctx: CommandContext<T>) {
         const selectorResult = ctx.args.get('selector');
-        if (!selectorResult) throw new CommandError("\x1b[33m<selector> is required");
+        if (!selectorResult) {
+            const target = ctx.source.entity;
+            if (target instanceof LivingEntity) {
+                target.clearStatuesEffects();
+            }
+            return;
+        }
+
         const selector = selectorResult.result;
         if (!(selector instanceof EntitySelector)) {
             throw new CommandError('');

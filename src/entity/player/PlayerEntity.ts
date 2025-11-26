@@ -8,25 +8,31 @@ import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import type {Item} from "../../item/Item.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
-import {Items} from "../../item/items.ts";
+import {Items} from "../../item/Items.ts";
 import type {EMPWeapon} from "../../item/weapon/EMPWeapon.ts";
 import {type NbtCompound} from "../../nbt/NbtCompound.ts";
 import {clamp} from "../../utils/math/math.ts";
 import type {TechTree} from "../../tech/TechTree.ts";
-import type {DataTrackerSerializedEntry} from "../data/DataTracker.ts";
+import {DataTracker, type DataTrackerSerializedEntry} from "../data/DataTracker.ts";
 import type {Channel} from "../../network/Channel.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
+import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts";
+import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
+
 
 export abstract class PlayerEntity extends LivingEntity {
-    public onDamageExplosionRadius = 320;
-    public techTree!: TechTree;
+    private static readonly SHIELD_AMOUNT = DataTracker.registerData(Object(PlayerEntity), TrackedDataHandlerRegistry.FLOAT);
 
+    public onDamageExplosionRadius = 320;
+    protected techTree: TechTree | null = null;
+
+    public readonly cooldownManager!: ItemCooldownManager;
     protected readonly items = new Map<Item, ItemStack>();
     protected readonly weaponKeys = new Map<SpecialWeapon, string>();
     protected readonly baseWeapons: BaseWeapon[] = [];
     protected currentBaseIndex: number = 0;
 
-    protected wasActive: boolean = false;
+    public wasFiring: boolean = false;
     private lastDamageTime = 0;
     public voidEdge = false;
 
@@ -34,13 +40,14 @@ export abstract class PlayerEntity extends LivingEntity {
     private isDev = false;
     private usedDev = false;
 
-    protected constructor(world: World) {
+    protected constructor(world: World, itemCooldownManager: ItemCooldownManager) {
         super(EntityTypes.PLAYER, world);
 
         this.setMovementSpeed(2);
         this.setYaw(-1.57079);
         this.setPosition(World.WORLD_W / 2, World.WORLD_H - 100);
 
+        this.cooldownManager = itemCooldownManager;
         this.addItem(Items.CANNON40_WEAPON);
         this.addItem(Items.BOMB_WEAPON);
     }
@@ -50,36 +57,40 @@ export abstract class PlayerEntity extends LivingEntity {
             .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 20);
     }
 
+    protected override initDataTracker(builder: InstanceType<typeof DataTracker.Builder>) {
+        super.initDataTracker(builder);
+        builder.add(PlayerEntity.SHIELD_AMOUNT, 0);
+    }
+
     public override tick() {
         super.tick();
 
         this.moveByVec(this.getVelocityRef);
         this.shouldWrap() ? this.wrapPosition() : this.adjustPosition();
         this.tickInventory(this.getWorld());
+        this.cooldownManager.update();
     }
 
     public override tickMovement() {
         this.getVelocityRef.multiply(0.9);
     }
 
+    protected tickInventory(world: World) {
+        for (const [w, stack] of this.items) {
+            w.inventoryTick(stack, world, this, 0, true);
+        }
+    }
+
     public getNetworkChannel(): Channel {
         return this.getWorld().getNetworkChannel();
     }
 
-    public switchWeapon(dir = 1) {
-        const stack = this.getCurrentItemStack();
-        const current = stack.getItem() as BaseWeapon;
-        current.onEndFire(stack, this.getWorld(), this);
-
-        this.wasActive = false;
-        const next = (this.currentBaseIndex + dir) % this.baseWeapons.length;
-        this.currentBaseIndex = next < 0 ? this.baseWeapons.length - 1 : next;
-    }
-
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (this.isInvulnerableTo(damageSource)) return false;
+        if (this.getWorld().isClient) return false;
+        if (this.isDead()) return false;
 
-        if (this.age - this.lastDamageTime < 50) return false;
+        if (this.age - this.lastDamageTime < 20) return false;
         this.lastDamageTime = this.age;
 
         const raw = Math.pow(damage * 0.3, 0.8);
@@ -94,22 +105,43 @@ export abstract class PlayerEntity extends LivingEntity {
             shake
         });
 
-        if (this.techTree.isUnlocked('electrical_energy_surges')) {
-            const stack = this.items.get(Items.EMP_WEAPON);
-            if (stack) {
-                const emp = stack.getItem() as EMPWeapon;
-                if (emp.canFire(stack) && this.techTree.isUnlocked('ele_shield')) {
-                    emp.tryFire(stack, world, this);
-                    world.playSound(this, SoundEvents.SHIELD_CRASH);
-                    return false;
-                }
-                const cd = emp.getCooldown(stack);
-                emp.tryFire(stack, world, this);
-                emp.setCooldown(stack, cd);
-            }
+        const remainDamage = Math.max(damage - this.getShieldAmount(), 0);
+        this.setShieldAmount(this.getShieldAmount() - damage + remainDamage);
+
+        // emp免伤
+        const stack = this.items.get(Items.EMP_WEAPON);
+        const emp = stack?.getItem() as EMPWeapon | undefined;
+        if (this.techTree!.isUnlocked('electrical_energy_surges') && stack && emp) {
+            const cd = emp.getCooldown(stack);
+            emp.tryFire(stack, world, this);
+            emp.setCooldown(stack, cd);
         }
 
-        return super.takeDamage(damageSource, damage);
+        if (remainDamage !== 0) {
+            if (stack && emp && emp.canFire(stack) && this.techTree!.isUnlocked('ele_shield')) {
+                emp.tryFire(stack, world, this);
+                world.playSound(this, SoundEvents.SHIELD_CRASH);
+                return false;
+            }
+
+            this.setHealth(this.getHealth() - remainDamage);
+            this.setShieldAmount(this.getShieldAmount() - remainDamage);
+
+            for (const effect of this.getStatusEffects()) {
+                effect.onEntityDamage(this, damageSource, remainDamage);
+            }
+            if (this.isDead()) this.onDeath(damageSource);
+        }
+
+        return true;
+    }
+
+    public override getShieldAmount(): number {
+        return this.dataTracker.get(PlayerEntity.SHIELD_AMOUNT);
+    }
+
+    protected override setShieldAmountUnclamped(amount: number) {
+        this.dataTracker.set(PlayerEntity.SHIELD_AMOUNT, amount);
     }
 
     public override onDeath(damageSource: DamageSource) {
@@ -128,6 +160,10 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public override shouldWrap(): boolean {
         return this.voidEdge;
+    }
+
+    public getTechs(): TechTree {
+        return this.techTree!;
     }
 
     private assignKeys() {
@@ -174,6 +210,18 @@ export abstract class PlayerEntity extends LivingEntity {
         this.baseWeapons.length = 0;
         this.items.clear();
         this.weaponKeys.clear();
+    }
+
+    public switchWeapon(dir = 1) {
+        const next = (this.currentBaseIndex + dir) % this.baseWeapons.length;
+        if (next === this.currentBaseIndex) return;
+
+        const stack = this.getCurrentItemStack();
+        const current = stack.getItem() as BaseWeapon;
+        current.onEndFire(stack, this.getWorld(), this);
+
+        this.wasFiring = false;
+        this.currentBaseIndex = next < 0 ? this.baseWeapons.length - 1 : next;
     }
 
     public getCurrentItem(): BaseWeapon {
@@ -227,7 +275,7 @@ export abstract class PlayerEntity extends LivingEntity {
         });
         nbt.putCompoundList('Weapons', weapons);
 
-        this.techTree.writeNBT(nbt);
+        this.techTree!.writeNBT(nbt);
 
         return nbt
     }
@@ -236,7 +284,7 @@ export abstract class PlayerEntity extends LivingEntity {
         super.readNBT(nbt);
         this.setScore(nbt.getUint('Score'));
 
-        this.techTree.readNBT(nbt);/*
+        this.techTree!.readNBT(nbt);/*
         const weaponsNbt = nbt.getCompoundList('Weapons');
         if (weaponsNbt && weaponsNbt.length > 0) {
             const stacks: ItemStack[] = [];
@@ -257,11 +305,5 @@ export abstract class PlayerEntity extends LivingEntity {
     }
 
     public onTrackedDataSet(_data: TrackedData<any>): void {
-    }
-
-    protected tickInventory(world: World) {
-        for (const [w, stack] of this.items) {
-            w.inventoryTick(stack, world, this, 0, true);
-        }
     }
 }

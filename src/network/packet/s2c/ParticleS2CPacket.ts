@@ -2,7 +2,14 @@ import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
-import {decodeFromInt16, decodeFromUnsignedByte, encodeToInt16, encodeToUnsignedByte} from "../../../utils/NetUtil.ts";
+import {
+    argbIntToHex,
+    decodeFromInt16,
+    decodeFromUnsignedByte,
+    encodeToInt16,
+    encodeToUnsignedByte,
+    hexToArgbInt,
+} from "../../../utils/NetUtil.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
@@ -19,10 +26,10 @@ export class ParticleS2CPacket implements Payload {
 
     private readonly lifeByte: number;
     private readonly sizeInt16: number;
-    public readonly colorFrom: string;
-    public readonly colorTo: string;
+    private readonly colorFromInt32: number;
+    private readonly colorToInt32: number;
 
-    public constructor(posX: number, posY: number, offsetXInt16: number, offsetYInt16: number, count: number, speedInt16: number, life: number, size: number, colorFrom: string, colorTo: string) {
+    public constructor(posX: number, posY: number, offsetXInt16: number, offsetYInt16: number, count: number, speedInt16: number, life: number, size: number, colorFromInt32: number, colorToInt32: number) {
         this.posX = posX;
         this.posY = posY;
         this.offsetXInt16 = offsetXInt16;
@@ -32,12 +39,12 @@ export class ParticleS2CPacket implements Payload {
 
         this.lifeByte = life;
         this.sizeInt16 = size;
-        this.colorFrom = colorFrom;
-        this.colorTo = colorTo;
+        this.colorFromInt32 = colorFromInt32;
+        this.colorToInt32 = colorToInt32;
     }
 
     public static create(posX: number, posY: number, offsetX: number, offsetY: number, count: number, speed: number, life: number, size: number, colorFrom: string, colorTo: string): ParticleS2CPacket {
-        return new this(
+        return new ParticleS2CPacket(
             posX,
             posY,
             encodeToInt16(offsetX),
@@ -46,14 +53,14 @@ export class ParticleS2CPacket implements Payload {
             speed,
             encodeToUnsignedByte(life),
             encodeToInt16(size),
-            colorFrom,
-            colorTo,
+            hexToArgbInt(colorFrom),
+            hexToArgbInt(colorTo),
         );
     }
 
     public static read(reader: BinaryReader): ParticleS2CPacket {
-        const posX = reader.readDouble();
-        const posY = reader.readDouble();
+        const posX = reader.readFloat();
+        const posY = reader.readFloat();
 
         const offsetXInt16 = reader.readInt16();
         const offsetYInt16 = reader.readInt16();
@@ -63,22 +70,22 @@ export class ParticleS2CPacket implements Payload {
 
         const life = reader.readUnsignByte();
         const size = reader.readInt16();
-        const colorFrom = reader.readString();
-        const colorTo = reader.readString();
-        return new ParticleS2CPacket(posX, posY, offsetXInt16, offsetYInt16, count, speed, life, size, colorFrom, colorTo);
+        const colorFromInt32 = reader.readUint32();
+        const colorToInt32 = reader.readUint32();
+        return new ParticleS2CPacket(posX, posY, offsetXInt16, offsetYInt16, count, speed, life, size, colorFromInt32, colorToInt32);
     }
 
     public static write(writer: BinaryWriter, value: ParticleS2CPacket): void {
-        writer.writeDouble(value.posX);
-        writer.writeDouble(value.posY);
+        writer.writeFloat(value.posX);
+        writer.writeFloat(value.posY);
         writer.writeInt16(value.offsetXInt16);
         writer.writeInt16(value.offsetYInt16);
         writer.writeByte(value.count);
         writer.writeFloat(value.speed);
         writer.writeByte(value.lifeByte);
         writer.writeInt16(value.sizeInt16);
-        writer.writeString(value.colorFrom);
-        writer.writeString(value.colorTo);
+        writer.writeUint32(value.colorFromInt32);
+        writer.writeUint32(value.colorToInt32);
     }
 
     public getId(): PayloadId<any> {
@@ -99,5 +106,13 @@ export class ParticleS2CPacket implements Payload {
 
     public get size() {
         return decodeFromInt16(this.sizeInt16);
+    }
+
+    public get colorFrom() {
+        return argbIntToHex(this.colorFromInt32);
+    }
+
+    public get colorTo() {
+        return argbIntToHex(this.colorToInt32);
     }
 }

@@ -27,6 +27,8 @@ import {ServerCommonNetworkHandler} from "./ServerCommonNetworkHandler.ts";
 import type {ServerWorld} from "../ServerWorld.ts";
 import {ChatMessageC2SPacket} from "../../network/packet/c2s/ChatMessageC2SPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
+import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPacket.ts";
+import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 
 export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
     public readonly player: ServerPlayerEntity;
@@ -35,8 +37,8 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
 
     private messageCooldown: number = 0;
 
-    private lastTickX!: number;
-    private lastTickY!: number;
+    private lastTickX: number = 0;
+    private lastTickY: number = 0;
 
     public constructor(server: NovaFlightServer, channel: ServerNetworkChannel, player: ServerPlayerEntity) {
         super(server, channel);
@@ -44,7 +46,7 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
         this.player = player;
         player.networkHandler = this;
 
-        this.world = server.world;
+        this.world = server.world!;
         this.clientId = player.getProfile().clientId;
         this.syncWithPlayerPosition();
         this.registryHandler();
@@ -74,7 +76,7 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
 
     public onPlayerFinishLogin(_: PlayerFinishLoginC2SPacket) {
         const uuid: UUID = this.clientId;
-        if (this.server.playerManager.isPlayerExists(uuid)) {
+        if (!this.server.playerManager.isPlayerExists(uuid)) {
             return;
         }
 
@@ -84,14 +86,13 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
         this.channel.sendTo(EntityBatchSpawnS2CPacket.create(entities), uuid);
     }
 
-    public onPlayerDisconnect(_: PlayerDisconnectC2SPacket) {
+    public async onPlayerDisconnect(_: PlayerDisconnectC2SPacket) {
         const uuid: UUID = this.clientId;
         if (!this.server.playerManager.isPlayerExists(uuid)) {
             return;
         }
 
-        this.world.removePlayer(this.player);
-        this.server.playerManager.removePlayer(uuid);
+        await this.server.playerManager.removePlayer(this.player);
         this.channel.send(new PlayerDisconnectS2CPacket(uuid, 'Logout'));
 
         console.log(`Player disconnected with uuid: ${uuid}`);
@@ -124,15 +125,21 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
         this.player.setFiring(packet.start);
     }
 
+    public onPlayerReload(): void {
+        const stack = this.player.getCurrentItemStack();
+        const item = stack.getItem() as BaseWeapon;
+        item.onReload(this.player, stack);
+    }
+
     public onUnlockTech(packet: PlayerUnlockTechC2SPacket): void {
         const name = packet.techName;
 
         applyServerTech(name, this.player);
-        this.player.techTree.unlock(name);
+        this.player.getTechs().unlock(name);
     }
 
     public onTechRest(_: PlayerTechResetC2SPacket): void {
-        this.player.techTree.resetTech();
+        this.player.getTechs().resetTech();
     }
 
     public onRequestPosition(_: RequestPositionC2SPacket): void {
@@ -196,5 +203,6 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
         this.register(RequestPositionC2SPacket.ID, this.onRequestPosition.bind(this));
         this.register(CommandExecutionC2SPacket.ID, this.onCommandExecution.bind(this));
         this.register(ChatMessageC2SPacket.ID, this.onChatMessage.bind(this));
+        this.register(PlayerReloadC2SPacket.ID, this.onPlayerReload.bind(this));
     }
 }

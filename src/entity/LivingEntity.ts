@@ -21,10 +21,12 @@ import type {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPac
 export abstract class LivingEntity extends Entity {
     private static readonly HEALTH = DataTracker.registerData(Object(LivingEntity), TrackedDataHandlerRegistry.FLOAT);
 
+    private shieldAmount: number = 0;
     protected bodyTrackingIncrements: number;
     protected serverX: number = 0;
     protected serverY: number = 0;
     protected serverYaw: number = 0;
+
     private readonly attributes: AttributeContainer;
     private readonly activeStatusEffects = new Map<RegistryEntry<StatusEffect>, StatusEffectInstance>();
 
@@ -40,7 +42,8 @@ export abstract class LivingEntity extends Entity {
     public createLivingAttributes(): InstanceType<typeof DefaultAttributeContainer.Builder> {
         return DefaultAttributeContainer.builder()
             .add(EntityAttributes.GENERIC_MAX_HEALTH)
-            .add(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+            .add(EntityAttributes.GENERIC_MOVEMENT_SPEED)
+            .add(EntityAttributes.GENERIC_MAX_SHIELD);
     }
 
     protected override initDataTracker(builder: InstanceType<typeof DataTracker.Builder>) {
@@ -117,8 +120,29 @@ export abstract class LivingEntity extends Entity {
         this.dataTracker.set(LivingEntity.HEALTH, clamp(health, 0, this.getMaxHealth()));
     }
 
+    public getMaxShieldAmount(): number {
+        return this.getAttributeValue(EntityAttributes.GENERIC_MAX_SHIELD);
+    }
+
+    public getShieldAmount(): number {
+        return this.shieldAmount;
+    }
+
+    // 不应该重写此方法
+    public setShieldAmount(amount: number): void {
+        this.setShieldAmountUnclamped(clamp(amount, 0, this.getMaxShieldAmount()));
+    }
+
+    protected setShieldAmountUnclamped(amount: number) {
+        this.shieldAmount = amount;
+    }
+
     public override isAlive() {
         return !this.isRemoved() && this.getHealth() > 0.0;
+    }
+
+    public isDead(): boolean {
+        return this.getHealth() <= 0.0;
     }
 
     public heal(amount: number) {
@@ -130,15 +154,21 @@ export abstract class LivingEntity extends Entity {
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (this.isInvulnerableTo(damageSource)) return false;
+        if (this.getWorld().isClient) return false;
+        if (this.isDead()) return false;
 
-        this.setHealth(this.getHealth() - damage);
-        if (damage > 0) {
+        const remainDamage = Math.max(damage - this.getShieldAmount(), 0);
+        this.setShieldAmount(this.getShieldAmount() - damage + remainDamage);
+
+        if (remainDamage > 0) {
+            this.setHealth(this.getHealth() - remainDamage);
+            this.setShieldAmount(this.getShieldAmount() - remainDamage);
+
             for (const effect of this.getStatusEffects()) {
-                effect.onEntityDamage(this, damageSource, damage);
+                effect.onEntityDamage(this, damageSource, remainDamage);
             }
+            if (this.isDead()) this.onDeath(damageSource);
         }
-
-        if (this.getHealth() <= 0) this.onDeath(damageSource);
         return true;
     }
 
@@ -165,7 +195,7 @@ export abstract class LivingEntity extends Entity {
         const instance = this.activeStatusEffects.get(type);
         let result = false;
 
-        if (instance === undefined) {
+        if (!instance) {
             this.activeStatusEffects.set(type, effect);
             this.onStatusEffectApplied(effect, source);
             result = true;
@@ -185,6 +215,7 @@ export abstract class LivingEntity extends Entity {
     public setStatusEffect(effect: StatusEffectInstance, source: Entity | null): void {
         if (!this.canHaveStatusEffect(effect)) return;
         const instance = this.activeStatusEffects.get(effect.getEffectType());
+        this.activeStatusEffects.set(effect.getEffectType(), effect);
         if (!instance) {
             this.onStatusEffectApplied(effect, source);
         } else {
@@ -192,14 +223,18 @@ export abstract class LivingEntity extends Entity {
         }
     }
 
-    public removeStatusEffectInternal(effect: RegistryEntry<StatusEffect>): boolean {
-        return this.activeStatusEffects.delete(effect);
+    public removeStatusEffectInternal(effect: RegistryEntry<StatusEffect>): StatusEffectInstance | null {
+        const instance = this.activeStatusEffects.get(effect);
+        if (instance) {
+            this.activeStatusEffects.delete(effect);
+        }
+        return instance ?? null;
     }
 
     public removeStatusEffect(effect: RegistryEntry<StatusEffect>): boolean {
-        if (this.removeStatusEffectInternal(effect)) {
-            effect.getValue().onRemoved(this.attributes);
-            this.updateAttributes();
+        const instance = this.removeStatusEffectInternal(effect);
+        if (instance) {
+            this.onStatusEffectRemoved(instance);
             return true;
         }
         return false;
@@ -217,15 +252,11 @@ export abstract class LivingEntity extends Entity {
     }
 
     protected tickStatusEffects(): void {
-        if (this.activeStatusEffects.size === 0) return;
+        if (this.activeStatusEffects.size === 0 || this.getWorld().isClient) return;
 
         for (const effect of this.activeStatusEffects.keys()) {
             const instance = this.activeStatusEffects.get(effect)!;
-            if (!instance.update(this)) {
-                if (!this.getWorld().isClient) {
-                    this.onStatusEffectRemoved(instance);
-                }
-            }
+            if (!instance.update(this)) this.onStatusEffectRemoved(instance);
         }
     }
 
@@ -239,6 +270,8 @@ export abstract class LivingEntity extends Entity {
     }
 
     protected onStatusEffectRemoved(effect: StatusEffectInstance): void {
+        if (this.getWorld().isClient) return;
+
         effect.getEffectType().getValue().onRemoved(this.attributes);
         this.updateAttributes();
     }
@@ -331,8 +364,7 @@ export abstract class LivingEntity extends Entity {
         if (effects && effects.length > 0) {
             for (const effectNbt of effects) {
                 const effect = StatusEffectInstance.fromNbt(effectNbt);
-                if (!effect) continue;
-                this.activeStatusEffects.set(effect.getEffectType(), effect);
+                if (effect) this.addStatusEffect(effect, null);
             }
         }
 

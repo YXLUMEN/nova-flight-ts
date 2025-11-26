@@ -16,9 +16,6 @@ import {check} from "@tauri-apps/plugin-updater";
 import {StartScreen} from "./render/ui/StartScreen.ts";
 import {ClientPlayNetworkHandler} from "./network/ClientPlayNetworkHandler.ts";
 import {RequestPositionC2SPacket} from "../network/packet/c2s/RequestPositionC2SPacket.ts";
-import {NbtCompound} from "../nbt/NbtCompound.ts";
-import {BaseDirectory, exists, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs";
-import {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import {error} from "@tauri-apps/plugin-log";
 import {ClientCommandManager} from "./command/ClientCommandManager.ts";
 import {invoke} from "@tauri-apps/api/core";
@@ -55,7 +52,8 @@ export class NovaFlightClient {
     private accumulator = 0;
 
     private waitWorldStop: Promise<void> | null = null;
-    private stopWorld!: () => void;
+    private stopWorld: () => void = () => {
+    };
     private bindRender = this.render.bind(this);
 
     public constructor() {
@@ -68,7 +66,6 @@ export class NovaFlightClient {
             this.clientId = crypto.randomUUID();
             localStorage.setItem('clientId', this.clientId);
         }
-        // this.clientId = crypto.randomUUID();
 
         const playerName = localStorage.getItem('playerName');
         if (playerName === null) throw new Error("Player name is required");
@@ -214,7 +211,7 @@ export class NovaFlightClient {
         }
         this.networkChannel.setServerAddress(address);
 
-        const connectInfo = new ConnectInfo(this.window.ctx, () => this.stopWorld());
+        const connectInfo = new ConnectInfo(this.window.ctx, this.stopWorld.bind(this));
         this.connectInfo = connectInfo;
         connectInfo.setMessage('尝试连接...');
 
@@ -250,7 +247,7 @@ export class NovaFlightClient {
         if (this.server) return;
 
         // 全屏提示
-        const connectInfo = new ConnectInfo(this.window.ctx);
+        const connectInfo = new ConnectInfo(this.window.ctx, this.stopWorld.bind(this));
         this.connectInfo = connectInfo;
         this.connectInfo.setMessage('启动内置服务器...');
 
@@ -291,34 +288,34 @@ export class NovaFlightClient {
         }
 
         // Vite 规定的格式 integrated dev
-        this.server = new ServerWorker(new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
+        this.server = new ServerWorker(new Worker(new URL('../worker/dev.worker.ts', import.meta.url), {
             type: 'module',
             name: 'server',
         }));
 
         this.connectInfo.setMessage('开始连接...');
 
-        this.server.postMessage({type: 'start_server', payload: {action, addr, key, clientId: this.clientId}});
+        this.server.postMessage({
+            type: 'start_server',
+            payload: {
+                action,
+                addr,
+                key,
+                clientId: this.clientId,
+                saveName: 'MyWorld'
+            }
+        });
 
         const timeout = setTimeout(() => {
             this.connectInfo?.setError('连接超时');
             this.server?.terminate();
         }, 8000);
 
-        this.server.getWorker().onmessage = async (event) => {
-            const {type, payload} = event.data;
+        this.server.getWorker().onmessage = (event) => {
+            const {type} = event.data;
 
             if (type === 'server_start') {
                 clearTimeout(timeout);
-                return;
-            }
-            if (type === 'write_file') {
-                return this.saveGame(payload);
-            }
-            if (type === 'read_file') {
-                const nbt = await this.loadSave();
-                if (!nbt) return;
-                this.server!.postMessage({type: 'loaded_save_data', data: nbt.toRootBinary()});
                 return;
             }
             if (type === 'server_stop') {
@@ -333,14 +330,14 @@ export class NovaFlightClient {
             }
         };
 
-        this.server.getWorker().onerror = async (err) => {
+        this.server.getWorker().onerror = (err) => {
             console.error('Server Thread:', err);
 
             let stack = '';
             if (err.error instanceof Error) {
                 stack = err.error.stack ?? '';
             }
-            await error(`${err.type}: ${err.message} at ${stack}`);
+            error(`${err.type}: ${err.message} at ${stack}`);
             this.stopWorld();
             this.server?.terminate();
         }
@@ -355,29 +352,6 @@ export class NovaFlightClient {
         world.close();
         this.world = null;
         this.player = null;
-    }
-
-    private async saveGame(buffer: Uint8Array): Promise<void> {
-        try {
-            await mkdir('saves', {baseDir: BaseDirectory.Resource, recursive: true});
-            await writeFile(NovaFlightServer.SAVE_PATH, buffer, {baseDir: BaseDirectory.Resource});
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
-    private async loadSave(): Promise<NbtCompound | null> {
-        try {
-            const available = await exists(NovaFlightServer.SAVE_PATH, {baseDir: BaseDirectory.Resource});
-            if (!available) return null;
-
-            const bytes = await readFile(NovaFlightServer.SAVE_PATH, {baseDir: BaseDirectory.Resource});
-            if (!bytes || bytes.length === 0) return null;
-            return NbtCompound.fromRootBinary(bytes);
-        } catch (err) {
-            console.error(err);
-            return null;
-        }
     }
 
     public getServerWorker(): ServerWorker | null {
@@ -515,7 +489,7 @@ export class NovaFlightClient {
                 player.setHealth(player.getMaxHealth());
                 break;
             case 'KeyO':
-                player.techTree.unlockAll();
+                player.getTechs().unlockAll();
                 break;
             case 'KeyF':
                 world.freeze = !world.freeze;

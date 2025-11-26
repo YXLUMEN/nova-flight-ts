@@ -1,21 +1,27 @@
 import {BaseWeapon} from "./BaseWeapon.ts";
-import type {World} from "../../../world/World.ts";
+import {type World} from "../../../world/World.ts";
 import {EntityTypes} from "../../../entity/EntityTypes.ts";
 import {RocketEntity} from "../../../entity/projectile/RocketEntity.ts";
 import {EMPRocketEntity} from "../../../entity/projectile/EMPRocketEntity.ts";
 import {BurstRocketEntity} from "../../../entity/projectile/BurstRocketEntity.ts";
 import {APRocketEntity} from "../../../entity/projectile/APRocketEntity.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
-import type {Entity} from "../../../entity/Entity.ts";
-import type {ItemStack} from "../../ItemStack.ts";
+import {type Entity} from "../../../entity/Entity.ts";
+import {type ItemStack} from "../../ItemStack.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
 import {ClusterRocketEntity} from "../../../entity/projectile/ClusterRocketEntity.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
+import type {ClientWorld} from "../../../client/ClientWorld.ts";
 
 export class RocketLauncherWeapon extends BaseWeapon {
     private static readonly BULLET_SPEED: number = 15;
 
-    public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
+    public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
+        this.onFire(stack, world, attacker);
+        this.setCooldown(stack, this.getFireRate(stack));
+    }
+
+    protected onFire(stack: ItemStack, world: World, attacker: Entity) {
         stack.set(DataComponentTypes.WEAPON_CAN_COOLDOWN, false);
 
         const rocketCounts = stack.getOrDefault(DataComponentTypes.MISSILE_COUNT, 8);
@@ -41,12 +47,12 @@ export class RocketLauncherWeapon extends BaseWeapon {
 
             this.setBullet(rocket, attacker, RocketLauncherWeapon.BULLET_SPEED, 4, 2);
             if (!world.isClient) (world as ServerWorld).spawnEntity(rocket);
+            else this.spawnMuzzle(world as ClientWorld, attacker, this.getMuzzleParticles());
             const yaw = attacker.getYaw();
             attacker.updateVelocity(-0.6, Math.cos(yaw), Math.sin(yaw));
         });
 
         world.playSound(attacker, SoundEvents.MISSILE_LAUNCH, 0.5);
-        this.setCooldown(stack, this.getMaxCooldown(stack));
     }
 
     public override getDisplayName(): string {

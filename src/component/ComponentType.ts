@@ -10,8 +10,8 @@ export class ComponentType<T> {
     public readonly packetCodec: PacketCodec<T>;
 
     public constructor(builder: ComponentTypeBuilder<T>) {
-        this.codec = builder.codec;
-        this.packetCodec = builder.packetCodec;
+        this.codec = builder.codec!;
+        this.packetCodec = builder.packetCodec!;
     }
 
     public static builder<T>() {
@@ -20,8 +20,8 @@ export class ComponentType<T> {
 }
 
 export class ComponentTypeBuilder<T> {
-    public codec!: Codec<T>;
-    public packetCodec!: PacketCodec<T>;
+    public codec: Codec<T> | null = null;
+    public packetCodec: PacketCodec<T> | null = null;
 
     public withCodec(codec: Codec<T>): this {
         this.codec = codec;

@@ -44,6 +44,6 @@ export class DevModCommand {
             entity.getProfile().clientId
         );
 
-        source.outPut.sendMessage(`Set dev mode \x1b[32m${bool}`);
+        source.outPut.sendMessage(`Set dev mode \x1b[32m${entity.isDevMode()}`);
     }
 }

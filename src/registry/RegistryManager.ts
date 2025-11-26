@@ -3,7 +3,7 @@ import {RegistryKey} from "./RegistryKey.ts";
 import {RegistryKeys} from "./RegistryKeys.ts";
 import {Registries} from "./Registries.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
-import {Items} from "../item/items.ts";
+import {Items} from "../item/Items.ts";
 import {deepFreeze} from "../utils/uit.ts";
 import {DamageTypes} from "../entity/damage/DamageTypes.ts";
 import {EntitySelectorOptions} from "../command/EntitySelectorOptions.ts";

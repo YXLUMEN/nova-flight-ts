@@ -18,7 +18,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
     private owner: Entity | null = null;
     private wrapTime = 0;
 
-    public constructor(type: EntityType<ProjectileEntity>, world: World, owner: Entity | null, damage: number) {
+    protected constructor(type: EntityType<ProjectileEntity>, world: World, owner: Entity | null, damage: number) {
         super(type, world);
 
         this.damage = damage;

@@ -17,6 +17,7 @@
     "noEmit": true,
     /* Linting */
     "strict": true,
+    "strictNullChecks": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
@@ -25,8 +26,5 @@
   },
   "include": [
     "src"
-  ],
-  "exclude": [
-    "src/nbt"
   ]
 }

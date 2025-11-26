@@ -3,20 +3,18 @@ import {BaseWeapon} from "./BaseWeapon.ts";
 import {EntityTypes} from "../../../entity/EntityTypes.ts";
 import {MiniBulletEntity} from "../../../entity/projectile/MiniBulletEntity.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
-import type {Entity} from "../../../entity/Entity.ts";
-import type {ItemStack} from "../../ItemStack.ts";
+import {type Entity} from "../../../entity/Entity.ts";
+import {type ItemStack} from "../../ItemStack.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 
 export class MiniGunWeapon extends BaseWeapon {
     private readonly speed = 45;
 
-    public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
+    protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity) {
         const bullet = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1));
         this.setBullet(bullet, attacker, this.speed, 4, 5);
-        if (!world.isClient) (world as ServerWorld).spawnEntity(bullet);
-
-        this.setCooldown(stack, this.getFireRate(stack));
+        world.spawnEntity(bullet);
     }
 
     public override onStartFire(_stack: ItemStack, world: World, attacker: Entity) {
@@ -29,6 +27,10 @@ export class MiniGunWeapon extends BaseWeapon {
         if (world.stopLoopSound(attacker, SoundEvents.MINIGUN_FIRE_LOOP)) {
             world.playSound(attacker, SoundEvents.MINIGUN_FIRE_TAIL);
         }
+    }
+
+    protected override getMuzzleParticles(): number {
+        return 3;
     }
 
     public override getDisplayName(): string {

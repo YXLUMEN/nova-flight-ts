@@ -54,6 +54,10 @@ import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 import {GameProfile} from "../../server/entity/GameProfile.ts";
 import {SyncPlayerProfileS2CPacket} from "../../network/packet/s2c/SyncPlayerProfileS2CPacket.ts";
+import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
+import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
+import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
+import {ItemCooldownUpdateS2CPacket} from "../../network/packet/s2c/ItemCooldownUpdateS2CPacket.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer: Set<UUID> = new Set();
@@ -64,7 +68,7 @@ export class ClientPlayNetworkHandler {
     private world: ClientWorld | null = null;
 
     private maxSniffTimes = 32;
-    private sniffInterval: number | undefined;
+    private sniffInterval: NodeJS.Timeout | undefined = undefined;
 
     public constructor(client: NovaFlightClient) {
         this.client = client;
@@ -385,11 +389,33 @@ export class ClientPlayNetworkHandler {
         this.client.clientCommandManager.addPlainMessage(msg);
     }
 
-    public onSyncProfile(packet: SyncPlayerProfileS2CPacket) {
+    public onSyncProfile(packet: SyncPlayerProfileS2CPacket): void {
         const player = this.client.player;
         if (!player) return;
 
         player.setDevMode(packet.devMode);
+    }
+
+    public onEntityStatusEffect(packet: EntityStatusEffectS2CPacket): void {
+        const entity = this.world?.getEntityById(packet.entityId);
+        if (entity instanceof LivingEntity) {
+            const registryEntry = packet.effectId;
+            const instance = new StatusEffectInstance(registryEntry, packet.duration, packet.amplifier);
+            entity.setStatusEffect(instance, null);
+        }
+    }
+
+    public onRemoveEntityStatusEffect(packet: RemoveEntityStatusEffectS2CPacket): void {
+        const entity = this.world?.getEntityById(packet.entityId);
+        if (entity instanceof LivingEntity) {
+            entity.removeStatusEffectInternal(packet.effectId);
+        }
+    }
+
+    public onItemCooldown(packet: ItemCooldownUpdateS2CPacket): void {
+        const player = this.client.player;
+        if (!player) return;
+        player.cooldownManager.set(packet.item, packet.duration);
     }
 
     public sendCommand(input: string): boolean {
@@ -465,5 +491,8 @@ export class ClientPlayNetworkHandler {
         this.register(EntityChooseTargetS2CPacket.ID, this.onMobChooseTarget.bind(this));
         this.register(GameMessageS2CPacket.ID, this.onGameMessage.bind(this));
         this.register(SyncPlayerProfileS2CPacket.ID, this.onSyncProfile.bind(this));
+        this.register(EntityStatusEffectS2CPacket.ID, this.onEntityStatusEffect.bind(this));
+        this.register(RemoveEntityStatusEffectS2CPacket.ID, this.onRemoveEntityStatusEffect.bind(this));
+        this.register(ItemCooldownUpdateS2CPacket.ID, this.onItemCooldown.bind(this));
     }
 }

@@ -21,8 +21,8 @@ export class Optional<T> {
         return new Optional(value);
     }
 
-    public static ofNullable<T>(value: T | null | undefined) {
-        return (value === null || value === undefined) ? this.EMPTY : new Optional<T>(value);
+    public static ofNullable<T>(value: T | null | undefined): Optional<T> {
+        return (value === null || value === undefined) ? this.EMPTY as Optional<T> : new Optional<T>(value);
     }
 
     public get(): T {
