@@ -1,24 +1,20 @@
 import {World} from "../../../world/World.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
-import {BulletEntity} from "../../../entity/projectile/BulletEntity.ts";
 import {EntityTypes} from "../../../entity/EntityTypes.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {ItemStack} from "../../ItemStack.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import {FastBulletEntity} from "../../../entity/projectile/FastBulletEntity.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 
 export class Cannon40Weapon extends BaseWeapon {
     private readonly speed = 35;
 
-    public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
-        const damage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 3);
-        const bullet = new BulletEntity(EntityTypes.BULLET_ENTITY, world, attacker, damage);
-
+    protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity) {
+        const bullet = new FastBulletEntity(EntityTypes.FAST_BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 3));
         this.setBullet(bullet, attacker, this.speed, 6, 2);
-        if (!world.isClient) (world as ServerWorld).spawnEntity(bullet);
-
-        this.setCooldown(stack, this.getFireRate(stack));
+        world.spawnEntity(bullet);
     }
 
     public override onStartFire(_stack: ItemStack, world: World, attacker: Entity) {

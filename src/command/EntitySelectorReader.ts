@@ -8,10 +8,10 @@ import {EntitySelector} from "./EntitySelector.ts";
 import {EntitySelectorOptions} from "./EntitySelectorOptions.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {Entity} from "../entity/Entity.ts";
-import {Optional} from "../utils/Optional.ts";
 import {Box} from "../utils/math/Box.ts";
 import type {EntityType} from "../entity/EntityType.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
+import type {NumRange} from "../predicate/NumberRange.ts";
 
 type provider = (builder: SuggestionsBuilder, consumer: Consumer<SuggestionsBuilder>) => Promise<Suggestions>;
 
@@ -30,7 +30,7 @@ export class EntitySelectorReader {
 
     private centerX: number | null = null;
     private centerY: number | null = null;
-    private distance: [Optional<number>, Optional<number>] = [Optional.empty(), Optional.empty()];
+    private distance: NumRange = [null, null];
     private entityType: EntityType<any> | null = null;
     private excludeMode: boolean = false;
 
@@ -45,8 +45,8 @@ export class EntitySelectorReader {
     public build(): EntitySelector {
         let box: Box | null = null;
         if (this.centerX === null && this.centerY === null) {
-            if (this.distance[1].isPresent()) {
-                const d = this.distance[1].get();
+            if (this.distance[1] !== null) {
+                const d = this.distance[1];
                 box = new Box(-d, -d, d + 1, d + 1);
             }
         } else {
@@ -251,11 +251,11 @@ export class EntitySelectorReader {
         return this.senderOnly;
     }
 
-    public setDistance(distance: [Optional<number>, Optional<number>]) {
+    public setDistance(distance: NumRange) {
         this.distance = distance;
     }
 
-    public getDistance(): Readonly<[Optional<number>, Optional<number>]> {
+    public getDistance(): Readonly<NumRange> {
         return this.distance;
     }
 

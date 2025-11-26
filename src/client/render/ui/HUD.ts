@@ -7,6 +7,7 @@ import type {ItemStack} from "../../../item/ItemStack.ts";
 import type {IUi} from "./IUi.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {ClientWorld} from "../../ClientWorld.ts";
+import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
 
 export class HUD implements IUi {
     private readonly font: string = '14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
@@ -108,6 +109,10 @@ export class HUD implements IUi {
         const realRatio = clamp(player.getHealth() / maxHealth, 0, 1);
         const displayRatio = clamp(this.displayHealth / maxHealth, 0, 1);
 
+        const shieldAmount = player.getShieldAmount();
+        const maxShield = player.getMaxShieldAmount();
+        const shieldRatio = maxShield > 0 ? clamp(shieldAmount / maxShield, 0, 1) : 0;
+
         // 背景
         ctx.fillStyle = 'rgba(255,255,255,0.12)';
         ctx.fillRect(x | 0, y | 0, this.barWidth | 0, this.barHeight | 0);
@@ -119,6 +124,14 @@ export class HUD implements IUi {
         // 红色当前血条
         ctx.fillStyle = '#ff0000';
         ctx.fillRect(x | 0, y | 0, (this.barWidth * realRatio) | 0, this.barHeight | 0);
+
+        // 护盾
+        if (shieldRatio > 0) {
+            const shieldWidth = (this.barWidth * shieldRatio) | 0;
+
+            ctx.fillStyle = 'rgba(80,149,255,0.8)';
+            ctx.fillRect(x | 0, y | 0, shieldWidth, this.barHeight | 0);
+        }
 
         // 文字
         ctx.fillStyle = this.hudColor;
@@ -145,9 +158,15 @@ export class HUD implements IUi {
         const stack = player.getCurrentItemStack();
         const weapon = stack.getItem() as BaseWeapon;
 
-        const anchorX = Math.floor(pos.x + player.getWidth() / 2 + 12);
-        const ratio = clamp(1 - weapon.getCooldown(stack) / weapon.getMaxCooldown(stack), 0, 1);
+        let ratio: number;
+        const reloadLeft = player.cooldownManager.getCooldownTicks(weapon);
+        if (reloadLeft > 0) {
+            ratio = clamp(1 - reloadLeft / stack.getOrDefault(DataComponentTypes.MAX_RELOAD_TIME, 1), 0, 1);
+        } else {
+            ratio = clamp(1 - weapon.getCooldown(stack) / weapon.getMaxCooldown(stack), 0, 1);
+        }
         this.displayRatio = lerp(tickDelta, this.displayRatio, ratio);
+        const anchorX = Math.floor(pos.x + player.getWidth() / 2 + 12);
 
         ctx.save();
         ctx.textAlign = 'left';
@@ -159,7 +178,19 @@ export class HUD implements IUi {
         ctx.fillRect(anchorX, pos.y, (64 * this.displayRatio) | 0, 2);
 
         ctx.fillStyle = this.hudColor;
-        ctx.fillText(weapon.getDisplayName(), anchorX, pos.y - 16);
+        const name = weapon.getDisplayName();
+        ctx.fillText(name, anchorX, pos.y - 16);
+
+        const textWidth = ctx.measureText(name).width + anchorX + 8;
+
+        if (stack.isDamageable()) {
+            const currentAmmo = stack.getDurability();
+            const maxAmmo = stack.getMaxDurability();
+            if (currentAmmo / maxAmmo <= 0.2) ctx.fillStyle = '#ff0000';
+            ctx.fillText(`${currentAmmo}/${maxAmmo}`, textWidth, pos.y - 16);
+        } else {
+            ctx.fillText('∞', textWidth, pos.y - 16);
+        }
 
         ctx.restore();
     }

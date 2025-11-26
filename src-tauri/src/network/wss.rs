@@ -396,8 +396,8 @@ async fn relay_message(state: &Arc<RelayState>, session: &Arc<Session>, payload:
             }
 
             // 解析验证 sessionId
-            let mut cursor = &payload[1..3];
-            let session_id = cursor.get_u16_le();
+            let mut cursor = &payload[1..2];
+            let session_id = cursor.get_u8();
             if session_id != session.session_id {
                 warn!("Invalid sessionId from client, dropping connection");
                 return;
@@ -435,20 +435,20 @@ async fn relay_message(state: &Arc<RelayState>, session: &Arc<Session>, payload:
         }
         (Role::Server, 0x12) => {
             // Server → 指定 Client
-            if payload.len() < 19 {
+            if payload.len() < 18 {
                 warn!("InvalidPacket: Unicast packet too short");
             }
 
             // UUID截断
             let mut target_client_id = [0u8; 16];
-            target_client_id.copy_from_slice(&payload[3..19]);
+            target_client_id.copy_from_slice(&payload[2..18]);
             let target_client_id = target_client_id;
 
             if let Some(client) = state.clients.get(&target_client_id) {
-                let remaining = payload.slice(19..);
+                let remaining = payload.slice(18..);
                 let mut buf = BytesMut::with_capacity(1 + remaining.len());
                 buf.put_u8(0x11);
-                buf.put_u16_le(session.session_id);
+                buf.put_u8(session.session_id);
                 buf.extend_from_slice(&remaining);
                 let forwarded = buf.freeze();
 
@@ -459,12 +459,12 @@ async fn relay_message(state: &Arc<RelayState>, session: &Arc<Session>, payload:
         }
         (Role::Server, 0x13) => {
             // Server → 广播给未被排除的 Client
-            if payload.len() < 4 {
+            if payload.len() < 3 {
                 warn!("InvalidPacket: BroadcastExcluding too short");
                 return;
             }
 
-            let mut cursor = &payload[3..];
+            let mut cursor = &payload[2..];
 
             let (count, remaining) = match read_var_uint(cursor) {
                 Ok(v) => v,
@@ -493,7 +493,7 @@ async fn relay_message(state: &Arc<RelayState>, session: &Arc<Session>, payload:
 
             let mut buf = BytesMut::with_capacity(1 + rest_payload.len());
             buf.put_u8(0x11);
-            buf.put_u16_le(session.session_id);
+            buf.put_u8(session.session_id);
             buf.extend_from_slice(rest_payload);
             let forwarded = buf.freeze();
 

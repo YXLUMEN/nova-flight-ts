@@ -1,4 +1,4 @@
-import {Items} from "../item/items.ts";
+import {Items} from "../item/Items.ts";
 import {LaserWeapon} from "../item/weapon/LaserWeapon.ts";
 import {EMPWeapon} from "../item/weapon/EMPWeapon.ts";
 import {DataComponentTypes} from "../component/DataComponentTypes.ts";
@@ -85,7 +85,7 @@ export function applyServerTech(id: string, player: ServerPlayerEntity): void {
             const c90 = new ItemStack(Items.CANNON90_WEAPON);
             player.addItem(Items.CANNON90_WEAPON, c90);
 
-            if (player.techTree.isUnlocked('hd_bullet')) {
+            if (player.getTechs().isUnlocked('hd_bullet')) {
                 const base = c90.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
                 c90.set(DataComponentTypes.ATTACK_DAMAGE, base * 2);
             }

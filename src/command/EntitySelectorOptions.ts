@@ -28,8 +28,8 @@ export class EntitySelectorOptions {
                 const range = NumberRange.parseNumberRange(reader.getReader(), parseFloat, Number);
                 const [min, max] = range;
 
-                if ((min.isEmpty() || min.get() >= 0) &&
-                    (max.isEmpty() || max.get() >= 0)
+                if ((min === null || min >= 0) &&
+                    (max === null || max >= 0)
                 ) {
                     reader.setDistance(range);
                     return;
@@ -38,7 +38,7 @@ export class EntitySelectorOptions {
                 throw new IllegalArgumentError();
             }, reader => {
                 const range = reader.getDistance();
-                return range[0].isEmpty() && range[1].isEmpty();
+                return range[0] === null && range[1] === null;
             }
         );
 

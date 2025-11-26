@@ -32,6 +32,9 @@ import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconne
 import {EntityChooseTargetS2CPacket} from "../../network/packet/s2c/EntityChooseTargetS2CPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 import {SyncPlayerProfileS2CPacket} from "../../network/packet/s2c/SyncPlayerProfileS2CPacket.ts";
+import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
+import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
+import {ItemCooldownUpdateS2CPacket} from "../../network/packet/s2c/ItemCooldownUpdateS2CPacket.ts";
 
 export class ServerNetwork {
     public static registerNetworkPacket() {
@@ -68,6 +71,9 @@ export class ServerNetwork {
         this.register(EntityChooseTargetS2CPacket.ID, EntityChooseTargetS2CPacket.CODEC);
         this.register(GameMessageS2CPacket.ID, GameMessageS2CPacket.CODEC);
         this.register(SyncPlayerProfileS2CPacket.ID, SyncPlayerProfileS2CPacket.CODEC);
+        this.register(EntityStatusEffectS2CPacket.ID, EntityStatusEffectS2CPacket.CODEC);
+        this.register(RemoveEntityStatusEffectS2CPacket.ID, RemoveEntityStatusEffectS2CPacket.CODEC);
+        this.register(ItemCooldownUpdateS2CPacket.ID, ItemCooldownUpdateS2CPacket.CODEC);
     }
 
     private static register<T extends Payload>(payloadId: PayloadId<T>, codec: PacketCodec<T>): void {

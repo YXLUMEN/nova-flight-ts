@@ -5,5 +5,5 @@ export interface IUi {
 
     setSize(w: number, h: number): void;
 
-    destroy(): void;
+    destroy(reason?: string): void;
 }

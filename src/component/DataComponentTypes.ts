@@ -11,13 +11,13 @@ export class DataComponentTypes {
     // public static readonly CUSTOM_DATA = this.register("custom_data", new ComponentType(CustomData));
 
     public static readonly MAX_STACK_SIZE: ComponentType<number> = this.register("max_stack_size",
-        builder => builder.withCodec(Codecs.UINT).withPacketCodec(PacketCodecs.UINT32)
+        builder => builder.withCodec(Codecs.UINT32).withPacketCodec(PacketCodecs.UINT32)
     );
     public static readonly MAX_DURABILITY: ComponentType<number> = this.register("max_durability",
-        builder => builder.withCodec(Codecs.UINT).withPacketCodec(PacketCodecs.UINT32)
+        builder => builder.withCodec(Codecs.UINT32).withPacketCodec(PacketCodecs.UINT32)
     );
     public static readonly DURABILITY: ComponentType<number> = this.register("durability",
-        builder => builder.withCodec(Codecs.UINT).withPacketCodec(PacketCodecs.UINT32)
+        builder => builder.withCodec(Codecs.UINT32).withPacketCodec(PacketCodecs.UINT32)
     );
     public static readonly UNBREAKABLE: ComponentType<boolean> = this.register("unbreakable",
         builder => builder.withCodec(Codecs.BOOLEAN).withPacketCodec(PacketCodecs.BOOL)
@@ -51,6 +51,13 @@ export class DataComponentTypes {
         builder => builder.withCodec(Codecs.DOABLE).withPacketCodec(PacketCodecs.DOUBLE)
     );
 
+    public static readonly RELOADING: ComponentType<boolean> = this.register("reloading",
+        builder => builder.withCodec(Codecs.BOOLEAN).withPacketCodec(PacketCodecs.BOOL)
+    );
+    public static readonly MAX_RELOAD_TIME: ComponentType<number> = this.register("max_reload",
+        builder => builder.withCodec(Codecs.UINT32).withPacketCodec(PacketCodecs.VAR_INT)
+    );
+
     public static readonly ACTIVE: ComponentType<boolean> = this.register("active",
         builder => builder.withCodec(Codecs.BOOLEAN).withPacketCodec(PacketCodecs.BOOL)
     );
@@ -58,13 +65,13 @@ export class DataComponentTypes {
         builder => builder.withCodec(Codecs.BOOLEAN).withPacketCodec(PacketCodecs.BOOL)
     );
     public static readonly MAX_HEAT: ComponentType<number> = this.register("max_heat",
-        builder => builder.withCodec(Codecs.INT).withPacketCodec(PacketCodecs.INT32)
+        builder => builder.withCodec(Codecs.INT32).withPacketCodec(PacketCodecs.INT32)
     );
     public static readonly HEAT: ComponentType<number> = this.register("heat",
-        builder => builder.withCodec(Codecs.INT).withPacketCodec(PacketCodecs.INT32)
+        builder => builder.withCodec(Codecs.INT32).withPacketCodec(PacketCodecs.INT32)
     );
     public static readonly DRAIN_RATE: ComponentType<number> = this.register("drain_rate",
-        builder => builder.withCodec(Codecs.INT).withPacketCodec(PacketCodecs.INT32)
+        builder => builder.withCodec(Codecs.INT32).withPacketCodec(PacketCodecs.INT32)
     );
     public static readonly COOLDOWN_RATE: ComponentType<number> = this.register("cooldown_rate",
         builder => builder.withCodec(Codecs.DOABLE).withPacketCodec(PacketCodecs.DOUBLE)
@@ -82,7 +89,7 @@ export class DataComponentTypes {
         builder => builder.withCodec(Codecs.BOOLEAN).withPacketCodec(PacketCodecs.BOOL)
     );
     public static readonly MISSILE_COUNT: ComponentType<number> = this.register("missile_count",
-        builder => builder.withCodec(Codecs.INT).withPacketCodec(PacketCodecs.INT32)
+        builder => builder.withCodec(Codecs.INT32).withPacketCodec(PacketCodecs.INT32)
     );
     public static readonly MISSILE_RANDOM_ENABLE: ComponentType<boolean> = this.register("random_enable",
         builder => builder.withCodec(Codecs.BOOLEAN).withPacketCodec(PacketCodecs.BOOL)

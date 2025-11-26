@@ -34,7 +34,7 @@ export abstract class NetworkChannel implements Channel {
         const {promise, resolve, reject} = Promise.withResolvers<void>();
         this.readyPromise = promise;
 
-        let timeout: number | undefined;
+        let timeout: number;
         const connectReady = () => {
             this.isConnected = true;
             resolve();
@@ -58,7 +58,7 @@ export abstract class NetworkChannel implements Channel {
 
             if (!(payload instanceof RelayServerPacket)) return;
 
-            const [type, msg] = payload.msg.split(":");
+            const [type, msg] = payload.msg.split(':');
             if (type === 'ERR') {
                 connectFail(msg);
                 return;
@@ -66,19 +66,18 @@ export abstract class NetworkChannel implements Channel {
 
             if (!payload.msg.startsWith('INFO:REGISTERED')) return;
 
-            const sessionId = payload.msg.split(':').at(-1);
-            if (!sessionId) return;
+            const sessionIdStr = payload.msg.split(':').at(-1);
+            if (!sessionIdStr) return;
 
-            this.sessionId = Number(sessionId);
-            if (!Number.isSafeInteger(this.sessionId)) {
-                this.sessionId = 0;
+            const sessionId = Number(sessionIdStr);
+            if (!Number.isSafeInteger(sessionId) || sessionId <= 0 || sessionId > 255) {
                 return;
             }
-
+            this.sessionId = sessionId;
             connectReady();
 
             ws.onmessage = this.handleMessage.bind(this);
-            ws.onerror = (err) => error(`${this.getSide()}: Connection Error: ${err}`);
+            ws.onerror = err => error(`${this.getSide()}: Connection Error: ${err}`);
         };
 
         ws.onerror = (err) => {
@@ -141,7 +140,7 @@ export abstract class NetworkChannel implements Channel {
         const writer = new BinaryWriter();
 
         writer.writeByte(this.getHeader());
-        writer.writeUint16(this.getSessionID());
+        writer.writeByte(this.getSessionID());
         writer.writeString(type.id.toString());
 
         type.codec.encode(writer, payload);
@@ -166,7 +165,7 @@ export abstract class NetworkChannel implements Channel {
             return null;
         }
 
-        reader.readUint16();
+        reader.readUnsignByte();
         const idStr = reader.readString();
         const id = Identifier.tryParse(idStr);
         if (!id) return null;

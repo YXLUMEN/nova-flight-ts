@@ -62,7 +62,7 @@ export class BossEntity extends MobEntity {
         for (let i = count; i--;) {
             const angle = startAngle + step * i;
             const vel = new Vec2(Math.cos(angle) * speed, Math.sin(angle) * speed);
-            const b = new BulletEntity(EntityTypes.BULLET_ENTITY, world, this, 1);
+            const b = new BulletEntity(EntityTypes.ENEMY_BULLET_ENTITY, world, this, 1);
             b.setVelocityByVec(vel);
             b.setPositionByVec(pos);
             b.color = '#b10000';

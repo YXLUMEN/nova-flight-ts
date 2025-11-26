@@ -12,7 +12,7 @@ export type Constructor<T = any> = new (...args: any[]) => T;
 
 export type UUID = `${string}-${string}-${string}-${string}-${string}`;
 
-export type FunctionReturn<T, U> = (val: T) => U;
+export type FunctionReturn<T, R> = (val: T) => R;
 
 export type Consumer<T> = (val: T) => void;
 
@@ -34,7 +34,7 @@ export interface Comparable {
 
 export interface StoreConfig {
     name: string; // 对象存储名称
-    keyPath: string; // 主键字段名
+    keyPath: string | string[]; // 主键字段名
     autoIncrement?: boolean; // 是否启用主键自增
     indexes?: {
         name: string;       // 索引名称

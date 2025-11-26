@@ -3,10 +3,10 @@ import type {World} from "../../world/World.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
 import {EntityType} from "../EntityType.ts";
 import {EntityTypes} from "../EntityTypes.ts";
-import {MiniBulletEntity} from "../projectile/MiniBulletEntity.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {randInt} from "../../utils/math/math.ts";
+import {BulletEntity} from "../projectile/BulletEntity.ts";
 
 export class GunEnemyEntity extends MobEntity {
     private static readonly bulletSpeed = 5;
@@ -36,7 +36,7 @@ export class GunEnemyEntity extends MobEntity {
 
         const pos = this.getPositionRef;
         const yaw = this.getYaw();
-        const b = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, this, 1);
+        const b = new BulletEntity(EntityTypes.ENEMY_BULLET_ENTITY, world, this, 1);
         b.setVelocity(Math.cos(yaw) * GunEnemyEntity.bulletSpeed, Math.sin(yaw) * GunEnemyEntity.bulletSpeed);
         b.setPosition(pos.x, pos.y);
 

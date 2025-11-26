@@ -8,7 +8,6 @@ import type {AutoAim} from "../../tech/AutoAim.ts";
 import type {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
 import {PlayerMoveC2SPacket} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
-import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
 import {PlayerAimC2SPacket} from "../../network/packet/c2s/PlayerAimC2SPacket.ts";
 import type {UUID} from "../../apis/types.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
@@ -20,6 +19,11 @@ import type {Item} from "../../item/Item.ts";
 import {AbstractClientPlayerEntity} from "./AbstractClientPlayerEntity.ts";
 import {BallisticCalculator} from "../../tech/BallisticCalculator.ts";
 import type {GameProfile} from "../../server/entity/GameProfile.ts";
+import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
+import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPacket.ts";
+import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
+import type {ClientWorld} from "../ClientWorld.ts";
 
 export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     public readonly profile: GameProfile;
@@ -38,7 +42,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     private revision: number = 0;
 
     public constructor(world: World, input: KeyboardInput, profile: GameProfile) {
-        super(world);
+        super(world, new ItemCooldownManager());
 
         this.input = input;
         this.profile = profile;
@@ -113,31 +117,17 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             }
         }
 
-        if (this.input.wasPressed('KeyR')) {
+        if (this.input.wasPressed('KeyF')) {
             this.switchWeapon();
             return;
         }
+        if (this.input.wasPressed('KeyR')) {
+            this.wpnReload();
+        }
     }
 
-    protected override tickInventory(world: World) {
-        const baseWeapon = this.baseWeapons[this.currentBaseIndex];
-        const stack = this.items.get(baseWeapon)!;
-        const fire = this.input.isDown("Space") || WorldConfig.autoShoot;
-        const active = stack.isAvailable() && fire;
-
-        if (active !== this.wasActive) {
-            if (!this.wasActive) {
-                this.getNetworkChannel().send(new PlayerFireC2SPacket(this.getUUID(), true));
-                baseWeapon.onStartFire(stack, world, this);
-            } else {
-                this.getNetworkChannel().send(new PlayerFireC2SPacket(this.getUUID(), false));
-                baseWeapon.onEndFire(stack, world, this);
-            }
-            this.wasActive = active;
-        }
-        if (active && baseWeapon.canFire(stack)) {
-            baseWeapon.tryFire(stack, world, this);
-        }
+    protected override tickInventory(world: ClientWorld) {
+        this.weaponFire(world);
 
         for (const [w, stack] of this.items) {
             if (w instanceof SpecialWeapon) {
@@ -147,19 +137,55 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
                 }
                 if (w.canFire(stack) && this.input.wasPressed(key)) {
                     w.tryFire(stack, world, this);
-                    this.getNetworkChannel().send(new PlayerInputC2SPacket(this.getUUID(), key));
+                    this.getNetworkChannel().send(new PlayerInputC2SPacket(key));
                 }
             }
             w.inventoryTick(stack, world, this, 0, true);
         }
     }
 
-    public override clearItems() {
+    private weaponFire(world: ClientWorld) {
+        const item = this.baseWeapons[this.currentBaseIndex];
+        const stack = this.items.get(item)!;
+        const isFiring = this.input.isDown("Space") || WorldConfig.autoShoot;
+
+        const hasAmmo = stack.getDurability() > 0 || !stack.isDamageable();
+
+        if (isFiring !== this.wasFiring) {
+            if (!this.wasFiring && hasAmmo) {
+                this.getNetworkChannel().send(new PlayerFireC2SPacket(true));
+                item.onStartFire(stack, world, this);
+            } else {
+                this.getNetworkChannel().send(new PlayerFireC2SPacket(false));
+                item.onEndFire(stack, world, this);
+            }
+            this.wasFiring = isFiring;
+        }
+
+        if (isFiring && hasAmmo && item.getCooldown(stack) <= 1) {
+            item.tryFire(stack, world, this);
+        }
+
+        if (isFiring && stack.getDurability() === 0 && stack.isDamageable()) {
+            this.wpnReload();
+            this.wasFiring = false;
+        }
+    }
+
+    private wpnReload() {
+        const stack = this.getCurrentItemStack();
+        if (stack.getDamage() === 0 || stack.getOrDefault(DataComponentTypes.RELOADING, false)) {
+            return;
+        }
+        this.getNetworkChannel().send(new PlayerReloadC2SPacket());
+    }
+
+    public override clearItems(): void {
         super.clearItems();
         this.specialWeapons.length = 0;
     }
 
-    public override addItem(item: Item, stack?: ItemStack) {
+    public override addItem(item: Item, stack?: ItemStack): void {
         super.addItem(item, stack);
         this.specialWeapons = this.items.keys().filter(item => item instanceof SpecialWeapon).toArray();
     }
@@ -178,7 +204,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         if (stack && item.canFire(stack)) {
             item.tryFire(stack, this.getWorld(), this);
             const key = this.weaponKeys.get(item)!;
-            this.getNetworkChannel().send(new PlayerInputC2SPacket(this.getUUID(), key));
+            this.getNetworkChannel().send(new PlayerInputC2SPacket(key));
         }
     }
 
@@ -200,7 +226,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     public override switchWeapon(dir: number = 1) {
         super.switchWeapon(dir);
-        this.getNetworkChannel().send(new PlayerSwitchSlotC2SPacket(this.getUUID(), this.currentBaseIndex));
+        this.getNetworkChannel().send(new PlayerSwitchSlotC2SPacket(this.currentBaseIndex));
     }
 
     public override setScore(score: number) {

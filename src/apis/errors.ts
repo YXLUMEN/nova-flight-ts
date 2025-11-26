@@ -17,3 +17,6 @@ export class CommandError extends Error {
 
 export class PacketTooLargeError extends Error {
 }
+
+export class MediaWithoutSrc extends Error {
+}

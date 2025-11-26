@@ -14,7 +14,7 @@ export class CommandContextBuilder<S> {
     public readonly rootNode: CommandNode<S>;
     public readonly args: Map<string, ParsedArgument<S, any>> = new Map();
     public readonly nodes: ParsedCommandNode<S>[] = [];
-    public command!: Command<S>;
+    public command: Command<S> | null = null;
     public child: CommandContextBuilder<S> | null;
     public source: S;
     public range: StringRange;
@@ -64,7 +64,7 @@ export class CommandContextBuilder<S> {
     }
 
     public build(input: string): CommandContext<S> {
-        return new CommandContext(this.source, input, this.args, this.command, this.nodes, this.range);
+        return new CommandContext(this.source, input, this.args, this.command!, this.nodes, this.range);
     }
 
     public getLastChild(): CommandContextBuilder<S> {

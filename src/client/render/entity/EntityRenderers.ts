@@ -16,6 +16,8 @@ import {MissileEnemyEntityRender} from "./MissileEnemyEntityRender.ts";
 import {deepFreeze} from "../../../utils/uit.ts";
 import {CIWSBulletEntityRender} from "./CIWSBulletEntityRender.ts";
 import {ADSEntityRender} from "./ADSEntityRender.ts";
+import {FastBulletEntityRender} from "./FastBulletEntityRender.ts";
+import {ExplodeBulletEntityRender} from "./ExplodeBulletEntityRender.ts";
 
 export class EntityRenderers {
     private static readonly RENDERER_FACTORIES = new Map<EntityType<Entity>, EntityRenderer<Entity>>();
@@ -27,6 +29,7 @@ export class EntityRenderers {
     public static registryRenders(): void {
         const baseEnemy = new BaseEnemyRender();
         const bullet = new BulletEntityRender();
+        const fastBullet = new FastBulletEntityRender();
         const rocket = new RocketEntityRender();
         const missile = new MissileEntityRender();
         this.register(EntityTypes.BASE_ENEMY, baseEnemy);
@@ -35,8 +38,10 @@ export class EntityRenderers {
         this.register(EntityTypes.GUN_ENEMY_ENTITY, new GunEnemyEntityRender());
         this.register(EntityTypes.MINIGUN_ENEMY_ENTITY, new MiniGunEnemyEntityRender());
         this.register(EntityTypes.BULLET_ENTITY, bullet);
-        this.register(EntityTypes.MINI_BULLET_ENTITY, bullet);
-        this.register(EntityTypes.EXPLODE_BULLET_ENTITY, bullet);
+        this.register(EntityTypes.ENEMY_BULLET_ENTITY, bullet);
+        this.register(EntityTypes.FAST_BULLET_ENTITY, fastBullet);
+        this.register(EntityTypes.MINI_BULLET_ENTITY, fastBullet);
+        this.register(EntityTypes.EXPLODE_BULLET_ENTITY, new ExplodeBulletEntityRender());
         this.register(EntityTypes.PLAYER, new PlayerEntityRender());
         this.register(EntityTypes.ROCKET_ENTITY, rocket);
         this.register(EntityTypes.MISSILE_ENTITY, missile);

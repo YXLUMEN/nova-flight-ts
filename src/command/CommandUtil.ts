@@ -72,7 +72,7 @@ export class CommandUtil {
             getSuggestions(_: CommandContext<T>, builder: SuggestionsBuilder): Promise<Suggestions> {
                 return CommandUtil.suggestIdentifiers(registry.getIdValues(), builder);
             }
-        });
+        } satisfies SuggestionProvider<T>);
     }
 
     public static suggestMatching(candidates: Iterable<string>, builder: SuggestionsBuilder) {

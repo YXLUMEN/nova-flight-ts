@@ -71,6 +71,25 @@ export class IndexedDBHelper {
         return promise;
     }
 
+    public async getByIndex<T>(
+        storeName: string,
+        indexName: string,
+        key: IDBValidKey
+    ): Promise<T | null> {
+        const db = await this.init();
+        const {promise, resolve, reject} = Promise.withResolvers<T | null>();
+
+        const tx = db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+        const index = store.index(indexName);
+        const request = index.get(key);
+
+        request.onsuccess = () => resolve(request.result ?? null);
+        request.onerror = () => reject(request.error);
+
+        return promise;
+    }
+
     public async update(storeName: string, data: object): Promise<IDBValidKey> {
         const db = await this.init();
         const {promise, resolve, reject} = Promise.withResolvers<IDBValidKey>();

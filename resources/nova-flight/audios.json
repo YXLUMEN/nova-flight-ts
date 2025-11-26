@@ -1,26 +1,38 @@
 {
-  "bgm.1": {
+  "space_walk_mabo": {
     "file": "nova-flight:/space_walk.ogg"
   },
-  "bgm.2": {
+  "no_more_mabo": {
     "file": "nova-flight:/no_more_mabo.ogg"
   },
-  "bgm.3": {
+  "some_time_hjm": {
     "file": "nova-flight:/sometime_hjm.ogg"
   },
-  "bgm.4": {
-    "file": "nova-flight:/delta_force_main.ogg"
+  "delta_force_theme": {
+    "file": "nova-flight:/delta_force_theme.ogg"
   },
-  "bgm.5": {
+  "come_on_mabo": {
     "file": "nova-flight:/come_on_mabo.ogg"
   },
-  "bgm.6": {
+  "mabo_2_23": {
     "file": "nova-flight:/2_23mabo.ogg"
   },
-  "bgm.7": {
+  "mabo_3_30": {
     "file": "nova-flight:/3_30am.ogg"
   },
-  "bgm.8": {
+  "ele_mabo": {
     "file": "nova-flight:/ele_mabo.ogg"
+  },
+  "in_the_summer": {
+    "file": "nova-flight:/in_the_summer.ogg"
+  },
+  "making_legends": {
+    "file": "nova-flight:/making_legends.ogg"
+  },
+  "victory": {
+    "file": "nova-flight:/victory_ow.ogg"
+  },
+  "warsaw": {
+    "file": "nova-flight:/warsaw.ogg"
   }
 }

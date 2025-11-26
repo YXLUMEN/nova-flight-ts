@@ -98,7 +98,11 @@ export class BinaryWriter {
         return this.buffer.subarray(0, this.offset);
     }
 
-    public reset() {
+    public reset(shrink = false) {
         this.offset = 0;
+        if (shrink && this.buffer.length > 128) {
+            this.buffer = new Uint8Array(128);
+            this.view= new DataView(this.buffer.buffer);
+        }
     }
 }

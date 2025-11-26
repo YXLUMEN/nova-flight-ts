@@ -19,10 +19,10 @@ export class Item {
             return this.component(DataComponentTypes.MAX_STACK_SIZE, maxCount);
         }
 
-        public maxDurability(maxDamage: number): this {
-            this.component(DataComponentTypes.MAX_DURABILITY, maxDamage);
+        public maxDurability(maxDurability: number): this {
+            this.component(DataComponentTypes.MAX_DURABILITY, maxDurability);
             this.component(DataComponentTypes.MAX_STACK_SIZE, 1);
-            return this.component(DataComponentTypes.DURABILITY, 0);
+            return this.component(DataComponentTypes.DURABILITY, maxDurability);
         }
 
         public attackDamage(damage: number): this {

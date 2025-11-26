@@ -7,7 +7,7 @@ import type {Consumer} from "../../../apis/types.ts";
 export class ConnectInfo implements IUi {
     private readonly ctx: CanvasRenderingContext2D;
     private readonly ctrl: AbortController;
-    private backBtn!: UIButton;
+    private backBtn: UIButton | null = null;
 
     private width: number = 0;
     private height: number = 0;
@@ -18,8 +18,6 @@ export class ConnectInfo implements IUi {
     private readonly onErr: Consumer<void> | undefined;
     private readonly promise: Promise<void>;
     private readonly resolve: Consumer<void>;
-
-    private readonly bindLoop = this.loop.bind(this);
 
     public constructor(ctx: CanvasRenderingContext2D, onErr?: Consumer<void>) {
         this.ctx = ctx;
@@ -39,7 +37,7 @@ export class ConnectInfo implements IUi {
         }, {signal: this.ctrl.signal});
 
         window.addEventListener('click', (event) => {
-            if (this.error && this.backBtn.hitTest(event.offsetX, event.offsetY)) {
+            if (this.error && this.backBtn && this.backBtn.hitTest(event.offsetX, event.offsetY)) {
                 this.backBtn.onClick();
             }
         }, {signal: this.ctrl.signal});
@@ -47,6 +45,8 @@ export class ConnectInfo implements IUi {
         this.running = true;
         this.loop();
     }
+
+    private readonly bindLoop = this.loop.bind(this);
 
     private loop(): void {
         if (!this.running) return;
@@ -66,7 +66,7 @@ export class ConnectInfo implements IUi {
         ctx.fillText(this.message, this.width / 2, this.height / 2);
         if (this.error) {
             ctx.font = '18px sans-serif';
-            this.backBtn.render(ctx);
+            this.backBtn!.render(ctx);
         }
         ctx.restore();
     }
@@ -75,8 +75,9 @@ export class ConnectInfo implements IUi {
         this.message = message;
     }
 
-    public async setError(message?: string): Promise<void> {
-        if (message !== undefined) this.setMessage(message);
+    public async setError(message: string): Promise<void> {
+        if (this.error) return;
+        this.setMessage(message);
         this.error = true;
 
         await this.promise;
@@ -95,6 +96,10 @@ export class ConnectInfo implements IUi {
         this.resolve();
     }
 
+    public isError() {
+        return this.error;
+    }
+
     public waitConfirm(): Promise<void> {
         return this.promise;
     }
@@ -104,6 +109,6 @@ export class ConnectInfo implements IUi {
         const btnH = 40;
         const btnX = this.width / 2 - btnW / 2;
         const btnY = this.height / 2 + 80;
-        this.backBtn = new UIButton(btnX, btnY, btnW, btnH, "确认", this.destroy.bind(this));
+        this.backBtn = new UIButton(btnX, btnY, btnW, btnH, '确认', this.destroy.bind(this));
     }
 }

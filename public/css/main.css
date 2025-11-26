@@ -4,7 +4,9 @@ html, body {
     background: #050915;
     overflow: hidden;
     user-select: none;
+    -webkit-user-select: none;
     -webkit-user-drag: none;
+    -ms-user-select: none;
     font-family: Consolas, Monaco, "Andale Mono", "Lucida Console", monospace;
 }
 
@@ -53,6 +55,7 @@ canvas {
         overflow: hidden;
         overflow-y: auto;
         overflow-wrap: break-word;
+        z-index: 100;
     }
 
     &.hidden {
@@ -84,6 +87,7 @@ canvas {
     background-color: #fff;
     transition: 100ms transform;
     font-size: 16px;
+    z-index: 100;
 }
 
 .command-bar.hidden {

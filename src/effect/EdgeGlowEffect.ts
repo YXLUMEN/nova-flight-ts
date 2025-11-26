@@ -2,7 +2,7 @@ import type {VisualEffect} from "./VisualEffect.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {decodeFromByte, encodeToByte} from "../utils/NetUtil.ts";
-import {rgba} from "../utils/uit.ts";
+import {hexToRgba} from "../utils/uit.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 
@@ -144,23 +144,23 @@ export class EdgeGlowEffect implements VisualEffect {
         switch (dir) {
             case "vertical":
                 grad = ctx.createLinearGradient(0, y, 0, y + h);
-                grad.addColorStop(0, rgba(color, a));
-                grad.addColorStop(1, rgba(color, 0));
+                grad.addColorStop(0, hexToRgba(color, a));
+                grad.addColorStop(1, hexToRgba(color, 0));
                 break;
             case "vertical-rev":
                 grad = ctx.createLinearGradient(0, y, 0, y + h);
-                grad.addColorStop(0, rgba(color, 0));
-                grad.addColorStop(1, rgba(color, a));
+                grad.addColorStop(0, hexToRgba(color, 0));
+                grad.addColorStop(1, hexToRgba(color, a));
                 break;
             case "horizontal":
                 grad = ctx.createLinearGradient(x, 0, x + w, 0);
-                grad.addColorStop(0, rgba(color, a));
-                grad.addColorStop(1, rgba(color, 0));
+                grad.addColorStop(0, hexToRgba(color, a));
+                grad.addColorStop(1, hexToRgba(color, 0));
                 break;
             case "horizontal-rev":
                 grad = ctx.createLinearGradient(x, 0, x + w, 0);
-                grad.addColorStop(0, rgba(color, 0));
-                grad.addColorStop(1, rgba(color, a));
+                grad.addColorStop(0, hexToRgba(color, 0));
+                grad.addColorStop(1, hexToRgba(color, a));
                 break;
         }
         ctx.fillStyle = grad!;

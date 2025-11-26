@@ -1,6 +1,5 @@
 import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
-import type {UUID} from "../../../apis/types.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
@@ -9,19 +8,17 @@ export class PlayerInputC2SPacket implements Payload {
 
     public static readonly CODEC: PacketCodec<PlayerInputC2SPacket> = PacketCodecs.of<PlayerInputC2SPacket>(
         (writer, value) => {
-            writer.writeString(value.uuid);
+
             writer.writeString(value.key);
         },
         (reader) => {
-            return new PlayerInputC2SPacket(reader.readString() as UUID, reader.readString());
+            return new PlayerInputC2SPacket(reader.readString());
         }
     );
 
-    public readonly uuid: UUID;
     public readonly key: string;
 
-    public constructor(uuid: UUID, key: string) {
-        this.uuid = uuid;
+    public constructor(key: string) {
         this.key = key;
     }
 

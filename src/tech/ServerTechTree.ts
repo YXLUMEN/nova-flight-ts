@@ -4,7 +4,7 @@ import type {NbtCompound} from "../nbt/NbtCompound.ts";
 import tech from "./tech-data.json";
 import type {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 import type {Tech} from "../apis/ITech.ts";
-import {Items} from "../item/items.ts";
+import {Items} from "../item/Items.ts";
 import type {ServerNetworkChannel} from "../server/network/ServerNetworkChannel.ts";
 import {PlayerSetScoreS2CPacket} from "../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
 

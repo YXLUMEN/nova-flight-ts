@@ -46,3 +46,25 @@ export function encodeToUnsignedByte(value: number, maxValue: number = 10): numb
 export function decodeFromUnsignedByte(value: number, maxValue: number = 10): number {
     return value * (maxValue / 255);
 }
+
+export function hexToArgbInt(hex: string): number {
+    let clean = hex.replace('#', '').trim();
+    if (clean.length === 6) {
+        clean = `${clean}FF`;
+    } else if (clean.length !== 8) {
+        throw new Error('Expected #RRGGBB or #RRGGBBAA');
+    }
+
+    const result = parseInt(clean, 16);
+
+    if (isNaN(result)) {
+        throw new Error('Invalid hexadecimal string');
+    }
+
+    return result;
+}
+
+export function argbIntToHex(colorInt: number): string {
+    const hexString = (colorInt >>> 0).toString(16).padStart(8, '0').toUpperCase();
+    return `#${hexString}`;
+}

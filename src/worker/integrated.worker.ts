@@ -12,16 +12,15 @@ async function handleEvent(event: MessageEvent) {
     switch (type) {
         case 'start_server': {
             if (server) return;
-            server = IntegratedServer.startServer(payload.key, payload.clientId) as IntegratedServer;
+            server = IntegratedServer.startServer(payload.key, payload.clientId, payload.saveName) as IntegratedServer;
             server.networkChannel.setServerAddress(payload.addr);
             return server.runServer(payload.action);
         }
         case 'stop_server': {
-            if (server) {
-                await server.stopGame();
-                server = null;
-                self.postMessage({type: 'server_shutdown'});
-            }
+            if (!server) return;
+            await server.stopGame();
+            server = null;
+            self.postMessage({type: 'server_shutdown'});
             break;
         }
         case 'start_ticking': {

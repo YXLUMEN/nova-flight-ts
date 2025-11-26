@@ -7,11 +7,15 @@ import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {EntityAttribute} from "../attribute/EntityAttribute.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import type {LivingEntity} from "../LivingEntity.ts";
+import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
+import {Registries} from "../../registry/Registries.ts";
 
 // 0 BENEFICIAL; 1 HARMFUL; 2 NEUTRAL;
 export type StatusEffectCategory = 0 | 1 | 2;
 
 export class StatusEffect {
+    public static readonly ENTRY_PACKET_CODEC = PacketCodecs.registryEntry(Registries.STATUS_EFFECT);
+
     public static EffectAttributeModifierCreator = class EffectAttributeModifierCreator {
         public readonly id: Identifier;
         public readonly baseValue: number;
@@ -63,9 +67,6 @@ export class StatusEffect {
         return false;
     }
 
-    public onAppliedWithEntity(_entity: LivingEntity, _amount: number): void {
-    }
-
     public addAttributeModifier(attribute: RegistryEntry<EntityAttribute>, id: Identifier, amount: number): StatusEffect {
         this.attributeModifiers.set(attribute, new StatusEffect.EffectAttributeModifierCreator(id, amount));
         return this;
@@ -84,9 +85,7 @@ export class StatusEffect {
     public onRemoved(attributeContainer: AttributeContainer): void {
         for (const entry of this.attributeModifiers.entries()) {
             const attrInstance = attributeContainer.getCustomInstance(entry[0]);
-            if (attrInstance) {
-                attrInstance.removeModifierById(entry[1].id);
-            }
+            if (attrInstance) attrInstance.removeModifierById(entry[1].id);
         }
     }
 

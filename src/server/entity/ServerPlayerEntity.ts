@@ -13,27 +13,33 @@ import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacke
 import type {GameProfile} from "./GameProfile.ts";
 import {type DamageSource} from "../../entity/damage/DamageSource.ts";
 import type {ServerPlayNetworkHandler} from "../network/ServerPlayNetworkHandler.ts";
+import {type StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
+import {type Entity} from "../../entity/Entity.ts";
+import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
+import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
+import {ServerItemCooldownManager} from "../item/ServerItemCooldownManager.ts";
 
 
 export class ServerPlayerEntity extends PlayerEntity {
     public readonly playerProfile: GameProfile;
 
-    public networkHandler!: ServerPlayNetworkHandler;
+    public networkHandler: ServerPlayNetworkHandler | null = null;
     private readonly inputKeys = new Set<string>();
     private readonly changedItems: Set<ItemStack> = new Set();
 
     private revision = 0;
 
     public constructor(world: ServerWorld, playerProfile: GameProfile) {
-        super(world);
+        super(world, new ServerItemCooldownManager());
 
         this.playerProfile = playerProfile;
         this.techTree = new ServerTechTree(this);
+        (this.cooldownManager as ServerItemCooldownManager).setPlayer(this);
     }
 
     public override tick() {
         super.tick();
-        if (this.wasActive) this.handleFire();
+        if (this.wasFiring) this.handleFire();
         this.inputKeys.clear();
 
         if (this.changedItems.size > 0) {
@@ -41,32 +47,6 @@ export class ServerPlayerEntity extends PlayerEntity {
             (this.getNetworkChannel() as ServerNetworkChannel).sendTo(packet, this.getUUID());
             this.changedItems.clear();
         }
-    }
-
-    public setFiring(active: boolean) {
-        this.wasActive = active;
-
-        const current = this.getCurrentItemStack();
-        const item = current.getItem() as BaseWeapon;
-        if (active) {
-            item.onStartFire(current, this.getWorld(), this);
-        } else {
-            item.onEndFire(current, this.getWorld(), this);
-        }
-    }
-
-    public handleFire() {
-        const item = this.baseWeapons[this.currentBaseIndex];
-        const stack = this.items.get(item)!;
-        if (item.canFire(stack)) {
-            item.tryFire(stack, this.getWorld(), this);
-        }
-    }
-
-    public setCurrentItem(slot: number) {
-        const current = this.getCurrentItemStack();
-        this.getCurrentItem().onEndFire(current, this.getWorld(), this);
-        this.currentBaseIndex = clamp(slot, 0, this.baseWeapons.length - 1);
     }
 
     protected override tickInventory(world: World) {
@@ -91,6 +71,33 @@ export class ServerPlayerEntity extends PlayerEntity {
         this.changedItems.add(itemStack);
     }
 
+    public setFiring(active: boolean) {
+        this.wasFiring = active;
+
+        const current = this.getCurrentItemStack();
+        const item = current.getItem() as BaseWeapon;
+        if (active) {
+            item.onStartFire(current, this.getWorld(), this);
+        } else {
+            item.onEndFire(current, this.getWorld(), this);
+        }
+    }
+
+    public handleFire() {
+        const item = this.baseWeapons[this.currentBaseIndex];
+        const stack = this.items.get(item)!;
+
+        if (item.canFire(stack)) {
+            item.tryFire(stack, this.getWorld(), this);
+        }
+    }
+
+    public setCurrentItem(slot: number) {
+        const current = this.getCurrentItemStack();
+        this.getCurrentItem().onEndFire(current, this.getWorld(), this);
+        this.currentBaseIndex = clamp(slot, 0, this.baseWeapons.length - 1);
+    }
+
     public override isInvulnerableTo(damageSource: DamageSource): boolean {
         return super.isInvulnerableTo(damageSource) || this.isDevMode();
     }
@@ -108,6 +115,21 @@ export class ServerPlayerEntity extends PlayerEntity {
     public override setScore(score: number) {
         super.setScore(score);
         (this.getNetworkChannel() as ServerNetworkChannel).sendTo(new PlayerSetScoreS2CPacket(score), this.getUUID());
+    }
+
+    protected override onStatusEffectApplied(effect: StatusEffectInstance, source: Entity | null) {
+        super.onStatusEffectApplied(effect, source);
+        this.networkHandler?.send(EntityStatusEffectS2CPacket.create(this.getId(), effect));
+    }
+
+    protected override onStatusEffectUpgraded(effect: StatusEffectInstance, reapplyEffect: boolean, source: Entity | null) {
+        super.onStatusEffectUpgraded(effect, reapplyEffect, source);
+        this.networkHandler?.send(EntityStatusEffectS2CPacket.create(this.getId(), effect));
+    }
+
+    protected override onStatusEffectRemoved(effect: StatusEffectInstance) {
+        super.onStatusEffectRemoved(effect);
+        this.networkHandler?.send(new RemoveEntityStatusEffectS2CPacket(this.getId(), effect.getEffectType()));
     }
 
     public nextRevision(): number {

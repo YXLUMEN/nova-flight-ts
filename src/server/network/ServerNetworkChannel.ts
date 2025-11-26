@@ -24,7 +24,7 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
 
         const writer = new BinaryWriter();
         writer.writeByte(0x12);
-        writer.writeUint16(this.getSessionID());
+        writer.writeByte(this.getSessionID());
         writer.writeUUID(target);
 
         writer.writeString(type.id.toString());
@@ -39,7 +39,7 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
 
         const writer = new BinaryWriter();
         writer.writeByte(0x13);
-        writer.writeUint16(this.getSessionID());
+        writer.writeByte(this.getSessionID());
 
         writer.writeVarUInt(excludes.length);
         for (const id of excludes) {
@@ -64,7 +64,7 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
             return null;
         }
 
-        const sessionId = reader.readUint16();
+        const sessionId = reader.readUnsignByte();
         const idStr = reader.readString();
         const id = Identifier.tryParse(idStr);
         if (!id) return null;

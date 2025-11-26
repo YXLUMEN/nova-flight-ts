@@ -124,6 +124,71 @@ export class CommandDispatcher<S> {
         return Suggestions.merge(fullInput, results);
     }
 
+    public getAllUsage(node: CommandNode<S>, source: S): string[] {
+        const result: string[] = [];
+
+        const optional = node.getCommand() !== null;
+        for (const child of node.getChildren()) {
+            const usage = this.getAllUsageInner(child, source, optional, false);
+            if (usage !== null) {
+                result.push(usage);
+            }
+        }
+
+        return result;
+    }
+
+    private getAllUsageInner(node: CommandNode<S> | null, source: S, optional: boolean, deep: boolean): string | null {
+        if (!node || !node.canUse(source)) return null;
+
+        const self = optional ? `[${node.getUsageText()}]` : node.getUsageText();
+
+        const childOptional = node.getCommand() !== null;
+        const open = childOptional ? '[' : '(';
+        const close = childOptional ? ']' : ')';
+
+        if (deep) return self;
+
+        const children = node.getChildren()
+            .filter(child => child.canUse(source))
+            .toArray();
+
+        if (children.length === 1) {
+            const next = children.values().next().value ?? null;
+            const usage = this.getAllUsageInner(next, source, childOptional, childOptional);
+            if (usage !== null) {
+                return `${self} ${usage}`;
+            }
+        } else if (children.length > 1) {
+            const childUsage = new Set();
+            for (const child of children) {
+                const usage = this.getAllUsageInner(child, source, childOptional, true);
+                if (usage !== null) {
+                    childUsage.add(usage);
+                }
+            }
+            if (childUsage.size > 1) {
+                const builder: string[] = [];
+                builder.push(open);
+
+                let count = 0;
+                for (const child of children) {
+                    if (count > 0) {
+                        builder.push('|');
+                    }
+                    builder.push(child.getUsageText());
+                    count++;
+                }
+                if (count > 0) {
+                    builder.push(close);
+                    return `${self} ${builder.join('')}`;
+                }
+            }
+        }
+
+        return self;
+    }
+
     public registry(command: LiteralArgumentBuilder<S>) {
         this.root.addChild(command.build());
     }

@@ -14,6 +14,9 @@ export class EntityAttributes {
     public static readonly GENERIC_MOVEMENT_SPEED = this.register('generic.speed',
         new ClampedEntityAttribute(1, 0, 256).setTracked(true)
     );
+    public static readonly GENERIC_MAX_SHIELD = this.register('generic.max_shield',
+        new ClampedEntityAttribute(0, 0, 2048).setTracked(true)
+    );
 
     public static registerAndGetDefault(_registry: Registry<EntityAttribute>) {
         return this.GENERIC_MAX_HEALTH;

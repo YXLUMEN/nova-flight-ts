@@ -7,6 +7,7 @@ import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {SoundEvent} from "./SoundEvent.ts";
 import {convertFileSrc} from "@tauri-apps/api/core";
 import {isServer} from "../configs/WorldConfig.ts";
+import {MediaWithoutSrc} from "../apis/errors.ts";
 
 export class AudioManager {
     private static readonly AUDIO_PLAYER: HTMLAudioElement;
@@ -65,7 +66,12 @@ export class AudioManager {
     }
 
     public static leap(time: number) {
-        this.AUDIO_PLAYER.currentTime = time;
+        if (!this.AUDIO_PLAYER.src) throw new MediaWithoutSrc("Audio does not set");
+        this.AUDIO_PLAYER.currentTime = clamp(time, 0, this.AUDIO_PLAYER.duration);
+    }
+
+    public static getDuration(): number {
+        return this.AUDIO_PLAYER.duration;
     }
 
     public static pause(): void {

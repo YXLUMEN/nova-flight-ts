@@ -49,7 +49,7 @@ export class MiniGunEnemyEntity extends MobEntity {
 
         const pos = this.getPositionRef;
         const yaw = this.getYaw();
-        const b = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, this, 1);
+        const b = new MiniBulletEntity(EntityTypes.ENEMY_BULLET_ENTITY, world, this, 1);
         b.setVelocity(Math.cos(yaw) * MiniGunEnemyEntity.bulletSpeed, Math.sin(yaw) * MiniGunEnemyEntity.bulletSpeed);
         b.setPosition(pos.x, pos.y);
 

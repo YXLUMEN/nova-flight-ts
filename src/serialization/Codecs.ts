@@ -4,7 +4,7 @@ import {Vec2} from "../utils/math/Vec2.ts";
 import type {Codec} from "./Codec.ts";
 
 export class Codecs {
-    public static readonly INT: Codec<number> = {
+    public static readonly INT32: Codec<number> = {
         encode(v: number) {
             return new NbtCompound().putInt32("value", v);
         },
@@ -13,7 +13,7 @@ export class Codecs {
         }
     };
 
-    public static readonly UINT: Codec<number> = {
+    public static readonly UINT32: Codec<number> = {
         encode(value: number): NbtCompound {
             return new NbtCompound().putUint("value", value);
         },

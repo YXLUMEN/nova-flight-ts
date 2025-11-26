@@ -35,15 +35,13 @@ import {encodeToUnsignedByte} from "../utils/NetUtil.ts";
 import {type VisualEffect} from "../effect/VisualEffect.ts";
 import {EffectCreateS2CPacket} from "../network/packet/s2c/EffectCreateS2CPacket.ts";
 import type {IServerPlayNetwork} from "./network/IServerPlayNetwork.ts";
+import {warn} from "@tauri-apps/plugin-log";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
 
     public stage: Stage;
     private phaseScore: number = 0;
-
-    private readonly players: Map<UUID, ServerPlayerEntity> = new Map<UUID, ServerPlayerEntity>();
-    private readonly playerData: Map<UUID, NbtCompound> = new Map<UUID, NbtCompound>();
 
     private readonly entities: EntityList = new EntityList();
     private readonly entityManager: ServerEntityManager<Entity>;
@@ -68,7 +66,7 @@ export class ServerWorld extends World implements NbtSerializable {
 
         for (const entity of this.entities.values()) {
             if (entity.isRemoved()) continue;
-            this.serverTickEntity(entity);
+            this.tickEntity(this.bindTickEntity, entity);
             if (this.over) break;
         }
         this.entities.processRemovals();
@@ -77,13 +75,15 @@ export class ServerWorld extends World implements NbtSerializable {
         }
     }
 
-    public serverTickEntity(entity: Entity): void {
+    private bindTickEntity = this.serverTickEntity.bind(this);
+
+    private serverTickEntity(entity: Entity): void {
         entity.resetPosition();
         entity.age++;
         entity.tick();
 
         if (entity.isPlayer()) return;
-        this.players.values().forEach(player => {
+        this.getPlayers().forEach(player => {
             this.tickOtherEntity(entity, player);
         });
     }
@@ -133,7 +133,7 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public override setTicking(ticking: boolean = true) {
-        if (this.isMultiPlayer) return;
+        if (this.getServer().isMultiPlayer) return;
         super.setTicking(ticking);
     }
 
@@ -150,27 +150,18 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public spawnPlayer(player: ServerPlayerEntity): void {
-        const playerUUID: UUID = player.getUUID();
-
-        if (this.playerData.has(playerUUID)) {
-            const nbt = this.playerData.get(playerUUID);
-            if (nbt) player.readNBT(nbt);
-            this.playerData.delete(playerUUID);
-        }
-
-        this.players.set(playerUUID, player);
-        if (this.players.size > 1) {
-            this.setTicking(true);
-            this.isMultiPlayer = true;
+        const entity = this.getEntity(player.getUUID());
+        if (entity) {
+            warn(`Force-added player with duplicate UUID ${player.getUUID()}`).catch();
+            entity.discard();
+            this.removePlayer(entity as ServerPlayerEntity);
         }
 
         this.entityManager.addEntity(player);
     }
 
     public removePlayer(player: ServerPlayerEntity): void {
-        if (this.players.delete(player.getUUID())) {
-            this.entityManager.remove(player);
-        }
+        player.discard();
     }
 
     public override addEntity(entity: Entity): void {
@@ -201,7 +192,7 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public getPlayers() {
-        return this.players.values();
+        return this.server.playerManager.getAllPlayers();
     }
 
     public getMobs(): ReadonlySet<MobEntity> {
@@ -224,7 +215,7 @@ export class ServerWorld extends World implements NbtSerializable {
         this.setPhase(this.phaseScore + phase);
     }
 
-    public override getServer(): NovaFlightServer | null {
+    public override getServer(): NovaFlightServer {
         return this.server;
     }
 
@@ -310,9 +301,12 @@ export class ServerWorld extends World implements NbtSerializable {
         this.entities.forEach(entity => {
             if (!entity.shouldSave()) return;
 
+            const type = entity.getType();
+            if (type === EntityTypes.PLAYER) return;
+
             const nbt = new NbtCompound();
-            const type = EntityType.getId(entity.getType())!;
-            nbt.putString('Type', type.toString());
+            const typeId = EntityType.getId(type)!;
+            nbt.putString('Type', typeId.toString());
             entity.writeNBT(nbt);
             entityList.push(nbt);
         });
@@ -329,8 +323,6 @@ export class ServerWorld extends World implements NbtSerializable {
     public readNBT(nbt: NbtCompound) {
         const entityNbt = nbt.getCompoundList('Entities');
         if (entityNbt) this.loadEntity(entityNbt);
-        // TODO
-        setTimeout(() => this.playerData.clear(), 20000);
 
         const stageNbt = nbt.getCompound('Stage');
         if (stageNbt) this.stage.readNBT(stageNbt);
@@ -343,12 +335,6 @@ export class ServerWorld extends World implements NbtSerializable {
             const entityType = EntityType.get(typeName);
 
             if (!entityType) continue;
-            if (entityType === EntityTypes.PLAYER) {
-                const uuid = nbt.getString('UUID') as UUID;
-                this.playerData.set(uuid, nbt);
-                continue;
-            }
-
             const entity = entityType.create(this);
             entity.readNBT(nbt);
             this.spawnEntity(entity);
@@ -358,8 +344,7 @@ export class ServerWorld extends World implements NbtSerializable {
     public override clear(): void {
         super.clear();
 
-        this.players.forEach(player => player.discard());
-        this.playerData.clear();
+        this.getPlayers().forEach(player => player.discard());
         this.entities.forEach(entity => entity.discard());
         this.entities.clear();
         this.trackedEntities.clear();

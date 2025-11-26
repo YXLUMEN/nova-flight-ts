@@ -36,6 +36,7 @@ export class ClientWorld extends World {
     private readonly players = new Set<AbstractClientPlayerEntity>();
     private readonly entities: EntityList = new EntityList();
     private readonly entityManager: ClientEntityManager<Entity>;
+    private isMultiPlayer = false;
 
     private readonly worldSound = new SoundSystem();
 
@@ -173,7 +174,7 @@ export class ClientWorld extends World {
     public override addParticle(
         posX: number, posY: number, velX: number, velY: number,
         life: number, size: number,
-        colorFrom: string, colorTo: string,
+        colorFrom: string, colorTo: string = colorFrom,
         drag = 0.0, gravity = 0.0
     ) {
         this.particlePool.spawn(
@@ -187,7 +188,7 @@ export class ClientWorld extends World {
     public override addImportantParticle(
         posX: number, posY: number, velX: number, velY: number,
         life: number, size: number,
-        colorFrom: string, colorTo: string,
+        colorFrom: string, colorTo: string = colorFrom,
         drag = 0.0, gravity = 0.0
     ) {
         this.addEffect(null, new Particle(
@@ -219,8 +220,8 @@ export class ClientWorld extends World {
         ClientDefaultEvents.registryEvents(this);
     }
 
-    public setMultiPlayer() {
-        this.isMultiPlayer = true;
+    public isMultiPlayerWorld() {
+        return this.isMultiPlayer;
     }
 
     public toggleTechTree() {
