@@ -58,7 +58,7 @@ export class DataComponentTypes {
         builder => builder.withCodec(Codecs.UINT32).withPacketCodec(PacketCodecs.VAR_INT)
     );
 
-    public static readonly ACTIVE: ComponentType<boolean> = this.register("active",
+    public static readonly FIRING: ComponentType<boolean> = this.register("firing",
         builder => builder.withCodec(Codecs.BOOLEAN).withPacketCodec(PacketCodecs.BOOL)
     );
     public static readonly OVERHEAT: ComponentType<boolean> = this.register("overheat",

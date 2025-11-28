@@ -5,7 +5,6 @@ import tech from "./tech-data.json";
 import type {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 import type {Tech} from "../apis/ITech.ts";
 import {Items} from "../item/Items.ts";
-import type {ServerNetworkChannel} from "../server/network/ServerNetworkChannel.ts";
 import {PlayerSetScoreS2CPacket} from "../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
 
 export class ServerTechTree implements TechTree {
@@ -76,7 +75,7 @@ export class ServerTechTree implements TechTree {
 
         this.state.reset();
 
-        (player.getNetworkChannel() as ServerNetworkChannel).sendTo(new PlayerSetScoreS2CPacket(finalScore), player.getUUID());
+        player.networkHandler?.send(new PlayerSetScoreS2CPacket(finalScore));
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {

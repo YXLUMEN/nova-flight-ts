@@ -142,7 +142,10 @@ export class EntityAttributeInstance {
     }
 
     public readNbt(nbt: NbtCompound): void {
-        this.baseValue = nbt.getDouble('base');
+        const value = nbt.getDouble('base');
+        if (!Number.isFinite(value)) throw new Error(`Error when read NBT for EntityAttribute: ${value}`);
+        this.baseValue = value;
+
         const nbtList = nbt.getCompoundList('modifiers');
         if (nbtList) {
             for (const modifierNbt of nbtList) {

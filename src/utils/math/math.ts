@@ -144,6 +144,10 @@ export function lerp(delta: number, start: number, end: number): number {
     return start + delta * (end - start);
 }
 
+export function easeOutQuad(t: number): number {
+    return 1 - (1 - t) * (1 - t);
+}
+
 export function doubleEquals(a: number, b: number, epsilon = 1E-6): boolean {
     return Math.abs(a - b) <= epsilon;
 }

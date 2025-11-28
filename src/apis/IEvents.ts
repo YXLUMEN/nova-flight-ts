@@ -25,7 +25,7 @@ export type IEvents = {
     [EVENTS.ENTITY_REMOVED]: { entity: Entity; };
     [EVENTS.BOSS_KILLED]: { mob: BossEntity | null; damageSource: DamageSource };
     [EVENTS.MOB_KILLED]: { mob: MobEntity; damageSource: DamageSource; pos: IVec };
-    [EVENTS.MOB_DAMAGE]: { mob: MobEntity; damageSource: DamageSource };
+    [EVENTS.MOB_DAMAGE]: { mob: MobEntity; damageSource: DamageSource; };
     [EVENTS.UNLOCK_TECH]: { id: string };
     [EVENTS.BOMB_DETONATE]: { entity: Entity };
     [EVENTS.EMP_BURST]: { entity: Entity, duration: number };

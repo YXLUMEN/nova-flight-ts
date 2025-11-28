@@ -69,7 +69,7 @@ export class DecoyReleaser extends SpecialWeapon {
         this.setCooldown(stack, this.getMaxCooldown(stack));
     }
 
-    public override bindKey(): string {
+    public bindKey(): string {
         return "KeyX";
     }
 

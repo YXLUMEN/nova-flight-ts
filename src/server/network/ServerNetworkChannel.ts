@@ -13,8 +13,8 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
     private readonly secretKey: Uint8Array;
     private handler: Consumer<PayloadWithOrigin> | null = null;
 
-    public constructor(url: string, secretKey: Uint8Array) {
-        super(url, PayloadTypeRegistry.playS2C());
+    public constructor(address: string, secretKey: Uint8Array) {
+        super(address, PayloadTypeRegistry.playS2C());
         this.secretKey = secretKey;
     }
 
@@ -99,7 +99,11 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
     }
 
     protected register() {
-        this.ws!.send(new Uint8Array([0x01, ...this.secretKey]));
+        const payload = new Uint8Array(1 + this.secretKey.length);
+        payload[0] = 0x01;
+        payload.set(this.secretKey, 1);
+
+        this.ws!.send(payload);
         console.log("Server registered");
     }
 }

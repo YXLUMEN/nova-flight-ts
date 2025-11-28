@@ -70,6 +70,7 @@ export class ClientWorld extends World {
         this.effects.forEach(effect => effect.tick(dt));
         this.particlePool.tick(dt);
         this.starField.update(dt, camera);
+        this.client.window.damagePopup.tick(dt);
     }
 
     public tickEntities() {
@@ -309,6 +310,7 @@ export class ClientWorld extends World {
         }
 
         this.client.window.hud.drawPrimaryWeapons(ctx, tickDelta);
+        this.client.window.damagePopup.render(ctx, tickDelta);
         ctx.restore();
 
         this.client.window.hud.render(ctx);

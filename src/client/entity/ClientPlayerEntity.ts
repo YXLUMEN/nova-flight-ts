@@ -42,7 +42,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     private revision: number = 0;
 
     public constructor(world: World, input: KeyboardInput, profile: GameProfile) {
-        super(world, new ItemCooldownManager());
+        super(world, ItemCooldownManager);
 
         this.input = input;
         this.profile = profile;
@@ -128,19 +128,20 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     protected override tickInventory(world: ClientWorld) {
         this.weaponFire(world);
+        const currentItem = this.getCurrentItem();
 
-        for (const [w, stack] of this.items) {
-            if (w instanceof SpecialWeapon) {
-                const key = this.weaponKeys.get(w)!;
-                if (this.isDevMode() && w.getCooldown(stack) > 0.5) {
-                    w.setCooldown(stack, 0.5);
+        for (const [item, stack] of this.items) {
+            if (item instanceof SpecialWeapon) {
+                const key = this.weaponKeys.get(item)!;
+                if (this.isDevMode() && item.getCooldown(stack) > 0.5) {
+                    item.setCooldown(stack, 0.5);
                 }
-                if (w.canFire(stack) && this.input.wasPressed(key)) {
-                    w.tryFire(stack, world, this);
+                if (item.canFire(stack) && this.input.wasPressed(key)) {
+                    item.tryFire(stack, world, this);
                     this.getNetworkChannel().send(new PlayerInputC2SPacket(key));
                 }
             }
-            w.inventoryTick(stack, world, this, 0, true);
+            item.inventoryTick(stack, world, this, 0, currentItem === item);
         }
     }
 
@@ -162,7 +163,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             this.wasFiring = isFiring;
         }
 
-        if (isFiring && hasAmmo && item.getCooldown(stack) <= 1) {
+        if (isFiring && hasAmmo && item.canFire(stack)) {
             item.tryFire(stack, world, this);
         }
 
@@ -178,6 +179,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             return;
         }
         this.getNetworkChannel().send(new PlayerReloadC2SPacket());
+        this.wasFiring = true;
     }
 
     public override clearItems(): void {

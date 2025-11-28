@@ -1,6 +1,7 @@
 import {ClientNetwork} from "../client/network/ClientNetwork.ts";
 import {ServerNetwork} from "../server/network/ServerNetwork.ts";
 import {DevServer} from "../server/DevServer.ts";
+import type {StartServer} from "../apis/startup.ts";
 
 let server: DevServer | null = null;
 
@@ -12,9 +13,11 @@ async function handleEvent(event: MessageEvent<any>) {
     switch (type) {
         case 'start_server': {
             if (server) return;
-            server = DevServer.startServer(payload.key, payload.clientId, payload.saveName) as DevServer;
-            server.networkChannel.setServerAddress(payload.addr);
-            return server.runServer(payload.action);
+            const startUp = payload as StartServer;
+
+            server = DevServer.startServer(new Uint8Array(startUp.key), startUp.hostUUID, startUp.saveName) as DevServer;
+            server.networkChannel.setServerAddress(startUp.addr);
+            return server.runServer(startUp.action);
         }
         case 'stop_server': {
             if (!server) return;

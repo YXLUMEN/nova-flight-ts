@@ -255,7 +255,13 @@ export class ServerWorld extends World implements NbtSerializable {
         const explosion = super.createExplosion(entity, damage, x, y, opts);
 
         const shack = encodeToUnsignedByte(opts.shake ?? 0, 1);
-        this.getNetworkChannel().send(new ExplosionS2CPacket(x, y, opts.explosionRadius ?? 64, shack));
+        const packet = new ExplosionS2CPacket(x, y, opts.explosionRadius ?? 64, shack);
+        this.getNetworkChannel().send(packet);
+
+        // if (opts.attacker && opts.attacker.isPlayer() && opts.attacker.getTechs().isUnlocked('serial_warhead')) {
+        //     let num = 0;
+        //     this.scheduleInterval();
+        // }
         return explosion;
     }
 

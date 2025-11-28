@@ -8,7 +8,6 @@ export abstract class SpecialWeapon extends Weapon {
     public override inventoryTick(stack: ItemStack, world: World, _holder: Entity) {
         const cooldown = this.getCooldown(stack);
         if (cooldown === 0) return;
-        if (this.shouldCooldown(stack)) this.setCooldown(stack, cooldown - 1);
         if (this.isReady(stack)) this.onReady(world);
     }
 
@@ -17,9 +16,18 @@ export abstract class SpecialWeapon extends Weapon {
     }
 
     public onReady(world: World): void {
-        if (!world.isClient) return;
-        world.playSound(null, SoundEvents.WEAPON_READY);
+        if (world.isClient) world.playSound(null, SoundEvents.WEAPON_READY);
     }
 
-    public abstract bindKey(): string;
+    public override setCooldown(stack: ItemStack, value: number) {
+        const holder = stack.getHolder();
+        if (!holder || !holder.isPlayer()) return super.setCooldown(stack, value);
+        holder.cooldownManager.set(this, value);
+    }
+
+    public override getCooldown(stack: ItemStack): number {
+        const holder = stack.getHolder();
+        if (!holder || !holder.isPlayer()) return super.getCooldown(stack);
+        return holder.cooldownManager.getCooldownTicks(this);
+    }
 }

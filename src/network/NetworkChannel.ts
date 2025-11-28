@@ -7,7 +7,6 @@ import type {Consumer} from "../apis/types.ts";
 import type {Channel} from "./Channel.ts";
 import {RelayServerPacket} from "./packet/RelayServerPacket.ts";
 import {sleep} from "../utils/uit.ts";
-import {error} from "@tauri-apps/plugin-log";
 import {PacketTooLargeError} from "../apis/errors.ts";
 
 
@@ -44,15 +43,12 @@ export abstract class NetworkChannel implements Channel {
             reject(reason);
             clearTimeout(timeout);
         };
+        timeout = setTimeout(() => connectFail('Connected timeout'), 6000);
 
-        timeout = setTimeout(() => {
-            connectFail('Connected timeout');
-        }, 5000);
+        this.ws = new WebSocket(`ws://${this.serverAddress}`);
+        this.ws.binaryType = 'arraybuffer';
 
-        const ws = new WebSocket(`ws://${this.serverAddress}`);
-        ws.binaryType = "arraybuffer";
-
-        ws.onmessage = (event) => {
+        this.ws.onmessage = (event) => {
             const binary = event.data as ArrayBuffer;
             const payload = this.decodePayload(new Uint8Array(binary));
 
@@ -76,18 +72,20 @@ export abstract class NetworkChannel implements Channel {
             this.sessionId = sessionId;
             connectReady();
 
-            ws.onmessage = this.handleMessage.bind(this);
-            ws.onerror = err => error(`${this.getSide()}: Connection Error: ${err}`);
+            this.ws!.onmessage = this.handleMessage.bind(this);
+            this.ws!.onerror = err => console.error(`${this.getSide()}: Connection Error: ${err}`);
         };
 
-        ws.onerror = (err) => {
-            error(`${this.getSide()}: Connection Error: ${err}`);
+        this.ws.onerror = (err) => {
+            console.error(`${this.getSide()}: Connection Error: ${err}`);
             connectFail(err);
         }
 
-        ws.onopen = () => this.register();
+        this.ws.onopen = () => this.register();
 
-        this.ws = ws;
+        this.ws.onclose = event => {
+            console.log(`A ${this.getSide()}'s connection to ${this.serverAddress} closed because ${event.type}:${event.reason || 'unknown'}`);
+        }
 
         await promise;
         this.readyPromise = null;

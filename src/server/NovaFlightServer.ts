@@ -69,8 +69,12 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.world = new ServerWorld(manager, this);
 
         if (readSave) {
-            const saves = await this.loadSaves();
-            if (saves) this.world.readNBT(saves);
+            try {
+                const saves = await this.loadSaves();
+                if (saves) this.world.readNBT(saves);
+            } catch (error) {
+                console.error(error);
+            }
         }
 
         this.profile = new GameProfile(this.networkChannel.getSessionID(), this.serverId, this.saveName);

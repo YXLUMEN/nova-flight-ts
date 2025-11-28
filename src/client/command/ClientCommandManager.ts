@@ -32,9 +32,8 @@ export class ClientCommandManager extends CommandManager {
 
     private readonly commandInput: HTMLInputElement;
 
-    // client + server
     private parse: ParseResults<any>[] | null = null;
-    private suggestionCache: MemoryLRU<string, Suggestion[]> = new MemoryLRU(12);
+    private suggestionCache: MemoryLRU<string, Suggestion[]> = new MemoryLRU(24);
     private suggestionsLength = 0;
     private tokenStart = -1;
     private completionIndex = -1;

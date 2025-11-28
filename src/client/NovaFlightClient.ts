@@ -24,6 +24,7 @@ import {ClientMultiGameManger} from "./ClientMultiGameManger.ts";
 import {ConnectInfo} from "./render/ui/ConnectInfo.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {ClientChat} from "./command/ClientChat.ts";
+import type {StartServer} from "../apis/startup.ts";
 
 export class NovaFlightClient {
     private static instance: NovaFlightClient;
@@ -249,10 +250,10 @@ export class NovaFlightClient {
         // 全屏提示
         const connectInfo = new ConnectInfo(this.window.ctx, this.stopWorld.bind(this));
         this.connectInfo = connectInfo;
-        this.connectInfo.setMessage('启动内置服务器...');
+        this.connectInfo.setMessage('准备启动内置服务器...');
 
         // 启动中继服务器
-        let key: number[];
+        let key: ArrayBuffer;
         try {
             await invoke('stop_server');
             const obj = await invoke('start_server', {port: WorldConfig.port});
@@ -261,7 +262,7 @@ export class NovaFlightClient {
                 // noinspection ExceptionCaughtLocallyJS
                 throw new Error("Key must be an number array");
             }
-            key = obj;
+            key = new Uint8Array(obj).buffer;
         } catch (err) {
             console.error(err);
             await connectInfo.setError(String(err));
@@ -280,6 +281,7 @@ export class NovaFlightClient {
             return;
         }
 
+        this.connectInfo.setMessage('开始连接...');
         try {
             await this.networkChannel.connect();
         } catch (err) {
@@ -287,24 +289,19 @@ export class NovaFlightClient {
             return;
         }
 
+        const startUp: StartServer = {
+            addr,
+            key,
+            hostUUID: this.clientId,
+            action,
+            saveName: 'MyWorld'
+        };
+
         // Vite 规定的格式 integrated dev
-        this.server = new ServerWorker(new Worker(new URL('../worker/dev.worker.ts', import.meta.url), {
+        this.server = new ServerWorker(new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
             type: 'module',
             name: 'server',
         }));
-
-        this.connectInfo.setMessage('开始连接...');
-
-        this.server.postMessage({
-            type: 'start_server',
-            payload: {
-                action,
-                addr,
-                key,
-                clientId: this.clientId,
-                saveName: 'MyWorld'
-            }
-        });
 
         const timeout = setTimeout(() => {
             this.connectInfo?.setError('连接超时');
@@ -341,6 +338,11 @@ export class NovaFlightClient {
             this.stopWorld();
             this.server?.terminate();
         }
+
+        this.server.postMessage({
+            type: 'start_server',
+            payload: startUp
+        }, {transfer: [key]});
 
         await connectInfo.waitConfirm();
     }

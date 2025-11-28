@@ -157,11 +157,11 @@ export class LaserWeapon extends SpecialWeapon {
     }
 
     public setActive(stack: ItemStack, active: boolean): void {
-        stack.set(DataComponentTypes.ACTIVE, active);
+        stack.set(DataComponentTypes.FIRING, active);
     }
 
     public getActive(stack: ItemStack): boolean {
-        return stack.getOrDefault(DataComponentTypes.ACTIVE, false);
+        return stack.getOrDefault(DataComponentTypes.FIRING, false);
     }
 
     public getMaxHeat(stack: ItemStack): number {

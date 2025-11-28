@@ -1,5 +1,5 @@
 import {Weapon} from "../Weapon.ts";
-import {clamp, rand, randInt} from "../../../utils/math/math.ts";
+import {rand, randInt} from "../../../utils/math/math.ts";
 import {Vec2} from "../../../utils/math/Vec2.ts";
 import type {ProjectileEntity} from "../../../entity/projectile/ProjectileEntity.ts";
 import type {Entity} from "../../../entity/Entity.ts";
@@ -12,30 +12,39 @@ import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
 
 export abstract class BaseWeapon extends Weapon {
+    public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean): void {
+        super.inventoryTick(stack, world, holder, slot, selected);
+
+        if (holder.isPlayer() && stack.getOrDefault(DataComponentTypes.RELOADING, false)) {
+            this.reloadAction(holder as PlayerEntity, stack, selected);
+        }
+    }
+
     public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
         if (!attacker.isPlayer()) return;
 
         const currentAmmo = stack.getDurability();
-        if (currentAmmo === 0) return;
-
+        if (currentAmmo === 0 && stack.isDamageable()) return;
         if (world.isClient) {
             this.spawnMuzzle(world as ClientWorld, attacker, this.getMuzzleParticles());
             return;
         }
 
+        // reload
         const player = attacker as ServerPlayerEntity;
         const manager = player.cooldownManager;
         if (manager.isCoolingDown(this)) {
-            if (stack.getOrDefault(DataComponentTypes.RELOADING, false)) {
-                manager.set(this, 0);
-                stack.set(DataComponentTypes.RELOADING, false);
-            } else {
+            if (!stack.getOrDefault(DataComponentTypes.RELOADING, false)) {
                 return;
             }
+            manager.set(this, 0);
+            stack.set(DataComponentTypes.RELOADING, false);
         }
 
         stack.setDurability(currentAmmo - this.getAmmoConsume());
         this.onFire(stack, world as ServerWorld, attacker);
+
+        // fire rate
         this.setCooldown(stack, this.getFireRate(stack));
         player.addChange(stack);
     }
@@ -73,20 +82,16 @@ export abstract class BaseWeapon extends Weapon {
         }
     }
 
-    public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean): void {
-        super.inventoryTick(stack, world, holder, slot, selected);
-
-        if (holder.isPlayer() && stack.getOrDefault(DataComponentTypes.RELOADING, false)) {
-            this.reloadAction(holder as PlayerEntity, stack, selected);
-        }
+    public override canFire(stack: ItemStack): boolean {
+        return this.getCooldown(stack) <= 1;
     }
 
     public getFireRate(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponentTypes.MAX_COOLDOWN, 1);
+        return this.getMaxCooldown(stack);
     }
 
     public setFireRate(stack: ItemStack, fireRate: number) {
-        stack.set(DataComponentTypes.MAX_COOLDOWN, clamp(fireRate, 0, 256));
+        this.setMaxCooldown(stack, fireRate);
     }
 
     public getReloadTick(stack: ItemStack): number {
@@ -103,29 +108,6 @@ export abstract class BaseWeapon extends Weapon {
 
     protected getMuzzleParticles(): number {
         return 4;
-    }
-
-    protected spawnMuzzle(world: ClientWorld, entity: Entity, particles: number): void {
-        const pos = entity.getPositionRef;
-        const yaw = entity.getYaw();
-
-        for (let i = 0; i < particles; i++) {
-            const angleOffset = rand(-0.41886, 0.41886);
-            const particleYaw = yaw + angleOffset;
-
-            const px = Math.cos(particleYaw);
-            const py = Math.sin(particleYaw);
-
-            const speed = randInt(100, 210);
-
-            world.addParticle(
-                pos.x, pos.y,
-                px * speed, py * speed,
-                rand(0.4, 0.6), rand(2, 3),
-                "#ffaa33", "#ff5454",
-                0.6, 80
-            );
-        }
     }
 
     protected setBullet(bullet: ProjectileEntity, attacker: Entity, speed: number, offset: number, maxSpread = 1, margin = 0): void {
@@ -147,5 +129,31 @@ export abstract class BaseWeapon extends Weapon {
             pos.x + f * completeOffset + f * margin,
             pos.y + g * completeOffset + g * margin,
         );
+    }
+
+    protected spawnMuzzle(world: ClientWorld, entity: Entity, particles: number): void {
+        const pos = entity.getPositionRef;
+        const yaw = entity.getYaw();
+        const offset = entity.getWidth() / 2;
+        const x = Math.cos(yaw) * offset + pos.x;
+        const y = Math.sin(yaw) * offset + pos.y;
+
+        for (let i = 0; i < particles; i++) {
+            const angleOffset = rand(-0.41886, 0.41886);
+            const particleYaw = yaw + angleOffset;
+
+            const px = Math.cos(particleYaw);
+            const py = Math.sin(particleYaw);
+
+            const speed = randInt(100, 210);
+
+            world.addParticle(
+                x, y,
+                px * speed, py * speed,
+                rand(0.4, 0.6), rand(2, 3),
+                "#ffaa33", "#ff5454",
+                0.6, 80
+            );
+        }
     }
 }

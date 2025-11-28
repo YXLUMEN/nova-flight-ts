@@ -29,7 +29,11 @@ export class StatusEffectInstance {
         const type = Registries.STATUS_EFFECT.getEntryById(id);
         if (!type) return null;
         const duration = nbt.getDouble('duration');
+        if (!Number.isFinite(duration)) throw new Error("StatusEffect duration should be finite");
+
         const amplifier = nbt.getUint('amplifier');
+        if (!Number.isSafeInteger(amplifier)) throw new Error("StatusEffect amplifier should be valid integer");
+
         return new StatusEffectInstance(type, duration, amplifier);
     }
 

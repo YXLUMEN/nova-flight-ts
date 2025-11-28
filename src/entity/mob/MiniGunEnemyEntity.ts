@@ -22,7 +22,7 @@ export class MiniGunEnemyEntity extends MobEntity {
 
     public override createLivingAttributes() {
         return super.createLivingAttributes()
-            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 64)
+            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 128)
             .addWithBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE, 6);
     }
 

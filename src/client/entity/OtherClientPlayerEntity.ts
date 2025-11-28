@@ -9,7 +9,7 @@ export class OtherClientPlayerEntity extends AbstractClientPlayerEntity {
     private velocityLerpDivisor: number = 0;
 
     public constructor(world: World) {
-        super(world, new ItemCooldownManager());
+        super(world, ItemCooldownManager);
     }
 
     protected override tickInventory() {

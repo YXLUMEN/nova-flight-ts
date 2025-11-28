@@ -34,6 +34,10 @@ export class Item {
             return this.component(DataComponentTypes.COOLDOWN, 0);
         }
 
+        public unbreakable(): this {
+            return this.component(DataComponentTypes.UNBREAKABLE, true);
+        }
+
         public component<T>(type: ComponentType<T>, value: T): this {
             if (this.components === null) {
                 this.components = this.getComponents();

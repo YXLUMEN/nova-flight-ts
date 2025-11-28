@@ -15,10 +15,17 @@ export class EMPRocketEntity extends RocketEntity {
 
     public override explode() {
         const world = this.getWorld();
+        const doubleR = this.explosionRadius * 2;
+
         world.getEntities().forEach(entity => {
             if (entity instanceof ProjectileEntity) {
-                if (entity.getOwner() !== this.getOwner()) entity.discard();
-            } else if (entity instanceof MobEntity) {
+                if (entity.getOwner() !== this.getOwner() &&
+                    pointInCircleVec2(entity.getPositionRef, this.getPositionRef, doubleR)) {
+                    entity.discard();
+                }
+                return;
+            }
+            if (entity instanceof MobEntity) {
                 if (!entity.isRemoved() &&
                     pointInCircleVec2(entity.getPositionRef, this.getPositionRef, this.explosionRadius)) {
                     entity.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, this.duration, 1), null);

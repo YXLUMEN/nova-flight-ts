@@ -81,10 +81,6 @@ export class IntoVoidWeapon extends SpecialWeapon {
         }
     }
 
-    public override bindKey(): string {
-        return "Digit4";
-    }
-
     public override getCooldown(stack: ItemStack): number {
         return this.getActive(stack) ? (this.getDuration(stack) - this.getTimeLeft(stack)) : super.getCooldown(stack);
     }
@@ -94,11 +90,11 @@ export class IntoVoidWeapon extends SpecialWeapon {
     }
 
     public getActive(stack: ItemStack): boolean {
-        return stack.getOrDefault(DataComponentTypes.ACTIVE, true);
+        return stack.getOrDefault(DataComponentTypes.FIRING, true);
     }
 
     public setActive(stack: ItemStack, value: boolean): void {
-        stack.set(DataComponentTypes.ACTIVE, value);
+        stack.set(DataComponentTypes.FIRING, value);
     }
 
     public getDuration(stack: ItemStack): number {

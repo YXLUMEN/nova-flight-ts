@@ -7,28 +7,11 @@ import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {CIWSBulletEntity} from "../../../entity/projectile/CIWSBulletEntity.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
-import type {ClientWorld} from "../../../client/ClientWorld.ts";
 import {clamp} from "../../../utils/math/math.ts";
+import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
 
 export class CIWS extends BaseWeapon {
     private static readonly BULLET_SPEED = 60;
-
-    public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
-        if (world.isClient) {
-            this.spawnMuzzle(world as ClientWorld, attacker, this.getMuzzleParticles());
-        } else {
-            this.onFire(stack, world as ServerWorld, attacker);
-        }
-
-        const increaseHeat = this.getHeat(stack) + 3;
-        this.setHeat(stack, increaseHeat);
-        if (increaseHeat > this.getMaxHeat(stack)) {
-            stack.setAvailable(false);
-            this.onEndFire(stack, world, attacker);
-            return;
-        }
-        this.setCooldown(stack, this.getFireRate(stack));
-    }
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity) {
         const damage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
@@ -37,27 +20,34 @@ export class CIWS extends BaseWeapon {
             this.setBullet(bullet, attacker, CIWS.BULLET_SPEED, 2, 2, i * 20);
             world.spawnEntity(bullet);
         }
+
+        const increaseHeat = this.getHeat(stack) + 3;
+        this.setHeat(stack, increaseHeat);
+        if (increaseHeat > this.getMaxHeat(stack)) {
+            stack.setAvailable(false);
+            this.onEndFire(stack, world, attacker);
+        }
     }
 
     public override onStartFire(stack: ItemStack, world: World, attacker: Entity): void {
         if (!stack.isAvailable()) return;
-        if (world.isClient) world.playLoopSound(attacker, SoundEvents.CIWS_FIRE_LOOP, 0.8);
-        stack.set(DataComponentTypes.ACTIVE, true);
+        if (world.isClient) {
+            world.playLoopSound(attacker, SoundEvents.CIWS_FIRE_LOOP, 0.8);
+        }
+        stack.set(DataComponentTypes.FIRING, true);
     }
 
     public override onEndFire(stack: ItemStack, world: World, attacker: Entity): void {
-        if (world.isClient) world.stopLoopSound(attacker, SoundEvents.CIWS_FIRE_LOOP);
-        stack.set(DataComponentTypes.ACTIVE, false);
-    }
-
-    protected override getMuzzleParticles(): number {
-        return 1;
+        if (world.isClient) {
+            world.stopLoopSound(attacker, SoundEvents.CIWS_FIRE_LOOP);
+        }
+        stack.set(DataComponentTypes.FIRING, false);
     }
 
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean) {
         super.inventoryTick(stack, world, holder, slot, selected);
 
-        if (stack.getOrDefault(DataComponentTypes.ACTIVE, true)) return;
+        if (!holder.isPlayer() || stack.getOrDefault(DataComponentTypes.FIRING, true)) return;
         const currentHeat = this.getHeat(stack);
         if (currentHeat === 0) return;
 
@@ -66,10 +56,19 @@ export class CIWS extends BaseWeapon {
         if (cooldown === 0) {
             stack.setAvailable(true);
         }
+        if (!world.isClient) (holder as ServerPlayerEntity).addChange(stack);
+    }
+
+    protected override getMuzzleParticles(): number {
+        return 1;
+    }
+
+    protected override getAmmoConsume(): number {
+        return 0;
     }
 
     public override canFire(stack: ItemStack): boolean {
-        return stack.isAvailable() && stack.getOrDefault(DataComponentTypes.COOLDOWN, 0) === 0;
+        return stack.isAvailable();
     }
 
     public override getCooldown(stack: ItemStack): number {
@@ -85,7 +84,7 @@ export class CIWS extends BaseWeapon {
     }
 
     public setMaxHeat(stack: ItemStack, value: number): void {
-        stack.set(DataComponentTypes.MAX_HEAT, Math.floor(value));
+        stack.set(DataComponentTypes.MAX_HEAT, Math.max(0, value | 0));
     }
 
     public getHeat(stack: ItemStack): number {

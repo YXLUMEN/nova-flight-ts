@@ -35,4 +35,8 @@ export class Cannon90Weapon extends BaseWeapon {
     public override getBallisticSpeed(): number {
         return this.speed;
     }
+
+    protected override getMuzzleParticles(): number {
+        return 20;
+    }
 }

@@ -16,6 +16,7 @@ import {type NbtCompound} from "../nbt/NbtCompound.ts";
 import {TrackedDataHandlerRegistry} from "./data/TrackedDataHandlerRegistry.ts";
 import type {TrackedData} from "./data/TrackedData.ts";
 import type {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import {EntityDamageS2CPacket} from "../network/packet/s2c/EntityDamageS2CPacket.ts";
 
 
 export abstract class LivingEntity extends Entity {
@@ -169,6 +170,8 @@ export abstract class LivingEntity extends Entity {
             }
             if (this.isDead()) this.onDeath(damageSource);
         }
+
+        this.getWorld().getNetworkChannel().send(new EntityDamageS2CPacket(this.getId(), this.getPositionRef, damage));
         return true;
     }
 
@@ -335,10 +338,12 @@ export abstract class LivingEntity extends Entity {
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
 
-        let health = this.getHealth();
-        if (Number.isNaN(health)) health = 5;
-        nbt.putFloat('Health', health);
-        nbt.putCompoundList("attributes", this.getAttributes().toNbt());
+        const health = this.getHealth();
+        nbt.putFloat('Health', Number.isFinite(health) ? health : 5);
+
+        const shield = this.getShieldAmount();
+        nbt.putFloat('Shield', Number.isFinite(shield) ? shield : 0);
+        nbt.putCompoundList('attributes', this.getAttributes().toNbt());
 
         if (this.activeStatusEffects.size > 0) {
             const nbtList: NbtCompound[] = [];
@@ -369,5 +374,6 @@ export abstract class LivingEntity extends Entity {
         }
 
         this.setHealth(nbt.getFloat('Health'));
+        this.setShieldAmount(nbt.getFloat('Shield'));
     }
 }

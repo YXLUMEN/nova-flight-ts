@@ -6,7 +6,6 @@ import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import type {ItemStack} from "../../item/ItemStack.ts";
 import {clamp} from "../../utils/math/math.ts";
 import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
-import type {ServerNetworkChannel} from "../network/ServerNetworkChannel.ts";
 import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
@@ -30,7 +29,7 @@ export class ServerPlayerEntity extends PlayerEntity {
     private revision = 0;
 
     public constructor(world: ServerWorld, playerProfile: GameProfile) {
-        super(world, new ServerItemCooldownManager());
+        super(world, ServerItemCooldownManager);
 
         this.playerProfile = playerProfile;
         this.techTree = new ServerTechTree(this);
@@ -44,13 +43,14 @@ export class ServerPlayerEntity extends PlayerEntity {
 
         if (this.changedItems.size > 0) {
             const packet = new InventoryS2CPacket(0, this.nextRevision(), this.changedItems);
-            (this.getNetworkChannel() as ServerNetworkChannel).sendTo(packet, this.getUUID());
+            this.networkHandler?.send(packet);
             this.changedItems.clear();
         }
     }
 
     protected override tickInventory(world: World) {
         const isDev = this.isDevMode();
+        const currentItem = this.getCurrentItem();
 
         for (const [item, stack] of this.items) {
             if (item instanceof SpecialWeapon) {
@@ -63,7 +63,7 @@ export class ServerPlayerEntity extends PlayerEntity {
                     item.tryFire(stack, world, this);
                 }
             }
-            item.inventoryTick(stack, world, this, 0, true);
+            item.inventoryTick(stack, world, this, 0, currentItem === item);
         }
     }
 
@@ -114,7 +114,7 @@ export class ServerPlayerEntity extends PlayerEntity {
 
     public override setScore(score: number) {
         super.setScore(score);
-        (this.getNetworkChannel() as ServerNetworkChannel).sendTo(new PlayerSetScoreS2CPacket(score), this.getUUID());
+        this.networkHandler?.send(new PlayerSetScoreS2CPacket(score));
     }
 
     protected override onStatusEffectApplied(effect: StatusEffectInstance, source: Entity | null) {
@@ -163,6 +163,6 @@ export class ServerPlayerEntity extends PlayerEntity {
     }
 
     public override sendMessage(msg: string) {
-        (this.getNetworkChannel() as ServerNetworkChannel).sendTo(new GameMessageS2CPacket(msg), this.getUUID());
+        this.networkHandler?.send(new GameMessageS2CPacket(msg));
     }
 }

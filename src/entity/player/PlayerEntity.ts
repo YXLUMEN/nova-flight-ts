@@ -18,6 +18,7 @@ import type {Channel} from "../../network/Channel.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts";
 import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
+import type {Constructor} from "../../apis/types.ts";
 
 
 export abstract class PlayerEntity extends LivingEntity {
@@ -40,14 +41,14 @@ export abstract class PlayerEntity extends LivingEntity {
     private isDev = false;
     private usedDev = false;
 
-    protected constructor(world: World, itemCooldownManager: ItemCooldownManager) {
+    protected constructor(world: World, itemCooldownManager: Constructor<ItemCooldownManager>) {
         super(EntityTypes.PLAYER, world);
 
         this.setMovementSpeed(2);
         this.setYaw(-1.57079);
         this.setPosition(World.WORLD_W / 2, World.WORLD_H - 100);
 
-        this.cooldownManager = itemCooldownManager;
+        this.cooldownManager = new itemCooldownManager();
         this.addItem(Items.CANNON40_WEAPON);
         this.addItem(Items.BOMB_WEAPON);
     }
@@ -76,11 +77,13 @@ export abstract class PlayerEntity extends LivingEntity {
     }
 
     protected tickInventory(world: World) {
-        for (const [w, stack] of this.items) {
-            w.inventoryTick(stack, world, this, 0, true);
+        const currentItem = this.getCurrentItem();
+        for (const [item, stack] of this.items) {
+            item.inventoryTick(stack, world, this, 0, currentItem === item);
         }
     }
 
+    // 此方法会返回世界网络频道,谨慎使用
     public getNetworkChannel(): Channel {
         return this.getWorld().getNetworkChannel();
     }

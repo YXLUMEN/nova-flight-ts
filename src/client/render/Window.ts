@@ -4,6 +4,7 @@ import {Camera} from "./Camera.ts";
 import {PauseOverlay} from "./ui/PauseOverlay.ts";
 import {NotificationManager} from "./ui/NotificationManager.ts";
 import {UITheme} from "./ui/theme.ts";
+import {DamagePopupRender} from "./ui/DamagePopupRender.ts";
 
 export class Window {
     public static VIEW_W = 800;
@@ -15,6 +16,7 @@ export class Window {
     public readonly hud: HUD = new HUD();
     public readonly pauseOverlay = new PauseOverlay();
     public readonly notify = new NotificationManager();
+    public readonly damagePopup = new DamagePopupRender();
 
     public constructor() {
         this.ctx.font = UITheme.font;
@@ -36,5 +38,12 @@ export class Window {
         this.hud.setSize(Window.VIEW_W, Window.VIEW_H);
         this.pauseOverlay.setSize(Window.VIEW_W, Window.VIEW_H);
         this.notify.setSize(Window.VIEW_W, Window.VIEW_H);
+    }
+
+    public reset(): void {
+        this.canvas.width = this.canvas.width;
+        this.ctx.font = UITheme.font;
+        this.ctx.textAlign = "center";
+        this.ctx.textBaseline = "middle";
     }
 }

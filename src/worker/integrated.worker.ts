@@ -1,6 +1,8 @@
 import {ClientNetwork} from "../client/network/ClientNetwork.ts";
 import {ServerNetwork} from "../server/network/ServerNetwork.ts";
 import {IntegratedServer} from "../server/IntegratedServer.ts";
+import type {StartServer} from "../apis/startup.ts";
+import {DevServer} from "../server/DevServer.ts";
 
 let server: IntegratedServer | null = null;
 
@@ -12,9 +14,11 @@ async function handleEvent(event: MessageEvent) {
     switch (type) {
         case 'start_server': {
             if (server) return;
-            server = IntegratedServer.startServer(payload.key, payload.clientId, payload.saveName) as IntegratedServer;
-            server.networkChannel.setServerAddress(payload.addr);
-            return server.runServer(payload.action);
+            const startUp = payload as StartServer;
+
+            server = IntegratedServer.startServer(new Uint8Array(startUp.key), startUp.hostUUID, startUp.saveName) as DevServer;
+            server.networkChannel.setServerAddress(startUp.addr);
+            return server.runServer(startUp.action);
         }
         case 'stop_server': {
             if (!server) return;

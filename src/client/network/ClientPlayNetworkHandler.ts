@@ -228,7 +228,19 @@ export class ClientPlayNetworkHandler {
         }
     }
 
-    public onEntityDamage(): void {
+    public onEntityDamage(packet: EntityDamageS2CPacket): void {
+        const entity = this.world?.getEntityById(packet.entityId);
+        if (!entity) {
+            this.client.window.damagePopup.spawnPopup(
+                packet.pos.x, packet.pos.y - 10, packet.damage, '#ff3434', 20, packet.entityId
+            );
+            return;
+        }
+
+        const pos = entity.getPositionRef;
+        this.client.window.damagePopup.spawnPopup(
+            pos.x, pos.y - entity.getHeight(), packet.damage, '#ff3434', 20, packet.entityId
+        );
     }
 
     public onEntityKilled() {
@@ -347,8 +359,7 @@ export class ClientPlayNetworkHandler {
     }
 
     public onInventory(packet: InventoryS2CPacket): void {
-        const player = this.client.player!;
-        player.updateSlotStacks(packet.revision, packet.contents);
+        this.client.player!.updateSlotStacks(packet.revision, packet.contents);
     }
 
     public onEffectCreate(packet: EffectCreateS2CPacket) {

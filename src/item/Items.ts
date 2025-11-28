@@ -51,9 +51,9 @@ export class Items {
     public static readonly ROCKET_WEAPON = this.register("rocket_weapon", new RocketLauncherWeapon(new Item.Settings()
         .attackDamage(8)
         .maxCooldown(44)
+        .unbreakable()
         .component(DataComponentTypes.EXPLOSION_RADIUS, 72)
         .component(DataComponentTypes.EXPLOSION_DAMAGE, 12)
-        .component(DataComponentTypes.UNBREAKABLE, true)
     ));
     public static readonly MISSILE_WEAPON = this.register("missile_weapon", new MissileWeapon(new Item.Settings()
         .attackDamage(5)
@@ -64,13 +64,13 @@ export class Items {
     public static readonly CIWS_WEAPON = this.register("ciws_weapon", new CIWS(new Item.Settings()
         .attackDamage(2)
         .maxCooldown(0)
+        .unbreakable()
         .component(DataComponentTypes.MAX_HEAT, 144)
-        .component(DataComponentTypes.UNBREAKABLE, true)
     ));
     public static readonly LASER_WEAPON: Item;
     public static readonly DECOY_RELEASER = this.register("decoy_releaser", new DecoyReleaser(new Item.Settings()
         .attackDamage(0)
-        .maxCooldown(200)
+        .maxCooldown(360)
     ));
 
     // 避免引用问题
@@ -78,14 +78,14 @@ export class Items {
         (this.INTO_VOID_WEAPON as any) = this.register("into_void_weapon", new IntoVoidWeapon(new Item.Settings()
             .attackDamage(0)
             .maxCooldown(600)
-            .component(DataComponentTypes.ACTIVE, false)
+            .component(DataComponentTypes.FIRING, false)
             .component(DataComponentTypes.EFFECT_RANGE, 32)
             .component(DataComponentTypes.EFFECT_DURATION, 100)
         ));
         (this.LASER_WEAPON as any) = this.register("laser_weapon", new LaserWeapon(new Item.Settings()
             .attackDamage(3)
             .component(DataComponentTypes.MAX_HEAT, 320)
-            .component(DataComponentTypes.ACTIVE, false)
+            .component(DataComponentTypes.FIRING, false)
             .component(DataComponentTypes.HEAT, 0)
             .component(DataComponentTypes.DRAIN_RATE, 2)
             .component(DataComponentTypes.COOLDOWN_RATE, 1)

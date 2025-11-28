@@ -23,7 +23,7 @@ export class ExplodeBulletEntity extends ProjectileEntity {
         super.tick();
 
         const world = this.getWorld();
-        if (!world.isClient || this.age >= 25) return;
+        if (!world.isClient || this.age >= 15) return;
 
         const yaw = this.getYaw();
         const height = this.getHeight();

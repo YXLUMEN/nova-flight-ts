@@ -11,10 +11,6 @@
     "core:window:allow-is-fullscreen",
     "core:window:allow-set-fullscreen",
     "core:window:allow-close",
-    "fs:default",
-    "fs:allow-read",
-    "fs:allow-resource-read-recursive",
-    "fs:allow-resource-write",
     "log:allow-log"
   ]
 }

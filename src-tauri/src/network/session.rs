@@ -12,10 +12,18 @@ pub struct Session {
     pub session_id: u8,
 }
 
-#[derive(Default)]
 struct SessionAllocatorInner {
     free_ids: VecDeque<u8>,
     next_id: u8,
+}
+
+impl SessionAllocatorInner {
+    fn new() -> SessionAllocatorInner {
+        Self {
+            free_ids: VecDeque::new(),
+            next_id: 1,
+        }
+    }
 }
 
 pub struct SessionAllocator {
@@ -25,7 +33,7 @@ pub struct SessionAllocator {
 impl SessionAllocator {
     fn new() -> SessionAllocator {
         Self {
-            inner: Arc::new(Mutex::new(SessionAllocatorInner::default())),
+            inner: Arc::new(Mutex::new(SessionAllocatorInner::new())),
         }
     }
 
