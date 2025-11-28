@@ -112,6 +112,6 @@ export class DamagePopupRender implements IUi {
             return 20;
         }
         const progress = (t - 0.5) / 0.5;
-        return lerp(progress, 20, 80);
+        return lerp(progress, 10, 60);
     }
 }

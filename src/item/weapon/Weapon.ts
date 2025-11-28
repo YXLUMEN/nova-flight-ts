@@ -6,11 +6,6 @@ import type {ItemStack} from "../ItemStack.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 
 export abstract class Weapon extends Item {
-    public override inventoryTick(stack: ItemStack, _world: World, _holder: Entity, _slot: number, _selected: boolean): void {
-        const cooldown = stack.getOrDefault(DataComponentTypes.COOLDOWN, 0);
-        if (cooldown > 0 && this.shouldCooldown(stack)) this.setCooldown(stack, cooldown - 1);
-    }
-
     public abstract tryFire(stack: ItemStack, world: World, attacker: Entity): void;
 
     public onStartFire(_stack: ItemStack, _world: World, _attacker: Entity): void {

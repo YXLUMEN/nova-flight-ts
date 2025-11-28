@@ -107,6 +107,7 @@ export class ClientPlayNetworkHandler {
         this.sendPacket(new ClientSniffingC2SPacket(this.client.clientId));
 
         let times = 0;
+        // @ts-ignore
         this.sniffInterval = setInterval(() => {
             times++;
             this.sendPacket(new ClientSniffingC2SPacket(this.client.clientId));

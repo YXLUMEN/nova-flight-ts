@@ -29,6 +29,9 @@ import {ChatMessageC2SPacket} from "../../network/packet/c2s/ChatMessageC2SPacke
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPacket.ts";
 import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
+import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import {NetworkChannel} from "../../network/NetworkChannel.ts";
+import {estimateEntitySpawnPacketSize} from "../../utils/NetUtil.ts";
 
 export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
     public readonly player: ServerPlayerEntity;
@@ -80,10 +83,30 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
             return;
         }
 
-        this.channel.sendTo(EntityNbtS2CPacket.create(this.player), uuid);
+        this.send(EntityNbtS2CPacket.create(this.player));
 
+        let currentSize = 0;
+        const maxSize = NetworkChannel.MAX_PACKET_SIZE - 32;
+
+        const currentBatch: EntitySpawnS2CPacket[] = [];
         const entities = this.world.getEntities().values();
-        this.channel.sendTo(EntityBatchSpawnS2CPacket.create(entities), uuid);
+        for (const entity of entities) {
+            const spawnPacket = EntitySpawnS2CPacket.create(entity);
+            const estSize = estimateEntitySpawnPacketSize(entity);
+
+            if (currentSize + estSize >= maxSize && currentBatch.length > 0) {
+                this.send(new EntityBatchSpawnS2CPacket(currentBatch));
+                currentBatch.length = 0;
+                currentSize = 0;
+                continue;
+            }
+            currentBatch.push(spawnPacket);
+            currentSize += estSize;
+        }
+
+        if (currentBatch.length > 0) {
+            this.send(new EntityBatchSpawnS2CPacket(currentBatch));
+        }
     }
 
     public async onPlayerDisconnect(_: PlayerDisconnectC2SPacket) {

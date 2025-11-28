@@ -30,7 +30,7 @@ export class Items {
         .component(DataComponentTypes.MAX_RELOAD_TIME, 16)
     ));
     public static readonly MINIGUN_WEAPON = this.register("minigun_weapon", new MiniGunWeapon(new Item.Settings()
-        .maxDurability(150)
+        .maxDurability(250)
         .attackDamage(1)
         .maxCooldown(1)
         .component(DataComponentTypes.MAX_RELOAD_TIME, 60)

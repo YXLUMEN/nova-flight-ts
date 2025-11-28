@@ -28,7 +28,7 @@ export class ClientNetworkChannel extends NetworkChannel {
     }
 
     protected override getSide(): string {
-        return 'client';
+        return 'Client';
     }
 
     protected override getHeader(): number {

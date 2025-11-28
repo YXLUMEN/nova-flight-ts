@@ -56,7 +56,7 @@ export class CIWS extends BaseWeapon {
         if (cooldown === 0) {
             stack.setAvailable(true);
         }
-        if (!world.isClient) (holder as ServerPlayerEntity).addChange(stack);
+        if (!world.isClient) (holder as ServerPlayerEntity).syncStack(stack);
     }
 
     protected override getMuzzleParticles(): number {

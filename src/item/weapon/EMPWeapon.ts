@@ -44,7 +44,7 @@ export class EMPWeapon extends SpecialWeapon {
         this.setCooldown(stack, this.getMaxCooldown(stack));
 
         if (attacker.isPlayer() && !world.isClient) {
-            (attacker as ServerPlayerEntity).addChange(stack);
+            (attacker as ServerPlayerEntity).syncStack(stack);
         }
     }
 

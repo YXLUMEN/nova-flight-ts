@@ -5,7 +5,7 @@ import type {Registry} from "../../registry/Registry.ts";
 import type {IndexedIterable} from "../../utils/collection/IndexedIterable.ts";
 import {type BinaryReader} from "../../nbt/BinaryReader.ts";
 import {type BinaryWriter} from "../../nbt/BinaryWriter.ts";
-import type {FunctionReturn} from "../../apis/types.ts";
+import type {BiConsumer, Constructor, FunctionReturn} from "../../apis/types.ts";
 
 export class PacketCodecs {
     public static readonly BOOL: PacketCodec<boolean> = PacketCodecs.of(
@@ -62,22 +62,20 @@ export class PacketCodecs {
     );
 
     public static of<T>(
-        encoder: (writer: BinaryWriter, value: T) => void,
+        encoder: BiConsumer<BinaryWriter, T>,
         decoder: (reader: BinaryReader) => T
     ): PacketCodec<T> {
         return {
-            encode(writer: BinaryWriter, value: T): Uint8Array {
+            encode(writer: BinaryWriter, value: T): void {
                 encoder(writer, value);
-                return writer.toUint8Array();
             },
             decode: decoder
         }
     }
 
-    public static empty<T>(decoder: new () => T): PacketCodec<T> {
+    public static empty<T>(decoder: Constructor<T>): PacketCodec<T> {
         return {
-            encode(writer: BinaryWriter): Uint8Array {
-                return writer.toUint8Array();
+            encode(): void {
             },
             decode(): T {
                 return new decoder();

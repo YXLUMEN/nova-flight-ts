@@ -6,7 +6,14 @@ import type {EntityType} from "../../../entity/EntityType.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import type {Entity} from "../../../entity/Entity.ts";
-import {decodeVelocity, decodeYaw, encodeVelocity, encodeYaw} from "../../../utils/NetUtil.ts";
+import {
+    argbIntToHex,
+    decodeVelocity,
+    decodeYaw,
+    encodeVelocity,
+    encodeYaw,
+    hexToArgbInt
+} from "../../../utils/NetUtil.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
@@ -20,8 +27,8 @@ export class EntitySpawnS2CPacket implements Payload {
     public readonly entityType: EntityType<any>;
     public readonly x: number;
     public readonly y: number;
-    public readonly color: string;
-    public readonly edgeColor: string;
+    private readonly colorInt32: number;
+    private readonly edgeColorInt32: number;
     public readonly entityData: number;
     private readonly velocityXInt16: number;
     private readonly velocityYInt16: number;
@@ -33,7 +40,7 @@ export class EntitySpawnS2CPacket implements Payload {
         x: number, y: number, yawInt8: number,
         entityType: EntityType<any>,
         velocityXInt16: number, velocityYInt16: number,
-        color: string, edgeColor: string,
+        colorInt32: number, edgeColorInt32: number,
         entityData: number,
     ) {
         this.entityId = entityId;
@@ -44,8 +51,8 @@ export class EntitySpawnS2CPacket implements Payload {
         this.velocityXInt16 = velocityXInt16;
         this.velocityYInt16 = velocityYInt16;
         this.yawInt8 = yawInt8;
-        this.color = color;
-        this.edgeColor = edgeColor;
+        this.colorInt32 = colorInt32;
+        this.edgeColorInt32 = edgeColorInt32;
         this.entityData = entityData;
     }
 
@@ -63,8 +70,8 @@ export class EntitySpawnS2CPacket implements Payload {
             entity.getType(),
             vx,
             vy,
-            entity.color,
-            entity.edgeColor,
+            hexToArgbInt(entity.color.length > 0 ? entity.color : '#fff'),
+            hexToArgbInt(entity.edgeColor.length > 0 ? entity.edgeColor : '#fff'),
             ownerId
         );
     }
@@ -80,8 +87,8 @@ export class EntitySpawnS2CPacket implements Payload {
         const yaw = reader.readUnsignByte();
         const velocityX = reader.readInt16();
         const velocityY = reader.readInt16();
-        const color = reader.readString();
-        const edgeColor = reader.readString();
+        const color = reader.readUint32();
+        const edgeColor = reader.readUint32();
         const ownerId = reader.readVarUInt();
 
         return new EntitySpawnS2CPacket(entityId, uuid, x, y, yaw, entityType, velocityX, velocityY, color, edgeColor, ownerId);
@@ -97,8 +104,8 @@ export class EntitySpawnS2CPacket implements Payload {
         writer.writeByte(value.yawInt8);
         writer.writeInt16(value.velocityXInt16);
         writer.writeInt16(value.velocityYInt16);
-        writer.writeString(value.color);
-        writer.writeString(value.edgeColor);
+        writer.writeUint32(value.colorInt32);
+        writer.writeUint32(value.edgeColorInt32);
         writer.writeVarUInt(value.entityData);
     }
 
@@ -116,5 +123,13 @@ export class EntitySpawnS2CPacket implements Payload {
 
     public get velocityY() {
         return decodeVelocity(this.velocityYInt16);
+    }
+
+    public get color() {
+        return argbIntToHex(this.colorInt32);
+    }
+
+    public get edgeColor() {
+        return argbIntToHex(this.edgeColorInt32);
     }
 }

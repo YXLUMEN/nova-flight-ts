@@ -83,6 +83,7 @@ export abstract class NovaFlightServer implements CommandOutput {
         self.postMessage({type: 'server_start'});
 
         this.last = performance.now();
+        // @ts-ignore
         this.tickInterval = setInterval(this.bindTick, 25);
     }
 

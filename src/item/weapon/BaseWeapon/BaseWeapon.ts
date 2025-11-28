@@ -12,8 +12,9 @@ import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
 
 export abstract class BaseWeapon extends Weapon {
-    public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean): void {
-        super.inventoryTick(stack, world, holder, slot, selected);
+    public override inventoryTick(stack: ItemStack, _world: World, holder: Entity, _slot: number, selected: boolean): void {
+        const cooldown = stack.getOrDefault(DataComponentTypes.COOLDOWN, 0);
+        if (cooldown > 0 && this.shouldCooldown(stack)) this.setCooldown(stack, cooldown - 1);
 
         if (holder.isPlayer() && stack.getOrDefault(DataComponentTypes.RELOADING, false)) {
             this.reloadAction(holder as PlayerEntity, stack, selected);
@@ -46,7 +47,7 @@ export abstract class BaseWeapon extends Weapon {
 
         // fire rate
         this.setCooldown(stack, this.getFireRate(stack));
-        player.addChange(stack);
+        player.syncStack(stack);
     }
 
     protected abstract onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void;
@@ -59,7 +60,7 @@ export abstract class BaseWeapon extends Weapon {
 
         manager.set(this, this.getReloadTick(stack));
         stack.set(DataComponentTypes.RELOADING, true);
-        player.addChange(stack);
+        player.syncStack(stack);
     }
 
     protected restoreAmmo(stack: ItemStack, player: PlayerEntity) {

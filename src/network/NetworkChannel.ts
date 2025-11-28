@@ -35,20 +35,21 @@ export abstract class NetworkChannel implements Channel {
 
         let timeout: number;
         const connectReady = () => {
+            clearTimeout(timeout);
             this.isConnected = true;
             resolve();
-            clearTimeout(timeout);
         };
         const connectFail = (reason: any) => {
-            reject(reason);
             clearTimeout(timeout);
+            reject(reason);
         };
-        timeout = setTimeout(() => connectFail('Connected timeout'), 6000);
+        // @ts-ignore
+        timeout = setTimeout(() => connectFail(`[${this.getSide()}] Connected timeout`), 6000);
 
         this.ws = new WebSocket(`ws://${this.serverAddress}`);
         this.ws.binaryType = 'arraybuffer';
 
-        this.ws.onmessage = (event) => {
+        this.ws.onmessage = event => {
             const binary = event.data as ArrayBuffer;
             const payload = this.decodePayload(new Uint8Array(binary));
 
@@ -67,24 +68,26 @@ export abstract class NetworkChannel implements Channel {
 
             const sessionId = Number(sessionIdStr);
             if (!Number.isSafeInteger(sessionId) || sessionId <= 0 || sessionId > 255) {
+                connectFail(`[${this.getSide()}] Invalid session ID`);
                 return;
             }
             this.sessionId = sessionId;
             connectReady();
 
             this.ws!.onmessage = this.handleMessage.bind(this);
-            this.ws!.onerror = err => console.error(`${this.getSide()}: Connection Error: ${err}`);
+            this.ws!.onerror = err => console.error(`[${this.getSide()}] Connection Error: ${err}`);
         };
 
-        this.ws.onerror = (err) => {
-            console.error(`${this.getSide()}: Connection Error: ${err}`);
-            connectFail(err);
+        this.ws.onerror = error => {
+            const msg = `[${this.getSide()}] Connection Error: ${error}`;
+            console.error(msg);
+            connectFail(msg);
         }
 
         this.ws.onopen = () => this.register();
 
         this.ws.onclose = event => {
-            console.log(`A ${this.getSide()}'s connection to ${this.serverAddress} closed because ${event.type}:${event.reason || 'unknown'}`);
+            console.log(`[${this.getSide()}] Connection to ${this.serverAddress} closed because ${event.type}:${event.reason || 'unknown'}`);
         }
 
         await promise;
@@ -93,7 +96,8 @@ export abstract class NetworkChannel implements Channel {
 
     public disconnect(): void {
         this.isConnected = false;
-        this.ws?.close();
+        this.ws?.close(1000, 'Connection Closed');
+        this.ws = null;
     }
 
     public async sniff(
@@ -139,13 +143,14 @@ export abstract class NetworkChannel implements Channel {
 
         writer.writeByte(this.getHeader());
         writer.writeByte(this.getSessionID());
+        // noinspection DuplicatedCode
         writer.writeString(type.id.toString());
 
         type.codec.encode(writer, payload);
 
         const buffer = writer.toUint8Array();
         if (buffer.length > NetworkChannel.MAX_PACKET_SIZE) {
-            throw new PacketTooLargeError(`Packet ${payload.getId().id} exceeds 2048 bytes`);
+            throw new PacketTooLargeError(`Packet ${payload.getId().id} exceeds 4096 bytes: ${buffer.length}`);
         }
 
         this.ws!.send(buffer);

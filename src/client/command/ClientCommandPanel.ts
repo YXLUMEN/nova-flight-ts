@@ -31,7 +31,8 @@ export class ClientCommandPanel {
 
         if (this.isShow) return;
 
-        const timer = setTimeout(() => {
+        // @ts-ignore
+        const timer: number = setTimeout(() => {
             msg.classList.add('hidden');
             this.hiddenTimer.delete(timer);
         }, 5000);

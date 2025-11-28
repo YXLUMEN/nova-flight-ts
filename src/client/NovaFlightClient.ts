@@ -274,7 +274,7 @@ export class NovaFlightClient {
         const addr = `127.0.0.1:${WorldConfig.port}`;
         this.networkChannel.setServerAddress(addr);
 
-        // 尝试连接
+        // 确认服务器开启
         const canConnect = await this.networkChannel.sniff(addr);
         if (!canConnect) {
             await this.connectInfo.setError('连接已丢失: 无法启动内置服务器');
@@ -289,6 +289,7 @@ export class NovaFlightClient {
             return;
         }
 
+        // 内置服务器配置
         const startUp: StartServer = {
             addr,
             key,
@@ -298,7 +299,7 @@ export class NovaFlightClient {
         };
 
         // Vite 规定的格式 integrated dev
-        this.server = new ServerWorker(new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
+        this.server = new ServerWorker(new Worker(new URL('../worker/dev.worker.ts', import.meta.url), {
             type: 'module',
             name: 'server',
         }));
@@ -334,7 +335,7 @@ export class NovaFlightClient {
             if (err.error instanceof Error) {
                 stack = err.error.stack ?? '';
             }
-            error(`${err.type}: ${err.message} at ${stack}`);
+            error(`[Server]: ${err.type}: ${err.message} at ${stack}`);
             this.stopWorld();
             this.server?.terminate();
         }

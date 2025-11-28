@@ -24,7 +24,7 @@ export class ServerPlayerEntity extends PlayerEntity {
 
     public networkHandler: ServerPlayNetworkHandler | null = null;
     private readonly inputKeys = new Set<string>();
-    private readonly changedItems: Set<ItemStack> = new Set();
+    private readonly pendingSyncStack: Set<ItemStack> = new Set();
 
     private revision = 0;
 
@@ -41,10 +41,10 @@ export class ServerPlayerEntity extends PlayerEntity {
         if (this.wasFiring) this.handleFire();
         this.inputKeys.clear();
 
-        if (this.changedItems.size > 0) {
-            const packet = new InventoryS2CPacket(0, this.nextRevision(), this.changedItems);
+        if (this.pendingSyncStack.size > 0) {
+            const packet = new InventoryS2CPacket(0, this.nextRevision(), this.pendingSyncStack);
             this.networkHandler?.send(packet);
-            this.changedItems.clear();
+            this.pendingSyncStack.clear();
         }
     }
 
@@ -57,7 +57,7 @@ export class ServerPlayerEntity extends PlayerEntity {
                 const key = this.weaponKeys.get(item)!;
                 if (isDev && item.getCooldown(stack) > 0.5) {
                     item.setCooldown(stack, 0.5);
-                    this.changedItems.add(stack);
+                    this.pendingSyncStack.add(stack);
                 }
                 if (item.canFire(stack) && this.inputKeys.delete(key)) {
                     item.tryFire(stack, world, this);
@@ -67,8 +67,8 @@ export class ServerPlayerEntity extends PlayerEntity {
         }
     }
 
-    public addChange(itemStack: ItemStack): void {
-        this.changedItems.add(itemStack);
+    public syncStack(itemStack: ItemStack): void {
+        this.pendingSyncStack.add(itemStack);
     }
 
     public setFiring(active: boolean) {

@@ -39,11 +39,4 @@ export class Window {
         this.pauseOverlay.setSize(Window.VIEW_W, Window.VIEW_H);
         this.notify.setSize(Window.VIEW_W, Window.VIEW_H);
     }
-
-    public reset(): void {
-        this.canvas.width = this.canvas.width;
-        this.ctx.font = UITheme.font;
-        this.ctx.textAlign = "center";
-        this.ctx.textBaseline = "middle";
-    }
 }

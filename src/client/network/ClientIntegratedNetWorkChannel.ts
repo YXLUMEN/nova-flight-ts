@@ -48,6 +48,7 @@ export class ClientIntegratedNetWorkChannel implements Channel {
         }, {signal: ctrl.signal});
 
         this.worker.postMessage({type: "sniff"});
+        // @ts-ignore
         timer = setInterval(() => {
             retries++;
             this.worker.postMessage({type: "sniff"});
