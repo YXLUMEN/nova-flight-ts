@@ -33,7 +33,7 @@ export class Items {
         .maxDurability(250)
         .attackDamage(1)
         .maxCooldown(1)
-        .component(DataComponentTypes.MAX_RELOAD_TIME, 60)
+        .component(DataComponentTypes.MAX_RELOAD_TIME, 50)
     ));
     public static readonly BOMB_WEAPON = this.register("bomb_weapon", new BombWeapon(new Item.Settings()
         .maxCooldown(800)
@@ -44,7 +44,7 @@ export class Items {
         .maxDurability(10)
         .attackDamage(6)
         .maxCooldown(16.5)
-        .component(DataComponentTypes.EXPLOSION_RADIUS, 96)
+        .component(DataComponentTypes.EXPLOSION_RADIUS, 112)
         .component(DataComponentTypes.EXPLOSION_DAMAGE, 8)
         .component(DataComponentTypes.MAX_RELOAD_TIME, 35)
     ));

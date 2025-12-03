@@ -84,8 +84,8 @@ export class DecoyEntity extends Entity implements IOwnable {
         if (owner) this.setOwner(owner);
     }
 
-    public override onRemove() {
-        super.onRemove();
+    public override onDiscard() {
+        super.onDiscard();
         DecoyEntity.Entities.delete(this);
     }
 

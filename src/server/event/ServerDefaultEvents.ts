@@ -1,22 +1,23 @@
-import type {ServerWorld} from "./ServerWorld.ts";
-import {EVENTS} from "../apis/IEvents.ts";
-import type {Entity} from "../entity/Entity.ts";
-import {BossEntity} from "../entity/mob/BossEntity.ts";
-import {EntityTypes} from "../entity/EntityTypes.ts";
-import {World} from "../world/World.ts";
-import {SpawnMarkerEntity} from "../entity/SpawnMarkerEntity.ts";
-import {SoundEvents} from "../sound/SoundEvents.ts";
-import {GeneralEventBus} from "../event/GeneralEventBus.ts";
-import {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
-import {StatusEffects} from "../entity/effect/StatusEffects.ts";
-import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
-import type {MobEntity} from "../entity/mob/MobEntity.ts";
-import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
-import {DamageTypes} from "../entity/damage/DamageTypes.ts";
-import type {DamageSource} from "../entity/damage/DamageSource.ts";
-import {DamageTypeTags} from "../registry/tag/DamageTypeTags.ts";
-import {Items} from "../item/Items.ts";
-import type {LaserWeapon} from "../item/weapon/LaserWeapon.ts";
+import type {ServerWorld} from "../ServerWorld.ts";
+import {EVENTS} from "../../apis/IEvents.ts";
+import type {Entity} from "../../entity/Entity.ts";
+import {BossEntity} from "../../entity/mob/BossEntity.ts";
+import {EntityTypes} from "../../entity/EntityTypes.ts";
+import {World} from "../../world/World.ts";
+import {SpawnMarkerEntity} from "../../entity/SpawnMarkerEntity.ts";
+import {SoundEvents} from "../../sound/SoundEvents.ts";
+import {GeneralEventBus} from "../../event/GeneralEventBus.ts";
+import {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
+import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
+import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
+import type {MobEntity} from "../../entity/mob/MobEntity.ts";
+import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
+import {DamageTypes} from "../../entity/damage/DamageTypes.ts";
+import type {DamageSource} from "../../entity/damage/DamageSource.ts";
+import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
+import {Items} from "../../item/Items.ts";
+import type {LaserWeapon} from "../../item/weapon/LaserWeapon.ts";
+import type {ExpendExplosionOpts} from "../../apis/IExplosionOpts.ts";
 
 export class ServerDefaultEvents {
     public static registerEvent(world: ServerWorld) {
@@ -49,7 +50,6 @@ export class ServerDefaultEvents {
             if (!(player instanceof ServerPlayerEntity)) return;
 
             const techTree = player.getTechs();
-
             if (!damageSource.isIn(DamageTypeTags.NOT_GAIN_SCORE)) {
                 player.addScore(event.mob.getWorth());
             }
@@ -114,5 +114,41 @@ export class ServerDefaultEvents {
 
             world.playSound(null, SoundEvents.PHASE_CHANGE);
         });
+
+        eventBus.on(EVENTS.EXPLOSION, (event: explosion) => {
+            if (event.opts.behaviour === 'triggered') return;
+            event.opts.behaviour = 'triggered';
+
+            if (!event.opts.attacker || !event.opts.attacker.isPlayer()) return;
+            if (!event.opts.attacker.getTechs().isUnlocked('serial_warhead')) return;
+
+            let count = 0;
+            const radius = (event.opts.explosionRadius ?? 16) / 2;
+
+            const yaw = event.entity?.getYaw();
+            const schedule = world.scheduleInterval(0.1, () => {
+                if (count++ >= 2) {
+                    schedule.cancel();
+                    return;
+                }
+
+                if (yaw === undefined) {
+                    world.createExplosion(event.entity, event.damage, event.x, event.y, event.opts);
+                    return;
+                }
+
+                const x = event.x + Math.cos(yaw) * radius * count;
+                const y = event.y + Math.sin(yaw) * radius * count;
+                world.createExplosion(event.entity, event.damage, x, y, event.opts);
+            });
+        });
     }
 }
+
+type explosion = {
+    entity: Entity | null,
+    damage: DamageSource | null,
+    x: number,
+    y: number,
+    opts: ExpendExplosionOpts
+};

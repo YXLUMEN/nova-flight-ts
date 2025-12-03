@@ -152,8 +152,8 @@ export abstract class PlayerEntity extends LivingEntity {
         this.getWorld().gameOver();
     }
 
-    public override onRemove() {
-        super.onRemove();
+    public override onDiscard() {
+        super.onDiscard();
         this.clearItems();
     }
 
@@ -272,12 +272,6 @@ export abstract class PlayerEntity extends LivingEntity {
         nbt.putUint('Score', this.score);
         nbt.putByte('SlotIndex', this.currentBaseIndex);
 
-        const weapons: NbtCompound[] = [];
-        this.items.values().forEach(stack => {
-            weapons.push(stack.toNbt());
-        });
-        nbt.putCompoundList('Weapons', weapons);
-
         this.techTree!.writeNBT(nbt);
 
         return nbt
@@ -287,20 +281,7 @@ export abstract class PlayerEntity extends LivingEntity {
         super.readNBT(nbt);
         this.setScore(nbt.getUint('Score'));
 
-        this.techTree!.readNBT(nbt);/*
-        const weaponsNbt = nbt.getCompoundList('Weapons');
-        if (weaponsNbt && weaponsNbt.length > 0) {
-            const stacks: ItemStack[] = [];
-            for (const wpn of weaponsNbt) {
-                const stack = ItemStack.readNBT(wpn);
-                if (stack) stacks.push(stack);
-            }
-
-            if (stacks.length > 0) {
-                this.clearItems();
-                stacks.forEach(stack => this.addItem(stack.getItem(), stack));
-            }
-        }*/
+        this.techTree!.readNBT(nbt);
         this.currentBaseIndex = clamp(nbt.getByte('SlotIndex'), 0, this.baseWeapons.length);
     }
 

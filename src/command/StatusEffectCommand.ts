@@ -23,14 +23,14 @@ export class StatusEffectCommand {
                             argument<T, EntitySelector>('selector', EntitySelectorArgumentType.selector())
                                 .then(
                                     argument<T, Identifier>('effect_id', IdentifierArgumentType.identifier())
-                                        .executes(ctx => this.applyEffect(ctx))
+                                        .executes(this.applyEffect.bind(this))
                                         .suggests(CommandUtil.createIdentifierSuggestion(Registries.STATUS_EFFECT))
                                         .then(
                                             argument<T, number>('duration', IntArgumentType.int())
-                                                .executes(ctx => this.applyEffect(ctx))
+                                                .executes(this.applyEffect.bind(this))
                                                 .then(
                                                     argument<T, number>('amplifier', IntArgumentType.int())
-                                                        .executes(ctx => this.applyEffect(ctx))
+                                                        .executes(this.applyEffect.bind(this))
                                                 )
                                         )
                                 )
@@ -38,13 +38,13 @@ export class StatusEffectCommand {
                 )
                 .then(
                     literal<T>('clear')
-                        .executes(ctx => this.removeStatus(ctx))
+                        .executes(this.removeStatus.bind(this))
                         .then(
                             argument<T, EntitySelector>('selector', EntitySelectorArgumentType.selector())
-                                .executes(ctx => this.removeStatus(ctx))
+                                .executes((this.removeStatus.bind(this)))
                                 .then(
                                     argument<T, Identifier>('effect_id', IdentifierArgumentType.identifier())
-                                        .executes(ctx => this.removeStatus(ctx))
+                                        .executes((this.removeStatus.bind(this)))
                                         .suggests(CommandUtil.createIdentifierSuggestion(Registries.STATUS_EFFECT))
                                 )
                         )
@@ -78,22 +78,29 @@ export class StatusEffectCommand {
 
         const effect = Registries.STATUS_EFFECT.getEntryById(effectIdResult.result);
         if (!effect) {
-            throw new CommandError(`\x1b[33mEffect not found with id ${effectIdResult.result}`, 'warning');
+            throw new CommandError(`\x1b[33mEffect not found with id ${effectIdResult.result}`);
         }
 
-        let count = 0;
         const entities = selector.getEntities(ctx.source);
-        for (const entity of entities) {
-            if (entity instanceof LivingEntity) {
-                count++;
-                entity.addStatusEffect(new StatusEffectInstance(effect, duration, amplifier), null);
-                ctx.source.outPut.sendMessage(`Give effect ${effectIdResult.result} to \x1b[32m${entity.getUUID()}`);
-            }
-        }
-
-        if (count === 0) {
+        if (entities.length === 0) {
             throw new Error(`\x1b[33mTarget not found`);
         }
+
+        if (entities.length === 1) {
+            const target = entities[0];
+            if (target instanceof LivingEntity) {
+                target.addStatusEffect(new StatusEffectInstance(effect, duration, amplifier), null);
+                ctx.source.outPut.sendMessage(`Give effect ${effectIdResult.result} to \x1b[32m${target.getUUID()}`);
+            }
+            return;
+        }
+
+        for (const entity of entities) {
+            if (entity instanceof LivingEntity) {
+                entity.addStatusEffect(new StatusEffectInstance(effect, duration, amplifier), null);
+            }
+        }
+        ctx.source.outPut.sendMessage(`Give effect ${effectIdResult.result} for ${entities.length} entities`);
     }
 
     private static removeStatus<T extends ServerCommandSource>(ctx: CommandContext<T>) {
@@ -111,8 +118,11 @@ export class StatusEffectCommand {
             throw new CommandError('');
         }
 
-        let count = 0;
         const entities = selector.getEntities(ctx.source);
+        if (entities.length === 0) {
+            throw new CommandError(`\x1b[33mTarget not found`);
+        }
+
         const effectIdResult = ctx.args.get('effect_id');
         if (!effectIdResult) {
             for (const entity of entities) {
@@ -120,26 +130,19 @@ export class StatusEffectCommand {
                     entity.clearStatuesEffects();
                 }
             }
-            if (count === 0) {
-                throw new CommandError(`\x1b[33mTarget not found`, 'warning');
-            }
             return;
         }
 
         const effect = Registries.STATUS_EFFECT.getEntryById(effectIdResult.result);
         if (!effect) {
-            throw new CommandError(`\x1b[33mEffect not found with id ${effectIdResult.result}`, 'warning');
+            throw new CommandError(`\x1b[33mEffect not found with id ${effectIdResult.result}`);
         }
 
         for (const entity of entities) {
             if (entity instanceof LivingEntity) {
-                count++;
                 entity.removeStatusEffect(effect);
                 ctx.source.outPut.sendMessage(`Remove effect ${effectIdResult.result} on \x1b[32m${entity.getUUID()}`);
             }
-        }
-        if (count === 0) {
-            throw new CommandError(`\x1b[33mTarget not found`, 'warning');
         }
     }
 }

@@ -15,7 +15,7 @@ export class LiteralArgumentBuilder<S> extends ArgumentBuilder<S, LiteralArgumen
     }
 
     public override build(): CommandNode<S> {
-        const result = new LiteralCommandNode(this.literal, this.command!, this.getRequirement());
+        const result = new LiteralCommandNode(this.literal, this.getCommand(), this.getRequirement());
 
         for (const argument of this.getArguments()) {
             result.addChild(argument);

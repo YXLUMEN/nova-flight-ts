@@ -27,7 +27,7 @@ import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
 import type {Explosion} from "../world/Explosion.ts";
 import {ExplosionS2CPacket} from "../network/packet/s2c/ExplosionS2CPacket.ts";
-import {ServerDefaultEvents} from "./ServerDefaultEvents.ts";
+import {ServerDefaultEvents} from "./event/ServerDefaultEvents.ts";
 import type {MutVec2} from "../utils/math/MutVec2.ts";
 import {ParticleS2CPacket} from "../network/packet/s2c/ParticleS2CPacket.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
@@ -258,10 +258,7 @@ export class ServerWorld extends World implements NbtSerializable {
         const packet = new ExplosionS2CPacket(x, y, opts.explosionRadius ?? 64, shack);
         this.getNetworkChannel().send(packet);
 
-        // if (opts.attacker && opts.attacker.isPlayer() && opts.attacker.getTechs().isUnlocked('serial_warhead')) {
-        //     let num = 0;
-        //     this.scheduleInterval();
-        // }
+        this.events.emit(EVENTS.EXPLOSION, {entity, damage, x, y, opts});
         return explosion;
     }
 

@@ -1,16 +1,18 @@
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
-import type {MobFactory, SamplerKind, SpawnCtx, TopSpawnOpts} from "../apis/IStage.ts";
+import type {MobFactory, SamplerKind, TopSpawnOpts} from "../apis/IStage.ts";
 import {World} from "../world/World.ts";
 import {randInt} from "../utils/math/math.ts";
 import type {EntityType} from "../entity/EntityType.ts";
 import {SpawnMarkerEntity} from "../entity/SpawnMarkerEntity.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
+import type {SpawnContext} from "./SpawnContext.ts";
+import type {BiConsumer} from "../apis/types.ts";
 
 // 顶部随机生成
 function spawnTopRandomCtor<T extends MobEntity>(
     type: EntityType<T>,
     args: readonly unknown[] = [],
-    init?: (mob: T, ctx: SpawnCtx) => void
+    init?: BiConsumer<T, SpawnContext>
 ): MobFactory {
     return (ctx) => {
         const x = randInt(24, World.WORLD_W - 24);
@@ -21,17 +23,17 @@ function spawnTopRandomCtor<T extends MobEntity>(
     };
 }
 
-export interface spawnConfig<T extends MobEntity> {
+export interface SpawnConfig<T extends MobEntity> {
     type: EntityType<T>,
     args: readonly unknown[],
-    init?: (mob: T, ctx: SpawnCtx) => void,
+    init?: BiConsumer<T, SpawnContext>,
     opts?: TopSpawnOpts
 }
 
 function spawnTopRandomCtorS<T extends MobEntity>(
     type: EntityType<T>,
     args: readonly unknown[] = [],
-    init?: (mob: T, ctx: SpawnCtx) => void,
+    init?: BiConsumer<T, SpawnContext>,
     opts: TopSpawnOpts = {}
 ): MobFactory {
     const sampler: SamplerKind = opts.sampler ?? 'best';
@@ -114,7 +116,7 @@ function spawnLineCtor<T extends MobEntity>(
     type: EntityType<T>,
     count: number,
     args: any[] = [],
-    init?: (mob: T, i: number, ctx: SpawnCtx) => void,
+    init?: (mob: T, i: number, ctx: SpawnContext) => void,
     opts: { gap?: number; startY?: number } = {}
 ): MobFactory {
     const {gap = 48, startY = -30} = opts;
@@ -131,9 +133,9 @@ function spawnLineCtor<T extends MobEntity>(
     };
 }
 
-function spawnFormation(configs: spawnConfig<any>[]): MobFactory {
+function spawnFormation(configs: SpawnConfig<MobEntity>[]): MobFactory {
     return (ctx) => {
-        const arr = [];
+        const arr: MobEntity[] = [];
         let gap = 0;
         const x = randInt(24, World.WORLD_W - 24);
         for (const config of configs) {
@@ -150,7 +152,7 @@ function spawnFormation(configs: spawnConfig<any>[]): MobFactory {
 function spawnInMapCtor<T extends MobEntity>(
     type: EntityType<T>,
     args: readonly unknown[] = [],
-    init?: (mob: T, ctx: SpawnCtx) => void,
+    init?: BiConsumer<T, SpawnContext>,
     opts: { margin?: number; farPower?: number } = {}
 ): MobFactory {
     const margin = opts.margin ?? 24;
@@ -193,7 +195,7 @@ function spawnInMapCtor<T extends MobEntity>(
 function spawnAvoidPlayerCtor<T extends MobEntity>(
     type: EntityType<T>,
     args: readonly unknown[] = [],
-    init?: (mob: T, ctx: SpawnCtx) => void,
+    init?: BiConsumer<T, SpawnContext>,
     opts: { margin?: number; safeRadius?: number } = {}
 ): MobFactory {
     const margin = opts.margin ?? 24;

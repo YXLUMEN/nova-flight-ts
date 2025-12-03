@@ -1,5 +1,5 @@
 import type {Payload} from "./Payload.ts";
-import {PayloadTypeRegistry} from "./PayloadTypeRegistry.ts";
+import {type PayloadType, PayloadTypeRegistry} from "./PayloadTypeRegistry.ts";
 import {BinaryWriter} from "../nbt/BinaryWriter.ts";
 import {BinaryReader} from "../nbt/BinaryReader.ts";
 import {Identifier} from "../registry/Identifier.ts";
@@ -43,7 +43,7 @@ export abstract class NetworkChannel implements Channel {
             clearTimeout(timeout);
             reject(reason);
         };
-        // @ts-ignore
+
         timeout = setTimeout(() => connectFail(`[${this.getSide()}] Connected timeout`), 6000);
 
         this.ws = new WebSocket(`ws://${this.serverAddress}`);
@@ -140,12 +140,14 @@ export abstract class NetworkChannel implements Channel {
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
 
         const writer = new BinaryWriter();
-
         writer.writeByte(this.getHeader());
         writer.writeByte(this.getSessionID());
-        // noinspection DuplicatedCode
-        writer.writeString(type.id.toString());
 
+        this.checkAndSend(writer, type, payload);
+    }
+
+    protected checkAndSend<T extends Payload>(writer: BinaryWriter, type: PayloadType<T>, payload: T): void {
+        writer.writeString(type.id.toString());
         type.codec.encode(writer, payload);
 
         const buffer = writer.toUint8Array();

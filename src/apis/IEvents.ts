@@ -5,6 +5,7 @@ import {createClean} from "../utils/uit.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
 import type {IVec} from "../utils/math/IVec.ts";
+import type {ExpendExplosionOpts} from "./IExplosionOpts.ts";
 
 export const EVENTS = createClean({
     ENTITY_REMOVED: "entity:mob:removed",
@@ -13,7 +14,7 @@ export const EVENTS = createClean({
     MOB_DAMAGE: "entity:mob:damage",
     ENTITY_DIE: "entity:die",
     UNLOCK_TECH: "player:tech:unlock",
-    BOMB_DETONATE: "world:bomb_detonate",
+    EXPLOSION: "world:explosion",
     EMP_BURST: "world:emp_burst",
     STAGE_ENTER: "world:stage:enter",
     STAGE_EXIT: "world:stage:exit",
@@ -27,7 +28,13 @@ export type IEvents = {
     [EVENTS.MOB_KILLED]: { mob: MobEntity; damageSource: DamageSource; pos: IVec };
     [EVENTS.MOB_DAMAGE]: { mob: MobEntity; damageSource: DamageSource; };
     [EVENTS.UNLOCK_TECH]: { id: string };
-    [EVENTS.BOMB_DETONATE]: { entity: Entity };
+    [EVENTS.EXPLOSION]: {
+        entity: Entity | null,
+        damage: DamageSource | null,
+        x: number,
+        y: number,
+        opts: ExpendExplosionOpts
+    };
     [EVENTS.EMP_BURST]: { entity: Entity, duration: number };
     [EVENTS.STAGE_ENTER]: { name: string };
     [EVENTS.STAGE_EXIT]: { name: string };

@@ -35,6 +35,7 @@ import {SyncPlayerProfileS2CPacket} from "../../network/packet/s2c/SyncPlayerPro
 import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
 import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
 import {ItemCooldownUpdateS2CPacket} from "../../network/packet/s2c/ItemCooldownUpdateS2CPacket.ts";
+import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
 
 export class ServerNetwork {
     public static registerNetworkPacket() {
@@ -74,6 +75,7 @@ export class ServerNetwork {
         this.register(EntityStatusEffectS2CPacket.ID, EntityStatusEffectS2CPacket.CODEC);
         this.register(RemoveEntityStatusEffectS2CPacket.ID, RemoveEntityStatusEffectS2CPacket.CODEC);
         this.register(ItemCooldownUpdateS2CPacket.ID, ItemCooldownUpdateS2CPacket.CODEC);
+        this.register(PlayAudioS2CPacket.ID, PlayAudioS2CPacket.CODEC);
     }
 
     private static register<T extends Payload>(payloadId: PayloadId<T>, codec: PacketCodec<T>): void {

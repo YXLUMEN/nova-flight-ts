@@ -10,6 +10,7 @@ import type {World} from "../../world/World.ts";
 export class ServerCommandSource extends CommandSource {
     public readonly outPut: CommandOutput;
     public readonly position: IVec;
+    public readonly yaw: number;
     private readonly world: ServerWorld | null;
     private readonly level: number;
     public readonly name: string;
@@ -22,6 +23,7 @@ export class ServerCommandSource extends CommandSource {
     public constructor(
         outPut: CommandOutput,
         position: IVec,
+        yaw: number,
         world: ServerWorld | null,
         level: number,
         name: string,
@@ -33,6 +35,7 @@ export class ServerCommandSource extends CommandSource {
         super();
         this.outPut = outPut;
         this.position = position;
+        this.yaw = yaw;
         this.world = world;
         this.level = level;
         this.name = name;

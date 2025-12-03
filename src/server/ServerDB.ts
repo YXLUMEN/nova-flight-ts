@@ -16,7 +16,7 @@ interface PlayerData {
 }
 
 export class ServerDB {
-    public static db = new IndexedDBHelper('nova-flight-server', 1, [
+    public static db = new IndexedDBHelper('nova-flight-server', 2, [
         {
             name: 'saves',
             keyPath: 'save_name',
@@ -24,6 +24,10 @@ export class ServerDB {
         {
             name: 'player_data',
             keyPath: ['save_name', 'uuid'],
+        },
+        {
+            name: 'user_info',
+            keyPath: 'name'
         }
     ]);
 

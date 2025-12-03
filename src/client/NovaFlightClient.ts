@@ -25,6 +25,7 @@ import {ConnectInfo} from "./render/ui/ConnectInfo.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {ClientChat} from "./command/ClientChat.ts";
 import type {StartServer} from "../apis/startup.ts";
+import {PlayerInputC2SPacket} from "../network/packet/c2s/PlayerInputC2SPacket.ts";
 
 export class NovaFlightClient {
     private static instance: NovaFlightClient;
@@ -132,6 +133,7 @@ export class NovaFlightClient {
             if (this.isIntegrated) {
                 await invoke('stop_server');
             }
+            this.window.resize();
         }
 
         this.networkChannel.disconnect();
@@ -147,6 +149,7 @@ export class NovaFlightClient {
         this.render(0);
 
         this.connectInfo?.destroy();
+        this.clientCommandManager.clearParseCache();
     }
 
     private render(ts: number) {
@@ -299,7 +302,7 @@ export class NovaFlightClient {
         };
 
         // Vite 规定的格式 integrated dev
-        this.server = new ServerWorker(new Worker(new URL('../worker/dev.worker.ts', import.meta.url), {
+        this.server = new ServerWorker(new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
             type: 'module',
             name: 'server',
         }));
@@ -465,6 +468,7 @@ export class NovaFlightClient {
             }
             case 'KeyG':
                 world?.toggleTechTree();
+                this.networkChannel.send(new PlayerInputC2SPacket('KeyG'));
                 break;
             case 'KeyL':
                 WorldConfig.follow = !WorldConfig.follow;
@@ -479,7 +483,7 @@ export class NovaFlightClient {
         const player = this.player;
         if (!player) return;
 
-        this.networkHandler.sendCommand(`/dev ${bool ?? !player.isDevMode()}`);
+        this.networkHandler.sendCommand(`/gamemode ${bool ?? !player.isDevMode()}`);
     }
 
     private devFunc(code: string, world: ClientWorld): void {

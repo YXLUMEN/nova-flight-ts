@@ -19,9 +19,9 @@ export class WorldDifficultCommand {
                 .then(
                     literal<T>('set')
                         .then(
-                            argument<T, number>('int', IntArgumentType.int())
+                            argument<T, number>('difficult', IntArgumentType.int())
                                 .executes(ctx => {
-                                    const arg = ctx.args.get('int');
+                                    const arg = ctx.args.get('difficult');
                                     if (!arg) throw new Error('\x1b[31m<int> is required');
 
                                     const int = Number(arg.result);

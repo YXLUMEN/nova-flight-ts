@@ -53,7 +53,7 @@ export abstract class CommandNode<S> {
         const child = this.children.get(node.getName());
         if (child) {
             if (node.getCommand() !== null) {
-                child.setCommand(node.getCommand());
+                child.command = node.getCommand();
             }
             for (const grandChild of node.getChildren()) {
                 child.addChild(grandChild);

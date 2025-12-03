@@ -7,10 +7,10 @@ import {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import {SyncPlayerProfileS2CPacket} from "../network/packet/s2c/SyncPlayerProfileS2CPacket.ts";
 
-export class DevModCommand {
+export class GameModeCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {
         dispatcher.registry(
-            literal<T>('dev')
+            literal<T>('gamemode')
                 .then(
                     argument<T, boolean>('bool', BoolArgumentType.bool())
                         .executes(ctx => {
@@ -27,7 +27,6 @@ export class DevModCommand {
                             this.setMode(ctx.source, bool);
                         })
                 )
-                .executes(ctx => this.setMode(ctx.source))
                 .requires(source => source.hasPermissionLevel(8))
         );
     }

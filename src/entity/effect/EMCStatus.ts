@@ -9,22 +9,22 @@ export class EMCStatus extends StatusEffect {
     }
 
     public override applyUpdateEffect(entity: Entity, _amplifier: number): boolean {
-        if (entity.getWorld().isClient) {
-            const angle = Math.random() * PI2;
-            const pos = entity.getPositionRef.clone()
-                .add(Math.cos(angle) * 16, Math.sin(angle) * 16);
+        if (!entity.getWorld().isClient) return true;
 
-            const speed = 100 + Math.random() * 50;
-            const vel = new MutVec2(Math.cos(angle), Math.sin(angle)).multiply(speed);
+        const angle = Math.random() * PI2;
+        const pos = entity.getPositionRef.clone()
+            .add(Math.cos(angle) * 16, Math.sin(angle) * 16);
 
-            entity.getWorld().addParticleByVec(
-                pos, vel,
-                0.3,
-                1.5,
-                '#66ccff', '#0033ff',
-                1.5
-            );
-        }
+        const speed = 100 + Math.random() * 50;
+        const vel = new MutVec2(Math.cos(angle), Math.sin(angle)).multiply(speed);
+
+        entity.getWorld().addParticleByVec(
+            pos, vel,
+            0.3,
+            1.5,
+            '#66ccff', '#0033ff',
+            1.5
+        );
         return true;
     }
 

@@ -12,15 +12,17 @@ export class LaserBeamEffect implements VisualEffect {
         (writer, value) => {
             writer.writeString(value.color);
             writer.writeVarUInt(value.baseWidth);
+            writer.writeFloat(value.life);
             PacketCodecs.VECTOR2D.encode(writer, value.start);
             PacketCodecs.VECTOR2D.encode(writer, value.end);
         },
         reader => {
             const laser = new LaserBeamEffect(
                 reader.readString(),
-                reader.readVarUInt()
+                reader.readVarUInt(),
+                reader.readFloat(),
             );
-            laser.set(PacketCodecs.VECTOR2D.decode(reader), PacketCodecs.VECTOR2D.decode(reader));
+            laser.reset(PacketCodecs.VECTOR2D.decode(reader), PacketCodecs.VECTOR2D.decode(reader));
             return laser;
         }
     );
@@ -29,6 +31,7 @@ export class LaserBeamEffect implements VisualEffect {
 
     private readonly color: string;
     private readonly baseWidth: number;
+    private readonly life: number;
 
     private readonly start = MutVec2.zero();
     private readonly end = MutVec2.zero();
@@ -38,9 +41,10 @@ export class LaserBeamEffect implements VisualEffect {
     private t = 0;
     private pulseTime = 0;
 
-    public constructor(color: string, baseWidth: number) {
+    public constructor(color: string, baseWidth: number, life = 0.15) {
         this.baseWidth = baseWidth;
         this.color = color;
+        this.life = life;
     }
 
     public set(start: IVec, end: IVec) {
@@ -53,7 +57,7 @@ export class LaserBeamEffect implements VisualEffect {
         this.t = 0; // 刷新寿命,保持常驻
     }
 
-    public reset(start: MutVec2, end: MutVec2) {
+    public reset(start: IVec, end: IVec) {
         this.start.set(start.x, start.y);
         this.end.set(end.x, end.y);
         this.prevStart.set(start.x, start.y);
@@ -72,7 +76,7 @@ export class LaserBeamEffect implements VisualEffect {
     public tick(dt: number) {
         this.t += dt;
         this.pulseTime += dt;
-        if (this.t > 0.15) this.alive = false;
+        if (this.t > this.life) this.alive = false;
     }
 
     public render(ctx: CanvasRenderingContext2D, tickDelta: number) {

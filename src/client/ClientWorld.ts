@@ -67,7 +67,14 @@ export class ClientWorld extends World {
 
         this.tickEntities();
 
-        this.effects.forEach(effect => effect.tick(dt));
+        for (let i = this.effects.length - 1; i >= 0; i--) {
+            const effect = this.effects[i];
+            effect.tick(dt);
+            if (effect.isAlive()) continue;
+            this.effects[i] = this.effects[this.effects.length - 1];
+            this.effects.pop();
+        }
+
         this.particlePool.tick(dt);
         this.starField.update(dt, camera);
         this.client.window.damagePopup.tick(dt);

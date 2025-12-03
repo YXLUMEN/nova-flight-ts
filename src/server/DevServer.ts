@@ -22,7 +22,6 @@ export class DevServer extends IntegratedServer {
         console.warn(`Will crash: ${this.willCrash}`);
 
         clearTimeout(this.restCrash);
-        // @ts-ignore
         this.restCrash = setTimeout(() => {
             this.willCrash = 0;
             this.restCrash = undefined;

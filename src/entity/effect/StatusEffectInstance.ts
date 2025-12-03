@@ -72,7 +72,7 @@ export class StatusEffectInstance {
         return this.amplifier;
     }
 
-    public update(entity: LivingEntity,): boolean {
+    public update(entity: LivingEntity): boolean {
         if (this.isActive()) {
             const effect = this.type.getValue();
             if (effect.canApplyUpdateEffect(this.duration, this.amplifier) && !effect.applyUpdateEffect(entity, this.amplifier)) {

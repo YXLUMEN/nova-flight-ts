@@ -58,6 +58,8 @@ import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatus
 import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
 import {ItemCooldownUpdateS2CPacket} from "../../network/packet/s2c/ItemCooldownUpdateS2CPacket.ts";
+import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
+import {AudioManager} from "../../sound/AudioManager.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer: Set<UUID> = new Set();
@@ -230,7 +232,10 @@ export class ClientPlayNetworkHandler {
     }
 
     public onEntityDamage(packet: EntityDamageS2CPacket): void {
-        const entity = this.world?.getEntityById(packet.entityId);
+        const world = this.world;
+        if (!world) return;
+
+        const entity = world.getEntityById(packet.entityId);
         if (!entity) {
             this.client.window.damagePopup.spawnPopup(
                 packet.pos.x, packet.pos.y - 10, packet.damage, '#ff3434', 20, packet.entityId
@@ -384,6 +389,11 @@ export class ClientPlayNetworkHandler {
         world.stopLoopSound(null, packet.soundEvent);
     }
 
+    public onPlayAudio(packet: PlayAudioS2CPacket): void {
+        AudioManager.playAudio(packet.audio);
+        AudioManager.setVolume(packet.volume);
+    }
+
     public onPlayerScore(packet: PlayerSetScoreS2CPacket): void {
         this.client.player?.setScore(packet.score);
     }
@@ -506,5 +516,6 @@ export class ClientPlayNetworkHandler {
         this.register(EntityStatusEffectS2CPacket.ID, this.onEntityStatusEffect.bind(this));
         this.register(RemoveEntityStatusEffectS2CPacket.ID, this.onRemoveEntityStatusEffect.bind(this));
         this.register(ItemCooldownUpdateS2CPacket.ID, this.onItemCooldown.bind(this));
+        this.register(PlayAudioS2CPacket.ID, this.onPlayAudio.bind(this));
     }
 }

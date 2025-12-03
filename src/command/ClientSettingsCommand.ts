@@ -6,6 +6,7 @@ import {invoke} from "@tauri-apps/api/core";
 import {CommandError, IllegalArgumentError} from "../apis/errors.ts";
 import {IntArgumentType} from "./argument/IntArgumentType.ts";
 import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
+import {ServerDB} from "../server/ServerDB.ts";
 
 export class ClientSettingsCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -39,7 +40,7 @@ export class ClientSettingsCommand {
                                     argument<T, number>('port', IntArgumentType.int())
                                         .executes(ctx => {
                                             const arg = ctx.args.get('port');
-                                            if (!arg) throw new CommandError('\x1b[31m<port> is required', 'warning');
+                                            if (!arg) throw new CommandError('\x1b[31m<port> is required');
 
                                             let port = Number(arg.result);
                                             if (!Number.isSafeInteger(port)) {
@@ -132,6 +133,12 @@ export class ClientSettingsCommand {
                             literal<T>('shut_relay')
                                 .executes(() => {
                                     return invoke('stop_server');
+                                })
+                        )
+                        .then(
+                            literal<T>('reset_tutorial')
+                                .executes(() => {
+                                    return ServerDB.db.delete('user_info', 'tutorial');
                                 })
                         )
                 )

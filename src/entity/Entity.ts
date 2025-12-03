@@ -90,17 +90,20 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     /**
      * 禁止重写
      *
-     * 如需清理工作, 考虑 onRemove
-     * @see onRemove
+     * 如需清理工作, 考虑 onDiscard
+     * @see onDiscard
      * */
     public discard(): void {
         if (this.removed) return;
         this.removed = true;
-        this.onRemove();
+        this.onDiscard();
         this.world.events.emit(EVENTS.ENTITY_REMOVED, {entity: this});
     }
 
-    protected onRemove() {
+    /**
+     * 用于丢弃后的清理, 必须保证清除有效
+     */
+    protected onDiscard(): void {
     }
 
     public kill(): void {
@@ -402,6 +405,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         return new ServerCommandSource(
             this,
             this.getPosition(),
+            this.getYaw(),
             serverWorld.isClient ? null : (serverWorld as ServerWorld),
             this.getPermissionLevel(),
             'Entity',

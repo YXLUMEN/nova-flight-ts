@@ -8,7 +8,6 @@ import {BinaryReader} from "../../nbt/BinaryReader.ts";
 import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import type {PayloadWithOrigin} from "../../network/codec/PayloadWithOrigin.ts";
-import {PacketTooLargeError} from "../../apis/errors.ts";
 
 export class ServerNetworkChannel extends NetworkChannel implements IServerPlayNetwork {
     private readonly secretKey: Uint8Array;
@@ -27,16 +26,7 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
         writer.writeByte(0x12);
         writer.writeByte(this.getSessionID());
         writer.writeUUID(target);
-        // noinspection DuplicatedCode
-        writer.writeString(type.id.toString());
-        type.codec.encode(writer, payload);
-
-        const buffer = writer.toUint8Array();
-        if (buffer.length > NetworkChannel.MAX_PACKET_SIZE) {
-            throw new PacketTooLargeError(`Packet ${payload.getId().id} exceeds 4096 bytes: ${buffer.length}`);
-        }
-
-        this.ws!.send(buffer);
+        this.checkAndSend(writer, type, payload);
     }
 
     public sendExclude<T extends Payload>(payload: T, ...excludes: UUID[]) {
@@ -51,16 +41,7 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
         for (const id of excludes) {
             writer.writeUUID(id);
         }
-        // noinspection DuplicatedCode
-        writer.writeString(type.id.toString());
-        type.codec.encode(writer, payload);
-
-        const buffer = writer.toUint8Array();
-        if (buffer.length > NetworkChannel.MAX_PACKET_SIZE) {
-            throw new PacketTooLargeError(`Packet ${payload.getId().id} exceeds 4096 bytes: ${buffer.length}`);
-        }
-
-        this.ws!.send(buffer);
+        this.checkAndSend(writer, type, payload);
     }
 
     private decodeWithOrigin(buf: Uint8Array): PayloadWithOrigin | null {

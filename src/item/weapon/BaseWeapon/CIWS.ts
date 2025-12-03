@@ -14,6 +14,8 @@ export class CIWS extends BaseWeapon {
     private static readonly BULLET_SPEED = 60;
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity) {
+        stack.set(DataComponentTypes.FIRING, true);
+
         const damage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
         for (let i = 4; i--;) {
             const bullet = new CIWSBulletEntity(EntityTypes.CIWS_BULLET_ENTITY, world, attacker, damage);
@@ -34,7 +36,6 @@ export class CIWS extends BaseWeapon {
         if (world.isClient) {
             world.playLoopSound(attacker, SoundEvents.CIWS_FIRE_LOOP, 0.8);
         }
-        stack.set(DataComponentTypes.FIRING, true);
     }
 
     public override onEndFire(stack: ItemStack, world: World, attacker: Entity): void {

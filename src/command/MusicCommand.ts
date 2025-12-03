@@ -27,7 +27,7 @@ export class MusicCommand {
 
                                     const event = Registries.AUDIOS.getById(arg.result);
                                     if (!event) {
-                                        throw new CommandError(`\x1b[33mMusic was not found with ID: "${arg.result}"`, 'warning');
+                                        throw new CommandError(`\x1b[33mMusic was not found with ID: "${arg.result}"`);
                                     }
                                     AudioManager.playAudio(event);
                                     ctx.source.addMessage(`Start to play \x1b[32m"${event.getId()}"\x1b[0m`);

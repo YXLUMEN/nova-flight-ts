@@ -26,7 +26,7 @@ export class CommandDispatcher<S> {
 
     private parseNodes(node: CommandNode<S>, originalReader: StringReader, contextSoFar: CommandContextBuilder<S>): ParseResults<S> {
         const source = contextSoFar.source;
-        const cursor = originalReader.getCursor();
+        const start = originalReader.getCursor();
 
         const potentials: ParseResults<S>[] = [];
         const errors: Map<CommandNode<S>, CommandError> = new Map();
@@ -45,13 +45,13 @@ export class CommandDispatcher<S> {
                 }
             } catch (err) {
                 if (err instanceof Error) {
-                    const commandError = new CommandError(`${err.name}: ${err.message}`, 'error');
+                    const commandError = new CommandError(`${err.name}: ${err.message}`);
                     errors.set(child, commandError);
                 } else if (err instanceof CommandError) {
                     errors.set(child, err);
                 }
 
-                reader.setCursor(cursor);
+                reader.setCursor(start);
                 continue;
             }
 
@@ -105,9 +105,8 @@ export class CommandDispatcher<S> {
         const truncatedInput = fullInput.substring(0, cursor);
         const truncatedInputLowerCase = truncatedInput.toLowerCase();
 
-        const futures: Promise<Suggestions>[] = new Array(parent.getOriginChildren().size);
+        const futures: Promise<Suggestions>[] = [];
 
-        let i = 0;
         for (const node of parent.getChildren()) {
             let future: Promise<Suggestions> = Suggestions.empty();
             try {
@@ -117,7 +116,7 @@ export class CommandDispatcher<S> {
                 );
             } catch {
             }
-            futures[i++] = future;
+            futures.push(future);
         }
 
         const results = await Promise.all(futures);

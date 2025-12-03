@@ -1,5 +1,5 @@
 import {StarField} from "../../../effect/StarField.ts";
-import {defaultLayers} from "../../../configs/StarfieldConfig.ts";
+import {lowPowerLayers} from "../../../configs/StarfieldConfig.ts";
 import {Camera} from "../Camera.ts";
 import {MutVec2} from "../../../utils/math/MutVec2.ts";
 import type {IUi} from "./IUi.ts";
@@ -19,7 +19,7 @@ export class StartScreen implements IUi {
     private height: number = 0;
 
     private readonly tempCamera: Camera = new Camera();
-    private readonly starField: StarField = new StarField(96, defaultLayers, 8);
+    private readonly starField: StarField = new StarField(96, lowPowerLayers, 8);
 
     private ctrl = new AbortController();
     private running = false

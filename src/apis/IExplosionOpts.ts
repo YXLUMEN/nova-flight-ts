@@ -20,5 +20,6 @@ export interface ExplosionOpts {
 
 export interface ExpendExplosionOpts extends ExplosionOpts {
     attacker: Entity | null;
-    flash?: VisualEffect
+    flash?: VisualEffect;
+    behaviour?: string;
 }

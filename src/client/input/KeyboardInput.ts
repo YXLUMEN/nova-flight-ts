@@ -87,7 +87,7 @@ export class KeyboardInput implements IInput {
             const code = event.code;
 
             if (code === 'Escape' && commandManager.isShow()) {
-                const hide = commandManager.handlerEsp();
+                const hide = commandManager.onEsc();
                 if (hide) this.setDisabled(false);
                 return;
             }

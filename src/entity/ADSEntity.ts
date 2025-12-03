@@ -6,8 +6,8 @@ import {World} from "../world/World.ts";
 import type {IOwnable} from "./IOwnable.ts";
 import type {LivingEntity} from "./LivingEntity.ts";
 import {distanceVec2} from "../utils/math/math.ts";
-import type {MutVec2} from "../utils/math/MutVec2.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
+import type {IVec} from "../utils/math/IVec.ts";
 
 export class ADSEntity extends Entity implements IOwnable {
     private static readonly RADIUS = 256 * 256;
@@ -18,20 +18,11 @@ export class ADSEntity extends Entity implements IOwnable {
         this.owner = owner;
     }
 
-    public static spawnInterceptPathParticles(world: World, start: MutVec2, end: MutVec2) {
-        const diff = end.subVec(start);
-        const length = diff.length();
-        if (length < 0.001) return;
-
-        const steps = length | 0;
-        const dir = diff.normalize();
-
-        for (let i = 0; i <= steps; i++) {
-            world.addParticle(start.x, start.y, 0, 0,
-                0.5, 2, '#fff', '#fff'
-            );
-            start.add(dir.x, dir.y);
-        }
+    public static async spawnInterceptPathParticles(world: ServerWorld, start: IVec, end: IVec) {
+        const mod = await import('../effect/LaserBeamEffect.ts');
+        const effect = new mod.LaserBeamEffect('#fff', 1, 0.1);
+        effect.set(start, end);
+        world.spawnEffect(null, effect);
     }
 
     public override tick() {
@@ -40,15 +31,31 @@ export class ADSEntity extends Entity implements IOwnable {
         if ((this.age & 7) !== 0) return;
         const world = this.getWorld() as ServerWorld;
         if (world.isClient) return;
+
+        const selfPos = this.getPosition();
         const projectiles = world.getProjectiles();
 
+        let intercepted = 0;
         for (const projectile of projectiles) {
-            if (projectile.getOwner() !== this.owner) {
-                if (distanceVec2(projectile.getPositionRef, this.getPositionRef) > ADSEntity.RADIUS) continue;
-                ADSEntity.spawnInterceptPathParticles(world, this.getPositionRef.clone(), projectile.getPositionRef.clone());
-                projectile.discard();
-                break;
-            }
+            if (projectile.getOwner() === this.owner) continue;
+
+            const projPos = projectile.getPositionRef;
+            if (distanceVec2(projPos, selfPos) > ADSEntity.RADIUS) continue;
+            const proVel = projectile.getVelocityRef;
+
+            const toSelf = selfPos.subVec(projPos);
+            const dot = proVel.x * toSelf.x + proVel.y * toSelf.y;
+            if (dot < 0) continue;
+
+            const velSq = proVel.x * proVel.x + proVel.y * proVel.y;
+            if (velSq < 1e-4) continue; // 低速
+
+            const t = dot / velSq; // 到达最近点的时间
+            if (t < 0) continue;
+
+            ADSEntity.spawnInterceptPathParticles(world, selfPos, projPos);
+            projectile.discard();
+            if (intercepted++ >= 5) break;
         }
     }
 

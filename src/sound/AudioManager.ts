@@ -10,7 +10,7 @@ import {isServer} from "../configs/WorldConfig.ts";
 import {MediaWithoutSrc} from "../apis/errors.ts";
 
 export class AudioManager {
-    private static readonly AUDIO_PLAYER: HTMLAudioElement;
+    public static readonly AUDIO_PLAYER: HTMLAudioElement;
     private static readonly audioMap = new Map<Identifier, string>();
     private static readonly eventMap = new Map<string, AbortController>();
 

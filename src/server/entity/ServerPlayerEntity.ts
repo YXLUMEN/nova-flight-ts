@@ -23,6 +23,7 @@ export class ServerPlayerEntity extends PlayerEntity {
     public readonly playerProfile: GameProfile;
 
     public networkHandler: ServerPlayNetworkHandler | null = null;
+    public watchTechPage = false;
     private readonly inputKeys = new Set<string>();
     private readonly pendingSyncStack: Set<ItemStack> = new Set();
 
@@ -144,6 +145,9 @@ export class ServerPlayerEntity extends PlayerEntity {
                 break;
             case 'Space':
                 this.handleFire();
+                break;
+            case 'KeyG':
+                this.watchTechPage = !this.watchTechPage;
                 break;
             default:
                 this.inputKeys.add(key);

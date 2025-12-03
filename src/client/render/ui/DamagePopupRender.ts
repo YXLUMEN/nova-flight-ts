@@ -36,7 +36,7 @@ export class DamagePopupRender implements IUi {
             this.activePopups.push({
                 x: x, y: y, preY: y,
                 age: 0, life: life / 20,
-                value: value.toString(),
+                value: this.formatDamage(value),
                 color: color,
                 entityId: null,
             });
@@ -45,10 +45,10 @@ export class DamagePopupRender implements IUi {
 
         const exist = this.popups.get(entityId);
         if (!exist) {
-            const event = {
+            const event: DamagePopupEvent = {
                 x: x, y: y, preY: y,
                 age: 0, life: life / 20,
-                value: value.toString(),
+                value: this.formatDamage(value),
                 color: color,
                 entityId: entityId,
             };
@@ -57,16 +57,10 @@ export class DamagePopupRender implements IUi {
             return;
         }
 
-        if (value === 0 && Number(exist.value) !== 0) {
-            this.popups.delete(entityId);
-            return;
-        }
-
         exist.x = x;
         exist.y = y;
         exist.age = exist.life * 0.2;
-        exist.value = `${Number(exist.value) + value}`;
-        exist.preY = exist.y - this.riseOffset(exist.age, exist.life);
+        exist.value = value === 0 ? '0' : this.formatDamage(Number(exist.value) + value);
     }
 
     public render(ctx: CanvasRenderingContext2D, tickDelta: number): void {
@@ -113,5 +107,9 @@ export class DamagePopupRender implements IUi {
         }
         const progress = (t - 0.5) / 0.5;
         return lerp(progress, 10, 60);
+    }
+
+    private formatDamage(value: number): string {
+        return Number(value.toFixed(1)).toString();
     }
 }

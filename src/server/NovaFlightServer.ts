@@ -12,6 +12,7 @@ import {ServerCommandManager} from "./ServerCommandManager.ts";
 import {PlayerManager} from "./entity/PlayerManager.ts";
 import {GameProfile} from "./entity/GameProfile.ts";
 import {ServerNetworkHandler} from "./network/ServerNetworkHandler.ts";
+import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static readonly SAVE_PATH = `saves/save-${NbtCompound.VERSION}.dat`;
@@ -28,6 +29,7 @@ export abstract class NovaFlightServer implements CommandOutput {
     public networkHandler: ServerNetworkHandler | null = null;
     public profile: GameProfile | null = null;
     public isMultiPlayer: boolean = false;
+    // startGame 后初始化
     public world: ServerWorld | null = null;
 
     private tickInterval: number | null = null;
@@ -83,7 +85,6 @@ export abstract class NovaFlightServer implements CommandOutput {
         self.postMessage({type: 'server_start'});
 
         this.last = performance.now();
-        // @ts-ignore
         this.tickInterval = setInterval(this.bindTick, 25);
     }
 
@@ -164,6 +165,7 @@ export abstract class NovaFlightServer implements CommandOutput {
         return new ServerCommandSource(
             this,
             Vec2.ZERO,
+            0,
             this.world,
             10,
             'Server',
@@ -174,7 +176,7 @@ export abstract class NovaFlightServer implements CommandOutput {
     }
 
     public sendMessage(msg: string): void {
-        console.log(msg);
+        this.networkChannel.send(new GameMessageS2CPacket(msg));
     }
 
     public shouldTrackOutput(): boolean {

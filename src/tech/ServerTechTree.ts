@@ -36,6 +36,10 @@ export class ServerTechTree implements TechTree {
         return false;
     }
 
+    public forceUnlock(id: string): void {
+        this.state.forceUnlock(id);
+    }
+
     public unlockAll() {
         const all = Array.from(this.state.techById.keys());
         for (const nid of all) {
@@ -43,6 +47,10 @@ export class ServerTechTree implements TechTree {
 
             this.state.forceUnlock(nid);
         }
+    }
+
+    public unloadedTechCount(): number {
+        return this.state.unlocked.size;
     }
 
     public resetTech() {

@@ -102,6 +102,10 @@ export class ClientTechTree implements TechTree {
         return this.state.unlock(id);
     }
 
+    public forceUnlock(id: string): void {
+        this.state.forceUnlock(id);
+    }
+
     public isUnlocked(id: string): boolean {
         return this.state.isUnlocked(id);
     }
@@ -423,6 +427,10 @@ export class ClientTechTree implements TechTree {
 
     private conflictPeers(id: string): string[] {
         return this.adj.conflicts.get(id) || [];
+    }
+
+    public unloadedTechCount(): number {
+        return this.state.unlocked.size;
     }
 
     public resetTech() {

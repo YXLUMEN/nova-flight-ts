@@ -13,16 +13,14 @@ import {ClusterRocketEntity} from "../../../entity/projectile/ClusterRocketEntit
 import type {ClientWorld} from "../../../client/ClientWorld.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
+import {EntityPositionForceS2CPacket} from "../../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
 
 export class RocketLauncherWeapon extends BaseWeapon {
     private static readonly BULLET_SPEED: number = 15;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
         this.onFire(stack, world, attacker);
-        if (!world.isClient && attacker.isPlayer()) {
-            this.setCooldown(stack, this.getFireRate(stack));
-            (attacker as ServerPlayerEntity).syncStack(stack);
-        }
+        this.setCooldown(stack, this.getFireRate(stack));
     }
 
     protected onFire(stack: ItemStack, world: World, attacker: Entity) {
@@ -36,6 +34,9 @@ export class RocketLauncherWeapon extends BaseWeapon {
             if (i++ > rocketCounts) {
                 schedule.cancel();
                 stack.set(DataComponentTypes.WEAPON_CAN_COOLDOWN, true);
+                if (!world.isClient && attacker.isPlayer()) {
+                    (attacker as ServerPlayerEntity).networkHandler?.send(EntityPositionForceS2CPacket.create(attacker));
+                }
                 return;
             }
 
@@ -50,14 +51,13 @@ export class RocketLauncherWeapon extends BaseWeapon {
             }
 
             this.setBullet(rocket, attacker, RocketLauncherWeapon.BULLET_SPEED, 4, 2);
-            if (!world.isClient) {
-                (world as ServerWorld).spawnEntity(rocket);
-            } else this.spawnMuzzle(world as ClientWorld, attacker, this.getMuzzleParticles());
+            if (!world.isClient) (world as ServerWorld).spawnEntity(rocket);
+            else this.spawnMuzzle(world as ClientWorld, attacker, this.getMuzzleParticles());
             const yaw = attacker.getYaw();
             attacker.updateVelocity(-0.6, Math.cos(yaw), Math.sin(yaw));
         });
 
-        world.playSound(null, SoundEvents.MISSILE_LAUNCH, 0.5);
+        world.playSound(attacker, SoundEvents.MISSILE_LAUNCH, 0.5);
     }
 
     public override getDisplayName(): string {

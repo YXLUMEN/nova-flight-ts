@@ -25,7 +25,7 @@ export class RequiredArgumentBuilder<S, T> extends ArgumentBuilder<S, RequiredAr
     }
 
     public override build(): CommandNode<S> {
-        const result = new ArgumentCommandNode(this.name, this.type, this.command!, this.getRequirement(), this.suggestionsProvider);
+        const result = new ArgumentCommandNode(this.name, this.type, this.getCommand(), this.getRequirement(), this.suggestionsProvider);
 
         for (const argument of this.getArguments()) {
             result.addChild(argument);

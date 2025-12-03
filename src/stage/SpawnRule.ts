@@ -1,5 +1,6 @@
-import type {SpawnCtx, SpawnRuleConfig} from "../apis/IStage.ts";
 import {clamp} from "../utils/math/math.ts";
+import type {SpawnRuleConfig} from "./SpawnRuleConfig.ts";
+import type {SpawnContext} from "./SpawnContext.ts";
 
 export class SpawnRule {
     private ticks = 0;
@@ -15,12 +16,15 @@ export class SpawnRule {
         this.next = 0;
     }
 
-    public tick(ctx: SpawnCtx) {
+    public tick(ctx: SpawnContext) {
         if (ctx.difficulty === 0) return;
         const cfg = this.cfg;
 
         if (cfg.enabled && !cfg.enabled(ctx)) return;
-        if (cfg.cap && ctx.world.getMobs().size >= cfg.cap) return;
+        if (cfg.cap !== undefined) {
+            const count = ctx.world.getMobs().size;
+            if (typeof cfg.cap === 'function' ? cfg.cap(ctx) < count : cfg.cap < count) return;
+        }
 
         this.ticks++;
 
@@ -35,7 +39,7 @@ export class SpawnRule {
         }
     }
 
-    private resolvePeriodTicks(ctx: SpawnCtx): number {
+    private resolvePeriodTicks(ctx: SpawnContext): number {
         const j = clamp(this.cfg.jitter ?? 0, 0, 1);
         const jitterMul = this.jitterMul(ctx.rng(), j);
 
@@ -59,14 +63,13 @@ export class SpawnRule {
         return 1 + k * j;
     }
 
-    private spawn(ctx: SpawnCtx) {
+    private spawn(ctx: SpawnContext) {
         const out = this.cfg.factory(ctx);
         if (!out) return;
 
         // 再次防洪
-        const cap = this.cfg.cap ?? Infinity;
-        const remain = cap - ctx.world.getMobs().size;
-        if (remain <= 0) return;
+        const cap = typeof this.cfg.cap === 'function' ? this.cfg.cap(ctx) : this.cfg.cap ?? Infinity;
+        if (cap <= ctx.world.getMobs().size) return;
 
         if (Array.isArray(out)) {
             for (const m of out) ctx.world.spawnEntity(m);

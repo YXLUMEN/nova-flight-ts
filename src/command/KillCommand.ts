@@ -33,7 +33,7 @@ export class KillCommand {
                             }
 
                             if (count === 0) {
-                                throw new CommandError('\x1b[33mNo target founded.', 'warning');
+                                throw new CommandError('\x1b[33mNo target founded.');
                             }
 
                             ctx.source.outPut.sendMessage(`Kill ${count} entities`);
@@ -42,15 +42,6 @@ export class KillCommand {
                             return source.hasPermissionLevel(8);
                         })
                 )
-                .executes(ctx => {
-                    const world = ctx.source.getWorld();
-                    const entity = ctx.source.entity;
-                    if (!world || world.isClient || !entity) return;
-                    entity.kill();
-                })
-                .requires(source => {
-                    return source.hasPermissionLevel(5);
-                })
         );
     }
 }

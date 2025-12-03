@@ -1,6 +1,6 @@
 import {CommandManager} from "../../command/CommandManager.ts";
 import {MusicCommand} from "../../command/MusicCommand.ts";
-import {DevModCommand} from "../../command/DevModCommand.ts";
+import {GameModeCommand} from "../../command/GameModeCommand.ts";
 import type {ClientCommandSource} from "./ClientCommandSource.ts";
 import {ClientSettingsCommand} from "../../command/ClientSettingsCommand.ts";
 import {CommandBarCommand} from "../../command/CommandBarCommand.ts";
@@ -17,6 +17,7 @@ import {ClientCommandPanel} from "./ClientCommandPanel.ts";
 import type {Suggestion} from "../../brigadier/suggestion/Suggestion.ts";
 import {MemoryLRU} from "../../utils/collection/MemoryLRU.ts";
 import {StringReader} from "../../brigadier/StringReader.ts";
+import {SummonEntityCommand} from "../../command/SummonEntityCommand.ts";
 
 export type CommandNotifyCategory = 'info' | 'success' | 'warning' | 'error';
 
@@ -32,7 +33,7 @@ export class ClientCommandManager extends CommandManager {
 
     private readonly commandInput: HTMLInputElement;
 
-    private parse: ParseResults<any>[] | null = null;
+    private parseCache: MemoryLRU<string, ParseResults<any>[]> = new MemoryLRU(24);
     private suggestionCache: MemoryLRU<string, Suggestion[]> = new MemoryLRU(24);
     private suggestionsLength = 0;
     private tokenStart = -1;
@@ -40,137 +41,137 @@ export class ClientCommandManager extends CommandManager {
 
     public constructor(source: ClientCommandSource) {
         super();
-        this.source = source;
-
-        this.commandInput = document.getElementById('command-input') as HTMLInputElement;
+        const commandInput = document.getElementById('command-input') as HTMLInputElement;
         const commandBar = document.getElementById('command-bar') as HTMLLabelElement;
         const commandPanel = document.getElementById('command-panel') as HTMLDivElement;
 
+        this.source = source;
+        this.commandInput = commandInput;
         this.popup = new ClientSuggestionPopup(commandBar, this.commandInput);
         this.commandPanel = new ClientCommandPanel(commandPanel, commandBar, this.commandInput);
 
-        commandBar.addEventListener('keydown', event => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                const input = this.commandInput.value;
-
-                if (this.popup.getPopups()) {
-                    const activeItem = this.popup.getActiveItem();
-                    if (!activeItem) return;
-                    this.popup.applySuggestion(
-                        activeItem.textContent!,
-                        this.tokenStart,
-                        input.length
-                    );
-                    this.popup.cleanPopup();
-                    return;
-                }
-
-                if (input.length <= 0) return;
-                if (!input.startsWith('/')) {
-                    this.source.getClient().clientChat.sendMessage(input);
-                    this.commandInput.value = '';
-                    return;
-                }
-
-                this.usedCommands.push(input);
-                if (this.usedCommands.length > 64) {
-                    this.usedCommands.shift();
-                }
-                this.historyIndex = -1;
-                this.commandInput.value = '';
-                this.resetSuggestionLen();
-
-                this.executeCommand(input);
-                return;
-            }
-
-            if (event.code === 'ArrowUp') {
-                event.preventDefault();
-                if (this.popup.getPopups()) {
-                    this.completionIndex = (this.completionIndex - 1 + this.suggestionsLength) % this.suggestionsLength;
-                    this.popup.highlightPopupItem(this.completionIndex);
-                    return;
-                }
-
-                if (this.usedCommands.length <= 0) return;
-                if (this.historyIndex === -1) {
-                    this.historyIndex = this.usedCommands.length - 1;
-                } else if (this.historyIndex > 0) {
-                    this.historyIndex--;
-                }
-                this.commandInput.value = this.usedCommands[this.historyIndex];
-                return;
-            }
-
-            if (event.code === 'ArrowDown') {
-                event.preventDefault();
-                if (this.popup.getPopups()) {
-                    this.completionIndex = (this.completionIndex + 1) % this.suggestionsLength;
-                    this.popup.highlightPopupItem(this.completionIndex);
-                    return;
-                }
-
-                if (this.usedCommands.length <= 0) return;
-                if (this.historyIndex >= 0 && this.historyIndex < this.usedCommands.length - 1) {
-                    this.historyIndex++;
-                    this.commandInput.value = this.usedCommands[this.historyIndex];
-                } else {
-                    this.historyIndex = -1;
-                    this.commandInput.value = '';
-                }
-                return;
-            }
-
-            if (event.code === 'Tab') {
-                event.preventDefault();
-                if (!this.popup.getPopups()) return;
-
-                // 轮询并应用
-                this.popup.highlightPopupItem(this.completionIndex);
-                const activeItem = this.popup.getActiveItem();
-                this.completionIndex = (this.completionIndex + 1) % this.suggestionsLength;
-
-                if (!activeItem) return;
-
-                this.popup.applySuggestion(
-                    activeItem.textContent!,
-                    this.tokenStart,
-                    this.commandInput.value.length,
-                );
-                return;
-            }
-
-            if (event.ctrlKey && event.code === 'Space') {
-                event.preventDefault();
-                this.giveSuggestions().catch();
-            }
-
-            if (event.ctrlKey && event.code === 'KeyW') {
-                event.preventDefault();
-                const cursor = this.commandInput.selectionStart ?? 0;
-                const text = this.commandInput.value;
-
-                let start = cursor;
-                while (start > 0 && text[start - 1] !== ' ') {
-                    start--;
-                }
-                let end = cursor;
-                while (end < text.length && text[end] !== ' ') {
-                    end++;
-                }
-                this.commandInput.setSelectionRange(start, end);
-                return;
-            }
-        });
-
-        const suggestionTimer = debounce(this.giveSuggestions.bind(this), 200);
-        this.commandInput.addEventListener('input', suggestionTimer);
+        commandBar.addEventListener('keydown', this.onCommandInput.bind(this));
+        commandInput.addEventListener('input', this.bounceGiveSuggestions);
 
         this.registry();
     }
 
-    public handlerEsp() {
+    private onCommandInput(event: KeyboardEvent) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            const input = this.commandInput.value;
+
+            if (this.popup.getPopups()) {
+                const activeItem = this.popup.getActiveItem();
+                if (!activeItem) return;
+                this.popup.applySuggestion(
+                    activeItem.textContent!,
+                    this.tokenStart,
+                    input.length
+                );
+                this.popup.cleanPopup();
+                return;
+            }
+
+            if (input.length <= 0) return;
+            if (!input.startsWith('/')) {
+                this.source.getClient().clientChat.sendMessage(input);
+                this.commandInput.value = '';
+                return;
+            }
+
+            this.usedCommands.push(input);
+            if (this.usedCommands.length > 64) {
+                this.usedCommands.shift();
+            }
+            this.historyIndex = -1;
+            this.commandInput.value = '';
+            this.resetSuggestionLen();
+
+            this.executeCommand(input);
+            return;
+        }
+
+        if (event.code === 'ArrowUp') {
+            event.preventDefault();
+            if (this.popup.getPopups()) {
+                this.completionIndex = (this.completionIndex - 1 + this.suggestionsLength) % this.suggestionsLength;
+                this.popup.highlightPopupItem(this.completionIndex);
+                return;
+            }
+
+            if (this.usedCommands.length <= 0) return;
+            if (this.historyIndex === -1) {
+                this.historyIndex = this.usedCommands.length - 1;
+            } else if (this.historyIndex > 0) {
+                this.historyIndex--;
+            }
+            this.commandInput.value = this.usedCommands[this.historyIndex];
+            return;
+        }
+
+        if (event.code === 'ArrowDown') {
+            event.preventDefault();
+            if (this.popup.getPopups()) {
+                this.completionIndex = (this.completionIndex + 1) % this.suggestionsLength;
+                this.popup.highlightPopupItem(this.completionIndex);
+                return;
+            }
+
+            if (this.usedCommands.length <= 0) return;
+            if (this.historyIndex >= 0 && this.historyIndex < this.usedCommands.length - 1) {
+                this.historyIndex++;
+                this.commandInput.value = this.usedCommands[this.historyIndex];
+            } else {
+                this.historyIndex = -1;
+                this.commandInput.value = '';
+            }
+            return;
+        }
+
+        if (event.code === 'Tab') {
+            event.preventDefault();
+            if (!this.popup.getPopups()) return;
+
+            // 轮询并应用
+            this.popup.highlightPopupItem(this.completionIndex);
+            const activeItem = this.popup.getActiveItem();
+            this.completionIndex = (this.completionIndex + 1) % this.suggestionsLength;
+
+            if (!activeItem) return;
+
+            this.popup.applySuggestion(
+                activeItem.textContent!,
+                this.tokenStart,
+                this.commandInput.value.length,
+            );
+            return;
+        }
+
+        if (event.ctrlKey && event.code === 'Space') {
+            event.preventDefault();
+            this.bounceGiveSuggestions();
+        }
+
+        if (event.ctrlKey && event.code === 'KeyW') {
+            event.preventDefault();
+            const cursor = this.commandInput.selectionStart ?? 0;
+            const text = this.commandInput.value;
+
+            let start = cursor;
+            while (start > 0 && text[start - 1] !== ' ') {
+                start--;
+            }
+            let end = cursor;
+            while (end < text.length && text[end] !== ' ') {
+                end++;
+            }
+            this.commandInput.setSelectionRange(start, end);
+            return;
+        }
+    }
+
+    public onEsc() {
         if (this.popup.getPopups()) {
             this.popup.cleanPopup();
             this.resetSuggestionLen();
@@ -179,6 +180,10 @@ export class ClientCommandManager extends CommandManager {
         this.switchPanel(false);
         return true;
     }
+
+    // 建议与用法
+
+    private bounceGiveSuggestions = debounce(this.giveSuggestions.bind(this), 100);
 
     private async giveSuggestions() {
         const command = this.commandInput.value;
@@ -192,7 +197,6 @@ export class ClientCommandManager extends CommandManager {
             this.renderSuggestions(cache);
             return;
         }
-        this.parse = null;
 
         const cursor = this.commandInput.selectionStart ?? command.length;
 
@@ -210,28 +214,29 @@ export class ClientCommandManager extends CommandManager {
 
         const suggestions = [...clientSuggestions.getList(), ...serverSuggestions.getList()];
         this.suggestionCache.set(command, suggestions);
-        this.parse = [clientResults, serverResults];
+        this.parseCache.set(command, [clientResults, serverResults]);
 
         this.renderSuggestions(suggestions);
     }
 
     private showUsages() {
-        if (!this.parse) return;
+        const cache = this.parseCache.get(this.commandInput.value);
+        if (!cache) return;
 
         const cursor = this.commandInput.selectionStart ?? this.commandInput.value.length;
         const usage = [];
 
-        const clientCommandBuilder = this.parse[0].context;
+        const clientCommandBuilder = cache[0].context;
         const clientSuggestionContext = clientCommandBuilder.findSuggestionContext(cursor);
         if (clientSuggestionContext.parent.getType() !== 0) {
             usage.push(...this.clientDispatcher.getAllUsage(clientSuggestionContext.parent, this.source));
         }
 
-        const commandBuilder = this.parse[1].context;
-        const suggestionContext = commandBuilder.findSuggestionContext(cursor);
-        if (suggestionContext.parent.getType() !== 0) {
+        const serverCommandBuilder = cache[1].context;
+        const serverSuggestionContext = serverCommandBuilder.findSuggestionContext(cursor);
+        if (serverSuggestionContext.parent.getType() !== 0) {
             // @ts-expect-error
-            usage.push(...this.dispatcher.getAllUsage(suggestionContext.parent, this.source));
+            usage.push(...this.dispatcher.getAllUsage(serverSuggestionContext.parent, this.source));
         }
 
         if (usage.length > 0) {
@@ -254,9 +259,6 @@ export class ClientCommandManager extends CommandManager {
         } else {
             this.resetSuggestionLen();
             this.popup.cleanPopup();
-        }
-
-        if (!this.popup.getPopups()) {
             this.showUsages();
         }
     }
@@ -267,9 +269,21 @@ export class ClientCommandManager extends CommandManager {
         this.completionIndex = -1;
     }
 
+    /**
+     * 清除解析缓存和建议
+     * */
+    public clearParseCache(): void {
+        this.parseCache.clear();
+        this.suggestionCache.clear();
+        this.resetSuggestionLen();
+        this.popup.cleanPopup();
+    }
+
     public getInput(): string {
         return this.commandInput.value;
     }
+
+    // 消息控制
 
     public addPlainMessage(msg: string): void {
         this.commandPanel.addPlainMessage(msg);
@@ -293,15 +307,18 @@ export class ClientCommandManager extends CommandManager {
         this.commandPanel.clearAllMessages();
     }
 
+    // 命令执行与注册
+
     public override registry(): void {
         MusicCommand.registry(this.clientDispatcher);
         ClientSettingsCommand.registry(this.clientDispatcher);
         CommandBarCommand.registry(this.clientDispatcher);
 
         KillCommand.registry(this.dispatcher);
-        DevModCommand.registry(this.dispatcher);
+        GameModeCommand.registry(this.dispatcher);
         WorldDifficultCommand.registry(this.dispatcher);
         StatusEffectCommand.registry(this.dispatcher);
+        SummonEntityCommand.registry(this.dispatcher);
     }
 
     public executeWithPrefix(source: CommandSource, input: string): void {

@@ -4,7 +4,8 @@ import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
 import {KillCommand} from "../command/KillCommand.ts";
 import {WorldDifficultCommand} from "../command/WorldDifficultCommand.ts";
 import {StatusEffectCommand} from "../command/StatusEffectCommand.ts";
-import {DevModCommand} from "../command/DevModCommand.ts";
+import {GameModeCommand} from "../command/GameModeCommand.ts";
+import {SummonEntityCommand} from "../command/SummonEntityCommand.ts";
 
 export class ServerCommandManager extends CommandManager {
     public readonly source: ServerCommandSource;
@@ -21,8 +22,9 @@ export class ServerCommandManager extends CommandManager {
 
     public registry(): void {
         KillCommand.registry(this.dispatcher);
-        DevModCommand.registry(this.dispatcher);
+        GameModeCommand.registry(this.dispatcher);
         WorldDifficultCommand.registry(this.dispatcher);
         StatusEffectCommand.registry(this.dispatcher);
+        SummonEntityCommand.registry(this.dispatcher);
     }
 }

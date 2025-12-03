@@ -4,6 +4,8 @@ import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {UUID} from "../apis/types.ts";
 import type {GameProfile} from "./entity/GameProfile.ts";
 import {ServerDB} from "./ServerDB.ts";
+import {TutorialStage} from "../configs/TutorialStage.ts";
+import {TutorialEvents} from "./event/TutorialEvents.ts";
 
 export class IntegratedServer extends NovaFlightServer {
     private readonly hostUUID: UUID;
@@ -27,6 +29,16 @@ export class IntegratedServer extends NovaFlightServer {
         manager.frozen();
 
         await this.startGame(manager, action === 1);
+
+        const isTutorial = await ServerDB.db.get<string>('user_info', 'tutorial');
+        if (isTutorial === null && action === 0 && this.world) {
+            await ServerDB.db.update('user_info', {name: 'tutorial'});
+
+            this.world.stage = TutorialStage;
+            this.world.stage.reset();
+            TutorialEvents.register();
+        }
+
         await this.waitForStop();
     }
 

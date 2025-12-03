@@ -1,9 +1,11 @@
 import {SpawnRule} from "./SpawnRule.ts";
-import type {PhaseConfig, RNG, SpawnCtx} from "../apis/IStage.ts";
+import type {RNG} from "../apis/IStage.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import {type NbtCompound} from "../nbt/NbtCompound.ts";
 import {clamp} from "../utils/math/math.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
+import type {PhaseConfig} from "./PhaseConfig.ts";
+import type {SpawnContext} from "./SpawnContext.ts";
 
 export class Stage implements NbtSerializable {
     private readonly rng: RNG;
@@ -48,14 +50,14 @@ export class Stage implements NbtSerializable {
         this.ticks++;
         this.phaseTime++;
 
-        const ctx: SpawnCtx = {
+        const ctx: SpawnContext = {
             world,
             time: this.ticks,
             phaseTime: this.phaseTime,
             phaseIndex: this.index,
             score: world.getPhase(),
             rng: this.rng,
-            difficulty: this.computeDifficulty(),
+            difficulty: world.stageDifficult,
         };
 
         const phase = this.phases[this.index];
@@ -66,7 +68,7 @@ export class Stage implements NbtSerializable {
 
         for (const r of this.rules) r.tick(ctx);
 
-        const timeUp = phase.duration !== undefined && this.phaseTime >= phase.duration;
+        const timeUp = phase.ticks !== undefined && this.phaseTime >= phase.ticks;
         const until = phase.until ? phase.until(ctx) : false;
 
         if (timeUp || until) {
@@ -100,9 +102,5 @@ export class Stage implements NbtSerializable {
 
         this.rules = this.phases[index].rules.map(r => new SpawnRule(r));
         for (const r of this.rules) r.reset();
-    }
-
-    private computeDifficulty(): number {
-        return 1;
     }
 }

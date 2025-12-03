@@ -1,12 +1,14 @@
 import type {Identifier} from "../registry/Identifier.ts";
 import {type SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
-import type {Consumer, FunctionReturn} from "../apis/types.ts";
+import type {Consumer, FunctionReturn, Predicate} from "../apis/types.ts";
 import {commonPrefix} from "../utils/Strings.ts";
 import {type Suggestions} from "../brigadier/suggestion/Suggestions.ts";
 import type {SuggestionProvider} from "../brigadier/suggestion/SuggestionProvider.ts";
 import type {CommandContext} from "../brigadier/context/CommandContext.ts";
 import {createClean} from "../utils/uit.ts";
 import type {Registry} from "../registry/Registry.ts";
+import {RelativePosition} from "../utils/math/RelativePosition.ts";
+import {StringReader} from "../brigadier/StringReader.ts";
 
 export class CommandUtil {
     public static forEachMatching<T>(
@@ -75,6 +77,31 @@ export class CommandUtil {
         } satisfies SuggestionProvider<T>);
     }
 
+    public static suggestPositions(remain: string, candidates: RelativePosition[], builder: SuggestionsBuilder, predicate: Predicate<string>) {
+        const list: string[] = [];
+        if (remain.length === 0) {
+            for (const pos of candidates) {
+                const posStr = `${pos.x} ${pos.y}`;
+                if (predicate(posStr)) {
+                    list.push(pos.x);
+                    list.push(posStr);
+                }
+            }
+
+            return this.suggestMatching(list, builder);
+        }
+
+        const remains = remain.split(' ');
+        if (remains.length === 1) for (const pos of candidates) {
+            const posStr = `${remains[0]} ${pos.y}`;
+            if (predicate(posStr)) {
+                list.push(posStr);
+            }
+        }
+
+        return this.suggestMatching(list, builder);
+    }
+
     public static suggestMatching(candidates: Iterable<string>, builder: SuggestionsBuilder) {
         const text = builder.remainingLowerCase;
         for (const candidate of candidates) {
@@ -102,5 +129,16 @@ export class CommandUtil {
         }
 
         return true;
+    }
+
+    public static getCommandValidator(parser: Consumer<StringReader>): Predicate<string> {
+        return text => {
+            try {
+                parser(new StringReader(text));
+                return true;
+            } catch (err) {
+                return false;
+            }
+        }
     }
 }

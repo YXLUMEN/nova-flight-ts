@@ -131,8 +131,8 @@ export class MissileEntity extends RocketEntity {
     public applyDecoy(): void {
     }
 
-    public override onRemove() {
-        super.onRemove();
+    public override onDiscard() {
+        super.onDiscard();
 
         if (this.target) {
             const count = MissileEntity.lockedEntity.get(this.target) ?? 0;

@@ -80,9 +80,9 @@ export abstract class LivingEntity extends Entity {
         velocity.set(vx, vy);
     }
 
-    protected override onRemove(): void {
+    protected override onDiscard(): void {
         this.onRemoval();
-        super.onRemove();
+        super.onDiscard();
     }
 
     protected onRemoval(): void {
@@ -171,7 +171,7 @@ export abstract class LivingEntity extends Entity {
             if (this.isDead()) this.onDeath(damageSource);
         }
 
-        this.getWorld().getNetworkChannel().send(new EntityDamageS2CPacket(this.getId(), this.getPositionRef, damage));
+        this.getWorld().getNetworkChannel().send(EntityDamageS2CPacket.create(this.getId(), this.getPositionRef, damage));
         return true;
     }
 
@@ -255,10 +255,9 @@ export abstract class LivingEntity extends Entity {
     }
 
     protected tickStatusEffects(): void {
-        if (this.activeStatusEffects.size === 0 || this.getWorld().isClient) return;
+        if (this.activeStatusEffects.size === 0) return;
 
-        for (const effect of this.activeStatusEffects.keys()) {
-            const instance = this.activeStatusEffects.get(effect)!;
+        for (const instance of this.activeStatusEffects.values()) {
             if (!instance.update(this)) this.onStatusEffectRemoved(instance);
         }
     }
