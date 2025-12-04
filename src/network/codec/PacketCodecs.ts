@@ -44,8 +44,8 @@ export class PacketCodecs {
     );
 
     public static readonly VAR_INT: PacketCodec<number> = PacketCodecs.of(
-        (writer, value) => writer.writeVarUInt(value),
-        reader => reader.readVarUInt()
+        (writer, value) => writer.writeVarUint(value),
+        reader => reader.readVarUint()
     );
 
     public static readonly STRING: PacketCodec<string> = PacketCodecs.of(
@@ -122,7 +122,7 @@ export class PacketCodecs {
     }
 
     private static readCollectionSize(reader: BinaryReader, maxSize: number): number {
-        const size = reader.readVarUInt();
+        const size = reader.readVarUint();
         if (size > maxSize) {
             throw new Error(`${size} elements exceeded max size of: ${maxSize}`);
         }
@@ -133,7 +133,7 @@ export class PacketCodecs {
         if (size > maxSize) {
             throw new Error(`${size} elements exceeded max size of: ${maxSize}`);
         }
-        writer.writeVarUInt(size);
+        writer.writeVarUint(size);
     }
 
     public static registryEntry<T>(registry: Registry<T>): PacketCodec<T> {
@@ -145,20 +145,19 @@ export class PacketCodecs {
         registryTransformer: FunctionReturn<Registry<T>, IndexedIterable<R>>
     ): PacketCodec<R> {
         return {
-            encode(writer: BinaryWriter, object: R): Uint8Array<ArrayBufferLike> {
+            encode(writer: BinaryWriter, object: R): void {
                 const iterable = registryTransformer(registry);
                 const id = iterable.getRawId(object);
                 if (id === undefined) throw new Error(`Object not registered`);
-                writer.writeVarUInt(id);
-                return writer.toUint8Array();
+                writer.writeVarUint(id);
             },
             decode(reader: BinaryReader): R {
-                const i = reader.readVarUInt();
+                const i = reader.readVarUint();
                 const iterable = registryTransformer(registry);
                 const value = iterable.get(i);
                 if (value === null) throw new Error(`No entry at index ${i}`);
                 return value;
             }
-        } satisfies PacketCodec<R>;
+        };
     }
 }

@@ -12,6 +12,10 @@ export class HashMap<K extends Comparable, V> implements Map<K, V> {
         return count;
     }
 
+    public keySize(): number {
+        return this.buckets.size;
+    }
+
     public set(key: K, value: V) {
         const hash = key.hashCode();
         let bucket = this.buckets.get(hash);

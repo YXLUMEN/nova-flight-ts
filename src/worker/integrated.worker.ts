@@ -41,9 +41,16 @@ async function handleEvent(event: MessageEvent) {
         }
         case 'loaded_save_data':
             break;
+        case 'save_all': {
+            if (!server || !server.world) return;
+
+            await server.playerManager.saveAllPlayerData();
+            const nbt = server.world.saveAll();
+            await server.saveGame(nbt);
+            break;
+        }
     }
 }
 
-
-ClientNetwork.registerNetworkPacket();
 ServerNetwork.registerNetworkPacket();
+ClientNetwork.registerNetworkPacket();

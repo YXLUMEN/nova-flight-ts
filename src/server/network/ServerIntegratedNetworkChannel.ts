@@ -7,6 +7,7 @@ import {Identifier} from "../../registry/Identifier.ts";
 import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 import {BinaryReader} from "../../nbt/BinaryReader.ts";
 import {UUIDUtil} from "../../utils/UUIDUtil.ts";
+import type {GameProfile} from "../entity/GameProfile.ts";
 
 export class ServerIntegratedNetworkChannel implements IServerPlayNetwork {
     private mainPlayerUUID: UUID = UUIDUtil.EMPTY_UUID_STRING;
@@ -42,13 +43,13 @@ export class ServerIntegratedNetworkChannel implements IServerPlayNetwork {
         self.postMessage({type: "PACKET", packet: writer.toUint8Array()});
     }
 
-    public sendTo<T extends Payload>(payload: T, target: UUID) {
-        if (target !== this.mainPlayerUUID) return;
+    public sendTo<T extends Payload>(payload: T, target: GameProfile) {
+        if (target.clientId !== this.mainPlayerUUID) return;
         this.send(payload);
     }
 
-    public sendExclude<T extends Payload>(payload: T, ...excludes: UUID[]) {
-        if (excludes.includes(this.mainPlayerUUID)) return;
+    public sendExclude<T extends Payload>(payload: T, ...excludes: GameProfile[]) {
+        if (excludes.some(profile => profile.clientId === this.mainPlayerUUID)) return;
         this.send(payload);
     }
 

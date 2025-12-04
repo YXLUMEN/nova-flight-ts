@@ -6,8 +6,8 @@ import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 import type {IServerPlayNetwork} from "./IServerPlayNetwork.ts";
 import {BinaryReader} from "../../nbt/BinaryReader.ts";
 import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
-import {Identifier} from "../../registry/Identifier.ts";
 import type {PayloadWithOrigin} from "../../network/codec/PayloadWithOrigin.ts";
+import type {GameProfile} from "../entity/GameProfile.ts";
 
 export class ServerNetworkChannel extends NetworkChannel implements IServerPlayNetwork {
     private readonly secretKey: Uint8Array;
@@ -18,28 +18,39 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
         this.secretKey = secretKey;
     }
 
-    public sendTo<T extends Payload>(payload: T, target: UUID) {
+    public sendTo<T extends Payload>(payload: T, target: GameProfile) {
         const type = this.registry.get(payload.getId().id);
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
 
         const writer = new BinaryWriter();
         writer.writeByte(0x12);
-        writer.writeByte(this.getSessionID());
-        writer.writeUUID(target);
+        writer.writeByte(this.getSessionId());
+        writer.writeByte(target.sessionId);
         this.checkAndSend(writer, type, payload);
     }
 
-    public sendExclude<T extends Payload>(payload: T, ...excludes: UUID[]) {
+    public sendToByUUID<T extends Payload>(payload: T, target: UUID) {
         const type = this.registry.get(payload.getId().id);
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
 
         const writer = new BinaryWriter();
         writer.writeByte(0x13);
-        writer.writeByte(this.getSessionID());
+        writer.writeByte(this.getSessionId());
+        writer.writeUUID(target);
+        this.checkAndSend(writer, type, payload);
+    }
 
-        writer.writeVarUInt(excludes.length);
-        for (const id of excludes) {
-            writer.writeUUID(id);
+    public sendExclude<T extends Payload>(payload: T, ...excludes: GameProfile[]) {
+        const type = this.registry.get(payload.getId().id);
+        if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
+
+        const writer = new BinaryWriter();
+        writer.writeByte(0x14);
+        writer.writeByte(this.getSessionId());
+
+        writer.writeVarUint(excludes.length);
+        for (const session of excludes) {
+            writer.writeByte(session.sessionId);
         }
         this.checkAndSend(writer, type, payload);
     }
@@ -52,16 +63,13 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
             return {sessionId: 0, payload: RelayServerPacket.CODEC.decode(reader)}
         }
         if (header !== 0x10) {
-            console.warn(`${this.getSide().toUpperCase()} -> Unknown header: ${header}`);
+            console.warn(`[${this.getSide()}] Unknown header: ${header}`);
             return null;
         }
 
         const sessionId = reader.readUnsignByte();
-        const idStr = reader.readString();
-        const id = Identifier.tryParse(idStr);
-        if (!id) return null;
-
-        const type = PayloadTypeRegistry.getGlobal(id);
+        const index = reader.readVarUint();
+        const type = PayloadTypeRegistry.getGlobalByIndex(index);
         if (!type) return null;
 
         const payload = type.codec.decode(reader);

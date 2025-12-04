@@ -34,5 +34,17 @@
   },
   "warsaw": {
     "file": "nova-flight:/warsaw.ogg"
+  },
+  "boss_phase": {
+    "file": "nova-flight:/boss_phase.ogg"
+  },
+  "lava_chicken": {
+    "file": "nova-flight:/lava_chicken.ogg"
+  },
+  "pixel_odyssey": {
+    "file": "nova-flight:/pixel_odyssey.ogg"
+  },
+  "void_showdown": {
+    "file": "nova-flight:/void_showdown.ogg"
   }
 }

@@ -16,27 +16,14 @@ pub fn format_uuid(bytes: &[u8; 16]) -> String {
     )
 }
 
-pub fn parse_excludes(
-    mut cursor: &[u8],
-    count: u32,
-) -> Result<(Vec<[u8; 16]>, &[u8]), &'static str> {
-    let needed = count as usize * 16;
-    if cursor.len() < needed {
+pub fn parse_excludes(cursor: &[u8], count: usize) -> Result<(Vec<u8>, &[u8]), &'static str> {
+    if cursor.len() < count {
         return Err("Not enough bytes for excludes");
     }
 
-    let mut excludes = Vec::with_capacity(count as usize);
-
-    for _ in 0..count {
-        let mut id = [0u8; 16];
-        id.copy_from_slice(&cursor[..16]);
-        cursor = &cursor[16..];
-
-        if !is_nil_uuid(&id) {
-            excludes.push(id);
-        }
-    }
-    Ok((excludes, cursor))
+    let excludes = cursor[..count].to_vec();
+    let rest = &cursor[count..];
+    Ok((excludes, rest))
 }
 
 pub fn read_var_uint(mut buf: &[u8]) -> Result<(u32, &[u8]), &'static str> {

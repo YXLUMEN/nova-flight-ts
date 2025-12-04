@@ -8,11 +8,11 @@ export class MobAiS2CPacket implements Payload {
 
     public static readonly CODEC: PacketCodec<MobAiS2CPacket> = PacketCodecs.of<MobAiS2CPacket>(
         (writer, value) => {
-            writer.writeVarUInt(value.entityId);
+            writer.writeVarUint(value.entityId);
             writer.writeByte(value.behavior);
         },
         (reader) => {
-            return new MobAiS2CPacket(reader.readVarUInt(), reader.readByte());
+            return new MobAiS2CPacket(reader.readVarUint(), reader.readByte());
         }
     );
 

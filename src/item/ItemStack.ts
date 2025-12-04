@@ -11,7 +11,6 @@ import {clamp} from "../utils/math/math.ts";
 import type {ComponentType} from "../component/ComponentType.ts";
 import type {LivingEntity} from "../entity/LivingEntity.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
-import {Identifier} from "../registry/Identifier.ts";
 import {Registries} from "../registry/Registries.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
@@ -20,23 +19,52 @@ import type {BinaryReader} from "../nbt/BinaryReader.ts";
 import {ComponentChanges} from "../component/ComponentChanges.ts";
 import {ComponentMapImpl} from "../component/ComponentMapImpl.ts";
 import type {Consumer} from "../apis/types.ts";
+import type {Codec} from "../serialization/Codec.ts";
+import {Identifier} from "../registry/Identifier.ts";
 
 
 export class ItemStack {
     public static readonly ITEM_PACKET_CODEC = PacketCodecs.registryEntry(Registries.ITEM);
+    public static readonly CODEC: Codec<ItemStack> = {
+        encode(value: ItemStack): NbtCompound {
+            const nbt = new NbtCompound();
+            nbt.putString('type', value.getItem().getRegistryEntry().toString());
+            nbt.putByte('counts', value.getCount());
+
+            const changes = value.components.getChanges();
+            nbt.putCompound('compounds', ComponentChanges.CODEC.encode(changes));
+            return nbt;
+        },
+        decode(nbt: NbtCompound): ItemStack | null {
+            const typeName = nbt.getString('type');
+            const id = Identifier.tryParse(typeName);
+            if (!id) return null;
+
+            const type = Registries.ITEM.getEntryById(id);
+            if (!type) return null;
+
+            const counts = nbt.getByte('counts');
+
+            let compounds: ComponentChanges | null = null;
+            const compoundsNbt = nbt.getCompound('compounds');
+            if (compoundsNbt) compounds = ComponentChanges.CODEC.decode(compoundsNbt);
+
+            return new ItemStack(type.getValue(), counts, compounds);
+        }
+    };
     public static readonly PACKET_CODEC: PacketCodec<ItemStack> = {
-        encode(writer: BinaryWriter, itemStack: ItemStack): Uint8Array {
+        encode(writer: BinaryWriter, itemStack: ItemStack): void {
             if (itemStack.isEmpty()) {
-                writer.writeVarUInt(0);
+                writer.writeVarUint(0);
             } else {
-                writer.writeVarUInt(itemStack.getCount());
+                writer.writeVarUint(itemStack.getCount());
                 ItemStack.ITEM_PACKET_CODEC.encode(writer, itemStack.getRegistryEntry().getValue());
                 ComponentChanges.PACKET_CODEC.encode(writer, itemStack.components.getChanges());
             }
-            return writer.toUint8Array();
+            return;
         },
         decode(reader: BinaryReader): ItemStack {
-            const count = reader.readVarUInt();
+            const count = reader.readVarUint();
             if (count <= 0) {
                 return ItemStack.EMPTY;
             }
@@ -75,23 +103,6 @@ export class ItemStack {
         return stack.isEmpty() && other.isEmpty() ? true : stack.components.equals(other.components);
     }
 
-    public static readNBT(nbt: NbtCompound): ItemStack | null {
-        const typeName = nbt.getString('type');
-        const id = Identifier.tryParse(typeName);
-        if (!id) return null;
-
-        const type = Registries.ITEM.getEntryById(id);
-        if (!type) return null;
-
-        const counts = nbt.getByte('counts');
-
-        let compounds: ComponentMapImpl | null = null;
-        const compoundsNbt = nbt.getCompound('compounds');
-        if (compoundsNbt) compounds = ComponentMapImpl.fromNbt(compoundsNbt);
-
-        return new ItemStack(type.getValue(), counts, compounds);
-    }
-
     public isEmpty(): boolean {
         return this === ItemStack.EMPTY || this.item === Items.AIR || this.count <= 0;
     }
@@ -127,7 +138,7 @@ export class ItemStack {
         return this.components.getOrDefault(type, fallback);
     }
 
-    public applyChanges(changes: ComponentChanges): void {
+    public applyUnvalidatedChanges(changes: ComponentChanges): void {
         this.components.applyChanges(changes);
     }
 
@@ -224,7 +235,7 @@ export class ItemStack {
     }
 
     public toString(): string {
-        return `${this.getCount()} ${this.getItem()}`
+        return `${this.getCount()} ${this.getItem()}`;
     }
 
     public inventoryTick(world: World, entity: Entity, slot: number, selected: boolean): void {
@@ -265,14 +276,5 @@ export class ItemStack {
 
     public decrement(amount: number): void {
         this.increment(-amount);
-    }
-
-    public toNbt(): NbtCompound {
-        const nbt = new NbtCompound();
-        nbt.putString('type', this.getItem().getRegistryEntry().getRegistryKey().getValue().toString());
-        nbt.putByte('counts', this.getCount());
-        nbt.putCompound('compounds', this.components.toNbt());
-
-        return nbt
     }
 }

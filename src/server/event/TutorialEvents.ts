@@ -175,7 +175,7 @@ export class TutorialEvents {
             await sleep(4000);
             server.sendMessage('是帝国的重型战列舰!');
             server.networkChannel.send(new PlayAudioS2CPacket(Audios.MAKING_LEGENDS, 0.6));
-            world.schedule(105, () => server.world!
+            world.schedule(110, () => server.world!
                 .getEntities()
                 .getMobs()
                 .forEach(entity => entity.kill())
@@ -316,6 +316,13 @@ export class TutorialEvents {
         const tech = this.hostPlayer.getTechs();
 
         if (tech.isUnlocked(condition.requireTech)) {
+            this.isPending = true;
+            const server = NovaFlightServer.getInstance();
+            await sleep(3000);
+            server.sendMessage('我们可以通过 \x1b[32m鼠标滚轮\x1b[0m 和 \x1b[32mF\x1b[0m 切换主武器');
+            await sleep(2000);
+            this.isPending = false;
+
             condition.unloaded = true;
             this.pendingAchievement = null;
             return;

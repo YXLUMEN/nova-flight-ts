@@ -73,12 +73,12 @@ export abstract class ServerCommonNetworkHandler {
     }
 
     public send(packet: Payload): void {
-        this.channel.sendTo(packet, this.getProfile().clientId);
+        this.channel.sendTo(packet, this.getProfile());
     }
 
     public disconnect(reason: string): void {
-        const uuid = this.getProfile().clientId;
-        this.channel.sendTo(new PlayerDisconnectS2CPacket(uuid, reason), uuid);
+        const profile = this.getProfile();
+        this.channel.sendTo(new PlayerDisconnectS2CPacket(profile.clientId, reason), profile);
     }
 
     protected isHost() {

@@ -31,7 +31,7 @@ export abstract class World {
 
     // ticking
     public readonly isClient: boolean;
-    public stageDifficult = 1;
+    public stageDifficulty = 1;
     public freeze = false;
     protected over = false;
     protected ticking = false;
@@ -98,7 +98,7 @@ export abstract class World {
     public abstract addEffect(source: Entity | null, effect: VisualEffect): void;
 
     public createExplosion(entity: Entity | null, damage: DamageSource | null, x: number, y: number, opts: ExpendExplosionOpts) {
-        if (!damage) damage = this.getDamageSources().explosion(null, entity);
+        if (!damage) damage = this.getDamageSources().explosion(entity, opts.attacker);
 
         const explosion = new Explosion(this, x, y, entity, damage, opts);
         explosion.apply();
@@ -213,7 +213,7 @@ export abstract class World {
     }
 
     public isPeaceMode(): boolean {
-        return this.stageDifficult === 0;
+        return this.stageDifficulty === 0;
     }
 
     public setTicking(ticking = true): void {

@@ -19,7 +19,7 @@ export class EntityTrackerUpdateS2CPacket implements Payload {
     }
 
     private static reader(reader: BinaryReader) {
-        const entityId = reader.readVarUInt();
+        const entityId = reader.readVarUint();
 
         const list: DataTrackerSerializedEntry<any>[] = [];
         let i = reader.readUnsignByte();
@@ -32,7 +32,7 @@ export class EntityTrackerUpdateS2CPacket implements Payload {
     }
 
     private static write(writer: BinaryWriter, value: EntityTrackerUpdateS2CPacket): void {
-        writer.writeVarUInt(value.entityId);
+        writer.writeVarUint(value.entityId);
         for (const entry of value.trackedValues) {
             entry.write(writer);
         }

@@ -1,8 +1,7 @@
 import {MobEntity} from "./MobEntity.ts";
 import type {World} from "../../world/World.ts";
-import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {type DamageSource} from "../damage/DamageSource.ts";
-import {clamp, HALF_PI, PI2, rand} from "../../utils/math/math.ts";
+import {clamp, HALF_PI, rand} from "../../utils/math/math.ts";
 import {BulletEntity} from "../projectile/BulletEntity.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
@@ -111,17 +110,15 @@ export class BossEntity extends MobEntity {
 
         const world = this.getWorld();
         world.events.emit(EVENTS.BOSS_KILLED, {mob: this, damageSource});
+        if (world.isClient) return;
 
-        for (let i = 32; i--;) {
-            const a = rand(0, PI2);
-            const speed = rand(240, 360);
-            const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
-
-            world.addParticleByVec(
-                this.getPositionRef, vel, rand(0.8, 1.4), rand(12, 24),
-                "#ffaa33", "#ff5454", 0.6, 80
-            );
-        }
+        const pos = this.getPositionRef;
+        (world as ServerWorld).spawnParticle(
+            pos.x, pos.y, 1, 1, 32,
+            rand(240, 360),
+            rand(0.8, 1.4), rand(12, 24),
+            "#ffaa33", "#ff5454",
+        );
     }
 
     public override attack(player: PlayerEntity) {

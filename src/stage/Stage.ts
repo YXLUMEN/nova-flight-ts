@@ -57,7 +57,7 @@ export class Stage implements NbtSerializable {
             phaseIndex: this.index,
             score: world.getPhase(),
             rng: this.rng,
-            difficulty: world.stageDifficult,
+            difficulty: world.stageDifficulty,
         };
 
         const phase = this.phases[this.index];

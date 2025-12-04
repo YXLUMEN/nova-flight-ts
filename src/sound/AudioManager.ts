@@ -11,6 +11,8 @@ import {MediaWithoutSrc} from "../apis/errors.ts";
 
 export class AudioManager {
     public static readonly AUDIO_PLAYER: HTMLAudioElement;
+
+    private static currentPlaying: SoundEvent | null = null;
     private static readonly audioMap = new Map<Identifier, string>();
     private static readonly eventMap = new Map<string, AbortController>();
 
@@ -59,10 +61,15 @@ export class AudioManager {
         player.src = url;
         player.loop = loop;
         player.play().catch(console.error);
+        this.currentPlaying = event;
     }
 
     public static randomPlay(...event: SoundEvent[]) {
         this.playAudio(event[Math.floor(Math.random() * event.length)]);
+    }
+
+    public static getCurrentPlaying(): SoundEvent | null {
+        return this.currentPlaying;
     }
 
     public static leap(time: number) {

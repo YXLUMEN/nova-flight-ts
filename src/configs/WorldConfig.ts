@@ -9,7 +9,9 @@ const freezeConfig = createClean({
     tick: 20,
     mbps: 0.05,
     per: 50,
-    version: '25w15a'
+    fps: 75,
+    perFrame: 1000 / 75,
+    version: '25w15b'
 } as const);
 
 const WorldConfig = Object.preventExtensions(createClean({
@@ -18,7 +20,8 @@ const WorldConfig = Object.preventExtensions(createClean({
     tick: freezeConfig.tick,
     mbps: freezeConfig.mbps,
     per: freezeConfig.per,
-
+    fps: freezeConfig.fps.valueOf(),
+    perFrame: freezeConfig.perFrame.valueOf(),
     enableCameraOffset: !isDev,
 
     follow: true,

@@ -42,6 +42,14 @@ async function handleEvent(event: MessageEvent<any>) {
             handleDev(payload.code);
             break;
         }
+        case 'save_all': {
+            if (!server || !server.world) return;
+
+            await server.playerManager.saveAllPlayerData();
+            const nbt = server.world.saveAll();
+            await server.saveGame(nbt);
+            break;
+        }
         case 'loaded_save_data':
             break;
         case 'crash_the_server':
@@ -75,5 +83,5 @@ function handleDev(key: string) {
     }
 }
 
-ClientNetwork.registerNetworkPacket();
 ServerNetwork.registerNetworkPacket();
+ClientNetwork.registerNetworkPacket();

@@ -10,11 +10,11 @@ export class RemoveEntityStatusEffectS2CPacket implements Payload {
     public static readonly ID: PayloadId<RemoveEntityStatusEffectS2CPacket> = {id: Identifier.ofVanilla('entity_remove_effect')};
     public static readonly CODEC: PacketCodec<RemoveEntityStatusEffectS2CPacket> = PacketCodecs.of(
         (writer, value) => {
-            writer.writeVarUInt(value.entityId);
+            writer.writeVarUint(value.entityId);
             StatusEffect.ENTRY_PACKET_CODEC.encode(writer, value.effectId.getValue());
         },
         reader => {
-            const entityId = reader.readVarUInt();
+            const entityId = reader.readVarUint();
             const effect = StatusEffect.ENTRY_PACKET_CODEC.decode(reader);
             const effectId = Registries.STATUS_EFFECT.getEntryByValue(effect)!;
             return new RemoveEntityStatusEffectS2CPacket(

@@ -4,7 +4,14 @@ import {lerp, PI2} from "../utils/math/math.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
-import {decodeFromInt16, decodeFromUnsignedByte, encodeToInt16, encodeToUnsignedByte} from "../utils/NetUtil.ts";
+import {
+    decodeColorHex,
+    decodeFromInt16,
+    decodeFromUnsignedByte,
+    encodeColorHex,
+    encodeToInt16,
+    encodeToUnsignedByte
+} from "../utils/NetUtil.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 
@@ -15,8 +22,8 @@ export class Particle implements VisualEffect {
             PacketCodecs.VECTOR2D.encode(writer, value.vel);
             writer.writeByte(encodeToUnsignedByte(value.life));
             writer.writeInt16(encodeToInt16(value.size));
-            writer.writeString(value.colorFrom);
-            writer.writeString(value.colorTo);
+            writer.writeUint32(encodeColorHex(value.colorFrom));
+            writer.writeUint32(encodeColorHex(value.colorTo));
             writer.writeFloat(value.drag);
             writer.writeFloat(value.gravity);
         },
@@ -26,8 +33,8 @@ export class Particle implements VisualEffect {
                 PacketCodecs.VECTOR2D.decode(reader),
                 decodeFromUnsignedByte(reader.readUnsignByte()),
                 decodeFromInt16(reader.readInt16()),
-                reader.readString(),
-                reader.readString(),
+                decodeColorHex(reader.readUint32()),
+                decodeColorHex(reader.readUint32()),
                 reader.readFloat(),
                 reader.readFloat(),
             );

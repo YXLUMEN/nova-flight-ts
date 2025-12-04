@@ -215,21 +215,21 @@ export class NbtCompound {
                     compound.putBoolean(key, reader.readByte() !== 0);
                     break;
                 case NbtTypes.NumberArray: {
-                    const len = reader.readVarUInt();
+                    const len = reader.readVarUint();
                     const arr: number[] = new Array(len);
                     for (let i = 0; i < len; i++) arr[i] = reader.readDouble();
                     compound.putNumberArray(key, ...arr);
                     break;
                 }
                 case NbtTypes.StringArray: {
-                    const len = reader.readVarUInt();
+                    const len = reader.readVarUint();
                     const arr: string[] = new Array(len);
                     for (let i = 0; i < len; i++) arr[i] = reader.readString();
                     compound.putStringArray(key, ...arr);
                     break;
                 }
                 case NbtTypes.Compound: {
-                    const nestedLen = reader.readVarUInt();
+                    const nestedLen = reader.readVarUint();
                     console.assert(reader.bytesRemaining() >= nestedLen, `[NBT] nested length overflow for key "${key}"`);
                     const nestedBuf = reader.readSlice(nestedLen);
                     const nested = NbtCompound.fromBinary(nestedBuf);
@@ -237,10 +237,10 @@ export class NbtCompound {
                     break;
                 }
                 case NbtTypes.NbtList: {
-                    const count = reader.readVarUInt();
+                    const count = reader.readVarUint();
                     const list: NbtCompound[] = [];
                     for (let i = 0; i < count; i++) {
-                        const nestedLen = reader.readVarUInt();
+                        const nestedLen = reader.readVarUint();
                         console.assert(reader.bytesRemaining() >= nestedLen, `[NBT] nested length overflow in list for key "${key}"`);
                         const nestedBuf = reader.readSlice(nestedLen);
                         const nested = NbtCompound.fromBinary(nestedBuf);
@@ -302,29 +302,29 @@ export class NbtCompound {
                     break;
                 case NbtTypes.NumberArray: {
                     const values = value as number[];
-                    writer.writeVarUInt(values.length);
+                    writer.writeVarUint(values.length);
                     for (const n of values) writer.writeDouble(n);
                     break;
                 }
                 case NbtTypes.StringArray: {
                     const values = value as string[];
-                    writer.writeVarUInt(values.length);
+                    writer.writeVarUint(values.length);
                     for (const s of values) writer.writeString(s);
                     break;
                 }
                 case NbtTypes.Compound: {
                     const values = value as NbtCompound;
                     const nested = values.toBinary();
-                    writer.writeVarUInt(nested.length);
+                    writer.writeVarUint(nested.length);
                     writer.pushBytes(nested);
                     break;
                 }
                 case NbtTypes.NbtList: {
                     const list = value as NbtCompound[];
-                    writer.writeVarUInt(list.length);
+                    writer.writeVarUint(list.length);
                     for (const compound of list) {
                         const nested = compound.toBinary();
-                        writer.writeVarUInt(nested.length);
+                        writer.writeVarUint(nested.length);
                         writer.pushBytes(nested);
                     }
                     break;

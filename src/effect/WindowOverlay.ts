@@ -3,11 +3,12 @@ import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
+import {decodeColorHex, encodeColorHex} from "../utils/NetUtil.ts";
 
 export class WindowOverlay implements VisualEffect {
     public static readonly PACKET_CODEC: PacketCodec<WindowOverlay> = PacketCodecs.of(
         (writer, value) => {
-            writer.writeString(value.color);
+            writer.writeUint32(encodeColorHex(value.color));
             writer.writeFloat(value.maxAlpha);
             writer.writeFloat(value.fadeIn);
             writer.writeFloat(value.fadeOut);
@@ -15,7 +16,7 @@ export class WindowOverlay implements VisualEffect {
         },
         reader => {
             return new WindowOverlay(
-                reader.readString(),
+                decodeColorHex(reader.readUint32()),
                 reader.readFloat(),
                 reader.readFloat(),
                 reader.readFloat(),

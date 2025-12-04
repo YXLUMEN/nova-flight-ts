@@ -7,9 +7,9 @@ export class PlayerSetScoreS2CPacket implements Payload {
     public static readonly ID: PayloadId<PlayerSetScoreS2CPacket> = {id: Identifier.ofVanilla('player_set_score')};
     public static readonly CODEC: PacketCodec<PlayerSetScoreS2CPacket> = PacketCodecs.of(
         (writer, value) => {
-            writer.writeVarUInt(value.score);
+            writer.writeVarUint(value.score);
         },
-        reader => new PlayerSetScoreS2CPacket(reader.readVarUInt())
+        reader => new PlayerSetScoreS2CPacket(reader.readVarUint())
     );
 
     public readonly score: number;

@@ -76,16 +76,16 @@ export class DataComponentTypes {
     public static readonly COOLDOWN_RATE: ComponentType<number> = this.register("cooldown_rate",
         builder => builder.withCodec(Codecs.DOABLE).withPacketCodec(PacketCodecs.DOUBLE)
     );
-    public static readonly EFFECT_DURATION: ComponentType<number> = this.register("void_duration",
+    public static readonly EFFECT_DURATION: ComponentType<number> = this.register("effect_duration",
         builder => builder.withCodec(Codecs.DOABLE).withPacketCodec(PacketCodecs.DOUBLE)
     );
-    public static readonly EFFECT_TIME_LEFT: ComponentType<number> = this.register("void_time_left",
+    public static readonly EFFECT_TIME_LEFT: ComponentType<number> = this.register("effect_time_left",
         builder => builder.withCodec(Codecs.DOABLE).withPacketCodec(PacketCodecs.DOUBLE)
     );
-    public static readonly EFFECT_RANGE: ComponentType<number> = this.register("void_damage_range",
+    public static readonly EFFECT_RANGE: ComponentType<number> = this.register("effect_range",
         builder => builder.withCodec(Codecs.DOABLE).withPacketCodec(PacketCodecs.DOUBLE)
     );
-    public static readonly ANY_BOOLEAN: ComponentType<boolean> = this.register("void_prev_invincible",
+    public static readonly ANY_BOOLEAN: ComponentType<boolean> = this.register("any_bool",
         builder => builder.withCodec(Codecs.BOOLEAN).withPacketCodec(PacketCodecs.BOOL)
     );
     public static readonly MISSILE_COUNT: ComponentType<number> = this.register("missile_count",

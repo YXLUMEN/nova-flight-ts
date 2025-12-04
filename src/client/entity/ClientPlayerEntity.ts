@@ -219,7 +219,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             const item = itemStack.getItem();
             const playerItemStack = this.items.get(item);
             if (playerItemStack) {
-                playerItemStack.applyChanges(itemStack.getComponents().getChanges());
+                playerItemStack.applyUnvalidatedChanges(itemStack.getComponents().getChanges());
             }
         }
 

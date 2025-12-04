@@ -9,13 +9,13 @@ export class EntityDamageS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityDamageS2CPacket> = {id: Identifier.ofVanilla('entity_damage')};
     public static readonly CODEC: PacketCodec<EntityDamageS2CPacket> = PacketCodecs.of(
         (writer, value) => {
-            writer.writeVarUInt(value.entityId);
+            writer.writeVarUint(value.entityId);
             PacketCodecs.VECTOR2D.encode(writer, value.pos);
             writer.writeUint16(value.damageUint16);
         },
         reader => {
             return new EntityDamageS2CPacket(
-                reader.readVarUInt(),
+                reader.readVarUint(),
                 PacketCodecs.VECTOR2D.decode(reader),
                 reader.readUint16()
             )

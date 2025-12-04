@@ -148,12 +148,12 @@ export class DataTracker {
                 throw new RangeError(`Unknown serializer type ${this.handler}`);
             }
             writer.writeByte(this.id);
-            writer.writeVarUInt(index);
+            writer.writeVarUint(index);
             this.handler.codec().encode(writer, this.value);
         }
 
         public static read(reader: BinaryReader, id: number): SerializedEntry<any> {
-            const index = reader.readVarUInt();
+            const index = reader.readVarUint();
             const handler = TrackedDataHandlerRegistry.getHandler(index);
             if (handler === null) {
                 throw new RangeError(`Unknown serializer type ${id}`);

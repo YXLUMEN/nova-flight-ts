@@ -49,7 +49,7 @@ export function decodeFromUnsignedByte(value: number, maxValue: number = 10): nu
     return value * (maxValue / 255);
 }
 
-export function hexToArgbInt(hex: string): number {
+export function encodeColorHex(hex: string): number {
     let clean = hex.replace('#', '').trim();
     if (clean.length === 3) {
         clean += clean + 'FF';
@@ -67,7 +67,7 @@ export function hexToArgbInt(hex: string): number {
     return result;
 }
 
-export function argbIntToHex(colorInt: number): string {
+export function decodeColorHex(colorInt: number): string {
     const hexString = (colorInt >>> 0).toString(16).padStart(8, '0').toUpperCase();
     return `#${hexString}`;
 }
@@ -110,4 +110,37 @@ export function getVarIntSize(value: number): number {
         size++;
     } while (value !== 0);
     return size;
+}
+
+// U32
+export function varUintSize(value: number): number {
+    if (value < 1 << 7) return 1;
+    if (value < 1 << 14) return 2;
+    if (value < 1 << 21) return 3;
+    if (value < 1 << 28) return 4;
+    return 5;
+}
+
+/**
+ * It assumes that the input is a valid UTF-16 string (i.e., surrogate pairs are correctly paired).
+ * */
+export function utf8ByteLength(str: string): number {
+    let bytes = 0;
+    for (let i = 0; i < str.length; i++) {
+        const code = str.charCodeAt(i);
+
+        if (code < 0x80) {
+            bytes += 1; // ASCII
+        } else if (code < 0x800) {
+            bytes += 2; // 2-byte UTF-8
+        } else if (code < 0xD800 || code >= 0xE000) {
+            bytes += 3; // 3-byte UTF-8 (BMP non-surrogate)
+        } else {
+            // Surrogate pair (for code points >= U+10000)
+            // Skip the low surrogate
+            i++;
+            bytes += 4; // 4-byte UTF-8
+        }
+    }
+    return bytes;
 }

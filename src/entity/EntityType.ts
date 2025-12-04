@@ -4,8 +4,10 @@ import {Registry} from "../registry/Registry.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {EntityDimensions} from "./EntityDimensions.ts";
 import type {Constructor} from "../apis/types.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 
 export class EntityType<T extends Entity, F extends Constructor<T> = Constructor<T>> {
+    public static readonly PACKET_CODEC = PacketCodecs.registryEntry(Registries.ENTITY_TYPE);
     private readonly id: Identifier;
     private readonly factory: F;
     private readonly trackTickInterval: number;

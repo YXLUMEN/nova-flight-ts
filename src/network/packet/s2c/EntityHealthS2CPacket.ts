@@ -7,12 +7,12 @@ export class EntityHealthS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityHealthS2CPacket> = {id: Identifier.ofVanilla('entity_health')};
     public static readonly CODEC: PacketCodec<EntityHealthS2CPacket> = PacketCodecs.of(
         (writer, value) => {
-            writer.writeVarUInt(value.id);
+            writer.writeVarUint(value.id);
             writer.writeFloat(value.amount);
         },
         reader => {
             return new EntityHealthS2CPacket(
-                reader.readVarUInt(),
+                reader.readVarUint(),
                 reader.readFloat()
             )
         }

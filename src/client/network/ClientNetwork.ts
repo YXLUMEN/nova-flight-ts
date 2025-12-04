@@ -36,6 +36,7 @@ export class ClientNetwork {
         this.register(ClientSniffingC2SPacket.ID, ClientSniffingC2SPacket.CODEC);
         this.register(ChatMessageC2SPacket.ID, ChatMessageC2SPacket.CODEC);
         this.register(PlayerReloadC2SPacket.ID, PlayerReloadC2SPacket.CODEC);
+        PayloadTypeRegistry.playC2S().settle();
     }
 
     private static register<T extends Payload>(payloadId: PayloadId<T>, codec: PacketCodec<T>): void {

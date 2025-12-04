@@ -36,8 +36,13 @@ import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatus
 import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
 import {ItemCooldownUpdateS2CPacket} from "../../network/packet/s2c/ItemCooldownUpdateS2CPacket.ts";
 import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
+import {GameOverS2CPacket} from "../../network/packet/s2c/GameOverS2CPacket.ts";
+import {AudioControlS2CPacket} from "../../network/packet/s2c/AudioControlS2CPacket.ts";
 
 export class ServerNetwork {
+    /**
+     * 先于 Client 注册
+     * */
     public static registerNetworkPacket() {
         this.register(ServerReadyS2CPacket.ID, ServerReadyS2CPacket.CODEC);
         this.register(SoundEventS2CPacket.ID, SoundEventS2CPacket.CODEC);
@@ -76,6 +81,9 @@ export class ServerNetwork {
         this.register(RemoveEntityStatusEffectS2CPacket.ID, RemoveEntityStatusEffectS2CPacket.CODEC);
         this.register(ItemCooldownUpdateS2CPacket.ID, ItemCooldownUpdateS2CPacket.CODEC);
         this.register(PlayAudioS2CPacket.ID, PlayAudioS2CPacket.CODEC);
+        this.register(GameOverS2CPacket.ID, GameOverS2CPacket.CODEC);
+        this.register(AudioControlS2CPacket.ID, AudioControlS2CPacket.CODEC);
+        PayloadTypeRegistry.playS2C().settle();
     }
 
     private static register<T extends Payload>(payloadId: PayloadId<T>, codec: PacketCodec<T>): void {

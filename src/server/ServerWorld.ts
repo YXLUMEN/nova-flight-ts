@@ -12,7 +12,7 @@ import {EntityList} from "../world/EntityList.ts";
 import {ServerEntityManager} from "../world/ServerEntityManager.ts";
 import type {EntityHandler} from "../world/EntityHandler.ts";
 import type {UUID} from "../apis/types.ts";
-import type {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
+import {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {collideEntityCircle} from "../utils/math/math.ts";
 import {CIWSBulletEntity} from "../entity/projectile/CIWSBulletEntity.ts";
@@ -21,7 +21,6 @@ import type {Stage} from "../stage/Stage.ts";
 import {STAGE} from "../configs/StageConfig.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import {EntityRemoveS2CPacket} from "../network/packet/s2c/EntityRemoveS2CPacket.ts";
-import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {EntityTrackerEntry} from "./network/EntityTrackerEntry.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
@@ -31,11 +30,12 @@ import {ServerDefaultEvents} from "./event/ServerDefaultEvents.ts";
 import type {MutVec2} from "../utils/math/MutVec2.ts";
 import {ParticleS2CPacket} from "../network/packet/s2c/ParticleS2CPacket.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
-import {encodeToUnsignedByte} from "../utils/NetUtil.ts";
+import {encodeColorHex, encodeToUnsignedByte} from "../utils/NetUtil.ts";
 import {type VisualEffect} from "../effect/VisualEffect.ts";
 import {EffectCreateS2CPacket} from "../network/packet/s2c/EffectCreateS2CPacket.ts";
 import type {IServerPlayNetwork} from "./network/IServerPlayNetwork.ts";
 import {warn} from "@tauri-apps/plugin-log";
+import {GameOverS2CPacket} from "../network/packet/s2c/GameOverS2CPacket.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
@@ -126,6 +126,12 @@ export class ServerWorld extends World implements NbtSerializable {
                 }
             }
         }
+    }
+
+    public override gameOver(): void {
+        this.over = true;
+        this.setTicking(false);
+        this.getNetworkChannel().send(new GameOverS2CPacket());
     }
 
     public override getNetworkChannel(): IServerPlayNetwork {
@@ -220,16 +226,18 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public override playSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
-        if (entity instanceof PlayerEntity) {
-            this.getNetworkChannel().sendExclude(new SoundEventS2CPacket(sound, volume, pitch, false), entity.getUUID());
+        if (entity instanceof ServerPlayerEntity) {
+            this.getNetworkChannel()
+                .sendExclude(new SoundEventS2CPacket(sound, volume, pitch, false), entity.getProfile());
             return;
         }
         this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, false));
     }
 
     public override playLoopSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
-        if (entity instanceof PlayerEntity) {
-            this.getNetworkChannel().sendExclude(new SoundEventS2CPacket(sound, volume, pitch, true), entity.getUUID());
+        if (entity instanceof ServerPlayerEntity) {
+            this.getNetworkChannel()
+                .sendExclude(new SoundEventS2CPacket(sound, volume, pitch, true), entity.getProfile());
             return;
         }
         this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, false));
@@ -244,8 +252,8 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public spawnEffect(source: Entity | null, effect: VisualEffect): void {
-        if (source instanceof PlayerEntity) {
-            this.getNetworkChannel().sendExclude(new EffectCreateS2CPacket(effect), source.getUUID());
+        if (source instanceof ServerPlayerEntity) {
+            this.getNetworkChannel().sendExclude(new EffectCreateS2CPacket(effect), source.getProfile());
             return;
         }
         this.getNetworkChannel().send(new EffectCreateS2CPacket(effect));
@@ -255,7 +263,7 @@ export class ServerWorld extends World implements NbtSerializable {
         const explosion = super.createExplosion(entity, damage, x, y, opts);
 
         const shack = encodeToUnsignedByte(opts.shake ?? 0, 1);
-        const packet = new ExplosionS2CPacket(x, y, opts.explosionRadius ?? 64, shack);
+        const packet = new ExplosionS2CPacket(x, y, opts.explosionRadius ?? 64, shack, encodeColorHex(opts.explodeColor ?? '#fff'));
         this.getNetworkChannel().send(packet);
 
         this.events.emit(EVENTS.EXPLOSION, {entity, damage, x, y, opts});
@@ -319,6 +327,7 @@ export class ServerWorld extends World implements NbtSerializable {
         this.stage.writeNBT(stageNbt);
         root.putCompound('Stage', stageNbt);
         root.putUint('PhaseScore', this.phaseScore);
+        root.putUint('Difficulty', this.stageDifficulty);
 
         return root;
     }
@@ -330,6 +339,7 @@ export class ServerWorld extends World implements NbtSerializable {
         const stageNbt = nbt.getCompound('Stage');
         if (stageNbt) this.stage.readNBT(stageNbt);
         this.phaseScore = nbt.getUint('PhaseScore');
+        this.stageDifficulty = nbt.getUint('Difficulty');
     }
 
     private loadEntity(nbtList: NbtCompound[]) {
@@ -372,7 +382,7 @@ export class ServerWorld extends World implements NbtSerializable {
         stopTicking: (entity: Entity) => {
             this.entities.remove(entity);
             this.trackedEntities.delete(entity.getId());
-            this.getNetworkChannel().send(new EntityRemoveS2CPacket(entity.getId(), entity.getUUID()));
+            this.getNetworkChannel().send(new EntityRemoveS2CPacket(entity.getId()));
         },
 
         startTracking: (_entity: Entity) => {

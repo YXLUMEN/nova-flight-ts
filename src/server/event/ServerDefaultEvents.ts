@@ -18,6 +18,9 @@ import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {Items} from "../../item/Items.ts";
 import type {LaserWeapon} from "../../item/weapon/LaserWeapon.ts";
 import type {ExpendExplosionOpts} from "../../apis/IExplosionOpts.ts";
+import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
+import {Audios} from "../../sound/Audios.ts";
+import {AudioControlS2CPacket} from "../../network/packet/s2c/AudioControlS2CPacket.ts";
 
 export class ServerDefaultEvents {
     public static registerEvent(world: ServerWorld) {
@@ -25,7 +28,7 @@ export class ServerDefaultEvents {
 
         eventBus.on(EVENTS.MOB_DAMAGE, event => {
             const mob = event.mob as MobEntity;
-            const damageSource = event.damageSource;
+            const damageSource = event.damageSource as DamageSource;
 
             const attacker = damageSource.getAttacker();
             if (attacker instanceof PlayerEntity && !damageSource.isOf(DamageTypes.ON_FIRE)) {
@@ -83,6 +86,9 @@ export class ServerDefaultEvents {
                     world.stage.nextPhase();
                 }
 
+                if (Math.random() > 0.8) {
+                    world.getNetworkChannel().send(new PlayAudioS2CPacket(Audios.BOSS_PHASE, 0.6));
+                }
                 const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 64);
                 boss.setPosition(World.WORLD_W / 2, 64);
 
@@ -92,6 +98,7 @@ export class ServerDefaultEvents {
             });
 
             world.stage.nextPhase();
+            world.getNetworkChannel().send(new AudioControlS2CPacket(4));
         });
 
         eventBus.on(EVENTS.EMP_BURST, event => {
@@ -101,15 +108,18 @@ export class ServerDefaultEvents {
             }
         });
 
-        eventBus.on(EVENTS.STAGE_ENTER, (event) => {
+        eventBus.on(EVENTS.STAGE_ENTER, event => {
             if (event.name === 'P6' || event.name === 'mP3') {
                 if (BossEntity.hasBoss) return;
-                const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 64);
-                boss.setPosition(World.WORLD_W / 2, 64);
+                world.getNetworkChannel().send(new PlayAudioS2CPacket(Audios.BOSS_PHASE, 1));
+                world.schedule(10, () => {
+                    const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 64);
+                    boss.setPosition(World.WORLD_W / 2, 64);
 
-                const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
-                mark.setPositionByVec(boss.getPositionRef);
-                world.spawnEntity(mark);
+                    const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
+                    mark.setPositionByVec(boss.getPositionRef);
+                    world.spawnEntity(mark);
+                });
             }
 
             world.playSound(null, SoundEvents.PHASE_CHANGE);

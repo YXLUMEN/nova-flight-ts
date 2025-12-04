@@ -40,7 +40,7 @@ export class GameModeCommand {
         entity.setDevMode(bool ?? !entity.isDevMode());
         (source.getWorld() as ServerWorld)?.getNetworkChannel().sendTo(
             new SyncPlayerProfileS2CPacket(entity.isDevMode()),
-            entity.getProfile().clientId
+            entity.getProfile()
         );
 
         source.outPut.sendMessage(`Set dev mode \x1b[32m${entity.isDevMode()}`);

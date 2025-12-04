@@ -60,6 +60,10 @@ import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts"
 import {ItemCooldownUpdateS2CPacket} from "../../network/packet/s2c/ItemCooldownUpdateS2CPacket.ts";
 import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {AudioManager} from "../../sound/AudioManager.ts";
+import {ConnectInfo} from "../render/ui/ConnectInfo.ts";
+import {GameOverS2CPacket} from "../../network/packet/s2c/GameOverS2CPacket.ts";
+import {AudioControlS2CPacket} from "../../network/packet/s2c/AudioControlS2CPacket.ts";
+import {BGMManager} from "../../sound/BGMManager.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer: Set<UUID> = new Set();
@@ -99,8 +103,12 @@ export class ClientPlayNetworkHandler {
     }
 
     public disconnect() {
-        this.client.connectInfo?.setMessage('等待连接关闭...');
-        this.sendPacket(new PlayerDisconnectC2SPacket());
+        try {
+            this.client.connectInfo?.setMessage('等待连接关闭...');
+            this.sendPacket(new PlayerDisconnectC2SPacket());
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     public checkServer() {
@@ -109,7 +117,6 @@ export class ClientPlayNetworkHandler {
         this.sendPacket(new ClientSniffingC2SPacket(this.client.clientId));
 
         let times = 0;
-        // @ts-ignore
         this.sniffInterval = setInterval(() => {
             times++;
             this.sendPacket(new ClientSniffingC2SPacket(this.client.clientId));
@@ -126,7 +133,7 @@ export class ClientPlayNetworkHandler {
         this.loginPlayer.add(this.client.clientId);
         this.sendPacket(new PlayerAttemptLoginC2SPacket(
             this.client.clientId,
-            this.client.networkChannel.getSessionID(),
+            this.client.networkChannel.getSessionId(),
             this.client.playerName
         ));
     }
@@ -136,7 +143,7 @@ export class ClientPlayNetworkHandler {
         await this.client.joinGame(this.world);
         if (this.client.player === null) {
             const profile = new GameProfile(
-                this.client.networkChannel.getSessionID(),
+                this.client.networkChannel.getSessionId(),
                 this.client.clientId,
                 this.client.playerName
             );
@@ -160,10 +167,12 @@ export class ClientPlayNetworkHandler {
         this.loginPlayer.delete(packet.uuid);
         this.world?.removeEntity(player.getId());
 
-        if (packet.uuid === this.client.clientId) {
-            this.client.window.notify.show(packet.reason);
-            this.client.scheduleStop();
-        }
+        if (packet.uuid !== this.client.clientId) return;
+
+        this.client.world?.setTicking(false);
+        const info = new ConnectInfo(this.client.window.ctx);
+        info.setError(packet.reason)
+            .then(() => this.client.scheduleStop());
     }
 
     public onEntity(packet: EntityS2CPacket) {
@@ -249,7 +258,11 @@ export class ClientPlayNetworkHandler {
         );
     }
 
-    public onEntityKilled() {
+    public onGameOver(): void {
+        this.world?.gameOver();
+    }
+
+    public onEntityKilled(): void {
     }
 
     public onEntityRemove(packet: EntityRemoveS2CPacket): void {
@@ -286,7 +299,8 @@ export class ClientPlayNetworkHandler {
         this.world?.createExplosion(null, null, packet.x, packet.y, {
             attacker: null,
             explosionRadius: packet.radius,
-            shake: packet.shack
+            shake: packet.shack,
+            explodeColor: packet.color,
         });
     }
 
@@ -392,6 +406,26 @@ export class ClientPlayNetworkHandler {
     public onPlayAudio(packet: PlayAudioS2CPacket): void {
         AudioManager.playAudio(packet.audio);
         AudioManager.setVolume(packet.volume);
+    }
+
+    public onAudioControl(packet: AudioControlS2CPacket): void {
+        switch (packet.action) {
+            case 0:
+                AudioManager.pause();
+                break;
+            case 1:
+                AudioManager.resume();
+                break;
+            case 2:
+                AudioManager.reset()
+                break;
+            case 3:
+                AudioManager.stop();
+                break;
+            case 4:
+                BGMManager.next();
+                break;
+        }
     }
 
     public onPlayerScore(packet: PlayerSetScoreS2CPacket): void {
@@ -517,5 +551,7 @@ export class ClientPlayNetworkHandler {
         this.register(RemoveEntityStatusEffectS2CPacket.ID, this.onRemoveEntityStatusEffect.bind(this));
         this.register(ItemCooldownUpdateS2CPacket.ID, this.onItemCooldown.bind(this));
         this.register(PlayAudioS2CPacket.ID, this.onPlayAudio.bind(this));
+        this.register(GameOverS2CPacket.ID, this.onGameOver.bind(this));
+        this.register(AudioControlS2CPacket.ID, this.onAudioControl.bind(this));
     }
 }

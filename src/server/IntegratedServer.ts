@@ -6,6 +6,8 @@ import type {GameProfile} from "./entity/GameProfile.ts";
 import {ServerDB} from "./ServerDB.ts";
 import {TutorialStage} from "../configs/TutorialStage.ts";
 import {TutorialEvents} from "./event/TutorialEvents.ts";
+import {PlayAudioS2CPacket} from "../network/packet/s2c/PlayAudioS2CPacket.ts";
+import {Audios} from "../sound/Audios.ts";
 
 export class IntegratedServer extends NovaFlightServer {
     private readonly hostUUID: UUID;
@@ -37,6 +39,7 @@ export class IntegratedServer extends NovaFlightServer {
             this.world.stage = TutorialStage;
             this.world.stage.reset();
             TutorialEvents.register();
+            this.world.getNetworkChannel().send(new PlayAudioS2CPacket(Audios.PIXEL_ODYSSEY, 0.8));
         }
 
         await this.waitForStop();

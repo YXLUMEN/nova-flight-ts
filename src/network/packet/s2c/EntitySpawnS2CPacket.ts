@@ -1,21 +1,22 @@
 import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
-import {Registries} from "../../../registry/Registries.ts";
 import type {UUID} from "../../../apis/types.ts";
-import type {EntityType} from "../../../entity/EntityType.ts";
+import {EntityType} from "../../../entity/EntityType.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import {
-    argbIntToHex,
+    decodeColorHex,
     decodeVelocity,
     decodeYaw,
+    encodeColorHex,
     encodeVelocity,
     encodeYaw,
-    hexToArgbInt
+    varUintSize
 } from "../../../utils/NetUtil.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import {Registries} from "../../../registry/Registries.ts";
 
 export class EntitySpawnS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntitySpawnS2CPacket> = {id: Identifier.ofVanilla('spawn_entity')};
@@ -27,7 +28,7 @@ export class EntitySpawnS2CPacket implements Payload {
     public readonly entityType: EntityType<any>;
     public readonly x: number;
     public readonly y: number;
-    private readonly colorInt32: number;
+    private readonly colorUint32: number;
     private readonly edgeColorInt32: number;
     public readonly entityData: number;
     private readonly velocityXInt16: number;
@@ -51,7 +52,7 @@ export class EntitySpawnS2CPacket implements Payload {
         this.velocityXInt16 = velocityXInt16;
         this.velocityYInt16 = velocityYInt16;
         this.yawInt8 = yawInt8;
-        this.colorInt32 = colorInt32;
+        this.colorUint32 = colorInt32;
         this.edgeColorInt32 = edgeColorInt32;
         this.entityData = entityData;
     }
@@ -70,18 +71,17 @@ export class EntitySpawnS2CPacket implements Payload {
             entity.getType(),
             vx,
             vy,
-            hexToArgbInt(entity.color.length > 0 ? entity.color : '#fff'),
-            hexToArgbInt(entity.edgeColor.length > 0 ? entity.edgeColor : '#fff'),
+            encodeColorHex(entity.color.length > 0 ? entity.color : '#fff'),
+            encodeColorHex(entity.edgeColor.length > 0 ? entity.edgeColor : '#fff'),
             ownerId
         );
     }
 
     protected static read(reader: BinaryReader): EntitySpawnS2CPacket {
-        const entityId = reader.readVarUInt();
+        const entityId = reader.readVarUint();
         const uuid = reader.readUUID();
 
-        const typeId = Identifier.PACKET_CODEC.decode(reader);
-        const entityType = Registries.ENTITY_TYPE.getEntryById(typeId)!.getValue();
+        const entityType = EntityType.PACKET_CODEC.decode(reader);
         const x = reader.readDouble();
         const y = reader.readDouble();
         const yaw = reader.readUnsignByte();
@@ -89,28 +89,56 @@ export class EntitySpawnS2CPacket implements Payload {
         const velocityY = reader.readInt16();
         const color = reader.readUint32();
         const edgeColor = reader.readUint32();
-        const ownerId = reader.readVarUInt();
+        const ownerId = reader.readVarUint();
 
         return new EntitySpawnS2CPacket(entityId, uuid, x, y, yaw, entityType, velocityX, velocityY, color, edgeColor, ownerId);
     }
 
     protected static write(writer: BinaryWriter, value: EntitySpawnS2CPacket): void {
-        writer.writeVarUInt(value.entityId);
+        writer.writeVarUint(value.entityId);
         writer.writeUUID(value.uuid);
-        const typeEntry = Registries.ENTITY_TYPE.getId(value.entityType)!;
-        Identifier.PACKET_CODEC.encode(writer, typeEntry);
+        EntityType.PACKET_CODEC.encode(writer, value.entityType);
         writer.writeDouble(value.x);
         writer.writeDouble(value.y);
         writer.writeByte(value.yawInt8);
         writer.writeInt16(value.velocityXInt16);
         writer.writeInt16(value.velocityYInt16);
-        writer.writeUint32(value.colorInt32);
+        writer.writeUint32(value.colorUint32);
         writer.writeUint32(value.edgeColorInt32);
-        writer.writeVarUInt(value.entityData);
+        writer.writeVarUint(value.entityData);
     }
 
     public getId(): PayloadId<EntitySpawnS2CPacket> {
         return EntitySpawnS2CPacket.ID;
+    }
+
+    public estimateSize(): number {
+        let size = 1;
+
+        // entityId (VarInt)
+        size += varUintSize(this.entityId);
+
+        // uuid (16 bytes)
+        size += 16;
+
+        // x, y (assume double = 8 bytes each)
+        size += 16;
+
+        // yaw (byte)
+        size += 1;
+
+        // entityType: Identifier.of("namespace:path") use it index to serialized as VarUint
+        size += varUintSize(Registries.ENTITY_TYPE.getIndex(this.entityType));
+
+        // vx, vy Uint16
+        size += 4;
+
+        // color & edgeColor: rgbaInt Uint32
+        size += 8;
+
+        // entityData (VarInt)
+        size += varUintSize(this.entityData);
+        return size;
     }
 
     public get yaw() {
@@ -126,10 +154,10 @@ export class EntitySpawnS2CPacket implements Payload {
     }
 
     public get color() {
-        return argbIntToHex(this.colorInt32);
+        return decodeColorHex(this.colorUint32);
     }
 
     public get edgeColor() {
-        return argbIntToHex(this.edgeColorInt32);
+        return decodeColorHex(this.edgeColorInt32);
     }
 }

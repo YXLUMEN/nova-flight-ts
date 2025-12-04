@@ -28,14 +28,14 @@ export class EntityVelocityUpdateS2CPacket implements Payload {
 
     private static reader(reader: BinaryReader) {
         return new EntityVelocityUpdateS2CPacket(
-            reader.readVarUInt(),
+            reader.readVarUint(),
             reader.readInt16(),
             reader.readInt16()
         )
     }
 
     private static write(writer: BinaryWriter, value: EntityVelocityUpdateS2CPacket): void {
-        writer.writeVarUInt(value.entityId);
+        writer.writeVarUint(value.entityId);
         writer.writeInt16(value.velocityXInt16);
         writer.writeInt16(value.velocityYInt16);
     }

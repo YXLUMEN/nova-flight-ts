@@ -17,7 +17,7 @@ export class BatchBufferPacket implements Payload {
     }
 
     private static read(reader: BinaryReader): BatchBufferPacket {
-        const count = reader.readVarUInt();
+        const count = reader.readVarUint();
         const payloads: Payload[] = [];
 
         for (let i = 0; i < count; i++) {
@@ -35,7 +35,7 @@ export class BatchBufferPacket implements Payload {
     }
 
     private static write(writer: BinaryWriter, value: BatchBufferPacket): void {
-        writer.writeVarUInt(value.payloads.length);
+        writer.writeVarUint(value.payloads.length);
         for (const payload of value.payloads) {
             const type = PayloadTypeRegistry.getGlobal(payload.getId().id);
             if (!type) throw new Error(`Missing packet type ${payload.getId().id}`);

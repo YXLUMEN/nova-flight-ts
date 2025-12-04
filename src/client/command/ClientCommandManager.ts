@@ -50,125 +50,124 @@ export class ClientCommandManager extends CommandManager {
         this.popup = new ClientSuggestionPopup(commandBar, this.commandInput);
         this.commandPanel = new ClientCommandPanel(commandPanel, commandBar, this.commandInput);
 
-        commandBar.addEventListener('keydown', this.onCommandInput.bind(this));
-        commandInput.addEventListener('input', this.bounceGiveSuggestions);
+        const bounceGiveSuggestions = debounce(this.giveSuggestions.bind(this), 100);
+        commandBar.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const input = this.commandInput.value;
 
-        this.registry();
-    }
+                if (this.popup.getPopups()) {
+                    const activeItem = this.popup.getActiveItem();
+                    if (!activeItem) return;
+                    this.popup.applySuggestion(
+                        activeItem.textContent!,
+                        this.tokenStart,
+                        input.length
+                    );
+                    this.popup.cleanPopup();
+                    return;
+                }
 
-    private onCommandInput(event: KeyboardEvent) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            const input = this.commandInput.value;
+                if (input.length <= 0) return;
+                if (!input.startsWith('/')) {
+                    this.source.getClient().clientChat.sendMessage(input);
+                    this.commandInput.value = '';
+                    return;
+                }
 
-            if (this.popup.getPopups()) {
+                this.usedCommands.push(input);
+                if (this.usedCommands.length > 64) {
+                    this.usedCommands.shift();
+                }
+                this.historyIndex = -1;
+                this.commandInput.value = '';
+                this.resetSuggestionLen();
+
+                this.executeCommand(input);
+                return;
+            }
+
+            if (event.code === 'ArrowUp') {
+                event.preventDefault();
+                if (this.popup.getPopups()) {
+                    this.completionIndex = (this.completionIndex - 1 + this.suggestionsLength) % this.suggestionsLength;
+                    this.popup.highlightPopupItem(this.completionIndex);
+                    return;
+                }
+
+                if (this.usedCommands.length <= 0) return;
+                if (this.historyIndex === -1) {
+                    this.historyIndex = this.usedCommands.length - 1;
+                } else if (this.historyIndex > 0) {
+                    this.historyIndex--;
+                }
+                this.commandInput.value = this.usedCommands[this.historyIndex];
+                return;
+            }
+
+            if (event.code === 'ArrowDown') {
+                event.preventDefault();
+                if (this.popup.getPopups()) {
+                    this.completionIndex = (this.completionIndex + 1) % this.suggestionsLength;
+                    this.popup.highlightPopupItem(this.completionIndex);
+                    return;
+                }
+
+                if (this.usedCommands.length <= 0) return;
+                if (this.historyIndex >= 0 && this.historyIndex < this.usedCommands.length - 1) {
+                    this.historyIndex++;
+                    this.commandInput.value = this.usedCommands[this.historyIndex];
+                } else {
+                    this.historyIndex = -1;
+                    this.commandInput.value = '';
+                }
+                return;
+            }
+
+            if (event.code === 'Tab') {
+                event.preventDefault();
+                if (!this.popup.getPopups()) return;
+
+                // 轮询并应用
+                this.popup.highlightPopupItem(this.completionIndex);
                 const activeItem = this.popup.getActiveItem();
+                this.completionIndex = (this.completionIndex + 1) % this.suggestionsLength;
+
                 if (!activeItem) return;
+
                 this.popup.applySuggestion(
                     activeItem.textContent!,
                     this.tokenStart,
-                    input.length
+                    this.commandInput.value.length,
                 );
-                this.popup.cleanPopup();
                 return;
             }
 
-            if (input.length <= 0) return;
-            if (!input.startsWith('/')) {
-                this.source.getClient().clientChat.sendMessage(input);
-                this.commandInput.value = '';
+            if (event.ctrlKey && event.code === 'Space') {
+                event.preventDefault();
+                bounceGiveSuggestions();
+            }
+
+            if (event.ctrlKey && event.code === 'KeyW') {
+                event.preventDefault();
+                const cursor = this.commandInput.selectionStart ?? 0;
+                const text = this.commandInput.value;
+
+                let start = cursor;
+                while (start > 0 && text[start - 1] !== ' ') {
+                    start--;
+                }
+                let end = cursor;
+                while (end < text.length && text[end] !== ' ') {
+                    end++;
+                }
+                this.commandInput.setSelectionRange(start, end);
                 return;
             }
+        });
+        commandInput.addEventListener('input', bounceGiveSuggestions);
 
-            this.usedCommands.push(input);
-            if (this.usedCommands.length > 64) {
-                this.usedCommands.shift();
-            }
-            this.historyIndex = -1;
-            this.commandInput.value = '';
-            this.resetSuggestionLen();
-
-            this.executeCommand(input);
-            return;
-        }
-
-        if (event.code === 'ArrowUp') {
-            event.preventDefault();
-            if (this.popup.getPopups()) {
-                this.completionIndex = (this.completionIndex - 1 + this.suggestionsLength) % this.suggestionsLength;
-                this.popup.highlightPopupItem(this.completionIndex);
-                return;
-            }
-
-            if (this.usedCommands.length <= 0) return;
-            if (this.historyIndex === -1) {
-                this.historyIndex = this.usedCommands.length - 1;
-            } else if (this.historyIndex > 0) {
-                this.historyIndex--;
-            }
-            this.commandInput.value = this.usedCommands[this.historyIndex];
-            return;
-        }
-
-        if (event.code === 'ArrowDown') {
-            event.preventDefault();
-            if (this.popup.getPopups()) {
-                this.completionIndex = (this.completionIndex + 1) % this.suggestionsLength;
-                this.popup.highlightPopupItem(this.completionIndex);
-                return;
-            }
-
-            if (this.usedCommands.length <= 0) return;
-            if (this.historyIndex >= 0 && this.historyIndex < this.usedCommands.length - 1) {
-                this.historyIndex++;
-                this.commandInput.value = this.usedCommands[this.historyIndex];
-            } else {
-                this.historyIndex = -1;
-                this.commandInput.value = '';
-            }
-            return;
-        }
-
-        if (event.code === 'Tab') {
-            event.preventDefault();
-            if (!this.popup.getPopups()) return;
-
-            // 轮询并应用
-            this.popup.highlightPopupItem(this.completionIndex);
-            const activeItem = this.popup.getActiveItem();
-            this.completionIndex = (this.completionIndex + 1) % this.suggestionsLength;
-
-            if (!activeItem) return;
-
-            this.popup.applySuggestion(
-                activeItem.textContent!,
-                this.tokenStart,
-                this.commandInput.value.length,
-            );
-            return;
-        }
-
-        if (event.ctrlKey && event.code === 'Space') {
-            event.preventDefault();
-            this.bounceGiveSuggestions();
-        }
-
-        if (event.ctrlKey && event.code === 'KeyW') {
-            event.preventDefault();
-            const cursor = this.commandInput.selectionStart ?? 0;
-            const text = this.commandInput.value;
-
-            let start = cursor;
-            while (start > 0 && text[start - 1] !== ' ') {
-                start--;
-            }
-            let end = cursor;
-            while (end < text.length && text[end] !== ' ') {
-                end++;
-            }
-            this.commandInput.setSelectionRange(start, end);
-            return;
-        }
+        this.registry();
     }
 
     public onEsc() {
@@ -182,8 +181,6 @@ export class ClientCommandManager extends CommandManager {
     }
 
     // 建议与用法
-
-    private bounceGiveSuggestions = debounce(this.giveSuggestions.bind(this), 100);
 
     private async giveSuggestions() {
         const command = this.commandInput.value;

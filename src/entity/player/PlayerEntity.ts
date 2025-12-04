@@ -231,6 +231,7 @@ export abstract class PlayerEntity extends LivingEntity {
         return this.baseWeapons[this.currentBaseIndex];
     }
 
+    // 如果玩家被清除, 有可能返回 undefined
     public getCurrentItemStack(): ItemStack {
         return this.items.get(this.baseWeapons[this.currentBaseIndex])!;
     }
@@ -271,7 +272,13 @@ export abstract class PlayerEntity extends LivingEntity {
         super.writeNBT(nbt);
         nbt.putUint('Score', this.score);
         nbt.putByte('SlotIndex', this.currentBaseIndex);
+        nbt.putBoolean('DevMode', this.isDevMode());
 
+        const inventory: NbtCompound[] = [];
+        this.items.values().forEach(stack => {
+            inventory.push(ItemStack.CODEC.encode(stack));
+        });
+        nbt.putCompoundList('Inventory', inventory);
         this.techTree!.writeNBT(nbt);
 
         return nbt
@@ -280,8 +287,21 @@ export abstract class PlayerEntity extends LivingEntity {
     public override readNBT(nbt: NbtCompound) {
         super.readNBT(nbt);
         this.setScore(nbt.getUint('Score'));
+        this.setDevMode(nbt.getBoolean('DevMode'));
 
         this.techTree!.readNBT(nbt);
+
+        const inventory = nbt.getCompoundList('Inventory');
+        if (inventory && inventory.length > 0) {
+            for (const nbt of inventory) {
+                const stack = ItemStack.CODEC.decode(nbt);
+                if (!stack) continue;
+
+                stack.setHolder(this);
+                this.addItem(stack.getItem(), stack);
+            }
+        }
+
         this.currentBaseIndex = clamp(nbt.getByte('SlotIndex'), 0, this.baseWeapons.length);
     }
 

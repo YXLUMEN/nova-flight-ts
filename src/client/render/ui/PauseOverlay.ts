@@ -41,7 +41,7 @@ export class PauseOverlay implements IUi {
                 centerX - 60, centerY + 100,
                 120, 36,
                 '保存并退出',
-                () => NovaFlightClient.getInstance().networkHandler.disconnect()),
+                () => NovaFlightClient.getInstance().leaveGame()),
         );
     }
 

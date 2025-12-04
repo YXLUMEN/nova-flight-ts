@@ -35,22 +35,22 @@ export class EntityStatusEffectS2CPacket implements Payload {
     }
 
     private static write(writer: BinaryWriter, value: EntityStatusEffectS2CPacket) {
-        writer.writeVarUInt(value.entityId);
+        writer.writeVarUint(value.entityId);
         StatusEffect.ENTRY_PACKET_CODEC.encode(writer, value.effectId.getValue());
-        writer.writeVarUInt(value.amplifier);
-        writer.writeVarUInt(value.duration);
+        writer.writeVarUint(value.amplifier);
+        writer.writeVarUint(value.duration);
     }
 
     private static read(reader: BinaryReader): EntityStatusEffectS2CPacket {
-        const entityId = reader.readVarUInt();
+        const entityId = reader.readVarUint();
         const effect = StatusEffect.ENTRY_PACKET_CODEC.decode(reader);
         const effectId = Registries.STATUS_EFFECT.getEntryByValue(effect)!;
 
         return new EntityStatusEffectS2CPacket(
             entityId,
             effectId,
-            reader.readVarUInt(),
-            reader.readVarUInt(),
+            reader.readVarUint(),
+            reader.readVarUint(),
         );
     }
 

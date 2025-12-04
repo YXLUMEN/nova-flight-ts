@@ -3,12 +3,12 @@ import {Identifier} from "../../../registry/Identifier.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import {
-    argbIntToHex,
+    decodeColorHex,
     decodeFromInt16,
     decodeFromUnsignedByte,
     encodeToInt16,
     encodeToUnsignedByte,
-    hexToArgbInt,
+    encodeColorHex,
 } from "../../../utils/NetUtil.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
@@ -53,8 +53,8 @@ export class ParticleS2CPacket implements Payload {
             speed,
             encodeToUnsignedByte(life),
             encodeToInt16(size),
-            hexToArgbInt(colorFrom),
-            hexToArgbInt(colorTo),
+            encodeColorHex(colorFrom),
+            encodeColorHex(colorTo),
         );
     }
 
@@ -109,10 +109,10 @@ export class ParticleS2CPacket implements Payload {
     }
 
     public get colorFrom() {
-        return argbIntToHex(this.colorFromInt32);
+        return decodeColorHex(this.colorFromInt32);
     }
 
     public get colorTo() {
-        return argbIntToHex(this.colorToInt32);
+        return decodeColorHex(this.colorToInt32);
     }
 }

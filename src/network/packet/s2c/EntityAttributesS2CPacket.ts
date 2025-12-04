@@ -12,11 +12,11 @@ export class EntityAttributesS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityAttributesS2CPacket> = {id: Identifier.ofVanilla('entity_attr')}
     public static readonly CODEC: PacketCodec<EntityAttributesS2CPacket> = PacketCodecs.of(
         (writer, value) => {
-            writer.writeVarUInt(value.entityId);
+            writer.writeVarUint(value.entityId);
             PacketCodecs.collection(Entry.CODEC).encode(writer, value.entries);
         },
         reader => {
-            const entityId = reader.readVarUInt();
+            const entityId = reader.readVarUint();
             const list = PacketCodecs.collection(Entry.CODEC).decode(reader);
             return new EntityAttributesS2CPacket(entityId, list);
         }

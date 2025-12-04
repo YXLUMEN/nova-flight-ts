@@ -16,8 +16,8 @@ pub enum Role {
 
 pub struct RelayState {
     pub server: RwLock<Option<Arc<Session>>>,
-    pub clients: DashMap<[u8; 16], Arc<Session>>,
-    // session_id_to_client
+    pub client_uuids: DashMap<[u8; 16], Arc<Session>>,
+    pub client_ids: DashMap<u8, Arc<Session>>,
     shutting_down: AtomicBool,
 }
 
@@ -25,7 +25,8 @@ impl RelayState {
     pub fn new() -> Self {
         RelayState {
             server: RwLock::new(None),
-            clients: DashMap::new(),
+            client_uuids: DashMap::new(),
+            client_ids: DashMap::new(),
             shutting_down: AtomicBool::new(false),
         }
     }
@@ -37,6 +38,24 @@ impl RelayState {
         }
         *guard = Some(session);
         Ok(())
+    }
+
+    /// NOT manually remove from only one map. Use this method to remove the session.
+    pub fn remove_by_id(&self, id: u8) -> Option<[u8; 16]> {
+        if let Some(session) = self.client_ids.remove(&id) {
+            let client_id = session.1.client_id;
+
+            if let Some(uuid) = client_id {
+                self.client_uuids.remove(&uuid);
+            }
+            return client_id;
+        }
+        None
+    }
+
+    pub fn clear_clients(&self) {
+        self.client_uuids.clear();
+        self.client_ids.clear();
     }
 
     pub async fn get_server(&self) -> Option<Arc<Session>> {

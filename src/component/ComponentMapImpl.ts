@@ -1,8 +1,5 @@
-import type {ComponentType} from "./ComponentType.ts";
+import {type ComponentType} from "./ComponentType.ts";
 import {Compare} from "../utils/collection/Compare.ts";
-import {NbtCompound} from "../nbt/NbtCompound.ts";
-import {Identifier} from "../registry/Identifier.ts";
-import {Registries} from "../registry/Registries.ts";
 import {ComponentChanges} from "./ComponentChanges.ts";
 import {Optional} from "../utils/Optional.ts";
 import type {ComponentMap} from "./ComponentMap.ts";
@@ -10,15 +7,15 @@ import type {ComponentMap} from "./ComponentMap.ts";
 export class ComponentMapImpl implements ComponentMap {
     public static readonly EMPTY = Object.freeze(new ComponentMapImpl()) as ComponentMapImpl;
 
-    public readonly components: Map<ComponentType<any>, any>;
+    private readonly baseComponents: Map<ComponentType<any>, any>;
     private changedComponents: Map<ComponentType<any>, Optional<any>>;
     private copyOnWrite: boolean;
 
     public constructor(components?: ComponentMap, changedComponents?: Map<ComponentType<any>, Optional<any>>, copyOnWrite = true) {
         if (!components) {
-            this.components = new Map();
+            this.baseComponents = new Map();
         } else {
-            this.components = components.components;
+            this.baseComponents = components.getComponents();
         }
 
         if (!changedComponents) {
@@ -55,13 +52,13 @@ export class ComponentMapImpl implements ComponentMap {
 
     public get<T>(type: ComponentType<T>): T | null {
         const changed = this.changedComponents.get(type) ?? null;
-        return changed !== null ? changed.orElse(null) : this.components.get(type) ?? null;
+        return changed !== null ? changed.orElse(null) : this.baseComponents.get(type) ?? null;
     }
 
     public set<T>(type: ComponentType<T>, value: T | null): void {
         this.onWrite();
 
-        const object = this.components.get(type);
+        const object = this.baseComponents.get(type);
         if (value === object) {
             this.changedComponents.delete(type);
         } else {
@@ -72,7 +69,7 @@ export class ComponentMapImpl implements ComponentMap {
     public remove<T>(type: ComponentType<T>): void {
         this.onWrite();
 
-        const object = this.components.get(type);
+        const object = this.baseComponents.get(type);
         if (object !== null) {
             this.changedComponents.set(type, Optional.empty());
         } else {
@@ -89,7 +86,7 @@ export class ComponentMapImpl implements ComponentMap {
     }
 
     public applyChange(type: ComponentType<any>, optional: Optional<any>) {
-        const value = this.components.get(type) ?? null;
+        const value = this.baseComponents.get(type) ?? null;
         if (optional.isPresent()) {
             if (optional.get() === value) {
                 this.changedComponents.delete(type);
@@ -112,7 +109,7 @@ export class ComponentMapImpl implements ComponentMap {
     }
 
     public has<T>(type: ComponentType<T>): boolean {
-        return this.components.has(type);
+        return this.baseComponents.has(type);
     }
 
     public getOrDefault<T>(type: ComponentType<T>, fallback: T): T {
@@ -125,7 +122,11 @@ export class ComponentMapImpl implements ComponentMap {
     }
 
     public size(): number {
-        return this.components.size;
+        return this.baseComponents.size;
+    }
+
+    public getComponents(): Map<ComponentType<any>, any> {
+        return this.baseComponents;
     }
 
     public getChanges(): ComponentChanges {
@@ -151,33 +152,6 @@ export class ComponentMapImpl implements ComponentMap {
     public equals(o: Object): boolean {
         return this === o ? true :
             o instanceof ComponentMapImpl &&
-            Compare.mapsEqual(this.components, o.components);
-    }
-
-    public toNbt(): NbtCompound {
-        const nbt = new NbtCompound();
-        for (const [type, value] of this.components) {
-            const id = Registries.DATA_COMPONENT_TYPE.getId(type);
-            if (!id) continue;
-            nbt.putCompound(id.toString(), type.codec.encode(value));
-        }
-        return nbt;
-    }
-
-    public static fromNbt(nbt: NbtCompound): ComponentMapImpl {
-        const map = new ComponentMapImpl();
-        for (const key of nbt.getKeys()) {
-            const id = Identifier.tryParse(key);
-            if (!id) continue;
-            const entry = Registries.DATA_COMPONENT_TYPE.getEntryById(id);
-            if (!entry) continue;
-            const nbtEntry = nbt.getCompound(key);
-            if (!nbtEntry) continue;
-
-            const type = entry.getValue();
-            const compound = type.codec.decode(nbtEntry);
-            map.set(type, compound);
-        }
-        return map;
+            Compare.mapsEqual(this.baseComponents, o.baseComponents);
     }
 }

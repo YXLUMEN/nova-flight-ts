@@ -7,6 +7,7 @@ import {CommandError, IllegalArgumentError} from "../apis/errors.ts";
 import {IntArgumentType} from "./argument/IntArgumentType.ts";
 import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
 import {ServerDB} from "../server/ServerDB.ts";
+import {clamp} from "../utils/math/math.ts";
 
 export class ClientSettingsCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -74,6 +75,28 @@ export class ClientSettingsCommand {
                                             localStorage.setItem('playerName', playerName);
                                             ctx.source.getClient().playerName = playerName;
                                             ctx.source.addMessage(`Set playerName to: \x1b[32m"${playerName}"`);
+                                        })
+                                )
+                        )
+                        .then(
+                            literal<T>('max_fps')
+                                .then(
+                                    argument<T, number>('int', IntArgumentType.int())
+                                        .executes(ctx => {
+                                            const arg = ctx.args.get('int');
+                                            if (!arg) throw new CommandError('\x1b[31m<int> is required');
+
+                                            let fps = Number(arg.result);
+                                            if (!Number.isSafeInteger(fps)) {
+                                                throw new IllegalArgumentError(`\x1b[31mInvalid argument: "${fps}", int must be an integer`);
+                                            }
+                                            if (fps <= 0) {
+                                                throw new IllegalArgumentError("\x1b[31mFps should greater than 0");
+                                            }
+                                            fps = clamp(fps, 0, 165);
+                                            WorldConfig.fps = fps;
+                                            WorldConfig.perFrame = 1000 / fps;
+                                            ctx.source.addMessage(`Set Maxfps: \x1b[32m"${fps}"`);
                                         })
                                 )
                         )

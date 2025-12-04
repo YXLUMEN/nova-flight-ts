@@ -141,8 +141,7 @@ export class ClientWorld extends World {
     }
 
     public override removeEntity(entityId: number): void {
-        const entity = this.getEntityLookup().get(entityId);
-        if (entity) entity.discard();
+        this.getEntityLookup().get(entityId)?.discard();
     }
 
     public override getEntityById(id: number): Entity | null {
@@ -322,7 +321,7 @@ export class ClientWorld extends World {
 
         this.client.window.hud.render(ctx);
         this.client.window.notify.render(ctx);
-        if (!this.ticking) this.client.window.pauseOverlay.render(ctx);
+        if (!this.ticking && !this.over) this.client.window.pauseOverlay.render(ctx);
     }
 
     private wrapEntityRender(ctx: CanvasRenderingContext2D, tickDelta: number) {
@@ -398,6 +397,7 @@ export class ClientWorld extends World {
     }
 
     public saveAll() {
+        this.client.getServerWorker()?.getWorker()?.postMessage({type: 'save_all'});
     }
 
     public readonly ClientEntityHandler: EntityHandler<Entity> = {

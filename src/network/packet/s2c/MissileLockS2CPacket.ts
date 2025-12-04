@@ -7,13 +7,13 @@ export class MissileLockS2CPacket implements Payload {
     public static readonly ID: PayloadId<MissileLockS2CPacket> = {id: Identifier.ofVanilla('missile_lock')};
     public static readonly CODEC: PacketCodec<MissileLockS2CPacket> = PacketCodecs.of(
         (writer, value) => {
-            writer.writeVarUInt(value.entityId);
-            writer.writeVarUInt(value.lockEntityId);
+            writer.writeVarUint(value.entityId);
+            writer.writeVarUint(value.lockEntityId);
         },
         reader => {
             return new MissileLockS2CPacket(
-                reader.readVarUInt(),
-                reader.readVarUInt()
+                reader.readVarUint(),
+                reader.readVarUint()
             )
         }
     );

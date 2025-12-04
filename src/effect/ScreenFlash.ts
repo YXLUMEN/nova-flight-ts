@@ -4,19 +4,20 @@ import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
+import {decodeColorHex, encodeColorHex} from "../utils/NetUtil.ts";
 
 export class ScreenFlash implements VisualEffect {
     public static readonly PACKET_CODEC: PacketCodec<ScreenFlash> = PacketCodecs.of(
         (writer, value) => {
             writer.writeFloat(value.life);
             writer.writeFloat(value.maxAlpha);
-            writer.writeString(value.color);
+            writer.writeUint32(encodeColorHex(value.color));
         },
         reader => {
             return new ScreenFlash(
                 reader.readFloat(),
                 reader.readFloat(),
-                reader.readString()
+                decodeColorHex(reader.readUint32())
             );
         }
     );

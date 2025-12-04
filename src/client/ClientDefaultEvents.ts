@@ -15,7 +15,7 @@ export class ClientDefaultEvents {
             const player = NovaFlightClient.getInstance().player;
             if (!player) return;
 
-            world.getNetworkChannel().send(new PlayerUnlockTechC2SPacket(player.getUUID(), event.id))
+            world.getNetworkChannel().send(new PlayerUnlockTechC2SPacket(event.id));
             applyClientTech(event.id);
         });
 

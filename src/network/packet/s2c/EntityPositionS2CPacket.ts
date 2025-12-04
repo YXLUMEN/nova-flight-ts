@@ -33,7 +33,7 @@ export class EntityPositionS2CPacket implements Payload {
 
     private static reader(reader: BinaryReader) {
         return new EntityPositionS2CPacket(
-            reader.readVarUInt(),
+            reader.readVarUint(),
             reader.readDouble(),
             reader.readDouble(),
             reader.readUnsignByte()
@@ -41,7 +41,7 @@ export class EntityPositionS2CPacket implements Payload {
     }
 
     private static write(writer: BinaryWriter, value: EntityPositionS2CPacket): void {
-        writer.writeVarUInt(value.entityId);
+        writer.writeVarUint(value.entityId);
         writer.writeDouble(value.x);
         writer.writeDouble(value.y);
         writer.writeByte(value.yawInt8);

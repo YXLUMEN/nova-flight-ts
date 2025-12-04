@@ -61,7 +61,7 @@ export class BinaryReader {
         return v;
     }
 
-    public readVarUInt(): number {
+    public readVarUint(): number {
         let num = 0;
         let shift = 0;
 
@@ -87,7 +87,7 @@ export class BinaryReader {
     }
 
     public readString(): string {
-        const len = this.readInt16();
+        const len = this.readUint16();
         console.assert(len >= 0 && this.offset + len <= this.view.byteLength, "Invalid string length");
 
         const bytes = new Uint8Array(this.view.buffer, this.view.byteOffset + this.offset, len);

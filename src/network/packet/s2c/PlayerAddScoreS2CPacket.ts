@@ -8,11 +8,11 @@ export class PlayerAddScoreS2CPacket implements Payload {
     public static readonly CODEC: PacketCodec<PlayerAddScoreS2CPacket> = PacketCodecs.of(
         (writer, value) => {
             writer.writeByte(value.decrease ? 1 : 0);
-            writer.writeVarUInt(value.score);
+            writer.writeVarUint(value.score);
         },
         reader => new PlayerAddScoreS2CPacket(
             reader.readByte() !== 0,
-            reader.readVarUInt()
+            reader.readVarUint()
         )
     );
 

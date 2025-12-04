@@ -3,19 +3,19 @@ import {Identifier} from "../../../registry/Identifier.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {Item} from "../../../item/Item.ts";
-import {Registries} from "../../../registry/Registries.ts";
+import {ItemStack} from "../../../item/ItemStack.ts";
 
 export class ItemCooldownUpdateS2CPacket implements Payload {
     public static readonly ID: PayloadId<ItemCooldownUpdateS2CPacket> = {id: Identifier.ofVanilla('item_c_u')};
     public static readonly CODEC: PacketCodec<ItemCooldownUpdateS2CPacket> = PacketCodecs.of(
         (writer, value) => {
-            PacketCodecs.registryEntry(Registries.ITEM).encode(writer, value.item);
-            writer.writeVarUInt(value.duration);
+            ItemStack.ITEM_PACKET_CODEC.encode(writer, value.item);
+            writer.writeVarUint(value.duration);
         },
         reader => {
             return new ItemCooldownUpdateS2CPacket(
-                PacketCodecs.registryEntry(Registries.ITEM).decode(reader),
-                reader.readVarUInt()
+                ItemStack.ITEM_PACKET_CODEC.decode(reader),
+                reader.readVarUint()
             )
         }
     );

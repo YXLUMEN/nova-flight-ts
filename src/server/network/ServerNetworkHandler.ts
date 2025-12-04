@@ -31,7 +31,7 @@ export class ServerNetworkHandler {
 
     private onClientSniff(packet: ClientSniffingC2SPacket) {
         if (!this.server.world) return;
-        this.server.networkChannel.sendTo(new ServerReadyS2CPacket(), packet.clientId);
+        this.server.networkChannel.sendToByUUID(new ServerReadyS2CPacket(), packet.clientId);
     }
 
     private async onPlayerConnect(packet: PlayerAttemptLoginC2SPacket) {
@@ -57,7 +57,7 @@ export class ServerNetworkHandler {
     }
 
     public disconnectTarget(target: UUID, reason: string): void {
-        this.server.networkChannel.sendTo(new PlayerDisconnectS2CPacket(target, reason), target);
+        this.server.networkChannel.sendToByUUID(new PlayerDisconnectS2CPacket(target, reason), target);
     }
 
     public disconnectAllPlayer(): void {

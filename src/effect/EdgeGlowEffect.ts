@@ -1,7 +1,7 @@
 import type {VisualEffect} from "./VisualEffect.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
-import {decodeFromByte, encodeToByte} from "../utils/NetUtil.ts";
+import {decodeColorHex, decodeFromByte, encodeToByte, encodeColorHex} from "../utils/NetUtil.ts";
 import {hexToRgba} from "../utils/uit.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
@@ -9,7 +9,7 @@ import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 export class EdgeGlowEffect implements VisualEffect {
     public static readonly PACKET_CODEC: PacketCodec<EdgeGlowEffect> = PacketCodecs.of(
         (writer, value) => {
-            writer.writeString(value.color);
+            writer.writeUint32(encodeColorHex(value.color));
             writer.writeUint16(value.thickness);
             writer.writeFloat(value.intensity);
             writer.writeFloat(value.duration);
@@ -20,7 +20,7 @@ export class EdgeGlowEffect implements VisualEffect {
         },
         reader => {
             return new EdgeGlowEffect(
-                reader.readString(),
+                decodeColorHex(reader.readUint32()),
                 reader.readUint16(),
                 reader.readFloat(),
                 reader.readFloat(),

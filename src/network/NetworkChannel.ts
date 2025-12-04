@@ -2,7 +2,6 @@ import type {Payload} from "./Payload.ts";
 import {type PayloadType, PayloadTypeRegistry} from "./PayloadTypeRegistry.ts";
 import {BinaryWriter} from "../nbt/BinaryWriter.ts";
 import {BinaryReader} from "../nbt/BinaryReader.ts";
-import {Identifier} from "../registry/Identifier.ts";
 import type {Consumer} from "../apis/types.ts";
 import type {Channel} from "./Channel.ts";
 import {RelayServerPacket} from "./packet/RelayServerPacket.ts";
@@ -11,7 +10,8 @@ import {PacketTooLargeError} from "../apis/errors.ts";
 
 
 export abstract class NetworkChannel implements Channel {
-    public static readonly MAX_PACKET_SIZE = 4096;
+    // 单个数据包最大长度
+    public static readonly MAX_PACKET_SIZE = 6144;
 
     protected serverAddress: string;
     protected ws: WebSocket | null = null;
@@ -141,13 +141,13 @@ export abstract class NetworkChannel implements Channel {
 
         const writer = new BinaryWriter();
         writer.writeByte(this.getHeader());
-        writer.writeByte(this.getSessionID());
+        writer.writeByte(this.getSessionId());
 
         this.checkAndSend(writer, type, payload);
     }
 
     protected checkAndSend<T extends Payload>(writer: BinaryWriter, type: PayloadType<T>, payload: T): void {
-        writer.writeString(type.id.toString());
+        writer.writeVarUint(type.index);
         type.codec.encode(writer, payload);
 
         const buffer = writer.toUint8Array();
@@ -166,16 +166,14 @@ export abstract class NetworkChannel implements Channel {
             return RelayServerPacket.CODEC.decode(reader);
         }
         if (header !== 0x10 && header !== 0x11) {
-            console.warn(`${this.getSide().toUpperCase()} -> Unknown header: ${header}`);
+            console.warn(`[${this.getSide()}] Unknown header: ${header}`);
             return null;
         }
 
+        // pass sessionId
         reader.readUnsignByte();
-        const idStr = reader.readString();
-        const id = Identifier.tryParse(idStr);
-        if (!id) return null;
-
-        const type = PayloadTypeRegistry.getGlobal(id);
+        const index = reader.readVarUint();
+        const type = PayloadTypeRegistry.getGlobalByIndex(index);
         if (!type) return null;
 
         return type.codec.decode(reader);
@@ -203,7 +201,7 @@ export abstract class NetworkChannel implements Channel {
         await this.readyPromise;
     }
 
-    public getSessionID() {
+    public getSessionId() {
         return this.sessionId;
     }
 

@@ -31,7 +31,6 @@ import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPac
 import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {NetworkChannel} from "../../network/NetworkChannel.ts";
-import {estimateEntitySpawnPacketSize} from "../../utils/NetUtil.ts";
 
 export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
     public readonly player: ServerPlayerEntity;
@@ -84,15 +83,22 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
         }
 
         this.send(EntityNbtS2CPacket.create(this.player));
+        /**
+         * - [Header][SessionId][Target] 3B
+         * - PayloadType index default at 13, varUint 1B
+         * - Batch count varUint (max 3B)
+         * - Reserve 7B for safe
+         *
+         * Total: 3 + 1 + 3 +7 = 14B
+         * */
+        const maxSize = NetworkChannel.MAX_PACKET_SIZE - 14;
 
         let currentSize = 0;
-        const maxSize = NetworkChannel.MAX_PACKET_SIZE - 32;
-
         const currentBatch: EntitySpawnS2CPacket[] = [];
         const entities = this.world.getEntities().values();
         for (const entity of entities) {
             const spawnPacket = EntitySpawnS2CPacket.create(entity);
-            const estSize = estimateEntitySpawnPacketSize(entity);
+            const estSize = spawnPacket.estimateSize();
 
             if (currentSize + estSize >= maxSize && currentBatch.length > 0) {
                 this.send(new EntityBatchSpawnS2CPacket(currentBatch));
@@ -157,8 +163,9 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
     public onUnlockTech(packet: PlayerUnlockTechC2SPacket): void {
         const name = packet.techName;
 
-        applyServerTech(name, this.player);
-        this.player.getTechs().unlock(name);
+        if (this.player.getTechs().unlock(name)) {
+            applyServerTech(name, this.player);
+        }
     }
 
     public onTechRest(_: PlayerTechResetC2SPacket): void {
@@ -166,7 +173,7 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
     }
 
     public onRequestPosition(_: RequestPositionC2SPacket): void {
-        this.channel.sendTo(EntityPositionForceS2CPacket.create(this.player), this.player.getUUID());
+        this.send(EntityPositionForceS2CPacket.create(this.player));
     }
 
     public onCommandExecution(packet: CommandExecutionC2SPacket): void {

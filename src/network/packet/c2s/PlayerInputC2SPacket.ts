@@ -8,7 +8,6 @@ export class PlayerInputC2SPacket implements Payload {
 
     public static readonly CODEC: PacketCodec<PlayerInputC2SPacket> = PacketCodecs.of<PlayerInputC2SPacket>(
         (writer, value) => {
-
             writer.writeString(value.key);
         },
         (reader) => {

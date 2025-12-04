@@ -8,11 +8,11 @@ export class EntityKilledS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityKilledS2CPacket> = {id: Identifier.ofVanilla('entity_killed')};
     public static readonly CODEC: PacketCodec<EntityKilledS2CPacket> = PacketCodecs.of(
         (writer, value) => {
-            writer.writeVarUInt(value.entityId);
+            writer.writeVarUint(value.entityId);
         },
         reader => {
             return new EntityKilledS2CPacket(
-                reader.readVarUInt()
+                reader.readVarUint()
             )
         }
     );

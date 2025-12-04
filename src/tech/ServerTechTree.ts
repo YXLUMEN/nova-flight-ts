@@ -6,6 +6,7 @@ import type {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 import type {Tech} from "../apis/ITech.ts";
 import {Items} from "../item/Items.ts";
 import {PlayerSetScoreS2CPacket} from "../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
+import {applyServerTech} from "./applyServerTech.ts";
 
 export class ServerTechTree implements TechTree {
     private readonly player: ServerPlayerEntity;
@@ -38,6 +39,7 @@ export class ServerTechTree implements TechTree {
 
     public forceUnlock(id: string): void {
         this.state.forceUnlock(id);
+        applyServerTech(id, this.player);
     }
 
     public unlockAll() {

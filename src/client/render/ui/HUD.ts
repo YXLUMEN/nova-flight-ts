@@ -156,6 +156,7 @@ export class HUD implements IUi {
         const pos = player.getLerpPos(tickDelta);
 
         const stack = player.getCurrentItemStack();
+        if (!stack) return;
         const weapon = stack.getItem() as BaseWeapon;
 
         let ratio: number;
@@ -241,7 +242,7 @@ export class HUD implements IUi {
         ctx.fillText(`游戏时长: ${time}, 得分: ${score}, 击杀效率: ${(score / time).toFixed(2)}`, width / 2, y);
         y += 32;
 
-        ctx.fillText('按 Enter 键重新开始', width / 2, y);
+        ctx.fillText('按 任意键 返回标题页面', width / 2, y);
 
         ctx.restore();
     }

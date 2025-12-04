@@ -73,7 +73,7 @@ export class BinaryWriter {
         this.offset += 4;
     }
 
-    public writeVarUInt(v: number) {
+    public writeVarUint(v: number) {
         let i = v >>> 0;
         while ((i & ~0x7F) !== 0) {
             this.writeByte((i & 0x7F) | 0x80);
@@ -82,9 +82,12 @@ export class BinaryWriter {
         this.writeByte(i);
     }
 
+    /**
+     * Use Uint16 express total length
+     * */
     public writeString(s: string) {
         const utf8 = new TextEncoder().encode(s);
-        this.writeInt16(utf8.length);
+        this.writeUint16(utf8.length);
         this.ensure(utf8.length);
         this.buffer.set(utf8, this.offset);
         this.offset += utf8.length;
@@ -102,7 +105,7 @@ export class BinaryWriter {
         this.offset = 0;
         if (shrink && this.buffer.length > 128) {
             this.buffer = new Uint8Array(128);
-            this.view= new DataView(this.buffer.buffer);
+            this.view = new DataView(this.buffer.buffer);
         }
     }
 }

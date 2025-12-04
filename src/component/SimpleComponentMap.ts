@@ -1,4 +1,4 @@
-import type {ComponentType} from "./ComponentType.ts";
+import  {type ComponentType} from "./ComponentType.ts";
 import {Compare} from "../utils/collection/Compare.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import {Identifier} from "../registry/Identifier.ts";
@@ -8,30 +8,30 @@ import type {ComponentMap} from "./ComponentMap.ts";
 export class SimpleComponentMap implements ComponentMap {
     public static readonly EMPTY = new SimpleComponentMap(null);
 
-    public readonly components: Map<ComponentType<any>, any>;
+    public readonly baseComponents: Map<ComponentType<any>, any>;
 
     public constructor(components: ComponentMap | null = null) {
         if (components) {
-            this.components = new Map(components.components);
+            this.baseComponents = new Map(components.getComponents());
             return;
         }
-        this.components = new Map<ComponentType<any>, any>();
+        this.baseComponents = new Map<ComponentType<any>, any>();
     }
 
     public get<T>(type: ComponentType<T>): T | null {
-        return this.components.get(type) ?? null;
+        return this.baseComponents.get(type) ?? null;
     }
 
     public set<T>(type: ComponentType<T>, value: T | null): void {
-        this.components.set(type, value);
+        this.baseComponents.set(type, value);
     }
 
     public has<T>(type: ComponentType<T>): boolean {
-        return this.components.has(type);
+        return this.baseComponents.has(type);
     }
 
     public getOrDefault<T>(type: ComponentType<T>, fallback: T): T {
-        const component = this.components.get(type);
+        const component = this.baseComponents.get(type);
         return component !== undefined ? component : fallback;
     }
 
@@ -40,7 +40,7 @@ export class SimpleComponentMap implements ComponentMap {
     }
 
     public size(): number {
-        return this.components.size;
+        return this.baseComponents.size;
     }
 
     public copy() {
@@ -50,12 +50,16 @@ export class SimpleComponentMap implements ComponentMap {
     public equals(o: Object): boolean {
         return this === o ? true :
             o instanceof SimpleComponentMap &&
-            Compare.mapsEqual(this.components, o.components);
+            Compare.mapsEqual(this.baseComponents, o.baseComponents);
+    }
+
+    public getComponents(): Map<ComponentType<any>, any> {
+        return this.baseComponents;
     }
 
     public toNbt(): NbtCompound {
         const nbt = new NbtCompound();
-        for (const [type, value] of this.components) {
+        for (const [type, value] of this.baseComponents) {
             const id = Registries.DATA_COMPONENT_TYPE.getId(type);
             if (!id) continue;
             nbt.putCompound(id.toString(), type.codec.encode(value));

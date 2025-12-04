@@ -16,6 +16,10 @@ export class Audios {
     public static readonly MAKING_LEGENDS = this.register('making_legends');
     public static readonly VICTORY = this.register('victory');
     public static readonly WARSAW = this.register('warsaw');
+    public static readonly BOSS_PHASE = this.register('boss_phase');
+    public static readonly LAVA_CHICKEN = this.register('lava_chicken');
+    public static readonly PIXEL_ODYSSEY = this.register('pixel_odyssey');
+    public static readonly VOID_SHOWDOWN = this.register('void_showdown');
 
     private static register(id: string) {
         const identifier = Identifier.ofVanilla(id);

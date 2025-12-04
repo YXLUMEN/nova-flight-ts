@@ -52,6 +52,7 @@ export class NovaFlightClient {
     private running = false;
     private last = 0;
     private accumulator = 0;
+    private lastRenderTime = 0;
 
     private waitWorldStop: Promise<void> | null = null;
     private stopWorld: () => void = () => {
@@ -152,6 +153,11 @@ export class NovaFlightClient {
         this.clientCommandManager.clearParseCache();
     }
 
+    public async leaveGame() {
+        this.networkHandler.disconnect();
+        this.scheduleStop();
+    }
+
     private render(ts: number) {
         try {
             const world = this.world;
@@ -171,10 +177,18 @@ export class NovaFlightClient {
             }
 
             const alpha = world.isTicking ? this.accumulator / WorldConfig.mbps : 1;
-            world.render(alpha);
+            if (ts - this.lastRenderTime >= WorldConfig.perFrame) {
+                world.render(alpha);
+                this.lastRenderTime = ts;
+            }
             requestAnimationFrame(this.bindRender);
         } catch (err) {
-            console.error(`Client runtime error: ${err}`);
+            if (err instanceof Error) {
+                console.error(`[Client] Runtime error: ${err.name}: ${err.message} at\n${err.stack}`);
+            } else {
+                console.error(`[Client] Runtime error: ${err}`);
+            }
+
             error(String(err)).catch(err => console.error(err));
             this.stopWorld();
         }
@@ -440,6 +454,12 @@ export class NovaFlightClient {
     private registryInput(event: KeyboardEvent): void {
         const code = event.code;
         const world = this.world;
+
+        if (world && world.isOver) {
+            this.networkHandler.disconnect();
+            this.scheduleStop();
+            return;
+        }
 
         // 开发者模式
         if (event.ctrlKey) {

@@ -11,8 +11,8 @@ export const mainWindow = new Window('main');
 function main() {
     if (isServer) return;
 
-    ClientNetwork.registerNetworkPacket();
     ServerNetwork.registerNetworkPacket();
+    ClientNetwork.registerNetworkPacket();
 
     window.oncontextmenu = event => event.preventDefault();
 
