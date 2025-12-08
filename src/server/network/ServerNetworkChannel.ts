@@ -23,9 +23,9 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
 
         const writer = new BinaryWriter();
-        writer.writeByte(0x12);
-        writer.writeByte(this.getSessionId());
-        writer.writeByte(target.sessionId);
+        writer.writeInt8(0x12);
+        writer.writeInt8(this.getSessionId());
+        writer.writeInt8(target.sessionId);
         this.checkAndSend(writer, type, payload);
     }
 
@@ -34,8 +34,8 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
 
         const writer = new BinaryWriter();
-        writer.writeByte(0x13);
-        writer.writeByte(this.getSessionId());
+        writer.writeInt8(0x13);
+        writer.writeInt8(this.getSessionId());
         writer.writeUUID(target);
         this.checkAndSend(writer, type, payload);
     }
@@ -45,12 +45,12 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
 
         const writer = new BinaryWriter();
-        writer.writeByte(0x14);
-        writer.writeByte(this.getSessionId());
+        writer.writeInt8(0x14);
+        writer.writeInt8(this.getSessionId());
 
         writer.writeVarUint(excludes.length);
         for (const session of excludes) {
-            writer.writeByte(session.sessionId);
+            writer.writeInt8(session.sessionId);
         }
         this.checkAndSend(writer, type, payload);
     }
@@ -58,7 +58,7 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
     private decodeWithOrigin(buf: Uint8Array): PayloadWithOrigin | null {
         const reader = new BinaryReader(buf);
 
-        const header = reader.readByte();
+        const header = reader.readInt8();
         if (header === 0x00) {
             return {sessionId: 0, payload: RelayServerPacket.CODEC.decode(reader)}
         }
@@ -67,7 +67,7 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
             return null;
         }
 
-        const sessionId = reader.readUnsignByte();
+        const sessionId = reader.readUint8();
         const index = reader.readVarUint();
         const type = PayloadTypeRegistry.getGlobalByIndex(index);
         if (!type) return null;

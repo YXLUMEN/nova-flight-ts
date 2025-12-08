@@ -1,4 +1,5 @@
 import type {StoreConfig} from "../apis/types.ts";
+import {Result} from "../utils/result/Result.ts";
 
 export class IndexedDBHelper {
     private db: IDBDatabase | null = null;
@@ -44,29 +45,29 @@ export class IndexedDBHelper {
         return promise;
     }
 
-    public async add(storeName: string, data: object): Promise<IDBValidKey> {
+    public async add(storeName: string, data: object): Promise<Result<IDBValidKey, DOMException | null>> {
         const db = await this.init();
-        const {promise, resolve, reject} = Promise.withResolvers<IDBValidKey>();
+        const {promise, resolve} = Promise.withResolvers<Result<IDBValidKey, DOMException | null>>();
 
         const tx = db.transaction(storeName, 'readwrite');
         const store = tx.objectStore(storeName);
         const request = store.add(data);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(Result.ok(request.result));
+        request.onerror = () => resolve(Result.err(request.error));
 
         return promise;
     }
 
-    public async get<T>(storeName: string, key: IDBValidKey): Promise<T | null> {
+    public async get<T>(storeName: string, key: IDBValidKey): Promise<Result<T, DOMException | null>> {
         const db = await this.init();
-        const {promise, resolve, reject} = Promise.withResolvers<T | null>();
+        const {promise, resolve} = Promise.withResolvers<Result<T, DOMException | null>>();
 
         const tx = db.transaction(storeName, 'readonly');
         const store = tx.objectStore(storeName);
         const request = store.get(key);
 
-        request.onsuccess = () => resolve(request.result ?? null);
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(Result.ok(request.result ?? null));
+        request.onerror = () => resolve(Result.err(request.error));
 
         return promise;
     }
@@ -75,69 +76,69 @@ export class IndexedDBHelper {
         storeName: string,
         indexName: string,
         key: IDBValidKey
-    ): Promise<T | null> {
+    ): Promise<Result<T, DOMException | null>> {
         const db = await this.init();
-        const {promise, resolve, reject} = Promise.withResolvers<T | null>();
+        const {promise, resolve} = Promise.withResolvers<Result<T, DOMException | null>>();
 
         const tx = db.transaction(storeName, 'readonly');
         const store = tx.objectStore(storeName);
         const index = store.index(indexName);
         const request = index.get(key);
 
-        request.onsuccess = () => resolve(request.result ?? null);
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(Result.ok(request.result ?? null));
+        request.onerror = () => resolve(Result.err(request.error));
 
         return promise;
     }
 
-    public async update(storeName: string, data: object): Promise<IDBValidKey> {
+    public async update(storeName: string, data: object): Promise<Result<IDBValidKey, DOMException | null>> {
         const db = await this.init();
-        const {promise, resolve, reject} = Promise.withResolvers<IDBValidKey>();
+        const {promise, resolve} = Promise.withResolvers<Result<IDBValidKey, DOMException | null>>();
 
         const tx = db.transaction(storeName, 'readwrite');
         const store = tx.objectStore(storeName);
         const request = store.put(data);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(Result.ok(request.result));
+        request.onerror = () => resolve(Result.err(request.error));
 
         return promise;
     }
 
-    public async delete(storeName: string, key: IDBValidKey | IDBKeyRange): Promise<boolean> {
+    public async delete(storeName: string, key: IDBValidKey | IDBKeyRange): Promise<Result<boolean, DOMException | null>> {
         const db = await this.init();
-        const {promise, resolve, reject} = Promise.withResolvers<boolean>();
+        const {promise, resolve} = Promise.withResolvers<Result<boolean, DOMException | null>>();
 
         const tx = db.transaction(storeName, 'readwrite');
         const store = tx.objectStore(storeName);
         const request = store.delete(key);
-        request.onsuccess = () => resolve(true);
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(Result.ok(true));
+        request.onerror = () => resolve(Result.err(request.error));
 
         return promise;
     }
 
-    public async clearStore(storeName: string): Promise<void> {
+    public async clearStore(storeName: string): Promise<Result<null, DOMException | null>> {
         const db = await this.init();
-        const {promise, resolve, reject} = Promise.withResolvers<void>();
+        const {promise, resolve} = Promise.withResolvers<Result<null, DOMException | null>>();
 
         const tx = db.transaction(storeName, 'readwrite');
         const store = tx.objectStore(storeName);
         const req = store.clear();
-        req.onsuccess = () => resolve();
-        req.onerror = () => reject(req.error);
+        req.onsuccess = () => resolve(Result.ok(null));
+        req.onerror = () => resolve(Result.err(req.error));
 
         return promise;
     }
 
-    public async getAll<T>(storeName: string): Promise<T[]> {
+    public async getAll<T>(storeName: string): Promise<Result<T[], DOMException | null>> {
         const db = await this.init();
-        const {promise, resolve, reject} = Promise.withResolvers<any>();
+        const {promise, resolve} = Promise.withResolvers<Result<T[], DOMException | null>>();
 
         const tx = db.transaction(storeName, 'readonly');
         const store = tx.objectStore(storeName);
         const request = store.getAll();
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(Result.ok(request.result));
+        request.onerror = () => resolve(Result.err(request.error));
 
         return promise;
     }

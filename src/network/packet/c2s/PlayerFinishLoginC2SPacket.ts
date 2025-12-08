@@ -5,8 +5,7 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class PlayerFinishLoginC2SPacket implements Payload {
     public static readonly ID: PayloadId<PlayerFinishLoginC2SPacket> = {id: Identifier.ofVanilla('player_fi_login')};
-    public static readonly CODEC: PacketCodec<PlayerFinishLoginC2SPacket> = PacketCodecs.empty(PlayerFinishLoginC2SPacket);
-
+    public static readonly CODEC: PacketCodec<PlayerFinishLoginC2SPacket> = PacketCodecs.emptyNew(PlayerFinishLoginC2SPacket);
 
     public getId(): PayloadId<PlayerFinishLoginC2SPacket> {
         return PlayerFinishLoginC2SPacket.ID;

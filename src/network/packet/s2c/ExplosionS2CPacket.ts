@@ -6,13 +6,12 @@ import {decodeColorHex, decodeFromUnsignedByte} from "../../../utils/NetUtil.ts"
 
 export class ExplosionS2CPacket implements Payload {
     public static readonly ID: PayloadId<ExplosionS2CPacket> = {id: Identifier.ofVanilla('explosion')};
-
     public static readonly CODEC: PacketCodec<ExplosionS2CPacket> = PacketCodecs.of<ExplosionS2CPacket>(
         (writer, value) => {
             writer.writeFloat(value.x);
             writer.writeFloat(value.y);
             writer.writeFloat(value.radius);
-            writer.writeByte(value.shackByte);
+            writer.writeInt8(value.shackByte);
             writer.writeUint32(value.colorUint32);
         },
         (reader) => {
@@ -20,7 +19,7 @@ export class ExplosionS2CPacket implements Payload {
                 reader.readFloat(),
                 reader.readFloat(),
                 reader.readFloat(),
-                reader.readUnsignByte(),
+                reader.readUint8(),
                 reader.readUint32()
             );
         }

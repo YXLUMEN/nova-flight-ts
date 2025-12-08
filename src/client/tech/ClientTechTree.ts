@@ -1,22 +1,23 @@
-import {TechState} from "./TechState.ts";
-import type {Tech} from "../apis/ITech.ts";
-import {clamp} from "../utils/math/math.ts";
-import {EVENTS} from "../apis/IEvents.ts";
-import {Items} from "../item/Items.ts";
-import {SoundEvents} from "../sound/SoundEvents.ts";
-import {type NbtCompound} from "../nbt/NbtCompound.ts";
-import {SoundSystem} from "../sound/SoundSystem.ts";
-import type {TechTree} from "./TechTree.ts";
-import tech from "./tech-data.json";
-import type {ClientPlayerEntity} from "../client/entity/ClientPlayerEntity.ts";
-import {PlayerTechResetC2SPacket} from "../network/packet/c2s/PlayerTechResetC2SPacket.ts";
+import {TechState} from "../../tech/TechState.ts";
+import {clamp} from "../../utils/math/math.ts";
+import {EVENTS} from "../../apis/IEvents.ts";
+import {Items} from "../../item/Items.ts";
+import {SoundEvents} from "../../sound/SoundEvents.ts";
+import {type NbtCompound} from "../../nbt/NbtCompound.ts";
+import {SoundSystem} from "../../sound/SoundSystem.ts";
+import type {TechTree} from "../../tech/TechTree.ts";
+import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
+import {PlayerTechResetC2SPacket} from "../../network/packet/c2s/PlayerTechResetC2SPacket.ts";
 import {applyClientTech} from "./applyClientTech.ts";
+import {Registries} from "../../registry/Registries.ts";
+import type {Tech} from "../../tech/Tech.ts";
+import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 
 type Adjacency = {
-    out: Map<string, string[]>; // id -> successors
-    conflicts: Map<string, string[]>; // id -> conflicts
-    branchOf: Map<string, string | undefined>; // id -> branchGroup
-    branchMembers: Map<string, string[]>; // branchGroup -> ids
+    successors: Map<Tech, Tech[]>; // tech -> successors
+    conflicts: Map<Tech, Tech[]>; // tech -> conflicts
+    branchGroupOf: Map<Tech, string | null>; // tech -> branchGroup
+    techsInBranch: Map<string, Tech[]>; // branchGroup -> Techs
 };
 
 
@@ -44,7 +45,10 @@ export class ClientTechTree implements TechTree {
         this.player = player;
         this.container = container;
 
-        const techState = TechState.normalizeTechs(tech);
+        const techState = Registries.TECH
+            .getEntries()
+            .map(entry => entry.getValue())
+            .toArray();
         this.state = new TechState(techState);
         this.adj = this.buildAdjacency(techState);
 
@@ -64,62 +68,69 @@ export class ClientTechTree implements TechTree {
         this.bindInteractions();
     }
 
-    public applyUnlockUpdates(id: string) {
-        const affected = new Set<string>();
+    public applyUnlockUpdates(tech: Tech) {
+        const affected = new Set<Tech>();
 
-        const add = (ids: Iterable<string>) => {
+        const add = (ids: Iterable<Tech>) => {
             for (const x of ids) affected.add(x);
         };
 
         // 自身 + 自身后继
-        affected.add(id);
-        add(this.successorsClosure(id));
+        affected.add(tech);
+        add(this.successorsClosure(tech));
 
         // 分支互斥节点 + 它们的后继
-        const branchPeers = this.branchPeers(id);
+        const branchPeers = this.branchPeers(tech);
         add(branchPeers);
         for (const p of branchPeers) add(this.successorsClosure(p));
 
         // 冲突节点 + 它们的后继
-        const conflictPeers = this.conflictPeers(id);
+        const conflictPeers = this.conflictPeers(tech);
         add(conflictPeers);
         for (const p of conflictPeers) add(this.successorsClosure(p));
 
         // 更新节点
-        for (const nid of affected) this.updateNodeClass(nid);
+        for (const t of affected) this.updateNodeClass(t);
 
         // 更新相关边
-        this.updateEdgesAround(Array.from(affected));
+        this.updateEdgesAround(affected
+            .values()
+            .map(tech => this.state.getTechId(tech))
+            .filter(id => id !== null)
+            .map(id => id.toString())
+            .toArray()
+        );
     }
 
-    public getTech(id: string): Tech | undefined {
-        const tech = this.state.getTech(id);
-        if (tech === undefined) return undefined;
-        return {...tech};
+    public unlock(tech: RegistryEntry<Tech>): boolean {
+        return this.state.unlock(tech.getValue());
     }
 
-    public unlock(id: string): boolean {
-        return this.state.unlock(id);
+    public forceUnlock(tech: RegistryEntry<Tech>): void {
+        this.state.forceUnlock(tech.getValue());
     }
 
-    public forceUnlock(id: string): void {
-        this.state.forceUnlock(id);
-    }
-
-    public isUnlocked(id: string): boolean {
-        return this.state.isUnlocked(id);
+    public isUnlocked(tech: RegistryEntry<Tech>): boolean {
+        return this.state.isUnlocked(tech.getValue());
     }
 
     public unlockAll() {
-        const all = Array.from(this.state.techById.keys());
-        for (const nid of all) {
-            if (this.state.isUnlocked(nid)) continue;
+        const allTech = this.state.allTechs;
+        for (const tech of allTech) {
+            if (this.state.isUnlocked(tech)) continue;
 
-            this.state.forceUnlock(nid);
-            this.updateNodeClass(nid);
-            applyClientTech(nid);
+            this.state.forceUnlock(tech);
+            this.updateNodeClass(tech);
+            const entry = Registries.TECH.getEntryByValue(tech);
+            if (!entry) throw new Error(`Unbound value ${tech}`);
+            applyClientTech(entry);
         }
-        this.updateEdgesAround(all);
+        this.updateEdgesAround(allTech.values()
+            .map(tech => this.state.getTechId(tech))
+            .filter(tech => tech !== null)
+            .map(id => id.toString())
+            .toArray()
+        );
     }
 
     public getSelected() {
@@ -127,9 +138,9 @@ export class ClientTechTree implements TechTree {
     }
 
     public destroy() {
-        this.adj.out.clear();
-        this.adj.branchMembers.clear();
-        this.adj.branchOf.clear();
+        this.adj.successors.clear();
+        this.adj.techsInBranch.clear();
+        this.adj.branchGroupOf.clear();
         this.adj.conflicts.clear();
         this.state.clear();
 
@@ -205,15 +216,15 @@ export class ClientTechTree implements TechTree {
         const svgNS = 'http://www.w3.org/2000/svg';
         this.svg.textContent = '';
 
-        this.state.techById.forEach(t => {
-            (t.requires || []).forEach(req => {
-                const from = this.state.techById.get(req);
-                if (!from) return;
-                const line = document.createElementNS(svgNS, 'line');
-                line.dataset.from = from.id;
-                line.dataset.to = t.id;
+        this.state.allTechs.forEach(to => {
+            if (to.requires === null) return;
 
-                const {x1, y1, x2, y2} = this.linkTo(from, t);
+            to.requires.forEach(from => {
+                const line = document.createElementNS(svgNS, 'line');
+                line.dataset.from = this.state.getTechId(from)!.toString();
+                line.dataset.to = this.state.getTechId(to)!.toString();
+
+                const {x1, y1, x2, y2} = this.linkTo(from, to);
 
                 line.setAttribute('x1', `${x1}`);
                 line.setAttribute('y1', `${y1}`);
@@ -229,19 +240,19 @@ export class ClientTechTree implements TechTree {
 
     private renderNodes() {
         const frag = document.createDocumentFragment();
-        this.state.techById.forEach(t => {
-            frag.append(this.createNodeElement(t));
+        this.state.allTechs.forEach(tech => {
+            frag.append(this.createNodeElement(tech));
         });
         this.nodesLayer.replaceChildren(frag);
     }
 
-    private createNodeElement(t: Tech): HTMLElement {
+    private createNodeElement(tech: Tech): HTMLElement {
         const el = document.createElement('div');
-        el.dataset.id = t.id;
-        el.className = `node ${this.state.computeStatus(t.id)}`;
-        el.style.left = `${t.x}px`;
-        el.style.top = `${t.y}px`;
-        el.textContent = t.name;
+        el.dataset.id = this.state.getTechId(tech)!.toString();
+        el.className = `node ${this.state.computeStatus(tech)}`;
+        el.style.left = `${tech.x}px`;
+        el.style.top = `${tech.y}px`;
+        el.textContent = tech.name;
         return el;
     }
 
@@ -259,7 +270,7 @@ export class ClientTechTree implements TechTree {
             }
 
             target.classList.add('selected');
-            const id = target.dataset.id!;
+            const id = target.dataset.id ?? null;
             this.selectNodeId = id;
             this.onSelect(id);
         }, {signal: this.abortCtrl.signal});
@@ -274,17 +285,17 @@ export class ClientTechTree implements TechTree {
     private tryApply() {
         const id = this.selectNodeId;
         if (!id) return;
-        const cost = this.state.getTech(id)?.cost;
-        if (cost === undefined) return;
+        const tech = this.state.getTech(id);
+        if (!tech) return;
 
         const world = this.player.getWorld();
-        const score = this.player.getScore() - cost;
+        const score = this.player.getScore() - tech.cost;
         if (score < 0 && !this.player.isDevMode()) return;
 
-        if (this.unlock(id)) {
+        if (this.state.unlock(tech)) {
             this.player.setScore(score);
-            this.applyUnlockUpdates(id);
-            world.events.emit(EVENTS.UNLOCK_TECH, {id});
+            this.applyUnlockUpdates(tech);
+            world.events.emit(EVENTS.UNLOCK_TECH, {tech});
             SoundSystem.globalSound.playSound(SoundEvents.UI_APPLY, 1.5);
         }
     }
@@ -310,15 +321,16 @@ export class ClientTechTree implements TechTree {
         frag.append(descDiv);
 
         const costDiv = document.createElement('div');
-        costDiv.textContent = cost === undefined ? '无法使用' : `花费: ${cost}`;
+        costDiv.textContent = cost === -1 ? '无法使用' : `花费: ${cost}`;
         frag.append(costDiv);
 
-        if (requires && requires.length) {
+        if (requires && requires.size > 0) {
             const names = requires
-                .map(id => this.state.getTech(id))
-                .filter(tech => tech !== undefined)
+                .values()
                 .map(tech => tech.name)
+                .toArray()
                 .join(', ');
+
             const requireDiv = document.createElement('div');
             requireDiv.className = 'require';
             requireDiv.textContent = `前置科技: ${names}`;
@@ -326,14 +338,13 @@ export class ClientTechTree implements TechTree {
         }
 
         // 冲突
-        const declaredConflicts = tech.conflicts ?? [];
-        const branchConflictIds = this.branchPeers(id);
-        if (declaredConflicts.length > 0 || branchConflictIds.length > 0) {
-            const allConflictIds = new Set([...declaredConflicts, ...branchConflictIds]);
+        const declaredConflicts = tech.conflicts;
+        const branchConflicts = this.branchPeers(tech);
+
+        if (declaredConflicts && declaredConflicts.size > 0 || branchConflicts.length > 0) {
+            const allConflictIds = new Set([...declaredConflicts ?? [], ...branchConflicts]);
             const names = allConflictIds
                 .values()
-                .map(id => this.state.getTech(id))
-                .filter(tech => tech !== undefined)
                 .map(tech => tech.name)
                 .toArray()
                 .join(', ');
@@ -348,12 +359,14 @@ export class ClientTechTree implements TechTree {
         this.metaShow.replaceChildren(frag);
     }
 
-    private updateNodeClass(id: string) {
+    private updateNodeClass(tech: Tech) {
+        const id = this.state.getTechId(tech)?.toString();
+        if (!id) return;
         const el = this.nodesLayer.querySelector<HTMLElement>(`.node[data-id="${CSS.escape(id)}"]`);
         if (!el) return;
 
         el.classList.remove('unlocked', 'unlockable', 'locked', 'conflicted');
-        el.classList.add(this.state.computeStatus(id));
+        el.classList.add(this.state.computeStatus(tech));
     }
 
     private updateEdgesAround(ids: string[]) {
@@ -370,8 +383,8 @@ export class ClientTechTree implements TechTree {
     }
 
     private updateEdgeClass(line: SVGLineElement) {
-        const from = line.dataset.from!;
-        const to = line.dataset.to!;
+        const from = this.state.getTech(line.dataset.from!)!;
+        const to = this.state.getTech(line.dataset.to!)!;
         const fromUnlocked = this.state.isUnlocked(from);
         const toUnlocked = this.state.isUnlocked(to);
         const toStatus = this.state.computeStatus(to);
@@ -382,51 +395,57 @@ export class ClientTechTree implements TechTree {
     }
 
     // -------- Adjacency helpers --------
-    private buildAdjacency(techs: Tech[] | Readonly<Tech[]>): Adjacency {
-        const out = new Map<string, string[]>();
-        const conflicts = new Map<string, string[]>();
-        const branchOf = new Map<string, string | undefined>();
-        const branchMembers = new Map<string, string[]>();
+    private buildAdjacency(techs: Tech[]): Adjacency {
+        const successors = new Map<Tech, Tech[]>();
+        const conflicts = new Map<Tech, Tech[]>();
+        const branchGroupOf = new Map<Tech, string | null>();
+        const techsInBranch = new Map<string, Tech[]>();
 
-        for (const t of techs) {
-            for (const r of t.requires || []) {
-                if (!out.has(r)) out.set(r, []);
-                out.get(r)!.push(t.id);
+        for (const tech of techs) {
+            if (tech.requires) for (const require of tech.requires) {
+                if (!successors.has(require)) successors.set(require, []);
+                successors.get(require)!.push(tech);
             }
-            if (t.conflicts && t.conflicts.length) conflicts.set(t.id, t.conflicts);
+            if (tech.conflicts && tech.conflicts.size > 0) {
+                conflicts.set(tech, Array.from(tech.conflicts));
+            }
 
-            branchOf.set(t.id, t.branchGroup);
-            if (t.branchGroup) {
-                if (!branchMembers.has(t.branchGroup)) branchMembers.set(t.branchGroup, []);
-                branchMembers.get(t.branchGroup)!.push(t.id);
+            branchGroupOf.set(tech, tech.branchGroup);
+            if (tech.branchGroup) {
+                if (!techsInBranch.has(tech.branchGroup)) techsInBranch.set(tech.branchGroup, []);
+                techsInBranch.get(tech.branchGroup)!.push(tech);
             }
         }
-        return {out, conflicts, branchOf, branchMembers};
+        return {successors, conflicts, branchGroupOf, techsInBranch};
     }
 
-    private successorsClosure(id: string): string[] {
-        const res: string[] = [];
-        const seen = new Set<string>();
-        const stack = [...(this.adj.out.get(id) || [])];
+    private successorsClosure(tech: Tech): Tech[] {
+        const res: Tech[] = [];
+        const seen = new Set<Tech>();
+        const stack = this.adj.successors.get(tech);
+        if (!stack) return [];
+
         while (stack.length) {
             const n = stack.pop()!;
             if (seen.has(n)) continue;
             seen.add(n);
             res.push(n);
-            const next = this.adj.out.get(n);
+            const next = this.adj.successors.get(n);
             if (next) stack.push(...next);
         }
         return res;
     }
 
-    private branchPeers(id: string): string[] {
-        const group = this.adj.branchOf.get(id);
+    private branchPeers(tech: Tech): Tech[] {
+        const group = this.adj.branchGroupOf.get(tech);
         if (!group) return [];
-        return (this.adj.branchMembers.get(group) || []).filter(x => x !== id);
+        const inGroup = this.adj.techsInBranch.get(group);
+        if (!inGroup) return [];
+        return inGroup.filter(x => x !== tech);
     }
 
-    private conflictPeers(id: string): string[] {
-        return this.adj.conflicts.get(id) || [];
+    private conflictPeers(tech: Tech): Tech[] {
+        return this.adj.conflicts.get(tech) ?? [];
     }
 
     public unloadedTechCount(): number {
@@ -437,10 +456,10 @@ export class ClientTechTree implements TechTree {
         // noinspection DuplicatedCode
         const player = this.player;
 
-        const allTech = this.state.techById;
+        const allTech = this.state.allTechs;
         const unlocked: Tech[] = [];
-        for (const [nid, tech] of allTech) {
-            if (this.state.isUnlocked(nid)) unlocked.push(tech);
+        for (const tech of allTech) {
+            if (this.state.isUnlocked(tech)) unlocked.push(tech);
         }
         if (unlocked.length === 0) return;
 
@@ -468,7 +487,13 @@ export class ClientTechTree implements TechTree {
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
-        nbt.putStringArray('Techs', ...this.state.unlocked);
+        const ids = this.state.unlocked
+            .values()
+            .map(tech => this.state.getTechId(tech))
+            .filter(id => id !== null)
+            .map(id => id.toString());
+
+        nbt.putStringArray('Techs', ...ids);
         return nbt
     }
 
@@ -477,10 +502,13 @@ export class ClientTechTree implements TechTree {
         if (techs.length === 0) return;
         const world = this.player.getWorld();
 
-        for (const tech of techs) {
+        for (const id of techs) {
+            const tech = this.state.getTech(id);
+            if (!tech) throw new Error(`Fail to parse tech with id: ${id}`);
+
             this.state.unlock(tech);
             this.applyUnlockUpdates(tech);
-            world.events.emit(EVENTS.UNLOCK_TECH, {id: tech});
+            world.events.emit(EVENTS.UNLOCK_TECH, {tech});
         }
     }
 }

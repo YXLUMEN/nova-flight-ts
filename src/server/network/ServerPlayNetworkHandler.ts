@@ -1,7 +1,7 @@
 import type {NovaFlightServer} from "../NovaFlightServer.ts";
 import {PlayerFinishLoginC2SPacket} from "../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
 import {PlayerDisconnectC2SPacket} from "../../network/packet/c2s/PlayerDisconnectC2SPacket.ts";
-import {PlayerAimC2SPacket} from "../../network/packet/c2s/PlayerAimC2SPacket.ts";
+import {PlayerYawC2SPacket} from "../../network/packet/c2s/PlayerYawC2SPacket.ts";
 import {PlayerMoveC2SPacket} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
@@ -10,7 +10,7 @@ import {RequestPositionC2SPacket} from "../../network/packet/c2s/RequestPosition
 import {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
 import type {UUID} from "../../apis/types.ts";
 import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
-import {applyServerTech} from "../../tech/applyServerTech.ts";
+import {applyServerTech} from "../tech/applyServerTech.ts";
 import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
 import type {ServerNetworkChannel} from "./ServerNetworkChannel.ts";
 import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
@@ -127,13 +127,8 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
         console.log(`Player disconnected with uuid: ${uuid}`);
     }
 
-    public onPlayerAim(packet: PlayerAimC2SPacket) {
-        const pointer = packet.aim;
-        const posRef = this.player.getPositionRef;
-        this.player.setClampYaw(Math.atan2(
-            pointer.y - posRef.y,
-            pointer.x - posRef.x
-        ), 0.3926875);
+    public onPlayerAim(packet: PlayerYawC2SPacket) {
+        this.player.setClampYaw(packet.yaw, 0.3926875);
     }
 
     public onPlayerMove(packet: PlayerMoveC2SPacket | PlayerMoveByPointerC2SPacket) {
@@ -161,10 +156,8 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
     }
 
     public onUnlockTech(packet: PlayerUnlockTechC2SPacket): void {
-        const name = packet.techName;
-
-        if (this.player.getTechs().unlock(name)) {
-            applyServerTech(name, this.player);
+        if (this.player.getTechs().unlock(packet.tech)) {
+            applyServerTech(packet.tech, this.player);
         }
     }
 
@@ -222,7 +215,7 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
     private registryHandler() {
         this.register(PlayerFinishLoginC2SPacket.ID, this.onPlayerFinishLogin.bind(this));
         this.register(PlayerDisconnectC2SPacket.ID, this.onPlayerDisconnect.bind(this));
-        this.register(PlayerAimC2SPacket.ID, this.onPlayerAim.bind(this));
+        this.register(PlayerYawC2SPacket.ID, this.onPlayerAim.bind(this));
         this.register(PlayerMoveC2SPacket.ID, this.onPlayerMove.bind(this));
         this.register(PlayerMoveByPointerC2SPacket.ID, this.onPlayerMove.bind(this));
         this.register(PlayerInputC2SPacket.ID, this.onPlayerInput.bind(this));

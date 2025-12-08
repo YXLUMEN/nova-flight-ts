@@ -13,7 +13,7 @@ export class APRocketEntity extends RocketEntity {
         const sources = this.getWorld().getDamageSources();
 
         if (entity instanceof LivingEntity) {
-            damaged += entity.getMaxHealth() * 0.4;
+            damaged += entity.getMaxHealth() * 0.35;
         }
         entity.takeDamage(sources.apDamage(this, this.getOwner()), damaged);
         this.damagedEntity.add(entity);

@@ -5,7 +5,7 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class ServerShutdownS2CPacket implements Payload {
     public static readonly ID: PayloadId<ServerShutdownS2CPacket> = {id: Identifier.ofVanilla('server_shutdown')};
-    public static readonly CODEC: PacketCodec<ServerShutdownS2CPacket> = PacketCodecs.empty(ServerShutdownS2CPacket);
+    public static readonly CODEC: PacketCodec<ServerShutdownS2CPacket> = PacketCodecs.emptyNew(ServerShutdownS2CPacket);
 
     public getId(): PayloadId<ServerShutdownS2CPacket> {
         return ServerShutdownS2CPacket.ID;

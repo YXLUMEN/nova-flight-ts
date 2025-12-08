@@ -6,17 +6,12 @@ import type {IVec} from "../../../utils/math/IVec.ts";
 
 export class EntityChooseTargetS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityChooseTargetS2CPacket> = {id: Identifier.ofVanilla('entity_choose_target')};
-    public static readonly CODEC: PacketCodec<EntityChooseTargetS2CPacket> = PacketCodecs.of(
-        (writer, value) => {
-            writer.writeVarUint(value.entityId);
-            PacketCodecs.VECTOR2D.encode(writer, value.target);
-        },
-        reader => {
-            return new EntityChooseTargetS2CPacket(
-                reader.readVarUint(),
-                PacketCodecs.VECTOR2D.decode(reader)
-            )
-        }
+    public static readonly CODEC: PacketCodec<EntityChooseTargetS2CPacket> = PacketCodecs.adapt2(
+        PacketCodecs.VAR_UINT,
+        val => val.entityId,
+        PacketCodecs.VECTOR2D,
+        val => val.target,
+        EntityChooseTargetS2CPacket.new
     );
 
     public readonly entityId: number;
@@ -27,7 +22,11 @@ export class EntityChooseTargetS2CPacket implements Payload {
         this.target = target;
     }
 
-    public getId(): PayloadId<any> {
+    public static new(entityId: number, target: IVec) {
+        return new EntityChooseTargetS2CPacket(entityId, target);
+    }
+
+    public getId(): PayloadId<EntityChooseTargetS2CPacket> {
         return EntityChooseTargetS2CPacket.ID;
     }
 }

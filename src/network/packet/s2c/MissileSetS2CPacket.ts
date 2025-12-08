@@ -9,13 +9,13 @@ export class MissileSetS2CPacket implements Payload {
         (writer, value) => {
             writer.writeVarUint(value.entityId);
             writer.writeFloat(value.driftAngle);
-            writer.writeByte(value.hoverDir);
+            writer.writeInt8(value.hoverDir);
         },
         reader => {
             return new MissileSetS2CPacket(
                 reader.readVarUint(),
                 reader.readFloat(),
-                reader.readByte()
+                reader.readInt8()
             )
         }
     );

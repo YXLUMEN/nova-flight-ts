@@ -7,7 +7,6 @@ import {StatusEffect} from "../../../entity/effect/StatusEffect.ts";
 import type {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
-import {Registries} from "../../../registry/Registries.ts";
 
 export class EntityStatusEffectS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityStatusEffectS2CPacket> = {id: Identifier.ofVanilla('entity_status_effect')};
@@ -36,7 +35,7 @@ export class EntityStatusEffectS2CPacket implements Payload {
 
     private static write(writer: BinaryWriter, value: EntityStatusEffectS2CPacket) {
         writer.writeVarUint(value.entityId);
-        StatusEffect.ENTRY_PACKET_CODEC.encode(writer, value.effectId.getValue());
+        StatusEffect.ENTRY_PACKET_CODEC.encode(writer, value.effectId);
         writer.writeVarUint(value.amplifier);
         writer.writeVarUint(value.duration);
     }
@@ -44,17 +43,16 @@ export class EntityStatusEffectS2CPacket implements Payload {
     private static read(reader: BinaryReader): EntityStatusEffectS2CPacket {
         const entityId = reader.readVarUint();
         const effect = StatusEffect.ENTRY_PACKET_CODEC.decode(reader);
-        const effectId = Registries.STATUS_EFFECT.getEntryByValue(effect)!;
 
         return new EntityStatusEffectS2CPacket(
             entityId,
-            effectId,
+            effect,
             reader.readVarUint(),
             reader.readVarUint(),
         );
     }
 
-    public getId(): PayloadId<any> {
+    public getId(): PayloadId<EntityStatusEffectS2CPacket> {
         return EntityStatusEffectS2CPacket.ID;
     }
 }

@@ -7,6 +7,7 @@ import {UIButton} from "./UIButton.ts";
 import {UITheme} from "./theme.ts";
 import {Window} from "../Window.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
+import type {Consumer} from "../../../apis/types.ts";
 
 type StartScreenOptions = {
     title: string;
@@ -29,7 +30,7 @@ export class StartScreen implements IUi {
     private lastTickTime = 0;
 
     private readonly waitConfirm: Promise<number>;
-    private readonly onConfirmCallback: (action: number) => void;
+    private readonly complete: Consumer<number>;
 
     private buttons: UIButton[] = [];
     private bindTick = this.tick.bind(this);
@@ -37,7 +38,7 @@ export class StartScreen implements IUi {
     public constructor(ctx: CanvasRenderingContext2D, options: StartScreenOptions) {
         const {promise, resolve} = Promise.withResolvers<number>();
         this.waitConfirm = promise;
-        this.onConfirmCallback = resolve;
+        this.complete = resolve;
 
         this.ctx = ctx;
         this.options = {
@@ -163,21 +164,21 @@ export class StartScreen implements IUi {
 
     private exitGame(): void {
         this.destroy();
-        this.onConfirmCallback(-1);
+        this.complete(-1);
     }
 
     private newGame(): void {
         this.destroy();
-        this.onConfirmCallback(0);
+        this.complete(0);
     }
 
     private readSave(): void {
         this.destroy();
-        this.onConfirmCallback(1);
+        this.complete(1);
     }
 
     private joinGame(): void {
         this.destroy();
-        this.onConfirmCallback(2);
+        this.complete(2);
     }
 }

@@ -21,6 +21,7 @@ import type {ExpendExplosionOpts} from "../../apis/IExplosionOpts.ts";
 import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {Audios} from "../../sound/Audios.ts";
 import {AudioControlS2CPacket} from "../../network/packet/s2c/AudioControlS2CPacket.ts";
+import {Techs} from "../../tech/Techs.ts";
 
 export class ServerDefaultEvents {
     public static registerEvent(world: ServerWorld) {
@@ -33,9 +34,9 @@ export class ServerDefaultEvents {
             const attacker = damageSource.getAttacker();
             if (attacker instanceof PlayerEntity && !damageSource.isOf(DamageTypes.ON_FIRE)) {
                 const techTree = attacker.getTechs();
-                if (!techTree.isUnlocked('incendiary_bullet')) return;
+                if (!techTree.isUnlocked(Techs.INCENDIARY_BULLET)) return;
 
-                if (techTree.isUnlocked('meltdown')) {
+                if (techTree.isUnlocked(Techs.MELTDOWN)) {
                     const effect = mob.getStatusEffect(StatusEffects.BURNING);
                     if (effect) {
                         const amplifier = Math.min(10, effect.getAmplifier() + 1);
@@ -57,7 +58,7 @@ export class ServerDefaultEvents {
                 player.addScore(event.mob.getWorth());
             }
 
-            if (damageSource.isIn(DamageTypeTags.REPLY_LASER) && techTree.isUnlocked('energy_recovery')) {
+            if (damageSource.isIn(DamageTypeTags.REPLY_LASER) && techTree.isUnlocked(Techs.ENERGY_RECOVERY)) {
                 const laser = Items.LASER_WEAPON as LaserWeapon;
                 const stack = player.getItem(laser);
                 if (stack && stack.isAvailable()) {
@@ -65,7 +66,7 @@ export class ServerDefaultEvents {
                 }
             }
 
-            if (techTree.isUnlocked('emergency_repair')) {
+            if (techTree.isUnlocked(Techs.EMERGENCY_REPAIR)) {
                 if (Math.random() <= 0.08) player.setHealth(player.getHealth() + 5);
             }
         });
@@ -103,7 +104,7 @@ export class ServerDefaultEvents {
 
         eventBus.on(EVENTS.EMP_BURST, event => {
             const player = event.entity as Entity;
-            if (player instanceof ServerPlayerEntity && player.getTechs().isUnlocked('ele_oscillation')) {
+            if (player instanceof ServerPlayerEntity && player.getTechs().isUnlocked(Techs.ELE_OSCILLATION)) {
                 world.empBurst = event.duration;
             }
         });
@@ -130,7 +131,7 @@ export class ServerDefaultEvents {
             event.opts.behaviour = 'triggered';
 
             if (!event.opts.attacker || !event.opts.attacker.isPlayer()) return;
-            if (!event.opts.attacker.getTechs().isUnlocked('serial_warhead')) return;
+            if (!event.opts.attacker.getTechs().isUnlocked(Techs.SERIAL_WARHEAD)) return;
 
             let count = 0;
             const radius = (event.opts.explosionRadius ?? 16) / 2;

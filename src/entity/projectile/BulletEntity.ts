@@ -5,6 +5,7 @@ import {World} from "../../world/World.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 import {clamp} from "../../utils/math/math.ts";
+import {Techs} from "../../tech/Techs.ts";
 
 export class BulletEntity extends ProjectileEntity {
     public constructor(type: EntityType<BulletEntity>, world: World, owner: Entity | null, damage: number) {
@@ -17,7 +18,7 @@ export class BulletEntity extends ProjectileEntity {
         const sources = this.getWorld().getDamageSources();
         const owner = this.getOwner();
 
-        if (owner instanceof PlayerEntity && owner.getTechs().isUnlocked('apfs_discarding_sabot')) {
+        if (owner instanceof PlayerEntity && owner.getTechs().isUnlocked(Techs.APFS_DISCARDING_SABOT)) {
             let damage = this.damage;
             const factor = clamp(damage * 0.1, 0.1, 0.5);
             if (entity instanceof LivingEntity) damage = this.damage + (entity.getMaxHealth() * factor) | 0;

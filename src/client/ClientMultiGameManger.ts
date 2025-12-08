@@ -25,11 +25,14 @@ export class ClientMultiGameManger {
         this.cancelBtn = document.getElementById('cancel-btn') as HTMLButtonElement;
 
         ClientDB.db.getAll<ServerSelect>('server-addr-list')
-            .then(serverList => {
-                serverList.forEach(each => {
-                    this.serverList.appendChild(ClientMultiGameManger.createServerSelect(each.addr, each.name));
-                });
-            });
+            .then(result => result
+                .map(list => list.forEach(
+                    each => this.serverList.appendChild(ClientMultiGameManger.createServerSelect(each.addr, each.name))
+                ))
+                .mapErr(
+                    err => console.error(err)
+                ))
+            .catch(err => console.error(err));
     }
 
     public getServerAddress(): Promise<string | null> {

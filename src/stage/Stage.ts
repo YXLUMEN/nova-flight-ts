@@ -88,11 +88,11 @@ export class Stage implements NbtSerializable {
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
-        return nbt.putByte('StageIndex', this.index);
+        return nbt.putInt8('StageIndex', this.index);
     }
 
     public readNBT(nbt: NbtCompound) {
-        const index = clamp(nbt.getByte('StageIndex'), 0, this.phases.length);
+        const index = clamp(nbt.getInt8('StageIndex'), 0, this.phases.length);
         this.loadPhase(index);
     }
 

@@ -84,7 +84,7 @@ export class EntitySpawnS2CPacket implements Payload {
         const entityType = EntityType.PACKET_CODEC.decode(reader);
         const x = reader.readDouble();
         const y = reader.readDouble();
-        const yaw = reader.readUnsignByte();
+        const yaw = reader.readUint8();
         const velocityX = reader.readInt16();
         const velocityY = reader.readInt16();
         const color = reader.readUint32();
@@ -100,7 +100,7 @@ export class EntitySpawnS2CPacket implements Payload {
         EntityType.PACKET_CODEC.encode(writer, value.entityType);
         writer.writeDouble(value.x);
         writer.writeDouble(value.y);
-        writer.writeByte(value.yawInt8);
+        writer.writeInt8(value.yawInt8);
         writer.writeInt16(value.velocityXInt16);
         writer.writeInt16(value.velocityYInt16);
         writer.writeUint32(value.colorUint32);
@@ -113,7 +113,7 @@ export class EntitySpawnS2CPacket implements Payload {
     }
 
     public estimateSize(): number {
-        let size = 1;
+        let size = 0;
 
         // entityId (VarInt)
         size += varUintSize(this.entityId);

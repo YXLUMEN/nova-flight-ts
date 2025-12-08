@@ -22,6 +22,7 @@ export class SummonEntityCommand {
                 .then(
                     argument<T, Identifier>('entity', IdentifierArgumentType.identifier())
                         .executes(this.summonEntity.bind(this))
+                        .suggests(CommandUtil.createIdentifierSuggestion(Registries.ENTITY_TYPE))
                         .then(
                             argument<T, PosArgument>('pos', PosArgumentType.pos())
                                 .executes(this.summonEntity.bind(this))
@@ -30,7 +31,6 @@ export class SummonEntityCommand {
                                         .executes(this.summonEntity.bind(this))
                                 )
                         )
-                        .suggests(CommandUtil.createIdentifierSuggestion(Registries.ENTITY_TYPE))
                 )
                 .requires(source => source.hasPermissionLevel(7))
         );

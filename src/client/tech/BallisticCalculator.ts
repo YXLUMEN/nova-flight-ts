@@ -1,7 +1,7 @@
-import type {MobEntity} from "../entity/mob/MobEntity.ts";
-import {lerp, PI2} from "../utils/math/math.ts";
-import type {BaseWeapon} from "../item/weapon/BaseWeapon/BaseWeapon.ts";
-import type {ClientPlayerEntity} from "../client/entity/ClientPlayerEntity.ts";
+import type {MobEntity} from "../../entity/mob/MobEntity.ts";
+import {lerp, PI2} from "../../utils/math/math.ts";
+import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
+import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
 
 export class BallisticCalculator {
     private owner: ClientPlayerEntity;

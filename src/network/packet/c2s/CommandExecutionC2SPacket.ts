@@ -5,16 +5,11 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class CommandExecutionC2SPacket implements Payload {
     public static readonly ID: PayloadId<CommandExecutionC2SPacket> = {id: Identifier.ofVanilla('command_exec')};
-
-    public static readonly CODEC: PacketCodec<CommandExecutionC2SPacket> = PacketCodecs.of<CommandExecutionC2SPacket>(
-        (writer, value) => {
-            writer.writeString(value.command);
-        },
-        (reader) => {
-            return new CommandExecutionC2SPacket(reader.readString());
-        }
+    public static readonly CODEC: PacketCodec<CommandExecutionC2SPacket> = PacketCodecs.adapt(
+        PacketCodecs.STRING,
+        val => val.command,
+        to => new CommandExecutionC2SPacket(to)
     );
-
     public readonly command: string;
 
     public constructor(command: string) {

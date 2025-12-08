@@ -1,8 +1,6 @@
 import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
-import type {SoundEvent} from "../../../sound/SoundEvent.ts";
-import {Registries} from "../../../registry/Registries.ts";
-import {SoundEvents} from "../../../sound/SoundEvents.ts";
+import {SoundEvent} from "../../../sound/SoundEvent.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
@@ -11,19 +9,14 @@ export class SoundEventS2CPacket implements Payload {
 
     public static readonly CODEC: PacketCodec<SoundEventS2CPacket> = PacketCodecs.of<SoundEventS2CPacket>(
         (writer, value) => {
-            Identifier.PACKET_CODEC.encode(writer, value.soundEvent.getId());
+            SoundEvent.SOUND_PACKET_CODEC.encode(writer, value.soundEvent);
             writer.writeFloat(value.volume);
             writer.writeFloat(value.pitch);
-            writer.writeByte(value.loop ? 1 : 0);
+            writer.writeInt8(value.loop ? 1 : 0);
         },
         (reader) => {
-            const id = Identifier.PACKET_CODEC.decode(reader);
-            const sound = Registries.SOUND_EVENT.getById(id);
-            if (!sound) {
-                return new SoundEventS2CPacket(SoundEvents.UI_APPLY, 0, 1, false);
-            }
-
-            return new SoundEventS2CPacket(sound, reader.readFloat(), reader.readFloat(), reader.readByte() === 1);
+            const sound = SoundEvent.SOUND_PACKET_CODEC.decode(reader);
+            return new SoundEventS2CPacket(sound, reader.readFloat(), reader.readFloat(), reader.readInt8() === 1);
         }
     );
 

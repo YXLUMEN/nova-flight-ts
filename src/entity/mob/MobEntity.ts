@@ -102,7 +102,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         super.writeNBT(nbt);
         nbt.putUint('Worth', this.worth);
         nbt.putString('Color', this.color);
-        nbt.putByte('AiBehavior', this.AI.getBehavior());
+        nbt.putInt8('AiBehavior', this.AI.getBehavior());
         nbt.putUint('Age', this.age);
 
         return nbt;
@@ -112,7 +112,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         super.readNBT(nbt);
         this.worth = nbt.getUint('Worth', 1);
         this.color = nbt.getString('Color', this.color);
-        this.AI.setBehavior(this, nbt.getByte('AiBehavior', 0));
+        this.AI.setBehavior(this, nbt.getInt8('AiBehavior', 0));
         this.age = nbt.getUint('Age', 0);
     }
 

@@ -1,13 +1,15 @@
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
+import type {Tech} from "./Tech.ts";
+import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 
 export interface TechTree extends NbtSerializable {
-    unlock(id: string): boolean;
+    unlock(tech: RegistryEntry<Tech>): boolean;
 
-    forceUnlock(id: string): void;
+    forceUnlock(tech: RegistryEntry<Tech>): void;
 
     unlockAll(): void;
 
-    isUnlocked(id: string): boolean;
+    isUnlocked(tech: RegistryEntry<Tech>): boolean;
 
     resetTech(): void;
 

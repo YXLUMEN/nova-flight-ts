@@ -2,6 +2,8 @@ import type {UUID} from "../apis/types.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
 
 export class BinaryWriter {
+    public static readonly MAX_BUFFER_SIZE = 16 * 1024 * 1024;
+
     private buffer: Uint8Array;
     private view: DataView;
     private offset: number = 0;
@@ -15,8 +17,12 @@ export class BinaryWriter {
         const required = this.offset + extra;
         if (required > this.buffer.length) {
             let newLen = this.buffer.length;
-
             while (newLen < required) newLen *= 2;
+
+            if (newLen > BinaryWriter.MAX_BUFFER_SIZE) {
+                throw new Error(`Packet too large (> ${BinaryWriter.MAX_BUFFER_SIZE} bytes)`);
+            }
+
             const newBuf = new Uint8Array(newLen);
             newBuf.set(this.buffer, 0);
 
@@ -26,13 +32,14 @@ export class BinaryWriter {
     }
 
     public pushBytes(buf: ArrayBuffer | Uint8Array) {
-        const bytes = new Uint8Array(buf);
+        // 实际有效
+        const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
         this.ensure(bytes.length);
         this.buffer.set(bytes, this.offset);
         this.offset += bytes.length;
     }
 
-    public writeByte(v: number) {
+    public writeInt8(v: number) {
         this.ensure(1);
         this.buffer[this.offset++] = v & 0xFF;
     }
@@ -76,10 +83,14 @@ export class BinaryWriter {
     public writeVarUint(v: number) {
         let i = v >>> 0;
         while ((i & ~0x7F) !== 0) {
-            this.writeByte((i & 0x7F) | 0x80);
+            this.writeInt8((i & 0x7F) | 0x80);
             i >>>= 7;
         }
-        this.writeByte(i);
+        this.writeInt8(i);
+    }
+
+    public writeBoolean(v: boolean) {
+        this.writeInt8(v ? 1 : 0);
     }
 
     /**

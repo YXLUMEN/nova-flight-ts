@@ -1,23 +1,22 @@
 import type {KeyboardInput} from "../input/KeyboardInput.ts";
-import {ClientTechTree} from "../../tech/ClientTechTree.ts";
+import {ClientTechTree} from "../tech/ClientTechTree.ts";
 import type {World} from "../../world/World.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
-import type {AutoAim} from "../../tech/AutoAim.ts";
+import type {AutoAim} from "../tech/AutoAim.ts";
 import type {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
 import {PlayerMoveC2SPacket} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
-import {PlayerAimC2SPacket} from "../../network/packet/c2s/PlayerAimC2SPacket.ts";
-import type {UUID} from "../../apis/types.ts";
+import {PlayerYawC2SPacket} from "../../network/packet/c2s/PlayerYawC2SPacket.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
-import {wrapRadians} from "../../utils/math/math.ts";
+import {doubleEquals, wrapRadians} from "../../utils/math/math.ts";
 import {type ItemStack} from "../../item/ItemStack.ts";
 import {PlayerMoveByPointerC2SPacket} from "../../network/packet/c2s/PlayerMoveByPointerC2SPacket.ts";
 import {encodeVelocity} from "../../utils/NetUtil.ts";
 import type {Item} from "../../item/Item.ts";
 import {AbstractClientPlayerEntity} from "./AbstractClientPlayerEntity.ts";
-import {BallisticCalculator} from "../../tech/BallisticCalculator.ts";
+import {BallisticCalculator} from "../tech/BallisticCalculator.ts";
 import type {GameProfile} from "../../server/entity/GameProfile.ts";
 import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
 import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPacket.ts";
@@ -58,7 +57,6 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         super.tick();
 
         const posRef = this.getPositionRef;
-        const uuid: UUID = this.getUUID();
 
         let dx = 0, dy = 0;
         if (this.input.isDown("ArrowLeft", "KeyA")) dx -= 1;
@@ -75,13 +73,15 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
             const speed = this.getMovementSpeed() * speedMultiplier;
             this.updateVelocity(speed, dx, dy);
-            this.getNetworkChannel().send(new PlayerMoveC2SPacket(uuid, dx, dy));
+            this.getNetworkChannel().send(new PlayerMoveC2SPacket(dx, dy));
         }
 
         if (this.autoAimEnable && this.autoAim) {
+            const yaw = this.getYaw();
             this.autoAim.tick();
-            const pos = this.autoAim.getLockTargetPos();
-            if (pos) this.getNetworkChannel().send(new PlayerAimC2SPacket(uuid, pos));
+            if (!doubleEquals(yaw, this.getYaw())) {
+                this.getNetworkChannel().send(PlayerYawC2SPacket.create(yaw));
+            }
         } else if (this.steeringGear) {
             const pointer = this.input.getPointer;
             const yaw = Math.atan2(
@@ -91,7 +91,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
             if (Math.abs(wrapRadians(yaw - this.getYaw())) > 0.02) {
                 this.setClampYaw(yaw, 0.3926875);
-                this.getNetworkChannel().send(new PlayerAimC2SPacket(uuid, pointer));
+                this.getNetworkChannel().send(PlayerYawC2SPacket.create(yaw));
             }
 
             if (this.assistedAiming) this.bc.tick();
@@ -101,7 +101,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             const dy = pointer.y - posRef.y;
 
             if (Math.abs(dx) > 32 || Math.abs(dy) > 32) {
-                const packet = new PlayerMoveByPointerC2SPacket(uuid, encodeVelocity(dx), encodeVelocity(dy));
+                const packet = new PlayerMoveByPointerC2SPacket(encodeVelocity(dx), encodeVelocity(dy));
 
                 const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
                 const speed = this.getMovementSpeed() * speedMultiplier;

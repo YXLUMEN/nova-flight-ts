@@ -1,27 +1,26 @@
-import {EMPWeapon} from "../item/weapon/EMPWeapon.ts";
-import {LaserWeapon} from "../item/weapon/LaserWeapon.ts";
-import {BaseWeapon} from "../item/weapon/BaseWeapon/BaseWeapon.ts";
-import {IntoVoidWeapon} from "../item/weapon/IntoVoidWeapon.ts";
-import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
-import {StatusEffects} from "../entity/effect/StatusEffects.ts";
-import {AutoAim} from "./AutoAim.ts";
-import {Items} from "../item/Items.ts";
-import {ItemStack} from "../item/ItemStack.ts";
-import {DataComponentTypes} from "../component/DataComponentTypes.ts";
-import {NovaFlightClient} from "../client/NovaFlightClient.ts";
+import {Items} from "../../item/Items.ts";
+import {LaserWeapon} from "../../item/weapon/LaserWeapon.ts";
+import {EMPWeapon} from "../../item/weapon/EMPWeapon.ts";
+import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
+import {ItemStack} from "../../item/ItemStack.ts";
+import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
+import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
+import {IntoVoidWeapon} from "../../item/weapon/IntoVoidWeapon.ts";
+import type {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
+import type {Tech} from "../../tech/Tech.ts";
+import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import {Techs} from "../../tech/Techs.ts";
 
-export function applyClientTech(id: string): void {
-    const player = NovaFlightClient.getInstance().player;
-    if (!player) return;
-
-    switch (id) {
-        case 'energy_focus':
+export function applyServerTech(tech: RegistryEntry<Tech>, player: ServerPlayerEntity): void {
+    switch (tech) {
+        case Techs.ENERGY_FORCE:
             player.addItem(Items.EMP_WEAPON);
             break;
-        case 'laser':
+        case Techs.LASER:
             player.addItem(Items.LASER_WEAPON);
             break;
-        case 'high_efficiency_coolant': {
+        case Techs.HIGH_EFFICIENCY_COOLANT: {
             const laser = Items.LASER_WEAPON as LaserWeapon;
             const stack = player.getItem(laser);
             if (stack) {
@@ -29,7 +28,7 @@ export function applyClientTech(id: string): void {
             }
             break;
         }
-        case 'ad_capacitance': {
+        case Techs.AD_CAPACITANCE: {
             const emp = Items.EMP_WEAPON as EMPWeapon;
             const stack = player.getItem(emp);
             if (stack) {
@@ -39,7 +38,7 @@ export function applyClientTech(id: string): void {
             }
             break;
         }
-        case 'quick_charge': {
+        case Techs.QUICK_CHARGE: {
             const emp = Items.EMP_WEAPON as EMPWeapon;
             const stack = player.getItem(emp);
             if (stack) {
@@ -49,14 +48,14 @@ export function applyClientTech(id: string): void {
             }
             break;
         }
-        case 'harmonic_analysis': {
+        case Techs.HARMONIC_ANALYSIS: {
             const stack = player.getItem(Items.LASER_WEAPON);
             if (stack) {
                 stack.set(DataComponentTypes.ATTACK_DAMAGE, 2);
             }
             break;
         }
-        case 'high_temperature_alloy': {
+        case Techs.HIGH_TEMPERATURE_ALLOY: {
             player.getInventory().values().forEach(stack => {
                 const base = stack.get(DataComponentTypes.MAX_HEAT);
                 if (base) {
@@ -65,11 +64,11 @@ export function applyClientTech(id: string): void {
             });
             break;
         }
-        case 'gunboat_focus': {
+        case Techs.GUNBOAT_FOCUS: {
             player.addItem(Items.MINIGUN_WEAPON);
             break;
         }
-        case 'hd_bullet':
+        case Techs.HD_BULLET:
             player.getInventory().values().forEach(stack => {
                 const item = stack.getItem();
                 if (item instanceof BaseWeapon) {
@@ -78,24 +77,24 @@ export function applyClientTech(id: string): void {
                 }
             });
             break;
-        case 'ad_loading': {
+        case Techs.AD_LOADING: {
             player.getInventory().values().forEach(stack => {
                 const item = stack.getItem();
                 if (item instanceof BaseWeapon) item.setFireRate(stack, item.getFireRate(stack) * 0.8);
             });
             break;
         }
-        case '90_cannon': {
+        case Techs.CANNON90: {
             const c90 = new ItemStack(Items.CANNON90_WEAPON);
             player.addItem(Items.CANNON90_WEAPON, c90);
 
-            if (player.getTechs().isUnlocked('hd_bullet')) {
+            if (player.getTechs().isUnlocked(Techs.HD_BULLET)) {
                 const base = c90.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
                 c90.set(DataComponentTypes.ATTACK_DAMAGE, base * 2);
             }
             break;
         }
-        case 'hv_warhead': {
+        case Techs.HV_WARHEAD: {
             player.getInventory().values().forEach(stack => {
                 const base = stack.get(DataComponentTypes.EXPLOSION_RADIUS);
                 if (base) {
@@ -104,7 +103,7 @@ export function applyClientTech(id: string): void {
             });
             break;
         }
-        case 'hd_explosives': {
+        case Techs.HD_EXPLOSIVES: {
             player.getInventory().values().forEach(stack => {
                 const base = stack.get(DataComponentTypes.EXPLOSION_DAMAGE);
                 if (base) {
@@ -113,7 +112,7 @@ export function applyClientTech(id: string): void {
             });
             break;
         }
-        case 'ship_opt': {
+        case Techs.SHIP_OPT: {
             player.addStatusEffect(new StatusEffectInstance(StatusEffects.HEALTH_BOOST, -1, 0), null);
 
             if (player.getNormalTags().has('Repaired')) return;
@@ -121,11 +120,11 @@ export function applyClientTech(id: string): void {
             player.setHealth(player.getMaxHealth());
             break;
         }
-        case 'into_void': {
+        case Techs.INTO_VOID: {
             player.addItem(Items.INTO_VOID_WEAPON);
             break;
         }
-        case 'void_leap': {
+        case Techs.VOID_LEAP: {
             const intoVoid = Items.INTO_VOID_WEAPON as IntoVoidWeapon;
             const stack = player.getItem(intoVoid);
             if (stack) {
@@ -136,7 +135,7 @@ export function applyClientTech(id: string): void {
             }
             break;
         }
-        case 'void_dweller': {
+        case Techs.VOID_DWELLER: {
             const intoVoid = Items.INTO_VOID_WEAPON as IntoVoidWeapon;
             const stack = player.getItem(intoVoid);
             if (stack) {
@@ -145,16 +144,16 @@ export function applyClientTech(id: string): void {
             }
             break;
         }
-        case 'space_tear': {
+        case Techs.SPACE_TEAR: {
             const stack = player.getItem(Items.INTO_VOID_WEAPON);
             if (stack) stack.set(DataComponentTypes.EFFECT_RANGE, 128);
             break;
         }
-        case 'explosive_armor': {
+        case Techs.EXPLOSIVE_ARMOR: {
             player.onDamageExplosionRadius *= 1.4;
             break;
         }
-        case 'meltdown': {
+        case Techs.MELTDOWN: {
             const stack = player.getItem(Items.LASER_WEAPON);
             if (stack) {
                 stack.set(DataComponentTypes.ATTACK_DAMAGE, 0);
@@ -164,12 +163,12 @@ export function applyClientTech(id: string): void {
             }
             break;
         }
-        case 'missile': {
+        case Techs.MISSILE: {
             player.removeItem(Items.BOMB_WEAPON);
             player.addItem(Items.MISSILE_WEAPON);
             break;
         }
-        case 'honeycomb_missile': {
+        case Techs.HONEYCOMB_MISSILE: {
             const stack = player.getItem(Items.MISSILE_WEAPON);
             if (stack) {
                 stack.set(DataComponentTypes.MISSILE_COUNT, 24);
@@ -179,39 +178,23 @@ export function applyClientTech(id: string): void {
             }
             break;
         }
-        case 'steering_gear': {
-            player.steeringGear = true;
-            break;
-        }
-        case 'fire_control_computer': {
-            player.autoAim = new AutoAim(player);
-            break;
-        }
-        case 'rocket_launcher': {
+        case Techs.ROCKET_LAUNCHER: {
             player.addItem(Items.ROCKET_WEAPON);
             break;
         }
-        case 'random_rocket': {
+        case Techs.RANDOM_ROCKET: {
             const rocket = player.getItem(Items.ROCKET_WEAPON);
             if (rocket) {
                 rocket.set(DataComponentTypes.MISSILE_RANDOM_ENABLE, true);
             }
             break;
         }
-        case 'decoy_releaser': {
+        case Techs.DECOY_RELEASER: {
             player.addItem(Items.DECOY_RELEASER);
             break;
         }
-        case 'ciws': {
+        case Techs.CIWS: {
             player.addItem(Items.CIWS_WEAPON);
-            break;
-        }
-        case 'void_edge' : {
-            player.voidEdge = true;
-            break;
-        }
-        case 'instant_response': {
-            player.followPointer = true;
             break;
         }
     }

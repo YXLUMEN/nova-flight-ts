@@ -8,10 +8,10 @@ export class SyncPlayerProfileS2CPacket implements Payload {
 
     public static readonly CODEC: PacketCodec<SyncPlayerProfileS2CPacket> = PacketCodecs.of<SyncPlayerProfileS2CPacket>(
         (writer, value) => {
-            writer.writeByte(value.devMode ? 1 : 0)
+            writer.writeInt8(value.devMode ? 1 : 0)
         },
         (reader) => {
-            return new SyncPlayerProfileS2CPacket(reader.readByte() !== 0);
+            return new SyncPlayerProfileS2CPacket(reader.readInt8() !== 0);
         }
     );
 

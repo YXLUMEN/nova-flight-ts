@@ -56,9 +56,9 @@ export class EntitySelectorOptions {
         this.putOption('type', reader => {
             reader.setSuggestionProvider(async (builder, _) => {
                 if (reader.isExcludesEntityMode()) {
-                    await CommandUtil.suggestIdentifiersPrefix(Registries.ENTITY_TYPE.getIdValues(), builder, '!');
+                    await CommandUtil.suggestIdentifiersPrefix(Registries.ENTITY_TYPE.getIds(), builder, '!');
                 } else {
-                    await CommandUtil.suggestIdentifiers(Registries.ENTITY_TYPE.getIdValues(), builder);
+                    await CommandUtil.suggestIdentifiers(Registries.ENTITY_TYPE.getIds(), builder);
                 }
 
                 return builder.buildPromise();

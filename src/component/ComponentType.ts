@@ -4,7 +4,7 @@ import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {Registries} from "../registry/Registries.ts";
 
 export class ComponentType<T> {
-    public static readonly PACKET_CODEC: PacketCodec<ComponentType<any>> = PacketCodecs.registryEntry(Registries.DATA_COMPONENT_TYPE);
+    public static readonly PACKET_CODEC: PacketCodec<ComponentType<any>> = PacketCodecs.registryValue(Registries.DATA_COMPONENT_TYPE);
 
     public readonly codec: Codec<T>
     public readonly packetCodec: PacketCodec<T>;

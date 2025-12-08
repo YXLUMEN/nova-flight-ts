@@ -30,7 +30,7 @@ export class SoundSystem {
 
     public static async loadSounds(manager: RegistryManager): Promise<any> {
         const soundRegister = manager.get(RegistryKeys.SOUND_EVENT);
-        const sounds = soundRegister.getIds();
+        const sounds = soundRegister.getIdSet();
 
         const soundJson = await resolveResource('resources/nova-flight/sounds.json');
         const json = JSON.parse(await readTextFile(soundJson));

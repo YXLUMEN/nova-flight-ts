@@ -49,25 +49,44 @@ export function decodeFromUnsignedByte(value: number, maxValue: number = 10): nu
     return value * (maxValue / 255);
 }
 
+/**
+ * Encodes a CSS-like hex color string into a 32-bit RGBA integer (0xRRGGBBAA).
+ * Supports:
+ *   - #RGB    → #RRGGBBFF
+ *   - #RRGGBB → #RRGGBBFF
+ *   - #RRGGBBAA
+ */
 export function encodeColorHex(hex: string): number {
     let clean = hex.replace('#', '').trim();
     if (clean.length === 3) {
-        clean += clean + 'FF';
+        clean = clean
+            .split('')
+            .map(c => c + c)
+            .join('') + 'FF';
     } else if (clean.length === 6) {
-        clean = `${clean}FF`;
+        clean = clean + 'FF';
     } else if (clean.length !== 8) {
-        throw new Error(`Expected #RRGGBB or #RRGGBBAA not: ${hex}`);
+        throw new Error(
+            `Expected #RGB, #RRGGBB, or #RRGGBBAA, got: "${hex}" (${clean.length} chars)`
+        );
     }
 
     const result = parseInt(clean, 16);
-    if (isNaN(result)) {
-        throw new Error('Invalid hexadecimal string');
+    if (!Number.isSafeInteger(result) || result < 0 || result > 0xFFFFFFFF) {
+        throw new Error(`Color value out of range: ${hex}`);
     }
 
     return result;
 }
 
+/**
+ * Decodes a 32-bit RGBA integer (0xRRGGBBAA) into a normalized 8-digit hex string.
+ * Always returns uppercase with leading '#'.
+ */
 export function decodeColorHex(colorInt: number): string {
+    if (!Number.isInteger(colorInt) || colorInt < 0 || colorInt > 0xFFFFFFFF) {
+        throw new Error(`Expected a 32-bit unsigned integer, got: ${colorInt}`);
+    }
     const hexString = (colorInt >>> 0).toString(16).padStart(8, '0').toUpperCase();
     return `#${hexString}`;
 }

@@ -316,7 +316,7 @@ export class NovaFlightClient {
         };
 
         // Vite 规定的格式 integrated dev
-        this.server = new ServerWorker(new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
+        this.server = new ServerWorker(new Worker(new URL('../worker/dev.worker.ts', import.meta.url), {
             type: 'module',
             name: 'server',
         }));
@@ -346,15 +346,14 @@ export class NovaFlightClient {
         };
 
         this.server.getWorker().onerror = (err) => {
-            console.error('Server Thread:', err);
+            console.error('Server Thread:', err.message);
 
             let stack = '';
             if (err.error instanceof Error) {
                 stack = err.error.stack ?? '';
             }
-            error(`[Server]: ${err.type}: ${err.message} at ${stack}`);
-            this.stopWorld();
-            this.server?.terminate();
+            error(`[Server Thead]: ${err.type}: ${err.message} at ${stack}`);
+            this.scheduleStop();
         }
 
         this.server.postMessage({
@@ -410,7 +409,7 @@ export class NovaFlightClient {
         await DataLoader.init(manager);
 
         loadingScreen.setProgress(0.8, '冻结资源');
-        manager.frozen();
+        manager.freeze();
         await sleep(200);
 
         loadingScreen.setProgress(1, '创建世界');

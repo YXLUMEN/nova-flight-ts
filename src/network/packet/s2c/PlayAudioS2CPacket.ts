@@ -2,22 +2,16 @@ import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {Registries} from "../../../registry/Registries.ts";
-import type {SoundEvent} from "../../../sound/SoundEvent.ts";
+import {SoundEvent} from "../../../sound/SoundEvent.ts";
 
 export class PlayAudioS2CPacket implements Payload {
     public static readonly ID: PayloadId<PlayAudioS2CPacket> = {id: Identifier.ofVanilla('play_audio')};
-
-    public static readonly CODEC: PacketCodec<PlayAudioS2CPacket> = PacketCodecs.of<PlayAudioS2CPacket>(
-        (writer, value) => {
-            Identifier.PACKET_CODEC.encode(writer, value.audio.getId());
-            writer.writeFloat(value.volume);
-        },
-        (reader) => {
-            const id = Identifier.PACKET_CODEC.decode(reader);
-            const sound = Registries.AUDIOS.getById(id)!;
-            return new PlayAudioS2CPacket(sound, reader.readFloat());
-        }
+    public static readonly CODEC: PacketCodec<PlayAudioS2CPacket> = PacketCodecs.adapt2(
+        SoundEvent.AUDIO_PACKET_CODEC,
+        val => val.audio,
+        PacketCodecs.FLOAT,
+        val => val.volume,
+        PlayAudioS2CPacket.new
     );
 
     public readonly audio: SoundEvent;
@@ -26,6 +20,10 @@ export class PlayAudioS2CPacket implements Payload {
     public constructor(soundEvent: SoundEvent, volume: number) {
         this.audio = soundEvent;
         this.volume = volume;
+    }
+
+    public static new(soundEvent: SoundEvent, volume: number) {
+        return new PlayAudioS2CPacket(soundEvent, volume);
     }
 
     public getId(): PayloadId<PlayAudioS2CPacket> {

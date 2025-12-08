@@ -26,7 +26,7 @@ export class WorldDifficultCommand {
 
                                     const int = Number(arg.result);
                                     if (!Number.isSafeInteger(int)) throw new IllegalArgumentError('\x1b[31mInvalid argument, must be a integer');
-                                    if (int < 0 || int > 3) throw new IllegalArgumentError('\x1b[31mInvalid argument, int must in [0,3]');
+                                    if (int < 0 || int > 16) throw new IllegalArgumentError('\x1b[31mInvalid argument, int must in [0,16]');
 
                                     const world = ctx.source.getWorld();
                                     if (world) world.stageDifficulty = int;

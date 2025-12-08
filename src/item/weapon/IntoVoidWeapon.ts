@@ -15,6 +15,7 @@ import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 import {AttributeModifiersComponent} from "../../component/type/AttributeModifiersComponent.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {Items} from "../Items.ts";
+import {Techs} from "../../tech/Techs.ts";
 
 const id2EffectMap = new Map<number, WindowOverlay>();
 
@@ -53,7 +54,7 @@ export class IntoVoidWeapon extends SpecialWeapon {
             world.addEffect(null, mask);
             id2EffectMap.set(attacker.getId(), mask);
 
-            if (attacker.getTechs().isUnlocked('void_energy_extraction')) {
+            if (attacker.getTechs().isUnlocked(Techs.VOID_ENERGY_EXTRACTION)) {
                 const emp = Items.EMP_WEAPON as EMPWeapon;
                 const stack = attacker.getItem(emp);
                 if (stack) emp.setCooldown(stack, 0);
@@ -74,7 +75,7 @@ export class IntoVoidWeapon extends SpecialWeapon {
         if (this.getTimeLeft(stack) <= 0 && holder instanceof LivingEntity) {
             this.exitVoid(stack, holder.getWorld(), holder);
         }
-        if (holder instanceof PlayerEntity && holder.getTechs().isUnlocked('void_energy_extraction')) {
+        if (holder instanceof PlayerEntity && holder.getTechs().isUnlocked(Techs.VOID_ENERGY_EXTRACTION)) {
             const laser = Items.LASER_WEAPON as LaserWeapon;
             const stack = holder.getItem(laser);
             if (stack) stack.setAvailable(true);
@@ -157,7 +158,7 @@ export class IntoVoidWeapon extends SpecialWeapon {
             }
         }
 
-        if (attacker.getTechs().isUnlocked('void_disturbance')) {
+        if (attacker.getTechs().isUnlocked(Techs.VOID_DISTURBANCE)) {
             const emp = Items.EMP_WEAPON as EMPWeapon;
             const stack = attacker.getItem(emp);
             if (stack) {

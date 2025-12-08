@@ -8,7 +8,7 @@ export class NbtCompound {
 
     private entries: Map<string, Nbt> = new Map();
 
-    public putByte(key: string, value: number): this {
+    public putInt8(key: string, value: number): this {
         console.assert(Number.isInteger(value) && value >= -128 && value <= 127, "Int8 out of range");
         this.entries.set(key, {type: NbtTypes.Int8, value});
         return this;
@@ -39,7 +39,8 @@ export class NbtCompound {
     }
 
     public putUint(key: string, value: number): this {
-        console.assert(Number.isInteger(value) && value >= 0, `[NBT] ${key} expected integer, got ${value}`);
+        console.assert(Number.isInteger(value) && value >= 0 && value <= 0xFFFFFFFF,
+            `[NBT] ${key} expected uint32 (0 ~ ${0xFFFFFFFF}), got ${value}`);
         this.entries.set(key, {type: NbtTypes.Uint, value: value | 0});
         return this;
     }
@@ -74,7 +75,7 @@ export class NbtCompound {
         return this;
     }
 
-    public getByte(key: string, d = 0): number {
+    public getInt8(key: string, d = 0): number {
         const v = this.entries.get(key);
         return v && v.type === NbtTypes.Int8 ? (v.value as number) : d;
     }
@@ -139,6 +140,11 @@ export class NbtCompound {
         return this;
     }
 
+    public clear(): this {
+        this.entries.clear();
+        return this;
+    }
+
     public has(key: string): boolean {
         return this.entries.has(key);
     }
@@ -185,13 +191,13 @@ export class NbtCompound {
         const compound = new NbtCompound();
 
         while (true) {
-            const type = reader.readUnsignByte();
+            const type = reader.readUint8();
             if (type === NbtTypes.End) break;
 
             const key = reader.readString();
             switch (type) {
                 case NbtTypes.Int8:
-                    compound.putByte(key, reader.readByte());
+                    compound.putInt8(key, reader.readInt8());
                     break;
                 case NbtTypes.Int16:
                     compound.putInt16(key, reader.readInt16());
@@ -212,7 +218,7 @@ export class NbtCompound {
                     compound.putString(key, reader.readString());
                     break;
                 case NbtTypes.Boolean:
-                    compound.putBoolean(key, reader.readByte() !== 0);
+                    compound.putBoolean(key, reader.readInt8() !== 0);
                     break;
                 case NbtTypes.NumberArray: {
                     const len = reader.readVarUint();
@@ -230,7 +236,6 @@ export class NbtCompound {
                 }
                 case NbtTypes.Compound: {
                     const nestedLen = reader.readVarUint();
-                    console.assert(reader.bytesRemaining() >= nestedLen, `[NBT] nested length overflow for key "${key}"`);
                     const nestedBuf = reader.readSlice(nestedLen);
                     const nested = NbtCompound.fromBinary(nestedBuf);
                     compound.putCompound(key, nested!);
@@ -241,7 +246,6 @@ export class NbtCompound {
                     const list: NbtCompound[] = [];
                     for (let i = 0; i < count; i++) {
                         const nestedLen = reader.readVarUint();
-                        console.assert(reader.bytesRemaining() >= nestedLen, `[NBT] nested length overflow in list for key "${key}"`);
                         const nestedBuf = reader.readSlice(nestedLen);
                         const nested = NbtCompound.fromBinary(nestedBuf);
                         list.push(nested!);
@@ -272,12 +276,12 @@ export class NbtCompound {
         }
 
         for (const [key, {type, value}] of this.entries) {
-            writer.writeByte(type);
+            writer.writeInt8(type);
             writer.writeString(key);
 
             switch (type) {
                 case NbtTypes.Int8:
-                    writer.writeByte(value as number);
+                    writer.writeInt8(value as number);
                     break;
                 case NbtTypes.Int16:
                     writer.writeInt16(value as number);
@@ -298,7 +302,7 @@ export class NbtCompound {
                     writer.writeString(value as string);
                     break;
                 case NbtTypes.Boolean:
-                    writer.writeByte(value ? 1 : 0);
+                    writer.writeInt8(value ? 1 : 0);
                     break;
                 case NbtTypes.NumberArray: {
                     const values = value as number[];
@@ -332,7 +336,7 @@ export class NbtCompound {
             }
         }
 
-        writer.writeByte(NbtTypes.End);
+        writer.writeInt8(NbtTypes.End);
         return writer.toUint8Array();
     }
 }

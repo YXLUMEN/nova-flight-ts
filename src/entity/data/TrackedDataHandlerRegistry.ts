@@ -9,8 +9,8 @@ export class TrackedDataHandlerRegistry {
     private static readonly DATA_ID_HANDLERS = new Map<number, TrackedDataHandler<any>>();
 
     public static readonly BOOL = this.create(PacketCodecs.BOOL);
-    public static readonly INT8 = this.create(PacketCodecs.BYTE);
-    public static readonly INTEGER = this.create(PacketCodecs.VAR_INT);
+    public static readonly INT8 = this.create(PacketCodecs.INT8);
+    public static readonly INTEGER = this.create(PacketCodecs.VAR_UINT);
     public static readonly FLOAT = this.create(PacketCodecs.FLOAT);
     public static readonly DOUBLE = this.create(PacketCodecs.DOUBLE);
 

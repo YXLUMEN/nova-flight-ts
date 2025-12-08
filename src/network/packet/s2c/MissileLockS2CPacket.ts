@@ -5,17 +5,12 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class MissileLockS2CPacket implements Payload {
     public static readonly ID: PayloadId<MissileLockS2CPacket> = {id: Identifier.ofVanilla('missile_lock')};
-    public static readonly CODEC: PacketCodec<MissileLockS2CPacket> = PacketCodecs.of(
-        (writer, value) => {
-            writer.writeVarUint(value.entityId);
-            writer.writeVarUint(value.lockEntityId);
-        },
-        reader => {
-            return new MissileLockS2CPacket(
-                reader.readVarUint(),
-                reader.readVarUint()
-            )
-        }
+    public static readonly CODEC: PacketCodec<MissileLockS2CPacket> = PacketCodecs.adapt2(
+        PacketCodecs.VAR_UINT,
+        val => val.entityId,
+        PacketCodecs.VAR_UINT,
+        val => val.lockEntityId,
+        MissileLockS2CPacket.new
     );
 
     public readonly entityId: number;
@@ -24,6 +19,10 @@ export class MissileLockS2CPacket implements Payload {
     public constructor(id: number, lockEntityId: number) {
         this.entityId = id;
         this.lockEntityId = lockEntityId;
+    }
+
+    public static new(id: number, lockEntityId: number) {
+        return new MissileLockS2CPacket(id, lockEntityId);
     }
 
     public getId(): PayloadId<MissileLockS2CPacket> {

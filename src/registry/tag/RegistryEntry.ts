@@ -55,6 +55,10 @@ export class RegistryEntry<T> {
         this.tags = new Set(tags);
     }
 
+    public hasKeyAndValue(): boolean {
+        return this.registryKey !== null && this.value !== null;
+    }
+
     public toString() {
         return this.registryKey === null ? 'unregistered' : this.registryKey.getValue().toString();
     }

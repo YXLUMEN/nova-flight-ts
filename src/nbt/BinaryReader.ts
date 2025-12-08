@@ -13,13 +13,17 @@ export class BinaryReader {
         return this.view.byteLength - this.offset;
     }
 
-    public readByte(): number {
+    public readInt8(): number {
         const v = this.view.getInt8(this.offset);
         this.offset += 1;
         return v;
     }
 
-    public readUnsignByte(): number {
+    public readBoolean(): boolean {
+        return this.readInt8() !== 0;
+    }
+
+    public readUint8(): number {
         const v = this.view.getUint8(this.offset);
         this.offset += 1;
         return v;
@@ -106,6 +110,9 @@ export class BinaryReader {
     }
 
     public readSlice(len: number): Uint8Array {
+        if (len < 0 || len > this.bytesRemaining()) {
+            throw new RangeError(`Cannot read slice of ${len} bytes, only ${this.bytesRemaining()} available`);
+        }
         const bytes = new Uint8Array(this.view.buffer, this.view.byteOffset + this.offset, len);
         this.offset += len;
         return bytes;

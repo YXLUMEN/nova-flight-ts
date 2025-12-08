@@ -266,7 +266,7 @@ export class ClientPlayNetworkHandler {
     }
 
     public onEntityRemove(packet: EntityRemoveS2CPacket): void {
-        this.world?.removeEntity(packet.id);
+        this.world?.removeEntity(packet.entityId);
     }
 
     public onEntityVelocityUpdate(packet: EntityVelocityUpdateS2CPacket) {
@@ -373,7 +373,7 @@ export class ClientPlayNetworkHandler {
         const world = this.world;
         if (!world) return;
 
-        const entity = world.getEntityLookup().getByUUID(packet.entityUUID);
+        const entity = world.getEntityLookup().getByUUID(packet.entityUuid);
         if (!entity) return;
         entity.readNBT(packet.nbt);
     }

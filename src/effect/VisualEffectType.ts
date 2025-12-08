@@ -6,7 +6,7 @@ import {Registries} from "../registry/Registries.ts";
 
 
 export class VisualEffectType<T extends VisualEffect, F extends Constructor<T> = Constructor<T>> {
-    public static readonly PACKET_CODEC: PacketCodec<VisualEffectType<any>> = PacketCodecs.registryEntry(Registries.EFFECT_TYPE);
+    public static readonly PACKET_CODEC: PacketCodec<VisualEffectType<any>> = PacketCodecs.registryValue(Registries.EFFECT_TYPE);
     public readonly codec: PacketCodec<T>;
     private readonly effect: F;
 

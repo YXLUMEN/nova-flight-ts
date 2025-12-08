@@ -6,6 +6,7 @@ import type {Entity} from "../entity/Entity.ts";
 import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {ExpendExplosionOpts} from "./IExplosionOpts.ts";
+import type {Tech} from "../tech/Tech.ts";
 
 export const EVENTS = createClean({
     ENTITY_REMOVED: "entity:mob:removed",
@@ -27,7 +28,7 @@ export type IEvents = {
     [EVENTS.BOSS_KILLED]: { mob: BossEntity | null; damageSource: DamageSource };
     [EVENTS.MOB_KILLED]: { mob: MobEntity; damageSource: DamageSource; pos: IVec };
     [EVENTS.MOB_DAMAGE]: { mob: MobEntity; damageSource: DamageSource; };
-    [EVENTS.UNLOCK_TECH]: { id: string };
+    [EVENTS.UNLOCK_TECH]: { tech: Tech };
     [EVENTS.EXPLOSION]: {
         entity: Entity | null,
         damage: DamageSource | null,

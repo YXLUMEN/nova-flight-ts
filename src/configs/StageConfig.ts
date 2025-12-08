@@ -17,10 +17,10 @@ const p1 = PhaseConfigBuilder.create({
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P1'}),
     rules: [
         {
-            every: 30,
+            every: 20,
             jitter: 0.3,
             factory: spawnAtTop(EntityTypes.BASE_ENEMY, 1.5, 0),
-            cap: 32
+            cap: 48
         },
     ],
 });
@@ -31,13 +31,13 @@ const p2 = PhaseConfigBuilder.create({
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P2'}),
     rules: [
         {
-            every: 30,
+            every: 20,
             jitter: 0.3,
             factory: spawnAtTop(EntityTypes.BASE_ENEMY, 1.5, 2, 4),
             cap: 16
         },
         {
-            every: 150,
+            every: 40,
             jitter: 0.2,
             factory: spawnAtTopInLine(EntityTypes.BASE_ENEMY, 4, 56, 1.8, 0, 2),
             cap: 48
@@ -51,19 +51,19 @@ const p3 = PhaseConfigBuilder.create({
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P3'}),
     rules: [
         {
-            every: 35,
+            every: 20,
             jitter: 0.4,
             factory: spawnAtTop(EntityTypes.BASE_ENEMY, 1.6, 2, 6, '#ff2121'),
             cap: 64,
         },
         {
-            every: 60,
+            every: 40,
             jitter: 0.5,
             factory: spawnAtTopS(EntityTypes.GUN_ENEMY_ENTITY, 1.5, 1, 4),
             cap: 24
         },
         {
-            every: 100,
+            every: 45,
             jitter: 0.35,
             factory: spawnAtTopInLine(EntityTypes.BASE_ENEMY, 4, 64, 1.9, 0, 2),
             cap: 48
@@ -77,19 +77,19 @@ const p4 = PhaseConfigBuilder.create({
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P4'}),
     rules: [
         {
-            every: 40,
+            every: 22,
             jitter: 0.4,
             factory: spawnAtTopS(EntityTypes.BASE_ENEMY, 1.3, 4, 8, '#c10000'),
             cap: 64,
         },
         {
-            every: 60,
+            every: 34,
             jitter: 0.5,
             factory: spawnAtTopS(EntityTypes.GUN_ENEMY_ENTITY, 1.5, 2, 6),
             cap: 32
         },
         {
-            every: 100,
+            every: 50,
             jitter: 0.35,
             factory: spawnAtTopInLine(EntityTypes.BASE_ENEMY, 6, 72, 1.4, 1, 4),
             cap: 64
@@ -103,7 +103,7 @@ const p5 = PhaseConfigBuilder.create({
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P5'}),
     rules: [
         {
-            every: 50,
+            every: 20,
             jitter: 0.4,
             factory: spawnAtTopS(EntityTypes.BASE_ENEMY,
                 1, 6, 10,
@@ -127,7 +127,7 @@ const p5 = PhaseConfigBuilder.create({
             cap: 64
         },
         {
-            every: 200,
+            every: 80,
             jitter: 0.35,
             factory: spawnAtTopInLine(EntityTypes.BASE_ENEMY, 6, 64, 1, 1, 4),
             cap: 72
@@ -164,7 +164,7 @@ const p7 = PhaseConfigBuilder.create({
     onExit: ({world}) => world.events.emit(EVENTS.STAGE_EXIT, {name: 'P7'}),
     rules: [
         {
-            every: 50,
+            every: 40,
             jitter: 0.4,
             factory: spawnAtTopS(EntityTypes.BASE_ENEMY,
                 0.98, 8, 10,
@@ -174,7 +174,7 @@ const p7 = PhaseConfigBuilder.create({
             cap: 94
         },
         {
-            every: 18,
+            every: 20,
             jitter: 0.6,
             factory: spawnAtTopS(EntityTypes.TANK_ENEMY_ENTITY,
                 0.84, 0, 16,
@@ -184,13 +184,13 @@ const p7 = PhaseConfigBuilder.create({
             cap: 72,
         },
         {
-            every: 100,
+            every: 80,
             jitter: 0.5,
             factory: spawnAtTopS(EntityTypes.MISSILE_ENEMY_ENTITY, 0.8, 4, 4, '#ac0000'),
             cap: 70
         },
         {
-            every: 150,
+            every: 120,
             jitter: 0.4,
             factory: spawnMiniGun(0.5, 0, 12),
             cap: 96
@@ -199,38 +199,6 @@ const p7 = PhaseConfigBuilder.create({
 });
 
 const p8 = PhaseConfigBuilder.create({
-    name: "P8",
-    until: ({score}) => score >= 8192,
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P8'}),
-    rules: [
-        {
-            every: 80,
-            jitter: 0.4,
-            factory: spawnInMap(EntityTypes.BASE_ENEMY,
-                1, 6, 8,
-                '#910000'
-            ),
-            cap: 64
-        },
-        {
-            every: 60,
-            jitter: 0.8,
-            factory: spawnInMap(EntityTypes.BASE_ENEMY,
-                0.96, 2, 4,
-                '#ff2121',
-            ),
-            cap: 66,
-        },
-        {
-            every: 150,
-            jitter: 0.5,
-            factory: spawnInMap(EntityTypes.GUN_ENEMY_ENTITY, 0.84, 2),
-            cap: 48
-        },
-    ],
-});
-
-const p9 = PhaseConfigBuilder.create({
     name: "P9",
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P9'}),
     rules: [
@@ -275,4 +243,4 @@ const p9 = PhaseConfigBuilder.create({
     ],
 });
 
-export const STAGE = new Stage([p0, p1, p2, p3, p4, p5, p6, p7, p8, p9]);
+export const STAGE = new Stage([p0, p1, p2, p3, p4, p5, p6, p7, p8]);

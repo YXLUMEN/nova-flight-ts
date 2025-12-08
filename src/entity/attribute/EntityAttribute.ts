@@ -9,7 +9,7 @@ export const EntityAttributeCategory = {
 } as const;
 
 export class EntityAttribute {
-    public static readonly PACKET_CODEC: PacketCodec<EntityAttribute> = PacketCodecs.registryEntry(Registries.ATTRIBUTE);
+    public static readonly PACKET_CODEC: PacketCodec<EntityAttribute> = PacketCodecs.registryValue(Registries.ATTRIBUTE);
 
     private readonly fallback: number;
     private tracked: boolean = false;

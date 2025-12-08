@@ -5,14 +5,10 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class PlayerInputC2SPacket implements Payload {
     public static readonly ID: PayloadId<PlayerInputC2SPacket> = {id: Identifier.ofVanilla('player_input')};
-
-    public static readonly CODEC: PacketCodec<PlayerInputC2SPacket> = PacketCodecs.of<PlayerInputC2SPacket>(
-        (writer, value) => {
-            writer.writeString(value.key);
-        },
-        (reader) => {
-            return new PlayerInputC2SPacket(reader.readString());
-        }
+    public static readonly CODEC: PacketCodec<PlayerInputC2SPacket> = PacketCodecs.adapt(
+        PacketCodecs.STRING,
+        val => val.key,
+        to => new PlayerInputC2SPacket(to)
     );
 
     public readonly key: string;

@@ -2,10 +2,12 @@ import {IndexedDBHelper} from "../database/IndexedDBHelper.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {UUID} from "../apis/types.ts";
 import type {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
+import {Result} from "../utils/result/Result.ts";
 
 interface Save {
     save_name: string,
     data: Uint8Array<ArrayBufferLike>,
+    version: number,
     timestamp: number,
 }
 
@@ -13,10 +15,11 @@ interface PlayerData {
     save_name: string,
     uuid: string,
     data: Uint8Array<ArrayBufferLike>,
+    version: number,
 }
 
 export class ServerDB {
-    public static db = new IndexedDBHelper('nova-flight-server', 2, [
+    public static db = new IndexedDBHelper('nova-flight-server', 3, [
         {
             name: 'saves',
             keyPath: 'save_name',
@@ -36,6 +39,7 @@ export class ServerDB {
             save_name: saveName,
             data: compound.toBinary(),
             timestamp: Date.now(),
+            version: NbtCompound.VERSION
         } satisfies Save);
     }
 
@@ -51,23 +55,32 @@ export class ServerDB {
             save_name,
             uuid,
             data: nbt.toBinary(),
+            version: NbtCompound.VERSION
         } satisfies PlayerData);
     }
 
     public static async loadWorld(saveName?: string): Promise<NbtCompound | null> {
         if (saveName) {
-            const record = await this.db.get<Save>('saves', saveName);
-            const data = record?.data;
+            const result = await this.db.get<Save>('saves', saveName);
+            const optional = result.ok();
+            if (optional.isEmpty()) return null;
+
+            const data = optional.get().data;
             if (!data) return null;
+            if (optional.get().version !== NbtCompound.VERSION) return null;
             return NbtCompound.fromBinary(data);
         }
 
-        const allSaves = await this.db.getAll<Save>('saves');
-        if (allSaves.length === 0) return null;
+        const result = await this.db.getAll<Save>('saves');
+        const optional = result.ok();
+        if (optional.isEmpty()) return null;
 
-        const latest = allSaves.reduce((prev, curr) =>
+        if (optional.get().length === 0) return null;
+
+        const latest = optional.get().reduce((prev, curr) =>
             curr.timestamp > prev.timestamp ? curr : prev
         );
+        if (latest.version !== NbtCompound.VERSION) return null;
         return NbtCompound.fromBinary(latest.data);
     }
 
@@ -77,19 +90,22 @@ export class ServerDB {
 
         const uuid: UUID = player.getProfile().clientId;
         const key = [saveName, uuid];
-        const playerData = await this.db.get<PlayerData>('player_data', key);
+        const result = await this.db.get<PlayerData>('player_data', key);
+        const optional = result.ok();
+        if (optional.isEmpty()) return null;
 
-        const data = playerData?.data;
+        const data = optional.get().data;
         if (!data) return null;
+        if (optional.get().version !== NbtCompound.VERSION) return null;
         return NbtCompound.fromBinary(data)
     }
 
-    public static async deleteWorld(saveName: string): Promise<boolean> {
+    public static async deleteWorld(saveName: string): Promise<Result<boolean, DOMException | null>> {
         const exists = await this.db.get<Save>('saves', saveName);
-        if (!exists) return false;
+        if (!exists) return Result.ok(false);
 
         const db = await this.db.init();
-        const {promise, resolve, reject} = Promise.withResolvers<boolean>();
+        const {promise, resolve} = Promise.withResolvers<Result<boolean, DOMException | null>>();
 
         const tx = db.transaction(['saves', 'player_data'], 'readwrite');
 
@@ -103,8 +119,8 @@ export class ServerDB {
 
         playerStore.delete(range);
 
-        tx.oncomplete = () => resolve(true);
-        tx.onerror = () => reject(tx.error);
+        tx.oncomplete = () => resolve(Result.ok(true));
+        tx.onerror = () => resolve(Result.err(tx.error));
 
         return promise;
     }
@@ -115,7 +131,11 @@ export class ServerDB {
 
         const uuid: UUID = player.getProfile().clientId;
         const key = [saveName, uuid];
-        return await this.db.delete('player_data', key);
+        const result = await this.db.delete('player_data', key);
+        return result
+            .mapErr(err => console.error(err))
+            .ok()
+            .get()
     }
 
     private static getSaveName(player: ServerPlayerEntity): string | null {

@@ -6,15 +6,10 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class EntityKilledS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityKilledS2CPacket> = {id: Identifier.ofVanilla('entity_killed')};
-    public static readonly CODEC: PacketCodec<EntityKilledS2CPacket> = PacketCodecs.of(
-        (writer, value) => {
-            writer.writeVarUint(value.entityId);
-        },
-        reader => {
-            return new EntityKilledS2CPacket(
-                reader.readVarUint()
-            )
-        }
+    public static readonly CODEC: PacketCodec<EntityKilledS2CPacket> = PacketCodecs.adapt(
+        PacketCodecs.VAR_UINT,
+        val => val.entityId,
+        to => new EntityKilledS2CPacket(to)
     );
 
     public readonly entityId: number;

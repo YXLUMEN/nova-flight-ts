@@ -1,6 +1,6 @@
 import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import type {ServerWorld} from "../ServerWorld.ts";
-import {ServerTechTree} from "../../tech/ServerTechTree.ts";
+import {ServerTechTree} from "../tech/ServerTechTree.ts";
 import type {World} from "../../world/World.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import type {ItemStack} from "../../item/ItemStack.ts";

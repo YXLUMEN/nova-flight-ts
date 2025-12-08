@@ -5,7 +5,7 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class PlayerRespawnS2CPacket implements Payload {
     public static readonly ID: PayloadId<PlayerRespawnS2CPacket> = {id: Identifier.ofVanilla('player_respawn')};
-    public static readonly CODEC: PacketCodec<PlayerRespawnS2CPacket> = PacketCodecs.empty(PlayerRespawnS2CPacket);
+    public static readonly CODEC: PacketCodec<PlayerRespawnS2CPacket> = PacketCodecs.emptyNew(PlayerRespawnS2CPacket);
 
     public getId(): PayloadId<PlayerRespawnS2CPacket> {
         return PlayerRespawnS2CPacket.ID;

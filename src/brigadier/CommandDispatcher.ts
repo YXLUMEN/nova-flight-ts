@@ -105,8 +105,9 @@ export class CommandDispatcher<S> {
         const truncatedInput = fullInput.substring(0, cursor);
         const truncatedInputLowerCase = truncatedInput.toLowerCase();
 
-        const futures: Promise<Suggestions>[] = [];
+        const futures: Promise<Suggestions>[] = new Array(parent.getOriginChildren().size);
 
+        let i = 0;
         for (const node of parent.getChildren()) {
             let future: Promise<Suggestions> = Suggestions.empty();
             try {
@@ -116,7 +117,7 @@ export class CommandDispatcher<S> {
                 );
             } catch {
             }
-            futures.push(future);
+            futures[i++] = future;
         }
 
         const results = await Promise.all(futures);

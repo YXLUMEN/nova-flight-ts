@@ -24,12 +24,13 @@ import {Identifier} from "../registry/Identifier.ts";
 
 
 export class ItemStack {
+    public static readonly ITEM_VALUE_PACKET_CODEC = PacketCodecs.registryValue(Registries.ITEM);
     public static readonly ITEM_PACKET_CODEC = PacketCodecs.registryEntry(Registries.ITEM);
     public static readonly CODEC: Codec<ItemStack> = {
         encode(value: ItemStack): NbtCompound {
             const nbt = new NbtCompound();
             nbt.putString('type', value.getItem().getRegistryEntry().toString());
-            nbt.putByte('counts', value.getCount());
+            nbt.putInt8('counts', value.getCount());
 
             const changes = value.components.getChanges();
             nbt.putCompound('compounds', ComponentChanges.CODEC.encode(changes));
@@ -43,7 +44,7 @@ export class ItemStack {
             const type = Registries.ITEM.getEntryById(id);
             if (!type) return null;
 
-            const counts = nbt.getByte('counts');
+            const counts = nbt.getInt8('counts');
 
             let compounds: ComponentChanges | null = null;
             const compoundsNbt = nbt.getCompound('compounds');
@@ -58,7 +59,7 @@ export class ItemStack {
                 writer.writeVarUint(0);
             } else {
                 writer.writeVarUint(itemStack.getCount());
-                ItemStack.ITEM_PACKET_CODEC.encode(writer, itemStack.getRegistryEntry().getValue());
+                ItemStack.ITEM_PACKET_CODEC.encode(writer, itemStack.getRegistryEntry());
                 ComponentChanges.PACKET_CODEC.encode(writer, itemStack.components.getChanges());
             }
             return;
@@ -68,7 +69,7 @@ export class ItemStack {
             if (count <= 0) {
                 return ItemStack.EMPTY;
             }
-            const item = ItemStack.ITEM_PACKET_CODEC.decode(reader);
+            const item = ItemStack.ITEM_PACKET_CODEC.decode(reader).getValue();
             const componentChanges = ComponentChanges.PACKET_CODEC.decode(reader);
             return new ItemStack(item, count, ComponentMapImpl.create(item.getComponents(), componentChanges));
         }

@@ -22,7 +22,7 @@ export class AudioManager {
 
     public static async loadFiles(manager: RegistryManager): Promise<void> {
         const audioRegister = manager.get(RegistryKeys.AUDIOS);
-        const audios = audioRegister.getIds();
+        const audios = audioRegister.getIdSet();
 
         const jsonPath = await resolveResource(`resources/nova-flight/audios.json`);
         const json = JSON.parse(await readTextFile(jsonPath));

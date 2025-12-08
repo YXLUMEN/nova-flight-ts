@@ -15,6 +15,7 @@ import type {IVec} from "../../utils/math/IVec.ts";
 import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {Audios} from "../../sound/Audios.ts";
 import {STAGE} from "../../configs/StageConfig.ts";
+import {Techs} from "../../tech/Techs.ts";
 
 export class TutorialEvents {
     private static loop: number | undefined = undefined;
@@ -306,9 +307,9 @@ export class TutorialEvents {
             condition.requireOpenPage = true;
 
             const tech = this.hostPlayer.getTechs();
-            tech.forceUnlock('gunboat_focus');
-            tech.forceUnlock('hd_bullet');
-            tech.forceUnlock('ad_loading');
+            tech.forceUnlock(Techs.GUNBOAT_FOCUS);
+            tech.forceUnlock(Techs.HD_BULLET);
+            tech.forceUnlock(Techs.AD_LOADING);
             return;
         }
 

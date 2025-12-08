@@ -5,9 +5,10 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class JoinGameS2CPacket implements Payload {
     public static readonly ID: PayloadId<JoinGameS2CPacket> = {id: Identifier.ofVanilla('join_game')};
-    public static readonly CODEC: PacketCodec<JoinGameS2CPacket> = PacketCodecs.of(
-        (writer, value) => writer.writeVarUint(value.playerEntityId),
-        reader => new JoinGameS2CPacket(reader.readVarUint())
+    public static readonly CODEC: PacketCodec<JoinGameS2CPacket> = PacketCodecs.adapt(
+        PacketCodecs.VAR_UINT,
+        val => val.playerEntityId,
+        to => new JoinGameS2CPacket(to)
     );
 
     public playerEntityId: number;

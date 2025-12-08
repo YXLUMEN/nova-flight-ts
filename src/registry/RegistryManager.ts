@@ -12,6 +12,8 @@ export class RegistryManager {
     private readonly registers = new Map<RegistryKey<any>, Registry<any>>();
 
     public async registerAll(): Promise<void> {
+        if (Object.isFrozen(this)) throw new Error('Registry already registered');
+
         this.registers.set(RegistryKeys.SOUND_EVENT, Registries.SOUND_EVENT);
         this.registers.set(RegistryKeys.AUDIOS, Registries.AUDIOS);
         this.registers.set(RegistryKeys.DAMAGE_TYPE, Registries.DAMAGE_TYPE);
@@ -37,7 +39,8 @@ export class RegistryManager {
         }
     }
 
-    public frozen() {
+    public freeze() {
+        this.registers.values().forEach(value => value.freeze());
         deepFreeze(this);
     }
 }

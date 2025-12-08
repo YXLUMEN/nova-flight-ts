@@ -1,14 +1,4 @@
-export interface Tech {
-    id: string;
-    name: string;
-    x: number;
-    y: number;
-    requires?: string[];
-    conflicts?: string[];
-    branchGroup?: string;
-    cost?: number;
-    desc?: string;
-}
+import type {Tech} from "../tech/Tech.ts";
 
 export type RawTech = Partial<Omit<Tech, 'id' | 'name'>> & { id?: unknown; name?: unknown; x?: unknown; y?: unknown };
 

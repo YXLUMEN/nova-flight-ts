@@ -19,6 +19,7 @@ import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts";
 import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
 import type {Constructor} from "../../apis/types.ts";
+import {Techs} from "../../tech/Techs.ts";
 
 
 export abstract class PlayerEntity extends LivingEntity {
@@ -114,14 +115,14 @@ export abstract class PlayerEntity extends LivingEntity {
         // emp免伤
         const stack = this.items.get(Items.EMP_WEAPON);
         const emp = stack?.getItem() as EMPWeapon | undefined;
-        if (this.techTree!.isUnlocked('electrical_energy_surges') && stack && emp) {
+        if (this.techTree!.isUnlocked(Techs.ELECTRICAL_SURGES) && stack && emp) {
             const cd = emp.getCooldown(stack);
             emp.tryFire(stack, world, this);
             emp.setCooldown(stack, cd);
         }
 
         if (remainDamage !== 0) {
-            if (stack && emp && emp.canFire(stack) && this.techTree!.isUnlocked('ele_shield')) {
+            if (stack && emp && emp.canFire(stack) && this.techTree!.isUnlocked(Techs.ELE_SHIELD)) {
                 emp.tryFire(stack, world, this);
                 world.playSound(this, SoundEvents.SHIELD_CRASH);
                 return false;
@@ -271,7 +272,7 @@ export abstract class PlayerEntity extends LivingEntity {
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
         nbt.putUint('Score', this.score);
-        nbt.putByte('SlotIndex', this.currentBaseIndex);
+        nbt.putInt8('SlotIndex', this.currentBaseIndex);
         nbt.putBoolean('DevMode', this.isDevMode());
 
         const inventory: NbtCompound[] = [];
@@ -302,7 +303,7 @@ export abstract class PlayerEntity extends LivingEntity {
             }
         }
 
-        this.currentBaseIndex = clamp(nbt.getByte('SlotIndex'), 0, this.baseWeapons.length);
+        this.currentBaseIndex = clamp(nbt.getInt8('SlotIndex'), 0, this.baseWeapons.length);
     }
 
     public onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {

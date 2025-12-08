@@ -1,28 +1,17 @@
 import type {Comparable} from "../../apis/types.ts";
 
 export class HashMap<K extends Comparable, V> implements Map<K, V> {
-    public readonly [Symbol.toStringTag]: string = 'HashMap';
-    private readonly buckets: Map<string, Array<{ key: K, value: V }>> = new Map();
-
-    public get size(): number {
-        let count = 0;
-        for (const bucket of this.buckets.values()) {
-            count += bucket.length;
-        }
-        return count;
-    }
-
-    public keySize(): number {
-        return this.buckets.size;
-    }
+    private readonly buckets: Map<string, { key: K, value: V }[]> = new Map();
+    private _size: number = 0;
 
     public set(key: K, value: V) {
         const hash = key.hashCode();
-        let bucket = this.buckets.get(hash);
+        const bucket = this.buckets.get(hash);
 
         if (!bucket) {
-            bucket = [];
-            this.buckets.set(hash, bucket);
+            this.buckets.set(hash, [{key, value}]);
+            this._size++;
+            return this;
         }
 
         const existingIndex = bucket.findIndex(entry => key.equals(entry.key));
@@ -32,6 +21,7 @@ export class HashMap<K extends Comparable, V> implements Map<K, V> {
             bucket.push({key, value});
         }
 
+        this._size++;
         return this;
     }
 
@@ -61,6 +51,7 @@ export class HashMap<K extends Comparable, V> implements Map<K, V> {
             if (bucket.length === 0) {
                 this.buckets.delete(hash);
             }
+            this._size--;
             return true;
         }
 
@@ -69,6 +60,15 @@ export class HashMap<K extends Comparable, V> implements Map<K, V> {
 
     public clear(): void {
         this.buckets.clear();
+        this._size = 0;
+    }
+
+    public get size(): number {
+        return this._size;
+    }
+
+    public keySize(): number {
+        return this.buckets.size;
     }
 
     public* entries(): MapIterator<[K, V]> {
@@ -91,13 +91,15 @@ export class HashMap<K extends Comparable, V> implements Map<K, V> {
         }
     }
 
-    public forEach(callback: (value: V, key: K, map: Map<K, V>) => void, _thisArg?: any): void {
+    public forEach(callback: (value: V, key: K, map: Map<K, V>) => void, thisArg?: any): void {
         for (const [key, value] of this.entries()) {
-            callback(value, key, this);
+            callback.call(thisArg, value, key, this);
         }
     }
 
     public [Symbol.iterator](): MapIterator<[K, V]> {
         return this.entries();
     }
+
+    public readonly [Symbol.toStringTag]: string = 'HashMap';
 }

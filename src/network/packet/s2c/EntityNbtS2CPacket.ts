@@ -8,22 +8,24 @@ import {NbtCompound} from "../../../nbt/NbtCompound.ts";
 
 export class EntityNbtS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityNbtS2CPacket> = {id: Identifier.ofVanilla('entity_nbt')};
-    public static readonly CODEC: PacketCodec<EntityNbtS2CPacket> = PacketCodecs.of(
-        (writer, value) => {
-            writer.writeUUID(value.entityUUID);
-            writer.pushBytes(value.nbt.toBinary());
-        },
-        reader => {
-            return new EntityNbtS2CPacket(reader.readUUID(), NbtCompound.fromReader(reader));
-        }
+    public static readonly CODEC: PacketCodec<EntityNbtS2CPacket> = PacketCodecs.adapt2(
+        PacketCodecs.UUID,
+        val => val.entityUuid,
+        PacketCodecs.NBT,
+        val => val.nbt,
+        EntityNbtS2CPacket.new
     );
 
-    public readonly entityUUID: UUID;
+    public readonly entityUuid: UUID;
     public readonly nbt: NbtCompound;
 
-    public constructor(entityUUID: UUID, nbt: NbtCompound) {
-        this.entityUUID = entityUUID;
+    public constructor(entityUuid: UUID, nbt: NbtCompound) {
+        this.entityUuid = entityUuid;
         this.nbt = nbt;
+    }
+
+    public static new(entityUuid: UUID, nbt: NbtCompound) {
+        return new EntityNbtS2CPacket(entityUuid, nbt);
     }
 
     public static create(entity: Entity) {

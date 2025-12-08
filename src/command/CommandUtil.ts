@@ -72,7 +72,7 @@ export class CommandUtil {
     public static createIdentifierSuggestion<T>(registry: Registry<any>): SuggestionProvider<T> {
         return createClean({
             getSuggestions(_: CommandContext<T>, builder: SuggestionsBuilder): Promise<Suggestions> {
-                return CommandUtil.suggestIdentifiers(registry.getIdValues(), builder);
+                return CommandUtil.suggestIdentifiers(registry.getIds(), builder);
             }
         } satisfies SuggestionProvider<T>);
     }

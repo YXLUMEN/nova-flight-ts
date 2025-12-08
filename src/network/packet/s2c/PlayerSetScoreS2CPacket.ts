@@ -5,11 +5,10 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class PlayerSetScoreS2CPacket implements Payload {
     public static readonly ID: PayloadId<PlayerSetScoreS2CPacket> = {id: Identifier.ofVanilla('player_set_score')};
-    public static readonly CODEC: PacketCodec<PlayerSetScoreS2CPacket> = PacketCodecs.of(
-        (writer, value) => {
-            writer.writeVarUint(value.score);
-        },
-        reader => new PlayerSetScoreS2CPacket(reader.readVarUint())
+    public static readonly CODEC: PacketCodec<PlayerSetScoreS2CPacket> = PacketCodecs.adapt(
+        PacketCodecs.VAR_UINT,
+        val => val.score,
+        to => new PlayerSetScoreS2CPacket(to)
     );
 
     public readonly score: number;

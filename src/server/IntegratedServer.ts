@@ -28,7 +28,7 @@ export class IntegratedServer extends NovaFlightServer {
     public override async runServer(action: number): Promise<void> {
         const manager = new RegistryManager();
         await manager.registerAll();
-        manager.frozen();
+        manager.freeze();
 
         await this.startGame(manager, action === 1);
 

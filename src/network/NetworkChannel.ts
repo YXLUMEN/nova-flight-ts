@@ -140,8 +140,8 @@ export abstract class NetworkChannel implements Channel {
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
 
         const writer = new BinaryWriter();
-        writer.writeByte(this.getHeader());
-        writer.writeByte(this.getSessionId());
+        writer.writeInt8(this.getHeader());
+        writer.writeInt8(this.getSessionId());
 
         this.checkAndSend(writer, type, payload);
     }
@@ -152,7 +152,7 @@ export abstract class NetworkChannel implements Channel {
 
         const buffer = writer.toUint8Array();
         if (buffer.length > NetworkChannel.MAX_PACKET_SIZE) {
-            throw new PacketTooLargeError(`Packet ${payload.getId().id} exceeds 4096 bytes: ${buffer.length}`);
+            throw new PacketTooLargeError(`Packet ${payload.getId().id} exceeds 6144 bytes: ${buffer.length}`);
         }
 
         this.ws!.send(buffer);
@@ -161,7 +161,7 @@ export abstract class NetworkChannel implements Channel {
     protected decodePayload(buf: Uint8Array): Payload | null {
         const reader = new BinaryReader(buf);
 
-        const header = reader.readByte();
+        const header = reader.readInt8();
         if (header === 0x00) {
             return RelayServerPacket.CODEC.decode(reader);
         }
@@ -171,7 +171,7 @@ export abstract class NetworkChannel implements Channel {
         }
 
         // pass sessionId
-        reader.readUnsignByte();
+        reader.readUint8();
         const index = reader.readVarUint();
         const type = PayloadTypeRegistry.getGlobalByIndex(index);
         if (!type) return null;

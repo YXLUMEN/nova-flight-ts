@@ -6,9 +6,10 @@ import type {UUID} from "../../../apis/types.ts";
 
 export class ClientSniffingC2SPacket implements Payload {
     public static readonly ID: PayloadId<ClientSniffingC2SPacket> = {id: Identifier.ofVanilla('client_sniffing')};
-    public static readonly CODEC: PacketCodec<ClientSniffingC2SPacket> = PacketCodecs.of(
-        (writer, value) => writer.writeUUID(value.clientId),
-        reader => new ClientSniffingC2SPacket(reader.readUUID())
+    public static readonly CODEC: PacketCodec<ClientSniffingC2SPacket> = PacketCodecs.adapt(
+        PacketCodecs.UUID,
+        val => val.clientId,
+        to => new ClientSniffingC2SPacket(to)
     );
 
     public readonly clientId: UUID;

@@ -65,10 +65,10 @@ export class ParticleS2CPacket implements Payload {
         const offsetXInt16 = reader.readInt16();
         const offsetYInt16 = reader.readInt16();
 
-        const count = reader.readUnsignByte();
+        const count = reader.readUint8();
         const speed = reader.readFloat();
 
-        const life = reader.readUnsignByte();
+        const life = reader.readUint8();
         const size = reader.readInt16();
         const colorFromInt32 = reader.readUint32();
         const colorToInt32 = reader.readUint32();
@@ -80,9 +80,9 @@ export class ParticleS2CPacket implements Payload {
         writer.writeFloat(value.posY);
         writer.writeInt16(value.offsetXInt16);
         writer.writeInt16(value.offsetYInt16);
-        writer.writeByte(value.count);
+        writer.writeInt8(value.count);
         writer.writeFloat(value.speed);
-        writer.writeByte(value.lifeByte);
+        writer.writeInt8(value.lifeByte);
         writer.writeInt16(value.sizeInt16);
         writer.writeUint32(value.colorFromInt32);
         writer.writeUint32(value.colorToInt32);

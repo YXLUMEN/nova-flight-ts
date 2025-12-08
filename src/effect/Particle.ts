@@ -20,7 +20,7 @@ export class Particle implements VisualEffect {
         (writer, value) => {
             PacketCodecs.VECTOR2D.encode(writer, value.pos);
             PacketCodecs.VECTOR2D.encode(writer, value.vel);
-            writer.writeByte(encodeToUnsignedByte(value.life));
+            writer.writeInt8(encodeToUnsignedByte(value.life));
             writer.writeInt16(encodeToInt16(value.size));
             writer.writeUint32(encodeColorHex(value.colorFrom));
             writer.writeUint32(encodeColorHex(value.colorTo));
@@ -31,7 +31,7 @@ export class Particle implements VisualEffect {
             return new Particle(
                 PacketCodecs.VECTOR2D.decode(reader),
                 PacketCodecs.VECTOR2D.decode(reader),
-                decodeFromUnsignedByte(reader.readUnsignByte()),
+                decodeFromUnsignedByte(reader.readUint8()),
                 decodeFromInt16(reader.readInt16()),
                 decodeColorHex(reader.readUint32()),
                 decodeColorHex(reader.readUint32()),

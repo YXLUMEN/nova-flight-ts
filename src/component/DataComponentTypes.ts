@@ -55,7 +55,7 @@ export class DataComponentTypes {
         builder => builder.withCodec(Codecs.BOOLEAN).withPacketCodec(PacketCodecs.BOOL)
     );
     public static readonly MAX_RELOAD_TIME: ComponentType<number> = this.register("max_reload",
-        builder => builder.withCodec(Codecs.UINT32).withPacketCodec(PacketCodecs.VAR_INT)
+        builder => builder.withCodec(Codecs.UINT32).withPacketCodec(PacketCodecs.VAR_UINT)
     );
 
     public static readonly FIRING: ComponentType<boolean> = this.register("firing",

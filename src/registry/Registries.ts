@@ -27,6 +27,8 @@ export class Registries {
     });
     public static readonly EFFECT_TYPE = this.simpleCreate(RegistryKeys.EFFECT_TYPE, () => {
     });
+    public static readonly TECH = this.simpleCreate(RegistryKeys.TECH, () => {
+    });
 
     public static async complete() {
         const attr = await import('../entity/attribute/EntityAttributes.ts');

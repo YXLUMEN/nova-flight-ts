@@ -1,11 +1,11 @@
 export interface IndexedIterable<T> extends Iterable<T> {
-    getRawId(value: T): number;
+    getIndex(value: T): number;
 
-    get(index: number): T | null;
+    getByIndex(index: number): T | null;
 
-    getOrThrow(index: number): T;
+    getByIndexOrThrow(index: number): T;
 
-    getRawOrThrow(value: T): number;
+    getIndexOrThrow(value: T): number;
 
     size(): number;
 }

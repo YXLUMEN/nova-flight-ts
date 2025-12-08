@@ -1,5 +1,5 @@
 import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
-import {PlayerAimC2SPacket} from "../../network/packet/c2s/PlayerAimC2SPacket.ts";
+import {PlayerYawC2SPacket} from "../../network/packet/c2s/PlayerYawC2SPacket.ts";
 import {PlayerMoveC2SPacket} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import {PlayerAttemptLoginC2SPacket} from "../../network/packet/c2s/PlayerAttemptLoginC2SPacket.ts";
@@ -20,7 +20,7 @@ import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPac
 
 export class ClientNetwork {
     public static registerNetworkPacket(): void {
-        this.register(PlayerAimC2SPacket.ID, PlayerAimC2SPacket.CODEC);
+        this.register(PlayerYawC2SPacket.ID, PlayerYawC2SPacket.CODEC);
         this.register(PlayerMoveC2SPacket.ID, PlayerMoveC2SPacket.CODEC);
         this.register(PlayerMoveByPointerC2SPacket.ID, PlayerMoveByPointerC2SPacket.CODEC);
         this.register(PlayerInputC2SPacket.ID, PlayerInputC2SPacket.CODEC);

@@ -13,9 +13,9 @@ export class EdgeGlowEffect implements VisualEffect {
             writer.writeUint16(value.thickness);
             writer.writeFloat(value.intensity);
             writer.writeFloat(value.duration);
-            writer.writeByte(encodeToByte(value.fadeIn, 1));
-            writer.writeByte(encodeToByte(value.fadeOut, 1));
-            writer.writeByte(value.pulse ? 1 : 0);
+            writer.writeInt8(encodeToByte(value.fadeIn, 1));
+            writer.writeInt8(encodeToByte(value.fadeOut, 1));
+            writer.writeInt8(value.pulse ? 1 : 0);
             writer.writeString(value.composite);
         },
         reader => {
@@ -24,9 +24,9 @@ export class EdgeGlowEffect implements VisualEffect {
                 reader.readUint16(),
                 reader.readFloat(),
                 reader.readFloat(),
-                decodeFromByte(reader.readUnsignByte(), 1),
-                decodeFromByte(reader.readUnsignByte(), 1),
-                reader.readByte() !== 0,
+                decodeFromByte(reader.readUint8(), 1),
+                decodeFromByte(reader.readUint8(), 1),
+                reader.readInt8() !== 0,
                 reader.readString() as GlobalCompositeOperation
             );
         }

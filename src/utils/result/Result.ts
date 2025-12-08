@@ -1,7 +1,15 @@
-import {Ok} from "./Ok.ts";
-import {Err} from "./Err.ts";
 import type {FunctionReturn} from "../../apis/types.ts";
 import {Optional} from "../Optional.ts";
+
+export interface Ok<T> {
+    readonly ok: true;
+    readonly value: T;
+}
+
+export interface Err<E> {
+    readonly ok: false;
+    readonly error: E;
+}
 
 export type ResultType<T, E> = Ok<T> | Err<E>;
 
@@ -13,11 +21,11 @@ export class Result<T, E> {
     }
 
     public static ok<T, E>(value: T): Result<T, E> {
-        return new Result<T, E>(new Ok(value));
+        return new Result<T, E>({ok: true, value});
     }
 
     public static err<T, E>(error: E): Result<T, E> {
-        return new Result<T, E>(new Err(error));
+        return new Result<T, E>({ok: false, error});
     }
 
     public isOk(): boolean {
@@ -73,4 +81,12 @@ export class Result<T, E> {
         }
         return Optional.empty();
     }
+}
+
+export function Ok<T>(value: T): Ok<T> {
+    return {ok: true, value};
+}
+
+export function Err<E>(error: E): Err<E> {
+    return {ok: false, error};
 }

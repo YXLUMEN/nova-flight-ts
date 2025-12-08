@@ -4,8 +4,10 @@ import type {Identifier} from "./Identifier.ts";
 import type {TagKey} from "./tag/TagKey.ts";
 import {HashMap} from "../utils/collection/HashMap.ts";
 import type {IndexedIterable} from "../utils/collection/IndexedIterable.ts";
+import {IllegalStateException} from "../apis/errors.ts";
+import {deepFreeze} from "../utils/uit.ts";
 
-export class Registry<T> {
+export class Registry<T> implements IndexedIterable<T> {
     public static registerReference<T>(registry: Registry<T>, key: RegistryKey<T>, entry: T): RegistryEntry<T> {
         return registry.add(key, entry);
     }
@@ -21,7 +23,7 @@ export class Registry<T> {
     public readonly key: RegistryKey<T>;
 
     private readonly indexToEntry: RegistryEntry<T>[];
-    private readonly valueToIndex: Map<T, number>;
+    private readonly entryToIndex: Map<RegistryEntry<T>, number>;
     private readonly idToEntry: HashMap<Identifier, RegistryEntry<T>>;
     private readonly keyToEntry: Map<RegistryKey<T>, RegistryEntry<T>>;
     private readonly valueToEntry: Map<T, RegistryEntry<T>>;
@@ -29,7 +31,7 @@ export class Registry<T> {
     public constructor(key: RegistryKey<Registry<T>>) {
         this.key = key;
         this.indexToEntry = [];
-        this.valueToIndex = new Map<T, number>();
+        this.entryToIndex = new Map<RegistryEntry<T>, number>();
         this.idToEntry = new HashMap<Identifier, RegistryEntry<T>>();
         this.keyToEntry = new Map<RegistryKey<T>, RegistryEntry<T>>();
         this.valueToEntry = new Map<T, RegistryEntry<T>>();
@@ -39,7 +41,15 @@ export class Registry<T> {
         return this.key;
     }
 
+    private assertNotFrozen() {
+        if (Object.isFrozen(this)) {
+            throw new IllegalStateException('Registry is already frozen');
+        }
+    }
+
     public add(key: RegistryKey<T>, value: T, ...tags: TagKey<T>[]): RegistryEntry<T> {
+        this.assertNotFrozen();
+
         if (this.idToEntry.has(key.getValue())) throw new Error(`ID is already registered: ${key.getValue()}`);
         if (this.valueToEntry.has(value)) throw new Error(`Value is already registered: ${value}`);
 
@@ -52,22 +62,48 @@ export class Registry<T> {
 
         const index = this.indexToEntry.length;
         this.indexToEntry.push(entry);
-        this.valueToIndex.set(value, index);
+        this.entryToIndex.set(entry, index);
 
         return entry;
     }
 
+    /**
+     * Get value's identifier.
+     * */
     public getId(value: T): Identifier | null {
         const entry = this.valueToEntry.get(value);
         return entry !== undefined ? entry.getRegistryKey().getValue() : null
     }
 
+    /**
+     * Get value's registry key.
+     * */
     public getRegistryKey(value: T): RegistryKey<T> | null {
         return this.valueToEntry.get(value)?.getRegistryKey() ?? null;
     }
 
+    /**
+     * Get value's registry index(raw id)
+     * */
     public getIndex(value: T): number {
-        return this.valueToIndex.get(value) ?? -1;
+        const entry = this.valueToEntry.get(value);
+        if (!entry) return -1;
+        return this.getEntryIndex(entry);
+    }
+
+    public getIndexOrThrow(value: T): number {
+        const entry = this.valueToEntry.get(value);
+        if (!entry) throw new ReferenceError(`No entry with ${value}`);
+
+        const id = this.getEntryIndex(entry);
+        if (id === -1) {
+            throw new ReferenceError(`Can't find id for ${value}`);
+        }
+        return id;
+    }
+
+    public getEntryIndex(entry: RegistryEntry<T>): number {
+        return this.entryToIndex.get(entry) ?? -1;
     }
 
     public getById(id: Identifier | null): T | null {
@@ -75,8 +111,16 @@ export class Registry<T> {
         return Registry.getValue(this.idToEntry.get(id) ?? null);
     }
 
-    public getByRawId(index: number): T | null {
-        return index >= 0 && index < this.indexToEntry.length ? this.indexToEntry[index].getValue() : null;
+    public getByIndex(index: number): T | null {
+        const entry = this.getEntryByIndex(index);
+        if (!entry) return null;
+        return entry.getValue();
+    }
+
+    public getByIndexOrThrow(index: number): T {
+        const entry = this.getEntryByIndex(index);
+        if (!entry) throw new ReferenceError(`No value with id ${index}`);
+        return entry.getValue();
     }
 
     public getEntryById(id: Identifier): RegistryEntry<T> | null {
@@ -99,32 +143,40 @@ export class Registry<T> {
         return this.keyToEntry.size;
     }
 
-    public getIds(): Set<Identifier> {
+    public getIdSet(): Set<Identifier> {
         return new Set(this.idToEntry.keys());
     }
 
-    public getIdValues() {
+    public getIds() {
         return this.idToEntry.keys();
     }
 
-    public getIndexedEntries(): IndexedIterable<T> {
+    public getEntries() {
+        return this.idToEntry.values();
+    }
+
+    public [Symbol.iterator]() {
+        return this.valueToEntry.keys();
+    }
+
+    public getIndexedEntries(): IndexedIterable<RegistryEntry<T>> {
         const self = this;
         return {
-            getRawId(v: T) {
-                return self.getIndex(v);
+            getIndex(entry: RegistryEntry<T>): number {
+                return self.getEntryIndex(entry);
             },
-            get(i: number) {
-                return self.getByRawId(i);
+            getByIndex(index: number): RegistryEntry<T> | null {
+                return self.getEntryByIndex(index);
             },
-            getOrThrow(index: number): T {
-                const value = this.get(index);
+            getByIndexOrThrow(index: number): RegistryEntry<T> {
+                const value = this.getByIndex(index);
                 if (value === null) throw new ReferenceError(`No value with id ${index}`);
                 return value
             },
-            getRawOrThrow(value: T): number {
-                const id = this.getRawId(value);
+            getIndexOrThrow(entry: RegistryEntry<T>): number {
+                const id = this.getIndex(entry);
                 if (id === -1) {
-                    throw new ReferenceError(`Can't find id for ${value}`);
+                    throw new ReferenceError(`Can't find id for ${entry.toString()}`);
                 }
                 return id;
             },
@@ -133,8 +185,25 @@ export class Registry<T> {
             },
 
             [Symbol.iterator]() {
-                return self.valueToIndex.keys();
+                return self.entryToIndex.keys();
             },
-        };
+        } satisfies IndexedIterable<RegistryEntry<T>>;
+    }
+
+    public freeze() {
+        if (Object.isFrozen(this)) {
+            return;
+        }
+        deepFreeze(this);
+
+        const unbound = this.keyToEntry
+            .entries()
+            .filter(entry => !entry[1].hasKeyAndValue())
+            .map(entry => entry[0].getValue())
+            .toArray()
+            .sort();
+        if (unbound.length > 0) {
+            throw new IllegalStateException(`Unbound values in registry ${this.getKey()}:\n ${unbound}`);
+        }
     }
 }

@@ -66,13 +66,13 @@ export class Rotate extends EntityS2CPacket {
 
     private static write(writer: BinaryWriter, value: EntityS2CPacket,): void {
         writer.writeVarUint(value.entityId);
-        writer.writeByte(value.yaw);
+        writer.writeInt8(value.yaw);
     }
 
     private static read(reader: BinaryReader): Rotate {
         return new Rotate(
             reader.readVarUint(),
-            reader.readUnsignByte()
+            reader.readUint8()
         )
     }
 
@@ -93,7 +93,7 @@ export class RotateAndMoveRelative extends EntityS2CPacket {
         writer.writeVarUint(value.entityId);
         writer.writeInt16(value.deltaX);
         writer.writeInt16(value.deltaY);
-        writer.writeByte(value.yaw);
+        writer.writeInt8(value.yaw);
     }
 
     private static read(reader: BinaryReader): RotateAndMoveRelative {
@@ -101,7 +101,7 @@ export class RotateAndMoveRelative extends EntityS2CPacket {
             reader.readVarUint(),
             reader.readInt16(),
             reader.readInt16(),
-            reader.readByte()
+            reader.readInt8()
         )
     }
 

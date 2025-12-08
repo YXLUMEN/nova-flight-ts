@@ -13,6 +13,7 @@ import {StatusEffects} from "../effect/StatusEffects.ts";
 import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.ts";
+import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 
 export class BossEntity extends MobEntity {
     public static hasBoss: boolean = false;
@@ -94,7 +95,7 @@ export class BossEntity extends MobEntity {
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
-        if (this.damageCooldown > 0) return false;
+        if (this.damageCooldown > 0 && !damageSource.isIn(DamageTypeTags.BYPASSES_INVULNERABLE)) return false;
 
         const clampDamage = clamp((damage * 0.1) | 0, 1, this.maxDamageCanTake);
         if (super.takeDamage(damageSource, clampDamage)) {

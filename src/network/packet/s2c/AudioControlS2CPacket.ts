@@ -5,13 +5,10 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class AudioControlS2CPacket implements Payload {
     public static readonly ID: PayloadId<AudioControlS2CPacket> = {id: Identifier.ofVanilla('audio_control')};
-    public static readonly CODEC: PacketCodec<AudioControlS2CPacket> = PacketCodecs.of(
-        (writer, value) => {
-            writer.writeByte(value.action);
-        },
-        reader => new AudioControlS2CPacket(
-            reader.readUnsignByte()
-        )
+    public static readonly CODEC: PacketCodec<AudioControlS2CPacket> = PacketCodecs.adapt(
+        PacketCodecs.UINT8,
+        val => val.action,
+        to => new AudioControlS2CPacket(to)
     );
 
     public readonly action: number

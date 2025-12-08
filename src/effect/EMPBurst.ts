@@ -14,24 +14,24 @@ export class EMPBurst implements VisualEffect {
             PacketCodecs.VECTOR2D.encode(writer, value.pos);
             writer.writeUint16(value.radius);
             writer.writeFloat(value.duration);
-            writer.writeByte(value.bolts);
-            writer.writeByte(value.segs);
+            writer.writeInt8(value.bolts);
+            writer.writeInt8(value.segs);
             writer.writeString(value.color);
-            writer.writeByte(value.thickness);
-            writer.writeByte(encodeToByte(value.jitter, 1));
-            writer.writeByte(value.glow);
+            writer.writeInt8(value.thickness);
+            writer.writeInt8(encodeToByte(value.jitter, 1));
+            writer.writeInt8(value.glow);
         },
         reader => {
             return new EMPBurst(
                 PacketCodecs.VECTOR2D.decode(reader),
                 reader.readUint16(),
                 reader.readFloat(),
-                reader.readUnsignByte(),
-                reader.readUnsignByte(),
+                reader.readUint8(),
+                reader.readUint8(),
                 reader.readString(),
-                reader.readUnsignByte(),
-                decodeFromByte(reader.readUnsignByte(), 1),
-                reader.readUnsignByte()
+                reader.readUint8(),
+                decodeFromByte(reader.readUint8(), 1),
+                reader.readUint8()
             );
         }
     );

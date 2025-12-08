@@ -22,10 +22,10 @@ export class EntityTrackerUpdateS2CPacket implements Payload {
         const entityId = reader.readVarUint();
 
         const list: DataTrackerSerializedEntry<any>[] = [];
-        let i = reader.readUnsignByte();
+        let i = reader.readUint8();
         while (i != 255) {
             list.push(DataTracker.SerializedEntry.read(reader, i));
-            i = reader.readUnsignByte();
+            i = reader.readUint8();
         }
 
         return new EntityTrackerUpdateS2CPacket(entityId, list);
@@ -36,7 +36,7 @@ export class EntityTrackerUpdateS2CPacket implements Payload {
         for (const entry of value.trackedValues) {
             entry.write(writer);
         }
-        writer.writeByte(255);
+        writer.writeInt8(255);
     }
 
     public getId(): PayloadId<EntityTrackerUpdateS2CPacket> {

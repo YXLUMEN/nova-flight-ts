@@ -50,7 +50,7 @@ export class Items {
     ));
     public static readonly ROCKET_WEAPON = this.register("rocket_weapon", new RocketLauncherWeapon(new Item.Settings()
         .attackDamage(8)
-        .maxCooldown(44)
+        .maxCooldown(70)
         .unbreakable()
         .component(DataComponentTypes.EXPLOSION_RADIUS, 72)
         .component(DataComponentTypes.EXPLOSION_DAMAGE, 12)

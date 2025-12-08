@@ -5,7 +5,9 @@ import type {ClientWorld} from "./ClientWorld.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {PlayerUnlockTechC2SPacket} from "../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
-import {applyClientTech} from "../tech/applyClientTech.ts";
+import {applyClientTech} from "./tech/applyClientTech.ts";
+import {Tech} from "../tech/Tech.ts";
+import {Registries} from "../registry/Registries.ts";
 
 export class ClientDefaultEvents {
     public static registryEvents(world: ClientWorld) {
@@ -14,9 +16,15 @@ export class ClientDefaultEvents {
         eventBus.on(EVENTS.UNLOCK_TECH, event => {
             const player = NovaFlightClient.getInstance().player;
             if (!player) return;
+            const tech = event.tech;
 
-            world.getNetworkChannel().send(new PlayerUnlockTechC2SPacket(event.id));
-            applyClientTech(event.id);
+            if (tech instanceof Tech) {
+                const entry = Registries.TECH.getEntryByValue(tech);
+                if (!entry) throw new Error(`Tech not found: ${tech})`);
+
+                world.getNetworkChannel().send(new PlayerUnlockTechC2SPacket(entry));
+                applyClientTech(entry);
+            }
         });
 
         eventBus.on(EVENTS.ENTITY_LOCKED, event => {

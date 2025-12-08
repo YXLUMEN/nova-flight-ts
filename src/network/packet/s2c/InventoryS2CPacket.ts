@@ -22,14 +22,14 @@ export class InventoryS2CPacket implements Payload {
 
     private static read(reader: BinaryReader) {
         return new InventoryS2CPacket(
-            reader.readUnsignByte(),
+            reader.readUint8(),
             reader.readVarUint(),
             ItemStack.LIST_PACKET_CODEC.decode(reader)
         );
     }
 
     private static write(writer: BinaryWriter, value: InventoryS2CPacket) {
-        writer.writeByte(value.syncId);
+        writer.writeInt8(value.syncId);
         writer.writeVarUint(value.revision);
         ItemStack.LIST_PACKET_CODEC.encode(writer, value.contents);
     }

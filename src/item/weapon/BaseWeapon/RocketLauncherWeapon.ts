@@ -40,7 +40,14 @@ export class RocketLauncherWeapon extends BaseWeapon {
                 return;
             }
 
-            let rocket = null;
+            if (world.isClient) {
+                this.spawnMuzzle(world as ClientWorld, attacker, this.getMuzzleParticles());
+                const yaw = attacker.getYaw();
+                attacker.updateVelocity(-0.6, Math.cos(yaw), Math.sin(yaw));
+                return;
+            }
+
+            let rocket: RocketEntity | null = null;
             if (randomRocketEnable) {
                 rocket = this.randomRocket(world, attacker);
             }
@@ -51,8 +58,7 @@ export class RocketLauncherWeapon extends BaseWeapon {
             }
 
             this.setBullet(rocket, attacker, RocketLauncherWeapon.BULLET_SPEED, 4, 2);
-            if (!world.isClient) (world as ServerWorld).spawnEntity(rocket);
-            else this.spawnMuzzle(world as ClientWorld, attacker, this.getMuzzleParticles());
+            (world as ServerWorld).spawnEntity(rocket);
             const yaw = attacker.getYaw();
             attacker.updateVelocity(-0.6, Math.cos(yaw), Math.sin(yaw));
         });
