@@ -17,6 +17,8 @@ import {TrackedDataHandlerRegistry} from "./data/TrackedDataHandlerRegistry.ts";
 import type {TrackedData} from "./data/TrackedData.ts";
 import type {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {EntityDamageS2CPacket} from "../network/packet/s2c/EntityDamageS2CPacket.ts";
+import {DamageTypeTags} from "../registry/tag/DamageTypeTags.ts";
+import {StatusEffects} from "./effect/StatusEffects.ts";
 
 
 export abstract class LivingEntity extends Entity {
@@ -153,11 +155,26 @@ export abstract class LivingEntity extends Entity {
         }
     }
 
+    protected modifyAppliedDamage(source: DamageSource, damage: number): number {
+        if (source.isIn(DamageTypeTags.BYPASSES_EFFECTS)) {
+            return damage;
+        }
+
+        if (this.hasStatusEffect(StatusEffects.RESISTANCE) && !source.isIn(DamageTypeTags.BYPASSES_RESISTANCE)) {
+            const reduce = this.getStatusEffect(StatusEffects.RESISTANCE).getAmplifier();
+            const precent = (8 - reduce) * 0.1;
+            return Math.max(0, damage * precent);
+        }
+
+        return damage;
+    }
+
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (this.isInvulnerableTo(damageSource)) return false;
         if (this.getWorld().isClient) return false;
         if (this.isDead()) return false;
 
+        damage = this.modifyAppliedDamage(damageSource, damage);
         const remainDamage = Math.max(damage - this.getShieldAmount(), 0);
         this.setShieldAmount(this.getShieldAmount() - damage + remainDamage);
 

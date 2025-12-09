@@ -37,13 +37,15 @@ export class TechState {
             }
 
             const name = isNonEmptyString(rawTech['name']) ? rawTech['name'].trim() : id;
-            if (typeof rawTech['x'] !== 'number' || !isFinite(rawTech['x']) ||
-                typeof rawTech['y'] !== 'number' || !isFinite(rawTech['y'])) {
+
+            const x = rawTech['x'];
+            const y = rawTech['y'];
+            if (typeof x !== 'number' || !Number.isFinite(x) || typeof y !== 'number' || !Number.isFinite(y)) {
                 throw new Error(`Tech[${idx}]: invalid position (${rawTech.x}, ${rawTech.y})`);
             }
 
             const cost = rawTech['cost'];
-            if (typeof cost !== 'number' || !isFinite(cost)) {
+            if (typeof cost !== 'number' || !Number.isFinite(cost)) {
                 throw new Error(`Tech[${idx}]: invalid cost '${rawTech.cost}'`);
             }
 
@@ -57,8 +59,8 @@ export class TechState {
                 .name(name)
                 .desc(desc)
                 .cost(cost)
-                .x(rawTech.x)
-                .y(rawTech.y)
+                .x(x)
+                .y(y)
                 .requires(requires)
                 .conflicts(conflicts)
                 .branchGroup(branchGroup)
@@ -70,11 +72,10 @@ export class TechState {
 
     public computeStatus(tech: Tech): TechAvailable {
         if (this.unlocked.has(tech)) return 'unlocked';
-
         if (tech.cost < 0) return 'locked';
 
         // 冲突检测
-        if (tech.conflicts?.has(tech)) {
+        if (tech.conflicts && !tech.conflicts.isDisjointFrom(this.unlocked)) {
             return 'conflicted';
         }
         // 分支互斥

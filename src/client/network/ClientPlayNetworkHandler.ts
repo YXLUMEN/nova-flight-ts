@@ -259,7 +259,9 @@ export class ClientPlayNetworkHandler {
     }
 
     public onGameOver(): void {
-        this.world?.gameOver();
+        if (this.world && this.client.player) {
+            this.world.gameOver(this.client.player);
+        }
     }
 
     public onEntityKilled(): void {

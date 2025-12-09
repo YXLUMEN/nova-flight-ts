@@ -150,7 +150,7 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public override onDeath(damageSource: DamageSource) {
         super.onDeath(damageSource);
-        this.getWorld().gameOver();
+        this.getWorld().gameOver(this);
     }
 
     public override onDiscard() {

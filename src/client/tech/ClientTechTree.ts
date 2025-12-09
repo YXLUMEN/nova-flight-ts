@@ -247,13 +247,13 @@ export class ClientTechTree implements TechTree {
     }
 
     private createNodeElement(tech: Tech): HTMLElement {
-        const el = document.createElement('div');
-        el.dataset.id = this.state.getTechId(tech)!.toString();
-        el.className = `node ${this.state.computeStatus(tech)}`;
-        el.style.left = `${tech.x}px`;
-        el.style.top = `${tech.y}px`;
-        el.textContent = tech.name;
-        return el;
+        const div = document.createElement('div');
+        div.dataset.id = this.state.getTechId(tech)!.toString();
+        div.className = `node ${this.state.computeStatus(tech)}`;
+        div.style.left = `${tech.x}px`;
+        div.style.top = `${tech.y}px`;
+        div.textContent = tech.name;
+        return div;
     }
 
     // -------- Interactions --------

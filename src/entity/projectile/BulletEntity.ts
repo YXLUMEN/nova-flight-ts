@@ -18,15 +18,16 @@ export class BulletEntity extends ProjectileEntity {
         const sources = this.getWorld().getDamageSources();
         const owner = this.getOwner();
 
+        const hitDamage = this.getHitDamage();
         if (owner instanceof PlayerEntity && owner.getTechs().isUnlocked(Techs.APFS_DISCARDING_SABOT)) {
-            let damage = this.damage;
+            let damage = hitDamage;
             const factor = clamp(damage * 0.1, 0.1, 0.5);
-            if (entity instanceof LivingEntity) damage = this.damage + (entity.getMaxHealth() * factor) | 0;
+            if (entity instanceof LivingEntity) damage = hitDamage + (entity.getMaxHealth() * factor) | 0;
             else damage *= 2;
             entity.takeDamage(sources.playerAttack(owner), damage);
             return;
         }
 
-        entity.takeDamage(sources.projectile(this, owner), this.damage);
-    };
+        entity.takeDamage(sources.projectile(this, owner), hitDamage);
+    }
 }

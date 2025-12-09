@@ -45,6 +45,8 @@ export class StatusEffects {
                 EntityAttributes.GENERIC_MAX_SHIELD, Identifier.ofVanilla("effect.shield"), 4)
     );
 
+    public static readonly RESISTANCE = this.register("resistance", new StatusEffect(0, '#ffc23f'));
+
     private static register(id: string, statusEffect: StatusEffect): RegistryEntry<StatusEffect> {
         return Registry.registerReferenceById(Registries.STATUS_EFFECT, Identifier.ofVanilla(id), statusEffect);
     }

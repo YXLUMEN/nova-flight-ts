@@ -236,6 +236,10 @@ export class ClientWorld extends World {
         this.setTicking(ticking);
     }
 
+    public isTechTreeHidden() {
+        return document.getElementById('tech-shell')!.classList.contains('hidden');
+    }
+
     public render(tickDelta: number) {
         if (!this.rendering) return;
 

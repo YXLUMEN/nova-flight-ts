@@ -194,7 +194,7 @@ export class MissileEntity extends RocketEntity {
             if (mob.isRemoved() || mob === this.getOwner()) continue;
 
             const currentLocks = MissileEntity.lockedEntity.get(mob) ?? 0;
-            const totalDamage = this.damage + this.explosionDamage;
+            const totalDamage = this.getHitDamage() + this.explosionDamage;
 
             if (currentLocks * totalDamage >= mob.getMaxHealth()) continue;
 

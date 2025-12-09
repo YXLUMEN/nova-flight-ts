@@ -11,7 +11,7 @@ const freezeConfig = createClean({
     per: 50,
     fps: 75,
     perFrame: 1000 / 75,
-    version: '25w15b'
+    version: '25w15c'
 } as const);
 
 const WorldConfig = Object.preventExtensions(createClean({

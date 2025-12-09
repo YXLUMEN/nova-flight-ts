@@ -29,10 +29,11 @@ export class OtherClientPlayerEntity extends AbstractClientPlayerEntity {
             const velocity = this.getVelocityRef;
             const vx = (this.clientVelocity.x - velocity.x) / this.velocityLerpDivisor;
             const vy = (this.clientVelocity.y - velocity.y) / this.velocityLerpDivisor;
-            velocity.add(vx, vy).multiply(0.9);
+            velocity.add(vx, vy);
 
             this.velocityLerpDivisor--;
         }
+        this.getVelocityRef.multiply(0.9);
     }
 
     public override setVelocityClient(x: number, y: number) {

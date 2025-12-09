@@ -9,7 +9,7 @@ export class APRocketEntity extends RocketEntity {
     public override onEntityHit(entity: Entity) {
         if (this.damagedEntity.has(entity)) return;
 
-        let damaged = this.damage;
+        let damaged = this.getHitDamage();
         const sources = this.getWorld().getDamageSources();
 
         if (entity instanceof LivingEntity) {

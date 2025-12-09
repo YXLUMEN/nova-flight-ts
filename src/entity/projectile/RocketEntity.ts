@@ -18,7 +18,7 @@ export class RocketEntity extends ProjectileEntity {
     public override onEntityHit(entity: Entity): void {
         this.explode();
 
-        let damage = this.damage;
+        let damage = this.getHitDamage();
         const sources = this.getWorld().getDamageSources();
         if (entity instanceof LivingEntity) {
             damage += Math.max(1, (entity.getMaxHealth() - entity.getHealth()) * 0.3);

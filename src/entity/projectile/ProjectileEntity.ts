@@ -11,9 +11,9 @@ import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacke
 import type {UUID} from "../../apis/types.ts";
 
 export abstract class ProjectileEntity extends Entity implements IOwnable, IColorEntity {
-    public readonly damage: number;
-    public color = "#8cf5ff";
-    public edgeColor = '';
+    private damage: number = 0;
+    public color: string = "#8cf5ff";
+    public edgeColor: string = '';
     private ownerUuid: UUID | null = null;
     private owner: Entity | null = null;
     private wrapTime = 0;
@@ -42,6 +42,10 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
     }
 
     public abstract onEntityHit(entity: Entity): void;
+
+    public getHitDamage(): number {
+        return this.damage;
+    }
 
     public setOwner(entity: Entity | null): void {
         if (entity) {
@@ -88,6 +92,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
         if (this.ownerUuid) {
             nbt.putString('Owner', this.ownerUuid);
         }
+        nbt.putFloat('Damage', this.damage);
         nbt.putString('Color', this.color);
         nbt.putString('EdgeColor', this.edgeColor);
 
@@ -98,6 +103,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
         super.readNBT(nbt);
         const ownerUuid = nbt.getString('Owner') as UUID;
         this.ownerUuid = ownerUuid.length > 0 ? ownerUuid : null;
+        this.damage = nbt.getFloat('Damage');
         this.color = nbt.getString('Color');
         this.edgeColor = nbt.getString('EdgeColor');
     }

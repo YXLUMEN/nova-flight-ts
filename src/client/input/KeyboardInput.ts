@@ -81,7 +81,8 @@ export class KeyboardInput implements IInput {
     }
 
     private registryListener(target: HTMLElement) {
-        const commandManager = NovaFlightClient.getInstance().clientCommandManager;
+        const client = NovaFlightClient.getInstance();
+        const commandManager = client.clientCommandManager;
 
         window.addEventListener('keydown', event => {
             const code = event.code;
@@ -113,12 +114,13 @@ export class KeyboardInput implements IInput {
         window.addEventListener('keyup', e => this.keys.delete(e.code));
         window.addEventListener('blur', () => this.keys.clear());
         window.addEventListener('wheel', e => {
-            const player = NovaFlightClient.getInstance().player;
+            if (client.world && !client.world.isTechTreeHidden()) return;
+            const player = client.player;
             if (player) player.switchWeapon(e.deltaY > 0 ? 1 : -1);
         }, {passive: true});
 
         target.addEventListener('mousemove', e => {
-            const offset = NovaFlightClient.getInstance().window.camera.cameraOffset;
+            const offset = client.window.camera.cameraOffset;
             this.pointer.set(e.offsetX + offset.x, e.offsetY + offset.y);
         }, {passive: true});
 
@@ -127,10 +129,10 @@ export class KeyboardInput implements IInput {
                 WorldConfig.autoShoot = true;
             }
             if (e.button === 1) {
-                NovaFlightClient.getInstance().player?.switchQuickFire();
+                client.player?.switchQuickFire();
             }
             if (e.button === 2) {
-                const player = NovaFlightClient.getInstance().player;
+                const player = client.player;
                 if (player) player.launchQuickFire();
             }
         });

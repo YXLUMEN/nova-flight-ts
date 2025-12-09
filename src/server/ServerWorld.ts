@@ -128,7 +128,8 @@ export class ServerWorld extends World implements NbtSerializable {
         }
     }
 
-    public override gameOver(): void {
+    public override gameOver(player: ServerPlayerEntity): void {
+        if (!this.server.isHost(player.getProfile())) return;
         this.over = true;
         this.setTicking(false);
         this.getNetworkChannel().send(new GameOverS2CPacket());
