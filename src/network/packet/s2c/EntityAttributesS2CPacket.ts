@@ -7,46 +7,7 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
 import {Registries} from "../../../registry/Registries.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-
-export class EntityAttributesS2CPacket implements Payload {
-    public static readonly ID: PayloadId<EntityAttributesS2CPacket> = {id: Identifier.ofVanilla('entity_attr')}
-    public static readonly CODEC: PacketCodec<EntityAttributesS2CPacket> = PacketCodecs.of(
-        (writer, value) => {
-            writer.writeVarUint(value.entityId);
-            PacketCodecs.collection(Entry.CODEC).encode(writer, value.entries);
-        },
-        reader => {
-            const entityId = reader.readVarUint();
-            const list = PacketCodecs.collection(Entry.CODEC).decode(reader);
-            return new EntityAttributesS2CPacket(entityId, list);
-        }
-    );
-
-    public readonly entityId: number;
-    public readonly entries: Entry[];
-
-    public constructor(entityId: number, entries: Entry[]) {
-        this.entityId = entityId;
-        this.entries = entries;
-    }
-
-    public static create(entityId: number, attributes: Iterable<EntityAttributeInstance>): EntityAttributesS2CPacket {
-        const entries: Entry[] = [];
-        for (const entry of attributes) {
-            entries.push(new Entry(
-                entry.getAttribute(),
-                entry.getBaseValue(),
-                entry.getModifiers() as Set<EntityAttributeModifier>
-            ));
-        }
-
-        return new EntityAttributesS2CPacket(entityId, entries);
-    }
-
-    public getId(): PayloadId<EntityAttributesS2CPacket> {
-        return EntityAttributesS2CPacket.ID;
-    }
-}
+import {createClean} from "../../../utils/uit.ts";
 
 class Entry {
     public static readonly MODIFIER_CODEC: PacketCodec<EntityAttributeModifier> = PacketCodecs.of(
@@ -55,10 +16,10 @@ class Entry {
             writer.writeDouble(value.value);
         },
         reader => {
-            return {
+            return createClean({
                 id: Identifier.PACKET_CODEC.decode(reader),
                 value: reader.readDouble()
-            } satisfies EntityAttributeModifier;
+            }) satisfies EntityAttributeModifier;
         }
     );
 
@@ -84,5 +45,45 @@ class Entry {
         this.attribute = attribute;
         this.base = base;
         this.modifiers = modifiers;
+    }
+}
+
+export class EntityAttributesS2CPacket implements Payload {
+    public static readonly ID: PayloadId<EntityAttributesS2CPacket> = {id: Identifier.ofVanilla('entity_attr')}
+    public static readonly CODEC: PacketCodec<EntityAttributesS2CPacket> = PacketCodecs.adapt2(
+        PacketCodecs.VAR_UINT,
+        val => val.entityId,
+        PacketCodecs.collection(Entry.CODEC),
+        val => val.entries,
+        EntityAttributesS2CPacket.new
+    );
+
+    public readonly entityId: number;
+    public readonly entries: Entry[];
+
+    public constructor(entityId: number, entries: Entry[]) {
+        this.entityId = entityId;
+        this.entries = entries;
+    }
+
+    public static new(entityId: number, entries: Entry[]) {
+        return new EntityAttributesS2CPacket(entityId, entries);
+    }
+
+    public static create(entityId: number, attributes: Iterable<EntityAttributeInstance>): EntityAttributesS2CPacket {
+        const entries: Entry[] = [];
+        for (const entry of attributes) {
+            entries.push(new Entry(
+                entry.getAttribute(),
+                entry.getBaseValue(),
+                entry.getModifiers() as Set<EntityAttributeModifier>
+            ));
+        }
+
+        return new EntityAttributesS2CPacket(entityId, entries);
+    }
+
+    public getId(): PayloadId<EntityAttributesS2CPacket> {
+        return EntityAttributesS2CPacket.ID;
     }
 }

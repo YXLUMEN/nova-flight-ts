@@ -7,22 +7,10 @@ import type {Entity} from "../../../entity/Entity.ts";
 
 export class EntityBatchSpawnS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityBatchSpawnS2CPacket> = {id: Identifier.ofVanilla('spawn_entity_batch')};
-    public static readonly CODEC: PacketCodec<EntityBatchSpawnS2CPacket> = PacketCodecs.of(
-        (writer, value) => {
-            writer.writeVarUint(value.entities.length);
-            for (const packet of value.entities) {
-                EntitySpawnS2CPacket.CODEC.encode(writer, packet);
-            }
-        },
-        reader => {
-            const count = reader.readVarUint();
-            const entities: EntitySpawnS2CPacket[] = [];
-            for (let i = 0; i < count; i++) {
-                const spawn = EntitySpawnS2CPacket.CODEC.decode(reader);
-                entities.push(spawn);
-            }
-            return new EntityBatchSpawnS2CPacket(entities);
-        }
+    public static readonly CODEC: PacketCodec<EntityBatchSpawnS2CPacket> = PacketCodecs.adapt(
+        PacketCodecs.collection(EntitySpawnS2CPacket.CODEC),
+        val => val.entities,
+        val => new EntityBatchSpawnS2CPacket(val)
     );
 
     public readonly entities: EntitySpawnS2CPacket[];

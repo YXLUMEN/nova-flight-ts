@@ -16,7 +16,7 @@ import {SoundEvents} from "../sound/SoundEvents.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {EntityRenderers} from "./render/entity/EntityRenderers.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
-import {HALF_PI, lerp} from "../utils/math/math.ts";
+import {HALF_PI, lerp, PI2} from "../utils/math/math.ts";
 import type {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
@@ -29,6 +29,7 @@ import {Particle} from "../effect/Particle.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {AbstractClientPlayerEntity} from "./entity/AbstractClientPlayerEntity.ts";
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
+import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
 
 export class ClientWorld extends World {
     private readonly client: NovaFlightClient = NovaFlightClient.getInstance();
@@ -287,25 +288,19 @@ export class ClientWorld extends World {
             }
 
             if (player.lockedMissile.size > 0) {
+                ctx.fillStyle = '#ff7f50';
                 for (const missile of player.lockedMissile) {
-                    const mPos = missile.getLerpPos(tickDelta);
-                    const dx = mPos.x - playerPos.x;
-                    const dy = mPos.y - playerPos.y;
-                    const angle = Math.atan2(dy, dx);
-                    const arrowX = playerPos.x + Math.cos(angle) * 64;
-                    const arrowY = playerPos.y + Math.sin(angle) * 64;
+                    if (player.approachMissile.has(missile)) continue;
+                    this.drawLockedDir(ctx, missile, playerPos, 8, 6, 6, tickDelta);
+                }
+            }
 
-                    ctx.save();
-                    ctx.translate(arrowX, arrowY);
-                    ctx.rotate(angle + HALF_PI);
-                    ctx.beginPath();
-                    ctx.moveTo(0, -10);
-                    ctx.lineTo(6, 8);
-                    ctx.lineTo(-6, 8);
-                    ctx.closePath();
-                    ctx.fillStyle = `#FF5050`;
-                    ctx.fill();
-                    ctx.restore();
+            if (player.approachMissile.size > 0) {
+                const t = performance.now() * 0.01;
+                const pulse = (Math.sin(t * PI2) + 1) / 2;
+                ctx.fillStyle = `rgba(255,27,27,${0.35 + 0.45 * pulse})`;
+                for (const missile of player.approachMissile) {
+                    this.drawLockedDir(ctx, missile, playerPos, 10, 6, 8, tickDelta);
                 }
             }
 
@@ -326,6 +321,32 @@ export class ClientWorld extends World {
         this.client.window.hud.render(ctx);
         this.client.window.notify.render(ctx);
         if (!this.ticking && !this.over) this.client.window.pauseOverlay.render(ctx);
+    }
+
+    public drawLockedDir(
+        ctx: CanvasRenderingContext2D,
+        missile: MissileEntity,
+        playerPos: IVec,
+        my: number, x: number, y: number,
+        tickDelta: number
+    ) {
+        const mPos = missile.getLerpPos(tickDelta);
+        const dx = mPos.x - playerPos.x;
+        const dy = mPos.y - playerPos.y;
+        const angle = Math.atan2(dy, dx);
+        const arrowX = playerPos.x + Math.cos(angle) * 64;
+        const arrowY = playerPos.y + Math.sin(angle) * 64;
+
+        ctx.save();
+        ctx.translate(arrowX, arrowY);
+        ctx.rotate(angle + HALF_PI);
+        ctx.beginPath();
+        ctx.moveTo(0, -my);
+        ctx.lineTo(x, y);
+        ctx.lineTo(-x, y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
     }
 
     private wrapEntityRender(ctx: CanvasRenderingContext2D, tickDelta: number) {

@@ -81,12 +81,7 @@ export class ServerDefaultEvents {
                 if (BossEntity.hasBoss) return;
 
                 world.stage.reset();
-                while (true) {
-                    const name = world.stage.getCurrentName();
-                    if (name === 'P6' || name === 'mP3' || name === null) break;
-                    world.stage.nextPhase();
-                }
-
+                world.stage.setStage('P6');
                 if (Math.random() > 0.8) {
                     world.getNetworkChannel().send(new PlayAudioS2CPacket(Audios.BOSS_PHASE, 0.6));
                 }

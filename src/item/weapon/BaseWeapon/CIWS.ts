@@ -52,7 +52,7 @@ export class CIWS extends BaseWeapon {
         const currentHeat = this.getHeat(stack);
         if (currentHeat === 0) return;
 
-        const cooldown = Math.max(0, currentHeat - 4);
+        const cooldown = Math.max(0, currentHeat - 2);
         this.setHeat(stack, cooldown);
         if (cooldown === 0) {
             stack.setAvailable(true);

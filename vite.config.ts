@@ -1,4 +1,4 @@
-import {defineConfig,} from 'vite';
+import {defineConfig} from 'vite';
 
 // @ts-expect-error process is a Node.js global
 const env = process.env;

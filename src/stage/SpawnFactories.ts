@@ -9,7 +9,7 @@ import type {SpawnContext} from "./SpawnContext.ts";
 import type {BiConsumer} from "../apis/types.ts";
 
 // 顶部随机生成
-function spawnTopRandomCtor<T extends MobEntity>(
+export function spawnTopRandomCtor<T extends MobEntity>(
     type: EntityType<T>,
     args: readonly unknown[] = [],
     init?: BiConsumer<T, SpawnContext>
@@ -30,7 +30,7 @@ export interface SpawnConfig<T extends MobEntity> {
     opts?: TopSpawnOpts
 }
 
-function spawnTopRandomCtorS<T extends MobEntity>(
+export function spawnTopRandomCtorS<T extends MobEntity>(
     type: EntityType<T>,
     args: readonly unknown[] = [],
     init?: BiConsumer<T, SpawnContext>,
@@ -112,7 +112,7 @@ function spawnTopRandomCtorS<T extends MobEntity>(
     };
 }
 
-function spawnLineCtor<T extends MobEntity>(
+export function spawnLineCtor<T extends MobEntity>(
     type: EntityType<T>,
     count: number,
     args: any[] = [],
@@ -133,15 +133,14 @@ function spawnLineCtor<T extends MobEntity>(
     };
 }
 
-function spawnFormation(configs: SpawnConfig<MobEntity>[]): MobFactory {
+export function spawnFormation(configs: SpawnConfig<MobEntity>[]): MobFactory {
     return (ctx) => {
         const arr: MobEntity[] = [];
-        let gap = 0;
         const x = randInt(24, World.WORLD_W - 24);
-        for (const config of configs) {
+        for (let i = 0; i < configs.length; i += 1) {
+            const config = configs[i];
             const mob = config.type.create(ctx.world, ...config.args) as MobEntity;
-            mob.setPosition(x, gap);
-            gap += -16 - mob.getHeight();
+            mob.setPosition(x, i + 16 + mob.getHeight());
             config.init?.(mob, ctx);
             arr.push(mob);
         }
@@ -149,50 +148,7 @@ function spawnFormation(configs: SpawnConfig<MobEntity>[]): MobFactory {
     }
 }
 
-function spawnInMapCtor<T extends MobEntity>(
-    type: EntityType<T>,
-    args: readonly unknown[] = [],
-    init?: BiConsumer<T, SpawnContext>,
-    opts: { margin?: number; farPower?: number } = {}
-): MobFactory {
-    const margin = opts.margin ?? 24;
-    const farPower = opts.farPower ?? 0; // 距离权重指数
-
-    return (ctx) => {
-        const minX = margin;
-        const maxX = World.WORLD_W - margin;
-        const minY = margin;
-        const maxY = World.WORLD_H - margin;
-        // todo
-        const playerPos = ctx.world.getPlayers().next().value?.getPositionRef;
-
-        // 多次采样，选距离玩家最远的点
-        let bestX = minX, bestY = minY;
-        if (playerPos) {
-            let bestScore = -Infinity;
-            for (let i = 0; i < 8; i++) {
-                const x = randInt(minX, maxX);
-                const y = randInt(minY, maxY);
-                const dx = x - playerPos.x;
-                const dy = y - playerPos.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                const score = Math.pow(dist, farPower);
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestX = x;
-                    bestY = y;
-                }
-            }
-        }
-
-        const mob = type.create(ctx.world, ...args);
-        mob.setPosition(bestX, bestY);
-        init?.(mob as T, ctx);
-        return mob;
-    };
-}
-
-function spawnAvoidPlayerCtor<T extends MobEntity>(
+export function spawnAvoidPlayerCtor<T extends MobEntity>(
     type: EntityType<T>,
     args: readonly unknown[] = [],
     init?: BiConsumer<T, SpawnContext>,
@@ -238,13 +194,4 @@ function spawnAvoidPlayerCtor<T extends MobEntity>(
         mark.setPosition(x, y);
         return mark;
     };
-}
-
-export {
-    spawnTopRandomCtor,
-    spawnTopRandomCtorS,
-    spawnLineCtor,
-    spawnFormation,
-    spawnInMapCtor,
-    spawnAvoidPlayerCtor
 }

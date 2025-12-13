@@ -10,6 +10,7 @@ import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {createClean} from "../../utils/uit.ts";
 import {Optional} from "../../utils/Optional.ts";
 import {NbtCompound} from "../../nbt/NbtCompound.ts";
+import {decodeColorHex, encodeColorHex} from "../../utils/NetUtil.ts";
 
 export class PacketCodecs {
     public static readonly INT8: PacketCodec<number> = PacketCodecs.of(
@@ -70,6 +71,11 @@ export class PacketCodecs {
     public static readonly NBT: PacketCodec<NbtCompound> = PacketCodecs.of(
         (writer, value) => writer.pushBytes(value.toBinary()),
         reader => NbtCompound.fromReader(reader)
+    );
+
+    public static readonly COLOR_HEX: PacketCodec<string> = PacketCodecs.of(
+        (writer, value) => writer.writeUint32(encodeColorHex(value)),
+        reader => decodeColorHex(reader.readUint32())
     );
 
     public static readonly VECTOR2F: PacketCodec<IVec> = PacketCodecs.of(
@@ -312,7 +318,7 @@ export class PacketCodecs {
      *
      * ONLY use for plain data classes with:
      *  - Public, writable, non-method fields
-     *  - A no-arg constructor (`new C()`)
+     *  - Better a no-arg constructor (`new C()`)
      *  - Stable field names (no renaming in production)
      *
      *  Type safety is NOT guaranteed. Field order = wire order.

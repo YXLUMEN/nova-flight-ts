@@ -144,10 +144,6 @@ export class LaserWeapon extends SpecialWeapon {
         return this.getMaxHeat(stack);
     }
 
-    public bindKey(): string {
-        return 'Digit3';
-    }
-
     public override getDisplayName(): string {
         return LaserWeapon.DISPLAY_NAME;
     }

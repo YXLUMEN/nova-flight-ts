@@ -70,7 +70,7 @@ export class Items {
     public static readonly LASER_WEAPON: Item;
     public static readonly DECOY_RELEASER = this.register("decoy_releaser", new DecoyReleaser(new Item.Settings()
         .attackDamage(0)
-        .maxCooldown(360)
+        .maxCooldown(450)
     ));
 
     // 避免引用问题

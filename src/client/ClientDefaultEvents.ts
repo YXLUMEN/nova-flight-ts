@@ -44,6 +44,7 @@ export class ClientDefaultEvents {
 
             if (target && target.isPlayer() && player.lockedMissile.size > 0) {
                 player.lockedMissile.delete(event.missile);
+                player.approachMissile.delete(event.missile);
             }
         });
     }

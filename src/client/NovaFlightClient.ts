@@ -4,7 +4,7 @@ import {isDev, WorldConfig} from "../configs/WorldConfig.ts";
 import {mainWindow} from "../main.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
 import {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
-import type {UUID} from "../apis/types.ts";
+import type {Supplier, UUID} from "../apis/types.ts";
 import {ClientWorld} from "./ClientWorld.ts";
 import {ClientPlayerEntity} from "./entity/ClientPlayerEntity.ts";
 import {LoadingScreen} from "./render/ui/LoadingScreen.ts";
@@ -55,7 +55,7 @@ export class NovaFlightClient {
     private lastRenderTime = 0;
 
     private waitWorldStop: Promise<void> | null = null;
-    private stopWorld: () => void = () => {
+    private stopWorld: Supplier<void> = () => {
     };
     private bindRender = this.render.bind(this);
 

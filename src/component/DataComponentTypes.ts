@@ -33,7 +33,7 @@ export class DataComponentTypes {
     );
 
     public static readonly UI_COLOR: ComponentType<string> = this.register("ui_color",
-        builder => builder.withCodec(Codecs.STRING).withPacketCodec(PacketCodecs.STRING)
+        builder => builder.withCodec(Codecs.STRING).withPacketCodec(PacketCodecs.COLOR_HEX)
     );
     public static readonly ATTACK_DAMAGE: ComponentType<number> = this.register("attack_damage",
         builder => builder.withCodec(Codecs.DOABLE).withPacketCodec(PacketCodecs.DOUBLE)

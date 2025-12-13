@@ -81,10 +81,20 @@ export class Stage implements NbtSerializable {
         }
     }
 
-    public nextPhase() {
+    public nextPhase(): boolean {
         const index = this.index + 1;
-        if (index >= this.phases.length) return;
+        if (index >= this.phases.length) return false;
         this.loadPhase(index);
+        return true;
+    }
+
+    public setStage(name: string): boolean {
+        this.reset();
+        while (true) {
+            const current = this.getCurrentName();
+            if (current === name) return true;
+            if (!this.nextPhase()) return false;
+        }
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {

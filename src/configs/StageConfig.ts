@@ -217,7 +217,7 @@ const p8 = PhaseConfigBuilder.create({
             every: 50,
             jitter: 0.6,
             factory: spawnInMap(EntityTypes.TANK_ENEMY_ENTITY,
-                0.82, 0, 8,
+                0.82, 1, 8,
                 '#9f3b00',
                 {safeRadius: 248},
                 (ctx) => 1 + (ctx.score / 700) | 0

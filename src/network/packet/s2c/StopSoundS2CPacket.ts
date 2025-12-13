@@ -1,26 +1,15 @@
 import type {Payload, PayloadId} from "../../Payload.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
-import {Registries} from "../../../registry/Registries.ts";
-import type {SoundEvent} from "../../../sound/SoundEvent.ts";
-import {SoundEvents} from "../../../sound/SoundEvents.ts";
+import {SoundEvent} from "../../../sound/SoundEvent.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class StopSoundS2CPacket implements Payload {
     public static readonly ID: PayloadId<StopSoundS2CPacket> = {id: Identifier.ofVanilla('stop_sound')};
-
-    public static readonly CODEC: PacketCodec<StopSoundS2CPacket> = PacketCodecs.of<StopSoundS2CPacket>(
-        (writer, value) => {
-            Identifier.PACKET_CODEC.encode(writer, value.soundEvent.getId());
-        },
-        (reader) => {
-            const id = Identifier.PACKET_CODEC.decode(reader);
-            const sound = Registries.SOUND_EVENT.getById(id);
-            if (!sound) {
-                return new StopSoundS2CPacket(SoundEvents.UI_APPLY);
-            }
-            return new StopSoundS2CPacket(sound);
-        }
+    public static readonly CODEC: PacketCodec<StopSoundS2CPacket> = PacketCodecs.adapt(
+        SoundEvent.SOUND_PACKET_CODEC,
+        val => val.soundEvent,
+        val => new StopSoundS2CPacket(val)
     );
 
     public readonly soundEvent: SoundEvent;

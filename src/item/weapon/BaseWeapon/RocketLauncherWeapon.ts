@@ -36,6 +36,7 @@ export class RocketLauncherWeapon extends BaseWeapon {
                 stack.set(DataComponentTypes.WEAPON_CAN_COOLDOWN, true);
                 if (!world.isClient && attacker.isPlayer()) {
                     (attacker as ServerPlayerEntity).networkHandler?.send(EntityPositionForceS2CPacket.create(attacker));
+                    (attacker as ServerPlayerEntity).syncStack(stack);
                 }
                 return;
             }

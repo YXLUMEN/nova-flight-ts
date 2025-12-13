@@ -20,10 +20,6 @@ export class BombWeapon extends SpecialWeapon {
         this.setCooldown(stack, this.getMaxCooldown(stack));
     }
 
-    public bindKey(): string {
-        return 'Digit1';
-    }
-
     public override getDisplayName(): string {
         return '炸弹';
     }

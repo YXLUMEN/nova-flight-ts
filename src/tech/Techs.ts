@@ -47,6 +47,7 @@ export class Techs {
     public static STEERING_GEAR;
     public static FIRE_CONTROL_COMPUTER;
     public static INSTANT_RESPONSE;
+    public static EMERGENCY_WARP;
 
     static {
         const parsed = TechState.normalizeTechs(tech);
@@ -94,6 +95,7 @@ export class Techs {
         this.STEERING_GEAR = registerFromJson('steering_gear');
         this.FIRE_CONTROL_COMPUTER = registerFromJson('fire_control_computer');
         this.INSTANT_RESPONSE = registerFromJson('instant_response');
+        this.EMERGENCY_WARP = registerFromJson('emergency_warp');
 
         Registries.TECH.getEntries().forEach(entry => entry.getValue().complete());
     }

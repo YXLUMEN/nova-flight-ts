@@ -5,6 +5,7 @@ import type {Consumer} from "../../apis/types.ts";
 import type {EntityAttributeModifier} from "./EntityAttributeModifier.ts";
 import {NbtCompound} from "../../nbt/NbtCompound.ts";
 import {HashMap} from "../../utils/collection/HashMap.ts";
+import {createClean} from "../../utils/uit.ts";
 
 
 export class EntityAttributeInstance {
@@ -153,7 +154,7 @@ export class EntityAttributeInstance {
                 if (!id) continue;
                 const value = modifierNbt.getDouble('value');
 
-                const modifier: EntityAttributeModifier = {id, value};
+                const modifier: EntityAttributeModifier = createClean({id, value});
                 this.idToModifiers.set(id, modifier);
             }
         }

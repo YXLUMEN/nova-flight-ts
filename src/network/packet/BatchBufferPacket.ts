@@ -21,12 +21,9 @@ export class BatchBufferPacket implements Payload {
         const payloads: Payload[] = [];
 
         for (let i = 0; i < count; i++) {
-            const idStr = reader.readString();
-            const id = Identifier.tryParse(idStr);
-            if (!id) throw new Error(`Unrecognized packet: ${idStr}`);
-
-            const type = PayloadTypeRegistry.getGlobal(id);
-            if (!type) throw new Error(`Unrecognized packet: ${idStr}`);
+            const index = reader.readVarUint();
+            const type = PayloadTypeRegistry.getGlobalByIndex(index);
+            if (!type) throw new Error(`Unrecognized packet: ${index}`);
 
             payloads.push(type.codec.decode(reader));
         }
@@ -40,9 +37,8 @@ export class BatchBufferPacket implements Payload {
             const type = PayloadTypeRegistry.getGlobal(payload.getId().id);
             if (!type) throw new Error(`Missing packet type ${payload.getId().id}`);
 
-            writer.writeString(type.id.toString());
+            writer.writeFloat(type.index);
             type.codec.encode(writer, payload);
-
         }
     }
 

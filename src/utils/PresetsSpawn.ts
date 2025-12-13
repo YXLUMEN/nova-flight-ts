@@ -13,6 +13,8 @@ import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import {Behavior} from "../entity/ai/MobAI.ts";
 import type {SpawnContext} from "../stage/SpawnContext.ts";
 import type {FunctionReturn} from "../apis/types.ts";
+import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
+import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 
 const spawnAtTop = (
     type: EntityType<MobEntity>,
@@ -72,6 +74,12 @@ const spawnInMap = (
         mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + scaledHp | 0);
         mob.setHealth(mob.getMaxHealth());
         mob.getAi().setBehavior(mob, Behavior.Wander);
+        if (ctx.difficulty > 9 && Math.random() > 0.8) {
+            mob.addStatusEffect(
+                new StatusEffectInstance(StatusEffects.RESISTANCE, 800, Math.min(7, ctx.difficulty)),
+                null
+            );
+        }
     }, opts)(ctx);
 }
 
@@ -85,13 +93,13 @@ const spawnAtTopInLine = (
     color = '#ff6b6b',
 ): MobFactory =>
     spawnLineCtor(type, count, [worth],
-        (m) => {
-            m.color = color;
-            m.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.setBaseValue(speed);
+        mob => {
+            mob.color = color;
+            mob.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.setBaseValue(speed);
 
-            const maxHealth = m.getMaxHealth();
-            m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + extraHp);
-            m.setHealth(m.getMaxHealth());
+            const maxHealth = mob.getMaxHealth();
+            mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + extraHp);
+            mob.setHealth(mob.getMaxHealth());
         },
         {gap}
     );

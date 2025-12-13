@@ -1,17 +1,17 @@
 import {NetworkChannel} from "../../network/NetworkChannel.ts";
 import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
 import type {Payload} from "../../network/Payload.ts";
-import type {Consumer, UUID} from "../../apis/types.ts";
+import type {BiConsumer, UUID} from "../../apis/types.ts";
 import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 import type {IServerPlayNetwork} from "./IServerPlayNetwork.ts";
 import {BinaryReader} from "../../nbt/BinaryReader.ts";
 import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
-import type {PayloadWithOrigin} from "../../network/codec/PayloadWithOrigin.ts";
 import type {GameProfile} from "../entity/GameProfile.ts";
 
 export class ServerNetworkChannel extends NetworkChannel implements IServerPlayNetwork {
     private readonly secretKey: Uint8Array;
-    private handler: Consumer<PayloadWithOrigin> | null = null;
+    private handler: BiConsumer<number, Payload> = () => {
+    };
 
     public constructor(address: string, secretKey: Uint8Array) {
         super(address, PayloadTypeRegistry.playS2C());
@@ -55,12 +55,13 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
         this.checkAndSend(writer, type, payload);
     }
 
-    private decodeWithOrigin(buf: Uint8Array): PayloadWithOrigin | null {
-        const reader = new BinaryReader(buf);
+    protected override handleMessage(event: MessageEvent) {
+        const binary = new Uint8Array(event.data as ArrayBuffer);
+        const reader = new BinaryReader(binary);
 
         const header = reader.readInt8();
         if (header === 0x00) {
-            return {sessionId: 0, payload: RelayServerPacket.CODEC.decode(reader)}
+            return this.handler(0, RelayServerPacket.CODEC.decode(reader))
         }
         if (header !== 0x10) {
             console.warn(`[${this.getSide()}] Unknown header: ${header}`);
@@ -73,21 +74,16 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
         if (!type) return null;
 
         const payload = type.codec.decode(reader);
-        return {sessionId, payload};
+        if (payload) this.handler(sessionId, payload);
     }
 
-    protected override handleMessage(event: MessageEvent) {
-        const binary = new Uint8Array(event.data as ArrayBuffer);
-        const payload = this.decodeWithOrigin(binary);
-        if (payload && this.handler) this.handler(payload);
-    }
-
-    public setHandler(handler: Consumer<PayloadWithOrigin>) {
+    public setHandler(handler: BiConsumer<number, Payload>) {
         this.handler = handler;
     }
 
     public override clearHandlers() {
-        this.handler = null;
+        this.handler = () => {
+        };
     }
 
     protected override getSide() {

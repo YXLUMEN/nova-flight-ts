@@ -55,7 +55,9 @@ export class ServerPlayerEntity extends PlayerEntity {
 
         for (const [item, stack] of this.items) {
             if (item instanceof SpecialWeapon) {
-                const key = this.weaponKeys.get(item)!;
+                const bind = item.bindKey();
+                const key = bind === null ? this.weaponKeys.get(item)! : bind;
+
                 if (isDev && item.getCooldown(stack) > 0.5) {
                     item.setCooldown(stack, 0.5);
                     this.pendingSyncStack.add(stack);

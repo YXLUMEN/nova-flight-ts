@@ -33,7 +33,6 @@ export function createClean<T>(obj: T): T {
     return Object.assign(Object.create(null), obj);
 }
 
-// 不要在游戏循环里调用
 export function sleep(time: number) {
     return new Promise(resolve => setTimeout(resolve, time));
 }

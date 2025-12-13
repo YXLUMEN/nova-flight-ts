@@ -53,7 +53,7 @@ import {EntityChooseTargetS2CPacket} from "../../network/packet/s2c/EntityChoose
 import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 import {GameProfile} from "../../server/entity/GameProfile.ts";
-import {SyncPlayerProfileS2CPacket} from "../../network/packet/s2c/SyncPlayerProfileS2CPacket.ts";
+import {PlayerGameModeS2CPacket} from "../../network/packet/s2c/PlayerGameModeS2CPacket.ts";
 import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
 import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
@@ -447,7 +447,7 @@ export class ClientPlayNetworkHandler {
         this.client.clientCommandManager.addPlainMessage(msg);
     }
 
-    public onSyncProfile(packet: SyncPlayerProfileS2CPacket): void {
+    public onSyncProfile(packet: PlayerGameModeS2CPacket): void {
         const player = this.client.player;
         if (!player) return;
 
@@ -548,7 +548,7 @@ export class ClientPlayNetworkHandler {
         this.register(PlayerAddScoreS2CPacket.ID, this.onPlayerAddScore.bind(this));
         this.register(EntityChooseTargetS2CPacket.ID, this.onMobChooseTarget.bind(this));
         this.register(GameMessageS2CPacket.ID, this.onGameMessage.bind(this));
-        this.register(SyncPlayerProfileS2CPacket.ID, this.onSyncProfile.bind(this));
+        this.register(PlayerGameModeS2CPacket.ID, this.onSyncProfile.bind(this));
         this.register(EntityStatusEffectS2CPacket.ID, this.onEntityStatusEffect.bind(this));
         this.register(RemoveEntityStatusEffectS2CPacket.ID, this.onRemoveEntityStatusEffect.bind(this));
         this.register(ItemCooldownUpdateS2CPacket.ID, this.onItemCooldown.bind(this));

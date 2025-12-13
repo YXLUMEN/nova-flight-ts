@@ -16,12 +16,12 @@ export class MissileEntity extends RocketEntity {
     protected reLockCD = 0;
     protected maxReLockCD = 5;
 
-    private igniteDelayTicks = 16;
-    private lockDelayTicks = 40;
+    protected igniteDelayTicks = 16;
+    protected lockDelayTicks = 40;
     protected maxLifetimeTicks = 400;
 
-    private driftSpeed = 2;
-    protected trackingSpeed = 4;
+    protected driftSpeed = 2;
+    protected trackingSpeed = 3;
 
     private readonly turnRate = Math.PI / 24;
 

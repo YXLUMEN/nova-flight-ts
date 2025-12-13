@@ -73,6 +73,8 @@ export class ServerWorld extends World implements NbtSerializable {
         for (const entry of this.trackedEntities.values()) {
             entry.tick();
         }
+
+        if (this.empBurst > 0) this.empBurst--;
     }
 
     private bindTickEntity = this.serverTickEntity.bind(this);

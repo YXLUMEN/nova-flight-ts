@@ -10,7 +10,7 @@ import {PlayerMoveC2SPacket} from "../../network/packet/c2s/PlayerMoveC2SPacket.
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import {PlayerYawC2SPacket} from "../../network/packet/c2s/PlayerYawC2SPacket.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
-import {doubleEquals, wrapRadians} from "../../utils/math/math.ts";
+import {distanceVec2, doubleEquals, wrapRadians} from "../../utils/math/math.ts";
 import {type ItemStack} from "../../item/ItemStack.ts";
 import {PlayerMoveByPointerC2SPacket} from "../../network/packet/c2s/PlayerMoveByPointerC2SPacket.ts";
 import {encodeVelocity} from "../../utils/NetUtil.ts";
@@ -37,7 +37,8 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     public followPointer: boolean = false;
     public assistedAiming: boolean = false;
 
-    public lockedMissile = new Set<MissileEntity>();
+    public readonly lockedMissile = new Set<MissileEntity>();
+    public readonly approachMissile = new Set<MissileEntity>();
     private revision: number = 0;
 
     public constructor(world: World, input: KeyboardInput, profile: GameProfile) {
@@ -112,8 +113,17 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
         // 锁定
         if (this.lockedMissile.size > 0) {
-            for (const missile of this.lockedMissile) {
-                if (missile.isRemoved()) this.lockedMissile.delete(missile);
+            for (const missile of this.lockedMissile.keys()) {
+                if (missile.isRemoved()) {
+                    this.lockedMissile.delete(missile);
+                    this.approachMissile.delete(missile);
+                    continue;
+                }
+                if (distanceVec2(missile.getPositionRef, this.getPositionRef) <= 1E5) {
+                    this.approachMissile.add(missile);
+                } else {
+                    this.approachMissile.delete(missile);
+                }
             }
         }
 
@@ -132,7 +142,9 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
         for (const [item, stack] of this.items) {
             if (item instanceof SpecialWeapon) {
-                const key = this.weaponKeys.get(item)!;
+                const bind = item.bindKey();
+                const key = bind === null ? this.weaponKeys.get(item)! : bind;
+
                 if (this.isDevMode() && item.getCooldown(stack) > 0.5) {
                     item.setCooldown(stack, 0.5);
                 }

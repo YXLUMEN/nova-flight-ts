@@ -203,11 +203,7 @@ export class TutorialEvents {
 
             await sleep(2000);
             server.world!.stage = STAGE;
-            while (true) {
-                const name = server.world!.stage.getCurrentName();
-                if (name === 'P7' || name === null) break;
-                server.world!.stage.nextPhase();
-            }
+            server.world!.stage.setStage('P7');
         }
     }
 

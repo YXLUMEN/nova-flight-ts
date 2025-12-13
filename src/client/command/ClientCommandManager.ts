@@ -18,6 +18,7 @@ import type {Suggestion} from "../../brigadier/suggestion/Suggestion.ts";
 import {MemoryLRU} from "../../utils/collection/MemoryLRU.ts";
 import {StringReader} from "../../brigadier/StringReader.ts";
 import {SummonEntityCommand} from "../../command/SummonEntityCommand.ts";
+import {StageCommand} from "../../command/StageCommand.ts";
 
 export type CommandNotifyCategory = 'info' | 'success' | 'warning' | 'error';
 
@@ -316,6 +317,7 @@ export class ClientCommandManager extends CommandManager {
         WorldDifficultCommand.registry(this.dispatcher);
         StatusEffectCommand.registry(this.dispatcher);
         SummonEntityCommand.registry(this.dispatcher);
+        StageCommand.registry(this.dispatcher);
     }
 
     public executeWithPrefix(source: CommandSource, input: string): void {

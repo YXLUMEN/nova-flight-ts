@@ -5,16 +5,11 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class KeepAliveC2SPacket implements Payload {
     public static readonly ID: PayloadId<KeepAliveC2SPacket> = {id: Identifier.ofVanilla('keep_alive')};
-
-    public static readonly CODEC: PacketCodec<KeepAliveC2SPacket> = PacketCodecs.of<KeepAliveC2SPacket>(
-        (writer, value) => {
-            writer.writeUint32(value.id);
-        },
-        (reader) => {
-            return new KeepAliveC2SPacket(reader.readUint32());
-        }
+    public static readonly CODEC: PacketCodec<KeepAliveC2SPacket> = PacketCodecs.adapt(
+        PacketCodecs.UINT32,
+        val => val.id,
+        val => new KeepAliveC2SPacket(val)
     );
-
     public readonly id: number;
 
     public constructor(id: number) {

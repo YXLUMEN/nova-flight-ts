@@ -8,8 +8,12 @@ import {distanceVec2, getNearestEntity} from "../../utils/math/math.ts";
 
 export class MobMissileEntity extends MissileEntity {
     protected override maxReLockCD = 15;
-    protected override trackingSpeed = 1;
-    protected override maxLifetimeTicks = 180;
+    protected override driftSpeed = 1.4;
+    protected override trackingSpeed = 2;
+
+    protected override igniteDelayTicks = 25;
+    protected override lockDelayTicks = 40;
+    protected override maxLifetimeTicks = 220;
 
     public constructor(type: EntityType<MobMissileEntity>, world: World, owner: Entity, driftAngle: number) {
         super(type, world, owner, driftAngle, 5);

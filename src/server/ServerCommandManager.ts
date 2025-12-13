@@ -6,6 +6,7 @@ import {WorldDifficultCommand} from "../command/WorldDifficultCommand.ts";
 import {StatusEffectCommand} from "../command/StatusEffectCommand.ts";
 import {GameModeCommand} from "../command/GameModeCommand.ts";
 import {SummonEntityCommand} from "../command/SummonEntityCommand.ts";
+import {StageCommand} from "../command/StageCommand.ts";
 
 export class ServerCommandManager extends CommandManager {
     public readonly source: ServerCommandSource;
@@ -26,5 +27,6 @@ export class ServerCommandManager extends CommandManager {
         WorldDifficultCommand.registry(this.dispatcher);
         StatusEffectCommand.registry(this.dispatcher);
         SummonEntityCommand.registry(this.dispatcher);
+        StageCommand.registry(this.dispatcher);
     }
 }

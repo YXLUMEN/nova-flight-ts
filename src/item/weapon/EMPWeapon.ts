@@ -48,10 +48,6 @@ export class EMPWeapon extends SpecialWeapon {
         }
     }
 
-    public bindKey(): string {
-        return 'Digit2';
-    }
-
     public override getDisplayName(): string {
         return 'EMP';
     }

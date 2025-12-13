@@ -7,9 +7,10 @@ import type {World} from "../../world/World.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {randInt} from "../../utils/math/math.ts";
+import type {NbtCompound} from "../../nbt/NbtCompound.ts";
 
 export class MiniGunEnemyEntity extends MobEntity {
-    private static readonly bulletSpeed = 4;
+    private static readonly bulletSpeed = 6;
     public color = "#ac0000";
     private cooldown: number;
     private fireCount = 0;
@@ -39,7 +40,7 @@ export class MiniGunEnemyEntity extends MobEntity {
         }
 
         if (this.fireCD-- > 0) return;
-        this.fireCD = 10;
+        this.fireCD = 6;
 
         if (this.fireCount > 16) {
             this.cooldown = 500;
@@ -57,6 +58,18 @@ export class MiniGunEnemyEntity extends MobEntity {
         b.edgeColor = '#ff0000';
         world.spawnEntity(b);
         this.fireCount++;
+    }
+
+    public override writeNBT(nbt: NbtCompound): NbtCompound {
+        super.writeNBT(nbt);
+        nbt.putUint('FireCooldown', this.cooldown);
+        return nbt;
+    }
+
+    public override readNBT(nbt: NbtCompound): NbtCompound {
+        super.readNBT(nbt);
+        this.cooldown = nbt.getUint('FireCooldown');
+        return nbt;
     }
 
     public override isRangedAttacker(): boolean {

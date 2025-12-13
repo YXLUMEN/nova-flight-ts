@@ -1,6 +1,4 @@
 import {clamp, PI2} from "./math/math.ts";
-import type {Entity} from "../entity/Entity.ts";
-import {Registries} from "../registry/Registries.ts";
 
 const VELOCITY_SCALE = 32767 / 60.0;
 
@@ -89,37 +87,6 @@ export function decodeColorHex(colorInt: number): string {
     }
     const hexString = (colorInt >>> 0).toString(16).padStart(8, '0').toUpperCase();
     return `#${hexString}`;
-}
-
-export function estimateEntitySpawnPacketSize(entity: Entity, ownerId: number = 0): number {
-    let size = 1;
-
-    // entityId (VarInt)
-    size += getVarIntSize(entity.getId());
-
-    // uuid (16 bytes)
-    size += 16;
-
-    // x, y (assume double = 8 bytes each)
-    size += 16;
-
-    // yaw (byte)
-    size += 1;
-
-    // entityType: Identifier.of("namespace:path") → serialized as VarInt-prefixed UTF-8 string
-    const typeStr = Registries.ENTITY_TYPE.getId(entity.getType())!.toString();
-    size += getVarIntSize(typeStr.length) + typeStr.length;
-
-    // vx, vy Uint16
-    size += 4;
-
-    // color & edgeColor: rgbaInt Uint32
-    size += 8;
-
-    // ownerId (VarInt)
-    size += getVarIntSize(ownerId);
-
-    return size;
 }
 
 export function getVarIntSize(value: number): number {

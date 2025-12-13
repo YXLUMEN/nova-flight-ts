@@ -98,7 +98,9 @@ export class HUD implements IUi {
 
         ctx.restore();
 
-        if (player.lockedMissile.size > 0) {
+        if (player.approachMissile.size > 0) {
+            this.renderLockAlert(ctx, 2);
+        } else if (player.lockedMissile.size > 0) {
             this.renderLockAlert(ctx);
         }
     }
@@ -247,7 +249,7 @@ export class HUD implements IUi {
         ctx.restore();
     }
 
-    public renderLockAlert(ctx: CanvasRenderingContext2D) {
+    public renderLockAlert(ctx: CanvasRenderingContext2D, flag = 1) {
         const x = (this.worldW - 120) / 2;
         const y = this.worldH - 60;
 
@@ -260,7 +262,7 @@ export class HUD implements IUi {
 
         // 背景板
         ctx.fillStyle = `rgba(10,10,12,${fillAlpha})`;
-        ctx.shadowColor = `rgba(255,70,70,${0.35 + 0.45 * pulse})`;
+        ctx.shadowColor = `rgba(255,70,70,${borderAlpha})`;
         ctx.shadowBlur = 16;
         ctx.beginPath();
         ctx.rect(x, y, 120, 32);
@@ -277,9 +279,15 @@ export class HUD implements IUi {
         ctx.font = `bold 14px ui-monospace, Menlo, Consolas, monospace`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = "rgba(255,255,255,0.92)";
-        ctx.shadowColor = "rgba(255,60,60,0.4)";
-        ctx.fillText("敌导弹", x + 60, y + 16);
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        ctx.shadowColor = 'rgba(255,60,60,0.4)';
+        if (flag === 0) {
+            ctx.fillText('敌锁定', x + 60, y + 16);
+        } else if (flag === 1) {
+            ctx.fillText('敌导弹', x + 60, y + 16);
+        } else if (flag === 2) {
+            ctx.fillText('即将到达', x + 60, y + 16);
+        }
 
         ctx.restore();
     }

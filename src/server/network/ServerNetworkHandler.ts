@@ -9,7 +9,6 @@ import type {NovaFlightServer} from "../NovaFlightServer.ts";
 import {HashMap} from "../../utils/collection/HashMap.ts";
 import type {Identifier} from "../../registry/Identifier.ts";
 import type {Payload, PayloadId} from "../../network/Payload.ts";
-import type {PayloadWithOrigin} from "../../network/codec/PayloadWithOrigin.ts";
 
 export class ServerNetworkHandler {
     private readonly server: NovaFlightServer;
@@ -66,14 +65,14 @@ export class ServerNetworkHandler {
         }
     }
 
-    private onReceive(payload: PayloadWithOrigin) {
-        const player = this.server.playerManager.getPlayerBySessionId(payload.sessionId);
+    private onReceive(sessionId: number, payload: Payload) {
+        const player = this.server.playerManager.getPlayerBySessionId(sessionId);
         if (player) {
-            player.networkHandler?.handlePayload(payload.payload);
+            player.networkHandler?.handlePayload(payload);
             return;
         }
 
-        this.handlers.get(payload.payload.getId().id)?.(payload.payload);
+        this.handlers.get(payload.getId().id)?.(payload);
     }
 
     private register<T extends Payload>(id: PayloadId<T>, handler: Consumer<T>): void {

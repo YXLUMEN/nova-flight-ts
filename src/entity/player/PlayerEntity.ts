@@ -97,6 +97,11 @@ export abstract class PlayerEntity extends LivingEntity {
         if (this.age - this.lastDamageTime < 20) return false;
         this.lastDamageTime = this.age;
 
+        if (this.techTree!.isUnlocked(Techs.EMERGENCY_WARP) && Math.random() >= 0.3) {
+            this.lastDamageTime = this.age + 30;
+            return false;
+        }
+
         const raw = Math.pow(damage * 0.3, 0.8);
         const shake = clamp(raw, 0.4, 0.9);
 
@@ -109,6 +114,7 @@ export abstract class PlayerEntity extends LivingEntity {
             shake
         });
 
+        damage = this.modifyAppliedDamage(damageSource, damage);
         const remainDamage = Math.max(damage - this.getShieldAmount(), 0);
         this.setShieldAmount(this.getShieldAmount() - damage + remainDamage);
 

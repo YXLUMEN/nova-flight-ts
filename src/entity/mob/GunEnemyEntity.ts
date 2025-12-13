@@ -9,7 +9,7 @@ import {randInt} from "../../utils/math/math.ts";
 import {BulletEntity} from "../projectile/BulletEntity.ts";
 
 export class GunEnemyEntity extends MobEntity {
-    private static readonly bulletSpeed = 5;
+    private static readonly bulletSpeed = 8;
     public color = "#ff6b6b";
     protected cooldown;
 

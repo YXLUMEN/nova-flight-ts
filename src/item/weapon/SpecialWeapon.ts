@@ -30,4 +30,8 @@ export abstract class SpecialWeapon extends Weapon {
         if (!holder || !holder.isPlayer()) return super.getCooldown(stack);
         return holder.cooldownManager.getCooldownTicks(this);
     }
+
+    public bindKey(): string | null {
+        return null;
+    }
 }
