@@ -92,6 +92,7 @@ export class AudioManager {
     public static stop(): void {
         this.AUDIO_PLAYER.pause();
         this.AUDIO_PLAYER.src = '';
+        this.currentPlaying = null;
     }
 
     public static reset(): void {

@@ -66,7 +66,10 @@ export class IndexedDBHelper {
         const store = tx.objectStore(storeName);
         const request = store.get(key);
 
-        request.onsuccess = () => resolve(Result.ok(request.result ?? null));
+        request.onsuccess = () => {
+            if (!request.result) resolve(Result.err(null));
+            resolve(Result.ok(request.result));
+        }
         request.onerror = () => resolve(Result.err(request.error));
 
         return promise;

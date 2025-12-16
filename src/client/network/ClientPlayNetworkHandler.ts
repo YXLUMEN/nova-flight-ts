@@ -64,6 +64,8 @@ import {ConnectInfo} from "../render/ui/ConnectInfo.ts";
 import {GameOverS2CPacket} from "../../network/packet/s2c/GameOverS2CPacket.ts";
 import {AudioControlS2CPacket} from "../../network/packet/s2c/AudioControlS2CPacket.ts";
 import {BGMManager} from "../../sound/BGMManager.ts";
+import {AudioStopS2CPacket} from "../../network/packet/s2c/AudioStopS2CPacket.ts";
+import {Audios} from "../../sound/Audios.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer: Set<UUID> = new Set();
@@ -422,11 +424,17 @@ export class ClientPlayNetworkHandler {
                 AudioManager.reset()
                 break;
             case 3:
-                AudioManager.stop();
-                break;
-            case 4:
                 BGMManager.next();
                 break;
+        }
+    }
+
+    public onAudioStop(packet: AudioStopS2CPacket): void {
+        if (packet.audio !== AudioManager.getCurrentPlaying()) return;
+        AudioManager.stop();
+
+        if (packet.audio === Audios.BOSS_PHASE) {
+            BGMManager.next();
         }
     }
 
@@ -555,5 +563,6 @@ export class ClientPlayNetworkHandler {
         this.register(PlayAudioS2CPacket.ID, this.onPlayAudio.bind(this));
         this.register(GameOverS2CPacket.ID, this.onGameOver.bind(this));
         this.register(AudioControlS2CPacket.ID, this.onAudioControl.bind(this));
+        this.register(AudioStopS2CPacket.ID, this.onAudioStop.bind(this));
     }
 }

@@ -1,34 +1,37 @@
-import {createClean} from "../utils/uit.ts";
+import {config, createClean} from "../utils/uit.ts";
 
 // @ts-expect-error
-const isDev = import.meta.env.MODE === "development";
+const isDev = import.meta.env.MODE === 'development';
 
 const isServer = typeof window === 'undefined';
 
-const freezeConfig = createClean({
+const defaultConfig = config({
     tick: 20,
     mbps: 0.05,
     per: 50,
     fps: 75,
     perFrame: 1000 / 75,
     version: '25w15c'
-} as const);
+});
 
 const WorldConfig = Object.preventExtensions(createClean({
     lowPowerMode: false,
 
-    tick: freezeConfig.tick,
-    mbps: freezeConfig.mbps,
-    per: freezeConfig.per,
-    fps: freezeConfig.fps.valueOf(),
-    perFrame: freezeConfig.perFrame.valueOf(),
+    tick: defaultConfig.tick,
+    mbps: defaultConfig.mbps,
+    per: defaultConfig.per,
+
+    lastFps: defaultConfig.fps.valueOf(),
+    fps: defaultConfig.fps.valueOf(),
+    perFrame: defaultConfig.perFrame.valueOf(),
+
     enableCameraOffset: !isDev,
 
     follow: true,
     autoShoot: false,
-    version: freezeConfig.version,
+    version: defaultConfig.version,
     port: 25566,
     serverAddr: '127.0.0.1:25566',
 }));
 
-export {freezeConfig, WorldConfig, isDev, isServer};
+export {defaultConfig, WorldConfig, isDev, isServer};

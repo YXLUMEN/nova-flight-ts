@@ -207,15 +207,42 @@ export class NovaFlightClient {
         const {promise, resolve} = Promise.withResolvers<void>();
         this.waitWorldStop = promise;
         this.stopWorld = () => {
-            if (!this.waitWorldStop) return;
+            if (!this.waitWorldStop || !this.world) return;
 
-            resolve();
             this.connectInfo?.destroy();
             this.clearWorld();
             this.last = 0;
             this.accumulator = 0;
-            this.server?.postMessage({type: 'stop_server'});
-            this.waitWorldStop = null;
+
+            if (!this.server) {
+                resolve();
+                this.waitWorldStop = null;
+                return;
+            }
+
+            const ctrl = new AbortController();
+            const {promise: serverShutdown, resolve: shut} = Promise.withResolvers<void>();
+            serverShutdown.then(() => {
+                ctrl.abort();
+                resolve();
+                this.waitWorldStop = null;
+            });
+
+            const shutTimeout = setTimeout(() => {
+                this.server?.terminate();
+                this.server = null;
+                shut();
+            }, 5000);
+
+            this.server.postMessage({type: 'stop_server'});
+            this.server.getWorker()!.addEventListener('message', event => {
+                if (event.data.type !== 'server_shutdown') return;
+
+                clearTimeout(shutTimeout);
+                this.server?.terminate();
+                this.server = null;
+                shut();
+            }, {signal: ctrl.signal});
         };
     }
 
@@ -316,39 +343,33 @@ export class NovaFlightClient {
         };
 
         // Vite 规定的格式 integrated dev
-        this.server = new ServerWorker(new Worker(new URL('../worker/dev.worker.ts', import.meta.url), {
+        this.server = new ServerWorker(new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
             type: 'module',
             name: 'server',
         }));
+        const worker = this.server.getWorker();
 
-        const timeout = setTimeout(() => {
+        const startTimeout = setTimeout(() => {
             this.connectInfo?.setError('连接超时');
             this.server?.terminate();
         }, 8000);
 
-        this.server.getWorker().onmessage = (event) => {
-            const {type} = event.data;
-
+        worker.onmessage = event => {
+            const type = event.data.type;
             if (type === 'server_start') {
-                clearTimeout(timeout);
+                clearTimeout(startTimeout);
                 return;
             }
             if (type === 'server_stop') {
                 this.stopWorld();
                 return;
             }
-            if (type === 'server_shutdown') {
-                if (!this.server) return;
-                this.server.terminate();
-                this.server = null;
-                return;
-            }
         };
 
-        this.server.getWorker().onerror = (err) => {
+        worker.onerror = err => {
             console.error('Server Thread:', err.message);
 
-            let stack = '';
+            let stack = 'unknown';
             if (err.error instanceof Error) {
                 stack = err.error.stack ?? '';
             }
@@ -539,8 +560,16 @@ export class NovaFlightClient {
     }
 
     private registryListener(): void {
+        mainWindow.listen('tauri://focus', () => {
+            WorldConfig.fps = WorldConfig.lastFps;
+            WorldConfig.perFrame = 1000 / WorldConfig.fps;
+        }).catch(console.error);
+
         mainWindow.listen('tauri://blur', () => {
             this.world?.setTicking(false);
+            WorldConfig.lastFps = WorldConfig.fps;
+            WorldConfig.fps = 5;
+            WorldConfig.perFrame = 1000 / WorldConfig.fps;
         }).catch(console.error);
 
         mainWindow.listen('tauri://resize', async () => {
@@ -557,7 +586,7 @@ export class NovaFlightClient {
 
         this.window.canvas.addEventListener('click', event => {
             const world = this.world;
-            if (world && !world.isTicking) {
+            if (world && !world.isTicking && !world.isOver) {
                 this.window.pauseOverlay.handleClick(event.offsetX, event.offsetY);
             }
         });

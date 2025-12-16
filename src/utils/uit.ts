@@ -33,6 +33,10 @@ export function createClean<T>(obj: T): T {
     return Object.assign(Object.create(null), obj);
 }
 
+export function config<T>(obj: T): T {
+    return deepFreeze(createClean(obj));
+}
+
 export function sleep(time: number) {
     return new Promise(resolve => setTimeout(resolve, time));
 }

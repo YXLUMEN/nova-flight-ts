@@ -7,7 +7,7 @@ import {type BinaryReader} from "../../nbt/BinaryReader.ts";
 import {type BinaryWriter} from "../../nbt/BinaryWriter.ts";
 import type {Constructor, FunctionReturn, Supplier, UUID} from "../../apis/types.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
-import {createClean} from "../../utils/uit.ts";
+import {config} from "../../utils/uit.ts";
 import {Optional} from "../../utils/Optional.ts";
 import {NbtCompound} from "../../nbt/NbtCompound.ts";
 import {decodeColorHex, encodeColorHex} from "../../utils/NetUtil.ts";
@@ -98,7 +98,7 @@ export class PacketCodecs {
         encoder: (writer: BinaryWriter, value: T) => void,
         decoder: (reader: BinaryReader) => T
     ): PacketCodec<T> {
-        return createClean({
+        return config({
             encode: encoder,
             decode: decoder
         });
@@ -108,7 +108,7 @@ export class PacketCodecs {
      * Codec that writes nothing and reconstructs an object via new T(). Requires a no-arg constructor.
      * */
     public static emptyNew<T>(decoder: Constructor<T>): PacketCodec<T> {
-        return createClean({
+        return config({
             encode(): void {
             },
             decode(): T {
@@ -121,7 +121,7 @@ export class PacketCodecs {
      * Like emptyNew, but uses a factory function instead of new
      * */
     public static empty<T>(decoder: Supplier<T>): PacketCodec<T> {
-        return createClean({
+        return config({
             encode() {
             },
             decode: decoder
@@ -129,7 +129,7 @@ export class PacketCodecs {
     }
 
     public static optional<T>(codec: PacketCodec<T>): PacketCodec<Optional<T>> {
-        return createClean({
+        return config({
             encode(writer: BinaryWriter, optional: Optional<T>) {
                 if (optional.isPresent()) {
                     writer.writeBoolean(true);
@@ -145,7 +145,7 @@ export class PacketCodecs {
     }
 
     public static collection<V>(elementCodec: PacketCodec<V>, maxSize: number = 2147483647): PacketCodec<V[]> {
-        return createClean({
+        return config({
             encode(writer: BinaryWriter, array: V[]) {
                 PacketCodecs.writeCollectionSize(writer, array.length, maxSize);
                 for (const v of array) {
@@ -164,7 +164,7 @@ export class PacketCodecs {
     }
 
     public static collectionSet<V>(elementCodec: PacketCodec<V>, maxSize: number = 2147483647): PacketCodec<Set<V>> {
-        return createClean({
+        return config({
             encode(writer: BinaryWriter, set: Set<V>) {
                 PacketCodecs.writeCollectionSize(writer, set.size, maxSize);
                 for (const v of set) {
@@ -185,7 +185,7 @@ export class PacketCodecs {
     public static map<K, V, M extends Map<K, V>>(
         constructor: Constructor<M>, keyCodec: PacketCodec<K>, valueCodec: PacketCodec<V>, maxSize: number = 2147483647
     ): PacketCodec<M> {
-        return createClean({
+        return config({
             encode(writer: BinaryWriter, map: M) {
                 PacketCodecs.writeCollectionSize(writer, map.size, maxSize);
                 for (const [key, value] of map) {
@@ -237,7 +237,7 @@ export class PacketCodecs {
         registry: Registry<T>,
         registryTransformer: FunctionReturn<Registry<T>, IndexedIterable<R>>
     ): PacketCodec<R> {
-        return createClean({
+        return config({
             encode(writer: BinaryWriter, object: R): void {
                 const iterable = registryTransformer(registry);
                 const id = iterable.getIndex(object) ?? null;
@@ -259,7 +259,7 @@ export class PacketCodecs {
      * then reconstructs C on decode. Ideal for single-field extraction.
      * */
     public static adapt<C, T1>(codec: PacketCodec<T1>, from: FunctionReturn<C, T1>, to: FunctionReturn<T1, C>): PacketCodec<C> {
-        return createClean({
+        return config({
             encode(writer: BinaryWriter, value: C) {
                 codec.encode(writer, from(value));
             },
@@ -273,7 +273,7 @@ export class PacketCodecs {
         codec1: PacketCodec<T1>, from1: FunctionReturn<C, T1>,
         codec2: PacketCodec<T2>, from2: FunctionReturn<C, T2>,
         to: (v1: T1, v2: T2) => C): PacketCodec<C> {
-        return createClean({
+        return config({
             encode(writer: BinaryWriter, value: C) {
                 codec1.encode(writer, from1(value));
                 codec2.encode(writer, from2(value));
@@ -297,7 +297,7 @@ export class PacketCodecs {
         codec2: PacketCodec<T2>, from2: FunctionReturn<C, T2>,
         codec3: PacketCodec<T3>, from3: FunctionReturn<C, T3>,
         to: (v1: T1, v2: T2, v3: T3) => C): PacketCodec<C> {
-        return createClean({
+        return config({
             encode(writer: BinaryWriter, value: C) {
                 codec1.encode(writer, from1(value));
                 codec2.encode(writer, from2(value));
@@ -337,7 +337,7 @@ export class PacketCodecs {
             throw new Error('Reflection fieldCodecs cannot be empty');
         }
 
-        return createClean({
+        return config({
             encode(writer: BinaryWriter, object: T) {
                 for (const [key, codec] of entries) {
                     const value = object[key];

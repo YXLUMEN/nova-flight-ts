@@ -13,6 +13,7 @@ import {PlayerManager} from "./entity/PlayerManager.ts";
 import {GameProfile} from "./entity/GameProfile.ts";
 import {ServerNetworkHandler} from "./network/ServerNetworkHandler.ts";
 import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.ts";
+import {ServerDB} from "./ServerDB.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static readonly SAVE_PATH = `saves/save-${NbtCompound.VERSION}.dat`;
@@ -76,6 +77,7 @@ export abstract class NovaFlightServer implements CommandOutput {
                 if (saves) this.world.readNBT(saves);
             } catch (error) {
                 console.error(error);
+                this.readSave = false;
             }
         }
 
@@ -123,9 +125,13 @@ export abstract class NovaFlightServer implements CommandOutput {
         }
 
         try {
-            await this.playerManager.saveAllPlayerData();
-            const nbt = this.world!.saveAll();
-            await this.saveGame(nbt);
+            if (this.world!.isOver) {
+                await ServerDB.deleteWorld(this.saveName);
+            } else {
+                await this.playerManager.saveAllPlayerData();
+                const nbt = this.world!.saveAll();
+                await this.saveGame(nbt);
+            }
         } catch (error) {
             console.error(`Error while saving game: ${error}`);
         }

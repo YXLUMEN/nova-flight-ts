@@ -47,7 +47,10 @@ export class ServerNetworkHandler {
             const player = manager.createPlayer(profile);
             await manager.onPlayerAttemptLogin(profile, player);
         } catch (err) {
-            console.error(`Couldn't place player in world: ${err}`);
+            if (err instanceof Error) {
+                console.error(`Couldn't place player in world: ${err.name}:${err.message} at\n ${err.stack}`);
+            } else console.error(err);
+
             this.disconnectTarget(packet.clientId, 'Duplicate Login');
         }
     }

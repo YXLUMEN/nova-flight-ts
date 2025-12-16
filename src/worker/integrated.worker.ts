@@ -5,6 +5,7 @@ import type {StartServer} from "../apis/startup.ts";
 import {DevServer} from "../server/DevServer.ts";
 
 let server: IntegratedServer | null = null;
+let pendingStop = false;
 
 self.addEventListener("message", handleEvent.bind(this));
 
@@ -21,7 +22,8 @@ async function handleEvent(event: MessageEvent) {
             return server.runServer(startUp.action);
         }
         case 'stop_server': {
-            if (!server) return;
+            if (!server || pendingStop) return;
+            pendingStop = true;
             await server.stopGame();
             server = null;
             self.postMessage({type: 'server_shutdown'});

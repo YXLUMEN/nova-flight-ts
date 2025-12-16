@@ -83,9 +83,10 @@ export class PlayerManager {
         return this.players.values();
     }
 
-    public async saveAllPlayerData() {
-        for (const player of this.players.values()) {
-            await this.savePlayerData(player);
-        }
+    public saveAllPlayerData(): Promise<PromiseSettledResult<void>[]> {
+        const promises = this.players
+            .values()
+            .map(player => this.savePlayerData(player));
+        return Promise.allSettled(promises);
     }
 }

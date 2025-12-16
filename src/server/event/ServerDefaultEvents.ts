@@ -20,8 +20,8 @@ import type {LaserWeapon} from "../../item/weapon/LaserWeapon.ts";
 import type {ExpendExplosionOpts} from "../../apis/IExplosionOpts.ts";
 import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {Audios} from "../../sound/Audios.ts";
-import {AudioControlS2CPacket} from "../../network/packet/s2c/AudioControlS2CPacket.ts";
 import {Techs} from "../../tech/Techs.ts";
+import {AudioStopS2CPacket} from "../../network/packet/s2c/AudioStopS2CPacket.ts";
 
 export class ServerDefaultEvents {
     public static registerEvent(world: ServerWorld) {
@@ -94,7 +94,7 @@ export class ServerDefaultEvents {
             });
 
             world.stage.nextPhase();
-            world.getNetworkChannel().send(new AudioControlS2CPacket(4));
+            world.getNetworkChannel().send(new AudioStopS2CPacket(Audios.BOSS_PHASE));
         });
 
         eventBus.on(EVENTS.EMP_BURST, event => {

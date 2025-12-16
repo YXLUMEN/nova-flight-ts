@@ -1,6 +1,6 @@
 import type {Consumer, Predicate} from "../apis/types.ts";
 import type {SpawnContext} from "./SpawnContext.ts";
-import {createClean, deepFreeze} from "../utils/uit.ts";
+import {config} from "../utils/uit.ts";
 import type {SpawnRuleConfig} from "./SpawnRuleConfig.ts";
 
 export interface PhaseConfig {
@@ -18,6 +18,6 @@ export interface PhaseConfig {
 
 export class PhaseConfigBuilder {
     public static create(obj: PhaseConfig) {
-        return deepFreeze(createClean(obj));
+        return config(obj);
     }
 }
