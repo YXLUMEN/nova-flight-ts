@@ -54,6 +54,7 @@ export class NovaFlightClient {
     private accumulator = 0;
     private lastRenderTime = 0;
 
+    private pendingShutdown = false;
     private waitWorldStop: Promise<void> | null = null;
     private stopWorld: Supplier<void> = () => {
     };
@@ -94,6 +95,10 @@ export class NovaFlightClient {
         this.registryListener();
 
         this.createPromise();
+    }
+
+    public static getInstance(): NovaFlightClient {
+        return this.instance;
     }
 
     public async startClient() {
@@ -183,13 +188,12 @@ export class NovaFlightClient {
             }
             requestAnimationFrame(this.bindRender);
         } catch (err) {
-            if (err instanceof Error) {
-                console.error(`[Client] Runtime error: ${err.name}: ${err.message} at\n${err.stack}`);
-            } else {
-                console.error(`[Client] Runtime error: ${err}`);
-            }
+            const msg = err instanceof Error ?
+                `[Client] Crash ${err.name}:${err.message} because ${err.cause} at\n${err.stack}` :
+                `[Client] Crash ${err}`;
 
-            error(String(err)).catch(err => console.error(err));
+            console.error(msg);
+            error(msg).then();
             this.stopWorld();
         }
     }
@@ -207,7 +211,8 @@ export class NovaFlightClient {
         const {promise, resolve} = Promise.withResolvers<void>();
         this.waitWorldStop = promise;
         this.stopWorld = () => {
-            if (!this.waitWorldStop || !this.world) return;
+            if (!this.waitWorldStop || this.pendingShutdown) return;
+            this.pendingShutdown = true;
 
             this.connectInfo?.destroy();
             this.clearWorld();
@@ -221,8 +226,9 @@ export class NovaFlightClient {
             }
 
             const ctrl = new AbortController();
-            const {promise: serverShutdown, resolve: shut} = Promise.withResolvers<void>();
-            serverShutdown.then(() => {
+
+            const {promise: afterShutdown, resolve: serverShutdown} = Promise.withResolvers<void>();
+            afterShutdown.then(() => {
                 ctrl.abort();
                 resolve();
                 this.waitWorldStop = null;
@@ -231,7 +237,7 @@ export class NovaFlightClient {
             const shutTimeout = setTimeout(() => {
                 this.server?.terminate();
                 this.server = null;
-                shut();
+                serverShutdown();
             }, 5000);
 
             this.server.postMessage({type: 'stop_server'});
@@ -241,7 +247,7 @@ export class NovaFlightClient {
                 clearTimeout(shutTimeout);
                 this.server?.terminate();
                 this.server = null;
-                shut();
+                serverShutdown();
             }, {signal: ctrl.signal});
         };
     }
@@ -304,11 +310,12 @@ export class NovaFlightClient {
 
             if (!Array.isArray(obj)) {
                 // noinspection ExceptionCaughtLocallyJS
-                throw new Error("Key must be an number array");
+                throw new TypeError("Key must be an number array");
             }
             key = new Uint8Array(obj).buffer;
         } catch (err) {
             console.error(err);
+            await error(String(err));
             await connectInfo.setError(String(err));
             return;
         }
@@ -329,7 +336,9 @@ export class NovaFlightClient {
         try {
             await this.networkChannel.connect();
         } catch (err) {
-            await connectInfo.setError(String(err));
+            console.error(err);
+            await error(String(err));
+            await connectInfo.setError(`连接失败`);
             return;
         }
 
@@ -343,41 +352,40 @@ export class NovaFlightClient {
         };
 
         // Vite 规定的格式 integrated dev
-        this.server = new ServerWorker(new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
+        const server = new ServerWorker(new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
             type: 'module',
             name: 'server',
         }));
+
+        this.server = server;
         const worker = this.server.getWorker();
 
         const startTimeout = setTimeout(() => {
-            this.connectInfo?.setError('连接超时');
-            this.server?.terminate();
+            connectInfo.setError('连接超时');
+            server.terminate();
         }, 8000);
 
         worker.onmessage = event => {
             const type = event.data.type;
             if (type === 'server_start') {
                 clearTimeout(startTimeout);
-                return;
-            }
-            if (type === 'server_stop') {
+            } else if (type === 'server_stop') {
                 this.stopWorld();
-                return;
             }
         };
 
-        worker.onerror = err => {
-            console.error('Server Thread:', err.message);
+        worker.onerror = event => {
+            const err = event.error;
+            const msg = err instanceof Error ?
+                `[Server Thread] Crash ${err.name}:${err.message} because ${err.cause} at\n ${err.stack}` :
+                `[Server Thread] Crash ${event.type}:${event.message} because ${event.error}`;
 
-            let stack = 'unknown';
-            if (err.error instanceof Error) {
-                stack = err.error.stack ?? '';
-            }
-            error(`[Server Thead]: ${err.type}: ${err.message} at ${stack}`);
+            console.error(msg);
+            error(msg);
             this.scheduleStop();
         }
 
-        this.server.postMessage({
+        server.postMessage({
             type: 'start_server',
             payload: startUp
         }, {transfer: [key]});
@@ -406,9 +414,7 @@ export class NovaFlightClient {
         this.running = false;
     }
 
-    public static getInstance(): NovaFlightClient {
-        return this.instance;
-    }
+    // 其他
 
     public async initResources(): Promise<void> {
         const loadingScreen = new LoadingScreen(this.window.ctx);
@@ -586,7 +592,7 @@ export class NovaFlightClient {
 
         this.window.canvas.addEventListener('click', event => {
             const world = this.world;
-            if (world && !world.isTicking && !world.isOver) {
+            if (world && !world.isTicking) {
                 this.window.pauseOverlay.handleClick(event.offsetX, event.offsetY);
             }
         });

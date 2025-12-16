@@ -50,7 +50,10 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         this.techTree = new ClientTechTree(this, viewport);
         this.bc = new BallisticCalculator(this);
 
-        this.specialWeapons = this.items.keys().filter(item => item instanceof SpecialWeapon).toArray();
+        this.specialWeapons = this.items
+            .keys()
+            .filter(item => item instanceof SpecialWeapon)
+            .toArray();
         this.switchQuickFire();
     }
 
@@ -201,7 +204,10 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     public override addItem(item: Item, stack?: ItemStack): void {
         super.addItem(item, stack);
-        this.specialWeapons = this.items.keys().filter(item => item instanceof SpecialWeapon).toArray();
+        this.specialWeapons = this.items
+            .keys()
+            .filter(item => item instanceof SpecialWeapon)
+            .toArray();
     }
 
     public switchQuickFire(): void {

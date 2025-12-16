@@ -107,9 +107,10 @@ export abstract class NetworkChannel implements Channel {
         tryCallback?: (attempts: number, max: number) => void,
         failCallback?: Consumer<void>
     ): Promise<boolean> {
+        const addr = `ws://${url}`;
         for (let attempts = 0; attempts < maxRetries; attempts++) {
             const {promise: ok, resolve} = Promise.withResolvers<boolean>();
-            const test = new WebSocket(`ws://${url}`);
+            const test = new WebSocket(addr);
 
             test.onopen = () => {
                 console.log("Server reachable");

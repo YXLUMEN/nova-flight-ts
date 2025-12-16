@@ -41,7 +41,7 @@ export class PlayerManager {
         networkHandler.send(new JoinGameS2CPacket(player.getId()));
         channel.send(new GameMessageS2CPacket(`\x1b[32m${player.playerProfile.name}\x1b[0m join the game`));
 
-        console.log(`Player ${profile.clientId} login`);
+        console.log(`[Server] Player ${profile.clientId} login`);
     }
 
     public createPlayer(profile: GameProfile) {
@@ -49,7 +49,6 @@ export class PlayerManager {
     }
 
     public async loadPlayerData(player: ServerPlayerEntity): Promise<NbtCompound | null> {
-        if (this.server.isNewSave()) return null;
         return await ServerDB.loadPlayer(player);
     }
 
@@ -83,10 +82,17 @@ export class PlayerManager {
         return this.players.values();
     }
 
-    public saveAllPlayerData(): Promise<PromiseSettledResult<void>[]> {
+    public async saveAllPlayerData(): Promise<void> {
         const promises = this.players
             .values()
             .map(player => this.savePlayerData(player));
-        return Promise.allSettled(promises);
+
+        const results = await Promise.allSettled(promises);
+        let failed = 0;
+        for (const result of results) {
+            if (result.status !== 'fulfilled') failed++;
+        }
+
+        if (failed > 0) console.warn(`[Server] Error while saving players, failed ${failed}`);
     }
 }

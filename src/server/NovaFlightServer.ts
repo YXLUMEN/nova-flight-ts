@@ -14,13 +14,13 @@ import {GameProfile} from "./entity/GameProfile.ts";
 import {ServerNetworkHandler} from "./network/ServerNetworkHandler.ts";
 import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.ts";
 import {ServerDB} from "./ServerDB.ts";
+import {Result} from "../utils/result/Result.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static readonly SAVE_PATH = `saves/save-${NbtCompound.VERSION}.dat`;
     public static instance: NovaFlightServer;
 
     public readonly saveName: string;
-    private readSave: boolean = true;
 
     public readonly serverId: UUID;
     public readonly networkChannel: ServerNetworkChannel;
@@ -61,7 +61,6 @@ export abstract class NovaFlightServer implements CommandOutput {
     protected async startGame(manager: RegistryManager, readSave = false): Promise<void> {
         if (this.running) return;
         this.running = true;
-        this.readSave = readSave;
 
         await this.networkChannel.connect();
 
@@ -72,12 +71,12 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.world = new ServerWorld(manager, this);
 
         if (readSave) {
-            try {
-                const saves = await this.loadSaves();
-                if (saves) this.world.readNBT(saves);
-            } catch (error) {
-                console.error(error);
-                this.readSave = false;
+            const loadResult = await this.loadWorld();
+            if (loadResult.isErr()) {
+                this.world.close();
+                this.world = null;
+                this.stopWorld();
+                return;
             }
         }
 
@@ -88,6 +87,22 @@ export abstract class NovaFlightServer implements CommandOutput {
 
         this.last = performance.now();
         this.tickInterval = setInterval(this.bindTick, 25);
+    }
+
+    private async loadWorld(): Promise<Result<boolean, string>> {
+        try {
+            const saves = await this.loadSaves();
+            if (!saves) return Result.ok(false);
+            this.world!.readNBT(saves);
+            return Result.ok(true);
+        } catch (error) {
+            const msg = error instanceof Error ?
+                `[Server] Error while load save ${error.name}:${error.message} because ${error.cause} at\n${error.stack}` :
+                `[Server] Error while loading save ${error}`;
+
+            console.error(msg);
+            return Result.err(msg);
+        }
     }
 
     private tick() {
@@ -159,10 +174,6 @@ export abstract class NovaFlightServer implements CommandOutput {
 
     public isRunning(): boolean {
         return this.running;
-    }
-
-    public isNewSave(): boolean {
-        return !this.readSave;
     }
 
     public abstract isHost(profile: GameProfile): boolean;

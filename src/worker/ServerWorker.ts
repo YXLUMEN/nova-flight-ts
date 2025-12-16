@@ -6,11 +6,11 @@ export class ServerWorker {
     }
 
     public postMessage(message: any, options?: StructuredSerializeOptions): void {
-        this.worker?.postMessage(message, options);
+        this.worker.postMessage(message, options);
     }
 
     public terminate(): void {
-        this.worker?.terminate();
+        this.worker.terminate();
     }
 
     public getWorker() {

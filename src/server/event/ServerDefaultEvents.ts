@@ -77,7 +77,7 @@ export class ServerDefaultEvents {
                 return;
             }
 
-            world.schedule(120, () => {
+            world.schedule(360, () => {
                 if (BossEntity.hasBoss) return;
 
                 world.stage.reset();

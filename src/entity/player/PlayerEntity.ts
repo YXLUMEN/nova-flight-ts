@@ -300,6 +300,7 @@ export abstract class PlayerEntity extends LivingEntity {
 
         const inventory = nbt.getCompoundList('Inventory');
         if (inventory && inventory.length > 0) {
+            this.clearItems();
             for (const nbt of inventory) {
                 const stack = ItemStack.CODEC.decode(nbt);
                 if (!stack) continue;
