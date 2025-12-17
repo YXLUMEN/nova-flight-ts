@@ -22,7 +22,7 @@ export class EntityTrackerEntry {
     private lastYaw: number;
     private velocity: MutVec2;
     private trackingTick: number = 0;
-    private updates: number = 0;
+    private updatesWithoutVehicle: number = 0;
     // @ts-ignore
     private changedEntries: DataTrackerSerializedEntry<any>[] | null;
 
@@ -39,7 +39,7 @@ export class EntityTrackerEntry {
 
     public tick() {
         if (this.trackingTick % this.tickInterval === 0 || this.entity.velocityDirty || this.entity.getDataTracker().isDirty()) {
-            this.updates++;
+            this.updatesWithoutVehicle++;
 
             const byteYaw = encodeYaw(this.entity.getYaw());
             const entityPos = this.entity.getPosition();
@@ -55,8 +55,8 @@ export class EntityTrackerEntry {
             const dx = this.trackedPos.getDeltaX(entityPos);
             const dy = this.trackedPos.getDeltaY(entityPos);
             const posDelta = dx < -32768 || dx > 32768 || dy < -32768 || dy > 32768;
-            if (posDelta || this.updates > 400) {
-                this.updates = 0;
+            if (posDelta || this.updatesWithoutVehicle > 400) {
+                this.updatesWithoutVehicle = 0;
                 packet = EntityPositionS2CPacket.create(this.entity);
                 syncPos = true;
                 syncYaw = true;
@@ -82,7 +82,7 @@ export class EntityTrackerEntry {
 
                 if (delta > 1E-7 || delta > 0 && velocity.lengthSquared() === 0) {
                     this.velocity = velocity;
-                    this.sendSync(EntityVelocityUpdateS2CPacket.create(this.entity));
+                    this.sendSync(EntityVelocityUpdateS2CPacket.createWithVec(this.entity, this.velocity));
                 }
             }
 
@@ -103,6 +103,10 @@ export class EntityTrackerEntry {
         }
 
         this.trackingTick++;
+        if (this.entity.velocityModified) {
+            this.entity.velocityModified = false;
+            this.sendSync(EntityVelocityUpdateS2CPacket.create(this.entity));
+        }
     }
 
     private syncEntityData() {

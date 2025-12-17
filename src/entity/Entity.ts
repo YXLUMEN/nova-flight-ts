@@ -11,7 +11,7 @@ import {AtomicInteger} from "../utils/math/AtomicInteger.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {Box} from "../utils/math/Box.ts";
-import {clamp, lerp} from "../utils/math/math.ts";
+import {clamp, lerp, lerpRadians} from "../utils/math/math.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import type {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {Comparable, UUID} from "../apis/types.ts";
@@ -29,6 +29,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
 
     public invulnerable: boolean = false;
     public velocityDirty: boolean = false;
+    public velocityModified: boolean = false;
     public prevX: number = 0;
     public prevY: number = 0;
     public prevYaw: number = 0;
@@ -202,7 +203,11 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     }
 
     public setYaw(yaw: number): void {
-        this.yaw = yaw;
+        if (Number.isFinite(yaw)) {
+            this.yaw = yaw;
+        } else {
+            console.warn(`Invalid entity rotation: ${yaw}, discarding.`);
+        }
     }
 
     public updateYaw(yaw: number): void {
@@ -258,6 +263,10 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     public addVelocity(deltaX: number, deltaY: number): void {
         this.setVelocity(this.velocity.x + deltaX, this.velocity.y + deltaY);
         this.velocityDirty = true;
+    }
+
+    protected scheduleVelocityUpdate(): void {
+        this.velocityModified = true;
     }
 
     public move(x: number, y: number): void {
@@ -360,7 +369,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         const t = 1 / step;
         const dx = lerp(t, this.getX(), x);
         const dy = lerp(t, this.getY(), y);
-        const dYaw = lerp(t, this.getYaw(), yaw);
+        const dYaw = lerpRadians(t, this.getYaw(), yaw);
         this.pos.set(dx, dy);
         this.setYaw(dYaw);
     }

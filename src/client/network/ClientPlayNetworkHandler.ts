@@ -180,14 +180,13 @@ export class ClientPlayNetworkHandler {
     public onEntity(packet: EntityS2CPacket) {
         const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
-        if (!entity.isLogicalSideForUpdatingMovement()) return;
+        if (entity.isLogicalSideForUpdatingMovement()) return;
 
         if (packet.positionChanged) {
             const trackedPos = entity.getTrackedPosition();
             const deltaPos = trackedPos.withDelta(packet.deltaX, packet.deltaY);
             trackedPos.setPos(deltaPos.x, deltaPos.y);
             const yaw = packet.rotate ? packet.yaw : entity.getLerpTargetYaw();
-
             entity.updateTrackedPositionAndAngles(deltaPos.x, deltaPos.y, yaw, 3);
         } else if (packet.rotate) {
             entity.updateTrackedPositionAndAngles(entity.getLerpTargetX(), entity.getLerpTargetY(), packet.yaw, 3);

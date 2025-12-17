@@ -11,7 +11,7 @@ const defaultConfig = config({
     per: 50,
     fps: 75,
     perFrame: 1000 / 75,
-    version: '25w16a'
+    version: '25w16b'
 });
 
 const WorldConfig = Object.preventExtensions(createClean({

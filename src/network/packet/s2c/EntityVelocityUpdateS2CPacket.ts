@@ -6,6 +6,7 @@ import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import {decodeVelocity, encodeVelocity} from "../../../utils/NetUtil.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import type {IVec} from "../../../utils/math/IVec.ts";
 
 export class EntityVelocityUpdateS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityVelocityUpdateS2CPacket> = {id: Identifier.ofVanilla('entity_velocity')};
@@ -24,6 +25,10 @@ export class EntityVelocityUpdateS2CPacket implements Payload {
     public static create(entity: Entity) {
         const vel = entity.getVelocityRef;
         return new EntityVelocityUpdateS2CPacket(entity.getId(), encodeVelocity(vel.x), encodeVelocity(vel.y));
+    }
+
+    public static createWithVec(entity: Entity, velocity: IVec) {
+        return new EntityVelocityUpdateS2CPacket(entity.getId(), encodeVelocity(velocity.x), encodeVelocity(velocity.y));
     }
 
     private static reader(reader: BinaryReader) {

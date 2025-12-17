@@ -28,7 +28,7 @@ export abstract class LivingEntity extends Entity {
     protected bodyTrackingIncrements: number;
     protected serverX: number = 0;
     protected serverY: number = 0;
-    protected serverYaw: number = 0;
+    public serverYaw: number = 0;
 
     private readonly attributes: AttributeContainer;
     private readonly activeStatusEffects = new Map<RegistryEntry<StatusEffect>, StatusEffectInstance>();
