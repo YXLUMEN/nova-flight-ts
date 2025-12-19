@@ -153,7 +153,7 @@ export function applyServerTech(tech: RegistryEntry<Tech>, player: ServerPlayerE
             player.onDamageExplosionRadius *= 1.4;
             break;
         }
-        case Techs.MELTDOWN: {
+        case Techs.GRAY: {
             const stack = player.getItem(Items.LASER_WEAPON);
             if (stack) {
                 stack.set(DataComponentTypes.ATTACK_DAMAGE, 0);

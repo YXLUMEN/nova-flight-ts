@@ -14,7 +14,7 @@ const defaultConfig = config({
     version: '25w16b'
 });
 
-const WorldConfig = Object.preventExtensions(createClean({
+const WorldConfig = Object.seal(createClean({
     lowPowerMode: false,
 
     tick: defaultConfig.tick,

@@ -40,14 +40,16 @@ export class Techs {
     public static EXPLOSIVE_ARMOR;
     public static EMERGENCY_REPAIR;
     public static DECOY_RELEASER;
-    public static INCENDIARY_BULLET;
-    public static MELTDOWN;
+    public static ARMOR_EROSION;
+    public static GRAY;
     public static MISSILE;
     public static HONEYCOMB_MISSILE;
     public static STEERING_GEAR;
     public static FIRE_CONTROL_COMPUTER;
     public static INSTANT_RESPONSE;
     public static EMERGENCY_WARP;
+    public static NANOTECHNOLOGY;
+    public static NANO_MENDING;
 
     static {
         const parsed = TechState.normalizeTechs(tech);
@@ -88,14 +90,16 @@ export class Techs {
         this.EXPLOSIVE_ARMOR = registerFromJson('explosive_armor');
         this.EMERGENCY_REPAIR = registerFromJson('emergency_repair');
         this.DECOY_RELEASER = registerFromJson('decoy_releaser');
-        this.INCENDIARY_BULLET = registerFromJson('incendiary_bullet');
-        this.MELTDOWN = registerFromJson('meltdown');
+        this.ARMOR_EROSION = registerFromJson('armor_erosion');
+        this.GRAY = registerFromJson('gray');
         this.MISSILE = registerFromJson('missile');
         this.HONEYCOMB_MISSILE = registerFromJson('honeycomb_missile');
         this.STEERING_GEAR = registerFromJson('steering_gear');
         this.FIRE_CONTROL_COMPUTER = registerFromJson('fire_control_computer');
-        this.INSTANT_RESPONSE = registerFromJson('instant_response');
+        this.INSTANT_RESPONSE = registerFromJson('pointer_following');
         this.EMERGENCY_WARP = registerFromJson('emergency_warp');
+        this.NANOTECHNOLOGY = registerFromJson('nanotechnology');
+        this.NANO_MENDING = registerFromJson('nano_mending')
 
         Registries.TECH.getEntries().forEach(entry => entry.getValue().complete());
     }

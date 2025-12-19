@@ -48,6 +48,7 @@ async function handleEvent(event: MessageEvent<any>) {
             await server.playerManager.saveAllPlayerData();
             const nbt = server.world.saveAll();
             await server.saveGame(nbt);
+            self.postMessage({type: 'saved'});
             break;
         }
         case 'loaded_save_data':

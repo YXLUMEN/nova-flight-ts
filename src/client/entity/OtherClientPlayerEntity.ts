@@ -21,7 +21,7 @@ export class OtherClientPlayerEntity extends AbstractClientPlayerEntity {
 
     public override tickMovement() {
         if (this.bodyTrackingIncrements > 0) {
-            this.lerpPosAndRotation(this.bodyTrackingIncrements, this.serverX, this.serverY, this.serverYaw);
+            this.lerpPosAndYaw(this.bodyTrackingIncrements, this.serverX, this.serverY, this.serverYaw);
             this.bodyTrackingIncrements--;
         }
 

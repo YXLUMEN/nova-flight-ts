@@ -18,7 +18,7 @@ export abstract class NetworkChannel implements Channel {
 
     private sessionId: number = 0;
     private isConnected: boolean = false;
-    private readyPromise: Promise<void> | null = null;
+    private ready: Promise<void> | null = null;
 
     protected readonly registry: PayloadTypeRegistry;
 
@@ -31,7 +31,7 @@ export abstract class NetworkChannel implements Channel {
         if (this.isConnected) return;
 
         const {promise, resolve, reject} = Promise.withResolvers<void>();
-        this.readyPromise = promise;
+        this.ready = promise;
 
         let timeout: number;
         const connectReady = () => {
@@ -75,11 +75,12 @@ export abstract class NetworkChannel implements Channel {
             connectReady();
 
             this.ws!.onmessage = this.handleMessage.bind(this);
-            this.ws!.onerror = err => console.error(`[${this.getSide()}] Connection Error: ${err}`);
+            this.ws!.onerror = event =>
+                console.error(`[${this.getSide()}] Connection Error: ${event.type}${event.target}`);
         };
 
-        this.ws.onerror = error => {
-            const msg = `[${this.getSide()}] Connection Error: ${error}`;
+        this.ws.onerror = event => {
+            const msg = `[${this.getSide()}] Connection Error: ${event.type}:${event.target}`;
             console.error(msg);
             connectFail(msg);
         }
@@ -91,7 +92,7 @@ export abstract class NetworkChannel implements Channel {
         }
 
         await promise;
-        this.readyPromise = null;
+        this.ready = null;
     }
 
     public disconnect(): void {
@@ -195,11 +196,11 @@ export abstract class NetworkChannel implements Channel {
     public async waitConnect(): Promise<void> {
         if (this.isConnected) return;
 
-        if (this.readyPromise === null) {
+        if (this.ready === null) {
             throw new Error("Wait before connect");
         }
 
-        await this.readyPromise;
+        await this.ready;
     }
 
     public getSessionId() {

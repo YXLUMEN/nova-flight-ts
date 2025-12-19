@@ -17,6 +17,7 @@ import {type Entity} from "../../entity/Entity.ts";
 import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
 import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
 import {ServerItemCooldownManager} from "../item/ServerItemCooldownManager.ts";
+import {Techs} from "../../tech/Techs.ts";
 
 
 export class ServerPlayerEntity extends PlayerEntity {
@@ -28,6 +29,8 @@ export class ServerPlayerEntity extends PlayerEntity {
     private readonly pendingSyncStack: Set<ItemStack> = new Set();
 
     private revision = 0;
+
+    private mendingCooldown = 0;
 
     public constructor(world: ServerWorld, playerProfile: GameProfile) {
         super(world, ServerItemCooldownManager);
@@ -46,6 +49,14 @@ export class ServerPlayerEntity extends PlayerEntity {
             const packet = new InventoryS2CPacket(0, this.nextRevision(), this.pendingSyncStack);
             this.networkHandler?.send(packet);
             this.pendingSyncStack.clear();
+        }
+
+        // 没有采用效果方便精细控制
+        if (this.getHealth() < this.getMaxHealth() &&
+            this.techTree!.isUnlocked(Techs.NANO_MENDING) &&
+            this.mendingCooldown-- <= 0) {
+            this.heal(1);
+            this.mendingCooldown = 60;
         }
     }
 
@@ -68,6 +79,14 @@ export class ServerPlayerEntity extends PlayerEntity {
             }
             item.inventoryTick(stack, world, this, 0, currentItem === item);
         }
+    }
+
+    public override takeDamage(damageSource: DamageSource, damage: number): boolean {
+        if (super.takeDamage(damageSource, damage)) {
+            this.mendingCooldown = 100;
+            return true;
+        }
+        return false;
     }
 
     public syncStack(itemStack: ItemStack): void {

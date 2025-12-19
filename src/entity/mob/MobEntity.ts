@@ -18,7 +18,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
     public yStep = 1;
 
     private worth: number;
-    private AI: MobAI;
+    private readonly AI: MobAI;
 
     protected constructor(type: EntityType<MobEntity>, world: World, worth: number = 1) {
         super(type, world);
@@ -32,9 +32,13 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
     public override tick(): void {
         super.tick();
 
-        this.AI.action(this);
+        if (!this.getWorld().isClient) this.AI.updateAction(this);
         this.moveByVec(this.getVelocityRef);
         this.adjustPosition();
+    }
+
+    protected override tickAi() {
+        this.AI.tickAi(this);
     }
 
     public getAi() {
@@ -89,6 +93,10 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
 
     public override createSpawnPacket(): EntitySpawnS2CPacket {
         return EntitySpawnS2CPacket.create(this, this.worth);
+    }
+
+    public override canMoveVoluntarily(): boolean {
+        return super.canMoveVoluntarily() && !this.AI.disable;
     }
 
     public override onSpawnPacket(packet: EntitySpawnS2CPacket) {

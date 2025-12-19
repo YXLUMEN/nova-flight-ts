@@ -1,14 +1,15 @@
 import type {UUID} from "../apis/types.ts";
+import {config} from "./uit.ts";
 
 export class UUIDUtil {
     public static readonly EMPTY_UUID = new Uint8Array(16);
-    public static readonly EMPTY_UUID_STRING = '0000-0000-0000-0000-0000';
+    public static readonly EMPTY_UUID_STRING: UUID = '0000-0000-0000-0000-0000';
 
-    private static readonly HEX_CHAR_TO_BYTE: Record<string, number> = {
+    private static readonly HEX_CHAR_TO_BYTE: Record<string, number> = config({
         '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
         '8': 8, '9': 9, 'a': 10, 'b': 11, 'c': 12, 'd': 13, 'e': 14, 'f': 15,
         'A': 10, 'B': 11, 'C': 12, 'D': 13, 'E': 14, 'F': 15
-    };
+    });
 
     private static readonly HEX_TABLE = Array.from({length: 256}, (_, i) =>
         i.toString(16).padStart(2, '0')

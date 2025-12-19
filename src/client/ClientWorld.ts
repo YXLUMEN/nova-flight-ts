@@ -111,6 +111,14 @@ export class ClientWorld extends World {
         entity.tick();
     }
 
+    public override gameOver() {
+        this.over = true;
+        this.schedule(1, () => {
+            this.setTicking(false);
+            this.client.onGameOver();
+        });
+    }
+
     public override getNetworkChannel(): ClientNetworkChannel {
         return this.client.networkChannel;
     }

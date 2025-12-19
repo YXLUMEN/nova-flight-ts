@@ -19,6 +19,7 @@ interface PlayerData {
 }
 
 export class ServerDB {
+    public static SAVE_VERSION = 2;
     public static db = new IndexedDBHelper('nova-flight-server', 3, [
         {
             name: 'saves',
@@ -39,7 +40,7 @@ export class ServerDB {
             save_name: saveName,
             data: compound.toBinary(),
             timestamp: Date.now(),
-            version: NbtCompound.VERSION
+            version: this.SAVE_VERSION
         } satisfies Save);
     }
 
@@ -55,7 +56,7 @@ export class ServerDB {
             save_name,
             uuid,
             data: nbt.toBinary(),
-            version: NbtCompound.VERSION
+            version: this.SAVE_VERSION
         } satisfies PlayerData);
     }
 
@@ -67,7 +68,7 @@ export class ServerDB {
 
             const data = optional.get().data;
             if (!data) return null;
-            if (optional.get().version !== NbtCompound.VERSION) return null;
+            if (optional.get().version !== this.SAVE_VERSION) return null;
             return NbtCompound.fromBinary(data);
         }
 
@@ -80,7 +81,7 @@ export class ServerDB {
         const latest = optional.get().reduce((prev, curr) =>
             curr.timestamp > prev.timestamp ? curr : prev
         );
-        if (latest.version !== NbtCompound.VERSION) return null;
+        if (latest.version !== this.SAVE_VERSION) return null;
         return NbtCompound.fromBinary(latest.data);
     }
 
@@ -96,7 +97,7 @@ export class ServerDB {
 
         const data = optional.get().data;
         if (!data) return null;
-        if (optional.get().version !== NbtCompound.VERSION) return null;
+        if (optional.get().version !== this.SAVE_VERSION) return null;
         return NbtCompound.fromBinary(data)
     }
 

@@ -8,7 +8,7 @@ import {type IEvents} from "../apis/IEvents.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import {AtomicInteger} from "../utils/math/AtomicInteger.ts";
 import type {Payload} from "../network/Payload.ts";
-import type {Consumer} from "../apis/types.ts";
+import type {Consumer, Supplier} from "../apis/types.ts";
 import type {EntityList} from "./EntityList.ts";
 import type {EntityIndex} from "./EntityIndex.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
@@ -177,7 +177,7 @@ export abstract class World {
         this.getNetworkChannel().send(payload);
     }
 
-    public schedule(delaySec: number, fn: () => void): Schedule {
+    public schedule(delaySec: number, fn: Supplier<void>): Schedule {
         const t: TimerTask = {
             id: this.nextTimerId.incrementAndGet(),
             at: this.time + Math.max(0, delaySec),

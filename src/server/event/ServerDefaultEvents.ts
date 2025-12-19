@@ -34,9 +34,9 @@ export class ServerDefaultEvents {
             const attacker = damageSource.getAttacker();
             if (attacker instanceof PlayerEntity && !damageSource.isOf(DamageTypes.ON_FIRE)) {
                 const techTree = attacker.getTechs();
-                if (!techTree.isUnlocked(Techs.INCENDIARY_BULLET)) return;
+                if (!techTree.isUnlocked(Techs.ARMOR_EROSION)) return;
 
-                if (techTree.isUnlocked(Techs.MELTDOWN)) {
+                if (techTree.isUnlocked(Techs.GRAY)) {
                     const effect = mob.getStatusEffect(StatusEffects.BURNING);
                     if (effect) {
                         const amplifier = Math.min(10, effect.getAmplifier() + 1);
@@ -67,7 +67,7 @@ export class ServerDefaultEvents {
             }
 
             if (techTree.isUnlocked(Techs.EMERGENCY_REPAIR)) {
-                if (Math.random() <= 0.08) player.setHealth(player.getHealth() + 5);
+                if (Math.random() <= 0.1) player.setHealth(player.getHealth() + 5);
             }
         });
 

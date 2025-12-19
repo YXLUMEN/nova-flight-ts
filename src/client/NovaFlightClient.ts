@@ -54,7 +54,6 @@ export class NovaFlightClient {
     private accumulator = 0;
     private lastRenderTime = 0;
 
-    private pendingShutdown = false;
     private waitWorldStop: Promise<void> | null = null;
     private stopWorld: Supplier<void> = () => {
     };
@@ -211,9 +210,7 @@ export class NovaFlightClient {
         const {promise, resolve} = Promise.withResolvers<void>();
         this.waitWorldStop = promise;
         this.stopWorld = () => {
-            if (!this.waitWorldStop || this.pendingShutdown) return;
-            this.pendingShutdown = true;
-
+            if (!this.waitWorldStop) return;
             this.connectInfo?.destroy();
             this.clearWorld();
             this.last = 0;
@@ -371,6 +368,8 @@ export class NovaFlightClient {
                 clearTimeout(startTimeout);
             } else if (type === 'server_stop') {
                 this.stopWorld();
+            } else if (type === 'saved') {
+                this.clientCommandManager.addPlainMessage('\x1b[32m游戏已保存');
             }
         };
 
@@ -563,6 +562,14 @@ export class NovaFlightClient {
                 this.server?.postMessage({type: 'crash_the_server'});
                 break;
         }
+    }
+
+    public onGameOver(): void {
+        const ctrl = new AbortController();
+        window.addEventListener('keydown', () => {
+            this.leaveGame();
+            ctrl.abort();
+        }, {signal: ctrl.signal});
     }
 
     private registryListener(): void {

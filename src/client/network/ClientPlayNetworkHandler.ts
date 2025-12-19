@@ -181,7 +181,6 @@ export class ClientPlayNetworkHandler {
         const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
         if (entity.isLogicalSideForUpdatingMovement()) return;
-
         if (packet.positionChanged) {
             const trackedPos = entity.getTrackedPosition();
             const deltaPos = trackedPos.withDelta(packet.deltaX, packet.deltaY);
@@ -207,7 +206,7 @@ export class ClientPlayNetworkHandler {
         const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
         entity.setTrackedPosition(packet.x, packet.y);
-        entity.updateTrackedPositionAndAngles(packet.x, packet.y, packet.yaw, 0);
+        entity.updateTrackedPositionAndAngles(packet.x, packet.y, packet.yaw, 3);
         entity.updatePosition(packet.x, packet.y);
         entity.updateYaw(packet.yaw);
     }
@@ -261,7 +260,7 @@ export class ClientPlayNetworkHandler {
 
     public onGameOver(): void {
         if (this.world && this.client.player) {
-            this.world.gameOver(this.client.player);
+            this.world.gameOver();
         }
     }
 

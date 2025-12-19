@@ -1,6 +1,6 @@
 import {Entity} from "./Entity.ts";
 import type {World} from "../world/World.ts";
-import {clamp} from "../utils/math/math.ts";
+import {clamp, PI2} from "../utils/math/math.ts";
 import type {DamageSource} from "./damage/DamageSource.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {StatusEffectInstance} from "./effect/StatusEffectInstance.ts";
@@ -28,7 +28,7 @@ export abstract class LivingEntity extends Entity {
     protected bodyTrackingIncrements: number;
     protected serverX: number = 0;
     protected serverY: number = 0;
-    public serverYaw: number = 0;
+    protected serverYaw: number = 0;
 
     private readonly attributes: AttributeContainer;
     private readonly activeStatusEffects = new Map<RegistryEntry<StatusEffect>, StatusEffectInstance>();
@@ -70,9 +70,10 @@ export abstract class LivingEntity extends Entity {
         }
 
         if (this.bodyTrackingIncrements > 0) {
-            this.lerpPosAndRotation(this.bodyTrackingIncrements, this.serverX, this.serverY, this.serverYaw);
+            this.lerpPosAndYaw(this.bodyTrackingIncrements, this.serverX, this.serverY, this.serverYaw);
             this.bodyTrackingIncrements--;
         }
+
         const velocity = this.getVelocityRef.multiply(0.9);
 
         let vx = velocity.x;
@@ -80,6 +81,21 @@ export abstract class LivingEntity extends Entity {
         if (Math.abs(vx) < 0.003) vx = 0;
         if (Math.abs(vy) < 0.003) vy = 0;
         velocity.set(vx, vy);
+
+        if (this.canMoveVoluntarily()) {
+            this.tickAi();
+        }
+
+        while (this.getYaw() - this.prevYaw < -Math.PI) {
+            this.prevYaw -= PI2;
+        }
+
+        while (this.getYaw() - this.prevYaw >= Math.PI) {
+            this.prevYaw += PI2;
+        }
+    }
+
+    protected tickAi(): void {
     }
 
     protected override onDiscard(): void {

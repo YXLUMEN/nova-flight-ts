@@ -7,6 +7,8 @@ import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {ExpendExplosionOpts} from "./IExplosionOpts.ts";
 import type {Tech} from "../tech/Tech.ts";
+import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
+import type {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 
 export const EVENTS = createClean({
     ENTITY_REMOVED: "entity:mob:removed",
@@ -15,6 +17,7 @@ export const EVENTS = createClean({
     MOB_DAMAGE: "entity:mob:damage",
     ENTITY_DIE: "entity:die",
     UNLOCK_TECH: "player:tech:unlock",
+    UNLOCK_TECH_SERVER: "server:player:tech:unlock",
     EXPLOSION: "world:explosion",
     EMP_BURST: "world:emp_burst",
     STAGE_ENTER: "world:stage:enter",
@@ -29,6 +32,7 @@ export type IEvents = {
     [EVENTS.MOB_KILLED]: { mob: MobEntity; damageSource: DamageSource; pos: IVec };
     [EVENTS.MOB_DAMAGE]: { mob: MobEntity; damageSource: DamageSource; };
     [EVENTS.UNLOCK_TECH]: { tech: Tech };
+    [EVENTS.UNLOCK_TECH_SERVER]: { tech: RegistryEntry<Tech>, player: ServerPlayerEntity };
     [EVENTS.EXPLOSION]: {
         entity: Entity | null,
         damage: DamageSource | null,

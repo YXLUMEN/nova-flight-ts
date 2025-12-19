@@ -8,6 +8,7 @@ import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {InstantHealthEffect} from "./InstantHealthEffect.ts";
 import {ShieldStatusEffect} from "./ShieldStatusEffect.ts";
+import {RegenerationStatusEffect} from "./RegenerationStatusEffect.ts";
 
 export class StatusEffects {
     public static readonly SPEED = this.register("speed",
@@ -46,6 +47,10 @@ export class StatusEffects {
     );
 
     public static readonly RESISTANCE = this.register("resistance", new StatusEffect(0, '#ffc23f'));
+
+    public static readonly REGENERATION = this.register("regeneration",
+        new RegenerationStatusEffect(0, '#ff5a5a')
+    );
 
     private static register(id: string, statusEffect: StatusEffect): RegistryEntry<StatusEffect> {
         return Registry.registerReferenceById(Registries.STATUS_EFFECT, Identifier.ofVanilla(id), statusEffect);

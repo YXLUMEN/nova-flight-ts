@@ -225,6 +225,10 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         this.setYaw(this.yaw + delta);
     }
 
+    public updateTrackedYaw(yaw: number, _interpolationSteps: number): void {
+        this.setYaw(yaw);
+    }
+
     public get getVelocityRef(): MutVec2 {
         return this.velocity;
     }
@@ -365,13 +369,13 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         return tickDelta === 1.0 ? this.yaw : lerp(tickDelta, this.prevYaw, this.yaw);
     }
 
-    protected lerpPosAndRotation(step: number, x: number, y: number, yaw: number): void {
+    protected lerpPosAndYaw(step: number, x: number, y: number, yaw: number): void {
         const t = 1 / step;
         const dx = lerp(t, this.getX(), x);
         const dy = lerp(t, this.getY(), y);
         const dYaw = lerpRadians(t, this.getYaw(), yaw);
         this.pos.set(dx, dy);
-        this.setYaw(dYaw);
+        this.yaw = dYaw;
     }
 
     protected adjustPosition(): boolean {

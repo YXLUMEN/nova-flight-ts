@@ -43,32 +43,35 @@ export class MobAI {
         this.random.setState(seed);
     }
 
-    public action(mob: MobEntity) {
+    public tickAi(mob: MobEntity) {
         if (this.disable) return;
 
         const speedMultiplier = mob.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
         if (speedMultiplier <= 0) return;
         const speed = mob.getMovementSpeed() * speedMultiplier;
 
-        const isSimple = this.behavior === Behavior.Simple;
-        if (!isSimple && (mob.age & 23) !== 0) this.chooseTarget(mob);
-
         switch (this.behavior) {
             case Behavior.Chase:
-                this.moveToward(mob, this.targetPos, speed, false);
+                this.moveToward(mob, speed);
+                this.faceTarget(mob, this.targetPos, 0.19634375, false);
                 break;
             case Behavior.Flee:
                 this.moveAway(mob, this.targetPos, speed);
+                this.faceTarget(mob, this.targetPos, 0.19634375, false);
                 break;
             case Behavior.Simple:
                 MobAI.simpleMove(mob);
                 break;
             default:
                 this.wander(mob, speed);
+                this.faceTarget(mob, this.targetPos, 0.19634375, false);
                 break;
         }
+    }
 
-        if (!isSimple) this.faceTarget(mob, this.targetPos, 0.19634375, false);
+    public updateAction(mob: MobEntity) {
+        const isSimple = this.behavior === Behavior.Simple;
+        if (!isSimple && (mob.age & 23) !== 0) this.chooseTarget(mob);
     }
 
     public chooseTarget(mob: MobEntity) {
@@ -122,11 +125,9 @@ export class MobAI {
         return this.behavior;
     }
 
-    private moveToward(mob: MobEntity, target: IVec, speed: number, wrap = false): void {
-        const pos = mob.getPositionRef;
-        const dx = wrap ? wrappedDelta(target.x, pos.x, World.WORLD_W) : target.x - pos.x;
-        const dy = target.y - pos.y;
-        this.dir.set(dx, dy).normalize();
+    private moveToward(mob: MobEntity, speed: number): void {
+        const yaw = mob.getYaw();
+        this.dir.set(Math.cos(yaw), Math.sin(yaw));
         mob.updateVelocity(speed, this.dir.x, this.dir.y);
     }
 
@@ -138,7 +139,7 @@ export class MobAI {
         mob.updateVelocity(speed, this.dir.x, this.dir.y);
     }
 
-    private faceTarget(mob: MobEntity, target: IVec, maxStep: number = 0.19634375, wrap = false): void {
+    public faceTarget(mob: MobEntity, target: IVec, maxStep: number = 0.19634375, wrap = false): void {
         const pos = mob.getPositionRef;
         const dx = wrap ? wrappedDelta(target.x, pos.x, World.WORLD_W) : target.x - pos.x;
         const dy = target.y - pos.y;

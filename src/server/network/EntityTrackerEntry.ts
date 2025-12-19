@@ -19,7 +19,7 @@ export class EntityTrackerEntry {
     private readonly tickInterval: number;
     private readonly alwaysUpdateVelocity: boolean;
     private readonly trackedPos = new TrackedPosition();
-    private lastYaw: number;
+    private lastYawUint8: number;
     private velocity: MutVec2;
     private trackingTick: number = 0;
     private updatesWithoutVehicle: number = 0;
@@ -33,7 +33,7 @@ export class EntityTrackerEntry {
         this.alwaysUpdateVelocity = alwaysUpdateVelocity;
         this.trackedPos.setPos(entity.getPositionRef.x, entity.getPositionRef.y);
         this.velocity = entity.getVelocityRef.clone();
-        this.lastYaw = encodeYaw(entity.getYaw());
+        this.lastYawUint8 = encodeYaw(entity.getYaw());
         this.changedEntries = entity.getDataTracker().getChangedEntries();
     }
 
@@ -41,13 +41,13 @@ export class EntityTrackerEntry {
         if (this.trackingTick % this.tickInterval === 0 || this.entity.velocityDirty || this.entity.getDataTracker().isDirty()) {
             this.updatesWithoutVehicle++;
 
-            const byteYaw = encodeYaw(this.entity.getYaw());
+            const yawInt8 = encodeYaw(this.entity.getYaw());
             const entityPos = this.entity.getPosition();
             const lenDelta = this.trackedPos.subtract(entityPos).lengthSquared() >= 7.6293945E-6;
 
             let packet: Payload | null = null;
             let relativePos = lenDelta || this.trackingTick % 60 === 0;
-            let yawDelta = Math.abs(byteYaw - this.lastYaw) >= 1;
+            let yawDelta = Math.abs(yawInt8 - this.lastYawUint8) >= 1;
             let syncPos = false;
             let syncYaw = false;
 
@@ -60,20 +60,18 @@ export class EntityTrackerEntry {
                 packet = EntityPositionS2CPacket.create(this.entity);
                 syncPos = true;
                 syncYaw = true;
-            } else if (relativePos) {
-                packet = new MoveRelative(this.entity.getId(), dx, dy);
-                syncPos = true;
-            } else if (yawDelta) {
-                packet = new Rotate(this.entity.getId(), byteYaw);
-                syncYaw = true;
-            } else {
-                const smallPos = Math.abs(dx) <= 1 && Math.abs(dy) <= 1;
-                const smallYaw = Math.abs(byteYaw - this.lastYaw) <= 2;
-                if (!smallPos || !smallYaw) {
-                    packet = new RotateAndMoveRelative(this.entity.getId(), dx, dy, byteYaw);
+            } else if (!relativePos || !yawDelta) {
+                if (relativePos) {
+                    packet = new MoveRelative(this.entity.getId(), dx, dy);
                     syncPos = true;
+                } else if (yawDelta) {
+                    packet = new Rotate(this.entity.getId(), yawInt8);
                     syncYaw = true;
                 }
+            } else {
+                packet = new RotateAndMoveRelative(this.entity.getId(), dx, dy, yawInt8);
+                syncPos = true;
+                syncYaw = true;
             }
 
             if (this.alwaysUpdateVelocity || this.entity.velocityDirty) {
@@ -96,7 +94,7 @@ export class EntityTrackerEntry {
             }
 
             if (syncYaw) {
-                this.lastYaw = byteYaw;
+                this.lastYawUint8 = yawInt8;
             }
 
             this.entity.velocityDirty = false;
