@@ -16,7 +16,7 @@ export class DamageSources {
     private readonly _kill: DamageSource;
     private readonly _laser: DamageSource;
     private readonly _void: DamageSource;
-    private readonly _onFire: DamageSource;
+    private readonly _erosion: DamageSource;
     private readonly _explosion: DamageSource;
 
     public constructor(registryManager: RegistryManager) {
@@ -26,7 +26,7 @@ export class DamageSources {
         this._kill = this.create(DamageTypes.KILL);
         this._laser = this.create(DamageTypes.LASER);
         this._void = this.create(DamageTypes.VOID);
-        this._onFire = this.create(DamageTypes.ON_FIRE);
+        this._erosion = this.create(DamageTypes.EROSION);
         this._explosion = this.create(DamageTypes.EXPLOSION);
     }
 
@@ -95,7 +95,7 @@ export class DamageSources {
         return this._void;
     }
 
-    public onFire() {
-        return this._onFire;
+    public erosion() {
+        return this._erosion;
     }
 }

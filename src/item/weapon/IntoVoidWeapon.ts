@@ -34,32 +34,33 @@ export class IntoVoidWeapon extends SpecialWeapon {
         this.setActive(stack, true);
         this.setTimeLeft(stack, this.getDuration(stack));
 
-        if (attacker instanceof PlayerEntity) {
-            stack.set(DataComponentTypes.ANY_BOOLEAN, attacker.invulnerable);
-            attacker.invulnerable = true;
+        if (!(attacker instanceof PlayerEntity)) return;
 
-            const modifier = stack.getOrDefault(
-                DataComponentTypes.ATTRIBUTE_MODIFIERS,
-                IntoVoidWeapon.DEFAULT_MODIFIER
-            );
-            attacker.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.addModifier(modifier);
+        stack.set(DataComponentTypes.ANY_BOOLEAN, attacker.invulnerable);
+        attacker.invulnerable = true;
 
-            const mask = new WindowOverlay(
-                IntoVoidWeapon.uiColor,
-                0.28,
-                0.2,
-                0.4,
-                "screen",
-            );
-            world.addEffect(null, mask);
-            id2EffectMap.set(attacker.getId(), mask);
+        const modifier = stack.getOrDefault(
+            DataComponentTypes.ATTRIBUTE_MODIFIERS,
+            IntoVoidWeapon.DEFAULT_MODIFIER
+        );
+        attacker.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.addModifier(modifier);
 
-            if (attacker.getTechs().isUnlocked(Techs.VOID_ENERGY_EXTRACTION)) {
-                const emp = Items.EMP_WEAPON as EMPWeapon;
-                const stack = attacker.getItem(emp);
-                if (stack) emp.setCooldown(stack, 0);
-            }
+        const mask = new WindowOverlay(
+            IntoVoidWeapon.uiColor,
+            0.28,
+            0.2,
+            0.4,
+            "screen",
+        );
+        world.addEffect(null, mask);
+        id2EffectMap.set(attacker.getId(), mask);
+
+        if (attacker.getTechs().isUnlocked(Techs.VOID_ENERGY_EXTRACTION)) {
+            const emp = Items.EMP_WEAPON as EMPWeapon;
+            const stack = attacker.getItem(emp);
+            if (stack) emp.setCooldown(stack, 0);
         }
+
     }
 
     public override canFire(stack: ItemStack): boolean {
@@ -78,7 +79,9 @@ export class IntoVoidWeapon extends SpecialWeapon {
         if (holder instanceof PlayerEntity && holder.getTechs().isUnlocked(Techs.VOID_ENERGY_EXTRACTION)) {
             const laser = Items.LASER_WEAPON as LaserWeapon;
             const stack = holder.getItem(laser);
-            if (stack) stack.setAvailable(true);
+            if (!stack) return;
+            stack.setAvailable(true);
+            laser.setHeat(stack, 0);
         }
     }
 

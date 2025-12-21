@@ -65,9 +65,8 @@ export class TutorialEvents {
 
             await sleep(1000);
             server.sendMessage('指挥官 ,欢迎来到 \x1b[32m"Nova Flight"');
-            await sleep(2000);
+            await sleep(3000);
             server.sendMessage('接下来我会重复一遍基础驾驶操作(如果需要重复观看, 请按下 \x1b[32mT\x1b[0m)');
-            await sleep(2000);
 
             this.conditions.clear();
             this.nextPhase();
@@ -77,14 +76,14 @@ export class TutorialEvents {
         if (name === 'tutorial_move') {
             if (this.conditions.has('move')) return;
             this.conditions.set('move', {
-                require: 4,
+                require: 6,
                 acc: 0,
             });
             this.currentPhase = name;
 
-            await sleep(800);
+            await sleep(3000);
             server.sendMessage('按下 \x1b[32mwasd\x1b[0m 或者 \x1b[32m方向键\x1b[0m 进行移动');
-            await sleep(2000);
+            await sleep(3000);
 
             this.pendingAchievement = this.move.bind(this);
             return;
@@ -98,10 +97,11 @@ export class TutorialEvents {
             });
             this.currentPhase = name;
 
-            await sleep(800);
+            await sleep(3000);
             server.sendMessage('按下 \x1b[32mSpace/空格\x1b[0m 或者 \x1b[32m鼠标左键\x1b[0m 进行基础攻击');
-            await sleep(2000);
+            await sleep(3000);
             server.sendMessage('战斗中请务必注意弹药消耗, 若弹药消耗殆尽, 您需要按下 \x1b[32mR\x1b[0m 进行装填');
+            await sleep(3000);
 
             this.pendingAchievement = this.fire.bind(this);
             return;
@@ -123,11 +123,11 @@ export class TutorialEvents {
         if (name === 'tutorial_tech') {
             if (this.conditions.has('tech')) return;
             this.conditions.set('tech', {
-                requireFire: 3,
+                requireFire: 5,
                 fireAcc: 0,
                 fireAchieve: false,
                 requireOpenPage: false,
-                requireTech: 'apfs_discarding_sabot',
+                requireTech: Techs.APFS_DISCARDING_SABOT,
                 currentUnlocked: 0,
                 showWarn: false,
                 unloaded: false,
@@ -136,17 +136,17 @@ export class TutorialEvents {
             });
             this.currentPhase = name;
 
-            await sleep(800);
+            await sleep(4000);
             server.sendMessage('您应该注意到了, 船体完整度下方存在其他信息, 那是舰船的特殊攻击');
-            await sleep(2000);
+            await sleep(4000);
             server.sendMessage('按照排列顺序, 按下 \x1b[32m数字键1\x1b[0m 将会释放 \x1b[32m"炸弹"\x1b[0m');
-            await sleep(2000);
+            await sleep(4000);
             server.sendMessage('您还可以通过按下 \x1b[32m鼠标右键\x1b[0m 快速释放被黄色框选的特殊攻击');
-            await sleep(2000);
+            await sleep(4000);
             server.sendMessage('如果您需要修改\x1b[32m快速释放\x1b[0m的目标, 按下 \x1b[32m鼠标中键\x1b[0m 即可');
-            await sleep(2000);
+            await sleep(4000);
             server.sendMessage('当然, 我们目前并没有更多的特殊攻击可供选择');
-            await sleep(2000);
+            await sleep(3000);
 
             this.pendingAchievement = this.tech.bind(this);
             return;
@@ -160,9 +160,9 @@ export class TutorialEvents {
             });
             this.currentPhase = name;
 
-            await sleep(500);
+            await sleep(2000);
             server.sendMessage('指挥官, 请务必小心, 探测到强烈的空间波动, 有大家伙来了');
-            await sleep(1000);
+            await sleep(2000);
 
             const world = server.world!;
             const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 64);
@@ -182,18 +182,21 @@ export class TutorialEvents {
                 .forEach(entity => entity.kill())
             );
 
-            await sleep(2000);
+            await sleep(3000);
             server.sendMessage('我们得合理利用科技, 击败它!');
-            await sleep(1000);
+            await sleep(3000);
             server.sendMessage('比如 "近防炮" 和 "火箭发射器"');
-            await sleep(1000);
+            await sleep(3000);
             server.sendMessage('前着可以拦截子弹和导弹, 但它极快的射速容易过热');
-            await sleep(1000);
+            await sleep(3000);
             server.sendMessage('后者能够发射一连串威力极大的火箭弹, 是对付重型目标的利器!');
         }
 
         if (name === 'tutorial_end') {
             this.currentPhase = name;
+            await sleep(2000);
+            server.sendMessage('干得漂亮!');
+            await sleep(3000);
             server.sendMessage('接下来看你的了, 指挥官!');
             await sleep(500);
             this.deregister();
@@ -241,7 +244,7 @@ export class TutorialEvents {
         const condition = this.conditions.get('move');
         if (!condition || !this.hostPlayer) return;
 
-        if (this.hostPlayer.getVelocityRef.lengthSquared() < 1) return;
+        if (this.hostPlayer.getVelocityRef.lengthSquared() < 150) return;
 
         condition.acc += dt;
         if (condition.acc > condition.require) {
@@ -278,9 +281,9 @@ export class TutorialEvents {
             this.isPending = true;
             const server = NovaFlightServer.getInstance();
             server.sendMessage('指挥官, 敌舰装备了适应装甲, 我们的攻击难以造成有效伤害');
-            await sleep(2000);
+            await sleep(3000);
             server.sendMessage('是时候呼叫我们的科研部门了');
-            await sleep(1000);
+            await sleep(3000);
             server.sendMessage('按下 \x1b[32mG\x1b[0m 就能够打开我们舰船的研究系统');
             await sleep(2000);
             this.isPending = false;
@@ -293,11 +296,11 @@ export class TutorialEvents {
             this.isPending = true;
             const server = NovaFlightServer.getInstance();
             server.sendMessage('我们拥有多种升级的途径, 需要注意的是, 部分分支之间存在冲突, 您需要慎重考虑');
-            await sleep(1000);
+            await sleep(4000);
             server.sendMessage('现在, 我们需要利用 \x1b[32m"钢芯穿甲弹"\x1b[0m 穿透敌人的装甲');
-            await sleep(1000);
+            await sleep(4000);
             server.sendMessage('在获取 \x1b[32m"钢芯穿甲弹"\x1b[0m 前需要研究它的\x1b[33m所有\x1b[0m前置科技');
-            await sleep(1000);
+            await sleep(4000);
             server.sendMessage('请注意, 升级科技需要\x1b[33m消耗材料\x1b[0m, 但只要我们击毁敌舰就能获取材料');
             this.isPending = false;
             condition.requireOpenPage = true;
@@ -317,6 +320,8 @@ export class TutorialEvents {
             const server = NovaFlightServer.getInstance();
             await sleep(3000);
             server.sendMessage('我们可以通过 \x1b[32m鼠标滚轮\x1b[0m 和 \x1b[32mF\x1b[0m 切换主武器');
+            await sleep(3000);
+            server.sendMessage('现在, 让我们击毁他们!');
             await sleep(2000);
             this.isPending = false;
 
@@ -330,9 +335,9 @@ export class TutorialEvents {
             this.isPending = true;
             const server = NovaFlightServer.getInstance();
             server.sendMessage('指挥官! 材料是很珍贵的, 您需要合理使用');
-            await sleep(1000);
+            await sleep(3000);
             server.sendMessage('如果您选择了错误的升级, 您可以通过科研界面的重置来回收所有科技, 但您需要注意, 回收会造成一些损耗');
-            await sleep(1000);
+            await sleep(3000);
             this.hostPlayer.addScore(900);
             condition.showWarn = true;
             this.isPending = false;

@@ -60,29 +60,15 @@ export class ServerDB {
         } satisfies PlayerData);
     }
 
-    public static async loadWorld(saveName?: string): Promise<NbtCompound | null> {
-        if (saveName) {
-            const result = await this.db.get<Save>('saves', saveName);
-            const optional = result.ok();
-            if (optional.isEmpty()) return null;
-
-            const data = optional.get().data;
-            if (!data) return null;
-            if (optional.get().version !== this.SAVE_VERSION) return null;
-            return NbtCompound.fromBinary(data);
-        }
-
-        const result = await this.db.getAll<Save>('saves');
+    public static async loadWorld(saveName: string): Promise<NbtCompound | null> {
+        const result = await this.db.get<Save>('saves', saveName);
         const optional = result.ok();
         if (optional.isEmpty()) return null;
 
-        if (optional.get().length === 0) return null;
-
-        const latest = optional.get().reduce((prev, curr) =>
-            curr.timestamp > prev.timestamp ? curr : prev
-        );
-        if (latest.version !== this.SAVE_VERSION) return null;
-        return NbtCompound.fromBinary(latest.data);
+        const data = optional.get().data;
+        if (!data) return null;
+        if (optional.get().version !== this.SAVE_VERSION) return null;
+        return NbtCompound.fromBinary(data);
     }
 
     public static async loadPlayer(player: ServerPlayerEntity): Promise<NbtCompound | null> {

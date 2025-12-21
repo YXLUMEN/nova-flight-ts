@@ -33,7 +33,7 @@ export class IntegratedServer extends NovaFlightServer {
         await this.startGame(manager, action === 1);
 
         const isTutorial = await ServerDB.db.get<string>('user_info', 'tutorial');
-        if (isTutorial === null && action === 0 && this.world) {
+        if (isTutorial.ok().isEmpty() && action === 0 && this.world) {
             await ServerDB.db.update('user_info', {name: 'tutorial'});
 
             this.world.stage = TutorialStage;
@@ -51,7 +51,7 @@ export class IntegratedServer extends NovaFlightServer {
     }
 
     public override loadSaves(): Promise<NbtCompound | null> {
-        return ServerDB.loadWorld();
+        return ServerDB.loadWorld(this.saveName);
     }
 
     public override async saveGame(compound: NbtCompound): Promise<void> {

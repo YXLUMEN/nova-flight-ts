@@ -32,18 +32,18 @@ export class ServerDefaultEvents {
             const damageSource = event.damageSource as DamageSource;
 
             const attacker = damageSource.getAttacker();
-            if (attacker instanceof PlayerEntity && !damageSource.isOf(DamageTypes.ON_FIRE)) {
+            if (attacker instanceof PlayerEntity && !damageSource.isOf(DamageTypes.EROSION)) {
                 const techTree = attacker.getTechs();
                 if (!techTree.isUnlocked(Techs.ARMOR_EROSION)) return;
 
                 if (techTree.isUnlocked(Techs.GRAY)) {
-                    const effect = mob.getStatusEffect(StatusEffects.BURNING);
+                    const effect = mob.getStatusEffect(StatusEffects.EROSION);
                     if (effect) {
                         const amplifier = Math.min(10, effect.getAmplifier() + 1);
-                        mob.addStatusEffect(new StatusEffectInstance(StatusEffects.BURNING, 400, amplifier), attacker);
+                        mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EROSION, 400, amplifier), attacker);
                     }
                 }
-                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.BURNING, 400, 1), attacker);
+                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EROSION, 400, 1), attacker);
             }
         });
 
@@ -67,7 +67,7 @@ export class ServerDefaultEvents {
             }
 
             if (techTree.isUnlocked(Techs.EMERGENCY_REPAIR)) {
-                if (Math.random() <= 0.1) player.setHealth(player.getHealth() + 5);
+                if (Math.random() <= 0.15) player.setHealth(player.getHealth() + 5);
             }
         });
 

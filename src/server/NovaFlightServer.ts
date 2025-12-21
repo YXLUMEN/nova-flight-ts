@@ -21,8 +21,8 @@ export abstract class NovaFlightServer implements CommandOutput {
     public static instance: NovaFlightServer;
 
     public readonly saveName: string;
-
     public readonly serverId: UUID;
+
     public readonly networkChannel: ServerNetworkChannel;
     public readonly serverCommandManager: ServerCommandManager;
     public readonly playerManager: PlayerManager;
@@ -78,6 +78,8 @@ export abstract class NovaFlightServer implements CommandOutput {
                 this.stopWorld();
                 return;
             }
+        } else {
+            await ServerDB.deleteWorld(this.saveName);
         }
 
         this.profile = new GameProfile(this.networkChannel.getSessionId(), this.serverId, this.saveName);

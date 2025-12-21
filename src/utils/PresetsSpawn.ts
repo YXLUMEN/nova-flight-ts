@@ -73,7 +73,7 @@ const spawnInMap = (
         const maxHealth = mob.getMaxHealth();
         mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + scaledHp | 0);
         mob.setHealth(mob.getMaxHealth());
-        mob.getAi().setBehavior(mob, Behavior.Wander);
+        mob.getAi().setBehavior(Behavior.Wander);
         if (ctx.difficulty > 9 && Math.random() > 0.8) {
             mob.addStatusEffect(
                 new StatusEffectInstance(StatusEffects.RESISTANCE, 800, Math.min(7, ctx.difficulty)),

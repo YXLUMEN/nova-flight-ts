@@ -23,6 +23,7 @@ export class BossEntity extends MobEntity {
     private maxKillCounts = 48;
     private cooldown = 0;
     private damageCooldown: number = 0;
+    private missileCooldown: number = 0;
     private releasingMissile: boolean = false;
 
     public constructor(type: EntityType<BossEntity>, world: World, worth: number) {
@@ -70,10 +71,11 @@ export class BossEntity extends MobEntity {
             world.spawnEntity(b);
         }
 
-        if (this.age % 12 !== 0 || this.releasingMissile) return;
+        if (this.releasingMissile || this.missileCooldown-- > 0) return;
+        this.releasingMissile = true;
+        this.missileCooldown = 12;
 
         let i = 1;
-        this.releasingMissile = true;
         const schedule = world.scheduleInterval(0.3, () => {
             if (i++ > 8) {
                 schedule.cancel();

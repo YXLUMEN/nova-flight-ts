@@ -1,7 +1,7 @@
 import {Identifier} from "../../registry/Identifier.ts";
 import {Registry} from "../../registry/Registry.ts";
 import {EMCStatus} from "./EMCStatus.ts";
-import {BurningEffect} from "./BurningEffect.ts";
+import {ErosionEffect} from "./ErosionEffect.ts";
 import {StatusEffect} from "./StatusEffect.ts";
 import {Registries} from "../../registry/Registries.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
@@ -27,8 +27,8 @@ export class StatusEffects {
             .addAttributeModifier(EntityAttributes.GENERIC_MOVEMENT_SPEED, Identifier.ofVanilla("effect.emc_status"), -0.8)
     );
 
-    public static readonly BURNING = this.register("burning_status",
-        new BurningEffect(1)
+    public static readonly EROSION = this.register("erosion",
+        new ErosionEffect(1)
     );
 
     public static readonly HEALTH_BOOST = this.register("health_boost",

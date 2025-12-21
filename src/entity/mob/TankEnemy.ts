@@ -4,6 +4,7 @@ import {MobEntity} from "./MobEntity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
+import {clamp} from "../../utils/math/math.ts";
 
 export class TankEnemy extends MobEntity {
     public override color = '#ff6b6b';
@@ -30,7 +31,7 @@ export class TankEnemy extends MobEntity {
             const reduction = Math.min(0.9, this.toughness * 0.1);
             damage *= 1 - reduction;
             this.toughness = Math.min(10, this.toughness + damage / 2);
-            if (this.toughness > 8) damage = Math.min(2, damage);
+            if (this.toughness > 8) damage = clamp(damage, 0.4, 4);
         }
 
         return super.takeDamage(damageSource, damage);

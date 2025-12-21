@@ -2,8 +2,6 @@ import {EMPWeapon} from "../../item/weapon/EMPWeapon.ts";
 import {LaserWeapon} from "../../item/weapon/LaserWeapon.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {IntoVoidWeapon} from "../../item/weapon/IntoVoidWeapon.ts";
-import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
-import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
 import {AutoAim} from "./AutoAim.ts";
 import {Items} from "../../item/Items.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
@@ -114,14 +112,6 @@ export function applyClientTech(tech: RegistryEntry<Tech>): void {
                     stack.set(DataComponentTypes.EXPLOSION_DAMAGE, base * 1.4);
                 }
             });
-            break;
-        }
-        case Techs.SHIP_OPT: {
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.HEALTH_BOOST, -1, 0), null);
-
-            if (player.getNormalTags().has('Repaired')) return;
-            player.addNormalTag('Repaired');
-            player.setHealth(player.getMaxHealth());
             break;
         }
         case Techs.INTO_VOID: {

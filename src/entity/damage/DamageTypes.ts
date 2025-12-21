@@ -15,7 +15,7 @@ export class DamageTypes {
     public static readonly LASER = this.registry("laser");
     public static readonly PLAYER_IMPACT = this.registry("player_impact");
     public static readonly VOID = this.registry("void");
-    public static readonly ON_FIRE = this.registry("on_fire");
+    public static readonly EROSION = this.registry("erosion");
     public static readonly AP_DAMAGE = this.registry("ap_damage");
 
     public static async init() {
@@ -30,7 +30,7 @@ export class DamageTypes {
         damage.add(this.LASER, 'laser', DamageTypeTags.REPLY_LASER);
         damage.add(this.PLAYER_IMPACT, 'playerImpact', DamageTypeTags.NOT_GAIN_SCORE);
         damage.add(this.VOID, 'void', DamageTypeTags.NOT_GAIN_SCORE);
-        damage.add(this.ON_FIRE, 'onFire', DamageTypeTags.REPLY_LASER);
+        damage.add(this.EROSION, 'onFire', DamageTypeTags.REPLY_LASER);
         damage.add(this.AP_DAMAGE, 'apDamage', DamageTypeTags.BYPASSES_INVULNERABLE);
     }
 

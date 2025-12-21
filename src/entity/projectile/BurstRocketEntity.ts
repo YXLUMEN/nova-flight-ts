@@ -17,7 +17,7 @@ export class BurstRocketEntity extends RocketEntity {
             fastSparks: 2,
             sparks: 3,
             explodeColor: this.explodeColor,
-            statusEffect: {effect: StatusEffects.BURNING, duration: 100, amplifier: 1}
+            statusEffect: {effect: StatusEffects.EROSION, duration: 100, amplifier: 1}
         });
 
         world.playSound(null, SoundEvents.MISSILE_EXPLOSION, 0.4);

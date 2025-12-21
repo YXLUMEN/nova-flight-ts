@@ -8,7 +8,6 @@ import {EntityHealthS2CPacket} from "../../network/packet/s2c/EntityHealthS2CPac
 import {EntityRemoveS2CPacket} from "../../network/packet/s2c/EntityRemoveS2CPacket.ts";
 import {EntityPositionS2CPacket} from "../../network/packet/s2c/EntityPositionS2CPacket.ts";
 import {ExplosionS2CPacket} from "../../network/packet/s2c/ExplosionS2CPacket.ts";
-import {MobAiS2CPacket} from "../../network/packet/s2c/MobAiS2CPacket.ts";
 import {EntityVelocityUpdateS2CPacket} from "../../network/packet/s2c/EntityVelocityUpdateS2CPacket.ts";
 import {EntityTrackerUpdateS2CPacket} from "../../network/packet/s2c/EntityTrackerUpdateS2CPacket.ts";
 import {MoveRelative, Rotate, RotateAndMoveRelative} from "../../network/packet/s2c/EntityS2CPacket.ts";
@@ -29,7 +28,6 @@ import {EffectCreateS2CPacket} from "../../network/packet/s2c/EffectCreateS2CPac
 import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
 import {PlayerAddScoreS2CPacket} from "../../network/packet/s2c/PlayerAddScoreS2CPacket.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
-import {EntityChooseTargetS2CPacket} from "../../network/packet/s2c/EntityChooseTargetS2CPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 import {PlayerGameModeS2CPacket} from "../../network/packet/s2c/PlayerGameModeS2CPacket.ts";
 import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
@@ -54,7 +52,6 @@ export class ServerNetwork {
         this.register(EntityRemoveS2CPacket.ID, EntityRemoveS2CPacket.CODEC);
         this.register(EntityPositionS2CPacket.ID, EntityPositionS2CPacket.CODEC);
         this.register(ExplosionS2CPacket.ID, ExplosionS2CPacket.CODEC);
-        this.register(MobAiS2CPacket.ID, MobAiS2CPacket.CODEC);
         this.register(EntityVelocityUpdateS2CPacket.ID, EntityVelocityUpdateS2CPacket.CODEC);
         this.register(EntityTrackerUpdateS2CPacket.ID, EntityTrackerUpdateS2CPacket.CODEC);
         this.register(Rotate.ID, Rotate.CODEC);
@@ -75,7 +72,6 @@ export class ServerNetwork {
         this.register(PlayerSetScoreS2CPacket.ID, PlayerSetScoreS2CPacket.CODEC);
         this.register(PlayerAddScoreS2CPacket.ID, PlayerAddScoreS2CPacket.CODEC);
         this.register(PlayerDisconnectS2CPacket.ID, PlayerDisconnectS2CPacket.CODEC);
-        this.register(EntityChooseTargetS2CPacket.ID, EntityChooseTargetS2CPacket.CODEC);
         this.register(GameMessageS2CPacket.ID, GameMessageS2CPacket.CODEC);
         this.register(PlayerGameModeS2CPacket.ID, PlayerGameModeS2CPacket.CODEC);
         this.register(EntityStatusEffectS2CPacket.ID, EntityStatusEffectS2CPacket.CODEC);

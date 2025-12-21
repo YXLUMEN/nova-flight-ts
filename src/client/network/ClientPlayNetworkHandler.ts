@@ -7,8 +7,6 @@ import {EntityTypes} from "../../entity/EntityTypes.ts";
 import type {Consumer, UUID} from "../../apis/types.ts";
 import {EntityRemoveS2CPacket} from "../../network/packet/s2c/EntityRemoveS2CPacket.ts";
 import {EntityPositionS2CPacket} from "../../network/packet/s2c/EntityPositionS2CPacket.ts";
-import {MobAiS2CPacket} from "../../network/packet/s2c/MobAiS2CPacket.ts";
-import {MobEntity} from "../../entity/mob/MobEntity.ts";
 import {ExplosionS2CPacket} from "../../network/packet/s2c/ExplosionS2CPacket.ts";
 import {EntityVelocityUpdateS2CPacket} from "../../network/packet/s2c/EntityVelocityUpdateS2CPacket.ts";
 import {EntityTrackerUpdateS2CPacket} from "../../network/packet/s2c/EntityTrackerUpdateS2CPacket.ts";
@@ -49,7 +47,6 @@ import {OtherClientPlayerEntity} from "../entity/OtherClientPlayerEntity.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import {PlayerDisconnectC2SPacket} from "../../network/packet/c2s/PlayerDisconnectC2SPacket.ts";
 import {ClientSniffingC2SPacket} from "../../network/packet/c2s/ClientSniffingC2SPacket.ts";
-import {EntityChooseTargetS2CPacket} from "../../network/packet/s2c/EntityChooseTargetS2CPacket.ts";
 import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 import {GameProfile} from "../../server/entity/GameProfile.ts";
@@ -283,18 +280,6 @@ export class ClientPlayNetworkHandler {
         if (entity) {
             entity.getDataTracker().writeUpdatedEntries(packet.trackedValues);
         }
-    }
-
-    public onMobAiBehavior(packet: MobAiS2CPacket): void {
-        const entity = this.world?.getEntityById(packet.entityId);
-        if (!entity) return;
-        (entity as MobEntity).getAi().setBehavior((entity as MobEntity), packet.behavior);
-    }
-
-    public onMobChooseTarget(packet: EntityChooseTargetS2CPacket) {
-        const entity = this.world?.getEntityById(packet.entityId);
-        if (!entity) return;
-        (entity as MobEntity).getAi().setTarget(packet.target);
     }
 
     public onExplosion(packet: ExplosionS2CPacket) {
@@ -531,7 +516,6 @@ export class ClientPlayNetworkHandler {
         this.register(EntityRemoveS2CPacket.ID, this.onEntityRemove.bind(this));
         this.register(EntityPositionS2CPacket.ID, this.onEntityPosition.bind(this));
         this.register(EntityPositionForceS2CPacket.ID, this.onEntityPositionForce.bind(this));
-        this.register(MobAiS2CPacket.ID, this.onMobAiBehavior.bind(this));
         this.register(ExplosionS2CPacket.ID, this.onExplosion.bind(this));
         this.register(EntityVelocityUpdateS2CPacket.ID, this.onEntityVelocityUpdate.bind(this));
         this.register(EntityTrackerUpdateS2CPacket.ID, this.onEntityTrackerUpdate.bind(this));
@@ -552,7 +536,6 @@ export class ClientPlayNetworkHandler {
         this.register(StopSoundS2CPacket.ID, this.onStopSound.bind(this));
         this.register(PlayerSetScoreS2CPacket.ID, this.onPlayerScore.bind(this));
         this.register(PlayerAddScoreS2CPacket.ID, this.onPlayerAddScore.bind(this));
-        this.register(EntityChooseTargetS2CPacket.ID, this.onMobChooseTarget.bind(this));
         this.register(GameMessageS2CPacket.ID, this.onGameMessage.bind(this));
         this.register(PlayerGameModeS2CPacket.ID, this.onSyncProfile.bind(this));
         this.register(EntityStatusEffectS2CPacket.ID, this.onEntityStatusEffect.bind(this));

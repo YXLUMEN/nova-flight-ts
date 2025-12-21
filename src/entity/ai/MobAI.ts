@@ -5,9 +5,7 @@ import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {createClean} from "../../utils/uit.ts";
 import {getNearestEntity, wrappedDelta} from "../../utils/math/math.ts";
 import {World} from "../../world/World.ts";
-import {MobAiS2CPacket} from "../../network/packet/s2c/MobAiS2CPacket.ts";
 import {Random} from "../../utils/math/Random.ts";
-import {EntityChooseTargetS2CPacket} from "../../network/packet/s2c/EntityChooseTargetS2CPacket.ts";
 
 export const Behavior = createClean({
     Wander: 0,
@@ -84,7 +82,6 @@ export class MobAI {
 
         const playerPos = target.getPositionRef;
         this.targetPos.set(playerPos.x, playerPos.y);
-        world.getNetworkChannel().send(new EntityChooseTargetS2CPacket(mob.getId(), this.targetPos));
 
         const dx = playerPos.x - pos.x;
         const dy = playerPos.y - pos.y;
@@ -92,12 +89,12 @@ export class MobAI {
 
         if (mob.isRangedAttacker()) {
             if (distSq < 230400) {
-                this.setBehavior(mob, Behavior.Flee);
+                this.setBehavior(Behavior.Flee);
             } else {
-                this.setBehavior(mob, Behavior.Wander);
+                this.setBehavior(Behavior.Wander);
             }
         } else {
-            this.setBehavior(mob, Behavior.Chase);
+            this.setBehavior(Behavior.Chase);
         }
     }
 
@@ -113,12 +110,8 @@ export class MobAI {
         mob.updateVelocity(speed, this.dir.x, this.dir.y);
     }
 
-    public setBehavior(mob: MobEntity, behavior: number): void {
+    public setBehavior(behavior: number): void {
         this.behavior = behavior;
-
-        const world = mob.getWorld();
-        if (world.isClient) return;
-        world.getNetworkChannel().send(new MobAiS2CPacket(mob.getId(), behavior));
     }
 
     public getBehavior(): number {

@@ -113,7 +113,7 @@ export function applyServerTech(tech: RegistryEntry<Tech>, player: ServerPlayerE
             break;
         }
         case Techs.SHIP_OPT: {
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.HEALTH_BOOST, -1, 0), null);
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.HEALTH_BOOST, -1, 3), null);
 
             if (player.getNormalTags().has('Repaired')) return;
             player.addNormalTag('Repaired');
