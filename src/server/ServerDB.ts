@@ -3,23 +3,9 @@ import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {UUID} from "../apis/types.ts";
 import type {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
 import {Result} from "../utils/result/Result.ts";
-
-interface Save {
-    save_name: string,
-    data: Uint8Array<ArrayBufferLike>,
-    version: number,
-    timestamp: number,
-}
-
-interface PlayerData {
-    save_name: string,
-    uuid: string,
-    data: Uint8Array<ArrayBufferLike>,
-    version: number,
-}
+import type {PlayerData, Save} from "../apis/Saves.ts";
 
 export class ServerDB {
-    public static SAVE_VERSION = 2;
     public static db = new IndexedDBHelper('nova-flight-server', 3, [
         {
             name: 'saves',
@@ -36,11 +22,11 @@ export class ServerDB {
     ]);
 
     public static async saveWorld(saveName: string, compound: NbtCompound): Promise<void> {
-        await this.db.update('saves', {
+        return void this.db.update('saves', {
             save_name: saveName,
             data: compound.toBinary(),
             timestamp: Date.now(),
-            version: this.SAVE_VERSION
+            version: NbtCompound.VERSION
         } satisfies Save);
     }
 
@@ -52,11 +38,11 @@ export class ServerDB {
         const nbt = new NbtCompound();
         player.writeNBT(nbt);
 
-        await this.db.update('player_data', {
+        return void this.db.update('player_data', {
             save_name,
             uuid,
             data: nbt.toBinary(),
-            version: this.SAVE_VERSION
+            version: NbtCompound.VERSION
         } satisfies PlayerData);
     }
 
@@ -67,7 +53,7 @@ export class ServerDB {
 
         const data = optional.get().data;
         if (!data) return null;
-        if (optional.get().version !== this.SAVE_VERSION) return null;
+        if (optional.get().version !== NbtCompound.VERSION) return null;
         return NbtCompound.fromBinary(data);
     }
 
@@ -83,16 +69,16 @@ export class ServerDB {
 
         const data = optional.get().data;
         if (!data) return null;
-        if (optional.get().version !== this.SAVE_VERSION) return null;
+        if (optional.get().version !== NbtCompound.VERSION) return null;
         return NbtCompound.fromBinary(data)
     }
 
-    public static async deleteWorld(saveName: string): Promise<Result<boolean, DOMException | null>> {
+    public static async deleteWorld(saveName: string): Promise<Result<boolean, Error>> {
         const exists = await this.db.get<Save>('saves', saveName);
         if (!exists) return Result.ok(false);
 
         const db = await this.db.init();
-        const {promise, resolve} = Promise.withResolvers<Result<boolean, DOMException | null>>();
+        const {promise, resolve} = Promise.withResolvers<Result<boolean, Error>>();
 
         const tx = db.transaction(['saves', 'player_data'], 'readwrite');
 
@@ -107,7 +93,7 @@ export class ServerDB {
         playerStore.delete(range);
 
         tx.oncomplete = () => resolve(Result.ok(true));
-        tx.onerror = () => resolve(Result.err(tx.error));
+        tx.onerror = () => resolve(Result.err(IndexedDBHelper.mapErr(tx.error)));
 
         return promise;
     }

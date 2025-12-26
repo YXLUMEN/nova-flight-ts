@@ -52,7 +52,7 @@ export class PlayerManager {
         return await ServerDB.loadPlayer(player);
     }
 
-    private savePlayerData(player: ServerPlayerEntity): Promise<void> {
+    protected savePlayerData(player: ServerPlayerEntity): Promise<void> {
         return ServerDB.savePlayer(player);
     }
 

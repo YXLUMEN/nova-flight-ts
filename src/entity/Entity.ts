@@ -297,10 +297,6 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         return this.dimensions.getBoxAtByVec(this.pos);
     }
 
-    public shouldWrap(): boolean {
-        return false;
-    }
-
     public createSpawnPacket() {
         return EntitySpawnS2CPacket.create(this);
     }
@@ -382,14 +378,6 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         const pos = this.pos;
         pos.x = clamp(pos.x, 20, World.WORLD_W - 20);
         pos.y = clamp(pos.y, 20, World.WORLD_H - 20);
-        return true;
-    }
-
-    protected wrapPosition(): boolean {
-        const pos = this.getPositionRef;
-        const W = World.WORLD_W;
-
-        this.setPosition(((pos.x % W) + W) % W, clamp(pos.y, 20, World.WORLD_H - 20));
         return true;
     }
 

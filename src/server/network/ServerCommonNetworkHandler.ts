@@ -6,13 +6,13 @@ import type {Payload, PayloadId} from "../../network/Payload.ts";
 import {HashMap} from "../../utils/collection/HashMap.ts";
 import type {Identifier} from "../../registry/Identifier.ts";
 import type {Consumer} from "../../apis/types.ts";
-import type {ServerNetworkChannel} from "./ServerNetworkChannel.ts";
+import type {ServerChannel} from "./ServerChannel.ts";
 
 export abstract class ServerCommonNetworkHandler {
     protected static readonly TIMEOUT = 'disconnect.timeout';
 
     protected readonly server: NovaFlightServer;
-    protected readonly channel: ServerNetworkChannel;
+    protected readonly channel: ServerChannel;
 
     private lastKeepAliveTime: number;
     private waitingForKeepAlive: boolean = true;
@@ -22,7 +22,7 @@ export abstract class ServerCommonNetworkHandler {
 
     private readonly payloadHandlers = new HashMap<Identifier, Consumer<Payload>>();
 
-    protected constructor(server: NovaFlightServer, channel: ServerNetworkChannel) {
+    protected constructor(server: NovaFlightServer, channel: ServerChannel) {
         this.server = server;
         this.channel = channel;
         this.lastKeepAliveTime = performance.now();

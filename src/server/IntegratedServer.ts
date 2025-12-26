@@ -8,12 +8,17 @@ import {TutorialStage} from "../configs/TutorialStage.ts";
 import {TutorialEvents} from "./event/TutorialEvents.ts";
 import {PlayAudioS2CPacket} from "../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {Audios} from "../sound/Audios.ts";
+import type {Result} from "../utils/result/Result.ts";
+import {ServerNetworkChannel} from "./network/ServerNetworkChannel.ts";
+import {PlayerManager} from "./entity/PlayerManager.ts";
 
 export class IntegratedServer extends NovaFlightServer {
     private readonly hostUUID: UUID;
 
     public constructor(secretKey: Uint8Array, host: UUID, saveName: string) {
-        super(secretKey, saveName);
+        const channel = new ServerNetworkChannel('127.0.0.1:25566', secretKey);
+        super(saveName, channel, PlayerManager);
+
         this.hostUUID = host;
     }
 
@@ -50,11 +55,15 @@ export class IntegratedServer extends NovaFlightServer {
         return Promise.resolve();
     }
 
-    public override loadSaves(): Promise<NbtCompound | null> {
-        return ServerDB.loadWorld(this.saveName);
+    public override deleteWorld(worldName: string): Promise<Result<boolean, Error>> {
+        return ServerDB.deleteWorld(worldName);
     }
 
-    public override async saveGame(compound: NbtCompound): Promise<void> {
+    public override readSave(): Promise<NbtCompound | null> {
+        return ServerDB.loadWorld(this.worldName);
+    }
+
+    public override saveWorld(compound: NbtCompound): Promise<void> {
         const saveName = this.profile!.name;
         return ServerDB.saveWorld(saveName, compound);
     }

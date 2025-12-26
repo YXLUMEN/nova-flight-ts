@@ -36,7 +36,6 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public wasFiring: boolean = false;
     private lastDamageTime = 0;
-    public voidEdge = false;
 
     private score: number = 0;
     private isDev = false;
@@ -68,7 +67,7 @@ export abstract class PlayerEntity extends LivingEntity {
         super.tick();
 
         this.moveByVec(this.getVelocityRef);
-        this.shouldWrap() ? this.wrapPosition() : this.adjustPosition();
+        this.adjustPosition();
         this.tickInventory(this.getWorld());
         this.cooldownManager.update();
     }
@@ -166,10 +165,6 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public override isPlayer(): this is PlayerEntity {
         return true;
-    }
-
-    public override shouldWrap(): boolean {
-        return this.voidEdge;
     }
 
     public getTechs(): TechTree {

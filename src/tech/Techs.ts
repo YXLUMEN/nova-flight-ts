@@ -4,7 +4,7 @@ import {Identifier} from "../registry/Identifier.ts";
 import {Tech} from "./Tech.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {TechState} from "./TechState.ts";
-import tech from "../tech/tech-data.json";
+import tech from "../tech/tech-data.json" with {type: "json"};
 
 export class Techs {
     public static ENERGY_FORCE;

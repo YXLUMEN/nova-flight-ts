@@ -47,7 +47,7 @@ async function handleEvent(event: MessageEvent<any>) {
 
             await server.playerManager.saveAllPlayerData();
             const nbt = server.world.saveAll();
-            await server.saveGame(nbt);
+            await server.saveWorld(nbt);
             self.postMessage({type: 'saved'});
             break;
         }

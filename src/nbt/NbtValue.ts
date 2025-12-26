@@ -1,4 +1,4 @@
-import type {NbtCompound} from "./NbtCompound";
+import type {NbtCompound} from "./NbtCompound.ts";
 
 export type NbtValue = number | string | boolean | number[] | string[] | NbtCompound | NbtCompound[];
 

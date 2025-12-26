@@ -475,7 +475,6 @@ export class ClientTechTree implements TechTree {
         player.addItem(Items.CANNON40_WEAPON);
         player.addItem(Items.BOMB_WEAPON);
 
-        player.voidEdge = false;
         player.steeringGear = false;
         player.followPointer = false;
         player.setYaw(-1.57079);

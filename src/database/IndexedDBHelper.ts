@@ -45,32 +45,32 @@ export class IndexedDBHelper {
         return promise;
     }
 
-    public async add(storeName: string, data: object): Promise<Result<IDBValidKey, DOMException | null>> {
+    public async add(storeName: string, data: object): Promise<Result<IDBValidKey, Error>> {
         const db = await this.init();
-        const {promise, resolve} = Promise.withResolvers<Result<IDBValidKey, DOMException | null>>();
+        const {promise, resolve} = Promise.withResolvers<Result<IDBValidKey, Error>>();
 
         const tx = db.transaction(storeName, 'readwrite');
         const store = tx.objectStore(storeName);
         const request = store.add(data);
         request.onsuccess = () => resolve(Result.ok(request.result));
-        request.onerror = () => resolve(Result.err(request.error));
+        request.onerror = () => resolve(Result.err(IndexedDBHelper.mapErr(request.error)));
 
         return promise;
     }
 
-    public async get<T>(storeName: string, key: IDBValidKey): Promise<Result<T, DOMException | null>> {
+    public async get<T>(storeName: string, key: IDBValidKey): Promise<Result<T, Error>> {
         const db = await this.init();
-        const {promise, resolve} = Promise.withResolvers<Result<T, DOMException | null>>();
+        const {promise, resolve} = Promise.withResolvers<Result<T, Error>>();
 
         const tx = db.transaction(storeName, 'readonly');
         const store = tx.objectStore(storeName);
         const request = store.get(key);
 
         request.onsuccess = () => {
-            if (!request.result) resolve(Result.err(null));
+            if (!request.result) resolve(Result.err(new Error('No results')));
             resolve(Result.ok(request.result));
         }
-        request.onerror = () => resolve(Result.err(request.error));
+        request.onerror = () => resolve(Result.err(IndexedDBHelper.mapErr(request.error)));
 
         return promise;
     }
@@ -79,9 +79,9 @@ export class IndexedDBHelper {
         storeName: string,
         indexName: string,
         key: IDBValidKey
-    ): Promise<Result<T, DOMException | null>> {
+    ): Promise<Result<T, Error>> {
         const db = await this.init();
-        const {promise, resolve} = Promise.withResolvers<Result<T, DOMException | null>>();
+        const {promise, resolve} = Promise.withResolvers<Result<T, Error>>();
 
         const tx = db.transaction(storeName, 'readonly');
         const store = tx.objectStore(storeName);
@@ -89,60 +89,65 @@ export class IndexedDBHelper {
         const request = index.get(key);
 
         request.onsuccess = () => resolve(Result.ok(request.result ?? null));
-        request.onerror = () => resolve(Result.err(request.error));
+        request.onerror = () => resolve(Result.err(IndexedDBHelper.mapErr(request.error)));
 
         return promise;
     }
 
-    public async update(storeName: string, data: object): Promise<Result<IDBValidKey, DOMException | null>> {
+    public async update(storeName: string, data: object): Promise<Result<IDBValidKey, Error>> {
         const db = await this.init();
-        const {promise, resolve} = Promise.withResolvers<Result<IDBValidKey, DOMException | null>>();
+        const {promise, resolve} = Promise.withResolvers<Result<IDBValidKey, Error>>();
 
         const tx = db.transaction(storeName, 'readwrite');
         const store = tx.objectStore(storeName);
         const request = store.put(data);
         request.onsuccess = () => resolve(Result.ok(request.result));
-        request.onerror = () => resolve(Result.err(request.error));
+        request.onerror = () => resolve(Result.err(IndexedDBHelper.mapErr(request.error)));
 
         return promise;
     }
 
-    public async delete(storeName: string, key: IDBValidKey | IDBKeyRange): Promise<Result<boolean, DOMException | null>> {
+    public async delete(storeName: string, key: IDBValidKey | IDBKeyRange): Promise<Result<boolean, Error>> {
         const db = await this.init();
-        const {promise, resolve} = Promise.withResolvers<Result<boolean, DOMException | null>>();
+        const {promise, resolve} = Promise.withResolvers<Result<boolean, Error>>();
 
         const tx = db.transaction(storeName, 'readwrite');
         const store = tx.objectStore(storeName);
         const request = store.delete(key);
         request.onsuccess = () => resolve(Result.ok(true));
-        request.onerror = () => resolve(Result.err(request.error));
+        request.onerror = () => resolve(Result.err(IndexedDBHelper.mapErr(request.error)));
 
         return promise;
     }
 
-    public async clearStore(storeName: string): Promise<Result<null, DOMException | null>> {
+    public async clearStore(storeName: string): Promise<Result<null, Error>> {
         const db = await this.init();
-        const {promise, resolve} = Promise.withResolvers<Result<null, DOMException | null>>();
+        const {promise, resolve} = Promise.withResolvers<Result<null, Error>>();
 
         const tx = db.transaction(storeName, 'readwrite');
         const store = tx.objectStore(storeName);
         const req = store.clear();
         req.onsuccess = () => resolve(Result.ok(null));
-        req.onerror = () => resolve(Result.err(req.error));
+        req.onerror = () => resolve(Result.err(IndexedDBHelper.mapErr(req.error)));
 
         return promise;
     }
 
-    public async getAll<T>(storeName: string): Promise<Result<T[], DOMException | null>> {
+    public async getAll<T>(storeName: string): Promise<Result<T[], Error>> {
         const db = await this.init();
-        const {promise, resolve} = Promise.withResolvers<Result<T[], DOMException | null>>();
+        const {promise, resolve} = Promise.withResolvers<Result<T[], Error>>();
 
         const tx = db.transaction(storeName, 'readonly');
         const store = tx.objectStore(storeName);
         const request = store.getAll();
         request.onsuccess = () => resolve(Result.ok(request.result));
-        request.onerror = () => resolve(Result.err(request.error));
+        request.onerror = () => resolve(Result.err(IndexedDBHelper.mapErr(request.error)));
 
         return promise;
+    }
+
+    public static mapErr(error: DOMException | null): Error {
+        if (!error) return new Error('Unknown error occurred.');
+        return new Error(`${error.name}:${error.message} because ${error.cause} at\n ${error.stack}`);
     }
 }

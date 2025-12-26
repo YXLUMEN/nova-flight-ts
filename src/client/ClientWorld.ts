@@ -269,20 +269,18 @@ export class ClientWorld extends World {
         this.drawBackground(ctx);
 
         // 其他实体
-        if (this.client.player?.voidEdge) {
-            this.wrapEntityRender(ctx, tickDelta);
-        } else {
-            this.players.forEach(player => {
-                if (player === this.client.player) return;
-                EntityRenderers.getRenderer(player).render(player, ctx, tickDelta, 0, 0);
-            })
-            this.entities.forEach(entity => {
-                EntityRenderers.getRenderer(entity).render(entity, ctx, tickDelta, 0, 0);
-            });
+        for (const player of this.players) {
+            if (player === this.client.player) continue;
+            EntityRenderers.getRenderer(player).render(player, ctx, tickDelta, 0, 0);
+        }
+        for (const entity of this.entities.values()) {
+            EntityRenderers.getRenderer(entity).render(entity, ctx, tickDelta, 0, 0);
         }
 
         // 特效
-        for (let i = 0; i < this.effects.length; i++) this.effects[i].render(ctx, tickDelta);
+        for (let i = 0; i < this.effects.length; i++) {
+            this.effects[i].render(ctx, tickDelta);
+        }
         this.particlePool.render(ctx, tickDelta);
 
         // 玩家
@@ -357,25 +355,6 @@ export class ClientWorld extends World {
         ctx.restore();
     }
 
-    private wrapEntityRender(ctx: CanvasRenderingContext2D, tickDelta: number) {
-        const margin = Window.VIEW_W / 2;
-
-        this.entities.forEach(entity => {
-            const renderer = EntityRenderers.getRenderer(entity);
-            const pos = entity.getPositionRef;
-            const width = entity.getWidth();
-
-            renderer.render(entity, ctx, tickDelta, 0, 0);
-
-            if (pos.x < margin + width) {
-                renderer.render(entity, ctx, tickDelta, World.WORLD_W, 0);
-            }
-            if (pos.x > World.WORLD_W - margin - width) {
-                renderer.render(entity, ctx, tickDelta, -World.WORLD_W, 0);
-            }
-        });
-    }
-
     public drawBackground(ctx: CanvasRenderingContext2D) {
         const v = this.client.window.camera.viewRect;
 
@@ -403,18 +382,9 @@ export class ClientWorld extends World {
 
         // 边界线
         ctx.strokeStyle = "rgba(230,240,255,0.3)";
-        if (this.client.player?.voidEdge) {
-            ctx.beginPath();
-            ctx.moveTo(-World.WORLD_W, 0);
-            ctx.lineTo(World.WORLD_W * 2, 0);
-            ctx.moveTo(-World.WORLD_W, World.WORLD_H);
-            ctx.lineTo(World.WORLD_W * 2, World.WORLD_H);
-            ctx.stroke();
-        } else {
-            ctx.beginPath();
-            ctx.rect(0, 0, World.WORLD_W, World.WORLD_H);
-            ctx.stroke();
-        }
+        ctx.beginPath();
+        ctx.rect(0, 0, World.WORLD_W, World.WORLD_H);
+        ctx.stroke();
 
         ctx.restore();
     }

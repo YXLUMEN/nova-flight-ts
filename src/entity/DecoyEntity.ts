@@ -36,22 +36,9 @@ export class DecoyEntity extends Entity implements IOwnable {
         velocity.multiply(0.98);
 
         const pos = this.getPositionRef;
-        if (this.shouldWrap()) {
-            if (pos.y < -20 || pos.y > World.WORLD_H + 20) {
-                this.discard();
-                return;
-            }
-            this.wrapPosition();
-            return;
-        }
-
         if (pos.x < -20 || pos.x > World.WORLD_W + 20) {
             this.discard();
         }
-    }
-
-    public override shouldWrap(): boolean {
-        return this.getOwner()?.shouldWrap() ?? false;
     }
 
     public getOwner(): Entity | null {

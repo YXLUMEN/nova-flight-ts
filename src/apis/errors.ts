@@ -12,3 +12,6 @@ export class PacketTooLargeError extends Error {
 
 export class MediaWithoutSrc extends Error {
 }
+
+export class DataBaseError extends Error {
+}

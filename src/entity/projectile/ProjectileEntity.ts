@@ -30,12 +30,6 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
 
         const pos = this.getPositionRef;
         this.moveByVec(this.getVelocityRef);
-
-        if (this.shouldWrap()) {
-            this.wrapPosition();
-            return;
-        }
-
         if (pos.y < -20 || pos.y > World.WORLD_H + 20 || pos.x < -20 || pos.x > World.WORLD_W + 20) {
             this.discard();
         }
@@ -81,10 +75,6 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
     public override createSpawnPacket(): EntitySpawnS2CPacket {
         const ownerId = this.getOwner()?.getId() ?? 0;
         return EntitySpawnS2CPacket.create(this, ownerId);
-    }
-
-    public override shouldWrap(): boolean {
-        return this.getOwner()?.shouldWrap() ?? false;
     }
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {

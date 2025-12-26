@@ -1,6 +1,7 @@
 import {Entity} from "../entity/Entity.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
+import type {Consumer} from "../apis/types.ts";
 
 export class EntityList {
     private readonly entities = new Map<number, Entity>();
@@ -34,7 +35,7 @@ export class EntityList {
         return this.entities.has(entity.getId());
     }
 
-    public forEach(action: (entity: Entity) => void): void {
+    public forEach(action: Consumer<Entity>): void {
         for (const entity of this.entities.values()) {
             action(entity);
         }

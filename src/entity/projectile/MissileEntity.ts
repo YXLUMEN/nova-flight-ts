@@ -40,9 +40,7 @@ export class MissileEntity extends RocketEntity {
         this.moveByVec(this.getVelocityRef);
         this.getVelocityRef.multiply(0.8);
 
-        if (this.shouldWrap()) {
-            if (!this.wrapPosition()) return;
-        } else if (!this.adjustPosition()) return;
+        if (!this.adjustPosition()) return;
 
         const world = this.getWorld();
         if (!world.isClient && this.lastTarget !== this.target) {

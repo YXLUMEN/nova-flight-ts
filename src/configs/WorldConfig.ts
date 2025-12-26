@@ -1,7 +1,9 @@
 import {config, createClean} from "../utils/uit.ts";
 
+const meta = import.meta;
+
 // @ts-expect-error
-const isDev = import.meta.env.MODE === 'development';
+const isDev = meta?.env !== undefined ? import.meta.env.MODE === 'development' : true;
 
 const isServer = typeof window === 'undefined';
 

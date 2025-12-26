@@ -3,12 +3,12 @@ import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
 import type {Payload} from "../../network/Payload.ts";
 import type {BiConsumer, UUID} from "../../apis/types.ts";
 import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
-import type {IServerPlayNetwork} from "./IServerPlayNetwork.ts";
+import type {ServerChannel} from "./ServerChannel.ts";
 import {BinaryReader} from "../../nbt/BinaryReader.ts";
 import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
 import type {GameProfile} from "../entity/GameProfile.ts";
 
-export class ServerNetworkChannel extends NetworkChannel implements IServerPlayNetwork {
+export class ServerNetworkChannel extends NetworkChannel implements ServerChannel {
     private readonly secretKey: Uint8Array;
     private handler: BiConsumer<number, Payload> = () => {
     };
@@ -29,7 +29,7 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
         this.checkAndSend(writer, type, payload);
     }
 
-    public sendToByUUID<T extends Payload>(payload: T, target: UUID) {
+    public sendToByUUID<T extends Payload>(payload: T, target: UUID): void {
         const type = this.registry.get(payload.getId().id);
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
 
@@ -40,7 +40,7 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
         this.checkAndSend(writer, type, payload);
     }
 
-    public sendExclude<T extends Payload>(payload: T, ...excludes: GameProfile[]) {
+    public sendExclude<T extends Payload>(payload: T, ...excludes: GameProfile[]): void {
         const type = this.registry.get(payload.getId().id);
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
 
@@ -65,13 +65,13 @@ export class ServerNetworkChannel extends NetworkChannel implements IServerPlayN
         }
         if (header !== 0x10) {
             console.warn(`[${this.getSide()}] Unknown header: ${header}`);
-            return null;
+            return;
         }
 
         const sessionId = reader.readUint8();
         const index = reader.readVarUint();
         const type = PayloadTypeRegistry.getGlobalByIndex(index);
-        if (!type) return null;
+        if (!type) return;
 
         const payload = type.codec.decode(reader);
         if (payload) this.handler(sessionId, payload);

@@ -12,7 +12,6 @@ import type {UUID} from "../../apis/types.ts";
 import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {applyServerTech} from "../tech/applyServerTech.ts";
 import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
-import type {ServerNetworkChannel} from "./ServerNetworkChannel.ts";
 import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
 import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
 import {EntityNbtS2CPacket} from "../../network/packet/s2c/EntityNbtS2CPacket.ts";
@@ -31,6 +30,7 @@ import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPac
 import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {NetworkChannel} from "../../network/NetworkChannel.ts";
+import type {ServerChannel} from "./ServerChannel.ts";
 
 export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
     public readonly player: ServerPlayerEntity;
@@ -42,7 +42,7 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
     private lastTickX: number = 0;
     private lastTickY: number = 0;
 
-    public constructor(server: NovaFlightServer, channel: ServerNetworkChannel, player: ServerPlayerEntity) {
+    public constructor(server: NovaFlightServer, channel: ServerChannel, player: ServerPlayerEntity) {
         super(server, channel);
 
         this.player = player;

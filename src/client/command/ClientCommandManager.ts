@@ -222,7 +222,7 @@ export class ClientCommandManager extends CommandManager {
         if (!cache) return;
 
         const cursor = this.commandInput.selectionStart ?? this.commandInput.value.length;
-        const usage = [];
+        const usage: string[] = [];
 
         const clientCommandBuilder = cache[0].context;
         const clientSuggestionContext = clientCommandBuilder.findSuggestionContext(cursor);
@@ -360,7 +360,7 @@ export class ClientCommandManager extends CommandManager {
                 return;
             }
 
-            const requiredArgs = node.getChildren()
+            const requiredArgs: string[] = node.getChildren()
                 .filter(child => child.getType() === 2)
                 .map(arg => arg.getName())
                 .toArray();

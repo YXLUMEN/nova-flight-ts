@@ -43,7 +43,7 @@ export abstract class NetworkChannel implements Channel {
             clearTimeout(timeout);
             reject(reason);
         };
-
+        // @ts-ignore
         timeout = setTimeout(() => connectFail(`[${this.getSide()}] Connected timeout`), 6000);
 
         this.ws = new WebSocket(`ws://${this.serverAddress}`);

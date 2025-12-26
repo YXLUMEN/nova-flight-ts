@@ -33,7 +33,7 @@ import {EntityTypes} from "../entity/EntityTypes.ts";
 import {encodeColorHex, encodeToUnsignedByte} from "../utils/NetUtil.ts";
 import {type VisualEffect} from "../effect/VisualEffect.ts";
 import {EffectCreateS2CPacket} from "../network/packet/s2c/EffectCreateS2CPacket.ts";
-import type {IServerPlayNetwork} from "./network/IServerPlayNetwork.ts";
+import type {ServerChannel} from "./network/ServerChannel.ts";
 import {warn} from "@tauri-apps/plugin-log";
 import {GameOverS2CPacket} from "../network/packet/s2c/GameOverS2CPacket.ts";
 
@@ -137,7 +137,7 @@ export class ServerWorld extends World implements NbtSerializable {
         this.getNetworkChannel().send(new GameOverS2CPacket());
     }
 
-    public override getNetworkChannel(): IServerPlayNetwork {
+    public override getNetworkChannel(): ServerChannel {
         return this.server.networkChannel;
     }
 

@@ -1,10 +1,10 @@
-import {type Nbt, NbtTypes} from "./NbtValue";
+import {type Nbt, NbtTypes} from "./NbtValue.ts";
 import {BinaryWriter} from "./BinaryWriter.ts";
 import {BinaryReader} from "./BinaryReader.ts";
 
 export class NbtCompound {
     public static readonly MAGIC = 0x6E627430;
-    public static readonly VERSION = 3;
+    public static readonly VERSION = 2;
 
     private entries: Map<string, Nbt> = new Map();
 

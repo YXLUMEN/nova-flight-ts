@@ -80,7 +80,6 @@ export class ServerTechTree implements TechTree {
         player.addItem(Items.CANNON40_WEAPON);
         player.addItem(Items.BOMB_WEAPON);
 
-        player.voidEdge = false;
         player.setYaw(-1.57079);
 
         this.state.reset();

@@ -1,7 +1,6 @@
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
-import {ServerNetworkChannel} from "./network/ServerNetworkChannel.ts";
-import type {Consumer, UUID} from "../apis/types.ts";
+import type {Constructor, Consumer, UUID} from "../apis/types.ts";
 import {ServerWorld} from "./ServerWorld.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {ServerReadyS2CPacket} from "../network/packet/s2c/ServerReadyS2CPacket.ts";
@@ -13,17 +12,17 @@ import {PlayerManager} from "./entity/PlayerManager.ts";
 import {GameProfile} from "./entity/GameProfile.ts";
 import {ServerNetworkHandler} from "./network/ServerNetworkHandler.ts";
 import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.ts";
-import {ServerDB} from "./ServerDB.ts";
 import {Result} from "../utils/result/Result.ts";
+import type {ServerChannel} from "./network/ServerChannel.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static readonly SAVE_PATH = `saves/save-${NbtCompound.VERSION}.dat`;
     public static instance: NovaFlightServer;
 
-    public readonly saveName: string;
+    public readonly worldName: string;
     public readonly serverId: UUID;
 
-    public readonly networkChannel: ServerNetworkChannel;
+    public readonly networkChannel: ServerChannel;
     public readonly serverCommandManager: ServerCommandManager;
     public readonly playerManager: PlayerManager;
 
@@ -43,12 +42,12 @@ export abstract class NovaFlightServer implements CommandOutput {
 
     private bindTick = this.tick.bind(this);
 
-    protected constructor(secretKey: Uint8Array, saveName: string) {
+    protected constructor(worldName: string, channel: ServerChannel, playerManagerCon: Constructor<PlayerManager>) {
         this.serverId = crypto.randomUUID();
 
-        this.saveName = saveName;
-        this.playerManager = new PlayerManager(this);
-        this.networkChannel = new ServerNetworkChannel('127.0.0.1:25566', secretKey);
+        this.worldName = worldName;
+        this.playerManager = new playerManagerCon(this);
+        this.networkChannel = channel;
         this.serverCommandManager = new ServerCommandManager(this.getCommandSource());
     }
 
@@ -79,21 +78,22 @@ export abstract class NovaFlightServer implements CommandOutput {
                 return;
             }
         } else {
-            await ServerDB.deleteWorld(this.saveName);
+            await this.deleteWorld(this.worldName);
         }
 
-        this.profile = new GameProfile(this.networkChannel.getSessionId(), this.serverId, this.saveName);
+        this.profile = new GameProfile(this.networkChannel.getSessionId(), this.serverId, this.worldName);
         this.networkHandler = new ServerNetworkHandler(this);
         this.networkChannel.send(new ServerReadyS2CPacket());
         self.postMessage({type: 'server_start'});
 
         this.last = performance.now();
+        // @ts-ignore
         this.tickInterval = setInterval(this.bindTick, 25);
     }
 
     private async loadWorld(): Promise<Result<boolean, string>> {
         try {
-            const saves = await this.loadSaves();
+            const saves = await this.readSave();
             if (!saves) return Result.ok(false);
             this.world!.readNBT(saves);
             return Result.ok(true);
@@ -143,11 +143,11 @@ export abstract class NovaFlightServer implements CommandOutput {
 
         try {
             if (this.world!.isOver) {
-                await ServerDB.deleteWorld(this.saveName);
+                await this.deleteWorld(this.worldName);
             } else {
                 await this.playerManager.saveAllPlayerData();
                 const nbt = this.world!.saveAll();
-                await this.saveGame(nbt);
+                await this.saveWorld(nbt);
             }
         } catch (error) {
             console.error(`Error while saving game: ${error}`);
@@ -170,9 +170,11 @@ export abstract class NovaFlightServer implements CommandOutput {
 
     public abstract onWorldStop(): Promise<void>;
 
-    public abstract saveGame(compound: NbtCompound): Promise<void>;
+    public abstract saveWorld(compound: NbtCompound): Promise<void>;
 
-    public abstract loadSaves(): Promise<NbtCompound | null>;
+    public abstract deleteWorld(worldName: string): Promise<Result<boolean, Error>>;
+
+    public abstract readSave(): Promise<NbtCompound | null>;
 
     public isRunning(): boolean {
         return this.running;
