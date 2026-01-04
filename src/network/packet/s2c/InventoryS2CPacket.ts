@@ -1,5 +1,4 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {ItemStack} from "../../../item/ItemStack.ts";
@@ -7,7 +6,7 @@ import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 
 export class InventoryS2CPacket implements Payload {
-    public static readonly ID: PayloadId<InventoryS2CPacket> = {id: Identifier.ofVanilla('inventory_sync')};
+    public static readonly ID: PayloadId<InventoryS2CPacket> = payloadId('inventory_sync');
     public static readonly CODEC: PacketCodec<InventoryS2CPacket> = PacketCodecs.of(this.write, this.read);
 
     public readonly syncId: number;

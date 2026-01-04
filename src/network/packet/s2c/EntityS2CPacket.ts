@@ -1,4 +1,4 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
+import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
@@ -30,7 +30,7 @@ export abstract class EntityS2CPacket implements Payload {
 }
 
 export class MoveRelative extends EntityS2CPacket {
-    public static readonly ID: PayloadId<EntityS2CPacket> = {id: Identifier.ofVanilla('entity_move_pos')};
+    public static readonly ID: PayloadId<EntityS2CPacket> = payloadId('entity_move_pos');
     public static readonly CODEC = PacketCodecs.of(this.write, this.read);
 
     public constructor(entityId: number, deltaX: number, deltaY: number) {

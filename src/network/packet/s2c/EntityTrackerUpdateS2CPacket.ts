@@ -1,5 +1,4 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import {DataTracker, type DataTrackerSerializedEntry} from "../../../entity/data/DataTracker.ts";
@@ -7,7 +6,7 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class EntityTrackerUpdateS2CPacket implements Payload {
-    public static readonly ID: PayloadId<EntityTrackerUpdateS2CPacket> = {id: Identifier.ofVanilla('entity_tracker_update')};
+    public static readonly ID: PayloadId<EntityTrackerUpdateS2CPacket> = payloadId('entity_tracker_update');
     public static readonly CODEC: PacketCodec<EntityTrackerUpdateS2CPacket> = PacketCodecs.of<EntityTrackerUpdateS2CPacket>(this.write, this.reader);
 
     public readonly entityId: number;

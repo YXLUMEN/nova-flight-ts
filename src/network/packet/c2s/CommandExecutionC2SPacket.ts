@@ -1,10 +1,9 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class CommandExecutionC2SPacket implements Payload {
-    public static readonly ID: PayloadId<CommandExecutionC2SPacket> = {id: Identifier.ofVanilla('command_exec')};
+    public static readonly ID: PayloadId<CommandExecutionC2SPacket> = payloadId('command_exec');
     public static readonly CODEC: PacketCodec<CommandExecutionC2SPacket> = PacketCodecs.adapt(
         PacketCodecs.STRING,
         val => val.command,

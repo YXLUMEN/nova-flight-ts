@@ -1,10 +1,9 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class PlayerGameModeS2CPacket implements Payload {
-    public static readonly ID: PayloadId<PlayerGameModeS2CPacket> = {id: Identifier.ofVanilla('profile_sync')};
+    public static readonly ID: PayloadId<PlayerGameModeS2CPacket> = payloadId('profile_sync');
     public static readonly CODEC: PacketCodec<PlayerGameModeS2CPacket> = PacketCodecs.adapt(
         PacketCodecs.BOOL,
         val => val.devMode,

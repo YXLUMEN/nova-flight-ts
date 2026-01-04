@@ -1,11 +1,10 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {SoundEvent} from "../../../sound/SoundEvent.ts";
 
 export class AudioStopS2CPacket implements Payload {
-    public static readonly ID: PayloadId<AudioStopS2CPacket> = {id: Identifier.ofVanilla('audio_stop')};
+    public static readonly ID: PayloadId<AudioStopS2CPacket> = payloadId('audio_stop');
     public static readonly CODEC: PacketCodec<AudioStopS2CPacket> = PacketCodecs.adapt(
         SoundEvent.AUDIO_PACKET_CODEC,
         val => val.audio,

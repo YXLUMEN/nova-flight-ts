@@ -1,4 +1,4 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
+import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
 import type {EntityAttributeInstance} from "../../../entity/attribute/EntityAttributeInstance.ts";
 import type {RegistryEntry} from "../../../registry/tag/RegistryEntry.ts";
 import {EntityAttribute} from "../../../entity/attribute/EntityAttribute.ts";
@@ -49,7 +49,7 @@ class Entry {
 }
 
 export class EntityAttributesS2CPacket implements Payload {
-    public static readonly ID: PayloadId<EntityAttributesS2CPacket> = {id: Identifier.ofVanilla('entity_attr')}
+    public static readonly ID: PayloadId<EntityAttributesS2CPacket> = payloadId('entity_attr');
     public static readonly CODEC: PacketCodec<EntityAttributesS2CPacket> = PacketCodecs.adapt2(
         PacketCodecs.VAR_UINT,
         val => val.entityId,

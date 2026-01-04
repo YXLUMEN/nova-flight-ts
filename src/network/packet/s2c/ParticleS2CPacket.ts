@@ -1,20 +1,19 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import {
-    decodeColorHex,
+    decodeColorToHex,
     decodeFromInt16,
     decodeFromUnsignedByte,
+    encodeColorHex,
     encodeToInt16,
     encodeToUnsignedByte,
-    encodeColorHex,
 } from "../../../utils/NetUtil.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class ParticleS2CPacket implements Payload {
-    public static readonly ID: PayloadId<ParticleS2CPacket> = {id: Identifier.ofVanilla('particle')};
+    public static readonly ID: PayloadId<ParticleS2CPacket> = payloadId('particle');
     public static readonly CODEC: PacketCodec<ParticleS2CPacket> = PacketCodecs.of(this.write, this.read);
 
     public readonly posX: number;
@@ -109,10 +108,10 @@ export class ParticleS2CPacket implements Payload {
     }
 
     public get colorFrom() {
-        return decodeColorHex(this.colorFromInt32);
+        return decodeColorToHex(this.colorFromInt32);
     }
 
     public get colorTo() {
-        return decodeColorHex(this.colorToInt32);
+        return decodeColorToHex(this.colorToInt32);
     }
 }

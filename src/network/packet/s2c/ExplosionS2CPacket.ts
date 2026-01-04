@@ -1,11 +1,10 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {decodeColorHex, decodeFromUnsignedByte} from "../../../utils/NetUtil.ts";
+import {decodeColorToHex, decodeFromUnsignedByte} from "../../../utils/NetUtil.ts";
 
 export class ExplosionS2CPacket implements Payload {
-    public static readonly ID: PayloadId<ExplosionS2CPacket> = {id: Identifier.ofVanilla('explosion')};
+    public static readonly ID: PayloadId<ExplosionS2CPacket> = payloadId('explosion');
     public static readonly CODEC: PacketCodec<ExplosionS2CPacket> = PacketCodecs.of<ExplosionS2CPacket>(
         (writer, value) => {
             writer.writeFloat(value.x);
@@ -48,6 +47,6 @@ export class ExplosionS2CPacket implements Payload {
     }
 
     public get color(): string {
-        return decodeColorHex(this.colorUint32);
+        return decodeColorToHex(this.colorUint32);
     }
 }

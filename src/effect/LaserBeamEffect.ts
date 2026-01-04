@@ -6,7 +6,7 @@ import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
-import {decodeColorHex, encodeColorHex} from "../utils/NetUtil.ts";
+import {decodeColorToHex, encodeColorHex} from "../utils/NetUtil.ts";
 
 export class LaserBeamEffect implements VisualEffect {
     public static readonly PACKET_CODEC: PacketCodec<LaserBeamEffect> = PacketCodecs.of(
@@ -19,7 +19,7 @@ export class LaserBeamEffect implements VisualEffect {
         },
         reader => {
             const laser = new LaserBeamEffect(
-                decodeColorHex(reader.readUint32()),
+                decodeColorToHex(reader.readUint32()),
                 reader.readVarUint(),
                 reader.readFloat(),
             );

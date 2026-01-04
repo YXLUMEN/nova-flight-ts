@@ -1,10 +1,9 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class GameMessageS2CPacket implements Payload {
-    public static readonly ID: PayloadId<GameMessageS2CPacket> = {id: Identifier.ofVanilla('game_msg')};
+    public static readonly ID: PayloadId<GameMessageS2CPacket> = payloadId('game_msg');
     public static readonly CODEC: PacketCodec<GameMessageS2CPacket> = PacketCodecs.adapt(
         PacketCodecs.STRING,
         from => from.value,

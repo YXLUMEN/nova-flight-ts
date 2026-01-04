@@ -10,7 +10,7 @@ import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {config} from "../../utils/uit.ts";
 import {Optional} from "../../utils/Optional.ts";
 import {NbtCompound} from "../../nbt/NbtCompound.ts";
-import {decodeColorHex, encodeColorHex} from "../../utils/NetUtil.ts";
+import {decodeColorToHex, encodeColorHex} from "../../utils/NetUtil.ts";
 
 export class PacketCodecs {
     public static readonly INT8: PacketCodec<number> = PacketCodecs.of(
@@ -75,7 +75,7 @@ export class PacketCodecs {
 
     public static readonly COLOR_HEX: PacketCodec<string> = PacketCodecs.of(
         (writer, value) => writer.writeUint32(encodeColorHex(value)),
-        reader => decodeColorHex(reader.readUint32())
+        reader => decodeColorToHex(reader.readUint32())
     );
 
     public static readonly VECTOR2F: PacketCodec<IVec> = PacketCodecs.of(

@@ -8,10 +8,12 @@ export class TechState {
     public readonly allTechs: Tech[];
     public readonly branchGroups: Map<string, Tech[]>;
     public readonly unlocked = new Set<Tech>();
+    public readonly dependentsMap: Map<Tech, Set<Tech>>;
 
     public constructor(techs: Tech[]) {
         this.allTechs = techs;
         this.branchGroups = groupBy(techs.filter(t => t.branchGroup), t => t.branchGroup!);
+        this.dependentsMap = this.buildDependentsMap();
     }
 
     public static normalizeTechs(raw: unknown) {
@@ -68,6 +70,47 @@ export class TechState {
         });
 
         return out;
+    }
+
+    private buildDependentsMap(): Map<Tech, Set<Tech>> {
+        const map = new Map<Tech, Set<Tech>>();
+
+        for (const tech of this.allTechs) {
+            map.set(tech, new Set());
+        }
+
+        for (const tech of this.allTechs) {
+            if (!tech.requires) continue;
+            for (const require of tech.requires) {
+                map.get(require)?.add(tech);
+            }
+        }
+
+        return map;
+    }
+
+    public collectDescendantsToRevoke(rootTech: Tech): Tech[] {
+        const toRevoke = new Set<Tech>();
+        const queue: Tech[] = [rootTech];
+
+        while (queue.length > 0) {
+            const current = queue.pop()!;
+            if (toRevoke.has(current)) continue;
+
+            if (!this.isUnlocked(current)) continue;
+            toRevoke.add(current);
+
+            // 继续遍历其 dependents
+            const deps = this.dependentsMap.get(current);
+            if (!deps) continue;
+
+            for (const dep of deps) {
+                if (toRevoke.has(dep)) continue;
+                queue.push(dep);
+            }
+        }
+
+        return toRevoke.values().toArray();
     }
 
     public computeStatus(tech: Tech): TechAvailable {

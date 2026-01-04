@@ -567,8 +567,8 @@ export class NovaFlightClient {
     public onGameOver(): void {
         const ctrl = new AbortController();
         window.addEventListener('keydown', () => {
-            this.leaveGame();
             ctrl.abort();
+            return void this.leaveGame();
         }, {signal: ctrl.signal});
     }
 

@@ -7,11 +7,12 @@ import {type NbtCompound} from "../../nbt/NbtCompound.ts";
 import {SoundSystem} from "../../sound/SoundSystem.ts";
 import type {TechTree} from "../../tech/TechTree.ts";
 import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
-import {PlayerTechResetC2SPacket} from "../../network/packet/c2s/PlayerTechResetC2SPacket.ts";
+import {PlayerResetAllTechC2SPacket} from "../../network/packet/c2s/PlayerResetAllTechC2SPacket.ts";
 import {applyClientTech} from "./applyClientTech.ts";
 import {Registries} from "../../registry/Registries.ts";
-import type {Tech} from "../../tech/Tech.ts";
-import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import {type Tech} from "../../tech/Tech.ts";
+import {type RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
 
 type Adjacency = {
     successors: Map<Tech, Tech[]>; // tech -> successors
@@ -25,7 +26,7 @@ export class ClientTechTree implements TechTree {
     public readonly playerScore = document.getElementById('player-money')!;
 
     private readonly submitBtn = document.getElementById('d-unlock') as HTMLButtonElement;
-    private readonly resetBtn = document.getElementById('reset') as HTMLButtonElement;
+    private readonly resetAllBtn = document.getElementById('reset-all') as HTMLButtonElement;
     private readonly techTitle = document.getElementById('d-title')!;
     private readonly metaShow = document.getElementById('d-meta')!;
     private readonly nodeWidth = 144;
@@ -53,7 +54,7 @@ export class ClientTechTree implements TechTree {
         this.adj = this.buildAdjacency(techState);
 
         this.tryApply = this.tryApply.bind(this);
-        this.resetTech = this.resetTech.bind(this);
+        this.resetAllTech = this.resetAllTech.bind(this);
 
         container.textContent = '';
         const svgNS = 'http://www.w3.org/2000/svg';
@@ -259,7 +260,6 @@ export class ClientTechTree implements TechTree {
     // -------- Interactions --------
     private bindInteractions() {
         this.nodesLayer.addEventListener('click', event => {
-            SoundSystem.globalSound.playSound(SoundEvents.UI_SELECT);
             this.nodesLayer.querySelector('.node.selected')?.classList.remove('selected');
             const target = (event.target as HTMLElement).closest<HTMLElement>('.node');
             this.selectNodeId = null;
@@ -273,11 +273,13 @@ export class ClientTechTree implements TechTree {
             const id = target.dataset.id ?? null;
             this.selectNodeId = id;
             this.onSelect(id);
+
+            SoundSystem.globalSound.playSound(SoundEvents.UI_SELECT);
         }, {signal: this.abortCtrl.signal});
 
         this.nodesLayer.addEventListener('dblclick', this.tryApply, {signal: this.abortCtrl.signal});
         this.submitBtn.addEventListener('click', this.tryApply, {signal: this.abortCtrl.signal});
-        this.resetBtn.addEventListener('click', this.resetTech, {signal: this.abortCtrl.signal});
+        this.resetAllBtn.addEventListener('click', this.resetAllTech, {signal: this.abortCtrl.signal});
 
         this.setupPanZoom(this.container, this.abortCtrl);
     }
@@ -452,7 +454,52 @@ export class ClientTechTree implements TechTree {
         return this.state.unlocked.size;
     }
 
-    public resetTech() {
+    public resetTech(entry: RegistryEntry<Tech>): boolean {
+        // noinspection DuplicatedCode
+        const tech = entry.getValue();
+        if (!this.state.isUnlocked(tech)) {
+            return false;
+        }
+
+        const techsToRevoke = this.state.collectDescendantsToRevoke(tech);
+        if (techsToRevoke.length === 0) return false;
+
+        let backScore = 0;
+        for (const tech of techsToRevoke) {
+            this.state.unlocked.delete(tech);
+            backScore += tech.cost;
+        }
+
+        const unlocked: Tech[] = [];
+        for (const tech of this.state.allTechs) {
+            if (this.state.isUnlocked(tech)) unlocked.push(tech);
+        }
+
+        const finalScore = this.player.getScore() + (backScore * 0.8) | 0;
+        this.player.setScore(finalScore);
+        this.player.clearItems();
+
+        this.player.addItem(Items.CANNON40_WEAPON);
+        this.player.addItem(Items.BOMB_WEAPON);
+
+        this.player.steeringGear = false;
+        this.player.followPointer = false;
+        this.player.setYaw(-1.57079);
+
+        for (const tech of unlocked) {
+            const entry = Registries.TECH.getEntryByValue(tech);
+            console.log(entry)
+            if (entry) this.forceUnlock(entry);
+        }
+
+        this.updateAllEdgeClasses();
+        this.renderNodes();
+
+        this.player.getNetworkChannel().send(new PlayerResetTechC2SPacket(entry));
+        return true;
+    }
+
+    public resetAllTech() {
         // noinspection DuplicatedCode
         const player = this.player;
 
@@ -480,9 +527,10 @@ export class ClientTechTree implements TechTree {
         player.setYaw(-1.57079);
 
         this.state.reset();
+        this.updateAllEdgeClasses();
         this.renderNodes();
 
-        player.getNetworkChannel().send(new PlayerTechResetC2SPacket());
+        player.getNetworkChannel().send(new PlayerResetAllTechC2SPacket());
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {

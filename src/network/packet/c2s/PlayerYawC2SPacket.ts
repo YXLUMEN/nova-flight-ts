@@ -1,11 +1,10 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {decodeYaw, encodeYaw} from "../../../utils/NetUtil.ts";
 
 export class PlayerYawC2SPacket implements Payload {
-    public static readonly ID: PayloadId<PlayerYawC2SPacket> = {id: Identifier.ofVanilla('player_yaw')};
+    public static readonly ID: PayloadId<PlayerYawC2SPacket> = payloadId('player_yaw');
     public static readonly CODEC: PacketCodec<PlayerYawC2SPacket> = PacketCodecs.adapt(
         PacketCodecs.INT8,
         val => val.yawInt8,

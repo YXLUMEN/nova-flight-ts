@@ -156,12 +156,7 @@ export abstract class World {
         this.setTicking(!this.ticking);
     }
 
-    public gameOver(_player: PlayerEntity) {
-        this.over = true;
-        this.schedule(1, () => {
-            this.setTicking(false);
-        });
-    }
+    public abstract gameOver(player: PlayerEntity): void;
 
     public getDamageSources(): DamageSources {
         return this.damageSources;

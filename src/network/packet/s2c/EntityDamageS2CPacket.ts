@@ -1,12 +1,11 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {IVec} from "../../../utils/math/IVec.ts";
 import {clamp} from "../../../utils/math/math.ts";
 
 export class EntityDamageS2CPacket implements Payload {
-    public static readonly ID: PayloadId<EntityDamageS2CPacket> = {id: Identifier.ofVanilla('entity_damage')};
+    public static readonly ID: PayloadId<EntityDamageS2CPacket> = payloadId('entity_damage');
     public static readonly CODEC: PacketCodec<EntityDamageS2CPacket> = PacketCodecs.of(
         (writer, value) => {
             writer.writeVarUint(value.entityId);

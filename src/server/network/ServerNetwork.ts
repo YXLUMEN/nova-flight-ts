@@ -37,6 +37,11 @@ import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts
 import {GameOverS2CPacket} from "../../network/packet/s2c/GameOverS2CPacket.ts";
 import {AudioControlS2CPacket} from "../../network/packet/s2c/AudioControlS2CPacket.ts";
 import {AudioStopS2CPacket} from "../../network/packet/s2c/AudioStopS2CPacket.ts";
+import {
+    LaserWeaponActivate,
+    LaserWeaponChange,
+    LaserWeaponDeactivate
+} from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
 
 export class ServerNetwork {
     /**
@@ -81,6 +86,9 @@ export class ServerNetwork {
         this.register(GameOverS2CPacket.ID, GameOverS2CPacket.CODEC);
         this.register(AudioControlS2CPacket.ID, AudioControlS2CPacket.CODEC);
         this.register(AudioStopS2CPacket.ID, AudioStopS2CPacket.CODEC);
+        this.register(LaserWeaponActivate.ID, LaserWeaponActivate.CODEC);
+        this.register(LaserWeaponDeactivate.ID, LaserWeaponDeactivate.CODEC);
+        this.register(LaserWeaponChange.ID, LaserWeaponChange.CODEC);
         PayloadTypeRegistry.playS2C().settle();
     }
 

@@ -1,5 +1,4 @@
-import type {Payload, PayloadId} from "../Payload.ts";
-import {Identifier} from "../../registry/Identifier.ts";
+import {type Payload, payloadId, type PayloadId} from "../Payload.ts";
 import type {PacketCodec} from "../codec/PacketCodec.ts";
 import {PacketCodecs} from "../codec/PacketCodecs.ts";
 
@@ -8,13 +7,11 @@ import {PacketCodecs} from "../codec/PacketCodecs.ts";
  * 永远返回字符串;
  * */
 export class RelayServerPacket implements Payload {
-    public static readonly ID: PayloadId<RelayServerPacket> = {id: Identifier.ofVanilla('relay_server')};
-    public static readonly CODEC: PacketCodec<RelayServerPacket> = PacketCodecs.of<RelayServerPacket>(
-        () => {
-        },
-        (reader) => {
-            return new RelayServerPacket(reader.readString());
-        }
+    public static readonly ID: PayloadId<RelayServerPacket> = payloadId('relay_server');
+    public static readonly CODEC: PacketCodec<RelayServerPacket> = PacketCodecs.adapt(
+        PacketCodecs.STRING,
+        val => val.msg,
+        val => new RelayServerPacket(val)
     );
 
     public readonly msg: string;

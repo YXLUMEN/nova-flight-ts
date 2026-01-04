@@ -24,8 +24,7 @@ import type {ServerWorld} from "../server/ServerWorld.ts";
 
 
 export abstract class Entity implements DataTracked, Comparable, NbtSerializable, CommandOutput {
-    // 除了全局EntityList, 禁止使用
-    public static readonly CURRENT_ID = new AtomicInteger();
+    private static readonly CURRENT_ID = new AtomicInteger();
 
     public invulnerable: boolean = false;
     public velocityDirty: boolean = false;
@@ -399,6 +398,10 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
 
     public getDataTracker(): DataTracker {
         return this.dataTracker;
+    }
+
+    public shouldRender(): boolean {
+        return true;
     }
 
     public getCommandSource(): ServerCommandSource {

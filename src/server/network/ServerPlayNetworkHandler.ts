@@ -15,7 +15,7 @@ import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPosit
 import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
 import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
 import {EntityNbtS2CPacket} from "../../network/packet/s2c/EntityNbtS2CPacket.ts";
-import {PlayerTechResetC2SPacket} from "../../network/packet/c2s/PlayerTechResetC2SPacket.ts";
+import {PlayerResetAllTechC2SPacket} from "../../network/packet/c2s/PlayerResetAllTechC2SPacket.ts";
 import {PlayerMoveByPointerC2SPacket} from "../../network/packet/c2s/PlayerMoveByPointerC2SPacket.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import {CommandExecutionC2SPacket} from "../../network/packet/c2s/CommandExecutionC2SPacket.ts";
@@ -31,6 +31,7 @@ import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {NetworkChannel} from "../../network/NetworkChannel.ts";
 import type {ServerChannel} from "./ServerChannel.ts";
+import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
 
 export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
     public readonly player: ServerPlayerEntity;
@@ -161,8 +162,12 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
         }
     }
 
-    public onTechRest(_: PlayerTechResetC2SPacket): void {
-        this.player.getTechs().resetTech();
+    public onAllTechRest(_: PlayerResetAllTechC2SPacket): void {
+        this.player.getTechs().resetAllTech();
+    }
+
+    public onTechRest(packet: PlayerResetTechC2SPacket): void {
+        this.player.getTechs().resetTech(packet.entry);
     }
 
     public onRequestPosition(_: RequestPositionC2SPacket): void {
@@ -222,7 +227,8 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
         this.register(PlayerSwitchSlotC2SPacket.ID, this.onPlayerSwitchSlot.bind(this));
         this.register(PlayerFireC2SPacket.ID, this.onPlayerFire.bind(this));
         this.register(PlayerUnlockTechC2SPacket.ID, this.onUnlockTech.bind(this));
-        this.register(PlayerTechResetC2SPacket.ID, this.onTechRest.bind(this));
+        this.register(PlayerResetTechC2SPacket.ID, this.onTechRest.bind(this));
+        this.register(PlayerResetAllTechC2SPacket.ID, this.onAllTechRest.bind(this));
         this.register(RequestPositionC2SPacket.ID, this.onRequestPosition.bind(this));
         this.register(CommandExecutionC2SPacket.ID, this.onCommandExecution.bind(this));
         this.register(ChatMessageC2SPacket.ID, this.onChatMessage.bind(this));

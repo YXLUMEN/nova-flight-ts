@@ -1,12 +1,11 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
 import type {UUID} from "../../../apis/types.ts";
 import {EntityType} from "../../../entity/EntityType.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import {
-    decodeColorHex,
+    decodeColorToHex,
     decodeVelocity,
     decodeYaw,
     encodeColorHex,
@@ -19,7 +18,7 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {Registries} from "../../../registry/Registries.ts";
 
 export class EntitySpawnS2CPacket implements Payload {
-    public static readonly ID: PayloadId<EntitySpawnS2CPacket> = {id: Identifier.ofVanilla('spawn_entity')};
+    public static readonly ID: PayloadId<EntitySpawnS2CPacket> = payloadId('spawn_entity');
 
     public static readonly CODEC: PacketCodec<EntitySpawnS2CPacket> = PacketCodecs.of<EntitySpawnS2CPacket>(this.write, this.read);
 
@@ -154,10 +153,10 @@ export class EntitySpawnS2CPacket implements Payload {
     }
 
     public get color() {
-        return decodeColorHex(this.colorUint32);
+        return decodeColorToHex(this.colorUint32);
     }
 
     public get edgeColor() {
-        return decodeColorHex(this.edgeColorInt32);
+        return decodeColorToHex(this.edgeColorInt32);
     }
 }

@@ -11,7 +11,9 @@ export interface TechTree extends NbtSerializable {
 
     isUnlocked(tech: RegistryEntry<Tech>): boolean;
 
-    resetTech(): void;
+    resetTech(entry: RegistryEntry<Tech>): void;
+
+    resetAllTech(): void;
 
     unloadedTechCount(): number;
 }

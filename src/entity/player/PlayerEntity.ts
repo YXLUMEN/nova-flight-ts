@@ -158,7 +158,7 @@ export abstract class PlayerEntity extends LivingEntity {
         this.getWorld().gameOver(this);
     }
 
-    public override onDiscard() {
+    protected override onDiscard() {
         super.onDiscard();
         this.clearItems();
     }

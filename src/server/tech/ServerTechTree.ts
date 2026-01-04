@@ -6,8 +6,8 @@ import {Items} from "../../item/Items.ts";
 import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
 import {applyServerTech} from "./applyServerTech.ts";
 import {Registries} from "../../registry/Registries.ts";
-import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
-import type {Tech} from "../../tech/Tech.ts";
+import {type RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import {type Tech} from "../../tech/Tech.ts";
 
 export class ServerTechTree implements TechTree {
     private readonly player: ServerPlayerEntity;
@@ -55,13 +55,50 @@ export class ServerTechTree implements TechTree {
         return this.state.unlocked.size;
     }
 
-    public resetTech() {
+    public resetTech(entry: RegistryEntry<Tech>): boolean {
+        // noinspection DuplicatedCode
+        const tech = entry.getValue();
+        if (!this.state.isUnlocked(tech)) {
+            return false;
+        }
+
+        const techsToRevoke = this.state.collectDescendantsToRevoke(tech);
+        if (techsToRevoke.length === 0) return false;
+
+        let backScore = 0;
+        for (const tech of techsToRevoke) {
+            this.state.unlocked.delete(tech);
+            backScore += tech.cost;
+        }
+
+        const unlocked: Tech[] = [];
+        for (const tech of this.state.allTechs) {
+            if (this.state.isUnlocked(tech)) unlocked.push(tech);
+        }
+
+        const finalScore = this.player.getScore() + (backScore * 0.8) | 0;
+        this.player.setScore(finalScore);
+        this.player.clearItems();
+
+        this.player.addItem(Items.CANNON40_WEAPON);
+        this.player.addItem(Items.BOMB_WEAPON);
+        this.player.setYaw(-1.57079);
+
+        for (const tech of unlocked) {
+            const entry = Registries.TECH.getEntryByValue(tech);
+            if (entry) this.forceUnlock(entry);
+        }
+
+        this.player.getNetworkChannel().send(new PlayerSetScoreS2CPacket(this.player.getScore()));
+        return true;
+    }
+
+    public resetAllTech() {
         // noinspection DuplicatedCode
         const player = this.player;
 
-        const allTech = this.state.allTechs;
         const unlocked: Tech[] = [];
-        for (const tech of allTech) {
+        for (const tech of this.state.allTechs) {
             if (this.state.isUnlocked(tech)) unlocked.push(tech);
         }
 
@@ -69,8 +106,7 @@ export class ServerTechTree implements TechTree {
 
         let backScore = 0;
         for (const tech of unlocked) {
-            const cost = tech.cost;
-            if (cost) backScore += cost;
+            backScore += tech.cost;
         }
 
         const finalScore = player.getScore() + (backScore * 0.8) | 0;

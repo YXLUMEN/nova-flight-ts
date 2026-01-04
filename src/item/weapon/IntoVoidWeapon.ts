@@ -17,8 +17,6 @@ import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {Items} from "../Items.ts";
 import {Techs} from "../../tech/Techs.ts";
 
-const id2EffectMap = new Map<number, WindowOverlay>();
-
 export class IntoVoidWeapon extends SpecialWeapon {
     public static readonly displayName = "遁入虚空";
     public static readonly uiColor = "#7945ff";
@@ -27,6 +25,8 @@ export class IntoVoidWeapon extends SpecialWeapon {
         Identifier.ofVanilla('weapon.into_void'),
         0.4
     );
+
+    private static readonly id2EffectMap = new Map<number, WindowOverlay>();
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         if (this.getActive(stack)) return;
@@ -53,7 +53,7 @@ export class IntoVoidWeapon extends SpecialWeapon {
             "screen",
         );
         world.addEffect(null, mask);
-        id2EffectMap.set(attacker.getId(), mask);
+        IntoVoidWeapon.id2EffectMap.set(attacker.getId(), mask);
 
         if (attacker.getTechs().isUnlocked(Techs.VOID_ENERGY_EXTRACTION)) {
             const emp = Items.EMP_WEAPON as EMPWeapon;
@@ -135,10 +135,10 @@ export class IntoVoidWeapon extends SpecialWeapon {
         this.setTimeLeft(stack, 0);
         this.setCooldown(stack, this.getMaxCooldown(stack));
 
-        const mask = id2EffectMap.get(attacker.getId());
+        const mask = IntoVoidWeapon.id2EffectMap.get(attacker.getId());
         if (mask) {
             mask.end();
-            id2EffectMap.delete(attacker.getId());
+            IntoVoidWeapon.id2EffectMap.delete(attacker.getId());
         }
 
         if (!keepCooldown) {

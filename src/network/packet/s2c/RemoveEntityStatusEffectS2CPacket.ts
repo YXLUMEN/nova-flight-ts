@@ -1,12 +1,11 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {RegistryEntry} from "../../../registry/tag/RegistryEntry.ts";
 import {StatusEffect} from "../../../entity/effect/StatusEffect.ts";
 
 export class RemoveEntityStatusEffectS2CPacket implements Payload {
-    public static readonly ID: PayloadId<RemoveEntityStatusEffectS2CPacket> = {id: Identifier.ofVanilla('entity_remove_effect')};
+    public static readonly ID: PayloadId<RemoveEntityStatusEffectS2CPacket> = payloadId('entity_remove_effect');
     public static readonly CODEC: PacketCodec<RemoveEntityStatusEffectS2CPacket> = PacketCodecs.adapt2(
         PacketCodecs.VAR_UINT,
         val => val.entityId,

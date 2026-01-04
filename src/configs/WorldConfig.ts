@@ -13,7 +13,7 @@ const defaultConfig = config({
     per: 50,
     fps: 75,
     perFrame: 1000 / 75,
-    version: '25w16b'
+    version: '26v01'
 });
 
 const WorldConfig = Object.seal(createClean({

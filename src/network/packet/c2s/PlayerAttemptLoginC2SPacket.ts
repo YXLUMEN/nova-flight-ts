@@ -1,11 +1,10 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
 import type {UUID} from "../../../apis/types.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class PlayerAttemptLoginC2SPacket implements Payload {
-    public static readonly ID: PayloadId<PlayerAttemptLoginC2SPacket> = {id: Identifier.ofVanilla('player_attempt_login')};
+    public static readonly ID: PayloadId<PlayerAttemptLoginC2SPacket> = payloadId('player_attempt_login');
     public static readonly CODEC: PacketCodec<PlayerAttemptLoginC2SPacket> = PacketCodecs.of<PlayerAttemptLoginC2SPacket>(
         (writer, value) => {
             writer.writeUUID(value.clientId);

@@ -5,7 +5,7 @@ import type {IVec} from "../utils/math/IVec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {
-    decodeColorHex,
+    decodeColorToHex,
     decodeFromInt16,
     decodeFromUnsignedByte,
     encodeColorHex,
@@ -33,8 +33,8 @@ export class Particle implements VisualEffect {
                 PacketCodecs.VECTOR2D.decode(reader),
                 decodeFromUnsignedByte(reader.readUint8()),
                 decodeFromInt16(reader.readInt16()),
-                decodeColorHex(reader.readUint32()),
-                decodeColorHex(reader.readUint32()),
+                decodeColorToHex(reader.readUint32()),
+                decodeColorToHex(reader.readUint32()),
                 reader.readFloat(),
                 reader.readFloat(),
             );

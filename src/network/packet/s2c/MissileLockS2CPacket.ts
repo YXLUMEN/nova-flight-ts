@@ -1,10 +1,9 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class MissileLockS2CPacket implements Payload {
-    public static readonly ID: PayloadId<MissileLockS2CPacket> = {id: Identifier.ofVanilla('missile_lock')};
+    public static readonly ID: PayloadId<MissileLockS2CPacket> = payloadId('missile_lock');
     public static readonly CODEC: PacketCodec<MissileLockS2CPacket> = PacketCodecs.adapt2(
         PacketCodecs.VAR_UINT,
         val => val.entityId,

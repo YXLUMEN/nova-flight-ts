@@ -70,7 +70,7 @@ export class EntityList {
     }
 
     /**
-     * 立即触发延迟删除, 同时重置实体ID计数.
+     * 立即触发延迟删除
      *
      * 注意, 只清空维护的列表, 你不应该直接调用这个方法, 或许你需要
      * @see Entity.discard()
@@ -82,6 +82,5 @@ export class EntityList {
         this.projectiles.clear();
 
         this.pendingRemoval.length = 0;
-        Entity.CURRENT_ID.reset();
     }
 }

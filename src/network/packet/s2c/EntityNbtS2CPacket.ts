@@ -1,5 +1,4 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {UUID} from "../../../apis/types.ts";
@@ -7,7 +6,7 @@ import type {Entity} from "../../../entity/Entity.ts";
 import {NbtCompound} from "../../../nbt/NbtCompound.ts";
 
 export class EntityNbtS2CPacket implements Payload {
-    public static readonly ID: PayloadId<EntityNbtS2CPacket> = {id: Identifier.ofVanilla('entity_nbt')};
+    public static readonly ID: PayloadId<EntityNbtS2CPacket> = payloadId('entity_nbt');
     public static readonly CODEC: PacketCodec<EntityNbtS2CPacket> = PacketCodecs.adapt2(
         PacketCodecs.UUID,
         val => val.entityUuid,

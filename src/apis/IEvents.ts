@@ -18,6 +18,7 @@ export const EVENTS = createClean({
     ENTITY_DIE: "entity:die",
     UNLOCK_TECH: "player:tech:unlock",
     UNLOCK_TECH_SERVER: "server:player:tech:unlock",
+    REVOKE_TECH_SERVER: "server:player:tech:revoke",
     EXPLOSION: "world:explosion",
     EMP_BURST: "world:emp_burst",
     STAGE_ENTER: "world:stage:enter",
@@ -33,6 +34,7 @@ export type IEvents = {
     [EVENTS.MOB_DAMAGE]: { mob: MobEntity; damageSource: DamageSource; };
     [EVENTS.UNLOCK_TECH]: { tech: Tech };
     [EVENTS.UNLOCK_TECH_SERVER]: { tech: RegistryEntry<Tech>, player: ServerPlayerEntity };
+    [EVENTS.REVOKE_TECH_SERVER]: { tech: RegistryEntry<Tech>, player: ServerPlayerEntity };
     [EVENTS.EXPLOSION]: {
         entity: Entity | null,
         damage: DamageSource | null,

@@ -1,5 +1,4 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
@@ -9,17 +8,17 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {IVec} from "../../../utils/math/IVec.ts";
 
 export class EntityVelocityUpdateS2CPacket implements Payload {
-    public static readonly ID: PayloadId<EntityVelocityUpdateS2CPacket> = {id: Identifier.ofVanilla('entity_velocity')};
+    public static readonly ID: PayloadId<EntityVelocityUpdateS2CPacket> = payloadId('entity_velocity');
     public static readonly CODEC: PacketCodec<EntityVelocityUpdateS2CPacket> = PacketCodecs.of<EntityVelocityUpdateS2CPacket>(this.write, this.reader);
 
     public readonly entityId: number;
-    private readonly velocityXInt16: number;
-    private readonly velocityYInt16: number;
+    private readonly vXInt16: number;
+    private readonly vYInt16: number;
 
     public constructor(entityId: number, velocityXInt16: number, velocityYInt16: number) {
         this.entityId = entityId;
-        this.velocityXInt16 = velocityXInt16;
-        this.velocityYInt16 = velocityYInt16;
+        this.vXInt16 = velocityXInt16;
+        this.vYInt16 = velocityYInt16;
     }
 
     public static create(entity: Entity) {
@@ -41,8 +40,8 @@ export class EntityVelocityUpdateS2CPacket implements Payload {
 
     private static write(writer: BinaryWriter, value: EntityVelocityUpdateS2CPacket): void {
         writer.writeVarUint(value.entityId);
-        writer.writeInt16(value.velocityXInt16);
-        writer.writeInt16(value.velocityYInt16);
+        writer.writeInt16(value.vXInt16);
+        writer.writeInt16(value.vYInt16);
     }
 
     public getId(): PayloadId<EntityVelocityUpdateS2CPacket> {
@@ -50,10 +49,10 @@ export class EntityVelocityUpdateS2CPacket implements Payload {
     }
 
     public get velocityX() {
-        return decodeVelocity(this.velocityXInt16);
+        return decodeVelocity(this.vXInt16);
     }
 
     public get velocityY() {
-        return decodeVelocity(this.velocityYInt16);
+        return decodeVelocity(this.vYInt16);
     }
 }

@@ -63,6 +63,15 @@ import {AudioControlS2CPacket} from "../../network/packet/s2c/AudioControlS2CPac
 import {BGMManager} from "../../sound/BGMManager.ts";
 import {AudioStopS2CPacket} from "../../network/packet/s2c/AudioStopS2CPacket.ts";
 import {Audios} from "../../sound/Audios.ts";
+import {
+    LaserWeaponActivate,
+    LaserWeaponChange,
+    LaserWeaponDeactivate,
+    type LaserWeaponS2CPacket
+} from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
+import {LaserBeamEffect} from "../../effect/LaserBeamEffect.ts";
+import {LaserWeapon} from "../../item/weapon/LaserWeapon.ts";
+import {decodeColorToHex} from "../../utils/NetUtil.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer: Set<UUID> = new Set();
@@ -468,6 +477,33 @@ export class ClientPlayNetworkHandler {
         player.cooldownManager.set(packet.item, packet.duration);
     }
 
+    public onLaserWeapon(packet: LaserWeaponS2CPacket) {
+        const holder = this.world?.getEntityById(packet.entityId);
+        if (!holder || holder === this.client.player) return;
+
+        if (packet.activate) {
+            const beamFx = LaserWeapon.id2EffectMap.get(packet.entityId);
+            if (beamFx && beamFx.isAlive()) {
+                beamFx.kill();
+            }
+            const newBeamFx = new LaserBeamEffect(decodeColorToHex(packet.color), packet.width, 0.5);
+            newBeamFx.reset(packet.start, packet.end);
+            LaserWeapon.id2EffectMap.set(packet.entityId, newBeamFx);
+            this.world!.addEffect(null, newBeamFx);
+        } else if (packet.change) {
+            const beamFx = LaserWeapon.id2EffectMap.get(packet.entityId);
+            if (beamFx) {
+                beamFx.set(packet.start, packet.end);
+            }
+        } else {
+            const beamFx = LaserWeapon.id2EffectMap.get(packet.entityId);
+            if (beamFx) {
+                beamFx.kill();
+                LaserWeapon.id2EffectMap.delete(packet.entityId);
+            }
+        }
+    }
+
     public sendCommand(input: string): boolean {
         const command = input.startsWith('/') ? input.slice(1) : input;
         if (this.parse(command).exceptions.size === 0) {
@@ -546,5 +582,8 @@ export class ClientPlayNetworkHandler {
         this.register(GameOverS2CPacket.ID, this.onGameOver.bind(this));
         this.register(AudioControlS2CPacket.ID, this.onAudioControl.bind(this));
         this.register(AudioStopS2CPacket.ID, this.onAudioStop.bind(this));
+        this.register(LaserWeaponActivate.ID, this.onLaserWeapon.bind(this));
+        this.register(LaserWeaponDeactivate.ID, this.onLaserWeapon.bind(this));
+        this.register(LaserWeaponChange.ID, this.onLaserWeapon.bind(this));
     }
 }

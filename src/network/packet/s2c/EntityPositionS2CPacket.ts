@@ -1,5 +1,4 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
@@ -8,7 +7,7 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class EntityPositionS2CPacket implements Payload {
-    public static readonly ID: PayloadId<EntityPositionS2CPacket> = {id: Identifier.ofVanilla('entity_position')};
+    public static readonly ID: PayloadId<EntityPositionS2CPacket> = payloadId('entity_position');
     public static readonly CODEC: PacketCodec<EntityPositionS2CPacket> = PacketCodecs.of<EntityPositionS2CPacket>(this.write, this.reader);
 
     public readonly entityId: number;

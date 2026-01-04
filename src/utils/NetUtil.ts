@@ -81,7 +81,7 @@ export function encodeColorHex(hex: string): number {
  * Decodes a 32-bit RGBA integer (0xRRGGBBAA) into a normalized 8-digit hex string.
  * Always returns uppercase with leading '#'.
  */
-export function decodeColorHex(colorInt: number): string {
+export function decodeColorToHex(colorInt: number): string {
     if (!Number.isInteger(colorInt) || colorInt < 0 || colorInt > 0xFFFFFFFF) {
         throw new Error(`Expected a 32-bit unsigned integer, got: ${colorInt}`);
     }

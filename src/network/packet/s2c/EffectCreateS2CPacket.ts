@@ -1,12 +1,11 @@
-import type {Payload, PayloadId} from "../../Payload.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
+import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {type VisualEffect} from "../../../effect/VisualEffect.ts";
 import {VisualEffectType} from "../../../effect/VisualEffectType.ts";
 
 export class EffectCreateS2CPacket implements Payload {
-    public static readonly ID: PayloadId<EffectCreateS2CPacket> = {id: Identifier.ofVanilla('effect_create')};
+    public static readonly ID: PayloadId<EffectCreateS2CPacket> = payloadId('effect_create');
     public static readonly CODEC: PacketCodec<EffectCreateS2CPacket> = PacketCodecs.of(
         (writer, value) => {
             const type = value.effect.getType();

@@ -113,10 +113,10 @@ export class ClientWorld extends World {
 
     public override gameOver() {
         this.over = true;
-        this.schedule(1, () => {
+        setTimeout(() => {
             this.setTicking(false);
             this.client.onGameOver();
-        });
+        }, 1500);
     }
 
     public override getNetworkChannel(): ClientNetworkChannel {
@@ -269,10 +269,6 @@ export class ClientWorld extends World {
         this.drawBackground(ctx);
 
         // 其他实体
-        for (const player of this.players) {
-            if (player === this.client.player) continue;
-            EntityRenderers.getRenderer(player).render(player, ctx, tickDelta, 0, 0);
-        }
         for (const entity of this.entities.values()) {
             EntityRenderers.getRenderer(entity).render(entity, ctx, tickDelta, 0, 0);
         }
@@ -282,6 +278,12 @@ export class ClientWorld extends World {
             this.effects[i].render(ctx, tickDelta);
         }
         this.particlePool.render(ctx, tickDelta);
+
+        // 其他玩家
+        for (const player of this.players) {
+            if (player === this.client.player) continue;
+            EntityRenderers.getRenderer(player).render(player, ctx, tickDelta, 0, 0);
+        }
 
         // 玩家
         const player = this.client.player;
