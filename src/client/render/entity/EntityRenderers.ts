@@ -18,6 +18,7 @@ import {CIWSBulletEntityRender} from "./CIWSBulletEntityRender.ts";
 import {ADSEntityRender} from "./ADSEntityRender.ts";
 import {FastBulletEntityRender} from "./FastBulletEntityRender.ts";
 import {ExplodeBulletEntityRender} from "./ExplodeBulletEntityRender.ts";
+import {CloudLightningEntityRender} from "./CloudLightningEntityRender.ts";
 
 export class EntityRenderers {
     private static readonly RENDERER_FACTORIES = new Map<EntityType<Entity>, EntityRenderer<Entity>>();
@@ -51,6 +52,7 @@ export class EntityRenderers {
         this.register(EntityTypes.MISSILE_ENEMY_ENTITY, new MissileEnemyEntityRender());
         this.register(EntityTypes.CIWS_BULLET_ENTITY, new CIWSBulletEntityRender());
         this.register(EntityTypes.ADS_ENTITY, new ADSEntityRender());
+        this.register(EntityTypes.CLOUD_LIGHTNING_ENTITY, new CloudLightningEntityRender());
         this.compileRenders();
     }
 

@@ -239,6 +239,7 @@
     "name": "火箭发射器",
     "x": 0,
     "y": 540,
+    "branchGroup": "heavy_upgrade",
     "desc": "解锁火箭发射器, 它会发射一连串威力强大的火箭弹, 不过你需要给装填器一点时间。   \n——‘长官长官, 我要是过载了就剩个指头会动了, 能玩火箭发射器吗’。  \n——‘别有点天赋就炫耀, 新兵’",
     "cost": 360,
     "requires": [
@@ -254,6 +255,40 @@
     "cost": 640,
     "requires": [
       "rocket_launcher"
+    ]
+  },
+  {
+    "id": "cloud_lightning",
+    "name": "天云闪电",
+    "x": 0,
+    "y": 460,
+    "branchGroup": "heavy_upgrade",
+    "desc": "凝聚而成的球状闪电, 可以有效穿透敌舰防御",
+    "cost": 480,
+    "requires": [
+      "heavy_weapon"
+    ]
+  },
+  {
+    "id": "arc_emitter",
+    "name": "电弧发射器",
+    "x": -160,
+    "y": 460,
+    "desc": "电弧发射器会向距离最近的6个目标发射电弧",
+    "cost": 320,
+    "requires": [
+      "cloud_lightning"
+    ]
+  },
+  {
+    "id": "focused_arc_emitter",
+    "name": "聚能电弧发射器",
+    "x": -320,
+    "y": 460,
+    "desc": "激发一道电弧, 从命中位置释放两道连锁电弧",
+    "cost": 160,
+    "requires": [
+      "arc_emitter"
     ]
   },
   {

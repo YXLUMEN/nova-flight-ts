@@ -15,12 +15,18 @@ import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {Explosion} from "./Explosion.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
-import type {MobEntity} from "../entity/mob/MobEntity.ts";
+import {MobEntity} from "../entity/mob/MobEntity.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {ClientWorld} from "../client/ClientWorld.ts";
 import {EntityType} from "../entity/EntityType.ts";
 import type {Channel} from "../network/Channel.ts";
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
+import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
+import {pointInCircleVec2} from "../utils/math/math.ts";
+import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
+import {StatusEffects} from "../entity/effect/StatusEffects.ts";
+import {SoundEvents} from "../sound/SoundEvents.ts";
+import type {MutVec2} from "../utils/math/MutVec2.ts";
 
 export abstract class World {
     public static readonly WORLD_W = 1692;
@@ -103,6 +109,28 @@ export abstract class World {
         const explosion = new Explosion(this, x, y, entity, damage, opts);
         explosion.apply();
         return explosion;
+    }
+
+    public createEMP(attacker: Entity | null, pos: MutVec2, radius: number, duration: number = 40, damage: number = 0) {
+        this.getEntities().forEach(entity => {
+            if (entity instanceof ProjectileEntity) {
+                if (entity.getOwner() !== attacker &&
+                    pointInCircleVec2(entity.getPositionRef, pos, radius)) {
+                    entity.discard();
+                }
+                return;
+            }
+            if (entity instanceof MobEntity) {
+                if (!entity.isRemoved() &&
+                    pointInCircleVec2(entity.getPositionRef, pos, radius)) {
+                    entity.addStatusEffect(new StatusEffectInstance(
+                        StatusEffects.EMC_STATUS, duration, 1), attacker);
+                    entity.takeDamage(this.damageSources.arc(attacker), damage);
+                }
+            }
+        });
+
+        this.playSound(null, SoundEvents.EMP_BURST);
     }
 
     public close(): void {

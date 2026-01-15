@@ -48,6 +48,10 @@ export class SoundEvents {
 
     public static readonly PHASE_CHANGE = this.registerSound("phase.change");
 
+    public static readonly ARC_FIRE = this.registerSound("arc.fire");
+    public static readonly ARC_LOOP = this.registerSound("arc.loop");
+    public static readonly ARC_BURST = this.registerSound("arc.burst");
+
     private static registerSound(id: string) {
         const identifier = Identifier.ofVanilla(id);
         return Registry.registerReferenceById(Registries.SOUND_EVENT, identifier, SoundEvent.of(identifier)).getValue();

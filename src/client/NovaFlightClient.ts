@@ -11,7 +11,7 @@ import {LoadingScreen} from "./render/ui/LoadingScreen.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import {sleep} from "../utils/uit.ts";
 import {EntityRenderers} from "./render/entity/EntityRenderers.ts";
-import {DataLoader} from "../DataLoader.ts";
+import {DataLoader} from "./DataLoader.ts";
 import {check} from "@tauri-apps/plugin-updater";
 import {StartScreen} from "./render/ui/StartScreen.ts";
 import {ClientPlayNetworkHandler} from "./network/ClientPlayNetworkHandler.ts";
@@ -431,7 +431,7 @@ export class NovaFlightClient {
         EntityRenderers.registryRenders();
         await sleep(200);
 
-        loadingScreen.setProgress(0.6, '加载数据');
+        loadingScreen.setProgress(0.6, '加载资源');
         await DataLoader.init(manager);
 
         loadingScreen.setProgress(0.8, '冻结资源');

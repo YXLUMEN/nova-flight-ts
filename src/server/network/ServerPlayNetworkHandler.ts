@@ -77,7 +77,7 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
         return this.player.getProfile();
     }
 
-    public onPlayerFinishLogin(_: PlayerFinishLoginC2SPacket) {
+    public onPlayerFinishLogin() {
         const uuid: UUID = this.clientId;
         if (!this.server.playerManager.isPlayerExists(uuid)) {
             return;

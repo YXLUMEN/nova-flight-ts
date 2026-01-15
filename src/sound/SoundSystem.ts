@@ -8,6 +8,7 @@ import {RegistryKeys} from "../registry/RegistryKeys.ts";
 import {clamp} from "../utils/math/math.ts";
 import {deepFreeze} from "../utils/uit.ts";
 import {isServer} from "../configs/WorldConfig.ts";
+import {PromisePool} from "../utils/collection/PromisePool.ts";
 
 // noinspection DuplicatedCode
 export class SoundSystem {
@@ -36,6 +37,10 @@ export class SoundSystem {
         const json = JSON.parse(await readTextFile(soundJson));
         const audioContext = new AudioContext();
 
+        const pool = new PromisePool();
+        const loadTasks: Promise<void>[] = [];
+        const buffersMap = new Map<Identifier, AudioBuffer[]>();
+
         for (const soundId of sounds) {
             try {
                 const id = soundId.getPath();
@@ -44,32 +49,41 @@ export class SoundSystem {
                     console.warn(`SoundID ${id} not found in sounds.json`);
                     continue;
                 }
-                if (!Array.isArray(entry.sounds)) {
+
+                const sounds = entry.sounds;
+                if (!Array.isArray(sounds) || !sounds.every(value => typeof value === 'string')) {
                     console.warn(`SoundID ${id} has invalid sounds format (must be array)`);
                     continue;
                 }
 
                 const buffers: AudioBuffer[] = [];
-                for (const soundEntry of entry.sounds) {
+                buffersMap.set(soundId, buffers);
+
+                for (const soundEntry of sounds) {
                     const soundPath = soundEntry.split(':').pop();
                     if (!soundPath) continue;
-                    const buffer = await this.loadStatic(soundPath, audioContext);
-                    if (buffer) buffers.push(buffer);
-                }
 
-                if (buffers.length > 0) {
-                    this.loadedSounds.set(soundId, buffers);
+                    loadTasks.push(pool.submit(async () => {
+                        const buffer = await this.loadStatic(soundPath, audioContext);
+                        if (buffer) buffers.push(buffer);
+                    }));
                 }
             } catch (error) {
                 console.warn(error);
             }
         }
 
+        await Promise.all(loadTasks);
+
+        for (const [id, buffers] of buffersMap) {
+            if (buffers.length > 0) this.loadedSounds.set(id, buffers);
+        }
+
         deepFreeze(this.loadedSounds);
         await audioContext.close();
     }
 
-    public static async loadStatic(path: string, audioContext: AudioContext): Promise<AudioBuffer | null> {
+    private static async loadStatic(path: string, audioContext: AudioContext): Promise<AudioBuffer | null> {
         try {
             const res = await resolveResource(`resources/nova-flight/sounds/${path}.wav`);
             const fileData = await readFile(res);

@@ -18,6 +18,7 @@ export class DamageSources {
     private readonly _void: DamageSource;
     private readonly _erosion: DamageSource;
     private readonly _explosion: DamageSource;
+    private readonly _arc: DamageSource;
 
     public constructor(registryManager: RegistryManager) {
         this.registry = registryManager.get(RegistryKeys.DAMAGE_TYPE);
@@ -28,6 +29,7 @@ export class DamageSources {
         this._void = this.create(DamageTypes.VOID);
         this._erosion = this.create(DamageTypes.EROSION);
         this._explosion = this.create(DamageTypes.EXPLOSION);
+        this._arc = this.create(DamageTypes.ARC);
     }
 
     public create(key: RegistryKey<DamageType>): DamageSource {
@@ -97,5 +99,13 @@ export class DamageSources {
 
     public erosion() {
         return this._erosion;
+    }
+
+    public arc(attacker: Entity | null) {
+        if (attacker) {
+            return this.createWithAttacker(DamageTypes.ARC, attacker);
+        }
+
+        return this._arc;
     }
 }

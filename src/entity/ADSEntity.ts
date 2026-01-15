@@ -5,7 +5,7 @@ import type {EntityType} from "./EntityType.ts";
 import {World} from "../world/World.ts";
 import type {IOwnable} from "./IOwnable.ts";
 import type {LivingEntity} from "./LivingEntity.ts";
-import {distanceVec2} from "../utils/math/math.ts";
+import {squareDistVec2} from "../utils/math/math.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 
@@ -40,7 +40,7 @@ export class ADSEntity extends Entity implements IOwnable {
             if (projectile.getOwner() === this.owner) continue;
 
             const projPos = projectile.getPositionRef;
-            if (distanceVec2(projPos, selfPos) > ADSEntity.RADIUS) continue;
+            if (squareDistVec2(projPos, selfPos) > ADSEntity.RADIUS) continue;
             const proVel = projectile.getVelocityRef;
 
             const toSelf = selfPos.subVec(projPos);

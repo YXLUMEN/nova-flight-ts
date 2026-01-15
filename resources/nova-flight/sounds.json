@@ -215,5 +215,24 @@
     "sounds": [
       "nova-flight:ciws/fire"
     ]
+  },
+  "arc.fire": {
+    "subtitle": "sound.nova-flight.arc.fire",
+    "sounds": [
+      "nova-flight:arc/arc_01",
+      "nova-flight:arc/arc_02"
+    ]
+  },
+  "arc.burst": {
+    "subtitle": "sound.nova-flight.arc.burst",
+    "sounds": [
+      "nova-flight:arc/arc_burst"
+    ]
+  },
+  "arc.loop": {
+    "subtitle": "sound.nova-flight.arc.loop",
+    "sounds": [
+      "nova-flight:arc/arc_loop"
+    ]
   }
 }

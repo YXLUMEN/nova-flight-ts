@@ -56,12 +56,12 @@ export function collideCircle(ax: number, ay: number, ar: number,
     return dx * dx + dy * dy < r * r;
 }
 
-export function distanceVec2(a: IVec, b: IVec) {
+export function squareDistVec2(a: IVec, b: IVec) {
     const dx = a.x - b.x, dy = a.y - b.y;
     return dx * dx + dy * dy;
 }
 
-export function distance2(aX: number, aY: number, bX: number, bY: number) {
+export function squareDist(aX: number, aY: number, bX: number, bY: number) {
     const dx = aX - bX;
     const dy = aY - bY;
     return dx * dx + dy * dy;
@@ -73,11 +73,44 @@ export function lineCircleHit(
     const acx = cx - ax, acy = cy - ay;
     const abLen2 = abx * abx + aby * aby || 1e-6;
 
-    let t = (acx * abx + acy * aby) / abLen2;
-    t = Math.max(0, Math.min(1, t));
+    const t = clamp((acx * abx + acy * aby) / abLen2, 0, 1);
     const px = ax + abx * t, py = ay + aby * t;
     const dx = px - cx, dy = py - cy;
     return (dx * dx + dy * dy) <= r * r;
+}
+
+export function thickLineCircleHit(
+    ax: number, ay: number,
+    bx: number, by: number,
+    halfWidth: number,
+    cx: number, cy: number,
+    r: number
+): boolean {
+    // 计算点 (cx,cy) 到线段 (ax,ay)-(bx,by) 的最短距离平方
+    const abx = bx - ax;
+    const aby = by - ay;
+    const acx = cx - ax;
+    const acy = cy - ay;
+
+    const abLen2 = abx * abx + aby * aby;
+    if (abLen2 === 0) {
+        // 线段退化为点
+        const dx = cx - ax;
+        const dy = cy - ay;
+        const dist2 = dx * dx + dy * dy;
+        return dist2 <= (halfWidth + r) * (halfWidth + r);
+    }
+
+    const t = clamp((acx * abx + acy * aby) / abLen2, 0, 1);
+    const px = ax + abx * t;
+    const py = ay + aby * t;
+
+    const dx = px - cx;
+    const dy = py - cy;
+    const dist2 = dx * dx + dy * dy;
+
+    const radiusSum = halfWidth + r;
+    return dist2 <= radiusSum * radiusSum;
 }
 
 // 点是否在圆内(含边界)

@@ -23,7 +23,7 @@ export class RocketLauncherWeapon extends BaseWeapon {
         this.setCooldown(stack, this.getFireRate(stack));
     }
 
-    protected onFire(stack: ItemStack, world: World, attacker: Entity) {
+    protected onFire(stack: ItemStack, world: World, attacker: Entity): void {
         stack.set(DataComponentTypes.WEAPON_CAN_COOLDOWN, false);
 
         const rocketCounts = stack.getOrDefault(DataComponentTypes.MISSILE_COUNT, 8);

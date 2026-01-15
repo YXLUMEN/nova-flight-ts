@@ -2,7 +2,7 @@ import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
-import {distance2, PI2, rand} from "../utils/math/math.ts";
+import {squareDist, PI2, rand} from "../utils/math/math.ts";
 import type {ClientWorld} from "../client/ClientWorld.ts";
 import type {World} from "./World.ts";
 import type {Entity} from "../entity/Entity.ts";
@@ -43,7 +43,7 @@ export class Explosion {
 
         if (this.opts.attacker instanceof MobEntity) {
             for (const player of world.getPlayers()) {
-                const d2 = distance2(player.getX(), player.getY(), this.x, this.y);
+                const d2 = squareDist(player.getX(), player.getY(), this.x, this.y);
                 if (d2 <= r2) player.takeDamage(this.damageSource, damage);
             }
             return;
@@ -51,7 +51,7 @@ export class Explosion {
 
         for (const mob of world.getMobs()) {
             if (mob.isRemoved()) continue;
-            const d2 = distance2(mob.getX(), mob.getY(), this.x, this.y);
+            const d2 = squareDist(mob.getX(), mob.getY(), this.x, this.y);
             if (d2 <= r2) {
                 mob.takeDamage(this.damageSource, damage);
                 if (this.opts.statusEffect) {

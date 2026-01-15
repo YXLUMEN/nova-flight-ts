@@ -14,6 +14,9 @@ import {IntoVoidWeapon} from "./weapon/IntoVoidWeapon.ts";
 import {LaserWeapon} from "./weapon/LaserWeapon.ts";
 import {DecoyReleaser} from "./weapon/DecoyReleaser.ts";
 import {CIWS} from "./weapon/BaseWeapon/CIWS.ts";
+import {CloudLightningConduits} from "./weapon/BaseWeapon/CloudLightningConduits.ts";
+import {FocusedArcEmitter} from "./weapon/BaseWeapon/FocusedArcEmitter.ts";
+import {ArcEmitter} from "./weapon/BaseWeapon/ArcEmitter.ts";
 
 export class Items {
     public static AIR = this.register("air", new Item(new Item.Settings()));
@@ -33,7 +36,7 @@ export class Items {
         .maxDurability(250)
         .attackDamage(1)
         .maxCooldown(1)
-        .component(DataComponentTypes.MAX_RELOAD_TIME, 50)
+        .component(DataComponentTypes.MAX_RELOAD_TIME, 45)
     ));
     public static readonly BOMB_WEAPON = this.register("bomb_weapon", new BombWeapon(new Item.Settings()
         .maxCooldown(800)
@@ -71,6 +74,22 @@ export class Items {
     public static readonly DECOY_RELEASER = this.register("decoy_releaser", new DecoyReleaser(new Item.Settings()
         .attackDamage(0)
         .maxCooldown(450)
+    ));
+    public static readonly CLOUD_LIGHTNING = this.register("cloud_lightning", new CloudLightningConduits(new Item.Settings()
+        .attackDamage(16)
+        .maxCooldown(40)
+        .unbreakable()
+    ));
+    public static readonly ARC_EMITTER = this.register("arc_emitter", new ArcEmitter(new Item.Settings()
+        .attackDamage(10)
+        .maxCooldown(4)
+        .maxDurability(100)
+        .component(DataComponentTypes.MAX_RELOAD_TIME, 46)
+    ));
+    public static readonly FOCUSED_ARC_EMITTER = this.register("focused_arc_emitter", new FocusedArcEmitter(new Item.Settings()
+        .attackDamage(48)
+        .maxCooldown(32)
+        .unbreakable()
     ));
 
     // 避免引用问题

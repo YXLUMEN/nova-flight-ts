@@ -121,4 +121,8 @@ export class BinaryReader {
     public getBuffer() {
         return new Uint8Array(this.view.buffer);
     }
+
+    public getOffset(): number {
+        return this.offset;
+    }
 }

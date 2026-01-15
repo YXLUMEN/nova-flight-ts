@@ -1,4 +1,4 @@
-import {distanceVec2} from "../utils/math/math.ts";
+import {squareDistVec2} from "../utils/math/math.ts";
 import type {EntityFilter} from "./SelectorArguments.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {BiConsumer} from "../apis/types.ts";
@@ -12,12 +12,12 @@ export class EntitySelector {
     };
     public static readonly NEAREST: BiConsumer<IVec, Entity[]> = (pos, entities) => {
         entities.sort((e1, e2) => {
-            return distanceVec2(e1.getPositionRef, pos) - distanceVec2(e2.getPositionRef, pos)
+            return squareDistVec2(e1.getPositionRef, pos) - squareDistVec2(e2.getPositionRef, pos)
         });
     };
     public static readonly FURTHEST: BiConsumer<IVec, Entity[]> = (pos, entities) => {
         entities.sort((e1, e2) => {
-            return distanceVec2(e2.getPositionRef, pos) - distanceVec2(e1.getPositionRef, pos)
+            return squareDistVec2(e2.getPositionRef, pos) - squareDistVec2(e1.getPositionRef, pos)
         });
     };
     public static readonly RANDOM: BiConsumer<IVec, Entity[]> = (_, entities) => {

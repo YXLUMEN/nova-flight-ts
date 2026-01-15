@@ -4,7 +4,7 @@ import type {Payload} from "../../network/Payload.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EntityPositionS2CPacket} from "../../network/packet/s2c/EntityPositionS2CPacket.ts";
 import {LivingEntity} from "../../entity/LivingEntity.ts";
-import {distanceVec2} from "../../utils/math/math.ts";
+import {squareDistVec2} from "../../utils/math/math.ts";
 import {EntityVelocityUpdateS2CPacket} from "../../network/packet/s2c/EntityVelocityUpdateS2CPacket.ts";
 import {EntityTrackerUpdateS2CPacket} from "../../network/packet/s2c/EntityTrackerUpdateS2CPacket.ts";
 import {TrackedPosition} from "../../entity/TrackedPosition.ts";
@@ -72,7 +72,7 @@ export class EntityTrackerEntry {
 
             if (this.alwaysUpdateVelocity || this.entity.velocityDirty) {
                 const velocity = this.entity.getVelocityRef;
-                const delta = distanceVec2(velocity, this.velocity);
+                const delta = squareDistVec2(velocity, this.velocity);
 
                 if (delta > 1E-7 || delta > 0 && velocity.lengthSquared() === 0) {
                     this.velocity = velocity;

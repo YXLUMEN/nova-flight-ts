@@ -3,8 +3,7 @@ import type {IVec} from "../../utils/math/IVec.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {createClean} from "../../utils/uit.ts";
-import {getNearestEntity, wrappedDelta} from "../../utils/math/math.ts";
-import {World} from "../../world/World.ts";
+import {getNearestEntity} from "../../utils/math/math.ts";
 import {Random} from "../../utils/math/Random.ts";
 
 export const Behavior = createClean({
@@ -51,18 +50,18 @@ export class MobAI {
         switch (this.behavior) {
             case Behavior.Chase:
                 this.moveToward(mob, speed);
-                this.faceTarget(mob, this.targetPos, 0.19634375, false);
+                this.faceTarget(mob, this.targetPos, 0.19634375);
                 break;
             case Behavior.Flee:
                 this.moveAway(mob, this.targetPos, speed);
-                this.faceTarget(mob, this.targetPos, 0.19634375, false);
+                this.faceTarget(mob, this.targetPos, 0.19634375);
                 break;
             case Behavior.Simple:
                 MobAI.simpleMove(mob);
                 break;
             default:
                 this.wander(mob, speed);
-                this.faceTarget(mob, this.targetPos, 0.19634375, false);
+                this.faceTarget(mob, this.targetPos, 0.19634375);
                 break;
         }
     }
@@ -119,12 +118,14 @@ export class MobAI {
     }
 
     private moveToward(mob: MobEntity, speed: number): void {
+        if (speed <= 0) return;
         const yaw = mob.getYaw();
         this.dir.set(Math.cos(yaw), Math.sin(yaw));
         mob.updateVelocity(speed, this.dir.x, this.dir.y);
     }
 
     private moveAway(mob: MobEntity, target: IVec, speed: number): void {
+        if (speed <= 0) return;
         const pos = mob.getPositionRef;
         const dx = pos.x - target.x;
         const dy = pos.y - target.y;
@@ -132,9 +133,9 @@ export class MobAI {
         mob.updateVelocity(speed, this.dir.x, this.dir.y);
     }
 
-    public faceTarget(mob: MobEntity, target: IVec, maxStep: number = 0.19634375, wrap = false): void {
+    public faceTarget(mob: MobEntity, target: IVec, maxStep: number = 0.19634375): void {
         const pos = mob.getPositionRef;
-        const dx = wrap ? wrappedDelta(target.x, pos.x, World.WORLD_W) : target.x - pos.x;
+        const dx = target.x - pos.x;
         const dy = target.y - pos.y;
         mob.setClampYaw(Math.atan2(dy, dx), maxStep);
     }

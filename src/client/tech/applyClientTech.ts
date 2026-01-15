@@ -203,5 +203,17 @@ export function applyClientTech(tech: RegistryEntry<Tech>): void {
             player.followPointer = true;
             break;
         }
+        case Techs.CLOUD_LIGHTNING: {
+            player.addItem(Items.CLOUD_LIGHTNING);
+            break;
+        }
+        case Techs.ARC_EMITTER: {
+            player.addItem(Items.ARC_EMITTER);
+            break;
+        }
+        case Techs.FOCUSED_ARC_EMITTER: {
+            player.addItem(Items.FOCUSED_ARC_EMITTER);
+            break;
+        }
     }
 }

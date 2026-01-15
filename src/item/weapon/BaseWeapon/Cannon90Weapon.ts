@@ -10,7 +10,7 @@ import type {ServerWorld} from "../../../server/ServerWorld.ts";
 export class Cannon90Weapon extends BaseWeapon {
     private readonly speed = 16;
 
-    protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity) {
+    protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
         const bullet = new ExplodeBulletEntity(EntityTypes.EXPLODE_BULLET_ENTITY,
             world, attacker, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1), {
                 explosionRadius: stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 16),

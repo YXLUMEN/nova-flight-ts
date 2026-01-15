@@ -27,7 +27,7 @@ import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
 import type {Explosion} from "../world/Explosion.ts";
 import {ExplosionS2CPacket} from "../network/packet/s2c/ExplosionS2CPacket.ts";
 import {ServerDefaultEvents} from "./event/ServerDefaultEvents.ts";
-import type {MutVec2} from "../utils/math/MutVec2.ts";
+import {type MutVec2} from "../utils/math/MutVec2.ts";
 import {ParticleS2CPacket} from "../network/packet/s2c/ParticleS2CPacket.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {encodeColorHex, encodeToUnsignedByte} from "../utils/NetUtil.ts";
@@ -36,6 +36,7 @@ import {EffectCreateS2CPacket} from "../network/packet/s2c/EffectCreateS2CPacket
 import type {ServerChannel} from "./network/ServerChannel.ts";
 import {warn} from "@tauri-apps/plugin-log";
 import {GameOverS2CPacket} from "../network/packet/s2c/GameOverS2CPacket.ts";
+import {EMPBurst} from "../effect/EMPBurst.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
@@ -275,6 +276,11 @@ export class ServerWorld extends World implements NbtSerializable {
 
         this.events.emit(EVENTS.EXPLOSION, {entity, damage, x, y, opts});
         return explosion;
+    }
+
+    public override createEMP(attacker: Entity | null, pos: MutVec2, radius: number, duration: number = 40, damage: number) {
+        super.createEMP(attacker, pos, radius, duration, damage);
+        this.spawnEffect(null, new EMPBurst(pos, radius));
     }
 
     public spawnParticle(

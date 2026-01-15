@@ -7,6 +7,7 @@ export class DamageTypeTags {
     public static readonly BYPASSES_INVULNERABLE = this.of('bypasses_invulnerable');
     public static readonly BYPASSES_EFFECTS = this.of("bypasses_effects");
     public static readonly BYPASSES_RESISTANCE = this.of("bypasses_resistance");
+    public static readonly BYPASSES_SHIELD = this.of('bypasses_shield');
     public static readonly NOT_GAIN_SCORE = this.of("not_gain_score");
     public static readonly INCENDIARY = this.of("incendiary");
     public static readonly REPLY_LASER = this.of("reply_laser");

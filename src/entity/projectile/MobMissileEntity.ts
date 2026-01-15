@@ -4,7 +4,7 @@ import type {EntityType} from "../EntityType.ts";
 import type {Entity} from "../Entity.ts";
 import {DecoyEntity} from "../DecoyEntity.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
-import {distanceVec2, getNearestEntity} from "../../utils/math/math.ts";
+import {squareDistVec2, getNearestEntity} from "../../utils/math/math.ts";
 
 export class MobMissileEntity extends MissileEntity {
     protected override maxReLockCD = 15;
@@ -40,7 +40,7 @@ export class MobMissileEntity extends MissileEntity {
             let minDist = Infinity;
 
             for (const decoyEntity of decoyEntities) {
-                const d = distanceVec2(decoyEntity.getPositionRef, this.getPositionRef);
+                const d = squareDistVec2(decoyEntity.getPositionRef, this.getPositionRef);
                 if (d < minDist) {
                     minDist = d;
                     closest = decoyEntity;

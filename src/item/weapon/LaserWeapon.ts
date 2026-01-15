@@ -116,15 +116,17 @@ export class LaserWeapon extends SpecialWeapon {
             ));
         }
 
+        const damage = Math.max(1, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1));
+        const damageSource = world.getDamageSources().laser(holder);
+
         const mobs = (world as ServerWorld).getMobs();
         for (const mob of mobs) {
-            if (mob.isRemoved() ||
-                !lineCircleHit(
-                    start.x, start.y, end.x, end.y,
-                    mob.getPositionRef.x, mob.getPositionRef.y, mob.getWidth())) continue;
-
-            const damage = Math.max(1, Math.round(stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1) | 0));
-            mob.takeDamage(world.getDamageSources().laser(holder), damage);
+            const pos = mob.getPositionRef;
+            if (!mob.isRemoved() && lineCircleHit(
+                start.x, start.y, end.x, end.y,
+                pos.x, pos.y, mob.getWidth())) {
+                mob.takeDamage(damageSource, damage);
+            }
         }
     }
 

@@ -1,9 +1,7 @@
 import {config, createClean} from "../utils/uit.ts";
 
-const meta = import.meta;
-
 // @ts-expect-error
-const isDev = meta?.env !== undefined ? import.meta.env.MODE === 'development' : true;
+const isDev = import.meta.env.MODE === 'development';
 
 const isServer = typeof window === 'undefined';
 
@@ -13,7 +11,7 @@ const defaultConfig = config({
     per: 50,
     fps: 75,
     perFrame: 1000 / 75,
-    version: '26v01'
+    version: '26v02'
 });
 
 const WorldConfig = Object.seal(createClean({

@@ -17,6 +17,7 @@ import {CIWSBulletEntity} from "./projectile/CIWSBulletEntity.ts";
 import {ADSEntity} from "./ADSEntity.ts";
 import {MobMissileEntity} from "./projectile/MobMissileEntity.ts";
 import {FastBulletEntity} from "./projectile/FastBulletEntity.ts";
+import {CloudLightningEntity} from "./projectile/CloudLightningEntity.ts";
 
 export class EntityTypes {
     public static readonly BASE_ENEMY = EntityType.register("base_enemy",
@@ -99,6 +100,11 @@ export class EntityTypes {
         EntityType.Builder.create(ADSEntity)
             .setDimensions(16, 16)
             .setTrackingTickInterval(20)
+    );
+    public static readonly CLOUD_LIGHTNING_ENTITY = EntityType.register("cloud_lightning",
+        EntityType.Builder.create(CloudLightningEntity)
+            .setDimensions(20, 20)
+            .setTrackingTickInterval(10)
     );
 
     public static init() {

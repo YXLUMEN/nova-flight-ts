@@ -10,6 +10,7 @@ import {RadialRing} from "./RadialRing.ts";
 import {ScreenFlash} from "./ScreenFlash.ts";
 import {WindowOverlay} from "./WindowOverlay.ts";
 import {VisualEffectType} from "./VisualEffectType.ts";
+import {ArcEffect} from "./ArcEffect.ts";
 
 export class VisualEffectTypes {
     public static readonly EDGE_GLOW: VisualEffectType<EdgeGlowEffect> = this.registry('edge_glow',
@@ -32,6 +33,9 @@ export class VisualEffectTypes {
     );
     public static readonly WINDOW_OVERLAY: VisualEffectType<WindowOverlay> = this.registry('window_overlay',
         VisualEffectType.create(WindowOverlay, WindowOverlay.PACKET_CODEC)
+    );
+    public static readonly ARC: VisualEffectType<ArcEffect> = this.registry('arc',
+        VisualEffectType.create(ArcEffect, ArcEffect.PACKET_CODEC)
     );
 
     private static registry<T extends VisualEffect>(

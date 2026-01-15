@@ -10,7 +10,7 @@ import {PlayerMoveC2SPacket} from "../../network/packet/c2s/PlayerMoveC2SPacket.
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import {PlayerYawC2SPacket} from "../../network/packet/c2s/PlayerYawC2SPacket.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
-import {distanceVec2, doubleEquals, wrapRadians} from "../../utils/math/math.ts";
+import {squareDistVec2, doubleEquals, wrapRadians} from "../../utils/math/math.ts";
 import {type ItemStack} from "../../item/ItemStack.ts";
 import {PlayerMoveByPointerC2SPacket} from "../../network/packet/c2s/PlayerMoveByPointerC2SPacket.ts";
 import {encodeVelocity} from "../../utils/NetUtil.ts";
@@ -122,7 +122,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
                     this.approachMissile.delete(missile);
                     continue;
                 }
-                if (distanceVec2(missile.getPositionRef, this.getPositionRef) <= 1E5) {
+                if (squareDistVec2(missile.getPositionRef, this.getPositionRef) <= 1E5) {
                     this.approachMissile.add(missile);
                 } else {
                     this.approachMissile.delete(missile);

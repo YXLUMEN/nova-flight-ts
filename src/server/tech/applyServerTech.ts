@@ -197,5 +197,17 @@ export function applyServerTech(tech: RegistryEntry<Tech>, player: ServerPlayerE
             player.addItem(Items.CIWS_WEAPON);
             break;
         }
+        case Techs.CLOUD_LIGHTNING: {
+            player.addItem(Items.CLOUD_LIGHTNING);
+            break;
+        }
+        case Techs.ARC_EMITTER:{
+            player.addItem(Items.ARC_EMITTER);
+            break;
+        }
+        case Techs.FOCUSED_ARC_EMITTER: {
+            player.addItem(Items.FOCUSED_ARC_EMITTER);
+            break;
+        }
     }
 }

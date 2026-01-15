@@ -45,7 +45,6 @@ export abstract class BaseWeapon extends Weapon {
         stack.setDurability(currentAmmo - this.getAmmoConsume());
         this.onFire(stack, world as ServerWorld, attacker);
 
-        // fire rate
         this.setCooldown(stack, this.getFireRate(stack));
         player.syncStack(stack);
     }

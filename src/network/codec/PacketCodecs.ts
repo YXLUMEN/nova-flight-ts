@@ -318,7 +318,6 @@ export class PacketCodecs {
      *
      * ONLY use for plain data classes with:
      *  - Public, writable, non-method fields
-     *  - Better a no-arg constructor (`new C()`)
      *  - Stable field names (no renaming in production)
      *
      *  Type safety is NOT guaranteed. Field order = wire order.
@@ -341,9 +340,6 @@ export class PacketCodecs {
             encode(writer: BinaryWriter, object: T) {
                 for (const [key, codec] of entries) {
                     const value = object[key];
-                    if (value === undefined) {
-                        throw new Error(`[PacketCodecs.reflection] Field "${String(key)}" is undefined on ${object}`);
-                    }
                     codec.encode(writer, value);
                 }
             },

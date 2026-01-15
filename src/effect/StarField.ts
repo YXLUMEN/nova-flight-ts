@@ -81,19 +81,6 @@ export class StarField {
     public update(dt: number, cam: Camera) {
         const v = cam.viewRect, m = this.margin;
 
-        const jumpX = cam.viewOffset.x - this.lastCamPos.x;
-        const jumpY = cam.viewOffset.y - this.lastCamPos.y;
-
-        if (Math.abs(jumpX) > World.WORLD_W / 2 || Math.abs(jumpY) > World.WORLD_H / 2) {
-            for (let li = 0; li < this.layers.length; li++) {
-                const L = this.layers[li];
-                for (let i = this.start[li]; i < this.end[li]; i++) {
-                    this.currX[i] += jumpX * L.parallax;
-                    this.currY[i] += jumpY * L.parallax;
-                }
-            }
-        }
-
         this.lastCamPos.x = cam.viewOffset.x;
         this.lastCamPos.y = cam.viewOffset.y;
 

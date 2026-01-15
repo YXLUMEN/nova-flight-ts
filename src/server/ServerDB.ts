@@ -24,7 +24,7 @@ export class ServerDB {
     public static async saveWorld(saveName: string, compound: NbtCompound): Promise<void> {
         return void this.db.update('saves', {
             save_name: saveName,
-            data: compound.toBinary(),
+            data: compound.toCompactBinary(),
             timestamp: Date.now(),
             version: NbtCompound.VERSION
         } satisfies Save);
@@ -41,7 +41,7 @@ export class ServerDB {
         return void this.db.update('player_data', {
             save_name,
             uuid,
-            data: nbt.toBinary(),
+            data: nbt.toCompactBinary(),
             version: NbtCompound.VERSION
         } satisfies PlayerData);
     }
@@ -54,7 +54,7 @@ export class ServerDB {
         const data = optional.get().data;
         if (!data) return null;
         if (optional.get().version !== NbtCompound.VERSION) return null;
-        return NbtCompound.fromBinary(data);
+        return NbtCompound.fromCompactBinary(data);
     }
 
     public static async loadPlayer(player: ServerPlayerEntity): Promise<NbtCompound | null> {
@@ -70,7 +70,7 @@ export class ServerDB {
         const data = optional.get().data;
         if (!data) return null;
         if (optional.get().version !== NbtCompound.VERSION) return null;
-        return NbtCompound.fromBinary(data)
+        return NbtCompound.fromCompactBinary(data)
     }
 
     public static async deleteWorld(saveName: string): Promise<Result<boolean, Error>> {

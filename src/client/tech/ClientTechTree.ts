@@ -26,6 +26,7 @@ export class ClientTechTree implements TechTree {
     public readonly playerScore = document.getElementById('player-money')!;
 
     private readonly submitBtn = document.getElementById('d-unlock') as HTMLButtonElement;
+    private readonly resetBtn = document.getElementById('reset') as HTMLButtonElement;
     private readonly resetAllBtn = document.getElementById('reset-all') as HTMLButtonElement;
     private readonly techTitle = document.getElementById('d-title')!;
     private readonly metaShow = document.getElementById('d-meta')!;
@@ -54,7 +55,6 @@ export class ClientTechTree implements TechTree {
         this.adj = this.buildAdjacency(techState);
 
         this.tryApply = this.tryApply.bind(this);
-        this.resetAllTech = this.resetAllTech.bind(this);
 
         container.textContent = '';
         const svgNS = 'http://www.w3.org/2000/svg';
@@ -109,6 +109,7 @@ export class ClientTechTree implements TechTree {
 
     public forceUnlock(tech: RegistryEntry<Tech>): void {
         this.state.forceUnlock(tech.getValue());
+        applyClientTech(tech);
     }
 
     public isUnlocked(tech: RegistryEntry<Tech>): boolean {
@@ -279,7 +280,18 @@ export class ClientTechTree implements TechTree {
 
         this.nodesLayer.addEventListener('dblclick', this.tryApply, {signal: this.abortCtrl.signal});
         this.submitBtn.addEventListener('click', this.tryApply, {signal: this.abortCtrl.signal});
-        this.resetAllBtn.addEventListener('click', this.resetAllTech, {signal: this.abortCtrl.signal});
+
+        this.resetBtn.addEventListener('click', () => {
+            const id = this.selectNodeId;
+            if (!id) return;
+            const tech = this.state.getTech(id);
+            if (!tech) return;
+            const entry = Registries.TECH.getEntryByValue(tech);
+            if (!entry) return;
+
+            this.resetTech(entry);
+        }, {signal: this.abortCtrl.signal});
+        this.resetAllBtn.addEventListener('click', this.resetAllTech.bind(this), {signal: this.abortCtrl.signal});
 
         this.setupPanZoom(this.container, this.abortCtrl);
     }
@@ -488,7 +500,6 @@ export class ClientTechTree implements TechTree {
 
         for (const tech of unlocked) {
             const entry = Registries.TECH.getEntryByValue(tech);
-            console.log(entry)
             if (entry) this.forceUnlock(entry);
         }
 

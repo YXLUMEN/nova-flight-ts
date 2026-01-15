@@ -11,7 +11,7 @@ import type {ServerWorld} from "../../../server/ServerWorld.ts";
 export class MiniGunWeapon extends BaseWeapon {
     private readonly speed = 45;
 
-    protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity) {
+    protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
         const bullet = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1));
         this.setBullet(bullet, attacker, this.speed, 4, 5);
         world.spawnEntity(bullet);

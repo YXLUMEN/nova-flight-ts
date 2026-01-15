@@ -11,7 +11,7 @@ import type {ServerWorld} from "../../../server/ServerWorld.ts";
 export class Cannon40Weapon extends BaseWeapon {
     private readonly speed = 35;
 
-    protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity) {
+    protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
         const bullet = new FastBulletEntity(EntityTypes.FAST_BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 3));
         this.setBullet(bullet, attacker, this.speed, 6, 2);
         world.spawnEntity(bullet);

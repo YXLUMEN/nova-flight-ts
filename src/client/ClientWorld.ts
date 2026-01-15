@@ -268,7 +268,7 @@ export class ClientWorld extends World {
         // 背景层
         this.drawBackground(ctx);
 
-        // 其他实体
+        // 其他实体. client 下 entities 不包含玩家
         for (const entity of this.entities.values()) {
             EntityRenderers.getRenderer(entity).render(entity, ctx, tickDelta, 0, 0);
         }

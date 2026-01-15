@@ -13,7 +13,7 @@ import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity
 export class CIWS extends BaseWeapon {
     private static readonly BULLET_SPEED = 60;
 
-    protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity) {
+    protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
         stack.set(DataComponentTypes.FIRING, true);
 
         const damage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);

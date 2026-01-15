@@ -50,6 +50,9 @@ export class Techs {
     public static EMERGENCY_WARP;
     public static NANOTECHNOLOGY;
     public static NANO_MENDING;
+    public static CLOUD_LIGHTNING;
+    public static ARC_EMITTER;
+    public static FOCUSED_ARC_EMITTER;
 
     static {
         const parsed = TechState.normalizeTechs(tech);
@@ -99,7 +102,10 @@ export class Techs {
         this.INSTANT_RESPONSE = registerFromJson('pointer_following');
         this.EMERGENCY_WARP = registerFromJson('emergency_warp');
         this.NANOTECHNOLOGY = registerFromJson('nanotechnology');
-        this.NANO_MENDING = registerFromJson('nano_mending')
+        this.NANO_MENDING = registerFromJson('nano_mending');
+        this.CLOUD_LIGHTNING = registerFromJson('cloud_lightning');
+        this.ARC_EMITTER = registerFromJson('arc_emitter');
+        this.FOCUSED_ARC_EMITTER = registerFromJson('focused_arc_emitter');
 
         Registries.TECH.getEntries().forEach(entry => entry.getValue().complete());
     }

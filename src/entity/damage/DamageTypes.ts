@@ -17,6 +17,7 @@ export class DamageTypes {
     public static readonly VOID = this.registry("void");
     public static readonly EROSION = this.registry("erosion");
     public static readonly AP_DAMAGE = this.registry("ap_damage");
+    public static readonly ARC = this.registry('arc');
 
     public static async init() {
         const damage = Registries.DAMAGE_TYPE;
@@ -32,6 +33,7 @@ export class DamageTypes {
         damage.add(this.VOID, 'void', DamageTypeTags.NOT_GAIN_SCORE);
         damage.add(this.EROSION, 'onFire', DamageTypeTags.REPLY_LASER);
         damage.add(this.AP_DAMAGE, 'apDamage', DamageTypeTags.BYPASSES_INVULNERABLE);
+        damage.add(this.ARC, 'arc', DamageTypeTags.REPLY_LASER, DamageTypeTags.BYPASSES_INVULNERABLE, DamageTypeTags.BYPASSES_EFFECTS);
     }
 
     private static registry(id: string) {

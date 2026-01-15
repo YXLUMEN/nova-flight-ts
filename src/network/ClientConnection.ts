@@ -1,8 +1,8 @@
 import type {Channel} from "./Channel.ts";
 import type {Payload} from "./Payload.ts";
-import {BatchBufferPacket} from "./packet/BatchBufferPacket.ts";
-import {PacketTooLargeError} from "../apis/errors.ts";
 import type {Connection} from "./Connection.ts";
+import {NetworkChannel} from "./NetworkChannel.ts";
+import {BatchBufferPacket} from "./packet/BatchBufferPacket.ts";
 
 export class ClientConnection implements Connection {
     private channel: Channel | null = null;
@@ -27,21 +27,29 @@ export class ClientConnection implements Connection {
     public flush(): void {
         if (!this.isOpen() || this.outboundBuffer.length === 0) return;
 
-        try {
-            const batch = new BatchBufferPacket(this.outboundBuffer);
-            this.channel!.send(batch);
-            this.outboundBuffer.length = 0;
-        } catch (error) {
-            if (error instanceof PacketTooLargeError) {
-                console.warn('Batch too large, falling back to individual sends')
-            } else {
-                throw error;
+        let size = 0;
+        const buffer: Payload[] = [];
+        for (const payload of this.outboundBuffer) {
+            if (!payload.estimateSize) {
+                this.channel!.send(payload);
+                continue;
             }
+
+            const est = payload.estimateSize();
+            if (size + est > NetworkChannel.MAX_PACKET_SIZE) {
+                this.channel!.send(new BatchBufferPacket(buffer));
+                buffer.length = 0;
+                size = 0;
+            }
+
+            buffer.push(payload);
+            size += est;
         }
 
-        for (const packet of this.outboundBuffer) {
-            this.channel!.send(packet);
+        if (buffer.length > 0) {
+            this.channel!.send(new BatchBufferPacket(buffer));
         }
+
         this.outboundBuffer.length = 0;
     }
 
