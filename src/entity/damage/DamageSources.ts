@@ -8,6 +8,7 @@ import {RegistryManager} from "../../registry/RegistryManager.ts";
 import {RegistryKeys} from "../../registry/RegistryKeys.ts";
 import type {PlayerEntity} from "../player/PlayerEntity.ts";
 import type {MobEntity} from "../mob/MobEntity.ts";
+import type {Explosion} from "../../world/Explosion.ts";
 
 export class DamageSources {
     private readonly registry: Registry<DamageType>;
@@ -64,11 +65,16 @@ export class DamageSources {
         return this.createWithSource(DamageTypes.AP_DAMAGE, source, attacker);
     }
 
+    public explosionInstance(explosion: Explosion | null) {
+        return explosion !== null ?
+            this.explosion(explosion.getSource(), explosion.getCausingEntity()) :
+            this.explosion(null, null);
+    }
+
     public explosion(source: Entity | null, attacker: Entity | null) {
-        if (source) {
-            return this.createWithSource(DamageTypes.EXPLOSION, source, attacker);
-        }
-        return this._explosion;
+        return source !== null ?
+            this.createWithSource(DamageTypes.EXPLOSION, source, attacker) :
+            this._explosion;
     }
 
     public laser(attacker: Entity | null) {

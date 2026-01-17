@@ -8,11 +8,10 @@ import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 export class BombWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
         if (!world.isClient) {
-            world.createExplosion(null, null, attacker.getX(), attacker.getY(), {
+            world.createExplosion(attacker, null, attacker.getX(), attacker.getY(), {
                 damage: stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 16),
                 explosionRadius: stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 256),
                 shake: 0.3,
-                attacker,
             });
         }
 

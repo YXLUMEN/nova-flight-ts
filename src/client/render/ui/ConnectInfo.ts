@@ -93,6 +93,7 @@ export class ConnectInfo implements IUi {
     public destroy(): void {
         this.running = false;
         this.ctrl.abort();
+        this.backBtn = null;
         this.resolve();
     }
 

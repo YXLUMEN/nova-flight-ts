@@ -28,23 +28,24 @@ import type {StartServer} from "../apis/startup.ts";
 import {PlayerInputC2SPacket} from "../network/packet/c2s/PlayerInputC2SPacket.ts";
 
 export class NovaFlightClient {
+    private static readonly SERVER_SHUTDOWN_TIMEOUT = 5000;
+    private static readonly SERVER_START_TIMEOUT = 8000;
+
     private static instance: NovaFlightClient;
+    public readonly clientId: UUID;
+    public playerName: string;
 
     public readonly window: Window;
     public readonly input: KeyboardInput;
+
     public readonly networkChannel: ClientNetworkChannel;
     public readonly networkHandler: ClientPlayNetworkHandler;
 
-    public readonly clientId: UUID;
-    public readonly registryManager: RegistryManager;
-    public readonly clientCommandManager: ClientCommandManager;
-    public readonly clientChat: ClientChat;
-    public playerName: string;
+    private server: ServerWorker | null = null;
+    private isIntegrated = false;
 
     public world: ClientWorld | null = null;
     public player: ClientPlayerEntity | null = null;
-    private server: ServerWorker | null = null;
-    private isIntegrated = false;
 
     private multiGameManager: ClientMultiGameManger;
     public connectInfo: ConnectInfo | null = null;
@@ -53,11 +54,16 @@ export class NovaFlightClient {
     private last = 0;
     private accumulator = 0;
     private lastRenderTime = 0;
+    private bindRender = this.render.bind(this);
 
+    private gameOverAbort: AbortController | null = null;
     private waitWorldStop: Promise<void> | null = null;
     private stopWorld: Supplier<void> = () => {
     };
-    private bindRender = this.render.bind(this);
+
+    public readonly registryManager: RegistryManager;
+    public readonly clientCommandManager: ClientCommandManager;
+    public readonly clientChat: ClientChat;
 
     public constructor() {
         NovaFlightClient.instance = this;
@@ -90,10 +96,10 @@ export class NovaFlightClient {
         this.clientChat = new ClientChat(this);
 
         this.input = new KeyboardInput(this.window.canvas);
-        this.input.onKeyDown('world_input', this.registryInput.bind(this));
+        this.input.onKeyDown(this.registryInput.bind(this));
         this.registryListener();
 
-        this.createPromise();
+        this.createWorldStopPromise();
     }
 
     public static getInstance(): NovaFlightClient {
@@ -110,18 +116,20 @@ export class NovaFlightClient {
         }
 
         while (true) {
-            if (this.waitWorldStop === null) this.createPromise();
+            if (this.waitWorldStop === null) this.createWorldStopPromise();
+
             this.networkHandler.registryHandler();
 
+            // wait for user input
             const startScreen = new StartScreen(this.window.ctx, {
                 title: `Nova Flight (${WorldConfig.version})`,
                 subtitle: '点击按钮 开始',
             });
-            startScreen.setSize(Window.VIEW_W, Window.VIEW_H);
-            startScreen.start();
 
             const action = await startScreen.onConfirm();
+
             if (action === -1) break;
+
             if (action < 2) {
                 this.isIntegrated = true;
                 await this.startIntegratedServer(action);
@@ -133,6 +141,8 @@ export class NovaFlightClient {
 
             await this.waitWorldStop;
 
+            // cleanup
+            this.gameOverAbort?.abort();
             this.networkChannel.disconnect();
             this.networkHandler.clear();
             if (this.isIntegrated) {
@@ -157,9 +167,9 @@ export class NovaFlightClient {
         this.clientCommandManager.clearParseCache();
     }
 
-    public async leaveGame() {
+    public leaveGame() {
         this.networkHandler.disconnect();
-        this.scheduleStop();
+        this.requestStop();
     }
 
     private render(ts: number) {
@@ -185,6 +195,7 @@ export class NovaFlightClient {
                 world.render(alpha);
                 this.lastRenderTime = ts;
             }
+
             requestAnimationFrame(this.bindRender);
         } catch (err) {
             const msg = err instanceof Error ?
@@ -198,7 +209,7 @@ export class NovaFlightClient {
     }
 
     private tickWorld(dt: number) {
-        if (this.world && (this.world.isTicking || this.world.isMultiPlayerWorld())) {
+        if (this.world && (this.world.isTicking || this.world.tickWhenMultiPlayer())) {
             this.world.tick(dt);
         }
 
@@ -206,7 +217,7 @@ export class NovaFlightClient {
         this.input.updateEndFrame();
     }
 
-    private createPromise(): void {
+    private createWorldStopPromise(): void {
         const {promise, resolve} = Promise.withResolvers<void>();
         this.waitWorldStop = promise;
         this.stopWorld = () => {
@@ -235,7 +246,7 @@ export class NovaFlightClient {
                 this.server?.terminate();
                 this.server = null;
                 serverShutdown();
-            }, 5000);
+            }, NovaFlightClient.SERVER_SHUTDOWN_TIMEOUT);
 
             this.server.postMessage({type: 'stop_server'});
             this.server.getWorker()!.addEventListener('message', event => {
@@ -260,13 +271,14 @@ export class NovaFlightClient {
         this.networkChannel.setServerAddress(address);
 
         const connectInfo = new ConnectInfo(this.window.ctx, this.stopWorld.bind(this));
+        this.connectInfo?.destroy();
         this.connectInfo = connectInfo;
         connectInfo.setMessage('尝试连接...');
 
         const result = await this.networkChannel.sniff(
             address,
-            2000,
-            5,
+            1000,
+            3,
             (num, max) => {
                 connectInfo.setMessage(`尝试连接(${num + 1}/${max})...`);
             });
@@ -296,6 +308,7 @@ export class NovaFlightClient {
 
         // 全屏提示
         const connectInfo = new ConnectInfo(this.window.ctx, this.stopWorld.bind(this));
+        this.connectInfo?.destroy();
         this.connectInfo = connectInfo;
         this.connectInfo.setMessage('准备启动内置服务器...');
 
@@ -360,7 +373,7 @@ export class NovaFlightClient {
         const startTimeout = setTimeout(() => {
             connectInfo.setError('连接超时');
             server.terminate();
-        }, 8000);
+        }, NovaFlightClient.SERVER_START_TIMEOUT);
 
         worker.onmessage = event => {
             const type = event.data.type;
@@ -381,7 +394,7 @@ export class NovaFlightClient {
 
             console.error(msg);
             error(msg);
-            this.scheduleStop();
+            this.requestStop();
         }
 
         server.postMessage({
@@ -409,8 +422,21 @@ export class NovaFlightClient {
         return this.running;
     }
 
-    public scheduleStop(): void {
+    public requestStop(): void {
         this.running = false;
+    }
+
+    public onGameOver(): void {
+        this.networkHandler.clear();
+
+        document.getElementById('tech-shell')!.classList.add('hidden');
+
+        const ctrl = new AbortController();
+        this.gameOverAbort?.abort();
+        this.gameOverAbort = ctrl;
+        window.addEventListener('keydown', () => {
+            this.leaveGame();
+        }, {signal: ctrl.signal, once: true});
     }
 
     // 其他
@@ -482,7 +508,7 @@ export class NovaFlightClient {
 
         if (world && world.isOver) {
             this.networkHandler.disconnect();
-            this.scheduleStop();
+            this.requestStop();
             return;
         }
 
@@ -505,14 +531,15 @@ export class NovaFlightClient {
             case 'Escape': {
                 const techTree = document.getElementById('tech-shell')!;
                 if (!techTree.classList.contains('hidden')) {
-                    world?.toggleTechTree();
+                    this.toggleTechTree();
                     return;
                 }
                 world?.togglePause();
                 break;
             }
             case 'KeyG':
-                world?.toggleTechTree();
+                this.toggleTechTree();
+                if (!this.networkChannel.isOpen()) return;
                 this.networkChannel.send(new PlayerInputC2SPacket('KeyG'));
                 break;
             case 'KeyL':
@@ -521,6 +548,14 @@ export class NovaFlightClient {
             case 'KeyM':
                 if (this.player) this.player.assistedAiming = !this.player.assistedAiming;
                 break;
+        }
+    }
+
+    private toggleTechTree() {
+        const ticking = document.getElementById('tech-shell')!.classList.toggle('hidden');
+        if (this.world) {
+            this.world.rendering = ticking;
+            this.world.setTicking(ticking);
         }
     }
 
@@ -562,14 +597,6 @@ export class NovaFlightClient {
                 this.server?.postMessage({type: 'crash_the_server'});
                 break;
         }
-    }
-
-    public onGameOver(): void {
-        const ctrl = new AbortController();
-        window.addEventListener('keydown', () => {
-            ctrl.abort();
-            return void this.leaveGame();
-        }, {signal: ctrl.signal});
     }
 
     private registryListener(): void {

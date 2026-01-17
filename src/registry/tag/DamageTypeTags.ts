@@ -11,6 +11,8 @@ export class DamageTypeTags {
     public static readonly NOT_GAIN_SCORE = this.of("not_gain_score");
     public static readonly INCENDIARY = this.of("incendiary");
     public static readonly REPLY_LASER = this.of("reply_laser");
+    public static readonly NOT_TRIGGER_EROSION = this.of("not_trigger_erosion");
+    public static readonly NOT_TRIGGER_AP = this.of("not_trigger_ap");
 
     private static of(id: string): TagKey<DamageType> {
         return TagKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.ofVanilla(id));

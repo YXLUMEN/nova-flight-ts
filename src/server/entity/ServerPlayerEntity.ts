@@ -12,7 +12,7 @@ import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacke
 import type {GameProfile} from "./GameProfile.ts";
 import {type DamageSource} from "../../entity/damage/DamageSource.ts";
 import type {ServerPlayNetworkHandler} from "../network/ServerPlayNetworkHandler.ts";
-import {type StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
+import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
 import {type Entity} from "../../entity/Entity.ts";
 import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
 import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
@@ -129,6 +129,16 @@ export class ServerPlayerEntity extends PlayerEntity {
         super.kill();
     }
 
+    public override onDeath(damageSource: DamageSource) {
+        super.onDeath(damageSource);
+
+        const mag = Math.random() > 0.5 ?
+            `${this.getProfile().name} 船毁人亡` :
+            `${this.getProfile().name} 坠机了`;
+
+        this.networkHandler?.broadcast(new GameMessageS2CPacket(mag));
+    }
+
     public override addScore(score: number) {
         super.addScore(score);
         (this.getWorld() as ServerWorld).addPhase(score);
@@ -152,6 +162,31 @@ export class ServerPlayerEntity extends PlayerEntity {
     protected override onStatusEffectRemoved(effect: StatusEffectInstance) {
         super.onStatusEffectRemoved(effect);
         this.networkHandler?.send(new RemoveEntityStatusEffectS2CPacket(this.getId(), effect.getEffectType()));
+    }
+
+    public copyFrom(oldPlayer: ServerPlayerEntity, alive: boolean): void {
+        this.setDevMode(oldPlayer.isDevMode());
+        this.getAttributes().setBaseFrom(oldPlayer.getAttributes());
+        this.setHealth(this.getMaxHealth());
+
+        if (alive) {
+            this.setHealth(oldPlayer.getHealth());
+
+            for (const [item, stack] of oldPlayer.getInventory()) {
+                this.addItem(item, stack);
+            }
+            for (const effect of oldPlayer.getStatusEffects()) {
+                this.addStatusEffect(StatusEffectInstance.fromOther(effect), null);
+            }
+
+            this.setScore(oldPlayer.getScore());
+        } else {
+            this.setScore(oldPlayer.getScore() * 0.5);
+        }
+
+        for (const tag of oldPlayer.getNormalTags()) {
+            this.addNormalTag(tag);
+        }
     }
 
     public nextRevision(): number {

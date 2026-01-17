@@ -47,6 +47,9 @@ export class StartScreen implements IUi {
         };
 
         this.starField.init();
+
+        this.setSize(Window.VIEW_W, Window.VIEW_H);
+        this.start();
     }
 
     public start() {

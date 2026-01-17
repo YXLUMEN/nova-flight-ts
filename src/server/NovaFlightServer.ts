@@ -7,7 +7,7 @@ import {ServerReadyS2CPacket} from "../network/packet/s2c/ServerReadyS2CPacket.t
 import {ServerCommandSource} from "./command/ServerCommandSource.ts";
 import type {CommandOutput} from "./command/CommandOutput.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
-import {ServerCommandManager} from "./ServerCommandManager.ts";
+import {ServerCommandManager} from "./command/ServerCommandManager.ts";
 import {PlayerManager} from "./entity/PlayerManager.ts";
 import {GameProfile} from "./entity/GameProfile.ts";
 import {ServerNetworkHandler} from "./network/ServerNetworkHandler.ts";

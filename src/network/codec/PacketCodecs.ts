@@ -73,6 +73,11 @@ export class PacketCodecs {
         reader => NbtCompound.fromReader(reader)
     );
 
+    public static readonly COMPACT_NBT: PacketCodec<NbtCompound> = PacketCodecs.of(
+        (writer, value) => writer.pushBytes(value.toCompactBinary()),
+        reader => NbtCompound.fromCompactBinary(reader.getBuffer())
+    );
+
     public static readonly COLOR_HEX: PacketCodec<string> = PacketCodecs.of(
         (writer, value) => writer.writeUint32(encodeColorHex(value)),
         reader => decodeColorToHex(reader.readUint32())

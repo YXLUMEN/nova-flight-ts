@@ -16,9 +16,9 @@ pub fn format_uuid(bytes: &[u8; 16]) -> String {
     )
 }
 
-pub fn parse_excludes(cursor: &[u8], count: usize) -> Result<(Vec<u8>, &[u8]), &'static str> {
+pub fn parse_session_id(cursor: &[u8], count: usize) -> Result<(Vec<u8>, &[u8]), &'static str> {
     if cursor.len() < count {
-        return Err("Not enough bytes for excludes");
+        return Err("Not enough bytes for parsing");
     }
 
     let excludes = cursor[..count].to_vec();

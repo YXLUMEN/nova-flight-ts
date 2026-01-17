@@ -7,6 +7,7 @@ import type {ServerChannel} from "./ServerChannel.ts";
 import {BinaryReader} from "../../nbt/BinaryReader.ts";
 import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
 import type {GameProfile} from "../entity/GameProfile.ts";
+import {PacketTooLargeError} from "../../apis/errors.ts";
 
 export class ServerNetworkChannel extends NetworkChannel implements ServerChannel {
     private readonly secretKey: Uint8Array;
@@ -16,6 +17,23 @@ export class ServerNetworkChannel extends NetworkChannel implements ServerChanne
     public constructor(address: string, secretKey: Uint8Array) {
         super(address, PayloadTypeRegistry.playS2C());
         this.secretKey = secretKey;
+    }
+
+    /**
+     * 触发中继服务器操作
+     * 必须由 0xFF 开头
+     * */
+    public action(buffer: Uint8Array) {
+        if (buffer[0] !== 0xff) {
+            console.warn('Relay action packet must start with 0xFF');
+            return;
+        }
+
+        if (buffer.length > NetworkChannel.MAX_PACKET_SIZE) {
+            throw new PacketTooLargeError(`Action packet exceeds 6144 bytes: ${buffer.length}`);
+        }
+
+        this.ws!.send(buffer);
     }
 
     public sendTo<T extends Payload>(payload: T, target: GameProfile) {

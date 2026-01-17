@@ -5,10 +5,10 @@ import {createClean} from "../utils/uit.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
 import type {IVec} from "../utils/math/IVec.ts";
-import type {ExpendExplosionOpts} from "./IExplosionOpts.ts";
 import type {Tech} from "../tech/Tech.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import type {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
+import type {Explosion} from "../world/Explosion.ts";
 
 export const EVENTS = createClean({
     ENTITY_REMOVED: "entity:mob:removed",
@@ -35,13 +35,7 @@ export type IEvents = {
     [EVENTS.UNLOCK_TECH]: { tech: Tech };
     [EVENTS.UNLOCK_TECH_SERVER]: { tech: RegistryEntry<Tech>, player: ServerPlayerEntity };
     [EVENTS.REVOKE_TECH_SERVER]: { tech: RegistryEntry<Tech>, player: ServerPlayerEntity };
-    [EVENTS.EXPLOSION]: {
-        entity: Entity | null,
-        damage: DamageSource | null,
-        x: number,
-        y: number,
-        opts: ExpendExplosionOpts
-    };
+    [EVENTS.EXPLOSION]: { explosion: Explosion };
     [EVENTS.EMP_BURST]: { entity: Entity, duration: number };
     [EVENTS.STAGE_ENTER]: { name: string };
     [EVENTS.STAGE_EXIT]: { name: string };

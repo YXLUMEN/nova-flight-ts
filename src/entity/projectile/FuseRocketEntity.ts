@@ -5,6 +5,7 @@ import type {Entity} from "../Entity.ts";
 
 export class FuseRocketEntity extends RocketEntity {
     private fuse: number;
+    public playSound = true;
 
     public constructor(type: EntityType<RocketEntity>, world: World, owner: Entity | null, damage: number = 8, fuse: number = 20) {
         super(type, world, owner, damage);
@@ -17,5 +18,16 @@ export class FuseRocketEntity extends RocketEntity {
             this.explode();
             this.discard();
         }
+    }
+
+    public override explode() {
+        this.getWorld().createExplosion(this, null, this.getX(), this.getY(), {
+            damage: this.explosionDamage,
+            explosionRadius: this.explosionRadius,
+            fastSparks: 2,
+            sparks: 5,
+            explodeColor: this.explodeColor,
+            playSound: this.playSound
+        });
     }
 }

@@ -12,16 +12,15 @@ import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
 import type {MobEntity} from "../../entity/mob/MobEntity.ts";
 import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
-import {DamageTypes} from "../../entity/damage/DamageTypes.ts";
 import type {DamageSource} from "../../entity/damage/DamageSource.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {Items} from "../../item/Items.ts";
 import type {LaserWeapon} from "../../item/weapon/LaserWeapon.ts";
-import type {ExpendExplosionOpts} from "../../apis/IExplosionOpts.ts";
 import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {Audios} from "../../sound/Audios.ts";
 import {Techs} from "../../tech/Techs.ts";
 import {AudioStopS2CPacket} from "../../network/packet/s2c/AudioStopS2CPacket.ts";
+import type {Explosion} from "../../world/Explosion.ts";
 
 export class ServerDefaultEvents {
     public static registerEvent(world: ServerWorld) {
@@ -32,7 +31,10 @@ export class ServerDefaultEvents {
             const damageSource = event.damageSource as DamageSource;
 
             const attacker = damageSource.getAttacker();
-            if (attacker instanceof PlayerEntity && !damageSource.isOf(DamageTypes.EROSION)) {
+            if (
+                attacker instanceof PlayerEntity &&
+                !damageSource.isIn(DamageTypeTags.NOT_TRIGGER_EROSION)
+            ) {
                 const techTree = attacker.getTechs();
                 if (!techTree.isUnlocked(Techs.ARMOR_EROSION)) return;
 
@@ -121,40 +123,46 @@ export class ServerDefaultEvents {
             world.playSound(null, SoundEvents.PHASE_CHANGE);
         });
 
-        eventBus.on(EVENTS.EXPLOSION, (event: explosion) => {
-            if (event.opts.behaviour === 'triggered') return;
-            event.opts.behaviour = 'triggered';
+        eventBus.on(EVENTS.EXPLOSION, ({explosion}) => {
+            const behaviour = explosion.getOpts().behaviour;
+            explosion.getOpts().behaviour = 'triggered';
+            if (behaviour !== 'triggered') {
+                this.serialWarhead(world, explosion);
+            }
+        });
+    }
 
-            if (!event.opts.attacker || !event.opts.attacker.isPlayer()) return;
-            if (!event.opts.attacker.getTechs().isUnlocked(Techs.SERIAL_WARHEAD)) return;
+    private static serialWarhead(world: ServerWorld, explosion: Explosion) {
+        const damageSource = explosion.getDamageSource();
+        const attacker = damageSource.getAttacker();
 
-            let count = 0;
-            const radius = (event.opts.explosionRadius ?? 16) / 2;
+        if (!attacker || !attacker.isPlayer()) return;
+        if (!attacker.getTechs().isUnlocked(Techs.SERIAL_WARHEAD)) return;
 
-            const yaw = event.entity?.getYaw();
-            const schedule = world.scheduleInterval(0.1, () => {
-                if (count++ >= 2) {
-                    schedule.cancel();
-                    return;
-                }
+        let count = 0;
+        const radius = (explosion.getOpts().explosionRadius ?? 16) / 2;
 
-                if (yaw === undefined) {
-                    world.createExplosion(event.entity, event.damage, event.x, event.y, event.opts);
-                    return;
-                }
+        const yaw = explosion.getSource()?.getYaw();
+        const schedule = world.scheduleInterval(0.1, () => {
+            if (count++ >= 2) {
+                schedule.cancel();
+                return;
+            }
 
-                const x = event.x + Math.cos(yaw) * radius * count;
-                const y = event.y + Math.sin(yaw) * radius * count;
-                world.createExplosion(event.entity, event.damage, x, y, event.opts);
-            });
+            if (yaw === undefined) {
+                world.createExplosion(
+                    explosion.getSource(),
+                    damageSource,
+                    explosion.getX(),
+                    explosion.getY(),
+                    explosion.getOpts()
+                );
+                return;
+            }
+
+            const x = explosion.getX() + Math.cos(yaw) * radius * count;
+            const y = explosion.getY() + Math.sin(yaw) * radius * count;
+            world.createExplosion(explosion.getSource(), damageSource, x, y, explosion.getOpts());
         });
     }
 }
-
-type explosion = {
-    entity: Entity | null,
-    damage: DamageSource | null,
-    x: number,
-    y: number,
-    opts: ExpendExplosionOpts
-};

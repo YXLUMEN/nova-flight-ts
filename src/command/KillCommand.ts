@@ -21,7 +21,7 @@ export class KillCommand {
 
                             const selector = selectorResult.result;
                             if (!(selector instanceof EntitySelector)) {
-                                throw new CommandError('');
+                                throw new CommandError('Not a entity selector');
                             }
 
                             let count = 0;

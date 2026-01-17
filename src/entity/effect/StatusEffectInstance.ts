@@ -37,6 +37,10 @@ export class StatusEffectInstance {
         return new StatusEffectInstance(type, duration, amplifier);
     }
 
+    public static fromOther(other: StatusEffectInstance): StatusEffectInstance {
+        return new StatusEffectInstance(other.type, other.duration, other.amplifier);
+    }
+
     public upgrade(that: StatusEffectInstance): boolean {
         if (this.type !== that.type) {
             console.warn("This method should only be called for matching effects!");

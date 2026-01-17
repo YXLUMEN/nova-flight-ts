@@ -18,7 +18,7 @@ export class CloudLightningConduits extends BaseWeapon {
         this.setBullet(cloud, attacker, this.speed, 10, 0);
         world.spawnEntity(cloud);
 
-        world.playSound(null, SoundEvents.CANNON90_FIRE);
+        world.playSound(null, SoundEvents.CLOUD_LIGHTNING_FIRE);
     }
 
     public override getUiColor(): string {
@@ -27,5 +27,13 @@ export class CloudLightningConduits extends BaseWeapon {
 
     public override getDisplayName(): string {
         return '天云闪电';
+    }
+
+    public override getBallisticSpeed(): number {
+        return this.speed;
+    }
+
+    protected override getMuzzleParticles(): number {
+        return 0;
     }
 }

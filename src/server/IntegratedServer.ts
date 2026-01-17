@@ -64,8 +64,7 @@ export class IntegratedServer extends NovaFlightServer {
     }
 
     public override saveWorld(compound: NbtCompound): Promise<void> {
-        const saveName = this.profile!.name;
-        return ServerDB.saveWorld(saveName, compound);
+        return ServerDB.saveWorld(this.profile!.name, compound);
     }
 
     public override isHost(profile: GameProfile): boolean {

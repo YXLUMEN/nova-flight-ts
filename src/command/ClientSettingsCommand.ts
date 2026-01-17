@@ -149,7 +149,7 @@ export class ClientSettingsCommand {
                         .then(
                             literal<T>('shutdown')
                                 .executes(ctx => {
-                                    ctx.source.getClient().scheduleStop();
+                                    ctx.source.getClient().requestStop();
                                 })
                         )
                         .then(

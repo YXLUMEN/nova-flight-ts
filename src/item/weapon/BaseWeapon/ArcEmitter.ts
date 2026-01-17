@@ -36,7 +36,7 @@ export class ArcEmitter extends BaseWeapon {
         }
 
         if (candidates.length === 0) {
-            this.randArc(world, pos, yaw);
+            this.randomArc(world, pos, yaw);
             return;
         }
 
@@ -62,16 +62,14 @@ export class ArcEmitter extends BaseWeapon {
     }
 
     public override onStartFire(_stack: ItemStack, world: World, attacker: Entity) {
-        if (!world.isClient) return;
         world.playLoopSound(attacker, SoundEvents.ARC_LOOP, 0.4);
     }
 
     public override onEndFire(_stack: ItemStack, world: World, attacker: Entity) {
-        if (!world.isClient) return;
         world.stopLoopSound(attacker, SoundEvents.ARC_LOOP);
     }
 
-    private randArc(world: ServerWorld, pos: IVec, yaw: number) {
+    private randomArc(world: ServerWorld, pos: IVec, yaw: number) {
         // 在 ±60° 内随机偏移
         const offset = yaw + (Math.random() - 0.5) * Math.PI / 1.5;
         const length = 48 + Math.random() * 64; // 48～112 像素
@@ -94,5 +92,9 @@ export class ArcEmitter extends BaseWeapon {
 
     public override getDisplayName(): string {
         return '电弧发射器';
+    }
+
+    protected override getMuzzleParticles(): number {
+        return 0;
     }
 }

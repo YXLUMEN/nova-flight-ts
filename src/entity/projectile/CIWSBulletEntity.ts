@@ -1,5 +1,6 @@
 import {BulletEntity} from "./BulletEntity.ts";
 import {type NbtCompound} from "../../nbt/NbtCompound.ts";
+import type {Entity} from "../Entity.ts";
 
 export class CIWSBulletEntity extends BulletEntity {
     public override tick() {
@@ -17,5 +18,11 @@ export class CIWSBulletEntity extends BulletEntity {
     public override readNBT(nbt: NbtCompound) {
         super.readNBT(nbt);
         this.age = nbt.getUint('Age');
+    }
+
+    public override onEntityHit(entity: Entity) {
+        super.onEntityHit(entity);
+
+        entity.getVelocityRef.multiply(0.8);
     }
 }

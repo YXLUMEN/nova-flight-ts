@@ -1,29 +1,40 @@
-import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
+import type {ExplosionOpts} from "../apis/IExplosionOpts.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
-import {squareDist, PI2, rand} from "../utils/math/math.ts";
+import {PI2, rand, squareDist} from "../utils/math/math.ts";
 import type {ClientWorld} from "../client/ClientWorld.ts";
 import type {World} from "./World.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
+import {SoundEvents} from "../sound/SoundEvents.ts";
+import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
+import {LivingEntity} from "../entity/LivingEntity.ts";
+import type {ServerWorld} from "../server/ServerWorld.ts";
 
 export class Explosion {
     private readonly world: World;
-    private x: number;
-    private y: number;
+    private readonly x: number;
+    private readonly y: number;
 
     private readonly source: Entity | null;
     private readonly damageSource: DamageSource;
-    private readonly opts: ExpendExplosionOpts;
+    private readonly opts: ExplosionOpts;
 
-    public constructor(world: World, x: number, y: number, source: Entity | null, damageSource: DamageSource, opts: ExpendExplosionOpts) {
+    public constructor(
+        world: World,
+        x: number,
+        y: number,
+        source: Entity | null,
+        damageSource: DamageSource | null,
+        opts: ExplosionOpts
+    ) {
         this.world = world;
         this.x = x;
         this.y = y;
         this.source = source;
-        this.damageSource = damageSource;
+        this.damageSource = damageSource === null ? world.getDamageSources().explosionInstance(this) : damageSource;
         this.opts = opts;
     }
 
@@ -40,26 +51,54 @@ export class Explosion {
         const damage = this.opts.damage ?? 6;
 
         const r2 = radius * radius;
+        const halfR2 = this.opts.behaviour === 'fusion' ? Math.floor(radius / 2) ** 2 : 0;
 
-        if (this.opts.attacker instanceof MobEntity) {
+        const attacker = this.damageSource.getAttacker();
+
+        if (attacker instanceof MobEntity) {
             for (const player of world.getPlayers()) {
-                const d2 = squareDist(player.getX(), player.getY(), this.x, this.y);
-                if (d2 <= r2) player.takeDamage(this.damageSource, damage);
+                const dist = squareDist(player.getX(), player.getY(), this.x, this.y);
+                if (dist <= r2) player.takeDamage(this.damageSource, damage);
             }
             return;
         }
 
         for (const mob of world.getMobs()) {
             if (mob.isRemoved()) continue;
-            const d2 = squareDist(mob.getX(), mob.getY(), this.x, this.y);
-            if (d2 <= r2) {
-                mob.takeDamage(this.damageSource, damage);
-                if (this.opts.statusEffect) {
-                    const {effect, duration, amplifier} = this.opts.statusEffect;
-                    mob.addStatusEffect(new StatusEffectInstance(effect, duration, amplifier), this.source);
-                }
+
+            const dist = squareDist(mob.getX(), mob.getY(), this.x, this.y);
+            if (dist > r2) continue;
+
+            mob.takeDamage(this.damageSource, damage);
+
+            if (this.opts.behaviour === 'fusion' && dist <= halfR2) {
+                this.fusion(mob, damage);
+            }
+
+            if (this.opts.statusEffect) {
+                const {effect, duration, amplifier} = this.opts.statusEffect;
+                mob.addStatusEffect(new StatusEffectInstance(effect, duration, amplifier), this.source);
             }
         }
+
+        // 客户端没有这个字段
+        if (this.opts.behaviour === 'fusion') {
+            const r = Math.floor(radius / 2);
+            import('../effect/RadialRing.ts')
+                .then(mod => (world as ServerWorld).spawnEffect(null, new mod.RadialRing(
+                    new Vec2(this.x, this.y),
+                    r * 0.1, r * 1.1,
+                    0.8, '#e13600'
+                )));
+        }
+
+        if (this.opts.playSound === false) return;
+        world.playSound(null, SoundEvents.EXPLOSION, 0.5);
+    }
+
+    private fusion(entity: LivingEntity, damage: number) {
+        const final = damage + (entity.getHealth() * 0.3) | 0;
+        entity.takeDamage(this.damageSource, final);
     }
 
     public summonExplosionVisual(world: ClientWorld) {
@@ -118,8 +157,42 @@ export class Explosion {
             )));
     }
 
-    public setPos(x: number, y: number) {
-        this.x = x;
-        this.y = y;
+    public getX() {
+        return this.x;
+    }
+
+    public getY() {
+        return this.y;
+    }
+
+    public getSource(): Entity | null {
+        return this.source;
+    }
+
+    public getCausingEntity(): Entity | null {
+        return Explosion.getCausingEntity(this.source);
+    }
+
+    public getDamageSource() {
+        return this.damageSource;
+    }
+
+    public getOpts() {
+        return this.opts;
+    }
+
+    private static getCausingEntity(from: Entity | null): Entity | null {
+        if (from === null) {
+            return null;
+        }
+
+        if (from instanceof LivingEntity) {
+            return from;
+        }
+
+        if (from instanceof ProjectileEntity) {
+            return from.getOwner();
+        }
+        return null;
     }
 }

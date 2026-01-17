@@ -65,24 +65,6 @@
       "nova-flight:laser/charge_down"
     ]
   },
-  "cannon40.fire": {
-    "subtitle": "sound.nova-flight.cannon40.fire",
-    "sounds": [
-      "nova-flight:cannon40/fire_core"
-    ]
-  },
-  "cannon40.fire_nx": {
-    "subtitle": "sound.nova-flight.cannon40.fire",
-    "sounds": [
-      "nova-flight:cannon40/fire_core_nx"
-    ]
-  },
-  "cannon40.fire_mech": {
-    "subtitle": "sound.nova-flight.cannon40.fire_mech",
-    "sounds": [
-      "nova-flight:cannon40/fire_mech"
-    ]
-  },
   "cannon40.fire_loop": {
     "subtitle": "sound.nova-flight.cannon40.fire",
     "sounds": [
@@ -119,6 +101,18 @@
       "nova-flight:minigun/fire_loop"
     ]
   },
+  "cannon90.fire": {
+    "subtitle": "sound.nova-flight.cannon90.fire",
+    "sounds": [
+      "nova-flight:cannon90/fire_01"
+    ]
+  },
+  "cannon125.fire": {
+    "subtitle": "sound.nova-flight.cannon125.fire",
+    "sounds": [
+      "nova-flight:cannon125/fire_01"
+    ]
+  },
   "emp.burst": {
     "subtitle": "sound.nova-flight.emp.burst",
     "sounds": [
@@ -128,15 +122,15 @@
       "nova-flight:emp/burst_04"
     ]
   },
-  "cannon90.fire": {
-    "subtitle": "sound.nova-flight.cannon90.fire",
+  "cloud_lightning.fire": {
+    "subtitle": "sound.nova-flight.cloud_lightning.fire",
     "sounds": [
-      "nova-flight:cannon90/fire_01",
-      "nova-flight:cannon90/fire_02",
-      "nova-flight:cannon90/fire_03",
-      "nova-flight:cannon90/fire_04",
-      "nova-flight:cannon90/fire_05",
-      "nova-flight:cannon90/fire_06"
+      "nova-flight:cloud_lightning/fire_01",
+      "nova-flight:cloud_lightning/fire_02",
+      "nova-flight:cloud_lightning/fire_03",
+      "nova-flight:cloud_lightning/fire_04",
+      "nova-flight:cloud_lightning/fire_05",
+      "nova-flight:cloud_lightning/fire_06"
     ]
   },
   "shield.crash": {

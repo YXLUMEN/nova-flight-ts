@@ -11,8 +11,8 @@ export class KeyboardInput implements IInput {
 
     private readonly keys = new Set<string>();
     private readonly bindings = new Map<string, string[]>();
-    private readonly keyHandler = new Map<string, Consumer<KeyboardEvent>>();
-    private readonly wheelHandler = new Map<string, Consumer<WheelEvent>>();
+    private keyHandler: Consumer<KeyboardEvent> | null = null;
+    private wheelHandler: Consumer<WheelEvent> | null = null;
     private prevKeys = new Set<string>();
 
     private pointer = MutVec2.zero();
@@ -56,24 +56,20 @@ export class KeyboardInput implements IInput {
         return keys ? this.wasComboPressed(...keys) : false;
     }
 
-    public onKeyDown(name: string, handler: Consumer<KeyboardEvent>): void {
-        this.keyHandler.set(name, handler);
+    public onKeyDown(handler: Consumer<KeyboardEvent>): void {
+        this.keyHandler = handler;
     }
 
-    public onWheeling(name: string, handler: Consumer<WheelEvent>): void {
-        this.wheelHandler.set(name, handler);
+    public onWheeling(handler: Consumer<WheelEvent>): void {
+        this.wheelHandler = handler;
     }
 
-    public delKeyDown(name: string): void {
-        this.keyHandler.delete(name);
+    public clearKeyDown(): void {
+        this.keyHandler = null;
     }
 
-    public delWheeling(name: string): void {
-        this.wheelHandler.delete(name);
-    }
-
-    public clearKeyHandler(): void {
-        this.keyHandler.clear();
+    public clearWheeling(): void {
+        this.wheelHandler = null
     }
 
     public setDisabled(disabled: boolean): void {
@@ -109,11 +105,13 @@ export class KeyboardInput implements IInput {
 
             event.preventDefault();
             this.keys.add(code);
-            for (const fn of this.keyHandler.values()) fn(event);
+            this.keyHandler?.(event);
         });
         window.addEventListener('keyup', e => this.keys.delete(e.code));
         window.addEventListener('blur', () => this.keys.clear());
         window.addEventListener('wheel', e => {
+            this.wheelHandler?.(e);
+
             if (client.world && !client.world.isTechTreeHidden()) return;
             const player = client.player;
             if (player) player.switchWeapon(e.deltaY > 0 ? 1 : -1);

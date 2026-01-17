@@ -17,9 +17,6 @@ export class SoundEvents {
     public static readonly LASER_BEAM = this.registerSound("laser.beam");
     public static readonly LASER_CHARGE_DOWN = this.registerSound("laser.charge_down");
 
-    public static readonly CANNON40_FIRE = this.registerSound("cannon40.fire");
-    public static readonly CANNON40_FIRE_NX = this.registerSound("cannon40.fire_nx");
-    public static readonly CANNON40_FIRE_MECH = this.registerSound("cannon40.fire_mech");
     public static readonly CANNON40_FIRE_LOOP = this.registerSound("cannon40.fire_loop");
     public static readonly CANNON40_FIRE_TAIL = this.registerSound("cannon40.fire_tail");
 
@@ -28,6 +25,9 @@ export class SoundEvents {
     public static readonly MINIGUN_FIRE_LOOP = this.registerSound("minigun.fire_loop");
 
     public static readonly CANNON90_FIRE = this.registerSound("cannon90.fire");
+    public static readonly CANNON125_FIRE = this.registerSound("cannon125.fire");
+
+    public static readonly CLOUD_LIGHTNING_FIRE = this.registerSound("cloud_lightning.fire");
 
     public static readonly EMP_BURST = this.registerSound("emp.burst");
     public static readonly SHIELD_CRASH = this.registerSound("shield.crash");

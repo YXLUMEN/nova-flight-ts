@@ -22,7 +22,7 @@ import {EVENTS} from "../apis/IEvents.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
-import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
+import type {ExplosionOpts} from "../apis/IExplosionOpts.ts";
 import type {Explosion} from "../world/Explosion.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import {Particle} from "../effect/Particle.ts";
@@ -116,7 +116,7 @@ export class ClientWorld extends World {
         setTimeout(() => {
             this.setTicking(false);
             this.client.onGameOver();
-        }, 1500);
+        }, 2000);
     }
 
     public override getNetworkChannel(): ClientNetworkChannel {
@@ -139,7 +139,7 @@ export class ClientWorld extends World {
 
             AudioManager.pause();
             SoundSystem.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
-            this.worldSound.pauseAll().catch(console.error);
+            if (!this.isMultiPlayer) this.worldSound.pauseAll().catch(console.error);
         }
 
         super.setTicking(ticking);
@@ -219,7 +219,13 @@ export class ClientWorld extends World {
         this.effects.push(effect);
     }
 
-    public override createExplosion(entity: Entity | null, damage: DamageSource | null, x: number, y: number, opts: ExpendExplosionOpts): Explosion {
+    public override createExplosion(
+        entity: Entity | null,
+        damage: DamageSource | null,
+        x: number,
+        y: number,
+        opts: ExplosionOpts
+    ): Explosion {
         if (opts.shake) {
             this.client.window.camera.addShake(opts.shake);
         }
@@ -236,13 +242,8 @@ export class ClientWorld extends World {
         ClientDefaultEvents.registryEvents(this);
     }
 
-    public isMultiPlayerWorld() {
-        return this.isMultiPlayer;
-    }
-
-    public toggleTechTree() {
-        const ticking = this.rendering = document.getElementById('tech-shell')!.classList.toggle('hidden');
-        this.setTicking(ticking);
+    public tickWhenMultiPlayer() {
+        return this.isMultiPlayer && !this.over;
     }
 
     public isTechTreeHidden() {

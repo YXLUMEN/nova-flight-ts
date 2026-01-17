@@ -65,7 +65,7 @@ export class UUIDUtil {
         ) as UUID;
     }
 
-    public static async uuidFromUsername(username: string): Promise<string> {
+    public static async uuidFromUsername(username: string): Promise<UUID> {
         const encoder = new TextEncoder();
         const data = encoder.encode(username);
 

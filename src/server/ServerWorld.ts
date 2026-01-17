@@ -23,7 +23,7 @@ import {EVENTS} from "../apis/IEvents.ts";
 import {EntityRemoveS2CPacket} from "../network/packet/s2c/EntityRemoveS2CPacket.ts";
 import {EntityTrackerEntry} from "./network/EntityTrackerEntry.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
-import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
+import type {ExplosionOpts} from "../apis/IExplosionOpts.ts";
 import type {Explosion} from "../world/Explosion.ts";
 import {ExplosionS2CPacket} from "../network/packet/s2c/ExplosionS2CPacket.ts";
 import {ServerDefaultEvents} from "./event/ServerDefaultEvents.ts";
@@ -34,7 +34,6 @@ import {encodeColorHex, encodeToUnsignedByte} from "../utils/NetUtil.ts";
 import {type VisualEffect} from "../effect/VisualEffect.ts";
 import {EffectCreateS2CPacket} from "../network/packet/s2c/EffectCreateS2CPacket.ts";
 import type {ServerChannel} from "./network/ServerChannel.ts";
-import {warn} from "@tauri-apps/plugin-log";
 import {GameOverS2CPacket} from "../network/packet/s2c/GameOverS2CPacket.ts";
 import {EMPBurst} from "../effect/EMPBurst.ts";
 
@@ -104,7 +103,7 @@ export class ServerWorld extends World implements NbtSerializable {
             const owner = entity.getOwner();
             // 敌方命中
             if (owner instanceof MobEntity) {
-                if (player.invulnerable || !collideEntityCircle(player, entity)) return;
+                if (player.invulnerable || player.isRemoved() || !collideEntityCircle(player, entity)) return;
 
                 entity.onEntityHit(player);
                 return;
@@ -151,6 +150,18 @@ export class ServerWorld extends World implements NbtSerializable {
         super.setTicking(ticking);
     }
 
+    /**
+     * 将传入实体直接加入世界,忽视世界状态
+     * */
+    public override addEntity(entity: Entity): void {
+        this.entityManager.addEntity(entity);
+    }
+
+    /**
+     * 在世界中生成实体的标准方式
+     * 区别于
+     * @see {addEntity}
+     * */
     public spawnEntity(entity: Entity): boolean {
         if (this.isPeaceMode() && entity instanceof MobEntity) {
             return false;
@@ -163,10 +174,10 @@ export class ServerWorld extends World implements NbtSerializable {
         return this.entityManager.addEntity(entity);
     }
 
-    public spawnPlayer(player: ServerPlayerEntity): void {
+    public addPlayer(player: ServerPlayerEntity): void {
         const entity = this.getEntity(player.getUUID());
         if (entity) {
-            warn(`Force-added player with duplicate UUID ${player.getUUID()}`).catch();
+            console.warn(`Force-added player with duplicate UUID ${player.getUUID()}`);
             entity.discard();
             this.removePlayer(entity as ServerPlayerEntity);
         }
@@ -174,19 +185,15 @@ export class ServerWorld extends World implements NbtSerializable {
         this.entityManager.addEntity(player);
     }
 
-    public removePlayer(player: ServerPlayerEntity): void {
-        player.discard();
-    }
-
-    public override addEntity(entity: Entity): void {
-        this.entityManager.addEntity(entity);
-    }
-
     public override removeEntity(entityId: number): void {
         const entity = this.getEntityLookup().get(entityId);
         if (entity) {
             entity.discard();
         }
+    }
+
+    public removePlayer(player: ServerPlayerEntity): void {
+        player.discard();
     }
 
     public override getEntityById(id: number): Entity | null {
@@ -248,7 +255,7 @@ export class ServerWorld extends World implements NbtSerializable {
                 .sendExclude(new SoundEventS2CPacket(sound, volume, pitch, true), entity.getProfile());
             return;
         }
-        this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, false));
+        this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, true));
     }
 
     public override stopLoopSound(_: Entity | null, sounds: SoundEvent): boolean {
@@ -267,14 +274,24 @@ export class ServerWorld extends World implements NbtSerializable {
         this.getNetworkChannel().send(new EffectCreateS2CPacket(effect));
     }
 
-    public override createExplosion(entity: Entity | null, damage: DamageSource | null, x: number, y: number, opts: ExpendExplosionOpts): Explosion {
-        const explosion = super.createExplosion(entity, damage, x, y, opts);
+    public override createExplosion(
+        source: Entity | null,
+        damage: DamageSource | null,
+        x: number,
+        y: number,
+        opts: ExplosionOpts
+    ): Explosion {
+        const explosion = super.createExplosion(source, damage, x, y, opts);
 
         const shack = encodeToUnsignedByte(opts.shake ?? 0, 1);
-        const packet = new ExplosionS2CPacket(x, y, opts.explosionRadius ?? 64, shack, encodeColorHex(opts.explodeColor ?? '#fff'));
+        const packet = new ExplosionS2CPacket(x, y,
+            opts.explosionRadius ?? 64,
+            shack,
+            encodeColorHex(opts.explodeColor ?? '#fff'),
+        );
         this.getNetworkChannel().send(packet);
 
-        this.events.emit(EVENTS.EXPLOSION, {entity, damage, x, y, opts});
+        this.events.emit(EVENTS.EXPLOSION, {explosion});
         return explosion;
     }
 

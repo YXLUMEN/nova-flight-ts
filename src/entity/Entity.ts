@@ -156,7 +156,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         this.prevYaw = this.getYaw();
     }
 
-    public refreshPosition(x: number, y: number, yaw = this.getYaw()): void {
+    public refreshPositionAndAngles(x: number, y: number, yaw = this.getYaw()): void {
         this.setPosition(x, y);
         this.setYaw(yaw);
         this.resetPosition();
@@ -302,7 +302,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
 
     public onSpawnPacket(packet: EntitySpawnS2CPacket) {
         this.setTrackedPosition(packet.x, packet.y);
-        this.refreshPosition(packet.x, packet.y);
+        this.refreshPositionAndAngles(packet.x, packet.y);
         this.setYaw(packet.yaw);
         this.setId(packet.entityId);
         this.setUuid(packet.uuid);

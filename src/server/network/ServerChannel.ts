@@ -8,6 +8,8 @@ export interface ServerChannel extends Channel {
 
     setServerAddress(address: string): void;
 
+    action(buf: Uint8Array): void;
+
     sendTo<T extends Payload>(payload: T, target: GameProfile): void;
 
     sendToByUUID<T extends Payload>(payload: T, target: UUID): void;

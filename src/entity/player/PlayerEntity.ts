@@ -35,7 +35,7 @@ export abstract class PlayerEntity extends LivingEntity {
     protected currentBaseIndex: number = 0;
 
     public wasFiring: boolean = false;
-    private lastDamageTime = 0;
+    public lastDamageTime = 0;
 
     private score: number = 0;
     private isDev = false;
@@ -109,7 +109,6 @@ export abstract class PlayerEntity extends LivingEntity {
             damage: 32,
             explosionRadius: this.onDamageExplosionRadius,
             important: true,
-            attacker: this,
             shake
         });
 
@@ -306,6 +305,9 @@ export abstract class PlayerEntity extends LivingEntity {
         }
 
         this.currentBaseIndex = clamp(nbt.getInt8('SlotIndex'), 0, this.baseWeapons.length);
+
+        // todo 玩家重生
+        if (this.getHealth() === 0) this.setHealth(this.getMaxHealth());
     }
 
     public onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {

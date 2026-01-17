@@ -36,7 +36,7 @@ export class PlayerManager {
             world.setTicking(true);
             this.server.isMultiPlayer = true;
         }
-        world.spawnPlayer(player);
+        world.addPlayer(player);
 
         networkHandler.send(new JoinGameS2CPacket(player.getId()));
         channel.send(new GameMessageS2CPacket(`\x1b[32m${player.playerProfile.name}\x1b[0m join the game`));
@@ -44,8 +44,26 @@ export class PlayerManager {
         console.log(`[Server] Player ${profile.clientId} login`);
     }
 
-    public createPlayer(profile: GameProfile) {
+    public createPlayer(profile: GameProfile): ServerPlayerEntity {
         return new ServerPlayerEntity(this.server.world!, profile);
+    }
+
+    public respawnPlayer(player: ServerPlayerEntity, alive: boolean): void {
+        this.players.delete(player.getUUID());
+        (player.getWorld() as ServerWorld).removePlayer(player);
+
+        const newPlayer = this.createPlayer(player.getProfile());
+        newPlayer.networkHandler = player.networkHandler;
+        newPlayer.setId(player.getId());
+        newPlayer.copyFrom(player, alive);
+
+        const targetPos = player.getPositionRef;
+        newPlayer.lastDamageTime = 60;
+        newPlayer.refreshPositionAndAngles(targetPos.x, targetPos.y, player.getYaw());
+
+        (newPlayer.getWorld() as ServerWorld).addPlayer(newPlayer);
+        this.players.set(newPlayer.getUUID(), newPlayer);
+        this.sessionToPlayer.set(newPlayer.getProfile().sessionId, newPlayer);
     }
 
     public async loadPlayerData(player: ServerPlayerEntity): Promise<NbtCompound | null> {

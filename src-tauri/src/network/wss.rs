@@ -1,6 +1,6 @@
 use crate::network::session::{Session, NEXT_SESSION_ID};
 use crate::network::states::{RelayState, Role, ServerHandle, ServerManager, Tx};
-use crate::network::util::{format_uuid, is_nil_uuid, parse_excludes, read_var_uint};
+use crate::network::util::{format_uuid, is_nil_uuid, parse_session_id, read_var_uint};
 use bytes::{Buf, BufMut, BytesMut};
 use dashmap::Entry;
 use futures_util::stream::SplitStream;
@@ -414,6 +414,7 @@ async fn server_relay(
 /// 0x10 = Client -> Server
 /// 0x11 = Server -> Client 广播 + 单个排除
 /// 0x12 = Server -> Client 单发
+/// 0xff = Server -> Relay 操作
 async fn relay_client_message(state: &Arc<RelayState>, session: &Arc<Session>, payload: Bytes) {
     if payload.is_empty() {
         info!("Empty message received");
@@ -555,11 +556,11 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
 
             cursor = remaining;
 
-            // 解析UUID
-            let (excludes, rest_payload) = match parse_excludes(cursor, count as usize) {
+            // 解析 id
+            let (excludes, rest_payload) = match parse_session_id(cursor, count as usize) {
                 Ok(v) => v,
                 Err(e) => {
-                    info!("Parse exclude uuid error: {}", e);
+                    info!("Parse exclude id error: {}", e);
                     return;
                 }
             };
@@ -592,6 +593,26 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
                     warn!("Dropping unresponsive client {}", format_uuid(&id));
                 }
             }
+        }
+        0xff => relay_actions(state, session, payload),
+        _ => {}
+    }
+}
+
+fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload: Bytes) {
+    match payload[1] {
+        0x00 => {
+            if payload.len() < 3 {
+                send_relay_try(&session.tx, "ERR:KickPacket illegal syntax");
+                warn!("InvalidPacket: Kick packet too short");
+                return;
+            }
+            let id = &payload[2];
+
+            if let Some(session) = state.client_ids.get(id) {
+                send_relay_try(&session.tx, "INFO:Kicked");
+                state.remove_by_id(*id);
+            };
         }
         _ => {}
     }

@@ -18,7 +18,7 @@ export class BulletEntity extends ProjectileEntity {
         const owner = this.getOwner();
 
         const hitDamage = this.getHitDamage();
-        if (owner instanceof PlayerEntity && owner.getTechs().isUnlocked(Techs.APFS_DISCARDING_SABOT)) {
+        if (owner instanceof PlayerEntity && owner.getTechs().isUnlocked(Techs.ANTIMATTER_WARHEAD)) {
             let damage = hitDamage;
             if (entity instanceof LivingEntity) damage = hitDamage + (entity.getMaxHealth() * 0.08) | 0;
             else damage *= 2;

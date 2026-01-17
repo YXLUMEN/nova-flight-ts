@@ -127,7 +127,7 @@ export class TutorialEvents {
                 fireAcc: 0,
                 fireAchieve: false,
                 requireOpenPage: false,
-                requireTech: Techs.APFS_DISCARDING_SABOT,
+                requireTech: Techs.ANTIMATTER_WARHEAD,
                 currentUnlocked: 0,
                 showWarn: false,
                 unloaded: false,
@@ -297,9 +297,9 @@ export class TutorialEvents {
             const server = NovaFlightServer.getInstance();
             server.sendMessage('我们拥有多种升级的途径, 需要注意的是, 部分分支之间存在冲突, 您需要慎重考虑');
             await sleep(4000);
-            server.sendMessage('现在, 我们需要利用 \x1b[32m"钢芯穿甲弹"\x1b[0m 穿透敌人的装甲');
+            server.sendMessage('现在, 我们需要利用 \x1b[32m"反物质弹头"\x1b[0m 穿透敌人的装甲');
             await sleep(4000);
-            server.sendMessage('在获取 \x1b[32m"钢芯穿甲弹"\x1b[0m 前需要研究它的\x1b[33m所有\x1b[0m前置科技');
+            server.sendMessage('在获取 \x1b[32m"反物质弹头"\x1b[0m 前需要研究它的\x1b[33m所有\x1b[0m前置科技');
             await sleep(4000);
             server.sendMessage('请注意, 升级科技需要\x1b[33m消耗材料\x1b[0m, 但只要我们击毁敌舰就能获取材料');
             this.isPending = false;
@@ -349,11 +349,11 @@ export class TutorialEvents {
         const server = NovaFlightServer.getInstance();
         switch (condition.currentUnlocked) {
             case 5:
-                server.sendMessage('指挥官, 请选择\x1b[32m"钢芯穿甲弹"\x1b[0m升级, 它能够高效的穿透敌人护甲');
+                server.sendMessage('指挥官, 请选择\x1b[32m"反物质弹头"\x1b[0m升级, 它能够高效的穿透敌人护甲');
                 this.hostPlayer.addScore(900);
                 break;
             case 6:
-                server.sendMessage('指挥官, 当下情景, \x1b[32m"钢芯穿甲弹"\x1b[0m是最佳选择');
+                server.sendMessage('指挥官, 当下情景, \x1b[32m"反物质弹头"\x1b[0m是最佳选择');
                 this.hostPlayer.addScore(900);
                 break;
             case 7:

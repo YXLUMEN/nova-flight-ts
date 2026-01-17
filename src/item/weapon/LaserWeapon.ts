@@ -14,6 +14,7 @@ import {
     LaserWeaponDeactivate
 } from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
 import {encodeColorHex} from "../../utils/NetUtil.ts";
+import {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
 
 
 export class LaserWeapon extends SpecialWeapon {
@@ -119,13 +120,21 @@ export class LaserWeapon extends SpecialWeapon {
         const damage = Math.max(1, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1));
         const damageSource = world.getDamageSources().laser(holder);
 
-        const mobs = (world as ServerWorld).getMobs();
-        for (const mob of mobs) {
+        for (const mob of world.getMobs()) {
             const pos = mob.getPositionRef;
             if (!mob.isRemoved() && lineCircleHit(
                 start.x, start.y, end.x, end.y,
                 pos.x, pos.y, mob.getWidth())) {
                 mob.takeDamage(damageSource, damage);
+            }
+        }
+
+        for (const project of (world as ServerWorld).getProjectiles()) {
+            if (project.getOwner() === holder || !(project instanceof MissileEntity)) continue;
+            const pos = project.getPositionRef;
+            if (lineCircleHit(start.x, start.y, end.x, end.y, pos.x, pos.y, project.getWidth())) {
+                project.explode();
+                project.discard();
             }
         }
     }

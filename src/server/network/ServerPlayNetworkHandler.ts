@@ -10,7 +10,6 @@ import {RequestPositionC2SPacket} from "../../network/packet/c2s/RequestPosition
 import {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
 import type {UUID} from "../../apis/types.ts";
 import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
-import {applyServerTech} from "../tech/applyServerTech.ts";
 import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
 import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
 import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
@@ -32,6 +31,7 @@ import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacke
 import {NetworkChannel} from "../../network/NetworkChannel.ts";
 import type {ServerChannel} from "./ServerChannel.ts";
 import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
+import {ApplyServerTech} from "../tech/applyServerTech.ts";
 
 export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
     public readonly player: ServerPlayerEntity;
@@ -116,7 +116,17 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
         }
     }
 
-    public async onPlayerDisconnect(_: PlayerDisconnectC2SPacket) {
+    public override forceDisconnect() {
+        if (this.server.isHost(this.getProfile())) {
+            console.warn('Can not kick host player');
+            return;
+        }
+
+        super.forceDisconnect();
+        this.onPlayerDisconnect().then();
+    }
+
+    public async onPlayerDisconnect() {
         const uuid: UUID = this.clientId;
         if (!this.server.playerManager.isPlayerExists(uuid)) {
             return;
@@ -158,7 +168,7 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
 
     public onUnlockTech(packet: PlayerUnlockTechC2SPacket): void {
         if (this.player.getTechs().unlock(packet.tech)) {
-            applyServerTech(packet.tech, this.player);
+            ApplyServerTech.apply(packet.tech, this.player);
         }
     }
 

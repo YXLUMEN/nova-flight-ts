@@ -5,10 +5,10 @@ import {Item} from "./Item.ts";
 import {BombWeapon} from "./weapon/BombWeapon.ts";
 import {EMPWeapon} from "./weapon/EMPWeapon.ts";
 import {MissileWeapon} from "./weapon/MissileWeapon.ts";
-import {Cannon40Weapon} from "./weapon/BaseWeapon/Cannon40Weapon.ts";
-import {Cannon90Weapon} from "./weapon/BaseWeapon/Cannon90Weapon.ts";
-import {MiniGunWeapon} from "./weapon/BaseWeapon/MiniGunWeapon.ts";
-import {RocketLauncherWeapon} from "./weapon/BaseWeapon/RocketLauncherWeapon.ts";
+import {Cannon40} from "./weapon/BaseWeapon/Cannon40.ts";
+import {Cannon90} from "./weapon/BaseWeapon/Cannon90.ts";
+import {MiniGun} from "./weapon/BaseWeapon/MiniGun.ts";
+import {RocketLauncher} from "./weapon/BaseWeapon/RocketLauncher.ts";
 import {DataComponentTypes} from "../component/DataComponentTypes.ts";
 import {IntoVoidWeapon} from "./weapon/IntoVoidWeapon.ts";
 import {LaserWeapon} from "./weapon/LaserWeapon.ts";
@@ -17,6 +17,7 @@ import {CIWS} from "./weapon/BaseWeapon/CIWS.ts";
 import {CloudLightningConduits} from "./weapon/BaseWeapon/CloudLightningConduits.ts";
 import {FocusedArcEmitter} from "./weapon/BaseWeapon/FocusedArcEmitter.ts";
 import {ArcEmitter} from "./weapon/BaseWeapon/ArcEmitter.ts";
+import {Cannon125} from "./weapon/BaseWeapon/Cannon125.ts";
 
 export class Items {
     public static AIR = this.register("air", new Item(new Item.Settings()));
@@ -26,13 +27,13 @@ export class Items {
         .component(DataComponentTypes.EFFECT_RANGE, 480)
     ));
     public static readonly INTO_VOID_WEAPON: Item;
-    public static readonly CANNON40_WEAPON = this.register("cannon40_weapon", new Cannon40Weapon(new Item.Settings()
+    public static readonly CANNON40_WEAPON = this.register("cannon40_weapon", new Cannon40(new Item.Settings()
         .maxDurability(50)
         .attackDamage(3)
         .maxCooldown(3)
         .component(DataComponentTypes.MAX_RELOAD_TIME, 16)
     ));
-    public static readonly MINIGUN_WEAPON = this.register("minigun_weapon", new MiniGunWeapon(new Item.Settings()
+    public static readonly MINIGUN_WEAPON = this.register("minigun_weapon", new MiniGun(new Item.Settings()
         .maxDurability(250)
         .attackDamage(1)
         .maxCooldown(1)
@@ -43,15 +44,15 @@ export class Items {
         .component(DataComponentTypes.EXPLOSION_RADIUS, 256)
         .component(DataComponentTypes.EXPLOSION_DAMAGE, 32)
     ));
-    public static readonly CANNON90_WEAPON = this.register("cannon90_weapon", new Cannon90Weapon(new Item.Settings()
-        .maxDurability(10)
+    public static readonly CANNON90_WEAPON = this.register("cannon90_weapon", new Cannon90(new Item.Settings()
+        .maxDurability(16)
         .attackDamage(6)
         .maxCooldown(16.5)
         .component(DataComponentTypes.EXPLOSION_RADIUS, 112)
         .component(DataComponentTypes.EXPLOSION_DAMAGE, 8)
         .component(DataComponentTypes.MAX_RELOAD_TIME, 35)
     ));
-    public static readonly ROCKET_WEAPON = this.register("rocket_weapon", new RocketLauncherWeapon(new Item.Settings()
+    public static readonly ROCKET_WEAPON = this.register("rocket_weapon", new RocketLauncher(new Item.Settings()
         .attackDamage(8)
         .maxCooldown(70)
         .unbreakable()
@@ -90,6 +91,14 @@ export class Items {
         .attackDamage(48)
         .maxCooldown(32)
         .unbreakable()
+    ));
+    public static readonly CANNON125 = this.register("cannon125", new Cannon125(new Item.Settings()
+        .maxDurability(8)
+        .attackDamage(12)
+        .maxCooldown(32)
+        .component(DataComponentTypes.EXPLOSION_RADIUS, 210)
+        .component(DataComponentTypes.EXPLOSION_DAMAGE, 14)
+        .component(DataComponentTypes.MAX_RELOAD_TIME, 40)
     ));
 
     // 避免引用问题

@@ -66,7 +66,7 @@ export function applyClientTech(tech: RegistryEntry<Tech>): void {
             });
             break;
         }
-        case Techs.GUNBOAT_FOCUS: {
+        case Techs.MINI_GUN: {
             player.addItem(Items.MINIGUN_WEAPON);
             break;
         }
@@ -93,6 +93,16 @@ export function applyClientTech(tech: RegistryEntry<Tech>): void {
             if (player.getTechs().isUnlocked(Techs.HD_BULLET)) {
                 const base = c90.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
                 c90.set(DataComponentTypes.ATTACK_DAMAGE, base * 2);
+            }
+            break;
+        }
+        case Techs.CANNON125: {
+            const c125 = new ItemStack(Items.CANNON125);
+            player.addItem(Items.CANNON125, c125);
+
+            if (player.getTechs().isUnlocked(Techs.HD_BULLET)) {
+                const base = c125.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
+                c125.set(DataComponentTypes.ATTACK_DAMAGE, base * 2);
             }
             break;
         }

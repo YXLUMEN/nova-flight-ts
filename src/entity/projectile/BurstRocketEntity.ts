@@ -12,7 +12,6 @@ export class BurstRocketEntity extends RocketEntity {
         const world = this.getWorld();
         world.createExplosion(this, null, this.getX(), this.getY(), {
             damage: this.explosionDamage,
-            attacker: this.getOwner(),
             explosionRadius: this.explosionRadius,
             fastSparks: 2,
             sparks: 3,

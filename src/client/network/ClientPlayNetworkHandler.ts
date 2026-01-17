@@ -171,17 +171,19 @@ export class ClientPlayNetworkHandler {
         const world = this.world;
         if (!world) return;
 
-        const player = world.getEntityLookup().getByUUID(packet.uuid);
-        if (!player) return;
         this.loginPlayer.delete(packet.uuid);
-        this.world?.removeEntity(player.getId());
+
+        const player = world.getEntityLookup().getByUUID(packet.uuid);
+        if (player) this.world?.removeEntity(player.getId());
 
         if (packet.uuid !== this.client.clientId) return;
 
         this.client.world?.setTicking(false);
-        const info = new ConnectInfo(this.client.window.ctx);
-        info.setError(packet.reason)
-            .then(() => this.client.scheduleStop());
+
+        this.client.connectInfo?.destroy();
+        this.client.connectInfo = new ConnectInfo(this.client.window.ctx);
+        this.client.connectInfo.setError(packet.reason)
+            .then(() => this.client.requestStop());
     }
 
     public onEntity(packet: EntityS2CPacket) {
@@ -294,7 +296,6 @@ export class ClientPlayNetworkHandler {
 
     public onExplosion(packet: ExplosionS2CPacket) {
         this.world?.createExplosion(null, null, packet.x, packet.y, {
-            attacker: null,
             explosionRadius: packet.radius,
             shake: packet.shack,
             explodeColor: packet.color,

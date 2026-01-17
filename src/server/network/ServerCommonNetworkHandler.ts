@@ -7,6 +7,7 @@ import {HashMap} from "../../utils/collection/HashMap.ts";
 import type {Identifier} from "../../registry/Identifier.ts";
 import type {Consumer} from "../../apis/types.ts";
 import type {ServerChannel} from "./ServerChannel.ts";
+import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 
 export abstract class ServerCommonNetworkHandler {
     protected static readonly TIMEOUT = 'disconnect.timeout';
@@ -76,9 +77,26 @@ export abstract class ServerCommonNetworkHandler {
         this.channel.sendTo(packet, this.getProfile());
     }
 
+    public broadcast(packet: Payload): void {
+        this.channel.send(packet);
+    }
+
     public disconnect(reason: string): void {
         const profile = this.getProfile();
         this.channel.sendTo(new PlayerDisconnectS2CPacket(profile.clientId, reason), profile);
+    }
+
+    public forceDisconnect(): void {
+        if (this.server.isHost(this.getProfile())) {
+            console.warn('Can not kick host player');
+            return;
+        }
+
+        const writer = new BinaryWriter();
+        writer.writeInt8(0xFF);
+        writer.writeInt8(0x00);
+        writer.writeInt8(this.getProfile().sessionId);
+        this.channel.action(writer.toUint8Array());
     }
 
     protected isHost() {

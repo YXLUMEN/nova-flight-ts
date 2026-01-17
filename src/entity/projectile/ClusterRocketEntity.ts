@@ -19,6 +19,7 @@ export class ClusterRocketEntity extends FuseRocketEntity {
 
         for (let i = this.rocketCounts; i--;) {
             const rocket = new FuseRocketEntity(EntityTypes.ROCKET_ENTITY, world, this.getOwner(), 8, randInt(8, 30));
+            rocket.playSound = false;
             rocket.explosionDamage = 6;
 
             const angleOffset = -Math.PI / 2 + (Math.PI / (this.rocketCounts - 1)) * i;

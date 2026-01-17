@@ -90,6 +90,14 @@ export class AttributeContainer {
         });
     }
 
+    public setBaseFrom(other: AttributeContainer): void {
+        other.custom.values().forEach(instance => {
+            const selfInstance = this.getCustomInstance(instance.getAttribute());
+            if (selfInstance === null) return;
+            selfInstance.setBaseValue(instance.getBaseValue());
+        });
+    }
+
     public toNbt(): NbtCompound[] {
         const nbtList: NbtCompound[] = [];
 

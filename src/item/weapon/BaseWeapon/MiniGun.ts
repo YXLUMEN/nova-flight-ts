@@ -8,7 +8,7 @@ import {type ItemStack} from "../../ItemStack.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 
-export class MiniGunWeapon extends BaseWeapon {
+export class MiniGun extends BaseWeapon {
     private readonly speed = 45;
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {

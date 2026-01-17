@@ -43,11 +43,9 @@ export class ExplodeBulletEntity extends ProjectileEntity {
 
         const world = this.getWorld();
         const attacker = this.getOwner();
+
         entity.takeDamage(this.getWorld().getDamageSources().projectile(this, attacker), this.getHitDamage());
-        world.createExplosion(this, null, this.getX(), this.getY(), {
-            attacker,
-            ...this.explosionOpts
-        });
+        world.createExplosion(this, null, this.getX(), this.getY(), this.explosionOpts);
 
         world.playSound(this.getOwner(), SoundEvents.MISSILE_EXPLOSION, 0.3);
     }

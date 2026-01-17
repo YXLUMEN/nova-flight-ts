@@ -4,10 +4,10 @@ import type {NbtCompound} from "../../nbt/NbtCompound.ts";
 import type {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
 import {Items} from "../../item/Items.ts";
 import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
-import {applyServerTech} from "./applyServerTech.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {type RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {type Tech} from "../../tech/Tech.ts";
+import {ApplyServerTech} from "./applyServerTech.ts";
 
 export class ServerTechTree implements TechTree {
     private readonly player: ServerPlayerEntity;
@@ -40,7 +40,7 @@ export class ServerTechTree implements TechTree {
 
     public forceUnlock(tech: RegistryEntry<Tech>): void {
         this.state.forceUnlock(tech.getValue());
-        applyServerTech(tech, this.player);
+        ApplyServerTech.apply(tech, this.player);
     }
 
     public unlockAll() {

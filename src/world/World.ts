@@ -14,7 +14,7 @@ import type {EntityIndex} from "./EntityIndex.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {Explosion} from "./Explosion.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
-import type {ExpendExplosionOpts} from "../apis/IExplosionOpts.ts";
+import type {ExplosionOpts} from "../apis/IExplosionOpts.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {ClientWorld} from "../client/ClientWorld.ts";
@@ -103,10 +103,14 @@ export abstract class World {
 
     public abstract addEffect(source: Entity | null, effect: VisualEffect): void;
 
-    public createExplosion(entity: Entity | null, damage: DamageSource | null, x: number, y: number, opts: ExpendExplosionOpts) {
-        if (!damage) damage = this.getDamageSources().explosion(entity, opts.attacker);
-
-        const explosion = new Explosion(this, x, y, entity, damage, opts);
+    public createExplosion(
+        source: Entity | null,
+        damageSource: DamageSource | null,
+        x: number,
+        y: number,
+        opts: ExplosionOpts
+    ) {
+        const explosion = new Explosion(this, x, y, source, damageSource, opts);
         explosion.apply();
         return explosion;
     }

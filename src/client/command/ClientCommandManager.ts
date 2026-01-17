@@ -19,6 +19,7 @@ import {MemoryLRU} from "../../utils/collection/MemoryLRU.ts";
 import {StringReader} from "../../brigadier/StringReader.ts";
 import {SummonEntityCommand} from "../../command/SummonEntityCommand.ts";
 import {StageCommand} from "../../command/StageCommand.ts";
+import {KickCommand} from "../../command/KickCommand.ts";
 
 export type CommandNotifyCategory = 'info' | 'success' | 'warning' | 'error';
 
@@ -70,11 +71,6 @@ export class ClientCommandManager extends CommandManager {
                 }
 
                 if (input.length <= 0) return;
-                if (!input.startsWith('/')) {
-                    this.source.getClient().clientChat.sendMessage(input);
-                    this.commandInput.value = '';
-                    return;
-                }
 
                 this.usedCommands.push(input);
                 if (this.usedCommands.length > 64) {
@@ -82,6 +78,12 @@ export class ClientCommandManager extends CommandManager {
                 }
                 this.historyIndex = -1;
                 this.commandInput.value = '';
+
+                if (!input.startsWith('/')) {
+                    this.source.getClient().clientChat.sendMessage(input);
+                    return;
+                }
+
                 this.resetSuggestionLen();
 
                 this.executeCommand(input);
@@ -312,12 +314,14 @@ export class ClientCommandManager extends CommandManager {
         ClientSettingsCommand.registry(this.clientDispatcher);
         CommandBarCommand.registry(this.clientDispatcher);
 
+        // noinspection DuplicatedCode
         KillCommand.registry(this.dispatcher);
         GameModeCommand.registry(this.dispatcher);
         WorldDifficultCommand.registry(this.dispatcher);
         StatusEffectCommand.registry(this.dispatcher);
         SummonEntityCommand.registry(this.dispatcher);
         StageCommand.registry(this.dispatcher);
+        KickCommand.registry(this.dispatcher);
     }
 
     public executeWithPrefix(source: CommandSource, input: string): void {

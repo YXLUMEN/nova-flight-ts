@@ -1,9 +1,10 @@
 import type {VisualEffect} from "../effect/VisualEffect.ts";
-import type {Entity} from "../entity/Entity.ts";
 import type {StatusEffect} from "../entity/effect/StatusEffect.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 
 export interface ExplosionOpts {
+    flash?: VisualEffect;
+    behaviour?: 'triggered' | 'fusion';
     explosionRadius?: number;        // 视觉半径
     ring?: boolean;
     screenFlash?: boolean;
@@ -12,14 +13,9 @@ export interface ExplosionOpts {
     // 火花数量
     sparks?: number;
     fastSparks?: number;
-    damage?: number;        // AoE 伤害
+    damage?: number;
     important?: boolean;
+    playSound?: boolean;
     explodeColor?: string;
     statusEffect?: { effect: RegistryEntry<StatusEffect>; duration: number, amplifier: number };
-}
-
-export interface ExpendExplosionOpts extends ExplosionOpts {
-    attacker: Entity | null;
-    flash?: VisualEffect;
-    behaviour?: string;
 }

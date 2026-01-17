@@ -15,7 +15,7 @@ import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
 import {EntityPositionForceS2CPacket} from "../../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
 
-export class RocketLauncherWeapon extends BaseWeapon {
+export class RocketLauncher extends BaseWeapon {
     private static readonly BULLET_SPEED: number = 15;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
@@ -58,7 +58,7 @@ export class RocketLauncherWeapon extends BaseWeapon {
                 rocket.explosionRadius = stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 72);
             }
 
-            this.setBullet(rocket, attacker, RocketLauncherWeapon.BULLET_SPEED, 4, 2);
+            this.setBullet(rocket, attacker, RocketLauncher.BULLET_SPEED, 4, 2);
             (world as ServerWorld).spawnEntity(rocket);
             const yaw = attacker.getYaw();
             attacker.updateVelocity(-0.6, Math.cos(yaw), Math.sin(yaw));
@@ -76,7 +76,7 @@ export class RocketLauncherWeapon extends BaseWeapon {
     }
 
     public override getBallisticSpeed(): number {
-        return RocketLauncherWeapon.BULLET_SPEED;
+        return RocketLauncher.BULLET_SPEED;
     }
 
     protected override getAmmoConsume(): number {

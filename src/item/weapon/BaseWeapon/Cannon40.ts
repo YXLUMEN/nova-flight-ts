@@ -8,7 +8,7 @@ import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
 import {FastBulletEntity} from "../../../entity/projectile/FastBulletEntity.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 
-export class Cannon40Weapon extends BaseWeapon {
+export class Cannon40 extends BaseWeapon {
     private readonly speed = 35;
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {

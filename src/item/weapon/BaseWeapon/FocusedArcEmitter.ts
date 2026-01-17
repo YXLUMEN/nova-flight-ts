@@ -20,7 +20,6 @@ export class FocusedArcEmitter extends BaseWeapon {
         const endY = start.y + Math.sin(yaw) * this.arcLength;
 
         const damage = randInt(4, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 48));
-        const chainDamage = Math.floor(damage * 0.5);
         const damageSource = world.getDamageSources().arc(attacker);
 
         const initialTargets: MobEntity[] = [];
@@ -39,56 +38,46 @@ export class FocusedArcEmitter extends BaseWeapon {
             }
         }
 
-        // 连锁
-        const subHitCount = new Map<Entity, number>();
-
-        for (const source of initialTargets) {
-            const candidates: Entity[] = [];
-            const sourcePos = source.getPositionRef;
-
-            for (const mob of mobs) {
-                if (mob === source || mob.isRemoved() || (subHitCount.get(mob) ?? 0) >= 2) continue;
-                if (squareDistVec2(sourcePos, mob.getPositionRef) <= 16384) {
-                    candidates.push(mob);
-                }
-            }
-
-            if (candidates.length === 0) continue;
-
-            const t = Math.min(3, candidates.length);
-            for (let i = 0; i < t; i++) {
-                const j = Math.floor(Math.random() * candidates.length);
-                const s = candidates.length - 1 - i;
-
-                [candidates[j], candidates[s]] = [candidates[s], candidates[j]];
-            }
-
-            const startIndex = candidates.length - t;
-            for (let i = startIndex; i < candidates.length; i++) {
-                const target = candidates[i];
-
-                const count = subHitCount.get(target) ?? 0;
-                subHitCount.set(target, count + 1);
-
-                target.takeDamage(damageSource, chainDamage);
-                const targetPos = target.getPositionRef;
-
-                world.spawnEffect(null, new ArcEffect(
-                    sourcePos.x, sourcePos.y, targetPos.x, targetPos.y,
-                    0.2, 1,
-                    '#7f54ff',
-                    1, 10
-                ));
-
-            }
-        }
-
         world.spawnEffect(null, new ArcEffect(
             start.x, start.y, endX, endY,
             0.2, 1,
             '#7f54ff'));
 
         world.playSound(null, SoundEvents.ARC_BURST);
+
+        if (initialTargets.length === 0) return;
+
+        // 连锁
+        const subHitCount = new Map<Entity, number>();
+        const chainDamage = Math.floor(damage * 0.5);
+
+        for (const source of initialTargets) {
+            let targetCount = 0;
+            const sourcePos = source.getPositionRef;
+
+            for (const mob of mobs) {
+                if (targetCount >= 3) break;
+                if (mob === source || mob.isRemoved()) continue;
+
+                const hitTime = subHitCount.get(mob) ?? 0;
+                if (hitTime >= 2) continue;
+
+                if (squareDistVec2(sourcePos, mob.getPositionRef) <= 16384) {
+                    targetCount++;
+                    subHitCount.set(mob, hitTime + 1);
+
+                    mob.takeDamage(damageSource, chainDamage);
+                    const targetPos = mob.getPositionRef;
+
+                    world.spawnEffect(null, new ArcEffect(
+                        sourcePos.x, sourcePos.y, targetPos.x, targetPos.y,
+                        0.2, 1,
+                        '#7f54ff',
+                        1, 10
+                    ));
+                }
+            }
+        }
     }
 
     public override getUiColor(): string {
@@ -97,5 +86,9 @@ export class FocusedArcEmitter extends BaseWeapon {
 
     public override getDisplayName(): string {
         return '聚能电弧发射器';
+    }
+
+    protected override getMuzzleParticles(): number {
+        return 0;
     }
 }

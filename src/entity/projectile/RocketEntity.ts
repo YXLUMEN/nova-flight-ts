@@ -3,7 +3,6 @@ import type {Entity} from "../Entity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
 import {LivingEntity} from "../LivingEntity.ts";
-import {SoundEvents} from "../../sound/SoundEvents.ts";
 
 export class RocketEntity extends ProjectileEntity {
     public explosionRadius = 64;
@@ -29,15 +28,12 @@ export class RocketEntity extends ProjectileEntity {
     }
 
     public explode() {
-        const world = this.getWorld();
-        world.createExplosion(this, null, this.getX(), this.getY(), {
+        this.getWorld().createExplosion(this, null, this.getX(), this.getY(), {
             damage: this.explosionDamage,
-            attacker: this.getOwner(),
             explosionRadius: this.explosionRadius,
             fastSparks: 2,
             sparks: 5,
             explodeColor: this.explodeColor,
         });
-        world.playSound(null, SoundEvents.MISSILE_EXPLOSION, 0.4);
     }
 }
