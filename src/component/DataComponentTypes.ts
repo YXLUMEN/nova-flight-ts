@@ -98,6 +98,10 @@ export class DataComponentTypes {
         builder => builder.withCodec(Codecs.BOOLEAN).withPacketCodec(PacketCodecs.BOOL)
     );
 
+    public static readonly MAX_DEFENSE: ComponentType<number> = this.register("max_defence",
+        builder => builder.withCodec(Codecs.UINT32).withPacketCodec(PacketCodecs.UINT8)
+    );
+
     private static register<T>(id: string, builderOperator: UnaryOperator<ComponentTypeBuilder<T>>): ComponentType<T> {
         const ide = Identifier.ofVanilla(id);
         const builder = new ComponentTypeBuilder<T>();

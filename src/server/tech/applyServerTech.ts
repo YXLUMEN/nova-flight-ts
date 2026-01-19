@@ -29,9 +29,9 @@ export class ApplyServerTech {
                 this.onUnlockExplosionWpn(stack, player);
                 break;
             }
-            case Techs.CANNON125: {
-                const stack = new ItemStack(Items.CANNON125);
-                player.addItem(Items.CANNON125, stack);
+            case Techs.ARTILLERY125: {
+                const stack = new ItemStack(Items.ARTILLERY125);
+                player.addItem(Items.ARTILLERY125, stack);
 
                 this.onUnlockBulletWpn(stack, player)
                 this.onUnlockExplosionWpn(stack, player);
@@ -69,6 +69,14 @@ export class ApplyServerTech {
             }
             case Techs.FOCUSED_ARC_EMITTER: {
                 player.addItem(Items.FOCUSED_ARC_EMITTER);
+                break;
+            }
+            case Techs.SENTINEL_POINT_DEFENSE: {
+                player.addItem(Items.POINT_DEFENSE);
+                break;
+            }
+            case Techs.FLAK_BATTERY: {
+                player.addItem(Items.FLAK_BATTERY);
                 break;
             }
             case Techs.HIGH_EFFICIENCY_COOLANT: {
@@ -227,6 +235,36 @@ export class ApplyServerTech {
             }
             case Techs.DECOY_RELEASER: {
                 player.addItem(Items.DECOY_RELEASER);
+                break;
+            }
+            case Techs.BARRIER_POINT_DEFENSE: {
+                const stack = player.getItem(Items.POINT_DEFENSE);
+                if (stack) {
+                    stack.set(DataComponentTypes.MAX_DEFENSE, 3);
+                }
+                break;
+            }
+            case Techs.GUARDIAN_POINT_DEFENSE: {
+                const stack = player.getItem(Items.POINT_DEFENSE);
+                if (stack) {
+                    stack.set(DataComponentTypes.MAX_DEFENSE, 5);
+                }
+                break;
+            }
+            case Techs.FLAK_CANNONS: {
+                const stack = player.getItem(Items.FLAK_BATTERY);
+                if (stack) {
+                    stack.set(DataComponentTypes.MAX_DEFENSE, 2);
+                    stack.set(DataComponentTypes.ATTACK_DAMAGE, 2);
+                }
+                break;
+            }
+            case Techs.FLAK_ARTILLERY: {
+                const stack = player.getItem(Items.FLAK_BATTERY);
+                if (stack) {
+                    stack.set(DataComponentTypes.MAX_DEFENSE, 3);
+                    stack.set(DataComponentTypes.ATTACK_DAMAGE, 3);
+                }
                 break;
             }
         }

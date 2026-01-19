@@ -496,6 +496,7 @@ export class ClientTechTree implements TechTree {
 
         this.player.steeringGear = false;
         this.player.followPointer = false;
+        this.player.autoAim = null;
         this.player.setYaw(-1.57079);
 
         for (const tech of unlocked) {
@@ -535,6 +536,7 @@ export class ClientTechTree implements TechTree {
 
         player.steeringGear = false;
         player.followPointer = false;
+        this.player.autoAim = null;
         player.setYaw(-1.57079);
 
         this.state.reset();

@@ -1,6 +1,7 @@
 import type {MutVec2} from "./MutVec2.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {IVec} from "./IVec.ts";
+import type {Predicate} from "../../apis/types.ts";
 
 export function clamp(value: number, min: number, max: number) {
     return Math.max(min, Math.min(max, value));
@@ -189,14 +190,25 @@ export function doubleEquals(a: number, b: number, epsilon = 1E-6): boolean {
     return Math.abs(a - b) <= epsilon;
 }
 
-export function getNearestEntity(center: IVec, entities: Iterable<Entity>, maxDistance?: number): Entity | null {
+/**
+ * @param center 起始点
+ * @param entities 可迭代集合
+ * @param maxDistanceSq 最大搜索距离
+ * @param filter 排除满足条件
+ * */
+export function getNearestEntity<T extends Entity>(
+    center: IVec,
+    entities: Iterable<T>,
+    maxDistanceSq?: number,
+    filter?: Predicate<T>): T | null {
     let nearest = null;
-    let nearestDistSq = maxDistance !== undefined
-        ? maxDistance * maxDistance
+    let nearestDistSq = maxDistanceSq !== undefined
+        ? maxDistanceSq
         : Infinity;
 
     for (const entity of entities) {
-        if (entity.isRemoved()) continue;
+        if (entity.isRemoved() || filter?.(entity)) continue;
+
         const pos = entity.getPositionRef;
         const dx = pos.x - center.x;
         const dy = pos.y - center.y;

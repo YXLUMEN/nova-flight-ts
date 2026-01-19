@@ -8,9 +8,9 @@ import {SoundEventS2CPacket} from "../network/packet/s2c/SoundEventS2CPacket.ts"
 import {StopSoundS2CPacket} from "../network/packet/s2c/StopSoundS2CPacket.ts";
 import {type Entity} from "../entity/Entity.ts";
 import {EntityType} from "../entity/EntityType.ts";
-import {EntityList} from "../world/EntityList.ts";
-import {ServerEntityManager} from "../world/ServerEntityManager.ts";
-import type {EntityHandler} from "../world/EntityHandler.ts";
+import {EntityList} from "../world/entity/EntityList.ts";
+import {ServerEntityManager} from "../world/entity/ServerEntityManager.ts";
+import type {EntityHandler} from "../world/entity/EntityHandler.ts";
 import type {UUID} from "../apis/types.ts";
 import {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
@@ -205,22 +205,22 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public override getEntityLookup() {
-        return this.entityManager.getIndex();
+        return this.entityManager.getLookup();
     }
 
-    public getEntities(): EntityList {
+    public override getEntities(): EntityList {
         return this.entities;
     }
 
-    public getPlayers() {
+    public override getPlayers() {
         return this.server.playerManager.getAllPlayers();
     }
 
-    public getMobs(): ReadonlySet<MobEntity> {
+    public override getMobs(): ReadonlySet<MobEntity> {
         return this.entities.getMobs();
     }
 
-    public getProjectiles(): ReadonlySet<ProjectileEntity> {
+    public override getProjectiles(): ReadonlySet<ProjectileEntity> {
         return this.entities.getProjectiles();
     }
 

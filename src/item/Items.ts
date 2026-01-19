@@ -17,7 +17,9 @@ import {CIWS} from "./weapon/BaseWeapon/CIWS.ts";
 import {CloudLightningConduits} from "./weapon/BaseWeapon/CloudLightningConduits.ts";
 import {FocusedArcEmitter} from "./weapon/BaseWeapon/FocusedArcEmitter.ts";
 import {ArcEmitter} from "./weapon/BaseWeapon/ArcEmitter.ts";
-import {Cannon125} from "./weapon/BaseWeapon/Cannon125.ts";
+import {Artillery125} from "./weapon/BaseWeapon/Artillery125.ts";
+import {PointDefense} from "./PointDefense.ts";
+import {FlakBattery} from "./FlakBattery.ts";
 
 export class Items {
     public static AIR = this.register("air", new Item(new Item.Settings()));
@@ -92,13 +94,20 @@ export class Items {
         .maxCooldown(32)
         .unbreakable()
     ));
-    public static readonly CANNON125 = this.register("cannon125", new Cannon125(new Item.Settings()
+    public static readonly ARTILLERY125 = this.register("artillery125", new Artillery125(new Item.Settings()
         .maxDurability(8)
         .attackDamage(12)
         .maxCooldown(32)
         .component(DataComponentTypes.EXPLOSION_RADIUS, 210)
         .component(DataComponentTypes.EXPLOSION_DAMAGE, 14)
         .component(DataComponentTypes.MAX_RELOAD_TIME, 40)
+    ));
+    public static readonly POINT_DEFENSE = this.register("point_defense", new PointDefense(new Item.Settings()
+        .component(DataComponentTypes.MAX_DEFENSE, 1)
+    ));
+    public static readonly FLAK_BATTERY = this.register("flak_battery", new FlakBattery(new Item.Settings()
+        .attackDamage(1)
+        .component(DataComponentTypes.MAX_DEFENSE, 1)
     ));
 
     // 避免引用问题

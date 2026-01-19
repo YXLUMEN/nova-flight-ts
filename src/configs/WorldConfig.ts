@@ -1,4 +1,4 @@
-import {config, createClean} from "../utils/uit.ts";
+import {config, status} from "../utils/uit.ts";
 
 // @ts-expect-error
 const isDev = import.meta.env.MODE === 'development';
@@ -11,10 +11,10 @@ const defaultConfig = config({
     per: 50,
     fps: 75,
     perFrame: 1000 / 75,
-    version: '26v04'
+    version: '26v06'
 });
 
-const WorldConfig = Object.seal(createClean({
+const WorldConfig = status({
     lowPowerMode: false,
 
     tick: defaultConfig.tick,
@@ -32,6 +32,6 @@ const WorldConfig = Object.seal(createClean({
     version: defaultConfig.version,
     port: 25566,
     serverAddr: '127.0.0.1:25566',
-}));
+});
 
 export {defaultConfig, WorldConfig, isDev, isServer};

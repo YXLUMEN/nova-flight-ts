@@ -1,7 +1,7 @@
-import type {Entity} from "../entity/Entity.ts";
-import type {UUID} from "../apis/types.ts";
+import type {UUID} from "../../apis/types.ts";
+import type {EntityLike} from "./EntityLike.ts";
 
-export class EntityIndex<T extends Entity> {
+export class EntityIndex<T extends EntityLike> {
     private readonly idToEntity = new Map<number, T>;
     private readonly uuidToEntity = new Map<UUID, T>();
 
@@ -10,7 +10,7 @@ export class EntityIndex<T extends Entity> {
     }
 
     public add(entity: T): boolean {
-        const uuid = entity.getUUID();
+        const uuid: UUID = entity.getUUID();
         if (this.uuidToEntity.has(uuid)) {
             console.warn(`Duplicate entity UUID ${uuid}: ${entity}`);
             return false;
@@ -31,6 +31,10 @@ export class EntityIndex<T extends Entity> {
 
     public getByUUID(uuid: UUID): T | null {
         return this.uuidToEntity.get(uuid) ?? null;
+    }
+
+    public iterate() {
+        return this.uuidToEntity.values();
     }
 
     public uuidValues() {

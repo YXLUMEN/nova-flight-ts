@@ -2,10 +2,10 @@ import {type Entity} from "../Entity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
 import {PI2, rand} from "../../utils/math/math.ts";
-import {AutoAim} from "../../client/tech/AutoAim.ts";
 import {RocketEntity} from "./RocketEntity.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
 import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacket.ts";
+import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 
 export class MissileEntity extends RocketEntity {
     public static lockedEntity = new WeakMap<Entity, number>();
@@ -114,7 +114,7 @@ export class MissileEntity extends RocketEntity {
         // 追踪
         const targetPos = this.target.getPositionRef;
         const targetVel = this.target.getVelocityRef;
-        const desiredYaw = AutoAim.getLeadYaw(pos, targetPos, targetVel, this.trackingSpeed);
+        const desiredYaw = BallisticsUtils.getLeadYaw(pos, targetPos, targetVel, this.trackingSpeed);
 
         this.setClampYaw(desiredYaw, this.turnRate);
 

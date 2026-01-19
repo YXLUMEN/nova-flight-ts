@@ -7,10 +7,10 @@ import type {EntityType} from "./EntityType.ts";
 import type {EntityDimensions} from "./EntityDimensions.ts";
 import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
 import type {DataTracked} from "./data/DataTracked.ts";
-import {AtomicInteger} from "../utils/math/AtomicInteger.ts";
+import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import type {IVec} from "../utils/math/IVec.ts";
-import type {Box} from "../utils/math/Box.ts";
+import {Box} from "../utils/math/Box.ts";
 import {clamp, lerp, lerpRadians} from "../utils/math/math.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import type {NbtCompound} from "../nbt/NbtCompound.ts";
@@ -21,10 +21,12 @@ import type {PlayerEntity} from "./player/PlayerEntity.ts";
 import type {CommandOutput} from "../server/command/CommandOutput.ts";
 import {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
+import type {EntityLike} from "../world/entity/EntityLike.ts";
 
 
-export abstract class Entity implements DataTracked, Comparable, NbtSerializable, CommandOutput {
+export abstract class Entity implements EntityLike, DataTracked, Comparable, NbtSerializable, CommandOutput {
     private static readonly CURRENT_ID = new AtomicInteger();
+    private static readonly NULL_BOX = new Box(0.0, 0.0, 0.0, 0.0);
 
     public invulnerable: boolean = false;
     public velocityDirty: boolean = false;
@@ -34,19 +36,27 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     public prevYaw: number = 0;
 
     public age: number = 0;
+
     public color = '';
     public edgeColor = '';
-    protected readonly dataTracker: DataTracker;
+
     private uuid: UUID = crypto.randomUUID();
     private id: number = Entity.CURRENT_ID.incrementAndGet();
+
     private readonly normalTags: Set<string> = new Set<string>();
     private readonly type: EntityType<any>;
     private readonly world: World;
+
+    protected readonly dataTracker: DataTracker;
+
     private readonly trackedPosition = new TrackedPosition();
     private readonly pos: MutVec2;
+    private readonly intPos: MutVec2;
     private readonly velocity: MutVec2 = MutVec2.zero();
     private movementSpeed: number = 0.2;
     private yaw: number = 0;
+
+    private boundingBox: Box = Entity.NULL_BOX;
     private readonly dimensions: EntityDimensions;
     private removed: boolean = false;
 
@@ -55,6 +65,7 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         this.world = world;
 
         this.pos = MutVec2.zero();
+        this.intPos = MutVec2.zero();
         this.prevX = 0;
         this.prevY = 0;
         this.dimensions = type.getDimensions();
@@ -171,6 +182,10 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         return this.pos.toImmutable();
     }
 
+    public getIntPos(): MutVec2 {
+        return this.intPos;
+    }
+
     public getX(): number {
         return this.pos.x;
     }
@@ -180,9 +195,9 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
     }
 
     public setPosition(x: number, y: number): void {
-        if (this.pos.x !== x || this.pos.y !== y) {
-            this.pos.set(x, y);
-        }
+        if (this.pos.x === x && this.pos.y === y) return;
+        this.pos.set(x, y);
+        // this.setBoundingBox(this.calculateBoundingBox());
     }
 
     public setPositionByVec(pos: IVec): void {
@@ -292,6 +307,14 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         return this.dimensions;
     }
 
+    public getBoundingBox(): Box {
+        return this.boundingBox;
+    }
+
+    public setBoundingBox(boundingBox: Box): void {
+        this.boundingBox = boundingBox;
+    }
+
     public calculateBoundingBox(): Box {
         return this.dimensions.getBoxAtByVec(this.pos);
     }
@@ -369,14 +392,15 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
         const dx = lerp(t, this.getX(), x);
         const dy = lerp(t, this.getY(), y);
         const dYaw = lerpRadians(t, this.getYaw(), yaw);
-        this.pos.set(dx, dy);
+        this.setPosition(dx, dy);
         this.yaw = dYaw;
     }
 
     protected adjustPosition(): boolean {
-        const pos = this.pos;
-        pos.x = clamp(pos.x, 20, World.WORLD_W - 20);
-        pos.y = clamp(pos.y, 20, World.WORLD_H - 20);
+        this.setPosition(
+            clamp(this.pos.x, 20, World.WORLD_W - 20),
+            clamp(this.pos.y, 20, World.WORLD_H - 20)
+        );
         return true;
     }
 
@@ -440,11 +464,9 @@ export abstract class Entity implements DataTracked, Comparable, NbtSerializable
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
         try {
-            const pos = this.pos;
-            nbt.putNumberArray('Pos', pos.x, pos.y);
+            nbt.putNumberArray('Pos', this.pos.x, this.pos.y);
+            nbt.putNumberArray('Velocity', this.velocity.x, this.velocity.y);
 
-            const velocity = this.velocity;
-            nbt.putNumberArray('Velocity', velocity.x, velocity.y);
             nbt.putDouble('Yaw', this.yaw);
             nbt.putDouble('Speed', this.movementSpeed);
             nbt.putBoolean('Invulnerable', this.invulnerable);

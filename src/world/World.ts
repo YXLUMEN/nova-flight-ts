@@ -6,11 +6,10 @@ import {DamageSources} from "../entity/damage/DamageSources.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import {type IEvents} from "../apis/IEvents.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
-import {AtomicInteger} from "../utils/math/AtomicInteger.ts";
+import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
 import type {Payload} from "../network/Payload.ts";
 import type {Consumer, Supplier} from "../apis/types.ts";
-import type {EntityList} from "./EntityList.ts";
-import type {EntityIndex} from "./EntityIndex.ts";
+import type {EntityList} from "./entity/EntityList.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {Explosion} from "./Explosion.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
@@ -22,11 +21,12 @@ import {EntityType} from "../entity/EntityType.ts";
 import type {Channel} from "../network/Channel.ts";
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
-import {pointInCircleVec2} from "../utils/math/math.ts";
+import {squareDistVec2} from "../utils/math/math.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import type {MutVec2} from "../utils/math/MutVec2.ts";
+import type {EntityLookUp} from "./entity/EntityLookUp.ts";
 
 export abstract class World {
     public static readonly WORLD_W = 1692;
@@ -116,23 +116,23 @@ export abstract class World {
     }
 
     public createEMP(attacker: Entity | null, pos: MutVec2, radius: number, duration: number = 40, damage: number = 0) {
-        this.getEntities().forEach(entity => {
+        const r2 = radius * radius;
+
+        for (const entity of this.getEntities().values()) {
             if (entity instanceof ProjectileEntity) {
                 if (entity.getOwner() !== attacker &&
-                    pointInCircleVec2(entity.getPositionRef, pos, radius)) {
+                    squareDistVec2(pos, entity.getPositionRef) <= r2) {
                     entity.discard();
                 }
-                return;
-            }
-            if (entity instanceof MobEntity) {
+            } else if (entity instanceof MobEntity) {
                 if (!entity.isRemoved() &&
-                    pointInCircleVec2(entity.getPositionRef, pos, radius)) {
+                    squareDistVec2(pos, entity.getPositionRef) <= r2) {
                     entity.addStatusEffect(new StatusEffectInstance(
                         StatusEffects.EMC_STATUS, duration, 1), attacker);
                     entity.takeDamage(this.damageSources.arc(attacker), damage);
                 }
             }
-        });
+        }
 
         this.playSound(null, SoundEvents.EMP_BURST);
     }
@@ -175,13 +175,15 @@ export abstract class World {
 
     public abstract getMobs(): ReadonlySet<MobEntity>;
 
+    public abstract getProjectiles(): ReadonlySet<ProjectileEntity>;
+
     public abstract addEntity(entity: Entity): void;
 
     public abstract removeEntity(entityId: number): void;
 
     public abstract getEntityById(id: number): Entity | null;
 
-    public abstract getEntityLookup(): EntityIndex<Entity>;
+    public abstract getEntityLookup(): EntityLookUp<Entity>;
 
     public togglePause(): void {
         if (this.over) return;

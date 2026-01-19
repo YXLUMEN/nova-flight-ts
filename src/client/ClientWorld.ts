@@ -1,9 +1,9 @@
 import {World} from "../world/World.ts";
 import {type Entity} from "../entity/Entity.ts";
-import {ClientEntityManager} from "../world/ClientEntityManager.ts";
-import {EntityList} from "../world/EntityList.ts";
+import {ClientEntityManager} from "../world/entity/ClientEntityManager.ts";
+import {EntityList} from "../world/entity/EntityList.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
-import type {EntityHandler} from "../world/EntityHandler.ts";
+import type {EntityHandler} from "../world/entity/EntityHandler.ts";
 import type {VisualEffect} from "../effect/VisualEffect.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
@@ -30,6 +30,7 @@ import {WorldConfig} from "../configs/WorldConfig.ts";
 import {AbstractClientPlayerEntity} from "./entity/AbstractClientPlayerEntity.ts";
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
+import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 
 export class ClientWorld extends World {
     private readonly client: NovaFlightClient = NovaFlightClient.getInstance();
@@ -93,7 +94,7 @@ export class ClientWorld extends World {
         this.entities.processRemovals();
     }
 
-    public getEntities() {
+    public override getEntities() {
         return this.entities;
     }
 
@@ -101,8 +102,12 @@ export class ClientWorld extends World {
         return this.players;
     }
 
-    public getMobs(): ReadonlySet<MobEntity> {
+    public override getMobs(): ReadonlySet<MobEntity> {
         return this.entities.getMobs();
+    }
+
+    public override getProjectiles(): ReadonlySet<ProjectileEntity> {
+        return this.entities.getProjectiles();
     }
 
     public clientTickEntity(entity: Entity) {
@@ -158,7 +163,7 @@ export class ClientWorld extends World {
     }
 
     public override getEntityLookup() {
-        return this.entityManager.getIndex();
+        return this.entityManager.getLookup();
     }
 
     public override playSound(_: Entity | null, sounds: SoundEvent, volume: number = 1, pitch: number = 1): void {

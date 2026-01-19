@@ -37,6 +37,10 @@ export function config<T>(obj: T): T {
     return deepFreeze(createClean(obj));
 }
 
+export function status<T>(obj: T): T {
+    return Object.seal(createClean(obj));
+}
+
 export function sleep(time: number) {
     return new Promise(resolve => setTimeout(resolve, time));
 }

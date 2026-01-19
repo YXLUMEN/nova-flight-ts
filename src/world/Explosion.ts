@@ -42,11 +42,11 @@ export class Explosion {
         if (this.world.isClient) {
             this.summonExplosionVisual(this.world as ClientWorld);
         } else {
-            this.summonExplosion(this.world);
+            this.summonExplosion(this.world as ServerWorld);
         }
     }
 
-    public summonExplosion(world: World) {
+    public summonExplosion(world: ServerWorld) {
         const radius = this.opts.explosionRadius ?? 16;
         const damage = this.opts.damage ?? 6;
 

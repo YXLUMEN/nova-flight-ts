@@ -1,7 +1,7 @@
-import {Entity} from "../entity/Entity.ts";
-import {MobEntity} from "../entity/mob/MobEntity.ts";
-import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
-import type {Consumer} from "../apis/types.ts";
+import {Entity} from "../../entity/Entity.ts";
+import {MobEntity} from "../../entity/mob/MobEntity.ts";
+import {ProjectileEntity} from "../../entity/projectile/ProjectileEntity.ts";
+import type {Consumer} from "../../apis/types.ts";
 
 export class EntityList {
     private readonly entities = new Map<number, Entity>();

@@ -96,14 +96,22 @@ export function applyClientTech(tech: RegistryEntry<Tech>): void {
             }
             break;
         }
-        case Techs.CANNON125: {
-            const c125 = new ItemStack(Items.CANNON125);
-            player.addItem(Items.CANNON125, c125);
+        case Techs.ARTILLERY125: {
+            const c125 = new ItemStack(Items.ARTILLERY125);
+            player.addItem(Items.ARTILLERY125, c125);
 
             if (player.getTechs().isUnlocked(Techs.HD_BULLET)) {
                 const base = c125.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
                 c125.set(DataComponentTypes.ATTACK_DAMAGE, base * 2);
             }
+            break;
+        }
+        case Techs.SENTINEL_POINT_DEFENSE: {
+            player.addItem(Items.POINT_DEFENSE);
+            break;
+        }
+        case Techs.FLAK_BATTERY: {
+            player.addItem(Items.FLAK_BATTERY);
             break;
         }
         case Techs.HV_WARHEAD: {

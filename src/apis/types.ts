@@ -1,3 +1,5 @@
+import type {Entity} from "../entity/Entity.ts";
+
 export type Constructor<T = any> = new (...args: any[]) => T;
 
 export type UUID = `${string}-${string}-${string}-${string}-${string}`;
@@ -32,3 +34,5 @@ export interface StoreConfig {
         unique?: boolean;   // 是否唯一索引
     }[];
 }
+
+export type EntityDist<T extends Entity> = { entity: T, distSq: number };

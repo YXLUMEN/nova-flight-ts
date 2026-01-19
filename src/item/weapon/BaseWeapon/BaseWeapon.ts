@@ -1,6 +1,5 @@
 import {Weapon} from "../Weapon.ts";
 import {rand, randInt} from "../../../utils/math/math.ts";
-import {Vec2} from "../../../utils/math/Vec2.ts";
 import type {ProjectileEntity} from "../../../entity/projectile/ProjectileEntity.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {ItemStack} from "../../ItemStack.ts";
@@ -120,8 +119,7 @@ export abstract class BaseWeapon extends Weapon {
         const f = Math.cos(offsetYaw);
         const g = Math.sin(offsetYaw);
 
-        const vel = new Vec2(f * speed, g * speed);
-        bullet.setVelocityByVec(vel);
+        bullet.setVelocity(f * speed, g * speed);
         bullet.setYaw(offsetYaw);
 
         const completeOffset = attacker.getWidth() / 2 + offset;

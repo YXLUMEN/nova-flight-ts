@@ -1,5 +1,5 @@
 import type {WeaponUIInfo} from '../../../apis/IUIInfo.ts';
-import type {Weapon} from '../../../item/weapon/Weapon.ts';
+import {Weapon} from '../../../item/weapon/Weapon.ts';
 import {BaseWeapon} from "../../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {clamp, lerp, PI2} from "../../../utils/math/math.ts";
 import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
@@ -141,13 +141,15 @@ export class HUD implements IUi {
     }
 
     private getWeaponUI(stack: ItemStack): WeaponUIInfo | null {
-        const weapon = stack.getItem() as Weapon;
-        const cd = weapon.getCooldown(stack) ?? 0;
-        const max = weapon.getMaxCooldown(stack) ?? 1;
-        const label = weapon.getDisplayName() ?? weapon.getDisplayName().toUpperCase();
-        const color = weapon.getUiColor(stack) ?? '#5ec8ff';
+        const weapon = stack.getItem();
+        if (!(weapon instanceof Weapon) || weapon instanceof BaseWeapon) return null;
 
-        if (max <= 0 || weapon instanceof BaseWeapon) return null;
+        const cd = weapon.getCooldown(stack);
+        const max = weapon.getMaxCooldown(stack);
+        const label = weapon.getDisplayName();
+        const color = weapon.getUiColor(stack);
+
+        if (max <= 0) return null;
         return {label, color, cooldown: Math.max(0, cd), maxCooldown: Math.max(0.001, max)};
     }
 

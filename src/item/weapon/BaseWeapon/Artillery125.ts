@@ -9,7 +9,7 @@ import {C125BulletEntity} from "../../../entity/projectile/C125BulletEntity.ts";
 import {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import {Techs} from "../../../tech/Techs.ts";
 
-export class Cannon125 extends BaseWeapon {
+export class Artillery125 extends BaseWeapon {
     private readonly speed = 14;
 
     protected onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
@@ -37,7 +37,7 @@ export class Cannon125 extends BaseWeapon {
     }
 
     public override getDisplayName(): string {
-        return '125舰炮';
+        return '125火炮';
     }
 
     public override getBallisticSpeed(): number {

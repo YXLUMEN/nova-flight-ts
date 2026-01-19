@@ -5,6 +5,7 @@ import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
 import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
+import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 
 export class AutoAim {
     public static readonly FIRE_THRESHOLD = Math.PI / 90;
@@ -15,40 +16,6 @@ export class AutoAim {
 
     public constructor(owner: ClientPlayerEntity) {
         this.owner = owner;
-    }
-
-    public static getLeadYaw(shooterPos: IVec, targetPos: IVec, targetVel: IVec, bulletSpeed: number): number {
-        const dx = targetPos.x - shooterPos.x;
-        const dy = targetPos.y - shooterPos.y;
-        const vx = targetVel.x;
-        const vy = targetVel.y;
-
-        const a = vx * vx + vy * vy - bulletSpeed * bulletSpeed;
-        const b = 2 * (dx * vx + dy * vy);
-        const c = dx * dx + dy * dy;
-
-        let t: number;
-
-        if (Math.abs(a) < 1e-6) {
-            if (Math.abs(b) < 1e-6) return Math.atan2(dy, dx);
-            // 退化为线性方程
-            t = -c / b;
-        } else {
-            const disc = b * b - 4 * a * c;
-            if (disc < 0) return Math.atan2(dy, dx); // 无解, 直接瞄准当前
-            const sqrtDisc = Math.sqrt(disc);
-            const t1 = (-b - sqrtDisc) / (2 * a);
-            const t2 = (-b + sqrtDisc) / (2 * a);
-            // 取最小正时间
-            t = Math.min(t1, t2) > 0 ? Math.min(t1, t2) : Math.max(t1, t2);
-        }
-
-        if (t <= 0) return Math.atan2(dy, dx);
-
-        const leadX = targetPos.x + vx * t;
-        const leadY = targetPos.y + vy * t;
-
-        return Math.atan2(leadY - shooterPos.y, leadX - shooterPos.x);
     }
 
     public tick(): void {
@@ -66,7 +33,7 @@ export class AutoAim {
         const mobVel = target.getVelocityRef;
         const bulletSpeed = (this.owner.getCurrentItemStack().getItem() as BaseWeapon).getBallisticSpeed();
 
-        const targetYaw = AutoAim.getLeadYaw(pos, mobPos, mobVel, bulletSpeed);
+        const targetYaw = BallisticsUtils.getLeadYaw(pos, mobPos, mobVel, bulletSpeed);
         this.owner.setClampYaw(targetYaw, 0.1963);
 
         const currentYaw = this.owner.getYaw();
@@ -99,12 +66,11 @@ export class AutoAim {
             const mobPos = mob.getPositionRef;
             const dx = mobPos.x - pos.x;
             const dy = mobPos.y - pos.y;
-            const dist2 = dx * dx + dy * dy;
-            if (dist2 < 1E-6) continue;
+            const distSq = dx * dx + dy * dy;
+            if (distSq < 1E-6) continue;
 
-            const mobVel = mob.getPositionRef;
-            const relSpeed = ((dx * mobVel.x) + (dy * mobVel.y)) / Math.sqrt(dist2);
-            const approaching = relSpeed < 0;
+            const mobVel = mob.getVelocityRef;
+            const approaching = (dx * mobVel.x + dy * mobVel.y) < 0;
 
             let angleDiff = Math.atan2(dy, dx) - ownerYaw;
             angleDiff = ((angleDiff + Math.PI) % PI2) - Math.PI;
@@ -112,11 +78,11 @@ export class AutoAim {
             const absAngleDiff = Math.abs(angleDiff);
 
             if (!best ||
-                (dist2 < best.dist2) ||
-                (dist2 === best.dist2 && approaching && !best.approaching) ||
-                (dist2 === best.dist2 && approaching === best.approaching && absAngleDiff < best.angleDiff)
+                (distSq < best.dist2) ||
+                (distSq === best.dist2 && approaching && !best.approaching) ||
+                (distSq === best.dist2 && approaching === best.approaching && absAngleDiff < best.angleDiff)
             ) {
-                best = {mob, dist2, angleDiff: absAngleDiff, approaching};
+                best = {mob, dist2: distSq, angleDiff: absAngleDiff, approaching};
             }
         }
 

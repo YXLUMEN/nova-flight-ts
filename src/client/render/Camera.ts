@@ -2,7 +2,6 @@ import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {PI2} from "../../utils/math/math.ts";
 import {Window} from "./Window.ts";
-import {World} from "../../world/World.ts";
 
 interface ViewRect {
     top: number;
@@ -13,13 +12,12 @@ interface ViewRect {
     height: number;
 }
 
-// noinspection DuplicatedCode
 export class Camera {
-    private offset = MutVec2.zero();
-    private velocity = MutVec2.zero();
-    private lastViewOffsetCache = MutVec2.zero();
-    private viewOffsetCache = MutVec2.zero();
-    private uiOffsetCache = MutVec2.zero();
+    private readonly offset = MutVec2.zero();
+    private readonly velocity = MutVec2.zero();
+    private readonly lastViewOffsetCache = MutVec2.zero();
+    private readonly viewOffsetCache = MutVec2.zero();
+    private readonly uiOffsetCache = MutVec2.zero();
     private viewRectCache: ViewRect = {
         top: 0,
         bottom: 0,
@@ -30,6 +28,7 @@ export class Camera {
     };
 
     private deadZoneRadius = 40;
+    private squareDeadZone = this.deadZoneRadius ** 2;
     private followSpeed = 2000;
     private smoothing = 20;
     private friction = 12;
@@ -43,13 +42,9 @@ export class Camera {
     private uiMaxDrift = 64;      // HUD 最大漂移像素(镜头快速移动时)
     private uiShakeFactor = 0.5;
 
-    public update(target: MutVec2, tickDelta: number, leap = false): void {
+    public update(target: MutVec2, tickDelta: number): void {
         if (WorldConfig.enableCameraOffset) {
-            if (leap) {
-                this.leapFollow(target, tickDelta);
-            } else {
-                this.follow(target, tickDelta);
-            }
+            this.follow(target, tickDelta);
         }
         this.updateShake(tickDelta);
 
@@ -99,35 +94,6 @@ export class Camera {
         this.velocity.y *= damping;
     }
 
-    private leapFollow(target: MutVec2, tickDelta: number): void {
-        const desired = target.subtract(Window.VIEW_W / 2, Window.VIEW_H / 2);
-
-        let dx = desired.x - this.offset.x;
-        let dy = desired.y - this.offset.y;
-
-        if (Math.abs(dx) > World.WORLD_W / 2) {
-            this.offset.x = desired.x;
-            return;
-        }
-
-        this.velocity.x += dx * this.smoothing * tickDelta;
-        this.velocity.y += dy * this.smoothing * tickDelta;
-
-        const len = Math.hypot(this.velocity.x, this.velocity.y);
-        if (len > this.followSpeed) {
-            const scale = this.followSpeed / len;
-            this.velocity.x *= scale;
-            this.velocity.y *= scale;
-        }
-
-        this.offset.x += this.velocity.x * tickDelta;
-        this.offset.y += this.velocity.y * tickDelta;
-
-        const damping = Math.exp(-this.friction * tickDelta);
-        this.velocity.x *= damping;
-        this.velocity.y *= damping;
-    }
-
     private updateShake(tickDelta: number) {
         // 衰减创伤
         if (this.shakeTrauma > 0) {
@@ -155,7 +121,7 @@ export class Camera {
         const y = this.offset.y + Window.VIEW_H / 2;
         const dx = target.x - x;
         const dy = target.y - y;
-        return dx * dx + dy * dy > this.deadZoneRadius * this.deadZoneRadius;
+        return dx * dx + dy * dy > this.squareDeadZone;
     }
 
     public get cameraOffset(): MutVec2 {

@@ -13,7 +13,6 @@ import {LivingEntity} from "../../entity/LivingEntity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 import {AttributeModifiersComponent} from "../../component/type/AttributeModifiersComponent.ts";
-import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {Items} from "../Items.ts";
 import {Techs} from "../../tech/Techs.ts";
 
@@ -154,7 +153,7 @@ export class IntoVoidWeapon extends SpecialWeapon {
 
         if (!world.isClient) {
             const box = attacker.getWidth() + stack.getOrDefault(DataComponentTypes.EFFECT_RANGE, 32);
-            for (const mob of (world as ServerWorld).getMobs()) {
+            for (const mob of world.getMobs()) {
                 if (mob.isRemoved() || !pointInCircleVec2(attacker.getPositionRef, mob.getPositionRef, box + mob.getWidth())) continue;
                 if (mob instanceof BossEntity) continue;
                 mob.onDeath(world.getDamageSources().void(attacker as PlayerEntity));

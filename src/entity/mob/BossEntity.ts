@@ -37,7 +37,7 @@ export class BossEntity extends MobEntity {
     private readonly BULLET_WAVES = [
         {count: 8, speed: 4.5, delay: 0, face: false},
         {count: 12, speed: 3.0, delay: 4, face: false},
-        {count: 10, speed: 4.0, delay: 0, face: true},
+        {count: 10, speed: 6.0, delay: 0, face: true},
     ]
 
     private readonly FIRE_OFFSETS = [

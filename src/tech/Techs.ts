@@ -25,7 +25,7 @@ export class Techs {
     public static AD_LOADING;
     public static ANTIMATTER_WARHEAD;
     public static CANNON90;
-    public static CANNON125;
+    public static ARTILLERY125;
     public static FUSION_BOMB;
     public static HV_WARHEAD;
     public static HD_EXPLOSIVES;
@@ -56,6 +56,12 @@ export class Techs {
     public static CLOUD_LIGHTNING;
     public static ARC_EMITTER;
     public static FOCUSED_ARC_EMITTER;
+    public static SENTINEL_POINT_DEFENSE;
+    public static BARRIER_POINT_DEFENSE;
+    public static GUARDIAN_POINT_DEFENSE;
+    public static FLAK_BATTERY;
+    public static FLAK_CANNONS;
+    public static FLAK_ARTILLERY;
 
     static {
         const parsed = TechState.normalizeTechs(tech);
@@ -81,7 +87,7 @@ export class Techs {
         this.AD_LOADING = registerFromJson('ad_loading');
         this.ANTIMATTER_WARHEAD = registerFromJson('antimatter_warhead');
         this.CANNON90 = registerFromJson('90_cannon');
-        this.CANNON125 = registerFromJson('125_cannon');
+        this.ARTILLERY125 = registerFromJson('125_artillery');
         this.FUSION_BOMB = registerFromJson('fusion_bomb');
         this.HV_WARHEAD = registerFromJson('hv_warhead');
         this.HD_EXPLOSIVES = registerFromJson('hd_explosives');
@@ -112,6 +118,12 @@ export class Techs {
         this.CLOUD_LIGHTNING = registerFromJson('cloud_lightning');
         this.ARC_EMITTER = registerFromJson('arc_emitter');
         this.FOCUSED_ARC_EMITTER = registerFromJson('focused_arc_emitter');
+        this.SENTINEL_POINT_DEFENSE = registerFromJson('sentinel_point_defense');
+        this.BARRIER_POINT_DEFENSE = registerFromJson('barrier_point_defense');
+        this.GUARDIAN_POINT_DEFENSE = registerFromJson('guardian_point_defense');
+        this.FLAK_BATTERY = registerFromJson('flak_battery');
+        this.FLAK_CANNONS = registerFromJson('flak_cannons');
+        this.FLAK_ARTILLERY = registerFromJson('flak_artillery');
 
         Registries.TECH.getEntries().forEach(entry => entry.getValue().complete());
     }

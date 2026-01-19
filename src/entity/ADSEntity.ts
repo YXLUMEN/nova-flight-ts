@@ -8,6 +8,7 @@ import type {LivingEntity} from "./LivingEntity.ts";
 import {squareDistVec2} from "../utils/math/math.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import type {IVec} from "../utils/math/IVec.ts";
+import {BallisticsUtils} from "../utils/math/BallisticsUtils.ts";
 
 export class ADSEntity extends Entity implements IOwnable {
     private static readonly RADIUS = 256 * 256;
@@ -18,7 +19,7 @@ export class ADSEntity extends Entity implements IOwnable {
         this.owner = owner;
     }
 
-    public static async spawnInterceptPathParticles(world: ServerWorld, start: IVec, end: IVec) {
+    public static async spawnInterceptPath(world: ServerWorld, start: IVec, end: IVec) {
         const mod = await import('../effect/LaserBeamEffect.ts');
         const effect = new mod.LaserBeamEffect('#fff', 1, 0.1);
         effect.set(start, end);
@@ -40,20 +41,11 @@ export class ADSEntity extends Entity implements IOwnable {
             if (projectile.getOwner() === this.owner) continue;
 
             const projPos = projectile.getPositionRef;
-            if (squareDistVec2(projPos, selfPos) > ADSEntity.RADIUS) continue;
-            const proVel = projectile.getVelocityRef;
+            if (squareDistVec2(projPos, selfPos) > ADSEntity.RADIUS ||
+                !BallisticsUtils.isViableThreat(projPos, projectile.getVelocityRef, selfPos)
+            ) continue;
 
-            const toSelf = selfPos.subVec(projPos);
-            const dot = proVel.x * toSelf.x + proVel.y * toSelf.y;
-            if (dot < 0) continue;
-
-            const velSq = proVel.x * proVel.x + proVel.y * proVel.y;
-            if (velSq < 1e-4) continue; // 低速
-
-            const t = dot / velSq; // 到达最近点的时间
-            if (t < 0) continue;
-
-            ADSEntity.spawnInterceptPathParticles(world, selfPos, projPos);
+            ADSEntity.spawnInterceptPath(world, selfPos, projPos);
             projectile.discard();
             if (intercepted++ >= 5) break;
         }

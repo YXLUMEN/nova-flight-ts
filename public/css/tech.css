@@ -183,6 +183,10 @@ svg.edges {
     gap: 6px;
 }
 
+.details .desc {
+    white-space: pre-line;
+}
+
 .details .require {
     color: var(--good);
 }
