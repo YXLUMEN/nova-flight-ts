@@ -5,33 +5,32 @@ import type {Predicate} from "../../apis/types.ts";
 
 export class SpatialGrid<T extends EntityLike> {
     private readonly cellLength: number;
+    private readonly cellLengthInv: number;
 
     private readonly cols: number;
     private readonly rows: number;
 
     private readonly grid: Array<Set<T> | null> = [];
-    private readonly entityToCells = new Map<number, number[]>();
+    private readonly entityToCells = new Map<number, Uint32Array>();
 
     public constructor(totalWidth: number, totalHeight: number, cellLength: number = 64) {
         this.cellLength = cellLength;
+        this.cellLengthInv = 1.0 / this.cellLength;
 
         this.cols = Math.ceil(totalWidth / cellLength);
         this.rows = Math.ceil(totalHeight / cellLength);
-
         const totalCells = this.cols * this.rows;
-        for (let i = 0; i < totalCells; i++) {
-            this.grid[i] = new Set<T>();
-        }
+
+        this.grid = new Array(totalCells).fill(null);
     }
 
-    private *getCoveredCells(box: Box): Generator<number> {
+    private* getCoveredCells(box: Box): Generator<number> {
         const {minX, minY, maxX, maxY} = box;
 
-        // 计算覆盖的列/行范围（避免浮点精度问题）
-        const colStart = Math.floor(minX / this.cellLength);
-        const colEnd = Math.floor((maxX - 1e-5) / this.cellLength);
-        const rowStart = Math.floor(minY / this.cellLength);
-        const rowEnd = Math.floor((maxY - 1e-5) / this.cellLength);
+        const colStart = Math.floor(minX * this.cellLengthInv);
+        const colEnd = Math.floor((maxX - 1e-5) * this.cellLengthInv);
+        const rowStart = Math.floor(minY * this.cellLengthInv);
+        const rowEnd = Math.floor((maxY - 1e-5) * this.cellLengthInv);
 
         const validColStart = clamp(colStart, 0, this.cols - 1);
         const validColEnd = clamp(colEnd, 0, this.cols - 1);
@@ -45,13 +44,40 @@ export class SpatialGrid<T extends EntityLike> {
         }
     }
 
+    private getCoveredCellsArray(box: Box): Uint32Array {
+        const {minX, minY, maxX, maxY} = box;
+
+        const colStart = Math.floor(minX * this.cellLengthInv);
+        const colEnd = Math.floor((maxX - 1e-5) * this.cellLengthInv);
+        const rowStart = Math.floor(minY * this.cellLengthInv);
+        const rowEnd = Math.floor((maxY - 1e-5) * this.cellLengthInv);
+
+        const validColStart = clamp(colStart, 0, this.cols - 1);
+        const validColEnd = clamp(colEnd, 0, this.cols - 1);
+        const validRowStart = clamp(rowStart, 0, this.rows - 1);
+        const validRowEnd = clamp(rowEnd, 0, this.rows - 1);
+
+        const cellCount = (validColEnd - validColStart + 1) * (validRowEnd - validRowStart + 1);
+        const result = new Uint32Array(cellCount);
+
+        let index = 0;
+        for (let col = validColStart; col <= validColEnd; col++) {
+            for (let row = validRowStart; row <= validRowEnd; row++) {
+                result[index++] = col + row * this.cols;
+            }
+        }
+
+        return result;
+    }
+
     public insert(entity: T): void {
         const box = entity.getBoundingBox();
-        const cellIndices = this.getCoveredCells(box).toArray();
+        const cellIndices = this.getCoveredCellsArray(box);
         this.entityToCells.set(entity.getId(), cellIndices);
 
         for (const idx of cellIndices) {
-            this.grid[idx]!.add(entity);
+            const set = this.grid[idx] ?? new Set<T>();
+            set.add(entity);
         }
     }
 
@@ -61,7 +87,13 @@ export class SpatialGrid<T extends EntityLike> {
         if (!cellIndices) return false;
 
         for (const idx of cellIndices) {
-            this.grid[idx]!.delete(entity);
+            const cell = this.grid[idx];
+            if (!cell) continue;
+
+            cell.delete(entity);
+            if (cell.size === 0) {
+                this.grid[idx] = null;
+            }
         }
 
         this.entityToCells.delete(id);
@@ -87,22 +119,26 @@ export class SpatialGrid<T extends EntityLike> {
     public forEachInBox(queryBox: Box, predicate: Predicate<T>): void {
         const cellIndices = this.getCoveredCells(queryBox);
 
-        const results = new Set<T>();
+        const visited = new Set<number>();
         for (const idx of cellIndices) {
             const cell = this.grid[idx];
             if (!cell) continue;
 
             for (const entity of cell) {
-                if (!entity.getBoundingBox().intersectsByBox(queryBox) || results.has(entity)) continue;
+                const id = entity.getId();
+                if (visited.has(id)) continue;
+
+                if (!entity.getBoundingBox().intersectsByBox(queryBox)) continue;
+
                 if (!predicate(entity)) return;
-                results.add(entity);
+                visited.add(id);
             }
         }
     }
 
     public clear(): void {
         for (let i = 0; i < this.grid.length; i++) {
-            this.grid[i]!.clear();
+            this.grid[i]?.clear();
         }
         this.entityToCells.clear();
     }

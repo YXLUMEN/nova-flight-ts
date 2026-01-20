@@ -15,7 +15,7 @@ import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import type {EntityDist} from "../apis/types.ts";
 
 export class FlakBattery extends Item {
-    public static readonly BULLET_SPEED = 50;
+    public static readonly BULLET_SPEED = 40;
     public static readonly DEFENCE_RADIUS_SQ = 256 * 256;
 
     private static readonly targets = new WeakMap<Entity, Set<ProjectileEntity>>();
@@ -26,7 +26,6 @@ export class FlakBattery extends Item {
         if (world.isClient || (holder.age & 1) !== 0) return;
 
         if (holder instanceof LivingEntity && holder.hasStatusEffect(StatusEffects.EMC_STATUS)) {
-            FlakBattery.targets.get(holder)?.clear();
             return;
         }
 
@@ -56,9 +55,9 @@ export class FlakBattery extends Item {
             target.getPositionRef,
             target.getVelocityRef,
             FlakBattery.BULLET_SPEED
-        ) + rand(-0.01745329, 0.01745329);
+        ) + rand(-0.03490658, 0.03490658);
 
-        const bullet = new CIWSBulletEntity(EntityTypes.CIWS_BULLET_ENTITY, world, defender, damage);
+        const bullet = new CIWSBulletEntity(EntityTypes.CIWS_BULLET_ENTITY, world, defender, damage, 10);
 
         const f = Math.cos(yaw);
         const g = Math.sin(yaw);

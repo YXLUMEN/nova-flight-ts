@@ -52,4 +52,31 @@ export class BallisticsUtils {
         // 到达最近点的时间
         return dot / velSq >= 0;
     }
+
+    public static isViableThreatRelative(
+        threatPos: IVec,
+        threatVel: IVec,
+        defenderPos: IVec,
+        defenderVel: IVec,
+    ): boolean {
+        const relPosX = threatPos.x - defenderPos.x;
+        const relPosY = threatPos.y - defenderPos.y;
+
+        const relVelX = threatVel.x - defenderVel.x;
+        const relVelY = threatVel.y - defenderVel.y;
+
+        const relPosSq = relPosX * relPosX + relPosY * relPosY;
+        if (relPosSq < 1e-6) return true;
+
+        const relVelSq = relVelX * relVelX + relVelY * relVelY;
+        if (relVelSq < 1e-6) return false; // 相对静止
+
+        // 计算相对速度在相对位置方向上的投影
+        // 如果点积 < 0，说明两者正在靠近
+        const dot = relVelX * relPosX + relVelY * relPosY;
+
+        // dot < 0 → 距离在减小
+        // dot >= 0 → 距离不变或增大
+        return dot < 0;
+    }
 }

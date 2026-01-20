@@ -26,7 +26,7 @@ import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import type {MutVec2} from "../utils/math/MutVec2.ts";
-import type {EntityLookUp} from "./entity/EntityLookUp.ts";
+import type {EntityIndex} from "./entity/EntityIndex.ts";
 
 export abstract class World {
     public static readonly WORLD_W = 1692;
@@ -183,7 +183,7 @@ export abstract class World {
 
     public abstract getEntityById(id: number): Entity | null;
 
-    public abstract getEntityLookup(): EntityLookUp<Entity>;
+    public abstract getEntityLookup(): EntityIndex<Entity>;
 
     public togglePause(): void {
         if (this.over) return;

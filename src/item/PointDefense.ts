@@ -19,7 +19,7 @@ export class PointDefense extends Item {
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean) {
         super.inventoryTick(stack, world, holder, slot, selected);
 
-        if (world.isClient || (holder.age & 15) !== 0) return;
+        if (world.isClient || holder.age % 12 !== 0) return;
 
         if (holder instanceof LivingEntity && holder.hasStatusEffect(StatusEffects.EMC_STATUS)) {
             return;

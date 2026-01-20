@@ -1,12 +1,21 @@
 import {BulletEntity} from "./BulletEntity.ts";
 import {type NbtCompound} from "../../nbt/NbtCompound.ts";
 import type {Entity} from "../Entity.ts";
+import type {EntityType} from "../EntityType.ts";
+import {World} from "../../world/World.ts";
 
 export class CIWSBulletEntity extends BulletEntity {
+    private readonly maxAge: number;
+
+    public constructor(type: EntityType<CIWSBulletEntity>, world: World, owner: Entity | null, damage: number, maxAge: number = 8) {
+        super(type, world, owner, damage);
+        this.maxAge = maxAge;
+    }
+
     public override tick() {
         super.tick();
 
-        if (this.age >= 8) this.discard();
+        if (this.age >= this.maxAge) this.discard();
     }
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {
