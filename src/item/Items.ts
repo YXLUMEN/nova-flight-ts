@@ -11,7 +11,7 @@ import {MiniGun} from "./weapon/BaseWeapon/MiniGun.ts";
 import {RocketLauncher} from "./weapon/BaseWeapon/RocketLauncher.ts";
 import {DataComponentTypes} from "../component/DataComponentTypes.ts";
 import {IntoVoidWeapon} from "./weapon/IntoVoidWeapon.ts";
-import {LaserWeapon} from "./weapon/LaserWeapon.ts";
+import {PhaseLasers} from "./weapon/PhaseLasers.ts";
 import {DecoyReleaser} from "./weapon/DecoyReleaser.ts";
 import {CIWS} from "./weapon/BaseWeapon/CIWS.ts";
 import {CloudLightningConduits} from "./weapon/BaseWeapon/CloudLightningConduits.ts";
@@ -20,6 +20,13 @@ import {ArcEmitter} from "./weapon/BaseWeapon/ArcEmitter.ts";
 import {Artillery125} from "./weapon/BaseWeapon/Artillery125.ts";
 import {PointDefense} from "./PointDefense.ts";
 import {FlakBattery} from "./FlakBattery.ts";
+import {RailGun} from "./weapon/BaseWeapon/RailGun.ts";
+import {KineticArtillery} from "./weapon/BaseWeapon/KineticArtillery.ts";
+import {SpaceTorpedoes} from "./weapon/SpaceTorpedoes.ts";
+import {GammaLasers} from "./weapon/BaseWeapon/GammaLasers.ts";
+import {Coilguns} from "./weapon/BaseWeapon/Coilguns.ts";
+import {ParticleLance} from "./weapon/BaseWeapon/ParticleLance.ts";
+import {TachyonLance} from "./weapon/BaseWeapon/TachyonLance.ts";
 
 export class Items {
     public static AIR = this.register("air", new Item(new Item.Settings()));
@@ -73,7 +80,7 @@ export class Items {
         .unbreakable()
         .component(DataComponentTypes.MAX_HEAT, 144)
     ));
-    public static readonly LASER_WEAPON: Item;
+    public static readonly PHASE_LASERS: Item;
     public static readonly DECOY_RELEASER = this.register("decoy_releaser", new DecoyReleaser(new Item.Settings()
         .attackDamage(0)
         .maxCooldown(450)
@@ -109,6 +116,45 @@ export class Items {
         .attackDamage(1)
         .component(DataComponentTypes.MAX_DEFENSE, 1)
     ));
+    public static readonly COILGUN = this.register("coilgun", new Coilguns(new Item.Settings()
+        .maxDurability(50)
+        .attackDamage(5)
+        .maxCooldown(3)
+        .component(DataComponentTypes.MAX_RELOAD_TIME, 16)
+    ));
+    public static readonly RAILGUN = this.register("railgun", new RailGun(new Item.Settings()
+        .maxDurability(40)
+        .attackDamage(16)
+        .maxCooldown(5)
+        .component(DataComponentTypes.MAX_RELOAD_TIME, 24)
+    ));
+    public static readonly KINETIC_BATTERY = this.register("kinetic_battery", new KineticArtillery(new Item.Settings()
+        .maxDurability(32)
+        .attackDamage(32)
+        .maxCooldown(16)
+        .component(DataComponentTypes.MAX_RELOAD_TIME, 24)
+    ));
+    public static readonly SPACE_TORPEDOES = this.register("space_torpedoes", new SpaceTorpedoes(new Item.Settings()
+        .attackDamage(16)
+        .maxCooldown(400)
+        .component(DataComponentTypes.EXPLOSION_RADIUS, 64)
+        .component(DataComponentTypes.EXPLOSION_DAMAGE, 16)
+    ));
+    public static readonly GAMMA_LASERS = this.register('gamma_lasers', new GammaLasers(new Item.Settings()
+        .attackDamage(12)
+        .maxCooldown(20)
+        .unbreakable()
+    ));
+    public static readonly PARTICLE_LANCE = this.register('particle_lance', new ParticleLance(new Item.Settings()
+        .attackDamage(20)
+        .maxCooldown(48)
+        .unbreakable()
+    ));
+    public static readonly TACHYON_LANCE = this.register('tachyon_lance', new TachyonLance(new Item.Settings()
+        .attackDamage(40)
+        .maxCooldown(48)
+        .unbreakable()
+    ));
 
     // 避免引用问题
     public static init() {
@@ -119,12 +165,12 @@ export class Items {
             .component(DataComponentTypes.EFFECT_RANGE, 32)
             .component(DataComponentTypes.EFFECT_DURATION, 100)
         ));
-        (this.LASER_WEAPON as any) = this.register("laser_weapon", new LaserWeapon(new Item.Settings()
+        (this.PHASE_LASERS as any) = this.register("phase_lasers", new PhaseLasers(new Item.Settings()
             .attackDamage(3)
             .component(DataComponentTypes.MAX_HEAT, 320)
             .component(DataComponentTypes.FIRING, false)
             .component(DataComponentTypes.HEAT, 0)
-            .component(DataComponentTypes.DRAIN_RATE, 2)
+            .component(DataComponentTypes.DRAIN_RATE, 3)
             .component(DataComponentTypes.COOLDOWN_RATE, 1)
         ));
     }

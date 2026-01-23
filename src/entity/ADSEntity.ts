@@ -19,9 +19,9 @@ export class ADSEntity extends Entity implements IOwnable {
         this.owner = owner;
     }
 
-    public static async spawnInterceptPath(world: ServerWorld, start: IVec, end: IVec) {
+    public static async spawnInterceptPath(world: ServerWorld, start: IVec, end: IVec, color = '#fff', width = 1, life = 0.1) {
         const mod = await import('../effect/LaserBeamEffect.ts');
-        const effect = new mod.LaserBeamEffect('#fff', 1, 0.1);
+        const effect = new mod.LaserBeamEffect(color, width, life);
         effect.set(start, end);
         world.spawnEffect(null, effect);
     }

@@ -3,7 +3,7 @@ import {WindowOverlay} from "../../effect/WindowOverlay.ts";
 import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import {pointInCircleVec2} from "../../utils/math/math.ts";
 import {EMPWeapon} from "./EMPWeapon.ts";
-import {LaserWeapon} from "./LaserWeapon.ts";
+import {PhaseLasers} from "./PhaseLasers.ts";
 import {BossEntity} from "../../entity/mob/BossEntity.ts";
 import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {Identifier} from "../../registry/Identifier.ts";
@@ -76,7 +76,7 @@ export class IntoVoidWeapon extends SpecialWeapon {
             this.exitVoid(stack, holder.getWorld(), holder);
         }
         if (holder instanceof PlayerEntity && holder.getTechs().isUnlocked(Techs.VOID_ENERGY_EXTRACTION)) {
-            const laser = Items.LASER_WEAPON as LaserWeapon;
+            const laser = Items.PHASE_LASERS as PhaseLasers;
             const stack = holder.getItem(laser);
             if (!stack) return;
             stack.setAvailable(true);
@@ -169,5 +169,9 @@ export class IntoVoidWeapon extends SpecialWeapon {
                 emp.setCooldown(stack, cd);
             }
         }
+    }
+
+    public override getSortIndex(): number {
+        return 3;
     }
 }

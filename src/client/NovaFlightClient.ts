@@ -26,6 +26,8 @@ import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {ClientChat} from "./command/ClientChat.ts";
 import type {StartServer} from "../apis/startup.ts";
 import {PlayerInputC2SPacket} from "../network/packet/c2s/PlayerInputC2SPacket.ts";
+import {resolveResource} from "@tauri-apps/api/path";
+import {exists, readFile} from "@tauri-apps/plugin-fs";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 5000;
@@ -383,6 +385,8 @@ export class NovaFlightClient {
                 this.stopWorld();
             } else if (type === 'saved') {
                 this.clientCommandManager.addPlainMessage('\x1b[32m游戏已保存');
+            } else if (type === 'readFile') {
+                this.serverReadFile(event.data);
             }
         };
 
@@ -545,9 +549,6 @@ export class NovaFlightClient {
             case 'KeyL':
                 WorldConfig.follow = !WorldConfig.follow;
                 break;
-            case 'KeyM':
-                if (this.player) this.player.assistedAiming = !this.player.assistedAiming;
-                break;
         }
     }
 
@@ -597,6 +598,27 @@ export class NovaFlightClient {
                 this.server?.postMessage({type: 'crash_the_server'});
                 break;
         }
+    }
+
+    private async serverReadFile(data: any) {
+        const path = data.path as string;
+        const res = await resolveResource(`resources/nova-flight/${path}`);
+
+        if (!(await exists(res))) {
+            this.server?.postMessage({
+                type: 'readFile',
+                id: data.id,
+                buffer: null
+            });
+            return;
+        }
+
+        const buffer = await readFile(res);
+        this.server?.postMessage({
+            type: 'readFile',
+            id: data.id,
+            buffer: buffer
+        }, {transfer: [buffer.buffer]});
     }
 
     private registryListener(): void {

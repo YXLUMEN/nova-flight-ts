@@ -26,7 +26,7 @@ export class RocketLauncher extends BaseWeapon {
     protected onFire(stack: ItemStack, world: World, attacker: Entity): void {
         stack.set(DataComponentTypes.WEAPON_CAN_COOLDOWN, false);
 
-        const rocketCounts = stack.getOrDefault(DataComponentTypes.MISSILE_COUNT, 8);
+        const rocketCounts = stack.getOrDefault(DataComponentTypes.LAUNCH_COUNT, 8);
         const randomRocketEnable = stack.getOrDefault(DataComponentTypes.MISSILE_RANDOM_ENABLE, false);
 
         let i = 1;

@@ -1,5 +1,4 @@
 import type {WeaponUIInfo} from '../../../apis/IUIInfo.ts';
-import {Weapon} from '../../../item/weapon/Weapon.ts';
 import {BaseWeapon} from "../../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {clamp, lerp, PI2} from "../../../utils/math/math.ts";
 import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
@@ -8,6 +7,7 @@ import type {IUi} from "./IUi.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {ClientWorld} from "../../ClientWorld.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import type {SpecialWeapon} from "../../../item/weapon/SpecialWeapon.ts";
 
 export class HUD implements IUi {
     private readonly font: string = '14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
@@ -78,15 +78,18 @@ export class HUD implements IUi {
         y += this.barHeight + this.lineGap;
 
         // 武器冷却条
-        const items = player.getInventory();
-        if (items.size > 0) {
+        const items = player.getSpecials();
+        if (items.length > 0) {
             const quickFire = player.getQuickFire();
-            for (const stack of items.values()) {
-                const info = this.getWeaponUI(stack);
+            for (const item of items) {
+                const stack = player.getItem(item);
+                if (!stack) continue;
+
+                const info = this.getWeaponUI(item, stack);
                 if (!info) continue;
 
                 this.drawBar(ctx, x, y, this.barWidth, this.barHeight, info);
-                if (stack.getItem() === quickFire) {
+                if (item === quickFire) {
                     ctx.strokeStyle = "yellow";
                     ctx.lineWidth = 2;
                     ctx.strokeRect(x - 2, y - 2, this.barWidth + 4, this.barHeight + 4);
@@ -140,14 +143,11 @@ export class HUD implements IUi {
         ctx.fillText('船体值', (x + this.barWidth + 8) | 0, (y | 0) - 1);
     }
 
-    private getWeaponUI(stack: ItemStack): WeaponUIInfo | null {
-        const weapon = stack.getItem();
-        if (!(weapon instanceof Weapon) || weapon instanceof BaseWeapon) return null;
-
-        const cd = weapon.getCooldown(stack);
-        const max = weapon.getMaxCooldown(stack);
-        const label = weapon.getDisplayName();
-        const color = weapon.getUiColor(stack);
+    private getWeaponUI(item: SpecialWeapon, stack: ItemStack): WeaponUIInfo | null {
+        const cd = item.getCooldown(stack);
+        const max = item.getMaxCooldown(stack);
+        const label = item.getDisplayName();
+        const color = item.getUiColor(stack);
 
         if (max <= 0) return null;
         return {label, color, cooldown: Math.max(0, cd), maxCooldown: Math.max(0.001, max)};

@@ -88,7 +88,7 @@ export class DataComponentTypes {
     public static readonly ANY_BOOLEAN: ComponentType<boolean> = this.register("any_bool",
         builder => builder.withCodec(Codecs.BOOLEAN).withPacketCodec(PacketCodecs.BOOL)
     );
-    public static readonly MISSILE_COUNT: ComponentType<number> = this.register("missile_count",
+    public static readonly LAUNCH_COUNT: ComponentType<number> = this.register("launch_count",
         builder => builder.withCodec(Codecs.INT32).withPacketCodec(PacketCodecs.INT32)
     );
     public static readonly MISSILE_RANDOM_ENABLE: ComponentType<boolean> = this.register("random_enable",
@@ -100,6 +100,12 @@ export class DataComponentTypes {
 
     public static readonly MAX_DEFENSE: ComponentType<number> = this.register("max_defence",
         builder => builder.withCodec(Codecs.UINT32).withPacketCodec(PacketCodecs.UINT8)
+    );
+    public static readonly SCHEDULE_FIRE: ComponentType<boolean> = this.register("schedule_fire",
+        builder => builder.withCodec(Codecs.BOOLEAN).withPacketCodec(PacketCodecs.BOOL)
+    );
+    public static readonly CHARGING_PROGRESS: ComponentType<number> = this.register("charging_progress",
+        builder => builder.withCodec(Codecs.UINT32).withPacketCodec(PacketCodecs.VAR_UINT)
     );
 
     private static register<T>(id: string, builderOperator: UnaryOperator<ComponentTypeBuilder<T>>): ComponentType<T> {

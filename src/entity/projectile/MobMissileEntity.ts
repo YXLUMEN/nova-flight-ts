@@ -15,6 +15,8 @@ export class MobMissileEntity extends MissileEntity {
     protected override lockDelayTicks = 40;
     protected override maxLifetimeTicks = 220;
 
+    protected turnRate = Math.PI / 24;
+
     public constructor(type: EntityType<MobMissileEntity>, world: World, owner: Entity, driftAngle: number) {
         super(type, world, owner, driftAngle, 5);
     }

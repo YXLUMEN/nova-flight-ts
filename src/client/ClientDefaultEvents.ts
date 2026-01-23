@@ -5,7 +5,7 @@ import type {ClientWorld} from "./ClientWorld.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {PlayerUnlockTechC2SPacket} from "../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
-import {applyClientTech} from "./tech/applyClientTech.ts";
+import {ApplyClientTech} from "./tech/ApplyClientTech.ts";
 import {Tech} from "../tech/Tech.ts";
 import {Registries} from "../registry/Registries.ts";
 
@@ -23,7 +23,7 @@ export class ClientDefaultEvents {
                 if (!entry) throw new Error(`Tech not found: ${tech})`);
 
                 world.getNetworkChannel().send(new PlayerUnlockTechC2SPacket(entry));
-                applyClientTech(entry);
+                ApplyClientTech.apply(entry);
             }
         });
 

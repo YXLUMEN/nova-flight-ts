@@ -29,11 +29,11 @@ export class Cannon40 extends BaseWeapon {
         }
     }
 
-    public getDisplayName(): string {
+    public override getDisplayName(): string {
         return '40mm机炮';
     }
 
-    public getUiColor(): string {
+    public override getUiColor(): string {
         return '#fff';
     }
 

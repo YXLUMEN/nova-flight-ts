@@ -171,11 +171,10 @@ export abstract class PlayerEntity extends LivingEntity {
     }
 
     private assignKeys() {
-        let i = 0;
         for (const w of this.items.keys()) {
-            if (!(w instanceof SpecialWeapon)) continue;
-            i++;
-            this.weaponKeys.set(w, `Digit${i}`);
+            if (w instanceof SpecialWeapon) {
+                this.weaponKeys.set(w, `Digit${w.getSortIndex() + 1}`);
+            }
         }
     }
 
@@ -199,6 +198,13 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public removeItem(item: Item): boolean {
         const result = this.items.delete(item);
+        if (item instanceof BaseWeapon) {
+            const index = this.baseWeapons.indexOf(item);
+            if (index >= 0) {
+                this.baseWeapons.splice(index, 1);
+                this.currentBaseIndex = clamp(index - 1, 0, this.baseWeapons.length - 1);
+            }
+        }
         this.assignKeys();
         return result;
     }

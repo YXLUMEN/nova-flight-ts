@@ -37,6 +37,10 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
 
     public abstract onEntityHit(entity: Entity): void;
 
+    public onIntercept(_damage: number): void {
+        this.discard();
+    }
+
     public getHitDamage(): number {
         return this.damage;
     }

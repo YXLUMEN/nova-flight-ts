@@ -70,7 +70,7 @@ import {
     type LaserWeaponS2CPacket
 } from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
 import {LaserBeamEffect} from "../../effect/LaserBeamEffect.ts";
-import {LaserWeapon} from "../../item/weapon/LaserWeapon.ts";
+import {PhaseLasers} from "../../item/weapon/PhaseLasers.ts";
 import {decodeColorToHex} from "../../utils/NetUtil.ts";
 
 export class ClientPlayNetworkHandler {
@@ -256,14 +256,24 @@ export class ClientPlayNetworkHandler {
         const entity = world.getEntityById(packet.entityId);
         if (!entity) {
             this.client.window.damagePopup.spawnPopup(
-                packet.pos.x, packet.pos.y - 10, packet.damage, '#ff3434', 20, packet.entityId
+                packet.pos.x,
+                packet.pos.y - 10,
+                packet.damage,
+                packet.color,
+                20,
+                packet.entityId
             );
             return;
         }
 
         const pos = entity.getPositionRef;
         this.client.window.damagePopup.spawnPopup(
-            pos.x, pos.y - entity.getHeight(), packet.damage, '#ff3434', 20, packet.entityId
+            pos.x,
+            pos.y - entity.getHeight(),
+            packet.damage,
+            packet.color,
+            20,
+            packet.entityId
         );
     }
 
@@ -483,24 +493,24 @@ export class ClientPlayNetworkHandler {
         if (!holder || holder === this.client.player) return;
 
         if (packet.activate) {
-            const beamFx = LaserWeapon.id2EffectMap.get(packet.entityId);
+            const beamFx = PhaseLasers.id2EffectMap.get(packet.entityId);
             if (beamFx && beamFx.isAlive()) {
                 beamFx.kill();
             }
             const newBeamFx = new LaserBeamEffect(decodeColorToHex(packet.color), packet.width, 0.5);
             newBeamFx.reset(packet.start, packet.end);
-            LaserWeapon.id2EffectMap.set(packet.entityId, newBeamFx);
+            PhaseLasers.id2EffectMap.set(packet.entityId, newBeamFx);
             this.world!.addEffect(null, newBeamFx);
         } else if (packet.change) {
-            const beamFx = LaserWeapon.id2EffectMap.get(packet.entityId);
+            const beamFx = PhaseLasers.id2EffectMap.get(packet.entityId);
             if (beamFx) {
                 beamFx.set(packet.start, packet.end);
             }
         } else {
-            const beamFx = LaserWeapon.id2EffectMap.get(packet.entityId);
+            const beamFx = PhaseLasers.id2EffectMap.get(packet.entityId);
             if (beamFx) {
                 beamFx.kill();
-                LaserWeapon.id2EffectMap.delete(packet.entityId);
+                PhaseLasers.id2EffectMap.delete(packet.entityId);
             }
         }
     }

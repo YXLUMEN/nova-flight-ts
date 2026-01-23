@@ -1,6 +1,6 @@
 import {LaserBeamEffect} from '../../effect/LaserBeamEffect.ts';
 import {World} from '../../world/World.ts';
-import {clamp, lineCircleHit} from '../../utils/math/math.ts';
+import {clamp, lineCircleHit, thickLineCircleHit} from '../../utils/math/math.ts';
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
 import type {Entity} from "../../entity/Entity.ts";
@@ -17,16 +17,16 @@ import {encodeColorHex} from "../../utils/NetUtil.ts";
 import {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
 
 
-export class LaserWeapon extends SpecialWeapon {
-    public static readonly DISPLAY_NAME = 'LASER';
+export class PhaseLasers extends SpecialWeapon {
+    public static readonly DISPLAY_NAME = '相位镭射';
     public static readonly COLOR = '#8bff5e';
     public static readonly OVERHEAT_COLOR = '#ff5e5e';
 
+    public static readonly LASER_HEIGHT = World.WORLD_H * 2;
+    public static readonly LASER_WIDTH = 6;
+
     public static readonly id2EffectMap = new Map<number, LaserBeamEffect>();
     private static readonly activateBeam = new Set<number>();
-
-    private readonly height = World.WORLD_H * 2;
-    private readonly width = 6;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         this.setActive(stack, this.getActive(stack) ? false : stack.isAvailable());
@@ -87,43 +87,45 @@ export class LaserWeapon extends SpecialWeapon {
         const start = holder.getPositionRef;
         const yaw = holder.getYaw();
         const end = new Vec2(
-            start.x + Math.cos(yaw) * this.height,
-            start.y + Math.sin(yaw) * this.height
+            start.x + Math.cos(yaw) * PhaseLasers.LASER_HEIGHT,
+            start.y + Math.sin(yaw) * PhaseLasers.LASER_HEIGHT
         );
 
         if (world.isClient) {
             // 刷新/创建光束效果
-            const beamFx = LaserWeapon.id2EffectMap.get(entityId);
+            const beamFx = PhaseLasers.id2EffectMap.get(entityId);
             if (beamFx && beamFx.isAlive()) {
                 beamFx.set(start, end);
             } else {
-                const newBeamFx = new LaserBeamEffect(stack.getOrDefault(DataComponentTypes.UI_COLOR, LaserWeapon.COLOR), this.width);
+                const newBeamFx = new LaserBeamEffect(stack.getOrDefault(DataComponentTypes.UI_COLOR, PhaseLasers.COLOR), PhaseLasers.LASER_WIDTH);
                 newBeamFx.reset(start, end);
                 world.addEffect(null, newBeamFx);
-                LaserWeapon.id2EffectMap.set(entityId, newBeamFx);
+                PhaseLasers.id2EffectMap.set(entityId, newBeamFx);
             }
             return;
         }
 
-        if (LaserWeapon.activateBeam.has(entityId)) {
+        if (PhaseLasers.activateBeam.has(entityId)) {
             world.sendPacket(new LaserWeaponChange(entityId, start, end));
         } else {
             world.sendPacket(new LaserWeaponActivate(
                 entityId,
                 start,
                 end,
-                this.width,
-                encodeColorHex(stack.getOrDefault(DataComponentTypes.UI_COLOR, LaserWeapon.COLOR))
+                PhaseLasers.LASER_WIDTH,
+                encodeColorHex(stack.getOrDefault(DataComponentTypes.UI_COLOR, PhaseLasers.COLOR))
             ));
         }
 
         const damage = Math.max(1, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1));
-        const damageSource = world.getDamageSources().laser(holder);
+        const damageSource = world.getDamageSources().laser(holder).setShieldMulti(0.1);
 
         for (const mob of world.getMobs()) {
             const pos = mob.getPositionRef;
-            if (!mob.isRemoved() && lineCircleHit(
-                start.x, start.y, end.x, end.y,
+            if (!mob.isRemoved() && thickLineCircleHit(
+                start.x, start.y,
+                end.x, end.y,
+                PhaseLasers.LASER_WIDTH,
                 pos.x, pos.y, mob.getWidth())) {
                 mob.takeDamage(damageSource, damage);
             }
@@ -140,19 +142,19 @@ export class LaserWeapon extends SpecialWeapon {
     }
 
     private removeLaser(world: World, entityId: number) {
-        const beamFx = LaserWeapon.id2EffectMap.get(entityId);
+        const beamFx = PhaseLasers.id2EffectMap.get(entityId);
         if (beamFx) {
             beamFx.kill();
-            LaserWeapon.id2EffectMap.delete(entityId);
+            PhaseLasers.id2EffectMap.delete(entityId);
         }
-        LaserWeapon.activateBeam.delete(entityId);
+        PhaseLasers.activateBeam.delete(entityId);
         if (!world.isClient) world.sendPacket(new LaserWeaponDeactivate(entityId));
     }
 
     public override onStartFire(_stack: ItemStack, world: World, attacker: Entity) {
         if (!world.isClient) return;
         world.playSound(attacker, SoundEvents.LASER_TRIGGER);
-        world.playLoopSound(attacker, SoundEvents.LASER_BEAM);
+        world.playLoopSound(attacker, SoundEvents.LASER_BEAM, 0.3);
     }
 
     public override onEndFire(_stack: ItemStack, world: World, attacker: Entity) {
@@ -179,11 +181,11 @@ export class LaserWeapon extends SpecialWeapon {
     }
 
     public override getDisplayName(): string {
-        return LaserWeapon.DISPLAY_NAME;
+        return PhaseLasers.DISPLAY_NAME;
     }
 
     public override getUiColor(stack: ItemStack): string {
-        return stack.isAvailable() ? LaserWeapon.COLOR : LaserWeapon.OVERHEAT_COLOR;
+        return stack.isAvailable() ? PhaseLasers.COLOR : PhaseLasers.OVERHEAT_COLOR;
     }
 
     public setActive(stack: ItemStack, active: boolean): void {
@@ -224,5 +226,9 @@ export class LaserWeapon extends SpecialWeapon {
 
     public setCoolRate(stack: ItemStack, value: number) {
         stack.set(DataComponentTypes.COOLDOWN_RATE, value);
+    }
+
+    public override getSortIndex(): number {
+        return 2;
     }
 }

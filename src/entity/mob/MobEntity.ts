@@ -53,6 +53,15 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         if (world.isClient) return true;
 
         world.events.emit(EVENTS.MOB_DAMAGE, {mob: this, damageSource});
+        if (this.getShieldAmount() > 0) {
+            world.spawnParticleVec(
+                this.getPositionRef, 1, 1, 1, rand(10, 30),
+                rand(0.2, 0.6), rand(4, 6),
+                "#5095ff", "#73c4ff"
+            );
+            return true;
+        }
+
         world.spawnParticleVec(
             this.getPositionRef, 1, 1, 1, rand(20, 60),
             rand(0.2, 0.6), rand(4, 6),

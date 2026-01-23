@@ -3,6 +3,8 @@ import type {RawTech, TechAvailable} from '../apis/ITech.ts';
 import {Tech} from "./Tech.ts";
 import {Registries} from "../registry/Registries.ts";
 import {Identifier} from "../registry/Identifier.ts";
+import {TechLayoutParser} from "../client/tech/TechLayoutParser.ts";
+import {isServer} from "../configs/WorldConfig.ts";
 
 export class TechState {
     public readonly allTechs: Tech[];
@@ -21,6 +23,21 @@ export class TechState {
             throw new Error('Tech JSON must be an array');
         }
         const out: Map<string, InstanceType<typeof Tech.Builder>> = new Map();
+
+        let x: number, y: number;
+        if (isServer) {
+            x = 0;
+            y = 0;
+        } else {
+            const ele = document.getElementById('tech-shell')!;
+            ele.classList.remove('hidden');
+            const box = document.getElementById('viewport')!.getBoundingClientRect();
+            ele.classList.add('hidden');
+            x = Math.floor(box.width / 2);
+            y = Math.floor(80);
+        }
+
+        const parser = new TechLayoutParser(x, y, 160, 80);
 
         raw.forEach((item, idx) => {
             if (item == null || typeof item !== 'object') {
@@ -53,16 +70,19 @@ export class TechState {
 
             const desc = isNonEmptyString(rawTech['desc']) ? rawTech['desc'].trim() : '';
 
+            const drawLine = Array.isArray(rawTech['drawExcept']) ? rawTech['drawExcept'] : null;
             const requires = Array.isArray(rawTech['requires']) ? rawTech['requires'] : null;
             const conflicts = Array.isArray(rawTech['conflicts']) ? rawTech['conflicts'] : null;
             const branchGroup = isNonEmptyString(rawTech['branchGroup']) ? rawTech['branchGroup'].trim() : null;
 
+            const parsedPos = parser.parse(x, y);
             out.set(id, Tech.create()
                 .name(name)
                 .desc(desc)
                 .cost(cost)
-                .x(x)
-                .y(y)
+                .x(parsedPos.x)
+                .y(parsedPos.y)
+                .drawExcept(drawLine)
                 .requires(requires)
                 .conflicts(conflicts)
                 .branchGroup(branchGroup)

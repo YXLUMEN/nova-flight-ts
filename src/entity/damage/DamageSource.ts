@@ -6,6 +6,7 @@ import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {RegistryKey} from "../../registry/RegistryKey.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
+import {clamp} from "../../utils/math/math.ts";
 
 export class DamageSource {
     public static readonly PACKET_CODE = PacketCodecs.registryEntry(Registries.DAMAGE_TYPE);
@@ -14,6 +15,10 @@ export class DamageSource {
     private readonly attacker: Entity | null;
     private readonly source: Entity | null;
     private readonly position: Vec2 | null;
+
+    private healthMulti: number = 1;
+    private armorMulti: number = 1;
+    private shieldMulti: number = 1;
 
     public constructor(type: RegistryEntry<DamageType>, attacker: Entity | null = null, source: Entity | null = null, position: Vec2 | null = null) {
         this.type = type;
@@ -42,6 +47,33 @@ export class DamageSource {
         }
     }
 
+    public getHealthMulti(): number {
+        return this.healthMulti;
+    }
+
+    public setHealthMulti(multi: number) {
+        this.healthMulti = clamp(multi, 0, 128);
+        return this;
+    }
+
+    public getArmorMulti(): number {
+        return this.armorMulti;
+    }
+
+    public setArmorMulti(multi: number) {
+        this.armorMulti = clamp(multi, 0, 128);
+        return this;
+    }
+
+    public getShieldMulti(): number {
+        return this.shieldMulti;
+    }
+
+    public setShieldMulti(multi: number) {
+        this.shieldMulti = clamp(multi, 0, 128);
+        return this;
+    }
+
     public getStoredPosition(): Vec2 | null {
         return this.position;
     }
@@ -54,7 +86,7 @@ export class DamageSource {
         return this.type.matchesKey(typeKey);
     }
 
-    public getType(): DamageType {
-        return this.type.getValue();
+    public getType() {
+        return this.type;
     }
 }

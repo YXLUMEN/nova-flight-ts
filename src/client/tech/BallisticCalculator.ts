@@ -45,7 +45,7 @@ export class BallisticCalculator {
         const dist = Math.hypot(dx, dy);
 
         const bulletSpeed = (this.owner.getCurrentItemStack().getItem() as BaseWeapon).getBallisticSpeed();
-        const t = dist / bulletSpeed;
+        const t = bulletSpeed > 0 ? dist / bulletSpeed : 0;
 
         let leadX = tPos.x + tVelocity.x * t;
         let leadY = tPos.y + tVelocity.y * t;

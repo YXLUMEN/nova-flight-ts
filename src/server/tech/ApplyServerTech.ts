@@ -1,5 +1,5 @@
 import {Items} from "../../item/Items.ts";
-import {LaserWeapon} from "../../item/weapon/LaserWeapon.ts";
+import {PhaseLasers} from "../../item/weapon/PhaseLasers.ts";
 import {EMPWeapon} from "../../item/weapon/EMPWeapon.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
@@ -18,9 +18,32 @@ export class ApplyServerTech {
             case Techs.ENERGY_FORCE:
                 player.addItem(Items.EMP_WEAPON);
                 break;
-            case Techs.LASER:
-                player.addItem(Items.LASER_WEAPON);
+            case Techs.PHASE_LASERS:
+                player.addItem(Items.PHASE_LASERS);
                 break;
+            case Techs.COILGUNS : {
+                const stack = new ItemStack(Items.COILGUN);
+                player.addItem(Items.COILGUN, stack);
+                player.removeItem(Items.CANNON40_WEAPON);
+
+                this.onUnlockBulletWpn(stack, player);
+                break;
+            }
+            case Techs.RAILGUNS: {
+                const stack = new ItemStack(Items.RAILGUN);
+                player.addItem(Items.RAILGUN, stack);
+                player.removeItem(Items.COILGUN);
+
+                this.onUnlockBulletWpn(stack, player);
+                break;
+            }
+            case Techs.KINETIC_ARTILLERY: {
+                const stack = new ItemStack(Items.KINETIC_BATTERY);
+                player.addItem(Items.KINETIC_BATTERY, stack);
+
+                this.onUnlockBulletWpn(stack, player);
+                break;
+            }
             case Techs.CANNON90: {
                 const stack = new ItemStack(Items.CANNON90_WEAPON);
                 player.addItem(Items.CANNON90_WEAPON, stack);
@@ -71,6 +94,26 @@ export class ApplyServerTech {
                 player.addItem(Items.FOCUSED_ARC_EMITTER);
                 break;
             }
+            case Techs.GAMMA_LASERS: {
+                const stack = new ItemStack(Items.GAMMA_LASERS);
+                player.addItem(Items.GAMMA_LASERS, stack);
+                this.onEnergyWpn(stack, player);
+                break;
+            }
+            case Techs.PARTICLE_LANCE: {
+                const stack = new ItemStack(Items.PARTICLE_LANCE);
+                player.addItem(Items.PARTICLE_LANCE);
+                this.onEnergyWpn(stack, player);
+                break;
+            }
+            case Techs.TACHYON_LANCE: {
+                player.removeItem(Items.PARTICLE_LANCE);
+
+                const stack = new ItemStack(Items.TACHYON_LANCE);
+                player.addItem(Items.TACHYON_LANCE);
+                this.onEnergyWpn(stack, player);
+                break;
+            }
             case Techs.SENTINEL_POINT_DEFENSE: {
                 player.addItem(Items.POINT_DEFENSE);
                 break;
@@ -80,7 +123,7 @@ export class ApplyServerTech {
                 break;
             }
             case Techs.HIGH_EFFICIENCY_COOLANT: {
-                const laser = Items.LASER_WEAPON as LaserWeapon;
+                const laser = Items.PHASE_LASERS as PhaseLasers;
                 const stack = player.getItem(laser);
                 if (stack) {
                     laser.setCoolRate(stack, laser.getCoolRate(stack) * 1.5);
@@ -108,9 +151,31 @@ export class ApplyServerTech {
                 break;
             }
             case Techs.HARMONIC_ANALYSIS: {
-                const stack = player.getItem(Items.LASER_WEAPON);
-                if (stack) {
-                    stack.set(DataComponentTypes.ATTACK_DAMAGE, 2);
+                // todo
+                const pL = player.getItem(Items.PHASE_LASERS);
+                if (pL) {
+                    pL.set(DataComponentTypes.ATTACK_DAMAGE, 1.4);
+                }
+                const gl = player.getItem(Items.GAMMA_LASERS);
+                if (gl) {
+                    const base = gl.get(DataComponentTypes.ATTACK_DAMAGE);
+                    if (base) {
+                        gl.set(DataComponentTypes.ATTACK_DAMAGE, base * 1.4);
+                    }
+                }
+                const pl = player.getItem(Items.PARTICLE_LANCE);
+                if (pl) {
+                    const base = pl.get(DataComponentTypes.ATTACK_DAMAGE);
+                    if (base) {
+                        pl.set(DataComponentTypes.ATTACK_DAMAGE, base * 1.4);
+                    }
+                }
+                const tl = player.getItem(Items.TACHYON_LANCE);
+                if (tl) {
+                    const base = tl.get(DataComponentTypes.ATTACK_DAMAGE);
+                    if (base) {
+                        tl.set(DataComponentTypes.ATTACK_DAMAGE, base * 1.4);
+                    }
                 }
                 break;
             }
@@ -199,11 +264,11 @@ export class ApplyServerTech {
                 break;
             }
             case Techs.GRAY: {
-                const stack = player.getItem(Items.LASER_WEAPON);
+                const stack = player.getItem(Items.PHASE_LASERS);
                 if (stack) {
                     stack.set(DataComponentTypes.ATTACK_DAMAGE, 0);
                     stack.set(DataComponentTypes.UI_COLOR, '#ff0000');
-                    const laser = Items.LASER_WEAPON as LaserWeapon;
+                    const laser = Items.PHASE_LASERS as PhaseLasers;
                     laser.setDrainRate(stack, laser.getDrainRate(stack) * 1.5);
                 }
                 break;
@@ -219,11 +284,21 @@ export class ApplyServerTech {
             case Techs.HONEYCOMB_MISSILE: {
                 const stack = player.getItem(Items.MISSILE_WEAPON);
                 if (stack) {
-                    stack.set(DataComponentTypes.MISSILE_COUNT, 24);
+                    stack.set(DataComponentTypes.LAUNCH_COUNT, 24);
                     stack.set(DataComponentTypes.ATTACK_DAMAGE, 3);
                     stack.set(DataComponentTypes.EXPLOSION_DAMAGE, 6);
                     stack.set(DataComponentTypes.EXPLOSION_RADIUS, 48);
                 }
+                break;
+            }
+            case Techs.SPACE_TORPEDOES: {
+                player.removeItem(Items.MISSILE_WEAPON);
+
+                const stack = new ItemStack(Items.SPACE_TORPEDOES);
+                player.addItem(Items.SPACE_TORPEDOES, stack);
+
+                this.onUnlockBulletWpn(stack, player);
+                this.onUnlockExplosionWpn(stack, player);
                 break;
             }
             case Techs.RANDOM_ROCKET: {
@@ -241,6 +316,7 @@ export class ApplyServerTech {
                 const stack = player.getItem(Items.POINT_DEFENSE);
                 if (stack) {
                     stack.set(DataComponentTypes.MAX_DEFENSE, 3);
+                    stack.set(DataComponentTypes.ATTACK_DAMAGE, 2);
                 }
                 break;
             }
@@ -248,6 +324,7 @@ export class ApplyServerTech {
                 const stack = player.getItem(Items.POINT_DEFENSE);
                 if (stack) {
                     stack.set(DataComponentTypes.MAX_DEFENSE, 5);
+                    stack.set(DataComponentTypes.ATTACK_DAMAGE, 3);
                 }
                 break;
             }
@@ -307,6 +384,17 @@ export class ApplyServerTech {
             if (base) {
                 stack.set(DataComponentTypes.EXPLOSION_DAMAGE, base * 1.4);
                 player.syncStack(stack);
+            }
+        }
+    }
+
+    private static onEnergyWpn(stack: ItemStack, player: ServerPlayerEntity) {
+        const tech = player.getTechs();
+
+        if (tech.isUnlocked(Techs.HARMONIC_ANALYSIS)) {
+            const base = stack.get(DataComponentTypes.ATTACK_DAMAGE);
+            if (base) {
+                stack.set(DataComponentTypes.ATTACK_DAMAGE, base * 1.4);
             }
         }
     }

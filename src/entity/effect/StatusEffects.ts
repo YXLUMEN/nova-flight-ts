@@ -9,6 +9,7 @@ import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {InstantHealthEffect} from "./InstantHealthEffect.ts";
 import {ShieldStatusEffect} from "./ShieldStatusEffect.ts";
 import {RegenerationStatusEffect} from "./RegenerationStatusEffect.ts";
+import {MeltdownEffect} from "./MeltdownEffect.ts";
 
 export class StatusEffects {
     public static readonly SPEED = this.register("speed",
@@ -44,6 +45,10 @@ export class StatusEffects {
         new ShieldStatusEffect(0, '#5095ff')
             .addAttributeModifier(
                 EntityAttributes.GENERIC_MAX_SHIELD, Identifier.ofVanilla("effect.shield"), 4)
+    );
+
+    public static readonly MELTDOWN = this.register("meltdown",
+        new MeltdownEffect(1, '#e86831')
     );
 
     public static readonly RESISTANCE = this.register("resistance", new StatusEffect(0, '#ffc23f'));

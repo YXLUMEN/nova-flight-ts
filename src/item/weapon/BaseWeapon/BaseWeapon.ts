@@ -114,7 +114,7 @@ export abstract class BaseWeapon extends Weapon {
 
         const yaw = attacker.getYaw();
 
-        const spread = Math.max(maxSpread, 1) * 0.01745329;
+        const spread = Math.max(maxSpread, 0) * 0.01745329;
         const offsetYaw = yaw + rand(-spread, spread);
         const f = Math.cos(offsetYaw);
         const g = Math.sin(offsetYaw);

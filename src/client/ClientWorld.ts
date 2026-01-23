@@ -297,7 +297,7 @@ export class ClientWorld extends World {
             EntityRenderers.getRenderer(player).render(player, ctx, tickDelta, 0, 0);
             const playerPos = player.getLerpPos(tickDelta);
 
-            if (player.assistedAiming) {
+            if (player.bc) {
                 player.bc.drawAimIndicator(ctx, tickDelta);
             }
 

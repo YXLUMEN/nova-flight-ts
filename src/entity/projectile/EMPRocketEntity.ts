@@ -10,7 +10,8 @@ export class EMPRocketEntity extends RocketEntity {
             this.getOwner(),
             this.getPositionRef,
             this.explosionRadius * 2,
-            this.duration
+            this.duration,
+            1
         );
     }
 }

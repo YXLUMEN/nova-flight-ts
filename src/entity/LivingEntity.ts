@@ -177,12 +177,12 @@ export abstract class LivingEntity extends Entity {
         }
 
         if (this.hasStatusEffect(StatusEffects.RESISTANCE) && !source.isIn(DamageTypeTags.BYPASSES_RESISTANCE)) {
-            const reduce = this.getStatusEffect(StatusEffects.RESISTANCE).getAmplifier();
+            const reduce = this.getStatusEffect(StatusEffects.RESISTANCE)!.getAmplifier();
             const precent = (8 - reduce) * 0.1;
-            return Math.max(0, damage * precent);
+            damage = Math.max(0, damage * precent);
         }
 
-        return damage;
+        return damage > 1E-5 ? damage : 0;
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
@@ -191,20 +191,39 @@ export abstract class LivingEntity extends Entity {
         if (this.isDead()) return false;
 
         damage = this.modifyAppliedDamage(damageSource, damage);
-        const remainDamage = Math.max(damage - this.getShieldAmount(), 0);
-        this.setShieldAmount(this.getShieldAmount() - damage + remainDamage);
+        let remain = damage;
 
-        if (remainDamage > 0) {
-            this.setHealth(this.getHealth() - remainDamage);
-            this.setShieldAmount(this.getShieldAmount() - remainDamage);
+        const channel = this.getWorld().getNetworkChannel();
+        const shieldAmount = this.getShieldAmount();
 
-            for (const effect of this.getStatusEffects()) {
-                effect.onEntityDamage(this, damageSource, remainDamage);
+        if (shieldAmount > 0 && !damageSource.isIn(DamageTypeTags.BYPASSES_SHIELD)) {
+            const hitShield = damage * damageSource.getShieldMulti();
+
+            remain = Math.max(hitShield - shieldAmount, 0);
+            this.setShieldAmount(shieldAmount - hitShield + remain);
+
+            if (hitShield > 0) {
+                channel.send(EntityDamageS2CPacket.create(this.getId(), this.getPositionRef, hitShield, '#73c4ff'));
             }
-            if (this.isDead()) this.onDeath(damageSource);
         }
 
-        this.getWorld().getNetworkChannel().send(EntityDamageS2CPacket.create(this.getId(), this.getPositionRef, damage));
+        if (remain > 0) {
+            remain *= damageSource.getHealthMulti();
+
+            this.setHealth(this.getHealth() - remain);
+
+            for (const effect of this.getStatusEffects()) {
+                effect.onEntityDamage(this, damageSource, remain);
+            }
+            if (this.isDead()) this.onDeath(damageSource);
+
+            channel.send(EntityDamageS2CPacket.create(this.getId(), this.getPositionRef, remain));
+        }
+
+        if (damage === 0) {
+            channel.send(EntityDamageS2CPacket.create(this.getId(), this.getPositionRef, 0, '#979797'));
+        }
+
         return true;
     }
 
@@ -220,8 +239,8 @@ export abstract class LivingEntity extends Entity {
         return this.activeStatusEffects.has(effect);
     }
 
-    public getStatusEffect(effect: RegistryEntry<StatusEffect>): StatusEffectInstance {
-        return this.activeStatusEffects.get(effect)!;
+    public getStatusEffect(effect: RegistryEntry<StatusEffect>): StatusEffectInstance | undefined {
+        return this.activeStatusEffects.get(effect);
     }
 
     public addStatusEffect(effect: StatusEffectInstance, source: Entity | null): boolean {

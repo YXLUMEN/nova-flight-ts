@@ -10,7 +10,7 @@ import {PlayerMoveC2SPacket} from "../../network/packet/c2s/PlayerMoveC2SPacket.
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import {PlayerYawC2SPacket} from "../../network/packet/c2s/PlayerYawC2SPacket.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
-import {squareDistVec2, doubleEquals, wrapRadians} from "../../utils/math/math.ts";
+import {doubleEquals, squareDistVec2, wrapRadians} from "../../utils/math/math.ts";
 import {type ItemStack} from "../../item/ItemStack.ts";
 import {PlayerMoveByPointerC2SPacket} from "../../network/packet/c2s/PlayerMoveByPointerC2SPacket.ts";
 import {encodeVelocity} from "../../utils/NetUtil.ts";
@@ -27,15 +27,17 @@ import type {ClientWorld} from "../ClientWorld.ts";
 export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     public readonly profile: GameProfile;
     public readonly input: KeyboardInput;
-    public readonly bc: BallisticCalculator;
+
     private specialWeapons: SpecialWeapon[];
     private quickFireIndex = 0;
 
     private autoAimEnable: boolean = false;
     public autoAim: AutoAim | null = null;
+
+    public bc: BallisticCalculator | null = null;
+
     public steeringGear: boolean = false;
     public followPointer: boolean = false;
-    public assistedAiming: boolean = false;
 
     public readonly lockedMissile = new Set<MissileEntity>();
     public readonly approachMissile = new Set<MissileEntity>();
@@ -46,9 +48,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
         this.input = input;
         this.profile = profile;
-        const viewport = document.getElementById('viewport') as HTMLElement;
-        this.techTree = new ClientTechTree(this, viewport);
-        this.bc = new BallisticCalculator(this);
+        this.techTree = new ClientTechTree(this);
 
         this.specialWeapons = this.items
             .keys()
@@ -93,12 +93,12 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
                 pointer.x - posRef.x
             );
 
-            if (Math.abs(wrapRadians(yaw - this.getYaw())) > 0.02) {
+            if (Math.abs(wrapRadians(yaw - this.getYaw())) > 1E-3) {
                 this.setClampYaw(yaw, 0.3926875);
                 this.getNetworkChannel().send(PlayerYawC2SPacket.create(yaw));
             }
 
-            if (this.assistedAiming) this.bc.tick();
+            if (this.bc) this.bc.tick();
         } else if (this.followPointer && WorldConfig.follow) {
             const pointer = this.input.getPointer;
             const dx = pointer.x - posRef.x;
@@ -197,6 +197,10 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         this.wasFiring = true;
     }
 
+    public getSpecials() {
+        return this.specialWeapons;
+    }
+
     public override clearItems(): void {
         super.clearItems();
         this.specialWeapons.length = 0;
@@ -207,7 +211,8 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         this.specialWeapons = this.items
             .keys()
             .filter(item => item instanceof SpecialWeapon)
-            .toArray();
+            .toArray()
+            .sort((a, b) => a.getSortIndex() - b.getSortIndex());
     }
 
     public switchQuickFire(): void {

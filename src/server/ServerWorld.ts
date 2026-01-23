@@ -113,8 +113,8 @@ export class ServerWorld extends World implements NbtSerializable {
             if (entity instanceof CIWSBulletEntity) {
                 for (const projectile of this.getProjectiles()) {
                     if (projectile.getOwner() !== owner && collideEntityCircle(entity, projectile)) {
-                        entity.onEntityHit(projectile);
-                        projectile.onEntityHit(entity);
+                        entity.discard();
+                        projectile.onIntercept(entity.getHitDamage());
                         return;
                     }
                 }
@@ -303,9 +303,9 @@ export class ServerWorld extends World implements NbtSerializable {
     public spawnParticle(
         posX: number, posY: number, offsetX: number, offsetY: number,
         count: number, speed: number, life: number, size: number,
-        colorFrom: string, colorTo: string): void {
+        colorFrom: string, colorTo?: string): void {
         this.getNetworkChannel().send(ParticleS2CPacket.create(
-            posX, posY, offsetX, offsetY, count, speed, life, size, colorFrom, colorTo
+            posX, posY, offsetX, offsetY, count, speed, life, size, colorFrom, colorTo ?? colorFrom
         ));
     }
 

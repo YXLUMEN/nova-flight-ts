@@ -13,7 +13,7 @@ import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.
 export class MissileWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         const pos = attacker.getPositionRef;
-        const missileCounts = stack.getOrDefault(DataComponentTypes.MISSILE_COUNT, 8);
+        const missileCounts = stack.getOrDefault(DataComponentTypes.LAUNCH_COUNT, 8);
         const explosionDamage = stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 10);
         const explosionRadius = stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 72);
         let i = 1;
@@ -57,5 +57,9 @@ export class MissileWeapon extends SpecialWeapon {
 
     public override getUiColor(): string {
         return '#ff9f43';
+    }
+
+    public override getSortIndex(): number {
+        return 0;
     }
 }

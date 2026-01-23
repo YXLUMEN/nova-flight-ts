@@ -75,7 +75,7 @@ export class EntityTrackerEntry {
                 const delta = squareDistVec2(velocity, this.velocity);
 
                 if (delta > 1E-7 || delta > 0 && velocity.lengthSquared() === 0) {
-                    this.velocity = velocity;
+                    this.velocity.set(velocity.x, velocity.y);
                     this.sendSync(EntityVelocityUpdateS2CPacket.createWithVec(this.entity, this.velocity));
                 }
             }

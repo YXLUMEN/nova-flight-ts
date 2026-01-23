@@ -64,6 +64,8 @@ export class MobAI {
                 this.faceTarget(mob, this.targetPos, 0.19634375);
                 break;
         }
+
+        mob.velocityDirty = true;
     }
 
     public updateAction(mob: MobEntity) {

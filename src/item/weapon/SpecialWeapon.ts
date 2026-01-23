@@ -34,4 +34,6 @@ export abstract class SpecialWeapon extends Weapon {
     public bindKey(): string | null {
         return null;
     }
+
+    public abstract getSortIndex(): number;
 }

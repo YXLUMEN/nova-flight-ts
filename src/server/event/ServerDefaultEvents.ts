@@ -15,7 +15,7 @@ import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import type {DamageSource} from "../../entity/damage/DamageSource.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {Items} from "../../item/Items.ts";
-import type {LaserWeapon} from "../../item/weapon/LaserWeapon.ts";
+import type {PhaseLasers} from "../../item/weapon/PhaseLasers.ts";
 import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {Audios} from "../../sound/Audios.ts";
 import {Techs} from "../../tech/Techs.ts";
@@ -61,7 +61,7 @@ export class ServerDefaultEvents {
             }
 
             if (damageSource.isIn(DamageTypeTags.REPLY_LASER) && techTree.isUnlocked(Techs.ENERGY_RECOVERY)) {
-                const laser = Items.LASER_WEAPON as LaserWeapon;
+                const laser = Items.PHASE_LASERS as PhaseLasers;
                 const stack = player.getItem(laser);
                 if (stack && stack.isAvailable()) {
                     laser.setCooldown(stack, laser.getCooldown(stack) - 25);
@@ -141,6 +141,7 @@ export class ServerDefaultEvents {
 
         let count = 0;
         const radius = (explosion.getOpts().explosionRadius ?? 16) / 2;
+        explosion.getOpts().playSound = false;
 
         const yaw = explosion.getSource()?.getYaw();
         const schedule = world.scheduleInterval(0.1, () => {

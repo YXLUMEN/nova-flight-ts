@@ -8,9 +8,9 @@ interface DamagePopupEvent {
     preY: number;
     age: number;
     readonly  life: number;
+    readonly entityId: number | null;
     value: string;
     color: string;
-    readonly entityId: number | null;
 }
 
 const FADE_DURATION = 0.25;
@@ -31,29 +31,36 @@ export class DamagePopupRender implements IUi {
         }
     }
 
-    public spawnPopup(x: number, y: number, value: number, color: string, life: number, entityId?: number): void {
+    public spawnPopup(x: number, y: number, value: number, color: string, life: number, entityId?: number, force = false): void {
         if (!entityId) {
             this.activePopups.push({
                 x: x, y: y, preY: y,
                 age: 0, life: life / 20,
+                entityId: null,
                 value: this.formatDamage(value),
                 color: color,
-                entityId: null,
             });
             return;
         }
 
         const exist = this.popups.get(entityId);
-        if (!exist) {
+        if (!exist || force) {
             const event: DamagePopupEvent = {
                 x: x, y: y, preY: y,
                 age: 0, life: life / 20,
+                entityId: entityId,
                 value: this.formatDamage(value),
                 color: color,
-                entityId: entityId,
             };
             this.activePopups.push(event);
             this.popups.set(entityId, event);
+            return;
+        }
+
+        if (exist.color !== color) {
+            exist.y -= 20;
+            this.popups.delete(entityId);
+            this.spawnPopup(x, y, value, color, life, entityId, true);
             return;
         }
 

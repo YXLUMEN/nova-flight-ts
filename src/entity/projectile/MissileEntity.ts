@@ -8,7 +8,7 @@ import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacke
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 
 export class MissileEntity extends RocketEntity {
-    public static lockedEntity = new WeakMap<Entity, number>();
+    public static readonly lockedEntity = new WeakMap<Entity, number>();
 
     protected target: Entity | null = null;
     protected lastTarget: Entity | null = null;
@@ -23,7 +23,7 @@ export class MissileEntity extends RocketEntity {
     protected driftSpeed = 2;
     protected trackingSpeed = 3;
 
-    private readonly turnRate = Math.PI / 24;
+    protected turnRate = Math.PI / 20;
 
     public hoverDir: number = 1;
     public driftAngle: number;
@@ -53,8 +53,9 @@ export class MissileEntity extends RocketEntity {
         if (this.age > this.maxLifetimeTicks) {
             if (this.target) {
                 world.events.emit(EVENTS.ENTITY_UNLOCKED, {missile: this, lastTarget: this.target});
-                this.target = null;
             }
+            this.target = null;
+            this.lastTarget = null;
             const yaw = this.getYaw();
             this.setYaw(yaw);
             this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
@@ -97,13 +98,17 @@ export class MissileEntity extends RocketEntity {
         // 重新锁定
         if (this.reLockCD > 0) this.reLockCD--;
         if (!this.target || this.target.isRemoved()) {
-            if (cd && this.reLockCD <= 0) this.target = this.acquireTarget();
-            if (!this.target) {
+            let target: Entity | null = null;
+            if (cd && this.reLockCD <= 0) target = this.acquireTarget();
+            if (!target) {
                 const yaw = this.getYaw();
                 this.setYaw(yaw + this.turnRate * this.hoverDir);
                 this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
                 return;
             }
+            this.lastTarget = target;
+            this.target = target;
+
             this.reLockCD = this.maxReLockCD;
             const count = MissileEntity.lockedEntity.get(this.target) ?? 0;
             MissileEntity.lockedEntity.set(this.target, count + 1);

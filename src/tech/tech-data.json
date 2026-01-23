@@ -1,168 +1,58 @@
 [
   {
-    "id": "energy_focus",
-    "name": "能源研究",
-    "x": 340,
-    "y": 320,
-    "desc": "解锁能量武器研究. 解锁EMP.电能武器刚被发明的时候, 因为其巨大的耗能, 反抗军并不看好它, 直到有人发现这东西能清除帝国的所有子弹",
-    "cost": 100
-  },
-  {
-    "id": "electrical_energy_surges",
-    "name": "电能激荡",
-    "x": 560,
-    "y": 240,
-    "desc": "受击时立即触发EMP, 这种受人欢迎的自卫系统名叫电棘刺, 在一些近卫飞行员的座驾上常常出现",
-    "cost": 120,
-    "requires": [
-      "energy_focus"
-    ]
-  },
-  {
-    "id": "ad_capacitance",
-    "name": "强化电容",
-    "x": 740,
-    "y": 160,
-    "branchGroup": "emp_radius",
-    "desc": "EMP影响范围 +50%, 充能冷却速度 -20%, 多亏了格雷老爷子的废寝忘食, 现在有了超级电容, 量大管饱, 把那些废电池扔在一边吧!",
-    "cost": 180,
-    "requires": [
-      "electrical_energy_surges"
-    ]
-  },
-  {
-    "id": "ele_oscillation",
-    "name": "电磁震荡",
-    "x": 900,
-    "y": 160,
-    "desc": "强大的电磁脉冲会持续瘫痪敌人的武器系统.",
-    "cost": 250,
-    "requires": [
-      "ad_capacitance"
-    ]
-  },
-  {
-    "id": "quick_charge",
-    "name": "快充电容",
-    "x": 740,
-    "y": 80,
-    "branchGroup": "emp_radius",
-    "desc": "EMP范围 -50%, 冷却速度 +50%, 与格雷的发明相反, 弗兰克认为作为自卫系统的emp高速充能才是王道, 于是快充电容诞生了.",
-    "cost": 180,
-    "requires": [
-      "electrical_energy_surges"
-    ]
-  },
-  {
-    "id": "ele_shield",
-    "name": "电磁护盾",
-    "x": 740,
-    "y": 240,
-    "desc": "受击触发EMP并抵消伤害, EMP进入冷却, 人们巧妙地将护盾和emp结合, 创造出了电磁护盾, 当受到弹药伤害时能够触发机体表面的emp防护",
-    "cost": 180,
-    "requires": [
-      "electrical_energy_surges"
-    ]
-  },
-  {
-    "id": "missile",
-    "name": "导弹",
-    "x": 160,
-    "y": 320,
-    "desc": "炸弹替换为释放8枚追踪导弹, \n“追猎者导弹”, 标定距离100km,有效距离300km",
-    "cost": 320
-  },
-  {
-    "id": "honeycomb_missile",
-    "name": "蜂巢导弹",
+    "id": "coilguns",
+    "name": "线圈炮",
     "x": 0,
-    "y": 320,
-    "desc": "释放24枚伤害较低的导弹, 其实蜂巢导弹的原型是一种小的自爆无人机, 作为僚机进行护卫, 但后来人们发现这玩意擅长的只有自爆, 蜂巢导弹应运而生",
-    "cost": 160,
-    "requires": [
-      "missile"
-    ]
+    "y": 0,
+    "desc": "抛弃传统的化学推进而采用电磁线圈更加高效地加速炮弹",
+    "cost": 64
   },
   {
-    "id": "laser",
-    "name": "激光发生器",
-    "x": 560,
-    "y": 320,
-    "desc": "解锁 \"激光武器\", “原先就是用来指引和烧死害虫的东西, 直到大家发现这玩意可以轻易的烧穿船舰”",
+    "id": "railguns",
+    "name": "轨道炮",
+    "x": 1,
+    "y": 0,
+    "desc": "轨道炮是最新的电磁加速炮, 轨道炮通过并行双轨加速炮弹使之以难以置信的高速发射出去.",
     "cost": 120,
     "requires": [
-      "energy_focus"
+      "coilguns"
     ]
   },
   {
-    "id": "high_efficiency_coolant",
-    "name": "高效冷却剂",
-    "x": 720,
-    "y": 320,
-    "desc": "激光冷却速率 +50%, 新增了散热槽!这样会变得更凉快",
-    "cost": 120,
+    "id": "kinetic_artillery",
+    "name": "动能火炮",
+    "x": 2,
+    "y": 0,
+    "desc": "射程远, 威力大, 准确度高, 是动能火炮的座右铭.",
+    "cost": 220,
     "requires": [
-      "laser"
+      "railguns"
     ]
   },
   {
-    "id": "harmonic_analysis",
-    "name": "谐波分析",
-    "x": 880,
-    "y": 320,
-    "desc": "激光伤害 +100%, 帝国的光谱分析学家们研制出了一款基于表面材料调整光波的系统, 后来被反抗军间谍“红鹰”获取, 据说其原理来自于宇宙深处某种巨大的鳞翅目昆虫。。。",
-    "cost": 180,
-    "requires": [
-      "high_efficiency_coolant"
-    ]
-  },
-  {
-    "id": "high_temperature_alloy",
-    "name": "耐高温合金",
-    "x": 1040,
-    "y": 320,
-    "desc": "激光过热上限 +50%, 基于散热器上的锦上添花, 不如再涂点液金?",
-    "cost": 360,
-    "requires": [
-      "harmonic_analysis"
-    ]
-  },
-  {
-    "id": "energy_recovery",
-    "name": "能量回收",
-    "x": 1200,
-    "y": 320,
-    "branchGroup": "apex_upgrade",
-    "desc": "击败敌舰增加激光持续时间, 在这些激光束中加入了反射回收机制, 一部分没有完全发挥作用的激光电能将会回收, 这要感谢哈夫博士对凯博水晶的研究",
-    "cost": 640,
-    "requires": [
-      "high_temperature_alloy"
-    ]
-  },
-  {
-    "id": "gunboat_focus",
-    "name": "炮艇专精",
-    "x": 340,
-    "y": 460,
-    "desc": "专注机炮研发. 解锁微针, 毁灭者, 近防炮等强大武器.",
-    "cost": 100
+    "id": "autocannon",
+    "name": "机关炮",
+    "x": 0,
+    "y": 1,
+    "desc": "解锁速射武器分支, 缩小的弹丸体积允许以更高的频率发射.",
+    "cost": 32
   },
   {
     "id": "mini_gun",
     "name": "MiniGun",
-    "x": 560,
-    "y": 380,
+    "x": 1,
+    "y": 1,
     "desc": "解锁 \"MiniGun(微针)\", 微针机炮采用25mm口径, 虽然伤害和穿甲能力有所降低, 但是大幅度提高的射速能够阻挡敌舰的前进.",
     "cost": 80,
     "requires": [
-      "gunboat_focus"
+      "autocannon"
     ]
   },
   {
     "id": "ciws",
     "name": "近防炮",
-    "x": 720,
-    "y": 380,
+    "x": 2,
+    "y": 1,
     "desc": "解锁 \"近防炮\", 那是在一个遥远的星球, 淳朴的村民向您分享了进防炮技术, 在拦截飞弹, 清除近身的敌人时效果无与伦比, 但其极高的射速非常容易过热.",
     "cost": 120,
     "requires": [
@@ -170,21 +60,135 @@
     ]
   },
   {
+    "id": "flak_battery",
+    "name": "高射炮",
+    "x": -1,
+    "y": 1,
+    "desc": "高射炮可以近距离发射榴弹, 这对能有效防御敌军炮弹.",
+    "cost": 120,
+    "branchGroup": "point_defense",
+    "requires": [
+      "ballistic_calculator",
+      "autocannon"
+    ],
+    "drawExcept": [
+      "ballistic_calculator"
+    ]
+  },
+  {
+    "id": "flak_cannons",
+    "name": "高射加农炮",
+    "x": -2,
+    "y": 1,
+    "desc": "可锁定目标 +1, 伤害 +1, 升级后的高射炮装备了新型更加强大的榴弹.",
+    "cost": 240,
+    "requires": [
+      "flak_battery"
+    ]
+  },
+  {
+    "id": "flak_artillery",
+    "name": "重型高射炮",
+    "x": -3,
+    "y": 1,
+    "desc": "可锁定目标 +1, 伤害 +1, 使用预测跟踪算法和更强大的齐射, 使得这些高射炮拥有了难以置信的打击敌军炮弹的能力.",
+    "cost": 320,
+    "requires": [
+      "flak_cannons"
+    ]
+  },
+  {
+    "id": "laser",
+    "name": "激光发生器",
+    "x": 0,
+    "y": 2,
+    "desc": "开启激光武器分支. 激光能对金属目标造成巨量热能伤害, 如果角度得当甚至可以令舰船殉爆.",
+    "cost": 100
+  },
+  {
+    "id": "gamma_lasers",
+    "name": "伽马激光",
+    "x": 1,
+    "y": 2,
+    "desc": "伽马激光的电磁辐射频率极高. 在激光武器领域, 其破坏力是无可比拟的.",
+    "cost": 160,
+    "requires": [
+      "laser"
+    ]
+  },
+  {
+    "id": "phase_lasers",
+    "name": "相位激光",
+    "x": 2,
+    "y": 2,
+    "desc": "这种激光能够持续穿透一整行舰船, 但在对付装备护盾的敌人会略显吃力.",
+    "cost": 160,
+    "requires": [
+      "gamma_lasers"
+    ]
+  },
+  {
+    "id": "sentinel_point_defense",
+    "name": "哨兵点防御",
+    "x": -1,
+    "y": 2,
+    "desc": "对于那些又大又笨重的军用舰船来说, 在船体上安装反导弹和反攻击机的装置是很有必要的, 忠实的哨兵会用激光融化靠近的一切炮弹.",
+    "cost": 120,
+    "branchGroup": "point_defense",
+    "requires": [
+      "ballistic_calculator",
+      "laser"
+    ],
+    "drawExcept": [
+      "ballistic_calculator"
+    ]
+  },
+  {
+    "id": "barrier_point_defense",
+    "name": "屏障点防御",
+    "x": -2,
+    "y": 2,
+    "desc": "可锁定目标 +2, 伤害 +1, 升级后的弹道预测算法可以提升追踪和点防御的效果.",
+    "cost": 240,
+    "requires": [
+      "sentinel_point_defense"
+    ]
+  },
+  {
+    "id": "guardian_point_defense",
+    "name": "守护者点防御",
+    "x": -3,
+    "y": 2,
+    "desc": "可锁定目标 +2, 种类丰富的弹药能够显著提升拦截威胁的能力.",
+    "cost": 320,
+    "requires": [
+      "barrier_point_defense"
+    ]
+  },
+  {
+    "id": "explosive",
+    "name": "易燃易爆炸",
+    "x": 0,
+    "y": 3,
+    "desc": "艺术就是爆炸, 这类武器能够轻易的处理成批的敌人.",
+    "cost": 100
+  },
+  {
     "id": "90_cannon",
     "name": "90机炮",
-    "x": 560,
-    "y": 460,
+    "x": 1,
+    "y": 3,
     "desc": "解锁90机炮, 一种名为“毁灭者”的大口径机炮, 炮弹击中敌机会发生爆炸, 造成范围伤害, 由于炮弹重量的限制, 自动装弹机装弹速度会慢一点. \n——“北方联盟的那帮设计师甚至要把125舰炮端上飞机, 我们多次商讨, 才用了这么个折中方法”",
     "cost": 160,
     "requires": [
-      "gunboat_focus"
+      "explosive"
     ]
   },
   {
     "id": "125_artillery",
     "name": "125火炮",
-    "x": 720,
-    "y": 460,
+    "x": 2,
+    "y": 3,
     "desc": "然而以军事支援为要挟，北方联盟的那帮设计师\"得逞\"了, 这些装有巨量烈性炸药的大口径炮弹会轻微击退敌人，给你一些喘息的时间",
     "cost": 240,
     "requires": [
@@ -192,21 +196,161 @@
     ]
   },
   {
-    "id": "fusion_bomb",
-    "name": "热熔炸弹",
-    "x": 880,
-    "y": 460,
-    "desc": "来自恒星的力量能够轻易融化敌人的装甲, 位于爆炸中心的敌人将承受基于当前生命的额外伤害. 解锁\"串联战斗部\"后, 只有第一次爆炸触发此效果",
+    "id": "missile",
+    "name": "导弹",
+    "x": -1,
+    "y": 3,
+    "desc": "炸弹替换为释放8枚追踪导弹, \n“追猎者导弹”, 标定距离100km,有效距离300km.",
+    "cost": 200,
+    "requires": [
+      "explosive"
+    ]
+  },
+  {
+    "id": "honeycomb_missile",
+    "name": "蜂巢导弹",
+    "x": -2,
+    "y": 3,
+    "desc": "释放24枚伤害较低的导弹, 其实蜂巢导弹的原型是一种小的自爆无人机, 作为僚机进行护卫, 但后来人们发现这玩意擅长的只有自爆, 蜂巢导弹应运而生.",
+    "cost": 160,
+    "branchGroup": "guidance",
+    "requires": [
+      "missile"
+    ]
+  },
+  {
+    "id": "space_torpedoes",
+    "name": "太空鱼雷",
+    "x": -2,
+    "y": 4,
+    "desc": "这些鱼雷其实都是速度缓慢的巨大导弹. 它们装备了更加强大的弹头和护盾调制器, 这使得它们可以安然穿过能量屏障.",
+    "cost": 260,
+    "branchGroup": "guidance",
+    "requires": [
+      "missile"
+    ]
+  },
+  {
+    "id": "heavy_weapon",
+    "name": "重型武器",
+    "x": 0,
+    "y": 5,
+    "desc": "解锁重型武器研究路径, 研究诸如火箭发射器等强大武器",
+    "cost": 160
+  },
+  {
+    "id": "rocket_launcher",
+    "name": "火箭发射器",
+    "x": 1,
+    "y": 4,
+    "branchGroup": "heavy_upgrade",
+    "desc": "解锁 \"火箭发射器\", 一连串威力强大的火箭弹将清扫面前一切敌人. \n——‘长官长官, 我要是过载了就剩个指头会动了, 能玩火箭发射器吗’. \n——‘别有点天赋就炫耀, 新兵’",
     "cost": 360,
     "requires": [
-      "125_artillery"
+      "heavy_weapon",
+      "explosive"
     ]
+  },
+  {
+    "id": "random_rocket",
+    "name": "随机炮弹",
+    "x": 2,
+    "y": 4,
+    "desc": "从高爆, 燃烧, 集束, emp和穿甲弹中随机发射. \n具体是什么让炮弹变得随机我们也不知道其中原理, 不过能用就行, 不管那么多了",
+    "cost": 640,
+    "requires": [
+      "rocket_launcher"
+    ]
+  },
+  {
+    "id": "cloud_lightning",
+    "name": "天云闪电",
+    "x": 1,
+    "y": 5,
+    "branchGroup": "heavy_upgrade",
+    "desc": "以雷霆击碎黑暗! 通过电磁生成器凝聚而成的球状闪电, 可以有效穿透敌舰防御",
+    "cost": 320,
+    "requires": [
+      "heavy_weapon",
+      "electrical_energy_surges"
+    ],
+    "drawExcept": [
+      "electrical_energy_surges"
+    ]
+  },
+  {
+    "id": "arc_emitter",
+    "name": "电弧发射器",
+    "x": 2,
+    "y": 5,
+    "desc": "电弧发射器会向距离最近的6个目标发射电弧.",
+    "cost": 320,
+    "requires": [
+      "cloud_lightning"
+    ]
+  },
+  {
+    "id": "focused_arc_emitter",
+    "name": "聚能电弧发射器",
+    "x": 3,
+    "y": 5,
+    "desc": "激发一道电弧, 从命中位置释放两道连锁电弧.",
+    "cost": 510,
+    "requires": [
+      "arc_emitter"
+    ]
+  },
+  {
+    "id": "particle_lance",
+    "name": "粒子光矛",
+    "x": 1,
+    "y": 6,
+    "desc": "这类重型能量武器发射高度集中的粒子束, 可以造成巨大伤害.",
+    "cost": 320,
+    "branchGroup": "heavy_upgrade",
+    "requires": [
+      "gamma_lasers",
+      "heavy_weapon"
+    ],
+    "drawExcept": [
+      "gamma_lasers"
+    ]
+  },
+  {
+    "id": "tachyon_lance",
+    "name": "快子光矛",
+    "x": 2,
+    "y": 6,
+    "desc": "粒子光矛的增强版, 可以发射威力强大的快子束.",
+    "cost": 480,
+    "requires": [
+      "particle_lance"
+    ]
+  },
+  {
+    "id": "perdition_beam",
+    "name": "炼狱射线(WIP)",
+    "x": 3,
+    "y": 6,
+    "desc": "WIP",
+    "cost": 480,
+    "requires": [
+      "tachyon_lance"
+    ]
+  },
+  {
+    "id": "gunboat_focus",
+    "name": "炮艇专精",
+    "x": 0,
+    "y": 7,
+    "desc": "专注机炮研发, 精进动能和爆炸武器强化.",
+    "cost": 100
   },
   {
     "id": "hd_bullet",
     "name": "高密度弹丸",
-    "x": 560,
-    "y": 540,
+    "x": 1,
+    "y": 7,
     "branchGroup": "bullet_dir",
     "desc": "直接命中伤害 +100%, 采用高强度的钨合金, 你永远无法相信他们是在太空工厂里制造的",
     "cost": 100,
@@ -217,8 +361,8 @@
   {
     "id": "ad_loading",
     "name": "先进装填器",
-    "x": 720,
-    "y": 540,
+    "x": 2,
+    "y": 7,
     "desc": "机炮射速 +20%, 采用先进的链式传动! 包括弹壳回收以及3d打印的带弹头",
     "cost": 100,
     "requires": [
@@ -228,8 +372,8 @@
   {
     "id": "antimatter_warhead",
     "name": "反物质弹头",
-    "x": 880,
-    "y": 540,
+    "x": 3,
+    "y": 7,
     "branchGroup": "apex_upgrade",
     "desc": "造成目标最大生命8%的伤害, 弹头附着的反物质能够轻易泯灭装甲.",
     "cost": 600,
@@ -243,8 +387,8 @@
   {
     "id": "hv_warhead",
     "name": "高爆战斗部",
-    "x": 560,
-    "y": 620,
+    "x": -1,
+    "y": 7,
     "branchGroup": "bullet_dir",
     "desc": "爆炸半径 +50%. 在无数同志们的无私奉献之下, 我们终究研制出了高爆炸药.",
     "cost": 150,
@@ -255,8 +399,8 @@
   {
     "id": "hd_explosives",
     "name": "高密度炸药",
-    "x": 720,
-    "y": 620,
+    "x": -2,
+    "y": 7,
     "desc": "爆炸伤害 +40%\n《易燃易爆炸》作为宇宙流行专辑的新歌很流行, 人们不知道的是这首歌其实是公元纪年的老歌.",
     "cost": 180,
     "requires": [
@@ -266,8 +410,8 @@
   {
     "id": "serial_warhead",
     "name": "串联战斗部",
-    "x": 880,
-    "y": 620,
+    "x": -3,
+    "y": 7,
     "branchGroup": "apex_upgrade",
     "desc": "爆炸次数 +2.\n 串联毁伤弹药, 提供额外爆炸, 一发炮弹两个惊喜.",
     "cost": 600,
@@ -276,98 +420,154 @@
     ]
   },
   {
-    "id": "heavy_weapon",
-    "name": "重型武器",
-    "x": 160,
-    "y": 460,
-    "desc": "解锁重型武器研究路径, 研究诸如火箭发射器等强大武器",
-    "cost": 160,
-    "requires": [
-      "gunboat_focus"
-    ]
-  },
-  {
-    "id": "rocket_launcher",
-    "name": "火箭发射器",
-    "x": 0,
-    "y": 540,
-    "branchGroup": "heavy_upgrade",
-    "desc": "解锁 \"火箭发射器\", 一连串威力强大的火箭弹将清扫面前一切敌人. \n——‘长官长官, 我要是过载了就剩个指头会动了, 能玩火箭发射器吗’. \n——‘别有点天赋就炫耀, 新兵’",
+    "id": "fusion_bomb",
+    "name": "热熔炸弹",
+    "x": -3,
+    "y": 8,
+    "desc": "来自恒星的力量能够轻易融化敌人的装甲, 位于爆炸中心的敌人将承受基于当前生命的额外伤害. 解锁\"串联战斗部\"后, 只有第一次爆炸触发此效果",
     "cost": 360,
     "requires": [
-      "heavy_weapon"
+      "hd_explosives"
     ]
   },
   {
-    "id": "random_rocket",
-    "name": "随机炮弹",
-    "x": -160,
-    "y": 540,
-    "desc": "从高爆, 燃烧, 集束, emp和穿甲弹中随机发射. \n具体是什么让炮弹变得随机我们也不知道其中原理, 不过能用就行, 不管那么多了",
+    "id": "energy_focus",
+    "name": "能源研究",
+    "x": 0,
+    "y": 9,
+    "desc": "解锁能量武器研究. \n解锁 \"EMP\". \n电能武器刚被发明的时候, 因为其巨大的耗能, 反抗军并不看好它, 直到有人发现这东西能清除帝国的所有子弹",
+    "cost": 100
+  },
+  {
+    "id": "electrical_energy_surges",
+    "name": "电能激荡",
+    "x": 1,
+    "y": 9,
+    "desc": "受击时立即触发EMP, 这种受人欢迎的自卫系统名叫电棘刺, 在一些近卫飞行员的座驾上常常出现",
+    "cost": 120,
+    "requires": [
+      "energy_focus"
+    ]
+  },
+  {
+    "id": "ele_shield",
+    "name": "电磁护盾",
+    "x": 2,
+    "y": 9,
+    "desc": "受击触发EMP并抵消伤害, EMP进入冷却, 人们巧妙地将护盾和emp结合, 创造出了电磁护盾, 当受到弹药伤害时能够触发机体表面的emp防护",
+    "cost": 180,
+    "requires": [
+      "electrical_energy_surges"
+    ]
+  },
+  {
+    "id": "ad_capacitance",
+    "name": "强化电容",
+    "x": 2,
+    "y": 10,
+    "branchGroup": "emp_radius",
+    "desc": "EMP影响范围 +50%, 充能冷却速度 -20%, 多亏了格雷老爷子的废寝忘食, 现在有了超级电容, 量大管饱, 把那些废电池扔在一边吧!",
+    "cost": 180,
+    "requires": [
+      "electrical_energy_surges"
+    ]
+  },
+  {
+    "id": "ele_oscillation",
+    "name": "电磁震荡",
+    "x": 3,
+    "y": 10,
+    "desc": "强大的电磁脉冲会持续瘫痪敌人的武器系统.",
+    "cost": 250,
+    "requires": [
+      "ad_capacitance"
+    ]
+  },
+  {
+    "id": "quick_charge",
+    "name": "快充电容",
+    "x": 2,
+    "y": 11,
+    "branchGroup": "emp_radius",
+    "desc": "EMP范围 -50%, 冷却速度 +50%, 与格雷的发明相反, 弗兰克认为作为自卫系统的emp高速充能才是王道, 于是快充电容诞生了.",
+    "cost": 180,
+    "requires": [
+      "electrical_energy_surges"
+    ]
+  },
+  {
+    "id": "high_efficiency_coolant",
+    "name": "高效冷却剂",
+    "x": -1,
+    "y": 9,
+    "desc": "武器散热速率 +50%, 新增了散热槽! 这样会变得更凉快",
+    "cost": 120,
+    "requires": [
+      "energy_focus"
+    ]
+  },
+  {
+    "id": "harmonic_analysis",
+    "name": "谐波分析",
+    "x": -2,
+    "y": 9,
+    "desc": "能量武器伤害 +40%, 帝国的光谱分析学家们研制出了一款基于表面材料调整光波的系统, 后来被反抗军间谍“红鹰”获取, 据说其原理来自于宇宙深处某种巨大的鳞翅目昆虫。。。",
+    "cost": 180,
+    "requires": [
+      "high_efficiency_coolant"
+    ]
+  },
+  {
+    "id": "high_temperature_alloy",
+    "name": "耐高温合金",
+    "x": -3,
+    "y": 9,
+    "desc": "武器过热上限 +50%, ",
+    "cost": 360,
+    "requires": [
+      "harmonic_analysis"
+    ]
+  },
+  {
+    "id": "energy_recovery",
+    "name": "能量回收",
+    "x": -4,
+    "y": 9,
+    "branchGroup": "apex_upgrade",
+    "desc": "击败敌舰增加激光持续时间, 在这些激光束中加入了反射回收机制, 一部分没有完全发挥作用的激光电能将会回收, 这要感谢哈夫博士对凯博水晶的研究",
     "cost": 640,
     "requires": [
-      "rocket_launcher"
-    ]
-  },
-  {
-    "id": "cloud_lightning",
-    "name": "天云闪电",
-    "x": 0,
-    "y": 460,
-    "branchGroup": "heavy_upgrade",
-    "desc": "以雷霆击碎黑暗! 通过电磁生成器凝聚而成的球状闪电, 可以有效穿透敌舰防御",
-    "cost": 480,
-    "requires": [
-      "heavy_weapon"
-    ]
-  },
-  {
-    "id": "arc_emitter",
-    "name": "电弧发射器",
-    "x": -160,
-    "y": 460,
-    "desc": "电弧发射器会向距离最近的6个目标发射电弧.",
-    "cost": 320,
-    "requires": [
-      "cloud_lightning"
-    ]
-  },
-  {
-    "id": "focused_arc_emitter",
-    "name": "聚能电弧发射器",
-    "x": -320,
-    "y": 460,
-    "desc": "激发一道电弧, 从命中位置释放两道连锁电弧.",
-    "cost": 480,
-    "requires": [
-      "arc_emitter"
+      "high_temperature_alloy"
     ]
   },
   {
     "id": "into_void",
     "name": "虚空行者",
-    "x": 340,
-    "y": 700,
+    "x": 0,
+    "y": 12,
     "desc": "解锁 \"遁入虚空\", 在对暗影族的战斗中从对方缴获的幽灵战机的技术, 通过小黑洞压缩空间实现你和其他飞机不在一个“维度”上",
     "cost": 180
   },
   {
     "id": "void_disturbance",
     "name": "虚空扰动",
-    "x": 160,
-    "y": 700,
+    "x": -1,
+    "y": 12,
     "desc": "退出虚空时触发EMP, 清除周围弹幕并瘫痪敌人",
     "cost": 100,
     "requires": [
       "into_void",
+      "energy_focus"
+    ],
+    "drawExcept": [
       "energy_focus"
     ]
   },
   {
     "id": "space_tear",
     "name": "空间撕裂",
-    "x": 0,
-    "y": 700,
+    "x": -2,
+    "y": 12,
     "desc": "退出虚空时撕裂周围敌舰, 作为虚空的副作用, 小型黑洞可能对战机造成不可逆的损害, 这项技术将能量转移到了敌机身上, 哪怕是坚硬的外壳也会撕成碎块.",
     "cost": 300,
     "requires": [
@@ -377,8 +577,8 @@
   {
     "id": "void_dweller",
     "name": "虚空居者",
-    "x": 560,
-    "y": 700,
+    "x": 1,
+    "y": 12,
     "branchGroup": "void_duration",
     "desc": "虚空持续时间 +200%, 冷却时间 +30% “虚空居者”是暗影族里长老的头衔, 不过暗影族被征服后, “居者们”都窝在帝国给的豪宅中醉生梦死, 令人唏嘘.",
     "cost": 100,
@@ -389,20 +589,23 @@
   {
     "id": "void_energy_extraction",
     "name": "虚境汲能",
-    "x": 720,
-    "y": 700,
+    "x": 2,
+    "y": 12,
     "desc": "进入虚空时不消耗激光能量, 同时立即冷却EMP\n 在另一个维度中充斥着电能量, 战机上的充电隔板就发挥了它应有的作用.",
     "cost": 150,
     "requires": [
-      "laser",
-      "void_dweller"
+      "void_dweller",
+      "laser"
+    ],
+    "drawExcept": [
+      "laser"
     ]
   },
   {
     "id": "void_leap",
     "name": "虚空跳跃",
-    "x": 560,
-    "y": 780,
+    "x": 1,
+    "y": 13,
     "branchGroup": "void_duration",
     "desc": "虚空持续时间 -90%, 冷却时间 -80% \n黑洞的效能更快, 代价是更短的时间, 鱼与熊掌不可兼得.",
     "cost": 90,
@@ -413,8 +616,8 @@
   {
     "id": "emergency_warp",
     "name": "应急跃迁",
-    "x": 720,
-    "y": 780,
+    "x": 2,
+    "y": 13,
     "desc": "基于虚空跳跃装置做的“虚脱”装置, 全称是虚空逃逸脱离危险装置, 其中, 虚脱有两个含义, 令人忍俊不禁. \n——舰船上的辅助AI.",
     "cost": 320,
     "requires": [
@@ -424,16 +627,16 @@
   {
     "id": "ship_opt",
     "name": "船体强化",
-    "x": 340,
-    "y": 860,
+    "x": 0,
+    "y": 14,
     "desc": "生命值提升 12, “坚船利炮才是最终答案!” \n——鲍里斯元帅, 重型作战学说的创造者.",
     "cost": 180
   },
   {
     "id": "explosive_armor",
     "name": "爆炸装甲",
-    "x": 560,
-    "y": 860,
+    "x": 1,
+    "y": 14,
     "desc": "受伤时爆炸范围 +40%, 船上利用了自从星际殖民时代前的爆炸反应装甲技术, 不过不是在坦克上.",
     "cost": 160,
     "requires": [
@@ -443,8 +646,8 @@
   {
     "id": "emergency_repair",
     "name": "紧急维修",
-    "x": 720,
-    "y": 860,
+    "x": 2,
+    "y": 14,
     "branchGroup": "apex_upgrade",
     "desc": "击毁敌舰15%概率修复船体. 从被击毁的敌舰回收合金, '不浪费'是我们的原则.",
     "cost": 320,
@@ -455,8 +658,8 @@
   {
     "id": "decoy_releaser",
     "name": "干扰弹",
-    "x": 160,
-    "y": 860,
+    "x": -1,
+    "y": 14,
     "desc": "释放干扰弹, 大概率使导弹丢失目标. (X键释放) 在星际战争时代, 人们对于战机要不要携带干扰弹产生了争议, 后来高松将军力排众议, 下达了命令, 这一举动挽回了许多飞行员的生命",
     "cost": 80,
     "requires": [
@@ -466,16 +669,16 @@
   {
     "id": "nanotechnology",
     "name": "纳米科技",
-    "x": 340,
-    "y": 240,
+    "x": 0,
+    "y": 15,
     "desc": "了解你的微小“朋友”, 解锁纳米科技研究路线 \n知己知彼, 百战不殆, 帝国的坚船利炮在这些小家伙身上变得十分脆弱, 无论是修复战舰, 干扰敌方还是毁灭杀伤, 纳米机器人起到了重要作用. 不仅如此, 纳米机器人也登上了宣传海报, 形象是一个可爱又能打的女孩子.",
     "cost": 160
   },
   {
     "id": "armor_erosion",
     "name": "装甲侵蚀",
-    "x": 160,
-    "y": 240,
+    "x": 1,
+    "y": 15,
     "desc": "特质的弹头装载了纳米机器, 一但接触到敌舰便会开始侵蚀他们的装甲. \n 我的甲呀!",
     "cost": 240,
     "requires": [
@@ -488,10 +691,11 @@
   {
     "id": "gray",
     "name": "灰蛊",
-    "x": 0,
-    "y": 240,
+    "x": 2,
+    "y": 15,
     "desc": "重复命中同一目标会使得其承受更高伤害. 纳米虫群会吞噬掉经过的一切, 受宇宙蝗灾影响得到启发, 我们使用平常回收站的纳米溶蚀机器人来对付敌舰.",
     "cost": 320,
+    "branchGroup": "apex_upgrade",
     "requires": [
       "armor_erosion"
     ]
@@ -499,8 +703,8 @@
   {
     "id": "nano_mending",
     "name": "纳米修复",
-    "x": 0,
-    "y": 160,
+    "x": 2,
+    "y": 16,
     "desc": "先进的纳米船体将缓慢自动修复损伤.",
     "cost": 320,
     "requires": [
@@ -513,92 +717,41 @@
   {
     "id": "steering_gear",
     "name": "方向机",
-    "x": 340,
-    "y": 940,
+    "x": 0,
+    "y": 17,
     "desc": "舰艇可以全向瞄准, 飞行员们再也不用担心飞行和开炮之间的矛盾了, 不过千万要小心四面八方来的敌机!",
     "cost": 220,
     "branchGroup": "directional_control"
   },
   {
-    "id": "fire_control_computer",
-    "name": "火控计算机",
-    "x": 160,
-    "y": 940,
-    "desc": "弹道计算机将自动计算并瞄准! \n “忘关了就是开了?” ——帝国旗舰指挥官“大姐头”凯瑟琳的嘲讽 (左Alt开启)",
-    "cost": 320,
+    "id": "ballistic_calculator",
+    "name": "弹道计算器",
+    "x": 1,
+    "y": 17,
+    "desc": "配备的弹道计算器有效的提升了打击远距离目标的精准度. (左Shift锁定敌人)",
+    "cost": 10,
     "requires": [
       "steering_gear"
     ]
   },
   {
+    "id": "fire_control_computer",
+    "name": "火控计算机",
+    "x": 2,
+    "y": 17,
+    "desc": "弹道计算机将自动计算并瞄准! (左Alt开启) \n“忘关了就是开了?” ——帝国旗舰指挥官“大姐头”凯瑟琳的嘲讽",
+    "cost": 320,
+    "requires": [
+      "ballistic_calculator"
+    ]
+  },
+  {
     "id": "pointer_following",
     "name": "指针跟随",
-    "x": 340,
-    "y": 1020,
+    "x": -1,
+    "y": 17,
     "desc": "舰艇将跟随鼠标位置. \n牺牲方向机得来的导航系统, 通过引导信标来实现更灵活的机动.",
     "cost": 10,
     "branchGroup": "directional_control"
-  },
-  {
-    "id": "sentinel_point_defense",
-    "name": "哨兵点防御",
-    "x": 560,
-    "y": 940,
-    "desc": "对于那些又大又笨重的军用舰船来说, 在船体上安装反导弹和反攻击机的装置是很有必要的, 忠实的哨兵会用激光融化靠近的一切炮弹.",
-    "cost": 120,
-    "branchGroup": "point_defense"
-  },
-  {
-    "id": "barrier_point_defense",
-    "name": "屏障点防御",
-    "x": 720,
-    "y": 940,
-    "desc": "可锁定目标 +2 ,升级后的弹道预测算法可以提升追踪和点防御的效果.",
-    "cost": 240,
-    "requires": [
-      "sentinel_point_defense"
-    ]
-  },
-  {
-    "id": "guardian_point_defense",
-    "name": "守护者点防御",
-    "x": 880,
-    "y": 940,
-    "desc": "可锁定目标 +2, 种类丰富的弹药能够显著提升拦截威胁的能力.",
-    "cost": 320,
-    "requires": [
-      "barrier_point_defense"
-    ]
-  },
-  {
-    "id": "flak_battery",
-    "name": "高射炮",
-    "x": 560,
-    "y": 1020,
-    "desc": "高射炮可以近距离发射榴弹, 这对能有效防御敌军炮弹.",
-    "cost": 120,
-    "branchGroup": "point_defense"
-  },
-  {
-    "id": "flak_cannons",
-    "name": "高射加农炮",
-    "x": 720,
-    "y": 1020,
-    "desc": "可锁定目标 +1, 伤害 +1, 升级后的高射炮装备了新型更加强大的榴弹.",
-    "cost": 240,
-    "requires": [
-      "flak_battery"
-    ]
-  },
-  {
-    "id": "flak_artillery",
-    "name": "重型高射炮",
-    "x": 880,
-    "y": 1020,
-    "desc": "可锁定目标 +1, 伤害 +1, 使用预测跟踪算法和更强大的齐射, 使得这些高射炮拥有了难以置信的打击敌军炮弹的能力.",
-    "cost": 320,
-    "requires": [
-      "flak_cannons"
-    ]
   }
 ]

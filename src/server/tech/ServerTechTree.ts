@@ -7,7 +7,8 @@ import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2
 import {Registries} from "../../registry/Registries.ts";
 import {type RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {type Tech} from "../../tech/Tech.ts";
-import {ApplyServerTech} from "./applyServerTech.ts";
+import {ApplyServerTech} from "./ApplyServerTech.ts";
+import {Techs} from "../../tech/Techs.ts";
 
 export class ServerTechTree implements TechTree {
     private readonly player: ServerPlayerEntity;
@@ -78,15 +79,17 @@ export class ServerTechTree implements TechTree {
 
         const finalScore = this.player.getScore() + (backScore * 0.8) | 0;
         this.player.setScore(finalScore);
-        this.player.clearItems();
 
-        this.player.addItem(Items.CANNON40_WEAPON);
-        this.player.addItem(Items.BOMB_WEAPON);
-        this.player.setYaw(-1.57079);
+        const yaw = this.player.getYaw();
+        this.resetPlayer();
 
         for (const tech of unlocked) {
             const entry = Registries.TECH.getEntryByValue(tech);
             if (entry) this.forceUnlock(entry);
+        }
+
+        if (this.isUnlocked(Techs.STEERING_GEAR)) {
+            this.player.setYaw(yaw);
         }
 
         this.player.getNetworkChannel().send(new PlayerSetScoreS2CPacket(this.player.getScore()));
@@ -111,16 +114,20 @@ export class ServerTechTree implements TechTree {
 
         const finalScore = player.getScore() + (backScore * 0.8) | 0;
         player.setScore(finalScore);
-        player.clearItems();
-
-        player.addItem(Items.CANNON40_WEAPON);
-        player.addItem(Items.BOMB_WEAPON);
-
-        player.setYaw(-1.57079);
+        this.resetPlayer();
 
         this.state.reset();
 
         player.networkHandler?.send(new PlayerSetScoreS2CPacket(finalScore));
+    }
+
+    private resetPlayer() {
+        this.player.clearItems();
+        this.player.onDamageExplosionRadius = 320;
+
+        this.player.addItem(Items.CANNON40_WEAPON);
+        this.player.addItem(Items.BOMB_WEAPON);
+        this.player.setYaw(-1.57079);
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {

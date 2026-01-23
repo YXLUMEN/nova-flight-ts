@@ -84,4 +84,8 @@ export class DecoyReleaser extends SpecialWeapon {
     public override shouldCooldown(stack: ItemStack): boolean {
         return stack.getOrDefault(DataComponentTypes.WEAPON_CAN_COOLDOWN, true);
     }
+
+    public override getSortIndex(): number {
+        return Infinity;
+    }
 }

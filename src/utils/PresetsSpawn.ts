@@ -15,19 +15,51 @@ import type {SpawnContext} from "../stage/SpawnContext.ts";
 import type {FunctionReturn} from "../apis/types.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
+import {TankEnemy} from "../entity/mob/TankEnemy.ts";
+
+function modifyEntity(
+    ctx: SpawnContext,
+    mob: MobEntity,
+    speed: number,
+    extraHp: number,
+    color: string,
+    hpScaleFn?: FunctionReturn<SpawnContext, number>
+): void {
+    mob.color = color;
+    mob.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.setBaseValue(speed);
+
+    const scaledHp = hpScaleFn !== undefined ?
+        extraHp * hpScaleFn(ctx) * ctx.difficulty :
+        extraHp * ctx.difficulty;
+
+    const maxHealth = mob.getMaxHealth();
+    mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + scaledHp | 0);
+    mob.setHealth(mob.getMaxHealth());
+
+    if (Math.random() > 0.7) {
+        const scaledShield = Math.max(ctx.difficulty, scaledHp / 5);
+        mob.addStatusEffect(
+            new StatusEffectInstance(StatusEffects.SHIELD, -1, scaledShield),
+            null
+        );
+        return;
+    }
+
+    if (ctx.difficulty > 8 && Math.random() > 0.9 && !(mob instanceof TankEnemy)) {
+        mob.addStatusEffect(
+            new StatusEffectInstance(StatusEffects.RESISTANCE, 800, Math.min(7, ctx.difficulty)),
+            null
+        );
+    }
+}
 
 const spawnAtTop = (
     type: EntityType<MobEntity>,
     speed = 1, extraHp = 0, worth = 1,
     color = '#ff6b6b'
 ): MobFactory => (ctx) => {
-    return spawnTopRandomCtor(type, [worth], (m) => {
-        m.color = color;
-        m.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.setBaseValue(speed);
-
-        const maxHealth = m.getMaxHealth() * ctx.difficulty;
-        m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + extraHp);
-        m.setHealth(m.getMaxHealth());
+    return spawnTopRandomCtor(type, [worth], mob => {
+        modifyEntity(ctx, mob, speed, extraHp, color);
     })(ctx);
 }
 
@@ -40,16 +72,7 @@ const spawnAtTopS = (
     hpScaleFn?: FunctionReturn<SpawnContext, number>
 ): MobFactory => (ctx) => {
     return spawnTopRandomCtorS(type, [worth], (mob) => {
-        mob.color = color;
-        mob.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.setBaseValue(speed);
-
-        const scaledHp = hpScaleFn !== undefined ?
-            extraHp * hpScaleFn(ctx) * ctx.difficulty :
-            extraHp * ctx.difficulty;
-
-        const maxHealth = mob.getMaxHealth();
-        mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + scaledHp | 0);
-        mob.setHealth(mob.getMaxHealth());
+        modifyEntity(ctx, mob, speed, extraHp, color, hpScaleFn);
     }, {sampler: 'best', candidates: 8, history: 16, minGap: 64, margin: 24})(ctx)
 };
 
@@ -63,23 +86,8 @@ const spawnInMap = (
     hpScaleFn?: FunctionReturn<SpawnContext, number>
 ): MobFactory => (ctx) => {
     return spawnAvoidPlayerCtor(type, [worth], (mob) => {
-        mob.color = color;
-        mob.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.setBaseValue(speed);
-
-        const scaledHp = hpScaleFn !== undefined ?
-            extraHp * hpScaleFn(ctx) * ctx.difficulty :
-            extraHp * ctx.difficulty;
-
-        const maxHealth = mob.getMaxHealth();
-        mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + scaledHp | 0);
-        mob.setHealth(mob.getMaxHealth());
+        modifyEntity(ctx, mob, speed, extraHp, color, hpScaleFn);
         mob.getAi().setBehavior(Behavior.Wander);
-        if (ctx.difficulty > 9 && Math.random() > 0.8) {
-            mob.addStatusEffect(
-                new StatusEffectInstance(StatusEffects.RESISTANCE, 800, Math.min(7, ctx.difficulty)),
-                null
-            );
-        }
     }, opts)(ctx);
 }
 

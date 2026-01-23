@@ -18,6 +18,7 @@ export class DamageTypes {
     public static readonly EROSION = this.registry("erosion");
     public static readonly AP_DAMAGE = this.registry("ap_damage");
     public static readonly ARC = this.registry('arc');
+    public static readonly KINETIC = this.registry('kinetic');
 
     public static async init() {
         const damage = Registries.DAMAGE_TYPE;
@@ -28,12 +29,13 @@ export class DamageTypes {
         damage.add(this.PLAYER_ATTACK, 'playerAttack');
         damage.add(this.MOB_PROJECTILE, 'mobProjectile');
         damage.add(this.EXPLOSION, 'explosion');
-        damage.add(this.LASER, 'laser', DamageTypeTags.REPLY_LASER);
+        damage.add(this.LASER, 'laser', DamageTypeTags.REPLY_LASER, DamageTypeTags.NOT_TRIGGER_EROSION);
         damage.add(this.PLAYER_IMPACT, 'playerImpact', DamageTypeTags.NOT_GAIN_SCORE);
         damage.add(this.VOID, 'void', DamageTypeTags.NOT_GAIN_SCORE);
         damage.add(this.EROSION, 'onFire', DamageTypeTags.REPLY_LASER, DamageTypeTags.NOT_TRIGGER_EROSION);
         damage.add(this.AP_DAMAGE, 'apDamage', DamageTypeTags.BYPASSES_INVULNERABLE);
-        damage.add(this.ARC, 'arc', DamageTypeTags.REPLY_LASER, DamageTypeTags.BYPASSES_INVULNERABLE, DamageTypeTags.BYPASSES_EFFECTS, DamageTypeTags.NOT_TRIGGER_EROSION);
+        damage.add(this.ARC, 'arc', DamageTypeTags.REPLY_LASER, DamageTypeTags.BYPASSES_INVULNERABLE, DamageTypeTags.BYPASSES_EFFECTS, DamageTypeTags.BYPASSES_SHIELD, DamageTypeTags.NOT_TRIGGER_EROSION);
+        damage.add(this.KINETIC, 'kinetic', DamageTypeTags.BYPASSES_SHIELD);
     }
 
     private static registry(id: string) {

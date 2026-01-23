@@ -7,55 +7,92 @@ import {TechState} from "./TechState.ts";
 import tech from "../tech/tech-data.json" with {type: "json"};
 
 export class Techs {
+    public static COILGUNS;
+    public static RAILGUNS;
+    public static KINETIC_ARTILLERY;
+
+    public static AUTOCANNON;
+    public static MINI_GUN;
+    public static CIWS;
+
+    // 爆炸类
+    public static EXPLOSIVE;
+
+    public static CANNON90;
+    public static ARTILLERY125;
+
+    public static MISSILE;
+    public static HONEYCOMB_MISSILE;
+    public static SPACE_TORPEDOES;
+
+    // 能量类
+    public static LASER;
+    public static GAMMA_LASERS;
+    public static PHASE_LASERS;
+
+    // 重型武器
+    public static HEAVY_WEAPON;
+
+    public static ROCKET_LAUNCHER;
+    public static RANDOM_ROCKET;
+
+    public static CLOUD_LIGHTNING;
+    public static ARC_EMITTER;
+    public static FOCUSED_ARC_EMITTER;
+
+    public static PARTICLE_LANCE;
+    public static TACHYON_LANCE;
+    public static PERDITION_BEAM;
+
+    // 炮艇专精
+    public static GUNBOAT_FOCUS;
+
+    public static HD_BULLET;
+    public static AD_LOADING;
+    public static ANTIMATTER_WARHEAD;
+
+    public static HV_WARHEAD;
+    public static HD_EXPLOSIVES;
+    public static SERIAL_WARHEAD;
+    public static FUSION_BOMB;
+
+    // 能力专精
     public static ENERGY_FORCE;
+
     public static ELECTRICAL_SURGES;
     public static AD_CAPACITANCE;
     public static ELE_OSCILLATION;
     public static QUICK_CHARGE;
     public static ELE_SHIELD;
-    public static LASER;
+
     public static HIGH_EFFICIENCY_COOLANT;
     public static HARMONIC_ANALYSIS;
     public static HIGH_TEMPERATURE_ALLOY;
     public static ENERGY_RECOVERY;
-    public static GUNBOAT_FOCUS;
-    public static MINI_GUN;
-    public static CIWS;
-    public static HD_BULLET;
-    public static AD_LOADING;
-    public static ANTIMATTER_WARHEAD;
-    public static CANNON90;
-    public static ARTILLERY125;
-    public static FUSION_BOMB;
-    public static HV_WARHEAD;
-    public static HD_EXPLOSIVES;
-    public static SERIAL_WARHEAD;
-    public static HEAVY_WEAPON;
-    public static ROCKET_LAUNCHER;
-    public static RANDOM_ROCKET;
+
     public static INTO_VOID;
     public static VOID_DISTURBANCE;
     public static SPACE_TEAR;
     public static VOID_DWELLER;
     public static VOID_ENERGY_EXTRACTION;
     public static VOID_LEAP;
+
     public static SHIP_OPT;
     public static EXPLOSIVE_ARMOR;
     public static EMERGENCY_REPAIR;
     public static DECOY_RELEASER;
+
+    public static NANOTECHNOLOGY;
+    public static NANO_MENDING;
     public static ARMOR_EROSION;
     public static GRAY;
-    public static MISSILE;
-    public static HONEYCOMB_MISSILE;
+
     public static STEERING_GEAR;
+    public static BALLISTIC_CALCULATOR;
     public static FIRE_CONTROL_COMPUTER;
     public static INSTANT_RESPONSE;
     public static EMERGENCY_WARP;
-    public static NANOTECHNOLOGY;
-    public static NANO_MENDING;
-    public static CLOUD_LIGHTNING;
-    public static ARC_EMITTER;
-    public static FOCUSED_ARC_EMITTER;
+
     public static SENTINEL_POINT_DEFENSE;
     public static BARRIER_POINT_DEFENSE;
     public static GUARDIAN_POINT_DEFENSE;
@@ -124,6 +161,18 @@ export class Techs {
         this.FLAK_BATTERY = registerFromJson('flak_battery');
         this.FLAK_CANNONS = registerFromJson('flak_cannons');
         this.FLAK_ARTILLERY = registerFromJson('flak_artillery');
+        this.COILGUNS = registerFromJson('coilguns');
+        this.RAILGUNS = registerFromJson('railguns');
+        this.KINETIC_ARTILLERY = registerFromJson('kinetic_artillery');
+        this.AUTOCANNON = registerFromJson('autocannon');
+        this.EXPLOSIVE = registerFromJson('explosive');
+        this.SPACE_TORPEDOES = registerFromJson('space_torpedoes');
+        this.GAMMA_LASERS = registerFromJson('gamma_lasers');
+        this.PHASE_LASERS = registerFromJson('phase_lasers');
+        this.PARTICLE_LANCE = registerFromJson('particle_lance');
+        this.TACHYON_LANCE = registerFromJson('tachyon_lance');
+        this.BALLISTIC_CALCULATOR = registerFromJson('ballistic_calculator');
+        this.PERDITION_BEAM = registerFromJson('perdition_beam');
 
         Registries.TECH.getEntries().forEach(entry => entry.getValue().complete());
     }

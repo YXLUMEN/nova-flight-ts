@@ -10,12 +10,18 @@ export class SoundEvents {
     public static readonly UI_MENU_HOVER = this.registerSound("ui.menu_hover");
     public static readonly UI_PAGE_SWITCH = this.registerSound("ui.page_switch");
     public static readonly UI_SELECT = this.registerSound("ui.select");
+    public static readonly UI_ERROR = this.registerSound("ui.error");
 
     public static readonly LASER_OVERHEAT = this.registerSound("laser.overheat_alarm");
     public static readonly LASER_COOLDOWN = this.registerSound("laser.cooldown");
     public static readonly LASER_TRIGGER = this.registerSound("laser.trigger");
     public static readonly LASER_BEAM = this.registerSound("laser.beam");
     public static readonly LASER_CHARGE_DOWN = this.registerSound("laser.charge_down");
+    public static readonly LASER_FIRE_BEAM = this.registerSound("laser.fire_beam");
+    public static readonly LASER_FIRE_SYNTH = this.registerSound("laser.fire_synth");
+    public static readonly LASER_FIRE_BEAM_MID = this.registerSound("laser.fire_beam_mid");
+    public static readonly LASER_SPIN_BARREL = this.registerSound("laser.spin_barrel");
+    public static readonly LASER_CHARGEUP = this.registerSound("laser.chargeup");
 
     public static readonly CANNON40_FIRE_LOOP = this.registerSound("cannon40.fire_loop");
     public static readonly CANNON40_FIRE_TAIL = this.registerSound("cannon40.fire_tail");
@@ -51,6 +57,13 @@ export class SoundEvents {
     public static readonly ARC_FIRE = this.registerSound("arc.fire");
     public static readonly ARC_LOOP = this.registerSound("arc.loop");
     public static readonly ARC_BURST = this.registerSound("arc.burst");
+
+    public static readonly COILGUNS_FIRE_LOOP = this.registerSound("coilguns.fire_loop");
+    public static readonly RAILGUNS_FIRE = this.registerSound("railguns.fire");
+    public static readonly KINETIC_ARTILLERY_FIRE = this.registerSound("kinetic_artillery.fire");
+    public static readonly KINETIC_ARTILLERY_LOAD = this.registerSound("kinetic_artillery.load");
+
+    public static readonly TORPEDOES_FIRE = this.registerSound("torpedoes.fire");
 
     private static registerSound(id: string) {
         const identifier = Identifier.ofVanilla(id);

@@ -22,7 +22,7 @@ export class BulletEntity extends ProjectileEntity {
             let damage = hitDamage;
             if (entity instanceof LivingEntity) damage = hitDamage + (entity.getMaxHealth() * 0.08) | 0;
             else damage *= 2;
-            entity.takeDamage(sources.playerAttack(owner), damage);
+            entity.takeDamage(sources.projectile(this, owner), damage);
             return;
         }
 

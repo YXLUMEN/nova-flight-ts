@@ -26,7 +26,7 @@ export class DamageSources {
         this._generic = this.create(DamageTypes.GENERIC);
         this._removed = this.create(DamageTypes.REMOVED);
         this._kill = this.create(DamageTypes.KILL);
-        this._laser = this.create(DamageTypes.LASER);
+        this._laser = this.create(DamageTypes.LASER).setShieldMulti(0.5);
         this._void = this.create(DamageTypes.VOID);
         this._erosion = this.create(DamageTypes.EROSION);
         this._explosion = this.create(DamageTypes.EXPLOSION);
@@ -61,6 +61,10 @@ export class DamageSources {
         return this.createWithSource(DamageTypes.MOB_PROJECTILE, source, attacker);
     }
 
+    public kinetic(source: Entity, attacker: Entity | null) {
+        return this.createWithSource(DamageTypes.KINETIC, source, attacker).setArmorMulti(0.5);
+    }
+
     public apDamage(source: Entity, attacker: Entity | null): DamageSource {
         return this.createWithSource(DamageTypes.AP_DAMAGE, source, attacker);
     }
@@ -78,10 +82,9 @@ export class DamageSources {
     }
 
     public laser(attacker: Entity | null) {
-        if (attacker) {
-            return this.createWithAttacker(DamageTypes.LASER, attacker);
-        }
-        return this._laser;
+        return attacker !== null ?
+            this.createWithAttacker(DamageTypes.LASER, attacker).setShieldMulti(0.5) :
+            this._laser;
     }
 
     public playerImpact(attacker: PlayerEntity) {

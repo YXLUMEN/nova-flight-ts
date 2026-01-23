@@ -53,4 +53,8 @@ export class EMPWeapon extends SpecialWeapon {
     public override getUiColor(): string {
         return '#5ec8ff'
     }
+
+    public override getSortIndex(): number {
+        return 1;
+    }
 }

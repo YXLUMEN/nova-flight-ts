@@ -1,4 +1,4 @@
-import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {IVec} from "../../../utils/math/IVec.ts";
@@ -11,12 +11,14 @@ export class EntityDamageS2CPacket implements Payload {
             writer.writeVarUint(value.entityId);
             PacketCodecs.VECTOR2D.encode(writer, value.pos);
             writer.writeUint16(value.damageUint16);
+            PacketCodecs.COLOR_HEX.encode(writer, value.color);
         },
         reader => {
             return new EntityDamageS2CPacket(
                 reader.readVarUint(),
                 PacketCodecs.VECTOR2D.decode(reader),
-                reader.readUint16()
+                reader.readUint16(),
+                PacketCodecs.COLOR_HEX.decode(reader)
             )
         }
     );
@@ -24,18 +26,21 @@ export class EntityDamageS2CPacket implements Payload {
     public readonly entityId: number;
     public readonly pos: IVec;
     private readonly damageUint16: number;
+    public readonly color: string;
 
-    public constructor(entityId: number, pos: IVec, damageUint16: number) {
+    public constructor(entityId: number, pos: IVec, damageUint16: number, color: string) {
         this.entityId = entityId;
         this.pos = pos;
         this.damageUint16 = damageUint16;
+        this.color = color;
     }
 
-    public static create(entityId: number, pos: IVec, damage: number) {
+    public static create(entityId: number, pos: IVec, damage: number, color: string = '#ff3434'): EntityDamageS2CPacket {
         return new EntityDamageS2CPacket(
             entityId,
             pos,
-            clamp((damage * 10) | 0, 0, 65535)
+            clamp((damage * 10) | 0, 0, 65535),
+            color
         );
     }
 

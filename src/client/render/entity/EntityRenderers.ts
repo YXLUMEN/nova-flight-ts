@@ -42,6 +42,7 @@ export class EntityRenderers {
         this.register(EntityTypes.ENEMY_BULLET_ENTITY, bullet);
         this.register(EntityTypes.FAST_BULLET_ENTITY, fastBullet);
         this.register(EntityTypes.MINI_BULLET_ENTITY, fastBullet);
+        this.register(EntityTypes.KINETIC_ARTILLERY_ENTITY, fastBullet);
         this.register(EntityTypes.EXPLODE_BULLET_ENTITY, new ExplodeBulletEntityRender());
         this.register(EntityTypes.PLAYER, new PlayerEntityRender());
         this.register(EntityTypes.ROCKET_ENTITY, rocket);

@@ -31,7 +31,7 @@ import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacke
 import {NetworkChannel} from "../../network/NetworkChannel.ts";
 import type {ServerChannel} from "./ServerChannel.ts";
 import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
-import {ApplyServerTech} from "../tech/applyServerTech.ts";
+import {ApplyServerTech} from "../tech/ApplyServerTech.ts";
 
 export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
     public readonly player: ServerPlayerEntity;

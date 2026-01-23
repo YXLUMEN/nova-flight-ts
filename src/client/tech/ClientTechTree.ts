@@ -8,11 +8,12 @@ import {SoundSystem} from "../../sound/SoundSystem.ts";
 import type {TechTree} from "../../tech/TechTree.ts";
 import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
 import {PlayerResetAllTechC2SPacket} from "../../network/packet/c2s/PlayerResetAllTechC2SPacket.ts";
-import {applyClientTech} from "./applyClientTech.ts";
+import {ApplyClientTech} from "./ApplyClientTech.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {type Tech} from "../../tech/Tech.ts";
 import {type RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
+import {Techs} from "../../tech/Techs.ts";
 
 type Adjacency = {
     successors: Map<Tech, Tech[]>; // tech -> successors
@@ -30,22 +31,26 @@ export class ClientTechTree implements TechTree {
     private readonly resetAllBtn = document.getElementById('reset-all') as HTMLButtonElement;
     private readonly techTitle = document.getElementById('d-title')!;
     private readonly metaShow = document.getElementById('d-meta')!;
+
     private readonly nodeWidth = 144;
     private readonly nodeHeight = 40;
 
     private readonly player: ClientPlayerEntity;
+
     private readonly container: HTMLElement;
     private readonly svg: SVGSVGElement;
     private readonly nodesLayer: HTMLElement;
+
     private readonly state: TechState;
     private readonly adj: Adjacency;
+
     private readonly abortCtrl: AbortController = new AbortController();
 
     private selectNodeId: string | null = null;
 
-    public constructor(player: ClientPlayerEntity, container: HTMLElement) {
+    public constructor(player: ClientPlayerEntity, container?: HTMLElement) {
         this.player = player;
-        this.container = container;
+        this.container = container ?? document.getElementById('viewport')!;
 
         const techState = Registries.TECH
             .getEntries()
@@ -56,13 +61,13 @@ export class ClientTechTree implements TechTree {
 
         this.tryApply = this.tryApply.bind(this);
 
-        container.textContent = '';
+        this.container.textContent = '';
         const svgNS = 'http://www.w3.org/2000/svg';
         this.svg = document.createElementNS(svgNS, 'svg');
         this.svg.classList.add('edges');
         this.nodesLayer = document.createElement('div');
         this.nodesLayer.classList.add('nodes');
-        container.append(this.svg, this.nodesLayer);
+        this.container.append(this.svg, this.nodesLayer);
 
         this.renderEdges();
         this.renderNodes();
@@ -109,7 +114,7 @@ export class ClientTechTree implements TechTree {
 
     public forceUnlock(tech: RegistryEntry<Tech>): void {
         this.state.forceUnlock(tech.getValue());
-        applyClientTech(tech);
+        ApplyClientTech.apply(tech);
     }
 
     public isUnlocked(tech: RegistryEntry<Tech>): boolean {
@@ -125,7 +130,7 @@ export class ClientTechTree implements TechTree {
             this.updateNodeClass(tech);
             const entry = Registries.TECH.getEntryByValue(tech);
             if (!entry) throw new Error(`Unbound value ${tech}`);
-            applyClientTech(entry);
+            ApplyClientTech.apply(entry);
         }
         this.updateEdgesAround(allTech.values()
             .map(tech => this.state.getTechId(tech))
@@ -191,6 +196,10 @@ export class ClientTechTree implements TechTree {
             isDragging = true;
             lastX = e.clientX;
             lastY = e.clientY;
+            if (e.button === 1) {
+                panX = panY = 0;
+                applyTransform();
+            }
         }, {signal: abortCtrl.signal});
         parent.addEventListener('pointerup', dragStop, {signal: abortCtrl.signal});
         parent.addEventListener('pointermove', e => {
@@ -209,8 +218,9 @@ export class ClientTechTree implements TechTree {
             SoundSystem.globalSound.playSound(SoundEvents.UI_HOVER);
         }, {passive: true, signal: abortCtrl.signal});
 
-        const applyTransform = () =>
+        const applyTransform = () => {
             container.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+        }
     }
 
     // -------- Rendering --------
@@ -222,6 +232,8 @@ export class ClientTechTree implements TechTree {
             if (to.requires === null) return;
 
             to.requires.forEach(from => {
+                if (to.drawExcept && to.drawExcept.has(from)) return;
+
                 const line = document.createElementNS(svgNS, 'line');
                 line.dataset.from = this.state.getTechId(from)!.toString();
                 line.dataset.to = this.state.getTechId(to)!.toString();
@@ -296,7 +308,10 @@ export class ClientTechTree implements TechTree {
         this.setupPanZoom(this.container, this.abortCtrl);
     }
 
-    private tryApply() {
+    private tryApply(event: MouseEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+
         const id = this.selectNodeId;
         if (!id) return;
         const tech = this.state.getTech(id);
@@ -311,6 +326,8 @@ export class ClientTechTree implements TechTree {
             this.applyUnlockUpdates(tech);
             world.events.emit(EVENTS.UNLOCK_TECH, {tech});
             SoundSystem.globalSound.playSound(SoundEvents.UI_APPLY, 1.5);
+        } else {
+            SoundSystem.globalSound.playSound(SoundEvents.UI_ERROR);
         }
     }
 
@@ -489,19 +506,17 @@ export class ClientTechTree implements TechTree {
 
         const finalScore = this.player.getScore() + (backScore * 0.8) | 0;
         this.player.setScore(finalScore);
-        this.player.clearItems();
 
-        this.player.addItem(Items.CANNON40_WEAPON);
-        this.player.addItem(Items.BOMB_WEAPON);
-
-        this.player.steeringGear = false;
-        this.player.followPointer = false;
-        this.player.autoAim = null;
-        this.player.setYaw(-1.57079);
+        const yaw = this.player.getYaw();
+        this.resetPlayer();
 
         for (const tech of unlocked) {
             const entry = Registries.TECH.getEntryByValue(tech);
             if (entry) this.forceUnlock(entry);
+        }
+
+        if (this.isUnlocked(Techs.STEERING_GEAR)) {
+            this.player.setYaw(yaw);
         }
 
         this.updateAllEdgeClasses();
@@ -529,21 +544,27 @@ export class ClientTechTree implements TechTree {
         }
 
         player.setScore(player.getScore() + (backScore * 0.8) | 0);
-        player.clearItems();
-
-        player.addItem(Items.CANNON40_WEAPON);
-        player.addItem(Items.BOMB_WEAPON);
-
-        player.steeringGear = false;
-        player.followPointer = false;
-        this.player.autoAim = null;
-        player.setYaw(-1.57079);
+        this.resetPlayer();
 
         this.state.reset();
         this.updateAllEdgeClasses();
         this.renderNodes();
 
         player.getNetworkChannel().send(new PlayerResetAllTechC2SPacket());
+    }
+
+    private resetPlayer() {
+        this.player.clearItems();
+
+        this.player.addItem(Items.CANNON40_WEAPON);
+        this.player.addItem(Items.BOMB_WEAPON);
+
+        this.player.steeringGear = false;
+        this.player.followPointer = false;
+        this.player.autoAim = null;
+        this.player.bc = null;
+        this.player.onDamageExplosionRadius = 320;
+        this.player.setYaw(-1.57079);
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {

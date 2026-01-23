@@ -18,6 +18,7 @@ import {ADSEntity} from "./ADSEntity.ts";
 import {MobMissileEntity} from "./projectile/MobMissileEntity.ts";
 import {FastBulletEntity} from "./projectile/FastBulletEntity.ts";
 import {CloudLightningEntity} from "./projectile/CloudLightningEntity.ts";
+import {ArtilleryEntity} from "./projectile/ArtilleryEntity.ts";
 
 export class EntityTypes {
     public static readonly BASE_ENEMY = EntityType.register("base_enemy",
@@ -52,6 +53,10 @@ export class EntityTypes {
             .setDimensions(6, 6)
             .setTrackingTickInterval(10)
     );
+    public static readonly KINETIC_ARTILLERY_ENTITY = EntityType.register("kinetic_artillery",
+        EntityType.Builder.create(ArtilleryEntity)
+            .setDimensions(10, 10)
+    );
     public static readonly ENEMY_BULLET_ENTITY = EntityType.register("enemy_bullet",
         EntityType.Builder.create(MiniBulletEntity)
             .setDimensions(4, 4)
@@ -70,6 +75,7 @@ export class EntityTypes {
     public static readonly MISSILE_ENTITY = EntityType.register("missile_entity",
         EntityType.Builder.create(MissileEntity)
             .setDimensions(8, 8)
+            .setTrackingTickInterval(1)
     );
     public static readonly MOB_MISSILE_ENTITY = EntityType.register("mob_missile_entity",
         EntityType.Builder.create(MobMissileEntity)
