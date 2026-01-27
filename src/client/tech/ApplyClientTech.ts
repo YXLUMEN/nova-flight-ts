@@ -201,7 +201,7 @@ export class ApplyClientTech {
                 player.steeringGear = true;
                 break;
             }
-            case Techs.BALLISTIC_CALCULATOR :{
+            case Techs.BALLISTIC_CALCULATOR : {
                 player.bc = new BallisticCalculator(player);
                 break;
             }
@@ -268,7 +268,12 @@ export class ApplyClientTech {
                 break;
             }
             case Techs.KINETIC_ARTILLERY : {
-                player.addItem(Items.KINETIC_BATTERY);
+                player.addItem(Items.KINETIC_ARTILLERY);
+                break;
+            }
+            case Techs.PERDITION_BEAM: {
+                player.removeItem(Items.PHASE_LASERS);
+                player.addItem(Items.PERDITION_BEAM);
                 break;
             }
         }

@@ -14,6 +14,7 @@ export class MissileWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         const pos = attacker.getPositionRef;
         const missileCounts = stack.getOrDefault(DataComponentTypes.LAUNCH_COUNT, 8);
+        const hitDamage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 10);
         const explosionDamage = stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 10);
         const explosionRadius = stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 72);
         let i = 1;
@@ -31,7 +32,7 @@ export class MissileWeapon extends SpecialWeapon {
 
             const driftAngle = yaw + side * (HALF_PI + (Math.random() - 0.5) * 0.2);
 
-            const missile = new MissileEntity(EntityTypes.MISSILE_ENTITY, world, attacker, driftAngle);
+            const missile = new MissileEntity(EntityTypes.MISSILE_ENTITY, world, attacker, driftAngle, hitDamage);
             missile.explosionDamage = explosionDamage;
             missile.explosionRadius = explosionRadius;
             missile.hoverDir = side;

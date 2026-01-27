@@ -147,7 +147,6 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         return this.id.toString();
     }
 
-    // 位置和速度
     public setTrackedPosition(x: number, y: number): void {
         this.trackedPosition.setPos(x, y);
     }
@@ -393,7 +392,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         const dy = lerp(t, this.getY(), y);
         const dYaw = lerpRadians(t, this.getYaw(), yaw);
         this.setPosition(dx, dy);
-        this.yaw = dYaw;
+        this.setYaw(dYaw);
     }
 
     protected adjustPosition(): boolean {

@@ -13,7 +13,6 @@ import {ClusterRocketEntity} from "../../../entity/projectile/ClusterRocketEntit
 import type {ClientWorld} from "../../../client/ClientWorld.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
-import {EntityPositionForceS2CPacket} from "../../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
 
 export class RocketLauncher extends BaseWeapon {
     private static readonly BULLET_SPEED: number = 15;
@@ -35,7 +34,6 @@ export class RocketLauncher extends BaseWeapon {
                 schedule.cancel();
                 stack.set(DataComponentTypes.WEAPON_CAN_COOLDOWN, true);
                 if (!world.isClient && attacker.isPlayer()) {
-                    (attacker as ServerPlayerEntity).networkHandler?.send(EntityPositionForceS2CPacket.create(attacker));
                     (attacker as ServerPlayerEntity).syncStack(stack);
                 }
                 return;

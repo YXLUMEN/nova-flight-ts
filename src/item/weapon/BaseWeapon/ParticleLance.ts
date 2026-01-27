@@ -6,13 +6,14 @@ import type {World} from "../../../world/World.ts";
 import {MutVec2} from "../../../utils/math/MutVec2.ts";
 import {PhaseLasers} from "../PhaseLasers.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
-import {PI2, rand, randInt, thickLineCircleHit} from "../../../utils/math/math.ts";
+import {thickLineCircleHit} from "../../../utils/math/math.ts";
 import {StatusEffects} from "../../../entity/effect/StatusEffects.ts";
 import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
 import {ADSEntity} from "../../../entity/ADSEntity.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
 import type {ClientWorld} from "../../../client/ClientWorld.ts";
+import {ClientEffect} from "../../../utils/ClientEffect.ts";
 
 export class ParticleLance extends BaseWeapon {
     public static readonly LASER_WIDTH = 8;
@@ -29,10 +30,11 @@ export class ParticleLance extends BaseWeapon {
             const charging = stack.getOrDefault(DataComponentTypes.CHARGING_PROGRESS, 0) - 1;
             if (charging <= 0) {
                 if (!world.isClient) this.onFire(stack, world as ServerWorld, holder);
+
                 this.setCooldown(stack, this.getFireRate(stack));
                 stack.set(DataComponentTypes.SCHEDULE_FIRE, false);
             } else if (world.isClient) {
-                this.spawnMuzzle(world as ClientWorld, holder, 4);
+                ClientEffect.spawnChargingParticles(world as ClientWorld, holder, 4, this.getUiColor());
             }
             stack.set(DataComponentTypes.CHARGING_PROGRESS, Math.max(charging, 0));
             return;
@@ -45,17 +47,14 @@ export class ParticleLance extends BaseWeapon {
     }
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
-        if (!attacker.isPlayer()) return;
-
         if (stack.getOrDefault(DataComponentTypes.SCHEDULE_FIRE, false)) return;
         stack.set(DataComponentTypes.CHARGING_PROGRESS, ParticleLance.CHARGING_TIME);
         stack.set(DataComponentTypes.SCHEDULE_FIRE, true);
 
-        if (world.isClient) {
-            return;
-        }
+        if (world.isClient) return;
+        world.playSound(null, SoundEvents.LASER_CHARGE_UP, 0.5);
 
-        world.playSound(null, SoundEvents.LASER_CHARGEUP, 0.5);
+        if (!attacker.isPlayer()) return;
         (attacker as ServerPlayerEntity).syncStack(stack);
     }
 
@@ -94,36 +93,6 @@ export class ParticleLance extends BaseWeapon {
 
         ADSEntity.spawnInterceptPath(world, start, end, this.getUiColor(), 4, 0.2);
         world.playSound(null, SoundEvents.LASER_FIRE_BEAM_MID, 0.6);
-    }
-
-    protected override spawnMuzzle(world: ClientWorld, entity: Entity, particles: number): void {
-        const pos = entity.getPositionRef;
-        const yaw = entity.getYaw();
-        const offset = entity.getWidth() / 2;
-        const x = Math.cos(yaw) * offset + pos.x;
-        const y = Math.sin(yaw) * offset + pos.y;
-        const color = this.getUiColor();
-
-        for (let i = 0; i < particles; i++) {
-            const angle = Math.random() * PI2;
-            const radius = 30 + Math.random() * 16;
-
-            const startX = x + Math.cos(angle) * radius;
-            const startY = y + Math.sin(angle) * radius;
-
-            const dirX = Math.cos(angle);
-            const dirY = Math.sin(angle);
-
-            const speed = -randInt(100, 210);
-
-            world.addParticle(
-                startX, startY,
-                dirX * speed, dirY * speed,
-                rand(0.4, 0.6), rand(2, 3),
-                color, color,
-                0.6, 80
-            );
-        }
     }
 
     public override getUiColor(): string {

@@ -1,5 +1,4 @@
 import {Items} from "../../item/Items.ts";
-import {PhaseLasers} from "../../item/weapon/PhaseLasers.ts";
 import {EMPWeapon} from "../../item/weapon/EMPWeapon.ts";
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
@@ -11,6 +10,8 @@ import type {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
 import type {Tech} from "../../tech/Tech.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {Techs} from "../../tech/Techs.ts";
+import {BitFlag} from "../../utils/BitFlag.ts";
+import {WeaponType} from "../../item/WeaponType.ts";
 
 export class ApplyServerTech {
     public static apply(tech: RegistryEntry<Tech>, player: ServerPlayerEntity): void {
@@ -19,7 +20,10 @@ export class ApplyServerTech {
                 player.addItem(Items.EMP_WEAPON);
                 break;
             case Techs.PHASE_LASERS:
-                player.addItem(Items.PHASE_LASERS);
+                const stack = new ItemStack(Items.PHASE_LASERS);
+                player.addItem(Items.PHASE_LASERS, stack);
+                this.onEnergyWpn(stack, player);
+                this.onHasHeatWpn(stack, player);
                 break;
             case Techs.COILGUNS : {
                 const stack = new ItemStack(Items.COILGUN);
@@ -38,8 +42,8 @@ export class ApplyServerTech {
                 break;
             }
             case Techs.KINETIC_ARTILLERY: {
-                const stack = new ItemStack(Items.KINETIC_BATTERY);
-                player.addItem(Items.KINETIC_BATTERY, stack);
+                const stack = new ItemStack(Items.KINETIC_ARTILLERY);
+                player.addItem(Items.KINETIC_ARTILLERY, stack);
 
                 this.onUnlockBulletWpn(stack, player);
                 break;
@@ -80,6 +84,7 @@ export class ApplyServerTech {
                 player.addItem(Items.CIWS_WEAPON);
 
                 this.onUnlockBulletWpn(stack, player);
+                this.onHasHeatWpn(stack, player);
                 break;
             }
             case Techs.CLOUD_LIGHTNING: {
@@ -114,6 +119,15 @@ export class ApplyServerTech {
                 this.onEnergyWpn(stack, player);
                 break;
             }
+            case Techs.PERDITION_BEAM: {
+                player.removeItem(Items.PHASE_LASERS);
+
+                const stack = new ItemStack(Items.PERDITION_BEAM);
+                player.addItem(Items.PERDITION_BEAM, stack);
+                this.onEnergyWpn(stack, player);
+                this.onHasHeatWpn(stack, player);
+                break;
+            }
             case Techs.SENTINEL_POINT_DEFENSE: {
                 player.addItem(Items.POINT_DEFENSE);
                 break;
@@ -123,21 +137,21 @@ export class ApplyServerTech {
                 break;
             }
             case Techs.HIGH_EFFICIENCY_COOLANT: {
-                const laser = Items.PHASE_LASERS as PhaseLasers;
-                const stack = player.getItem(laser);
-                if (stack) {
-                    laser.setCoolRate(stack, laser.getCoolRate(stack) * 1.5);
-                }
+                player.getInventory().values().forEach(stack => {
+                    const base = stack.get(DataComponentTypes.COOLDOWN_RATE);
+                    if (!base) return;
+                    stack.set(DataComponentTypes.COOLDOWN_RATE, base * 1.5);
+                })
                 break;
             }
             case Techs.AD_CAPACITANCE: {
                 const emp = Items.EMP_WEAPON as EMPWeapon;
                 const stack = player.getItem(emp);
-                if (stack) {
-                    const base = stack.getOrDefault(DataComponentTypes.EFFECT_RANGE, 480);
-                    stack.set(DataComponentTypes.EFFECT_RANGE, base * 1.5);
-                    emp.setMaxCooldown(stack, emp.getMaxCooldown(stack) * 1.2);
-                }
+                if (!stack) break;
+
+                const base = stack.getOrDefault(DataComponentTypes.EFFECT_RANGE, 480);
+                stack.set(DataComponentTypes.EFFECT_RANGE, base * 1.5);
+                emp.setMaxCooldown(stack, emp.getMaxCooldown(stack) * 1.2);
                 break;
             }
             case Techs.QUICK_CHARGE: {
@@ -151,50 +165,33 @@ export class ApplyServerTech {
                 break;
             }
             case Techs.HARMONIC_ANALYSIS: {
-                // todo
-                const pL = player.getItem(Items.PHASE_LASERS);
-                if (pL) {
-                    pL.set(DataComponentTypes.ATTACK_DAMAGE, 1.4);
-                }
-                const gl = player.getItem(Items.GAMMA_LASERS);
-                if (gl) {
-                    const base = gl.get(DataComponentTypes.ATTACK_DAMAGE);
-                    if (base) {
-                        gl.set(DataComponentTypes.ATTACK_DAMAGE, base * 1.4);
-                    }
-                }
-                const pl = player.getItem(Items.PARTICLE_LANCE);
-                if (pl) {
-                    const base = pl.get(DataComponentTypes.ATTACK_DAMAGE);
-                    if (base) {
-                        pl.set(DataComponentTypes.ATTACK_DAMAGE, base * 1.4);
-                    }
-                }
-                const tl = player.getItem(Items.TACHYON_LANCE);
-                if (tl) {
-                    const base = tl.get(DataComponentTypes.ATTACK_DAMAGE);
-                    if (base) {
-                        tl.set(DataComponentTypes.ATTACK_DAMAGE, base * 1.4);
-                    }
-                }
+                player.getInventory().values().forEach(stack => {
+                    const type = stack.get(DataComponentTypes.WEAPON_TYPE);
+                    if (type === null || !BitFlag.has(type, WeaponType.ENERGY)) return;
+
+                    const base = stack.get(DataComponentTypes.ATTACK_DAMAGE);
+                    if (!base) return;
+
+                    stack.set(DataComponentTypes.ATTACK_DAMAGE, base * 1.4);
+                });
                 break;
             }
             case Techs.HIGH_TEMPERATURE_ALLOY: {
                 player.getInventory().values().forEach(stack => {
                     const base = stack.get(DataComponentTypes.MAX_HEAT);
-                    if (base) {
-                        stack.set(DataComponentTypes.MAX_HEAT, Math.ceil(base * 1.5));
-                    }
+                    if (!base) return;
+                    stack.set(DataComponentTypes.MAX_HEAT, Math.ceil(base * 1.5));
                 });
                 break;
             }
             case Techs.HD_BULLET:
                 player.getInventory().values().forEach(stack => {
-                    const item = stack.getItem();
-                    if (item instanceof BaseWeapon) {
-                        const base = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
-                        stack.set(DataComponentTypes.ATTACK_DAMAGE, Math.ceil(base * 2));
-                    }
+                    const type = stack.get(DataComponentTypes.WEAPON_TYPE);
+                    if (type === null || !BitFlag.has(type, WeaponType.KINETIC)) return;
+
+                    const base = stack.get(DataComponentTypes.ATTACK_DAMAGE);
+                    if (!base) return;
+                    stack.set(DataComponentTypes.ATTACK_DAMAGE, Math.ceil(base * 2));
                 });
                 break;
             case Techs.AD_LOADING: {
@@ -261,16 +258,6 @@ export class ApplyServerTech {
             }
             case Techs.EXPLOSIVE_ARMOR: {
                 player.onDamageExplosionRadius *= 1.4;
-                break;
-            }
-            case Techs.GRAY: {
-                const stack = player.getItem(Items.PHASE_LASERS);
-                if (stack) {
-                    stack.set(DataComponentTypes.ATTACK_DAMAGE, 0);
-                    stack.set(DataComponentTypes.UI_COLOR, '#ff0000');
-                    const laser = Items.PHASE_LASERS as PhaseLasers;
-                    laser.setDrainRate(stack, laser.getDrainRate(stack) * 1.5);
-                }
                 break;
             }
             case Techs.MISSILE: {
@@ -395,6 +382,17 @@ export class ApplyServerTech {
             const base = stack.get(DataComponentTypes.ATTACK_DAMAGE);
             if (base) {
                 stack.set(DataComponentTypes.ATTACK_DAMAGE, base * 1.4);
+            }
+        }
+    }
+
+    private static onHasHeatWpn(stack: ItemStack, player: ServerPlayerEntity) {
+        const tech = player.getTechs();
+
+        if (tech.isUnlocked(Techs.HIGH_TEMPERATURE_ALLOY)) {
+            const base = stack.get(DataComponentTypes.MAX_HEAT);
+            if (base) {
+                stack.set(DataComponentTypes.MAX_HEAT, base * 1.5);
             }
         }
     }

@@ -8,6 +8,8 @@ import {SimpleComponentMap} from "../component/SimpleComponentMap.ts";
 import {DataComponentTypes} from "../component/DataComponentTypes.ts";
 import type {ComponentType} from "../component/ComponentType.ts";
 import type {ComponentMap} from "../component/ComponentMap.ts";
+import {Registries} from "../registry/Registries.ts";
+import {BitFlag} from "../utils/BitFlag.ts";
 
 export type ItemSettings = InstanceType<typeof Item.Settings>;
 
@@ -38,6 +40,10 @@ export class Item {
             return this.component(DataComponentTypes.UNBREAKABLE, true);
         }
 
+        public type(...type: number[]): this {
+            return this.component(DataComponentTypes.WEAPON_TYPE, BitFlag.combine(...type));
+        }
+
         public component<T>(type: ComponentType<T>, value: T): this {
             if (this.components === null) {
                 this.components = this.getComponents();
@@ -66,22 +72,28 @@ export class Item {
             return this.components;
         }
     }
-    public readonly registryEntry: RegistryEntry<Item> | null = null;
+    public readonly registryEntry!: RegistryEntry<Item>;
     private readonly components: SimpleComponentMap;
+
+    // private translationKey: string | null = null;
 
     public constructor(settings: ItemSettings) {
         this.components = settings.getValidatedComponents();
     }
 
-    public inventoryTick(_stack: ItemStack, _world: World, _holder: Entity, _slot: number, _selected: boolean): void {
+    public static getIndex(item: Item | null) {
+        return item === null ? 0 : Registries.ITEM.getIndex(item);
     }
 
     public getRegistryEntry(): RegistryEntry<Item> {
-        return this.registryEntry!;
+        return this.registryEntry;
     }
 
     public getComponents(): ComponentMap {
         return this.components;
+    }
+
+    public inventoryTick(_stack: ItemStack, _world: World, _holder: Entity, _slot: number, _selected: boolean): void {
     }
 
     public leftClick(_world: World, _user: PlayerEntity): boolean {

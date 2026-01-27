@@ -329,10 +329,10 @@
   },
   {
     "id": "perdition_beam",
-    "name": "炼狱射线(WIP)",
+    "name": "炼狱射线",
     "x": 3,
     "y": 6,
-    "desc": "WIP",
+    "desc": "强而有力啊, 强而有力, 蓄力完成后, 你就是全银河最亮的仔.",
     "cost": 480,
     "requires": [
       "tachyon_lance"

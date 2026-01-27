@@ -6,14 +6,10 @@ import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import type {AutoAim} from "../tech/AutoAim.ts";
 import type {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
-import {PlayerMoveC2SPacket} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
-import {PlayerYawC2SPacket} from "../../network/packet/c2s/PlayerYawC2SPacket.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
-import {doubleEquals, squareDistVec2, wrapRadians} from "../../utils/math/math.ts";
+import {squareDistVec2, wrapRadians} from "../../utils/math/math.ts";
 import {type ItemStack} from "../../item/ItemStack.ts";
-import {PlayerMoveByPointerC2SPacket} from "../../network/packet/c2s/PlayerMoveByPointerC2SPacket.ts";
-import {encodeVelocity} from "../../utils/NetUtil.ts";
 import type {Item} from "../../item/Item.ts";
 import {AbstractClientPlayerEntity} from "./AbstractClientPlayerEntity.ts";
 import {BallisticCalculator} from "../tech/BallisticCalculator.ts";
@@ -23,6 +19,7 @@ import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPac
 import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
+import {FullMove, PositionOnly, Steering} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
 
 export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     public readonly profile: GameProfile;
@@ -60,69 +57,16 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     public override tick() {
         super.tick();
 
-        const posRef = this.getPositionRef;
-
-        let dx = 0, dy = 0;
-        if (this.input.isDown("ArrowLeft", "KeyA")) dx -= 1;
-        if (this.input.isDown("ArrowRight", "KeyD")) dx += 1;
-        if (this.input.isDown("ArrowUp", "KeyW")) dy -= 1;
-        if (this.input.isDown("ArrowDown", "KeyS")) dy += 1;
-        if (this.input.wasPressed('AltLeft') && this.autoAim) {
-            this.autoAimEnable = !this.autoAimEnable;
-            this.autoAim.setTarget(null);
-            WorldConfig.autoShoot = false;
-        }
-
-        if (dx !== 0 || dy !== 0) {
-            const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-            const speed = this.getMovementSpeed() * speedMultiplier;
-            this.updateVelocity(speed, dx, dy);
-            this.getNetworkChannel().send(new PlayerMoveC2SPacket(dx, dy));
-        }
-
-        if (this.autoAimEnable && this.autoAim) {
-            const yaw = this.getYaw();
-            this.autoAim.tick();
-            if (!doubleEquals(yaw, this.getYaw())) {
-                this.getNetworkChannel().send(PlayerYawC2SPacket.create(yaw));
-            }
-        } else if (this.steeringGear) {
-            const pointer = this.input.getPointer;
-            const yaw = Math.atan2(
-                pointer.y - posRef.y,
-                pointer.x - posRef.x
-            );
-
-            if (Math.abs(wrapRadians(yaw - this.getYaw())) > 1E-3) {
-                this.setClampYaw(yaw, 0.3926875);
-                this.getNetworkChannel().send(PlayerYawC2SPacket.create(yaw));
-            }
-
-            if (this.bc) this.bc.tick();
-        } else if (this.followPointer && WorldConfig.follow) {
-            const pointer = this.input.getPointer;
-            const dx = pointer.x - posRef.x;
-            const dy = pointer.y - posRef.y;
-
-            if (Math.abs(dx) > 32 || Math.abs(dy) > 32) {
-                const packet = new PlayerMoveByPointerC2SPacket(encodeVelocity(dx), encodeVelocity(dy));
-
-                const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-                const speed = this.getMovementSpeed() * speedMultiplier;
-                this.updateVelocity(speed, packet.dx, packet.dy);
-                this.getNetworkChannel().send(packet);
-            }
-        }
-
         // 锁定
         if (this.lockedMissile.size > 0) {
+            const pos = this.getPositionRef;
             for (const missile of this.lockedMissile.keys()) {
                 if (missile.isRemoved()) {
                     this.lockedMissile.delete(missile);
                     this.approachMissile.delete(missile);
                     continue;
                 }
-                if (squareDistVec2(missile.getPositionRef, this.getPositionRef) <= 1E5) {
+                if (squareDistVec2(missile.getPositionRef, pos) <= 1E5) {
                     this.approachMissile.add(missile);
                 } else {
                     this.approachMissile.delete(missile);
@@ -136,6 +80,76 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         }
         if (this.input.wasPressed('KeyR')) {
             this.wpnReload();
+        }
+    }
+
+    public override tickMovement() {
+        let dx = 0, dy = 0;
+        if (this.input.isDown("ArrowLeft", "KeyA")) dx -= 1;
+        if (this.input.isDown("ArrowRight", "KeyD")) dx += 1;
+        if (this.input.isDown("ArrowUp", "KeyW")) dy -= 1;
+        if (this.input.isDown("ArrowDown", "KeyS")) dy += 1;
+        if (this.input.wasPressed('AltLeft') && this.autoAim) {
+            this.autoAimEnable = !this.autoAimEnable;
+            this.autoAim.setTarget(null);
+            WorldConfig.autoShoot = false;
+        }
+
+        let updatePos = dx !== 0 || dy !== 0;
+        let updateYaw = false;
+
+        if (updatePos) {
+            const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+            const speed = this.getMovementSpeed() * speedMultiplier;
+            this.updateVelocity(speed, dx, dy);
+        }
+
+        if (this.autoAimEnable && this.autoAim) {
+            const yaw = this.getYaw();
+            this.autoAim.tick();
+
+            if (Math.abs(wrapRadians(this.getYaw() - yaw)) > 1E-3) {
+                this.setYaw(yaw);
+                updateYaw = true;
+            }
+        } else if (this.steeringGear) {
+            const pos = this.getPositionRef;
+            const pointer = this.input.getPointer;
+            const yaw = Math.atan2(
+                pointer.y - pos.y,
+                pointer.x - pos.x
+            );
+
+            if (Math.abs(wrapRadians(this.getYaw() - yaw)) > 0.01) {
+                this.setClampYaw(yaw, 0.3926875);
+                updateYaw = true;
+            }
+            if (this.bc) this.bc.tick();
+        } else if (this.followPointer && WorldConfig.follow) {
+            const pos = this.getPositionRef;
+            const pointer = this.input.getPointer;
+            const pdx = pointer.x - pos.x;
+            const pdy = pointer.y - pos.y;
+
+            if (Math.abs(pdx) > 32 || Math.abs(pdy) > 32) {
+                dx = Math.sign(pdx);
+                dy = Math.sign(pdy);
+                updatePos = true;
+
+                const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+                const speed = this.getMovementSpeed() * speedMultiplier;
+                this.updateVelocity(speed, dx, dy);
+            }
+        }
+
+        super.tickMovement();
+
+        if (updatePos && updateYaw) {
+            this.getNetworkChannel().send(new FullMove(dx, dy, this.getYaw()));
+        } else if (updatePos) {
+            this.getNetworkChannel().send(new PositionOnly(dx, dy));
+        } else if (updateYaw) {
+            this.getNetworkChannel().send(new Steering(this.getYaw()));
         }
     }
 

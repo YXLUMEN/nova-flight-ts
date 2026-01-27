@@ -4,7 +4,9 @@ import type {EntityType} from "../EntityType.ts";
 import type {Entity} from "../Entity.ts";
 import {DecoyEntity} from "../DecoyEntity.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
-import {squareDistVec2, getNearestEntity} from "../../utils/math/math.ts";
+import {getNearestEntity, squareDistVec2} from "../../utils/math/math.ts";
+import type {IVec} from "../../utils/math/IVec.ts";
+import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 
 export class MobMissileEntity extends MissileEntity {
     protected override maxReLockCD = 15;
@@ -19,6 +21,10 @@ export class MobMissileEntity extends MissileEntity {
 
     public constructor(type: EntityType<MobMissileEntity>, world: World, owner: Entity, driftAngle: number) {
         super(type, world, owner, driftAngle, 5);
+    }
+
+    protected override predictMethod(pos: IVec, targetPos: IVec, targetVel: IVec): number {
+        return BallisticsUtils.getLeadYaw(pos, targetPos, targetVel, this.trackingSpeed);
     }
 
     public override shouldApplyDecoy(): boolean {

@@ -194,6 +194,7 @@ export class ClientPlayNetworkHandler {
             const trackedPos = entity.getTrackedPosition();
             const deltaPos = trackedPos.withDelta(packet.deltaX, packet.deltaY);
             trackedPos.setPos(deltaPos.x, deltaPos.y);
+
             const yaw = packet.rotate ? packet.yaw : entity.getLerpTargetYaw();
             entity.updateTrackedPositionAndAngles(deltaPos.x, deltaPos.y, yaw, 3);
         } else if (packet.rotate) {
@@ -214,6 +215,7 @@ export class ClientPlayNetworkHandler {
     public onEntityPositionForce(packet: EntityPositionForceS2CPacket): void {
         const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
+
         entity.setTrackedPosition(packet.x, packet.y);
         entity.updateTrackedPositionAndAngles(packet.x, packet.y, packet.yaw, 3);
         entity.updatePosition(packet.x, packet.y);

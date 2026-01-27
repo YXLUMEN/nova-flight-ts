@@ -5,6 +5,15 @@ import type {Codec} from "./Codec.ts";
 import {config} from "../utils/uit.ts";
 
 export class Codecs {
+    public static readonly INT8:Codec<number> = config({
+        encode(value: number): NbtCompound {
+            return new NbtCompound().putInt8('value', value);
+        },
+        decode(nbt: NbtCompound): number | null {
+            return nbt.getInt8('value');
+        }
+    });
+
     public static readonly INT32: Codec<number> = config({
         encode(v: number) {
             return new NbtCompound().putInt32("value", v);

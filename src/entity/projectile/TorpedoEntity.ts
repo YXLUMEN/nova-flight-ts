@@ -4,12 +4,14 @@ import {MissileEntity} from "./MissileEntity.ts";
 
 export class TorpedoEntity extends MissileEntity {
     protected readonly maxReLockCD = 10;
+
+    protected readonly driftAttenuation = false;
     protected readonly driftSpeed = 2;
     protected readonly trackingSpeed = 3;
 
-    protected readonly igniteDelayTicks = 20;
-    protected readonly lockDelayTicks = 50;
-    protected readonly maxLifetimeTicks = 600;
+    protected readonly igniteDelayTicks = 40;
+    protected readonly lockDelayTicks = 80;
+    protected readonly maxLifetimeTicks = 650;
 
     public readonly hoverDir: number = 0;
 

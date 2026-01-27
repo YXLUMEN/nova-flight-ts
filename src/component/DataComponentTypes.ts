@@ -108,6 +108,10 @@ export class DataComponentTypes {
         builder => builder.withCodec(Codecs.UINT32).withPacketCodec(PacketCodecs.VAR_UINT)
     );
 
+    public static readonly WEAPON_TYPE: ComponentType<number> = this.register("weapon_type",
+        builder => builder.withCodec(Codecs.INT8).withPacketCodec(PacketCodecs.INT8)
+    );
+
     private static register<T>(id: string, builderOperator: UnaryOperator<ComponentTypeBuilder<T>>): ComponentType<T> {
         const ide = Identifier.ofVanilla(id);
         const builder = new ComponentTypeBuilder<T>();

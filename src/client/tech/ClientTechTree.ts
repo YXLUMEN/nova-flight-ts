@@ -319,7 +319,10 @@ export class ClientTechTree implements TechTree {
 
         const world = this.player.getWorld();
         const score = this.player.getScore() - tech.cost;
-        if (score < 0 && !this.player.isDevMode()) return;
+        if (score < 0 && !this.player.isDevMode()) {
+            SoundSystem.globalSound.playSound(SoundEvents.UI_ERROR);
+            return;
+        }
 
         if (this.state.unlock(tech)) {
             this.player.setScore(score);

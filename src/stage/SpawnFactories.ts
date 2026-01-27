@@ -1,12 +1,13 @@
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
-import type {MobFactory, SamplerKind, TopSpawnOpts} from "../apis/IStage.ts";
+import type {MobFactory, TopSpawnOpts} from "../apis/IStage.ts";
 import {World} from "../world/World.ts";
-import {randInt} from "../utils/math/math.ts";
+import {randInt, randomFromIterator} from "../utils/math/math.ts";
 import type {EntityType} from "../entity/EntityType.ts";
 import {SpawnMarkerEntity} from "../entity/SpawnMarkerEntity.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import type {SpawnContext} from "./SpawnContext.ts";
 import type {BiConsumer} from "../apis/types.ts";
+import {ExplosionEntity} from "../entity/ExplosionEntity.ts";
 
 // 顶部随机生成
 export function spawnTopRandomCtor<T extends MobEntity>(
@@ -36,7 +37,6 @@ export function spawnTopRandomCtorS<T extends MobEntity>(
     init?: BiConsumer<T, SpawnContext>,
     opts: TopSpawnOpts = {}
 ): MobFactory {
-    const sampler: SamplerKind = opts.sampler ?? 'best';
     const margin = opts.margin ?? 24;
 
     // best-candidate 状态
@@ -45,60 +45,36 @@ export function spawnTopRandomCtorS<T extends MobEntity>(
     const minGap = Math.max(0, opts.minGap ?? 64);
     const recent: number[] = [];
 
-    // golden ratio 低差异序列状态
-    let t = Math.random(); // 初始相位
-    const phi = 0.6180339887498949; // (sqrt(5)-1)/2
-
-    // stratified 分层抖动状态
-    const bins = Math.max(1, opts.bins ?? 8);
-    let binIndex = Math.floor(Math.random() * bins); // 随机起始分层
-
     function sampleX(minX: number, maxX: number): number {
         if (maxX <= minX) return minX;
 
-        switch (sampler) {
-            case 'golden': {
-                t += phi;
-                t -= Math.floor(t); // t = frac(t + phi)
-                return minX + (maxX - minX) * t;
+        // 'best': Mitchell best-candidate(1D 近似蓝噪声)
+        if (recent.length === 0) {
+            const x0 = randInt(minX, maxX);
+            recent.push(x0);
+            return x0;
+        }
+        let bestX = minX, bestD = -Infinity;
+        for (let c = 0; c < kCandidates; c++) {
+            const x = randInt(minX, maxX);
+            // 与历史最近点的距离(软性加入 minGap)
+            let d = Infinity;
+            for (let i = 0; i < recent.length; i++) {
+                const dx = Math.abs(x - recent[i]);
+                d = Math.min(d, dx);
+                if (d === 0) break;
             }
-            case 'strata': {
-                const w = (maxX - minX) / bins;
-                const i = binIndex;
-                binIndex = (binIndex + 1) % bins;
-                // 分层内加入轻微抖动
-                const jitter = (Math.random() - 0.5) * 0.5; // [-0.25, 0.25) 层宽
-                return minX + (i + 0.5 + jitter) * w;
-            }
-            default: { // 'best': Mitchell best-candidate(1D 近似蓝噪声)
-                if (recent.length === 0) {
-                    const x0 = randInt(minX, maxX);
-                    recent.push(x0);
-                    return x0;
-                }
-                let bestX = minX, bestD = -Infinity;
-                for (let c = 0; c < kCandidates; c++) {
-                    const x = randInt(minX, maxX);
-                    // 与历史最近点的距离(软性加入 minGap)
-                    let d = Infinity;
-                    for (let i = 0; i < recent.length; i++) {
-                        const dx = Math.abs(x - recent[i]);
-                        d = Math.min(d, dx);
-                        if (d === 0) break;
-                    }
-                    // 轻微奖励：距离 minGap 附近更优(使间距趋向 minGap)
-                    const bias = -Math.abs(d - minGap) * 0.01;
-                    const score = d + bias;
-                    if (score > bestD) {
-                        bestD = score;
-                        bestX = x;
-                    }
-                }
-                recent.push(bestX);
-                if (recent.length > histMax) recent.shift();
-                return bestX;
+            // 轻微奖励：距离 minGap 附近更优(使间距趋向 minGap)
+            const bias = -Math.abs(d - minGap) * 0.01;
+            const score = d + bias;
+            if (score > bestD) {
+                bestD = score;
+                bestX = x;
             }
         }
+        recent.push(bestX);
+        if (recent.length > histMax) recent.shift();
+        return bestX;
     }
 
     return (ctx) => {
@@ -194,4 +170,15 @@ export function spawnAvoidPlayerCtor<T extends MobEntity>(
         mark.setPosition(x, y);
         return mark;
     };
+}
+
+export function spawnExplosion(): MobFactory {
+    return (ctx) => {
+        const player = randomFromIterator(ctx.world.getPlayers());
+        if (!player) return null;
+
+        const explosion = new ExplosionEntity(EntityTypes.EXPLOSION_ENTITY, ctx.world);
+        explosion.setPositionByVec(player.getPositionRef);
+        return explosion;
+    }
 }

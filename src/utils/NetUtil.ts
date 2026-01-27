@@ -47,6 +47,15 @@ export function decodeFromUnsignedByte(value: number, maxValue: number = 10): nu
     return value * (maxValue / 255);
 }
 
+export function encodeToInt32(value: number, maxValue: number = 2e5): number {
+    const clamped = clamp(value, -maxValue, maxValue);
+    return Math.round(clamped * (2147483647 / maxValue));
+}
+
+export function decodeFromInt32(value: number, maxValue: number = 2e5): number {
+    return (value * maxValue) / 2147483647;
+}
+
 /**
  * Encodes a CSS-like hex color string into a 32-bit RGBA integer (0xRRGGBBAA).
  * Supports:

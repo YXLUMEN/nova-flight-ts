@@ -20,6 +20,7 @@ import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts"
 import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
 import type {Constructor} from "../../apis/types.ts";
 import {Techs} from "../../tech/Techs.ts";
+import {Weapon} from "../../item/weapon/Weapon.ts";
 
 
 export abstract class PlayerEntity extends LivingEntity {
@@ -66,14 +67,15 @@ export abstract class PlayerEntity extends LivingEntity {
     public override tick() {
         super.tick();
 
-        this.moveByVec(this.getVelocityRef);
-        this.adjustPosition();
         this.tickInventory(this.getWorld());
         this.cooldownManager.update();
     }
 
     public override tickMovement() {
-        this.getVelocityRef.multiply(0.9);
+        super.tickMovement();
+
+        this.moveByVec(this.getVelocityRef);
+        this.adjustPosition();
     }
 
     protected tickInventory(world: World) {
@@ -197,7 +199,13 @@ export abstract class PlayerEntity extends LivingEntity {
     }
 
     public removeItem(item: Item): boolean {
-        const result = this.items.delete(item);
+        const stack = this.getItem(item);
+        if (!stack) return false;
+        this.items.delete(item);
+
+        if (item instanceof Weapon) {
+            item.onEndFire(stack, this.getWorld(), this);
+        }
         if (item instanceof BaseWeapon) {
             const index = this.baseWeapons.indexOf(item);
             if (index >= 0) {
@@ -206,7 +214,7 @@ export abstract class PlayerEntity extends LivingEntity {
             }
         }
         this.assignKeys();
-        return result;
+        return true;
     }
 
     public clearItems(): void {

@@ -3,6 +3,7 @@ import {spawnAtTop, spawnAtTopInLine, spawnAtTopS, spawnInMap, spawnMiniGun,} fr
 import {EVENTS} from "../apis/IEvents.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {PhaseConfigBuilder} from "../stage/PhaseConfig.ts";
+import {spawnExplosion} from "../stage/SpawnFactories.ts";
 
 const p0 = PhaseConfigBuilder.create({
     name: "P0",
@@ -195,23 +196,30 @@ const p7 = PhaseConfigBuilder.create({
             factory: spawnMiniGun(0.5, 0, 12),
             cap: 96
         },
+        {
+            every: 320,
+            jitter: 0.6,
+            factory: spawnExplosion(),
+            cap: 68
+        }
     ],
 });
 
 const p8 = PhaseConfigBuilder.create({
-    name: "P9",
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P9'}),
+    name: "P8",
+    until: ({score}) => score >= 9216,
+    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P8'}),
     rules: [
         {
             every: 80,
             jitter: 0.4,
             factory: spawnInMap(EntityTypes.BASE_ENEMY,
-                0.96, 6, 8,
+                0.96, 8, 8,
                 '#910000',
                 {},
                 (ctx) => 1 + (ctx.score / 500) | 0
             ),
-            cap: 72
+            cap: 64
         },
         {
             every: 50,
@@ -220,9 +228,9 @@ const p8 = PhaseConfigBuilder.create({
                 0.82, 1, 8,
                 '#9f3b00',
                 {safeRadius: 248},
-                (ctx) => 1 + (ctx.score / 700) | 0
+                (ctx) => 1 + (ctx.score / 800) | 0
             ),
-            cap: (ctx) => ctx.difficulty * 10 + 64,
+            cap: 64
         },
         {
             every: 200,
@@ -232,15 +240,76 @@ const p8 = PhaseConfigBuilder.create({
                 '#ac0000',
                 {safeRadius: 480}
             ),
-            cap: (ctx) => ctx.difficulty * 3 + 48
+            cap: (ctx) => ctx.difficulty + 48
         },
         {
             every: 250,
             jitter: 0.4,
-            factory: spawnInMap(EntityTypes.MINIGUN_ENEMY_ENTITY, 0.72, 0, 12),
-            cap: (ctx) => ctx.difficulty * 3 + 46
+            factory: spawnInMap(EntityTypes.GUN_ENEMY_ENTITY, 0.72, 4, 3),
+            cap: (ctx) => ctx.difficulty + 48
         },
+        {
+            every: 320,
+            jitter: 0.8,
+            factory: spawnExplosion(),
+            cap: 64
+        }
     ],
 });
 
-export const STAGE = new Stage([p0, p1, p2, p3, p4, p5, p6, p7, p8]);
+const p9 = PhaseConfigBuilder.create({
+    name: "P9",
+    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P9'}),
+    rules: [
+        {
+            every: 80,
+            jitter: 0.4,
+            factory: spawnInMap(EntityTypes.BASE_ENEMY,
+                1, 8, 8,
+                '#910000',
+                {},
+                (ctx) => 1 + (ctx.score / 400) | 0
+            ),
+            cap: 81
+        },
+        {
+            every: 50,
+            jitter: 0.6,
+            factory: spawnInMap(EntityTypes.TANK_ENEMY_ENTITY,
+                0.9, 1, 8,
+                '#9f3b00',
+                {safeRadius: 248},
+                (ctx) => 1 + (ctx.score / 600) | 0
+            ),
+            cap: (ctx) => ctx.difficulty + 64,
+        },
+        {
+            every: 200,
+            jitter: 0.5,
+            factory: spawnInMap(EntityTypes.MISSILE_ENEMY_ENTITY,
+                0.8, 4, 4,
+                '#ac0000',
+                {safeRadius: 480}
+            ),
+            cap: (ctx) => ctx.difficulty * 2 + 48
+        },
+        {
+            every: 250,
+            jitter: 0.4,
+            factory: spawnInMap(EntityTypes.MINIGUN_ENEMY_ENTITY,
+                0.72, 8, 12,
+                "#ff4444",
+                {safeRadius: 640}
+            ),
+            cap: (ctx) => ctx.difficulty * 2 + 48
+        },
+        {
+            every: 250,
+            jitter: 0.8,
+            factory: spawnExplosion(),
+            cap: 64
+        }
+    ],
+});
+
+export const STAGE = new Stage([p0, p1, p2, p3, p4, p5, p6, p7, p8, p9]);

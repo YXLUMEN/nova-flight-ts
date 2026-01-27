@@ -19,7 +19,7 @@ export class Coilguns extends BaseWeapon {
 
     public override onStartFire(_stack: ItemStack, world: World, attacker: Entity) {
         if (!world.isClient) return;
-        world.playLoopSound(attacker, SoundEvents.COILGUNS_FIRE_LOOP, 0.3);
+        world.playLoopSound(attacker, SoundEvents.COILGUNS_FIRE_LOOP, 0.8);
     }
 
     public override onEndFire(_stack: ItemStack, world: World, attacker: Entity) {

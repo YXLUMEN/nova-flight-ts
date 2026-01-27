@@ -70,6 +70,20 @@
       "nova-flight:laser/beam"
     ]
   },
+  "laser.beam_low": {
+    "subtitle": "sound.nova-flight.laser.beam_low",
+    "sounds": [
+      "nova-flight:laser/beam_low_01",
+      "nova-flight:laser/beam_low_02",
+      "nova-flight:laser/beam_low_03"
+    ]
+  },
+  "laser.steam_release": {
+    "subtitle": "sound.nova-flight.laser.steam_release",
+    "sounds": [
+      "nova-flight:laser/steam_release"
+    ]
+  },
   "laser.charge_down": {
     "subtitle": "sound.nova-flight.laser.charge_down",
     "sounds": [
@@ -100,17 +114,27 @@
       "nova-flight:laser/fire_beam_mid_03"
     ]
   },
-  "laser.spin_barrel": {
-    "subtitle": "sound.nova-flight.laser.spin_barrel",
+  "laser.spindown": {
+    "subtitle": "sound.nova-flight.laser.spindown",
     "sounds": [
-      "nova-flight:laser/spin_barrel"
+      "nova-flight:laser/spindown_01",
+      "nova-flight:laser/spindown_02",
+      "nova-flight:laser/spindown_03"
     ]
   },
-  "laser.chargeup": {
-    "subtitle": "sound.nova-flight.laser.chargeup",
+  "laser.charge_up": {
+    "subtitle": "sound.nova-flight.laser.charge_up",
     "sounds": [
-      "nova-flight:laser/chargeup_01",
-      "nova-flight:laser/chargeup_02"
+      "nova-flight:laser/charge_up_01",
+      "nova-flight:laser/charge_up_02"
+    ]
+  },
+  "laser.charge_up_long": {
+    "subtitle": "sound.nova-flight.laser.charge_up_long",
+    "sounds": [
+      "nova-flight:laser/charge_up_long_01",
+      "nova-flight:laser/charge_up_long_02",
+      "nova-flight:laser/charge_up_long_03"
     ]
   },
   "cannon40.fire_loop": {

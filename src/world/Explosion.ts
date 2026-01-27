@@ -12,6 +12,7 @@ import {SoundEvents} from "../sound/SoundEvents.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 import {LivingEntity} from "../entity/LivingEntity.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
+import {ExplosionEntity} from "../entity/ExplosionEntity.ts";
 
 export class Explosion {
     private readonly world: World;
@@ -51,11 +52,17 @@ export class Explosion {
         const damage = this.opts.damage ?? 6;
 
         const r2 = radius * radius;
-        const halfR2 = this.opts.behaviour === 'fusion' ? Math.floor(radius / 2) ** 2 : 0;
 
         const attacker = this.damageSource.getAttacker();
+        if (attacker === null) {
+            for (const entity of world.getEntities().values()) {
+                const dist = squareDist(entity.getX(), entity.getY(), this.x, this.y);
+                if (dist <= r2) entity.takeDamage(this.damageSource, damage);
+            }
+            return;
+        }
 
-        if (attacker instanceof MobEntity) {
+        if (attacker instanceof MobEntity || attacker instanceof ExplosionEntity) {
             for (const player of world.getPlayers()) {
                 const dist = squareDist(player.getX(), player.getY(), this.x, this.y);
                 if (dist <= r2) player.takeDamage(this.damageSource, damage);
@@ -63,6 +70,7 @@ export class Explosion {
             return;
         }
 
+        const halfR2 = this.opts.behaviour === 'fusion' ? Math.floor(radius / 2) ** 2 : 0;
         for (const mob of world.getMobs()) {
             if (mob.isRemoved()) continue;
 

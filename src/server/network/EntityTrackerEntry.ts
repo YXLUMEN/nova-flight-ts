@@ -18,10 +18,12 @@ export class EntityTrackerEntry {
     private readonly tickInterval: number;
     private readonly alwaysUpdateVelocity: boolean;
     private readonly trackedPos = new TrackedPosition();
+    private readonly velocity: MutVec2;
+
     private lastYawUint8: number;
-    private velocity: MutVec2;
+
     private trackingTick: number = 0;
-    private updatesWithoutVehicle: number = 0;
+    private updates: number = 0;
 
     public constructor(world: ServerWorld, entity: Entity, tickInterval: number, alwaysUpdateVelocity: boolean) {
         this.world = world;
@@ -35,7 +37,7 @@ export class EntityTrackerEntry {
 
     public tick() {
         if (this.trackingTick % this.tickInterval === 0 || this.entity.velocityDirty || this.entity.getDataTracker().isDirty()) {
-            this.updatesWithoutVehicle++;
+            this.updates++;
 
             const yawUint8 = encodeYaw(this.entity.getYaw());
             const entityPos = this.entity.getPosition();
@@ -51,8 +53,8 @@ export class EntityTrackerEntry {
             const dx = this.trackedPos.getDeltaX(entityPos);
             const dy = this.trackedPos.getDeltaY(entityPos);
             const posDelta = dx < -32768 || dx > 32768 || dy < -32768 || dy > 32768;
-            if (posDelta || this.updatesWithoutVehicle > 400) {
-                this.updatesWithoutVehicle = 0;
+            if (posDelta || this.updates > 400) {
+                this.updates = 0;
                 packet = EntityPositionS2CPacket.create(this.entity);
                 syncPos = true;
                 syncYaw = true;

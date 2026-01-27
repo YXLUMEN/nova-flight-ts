@@ -11,6 +11,7 @@ import type {Item} from "../item/Item.ts";
 import type {ComponentType} from "../component/ComponentType.ts";
 import type {VisualEffectType} from "../effect/VisualEffectType.ts";
 import type {Tech} from "../tech/Tech.ts";
+import type {WorldEventType} from "../world/events/WorldEventType.ts";
 
 export class RegistryKeys {
     public static readonly DAMAGE_TYPE: RegistryKey<Registry<DamageType>> = this.of("damage_type");
@@ -24,6 +25,7 @@ export class RegistryKeys {
     public static readonly DATA_COMPONENT_TYPE: RegistryKey<Registry<ComponentType<any>>> = this.of("data_component_type");
     public static readonly EFFECT_TYPE: RegistryKey<Registry<VisualEffectType<any>>> = this.of("effect");
     public static readonly TECH: RegistryKey<Registry<Tech>> = this.of("tech");
+    public static readonly WORLD_EVENT: RegistryKey<Registry<WorldEventType<any>>> = this.of("world_event");
 
     private static of<T>(id: string): RegistryKey<T> {
         return RegistryKey.ofRegistry(Identifier.ofVanilla(id));

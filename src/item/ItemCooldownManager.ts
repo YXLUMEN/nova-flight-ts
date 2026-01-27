@@ -14,15 +14,15 @@ export class ItemCooldownManager {
     public update(): void {
         if (this.cooldowns.size === 0) return;
 
-        this.cooldowns.entries().forEach(([key, value]) => {
+        this.cooldowns.entries().forEach(([item, value]) => {
             const newValue = value > 0 ? value - 1 : 0;
             if (newValue <= 0) {
-                this.onCooldownUpdate(key);
-                this.cooldowns.delete(key);
+                this.onCooldownUpdate(item);
+                this.cooldowns.delete(item);
                 return;
             }
 
-            this.cooldowns.set(key, newValue);
+            this.cooldowns.set(item, newValue);
         });
     }
 

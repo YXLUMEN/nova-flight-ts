@@ -13,6 +13,7 @@ export class SpaceTorpedoes extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         const pos = attacker.getPositionRef;
         const torpedoesCount = stack.getOrDefault(DataComponentTypes.LAUNCH_COUNT, 4);
+        const hitDamage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 12);
         const explosionDamage = stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 12);
         const explosionRadius = stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 64);
 
@@ -27,7 +28,7 @@ export class SpaceTorpedoes extends SpecialWeapon {
             if (world.isClient) return;
 
             const yaw = attacker.getYaw();
-            const torpedo = new TorpedoEntity(EntityTypes.MISSILE_ENTITY, world, attacker, yaw);
+            const torpedo = new TorpedoEntity(EntityTypes.TORPEDO_ENTITY, world, attacker, yaw, hitDamage);
             torpedo.explosionDamage = explosionDamage;
             torpedo.explosionRadius = explosionRadius;
             torpedo.color = '#6c4b00';

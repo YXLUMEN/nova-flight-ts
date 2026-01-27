@@ -1,21 +1,18 @@
 import type {NovaFlightServer} from "../NovaFlightServer.ts";
 import {PlayerFinishLoginC2SPacket} from "../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
 import {PlayerDisconnectC2SPacket} from "../../network/packet/c2s/PlayerDisconnectC2SPacket.ts";
-import {PlayerYawC2SPacket} from "../../network/packet/c2s/PlayerYawC2SPacket.ts";
-import {PlayerMoveC2SPacket} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
+import {FullMove, PlayerMoveC2SPacket, PositionOnly, Steering} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
 import {PlayerUnlockTechC2SPacket} from "../../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
 import {RequestPositionC2SPacket} from "../../network/packet/c2s/RequestPositionC2SPacket.ts";
 import {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
 import type {UUID} from "../../apis/types.ts";
-import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
 import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
 import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
 import {EntityNbtS2CPacket} from "../../network/packet/s2c/EntityNbtS2CPacket.ts";
 import {PlayerResetAllTechC2SPacket} from "../../network/packet/c2s/PlayerResetAllTechC2SPacket.ts";
-import {PlayerMoveByPointerC2SPacket} from "../../network/packet/c2s/PlayerMoveByPointerC2SPacket.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import {CommandExecutionC2SPacket} from "../../network/packet/c2s/CommandExecutionC2SPacket.ts";
 import type {ParseResults} from "../../brigadier/ParseResults.ts";
@@ -32,6 +29,7 @@ import {NetworkChannel} from "../../network/NetworkChannel.ts";
 import type {ServerChannel} from "./ServerChannel.ts";
 import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
 import {ApplyServerTech} from "../tech/ApplyServerTech.ts";
+import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 
 export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
     public readonly player: ServerPlayerEntity;
@@ -138,14 +136,16 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
         console.log(`Player disconnected with uuid: ${uuid}`);
     }
 
-    public onPlayerAim(packet: PlayerYawC2SPacket) {
-        this.player.setClampYaw(packet.yaw, 0.3926875);
-    }
+    public onPlayerMove(packet: PlayerMoveC2SPacket) {
+        if (packet.changePosition) {
+            const speedMultiplier = this.player.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+            const speed = this.player.getMovementSpeed() * speedMultiplier;
+            this.player.updateVelocity(speed, packet.dx, packet.dy);
+        }
 
-    public onPlayerMove(packet: PlayerMoveC2SPacket | PlayerMoveByPointerC2SPacket) {
-        const speedMultiplier = this.player.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-        const speed = this.player.getMovementSpeed() * speedMultiplier;
-        this.player.updateVelocity(speed, packet.dx, packet.dy);
+        if (packet.changeYaw) {
+            this.player.setClampYaw(packet.yaw, 0.3926875);
+        }
     }
 
     public onPlayerInput(packet: PlayerInputC2SPacket): void {
@@ -230,9 +230,9 @@ export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
     private registryHandler() {
         this.register(PlayerFinishLoginC2SPacket.ID, this.onPlayerFinishLogin.bind(this));
         this.register(PlayerDisconnectC2SPacket.ID, this.onPlayerDisconnect.bind(this));
-        this.register(PlayerYawC2SPacket.ID, this.onPlayerAim.bind(this));
-        this.register(PlayerMoveC2SPacket.ID, this.onPlayerMove.bind(this));
-        this.register(PlayerMoveByPointerC2SPacket.ID, this.onPlayerMove.bind(this));
+        this.register(FullMove.ID, this.onPlayerMove.bind(this));
+        this.register(PositionOnly.ID, this.onPlayerMove.bind(this));
+        this.register(Steering.ID, this.onPlayerMove.bind(this));
         this.register(PlayerInputC2SPacket.ID, this.onPlayerInput.bind(this));
         this.register(PlayerSwitchSlotC2SPacket.ID, this.onPlayerSwitchSlot.bind(this));
         this.register(PlayerFireC2SPacket.ID, this.onPlayerFire.bind(this));

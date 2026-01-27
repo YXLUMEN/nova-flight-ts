@@ -15,18 +15,19 @@ import {
 } from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
 import {encodeColorHex} from "../../utils/NetUtil.ts";
 import {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
+import type {IVec} from "../../utils/math/IVec.ts";
 
 
 export class PhaseLasers extends SpecialWeapon {
-    public static readonly DISPLAY_NAME = '相位镭射';
     public static readonly COLOR = '#8bff5e';
     public static readonly OVERHEAT_COLOR = '#ff5e5e';
 
     public static readonly LASER_HEIGHT = World.WORLD_H * 2;
-    public static readonly LASER_WIDTH = 6;
 
     public static readonly id2EffectMap = new Map<number, LaserBeamEffect>();
     private static readonly activateBeam = new Set<number>();
+
+    protected width = 6;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         this.setActive(stack, this.getActive(stack) ? false : stack.isAvailable());
@@ -65,7 +66,7 @@ export class PhaseLasers extends SpecialWeapon {
                 this.onEndFire(stack, world, holder);
             }
             if (stack.getOrDefault(DataComponentTypes.ANY_BOOLEAN, false) && heatLeft <= 40) {
-                world.playSound(holder, SoundEvents.LASER_OVERHEAT);
+                this.overHeatAlert(world, holder);
                 stack.set(DataComponentTypes.ANY_BOOLEAN, false);
             }
         }
@@ -97,7 +98,7 @@ export class PhaseLasers extends SpecialWeapon {
             if (beamFx && beamFx.isAlive()) {
                 beamFx.set(start, end);
             } else {
-                const newBeamFx = new LaserBeamEffect(stack.getOrDefault(DataComponentTypes.UI_COLOR, PhaseLasers.COLOR), PhaseLasers.LASER_WIDTH);
+                const newBeamFx = new LaserBeamEffect(stack.getOrDefault(DataComponentTypes.UI_COLOR, PhaseLasers.COLOR), this.width);
                 newBeamFx.reset(start, end);
                 world.addEffect(null, newBeamFx);
                 PhaseLasers.id2EffectMap.set(entityId, newBeamFx);
@@ -112,12 +113,26 @@ export class PhaseLasers extends SpecialWeapon {
                 entityId,
                 start,
                 end,
-                PhaseLasers.LASER_WIDTH,
+                this.width,
                 encodeColorHex(stack.getOrDefault(DataComponentTypes.UI_COLOR, PhaseLasers.COLOR))
             ));
         }
 
-        const damage = Math.max(1, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1));
+        this.damage(world as ServerWorld, stack, holder, start, end);
+    }
+
+    private removeLaser(world: World, entityId: number) {
+        const beamFx = PhaseLasers.id2EffectMap.get(entityId);
+        if (beamFx) {
+            beamFx.kill();
+            PhaseLasers.id2EffectMap.delete(entityId);
+        }
+        PhaseLasers.activateBeam.delete(entityId);
+        if (!world.isClient) world.sendPacket(new LaserWeaponDeactivate(entityId));
+    }
+
+    protected damage(world: ServerWorld, stack: ItemStack, holder: Entity, start: IVec, end: IVec) {
+        const damage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
         const damageSource = world.getDamageSources().laser(holder).setShieldMulti(0.1);
 
         for (const mob of world.getMobs()) {
@@ -125,7 +140,7 @@ export class PhaseLasers extends SpecialWeapon {
             if (!mob.isRemoved() && thickLineCircleHit(
                 start.x, start.y,
                 end.x, end.y,
-                PhaseLasers.LASER_WIDTH,
+                this.width,
                 pos.x, pos.y, mob.getWidth())) {
                 mob.takeDamage(damageSource, damage);
             }
@@ -141,27 +156,20 @@ export class PhaseLasers extends SpecialWeapon {
         }
     }
 
-    private removeLaser(world: World, entityId: number) {
-        const beamFx = PhaseLasers.id2EffectMap.get(entityId);
-        if (beamFx) {
-            beamFx.kill();
-            PhaseLasers.id2EffectMap.delete(entityId);
-        }
-        PhaseLasers.activateBeam.delete(entityId);
-        if (!world.isClient) world.sendPacket(new LaserWeaponDeactivate(entityId));
-    }
-
     public override onStartFire(_stack: ItemStack, world: World, attacker: Entity) {
         if (!world.isClient) return;
         world.playSound(attacker, SoundEvents.LASER_TRIGGER);
-        world.playLoopSound(attacker, SoundEvents.LASER_BEAM, 0.3);
+        world.playLoopSound(attacker, SoundEvents.LASER_BEAM_LOW, 0.5);
     }
 
     public override onEndFire(_stack: ItemStack, world: World, attacker: Entity) {
         if (!world.isClient) return;
-        if (world.stopLoopSound(attacker, SoundEvents.LASER_BEAM)) {
-            world.playSound(attacker, SoundEvents.LASER_CHARGE_DOWN);
-        }
+        world.stopLoopSound(attacker, SoundEvents.LASER_BEAM_LOW);
+        world.playSound(attacker, SoundEvents.LASER_CHARGE_DOWN);
+    }
+
+    protected overHeatAlert(world: World, holder: Entity) {
+        world.playSound(holder, SoundEvents.LASER_OVERHEAT);
     }
 
     public override isReady(): boolean {
@@ -181,7 +189,7 @@ export class PhaseLasers extends SpecialWeapon {
     }
 
     public override getDisplayName(): string {
-        return PhaseLasers.DISPLAY_NAME;
+        return '相位镭射';
     }
 
     public override getUiColor(stack: ItemStack): string {

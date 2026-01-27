@@ -4,8 +4,10 @@ import {World} from "../../world/World.ts";
 import {PI2, rand} from "../../utils/math/math.ts";
 import {RocketEntity} from "./RocketEntity.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
-import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacket.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
+import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacket.ts";
+import {WorldConfig} from "../../configs/WorldConfig.ts";
+import type {IVec} from "../../utils/math/IVec.ts";
 
 export class MissileEntity extends RocketEntity {
     public static readonly lockedEntity = new WeakMap<Entity, number>();
@@ -20,6 +22,7 @@ export class MissileEntity extends RocketEntity {
     protected lockDelayTicks = 40;
     protected maxLifetimeTicks = 400;
 
+    protected driftAttenuation = true;
     protected driftSpeed = 2;
     protected trackingSpeed = 3;
 
@@ -38,16 +41,15 @@ export class MissileEntity extends RocketEntity {
 
         const pos = this.getPositionRef;
         this.moveByVec(this.getVelocityRef);
-        this.getVelocityRef.multiply(0.8);
 
         if (!this.adjustPosition()) return;
 
         const world = this.getWorld();
+
         if (!world.isClient && this.lastTarget !== this.target) {
             const packet = new MissileLockS2CPacket(this.getId(), this.target?.getId() ?? 0);
             world.getNetworkChannel().send(packet);
         }
-        this.lastTarget = this.target;
 
         // 燃料耗尽
         if (this.age > this.maxLifetimeTicks) {
@@ -56,15 +58,17 @@ export class MissileEntity extends RocketEntity {
             }
             this.target = null;
             this.lastTarget = null;
-            const yaw = this.getYaw();
-            this.setYaw(yaw);
-            this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
             return;
         }
 
+        this.getVelocityRef.multiply(0.8);
+        this.velocityDirty = true;
+
         // 点燃延迟
         if (this.age <= this.igniteDelayTicks) {
-            if (this.driftSpeed > 0.01) this.driftSpeed *= 0.98;
+            if (world.isClient) return;
+
+            if (this.driftSpeed > 0.01 && this.driftAttenuation) this.driftSpeed *= 0.98;
             const vx1 = Math.cos(this.driftAngle);
             const vy1 = Math.sin(this.driftAngle);
             this.updateVelocity(this.driftSpeed, vx1, vy1);
@@ -73,14 +77,19 @@ export class MissileEntity extends RocketEntity {
 
         const cd = (this.age & 3) === 0;
 
-        if (cd) {
+        if (world.isClient) {
+            if (!cd) return;
+
             const yaw = this.getYaw();
             const dx = Math.cos(yaw) * 32;
             const dy = Math.sin(yaw) * 32;
-            world.addParticle(pos.x - dx, pos.y - dy, rand(-1, 1), rand(-1, 1),
+            world.addParticle(
+                pos.x - dx, pos.y - dy,
+                rand(-1, 1), rand(-1, 1),
                 rand(1, 1.5), rand(4, 6),
                 "#986900", "#575757", 0.3
             );
+            return;
         }
 
         // 开始锁定
@@ -99,17 +108,22 @@ export class MissileEntity extends RocketEntity {
         if (this.reLockCD > 0) this.reLockCD--;
         if (!this.target || this.target.isRemoved()) {
             let target: Entity | null = null;
-            if (cd && this.reLockCD <= 0) target = this.acquireTarget();
+
+            if (cd && this.reLockCD <= 0) {
+                target = this.acquireTarget();
+            }
+
             if (!target) {
                 const yaw = this.getYaw();
                 this.setYaw(yaw + this.turnRate * this.hoverDir);
                 this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
                 return;
             }
-            this.lastTarget = target;
-            this.target = target;
 
+            this.lastTarget = this.target;
+            this.target = target;
             this.reLockCD = this.maxReLockCD;
+
             const count = MissileEntity.lockedEntity.get(this.target) ?? 0;
             MissileEntity.lockedEntity.set(this.target, count + 1);
 
@@ -119,12 +133,23 @@ export class MissileEntity extends RocketEntity {
         // 追踪
         const targetPos = this.target.getPositionRef;
         const targetVel = this.target.getVelocityRef;
-        const desiredYaw = BallisticsUtils.getLeadYaw(pos, targetPos, targetVel, this.trackingSpeed);
+        const desiredYaw = this.predictMethod(pos, targetPos, targetVel);
 
         this.setClampYaw(desiredYaw, this.turnRate);
 
         const yaw = this.getYaw();
         this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
+    }
+
+    protected predictMethod(pos: IVec, targetPos: IVec, targetVel: IVec) {
+        return BallisticsUtils.guidedIntercept(
+            pos,
+            targetPos,
+            targetVel,
+            this.trackingSpeed,
+            this.turnRate,
+            WorldConfig.mbps
+        );
     }
 
     public shouldApplyDecoy(): boolean {

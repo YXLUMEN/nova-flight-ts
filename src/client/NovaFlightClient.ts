@@ -15,7 +15,6 @@ import {DataLoader} from "./DataLoader.ts";
 import {check} from "@tauri-apps/plugin-updater";
 import {StartScreen} from "./render/ui/StartScreen.ts";
 import {ClientPlayNetworkHandler} from "./network/ClientPlayNetworkHandler.ts";
-import {RequestPositionC2SPacket} from "../network/packet/c2s/RequestPositionC2SPacket.ts";
 import {error} from "@tauri-apps/plugin-log";
 import {ClientCommandManager} from "./command/ClientCommandManager.ts";
 import {invoke} from "@tauri-apps/api/core";
@@ -642,8 +641,6 @@ export class NovaFlightClient {
 
         window.addEventListener('resize', () => {
             this.window.resize();
-            if (!this.player) return;
-            this.networkChannel.send(new RequestPositionC2SPacket());
         });
 
         this.window.canvas.addEventListener('click', event => {

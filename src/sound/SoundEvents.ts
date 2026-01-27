@@ -16,12 +16,15 @@ export class SoundEvents {
     public static readonly LASER_COOLDOWN = this.registerSound("laser.cooldown");
     public static readonly LASER_TRIGGER = this.registerSound("laser.trigger");
     public static readonly LASER_BEAM = this.registerSound("laser.beam");
+    public static readonly LASER_BEAM_LOW = this.registerSound("laser.beam_low");
     public static readonly LASER_CHARGE_DOWN = this.registerSound("laser.charge_down");
     public static readonly LASER_FIRE_BEAM = this.registerSound("laser.fire_beam");
     public static readonly LASER_FIRE_SYNTH = this.registerSound("laser.fire_synth");
     public static readonly LASER_FIRE_BEAM_MID = this.registerSound("laser.fire_beam_mid");
-    public static readonly LASER_SPIN_BARREL = this.registerSound("laser.spin_barrel");
-    public static readonly LASER_CHARGEUP = this.registerSound("laser.chargeup");
+    public static readonly LASER_SPINDOWN = this.registerSound("laser.spindown");
+    public static readonly LASER_CHARGE_UP = this.registerSound("laser.charge_up");
+    public static readonly LASER_CHARGE_UP_LONG = this.registerSound("laser.charge_up_long");
+    public static readonly STEAM_RELEASE = this.registerSound("laser.steam_release");
 
     public static readonly CANNON40_FIRE_LOOP = this.registerSound("cannon40.fire_loop");
     public static readonly CANNON40_FIRE_TAIL = this.registerSound("cannon40.fire_tail");

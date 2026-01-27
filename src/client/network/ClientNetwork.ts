@@ -1,6 +1,5 @@
 import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
-import {PlayerYawC2SPacket} from "../../network/packet/c2s/PlayerYawC2SPacket.ts";
-import {PlayerMoveC2SPacket} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
+import {FullMove, PositionOnly, Steering} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import {PlayerAttemptLoginC2SPacket} from "../../network/packet/c2s/PlayerAttemptLoginC2SPacket.ts";
 import type {Payload, PayloadId} from "../../network/Payload.ts";
@@ -11,7 +10,6 @@ import {RequestPositionC2SPacket} from "../../network/packet/c2s/RequestPosition
 import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 import {PlayerFinishLoginC2SPacket} from "../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
 import {PlayerResetAllTechC2SPacket} from "../../network/packet/c2s/PlayerResetAllTechC2SPacket.ts";
-import {PlayerMoveByPointerC2SPacket} from "../../network/packet/c2s/PlayerMoveByPointerC2SPacket.ts";
 import {CommandExecutionC2SPacket} from "../../network/packet/c2s/CommandExecutionC2SPacket.ts";
 import {PlayerDisconnectC2SPacket} from "../../network/packet/c2s/PlayerDisconnectC2SPacket.ts";
 import {ClientSniffingC2SPacket} from "../../network/packet/c2s/ClientSniffingC2SPacket.ts";
@@ -21,9 +19,9 @@ import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTech
 
 export class ClientNetwork {
     public static registerNetworkPacket(): void {
-        this.register(PlayerYawC2SPacket.ID, PlayerYawC2SPacket.CODEC);
-        this.register(PlayerMoveC2SPacket.ID, PlayerMoveC2SPacket.CODEC);
-        this.register(PlayerMoveByPointerC2SPacket.ID, PlayerMoveByPointerC2SPacket.CODEC);
+        this.register(FullMove.ID, FullMove.CODEC);
+        this.register(PositionOnly.ID, PositionOnly.CODEC);
+        this.register(Steering.ID, Steering.CODEC);
         this.register(PlayerInputC2SPacket.ID, PlayerInputC2SPacket.CODEC);
         this.register(PlayerAttemptLoginC2SPacket.ID, PlayerAttemptLoginC2SPacket.CODEC);
         this.register(PlayerFireC2SPacket.ID, PlayerFireC2SPacket.CODEC);

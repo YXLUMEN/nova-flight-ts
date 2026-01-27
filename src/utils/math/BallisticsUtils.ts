@@ -1,4 +1,5 @@
 import type {IVec} from "./IVec.ts";
+import {wrapRadians} from "./math.ts";
 
 export class BallisticsUtils {
     public static getLeadYaw(shooterPos: IVec, targetPos: IVec, targetVel: IVec, bulletSpeed: number): number {
@@ -78,5 +79,53 @@ export class BallisticsUtils {
         // dot < 0 → 距离在减小
         // dot >= 0 → 距离不变或增大
         return dot < 0;
+    }
+
+    public static guidedIntercept(
+        shooterPos: IVec,
+        targetPos: IVec,
+        targetVel: IVec,
+        missileSpeed: number,
+        turnRateLimit: number,
+        deltaTime: number,
+        maxSteps: number = 20,
+        sqHitRadius: number = 36,
+    ): number {
+        let mx = shooterPos.x;
+        let my = shooterPos.y;
+        let tx = targetPos.x;
+        let ty = targetPos.y;
+
+        let currentYaw = Math.atan2(ty - my, tx - mx);
+
+        for (let step = 0; step < maxSteps; step++) {
+            // 更新目标位置
+            tx += targetVel.x * deltaTime;
+            ty += targetVel.y * deltaTime;
+
+            // 理想提前角
+            const desiredYaw = this.getLeadYaw(shooterPos, targetPos, targetVel, missileSpeed);
+
+            // 限制转向速率
+            let deltaYaw = wrapRadians(desiredYaw - currentYaw);
+            const maxTurn = turnRateLimit * deltaTime;
+            if (Math.abs(deltaYaw) > maxTurn) {
+                deltaYaw = Math.sign(deltaYaw) * maxTurn;
+            }
+            currentYaw += deltaYaw;
+
+            // 更新导弹位置
+            mx += Math.cos(currentYaw) * missileSpeed * deltaTime;
+            my += Math.sin(currentYaw) * missileSpeed * deltaTime;
+
+            // 命中判定
+            const dx = tx - mx;
+            const dy = ty - my;
+            if (dx * dx + dy * dy < sqHitRadius) {
+                return currentYaw;
+            }
+        }
+
+        return currentYaw;
     }
 }

@@ -29,6 +29,8 @@ export class Registries {
     });
     public static readonly TECH = this.simpleCreate(RegistryKeys.TECH, () => {
     });
+    public static readonly WORLD_EVENT = this.simpleCreate(RegistryKeys.WORLD_EVENT, () => {
+    });
 
     public static async complete() {
         const attr = await import('../entity/attribute/EntityAttributes.ts');

@@ -13,10 +13,12 @@ import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity
 export abstract class BaseWeapon extends Weapon {
     public override inventoryTick(stack: ItemStack, _world: World, holder: Entity, _slot: number, selected: boolean): void {
         const cooldown = stack.getOrDefault(DataComponentTypes.COOLDOWN, 0);
-        if (cooldown > 0 && this.shouldCooldown(stack)) this.setCooldown(stack, cooldown - 1);
+        if (cooldown > 0 && this.shouldCooldown(stack)) {
+            this.setCooldown(stack, cooldown - 1);
+        }
 
         if (holder.isPlayer() && stack.getOrDefault(DataComponentTypes.RELOADING, false)) {
-            this.reloadAction(holder as PlayerEntity, stack, selected);
+            this.reloadAction(holder, stack, selected);
         }
     }
 
@@ -67,7 +69,7 @@ export abstract class BaseWeapon extends Weapon {
         stack.setDamage(0);
     }
 
-    private reloadAction(player: PlayerEntity, stack: ItemStack, selected: boolean): void {
+    protected reloadAction(player: PlayerEntity, stack: ItemStack, selected: boolean): void {
         const manager = player.cooldownManager;
 
         if (!selected) {
