@@ -20,6 +20,7 @@ import {FastBulletEntityRender} from "./FastBulletEntityRender.ts";
 import {ExplodeBulletEntityRender} from "./ExplodeBulletEntityRender.ts";
 import {CloudLightningEntityRender} from "./CloudLightningEntityRender.ts";
 import {ExplosionEntityRender} from "./ExplosionEntityRender.ts";
+import {TargetDroneEntityRender} from "./TargetDroneEntityRender.ts";
 
 export class EntityRenderers {
     private static readonly RENDERER_FACTORIES = new Map<EntityType<Entity>, EntityRenderer<Entity>>();
@@ -57,6 +58,7 @@ export class EntityRenderers {
         this.register(EntityTypes.ADS_ENTITY, new ADSEntityRender());
         this.register(EntityTypes.CLOUD_LIGHTNING_ENTITY, new CloudLightningEntityRender());
         this.register(EntityTypes.EXPLOSION_ENTITY, new ExplosionEntityRender());
+        this.register(EntityTypes.TARGET_DRONE, new TargetDroneEntityRender());
         this.compileRenders();
     }
 

@@ -15,6 +15,8 @@
     "fs:allow-read",
     "fs:allow-resource-read-recursive",
     "fs:allow-resource-write",
+    "fs:scope-document-recursive",
+    "fs:allow-document-write",
     "log:allow-log"
   ]
 }

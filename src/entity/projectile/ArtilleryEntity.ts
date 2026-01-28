@@ -5,9 +5,13 @@ import {Techs} from "../../tech/Techs.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 
 export class ArtilleryEntity extends FastBulletEntity {
+    private readonly hit = new WeakSet<Entity>();
     private hitTime = 0;
 
     public override onEntityHit(entity: Entity): void {
+        if (this.hit.has(entity)) return;
+        this.hit.add(entity);
+
         if (this.hitTime++ >= 3) {
             this.discard();
         }

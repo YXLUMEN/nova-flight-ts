@@ -28,3 +28,11 @@ export function readFile(path: string, timeout: number = 1000): Promise<ArrayBuf
 
     return promise;
 }
+
+export function writeFile(path: string, buffer: ArrayBuffer) {
+    self.postMessage({
+        type: "writeFile",
+        path,
+        buffer
+    }, {transfer: [buffer]});
+}

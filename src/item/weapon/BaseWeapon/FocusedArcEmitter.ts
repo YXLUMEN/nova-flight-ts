@@ -48,6 +48,7 @@ export class FocusedArcEmitter extends BaseWeapon {
         if (initialTargets.length === 0) return;
 
         // 连锁
+        const range = stack.getOrDefault(DataComponentTypes.ATTACK_RANGE, 16384);
         const subHitCount = new Map<Entity, number>();
         const chainDamage = Math.floor(damage * 0.5);
 
@@ -62,7 +63,7 @@ export class FocusedArcEmitter extends BaseWeapon {
                 const hitTime = subHitCount.get(mob) ?? 0;
                 if (hitTime >= 2) continue;
 
-                if (squareDistVec2(sourcePos, mob.getPositionRef) <= 16384) {
+                if (squareDistVec2(sourcePos, mob.getPositionRef) <= range) {
                     targetCount++;
                     subHitCount.set(mob, hitTime + 1);
 

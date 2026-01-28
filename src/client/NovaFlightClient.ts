@@ -15,7 +15,7 @@ import {DataLoader} from "./DataLoader.ts";
 import {check} from "@tauri-apps/plugin-updater";
 import {StartScreen} from "./render/ui/StartScreen.ts";
 import {ClientPlayNetworkHandler} from "./network/ClientPlayNetworkHandler.ts";
-import {error} from "@tauri-apps/plugin-log";
+import {error, info} from "@tauri-apps/plugin-log";
 import {ClientCommandManager} from "./command/ClientCommandManager.ts";
 import {invoke} from "@tauri-apps/api/core";
 import {ServerWorker} from "../worker/ServerWorker.ts";
@@ -25,12 +25,14 @@ import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {ClientChat} from "./command/ClientChat.ts";
 import type {StartServer} from "../apis/startup.ts";
 import {PlayerInputC2SPacket} from "../network/packet/c2s/PlayerInputC2SPacket.ts";
-import {resolveResource} from "@tauri-apps/api/path";
-import {exists, readFile} from "@tauri-apps/plugin-fs";
+import {documentDir, resolve, resolveResource} from "@tauri-apps/api/path";
+import {exists, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs";
+import {ClientSavesManager} from "./ClientSavesManager.ts";
+import {warn} from "../worker/log.ts";
 
 export class NovaFlightClient {
-    private static readonly SERVER_SHUTDOWN_TIMEOUT = 5000;
-    private static readonly SERVER_START_TIMEOUT = 8000;
+    private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
+    private static readonly SERVER_START_TIMEOUT = 5000;
 
     private static instance: NovaFlightClient;
     public readonly clientId: UUID;
@@ -48,7 +50,9 @@ export class NovaFlightClient {
     public world: ClientWorld | null = null;
     public player: ClientPlayerEntity | null = null;
 
-    private multiGameManager: ClientMultiGameManger;
+    private readonly multiGameManager: ClientMultiGameManger;
+    private readonly saveManager: ClientSavesManager;
+
     public connectInfo: ConnectInfo | null = null;
 
     private running = false;
@@ -91,7 +95,9 @@ export class NovaFlightClient {
         );
 
         this.networkHandler = new ClientPlayNetworkHandler(this);
+
         this.multiGameManager = new ClientMultiGameManger();
+        this.saveManager = new ClientSavesManager();
 
         this.clientCommandManager = new ClientCommandManager(this.networkHandler.getCommandSource());
         this.clientChat = new ClientChat(this);
@@ -131,11 +137,16 @@ export class NovaFlightClient {
 
             if (action === -1) break;
 
-            if (action < 2) {
+            if (action === 0) {
                 this.isIntegrated = true;
-                await this.startIntegratedServer(action);
-            }
-            if (action === 2) {
+                const saveName = await this.saveManager.choseSaves();
+                this.saveManager.hide();
+                if (saveName === null) {
+                    this.stopWorld();
+                } else {
+                    await this.startIntegratedServer(saveName);
+                }
+            } else if (action === 1) {
                 this.isIntegrated = false;
                 await this.connectToServer();
             }
@@ -234,30 +245,26 @@ export class NovaFlightClient {
                 return;
             }
 
-            const ctrl = new AbortController();
-
-            const {promise: afterShutdown, resolve: serverShutdown} = Promise.withResolvers<void>();
-            afterShutdown.then(() => {
-                ctrl.abort();
-                resolve();
-                this.waitWorldStop = null;
-            });
-
-            const shutTimeout = setTimeout(() => {
+            const terminate = () => {
                 this.server?.terminate();
                 this.server = null;
-                serverShutdown();
+
+                resolve();
+                this.waitWorldStop = null;
+            };
+
+            const shutTimeout = setTimeout(() => {
+                terminate();
             }, NovaFlightClient.SERVER_SHUTDOWN_TIMEOUT);
 
-            this.server.postMessage({type: 'stop_server'});
-            this.server.getWorker()!.addEventListener('message', event => {
+            this.server.getWorker().onmessage = event => {
                 if (event.data.type !== 'server_shutdown') return;
 
                 clearTimeout(shutTimeout);
-                this.server?.terminate();
-                this.server = null;
-                serverShutdown();
-            }, {signal: ctrl.signal});
+                terminate();
+            };
+
+            this.server.postMessage({type: 'stop_server'});
         };
     }
 
@@ -304,7 +311,7 @@ export class NovaFlightClient {
         await connectInfo.waitConfirm();
     }
 
-    private async startIntegratedServer(action: number): Promise<void> {
+    private async startIntegratedServer(saveName: string): Promise<void> {
         if (this.server) return;
 
         // 全屏提示
@@ -358,8 +365,7 @@ export class NovaFlightClient {
             addr,
             key,
             hostUUID: this.clientId,
-            action,
-            saveName: 'MyWorld'
+            saveName
         };
 
         // Vite 规定的格式 integrated dev
@@ -377,15 +383,28 @@ export class NovaFlightClient {
         }, NovaFlightClient.SERVER_START_TIMEOUT);
 
         worker.onmessage = event => {
-            const type = event.data.type;
-            if (type === 'server_start') {
-                clearTimeout(startTimeout);
-            } else if (type === 'server_stop') {
-                this.stopWorld();
-            } else if (type === 'saved') {
-                this.clientCommandManager.addPlainMessage('\x1b[32m游戏已保存');
-            } else if (type === 'readFile') {
-                this.serverReadFile(event.data);
+            switch (event.data.type) {
+                case 'server_start':
+                    clearTimeout(startTimeout);
+                    break;
+                case 'server_stop':
+                    this.stopWorld();
+                    break;
+                case 'saved':
+                    this.clientCommandManager.addPlainMessage('\x1b[32m游戏已保存');
+                    break;
+                case 'readFile':
+                    this.serverReadFile(event.data);
+                    break;
+                case 'writeFile':
+                    this.serverWriteFile(event.data);
+                    break;
+                case 'log':
+                    const level = event.data.level;
+                    if (level === 'info') info(event.data.message);
+                    else if (level === 'warn') warn(event.data.message);
+                    else if (level === 'error') error(event.data.message);
+                    break;
             }
         };
 
@@ -618,6 +637,21 @@ export class NovaFlightClient {
             id: data.id,
             buffer: buffer
         }, {transfer: [buffer.buffer]});
+    }
+
+    private async serverWriteFile(data: any) {
+        const path = data.path as string;
+        const buffer = data.buffer;
+        if (!(buffer instanceof ArrayBuffer)) throw new TypeError('BufferData must be an ArrayBuffer');
+
+        const documentPath = await documentDir();
+        const saveRoot = await resolve(documentPath, 'saves');
+        if (!await exists(saveRoot)) {
+            await mkdir(saveRoot);
+        }
+
+        const resolved = await resolve(saveRoot, path);
+        await writeFile(resolved, new Uint8Array(buffer), {create: true});
     }
 
     private registryListener(): void {

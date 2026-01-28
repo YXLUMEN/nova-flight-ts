@@ -147,17 +147,11 @@ export class StartScreen implements IUi {
             new UIButton(
                 startX, startY + 60,
                 200, 50,
-                '读取存档',
-                this.readSave.bind(this),
-            ),
-            new UIButton(
-                startX, startY + 120,
-                200, 50,
                 '加入游戏',
                 this.joinGame.bind(this),
             ),
             new UIButton(
-                startX, startY + 180,
+                startX, startY + 120,
                 200, 50,
                 '退出游戏',
                 this.exitGame.bind(this),
@@ -175,13 +169,8 @@ export class StartScreen implements IUi {
         this.complete(0);
     }
 
-    private readSave(): void {
-        this.destroy();
-        this.complete(1);
-    }
-
     private joinGame(): void {
         this.destroy();
-        this.complete(2);
+        this.complete(1);
     }
 }

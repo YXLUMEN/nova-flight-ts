@@ -7,11 +7,11 @@ import {DataComponentTypes} from "../component/DataComponentTypes.ts";
 import {BallisticsUtils} from "../utils/math/BallisticsUtils.ts";
 import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import type {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
-import {ADSEntity} from "../entity/ADSEntity.ts";
 import {LivingEntity} from "../entity/LivingEntity.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {squareDistVec2} from "../utils/math/math.ts";
 import type {EntityDist} from "../apis/types.ts";
+import {spawnLaserByVec} from "../utils/ServerEffect.ts";
 
 export class PointDefense extends Item {
     public static readonly DEFENSE_RADIUS_SQ = 256 * 256;
@@ -51,7 +51,7 @@ export class PointDefense extends Item {
             const entity = validThreats[i].entity;
 
             entity.onIntercept(damage);
-            ADSEntity.spawnInterceptPath(world as ServerWorld, selfPos, entity.getPositionRef);
+            spawnLaserByVec(world as ServerWorld, selfPos, entity.getPositionRef);
         }
     }
 }

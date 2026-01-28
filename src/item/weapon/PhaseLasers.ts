@@ -96,7 +96,7 @@ export class PhaseLasers extends SpecialWeapon {
             // 刷新/创建光束效果
             const beamFx = PhaseLasers.id2EffectMap.get(entityId);
             if (beamFx && beamFx.isAlive()) {
-                beamFx.set(start, end);
+                beamFx.setByVec(start, end);
             } else {
                 const newBeamFx = new LaserBeamEffect(stack.getOrDefault(DataComponentTypes.UI_COLOR, PhaseLasers.COLOR), this.width);
                 newBeamFx.reset(start, end);

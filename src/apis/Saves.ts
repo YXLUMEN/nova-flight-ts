@@ -1,8 +1,9 @@
 export interface Save {
-    save_name: string,
-    data: Uint8Array<ArrayBufferLike>,
-    version: number,
-    timestamp: number,
+    save_name: string;
+    display_name: string;
+    data: Uint8Array<ArrayBufferLike>;
+    version: number;
+    timestamp: number;
 }
 
 export interface PlayerData {

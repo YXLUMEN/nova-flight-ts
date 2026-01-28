@@ -13,8 +13,9 @@ export class CloudLightningConduits extends BaseWeapon {
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
         const damage = randInt(1, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 12));
+        const range = stack.getOrDefault(DataComponentTypes.ATTACK_RANGE, 128);
 
-        const cloud = new CloudLightningEntity(EntityTypes.CLOUD_LIGHTNING_ENTITY, world, attacker, damage);
+        const cloud = new CloudLightningEntity(EntityTypes.CLOUD_LIGHTNING_ENTITY, world, attacker, damage, range);
         this.setBullet(cloud, attacker, this.speed, 10, 0);
         world.spawnEntity(cloud);
 

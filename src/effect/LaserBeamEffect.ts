@@ -48,7 +48,7 @@ export class LaserBeamEffect implements VisualEffect {
         this.life = life;
     }
 
-    public set(start: IVec, end: IVec) {
+    public setByVec(start: IVec, end: IVec) {
         this.prevStart.set(this.start.x, this.start.y);
         this.prevEnd.set(this.end.x, this.end.y);
         this.start.x = start.x;
@@ -56,6 +56,16 @@ export class LaserBeamEffect implements VisualEffect {
         this.end.x = end.x;
         this.end.y = end.y;
         this.t = 0; // 刷新寿命,保持常驻
+    }
+
+    public set(startX: number, startY: number, endX: number, endY: number) {
+        this.prevStart.set(this.start.x, this.start.y);
+        this.prevEnd.set(this.end.x, this.end.y);
+        this.start.x = startX;
+        this.start.y = startY;
+        this.end.x = endX;
+        this.end.y = endY;
+        this.t = 0;
     }
 
     public reset(start: IVec, end: IVec) {

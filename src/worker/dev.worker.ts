@@ -17,7 +17,7 @@ async function handleEvent(event: MessageEvent<any>) {
 
             server = DevServer.startServer(new Uint8Array(startUp.key), startUp.hostUUID, startUp.saveName) as DevServer;
             server.networkChannel.setServerAddress(startUp.addr);
-            return server.runServer(startUp.action);
+            return server.runServer();
         }
         case 'stop_server': {
             if (!server) return;

@@ -14,6 +14,7 @@ import {ServerNetworkHandler} from "./network/ServerNetworkHandler.ts";
 import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.ts";
 import {Result} from "../utils/result/Result.ts";
 import type {ServerChannel} from "./network/ServerChannel.ts";
+import {error} from "../worker/log.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static readonly SAVE_PATH = `saves/save-${NbtCompound.VERSION}.dat`;
@@ -57,7 +58,7 @@ export abstract class NovaFlightServer implements CommandOutput {
 
     public abstract runServer(action: number): Promise<void>;
 
-    protected async startGame(manager: RegistryManager, readSave = false): Promise<void> {
+    protected async startGame(manager: RegistryManager): Promise<void> {
         if (this.running) return;
         this.running = true;
 
@@ -69,16 +70,12 @@ export abstract class NovaFlightServer implements CommandOutput {
 
         this.world = new ServerWorld(manager, this);
 
-        if (readSave) {
-            const loadResult = await this.loadWorld();
-            if (loadResult.isErr()) {
-                this.world.close();
-                this.world = null;
-                this.stopWorld();
-                return;
-            }
-        } else {
-            await this.deleteWorld(this.worldName);
+        const loadResult = await this.loadWorld();
+        if (loadResult.isErr()) {
+            this.world.close();
+            this.world = null;
+            this.stopWorld();
+            return;
         }
 
         this.profile = new GameProfile(this.networkChannel.getSessionId(), this.serverId, this.worldName);
@@ -86,8 +83,15 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.networkChannel.send(new ServerReadyS2CPacket());
         self.postMessage({type: 'server_start'});
 
+        try {
+            await this.playerManager.saveAllPlayerData();
+            const nbt = this.world!.saveAll();
+            await this.saveWorld(nbt);
+        } catch (err) {
+            error(`[Server] At NovaFlightServer starting, Error while saving game: ${err}`);
+        }
+
         this.last = performance.now();
-        // @ts-ignore
         this.tickInterval = setInterval(this.bindTick, 25);
     }
 
@@ -142,26 +146,19 @@ export abstract class NovaFlightServer implements CommandOutput {
         }
 
         try {
-            if (this.world!.isOver) {
-                await this.deleteWorld(this.worldName);
-            } else {
-                await this.playerManager.saveAllPlayerData();
-                const nbt = this.world!.saveAll();
-                await this.saveWorld(nbt);
-            }
-        } catch (error) {
-            console.error(`Error while saving game: ${error}`);
+            await this.playerManager.saveAllPlayerData();
+            const nbt = this.world!.saveAll();
+            await this.saveWorld(nbt);
+        } catch (err) {
+            error(`[Server] At NovaFlightServer, Error while saving game: ${err}`);
         }
 
-        this.networkHandler?.disconnectAllPlayer();
-        this.world?.close();
+        this.networkHandler!.disconnectAllPlayer();
+        this.world!.close();
+        this.networkChannel.disconnect();
 
         await this.onWorldStop();
-        this.stopWorld?.();
-
-        this.waitWorldStop = null;
-
-        this.networkChannel.disconnect();
+        this.stopWorld!();
     }
 
     public async waitForStop(): Promise<void> {

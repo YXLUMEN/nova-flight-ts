@@ -45,6 +45,6 @@ export class Cannon90 extends BaseWeapon {
     }
 
     protected override getMuzzleParticles(): number {
-        return 20;
+        return 8;
     }
 }

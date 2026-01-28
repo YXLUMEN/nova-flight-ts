@@ -7,8 +7,8 @@ import type {IOwnable} from "./IOwnable.ts";
 import type {LivingEntity} from "./LivingEntity.ts";
 import {squareDistVec2} from "../utils/math/math.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
-import type {IVec} from "../utils/math/IVec.ts";
 import {BallisticsUtils} from "../utils/math/BallisticsUtils.ts";
+import {spawnLaserByVec} from "../utils/ServerEffect.ts";
 
 export class ADSEntity extends Entity implements IOwnable {
     private static readonly RADIUS = 256 * 256;
@@ -17,13 +17,6 @@ export class ADSEntity extends Entity implements IOwnable {
     public constructor(type: EntityType<ADSEntity>, world: World, owner: LivingEntity | null = null) {
         super(type, world);
         this.owner = owner;
-    }
-
-    public static async spawnInterceptPath(world: ServerWorld, start: IVec, end: IVec, color = '#fff', width = 1, life = 0.1) {
-        const mod = await import('../effect/LaserBeamEffect.ts');
-        const effect = new mod.LaserBeamEffect(color, width, life);
-        effect.set(start, end);
-        world.spawnEffect(null, effect);
     }
 
     public override tick() {
@@ -45,7 +38,7 @@ export class ADSEntity extends Entity implements IOwnable {
                 !BallisticsUtils.isViableThreat(projPos, projectile.getVelocityRef, selfPos)
             ) continue;
 
-            ADSEntity.spawnInterceptPath(world, selfPos, projPos);
+            spawnLaserByVec(world, selfPos, projPos);
             projectile.discard();
             if (intercepted++ >= 5) break;
         }

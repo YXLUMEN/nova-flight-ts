@@ -6,19 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="/css/main.css"/>
     <link rel="stylesheet" href="/css/tech.css"/>
+    <link rel="stylesheet" href="/css/start.css"/>
     <link rel="stylesheet" href="/css/multi-game.css"/>
 </head>
 <body>
-<div class="help hidden" id="help">
-    1. 按 M 显示此教程;
-    2. wasd/方向键: 移动;
-    3. 鼠标点击/按下空格 开火, 或者按下 T 键自动开火;
-    4. 数字键 1 释放炸弹, 2 释放EMP, 3 切换激光, 4 遁入虚空, x 释放干扰弹, 左Alt 启动自动瞄准;
-    5. 按 G 显示科技树;
-    6. 按 Esc 切换暂停;
-    7. 游戏结束后, 按 Enter 重新开始;
-    8. 按 R/鼠标滚轮 切换主武器;
-</div>
 
 <canvas id="game"></canvas>
 
@@ -27,6 +18,31 @@
     <input class="command-input" id="command-input" type="text" autocomplete="off" spellcheck="false">
 </label>
 
+<div class="start hidden" id="start">
+    <div class="title">存档</div>
+
+    <div class="save-list" id="save-list"></div>
+
+    <div class="start-buttons" id="start-buttons">
+        <button class="btn" action="back">返回标题</button>
+        <button class="btn" action="create-world">新建世界</button>
+
+        <button class="btn disabled" id="load-world" action="load-world">进入世界</button>
+        <button class="btn disabled" id="delete-world" action="delete-world">删除存档</button>
+        <button class="btn" action="export-world">导出存档</button>
+    </div>
+
+    <div class="save-name-label hidden" id="save-name-label">
+        <div class="input-title">存档名称</div>
+        <label for="save-name-input"></label>
+        <input class="save-name-input" id="save-name-input" type="text" autocomplete="off" spellcheck="false">
+
+        <div class="save-name-buttons" id="save-name-buttons">
+            <button class="btn confirm-btn" action="confirm">确认</button>
+            <button class="btn cancel-btn" action="cancel">取消</button>
+        </div>
+    </div>
+</div>
 
 <div class="multi-game hidden" id="multi-game">
     <div class="server-list" id="server-list"></div>
@@ -35,7 +51,7 @@
         <label for="server-address"></label>
         <input class="server-address" id="server-address" type="text" autocomplete="off" spellcheck="false"
                placeholder="输入服务器地址 (ip:port)"/>
-        <button class="btn connect-btn" id="connect-btn">连接</button>
+        <button class="btn confirm-btn" id="connect-btn">连接</button>
         <button class="btn cancel-btn" id="cancel-btn">返回主页</button>
     </div>
 </div>

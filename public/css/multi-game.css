@@ -77,12 +77,12 @@
     font-weight: bold;
 }
 
-.connect-btn {
+.confirm-btn {
     background-color: #5ec8ff;
     color: #000;
 }
 
-.connect-btn:hover {
+.confirm-btn:hover {
     background-color: #00ff99;
 }
 

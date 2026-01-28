@@ -56,7 +56,7 @@ export class Techs {
     public static SERIAL_WARHEAD;
     public static FUSION_BOMB;
 
-    // 能力专精
+    // 能源专精
     public static ENERGY_FORCE;
 
     public static ELECTRICAL_SURGES;
@@ -69,6 +69,9 @@ export class Techs {
     public static HARMONIC_ANALYSIS;
     public static HIGH_TEMPERATURE_ALLOY;
     public static ENERGY_RECOVERY;
+
+    public static CORONA_DISCHARGE;
+    public static STATIC_ELECTRICITY;
 
     public static INTO_VOID;
     public static VOID_DISTURBANCE;
@@ -173,6 +176,8 @@ export class Techs {
         this.TACHYON_LANCE = registerFromJson('tachyon_lance');
         this.BALLISTIC_CALCULATOR = registerFromJson('ballistic_calculator');
         this.PERDITION_BEAM = registerFromJson('perdition_beam');
+        this.CORONA_DISCHARGE = registerFromJson('corona_discharge');
+        this.STATIC_ELECTRICITY = registerFromJson('static_electricity');
 
         Registries.TECH.getEntries().forEach(entry => entry.getValue().complete());
     }

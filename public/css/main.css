@@ -21,21 +21,6 @@ canvas {
     cursor: crosshair;
 }
 
-.help {
-    position: absolute;
-    width: 50%;
-    height: 50%;
-    margin: 10% 25%;
-    background-color: #fff;
-    white-space: pre-wrap;
-    z-index: 50;
-    pointer-events: none;
-}
-
-.help.hidden {
-    display: none;
-}
-
 .skill {
     padding: 4px;
     background-color: #cfe3ff;

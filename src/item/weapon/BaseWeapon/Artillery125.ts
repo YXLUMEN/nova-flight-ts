@@ -43,4 +43,8 @@ export class Artillery125 extends BaseWeapon {
     public override getBallisticSpeed(): number {
         return this.speed;
     }
+
+    protected override getMuzzleParticles(): number {
+        return 12;
+    }
 }

@@ -14,6 +14,7 @@ export class ArcEmitter extends BaseWeapon {
         const pos = attacker.getPositionRef;
         const yaw = attacker.getYaw();
 
+        const range = stack.getOrDefault(DataComponentTypes.ATTACK_RANGE, 65536);
         const candidates: { mob: Entity; distSq: number }[] = [];
 
         for (const mob of world.getMobs()) {
@@ -24,7 +25,7 @@ export class ArcEmitter extends BaseWeapon {
             const dy = mobPos.y - pos.y;
             const distSq = dx * dx + dy * dy;
 
-            if (distSq > 65536) continue;
+            if (distSq > range) continue;
 
             const angleToMob = Math.atan2(dy, dx);
             const diff = wrapRadians(angleToMob - yaw);

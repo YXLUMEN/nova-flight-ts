@@ -99,6 +99,7 @@ export class Items {
         .maxCooldown(40)
         .type(WeaponType.ENERGY, WeaponType.ARC)
         .unbreakable()
+        .component(DataComponentTypes.ATTACK_RANGE, 128) // 半径
     ));
     public static readonly ARC_EMITTER = this.register("arc_emitter", new ArcEmitter(new Item.Settings()
         .attackDamage(10)
@@ -106,12 +107,14 @@ export class Items {
         .maxDurability(100)
         .type(WeaponType.ENERGY, WeaponType.ARC)
         .component(DataComponentTypes.MAX_RELOAD_TIME, 46)
+        .component(DataComponentTypes.ATTACK_RANGE, 65536) // 平方距离
     ));
     public static readonly FOCUSED_ARC_EMITTER = this.register("focused_arc_emitter", new FocusedArcEmitter(new Item.Settings()
         .attackDamage(48)
         .maxCooldown(32)
         .type(WeaponType.ENERGY, WeaponType.ARC)
         .unbreakable()
+        .component(DataComponentTypes.ATTACK_RANGE, 16384) // 平方距离
     ));
     public static readonly ARTILLERY125 = this.register("artillery125", new Artillery125(new Item.Settings()
         .maxDurability(8)
@@ -183,7 +186,7 @@ export class Items {
         .component(DataComponentTypes.MAX_HEAT, 600)
         .component(DataComponentTypes.FIRING, false)
         .component(DataComponentTypes.HEAT, 0)
-        .component(DataComponentTypes.DRAIN_RATE, 5)
+        .component(DataComponentTypes.DRAIN_RATE, 6)
         .component(DataComponentTypes.COOLDOWN_RATE, 1)
         .component(DataComponentTypes.UI_COLOR, '#ff4927')
     ));

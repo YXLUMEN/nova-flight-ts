@@ -1,12 +1,7 @@
 import {IndexedDBHelper} from "../database/IndexedDBHelper.ts";
 
 export class ClientDB {
-    public static db = new IndexedDBHelper('nova-flight-client', 1, [
-        {
-            name: 'saves',
-            keyPath: 'id',
-            autoIncrement: true,
-        },
+    public static db = new IndexedDBHelper('nova-flight-client', 2, [
         {
             name: 'server-addr-list',
             keyPath: 'id',
@@ -14,6 +9,10 @@ export class ClientDB {
             indexes: [
                 {name: 'addr_name', keyPath: ['addr', 'name']},
             ]
+        },
+        {
+            name: 'user-options',
+            keyPath: 'id',
         }
     ]);
 

@@ -72,7 +72,10 @@ export class ClientCommandManager extends CommandManager {
 
                 if (input.length <= 0) return;
 
-                this.usedCommands.push(input);
+                if (this.usedCommands.at(-1) !== input) {
+                    this.usedCommands.push(input);
+                }
+
                 if (this.usedCommands.length > 64) {
                     this.usedCommands.shift();
                 }

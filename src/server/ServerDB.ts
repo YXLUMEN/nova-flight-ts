@@ -4,12 +4,16 @@ import type {UUID} from "../apis/types.ts";
 import type {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
 import {Result} from "../utils/result/Result.ts";
 import type {PlayerData, Save} from "../apis/Saves.ts";
+import {error} from "../worker/log.ts";
 
 export class ServerDB {
-    public static db = new IndexedDBHelper('nova-flight-server', 3, [
+    public static db = new IndexedDBHelper('nova-flight-server', 4, [
         {
             name: 'saves',
             keyPath: 'save_name',
+            indexes: [
+                {name: 'save_name', keyPath: 'save_name', unique: true},
+            ]
         },
         {
             name: 'player_data',
@@ -17,17 +21,37 @@ export class ServerDB {
         },
         {
             name: 'user_info',
-            keyPath: 'name'
+            keyPath: 'name',
+            indexes: [
+                {name: 'name', keyPath: 'name', unique: true},
+            ]
         }
     ]);
 
     public static async saveWorld(saveName: string, compound: NbtCompound): Promise<void> {
-        return void this.db.update('saves', {
+        const result = await this.db.add('saves', {
             save_name: saveName,
+            display_name: saveName,
             data: compound.toCompactBinary(),
             timestamp: Date.now(),
             version: NbtCompound.VERSION
         } satisfies Save);
+        result.mapErr(err => {
+            error(`[Server] Error while saving "${saveName}", ${err.name}:${err.message} because ${err.cause} at\n ${err.stack}`);
+        });
+    }
+
+    public static async updateWorldSave(saveName: string, compound: NbtCompound): Promise<void> {
+        const result = await this.db.update('saves', {
+            save_name: saveName,
+            display_name: saveName,
+            data: compound.toCompactBinary(),
+            timestamp: Date.now(),
+            version: NbtCompound.VERSION
+        } satisfies Save);
+        result.mapErr(err => {
+            error(`[Server] Error while update "${saveName}", ${err.name}:${err.message} because ${err.cause} at\n ${err.stack}`);
+        });
     }
 
     public static async savePlayer(player: ServerPlayerEntity): Promise<void> {

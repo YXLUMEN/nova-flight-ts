@@ -16,7 +16,7 @@ export class KineticArtillery extends BaseWeapon {
         if (cooldown > 0 && this.shouldCooldown(stack)) {
             this.setCooldown(stack, cooldown - 1);
 
-            if (world.isClient && cooldown === 12 && stack.getDurability() !== 0) {
+            if (world.isClient && (cooldown | 0) === 12 && stack.getDurability() !== 0) {
                 world.playSound(null, SoundEvents.KINETIC_ARTILLERY_LOAD);
             }
         }
@@ -42,9 +42,6 @@ export class KineticArtillery extends BaseWeapon {
         world.spawnEntity(bullet);
 
         world.playSound(null, SoundEvents.KINETIC_ARTILLERY_FIRE, 0.4);
-
-        // if (stack.getDurability() === 0) return;
-        // setTimeout(() => world.playSound(null, SoundEvents.KINETIC_ARTILLERY_LOAD), 200);
     }
 
     public override getUiColor(): string {
@@ -57,5 +54,9 @@ export class KineticArtillery extends BaseWeapon {
 
     public override getBallisticSpeed(): number {
         return KineticArtillery.SPEED;
+    }
+
+    protected override getMuzzleParticles(): number {
+        return 8;
     }
 }

@@ -109,7 +109,6 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             this.autoAim.tick();
 
             if (Math.abs(wrapRadians(this.getYaw() - yaw)) > 1E-3) {
-                this.setYaw(yaw);
                 updateYaw = true;
             }
         } else if (this.steeringGear) {
@@ -192,7 +191,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             this.wasFiring = isFiring;
         }
 
-        if (isFiring && hasAmmo && item.canFire(stack)) {
+        if (isFiring && hasAmmo && (item.canFire(stack) || item.getCooldown(stack) < 3)) {
             item.tryFire(stack, world, this);
         }
 

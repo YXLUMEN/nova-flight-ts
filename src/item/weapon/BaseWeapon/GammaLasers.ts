@@ -4,13 +4,13 @@ import type {ItemStack} from "../../ItemStack.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
 import {squareDistVec2, thickLineCircleHit} from "../../../utils/math/math.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
-import {ADSEntity} from "../../../entity/ADSEntity.ts";
 import {MutVec2} from "../../../utils/math/MutVec2.ts";
 import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../../../entity/effect/StatusEffects.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {PhaseLasers} from "../PhaseLasers.ts";
 import type {LivingEntity} from "../../../entity/LivingEntity.ts";
+import {spawnLaserByVec} from "../../../utils/ServerEffect.ts";
 
 export class GammaLasers extends BaseWeapon {
     public static readonly LASER_WIDTH = 3;
@@ -54,9 +54,10 @@ export class GammaLasers extends BaseWeapon {
         if (target) {
             target.takeDamage(damageSource, damage);
 
-            const toTarget = target.getPositionRef.clone().subVec(start);
+            const toX = target.getX() - start.x;
+            const toY = target.getY() - start.y;
             const width = target.getWidth() / 2;
-            const len = (toTarget.x * f + toTarget.y * g) - width;
+            const len = (toX * f + toY * g) - width;
 
             end.set(
                 start.x + len * f,
@@ -70,7 +71,7 @@ export class GammaLasers extends BaseWeapon {
             }
         }
 
-        ADSEntity.spawnInterceptPath(world, start, end, '#ffca59', GammaLasers.LASER_WIDTH, 0.2);
+        spawnLaserByVec(world, start, end, '#ffca59', GammaLasers.LASER_WIDTH, 0.2);
         world.spawnParticle(
             end.x, end.y,
             0, 0,

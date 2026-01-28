@@ -72,6 +72,7 @@ import {
 import {LaserBeamEffect} from "../../effect/LaserBeamEffect.ts";
 import {PhaseLasers} from "../../item/weapon/PhaseLasers.ts";
 import {decodeColorToHex} from "../../utils/NetUtil.ts";
+import {TargetDrone} from "../../entity/TargetDrone.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer: Set<UUID> = new Set();
@@ -190,6 +191,7 @@ export class ClientPlayNetworkHandler {
         const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
         if (entity.isLogicalSideForUpdatingMovement()) return;
+
         if (packet.positionChanged) {
             const trackedPos = entity.getTrackedPosition();
             const deltaPos = trackedPos.withDelta(packet.deltaX, packet.deltaY);
@@ -209,6 +211,8 @@ export class ClientPlayNetworkHandler {
         entity.setTrackedPosition(packet.x, packet.y);
         if (!entity.isLogicalSideForUpdatingMovement()) {
             entity.updateTrackedPositionAndAngles(packet.x, packet.y, packet.yaw, 3);
+        } else if (entity === this.client.player) {
+            this.client.player.setPosition(packet.x, packet.y);
         }
     }
 
@@ -266,6 +270,10 @@ export class ClientPlayNetworkHandler {
                 packet.entityId
             );
             return;
+        }
+
+        if (entity instanceof TargetDrone) {
+            entity.push(packet.damage);
         }
 
         const pos = entity.getPositionRef;
@@ -506,7 +514,7 @@ export class ClientPlayNetworkHandler {
         } else if (packet.change) {
             const beamFx = PhaseLasers.id2EffectMap.get(packet.entityId);
             if (beamFx) {
-                beamFx.set(packet.start, packet.end);
+                beamFx.setByVec(packet.start, packet.end);
             }
         } else {
             const beamFx = PhaseLasers.id2EffectMap.get(packet.entityId);

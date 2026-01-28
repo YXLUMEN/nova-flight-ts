@@ -8,6 +8,7 @@ import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacket.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
+import type {MutVec2} from "../../utils/math/MutVec2.ts";
 
 export class MissileEntity extends RocketEntity {
     public static readonly lockedEntity = new WeakMap<Entity, number>();
@@ -61,17 +62,17 @@ export class MissileEntity extends RocketEntity {
             return;
         }
 
-        this.getVelocityRef.multiply(0.8);
-        this.velocityDirty = true;
-
         // 点燃延迟
         if (this.age <= this.igniteDelayTicks) {
+            if (this.driftSpeed > 0.01 && this.driftAttenuation) this.driftSpeed *= 0.98;
             if (world.isClient) return;
 
-            if (this.driftSpeed > 0.01 && this.driftAttenuation) this.driftSpeed *= 0.98;
             const vx1 = Math.cos(this.driftAngle);
             const vy1 = Math.sin(this.driftAngle);
             this.updateVelocity(this.driftSpeed, vx1, vy1);
+
+            this.getVelocityRef.multiply(0.8);
+            this.velocityDirty = true;
             return;
         }
 
@@ -91,6 +92,9 @@ export class MissileEntity extends RocketEntity {
             );
             return;
         }
+
+        this.getVelocityRef.multiply(0.8);
+        this.velocityDirty = true;
 
         // 开始锁定
         if (this.age < this.lockDelayTicks) {
@@ -141,7 +145,7 @@ export class MissileEntity extends RocketEntity {
         this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
     }
 
-    protected predictMethod(pos: IVec, targetPos: IVec, targetVel: IVec) {
+    protected predictMethod(pos: MutVec2, targetPos: MutVec2, targetVel: IVec) {
         return BallisticsUtils.guidedIntercept(
             pos,
             targetPos,

@@ -342,8 +342,17 @@ export class NbtCompound {
 
     /* 紧凑格式 */
 
-    public toCompactBinary(): Uint8Array {
+    public toRootCompactBinary(): Uint8Array {
         const writer = new BinaryWriter();
+
+        writer.writeInt32(NbtCompound.MAGIC);
+        writer.writeInt16(NbtCompound.VERSION);
+
+        return this.toCompactBinary(writer);
+    }
+
+    public toCompactBinary(writer?: BinaryWriter): Uint8Array {
+        if (!writer) writer = new BinaryWriter();
         const scheme = new Map<string, KeyIndex>();
 
         this.updateScheme(scheme);

@@ -21,6 +21,7 @@ import {CloudLightningEntity} from "./projectile/CloudLightningEntity.ts";
 import {ArtilleryEntity} from "./projectile/ArtilleryEntity.ts";
 import {TorpedoEntity} from "./projectile/TorpedoEntity.ts";
 import {ExplosionEntity} from "./ExplosionEntity.ts";
+import {TargetDrone} from "./TargetDrone.ts";
 
 export class EntityTypes {
     public static readonly BASE_ENEMY = EntityType.register("base_enemy",
@@ -120,6 +121,11 @@ export class EntityTypes {
     public static readonly EXPLOSION_ENTITY = EntityType.register('explosion',
         EntityType.Builder.create(ExplosionEntity)
             .setDimensions(0, 0)
+            .setTrackingTickInterval(40)
+    );
+    public static readonly TARGET_DRONE = EntityType.register('target_drone',
+        EntityType.Builder.create(TargetDrone)
+            .setDimensions(32, 32)
             .setTrackingTickInterval(40)
     );
 

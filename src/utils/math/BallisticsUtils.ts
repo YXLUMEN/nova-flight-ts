@@ -1,5 +1,6 @@
 import type {IVec} from "./IVec.ts";
 import {wrapRadians} from "./math.ts";
+import type {MutVec2} from "./MutVec2.ts";
 
 export class BallisticsUtils {
     public static getLeadYaw(shooterPos: IVec, targetPos: IVec, targetVel: IVec, bulletSpeed: number): number {
@@ -72,18 +73,12 @@ export class BallisticsUtils {
         const relVelSq = relVelX * relVelX + relVelY * relVelY;
         if (relVelSq < 1e-6) return false; // 相对静止
 
-        // 计算相对速度在相对位置方向上的投影
-        // 如果点积 < 0，说明两者正在靠近
-        const dot = relVelX * relPosX + relVelY * relPosY;
-
-        // dot < 0 → 距离在减小
-        // dot >= 0 → 距离不变或增大
-        return dot < 0;
+        return relVelX * relPosX + relVelY * relPosY < 0;
     }
 
     public static guidedIntercept(
-        shooterPos: IVec,
-        targetPos: IVec,
+        shooterPos: MutVec2,
+        targetPos: MutVec2,
         targetVel: IVec,
         missileSpeed: number,
         turnRateLimit: number,
@@ -91,36 +86,35 @@ export class BallisticsUtils {
         maxSteps: number = 20,
         sqHitRadius: number = 36,
     ): number {
-        let mx = shooterPos.x;
-        let my = shooterPos.y;
-        let tx = targetPos.x;
-        let ty = targetPos.y;
+        const mp = shooterPos.clone();
+        const tp = targetPos.clone();
 
-        let currentYaw = Math.atan2(ty - my, tx - mx);
+        const stepSpeed = missileSpeed * deltaTime;
+        const maxTurn = turnRateLimit * deltaTime;
+
+        let currentYaw = Math.atan2(tp.y - mp.y, tp.x - mp.x);
 
         for (let step = 0; step < maxSteps; step++) {
-            // 更新目标位置
-            tx += targetVel.x * deltaTime;
-            ty += targetVel.y * deltaTime;
+            tp.add(targetVel.x * deltaTime, targetVel.y * deltaTime);
 
-            // 理想提前角
-            const desiredYaw = this.getLeadYaw(shooterPos, targetPos, targetVel, missileSpeed);
+            const desiredYaw = this.getLeadYaw(mp, tp, targetVel, missileSpeed);
 
             // 限制转向速率
             let deltaYaw = wrapRadians(desiredYaw - currentYaw);
-            const maxTurn = turnRateLimit * deltaTime;
+
             if (Math.abs(deltaYaw) > maxTurn) {
                 deltaYaw = Math.sign(deltaYaw) * maxTurn;
             }
             currentYaw += deltaYaw;
 
-            // 更新导弹位置
-            mx += Math.cos(currentYaw) * missileSpeed * deltaTime;
-            my += Math.sin(currentYaw) * missileSpeed * deltaTime;
+            mp.add(
+                Math.cos(currentYaw) * stepSpeed,
+                Math.sin(currentYaw) * stepSpeed,
+            );
 
             // 命中判定
-            const dx = tx - mx;
-            const dy = ty - my;
+            const dx = tp.x - mp.x;
+            const dy = tp.y - mp.y;
             if (dx * dx + dy * dy < sqHitRadius) {
                 return currentYaw;
             }

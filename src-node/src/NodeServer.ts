@@ -24,7 +24,7 @@ export class NodeServer extends NovaFlightServer {
         const manager = new RegistryManager();
         await manager.registerAll();
         manager.freeze();
-        await this.startGame(manager, true);
+        await this.startGame(manager);
         await this.waitForStop();
     }
 

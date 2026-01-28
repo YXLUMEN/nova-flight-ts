@@ -30,15 +30,15 @@ export class IntegratedServer extends NovaFlightServer {
         return NovaFlightServer.instance;
     }
 
-    public override async runServer(action: number): Promise<void> {
+    public override async runServer(): Promise<void> {
         const manager = new RegistryManager();
         await manager.registerAll();
         manager.freeze();
 
-        await this.startGame(manager, action === 1);
+        await this.startGame(manager);
 
         const isTutorial = await ServerDB.db.get<string>('user_info', 'tutorial');
-        if (isTutorial.ok().isEmpty() && action === 0 && this.world) {
+        if (isTutorial.ok().isEmpty() && this.world) {
             await ServerDB.db.update('user_info', {name: 'tutorial'});
 
             this.world.stage = TutorialStage;
@@ -64,7 +64,7 @@ export class IntegratedServer extends NovaFlightServer {
     }
 
     public override saveWorld(compound: NbtCompound): Promise<void> {
-        return ServerDB.saveWorld(this.profile!.name, compound);
+        return ServerDB.updateWorldSave(this.profile!.name, compound);
     }
 
     public override isHost(profile: GameProfile): boolean {

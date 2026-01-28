@@ -21,6 +21,7 @@ import {Audios} from "../../sound/Audios.ts";
 import {Techs} from "../../tech/Techs.ts";
 import {AudioStopS2CPacket} from "../../network/packet/s2c/AudioStopS2CPacket.ts";
 import type {Explosion} from "../../world/Explosion.ts";
+import {DamageTypes} from "../../entity/damage/DamageTypes.ts";
 
 export class ServerDefaultEvents {
     public static registerEvent(world: ServerWorld) {
@@ -31,10 +32,9 @@ export class ServerDefaultEvents {
             const damageSource = event.damageSource as DamageSource;
 
             const attacker = damageSource.getAttacker();
-            if (
-                attacker instanceof PlayerEntity &&
-                !damageSource.isIn(DamageTypeTags.NOT_TRIGGER_EROSION)
-            ) {
+            if (!(attacker instanceof PlayerEntity)) return;
+
+            if (!damageSource.isIn(DamageTypeTags.NOT_TRIGGER_EROSION)) {
                 const techTree = attacker.getTechs();
                 if (!techTree.isUnlocked(Techs.ARMOR_EROSION)) return;
 
@@ -46,6 +46,10 @@ export class ServerDefaultEvents {
                     }
                 }
                 mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EROSION, 400, 1), attacker);
+            }
+
+            if (damageSource.isOf(DamageTypes.ARC) && attacker.getTechs().isUnlocked(Techs.STATIC_ELECTRICITY)) {
+                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, 20, 0), attacker);
             }
         });
 

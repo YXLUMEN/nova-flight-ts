@@ -75,6 +75,20 @@ export class IndexedDBHelper {
         return promise;
     }
 
+    public async exist(storeName: string, key: IDBValidKey): Promise<Result<boolean, Error>> {
+        const db = await this.init();
+        const {promise, resolve} = Promise.withResolvers<Result<boolean, Error>>();
+
+        const tx = db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+        const request = store.count(key);
+
+        request.onsuccess = () => resolve(Result.ok(request.result > 0));
+        request.onerror = () => resolve(Result.err(IndexedDBHelper.mapErr(request.error)));
+
+        return promise;
+    }
+
     public async getByIndex<T>(
         storeName: string,
         indexName: string,

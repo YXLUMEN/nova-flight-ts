@@ -18,6 +18,7 @@ import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatus
 import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
 import {ServerItemCooldownManager} from "../item/ServerItemCooldownManager.ts";
 import {Techs} from "../../tech/Techs.ts";
+import {EdgeGlowEffect} from "../../effect/EdgeGlowEffect.ts";
 
 
 export class ServerPlayerEntity extends PlayerEntity {
@@ -84,6 +85,12 @@ export class ServerPlayerEntity extends PlayerEntity {
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (super.takeDamage(damageSource, damage)) {
             this.mendingCooldown = 100;
+
+            if (this.getHealth() / this.getMaxHealth() <= 0.2) {
+                (this.getWorld() as ServerWorld).spawnEffect(null,
+                    new EdgeGlowEffect('#ff3333', 32, 0.8, 4));
+            }
+
             return true;
         }
         return false;

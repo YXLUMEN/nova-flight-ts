@@ -12,7 +12,7 @@ import {SoundEvents} from "../../sound/SoundEvents.ts";
 export class SpaceTorpedoes extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         const pos = attacker.getPositionRef;
-        const torpedoesCount = stack.getOrDefault(DataComponentTypes.LAUNCH_COUNT, 4);
+        const torpedoesCount = stack.getOrDefault(DataComponentTypes.LAUNCH_COUNT, 6);
         const hitDamage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 12);
         const explosionDamage = stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 12);
         const explosionRadius = stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 64);

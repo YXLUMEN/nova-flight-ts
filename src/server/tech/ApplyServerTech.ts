@@ -88,15 +88,24 @@ export class ApplyServerTech {
                 break;
             }
             case Techs.CLOUD_LIGHTNING: {
-                player.addItem(Items.CLOUD_LIGHTNING);
+                const stack = new ItemStack(Items.CLOUD_LIGHTNING);
+                player.addItem(Items.CLOUD_LIGHTNING, stack);
+                this.onEnergyWpn(stack, player);
+                this.onArcWpn(stack, player);
                 break;
             }
             case Techs.ARC_EMITTER: {
-                player.addItem(Items.ARC_EMITTER);
+                const stack = new ItemStack(Items.ARC_EMITTER);
+                player.addItem(Items.ARC_EMITTER, stack);
+                this.onEnergyWpn(stack, player);
+                this.onArcWpn(stack, player);
                 break;
             }
             case Techs.FOCUSED_ARC_EMITTER: {
-                player.addItem(Items.FOCUSED_ARC_EMITTER);
+                const stack = new ItemStack(Items.FOCUSED_ARC_EMITTER);
+                player.addItem(Items.FOCUSED_ARC_EMITTER, stack);
+                this.onEnergyWpn(stack, player);
+                this.onArcWpn(stack, player);
                 break;
             }
             case Techs.GAMMA_LASERS: {
@@ -331,6 +340,17 @@ export class ApplyServerTech {
                 }
                 break;
             }
+            case Techs.CORONA_DISCHARGE: {
+                player.getInventory().forEach(stack => {
+                    const type = stack.get(DataComponentTypes.WEAPON_TYPE);
+                    if (type === null || !BitFlag.has(type, WeaponType.ARC)) return;
+
+                    const base = stack.get(DataComponentTypes.ATTACK_RANGE);
+                    if (!base) return;
+                    stack.set(DataComponentTypes.ATTACK_RANGE, Math.ceil(base * 1.2));
+                })
+                break;
+            }
         }
     }
 
@@ -382,6 +402,17 @@ export class ApplyServerTech {
             const base = stack.get(DataComponentTypes.ATTACK_DAMAGE);
             if (base) {
                 stack.set(DataComponentTypes.ATTACK_DAMAGE, base * 1.4);
+            }
+        }
+    }
+
+    private static onArcWpn(stack: ItemStack, player: ServerPlayerEntity) {
+        const tech = player.getTechs();
+
+        if (tech.isUnlocked(Techs.CORONA_DISCHARGE)) {
+            const base = stack.get(DataComponentTypes.ATTACK_RANGE);
+            if (base) {
+                stack.set(DataComponentTypes.ATTACK_RANGE, Math.ceil(base * 1.2));
             }
         }
     }

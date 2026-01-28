@@ -541,6 +541,28 @@
     ]
   },
   {
+    "id": "corona_discharge",
+    "name": "尖端放电",
+    "x": -1,
+    "y": 10,
+    "desc": "电弧武器的伤害范围 +20%",
+    "cost": 120,
+    "requires": [
+      "energy_focus"
+    ]
+  },
+  {
+    "id": "static_electricity",
+    "name": "静电",
+    "x": -2,
+    "y": 10,
+    "desc": "电弧武器命中的目标会遭受电磁干扰",
+    "cost": 120,
+    "requires": [
+      "corona_discharge"
+    ]
+  },
+  {
     "id": "into_void",
     "name": "虚空行者",
     "x": 0,

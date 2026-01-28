@@ -112,6 +112,10 @@ export class DataComponentTypes {
         builder => builder.withCodec(Codecs.INT8).withPacketCodec(PacketCodecs.INT8)
     );
 
+    public static readonly ATTACK_RANGE: ComponentType<number> = this.register('attack_range',
+        builder => builder.withCodec(Codecs.FLOAT).withPacketCodec(PacketCodecs.FLOAT)
+    );
+
     private static register<T>(id: string, builderOperator: UnaryOperator<ComponentTypeBuilder<T>>): ComponentType<T> {
         const ide = Identifier.ofVanilla(id);
         const builder = new ComponentTypeBuilder<T>();

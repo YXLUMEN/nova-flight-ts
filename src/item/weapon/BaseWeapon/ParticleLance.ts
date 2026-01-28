@@ -3,17 +3,16 @@ import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import {type ItemStack} from "../../ItemStack.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
 import type {World} from "../../../world/World.ts";
-import {MutVec2} from "../../../utils/math/MutVec2.ts";
 import {PhaseLasers} from "../PhaseLasers.ts";
 import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
 import {thickLineCircleHit} from "../../../utils/math/math.ts";
 import {StatusEffects} from "../../../entity/effect/StatusEffects.ts";
 import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
-import {ADSEntity} from "../../../entity/ADSEntity.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
 import type {ClientWorld} from "../../../client/ClientWorld.ts";
 import {ClientEffect} from "../../../utils/ClientEffect.ts";
+import {spawnLaser} from "../../../utils/ServerEffect.ts";
 
 export class ParticleLance extends BaseWeapon {
     public static readonly LASER_WIDTH = 8;
@@ -61,10 +60,8 @@ export class ParticleLance extends BaseWeapon {
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
         const start = attacker.getPositionRef;
         const yaw = attacker.getYaw();
-        const end = new MutVec2(
-            start.x + Math.cos(yaw) * PhaseLasers.LASER_HEIGHT,
-            start.y + Math.sin(yaw) * PhaseLasers.LASER_HEIGHT
-        );
+        const endX = start.x + Math.cos(yaw) * PhaseLasers.LASER_HEIGHT;
+        const endY = start.y + Math.sin(yaw) * PhaseLasers.LASER_HEIGHT;
 
         const damage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 20);
         const damageSource = world.getDamageSources()
@@ -77,7 +74,7 @@ export class ParticleLance extends BaseWeapon {
             const pos = mob.getPositionRef;
             if (!mob.isRemoved() && thickLineCircleHit(
                 start.x, start.y,
-                end.x, end.y,
+                endX, endY,
                 ParticleLance.LASER_WIDTH,
                 pos.x, pos.y, mob.getWidth())
             ) {
@@ -91,7 +88,7 @@ export class ParticleLance extends BaseWeapon {
             }
         }
 
-        ADSEntity.spawnInterceptPath(world, start, end, this.getUiColor(), 4, 0.2);
+        spawnLaser(world, start.x, start.y, endX, endY, this.getUiColor(), 4, 0.2);
         world.playSound(null, SoundEvents.LASER_FIRE_BEAM_MID, 0.6);
     }
 
