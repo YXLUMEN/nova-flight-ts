@@ -3,9 +3,10 @@ import type {SaveMeta} from "../apis/Saves.ts";
 import {error} from "@tauri-apps/plugin-log";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {documentDir, resolve} from "@tauri-apps/api/path";
-import {mkdir, writeFile, writeTextFile} from "@tauri-apps/plugin-fs";
+import {mkdir, readFile, writeFile, writeTextFile} from "@tauri-apps/plugin-fs";
 import {NbtSerialization} from "../nbt/NbtSerialization.ts";
 import {NbtUnserialization} from "../nbt/NbtUnserialization.ts";
+import {confirm, message, open} from "@tauri-apps/plugin-dialog";
 
 export class ClientSavesManager {
     private readonly saveContainer: HTMLElement;
@@ -88,51 +89,43 @@ export class ClientSavesManager {
                 return;
             }
 
+            if (action === 'import-world') {
+                this.importSave();
+                return;
+            }
+
             if (this.chosenItem === null) return;
-            if (action === 'load-world') {
-                const saveName = this.chosenItem.dataset.saveName;
-                if (!saveName) {
-                    alert('未能读取此存档信息, 可能文件已损坏');
-                    return;
-                }
-
-                resolve(saveName);
-                ctrl.abort();
-                return;
-            }
-
-            if (action === 'rename') {
-                const saveName = this.chosenItem.dataset.saveName;
-                if (!saveName) {
-                    alert('未能读取此存档信息, 可能文件已损坏');
-                    return;
-                }
-                this.renameSave(saveName);
-                return;
-            }
 
             if (action === 'delete-world') {
                 this.deleteWorld();
                 return;
             }
 
+            const saveName = this.chosenItem.dataset.saveName;
+            if (!saveName) {
+                message('未能读取此存档信息, 可能文件已损坏', {kind: 'warning'});
+                return;
+            }
+
+            if (action === 'load-world') {
+                resolve(saveName);
+                ctrl.abort();
+                return;
+            }
+
+            if (action === 'rename') {
+                this.renameSave(saveName);
+                return;
+            }
+
             if (action === 'export-world') {
-                const saveName = this.chosenItem.dataset.saveName;
-                if (!saveName) {
-                    alert('未能读取此存档信息, 可能文件已损坏');
-                    return;
-                }
                 this.exportSave(saveName);
                 return;
             }
 
             if (action === 'export-world-snbt') {
-                const saveName = this.chosenItem.dataset.saveName;
-                if (!saveName) {
-                    alert('未能读取此存档信息, 可能文件已损坏');
-                    return;
-                }
                 this.exportAsSNbt(saveName);
+                return;
             }
         }, {signal: ctrl.signal});
 
@@ -150,10 +143,7 @@ export class ClientSavesManager {
             return;
         }
 
-        const optional = result.ok();
-        if (optional.isEmpty()) return;
-
-        const saves = optional.get();
+        const saves = result.ok().get();
         if (saves.length === 0) return;
 
         const frag = document.createDocumentFragment();
@@ -169,23 +159,26 @@ export class ClientSavesManager {
         if (!input) return null;
 
         if (ClientSavesManager.isinValidName(input)) {
-            alert('输入不合法, 字符长度必须在 1-120 内, 且不包含 下划线 外的特殊字符');
+            await message('输入不合法, 字符长度必须在 1-120 内, 且不包含 下划线 外的特殊字符');
             return null;
         }
 
+        return await this.tryInsertWorld(input);
+    }
+
+    private async tryInsertWorld(input: string) {
         const saveName = await this.genSaveName(input);
         const result = await ServerStorage.insertWorld(saveName);
         if (result.isErr()) {
             const err = result.unwrapErr();
             if (err.name === 'ConstraintError') {
-                alert('存在同名存档');
+                await message('存在同名存档');
                 return null;
             }
             console.error(err);
-            alert('创建失败: 数据库异常');
+            await message('创建失败: 数据库异常', {kind: 'error'});
             return null;
         }
-
         return saveName;
     }
 
@@ -254,14 +247,14 @@ export class ClientSavesManager {
         if (!name) return;
 
         if (ClientSavesManager.isinValidName(name)) {
-            alert('输入不合法, 字符长度必须在 1-120 内, 且不包含 下划线 外的特殊字符');
+            await message('输入不合法, 字符长度必须在 1-120 内, 且不包含 下划线 外的特殊字符');
             return;
         }
 
         const result = await ServerStorage.db.get<SaveMeta>('save_meta', origin);
         const optional = result.ok();
         if (optional.isEmpty()) {
-            alert('未能读取到原始存档');
+            await message('未能读取到原始存档');
             return;
         }
 
@@ -269,9 +262,9 @@ export class ClientSavesManager {
         meta.display_name = name;
         const isSuccess = await ServerStorage.db.update('save_meta', meta);
         if (isSuccess.isErr()) {
-            alert('修改失败');
+            console.error(isSuccess.unwrapErr());
+            await message('修改失败', {kind: 'error'});
         } else {
-            alert('重命名成功');
             await this.refreshSaves();
         }
     }
@@ -281,14 +274,18 @@ export class ClientSavesManager {
 
         const saveName = this.chosenItem.dataset.saveName;
         if (!saveName) {
-            if (!confirm('未能读取次存档信息, 是否强制删除')) return;
+            if (!await confirm('未能读取次存档信息, 是否强制删除', {
+                kind: 'warning',
+            })) return;
 
             this.chosenItem.remove();
             this.deChose();
             return;
         }
 
-        if (!confirm('确认删除次存档')) return;
+        if (!await confirm('确认删除次存档', {
+            kind: 'warning',
+        })) return;
 
         const result = await ServerStorage.deleteWorld(saveName);
         result
@@ -300,7 +297,7 @@ export class ClientSavesManager {
                 const msg = `[Client] Error while deleting save "${saveName}", ${err.name}:${err.message} because ${err.cause} at\n ${err.stack}`;
                 console.error(msg);
                 error(msg);
-                alert('删除时出现错误, 详细信息参考日志');
+                message('删除时出现错误, 详细信息参考日志');
             });
     }
 
@@ -313,7 +310,7 @@ export class ClientSavesManager {
             const worldPath = await resolve(saveDir, `world.dat`);
             const save = await ServerStorage.loadWorld(saveName);
             if (!save) {
-                alert('未找到存档');
+                await message('未找到存档');
                 return;
             }
             await writeFile(worldPath, NbtSerialization.toRootCompactBinary(save));
@@ -328,9 +325,9 @@ export class ClientSavesManager {
                 return true;
             });
 
-            alert('已导出至 "文档"');
+            await message('已导出至 "文档"');
         } catch (err) {
-            alert('导出失败');
+            await message('导出失败', {kind: 'error'});
             console.error(err);
         }
     }
@@ -344,10 +341,10 @@ export class ClientSavesManager {
             const worldPath = await resolve(saveDir, `world.snbt`);
             const save = await ServerStorage.loadWorld(saveName);
             if (!save) {
-                alert('未找到存档');
+                await message('未找到存档', {kind: 'warning'});
                 return;
             }
-            await writeTextFile(worldPath, NbtSerialization.toSnbt(save, true));
+            await writeTextFile(worldPath, NbtSerialization.toSNbt(save, true));
 
             const playerDir = await resolve(saveDir, `players`);
             await mkdir(playerDir, {recursive: true});
@@ -356,20 +353,72 @@ export class ClientSavesManager {
                 resolve(playerDir, `${data.uuid}.snbt`)
                     .then(path => {
                         const nbt = NbtUnserialization.fromCompactBinary(data.data)
-                        writeTextFile(path, NbtSerialization.toSnbt(nbt, true))
+                        writeTextFile(path, NbtSerialization.toSNbt(nbt, true))
                     })
                     .catch(err => console.error(err));
                 return true;
             });
 
-            alert('已导出至 "文档"');
+            await message('已导出至 "文档"');
         } catch (err) {
-            alert('导出失败');
+            await message('导出失败', {kind: 'error'});
             console.error(err);
         }
     }
 
-    private getInputSaveName() {
+    // TODO 完整导入
+    private async importSave() {
+        const file = await open({
+            multiple: false,
+            directory: false,
+            filters: [{name: 'Archive', extensions: ['dat', 'snbt']}]
+        });
+        if (!file) return;
+
+        const buffer = await readFile(file);
+        if (buffer.length === 0) return;
+
+        if (file.endsWith('.dat')) {
+            try {
+                const nbt = NbtUnserialization.fromRootCompactBinary(buffer);
+
+                const date = new Date().toISOString();
+                const status = nbt === null ? 'broken' : 'normal';
+
+                const worldName = nbt?.getString('WorldName', date) ?? date;
+                const saveName = await this.tryInsertWorld(worldName);
+                if (!saveName || !nbt) return;
+
+                await ServerStorage.updateWorld(saveName, nbt, status);
+                await message('导入完成');
+            } catch (err) {
+                console.error(err);
+                await message('解析失败', {kind: 'error'});
+            }
+            return;
+        }
+
+        if (file.endsWith('.snbt')) {
+            try {
+                const snbt = new TextDecoder("utf-8", {fatal: true}).decode(buffer);
+                const nbt = NbtUnserialization.fromSNbt(snbt);
+
+                const date = new Date().toISOString();
+                const worldName = nbt.getString('WorldName', date);
+                const saveName = await this.tryInsertWorld(worldName);
+                if (!saveName) return;
+
+                await ServerStorage.updateWorld(saveName, nbt);
+                await message('导入完成');
+                await this.refreshSaves();
+            } catch (err) {
+                console.error(err);
+                await message('解析失败', {kind: 'error'});
+            }
+        }
+    }
+
+    private getInputSaveName(): Promise<string | null> {
         const {promise, resolve} = Promise.withResolvers<string | null>();
         const ctrl = new AbortController();
 
@@ -396,7 +445,7 @@ export class ClientSavesManager {
             if (action === 'confirm') {
                 const input = this.saveNameInput.value.trim();
                 if (input.length === 0) {
-                    alert('输入不能为空');
+                    message('输入不能为空', {kind: 'warning'}).then();
                     return;
                 }
                 settled(input);
@@ -441,7 +490,19 @@ export class ClientSavesManager {
         saveName.className = 'save-name';
         saveName.textContent = save.save_name;
 
-        item.append(displayName, saveName);
+        const right = document.createElement('div');
+        right.className = 'right-box';
+
+        const status = document.createElement('div');
+        status.className = 'status';
+        status.textContent = save.status === 'normal' ? '' : save.status;
+
+        const timestamp = document.createElement('div');
+        timestamp.className = 'time';
+        timestamp.textContent = new Date(save.timestamp).toLocaleString();
+        right.append(status, timestamp);
+
+        item.append(displayName, saveName, right);
         return item;
     }
 
@@ -451,5 +512,6 @@ export class ClientSavesManager {
 
     public hide() {
         this.saveContainer.classList.add('hidden');
+        this.deChose();
     }
 }

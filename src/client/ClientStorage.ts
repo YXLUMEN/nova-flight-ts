@@ -1,6 +1,6 @@
 import {IndexedDBHelper} from "../database/IndexedDBHelper.ts";
 
-export class ClientDB {
+export class ClientStorage {
     public static db = new IndexedDBHelper('nova-flight-client', 2, [
         {
             name: 'server-addr-list',

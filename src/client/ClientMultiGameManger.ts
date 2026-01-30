@@ -1,6 +1,6 @@
 import type {Consumer} from "../apis/types.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
-import {ClientDB} from "./ClientDB.ts";
+import {ClientStorage} from "./ClientStorage.ts";
 
 interface ServerSelect {
     addr: string;
@@ -24,7 +24,7 @@ export class ClientMultiGameManger {
         this.connectBtn = document.getElementById('connect-btn') as HTMLButtonElement;
         this.cancelBtn = document.getElementById('cancel-btn') as HTMLButtonElement;
 
-        ClientDB.db.getAll<ServerSelect>('server-addr-list')
+        ClientStorage.db.getAll<ServerSelect>('server-addr-list')
             .then(result => result
                 .map(list => list.forEach(
                     each => this.serverList.appendChild(ClientMultiGameManger.createServerSelect(each.addr, each.name))
@@ -59,7 +59,7 @@ export class ClientMultiGameManger {
             if (!document.getElementById(id)) {
                 const [_, addr, name] = id.split('-');
                 this.serverList.appendChild(select);
-                await ClientDB.db.add('server-addr-list', {addr, name});
+                await ClientStorage.db.add('server-addr-list', {addr, name});
             }
 
             this.resolveLast?.(addr);
@@ -83,7 +83,7 @@ export class ClientMultiGameManger {
             if (target instanceof HTMLElement && target.className === 'server-select') {
                 const [_, addr, name] = target.id.split('-');
                 target.remove();
-                await ClientDB.deleteServer(addr, name);
+                await ClientStorage.deleteServer(addr, name);
             }
         }, {signal: ctrl.signal});
 

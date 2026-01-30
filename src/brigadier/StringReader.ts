@@ -11,7 +11,7 @@ export class StringReader {
         return new StringReader(reader.string, reader.cursor);
     }
 
-    public   getString(): string {
+    public getString(): string {
         return this.string;
     }
 
@@ -76,6 +76,19 @@ export class StringReader {
         }
     }
 
+    public skipAnyWhitespace(): void {
+        while (this.canRead() && /\s/.test(this.peek())) {
+            this.skip();
+        }
+    }
+
+    public expect(char: string): void {
+        if (!this.canRead() || this.peek() !== char) {
+            throw new Error(`Expected '${char}' at position ${this.getCursor()}, got '${this.peek()}'`);
+        }
+        this.skip();
+    }
+
     public readInt(): number {
         const start = this.cursor;
         while (this.canRead() && StringReader.isAllowedNumber(this.peek())) {
@@ -124,8 +137,8 @@ export class StringReader {
             throw new Error("Nothing to pares as Double");
         }
 
-        const int = Number.parseInt(number);
-        if (Number.isFinite(int)) return int;
+        const double = Number(number);
+        if (Number.isFinite(double)) return double;
 
         this.cursor = start;
         throw new Error("Not a integer");

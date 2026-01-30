@@ -29,6 +29,7 @@ import {documentDir, resolve, resolveResource} from "@tauri-apps/api/path";
 import {exists, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs";
 import {ClientSavesManager} from "./ClientSavesManager.ts";
 import {warn} from "../worker/log.ts";
+import {confirm} from "@tauri-apps/plugin-dialog";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -497,7 +498,7 @@ export class NovaFlightClient {
             await sleep(200);
 
             const update = await check({timeout: 2000});
-            if (!update || !confirm('是否更新')) return;
+            if (!update || !await confirm('是否更新')) return;
 
             let contentLength: number = 0;
             let downloaded = 0;

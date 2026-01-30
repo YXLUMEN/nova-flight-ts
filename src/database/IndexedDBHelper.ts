@@ -19,8 +19,12 @@ export class IndexedDBHelper {
         const {promise, resolve, reject} = Promise.withResolvers<IDBDatabase>();
         const request = indexedDB.open(this.dbName, this.version);
 
-        request.onupgradeneeded = () => {
+        request.onupgradeneeded = (e) => {
             const db = request.result;
+            if (e.oldVersion < 5) {
+                db.deleteObjectStore('saves');
+            }
+
             for (const store of this.stores) {
                 if (db.objectStoreNames.contains(store.name)) continue;
 

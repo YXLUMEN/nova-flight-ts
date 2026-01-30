@@ -37,7 +37,8 @@ export class ServerStorage {
             save_name: saveName,
             display_name: saveName,
             version: NbtCompound.VERSION,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            status: 'pending',
         } satisfies SaveMeta);
         request.onsuccess = () => resolve(Result.ok(undefined));
         request.onerror = () => resolve(Result.err(this.mapErr(request.error)));
@@ -45,7 +46,7 @@ export class ServerStorage {
         return promise;
     }
 
-    public static async updateWorld(saveName: string, compound: NbtCompound) {
+    public static async updateWorld(saveName: string, compound: NbtCompound, status = 'normal') {
         const db = await this.db.init();
         const tx = db.transaction(['save_meta', 'saves'], 'readwrite');
 
@@ -55,7 +56,8 @@ export class ServerStorage {
                 save_name: saveName,
                 display_name: saveName,
                 version: NbtCompound.VERSION,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                status: status,
             } satisfies SaveMeta);
             request.onsuccess = () => resolve();
             request.onerror = () => resolve(this.mapErr(request.error));
@@ -74,6 +76,7 @@ export class ServerStorage {
                 save_name: saveName,
                 data: NbtSerialization.toCompactBinary(compound),
                 version: NbtCompound.VERSION,
+                status: status,
             } satisfies Save);
             request.onsuccess = () => resolve();
             request.onerror = () => resolve(this.mapErr(request.error));
@@ -114,8 +117,12 @@ export class ServerStorage {
         }
 
         const save = result.ok().get();
-        if (!save.data || save.data.byteLength === 0 || save.version !== NbtCompound.VERSION) return null;
-        return NbtUnserialization.fromRootCompactBinary(save.data);
+        if (!save.data ||
+            save.data.byteLength === 0 ||
+            save.version !== NbtCompound.VERSION ||
+            save.status !== 'normal'
+        ) return null;
+        return NbtUnserialization.fromCompactBinary(save.data);
     }
 
     public static async loadPlayerInWorld(saveName: string, predicate: Predicate<PlayerData>): Promise<void> {
@@ -170,7 +177,7 @@ export class ServerStorage {
 
         const data = result.ok().get();
         if (!data.data || data.data.byteLength === 0 || data.version !== NbtCompound.VERSION) return null;
-        return NbtUnserialization.fromRootCompactBinary(data.data);
+        return NbtUnserialization.fromCompactBinary(data.data);
     }
 
     public static async deleteWorld(saveName: string): Promise<Result<void, Error>> {

@@ -206,7 +206,7 @@ export class NbtSerialization {
         }
     }
 
-    public static toSnbt(compound: NbtCompound, pretty = false, indent = 0): string {
+    public static toSNbt(compound: NbtCompound, pretty = false, indent = 0): string {
         const entries: string[] = [];
         const spacing = pretty ? ' '.repeat(indent) : '';
         const newline = pretty ? '\n' : '';
@@ -229,7 +229,7 @@ export class NbtSerialization {
                     valStr = `${value}`;
                     break;
                 case NbtTypes.Uint:
-                    valStr = `${value}U`;
+                    valStr = `${value}u`;
                     break;
                 case NbtTypes.Float:
                     valStr = `${value}f`;
@@ -245,11 +245,10 @@ export class NbtSerialization {
                         .toString()
                         .replace(/\\/g, '\\\\')
                         .replace(/"/g, '\\"');
-                    valStr = `"${escapedStr}""`;
+                    valStr = `"${escapedStr}"`;
                     break;
                 case NbtTypes.NumberArray:
                     const arrayItems = (value as number[])
-                        .map(n => `${n}d`)
                         .join(',');
                     valStr = `[${arrayItems}]`;
                     break;
@@ -260,11 +259,11 @@ export class NbtSerialization {
                     valStr = `[${items}]`;
                     break;
                 case NbtTypes.Compound:
-                    valStr = this.toSnbt((value as NbtCompound), pretty, indent + 2);
+                    valStr = this.toSNbt((value as NbtCompound), pretty, indent + 2);
                     break;
                 case NbtTypes.NbtList:
                     const listItems = (value as NbtCompound[])
-                        .map(comp => this.toSnbt(comp, pretty))
+                        .map(comp => this.toSNbt(comp, pretty))
                         .join(',');
                     valStr = `[${listItems}]`;
                     break;

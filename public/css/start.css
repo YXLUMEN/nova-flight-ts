@@ -14,7 +14,7 @@
     display: none;
 }
 
-.title {
+.start .title {
     width: 100%;
     padding: 24px 0;
     color: #fff;
@@ -42,6 +42,7 @@
 
 .save-list-item {
     & {
+        position: relative;
         display: flex;
         flex-direction: column;
 
@@ -66,6 +67,30 @@
     .save-name {
         color: #8a8a8a;
         pointer-events: none;
+    }
+
+    .right-box {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0 16px;
+
+        right: 0;
+        top: 0;
+        height: 100%;
+        pointer-events: none;
+    }
+
+    .status {
+        font-size: 24px;
+        color: #fff;
+        flex: .6;
+    }
+
+    .time {
+        color: #8a8a8a;
     }
 }
 

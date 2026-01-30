@@ -6,10 +6,6 @@ export class NbtCompound {
 
     private readonly entries: Map<string, Nbt> = new Map();
 
-    public getEntries(): ReadonlyMap<string, Nbt> {
-        return this.entries;
-    }
-
     public putInt8(key: string, value: number): this {
         console.assert(Number.isInteger(value) && value >= -128 && value <= 127, "Int8 out of range");
         this.entries.set(key, {type: NbtTypes.Int8, value});
@@ -155,6 +151,10 @@ export class NbtCompound {
         return this.entries.size === 0;
     }
 
+    public getEntries(): ReadonlyMap<string, Nbt> {
+        return this.entries;
+    }
+
     public getKeys(): Set<string> {
         return new Set<string>(this.entries.keys());
     }
@@ -165,5 +165,9 @@ export class NbtCompound {
 
     public getSize(): number {
         return this.entries.size;
+    }
+
+    public put(key: string, nbt: Nbt) {
+        this.entries.set(key, nbt);
     }
 }
