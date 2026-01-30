@@ -24,12 +24,15 @@
     <div class="save-list" id="save-list"></div>
 
     <div class="start-buttons" id="start-buttons">
-        <button class="btn" action="back">返回标题</button>
-        <button class="btn" action="create-world">新建世界</button>
+        <button class="btn always" action="back">返回标题</button>
+        <button class="btn always" action="create-world">新建世界</button>
 
-        <button class="btn disabled" id="load-world" action="load-world">进入世界</button>
-        <button class="btn disabled" id="delete-world" action="delete-world">删除存档</button>
-        <button class="btn" action="export-world">导出存档</button>
+        <button class="btn disabled" action="load-world">进入世界</button>
+        <button class="btn disabled" action="delete-world">删除存档</button>
+        <button class="btn disabled" action="rename">重命名</button>
+        <button class="btn disabled" action="export-world">导出存档</button>
+        <button class="btn disabled" action="export-world-snbt">导出为S-NBT</button>
+        <button class="btn disabled" action="import-world">导入存档</button>
     </div>
 
     <div class="save-name-label hidden" id="save-name-label">

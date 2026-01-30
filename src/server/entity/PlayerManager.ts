@@ -2,7 +2,7 @@ import type {UUID} from "../../apis/types.ts";
 import {ServerPlayerEntity} from "./ServerPlayerEntity.ts";
 import {NbtCompound} from "../../nbt/NbtCompound.ts";
 import type {NovaFlightServer} from "../NovaFlightServer.ts";
-import {ServerDB} from "../ServerDB.ts";
+import {ServerStorage} from "../ServerStorage.ts";
 import {GameProfile} from "./GameProfile.ts";
 import {ServerPlayNetworkHandler} from "../network/ServerPlayNetworkHandler.ts";
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
@@ -67,11 +67,11 @@ export class PlayerManager {
     }
 
     public async loadPlayerData(player: ServerPlayerEntity): Promise<NbtCompound | null> {
-        return await ServerDB.loadPlayer(player);
+        return await ServerStorage.loadPlayer(player);
     }
 
     protected savePlayerData(player: ServerPlayerEntity): Promise<void> {
-        return ServerDB.savePlayer(player);
+        return ServerStorage.savePlayer(player);
     }
 
     public async removePlayer(player: ServerPlayerEntity): Promise<void> {

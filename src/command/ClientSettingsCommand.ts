@@ -6,7 +6,7 @@ import {invoke} from "@tauri-apps/api/core";
 import {CommandError, IllegalArgumentError} from "../apis/errors.ts";
 import {IntArgumentType} from "./argument/IntArgumentType.ts";
 import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
-import {ServerDB} from "../server/ServerDB.ts";
+import {ServerStorage} from "../server/ServerStorage.ts";
 import {clamp} from "../utils/math/math.ts";
 
 export class ClientSettingsCommand {
@@ -161,7 +161,7 @@ export class ClientSettingsCommand {
                         .then(
                             literal<T>('reset_tutorial')
                                 .executes(() => {
-                                    return ServerDB.db.delete('user_info', 'tutorial');
+                                    return ServerStorage.db.delete('user_info', 'tutorial');
                                 })
                         )
                 )

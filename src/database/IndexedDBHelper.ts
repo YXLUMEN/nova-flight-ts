@@ -162,6 +162,6 @@ export class IndexedDBHelper {
 
     public static mapErr(error: DOMException | null): Error {
         if (!error) return new Error('Unknown error occurred.');
-        return new Error(`${error.name}:${error.message} because ${error.cause} at\n ${error.stack}`);
+        return error;
     }
 }

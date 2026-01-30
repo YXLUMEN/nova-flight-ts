@@ -71,11 +71,14 @@
 
 .start-buttons {
     & {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
         width: 50%;
-        gap: 32px;
+        gap: 24px 32px;
+    }
+
+    .btn {
+        width: 100%;
     }
 
     .btn:hover {

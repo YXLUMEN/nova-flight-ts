@@ -11,6 +11,8 @@ import {config} from "../../utils/uit.ts";
 import {Optional} from "../../utils/Optional.ts";
 import {NbtCompound} from "../../nbt/NbtCompound.ts";
 import {decodeColorToHex, encodeColorHex} from "../../utils/NetUtil.ts";
+import {NbtSerialization} from "../../nbt/NbtSerialization.ts";
+import {NbtUnserialization} from "../../nbt/NbtUnserialization.ts";
 
 export class PacketCodecs {
     public static readonly INT8: PacketCodec<number> = PacketCodecs.of(
@@ -69,13 +71,13 @@ export class PacketCodecs {
     );
 
     public static readonly NBT: PacketCodec<NbtCompound> = PacketCodecs.of(
-        (writer, value) => writer.pushBytes(value.toBinary()),
-        reader => NbtCompound.fromReader(reader)
+        (writer, value) => writer.pushBytes(NbtSerialization.toBinary(value)),
+        reader => NbtUnserialization.fromReader(reader),
     );
 
     public static readonly COMPACT_NBT: PacketCodec<NbtCompound> = PacketCodecs.of(
-        (writer, value) => writer.pushBytes(value.toCompactBinary()),
-        reader => NbtCompound.fromCompactBinary(reader.getBuffer())
+        (writer, value) => writer.pushBytes(NbtSerialization.toCompactBinary(value)),
+        reader => NbtUnserialization.fromCompactBinary(reader.getBuffer())
     );
 
     public static readonly COLOR_HEX: PacketCodec<string> = PacketCodecs.of(

@@ -4,8 +4,8 @@ import {UUIDUtil} from "../utils/UUIDUtil.ts";
 export class BinaryWriter {
     public static readonly MAX_BUFFER_SIZE = 16 * 1024 * 1024;
 
-    private buffer: Uint8Array;
-    private view: DataView;
+    private buffer: Uint8Array<ArrayBuffer>;
+    private view: DataView<ArrayBuffer>;
     private offset: number = 0;
 
     public constructor(initialSize = 128) {
@@ -108,7 +108,7 @@ export class BinaryWriter {
         this.pushBytes(UUIDUtil.parse(uuid));
     }
 
-    public toUint8Array(): Uint8Array {
+    public toUint8Array(): Uint8Array<ArrayBuffer> {
         return this.buffer.subarray(0, this.offset);
     }
 

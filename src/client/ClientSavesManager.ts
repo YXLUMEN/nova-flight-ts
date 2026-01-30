@@ -1,16 +1,16 @@
-import {ServerDB} from "../server/ServerDB.ts";
-import type {Save} from "../apis/Saves.ts";
+import {ServerStorage} from "../server/ServerStorage.ts";
+import type {SaveMeta} from "../apis/Saves.ts";
 import {error} from "@tauri-apps/plugin-log";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {documentDir, resolve} from "@tauri-apps/api/path";
-import {mkdir, writeFile} from "@tauri-apps/plugin-fs";
+import {mkdir, writeFile, writeTextFile} from "@tauri-apps/plugin-fs";
+import {NbtSerialization} from "../nbt/NbtSerialization.ts";
+import {NbtUnserialization} from "../nbt/NbtUnserialization.ts";
 
 export class ClientSavesManager {
     private readonly saveContainer: HTMLElement;
     private readonly saveList: HTMLElement;
     private readonly buttonBox: HTMLElement;
-    private readonly loadWorldBtn: HTMLElement;
-    private readonly deleteBtn: HTMLElement;
 
     private readonly inputContainer: HTMLElement;
     private readonly saveNameInput: HTMLInputElement;
@@ -22,8 +22,6 @@ export class ClientSavesManager {
         this.saveContainer = document.getElementById('start')!;
         this.saveList = document.getElementById('save-list')!;
         this.buttonBox = document.getElementById('start-buttons')!;
-        this.loadWorldBtn = document.getElementById('load-world')!;
-        this.deleteBtn = document.getElementById('delete-world')!;
 
         this.inputContainer = document.getElementById('save-name-label')!;
         this.saveNameInput = document.getElementById('save-name-input') as HTMLInputElement;
@@ -32,7 +30,7 @@ export class ClientSavesManager {
 
     public async choseSaves() {
         this.show();
-        await this.loadAllSaves();
+        await this.refreshSaves();
 
         const {promise, resolve} = Promise.withResolvers<string | null>();
         const ctrl = new AbortController();
@@ -47,10 +45,7 @@ export class ClientSavesManager {
             if (!item) return;
 
             this.chosenItem = target;
-
-            target.classList.add('chosen');
-            this.loadWorldBtn.classList.remove('disabled');
-            this.deleteBtn.classList.remove('disabled');
+            this.onChose();
         }, {signal: ctrl.signal});
 
         this.saveList.addEventListener('dblclick', event => {
@@ -85,29 +80,11 @@ export class ClientSavesManager {
             }
 
             if (action === 'create-world') {
-                this.inputSaveName()
-                    .then(input => {
-                        if (input === null) return;
-                        return this.createNewWorld(input);
-                    })
-                    .then(async (result) => {
-                        if (result === undefined) return;
-
-                        const exist = await ServerDB.db.exist('saves', result);
-                        const optional = exist.ok();
-                        if (optional.isEmpty() || optional.get()) {
-                            alert('无法生成唯一的存档名称');
-                            return;
-                        }
-
-                        resolve(result);
-                        ctrl.abort();
-                    })
-                    .catch(err => {
-                        alert('创建时出现错误');
-                        console.error(err);
-                        error(String(err));
-                    });
+                this.createNewWorld().then(result => {
+                    if (result === null) return;
+                    resolve(result);
+                    ctrl.abort();
+                });
                 return;
             }
 
@@ -124,8 +101,18 @@ export class ClientSavesManager {
                 return;
             }
 
+            if (action === 'rename') {
+                const saveName = this.chosenItem.dataset.saveName;
+                if (!saveName) {
+                    alert('未能读取此存档信息, 可能文件已损坏');
+                    return;
+                }
+                this.renameSave(saveName);
+                return;
+            }
+
             if (action === 'delete-world') {
-                this.deleteChosen();
+                this.deleteWorld();
                 return;
             }
 
@@ -136,14 +123,24 @@ export class ClientSavesManager {
                     return;
                 }
                 this.exportSave(saveName);
+                return;
+            }
+
+            if (action === 'export-world-snbt') {
+                const saveName = this.chosenItem.dataset.saveName;
+                if (!saveName) {
+                    alert('未能读取此存档信息, 可能文件已损坏');
+                    return;
+                }
+                this.exportAsSNbt(saveName);
             }
         }, {signal: ctrl.signal});
 
         return promise;
     }
 
-    private async loadAllSaves() {
-        const result = await ServerDB.db.getAll<Save>('saves');
+    private async refreshSaves() {
+        const result = await ServerStorage.db.getAll<SaveMeta>('save_meta');
         if (result.isErr()) {
             const err = result.unwrapErr();
             const msg = `[Client] Error while read saves, ${err.name}:${err.message} because ${err.cause} at\n ${err.stack}`;
@@ -157,6 +154,7 @@ export class ClientSavesManager {
         if (optional.isEmpty()) return;
 
         const saves = optional.get();
+        if (saves.length === 0) return;
 
         const frag = document.createDocumentFragment();
         for (const save of saves) {
@@ -166,50 +164,43 @@ export class ClientSavesManager {
         this.saveList.replaceChildren(frag);
     }
 
-    private inputSaveName() {
-        const {promise, resolve} = Promise.withResolvers<string | null>();
-        const ctrl = new AbortController();
+    private async createNewWorld() {
+        const input = await this.getInputSaveName();
+        if (!input) return null;
 
-        this.saveNameInput.value = 'New World';
-        this.inputContainer.classList.remove('hidden');
-        NovaFlightClient.getInstance().input.setDisabled(true);
+        if (ClientSavesManager.isinValidName(input)) {
+            alert('输入不合法, 字符长度必须在 1-120 内, 且不包含 下划线 外的特殊字符');
+            return null;
+        }
 
-        const settled = (result: string | null) => {
-            NovaFlightClient.getInstance().input.setDisabled(false);
-            this.inputContainer.classList.add('hidden');
-            resolve(result);
-            ctrl.abort();
-        };
-
-        this.inputButtonBox.addEventListener('click', event => {
-            const target = event.target;
-            if (!(target instanceof HTMLElement)) return;
-
-            const actionBtn = target.closest('.btn');
-            if (!actionBtn) return;
-
-            const action = actionBtn.getAttribute('action');
-            if (!action) return;
-            if (action === 'confirm') {
-                const input = this.saveNameInput.value.trim();
-                if (input.length === 0) {
-                    alert('输入不能为空');
-                    return;
-                }
-                settled(input);
-            } else if (action === 'cancel') {
-                settled(null);
+        const saveName = await this.genSaveName(input);
+        const result = await ServerStorage.insertWorld(saveName);
+        if (result.isErr()) {
+            const err = result.unwrapErr();
+            if (err.name === 'ConstraintError') {
+                alert('存在同名存档');
+                return null;
             }
-        }, {signal: ctrl.signal});
+            console.error(err);
+            alert('创建失败: 数据库异常');
+            return null;
+        }
 
-        return promise;
+        return saveName;
     }
 
-    private async createNewWorld(saveName: string) {
-        const exist = await ServerDB.db.exist('saves', saveName);
+    private static isinValidName(name: string) {
+        if (!name || name.length === 0 || name.length > 120) return true;
+        if (/[@#$%^&!<>:"/\\|?*\x00]/.test(name)) return true;
+        const reserved = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'];
+        return reserved.includes(name.toUpperCase());
+    }
+
+    private async genSaveName(saveName: string) {
+        const exist = await ServerStorage.db.exist('saves', saveName);
         if (exist.isOk() && !exist.unwrap()) return saveName;
 
-        const db = await ServerDB.db.init();
+        const db = await ServerStorage.db.init();
         const transaction = db.transaction('saves', 'readonly');
         const store = transaction.objectStore('saves');
 
@@ -258,7 +249,34 @@ export class ClientSavesManager {
         return promise;
     }
 
-    private async deleteChosen() {
+    private async renameSave(origin: string) {
+        const name = await this.getInputSaveName();
+        if (!name) return;
+
+        if (ClientSavesManager.isinValidName(name)) {
+            alert('输入不合法, 字符长度必须在 1-120 内, 且不包含 下划线 外的特殊字符');
+            return;
+        }
+
+        const result = await ServerStorage.db.get<SaveMeta>('save_meta', origin);
+        const optional = result.ok();
+        if (optional.isEmpty()) {
+            alert('未能读取到原始存档');
+            return;
+        }
+
+        const meta = optional.get();
+        meta.display_name = name;
+        const isSuccess = await ServerStorage.db.update('save_meta', meta);
+        if (isSuccess.isErr()) {
+            alert('修改失败');
+        } else {
+            alert('重命名成功');
+            await this.refreshSaves();
+        }
+    }
+
+    private async deleteWorld() {
         if (!this.chosenItem) return;
 
         const saveName = this.chosenItem.dataset.saveName;
@@ -272,7 +290,7 @@ export class ClientSavesManager {
 
         if (!confirm('确认删除次存档')) return;
 
-        const result = await ServerDB.deleteWorld(saveName);
+        const result = await ServerStorage.deleteWorld(saveName);
         result
             .map(() => {
                 this.chosenItem?.remove();
@@ -293,31 +311,124 @@ export class ClientSavesManager {
             await mkdir(saveDir, {recursive: true});
 
             const worldPath = await resolve(saveDir, `world.dat`);
-            const save = await ServerDB.loadWorld(saveName);
-
+            const save = await ServerStorage.loadWorld(saveName);
             if (!save) {
-                alert('导出失败');
+                alert('未找到存档');
                 return;
             }
-            await writeFile(worldPath, save.toRootCompactBinary());
-            alert('已导出置 "文档"')
+            await writeFile(worldPath, NbtSerialization.toRootCompactBinary(save));
+
+            const playerDir = await resolve(saveDir, `players`);
+            await mkdir(playerDir, {recursive: true});
+
+            await ServerStorage.loadPlayerInWorld(saveName, (data) => {
+                resolve(playerDir, `${data.uuid}.dat`)
+                    .then(path => writeFile(path, new Uint8Array(data.data)))
+                    .catch(err => console.error(err));
+                return true;
+            });
+
+            alert('已导出至 "文档"');
         } catch (err) {
             alert('导出失败');
             console.error(err);
         }
     }
 
+    private async exportAsSNbt(saveName: string) {
+        try {
+            const documentPath = await documentDir();
+            const saveDir = await resolve(documentPath, 'NovaFlight', 'saves', saveName);
+            await mkdir(saveDir, {recursive: true});
+
+            const worldPath = await resolve(saveDir, `world.snbt`);
+            const save = await ServerStorage.loadWorld(saveName);
+            if (!save) {
+                alert('未找到存档');
+                return;
+            }
+            await writeTextFile(worldPath, NbtSerialization.toSnbt(save, true));
+
+            const playerDir = await resolve(saveDir, `players`);
+            await mkdir(playerDir, {recursive: true});
+
+            await ServerStorage.loadPlayerInWorld(saveName, (data) => {
+                resolve(playerDir, `${data.uuid}.snbt`)
+                    .then(path => {
+                        const nbt = NbtUnserialization.fromCompactBinary(data.data)
+                        writeTextFile(path, NbtSerialization.toSnbt(nbt, true))
+                    })
+                    .catch(err => console.error(err));
+                return true;
+            });
+
+            alert('已导出至 "文档"');
+        } catch (err) {
+            alert('导出失败');
+            console.error(err);
+        }
+    }
+
+    private getInputSaveName() {
+        const {promise, resolve} = Promise.withResolvers<string | null>();
+        const ctrl = new AbortController();
+
+        this.saveNameInput.value = 'New World';
+        this.inputContainer.classList.remove('hidden');
+        NovaFlightClient.getInstance().input.setDisabled(true);
+
+        const settled = (result: string | null) => {
+            NovaFlightClient.getInstance().input.setDisabled(false);
+            this.inputContainer.classList.add('hidden');
+            resolve(result);
+            ctrl.abort();
+        };
+
+        this.inputButtonBox.addEventListener('click', event => {
+            const target = event.target;
+            if (!(target instanceof HTMLElement)) return;
+
+            const actionBtn = target.closest('.btn');
+            if (!actionBtn) return;
+
+            const action = actionBtn.getAttribute('action');
+            if (!action) return;
+            if (action === 'confirm') {
+                const input = this.saveNameInput.value.trim();
+                if (input.length === 0) {
+                    alert('输入不能为空');
+                    return;
+                }
+                settled(input);
+            } else if (action === 'cancel') {
+                settled(null);
+            }
+        }, {signal: ctrl.signal});
+
+        return promise;
+    }
+
+    private onChose() {
+        this.chosenItem?.classList.add('chosen');
+        for (const element of this.buttonBox.children) {
+            if (element.classList.contains('always')) continue;
+            element.classList.remove('disabled');
+        }
+    }
+
     private deChose() {
         this.chosenItem = null;
 
-        this.loadWorldBtn.classList.add('disabled');
-        this.deleteBtn.classList.add('disabled');
-
         this.saveList.querySelectorAll('.save-list-item.chosen')
             .forEach(element => element.classList.remove('chosen'));
+
+        for (const element of this.buttonBox.children) {
+            if (element.classList.contains('always')) continue;
+            element.classList.add('disabled');
+        }
     }
 
-    private createSaveItem(save: Save): HTMLDivElement {
+    private createSaveItem(save: SaveMeta): HTMLDivElement {
         const item = document.createElement('div');
         item.className = 'save-list-item';
         item.dataset.saveName = save.save_name;

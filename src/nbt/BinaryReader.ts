@@ -2,10 +2,10 @@ import type {UUID} from "../apis/types.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
 
 export class BinaryReader {
-    private view: DataView;
+    private view: DataView<ArrayBuffer>;
     private offset = 0;
 
-    public constructor(bytes: Uint8Array) {
+    public constructor(bytes: Uint8Array<ArrayBuffer>) {
         this.view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     }
 
@@ -109,7 +109,7 @@ export class BinaryReader {
         return UUIDUtil.stringify(bytes);
     }
 
-    public readSlice(len: number): Uint8Array {
+    public readSlice(len: number): Uint8Array<ArrayBuffer> {
         if (len < 0 || len > this.bytesRemaining()) {
             throw new RangeError(`Cannot read slice of ${len} bytes, only ${this.bytesRemaining()} available`);
         }

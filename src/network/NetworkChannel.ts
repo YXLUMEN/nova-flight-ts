@@ -160,7 +160,7 @@ export abstract class NetworkChannel implements Channel {
         this.ws!.send(buffer);
     }
 
-    protected decodePayload(buf: Uint8Array): Payload | null {
+    protected decodePayload(buf: Uint8Array<ArrayBuffer>): Payload | null {
         const reader = new BinaryReader(buf);
 
         const header = reader.readInt8();

@@ -1,14 +1,19 @@
-export interface Save {
-    save_name: string;
+export interface SaveMeta {
+    readonly save_name: string;
     display_name: string;
-    data: Uint8Array<ArrayBufferLike>;
     version: number;
     timestamp: number;
 }
 
+export interface Save {
+    readonly save_name: string;
+    readonly data: Uint8Array<ArrayBuffer>;
+    readonly version: number;
+}
+
 export interface PlayerData {
-    save_name: string,
-    uuid: string,
-    data: Uint8Array<ArrayBufferLike>,
+    readonly save_name: string,
+    readonly uuid: string,
+    data: Uint8Array<ArrayBuffer>,
     version: number,
 }

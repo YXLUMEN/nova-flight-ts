@@ -75,7 +75,7 @@ export class ClientIntegratedNetWorkChannel implements Channel {
         this.worker.postMessage({type: "packet", packet: writer.toUint8Array()});
     }
 
-    private decodePayload(buf: Uint8Array): Payload | null {
+    private decodePayload(buf: Uint8Array<ArrayBuffer>): Payload | null {
         const reader = new BinaryReader(buf);
 
         const idStr = reader.readString();

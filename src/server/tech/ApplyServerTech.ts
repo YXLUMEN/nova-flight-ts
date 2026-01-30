@@ -423,7 +423,7 @@ export class ApplyServerTech {
         if (tech.isUnlocked(Techs.HIGH_TEMPERATURE_ALLOY)) {
             const base = stack.get(DataComponentTypes.MAX_HEAT);
             if (base) {
-                stack.set(DataComponentTypes.MAX_HEAT, base * 1.5);
+                stack.set(DataComponentTypes.MAX_HEAT, Math.ceil(base * 1.5));
             }
         }
     }

@@ -619,11 +619,13 @@ export class NovaFlightClient {
     }
 
     private async serverReadFile(data: any) {
+        if (!this.server) return;
+
         const path = data.path as string;
         const res = await resolveResource(`resources/nova-flight/${path}`);
 
         if (!(await exists(res))) {
-            this.server?.postMessage({
+            this.server.postMessage({
                 type: 'readFile',
                 id: data.id,
                 buffer: null
@@ -632,7 +634,7 @@ export class NovaFlightClient {
         }
 
         const buffer = await readFile(res);
-        this.server?.postMessage({
+        this.server.postMessage({
             type: 'readFile',
             id: data.id,
             buffer: buffer

@@ -369,7 +369,7 @@ export class ServerWorld extends World implements NbtSerializable {
         const stageNbt = nbt.getCompound('Stage');
         if (stageNbt) this.stage.readNBT(stageNbt);
         this.phaseScore = nbt.getUint('PhaseScore');
-        this.stageDifficulty = nbt.getUint('Difficulty');
+        this.stageDifficulty = nbt.getUint('Difficulty', 1);
     }
 
     private loadEntity(nbtList: NbtCompound[]) {

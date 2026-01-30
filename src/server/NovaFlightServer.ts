@@ -169,7 +169,7 @@ export abstract class NovaFlightServer implements CommandOutput {
 
     public abstract saveWorld(compound: NbtCompound): Promise<void>;
 
-    public abstract deleteWorld(worldName: string): Promise<Result<boolean, Error>>;
+    public abstract deleteWorld(worldName: string): Promise<Result<void, Error>>;
 
     public abstract readSave(): Promise<NbtCompound | null>;
 

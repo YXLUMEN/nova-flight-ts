@@ -3,7 +3,7 @@ import {RegistryManager} from "../registry/RegistryManager.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {UUID} from "../apis/types.ts";
 import type {GameProfile} from "./entity/GameProfile.ts";
-import {ServerDB} from "./ServerDB.ts";
+import {ServerStorage} from "./ServerStorage.ts";
 import {TutorialStage} from "../configs/TutorialStage.ts";
 import {TutorialEvents} from "./event/TutorialEvents.ts";
 import {PlayAudioS2CPacket} from "../network/packet/s2c/PlayAudioS2CPacket.ts";
@@ -37,9 +37,9 @@ export class IntegratedServer extends NovaFlightServer {
 
         await this.startGame(manager);
 
-        const isTutorial = await ServerDB.db.get<string>('user_info', 'tutorial');
+        const isTutorial = await ServerStorage.db.get<string>('user_info', 'tutorial');
         if (isTutorial.ok().isEmpty() && this.world) {
-            await ServerDB.db.update('user_info', {name: 'tutorial'});
+            await ServerStorage.db.update('user_info', {name: 'tutorial'});
 
             this.world.stage = TutorialStage;
             this.world.stage.reset();
@@ -55,16 +55,16 @@ export class IntegratedServer extends NovaFlightServer {
         return Promise.resolve();
     }
 
-    public override deleteWorld(worldName: string): Promise<Result<boolean, Error>> {
-        return ServerDB.deleteWorld(worldName);
-    }
-
     public override readSave(): Promise<NbtCompound | null> {
-        return ServerDB.loadWorld(this.worldName);
+        return ServerStorage.loadWorld(this.worldName);
     }
 
     public override saveWorld(compound: NbtCompound): Promise<void> {
-        return ServerDB.updateWorldSave(this.profile!.name, compound);
+        return ServerStorage.updateWorld(this.profile!.name, compound);
+    }
+
+    public override deleteWorld(worldName: string): Promise<Result<void, Error>> {
+        return ServerStorage.deleteWorld(worldName);
     }
 
     public override isHost(profile: GameProfile): boolean {
