@@ -83,8 +83,8 @@ export class BallisticsUtils {
         missileSpeed: number,
         turnRateLimit: number,
         deltaTime: number,
-        maxSteps: number = 20,
-        sqHitRadius: number = 36,
+        maxSteps: number = 8,
+        sqHitRadius: number = 64,
     ): number {
         const mp = shooterPos.clone();
         const tp = targetPos.clone();
@@ -99,9 +99,7 @@ export class BallisticsUtils {
 
             const desiredYaw = this.getLeadYaw(mp, tp, targetVel, missileSpeed);
 
-            // 限制转向速率
             let deltaYaw = wrapRadians(desiredYaw - currentYaw);
-
             if (Math.abs(deltaYaw) > maxTurn) {
                 deltaYaw = Math.sign(deltaYaw) * maxTurn;
             }
@@ -112,7 +110,6 @@ export class BallisticsUtils {
                 Math.sin(currentYaw) * stepSpeed,
             );
 
-            // 命中判定
             const dx = tp.x - mp.x;
             const dy = tp.y - mp.y;
             if (dx * dx + dy * dy < sqHitRadius) {

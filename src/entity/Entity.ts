@@ -482,28 +482,23 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     public readNBT(nbt: NbtCompound): void {
-        try {
-            const posNbt = nbt.getNumberArray('Pos');
-            this.setPosition(posNbt[0], posNbt[1]);
+        const posNbt = nbt.getNumberArray('Pos');
+        this.setPosition(posNbt[0], posNbt[1]);
 
-            const velocity = nbt.getNumberArray('Velocity');
-            this.setVelocity(velocity[0], velocity[1]);
+        const velocity = nbt.getNumberArray('Velocity');
+        this.setVelocity(velocity[0], velocity[1]);
 
-            this.setYaw(nbt.getDouble('Yaw'));
-            this.setMovementSpeed(nbt.getDouble('Speed'));
-            this.invulnerable = nbt.getBoolean('Invulnerable', false);
-            this.uuid = nbt.getString('UUID') as UUID;
+        this.setYaw(nbt.getDouble('Yaw'));
+        this.setMovementSpeed(nbt.getDouble('Speed'));
+        this.invulnerable = nbt.getBoolean('Invulnerable', false);
+        this.uuid = nbt.getString('UUID') as UUID;
 
-            const tags = nbt.getStringArray('Tags');
-            if (tags.length > 0) {
-                this.normalTags.clear();
-                for (const tag of tags) {
-                    this.normalTags.add(tag);
-                }
+        const tags = nbt.getStringArray('Tags');
+        if (tags.length > 0) {
+            this.normalTags.clear();
+            for (const tag of tags) {
+                this.normalTags.add(tag);
             }
-        } catch (err) {
-            console.error(`Error when readNBT: ${err}`);
-            throw err;
         }
     }
 

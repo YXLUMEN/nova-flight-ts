@@ -191,7 +191,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             this.wasFiring = isFiring;
         }
 
-        if (isFiring && hasAmmo && (item.canFire(stack) || item.getCooldown(stack) < 3)) {
+        if (isFiring && hasAmmo && (item.canFire(stack))) {
             item.tryFire(stack, world, this);
         }
 

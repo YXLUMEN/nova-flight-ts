@@ -11,6 +11,8 @@ import {Audios} from "../sound/Audios.ts";
 import type {Result} from "../utils/result/Result.ts";
 import {ServerNetworkChannel} from "./network/ServerNetworkChannel.ts";
 import {PlayerManager} from "./entity/PlayerManager.ts";
+import {Log} from "../worker/log.ts";
+import {NoResultsError, StatusError} from "../apis/errors.ts";
 
 export class IntegratedServer extends NovaFlightServer {
     private readonly hostUUID: UUID;
@@ -55,12 +57,29 @@ export class IntegratedServer extends NovaFlightServer {
         return Promise.resolve();
     }
 
-    public override readSave(): Promise<NbtCompound | null> {
-        return ServerStorage.loadWorld(this.worldName);
+    public override async readSave(): Promise<NbtCompound | null> {
+        const result = await ServerStorage.loadWorld(this.worldName);
+        if (result.isOk()) return result.unwrap();
+
+        const err = result.unwrapErr();
+        if (err instanceof NoResultsError) {
+        } else if (err instanceof StatusError) {
+            if (err.cause === 'broken') {
+                Log.message('存档已损坏', 'warning');
+            }
+            Log.warn(err.message);
+        } else {
+            Log.error(err.message);
+        }
+
+        return null;
     }
 
-    public override saveWorld(compound: NbtCompound): Promise<void> {
-        return ServerStorage.updateWorld(this.profile!.name, compound);
+    public override async saveWorld(compound: NbtCompound): Promise<void> {
+        const result = await ServerStorage.updateWorld(this.profile!.name, compound);
+        if (result.isErr()) {
+            Log.error(result.unwrapErr().message);
+        }
     }
 
     public override deleteWorld(worldName: string): Promise<Result<void, Error>> {

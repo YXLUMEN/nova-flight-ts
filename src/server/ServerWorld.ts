@@ -338,8 +338,6 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public writeNBT(root: NbtCompound): NbtCompound {
-        root.putString('WorldName', this.server.worldName);
-
         const entityList: NbtCompound[] = [];
         this.entities.forEach(entity => {
             if (!entity.shouldSave()) return;

@@ -34,7 +34,7 @@ export class Items {
     public static AIR = this.register("air", new Item(new Item.Settings()));
     public static readonly EMP_WEAPON = this.register("emp_weapon", new EMPWeapon(new Item.Settings()
         .attackDamage(0)
-        .maxCooldown(200)
+        .maxCooldown(240)
         .component(DataComponentTypes.EFFECT_RANGE, 480)
     ));
     public static readonly INTO_VOID_WEAPON: Item;

@@ -8,6 +8,8 @@ import {ServerPlayNetworkHandler} from "../network/ServerPlayNetworkHandler.ts";
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 import type {ServerWorld} from "../ServerWorld.ts";
+import {Log} from "../../worker/log.ts";
+import {NoResultsError} from "../../apis/errors.ts";
 
 export class PlayerManager {
     private readonly server: NovaFlightServer;
@@ -67,11 +69,21 @@ export class PlayerManager {
     }
 
     public async loadPlayerData(player: ServerPlayerEntity): Promise<NbtCompound | null> {
-        return await ServerStorage.loadPlayer(player);
+        const result = await ServerStorage.loadPlayer(player);
+        if (result.isOk()) return result.unwrap();
+
+        const err = result.unwrapErr();
+        if (err instanceof NoResultsError) return null;
+        Log.error(err.message);
+
+        return null;
     }
 
-    protected savePlayerData(player: ServerPlayerEntity): Promise<void> {
-        return ServerStorage.savePlayer(player);
+    protected async savePlayerData(player: ServerPlayerEntity): Promise<void> {
+        const result = await ServerStorage.savePlayer(player);
+        if (result.isErr()) {
+            Log.error(result.unwrapErr().message);
+        }
     }
 
     public async removePlayer(player: ServerPlayerEntity): Promise<void> {

@@ -29,8 +29,8 @@ import type {MutVec2} from "../utils/math/MutVec2.ts";
 import type {EntityIndex} from "./entity/EntityIndex.ts";
 
 export abstract class World {
-    public static readonly WORLD_W = 1692;
-    public static readonly WORLD_H = 1030;
+    public static readonly WORLD_W = 1760;
+    public static readonly WORLD_H = 1120;
 
     public readonly events: GeneralEventBus<IEvents> = GeneralEventBus.getEventBus();
     public empBurst: number = 0

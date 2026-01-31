@@ -12,6 +12,7 @@
     "core:window:allow-set-fullscreen",
     "core:window:allow-close",
     "fs:default",
+    "fs:allow-exists",
     "fs:allow-read",
     "fs:allow-resource-read-recursive",
     "fs:allow-resource-write",

@@ -14,7 +14,7 @@ import {ServerNetworkHandler} from "./network/ServerNetworkHandler.ts";
 import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.ts";
 import {Result} from "../utils/result/Result.ts";
 import type {ServerChannel} from "./network/ServerChannel.ts";
-import {error} from "../worker/log.ts";
+import {Log} from "../worker/log.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static readonly SAVE_PATH = `saves/save-${NbtCompound.VERSION}.dat`;
@@ -88,7 +88,7 @@ export abstract class NovaFlightServer implements CommandOutput {
             const nbt = this.world!.saveAll();
             await this.saveWorld(nbt);
         } catch (err) {
-            error(`[Server] At NovaFlightServer starting, Error while saving game: ${err}`);
+            Log.error(`[Server] At NovaFlightServer starting, Error while saving game: ${err}`);
         }
 
         this.last = performance.now();
@@ -106,7 +106,7 @@ export abstract class NovaFlightServer implements CommandOutput {
                 `[Server] Error while load save ${error.name}:${error.message} because ${error.cause} at\n${error.stack}` :
                 `[Server] Error while loading save ${error}`;
 
-            console.error(msg);
+            Log.error(msg);
             return Result.err(msg);
         }
     }
@@ -127,7 +127,7 @@ export abstract class NovaFlightServer implements CommandOutput {
                 this.accumulator -= WorldConfig.mbps;
             }
         } catch (error) {
-            console.error(`Server runtime error: ${error}`);
+            Log.error(`[Server] Server runtime error: ${error}`);
             this.stopGame().catch(error => console.error(error));
             throw error;
         }
@@ -150,7 +150,7 @@ export abstract class NovaFlightServer implements CommandOutput {
             const nbt = this.world!.saveAll();
             await this.saveWorld(nbt);
         } catch (err) {
-            error(`[Server] At NovaFlightServer, Error while saving game: ${err}`);
+            Log.error(`[Server] At NovaFlightServer, Error while saving game: ${err}`);
         }
 
         this.networkHandler!.disconnectAllPlayer();

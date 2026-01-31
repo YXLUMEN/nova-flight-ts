@@ -5,33 +5,34 @@ const isDev = import.meta.env.MODE === 'development';
 
 const isServer = typeof window === 'undefined';
 
-const defaultConfig = config({
+const DEFAULT_CONFIG = config({
     tick: 20,
     mbps: 0.05,
     per: 50,
     fps: 75,
     perFrame: 1000 / 75,
-    version: '26v08'
+    version: '26v09',
+    gameVersion: 1,
 });
 
 const WorldConfig = status({
     lowPowerMode: false,
 
-    tick: defaultConfig.tick,
-    mbps: defaultConfig.mbps,
-    per: defaultConfig.per,
+    tick: DEFAULT_CONFIG.tick,
+    mbps: DEFAULT_CONFIG.mbps,
+    per: DEFAULT_CONFIG.per,
 
-    lastFps: defaultConfig.fps.valueOf(),
-    fps: defaultConfig.fps.valueOf(),
-    perFrame: defaultConfig.perFrame.valueOf(),
+    lastFps: DEFAULT_CONFIG.fps.valueOf(),
+    fps: DEFAULT_CONFIG.fps.valueOf(),
+    perFrame: DEFAULT_CONFIG.perFrame.valueOf(),
 
     enableCameraOffset: !isDev,
 
     follow: true,
     autoShoot: false,
-    version: defaultConfig.version,
+    version: DEFAULT_CONFIG.version,
     port: 25566,
     serverAddr: '127.0.0.1:25566',
 });
 
-export {defaultConfig, WorldConfig, isDev, isServer};
+export {DEFAULT_CONFIG, WorldConfig, isDev, isServer};

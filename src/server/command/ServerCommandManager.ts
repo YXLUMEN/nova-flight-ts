@@ -8,6 +8,8 @@ import {GameModeCommand} from "../../command/GameModeCommand.ts";
 import {SummonEntityCommand} from "../../command/SummonEntityCommand.ts";
 import {StageCommand} from "../../command/StageCommand.ts";
 import {KickCommand} from "../../command/KickCommand.ts";
+import {GiveCommand} from "../../command/GiveCommand.ts";
+import {ScoreCommand} from "../../command/ScoreCommand.ts";
 
 export class ServerCommandManager extends CommandManager {
     public readonly source: ServerCommandSource;
@@ -23,6 +25,7 @@ export class ServerCommandManager extends CommandManager {
     }
 
     public registry(): void {
+        // noinspection DuplicatedCode
         KillCommand.registry(this.dispatcher);
         GameModeCommand.registry(this.dispatcher);
         WorldDifficultCommand.registry(this.dispatcher);
@@ -30,5 +33,7 @@ export class ServerCommandManager extends CommandManager {
         SummonEntityCommand.registry(this.dispatcher);
         StageCommand.registry(this.dispatcher);
         KickCommand.registry(this.dispatcher);
+        GiveCommand.registry(this.dispatcher);
+        ScoreCommand.registry(this.dispatcher);
     }
 }

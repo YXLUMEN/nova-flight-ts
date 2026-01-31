@@ -21,7 +21,7 @@ export class IndexedDBHelper {
 
         request.onupgradeneeded = (e) => {
             const db = request.result;
-            if (e.oldVersion < 5) {
+            if (e.oldVersion < 6) {
                 db.deleteObjectStore('saves');
             }
 

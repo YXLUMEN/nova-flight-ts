@@ -1,5 +1,7 @@
+use crate::file::chose_dir;
 use crate::network::wss::{is_open, set_open, start_server, stop_server};
 
+mod file;
 mod network;
 mod window;
 
@@ -37,7 +39,8 @@ pub fn run() {
             start_server,
             stop_server,
             set_open,
-            is_open
+            is_open,
+            chose_dir,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

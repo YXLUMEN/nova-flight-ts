@@ -1,38 +1,40 @@
 import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
 
-const autoId = new AtomicInteger();
+export class WorkerFS {
+    private static autoInt = new AtomicInteger();
 
-export function readFile(path: string, timeout: number = 1000): Promise<ArrayBuffer | null> {
-    const {promise, resolve, reject} = Promise.withResolvers<ArrayBuffer>();
-    const ctrl = new AbortController();
-    const id = autoId.get();
+    public static readFile(path: string, timeout: number = 1000): Promise<ArrayBuffer | null> {
+        const {promise, resolve, reject} = Promise.withResolvers<ArrayBuffer>();
+        const ctrl = new AbortController();
+        const id = this.autoInt.get();
 
-    const timeoutId = setTimeout(() => {
-        reject(`Timeout while receive ${path}`);
-        ctrl.abort();
-    }, timeout);
+        const timeoutId = setTimeout(() => {
+            reject(`Timeout while receive ${path}`);
+            ctrl.abort();
+        }, timeout);
 
-    self.addEventListener('message', event => {
-        if (event.data.type !== 'readFile' || event.data.id !== id) return;
+        self.addEventListener('message', event => {
+            if (event.data.type !== 'readFile' || event.data.id !== id) return;
 
-        clearTimeout(timeoutId);
-        resolve(event.data.buffer);
-        ctrl.abort();
-    }, {signal: ctrl.signal});
+            clearTimeout(timeoutId);
+            resolve(event.data.buffer);
+            ctrl.abort();
+        }, {signal: ctrl.signal});
 
-    self.postMessage({
-        type: "readFile",
-        id,
-        path,
-    });
+        self.postMessage({
+            type: "readFile",
+            id,
+            path,
+        });
 
-    return promise;
-}
+        return promise;
+    }
 
-export function writeFile(path: string, buffer: ArrayBuffer) {
-    self.postMessage({
-        type: "writeFile",
-        path,
-        buffer
-    }, {transfer: [buffer]});
+    public static writeFile(path: string, buffer: ArrayBuffer) {
+        self.postMessage({
+            type: "writeFile",
+            path,
+            buffer
+        }, {transfer: [buffer]});
+    }
 }

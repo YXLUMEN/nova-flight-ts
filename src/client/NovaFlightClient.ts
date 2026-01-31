@@ -15,7 +15,7 @@ import {DataLoader} from "./DataLoader.ts";
 import {check} from "@tauri-apps/plugin-updater";
 import {StartScreen} from "./render/ui/StartScreen.ts";
 import {ClientPlayNetworkHandler} from "./network/ClientPlayNetworkHandler.ts";
-import {error, info} from "@tauri-apps/plugin-log";
+import {error, info, warn} from "@tauri-apps/plugin-log";
 import {ClientCommandManager} from "./command/ClientCommandManager.ts";
 import {invoke} from "@tauri-apps/api/core";
 import {ServerWorker} from "../worker/ServerWorker.ts";
@@ -28,8 +28,7 @@ import {PlayerInputC2SPacket} from "../network/packet/c2s/PlayerInputC2SPacket.t
 import {documentDir, resolve, resolveResource} from "@tauri-apps/api/path";
 import {exists, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs";
 import {ClientSavesManager} from "./ClientSavesManager.ts";
-import {warn} from "../worker/log.ts";
-import {confirm} from "@tauri-apps/plugin-dialog";
+import {confirm, message} from "@tauri-apps/plugin-dialog";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -405,6 +404,9 @@ export class NovaFlightClient {
                     if (level === 'info') info(event.data.message);
                     else if (level === 'warn') warn(event.data.message);
                     else if (level === 'error') error(event.data.message);
+                    break;
+                case 'message':
+                    message(event.data.message, {kind: event.data.kind});
                     break;
             }
         };

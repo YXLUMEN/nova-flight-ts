@@ -73,7 +73,7 @@
         position: absolute;
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: end;
         justify-content: center;
         padding: 0 16px;
 
@@ -84,9 +84,25 @@
     }
 
     .status {
-        font-size: 24px;
+        font-size: 20px;
         color: #fff;
         flex: .6;
+    }
+
+    .status.available {
+        color: #62ff47;
+    }
+
+    .status.broken {
+        color: #ff3333;
+    }
+
+    .status.pending {
+        color: #cccccc;
+    }
+
+    .status.outdated {
+        color: #ffdd00;
     }
 
     .time {

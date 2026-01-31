@@ -9,6 +9,7 @@ import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacke
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
+import {type NbtCompound} from "../../nbt/NbtCompound.ts";
 
 export class MissileEntity extends RocketEntity {
     public static readonly lockedEntity = new WeakMap<Entity, number>();
@@ -207,10 +208,6 @@ export class MissileEntity extends RocketEntity {
         return this.lastTarget;
     }
 
-    public override shouldSave(): boolean {
-        return false;
-    }
-
     protected acquireTarget(): Entity | null {
         const world = this.getWorld();
 
@@ -256,5 +253,17 @@ export class MissileEntity extends RocketEntity {
             return false;
         }
         return true;
+    }
+
+    public override writeNBT(nbt: NbtCompound): NbtCompound {
+        super.writeNBT(nbt);
+
+        nbt.putUint('Age', this.age);
+        return nbt;
+    }
+
+    public override readNBT(nbt: NbtCompound) {
+        super.readNBT(nbt);
+        this.age = nbt.getUint('Age', 0);
     }
 }

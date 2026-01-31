@@ -1,12 +1,16 @@
 import {ServerStorage} from "../server/ServerStorage.ts";
 import type {SaveMeta} from "../apis/Saves.ts";
-import {error} from "@tauri-apps/plugin-log";
+import {error, warn} from "@tauri-apps/plugin-log";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {documentDir, resolve} from "@tauri-apps/api/path";
-import {mkdir, readFile, writeFile, writeTextFile} from "@tauri-apps/plugin-fs";
+import {exists, mkdir, readFile, readTextFile, writeFile, writeTextFile} from "@tauri-apps/plugin-fs";
 import {NbtSerialization} from "../nbt/NbtSerialization.ts";
 import {NbtUnserialization} from "../nbt/NbtUnserialization.ts";
-import {confirm, message, open} from "@tauri-apps/plugin-dialog";
+import {confirm, message} from "@tauri-apps/plugin-dialog";
+import {invoke} from "@tauri-apps/api/core";
+import {NbtCompound} from "../nbt/NbtCompound.ts";
+import {UUIDUtil} from "../utils/UUIDUtil.ts";
+import {BinaryWriter} from "../nbt/BinaryWriter.ts";
 
 export class ClientSavesManager {
     private readonly saveContainer: HTMLElement;
@@ -30,8 +34,10 @@ export class ClientSavesManager {
     }
 
     public async choseSaves() {
+        await ServerStorage.updateStatus();
+        await this.refreshSaveDisplay();
+
         this.show();
-        await this.refreshSaves();
 
         const {promise, resolve} = Promise.withResolvers<string | null>();
         const ctrl = new AbortController();
@@ -132,7 +138,7 @@ export class ClientSavesManager {
         return promise;
     }
 
-    private async refreshSaves() {
+    private async refreshSaveDisplay(): Promise<void> {
         const result = await ServerStorage.db.getAll<SaveMeta>('save_meta');
         if (result.isErr()) {
             const err = result.unwrapErr();
@@ -265,7 +271,7 @@ export class ClientSavesManager {
             console.error(isSuccess.unwrapErr());
             await message('修改失败', {kind: 'error'});
         } else {
-            await this.refreshSaves();
+            await this.refreshSaveDisplay();
         }
     }
 
@@ -308,21 +314,31 @@ export class ClientSavesManager {
             await mkdir(saveDir, {recursive: true});
 
             const worldPath = await resolve(saveDir, `world.dat`);
-            const save = await ServerStorage.loadWorld(saveName);
-            if (!save) {
-                await message('未找到存档');
+            const result = await ServerStorage.loadWorld(saveName);
+            if (result.isErr()) {
+                const msg = result.unwrapErr().message || '未找到存档';
+                await message(msg, {kind: 'warning'});
                 return;
             }
-            await writeFile(worldPath, NbtSerialization.toRootCompactBinary(save));
+            await writeFile(worldPath, NbtSerialization.toRootCompactBinary(result.ok().get()));
 
             const playerDir = await resolve(saveDir, `players`);
             await mkdir(playerDir, {recursive: true});
 
-            await ServerStorage.loadPlayerInWorld(saveName, (data) => {
-                resolve(playerDir, `${data.uuid}.dat`)
-                    .then(path => writeFile(path, new Uint8Array(data.data)))
-                    .catch(err => console.error(err));
-                return true;
+            // 添加头部
+            const writer = new BinaryWriter();
+            writer.writeInt32(NbtCompound.MAGIC);
+            writer.writeInt16(NbtCompound.VERSION);
+            const header = writer.toUint8Array();
+
+            await ServerStorage.loadPlayerInWorld(saveName, async (data) => {
+                try {
+                    const path = await resolve(playerDir, `${data.uuid}.dat`);
+                    await writeFile(path, header);
+                    return await writeFile(path, data.data, {append: true});
+                } catch (err) {
+                    return console.error(err);
+                }
             });
 
             await message('已导出至 "文档"');
@@ -339,12 +355,13 @@ export class ClientSavesManager {
             await mkdir(saveDir, {recursive: true});
 
             const worldPath = await resolve(saveDir, `world.snbt`);
-            const save = await ServerStorage.loadWorld(saveName);
-            if (!save) {
-                await message('未找到存档', {kind: 'warning'});
+            const result = await ServerStorage.loadWorld(saveName);
+            if (result.isErr()) {
+                const msg = result.unwrapErr().message || '未找到存档';
+                await message(msg, {kind: 'warning'});
                 return;
             }
-            await writeTextFile(worldPath, NbtSerialization.toSNbt(save, true));
+            await writeTextFile(worldPath, NbtSerialization.toSNbt(result.ok().get(), true));
 
             const playerDir = await resolve(saveDir, `players`);
             await mkdir(playerDir, {recursive: true});
@@ -366,56 +383,95 @@ export class ClientSavesManager {
         }
     }
 
-    // TODO 完整导入
     private async importSave() {
-        const file = await open({
-            multiple: false,
-            directory: false,
-            filters: [{name: 'Archive', extensions: ['dat', 'snbt']}]
-        });
-        if (!file) return;
+        let results: ChosenDirResult | undefined;
+        try {
+            results = await invoke('chose_dir');
+        } catch (err) {
+            console.error(err);
+            await message('未能读取目录', {kind: 'error'});
+        }
+        if (!results || results.root.length === 0 || results.files.length === 0) return;
 
-        const buffer = await readFile(file);
-        if (buffer.length === 0) return;
+        const root = results.root;
+        const rootName = root.split(/[\\/]/).pop();
+        if (!rootName) return;
 
-        if (file.endsWith('.dat')) {
-            try {
-                const nbt = NbtUnserialization.fromRootCompactBinary(buffer);
+        const saveName = await this.tryInsertWorld(rootName);
+        if (!saveName) return;
 
-                const date = new Date().toISOString();
-                const status = nbt === null ? 'broken' : 'normal';
+        const alreadyImport = new Set<string>();
+        const canNotRead: string[] = [];
 
-                const worldName = nbt?.getString('WorldName', date) ?? date;
-                const saveName = await this.tryInsertWorld(worldName);
-                if (!saveName || !nbt) return;
+        for (const fullPath of results.files) {
+            const path = fullPath.split(/[\\/]/).pop();
+            if (!path) continue;
 
-                await ServerStorage.updateWorld(saveName, nbt, status);
-                await message('导入完成');
-            } catch (err) {
-                console.error(err);
-                await message('解析失败', {kind: 'error'});
+            const i = path.lastIndexOf('.');
+            if (i <= 0) continue;
+
+            const ext = path.substring(i + 1);
+            if (ext !== 'dat' && ext !== 'snbt') continue;
+
+            const fileName = path.substring(0, i);
+            if (alreadyImport.has(fileName)) continue;
+
+            if (!await exists(fullPath)) {
+                canNotRead.push(path);
+                continue;
             }
-            return;
+
+            const parseNbt = async () => {
+                try {
+                    let compound: NbtCompound | null;
+                    if (ext === 'dat') {
+                        compound = NbtUnserialization.fromRootCompactBinary(await readFile(fullPath));
+                    } else {
+                        compound = NbtUnserialization.fromSNbt(await readTextFile(fullPath));
+                    }
+                    if (compound === null) canNotRead.push(path);
+                    else alreadyImport.add(fileName);
+
+                    return compound;
+                } catch (err) {
+                    console.error(err);
+                    return null;
+                }
+            };
+
+            if (fileName === 'world') {
+                const compound = await parseNbt();
+                if (compound === null) break;
+
+                const saveResult = await ServerStorage.updateWorld(saveName, compound);
+                if (saveResult.isErr()) {
+                    canNotRead.push(path);
+                    console.error(saveResult.unwrapErr());
+                }
+                continue;
+            }
+
+            const playerFolderIndex = fullPath.lastIndexOf('players');
+            if (playerFolderIndex <= 0 || !UUIDUtil.isValidUUID(fileName)) continue;
+
+            const compound = await parseNbt();
+            if (compound === null) continue;
+
+            const playerResult = await ServerStorage.savePlayerNbt(saveName, fileName, compound);
+            if (playerResult.isErr()) {
+                canNotRead.push(path);
+                console.error(playerResult.unwrapErr());
+            }
         }
 
-        if (file.endsWith('.snbt')) {
-            try {
-                const snbt = new TextDecoder("utf-8", {fatal: true}).decode(buffer);
-                const nbt = NbtUnserialization.fromSNbt(snbt);
-
-                const date = new Date().toISOString();
-                const worldName = nbt.getString('WorldName', date);
-                const saveName = await this.tryInsertWorld(worldName);
-                if (!saveName) return;
-
-                await ServerStorage.updateWorld(saveName, nbt);
-                await message('导入完成');
-                await this.refreshSaves();
-            } catch (err) {
-                console.error(err);
-                await message('解析失败', {kind: 'error'});
-            }
+        if (canNotRead.length > 0) {
+            await message(`导入完成, 但存在 ${canNotRead.length} 个文件无法加载`);
+            await warn(`导入时无法加载: ${JSON.stringify(canNotRead)}`);
+        } else {
+            await message('导入完成');
         }
+
+        await this.refreshSaveDisplay();
     }
 
     private getInputSaveName(): Promise<string | null> {
@@ -494,8 +550,8 @@ export class ClientSavesManager {
         right.className = 'right-box';
 
         const status = document.createElement('div');
-        status.className = 'status';
-        status.textContent = save.status === 'normal' ? '' : save.status;
+        status.classList.add('status', save.status);
+        status.textContent = save.status === 'available' ? '' : save.status;
 
         const timestamp = document.createElement('div');
         timestamp.className = 'time';
@@ -514,4 +570,9 @@ export class ClientSavesManager {
         this.saveContainer.classList.add('hidden');
         this.deChose();
     }
+}
+
+type ChosenDirResult = {
+    root: string;
+    files: string[];
 }

@@ -1,14 +1,16 @@
 import {IndexedDBHelper} from "../database/IndexedDBHelper.ts";
 import {NbtCompound} from "../nbt/NbtCompound.ts";
-import type {Predicate, UUID} from "../apis/types.ts";
+import type {Consumer, UUID} from "../apis/types.ts";
 import type {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
 import {Result} from "../utils/result/Result.ts";
-import type {PlayerData, Save, SaveMeta} from "../apis/Saves.ts";
+import type {MetaStatus, PlayerData, Save, SaveMeta} from "../apis/Saves.ts";
 import {NbtSerialization} from "../nbt/NbtSerialization.ts";
 import {NbtUnserialization} from "../nbt/NbtUnserialization.ts";
+import {NoResultsError, StatusError, VersionError} from "../apis/errors.ts";
+import {DEFAULT_CONFIG} from "../configs/WorldConfig.ts";
 
 export class ServerStorage {
-    public static readonly db = new IndexedDBHelper('nova-flight-server', 5, [
+    public static readonly db = new IndexedDBHelper('nova-flight-server', 6, [
         {
             name: 'saves',
             keyPath: 'save_name'
@@ -36,7 +38,8 @@ export class ServerStorage {
         const request = store.add({
             save_name: saveName,
             display_name: saveName,
-            version: NbtCompound.VERSION,
+            format_version: NbtCompound.VERSION,
+            game_version: DEFAULT_CONFIG.gameVersion,
             timestamp: Date.now(),
             status: 'pending',
         } satisfies SaveMeta);
@@ -46,16 +49,17 @@ export class ServerStorage {
         return promise;
     }
 
-    public static async updateWorld(saveName: string, compound: NbtCompound, status = 'normal') {
+    public static async updateWorld(saveName: string, compound: NbtCompound, status: MetaStatus = 'available'): Promise<Result<void, Error>> {
         const db = await this.db.init();
         const tx = db.transaction(['save_meta', 'saves'], 'readwrite');
 
-        const metaTask = new Promise<Error | void>((resolve) => {
+        const metaTask = new Promise<void | Error>((resolve) => {
             const store = tx.objectStore('save_meta');
             const request = store.put({
                 save_name: saveName,
                 display_name: saveName,
-                version: NbtCompound.VERSION,
+                format_version: NbtCompound.VERSION,
+                game_version: DEFAULT_CONFIG.gameVersion,
                 timestamp: Date.now(),
                 status: status,
             } satisfies SaveMeta);
@@ -66,17 +70,14 @@ export class ServerStorage {
         const metaError = await metaTask;
         if (metaError) {
             tx.abort();
-            console.error(metaError);
-            return;
+            return Result.err(metaError);
         }
 
-        const saveTask = new Promise<Error | void>((resolve) => {
+        const saveTask = new Promise<void | Error>((resolve) => {
             const store = tx.objectStore('saves');
             const request = store.put({
                 save_name: saveName,
                 data: NbtSerialization.toCompactBinary(compound),
-                version: NbtCompound.VERSION,
-                status: status,
             } satisfies Save);
             request.onsuccess = () => resolve();
             request.onerror = () => resolve(this.mapErr(request.error));
@@ -85,54 +86,118 @@ export class ServerStorage {
         const saveError = await saveTask;
         if (saveError) {
             tx.abort();
-            console.error(saveError);
+            return Result.err(saveError);
         }
+
+        return Result.ok(undefined);
     }
 
-    public static async savePlayer(player: ServerPlayerEntity): Promise<void> {
+    public static async savePlayer(player: ServerPlayerEntity): Promise<Result<void, Error>> {
         const saveName = this.getSaveName(player);
-        if (!saveName) return;
+        if (!saveName) return Result.err(new NoResultsError());
 
         const uuid: UUID = player.getUUID();
         const compound = new NbtCompound();
         player.writeNBT(compound);
 
-        const result = await this.db.update('player_data', {
+        return this.savePlayerNbt(saveName, uuid, compound);
+    }
+
+    public static async savePlayerNbt(saveName: string, uuid: UUID, compound: NbtCompound): Promise<Result<void, Error>> {
+        const db = await this.db.init();
+        const tx = db.transaction(['save_meta', 'player_data'], 'readwrite');
+
+        const metaTask = new Promise<boolean>((resolve) => {
+            const store = tx.objectStore('save_meta');
+            const request = store.getKey(saveName);
+            request.onsuccess = () => resolve(!!request.result);
+            request.onerror = () => resolve(false);
+        });
+
+        if (!metaTask) {
+            return Result.err(new NoResultsError(`World ${saveName} not found.`));
+        }
+
+        const {promise, resolve} = Promise.withResolvers<Result<void, Error>>();
+        const store = tx.objectStore('player_data');
+        const request = store.put({
             save_name: saveName,
             uuid,
             data: NbtSerialization.toCompactBinary(compound),
-            version: NbtCompound.VERSION
+            format_version: NbtCompound.VERSION,
+            game_version: DEFAULT_CONFIG.gameVersion,
         } satisfies PlayerData);
+        request.onsuccess = () => resolve(Result.ok(undefined));
+        request.onerror = () => resolve(Result.err(this.mapErr(request.error)));
 
-        if (result.isErr()) {
-            console.error(result.unwrapErr());
-        }
+        return promise;
     }
 
-    public static async loadWorld(saveName: string): Promise<NbtCompound | null> {
-        const result = await this.db.get<Save>('saves', saveName);
-        if (result.isErr()) {
-            console.error(result.unwrapErr());
-            return null;
-        }
-
-        const save = result.ok().get();
-        if (!save.data ||
-            save.data.byteLength === 0 ||
-            save.version !== NbtCompound.VERSION ||
-            save.status !== 'normal'
-        ) return null;
-        return NbtUnserialization.fromCompactBinary(save.data);
-    }
-
-    public static async loadPlayerInWorld(saveName: string, predicate: Predicate<PlayerData>): Promise<void> {
-        const exists = await this.db.exist('save_meta', saveName);
-        if (exists.isOk() && !exists.ok().get()) return;
-
+    public static async loadWorld(saveName: string): Promise<Result<NbtCompound, Error>> {
         const db = await this.db.init();
-        const {promise, resolve} = Promise.withResolvers<Error | void>();
+        const tx = db.transaction(['save_meta', 'saves'], 'readonly');
 
-        const tx = db.transaction('player_data', 'readonly');
+        const metaTask = new Promise<SaveMeta | Error>((resolve) => {
+            const store = tx.objectStore('save_meta');
+            const request = store.get(saveName);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => resolve(this.mapErr(request.error));
+        });
+
+        const meta = await metaTask;
+        if (meta instanceof Error) {
+            return Result.err(meta);
+        }
+
+        if (meta.format_version !== NbtCompound.VERSION) {
+            return Result.err(new VersionError(`Current target version is "${meta.format_version}", but require "${NbtCompound.VERSION}".`));
+        }
+
+        if (meta.status === 'broken' || meta.status === 'pending') {
+            return Result.err(new StatusError('Status exception', {cause: meta.status}));
+        }
+
+        const saveTask = new Promise<Save | Error>((resolve) => {
+            const store = tx.objectStore('saves');
+            const request = store.get(saveName);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => resolve(this.mapErr(request.error));
+        });
+
+        const save = await saveTask;
+        if (save instanceof Error) {
+            return Result.err(save);
+        }
+
+        if (save.data.length === 0) {
+            return Result.err(new NoResultsError());
+        }
+
+        try {
+            const compound = NbtUnserialization.fromCompactBinary(save.data);
+            return Result.ok(compound);
+        } catch (err) {
+            return Result.err(this.mapErr(err));
+        }
+    }
+
+    public static async loadPlayerInWorld(saveName: string, consumer: Consumer<PlayerData>): Promise<Result<void, Error>> {
+        const db = await this.db.init();
+        const tx = db.transaction(['save_meta', 'player_data'], 'readonly');
+
+        const metaTask = new Promise<void | Error>((resolve) => {
+            const store = tx.objectStore('save_meta');
+            const request = store.get(saveName);
+            request.onsuccess = () => resolve();
+            request.onerror = () => resolve(this.mapErr(request.error));
+        });
+
+        const meta = await metaTask;
+        if (meta) {
+            return Result.err(meta);
+        }
+
+        const {promise, resolve} = Promise.withResolvers<void | Error>();
         const store = tx.objectStore('player_data');
         const range = IDBKeyRange.lowerBound([saveName]);
 
@@ -149,41 +214,47 @@ export class ServerStorage {
                 return;
             }
 
-            if (!predicate(cursor.value)) {
-                resolve();
-                return;
-            }
+            consumer(cursor.value);
             cursor.continue();
         };
         request.onerror = () => resolve(this.mapErr(request.error));
 
-        const isError = await promise;
-        if (isError) {
-            console.error(isError);
+        const error = await promise;
+        if (error) {
+            return Result.err(error);
         }
+        return Result.ok(undefined);
     }
 
-    public static async loadPlayer(player: ServerPlayerEntity): Promise<NbtCompound | null> {
+    public static async loadPlayer(player: ServerPlayerEntity): Promise<Result<NbtCompound, Error>> {
         const saveName = this.getSaveName(player);
-        if (!saveName) return null;
+        if (!saveName) return Result.err(new NoResultsError());
 
         const uuid: UUID = player.getProfile().clientId;
 
         const result = await this.db.get<PlayerData>('player_data', [saveName, uuid]);
         if (result.isErr()) {
-            console.error(result.unwrapErr());
-            return null;
+            return Result.err(result.unwrapErr());
         }
 
-        const data = result.ok().get();
-        if (!data.data || data.data.byteLength === 0 || data.version !== NbtCompound.VERSION) return null;
-        return NbtUnserialization.fromCompactBinary(data.data);
+        const playerData = result.ok().get();
+        if (!playerData.data || playerData.data.length === 0) {
+            return Result.err(new NoResultsError());
+        }
+
+        if (playerData.format_version !== NbtCompound.VERSION) {
+            return Result.err(new VersionError(`Target version is ${playerData.format_version}, but require ${NbtCompound.VERSION}.`));
+        }
+
+        try {
+            const compound = NbtUnserialization.fromCompactBinary(playerData.data);
+            return Result.ok(compound);
+        } catch (err) {
+            return Result.err(this.mapErr(err));
+        }
     }
 
     public static async deleteWorld(saveName: string): Promise<Result<void, Error>> {
-        const exists = await this.db.exist('save_meta', saveName);
-        if (exists.isOk() && !exists.ok().get()) return Result.ok(undefined);
-
         const db = await this.db.init();
         const {promise, resolve} = Promise.withResolvers<Result<void, Error>>();
 
@@ -207,8 +278,7 @@ export class ServerStorage {
         if (!saveName) return false;
 
         const uuid: UUID = player.getProfile().clientId;
-        const key = [saveName, uuid];
-        const result = await this.db.delete('player_data', key);
+        const result = await this.db.delete('player_data', [saveName, uuid]);
         return result
             .mapErr(err => console.error(err))
             .ok()
@@ -222,6 +292,44 @@ export class ServerStorage {
         if (!profile) return null;
 
         return profile.name;
+    }
+
+    public static checkMetaStatus(save: SaveMeta) {
+        let status = save.status;
+        if (save.game_version !== DEFAULT_CONFIG.gameVersion) {
+            status = 'outdated';
+        }
+
+        if (save.format_version !== NbtCompound.VERSION) {
+            status = 'broken';
+        }
+
+        return status;
+    }
+
+    public static async updateStatus() {
+        const {promise, resolve} = Promise.withResolvers<void>();
+
+        const db = await this.db.init();
+        const tx = db.transaction('save_meta', 'readwrite');
+        const store = tx.objectStore('save_meta');
+
+        const request = store.openCursor();
+        request.onsuccess = () => {
+            const cursor = request.result;
+            if (!cursor) {
+                resolve();
+                return;
+            }
+
+            const meta = cursor.value as SaveMeta;
+            meta.status = this.checkMetaStatus(meta);
+            cursor.update(meta);
+            cursor.continue();
+        };
+        request.onerror = () => resolve();
+
+        return promise;
     }
 
     private static mapErr(error: unknown) {
