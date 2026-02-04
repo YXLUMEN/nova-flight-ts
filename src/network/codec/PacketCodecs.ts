@@ -9,10 +9,14 @@ import type {Constructor, FunctionReturn, Supplier, UUID} from "../../apis/types
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {config} from "../../utils/uit.ts";
 import {Optional} from "../../utils/Optional.ts";
-import {NbtCompound} from "../../nbt/NbtCompound.ts";
+import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {decodeColorToHex, encodeColorHex} from "../../utils/NetUtil.ts";
 import {NbtSerialization} from "../../nbt/NbtSerialization.ts";
 import {NbtUnserialization} from "../../nbt/NbtUnserialization.ts";
+import type {Codec} from "../../serialization/Codec.ts";
+import type {NbtElement} from "../../nbt/element/NbtElement.ts";
+import {NbtEnd} from "../../nbt/element/NbtEnd.ts";
+import {NbtTypes} from "../../nbt/NbtTypes.ts";
 
 export class PacketCodecs {
     public static readonly INT8: PacketCodec<number> = PacketCodecs.of(
@@ -71,8 +75,8 @@ export class PacketCodecs {
     );
 
     public static readonly NBT: PacketCodec<NbtCompound> = PacketCodecs.of(
-        (writer, value) => writer.pushBytes(NbtSerialization.toBinary(value)),
-        reader => NbtUnserialization.fromReader(reader),
+        (writer, value) => value.write(writer),
+        reader => NbtCompound.TYPE.read(reader),
     );
 
     public static readonly COMPACT_NBT: PacketCodec<NbtCompound> = PacketCodecs.of(
@@ -224,6 +228,41 @@ export class PacketCodecs {
             throw new Error(`${size} elements exceeded max size of: ${maxSize}`);
         }
         writer.writeVarUint(size);
+    }
+
+    public static nbt(): PacketCodec<NbtElement> {
+        return config({
+            encode(writer: BinaryWriter, nbt: NbtElement) {
+                if (nbt === NbtEnd.INSTANCE) {
+                    throw new TypeError("Expected non-null compound tag");
+                }
+                writer.writeInt8(nbt.getType());
+                nbt.write(writer);
+            },
+            decode(reader: BinaryReader): NbtElement {
+                const type = reader.readInt8();
+                if (type === 0) return NbtEnd.INSTANCE;
+                return NbtTypes.getTypeByIndex(type).read(reader);
+            }
+        });
+    }
+
+    public static registryCodec<T>(codec: Codec<T>): PacketCodec<T> {
+        const packetCodec = this.nbt();
+        return config({
+            encode(writer: BinaryWriter, object: T) {
+                const nbt = codec.encode(object);
+                packetCodec.encode(writer, nbt);
+            },
+            decode(reader: BinaryReader): T {
+                const nbt = packetCodec.decode(reader);
+                const obj = codec.decode(nbt);
+                if (obj === null) {
+                    throw new Error(`Failed to decode: ${nbt}`);
+                }
+                return obj;
+            }
+        });
     }
 
     /**

@@ -7,12 +7,15 @@ import {Items} from "../item/Items.ts";
 import {deepFreeze} from "../utils/uit.ts";
 import {DamageTypes} from "../entity/damage/DamageTypes.ts";
 import {EntitySelectorOptions} from "../command/EntitySelectorOptions.ts";
+import {NbtTypes} from "../nbt/NbtTypes.ts";
 
 export class RegistryManager {
     private readonly registers = new Map<RegistryKey<any>, Registry<any>>();
 
     public async registerAll(): Promise<void> {
         if (Object.isFrozen(this)) throw new Error('Registry already registered');
+
+        NbtTypes.init();
 
         this.registers.set(RegistryKeys.SOUND_EVENT, Registries.SOUND_EVENT);
         this.registers.set(RegistryKeys.AUDIOS, Registries.AUDIOS);

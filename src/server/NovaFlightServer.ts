@@ -1,4 +1,4 @@
-import {NbtCompound} from "../nbt/NbtCompound.ts";
+import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {Constructor, Consumer, UUID} from "../apis/types.ts";
 import {ServerWorld} from "./ServerWorld.ts";
@@ -83,14 +83,6 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.networkChannel.send(new ServerReadyS2CPacket());
         self.postMessage({type: 'server_start'});
 
-        try {
-            await this.playerManager.saveAllPlayerData();
-            const nbt = this.world!.saveAll();
-            await this.saveWorld(nbt);
-        } catch (err) {
-            Log.error(`[Server] At NovaFlightServer starting, Error while saving game: ${err}`);
-        }
-
         this.last = performance.now();
         this.tickInterval = setInterval(this.bindTick, 25);
     }
@@ -99,6 +91,7 @@ export abstract class NovaFlightServer implements CommandOutput {
         try {
             const saves = await this.readSave();
             if (!saves) return Result.ok(false);
+
             this.world!.readNBT(saves);
             return Result.ok(true);
         } catch (error) {

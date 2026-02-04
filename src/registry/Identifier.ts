@@ -1,26 +1,20 @@
 import type {Codec} from "../serialization/Codec.ts";
-import {NbtCompound} from "../nbt/NbtCompound.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {Comparable} from "../apis/types.ts";
 import {StringReader} from "../brigadier/StringReader.ts";
+import {Codecs} from "../serialization/Codecs.ts";
+import {NbtString} from "../nbt/element/NbtString.ts";
 
 export class Identifier implements Comparable {
     private static readonly validNamespace = /^[a-z0-9_.-]+$/;
     private static readonly validPath = /^[a-z0-9_.\/-]+$/;
     private static readonly validCharReg = /[0-9a-z_\-.+\/:]/;
 
-    public static readonly CODEC: Codec<Identifier> = {
-        encode(value: Identifier): NbtCompound {
-            const nbt = new NbtCompound();
-            nbt.putString('id', value.toString());
-            return nbt;
-        },
-
-        decode(nbt: NbtCompound): Identifier | null {
-            return Identifier.tryParse(nbt.getString('id'));
-        }
-    };
+    public static readonly CODEC: Codec<Identifier> = Codecs.of(
+        value => NbtString.of(value.toString()),
+        input => Identifier.tryParse(input.value)
+    );
     public static readonly PACKET_CODEC: PacketCodec<Identifier> = PacketCodecs.of(
         (writer, value) => writer.writeString(value.toString()),
         reader => this.splitOn(reader.readString())

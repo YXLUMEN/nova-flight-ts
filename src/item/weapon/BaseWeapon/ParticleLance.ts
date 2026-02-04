@@ -19,10 +19,10 @@ export class ParticleLance extends BaseWeapon {
     public static readonly CHARGING_TIME = 10;
 
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity, _slot: number, selected: boolean): void {
-        if (stack.getOrDefault(DataComponentTypes.SCHEDULE_FIRE, false)) {
+        if (stack.get(DataComponentTypes.SCHEDULE_FIRE)) {
             if (!selected) {
-                stack.set(DataComponentTypes.SCHEDULE_FIRE, false);
-                stack.set(DataComponentTypes.CHARGING_PROGRESS, 0);
+                stack.remove(DataComponentTypes.SCHEDULE_FIRE);
+                stack.remove(DataComponentTypes.CHARGING_PROGRESS);
                 return;
             }
 
@@ -31,10 +31,12 @@ export class ParticleLance extends BaseWeapon {
                 if (!world.isClient) this.onFire(stack, world as ServerWorld, holder);
 
                 this.setCooldown(stack, this.getFireRate(stack));
+
                 stack.set(DataComponentTypes.SCHEDULE_FIRE, false);
             } else if (world.isClient) {
                 ClientEffect.spawnChargingParticles(world as ClientWorld, holder, 4, this.getUiColor());
             }
+
             stack.set(DataComponentTypes.CHARGING_PROGRESS, Math.max(charging, 0));
             return;
         }

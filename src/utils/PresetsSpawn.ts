@@ -36,8 +36,8 @@ function modifyEntity(
     mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(maxHealth + scaledHp | 0);
     mob.setHealth(mob.getMaxHealth());
 
-    if (Math.random() > 0.7) {
-        const scaledShield = Math.max(ctx.difficulty, scaledHp / 5);
+    if (ctx.difficulty > 2 && Math.random() > 0.7) {
+        const scaledShield = Math.max(ctx.difficulty, scaledHp / 6);
         mob.addStatusEffect(
             new StatusEffectInstance(StatusEffects.SHIELD, -1, scaledShield),
             null

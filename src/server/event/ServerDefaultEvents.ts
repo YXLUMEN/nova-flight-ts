@@ -16,18 +16,17 @@ import type {DamageSource} from "../../entity/damage/DamageSource.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {Items} from "../../item/Items.ts";
 import type {PhaseLasers} from "../../item/weapon/PhaseLasers.ts";
-import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
-import {Audios} from "../../sound/Audios.ts";
 import {Techs} from "../../tech/Techs.ts";
-import {AudioStopS2CPacket} from "../../network/packet/s2c/AudioStopS2CPacket.ts";
 import type {Explosion} from "../../world/Explosion.ts";
 import {DamageTypes} from "../../entity/damage/DamageTypes.ts";
+import {BaseBossEntity} from "../../entity/mob/BaseBossEntity.ts";
+import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
 
 export class ServerDefaultEvents {
     public static registerEvent(world: ServerWorld) {
-        const eventBus = GeneralEventBus.getEventBus();
+        const events = GeneralEventBus.getEventBus();
 
-        eventBus.on(EVENTS.MOB_DAMAGE, event => {
+        events.on(EVENTS.MOB_DAMAGE, event => {
             const mob = event.mob as MobEntity;
             const damageSource = event.damageSource as DamageSource;
 
@@ -49,11 +48,11 @@ export class ServerDefaultEvents {
             }
 
             if (damageSource.isOf(DamageTypes.ARC) && attacker.getTechs().isUnlocked(Techs.STATIC_ELECTRICITY)) {
-                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, 20, 0), attacker);
+                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, 40, 0), attacker);
             }
         });
 
-        eventBus.on(EVENTS.MOB_KILLED, event => {
+        events.on(EVENTS.MOB_KILLED, event => {
             const damageSource = event.damageSource as DamageSource;
 
             const player = damageSource.getAttacker();
@@ -77,8 +76,8 @@ export class ServerDefaultEvents {
             }
         });
 
-        eventBus.on(EVENTS.BOSS_KILLED, event => {
-            if (!event.mob) {
+        events.on(EVENTS.BOSS_KILLED, event => {
+            if (!event.entity) {
                 world.stage.nextPhase();
                 return;
             }
@@ -88,10 +87,8 @@ export class ServerDefaultEvents {
 
                 world.stage.reset();
                 world.stage.setStage('P6');
-                if (Math.random() > 0.8) {
-                    world.getNetworkChannel().send(new PlayAudioS2CPacket(Audios.BOSS_PHASE, 0.6));
-                }
-                const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 64);
+
+                const boss = new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64);
                 boss.setPosition(World.WORLD_W / 2, 64);
 
                 const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
@@ -99,23 +96,29 @@ export class ServerDefaultEvents {
                 world.spawnEntity(mark);
             });
 
-            world.stage.nextPhase();
-            world.getNetworkChannel().send(new AudioStopS2CPacket(Audios.BOSS_PHASE));
+            if (world.getDifficulty() > 0) {
+                world.setDifficulty(world.getDifficulty() + 1);
+                world.getNetworkChannel().send(new DifficultChangeS2CPacket(world.getDifficulty()));
+            }
+
+            if (world.stage.getCurrentName() === 'P6') {
+                world.stage.nextPhase();
+            }
         });
 
-        eventBus.on(EVENTS.EMP_BURST, event => {
+        events.on(EVENTS.EMP_BURST, event => {
             const player = event.entity as Entity;
             if (player instanceof ServerPlayerEntity && player.getTechs().isUnlocked(Techs.ELE_OSCILLATION)) {
                 world.empBurst = event.duration;
             }
         });
 
-        eventBus.on(EVENTS.STAGE_ENTER, event => {
+        events.on(EVENTS.STAGE_ENTER, event => {
             if (event.name === 'P6' || event.name === 'mP3') {
                 if (BossEntity.hasBoss) return;
-                world.getNetworkChannel().send(new PlayAudioS2CPacket(Audios.BOSS_PHASE, 1));
+
                 world.schedule(10, () => {
-                    const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 64);
+                    const boss = new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64);
                     boss.setPosition(World.WORLD_W / 2, 64);
 
                     const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
@@ -127,7 +130,7 @@ export class ServerDefaultEvents {
             world.playSound(null, SoundEvents.PHASE_CHANGE);
         });
 
-        eventBus.on(EVENTS.EXPLOSION, ({explosion}) => {
+        events.on(EVENTS.EXPLOSION, ({explosion}) => {
             const behaviour = explosion.getOpts().behaviour;
             explosion.getOpts().behaviour = 'triggered';
             if (behaviour !== 'triggered') {

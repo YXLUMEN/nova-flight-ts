@@ -1,7 +1,7 @@
 import {access, mkdir, readFile, rename, rm, unlink, writeFile} from "fs/promises";
 import {join} from "path";
 import type {UUID} from "../../../src/apis/types.ts";
-import {NbtCompound} from "../../../src/nbt/NbtCompound.ts";
+import {NbtCompound} from "../../../src/nbt/element/NbtCompound.ts";
 import type {ServerPlayerEntity} from "../../../src/server/entity/ServerPlayerEntity.ts";
 import {Result} from "../../../src/utils/result/Result.ts";
 

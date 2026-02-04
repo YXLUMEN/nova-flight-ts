@@ -9,7 +9,7 @@ import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacke
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
-import {type NbtCompound} from "../../nbt/NbtCompound.ts";
+import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 
 export class MissileEntity extends RocketEntity {
     public static readonly lockedEntity = new WeakMap<Entity, number>();
@@ -47,19 +47,14 @@ export class MissileEntity extends RocketEntity {
         if (!this.adjustPosition()) return;
 
         const world = this.getWorld();
-
         if (!world.isClient && this.lastTarget !== this.target) {
-            const packet = new MissileLockS2CPacket(this.getId(), this.target?.getId() ?? 0);
-            world.getNetworkChannel().send(packet);
+            this.lastTarget = this.target;
+            world.getNetworkChannel().send(new MissileLockS2CPacket(this.getId(), this.target?.getId() ?? 0));
         }
 
         // 燃料耗尽
         if (this.age > this.maxLifetimeTicks) {
-            if (this.target) {
-                world.events.emit(EVENTS.ENTITY_UNLOCKED, {missile: this, lastTarget: this.target});
-            }
             this.target = null;
-            this.lastTarget = null;
             return;
         }
 
@@ -105,9 +100,7 @@ export class MissileEntity extends RocketEntity {
         }
 
         // 干扰逻辑
-        if (this.shouldApplyDecoy()) {
-            this.applyDecoy();
-        }
+        this.applyDecoy();
 
         // 重新锁定
         if (this.reLockCD > 0) this.reLockCD--;
@@ -125,7 +118,6 @@ export class MissileEntity extends RocketEntity {
                 return;
             }
 
-            this.lastTarget = this.target;
             this.target = target;
             this.reLockCD = this.maxReLockCD;
 
@@ -157,10 +149,6 @@ export class MissileEntity extends RocketEntity {
         );
     }
 
-    public shouldApplyDecoy(): boolean {
-        return false;
-    }
-
     public applyDecoy(): void {
     }
 
@@ -175,9 +163,8 @@ export class MissileEntity extends RocketEntity {
                 MissileEntity.lockedEntity.delete(this.target);
             }
         }
-
-        this.getWorld().events.emit(EVENTS.ENTITY_UNLOCKED, {missile: this, lastTarget: this.target});
         this.target = null;
+        this.lastTarget = null;
     }
 
     public isIgnite(): boolean {
@@ -264,6 +251,6 @@ export class MissileEntity extends RocketEntity {
 
     public override readNBT(nbt: NbtCompound) {
         super.readNBT(nbt);
-        this.age = nbt.getUint('Age', 0);
+        this.age = nbt.getU32('Age', 0);
     }
 }

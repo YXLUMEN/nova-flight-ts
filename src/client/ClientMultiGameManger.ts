@@ -95,12 +95,12 @@ export class ClientMultiGameManger {
     }
 
     public show(): void {
-        NovaFlightClient.getInstance().input.setDisabled(true);
+        NovaFlightClient.getInstance().input.setHandlerDisabled(true);
         this.multiGame.classList.remove('hidden');
     }
 
     public hide(): void {
-        NovaFlightClient.getInstance().input.setDisabled(false);
+        NovaFlightClient.getInstance().input.setHandlerDisabled(false);
         this.multiGame.classList.add('hidden');
     }
 

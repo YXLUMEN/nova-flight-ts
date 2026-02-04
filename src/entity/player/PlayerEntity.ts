@@ -10,7 +10,7 @@ import type {Item} from "../../item/Item.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
 import {Items} from "../../item/Items.ts";
 import type {EMPWeapon} from "../../item/weapon/EMPWeapon.ts";
-import {type NbtCompound} from "../../nbt/NbtCompound.ts";
+import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {clamp} from "../../utils/math/math.ts";
 import type {TechTree} from "../../tech/TechTree.ts";
 import {DataTracker, type DataTrackerSerializedEntry} from "../data/DataTracker.ts";
@@ -21,7 +21,6 @@ import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
 import type {Constructor} from "../../apis/types.ts";
 import {Techs} from "../../tech/Techs.ts";
 import {Weapon} from "../../item/weapon/Weapon.ts";
-
 
 export abstract class PlayerEntity extends LivingEntity {
     private static readonly SHIELD_AMOUNT = DataTracker.registerData(Object(PlayerEntity), TrackedDataHandlerRegistry.FLOAT);
@@ -288,12 +287,13 @@ export abstract class PlayerEntity extends LivingEntity {
         nbt.putUint('Score', this.score);
         nbt.putInt8('SlotIndex', this.currentBaseIndex);
         nbt.putBoolean('DevMode', this.isDevMode());
+        nbt.putBoolean('UsedBeDev', this.isUsedBeDev());
 
         const inventory: NbtCompound[] = [];
         this.items.values().forEach(stack => {
-            inventory.push(ItemStack.CODEC.encode(stack));
+            inventory.push(ItemStack.CODEC.encode(stack) as NbtCompound);
         });
-        nbt.putCompoundList('Inventory', inventory);
+        nbt.putCompoundArray('Inventory', inventory);
         this.techTree!.writeNBT(nbt);
 
         return nbt
@@ -301,13 +301,14 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public override readNBT(nbt: NbtCompound) {
         super.readNBT(nbt);
-        this.setScore(nbt.getUint('Score'));
+        this.setScore(nbt.getU32('Score'));
         this.setDevMode(nbt.getBoolean('DevMode'));
+        this.usedDev = nbt.getBoolean('UsedBeDev');
 
         this.techTree!.readNBT(nbt);
 
-        const inventory = nbt.getCompoundList('Inventory');
-        if (inventory && inventory.length > 0) {
+        const inventory = nbt.getCompoundArray('Inventory');
+        if (inventory.length > 0) {
             this.clearItems();
             for (const nbt of inventory) {
                 const stack = ItemStack.CODEC.decode(nbt);

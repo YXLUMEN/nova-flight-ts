@@ -1,6 +1,6 @@
 import type {TechTree} from "../../tech/TechTree.ts";
 import {TechState} from "../../tech/TechState.ts";
-import type {NbtCompound} from "../../nbt/NbtCompound.ts";
+import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
 import {Items} from "../../item/Items.ts";
 import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";

@@ -58,6 +58,17 @@ export class MusicCommand {
                         )
                 )
                 .then(
+                    literal<T>('current')
+                        .executes(ctx => {
+                            const current = AudioManager.getCurrentPlaying();
+                            if (!current) {
+                                ctx.source.addMessage(`No music is playing`);
+                                return;
+                            }
+                            ctx.source.addMessage(`Current playing is \x1b[32m"${current.getId().toString()}"`);
+                        })
+                )
+                .then(
                     literal<T>('pause')
                         .executes(() => {
                             AudioManager.pause();

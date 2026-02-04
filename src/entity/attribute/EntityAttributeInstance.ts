@@ -3,7 +3,7 @@ import type {EntityAttribute} from "./EntityAttribute.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import type {Consumer} from "../../apis/types.ts";
 import type {EntityAttributeModifier} from "./EntityAttributeModifier.ts";
-import {NbtCompound} from "../../nbt/NbtCompound.ts";
+import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {HashMap} from "../../utils/collection/HashMap.ts";
 import {createClean} from "../../utils/uit.ts";
 
@@ -127,7 +127,7 @@ export class EntityAttributeInstance {
         nbt.putDouble('base', this.baseValue);
 
         if (this.idToModifiers.size > 0) {
-            const nbtList = [];
+            const nbtList: NbtCompound[] = [];
             for (const modifier of this.idToModifiers.values()) {
                 const modNbt = new NbtCompound();
                 modNbt.putString('id', modifier.id.toString());
@@ -136,10 +136,10 @@ export class EntityAttributeInstance {
                 nbtList.push(modNbt);
             }
 
-            nbt.putCompoundList('modifiers', nbtList);
+            nbt.putCompoundArray('modifiers', nbtList);
         }
 
-        return nbt
+        return nbt;
     }
 
     public readNbt(nbt: NbtCompound): void {
@@ -147,7 +147,7 @@ export class EntityAttributeInstance {
         if (!Number.isFinite(value)) throw new Error(`Error when read NBT for EntityAttribute: ${value}`);
         this.baseValue = value;
 
-        const nbtList = nbt.getCompoundList('modifiers');
+        const nbtList = nbt.getCompoundArray('modifiers');
         if (nbtList) {
             for (const modifierNbt of nbtList) {
                 const id = Identifier.tryParse(modifierNbt.getString('id'));

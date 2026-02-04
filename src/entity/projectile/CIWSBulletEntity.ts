@@ -1,5 +1,5 @@
 import {BulletEntity} from "./BulletEntity.ts";
-import {type NbtCompound} from "../../nbt/NbtCompound.ts";
+import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {Entity} from "../Entity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
@@ -26,7 +26,7 @@ export class CIWSBulletEntity extends BulletEntity {
 
     public override readNBT(nbt: NbtCompound) {
         super.readNBT(nbt);
-        this.age = nbt.getUint('Age');
+        this.age = nbt.getU32('Age');
     }
 
     public override onEntityHit(entity: Entity) {

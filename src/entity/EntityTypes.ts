@@ -3,7 +3,6 @@ import {ExplodeBulletEntity} from "./projectile/ExplodeBulletEntity.ts";
 import {BulletEntity} from "./projectile/BulletEntity.ts";
 import {TankEnemy} from "./mob/TankEnemy.ts";
 import {GunEnemyEntity} from "./mob/GunEnemyEntity.ts";
-import {BossEntity} from "./mob/BossEntity.ts";
 import {BaseEnemy} from "./mob/BaseEnemy.ts";
 import {EntityType} from "./EntityType.ts";
 import {MiniBulletEntity} from "./projectile/MiniBulletEntity.ts";
@@ -22,13 +21,14 @@ import {ArtilleryEntity} from "./projectile/ArtilleryEntity.ts";
 import {TorpedoEntity} from "./projectile/TorpedoEntity.ts";
 import {ExplosionEntity} from "./ExplosionEntity.ts";
 import {TargetDrone} from "./TargetDrone.ts";
+import {TNTBossEntity} from "./mob/TNTBossEntity.ts";
+import {BaseBossEntity} from "./mob/BaseBossEntity.ts";
 
 export class EntityTypes {
     public static readonly BASE_ENEMY = EntityType.register("base_enemy",
         EntityType.Builder.create(BaseEnemy)
             .setDimensions(28, 24)
     );
-    public static readonly BOSS_ENTITY: EntityType<BossEntity>;
     public static readonly GUN_ENEMY_ENTITY = EntityType.register("gun_enemy",
         EntityType.Builder.create(GunEnemyEntity)
             .setDimensions(20, 20)
@@ -128,12 +128,16 @@ export class EntityTypes {
             .setDimensions(32, 32)
             .setTrackingTickInterval(40)
     );
+    public static readonly BASE_BOSS_ENTITY = EntityType.register("base_boss_entity",
+        EntityType.Builder.create(BaseBossEntity)
+            .setDimensions(148, 160)
+    );
+    public static readonly TNT_BOSS_ENTITY = EntityType.register('tnt_boss',
+        EntityType.Builder.create(TNTBossEntity)
+            .setDimensions(128, 128)
+    );
 
     public static init() {
-        (this.BOSS_ENTITY as any) = EntityType.register("boss",
-            EntityType.Builder.create(BossEntity)
-                .setDimensions(148, 160)
-        );
         (this.PLAYER as any) = EntityType.register("player",
             // @ts-ignore
             EntityType.Builder.create(PlayerEntity)

@@ -11,8 +11,10 @@ import type {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 import type {Explosion} from "../world/Explosion.ts";
 
 export const EVENTS = createClean({
+    GAME_START: "game:start",
     ENTITY_REMOVED: "entity:mob:removed",
     BOSS_KILLED: "entity:boss:killed",
+    BOSS_SPAWN: "entity:boss:spawn",
     MOB_KILLED: "entity:mob:killed",
     MOB_DAMAGE: "entity:mob:damage",
     ENTITY_DIE: "entity:die",
@@ -24,12 +26,15 @@ export const EVENTS = createClean({
     STAGE_ENTER: "world:stage:enter",
     STAGE_EXIT: "world:stage:exit",
     ENTITY_LOCKED: "entity:player.locked",
-    ENTITY_UNLOCKED: "entity:player.unlocked",
+    DIFFICULT_CHANGE: "world:stage:difficult",
+    GAME_OVER: "game:over"
 } as const);
 
 export type IEvents = {
+    [EVENTS.GAME_START]: null;
     [EVENTS.ENTITY_REMOVED]: { entity: Entity; };
-    [EVENTS.BOSS_KILLED]: { mob: BossEntity | null; damageSource: DamageSource };
+    [EVENTS.BOSS_SPAWN]: { entity: BossEntity };
+    [EVENTS.BOSS_KILLED]: { entity: BossEntity | null };
     [EVENTS.MOB_KILLED]: { mob: MobEntity; damageSource: DamageSource; pos: IVec };
     [EVENTS.MOB_DAMAGE]: { mob: MobEntity; damageSource: DamageSource; };
     [EVENTS.UNLOCK_TECH]: { tech: Tech };
@@ -40,5 +45,6 @@ export type IEvents = {
     [EVENTS.STAGE_ENTER]: { name: string };
     [EVENTS.STAGE_EXIT]: { name: string };
     [EVENTS.ENTITY_LOCKED]: { missile: MissileEntity };
-    [EVENTS.ENTITY_UNLOCKED]: { missile: MissileEntity, lastTarget: Entity | null };
+    [EVENTS.DIFFICULT_CHANGE]: { difficult: number };
+    [EVENTS.GAME_OVER]: null;
 }

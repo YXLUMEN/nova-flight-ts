@@ -61,7 +61,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         if (this.lockedMissile.size > 0) {
             const pos = this.getPositionRef;
             for (const missile of this.lockedMissile.keys()) {
-                if (missile.isRemoved()) {
+                if (missile.isRemoved() || missile.getTarget() !== this) {
                     this.lockedMissile.delete(missile);
                     this.approachMissile.delete(missile);
                     continue;
@@ -267,8 +267,15 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         this.getNetworkChannel().send(new PlayerSwitchSlotC2SPacket(this.currentBaseIndex));
     }
 
+    public override addScore(score: number): void {
+        super.addScore(score);
+        const world = this.getWorld() as ClientWorld;
+        world.setTotalScore(world.getTotalScore() + score);
+    }
+
     public override setScore(score: number) {
         super.setScore(score);
+        (this.getWorld() as ClientWorld).setTotalScore(score);
         (this.techTree as ClientTechTree).playerScore.textContent = `点数: ${this.getScore()}`;
     }
 

@@ -3,50 +3,52 @@ import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {Optional} from "../utils/Optional.ts";
 import type {Codec} from "../serialization/Codec.ts";
-import {NbtCompound} from "../nbt/NbtCompound.ts";
+import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {Registries} from "../registry/Registries.ts";
+import {Codecs} from "../serialization/Codecs.ts";
 
 export class ComponentChanges {
     public static readonly EMPTY = new ComponentChanges(new Map());
-
-    public static readonly CODEC: Codec<ComponentChanges> = {
-        encode(value: ComponentChanges): NbtCompound {
-            const nbt = new NbtCompound();
+    public static readonly CODEC: Codec<ComponentChanges> = Codecs.of(
+        value => {
+            const compound = new NbtCompound();
             if (value.changedComponents.size === 0) {
-                return nbt;
+                return compound;
             }
 
             for (const [type, optional] of value.changedComponents) {
                 if (optional.isEmpty()) continue;
                 const id = Registries.DATA_COMPONENT_TYPE.getId(type);
                 if (!id) continue;
-                nbt.putCompound(id.toString(), type.codec.encode(optional.get()));
+
+                compound.put(id.toString(), type.codec.encode(optional.get()));
             }
 
-            return nbt;
-
+            return compound;
         },
-        decode(nbt: NbtCompound): ComponentChanges | null {
-            const keys = nbt.getKeys();
+        input => {
+            const keys = input.getKeys();
             if (keys.size === 0) return ComponentChanges.EMPTY;
 
             const map = new Map<ComponentType<any>, Optional<any>>();
             for (const key of keys) {
+                const nbt = input.get(key);
+                if (!nbt) continue;
+
                 const id = Identifier.tryParse(key);
                 if (!id) continue;
+
                 const entry = Registries.DATA_COMPONENT_TYPE.getEntryById(id);
                 if (!entry) continue;
-                const nbtEntry = nbt.getCompound(key);
-                if (!nbtEntry) continue;
 
                 const type = entry.getValue();
-                const compound = type.codec.decode(nbtEntry);
+                const compound = type.codec.decode(nbt);
                 map.set(type, Optional.of(compound));
             }
             return new ComponentChanges(map);
         }
-    };
+    );
 
     public static readonly PACKET_CODEC: PacketCodec<ComponentChanges> = PacketCodecs.of(
         (writer, componentChanges) => {

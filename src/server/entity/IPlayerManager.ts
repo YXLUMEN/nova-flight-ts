@@ -1,6 +1,6 @@
 import {GameProfile} from "./GameProfile.ts";
 import {ServerPlayerEntity} from "./ServerPlayerEntity.ts";
-import {NbtCompound} from "../../nbt/NbtCompound.ts";
+import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {UUID} from "../../apis/types.ts";
 
 export interface IPlayerManager {

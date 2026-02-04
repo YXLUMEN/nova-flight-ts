@@ -13,7 +13,7 @@ export class WorldDifficultCommand {
                         .executes(ctx => {
                             const world = ctx.source.getWorld();
                             if (!world || world.isClient) return;
-                            ctx.source.outPut.sendMessage(`Current difficulty is: ${world.stageDifficulty}`);
+                            ctx.source.outPut.sendMessage(`Current difficulty is: ${world.getDifficulty()}`);
                         })
                 )
                 .then(
@@ -29,7 +29,7 @@ export class WorldDifficultCommand {
                                     if (int < 0 || int > 16) throw new IllegalArgumentError('\x1b[31mInvalid argument, int must in [0,16]');
 
                                     const world = ctx.source.getWorld();
-                                    if (world) world.stageDifficulty = int;
+                                    if (world) world.setDifficulty(int);
                                     ctx.source.outPut.sendMessage(`World difficult set to: \x1b[32m${int}`);
                                 })
                         )

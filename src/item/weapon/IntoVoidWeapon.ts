@@ -149,7 +149,7 @@ export class IntoVoidWeapon extends SpecialWeapon {
         if (!(attacker instanceof PlayerEntity)) return;
 
         attacker.invulnerable = stack.getOrDefault(DataComponentTypes.ANY_BOOLEAN, false);
-        stack.set(DataComponentTypes.ANY_BOOLEAN, false);
+        stack.remove(DataComponentTypes.ANY_BOOLEAN);
 
         if (!world.isClient) {
             const box = attacker.getWidth() + stack.getOrDefault(DataComponentTypes.EFFECT_RANGE, 32);

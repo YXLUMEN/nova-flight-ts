@@ -1,7 +1,7 @@
 import {SpawnRule} from "./SpawnRule.ts";
 import type {RNG} from "../apis/IStage.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
-import {type NbtCompound} from "../nbt/NbtCompound.ts";
+import {type NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {clamp} from "../utils/math/math.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import type {PhaseConfig} from "./PhaseConfig.ts";
@@ -57,7 +57,7 @@ export class Stage implements NbtSerializable {
             phaseIndex: this.index,
             score: world.getPhase(),
             rng: this.rng,
-            difficulty: world.stageDifficulty,
+            difficulty: world.getDifficulty(),
         };
 
         const phase = this.phases[this.index];

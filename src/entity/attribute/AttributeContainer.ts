@@ -4,7 +4,7 @@ import type {EntityAttributeInstance} from "./EntityAttributeInstance.ts";
 import type {DefaultAttributeContainer} from "./DefaultAttributeContainer.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import type {EntityAttributeModifier} from "./EntityAttributeModifier.ts";
-import type {NbtCompound} from "../../nbt/NbtCompound.ts";
+import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {Registries} from "../../registry/Registries.ts";
 
 export class AttributeContainer {

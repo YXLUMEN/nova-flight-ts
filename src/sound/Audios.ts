@@ -4,6 +4,18 @@ import {Registries} from "../registry/Registries.ts";
 import {SoundEvent} from "./SoundEvent.ts";
 
 export class Audios {
+    public static readonly MAIN_THEME = this.register('main_theme');
+    public static readonly NO_MERCY = this.register('no_mercy');
+    public static readonly ENCOUNTER = this.register('encounter');
+    public static readonly FIRING_ON_FULL_POWER = this.register('firing_on_full_power');
+    public static readonly KEEP_FIGHTING = this.register('keep_fighting');
+    public static readonly TECHNOLOGY_CHANGES_THE_UNIVERSE = this.register('technology_changes_the_universe');
+    public static readonly WE_MADE_IT = this.register('we_made_it');
+
+    public static readonly PIXEL_ODYSSEY = this.register('pixel_odyssey');
+    public static readonly VOID_SHOWDOWN = this.register('void_showdown');
+    public static readonly BOSS_PHASE = this.register('boss_phase');
+
     public static readonly SPACE_WALK = this.register('space_walk_mabo');
     public static readonly NO_MORE_MABO = this.register('no_more_mabo');
     public static readonly SOME_TIME_HJM = this.register('some_time_hjm');
@@ -16,10 +28,9 @@ export class Audios {
     public static readonly MAKING_LEGENDS = this.register('making_legends');
     public static readonly VICTORY = this.register('victory');
     public static readonly WARSAW = this.register('warsaw');
-    public static readonly BOSS_PHASE = this.register('boss_phase');
     public static readonly LAVA_CHICKEN = this.register('lava_chicken');
-    public static readonly PIXEL_ODYSSEY = this.register('pixel_odyssey');
-    public static readonly VOID_SHOWDOWN = this.register('void_showdown');
+    public static readonly STEEL_REQUIEM = this.register('steel_requiem');
+    public static readonly TROPIC_THUNDER = this.register('tropic_thunder');
 
     private static register(id: string) {
         const identifier = Identifier.ofVanilla(id);

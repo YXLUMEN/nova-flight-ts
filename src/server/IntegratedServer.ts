@@ -1,6 +1,6 @@
 import {NovaFlightServer} from "./NovaFlightServer.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
-import {NbtCompound} from "../nbt/NbtCompound.ts";
+import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {UUID} from "../apis/types.ts";
 import type {GameProfile} from "./entity/GameProfile.ts";
 import {ServerStorage} from "./ServerStorage.ts";
@@ -46,7 +46,7 @@ export class IntegratedServer extends NovaFlightServer {
             this.world.stage = TutorialStage;
             this.world.stage.reset();
             TutorialEvents.register();
-            this.world.getNetworkChannel().send(new PlayAudioS2CPacket(Audios.PIXEL_ODYSSEY, 0.8));
+            this.world.getNetworkChannel().send(new PlayAudioS2CPacket(Audios.WE_MADE_IT, 0.8));
         }
 
         await this.waitForStop();
@@ -66,8 +66,11 @@ export class IntegratedServer extends NovaFlightServer {
         } else if (err instanceof StatusError) {
             if (err.cause === 'broken') {
                 Log.message('存档已损坏', 'warning');
+            } else if (err.cause === 'pending') {
+                console.log('初始化存档');
+            } else {
+                Log.warn(err.message);
             }
-            Log.warn(err.message);
         } else {
             Log.error(err.message);
         }

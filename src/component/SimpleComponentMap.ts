@@ -1,6 +1,6 @@
-import  {type ComponentType} from "./ComponentType.ts";
+import {type ComponentType} from "./ComponentType.ts";
 import {Compare} from "../utils/collection/Compare.ts";
-import {NbtCompound} from "../nbt/NbtCompound.ts";
+import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {Registries} from "../registry/Registries.ts";
 import type {ComponentMap} from "./ComponentMap.ts";
@@ -62,7 +62,7 @@ export class SimpleComponentMap implements ComponentMap {
         for (const [type, value] of this.baseComponents) {
             const id = Registries.DATA_COMPONENT_TYPE.getId(type);
             if (!id) continue;
-            nbt.putCompound(id.toString(), type.codec.encode(value));
+            nbt.put(id.toString(), type.codec.encode(value))
         }
         return nbt;
     }
@@ -74,7 +74,8 @@ export class SimpleComponentMap implements ComponentMap {
             if (!id) continue;
             const entry = Registries.DATA_COMPONENT_TYPE.getEntryById(id);
             if (!entry) continue;
-            const nbtEntry = nbt.getCompound(key);
+
+            const nbtEntry = nbt.get(key);
             if (!nbtEntry) continue;
 
             const type = entry.getValue();

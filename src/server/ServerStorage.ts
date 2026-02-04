@@ -1,5 +1,5 @@
 import {IndexedDBHelper} from "../database/IndexedDBHelper.ts";
-import {NbtCompound} from "../nbt/NbtCompound.ts";
+import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {Consumer, UUID} from "../apis/types.ts";
 import type {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
 import {Result} from "../utils/result/Result.ts";

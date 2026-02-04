@@ -20,7 +20,10 @@ export class ClientNetworkChannel extends NetworkChannel {
         const payload = this.decodePayload(binary);
         if (!payload) return;
 
-        this.handlers.get(payload.getId().id)?.(payload);
+        const handler = this.handlers.get(payload.getId().id);
+        if (!handler) return;
+        Promise.resolve()
+            .then(() => handler(payload))
     }
 
     public override clearHandlers(): void {

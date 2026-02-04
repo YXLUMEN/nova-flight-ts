@@ -1,5 +1,5 @@
 import {ServerPlayerEntity} from "../../../src/server/entity/ServerPlayerEntity.ts";
-import {NbtCompound} from "../../../src/nbt/NbtCompound.ts";
+import {NbtCompound} from "../../../src/nbt/element/NbtCompound.ts";
 import {WorldLoader} from "../io/WorldLoader.ts";
 import {PlayerManager} from "../../../src/server/entity/PlayerManager.ts";
 

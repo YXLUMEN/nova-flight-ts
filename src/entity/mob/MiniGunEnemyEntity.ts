@@ -7,7 +7,7 @@ import type {World} from "../../world/World.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {randInt} from "../../utils/math/math.ts";
-import type {NbtCompound} from "../../nbt/NbtCompound.ts";
+import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 
 export class MiniGunEnemyEntity extends MobEntity {
     private static readonly bulletSpeed = 6;
@@ -68,7 +68,7 @@ export class MiniGunEnemyEntity extends MobEntity {
 
     public override readNBT(nbt: NbtCompound): NbtCompound {
         super.readNBT(nbt);
-        this.cooldown = nbt.getUint('FireCooldown');
+        this.cooldown = nbt.getU32('FireCooldown');
         return nbt;
     }
 

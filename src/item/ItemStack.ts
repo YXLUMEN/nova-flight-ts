@@ -10,7 +10,7 @@ import {DataComponentTypes} from "../component/DataComponentTypes.ts";
 import {clamp} from "../utils/math/math.ts";
 import type {ComponentType} from "../component/ComponentType.ts";
 import type {LivingEntity} from "../entity/LivingEntity.ts";
-import {NbtCompound} from "../nbt/NbtCompound.ts";
+import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {Registries} from "../registry/Registries.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
@@ -21,38 +21,40 @@ import {ComponentMapImpl} from "../component/ComponentMapImpl.ts";
 import type {Consumer} from "../apis/types.ts";
 import type {Codec} from "../serialization/Codec.ts";
 import {Identifier} from "../registry/Identifier.ts";
+import {Codecs} from "../serialization/Codecs.ts";
 
 
 export class ItemStack {
     public static readonly ITEM_VALUE_PACKET_CODEC = PacketCodecs.registryValue(Registries.ITEM);
     public static readonly ITEM_PACKET_CODEC = PacketCodecs.registryEntry(Registries.ITEM);
-    public static readonly CODEC: Codec<ItemStack> = {
-        encode(value: ItemStack): NbtCompound {
-            const nbt = new NbtCompound();
-            nbt.putString('type', value.getItem().getRegistryEntry().toString());
-            nbt.putInt8('counts', value.getCount());
+    public static readonly CODEC: Codec<ItemStack> = Codecs.of(
+        value => {
+            const compound = new NbtCompound();
+            compound.putString('type', value.getItem().getRegistryEntry().toString());
+            compound.putInt8('counts', value.getCount());
 
             const changes = value.components.getChanges();
-            nbt.putCompound('compounds', ComponentChanges.CODEC.encode(changes));
-            return nbt;
+            compound.put('compounds', ComponentChanges.CODEC.encode(changes));
+
+            return compound;
         },
-        decode(nbt: NbtCompound): ItemStack | null {
-            const typeName = nbt.getString('type');
+        value => {
+            const typeName = value.getString('type');
             const id = Identifier.tryParse(typeName);
             if (!id) return null;
 
             const type = Registries.ITEM.getEntryById(id);
             if (!type) return null;
 
-            const counts = nbt.getInt8('counts');
+            const counts = value.getInt8('counts');
 
             let compounds: ComponentChanges | null = null;
-            const compoundsNbt = nbt.getCompound('compounds');
+            const compoundsNbt = value.get('compounds');
             if (compoundsNbt) compounds = ComponentChanges.CODEC.decode(compoundsNbt);
 
             return new ItemStack(type.getValue(), counts, compounds);
         }
-    };
+    );
     public static readonly PACKET_CODEC: PacketCodec<ItemStack> = {
         encode(writer: BinaryWriter, itemStack: ItemStack): void {
             if (itemStack.isEmpty()) {
@@ -137,6 +139,10 @@ export class ItemStack {
 
     public getOrDefault<T>(type: ComponentType<T>, fallback: T): T {
         return this.components.getOrDefault(type, fallback);
+    }
+
+    public remove<T>(type: ComponentType<T>): void {
+        return this.components.remove(type);
     }
 
     public applyUnvalidatedChanges(changes: ComponentChanges): void {

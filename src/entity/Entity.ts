@@ -13,7 +13,7 @@ import type {IVec} from "../utils/math/IVec.ts";
 import {Box} from "../utils/math/Box.ts";
 import {clamp, lerp, lerpRadians} from "../utils/math/math.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
-import type {NbtCompound} from "../nbt/NbtCompound.ts";
+import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {Comparable, UUID} from "../apis/types.ts";
 import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {TrackedPosition} from "./TrackedPosition.ts";
@@ -25,7 +25,7 @@ import type {EntityLike} from "../world/entity/EntityLike.ts";
 
 
 export abstract class Entity implements EntityLike, DataTracked, Comparable, NbtSerializable, CommandOutput {
-    private static readonly CURRENT_ID = new AtomicInteger();
+    public static readonly CURRENT_ID = new AtomicInteger();
     private static readonly NULL_BOX = new Box(0.0, 0.0, 0.0, 0.0);
 
     public invulnerable: boolean = false;
@@ -463,8 +463,8 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
         try {
-            nbt.putNumberArray('Pos', this.pos.x, this.pos.y);
-            nbt.putNumberArray('Velocity', this.velocity.x, this.velocity.y);
+            nbt.putDoubleArray('Pos', this.pos.x, this.pos.y);
+            nbt.putFloatArray('Velocity', this.velocity.x, this.velocity.y);
 
             nbt.putDouble('Yaw', this.yaw);
             nbt.putDouble('Speed', this.movementSpeed);
@@ -482,15 +482,15 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     public readNBT(nbt: NbtCompound): void {
-        const posNbt = nbt.getNumberArray('Pos');
+        const posNbt = nbt.getDoubleArray('Pos');
         this.setPosition(posNbt[0], posNbt[1]);
 
-        const velocity = nbt.getNumberArray('Velocity');
+        const velocity = nbt.getFloatArray('Velocity');
         this.setVelocity(velocity[0], velocity[1]);
 
         this.setYaw(nbt.getDouble('Yaw'));
         this.setMovementSpeed(nbt.getDouble('Speed'));
-        this.invulnerable = nbt.getBoolean('Invulnerable', false);
+        this.invulnerable = nbt.getBoolean('Invulnerable', 0);
         this.uuid = nbt.getString('UUID') as UUID;
 
         const tags = nbt.getStringArray('Tags');

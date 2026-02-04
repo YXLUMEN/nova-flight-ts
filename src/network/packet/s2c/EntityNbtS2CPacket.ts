@@ -3,7 +3,7 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {UUID} from "../../../apis/types.ts";
 import type {Entity} from "../../../entity/Entity.ts";
-import {NbtCompound} from "../../../nbt/NbtCompound.ts";
+import {NbtCompound} from "../../../nbt/element/NbtCompound.ts";
 
 export class EntityNbtS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityNbtS2CPacket> = payloadId('entity_nbt');

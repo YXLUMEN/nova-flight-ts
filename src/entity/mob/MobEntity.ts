@@ -7,7 +7,7 @@ import type {EntityType} from "../EntityType.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {MobAI} from "../ai/MobAI.ts";
-import type {NbtCompound} from "../../nbt/NbtCompound.ts";
+import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {IColorEntity} from "../IColorEntity.ts";
 import type {DataTrackerSerializedEntry} from "../data/DataTracker.ts";
 import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
@@ -127,10 +127,10 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
 
     public override readNBT(nbt: NbtCompound): void {
         super.readNBT(nbt);
-        this.worth = nbt.getUint('Worth', 1);
+        this.worth = nbt.getU32('Worth', 1);
         this.color = nbt.getString('Color', this.color);
         this.AI.setBehavior(nbt.getInt8('AiBehavior', 0));
-        this.age = nbt.getUint('Age', 0);
+        this.age = nbt.getU32('Age', 0);
     }
 
     public isRangedAttacker(): boolean {

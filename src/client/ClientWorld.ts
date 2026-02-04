@@ -26,13 +26,15 @@ import type {ExplosionOpts} from "../apis/IExplosionOpts.ts";
 import type {Explosion} from "../world/Explosion.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import {Particle} from "../effect/Particle.ts";
-import {WorldConfig} from "../configs/WorldConfig.ts";
+import {DEFAULT_CONFIG, WorldConfig} from "../configs/WorldConfig.ts";
 import {AbstractClientPlayerEntity} from "./entity/AbstractClientPlayerEntity.ts";
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
+import {RankingList} from "../statistics/RankingList.ts";
 
 export class ClientWorld extends World {
+    public readonly worldName: string;
     private readonly client: NovaFlightClient = NovaFlightClient.getInstance();
 
     private readonly players = new Set<AbstractClientPlayerEntity>();
@@ -49,10 +51,12 @@ export class ClientWorld extends World {
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
 
     private finishInit = false;
+    private totalScore = 0;
 
-    public constructor(registryManager: RegistryManager) {
+    public constructor(registryManager: RegistryManager, worldName: string) {
         super(registryManager, true);
 
+        this.worldName = worldName;
         this.entityManager = new ClientEntityManager(this.ClientEntityHandler);
         this.starField.init();
         this.onEvent();
@@ -118,10 +122,25 @@ export class ClientWorld extends World {
 
     public override gameOver() {
         this.over = true;
+        this.setTicking(false);
+
+        const total = this.getTotalScore();
+        const record = {
+            score: total,
+            killEffective: Number((total / this.getTime()).toFixed(2)),
+            totalSurvivalTime: Number(this.getTime().toFixed(2)),
+            playerName: this.client.playerName,
+            worldName: this.worldName,
+            gameVersion: DEFAULT_CONFIG.gameVersion,
+            recordTime: new Date().toISOString(),
+            devMode: this.client.player!.isUsedBeDev(),
+        };
+        RankingList.recordScore(record).catch(console.error);
+
+        this.events.emit(EVENTS.GAME_OVER, null);
         setTimeout(() => {
-            this.setTicking(false);
             this.client.onGameOver();
-        }, 2000);
+        }, 6000);
     }
 
     public override getNetworkChannel(): ClientNetworkChannel {
@@ -245,6 +264,14 @@ export class ClientWorld extends World {
         });
 
         ClientDefaultEvents.registryEvents(this);
+    }
+
+    public setTotalScore(score: number): void {
+        this.totalScore = Math.max(score, this.totalScore);
+    }
+
+    public getTotalScore(): number {
+        return this.totalScore;
     }
 
     public tickWhenMultiPlayer() {

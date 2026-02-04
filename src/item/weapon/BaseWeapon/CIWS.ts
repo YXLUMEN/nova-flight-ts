@@ -33,22 +33,18 @@ export class CIWS extends BaseWeapon {
 
     public override onStartFire(stack: ItemStack, world: World, attacker: Entity): void {
         if (!stack.isAvailable()) return;
-        if (world.isClient) {
-            world.playLoopSound(attacker, SoundEvents.CIWS_FIRE_LOOP, 0.8);
-        }
+        world.playLoopSound(attacker, SoundEvents.CIWS_FIRE_LOOP, 0.8);
     }
 
     public override onEndFire(stack: ItemStack, world: World, attacker: Entity): void {
-        if (world.isClient) {
-            world.stopLoopSound(attacker, SoundEvents.CIWS_FIRE_LOOP);
-        }
-        stack.set(DataComponentTypes.FIRING, false);
+        world.stopLoopSound(attacker, SoundEvents.CIWS_FIRE_LOOP);
+        stack.remove(DataComponentTypes.FIRING);
     }
 
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean) {
         super.inventoryTick(stack, world, holder, slot, selected);
 
-        if (!holder.isPlayer() || stack.getOrDefault(DataComponentTypes.FIRING, true)) return;
+        if (!holder.isPlayer() || stack.get(DataComponentTypes.FIRING)) return;
         const currentHeat = this.getHeat(stack);
         if (currentHeat === 0) return;
 

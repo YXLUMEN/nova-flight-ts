@@ -3,7 +3,7 @@ import type {StatusEffect} from "./StatusEffect.ts";
 import type {LivingEntity} from "../LivingEntity.ts";
 import {clamp} from "../../utils/math/math.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
-import {NbtCompound} from "../../nbt/NbtCompound.ts";
+import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 
@@ -31,7 +31,7 @@ export class StatusEffectInstance {
         const duration = nbt.getDouble('duration');
         if (!Number.isFinite(duration)) throw new Error("StatusEffect duration should be finite");
 
-        const amplifier = nbt.getUint('amplifier');
+        const amplifier = nbt.getU32('amplifier');
         if (!Number.isSafeInteger(amplifier)) throw new Error("StatusEffect amplifier should be valid integer");
 
         return new StatusEffectInstance(type, duration, amplifier);

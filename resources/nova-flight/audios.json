@@ -1,4 +1,34 @@
 {
+  "main_theme": {
+    "file": "nova-flight:/main_theme.ogg"
+  },
+  "no_mercy": {
+    "file": "nova-flight:/no_mercy.ogg"
+  },
+  "encounter": {
+    "file": "nova-flight:/encounter.ogg"
+  },
+  "firing_on_full_power": {
+    "file": "nova-flight:/firing_on_full_power.ogg"
+  },
+  "keep_fighting": {
+    "file": "nova-flight:/keep_fighting.ogg"
+  },
+  "technology_changes_the_universe": {
+    "file": "nova-flight:/technology_changes_the_universe.ogg"
+  },
+  "we_made_it": {
+    "file": "nova-flight:/we_made_it.ogg"
+  },
+  "void_showdown": {
+    "file": "nova-flight:/void_showdown.ogg"
+  },
+  "pixel_odyssey": {
+    "file": "nova-flight:/pixel_odyssey.ogg"
+  },
+  "boss_phase": {
+    "file": "nova-flight:/boss_phase.ogg"
+  },
   "space_walk_mabo": {
     "file": "nova-flight:/space_walk.ogg"
   },
@@ -35,16 +65,13 @@
   "warsaw": {
     "file": "nova-flight:/warsaw.ogg"
   },
-  "boss_phase": {
-    "file": "nova-flight:/boss_phase.ogg"
-  },
   "lava_chicken": {
     "file": "nova-flight:/lava_chicken.ogg"
   },
-  "pixel_odyssey": {
-    "file": "nova-flight:/pixel_odyssey.ogg"
+  "steel_requiem": {
+    "file": "nova-flight:/steel_requiem.ogg"
   },
-  "void_showdown": {
-    "file": "nova-flight:/void_showdown.ogg"
+  "tropic_thunder": {
+    "file": "nova-flight:/tropic_thunder.ogg"
   }
 }

@@ -3,7 +3,7 @@ import {clamp} from "../../utils/math/math.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
 import {Items} from "../../item/Items.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
-import {type NbtCompound} from "../../nbt/NbtCompound.ts";
+import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {SoundSystem} from "../../sound/SoundSystem.ts";
 import type {TechTree} from "../../tech/TechTree.ts";
 import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";

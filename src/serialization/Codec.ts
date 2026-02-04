@@ -1,7 +1,7 @@
-import {NbtCompound} from "../nbt/NbtCompound.ts";
+import type {NbtElement} from "../nbt/element/NbtElement.ts";
 
-export interface Codec<T> {
-    encode(value: T): NbtCompound;
+export interface Codec<A> {
+    encode(value: A): NbtElement;
 
-    decode(nbt: NbtCompound): T | null;
+    decode(value: NbtElement): A | null;
 }

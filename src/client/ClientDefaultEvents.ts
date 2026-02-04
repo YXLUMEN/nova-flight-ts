@@ -1,6 +1,5 @@
 import {EVENTS} from "../apis/IEvents.ts";
 import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
-import type {Entity} from "../entity/Entity.ts";
 import type {ClientWorld} from "./ClientWorld.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
@@ -8,14 +7,25 @@ import {PlayerUnlockTechC2SPacket} from "../network/packet/c2s/PlayerUnlockTechC
 import {ApplyClientTech} from "./tech/ApplyClientTech.ts";
 import {Tech} from "../tech/Tech.ts";
 import {Registries} from "../registry/Registries.ts";
+import {BGMManager} from "../sound/BGMManager.ts";
 
 export class ClientDefaultEvents {
     public static registryEvents(world: ClientWorld) {
-        const eventBus = GeneralEventBus.getEventBus();
+        const events = GeneralEventBus.getEventBus();
 
-        eventBus.on(EVENTS.UNLOCK_TECH, event => {
+        events.on(EVENTS.GAME_START, () => {
+            BGMManager.onGameStart().then();
+        });
+
+        events.on(EVENTS.GAME_OVER, () => {
+            BGMManager.onGameOver();
+        });
+
+        events.on(EVENTS.UNLOCK_TECH, event => {
             const player = NovaFlightClient.getInstance().player;
             if (!player) return;
+            BGMManager.onTechUnlock(player);
+
             const tech = event.tech;
 
             if (tech instanceof Tech) {
@@ -27,25 +37,26 @@ export class ClientDefaultEvents {
             }
         });
 
-        eventBus.on(EVENTS.ENTITY_LOCKED, event => {
+        events.on(EVENTS.ENTITY_LOCKED, event => {
             const missile = event.missile as MissileEntity;
             const target = missile.getTarget();
             if (missile.isRemoved() || !target || !target.isPlayer()) return;
 
             const player = NovaFlightClient.getInstance().player;
-            if (!player || target.getId() !== player.getId()) return;
+            if (!player || target !== player) return;
             player.lockedMissile.add(missile);
         });
 
-        eventBus.on(EVENTS.ENTITY_UNLOCKED, event => {
-            const target = event.lastTarget as Entity | null;
-            const player = NovaFlightClient.getInstance().player;
-            if (!player) return;
+        events.on(EVENTS.DIFFICULT_CHANGE, event => {
+            BGMManager.onDifficultRaise(event.difficult);
+        });
 
-            if (target && target.isPlayer() && player.lockedMissile.size > 0) {
-                player.lockedMissile.delete(event.missile);
-                player.approachMissile.delete(event.missile);
-            }
+        events.on(EVENTS.BOSS_SPAWN, () => {
+            BGMManager.onBossSpawn();
+        });
+
+        events.on(EVENTS.BOSS_KILLED, () => {
+            BGMManager.onBossDead();
         });
     }
 }

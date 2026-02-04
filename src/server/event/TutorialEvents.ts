@@ -12,10 +12,9 @@ import {SpawnMarkerEntity} from "../../entity/SpawnMarkerEntity.ts";
 import type {MobEntity} from "../../entity/mob/MobEntity.ts";
 import type {DamageSource} from "../../entity/damage/DamageSource.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
-import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
-import {Audios} from "../../sound/Audios.ts";
 import {STAGE} from "../../configs/StageConfig.ts";
 import {Techs} from "../../tech/Techs.ts";
+import {BaseBossEntity} from "../../entity/mob/BaseBossEntity.ts";
 
 export class TutorialEvents {
     private static loop: number | undefined = undefined;
@@ -154,9 +153,18 @@ export class TutorialEvents {
 
         if (name === 'tutorial_boss') {
             if (this.conditions.has('boss')) return;
+            const world = server.world!;
+
+            const cancel = world.schedule(120, () => server.world!
+                .getEntities()
+                .getMobs()
+                .forEach(entity => entity.kill())
+            );
+
             this.conditions.set('boss', {
-                require: 115,
-                acc: 0
+                require: 125,
+                acc: 0,
+                cancel,
             });
             this.currentPhase = name;
 
@@ -164,10 +172,8 @@ export class TutorialEvents {
             server.sendMessage('指挥官, 请务必小心, 探测到强烈的空间波动, 有大家伙来了');
             await sleep(2000);
 
-            const world = server.world!;
-            const boss = new BossEntity(EntityTypes.BOSS_ENTITY, world, 64);
+            const boss = new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64);
             boss.setPosition(World.WORLD_W / 2, 64);
-            boss.invulnerable = true;
 
             const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
             mark.setPositionByVec(boss.getPositionRef);
@@ -175,13 +181,6 @@ export class TutorialEvents {
 
             await sleep(4000);
             server.sendMessage('是帝国的重型战列舰!');
-            server.networkChannel.send(new PlayAudioS2CPacket(Audios.MAKING_LEGENDS, 0.6));
-            world.schedule(110, () => server.world!
-                .getEntities()
-                .getMobs()
-                .forEach(entity => entity.kill())
-            );
-
             await sleep(3000);
             server.sendMessage('我们得合理利用科技, 击败它!');
             await sleep(3000);
@@ -233,7 +232,8 @@ export class TutorialEvents {
         }
 
         const bossCondition = this.conditions.get('boss');
-        if (bossCondition && event.mob.getType() === EntityTypes.BOSS_ENTITY) {
+        if (bossCondition && event.mob instanceof BossEntity) {
+            bossCondition?.cancel();
             this.conditions.delete('boss');
             this.pendingAchievement = null;
             this.nextPhase();

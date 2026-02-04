@@ -168,7 +168,7 @@ const p7 = PhaseConfigBuilder.create({
             every: 40,
             jitter: 0.4,
             factory: spawnAtTopS(EntityTypes.BASE_ENEMY,
-                0.98, 8, 10,
+                1, 8, 10,
                 '#910000',
                 (ctx) => 1 + (ctx.score / 600) | 0
             ),
@@ -178,7 +178,7 @@ const p7 = PhaseConfigBuilder.create({
             every: 20,
             jitter: 0.6,
             factory: spawnAtTopS(EntityTypes.TANK_ENEMY_ENTITY,
-                0.84, 0, 16,
+                0.9, 0, 16,
                 '#9f3b00',
                 (ctx) => 1 + (ctx.score / 800) | 0
             ),
@@ -187,7 +187,8 @@ const p7 = PhaseConfigBuilder.create({
         {
             every: 80,
             jitter: 0.5,
-            factory: spawnAtTopS(EntityTypes.MISSILE_ENEMY_ENTITY, 0.8, 4, 4, '#ac0000'),
+            factory: spawnAtTopS(EntityTypes.MISSILE_ENEMY_ENTITY,
+                0.8, 4, 4, '#ac0000'),
             cap: 70
         },
         {
@@ -214,7 +215,7 @@ const p8 = PhaseConfigBuilder.create({
             every: 80,
             jitter: 0.4,
             factory: spawnInMap(EntityTypes.BASE_ENEMY,
-                0.96, 8, 8,
+                1.2, 8, 8,
                 '#910000',
                 {},
                 (ctx) => 1 + (ctx.score / 500) | 0
@@ -225,7 +226,7 @@ const p8 = PhaseConfigBuilder.create({
             every: 50,
             jitter: 0.6,
             factory: spawnInMap(EntityTypes.TANK_ENEMY_ENTITY,
-                0.82, 1, 8,
+                1, 1, 8,
                 '#9f3b00',
                 {safeRadius: 248},
                 (ctx) => 1 + (ctx.score / 800) | 0
@@ -265,7 +266,7 @@ const p9 = PhaseConfigBuilder.create({
             every: 80,
             jitter: 0.4,
             factory: spawnInMap(EntityTypes.BASE_ENEMY,
-                1, 8, 8,
+                1.2, 8, 8,
                 '#910000',
                 {},
                 (ctx) => 1 + (ctx.score / 400) | 0
@@ -276,7 +277,7 @@ const p9 = PhaseConfigBuilder.create({
             every: 50,
             jitter: 0.6,
             factory: spawnInMap(EntityTypes.TANK_ENEMY_ENTITY,
-                0.9, 1, 8,
+                1.1, 1, 8,
                 '#9f3b00',
                 {safeRadius: 248},
                 (ctx) => 1 + (ctx.score / 600) | 0

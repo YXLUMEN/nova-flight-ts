@@ -27,8 +27,9 @@ export class PerditionBeam extends PhaseLasers {
         if (this.getActive(stack)) return;
 
         if (stack.getOrDefault(DataComponentTypes.SCHEDULE_FIRE, false)) {
-            stack.set(DataComponentTypes.SCHEDULE_FIRE, false);
-            stack.set(DataComponentTypes.CHARGING_PROGRESS, 0);
+            stack.remove(DataComponentTypes.SCHEDULE_FIRE);
+            stack.remove(DataComponentTypes.CHARGING_PROGRESS);
+
             if (attacker instanceof LivingEntity) {
                 const instance = attacker.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
                 if (instance) instance.removeModifier(PerditionBeam.DEFAULT_MODIFIER);
@@ -57,7 +58,8 @@ export class PerditionBeam extends PhaseLasers {
             const charging = stack.getOrDefault(DataComponentTypes.CHARGING_PROGRESS, 0) - 1;
             if (charging <= 0) {
                 this.setActive(stack, true);
-                stack.set(DataComponentTypes.SCHEDULE_FIRE, false);
+                stack.remove(DataComponentTypes.SCHEDULE_FIRE);
+
                 this.onStartFire(stack, world, holder);
             } else if (world.isClient) {
                 ClientEffect.spawnChargingParticles(world as ClientWorld, holder, 4, '#ff8282', '#ff0a0a');

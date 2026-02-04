@@ -90,7 +90,6 @@ export class ClientCommandManager extends CommandManager {
                 }
 
                 this.resetSuggestionLen();
-
                 this.executeCommand(input);
                 return;
             }

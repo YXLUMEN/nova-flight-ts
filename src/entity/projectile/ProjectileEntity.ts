@@ -4,7 +4,7 @@ import type {IOwnable} from "../IOwnable.ts";
 import type {EntityType} from "../EntityType.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import {DataTracker, type DataTrackerSerializedEntry} from "../data/DataTracker.ts";
-import {type NbtCompound} from "../../nbt/NbtCompound.ts";
+import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {IColorEntity} from "../IColorEntity.ts";
 import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";

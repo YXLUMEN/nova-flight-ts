@@ -1,6 +1,7 @@
-import {NbtCompound} from "./NbtCompound.ts";
-import {NbtTypes} from "./NbtValue.ts";
+import {NbtCompound} from "./element/NbtCompound.ts";
 import {BinaryWriter} from "./BinaryWriter.ts";
+import {NbtTypeId} from "./NbtType.ts";
+import type {NbtCompoundArray} from "./element/NbtCompoundArray.ts";
 
 type KeyIndex = Readonly<{ key: string, type: number, index: number }>;
 
@@ -10,77 +11,8 @@ export class NbtSerialization {
 
         writer.writeInt32(NbtCompound.MAGIC);
         writer.writeInt16(NbtCompound.VERSION);
+        compound.write(writer);
 
-        return this.toBinary(compound, writer);
-    }
-
-    public static toBinary(compound: NbtCompound, writer?: BinaryWriter): Uint8Array<ArrayBuffer> {
-        if (!writer) {
-            writer = new BinaryWriter();
-        }
-
-        for (const [key, {type, value}] of compound.getEntries()) {
-            writer.writeInt8(type);
-            writer.writeString(key);
-
-            switch (type) {
-                case NbtTypes.Int8:
-                    writer.writeInt8(value as number);
-                    break;
-                case NbtTypes.Int16:
-                    writer.writeInt16(value as number);
-                    break;
-                case NbtTypes.Int32:
-                    writer.writeInt32(value as number);
-                    break;
-                case NbtTypes.Float:
-                    writer.writeFloat(value as number);
-                    break;
-                case NbtTypes.Double:
-                    writer.writeDouble(value as number);
-                    break;
-                case NbtTypes.Uint:
-                    writer.writeUint32(value as number);
-                    break;
-                case NbtTypes.String:
-                    writer.writeString(value as string);
-                    break;
-                case NbtTypes.Boolean:
-                    writer.writeInt8(value ? 1 : 0);
-                    break;
-                case NbtTypes.NumberArray: {
-                    const values = value as number[];
-                    writer.writeVarUint(values.length);
-                    for (const n of values) writer.writeDouble(n);
-                    break;
-                }
-                case NbtTypes.StringArray: {
-                    const values = value as string[];
-                    writer.writeVarUint(values.length);
-                    for (const s of values) writer.writeString(s);
-                    break;
-                }
-                case NbtTypes.Compound: {
-                    const compound = value as NbtCompound;
-                    const nested = this.toBinary(compound);
-                    writer.writeVarUint(nested.length);
-                    writer.pushBytes(nested);
-                    break;
-                }
-                case NbtTypes.NbtList: {
-                    const list = value as NbtCompound[];
-                    writer.writeVarUint(list.length);
-                    for (const compound of list) {
-                        const nested = this.toBinary(compound);
-                        writer.writeVarUint(nested.length);
-                        writer.pushBytes(nested);
-                    }
-                    break;
-                }
-            }
-        }
-
-        writer.writeInt8(NbtTypes.End);
         return writer.toUint8Array();
     }
 
@@ -109,72 +41,37 @@ export class NbtSerialization {
             writer.pushBytes(this.writeWithScheme(compound, scheme));
         }
 
-        writer.writeInt8(NbtTypes.End);
+        writer.writeInt8(NbtTypeId.End);
         return writer.toUint8Array();
     }
 
     private static writeWithScheme(compound: NbtCompound, scheme: Map<string, KeyIndex>) {
         const writer = new BinaryWriter();
 
-        for (const [key, {type, value}] of compound.getEntries()) {
+        for (const [key, element] of compound.getEntries()) {
+            const type = element.getType();
             const index = scheme.get(`${key}:${type}`)!.index;
             writer.writeVarUint(index);
 
-            switch (type) {
-                case NbtTypes.Int8:
-                    writer.writeInt8(value as number);
-                    break;
-                case NbtTypes.Int16:
-                    writer.writeInt16(value as number);
-                    break;
-                case NbtTypes.Int32:
-                    writer.writeInt32(value as number);
-                    break;
-                case NbtTypes.Float:
-                    writer.writeFloat(value as number);
-                    break;
-                case NbtTypes.Double:
-                    writer.writeDouble(value as number);
-                    break;
-                case NbtTypes.Uint:
-                    writer.writeUint32(value as number);
-                    break;
-                case NbtTypes.String:
-                    writer.writeString(value as string);
-                    break;
-                case NbtTypes.Boolean:
-                    writer.writeInt8(value ? 1 : 0);
-                    break;
-                case NbtTypes.NumberArray: {
-                    const values = value as number[];
-                    writer.writeVarUint(values.length);
-                    for (const n of values) writer.writeDouble(n);
-                    break;
-                }
-                case NbtTypes.StringArray: {
-                    const values = value as string[];
-                    writer.writeVarUint(values.length);
-                    for (const s of values) writer.writeString(s);
-                    break;
-                }
-                case NbtTypes.Compound: {
-                    const compound = value as NbtCompound;
+            if (type === NbtTypeId.Compound) {
+                const compound = element as NbtCompound;
+                const nested = this.writeWithScheme(compound, scheme);
+                writer.writeVarUint(nested.length);
+                writer.pushBytes(nested);
+                continue;
+            }
+
+            if (type === NbtTypeId.CompoundArray) {
+                const list = (element as NbtCompoundArray).value;
+                writer.writeVarUint(list.length);
+                for (const compound of list) {
                     const nested = this.writeWithScheme(compound, scheme);
                     writer.writeVarUint(nested.length);
                     writer.pushBytes(nested);
-                    break;
                 }
-                case NbtTypes.NbtList: {
-                    const list = value as NbtCompound[];
-                    writer.writeVarUint(list.length);
-                    for (const compound of list) {
-                        const nested = this.writeWithScheme(compound, scheme);
-                        writer.writeVarUint(nested.length);
-                        writer.pushBytes(nested);
-                    }
-                    break;
-                }
+                continue;
             }
+            element.write(writer);
         }
 
         return writer.toUint8Array();
@@ -183,24 +80,22 @@ export class NbtSerialization {
     private static updateScheme(compound: NbtCompound, scheme: Map<string, KeyIndex>) {
         if (compound.getSize() === 0) return;
 
-        for (const [key, {type, value}] of compound.getEntries()) {
-            // 避免键同类型不同
+        for (const [key, element] of compound.getEntries()) {
+            const type = element.getType();
             const compositeKey = `${key}:${type}`;
             if (!scheme.has(compositeKey)) {
                 scheme.set(compositeKey, {key, type, index: scheme.size});
             }
 
-            switch (type) {
-                case NbtTypes.Compound: {
-                    this.updateScheme(value as NbtCompound, scheme);
-                    break;
-                }
-                case NbtTypes.NbtList: {
-                    const values = value as NbtCompound[];
-                    for (const compound of values) {
-                        this.updateScheme(compound, scheme);
-                    }
-                    break;
+            if (type === NbtTypeId.Compound) {
+                this.updateScheme(element as NbtCompound, scheme);
+                continue;
+            }
+
+            if (type === NbtTypeId.CompoundArray) {
+                const values = element as NbtCompoundArray;
+                for (const compound of values.value) {
+                    this.updateScheme(compound, scheme);
                 }
             }
         }
@@ -214,62 +109,22 @@ export class NbtSerialization {
 
         const reg = /^[a-zA-Z0-9_]+$/;
 
-        for (const [key, {type, value}] of compound.getEntries()) {
+        for (const [key, element] of compound.getEntries()) {
             const safeKey = reg.test(key) ? `"${key}"` : `"${key.replace(/"/g, '\\"')}"`;
+            const type = element.getType();
 
             let valStr: string;
-            switch (type) {
-                case NbtTypes.Int8:
-                    valStr = `${value}b`;
-                    break;
-                case NbtTypes.Int16:
-                    valStr = `${value}s`;
-                    break;
-                case NbtTypes.Int32:
-                    valStr = `${value}`;
-                    break;
-                case NbtTypes.Uint:
-                    valStr = `${value}u`;
-                    break;
-                case NbtTypes.Float:
-                    valStr = `${value}f`;
-                    break;
-                case NbtTypes.Double:
-                    valStr = `${value}d`;
-                    break;
-                case NbtTypes.Boolean:
-                    valStr = value ? 'true' : 'false';
-                    break;
-                case NbtTypes.String:
-                    const escapedStr = value
-                        .toString()
-                        .replace(/\\/g, '\\\\')
-                        .replace(/"/g, '\\"');
-                    valStr = `"${escapedStr}"`;
-                    break;
-                case NbtTypes.NumberArray:
-                    const arrayItems = (value as number[])
-                        .join(',');
-                    valStr = `[${arrayItems}]`;
-                    break;
-                case NbtTypes.StringArray:
-                    const items = (value as string[])
-                        .map(s => `"${s.replace(/"/g, '\\"')}"`)
-                        .join(',');
-                    valStr = `[${items}]`;
-                    break;
-                case NbtTypes.Compound:
-                    valStr = this.toSNbt((value as NbtCompound), pretty, indent + 2);
-                    break;
-                case NbtTypes.NbtList:
-                    const listItems = (value as NbtCompound[])
-                        .map(comp => this.toSNbt(comp, pretty))
-                        .join(',');
-                    valStr = `[${listItems}]`;
-                    break;
-                default:
-                    valStr = '"<unsupported>"';
+            if (type === NbtTypeId.Compound) {
+                valStr = this.toSNbt((element as NbtCompound), pretty, indent + 2);
+            } else if (type === NbtTypeId.CompoundArray) {
+                const listItems = (element as NbtCompoundArray).value
+                    .map(comp => this.toSNbt(comp, pretty))
+                    .join(',');
+                valStr = `[${listItems}]`;
+            } else {
+                valStr = element.toString();
             }
+
             entries.push(`${innerIndent}${safeKey}:${valStr}`);
         }
 

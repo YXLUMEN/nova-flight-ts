@@ -1,12 +1,31 @@
 import {BinaryReader} from "./BinaryReader.ts";
-import {type Nbt, NbtTypes} from "./NbtValue.ts";
-import {NbtCompound} from "./NbtCompound.ts";
+import {NbtCompound} from "./element/NbtCompound.ts";
 import {StringReader} from "../brigadier/StringReader.ts";
+import {NbtTypeId} from "./NbtType.ts";
+import type {NbtElement} from "./element/NbtElement.ts";
+import {NbtInt8} from "./element/NbtInt8.ts";
+import {NbtString} from "./element/NbtString.ts";
+import {NbtInt16} from "./element/NbtInt16.ts";
+import {NbtU32} from "./element/NbtU32.ts";
+import {NbtFloat} from "./element/NbtFloat.ts";
+import {NbtDouble} from "./element/NbtDouble.ts";
+import {NbtInt32} from "./element/NbtInt32.ts";
+import {NbtInt32Array} from "./element/NbtInt32Array.ts";
+import {NbtCompoundArray} from "./element/NbtCompoundArray.ts";
+import {NbtStringArray} from "./element/NbtStringArray.ts";
+import {NbtDoubleArray} from "./element/NbtDoubleArray.ts";
+import {NbtInt8Array} from "./element/NbtInt8Array.ts";
+import {NbtInt16Array} from "./element/NbtInt16Array.ts";
+import {NbtFloatArray} from "./element/NbtFloatArray.ts";
+import {NbtU32Array} from "./element/NbtU32Array.ts";
+import {NbtTypes} from "./NbtTypes.ts";
 
 type KeyType = Readonly<{ key: string, type: number }>;
 
 
 export class NbtUnserialization {
+    public static readonly VALIDA_NUMBER_PREFIX = ['B', 'S', 'U', 'F', 'D', 'I'];
+
     public static fromRootBinary(buffer: Uint8Array<ArrayBuffer>): NbtCompound | null {
         const reader = new BinaryReader(buffer);
 
@@ -21,86 +40,12 @@ export class NbtUnserialization {
             return null;
         }
 
-        return this.fromReader(reader);
+        return NbtCompound.TYPE.read(reader);
     }
 
     public static fromBinary(buffer: Uint8Array<ArrayBuffer>): NbtCompound {
         const reader = new BinaryReader(buffer);
-        return this.fromReader(reader);
-    }
-
-    public static fromReader(reader: BinaryReader): NbtCompound {
-        const compound = new NbtCompound();
-
-        while (true) {
-            const type = reader.readUint8();
-            if (type === NbtTypes.End || reader.bytesRemaining() === 0) break;
-
-            const key = reader.readString();
-            switch (type) {
-                case NbtTypes.Int8:
-                    compound.putInt8(key, reader.readInt8());
-                    break;
-                case NbtTypes.Int16:
-                    compound.putInt16(key, reader.readInt16());
-                    break;
-                case NbtTypes.Int32:
-                    compound.putInt32(key, reader.readInt32());
-                    break;
-                case NbtTypes.Float:
-                    compound.putFloat(key, reader.readFloat());
-                    break;
-                case NbtTypes.Double:
-                    compound.putDouble(key, reader.readDouble());
-                    break;
-                case NbtTypes.Uint:
-                    compound.putUint(key, reader.readUint32());
-                    break;
-                case NbtTypes.String:
-                    compound.putString(key, reader.readString());
-                    break;
-                case NbtTypes.Boolean:
-                    compound.putBoolean(key, reader.readInt8() !== 0);
-                    break;
-                case NbtTypes.NumberArray: {
-                    const len = reader.readVarUint();
-                    const arr: number[] = new Array(len);
-                    for (let i = 0; i < len; i++) arr[i] = reader.readDouble();
-                    compound.putNumberArray(key, ...arr);
-                    break;
-                }
-                case NbtTypes.StringArray: {
-                    const len = reader.readVarUint();
-                    const arr: string[] = new Array(len);
-                    for (let i = 0; i < len; i++) arr[i] = reader.readString();
-                    compound.putStringArray(key, ...arr);
-                    break;
-                }
-                case NbtTypes.Compound: {
-                    const nestedLen = reader.readVarUint();
-                    const nestedBuf = reader.readSlice(nestedLen);
-                    const nested = this.fromBinary(nestedBuf);
-                    compound.putCompound(key, nested!);
-                    break;
-                }
-                case NbtTypes.NbtList: {
-                    const count = reader.readVarUint();
-                    const list: NbtCompound[] = [];
-                    for (let i = 0; i < count; i++) {
-                        const nestedLen = reader.readVarUint();
-                        const nestedBuf = reader.readSlice(nestedLen);
-                        const nested = this.fromBinary(nestedBuf);
-                        list.push(nested!);
-                    }
-                    compound.putCompoundList(key, list);
-                    break;
-                }
-                default:
-                    throw new Error(`Unknown NbtType: ${type}`);
-            }
-        }
-
-        return compound;
+        return NbtCompound.TYPE.read(reader);
     }
 
     public static fromRootCompactBinary(buffer: Uint8Array<ArrayBuffer>): NbtCompound | null {
@@ -137,7 +82,7 @@ export class NbtUnserialization {
 
         const payloadEnd = buffer.length - 1;
         const endTag = buffer[payloadEnd];
-        if (endTag !== NbtTypes.End) {
+        if (endTag !== NbtTypeId.End) {
             throw new Error(`Expected End tag, got ${endTag}`);
         }
 
@@ -162,77 +107,36 @@ export class NbtUnserialization {
         }
 
         const {key, type} = scheme[index];
-        switch (type) {
-            case NbtTypes.Int8:
-                compound.putInt8(key, reader.readInt8());
-                break;
-            case NbtTypes.Int16:
-                compound.putInt16(key, reader.readInt16());
-                break;
-            case NbtTypes.Int32:
-                compound.putInt32(key, reader.readInt32());
-                break;
-            case NbtTypes.Float:
-                compound.putFloat(key, reader.readFloat());
-                break;
-            case NbtTypes.Double:
-                compound.putDouble(key, reader.readDouble());
-                break;
-            case NbtTypes.Uint:
-                compound.putUint(key, reader.readUint32());
-                break;
-            case NbtTypes.String:
-                compound.putString(key, reader.readString());
-                break;
-            case NbtTypes.Boolean:
-                compound.putBoolean(key, reader.readInt8() !== 0);
-                break;
-            case NbtTypes.NumberArray: {
-                const len = reader.readVarUint();
-                const arr: number[] = new Array(len);
-                for (let i = 0; i < len; i++) arr[i] = reader.readDouble();
-                compound.putNumberArray(key, ...arr);
-                break;
-            }
-            case NbtTypes.StringArray: {
-                const len = reader.readVarUint();
-                const arr: string[] = new Array(len);
-                for (let i = 0; i < len; i++) arr[i] = reader.readString();
-                compound.putStringArray(key, ...arr);
-                break;
-            }
-            case NbtTypes.Compound: {
+        if (type === NbtTypeId.Compound) {
+            const nestedLen = reader.readVarUint();
+            const nestedBuf = reader.readSlice(nestedLen);
+            const nested = this.parsePayload(nestedBuf, scheme);
+            compound.putCompound(key, nested);
+            return;
+        }
+        if (type === NbtTypeId.CompoundArray) {
+            const count = reader.readVarUint();
+            const list: NbtCompound[] = [];
+            for (let i = 0; i < count; i++) {
                 const nestedLen = reader.readVarUint();
                 const nestedBuf = reader.readSlice(nestedLen);
                 const nested = this.parsePayload(nestedBuf, scheme);
-                compound.putCompound(key, nested);
-                break;
+                list.push(nested);
             }
-            case NbtTypes.NbtList: {
-                const count = reader.readVarUint();
-                const list: NbtCompound[] = [];
-                for (let i = 0; i < count; i++) {
-                    const nestedLen = reader.readVarUint();
-                    const nestedBuf = reader.readSlice(nestedLen);
-                    const nested = this.parsePayload(nestedBuf, scheme);
-                    list.push(nested);
-                }
-                compound.putCompoundList(key, list);
-                break;
-            }
-            default:
-                throw new Error(`Unknown NbtType: ${type}`);
+            compound.putCompoundArray(key, list);
+            return;
         }
+        compound.put(key, NbtTypes.getTypeByIndex(type).read(reader));
     }
 
     public static fromSNbt(snbt: string): NbtCompound {
         const reader = new StringReader(snbt);
         reader.skipAnyWhitespace();
         reader.expect('{');
-        return this.parseCompound(reader);
+        return this.parseStringCompound(reader);
     }
 
-    private static parseCompound(reader: StringReader): NbtCompound {
+    public static parseStringCompound(reader: StringReader): NbtCompound {
         const compound = new NbtCompound();
 
         while (true) {
@@ -269,13 +173,13 @@ export class NbtUnserialization {
         return compound;
     }
 
-    private static parseValue(reader: StringReader): Nbt {
+    private static parseValue(reader: StringReader): NbtElement {
         reader.skipAnyWhitespace();
 
         // Compound
         if (reader.peek() === '{') {
             reader.skip();
-            return {type: NbtTypes.Compound, value: this.parseCompound(reader)};
+            return this.parseStringCompound(reader);
         }
 
         // Array
@@ -287,18 +191,24 @@ export class NbtUnserialization {
         // Boolean
         if (reader.canRead(4) && reader.getString().substring(reader.getCursor(), reader.getCursor() + 4) === 'true') {
             reader.setCursor(reader.getCursor() + 4);
-            return {type: NbtTypes.Boolean, value: true};
+            return NbtInt8.bool(true);
         }
         if (reader.canRead(5) && reader.getString().substring(reader.getCursor(), reader.getCursor() + 5) === 'false') {
             reader.setCursor(reader.getCursor() + 5);
-            return {type: NbtTypes.Boolean, value: false};
+            return NbtInt8.bool(false);
         }
 
+        // String
         if (StringReader.isQuotedStringStart(reader.peek())) {
             const str = reader.readQuotedString();
-            return {type: NbtTypes.String, value: str};
+            return NbtString.of(str);
         }
 
+        // Number
+        return this.parseNumber(reader) as NbtElement;
+    }
+
+    private static parseNumber(reader: StringReader, raw = false): NbtElement | number {
         const start = reader.getCursor();
         while (reader.canRead() && StringReader.isAllowedNumber(reader.peek())) {
             reader.skip();
@@ -311,43 +221,54 @@ export class NbtUnserialization {
         const numStr = reader.getString().substring(start, reader.getCursor());
         let suffix = '';
         if (reader.canRead()) {
-            const c = reader.peek().toLowerCase();
-            if (['b', 's', 'u', 'f', 'd'].includes(c)) {
+            const c = reader.peek().toUpperCase();
+            if (this.VALIDA_NUMBER_PREFIX.includes(c)) {
                 suffix = c;
                 reader.skip();
             }
         }
 
-        const num = parseFloat(numStr);
+        const num = Number(numStr);
         if (isNaN(num)) {
             throw new Error(`Invalid number: ${numStr}`);
         }
 
+        if (raw) return num;
         switch (suffix) {
-            case 'b':
-                return {type: NbtTypes.Int8, value: Math.round(num)};
-            case 's':
-                return {type: NbtTypes.Int16, value: Math.round(num)};
-            case 'u':
-                return {type: NbtTypes.Uint, value: Math.round(num)};
-            case 'f':
-                return {type: NbtTypes.Float, value: num};
-            case 'd':
-                return {type: NbtTypes.Double, value: num};
+            case 'B':
+                return NbtInt8.of(Math.round(num));
+            case 'S':
+                return NbtInt16.of(Math.round(num));
+            case 'U':
+                return NbtU32.of(Math.round(num));
+            case 'F':
+                return NbtFloat.of(num);
+            case 'D':
+                return NbtDouble.of(num);
             default:
-                return {type: NbtTypes.Int32, value: Math.round(num)};
+                return NbtInt32.of(Math.round(num));
         }
     }
 
-    private static parseArray(reader: StringReader): Nbt {
+    private static parseArray(reader: StringReader): NbtElement {
         reader.skipAnyWhitespace();
+
         if (reader.peek() === ']') {
             reader.skip();
-            return {type: NbtTypes.NumberArray, value: []};
+            return new NbtInt32Array(new Int32Array(0));
         }
 
-        const items: Nbt[] = [];
+        const type = reader.peek().toUpperCase();
+        if (this.VALIDA_NUMBER_PREFIX.includes(type)) {
+            reader.skip();
+            if (reader.peek() !== ';') {
+                throw new Error(`Expected ';' in array at ${reader.getCursor()}`);
+            }
+            reader.skip();
+            return this.parseNumArray(reader, type);
+        }
 
+        const items: NbtElement[] = [];
         while (true) {
             const item = this.parseValue(reader);
             items.push(item);
@@ -364,33 +285,63 @@ export class NbtUnserialization {
         }
 
         // 推断数组类型
-        const types = new Set(items.map(i => i.type));
+        const types = new Set(items.map(i => i.getType()));
         if (types.size === 0) {
-            return {type: NbtTypes.NumberArray, value: []};
+            return new NbtInt32Array(new Int32Array(0));
         }
+
         if (types.size === 1) {
-            const t = items[0].type;
-            if (t === NbtTypes.Compound) return {
-                type: NbtTypes.NbtList,
-                value: items.map(i => i.value as NbtCompound)
-            };
+            const t = items[0].getType();
+            if (t === NbtTypeId.Compound) {
+                return new NbtCompoundArray(items as NbtCompound[]);
+            }
 
-            if (t === NbtTypes.String) return {
-                type: NbtTypes.StringArray,
-                value: items.map(i => i.value as string)
-            };
-
-            const numType: number[] = [NbtTypes.Int8, NbtTypes.Int16, NbtTypes.Int32, NbtTypes.Uint, NbtTypes.Float, NbtTypes.Double];
-            if (numType.includes(t)) return {
-                type: NbtTypes.NumberArray,
-                value: items.map(i => i.value as number)
-            };
+            if (t === NbtTypeId.String) {
+                const strings = (items as NbtString[])
+                    .map(i => i.value);
+                return new NbtStringArray(strings);
+            }
         }
 
         console.warn('Mixed array types, falling back to NumberArray');
-        return {
-            type: NbtTypes.NumberArray,
-            value: items.map(i => typeof i.value === 'number' ? i.value : 0)
-        };
+
+        const numType: number[] = [NbtTypeId.Int8, NbtTypeId.Int16, NbtTypeId.Int32, NbtTypeId.U32, NbtTypeId.Float, NbtTypeId.Double];
+        const nums = items
+            .filter(i => numType.includes(i.getType()))
+            .map(num => (num as NbtDouble).value)
+        return NbtDoubleArray.create(nums);
+    }
+
+    private static parseNumArray(reader: StringReader, type: string): NbtElement {
+        const items: number[] = [];
+        while (true) {
+            const item = this.parseNumber(reader, true) as number;
+            items.push(item);
+
+            reader.skipAnyWhitespace();
+            if (reader.peek() === ',') {
+                reader.skip();
+            } else if (reader.peek() === ']') {
+                reader.skip();
+                break;
+            } else {
+                throw new Error(`Expected ',' or ']' in array at ${reader.getCursor()}`);
+            }
+        }
+
+        switch (type) {
+            case "B":
+                return NbtInt8Array.create(items);
+            case "S":
+                return NbtInt16Array.create(items);
+            case "I":
+                return NbtInt32Array.create(items);
+            case "F":
+                return NbtFloatArray.create(items);
+            case "U":
+                return NbtU32Array.create(items);
+            default:
+                return NbtDoubleArray.create(items);
+        }
     }
 }

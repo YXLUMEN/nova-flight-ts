@@ -73,6 +73,7 @@ import {LaserBeamEffect} from "../../effect/LaserBeamEffect.ts";
 import {PhaseLasers} from "../../item/weapon/PhaseLasers.ts";
 import {decodeColorToHex} from "../../utils/NetUtil.ts";
 import {TargetDrone} from "../../entity/TargetDrone.ts";
+import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly loginPlayer: Set<UUID> = new Set();
@@ -149,7 +150,7 @@ export class ClientPlayNetworkHandler {
     }
 
     public async onGameJoin(packet: JoinGameS2CPacket) {
-        this.world = new ClientWorld(this.client.registryManager);
+        this.world = new ClientWorld(this.client.registryManager, packet.worldName);
         await this.client.joinGame(this.world);
         if (this.client.player === null) {
             const profile = new GameProfile(
@@ -365,7 +366,6 @@ export class ClientPlayNetworkHandler {
 
     public onMissileSet(packet: MissileSetS2CPacket): void {
         const missile = this.world?.getEntityById(packet.entityId);
-        if (!missile) return;
         if (missile instanceof MissileEntity) {
             missile.driftAngle = packet.driftAngle;
             missile.hoverDir = packet.hoverDir;
@@ -377,13 +377,11 @@ export class ClientPlayNetworkHandler {
         if (!world) return;
 
         const missile = world.getEntityById(packet.entityId);
-        const locked = world.getEntityById(packet.lockEntityId);
-        if (missile && missile instanceof MissileEntity) {
+        if (missile instanceof MissileEntity) {
+            const locked = world.getEntityById(packet.lockEntityId);
+
             missile.setTarget(locked);
             world.events.emit(EVENTS.ENTITY_LOCKED, {missile});
-            if (missile.getLastTarget() !== locked) {
-                world.events.emit(EVENTS.ENTITY_UNLOCKED, {missile, lastTarget: missile.getLastTarget()});
-            }
         }
     }
 
@@ -525,6 +523,12 @@ export class ClientPlayNetworkHandler {
         }
     }
 
+    public onDifficultChange(packet: DifficultChangeS2CPacket): void {
+        if (this.world) {
+            this.world.setDifficulty(packet.difficult);
+        }
+    }
+
     public sendCommand(input: string): boolean {
         const command = input.startsWith('/') ? input.slice(1) : input;
         if (this.parse(command).exceptions.size === 0) {
@@ -606,5 +610,6 @@ export class ClientPlayNetworkHandler {
         this.register(LaserWeaponActivate.ID, this.onLaserWeapon.bind(this));
         this.register(LaserWeaponDeactivate.ID, this.onLaserWeapon.bind(this));
         this.register(LaserWeaponChange.ID, this.onLaserWeapon.bind(this));
+        this.register(DifficultChangeS2CPacket.ID, this.onDifficultChange.bind(this));
     }
 }

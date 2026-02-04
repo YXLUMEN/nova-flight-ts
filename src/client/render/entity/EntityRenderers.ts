@@ -35,9 +35,11 @@ export class EntityRenderers {
         const fastBullet = new FastBulletEntityRender();
         const rocket = new RocketEntityRender();
         const missile = new MissileEntityRender();
+        const boss = new BossEntityRender();
         this.register(EntityTypes.BASE_ENEMY, baseEnemy);
         this.register(EntityTypes.TANK_ENEMY_ENTITY, baseEnemy);
-        this.register(EntityTypes.BOSS_ENTITY, new BossEntityRender());
+        this.register(EntityTypes.BASE_BOSS_ENTITY, boss);
+        this.register(EntityTypes.TNT_BOSS_ENTITY, boss);
         this.register(EntityTypes.GUN_ENEMY_ENTITY, new GunEnemyEntityRender());
         this.register(EntityTypes.MINIGUN_ENEMY_ENTITY, new MiniGunEnemyEntityRender());
         this.register(EntityTypes.BULLET_ENTITY, bullet);

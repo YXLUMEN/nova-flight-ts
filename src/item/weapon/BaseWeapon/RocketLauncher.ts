@@ -23,7 +23,7 @@ export class RocketLauncher extends BaseWeapon {
     }
 
     protected onFire(stack: ItemStack, world: World, attacker: Entity): void {
-        stack.set(DataComponentTypes.WEAPON_CAN_COOLDOWN, false);
+        stack.set(DataComponentTypes.FIRING, true);
 
         const rocketCounts = stack.getOrDefault(DataComponentTypes.LAUNCH_COUNT, 8);
         const randomRocketEnable = stack.getOrDefault(DataComponentTypes.MISSILE_RANDOM_ENABLE, false);
@@ -32,7 +32,7 @@ export class RocketLauncher extends BaseWeapon {
         const schedule = world.scheduleInterval(0.1, () => {
             if (i++ > rocketCounts) {
                 schedule.cancel();
-                stack.set(DataComponentTypes.WEAPON_CAN_COOLDOWN, true);
+                stack.remove(DataComponentTypes.FIRING);
                 if (!world.isClient && attacker.isPlayer()) {
                     (attacker as ServerPlayerEntity).syncStack(stack);
                 }
@@ -82,7 +82,7 @@ export class RocketLauncher extends BaseWeapon {
     }
 
     public override shouldCooldown(stack: ItemStack): boolean {
-        return stack.getOrDefault(DataComponentTypes.WEAPON_CAN_COOLDOWN, false);
+        return !stack.getOrDefault(DataComponentTypes.FIRING, false);
     }
 
     private randomRocket(world: World, attacker: Entity): RocketEntity | null {

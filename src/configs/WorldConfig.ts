@@ -9,10 +9,10 @@ const DEFAULT_CONFIG = config({
     tick: 20,
     mbps: 0.05,
     per: 50,
-    fps: 75,
-    perFrame: 1000 / 75,
-    version: '26v09',
-    gameVersion: 1,
+    fps: 100,
+    perFrame: 1000 / 100,
+    version: '26v10',
+    gameVersion: 2,
 });
 
 const WorldConfig = status({

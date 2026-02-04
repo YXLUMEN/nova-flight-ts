@@ -4,16 +4,24 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class JoinGameS2CPacket implements Payload {
     public static readonly ID: PayloadId<JoinGameS2CPacket> = payloadId('join_game');
-    public static readonly CODEC: PacketCodec<JoinGameS2CPacket> = PacketCodecs.adapt(
+    public static readonly CODEC: PacketCodec<JoinGameS2CPacket> = PacketCodecs.adapt2(
         PacketCodecs.VAR_UINT,
         val => val.playerEntityId,
-        to => new JoinGameS2CPacket(to)
+        PacketCodecs.STRING,
+        val => val.worldName,
+        JoinGameS2CPacket.new
     );
 
-    public playerEntityId: number;
+    public readonly playerEntityId: number;
+    public readonly worldName: string;
 
-    public constructor(playerEntityId: number) {
+    public constructor(playerEntityId: number, worldName: string) {
         this.playerEntityId = playerEntityId;
+        this.worldName = worldName;
+    }
+
+    public static new(playerEntityId: number, worldName: string) {
+        return new JoinGameS2CPacket(playerEntityId, worldName)
     }
 
     public getId(): PayloadId<JoinGameS2CPacket> {

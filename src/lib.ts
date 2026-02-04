@@ -12,6 +12,11 @@ export function run() {
 
     window.oncontextmenu = event => event.preventDefault();
 
+    const ctrl = new AbortController();
+    window.addEventListener('keydown', event => {
+        event.preventDefault();
+    }, {signal: ctrl.signal});
+
     const playerName = localStorage.getItem('playerName') ?? 'null';
     UUIDUtil.uuidFromUsername(playerName)
         .then(uuid => {
@@ -19,6 +24,7 @@ export function run() {
             localStorage.setItem('playerName', playerName);
 
             const client = new NovaFlightClient();
+            ctrl.abort();
             return client.startClient();
         })
         .then(() => mainWindow.close())

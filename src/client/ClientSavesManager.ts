@@ -8,7 +8,7 @@ import {NbtSerialization} from "../nbt/NbtSerialization.ts";
 import {NbtUnserialization} from "../nbt/NbtUnserialization.ts";
 import {confirm, message} from "@tauri-apps/plugin-dialog";
 import {invoke} from "@tauri-apps/api/core";
-import {NbtCompound} from "../nbt/NbtCompound.ts";
+import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {BinaryWriter} from "../nbt/BinaryWriter.ts";
 
@@ -174,6 +174,10 @@ export class ClientSavesManager {
 
     private async tryInsertWorld(input: string) {
         const saveName = await this.genSaveName(input);
+        if (!saveName || saveName instanceof Error) {
+            return null
+        }
+
         const result = await ServerStorage.insertWorld(saveName);
         if (result.isErr()) {
             const err = result.unwrapErr();
@@ -196,12 +200,12 @@ export class ClientSavesManager {
     }
 
     private async genSaveName(saveName: string) {
-        const exist = await ServerStorage.db.exist('saves', saveName);
+        const exist = await ServerStorage.db.exist('save_meta', saveName);
         if (exist.isOk() && !exist.unwrap()) return saveName;
 
         const db = await ServerStorage.db.init();
-        const transaction = db.transaction('saves', 'readonly');
-        const store = transaction.objectStore('saves');
+        const transaction = db.transaction('save_meta', 'readonly');
+        const store = transaction.objectStore('save_meta');
 
         const basePattern = new RegExp(`^${saveName}\\((\\d+)\\)$`);
 
@@ -209,7 +213,7 @@ export class ClientSavesManager {
         const request = store.openKeyCursor(range);
         const keys: string[] = [];
 
-        const {promise, resolve, reject} = Promise.withResolvers<string>();
+        const {promise, resolve} = Promise.withResolvers<string | Error | null>();
 
         request.onsuccess = () => {
             const cursor = request.result;
@@ -242,7 +246,7 @@ export class ClientSavesManager {
 
         request.onerror = () => {
             console.error('Cursor error:', request.error);
-            reject(request.error);
+            resolve(request.error);
         };
 
         return promise;
@@ -403,6 +407,24 @@ export class ClientSavesManager {
         const alreadyImport = new Set<string>();
         const canNotRead: string[] = [];
 
+        const parseNbt = async (fullPath: string, path: string, fileName: string, ext: string) => {
+            try {
+                let compound: NbtCompound | null;
+                if (ext === 'dat') {
+                    compound = NbtUnserialization.fromRootCompactBinary(await readFile(fullPath));
+                } else {
+                    compound = NbtUnserialization.fromSNbt(await readTextFile(fullPath));
+                }
+                if (compound === null) canNotRead.push(path);
+                else alreadyImport.add(fileName);
+
+                return compound;
+            } catch (err) {
+                console.error(err);
+                return null;
+            }
+        };
+
         for (const fullPath of results.files) {
             const path = fullPath.split(/[\\/]/).pop();
             if (!path) continue;
@@ -421,26 +443,8 @@ export class ClientSavesManager {
                 continue;
             }
 
-            const parseNbt = async () => {
-                try {
-                    let compound: NbtCompound | null;
-                    if (ext === 'dat') {
-                        compound = NbtUnserialization.fromRootCompactBinary(await readFile(fullPath));
-                    } else {
-                        compound = NbtUnserialization.fromSNbt(await readTextFile(fullPath));
-                    }
-                    if (compound === null) canNotRead.push(path);
-                    else alreadyImport.add(fileName);
-
-                    return compound;
-                } catch (err) {
-                    console.error(err);
-                    return null;
-                }
-            };
-
             if (fileName === 'world') {
-                const compound = await parseNbt();
+                const compound = await parseNbt(fullPath, path, fileName, ext);
                 if (compound === null) break;
 
                 const saveResult = await ServerStorage.updateWorld(saveName, compound);
@@ -451,16 +455,15 @@ export class ClientSavesManager {
                 continue;
             }
 
-            const playerFolderIndex = fullPath.lastIndexOf('players');
-            if (playerFolderIndex <= 0 || !UUIDUtil.isValidUUID(fileName)) continue;
+            if (fullPath.lastIndexOf('players') > 0 && UUIDUtil.isValidUUID(fileName)) {
+                const compound = await parseNbt(fullPath, path, fileName, ext);
+                if (compound === null) continue;
 
-            const compound = await parseNbt();
-            if (compound === null) continue;
-
-            const playerResult = await ServerStorage.savePlayerNbt(saveName, fileName, compound);
-            if (playerResult.isErr()) {
-                canNotRead.push(path);
-                console.error(playerResult.unwrapErr());
+                const playerResult = await ServerStorage.savePlayerNbt(saveName, fileName, compound);
+                if (playerResult.isErr()) {
+                    canNotRead.push(path);
+                    console.error(playerResult.unwrapErr());
+                }
             }
         }
 
@@ -480,10 +483,10 @@ export class ClientSavesManager {
 
         this.saveNameInput.value = 'New World';
         this.inputContainer.classList.remove('hidden');
-        NovaFlightClient.getInstance().input.setDisabled(true);
+        NovaFlightClient.getInstance().input.startInput(true);
 
         const settled = (result: string | null) => {
-            NovaFlightClient.getInstance().input.setDisabled(false);
+            NovaFlightClient.getInstance().input.startInput(false);
             this.inputContainer.classList.add('hidden');
             resolve(result);
             ctrl.abort();

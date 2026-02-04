@@ -6,9 +6,12 @@ import {Codecs} from "../serialization/Codecs.ts";
 import type {UnaryOperator} from "../apis/types.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {AttributeModifiersComponent} from "./type/AttributeModifiersComponent.ts";
+import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
 
 export class DataComponentTypes {
-    // public static readonly CUSTOM_DATA = this.register("custom_data", new ComponentType(CustomData));
+    public static readonly CUSTOM_DATA: ComponentType<NbtCompound> = this.register("custom_data",
+        builder => builder.withCodec(Codecs.NBT_COMPOUND)
+    );
 
     public static readonly MAX_STACK_SIZE: ComponentType<number> = this.register("max_stack_size",
         builder => builder.withCodec(Codecs.UINT32).withPacketCodec(PacketCodecs.UINT32)
@@ -39,10 +42,10 @@ export class DataComponentTypes {
         builder => builder.withCodec(Codecs.DOABLE).withPacketCodec(PacketCodecs.DOUBLE)
     );
     public static readonly MAX_COOLDOWN: ComponentType<number> = this.register("max_cooldown",
-        builder => builder.withCodec(Codecs.DOABLE).withPacketCodec(PacketCodecs.DOUBLE)
+        builder => builder.withCodec(Codecs.UINT32).withPacketCodec(PacketCodecs.UINT32)
     );
     public static readonly COOLDOWN: ComponentType<number> = this.register("cooldown",
-        builder => builder.withCodec(Codecs.DOABLE).withPacketCodec(PacketCodecs.DOUBLE)
+        builder => builder.withCodec(Codecs.UINT32).withPacketCodec(PacketCodecs.UINT32)
     );
     public static readonly EXPLOSION_RADIUS: ComponentType<number> = this.register("explosion_radius",
         builder => builder.withCodec(Codecs.DOABLE).withPacketCodec(PacketCodecs.DOUBLE)

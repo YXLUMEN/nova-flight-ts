@@ -12,7 +12,7 @@ import type {EntityAttribute} from "./attribute/EntityAttribute.ts";
 import {EntityAttributes} from "./attribute/EntityAttributes.ts";
 import type {EntityAttributeInstance} from "./attribute/EntityAttributeInstance.ts";
 import {DefaultAttributeContainer} from "./attribute/DefaultAttributeContainer.ts";
-import {type NbtCompound} from "../nbt/NbtCompound.ts";
+import {type NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {TrackedDataHandlerRegistry} from "./data/TrackedDataHandlerRegistry.ts";
 import type {TrackedData} from "./data/TrackedData.ts";
 import type {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
@@ -394,7 +394,7 @@ export abstract class LivingEntity extends Entity {
 
         const shield = this.getShieldAmount();
         nbt.putFloat('Shield', Number.isFinite(shield) ? shield : 0);
-        nbt.putCompoundList('attributes', this.getAttributes().toNbt());
+        nbt.putCompoundArray('attributes', this.getAttributes().toNbt());
 
         if (this.activeStatusEffects.size > 0) {
             const nbtList: NbtCompound[] = [];
@@ -402,7 +402,7 @@ export abstract class LivingEntity extends Entity {
                 nbtList.push(effect.toNbt());
             }
 
-            nbt.putCompoundList('active_effects', nbtList);
+            nbt.putCompoundArray('active_effects', nbtList);
         }
 
         return nbt
@@ -411,12 +411,12 @@ export abstract class LivingEntity extends Entity {
     public readNBT(nbt: NbtCompound) {
         super.readNBT(nbt);
 
-        const attributes = nbt.getCompoundList('attributes');
+        const attributes = nbt.getCompoundArray('attributes');
         if (attributes && attributes.length > 0) {
             this.getAttributes().readNbt(attributes);
         }
 
-        const effects = nbt.getCompoundList('active_effects');
+        const effects = nbt.getCompoundArray('active_effects');
         if (effects && effects.length > 0) {
             for (const effectNbt of effects) {
                 const effect = StatusEffectInstance.fromNbt(effectNbt);

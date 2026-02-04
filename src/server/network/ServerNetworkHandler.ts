@@ -75,7 +75,10 @@ export class ServerNetworkHandler {
             return;
         }
 
-        this.handlers.get(payload.getId().id)?.(payload);
+        const handler = this.handlers.get(payload.getId().id);
+        if (!handler) return;
+        Promise.resolve()
+            .then(() => handler(payload))
     }
 
     private register<T extends Payload>(id: PayloadId<T>, handler: Consumer<T>): void {

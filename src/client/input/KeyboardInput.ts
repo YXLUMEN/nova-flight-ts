@@ -7,7 +7,8 @@ import {NovaFlightClient} from "../NovaFlightClient.ts";
 import type {Consumer} from "../../apis/types.ts";
 
 export class KeyboardInput implements IInput {
-    private disableKey = false;
+    private disableHandler = false;
+    private globalInput = false;
 
     private readonly keys = new Set<string>();
     private readonly bindings = new Map<string, string[]>();
@@ -72,22 +73,34 @@ export class KeyboardInput implements IInput {
         this.wheelHandler = null
     }
 
-    public setDisabled(disabled: boolean): void {
-        this.disableKey = disabled;
+    public startInput(on: boolean): void {
+        this.globalInput = on;
+    }
+
+    public setHandlerDisabled(disabled: boolean): void {
+        this.disableHandler = disabled;
     }
 
     private registryListener(target: HTMLElement) {
         const client = NovaFlightClient.getInstance();
         const commandManager = client.clientCommandManager;
 
+        const allowedShortcuts = new Set(['KeyA', 'KeyC', 'KeyV', 'KeyX', 'KeyZ',]);
+
         window.addEventListener('keydown', event => {
             const code = event.code;
+            if (code === 'F5' || ((event.ctrlKey || event.metaKey) && !allowedShortcuts.has(code))) {
+                event.preventDefault();
+            }
+
+            if (this.globalInput) return;
 
             if (code === 'Escape' && commandManager.isShow()) {
                 const hide = commandManager.onEsc();
-                if (hide) this.setDisabled(false);
+                if (hide) this.setHandlerDisabled(false);
                 return;
             }
+
             if ((code === 'Slash' || code === 'KeyT') && !commandManager.isShow()) {
                 if (code === 'Slash' && commandManager.getInput().length > 0) {
                     event.preventDefault();
@@ -95,14 +108,10 @@ export class KeyboardInput implements IInput {
                 if (code === 'KeyT') event.preventDefault();
 
                 commandManager.switchPanel(true);
-                this.setDisabled(true);
+                this.setHandlerDisabled(true);
             }
 
-            if (this.disableKey) {
-                if (code === 'F5' || ((event.ctrlKey || event.metaKey) && code === 'KeyR')) event.preventDefault();
-                return;
-            }
-
+            if (this.disableHandler) return;
             event.preventDefault();
             this.keys.add(code);
             this.keyHandler?.(event);

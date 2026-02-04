@@ -2,7 +2,7 @@ import {World} from "../world/World.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import {type NovaFlightServer} from "./NovaFlightServer.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
-import {NbtCompound} from "../nbt/NbtCompound.ts";
+import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import {SoundEventS2CPacket} from "../network/packet/s2c/SoundEventS2CPacket.ts";
 import {StopSoundS2CPacket} from "../network/packet/s2c/StopSoundS2CPacket.ts";
@@ -36,6 +36,7 @@ import {EffectCreateS2CPacket} from "../network/packet/s2c/EffectCreateS2CPacket
 import type {ServerChannel} from "./network/ServerChannel.ts";
 import {GameOverS2CPacket} from "../network/packet/s2c/GameOverS2CPacket.ts";
 import {EMPBurst} from "../effect/EMPBurst.ts";
+import {DifficultChangeS2CPacket} from "../network/packet/s2c/DifficultChangeS2CPacket.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
@@ -139,6 +140,7 @@ export class ServerWorld extends World implements NbtSerializable {
         this.over = true;
         this.setTicking(false);
         this.getNetworkChannel().send(new GameOverS2CPacket());
+        this.events.emit(EVENTS.GAME_OVER, null);
     }
 
     public override getNetworkChannel(): ServerChannel {
@@ -222,6 +224,12 @@ export class ServerWorld extends World implements NbtSerializable {
 
     public override getProjectiles(): ReadonlySet<ProjectileEntity> {
         return this.entities.getProjectiles();
+    }
+
+    public setDifficulty(difficulty: number) {
+        if (difficulty === this.getDifficulty()) return;
+        super.setDifficulty(difficulty);
+        this.sendPacket(new DifficultChangeS2CPacket(difficulty));
     }
 
     public getPhase(): number {
@@ -351,25 +359,25 @@ export class ServerWorld extends World implements NbtSerializable {
             entity.writeNBT(nbt);
             entityList.push(nbt);
         });
-        root.putCompoundList('Entities', entityList);
+        root.putCompoundArray('Entities', entityList);
 
         const stageNbt = new NbtCompound();
         this.stage.writeNBT(stageNbt);
         root.putCompound('Stage', stageNbt);
         root.putUint('PhaseScore', this.phaseScore);
-        root.putUint('Difficulty', this.stageDifficulty);
+        root.putInt8('Difficulty', this.getDifficulty());
 
         return root;
     }
 
     public readNBT(nbt: NbtCompound) {
-        const entityNbt = nbt.getCompoundList('Entities');
+        const entityNbt = nbt.getCompoundArray('Entities');
         if (entityNbt) this.loadEntity(entityNbt);
 
         const stageNbt = nbt.getCompound('Stage');
         if (stageNbt) this.stage.readNBT(stageNbt);
-        this.phaseScore = nbt.getUint('PhaseScore');
-        this.stageDifficulty = nbt.getUint('Difficulty', 1);
+        this.phaseScore = nbt.getU32('PhaseScore');
+        this.setDifficulty(nbt.getInt8('Difficulty', 1));
     }
 
     private loadEntity(nbtList: NbtCompound[]) {

@@ -34,8 +34,11 @@ export class ComponentTypeBuilder<T> {
     }
 
     public build(): ComponentType<T> {
-        if (!this.codec || !this.packetCodec) {
+        if (!this.codec) {
             throw new Error("Missing Codec for component");
+        }
+        if (!this.packetCodec) {
+            this.packetCodec = PacketCodecs.registryCodec(this.codec);
         }
         return new ComponentType<T>(this);
     }

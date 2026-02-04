@@ -1,6 +1,6 @@
 import type {UUID} from "../../apis/types.ts";
 import {ServerPlayerEntity} from "./ServerPlayerEntity.ts";
-import {NbtCompound} from "../../nbt/NbtCompound.ts";
+import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {NovaFlightServer} from "../NovaFlightServer.ts";
 import {ServerStorage} from "../ServerStorage.ts";
 import {GameProfile} from "./GameProfile.ts";
@@ -40,7 +40,7 @@ export class PlayerManager {
         }
         world.addPlayer(player);
 
-        networkHandler.send(new JoinGameS2CPacket(player.getId()));
+        networkHandler.send(new JoinGameS2CPacket(player.getId(), this.server.worldName));
         channel.send(new GameMessageS2CPacket(`\x1b[32m${player.playerProfile.name}\x1b[0m join the game`));
 
         console.log(`[Server] Player ${profile.clientId} login`);

@@ -1,10 +1,10 @@
-import type {Entity} from "../entity/Entity.ts";
+import {Entity} from "../entity/Entity.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 import type {VisualEffect} from "../effect/VisualEffect.ts";
 import type {Schedule, TimerTask} from "../apis/ITimer.ts";
 import {DamageSources} from "../entity/damage/DamageSources.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
-import {type IEvents} from "../apis/IEvents.ts";
+import {EVENTS, type IEvents} from "../apis/IEvents.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
 import type {Payload} from "../network/Payload.ts";
@@ -21,7 +21,7 @@ import {EntityType} from "../entity/EntityType.ts";
 import type {Channel} from "../network/Channel.ts";
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
-import {squareDistVec2} from "../utils/math/math.ts";
+import {clamp, squareDistVec2} from "../utils/math/math.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
@@ -37,7 +37,7 @@ export abstract class World {
 
     // ticking
     public readonly isClient: boolean;
-    public stageDifficulty = 1;
+    private stageDifficulty = 1;
     public freeze = false;
     protected over = false;
     protected ticking = false;
@@ -72,6 +72,15 @@ export abstract class World {
 
     public getServer(): NovaFlightServer | null {
         return null;
+    }
+
+    public getDifficulty(): number {
+        return this.stageDifficulty;
+    }
+
+    public setDifficulty(difficulty: number) {
+        this.stageDifficulty = clamp(difficulty, 0, 16) | 0;
+        this.events.emit(EVENTS.DIFFICULT_CHANGE, {difficult: difficulty});
     }
 
     public abstract playSound(entity: Entity | null, sound: SoundEvent, volume?: number, pitch?: number): void;
@@ -140,6 +149,7 @@ export abstract class World {
     public close(): void {
         this.clear();
         this.events.clear();
+        Entity.CURRENT_ID.reset();
     }
 
     public clear(): void {

@@ -12,7 +12,7 @@ export class KineticArtillery extends BaseWeapon {
     public static readonly SPEED = 50;
 
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity, _slot: number, selected: boolean) {
-        const cooldown = stack.getOrDefault(DataComponentTypes.COOLDOWN, 0);
+        const cooldown = this.getCooldown(stack);
         if (cooldown > 0 && this.shouldCooldown(stack)) {
             this.setCooldown(stack, cooldown - 1);
 

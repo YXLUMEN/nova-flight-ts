@@ -29,6 +29,7 @@ import {documentDir, resolve, resolveResource} from "@tauri-apps/api/path";
 import {exists, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs";
 import {ClientSavesManager} from "./ClientSavesManager.ts";
 import {confirm, message} from "@tauri-apps/plugin-dialog";
+import {EVENTS} from "../apis/IEvents.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -59,7 +60,6 @@ export class NovaFlightClient {
     private last = 0;
     private accumulator = 0;
     private lastRenderTime = 0;
-    private bindRender = this.render.bind(this);
 
     private gameOverAbort: AbortController | null = null;
     private waitWorldStop: Promise<void> | null = null;
@@ -116,9 +116,9 @@ export class NovaFlightClient {
     public async startClient() {
         this.window.resize();
         await this.initResources();
-
+        BGMManager.init();
         if (!isDev) {
-            BGMManager.init();
+
             await mainWindow.setFullscreen(true);
         }
 
@@ -151,6 +151,7 @@ export class NovaFlightClient {
                 await this.connectToServer();
             }
 
+            this.world?.events.emit(EVENTS.GAME_START, null);
             await this.waitWorldStop;
 
             // cleanup
@@ -219,6 +220,8 @@ export class NovaFlightClient {
             this.stopWorld();
         }
     }
+
+    private bindRender = this.render.bind(this);
 
     private tickWorld(dt: number) {
         if (this.world && (this.world.isTicking || this.world.tickWhenMultiPlayer())) {
@@ -666,6 +669,7 @@ export class NovaFlightClient {
         }).catch(console.error);
 
         mainWindow.listen('tauri://blur', () => {
+            if (this.clientCommandManager.isShow()) return;
             this.world?.setTicking(false);
             WorldConfig.lastFps = WorldConfig.fps;
             WorldConfig.fps = 5;

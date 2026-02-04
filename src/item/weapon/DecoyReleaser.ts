@@ -6,7 +6,6 @@ import {DecoyEntity} from "../../entity/DecoyEntity.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {HALF_PI, rand} from "../../utils/math/math.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
-import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export class DecoyReleaser extends SpecialWeapon {
@@ -20,13 +19,15 @@ export class DecoyReleaser extends SpecialWeapon {
         if (!world.isClient) {
             const pos = attacker.getPositionRef;
             const yaw = attacker.getYaw();
+            const f = Math.cos(yaw) * -0.5;
+            const g = Math.sin(yaw) * -0.5;
 
             for (let i = 0; i < perRelease; i++) {
                 const t = (i / (perRelease - 1)) - 0.5;
                 const angle = yaw + t * Math.PI / 3;
 
-                const offsetX = Math.cos(angle) * 1.5 + Math.cos(yaw) * -0.5;
-                const offsetY = Math.sin(angle) * 1.5 + Math.sin(yaw) * -0.5;
+                const offsetX = Math.cos(angle) * 1.5 + f;
+                const offsetY = Math.sin(angle) * 1.5 + g;
 
                 const decoy = new DecoyEntity(EntityTypes.DECOY_ENTITY, world, attacker);
                 decoy.setPosition(pos.x + offsetX, pos.y + offsetY);
@@ -42,15 +43,12 @@ export class DecoyReleaser extends SpecialWeapon {
     }
 
     public tryFire(stack: ItemStack, world: World, attacker: Entity): void {
-        stack.set(DataComponentTypes.WEAPON_CAN_COOLDOWN, false);
-
         let quickReCount = 0;
         let sustainReCount = 0;
 
         const sustainSchedule = world.scheduleInterval(1.0, () => {
             if (sustainReCount++ > this.sustainReleaseTimes) {
                 sustainSchedule.cancel();
-                stack.set(DataComponentTypes.WEAPON_CAN_COOLDOWN, true);
                 return;
             }
 
@@ -79,10 +77,6 @@ export class DecoyReleaser extends SpecialWeapon {
 
     public override getDisplayName(): string {
         return "干扰弹";
-    }
-
-    public override shouldCooldown(stack: ItemStack): boolean {
-        return stack.getOrDefault(DataComponentTypes.WEAPON_CAN_COOLDOWN, true);
     }
 
     public override getSortIndex(): number {

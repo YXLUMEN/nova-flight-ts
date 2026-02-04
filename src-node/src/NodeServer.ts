@@ -1,4 +1,4 @@
-import type {NbtCompound} from "../../src/nbt/NbtCompound.ts";
+import type {NbtCompound} from "../../src/nbt/element/NbtCompound.ts";
 import {NovaFlightServer} from "../../src/server/NovaFlightServer.ts";
 import type {Result} from "../../src/utils/result/Result.ts";
 import {NodeServerChannel} from "./network/NodeServerChannel.ts";
