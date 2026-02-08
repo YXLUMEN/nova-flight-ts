@@ -2,8 +2,8 @@ import {StringReader} from "../brigadier/StringReader.ts";
 import {SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
 import type {EntityFilter} from "./SelectorArguments.ts";
 import type {Suggestions} from "../brigadier/suggestion/Suggestions.ts";
-import {IllegalArgumentError} from "../apis/errors.ts";
-import type {BiConsumer, Consumer} from "../apis/types.ts";
+import {CommandError, IllegalArgumentError} from "../apis/errors.ts";
+import type {BiConsumer, Consumer, UUID} from "../apis/types.ts";
 import {EntitySelector} from "./EntitySelector.ts";
 import {EntitySelectorOptions} from "./EntitySelectorOptions.ts";
 import type {IVec} from "../utils/math/IVec.ts";
@@ -12,10 +12,12 @@ import {Box} from "../utils/math/Box.ts";
 import type {EntityType} from "../entity/EntityType.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import type {NumRange} from "../predicate/NumberRange.ts";
+import {UUIDUtil} from "../utils/UUIDUtil.ts";
 
 type provider = (builder: SuggestionsBuilder, consumer: Consumer<SuggestionsBuilder>) => Promise<Suggestions>;
 
 export class EntitySelectorReader {
+    public static readonly INVALID_ENTITY_EXCEPTION = new CommandError('Invalid entity');
     public static DEFAULT_SUGGESTION_PROVIDER: provider = (builder, _) => builder.buildPromise();
 
     private readonly reader: StringReader;
@@ -27,6 +29,9 @@ export class EntitySelectorReader {
     private limit: number = 1;
     public hasLimit: boolean = false;
     public includesNonPlayers: boolean = false;
+
+    private playerName: string | null = null;
+    private uuid: UUID | null = null;
 
     private centerX: number | null = null;
     private centerY: number | null = null;
@@ -70,7 +75,9 @@ export class EntitySelectorReader {
             this.includesNonPlayers,
             this.filters,
             this.sorter,
-            this.senderOnly
+            this.senderOnly,
+            this.playerName,
+            this.uuid,
         );
     }
 
@@ -78,6 +85,23 @@ export class EntitySelectorReader {
         if (this.reader.canRead()) {
             this.suggestionProvider = this.suggestNormal;
         }
+
+        const start = this.reader.getCursor();
+        const str = this.reader.getString();
+
+        if (UUIDUtil.isValidUUID(str)) {
+            this.uuid = str;
+            this.includesNonPlayers = true;
+        } else {
+            if (str.length === 0 || str.length > 16) {
+                this.reader.setCursor(start);
+                throw EntitySelectorReader.INVALID_ENTITY_EXCEPTION;
+            }
+
+            this.includesNonPlayers = false;
+            this.playerName = str;
+        }
+
         this.limit = 1;
     }
 

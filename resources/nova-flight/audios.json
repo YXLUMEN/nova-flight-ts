@@ -20,6 +20,9 @@
   "we_made_it": {
     "file": "nova-flight:/we_made_it.ogg"
   },
+  "zerg": {
+    "file": "nova-flight:/zerg.ogg"
+  },
   "void_showdown": {
     "file": "nova-flight:/void_showdown.ogg"
   },

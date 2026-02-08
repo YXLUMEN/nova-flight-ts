@@ -20,13 +20,13 @@ export class CIWSBulletEntity extends BulletEntity {
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
-        nbt.putUint('Age', this.age);
+        nbt.putUint32('age', this.age);
         return nbt
     }
 
     public override readNBT(nbt: NbtCompound) {
         super.readNBT(nbt);
-        this.age = nbt.getU32('Age');
+        this.age = nbt.getUint32('age');
     }
 
     public override onEntityHit(entity: Entity) {

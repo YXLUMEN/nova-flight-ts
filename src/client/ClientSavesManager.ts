@@ -345,7 +345,7 @@ export class ClientSavesManager {
                 }
             });
 
-            await message('已导出至 "文档"');
+            await message('已导出至 "Document/NovaFlight"');
         } catch (err) {
             await message('导出失败', {kind: 'error'});
             console.error(err);
@@ -405,21 +405,31 @@ export class ClientSavesManager {
         if (!saveName) return;
 
         const alreadyImport = new Set<string>();
-        const canNotRead: string[] = [];
+        const failTasks: { path: string, reason: string }[] = [];
 
         const parseNbt = async (fullPath: string, path: string, fileName: string, ext: string) => {
             try {
+                if (!await exists(fullPath)) {
+                    failTasks.push({path, reason: 'not exists'});
+                    return null;
+                }
+
                 let compound: NbtCompound | null;
                 if (ext === 'dat') {
                     compound = NbtUnserialization.fromRootCompactBinary(await readFile(fullPath));
                 } else {
                     compound = NbtUnserialization.fromSNbt(await readTextFile(fullPath));
                 }
-                if (compound === null) canNotRead.push(path);
+                if (compound === null) failTasks.push({path, reason: 'parse fail'});
                 else alreadyImport.add(fileName);
 
                 return compound;
             } catch (err) {
+                if (typeof err === 'string' && err.startsWith('forbidden path')) {
+                    failTasks.push({path, reason: 'forbidden'});
+                } else {
+                    failTasks.push({path, reason: 'parse error'});
+                }
                 console.error(err);
                 return null;
             }
@@ -438,18 +448,13 @@ export class ClientSavesManager {
             const fileName = path.substring(0, i);
             if (alreadyImport.has(fileName)) continue;
 
-            if (!await exists(fullPath)) {
-                canNotRead.push(path);
-                continue;
-            }
-
             if (fileName === 'world') {
                 const compound = await parseNbt(fullPath, path, fileName, ext);
                 if (compound === null) break;
 
                 const saveResult = await ServerStorage.updateWorld(saveName, compound);
                 if (saveResult.isErr()) {
-                    canNotRead.push(path);
+                    failTasks.push({path, reason: saveResult.unwrapErr().message});
                     console.error(saveResult.unwrapErr());
                 }
                 continue;
@@ -461,19 +466,24 @@ export class ClientSavesManager {
 
                 const playerResult = await ServerStorage.savePlayerNbt(saveName, fileName, compound);
                 if (playerResult.isErr()) {
-                    canNotRead.push(path);
+                    failTasks.push({path, reason: playerResult.unwrapErr().message});
                     console.error(playerResult.unwrapErr());
                 }
             }
         }
 
-        if (canNotRead.length > 0) {
-            await message(`导入完成, 但存在 ${canNotRead.length} 个文件无法加载`);
-            await warn(`导入时无法加载: ${JSON.stringify(canNotRead)}`);
-        } else {
+        if (failTasks.length === 0) {
             await message('导入完成');
+            await this.refreshSaveDisplay();
+            return
         }
 
+        if (failTasks.find(fail => fail.reason === 'forbidden')) {
+            await message('读取时被拒绝, 尝试将存档文件夹转移至 "Document/NovaFlight" 再进行导入', {kind: 'warning'});
+        } else {
+            await message(`导入完成, 但存在 ${failTasks.length} 个文件无法加载`, {kind: 'warning'});
+        }
+        await warn(`导入时无法加载: ${JSON.stringify(failTasks)}`);
         await this.refreshSaveDisplay();
     }
 

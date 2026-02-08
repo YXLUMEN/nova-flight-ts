@@ -20,7 +20,7 @@ export class StatusEffectCommand {
                 .then(
                     literal<T>('give')
                         .then(
-                            argument<T, EntitySelector>('selector', EntitySelectorArgumentType.selector())
+                            argument<T, EntitySelector>('selector', EntitySelectorArgumentType.entities())
                                 .then(
                                     argument<T, Identifier>('effect_id', IdentifierArgumentType.identifier())
                                         .executes(this.applyEffect.bind(this))
@@ -40,7 +40,7 @@ export class StatusEffectCommand {
                     literal<T>('clear')
                         .executes(this.removeStatus.bind(this))
                         .then(
-                            argument<T, EntitySelector>('selector', EntitySelectorArgumentType.selector())
+                            argument<T, EntitySelector>('selector', EntitySelectorArgumentType.entities())
                                 .executes((this.removeStatus.bind(this)))
                                 .then(
                                     argument<T, Identifier>('effect_id', IdentifierArgumentType.identifier())

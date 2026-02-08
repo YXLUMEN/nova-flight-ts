@@ -13,11 +13,23 @@
     "core:window:allow-close",
     "fs:default",
     "fs:allow-exists",
-    "fs:allow-read",
     "fs:allow-resource-read-recursive",
-    "fs:allow-resource-write",
-    "fs:scope-document-recursive",
-    "fs:allow-document-write",
+    {
+      "identifier": "fs:scope-document-recursive",
+      "allow": [
+        {
+          "path": "$DOCUMENT/NovaFlight/**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-document-write",
+      "allow": [
+        {
+          "path": "$DOCUMENT/NovaFlight/**"
+        }
+      ]
+    },
     "log:allow-log",
     "dialog:default"
   ]

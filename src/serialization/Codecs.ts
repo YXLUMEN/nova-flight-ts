@@ -3,7 +3,7 @@ import {config} from "../utils/uit.ts";
 import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {NbtInt8} from "../nbt/element/NbtInt8.ts";
 import {NbtInt32} from "../nbt/element/NbtInt32.ts";
-import {NbtU32} from "../nbt/element/NbtU32.ts";
+import {NbtUint32} from "../nbt/element/NbtUint32.ts";
 import {NbtFloat} from "../nbt/element/NbtFloat.ts";
 import {NbtDouble} from "../nbt/element/NbtDouble.ts";
 import {NbtString} from "../nbt/element/NbtString.ts";
@@ -21,7 +21,7 @@ export class Codecs {
     );
 
     public static readonly UINT32: Codec<number> = this.of(
-        value => NbtU32.of(value),
+        value => NbtUint32.of(value),
         input => input.value
     );
 

@@ -3,8 +3,9 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class GameOverS2CPacket implements Payload {
+    public static readonly INSTANCE = new GameOverS2CPacket();
     public static readonly ID: PayloadId<GameOverS2CPacket> = payloadId('game_over');
-    public static readonly CODEC: PacketCodec<GameOverS2CPacket> = PacketCodecs.emptyNew(GameOverS2CPacket);
+    public static readonly CODEC: PacketCodec<GameOverS2CPacket> = PacketCodecs.uint(this.INSTANCE);
 
     public getId(): PayloadId<GameOverS2CPacket> {
         return GameOverS2CPacket.ID;

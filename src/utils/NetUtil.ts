@@ -57,7 +57,7 @@ export function decodeFromInt32(value: number, maxValue: number = 2e5): number {
 }
 
 /**
- * Encodes a CSS-like hex color string into a 32-bit RGBA integer (0xRRGGBBAA).
+ * Encodes a CSS-like hex color string into a u32-bit RGBA integer (0xRRGGBBAA).
  * Supports:
  *   - #RGB    → #RRGGBBFF
  *   - #RRGGBB → #RRGGBBFF
@@ -65,7 +65,9 @@ export function decodeFromInt32(value: number, maxValue: number = 2e5): number {
  */
 export function encodeColorHex(hex: string): number {
     let clean = hex.replace('#', '').trim();
-    if (clean.length === 3) {
+    if (clean.length === 0) {
+        clean = 'FFFFFFFF';
+    } else if (clean.length === 3) {
         clean = clean
             .split('')
             .map(c => c + c)
@@ -87,7 +89,7 @@ export function encodeColorHex(hex: string): number {
 }
 
 /**
- * Decodes a 32-bit RGBA integer (0xRRGGBBAA) into a normalized 8-digit hex string.
+ * Decodes a u32-bit RGBA integer (0xRRGGBBAA) into a normalized 8-digit hex string.
  * Always returns uppercase with leading '#'.
  */
 export function decodeColorToHex(colorInt: number): string {

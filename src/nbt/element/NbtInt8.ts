@@ -12,7 +12,7 @@ export class NbtInt8 implements NbtElement {
     });
 
     public static of(value: number): NbtInt8 {
-        return this.cache[128 + value];
+        return this.cache[128 + Math.floor(value)];
     }
 
     public static bool(bl: boolean): NbtInt8 {
@@ -33,6 +33,10 @@ export class NbtInt8 implements NbtElement {
         writer.writeInt8(this.value);
     }
 
+    public copy(): NbtInt8 {
+        return this;
+    }
+
     private static readonly cache: NbtInt8[] = new Array<NbtInt8>(256);
     static {
         for (let i = 0; i < this.cache.length; i++) {
@@ -42,6 +46,6 @@ export class NbtInt8 implements NbtElement {
     }
 
     public toString(): string {
-        return `${this.value}B`;
+        return `${this.value}b`;
     }
 }

@@ -10,7 +10,7 @@ export class KillCommand {
         dispatcher.registry(
             literal<T>('kill')
                 .then(
-                    argument<T, EntitySelector>('selector', EntitySelectorArgumentType.selector())
+                    argument<T, EntitySelector>('selector', EntitySelectorArgumentType.entities())
                         .executes(ctx => {
                             const world = ctx.source.getWorld();
                             if (!world) throw new CommandError("No world was found.");

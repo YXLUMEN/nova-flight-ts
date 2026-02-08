@@ -137,12 +137,12 @@ export class ServerTechTree implements TechTree {
             .filter(id => id !== null)
             .map(id => id.toString());
 
-        nbt.putStringArray('Techs', ...ids);
+        nbt.putStringArray('techs', ...ids);
         return nbt
     }
 
     public readNBT(nbt: NbtCompound) {
-        const techs = nbt.getStringArray('Techs');
+        const techs = nbt.getStringArray('techs');
         if (techs.length === 0) return;
 
         for (const id of techs) {

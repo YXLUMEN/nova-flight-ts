@@ -16,7 +16,7 @@ export class GiveCommand {
         dispatcher.registry(
             literal<T>('give')
                 .then(
-                    argument<T, EntitySelector>('target', EntitySelectorArgumentType.selector())
+                    argument<T, EntitySelector>('target', EntitySelectorArgumentType.players())
                         .then(
                             argument<T, Identifier>('item', IdentifierArgumentType.identifier())
                                 .executes(ctx => {

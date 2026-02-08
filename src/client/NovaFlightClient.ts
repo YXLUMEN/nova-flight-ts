@@ -30,6 +30,7 @@ import {exists, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs";
 import {ClientSavesManager} from "./ClientSavesManager.ts";
 import {confirm, message} from "@tauri-apps/plugin-dialog";
 import {EVENTS} from "../apis/IEvents.ts";
+import {AudioManager} from "../sound/AudioManager.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -116,10 +117,12 @@ export class NovaFlightClient {
     public async startClient() {
         this.window.resize();
         await this.initResources();
-        BGMManager.init();
-        if (!isDev) {
 
+        if (!isDev) {
+            BGMManager.init();
             await mainWindow.setFullscreen(true);
+        } else {
+            AudioManager.setDisable(true);
         }
 
         while (true) {
@@ -503,7 +506,13 @@ export class NovaFlightClient {
             await sleep(200);
 
             const update = await check({timeout: 2000});
-            if (!update || !await confirm('是否更新')) return;
+            if (!update) return;
+
+            if (!await confirm(`当前游戏版本为 "${update.currentVersion}" 存在更新版本 "${update.version}"`, {
+                title: '发现更新',
+                okLabel: '更新',
+                cancelLabel: '忽略'
+            })) return;
 
             let contentLength: number = 0;
             let downloaded = 0;
@@ -518,7 +527,7 @@ export class NovaFlightClient {
                         loadingScreen.setProgress(downloaded / contentLength, `正在下载...`);
                         break;
                     case 'Finished':
-                        loadingScreen.setProgress(1, '下载完成, 程序将关闭');
+                        loadingScreen.setProgress(1, '下载完成, 程序即将重启');
                         loadingScreen.setDone();
                         break;
                 }
@@ -526,8 +535,8 @@ export class NovaFlightClient {
         } catch (error) {
             console.error(error);
             loadingScreen.setProgress(0, '检查更新失败');
-            await sleep(300);
         }
+        await sleep(500);
     }
 
     private registryInput(event: KeyboardEvent): void {
@@ -669,8 +678,9 @@ export class NovaFlightClient {
         }).catch(console.error);
 
         mainWindow.listen('tauri://blur', () => {
-            if (this.clientCommandManager.isShow()) return;
-            this.world?.setTicking(false);
+            if (!this.clientCommandManager.isShow()) {
+                this.world?.setTicking(false);
+            }
             WorldConfig.lastFps = WorldConfig.fps;
             WorldConfig.fps = 5;
             WorldConfig.perFrame = 1000 / WorldConfig.fps;

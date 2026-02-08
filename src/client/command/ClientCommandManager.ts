@@ -22,6 +22,7 @@ import {StageCommand} from "../../command/StageCommand.ts";
 import {KickCommand} from "../../command/KickCommand.ts";
 import {GiveCommand} from "../../command/GiveCommand.ts";
 import {ScoreCommand} from "../../command/ScoreCommand.ts";
+import {ClientStorage} from "../ClientStorage.ts";
 
 export type CommandNotifyCategory = 'info' | 'success' | 'warning' | 'error';
 
@@ -31,6 +32,7 @@ export class ClientCommandManager extends CommandManager {
 
     private historyIndex = -1;
     private readonly usedCommands: string[] = [];
+    private pendingStorage: number | undefined;
 
     private readonly popup: ClientSuggestionPopup;
     private readonly commandPanel: ClientCommandPanel;
@@ -54,6 +56,7 @@ export class ClientCommandManager extends CommandManager {
         this.popup = new ClientSuggestionPopup(commandBar, this.commandInput);
         this.commandPanel = new ClientCommandPanel(commandPanel, commandBar, this.commandInput);
 
+        const storageTask = this.persistentStorage.bind(this);
         const bounceGiveSuggestions = debounce(this.giveSuggestions.bind(this), 100);
         commandBar.addEventListener('keydown', event => {
             if (event.key === 'Enter') {
@@ -81,6 +84,10 @@ export class ClientCommandManager extends CommandManager {
                 if (this.usedCommands.length > 64) {
                     this.usedCommands.shift();
                 }
+
+                if (this.pendingStorage !== undefined) cancelIdleCallback(this.pendingStorage);
+                this.pendingStorage = requestIdleCallback(storageTask, {timeout: 8000});
+
                 this.historyIndex = -1;
                 this.commandInput.value = '';
 
@@ -175,6 +182,7 @@ export class ClientCommandManager extends CommandManager {
         commandInput.addEventListener('input', bounceGiveSuggestions);
 
         this.registry();
+        this.loadPersistentStorage().then();
     }
 
     public onEsc() {
@@ -271,6 +279,45 @@ export class ClientCommandManager extends CommandManager {
         this.suggestionsLength = 0;
         this.tokenStart = -1;
         this.completionIndex = -1;
+    }
+
+    private async loadPersistentStorage(): Promise<void> {
+        const db = await ClientStorage.db.init();
+        const tx = db.transaction('command_history', 'readonly');
+        const store = tx.objectStore('command_history');
+
+        const {promise, resolve} = Promise.withResolvers<void>();
+        const request = store.get(this.source.getClient().clientId);
+
+        request.onsuccess = () => {
+            if (!request.result) return resolve();
+            const array = request.result.commands;
+            if (Array.isArray(array)) {
+                this.usedCommands.length = 0;
+                this.usedCommands.push(...array);
+            }
+            resolve();
+        };
+        request.onerror = () => resolve();
+
+        return promise;
+    }
+
+    private async persistentStorage() {
+        const db = await ClientStorage.db.init();
+        const tx = db.transaction('command_history', 'readwrite');
+        const store = tx.objectStore('command_history');
+
+        const {promise, resolve} = Promise.withResolvers<void>();
+        const request = store.put({
+            client_uuid: this.source.getClient().clientId,
+            commands: this.usedCommands
+        });
+
+        request.onsuccess = () => resolve();
+        request.onerror = () => resolve();
+
+        return promise;
     }
 
     /**

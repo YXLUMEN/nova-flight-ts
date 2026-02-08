@@ -12,8 +12,15 @@ export class NbtEnd implements NbtElement {
     public readonly type = NbtTypeId.End;
     public static readonly INSTANCE = new NbtEnd();
 
+    private constructor() {
+    }
+
     public getType(): NbtTypeIndex {
         return 0;
+    }
+
+    public copy(): NbtEnd {
+        return this;
     }
 
     public write() {

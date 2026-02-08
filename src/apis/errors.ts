@@ -24,3 +24,6 @@ export class VersionError extends Error {
 
 export class StatusError extends Error {
 }
+
+export class NbtSizeValidationException extends Error {
+}

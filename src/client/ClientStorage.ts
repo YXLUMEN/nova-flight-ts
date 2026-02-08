@@ -1,9 +1,9 @@
 import {IndexedDBHelper} from "../database/IndexedDBHelper.ts";
 
 export class ClientStorage {
-    public static db = new IndexedDBHelper('nova-flight-client', 3, [
+    public static db = new IndexedDBHelper('nova-flight-client', 4, [
         {
-            name: 'server-addr-list',
+            name: 'server_addr_list',
             keyPath: 'id',
             autoIncrement: true,
             indexes: [
@@ -11,20 +11,24 @@ export class ClientStorage {
             ]
         },
         {
-            name: 'user-options',
+            name: 'user_options',
             keyPath: 'id',
         },
         {
             name: 'statistics',
             keyPath: 'item',
+        },
+        {
+            name: 'command_history',
+            keyPath: 'client_uuid'
         }
     ]);
 
     public static async deleteServer(addr: string, name: string): Promise<void> {
         const db = await this.db.init();
 
-        const tx = db.transaction('server-addr-list', 'readwrite');
-        const store = tx.objectStore('server-addr-list');
+        const tx = db.transaction('server_addr_list', 'readwrite');
+        const store = tx.objectStore('server_addr_list');
         const index = store.index('addr_name');
 
         const range = IDBKeyRange.only([addr, name]);

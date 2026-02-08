@@ -30,7 +30,11 @@ export class NbtDouble implements NbtElement {
         writer.writeDouble(this.value);
     }
 
+    public copy(): NbtDouble {
+        return this;
+    }
+
     public toString(): string {
-        return `${this.value}D`;
+        return `${this.value}d`;
     }
 }

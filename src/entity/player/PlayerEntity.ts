@@ -284,16 +284,16 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
-        nbt.putUint('Score', this.score);
-        nbt.putInt8('SlotIndex', this.currentBaseIndex);
-        nbt.putBoolean('DevMode', this.isDevMode());
-        nbt.putBoolean('UsedBeDev', this.isUsedBeDev());
+        nbt.putUint32('score', this.score);
+        nbt.putInt8('slot_index', this.currentBaseIndex);
+        nbt.putBoolean('dev_mode', this.isDevMode());
+        nbt.putBoolean('used_be_dev', this.isUsedBeDev());
 
         const inventory: NbtCompound[] = [];
         this.items.values().forEach(stack => {
             inventory.push(ItemStack.CODEC.encode(stack) as NbtCompound);
         });
-        nbt.putCompoundArray('Inventory', inventory);
+        nbt.putCompoundArray('inventory', inventory);
         this.techTree!.writeNBT(nbt);
 
         return nbt
@@ -301,13 +301,13 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public override readNBT(nbt: NbtCompound) {
         super.readNBT(nbt);
-        this.setScore(nbt.getU32('Score'));
-        this.setDevMode(nbt.getBoolean('DevMode'));
-        this.usedDev = nbt.getBoolean('UsedBeDev');
+        this.setScore(nbt.getUint32('score'));
+        this.setDevMode(nbt.getBoolean('dev_mode'));
+        this.usedDev = nbt.getBoolean('used_be_dev');
 
         this.techTree!.readNBT(nbt);
 
-        const inventory = nbt.getCompoundArray('Inventory');
+        const inventory = nbt.getCompoundArray('inventory');
         if (inventory.length > 0) {
             this.clearItems();
             for (const nbt of inventory) {
@@ -319,7 +319,7 @@ export abstract class PlayerEntity extends LivingEntity {
             }
         }
 
-        this.currentBaseIndex = clamp(nbt.getInt8('SlotIndex'), 0, this.baseWeapons.length);
+        this.currentBaseIndex = clamp(nbt.getInt8('slot_index'), 0, this.baseWeapons.length);
 
         // todo 玩家重生
         if (this.getHealth() === 0) this.setHealth(this.getMaxHealth());

@@ -4,14 +4,14 @@ import {NbtInt32} from "./element/NbtInt32.ts";
 import {NbtEnd} from "./element/NbtEnd.ts";
 import {NbtFloat} from "./element/NbtFloat.ts";
 import {NbtDouble} from "./element/NbtDouble.ts";
-import {NbtU32} from "./element/NbtU32.ts";
+import {NbtUint32} from "./element/NbtUint32.ts";
 import {NbtString} from "./element/NbtString.ts";
 import {NbtInt8Array} from "./element/NbtInt8Array.ts";
 import {NbtInt16Array} from "./element/NbtInt16Array.ts";
 import {NbtInt32Array} from "./element/NbtInt32Array.ts";
 import {NbtFloatArray} from "./element/NbtFloatArray.ts";
 import {NbtDoubleArray} from "./element/NbtDoubleArray.ts";
-import {NbtU32Array} from "./element/NbtU32Array.ts";
+import {NbtUint32Array} from "./element/NbtUint32Array.ts";
 import {NbtStringArray} from "./element/NbtStringArray.ts";
 import {NbtCompoundArray} from "./element/NbtCompoundArray.ts";
 import {NbtInvalid} from "./element/NbtInvalid.ts";
@@ -33,7 +33,7 @@ export class NbtTypes {
             NbtInt32.TYPE,
             NbtFloat.TYPE,
             NbtDouble.TYPE,
-            NbtU32.TYPE,
+            NbtUint32.TYPE,
             NbtString.TYPE,
             NbtCompound.TYPE,
             NbtInt8Array.TYPE,
@@ -41,7 +41,7 @@ export class NbtTypes {
             NbtInt32Array.TYPE,
             NbtFloatArray.TYPE,
             NbtDoubleArray.TYPE,
-            NbtU32Array.TYPE,
+            NbtUint32Array.TYPE,
             NbtStringArray.TYPE,
             NbtCompoundArray.TYPE
         ];

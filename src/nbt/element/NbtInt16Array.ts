@@ -39,6 +39,11 @@ export class NbtInt16Array implements NbtElement {
         }
     }
 
+    public copy(): NbtInt16Array {
+        const array = new Int16Array(this.value);
+        return new NbtInt16Array(array);
+    }
+
     public toString(): string {
         return `[S;${this.value.join(',')}]`;
     }

@@ -13,7 +13,7 @@ export const NbtTypeId = config({
     Int32: 3,
     Float: 4,
     Double: 5,
-    U32: 6,
+    Uint32: 6,
     String: 7,
     Compound: 8,
     Int8Array: 9,
@@ -24,6 +24,7 @@ export const NbtTypeId = config({
     Uint32Array: 14,
     StringArray: 15,
     CompoundArray: 16,
+    Number: 99
 });
 
 export type NbtTypeIndex = typeof NbtTypeId[keyof typeof NbtTypeId];

@@ -17,7 +17,6 @@ import type {ServerChannel} from "./network/ServerChannel.ts";
 import {Log} from "../worker/log.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
-    public static readonly SAVE_PATH = `saves/save-${NbtCompound.VERSION}.dat`;
     public static instance: NovaFlightServer;
 
     public readonly worldName: string;

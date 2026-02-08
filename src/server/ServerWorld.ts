@@ -37,6 +37,7 @@ import type {ServerChannel} from "./network/ServerChannel.ts";
 import {GameOverS2CPacket} from "../network/packet/s2c/GameOverS2CPacket.ts";
 import {EMPBurst} from "../effect/EMPBurst.ts";
 import {DifficultChangeS2CPacket} from "../network/packet/s2c/DifficultChangeS2CPacket.ts";
+import {Log} from "../worker/log.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
@@ -352,37 +353,41 @@ export class ServerWorld extends World implements NbtSerializable {
 
             const type = entity.getType();
             if (type === EntityTypes.PLAYER) return;
+            const typeId = EntityType.getId(type);
+            if (!typeId) {
+                Log.warn(`EntityType ${type.toString()} maybe unregistered.`);
+                return;
+            }
 
             const nbt = new NbtCompound();
-            const typeId = EntityType.getId(type)!;
-            nbt.putString('Type', typeId.toString());
+            nbt.putString('type', typeId.toString());
             entity.writeNBT(nbt);
             entityList.push(nbt);
         });
-        root.putCompoundArray('Entities', entityList);
+        root.putCompoundArray('entities', entityList);
 
         const stageNbt = new NbtCompound();
         this.stage.writeNBT(stageNbt);
-        root.putCompound('Stage', stageNbt);
-        root.putUint('PhaseScore', this.phaseScore);
-        root.putInt8('Difficulty', this.getDifficulty());
+        root.putCompound('stage', stageNbt);
+        root.putUint32('phase_score', this.phaseScore);
+        root.putInt8('difficulty', this.getDifficulty());
 
         return root;
     }
 
     public readNBT(nbt: NbtCompound) {
-        const entityNbt = nbt.getCompoundArray('Entities');
+        const entityNbt = nbt.getCompoundArray('entities');
         if (entityNbt) this.loadEntity(entityNbt);
 
-        const stageNbt = nbt.getCompound('Stage');
+        const stageNbt = nbt.getCompound('stage');
         if (stageNbt) this.stage.readNBT(stageNbt);
-        this.phaseScore = nbt.getU32('PhaseScore');
-        this.setDifficulty(nbt.getInt8('Difficulty', 1));
+        this.phaseScore = nbt.getUint32('phase_score');
+        this.setDifficulty(nbt.getInt8('difficulty', 1));
     }
 
     private loadEntity(nbtList: NbtCompound[]) {
         for (const nbt of nbtList) {
-            const typeName = nbt.getString('Type');
+            const typeName = nbt.getString('type');
             const entityType = EntityType.get(typeName);
 
             if (!entityType) continue;

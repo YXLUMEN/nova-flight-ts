@@ -30,6 +30,10 @@ export class NbtString implements NbtElement {
         writer.writeString(this.value);
     }
 
+    public copy(): NbtString {
+        return this;
+    }
+
     public toString() {
         const escaped = this.value
             .replace(/\\/g, '\\\\')

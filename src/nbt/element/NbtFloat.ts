@@ -30,7 +30,11 @@ export class NbtFloat implements NbtElement {
         writer.writeFloat(this.value);
     }
 
+    public copy(): NbtFloat {
+        return this;
+    }
+
     public toString(): string {
-        return `${this.value}F`;
+        return `${this.value}f`;
     }
 }

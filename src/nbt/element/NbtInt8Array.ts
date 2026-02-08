@@ -39,6 +39,10 @@ export class NbtInt8Array implements NbtElement {
         }
     }
 
+    public copy(): NbtInt8Array {
+        return new NbtInt8Array(new Int8Array(this.value));
+    }
+
     public toString(): string {
         return `[B;${this.value.join(',')}]`;
     }

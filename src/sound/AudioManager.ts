@@ -8,19 +8,20 @@ import type {SoundEvent} from "./SoundEvent.ts";
 import {convertFileSrc} from "@tauri-apps/api/core";
 import {isServer} from "../configs/WorldConfig.ts";
 import {MediaWithoutSrc} from "../apis/errors.ts";
-import type {Supplier} from "../apis/types.ts";
+import type {Consumer, Supplier} from "../apis/types.ts";
 
 export class AudioManager {
-    private static readonly AUDIO_PLAYER: HTMLAudioElement;
+    private static readonly audio: HTMLAudioElement;
 
+    private static disable = false;
     private static currentPlaying: SoundEvent | null = null;
     private static readonly audioMap = new Map<Identifier, string>();
     private static readonly eventMap = new Map<string, AbortController>();
 
     static {
         if (!isServer) {
-            (this.AUDIO_PLAYER as any) = new Audio();
-            this.AUDIO_PLAYER.addEventListener('ended', () => this.currentPlaying = null);
+            (this.audio as any) = new Audio();
+            this.audio.addEventListener('ended', () => this.currentPlaying = null);
         }
     }
 
@@ -54,6 +55,8 @@ export class AudioManager {
     }
 
     public static playAudio(event: SoundEvent, loop = false, callback?: Supplier<void>) {
+        if (this.disable) return;
+
         const id = event.getId();
         const url = this.audioMap.get(id);
         if (!url) {
@@ -61,9 +64,9 @@ export class AudioManager {
             return;
         }
 
-        this.AUDIO_PLAYER.src = url;
-        this.AUDIO_PLAYER.loop = loop;
-        this.AUDIO_PLAYER.play()
+        this.audio.src = url;
+        this.audio.loop = loop;
+        this.audio.play()
             .then(callback)
             .catch(console.error);
         this.currentPlaying = event;
@@ -78,41 +81,50 @@ export class AudioManager {
     }
 
     public static leap(time: number) {
-        if (!this.AUDIO_PLAYER.src) throw new MediaWithoutSrc("Audio does not set");
-        const duration = this.AUDIO_PLAYER.duration;
-        this.AUDIO_PLAYER.currentTime = clamp(time, 0, Number.isFinite(duration) ? duration : 0);
+        if (!this.audio.src) throw new MediaWithoutSrc("Audio does not set");
+        const duration = this.audio.duration;
+        this.audio.currentTime = clamp(time, 0, Number.isFinite(duration) ? duration : 0);
     }
 
     public static getDuration(): number {
-        return this.AUDIO_PLAYER.duration;
+        return this.audio.duration;
     }
 
     public static pause(): void {
-        this.AUDIO_PLAYER.pause();
+        this.audio.pause();
     }
 
     public static resume(): void {
         if (this.currentPlaying) {
-            this.AUDIO_PLAYER.play().catch(console.error);
+            this.audio.play().catch(console.error);
         }
     }
 
     public static stop(event?: SoundEvent): void {
         if (event && this.currentPlaying !== event) return;
 
-        this.AUDIO_PLAYER.pause();
-        this.AUDIO_PLAYER.src = '';
+        this.audio.pause();
+        this.audio.src = '';
         this.currentPlaying = null;
+    }
+
+    public static isDisable(): boolean {
+        return this.disable;
+    }
+
+    public static setDisable(isDisable: boolean): void {
+        this.disable = isDisable;
+        if (isDisable) this.stop();
     }
 
     public static fadeOutAndPause(durationMs: number = 1000): Promise<void> {
         const {promise, resolve} = Promise.withResolvers<void>();
-        if (this.AUDIO_PLAYER.paused) {
+        if (this.audio.paused) {
             resolve();
             return promise;
         }
 
-        const startVolume = this.AUDIO_PLAYER.volume;
+        const startVolume = this.audio.volume;
         const steps = Math.max(30, Math.floor(durationMs / 16));
         const stepInterval = durationMs / steps;
         let step = 0;
@@ -120,14 +132,14 @@ export class AudioManager {
         const fade = () => {
             step++;
             if (step < steps) {
-                this.AUDIO_PLAYER.volume = startVolume * startVolume * (1 - step / steps);
+                this.audio.volume = startVolume * startVolume * (1 - step / steps);
                 setTimeout(fade, stepInterval);
                 return;
             }
 
-            this.AUDIO_PLAYER.volume = 0;
-            this.AUDIO_PLAYER.pause();
-            this.AUDIO_PLAYER.volume = startVolume;
+            this.audio.volume = 0;
+            this.audio.pause();
+            this.audio.volume = startVolume;
             resolve();
         }
         fade();
@@ -136,23 +148,23 @@ export class AudioManager {
     }
 
     public static reset(): void {
-        this.AUDIO_PLAYER.pause();
-        this.AUDIO_PLAYER.currentTime = 0;
+        this.audio.pause();
+        this.audio.currentTime = 0;
     }
 
     public static setVolume(volume: number): void {
-        this.AUDIO_PLAYER.volume = clamp(volume, 0, 1);
+        this.audio.volume = clamp(volume, 0, 1);
     }
 
     public static getRemainingTime(): number {
         if (!this.currentPlaying) return 0;
-        return this.AUDIO_PLAYER.duration - this.AUDIO_PLAYER.currentTime;
+        return this.audio.duration - this.audio.currentTime;
     }
 
     public static addListener(
         name: string,
         type: keyof HTMLMediaElementEventMap,
-        listener: (ev: Event) => void,
+        listener: Consumer<Event>,
         options?: AddEventListenerOptions
     ): AbortController | null {
         if (this.eventMap.has(name)) {
@@ -166,7 +178,7 @@ export class AudioManager {
             signal: ctrl.signal
         }
 
-        this.AUDIO_PLAYER.addEventListener(type, listener, opts);
+        this.audio.addEventListener(type, listener, opts);
         this.eventMap.set(name, ctrl);
 
         return ctrl;

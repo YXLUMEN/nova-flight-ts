@@ -22,6 +22,9 @@ import type {CommandOutput} from "../server/command/CommandOutput.ts";
 import {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import type {EntityLike} from "../world/entity/EntityLike.ts";
+import {UUIDUtil} from "../utils/UUIDUtil.ts";
+import {IllegalArgumentError, IllegalStateException} from "../apis/errors.ts";
+import {NbtTypeId} from "../nbt/NbtType.ts";
 
 
 export abstract class Entity implements EntityLike, DataTracked, Comparable, NbtSerializable, CommandOutput {
@@ -437,7 +440,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
             this.getPermissionLevel(),
             'Entity',
             'Entity',
-            serverWorld.getServer(),
+            serverWorld.getServer()!,
             this
         );
     }
@@ -463,16 +466,16 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
         try {
-            nbt.putDoubleArray('Pos', this.pos.x, this.pos.y);
-            nbt.putFloatArray('Velocity', this.velocity.x, this.velocity.y);
+            nbt.putDoubleArray('pos', this.pos.x, this.pos.y);
+            nbt.putFloatArray('velocity', this.velocity.x, this.velocity.y);
 
-            nbt.putDouble('Yaw', this.yaw);
-            nbt.putDouble('Speed', this.movementSpeed);
-            nbt.putBoolean('Invulnerable', this.invulnerable);
-            nbt.putString('UUID', this.uuid);
+            nbt.putDouble('yaw', this.yaw);
+            nbt.putDouble('speed', this.movementSpeed);
+            nbt.putBoolean('invulnerable', this.invulnerable);
+            nbt.putString('uuid', this.uuid);
 
             if (this.normalTags.size > 0) {
-                nbt.putStringArray('Tags', ...this.normalTags);
+                nbt.putStringArray('tags', ...this.normalTags);
             }
             return nbt;
         } catch (err) {
@@ -482,18 +485,36 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     public readNBT(nbt: NbtCompound): void {
-        const posNbt = nbt.getDoubleArray('Pos');
-        this.setPosition(posNbt[0], posNbt[1]);
+        const posNbt = nbt.getDoubleArray('pos');
+        this.setPosition(
+            clamp(posNbt[0] ?? 0, -3E7, 3E7),
+            clamp(posNbt[1] ?? 0, -3E7, 3E7),
+        );
+        const velocity = nbt.getFloatArray('velocity');
+        this.setVelocity(
+            clamp(velocity[0] ?? 0, -10, 10),
+            clamp(velocity[1] ?? 0, -10, 10)
+        );
+        this.setYaw(nbt.getDouble('yaw'));
+        this.resetPosition();
 
-        const velocity = nbt.getFloatArray('Velocity');
-        this.setVelocity(velocity[0], velocity[1]);
+        this.setMovementSpeed(nbt.getDouble('speed'));
+        this.invulnerable = nbt.getBoolean('invulnerable', 0);
 
-        this.setYaw(nbt.getDouble('Yaw'));
-        this.setMovementSpeed(nbt.getDouble('Speed'));
-        this.invulnerable = nbt.getBoolean('Invulnerable', 0);
-        this.uuid = nbt.getString('UUID') as UUID;
+        if (nbt.contains('uuid', NbtTypeId.String)) {
+            const uuid = nbt.getString('uuid');
+            if (!UUIDUtil.isValidUUID(uuid)) throw new IllegalArgumentError('Invalid UUID format.');
+            this.uuid = uuid;
+        }
 
-        const tags = nbt.getStringArray('Tags');
+        if (!Number.isFinite(this.getX()) || !Number.isFinite(this.getY())) {
+            throw new IllegalStateException('Entity has invalid position');
+        }
+        if (!Number.isFinite(this.getYaw())) {
+            throw new IllegalArgumentError('Entity has invalid rotation');
+        }
+
+        const tags = nbt.getStringArray('tags');
         if (tags.length > 0) {
             this.normalTags.clear();
             for (const tag of tags) {

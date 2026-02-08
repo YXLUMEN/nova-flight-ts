@@ -19,6 +19,7 @@ import type {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPac
 import {EntityDamageS2CPacket} from "../network/packet/s2c/EntityDamageS2CPacket.ts";
 import {DamageTypeTags} from "../registry/tag/DamageTypeTags.ts";
 import {StatusEffects} from "./effect/StatusEffects.ts";
+import {NbtTypeId} from "../nbt/NbtType.ts";
 
 
 export abstract class LivingEntity extends Entity {
@@ -390,10 +391,10 @@ export abstract class LivingEntity extends Entity {
         super.writeNBT(nbt);
 
         const health = this.getHealth();
-        nbt.putFloat('Health', Number.isFinite(health) ? health : 5);
+        nbt.putFloat('health', Number.isFinite(health) ? health : 5);
 
         const shield = this.getShieldAmount();
-        nbt.putFloat('Shield', Number.isFinite(shield) ? shield : 0);
+        nbt.putFloat('shield', Number.isFinite(shield) ? shield : 0);
         nbt.putCompoundArray('attributes', this.getAttributes().toNbt());
 
         if (this.activeStatusEffects.size > 0) {
@@ -411,20 +412,23 @@ export abstract class LivingEntity extends Entity {
     public readNBT(nbt: NbtCompound) {
         super.readNBT(nbt);
 
+        this.setShieldAmountUnclamped(nbt.getFloat('shield'));
+
         const attributes = nbt.getCompoundArray('attributes');
-        if (attributes && attributes.length > 0) {
+        if (attributes.length > 0 && !this.getWorld().isClient) {
             this.getAttributes().readNbt(attributes);
         }
 
         const effects = nbt.getCompoundArray('active_effects');
-        if (effects && effects.length > 0) {
+        if (effects.length > 0) {
             for (const effectNbt of effects) {
                 const effect = StatusEffectInstance.fromNbt(effectNbt);
                 if (effect) this.addStatusEffect(effect, null);
             }
         }
 
-        this.setHealth(nbt.getFloat('Health'));
-        this.setShieldAmount(nbt.getFloat('Shield'));
+        if (nbt.contains('health', NbtTypeId.Number)) {
+            this.setHealth(nbt.getFloat('health'));
+        }
     }
 }

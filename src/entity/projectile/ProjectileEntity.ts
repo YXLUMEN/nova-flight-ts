@@ -9,6 +9,9 @@ import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {IColorEntity} from "../IColorEntity.ts";
 import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import type {UUID} from "../../apis/types.ts";
+import {NbtTypeId} from "../../nbt/NbtType.ts";
+import {UUIDUtil} from "../../utils/UUIDUtil.ts";
+import {decodeColorToHex, encodeColorHex} from "../../utils/NetUtil.ts";
 
 export abstract class ProjectileEntity extends Entity implements IOwnable, IColorEntity {
     private damage: number = 0;
@@ -84,22 +87,36 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
         if (this.ownerUuid) {
-            nbt.putString('Owner', this.ownerUuid);
+            nbt.putString('owner', this.ownerUuid);
         }
-        nbt.putFloat('Damage', this.damage);
-        nbt.putString('Color', this.color);
-        nbt.putString('EdgeColor', this.edgeColor);
-
-        return nbt
+        nbt.putFloat('damage', this.damage);
+        nbt.putUint32Array('colors', encodeColorHex(this.color), encodeColorHex(this.edgeColor));
+        return nbt;
     }
 
     public override readNBT(nbt: NbtCompound) {
         super.readNBT(nbt);
-        const ownerUuid = nbt.getString('Owner') as UUID;
-        this.ownerUuid = ownerUuid.length > 0 ? ownerUuid : null;
-        this.damage = nbt.getFloat('Damage');
-        this.color = nbt.getString('Color');
-        this.edgeColor = nbt.getString('EdgeColor');
+
+        if (nbt.contains('owner', NbtTypeId.String)) {
+            const ownerUuid = nbt.getString('owner');
+            if (UUIDUtil.isValidUUID(ownerUuid)) {
+                this.ownerUuid = ownerUuid;
+            }
+        }
+
+        if (nbt.contains('damage', NbtTypeId.Number)) {
+            this.damage = nbt.getFloat('damage');
+        }
+
+        if (nbt.contains('colors', NbtTypeId.Uint32Array)) {
+            const colors = nbt.getUint32Array('colors');
+            if (colors[0]) {
+                this.color = decodeColorToHex(colors[0]);
+            }
+            if (colors[1]) {
+                this.edgeColor = decodeColorToHex(colors[1]);
+            }
+        }
     }
 
     public onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {

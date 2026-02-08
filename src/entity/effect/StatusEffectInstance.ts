@@ -31,7 +31,7 @@ export class StatusEffectInstance {
         const duration = nbt.getDouble('duration');
         if (!Number.isFinite(duration)) throw new Error("StatusEffect duration should be finite");
 
-        const amplifier = nbt.getU32('amplifier');
+        const amplifier = nbt.getUint32('amplifier');
         if (!Number.isSafeInteger(amplifier)) throw new Error("StatusEffect amplifier should be valid integer");
 
         return new StatusEffectInstance(type, duration, amplifier);
@@ -132,7 +132,7 @@ export class StatusEffectInstance {
         const nbt = new NbtCompound();
         nbt.putString('type', this.type.getRegistryKey().getValue().toString());
         nbt.putDouble('duration', this.duration);
-        nbt.putUint('amplifier', this.amplifier);
+        nbt.putUint32('amplifier', this.amplifier);
 
         return nbt
     }

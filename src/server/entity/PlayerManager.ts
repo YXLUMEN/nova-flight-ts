@@ -100,6 +100,17 @@ export class PlayerManager {
         return this.players.get(uuid) ?? null;
     }
 
+    public getPlayerByName(playerName: string): ServerPlayerEntity | null {
+        const lowerName = playerName.toLowerCase();
+
+        for (const player of this.players.values()) {
+            if (player.getProfile().name.toLowerCase() === lowerName) {
+                return player;
+            }
+        }
+        return null;
+    }
+
     public getPlayerBySessionId(sessionId: number): ServerPlayerEntity | null {
         return this.sessionToPlayer.get(sessionId) ?? null;
     }
@@ -110,6 +121,12 @@ export class PlayerManager {
 
     public getAllPlayers() {
         return this.players.values();
+    }
+
+    public getPlayerNames() {
+        return this.players
+            .values()
+            .map(player => player.getProfile().name);
     }
 
     public async saveAllPlayerData(): Promise<void> {

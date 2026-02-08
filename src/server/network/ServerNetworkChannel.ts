@@ -10,7 +10,8 @@ import type {GameProfile} from "../entity/GameProfile.ts";
 import {PacketTooLargeError} from "../../apis/errors.ts";
 
 export class ServerNetworkChannel extends NetworkChannel implements ServerChannel {
-    private readonly secretKey: Uint8Array;
+    private secretKey: Uint8Array | null;
+
     private handler: BiConsumer<number, Payload> = () => {
     };
 
@@ -113,11 +114,16 @@ export class ServerNetworkChannel extends NetworkChannel implements ServerChanne
     }
 
     protected register() {
+        if (!this.secretKey) throw new Error(`Cannot register without a secret key`);
+
         const payload = new Uint8Array(1 + this.secretKey.length);
         payload[0] = 0x01;
         payload.set(this.secretKey, 1);
 
         this.ws!.send(payload);
         console.log("Server registered");
+
+        this.secretKey.fill(0);
+        this.secretKey = null;
     }
 }

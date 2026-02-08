@@ -11,6 +11,7 @@ export class Audios {
     public static readonly KEEP_FIGHTING = this.register('keep_fighting');
     public static readonly TECHNOLOGY_CHANGES_THE_UNIVERSE = this.register('technology_changes_the_universe');
     public static readonly WE_MADE_IT = this.register('we_made_it');
+    public static readonly ZERG = this.register('zerg');
 
     public static readonly PIXEL_ODYSSEY = this.register('pixel_odyssey');
     public static readonly VOID_SHOWDOWN = this.register('void_showdown');

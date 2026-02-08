@@ -3,8 +3,9 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class ServerReadyS2CPacket implements Payload {
+    public static readonly INSTANCE = new ServerReadyS2CPacket();
     public static readonly ID: PayloadId<ServerReadyS2CPacket> = payloadId('server_ready');
-    public static readonly CODEC: PacketCodec<ServerReadyS2CPacket> = PacketCodecs.emptyNew(ServerReadyS2CPacket);
+    public static readonly CODEC: PacketCodec<ServerReadyS2CPacket> = PacketCodecs.uint(this.INSTANCE);
 
     public getId(): PayloadId<ServerReadyS2CPacket> {
         return ServerReadyS2CPacket.ID;

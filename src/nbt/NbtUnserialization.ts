@@ -6,7 +6,7 @@ import type {NbtElement} from "./element/NbtElement.ts";
 import {NbtInt8} from "./element/NbtInt8.ts";
 import {NbtString} from "./element/NbtString.ts";
 import {NbtInt16} from "./element/NbtInt16.ts";
-import {NbtU32} from "./element/NbtU32.ts";
+import {NbtUint32} from "./element/NbtUint32.ts";
 import {NbtFloat} from "./element/NbtFloat.ts";
 import {NbtDouble} from "./element/NbtDouble.ts";
 import {NbtInt32} from "./element/NbtInt32.ts";
@@ -17,7 +17,7 @@ import {NbtDoubleArray} from "./element/NbtDoubleArray.ts";
 import {NbtInt8Array} from "./element/NbtInt8Array.ts";
 import {NbtInt16Array} from "./element/NbtInt16Array.ts";
 import {NbtFloatArray} from "./element/NbtFloatArray.ts";
-import {NbtU32Array} from "./element/NbtU32Array.ts";
+import {NbtUint32Array} from "./element/NbtUint32Array.ts";
 import {NbtTypes} from "./NbtTypes.ts";
 
 type KeyType = Readonly<{ key: string, type: number }>;
@@ -26,29 +26,7 @@ type KeyType = Readonly<{ key: string, type: number }>;
 export class NbtUnserialization {
     public static readonly VALIDA_NUMBER_PREFIX = ['B', 'S', 'U', 'F', 'D', 'I'];
 
-    public static fromRootBinary(buffer: Uint8Array<ArrayBuffer>): NbtCompound | null {
-        const reader = new BinaryReader(buffer);
-
-        const magic = reader.readInt32();
-        if (magic !== NbtCompound.MAGIC) {
-            throw new Error('Invalid magic number');
-        }
-
-        const version = reader.readInt16();
-        if (version !== NbtCompound.VERSION) {
-            console.warn(`Unsupported version: ${version}`);
-            return null;
-        }
-
-        return NbtCompound.TYPE.read(reader);
-    }
-
-    public static fromBinary(buffer: Uint8Array<ArrayBuffer>): NbtCompound {
-        const reader = new BinaryReader(buffer);
-        return NbtCompound.TYPE.read(reader);
-    }
-
-    public static fromRootCompactBinary(buffer: Uint8Array<ArrayBuffer>): NbtCompound | null {
+    private static checkMagic(buffer: Uint8Array<ArrayBuffer>) {
         const reader = new BinaryReader(buffer);
 
         const magic = reader.readInt32();
@@ -62,7 +40,23 @@ export class NbtUnserialization {
             console.warn(`Unsupported version: ${version}`);
             return null;
         }
+        return reader;
+    }
 
+    public static fromRootBinary(buffer: Uint8Array<ArrayBuffer>): NbtCompound | null {
+        const reader = this.checkMagic(buffer);
+        if (!reader) return null;
+        return NbtCompound.TYPE.read(reader);
+    }
+
+    public static fromBinary(buffer: Uint8Array<ArrayBuffer>): NbtCompound {
+        const reader = new BinaryReader(buffer);
+        return NbtCompound.TYPE.read(reader);
+    }
+
+    public static fromRootCompactBinary(buffer: Uint8Array<ArrayBuffer>): NbtCompound | null {
+        const reader = this.checkMagic(buffer);
+        if (!reader) return null;
         return this.fromCompactBinary(reader.readSlice(reader.bytesRemaining()));
     }
 
@@ -221,7 +215,7 @@ export class NbtUnserialization {
         const numStr = reader.getString().substring(start, reader.getCursor());
         let suffix = '';
         if (reader.canRead()) {
-            const c = reader.peek().toUpperCase();
+            const c = reader.peek().toLowerCase();
             if (this.VALIDA_NUMBER_PREFIX.includes(c)) {
                 suffix = c;
                 reader.skip();
@@ -235,15 +229,15 @@ export class NbtUnserialization {
 
         if (raw) return num;
         switch (suffix) {
-            case 'B':
+            case 'b':
                 return NbtInt8.of(Math.round(num));
-            case 'S':
+            case 's':
                 return NbtInt16.of(Math.round(num));
-            case 'U':
-                return NbtU32.of(Math.round(num));
-            case 'F':
+            case 'u':
+                return NbtUint32.of(Math.round(num));
+            case 'f':
                 return NbtFloat.of(num);
-            case 'D':
+            case 'd':
                 return NbtDouble.of(num);
             default:
                 return NbtInt32.of(Math.round(num));
@@ -305,7 +299,7 @@ export class NbtUnserialization {
 
         console.warn('Mixed array types, falling back to NumberArray');
 
-        const numType: number[] = [NbtTypeId.Int8, NbtTypeId.Int16, NbtTypeId.Int32, NbtTypeId.U32, NbtTypeId.Float, NbtTypeId.Double];
+        const numType: number[] = [NbtTypeId.Int8, NbtTypeId.Int16, NbtTypeId.Int32, NbtTypeId.Uint32, NbtTypeId.Float, NbtTypeId.Double];
         const nums = items
             .filter(i => numType.includes(i.getType()))
             .map(num => (num as NbtDouble).value)
@@ -339,7 +333,7 @@ export class NbtUnserialization {
             case "F":
                 return NbtFloatArray.create(items);
             case "U":
-                return NbtU32Array.create(items);
+                return NbtUint32Array.create(items);
             default:
                 return NbtDoubleArray.create(items);
         }

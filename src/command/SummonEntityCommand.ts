@@ -5,7 +5,7 @@ import type {Identifier} from "../registry/Identifier.ts";
 import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
 import {CommandUtil} from "./CommandUtil.ts";
 import {Registries} from "../registry/Registries.ts";
-import {CommandError, IllegalArgumentError} from "../apis/errors.ts";
+import {CommandError, IllegalArgumentError, IllegalStateException} from "../apis/errors.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {PosArgument} from "./argument/PosArgument.ts";
 import {PosArgumentType} from "./argument/PosArgumentType.ts";
@@ -14,6 +14,8 @@ import {EntityTypes} from "../entity/EntityTypes.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import {IntArgumentType} from "./argument/IntArgumentType.ts";
 import type {EntityType} from "../entity/EntityType.ts";
+import {NbtCompoundArgumentType} from "./argument/NbtCompoundArgumentType.ts";
+import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 
 export class SummonEntityCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -27,8 +29,12 @@ export class SummonEntityCommand {
                             argument<T, PosArgument>('pos', PosArgumentType.pos())
                                 .executes(this.summonEntity.bind(this))
                                 .then(
-                                    argument<T, number>('count', IntArgumentType.int())
+                                    argument<T, NbtCompound>('nbt', NbtCompoundArgumentType.nbt())
                                         .executes(this.summonEntity.bind(this))
+                                        .then(
+                                            argument<T, number>('count', IntArgumentType.int())
+                                                .executes(this.summonEntity.bind(this))
+                                        )
                                 )
                         )
                 )
@@ -47,15 +53,20 @@ export class SummonEntityCommand {
             throw new Error('Cannot summon a player');
         }
 
+        const nbtArg = ctx.args.get('nbt');
+        let nbt: NbtCompound | undefined = nbtArg?.result;
+
         const countArg = ctx.args.get('count');
         if (countArg) {
-            this.summonBatch(countArg.result, type, ctx);
+            this.summonBatch(ctx, countArg.result, type, nbt);
             return;
         }
 
         try {
             const world = ctx.source.getWorld()!;
             const entity = type.create(world) as Entity;
+            if (nbt) entity.readNBT(nbt);
+
             entity.setPositionByVec(this.getSpawnPos(ctx));
             world.addEntity(entity);
             ctx.source.outPut.sendMessage(`Success summon ${type.toString()}`);
@@ -73,7 +84,7 @@ export class SummonEntityCommand {
         return posArg.toAbsolutePos(ctx.source);
     }
 
-    private static summonBatch<T extends ServerCommandSource>(count: number, type: EntityType<any>, ctx: CommandContext<T>) {
+    private static summonBatch<T extends ServerCommandSource>(ctx: CommandContext<T>, count: number, type: EntityType<any>, nbt?: NbtCompound) {
         if (count <= 0 || count > 255) throw new IllegalArgumentError('Summon count should in [1-255]');
 
         const world = ctx.source.getWorld()!;
@@ -82,11 +93,20 @@ export class SummonEntityCommand {
         try {
             for (let i = 0; i < count; i++) {
                 const entity = type.create(world) as Entity;
+
+                if (nbt) {
+                    const compound = nbt.copy();
+                    entity.readNBT(compound);
+                }
+
                 entity.setPositionByVec(pos);
                 world.addEntity(entity);
             }
             ctx.source.outPut.sendMessage(`Success summon ${type.toString()}`);
         } catch (error) {
+            if (error instanceof IllegalArgumentError || error instanceof IllegalStateException) {
+                throw error;
+            }
             throw new CommandError(`\x1b[33mFail to summon entity`);
         }
     }

@@ -39,6 +39,11 @@ export class NbtDoubleArray implements NbtElement {
         }
     }
 
+    public copy(): NbtDoubleArray {
+        const array = new Float64Array(this.value);
+        return new NbtDoubleArray(array);
+    }
+
     public toString(): string {
         return `[D;${this.value.join(',')}]`;
     }

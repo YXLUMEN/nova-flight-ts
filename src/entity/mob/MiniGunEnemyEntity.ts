@@ -62,13 +62,13 @@ export class MiniGunEnemyEntity extends MobEntity {
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
-        nbt.putUint('FireCooldown', this.cooldown);
+        nbt.putUint32('fire_cooldown', this.cooldown);
         return nbt;
     }
 
     public override readNBT(nbt: NbtCompound): NbtCompound {
         super.readNBT(nbt);
-        this.cooldown = nbt.getU32('FireCooldown');
+        this.cooldown = nbt.getUint32('fire_cooldown', 20);
         return nbt;
     }
 

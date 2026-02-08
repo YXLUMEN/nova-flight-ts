@@ -5,7 +5,7 @@ import type {Registry} from "../../registry/Registry.ts";
 import type {IndexedIterable} from "../../utils/collection/IndexedIterable.ts";
 import {type BinaryReader} from "../../nbt/BinaryReader.ts";
 import {type BinaryWriter} from "../../nbt/BinaryWriter.ts";
-import type {Constructor, FunctionReturn, Supplier, UUID} from "../../apis/types.ts";
+import type {Comparable, Constructor, FunctionReturn, Supplier, UUID} from "../../apis/types.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {config} from "../../utils/uit.ts";
 import {Optional} from "../../utils/Optional.ts";
@@ -17,6 +17,7 @@ import type {Codec} from "../../serialization/Codec.ts";
 import type {NbtElement} from "../../nbt/element/NbtElement.ts";
 import {NbtEnd} from "../../nbt/element/NbtEnd.ts";
 import {NbtTypes} from "../../nbt/NbtTypes.ts";
+import {IllegalStateException} from "../../apis/errors.ts";
 
 export class PacketCodecs {
     public static readonly INT8: PacketCodec<number> = PacketCodecs.of(
@@ -112,6 +113,28 @@ export class PacketCodecs {
         return config({
             encode: encoder,
             decode: decoder
+        });
+    }
+
+    public static uint<V>(value: V): PacketCodec<V> {
+        return config({
+            encode(): void {
+            },
+            decode() {
+                return value;
+            }
+        });
+    }
+
+    public static uintStrict<V extends Comparable>(value: V): PacketCodec<V> {
+        return config({
+            encode(_: BinaryWriter, object: V): void {
+                if (object.equals(value)) return;
+                throw new IllegalStateException(`Can't encode "${object}", expected "${value}"`);
+            },
+            decode() {
+                return value;
+            }
         });
     }
 

@@ -14,7 +14,7 @@ export class ScoreCommand {
         dispatcher.registry(
             literal<T>('score')
                 .then(
-                    argument<T, EntitySelector>('target', EntitySelectorArgumentType.selector())
+                    argument<T, EntitySelector>('target', EntitySelectorArgumentType.players())
                         .executes(this.giveScore.bind(this))
                         .then(
                             argument<T, number>('int', IntArgumentType.int())

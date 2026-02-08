@@ -5,4 +5,6 @@ export interface NbtElement {
     getType(): NbtTypeIndex;
 
     write(writer: BinaryWriter): void;
+
+    copy(): NbtElement;
 }

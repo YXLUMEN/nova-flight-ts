@@ -1,7 +1,7 @@
 import {squareDistVec2} from "../utils/math/math.ts";
 import type {EntityFilter} from "./SelectorArguments.ts";
 import type {Entity} from "../entity/Entity.ts";
-import type {BiConsumer} from "../apis/types.ts";
+import type {BiConsumer, UUID} from "../apis/types.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import {shuffleArray} from "../utils/uit.ts";
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
@@ -27,6 +27,9 @@ export class EntitySelector {
     public readonly limit: number;
     public readonly includesNonPlayers: boolean;
     public readonly senderOnly: boolean;
+    public readonly playerName: string | null;
+    public readonly uuid: UUID | null;
+
     private readonly filters: EntityFilter[];
     private readonly sorter: BiConsumer<IVec, Entity[]>;
 
@@ -36,12 +39,16 @@ export class EntitySelector {
         filters: EntityFilter[],
         sorter: BiConsumer<IVec, Entity[]>,
         senderOnly: boolean,
+        playerName: string | null,
+        uuid: UUID | null,
     ) {
         this.limit = limit;
         this.includesNonPlayers = includesNonPlayers;
         this.filters = filters;
         this.sorter = sorter;
         this.senderOnly = senderOnly;
+        this.playerName = playerName;
+        this.uuid = uuid;
     }
 
     private checkSourcePermission(source: ServerCommandSource) {

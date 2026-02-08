@@ -24,7 +24,7 @@ export class ClientMultiGameManger {
         this.connectBtn = document.getElementById('connect-btn') as HTMLButtonElement;
         this.cancelBtn = document.getElementById('cancel-btn') as HTMLButtonElement;
 
-        ClientStorage.db.getAll<ServerSelect>('server-addr-list')
+        ClientStorage.db.getAll<ServerSelect>('server_addr_list')
             .then(result => result
                 .map(list => list.forEach(
                     each => this.serverList.appendChild(ClientMultiGameManger.createServerSelect(each.addr, each.name))
@@ -59,7 +59,7 @@ export class ClientMultiGameManger {
             if (!document.getElementById(id)) {
                 const [_, addr, name] = id.split('-');
                 this.serverList.appendChild(select);
-                await ClientStorage.db.add('server-addr-list', {addr, name});
+                await ClientStorage.db.add('server_addr_list', {addr, name});
             }
 
             this.resolveLast?.(addr);

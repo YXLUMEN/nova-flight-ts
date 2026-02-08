@@ -12,6 +12,8 @@ import type {IColorEntity} from "../IColorEntity.ts";
 import type {DataTrackerSerializedEntry} from "../data/DataTracker.ts";
 import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
+import {decodeColorToHex, encodeColorHex} from "../../utils/NetUtil.ts";
+import {NbtTypeId} from "../../nbt/NbtType.ts";
 
 export abstract class MobEntity extends LivingEntity implements IColorEntity {
     public color = '#ff6b6b';
@@ -117,20 +119,23 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
-        nbt.putUint('Worth', this.worth);
-        nbt.putString('Color', this.color);
-        nbt.putInt8('AiBehavior', this.AI.getBehavior());
-        nbt.putUint('Age', this.age);
 
+        nbt.putUint32('worth', this.worth);
+        nbt.putUint32('color', encodeColorHex(this.color));
+        nbt.putInt8('ai_behavior', this.AI.getBehavior());
+        nbt.putUint32('age', this.age);
         return nbt;
     }
 
     public override readNBT(nbt: NbtCompound): void {
         super.readNBT(nbt);
-        this.worth = nbt.getU32('Worth', 1);
-        this.color = nbt.getString('Color', this.color);
-        this.AI.setBehavior(nbt.getInt8('AiBehavior', 0));
-        this.age = nbt.getU32('Age', 0);
+
+        this.worth = nbt.getUint32('worth', this.worth);
+        if (nbt.contains('color', NbtTypeId.Uint32)) {
+            this.color = decodeColorToHex(nbt.getUint32('color'));
+        }
+        this.AI.setBehavior(nbt.getInt8('ai_behavior', 3));
+        this.age = nbt.getUint32('age', 0);
     }
 
     public isRangedAttacker(): boolean {

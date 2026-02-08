@@ -12,6 +12,7 @@ import {DoubleArgumentType} from "./argument/DoubleArgumentType.ts";
 import type {CommandContext} from "../brigadier/context/CommandContext.ts";
 import type {SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
 import type {Suggestions} from "../brigadier/suggestion/Suggestions.ts";
+import {BoolArgumentType} from "./argument/BoolArgumentType.ts";
 
 export class MusicCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -28,6 +29,10 @@ export class MusicCommand {
                                     const event = Registries.AUDIOS.getById(arg.result);
                                     if (!event) {
                                         throw new CommandError(`\x1b[33mMusic was not found with ID: "${arg.result}"`);
+                                    }
+                                    if (AudioManager.isDisable()) {
+                                        ctx.source.addMessage(`\x1b[33mMusic is disable now.`);
+                                        return;
                                     }
                                     AudioManager.playAudio(event);
                                     ctx.source.addMessage(`Start to play \x1b[32m"${event.getId()}"\x1b[0m`);
@@ -92,6 +97,24 @@ export class MusicCommand {
                             BGMManager.next();
                         })
                 )
+                .then(
+                    literal<T>('disable')
+                        .then(
+                            argument<T, boolean>('bool', BoolArgumentType.bool())
+                                .executes(this.toggleDisable.bind(this))
+                        )
+                        .executes(this.toggleDisable.bind(this))
+                )
         );
+    }
+
+    private static toggleDisable<T extends ClientCommandSource>(ctx: CommandContext<T>): void {
+        const arg = ctx.args.get('bool');
+        if (!arg) {
+            AudioManager.setDisable(!AudioManager.isDisable());
+            return;
+        }
+        const bl = Boolean(arg.result);
+        AudioManager.setDisable(bl);
     }
 }

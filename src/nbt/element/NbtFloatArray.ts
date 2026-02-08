@@ -39,6 +39,11 @@ export class NbtFloatArray implements NbtElement {
         }
     }
 
+    public copy(): NbtFloatArray {
+        const array = new Float32Array(this.value);
+        return new NbtFloatArray(array);
+    }
+
     public toString(): string {
         return `[F;${this.value.join(',')}]`;
     }

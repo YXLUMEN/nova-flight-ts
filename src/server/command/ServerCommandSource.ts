@@ -15,7 +15,7 @@ export class ServerCommandSource extends CommandSource {
     private readonly level: number;
     public readonly name: string;
     public readonly displayName: string;
-    public readonly server: NovaFlightServer | null;
+    public readonly server: NovaFlightServer;
     public readonly silent: boolean;
 
     public readonly entity: Entity | null;
@@ -28,7 +28,7 @@ export class ServerCommandSource extends CommandSource {
         level: number,
         name: string,
         displayName: string,
-        server: NovaFlightServer | null,
+        server: NovaFlightServer,
         entity: Entity | null,
         silent: boolean = false
     ) {
@@ -56,11 +56,15 @@ export class ServerCommandSource extends CommandSource {
         return !!this.entity && this.entity.isPlayer() && !this.entity.getWorld().isClient;
     }
 
-    public getWorld(): World | null {
+    public override getPlayerNames(): Iterable<string> {
+        return this.server!.playerManager.getPlayerNames();
+    }
+
+    public override getWorld(): World | null {
         return this.world;
     }
 
-    public hasPermissionLevel(level: number): boolean {
+    public override hasPermissionLevel(level: number): boolean {
         return this.level >= level;
     }
 }

@@ -35,6 +35,10 @@ export class NbtStringArray implements NbtElement {
         }
     }
 
+    public copy(): NbtStringArray {
+        return new NbtStringArray(Array.from(this.value));
+    }
+
     public toString(): string {
         const items = this.value
             .map(s => {

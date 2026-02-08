@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "nova-flight",
-  "version": "0.1.59",
+  "version": "0.1.63",
   "identifier": "com.lumen.nova-flight",
   "build": {
     "frontendDist": "../dist",
@@ -45,11 +45,12 @@
       "../resources/": "resources/"
     },
     "windows": {
+      "webviewInstallMode": {
+        "silent": true,
+        "type": "downloadBootstrapper"
+      },
       "wix": {
         "language": "zh-CN"
-      },
-      "webviewInstallMode": {
-        "type": "downloadBootstrapper"
       }
     },
     "createUpdaterArtifacts": true,

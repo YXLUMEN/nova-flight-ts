@@ -35,4 +35,9 @@ export class NbtCompoundArray implements NbtElement {
             compound.write(writer);
         }
     }
+
+    public copy(): NbtCompoundArray {
+        const array = this.value.map(compound => compound.copy());
+        return new NbtCompoundArray(array);
+    }
 }

@@ -12,6 +12,7 @@ export class NbtInt32 implements NbtElement {
     });
 
     public static of(value: number): NbtInt32 {
+        value = Math.floor(value);
         return value >= -128 && value <= 512 ? this.cache[value + 128] : new NbtInt32(value);
     }
 
@@ -29,6 +30,10 @@ export class NbtInt32 implements NbtElement {
         writer.writeInt32(this.value);
     }
 
+    public copy(): NbtInt32 {
+        return this;
+    }
+
     private static readonly cache: NbtInt32[] = new Array<NbtInt32>(641);
     static {
         for (let i = 0; i < this.cache.length; i++) {
@@ -38,6 +43,6 @@ export class NbtInt32 implements NbtElement {
     }
 
     public toString(): string {
-        return `${this.value}I`;
+        return `${this.value}i`;
     }
 }
