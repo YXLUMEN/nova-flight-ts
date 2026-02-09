@@ -28,7 +28,7 @@ import {EffectCreateS2CPacket} from "../../network/packet/s2c/EffectCreateS2CPac
 import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
 import {PlayerAddScoreS2CPacket} from "../../network/packet/s2c/PlayerAddScoreS2CPacket.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
-import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
+import {PlayerJoinS2CPacket} from "../../network/packet/s2c/PlayerJoinS2CPacket.ts";
 import {PlayerGameModeS2CPacket} from "../../network/packet/s2c/PlayerGameModeS2CPacket.ts";
 import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
 import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
@@ -43,6 +43,7 @@ import {
     LaserWeaponDeactivate
 } from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
 import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
+import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 
 export class ServerNetwork {
     /**
@@ -78,7 +79,7 @@ export class ServerNetwork {
         this.register(PlayerSetScoreS2CPacket.ID, PlayerSetScoreS2CPacket.CODEC);
         this.register(PlayerAddScoreS2CPacket.ID, PlayerAddScoreS2CPacket.CODEC);
         this.register(PlayerDisconnectS2CPacket.ID, PlayerDisconnectS2CPacket.CODEC);
-        this.register(GameMessageS2CPacket.ID, GameMessageS2CPacket.CODEC);
+        this.register(PlayerJoinS2CPacket.ID, PlayerJoinS2CPacket.CODEC);
         this.register(PlayerGameModeS2CPacket.ID, PlayerGameModeS2CPacket.CODEC);
         this.register(EntityStatusEffectS2CPacket.ID, EntityStatusEffectS2CPacket.CODEC);
         this.register(RemoveEntityStatusEffectS2CPacket.ID, RemoveEntityStatusEffectS2CPacket.CODEC);
@@ -91,6 +92,7 @@ export class ServerNetwork {
         this.register(LaserWeaponDeactivate.ID, LaserWeaponDeactivate.CODEC);
         this.register(LaserWeaponChange.ID, LaserWeaponChange.CODEC);
         this.register(DifficultChangeS2CPacket.ID, DifficultChangeS2CPacket.CODEC);
+        this.register(GameMessageS2CPacket.ID, GameMessageS2CPacket.CODEC);
         PayloadTypeRegistry.playS2C().settle();
     }
 

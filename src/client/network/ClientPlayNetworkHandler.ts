@@ -48,7 +48,7 @@ import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconne
 import {PlayerDisconnectC2SPacket} from "../../network/packet/c2s/PlayerDisconnectC2SPacket.ts";
 import {ClientSniffingC2SPacket} from "../../network/packet/c2s/ClientSniffingC2SPacket.ts";
 import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
-import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
+import {PlayerJoinS2CPacket} from "../../network/packet/s2c/PlayerJoinS2CPacket.ts";
 import {GameProfile} from "../../server/entity/GameProfile.ts";
 import {PlayerGameModeS2CPacket} from "../../network/packet/s2c/PlayerGameModeS2CPacket.ts";
 import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
@@ -74,9 +74,10 @@ import {PhaseLasers} from "../../item/weapon/PhaseLasers.ts";
 import {decodeColorToHex} from "../../utils/NetUtil.ts";
 import {TargetDrone} from "../../entity/TargetDrone.ts";
 import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
+import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 
 export class ClientPlayNetworkHandler {
-    private readonly loginPlayer: Set<UUID> = new Set();
+    private readonly playerProfiles: Map<UUID, GameProfile> = new Map();
     private readonly commandSource: ClientCommandSource;
     private readonly commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
     private readonly client: NovaFlightClient;
@@ -140,8 +141,6 @@ export class ClientPlayNetworkHandler {
 
     public onServerReady(_: ServerReadyS2CPacket) {
         this.stopSniff();
-
-        this.loginPlayer.add(this.client.clientId);
         this.sendPacket(new PlayerAttemptLoginC2SPacket(
             this.client.clientId,
             this.client.networkChannel.getSessionId(),
@@ -158,6 +157,7 @@ export class ClientPlayNetworkHandler {
                 this.client.clientId,
                 this.client.playerName
             );
+            this.playerProfiles.set(profile.clientId, profile);
             this.client.player = new ClientPlayerEntity(this.world, this.client.input, profile);
             this.client.player.setYaw(-1.57079);
         }
@@ -169,11 +169,17 @@ export class ClientPlayNetworkHandler {
         this.sendPacket(new PlayerFinishLoginC2SPacket());
     }
 
+    public onPlayerJoin(packet: PlayerJoinS2CPacket) {
+        if (this.playerProfiles.has(packet.uuid)) return;
+        this.playerProfiles.set(packet.uuid, new GameProfile(0, packet.uuid, packet.playerName));
+        this.client.clientCommandManager.addPlainMessage(`\x1b[32m${packet.playerName}\x1b[0m join the game`);
+    }
+
     public onDisconnect(packet: PlayerDisconnectS2CPacket) {
         const world = this.world;
         if (!world) return;
 
-        this.loginPlayer.delete(packet.uuid);
+        this.playerProfiles.delete(packet.uuid);
 
         const player = world.getEntityLookup().getByUUID(packet.uuid);
         if (player) this.world?.removeEntity(player.getId());
@@ -199,9 +205,9 @@ export class ClientPlayNetworkHandler {
             trackedPos.setPos(deltaPos.x, deltaPos.y);
 
             const yaw = packet.rotate ? packet.yaw : entity.getLerpTargetYaw();
-            entity.updateTrackedPositionAndAngles(deltaPos.x, deltaPos.y, yaw, 3);
+            entity.updateSyncPositionAndAngles(deltaPos.x, deltaPos.y, yaw, 3);
         } else if (packet.rotate) {
-            entity.updateTrackedPositionAndAngles(entity.getLerpTargetX(), entity.getLerpTargetY(), packet.yaw, 3);
+            entity.updateSyncPositionAndAngles(entity.getLerpTargetX(), entity.getLerpTargetY(), packet.yaw, 3);
         }
     }
 
@@ -211,7 +217,7 @@ export class ClientPlayNetworkHandler {
 
         entity.setTrackedPosition(packet.x, packet.y);
         if (!entity.isLogicalSideForUpdatingMovement()) {
-            entity.updateTrackedPositionAndAngles(packet.x, packet.y, packet.yaw, 3);
+            entity.updateSyncPositionAndAngles(packet.x, packet.y, packet.yaw, 3);
         } else if (entity === this.client.player) {
             this.client.player.setPosition(packet.x, packet.y);
         }
@@ -222,7 +228,7 @@ export class ClientPlayNetworkHandler {
         if (!entity) return;
 
         entity.setTrackedPosition(packet.x, packet.y);
-        entity.updateTrackedPositionAndAngles(packet.x, packet.y, packet.yaw, 3);
+        entity.updateSyncPositionAndAngles(packet.x, packet.y, packet.yaw, 3);
         entity.updatePosition(packet.x, packet.y);
         entity.updateYaw(packet.yaw);
     }
@@ -241,9 +247,7 @@ export class ClientPlayNetworkHandler {
 
         const entityType = packet.entityType;
         if (entityType === EntityTypes.PLAYER) {
-            if (this.loginPlayer.has(packet.uuid)) return null;
-
-            this.loginPlayer.add(packet.uuid);
+            if (this.playerProfiles.has(packet.uuid)) return null;
             return new OtherClientPlayerEntity(world);
         }
 
@@ -551,7 +555,7 @@ export class ClientPlayNetworkHandler {
     }
 
     public getPlayerList() {
-        return this.loginPlayer.values();
+        return this.playerProfiles.values();
     }
 
     private stopSniff() {
@@ -560,7 +564,7 @@ export class ClientPlayNetworkHandler {
     }
 
     public clear(): void {
-        this.loginPlayer.clear();
+        this.playerProfiles.clear();
         this.world = null;
         this.client.networkChannel.clearHandlers();
     }
@@ -573,6 +577,7 @@ export class ClientPlayNetworkHandler {
         this.register(RelayServerPacket.ID, this.onRelayServer.bind(this));
         this.register(ServerReadyS2CPacket.ID, this.onServerReady.bind(this));
         this.register(JoinGameS2CPacket.ID, this.onGameJoin.bind(this));
+        this.register(PlayerJoinS2CPacket.ID, this.onPlayerJoin.bind(this));
         this.register(PlayerDisconnectS2CPacket.ID, this.onDisconnect.bind(this));
         this.register(EntitySpawnS2CPacket.ID, this.onEntitySpawn.bind(this));
         this.register(EntityRemoveS2CPacket.ID, this.onEntityRemove.bind(this));

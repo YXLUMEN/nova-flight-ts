@@ -11,10 +11,10 @@ import {ServerCommandManager} from "./command/ServerCommandManager.ts";
 import {PlayerManager} from "./entity/PlayerManager.ts";
 import {GameProfile} from "./entity/GameProfile.ts";
 import {ServerNetworkHandler} from "./network/ServerNetworkHandler.ts";
-import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.ts";
 import {Result} from "../utils/result/Result.ts";
 import type {ServerChannel} from "./network/ServerChannel.ts";
 import {Log} from "../worker/log.ts";
+import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static instance: NovaFlightServer;

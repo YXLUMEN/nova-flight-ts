@@ -12,7 +12,7 @@ export class NbtUint32 implements NbtElement {
     });
 
     public static of(value: number): NbtUint32 {
-        value = value | 0;
+        value = value >>> 0;
         return value >= 0 && value <= 512 ? this.cache[value] : new NbtUint32(value);
     }
 

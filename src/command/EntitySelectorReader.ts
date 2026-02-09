@@ -13,17 +13,34 @@ import type {EntityType} from "../entity/EntityType.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import type {NumRange} from "../predicate/NumberRange.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
+import {squareDistVec2} from "../utils/math/math.ts";
+import {shuffleArray} from "../utils/uit.ts";
 
 type provider = (builder: SuggestionsBuilder, consumer: Consumer<SuggestionsBuilder>) => Promise<Suggestions>;
 
 export class EntitySelectorReader {
     public static readonly INVALID_ENTITY_EXCEPTION = new CommandError('Invalid entity');
-    public static DEFAULT_SUGGESTION_PROVIDER: provider = (builder, _) => builder.buildPromise();
+    public static readonly DEFAULT_SUGGESTION_PROVIDER: provider = (builder, _) => builder.buildPromise();
+    public static readonly ARBITRARY: BiConsumer<IVec, Entity[]> = () => {
+    };
+    public static readonly NEAREST: BiConsumer<IVec, Entity[]> = (pos, entities) => {
+        entities.sort((e1, e2) => {
+            return squareDistVec2(e1.getPositionRef, pos) - squareDistVec2(e2.getPositionRef, pos)
+        });
+    };
+    public static readonly FURTHEST: BiConsumer<IVec, Entity[]> = (pos, entities) => {
+        entities.sort((e1, e2) => {
+            return squareDistVec2(e2.getPositionRef, pos) - squareDistVec2(e1.getPositionRef, pos)
+        });
+    };
+    public static readonly RANDOM: BiConsumer<IVec, Entity[]> = (_, entities) => {
+        shuffleArray(entities);
+    };
 
     private readonly reader: StringReader;
 
     private senderOnly: boolean = false;
-    private sorter: BiConsumer<IVec, Entity[]> = EntitySelector.ARBITRARY;
+    private sorter: BiConsumer<IVec, Entity[]> = EntitySelectorReader.ARBITRARY;
 
     private startCursor: number = 0;
     private limit: number = 1;
@@ -40,8 +57,8 @@ export class EntitySelectorReader {
     private excludeMode: boolean = false;
 
     private suggestionProvider: provider = EntitySelectorReader.DEFAULT_SUGGESTION_PROVIDER;
-
     private filters: EntityFilter[] = [];
+    private useAt = false;
 
     public constructor(reader: StringReader) {
         this.reader = reader;
@@ -58,26 +75,22 @@ export class EntitySelectorReader {
             box = new Box(this.centerX ?? 0, this.centerY ?? 0);
         }
 
-        if (box) this.filters.push(entity => {
-            return box.intersectsByBox(entity.calculateBoundingBox());
-        });
-
         if (this.entityType) {
-            if (this.excludeMode) {
-                this.filters.push(entity => this.entityType !== entity.getType());
-            } else {
-                this.filters.push(entity => this.entityType === entity.getType());
-            }
+            if (this.excludeMode) this.filters.push(entity => this.entityType !== entity.getType());
+            else this.filters.push(entity => this.entityType === entity.getType());
         }
 
         return new EntitySelector(
             this.limit ?? Number.MAX_SAFE_INTEGER,
             this.includesNonPlayers,
             this.filters,
+            this.distance,
+            box,
             this.sorter,
             this.senderOnly,
             this.playerName,
             this.uuid,
+            this.useAt
         );
     }
 
@@ -87,7 +100,7 @@ export class EntitySelectorReader {
         }
 
         const start = this.reader.getCursor();
-        const str = this.reader.getString();
+        const str = this.reader.readString();
 
         if (UUIDUtil.isValidUUID(str)) {
             this.uuid = str;
@@ -106,6 +119,7 @@ export class EntitySelectorReader {
     }
 
     protected readAtVariable(): void {
+        this.useAt = true;
         this.suggestionProvider = this.suggestSelectorRest;
         if (!this.reader.canRead()) {
             throw new IllegalArgumentError("Can't read variable");
@@ -119,7 +133,7 @@ export class EntitySelectorReader {
             case 'a': {
                 this.limit = Number.MAX_SAFE_INTEGER;
                 this.includesNonPlayers = false;
-                this.sorter = EntitySelector.ARBITRARY;
+                this.sorter = EntitySelectorReader.ARBITRARY;
                 this.setEntityType(EntityTypes.PLAYER);
                 result = false;
                 break;
@@ -127,21 +141,21 @@ export class EntitySelectorReader {
             case 'e': {
                 this.limit = Number.MAX_SAFE_INTEGER;
                 this.includesNonPlayers = true;
-                this.sorter = EntitySelector.ARBITRARY;
+                this.sorter = EntitySelectorReader.ARBITRARY;
                 result = true;
                 break;
             }
             case 'n': {
                 this.limit = 1;
                 this.includesNonPlayers = true;
-                this.sorter = EntitySelector.NEAREST;
+                this.sorter = EntitySelectorReader.NEAREST;
                 result = true;
                 break;
             }
             case 'p': {
                 this.limit = 1;
                 this.includesNonPlayers = false;
-                this.sorter = EntitySelector.NEAREST;
+                this.sorter = EntitySelectorReader.NEAREST;
                 this.setEntityType(EntityTypes.PLAYER);
                 result = false;
                 break;
@@ -149,7 +163,7 @@ export class EntitySelectorReader {
             case 'r': {
                 this.limit = 1;
                 this.includesNonPlayers = false;
-                this.sorter = EntitySelector.RANDOM;
+                this.sorter = EntitySelectorReader.RANDOM;
                 this.setEntityType(EntityTypes.PLAYER);
                 result = false;
                 break;

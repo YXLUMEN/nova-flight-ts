@@ -21,6 +21,22 @@ canvas {
     cursor: crosshair;
 }
 
+.background {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #050915;
+}
+
+.background.hidden {
+    display: none;
+}
+
 .skill {
     padding: 4px;
     background-color: #cfe3ff;
@@ -115,4 +131,10 @@ canvas {
     outline: none;
     padding: 0 8px;
     font-family: Consolas, Monaco, "Andale Mono", "Lucida Console", monospace;
+}
+
+.line {
+    border-bottom: 1px solid rgba(230, 230, 230, 0.1);
+    width: 100%;
+    pointer-events: none;
 }

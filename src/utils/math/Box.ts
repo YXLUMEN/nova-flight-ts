@@ -1,4 +1,4 @@
-import type {Vec2} from "./Vec2.ts";
+import type {IVec} from "./IVec.ts";
 
 export class Box {
     public readonly minX: number;
@@ -13,7 +13,7 @@ export class Box {
         this.maxY = Math.max(y1, y2);
     }
 
-    public static byVec2(pos1: Vec2, pos2: Vec2) {
+    public static byVec(pos1: IVec, pos2: IVec) {
         return new Box(pos1.x, pos1.y, pos2.x, pos2.y);
     }
 
@@ -23,6 +23,14 @@ export class Box {
 
     public intersects(minX: number, minY: number, maxX: number, maxY: number) {
         return this.minX < maxX && this.maxX > minX && this.minY < maxY && this.maxY > minY;
+    }
+
+    public offset(x: number, y: number): Box {
+        return new Box(this.minX + x, this.minY + y, this.maxX + x, this.maxY + y);
+    }
+
+    public offsetByVec(vec: IVec): Box {
+        return this.offset(vec.x, vec.y);
     }
 
     public expand(x: number, y: number) {

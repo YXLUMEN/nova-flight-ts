@@ -6,10 +6,11 @@ import {ServerStorage} from "../ServerStorage.ts";
 import {GameProfile} from "./GameProfile.ts";
 import {ServerPlayNetworkHandler} from "../network/ServerPlayNetworkHandler.ts";
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
-import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
+import {PlayerJoinS2CPacket} from "../../network/packet/s2c/PlayerJoinS2CPacket.ts";
 import type {ServerWorld} from "../ServerWorld.ts";
 import {Log} from "../../worker/log.ts";
 import {NoResultsError} from "../../apis/errors.ts";
+import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 
 export class PlayerManager {
     private readonly server: NovaFlightServer;
@@ -41,7 +42,7 @@ export class PlayerManager {
         world.addPlayer(player);
 
         networkHandler.send(new JoinGameS2CPacket(player.getId(), this.server.worldName));
-        channel.send(new GameMessageS2CPacket(`\x1b[32m${player.playerProfile.name}\x1b[0m join the game`));
+        channel.send(new PlayerJoinS2CPacket(profile.name, profile.clientId));
 
         console.log(`[Server] Player ${profile.clientId} login`);
     }

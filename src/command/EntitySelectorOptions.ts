@@ -25,13 +25,13 @@ export class EntitySelectorOptions {
 
         this.putOption('distance', reader => {
                 const start = reader.getReader().getCursor();
-                const range = NumberRange.parseNumberRange(reader.getReader(), parseFloat, Number);
-                const [min, max] = range;
+                const sqrtRange = NumberRange.parseNumberRange(reader.getReader(), Number, n => n * n);
+                const [min, max] = sqrtRange;
 
                 if ((min === null || min >= 0) &&
                     (max === null || max >= 0)
                 ) {
-                    reader.setDistance(range);
+                    reader.setDistance(sqrtRange);
                     return;
                 }
                 reader.getReader().setCursor(start);

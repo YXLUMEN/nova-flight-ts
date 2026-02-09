@@ -31,7 +31,7 @@ import {AbstractClientPlayerEntity} from "./entity/AbstractClientPlayerEntity.ts
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
-import {RankingList} from "../statistics/RankingList.ts";
+import {HistoricalScore} from "../statistics/HistoricalScore.ts";
 
 export class ClientWorld extends World {
     public readonly worldName: string;
@@ -115,7 +115,7 @@ export class ClientWorld extends World {
     }
 
     public clientTickEntity(entity: Entity) {
-        entity.resetPosition();
+        entity.flashPosition();
         entity.age++;
         entity.tick();
     }
@@ -125,17 +125,16 @@ export class ClientWorld extends World {
         this.setTicking(false);
 
         const total = this.getTotalScore();
-        const record = {
+        HistoricalScore.recordScore({
             score: total,
             killEffective: Number((total / this.getTime()).toFixed(2)),
             totalSurvivalTime: Number(this.getTime().toFixed(2)),
             playerName: this.client.playerName,
             worldName: this.worldName,
-            gameVersion: DEFAULT_CONFIG.gameVersion,
+            version: DEFAULT_CONFIG.version,
             recordTime: new Date().toISOString(),
             devMode: this.client.player!.isUsedBeDev(),
-        };
-        RankingList.recordScore(record).catch(console.error);
+        }).catch(console.error);
 
         this.events.emit(EVENTS.GAME_OVER, null);
         setTimeout(() => {

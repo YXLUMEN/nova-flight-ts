@@ -3,6 +3,10 @@ import type {StringReader} from "../brigadier/StringReader.ts";
 export type NumRange = [number | null, number | null];
 
 export class NumberRange {
+    public static test(range: NumRange, value: number): boolean {
+        return range[0] !== null && range[0] > 0 ? false : range[1] === null || range[1] < value;
+    }
+
     public static parseNumberRange(
         reader: StringReader,
         converter: (s: string) => number,
@@ -19,6 +23,7 @@ export class NumberRange {
             const token = reader.readUnquotedString();
             if (token.length > 0) {
                 first = mapper(converter(token));
+                if (!Number.isFinite(first)) first = null;
             } else {
                 first = null;
             }
@@ -30,6 +35,7 @@ export class NumberRange {
                 const token2 = reader.readUnquotedString();
                 if (token2.length > 0) {
                     second = mapper(converter(token2));
+                    if (!Number.isFinite(second)) second = null;
                 } else {
                     second = null;
                 }

@@ -139,7 +139,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         return this.normalTags.delete(tag);
     }
 
-    public equals(other: any): boolean {
+    public equals(other: unknown): boolean {
         if (other instanceof Entity) {
             return other.id === this.id
         }
@@ -158,12 +158,12 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         return this.trackedPosition;
     }
 
-    public updateTrackedPositionAndAngles(x: number, y: number, yaw: number, _interpolationSteps: number): void {
+    public updateSyncPositionAndAngles(x: number, y: number, yaw: number, _interpolationSteps: number): void {
         this.setPosition(x, y);
         this.setYaw(yaw);
     }
 
-    public resetPosition() {
+    public flashPosition() {
         this.prevX = this.getX();
         this.prevY = this.getY();
         this.prevYaw = this.getYaw();
@@ -172,8 +172,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     public refreshPositionAndAngles(x: number, y: number, yaw = this.getYaw()): void {
         this.setPosition(x, y);
         this.setYaw(yaw);
-        this.resetPosition();
-        this.setPosition(x, y);
+        this.flashPosition();
     }
 
     public get getPositionRef(): Readonly<MutVec2> {
@@ -200,6 +199,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         if (this.pos.x === x && this.pos.y === y) return;
         this.pos.set(x, y);
         // this.setBoundingBox(this.calculateBoundingBox());
+        // intPos
     }
 
     public setPositionByVec(pos: IVec): void {
@@ -241,12 +241,12 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.setYaw(this.yaw + delta);
     }
 
-    public updateTrackedYaw(yaw: number, _interpolationSteps: number): void {
-        this.setYaw(yaw);
-    }
-
     public get getVelocityRef(): MutVec2 {
         return this.velocity;
+    }
+
+    public getVelocity(): Vec2 {
+        return this.velocity.toImmutable();
     }
 
     public updateVelocityByVec(speed: number, movementInput: IVec): void {
@@ -264,10 +264,6 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         }
     }
 
-    public getVelocity(): Vec2 {
-        return this.velocity.toImmutable();
-    }
-
     public setVelocity(x: number, y: number): void {
         this.velocity.set(x, y);
     }
@@ -283,10 +279,6 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     public addVelocity(deltaX: number, deltaY: number): void {
         this.setVelocity(this.velocity.x + deltaX, this.velocity.y + deltaY);
         this.velocityDirty = true;
-    }
-
-    protected scheduleVelocityUpdate(): void {
-        this.velocityModified = true;
     }
 
     public move(x: number, y: number): void {
@@ -496,7 +488,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
             clamp(velocity[1] ?? 0, -10, 10)
         );
         this.setYaw(nbt.getDouble('yaw'));
-        this.resetPosition();
+        this.flashPosition();
 
         this.setMovementSpeed(nbt.getDouble('speed'));
         this.invulnerable = nbt.getBoolean('invulnerable', 0);

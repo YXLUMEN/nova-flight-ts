@@ -12,7 +12,9 @@ import {CommandUtil} from "../CommandUtil.ts";
 export class EntitySelectorArgumentType implements ArgumentType<EntitySelector> {
     public static readonly TOO_MANY_ENTITIES = new CommandError('Too many entities be selected.');
     public static readonly TOO_MANY_PLAYERS = new CommandError('Too many players be selected.');
-    public static readonly PLAYER_SELECTOR_HAS_ENTITIES = new CommandError('A players only selector has entities.');
+    public static readonly PLAYER_SELECTOR_HAS_ENTITIES = new CommandError('Only players may be affected by this command,but the provided selector includes entities');
+    public static readonly ENTITY_NOT_FOUND_EXCEPTION = new CommandError('No entity was found.');
+    public static readonly PLAYER_NOT_FOUND_EXCEPTION = new CommandError('No player was found.');
 
     private readonly singleTarget: boolean;
     private readonly playersOnly: boolean;

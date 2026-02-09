@@ -21,7 +21,6 @@ import {GameProfile} from "../entity/GameProfile.ts";
 import {ServerCommonNetworkHandler} from "./ServerCommonNetworkHandler.ts";
 import type {ServerWorld} from "../ServerWorld.ts";
 import {ChatMessageC2SPacket} from "../../network/packet/c2s/ChatMessageC2SPacket.ts";
-import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPacket.ts";
 import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
@@ -30,6 +29,7 @@ import type {ServerChannel} from "./ServerChannel.ts";
 import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
 import {ApplyServerTech} from "../tech/ApplyServerTech.ts";
 import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
+import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 
 export class ServerPlayNetworkHandler extends ServerCommonNetworkHandler {
     public readonly player: ServerPlayerEntity;

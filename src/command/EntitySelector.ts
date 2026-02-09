@@ -3,32 +3,24 @@ import type {EntityFilter} from "./SelectorArguments.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {BiConsumer, UUID} from "../apis/types.ts";
 import type {IVec} from "../utils/math/IVec.ts";
-import {shuffleArray} from "../utils/uit.ts";
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
+import type {Box} from "../utils/math/Box.ts";
+import {NumberRange, type NumRange} from "../predicate/NumberRange.ts";
+import {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
+import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
+import {EntitySelectorArgumentType} from "./argument/EntitySelectorArgumentType.ts";
+import {EntitySelectorReader} from "./EntitySelectorReader.ts";
 
 
 export class EntitySelector {
-    public static readonly ARBITRARY: BiConsumer<IVec, Entity[]> = () => {
-    };
-    public static readonly NEAREST: BiConsumer<IVec, Entity[]> = (pos, entities) => {
-        entities.sort((e1, e2) => {
-            return squareDistVec2(e1.getPositionRef, pos) - squareDistVec2(e2.getPositionRef, pos)
-        });
-    };
-    public static readonly FURTHEST: BiConsumer<IVec, Entity[]> = (pos, entities) => {
-        entities.sort((e1, e2) => {
-            return squareDistVec2(e2.getPositionRef, pos) - squareDistVec2(e1.getPositionRef, pos)
-        });
-    };
-    public static readonly RANDOM: BiConsumer<IVec, Entity[]> = (_, entities) => {
-        shuffleArray(entities);
-    };
-
     public readonly limit: number;
     public readonly includesNonPlayers: boolean;
     public readonly senderOnly: boolean;
+    public readonly sqrtDistance: NumRange;
+    public readonly box: Box | null;
     public readonly playerName: string | null;
     public readonly uuid: UUID | null;
+    public readonly useAt: boolean;
 
     private readonly filters: EntityFilter[];
     private readonly sorter: BiConsumer<IVec, Entity[]>;
@@ -37,69 +29,144 @@ export class EntitySelector {
         limit: number,
         includesNonPlayers: boolean,
         filters: EntityFilter[],
+        sqrtDistance: NumRange,
+        box: Box | null,
         sorter: BiConsumer<IVec, Entity[]>,
         senderOnly: boolean,
         playerName: string | null,
         uuid: UUID | null,
+        useAt: boolean
     ) {
         this.limit = limit;
         this.includesNonPlayers = includesNonPlayers;
+        this.sqrtDistance = sqrtDistance;
+        this.box = box;
         this.filters = filters;
         this.sorter = sorter;
         this.senderOnly = senderOnly;
         this.playerName = playerName;
         this.uuid = uuid;
+        this.useAt = useAt;
     }
 
     private checkSourcePermission(source: ServerCommandSource) {
-        if (!source.hasPermissionLevel(6)) {
+        if (this.useAt && !source.hasPermissionLevel(6)) {
             throw new Error('Not allowed permission level');
         }
     }
 
-    public getEntity(source: ServerCommandSource): Entity | null {
+    public getEntity(source: ServerCommandSource): Entity {
         this.checkSourcePermission(source);
-        return this.getEntitiesIter(source).next().value ?? null;
+        const entities = this.getEntities(source);
+        if (entities.length === 0) {
+            throw EntitySelectorArgumentType.ENTITY_NOT_FOUND_EXCEPTION;
+        }
+        if (entities.length > 1) {
+            throw EntitySelectorArgumentType.TOO_MANY_ENTITIES;
+        }
+        return entities[0];
     }
 
     public getEntities(source: ServerCommandSource): Entity[] {
-        const entities = this.getEntitiesIter(source).toArray();
-        return this.findEntities(source.position, entities);
-    }
-
-    private* getEntitiesIter(source: ServerCommandSource) {
         this.checkSourcePermission(source);
-        if (this.senderOnly && source.entity !== null) {
-            yield source.entity;
-            return;
+        if (!this.includesNonPlayers) {
+            return this.getPlayers(source);
         }
 
-        const world = source.getWorld();
-        if (!world) {
-            return;
+        if (this.playerName !== null) {
+            const player = source.server.playerManager.getPlayerByName(this.playerName);
+            return player === null ? [] : [player];
+        }
+
+        if (this.uuid !== null) {
+            const entity = source.server.world!.getEntity(this.uuid);
+            return entity === null ? [] : [entity];
+        }
+
+        const box = this.box !== null ? this.box.offsetByVec(source.position) : null;
+        const filters = this.getPositionFilters(source.position, box);
+
+        if (this.senderOnly) {
+            const entity = source.entity;
+            return entity !== null && filters.every(f => f(entity)) ? [entity] : [];
         }
 
         const limit = this.getAppendLimit();
-        if (!this.includesNonPlayers) {
-            yield* this.iterEntities(source, world.getPlayers(), limit);
-            return;
+        const candidates: Entity[] = [];
+
+        for (const entity of source.server.world!.getEntities().values()) {
+            if (!filters.every(f => f(entity))) continue;
+            candidates.push(entity);
+            if (candidates.length >= limit) break;
         }
 
-        yield* this.iterEntities(source, world.getEntities().values(), limit);
+        return this.findEntities(source.position, candidates);
     }
 
-    private* iterEntities(source: ServerCommandSource, entities: Iterable<Entity>, limit: number) {
-        let i = 0;
-        for (const entity of entities) {
-            if (!this.filters.every(f => f(entity, source))) continue;
-            if (i >= limit) break;
-            i++;
-            yield entity;
+    public getPlayer(source: ServerCommandSource): PlayerEntity {
+        this.checkSourcePermission(source);
+        const players = this.getPlayers(source);
+        if (players.length !== 1) {
+            throw EntitySelectorArgumentType.PLAYER_NOT_FOUND_EXCEPTION;
         }
+        return players[0];
+    }
+
+    public getPlayers(source: ServerCommandSource): ServerPlayerEntity[] {
+        this.checkSourcePermission(source);
+        if (this.playerName !== null) {
+            const player = source.server.playerManager.getPlayerByName(this.playerName);
+            return player === null ? [] : [player];
+        }
+
+        if (this.uuid !== null) {
+            const player = source.server.playerManager.getPlayer(this.uuid);
+            return player === null ? [] : [player];
+        }
+
+        const box = this.box !== null ? this.box.offsetByVec(source.position) : null;
+        const filters = this.getPositionFilters(source.position, box);
+
+        if (this.senderOnly) {
+            const player = source.entity;
+            return player instanceof ServerPlayerEntity &&
+            filters.every(f => f(player)) ?
+                [player] : [];
+        }
+
+        const limit = this.getAppendLimit();
+        const results: ServerPlayerEntity[] = [];
+
+        for (const player of source.server.playerManager.getAllPlayers()) {
+            if (!filters.every(f => f(player))) continue;
+            results.push(player);
+            if (results.length >= limit) break;
+        }
+
+        return results;
+    }
+
+    private getPositionFilters(pos: IVec, box: Box | null) {
+        const hasBox = box !== null;
+        const hasDistance = this.sqrtDistance[0] !== null && this.sqrtDistance[1] !== null;
+
+        if (!hasBox && !hasDistance) {
+            return this.filters;
+        }
+
+        const filters = Array.from(this.filters);
+        if (hasBox) {
+            filters.push(entity => box.intersectsByBox(entity.calculateBoundingBox()));
+        }
+        if (hasDistance) {
+            filters.push(entity => NumberRange.test(this.sqrtDistance, squareDistVec2(entity.getPositionRef, pos)));
+        }
+
+        return filters;
     }
 
     private getAppendLimit() {
-        return this.sorter == EntitySelector.ARBITRARY ? this.limit : Number.MAX_SAFE_INTEGER;
+        return this.sorter == EntitySelectorReader.ARBITRARY ? this.limit : Number.MAX_SAFE_INTEGER;
     }
 
     private findEntities(pos: IVec, entities: Entity[]) {

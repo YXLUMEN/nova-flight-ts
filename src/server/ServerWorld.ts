@@ -82,7 +82,7 @@ export class ServerWorld extends World implements NbtSerializable {
     private bindTickEntity = this.serverTickEntity.bind(this);
 
     private serverTickEntity(entity: Entity): void {
-        entity.resetPosition();
+        entity.flashPosition();
         entity.age++;
         entity.tick();
 

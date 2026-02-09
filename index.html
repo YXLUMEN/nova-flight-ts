@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/css/tech.css"/>
     <link rel="stylesheet" href="/css/start.css"/>
     <link rel="stylesheet" href="/css/multi-game.css"/>
+    <link rel="stylesheet" href="/css/statistic.css"/>
 </head>
 <body>
 
@@ -18,7 +19,7 @@
     <input class="command-input" id="command-input" type="text" autocomplete="off" spellcheck="false">
 </label>
 
-<div class="start hidden" id="start">
+<div class="start background hidden" id="start">
     <div class="title">存档</div>
 
     <div class="save-list" id="save-list"></div>
@@ -47,7 +48,7 @@
     </div>
 </div>
 
-<div class="multi-game hidden" id="multi-game">
+<div class="multi-game background hidden" id="multi-game">
     <div class="title">服务器列表</div>
 
     <div class="server-list" id="server-list"></div>
@@ -58,6 +59,22 @@
                placeholder="输入服务器地址 (ip:port)"/>
         <button class="btn confirm-btn" id="connect-btn">连接</button>
         <button class="btn cancel-btn" id="cancel-btn">返回主页</button>
+    </div>
+</div>
+
+<div class="statistic background hidden" id="statistic">
+    <div class="title">统计数据</div>
+
+    <div class="container">
+        <div class="directory" id="statistic-directory">
+            <div class="item" data-name="historical-score">历史得分</div>
+        </div>
+
+        <div class="statistic-displayer hidden" id="statistic-displayer"></div>
+    </div>
+
+    <div class="control-buttons">
+        <button class="btn confirm-btn" id="statistic-back">返回</button>
     </div>
 </div>
 

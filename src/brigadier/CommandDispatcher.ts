@@ -44,11 +44,14 @@ export class CommandDispatcher<S> {
                     throw new SyntaxError('Unexpected Char');
                 }
             } catch (err) {
-                if (err instanceof Error) {
+                if (err instanceof CommandError) {
+                    errors.set(child, err);
+                } else if (err instanceof Error) {
                     const commandError = new CommandError(`${err.name}: ${err.message}`);
                     errors.set(child, commandError);
-                } else if (err instanceof CommandError) {
-                    errors.set(child, err);
+                } else {
+                    const error = new CommandError(String(err));
+                    errors.set(child, error);
                 }
 
                 reader.setCursor(start);

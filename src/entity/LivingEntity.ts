@@ -368,7 +368,7 @@ export abstract class LivingEntity extends Entity {
         this.edgeColor = packet.edgeColor;
     }
 
-    public override updateTrackedPositionAndAngles(x: number, y: number, yaw: number, interpolationSteps: number) {
+    public override updateSyncPositionAndAngles(x: number, y: number, yaw: number, interpolationSteps: number) {
         this.serverX = x;
         this.serverY = y;
         this.serverYaw = yaw;

@@ -31,6 +31,7 @@ import {ClientSavesManager} from "./ClientSavesManager.ts";
 import {confirm, message} from "@tauri-apps/plugin-dialog";
 import {EVENTS} from "../apis/IEvents.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
+import {StatisticManager} from "./render/statistic/StatisticManager.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -54,6 +55,7 @@ export class NovaFlightClient {
 
     private readonly multiGameManager: ClientMultiGameManger;
     private readonly saveManager: ClientSavesManager;
+    private readonly statisticManager: StatisticManager;
 
     public connectInfo: ConnectInfo | null = null;
 
@@ -99,6 +101,7 @@ export class NovaFlightClient {
 
         this.multiGameManager = new ClientMultiGameManger();
         this.saveManager = new ClientSavesManager();
+        this.statisticManager = new StatisticManager();
 
         this.clientCommandManager = new ClientCommandManager(this.networkHandler.getCommandSource());
         this.clientChat = new ClientChat(this);
@@ -152,6 +155,9 @@ export class NovaFlightClient {
             } else if (action === 1) {
                 this.isIntegrated = false;
                 await this.connectToServer();
+            } else if (action === 2) {
+                await this.statisticManager.selectItem();
+                this.stopWorld();
             }
 
             this.world?.events.emit(EVENTS.GAME_START, null);

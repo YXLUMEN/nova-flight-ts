@@ -1,6 +1,5 @@
 import type {ClientPlayNetworkHandler} from "../network/ClientPlayNetworkHandler.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
-import type {UUID} from "../../apis/types.ts";
 import {CommandSource} from "../../command/CommandSource.ts";
 import type {World} from "../../world/World.ts";
 
@@ -14,8 +13,8 @@ export class ClientCommandSource extends CommandSource {
         this.client = client;
     }
 
-    public getPlayerNames(): UUID[] {
-        return this.networkHandler.getPlayerList().toArray();
+    public getPlayerNames(): Iterable<string> {
+        return this.networkHandler.getPlayerList().map(profile => profile.name);
     }
 
     public getWorld(): World | null {

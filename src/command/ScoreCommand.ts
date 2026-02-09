@@ -15,10 +15,19 @@ export class ScoreCommand {
             literal<T>('score')
                 .then(
                     argument<T, EntitySelector>('target', EntitySelectorArgumentType.players())
-                        .executes(this.giveScore.bind(this))
                         .then(
-                            argument<T, number>('int', IntArgumentType.int())
-                                .executes(this.giveScore.bind(this))
+                            literal<T>('set')
+                                .then(
+                                    argument<T, number>('int', IntArgumentType.int())
+                                        .executes(ctx => this.giveScore(ctx, false))
+                                )
+                        )
+                        .then(
+                            literal<T>('add')
+                                .then(
+                                    argument<T, number>('int', IntArgumentType.int())
+                                        .executes(ctx => this.giveScore(ctx, true))
+                                )
                         )
                 )
                 .requires(source => {
@@ -27,7 +36,7 @@ export class ScoreCommand {
         );
     }
 
-    private static giveScore<T extends ServerCommandSource>(ctx: CommandContext<T>) {
+    private static giveScore<T extends ServerCommandSource>(ctx: CommandContext<T>, add: boolean) {
         const world = ctx.source.getWorld() as ServerWorld | null;
         if (!world) throw new CommandError("No world was found.");
         if (world.isClient) return;
@@ -46,7 +55,8 @@ export class ScoreCommand {
         const entities = selector.getEntities(ctx.source);
         for (const entity of entities) {
             if (entity instanceof ServerPlayerEntity) {
-                entity.setScore(entity.getScore() + score);
+                if (add) entity.addScore(score);
+                else entity.setScore(score);
             }
         }
     }

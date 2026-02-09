@@ -66,6 +66,7 @@ export class ClientCommandManager extends CommandManager {
                 if (this.popup.getPopups()) {
                     const activeItem = this.popup.getActiveItem();
                     if (!activeItem) return;
+
                     this.popup.applySuggestion(
                         activeItem.textContent!,
                         this.tokenStart,

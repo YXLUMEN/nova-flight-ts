@@ -8,7 +8,6 @@ import {clamp} from "../../utils/math/math.ts";
 import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
-import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 import type {GameProfile} from "./GameProfile.ts";
 import {type DamageSource} from "../../entity/damage/DamageSource.ts";
 import type {ServerPlayNetworkHandler} from "../network/ServerPlayNetworkHandler.ts";
@@ -19,6 +18,7 @@ import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/Remove
 import {ServerItemCooldownManager} from "../item/ServerItemCooldownManager.ts";
 import {Techs} from "../../tech/Techs.ts";
 import {EdgeGlowEffect} from "../../effect/EdgeGlowEffect.ts";
+import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 
 
 export class ServerPlayerEntity extends PlayerEntity {

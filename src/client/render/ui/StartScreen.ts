@@ -153,6 +153,12 @@ export class StartScreen implements IUi {
             new UIButton(
                 startX, startY + 120,
                 200, 50,
+                '统计数据',
+                this.statistics.bind(this),
+            ),
+            new UIButton(
+                startX, startY + 180,
+                200, 50,
                 '退出游戏',
                 this.exitGame.bind(this),
             )
@@ -172,5 +178,10 @@ export class StartScreen implements IUi {
     private joinGame(): void {
         this.destroy();
         this.complete(1);
+    }
+
+    private statistics(): void {
+        this.destroy();
+        this.complete(2);
     }
 }
