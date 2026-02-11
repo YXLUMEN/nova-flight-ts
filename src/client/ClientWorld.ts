@@ -132,7 +132,7 @@ export class ClientWorld extends World {
             playerName: this.client.playerName,
             worldName: this.worldName,
             version: DEFAULT_CONFIG.version,
-            recordTime: new Date().toISOString(),
+            recordTime: Date.now(),
             devMode: this.client.player!.isUsedBeDev(),
         }).catch(console.error);
 

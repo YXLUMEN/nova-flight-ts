@@ -1,4 +1,3 @@
-import type {WeaponUIInfo} from '../../../apis/IUIInfo.ts';
 import {BaseWeapon} from "../../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {clamp, lerp, PI2} from "../../../utils/math/math.ts";
 import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
@@ -85,10 +84,9 @@ export class HUD implements IUi {
                 const stack = player.getItem(item);
                 if (!stack) continue;
 
-                const info = this.getWeaponUI(item, stack);
-                if (!info) continue;
+                if (item.getMaxCooldown(stack) <= 0) continue;
 
-                this.drawBar(ctx, x, y, this.barWidth, this.barHeight, info);
+                this.drawBar(ctx, x, y, this.barWidth, this.barHeight, item, stack);
                 if (item === quickFire) {
                     ctx.strokeStyle = "yellow";
                     ctx.lineWidth = 2;
@@ -141,16 +139,6 @@ export class HUD implements IUi {
         // 文字
         ctx.fillStyle = this.hudColor;
         ctx.fillText('船体值', (x + this.barWidth + 8) | 0, (y | 0) - 1);
-    }
-
-    private getWeaponUI(item: SpecialWeapon, stack: ItemStack): WeaponUIInfo | null {
-        const cd = item.getCooldown(stack);
-        const max = item.getMaxCooldown(stack);
-        const label = item.getDisplayName();
-        const color = item.getUiColor(stack);
-
-        if (max <= 0) return null;
-        return {label, color, cooldown: Math.max(0, cd), maxCooldown: Math.max(0.001, max)};
     }
 
     public drawPrimaryWeapons(ctx: CanvasRenderingContext2D, tickDelta: number) {
@@ -206,20 +194,21 @@ export class HUD implements IUi {
         y: number,
         w: number,
         h: number,
-        info: WeaponUIInfo
+        item: SpecialWeapon,
+        stack: ItemStack
     ) {
-        const ratio = clamp(1 - info.cooldown / info.maxCooldown, 0, 1);
+        const ratio = clamp(1 - item.getCooldown(stack) / item.getMaxCooldown(stack), 0, 1);
         // 背景槽
         ctx.fillStyle = 'rgba(255,255,255,0.12)';
         ctx.fillRect(x | 0, y | 0, w | 0, h | 0);
 
         // 进度
-        ctx.fillStyle = info.color;
+        ctx.fillStyle = item.getUiColor(stack);
         ctx.fillRect(x | 0, y | 0, (w * ratio) | 0, h | 0);
 
         // 文本标签
         ctx.fillStyle = this.hudColor;
-        ctx.fillText(info.label, (x + w + 8) | 0, (y | 0) - 1);
+        ctx.fillText(item.getName().toString(), (x + w + 8) | 0, (y | 0) - 1);
     }
 
     private renderEndOverlay(ctx: CanvasRenderingContext2D, world: ClientWorld) {

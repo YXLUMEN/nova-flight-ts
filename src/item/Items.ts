@@ -170,13 +170,13 @@ export class Items {
     ));
     public static readonly PARTICLE_LANCE = this.register('particle_lance', new ParticleLance(new Item.Settings()
         .attackDamage(20)
-        .maxCooldown(40)
+        .maxCooldown(36)
         .unbreakable()
         .type(WeaponType.ENERGY)
     ));
     public static readonly TACHYON_LANCE = this.register('tachyon_lance', new TachyonLance(new Item.Settings()
         .attackDamage(40)
-        .maxCooldown(40)
+        .maxCooldown(36)
         .unbreakable()
         .type(WeaponType.ENERGY)
     ));
@@ -214,6 +214,7 @@ export class Items {
     private static register(id: string, item: Item): Item {
         const entry = Registry.registerReferenceById(Registries.ITEM, Identifier.ofVanilla(id), item).getValue();
         (item.registryEntry as any) = Registries.ITEM.getEntryByValue(item);
+        item.getName();
         return entry;
     }
 }

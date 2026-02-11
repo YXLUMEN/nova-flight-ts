@@ -19,6 +19,7 @@ import {ServerItemCooldownManager} from "../item/ServerItemCooldownManager.ts";
 import {Techs} from "../../tech/Techs.ts";
 import {EdgeGlowEffect} from "../../effect/EdgeGlowEffect.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
+import {TranslatableTextS2CPacket} from "../../network/packet/s2c/TranslatableTextS2CPacket.ts";
 
 
 export class ServerPlayerEntity extends PlayerEntity {
@@ -231,5 +232,9 @@ export class ServerPlayerEntity extends PlayerEntity {
 
     public override sendMessage(msg: string) {
         this.networkHandler?.send(new GameMessageS2CPacket(msg));
+    }
+
+    public override sendTranslatable(key: string, args?: string[]) {
+        this.networkHandler?.send(new TranslatableTextS2CPacket(key, args ?? []));
     }
 }

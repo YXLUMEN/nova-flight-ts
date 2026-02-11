@@ -23,6 +23,7 @@ import {KickCommand} from "../../command/KickCommand.ts";
 import {GiveCommand} from "../../command/GiveCommand.ts";
 import {ScoreCommand} from "../../command/ScoreCommand.ts";
 import {ClientStorage} from "../ClientStorage.ts";
+import {LangCommand} from "../../command/LangCommand.ts";
 
 export type CommandNotifyCategory = 'info' | 'success' | 'warning' | 'error';
 
@@ -365,6 +366,7 @@ export class ClientCommandManager extends CommandManager {
         MusicCommand.registry(this.clientDispatcher);
         ClientSettingsCommand.registry(this.clientDispatcher);
         CommandBarCommand.registry(this.clientDispatcher);
+        LangCommand.registry(this.clientDispatcher);
 
         // noinspection DuplicatedCode
         KillCommand.registry(this.dispatcher);

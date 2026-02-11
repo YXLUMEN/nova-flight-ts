@@ -123,7 +123,6 @@ export class NovaFlightClient {
 
         if (!isDev) {
             BGMManager.init();
-            await mainWindow.setFullscreen(true);
         } else {
             AudioManager.setDisable(true);
         }

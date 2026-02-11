@@ -75,6 +75,8 @@ import {decodeColorToHex} from "../../utils/NetUtil.ts";
 import {TargetDrone} from "../../entity/TargetDrone.ts";
 import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
+import {TranslatableTextS2CPacket} from "../../network/packet/s2c/TranslatableTextS2CPacket.ts";
+import {TranslatableText} from "../../i18n/TranslatableText.ts";
 
 export class ClientPlayNetworkHandler {
     private readonly playerProfiles: Map<UUID, GameProfile> = new Map();
@@ -471,6 +473,11 @@ export class ClientPlayNetworkHandler {
         this.client.clientCommandManager.addPlainMessage(msg);
     }
 
+    public onTranslateText(packet: TranslatableTextS2CPacket): void {
+        const text = new TranslatableText(packet.key, packet.args);
+        this.client.clientCommandManager.addPlainMessage(text.toString());
+    }
+
     public onSyncProfile(packet: PlayerGameModeS2CPacket): void {
         const player = this.client.player;
         if (!player) return;
@@ -604,6 +611,7 @@ export class ClientPlayNetworkHandler {
         this.register(PlayerSetScoreS2CPacket.ID, this.onPlayerScore.bind(this));
         this.register(PlayerAddScoreS2CPacket.ID, this.onPlayerAddScore.bind(this));
         this.register(GameMessageS2CPacket.ID, this.onGameMessage.bind(this));
+        this.register(TranslatableTextS2CPacket.ID, this.onTranslateText.bind(this));
         this.register(PlayerGameModeS2CPacket.ID, this.onSyncProfile.bind(this));
         this.register(EntityStatusEffectS2CPacket.ID, this.onEntityStatusEffect.bind(this));
         this.register(RemoveEntityStatusEffectS2CPacket.ID, this.onRemoveEntityStatusEffect.bind(this));

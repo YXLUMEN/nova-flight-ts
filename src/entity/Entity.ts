@@ -448,6 +448,9 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     public sendMessage(_msg: string): void {
     }
 
+    public sendTranslatable(_key: string, _args?: string[]) {
+    }
+
     public shouldTrackOutput(): boolean {
         return true;
     }

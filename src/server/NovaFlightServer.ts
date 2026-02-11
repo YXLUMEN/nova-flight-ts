@@ -15,6 +15,7 @@ import {Result} from "../utils/result/Result.ts";
 import type {ServerChannel} from "./network/ServerChannel.ts";
 import {Log} from "../worker/log.ts";
 import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.ts";
+import {TranslatableTextS2CPacket} from "../network/packet/s2c/TranslatableTextS2CPacket.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static instance: NovaFlightServer;
@@ -187,6 +188,10 @@ export abstract class NovaFlightServer implements CommandOutput {
 
     public sendMessage(msg: string): void {
         this.networkChannel.send(new GameMessageS2CPacket(msg));
+    }
+
+    public sendTranslatable(key: string, args?: string[]): void {
+        this.networkChannel.send(new TranslatableTextS2CPacket(key, args ?? []));
     }
 
     public shouldTrackOutput(): boolean {

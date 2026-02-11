@@ -3,21 +3,25 @@ import {UIButton} from "./UIButton.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
 
 export class PauseOverlay implements IUi {
-    private buttons: UIButton[] = [];
+    private readonly buttons: UIButton[] = [];
     private pulse = 1;
 
     private worldW: number = 0;
     private worldH: number = 0;
+    private halfW = 0;
+    private halfH: number = 0;
 
     public setSize(w: number, h: number) {
         this.worldW = w;
         this.worldH = h;
+        this.halfW = w / 2;
+        this.halfH = h / 2;
         this.layoutButtons();
     }
 
     private layoutButtons() {
-        const centerX = this.worldW / 2;
-        const centerY = this.worldH / 2;
+        const centerX = this.halfW;
+        const centerY = this.halfH;
         this.buttons.length = 0;
         this.buttons.push(
             new UIButton(
@@ -46,9 +50,6 @@ export class PauseOverlay implements IUi {
     }
 
     public render(ctx: CanvasRenderingContext2D) {
-        const width = this.worldW / 2;
-        const height = this.worldH / 2;
-
         ctx.save();
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -62,12 +63,12 @@ export class PauseOverlay implements IUi {
         // 主标题
         ctx.fillStyle = `rgba(255,255,255,${this.pulse.toFixed(3)})`;
         ctx.font = 'bold 32px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
-        ctx.fillText('已暂停', width, height - 100);
+        ctx.fillText('已暂停', this.halfW, this.halfH - 100);
 
         // 副提示
         ctx.fillStyle = 'rgba(255,255,255,0.9)';
         ctx.font = '16px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
-        ctx.fillText('按 Esc 继续', width, height - 70);
+        ctx.fillText('按 Esc 继续', this.halfW, this.halfH - 70);
 
         // 按钮
         for (const btn of this.buttons) {

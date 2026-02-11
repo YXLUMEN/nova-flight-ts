@@ -48,6 +48,6 @@ export interface ScoreRecord {
     readonly playerName: string;
     readonly worldName: string;
     readonly version: string;
-    readonly recordTime: string;
+    readonly recordTime: number;
     readonly devMode: boolean;
 }

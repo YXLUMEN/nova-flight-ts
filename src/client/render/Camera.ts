@@ -27,11 +27,13 @@ export class Camera {
         height: 0,
     };
 
-    private deadZoneRadius = 40;
-    private squareDeadZone = this.deadZoneRadius ** 2;
-    private followSpeed = 2000;
-    private smoothing = 20;
-    private friction = 12;
+    private isDeadZone = false;
+    private readonly outDeadZone = 40 ** 2;
+    private readonly intoDeadZone = 32 ** 2;
+
+    private readonly followSpeed = 2000;
+    private readonly smoothing = 16;
+    private readonly friction = 12;
 
     private shakeTrauma = 0;       // [0,1]
     private traumaPower = 2;       // 非线性放大, 常用 2 或 3
@@ -71,10 +73,21 @@ export class Camera {
     }
 
     private follow(target: MutVec2, tickDelta: number): void {
-        if (!this.isOutsideDeadZone(target)) return;
-
         const desired = target.subtract(Window.VIEW_W / 2, Window.VIEW_H / 2);
         const delta = desired.subVec(this.offset);
+        const distSq = delta.lengthSquared();
+
+        if (this.isDeadZone) {
+            if (distSq > this.outDeadZone) {
+                this.isDeadZone = false;
+            } else {
+                return;
+            }
+        }
+        if (distSq <= this.intoDeadZone) {
+            this.isDeadZone = true;
+            return;
+        }
 
         this.velocity.x += delta.x * this.smoothing * tickDelta;
         this.velocity.y += delta.y * this.smoothing * tickDelta;
@@ -114,14 +127,6 @@ export class Camera {
                 this.shakeOffset.y = 0;
             }
         }
-    }
-
-    private isOutsideDeadZone(target: MutVec2): boolean {
-        const x = this.offset.x + Window.VIEW_W / 2;
-        const y = this.offset.y + Window.VIEW_H / 2;
-        const dx = target.x - x;
-        const dy = target.y - y;
-        return dx * dx + dy * dy > this.squareDeadZone;
     }
 
     public get cameraOffset(): MutVec2 {

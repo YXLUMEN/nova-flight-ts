@@ -44,6 +44,7 @@ import {
 } from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
 import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
+import {TranslatableTextS2CPacket} from "../../network/packet/s2c/TranslatableTextS2CPacket.ts";
 
 export class ServerNetwork {
     /**
@@ -93,6 +94,7 @@ export class ServerNetwork {
         this.register(LaserWeaponChange.ID, LaserWeaponChange.CODEC);
         this.register(DifficultChangeS2CPacket.ID, DifficultChangeS2CPacket.CODEC);
         this.register(GameMessageS2CPacket.ID, GameMessageS2CPacket.CODEC);
+        this.register(TranslatableTextS2CPacket.ID, TranslatableTextS2CPacket.CODEC);
         PayloadTypeRegistry.playS2C().settle();
     }
 

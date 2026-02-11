@@ -2,12 +2,13 @@ import {clamp} from "../utils/math/math.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {Registries} from "../registry/Registries.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import {TranslatableText} from "../i18n/TranslatableText.ts";
 
 export class Tech {
     public static readonly PACKET_CODEC = PacketCodecs.registryEntry(Registries.TECH);
 
-    public readonly name: string;
-    public readonly desc: string;
+    public readonly name: TranslatableText;
+    public readonly desc: TranslatableText;
     public readonly cost: number;
 
     public readonly x: number;
@@ -19,8 +20,8 @@ export class Tech {
     public readonly branchGroup: string | null;
 
     public constructor(
-        name: string,
-        desc: string,
+        name: TranslatableText,
+        desc: TranslatableText,
         cost: number,
         x: number,
         y: number,
@@ -161,8 +162,8 @@ export class Tech {
 
         public build() {
             return new Tech(
-                this._name,
-                this._desc,
+                TranslatableText.of(this._name),
+                TranslatableText.of(this._desc),
                 this._cost,
                 this._x,
                 this._y,

@@ -10,6 +10,8 @@ import type {ComponentType} from "../component/ComponentType.ts";
 import type {ComponentMap} from "../component/ComponentMap.ts";
 import {Registries} from "../registry/Registries.ts";
 import {BitFlag} from "../utils/BitFlag.ts";
+import {createTranslationKey} from "../utils/uit.ts";
+import {TranslatableText} from "../i18n/TranslatableText.ts";
 
 export type ItemSettings = InstanceType<typeof Item.Settings>;
 
@@ -75,7 +77,7 @@ export class Item {
     public readonly registryEntry!: RegistryEntry<Item>;
     private readonly components: SimpleComponentMap;
 
-    // private translationKey: string | null = null;
+    private translation: TranslatableText | null = null;
 
     public constructor(settings: ItemSettings) {
         this.components = settings.getValidatedComponents();
@@ -110,5 +112,17 @@ export class Item {
 
     public getDisplayName(): string {
         return "Item";
+    }
+
+    public getName(): TranslatableText {
+        if (this.translation === null) {
+            this.translation = TranslatableText.of(createTranslationKey('item', Registries.ITEM.getId(this)))
+        }
+
+        return this.translation;
+    }
+
+    public toString() {
+        return Registries.ITEM.getEntryByValue(this)?.toString() ?? this.getDisplayName();
     }
 }

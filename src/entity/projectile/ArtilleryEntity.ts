@@ -3,20 +3,17 @@ import {type Entity} from "../Entity.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import {Techs} from "../../tech/Techs.ts";
 import {LivingEntity} from "../LivingEntity.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
 
 export class ArtilleryEntity extends FastBulletEntity {
     private readonly hit = new WeakSet<Entity>();
-    private hitTime = 0;
 
     public override onEntityHit(entity: Entity): void {
         if (this.hit.has(entity)) return;
         this.hit.add(entity);
 
-        if (this.hitTime++ >= 3) {
-            this.discard();
-        }
-
-        const sources = this.getWorld().getDamageSources();
+        const world = this.getWorld();
+        const sources = world.getDamageSources();
         const owner = this.getOwner();
 
         const hitDamage = this.getHitDamage();
@@ -29,5 +26,12 @@ export class ArtilleryEntity extends FastBulletEntity {
         }
 
         entity.takeDamage(sources.kinetic(this, owner), hitDamage);
+        if (!world.isClient) {
+            (world as ServerWorld).spawnParticle(
+                this.getX(), this.getY(), 0, 0,
+                6, 100, 0.5, 4,
+                '#ffd8b6'
+            );
+        }
     }
 }

@@ -1,4 +1,5 @@
 import {clamp} from "./math/math.ts";
+import type {Identifier} from "../registry/Identifier.ts";
 
 export const DPR = Math.max(1, Math.min(2, globalThis.devicePixelRatio || 1));
 
@@ -111,4 +112,10 @@ export function getCompactTimestamp() {
     const s = String(now.getSeconds()).padStart(2, '0');
 
     return `${y}${m}${d}_${h}${min}${s}`;
+}
+
+export function createTranslationKey(type: string, id: Identifier | null) {
+    return id == null ?
+        `${type}.unregistered` :
+        `${type}.${id.getNamespace()}.${id.getPath().replace('/', '.')}`
 }

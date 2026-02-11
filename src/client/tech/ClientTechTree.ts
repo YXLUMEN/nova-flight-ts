@@ -14,6 +14,7 @@ import {type Tech} from "../../tech/Tech.ts";
 import {type RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
 import {Techs} from "../../tech/Techs.ts";
+import {AnsiParser} from "../../utils/AnsiParser.ts";
 
 type Adjacency = {
     successors: Map<Tech, Tech[]>; // tech -> successors
@@ -266,7 +267,7 @@ export class ClientTechTree implements TechTree {
         div.className = `node ${this.state.computeStatus(tech)}`;
         div.style.left = `${tech.x}px`;
         div.style.top = `${tech.y}px`;
-        div.textContent = tech.name;
+        div.textContent = tech.name.toString();
         return div;
     }
 
@@ -350,7 +351,7 @@ export class ClientTechTree implements TechTree {
         const frag = document.createDocumentFragment();
 
         const descDiv = document.createElement('div');
-        descDiv.textContent = desc ?? '';
+        descDiv.append(AnsiParser.parseToElement(desc.toString()));
         descDiv.className = 'desc';
         frag.append(descDiv);
 
@@ -389,7 +390,7 @@ export class ClientTechTree implements TechTree {
             frag.append(conflictDiv);
         }
 
-        this.techTitle.textContent = tech.name;
+        this.techTitle.textContent = tech.name.toString();
         this.metaShow.replaceChildren(frag);
     }
 

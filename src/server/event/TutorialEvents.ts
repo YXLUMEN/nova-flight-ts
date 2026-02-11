@@ -63,9 +63,9 @@ export class TutorialEvents {
             this.currentPhase = name;
 
             await sleep(1000);
-            server.sendMessage('指挥官 ,欢迎来到 \x1b[32m"Nova Flight"');
+            server.sendTranslatable('tutorial.intro.welcome');
             await sleep(3000);
-            server.sendMessage('接下来我会重复一遍基础驾驶操作(如果需要重复观看, 请按下 \x1b[32mT\x1b[0m)');
+            server.sendTranslatable('tutorial.intro.teach');
 
             this.conditions.clear();
             this.nextPhase();
@@ -81,7 +81,7 @@ export class TutorialEvents {
             this.currentPhase = name;
 
             await sleep(3000);
-            server.sendMessage('按下 \x1b[32mwasd\x1b[0m 或者 \x1b[32m方向键\x1b[0m 进行移动');
+            server.sendTranslatable('tutorial.move');
             await sleep(3000);
 
             this.pendingAchievement = this.move.bind(this);
@@ -97,9 +97,9 @@ export class TutorialEvents {
             this.currentPhase = name;
 
             await sleep(3000);
-            server.sendMessage('按下 \x1b[32mSpace/空格\x1b[0m 或者 \x1b[32m鼠标左键\x1b[0m 进行基础攻击');
+            server.sendTranslatable('tutorial.fire.space');
             await sleep(3000);
-            server.sendMessage('战斗中请务必注意弹药消耗, 若弹药消耗殆尽, 您需要按下 \x1b[32mR\x1b[0m 进行装填');
+            server.sendTranslatable('tutorial.fire.ammo');
             await sleep(3000);
 
             this.pendingAchievement = this.fire.bind(this);
@@ -115,7 +115,7 @@ export class TutorialEvents {
             this.currentPhase = name;
 
             await sleep(1000);
-            server.sendMessage('指挥官, 检测到敌舰靠近, 请下令击毁他们!');
+            server.sendTranslatable('tutorial.enemy');
             return;
         }
 
@@ -136,15 +136,15 @@ export class TutorialEvents {
             this.currentPhase = name;
 
             await sleep(4000);
-            server.sendMessage('您应该注意到了, 船体完整度下方存在其他信息, 那是舰船的特殊攻击');
+            server.sendTranslatable('tutorial.tech.special');
             await sleep(4000);
-            server.sendMessage('按照排列顺序, 按下 \x1b[32m数字键1\x1b[0m 将会释放 \x1b[32m"炸弹"\x1b[0m');
+            server.sendTranslatable('tutorial.tech.bomb');
             await sleep(4000);
-            server.sendMessage('您还可以通过按下 \x1b[32m鼠标右键\x1b[0m 快速释放被黄色框选的特殊攻击');
+            server.sendTranslatable('tutorial.tech.quick_release');
             await sleep(4000);
-            server.sendMessage('如果您需要修改\x1b[32m快速释放\x1b[0m的目标, 按下 \x1b[32m鼠标中键\x1b[0m 即可');
+            server.sendTranslatable('tutorial.tech.change');
             await sleep(4000);
-            server.sendMessage('当然, 我们目前并没有更多的特殊攻击可供选择');
+            server.sendTranslatable('tutorial.tech.no_choice');
             await sleep(3000);
 
             this.pendingAchievement = this.tech.bind(this);
@@ -169,7 +169,7 @@ export class TutorialEvents {
             this.currentPhase = name;
 
             await sleep(2000);
-            server.sendMessage('指挥官, 请务必小心, 探测到强烈的空间波动, 有大家伙来了');
+            server.sendTranslatable('tutorial.boss.intro');
             await sleep(2000);
 
             const boss = new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64);
@@ -180,23 +180,23 @@ export class TutorialEvents {
             world.spawnEntity(mark);
 
             await sleep(4000);
-            server.sendMessage('是帝国的重型战列舰!');
+            server.sendTranslatable('tutorial.boss.heavy');
             await sleep(3000);
-            server.sendMessage('我们得合理利用科技, 击败它!');
+            server.sendTranslatable('tutorial.boss.tech');
             await sleep(3000);
-            server.sendMessage('比如 "近防炮" 和 "火箭发射器"');
+            server.sendTranslatable('tutorial.boss.recommend');
             await sleep(3000);
-            server.sendMessage('前着可以拦截子弹和导弹, 但它极快的射速容易过热');
+            server.sendTranslatable('tutorial.boss.introduction');
             await sleep(3000);
-            server.sendMessage('后者能够发射一连串威力极大的火箭弹, 是对付重型目标的利器!');
+            server.sendTranslatable('tutorial.boss.rocket');
         }
 
         if (name === 'tutorial_end') {
             this.currentPhase = name;
             await sleep(2000);
-            server.sendMessage('干得漂亮!');
+            server.sendTranslatable('tutorial.end');
             await sleep(3000);
-            server.sendMessage('接下来看你的了, 指挥官!');
+            server.sendTranslatable('tutorial.end.exit');
             await sleep(500);
             this.deregister();
 
@@ -280,11 +280,11 @@ export class TutorialEvents {
 
             this.isPending = true;
             const server = NovaFlightServer.getInstance();
-            server.sendMessage('指挥官, 敌舰装备了适应装甲, 我们的攻击难以造成有效伤害');
+            server.sendTranslatable('tutorial.tech.armor');
             await sleep(3000);
-            server.sendMessage('是时候呼叫我们的科研部门了');
+            server.sendTranslatable('tutorial.tech.call');
             await sleep(3000);
-            server.sendMessage('按下 \x1b[32mG\x1b[0m 就能够打开我们舰船的研究系统');
+            server.sendTranslatable('tutorial.tech.teach');
             await sleep(2000);
             this.isPending = false;
             return;
@@ -295,13 +295,13 @@ export class TutorialEvents {
 
             this.isPending = true;
             const server = NovaFlightServer.getInstance();
-            server.sendMessage('我们拥有多种升级的途径, 需要注意的是, 部分分支之间存在冲突, 您需要慎重考虑');
+            server.sendTranslatable('tutorial.tech.teach.conflict');
             await sleep(4000);
-            server.sendMessage('现在, 我们需要利用 \x1b[32m"反物质弹头"\x1b[0m 穿透敌人的装甲');
+            server.sendTranslatable('tutorial.tech.teach.antimatter');
             await sleep(4000);
-            server.sendMessage('在获取 \x1b[32m"反物质弹头"\x1b[0m 前需要研究它的\x1b[33m所有\x1b[0m前置科技');
+            server.sendTranslatable('tutorial.tech.teach.requires');
             await sleep(4000);
-            server.sendMessage('请注意, 升级科技需要\x1b[33m消耗材料\x1b[0m, 但只要我们击毁敌舰就能获取材料');
+            server.sendTranslatable('tutorial.tech.teach.cost');
             this.isPending = false;
             condition.requireOpenPage = true;
 
@@ -319,9 +319,9 @@ export class TutorialEvents {
             this.isPending = true;
             const server = NovaFlightServer.getInstance();
             await sleep(3000);
-            server.sendMessage('我们可以通过 \x1b[32m鼠标滚轮\x1b[0m 和 \x1b[32mF\x1b[0m 切换主武器');
+            server.sendTranslatable('tutorial.tech.teach.switch');
             await sleep(3000);
-            server.sendMessage('现在, 让我们击毁他们!');
+            server.sendTranslatable('tutorial.tech.teach.fire');
             await sleep(2000);
             this.isPending = false;
 
@@ -334,9 +334,9 @@ export class TutorialEvents {
         if (count >= 4 && !condition.showWarn) {
             this.isPending = true;
             const server = NovaFlightServer.getInstance();
-            server.sendMessage('指挥官! 材料是很珍贵的, 您需要合理使用');
+            server.sendTranslatable('tutorial.tech.score.intro');
             await sleep(3000);
-            server.sendMessage('如果您选择了错误的升级, 您可以通过科研界面的重置来回收所有科技, 但您需要注意, 回收会造成一些损耗');
+            server.sendTranslatable('tutorial.tech.score.reset');
             await sleep(3000);
             this.hostPlayer.addScore(900);
             condition.showWarn = true;
@@ -349,27 +349,27 @@ export class TutorialEvents {
         const server = NovaFlightServer.getInstance();
         switch (condition.currentUnlocked) {
             case 5:
-                server.sendMessage('指挥官, 请选择\x1b[32m"反物质弹头"\x1b[0m升级, 它能够高效的穿透敌人护甲');
+                server.sendTranslatable('tutorial.tech.score.first');
                 this.hostPlayer.addScore(900);
                 break;
             case 6:
-                server.sendMessage('指挥官, 当下情景, \x1b[32m"反物质弹头"\x1b[0m是最佳选择');
+                server.sendTranslatable('tutorial.tech.score.second');
                 this.hostPlayer.addScore(900);
                 break;
             case 7:
-                server.sendMessage('指挥官!');
+                server.sendTranslatable('tutorial.tech.score.third');
                 this.hostPlayer.addScore(900);
                 break;
             case 8:
-                server.sendMessage('指挥官! 快做出正确的选择!');
+                server.sendTranslatable('tutorial.tech.score.fourth');
                 this.hostPlayer.addScore(900);
                 break;
             case 9:
-                server.sendMessage('指挥官, 我真的批不出经费啦!');
+                server.sendTranslatable('tutorial.tech.score.fifth');
                 this.hostPlayer.addScore(900);
                 break;
             case 10:
-                server.sendMessage('好吧好吧, 随便你了, 我已经向科研部门申请了这个科技, 赶快摧毁这些敌舰!');
+                server.sendTranslatable('tutorial.tech.score.sixth');
                 tech.forceUnlock(condition.requireTech);
                 break;
         }
