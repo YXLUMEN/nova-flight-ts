@@ -141,7 +141,8 @@ export class PhaseLasers extends SpecialWeapon {
                 start.x, start.y,
                 end.x, end.y,
                 this.width,
-                pos.x, pos.y, mob.getWidth())) {
+                pos.x, pos.y,
+                mob.getWidth() / 2)) {
                 mob.takeDamage(damageSource, damage);
             }
         }

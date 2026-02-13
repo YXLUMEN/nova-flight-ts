@@ -5,13 +5,13 @@ import {PI2} from "../../../utils/math/math.ts";
 export class CloudLightningEntityRender implements EntityRenderer<CloudLightningEntity> {
     public render(entity: CloudLightningEntity, ctx: CanvasRenderingContext2D, tickDelta: number): void {
         const {x, y} = entity.getLerpPos(tickDelta);
-        const r = entity.getWidth();
+        const r = entity.getDimensions().halfWidth;
 
-        ctx.beginPath();
-
+        ctx.save();
         ctx.strokeStyle = 'rgba(176,158,255,0.8)';
         ctx.fillStyle = 'rgba(176,158,255,0.3)';
 
+        ctx.beginPath();
         ctx.arc(x, y, r, 0, PI2);
 
         for (let i = 0; i < 5; i++) {
@@ -23,5 +23,6 @@ export class CloudLightningEntityRender implements EntityRenderer<CloudLightning
 
         ctx.stroke();
         ctx.fill();
+        ctx.restore();
     }
 }

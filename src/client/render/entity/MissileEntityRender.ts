@@ -4,8 +4,8 @@ import {HALF_PI} from "../../../utils/math/math.ts";
 
 export class MissileEntityRender implements EntityRenderer<MissileEntity> {
     public render(entity: MissileEntity, ctx: CanvasRenderingContext2D, tickDelta: number, offsetX: number = 0, offsetY: number = 0): void {
-        ctx.save();
         const pos = entity.getLerpPos(tickDelta);
+        ctx.save();
         ctx.translate(pos.x + offsetX, pos.y + offsetY);
         ctx.rotate(entity.getLerpYaw(tickDelta) + HALF_PI);
 

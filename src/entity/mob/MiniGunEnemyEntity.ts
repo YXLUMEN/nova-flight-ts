@@ -1,5 +1,4 @@
 import {StatusEffects} from "../effect/StatusEffects.ts";
-import {MiniBulletEntity} from "../projectile/MiniBulletEntity.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {MobEntity} from "./MobEntity.ts";
 import {EntityType} from "../EntityType.ts";
@@ -8,6 +7,7 @@ import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {randInt} from "../../utils/math/math.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
+import {BulletEntity} from "../projectile/BulletEntity.ts";
 
 export class MiniGunEnemyEntity extends MobEntity {
     private static readonly bulletSpeed = 6;
@@ -50,7 +50,7 @@ export class MiniGunEnemyEntity extends MobEntity {
 
         const pos = this.getPositionRef;
         const yaw = this.getYaw();
-        const b = new MiniBulletEntity(EntityTypes.ENEMY_BULLET_ENTITY, world, this, 1);
+        const b = new BulletEntity(EntityTypes.ENEMY_BULLET_ENTITY, world, this, 1);
         b.setVelocity(Math.cos(yaw) * MiniGunEnemyEntity.bulletSpeed, Math.sin(yaw) * MiniGunEnemyEntity.bulletSpeed);
         b.setPosition(pos.x, pos.y);
 

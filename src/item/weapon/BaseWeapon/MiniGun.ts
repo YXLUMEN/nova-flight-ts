@@ -13,7 +13,7 @@ export class MiniGun extends BaseWeapon {
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
         const bullet = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1));
-        this.setBullet(bullet, attacker, this.speed, 4, 5);
+        this.setBullet(bullet, attacker, this.speed, 4, 3);
         world.spawnEntity(bullet);
     }
 

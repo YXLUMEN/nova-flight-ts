@@ -19,38 +19,26 @@ export function randInt(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-export function randNormal(mean = 0, stdDev = 1) {
-    let u = 0, v = 0;
-    while (u === 0) u = Math.random();
-    while (v === 0) v = Math.random();
-    const num = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-    return num * stdDev + mean;
-}
-
 export function shortUUID(): string {
     return Math.random().toString(36).slice(2, 10);
 }
 
-export function collideEntityBox(a: Entity, b: Entity): boolean {
-    const boxA = a.calculateBoundingBox();
-    const boxB = b.calculateBoundingBox();
-
-    return boxA.intersectsByBox(boxB);
+export function getBoundingRadius(entity: Entity): number {
+    return Math.max(entity.getWidth(), entity.getHeight()) / 2;
 }
 
-export function collideEntityCircle(a: Entity, b: Entity) {
-    const ax = a.getPositionRef.x, ay = a.getPositionRef.y;
-    const bx = b.getPositionRef.x, by = b.getPositionRef.y;
+export function collideEntityCircle(a: Entity, b: Entity): boolean {
+    const dx = a.getX() - b.getX();
+    const dy = a.getY() - b.getY();
 
-    const dx = ax - bx;
-    const dy = ay - by;
-
-    const r = a.getWidth() + b.getWidth();
+    const r = getBoundingRadius(a) + getBoundingRadius(b);
     return dx * dx + dy * dy < r * r;
 }
 
-export function collideCircle(ax: number, ay: number, ar: number,
-                              bx: number, by: number, br: number) {
+export function collideCircle(
+    ax: number, ay: number, ar: number,
+    bx: number, by: number, br: number
+): boolean {
     const dx = ax - bx;
     const dy = ay - by;
     const r = ar + br;
@@ -69,7 +57,11 @@ export function squareDist(aX: number, aY: number, bX: number, bY: number) {
 }
 
 export function lineCircleHit(
-    ax: number, ay: number, bx: number, by: number, cx: number, cy: number, r: number): boolean {
+    ax: number, ay: number,
+    bx: number, by: number,
+    cx: number, cy: number,
+    r: number
+): boolean {
     const abx = bx - ax, aby = by - ay;
     const acx = cx - ax, acy = cy - ay;
     const abLen2 = abx * abx + aby * aby || 1e-6;
@@ -144,7 +136,7 @@ export function circleContainsCircle(
     const dx = ex - cx;
     const dy = ey - cy;
     const mr = cr - er;
-    if (mr < 0) return false; // 实体比范围圆还大，不可能“完全包含”
+    if (mr < 0) return false;
     return dx * dx + dy * dy <= mr * mr;
 }
 

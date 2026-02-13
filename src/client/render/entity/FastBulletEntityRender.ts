@@ -10,11 +10,11 @@ export class FastBulletEntityRender implements EntityRenderer<FastBulletEntity> 
         const tailX = x - entity.getVelocityRef.x;
         const tailY = y - entity.getVelocityRef.y;
 
-        ctx.save();
         const gradient = ctx.createLinearGradient(tailX, tailY, x, y);
         gradient.addColorStop(0, 'rgba(166,166,166,0)');
         gradient.addColorStop(1, entity.color);
 
+        ctx.save();
         ctx.strokeStyle = gradient;
         ctx.lineWidth = entity.getWidth();
         ctx.lineCap = 'round';

@@ -8,8 +8,9 @@ export class ExplodeBulletEntityRender implements EntityRenderer<ExplodeBulletEn
         const x = pos.x + offsetX;
         const y = pos.y + offsetY;
 
-        const radius = entity.getWidth();
-        const tailLength = entity.getHeight();
+        const dim = entity.getDimensions();
+        const r = dim.halfWidth;
+        const tailLength = dim.height;
 
         ctx.save();
         ctx.translate(x, y);
@@ -17,17 +18,17 @@ export class ExplodeBulletEntityRender implements EntityRenderer<ExplodeBulletEn
         ctx.fillStyle = entity.color;
 
         ctx.beginPath();
-        ctx.arc(0, 0, radius, -HALF_PI, HALF_PI, false);
-        ctx.lineTo(-tailLength, radius);
-        ctx.lineTo(-tailLength, -radius);
+        ctx.arc(0, 0, r, -HALF_PI, HALF_PI, false);
+        ctx.lineTo(-tailLength, r);
+        ctx.lineTo(-tailLength, -r);
         ctx.closePath();
         ctx.fill();
 
         ctx.strokeStyle = "#ccc";
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(-tailLength + 5, -radius);
-        ctx.lineTo(-tailLength + 5, radius);
+        ctx.moveTo(-tailLength + 5, -r);
+        ctx.lineTo(-tailLength + 5, r);
         ctx.stroke();
 
         ctx.restore();

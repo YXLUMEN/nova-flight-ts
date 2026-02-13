@@ -39,7 +39,8 @@ export class GammaLasers extends BaseWeapon {
                 start.x, start.y,
                 end.x, end.y,
                 GammaLasers.LASER_WIDTH,
-                pos.x, pos.y, mob.getWidth())
+                pos.x, pos.y,
+                mob.getWidth() / 2)
             ) {
                 candidates.push(mob);
                 if (candidates.length > 32) break;

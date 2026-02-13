@@ -25,7 +25,6 @@ import {clamp, squareDistVec2} from "../utils/math/math.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
-import type {MutVec2} from "../utils/math/MutVec2.ts";
 import type {EntityIndex} from "./entity/EntityIndex.ts";
 
 export abstract class World {
@@ -124,7 +123,7 @@ export abstract class World {
         return explosion;
     }
 
-    public createEMP(attacker: Entity | null, pos: MutVec2, radius: number, duration: number = 40, damage: number = 0) {
+    public createEMP(attacker: Entity | null, pos: IVec, radius: number, duration: number = 40, damage: number = 0) {
         const r2 = radius * radius;
 
         for (const entity of this.getEntities().values()) {

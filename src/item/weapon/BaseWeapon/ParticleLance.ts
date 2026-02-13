@@ -78,7 +78,8 @@ export class ParticleLance extends BaseWeapon {
                 start.x, start.y,
                 endX, endY,
                 ParticleLance.LASER_WIDTH,
-                pos.x, pos.y, mob.getWidth())
+                pos.x, pos.y,
+                mob.getWidth() / 2)
             ) {
                 mob.takeDamage(damageSource, damage);
                 if (mob.getShieldAmount() !== 0) continue;

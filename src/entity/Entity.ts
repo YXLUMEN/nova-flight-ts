@@ -198,8 +198,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     public setPosition(x: number, y: number): void {
         if (this.pos.x === x && this.pos.y === y) return;
         this.pos.set(x, y);
-        // this.setBoundingBox(this.calculateBoundingBox());
-        // intPos
+        this.setBoundingBox(this.calculateBoundingBox());
     }
 
     public setPositionByVec(pos: IVec): void {
@@ -301,6 +300,10 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         return this.dimensions;
     }
 
+    public isCollisionTo(entity: Entity): boolean {
+        return this.boundingBox.intersectsByBox(entity.getBoundingBox());
+    }
+
     public getBoundingBox(): Box {
         return this.boundingBox;
     }
@@ -310,7 +313,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     public calculateBoundingBox(): Box {
-        return this.dimensions.getBoxAtByVec(this.pos);
+        return this.dimensions.getBoxAt(this.pos.x, this.pos.y);
     }
 
     public createSpawnPacket() {
@@ -391,10 +394,28 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     protected adjustPosition(): boolean {
-        this.setPosition(
-            clamp(this.pos.x, 20, World.WORLD_W - 20),
-            clamp(this.pos.y, 20, World.WORLD_H - 20)
-        );
+        const dim = this.dimensions;
+        let x = this.pos.x;
+        let y = this.pos.y;
+
+        if (x < dim.halfWidth) {
+            x = dim.halfWidth;
+            this.velocity.x = 0;
+        }
+        if (x > World.WORLD_W - dim.halfWidth) {
+            x = World.WORLD_W - dim.halfWidth;
+            this.velocity.x = 0;
+        }
+        if (y < dim.halfHeight) {
+            y = dim.halfHeight;
+            this.velocity.y = 0;
+        }
+        if (y > World.WORLD_H - dim.halfHeight) {
+            y = World.WORLD_H - dim.halfHeight;
+            this.velocity.y = 0;
+        }
+
+        this.setPosition(x, y);
         return true;
     }
 

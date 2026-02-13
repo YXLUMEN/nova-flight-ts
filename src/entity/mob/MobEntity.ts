@@ -152,7 +152,13 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
             return false;
         }
 
-        this.setPosition(clamp(pos.x, 20, World.WORLD_W), Math.max(pos.y, 0));
+        if (this.getAi().getBehavior() !== 3) {
+            return super.adjustPosition();
+        }
+        this.setPosition(
+            clamp(pos.x, 20, World.WORLD_W),
+            Math.max(pos.y, 0)
+        );
         return true;
     }
 }

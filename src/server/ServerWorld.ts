@@ -14,7 +14,6 @@ import type {EntityHandler} from "../world/entity/EntityHandler.ts";
 import type {UUID} from "../apis/types.ts";
 import {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
-import {collideEntityCircle} from "../utils/math/math.ts";
 import {CIWSBulletEntity} from "../entity/projectile/CIWSBulletEntity.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 import type {Stage} from "../stage/Stage.ts";
@@ -95,7 +94,7 @@ export class ServerWorld extends World implements NbtSerializable {
     public tickOtherEntity(entity: Entity, player: ServerPlayerEntity): void {
         // 敌方碰撞
         if (entity instanceof MobEntity) {
-            if (player.invulnerable || !collideEntityCircle(player, entity)) return;
+            if (player.invulnerable || !entity.isCollisionTo(player)) return;
             entity.attack(player);
             return;
         }
@@ -105,8 +104,7 @@ export class ServerWorld extends World implements NbtSerializable {
             const owner = entity.getOwner();
             // 敌方命中
             if (owner instanceof MobEntity) {
-                if (player.invulnerable || player.isRemoved() || !collideEntityCircle(player, entity)) return;
-
+                if (player.invulnerable || player.isRemoved() || !entity.isCollisionTo(player)) return;
                 entity.onEntityHit(player);
                 return;
             }
@@ -114,19 +112,19 @@ export class ServerWorld extends World implements NbtSerializable {
             // 玩家近防炮命中
             if (entity instanceof CIWSBulletEntity) {
                 for (const projectile of this.getProjectiles()) {
-                    if (projectile.getOwner() !== owner && collideEntityCircle(entity, projectile)) {
-                        entity.discard();
-                        projectile.onIntercept(entity.getHitDamage());
-                        return;
-                    }
+                    if (projectile.getOwner() === owner || !entity.isCollisionTo(projectile)) continue;
+
+                    entity.discard();
+                    projectile.onIntercept(entity.getHitDamage());
+                    return;
                 }
             }
 
             // 玩家命中
             for (const mob of this.getMobs()) {
-                if (collideEntityCircle(entity, mob)) {
+                if (entity.isCollisionTo(mob)) {
                     entity.onEntityHit(mob);
-                    return;
+                    if (entity.isRemoved()) return;
                 }
             }
         }

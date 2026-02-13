@@ -17,12 +17,24 @@ export class Box {
         return new Box(pos1.x, pos1.y, pos2.x, pos2.y);
     }
 
+    public getWidth(): number {
+        return this.maxX - this.minX;
+    }
+
+    public getHeight(): number {
+        return this.maxY - this.minY;
+    }
+
     public intersectsByBox(box: Box): boolean {
         return this.intersects(box.minX, box.minY, box.maxX, box.maxY);
     }
 
     public intersects(minX: number, minY: number, maxX: number, maxY: number) {
         return this.minX < maxX && this.maxX > minX && this.minY < maxY && this.maxY > minY;
+    }
+
+    public contains(x: number, y: number): boolean {
+        return x >= this.minX && x < this.maxX && y >= this.minY && y < this.maxY;
     }
 
     public offset(x: number, y: number): Box {
@@ -44,5 +56,14 @@ export class Box {
 
     public expandAll(value: number) {
         return this.expand(value, value);
+    }
+
+    public union(box: Box) {
+        return new Box(
+            Math.min(this.minX, box.minX),
+            Math.min(this.minY, box.minY),
+            Math.max(this.maxX, box.maxX),
+            Math.min(this.maxY, box.maxY)
+        );
     }
 }

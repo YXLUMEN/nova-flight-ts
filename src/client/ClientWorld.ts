@@ -321,12 +321,12 @@ export class ClientWorld extends World {
         const player = this.client.player;
         if (!this.over && player) {
             EntityRenderers.getRenderer(player).render(player, ctx, tickDelta, 0, 0);
-            const playerPos = player.getLerpPos(tickDelta);
 
             if (player.bc) {
                 player.bc.drawAimIndicator(ctx, tickDelta);
             }
 
+            const playerPos = player.getLerpPos(tickDelta);
             if (player.lockedMissile.size > 0) {
                 ctx.fillStyle = '#ff7f50';
                 for (const missile of player.lockedMissile) {
@@ -352,6 +352,22 @@ export class ClientWorld extends World {
                 ctx.lineTo(pointer.x, pointer.y);
                 ctx.stroke();
             }
+        }
+
+        if (WorldConfig.renderHitBox) {
+            ctx.beginPath();
+            for (const entity of this.entities.values()) {
+                const pos = entity.getLerpPos(tickDelta);
+                const lerpBox = entity.getDimensions().getBoxAtByVec(pos);
+                ctx.rect(lerpBox.minX, lerpBox.minY, lerpBox.getWidth(), lerpBox.getHeight());
+            }
+            for (const player of this.players) {
+                const pos = player.getLerpPos(tickDelta);
+                const lerpBox = player.getDimensions().getBoxAtByVec(pos);
+                ctx.rect(lerpBox.minX, lerpBox.minY, lerpBox.getWidth(), lerpBox.getHeight());
+            }
+            ctx.strokeStyle = "#ffffff";
+            ctx.stroke();
         }
 
         this.client.window.hud.drawPrimaryWeapons(ctx, tickDelta);

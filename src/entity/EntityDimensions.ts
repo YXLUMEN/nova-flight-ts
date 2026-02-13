@@ -5,9 +5,14 @@ export class EntityDimensions {
     public readonly width: number;
     public readonly height: number;
 
+    public readonly halfWidth: number;
+    public readonly halfHeight: number;
+
     private constructor(width: number, height: number) {
         this.width = width;
         this.height = height;
+        this.halfWidth = width / 2;
+        this.halfHeight = height / 2;
     }
 
     public static changing(width: number, height: number) {
@@ -15,9 +20,7 @@ export class EntityDimensions {
     }
 
     public getBoxAt(x: number, y: number): Box {
-        const f = this.width / 2.0;
-        const g = this.height;
-        return new Box(x - f, y, x + f, y + g);
+        return new Box(x - this.halfWidth, y - this.halfHeight, x + this.halfWidth, y + this.halfHeight);
     }
 
     public getBoxAtByVec(pos: IVec) {

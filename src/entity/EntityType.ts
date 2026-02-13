@@ -65,8 +65,8 @@ export class EntityType<T extends Entity, F extends Constructor<T> = Constructor
             return new Builder(factory);
         }
 
-        public setDimensions(width: number, height: number) {
-            this.dimensions = EntityDimensions.changing(width, height);
+        public setDimensions(width: number, height?: number) {
+            this.dimensions = EntityDimensions.changing(width, height ?? width);
             return this;
         }
 

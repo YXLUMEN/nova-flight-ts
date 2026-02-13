@@ -4,8 +4,9 @@ import type {RocketEntity} from "../../../entity/projectile/RocketEntity.ts";
 
 export class RocketEntityRender implements EntityRenderer<RocketEntity> {
     public render(entity: RocketEntity, ctx: CanvasRenderingContext2D, tickDelta: number, offsetX: number = 0, offsetY: number = 0): void {
-        ctx.save();
         const pos = entity.getLerpPos(tickDelta);
+
+        ctx.save();
         ctx.translate(pos.x + offsetX, pos.y + offsetY);
         ctx.rotate(entity.getLerpYaw(tickDelta) + HALF_PI);
 

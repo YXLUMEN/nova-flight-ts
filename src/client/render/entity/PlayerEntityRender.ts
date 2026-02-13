@@ -4,8 +4,9 @@ import {HALF_PI} from "../../../utils/math/math.ts";
 
 export class PlayerEntityRender implements EntityRenderer<PlayerEntity> {
     public render(player: PlayerEntity, ctx: CanvasRenderingContext2D, tickDelta: number, offsetX: number = 0, offsetY: number = 0) {
-        ctx.save();
         const pos = player.getLerpPos(tickDelta);
+
+        ctx.save();
         ctx.translate(pos.x + offsetX, pos.y + offsetY);
         ctx.rotate(player.getLerpYaw(tickDelta) + HALF_PI);
         // 机身

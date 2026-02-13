@@ -587,6 +587,9 @@ export class NovaFlightClient {
             case 'KeyL':
                 WorldConfig.follow = !WorldConfig.follow;
                 break;
+            case 'F3':
+                WorldConfig.renderHitBox = !WorldConfig.renderHitBox;
+                break;
         }
     }
 

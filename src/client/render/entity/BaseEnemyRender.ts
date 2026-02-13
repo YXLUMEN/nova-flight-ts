@@ -3,14 +3,15 @@ import type {BaseEnemy} from "../../../entity/mob/BaseEnemy.ts";
 import {HALF_PI} from "../../../utils/math/math.ts";
 
 export class BaseEnemyRender implements EntityRenderer<BaseEnemy> {
-    public render(entity: BaseEnemy, ctx: CanvasRenderingContext2D, tickDelta: number, offsetX: number = 0, offsetY: number = 0) {
-        ctx.save();
+    public render(entity: BaseEnemy, ctx: CanvasRenderingContext2D, tickDelta: number) {
         const pos = entity.getLerpPos(tickDelta);
-        ctx.translate(pos.x + offsetX, pos.y + offsetY);
-        ctx.rotate(entity.getLerpYaw(tickDelta) + HALF_PI);
+        ctx.save();
 
         ctx.fillStyle = entity.color;
         ctx.strokeStyle = "rgba(0,0,0,.2)";
+
+        ctx.translate(pos.x, pos.y);
+        ctx.rotate(entity.getLerpYaw(tickDelta) + HALF_PI);
 
         ctx.beginPath();
         ctx.moveTo(0, -18);

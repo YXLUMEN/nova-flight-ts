@@ -33,6 +33,8 @@ const WorldConfig = status({
     version: DEFAULT_CONFIG.version,
     port: 25566,
     serverAddr: '127.0.0.1:25566',
+
+    renderHitBox: false,
 });
 
 export {DEFAULT_CONFIG, WorldConfig, isDev, isServer};

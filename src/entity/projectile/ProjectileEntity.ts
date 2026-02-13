@@ -12,6 +12,7 @@ import type {UUID} from "../../apis/types.ts";
 import {NbtTypeId} from "../../nbt/NbtType.ts";
 import {UUIDUtil} from "../../utils/UUIDUtil.ts";
 import {decodeColorToHex, encodeColorHex} from "../../utils/NetUtil.ts";
+import {Box} from "../../utils/math/Box.ts";
 
 export abstract class ProjectileEntity extends Entity implements IOwnable, IColorEntity {
     private damage: number = 0;
@@ -36,6 +37,23 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
         if (pos.y < -20 || pos.y > World.WORLD_H + 20 || pos.x < -20 || pos.x > World.WORLD_W + 20) {
             this.discard();
         }
+    }
+
+    public calculateBoundingBox() {
+        const box = super.calculateBoundingBox();
+        const v = this.getVelocityRef;
+        if (Math.abs(v.x) <= 48 && Math.abs(v.y) <= 48) {
+            return box;
+        }
+
+        const vx = v.x * 0.1;
+        const vy = v.y * 0.1;
+        return new Box(
+            Math.min(box.minX, box.minX + vx),
+            Math.min(box.minY, box.minY + vy),
+            Math.max(box.maxX, box.maxX + vx),
+            Math.max(box.maxY, box.maxY + vy)
+        );
     }
 
     public abstract onEntityHit(entity: Entity): void;
