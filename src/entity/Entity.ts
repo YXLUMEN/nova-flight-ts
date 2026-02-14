@@ -8,7 +8,6 @@ import type {EntityDimensions} from "./EntityDimensions.ts";
 import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
 import type {DataTracked} from "./data/DataTracked.ts";
 import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
-import {EVENTS} from "../apis/IEvents.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import {Box} from "../utils/math/Box.ts";
 import {clamp, lerp, lerpRadians} from "../utils/math/math.ts";
@@ -25,6 +24,7 @@ import type {EntityLike} from "../world/entity/EntityLike.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {IllegalArgumentError, IllegalStateException} from "../apis/errors.ts";
 import {NbtTypeId} from "../nbt/NbtType.ts";
+import {EMPTY_LISTENER, type EntityChangeListener} from "../world/entity/EntityChangeListener.ts";
 
 
 export abstract class Entity implements EntityLike, DataTracked, Comparable, NbtSerializable, CommandOutput {
@@ -58,6 +58,8 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     private readonly velocity: MutVec2 = MutVec2.zero();
     private movementSpeed: number = 0.2;
     private yaw: number = 0;
+
+    private changeListener: EntityChangeListener = EMPTY_LISTENER;
 
     private boundingBox: Box = Entity.NULL_BOX;
     private readonly dimensions: EntityDimensions;
@@ -111,7 +113,8 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         if (this.removed) return;
         this.removed = true;
         this.onDiscard();
-        this.world.events.emit(EVENTS.ENTITY_REMOVED, {entity: this});
+        this.changeListener.remove();
+        // this.world.events.emit(EVENTS.ENTITY_REMOVED, {entity: this});
     }
 
     /**
@@ -163,16 +166,19 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.setYaw(yaw);
     }
 
-    public flashPosition() {
+    /**
+     * 重置所有 prev 位置和旋转
+     * */
+    public resetPrevious() {
         this.prevX = this.getX();
         this.prevY = this.getY();
         this.prevYaw = this.getYaw();
     }
 
-    public refreshPositionAndAngles(x: number, y: number, yaw = this.getYaw()): void {
+    public refreshPositionAndAngles(x: number, y: number, yaw: number): void {
         this.setPosition(x, y);
         this.setYaw(yaw);
-        this.flashPosition();
+        this.resetPrevious();
     }
 
     public get getPositionRef(): Readonly<MutVec2> {
@@ -195,9 +201,15 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         return this.pos.y;
     }
 
+    public overwritePos(x: number, y: number): void {
+        if (this.pos.x === x && this.pos.y === y) return;
+        this.pos.set(x, y);
+    }
+
     public setPosition(x: number, y: number): void {
         if (this.pos.x === x && this.pos.y === y) return;
         this.pos.set(x, y);
+        // this.changeListener.updateEntityPosition();
         this.setBoundingBox(this.calculateBoundingBox());
     }
 
@@ -312,7 +324,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.boundingBox = boundingBox;
     }
 
-    public calculateBoundingBox(): Box {
+    protected calculateBoundingBox(): Box {
         return this.dimensions.getBoxAt(this.pos.x, this.pos.y);
     }
 
@@ -322,8 +334,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     public onSpawnPacket(packet: EntitySpawnS2CPacket) {
         this.setTrackedPosition(packet.x, packet.y);
-        this.refreshPositionAndAngles(packet.x, packet.y);
-        this.setYaw(packet.yaw);
+        this.refreshPositionAndAngles(packet.x, packet.y, packet.yaw);
         this.setId(packet.entityId);
         this.setUuid(packet.uuid);
         this.color = packet.color;
@@ -415,12 +426,16 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
             this.velocity.y = 0;
         }
 
-        this.setPosition(x, y);
+        this.overwritePos(x, y);
         return true;
     }
 
+    public setChangeListener(listener: EntityChangeListener): void {
+        this.changeListener = listener;
+    }
+
     public shouldSave(): boolean {
-        return true;
+        return !this.removed;
     }
 
     public isLogicalSideForUpdatingMovement(): boolean {
@@ -512,7 +527,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
             clamp(velocity[1] ?? 0, -10, 10)
         );
         this.setYaw(nbt.getDouble('yaw'));
-        this.flashPosition();
+        this.resetPrevious();
 
         this.setMovementSpeed(nbt.getDouble('speed'));
         this.invulnerable = nbt.getBoolean('invulnerable', 0);

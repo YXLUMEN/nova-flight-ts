@@ -59,7 +59,7 @@ export class ClientWorld extends World {
         this.worldName = worldName;
         this.entityManager = new ClientEntityManager(this.ClientEntityHandler);
         this.starField.init();
-        this.onEvent();
+        this.registerEvents();
         this.finishInit = true;
     }
 
@@ -115,7 +115,7 @@ export class ClientWorld extends World {
     }
 
     public clientTickEntity(entity: Entity) {
-        entity.flashPosition();
+        entity.resetPrevious();
         entity.age++;
         entity.tick();
     }
@@ -255,7 +255,7 @@ export class ClientWorld extends World {
         return super.createExplosion(entity, damage, x, y, opts);
     }
 
-    private onEvent() {
+    private registerEvents() {
         if (this.finishInit) return;
 
         this.events.on(EVENTS.ENTITY_REMOVED, event => {
@@ -355,19 +355,12 @@ export class ClientWorld extends World {
         }
 
         if (WorldConfig.renderHitBox) {
-            ctx.beginPath();
             for (const entity of this.entities.values()) {
-                const pos = entity.getLerpPos(tickDelta);
-                const lerpBox = entity.getDimensions().getBoxAtByVec(pos);
-                ctx.rect(lerpBox.minX, lerpBox.minY, lerpBox.getWidth(), lerpBox.getHeight());
+                this.drawBoundingBox(ctx, entity, tickDelta);
             }
             for (const player of this.players) {
-                const pos = player.getLerpPos(tickDelta);
-                const lerpBox = player.getDimensions().getBoxAtByVec(pos);
-                ctx.rect(lerpBox.minX, lerpBox.minY, lerpBox.getWidth(), lerpBox.getHeight());
+                this.drawBoundingBox(ctx, player, tickDelta);
             }
-            ctx.strokeStyle = "#ffffff";
-            ctx.stroke();
         }
 
         this.client.window.hud.drawPrimaryWeapons(ctx, tickDelta);
@@ -377,6 +370,26 @@ export class ClientWorld extends World {
         this.client.window.hud.render(ctx);
         this.client.window.notify.render(ctx);
         if (!this.ticking && !this.over) this.client.window.pauseOverlay.render(ctx);
+    }
+
+    private drawBoundingBox(ctx: CanvasRenderingContext2D, entity: Entity, tickDelta: number) {
+        const pos = entity.getLerpPos(tickDelta);
+        const yaw = entity.getLerpYaw(tickDelta);
+        const lerpBox = entity.getDimensions().getBoxAtByVec(pos);
+
+        const w = lerpBox.getWidth();
+        const h = lerpBox.getHeight();
+
+        ctx.beginPath();
+        ctx.strokeStyle = "#2aff00";
+        ctx.moveTo(pos.x, pos.y);
+        ctx.lineTo(Math.cos(yaw) * (w + 20) + pos.x, Math.sin(yaw) * (h + 20) + pos.y);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = "#fff";
+        ctx.rect(lerpBox.minX, lerpBox.minY, w, h);
+        ctx.stroke();
     }
 
     public drawLockedDir(

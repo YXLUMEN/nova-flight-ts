@@ -17,6 +17,15 @@ export class Box {
         return new Box(pos1.x, pos1.y, pos2.x, pos2.y);
     }
 
+    public static fromCenter(cx: number, cy: number, halfWidth: number, halfHeight: number): Box {
+        return new Box(
+            cx - halfWidth,
+            cy - halfHeight,
+            cx + halfWidth,
+            cy + halfHeight
+        );
+    }
+
     public getWidth(): number {
         return this.maxX - this.minX;
     }

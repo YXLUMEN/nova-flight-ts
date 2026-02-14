@@ -1,4 +1,6 @@
-import {World} from "../../world/World.ts";
+import type {World} from "../../world/World.ts";
+// @ts-ignore
+import {VisualEffectTypes} from "../../effect/VisualEffectTypes.ts";
 import {WindowOverlay} from "../../effect/WindowOverlay.ts";
 import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import {pointInCircleVec2} from "../../utils/math/math.ts";
@@ -59,7 +61,6 @@ export class IntoVoidWeapon extends SpecialWeapon {
             const stack = attacker.getItem(emp);
             if (stack) emp.setCooldown(stack, 0);
         }
-
     }
 
     public override canFire(stack: ItemStack): boolean {

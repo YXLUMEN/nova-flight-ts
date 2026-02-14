@@ -22,9 +22,7 @@ export class BGMManager {
 
     public static init() {
         shuffleArray(this.playList);
-
         AudioManager.playAudio(Audios.MAIN_THEME, true);
-        AudioManager.setVolume(0.8);
     }
 
     public static next() {

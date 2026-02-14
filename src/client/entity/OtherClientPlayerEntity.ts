@@ -43,6 +43,6 @@ export class OtherClientPlayerEntity extends AbstractClientPlayerEntity {
 
     public override onSpawnPacket(packet: EntitySpawnS2CPacket) {
         super.onSpawnPacket(packet);
-        this.flashPosition();
+        this.resetPrevious();
     }
 }

@@ -56,7 +56,7 @@ export class ServerWorld extends World implements NbtSerializable {
         this.entityManager = new ServerEntityManager(this.ServerEntityHandler);
         this.stage = STAGE;
 
-        this.onEvent();
+        this.registerEvents();
         this.finishInit = true;
     }
 
@@ -81,9 +81,15 @@ export class ServerWorld extends World implements NbtSerializable {
     private bindTickEntity = this.serverTickEntity.bind(this);
 
     private serverTickEntity(entity: Entity): void {
-        entity.flashPosition();
+        entity.resetPrevious();
         entity.age++;
         entity.tick();
+
+        // if (entity.isPlayer()) {
+        //     this.tickPlayer(entity as ServerPlayerEntity);
+        // } else if (entity instanceof ProjectileEntity) {
+        //     this.tickProjectile(entity);
+        // }
 
         if (entity.isPlayer()) return;
         this.getPlayers().forEach(player => {
@@ -91,7 +97,7 @@ export class ServerWorld extends World implements NbtSerializable {
         });
     }
 
-    public tickOtherEntity(entity: Entity, player: ServerPlayerEntity): void {
+    private tickOtherEntity(entity: Entity, player: ServerPlayerEntity): void {
         // 敌方碰撞
         if (entity instanceof MobEntity) {
             if (player.invulnerable || !entity.isCollisionTo(player)) return;
@@ -103,7 +109,7 @@ export class ServerWorld extends World implements NbtSerializable {
         if (entity instanceof ProjectileEntity) {
             const owner = entity.getOwner();
             // 敌方命中
-            if (owner instanceof MobEntity) {
+            if (!owner || owner instanceof MobEntity) {
                 if (player.invulnerable || player.isRemoved() || !entity.isCollisionTo(player)) return;
                 entity.onEntityHit(player);
                 return;
@@ -129,6 +135,57 @@ export class ServerWorld extends World implements NbtSerializable {
             }
         }
     }
+
+    // private tickPlayer(player: ServerPlayerEntity) {
+    //     if (player.invulnerable) return;
+    //
+    //     this.getEntityLookup().forEachInBox(player.getBoundingBox(), entity => {
+    //         if (entity.isRemoved() || entity.isPlayer() || !entity.isCollisionTo(player)) return;
+    //
+    //         if (entity instanceof MobEntity) {
+    //             entity.attack(player);
+    //             return;
+    //         }
+    //
+    //         if (entity instanceof ProjectileEntity) {
+    //             const owner = entity.getOwner();
+    //             if (owner && owner.isPlayer()) return;
+    //             entity.onEntityHit(player);
+    //         }
+    //     });
+    // }
+
+    // private tickProjectile(projectile: ProjectileEntity): void {
+    //     const owner = projectile.getOwner();
+    //     // 不处理 mob
+    //     if (!owner || !owner.isPlayer()) return;
+    //
+    //     if (projectile instanceof CIWSBulletEntity) {
+    //         this.getEntityLookup().findFirst(projectile.getBoundingBox(), entity => {
+    //             if (entity.isRemoved() || entity.isPlayer() || !projectile.isCollisionTo(entity)) return false;
+    //
+    //             if (entity instanceof MobEntity) {
+    //                 projectile.onEntityHit(entity);
+    //                 return true;
+    //             }
+    //             // 允许玩家相互拦截
+    //             if (entity instanceof ProjectileEntity && entity.getOwner() !== owner) {
+    //                 projectile.discard();
+    //                 entity.onIntercept(projectile.getHitDamage());
+    //                 return true;
+    //             }
+    //             return false;
+    //         });
+    //         return;
+    //     }
+    //
+    //     for (const mob of this.getMobs()) {
+    //         if (projectile.isCollisionTo(mob)) {
+    //             projectile.onEntityHit(mob);
+    //             if (projectile.isRemoved()) return;
+    //         }
+    //     }
+    // }
 
     public override gameOver(player: ServerPlayerEntity): void {
         if (!this.server.isHost(player.getProfile())) {
@@ -187,10 +244,7 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public override removeEntity(entityId: number): void {
-        const entity = this.getEntityLookup().get(entityId);
-        if (entity) {
-            entity.discard();
-        }
+        this.getEntityLookup().get(entityId)?.discard();
     }
 
     public removePlayer(player: ServerPlayerEntity): void {
@@ -334,7 +388,7 @@ export class ServerWorld extends World implements NbtSerializable {
     public override addParticle(): void {
     }
 
-    private onEvent() {
+    private registerEvents() {
         if (this.finishInit) return;
 
         this.events.on(EVENTS.ENTITY_REMOVED, event => {

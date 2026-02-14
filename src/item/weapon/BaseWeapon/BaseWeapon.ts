@@ -124,7 +124,7 @@ export abstract class BaseWeapon extends Weapon {
         bullet.setVelocity(f * speed, g * speed);
         bullet.setYaw(offsetYaw);
 
-        const completeOffset = attacker.getWidth() / 2 + offset;
+        const completeOffset = attacker.getDimensions().halfWidth + offset;
         bullet.setPosition(
             pos.x + f * completeOffset + f * margin,
             pos.y + g * completeOffset + g * margin,
@@ -134,7 +134,7 @@ export abstract class BaseWeapon extends Weapon {
     protected spawnMuzzle(world: ClientWorld, entity: Entity, particles: number): void {
         const pos = entity.getPositionRef;
         const yaw = entity.getYaw();
-        const offset = entity.getWidth() / 2;
+        const offset = entity.getDimensions().halfWidth;
         const x = Math.cos(yaw) * offset + pos.x;
         const y = Math.sin(yaw) * offset + pos.y;
 

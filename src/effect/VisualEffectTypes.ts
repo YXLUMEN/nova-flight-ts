@@ -1,4 +1,5 @@
-import {type VisualEffect} from "./VisualEffect.ts";
+import type {VisualEffect} from "./VisualEffect.ts";
+import {VisualEffectType} from "./VisualEffectType.ts";
 import {Registries} from "../registry/Registries.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {Registry} from "../registry/Registry.ts";
@@ -9,7 +10,6 @@ import {Particle} from "./Particle.ts";
 import {RadialRing} from "./RadialRing.ts";
 import {ScreenFlash} from "./ScreenFlash.ts";
 import {WindowOverlay} from "./WindowOverlay.ts";
-import {VisualEffectType} from "./VisualEffectType.ts";
 import {ArcEffect} from "./ArcEffect.ts";
 
 export class VisualEffectTypes {

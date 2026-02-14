@@ -156,7 +156,7 @@ export class EntitySelector {
 
         const filters = Array.from(this.filters);
         if (hasBox) {
-            filters.push(entity => box.intersectsByBox(entity.calculateBoundingBox()));
+            filters.push(entity => box.intersectsByBox(entity.getBoundingBox()));
         }
         if (hasDistance) {
             filters.push(entity => NumberRange.test(this.sqrtDistance, squareDistVec2(entity.getPositionRef, pos)));
