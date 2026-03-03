@@ -67,7 +67,7 @@ export abstract class LivingEntity extends Entity {
     protected tickMovement() {
         if (this.isLogicalSideForUpdatingMovement()) {
             this.bodyTrackingIncrements = 0;
-            this.setTrackedPosition(this.getX(), this.getY());
+            this.syncPositionDelta(this.getX(), this.getY());
         }
 
         if (this.bodyTrackingIncrements > 0) {
@@ -356,7 +356,7 @@ export abstract class LivingEntity extends Entity {
         const x = packet.x;
         const y = packet.y;
         const yaw = packet.yaw;
-        this.setTrackedPosition(x, y);
+        this.syncPositionDelta(x, y);
         this.setId(packet.entityId);
         this.setUuid(packet.uuid);
         this.updatePosition(x, y);
@@ -368,7 +368,7 @@ export abstract class LivingEntity extends Entity {
         this.edgeColor = packet.edgeColor;
     }
 
-    public override updateSyncPositionAndAngles(x: number, y: number, yaw: number, interpolationSteps: number) {
+    public override updatePositionAndAngles(x: number, y: number, yaw: number, interpolationSteps: number) {
         this.serverX = x;
         this.serverY = y;
         this.serverYaw = yaw;

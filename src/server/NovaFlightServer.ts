@@ -3,19 +3,19 @@ import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {Constructor, Consumer, UUID} from "../apis/types.ts";
 import {ServerWorld} from "./ServerWorld.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
-import {ServerReadyS2CPacket} from "../network/packet/s2c/ServerReadyS2CPacket.ts";
 import {ServerCommandSource} from "./command/ServerCommandSource.ts";
 import type {CommandOutput} from "./command/CommandOutput.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 import {ServerCommandManager} from "./command/ServerCommandManager.ts";
 import {PlayerManager} from "./entity/PlayerManager.ts";
 import {GameProfile} from "./entity/GameProfile.ts";
-import {ServerNetworkHandler} from "./network/ServerNetworkHandler.ts";
+import {ServerNetworkManager} from "./network/ServerNetworkManager.ts";
 import {Result} from "../utils/result/Result.ts";
 import type {ServerChannel} from "./network/ServerChannel.ts";
 import {Log} from "../worker/log.ts";
 import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.ts";
 import {TranslatableTextS2CPacket} from "../network/packet/s2c/TranslatableTextS2CPacket.ts";
+import {ServerStartS2CPacket} from "../network/packet/s2c/ServerStartS2CPacket.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static instance: NovaFlightServer;
@@ -27,7 +27,7 @@ export abstract class NovaFlightServer implements CommandOutput {
     public readonly serverCommandManager: ServerCommandManager;
     public readonly playerManager: PlayerManager;
 
-    public networkHandler: ServerNetworkHandler | null = null;
+    public networkManager: ServerNetworkManager | null = null;
     public profile: GameProfile | null = null;
     public isMultiPlayer: boolean = false;
     // startGame 后初始化
@@ -79,8 +79,8 @@ export abstract class NovaFlightServer implements CommandOutput {
         }
 
         this.profile = new GameProfile(this.networkChannel.getSessionId(), this.serverId, this.worldName);
-        this.networkHandler = new ServerNetworkHandler(this);
-        this.networkChannel.send(new ServerReadyS2CPacket());
+        this.networkManager = new ServerNetworkManager(this);
+        this.networkChannel.send(new ServerStartS2CPacket());
         self.postMessage({type: 'server_start'});
 
         this.last = performance.now();
@@ -116,17 +116,18 @@ export abstract class NovaFlightServer implements CommandOutput {
             this.accumulator += tickDelta;
 
             while (this.accumulator >= WorldConfig.mbps) {
+                this.networkManager!.tick();
                 if (world.isTicking) world.tick(WorldConfig.mbps);
                 this.accumulator -= WorldConfig.mbps;
             }
         } catch (error) {
             Log.error(`[Server] Server runtime error: ${error}`);
-            this.stopGame().catch(error => console.error(error));
+            this.halt().catch(error => console.error(error));
             throw error;
         }
     }
 
-    public async stopGame(): Promise<void> {
+    public async halt(): Promise<void> {
         if (!this.running) {
             // 避免ts抱怨
             return this.waitWorldStop ? this.waitWorldStop : Promise.resolve();
@@ -146,7 +147,7 @@ export abstract class NovaFlightServer implements CommandOutput {
             Log.error(`[Server] At NovaFlightServer, Error while saving game: ${err}`);
         }
 
-        this.networkHandler!.disconnectAllPlayer();
+        this.networkManager!.disconnectAllPlayer();
         this.world!.close();
         this.networkChannel.disconnect();
 
@@ -171,6 +172,8 @@ export abstract class NovaFlightServer implements CommandOutput {
     }
 
     public abstract isHost(profile: GameProfile): boolean;
+
+    public abstract isHostUUID(uuid: UUID): boolean;
 
     public getCommandSource(): ServerCommandSource {
         return new ServerCommandSource(

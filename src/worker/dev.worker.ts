@@ -21,7 +21,7 @@ async function handleEvent(event: MessageEvent<any>) {
         }
         case 'stop_server': {
             if (!server) return;
-            await server.stopGame();
+            await server.halt();
             server = null;
             self.postMessage({type: 'server_shutdown'});
             break;

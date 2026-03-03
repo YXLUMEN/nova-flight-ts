@@ -1,6 +1,5 @@
 import type {ServerWorld} from "../ServerWorld.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
-import type {Entity} from "../../entity/Entity.ts";
 import {BossEntity} from "../../entity/mob/BossEntity.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {World} from "../../world/World.ts";
@@ -107,7 +106,7 @@ export class ServerDefaultEvents {
         });
 
         events.on(EVENTS.EMP_BURST, event => {
-            const player = event.entity as Entity;
+            const player = event.entity;
             if (player instanceof ServerPlayerEntity && player.getTechs().isUnlocked(Techs.ELE_OSCILLATION)) {
                 world.empBurst = event.duration;
             }

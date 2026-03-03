@@ -16,7 +16,7 @@ import {BallisticCalculator} from "../tech/BallisticCalculator.ts";
 import type {GameProfile} from "../../server/entity/GameProfile.ts";
 import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
 import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPacket.ts";
-import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../component/DataComponents.ts";
 import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
 import {FullMove, PositionOnly, Steering} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
@@ -203,7 +203,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     private wpnReload() {
         const stack = this.getCurrentItemStack();
-        if (stack.getDamage() === 0 || stack.getOrDefault(DataComponentTypes.RELOADING, false)) {
+        if (stack.getDamage() === 0 || stack.getOrDefault(DataComponents.RELOADING, false)) {
             return;
         }
         this.getNetworkChannel().send(new PlayerReloadC2SPacket());

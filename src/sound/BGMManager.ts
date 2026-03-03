@@ -16,7 +16,6 @@ export class BGMManager {
 
     private static current = 0;
 
-    private static firstKillBoss = false;
     private static addDifficulty = false;
     private static addTech = false;
 
@@ -48,9 +47,9 @@ export class BGMManager {
     }
 
     public static onGameOver() {
-        AudioManager.fadeOutAndPause().then(() => {
-            AudioManager.playAudio(Audios.KEEP_FIGHTING, false, () => AudioManager.leap(10));
-        });
+        AudioManager.fadeOutAndPause()
+            .then(() => AudioManager.playAudio(Audios.KEEP_FIGHTING, false))
+            .then(() => AudioManager.leap(10));
     }
 
     public static onBossSpawn(): void {
@@ -67,16 +66,13 @@ export class BGMManager {
     }
 
     public static onBossDead(): void {
-        if (this.firstKillBoss) return;
-        this.firstKillBoss = true;
-
         AudioManager.fadeOutAndPause().then(() => {
-            AudioManager.playAudio(Audios.WE_MADE_IT);
+            this.next();
         });
     }
 
     public static onDifficultRaise(difficulty: number) {
-        if (this.addDifficulty || difficulty <= 3) return;
+        if (this.addDifficulty || difficulty < 3) return;
         this.addDifficulty = true;
 
         AudioManager.fadeOutAndPause().then(() => {

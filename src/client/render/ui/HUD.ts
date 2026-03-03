@@ -5,7 +5,7 @@ import type {ItemStack} from "../../../item/ItemStack.ts";
 import type {IUi} from "./IUi.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {ClientWorld} from "../../ClientWorld.ts";
-import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../../component/DataComponents.ts";
 import type {SpecialWeapon} from "../../../item/weapon/SpecialWeapon.ts";
 
 export class HUD implements IUi {
@@ -154,7 +154,7 @@ export class HUD implements IUi {
         let ratio: number;
         const reloadLeft = player.cooldownManager.getCooldownTicks(weapon);
         if (reloadLeft > 0) {
-            ratio = clamp(1 - reloadLeft / stack.getOrDefault(DataComponentTypes.MAX_RELOAD_TIME, 1), 0, 1);
+            ratio = clamp(1 - reloadLeft / stack.getOrDefault(DataComponents.MAX_RELOAD_TIME, 1), 0, 1);
         } else {
             ratio = clamp(1 - weapon.getCooldown(stack) / weapon.getMaxCooldown(stack), 0, 1);
         }

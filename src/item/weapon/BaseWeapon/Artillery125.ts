@@ -3,7 +3,7 @@ import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import type {ItemStack} from "../../ItemStack.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
 import {EntityTypes} from "../../../entity/EntityTypes.ts";
-import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../../component/DataComponents.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {C125BulletEntity} from "../../../entity/projectile/C125BulletEntity.ts";
 import {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
@@ -18,10 +18,10 @@ export class Artillery125 extends BaseWeapon {
         const bullet = new C125BulletEntity(EntityTypes.EXPLODE_BULLET_ENTITY,
             world,
             attacker,
-            stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1),
+            stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1),
             {
-                explosionRadius: stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 16),
-                damage: stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 5),
+                explosionRadius: stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 16),
+                damage: stack.getOrDefault(DataComponents.EXPLOSION_DAMAGE, 5),
                 sparks: 6,
                 fastSparks: 3,
                 behaviour: fusion ? 'fusion' : undefined,

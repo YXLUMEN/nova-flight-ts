@@ -17,6 +17,14 @@ export class NodeServerChannel implements ServerChannel {
         this.registry = PayloadTypeRegistry.playS2C();
     }
 
+    public action(): void {
+        throw new Error("Method not implemented.");
+    }
+
+    public sendToSessionId(): void {
+        throw new Error("Method not implemented.");
+    }
+
     private buildBuffer<T extends Payload>(payload: T) {
         const type = this.registry.get(payload.getId().id);
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
@@ -45,7 +53,7 @@ export class NodeServerChannel implements ServerChannel {
         this.wss.sendTo(buffer, target.clientId);
     }
 
-    public sendToByUUID<T extends Payload>(payload: T, target: UUID): void {
+    public sendToUUID<T extends Payload>(payload: T, target: UUID): void {
         const buffer = this.buildBuffer(payload);
         this.wss.sendTo(buffer, target);
     }

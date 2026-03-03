@@ -302,7 +302,10 @@ export class ClientWorld extends World {
 
         // 其他实体. client 下 entities 不包含玩家
         for (const entity of this.entities.values()) {
-            EntityRenderers.getRenderer(entity).render(entity, ctx, tickDelta, 0, 0);
+            if (entity.renderer === null) {
+                entity.renderer = EntityRenderers.getRenderer(entity);
+            }
+            entity.renderer.render(entity, ctx, tickDelta, 0, 0);
         }
 
         // 特效
@@ -311,16 +314,20 @@ export class ClientWorld extends World {
         }
         this.particlePool.render(ctx, tickDelta);
 
-        // 其他玩家
+        // 玩家 不渲染主要玩家
         for (const player of this.players) {
+            if (player.renderer === null) {
+                player.renderer = EntityRenderers.getRenderer(player);
+            }
+
             if (player === this.client.player) continue;
-            EntityRenderers.getRenderer(player).render(player, ctx, tickDelta, 0, 0);
+            player.renderer.render(player, ctx, tickDelta, 0, 0);
         }
 
-        // 玩家
+        // 主要玩家
         const player = this.client.player;
-        if (!this.over && player) {
-            EntityRenderers.getRenderer(player).render(player, ctx, tickDelta, 0, 0);
+        if (!this.over && player && player.renderer) {
+            player.renderer.render(player, ctx, tickDelta, 0, 0);
 
             if (player.bc) {
                 player.bc.drawAimIndicator(ctx, tickDelta);

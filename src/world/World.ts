@@ -142,13 +142,13 @@ export abstract class World {
             }
         }
 
-        this.playSound(null, SoundEvents.EMP_BURST);
+        this.playSound(attacker, SoundEvents.EMP_BURST);
     }
 
     public close(): void {
         this.clear();
         this.events.clear();
-        Entity.CURRENT_ID.reset();
+        Entity.resetCounter();
     }
 
     public clear(): void {

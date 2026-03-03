@@ -8,7 +8,7 @@ import type {SoundEvent} from "./SoundEvent.ts";
 import {convertFileSrc} from "@tauri-apps/api/core";
 import {isServer} from "../configs/WorldConfig.ts";
 import {MediaWithoutSrc} from "../apis/errors.ts";
-import type {Consumer, Supplier} from "../apis/types.ts";
+import type {Consumer} from "../apis/types.ts";
 
 export class AudioManager {
     private static readonly audio: HTMLAudioElement;
@@ -54,7 +54,7 @@ export class AudioManager {
         }
     }
 
-    public static playAudio(event: SoundEvent, loop = false, callback?: Supplier<void>) {
+    public static playAudio(event: SoundEvent, loop = false) {
         if (this.disable) return;
 
         const id = event.getId();
@@ -66,10 +66,8 @@ export class AudioManager {
 
         this.audio.src = url;
         this.audio.loop = loop;
-        this.audio.play()
-            .then(callback)
-            .catch(console.error);
         this.currentPlaying = event;
+        return this.audio.play().catch(console.error);
     }
 
     public static randomPlay(...event: SoundEvent[]) {

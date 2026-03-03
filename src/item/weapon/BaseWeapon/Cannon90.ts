@@ -4,7 +4,7 @@ import {EntityTypes} from "../../../entity/EntityTypes.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {ItemStack} from "../../ItemStack.ts";
-import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../../component/DataComponents.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import {Techs} from "../../../tech/Techs.ts";
@@ -18,10 +18,10 @@ export class Cannon90 extends BaseWeapon {
         const bullet = new ExplodeBulletEntity(EntityTypes.EXPLODE_BULLET_ENTITY,
             world,
             attacker,
-            stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1),
+            stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1),
             {
-                explosionRadius: stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 16),
-                damage: stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 5),
+                explosionRadius: stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 16),
+                damage: stack.getOrDefault(DataComponents.EXPLOSION_DAMAGE, 5),
                 sparks: 4,
                 fastSparks: 2,
                 behaviour: fusion ? 'fusion' : undefined,

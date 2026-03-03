@@ -1,5 +1,5 @@
 import {type ItemStack} from "../ItemStack.ts";
-import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../component/DataComponents.ts";
 import {type World} from "../../world/World.ts";
 import {type Entity} from "../../entity/Entity.ts";
 import type {ClientWorld} from "../../client/ClientWorld.ts";
@@ -26,9 +26,9 @@ export class PerditionBeam extends PhaseLasers {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         if (this.getActive(stack)) return;
 
-        if (stack.getOrDefault(DataComponentTypes.SCHEDULE_FIRE, false)) {
-            stack.remove(DataComponentTypes.SCHEDULE_FIRE);
-            stack.remove(DataComponentTypes.CHARGING_PROGRESS);
+        if (stack.getOrDefault(DataComponents.SCHEDULE_FIRE, false)) {
+            stack.remove(DataComponents.SCHEDULE_FIRE);
+            stack.remove(DataComponents.CHARGING_PROGRESS);
 
             if (attacker instanceof LivingEntity) {
                 const instance = attacker.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
@@ -42,8 +42,8 @@ export class PerditionBeam extends PhaseLasers {
             return;
         }
 
-        stack.set(DataComponentTypes.SCHEDULE_FIRE, true);
-        stack.set(DataComponentTypes.CHARGING_PROGRESS, 60);
+        stack.set(DataComponents.SCHEDULE_FIRE, true);
+        stack.set(DataComponents.CHARGING_PROGRESS, 60);
 
         if (world.isClient) {
             world.playLoopSound(attacker, SoundEvents.LASER_CHARGE_UP_LONG);
@@ -54,18 +54,18 @@ export class PerditionBeam extends PhaseLasers {
     }
 
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity) {
-        if (stack.getOrDefault(DataComponentTypes.SCHEDULE_FIRE, false)) {
-            const charging = stack.getOrDefault(DataComponentTypes.CHARGING_PROGRESS, 0) - 1;
+        if (stack.getOrDefault(DataComponents.SCHEDULE_FIRE, false)) {
+            const charging = stack.getOrDefault(DataComponents.CHARGING_PROGRESS, 0) - 1;
             if (charging <= 0) {
                 this.setActive(stack, true);
-                stack.remove(DataComponentTypes.SCHEDULE_FIRE);
+                stack.remove(DataComponents.SCHEDULE_FIRE);
 
                 this.onStartFire(stack, world, holder);
             } else if (world.isClient) {
                 ClientEffect.spawnChargingParticles(world as ClientWorld, holder, 4, '#ff8282', '#ff0a0a');
             }
 
-            stack.set(DataComponentTypes.CHARGING_PROGRESS, Math.max(charging, 0));
+            stack.set(DataComponents.CHARGING_PROGRESS, Math.max(charging, 0));
             return;
         }
 
@@ -73,7 +73,7 @@ export class PerditionBeam extends PhaseLasers {
     }
 
     protected damage(world: ServerWorld, stack: ItemStack, holder: Entity, start: IVec, end: IVec) {
-        const damage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
+        const damage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
         const damageSource = world.getDamageSources()
             .laser(holder)
             .setHealthMulti(4)

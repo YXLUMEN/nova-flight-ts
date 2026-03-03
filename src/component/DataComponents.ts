@@ -8,7 +8,7 @@ import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {AttributeModifiersComponent} from "./type/AttributeModifiersComponent.ts";
 import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
 
-export class DataComponentTypes {
+export class DataComponents {
     public static readonly CUSTOM_DATA: ComponentType<NbtCompound> = this.register("custom_data",
         builder => builder.withCodec(Codecs.NBT_COMPOUND)
     );

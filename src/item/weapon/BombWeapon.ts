@@ -3,7 +3,7 @@ import {SpecialWeapon} from "./SpecialWeapon.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
-import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../component/DataComponents.ts";
 
 export class BombWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
@@ -14,8 +14,8 @@ export class BombWeapon extends SpecialWeapon {
                 attacker.getX(),
                 attacker.getY(),
                 {
-                    damage: stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 16),
-                    explosionRadius: stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 256),
+                    damage: stack.getOrDefault(DataComponents.EXPLOSION_DAMAGE, 16),
+                    explosionRadius: stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 256),
                     shake: 0.3,
                 });
         }

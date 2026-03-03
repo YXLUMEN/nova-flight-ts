@@ -2,7 +2,7 @@ import type {Inventory} from "../../inventory/Inventory.ts";
 import {type PlayerEntity} from "./PlayerEntity.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
 import {DefaultedList} from "../../utils/collection/DefaultedList.ts";
-import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../component/DataComponents.ts";
 import type {Item} from "../../item/Item.ts";
 import {Inventories} from "../../inventory/Inventories.ts";
 
@@ -63,7 +63,7 @@ export class PlayerInventory implements Inventory {
             if (!itemStack.isEmpty()
                 && ItemStack.areItemsAndComponentsEqual(stack, itemStack)
                 && !itemStack.isDamaged()
-                && !itemStack.contains(DataComponentTypes.CUSTOM_NAME)) {
+                && !itemStack.contains(DataComponents.CUSTOM_NAME)) {
                 return i;
             }
         }

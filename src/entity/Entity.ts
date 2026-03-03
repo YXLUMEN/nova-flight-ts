@@ -15,7 +15,7 @@ import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {Comparable, UUID} from "../apis/types.ts";
 import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
-import {TrackedPosition} from "./TrackedPosition.ts";
+import {VecDeltaCodec} from "./VecDeltaCodec.ts";
 import type {PlayerEntity} from "./player/PlayerEntity.ts";
 import type {CommandOutput} from "../server/command/CommandOutput.ts";
 import {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
@@ -25,10 +25,11 @@ import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {IllegalArgumentError, IllegalStateException} from "../apis/errors.ts";
 import {NbtTypeId} from "../nbt/NbtType.ts";
 import {EMPTY_LISTENER, type EntityChangeListener} from "../world/entity/EntityChangeListener.ts";
+import type {EntityRenderer} from "../client/render/entity/EntityRenderer.ts";
 
 
 export abstract class Entity implements EntityLike, DataTracked, Comparable, NbtSerializable, CommandOutput {
-    public static readonly CURRENT_ID = new AtomicInteger();
+    private static readonly ENTITY_COUNTER = new AtomicInteger();
     private static readonly NULL_BOX = new Box(0.0, 0.0, 0.0, 0.0);
 
     public invulnerable: boolean = false;
@@ -43,34 +44,33 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     public color = '';
     public edgeColor = '';
 
-    private uuid: UUID = crypto.randomUUID();
-    private id: number = Entity.CURRENT_ID.incrementAndGet();
-
-    private readonly normalTags: Set<string> = new Set<string>();
     private readonly type: EntityType<any>;
-    private readonly world: World;
+    private uuid: UUID = crypto.randomUUID();
+    private id: number = Entity.ENTITY_COUNTER.incrementAndGet();
 
+    private readonly world: World;
     protected readonly dataTracker: DataTracker;
 
-    private readonly trackedPosition = new TrackedPosition();
-    private readonly pos: MutVec2;
-    private readonly intPos: MutVec2;
+    private readonly position: MutVec2;
+    private readonly positionDelta = new VecDeltaCodec();
+
     private readonly velocity: MutVec2 = MutVec2.zero();
     private movementSpeed: number = 0.2;
     private yaw: number = 0;
 
     private changeListener: EntityChangeListener = EMPTY_LISTENER;
 
-    private boundingBox: Box = Entity.NULL_BOX;
     private readonly dimensions: EntityDimensions;
+    private boundingBox: Box = Entity.NULL_BOX;
+
+    private readonly tags: Set<string> = new Set<string>();
     private removed: boolean = false;
 
     protected constructor(type: EntityType<any>, world: World) {
         this.type = type;
         this.world = world;
 
-        this.pos = MutVec2.zero();
-        this.intPos = MutVec2.zero();
+        this.position = MutVec2.zero();
         this.prevX = 0;
         this.prevY = 0;
         this.dimensions = type.getDimensions();
@@ -114,7 +114,6 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.removed = true;
         this.onDiscard();
         this.changeListener.remove();
-        // this.world.events.emit(EVENTS.ENTITY_REMOVED, {entity: this});
     }
 
     /**
@@ -128,18 +127,18 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.onDeath(damage);
     }
 
-    public getNormalTags(): Set<string> {
-        return this.normalTags;
+    public getTags(): Set<string> {
+        return this.tags;
     }
 
-    public addNormalTag(tag: string): boolean {
-        if (this.normalTags.size > 1024) return false;
-        this.normalTags.add(tag);
+    public addTag(tag: string): boolean {
+        if (this.tags.size > 1024) return false;
+        this.tags.add(tag);
         return true;
     }
 
-    public removeNormalTag(tag: string): boolean {
-        return this.normalTags.delete(tag);
+    public removeTag(tag: string): boolean {
+        return this.tags.delete(tag);
     }
 
     public equals(other: unknown): boolean {
@@ -153,62 +152,30 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         return this.id.toString();
     }
 
-    public setTrackedPosition(x: number, y: number): void {
-        this.trackedPosition.setPos(x, y);
-    }
-
-    public getTrackedPosition() {
-        return this.trackedPosition;
-    }
-
-    public updateSyncPositionAndAngles(x: number, y: number, yaw: number, _interpolationSteps: number): void {
-        this.setPosition(x, y);
-        this.setYaw(yaw);
-    }
-
-    /**
-     * 重置所有 prev 位置和旋转
-     * */
-    public resetPrevious() {
-        this.prevX = this.getX();
-        this.prevY = this.getY();
-        this.prevYaw = this.getYaw();
-    }
-
-    public refreshPositionAndAngles(x: number, y: number, yaw: number): void {
-        this.setPosition(x, y);
-        this.setYaw(yaw);
-        this.resetPrevious();
-    }
-
     public get getPositionRef(): Readonly<MutVec2> {
-        return this.pos;
+        return this.position;
     }
 
     public getPosition(): Vec2 {
-        return this.pos.toImmutable();
-    }
-
-    public getIntPos(): MutVec2 {
-        return this.intPos;
+        return this.position.toImmutable();
     }
 
     public getX(): number {
-        return this.pos.x;
+        return this.position.x;
     }
 
     public getY(): number {
-        return this.pos.y;
+        return this.position.y;
     }
 
     public overwritePos(x: number, y: number): void {
-        if (this.pos.x === x && this.pos.y === y) return;
-        this.pos.set(x, y);
+        if (this.position.x === x && this.position.y === y) return;
+        this.position.set(x, y);
     }
 
     public setPosition(x: number, y: number): void {
-        if (this.pos.x === x && this.pos.y === y) return;
-        this.pos.set(x, y);
+        if (this.position.x === x && this.position.y === y) return;
+        this.position.set(x, y);
         // this.changeListener.updateEntityPosition();
         this.setBoundingBox(this.calculateBoundingBox());
     }
@@ -223,6 +190,31 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.prevX = d;
         this.prevY = e;
         this.setPosition(d, e);
+    }
+
+    public syncPositionDelta(x: number, y: number): void {
+        this.positionDelta.setPos(x, y);
+    }
+
+    public resetPrevious() {
+        this.prevX = this.getX();
+        this.prevY = this.getY();
+        this.prevYaw = this.getYaw();
+    }
+
+    public refreshPositionAndAngles(x: number, y: number, yaw: number): void {
+        this.setPosition(x, y);
+        this.setYaw(yaw);
+        this.resetPrevious();
+    }
+
+    public getPositionDelta() {
+        return this.positionDelta;
+    }
+
+    public updatePositionAndAngles(x: number, y: number, yaw: number, _interpolationSteps: number): void {
+        this.setPosition(x, y);
+        this.setYaw(yaw);
     }
 
     public getYaw(): number {
@@ -293,7 +285,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     public move(x: number, y: number): void {
-        this.setPosition(this.pos.x + x, this.pos.y + y);
+        this.setPosition(this.position.x + x, this.position.y + y);
     }
 
     public moveByVec(vec: IVec): void {
@@ -325,7 +317,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     protected calculateBoundingBox(): Box {
-        return this.dimensions.getBoxAt(this.pos.x, this.pos.y);
+        return this.dimensions.getBoxAt(this.position.x, this.position.y);
     }
 
     public createSpawnPacket() {
@@ -333,7 +325,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     public onSpawnPacket(packet: EntitySpawnS2CPacket) {
-        this.setTrackedPosition(packet.x, packet.y);
+        this.syncPositionDelta(packet.x, packet.y);
         this.refreshPositionAndAngles(packet.x, packet.y, packet.yaw);
         this.setId(packet.entityId);
         this.setUuid(packet.uuid);
@@ -406,8 +398,8 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     protected adjustPosition(): boolean {
         const dim = this.dimensions;
-        let x = this.pos.x;
-        let y = this.pos.y;
+        let x = this.position.x;
+        let y = this.position.y;
 
         if (x < dim.halfWidth) {
             x = dim.halfWidth;
@@ -497,7 +489,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
         try {
-            nbt.putDoubleArray('pos', this.pos.x, this.pos.y);
+            nbt.putDoubleArray('pos', this.position.x, this.position.y);
             nbt.putFloatArray('velocity', this.velocity.x, this.velocity.y);
 
             nbt.putDouble('yaw', this.yaw);
@@ -505,8 +497,8 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
             nbt.putBoolean('invulnerable', this.invulnerable);
             nbt.putString('uuid', this.uuid);
 
-            if (this.normalTags.size > 0) {
-                nbt.putStringArray('tags', ...this.normalTags);
+            if (this.tags.size > 0) {
+                nbt.putStringArray('tags', ...this.tags);
             }
             return nbt;
         } catch (err) {
@@ -523,8 +515,8 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         );
         const velocity = nbt.getFloatArray('velocity');
         this.setVelocity(
-            clamp(velocity[0] ?? 0, -10, 10),
-            clamp(velocity[1] ?? 0, -10, 10)
+            clamp(velocity[0] ?? 0, -1E3, 1E3),
+            clamp(velocity[1] ?? 0, -1E3, 1E3)
         );
         this.setYaw(nbt.getDouble('yaw'));
         this.resetPrevious();
@@ -547,9 +539,9 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
         const tags = nbt.getStringArray('tags');
         if (tags.length > 0) {
-            this.normalTags.clear();
+            this.tags.clear();
             for (const tag of tags) {
-                this.normalTags.add(tag);
+                this.tags.add(tag);
             }
         }
     }
@@ -559,4 +551,12 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     public abstract onTrackedDataSet(data: TrackedData<any>): void;
 
     protected abstract initDataTracker(builder: InstanceType<typeof DataTracker.Builder>): void;
+
+    // 仅限清理. 用别怕,怕别用
+    public static resetCounter() {
+        this.ENTITY_COUNTER.reset();
+    }
+
+    // 用于缓存,渲染器自动处理,一般不需要手动管理
+    public renderer: EntityRenderer<Entity> | null = null;
 }

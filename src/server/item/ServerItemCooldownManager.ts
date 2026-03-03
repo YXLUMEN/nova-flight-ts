@@ -12,6 +12,6 @@ export class ServerItemCooldownManager extends ItemCooldownManager {
 
     protected override onCooldownUpdate(item: Item, duration: number = 0) {
         super.onCooldownUpdate(item, duration);
-        this.player?.networkHandler?.send(new ItemCooldownUpdateS2CPacket(item, duration));
+        this.player?.session.send(new ItemCooldownUpdateS2CPacket(item, duration));
     }
 }

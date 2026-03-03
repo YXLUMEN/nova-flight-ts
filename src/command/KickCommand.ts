@@ -32,7 +32,12 @@ export class KickCommand {
                                 throw new CommandError('\x1b[33mNo target founded.');
                             }
 
-                            player.networkHandler!.forceDisconnect();
+                            if (world.getServer().isHost(player.getProfile())) {
+                                ctx.source.outPut.sendMessage(`Can not kick the host player`);
+                                return;
+                            }
+
+                            player.session!.forceDisconnect();
                             ctx.source.outPut.sendMessage(`Kick ${playerName}`);
                         })
                 )

@@ -12,13 +12,15 @@ import {PlayerFinishLoginC2SPacket} from "../../network/packet/c2s/PlayerFinishL
 import {PlayerResetAllTechC2SPacket} from "../../network/packet/c2s/PlayerResetAllTechC2SPacket.ts";
 import {CommandExecutionC2SPacket} from "../../network/packet/c2s/CommandExecutionC2SPacket.ts";
 import {PlayerDisconnectC2SPacket} from "../../network/packet/c2s/PlayerDisconnectC2SPacket.ts";
-import {ClientSniffingC2SPacket} from "../../network/packet/c2s/ClientSniffingC2SPacket.ts";
+import {ClientReadyC2SPacket} from "../../network/packet/c2s/ClientReadyC2SPacket.ts";
 import {ChatMessageC2SPacket} from "../../network/packet/c2s/ChatMessageC2SPacket.ts";
 import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPacket.ts";
 import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
+import {PingC2SPacket} from "../../network/packet/c2s/PingC2SPacket.ts";
 
 export class ClientNetwork {
     public static registerNetworkPacket(): void {
+        this.register(PingC2SPacket.ID, PingC2SPacket.CODEC);
         this.register(FullMove.ID, FullMove.CODEC);
         this.register(PositionOnly.ID, PositionOnly.CODEC);
         this.register(Steering.ID, Steering.CODEC);
@@ -32,7 +34,7 @@ export class ClientNetwork {
         this.register(PlayerResetAllTechC2SPacket.ID, PlayerResetAllTechC2SPacket.CODEC);
         this.register(CommandExecutionC2SPacket.ID, CommandExecutionC2SPacket.CODEC);
         this.register(PlayerDisconnectC2SPacket.ID, PlayerDisconnectC2SPacket.CODEC);
-        this.register(ClientSniffingC2SPacket.ID, ClientSniffingC2SPacket.CODEC);
+        this.register(ClientReadyC2SPacket.ID, ClientReadyC2SPacket.CODEC);
         this.register(ChatMessageC2SPacket.ID, ChatMessageC2SPacket.CODEC);
         this.register(PlayerReloadC2SPacket.ID, PlayerReloadC2SPacket.CODEC);
         this.register(PlayerResetTechC2SPacket.ID, PlayerResetTechC2SPacket.CODEC);

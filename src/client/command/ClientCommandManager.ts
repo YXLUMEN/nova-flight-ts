@@ -390,7 +390,7 @@ export class ClientCommandManager extends CommandManager {
         const context = contextBuilder.build(command);
         const lastNode = context.nodes.at(-1);
         if (lastNode) {
-            this.source.getClient().networkHandler.sendCommand(command);
+            this.source.getClient().session.sendCommand(command);
             return;
         }
 

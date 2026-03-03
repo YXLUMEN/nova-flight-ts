@@ -37,7 +37,7 @@ export type IEvents = {
     [EVENTS.BOSS_KILLED]: { entity: BossEntity | null };
     [EVENTS.MOB_KILLED]: { mob: MobEntity; damageSource: DamageSource; pos: IVec };
     [EVENTS.MOB_DAMAGE]: { mob: MobEntity; damageSource: DamageSource; };
-    [EVENTS.UNLOCK_TECH]: { tech: Tech };
+    [EVENTS.UNLOCK_TECH]: { tech: Tech; silent?: boolean };
     [EVENTS.UNLOCK_TECH_SERVER]: { tech: RegistryEntry<Tech>, player: ServerPlayerEntity };
     [EVENTS.REVOKE_TECH_SERVER]: { tech: RegistryEntry<Tech>, player: ServerPlayerEntity };
     [EVENTS.EXPLOSION]: { explosion: Explosion };

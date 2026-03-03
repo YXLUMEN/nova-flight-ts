@@ -48,7 +48,18 @@ export class ServerNetworkChannel extends NetworkChannel implements ServerChanne
         this.checkAndSend(writer, type, payload);
     }
 
-    public sendToByUUID<T extends Payload>(payload: T, target: UUID): void {
+    public sendToSessionId<T extends Payload>(payload: T, target: number) {
+        const type = this.registry.get(payload.getId().id);
+        if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
+
+        const writer = new BinaryWriter();
+        writer.writeInt8(0x12);
+        writer.writeInt8(this.getSessionId());
+        writer.writeInt8(target);
+        this.checkAndSend(writer, type, payload);
+    }
+
+    public sendToUUID<T extends Payload>(payload: T, target: UUID): void {
         const type = this.registry.get(payload.getId().id);
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
 

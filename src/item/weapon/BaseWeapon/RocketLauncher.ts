@@ -8,7 +8,7 @@ import {APRocketEntity} from "../../../entity/projectile/APRocketEntity.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {type Entity} from "../../../entity/Entity.ts";
 import {type ItemStack} from "../../ItemStack.ts";
-import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../../component/DataComponents.ts";
 import {ClusterRocketEntity} from "../../../entity/projectile/ClusterRocketEntity.ts";
 import type {ClientWorld} from "../../../client/ClientWorld.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
@@ -23,16 +23,16 @@ export class RocketLauncher extends BaseWeapon {
     }
 
     protected onFire(stack: ItemStack, world: World, attacker: Entity): void {
-        stack.set(DataComponentTypes.FIRING, true);
+        stack.set(DataComponents.FIRING, true);
 
-        const rocketCounts = stack.getOrDefault(DataComponentTypes.LAUNCH_COUNT, 8);
-        const randomRocketEnable = stack.getOrDefault(DataComponentTypes.MISSILE_RANDOM_ENABLE, false);
+        const rocketCounts = stack.getOrDefault(DataComponents.LAUNCH_COUNT, 8);
+        const randomRocketEnable = stack.getOrDefault(DataComponents.MISSILE_RANDOM_ENABLE, false);
 
         let i = 1;
         const schedule = world.scheduleInterval(0.1, () => {
             if (i++ > rocketCounts) {
                 schedule.cancel();
-                stack.remove(DataComponentTypes.FIRING);
+                stack.remove(DataComponents.FIRING);
                 if (!world.isClient && attacker.isPlayer()) {
                     (attacker as ServerPlayerEntity).syncStack(stack);
                 }
@@ -52,8 +52,8 @@ export class RocketLauncher extends BaseWeapon {
             }
             if (rocket === null) {
                 rocket = new RocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker);
-                rocket.explosionDamage = stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 12);
-                rocket.explosionRadius = stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 72);
+                rocket.explosionDamage = stack.getOrDefault(DataComponents.EXPLOSION_DAMAGE, 12);
+                rocket.explosionRadius = stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 72);
             }
 
             this.setBullet(rocket, attacker, RocketLauncher.BULLET_SPEED, 4, 2);
@@ -82,7 +82,7 @@ export class RocketLauncher extends BaseWeapon {
     }
 
     public override shouldCooldown(stack: ItemStack): boolean {
-        return !stack.getOrDefault(DataComponentTypes.FIRING, false);
+        return !stack.getOrDefault(DataComponents.FIRING, false);
     }
 
     private randomRocket(world: World, attacker: Entity): RocketEntity | null {

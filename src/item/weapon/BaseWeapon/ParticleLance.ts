@@ -4,7 +4,7 @@ import {type ItemStack} from "../../ItemStack.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
 import type {World} from "../../../world/World.ts";
 import {PhaseLasers} from "../PhaseLasers.ts";
-import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../../component/DataComponents.ts";
 import {thickLineCircleHit} from "../../../utils/math/math.ts";
 import {StatusEffects} from "../../../entity/effect/StatusEffects.ts";
 import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
@@ -19,38 +19,38 @@ export class ParticleLance extends BaseWeapon {
     public static readonly CHARGING_TIME = 10;
 
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity, _slot: number, selected: boolean): void {
-        if (stack.get(DataComponentTypes.SCHEDULE_FIRE)) {
+        if (stack.get(DataComponents.SCHEDULE_FIRE)) {
             if (!selected) {
-                stack.remove(DataComponentTypes.SCHEDULE_FIRE);
-                stack.remove(DataComponentTypes.CHARGING_PROGRESS);
+                stack.remove(DataComponents.SCHEDULE_FIRE);
+                stack.remove(DataComponents.CHARGING_PROGRESS);
                 return;
             }
 
-            const charging = stack.getOrDefault(DataComponentTypes.CHARGING_PROGRESS, 0) - 1;
+            const charging = stack.getOrDefault(DataComponents.CHARGING_PROGRESS, 0) - 1;
             if (charging <= 0) {
                 if (!world.isClient) this.onFire(stack, world as ServerWorld, holder);
 
                 this.setCooldown(stack, this.getFireRate(stack));
 
-                stack.set(DataComponentTypes.SCHEDULE_FIRE, false);
+                stack.set(DataComponents.SCHEDULE_FIRE, false);
             } else if (world.isClient) {
                 ClientEffect.spawnChargingParticles(world as ClientWorld, holder, 4, this.getUiColor());
             }
 
-            stack.set(DataComponentTypes.CHARGING_PROGRESS, Math.max(charging, 0));
+            stack.set(DataComponents.CHARGING_PROGRESS, Math.max(charging, 0));
             return;
         }
 
-        const cooldown = stack.getOrDefault(DataComponentTypes.COOLDOWN, 0);
+        const cooldown = stack.getOrDefault(DataComponents.COOLDOWN, 0);
         if (cooldown > 0 && this.shouldCooldown(stack)) {
             this.setCooldown(stack, cooldown - 1);
         }
     }
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
-        if (stack.getOrDefault(DataComponentTypes.SCHEDULE_FIRE, false)) return;
-        stack.set(DataComponentTypes.CHARGING_PROGRESS, ParticleLance.CHARGING_TIME);
-        stack.set(DataComponentTypes.SCHEDULE_FIRE, true);
+        if (stack.getOrDefault(DataComponents.SCHEDULE_FIRE, false)) return;
+        stack.set(DataComponents.CHARGING_PROGRESS, ParticleLance.CHARGING_TIME);
+        stack.set(DataComponents.SCHEDULE_FIRE, true);
 
         if (world.isClient) return;
         world.playSound(null, SoundEvents.LASER_CHARGE_UP, 0.5);
@@ -65,7 +65,7 @@ export class ParticleLance extends BaseWeapon {
         const endX = start.x + Math.cos(yaw) * PhaseLasers.LASER_HEIGHT;
         const endY = start.y + Math.sin(yaw) * PhaseLasers.LASER_HEIGHT;
 
-        const damage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 20);
+        const damage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 20);
         const damageSource = world.getDamageSources()
             .laser(attacker)
             .setShieldMulti(0.5)

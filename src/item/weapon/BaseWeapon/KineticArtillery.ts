@@ -3,7 +3,7 @@ import {type ItemStack} from "../../ItemStack.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import {type Entity} from "../../../entity/Entity.ts";
 import {EntityTypes} from "../../../entity/EntityTypes.ts";
-import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../../component/DataComponents.ts";
 import {ArtilleryEntity} from "../../../entity/projectile/ArtilleryEntity.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import type {World} from "../../../world/World.ts";
@@ -23,7 +23,7 @@ export class KineticArtillery extends BaseWeapon {
 
         if (!holder.isPlayer()) return;
 
-        if (stack.getOrDefault(DataComponentTypes.RELOADING, false)) {
+        if (stack.getOrDefault(DataComponents.RELOADING, false)) {
             this.reloadAction(holder, stack, selected);
         }
 
@@ -36,7 +36,7 @@ export class KineticArtillery extends BaseWeapon {
         const bullet = new ArtilleryEntity(EntityTypes.KINETIC_ARTILLERY_ENTITY,
             world,
             attacker,
-            stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 32)
+            stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 32)
         );
         this.setBullet(bullet, attacker, KineticArtillery.SPEED, 8, 0);
         world.spawnEntity(bullet);

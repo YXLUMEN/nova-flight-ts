@@ -3,7 +3,7 @@ import type {Entity} from "../../../entity/Entity.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import type {ItemStack} from "../../ItemStack.ts";
 import {randInt, wrapRadians} from "../../../utils/math/math.ts";
-import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../../component/DataComponents.ts";
 import {ArcEffect} from "../../../effect/ArcEffect.ts";
 import type {IVec} from "../../../utils/math/IVec.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
@@ -14,7 +14,7 @@ export class ArcEmitter extends BaseWeapon {
         const pos = attacker.getPositionRef;
         const yaw = attacker.getYaw();
 
-        const range = stack.getOrDefault(DataComponentTypes.ATTACK_RANGE, 65536);
+        const range = stack.getOrDefault(DataComponents.ATTACK_RANGE, 65536);
         const candidates: { mob: Entity; distSq: number }[] = [];
 
         for (const mob of world.getMobs()) {
@@ -43,7 +43,7 @@ export class ArcEmitter extends BaseWeapon {
 
         candidates.sort((a, b) => a.distSq - b.distSq);
 
-        const damage = randInt(1, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 10));
+        const damage = randInt(1, stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 10));
         const damageSource = world.getDamageSources().arc(attacker);
         const maxTarget = Math.min(6, candidates.length);
 

@@ -100,7 +100,7 @@ export class StringReader {
             throw new Error("Nothing to pares as Integer");
         }
 
-        const int = Number.parseInt(number);
+        const int = Number(number);
         if (Number.isSafeInteger(int)) return int;
 
         this.cursor = start;

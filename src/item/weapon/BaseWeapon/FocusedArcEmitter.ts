@@ -3,7 +3,7 @@ import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import type {ItemStack} from "../../ItemStack.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
 import {randInt, squareDistVec2, thickLineCircleHit} from "../../../utils/math/math.ts";
-import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../../component/DataComponents.ts";
 import {World} from "../../../world/World.ts";
 import {ArcEffect} from "../../../effect/ArcEffect.ts";
 import type {MobEntity} from "../../../entity/mob/MobEntity.ts";
@@ -19,7 +19,7 @@ export class FocusedArcEmitter extends BaseWeapon {
         const endX = start.x + Math.cos(yaw) * this.arcLength;
         const endY = start.y + Math.sin(yaw) * this.arcLength;
 
-        const damage = randInt(4, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 48));
+        const damage = randInt(4, stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 48));
         const damageSource = world.getDamageSources().arc(attacker);
 
         const initialTargets: MobEntity[] = [];
@@ -48,7 +48,7 @@ export class FocusedArcEmitter extends BaseWeapon {
         if (initialTargets.length === 0) return;
 
         // 连锁
-        const range = stack.getOrDefault(DataComponentTypes.ATTACK_RANGE, 16384);
+        const range = stack.getOrDefault(DataComponents.ATTACK_RANGE, 16384);
         const subHitCount = new Map<Entity, number>();
         const chainDamage = Math.floor(damage * 0.5);
 

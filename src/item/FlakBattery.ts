@@ -9,7 +9,7 @@ import {CIWSBulletEntity} from "../entity/projectile/CIWSBulletEntity.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {BallisticsUtils} from "../utils/math/BallisticsUtils.ts";
-import {DataComponentTypes} from "../component/DataComponentTypes.ts";
+import {DataComponents} from "../component/DataComponents.ts";
 import {LivingEntity} from "../entity/LivingEntity.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import type {EntityDist} from "../apis/types.ts";
@@ -30,13 +30,13 @@ export class FlakBattery extends Item {
         }
 
         if ((holder.age & 15) !== 0) {
-            FlakBattery.choseTarget(world as ServerWorld, holder, stack.getOrDefault(DataComponentTypes.MAX_DEFENSE, 1));
+            FlakBattery.choseTarget(world as ServerWorld, holder, stack.getOrDefault(DataComponents.MAX_DEFENSE, 1));
         }
 
         const targets = FlakBattery.targets.get(holder);
         if (!targets || targets.size === 0) return;
 
-        const damage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
+        const damage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
 
         for (const target of targets) {
             if (target.isRemoved()) {

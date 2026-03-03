@@ -3,7 +3,7 @@ import {rand, randInt} from "../../../utils/math/math.ts";
 import type {ProjectileEntity} from "../../../entity/projectile/ProjectileEntity.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {ItemStack} from "../../ItemStack.ts";
-import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../../component/DataComponents.ts";
 import type {World} from "../../../world/World.ts";
 import type {ClientWorld} from "../../../client/ClientWorld.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
@@ -12,12 +12,12 @@ import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity
 
 export abstract class BaseWeapon extends Weapon {
     public override inventoryTick(stack: ItemStack, _world: World, holder: Entity, _slot: number, selected: boolean): void {
-        const cooldown = stack.getOrDefault(DataComponentTypes.COOLDOWN, 0);
+        const cooldown = stack.getOrDefault(DataComponents.COOLDOWN, 0);
         if (cooldown > 0 && this.shouldCooldown(stack)) {
             this.setCooldown(stack, cooldown - 1);
         }
 
-        if (holder.isPlayer() && stack.getOrDefault(DataComponentTypes.RELOADING, false)) {
+        if (holder.isPlayer() && stack.getOrDefault(DataComponents.RELOADING, false)) {
             this.reloadAction(holder, stack, selected);
         }
     }
@@ -36,11 +36,11 @@ export abstract class BaseWeapon extends Weapon {
         const player = attacker as ServerPlayerEntity;
         const manager = player.cooldownManager;
         if (manager.isCoolingDown(this)) {
-            if (!stack.getOrDefault(DataComponentTypes.RELOADING, false)) {
+            if (!stack.getOrDefault(DataComponents.RELOADING, false)) {
                 return;
             }
             manager.set(this, 0);
-            stack.set(DataComponentTypes.RELOADING, false);
+            stack.set(DataComponents.RELOADING, false);
         }
 
         stack.setDurability(currentAmmo - this.getAmmoConsume());
@@ -59,12 +59,12 @@ export abstract class BaseWeapon extends Weapon {
         if (manager.isCoolingDown(this)) return;
 
         manager.set(this, this.getReloadTick(stack));
-        stack.set(DataComponentTypes.RELOADING, true);
+        stack.set(DataComponents.RELOADING, true);
         player.syncStack(stack);
     }
 
     protected restoreAmmo(stack: ItemStack, player: PlayerEntity) {
-        stack.set(DataComponentTypes.RELOADING, false);
+        stack.set(DataComponents.RELOADING, false);
         player.cooldownManager.set(this, 0);
         stack.setDamage(0);
     }
@@ -74,7 +74,7 @@ export abstract class BaseWeapon extends Weapon {
 
         if (!selected) {
             manager.set(this, 0);
-            stack.set(DataComponentTypes.RELOADING, false);
+            stack.set(DataComponents.RELOADING, false);
             return;
         }
 
@@ -96,7 +96,7 @@ export abstract class BaseWeapon extends Weapon {
     }
 
     public getReloadTick(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponentTypes.MAX_RELOAD_TIME, 0);
+        return stack.getOrDefault(DataComponents.MAX_RELOAD_TIME, 0);
     }
 
     public getBallisticSpeed(): number {

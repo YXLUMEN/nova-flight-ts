@@ -5,7 +5,7 @@ import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
-import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../component/DataComponents.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import {
@@ -54,7 +54,7 @@ export class PhaseLasers extends SpecialWeapon {
 
         const heat = this.getHeat(stack);
         const heatLeft = maxHeat - heat;
-        if (heatLeft > 60) stack.set(DataComponentTypes.ANY_BOOLEAN, true);
+        if (heatLeft > 60) stack.set(DataComponents.ANY_BOOLEAN, true);
 
         // 触发过热: 立即停火并锁定
         if (stack.isAvailable()) {
@@ -65,9 +65,9 @@ export class PhaseLasers extends SpecialWeapon {
                 this.removeLaser(world, holder.getId());
                 this.onEndFire(stack, world, holder);
             }
-            if (stack.getOrDefault(DataComponentTypes.ANY_BOOLEAN, false) && heatLeft <= 40) {
+            if (stack.getOrDefault(DataComponents.ANY_BOOLEAN, false) && heatLeft <= 40) {
                 this.overHeatAlert(world, holder);
-                stack.set(DataComponentTypes.ANY_BOOLEAN, false);
+                stack.set(DataComponents.ANY_BOOLEAN, false);
             }
         }
 
@@ -98,7 +98,7 @@ export class PhaseLasers extends SpecialWeapon {
             if (beamFx && beamFx.isAlive()) {
                 beamFx.setByVec(start, end);
             } else {
-                const newBeamFx = new LaserBeamEffect(stack.getOrDefault(DataComponentTypes.UI_COLOR, PhaseLasers.COLOR), this.width);
+                const newBeamFx = new LaserBeamEffect(stack.getOrDefault(DataComponents.UI_COLOR, PhaseLasers.COLOR), this.width);
                 newBeamFx.reset(start, end);
                 world.addEffect(null, newBeamFx);
                 PhaseLasers.id2EffectMap.set(entityId, newBeamFx);
@@ -114,7 +114,7 @@ export class PhaseLasers extends SpecialWeapon {
                 start,
                 end,
                 this.width,
-                encodeColorHex(stack.getOrDefault(DataComponentTypes.UI_COLOR, PhaseLasers.COLOR))
+                encodeColorHex(stack.getOrDefault(DataComponents.UI_COLOR, PhaseLasers.COLOR))
             ));
         }
 
@@ -132,7 +132,7 @@ export class PhaseLasers extends SpecialWeapon {
     }
 
     protected damage(world: ServerWorld, stack: ItemStack, holder: Entity, start: IVec, end: IVec) {
-        const damage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
+        const damage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
         const damageSource = world.getDamageSources().laser(holder).setShieldMulti(0.1);
 
         for (const mob of world.getMobs()) {
@@ -198,43 +198,43 @@ export class PhaseLasers extends SpecialWeapon {
     }
 
     public setActive(stack: ItemStack, active: boolean): void {
-        stack.set(DataComponentTypes.FIRING, active);
+        stack.set(DataComponents.FIRING, active);
     }
 
     public getActive(stack: ItemStack): boolean {
-        return stack.getOrDefault(DataComponentTypes.FIRING, false);
+        return stack.getOrDefault(DataComponents.FIRING, false);
     }
 
     public getMaxHeat(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponentTypes.MAX_HEAT, 0);
+        return stack.getOrDefault(DataComponents.MAX_HEAT, 0);
     }
 
     public setMaxHeat(stack: ItemStack, maxHeat: number): void {
-        stack.set(DataComponentTypes.MAX_HEAT, Math.floor(maxHeat));
+        stack.set(DataComponents.MAX_HEAT, Math.floor(maxHeat));
     }
 
     public getHeat(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponentTypes.HEAT, 0);
+        return stack.getOrDefault(DataComponents.HEAT, 0);
     }
 
     public setHeat(stack: ItemStack, value: number): void {
-        stack.set(DataComponentTypes.HEAT, value);
+        stack.set(DataComponents.HEAT, value);
     }
 
     public getDrainRate(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponentTypes.DRAIN_RATE, 2);
+        return stack.getOrDefault(DataComponents.DRAIN_RATE, 2);
     }
 
     public setDrainRate(stack: ItemStack, value: number) {
-        stack.set(DataComponentTypes.DRAIN_RATE, value);
+        stack.set(DataComponents.DRAIN_RATE, value);
     }
 
     public getCoolRate(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponentTypes.COOLDOWN_RATE, 1);
+        return stack.getOrDefault(DataComponents.COOLDOWN_RATE, 1);
     }
 
     public setCoolRate(stack: ItemStack, value: number) {
-        stack.set(DataComponentTypes.COOLDOWN_RATE, value);
+        stack.set(DataComponents.COOLDOWN_RATE, value);
     }
 
     public override getSortIndex(): number {

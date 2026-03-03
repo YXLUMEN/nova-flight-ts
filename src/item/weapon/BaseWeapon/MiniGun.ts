@@ -5,14 +5,14 @@ import {MiniBulletEntity} from "../../../entity/projectile/MiniBulletEntity.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {type Entity} from "../../../entity/Entity.ts";
 import {type ItemStack} from "../../ItemStack.ts";
-import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../../component/DataComponents.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 
 export class MiniGun extends BaseWeapon {
     private readonly speed = 45;
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        const bullet = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1));
+        const bullet = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1));
         this.setBullet(bullet, attacker, this.speed, 4, 3);
         world.spawnEntity(bullet);
     }

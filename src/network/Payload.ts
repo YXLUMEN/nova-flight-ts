@@ -19,5 +19,7 @@ export interface Payload {
      * @return uint 返回的长度**不包含**固定头部
      * */
     estimateSize?(): number;
+
+    canProcessInTransition?(): boolean;
 }
 

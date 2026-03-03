@@ -5,15 +5,15 @@ import {BaseWeapon} from "./BaseWeapon.ts";
 import {CloudLightningEntity} from "../../../entity/projectile/CloudLightningEntity.ts";
 import {EntityTypes} from "../../../entity/EntityTypes.ts";
 import {randInt} from "../../../utils/math/math.ts";
-import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../../component/DataComponents.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 
 export class CloudLightningConduits extends BaseWeapon {
     private readonly speed = 12;
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        const damage = randInt(1, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 12));
-        const range = stack.getOrDefault(DataComponentTypes.ATTACK_RANGE, 128);
+        const damage = randInt(1, stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 12));
+        const range = stack.getOrDefault(DataComponents.ATTACK_RANGE, 128);
 
         const cloud = new CloudLightningEntity(EntityTypes.CLOUD_LIGHTNING_ENTITY, world, attacker, damage, range);
         this.setBullet(cloud, attacker, this.speed, 10, 0);

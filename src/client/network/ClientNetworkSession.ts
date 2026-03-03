@@ -46,7 +46,7 @@ import {CommandExecutionC2SPacket} from "../../network/packet/c2s/CommandExecuti
 import {OtherClientPlayerEntity} from "../entity/OtherClientPlayerEntity.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import {PlayerDisconnectC2SPacket} from "../../network/packet/c2s/PlayerDisconnectC2SPacket.ts";
-import {ClientSniffingC2SPacket} from "../../network/packet/c2s/ClientSniffingC2SPacket.ts";
+import {ClientReadyC2SPacket} from "../../network/packet/c2s/ClientReadyC2SPacket.ts";
 import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
 import {PlayerJoinS2CPacket} from "../../network/packet/s2c/PlayerJoinS2CPacket.ts";
 import {GameProfile} from "../../server/entity/GameProfile.ts";
@@ -77,11 +77,18 @@ import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChange
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 import {TranslatableTextS2CPacket} from "../../network/packet/s2c/TranslatableTextS2CPacket.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
+import {KeepAliveS2CPacket} from "../../network/packet/s2c/KeepAliveS2CPacket.ts";
+import {KeepAliveC2SPacket} from "../../network/packet/c2s/KeepAliveC2SPacket.ts";
+import {PongS2CPacket} from "../../network/packet/s2c/PongS2CPacket.ts";
+import {PingC2SPacket} from "../../network/packet/c2s/PingC2SPacket.ts";
+import {ServerStartS2CPacket} from "../../network/packet/s2c/ServerStartS2CPacket.ts";
 
-export class ClientPlayNetworkHandler {
+export class ClientNetworkSession {
     private readonly playerProfiles: Map<UUID, GameProfile> = new Map();
+
     private readonly commandSource: ClientCommandSource;
     private readonly commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
+
     private readonly client: NovaFlightClient;
     private readonly random = new GaussianRandom();
     private world: ClientWorld | null = null;
@@ -89,13 +96,51 @@ export class ClientPlayNetworkHandler {
     private maxSniffTimes = 32;
     private sniffInterval: number | undefined = undefined;
 
+    private lastPingTime: number = 0;
+    private latency: number = 0;
+
     public constructor(client: NovaFlightClient) {
         this.client = client;
         this.commandSource = new ClientCommandSource(this, client);
     }
 
-    public sendPacket(packet: Payload) {
+    public send(packet: Payload) {
         this.client.networkChannel.send(packet);
+    }
+
+    public disconnect() {
+        try {
+            this.client.connectInfo?.setMessage('等待连接关闭...');
+            this.send(new PlayerDisconnectC2SPacket());
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    public checkServer() {
+        if (this.sniffInterval !== undefined) return;
+
+        this.send(new ClientReadyC2SPacket(this.client.clientId));
+
+        let times = 0;
+        this.sniffInterval = setInterval(() => {
+            times++;
+            try {
+                this.send(new ClientReadyC2SPacket(this.client.clientId));
+            } catch (e) {
+                this.stopSniff();
+                console.error(e);
+            }
+            if (times >= this.maxSniffTimes) {
+                this.stopSniff();
+                this.client.connectInfo?.setError('无法连接至服务器');
+            }
+        }, 2000);
+    }
+
+    public ping() {
+        this.lastPingTime = performance.now();
+        this.send(new PingC2SPacket());
     }
 
     private onRelayServer(packet: RelayServerPacket) {
@@ -115,39 +160,34 @@ export class ClientPlayNetworkHandler {
         this.client.connectInfo?.setError(message);
     }
 
-    public disconnect() {
-        try {
-            this.client.connectInfo?.setMessage('等待连接关闭...');
-            this.sendPacket(new PlayerDisconnectC2SPacket());
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-    public checkServer() {
-        if (this.sniffInterval !== undefined) return;
-
-        this.sendPacket(new ClientSniffingC2SPacket(this.client.clientId));
-
-        let times = 0;
-        // @ts-ignore
-        this.sniffInterval = setInterval(() => {
-            times++;
-            this.sendPacket(new ClientSniffingC2SPacket(this.client.clientId));
-            if (times >= this.maxSniffTimes) {
-                this.stopSniff();
-                this.client.connectInfo?.setError('无法连接至服务器');
-            }
-        }, 2000);
+    public onServerStart(_: ServerStartS2CPacket) {
+        this.stopSniff();
+        this.checkServer();
     }
 
     public onServerReady(_: ServerReadyS2CPacket) {
         this.stopSniff();
-        this.sendPacket(new PlayerAttemptLoginC2SPacket(
+        this.send(new PlayerAttemptLoginC2SPacket(
             this.client.clientId,
             this.client.networkChannel.getSessionId(),
             this.client.playerName
         ));
+    }
+
+    public onKeepAlive(packet: KeepAliveS2CPacket) {
+        this.send(new KeepAliveC2SPacket(packet.id));
+    }
+
+    public onPong() {
+        this.smoothLatency(performance.now() - this.lastPingTime);
+    }
+
+    private smoothLatency(rrt: number) {
+        if (this.latency === 0) {
+            this.latency = rrt;
+            return;
+        }
+        this.latency = this.latency * (1 - 0.2) + rrt * 0.2;
     }
 
     public async onGameJoin(packet: JoinGameS2CPacket) {
@@ -168,7 +208,7 @@ export class ClientPlayNetworkHandler {
         this.client.player.setId(packet.playerEntityId);
         this.world.addEntity(this.client.player);
         this.world.setTicking(true);
-        this.sendPacket(new PlayerFinishLoginC2SPacket());
+        this.send(new PlayerFinishLoginC2SPacket());
     }
 
     public onPlayerJoin(packet: PlayerJoinS2CPacket) {
@@ -192,7 +232,7 @@ export class ClientPlayNetworkHandler {
 
         this.client.connectInfo?.destroy();
         this.client.connectInfo = new ConnectInfo(this.client.window.ctx);
-        this.client.connectInfo.setError(packet.reason)
+        this.client.connectInfo.setError(packet.reason.toString())
             .then(() => this.client.requestStop());
     }
 
@@ -202,14 +242,14 @@ export class ClientPlayNetworkHandler {
         if (entity.isLogicalSideForUpdatingMovement()) return;
 
         if (packet.positionChanged) {
-            const trackedPos = entity.getTrackedPosition();
+            const trackedPos = entity.getPositionDelta();
             const deltaPos = trackedPos.withDelta(packet.deltaX, packet.deltaY);
             trackedPos.setPos(deltaPos.x, deltaPos.y);
 
             const yaw = packet.rotate ? packet.yaw : entity.getLerpTargetYaw();
-            entity.updateSyncPositionAndAngles(deltaPos.x, deltaPos.y, yaw, 3);
+            entity.updatePositionAndAngles(deltaPos.x, deltaPos.y, yaw, 3);
         } else if (packet.rotate) {
-            entity.updateSyncPositionAndAngles(entity.getLerpTargetX(), entity.getLerpTargetY(), packet.yaw, 3);
+            entity.updatePositionAndAngles(entity.getLerpTargetX(), entity.getLerpTargetY(), packet.yaw, 3);
         }
     }
 
@@ -217,9 +257,9 @@ export class ClientPlayNetworkHandler {
         const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
 
-        entity.setTrackedPosition(packet.x, packet.y);
+        entity.syncPositionDelta(packet.x, packet.y);
         if (!entity.isLogicalSideForUpdatingMovement()) {
-            entity.updateSyncPositionAndAngles(packet.x, packet.y, packet.yaw, 3);
+            entity.updatePositionAndAngles(packet.x, packet.y, packet.yaw, 3);
         } else if (entity === this.client.player) {
             this.client.player.setPosition(packet.x, packet.y);
         }
@@ -229,31 +269,29 @@ export class ClientPlayNetworkHandler {
         const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
 
-        entity.setTrackedPosition(packet.x, packet.y);
-        entity.updateSyncPositionAndAngles(packet.x, packet.y, packet.yaw, 3);
+        entity.syncPositionDelta(packet.x, packet.y);
+        entity.updatePositionAndAngles(packet.x, packet.y, packet.yaw, 3);
         entity.updatePosition(packet.x, packet.y);
         entity.updateYaw(packet.yaw);
     }
 
     public onEntitySpawn(packet: EntitySpawnS2CPacket): void {
+        if (!this.world) return;
         const entity = this.createEntity(packet);
         if (!entity) return;
 
         entity.onSpawnPacket(packet);
-        this.world?.addEntity(entity);
+        this.world.addEntity(entity);
     }
 
     private createEntity(packet: EntitySpawnS2CPacket): Entity | null {
-        const world = this.world;
-        if (!world) return null;
-
         const entityType = packet.entityType;
         if (entityType === EntityTypes.PLAYER) {
             if (this.playerProfiles.has(packet.uuid)) return null;
-            return new OtherClientPlayerEntity(world);
+            return new OtherClientPlayerEntity(this.world!);
         }
 
-        return entityType.create(world);
+        return entityType.create(this.world!);
     }
 
     public onEntityBatchSpawn(packet: EntityBatchSpawnS2CPacket): void {
@@ -543,7 +581,7 @@ export class ClientPlayNetworkHandler {
     public sendCommand(input: string): boolean {
         const command = input.startsWith('/') ? input.slice(1) : input;
         if (this.parse(command).exceptions.size === 0) {
-            this.sendPacket(new CommandExecutionC2SPacket(command));
+            this.send(new CommandExecutionC2SPacket(command));
             return true;
         }
         return false;
@@ -565,6 +603,10 @@ export class ClientPlayNetworkHandler {
         return this.playerProfiles.values();
     }
 
+    public getLatency() {
+        return this.latency;
+    }
+
     private stopSniff() {
         clearInterval(this.sniffInterval);
         this.sniffInterval = undefined;
@@ -577,52 +619,55 @@ export class ClientPlayNetworkHandler {
     }
 
     private register<T extends Payload>(id: PayloadId<T>, handler: Consumer<T>): void {
-        this.client.networkChannel.receive(id, handler as Consumer<Payload>);
+        this.client.networkChannel.receive(id, handler.bind(this) as Consumer<Payload>);
     }
 
     public registryHandler() {
-        this.register(RelayServerPacket.ID, this.onRelayServer.bind(this));
-        this.register(ServerReadyS2CPacket.ID, this.onServerReady.bind(this));
-        this.register(JoinGameS2CPacket.ID, this.onGameJoin.bind(this));
-        this.register(PlayerJoinS2CPacket.ID, this.onPlayerJoin.bind(this));
-        this.register(PlayerDisconnectS2CPacket.ID, this.onDisconnect.bind(this));
-        this.register(EntitySpawnS2CPacket.ID, this.onEntitySpawn.bind(this));
-        this.register(EntityRemoveS2CPacket.ID, this.onEntityRemove.bind(this));
-        this.register(EntityPositionS2CPacket.ID, this.onEntityPosition.bind(this));
-        this.register(EntityPositionForceS2CPacket.ID, this.onEntityPositionForce.bind(this));
-        this.register(ExplosionS2CPacket.ID, this.onExplosion.bind(this));
-        this.register(EntityVelocityUpdateS2CPacket.ID, this.onEntityVelocityUpdate.bind(this));
-        this.register(EntityTrackerUpdateS2CPacket.ID, this.onEntityTrackerUpdate.bind(this));
-        this.register(Rotate.ID, this.onEntity.bind(this));
-        this.register(MoveRelative.ID, this.onEntity.bind(this));
-        this.register(RotateAndMoveRelative.ID, this.onEntity.bind(this));
-        this.register(EntityKilledS2CPacket.ID, this.onEntityKilled.bind(this));
-        this.register(EntityDamageS2CPacket.ID, this.onEntityDamage.bind(this));
-        this.register(ParticleS2CPacket.ID, this.onParticle.bind(this));
-        this.register(EntityAttributesS2CPacket.ID, this.onEntityAttributes.bind(this));
-        this.register(MissileSetS2CPacket.ID, this.onMissileSet.bind(this));
-        this.register(MissileLockS2CPacket.ID, this.onMissileLock.bind(this));
-        this.register(EntityBatchSpawnS2CPacket.ID, this.onEntityBatchSpawn.bind(this));
-        this.register(EntityNbtS2CPacket.ID, this.onEntityNbt.bind(this));
-        this.register(InventoryS2CPacket.ID, this.onInventory.bind(this));
-        this.register(EffectCreateS2CPacket.ID, this.onEffectCreate.bind(this));
-        this.register(SoundEventS2CPacket.ID, this.onPlaySound.bind(this));
-        this.register(StopSoundS2CPacket.ID, this.onStopSound.bind(this));
-        this.register(PlayerSetScoreS2CPacket.ID, this.onPlayerScore.bind(this));
-        this.register(PlayerAddScoreS2CPacket.ID, this.onPlayerAddScore.bind(this));
-        this.register(GameMessageS2CPacket.ID, this.onGameMessage.bind(this));
-        this.register(TranslatableTextS2CPacket.ID, this.onTranslateText.bind(this));
-        this.register(PlayerGameModeS2CPacket.ID, this.onSyncProfile.bind(this));
-        this.register(EntityStatusEffectS2CPacket.ID, this.onEntityStatusEffect.bind(this));
-        this.register(RemoveEntityStatusEffectS2CPacket.ID, this.onRemoveEntityStatusEffect.bind(this));
-        this.register(ItemCooldownUpdateS2CPacket.ID, this.onItemCooldown.bind(this));
-        this.register(PlayAudioS2CPacket.ID, this.onPlayAudio.bind(this));
-        this.register(GameOverS2CPacket.ID, this.onGameOver.bind(this));
-        this.register(AudioControlS2CPacket.ID, this.onAudioControl.bind(this));
-        this.register(AudioStopS2CPacket.ID, this.onAudioStop.bind(this));
-        this.register(LaserWeaponActivate.ID, this.onLaserWeapon.bind(this));
-        this.register(LaserWeaponDeactivate.ID, this.onLaserWeapon.bind(this));
-        this.register(LaserWeaponChange.ID, this.onLaserWeapon.bind(this));
-        this.register(DifficultChangeS2CPacket.ID, this.onDifficultChange.bind(this));
+        this.register(RelayServerPacket.ID, this.onRelayServer);
+        this.register(ServerStartS2CPacket.ID, this.onServerStart);
+        this.register(ServerReadyS2CPacket.ID, this.onServerReady);
+        this.register(KeepAliveS2CPacket.ID, this.onKeepAlive);
+        this.register(PongS2CPacket.ID, this.onPong);
+        this.register(JoinGameS2CPacket.ID, this.onGameJoin);
+        this.register(PlayerJoinS2CPacket.ID, this.onPlayerJoin);
+        this.register(PlayerDisconnectS2CPacket.ID, this.onDisconnect);
+        this.register(EntitySpawnS2CPacket.ID, this.onEntitySpawn);
+        this.register(EntityRemoveS2CPacket.ID, this.onEntityRemove);
+        this.register(EntityPositionS2CPacket.ID, this.onEntityPosition);
+        this.register(EntityPositionForceS2CPacket.ID, this.onEntityPositionForce);
+        this.register(ExplosionS2CPacket.ID, this.onExplosion);
+        this.register(EntityVelocityUpdateS2CPacket.ID, this.onEntityVelocityUpdate);
+        this.register(EntityTrackerUpdateS2CPacket.ID, this.onEntityTrackerUpdate);
+        this.register(Rotate.ID, this.onEntity);
+        this.register(MoveRelative.ID, this.onEntity);
+        this.register(RotateAndMoveRelative.ID, this.onEntity);
+        this.register(EntityKilledS2CPacket.ID, this.onEntityKilled);
+        this.register(EntityDamageS2CPacket.ID, this.onEntityDamage);
+        this.register(ParticleS2CPacket.ID, this.onParticle);
+        this.register(EntityAttributesS2CPacket.ID, this.onEntityAttributes);
+        this.register(MissileSetS2CPacket.ID, this.onMissileSet);
+        this.register(MissileLockS2CPacket.ID, this.onMissileLock);
+        this.register(EntityBatchSpawnS2CPacket.ID, this.onEntityBatchSpawn);
+        this.register(EntityNbtS2CPacket.ID, this.onEntityNbt);
+        this.register(InventoryS2CPacket.ID, this.onInventory);
+        this.register(EffectCreateS2CPacket.ID, this.onEffectCreate);
+        this.register(SoundEventS2CPacket.ID, this.onPlaySound);
+        this.register(StopSoundS2CPacket.ID, this.onStopSound);
+        this.register(PlayerSetScoreS2CPacket.ID, this.onPlayerScore);
+        this.register(PlayerAddScoreS2CPacket.ID, this.onPlayerAddScore);
+        this.register(GameMessageS2CPacket.ID, this.onGameMessage);
+        this.register(TranslatableTextS2CPacket.ID, this.onTranslateText);
+        this.register(PlayerGameModeS2CPacket.ID, this.onSyncProfile);
+        this.register(EntityStatusEffectS2CPacket.ID, this.onEntityStatusEffect);
+        this.register(RemoveEntityStatusEffectS2CPacket.ID, this.onRemoveEntityStatusEffect);
+        this.register(ItemCooldownUpdateS2CPacket.ID, this.onItemCooldown);
+        this.register(PlayAudioS2CPacket.ID, this.onPlayAudio);
+        this.register(GameOverS2CPacket.ID, this.onGameOver);
+        this.register(AudioControlS2CPacket.ID, this.onAudioControl);
+        this.register(AudioStopS2CPacket.ID, this.onAudioStop);
+        this.register(LaserWeaponActivate.ID, this.onLaserWeapon);
+        this.register(LaserWeaponDeactivate.ID, this.onLaserWeapon);
+        this.register(LaserWeaponChange.ID, this.onLaserWeapon);
+        this.register(DifficultChangeS2CPacket.ID, this.onDifficultChange);
     }
 }

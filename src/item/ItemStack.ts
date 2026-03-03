@@ -6,7 +6,7 @@ import type {TagKey} from "../registry/tag/TagKey.ts";
 import {SimpleComponentMap} from "../component/SimpleComponentMap.ts";
 import type {World} from "../world/World.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
-import {DataComponentTypes} from "../component/DataComponentTypes.ts";
+import {DataComponents} from "../component/DataComponents.ts";
 import {clamp} from "../utils/math/math.ts";
 import type {ComponentType} from "../component/ComponentType.ts";
 import type {LivingEntity} from "../entity/LivingEntity.ts";
@@ -174,15 +174,15 @@ export class ItemStack {
     }
 
     public isAvailable(): boolean {
-        return this.getOrDefault(DataComponentTypes.ITEM_AVAILABLE, true);
+        return this.getOrDefault(DataComponents.ITEM_AVAILABLE, true);
     }
 
     public setAvailable(value: boolean): void {
-        this.set(DataComponentTypes.ITEM_AVAILABLE, value);
+        this.set(DataComponents.ITEM_AVAILABLE, value);
     }
 
     public isDamageable(): boolean {
-        return this.has(DataComponentTypes.MAX_DURABILITY) && !this.has(DataComponentTypes.UNBREAKABLE) && this.has(DataComponentTypes.DURABILITY);
+        return this.has(DataComponents.MAX_DURABILITY) && !this.has(DataComponents.UNBREAKABLE) && this.has(DataComponents.DURABILITY);
     }
 
     public isDamaged(): boolean {
@@ -198,15 +198,15 @@ export class ItemStack {
     }
 
     public getDurability(): number {
-        return clamp(this.components.getOrDefault(DataComponentTypes.DURABILITY, 0), 0, this.getMaxDurability());
+        return clamp(this.components.getOrDefault(DataComponents.DURABILITY, 0), 0, this.getMaxDurability());
     }
 
     public setDurability(value: number) {
-        this.components.set(DataComponentTypes.DURABILITY, clamp(value, 0, this.getMaxDurability()));
+        this.components.set(DataComponents.DURABILITY, clamp(value, 0, this.getMaxDurability()));
     }
 
     public getMaxDurability(): number {
-        return this.components.getOrDefault(DataComponentTypes.MAX_DURABILITY, 0);
+        return this.components.getOrDefault(DataComponents.MAX_DURABILITY, 0);
     }
 
     public damage(amount: number, breakCallback?: Consumer<Item>): void {
@@ -270,7 +270,7 @@ export class ItemStack {
     }
 
     public getMaxCount(): number {
-        return this.components.getOrDefault(DataComponentTypes.MAX_STACK_SIZE, 1);
+        return this.components.getOrDefault(DataComponents.MAX_STACK_SIZE, 1);
     }
 
     public isStackable(): boolean {

@@ -189,7 +189,7 @@ export class ServerWorld extends World implements NbtSerializable {
 
     public override gameOver(player: ServerPlayerEntity): void {
         if (!this.server.isHost(player.getProfile())) {
-            player.networkHandler?.send(new GameOverS2CPacket());
+            player.session!.send(new GameOverS2CPacket());
             return;
         }
 
@@ -444,7 +444,12 @@ export class ServerWorld extends World implements NbtSerializable {
 
             if (!entityType) continue;
             const entity = entityType.create(this);
-            entity.readNBT(nbt);
+            try {
+                entity.readNBT(nbt);
+            } catch (err) {
+                Log.error(String(err));
+                continue;
+            }
             this.spawnEntity(entity);
         }
     }
@@ -460,9 +465,7 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public saveAll(): NbtCompound {
-        const root = new NbtCompound();
-        this.writeNBT(root);
-        return root;
+        return this.writeNBT(new NbtCompound());
     }
 
     public readonly ServerEntityHandler: EntityHandler<Entity> = {

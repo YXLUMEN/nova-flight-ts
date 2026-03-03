@@ -33,4 +33,8 @@ export class PlayerAttemptLoginC2SPacket implements Payload {
     public getId(): PayloadId<PlayerAttemptLoginC2SPacket> {
         return PlayerAttemptLoginC2SPacket.ID;
     }
+
+    public canProcessInTransition(): boolean {
+        return true;
+    }
 }

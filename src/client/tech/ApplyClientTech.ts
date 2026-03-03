@@ -5,7 +5,7 @@ import {IntoVoidWeapon} from "../../item/weapon/IntoVoidWeapon.ts";
 import {AutoAim} from "./AutoAim.ts";
 import {Items} from "../../item/Items.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
-import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../component/DataComponents.ts";
 import {NovaFlightClient} from "../NovaFlightClient.ts";
 import type {Tech} from "../../tech/Tech.ts";
 import {Techs} from "../../tech/Techs.ts";
@@ -36,8 +36,8 @@ export class ApplyClientTech {
                 const emp = Items.EMP_WEAPON as EMPWeapon;
                 const stack = player.getItem(emp);
                 if (stack) {
-                    const base = stack.getOrDefault(DataComponentTypes.EFFECT_RANGE, 480);
-                    stack.set(DataComponentTypes.EFFECT_RANGE, base * 1.5);
+                    const base = stack.getOrDefault(DataComponents.EFFECT_RANGE, 480);
+                    stack.set(DataComponents.EFFECT_RANGE, base * 1.5);
                     emp.setMaxCooldown(stack, emp.getMaxCooldown(stack) * 1.2);
                 }
                 break;
@@ -46,8 +46,8 @@ export class ApplyClientTech {
                 const emp = Items.EMP_WEAPON as EMPWeapon;
                 const stack = player.getItem(emp);
                 if (stack) {
-                    const base = stack.getOrDefault(DataComponentTypes.EFFECT_RANGE, 480);
-                    stack.set(DataComponentTypes.EFFECT_RANGE, base * 0.5);
+                    const base = stack.getOrDefault(DataComponents.EFFECT_RANGE, 480);
+                    stack.set(DataComponents.EFFECT_RANGE, base * 0.5);
                     emp.setMaxCooldown(stack, emp.getMaxCooldown(stack) * 0.5);
                 }
                 break;
@@ -55,15 +55,15 @@ export class ApplyClientTech {
             case Techs.HARMONIC_ANALYSIS: {
                 const stack = player.getItem(Items.PHASE_LASERS);
                 if (stack) {
-                    stack.set(DataComponentTypes.ATTACK_DAMAGE, 2);
+                    stack.set(DataComponents.ATTACK_DAMAGE, 2);
                 }
                 break;
             }
             case Techs.HIGH_TEMPERATURE_ALLOY: {
                 player.getInventory().values().forEach(stack => {
-                    const base = stack.get(DataComponentTypes.MAX_HEAT);
+                    const base = stack.get(DataComponents.MAX_HEAT);
                     if (base) {
-                        stack.set(DataComponentTypes.MAX_HEAT, Math.ceil(base * 1.5));
+                        stack.set(DataComponents.MAX_HEAT, Math.ceil(base * 1.5));
                     }
                 });
                 break;
@@ -76,8 +76,8 @@ export class ApplyClientTech {
                 player.getInventory().values().forEach(stack => {
                     const item = stack.getItem();
                     if (item instanceof BaseWeapon) {
-                        const base = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
-                        stack.set(DataComponentTypes.ATTACK_DAMAGE, Math.ceil(base * 2));
+                        const base = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
+                        stack.set(DataComponents.ATTACK_DAMAGE, Math.ceil(base * 2));
                     }
                 });
                 break;
@@ -93,8 +93,8 @@ export class ApplyClientTech {
                 player.addItem(Items.CANNON90_WEAPON, c90);
 
                 if (player.getTechs().isUnlocked(Techs.HD_BULLET)) {
-                    const base = c90.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
-                    c90.set(DataComponentTypes.ATTACK_DAMAGE, base * 2);
+                    const base = c90.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
+                    c90.set(DataComponents.ATTACK_DAMAGE, base * 2);
                 }
                 break;
             }
@@ -103,8 +103,8 @@ export class ApplyClientTech {
                 player.addItem(Items.ARTILLERY125, c125);
 
                 if (player.getTechs().isUnlocked(Techs.HD_BULLET)) {
-                    const base = c125.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
-                    c125.set(DataComponentTypes.ATTACK_DAMAGE, base * 2);
+                    const base = c125.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
+                    c125.set(DataComponents.ATTACK_DAMAGE, base * 2);
                 }
                 break;
             }
@@ -118,18 +118,18 @@ export class ApplyClientTech {
             }
             case Techs.HV_WARHEAD: {
                 player.getInventory().values().forEach(stack => {
-                    const base = stack.get(DataComponentTypes.EXPLOSION_RADIUS);
+                    const base = stack.get(DataComponents.EXPLOSION_RADIUS);
                     if (base) {
-                        stack.set(DataComponentTypes.EXPLOSION_RADIUS, base * 1.5);
+                        stack.set(DataComponents.EXPLOSION_RADIUS, base * 1.5);
                     }
                 });
                 break;
             }
             case Techs.HD_EXPLOSIVES: {
                 player.getInventory().values().forEach(stack => {
-                    const base = stack.get(DataComponentTypes.EXPLOSION_DAMAGE);
+                    const base = stack.get(DataComponents.EXPLOSION_DAMAGE);
                     if (base) {
-                        stack.set(DataComponentTypes.EXPLOSION_DAMAGE, base * 1.4);
+                        stack.set(DataComponents.EXPLOSION_DAMAGE, base * 1.4);
                     }
                 });
                 break;
@@ -142,9 +142,9 @@ export class ApplyClientTech {
                 const intoVoid = Items.INTO_VOID_WEAPON as IntoVoidWeapon;
                 const stack = player.getItem(intoVoid);
                 if (stack) {
-                    stack.set(DataComponentTypes.EFFECT_DURATION, stack.getOrDefault(DataComponentTypes.EFFECT_DURATION, 1) * 0.1);
+                    stack.set(DataComponents.EFFECT_DURATION, stack.getOrDefault(DataComponents.EFFECT_DURATION, 1) * 0.1);
                     intoVoid.setMaxCooldown(stack, intoVoid.accuratelyMaxCooldown(stack) * 0.2);
-                    const modifier = stack.get(DataComponentTypes.ATTRIBUTE_MODIFIERS);
+                    const modifier = stack.get(DataComponents.ATTRIBUTE_MODIFIERS);
                     if (modifier) modifier.value = 1.5;
                 }
                 break;
@@ -153,14 +153,14 @@ export class ApplyClientTech {
                 const intoVoid = Items.INTO_VOID_WEAPON as IntoVoidWeapon;
                 const stack = player.getItem(intoVoid);
                 if (stack) {
-                    stack.set(DataComponentTypes.EFFECT_DURATION, stack.getOrDefault(DataComponentTypes.EFFECT_DURATION, 1) * 2);
+                    stack.set(DataComponents.EFFECT_DURATION, stack.getOrDefault(DataComponents.EFFECT_DURATION, 1) * 2);
                     intoVoid.setMaxCooldown(stack, intoVoid.accuratelyMaxCooldown(stack) * 1.4);
                 }
                 break;
             }
             case Techs.SPACE_TEAR: {
                 const stack = player.getItem(Items.INTO_VOID_WEAPON);
-                if (stack) stack.set(DataComponentTypes.EFFECT_RANGE, 128);
+                if (stack) stack.set(DataComponents.EFFECT_RANGE, 128);
                 break;
             }
             case Techs.EXPLOSIVE_ARMOR: {
@@ -170,8 +170,8 @@ export class ApplyClientTech {
             case Techs.GRAY: {
                 const stack = player.getItem(Items.PHASE_LASERS);
                 if (stack) {
-                    stack.set(DataComponentTypes.ATTACK_DAMAGE, 0);
-                    stack.set(DataComponentTypes.UI_COLOR, '#ff0000');
+                    stack.set(DataComponents.ATTACK_DAMAGE, 0);
+                    stack.set(DataComponents.UI_COLOR, '#ff0000');
                     const laser = Items.PHASE_LASERS as PhaseLasers;
                     laser.setDrainRate(stack, laser.getDrainRate(stack) * 1.5);
                 }
@@ -185,10 +185,10 @@ export class ApplyClientTech {
             case Techs.HONEYCOMB_MISSILE: {
                 const stack = player.getItem(Items.MISSILE_WEAPON);
                 if (stack) {
-                    stack.set(DataComponentTypes.LAUNCH_COUNT, 24);
-                    stack.set(DataComponentTypes.ATTACK_DAMAGE, 3);
-                    stack.set(DataComponentTypes.EXPLOSION_DAMAGE, 6);
-                    stack.set(DataComponentTypes.EXPLOSION_RADIUS, 48);
+                    stack.set(DataComponents.LAUNCH_COUNT, 24);
+                    stack.set(DataComponents.ATTACK_DAMAGE, 3);
+                    stack.set(DataComponents.EXPLOSION_DAMAGE, 6);
+                    stack.set(DataComponents.EXPLOSION_RADIUS, 48);
                 }
                 break;
             }
@@ -216,7 +216,7 @@ export class ApplyClientTech {
             case Techs.RANDOM_ROCKET: {
                 const rocket = player.getItem(Items.ROCKET_WEAPON);
                 if (rocket) {
-                    rocket.set(DataComponentTypes.MISSILE_RANDOM_ENABLE, true);
+                    rocket.set(DataComponents.MISSILE_RANDOM_ENABLE, true);
                 }
                 break;
             }

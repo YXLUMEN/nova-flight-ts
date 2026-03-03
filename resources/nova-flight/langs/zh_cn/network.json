@@ -1,0 +1,7 @@
+{
+  "disconnect.timeout": "连接超时",
+  "disconnect.logout": "断开连接",
+  "disconnect.illegal_character": "非法字符",
+  "disconnect.server_close": "服务器关闭",
+  "disconnect.duplicate_player": "已有玩家在线"
+}

@@ -27,12 +27,11 @@ export class ClientDefaultEvents {
             BGMManager.onTechUnlock(player);
 
             const tech = event.tech;
-
             if (tech instanceof Tech) {
                 const entry = Registries.TECH.getEntryByValue(tech);
                 if (!entry) throw new Error(`Tech not found: ${tech})`);
 
-                world.getNetworkChannel().send(new PlayerUnlockTechC2SPacket(entry));
+                if (!event.silent) world.getNetworkChannel().send(new PlayerUnlockTechC2SPacket(entry));
                 ApplyClientTech.apply(entry);
             }
         });

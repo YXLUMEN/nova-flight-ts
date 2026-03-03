@@ -29,10 +29,10 @@ export class SummonEntityCommand {
                             argument<T, PosArgument>('pos', PosArgumentType.pos())
                                 .executes(this.summonEntity.bind(this))
                                 .then(
-                                    argument<T, NbtCompound>('nbt', NbtCompoundArgumentType.nbt())
+                                    argument<T, number>('count', IntArgumentType.int())
                                         .executes(this.summonEntity.bind(this))
                                         .then(
-                                            argument<T, number>('count', IntArgumentType.int())
+                                            argument<T, NbtCompound>('nbt', NbtCompoundArgumentType.nbt())
                                                 .executes(this.summonEntity.bind(this))
                                         )
                                 )

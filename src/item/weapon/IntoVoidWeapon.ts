@@ -13,7 +13,7 @@ import {SpecialWeapon} from "./SpecialWeapon.ts";
 import {type Entity} from "../../entity/Entity.ts";
 import {LivingEntity} from "../../entity/LivingEntity.ts";
 import type {ItemStack} from "../ItemStack.ts";
-import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../component/DataComponents.ts";
 import {AttributeModifiersComponent} from "../../component/type/AttributeModifiersComponent.ts";
 import {Items} from "../Items.ts";
 import {Techs} from "../../tech/Techs.ts";
@@ -37,11 +37,11 @@ export class IntoVoidWeapon extends SpecialWeapon {
 
         if (!(attacker instanceof PlayerEntity)) return;
 
-        stack.set(DataComponentTypes.ANY_BOOLEAN, attacker.invulnerable);
+        stack.set(DataComponents.ANY_BOOLEAN, attacker.invulnerable);
         attacker.invulnerable = true;
 
         const modifier = stack.getOrDefault(
-            DataComponentTypes.ATTRIBUTE_MODIFIERS,
+            DataComponents.ATTRIBUTE_MODIFIERS,
             IntoVoidWeapon.DEFAULT_MODIFIER
         );
         attacker.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.addModifier(modifier);
@@ -94,27 +94,27 @@ export class IntoVoidWeapon extends SpecialWeapon {
     }
 
     public getActive(stack: ItemStack): boolean {
-        return stack.getOrDefault(DataComponentTypes.FIRING, true);
+        return stack.getOrDefault(DataComponents.FIRING, true);
     }
 
     public setActive(stack: ItemStack, value: boolean): void {
-        stack.set(DataComponentTypes.FIRING, value);
+        stack.set(DataComponents.FIRING, value);
     }
 
     public getDuration(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponentTypes.EFFECT_DURATION, 0);
+        return stack.getOrDefault(DataComponents.EFFECT_DURATION, 0);
     }
 
     public setDuration(stack: ItemStack, value: number): void {
-        stack.set(DataComponentTypes.EFFECT_DURATION, value);
+        stack.set(DataComponents.EFFECT_DURATION, value);
     }
 
     public getTimeLeft(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponentTypes.EFFECT_TIME_LEFT, 0);
+        return stack.getOrDefault(DataComponents.EFFECT_TIME_LEFT, 0);
     }
 
     public setTimeLeft(stack: ItemStack, value: number): void {
-        stack.set(DataComponentTypes.EFFECT_TIME_LEFT, value);
+        stack.set(DataComponents.EFFECT_TIME_LEFT, value);
     }
 
     public accuratelyMaxCooldown(stack: ItemStack): number {
@@ -149,11 +149,11 @@ export class IntoVoidWeapon extends SpecialWeapon {
 
         if (!(attacker instanceof PlayerEntity)) return;
 
-        attacker.invulnerable = stack.getOrDefault(DataComponentTypes.ANY_BOOLEAN, false);
-        stack.remove(DataComponentTypes.ANY_BOOLEAN);
+        attacker.invulnerable = stack.getOrDefault(DataComponents.ANY_BOOLEAN, false);
+        stack.remove(DataComponents.ANY_BOOLEAN);
 
         if (!world.isClient) {
-            const box = attacker.getWidth() + stack.getOrDefault(DataComponentTypes.EFFECT_RANGE, 32);
+            const box = attacker.getWidth() + stack.getOrDefault(DataComponents.EFFECT_RANGE, 32);
             for (const mob of world.getMobs()) {
                 if (mob.isRemoved() || !pointInCircleVec2(attacker.getPositionRef, mob.getPositionRef, box + mob.getWidth())) continue;
                 if (mob instanceof BossEntity) continue;

@@ -3,7 +3,7 @@ import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import type {ItemStack} from "../../ItemStack.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
 import {squareDistVec2, thickLineCircleHit} from "../../../utils/math/math.ts";
-import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../../component/DataComponents.ts";
 import {MutVec2} from "../../../utils/math/MutVec2.ts";
 import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../../../entity/effect/StatusEffects.ts";
@@ -26,7 +26,7 @@ export class GammaLasers extends BaseWeapon {
             start.y + g * PhaseLasers.LASER_HEIGHT
         );
 
-        const damage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 10);
+        const damage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 10);
         const damageSource = world.getDamageSources()
             .laser(attacker)
             .setShieldMulti(0.4)

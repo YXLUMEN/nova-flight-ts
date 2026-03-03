@@ -5,7 +5,7 @@ import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import type {ItemStack} from "./ItemStack.ts";
 import type {LivingEntity} from "../entity/LivingEntity.ts";
 import {SimpleComponentMap} from "../component/SimpleComponentMap.ts";
-import {DataComponentTypes} from "../component/DataComponentTypes.ts";
+import {DataComponents} from "../component/DataComponents.ts";
 import type {ComponentType} from "../component/ComponentType.ts";
 import type {ComponentMap} from "../component/ComponentMap.ts";
 import {Registries} from "../registry/Registries.ts";
@@ -20,30 +20,30 @@ export class Item {
         private components: SimpleComponentMap | null = null;
 
         public maxCount(maxCount: number): this {
-            return this.component(DataComponentTypes.MAX_STACK_SIZE, maxCount);
+            return this.component(DataComponents.MAX_STACK_SIZE, maxCount);
         }
 
         public maxDurability(maxDurability: number): this {
-            this.component(DataComponentTypes.MAX_DURABILITY, maxDurability);
-            this.component(DataComponentTypes.MAX_STACK_SIZE, 1);
-            return this.component(DataComponentTypes.DURABILITY, maxDurability);
+            this.component(DataComponents.MAX_DURABILITY, maxDurability);
+            this.component(DataComponents.MAX_STACK_SIZE, 1);
+            return this.component(DataComponents.DURABILITY, maxDurability);
         }
 
         public attackDamage(damage: number): this {
-            return this.component(DataComponentTypes.ATTACK_DAMAGE, damage);
+            return this.component(DataComponents.ATTACK_DAMAGE, damage);
         }
 
         public maxCooldown(maxCooldown: number): this {
-            this.component(DataComponentTypes.MAX_COOLDOWN, maxCooldown)
-            return this.component(DataComponentTypes.COOLDOWN, 0);
+            this.component(DataComponents.MAX_COOLDOWN, maxCooldown)
+            return this.component(DataComponents.COOLDOWN, 0);
         }
 
         public unbreakable(): this {
-            return this.component(DataComponentTypes.UNBREAKABLE, true);
+            return this.component(DataComponents.UNBREAKABLE, true);
         }
 
         public type(...type: number[]): this {
-            return this.component(DataComponentTypes.WEAPON_TYPE, BitFlag.combine(...type));
+            return this.component(DataComponents.WEAPON_TYPE, BitFlag.combine(...type));
         }
 
         public component<T>(type: ComponentType<T>, value: T): this {
@@ -57,8 +57,8 @@ export class Item {
 
         public getValidatedComponents(): SimpleComponentMap {
             const componentMap = this.getComponents();
-            if (componentMap.has(DataComponentTypes.DURABILITY) &&
-                componentMap.getOrDefault(DataComponentTypes.MAX_STACK_SIZE, 1) > 1) {
+            if (componentMap.has(DataComponents.DURABILITY) &&
+                componentMap.getOrDefault(DataComponents.MAX_STACK_SIZE, 1) > 1) {
                 throw Error("Item cannot have both durability and be stackable");
             }
             return componentMap;
@@ -67,8 +67,8 @@ export class Item {
         private getComponents() {
             if (this.components === null) {
                 const com = new SimpleComponentMap();
-                com.set(DataComponentTypes.MAX_STACK_SIZE, 1);
-                com.set(DataComponentTypes.ITEM_AVAILABLE, true);
+                com.set(DataComponents.MAX_STACK_SIZE, 1);
+                com.set(DataComponents.ITEM_AVAILABLE, true);
                 this.components = com;
             }
             return this.components;

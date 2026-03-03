@@ -10,4 +10,8 @@ export class PlayerFinishLoginC2SPacket implements Payload {
     public getId(): PayloadId<PlayerFinishLoginC2SPacket> {
         return PlayerFinishLoginC2SPacket.ID;
     }
+
+    public canProcessInTransition(): boolean {
+        return true;
+    }
 }

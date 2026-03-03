@@ -34,7 +34,6 @@ export class PauseOverlay implements IUi {
                 120, 36,
                 '设置',
                 () => {
-                    NovaFlightClient.getInstance().window.notify.show('正在制作');
                 }),
             new UIButton(
                 centerX - 60, centerY + 50,

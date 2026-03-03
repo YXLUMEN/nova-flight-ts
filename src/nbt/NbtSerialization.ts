@@ -3,7 +3,7 @@ import {BinaryWriter} from "./BinaryWriter.ts";
 import {NbtTypeId} from "./NbtType.ts";
 import type {NbtCompoundArray} from "./element/NbtCompoundArray.ts";
 
-type KeyIndex = Readonly<{ key: string, type: number, index: number }>;
+export type KeyIndex = Readonly<{ key: string, type: number, index: number }>;
 
 export class NbtSerialization {
     public static toRootBinary(compound: NbtCompound): Uint8Array<ArrayBuffer> {

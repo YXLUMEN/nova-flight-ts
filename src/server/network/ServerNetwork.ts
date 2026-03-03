@@ -45,13 +45,17 @@ import {
 import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 import {TranslatableTextS2CPacket} from "../../network/packet/s2c/TranslatableTextS2CPacket.ts";
+import {PongS2CPacket} from "../../network/packet/s2c/PongS2CPacket.ts";
+import {ServerStartS2CPacket} from "../../network/packet/s2c/ServerStartS2CPacket.ts";
 
 export class ServerNetwork {
     /**
      * 先于 Client 注册
      * */
     public static registerNetworkPacket() {
+        this.register(ServerStartS2CPacket.ID, ServerStartS2CPacket.CODEC);
         this.register(ServerReadyS2CPacket.ID, ServerReadyS2CPacket.CODEC);
+        this.register(PongS2CPacket.ID, PongS2CPacket.CODEC);
         this.register(SoundEventS2CPacket.ID, SoundEventS2CPacket.CODEC);
         this.register(StopSoundS2CPacket.ID, StopSoundS2CPacket.CODEC);
         this.register(EntitySpawnS2CPacket.ID, EntitySpawnS2CPacket.CODEC);

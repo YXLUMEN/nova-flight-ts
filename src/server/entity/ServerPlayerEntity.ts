@@ -10,7 +10,7 @@ import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
 import type {GameProfile} from "./GameProfile.ts";
 import {type DamageSource} from "../../entity/damage/DamageSource.ts";
-import type {ServerPlayNetworkHandler} from "../network/ServerPlayNetworkHandler.ts";
+import type {ServerStableSession} from "../network/ServerStableSession.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
 import {type Entity} from "../../entity/Entity.ts";
 import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
@@ -21,11 +21,10 @@ import {EdgeGlowEffect} from "../../effect/EdgeGlowEffect.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 import {TranslatableTextS2CPacket} from "../../network/packet/s2c/TranslatableTextS2CPacket.ts";
 
-
 export class ServerPlayerEntity extends PlayerEntity {
     public readonly playerProfile: GameProfile;
 
-    public networkHandler: ServerPlayNetworkHandler | null = null;
+    public session!: ServerStableSession;
     public watchTechPage = false;
     private readonly inputKeys = new Set<string>();
     private readonly pendingSyncStack: Set<ItemStack> = new Set();
@@ -49,7 +48,7 @@ export class ServerPlayerEntity extends PlayerEntity {
 
         if (this.pendingSyncStack.size > 0) {
             const packet = new InventoryS2CPacket(0, this.nextRevision(), this.pendingSyncStack);
-            this.networkHandler?.send(packet);
+            this.session.send(packet);
             this.pendingSyncStack.clear();
         }
 
@@ -144,7 +143,7 @@ export class ServerPlayerEntity extends PlayerEntity {
             `${this.getProfile().name} 船毁人亡` :
             `${this.getProfile().name} 坠机了`;
 
-        this.networkHandler?.broadcast(new GameMessageS2CPacket(mag));
+        this.getNetworkChannel().send(new GameMessageS2CPacket(mag));
     }
 
     public override addScore(score: number) {
@@ -154,22 +153,22 @@ export class ServerPlayerEntity extends PlayerEntity {
 
     public override setScore(score: number) {
         super.setScore(score);
-        this.networkHandler?.send(new PlayerSetScoreS2CPacket(score));
+        this.session.send(new PlayerSetScoreS2CPacket(score));
     }
 
     protected override onStatusEffectApplied(effect: StatusEffectInstance, source: Entity | null) {
         super.onStatusEffectApplied(effect, source);
-        this.networkHandler?.send(EntityStatusEffectS2CPacket.create(this.getId(), effect));
+        this.session.send(EntityStatusEffectS2CPacket.create(this.getId(), effect));
     }
 
     protected override onStatusEffectUpgraded(effect: StatusEffectInstance, reapplyEffect: boolean, source: Entity | null) {
         super.onStatusEffectUpgraded(effect, reapplyEffect, source);
-        this.networkHandler?.send(EntityStatusEffectS2CPacket.create(this.getId(), effect));
+        this.session.send(EntityStatusEffectS2CPacket.create(this.getId(), effect));
     }
 
     protected override onStatusEffectRemoved(effect: StatusEffectInstance) {
         super.onStatusEffectRemoved(effect);
-        this.networkHandler?.send(new RemoveEntityStatusEffectS2CPacket(this.getId(), effect.getEffectType()));
+        this.session.send(new RemoveEntityStatusEffectS2CPacket(this.getId(), effect.getEffectType()));
     }
 
     public copyFrom(oldPlayer: ServerPlayerEntity, alive: boolean): void {
@@ -192,8 +191,8 @@ export class ServerPlayerEntity extends PlayerEntity {
             this.setScore(oldPlayer.getScore() * 0.5);
         }
 
-        for (const tag of oldPlayer.getNormalTags()) {
-            this.addNormalTag(tag);
+        for (const tag of oldPlayer.getTags()) {
+            this.addTag(tag);
         }
     }
 
@@ -231,10 +230,10 @@ export class ServerPlayerEntity extends PlayerEntity {
     }
 
     public override sendMessage(msg: string) {
-        this.networkHandler?.send(new GameMessageS2CPacket(msg));
+        this.session.send(new GameMessageS2CPacket(msg));
     }
 
     public override sendTranslatable(key: string, args?: string[]) {
-        this.networkHandler?.send(new TranslatableTextS2CPacket(key, args ?? []));
+        this.session.send(new TranslatableTextS2CPacket(key, args ?? []));
     }
 }

@@ -3,7 +3,7 @@ import {type ItemStack} from "../../ItemStack.ts";
 import {type World} from "../../../world/World.ts";
 import {type Entity} from "../../../entity/Entity.ts";
 import {EntityTypes} from "../../../entity/EntityTypes.ts";
-import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../../component/DataComponents.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {CIWSBulletEntity} from "../../../entity/projectile/CIWSBulletEntity.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
@@ -14,9 +14,9 @@ export class CIWS extends BaseWeapon {
     private static readonly BULLET_SPEED = 60;
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        stack.set(DataComponentTypes.FIRING, true);
+        stack.set(DataComponents.FIRING, true);
 
-        const damage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 1);
+        const damage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
         for (let i = 4; i--;) {
             const bullet = new CIWSBulletEntity(EntityTypes.CIWS_BULLET_ENTITY, world, attacker, damage);
             this.setBullet(bullet, attacker, CIWS.BULLET_SPEED, 2, 2, i * 20);
@@ -38,13 +38,13 @@ export class CIWS extends BaseWeapon {
 
     public override onEndFire(stack: ItemStack, world: World, attacker: Entity): void {
         world.stopLoopSound(attacker, SoundEvents.CIWS_FIRE_LOOP);
-        stack.remove(DataComponentTypes.FIRING);
+        stack.remove(DataComponents.FIRING);
     }
 
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean) {
         super.inventoryTick(stack, world, holder, slot, selected);
 
-        if (!holder.isPlayer() || stack.get(DataComponentTypes.FIRING)) return;
+        if (!holder.isPlayer() || stack.get(DataComponents.FIRING)) return;
         const currentHeat = this.getHeat(stack);
         if (currentHeat === 0) return;
 
@@ -77,19 +77,19 @@ export class CIWS extends BaseWeapon {
     }
 
     public getMaxHeat(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponentTypes.MAX_HEAT, 300);
+        return stack.getOrDefault(DataComponents.MAX_HEAT, 300);
     }
 
     public setMaxHeat(stack: ItemStack, value: number): void {
-        stack.set(DataComponentTypes.MAX_HEAT, Math.max(0, value | 0));
+        stack.set(DataComponents.MAX_HEAT, Math.max(0, value | 0));
     }
 
     public getHeat(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponentTypes.HEAT, 0);
+        return stack.getOrDefault(DataComponents.HEAT, 0);
     }
 
     public setHeat(stack: ItemStack, value: number): void {
-        stack.set(DataComponentTypes.HEAT, clamp(value, 0, this.getMaxHeat(stack)));
+        stack.set(DataComponents.HEAT, clamp(value, 0, this.getMaxHeat(stack)));
     }
 
     public override getDisplayName(): string {

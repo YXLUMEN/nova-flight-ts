@@ -1,13 +1,13 @@
-import type {ClientPlayNetworkHandler} from "../network/ClientPlayNetworkHandler.ts";
+import type {ClientNetworkSession} from "../network/ClientNetworkSession.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import {CommandSource} from "../../command/CommandSource.ts";
 import type {World} from "../../world/World.ts";
 
 export class ClientCommandSource extends CommandSource {
-    private readonly networkHandler: ClientPlayNetworkHandler;
+    private readonly networkHandler: ClientNetworkSession;
     private readonly client: NovaFlightClient;
 
-    public constructor(networkHandler: ClientPlayNetworkHandler, client: NovaFlightClient) {
+    public constructor(networkHandler: ClientNetworkSession, client: NovaFlightClient) {
         super();
         this.networkHandler = networkHandler;
         this.client = client;

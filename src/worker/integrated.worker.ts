@@ -23,7 +23,7 @@ async function handleEvent(event: MessageEvent) {
         case 'stop_server': {
             if (!server || pendingStop) return;
             pendingStop = true;
-            await server.stopGame();
+            await server.halt();
             server = null;
             self.postMessage({type: 'server_shutdown'});
             break;

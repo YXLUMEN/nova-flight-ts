@@ -7,7 +7,7 @@ import {LivingEntity} from "../../entity/LivingEntity.ts";
 import {squareDistVec2} from "../../utils/math/math.ts";
 import {EntityVelocityUpdateS2CPacket} from "../../network/packet/s2c/EntityVelocityUpdateS2CPacket.ts";
 import {EntityTrackerUpdateS2CPacket} from "../../network/packet/s2c/EntityTrackerUpdateS2CPacket.ts";
-import {TrackedPosition} from "../../entity/TrackedPosition.ts";
+import {VecDeltaCodec} from "../../entity/VecDeltaCodec.ts";
 import {encodeYaw} from "../../utils/NetUtil.ts";
 import {MoveRelative, Rotate, RotateAndMoveRelative} from "../../network/packet/s2c/EntityS2CPacket.ts";
 import {EntityAttributesS2CPacket} from "../../network/packet/s2c/EntityAttributesS2CPacket.ts";
@@ -17,7 +17,7 @@ export class EntityTrackerEntry {
     private readonly entity: Entity;
     private readonly tickInterval: number;
     private readonly alwaysUpdateVelocity: boolean;
-    private readonly trackedPos = new TrackedPosition();
+    private readonly posDelta = new VecDeltaCodec();
     private readonly velocity: MutVec2;
 
     private lastYawUint8: number;
@@ -30,7 +30,7 @@ export class EntityTrackerEntry {
         this.entity = entity;
         this.tickInterval = tickInterval;
         this.alwaysUpdateVelocity = alwaysUpdateVelocity;
-        this.trackedPos.setPos(entity.getPositionRef.x, entity.getPositionRef.y);
+        this.posDelta.setPos(entity.getPositionRef.x, entity.getPositionRef.y);
         this.velocity = entity.getVelocityRef.clone();
         this.lastYawUint8 = encodeYaw(entity.getYaw());
     }
@@ -41,7 +41,7 @@ export class EntityTrackerEntry {
 
             const yawUint8 = encodeYaw(this.entity.getYaw());
             const entityPos = this.entity.getPosition();
-            const lenDelta = this.trackedPos.subtract(entityPos).lengthSquared() >= 7.6293945E-6;
+            const lenDelta = this.posDelta.subtract(entityPos).lengthSquared() >= 7.6293945E-6;
 
             let packet: Payload | null = null;
             let relativePos = lenDelta || this.trackingTick % 60 === 0;
@@ -50,8 +50,8 @@ export class EntityTrackerEntry {
             let syncYaw = false;
 
             // 同步位置
-            const dx = this.trackedPos.getDeltaX(entityPos);
-            const dy = this.trackedPos.getDeltaY(entityPos);
+            const dx = this.posDelta.getDeltaX(entityPos);
+            const dy = this.posDelta.getDeltaY(entityPos);
             const posDelta = dx < -32768 || dx > 32768 || dy < -32768 || dy > 32768;
             if (posDelta || this.updates > 400) {
                 this.updates = 0;
@@ -88,7 +88,7 @@ export class EntityTrackerEntry {
 
             this.syncEntityData();
             if (syncPos) {
-                this.trackedPos.setPos(entityPos.x, entityPos.y);
+                this.posDelta.setPos(entityPos.x, entityPos.y);
             }
 
             if (syncYaw) {

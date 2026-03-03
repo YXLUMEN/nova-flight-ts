@@ -593,7 +593,7 @@ export class ClientTechTree implements TechTree {
 
             this.state.unlock(tech);
             this.applyUnlockUpdates(tech);
-            world.events.emit(EVENTS.UNLOCK_TECH, {tech});
+            world.events.emit(EVENTS.UNLOCK_TECH, {tech, silent: true});
         }
     }
 }

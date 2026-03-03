@@ -12,7 +12,9 @@ export interface ServerChannel extends Channel {
 
     sendTo<T extends Payload>(payload: T, target: GameProfile): void;
 
-    sendToByUUID<T extends Payload>(payload: T, target: UUID): void;
+    sendToSessionId<T extends Payload>(payload: T, target: number): void;
+
+    sendToUUID<T extends Payload>(payload: T, target: UUID): void;
 
     sendExclude<T extends Payload>(payload: T, ...excludes: GameProfile[]): void;
 

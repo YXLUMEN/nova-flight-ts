@@ -3,7 +3,7 @@ import {EVENTS} from "../../apis/IEvents.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
-import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../component/DataComponents.ts";
 import type {ServerPlayerEntity} from "../../server/entity/ServerPlayerEntity.ts";
 
 export class EMPWeapon extends SpecialWeapon {
@@ -12,7 +12,7 @@ export class EMPWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         world.events.emit(EVENTS.EMP_BURST, {entity: attacker, duration: this.duration});
 
-        const radius = stack.getOrDefault(DataComponentTypes.EFFECT_RANGE, 480);
+        const radius = stack.getOrDefault(DataComponents.EFFECT_RANGE, 480);
         world.createEMP(attacker, attacker.getPositionRef, radius, this.duration, 1);
         this.setCooldown(stack, this.getMaxCooldown(stack));
 

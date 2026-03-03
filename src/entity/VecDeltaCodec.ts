@@ -2,7 +2,7 @@ import {MutVec2} from "../utils/math/MutVec2.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 
-export class TrackedPosition {
+export class VecDeltaCodec {
     private pos = MutVec2.zero();
 
     public withDelta(dx: number, dy: number): Vec2 {

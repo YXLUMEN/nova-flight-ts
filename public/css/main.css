@@ -30,7 +30,7 @@ canvas {
     left: 0;
     width: 100%;
     height: 100%;
-    background: #050915;
+    background: radial-gradient(1200px 800px at 50% 50%, #1a2032 0%, transparent 60%), #0e1220;
 }
 
 .background.hidden {

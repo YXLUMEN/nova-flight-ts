@@ -6,17 +6,17 @@ import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
-import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../component/DataComponents.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.ts";
 
 export class MissileWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         const pos = attacker.getPositionRef;
-        const missileCounts = stack.getOrDefault(DataComponentTypes.LAUNCH_COUNT, 8);
-        const hitDamage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 10);
-        const explosionDamage = stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 10);
-        const explosionRadius = stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 72);
+        const missileCounts = stack.getOrDefault(DataComponents.LAUNCH_COUNT, 8);
+        const hitDamage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 10);
+        const explosionDamage = stack.getOrDefault(DataComponents.EXPLOSION_DAMAGE, 10);
+        const explosionRadius = stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 72);
         let i = 1;
 
         const schedule = world.scheduleInterval(0.1, () => {

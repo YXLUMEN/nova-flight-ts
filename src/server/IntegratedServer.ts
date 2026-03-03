@@ -92,4 +92,8 @@ export class IntegratedServer extends NovaFlightServer {
     public override isHost(profile: GameProfile): boolean {
         return profile.clientId === this.hostUUID;
     }
+
+    public override isHostUUID(uuid: UUID): boolean {
+        return uuid === this.hostUUID;
+    }
 }

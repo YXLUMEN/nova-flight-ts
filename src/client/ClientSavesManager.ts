@@ -324,7 +324,7 @@ export class ClientSavesManager {
                 await message(msg, {kind: 'warning'});
                 return;
             }
-            await writeFile(worldPath, NbtSerialization.toRootCompactBinary(result.ok().get()));
+            await writeFile(worldPath, NbtSerialization.toRootCompactBinary(result.unwrap()));
 
             const playerDir = await resolve(saveDir, `players`);
             await mkdir(playerDir, {recursive: true});

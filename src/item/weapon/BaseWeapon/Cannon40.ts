@@ -4,7 +4,7 @@ import {EntityTypes} from "../../../entity/EntityTypes.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {ItemStack} from "../../ItemStack.ts";
-import {DataComponentTypes} from "../../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../../component/DataComponents.ts";
 import {FastBulletEntity} from "../../../entity/projectile/FastBulletEntity.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 
@@ -12,7 +12,7 @@ export class Cannon40 extends BaseWeapon {
     private readonly speed = 35;
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        const bullet = new FastBulletEntity(EntityTypes.FAST_BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 3));
+        const bullet = new FastBulletEntity(EntityTypes.FAST_BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 3));
         this.setBullet(bullet, attacker, this.speed, 6, 2);
         world.spawnEntity(bullet);
     }

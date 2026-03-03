@@ -14,7 +14,7 @@ import {EntityRenderers} from "./render/entity/EntityRenderers.ts";
 import {DataLoader} from "./DataLoader.ts";
 import {check} from "@tauri-apps/plugin-updater";
 import {StartScreen} from "./render/ui/StartScreen.ts";
-import {ClientPlayNetworkHandler} from "./network/ClientPlayNetworkHandler.ts";
+import {ClientNetworkSession} from "./network/ClientNetworkSession.ts";
 import {error, info, warn} from "@tauri-apps/plugin-log";
 import {ClientCommandManager} from "./command/ClientCommandManager.ts";
 import {invoke} from "@tauri-apps/api/core";
@@ -45,7 +45,7 @@ export class NovaFlightClient {
     public readonly input: KeyboardInput;
 
     public readonly networkChannel: ClientNetworkChannel;
-    public readonly networkHandler: ClientPlayNetworkHandler;
+    public readonly session: ClientNetworkSession;
 
     private server: ServerWorker | null = null;
     private isIntegrated = false;
@@ -89,7 +89,6 @@ export class NovaFlightClient {
         this.playerName = playerName;
 
         this.registryManager = new RegistryManager();
-
         this.window = new Window();
 
         this.networkChannel = new ClientNetworkChannel(
@@ -97,13 +96,13 @@ export class NovaFlightClient {
             this.clientId
         );
 
-        this.networkHandler = new ClientPlayNetworkHandler(this);
+        this.session = new ClientNetworkSession(this);
 
         this.multiGameManager = new ClientMultiGameManger();
         this.saveManager = new ClientSavesManager();
         this.statisticManager = new StatisticManager();
 
-        this.clientCommandManager = new ClientCommandManager(this.networkHandler.getCommandSource());
+        this.clientCommandManager = new ClientCommandManager(this.session.getCommandSource());
         this.clientChat = new ClientChat(this);
 
         this.input = new KeyboardInput(this.window.canvas);
@@ -130,7 +129,7 @@ export class NovaFlightClient {
         while (true) {
             if (this.waitWorldStop === null) this.createWorldStopPromise();
 
-            this.networkHandler.registryHandler();
+            this.session.registryHandler();
 
             // wait for user input
             const startScreen = new StartScreen(this.window.ctx, {
@@ -165,7 +164,7 @@ export class NovaFlightClient {
             // cleanup
             this.gameOverAbort?.abort();
             this.networkChannel.disconnect();
-            this.networkHandler.clear();
+            this.session.clear();
             if (this.isIntegrated) {
                 await invoke('stop_server');
             }
@@ -173,7 +172,7 @@ export class NovaFlightClient {
         }
 
         this.networkChannel.disconnect();
-        this.networkHandler.clear();
+        this.session.clear();
     }
 
     public async joinGame(world: ClientWorld) {
@@ -189,7 +188,7 @@ export class NovaFlightClient {
     }
 
     public leaveGame() {
-        this.networkHandler.disconnect();
+        this.session.disconnect();
         this.requestStop();
     }
 
@@ -317,7 +316,7 @@ export class NovaFlightClient {
             return;
         }
 
-        this.networkHandler.checkServer();
+        this.session.checkServer();
 
         await connectInfo.waitConfirm();
     }
@@ -438,6 +437,8 @@ export class NovaFlightClient {
             payload: startUp
         }, {transfer: [key]});
 
+        this.session.checkServer();
+
         await connectInfo.waitConfirm();
     }
 
@@ -463,7 +464,7 @@ export class NovaFlightClient {
     }
 
     public onGameOver(): void {
-        this.networkHandler.clear();
+        this.session.clear();
 
         document.getElementById('tech-shell')!.classList.add('hidden');
 
@@ -549,7 +550,7 @@ export class NovaFlightClient {
         const world = this.world;
 
         if (world && world.isOver) {
-            this.networkHandler.disconnect();
+            this.session.disconnect();
             this.requestStop();
             return;
         }
@@ -590,6 +591,11 @@ export class NovaFlightClient {
             case 'F3':
                 WorldConfig.renderHitBox = !WorldConfig.renderHitBox;
                 break;
+            case 'Tab':
+                this.session.ping();
+                const ping = `Ping ${Math.floor(this.session.getLatency())}ms`;
+                this.clientCommandManager.addPlainMessage(ping);
+                break;
         }
     }
 
@@ -605,7 +611,7 @@ export class NovaFlightClient {
         const player = this.player;
         if (!player) return;
 
-        this.networkHandler.sendCommand(`/gamemode ${bool ?? !player.isDevMode()}`);
+        this.session.sendCommand(`/gamemode ${bool ?? !player.isDevMode()}`);
     }
 
     private devFunc(code: string, world: ClientWorld): void {

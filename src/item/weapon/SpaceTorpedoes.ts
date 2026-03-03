@@ -3,7 +3,7 @@ import type {World} from "../../world/World.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
-import {DataComponentTypes} from "../../component/DataComponentTypes.ts";
+import {DataComponents} from "../../component/DataComponents.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.ts";
 import {TorpedoEntity} from "../../entity/projectile/TorpedoEntity.ts";
@@ -12,10 +12,10 @@ import {SoundEvents} from "../../sound/SoundEvents.ts";
 export class SpaceTorpedoes extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         const pos = attacker.getPositionRef;
-        const torpedoesCount = stack.getOrDefault(DataComponentTypes.LAUNCH_COUNT, 6);
-        const hitDamage = stack.getOrDefault(DataComponentTypes.ATTACK_DAMAGE, 12);
-        const explosionDamage = stack.getOrDefault(DataComponentTypes.EXPLOSION_DAMAGE, 12);
-        const explosionRadius = stack.getOrDefault(DataComponentTypes.EXPLOSION_RADIUS, 64);
+        const torpedoesCount = stack.getOrDefault(DataComponents.LAUNCH_COUNT, 6);
+        const hitDamage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 12);
+        const explosionDamage = stack.getOrDefault(DataComponents.EXPLOSION_DAMAGE, 12);
+        const explosionRadius = stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 64);
 
         let i = 1;
         const schedule = world.scheduleInterval(0.3, () => {
