@@ -5,18 +5,20 @@ import type {IInput} from "./IInput.ts";
 import {World} from "../../world/World.ts";
 import {NovaFlightClient} from "../NovaFlightClient.ts";
 import type {Consumer} from "../../apis/types.ts";
+import {throttleTimeOut} from "../../utils/uit.ts";
 
 export class KeyboardInput implements IInput {
     private disableHandler = false;
     private globalInput = false;
 
     private readonly keys = new Set<string>();
+    private prevKeys = new Set<string>();
+
     private readonly bindings = new Map<string, string[]>();
     private keyHandler: Consumer<KeyboardEvent> | null = null;
     private wheelHandler: Consumer<WheelEvent> | null = null;
-    private prevKeys = new Set<string>();
 
-    private pointer = MutVec2.zero();
+    private readonly pointer = MutVec2.zero();
 
     public constructor(target: HTMLElement) {
         this.registryListener(target);
@@ -118,19 +120,19 @@ export class KeyboardInput implements IInput {
         });
         window.addEventListener('keyup', e => this.keys.delete(e.code));
         window.addEventListener('blur', () => this.keys.clear());
-        window.addEventListener('wheel', e => {
+
+        const onWheel = throttleTimeOut((e: WheelEvent) => {
             this.wheelHandler?.(e);
 
             if (client.world && !client.world.isTechTreeHidden()) return;
-            const player = client.player;
-            if (player) player.switchWeapon(e.deltaY > 0 ? 1 : -1);
-        }, {passive: true});
+            client.player?.switchWeapon(e.deltaY > 0 ? 1 : -1);
+        }, 100);
+        window.addEventListener('wheel', onWheel, {passive: true});
 
         target.addEventListener('mousemove', e => {
             const offset = client.window.camera.cameraOffset;
             this.pointer.set(e.offsetX + offset.x, e.offsetY + offset.y);
         }, {passive: true});
-
         target.addEventListener('mousedown', e => {
             if (e.button === 0) {
                 WorldConfig.autoShoot = true;
@@ -139,8 +141,7 @@ export class KeyboardInput implements IInput {
                 client.player?.switchQuickFire();
             }
             if (e.button === 2) {
-                const player = client.player;
-                if (player) player.launchQuickFire();
+                client.player?.launchQuickFire();
             }
         });
         target.addEventListener('mouseup', e => {

@@ -48,7 +48,7 @@ import {TranslatableTextS2CPacket} from "../../network/packet/s2c/TranslatableTe
 import {PongS2CPacket} from "../../network/packet/s2c/PongS2CPacket.ts";
 import {ServerStartS2CPacket} from "../../network/packet/s2c/ServerStartS2CPacket.ts";
 
-export class ServerNetwork {
+export class ServerPackets {
     /**
      * 先于 Client 注册
      * */

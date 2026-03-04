@@ -3,6 +3,16 @@ import type {Identifier} from "../registry/Identifier.ts";
 
 export const DPR = Math.max(1, Math.min(2, globalThis.devicePixelRatio || 1));
 
+export function throttleTimeOut<T extends (...args: any[]) => any>(func: T, wait: number = 200) {
+    let timer: number | null = null;
+    return function (...args: Parameters<T>) {
+        if (timer) return;
+        // @ts-ignore
+        func.apply(this, args);
+        timer = setTimeout((): any => timer = null, wait);
+    }
+}
+
 export function deepFreeze<T>(obj: T, seen = new WeakSet()): Readonly<T> {
     if (obj === null || typeof obj !== 'object') return obj;
     if (seen.has(obj)) return obj;

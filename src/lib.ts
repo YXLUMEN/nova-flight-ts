@@ -1,5 +1,5 @@
-import {ClientNetwork} from "./client/network/ClientNetwork.ts";
-import {ServerNetwork} from "./server/network/ServerNetwork.ts";
+import {ClientPackets} from "./client/network/ClientPackets.ts";
+import {ServerPackets} from "./server/network/ServerPackets.ts";
 import {UUIDUtil} from "./utils/UUIDUtil.ts";
 import {NovaFlightClient} from "./client/NovaFlightClient.ts";
 import {mainWindow} from "./main.ts";
@@ -7,8 +7,8 @@ import {error} from "@tauri-apps/plugin-log";
 import {isDev} from "./configs/WorldConfig.ts";
 
 export function run() {
-    ServerNetwork.registerNetworkPacket();
-    ClientNetwork.registerNetworkPacket();
+    ServerPackets.registerNetworkPacket();
+    ClientPackets.registerNetworkPacket();
 
     window.oncontextmenu = event => event.preventDefault();
 

@@ -1,14 +1,14 @@
-import {ServerStableSession} from "../../../src/server/network/ServerStableSession.ts";
+import {ServerStableHandler} from "../../../src/server/network/session/ServerStableHandler.ts";
 import type {Session} from "./Session.ts";
 import type {NovaFlightServer} from "../../../src/server/NovaFlightServer.ts";
 import {ServerPlayerEntity} from "../../../src/server/entity/ServerPlayerEntity.ts";
 import {BinaryReader} from "../../../src/nbt/BinaryReader.ts";
 import {PayloadTypeRegistry} from "../../../src/network/PayloadTypeRegistry.ts";
-import type {ServerChannel} from "../../../src/server/network/ServerChannel.ts";
+import type {ServerConnection} from "../../../src/server/network/ServerConnection.ts";
 
-export class NodeServerPlayNetworkHandler extends ServerStableSession {
-    public constructor(server: NovaFlightServer, channel: ServerChannel, player: ServerPlayerEntity, session: Session) {
-        super(server, channel, player);
+export class NodeServerPlayNetworkHandler extends ServerStableHandler {
+    public constructor(server: NovaFlightServer, connection: ServerConnection, player: ServerPlayerEntity, session: Session) {
+        super(server, connection, player);
 
         const handler = this.handleMessage.bind(this);
         session.ws.on('message', handler);

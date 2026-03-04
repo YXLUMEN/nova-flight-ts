@@ -10,7 +10,7 @@ import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
 import type {GameProfile} from "./GameProfile.ts";
 import {type DamageSource} from "../../entity/damage/DamageSource.ts";
-import type {ServerStableSession} from "../network/ServerStableSession.ts";
+import type {ServerStableHandler} from "../network/session/ServerStableHandler.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
 import {type Entity} from "../../entity/Entity.ts";
 import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
@@ -24,7 +24,7 @@ import {TranslatableTextS2CPacket} from "../../network/packet/s2c/TranslatableTe
 export class ServerPlayerEntity extends PlayerEntity {
     public readonly playerProfile: GameProfile;
 
-    public session!: ServerStableSession;
+    public networkHandler!: ServerStableHandler;
     public watchTechPage = false;
     private readonly inputKeys = new Set<string>();
     private readonly pendingSyncStack: Set<ItemStack> = new Set();
@@ -48,7 +48,7 @@ export class ServerPlayerEntity extends PlayerEntity {
 
         if (this.pendingSyncStack.size > 0) {
             const packet = new InventoryS2CPacket(0, this.nextRevision(), this.pendingSyncStack);
-            this.session.send(packet);
+            this.networkHandler.send(packet);
             this.pendingSyncStack.clear();
         }
 
@@ -153,22 +153,22 @@ export class ServerPlayerEntity extends PlayerEntity {
 
     public override setScore(score: number) {
         super.setScore(score);
-        this.session.send(new PlayerSetScoreS2CPacket(score));
+        this.networkHandler.send(new PlayerSetScoreS2CPacket(score));
     }
 
     protected override onStatusEffectApplied(effect: StatusEffectInstance, source: Entity | null) {
         super.onStatusEffectApplied(effect, source);
-        this.session.send(EntityStatusEffectS2CPacket.create(this.getId(), effect));
+        this.networkHandler.send(EntityStatusEffectS2CPacket.create(this.getId(), effect));
     }
 
     protected override onStatusEffectUpgraded(effect: StatusEffectInstance, reapplyEffect: boolean, source: Entity | null) {
         super.onStatusEffectUpgraded(effect, reapplyEffect, source);
-        this.session.send(EntityStatusEffectS2CPacket.create(this.getId(), effect));
+        this.networkHandler.send(EntityStatusEffectS2CPacket.create(this.getId(), effect));
     }
 
     protected override onStatusEffectRemoved(effect: StatusEffectInstance) {
         super.onStatusEffectRemoved(effect);
-        this.session.send(new RemoveEntityStatusEffectS2CPacket(this.getId(), effect.getEffectType()));
+        this.networkHandler.send(new RemoveEntityStatusEffectS2CPacket(this.getId(), effect.getEffectType()));
     }
 
     public copyFrom(oldPlayer: ServerPlayerEntity, alive: boolean): void {
@@ -230,10 +230,10 @@ export class ServerPlayerEntity extends PlayerEntity {
     }
 
     public override sendMessage(msg: string) {
-        this.session.send(new GameMessageS2CPacket(msg));
+        this.networkHandler.send(new GameMessageS2CPacket(msg));
     }
 
     public override sendTranslatable(key: string, args?: string[]) {
-        this.session.send(new TranslatableTextS2CPacket(key, args ?? []));
+        this.networkHandler.send(new TranslatableTextS2CPacket(key, args ?? []));
     }
 }

@@ -6,14 +6,14 @@ import type {Payload} from "../../network/Payload.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 import type {UUID} from "../../apis/types.ts";
-import type {PacketListener} from "./PacketListener.ts";
+import type {PacketListener} from "./session/PacketListener.ts";
 import {IllegalStateException} from "../../apis/errors.ts";
 
 export class ServerConnection {
     public static readonly TIMEOUT = TranslatableText.of('network.disconnect.timeout');
     public static readonly AFK_TIMEOUT_MS = 60000; // 60s
 
-    protected readonly channel: ServerChannel;
+    private readonly channel: ServerChannel;
     private readonly sessionId: number;
     private readonly uuid: UUID;
     private readonly isLocal: boolean;
@@ -21,7 +21,7 @@ export class ServerConnection {
     private readonly receiveQueue: RingBuffer<Payload> = new RingBuffer(8);
     private packetListener: PacketListener | null = null;
 
-    protected state: ConnectionStateType = ConnectionState.CONNECTING;
+    private state: ConnectionStateType = ConnectionState.HANDSHAKING;
     private lastActivityTime: number;
     private disconnectStartTime: number = 0;
 
@@ -33,13 +33,24 @@ export class ServerConnection {
         this.lastActivityTime = performance.now();
     }
 
+    public tick(): void {
+        if (!this.packetListener) return;
+
+        while (!this.receiveQueue.isEmpty()) {
+            const packet = this.receiveQueue.shift();
+            if (!packet) break;
+            this.packetListener.accepts(packet);
+        }
+        this.packetListener.tick?.();
+    }
+
     public send(packet: Payload): void {
-        if (this.state === ConnectionState.CLOSE) return;
+        if (this.state === ConnectionState.CLOSED) return;
         this.channel.sendToSessionId(packet, this.sessionId);
     }
 
     public broadcast(packet: Payload): void {
-        if (this.state === ConnectionState.CLOSE) return;
+        if (this.state === ConnectionState.CLOSED) return;
         this.channel.send(packet);
     }
 
@@ -50,15 +61,21 @@ export class ServerConnection {
         this.receiveQueue.push(packet);
     }
 
-    public tick(): void {
-        if (!this.packetListener) return;
+    public disconnect(reason: TranslatableText): void {
+        if (!this.changeState(ConnectionState.DISCONNECTING)) return;
 
-        while (!this.receiveQueue.isEmpty()) {
-            const packet = this.receiveQueue.shift();
-            if (!packet) break;
-            this.packetListener.accepts(packet);
-        }
-        this.packetListener.tick?.();
+        this.disconnectStartTime = performance.now();
+        this.send(new PlayerDisconnectS2CPacket(this.uuid, reason));
+    }
+
+    public forceDisconnect(): void {
+        if (!this.changeState(ConnectionState.CLOSED)) return;
+
+        const writer = new BinaryWriter();
+        writer.writeInt8(0xFF);
+        writer.writeInt8(0x00);
+        writer.writeInt8(this.sessionId);
+        this.channel.action(writer.toUint8Array());
     }
 
     public changeState(state: ConnectionStateType): boolean {
@@ -79,23 +96,6 @@ export class ServerConnection {
         this.changeState(state);
     }
 
-    public disconnect(reason: TranslatableText): void {
-        if (!this.changeState(ConnectionState.DISCONNECTING)) return;
-
-        this.disconnectStartTime = performance.now();
-        this.channel.sendToSessionId(new PlayerDisconnectS2CPacket(this.uuid, reason), this.sessionId);
-    }
-
-    public forceDisconnect(): void {
-        if (!this.changeState(ConnectionState.CLOSE)) return;
-
-        const writer = new BinaryWriter();
-        writer.writeInt8(0xFF);
-        writer.writeInt8(0x00);
-        writer.writeInt8(this.sessionId);
-        this.channel.action(writer.toUint8Array());
-    }
-
     public checkActivate(timeout: number = 60000): void {
         if (performance.now() - this.lastActivityTime >= timeout) {
             this.disconnect(ServerConnection.TIMEOUT);
@@ -103,18 +103,22 @@ export class ServerConnection {
     }
 
     public shouldRemove(): boolean {
-        if (this.state === ConnectionState.CLOSE) return true;
+        if (this.state === ConnectionState.CLOSED) return true;
         if (this.state === ConnectionState.DISCONNECTING) {
             return (performance.now() - this.disconnectStartTime) > 2000;
         }
         return false;
     }
 
+    public getId(): number {
+        return this.sessionId;
+    }
+
     public isEmpty(): boolean {
         return this.receiveQueue.isEmpty();
     }
 
-    public isHost() {
+    public isHost(): boolean {
         return this.isLocal;
     }
 

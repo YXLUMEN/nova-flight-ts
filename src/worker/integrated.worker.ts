@@ -1,5 +1,5 @@
-import {ClientNetwork} from "../client/network/ClientNetwork.ts";
-import {ServerNetwork} from "../server/network/ServerNetwork.ts";
+import {ClientPackets} from "../client/network/ClientPackets.ts";
+import {ServerPackets} from "../server/network/ServerPackets.ts";
 import {IntegratedServer} from "../server/IntegratedServer.ts";
 import type {StartServer} from "../apis/startup.ts";
 
@@ -54,5 +54,5 @@ async function handleEvent(event: MessageEvent) {
     }
 }
 
-ServerNetwork.registerNetworkPacket();
-ClientNetwork.registerNetworkPacket();
+ServerPackets.registerNetworkPacket();
+ClientPackets.registerNetworkPacket();

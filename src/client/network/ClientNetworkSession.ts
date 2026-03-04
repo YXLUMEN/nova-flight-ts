@@ -77,13 +77,14 @@ import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChange
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 import {TranslatableTextS2CPacket} from "../../network/packet/s2c/TranslatableTextS2CPacket.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
-import {KeepAliveS2CPacket} from "../../network/packet/s2c/KeepAliveS2CPacket.ts";
-import {KeepAliveC2SPacket} from "../../network/packet/c2s/KeepAliveC2SPacket.ts";
 import {PongS2CPacket} from "../../network/packet/s2c/PongS2CPacket.ts";
 import {PingC2SPacket} from "../../network/packet/c2s/PingC2SPacket.ts";
 import {ServerStartS2CPacket} from "../../network/packet/s2c/ServerStartS2CPacket.ts";
+import {HashMap} from "../../utils/collection/HashMap.ts";
+import type {Identifier} from "../../registry/Identifier.ts";
 
 export class ClientNetworkSession {
+    private readonly handlers = new HashMap<Identifier, Consumer<Payload>>();
     private readonly playerProfiles: Map<UUID, GameProfile> = new Map();
 
     private readonly commandSource: ClientCommandSource;
@@ -96,12 +97,15 @@ export class ClientNetworkSession {
     private maxSniffTimes = 32;
     private sniffInterval: number | undefined = undefined;
 
+    private pingInterval: number | undefined = undefined;
     private lastPingTime: number = 0;
     private latency: number = 0;
 
     public constructor(client: NovaFlightClient) {
         this.client = client;
         this.commandSource = new ClientCommandSource(this, client);
+        this.client.networkChannel.setHandler(this.onReceive.bind(this));
+        this.registryHandler();
     }
 
     public send(packet: Payload) {
@@ -174,15 +178,12 @@ export class ClientNetworkSession {
         ));
     }
 
-    public onKeepAlive(packet: KeepAliveS2CPacket) {
-        this.send(new KeepAliveC2SPacket(packet.id));
-    }
-
-    public onPong() {
+    public onPong(_: PongS2CPacket) {
         this.smoothLatency(performance.now() - this.lastPingTime);
     }
 
     private smoothLatency(rrt: number) {
+        rrt /= 2;
         if (this.latency === 0) {
             this.latency = rrt;
             return;
@@ -209,6 +210,9 @@ export class ClientNetworkSession {
         this.world.addEntity(this.client.player);
         this.world.setTicking(true);
         this.send(new PlayerFinishLoginC2SPacket());
+
+        clearInterval(this.pingInterval);
+        this.pingInterval = setInterval(() => this.ping(), 2000);
     }
 
     public onPlayerJoin(packet: PlayerJoinS2CPacket) {
@@ -228,6 +232,7 @@ export class ClientNetworkSession {
 
         if (packet.uuid !== this.client.clientId) return;
 
+        clearInterval(this.pingInterval);
         this.client.world?.setTicking(false);
 
         this.client.connectInfo?.destroy();
@@ -612,21 +617,38 @@ export class ClientNetworkSession {
         this.sniffInterval = undefined;
     }
 
+    public destroy() {
+        this.clear();
+        this.handlers.clear();
+    }
+
     public clear(): void {
+        clearInterval(this.pingInterval);
+        clearInterval(this.sniffInterval);
         this.playerProfiles.clear();
         this.world = null;
         this.client.networkChannel.clearHandlers();
     }
 
-    private register<T extends Payload>(id: PayloadId<T>, handler: Consumer<T>): void {
-        this.client.networkChannel.receive(id, handler.bind(this) as Consumer<Payload>);
+    public reBind() {
+        this.client.networkChannel.setHandler(this.onReceive.bind(this));
     }
 
-    public registryHandler() {
+    private onReceive(payload: Payload): void {
+        const task = this.handlers.get(payload.getId().id);
+        if (!task) return;
+        Promise.resolve()
+            .then(() => task(payload));
+    }
+
+    private register<T extends Payload>(id: PayloadId<T>, handler: Consumer<T>): void {
+        this.handlers.set(id.id, handler.bind(this) as Consumer<Payload>);
+    }
+
+    private registryHandler() {
         this.register(RelayServerPacket.ID, this.onRelayServer);
         this.register(ServerStartS2CPacket.ID, this.onServerStart);
         this.register(ServerReadyS2CPacket.ID, this.onServerReady);
-        this.register(KeepAliveS2CPacket.ID, this.onKeepAlive);
         this.register(PongS2CPacket.ID, this.onPong);
         this.register(JoinGameS2CPacket.ID, this.onGameJoin);
         this.register(PlayerJoinS2CPacket.ID, this.onPlayerJoin);

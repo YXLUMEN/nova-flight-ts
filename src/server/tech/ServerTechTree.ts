@@ -118,7 +118,7 @@ export class ServerTechTree implements TechTree {
 
         this.state.reset();
 
-        player.session.send(new PlayerSetScoreS2CPacket(finalScore));
+        player.networkHandler.send(new PlayerSetScoreS2CPacket(finalScore));
     }
 
     private resetPlayer() {

@@ -18,7 +18,7 @@ import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPac
 import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
 import {PingC2SPacket} from "../../network/packet/c2s/PingC2SPacket.ts";
 
-export class ClientNetwork {
+export class ClientPackets {
     public static registerNetworkPacket(): void {
         this.register(PingC2SPacket.ID, PingC2SPacket.CODEC);
         this.register(FullMove.ID, FullMove.CODEC);

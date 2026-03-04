@@ -11,8 +11,8 @@ const DEFAULT_CONFIG = config({
     per: 50,
     fps: 100,
     perFrame: 1000 / 100,
-    version: '26v15',
-    gameVersion: 5,
+    version: '26v16',
+    gameVersion: 6,
 });
 
 const WorldConfig = status({

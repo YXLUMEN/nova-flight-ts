@@ -2,13 +2,12 @@ import {NetworkChannel} from "../../network/NetworkChannel.ts";
 import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
 import type {Consumer, UUID} from "../../apis/types.ts";
 import {UUIDUtil} from "../../utils/UUIDUtil.ts";
-import type {Payload, PayloadId} from "../../network/Payload.ts";
-import {HashMap} from "../../utils/collection/HashMap.ts";
-import type {Identifier} from "../../registry/Identifier.ts";
+import type {Payload} from "../../network/Payload.ts";
 
 export class ClientNetworkChannel extends NetworkChannel {
     private readonly clientId: UUID;
-    private readonly handlers = new HashMap<Identifier, Consumer<Payload>>();
+    private handler: Consumer<Payload> = () => {
+    };
 
     public constructor(url: string, clientId: UUID) {
         super(url, PayloadTypeRegistry.playC2S());
@@ -18,16 +17,16 @@ export class ClientNetworkChannel extends NetworkChannel {
     protected override handleMessage(event: MessageEvent) {
         const binary = new Uint8Array(event.data as ArrayBuffer);
         const payload = this.decodePayload(binary);
-        if (!payload) return;
+        if (payload) this.handler(payload);
+    }
 
-        const handler = this.handlers.get(payload.getId().id);
-        if (!handler) return;
-        Promise.resolve()
-            .then(() => handler(payload))
+    public setHandler(handler: Consumer<Payload>) {
+        this.handler = handler;
     }
 
     public override clearHandlers(): void {
-        this.handlers.clear();
+        this.handler = () => {
+        };
     }
 
     protected override getSide(): string {
@@ -46,9 +45,5 @@ export class ClientNetworkChannel extends NetworkChannel {
 
         this.ws!.send(buf);
         console.log(`Client ${this.clientId} registered`);
-    }
-
-    public receive<T extends Payload>(id: PayloadId<T>, handler: Consumer<T>): void {
-        this.handlers.set(id.id, handler as Consumer<Payload>);
     }
 }

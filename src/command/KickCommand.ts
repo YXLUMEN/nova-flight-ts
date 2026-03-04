@@ -37,7 +37,7 @@ export class KickCommand {
                                 return;
                             }
 
-                            player.session!.forceDisconnect();
+                            player.networkHandler!.forceDisconnect();
                             ctx.source.outPut.sendMessage(`Kick ${playerName}`);
                         })
                 )

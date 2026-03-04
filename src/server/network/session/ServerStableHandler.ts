@@ -1,40 +1,46 @@
-import type {NovaFlightServer} from "../NovaFlightServer.ts";
-import {PlayerFinishLoginC2SPacket} from "../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
-import {PlayerDisconnectC2SPacket} from "../../network/packet/c2s/PlayerDisconnectC2SPacket.ts";
-import {FullMove, PlayerMoveC2SPacket, PositionOnly, Steering} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
-import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
-import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
-import {PlayerUnlockTechC2SPacket} from "../../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
-import {RequestPositionC2SPacket} from "../../network/packet/c2s/RequestPositionC2SPacket.ts";
-import {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
-import type {Consumer, UUID} from "../../apis/types.ts";
-import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
-import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
-import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
-import {EntityNbtS2CPacket} from "../../network/packet/s2c/EntityNbtS2CPacket.ts";
-import {PlayerResetAllTechC2SPacket} from "../../network/packet/c2s/PlayerResetAllTechC2SPacket.ts";
-import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
-import {CommandExecutionC2SPacket} from "../../network/packet/c2s/CommandExecutionC2SPacket.ts";
-import type {ParseResults} from "../../brigadier/ParseResults.ts";
-import type {ServerCommandSource} from "../command/ServerCommandSource.ts";
-import {GameProfile} from "../entity/GameProfile.ts";
+import type {NovaFlightServer} from "../../NovaFlightServer.ts";
+import {PlayerFinishLoginC2SPacket} from "../../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
+import {PlayerDisconnectC2SPacket} from "../../../network/packet/c2s/PlayerDisconnectC2SPacket.ts";
+import {
+    FullMove,
+    PlayerMoveC2SPacket,
+    PositionOnly,
+    Steering
+} from "../../../network/packet/c2s/PlayerMoveC2SPacket.ts";
+import {PlayerInputC2SPacket} from "../../../network/packet/c2s/PlayerInputC2SPacket.ts";
+import {PlayerSwitchSlotC2SPacket} from "../../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
+import {PlayerUnlockTechC2SPacket} from "../../../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
+import {RequestPositionC2SPacket} from "../../../network/packet/c2s/RequestPositionC2SPacket.ts";
+import {ServerPlayerEntity} from "../../entity/ServerPlayerEntity.ts";
+import type {Consumer, UUID} from "../../../apis/types.ts";
+import {EntityPositionForceS2CPacket} from "../../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
+import {PlayerFireC2SPacket} from "../../../network/packet/c2s/PlayerFireC2SPacket.ts";
+import {EntityBatchSpawnS2CPacket} from "../../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
+import {EntityNbtS2CPacket} from "../../../network/packet/s2c/EntityNbtS2CPacket.ts";
+import {PlayerResetAllTechC2SPacket} from "../../../network/packet/c2s/PlayerResetAllTechC2SPacket.ts";
+import {PlayerDisconnectS2CPacket} from "../../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
+import {CommandExecutionC2SPacket} from "../../../network/packet/c2s/CommandExecutionC2SPacket.ts";
+import type {ParseResults} from "../../../brigadier/ParseResults.ts";
+import type {ServerCommandSource} from "../../command/ServerCommandSource.ts";
+import {GameProfile} from "../../entity/GameProfile.ts";
 import {ServerCommonHandler} from "./ServerCommonHandler.ts";
-import type {ServerWorld} from "../ServerWorld.ts";
-import {ChatMessageC2SPacket} from "../../network/packet/c2s/ChatMessageC2SPacket.ts";
-import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPacket.ts";
-import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
-import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
-import {NetworkChannel} from "../../network/NetworkChannel.ts";
-import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
-import {ApplyServerTech} from "../tech/ApplyServerTech.ts";
-import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
-import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
-import {PingC2SPacket} from "../../network/packet/c2s/PingC2SPacket.ts";
-import type {ServerConnection} from "./ServerConnection.ts";
-import type {Payload, PayloadId} from "../../network/Payload.ts";
-import {ConnectionState, type ConnectionStateType} from "./ConnectionState.ts";
+import type {ServerWorld} from "../../ServerWorld.ts";
+import {ChatMessageC2SPacket} from "../../../network/packet/c2s/ChatMessageC2SPacket.ts";
+import {PlayerReloadC2SPacket} from "../../../network/packet/c2s/PlayerReloadC2SPacket.ts";
+import type {BaseWeapon} from "../../../item/weapon/BaseWeapon/BaseWeapon.ts";
+import {EntitySpawnS2CPacket} from "../../../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import {NetworkChannel} from "../../../network/NetworkChannel.ts";
+import {PlayerResetTechC2SPacket} from "../../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
+import {ApplyServerTech} from "../../tech/ApplyServerTech.ts";
+import {EntityAttributes} from "../../../entity/attribute/EntityAttributes.ts";
+import {GameMessageS2CPacket} from "../../../network/packet/s2c/GameMessageS2CPacket.ts";
+import {PingC2SPacket} from "../../../network/packet/c2s/PingC2SPacket.ts";
+import type {ServerConnection} from "../ServerConnection.ts";
+import type {Payload, PayloadId} from "../../../network/Payload.ts";
+import {ConnectionState, type ConnectionStateType} from "../ConnectionState.ts";
+import {Log} from "../../../worker/log.ts";
 
-export class ServerStableSession extends ServerCommonHandler {
+export class ServerStableHandler extends ServerCommonHandler {
     public readonly player: ServerPlayerEntity;
     private readonly world: ServerWorld;
 
@@ -45,7 +51,7 @@ export class ServerStableSession extends ServerCommonHandler {
         super(server, connection);
 
         this.player = player;
-        player.session = this;
+        player.networkHandler = this;
 
         this.world = server.world!;
         this.registryHandler();
@@ -88,11 +94,15 @@ export class ServerStableSession extends ServerCommonHandler {
             const spawnPacket = EntitySpawnS2CPacket.create(entity);
             const estSize = spawnPacket.estimateSize();
 
+            if (estSize >= maxSize) {
+                Log.warn(`Entity ${entity.getUUID()} to large, skip sync`);
+                continue;
+            }
+
             if (currentSize + estSize >= maxSize && currentBatch.length > 0) {
                 this.send(new EntityBatchSpawnS2CPacket(currentBatch));
                 currentBatch.length = 0;
                 currentSize = 0;
-                continue;
             }
             currentBatch.push(spawnPacket);
             currentSize += estSize;
@@ -117,7 +127,7 @@ export class ServerStableSession extends ServerCommonHandler {
         }
 
         this.send(new PlayerDisconnectS2CPacket(uuid, ServerCommonHandler.LOGOUT));
-        this.connection.changeState(ConnectionState.CLOSE);
+        this.connection.changeState(ConnectionState.CLOSED);
         this.clear();
 
         await this.onDisconnected();
@@ -212,7 +222,7 @@ export class ServerStableSession extends ServerCommonHandler {
     }
 
     private validateMessage(command: string): boolean {
-        if (ServerStableSession.hasIllegalCharacter(command)) {
+        if (ServerStableHandler.hasIllegalCharacter(command)) {
             this.disconnect(ServerCommonHandler.ILLEGAL_CHARACTER);
             return false;
         }

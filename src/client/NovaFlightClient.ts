@@ -129,7 +129,7 @@ export class NovaFlightClient {
         while (true) {
             if (this.waitWorldStop === null) this.createWorldStopPromise();
 
-            this.session.registryHandler();
+            this.session.reBind();
 
             // wait for user input
             const startScreen = new StartScreen(this.window.ctx, {
@@ -172,7 +172,7 @@ export class NovaFlightClient {
         }
 
         this.networkChannel.disconnect();
-        this.session.clear();
+        this.session.destroy();
     }
 
     public async joinGame(world: ClientWorld) {
@@ -592,7 +592,6 @@ export class NovaFlightClient {
                 WorldConfig.renderHitBox = !WorldConfig.renderHitBox;
                 break;
             case 'Tab':
-                this.session.ping();
                 const ping = `Ping ${Math.floor(this.session.getLatency())}ms`;
                 this.clientCommandManager.addPlainMessage(ping);
                 break;

@@ -1,14 +1,14 @@
-import type {NovaFlightServer} from "../NovaFlightServer.ts";
-import type {GameProfile} from "../entity/GameProfile.ts";
-import type {Payload, PayloadId} from "../../network/Payload.ts";
-import {HashMap} from "../../utils/collection/HashMap.ts";
-import type {Identifier} from "../../registry/Identifier.ts";
-import type {Consumer} from "../../apis/types.ts";
-import {TranslatableText} from "../../i18n/TranslatableText.ts";
-import {PongS2CPacket} from "../../network/packet/s2c/PongS2CPacket.ts";
-import type {ServerConnection} from "./ServerConnection.ts";
+import type {NovaFlightServer} from "../../NovaFlightServer.ts";
+import type {GameProfile} from "../../entity/GameProfile.ts";
+import type {Payload, PayloadId} from "../../../network/Payload.ts";
+import {HashMap} from "../../../utils/collection/HashMap.ts";
+import type {Identifier} from "../../../registry/Identifier.ts";
+import type {Consumer} from "../../../apis/types.ts";
+import {TranslatableText} from "../../../i18n/TranslatableText.ts";
+import {PongS2CPacket} from "../../../network/packet/s2c/PongS2CPacket.ts";
+import type {ServerConnection} from "../ServerConnection.ts";
 import type {PacketListener} from "./PacketListener.ts";
-import {type ConnectionStateType} from "./ConnectionState.ts";
+import {type ConnectionStateType} from "../ConnectionState.ts";
 
 export abstract class ServerCommonHandler implements PacketListener {
     public static readonly LOGOUT = TranslatableText.of('network.disconnect.logout');

@@ -4,7 +4,7 @@ import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {NovaFlightServer} from "../NovaFlightServer.ts";
 import {ServerStorage} from "../ServerStorage.ts";
 import {GameProfile} from "./GameProfile.ts";
-import {ServerStableSession} from "../network/ServerStableSession.ts";
+import {ServerStableHandler} from "../network/session/ServerStableHandler.ts";
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
 import {PlayerJoinS2CPacket} from "../../network/packet/s2c/PlayerJoinS2CPacket.ts";
 import type {ServerWorld} from "../ServerWorld.ts";
@@ -23,13 +23,13 @@ export class PlayerManager {
         this.server = server;
     }
 
-    public async onPlayerAttemptLogin(connection: ServerConnection, profile: GameProfile, player: ServerPlayerEntity): Promise<void> {
+    public async onPlayerLogin(connection: ServerConnection, profile: GameProfile, player: ServerPlayerEntity): Promise<void> {
         const world = this.server.world;
         if (!world) return;
 
         player.setUuid(profile.clientId);
-        const session = new ServerStableSession(this.server, connection, player);
-        connection.setPacketListener(ConnectionState.STABLE, session);
+        const handler = new ServerStableHandler(this.server, connection, player);
+        connection.setPacketListener(ConnectionState.STABLE, handler);
 
         this.uuidToPlayer.set(profile.clientId, player);
         this.sessionToPlayer.set(profile.sessionId, player);
@@ -44,7 +44,7 @@ export class PlayerManager {
         }
 
         world.addPlayer(player);
-        session.send(new JoinGameS2CPacket(player.getId(), this.server.worldName));
+        handler.send(new JoinGameS2CPacket(player.getId(), this.server.worldName));
         connection.broadcast(new PlayerJoinS2CPacket(profile.name, profile.clientId));
 
         console.log(`[Server] Player ${profile.clientId} login`);
@@ -59,7 +59,7 @@ export class PlayerManager {
         (player.getWorld() as ServerWorld).removePlayer(player);
 
         const newPlayer = this.createPlayer(player.getProfile());
-        newPlayer.session = player.session;
+        newPlayer.networkHandler = player.networkHandler;
         newPlayer.setId(player.getId());
         newPlayer.copyFrom(player, alive);
 

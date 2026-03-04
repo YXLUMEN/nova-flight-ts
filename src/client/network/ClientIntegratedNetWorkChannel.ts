@@ -69,10 +69,13 @@ export class ClientIntegratedNetWorkChannel implements Channel {
 
         const writer = new BinaryWriter();
         writer.writeString(type.id.toString());
-
         type.codec.encode(writer, payload);
 
-        this.worker.postMessage({type: "packet", packet: writer.toUint8Array()});
+        const buffer = writer.toUint8Array();
+        this.worker.postMessage({
+            type: 'packet',
+            packet: buffer
+        }, {transfer: [buffer.buffer]});
     }
 
     private decodePayload(buf: Uint8Array<ArrayBuffer>): Payload | null {
@@ -89,14 +92,13 @@ export class ClientIntegratedNetWorkChannel implements Channel {
     }
 
     private onMessage(event: MessageEvent): void {
-        if (event.type === "PACKET") {
+        if (event.type === 'PACKET') {
             const binary = event.data as ArrayBuffer;
             const payload = this.decodePayload(new Uint8Array(binary));
-            if (payload) {
-                const handler = this.handlers.get(payload.getId().id);
-                if (handler) handler(payload);
-            }
-        } else if (event.type === "DISCONNECT") {
+            if (payload) this.handlers.get(payload.getId().id)?.(payload);
+            return;
+        }
+        if (event.type === 'DISCONNECT') {
             this.worker.terminate();
         }
     }

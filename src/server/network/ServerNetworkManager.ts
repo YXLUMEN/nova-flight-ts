@@ -5,7 +5,7 @@ import {HashMap} from "../../utils/collection/HashMap.ts";
 import type {Identifier} from "../../registry/Identifier.ts";
 import type {Payload, PayloadId} from "../../network/Payload.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
-import {ServerConfigSession} from "./ServerConfigSession.ts";
+import {ServerConfigHandler} from "./session/ServerConfigHandler.ts";
 import {ClientReadyC2SPacket} from "../../network/packet/c2s/ClientReadyC2SPacket.ts";
 import {ServerConnection} from "./ServerConnection.ts";
 import {Log} from "../../worker/log.ts";
@@ -52,7 +52,7 @@ export class ServerNetworkManager {
 
     public disconnectAllPlayer(): void {
         for (const player of this.server.playerManager.getAllPlayers()) {
-            player.session.disconnect(ServerNetworkManager.SERVER_CLOSE);
+            player.networkHandler.disconnect(ServerNetworkManager.SERVER_CLOSE);
         }
     }
 
@@ -68,7 +68,7 @@ export class ServerNetworkManager {
             const isHost = this.server.isHostUUID(packet.clientId);
 
             const connection = new ServerConnection(this.server.networkChannel, sessionId, packet.clientId, isHost);
-            const config = new ServerConfigSession(this.server, connection);
+            const config = new ServerConfigHandler(this.server, connection);
             connection.setPacketListener(ConnectionState.CONFIGURATION, config);
             config.onClientReady(packet);
 

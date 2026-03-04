@@ -1,5 +1,5 @@
-import {ClientNetwork} from "../client/network/ClientNetwork.ts";
-import {ServerNetwork} from "../server/network/ServerNetwork.ts";
+import {ClientPackets} from "../client/network/ClientPackets.ts";
+import {ServerPackets} from "../server/network/ServerPackets.ts";
 import {DevServer} from "../server/DevServer.ts";
 import type {StartServer} from "../apis/startup.ts";
 
@@ -84,5 +84,5 @@ function handleDev(key: string) {
     }
 }
 
-ServerNetwork.registerNetworkPacket();
-ClientNetwork.registerNetworkPacket();
+ServerPackets.registerNetworkPacket();
+ClientPackets.registerNetworkPacket();

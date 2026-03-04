@@ -1,5 +1,5 @@
-import type {Payload} from "../../network/Payload.ts";
-import type {ConnectionStateType} from "./ConnectionState.ts";
+import type {Payload} from "../../../network/Payload.ts";
+import type {ConnectionStateType} from "../ConnectionState.ts";
 
 export interface PacketListener {
     onDisconnected(): void;
@@ -9,4 +9,6 @@ export interface PacketListener {
     getPhase(): ConnectionStateType;
 
     tick?(): void;
+
+    clear(): void;
 }

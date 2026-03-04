@@ -148,6 +148,8 @@ export abstract class NetworkChannel implements Channel {
     }
 
     protected checkAndSend<T extends Payload>(writer: BinaryWriter, type: PayloadType<T>, payload: T): void {
+        if (!this.isOpen()) return;
+
         writer.writeVarUint(type.index);
         type.codec.encode(writer, payload);
 
@@ -207,7 +209,7 @@ export abstract class NetworkChannel implements Channel {
     }
 
     public isOpen(): boolean {
-        return this.isConnected;
+        return this.isConnected && !!this.ws && this.ws.readyState === WebSocket.OPEN;
     }
 
     protected abstract getSide(): string;
