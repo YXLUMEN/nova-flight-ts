@@ -4,7 +4,7 @@ import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {NovaFlightServer} from "../NovaFlightServer.ts";
 import {ServerStorage} from "../ServerStorage.ts";
 import {GameProfile} from "./GameProfile.ts";
-import {ServerStableHandler} from "../network/session/ServerStableHandler.ts";
+import {ServerStableHandler} from "../network/handler/ServerStableHandler.ts";
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
 import {PlayerJoinS2CPacket} from "../../network/packet/s2c/PlayerJoinS2CPacket.ts";
 import type {ServerWorld} from "../ServerWorld.ts";

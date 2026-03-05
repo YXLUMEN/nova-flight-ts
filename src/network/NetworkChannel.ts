@@ -38,6 +38,7 @@ export abstract class NetworkChannel implements Channel {
             clearTimeout(timeout);
             this.isConnected = true;
             resolve();
+            console.log(`Successfully connected to ${this.serverAddress} at ${Date.now()}`);
         };
         const connectFail = (reason: any) => {
             clearTimeout(timeout);
@@ -45,6 +46,7 @@ export abstract class NetworkChannel implements Channel {
         };
         timeout = setTimeout(() => connectFail(`[${this.getSide()}] Connected timeout`), 6000);
 
+        console.log(`A ${this.getSide()} side connecting start at ${Date.now()}`);
         this.ws = new WebSocket(`ws://${this.serverAddress}`);
         this.ws.binaryType = 'arraybuffer';
 
@@ -149,6 +151,7 @@ export abstract class NetworkChannel implements Channel {
 
     protected checkAndSend<T extends Payload>(writer: BinaryWriter, type: PayloadType<T>, payload: T): void {
         if (!this.isOpen()) return;
+        console.log(this.getSide(), type.id);
 
         writer.writeVarUint(type.index);
         type.codec.encode(writer, payload);

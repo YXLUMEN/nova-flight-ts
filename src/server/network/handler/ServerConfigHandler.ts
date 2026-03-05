@@ -14,6 +14,7 @@ export class ServerConfigHandler extends ServerCommonHandler {
     public static readonly AUTH_FAILED = TranslatableText.of('network.disconnect.auth_failed');
     public static readonly INVALID_STATE = TranslatableText.of("network.disconnect.invalid_state");
 
+    private attemptUUID: UUID | null = null;
     private profile: GameProfile | null = null;
 
     public constructor(server: NovaFlightServer, connection: ServerConnection) {
@@ -21,13 +22,18 @@ export class ServerConfigHandler extends ServerCommonHandler {
         this.registryHandler();
     }
 
-    public onClientReady(_: ClientReadyC2SPacket) {
+    public onClientReady(packet: ClientReadyC2SPacket) {
+        if (this.attemptUUID !== null && this.attemptUUID !== packet.clientId) {
+            this.disconnect(ServerConfigHandler.INVALID_STATE);
+        }
         if (this.server.world === null) return;
+
+        this.attemptUUID = packet.clientId;
         this.send(new ServerReadyS2CPacket());
     }
 
     private onPlayerAttemptLogin(packet: PlayerAttemptLoginC2SPacket) {
-        if (this.connection.getState() !== this.getPhase()) {
+        if (this.connection.getState() !== this.getPhase() || this.attemptUUID !== packet.clientId) {
             this.disconnect(ServerConfigHandler.INVALID_STATE);
             return;
         }
@@ -41,7 +47,7 @@ export class ServerConfigHandler extends ServerCommonHandler {
                 return;
             }
 
-            // 销毁监听器,不处理第二次登录
+            // 同步销毁监听器,不处理第二次登录
             this.clear();
             this.profile = new GameProfile(packet.sessionId, packet.clientId, packet.playerName);
             this.promoteToPlaySession().catch(err => {

@@ -1,5 +1,6 @@
 use crate::network::states::{Role, Tx};
 use std::collections::VecDeque;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
 
 pub static NEXT_SESSION_ID: LazyLock<SessionAllocator> = LazyLock::new(|| SessionAllocator::new());
@@ -8,6 +9,7 @@ pub static NEXT_SESSION_ID: LazyLock<SessionAllocator> = LazyLock::new(|| Sessio
 pub struct Session {
     pub tx: Tx,
     pub role: Role,
+    traffic_allowed: AtomicBool,
     pub client_id: Option<[u8; 16]>,
     pub session_id: u8,
 }
@@ -69,12 +71,27 @@ impl SessionAllocator {
 }
 
 impl Session {
-    pub fn new(tx: Tx, role: Role, client_id: Option<[u8; 16]>, session_id: u8) -> Arc<Self> {
+    pub fn new(
+        tx: Tx,
+        role: Role,
+        traffic_allowed: bool,
+        client_id: Option<[u8; 16]>,
+        session_id: u8,
+    ) -> Arc<Self> {
         Arc::new(Session {
             tx,
             role,
+            traffic_allowed: AtomicBool::new(traffic_allowed),
             client_id,
             session_id,
         })
+    }
+
+    pub fn allow_traffic(&self) {
+        self.traffic_allowed.store(true, Ordering::SeqCst);
+    }
+
+    pub fn is_allowed(&self) -> bool {
+        self.traffic_allowed.load(Ordering::SeqCst)
     }
 }

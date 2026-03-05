@@ -6,7 +6,7 @@ import type {Payload} from "../../network/Payload.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 import type {UUID} from "../../apis/types.ts";
-import type {PacketListener} from "./session/PacketListener.ts";
+import type {PacketListener} from "./handler/PacketListener.ts";
 import {IllegalStateException} from "../../apis/errors.ts";
 
 export class ServerConnection {
@@ -112,6 +112,10 @@ export class ServerConnection {
 
     public getId(): number {
         return this.sessionId;
+    }
+
+    public getUUID(): UUID {
+        return this.uuid;
     }
 
     public isEmpty(): boolean {

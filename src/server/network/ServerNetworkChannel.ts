@@ -25,6 +25,8 @@ export class ServerNetworkChannel extends NetworkChannel implements ServerChanne
      * 必须由 0xFF 开头
      * */
     public action(buffer: Uint8Array) {
+        if (!this.isOpen()) return;
+
         if (buffer[0] !== 0xff) {
             console.warn('Relay action packet must start with 0xFF');
             return;

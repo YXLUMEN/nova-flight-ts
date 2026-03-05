@@ -1,4 +1,4 @@
-import {ServerStableHandler} from "../../../src/server/network/session/ServerStableHandler.ts";
+import {ServerStableHandler} from "../../../src/server/network/handler/ServerStableHandler.ts";
 import type {Session} from "./Session.ts";
 import type {NovaFlightServer} from "../../../src/server/NovaFlightServer.ts";
 import {ServerPlayerEntity} from "../../../src/server/entity/ServerPlayerEntity.ts";

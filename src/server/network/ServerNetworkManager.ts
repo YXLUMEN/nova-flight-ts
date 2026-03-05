@@ -5,13 +5,15 @@ import {HashMap} from "../../utils/collection/HashMap.ts";
 import type {Identifier} from "../../registry/Identifier.ts";
 import type {Payload, PayloadId} from "../../network/Payload.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
-import {ServerConfigHandler} from "./session/ServerConfigHandler.ts";
+import {ServerConfigHandler} from "./handler/ServerConfigHandler.ts";
 import {ClientReadyC2SPacket} from "../../network/packet/c2s/ClientReadyC2SPacket.ts";
 import {ServerConnection} from "./ServerConnection.ts";
 import {Log} from "../../worker/log.ts";
 import {ConnectionState} from "./ConnectionState.ts";
+import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 
 export class ServerNetworkManager {
+    public static readonly PENDING_TIMEOUT = 5000;
     public static readonly SERVER_CLOSE = TranslatableText.of('network.disconnect.server_close');
 
     private readonly server: NovaFlightServer;
@@ -28,8 +30,32 @@ export class ServerNetworkManager {
         const parts = packet.msg.split(':');
         const type = parts[0];
         const msg = parts.slice(1).join(':');
+        if (type === 'INFO') {
+            this.onRelayInfo(msg);
+        }
+    }
 
-        console.log(type, msg);
+    private onRelayInfo(msg: string) {
+        const parts = msg.split(':');
+        const type = parts.shift();
+
+        if (type === 'CLIENT_REGISTERED') this.onRegistry(parts);
+    }
+
+    private onRegistry(args: string[]) {
+        const sessionId = Number(args[0]);
+        if (!Number.isSafeInteger(sessionId)) {
+            Log.error(`Received invalid sessionId ${sessionId} from Relay server`);
+            return;
+        }
+
+        const conn = this.connections.get(sessionId);
+        if (conn) {
+            conn.forceDisconnect();
+            this.connections.delete(sessionId);
+        }
+
+        this.allowTraffic(sessionId);
     }
 
     public tick(): void {
@@ -85,5 +111,13 @@ export class ServerNetworkManager {
 
     private registryHandler() {
         this.register(RelayServerPacket.ID, this.onRelayServer);
+    }
+
+    private allowTraffic(sessionId: number) {
+        const writer = new BinaryWriter();
+        writer.writeInt8(0xFF);
+        writer.writeInt8(0x01);
+        writer.writeInt8(sessionId);
+        this.server.networkChannel.action(writer.toUint8Array());
     }
 }

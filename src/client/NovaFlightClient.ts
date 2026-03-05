@@ -328,7 +328,7 @@ export class NovaFlightClient {
         const connectInfo = new ConnectInfo(this.window.ctx, this.stopWorld.bind(this));
         this.connectInfo?.destroy();
         this.connectInfo = connectInfo;
-        this.connectInfo.setMessage('准备启动内置服务器...');
+        connectInfo.setMessage('准备启动内置服务器...');
 
         // 启动中继服务器
         let key: ArrayBuffer;
@@ -353,22 +353,25 @@ export class NovaFlightClient {
         const addr = `127.0.0.1:${WorldConfig.port}`;
         this.networkChannel.setServerAddress(addr);
 
-        // 确认服务器开启
+        // 确认中继服务器开启
         const canConnect = await this.networkChannel.sniff(addr);
         if (!canConnect) {
-            await this.connectInfo.setError('连接已丢失: 无法启动内置服务器');
+            await connectInfo.setError('连接已丢失: 无法启动内置服务器');
             return;
         }
 
-        this.connectInfo.setMessage('开始连接...');
-        try {
-            await this.networkChannel.connect();
-        } catch (err) {
-            console.error(err);
-            await error(String(err));
-            await connectInfo.setError(`连接失败`);
-            return;
-        }
+        const connectToServer = async () => {
+            connectInfo.setMessage('开始连接...');
+            try {
+                await this.networkChannel.connect();
+                this.session.checkServer();
+            } catch (err) {
+                console.error(err);
+                await error(String(err));
+                await connectInfo.setError(`连接失败`);
+                this.stopWorld();
+            }
+        };
 
         // 内置服务器配置
         const startUp: StartServer = {
@@ -396,6 +399,7 @@ export class NovaFlightClient {
             switch (event.data.type) {
                 case 'server_start':
                     clearTimeout(startTimeout);
+                    connectToServer();
                     break;
                 case 'server_stop':
                     this.stopWorld();
@@ -436,8 +440,6 @@ export class NovaFlightClient {
             type: 'start_server',
             payload: startUp
         }, {transfer: [key]});
-
-        this.session.checkServer();
 
         await connectInfo.waitConfirm();
     }
@@ -582,7 +584,6 @@ export class NovaFlightClient {
             }
             case 'KeyG':
                 this.toggleTechTree();
-                if (!this.networkChannel.isOpen()) return;
                 this.networkChannel.send(new PlayerInputC2SPacket('KeyG'));
                 break;
             case 'KeyL':

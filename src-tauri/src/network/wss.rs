@@ -1,6 +1,6 @@
 use crate::network::session::{Session, NEXT_SESSION_ID};
 use crate::network::states::{RelayState, Role, ServerHandle, ServerManager, Tx};
-use crate::network::util::{format_uuid, is_nil_uuid, parse_session_id, read_var_uint};
+use crate::network::util::{format_uuid, get_time, is_nil_uuid, parse_session_id, read_var_uint};
 use bytes::{Buf, BufMut, BytesMut};
 use dashmap::Entry;
 use futures_util::stream::SplitStream;
@@ -9,6 +9,7 @@ use log::{error, info, warn};
 use rand::RngCore;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::time::SystemTime;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{mpsc, oneshot, Mutex, OnceCell};
 use tokio::time::{timeout, Duration};
@@ -167,6 +168,16 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
         return;
     }
 
+    match stream.peer_addr() {
+        Ok(a) => {
+            info!("New connection received {}", a);
+        }
+        Err(e) => {
+            error!("Failed to get peer address: {}", e);
+            return;
+        }
+    };
+
     let ws_stream = match accept_async(stream).await {
         Ok(ws) => ws,
         Err(e) => {
@@ -188,6 +199,10 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
             }
         }
     });
+
+    if cfg!(debug_assertions) {
+        info!("Start to registry {}", get_time());
+    }
 
     // 注册
     let session = match register_session(&state, tx, &mut reader).await {
@@ -287,12 +302,12 @@ async fn register_session(
                 .allocate()
                 .ok_or("No session id allocated")?;
 
-            let session = Session::new(tx, Role::Server, None, session_id);
+            let session = Session::new(tx, Role::Server, true, None, session_id);
             state.register_server(session.clone()).await?;
 
             let registry_msg = format!("INFO:REGISTERED:{}", session.session_id);
             send_relay(&session.tx, &registry_msg, Duration::from_secs(2)).await;
-            info!("Server registered");
+            info!("Server registered at {}", get_time());
             Ok(session)
         }
         0x02 => {
@@ -317,7 +332,8 @@ async fn register_session(
                         .allocate()
                         .ok_or("No session id allocated")?;
 
-                    let session = Session::new(tx, Role::Client, Some(client_id), session_id);
+                    let session =
+                        Session::new(tx, Role::Client, false, Some(client_id), session_id);
                     v.insert(session.clone());
                     state.client_ids.insert(session_id, session.clone());
 
@@ -333,7 +349,11 @@ async fn register_session(
                         send_relay(&server.tx, &msg, Duration::from_secs(2)).await;
                     }
 
-                    info!("Client {} registered", format_uuid(&client_id));
+                    info!(
+                        "Client {} registered at {}",
+                        format_uuid(&client_id),
+                        get_time()
+                    );
                     Ok(session)
                 }
             }
@@ -350,6 +370,9 @@ async fn client_relay(
     while let Some(msg) = reader.next().await {
         if state.is_shutdown() {
             break;
+        }
+        if !session.is_allowed() {
+            continue;
         }
         match msg {
             Ok(Message::Binary(payload)) => {
@@ -613,6 +636,17 @@ fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload: Bytes
                 send_relay_try(&session.tx, "INFO:Kicked");
                 state.remove_by_id(*id);
             };
+        }
+        0x01 => {
+            if payload.len() < 3 {
+                send_relay_try(&session.tx, "ERR:allow illegal syntax");
+                warn!("InvalidPacket: Kick packet too short");
+                return;
+            }
+            let id = &payload[2];
+            if let Some(session) = state.client_ids.get(id) {
+                session.allow_traffic();
+            }
         }
         _ => {}
     }

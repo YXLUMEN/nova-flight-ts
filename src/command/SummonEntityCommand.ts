@@ -50,7 +50,7 @@ export class SummonEntityCommand {
         if (!type) throw new CommandError(`Entity type ${entityArg.result} is not registered`);
 
         if (type === EntityTypes.PLAYER) {
-            throw new Error('Cannot summon a player');
+            throw new Error('Can not summon a player');
         }
 
         const nbtArg = ctx.args.get('nbt');

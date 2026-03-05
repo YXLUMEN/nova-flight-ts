@@ -10,7 +10,7 @@ import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
 import type {GameProfile} from "./GameProfile.ts";
 import {type DamageSource} from "../../entity/damage/DamageSource.ts";
-import type {ServerStableHandler} from "../network/session/ServerStableHandler.ts";
+import type {ServerStableHandler} from "../network/handler/ServerStableHandler.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
 import {type Entity} from "../../entity/Entity.ts";
 import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
