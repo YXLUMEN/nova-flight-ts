@@ -4,8 +4,11 @@ import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import {CommandError} from "../apis/errors.ts";
 import {PlayerSelectorArgumentType} from "./argument/PlayerSelectorArgumentType.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
+import {TranslatableText} from "../i18n/TranslatableText.ts";
 
 export class KickCommand {
+    private static readonly KICK = TranslatableText.of("network.disconnect.kicked");
+
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {
         dispatcher.registry(
             literal<T>('kick')
@@ -24,21 +27,24 @@ export class KickCommand {
                                 throw new CommandError('Not a entity selector');
                             }
 
-                            const player = world
+                            const players = world
                                 .getPlayers()
-                                .find(player => player.getProfile().name === playerName);
+                                .filter(player => player.getProfile().name === playerName)
+                                .toArray();
 
-                            if (!player) {
+                            if (players.length === 0) {
                                 throw new CommandError('\x1b[33mNo target founded.');
                             }
 
-                            if (world.getServer().isHost(player.getProfile())) {
-                                ctx.source.outPut.sendMessage(`Can not kick the host player`);
-                                return;
-                            }
+                            for (const player of players) {
+                                if (world.getServer().isHost(player.getProfile())) {
+                                    ctx.source.outPut.sendMessage(`Can not kick the host player`);
+                                    continue;
+                                }
 
-                            player.networkHandler!.forceDisconnect();
-                            ctx.source.outPut.sendMessage(`Kick ${playerName}`);
+                                player.networkHandler!.disconnect(this.KICK);
+                                ctx.source.outPut.sendMessage(`Kick ${playerName}`);
+                            }
                         })
                 )
                 .requires(source => {

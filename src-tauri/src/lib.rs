@@ -1,5 +1,5 @@
 use crate::file::chose_dir;
-use crate::network::wss::{is_open, set_open, start_server, stop_server};
+use crate::network::cmd::{is_open, set_open, start_server, stop_server};
 
 mod file;
 mod network;

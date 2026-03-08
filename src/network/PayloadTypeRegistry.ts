@@ -1,7 +1,7 @@
 import type {Identifier} from "../registry/Identifier.ts";
 import type {Payload, PayloadId} from "./Payload.ts";
 import {HashMap} from "../utils/collection/HashMap.ts";
-import {createClean, deepFreeze} from "../utils/uit.ts";
+import {config, deepFreeze} from "../utils/uit.ts";
 import type {PacketCodec} from "./codec/PacketCodec.ts";
 
 type Side = 'server' | 'client';
@@ -29,7 +29,7 @@ export class PayloadTypeRegistry {
     }
 
     public static getGlobalByIndex(index: number): PayloadType<any> | null {
-        return PayloadTypeRegistry.PACKET_TYPES[index] ?? null;
+        return this.PACKET_TYPES[index] ?? null;
     }
 
     public static playS2C() {
@@ -38,6 +38,10 @@ export class PayloadTypeRegistry {
 
     public static playC2S() {
         return this.PLAY_C2S;
+    }
+
+    public static freeze() {
+        deepFreeze(this);
     }
 
     public register<T extends Payload>(payloadId: PayloadId<T>, codec: PacketCodec<T>): PayloadType<T> {
@@ -49,7 +53,7 @@ export class PayloadTypeRegistry {
         }
 
         const index = PayloadTypeRegistry.PACKET_TYPES.length;
-        const payload: PayloadType<T> = createClean({id, index, codec});
+        const payload: PayloadType<T> = config({id, index, codec});
         PayloadTypeRegistry.PACKET_TYPES.push(payload);
         this.packetTypes.set(id, payload);
         return payload;

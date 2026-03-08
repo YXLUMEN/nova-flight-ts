@@ -3,5 +3,8 @@
   "disconnect.logout": "断开连接",
   "disconnect.illegal_character": "非法字符",
   "disconnect.server_close": "服务器关闭",
-  "disconnect.duplicate_player": "已有玩家在线"
+  "disconnect.duplicate_player": "已有玩家在线",
+  "disconnect.kicked": "被服务器踢出",
+  "disconnect.invalid_state": "连接状态异常",
+  "disconnect.promote_fail": "会话提升失败"
 }

@@ -2,6 +2,7 @@ import {ClientPackets} from "../client/network/ClientPackets.ts";
 import {ServerPackets} from "../server/network/ServerPackets.ts";
 import {DevServer} from "../server/DevServer.ts";
 import type {StartServer} from "../apis/startup.ts";
+import {RelayPackets} from "../network/RelayPackets.ts";
 
 let server: DevServer | null = null;
 
@@ -84,5 +85,6 @@ function handleDev(key: string) {
     }
 }
 
+RelayPackets.registerNetworkPacket();
 ServerPackets.registerNetworkPacket();
 ClientPackets.registerNetworkPacket();

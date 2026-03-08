@@ -10,9 +10,10 @@ import {PlayerJoinS2CPacket} from "../../network/packet/s2c/PlayerJoinS2CPacket.
 import type {ServerWorld} from "../ServerWorld.ts";
 import {Log} from "../../worker/log.ts";
 import {NoResultsError} from "../../apis/errors.ts";
-import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 import type {ServerConnection} from "../network/ServerConnection.ts";
 import {ConnectionState} from "../network/ConnectionState.ts";
+import {ServerCommonHandler} from "../network/handler/ServerCommonHandler.ts";
+import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 
 export class PlayerManager {
     private readonly server: NovaFlightServer;
@@ -90,14 +91,19 @@ export class PlayerManager {
         }
     }
 
-    public async removePlayer(player: ServerPlayerEntity): Promise<void> {
+    public removePlayer(player: ServerPlayerEntity): void {
         const world = player.getWorld() as ServerWorld;
-        await this.savePlayerData(player);
 
         world.removePlayer(player);
-        this.uuidToPlayer.delete(player.getUUID());
-        this.sessionToPlayer.delete(player.getProfile().sessionId);
-        this.server.networkChannel.send(new GameMessageS2CPacket(`\x1b[32m${player.playerProfile.name}\x1b[0m leave the game`));
+        const uuid = player.getUUID();
+        const exist = this.uuidToPlayer.get(uuid);
+        if (exist === player) {
+            this.uuidToPlayer.delete(uuid);
+            this.sessionToPlayer.delete(player.getProfile().sessionId);
+        }
+
+        this.savePlayerData(player).then();
+        this.server.networkChannel.send(new PlayerDisconnectS2CPacket(player.getUUID(), ServerCommonHandler.LOGOUT));
     }
 
     public getPlayer(uuid: UUID): ServerPlayerEntity | null {

@@ -4,9 +4,11 @@ import {BinaryWriter} from "../nbt/BinaryWriter.ts";
 import {BinaryReader} from "../nbt/BinaryReader.ts";
 import type {Consumer} from "../apis/types.ts";
 import type {Channel} from "./Channel.ts";
-import {RelayServerPacket} from "./packet/RelayServerPacket.ts";
 import {sleep} from "../utils/uit.ts";
 import {PacketTooLargeError} from "../apis/errors.ts";
+import {RelayPackets} from "./RelayPackets.ts";
+import {Attached} from "./packet/relay/Attached.ts";
+import {RelayMessage} from "./packet/relay/RelayMessage.ts";
 
 
 export abstract class NetworkChannel implements Channel {
@@ -38,7 +40,7 @@ export abstract class NetworkChannel implements Channel {
             clearTimeout(timeout);
             this.isConnected = true;
             resolve();
-            console.log(`Successfully connected to ${this.serverAddress} at ${Date.now()}`);
+            console.log(`[${this.getSide()}] Successfully connected to ${this.serverAddress} at ${new Date().toISOString()}`);
         };
         const connectFail = (reason: any) => {
             clearTimeout(timeout);
@@ -46,28 +48,28 @@ export abstract class NetworkChannel implements Channel {
         };
         timeout = setTimeout(() => connectFail(`[${this.getSide()}] Connected timeout`), 6000);
 
-        console.log(`A ${this.getSide()} side connecting start at ${Date.now()}`);
+        console.log(`A ${this.getSide()} side connecting start at ${new Date().toISOString()}`);
         this.ws = new WebSocket(`ws://${this.serverAddress}`);
         this.ws.binaryType = 'arraybuffer';
 
         this.ws.onmessage = event => {
             const binary = event.data as ArrayBuffer;
-            const payload = this.decodePayload(new Uint8Array(binary));
+            const buffer = new Uint8Array(binary);
+            if (buffer[0] !== 0x00) return;
 
-            if (!(payload instanceof RelayServerPacket)) return;
-
-            const [type, msg] = payload.msg.split(':');
-            if (type === 'ERR') {
-                connectFail(msg);
+            const payload = this.decodePayload(buffer);
+            if (payload instanceof RelayMessage) {
+                const [type, msg] = payload.msg.split(':');
+                if (type === 'ERR') {
+                    connectFail(msg);
+                }
+                console.log(msg);
                 return;
             }
 
-            if (!payload.msg.startsWith('INFO:REGISTERED')) return;
+            if (!(payload instanceof Attached)) return;
 
-            const sessionIdStr = payload.msg.split(':').at(-1);
-            if (!sessionIdStr) return;
-
-            const sessionId = Number(sessionIdStr);
+            const sessionId = payload.sessionId;
             if (!Number.isSafeInteger(sessionId) || sessionId <= 0 || sessionId > 255) {
                 connectFail(`[${this.getSide()}] Invalid session ID`);
                 return;
@@ -151,7 +153,6 @@ export abstract class NetworkChannel implements Channel {
 
     protected checkAndSend<T extends Payload>(writer: BinaryWriter, type: PayloadType<T>, payload: T): void {
         if (!this.isOpen()) return;
-        console.log(this.getSide(), type.id);
 
         writer.writeVarUint(type.index);
         type.codec.encode(writer, payload);
@@ -167,9 +168,12 @@ export abstract class NetworkChannel implements Channel {
     protected decodePayload(buf: Uint8Array<ArrayBuffer>): Payload | null {
         const reader = new BinaryReader(buf);
 
-        const header = reader.readInt8();
+        const header = reader.readUint8();
         if (header === 0x00) {
-            return RelayServerPacket.CODEC.decode(reader);
+            const index = reader.readUint8();
+            const type = RelayPackets.getType(index);
+            if (!type) return null;
+            return type.codec.decode(reader);
         }
         if (header !== 0x10 && header !== 0x11) {
             console.warn(`[${this.getSide()}] Unknown header: ${header}`);

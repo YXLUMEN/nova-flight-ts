@@ -1,111 +1,29 @@
-use crate::network::session::{Session, NEXT_SESSION_ID};
-use crate::network::states::{RelayState, Role, ServerHandle, ServerManager, Tx};
+use crate::network::cmd::is_open;
+use crate::network::protocol::*;
+use crate::network::session::{Session, SessionContext, NEXT_SESSION_ID};
+use crate::network::states::{RelayState, Role, ServerManager, Tx};
 use crate::network::util::{format_uuid, get_time, is_nil_uuid, parse_session_id, read_var_uint};
 use bytes::{Buf, BufMut, BytesMut};
 use dashmap::Entry;
 use futures_util::stream::SplitStream;
 use futures_util::{SinkExt, StreamExt};
 use log::{error, info, warn};
-use rand::RngCore;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
-use std::time::SystemTime;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{mpsc, oneshot, Mutex, OnceCell};
 use tokio::time::{timeout, Duration};
-use tokio_tungstenite::tungstenite::{Bytes, Message};
+use tokio_tungstenite::tungstenite::{Bytes, Error, Message};
 use tokio_tungstenite::{accept_async, WebSocketStream};
 
-static SERVER_MANAGER: OnceCell<Mutex<ServerManager>> = OnceCell::const_new();
-static OPEN_FLAG: OnceCell<AtomicBool> = OnceCell::const_new();
+pub static SERVER_MANAGER: OnceCell<Mutex<ServerManager>> = OnceCell::const_new();
+pub static OPEN_FLAG: OnceCell<AtomicBool> = OnceCell::const_new();
 
 const MAX_PAYLOAD_LEN: usize = 6144; // 6 KB upper bound for a single frame
 const MAX_EXCLUDES: u32 = 16; // exclude uuid count
 const MAX_BACKOFF: Duration = Duration::from_secs(5);
 
-#[tauri::command]
-pub async fn start_server(port: u16) -> Result<[u8; 32], String> {
-    let state_cell = SERVER_MANAGER
-        .get_or_init(|| async {
-            Mutex::new(ServerManager {
-                handle: None,
-                stop_tx: None,
-            })
-        })
-        .await;
-
-    OPEN_FLAG
-        .get_or_init(|| async { AtomicBool::new(false) })
-        .await
-        .store(false, Ordering::SeqCst);
-
-    let mut guard = state_cell.lock().await;
-    if let Some(handle) = guard.handle.as_ref() {
-        return Err(format!("Server already listen on \"{}\"", handle.port));
-    }
-
-    let (tx, rx) = oneshot::channel();
-    guard.stop_tx = Some(tx);
-
-    // 开始监听
-    let addr = format!("0.0.0.0:{}", port);
-    let listener = match TcpListener::bind(&addr).await {
-        Ok(l) => l,
-        Err(e) => {
-            error!("Failed to bind {}: {}", addr, e);
-            return Err("Port already in use".into());
-        }
-    };
-
-    info!("WebSocket server listening on {}", addr);
-
-    // 生成随机密钥
-    let mut secret = [0u8; 32];
-    rand::thread_rng().fill_bytes(&mut secret);
-
-    let state = Arc::new(RelayState::new());
-    tokio::spawn(run_ws_server(listener, state, rx));
-
-    guard.handle = Some(ServerHandle { port, secret });
-
-    Ok(secret)
-}
-
-#[tauri::command]
-pub async fn stop_server() -> Result<(), String> {
-    let Some(state_cell) = SERVER_MANAGER.get() else {
-        info!("Server not initialized");
-        return Ok(());
-    };
-
-    let mut guard = state_cell.lock().await;
-    if let Some(tx) = guard.stop_tx.take() {
-        let _ = tx.send(());
-        info!("Stopping server");
-    } else {
-        info!("Server not running");
-    }
-
-    Ok(())
-}
-
-#[tauri::command]
-pub fn set_open() {
-    if let Some(flag) = OPEN_FLAG.get() {
-        flag.store(true, Ordering::SeqCst);
-    }
-}
-
-#[tauri::command]
-pub fn is_open() -> bool {
-    if let Some(flag) = OPEN_FLAG.get() {
-        return flag.load(Ordering::SeqCst);
-    }
-
-    false
-}
-
-async fn run_ws_server(
+pub async fn run_ws_server(
     listener: TcpListener,
     state: Arc<RelayState>,
     mut stop_receiver: oneshot::Receiver<()>,
@@ -186,26 +104,25 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
         }
     };
 
+    // tcp + 消息管道
     let (mut writer, mut reader) = ws_stream.split();
     let (tx, mut rx) = mpsc::channel::<Bytes>(512);
 
-    // 发送任务
+    // 向此连接发送
     let send_task = tokio::spawn(async move {
         while let Some(msg) = rx.recv().await {
             if let Err(e) = writer.send(Message::Binary(msg)).await {
                 error!("WebSocket write failed: {}", e);
                 drop(rx);
+                let _ = writer.close().await;
                 break;
             }
         }
     });
 
-    if cfg!(debug_assertions) {
-        info!("Start to registry {}", get_time());
-    }
+    info!("Start to registry {}", get_time());
 
-    // 注册
-    let session = match register_session(&state, tx, &mut reader).await {
+    let ctx = match attach_session(&state, tx, &mut reader).await {
         Ok(s) => s,
         Err(e) => {
             warn!("Registration failed: {}", e);
@@ -213,14 +130,34 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
         }
     };
 
-    // 转发任务
+    // 向对端发送
+    let session = ctx.session;
     match session.role {
         Role::Client => {
-            client_relay(&state, &session, &mut reader).await;
+            if let Some(allow_rx) = ctx.allow {
+                info!("Client {} waiting release", session.session_id);
+                let allow = tokio::select! {
+                    _ = allow_rx => true,
+                    _ = tokio::time::sleep(Duration::from_secs(4)) => false,
+                };
+
+                info!("Client {} released {}", session.session_id, allow);
+                if let Some(close_rx) = ctx.close {
+                    if allow {
+                        client_relay(&state, &session, &mut reader, close_rx).await;
+                    }
+                }
+            }
 
             // 清理
             if let Some(id) = state.remove_by_id(session.session_id) {
                 info!("Client disconnected with id: {}", format_uuid(&id));
+                if let Some(server) = state.get_server().await {
+                    let packet = Detached {
+                        session_id: session.session_id,
+                    };
+                    send_packet(&server.tx, packet, Duration::from_secs(2)).await;
+                }
             }
         }
         Role::Server => {
@@ -234,10 +171,16 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
                 .unwrap_or(false)
             {
                 info!("Server disconnected");
+                state.iter_ids().for_each(|client| {
+                    client.close(&state);
+                });
                 state.clear_server().await;
             }
         }
     }
+
+    info!("Connection closed {}", session.session_id);
+    info!("Left {} client conn", state.size());
 
     NEXT_SESSION_ID.deallocate(session.session_id);
     drop(session);
@@ -248,39 +191,39 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
 
 /// 0x01 = 注册为 Server
 /// 0x02 = 注册为 Client + 后续字节是 client_id
-async fn register_session(
+async fn attach_session(
     state: &Arc<RelayState>,
     tx: Tx,
     reader: &mut SplitStream<WebSocketStream<TcpStream>>,
-) -> Result<Arc<Session>, &'static str> {
+) -> Result<SessionContext, &'static str> {
     let msg = timeout(Duration::from_secs(5), reader.next())
         .await
         .map_err(|_| "Registry Timeout")?;
 
-    let payload = match msg {
+    let incoming = match msg {
         Some(Ok(Message::Binary(p))) => p,
         Some(Ok(Message::Close(_))) => return Err("Channel closed"),
         _ => return Err("Invalid register packet"),
     };
 
-    if payload.is_empty() {
+    if incoming.is_empty() {
         return Err("Empty register packet");
     }
 
-    match payload[0] {
+    match incoming[0] {
         0x01 => {
             // 注册服务端
-            if payload.len() < 33 {
+            if incoming.len() < 33 {
                 return Err("Invalid server register packet");
             }
 
             let server = state.get_server().await;
             if server.is_some() {
-                send_relay_try(&tx, "ERR:Server already registered");
+                send_message(&tx, "ERR:Server already registered");
                 return Err("Server already exists");
             }
 
-            let provided_secret = &payload[1..33];
+            let provided_secret = &incoming[1..33];
 
             // 密钥校验
             let state_cell = SERVER_MANAGER
@@ -294,7 +237,7 @@ async fn register_session(
                 .ok_or("No server handle")?;
 
             if provided_secret != expected_secret {
-                send_relay_try(&tx, "ERR:Invalid secret");
+                send_message(&tx, "ERR:Invalid secret");
                 return Err("Server secret mismatch");
             }
 
@@ -302,29 +245,35 @@ async fn register_session(
                 .allocate()
                 .ok_or("No session id allocated")?;
 
-            let session = Session::new(tx, Role::Server, true, None, session_id);
+            let session = Session::new_server(tx, session_id);
             state.register_server(session.clone()).await?;
 
-            let registry_msg = format!("INFO:REGISTERED:{}", session.session_id);
-            send_relay(&session.tx, &registry_msg, Duration::from_secs(2)).await;
+            let packet = Attached {
+                session_id: session.session_id,
+            };
+            send_packet(&session.tx, packet, Duration::from_secs(2)).await;
             info!("Server registered at {}", get_time());
-            Ok(session)
+            Ok(SessionContext {
+                session,
+                allow: None,
+                close: None,
+            })
         }
         0x02 => {
             // 注册 Client
-            if payload.len() < 17 {
-                send_relay_try(&tx, "ERR:Invalid register packet");
+            if incoming.len() < 17 {
+                send_message(&tx, "ERR:Invalid register packet");
                 return Err("Invalid client register packet");
             }
 
-            let mut client_id = [0u8; 16];
-            client_id.copy_from_slice(&payload[1..17]);
-            let client_id = client_id;
+            let mut uuid = [0u8; 16];
+            uuid.copy_from_slice(&incoming[1..17]);
+            let uuid = uuid;
 
             // UUID重复检查
-            match state.client_uuids.entry(client_id) {
+            match state.register_client(uuid) {
                 Entry::Occupied(_) => {
-                    send_relay_try(&tx, "ERR:Duplicate Player");
+                    send_message(&tx, "ERR:Duplicate Player");
                     Err("Duplicate client UUID")
                 }
                 Entry::Vacant(v) => {
@@ -332,29 +281,33 @@ async fn register_session(
                         .allocate()
                         .ok_or("No session id allocated")?;
 
-                    let session =
-                        Session::new(tx, Role::Client, false, Some(client_id), session_id);
+                    let (permit_tx, permit_rx) = oneshot::channel::<()>();
+                    let (c_tx, c_rx) = oneshot::channel::<()>();
+                    let session = Session::new_client(tx, session_id, uuid);
+
                     v.insert(session.clone());
-                    state.client_ids.insert(session_id, session.clone());
+                    state.complete_client(session_id, session.clone(), permit_tx, c_tx);
 
-                    let registry_msg = format!("INFO:REGISTERED:{}", session.session_id);
-                    send_relay(&session.tx, &registry_msg, Duration::from_secs(2)).await;
+                    let packet = Attached {
+                        session_id: session.session_id,
+                    };
+                    send_packet(&session.tx, packet, Duration::from_secs(2)).await;
 
+                    // 向服务端发送注册消息
                     if let Some(server) = state.get_server().await {
-                        let msg = format!(
-                            "INFO:CLIENT_REGISTERED:{}:{}",
-                            session.session_id,
-                            format_uuid(&client_id)
-                        );
-                        send_relay(&server.tx, &msg, Duration::from_secs(2)).await;
+                        let packet = ClientAttached {
+                            session_id: session.session_id,
+                            uuid,
+                        };
+                        send_packet(&server.tx, packet, Duration::from_secs(2)).await;
                     }
 
-                    info!(
-                        "Client {} registered at {}",
-                        format_uuid(&client_id),
-                        get_time()
-                    );
-                    Ok(session)
+                    info!("Client {} registered at {}", format_uuid(&uuid), get_time());
+                    Ok(SessionContext {
+                        session,
+                        allow: Some(permit_rx),
+                        close: Some(c_rx),
+                    })
                 }
             }
         }
@@ -366,38 +319,49 @@ async fn client_relay(
     state: &Arc<RelayState>,
     session: &Arc<Session>,
     reader: &mut SplitStream<WebSocketStream<TcpStream>>,
-) {
-    while let Some(msg) = reader.next().await {
-        if state.is_shutdown() {
-            break;
-        }
-        if !session.is_allowed() {
-            continue;
-        }
-        match msg {
-            Ok(Message::Binary(payload)) => {
-                if payload.len() > MAX_PAYLOAD_LEN {
-                    send_relay_try(&session.tx, "ERR:Payload too large");
-                    break;
+    mut close_rx: oneshot::Receiver<()>,
+) -> () {
+    loop {
+        tokio::select! {
+            _ = & mut close_rx => break,
+            msg = reader.next() => {
+                if let Some(msg) = msg {
+                    if !on_recv_client(state,session, msg).await {
+                        break;
+                    };
                 }
+            }
+        }
+    }
+}
 
-                relay_client_message(&state, &session, payload).await;
+async fn on_recv_client(
+    state: &Arc<RelayState>,
+    session: &Arc<Session>,
+    msg: Result<Message, Error>,
+) -> bool {
+    match msg {
+        Ok(Message::Binary(payload)) => {
+            if payload.len() > MAX_PAYLOAD_LEN {
+                send_message(&session.tx, "ERR:Payload too large");
+                return false;
             }
-            Ok(Message::Close(_)) => {
-                break;
-            }
-            Ok(_) => {}
-            Err(e) => {
-                error!(
-                    "WebSocket read failed from client with id={}: {}",
-                    session
-                        .client_id
-                        .map(|id| format_uuid(&id))
-                        .unwrap_or_else(|| "<no-id>".to_string()),
-                    e
-                );
-                break;
-            }
+
+            relay_client_message(&state, &session, payload).await;
+            true
+        }
+        Ok(Message::Close(_)) => false,
+        Ok(_) => true,
+        Err(e) => {
+            error!(
+                "WebSocket read failed from client with id={}: {}",
+                session
+                    .uuid
+                    .map(|id| format_uuid(&id))
+                    .unwrap_or_else(|| "<no-id>".to_string()),
+                e
+            );
+            false
         }
     }
 }
@@ -408,13 +372,10 @@ async fn server_relay(
     reader: &mut SplitStream<WebSocketStream<TcpStream>>,
 ) {
     while let Some(msg) = reader.next().await {
-        if state.is_shutdown() {
-            break;
-        }
         match msg {
             Ok(Message::Binary(payload)) => {
                 if payload.len() > MAX_PAYLOAD_LEN {
-                    send_relay_try(&session.tx, "ERR:Payload too large");
+                    send_message(&session.tx, "ERR:Payload too large");
                     break;
                 }
 
@@ -468,7 +429,7 @@ async fn relay_client_message(state: &Arc<RelayState>, session: &Arc<Session>, p
                 error!(
                     "Failed to forward message from Client {}: {}",
                     session
-                        .client_id
+                        .uuid
                         .map(|id| format_uuid(&id))
                         .unwrap_or_else(|| "<no-id>".to_string()),
                     e
@@ -488,33 +449,28 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
     match payload[0] {
         0x11 => {
             // Server → 广播给所有 Client
-            let to_remove: Vec<_> = state
-                .client_ids
-                .iter()
-                .filter_map(|entry| {
-                    if send_or_drop(&entry.value().tx, &payload) {
-                        return Some(*entry.key());
+            state.iter_ids().for_each(|client| {
+                if send_or_drop(&client.tx, &payload) {
+                    client.close(state);
+                    if let Some(uuid) = client.uuid {
+                        warn!(
+                            "[Broadcast] Dropping unresponsive client {}",
+                            format_uuid(&uuid)
+                        );
                     }
-                    None
-                })
-                .collect();
-
-            for id in to_remove {
-                if let Some(id) = state.remove_by_id(id) {
-                    warn!("Dropping unresponsive client {}", format_uuid(&id));
                 }
-            }
+            });
         }
         0x12 => {
             // Server → 指定 Client SessionId
             if payload.len() < 3 {
                 warn!("InvalidPacket: Unicast packet too short");
+                return;
             }
 
             // SessionId 截断
             let target_id = &payload[2];
-
-            if let Some(client) = state.client_ids.get(target_id) {
+            if let Some(client) = state.get_by_id(target_id) {
                 let remaining = payload.slice(3..);
                 let mut buf = BytesMut::with_capacity(2 + remaining.len());
                 buf.put_u8(0x11);
@@ -523,7 +479,7 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
                 let forwarded = buf.freeze();
 
                 if client.tx.send(forwarded).await.is_err() {
-                    state.remove_by_id(client.session_id);
+                    client.close(state);
                 }
             };
         }
@@ -531,17 +487,19 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
             // Server → 指定 Client UUID
             if payload.len() < 18 {
                 warn!("InvalidPacket: Unicast packet too short");
+                return;
             }
 
             // UUID截断
             let mut target_client_id = [0u8; 16];
             target_client_id.copy_from_slice(&payload[2..18]);
             let target_client_id = target_client_id;
+
             if is_nil_uuid(&target_client_id) {
                 return;
             }
 
-            if let Some(client) = state.client_uuids.get(&target_client_id) {
+            if let Some(client) = state.get_by_uuid(&target_client_id) {
                 let remaining = payload.slice(18..);
                 let mut buf = BytesMut::with_capacity(2 + remaining.len());
                 buf.put_u8(0x11);
@@ -550,7 +508,7 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
                 let forwarded = buf.freeze();
 
                 if client.tx.send(forwarded).await.is_err() {
-                    state.remove_by_id(client.session_id);
+                    client.close(state);
                 }
             };
         }
@@ -572,7 +530,7 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
             };
 
             if count > MAX_EXCLUDES {
-                send_relay_try(&session.tx, "ERR:Exclude list too large");
+                send_message(&session.tx, "ERR:Exclude list too large");
                 warn!("InvalidPacket: Exclude list too large");
                 return;
             }
@@ -594,87 +552,91 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
             buf.extend_from_slice(rest_payload);
             let forwarded = buf.freeze();
 
-            let to_remove: Vec<_> = state
-                .client_ids
-                .iter()
-                .filter_map(|entry| {
-                    let id = *entry.key();
-                    if excludes.iter().any(|ex| ex == &id) {
-                        return None;
-                    }
-
-                    let session = entry.value();
-                    if send_or_drop(&session.tx, &forwarded) {
-                        return Some(id);
-                    }
-                    None
-                })
-                .collect();
-
-            for id in to_remove {
-                if let Some(id) = state.remove_by_id(id) {
-                    warn!("Dropping unresponsive client {}", format_uuid(&id));
+            state.iter_ids().for_each(|client| {
+                let id = *client.key();
+                if excludes.iter().any(|ex| ex == &id) {
+                    return;
                 }
-            }
+                if send_or_drop(&client.tx, &forwarded) {
+                    client.close(state);
+                    if let Some(uuid) = client.uuid {
+                        warn!(
+                            "[Excludes] Dropping unresponsive client {}",
+                            format_uuid(&uuid)
+                        );
+                    }
+                }
+            });
         }
-        0xff => relay_actions(state, session, payload),
+        0xff => relay_actions(state, session, payload).await,
         _ => {}
     }
 }
 
-fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload: Bytes) {
+async fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload: Bytes) -> () {
+    // [Header 1][Type 1][Data n]
+    if payload.len() < 2 {
+        action_fail(&session.tx, "Invalid action packet").await;
+        return;
+    }
+
+    let data = &payload[2..];
     match payload[1] {
         0x00 => {
-            if payload.len() < 3 {
-                send_relay_try(&session.tx, "ERR:KickPacket illegal syntax");
-                warn!("InvalidPacket: Kick packet too short");
+            if data.len() < 1 {
+                action_fail(&session.tx, "[Kick] Session id cannot be empty").await;
                 return;
             }
-            let id = &payload[2];
 
-            if let Some(session) = state.client_ids.get(id) {
-                send_relay_try(&session.tx, "INFO:Kicked");
-                state.remove_by_id(*id);
-            };
+            let session_id = &data[0];
+            if let Some(session) = state.get_by_id(session_id) {
+                send_message(&session.tx, "Kicked");
+                session.close(state);
+            }
         }
         0x01 => {
-            if payload.len() < 3 {
-                send_relay_try(&session.tx, "ERR:allow illegal syntax");
-                warn!("InvalidPacket: Kick packet too short");
+            if data.len() < 1 {
+                action_fail(&session.tx, "[Permit] Session id cannot be empty").await;
                 return;
             }
-            let id = &payload[2];
-            if let Some(session) = state.client_ids.get(id) {
-                session.allow_traffic();
-            }
+            state.permit(&data[0]);
         }
-        _ => {}
-    }
-}
-
-fn build_relay_msg(msg: &str) -> Bytes {
-    let mut buf = BytesMut::new();
-    buf.put_u8(0x00);
-
-    let bytes = msg.as_bytes();
-    buf.put_u16_le(bytes.len() as u16);
-    buf.put_slice(bytes);
-    buf.freeze()
+        _ => {
+            warn!("Invalid packet type");
+        }
+    };
 }
 
 /// 中继服务器发送
-async fn send_relay(tx: &Tx, msg: &str, timeout: Duration) {
-    let payload = build_relay_msg(msg);
-
-    match tx.send_timeout(payload, timeout).await {
+async fn send_packet<T: Payload>(tx: &Tx, payload: T, timeout: Duration) -> () {
+    let buf = payload.to_bytes();
+    match tx.send_timeout(buf, timeout).await {
         Ok(()) => {}
-        Err(_) => {}
+        Err(e) => {
+            error!("Failed to send relay: {}", e);
+        }
     }
 }
 
-fn send_relay_try(tx: &Tx, msg: &str) {
-    let payload = build_relay_msg(msg);
-    let _ = tx.try_send(payload);
+fn try_send_packet<T: Payload>(tx: &Tx, payload: T) -> () {
+    let buf = payload.to_bytes();
+    let _ = tx.try_send(buf);
+}
+
+/// 区别于 send_message.
+/// 此方法只能向服务端发送
+async fn action_fail(tx: &Tx, reason: &str) -> () {
+    let packet = RelayMessage {
+        message: reason.to_string(),
+    };
+    send_packet(tx, packet, Duration::from_secs(2)).await;
+}
+
+fn send_message(tx: &Tx, reason: &str) -> () {
+    let packet = RelayMessage {
+        message: reason.to_string(),
+    };
+    try_send_packet(tx, packet);
 }
 
 /// 广播

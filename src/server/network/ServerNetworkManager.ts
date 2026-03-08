@@ -1,4 +1,3 @@
-import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
 import type {Consumer} from "../../apis/types.ts";
 import type {NovaFlightServer} from "../NovaFlightServer.ts";
 import {HashMap} from "../../utils/collection/HashMap.ts";
@@ -10,10 +9,12 @@ import {ClientReadyC2SPacket} from "../../network/packet/c2s/ClientReadyC2SPacke
 import {ServerConnection} from "./ServerConnection.ts";
 import {Log} from "../../worker/log.ts";
 import {ConnectionState} from "./ConnectionState.ts";
-import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
+import {RelayMessage} from "../../network/packet/relay/RelayMessage.ts";
+import {RelayActionBuilder} from "./RelayActionBuilder.ts";
+import {ClientAttached} from "../../network/packet/relay/ClientAttached.ts";
+import {Detached} from "../../network/packet/relay/Detached.ts";
 
 export class ServerNetworkManager {
-    public static readonly PENDING_TIMEOUT = 5000;
     public static readonly SERVER_CLOSE = TranslatableText.of('network.disconnect.server_close');
 
     private readonly server: NovaFlightServer;
@@ -26,43 +27,31 @@ export class ServerNetworkManager {
         this.server.networkChannel.setHandler(this.onReceive.bind(this));
     }
 
-    private onRelayServer(packet: RelayServerPacket) {
+    private onRelayMessage(packet: RelayMessage) {
         const parts = packet.msg.split(':');
         const type = parts[0];
         const msg = parts.slice(1).join(':');
-        if (type === 'INFO') {
-            this.onRelayInfo(msg);
-        }
+        console.log(type, msg);
     }
 
-    private onRelayInfo(msg: string) {
-        const parts = msg.split(':');
-        const type = parts.shift();
-
-        if (type === 'CLIENT_REGISTERED') this.onRegistry(parts);
+    private onDetached(packet: Detached) {
+        const conn = this.connections.get(packet.sessionId);
+        if (conn) this.removeConnection(conn);
     }
 
-    private onRegistry(args: string[]) {
-        const sessionId = Number(args[0]);
-        if (!Number.isSafeInteger(sessionId)) {
-            Log.error(`Received invalid sessionId ${sessionId} from Relay server`);
-            return;
-        }
+    private onClientAttached(packet: ClientAttached) {
+        // 触发则代表新客户端,踢掉旧连接
+        const id = packet.sessionId;
+        const conn = this.connections.get(id);
+        if (conn) this.removeConnection(conn);
 
-        const conn = this.connections.get(sessionId);
-        if (conn) {
-            conn.forceDisconnect();
-            this.connections.delete(sessionId);
-        }
-
-        this.allowTraffic(sessionId);
+        this.permit(id);
     }
 
     public tick(): void {
         for (const [id, conn] of this.connections) {
             if (conn.shouldRemove()) {
-                conn.forceDisconnect();
-                this.connections.delete(id);
+                this.removeConnection(conn);
                 continue;
             }
 
@@ -76,6 +65,11 @@ export class ServerNetworkManager {
         }
     }
 
+    private removeConnection(conn: ServerConnection) {
+        conn.handlerDisconnection();
+        this.connections.delete(conn.getId());
+    }
+
     public disconnectAllPlayer(): void {
         for (const player of this.server.playerManager.getAllPlayers()) {
             player.networkHandler.disconnect(ServerNetworkManager.SERVER_CLOSE);
@@ -83,6 +77,11 @@ export class ServerNetworkManager {
     }
 
     private onReceive(sessionId: number, packet: Payload) {
+        if (sessionId === 0) {
+            this.globals.get(packet.getId().id)?.(packet);
+            return;
+        }
+
         const conn = this.connections.get(sessionId);
         if (conn) {
             conn.recv(packet);
@@ -102,7 +101,8 @@ export class ServerNetworkManager {
             return;
         }
 
-        this.globals.get(packet.getId().id)?.(packet);
+        // 悬挂连接
+        this.server.networkChannel.action(RelayActionBuilder.forceDisconnect(sessionId));
     }
 
     private register<T extends Payload>(id: PayloadId<T>, handler: Consumer<T>): void {
@@ -110,14 +110,12 @@ export class ServerNetworkManager {
     }
 
     private registryHandler() {
-        this.register(RelayServerPacket.ID, this.onRelayServer);
+        this.register(Detached.ID, this.onDetached);
+        this.register(ClientAttached.ID, this.onClientAttached);
+        this.register(RelayMessage.ID, this.onRelayMessage);
     }
 
-    private allowTraffic(sessionId: number) {
-        const writer = new BinaryWriter();
-        writer.writeInt8(0xFF);
-        writer.writeInt8(0x01);
-        writer.writeInt8(sessionId);
-        this.server.networkChannel.action(writer.toUint8Array());
+    private permit(sessionId: number) {
+        this.server.networkChannel.action(RelayActionBuilder.allowTraffic(sessionId));
     }
 }

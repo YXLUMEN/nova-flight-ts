@@ -335,7 +335,11 @@
     "desc": "tech.desc.nova-flight.perdition_beam",
     "cost": 480,
     "requires": [
-      "tachyon_lance"
+      "tachyon_lance",
+      "phase_lasers"
+    ],
+    "drawExcept": [
+      "phase_lasers"
     ]
   },
   {

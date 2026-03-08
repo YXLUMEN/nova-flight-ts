@@ -201,7 +201,7 @@ export class NovaFlightClient {
                 return;
             }
 
-            const tickDelta = Math.min(0.25, (ts - this.last) / 1000 || 0);
+            const tickDelta = Math.min(0.1, (ts - this.last) / 1000 || 0);
             this.last = ts;
             this.accumulator += tickDelta;
 

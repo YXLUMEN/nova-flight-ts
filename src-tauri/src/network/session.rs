@@ -1,7 +1,7 @@
-use crate::network::states::{Role, Tx};
+use crate::network::states::{RelayState, Role, Tx};
 use std::collections::VecDeque;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
+use tokio::sync::oneshot;
 
 pub static NEXT_SESSION_ID: LazyLock<SessionAllocator> = LazyLock::new(|| SessionAllocator::new());
 
@@ -9,9 +9,14 @@ pub static NEXT_SESSION_ID: LazyLock<SessionAllocator> = LazyLock::new(|| Sessio
 pub struct Session {
     pub tx: Tx,
     pub role: Role,
-    traffic_allowed: AtomicBool,
-    pub client_id: Option<[u8; 16]>,
     pub session_id: u8,
+    pub uuid: Option<[u8; 16]>,
+}
+
+pub struct SessionContext {
+    pub session: Arc<Session>,
+    pub allow: Option<oneshot::Receiver<()>>,
+    pub close: Option<oneshot::Receiver<()>>,
 }
 
 struct SessionAllocatorInner {
@@ -40,24 +45,27 @@ impl SessionAllocator {
     }
 
     pub fn allocate(&self) -> Option<u8> {
-        let mut inner = self.inner.lock().unwrap();
+        let lock = self.inner.lock();
+        if let Ok(mut allocator) = lock {
+            if let Some(id) = allocator.free_ids.pop_front() {
+                return Some(id);
+            }
 
-        if let Some(id) = inner.free_ids.pop_front() {
-            return Some(id);
+            if allocator.next_id == u8::MAX {
+                return None;
+            }
+
+            let id = allocator.next_id;
+            allocator.next_id = allocator.next_id.wrapping_add(1);
+
+            if allocator.next_id == 0 {
+                allocator.next_id = 1;
+            }
+
+            Some(id)
+        } else {
+            None
         }
-
-        if inner.next_id == u8::MAX {
-            return None;
-        }
-
-        let id = inner.next_id;
-        inner.next_id = inner.next_id.wrapping_add(1);
-
-        if inner.next_id == 0 {
-            inner.next_id = 1;
-        }
-
-        Some(id)
     }
 
     pub fn deallocate(&self, id: u8) {
@@ -71,27 +79,25 @@ impl SessionAllocator {
 }
 
 impl Session {
-    pub fn new(
-        tx: Tx,
-        role: Role,
-        traffic_allowed: bool,
-        client_id: Option<[u8; 16]>,
-        session_id: u8,
-    ) -> Arc<Self> {
+    pub fn new_client(tx: Tx, session_id: u8, client_id: [u8; 16]) -> Arc<Self> {
         Arc::new(Session {
             tx,
-            role,
-            traffic_allowed: AtomicBool::new(traffic_allowed),
-            client_id,
+            role: Role::Client,
             session_id,
+            uuid: Some(client_id),
         })
     }
 
-    pub fn allow_traffic(&self) {
-        self.traffic_allowed.store(true, Ordering::SeqCst);
+    pub fn new_server(tx: Tx, session_id: u8) -> Arc<Self> {
+        Arc::new(Session {
+            tx,
+            role: Role::Server,
+            session_id,
+            uuid: None,
+        })
     }
 
-    pub fn is_allowed(&self) -> bool {
-        self.traffic_allowed.load(Ordering::SeqCst)
+    pub fn close(&self, state: &Arc<RelayState>) {
+        state.close(&self.session_id)
     }
 }

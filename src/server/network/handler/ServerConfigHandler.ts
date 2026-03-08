@@ -11,7 +11,7 @@ import {ConnectionState, type ConnectionStateType} from "../ConnectionState.ts";
 
 export class ServerConfigHandler extends ServerCommonHandler {
     public static readonly DUPLICATE_PLAYER = TranslatableText.of('network.disconnect.duplicate_player');
-    public static readonly AUTH_FAILED = TranslatableText.of('network.disconnect.auth_failed');
+    public static readonly PROMOTE_FAIL = TranslatableText.of('network.disconnect.promote_fail');
     public static readonly INVALID_STATE = TranslatableText.of("network.disconnect.invalid_state");
 
     private attemptUUID: UUID | null = null;
@@ -25,6 +25,7 @@ export class ServerConfigHandler extends ServerCommonHandler {
     public onClientReady(packet: ClientReadyC2SPacket) {
         if (this.attemptUUID !== null && this.attemptUUID !== packet.clientId) {
             this.disconnect(ServerConfigHandler.INVALID_STATE);
+            return;
         }
         if (this.server.world === null) return;
 
@@ -52,14 +53,14 @@ export class ServerConfigHandler extends ServerCommonHandler {
             this.profile = new GameProfile(packet.sessionId, packet.clientId, packet.playerName);
             this.promoteToPlaySession().catch(err => {
                 console.error(err);
-                this.disconnect(ServerConfigHandler.AUTH_FAILED);
+                this.disconnect(ServerConfigHandler.PROMOTE_FAIL);
             });
         } catch (err) {
             if (err instanceof Error) {
                 console.error(`Couldn't place player in world: ${err.name}:${err.message} at\n ${err.stack}`);
             } else console.error(err);
 
-            this.disconnect(ServerConfigHandler.AUTH_FAILED);
+            this.disconnect(ServerConfigHandler.PROMOTE_FAIL);
         }
     }
 

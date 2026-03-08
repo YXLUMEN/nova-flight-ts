@@ -4,10 +4,10 @@ import type {ServerChannel} from "./ServerChannel.ts";
 import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
 import type {Payload} from "../../network/Payload.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
-import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 import type {UUID} from "../../apis/types.ts";
 import type {PacketListener} from "./handler/PacketListener.ts";
 import {IllegalStateException} from "../../apis/errors.ts";
+import {RelayActionBuilder} from "./RelayActionBuilder.ts";
 
 export class ServerConnection {
     public static readonly TIMEOUT = TranslatableText.of('network.disconnect.timeout');
@@ -35,7 +35,6 @@ export class ServerConnection {
 
     public tick(): void {
         if (!this.packetListener) return;
-
         while (!this.receiveQueue.isEmpty()) {
             const packet = this.receiveQueue.shift();
             if (!packet) break;
@@ -70,12 +69,7 @@ export class ServerConnection {
 
     public forceDisconnect(): void {
         if (!this.changeState(ConnectionState.CLOSED)) return;
-
-        const writer = new BinaryWriter();
-        writer.writeInt8(0xFF);
-        writer.writeInt8(0x00);
-        writer.writeInt8(this.sessionId);
-        this.channel.action(writer.toUint8Array());
+        this.channel.action(RelayActionBuilder.forceDisconnect(this.sessionId));
     }
 
     public changeState(state: ConnectionStateType): boolean {
@@ -86,6 +80,15 @@ export class ServerConnection {
 
     public getState(): ConnectionStateType {
         return this.state;
+    }
+
+    public handlerDisconnection(): void {
+        if (this.state === ConnectionState.CLOSED) {
+            console.warn('handlerDisconnect call twice');
+            return;
+        }
+        this.packetListener?.onDisconnected();
+        this.forceDisconnect();
     }
 
     public setPacketListener(state: ConnectionStateType, listener: PacketListener): void {

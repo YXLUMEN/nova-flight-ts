@@ -5,10 +5,14 @@ import {NovaFlightClient} from "./client/NovaFlightClient.ts";
 import {mainWindow} from "./main.ts";
 import {error} from "@tauri-apps/plugin-log";
 import {isDev} from "./configs/WorldConfig.ts";
+import {PayloadTypeRegistry} from "./network/PayloadTypeRegistry.ts";
+import {RelayPackets} from "./network/RelayPackets.ts";
 
 export function run() {
+    RelayPackets.registerNetworkPacket();
     ServerPackets.registerNetworkPacket();
     ClientPackets.registerNetworkPacket();
+    PayloadTypeRegistry.freeze();
 
     window.oncontextmenu = event => event.preventDefault();
 

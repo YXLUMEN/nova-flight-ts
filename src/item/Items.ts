@@ -48,9 +48,9 @@ export class Items {
     public static readonly MINIGUN_WEAPON = this.register("minigun_weapon", new MiniGun(new Item.Settings()
         .maxDurability(250)
         .attackDamage(1)
-        .maxCooldown(1)
+        .maxCooldown(2)
         .type(WeaponType.KINETIC)
-        .component(DataComponents.MAX_RELOAD_TIME, 45)
+        .component(DataComponents.MAX_RELOAD_TIME, 42)
     ));
     public static readonly BOMB_WEAPON = this.register("bomb_weapon", new BombWeapon(new Item.Settings()
         .maxCooldown(800)

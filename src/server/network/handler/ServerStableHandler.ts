@@ -1,6 +1,5 @@
 import type {NovaFlightServer} from "../../NovaFlightServer.ts";
 import {PlayerFinishLoginC2SPacket} from "../../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
-import {PlayerDisconnectC2SPacket} from "../../../network/packet/c2s/PlayerDisconnectC2SPacket.ts";
 import {
     FullMove,
     PlayerMoveC2SPacket,
@@ -18,7 +17,6 @@ import {PlayerFireC2SPacket} from "../../../network/packet/c2s/PlayerFireC2SPack
 import {EntityBatchSpawnS2CPacket} from "../../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
 import {EntityNbtS2CPacket} from "../../../network/packet/s2c/EntityNbtS2CPacket.ts";
 import {PlayerResetAllTechC2SPacket} from "../../../network/packet/c2s/PlayerResetAllTechC2SPacket.ts";
-import {PlayerDisconnectS2CPacket} from "../../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import {CommandExecutionC2SPacket} from "../../../network/packet/c2s/CommandExecutionC2SPacket.ts";
 import type {ParseResults} from "../../../brigadier/ParseResults.ts";
 import type {ServerCommandSource} from "../../command/ServerCommandSource.ts";
@@ -70,6 +68,14 @@ export class ServerStableHandler extends ServerCommonHandler {
         return this.player.getProfile();
     }
 
+    public override onDisconnected() {
+        const profile = this.getProfile();
+
+        this.broadcast(new GameMessageS2CPacket(`\x1b[32m${profile.name}\x1b[0m leave the game`));
+        this.server.playerManager.removePlayer(this.player);
+        super.onDisconnected();
+    }
+
     public onPlayerFinishLogin(_: PlayerFinishLoginC2SPacket) {
         const uuid: UUID = this.getProfile().clientId;
         if (!this.server.playerManager.isPlayerExists(uuid)) {
@@ -115,26 +121,7 @@ export class ServerStableHandler extends ServerCommonHandler {
 
     public override forceDisconnect() {
         if (this.connection.shouldRemove()) return;
-
         super.forceDisconnect();
-        this.onPlayerDisconnect().then();
-    }
-
-    public async onPlayerDisconnect() {
-        const uuid: UUID = this.getProfile().clientId;
-        if (!this.server.playerManager.isPlayerExists(uuid)) {
-            return;
-        }
-
-        this.send(new PlayerDisconnectS2CPacket(uuid, ServerCommonHandler.LOGOUT));
-        this.connection.changeState(ConnectionState.CLOSED);
-        this.clear();
-
-        await this.onDisconnected();
-        if (this.isHost()) return;
-
-        await this.server.playerManager.removePlayer(this.player);
-        console.log(`Player disconnected with uuid: ${uuid}`);
     }
 
     public onPlayerMove(packet: PlayerMoveC2SPacket) {
@@ -251,8 +238,7 @@ export class ServerStableHandler extends ServerCommonHandler {
     private registryHandler() {
         this.bindSelf(PingC2SPacket.ID, this.onPing);
         this.bindSelf(PlayerFinishLoginC2SPacket.ID, this.onPlayerFinishLogin);
-        this.bindSelf(PlayerDisconnectC2SPacket.ID, this.onPlayerDisconnect);
-
+        // this.bindSelf(PlayerDisconnectC2SPacket.ID, this.onPlayerDisconnect);
         const move = this.onPlayerMove.bind(this);
         this.register(FullMove.ID, move);
         this.register(PositionOnly.ID, move);

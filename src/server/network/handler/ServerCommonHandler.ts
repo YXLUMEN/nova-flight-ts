@@ -27,7 +27,7 @@ export abstract class ServerCommonHandler implements PacketListener {
     public onDisconnected() {
         if (this.isHost()) {
             console.log('Stopping singleplayer server as player logged out');
-            return this.server.halt();
+            this.server.halt().then();
         }
     }
 

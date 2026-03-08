@@ -1,20 +1,17 @@
 import type {StarLayer} from "../apis/IStarLayer.ts";
 import type {Camera} from "../client/render/Camera.ts";
-import {lerp, rand} from "../utils/math/math.ts";
+import {lerp, PI2, rand} from "../utils/math/math.ts";
 import {World} from "../world/World.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 
 
 export class StarField {
-    public static readonly TWO_PI = Math.PI * 2;
-
     private readonly count: number;
     private readonly currX: Float32Array;
     private readonly currY: Float32Array;
-    private readonly prevX: Float32Array;
-    private readonly prevY: Float32Array;
     private readonly r: Float32Array;
     private readonly speed: Float32Array;
+    private lastTickDelta: number = 0.02;
 
     private readonly layers: ReadonlyArray<StarLayer>;
     private readonly margin: number;
@@ -33,8 +30,6 @@ export class StarField {
 
         this.currX = new Float32Array(this.count);
         this.currY = new Float32Array(this.count);
-        this.prevX = new Float32Array(this.count);
-        this.prevY = new Float32Array(this.count);
         this.r = new Float32Array(this.count);
         this.speed = new Float32Array(this.count);
 
@@ -86,9 +81,6 @@ export class StarField {
 
         for (let li = 0; li < this.layers.length; li++) {
             for (let i = this.start[li]; i < this.end[li]; i++) {
-                this.prevX[i] = this.currX[i];
-                this.prevY[i] = this.currY[i];
-
                 this.currY[i] += this.speed[i] * dt;
 
                 if (this.currY[i] > v.bottom + m) this.reseed(li, i, rand(v.left, v.right), v.top - m);
@@ -96,9 +88,10 @@ export class StarField {
                 else if (this.currX[i] > v.right + m) this.reseed(li, i, v.left - m, rand(v.top, v.bottom));
             }
         }
+        this.lastTickDelta = dt;
     }
 
-    public render(ctx: CanvasRenderingContext2D, cam: Camera, tickDelta: number) {
+    public render(ctx: CanvasRenderingContext2D, cam: Camera, alpha: number) {
         const base = cam.cameraOffset;
         const view = cam.lastViewOffset;
         const vr = cam.viewRect;
@@ -119,17 +112,17 @@ export class StarField {
             ctx.translate(-ox, -oy);
 
             for (let i = this.start[li]; i < this.end[li]; i++) {
-                const px = lerp(tickDelta, this.prevX[i], this.currX[i] + sx);
-                const py = lerp(tickDelta, this.prevY[i], this.currY[i] + sy);
+                const px = lerp(alpha, this.currX[i], this.currX[i] + sx);
+                const py = lerp(alpha, this.currY[i] - this.speed[i] * this.lastTickDelta, this.currY[i] + sy);
                 if (px < vr.left - m - maxR || px > vr.right + m + maxR ||
                     py < vr.top - m - maxR || py > vr.bottom + m + maxR) continue;
 
-                // 小星用 fillRect 而不是 arc
+                // 小星用 fillRect
                 if (this.r[i] <= 1) {
                     ctx.rect(px, py, 1, 1);
                 } else {
                     ctx.moveTo(px + this.r[i], py);
-                    ctx.arc(px, py, this.r[i], 0, StarField.TWO_PI);
+                    ctx.arc(px, py, this.r[i], 0, PI2);
                 }
             }
             ctx.restore();
@@ -143,8 +136,6 @@ export class StarField {
         const L = this.layers[li];
         this.currX[i] = x;
         this.currY[i] = y;
-        this.prevX[i] = x;
-        this.prevY[i] = y;
         this.r[i] = rand(L.radiusMin, L.radiusMax);
         this.speed[i] = rand(L.speedMin, L.speedMax);
     }

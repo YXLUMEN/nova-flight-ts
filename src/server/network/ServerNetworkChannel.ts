@@ -5,9 +5,9 @@ import type {BiConsumer, UUID} from "../../apis/types.ts";
 import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 import type {ServerChannel} from "./ServerChannel.ts";
 import {BinaryReader} from "../../nbt/BinaryReader.ts";
-import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
 import type {GameProfile} from "../entity/GameProfile.ts";
 import {PacketTooLargeError} from "../../apis/errors.ts";
+import {RelayPackets} from "../../network/RelayPackets.ts";
 
 export class ServerNetworkChannel extends NetworkChannel implements ServerChannel {
     private secretKey: Uint8Array | null;
@@ -91,9 +91,12 @@ export class ServerNetworkChannel extends NetworkChannel implements ServerChanne
         const binary = new Uint8Array(event.data as ArrayBuffer);
         const reader = new BinaryReader(binary);
 
-        const header = reader.readInt8();
+        const header = reader.readUint8();
         if (header === 0x00) {
-            return this.handler(0, RelayServerPacket.CODEC.decode(reader))
+            const index = reader.readUint8();
+            const type = RelayPackets.getType(index);
+            if (!type) return;
+            return this.handler(0, type.codec.decode(reader));
         }
         if (header !== 0x10) {
             console.warn(`[${this.getSide()}] Unknown header: ${header}`);

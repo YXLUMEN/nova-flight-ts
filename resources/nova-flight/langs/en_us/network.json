@@ -1,0 +1,10 @@
+{
+  "disconnect.timeout": "Timeout",
+  "disconnect.logout": "Logout",
+  "disconnect.illegal_character": "Illegal Character",
+  "disconnect.server_close": "Server Closed",
+  "disconnect.duplicate_player": "Duplicate login",
+  "disconnect.kicked": "Kick by the sever",
+  "disconnect.invalid_state": "Invalid connection state",
+  "disconnect.promote_fail": "Promote session fail"
+}

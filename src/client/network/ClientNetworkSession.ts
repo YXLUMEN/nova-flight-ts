@@ -47,7 +47,6 @@ import {OtherClientPlayerEntity} from "../entity/OtherClientPlayerEntity.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import {PlayerDisconnectC2SPacket} from "../../network/packet/c2s/PlayerDisconnectC2SPacket.ts";
 import {ClientReadyC2SPacket} from "../../network/packet/c2s/ClientReadyC2SPacket.ts";
-import {RelayServerPacket} from "../../network/packet/RelayServerPacket.ts";
 import {PlayerJoinS2CPacket} from "../../network/packet/s2c/PlayerJoinS2CPacket.ts";
 import {GameProfile} from "../../server/entity/GameProfile.ts";
 import {PlayerGameModeS2CPacket} from "../../network/packet/s2c/PlayerGameModeS2CPacket.ts";
@@ -82,6 +81,7 @@ import {PingC2SPacket} from "../../network/packet/c2s/PingC2SPacket.ts";
 import {ServerStartS2CPacket} from "../../network/packet/s2c/ServerStartS2CPacket.ts";
 import {HashMap} from "../../utils/collection/HashMap.ts";
 import type {Identifier} from "../../registry/Identifier.ts";
+import {RelayMessage} from "../../network/packet/relay/RelayMessage.ts";
 
 export class ClientNetworkSession {
     private readonly handlers = new HashMap<Identifier, Consumer<Payload>>();
@@ -147,7 +147,7 @@ export class ClientNetworkSession {
         this.send(new PingC2SPacket());
     }
 
-    private onRelayServer(packet: RelayServerPacket) {
+    private onRelayServer(packet: RelayMessage) {
         const parts = packet.msg.split(':');
         const type = parts[0];
         const msg = parts.slice(1).join(':');
@@ -221,14 +221,14 @@ export class ClientNetworkSession {
         this.client.clientCommandManager.addPlainMessage(`\x1b[32m${packet.playerName}\x1b[0m join the game`);
     }
 
-    public onDisconnect(packet: PlayerDisconnectS2CPacket) {
+    public onPlayerDisconnect(packet: PlayerDisconnectS2CPacket) {
         const world = this.world;
         if (!world) return;
 
         this.playerProfiles.delete(packet.uuid);
 
         const player = world.getEntityLookup().getByUUID(packet.uuid);
-        if (player) this.world?.removeEntity(player.getId());
+        if (player) world.removeEntity(player.getId());
 
         if (packet.uuid !== this.client.clientId) return;
 
@@ -646,13 +646,13 @@ export class ClientNetworkSession {
     }
 
     private registryHandler() {
-        this.register(RelayServerPacket.ID, this.onRelayServer);
+        this.register(RelayMessage.ID, this.onRelayServer);
         this.register(ServerStartS2CPacket.ID, this.onServerStart);
         this.register(ServerReadyS2CPacket.ID, this.onServerReady);
         this.register(PongS2CPacket.ID, this.onPong);
         this.register(JoinGameS2CPacket.ID, this.onGameJoin);
         this.register(PlayerJoinS2CPacket.ID, this.onPlayerJoin);
-        this.register(PlayerDisconnectS2CPacket.ID, this.onDisconnect);
+        this.register(PlayerDisconnectS2CPacket.ID, this.onPlayerDisconnect);
         this.register(EntitySpawnS2CPacket.ID, this.onEntitySpawn);
         this.register(EntityRemoveS2CPacket.ID, this.onEntityRemove);
         this.register(EntityPositionS2CPacket.ID, this.onEntityPosition);

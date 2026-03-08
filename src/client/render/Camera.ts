@@ -28,12 +28,12 @@ export class Camera {
     };
 
     private isDeadZone = false;
-    private readonly outDeadZone = 40 ** 2;
-    private readonly intoDeadZone = 32 ** 2;
+    private readonly outDeadZone: number = 40 ** 2;
+    private readonly intoDeadZone: number = 32 ** 2;
 
-    private readonly followSpeed = 2000;
-    private readonly smoothing = 16;
-    private readonly friction = 12;
+    private readonly followSpeed: number = 2000;
+    private readonly smoothing: number = 16;
+    private readonly friction: number = 12;
 
     private shakeTrauma = 0;       // [0,1]
     private traumaPower = 2;       // 非线性放大, 常用 2 或 3
