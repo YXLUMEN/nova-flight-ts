@@ -1,7 +1,7 @@
 use crate::network::states::{RelayState, Role, Tx};
 use std::collections::VecDeque;
-use std::sync::{Arc, LazyLock, Mutex};
-use tokio::sync::oneshot;
+use std::sync::{Arc, LazyLock};
+use tokio::sync::{oneshot, Mutex};
 
 pub static NEXT_SESSION_ID: LazyLock<SessionAllocator> = LazyLock::new(|| SessionAllocator::new());
 
@@ -44,36 +44,32 @@ impl SessionAllocator {
         }
     }
 
-    pub fn allocate(&self) -> Option<u8> {
-        let lock = self.inner.lock();
-        if let Ok(mut allocator) = lock {
-            if let Some(id) = allocator.free_ids.pop_front() {
-                return Some(id);
-            }
-
-            if allocator.next_id == u8::MAX {
-                return None;
-            }
-
-            let id = allocator.next_id;
-            allocator.next_id = allocator.next_id.wrapping_add(1);
-
-            if allocator.next_id == 0 {
-                allocator.next_id = 1;
-            }
-
-            Some(id)
-        } else {
-            None
+    pub async fn allocate(&self) -> Option<u8> {
+        let mut allocator = self.inner.lock().await;
+        if let Some(id) = allocator.free_ids.pop_front() {
+            return Some(id);
         }
+
+        if allocator.next_id == u8::MAX {
+            return None;
+        }
+
+        let id = allocator.next_id;
+        allocator.next_id = allocator.next_id.wrapping_add(1);
+
+        if allocator.next_id == 0 {
+            allocator.next_id = 1;
+        }
+
+        Some(id)
     }
 
-    pub fn deallocate(&self, id: u8) {
+    pub async fn deallocate(&self, id: u8) {
         if id == 0 {
             return;
         }
 
-        let mut inner = self.inner.lock().unwrap();
+        let mut inner = self.inner.lock().await;
         inner.free_ids.push_back(id);
     }
 }

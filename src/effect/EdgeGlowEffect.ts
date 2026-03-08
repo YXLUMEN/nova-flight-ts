@@ -1,7 +1,7 @@
 import type {VisualEffect} from "./VisualEffect.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
-import {decodeColorToHex, decodeFromByte, encodeToByte, encodeColorHex} from "../utils/NetUtil.ts";
+import {decodeFromByte, encodeToByte} from "../utils/NetUtil.ts";
 import {hexToRgba} from "../utils/uit.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
@@ -9,24 +9,24 @@ import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 export class EdgeGlowEffect implements VisualEffect {
     public static readonly PACKET_CODEC: PacketCodec<EdgeGlowEffect> = PacketCodecs.of(
         (writer, value) => {
-            writer.writeUint32(encodeColorHex(value.color));
+            PacketCodecs.COLOR_HEX.encode(writer, value.color);
             writer.writeUint16(value.thickness);
             writer.writeFloat(value.intensity);
             writer.writeFloat(value.duration);
             writer.writeInt8(encodeToByte(value.fadeIn, 1));
             writer.writeInt8(encodeToByte(value.fadeOut, 1));
-            writer.writeInt8(value.pulse ? 1 : 0);
+            writer.writeBoolean(value.pulse);
             writer.writeString(value.composite);
         },
         reader => {
             return new EdgeGlowEffect(
-                decodeColorToHex(reader.readUint32()),
+                PacketCodecs.COLOR_HEX.decode(reader),
                 reader.readUint16(),
                 reader.readFloat(),
                 reader.readFloat(),
                 decodeFromByte(reader.readUint8(), 1),
                 decodeFromByte(reader.readUint8(), 1),
-                reader.readInt8() !== 0,
+                reader.readBoolean(),
                 reader.readString() as GlobalCompositeOperation
             );
         }

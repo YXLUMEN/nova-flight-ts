@@ -175,7 +175,8 @@ export abstract class NetworkChannel implements Channel {
             if (!type) return null;
             return type.codec.decode(reader);
         }
-        if (header !== 0x10 && header !== 0x11) {
+
+        if (header < 0x10 || header > 0x12) {
             console.warn(`[${this.getSide()}] Unknown header: ${header}`);
             return null;
         }

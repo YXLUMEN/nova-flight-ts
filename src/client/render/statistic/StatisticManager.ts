@@ -1,5 +1,7 @@
 import type {StatisticItem} from "./StatisticItem.ts";
 import {HistoricalScoreRender} from "./HistoricalScoreRender.ts";
+import {error} from "@tauri-apps/plugin-log";
+import {message} from "@tauri-apps/plugin-dialog";
 
 export class StatisticManager {
     private readonly statisticItems = new Map<string, StatisticItem>();
@@ -34,7 +36,11 @@ export class StatisticManager {
             const item = this.statisticItems.get(name);
             if (!item) return;
             item.render()
-                .then(element => this.displayItem(element));
+                .then(element => this.displayItem(element))
+                .catch(err => {
+                    message('出错啦,详细情况请查看日志').catch();
+                    error(String(err)).catch();
+                });
         }, {signal: ctrl.signal});
 
         this.backBtn.addEventListener('click', () => {

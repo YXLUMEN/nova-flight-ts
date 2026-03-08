@@ -6,12 +6,11 @@ import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
-import {decodeColorToHex, encodeColorHex} from "../utils/NetUtil.ts";
 
 export class LaserBeamEffect implements VisualEffect {
     public static readonly PACKET_CODEC: PacketCodec<LaserBeamEffect> = PacketCodecs.of(
         (writer, value) => {
-            writer.writeUint32(encodeColorHex(value.color));
+            PacketCodecs.COLOR_HEX.encode(writer, value.color);
             writer.writeVarUint(value.baseWidth);
             writer.writeFloat(value.life);
             PacketCodecs.VECTOR2D.encode(writer, value.start);
@@ -19,7 +18,7 @@ export class LaserBeamEffect implements VisualEffect {
         },
         reader => {
             const laser = new LaserBeamEffect(
-                decodeColorToHex(reader.readUint32()),
+                PacketCodecs.COLOR_HEX.decode(reader),
                 reader.readVarUint(),
                 reader.readFloat(),
             );

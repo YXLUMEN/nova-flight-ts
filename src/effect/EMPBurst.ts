@@ -16,7 +16,7 @@ export class EMPBurst implements VisualEffect {
             writer.writeFloat(value.duration);
             writer.writeInt8(value.bolts);
             writer.writeInt8(value.segs);
-            writer.writeString(value.color);
+            PacketCodecs.COLOR_HEX.encode(writer, value.color);
             writer.writeInt8(value.thickness);
             writer.writeInt8(encodeToByte(value.jitter, 1));
             writer.writeInt8(value.glow);
@@ -28,7 +28,7 @@ export class EMPBurst implements VisualEffect {
                 reader.readFloat(),
                 reader.readUint8(),
                 reader.readUint8(),
-                reader.readString(),
+                PacketCodecs.COLOR_HEX.decode(reader),
                 reader.readUint8(),
                 decodeFromByte(reader.readUint8(), 1),
                 reader.readUint8()

@@ -17,7 +17,7 @@ pub enum Role {
 }
 
 pub struct RelayState {
-    pub server: RwLock<Option<Arc<Session>>>,
+    server: RwLock<Option<Arc<Session>>>,
     client_uuids: DashMap<[u8; 16], Arc<Session>>,
     client_ids: DashMap<u8, Arc<Session>>,
     client_waiting: DashMap<u8, oneshot::Sender<()>>,
@@ -60,6 +60,14 @@ impl RelayState {
         }
         *guard = Some(session);
         Ok(())
+    }
+
+    pub async fn get_server(&self) -> Option<Arc<Session>> {
+        self.server.read().await.clone()
+    }
+
+    pub async fn clear_server(&self) {
+        *self.server.write().await = None;
     }
 
     pub fn register_client(&self, uuid: [u8; 16]) -> Entry<'_, [u8; 16], Arc<Session>> {
@@ -110,14 +118,6 @@ impl RelayState {
         self.client_uuids.clear();
         self.client_ids.clear();
         self.client_waiting.clear();
-    }
-
-    pub async fn get_server(&self) -> Option<Arc<Session>> {
-        self.server.read().await.clone()
-    }
-
-    pub async fn clear_server(&self) {
-        *self.server.write().await = None;
     }
 
     pub fn schedule_shutdown(&self) {

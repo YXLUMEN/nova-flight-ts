@@ -142,8 +142,8 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
                 };
 
                 info!("Client {} released {}", session.session_id, allow);
-                if let Some(close_rx) = ctx.close {
-                    if allow {
+                if allow {
+                    if let Some(close_rx) = ctx.close {
                         client_relay(&state, &session, &mut reader, close_rx).await;
                     }
                 }
@@ -164,8 +164,9 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
             server_relay(&state, &session, &mut reader).await;
 
             // 清理
-            let server = state.get_server().await;
-            if server
+            if state
+                .get_server()
+                .await
                 .as_ref()
                 .map(|s| Arc::ptr_eq(s, &session))
                 .unwrap_or(false)
@@ -182,7 +183,7 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
     info!("Connection closed {}", session.session_id);
     info!("Left {} client conn", state.size());
 
-    NEXT_SESSION_ID.deallocate(session.session_id);
+    NEXT_SESSION_ID.deallocate(session.session_id).await;
     drop(session);
     if let Err(e) = send_task.await {
         info!("Send task panicked: {}", e);
@@ -243,6 +244,7 @@ async fn attach_session(
 
             let session_id = NEXT_SESSION_ID
                 .allocate()
+                .await
                 .ok_or("No session id allocated")?;
 
             let session = Session::new_server(tx, session_id);
@@ -279,6 +281,7 @@ async fn attach_session(
                 Entry::Vacant(v) => {
                     let session_id = NEXT_SESSION_ID
                         .allocate()
+                        .await
                         .ok_or("No session id allocated")?;
 
                     let (permit_tx, permit_rx) = oneshot::channel::<()>();
@@ -325,10 +328,11 @@ async fn client_relay(
         tokio::select! {
             _ = & mut close_rx => break,
             msg = reader.next() => {
-                if let Some(msg) = msg {
-                    if !on_recv_client(state,session, msg).await {
-                        break;
-                    };
+                let Some(msg) = msg else {
+                    return;
+                };
+                if !on_recv_client(state,session, msg).await {
+                    break;
                 }
             }
         }
@@ -425,16 +429,17 @@ async fn relay_client_message(state: &Arc<RelayState>, session: &Arc<Session>, p
                 return;
             }
 
-            if let Err(e) = server.tx.try_send(payload) {
-                error!(
-                    "Failed to forward message from Client {}: {}",
-                    session
-                        .uuid
-                        .map(|id| format_uuid(&id))
-                        .unwrap_or_else(|| "<no-id>".to_string()),
-                    e
-                );
-            }
+            let Err(e) = server.tx.try_send(payload) else {
+                return;
+            };
+            error!(
+                "Failed to forward message from Client {}: {}",
+                session
+                    .uuid
+                    .map(|id| format_uuid(&id))
+                    .unwrap_or_else(|| "<no-id>".to_string()),
+                e
+            );
         }
         _ => {}
     }
@@ -448,42 +453,40 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
 
     match payload[0] {
         0x11 => {
+            // [Header][Id][Data]
             // Server → 广播给所有 Client
             state.iter_ids().for_each(|client| {
-                if send_or_drop(&client.tx, &payload) {
-                    client.close(state);
-                    if let Some(uuid) = client.uuid {
-                        warn!(
-                            "[Broadcast] Dropping unresponsive client {}",
-                            format_uuid(&uuid)
-                        );
-                    }
+                if !send_or_drop(&client.tx, &payload) {
+                    return;
+                }
+                client.close(state);
+                if let Some(uuid) = client.uuid {
+                    warn!(
+                        "[Broadcast] Dropping unresponsive client {}",
+                        format_uuid(&uuid)
+                    );
                 }
             });
         }
         0x12 => {
+            // [Header][TargetId][Data]
             // Server → 指定 Client SessionId
-            if payload.len() < 3 {
+            if payload.len() < 2 {
                 warn!("InvalidPacket: Unicast packet too short");
                 return;
             }
 
-            // SessionId 截断
-            let target_id = &payload[2];
-            if let Some(client) = state.get_by_id(target_id) {
-                let remaining = payload.slice(3..);
-                let mut buf = BytesMut::with_capacity(2 + remaining.len());
-                buf.put_u8(0x11);
-                buf.put_u8(session.session_id);
-                buf.extend_from_slice(&remaining);
-                let forwarded = buf.freeze();
-
-                if client.tx.send(forwarded).await.is_err() {
-                    client.close(state);
-                }
+            // SessionId
+            let target_id = &payload[1];
+            let Some(client) = state.get_by_id(target_id) else {
+                return;
             };
+            if client.tx.send(payload).await.is_err() {
+                client.close(state);
+            }
         }
         0x13 => {
+            // [Header][Id][TargetUuid][Data]
             // Server → 指定 Client UUID
             if payload.len() < 18 {
                 warn!("InvalidPacket: Unicast packet too short");
@@ -499,20 +502,24 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
                 return;
             }
 
-            if let Some(client) = state.get_by_uuid(&target_client_id) {
-                let remaining = payload.slice(18..);
-                let mut buf = BytesMut::with_capacity(2 + remaining.len());
-                buf.put_u8(0x11);
-                buf.put_u8(session.session_id);
-                buf.extend_from_slice(&remaining);
-                let forwarded = buf.freeze();
-
-                if client.tx.send(forwarded).await.is_err() {
-                    client.close(state);
-                }
+            let Some(client) = state.get_by_uuid(&target_client_id) else {
+                return;
             };
+
+            let remaining = payload.slice(18..);
+
+            let mut buf = BytesMut::with_capacity(2 + remaining.len());
+            buf.put_u8(0x11);
+            buf.put_u8(session.session_id);
+            buf.put_slice(&remaining);
+            let forwarded = buf.freeze();
+
+            if client.tx.send(forwarded).await.is_err() {
+                client.close(state);
+            }
         }
         0x14 => {
+            // [Header][Id][TargetIds][Data]
             // Server → 广播给未被排除的 Client
             if payload.len() < 3 {
                 warn!("InvalidPacket: BroadcastExcluding too short");
@@ -549,7 +556,7 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
             let mut buf = BytesMut::with_capacity(2 + rest_payload.len());
             buf.put_u8(0x11);
             buf.put_u8(session.session_id);
-            buf.extend_from_slice(rest_payload);
+            buf.put_slice(rest_payload);
             let forwarded = buf.freeze();
 
             state.iter_ids().for_each(|client| {
@@ -557,14 +564,15 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
                 if excludes.iter().any(|ex| ex == &id) {
                     return;
                 }
-                if send_or_drop(&client.tx, &forwarded) {
-                    client.close(state);
-                    if let Some(uuid) = client.uuid {
-                        warn!(
-                            "[Excludes] Dropping unresponsive client {}",
-                            format_uuid(&uuid)
-                        );
-                    }
+                if !send_or_drop(&client.tx, &forwarded) {
+                    return;
+                }
+                client.close(state);
+                if let Some(uuid) = client.uuid {
+                    warn!(
+                        "[Excludes] Dropping unresponsive client {}",
+                        format_uuid(&uuid)
+                    );
                 }
             });
         }

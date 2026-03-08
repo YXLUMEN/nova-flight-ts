@@ -240,7 +240,7 @@ export class NbtUnserialization {
             case 'd':
                 return NbtDouble.of(num);
             default:
-                return NbtInt32.of(Math.round(num));
+                return Number.isInteger(num) ? NbtInt32.of(Math.round(num)) : NbtDouble.of(num);
         }
     }
 

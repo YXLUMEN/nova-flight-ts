@@ -40,14 +40,7 @@ export class ServerNetworkChannel extends NetworkChannel implements ServerChanne
     }
 
     public sendTo<T extends Payload>(payload: T, target: GameProfile) {
-        const type = this.registry.get(payload.getId().id);
-        if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
-
-        const writer = new BinaryWriter();
-        writer.writeInt8(0x12);
-        writer.writeInt8(this.getSessionId());
-        writer.writeInt8(target.sessionId);
-        this.checkAndSend(writer, type, payload);
+        this.sendToSessionId(payload, target.sessionId);
     }
 
     public sendToSessionId<T extends Payload>(payload: T, target: number) {
@@ -56,7 +49,7 @@ export class ServerNetworkChannel extends NetworkChannel implements ServerChanne
 
         const writer = new BinaryWriter();
         writer.writeInt8(0x12);
-        writer.writeInt8(this.getSessionId());
+        // 利用协议节省R端的数据重组
         writer.writeInt8(target);
         this.checkAndSend(writer, type, payload);
     }

@@ -24,6 +24,7 @@ import {GiveCommand} from "../../command/GiveCommand.ts";
 import {ScoreCommand} from "../../command/ScoreCommand.ts";
 import {ClientStorage} from "../ClientStorage.ts";
 import {LangCommand} from "../../command/LangCommand.ts";
+import {ClientFixCommand} from "../../command/ClientFixCommand.ts";
 
 export type CommandNotifyCategory = 'info' | 'success' | 'warning' | 'error';
 
@@ -364,6 +365,7 @@ export class ClientCommandManager extends CommandManager {
 
     public override registry(): void {
         MusicCommand.registry(this.clientDispatcher);
+        ClientFixCommand.registry(this.clientDispatcher);
         ClientSettingsCommand.registry(this.clientDispatcher);
         CommandBarCommand.registry(this.clientDispatcher);
         LangCommand.registry(this.clientDispatcher);

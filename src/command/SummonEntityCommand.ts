@@ -57,7 +57,7 @@ export class SummonEntityCommand {
         let nbt: NbtCompound | undefined = nbtArg?.result;
 
         const countArg = ctx.args.get('count');
-        if (countArg) {
+        if (countArg && countArg.result > 1) {
             this.summonBatch(ctx, countArg.result, type, nbt);
             return;
         }
@@ -66,6 +66,7 @@ export class SummonEntityCommand {
             const world = ctx.source.getWorld()!;
             const entity = type.create(world) as Entity;
             if (nbt) entity.readNBT(nbt);
+            console.log(entity)
 
             entity.setPositionByVec(this.getSpawnPos(ctx));
             world.addEntity(entity);
