@@ -85,12 +85,6 @@ export class ServerWorld extends World implements NbtSerializable {
         entity.age++;
         entity.tick();
 
-        // if (entity.isPlayer()) {
-        //     this.tickPlayer(entity as ServerPlayerEntity);
-        // } else if (entity instanceof ProjectileEntity) {
-        //     this.tickProjectile(entity);
-        // }
-
         if (entity.isPlayer()) return;
         this.getPlayers().forEach(player => {
             this.tickOtherEntity(entity, player);
@@ -135,57 +129,6 @@ export class ServerWorld extends World implements NbtSerializable {
             }
         }
     }
-
-    // private tickPlayer(player: ServerPlayerEntity) {
-    //     if (player.invulnerable) return;
-    //
-    //     this.getEntityLookup().forEachInBox(player.getBoundingBox(), entity => {
-    //         if (entity.isRemoved() || entity.isPlayer() || !entity.isCollisionTo(player)) return;
-    //
-    //         if (entity instanceof MobEntity) {
-    //             entity.attack(player);
-    //             return;
-    //         }
-    //
-    //         if (entity instanceof ProjectileEntity) {
-    //             const owner = entity.getOwner();
-    //             if (owner && owner.isPlayer()) return;
-    //             entity.onEntityHit(player);
-    //         }
-    //     });
-    // }
-
-    // private tickProjectile(projectile: ProjectileEntity): void {
-    //     const owner = projectile.getOwner();
-    //     // 不处理 mob
-    //     if (!owner || !owner.isPlayer()) return;
-    //
-    //     if (projectile instanceof CIWSBulletEntity) {
-    //         this.getEntityLookup().findFirst(projectile.getBoundingBox(), entity => {
-    //             if (entity.isRemoved() || entity.isPlayer() || !projectile.isCollisionTo(entity)) return false;
-    //
-    //             if (entity instanceof MobEntity) {
-    //                 projectile.onEntityHit(entity);
-    //                 return true;
-    //             }
-    //             // 允许玩家相互拦截
-    //             if (entity instanceof ProjectileEntity && entity.getOwner() !== owner) {
-    //                 projectile.discard();
-    //                 entity.onIntercept(projectile.getHitDamage());
-    //                 return true;
-    //             }
-    //             return false;
-    //         });
-    //         return;
-    //     }
-    //
-    //     for (const mob of this.getMobs()) {
-    //         if (projectile.isCollisionTo(mob)) {
-    //             projectile.onEntityHit(mob);
-    //             if (projectile.isRemoved()) return;
-    //         }
-    //     }
-    // }
 
     public override gameOver(player: ServerPlayerEntity): void {
         if (!this.server.isHost(player.getProfile())) {

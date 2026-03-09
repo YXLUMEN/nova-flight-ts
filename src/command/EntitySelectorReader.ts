@@ -128,28 +128,24 @@ export class EntitySelectorReader {
         const start = this.reader.getCursor();
         const c = this.reader.read();
 
-        let result: boolean;
         switch (c) {
             case 'a': {
                 this.limit = Number.MAX_SAFE_INTEGER;
                 this.includesNonPlayers = false;
                 this.sorter = EntitySelectorReader.ARBITRARY;
                 this.setEntityType(EntityTypes.PLAYER);
-                result = false;
                 break;
             }
             case 'e': {
                 this.limit = Number.MAX_SAFE_INTEGER;
                 this.includesNonPlayers = true;
                 this.sorter = EntitySelectorReader.ARBITRARY;
-                result = true;
                 break;
             }
             case 'n': {
                 this.limit = 1;
                 this.includesNonPlayers = true;
                 this.sorter = EntitySelectorReader.NEAREST;
-                result = true;
                 break;
             }
             case 'p': {
@@ -157,7 +153,6 @@ export class EntitySelectorReader {
                 this.includesNonPlayers = false;
                 this.sorter = EntitySelectorReader.NEAREST;
                 this.setEntityType(EntityTypes.PLAYER);
-                result = false;
                 break;
             }
             case 'r': {
@@ -165,24 +160,18 @@ export class EntitySelectorReader {
                 this.includesNonPlayers = false;
                 this.sorter = EntitySelectorReader.RANDOM;
                 this.setEntityType(EntityTypes.PLAYER);
-                result = false;
                 break;
             }
             case 's': {
                 this.limit = 1;
                 this.includesNonPlayers = true;
                 this.senderOnly = true;
-                result = false;
                 break;
             }
             default: {
                 this.reader.setCursor(start);
                 throw new SyntaxError(`Unknown selector: ${c}`);
             }
-        }
-
-        if (result) {
-            this.filters.push(entity => entity.isAlive());
         }
 
         this.suggestionProvider = this.suggestOpen;

@@ -188,4 +188,8 @@ export class AudioManager {
 
         ctrl.abort(reason);
     }
+
+    public static hasListener(name: string) {
+        return this.eventMap.has(name);
+    }
 }

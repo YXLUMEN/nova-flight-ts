@@ -61,13 +61,4 @@ export class MobMissileEntity extends MissileEntity {
         const players = this.getWorld().getPlayers();
         return getNearestEntity(this.getPositionRef, players);
     }
-
-    protected override adjustPosition(): boolean {
-        const pos = this.getPositionRef;
-        if (pos.y < -20 || pos.y > World.WORLD_H + 20 || pos.x < -20 || pos.x > World.WORLD_W + 20) {
-            this.discard();
-            return false;
-        }
-        return true;
-    }
 }

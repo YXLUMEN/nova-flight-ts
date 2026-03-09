@@ -158,13 +158,7 @@ export class NbtCompound implements NbtElement {
     public contains(key: string, type: NbtTypeIndex): boolean {
         const i = this.getKeyType(key);
         if (i === type) return true;
-        return i !== NbtTypeId.Number ?
-            false :
-            i === NbtTypeId.Int8 ||
-            i === NbtTypeId.Int16 ||
-            i === NbtTypeId.Int32 ||
-            i === NbtTypeId.Float ||
-            i === NbtTypeId.Double;
+        return type !== NbtTypeId.Number ? false : 1 <= i && i <= 6;
     }
 
     public getInt8(key: string, d = 0): number {

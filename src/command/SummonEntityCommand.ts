@@ -66,7 +66,6 @@ export class SummonEntityCommand {
             const world = ctx.source.getWorld()!;
             const entity = type.create(world) as Entity;
             if (nbt) entity.readNBT(nbt);
-            console.log(entity)
 
             entity.setPositionByVec(this.getSpawnPos(ctx));
             world.addEntity(entity);

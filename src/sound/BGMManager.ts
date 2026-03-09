@@ -36,6 +36,8 @@ export class BGMManager {
             AudioManager.playAudio(this.playList[this.current]);
         }
 
+        if (AudioManager.hasListener('bgm')) return;
+
         let last: number | undefined;
         AudioManager.addListener('bgm', 'ended', () => {
             clearTimeout(last);

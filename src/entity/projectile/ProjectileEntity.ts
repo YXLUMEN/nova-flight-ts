@@ -114,7 +114,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
             }
         }
 
-        if (nbt.contains('damage', NbtTypeId.Float)) {
+        if (nbt.contains('damage', NbtTypeId.Number)) {
             this.damage = nbt.getFloat('damage');
         }
 
