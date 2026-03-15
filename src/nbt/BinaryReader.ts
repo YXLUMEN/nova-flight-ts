@@ -9,6 +9,13 @@ export class BinaryReader {
         this.view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     }
 
+    public skip(bytes: number): void {
+        if (bytes < 0 || bytes > this.bytesRemaining()) {
+            throw new RangeError(`Cannot skip ${bytes} bytes, only ${this.bytesRemaining()} available`);
+        }
+        this.offset += bytes;
+    }
+
     public bytesRemaining(): number {
         return this.view.byteLength - this.offset;
     }

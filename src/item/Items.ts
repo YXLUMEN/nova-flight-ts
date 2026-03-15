@@ -56,7 +56,7 @@ export class Items {
         .maxCooldown(800)
         .type(WeaponType.EXPLOSIVE)
         .component(DataComponents.EXPLOSION_RADIUS, 256)
-        .component(DataComponents.EXPLOSION_DAMAGE, 32)
+        .component(DataComponents.EXPLOSION_POWER, 32)
     ));
     public static readonly CANNON90_WEAPON = this.register("cannon90_weapon", new Cannon90(new Item.Settings()
         .maxDurability(16)
@@ -64,7 +64,7 @@ export class Items {
         .maxCooldown(16.5)
         .type(WeaponType.KINETIC, WeaponType.EXPLOSIVE)
         .component(DataComponents.EXPLOSION_RADIUS, 112)
-        .component(DataComponents.EXPLOSION_DAMAGE, 8)
+        .component(DataComponents.EXPLOSION_POWER, 8)
         .component(DataComponents.MAX_RELOAD_TIME, 35)
     ));
     public static readonly ROCKET_WEAPON = this.register("rocket_weapon", new RocketLauncher(new Item.Settings()
@@ -73,14 +73,14 @@ export class Items {
         .unbreakable()
         .type(WeaponType.KINETIC, WeaponType.EXPLOSIVE)
         .component(DataComponents.EXPLOSION_RADIUS, 72)
-        .component(DataComponents.EXPLOSION_DAMAGE, 12)
+        .component(DataComponents.EXPLOSION_POWER, 12)
     ));
     public static readonly MISSILE_WEAPON = this.register("missile_weapon", new MissileWeapon(new Item.Settings()
         .attackDamage(5)
         .maxCooldown(400)
         .type(WeaponType.KINETIC, WeaponType.EXPLOSIVE)
         .component(DataComponents.EXPLOSION_RADIUS, 72)
-        .component(DataComponents.EXPLOSION_DAMAGE, 12)
+        .component(DataComponents.EXPLOSION_POWER, 12)
     ));
     public static readonly CIWS_WEAPON = this.register("ciws_weapon", new CIWS(new Item.Settings()
         .attackDamage(2)
@@ -122,7 +122,7 @@ export class Items {
         .maxCooldown(32)
         .type(WeaponType.KINETIC, WeaponType.EXPLOSIVE)
         .component(DataComponents.EXPLOSION_RADIUS, 210)
-        .component(DataComponents.EXPLOSION_DAMAGE, 14)
+        .component(DataComponents.EXPLOSION_POWER, 14)
         .component(DataComponents.MAX_RELOAD_TIME, 40)
     ));
     public static readonly POINT_DEFENSE = this.register("point_defense", new PointDefense(new Item.Settings()
@@ -160,7 +160,7 @@ export class Items {
         .maxCooldown(400)
         .type(WeaponType.KINETIC, WeaponType.EXPLOSIVE)
         .component(DataComponents.EXPLOSION_RADIUS, 64)
-        .component(DataComponents.EXPLOSION_DAMAGE, 16)
+        .component(DataComponents.EXPLOSION_POWER, 16)
     ));
     public static readonly GAMMA_LASERS = this.register('gamma_lasers', new GammaLasers(new Item.Settings()
         .attackDamage(12)

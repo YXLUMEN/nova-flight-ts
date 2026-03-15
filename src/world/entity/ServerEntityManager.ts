@@ -24,7 +24,7 @@ export class ServerEntityManager<T extends Entity> {
         if (!this.index.add(entity)) {
             return false;
         }
-        // this.grid.insert(entity);
+        this.grid.insert(entity);
         entity.setChangeListener(this.createListener(entity));
 
         if (!existed) {
@@ -40,7 +40,7 @@ export class ServerEntityManager<T extends Entity> {
     }
 
     public remove(entity: T) {
-        // this.grid.remove(entity);
+        this.grid.remove(entity);
         this.index.remove(entity);
         this.handler.stopTicking(entity);
         entity.setChangeListener(EMPTY_LISTENER);
@@ -64,7 +64,7 @@ export class ServerEntityManager<T extends Entity> {
         const self = this;
         return {
             updateEntityPosition() {
-                // self.grid.insert(entity);
+                self.grid.insert(entity);
             },
             remove() {
                 self.remove(entity);

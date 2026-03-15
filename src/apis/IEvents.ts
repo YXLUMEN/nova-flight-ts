@@ -8,7 +8,7 @@ import type {IVec} from "../utils/math/IVec.ts";
 import type {Tech} from "../tech/Tech.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import type {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
-import type {Explosion} from "../world/Explosion.ts";
+import type {Explosion} from "../world/explosion/Explosion.ts";
 
 export const EVENTS = createClean({
     GAME_START: "game:start",

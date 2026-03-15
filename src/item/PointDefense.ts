@@ -5,17 +5,16 @@ import type {Entity} from "../entity/Entity.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import {DataComponents} from "../component/DataComponents.ts";
 import {BallisticsUtils} from "../utils/math/BallisticsUtils.ts";
-import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import type {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 import {LivingEntity} from "../entity/LivingEntity.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {squareDistVec2} from "../utils/math/math.ts";
 import type {EntityDist} from "../apis/types.ts";
 import {spawnLaserByVec} from "../utils/ServerEffect.ts";
+import {Box} from "../utils/math/Box.ts";
+import {EntityPredicates} from "../predicate/EntityPredicates.ts";
 
 export class PointDefense extends Item {
-    public static readonly DEFENSE_RADIUS_SQ = 256 * 256;
-
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean) {
         super.inventoryTick(stack, world, holder, slot, selected);
 
@@ -25,19 +24,17 @@ export class PointDefense extends Item {
             return;
         }
 
-        const selfPos = holder.getPositionRef;
-
+        const holderPos = holder.getPositionRef;
         const validThreats: EntityDist<ProjectileEntity>[] = [];
-        for (const entity of world.getProjectiles()) {
-            if (entity.getOwner() instanceof PlayerEntity) continue;
 
-            const distSq = squareDistVec2(selfPos, entity.getPositionRef);
-            if (
-                distSq > PointDefense.DEFENSE_RADIUS_SQ ||
-                !BallisticsUtils.isViableThreat(entity.getPositionRef, entity.getVelocityRef, selfPos)
-            ) continue;
-
-            validThreats.push({entity, distSq});
+        const box = Box.fromCenter(holderPos.x, holderPos.y, 256, 256);
+        const entities = world.searchOtherEntities(holder, box, EntityPredicates.DEFENSE);
+        for (const entity of entities) {
+            if (!BallisticsUtils.isViableThreat(entity.getPositionRef, entity.getVelocityRef, holderPos)) continue;
+            validThreats.push({
+                entity: entity as ProjectileEntity,
+                distSq: squareDistVec2(holderPos, entity.getPositionRef)
+            });
             if (validThreats.length > 32) break;
         }
 
@@ -51,7 +48,7 @@ export class PointDefense extends Item {
             const entity = validThreats[i].entity;
 
             entity.onIntercept(damage);
-            spawnLaserByVec(world as ServerWorld, selfPos, entity.getPositionRef);
+            spawnLaserByVec(world as ServerWorld, holderPos, entity.getPositionRef);
         }
     }
 }

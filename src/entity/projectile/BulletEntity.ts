@@ -5,18 +5,20 @@ import {World} from "../../world/World.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 import {Techs} from "../../tech/Techs.ts";
+import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 
 export class BulletEntity extends ProjectileEntity {
     public constructor(type: EntityType<BulletEntity>, world: World, owner: Entity | null, damage: number) {
         super(type, world, owner, damage);
     }
 
-    public override onEntityHit(entity: Entity): void {
+    protected override onEntityHit(hitResult: EntityHitResult): void {
         this.discard();
 
         const sources = this.getWorld().getDamageSources();
         const owner = this.getOwner();
 
+        const entity = hitResult.entity;
         const hitDamage = this.getHitDamage();
         if (owner instanceof PlayerEntity && owner.getTechs().isUnlocked(Techs.ANTIMATTER_WARHEAD)) {
             let damage = hitDamage;

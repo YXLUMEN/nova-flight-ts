@@ -47,6 +47,8 @@ import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacke
 import {TranslatableTextS2CPacket} from "../../network/packet/s2c/TranslatableTextS2CPacket.ts";
 import {PongS2CPacket} from "../../network/packet/s2c/PongS2CPacket.ts";
 import {ServerStartS2CPacket} from "../../network/packet/s2c/ServerStartS2CPacket.ts";
+import {BlockChangeS2CPacket} from "../../network/packet/s2c/BlockChangeS2CPacket.ts";
+import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
 
 export class ServerPackets {
     /**
@@ -99,6 +101,8 @@ export class ServerPackets {
         this.register(DifficultChangeS2CPacket.ID, DifficultChangeS2CPacket.CODEC);
         this.register(GameMessageS2CPacket.ID, GameMessageS2CPacket.CODEC);
         this.register(TranslatableTextS2CPacket.ID, TranslatableTextS2CPacket.CODEC);
+        this.register(BlockChangeS2CPacket.ID, BlockChangeS2CPacket.CODEC);
+        this.register(BatchBlockChangesPacket.ID, BatchBlockChangesPacket.CODEC);
         PayloadTypeRegistry.playS2C().settle();
     }
 

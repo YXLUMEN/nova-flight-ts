@@ -20,11 +20,12 @@ import {config} from "../../utils/uit.ts";
 import type {BinaryReader} from "../BinaryReader.ts";
 import {NbtTypes} from "../NbtTypes.ts";
 import {NbtSerialization} from "../NbtSerialization.ts";
+import type {NbtUint8Array} from "./NbtUint8Array.ts";
 
 
 export class NbtCompound implements NbtElement {
     public static readonly MAGIC = 0x6E627430;
-    public static readonly VERSION = 6;
+    public static readonly VERSION = 7;
     public static readonly TYPE: NbtType<NbtCompound> = config({
         read(reader: BinaryReader): NbtCompound {
             const compound = new NbtCompound();
@@ -97,37 +98,37 @@ export class NbtCompound implements NbtElement {
         return this;
     }
 
-    public putInt8Array(key: string, ...value: number[]): this {
+    public putInt8Array(key: string, value: number[]): this {
         this.entries.set(key, NbtInt8Array.create(value));
         return this;
     }
 
-    public putInt16Array(key: string, ...value: number[]): this {
+    public putInt16Array(key: string, value: number[]): this {
         this.entries.set(key, NbtInt16Array.create(value));
         return this;
     }
 
-    public putInt32Array(key: string, ...value: number[]): this {
+    public putInt32Array(key: string, value: number[]): this {
         this.entries.set(key, NbtInt32Array.create(value));
         return this;
     }
 
-    public putFloatArray(key: string, ...value: number[]): this {
+    public putFloatArray(key: string, value: number[]): this {
         this.entries.set(key, NbtFloatArray.create(value));
         return this;
     }
 
-    public putDoubleArray(key: string, ...value: number[]): this {
+    public putDoubleArray(key: string, value: number[]): this {
         this.entries.set(key, NbtDoubleArray.create(value));
         return this;
     }
 
-    public putUint32Array(key: string, ...value: number[]): this {
+    public putUint32Array(key: string, value: number[]): this {
         this.entries.set(key, NbtUint32Array.create(value));
         return this;
     }
 
-    public putStringArray(key: string, ...value: string[]): this {
+    public putStringArray(key: string, value: string[]): this {
         this.entries.set(key, new NbtStringArray(value));
         return this;
     }
@@ -223,6 +224,11 @@ export class NbtCompound implements NbtElement {
     public getDoubleArray(key: string): Float64Array {
         const v = this.entries.get(key) as NbtDoubleArray;
         return v && v.getType() === NbtTypeId.DoubleArray ? v.value : new Float64Array();
+    }
+
+    public getUint8Array(key: string): Uint8Array {
+        const v = this.entries.get(key) as NbtUint8Array;
+        return v && v.getType() === NbtTypeId.Uint8Array ? v.value : new Uint8Array();
     }
 
     public getUint32Array(key: string): Uint32Array {

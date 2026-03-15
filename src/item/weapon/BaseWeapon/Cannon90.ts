@@ -8,6 +8,8 @@ import {DataComponents} from "../../../component/DataComponents.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import {Techs} from "../../../tech/Techs.ts";
+import {EffectEnum, ExplosionBehavior} from "../../../world/explosion/ExplosionBehavior.ts";
+import {ExplosionVisual} from "../../../world/explosion/ExplosionVisual.ts";
 
 export class Cannon90 extends BaseWeapon {
     private readonly speed = 16;
@@ -19,13 +21,10 @@ export class Cannon90 extends BaseWeapon {
             world,
             attacker,
             stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1),
-            {
-                explosionRadius: stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 16),
-                damage: stack.getOrDefault(DataComponents.EXPLOSION_DAMAGE, 5),
-                sparks: 4,
-                fastSparks: 2,
-                behaviour: fusion ? 'fusion' : undefined,
-            });
+            stack.getOrDefault(DataComponents.EXPLOSION_POWER, 5),
+            new ExplosionBehavior(undefined, fusion ? EffectEnum.FUSION : EffectEnum.NONE),
+            new ExplosionVisual(stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 16), undefined, 4, 2)
+        );
 
         this.setBullet(bullet, attacker, this.speed, 20, 1);
         world.spawnEntity(bullet);

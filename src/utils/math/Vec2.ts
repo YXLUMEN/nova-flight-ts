@@ -70,4 +70,8 @@ export class Vec2 implements IVec {
     public toMut(): MutVec2 {
         return new MutVec2(this.x, this.y);
     }
+
+    public toImmut(): Vec2 {
+        return this;
+    }
 }

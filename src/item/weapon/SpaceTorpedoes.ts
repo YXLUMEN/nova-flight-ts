@@ -14,7 +14,7 @@ export class SpaceTorpedoes extends SpecialWeapon {
         const pos = attacker.getPositionRef;
         const torpedoesCount = stack.getOrDefault(DataComponents.LAUNCH_COUNT, 6);
         const hitDamage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 12);
-        const explosionDamage = stack.getOrDefault(DataComponents.EXPLOSION_DAMAGE, 12);
+        const explosionDamage = stack.getOrDefault(DataComponents.EXPLOSION_POWER, 12);
         const explosionRadius = stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 64);
 
         let i = 1;

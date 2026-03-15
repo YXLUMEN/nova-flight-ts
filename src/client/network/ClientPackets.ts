@@ -17,6 +17,8 @@ import {ChatMessageC2SPacket} from "../../network/packet/c2s/ChatMessageC2SPacke
 import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPacket.ts";
 import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
 import {PingC2SPacket} from "../../network/packet/c2s/PingC2SPacket.ts";
+import {BlockChangeC2SPacket} from "../../network/packet/c2s/BlockChangeC2SPacket.ts";
+import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
 
 export class ClientPackets {
     public static registerNetworkPacket(): void {
@@ -38,6 +40,8 @@ export class ClientPackets {
         this.register(ChatMessageC2SPacket.ID, ChatMessageC2SPacket.CODEC);
         this.register(PlayerReloadC2SPacket.ID, PlayerReloadC2SPacket.CODEC);
         this.register(PlayerResetTechC2SPacket.ID, PlayerResetTechC2SPacket.CODEC);
+        this.register(BlockChangeC2SPacket.ID, BlockChangeC2SPacket.CODEC);
+        this.register(BatchBlockChangesPacket.ID, BatchBlockChangesPacket.CODEC);
         PayloadTypeRegistry.playC2S().settle();
     }
 

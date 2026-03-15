@@ -10,7 +10,7 @@ import type {DataTracked} from "./data/DataTracked.ts";
 import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import {Box} from "../utils/math/Box.ts";
-import {clamp, lerp, lerpRadians} from "../utils/math/math.ts";
+import {clamp, doubleEquals, lerp, lerpRadians} from "../utils/math/math.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {Comparable, UUID} from "../apis/types.ts";
@@ -26,6 +26,7 @@ import {IllegalArgumentError, IllegalStateException} from "../apis/errors.ts";
 import {NbtTypeId} from "../nbt/NbtType.ts";
 import {EMPTY_LISTENER, type EntityChangeListener} from "../world/entity/EntityChangeListener.ts";
 import type {EntityRenderer} from "../client/render/entity/EntityRenderer.ts";
+import {BlockCollision} from "../world/collision/BlockCollision.ts";
 
 
 export abstract class Entity implements EntityLike, DataTracked, Comparable, NbtSerializable, CommandOutput {
@@ -38,6 +39,12 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     public prevX: number = 0;
     public prevY: number = 0;
     public prevYaw: number = 0;
+
+    public noClip: boolean = false;
+    public noColliesToEntity: boolean = false;
+
+    private readonly dimensions: EntityDimensions;
+    private boundingBox: Box = Entity.NULL_BOX;
 
     public age: number = 0;
 
@@ -59,9 +66,6 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     private yaw: number = 0;
 
     private changeListener: EntityChangeListener = EMPTY_LISTENER;
-
-    private readonly dimensions: EntityDimensions;
-    private boundingBox: Box = Entity.NULL_BOX;
 
     private readonly tags: Set<string> = new Set<string>();
     private removed: boolean = false;
@@ -176,7 +180,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     public setPosition(x: number, y: number): void {
         if (this.position.x === x && this.position.y === y) return;
         this.position.set(x, y);
-        // this.changeListener.updateEntityPosition();
+        this.changeListener.updateEntityPosition();
         this.setBoundingBox(this.calculateBoundingBox());
     }
 
@@ -284,14 +288,6 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.velocityDirty = true;
     }
 
-    public move(x: number, y: number): void {
-        this.setPosition(this.position.x + x, this.position.y + y);
-    }
-
-    public moveByVec(vec: IVec): void {
-        this.move(vec.x, vec.y);
-    }
-
     public getWidth(): number {
         return this.dimensions.width;
     }
@@ -396,6 +392,59 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.setYaw(dYaw);
     }
 
+    public move(movement: IVec): void {
+        if (this.noClip) {
+            this.setPosition(this.position.x + movement.x, this.position.y + movement.y);
+            return;
+        }
+
+        const withBlock = this.adjustBlockCollision(movement);
+        const cx = !doubleEquals(movement.x, withBlock.x, 1E-5);
+        const cy = !doubleEquals(movement.y, withBlock.y, 1E-5);
+
+        if (cx || cy) {
+            this.setVelocity(cx ? 0 : this.velocity.x, cy ? 0 : this.velocity.y);
+        }
+
+        const withEntity = this.adjustEntityCollision(withBlock);
+        if (withEntity.lengthSquared() > 1E-7) {
+            this.setPosition(this.position.x + withEntity.x, this.position.y + withEntity.y);
+        }
+    }
+
+    protected adjustBlockCollision(movement: IVec): IVec {
+        const map = this.getWorld().getMap();
+        const bounds = this.getBoundingBox();
+        if (map.intersectsBox(bounds)) return movement;
+
+        return BlockCollision.separatingCollision(map, bounds, movement);
+    }
+
+    private adjustEntityCollision(movement: IVec): IVec {
+        if (this.noColliesToEntity) return movement;
+
+        const selfBox = this.getBoundingBox().stretchByVec(movement);
+        const entities = this.getWorld().getEntityCollisions(this, selfBox);
+        if (entities.length === 0) return movement;
+
+        const adjusted = movement.toMut();
+        for (const entity of entities) {
+            const otherBox = entity.getBoundingBox();
+
+            const overlapX = Math.min(selfBox.maxX - otherBox.minX, otherBox.maxX - selfBox.minX);
+            const overlapY = Math.min(selfBox.maxY - otherBox.minY, otherBox.maxY - selfBox.minY);
+
+            if (overlapX < overlapY) {
+                const sign = this.position.x < entity.position.x ? -1 : 1;
+                adjusted.x = clamp(overlapX * sign, -adjusted.x, adjusted.x);
+            } else {
+                const sign = this.position.y < entity.position.y ? -1 : 1;
+                adjusted.y = clamp(overlapY * sign, -adjusted.y, adjusted.y);
+            }
+        }
+        return adjusted;
+    }
+
     protected adjustPosition(): boolean {
         const dim = this.dimensions;
         let x = this.position.x;
@@ -489,8 +538,8 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
         try {
-            nbt.putDoubleArray('pos', this.position.x, this.position.y);
-            nbt.putFloatArray('velocity', this.velocity.x, this.velocity.y);
+            nbt.putDoubleArray('pos', [this.position.x, this.position.y]);
+            nbt.putFloatArray('velocity', [this.velocity.x, this.velocity.y]);
 
             nbt.putDouble('yaw', this.yaw);
             nbt.putDouble('speed', this.movementSpeed);
@@ -498,7 +547,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
             nbt.putString('uuid', this.uuid);
 
             if (this.tags.size > 0) {
-                nbt.putStringArray('tags', ...this.tags);
+                nbt.putStringArray('tags', Array.from(this.tags));
             }
             return nbt;
         } catch (err) {

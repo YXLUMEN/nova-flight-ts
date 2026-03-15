@@ -3,12 +3,14 @@ import type {GameProfile} from "../../entity/GameProfile.ts";
 import type {Payload, PayloadId} from "../../../network/Payload.ts";
 import {HashMap} from "../../../utils/collection/HashMap.ts";
 import type {Identifier} from "../../../registry/Identifier.ts";
-import type {Consumer} from "../../../apis/types.ts";
+import type {Consumer, FunctionReturn} from "../../../apis/types.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {PongS2CPacket} from "../../../network/packet/s2c/PongS2CPacket.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
 import type {PacketListener} from "./PacketListener.ts";
 import {type ConnectionStateType} from "../ConnectionState.ts";
+import {Log} from "../../../worker/log.ts";
+import {NetworkChannel} from "../../../network/NetworkChannel.ts";
 
 export abstract class ServerCommonHandler implements PacketListener {
     public static readonly LOGOUT = TranslatableText.of('network.disconnect.logout');
@@ -65,6 +67,69 @@ export abstract class ServerCommonHandler implements PacketListener {
 
     public clear(): void {
         this.payloadHandlers.clear();
+    }
+
+    public static* buildBatch<T, P extends Payload, B extends Payload>(
+        entries: Iterable<T>,
+        c0: FunctionReturn<T, P>,
+        c1: FunctionReturn<P[], B>,
+        maxSize = NetworkChannel.MAX_PACKET_SIZE - 14
+    ) {
+        let currentSize = 0;
+        const currentBatch: P[] = [];
+        for (const entry of entries) {
+            const packet = c0(entry);
+            const estSize = packet.estimateSize!();
+
+            if (estSize >= maxSize) {
+                Log.warn(`Packet ${packet} to large, skip sync`);
+                continue;
+            }
+
+            if (currentSize + estSize >= maxSize && currentBatch.length > 0) {
+                yield c1(currentBatch);
+                currentBatch.length = 0;
+                currentSize = 0;
+            }
+            currentBatch.push(packet);
+            currentSize += estSize;
+        }
+
+        if (currentBatch.length > 0) {
+            yield c1(currentBatch);
+        }
+    }
+
+    public static* buildBatchWithEst<T, B>(
+        entries: Iterable<T>,
+        estimateSize: FunctionReturn<T, number>,
+        buildBatch: FunctionReturn<T[], B>,
+        maxPacketSize = NetworkChannel.MAX_PACKET_SIZE - 14
+    ) {
+        let currentSize = 0;
+        const currentBatch: T[] = [];
+
+        for (const entry of entries) {
+            const estSize = estimateSize(entry);
+
+            if (estSize >= maxPacketSize) {
+                Log.warn(`Entry too large (${estSize} >= ${maxPacketSize}), skipped`);
+                continue;
+            }
+
+            if (currentSize + estSize > maxPacketSize && currentBatch.length > 0) {
+                yield buildBatch(currentBatch);
+                currentBatch.length = 0;
+                currentSize = 0;
+            }
+
+            currentBatch.push(entry);
+            currentSize += estSize;
+        }
+
+        if (currentBatch.length > 0) {
+            yield buildBatch(currentBatch);
+        }
     }
 
     public register<T extends Payload>(id: PayloadId<T>, handler: Consumer<T>): void {

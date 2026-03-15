@@ -3,20 +3,20 @@ import type {ItemStack} from "./ItemStack.ts";
 import type {World} from "../world/World.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
-import type {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
+import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 import {rand, squareDistVec2} from "../utils/math/math.ts";
 import {CIWSBulletEntity} from "../entity/projectile/CIWSBulletEntity.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
-import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {BallisticsUtils} from "../utils/math/BallisticsUtils.ts";
 import {DataComponents} from "../component/DataComponents.ts";
 import {LivingEntity} from "../entity/LivingEntity.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import type {EntityDist} from "../apis/types.ts";
+import {Box} from "../utils/math/Box.ts";
+import {EntityPredicates} from "../predicate/EntityPredicates.ts";
 
 export class FlakBattery extends Item {
     public static readonly BULLET_SPEED = 40;
-    public static readonly DEFENCE_RADIUS_SQ = 256 * 256;
 
     private static readonly targets = new WeakMap<Entity, Set<ProjectileEntity>>();
 
@@ -82,15 +82,16 @@ export class FlakBattery extends Item {
         } else targets.clear();
 
         const validThreats: EntityDist<ProjectileEntity>[] = [];
-        for (const entity of world.getProjectiles()) {
-            if (entity.isRemoved() || entity.getOwner() instanceof PlayerEntity) continue;
 
-            const distSq = squareDistVec2(selfPos, entity.getPositionRef);
-            if (distSq > this.DEFENCE_RADIUS_SQ ||
-                !BallisticsUtils.isViableThreat(entity.getPositionRef, entity.getVelocityRef, selfPos)
-            ) continue;
+        const box = Box.fromCenter(selfPos.x, selfPos.y, 256, 256);
+        const entities = world.searchOtherEntities(holder, box, EntityPredicates.DEFENSE);
 
-            validThreats.push({entity, distSq});
+        for (const entity of entities) {
+            if (!BallisticsUtils.isViableThreat(entity.getPositionRef, entity.getVelocityRef, selfPos)) continue;
+            validThreats.push({
+                entity: entity as ProjectileEntity,
+                distSq: squareDistVec2(selfPos, entity.getPositionRef)
+            });
             if (validThreats.length > 32) break;
         }
 

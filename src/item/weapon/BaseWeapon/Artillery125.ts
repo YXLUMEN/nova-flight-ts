@@ -8,6 +8,8 @@ import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {C125BulletEntity} from "../../../entity/projectile/C125BulletEntity.ts";
 import {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import {Techs} from "../../../tech/Techs.ts";
+import {EffectEnum, ExplosionBehavior} from "../../../world/explosion/ExplosionBehavior.ts";
+import {ExplosionVisual} from "../../../world/explosion/ExplosionVisual.ts";
 
 export class Artillery125 extends BaseWeapon {
     private readonly speed = 14;
@@ -19,13 +21,9 @@ export class Artillery125 extends BaseWeapon {
             world,
             attacker,
             stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1),
-            {
-                explosionRadius: stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 16),
-                damage: stack.getOrDefault(DataComponents.EXPLOSION_DAMAGE, 5),
-                sparks: 6,
-                fastSparks: 3,
-                behaviour: fusion ? 'fusion' : undefined,
-            });
+            stack.getOrDefault(DataComponents.EXPLOSION_POWER, 5),
+            new ExplosionBehavior(undefined, fusion ? EffectEnum.FUSION : EffectEnum.NONE),
+            new ExplosionVisual(stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 16), undefined, 6, 3));
 
         this.setBullet(bullet, attacker, this.speed, 20, 1);
         world.spawnEntity(bullet);

@@ -56,7 +56,7 @@ export class EntitySpawnS2CPacket implements Payload {
         const vx = encodeVelocity(entity.getVelocityRef.x);
         const vy = encodeVelocity(entity.getVelocityRef.y);
 
-        return new this(
+        return new EntitySpawnS2CPacket(
             entity.getId(),
             entity.getUUID(),
             entity.getX(),

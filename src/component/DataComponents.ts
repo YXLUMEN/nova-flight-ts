@@ -50,7 +50,7 @@ export class DataComponents {
     public static readonly EXPLOSION_RADIUS: ComponentType<number> = this.register("explosion_radius",
         builder => builder.withCodec(Codecs.DOABLE).withPacketCodec(PacketCodecs.DOUBLE)
     );
-    public static readonly EXPLOSION_DAMAGE: ComponentType<number> = this.register("explosion_damage",
+    public static readonly EXPLOSION_POWER: ComponentType<number> = this.register("explosion_power",
         builder => builder.withCodec(Codecs.DOABLE).withPacketCodec(PacketCodecs.DOUBLE)
     );
 

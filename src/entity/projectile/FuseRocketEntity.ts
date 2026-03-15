@@ -2,6 +2,8 @@ import {RocketEntity} from "./RocketEntity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
 import type {Entity} from "../Entity.ts";
+import {ExplosionBehavior} from "../../world/explosion/ExplosionBehavior.ts";
+import {ExplosionVisual} from "../../world/explosion/ExplosionVisual.ts";
 
 export class FuseRocketEntity extends RocketEntity {
     private fuse: number;
@@ -21,13 +23,10 @@ export class FuseRocketEntity extends RocketEntity {
     }
 
     public override explode() {
-        this.getWorld().createExplosion(this, null, this.getX(), this.getY(), {
-            damage: this.explosionDamage,
-            explosionRadius: this.explosionRadius,
-            fastSparks: 2,
-            sparks: 5,
-            explodeColor: this.explodeColor,
-            playSound: this.playSound
-        });
+        this.getWorld().createExplosion(this, null,
+            this.getX(), this.getY(), this.explosionDamage,
+            new ExplosionBehavior(undefined, undefined, true, this.playSound),
+            new ExplosionVisual(this.explosionRadius, this.explodeColor, 5, 2)
+        );
     }
 }

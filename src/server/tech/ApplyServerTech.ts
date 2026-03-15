@@ -221,9 +221,9 @@ export class ApplyServerTech {
             }
             case Techs.HD_EXPLOSIVES: {
                 player.getInventory().values().forEach(stack => {
-                    const base = stack.get(DataComponents.EXPLOSION_DAMAGE);
+                    const base = stack.get(DataComponents.EXPLOSION_POWER);
                     if (base) {
-                        stack.set(DataComponents.EXPLOSION_DAMAGE, base * 1.4);
+                        stack.set(DataComponents.EXPLOSION_POWER, base * 1.4);
                     }
                 });
                 break;
@@ -282,7 +282,7 @@ export class ApplyServerTech {
                 if (stack) {
                     stack.set(DataComponents.LAUNCH_COUNT, 24);
                     stack.set(DataComponents.ATTACK_DAMAGE, 3);
-                    stack.set(DataComponents.EXPLOSION_DAMAGE, 6);
+                    stack.set(DataComponents.EXPLOSION_POWER, 6);
                     stack.set(DataComponents.EXPLOSION_RADIUS, 48);
                 }
                 break;
@@ -387,9 +387,9 @@ export class ApplyServerTech {
         }
 
         if (tech.isUnlocked(Techs.HD_EXPLOSIVES)) {
-            const base = stack.get(DataComponents.EXPLOSION_DAMAGE);
+            const base = stack.get(DataComponents.EXPLOSION_POWER);
             if (base) {
-                stack.set(DataComponents.EXPLOSION_DAMAGE, base * 1.4);
+                stack.set(DataComponents.EXPLOSION_POWER, base * 1.4);
                 player.syncStack(stack);
             }
         }

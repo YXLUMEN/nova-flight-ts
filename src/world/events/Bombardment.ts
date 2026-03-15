@@ -42,11 +42,6 @@ export class Bombardment implements WorldEvent {
     public tick(world: World): void {
         if (this.isDestroyed() || this.age < this.countdown || world.isClient) return;
         this.age++;
-
-        world.createExplosion(null, null, this.position.x, this.position.y, {
-            damage: this.damage,
-            explosionRadius: this.radius,
-        });
     }
 
     public emit(): void {

@@ -3,7 +3,7 @@ import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {PI2} from "../../utils/math/math.ts";
 import {Window} from "./Window.ts";
 
-interface ViewRect {
+export interface ViewRect {
     top: number;
     bottom: number;
     left: number;

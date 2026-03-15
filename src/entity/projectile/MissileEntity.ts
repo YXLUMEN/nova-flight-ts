@@ -10,6 +10,8 @@ import {WorldConfig} from "../../configs/WorldConfig.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
+import {ProjectRaycastUtil} from "../../world/collision/ProjectRaycastUtil.ts";
+import {HitTypes} from "../../world/collision/HitResult.ts";
 
 export class MissileEntity extends RocketEntity {
     public static readonly lockedEntity = new WeakMap<Entity, number>();
@@ -39,12 +41,10 @@ export class MissileEntity extends RocketEntity {
     }
 
     public override tick() {
-        this.prevYaw = this.getYaw();
-
-        const pos = this.getPositionRef;
-        this.moveByVec(this.getVelocityRef);
-
         if (!this.adjustPosition()) return;
+
+        this.prevYaw = this.getYaw();
+        this.track(this.getVelocityRef);
 
         const world = this.getWorld();
         if (!world.isClient && this.lastTarget !== this.target) {
@@ -72,6 +72,7 @@ export class MissileEntity extends RocketEntity {
             return;
         }
 
+        const pos = this.getPositionRef;
         const cd = (this.age & 3) === 0;
 
         if (world.isClient) {
@@ -147,6 +148,16 @@ export class MissileEntity extends RocketEntity {
             this.turnRate,
             WorldConfig.mbps
         );
+    }
+
+    protected track(movement: IVec) {
+        const pos = this.getPositionRef;
+        const hitResult = ProjectRaycastUtil.getCollision(this, entity => this.canHit(entity));
+        if (hitResult.getType() !== HitTypes.MISS) {
+            this.onCollision(hitResult);
+        }
+
+        this.setPosition(pos.x + movement.x, pos.y + movement.y);
     }
 
     public applyDecoy(): void {

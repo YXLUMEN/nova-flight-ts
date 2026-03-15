@@ -1,15 +1,17 @@
 import {ExplodeBulletEntity} from "./ExplodeBulletEntity.ts";
-import type {Entity} from "../Entity.ts";
 import {BossEntity} from "../mob/BossEntity.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import {squareDistVec2} from "../../utils/math/math.ts";
+import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 
 export class C125BulletEntity extends ExplodeBulletEntity {
     public override color = '#c68900';
 
-    public override onEntityHit(entity: Entity) {
-        super.onEntityHit(entity);
+    protected override onEntityHit(hitResult: EntityHitResult) {
+        super.onEntityHit(hitResult);
 
+        if (this.getWorld().isClient) return;
+        const entity = hitResult.entity;
         if (entity instanceof BossEntity) return;
 
         const yaw = this.getYaw();

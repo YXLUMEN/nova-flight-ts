@@ -17,6 +17,7 @@ import {NbtCompoundArray} from "./element/NbtCompoundArray.ts";
 import {NbtInvalid} from "./element/NbtInvalid.ts";
 import type {NbtType} from "./NbtType.ts";
 import {NbtCompound} from "./element/NbtCompound.ts";
+import {NbtUint8Array} from "./element/NbtUint8Array.ts";
 
 export class NbtTypes {
     private static readonly VALUES: NbtType<any>[];
@@ -41,6 +42,7 @@ export class NbtTypes {
             NbtInt32Array.TYPE,
             NbtFloatArray.TYPE,
             NbtDoubleArray.TYPE,
+            NbtUint8Array.TYPE,
             NbtUint32Array.TYPE,
             NbtStringArray.TYPE,
             NbtCompoundArray.TYPE

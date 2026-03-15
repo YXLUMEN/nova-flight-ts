@@ -1,4 +1,4 @@
-import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {EntitySpawnS2CPacket} from "./EntitySpawnS2CPacket.ts";
@@ -16,6 +16,10 @@ export class EntityBatchSpawnS2CPacket implements Payload {
 
     public constructor(entities: EntitySpawnS2CPacket[]) {
         this.entities = entities;
+    }
+
+    public static new(entities: EntitySpawnS2CPacket[]) {
+        return new EntityBatchSpawnS2CPacket(entities);
     }
 
     public static create(entities: Iterable<Entity>) {

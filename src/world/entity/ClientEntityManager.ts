@@ -21,12 +21,14 @@ export class ClientEntityManager<T extends Entity> {
 
     public addEntity(entity: T): void {
         this.index.add(entity);
-        entity.setChangeListener(this.createListener(entity));
+        this.grid.insert(entity);
 
+        entity.setChangeListener(this.createListener(entity));
         this.handler.startTicking(entity);
     }
 
     public remove(entity: T): void {
+        this.grid.remove(entity);
         this.index.remove(entity);
         this.handler.stopTicking(entity);
         entity.setChangeListener(EMPTY_LISTENER);
@@ -45,6 +47,7 @@ export class ClientEntityManager<T extends Entity> {
         const self = this;
         return {
             updateEntityPosition() {
+                self.grid.insert(entity);
             },
             remove() {
                 self.remove(entity);

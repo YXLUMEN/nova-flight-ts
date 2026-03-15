@@ -8,9 +8,9 @@ import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.
 import type {IVec} from "../../utils/math/IVec.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
-import {BulletEntity} from "../projectile/BulletEntity.ts";
 import {EntityType} from "../EntityType.ts";
 import type {World} from "../../world/World.ts";
+import {MobBulletEntity} from "../projectile/MobBulletEntity.ts";
 
 export class BaseBossEntity extends BossEntity {
     protected attackCooldown: number = 0;
@@ -144,7 +144,7 @@ export class BaseBossEntity extends BossEntity {
         for (let i = 0; i < count; i++) {
             const angle = startAngle + step * i;
             const vel = new Vec2(Math.cos(angle) * speed, Math.sin(angle) * speed);
-            const b = new BulletEntity(EntityTypes.ENEMY_BULLET_ENTITY, world, this, 1);
+            const b = new MobBulletEntity(EntityTypes.ENEMY_BULLET_ENTITY, world, this, 1);
             b.setVelocityByVec(vel);
             b.setPositionByVec(pos);
             b.color = '#b10000';

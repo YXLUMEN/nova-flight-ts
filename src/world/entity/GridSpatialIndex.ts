@@ -10,6 +10,7 @@ export class GridSpatialIndex<T extends EntityLike> {
     private readonly cols: number;
     private readonly rows: number;
     private readonly grid: GridCell<T>[][];
+    private readonly filter = new Set<T>();
 
     private entityGridCells = new Map<T, Index[]>();
 
@@ -18,12 +19,11 @@ export class GridSpatialIndex<T extends EntityLike> {
         this.cols = Math.ceil(width / this.cellSize);
         this.rows = Math.ceil(height / this.cellSize);
 
-        // this.grid = Array(this.rows)
-        //     .fill(null)
-        //     .map(() => Array(this.cols)
-        //         .fill(null)
-        //         .map(() => new Set()));
-        this.grid = []; // 暂不启用
+        this.grid = Array(this.rows)
+            .fill(null)
+            .map(() => Array(this.cols)
+                .fill(null)
+                .map(() => new Set()));
     }
 
     private toGridCoord(value: number, maxIndex: number): number {
@@ -74,12 +74,21 @@ export class GridSpatialIndex<T extends EntityLike> {
         const startRow = this.toGridCoord(region.minY, this.rows - 1);
         const endRow = this.toGridCoord(region.maxY, this.rows - 1);
 
-        const result = new Set<T>();
+        if (startCol === endCol && startRow === endRow) {
+            for (const entity of this.grid[startRow][startCol]) {
+                if (region.intersectsByBox(entity.getBoundingBox())) {
+                    yield entity;
+                }
+            }
+            return;
+        }
+
+        this.filter.clear();
         for (let r = startRow; r <= endRow; r++) {
             for (let c = startCol; c <= endCol; c++) {
                 for (const entity of this.grid[r][c]) {
-                    if (result.has(entity)) continue;
-                    result.add(entity);
+                    if (this.filter.has(entity) || !region.intersectsByBox(entity.getBoundingBox())) continue;
+                    this.filter.add(entity);
                     yield entity;
                 }
             }
@@ -100,16 +109,6 @@ export class GridSpatialIndex<T extends EntityLike> {
         for (const entity of this.search(region)) {
             if (predicate(entity)) return;
         }
-    }
-
-    public queryIntersecting(region: Box): T[] {
-        const results: T[] = [];
-        for (const entity of this.search(region)) {
-            if (entity.getBoundingBox().intersectsByBox(region)) {
-                results.push(entity);
-            }
-        }
-        return results;
     }
 
     public clear(): void {

@@ -11,27 +11,35 @@ import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 export class EMPBurst implements VisualEffect {
     public static readonly PACKET_CODEC: PacketCodec<EMPBurst> = PacketCodecs.of(
         (writer, value) => {
+            const flag = value.modifiedFlag();
+            writer.writeVarUint(flag);
+
             PacketCodecs.VECTOR2D.encode(writer, value.pos);
             writer.writeUint16(value.radius);
-            writer.writeFloat(value.duration);
-            writer.writeInt8(value.bolts);
-            writer.writeInt8(value.segs);
-            PacketCodecs.COLOR_HEX.encode(writer, value.color);
-            writer.writeInt8(value.thickness);
-            writer.writeInt8(encodeToByte(value.jitter, 1));
-            writer.writeInt8(value.glow);
+
+            if (flag & 1 << 0) writer.writeFloat(value.duration);
+            if (flag & 1 << 1) writer.writeInt8(value.bolts);
+            if (flag & 1 << 2) writer.writeInt8(value.segs);
+            if (flag & 1 << 3) PacketCodecs.COLOR_HEX.encode(writer, value.color);
+            if (flag & 1 << 4) writer.writeInt8(value.thickness);
+            if (flag & 1 << 5) writer.writeInt8(encodeToByte(value.jitter, 1));
+            if (flag & 1 << 6) writer.writeInt8(value.glow);
+            if (flag & 1 << 7) writer.writeBoolean(value.drawRing);
         },
         reader => {
+            const flag = reader.readVarUint();
+
             return new EMPBurst(
                 PacketCodecs.VECTOR2D.decode(reader),
                 reader.readUint16(),
-                reader.readFloat(),
-                reader.readUint8(),
-                reader.readUint8(),
-                PacketCodecs.COLOR_HEX.decode(reader),
-                reader.readUint8(),
-                decodeFromByte(reader.readUint8(), 1),
-                reader.readUint8()
+                (flag & 1 << 0) ? reader.readFloat() : undefined,
+                (flag & 1 << 1) ? reader.readUint8() : undefined,
+                (flag & 1 << 2) ? reader.readUint8() : undefined,
+                (flag & 1 << 3) ? PacketCodecs.COLOR_HEX.decode(reader) : undefined,
+                (flag & 1 << 4) ? reader.readUint8() : undefined,
+                (flag & 1 << 5) ? decodeFromByte(reader.readUint8(), 1) : undefined,
+                (flag & 1 << 6) ? reader.readUint8() : undefined,
+                (flag & 1 << 7) ? reader.readBoolean() : undefined,
             );
         }
     );
@@ -141,5 +149,18 @@ export class EMPBurst implements VisualEffect {
 
     public getType(): VisualEffectType<EMPBurst> {
         return VisualEffectTypes.EMP_BURST;
+    }
+
+    public modifiedFlag(): number {
+        let flag = 0;
+        if (this.duration !== 0.6) flag |= 1 << 0;
+        if (this.bolts !== 8) flag |= 1 << 1;
+        if (this.segs !== 12) flag |= 1 << 2;
+        if (this.color !== '#66ccff') flag |= 1 << 3;
+        if (this.thickness !== 2) flag |= 1 << 4;
+        if (this.jitter !== 0.9) flag |= 1 << 5;
+        if (this.glow != 12) flag |= 1 << 6;
+        if (!this.drawRing) flag |= 1 << 7;
+        return flag;
     }
 }

@@ -12,14 +12,19 @@ import type {UUID} from "../../apis/types.ts";
 import {NbtTypeId} from "../../nbt/NbtType.ts";
 import {UUIDUtil} from "../../utils/UUIDUtil.ts";
 import {decodeColorToHex, encodeColorHex} from "../../utils/NetUtil.ts";
+import {ProjectRaycastUtil} from "../../world/collision/ProjectRaycastUtil.ts";
+import {type HitResult, HitTypes} from "../../world/collision/HitResult.ts";
+import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
+import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 
 export abstract class ProjectileEntity extends Entity implements IOwnable, IColorEntity {
+    public override noColliesToEntity = true;
+
     private damage: number = 0;
     public color: string = "#8cf5ff";
     public edgeColor: string = '';
     private ownerUuid: UUID | null = null;
     private owner: Entity | null = null;
-    private wrapTime = 0;
 
     protected constructor(type: EntityType<ProjectileEntity>, world: World, owner: Entity | null, damage: number) {
         super(type, world);
@@ -32,23 +37,46 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
         super.tick();
 
         const pos = this.getPositionRef;
-        this.moveByVec(this.getVelocityRef);
         if (pos.y < -20 || pos.y > World.WORLD_H + 20 || pos.x < -20 || pos.x > World.WORLD_W + 20) {
             this.discard();
+            return;
+        }
+
+        if (!this.getWorld().isClient) {
+            const hitResult = ProjectRaycastUtil.getCollision(
+                this,
+                entity => this.canHit(entity),
+                this.getDimensions().halfWidth
+            );
+
+            if (hitResult.getType() !== HitTypes.MISS) {
+                this.onCollision(hitResult);
+            }
+        }
+
+        const velocity = this.getVelocityRef;
+        this.setPosition(pos.x + velocity.x, pos.y + velocity.y);
+    }
+
+    public canHit(entity: Entity): boolean {
+        return entity.isAlive() && entity !== this.owner && !(entity instanceof ProjectileEntity);
+    }
+
+    public onCollision(hitResult: HitResult) {
+        if (hitResult.getType() === HitTypes.ENTITY) {
+            this.onEntityHit(hitResult as EntityHitResult);
+        } else if (hitResult.getType() === HitTypes.BLOCK) {
+            this.onBlockHit(hitResult as BlockHitResult);
         }
     }
 
-    protected override calculateBoundingBox() {
-        const box = super.calculateBoundingBox();
-        const v = this.getVelocityRef;
-        if (v.lengthSquared() < 1124) {
-            return box;
-        }
-
-        return box.expand(Math.abs(v.x) * 0.1, Math.abs(v.y) * 0.1);
+    protected onEntityHit(_hitResult: EntityHitResult): void {
+        this.discard();
     }
 
-    public abstract onEntityHit(entity: Entity): void;
+    protected onBlockHit(_hitResult: BlockHitResult): void {
+        this.discard();
+    }
 
     public onIntercept(_damage: number): void {
         this.discard();
@@ -100,7 +128,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
             nbt.putString('owner', this.ownerUuid);
         }
         nbt.putFloat('damage', this.damage);
-        nbt.putUint32Array('colors', encodeColorHex(this.color), encodeColorHex(this.edgeColor));
+        nbt.putUint32Array('colors', [encodeColorHex(this.color), encodeColorHex(this.edgeColor)]);
         return nbt;
     }
 
@@ -137,20 +165,6 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
 
     protected isOwner(entity: Entity) {
         return entity.getUUID() === this.ownerUuid;
-    }
-
-    protected wrapPosition(): boolean {
-        const pos = this.getPositionRef;
-        const W = World.WORLD_W;
-
-        if (this.wrapTime > 4 || pos.y < -20 || pos.y > World.WORLD_H + 20) {
-            this.discard();
-            return false;
-        }
-        if (pos.x < 0 || pos.x > World.WORLD_W) this.wrapTime++;
-
-        this.setPosition(((pos.x % W) + W) % W, pos.y);
-        return true;
     }
 
     protected initDataTracker(_builder: InstanceType<typeof DataTracker.Builder>): void {

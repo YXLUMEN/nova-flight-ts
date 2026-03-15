@@ -9,8 +9,9 @@ import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.
 import {StatusEffects} from "../../../entity/effect/StatusEffects.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {PhaseLasers} from "../PhaseLasers.ts";
-import type {LivingEntity} from "../../../entity/LivingEntity.ts";
+import {LivingEntity} from "../../../entity/LivingEntity.ts";
 import {spawnLaserByVec} from "../../../utils/ServerEffect.ts";
+import type {IVec} from "../../../utils/math/IVec.ts";
 
 export class GammaLasers extends BaseWeapon {
     public static readonly LASER_WIDTH = 3;
@@ -31,6 +32,8 @@ export class GammaLasers extends BaseWeapon {
             .laser(attacker)
             .setShieldMulti(0.4)
             .setHealthMulti(1.5);
+
+        const hitBlock = world.raycast(start, end);
 
         const candidates: LivingEntity[] = [];
         for (const mob of world.getMobs()) {
@@ -53,6 +56,12 @@ export class GammaLasers extends BaseWeapon {
 
         const target = candidates[0];
         if (target) {
+            if (!hitBlock.missed && squareDistVec2(start, target.getPositionRef) > squareDistVec2(start, hitBlock.pos)) {
+                end.set(hitBlock.pos.x, hitBlock.pos.y);
+                this.onHit(world, start, end);
+                return;
+            }
+
             target.takeDamage(damageSource, damage);
 
             const toX = target.getX() - start.x;
@@ -70,8 +79,13 @@ export class GammaLasers extends BaseWeapon {
                 const amplifier = effect ? Math.min(effect.getAmplifier() + 1, 3) : 0;
                 target.addStatusEffect(new StatusEffectInstance(StatusEffects.MELTDOWN, 60, amplifier), attacker);
             }
+        } else if (!hitBlock.missed) {
+            end.set(hitBlock.pos.x, hitBlock.pos.y);
         }
+        this.onHit(world, start, end);
+    }
 
+    private onHit(world: ServerWorld, start: IVec, end: IVec): void {
         spawnLaserByVec(world, start, end, '#ffca59', GammaLasers.LASER_WIDTH, 0.2);
         world.spawnParticle(
             end.x, end.y,

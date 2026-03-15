@@ -1,13 +1,21 @@
 import {MissileEntity} from "./MissileEntity.ts";
 import {World} from "../../world/World.ts";
 import type {EntityType} from "../EntityType.ts";
-import type {Entity} from "../Entity.ts";
+import {type Entity} from "../Entity.ts";
 import {DecoyEntity} from "../DecoyEntity.ts";
 import {getNearestEntity, squareDistVec2} from "../../utils/math/math.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
+import {Vec2} from "../../utils/math/Vec2.ts";
+import {BlockCollision} from "../../world/collision/BlockCollision.ts";
+import {BehaviourEnum} from "../../world/explosion/ExplosionBehavior.ts";
+import {FilterBehaviour} from "../../world/explosion/FilterBehaviour.ts";
+import {MobEntity} from "../mob/MobEntity.ts";
 
 export class MobMissileEntity extends MissileEntity {
+    private static readonly EXPLOSION = new FilterBehaviour(BehaviourEnum.ONLY_DAMAGE)
+        .withFiler(entity => !(entity instanceof MobEntity));
+
     protected override maxReLockCD = 15;
     protected override driftSpeed = 1.4;
     protected override trackingSpeed = 2;
@@ -17,9 +25,26 @@ export class MobMissileEntity extends MissileEntity {
     protected override maxLifetimeTicks = 220;
 
     protected turnRate = Math.PI / 24;
+    protected override behaviour = MobMissileEntity.EXPLOSION;
 
     public constructor(type: EntityType<MobMissileEntity>, world: World, owner: Entity, driftAngle: number) {
         super(type, world, owner, driftAngle, 5);
+    }
+
+    protected override track(movement: IVec) {
+        super.move(movement);
+    }
+
+    protected override adjustBlockCollision(movement: IVec): IVec {
+        const map = this.getWorld().getMap();
+        const collision = BlockCollision.fastCollision(map, this.getBoundingBox(), movement);
+        if (collision) {
+            this.discard();
+            this.explode();
+            return Vec2.ZERO;
+        }
+
+        return movement;
     }
 
     protected override predictMethod(pos: IVec, targetPos: IVec, targetVel: IVec): number {

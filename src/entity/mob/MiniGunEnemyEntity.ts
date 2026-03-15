@@ -7,7 +7,7 @@ import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {randInt} from "../../utils/math/math.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import {BulletEntity} from "../projectile/BulletEntity.ts";
+import {MobBulletEntity} from "../projectile/MobBulletEntity.ts";
 
 export class MiniGunEnemyEntity extends MobEntity {
     private static readonly bulletSpeed = 6;
@@ -50,7 +50,7 @@ export class MiniGunEnemyEntity extends MobEntity {
 
         const pos = this.getPositionRef;
         const yaw = this.getYaw();
-        const b = new BulletEntity(EntityTypes.ENEMY_BULLET_ENTITY, world, this, 1);
+        const b = new MobBulletEntity(EntityTypes.ENEMY_BULLET_ENTITY, world, this, 1);
         b.setVelocity(Math.cos(yaw) * MiniGunEnemyEntity.bulletSpeed, Math.sin(yaw) * MiniGunEnemyEntity.bulletSpeed);
         b.setPosition(pos.x, pos.y);
 

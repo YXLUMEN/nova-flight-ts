@@ -21,10 +21,13 @@ import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
 import type {Constructor} from "../../apis/types.ts";
 import {Techs} from "../../tech/Techs.ts";
 import {Weapon} from "../../item/weapon/Weapon.ts";
+import {BehaviourEnum, ExplosionBehavior} from "../../world/explosion/ExplosionBehavior.ts";
+import {ExplosionVisual} from "../../world/explosion/ExplosionVisual.ts";
 
 export abstract class PlayerEntity extends LivingEntity {
     private static readonly SHIELD_AMOUNT = DataTracker.registerData(Object(PlayerEntity), TrackedDataHandlerRegistry.FLOAT);
 
+    public override noColliesToEntity = true;
     public onDamageExplosionRadius = 320;
     protected techTree: TechTree | null = null;
 
@@ -73,7 +76,7 @@ export abstract class PlayerEntity extends LivingEntity {
     public override tickMovement() {
         super.tickMovement();
 
-        this.moveByVec(this.getVelocityRef);
+        this.move(this.getVelocityRef);
         this.adjustPosition();
     }
 
@@ -104,14 +107,15 @@ export abstract class PlayerEntity extends LivingEntity {
 
         const raw = Math.pow(damage * 0.3, 0.8);
         const shake = clamp(raw, 0.4, 0.9);
+        const visual = new ExplosionVisual(this.onDamageExplosionRadius);
+        visual.shake = shake;
 
         const world = this.getWorld();
-        world.createExplosion(this, null, this.getX(), this.getY(), {
-            damage: 32,
-            explosionRadius: this.onDamageExplosionRadius,
-            important: true,
-            shake
-        });
+        world.createExplosion(this, null, this.getX(), this.getY(),
+            2,
+            new ExplosionBehavior(BehaviourEnum.ONLY_DAMAGE, undefined, false),
+            visual
+        );
 
         damage = this.modifyAppliedDamage(damageSource, damage);
         const remainDamage = Math.max(damage - this.getShieldAmount(), 0);

@@ -52,7 +52,7 @@ export class RocketLauncher extends BaseWeapon {
             }
             if (rocket === null) {
                 rocket = new RocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker);
-                rocket.explosionDamage = stack.getOrDefault(DataComponents.EXPLOSION_DAMAGE, 12);
+                rocket.explosionDamage = stack.getOrDefault(DataComponents.EXPLOSION_POWER, 12);
                 rocket.explosionRadius = stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 72);
             }
 

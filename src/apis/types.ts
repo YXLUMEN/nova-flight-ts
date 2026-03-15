@@ -2,6 +2,8 @@ import type {Entity} from "../entity/Entity.ts";
 
 export type Constructor<T = any> = new (...args: any[]) => T;
 
+export type Creator<T = any> = (...args: any[]) => T;
+
 export type UUID = `${string}-${string}-${string}-${string}-${string}`;
 
 export type FunctionReturn<T, R> = (val: T) => R;

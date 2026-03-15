@@ -35,7 +35,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         super.tick();
 
         if (!this.getWorld().isClient) this.AI.updateAction(this);
-        this.moveByVec(this.getVelocityRef);
+        this.move(this.getVelocityRef);
         this.adjustPosition();
     }
 

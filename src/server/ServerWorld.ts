@@ -14,22 +14,19 @@ import type {EntityHandler} from "../world/entity/EntityHandler.ts";
 import type {UUID} from "../apis/types.ts";
 import {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
-import {CIWSBulletEntity} from "../entity/projectile/CIWSBulletEntity.ts";
-import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 import type {Stage} from "../stage/Stage.ts";
 import {STAGE} from "../configs/StageConfig.ts";
 import {EVENTS} from "../apis/IEvents.ts";
 import {EntityRemoveS2CPacket} from "../network/packet/s2c/EntityRemoveS2CPacket.ts";
 import {EntityTrackerEntry} from "./network/EntityTrackerEntry.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
-import type {ExplosionOpts} from "../apis/IExplosionOpts.ts";
-import type {Explosion} from "../world/Explosion.ts";
+import type {ExplosionVisual} from "../world/explosion/ExplosionVisual.ts";
+import type {Explosion} from "../world/explosion/Explosion.ts";
 import {ExplosionS2CPacket} from "../network/packet/s2c/ExplosionS2CPacket.ts";
 import {ServerDefaultEvents} from "./event/ServerDefaultEvents.ts";
 import {type MutVec2} from "../utils/math/MutVec2.ts";
 import {ParticleS2CPacket} from "../network/packet/s2c/ParticleS2CPacket.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
-import {encodeColorHex, encodeToUnsignedByte} from "../utils/NetUtil.ts";
 import {type VisualEffect} from "../effect/VisualEffect.ts";
 import {EffectCreateS2CPacket} from "../network/packet/s2c/EffectCreateS2CPacket.ts";
 import type {ServerChannel} from "./network/ServerChannel.ts";
@@ -37,6 +34,11 @@ import {GameOverS2CPacket} from "../network/packet/s2c/GameOverS2CPacket.ts";
 import {EMPBurst} from "../effect/EMPBurst.ts";
 import {DifficultChangeS2CPacket} from "../network/packet/s2c/DifficultChangeS2CPacket.ts";
 import {Log} from "../worker/log.ts";
+import {NbtTypeId} from "../nbt/NbtType.ts";
+import {EntityHitResult} from "../world/collision/EntityHitResult.ts";
+import {MobBulletEntity} from "../entity/projectile/MobBulletEntity.ts";
+import {MobMissileEntity} from "../entity/projectile/MobMissileEntity.ts";
+import type {ExplosionBehavior} from "../world/explosion/ExplosionBehavior.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
@@ -48,6 +50,9 @@ export class ServerWorld extends World implements NbtSerializable {
     private readonly entityManager: ServerEntityManager<Entity>;
     private readonly trackedEntities = new Map<number, EntityTrackerEntry>();
     private finishInit = false;
+
+    private times = 0;
+    private total = 0;
 
     public constructor(registryManager: RegistryManager, server: NovaFlightServer) {
         super(registryManager, false);
@@ -65,11 +70,22 @@ export class ServerWorld extends World implements NbtSerializable {
 
         this.stage.tick(this);
 
+        this.times++;
+        const s = performance.now();
         for (const entity of this.entities.values()) {
             if (entity.isRemoved()) continue;
             this.tickEntity(this.bindTickEntity, entity);
             if (this.over) break;
         }
+        const e = performance.now();
+        this.total += e - s;
+        if (this.times % 20 === 0) {
+            const avg = this.total / this.times;
+            console.log('Avg: ' + avg.toFixed(4));
+            this.times = 0;
+            this.total = 0;
+        }
+
         this.entities.processRemovals();
         for (const entry of this.trackedEntities.values()) {
             entry.tick();
@@ -85,47 +101,26 @@ export class ServerWorld extends World implements NbtSerializable {
         entity.age++;
         entity.tick();
 
-        if (entity.isPlayer()) return;
-        this.getPlayers().forEach(player => {
-            this.tickOtherEntity(entity, player);
-        });
+        if (entity.isPlayer()) {
+            this.tickPlayer(entity as ServerPlayerEntity);
+        }
     }
 
-    private tickOtherEntity(entity: Entity, player: ServerPlayerEntity): void {
-        // 敌方碰撞
-        if (entity instanceof MobEntity) {
-            if (player.invulnerable || !entity.isCollisionTo(player)) return;
-            entity.attack(player);
-            return;
-        }
+    private tickPlayer(player: ServerPlayerEntity) {
+        if (player.invulnerable) return;
 
-        // 弹射物碰撞
-        if (entity instanceof ProjectileEntity) {
-            const owner = entity.getOwner();
-            // 敌方命中
-            if (!owner || owner instanceof MobEntity) {
-                if (player.invulnerable || player.isRemoved() || !entity.isCollisionTo(player)) return;
-                entity.onEntityHit(player);
+        const box = player.getBoundingBox();
+        const predicate = (entity: Entity) => entity.isAlive() && !entity.isPlayer();
+        const search = this.searchOtherEntities(player, box, predicate);
+
+        for (const entity of search) {
+            if (entity instanceof MobEntity) {
+                entity.attack(player);
                 return;
             }
 
-            // 玩家近防炮命中
-            if (entity instanceof CIWSBulletEntity) {
-                for (const projectile of this.getProjectiles()) {
-                    if (projectile.getOwner() === owner || !entity.isCollisionTo(projectile)) continue;
-
-                    entity.discard();
-                    projectile.onIntercept(entity.getHitDamage());
-                    return;
-                }
-            }
-
-            // 玩家命中
-            for (const mob of this.getMobs()) {
-                if (entity.isCollisionTo(mob)) {
-                    entity.onEntityHit(mob);
-                    if (entity.isRemoved()) return;
-                }
+            if (entity instanceof MobBulletEntity || entity instanceof MobMissileEntity) {
+                entity.onCollision(new EntityHitResult(player.getPositionRef, player));
             }
         }
     }
@@ -218,10 +213,6 @@ export class ServerWorld extends World implements NbtSerializable {
         return this.entities.getMobs();
     }
 
-    public override getProjectiles(): ReadonlySet<ProjectileEntity> {
-        return this.entities.getProjectiles();
-    }
-
     public setDifficulty(difficulty: number) {
         if (difficulty === this.getDifficulty()) return;
         super.setDifficulty(difficulty);
@@ -280,19 +271,15 @@ export class ServerWorld extends World implements NbtSerializable {
 
     public override createExplosion(
         source: Entity | null,
-        damage: DamageSource | null,
+        damageSource: DamageSource | null,
         x: number,
         y: number,
-        opts: ExplosionOpts
+        power: number,
+        behaviour: ExplosionBehavior | null = null,
+        visual: ExplosionVisual | null = null
     ): Explosion {
-        const explosion = super.createExplosion(source, damage, x, y, opts);
-
-        const shack = encodeToUnsignedByte(opts.shake ?? 0, 1);
-        const packet = new ExplosionS2CPacket(x, y,
-            opts.explosionRadius ?? 64,
-            shack,
-            encodeColorHex(opts.explodeColor ?? '#fff'),
-        );
+        const explosion = super.createExplosion(source, damageSource, x, y, power, behaviour, visual);
+        const packet = new ExplosionS2CPacket(x, y, power, behaviour, visual);
         this.getNetworkChannel().send(packet);
 
         this.events.emit(EVENTS.EXPLOSION, {explosion});
@@ -367,6 +354,10 @@ export class ServerWorld extends World implements NbtSerializable {
         root.putUint32('phase_score', this.phaseScore);
         root.putInt8('difficulty', this.getDifficulty());
 
+        const map = new NbtCompound();
+        this.blockMap.writeNBT(map);
+        root.putCompound('map', map);
+
         return root;
     }
 
@@ -378,6 +369,11 @@ export class ServerWorld extends World implements NbtSerializable {
         if (stageNbt) this.stage.readNBT(stageNbt);
         this.phaseScore = nbt.getUint32('phase_score');
         this.setDifficulty(nbt.getInt8('difficulty', 1));
+
+        if (nbt.contains('map', NbtTypeId.Compound)) {
+            const map = nbt.getCompound('map');
+            this.blockMap.readNBT(map);
+        }
     }
 
     private loadEntity(nbtList: NbtCompound[]) {

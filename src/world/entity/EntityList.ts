@@ -1,13 +1,11 @@
 import {Entity} from "../../entity/Entity.ts";
 import {MobEntity} from "../../entity/mob/MobEntity.ts";
-import {ProjectileEntity} from "../../entity/projectile/ProjectileEntity.ts";
 import type {Consumer} from "../../apis/types.ts";
 import type {EntityType} from "../../entity/EntityType.ts";
 
 export class EntityList {
     private readonly entities = new Map<number, Entity>();
     private readonly mobs = new Set<MobEntity>();
-    private readonly projectiles = new Set<ProjectileEntity>();
 
     private readonly pendingRemoval: number[] = [];
 
@@ -20,11 +18,6 @@ export class EntityList {
 
         if (entity instanceof MobEntity) {
             this.mobs.add(entity);
-            return;
-        }
-        if (entity instanceof ProjectileEntity) {
-            this.projectiles.add(entity);
-            return;
         }
     }
 
@@ -58,10 +51,6 @@ export class EntityList {
         return this.mobs;
     }
 
-    public getProjectiles(): ReadonlySet<ProjectileEntity> {
-        return this.projectiles;
-    }
-
     public processRemovals(): void {
         for (const id of this.pendingRemoval) {
             const entity = this.entities.get(id);
@@ -69,8 +58,6 @@ export class EntityList {
 
             if (entity instanceof MobEntity) {
                 this.mobs.delete(entity);
-            } else if (entity instanceof ProjectileEntity) {
-                this.projectiles.delete(entity);
             }
 
             this.entities.delete(id);
@@ -88,7 +75,6 @@ export class EntityList {
         this.processRemovals();
         this.entities.clear();
         this.mobs.clear();
-        this.projectiles.clear();
 
         this.pendingRemoval.length = 0;
     }

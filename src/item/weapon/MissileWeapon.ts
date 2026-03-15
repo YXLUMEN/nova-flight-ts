@@ -15,7 +15,7 @@ export class MissileWeapon extends SpecialWeapon {
         const pos = attacker.getPositionRef;
         const missileCounts = stack.getOrDefault(DataComponents.LAUNCH_COUNT, 8);
         const hitDamage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 10);
-        const explosionDamage = stack.getOrDefault(DataComponents.EXPLOSION_DAMAGE, 10);
+        const explosionDamage = stack.getOrDefault(DataComponents.EXPLOSION_POWER, 10);
         const explosionRadius = stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 72);
         let i = 1;
 

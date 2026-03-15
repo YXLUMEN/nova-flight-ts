@@ -21,9 +21,10 @@ export const NbtTypeId = config({
     Int32Array: 11,
     FloatArray: 12,
     DoubleArray: 13,
-    Uint32Array: 14,
-    StringArray: 15,
-    CompoundArray: 16,
+    Uint8Array: 14,
+    Uint32Array: 15,
+    StringArray: 16,
+    CompoundArray: 17,
     Number: 99
 });
 

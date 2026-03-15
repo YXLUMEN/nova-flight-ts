@@ -16,10 +16,11 @@ import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {Items} from "../../item/Items.ts";
 import type {PhaseLasers} from "../../item/weapon/PhaseLasers.ts";
 import {Techs} from "../../tech/Techs.ts";
-import type {Explosion} from "../../world/Explosion.ts";
+import type {Explosion} from "../../world/explosion/Explosion.ts";
 import {DamageTypes} from "../../entity/damage/DamageTypes.ts";
 import {BaseBossEntity} from "../../entity/mob/BaseBossEntity.ts";
 import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
+import {EffectEnum} from "../../world/explosion/ExplosionBehavior.ts";
 
 export class ServerDefaultEvents {
     public static registerEvent(world: ServerWorld) {
@@ -130,9 +131,10 @@ export class ServerDefaultEvents {
         });
 
         events.on(EVENTS.EXPLOSION, ({explosion}) => {
-            const behaviour = explosion.getOpts().behaviour;
-            explosion.getOpts().behaviour = 'triggered';
-            if (behaviour !== 'triggered') {
+            const exp = explosion as Explosion;
+            const effect = exp.getBehaviour().effect;
+            exp.getBehaviour().effect = EffectEnum.TRIGGERED;
+            if (effect !== EffectEnum.TRIGGERED) {
                 this.serialWarhead(world, explosion);
             }
         });
@@ -146,8 +148,8 @@ export class ServerDefaultEvents {
         if (!attacker.getTechs().isUnlocked(Techs.SERIAL_WARHEAD)) return;
 
         let count = 0;
-        const radius = (explosion.getOpts().explosionRadius ?? 16) / 2;
-        explosion.getOpts().playSound = false;
+        const margin = (explosion.getVisual().radius) / 3;
+        explosion.getBehaviour().playSound = false;
 
         const yaw = explosion.getSource()?.getYaw();
         const schedule = world.scheduleInterval(0.1, () => {
@@ -162,14 +164,16 @@ export class ServerDefaultEvents {
                     damageSource,
                     explosion.getX(),
                     explosion.getY(),
-                    explosion.getOpts()
+                    explosion.getPower(),
+                    explosion.getBehaviour(),
+                    explosion.getVisual()
                 );
                 return;
             }
 
-            const x = explosion.getX() + Math.cos(yaw) * radius * count;
-            const y = explosion.getY() + Math.sin(yaw) * radius * count;
-            world.createExplosion(explosion.getSource(), damageSource, x, y, explosion.getOpts());
+            const x = explosion.getX() + Math.cos(yaw) * margin * count;
+            const y = explosion.getY() + Math.sin(yaw) * margin * count;
+            world.createExplosion(explosion.getSource(), damageSource, x, y, explosion.getPower(), explosion.getBehaviour(), explosion.getVisual());
         });
     }
 }

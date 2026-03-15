@@ -22,16 +22,18 @@ import {EVENTS} from "../apis/IEvents.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
-import type {ExplosionOpts} from "../apis/IExplosionOpts.ts";
-import type {Explosion} from "../world/Explosion.ts";
+import type {ExplosionVisual} from "../world/explosion/ExplosionVisual.ts";
+import type {Explosion} from "../world/explosion/Explosion.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import {Particle} from "../effect/Particle.ts";
 import {DEFAULT_CONFIG, WorldConfig} from "../configs/WorldConfig.ts";
 import {AbstractClientPlayerEntity} from "./entity/AbstractClientPlayerEntity.ts";
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
-import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 import {HistoricalScore} from "../statistics/HistoricalScore.ts";
+import {isBoxInView} from "../utils/render/render.ts";
+import {BitBlockMap} from "../world/map/BitBlockMap.ts";
+import type {ExplosionBehavior} from "../world/explosion/ExplosionBehavior.ts";
 
 export class ClientWorld extends World {
     public readonly worldName: string;
@@ -108,10 +110,6 @@ export class ClientWorld extends World {
 
     public override getMobs(): ReadonlySet<MobEntity> {
         return this.entities.getMobs();
-    }
-
-    public override getProjectiles(): ReadonlySet<ProjectileEntity> {
-        return this.entities.getProjectiles();
     }
 
     public clientTickEntity(entity: Entity) {
@@ -243,16 +241,18 @@ export class ClientWorld extends World {
     }
 
     public override createExplosion(
-        entity: Entity | null,
-        damage: DamageSource | null,
+        source: Entity | null,
+        damageSource: DamageSource | null,
         x: number,
         y: number,
-        opts: ExplosionOpts
+        power: number,
+        behaviour: ExplosionBehavior | null = null,
+        visual: ExplosionVisual | null = null
     ): Explosion {
-        if (opts.shake) {
-            this.client.window.camera.addShake(opts.shake);
+        if (visual && visual.shake > 0) {
+            this.client.window.camera.addShake(visual.shake);
         }
-        return super.createExplosion(entity, damage, x, y, opts);
+        return super.createExplosion(source, damageSource, x, y, power, behaviour, visual);
     }
 
     private registerEvents() {
@@ -289,6 +289,7 @@ export class ClientWorld extends World {
 
         this.starField.render(ctx, this.client.window.camera, tickDelta);
 
+        const viewRect = this.client.window.camera.viewRect;
         const offset = this.client.window.camera.viewOffset;
         const lastOffset = this.client.window.camera.lastViewOffset;
         const ox = lerp(tickDelta, lastOffset.x, offset.x);
@@ -298,10 +299,14 @@ export class ClientWorld extends World {
         ctx.translate(-ox, -oy);
 
         // 背景层
-        this.drawBackground(ctx);
+        this.renderBackground(ctx);
+        this.renderBlocks(ctx);
 
         // 其他实体. client 下 entities 不包含玩家
         for (const entity of this.entities.values()) {
+            const bounds = entity.getBoundingBox();
+            if (!isBoxInView(bounds, viewRect)) continue;
+
             if (entity.renderer === null) {
                 entity.renderer = EntityRenderers.getRenderer(entity);
             }
@@ -314,31 +319,35 @@ export class ClientWorld extends World {
         }
         this.particlePool.render(ctx, tickDelta);
 
-        // 玩家 不渲染主要玩家
+        // 其他玩家
         for (const player of this.players) {
+            if (player === this.client.player) continue;
+
+            const bound = player.getBoundingBox();
+            if (!isBoxInView(bound, viewRect)) continue;
+
             if (player.renderer === null) {
                 player.renderer = EntityRenderers.getRenderer(player);
             }
-
-            if (player === this.client.player) continue;
             player.renderer.render(player, ctx, tickDelta, 0, 0);
         }
 
         // 主要玩家
         const player = this.client.player;
-        if (!this.over && player && player.renderer) {
-            player.renderer.render(player, ctx, tickDelta, 0, 0);
-
-            if (player.bc) {
-                player.bc.drawAimIndicator(ctx, tickDelta);
+        if (!this.over && player) {
+            if (player.renderer === null) {
+                player.renderer = EntityRenderers.getRenderer(player);
             }
+
+            player.renderer.render(player, ctx, tickDelta, 0, 0);
+            player.bc?.drawAimIndicator(ctx, tickDelta);
 
             const playerPos = player.getLerpPos(tickDelta);
             if (player.lockedMissile.size > 0) {
                 ctx.fillStyle = '#ff7f50';
                 for (const missile of player.lockedMissile) {
                     if (player.approachMissile.has(missile)) continue;
-                    this.drawLockedDir(ctx, missile, playerPos, 8, 6, 6, tickDelta);
+                    this.renderLockedDir(ctx, missile, playerPos, 8, 6, 6, tickDelta);
                 }
             }
 
@@ -347,7 +356,7 @@ export class ClientWorld extends World {
                 const pulse = (Math.sin(t * PI2) + 1) / 2;
                 ctx.fillStyle = `rgba(255,27,27,${0.35 + 0.45 * pulse})`;
                 for (const missile of player.approachMissile) {
-                    this.drawLockedDir(ctx, missile, playerPos, 10, 6, 8, tickDelta);
+                    this.renderLockedDir(ctx, missile, playerPos, 10, 6, 8, tickDelta);
                 }
             }
 
@@ -363,10 +372,10 @@ export class ClientWorld extends World {
 
         if (WorldConfig.renderHitBox) {
             for (const entity of this.entities.values()) {
-                this.drawBoundingBox(ctx, entity, tickDelta);
+                this.renderBoundingBox(ctx, entity, tickDelta);
             }
             for (const player of this.players) {
-                this.drawBoundingBox(ctx, player, tickDelta);
+                this.renderBoundingBox(ctx, player, tickDelta);
             }
         }
 
@@ -379,10 +388,11 @@ export class ClientWorld extends World {
         if (!this.ticking && !this.over) this.client.window.pauseOverlay.render(ctx);
     }
 
-    private drawBoundingBox(ctx: CanvasRenderingContext2D, entity: Entity, tickDelta: number) {
+    private renderBoundingBox(ctx: CanvasRenderingContext2D, entity: Entity, tickDelta: number) {
         const pos = entity.getLerpPos(tickDelta);
         const yaw = entity.getLerpYaw(tickDelta);
         const lerpBox = entity.getDimensions().getBoxAtByVec(pos);
+        const stretchBox = lerpBox.stretchByVec(entity.getVelocityRef);
 
         const w = lerpBox.getWidth();
         const h = lerpBox.getHeight();
@@ -393,13 +403,13 @@ export class ClientWorld extends World {
         ctx.lineTo(Math.cos(yaw) * (w + 20) + pos.x, Math.sin(yaw) * (h + 20) + pos.y);
         ctx.stroke();
 
-        ctx.beginPath();
         ctx.strokeStyle = "#fff";
-        ctx.rect(lerpBox.minX, lerpBox.minY, w, h);
-        ctx.stroke();
+        ctx.strokeRect(lerpBox.minX, lerpBox.minY, w, h);
+        ctx.strokeStyle = "#c0ffad";
+        ctx.strokeRect(stretchBox.minX, stretchBox.minY, stretchBox.getWidth(), stretchBox.getHeight());
     }
 
-    public drawLockedDir(
+    private renderLockedDir(
         ctx: CanvasRenderingContext2D,
         missile: MissileEntity,
         playerPos: IVec,
@@ -425,7 +435,7 @@ export class ClientWorld extends World {
         ctx.restore();
     }
 
-    public drawBackground(ctx: CanvasRenderingContext2D) {
+    private renderBackground(ctx: CanvasRenderingContext2D) {
         const v = this.client.window.camera.viewRect;
 
         // 网格
@@ -457,6 +467,39 @@ export class ClientWorld extends World {
         ctx.stroke();
 
         ctx.restore();
+    }
+
+    private renderBlocks(ctx: CanvasRenderingContext2D) {
+        const view = this.client.window.camera.viewRect;
+        const blocksize = BitBlockMap.BLOCK_SIZE;
+        const power = BitBlockMap.POWER;
+
+        const sx = Math.max(0, view.left >> power);
+        const sy = Math.max(0, view.top >> power);
+        const ex = Math.min(this.blockMap.getWidth(), (view.right + blocksize - 1) >> power);
+        const ey = Math.min(this.blockMap.getHeight(), (view.bottom + blocksize - 1) >> power);
+
+        ctx.fillStyle = '#555';
+        for (let by = sy; by < ey; by++) {
+            let bx = sx;
+            while (bx < ex) {
+                if (this.blockMap.get(bx, by) === 0) {
+                    bx++;
+                    continue;
+                }
+
+                const start = bx;
+                while (bx < ex && this.blockMap.get(bx, by) !== 0) {
+                    bx++;
+                }
+                ctx.fillRect(
+                    start * blocksize,
+                    by * blocksize,
+                    (bx - start) * blocksize,
+                    blocksize
+                );
+            }
+        }
     }
 
     public override clear() {

@@ -135,9 +135,10 @@ export class ServerTechTree implements TechTree {
             .values()
             .map(tech => this.state.getTechId(tech))
             .filter(id => id !== null)
-            .map(id => id.toString());
+            .map(id => id.toString())
+            .toArray();
 
-        nbt.putStringArray('techs', ...ids);
+        nbt.putStringArray('techs', ids);
         return nbt
     }
 

@@ -7,6 +7,8 @@ import type {MobEntity} from "./mob/MobEntity.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 
 export class SpawnMarkerEntity extends Entity {
+    public override noClip = true;
+
     public readonly invulnerable = true;
     private readonly spawnMob: MobEntity;
     private readonly force;

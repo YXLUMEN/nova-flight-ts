@@ -23,6 +23,7 @@ import {ExplosionEntity} from "./ExplosionEntity.ts";
 import {TargetDrone} from "./TargetDrone.ts";
 import {TNTBossEntity} from "./mob/TNTBossEntity.ts";
 import {BaseBossEntity} from "./mob/BaseBossEntity.ts";
+import {MobBulletEntity} from "./projectile/MobBulletEntity.ts";
 
 export class EntityTypes {
     public static readonly BASE_ENEMY = EntityType.register("base_enemy",
@@ -61,7 +62,7 @@ export class EntityTypes {
             .setDimensions(10)
     );
     public static readonly ENEMY_BULLET_ENTITY = EntityType.register("enemy_bullet",
-        EntityType.Builder.create(BulletEntity)
+        EntityType.Builder.create(MobBulletEntity)
             .setDimensions(8)
             .setTrackingTickInterval(10)
     );

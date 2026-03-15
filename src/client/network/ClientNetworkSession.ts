@@ -82,6 +82,8 @@ import {ServerStartS2CPacket} from "../../network/packet/s2c/ServerStartS2CPacke
 import {HashMap} from "../../utils/collection/HashMap.ts";
 import type {Identifier} from "../../registry/Identifier.ts";
 import {RelayMessage} from "../../network/packet/relay/RelayMessage.ts";
+import {BlockChangeS2CPacket} from "../../network/packet/s2c/BlockChangeS2CPacket.ts";
+import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
 
 export class ClientNetworkSession {
     private readonly handlers = new HashMap<Identifier, Consumer<Payload>>();
@@ -365,11 +367,11 @@ export class ClientNetworkSession {
     }
 
     public onExplosion(packet: ExplosionS2CPacket) {
-        this.world?.createExplosion(null, null, packet.x, packet.y, {
-            explosionRadius: packet.radius,
-            shake: packet.shack,
-            explodeColor: packet.color,
-        });
+        this.world?.createExplosion(null, null,
+            packet.x, packet.y, packet.power,
+            packet.behaviour,
+            packet.visual
+        );
     }
 
     public onParticle(packet: ParticleS2CPacket): void {
@@ -583,6 +585,18 @@ export class ClientNetworkSession {
         }
     }
 
+    public onBlockChange(packet: BlockChangeS2CPacket): void {
+        if (this.world) {
+            this.world.getMap().set(packet.x, packet.y, packet.type);
+        }
+    }
+
+    public onBatchChanges(packet: BatchBlockChangesPacket): void {
+        if (!this.world) return;
+        const map = this.world.getMap();
+        packet.foreach((type, x, y) => map.set(x, y, type));
+    }
+
     public sendCommand(input: string): boolean {
         const command = input.startsWith('/') ? input.slice(1) : input;
         if (this.parse(command).exceptions.size === 0) {
@@ -691,5 +705,7 @@ export class ClientNetworkSession {
         this.register(LaserWeaponDeactivate.ID, this.onLaserWeapon);
         this.register(LaserWeaponChange.ID, this.onLaserWeapon);
         this.register(DifficultChangeS2CPacket.ID, this.onDifficultChange);
+        this.register(BlockChangeS2CPacket.ID, this.onBlockChange);
+        this.register(BatchBlockChangesPacket.ID, this.onBatchChanges);
     }
 }

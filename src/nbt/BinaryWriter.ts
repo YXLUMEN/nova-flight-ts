@@ -112,6 +112,10 @@ export class BinaryWriter {
         return this.buffer.subarray(0, this.offset);
     }
 
+    public getOffset(): number {
+        return this.offset;
+    }
+
     public reset(shrink = false) {
         this.offset = 0;
         if (shrink && this.buffer.length > 128) {

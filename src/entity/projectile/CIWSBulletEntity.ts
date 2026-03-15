@@ -3,6 +3,9 @@ import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {Entity} from "../Entity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
+import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
+import {ProjectileEntity} from "./ProjectileEntity.ts";
+import {MobEntity} from "../mob/MobEntity.ts";
 
 export class CIWSBulletEntity extends BulletEntity {
     private readonly maxAge: number;
@@ -29,9 +32,20 @@ export class CIWSBulletEntity extends BulletEntity {
         this.age = nbt.getUint32('age');
     }
 
-    public override onEntityHit(entity: Entity) {
-        super.onEntityHit(entity);
+    public canHit(entity: Entity): boolean {
+        return entity.isAlive() && entity !== this.getOwner();
+    }
 
-        entity.getVelocityRef.multiply(0.8);
+    protected override onEntityHit(hitResult: EntityHitResult) {
+        super.onEntityHit(hitResult);
+
+        const entity = hitResult.entity;
+        if (entity instanceof ProjectileEntity && entity.getOwner() !== this.getOwner()) {
+            entity.onIntercept(this.getHitDamage());
+            return;
+        }
+        if (entity instanceof MobEntity) {
+            entity.getVelocityRef.multiply(0.8);
+        }
     }
 }

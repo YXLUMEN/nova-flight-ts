@@ -1,6 +1,6 @@
-import type {Entity} from "../Entity.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 import {MissileEntity} from "./MissileEntity.ts";
+import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 
 export class TorpedoEntity extends MissileEntity {
     protected readonly maxReLockCD = 10;
@@ -17,7 +17,8 @@ export class TorpedoEntity extends MissileEntity {
 
     protected readonly turnRate = Math.PI / 26;
 
-    public override onEntityHit(entity: Entity) {
+    protected override onEntityHit(hitResult: EntityHitResult) {
+        const entity = hitResult.entity;
         let damage = this.getHitDamage();
         const sources = this.getWorld().getDamageSources();
         if (entity instanceof LivingEntity) {

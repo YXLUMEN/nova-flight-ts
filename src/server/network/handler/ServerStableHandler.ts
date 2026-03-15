@@ -27,7 +27,6 @@ import {ChatMessageC2SPacket} from "../../../network/packet/c2s/ChatMessageC2SPa
 import {PlayerReloadC2SPacket} from "../../../network/packet/c2s/PlayerReloadC2SPacket.ts";
 import type {BaseWeapon} from "../../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {EntitySpawnS2CPacket} from "../../../network/packet/s2c/EntitySpawnS2CPacket.ts";
-import {NetworkChannel} from "../../../network/NetworkChannel.ts";
 import {PlayerResetTechC2SPacket} from "../../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
 import {ApplyServerTech} from "../../tech/ApplyServerTech.ts";
 import {EntityAttributes} from "../../../entity/attribute/EntityAttributes.ts";
@@ -36,7 +35,10 @@ import {PingC2SPacket} from "../../../network/packet/c2s/PingC2SPacket.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
 import type {Payload, PayloadId} from "../../../network/Payload.ts";
 import {ConnectionState, type ConnectionStateType} from "../ConnectionState.ts";
-import {Log} from "../../../worker/log.ts";
+import {BlockChangeC2SPacket} from "../../../network/packet/c2s/BlockChangeC2SPacket.ts";
+import {BlockChangeS2CPacket} from "../../../network/packet/s2c/BlockChangeS2CPacket.ts";
+import {World} from "../../../world/World.ts";
+import {BatchBlockChangesPacket} from "../../../network/packet/BatchBlockChangesPacket.ts";
 
 export class ServerStableHandler extends ServerCommonHandler {
     public readonly player: ServerPlayerEntity;
@@ -83,40 +85,13 @@ export class ServerStableHandler extends ServerCommonHandler {
         }
 
         this.send(EntityNbtS2CPacket.create(this.player));
-        /**
-         * - [Header][SessionId][Target] 3B
-         * - PayloadType index default at 13, varUint 1B
-         * - Batch count varUint (max 3B)
-         * - Reserve 7B for safe
-         *
-         * Total: 3 + 1 + 3 +7 = 14B
-         * */
-        const maxSize = NetworkChannel.MAX_PACKET_SIZE - 14;
-
-        let currentSize = 0;
-        const currentBatch: EntitySpawnS2CPacket[] = [];
         const entities = this.world.getEntities().values();
-        for (const entity of entities) {
-            const spawnPacket = EntitySpawnS2CPacket.create(entity);
-            const estSize = spawnPacket.estimateSize();
+        ServerCommonHandler.buildBatch(entities, EntitySpawnS2CPacket.create, EntityBatchSpawnS2CPacket.new)
+            .forEach(packet => this.send(packet));
 
-            if (estSize >= maxSize) {
-                Log.warn(`Entity ${entity.getUUID()} to large, skip sync`);
-                continue;
-            }
-
-            if (currentSize + estSize >= maxSize && currentBatch.length > 0) {
-                this.send(new EntityBatchSpawnS2CPacket(currentBatch));
-                currentBatch.length = 0;
-                currentSize = 0;
-            }
-            currentBatch.push(spawnPacket);
-            currentSize += estSize;
-        }
-
-        if (currentBatch.length > 0) {
-            this.send(new EntityBatchSpawnS2CPacket(currentBatch));
-        }
+        const changes = this.world.getMap().getNonAirBlocksGen();
+        ServerCommonHandler.buildBatchWithEst(changes, () => 9, BatchBlockChangesPacket.from)
+            .forEach(packet => this.send(packet));
     }
 
     public override forceDisconnect() {
@@ -173,6 +148,29 @@ export class ServerStableHandler extends ServerCommonHandler {
 
     public onRequestPosition(_: RequestPositionC2SPacket): void {
         this.send(EntityPositionForceS2CPacket.create(this.player));
+    }
+
+    public onPlaceBlock(packet: BlockChangeC2SPacket): void {
+        if (packet.x < 0 || packet.x > World.WORLD_W ||
+            packet.y < 0 || packet.y > World.WORLD_H) {
+            this.send(new BlockChangeS2CPacket(0, packet.x, packet.y));
+            return;
+        }
+
+        this.world.getMap().set(packet.x, packet.y, packet.type);
+        this.broadcast(new BlockChangeS2CPacket(packet.type, packet.x, packet.y));
+    }
+
+    public onBatchPlace(packet: BatchBlockChangesPacket): void {
+        const map = this.world.getMap();
+        const changes = packet
+            .filter((_, x, y) => x > 0 ||
+                x < World.WORLD_W ||
+                y > 0 ||
+                y < World.WORLD_H
+            );
+        changes.foreach((type, x, y) => map.set(x, y, type));
+        this.broadcast(changes);
     }
 
     public onCommandExecution(packet: CommandExecutionC2SPacket): void {
@@ -238,7 +236,6 @@ export class ServerStableHandler extends ServerCommonHandler {
     private registryHandler() {
         this.bindSelf(PingC2SPacket.ID, this.onPing);
         this.bindSelf(PlayerFinishLoginC2SPacket.ID, this.onPlayerFinishLogin);
-        // this.bindSelf(PlayerDisconnectC2SPacket.ID, this.onPlayerDisconnect);
         const move = this.onPlayerMove.bind(this);
         this.register(FullMove.ID, move);
         this.register(PositionOnly.ID, move);
@@ -253,5 +250,7 @@ export class ServerStableHandler extends ServerCommonHandler {
         this.bindSelf(CommandExecutionC2SPacket.ID, this.onCommandExecution);
         this.bindSelf(ChatMessageC2SPacket.ID, this.onChatMessage);
         this.bindSelf(PlayerReloadC2SPacket.ID, this.onPlayerReload);
+        this.bindSelf(BlockChangeC2SPacket.ID, this.onPlaceBlock);
+        this.bindSelf(BatchBlockChangesPacket.ID, this.onBatchPlace);
     }
 }

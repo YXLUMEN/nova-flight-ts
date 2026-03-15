@@ -8,12 +8,12 @@ import {EVENTS, type IEvents} from "../apis/IEvents.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
 import type {Payload} from "../network/Payload.ts";
-import type {Consumer, Supplier} from "../apis/types.ts";
+import type {Consumer, Predicate, Supplier} from "../apis/types.ts";
 import type {EntityList} from "./entity/EntityList.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
-import {Explosion} from "./Explosion.ts";
+import {Explosion} from "./explosion/Explosion.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
-import type {ExplosionOpts} from "../apis/IExplosionOpts.ts";
+import type {ExplosionVisual} from "./explosion/ExplosionVisual.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {ClientWorld} from "../client/ClientWorld.ts";
@@ -26,11 +26,19 @@ import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import type {EntityLookUp} from "./entity/EntityLookUp.ts";
+import {BitBlockMap} from "./map/BitBlockMap.ts";
+import {Box} from "../utils/math/Box.ts";
+import {BlockCollision} from "./collision/BlockCollision.ts";
+import {LivingEntity} from "../entity/LivingEntity.ts";
+import type {ExplosionBehavior} from "./explosion/ExplosionBehavior.ts";
+import {EntityPredicates} from "../predicate/EntityPredicates.ts";
 
 export abstract class World {
     public static readonly WORLD_W = 1760;
     public static readonly WORLD_H = 1120;
+    public static readonly BLOCK_SIZE = 8;
 
+    protected readonly blockMap: BitBlockMap = new BitBlockMap(World.WORLD_W, World.WORLD_H);
     public readonly events: GeneralEventBus<IEvents> = GeneralEventBus.getEventBus();
     public empBurst: number = 0
 
@@ -48,10 +56,7 @@ export abstract class World {
     private nextTimerId = new AtomicInteger();
     private timers: TimerTask[] = [];
 
-    protected constructor(
-        registryManager: RegistryManager,
-        isClient: boolean,
-    ) {
+    protected constructor(registryManager: RegistryManager, isClient: boolean) {
         this.isClient = isClient;
         this.registryManager = registryManager;
         this.damageSources = new DamageSources(registryManager);
@@ -80,6 +85,10 @@ export abstract class World {
     public setDifficulty(difficulty: number) {
         this.stageDifficulty = clamp(difficulty, 0, 16) | 0;
         this.events.emit(EVENTS.DIFFICULT_CHANGE, {difficult: difficulty});
+    }
+
+    public getMap() {
+        return this.blockMap;
     }
 
     public abstract playSound(entity: Entity | null, sound: SoundEvent, volume?: number, pitch?: number): void;
@@ -116,29 +125,31 @@ export abstract class World {
         damageSource: DamageSource | null,
         x: number,
         y: number,
-        opts: ExplosionOpts
+        power: number,
+        behaviour: ExplosionBehavior | null = null,
+        visual: ExplosionVisual | null = null
     ) {
-        const explosion = new Explosion(this, x, y, source, damageSource, opts);
+        const explosion = new Explosion(this, source, damageSource, x, y, power, behaviour, visual);
         explosion.apply();
         return explosion;
     }
 
     public createEMP(attacker: Entity | null, pos: IVec, radius: number, duration: number = 40, damage: number = 0) {
         const r2 = radius * radius;
+        const box = Box.fromCenter(pos.x, pos.y, radius, radius);
+        const predicate = (entity: Entity) => {
+            return squareDistVec2(pos, entity.getPositionRef) <= r2;
+        };
 
-        for (const entity of this.getEntities().values()) {
+        for (const entity of this.searchOtherEntities(attacker, box, predicate)) {
             if (entity instanceof ProjectileEntity) {
-                if (entity.getOwner() !== attacker &&
-                    squareDistVec2(pos, entity.getPositionRef) <= r2) {
-                    entity.discard();
-                }
-            } else if (entity instanceof MobEntity) {
-                if (!entity.isRemoved() &&
-                    squareDistVec2(pos, entity.getPositionRef) <= r2) {
-                    entity.addStatusEffect(new StatusEffectInstance(
-                        StatusEffects.EMC_STATUS, duration, 1), attacker);
-                    entity.takeDamage(this.damageSources.arc(attacker), damage);
-                }
+                if (entity.getOwner() !== attacker) entity.discard();
+                continue;
+            }
+            if (entity instanceof LivingEntity) {
+                entity.addStatusEffect(new StatusEffectInstance(
+                    StatusEffects.EMC_STATUS, duration, 1), attacker);
+                entity.takeDamage(this.damageSources.arc(attacker), damage);
             }
         }
 
@@ -184,8 +195,6 @@ export abstract class World {
 
     public abstract getMobs(): ReadonlySet<MobEntity>;
 
-    public abstract getProjectiles(): ReadonlySet<ProjectileEntity>;
-
     public abstract addEntity(entity: Entity): void;
 
     public abstract removeEntity(entityId: number): void;
@@ -193,6 +202,61 @@ export abstract class World {
     public abstract getEntityById(id: number): Entity | null;
 
     public abstract getEntityLookup(): EntityLookUp<Entity>;
+
+    public* searchOtherEntities(except: Entity | null, box: Box, predicate?: Predicate<Entity>) {
+        if (!predicate) predicate = EntityPredicates.ALL;
+        const search = this.getEntityLookup().search(box);
+
+        for (const entity of search) {
+            if (entity !== except && predicate(entity)) {
+                yield entity;
+            }
+        }
+    }
+
+    public getOtherEntities(except: Entity | null, box: Box, predicate?: Predicate<Entity>) {
+        if (!predicate) predicate = EntityPredicates.ALL;
+
+        const candidates: Entity[] = [];
+        this.getEntityLookup().forEachInBox(box, entity => {
+            if (entity !== except && predicate(entity)) {
+                candidates.push(entity);
+            }
+        });
+
+        return candidates;
+    }
+
+    public getFirstOtherEntity(except: Entity | null, box: Box, predicate?: Predicate<Entity>): Entity | null {
+        if (!predicate) predicate = EntityPredicates.ALL;
+
+        let target: Entity | null = null;
+        this.getEntityLookup().findFirst(box, entity => {
+            if (entity !== except && predicate(entity)) {
+                target = entity;
+                return true;
+            }
+            return false;
+        });
+        return target;
+    }
+
+    public getEntityCollisions(entity: Entity | null, box: Box): Entity[] {
+        if (box.getAverageSideLength() < 1E-7) return [];
+
+        const predicate = (entity: Entity) => !entity.noClip && !entity.noColliesToEntity;
+        const candidates = this.getOtherEntities(entity, box.expandAll(1E-7), predicate);
+        if (candidates.length === 0) return [];
+        return candidates;
+    }
+
+    public raycast(start: IVec, end: IVec) {
+        return BlockCollision.raycastBlock({
+            start: start.toImmut(),
+            end: end.toImmut(),
+            map: this.blockMap
+        });
+    }
 
     public togglePause(): void {
         if (this.over) return;

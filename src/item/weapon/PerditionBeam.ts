@@ -91,16 +91,6 @@ export class PerditionBeam extends PhaseLasers {
                 mob.addStatusEffect(new StatusEffectInstance(StatusEffects.MELTDOWN, 80, 10), holder);
             }
         }
-
-        for (const project of (world as ServerWorld).getProjectiles()) {
-            if (project.getOwner() === holder) continue;
-            const pos = project.getPositionRef;
-            if (thickLineCircleHit(
-                start.x, start.y, end.x, end.y, this.width,
-                pos.x, pos.y, project.getWidth())) {
-                project.onIntercept(50);
-            }
-        }
     }
 
     public override onStartFire(_stack: ItemStack, world: World, attacker: Entity) {

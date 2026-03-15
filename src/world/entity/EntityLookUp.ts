@@ -25,6 +25,10 @@ export class EntityLookUp<T extends EntityLike> {
         return this.index.iterate();
     }
 
+    public search(box: Box) {
+        return this.grid.search(box);
+    }
+
     public query(queryBox: Box): T[] {
         return this.grid.query(queryBox);
     }

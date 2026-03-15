@@ -1,6 +1,6 @@
 import {LaserBeamEffect} from '../../effect/LaserBeamEffect.ts';
 import {World} from '../../world/World.ts';
-import {clamp, lineCircleHit, thickLineCircleHit} from '../../utils/math/math.ts';
+import {clamp, thickLineCircleHit} from '../../utils/math/math.ts';
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
 import type {Entity} from "../../entity/Entity.ts";
@@ -14,7 +14,6 @@ import {
     LaserWeaponDeactivate
 } from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
 import {encodeColorHex} from "../../utils/NetUtil.ts";
-import {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
 
 
@@ -144,15 +143,6 @@ export class PhaseLasers extends SpecialWeapon {
                 pos.x, pos.y,
                 mob.getWidth() / 2)) {
                 mob.takeDamage(damageSource, damage);
-            }
-        }
-
-        for (const project of (world as ServerWorld).getProjectiles()) {
-            if (project.getOwner() === holder || !(project instanceof MissileEntity)) continue;
-            const pos = project.getPositionRef;
-            if (lineCircleHit(start.x, start.y, end.x, end.y, pos.x, pos.y, project.getWidth())) {
-                project.explode();
-                project.discard();
             }
         }
     }

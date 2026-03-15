@@ -91,4 +91,12 @@ export class MutVec2 implements IVec {
         const dy = this.y - v.y;
         return (dx * dx + dy * dy) <= (epsilon * epsilon);
     }
+
+    public toMut(): MutVec2 {
+        return this;
+    }
+
+    public toImmut(): Vec2 {
+        return new Vec2(this.x, this.y);
+    }
 }

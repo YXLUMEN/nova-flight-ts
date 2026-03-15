@@ -18,6 +18,7 @@ import type {NbtElement} from "../../nbt/element/NbtElement.ts";
 import {NbtEnd} from "../../nbt/element/NbtEnd.ts";
 import {NbtTypes} from "../../nbt/NbtTypes.ts";
 import {IllegalStateException} from "../../apis/errors.ts";
+import {BlockPos} from "../../world/map/BlockPos.ts";
 
 export class PacketCodecs {
     public static readonly INT8: PacketCodec<number> = PacketCodecs.of(
@@ -104,6 +105,14 @@ export class PacketCodecs {
             writer.writeDouble(value.y);
         },
         reader => new Vec2(reader.readDouble(), reader.readDouble())
+    );
+
+    public static readonly BLOCK_POS: PacketCodec<BlockPos> = PacketCodecs.of(
+        (writer, value) => {
+            writer.writeUint32(value.getX());
+            writer.writeUint32(value.getY());
+        },
+        reader => BlockPos.of(reader.readUint32(), reader.readUint32())
     );
 
     public static of<T>(

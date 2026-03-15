@@ -231,5 +231,25 @@ export function randomFromIterator<T>(iter: Iterator<T>): T | undefined {
     return result;
 }
 
+export function pointToAABBMinDistSq(px: number, py: number, left: number, top: number, right: number, bottom: number): number {
+    let dx = 0, dy = 0;
+    if (px < left) dx = left - px;
+    else if (px > right) dx = px - right;
+
+    if (py < top) dy = top - py;
+    else if (py > bottom) dy = py - bottom;
+
+    return dx * dx + dy * dy;
+}
+
+export function lfloor(value: number) {
+    const l = Math.floor(value);
+    return value < l ? l - 1 : l;
+}
+
+export function fractionalPart(value: number) {
+    return value - lfloor(value);
+}
+
 export const PI2 = Math.PI * 2;
 export const HALF_PI = Math.PI / 2;

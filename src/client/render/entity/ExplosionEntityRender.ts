@@ -5,7 +5,7 @@ import {PI2} from "../../../utils/math/math.ts";
 export class ExplosionEntityRender implements EntityRenderer<ExplosionEntity> {
     public render(entity: ExplosionEntity, ctx: CanvasRenderingContext2D): void {
         const {x, y} = entity.getPositionRef;
-        const r = entity.opt.explosionRadius ?? 16;
+        const r = entity.visual.radius;
 
         let alpha = 1;
         if (entity.countdown - entity.age < 20) {

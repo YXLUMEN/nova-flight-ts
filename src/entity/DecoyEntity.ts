@@ -11,6 +11,8 @@ import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.t
 
 export class DecoyEntity extends Entity implements IOwnable {
     public static readonly Entities = new Set<DecoyEntity>();
+
+    public override noColliesToEntity = true;
     private owner: Entity | null = null;
     private ownerUuid: UUID | null = null;
     private readonly life = randInt(250, 320);
@@ -32,7 +34,7 @@ export class DecoyEntity extends Entity implements IOwnable {
         const yaw = this.getYaw();
         const velocity = this.getVelocityRef;
         this.updateVelocity(0.05, Math.cos(yaw), Math.sin(yaw));
-        this.moveByVec(velocity);
+        this.move(velocity);
         velocity.multiply(0.98);
 
         const pos = this.getPositionRef;

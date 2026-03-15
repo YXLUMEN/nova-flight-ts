@@ -20,6 +20,10 @@ import {DataComponents} from "../../component/DataComponents.ts";
 import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
 import {FullMove, PositionOnly, Steering} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
+import {BlockChangeC2SPacket} from "../../network/packet/c2s/BlockChangeC2SPacket.ts";
+import {BlockPos} from "../../world/map/BlockPos.ts";
+import type {BlockChange} from "../../world/map/BlockChange.ts";
+import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
 
 export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     public readonly profile: GameProfile;
@@ -72,6 +76,30 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
                     this.approachMissile.delete(missile);
                 }
             }
+        }
+
+        if (this.input.isDown('KeyL')) {
+            const pos = this.input.getPointer;
+            this.placeBlock(0, pos.x, pos.y);
+        }
+
+        if (this.input.isDown('KeyP')) {
+            const pos = this.input.getPointer;
+            this.placeBlock(1, pos.x, pos.y);
+        }
+
+        if (this.input.wasPressed('KeyO')) {
+            let {x, y} = this.input.getPointer;
+            x = BlockPos.alignValue(x);
+            y = BlockPos.alignValue(y);
+
+            const places: BlockChange[] = [];
+            for (let i = 0; i < 20; i++) {
+                for (let j = 0; j < 20; j++) {
+                    places.push({type: 1, x: x + i, y: y + j});
+                }
+            }
+            this.placeBlocks(places);
         }
 
         if (this.input.wasPressed('KeyF')) {
@@ -244,6 +272,20 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             const key = this.weaponKeys.get(item)!;
             this.getNetworkChannel().send(new PlayerInputC2SPacket(key));
         }
+    }
+
+    public placeBlock(type: number, x: number, y: number): void {
+        const map = this.getWorld().getMap();
+        if (map.getAt(x, y) === type) return;
+        this.getNetworkChannel().send(new BlockChangeC2SPacket(type, BlockPos.alignValue(x), BlockPos.alignValue(y)));
+    }
+
+    public placeBlocks(infos: BlockChange[]): void {
+        if (infos.length > 680) infos.length = 680;
+        const changes = infos
+            .map(info => new BlockChangeC2SPacket(info.type, info.x, info.y));
+
+        this.getNetworkChannel().send(BatchBlockChangesPacket.from(changes));
     }
 
     public getRevision(): number {
