@@ -10,9 +10,9 @@ export class GridSpatialIndex<T extends EntityLike> {
     private readonly cols: number;
     private readonly rows: number;
     private readonly grid: GridCell<T>[][];
-    private readonly filter = new Set<T>();
+    private readonly filter: Set<T> = new Set<T>();
 
-    private entityGridCells = new Map<T, Index[]>();
+    private entityGridCells: Map<T, Index[]> = new Map<T, Index[]>();
 
     public constructor(width: number, height: number, cellSize: number = 80) {
         this.cellSize = cellSize;
@@ -93,10 +93,6 @@ export class GridSpatialIndex<T extends EntityLike> {
                 }
             }
         }
-    }
-
-    public query(region: Box): T[] {
-        return this.search(region).toArray();
     }
 
     public forEach(region: Box, consumer: Consumer<T>): void {

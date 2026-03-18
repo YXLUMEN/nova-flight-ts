@@ -13,7 +13,6 @@ import {
     LaserWeaponChange,
     LaserWeaponDeactivate
 } from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
-import {encodeColorHex} from "../../utils/NetUtil.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
 
 
@@ -113,7 +112,7 @@ export class PhaseLasers extends SpecialWeapon {
                 start,
                 end,
                 this.width,
-                encodeColorHex(stack.getOrDefault(DataComponents.UI_COLOR, PhaseLasers.COLOR))
+                stack.getOrDefault(DataComponents.UI_COLOR, PhaseLasers.COLOR)
             ));
         }
 

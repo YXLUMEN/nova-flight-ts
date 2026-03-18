@@ -102,7 +102,7 @@ export class EntityTypes {
     );
     public static readonly CIWS_BULLET_ENTITY = EntityType.register("ciws_bullet",
         EntityType.Builder.create(CIWSBulletEntity)
-            .setDimensions(8)
+            .setDimensions(4)
             .setTrackingTickInterval(10)
     );
     public static readonly ADS_ENTITY = EntityType.register("ads_entity",

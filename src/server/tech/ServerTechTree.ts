@@ -92,7 +92,7 @@ export class ServerTechTree implements TechTree {
             this.player.setYaw(yaw);
         }
 
-        this.player.getNetworkChannel().send(new PlayerSetScoreS2CPacket(this.player.getScore()));
+        this.player.networkHandler.send(new PlayerSetScoreS2CPacket(this.player.getScore()));
         return true;
     }
 

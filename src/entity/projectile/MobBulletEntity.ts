@@ -1,8 +1,7 @@
 import {BulletEntity} from "./BulletEntity.ts";
 import {World} from "../../world/World.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
-import {Vec2} from "../../utils/math/Vec2.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
+import type {MutVec2} from "../../utils/math/MutVec2.ts";
 
 export class MobBulletEntity extends BulletEntity {
     public override tick() {
@@ -15,12 +14,12 @@ export class MobBulletEntity extends BulletEntity {
         this.move(this.getVelocityRef);
     }
 
-    protected override adjustBlockCollision(movement: IVec): IVec {
+    protected override adjustBlockCollision(movement: MutVec2): MutVec2 {
         const map = this.getWorld().getMap();
         const collision = BlockCollision.fastCollision(map, this.getBoundingBox(), movement);
         if (collision) {
             this.discard();
-            return Vec2.ZERO;
+            return movement.multiply(0);
         }
 
         return movement;

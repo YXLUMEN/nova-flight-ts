@@ -38,6 +38,16 @@ export class Box {
         return this.maxY - this.minY;
     }
 
+    /**
+     * @danger 非必要不使用
+     * */
+    public set(x1: number, y1: number, x2 = x1, y2 = y1) {
+        (this.minX as any) = Math.min(x1, x2);
+        (this.minY as any) = Math.min(y1, y2);
+        (this.maxX as any) = Math.max(x1, x2);
+        (this.maxY as any) = Math.max(y1, y2);
+    }
+
     public getAverageSideLength(): number {
         return (this.getWidth() + this.getHeight()) / 2;
     }
@@ -52,6 +62,10 @@ export class Box {
 
     public contains(x: number, y: number): boolean {
         return x >= this.minX && x < this.maxX && y >= this.minY && y < this.maxY;
+    }
+
+    public containsVec(vec: IVec): boolean {
+        return this.contains(vec.x, vec.y);
     }
 
     public offset(x: number, y: number): Box {
@@ -82,6 +96,14 @@ export class Box {
 
     public expandAll(value: number) {
         return this.expand(value, value);
+    }
+
+    public contract(x: number, y: number): Box {
+        return this.expand(-x, -y);
+    }
+
+    public contractAll(value: number): Box {
+        return this.expandAll(-value);
     }
 
     public union(box: Box) {

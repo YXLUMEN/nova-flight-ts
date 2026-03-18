@@ -18,8 +18,6 @@ import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 
 export abstract class ProjectileEntity extends Entity implements IOwnable, IColorEntity {
-    public override noColliesToEntity = true;
-
     private damage: number = 0;
     public color: string = "#8cf5ff";
     public edgeColor: string = '';
@@ -36,30 +34,33 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
     public override tick() {
         super.tick();
 
+        if (this.clampPosition()) return;
+
         const pos = this.getPositionRef;
-        if (pos.y < -20 || pos.y > World.WORLD_H + 20 || pos.x < -20 || pos.x > World.WORLD_W + 20) {
-            this.discard();
+        const velocity = this.getVelocityRef;
+        if (this.isClient()) {
+            this.setPosition(pos.x + velocity.x, pos.y + velocity.y);
             return;
         }
 
-        if (!this.getWorld().isClient) {
-            const hitResult = ProjectRaycastUtil.getCollision(
-                this,
-                entity => this.canHit(entity),
-                this.getDimensions().halfWidth
-            );
-
-            if (hitResult.getType() !== HitTypes.MISS) {
-                this.onCollision(hitResult);
-            }
+        const hitResult = ProjectRaycastUtil.getCollision(this, entity => this.canHit(entity));
+        if (hitResult.getType() !== HitTypes.MISS) {
+            this.onCollision(hitResult);
         }
-
-        const velocity = this.getVelocityRef;
         this.setPosition(pos.x + velocity.x, pos.y + velocity.y);
     }
 
+    public override isImmuneToExplosion() {
+        return true;
+    }
+
+    public override canHitByProjectile(): boolean {
+        return false;
+    }
+
     public canHit(entity: Entity): boolean {
-        return entity.isAlive() && entity !== this.owner && !(entity instanceof ProjectileEntity);
+        if (!entity.canHitByProjectile()) return false;
+        return entity !== this.getOwner();
     }
 
     public onCollision(hitResult: HitResult) {
@@ -108,6 +109,19 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
     public override setVelocity(x: number, y: number) {
         super.setVelocity(x, y);
         this.velocityDirty = true;
+    }
+
+    protected override getMapOffsetX(): number {
+        return 80;
+    }
+
+    protected override getMapOffsetY(): number {
+        return 80;
+    }
+
+    protected override onOutOffBound() {
+        super.onOutOffBound();
+        this.discard();
     }
 
     public override onSpawnPacket(packet: EntitySpawnS2CPacket) {

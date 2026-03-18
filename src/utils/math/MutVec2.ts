@@ -82,10 +82,6 @@ export class MutVec2 implements IVec {
         return Math.abs(this.x - v.x) <= epsilon && Math.abs(this.y - v.y) <= epsilon;
     }
 
-    public toImmutable(): Vec2 {
-        return new Vec2(this.x, this.y);
-    }
-
     public equalsSq(v: IVec, epsilon = 1e-6): boolean {
         const dx = this.x - v.x;
         const dy = this.y - v.y;

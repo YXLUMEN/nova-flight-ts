@@ -26,7 +26,7 @@ export abstract class LivingEntity extends Entity {
     private static readonly HEALTH = DataTracker.registerData(Object(LivingEntity), TrackedDataHandlerRegistry.FLOAT);
 
     private shieldAmount: number = 0;
-    protected bodyTrackingIncrements: number;
+    protected positionIncrements: number;
     protected serverX: number = 0;
     protected serverY: number = 0;
     protected serverYaw: number = 0;
@@ -40,7 +40,7 @@ export abstract class LivingEntity extends Entity {
         this.attributes = new AttributeContainer(this.createLivingAttributes().build(type));
         this.setHealth(this.getMaxHealth());
 
-        this.bodyTrackingIncrements = 0;
+        this.positionIncrements = 0;
     }
 
     public createLivingAttributes(): InstanceType<typeof DefaultAttributeContainer.Builder> {
@@ -65,14 +65,14 @@ export abstract class LivingEntity extends Entity {
     }
 
     protected tickMovement() {
-        if (this.isLogicalSideForUpdatingMovement()) {
-            this.bodyTrackingIncrements = 0;
+        if (this.isLogicalSide()) {
+            this.positionIncrements = 0;
             this.syncPositionDelta(this.getX(), this.getY());
         }
 
-        if (this.bodyTrackingIncrements > 0) {
-            this.lerpPosAndYaw(this.bodyTrackingIncrements, this.serverX, this.serverY, this.serverYaw);
-            this.bodyTrackingIncrements--;
+        if (this.positionIncrements > 0) {
+            this.lerpPosAndYaw(this.positionIncrements, this.serverX, this.serverY, this.serverYaw);
+            this.positionIncrements--;
         }
 
         const velocity = this.getVelocityRef.multiply(0.9);
@@ -94,9 +94,19 @@ export abstract class LivingEntity extends Entity {
         while (this.getYaw() - this.prevYaw >= Math.PI) {
             this.prevYaw += PI2;
         }
+
+        this.tickCramming();
     }
 
     protected tickAi(): void {
+    }
+
+    protected tickCramming(): void {
+        const entities = this.getWorld()
+            .searchOtherEntities(this, this.getBoundingBox(), entity => entity.isPushAble());
+        for (const entity of entities) {
+            this.pushAwayFrom(entity);
+        }
     }
 
     protected override onDiscard(): void {
@@ -368,23 +378,27 @@ export abstract class LivingEntity extends Entity {
         this.edgeColor = packet.edgeColor;
     }
 
+    public override isPushAble(): boolean {
+        return this.isAlive();
+    }
+
     public override updatePositionAndAngles(x: number, y: number, yaw: number, interpolationSteps: number) {
         this.serverX = x;
         this.serverY = y;
         this.serverYaw = yaw;
-        this.bodyTrackingIncrements = interpolationSteps;
+        this.positionIncrements = interpolationSteps;
     }
 
     public getLerpTargetX() {
-        return this.bodyTrackingIncrements > 0 ? this.serverX : this.getX();
+        return this.positionIncrements > 0 ? this.serverX : this.getX();
     }
 
     public getLerpTargetY() {
-        return this.bodyTrackingIncrements > 0 ? this.serverY : this.getY();
+        return this.positionIncrements > 0 ? this.serverY : this.getY();
     }
 
     public getLerpTargetYaw() {
-        return this.bodyTrackingIncrements > 0 ? this.serverYaw : this.getYaw();
+        return this.positionIncrements > 0 ? this.serverYaw : this.getYaw();
     }
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {

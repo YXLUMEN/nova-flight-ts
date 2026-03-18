@@ -7,7 +7,7 @@ export class VecDeltaCodec {
 
     public withDelta(dx: number, dy: number): Vec2 {
         if (dx === 0 && dy === 0) {
-            return this.pos.toImmutable();
+            return this.pos.toImmut();
         }
 
         const x = dx === 0 ? this.pos.x : dequantize(quantize(this.pos.x) + dx);

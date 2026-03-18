@@ -41,7 +41,7 @@ export class MissileEntity extends RocketEntity {
     }
 
     public override tick() {
-        if (!this.adjustPosition()) return;
+        if (this.clampPosition()) return;
 
         this.prevYaw = this.getYaw();
         this.track(this.getVelocityRef);
@@ -244,13 +244,17 @@ export class MissileEntity extends RocketEntity {
         return best;
     }
 
-    protected override adjustPosition(): boolean {
-        const pos = this.getPositionRef;
-        if (pos.y < -400 || pos.y > World.WORLD_H + 400 || pos.x < -400 || pos.x > World.WORLD_W + 400) {
-            this.discard();
-            return false;
-        }
-        return true;
+    protected override getMapOffsetX(): number {
+        return 400;
+    }
+
+    protected override getMapOffsetY(): number {
+        return 400;
+    }
+
+    protected override onOutOffBound() {
+        super.onOutOffBound();
+        this.discard();
     }
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {

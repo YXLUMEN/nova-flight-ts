@@ -143,7 +143,7 @@ export class ServerPlayerEntity extends PlayerEntity {
             `${this.getProfile().name} 船毁人亡` :
             `${this.getProfile().name} 坠机了`;
 
-        this.getNetworkChannel().send(new GameMessageS2CPacket(mag));
+        this.networkHandler.broadcast(new GameMessageS2CPacket(mag));
     }
 
     public override addScore(score: number) {

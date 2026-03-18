@@ -6,7 +6,7 @@ import {createClean} from "../../utils/uit.ts";
 import {getNearestEntity} from "../../utils/math/math.ts";
 import {Random} from "../../utils/math/Random.ts";
 
-export const Behavior = createClean({
+export const AiBehavior = createClean({
     Wander: 0,
     Chase: 1,
     Flee: 2,
@@ -20,7 +20,7 @@ export class MobAI {
     private readonly random: Random;
 
     private changeTimer = 0;
-    private behavior: number = Behavior.Simple;
+    private behavior: number = AiBehavior.Simple;
 
     public static simpleMove(mob: MobEntity) {
         const speedMultiplier = mob.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
@@ -48,15 +48,15 @@ export class MobAI {
         const speed = mob.getMovementSpeed() * speedMultiplier;
 
         switch (this.behavior) {
-            case Behavior.Chase:
+            case AiBehavior.Chase:
                 this.moveToward(mob, speed);
                 this.faceTarget(mob, this.targetPos, 0.19634375);
                 break;
-            case Behavior.Flee:
+            case AiBehavior.Flee:
                 this.moveAway(mob, this.targetPos, speed);
                 this.faceTarget(mob, this.targetPos, 0.19634375);
                 break;
-            case Behavior.Simple:
+            case AiBehavior.Simple:
                 MobAI.simpleMove(mob);
                 break;
             default:
@@ -69,7 +69,7 @@ export class MobAI {
     }
 
     public updateAction(mob: MobEntity) {
-        const isSimple = this.behavior === Behavior.Simple;
+        const isSimple = this.behavior === AiBehavior.Simple;
         if (!isSimple && (mob.age & 23) !== 0) this.chooseTarget(mob);
     }
 
@@ -90,12 +90,12 @@ export class MobAI {
 
         if (mob.isRangedAttacker()) {
             if (distSq < 230400) {
-                this.setBehavior(Behavior.Flee);
+                this.setBehavior(AiBehavior.Flee);
             } else {
-                this.setBehavior(Behavior.Wander);
+                this.setBehavior(AiBehavior.Wander);
             }
         } else {
-            this.setBehavior(Behavior.Chase);
+            this.setBehavior(AiBehavior.Chase);
         }
     }
 

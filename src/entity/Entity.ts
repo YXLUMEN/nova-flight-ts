@@ -41,8 +41,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     public prevYaw: number = 0;
 
     public noClip: boolean = false;
-    public noColliesToEntity: boolean = false;
-
+    public stuck = false;
     private readonly dimensions: EntityDimensions;
     private boundingBox: Box = Entity.NULL_BOX;
 
@@ -107,17 +106,14 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     public tick(): void {
     }
 
-    /**
-     * 禁止重写
-     *
-     * 如需清理工作, 考虑 onDiscard
-     * @see onDiscard
-     * */
-    public discard(): void {
-        if (this.removed) return;
-        this.removed = true;
-        this.onDiscard();
-        this.changeListener.remove();
+    // 生命周期与状态管理
+
+    public isRemoved(): boolean {
+        return this.removed;
+    }
+
+    public isAlive(): boolean {
+        return !this.isRemoved();
     }
 
     /**
@@ -129,6 +125,23 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     public kill(): void {
         const damage = this.getWorld().getDamageSources().kill();
         this.onDeath(damage);
+    }
+
+    public onDeath(_damageSource: DamageSource): void {
+        this.discard();
+    }
+
+    /**
+     * 禁止重写
+     *
+     * 如需清理工作, 考虑 onDiscard
+     * @see onDiscard
+     * */
+    public discard(): void {
+        if (this.removed) return;
+        this.removed = true;
+        this.onDiscard();
+        this.changeListener.remove();
     }
 
     public getTags(): Set<string> {
@@ -145,6 +158,8 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         return this.tags.delete(tag);
     }
 
+    // 相等性与哈希
+
     public equals(other: unknown): boolean {
         if (other instanceof Entity) {
             return other.id === this.id
@@ -156,12 +171,14 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         return this.id.toString();
     }
 
+    // 位置相关
+
     public get getPositionRef(): Readonly<MutVec2> {
         return this.position;
     }
 
     public getPosition(): Vec2 {
-        return this.position.toImmutable();
+        return this.position.toImmut();
     }
 
     public getX(): number {
@@ -172,8 +189,18 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         return this.position.y;
     }
 
-    public overwritePos(x: number, y: number): void {
-        if (this.position.x === x && this.position.y === y) return;
+    // 位置设置与更新
+
+    // 允许离开地图边界的距离
+    protected getMapOffsetX(): number {
+        return 0;
+    }
+
+    protected getMapOffsetY(): number {
+        return 0;
+    }
+
+    protected overwritePos(x: number, y: number): void {
         this.position.set(x, y);
     }
 
@@ -196,8 +223,15 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.setPosition(d, e);
     }
 
-    public syncPositionDelta(x: number, y: number): void {
-        this.positionDelta.setPos(x, y);
+    public refreshPositionAndAngles(x: number, y: number, yaw: number): void {
+        this.setPosition(x, y);
+        this.setYaw(yaw);
+        this.resetPrevious();
+    }
+
+    public updatePositionAndAngles(x: number, y: number, yaw: number, _interpolationSteps: number): void {
+        this.setPosition(x, y);
+        this.setYaw(yaw);
     }
 
     public resetPrevious() {
@@ -206,20 +240,15 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.prevYaw = this.getYaw();
     }
 
-    public refreshPositionAndAngles(x: number, y: number, yaw: number): void {
-        this.setPosition(x, y);
-        this.setYaw(yaw);
-        this.resetPrevious();
+    public syncPositionDelta(x: number, y: number): void {
+        this.positionDelta.setPos(x, y);
     }
 
     public getPositionDelta() {
         return this.positionDelta;
     }
 
-    public updatePositionAndAngles(x: number, y: number, yaw: number, _interpolationSteps: number): void {
-        this.setPosition(x, y);
-        this.setYaw(yaw);
-    }
+    // 朝向 Yaw
 
     public getYaw(): number {
         return this.yaw;
@@ -248,118 +277,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.setYaw(this.yaw + delta);
     }
 
-    public get getVelocityRef(): MutVec2 {
-        return this.velocity;
-    }
-
-    public getVelocity(): Vec2 {
-        return this.velocity.toImmutable();
-    }
-
-    public updateVelocityByVec(speed: number, movementInput: IVec): void {
-        if (movementInput.lengthSquared() < 1e-6) return;
-        const dir = movementInput.length() > 1 ? movementInput.normalize() : movementInput;
-        this.velocity.addVec(dir.multiply(speed));
-    }
-
-    public updateVelocity(speed: number, x: number, y: number): void {
-        const len = Math.hypot(x, y);
-        if (len > 1E-6) {
-            const nx = x / len;
-            const ny = y / len;
-            this.velocity.add(nx * speed, ny * speed);
-        }
-    }
-
-    public setVelocity(x: number, y: number): void {
-        this.velocity.set(x, y);
-    }
-
-    public setVelocityByVec(velocity: IVec): void {
-        this.setVelocity(velocity.x, velocity.y);
-    }
-
-    public setVelocityClient(x: number, y: number): void {
-        this.setVelocity(x, y);
-    }
-
-    public addVelocity(deltaX: number, deltaY: number): void {
-        this.setVelocity(this.velocity.x + deltaX, this.velocity.y + deltaY);
-        this.velocityDirty = true;
-    }
-
-    public getWidth(): number {
-        return this.dimensions.width;
-    }
-
-    public getHeight(): number {
-        return this.dimensions.height;
-    }
-
-    public getDimensions(): EntityDimensions {
-        return this.dimensions;
-    }
-
-    public isCollisionTo(entity: Entity): boolean {
-        return this.boundingBox.intersectsByBox(entity.getBoundingBox());
-    }
-
-    public getBoundingBox(): Box {
-        return this.boundingBox;
-    }
-
-    public setBoundingBox(boundingBox: Box): void {
-        this.boundingBox = boundingBox;
-    }
-
-    protected calculateBoundingBox(): Box {
-        return this.dimensions.getBoxAt(this.position.x, this.position.y);
-    }
-
-    public createSpawnPacket() {
-        return EntitySpawnS2CPacket.create(this);
-    }
-
-    public onSpawnPacket(packet: EntitySpawnS2CPacket) {
-        this.syncPositionDelta(packet.x, packet.y);
-        this.refreshPositionAndAngles(packet.x, packet.y, packet.yaw);
-        this.setId(packet.entityId);
-        this.setUuid(packet.uuid);
-        this.color = packet.color;
-        this.edgeColor = packet.edgeColor;
-    }
-
-    public getWorld(): World {
-        return this.world;
-    }
-
-    public isInvulnerableTo(damageSource: DamageSource): boolean {
-        return this.removed || this.invulnerable && !damageSource.isIn();
-    }
-
-    public takeDamage(damageSource: DamageSource, _amount: number): boolean {
-        return this.isInvulnerableTo(damageSource);
-    }
-
-    public onDeath(_damageSource: DamageSource): void {
-        this.discard();
-    }
-
-    public isRemoved(): boolean {
-        return this.removed;
-    }
-
-    public isAlive(): boolean {
-        return !this.isRemoved();
-    }
-
-    public getMovementSpeed(): number {
-        return this.movementSpeed;
-    }
-
-    public setMovementSpeed(speed: number): void {
-        this.movementSpeed = speed;
-    }
+    // 插值与渲染辅助
 
     public getLerpPos(tickDelta: number): MutVec2 {
         const x = lerp(tickDelta, this.prevX, this.getX());
@@ -392,42 +310,91 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.setYaw(dYaw);
     }
 
+    // 速度与移动
+
+    public get getVelocityRef(): MutVec2 {
+        return this.velocity;
+    }
+
+    public getVelocity(): Vec2 {
+        return this.velocity.toImmut();
+    }
+
+    public setVelocity(x: number, y: number): void {
+        this.velocity.set(x, y);
+    }
+
+    public setVelocityByVec(velocity: IVec): void {
+        this.setVelocity(velocity.x, velocity.y);
+    }
+
+    public setVelocityClient(x: number, y: number): void {
+        this.setVelocity(x, y);
+    }
+
+    public addVelocity(deltaX: number, deltaY: number): void {
+        this.setVelocity(this.velocity.x + deltaX, this.velocity.y + deltaY);
+        this.velocityDirty = true;
+    }
+
+    public updateVelocity(speed: number, x: number, y: number): void {
+        const len = Math.hypot(x, y);
+        if (len > 1E-6) {
+            const nx = x / len;
+            const ny = y / len;
+            this.velocity.add(nx * speed, ny * speed);
+        }
+    }
+
+    public updateVelocityByVec(speed: number, movementInput: IVec): void {
+        if (movementInput.lengthSquared() < 1e-6) return;
+        const dir = movementInput.length() > 1 ? movementInput.normalize() : movementInput;
+        this.velocity.addVec(dir.multiply(speed));
+    }
+
+    public getMovementSpeed(): number {
+        return this.movementSpeed;
+    }
+
+    public setMovementSpeed(speed: number): void {
+        this.movementSpeed = speed;
+    }
+
+    // 移动控制
+
     public move(movement: IVec): void {
         if (this.noClip) {
             this.setPosition(this.position.x + movement.x, this.position.y + movement.y);
             return;
         }
 
-        const withBlock = this.adjustBlockCollision(movement);
-        const cx = !doubleEquals(movement.x, withBlock.x, 1E-5);
-        const cy = !doubleEquals(movement.y, withBlock.y, 1E-5);
+        const adjusted = new MutVec2(movement.x, movement.y);
+        this.adjustBlockCollision(adjusted);
+        if (adjusted.lengthSquared() > 1E-7) {
+            this.setPosition(this.position.x + adjusted.x, this.position.y + adjusted.y);
+        }
+
+        const cx = !doubleEquals(movement.x, adjusted.x, 1E-5);
+        const cy = !doubleEquals(movement.y, adjusted.y, 1E-5);
 
         if (cx || cy) {
             this.setVelocity(cx ? 0 : this.velocity.x, cy ? 0 : this.velocity.y);
         }
-
-        const withEntity = this.adjustEntityCollision(withBlock);
-        if (withEntity.lengthSquared() > 1E-7) {
-            this.setPosition(this.position.x + withEntity.x, this.position.y + withEntity.y);
-        }
     }
 
-    protected adjustBlockCollision(movement: IVec): IVec {
+    protected adjustBlockCollision(movement: MutVec2): MutVec2 {
         const map = this.getWorld().getMap();
         const bounds = this.getBoundingBox();
-        if (map.intersectsBox(bounds)) return movement;
-
         return BlockCollision.separatingCollision(map, bounds, movement);
     }
 
-    private adjustEntityCollision(movement: IVec): IVec {
-        if (this.noColliesToEntity) return movement;
+    protected adjustEntityCollision(movement: MutVec2): MutVec2 {
+        if (this.noClip) return movement;
 
         const selfBox = this.getBoundingBox().stretchByVec(movement);
         const entities = this.getWorld().getEntityCollisions(this, selfBox);
         if (entities.length === 0) return movement;
 
-        const adjusted = movement.toMut();
         for (const entity of entities) {
             const otherBox = entity.getBoundingBox();
 
@@ -436,50 +403,165 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
             if (overlapX < overlapY) {
                 const sign = this.position.x < entity.position.x ? -1 : 1;
-                adjusted.x = clamp(overlapX * sign, -adjusted.x, adjusted.x);
+                movement.x = clamp(overlapX * sign, -movement.x, movement.x);
             } else {
                 const sign = this.position.y < entity.position.y ? -1 : 1;
-                adjusted.y = clamp(overlapY * sign, -adjusted.y, adjusted.y);
+                movement.y = clamp(overlapY * sign, -movement.y, movement.y);
             }
         }
-        return adjusted;
+        return movement;
     }
 
-    protected adjustPosition(): boolean {
+    protected clampPosition(): boolean {
         const dim = this.dimensions;
         let x = this.position.x;
         let y = this.position.y;
 
-        if (x < dim.halfWidth) {
+        const ox = this.getMapOffsetX();
+        const oy = this.getMapOffsetY();
+
+        if (x < dim.halfWidth - ox) {
             x = dim.halfWidth;
             this.velocity.x = 0;
         }
-        if (x > World.WORLD_W - dim.halfWidth) {
+        if (x > World.WORLD_W - dim.halfWidth + ox) {
             x = World.WORLD_W - dim.halfWidth;
             this.velocity.x = 0;
         }
-        if (y < dim.halfHeight) {
+        if (y < dim.halfHeight - oy) {
             y = dim.halfHeight;
             this.velocity.y = 0;
         }
-        if (y > World.WORLD_H - dim.halfHeight) {
+        if (y > World.WORLD_H - dim.halfHeight + oy) {
             y = World.WORLD_H - dim.halfHeight;
             this.velocity.y = 0;
         }
 
-        this.overwritePos(x, y);
+        if (x !== this.position.x || y !== this.position.y) {
+            this.onOutOffBound();
+            this.overwritePos(x, y);
+            return true;
+        }
+        return false;
+    }
+
+    protected onOutOffBound() {
+    }
+
+    // 碰撞与尺寸
+
+    public getWidth(): number {
+        return this.dimensions.width;
+    }
+
+    public getHeight(): number {
+        return this.dimensions.height;
+    }
+
+    public getDimensions(): EntityDimensions {
+        return this.dimensions;
+    }
+
+    public getBoundingBox(): Box {
+        return this.boundingBox;
+    }
+
+    public setBoundingBox(boundingBox: Box): void {
+        this.boundingBox = boundingBox;
+    }
+
+    protected calculateBoundingBox(): Box {
+        return this.dimensions.getBoxAt(this.position.x, this.position.y);
+    }
+
+    public isCollisionTo(entity: Entity): boolean {
+        return this.boundingBox.intersectsByBox(entity.getBoundingBox());
+    }
+
+    // 推挤行为
+
+    public isPushAble(): boolean {
+        return false;
+    }
+
+    public pushAwayFrom(entity: Entity): void {
+        if (entity.noClip || this.noClip) return;
+
+        let dx = entity.getX() - this.getX();
+        let dy = entity.getY() - this.getY();
+        const dist = Math.hypot(dx, dy);
+        if (dist < 0.01) return;
+
+        dx = (dx / dist) * 0.5;
+        dy = (dy / dist) * 0.5;
+        if (this.isPushAble()) {
+            this.addVelocity(-dx, -dy);
+        }
+        if (entity.isPushAble()) {
+            entity.addVelocity(dx, dy);
+        }
+    }
+
+    // 伤害
+
+    public isInvulnerableTo(damageSource: DamageSource): boolean {
+        return this.removed || this.invulnerable && !damageSource.isIn();
+    }
+
+    /**
+     * 和 isInvulnerableTo 不同,此方法使得实体免疫爆炸伤害以及后续效果
+     *
+     * @see{@link isInvulnerableTo}
+     * */
+    public isImmuneToExplosion() {
+        return false;
+    }
+
+    public takeDamage(damageSource: DamageSource, _amount: number): boolean {
+        return this.isInvulnerableTo(damageSource);
+    }
+
+    // 渲染与可见性
+
+    public shouldRender(): boolean {
         return true;
     }
 
-    public setChangeListener(listener: EntityChangeListener): void {
-        this.changeListener = listener;
+    /**
+     * 是否可以成为"弹射物/射线"的目标
+     * */
+    public canHitByProjectile(): boolean {
+        return this.isAlive();
     }
 
-    public shouldSave(): boolean {
-        return !this.removed;
+    // 网络同步
+
+    public createSpawnPacket() {
+        return EntitySpawnS2CPacket.create(this);
     }
 
-    public isLogicalSideForUpdatingMovement(): boolean {
+    public onSpawnPacket(packet: EntitySpawnS2CPacket) {
+        this.syncPositionDelta(packet.x, packet.y);
+        this.refreshPositionAndAngles(packet.x, packet.y, packet.yaw);
+        this.setId(packet.entityId);
+        this.setUuid(packet.uuid);
+        this.color = packet.color;
+        this.edgeColor = packet.edgeColor;
+    }
+
+    // 世界与环境
+
+    public getWorld(): World {
+        return this.world;
+    }
+
+    public isClient(): boolean {
+        return this.world.isClient;
+    }
+
+    // 行为逻辑
+
+    public isLogicalSide(): boolean {
         return this.canMoveVoluntarily();
     }
 
@@ -491,13 +573,19 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         return false;
     }
 
+    // 数据追踪
+
     public getDataTracker(): DataTracker {
         return this.dataTracker;
     }
 
-    public shouldRender(): boolean {
-        return true;
-    }
+    public abstract onDataTrackerUpdate(entries: DataTrackerSerializedEntry<any>[]): void;
+
+    public abstract onTrackedDataSet(data: TrackedData<any>): void;
+
+    protected abstract initDataTracker(builder: InstanceType<typeof DataTracker.Builder>): void;
+
+    // 权限与命令
 
     public getCommandSource(): ServerCommandSource {
         const serverWorld = this.getWorld();
@@ -534,6 +622,17 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     public cannotBeSilenced(): boolean {
         return false;
+    }
+
+    // 变更监听
+    public setChangeListener(listener: EntityChangeListener): void {
+        this.changeListener = listener;
+    }
+
+    // 持久化
+
+    public shouldSave(): boolean {
+        return !this.removed;
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
@@ -594,12 +693,6 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
             }
         }
     }
-
-    public abstract onDataTrackerUpdate(entries: DataTrackerSerializedEntry<any>[]): void;
-
-    public abstract onTrackedDataSet(data: TrackedData<any>): void;
-
-    protected abstract initDataTracker(builder: InstanceType<typeof DataTracker.Builder>): void;
 
     // 仅限清理. 用别怕,怕别用
     public static resetCounter() {

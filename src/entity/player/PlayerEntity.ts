@@ -23,13 +23,15 @@ import {Techs} from "../../tech/Techs.ts";
 import {Weapon} from "../../item/weapon/Weapon.ts";
 import {BehaviourEnum, ExplosionBehavior} from "../../world/explosion/ExplosionBehavior.ts";
 import {ExplosionVisual} from "../../world/explosion/ExplosionVisual.ts";
+import {BlockCollision} from "../../world/collision/BlockCollision.ts";
+import type {MutVec2} from "../../utils/math/MutVec2.ts";
 
 export abstract class PlayerEntity extends LivingEntity {
     private static readonly SHIELD_AMOUNT = DataTracker.registerData(Object(PlayerEntity), TrackedDataHandlerRegistry.FLOAT);
 
-    public override noColliesToEntity = true;
     public onDamageExplosionRadius = 320;
     protected techTree: TechTree | null = null;
+    public stuckSince: number = -1;
 
     public readonly cooldownManager!: ItemCooldownManager;
     protected readonly items = new Map<Item, ItemStack>();
@@ -77,7 +79,29 @@ export abstract class PlayerEntity extends LivingEntity {
         super.tickMovement();
 
         this.move(this.getVelocityRef);
-        this.adjustPosition();
+        this.clampPosition();
+
+        if (!this.stuck || this.isDevMode()) return;
+
+        const elapsed = performance.now() - this.stuckSince;
+        const remaining = Math.max(0, 12000 - elapsed);
+        if (remaining === 0) {
+            const damageSource = this.getWorld().getDamageSources().generic();
+            this.takeDamage(damageSource, 4);
+        }
+    }
+
+    protected override adjustBlockCollision(movement: MutVec2): MutVec2 {
+        const map = this.getWorld().getMap();
+        const bounds = this.getBoundingBox();
+        if (map.intersectsBox(bounds)) {
+            if (!this.stuck) this.stuckSince = performance.now();
+            this.stuck = true;
+            return movement;
+        }
+        this.stuck = false;
+
+        return BlockCollision.separatingCollision(map, bounds, movement);
     }
 
     protected tickInventory(world: World) {

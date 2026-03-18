@@ -100,7 +100,7 @@ export class ProjectRaycastUtil {
         return {hit: false, t: 1, gridX: -1, gridY: -1, normalX: 0, normalY: 0};
     }
 
-    public static getCollision(entity: Entity, predicate: Predicate<Entity>, margin: number = 0): HitResult {
+    public static getCollision(entity: Entity, predicate: Predicate<Entity>, margin: number = 0.3): HitResult {
         const velocity = entity.getVelocityRef;
         const world = entity.getWorld();
         const pos = entity.getPosition();
@@ -139,8 +139,12 @@ export class ProjectRaycastUtil {
         let candidate: Entity | null = null;
 
         for (const entity of world.searchOtherEntities(except, box, predicate)) {
-            const expanded = entity.getBoundingBox().expandAll(margin);
-            const hit = expanded.raycast(min, max);
+            const targetBox = entity.getBoundingBox().expandAll(margin);
+            if (targetBox.containsVec(min)) {
+                return EntityHitResult.create(entity);
+            }
+
+            const hit = targetBox.raycast(min, max);
             if (!hit) continue;
 
             const sqDist = squareDistVec2(min, hit);

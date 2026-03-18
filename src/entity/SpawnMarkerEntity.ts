@@ -42,6 +42,10 @@ export class SpawnMarkerEntity extends Entity {
         }
     }
 
+    public override canHitByProjectile(): boolean {
+        return false;
+    }
+
     public override shouldSave(): boolean {
         return false;
     }

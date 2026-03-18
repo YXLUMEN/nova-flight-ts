@@ -29,10 +29,6 @@ export class EntityLookUp<T extends EntityLike> {
         return this.grid.search(box);
     }
 
-    public query(queryBox: Box): T[] {
-        return this.grid.query(queryBox);
-    }
-
     public forEachInBox(box: Box, consumer: Consumer<T>): void {
         this.grid.forEach(box, consumer);
     }

@@ -20,9 +20,9 @@ export class OtherClientPlayerEntity extends AbstractClientPlayerEntity {
     }
 
     public override tickMovement() {
-        if (this.bodyTrackingIncrements > 0) {
-            this.lerpPosAndYaw(this.bodyTrackingIncrements, this.serverX, this.serverY, this.serverYaw);
-            this.bodyTrackingIncrements--;
+        if (this.positionIncrements > 0) {
+            this.lerpPosAndYaw(this.positionIncrements, this.serverX, this.serverY, this.serverYaw);
+            this.positionIncrements--;
         }
 
         if (this.velocityLerpDivisor > 0) {

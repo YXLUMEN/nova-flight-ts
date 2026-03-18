@@ -6,15 +6,15 @@ import {DecoyEntity} from "../DecoyEntity.ts";
 import {getNearestEntity, squareDistVec2} from "../../utils/math/math.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
-import {Vec2} from "../../utils/math/Vec2.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 import {BehaviourEnum} from "../../world/explosion/ExplosionBehavior.ts";
 import {FilterBehaviour} from "../../world/explosion/FilterBehaviour.ts";
-import {MobEntity} from "../mob/MobEntity.ts";
+import type {MutVec2} from "../../utils/math/MutVec2.ts";
+import {EntityPredicates} from "../../predicate/EntityPredicates.ts";
 
 export class MobMissileEntity extends MissileEntity {
     private static readonly EXPLOSION = new FilterBehaviour(BehaviourEnum.ONLY_DAMAGE)
-        .withFiler(entity => !(entity instanceof MobEntity));
+        .withFiler(EntityPredicates.ONLY_PLAYER);
 
     protected override maxReLockCD = 15;
     protected override driftSpeed = 1.4;
@@ -35,13 +35,13 @@ export class MobMissileEntity extends MissileEntity {
         super.move(movement);
     }
 
-    protected override adjustBlockCollision(movement: IVec): IVec {
+    protected override adjustBlockCollision(movement: MutVec2): MutVec2 {
         const map = this.getWorld().getMap();
         const collision = BlockCollision.fastCollision(map, this.getBoundingBox(), movement);
         if (collision) {
             this.discard();
             this.explode();
-            return Vec2.ZERO;
+            return movement.multiply(0);
         }
 
         return movement;

@@ -9,11 +9,11 @@ export abstract class LaserWeaponS2CPacket implements Payload {
     public readonly start: IVec;
     public readonly end: IVec;
     public readonly width: number;
-    public readonly color: number;
+    public readonly color: string;
     public readonly activate: boolean;
     public readonly change: boolean
 
-    protected constructor(entityId: number, start: IVec, end: IVec, width: number, color: number, activate: boolean, change: boolean) {
+    protected constructor(entityId: number, start: IVec, end: IVec, width: number, color: string, activate: boolean, change: boolean) {
         this.entityId = entityId;
         this.start = start;
         this.end = end;
@@ -34,7 +34,7 @@ export class LaserWeaponActivate extends LaserWeaponS2CPacket {
             PacketCodecs.VECTOR2F.encode(writer, value.start);
             PacketCodecs.VECTOR2F.encode(writer, value.end);
             writer.writeVarUint(value.width);
-            writer.writeUint32(value.color);
+            PacketCodecs.COLOR_HEX.encode(writer, value.color);
         },
         reader => {
             return new LaserWeaponActivate(
@@ -42,12 +42,12 @@ export class LaserWeaponActivate extends LaserWeaponS2CPacket {
                 PacketCodecs.VECTOR2F.decode(reader),
                 PacketCodecs.VECTOR2F.decode(reader),
                 reader.readVarUint(),
-                reader.readUint32(),
+                PacketCodecs.COLOR_HEX.decode(reader),
             );
         }
     );
 
-    public constructor(entityId: number, start: IVec, end: IVec, width: number, color: number) {
+    public constructor(entityId: number, start: IVec, end: IVec, width: number, color: string) {
         super(entityId, start, end, width, color, true, false);
     }
 
@@ -65,7 +65,7 @@ export class LaserWeaponDeactivate extends LaserWeaponS2CPacket {
     );
 
     public constructor(entityId: number) {
-        super(entityId, Vec2.ZERO, Vec2.ZERO, 0, 0, false, false);
+        super(entityId, Vec2.ZERO, Vec2.ZERO, 0, '', false, false);
     }
 
     public getId(): PayloadId<LaserWeaponDeactivate> {
@@ -91,7 +91,7 @@ export class LaserWeaponChange extends LaserWeaponS2CPacket {
     );
 
     public constructor(entityId: number, start: IVec, end: IVec) {
-        super(entityId, start, end, 0, 0, false, true);
+        super(entityId, start, end, 0, '', false, true);
     }
 
     public getId(): PayloadId<LaserWeaponChange> {

@@ -392,7 +392,7 @@ export class ClientWorld extends World {
         const pos = entity.getLerpPos(tickDelta);
         const yaw = entity.getLerpYaw(tickDelta);
         const lerpBox = entity.getDimensions().getBoxAtByVec(pos);
-        const stretchBox = lerpBox.stretchByVec(entity.getVelocityRef);
+        // const stretchBox = lerpBox.stretchByVec(entity.getVelocityRef);
 
         const w = lerpBox.getWidth();
         const h = lerpBox.getHeight();
@@ -405,8 +405,8 @@ export class ClientWorld extends World {
 
         ctx.strokeStyle = "#fff";
         ctx.strokeRect(lerpBox.minX, lerpBox.minY, w, h);
-        ctx.strokeStyle = "#c0ffad";
-        ctx.strokeRect(stretchBox.minX, stretchBox.minY, stretchBox.getWidth(), stretchBox.getHeight());
+        // ctx.strokeStyle = "#c0ffad";
+        // ctx.strokeRect(stretchBox.minX, stretchBox.minY, stretchBox.getWidth(), stretchBox.getHeight());
     }
 
     private renderLockedDir(
@@ -496,7 +496,7 @@ export class ClientWorld extends World {
                     start * blocksize,
                     by * blocksize,
                     (bx - start) * blocksize,
-                    blocksize
+                    blocksize + 1
                 );
             }
         }

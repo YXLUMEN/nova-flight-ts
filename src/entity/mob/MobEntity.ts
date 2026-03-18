@@ -1,12 +1,12 @@
 import {LivingEntity} from "../LivingEntity.ts";
 import {World} from "../../world/World.ts";
-import {clamp, rand} from "../../utils/math/math.ts";
+import {rand} from "../../utils/math/math.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {EVENTS} from "../../apis/IEvents.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
-import {MobAI} from "../ai/MobAI.ts";
+import {AiBehavior, MobAI} from "../ai/MobAI.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {IColorEntity} from "../IColorEntity.ts";
 import type {DataTrackerSerializedEntry} from "../data/DataTracker.ts";
@@ -14,6 +14,8 @@ import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacke
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {decodeColorToHex, encodeColorHex} from "../../utils/NetUtil.ts";
 import {NbtTypeId} from "../../nbt/NbtType.ts";
+import {MutVec2} from "../../utils/math/MutVec2.ts";
+import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 
 export abstract class MobEntity extends LivingEntity implements IColorEntity {
     public color = '#ff6b6b';
@@ -34,9 +36,12 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
     public override tick(): void {
         super.tick();
 
-        if (!this.getWorld().isClient) this.AI.updateAction(this);
+        if (!this.isClient()) {
+            this.AI.updateAction(this);
+        }
+
         this.move(this.getVelocityRef);
-        this.adjustPosition();
+        this.clampPosition();
     }
 
     protected override tickAi() {
@@ -145,20 +150,25 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
     public onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {
     }
 
-    protected override adjustPosition(): boolean {
-        const pos = this.getPositionRef;
-        if (pos.y > World.WORLD_H + 40) {
-            this.discard();
-            return false;
+    protected override adjustBlockCollision(movement: MutVec2): MutVec2 {
+        const map = this.getWorld().getMap();
+        const bounds = this.getBoundingBox();
+
+        if (map.intersectsBox(bounds)) {
+            const eject = BlockCollision.findEjectionVector(map, this.getPositionRef, bounds, 40);
+            this.stuck = true;
+            if (eject) return movement.set(eject.x, eject.y);
         }
 
-        if (this.getAi().getBehavior() !== 3) {
-            return super.adjustPosition();
-        }
-        this.setPosition(
-            clamp(pos.x, 20, World.WORLD_W),
-            Math.max(pos.y, 0)
-        );
-        return true;
+        return BlockCollision.separatingCollision(map, bounds, movement);
+    }
+
+    protected override getMapOffsetY(): number {
+        return this.AI.getBehavior() === AiBehavior.Simple ? 40 : 0;
+    }
+
+    protected override onOutOffBound() {
+        super.onOutOffBound();
+        if (!this.isClient() && this.AI.getBehavior() === AiBehavior.Simple) this.discard();
     }
 }

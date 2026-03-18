@@ -70,7 +70,6 @@ import {
 } from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
 import {LaserBeamEffect} from "../../effect/LaserBeamEffect.ts";
 import {PhaseLasers} from "../../item/weapon/PhaseLasers.ts";
-import {decodeColorToHex} from "../../utils/NetUtil.ts";
 import {TargetDrone} from "../../entity/TargetDrone.ts";
 import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
@@ -246,7 +245,7 @@ export class ClientNetworkSession {
     public onEntity(packet: EntityS2CPacket) {
         const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
-        if (entity.isLogicalSideForUpdatingMovement()) return;
+        if (entity.isLogicalSide()) return;
 
         if (packet.positionChanged) {
             const trackedPos = entity.getPositionDelta();
@@ -265,10 +264,10 @@ export class ClientNetworkSession {
         if (!entity) return;
 
         entity.syncPositionDelta(packet.x, packet.y);
-        if (!entity.isLogicalSideForUpdatingMovement()) {
+        if (!entity.isLogicalSide()) {
             entity.updatePositionAndAngles(packet.x, packet.y, packet.yaw, 3);
         } else if (entity === this.client.player) {
-            this.client.player.setPosition(packet.x, packet.y);
+            entity.setPosition(packet.x, packet.y);
         }
     }
 
@@ -561,7 +560,7 @@ export class ClientNetworkSession {
             if (beamFx && beamFx.isAlive()) {
                 beamFx.kill();
             }
-            const newBeamFx = new LaserBeamEffect(decodeColorToHex(packet.color), packet.width, 0.5);
+            const newBeamFx = new LaserBeamEffect(packet.color, packet.width, 0.5);
             newBeamFx.reset(packet.start, packet.end);
             PhaseLasers.id2EffectMap.set(packet.entityId, newBeamFx);
             this.world!.addEffect(null, newBeamFx);

@@ -7,6 +7,7 @@ import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {ClientWorld} from "../../ClientWorld.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import type {SpecialWeapon} from "../../../item/weapon/SpecialWeapon.ts";
+import type {ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
 
 export class HUD implements IUi {
     private readonly font: string = '14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
@@ -97,6 +98,9 @@ export class HUD implements IUi {
             }
         }
 
+        if (player.stuck && !player.isDevMode()) {
+            this.renderStuckOverlay(ctx, player);
+        }
         ctx.restore();
 
         if (player.approachMissile.size > 0) {
@@ -281,6 +285,37 @@ export class HUD implements IUi {
         }
 
         ctx.restore();
+    }
+
+    private renderStuckOverlay(ctx: CanvasRenderingContext2D, player: ClientPlayerEntity) {
+        const now = performance.now();
+        const elapsed = now - player.stuckSince;
+        const remaining = Math.max(0, 12000 - elapsed);
+        if (remaining > 10000) return;
+
+        const seconds = Math.ceil(remaining / 1000);
+
+        const width = this.worldW;
+        const height = this.worldH;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(0, 0, width, height);
+
+        const message = `回到战斗区域\n${seconds}`;
+
+        ctx.font = 'bold 32px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffffff';
+
+        // 支持换行
+        const lines = message.split('\n');
+        const lineHeight = 40;
+        const startY = height / 2 - (lines.length - 1) * lineHeight / 2;
+
+        for (let i = 0; i < lines.length; i++) {
+            ctx.fillText(lines[i], width / 2, startY + i * lineHeight);
+        }
     }
 
     public destroy() {

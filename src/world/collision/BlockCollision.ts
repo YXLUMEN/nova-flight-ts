@@ -6,8 +6,9 @@ import {fractionalPart, lerp} from "../../utils/math/math.ts";
 import {MutBlockPos} from "../map/MutBlockPos.ts";
 import type {RaycastContext} from "./RaycastContext.ts";
 import {BlockHitResult} from "./BlockHitResult.ts";
-import {type Direction, Directions, getFacing} from "./Direction.ts";
+import {AllDirs, type Direction, Directions, getFacing} from "./Direction.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
+import {MutVec2} from "../../utils/math/MutVec2.ts";
 
 export class BlockCollision {
     public static fastCollision(map: BitBlockMap, bounds: Box, movement: IVec): boolean {
@@ -16,25 +17,87 @@ export class BlockCollision {
         return map.intersectsBox(nextBox);
     }
 
-    public static separatingCollision(map: BitBlockMap, bounds: Box, movement: IVec): IVec {
+    public static separatingCollision(map: BitBlockMap, bounds: Box, movement: MutVec2): MutVec2 {
         if (movement.x === 0 && movement.y === 0) return movement;
 
-        const adjusted = movement.toMut();
         if (movement.x !== 0) {
             const xBox = bounds.offset(movement.x, 0);
-            if (map.intersectsBox(xBox)) {
-                adjusted.x = 0;
-            }
+            if (map.intersectsBox(xBox)) movement.x = 0;
         }
 
         if (movement.y !== 0) {
             const yBox = bounds.offset(0, movement.y);
-            if (map.intersectsBox(yBox)) {
-                adjusted.y = 0;
+            if (map.intersectsBox(yBox)) movement.y = 0;
+        }
+
+        return movement;
+    }
+
+    public static findEjectionVector(
+        map: BitBlockMap,
+        pos: IVec,
+        box: Box,
+        maxRadius: number = 64
+    ): MutVec2 | null {
+        const stepSize = 8;
+        const steps = Math.ceil(maxRadius / stepSize);
+
+        let bestEject: MutVec2 | null = null;
+        let minDistSq = maxRadius * maxRadius + 1;
+
+        const testPos = MutVec2.zero();
+
+        for (const dir of AllDirs) {
+            const dx = dir.dir.x;
+            const dy = dir.dir.y;
+
+            for (let i = 1; i <= steps; i++) {
+                const dist = i * stepSize;
+                const distSq = dist * dist;
+                if (distSq >= minDistSq) {
+                    break;
+                }
+
+                testPos.set(pos.x + dx * dist, pos.y + dy * dist);
+                const offsetBox = box.offset(testPos.x - pos.x, testPos.y - pos.y);
+
+                if (map.intersectsBox(offsetBox)) continue;
+                if (distSq < minDistSq) {
+                    minDistSq = distSq;
+                    if (bestEject === null) {
+                        bestEject = new MutVec2(dx * dist, dy * dist);
+                    } else {
+                        bestEject.set(dx * dist, dy * dist);
+                    }
+                }
+                break;
             }
         }
 
-        return adjusted;
+        return bestEject;
+    }
+
+    public static pushOutOfBlocks(map: BitBlockMap, bounds: Box, x: number, y: number) {
+        const box = bounds.contractAll(1E-7);
+        if (!map.intersectsBox(box)) return;
+        const dx = x % 8;
+        const dy = y % 8;
+
+        let pushDir: Direction | null = null;
+        let dist = Infinity;
+
+        for (const direction of AllDirs) {
+            const g = direction.dir.x === 0 ? dy : dx;
+            const h = direction.direction === 1 ? 1 - g : g;
+            if (h < dist && !map.intersectsBox(box.offset(direction.dir.x * 8, direction.dir.y * 8))) {
+                dist = h;
+                pushDir = direction;
+            }
+        }
+
+        if (pushDir) {
+            return pushDir.dir;
+        }
     }
 
     public static raycast<T, C>(

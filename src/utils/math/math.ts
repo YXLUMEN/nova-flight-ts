@@ -251,5 +251,15 @@ export function fractionalPart(value: number) {
     return value - lfloor(value);
 }
 
+export function absMax(a: number, b: number): number {
+    if (a < 0.0) {
+        a = -a;
+    }
+    if (b < 0.0) {
+        b = -b;
+    }
+    return Math.max(a, b);
+}
+
 export const PI2 = Math.PI * 2;
 export const HALF_PI = Math.PI / 2;

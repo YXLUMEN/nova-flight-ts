@@ -6,9 +6,7 @@ import {LivingEntity} from "../LivingEntity.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
-import type {BlockChange} from "../../world/map/BlockChange.ts";
-import {ServerCommonHandler} from "../../server/network/handler/ServerCommonHandler.ts";
-import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
+import {BlockChangeS2CPacket} from "../../network/packet/s2c/BlockChangeS2CPacket.ts";
 
 export class ArtilleryEntity extends FastBulletEntity {
     public override noClip = true;
@@ -47,17 +45,8 @@ export class ArtilleryEntity extends FastBulletEntity {
 
         const world = this.getWorld();
         if (world.isClient || hitResult.missed) return;
-        const map = world.getMap();
-        const x = hitResult.blockPos.getX(), y = hitResult.blockPos.getY();
-        const changes: BlockChange[] = [];
-        for (let i = -2; i < 2; i++) {
-            for (let j = -2; j < 2; j++) {
-                map.set(x + i, y + j, 0);
-                changes.push({type: 0, x: x + i, y: y + j});
-            }
-        }
-        const channel = world.getNetworkChannel();
-        ServerCommonHandler.buildBatchWithEst(changes, () => 9, BatchBlockChangesPacket.from)
-            .forEach(packet => channel.send(packet));
+
+        world.getMap().setBlock(hitResult.blockPos, 0);
+        world.getNetworkChannel().send(BlockChangeS2CPacket.from(0, hitResult.blockPos));
     }
 }

@@ -32,7 +32,7 @@ export class CIWSBulletEntity extends BulletEntity {
         this.age = nbt.getUint32('age');
     }
 
-    public canHit(entity: Entity): boolean {
+    public override canHit(entity: Entity): boolean {
         return entity.isAlive() && entity !== this.getOwner();
     }
 

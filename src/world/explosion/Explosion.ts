@@ -116,7 +116,7 @@ export class Explosion {
         const candidates = this.world.searchOtherEntities(
             source,
             box,
-            entity => this.behaviour.canDamage(entity)
+            entity => !entity.isImmuneToExplosion() && this.behaviour.canDamage(entity)
         );
         const start = new Vec2(this.x, this.y);
 

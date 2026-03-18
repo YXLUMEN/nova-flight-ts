@@ -8,6 +8,7 @@ import {EntityTypes} from "../entity/EntityTypes.ts";
 import type {SpawnContext} from "./SpawnContext.ts";
 import type {BiConsumer} from "../apis/types.ts";
 import {ExplosionEntity} from "../entity/ExplosionEntity.ts";
+import {Box} from "../utils/math/Box.ts";
 
 // 顶部随机生成
 export function spawnTopRandomCtor<T extends MobEntity>(
@@ -132,40 +133,61 @@ export function spawnAvoidPlayerCtor<T extends MobEntity>(
 ): MobFactory {
     const margin = opts.margin ?? 24;
     const safeRadius = opts.safeRadius ? opts.safeRadius * opts.safeRadius : 16384;
+    const {halfWidth, halfHeight} = type.getDimensions();
+
+    const blockMinX = Math.ceil(margin / 8);
+    const blockMaxX = Math.floor((World.WORLD_W - margin) / 8) - 1;
+    const blockMinY = Math.ceil(margin / 8);
+    const blockMaxY = Math.floor((World.WORLD_H - margin) / 8) - 1;
 
     return (ctx) => {
-        const minX = margin;
-        const maxX = World.WORLD_W - margin;
-        const minY = margin;
-        const maxY = World.WORLD_H - margin;
-
+        const blockMap = ctx.world.getMap();
         const players = ctx.world.getPlayers();
 
         let x: number, y: number;
         let tries = 0;
-        do {
-            x = randInt(minX, maxX);
-            y = randInt(minY, maxY);
-            tries++;
-            if (tries > 20) break;
+        const maxTries = 100;
+        const candidateAABB = new Box(0, 0);
 
-            let tooClose = false;
+        do {
+            const bx = randInt(blockMinX, blockMaxX);
+            const by = randInt(blockMinY, blockMaxY);
+
+            x = bx * 8 + 4;
+            y = by * 8 + 4;
+            tries++;
+
+            let tooCloseToPlayer = false;
             for (const p of players) {
                 const pos = p.getPositionRef;
                 const dx = x - pos.x;
                 const dy = y - pos.y;
                 if (dx * dx + dy * dy < safeRadius) {
-                    tooClose = true;
+                    tooCloseToPlayer = true;
                     break;
                 }
             }
 
-            if (!tooClose) break;
-        } while (true);
+            if (tooCloseToPlayer) continue;
+
+            candidateAABB.set(
+                x - halfWidth,
+                y - halfHeight,
+                x + halfWidth,
+                y + halfHeight
+            );
+
+            if (blockMap.intersectsBox(candidateAABB)) {
+                continue;
+            }
+
+            break;
+        } while (tries < maxTries);
 
         const mob = type.create(ctx.world, ...args);
         mob.setPosition(x, y);
         init?.(mob as T, ctx);
+
         const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, ctx.world, mob);
         mark.setPosition(x, y);
         return mark;
