@@ -36,7 +36,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
     public override tick(): void {
         super.tick();
 
-        if (!this.isClient()) {
+        if (!this.isClient() && this.stuckTicks === 0) {
             this.AI.updateAction(this);
         }
 
@@ -155,10 +155,22 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         const bounds = this.getBoundingBox();
 
         if (map.intersectsBox(bounds)) {
-            const eject = BlockCollision.findEjectionVector(map, this.getPositionRef, bounds, 40);
-            this.stuck = true;
-            if (eject) return movement.set(eject.x, eject.y);
+            if (this.stuckTicks === 0) this.ejectCooldown = 0;
+            this.stuckTicks++;
+
+            if (this.ejectCooldown <= 0) {
+                const eject = BlockCollision.findEjectionVector(map, this.getPositionRef, bounds, 24);
+                if (eject) {
+                    this.stuckTicks = 0;
+                    this.ejectCooldown = 0;
+                    return movement.set(eject.x, eject.y);
+                }
+                this.ejectCooldown = Math.min(1 << Math.min(this.stuckTicks - 1, 5), 32);
+            } else this.ejectCooldown--;
+
+            return movement.multiply(0);
         }
+        this.stuckTicks = 0;
 
         return BlockCollision.separatingCollision(map, bounds, movement);
     }

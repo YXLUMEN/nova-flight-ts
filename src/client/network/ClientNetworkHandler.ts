@@ -45,7 +45,6 @@ import type {Payload, PayloadId} from "../../network/Payload.ts";
 import {CommandExecutionC2SPacket} from "../../network/packet/c2s/CommandExecutionC2SPacket.ts";
 import {OtherClientPlayerEntity} from "../entity/OtherClientPlayerEntity.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
-import {PlayerDisconnectC2SPacket} from "../../network/packet/c2s/PlayerDisconnectC2SPacket.ts";
 import {ClientReadyC2SPacket} from "../../network/packet/c2s/ClientReadyC2SPacket.ts";
 import {PlayerJoinS2CPacket} from "../../network/packet/s2c/PlayerJoinS2CPacket.ts";
 import {GameProfile} from "../../server/entity/GameProfile.ts";
@@ -83,8 +82,12 @@ import type {Identifier} from "../../registry/Identifier.ts";
 import {RelayMessage} from "../../network/packet/relay/RelayMessage.ts";
 import {BlockChangeS2CPacket} from "../../network/packet/s2c/BlockChangeS2CPacket.ts";
 import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
+import type {ClientConnection} from "./ClientConnection.ts";
+import type {PacketListener} from "../../server/network/handler/PacketListener.ts";
+import {ConnectionState, type ConnectionStateType} from "../../server/network/ConnectionState.ts";
+import {squareDist} from "../../utils/math/math.ts";
 
-export class ClientNetworkSession {
+export class ClientNetworkHandler implements PacketListener {
     private readonly handlers = new HashMap<Identifier, Consumer<Payload>>();
     private readonly playerProfiles: Map<UUID, GameProfile> = new Map();
 
@@ -92,6 +95,7 @@ export class ClientNetworkSession {
     private readonly commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
 
     private readonly client: NovaFlightClient;
+    private readonly connection: ClientConnection;
     private readonly random = new GaussianRandom();
     private world: ClientWorld | null = null;
 
@@ -102,36 +106,47 @@ export class ClientNetworkSession {
     private lastPingTime: number = 0;
     private latency: number = 0;
 
-    public constructor(client: NovaFlightClient) {
+    public constructor(client: NovaFlightClient, connection: ClientConnection) {
         this.client = client;
+        this.connection = connection;
         this.commandSource = new ClientCommandSource(this, client);
-        this.client.networkChannel.setHandler(this.onReceive.bind(this));
+
+        connection.setPacketListener(ConnectionState.STABLE, this);
         this.registryHandler();
     }
 
     public send(packet: Payload) {
-        this.client.networkChannel.send(packet);
+        this.connection.send(packet);
     }
 
-    public disconnect() {
-        try {
-            this.client.connectInfo?.setMessage('等待连接关闭...');
-            this.send(new PlayerDisconnectC2SPacket());
-        } catch (error) {
-            console.error(error);
-        }
+    public sendImmediate(packet: Payload) {
+        this.connection.sendImmediately(packet);
+    }
+
+    public onDisconnected(): void {
+    }
+
+    public accepts(packet: Payload): void {
+        const task = this.handlers.get(packet.getId().id);
+        if (!task) return;
+        Promise.resolve()
+            .then(() => task(packet));
+    }
+
+    public getPhase(): ConnectionStateType {
+        return ConnectionState.STABLE;
     }
 
     public checkServer() {
         if (this.sniffInterval !== undefined) return;
 
-        this.send(new ClientReadyC2SPacket(this.client.clientId));
+        this.sendImmediate(new ClientReadyC2SPacket(this.client.clientId));
 
         let times = 0;
         this.sniffInterval = setInterval(() => {
             times++;
             try {
-                this.send(new ClientReadyC2SPacket(this.client.clientId));
+                this.sendImmediate(new ClientReadyC2SPacket(this.client.clientId));
             } catch (e) {
                 this.stopSniff();
                 console.error(e);
@@ -145,7 +160,7 @@ export class ClientNetworkSession {
 
     public ping() {
         this.lastPingTime = performance.now();
-        this.send(new PingC2SPacket());
+        this.sendImmediate(new PingC2SPacket());
     }
 
     private onRelayServer(packet: RelayMessage) {
@@ -172,7 +187,7 @@ export class ClientNetworkSession {
 
     public onServerReady(_: ServerReadyS2CPacket) {
         this.stopSniff();
-        this.send(new PlayerAttemptLoginC2SPacket(
+        this.sendImmediate(new PlayerAttemptLoginC2SPacket(
             this.client.clientId,
             this.client.networkChannel.getSessionId(),
             this.client.playerName
@@ -193,7 +208,7 @@ export class ClientNetworkSession {
     }
 
     public async onGameJoin(packet: JoinGameS2CPacket) {
-        this.world = new ClientWorld(this.client.registryManager, packet.worldName);
+        this.world = new ClientWorld(this.client.registryManager, this.client.worldRender, packet.worldName);
         await this.client.joinGame(this.world);
         if (this.client.player === null) {
             const profile = new GameProfile(
@@ -209,7 +224,7 @@ export class ClientNetworkSession {
         this.client.player.setUuid(this.client.clientId);
         this.client.player.setId(packet.playerEntityId);
         this.world.addEntity(this.client.player);
-        this.world.setTicking(true);
+        this.client.setPause(false);
         this.send(new PlayerFinishLoginC2SPacket());
 
         clearInterval(this.pingInterval);
@@ -234,7 +249,7 @@ export class ClientNetworkSession {
         if (packet.uuid !== this.client.clientId) return;
 
         clearInterval(this.pingInterval);
-        this.client.world?.setTicking(false);
+        this.client.setPause(true);
 
         this.client.connectInfo?.destroy();
         this.client.connectInfo = new ConnectInfo(this.client.window.ctx);
@@ -267,6 +282,7 @@ export class ClientNetworkSession {
         if (!entity.isLogicalSide()) {
             entity.updatePositionAndAngles(packet.x, packet.y, packet.yaw, 3);
         } else if (entity === this.client.player) {
+            if (squareDist(packet.x, packet.y, entity.getX(), entity.getY()) < 128) return;
             entity.setPosition(packet.x, packet.y);
         }
     }
@@ -640,18 +656,6 @@ export class ClientNetworkSession {
         clearInterval(this.sniffInterval);
         this.playerProfiles.clear();
         this.world = null;
-        this.client.networkChannel.clearHandlers();
-    }
-
-    public reBind() {
-        this.client.networkChannel.setHandler(this.onReceive.bind(this));
-    }
-
-    private onReceive(payload: Payload): void {
-        const task = this.handlers.get(payload.getId().id);
-        if (!task) return;
-        Promise.resolve()
-            .then(() => task(payload));
     }
 
     private register<T extends Payload>(id: PayloadId<T>, handler: Consumer<T>): void {

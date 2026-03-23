@@ -9,6 +9,7 @@ import {BlockHitResult} from "./BlockHitResult.ts";
 import {AllDirs, type Direction, Directions, getFacing} from "./Direction.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
+import {World} from "../World.ts";
 
 export class BlockCollision {
     public static fastCollision(map: BitBlockMap, bounds: Box, movement: IVec): boolean {
@@ -37,40 +38,44 @@ export class BlockCollision {
         map: BitBlockMap,
         pos: IVec,
         box: Box,
-        maxRadius: number = 64
+        maxBlocks: number = 32
     ): MutVec2 | null {
-        const stepSize = 8;
-        const steps = Math.ceil(maxRadius / stepSize);
+        const blockSize = BitBlockMap.BLOCK_SIZE;
+        const worldW = World.WORLD_W;
+        const worldH = World.WORLD_H;
+
+        maxBlocks = Math.ceil(maxBlocks);
 
         let bestEject: MutVec2 | null = null;
-        let minDistSq = maxRadius * maxRadius + 1;
-
-        const testPos = MutVec2.zero();
+        let minDist = maxBlocks + 1;
 
         for (const dir of AllDirs) {
             const dx = dir.dir.x;
             const dy = dir.dir.y;
 
-            for (let i = 1; i <= steps; i++) {
-                const dist = i * stepSize;
-                const distSq = dist * dist;
-                if (distSq >= minDistSq) {
-                    break;
-                }
+            for (let step = 1; step <= maxBlocks; step++) {
+                if (step >= minDist) break;
 
-                testPos.set(pos.x + dx * dist, pos.y + dy * dist);
-                const offsetBox = box.offset(testPos.x - pos.x, testPos.y - pos.y);
+                const candidateX = pos.x + dx * step * blockSize;
+                const candidateY = pos.y + dy * step * blockSize;
+                const offsetBox = box.offset(candidateX - pos.x, candidateY - pos.y);
+                if (
+                    offsetBox.minX < 0 ||
+                    offsetBox.minY < 0 ||
+                    offsetBox.maxX > worldW ||
+                    offsetBox.maxY > worldH
+                ) break;
 
                 if (map.intersectsBox(offsetBox)) continue;
-                if (distSq < minDistSq) {
-                    minDistSq = distSq;
+                if (step < minDist) {
+                    minDist = step;
                     if (bestEject === null) {
-                        bestEject = new MutVec2(dx * dist, dy * dist);
+                        bestEject = new MutVec2(dx * step * blockSize, dy * step * blockSize);
                     } else {
-                        bestEject.set(dx * dist, dy * dist);
+                        bestEject.set(dx * step * blockSize, dy * step * blockSize);
                     }
+                    break;
                 }
-                break;
             }
         }
 

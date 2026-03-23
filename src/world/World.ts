@@ -47,7 +47,7 @@ export abstract class World {
     private stageDifficulty = 1;
     public freeze = false;
     protected over = false;
-    protected ticking = false;
+
     private readonly registryManager: RegistryManager;
     private readonly damageSources: DamageSources;
 
@@ -60,10 +60,6 @@ export abstract class World {
         this.isClient = isClient;
         this.registryManager = registryManager;
         this.damageSources = new DamageSources(registryManager);
-    }
-
-    public get isTicking(): boolean {
-        return this.ticking;
     }
 
     public get isOver(): boolean {
@@ -251,11 +247,6 @@ export abstract class World {
         });
     }
 
-    public togglePause(): void {
-        if (this.over) return;
-        this.setTicking(!this.ticking);
-    }
-
     public abstract gameOver(player: PlayerEntity): void;
 
     public getDamageSources(): DamageSources {
@@ -309,10 +300,6 @@ export abstract class World {
 
     public isPeaceMode(): boolean {
         return this.stageDifficulty === 0;
-    }
-
-    public setTicking(ticking = true): void {
-        this.ticking = ticking;
     }
 
     // 二分插入 保持 timers 按 at 升序

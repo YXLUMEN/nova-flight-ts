@@ -30,15 +30,11 @@ async function handleEvent(event: MessageEvent) {
             break;
         }
         case 'start_ticking': {
-            const world = server?.world;
-            if (!world) return;
-            world.setTicking(true);
+            server?.setPause(false);
             break;
         }
         case 'stop_ticking': {
-            const world = server?.world;
-            if (!world) return;
-            world.setTicking(false);
+            server?.setPause(true);
             break;
         }
         case 'loaded_save_data':

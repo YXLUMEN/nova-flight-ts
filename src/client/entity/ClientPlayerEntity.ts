@@ -24,8 +24,7 @@ import {BlockChangeC2SPacket} from "../../network/packet/c2s/BlockChangeC2SPacke
 import {BlockPos} from "../../world/map/BlockPos.ts";
 import type {BlockChange} from "../../world/map/BlockChange.ts";
 import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
-import {BlockCollision} from "../../world/collision/BlockCollision.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
+import type {Channel} from "../../network/Channel.ts";
 
 export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     public readonly profile: GameProfile;
@@ -162,15 +161,6 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             }
         }
 
-        if (!this.noClip) {
-            const force = this.pushOutOffBlocks();
-            if (force) {
-                dx = force.x;
-                dy = force.y;
-                updatePos = true;
-            }
-        }
-
         if (updatePos) {
             const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
             const speed = this.getMovementSpeed() * speedMultiplier;
@@ -186,24 +176,6 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         } else if (updateYaw) {
             this.getNetworkChannel().send(new Steering(this.getYaw()));
         }
-    }
-
-    private pushOutOffBlocks() {
-        const map = this.getWorld().getMap();
-        const box = this.getBoundingBox();
-        const pos = this.getPositionRef;
-
-        const width = this.getWidth() * 0.35;
-        const height = this.getHeight() * 0.35;
-
-        let dir: IVec | undefined;
-        dir = BlockCollision.pushOutOfBlocks(map, box, pos.x - width, pos.y - height);
-        if (dir) return dir;
-        dir = BlockCollision.pushOutOfBlocks(map, box, pos.x - width, pos.y + height);
-        if (dir) return dir;
-        dir = BlockCollision.pushOutOfBlocks(map, box, pos.x + width, pos.y - height);
-        if (dir) return dir;
-        return BlockCollision.pushOutOfBlocks(map, box, pos.x + width, pos.y + height);
     }
 
     protected override tickInventory(world: ClientWorld) {
@@ -354,5 +326,9 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     protected override getPermissionLevel(): number {
         return 10;
+    }
+
+    public getNetworkChannel(): Channel {
+        return this.getWorld().getNetworkChannel();
     }
 }

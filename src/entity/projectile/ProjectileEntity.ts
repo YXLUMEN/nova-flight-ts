@@ -43,7 +43,11 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
             return;
         }
 
-        const hitResult = ProjectRaycastUtil.getCollision(this, entity => this.canHit(entity));
+        const hitResult = ProjectRaycastUtil.getCollision(
+            this,
+            entity => this.canHit(entity),
+            this.getWidth()
+        );
         if (hitResult.getType() !== HitTypes.MISS) {
             this.onCollision(hitResult);
         }

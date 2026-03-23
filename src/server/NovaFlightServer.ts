@@ -33,12 +33,13 @@ export abstract class NovaFlightServer implements CommandOutput {
     // startGame 后初始化
     public world: ServerWorld | null = null;
 
-    private tickInterval: number | null = null;
+    private pause: boolean = false;
+    private tickInterval: number | undefined;
     private last = 0;
     private accumulator = 0;
 
     private running = false;
-    private waitWorldStop: Promise<void> | null = null;
+    private waitServerHalt: Promise<void> | null = null;
     private stopWorld: Consumer<void> | null = null;
 
     private bindTick = this.tick.bind(this);
@@ -65,7 +66,7 @@ export abstract class NovaFlightServer implements CommandOutput {
         await this.networkChannel.connect();
 
         const {promise, resolve} = Promise.withResolvers<void>();
-        this.waitWorldStop = promise;
+        this.waitServerHalt = promise;
         this.stopWorld = () => resolve();
 
         this.world = new ServerWorld(manager, this);
@@ -117,7 +118,7 @@ export abstract class NovaFlightServer implements CommandOutput {
 
             while (this.accumulator >= WorldConfig.mbps) {
                 this.networkManager!.tick();
-                if (world.isTicking) world.tick(WorldConfig.mbps);
+                if (!this.pause) world.tick(WorldConfig.mbps);
                 this.accumulator -= WorldConfig.mbps;
             }
         } catch (error) {
@@ -129,20 +130,17 @@ export abstract class NovaFlightServer implements CommandOutput {
 
     public async halt(): Promise<void> {
         if (!this.running) {
-            // 避免ts抱怨
-            return this.waitWorldStop ? this.waitWorldStop : Promise.resolve();
+            return this.waitServerHalt ? this.waitServerHalt : Promise.resolve();
         }
 
         this.running = false;
-        if (this.tickInterval) {
-            clearInterval(this.tickInterval);
-            this.tickInterval = null;
-        }
+        clearInterval(this.tickInterval);
 
         try {
             await this.playerManager.saveAllPlayerData();
             const nbt = this.world!.saveAll();
             await this.saveWorld(nbt);
+            console.log('[Server] World and all players are save');
         } catch (err) {
             Log.error(`[Server] At NovaFlightServer, Error while saving game: ${err}`);
         }
@@ -151,15 +149,23 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.world!.close();
         this.networkChannel.disconnect();
 
-        await this.onWorldStop();
+        await this.onHalted();
         this.stopWorld!();
     }
 
-    public async waitForStop(): Promise<void> {
-        await this.waitWorldStop;
+    public setPause(bl: boolean): void {
+        this.pause = bl;
     }
 
-    public abstract onWorldStop(): Promise<void>;
+    public isPaused(): boolean {
+        return this.pause;
+    }
+
+    public async waitForStop(): Promise<void> {
+        await this.waitServerHalt;
+    }
+
+    public abstract onHalted(): Promise<void>;
 
     public abstract saveWorld(compound: NbtCompound): Promise<void>;
 

@@ -43,7 +43,8 @@ export class HUD implements IUi {
     }
 
     public render(ctx: CanvasRenderingContext2D) {
-        const world = NovaFlightClient.getInstance().world;
+        const client = NovaFlightClient.getInstance();
+        const world = client.world;
         if (!world) return;
 
         if (world.isOver) {
@@ -51,7 +52,7 @@ export class HUD implements IUi {
             return;
         }
 
-        const player = NovaFlightClient.getInstance().player;
+        const player = client.player;
         if (!player) return;
 
         ctx.save();
@@ -62,7 +63,7 @@ export class HUD implements IUi {
 
         let x = this.marginX;
         let y = this.marginY;
-        const uo = NovaFlightClient.getInstance().window.camera.uiOffset;
+        const uo = client.window.camera.uiOffset;
 
         ctx.translate(uo.x, uo.y);
         ctx.fillText(`分数: ${player.getScore()}`, x, y);
@@ -98,9 +99,6 @@ export class HUD implements IUi {
             }
         }
 
-        if (player.stuck && !player.isDevMode()) {
-            this.renderStuckOverlay(ctx, player);
-        }
         ctx.restore();
 
         if (player.approachMissile.size > 0) {
@@ -287,9 +285,10 @@ export class HUD implements IUi {
         ctx.restore();
     }
 
+    // @ts-ignore
     private renderStuckOverlay(ctx: CanvasRenderingContext2D, player: ClientPlayerEntity) {
         const now = performance.now();
-        const elapsed = now - player.stuckSince;
+        const elapsed = now - player.stuckTicks;
         const remaining = Math.max(0, 12000 - elapsed);
         if (remaining > 10000) return;
 

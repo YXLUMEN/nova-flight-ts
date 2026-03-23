@@ -35,7 +35,7 @@ export class PlayerManager {
         this.uuidToPlayer.set(profile.clientId, player);
         this.sessionToPlayer.set(profile.sessionId, player);
         if (this.uuidToPlayer.size > 1) {
-            world.setTicking(true);
+            world.getServer().setPause(false);
             this.server.isMultiPlayer = true;
         }
 
@@ -93,6 +93,7 @@ export class PlayerManager {
 
     public removePlayer(player: ServerPlayerEntity): void {
         const world = player.getWorld() as ServerWorld;
+        this.savePlayerData(player).then();
 
         world.removePlayer(player);
         const uuid = player.getUUID();
@@ -102,7 +103,6 @@ export class PlayerManager {
             this.sessionToPlayer.delete(player.getProfile().sessionId);
         }
 
-        this.savePlayerData(player).then();
         this.server.networkChannel.send(new PlayerDisconnectS2CPacket(player.getUUID(), ServerCommonHandler.LOGOUT));
     }
 

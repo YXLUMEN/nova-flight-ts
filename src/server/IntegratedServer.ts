@@ -52,7 +52,8 @@ export class IntegratedServer extends NovaFlightServer {
         await this.waitForStop();
     }
 
-    public override onWorldStop(): Promise<void> {
+    public override onHalted(): Promise<void> {
+        console.log('[Server] Notify client the integrated server shutdown.');
         self.postMessage({type: 'server_stop'});
         return Promise.resolve();
     }

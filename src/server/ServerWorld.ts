@@ -51,8 +51,8 @@ export class ServerWorld extends World implements NbtSerializable {
     private readonly trackedEntities = new Map<number, EntityTrackerEntry>();
     private finishInit = false;
 
-    private times = 0;
-    private total = 0;
+    // private times = 0;
+    // private total = 0;
 
     public constructor(registryManager: RegistryManager, server: NovaFlightServer) {
         super(registryManager, false);
@@ -70,21 +70,21 @@ export class ServerWorld extends World implements NbtSerializable {
 
         this.stage.tick(this);
 
-        this.times++;
-        const s = performance.now();
+        // this.times++;
+        // const s = performance.now();
         for (const entity of this.entities.values()) {
             if (entity.isRemoved()) continue;
             this.tickEntity(this.bindTickEntity, entity);
             if (this.over) break;
         }
-        const e = performance.now();
-        this.total += e - s;
-        if (this.times % 20 === 0) {
-            const avg = this.total / this.times;
-            console.log('Avg: ' + avg.toFixed(4));
-            this.times = 0;
-            this.total = 0;
-        }
+        // const e = performance.now();
+        // this.total += e - s;
+        // if (this.times % 20 === 0) {
+        //     const avg = this.total / this.times;
+        //     console.log('Avg: ' + avg.toFixed(4));
+        //     this.times = 0;
+        //     this.total = 0;
+        // }
 
         this.entities.processRemovals();
         for (const entry of this.trackedEntities.values()) {
@@ -132,18 +132,13 @@ export class ServerWorld extends World implements NbtSerializable {
         }
 
         this.over = true;
-        this.setTicking(false);
+        this.server.setPause(true);
         this.getNetworkChannel().send(new GameOverS2CPacket());
         this.events.emit(EVENTS.GAME_OVER, null);
     }
 
     public override getNetworkChannel(): ServerChannel {
         return this.server.networkChannel;
-    }
-
-    public override setTicking(ticking: boolean = true) {
-        if (this.getServer().isMultiPlayer) return;
-        super.setTicking(ticking);
     }
 
     /**

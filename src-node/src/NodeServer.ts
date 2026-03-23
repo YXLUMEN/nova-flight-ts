@@ -28,7 +28,7 @@ export class NodeServer extends NovaFlightServer {
         await this.waitForStop();
     }
 
-    public onWorldStop(): Promise<void> {
+    public onHalted(): Promise<void> {
         this.networkChannel.disconnect();
         return Promise.resolve();
     }

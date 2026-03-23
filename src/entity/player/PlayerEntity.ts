@@ -14,7 +14,6 @@ import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {clamp} from "../../utils/math/math.ts";
 import type {TechTree} from "../../tech/TechTree.ts";
 import {DataTracker, type DataTrackerSerializedEntry} from "../data/DataTracker.ts";
-import type {Channel} from "../../network/Channel.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts";
 import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
@@ -31,7 +30,6 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public onDamageExplosionRadius = 320;
     protected techTree: TechTree | null = null;
-    public stuckSince: number = -1;
 
     public readonly cooldownManager!: ItemCooldownManager;
     protected readonly items = new Map<Item, ItemStack>();
@@ -81,11 +79,7 @@ export abstract class PlayerEntity extends LivingEntity {
         this.move(this.getVelocityRef);
         this.clampPosition();
 
-        if (!this.stuck || this.isDevMode()) return;
-
-        const elapsed = performance.now() - this.stuckSince;
-        const remaining = Math.max(0, 12000 - elapsed);
-        if (remaining === 0) {
+        if (!this.isDevMode() && this.stuckTicks >= 240) {
             const damageSource = this.getWorld().getDamageSources().generic();
             this.takeDamage(damageSource, 4);
         }
@@ -95,11 +89,12 @@ export abstract class PlayerEntity extends LivingEntity {
         const map = this.getWorld().getMap();
         const bounds = this.getBoundingBox();
         if (map.intersectsBox(bounds)) {
-            if (!this.stuck) this.stuckSince = performance.now();
-            this.stuck = true;
-            return movement;
+            if (this.stuckTicks % 2 === 0) return movement.multiply(0.4);
+
+            const eject = BlockCollision.findEjectionVector(map, this.getPositionRef, bounds);
+            if (eject) return movement.set(eject.x, eject.y);
+            return movement.multiply(0.4);
         }
-        this.stuck = false;
 
         return BlockCollision.separatingCollision(map, bounds, movement);
     }
@@ -109,11 +104,6 @@ export abstract class PlayerEntity extends LivingEntity {
         for (const [item, stack] of this.items) {
             item.inventoryTick(stack, world, this, 0, currentItem === item);
         }
-    }
-
-    // 此方法会返回世界网络频道,谨慎使用
-    public getNetworkChannel(): Channel {
-        return this.getWorld().getNetworkChannel();
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
@@ -323,8 +313,7 @@ export abstract class PlayerEntity extends LivingEntity {
         });
         nbt.putCompoundArray('inventory', inventory);
         this.techTree!.writeNBT(nbt);
-
-        return nbt
+        return nbt;
     }
 
     public override readNBT(nbt: NbtCompound) {

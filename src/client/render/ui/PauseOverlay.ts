@@ -28,7 +28,7 @@ export class PauseOverlay implements IUi {
                 centerX - 60, centerY - 50,
                 120, 36,
                 '继续游戏',
-                () => NovaFlightClient.getInstance().world?.togglePause()),
+                () => NovaFlightClient.getInstance().togglePause()),
             new UIButton(
                 centerX - 60, centerY,
                 120, 36,

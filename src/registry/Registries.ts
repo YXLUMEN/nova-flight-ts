@@ -31,6 +31,8 @@ export class Registries {
     });
     public static readonly WORLD_EVENT = this.simpleCreate(RegistryKeys.WORLD_EVENT, () => {
     });
+    public static readonly BLOCK = this.simpleCreate(RegistryKeys.BLOCK, () => {
+    });
 
     public static async complete() {
         const attr = await import('../entity/attribute/EntityAttributes.ts');

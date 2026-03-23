@@ -41,7 +41,9 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     public prevYaw: number = 0;
 
     public noClip: boolean = false;
-    public stuck = false;
+    public stuckTicks: number = -1;
+    protected ejectCooldown = 0;
+
     private readonly dimensions: EntityDimensions;
     private boundingBox: Box = Entity.NULL_BOX;
 
