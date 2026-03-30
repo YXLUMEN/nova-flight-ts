@@ -10,6 +10,8 @@ export class APRocketEntity extends RocketEntity {
     private readonly damagedEntity = new WeakSet<Entity>();
 
     protected override onEntityHit(hitResult: EntityHitResult) {
+        if (this.isClient()) return;
+
         const entity = hitResult.entity;
         if (this.damagedEntity.has(entity)) return;
 

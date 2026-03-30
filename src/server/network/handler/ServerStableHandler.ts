@@ -25,7 +25,7 @@ import {ServerCommonHandler} from "./ServerCommonHandler.ts";
 import type {ServerWorld} from "../../ServerWorld.ts";
 import {ChatMessageC2SPacket} from "../../../network/packet/c2s/ChatMessageC2SPacket.ts";
 import {PlayerReloadC2SPacket} from "../../../network/packet/c2s/PlayerReloadC2SPacket.ts";
-import type {BaseWeapon} from "../../../item/weapon/BaseWeapon/BaseWeapon.ts";
+import {BaseWeapon} from "../../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {EntitySpawnS2CPacket} from "../../../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {PlayerResetTechC2SPacket} from "../../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
 import {ApplyServerTech} from "../../tech/ApplyServerTech.ts";
@@ -89,8 +89,8 @@ export class ServerStableHandler extends ServerCommonHandler {
         ServerCommonHandler.buildBatch(entities, EntitySpawnS2CPacket.create, EntityBatchSpawnS2CPacket.new)
             .forEach(packet => this.send(packet));
 
-        const changes = this.world.getMap().getNonAirBlocksGen();
-        ServerCommonHandler.buildBatchWithEst(changes, () => 9, BatchBlockChangesPacket.from)
+        const blocks = this.world.getMap().getNonAirBlocksGen();
+        ServerCommonHandler.buildBatchWithEst(blocks, () => 9, BatchBlockChangesPacket.from)
             .forEach(packet => this.send(packet));
     }
 
@@ -127,9 +127,11 @@ export class ServerStableHandler extends ServerCommonHandler {
     }
 
     public onPlayerReload(): void {
-        const stack = this.player.getCurrentItemStack();
-        const item = stack.getItem() as BaseWeapon;
-        item.onReload(this.player, stack);
+        const stack = this.player.getCurrentItem();
+        const item = stack.getItem();
+        if (item instanceof BaseWeapon) {
+            item.onReload(this.player, stack);
+        }
     }
 
     public onUnlockTech(packet: PlayerUnlockTechC2SPacket): void {

@@ -49,6 +49,7 @@ import {PongS2CPacket} from "../../network/packet/s2c/PongS2CPacket.ts";
 import {ServerStartS2CPacket} from "../../network/packet/s2c/ServerStartS2CPacket.ts";
 import {BlockChangeS2CPacket} from "../../network/packet/s2c/BlockChangeS2CPacket.ts";
 import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
+import {SetPlayerInventoryS2CPacket} from "../../network/packet/s2c/SetPlayerInventoryPacket.ts";
 
 export class ServerPackets {
     /**
@@ -103,6 +104,7 @@ export class ServerPackets {
         this.register(TranslatableTextS2CPacket.ID, TranslatableTextS2CPacket.CODEC);
         this.register(BlockChangeS2CPacket.ID, BlockChangeS2CPacket.CODEC);
         this.register(BatchBlockChangesPacket.ID, BatchBlockChangesPacket.CODEC);
+        this.register(SetPlayerInventoryS2CPacket.ID, SetPlayerInventoryS2CPacket.CODEC);
         PayloadTypeRegistry.playS2C().settle();
     }
 

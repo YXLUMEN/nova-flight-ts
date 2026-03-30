@@ -84,7 +84,7 @@ export abstract class BaseWeapon extends Weapon {
     }
 
     public override canFire(stack: ItemStack): boolean {
-        return this.getCooldown(stack) <= 1;
+        return this.getCooldown(stack) <= 0;
     }
 
     public getFireRate(stack: ItemStack): number {

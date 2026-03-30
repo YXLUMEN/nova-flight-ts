@@ -13,6 +13,7 @@ import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity
 import type {ClientWorld} from "../../../client/ClientWorld.ts";
 import {ClientEffect} from "../../../utils/ClientEffect.ts";
 import {spawnLaser} from "../../../utils/ServerEffect.ts";
+import {MutVec2} from "../../../utils/math/MutVec2.ts";
 
 export class ParticleLance extends BaseWeapon {
     public static readonly LASER_WIDTH = 8;
@@ -62,8 +63,10 @@ export class ParticleLance extends BaseWeapon {
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
         const start = attacker.getPositionRef;
         const yaw = attacker.getYaw();
-        const endX = start.x + Math.cos(yaw) * PhaseLasers.LASER_HEIGHT;
-        const endY = start.y + Math.sin(yaw) * PhaseLasers.LASER_HEIGHT;
+        const end = new MutVec2(
+            start.x + Math.cos(yaw) * PhaseLasers.LASER_HEIGHT,
+            start.y + Math.sin(yaw) * PhaseLasers.LASER_HEIGHT
+        );
 
         const damage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 20);
         const damageSource = world.getDamageSources()
@@ -71,12 +74,15 @@ export class ParticleLance extends BaseWeapon {
             .setShieldMulti(0.5)
             .setHealthMulti(2);
 
+        const hitBlock = world.raycast(start, end);
+        if (!hitBlock.missed) end.set(hitBlock.pos.x, hitBlock.pos.y);
+
         const mobs = world.getMobs();
         for (const mob of mobs) {
             const pos = mob.getPositionRef;
             if (!mob.isRemoved() && thickLineCircleHit(
                 start.x, start.y,
-                endX, endY,
+                end.x, end.y,
                 ParticleLance.LASER_WIDTH,
                 pos.x, pos.y,
                 mob.getWidth() / 2)
@@ -87,12 +93,20 @@ export class ParticleLance extends BaseWeapon {
                 const effect = mob.getStatusEffect(StatusEffects.MELTDOWN);
                 const amplifier = effect ? Math.min(effect.getAmplifier() + 1, 8) : 0;
 
-                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.MELTDOWN, 80, amplifier), attacker);
+                mob.addEffect(new StatusEffectInstance(StatusEffects.MELTDOWN, 80, amplifier), attacker);
             }
         }
 
-        spawnLaser(world, start.x, start.y, endX, endY, this.getUiColor(), 4, 0.2);
+        spawnLaser(world, start.x, start.y, end.x, end.y, this.getUiColor(), 4, 0.2);
         world.playSound(null, SoundEvents.LASER_FIRE_BEAM_MID, 0.6);
+        if (!hitBlock.missed) world.spawnParticle(
+            end.x, end.y,
+            0, 0,
+            8,
+            80,
+            0.5, 4,
+            this.getUiColor(),
+        );
     }
 
     public override getUiColor(): string {

@@ -10,7 +10,8 @@ export class C125BulletEntity extends ExplodeBulletEntity {
     protected override onEntityHit(hitResult: EntityHitResult) {
         super.onEntityHit(hitResult);
 
-        if (this.getWorld().isClient) return;
+        if (this.isClient()) return;
+
         const entity = hitResult.entity;
         if (entity instanceof BossEntity) return;
 

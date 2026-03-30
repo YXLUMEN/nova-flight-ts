@@ -8,7 +8,7 @@ import type {EntityAttribute} from "../entity/attribute/EntityAttribute.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import type {GameEvent} from "../event/GameEvent.ts";
 import type {Item} from "../item/Item.ts";
-import type {ComponentType} from "../component/ComponentType.ts";
+import type {DataComponentType} from "../component/DataComponentType.ts";
 import type {VisualEffectType} from "../effect/VisualEffectType.ts";
 import type {Tech} from "../tech/Tech.ts";
 import type {WorldEventType} from "../world/events/WorldEventType.ts";
@@ -23,7 +23,7 @@ export class RegistryKeys {
     public static readonly AUDIOS: RegistryKey<Registry<SoundEvent>> = this.of("audios");
     public static readonly GAME_EVENT: RegistryKey<Registry<GameEvent>> = this.of("game_event");
     public static readonly ITEM: RegistryKey<Registry<Item>> = this.of("item");
-    public static readonly DATA_COMPONENT_TYPE: RegistryKey<Registry<ComponentType<any>>> = this.of("data_component_type");
+    public static readonly DATA_COMPONENT_TYPE: RegistryKey<Registry<DataComponentType<any>>> = this.of("data_component_type");
     public static readonly EFFECT_TYPE: RegistryKey<Registry<VisualEffectType<any>>> = this.of("effect");
     public static readonly TECH: RegistryKey<Registry<Tech>> = this.of("tech");
     public static readonly WORLD_EVENT: RegistryKey<Registry<WorldEventType<any>>> = this.of("world_event");

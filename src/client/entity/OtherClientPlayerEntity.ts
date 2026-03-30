@@ -12,14 +12,11 @@ export class OtherClientPlayerEntity extends AbstractClientPlayerEntity {
         super(world, ItemCooldownManager);
     }
 
-    protected override tickInventory() {
-    }
-
     public override takeDamage(): boolean {
         return true;
     }
 
-    public override tickMovement() {
+    public override aiStep() {
         if (this.positionIncrements > 0) {
             this.lerpPosAndYaw(this.positionIncrements, this.serverX, this.serverY, this.serverYaw);
             this.positionIncrements--;

@@ -94,13 +94,10 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
     }
 
     public attack(player: PlayerEntity) {
-        const world = this.getWorld();
-        const result = player.takeDamage(
-            world.getDamageSources().mobAttack(this), this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE));
-
-        if (result) {
-            this.onDeath(world.getDamageSources().playerImpact(player));
-        }
+        player.takeDamage(
+            this.getWorld().getDamageSources().mobAttack(this),
+            this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+        );
     }
 
     public getWorth(): number {
@@ -176,11 +173,14 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
     }
 
     protected override getMapOffsetY(): number {
-        return this.AI.getBehavior() === AiBehavior.Simple ? 40 : 0;
+        return this.AI.getBehavior() === AiBehavior.Simple ? 80 : 0;
     }
 
-    protected override onOutOffBound() {
-        super.onOutOffBound();
-        if (!this.isClient() && this.AI.getBehavior() === AiBehavior.Simple) this.discard();
+    protected override onOutOffBound(x: number, y: number) {
+        if (y !== this.getY() && this.AI.isSimple()) {
+            this.discard();
+            return;
+        }
+        super.onOutOffBound(x, y);
     }
 }

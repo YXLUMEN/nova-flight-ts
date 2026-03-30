@@ -1,7 +1,7 @@
 import type {IVec} from "../../utils/math/IVec.ts";
 import type {MobEntity} from "../../entity/mob/MobEntity.ts";
 import {PI2, wrapRadians} from "../../utils/math/math.ts";
-import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
+import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
 import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
@@ -20,7 +20,8 @@ export class AutoAim {
 
     public tick(): void {
         const world = this.owner.getWorld() as ClientWorld;
-        if (!world.isClient) return;
+        const handItem = this.owner.getCurrentItem().getItem();
+        if (!(handItem instanceof BaseWeapon)) return;
 
         const mobs = world.getMobs();
         if (mobs.size === 0) return;
@@ -31,7 +32,7 @@ export class AutoAim {
 
         const mobPos = target.getPositionRef;
         const mobVel = target.getVelocityRef;
-        const bulletSpeed = (this.owner.getCurrentItemStack().getItem() as BaseWeapon).getBallisticSpeed();
+        const bulletSpeed = handItem.getBallisticSpeed();
 
         const targetYaw = BallisticsUtils.getLeadYaw(pos, mobPos, mobVel, bulletSpeed);
         this.owner.setClampYaw(targetYaw, 0.1963);

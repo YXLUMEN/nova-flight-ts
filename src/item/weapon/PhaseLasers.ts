@@ -131,7 +131,10 @@ export class PhaseLasers extends SpecialWeapon {
 
     protected damage(world: ServerWorld, stack: ItemStack, holder: Entity, start: IVec, end: IVec) {
         const damage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
-        const damageSource = world.getDamageSources().laser(holder).setShieldMulti(0.1);
+        const damageSource = world.getDamageSources()
+            .laser(holder)
+            .setHealthMulti(1.2)
+            .setShieldMulti(0.1);
 
         for (const mob of world.getMobs()) {
             const pos = mob.getPositionRef;
@@ -154,8 +157,9 @@ export class PhaseLasers extends SpecialWeapon {
 
     public override onEndFire(_stack: ItemStack, world: World, attacker: Entity) {
         if (!world.isClient) return;
-        world.stopLoopSound(attacker, SoundEvents.LASER_BEAM_LOW);
-        world.playSound(attacker, SoundEvents.LASER_CHARGE_DOWN);
+        if (world.stopLoopSound(attacker, SoundEvents.LASER_BEAM_LOW)) {
+            world.playSound(attacker, SoundEvents.LASER_CHARGE_DOWN);
+        }
     }
 
     protected overHeatAlert(world: World, holder: Entity) {

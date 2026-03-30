@@ -18,6 +18,8 @@ export class TorpedoEntity extends MissileEntity {
     protected readonly turnRate = Math.PI / 26;
 
     protected override onEntityHit(hitResult: EntityHitResult) {
+        if (this.isClient()) return;
+
         const entity = hitResult.entity;
         let damage = this.getHitDamage();
         const sources = this.getWorld().getDamageSources();

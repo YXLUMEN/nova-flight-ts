@@ -27,7 +27,7 @@ import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import type {EntityLookUp} from "./entity/EntityLookUp.ts";
 import {BitBlockMap} from "./map/BitBlockMap.ts";
-import {Box} from "../utils/math/Box.ts";
+import {AABB} from "../utils/math/AABB.ts";
 import {BlockCollision} from "./collision/BlockCollision.ts";
 import {LivingEntity} from "../entity/LivingEntity.ts";
 import type {ExplosionBehavior} from "./explosion/ExplosionBehavior.ts";
@@ -132,7 +132,7 @@ export abstract class World {
 
     public createEMP(attacker: Entity | null, pos: IVec, radius: number, duration: number = 40, damage: number = 0) {
         const r2 = radius * radius;
-        const box = Box.fromCenter(pos.x, pos.y, radius, radius);
+        const box = AABB.fromCenter(pos.x, pos.y, radius, radius);
 
         for (const entity of this.searchOtherEntities(attacker, box, EntityPredicates.inRange(pos, r2))) {
             if (entity instanceof ProjectileEntity) {
@@ -140,7 +140,7 @@ export abstract class World {
                 continue;
             }
             if (entity instanceof LivingEntity) {
-                entity.addStatusEffect(new StatusEffectInstance(
+                entity.addEffect(new StatusEffectInstance(
                     StatusEffects.EMC_STATUS, duration, 1), attacker);
                 entity.takeDamage(this.damageSources.arc(attacker), damage);
             }
@@ -196,7 +196,7 @@ export abstract class World {
 
     public abstract getEntityLookup(): EntityLookUp<Entity>;
 
-    public* searchOtherEntities(except: Entity | null, box: Box, predicate?: Predicate<Entity>) {
+    public* searchOtherEntities(except: Entity | null, box: AABB, predicate?: Predicate<Entity>) {
         if (!predicate) predicate = EntityPredicates.ANY;
         const search = this.getEntityLookup().search(box);
 
@@ -207,7 +207,7 @@ export abstract class World {
         }
     }
 
-    public getOtherEntities(except: Entity | null, box: Box, predicate: Predicate<Entity>) {
+    public getOtherEntities(except: Entity | null, box: AABB, predicate: Predicate<Entity>) {
         const candidates: Entity[] = [];
         this.getEntityLookup().forEachInBox(box, entity => {
             if (entity !== except && predicate(entity)) {
@@ -218,7 +218,7 @@ export abstract class World {
         return candidates;
     }
 
-    public getFirstOtherEntity(except: Entity | null, box: Box, predicate?: Predicate<Entity>): Entity | null {
+    public getFirstOtherEntity(except: Entity | null, box: AABB, predicate?: Predicate<Entity>): Entity | null {
         if (!predicate) predicate = EntityPredicates.ANY;
 
         let target: Entity | null = null;
@@ -232,7 +232,7 @@ export abstract class World {
         return target;
     }
 
-    public getEntityCollisions(entity: Entity | null, box: Box): Entity[] {
+    public getEntityCollisions(entity: Entity | null, box: AABB): Entity[] {
         if (box.getAverageSideLength() < 1E-7) return [];
         const candidates = this.getOtherEntities(entity, box.expandAll(1E-7), entity => !entity.noClip);
         if (candidates.length === 0) return [];

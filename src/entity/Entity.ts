@@ -9,7 +9,7 @@ import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.t
 import type {DataTracked} from "./data/DataTracked.ts";
 import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
 import type {IVec} from "../utils/math/IVec.ts";
-import {Box} from "../utils/math/Box.ts";
+import {AABB} from "../utils/math/AABB.ts";
 import {clamp, doubleEquals, lerp, lerpRadians} from "../utils/math/math.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
@@ -31,7 +31,7 @@ import {BlockCollision} from "../world/collision/BlockCollision.ts";
 
 export abstract class Entity implements EntityLike, DataTracked, Comparable, NbtSerializable, CommandOutput {
     private static readonly ENTITY_COUNTER = new AtomicInteger();
-    private static readonly NULL_BOX = new Box(0.0, 0.0, 0.0, 0.0);
+    private static readonly INITIAL_AABB = new AABB(0.0, 0.0, 0.0, 0.0);
 
     public invulnerable: boolean = false;
     public velocityDirty: boolean = false;
@@ -45,7 +45,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     protected ejectCooldown = 0;
 
     private readonly dimensions: EntityDimensions;
-    private boundingBox: Box = Entity.NULL_BOX;
+    private boundingBox: AABB = Entity.INITIAL_AABB;
 
     public age: number = 0;
 
@@ -81,7 +81,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.dimensions = type.getDimensions();
 
         const builder = new DataTracker.Builder(this);
-        this.initDataTracker(builder);
+        this.defineSyncedData(builder);
         this.dataTracker = builder.build();
     }
 
@@ -225,7 +225,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.setPosition(d, e);
     }
 
-    public refreshPositionAndAngles(x: number, y: number, yaw: number): void {
+    public snapTo(x: number, y: number, yaw: number): void {
         this.setPosition(x, y);
         this.setYaw(yaw);
         this.resetPrevious();
@@ -242,7 +242,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.prevYaw = this.getYaw();
     }
 
-    public syncPositionDelta(x: number, y: number): void {
+    public setDeltaMovement(x: number, y: number): void {
         this.positionDelta.setPos(x, y);
     }
 
@@ -440,14 +440,14 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         }
 
         if (x !== this.position.x || y !== this.position.y) {
-            this.onOutOffBound();
-            this.overwritePos(x, y);
+            this.onOutOffBound(x, y);
             return true;
         }
         return false;
     }
 
-    protected onOutOffBound() {
+    protected onOutOffBound(x: number, y: number): void {
+        this.overwritePos(x, y);
     }
 
     // 碰撞与尺寸
@@ -464,15 +464,15 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         return this.dimensions;
     }
 
-    public getBoundingBox(): Box {
+    public getBoundingBox(): AABB {
         return this.boundingBox;
     }
 
-    public setBoundingBox(boundingBox: Box): void {
+    public setBoundingBox(boundingBox: AABB): void {
         this.boundingBox = boundingBox;
     }
 
-    protected calculateBoundingBox(): Box {
+    protected calculateBoundingBox(): AABB {
         return this.dimensions.getBoxAt(this.position.x, this.position.y);
     }
 
@@ -543,8 +543,8 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     public onSpawnPacket(packet: EntitySpawnS2CPacket) {
-        this.syncPositionDelta(packet.x, packet.y);
-        this.refreshPositionAndAngles(packet.x, packet.y, packet.yaw);
+        this.setDeltaMovement(packet.x, packet.y);
+        this.snapTo(packet.x, packet.y, packet.yaw);
         this.setId(packet.entityId);
         this.setUuid(packet.uuid);
         this.color = packet.color;
@@ -585,7 +585,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     public abstract onTrackedDataSet(data: TrackedData<any>): void;
 
-    protected abstract initDataTracker(builder: InstanceType<typeof DataTracker.Builder>): void;
+    protected abstract defineSyncedData(builder: InstanceType<typeof DataTracker.Builder>): void;
 
     // 权限与命令
 

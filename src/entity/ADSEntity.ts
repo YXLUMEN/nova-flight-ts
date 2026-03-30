@@ -54,6 +54,6 @@ export class ADSEntity extends Entity implements IOwnable {
     public onTrackedDataSet(_data: TrackedData<any>): void {
     }
 
-    protected initDataTracker(_builder: InstanceType<typeof DataTracker.Builder>): void {
+    protected defineSyncedData(_builder: InstanceType<typeof DataTracker.Builder>): void {
     }
 }

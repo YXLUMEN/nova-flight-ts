@@ -1,8 +1,8 @@
-import {Box} from "../../utils/math/Box.ts";
+import {AABB} from "../../utils/math/AABB.ts";
 import type {EntityLike} from "./EntityLike.ts";
 
 export class QuadTree<T extends EntityLike> {
-    private readonly boundary: Box;
+    private readonly boundary: AABB;
     private readonly capacity: number;
     private readonly depth: number;
     private readonly maxDepth: number;
@@ -10,7 +10,7 @@ export class QuadTree<T extends EntityLike> {
     private entities: T[] = [];
     private children: QuadTree<T>[] | null = null; // [NW, NE, SW, SE]
 
-    public constructor(boundary: Box, capacity = 8, depth = 0, maxDepth = 6) {
+    public constructor(boundary: AABB, capacity = 8, depth = 0, maxDepth = 6) {
         this.boundary = boundary;
         this.capacity = capacity;
         this.depth = depth;
@@ -61,10 +61,10 @@ export class QuadTree<T extends EntityLike> {
         const cx = x + hw;
         const cy = y + hh;
 
-        const nw = new Box(x, y, cx, cy);
-        const ne = new Box(cx, y, x + 2 * hw, cy);
-        const sw = new Box(x, cy, cx, y + 2 * hh);
-        const se = new Box(cx, cy, x + 2 * hw, y + 2 * hh);
+        const nw = new AABB(x, y, cx, cy);
+        const ne = new AABB(cx, y, x + 2 * hw, cy);
+        const sw = new AABB(x, cy, cx, y + 2 * hh);
+        const se = new AABB(cx, cy, x + 2 * hw, y + 2 * hh);
 
         this.children = [
             new QuadTree(nw, this.capacity, this.depth + 1, this.maxDepth),
@@ -74,7 +74,7 @@ export class QuadTree<T extends EntityLike> {
         ];
     }
 
-    public query(range: Box): T[] {
+    public query(range: AABB): T[] {
         const found: T[] = [];
 
         // 检查是否与当前节点区域相交

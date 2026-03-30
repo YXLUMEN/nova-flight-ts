@@ -8,10 +8,14 @@ import type {ClientWorld} from "../../ClientWorld.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import type {SpecialWeapon} from "../../../item/weapon/SpecialWeapon.ts";
 import type {ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
+import {InventoryRender} from "./InventoryRender.ts";
 
 export class HUD implements IUi {
     private readonly font: string = '14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
     private readonly hudColor: string = '#fff';
+
+    private player: ClientPlayerEntity | null = null;
+    private inventoryRender: InventoryRender | null = null;
 
     // HUD 布局参数
     private worldW: number = 0;
@@ -27,13 +31,22 @@ export class HUD implements IUi {
     public setSize(w: number, h: number) {
         this.worldW = w;
         this.worldH = h;
+        this.inventoryRender?.setSize(w, h);
+    }
+
+    public setPlayer(player: ClientPlayerEntity | null): void {
+        this.player = player;
+        if (player) {
+            this.inventoryRender = new InventoryRender(player);
+            this.inventoryRender.setSize(this.worldW, this.worldH);
+        }
+        else this.inventoryRender = null;
     }
 
     public tick(tickDelta: number) {
-        const player = NovaFlightClient.getInstance().player;
-        if (!player) return;
+        if (!this.player) return;
 
-        const realHealth = player.getHealth();
+        const realHealth = this.player.getHealth();
         const speed = tickDelta * Math.max(this.displayHealth - realHealth, 4);
         if (this.displayHealth > realHealth) {
             this.displayHealth = Math.max(realHealth, this.displayHealth - speed);
@@ -52,8 +65,7 @@ export class HUD implements IUi {
             return;
         }
 
-        const player = client.player;
-        if (!player) return;
+        if (!this.player) return;
 
         ctx.save();
         ctx.font = this.font;
@@ -66,24 +78,24 @@ export class HUD implements IUi {
         const uo = client.window.camera.uiOffset;
 
         ctx.translate(uo.x, uo.y);
-        ctx.fillText(`分数: ${player.getScore()}`, x, y);
+        ctx.fillText(`分数: ${this.player.getScore()}`, x, y);
         y += 20;
 
-        if (player.isDevMode()) {
+        if (this.player.isDevMode()) {
             ctx.fillText('已启用dev模式,将不再记录成绩', x, y);
             y += 20;
         }
         y += 4;
 
-        this.renderHealth(ctx, player, x, y);
+        this.renderHealth(ctx, this.player, x, y);
         y += this.barHeight + this.lineGap;
 
         // 武器冷却条
-        const items = player.getSpecials();
+        const items = this.player.getSpecials();
         if (items.length > 0) {
-            const quickFire = player.getQuickFire();
+            const quickFire = this.player.getQuickFire();
             for (const item of items) {
-                const stack = player.getItem(item);
+                const stack = this.player.getItem(item);
                 if (!stack) continue;
 
                 if (item.getMaxCooldown(stack) <= 0) continue;
@@ -101,11 +113,12 @@ export class HUD implements IUi {
 
         ctx.restore();
 
-        if (player.approachMissile.size > 0) {
+        if (this.player.approachMissile.size > 0) {
             this.renderLockAlert(ctx, 2);
-        } else if (player.lockedMissile.size > 0) {
+        } else if (this.player.lockedMissile.size > 0) {
             this.renderLockAlert(ctx);
         }
+        this.inventoryRender!.render(ctx);
     }
 
     private renderHealth(ctx: CanvasRenderingContext2D, player: PlayerEntity, x: number, y: number) {
@@ -115,7 +128,7 @@ export class HUD implements IUi {
         const displayRatio = clamp(this.displayHealth / maxHealth, 0, 1);
 
         const shieldAmount = player.getShieldAmount();
-        const maxShield = player.getMaxShieldAmount();
+        const maxShield = player.getMaxShield();
         const shieldRatio = maxShield > 0 ? clamp(shieldAmount / maxShield, 0, 1) : 0;
 
         // 背景
@@ -144,36 +157,35 @@ export class HUD implements IUi {
     }
 
     public drawPrimaryWeapons(ctx: CanvasRenderingContext2D, tickDelta: number) {
-        const player = NovaFlightClient.getInstance().player;
-        if (!player) return;
+        if (!this.player) return;
 
-        const pos = player.getLerpPos(tickDelta);
+        const pos = this.player.getLerpPos(tickDelta);
 
-        const stack = player.getCurrentItemStack();
-        if (!stack) return;
-        const weapon = stack.getItem() as BaseWeapon;
+        const stack = this.player.getCurrentItem();
+        const item = stack.getItem();
+        if (stack.isEmpty() || !(item instanceof BaseWeapon)) return;
 
         let ratio: number;
-        const reloadLeft = player.cooldownManager.getCooldownTicks(weapon);
+        const reloadLeft = this.player.cooldownManager.getCooldownTicks(item);
         if (reloadLeft > 0) {
             ratio = clamp(1 - reloadLeft / stack.getOrDefault(DataComponents.MAX_RELOAD_TIME, 1), 0, 1);
         } else {
-            ratio = clamp(1 - weapon.getCooldown(stack) / weapon.getMaxCooldown(stack), 0, 1);
+            ratio = clamp(1 - item.getCooldown(stack) / item.getMaxCooldown(stack), 0, 1);
         }
         this.displayRatio = lerp(tickDelta, this.displayRatio, ratio);
-        const anchorX = Math.floor(pos.x + player.getWidth() / 2 + 12);
+        const anchorX = Math.floor(pos.x + this.player.getWidth() / 2 + 12);
 
         ctx.save();
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.font = this.font;
 
-        ctx.fillStyle = weapon.getUiColor(stack) ?? '#5ec8ff';
+        ctx.fillStyle = item.getUiColor(stack) ?? '#5ec8ff';
         ctx.globalAlpha = 0.6;
         ctx.fillRect(anchorX, pos.y, (64 * this.displayRatio) | 0, 2);
 
         ctx.fillStyle = this.hudColor;
-        const name = weapon.getDisplayName();
+        const name = item.getDisplayName();
         ctx.fillText(name, anchorX, pos.y - 16);
 
         const textWidth = ctx.measureText(name).width + anchorX + 8;

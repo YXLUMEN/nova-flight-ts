@@ -10,8 +10,8 @@ import {DataTracker} from "./data/DataTracker.ts";
 import {AttributeContainer} from "./attribute/AttributeContainer.ts";
 import type {EntityAttribute} from "./attribute/EntityAttribute.ts";
 import {EntityAttributes} from "./attribute/EntityAttributes.ts";
-import type {EntityAttributeInstance} from "./attribute/EntityAttributeInstance.ts";
-import {DefaultAttributeContainer} from "./attribute/DefaultAttributeContainer.ts";
+import type {AttributeInstance} from "./attribute/AttributeInstance.ts";
+import {AttributeSupplier} from "./attribute/AttributeSupplier.ts";
 import {type NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {TrackedDataHandlerRegistry} from "./data/TrackedDataHandlerRegistry.ts";
 import type {TrackedData} from "./data/TrackedData.ts";
@@ -32,7 +32,7 @@ export abstract class LivingEntity extends Entity {
     protected serverYaw: number = 0;
 
     private readonly attributes: AttributeContainer;
-    private readonly activeStatusEffects = new Map<RegistryEntry<StatusEffect>, StatusEffectInstance>();
+    private readonly activeEffects = new Map<RegistryEntry<StatusEffect>, StatusEffectInstance>();
 
     protected constructor(type: EntityType<LivingEntity>, world: World) {
         super(type, world);
@@ -43,31 +43,31 @@ export abstract class LivingEntity extends Entity {
         this.positionIncrements = 0;
     }
 
-    public createLivingAttributes(): InstanceType<typeof DefaultAttributeContainer.Builder> {
-        return DefaultAttributeContainer.builder()
+    public createLivingAttributes(): InstanceType<typeof AttributeSupplier.Builder> {
+        return AttributeSupplier.builder()
             .add(EntityAttributes.GENERIC_MAX_HEALTH)
             .add(EntityAttributes.GENERIC_MOVEMENT_SPEED)
             .add(EntityAttributes.GENERIC_MAX_SHIELD);
     }
 
-    protected override initDataTracker(builder: InstanceType<typeof DataTracker.Builder>) {
-        builder.add(LivingEntity.HEALTH, 1);
+    protected override defineSyncedData(builder: InstanceType<typeof DataTracker.Builder>) {
+        builder.define(LivingEntity.HEALTH, 1);
     }
 
     public override tick() {
         super.tick();
 
         if (!this.isRemoved()) {
-            this.tickMovement();
+            this.aiStep();
         }
 
         this.tickStatusEffects();
     }
 
-    protected tickMovement() {
+    protected aiStep() {
         if (this.isLogicalSide()) {
             this.positionIncrements = 0;
-            this.syncPositionDelta(this.getX(), this.getY());
+            this.setDeltaMovement(this.getX(), this.getY());
         }
 
         if (this.positionIncrements > 0) {
@@ -116,17 +116,17 @@ export abstract class LivingEntity extends Entity {
 
     protected onRemoval(): void {
         for (const instance of this.getStatusEffects()) {
-            instance.onEntityRemoval(this);
+            instance.onEntityRemoved(this);
         }
 
-        this.activeStatusEffects.clear();
+        this.activeEffects.clear();
     }
 
     public getAttributes(): AttributeContainer {
         return this.attributes;
     }
 
-    public getAttributeInstance(attribute: RegistryEntry<EntityAttribute>): EntityAttributeInstance | null {
+    public getAttributeInstance(attribute: RegistryEntry<EntityAttribute>): AttributeInstance | null {
         return this.attributes.getCustomInstance(attribute);
     }
 
@@ -150,7 +150,7 @@ export abstract class LivingEntity extends Entity {
         this.dataTracker.set(LivingEntity.HEALTH, clamp(health, 0, this.getMaxHealth()));
     }
 
-    public getMaxShieldAmount(): number {
+    public getMaxShield(): number {
         return this.getAttributeValue(EntityAttributes.GENERIC_MAX_SHIELD);
     }
 
@@ -160,7 +160,7 @@ export abstract class LivingEntity extends Entity {
 
     // 不应该重写此方法
     public setShieldAmount(amount: number): void {
-        this.setShieldAmountUnclamped(clamp(amount, 0, this.getMaxShieldAmount()));
+        this.setShieldAmountUnclamped(clamp(amount, 0, this.getMaxShield()));
     }
 
     protected setShieldAmountUnclamped(amount: number) {
@@ -238,110 +238,129 @@ export abstract class LivingEntity extends Entity {
         return true;
     }
 
+    protected tickStatusEffects(): void {
+        if (this.activeEffects.size === 0) return;
+
+        if (this.isClient()) {
+            for (const [type, effect] of this.activeEffects) {
+                type.getValue().tickClient(this, effect.getDuration());
+                effect.tickClient();
+            }
+
+            return;
+        }
+
+        for (const [type, effect] of this.activeEffects) {
+            if (!effect.tickServer(this)) {
+                this.activeEffects.delete(type);
+                this.onEffectRemoved(effect);
+            }
+        }
+    }
+
     public getStatusEffects(): MapIterator<StatusEffectInstance> {
-        return this.activeStatusEffects.values();
+        return this.activeEffects.values();
     }
 
     public getActiveStatusEffects(): Map<RegistryEntry<StatusEffect>, StatusEffectInstance> {
-        return this.activeStatusEffects;
+        return this.activeEffects;
     }
 
     public hasStatusEffect(effect: RegistryEntry<StatusEffect>): boolean {
-        return this.activeStatusEffects.has(effect);
+        return this.activeEffects.has(effect);
     }
 
     public getStatusEffect(effect: RegistryEntry<StatusEffect>): StatusEffectInstance | undefined {
-        return this.activeStatusEffects.get(effect);
+        return this.activeEffects.get(effect);
     }
 
-    public addStatusEffect(effect: StatusEffectInstance, source: Entity | null): boolean {
-        if (!this.canHaveStatusEffect(effect)) return false;
+    public addEffect(effect: StatusEffectInstance, source: Entity | null): boolean {
+        if (!this.canHaveEffect(effect)) return false;
 
-        const type = effect.getEffectType();
-        const instance = this.activeStatusEffects.get(type);
-        let result = false;
+        const type = effect.getEffect();
+        const instance = this.activeEffects.get(type);
+        let changed = false;
 
         if (!instance) {
-            this.activeStatusEffects.set(type, effect);
-            this.onStatusEffectApplied(effect, source);
-            result = true;
+            this.activeEffects.set(type, effect);
+            this.onEffectAdded(effect, source);
+            changed = true;
+            effect.onApplied(this);
         } else if (instance.upgrade(effect)) {
-            this.onStatusEffectUpgraded(instance, true, source);
-            result = true;
+            this.onEffectUpdated(instance, true, source);
+            changed = true;
         }
 
-        effect.onApplied(this);
-        return result;
+        effect.onEffectStarted(this);
+        return changed;
     }
 
-    public canHaveStatusEffect(_effect: StatusEffectInstance): boolean {
+    public canHaveEffect(_effect: StatusEffectInstance): boolean {
         return true;
     }
 
     public setStatusEffect(effect: StatusEffectInstance, source: Entity | null): void {
-        if (!this.canHaveStatusEffect(effect)) return;
-        const instance = this.activeStatusEffects.get(effect.getEffectType());
-        this.activeStatusEffects.set(effect.getEffectType(), effect);
-        if (!instance) {
-            this.onStatusEffectApplied(effect, source);
+        if (!this.canHaveEffect(effect)) return;
+
+        const previous = this.activeEffects.get(effect.getEffect());
+        if (!previous) {
+            this.onEffectAdded(effect, source);
         } else {
-            this.onStatusEffectUpgraded(effect, true, source);
+            this.onEffectUpdated(effect, true, source);
         }
     }
 
-    public removeStatusEffectInternal(effect: RegistryEntry<StatusEffect>): StatusEffectInstance | null {
-        const instance = this.activeStatusEffects.get(effect);
+    public removeEffectNoUpdate(effect: RegistryEntry<StatusEffect>): StatusEffectInstance | null {
+        const instance = this.activeEffects.get(effect);
         if (instance) {
-            this.activeStatusEffects.delete(effect);
+            this.activeEffects.delete(effect);
         }
         return instance ?? null;
     }
 
-    public removeStatusEffect(effect: RegistryEntry<StatusEffect>): boolean {
-        const instance = this.removeStatusEffectInternal(effect);
+    public removeEffect(effect: RegistryEntry<StatusEffect>): boolean {
+        const instance = this.removeEffectNoUpdate(effect);
         if (instance) {
-            this.onStatusEffectRemoved(instance);
+            this.onEffectRemoved(instance);
             return true;
         }
         return false;
     }
 
-    public clearStatuesEffects(): void {
-        for (const effect of this.activeStatusEffects.values()) {
-            this.removeStatusEffect(effect.getEffectType());
+    public clearEffects(): boolean {
+        if (this.isClient()) return false;
+        if (this.activeEffects.size === 0) return false;
+
+        for (const effect of this.activeEffects.values()) {
+            effect.getEffect().getValue().removeAttributeModifiers(this.attributes);
+        }
+        this.activeEffects.clear();
+        this.onAttributeUpdated();
+        return true;
+    }
+
+    protected onEffectAdded(effect: StatusEffectInstance, _source: Entity | null): void {
+        if (this.isClient()) return;
+        effect.getEffect().getValue().addAttributeModifiers(this.attributes, effect.getAmplifier());
+    }
+
+    protected onEffectUpdated(effect: StatusEffectInstance, reapplyEffect: boolean, _source: Entity | null): void {
+        if (reapplyEffect && !this.isClient()) {
+            const statusEffect = effect.getEffect().getValue();
+            statusEffect.removeAttributeModifiers(this.attributes);
+            statusEffect.addAttributeModifiers(this.attributes, effect.getAmplifier());
+            this.onAttributeUpdated();
         }
     }
 
-    protected onStatusEffectApplied(effect: StatusEffectInstance, _source: Entity | null): void {
-        if (this.getWorld().isClient) return;
-        effect.getEffectType().getValue().onApplied(this.attributes, effect.getAmplifier());
+    protected onEffectRemoved(effect: StatusEffectInstance): void {
+        if (this.isClient()) return;
+
+        effect.getEffect().getValue().removeAttributeModifiers(this.attributes);
+        this.onAttributeUpdated();
     }
 
-    protected tickStatusEffects(): void {
-        if (this.activeStatusEffects.size === 0) return;
-
-        for (const instance of this.activeStatusEffects.values()) {
-            if (!instance.update(this)) this.onStatusEffectRemoved(instance);
-        }
-    }
-
-    protected onStatusEffectUpgraded(effect: StatusEffectInstance, reapplyEffect: boolean, _source: Entity | null): void {
-        if (reapplyEffect && !this.getWorld().isClient) {
-            const statusEffect = effect.getEffectType().getValue();
-            statusEffect.onRemoved(this.attributes);
-            statusEffect.onApplied(this.attributes, effect.getAmplifier());
-            this.updateAttributes();
-        }
-    }
-
-    protected onStatusEffectRemoved(effect: StatusEffectInstance): void {
-        if (this.getWorld().isClient) return;
-
-        effect.getEffectType().getValue().onRemoved(this.attributes);
-        this.updateAttributes();
-    }
-
-    private updateAttributes(): void {
+    private onAttributeUpdated(): void {
         const pendingAttr = this.attributes.getPendingUpdate();
         for (const attr of pendingAttr) {
             this.updateAttribute(attr.getAttribute());
@@ -356,6 +375,11 @@ export abstract class LivingEntity extends Entity {
             if (this.getHealth() > maxHealth) {
                 this.setHealth(maxHealth);
             }
+        } else if (attribute.matches(EntityAttributes.GENERIC_MAX_SHIELD)) {
+            const maxShield = this.getMaxShield();
+            if (this.getShieldAmount() > maxShield) {
+                this.setShieldAmount(maxShield);
+            }
         }
     }
 
@@ -366,7 +390,7 @@ export abstract class LivingEntity extends Entity {
         const x = packet.x;
         const y = packet.y;
         const yaw = packet.yaw;
-        this.syncPositionDelta(x, y);
+        this.setDeltaMovement(x, y);
         this.setId(packet.entityId);
         this.setUuid(packet.uuid);
         this.updatePosition(x, y);
@@ -411,9 +435,9 @@ export abstract class LivingEntity extends Entity {
         nbt.putFloat('shield', Number.isFinite(shield) ? shield : 0);
         nbt.putCompoundArray('attributes', this.getAttributes().toNbt());
 
-        if (this.activeStatusEffects.size > 0) {
+        if (this.activeEffects.size > 0) {
             const nbtList: NbtCompound[] = [];
-            for (const effect of this.activeStatusEffects.values()) {
+            for (const effect of this.activeEffects.values()) {
                 nbtList.push(effect.toNbt());
             }
 
@@ -437,7 +461,7 @@ export abstract class LivingEntity extends Entity {
         if (effects.length > 0) {
             for (const effectNbt of effects) {
                 const effect = StatusEffectInstance.fromNbt(effectNbt);
-                if (effect) this.addStatusEffect(effect, null);
+                if (effect) this.addEffect(effect, null);
             }
         }
 

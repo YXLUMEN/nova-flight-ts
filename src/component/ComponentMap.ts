@@ -1,11 +1,11 @@
-import type {ComponentType} from "./ComponentType.ts";
+import type {DataComponentType} from "./DataComponentType.ts";
 
 export interface ComponentMap {
-    getComponents(): Map<ComponentType<any>, any>;
+    getComponents(): Map<DataComponentType<any>, any>;
 
-    get<T>(type: ComponentType<T>): T | null;
+    get<T>(type: DataComponentType<T>): T | null;
 
-    has<T>(type: ComponentType<T>): boolean;
+    has<T>(type: DataComponentType<T>): boolean;
 
     size(): number;
 }

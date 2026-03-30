@@ -1,6 +1,6 @@
 import type {MobEntity} from "../../entity/mob/MobEntity.ts";
 import {lerp, PI2} from "../../utils/math/math.ts";
-import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
+import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
 
 export class BallisticCalculator {
@@ -36,6 +36,9 @@ export class BallisticCalculator {
             return;
         }
 
+        const handItem = this.owner.getCurrentItem().getItem();
+        if (!(handItem instanceof BaseWeapon)) return;
+
         const tPos = target.getPositionRef;
         const tVelocity = target.getVelocityRef;
         const oPos = this.owner.getPositionRef;
@@ -44,7 +47,7 @@ export class BallisticCalculator {
         const dy = tPos.y - oPos.y;
         const dist = Math.hypot(dx, dy);
 
-        const bulletSpeed = (this.owner.getCurrentItemStack().getItem() as BaseWeapon).getBallisticSpeed();
+        const bulletSpeed = handItem.getBallisticSpeed();
         const t = bulletSpeed > 0 ? dist / bulletSpeed : 0;
 
         let leadX = tPos.x + tVelocity.x * t;

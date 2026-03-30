@@ -24,6 +24,7 @@ import {BehaviourEnum, ExplosionBehavior} from "../../world/explosion/ExplosionB
 import {ExplosionVisual} from "../../world/explosion/ExplosionVisual.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
+import {UniqueInventory} from "./UniqueInventory.ts";
 
 export abstract class PlayerEntity extends LivingEntity {
     private static readonly SHIELD_AMOUNT = DataTracker.registerData(Object(PlayerEntity), TrackedDataHandlerRegistry.FLOAT);
@@ -32,13 +33,12 @@ export abstract class PlayerEntity extends LivingEntity {
     protected techTree: TechTree | null = null;
 
     public readonly cooldownManager!: ItemCooldownManager;
-    protected readonly items = new Map<Item, ItemStack>();
+
+    private readonly inventory: UniqueInventory;
     protected readonly weaponKeys = new Map<SpecialWeapon, string>();
-    protected readonly baseWeapons: BaseWeapon[] = [];
-    protected currentBaseIndex: number = 0;
 
     public wasFiring: boolean = false;
-    public lastDamageTime = 0;
+    protected invulnerableTime = 0;
 
     private score: number = 0;
     private isDev = false;
@@ -51,6 +51,7 @@ export abstract class PlayerEntity extends LivingEntity {
         this.setYaw(-1.57079);
         this.setPosition(World.WORLD_W / 2, World.WORLD_H - 100);
 
+        this.inventory = new UniqueInventory(this);
         this.cooldownManager = new itemCooldownManager();
         this.addItem(Items.CANNON40_WEAPON);
         this.addItem(Items.BOMB_WEAPON);
@@ -61,28 +62,22 @@ export abstract class PlayerEntity extends LivingEntity {
             .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 20);
     }
 
-    protected override initDataTracker(builder: InstanceType<typeof DataTracker.Builder>) {
-        super.initDataTracker(builder);
-        builder.add(PlayerEntity.SHIELD_AMOUNT, 0);
+    protected override defineSyncedData(builder: InstanceType<typeof DataTracker.Builder>) {
+        super.defineSyncedData(builder);
+        builder.define(PlayerEntity.SHIELD_AMOUNT, 0);
     }
 
     public override tick() {
         super.tick();
-
-        this.tickInventory(this.getWorld());
-        this.cooldownManager.update();
+        this.cooldownManager.tick();
     }
 
-    public override tickMovement() {
-        super.tickMovement();
+    public override aiStep() {
+        this.inventory.tick();
+        super.aiStep();
 
         this.move(this.getVelocityRef);
         this.clampPosition();
-
-        if (!this.isDevMode() && this.stuckTicks >= 240) {
-            const damageSource = this.getWorld().getDamageSources().generic();
-            this.takeDamage(damageSource, 4);
-        }
     }
 
     protected override adjustBlockCollision(movement: MutVec2): MutVec2 {
@@ -99,23 +94,16 @@ export abstract class PlayerEntity extends LivingEntity {
         return BlockCollision.separatingCollision(map, bounds, movement);
     }
 
-    protected tickInventory(world: World) {
-        const currentItem = this.getCurrentItem();
-        for (const [item, stack] of this.items) {
-            item.inventoryTick(stack, world, this, 0, currentItem === item);
-        }
-    }
-
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (this.isInvulnerableTo(damageSource)) return false;
-        if (this.getWorld().isClient) return false;
+        if (this.isClient()) return false;
         if (this.isDead()) return false;
 
-        if (this.age - this.lastDamageTime < 20) return false;
-        this.lastDamageTime = this.age;
+        if (this.invulnerableTime > 0) return false;
+        this.invulnerableTime = 20;
 
         if (this.techTree!.isUnlocked(Techs.EMERGENCY_WARP) && Math.random() >= 0.3) {
-            this.lastDamageTime = this.age + 30;
+            this.invulnerableTime = 30;
             return false;
         }
 
@@ -136,16 +124,17 @@ export abstract class PlayerEntity extends LivingEntity {
         this.setShieldAmount(this.getShieldAmount() - damage + remainDamage);
 
         // emp免伤
-        const stack = this.items.get(Items.EMP_WEAPON);
-        const emp = stack?.getItem() as EMPWeapon | undefined;
-        if (this.techTree!.isUnlocked(Techs.ELECTRICAL_SURGES) && stack && emp) {
+        const stack = this.inventory.searchItem(Items.EMP_WEAPON);
+        if (!stack.isEmpty() && this.techTree!.isUnlocked(Techs.ELECTRICAL_SURGES)) {
+            const emp = Items.EMP_WEAPON as EMPWeapon;
             const cd = emp.getCooldown(stack);
             emp.tryFire(stack, world, this);
             emp.setCooldown(stack, cd);
         }
 
         if (remainDamage !== 0) {
-            if (stack && emp && emp.canFire(stack) && this.techTree!.isUnlocked(Techs.ELE_SHIELD)) {
+            const emp = Items.EMP_WEAPON as EMPWeapon;
+            if (!stack.isEmpty() && emp.canFire(stack) && this.techTree!.isUnlocked(Techs.ELE_SHIELD)) {
                 emp.tryFire(stack, world, this);
                 world.playSound(this, SoundEvents.SHIELD_CRASH);
                 return false;
@@ -190,82 +179,80 @@ export abstract class PlayerEntity extends LivingEntity {
     }
 
     private assignKeys() {
-        for (const w of this.items.keys()) {
-            if (w instanceof SpecialWeapon) {
-                this.weaponKeys.set(w, `Digit${w.getSortIndex() + 1}`);
+        for (const stack of this.inventory) {
+            const item = stack.getItem();
+            if (item instanceof SpecialWeapon) {
+                this.weaponKeys.set(item, `Digit${item.getSortIndex() + 1}`);
             }
         }
     }
 
-    public getItem(item: Item): ItemStack | null {
-        return this.items.get(item) ?? null;
+    public getItem(item: Item): ItemStack {
+        return this.inventory.searchItem(item);
     }
 
-    public getInventory(): ReadonlyMap<Item, ItemStack> {
-        return this.items;
+    public getInventory(): UniqueInventory {
+        return this.inventory;
     }
 
     public addItem(item: Item, stack?: ItemStack): void {
-        if (this.items.has(item)) return;
+        if (this.inventory.hasItem(item)) return;
+        if (!stack) stack = item.getDefaultStack();
 
-        if (item instanceof BaseWeapon) this.baseWeapons.push(item);
-        if (!stack) stack = new ItemStack(item);
         stack.setHolder(this);
-        this.items.set(item, stack);
+        if (item instanceof BaseWeapon) {
+            this.inventory.addItem(stack);
+        } else {
+            const index = this.inventory.getEmptySlot(this.inventory.hotbarLength());
+            if (index === -1) {
+                this.sendMessage('背包已满');
+                return;
+            }
+            this.inventory.setItem(index, stack);
+        }
         this.assignKeys();
     }
 
     public removeItem(item: Item): boolean {
         const stack = this.getItem(item);
-        if (!stack) return false;
-        this.items.delete(item);
+        if (stack.isEmpty()) return false;
 
         if (item instanceof Weapon) {
             item.onEndFire(stack, this.getWorld(), this);
         }
-        if (item instanceof BaseWeapon) {
-            const index = this.baseWeapons.indexOf(item);
-            if (index >= 0) {
-                this.baseWeapons.splice(index, 1);
-                this.currentBaseIndex = clamp(index - 1, 0, this.baseWeapons.length - 1);
-            }
-        }
+        this.inventory.removeInventoryItem(item);
         this.assignKeys();
         return true;
     }
 
     public clearItems(): void {
-        const stack = this.getCurrentItemStack();
-        if (stack) {
-            const current = stack.getItem() as BaseWeapon;
-            current.onEndFire(stack, this.getWorld(), this);
+        const world = this.getWorld();
+        for (const stack of this.inventory) {
+            const item = stack.getItem();
+            if (item instanceof Weapon) item.onEndFire(stack, world, this);
         }
-
-        this.currentBaseIndex = 0;
-        this.baseWeapons.length = 0;
-        this.items.clear();
+        this.inventory.clearContent();
         this.weaponKeys.clear();
     }
 
     public switchWeapon(dir = 1) {
-        const next = (this.currentBaseIndex + dir) % this.baseWeapons.length;
-        if (next === this.currentBaseIndex) return;
+        const slot = this.inventory.getSelectedSlot();
+        const len = this.inventory.hotbarLength();
+        const next = ((slot + dir) % len + len) % len;
+        if (next === slot) return;
 
-        const stack = this.getCurrentItemStack();
-        const current = stack.getItem() as BaseWeapon;
-        current.onEndFire(stack, this.getWorld(), this);
+        const stack = this.inventory.getSelectedItem();
+        if (!stack.isEmpty()) {
+            const current = stack.getItem() as BaseWeapon;
+            current.onEndFire(stack, this.getWorld(), this);
+        }
 
         this.wasFiring = false;
-        this.currentBaseIndex = next < 0 ? this.baseWeapons.length - 1 : next;
+        this.inventory.setSelectedSlot(next);
     }
 
-    public getCurrentItem(): BaseWeapon {
-        return this.baseWeapons[this.currentBaseIndex];
-    }
-
-    // 如果玩家被清除, 有可能返回 undefined
-    public getCurrentItemStack(): ItemStack {
-        return this.items.get(this.baseWeapons[this.currentBaseIndex])!;
+    public getCurrentItem(): ItemStack {
+        return this.inventory.getSelectedItem();
     }
 
     public getScore(): number {
@@ -303,15 +290,10 @@ export abstract class PlayerEntity extends LivingEntity {
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
         nbt.putUint32('score', this.score);
-        nbt.putInt8('slot_index', this.currentBaseIndex);
         nbt.putBoolean('dev_mode', this.isDevMode());
         nbt.putBoolean('used_be_dev', this.isUsedBeDev());
 
-        const inventory: NbtCompound[] = [];
-        this.items.values().forEach(stack => {
-            inventory.push(ItemStack.CODEC.encode(stack) as NbtCompound);
-        });
-        nbt.putCompoundArray('inventory', inventory);
+        this.inventory.writeNBT(nbt);
         this.techTree!.writeNBT(nbt);
         return nbt;
     }
@@ -323,21 +305,7 @@ export abstract class PlayerEntity extends LivingEntity {
         this.usedDev = nbt.getBoolean('used_be_dev');
 
         this.techTree!.readNBT(nbt);
-
-        const inventory = nbt.getCompoundArray('inventory');
-        if (inventory.length > 0) {
-            this.clearItems();
-            for (const nbt of inventory) {
-                const stack = ItemStack.CODEC.decode(nbt);
-                if (!stack) continue;
-
-                stack.setHolder(this);
-                this.addItem(stack.getItem(), stack);
-            }
-        }
-
-        this.currentBaseIndex = clamp(nbt.getInt8('slot_index'), 0, this.baseWeapons.length);
-
+        this.inventory.readNBT(nbt);
         // todo 玩家重生
         if (this.getHealth() === 0) this.setHealth(this.getMaxHealth());
     }

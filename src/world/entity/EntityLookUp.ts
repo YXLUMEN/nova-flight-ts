@@ -1,7 +1,7 @@
 import type {EntityIndex} from "./EntityIndex.ts";
 import type {Consumer, Predicate, UUID} from "../../apis/types.ts";
 import type {EntityLike} from "./EntityLike.ts";
-import type {Box} from "../../utils/math/Box.ts";
+import type {AABB} from "../../utils/math/AABB.ts";
 import type {GridSpatialIndex} from "./GridSpatialIndex.ts";
 
 export class EntityLookUp<T extends EntityLike> {
@@ -25,15 +25,15 @@ export class EntityLookUp<T extends EntityLike> {
         return this.index.iterate();
     }
 
-    public search(box: Box) {
+    public search(box: AABB) {
         return this.grid.search(box);
     }
 
-    public forEachInBox(box: Box, consumer: Consumer<T>): void {
+    public forEachInBox(box: AABB, consumer: Consumer<T>): void {
         this.grid.forEach(box, consumer);
     }
 
-    public findFirst(box: Box, predicate: Predicate<T>): void {
+    public findFirst(box: AABB, predicate: Predicate<T>): void {
         this.grid.findFirst(box, predicate);
     }
 

@@ -1,6 +1,5 @@
 import {Item} from "./Item.ts";
 import type {ItemStack} from "./ItemStack.ts";
-import type {World} from "../world/World.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import {DataComponents} from "../component/DataComponents.ts";
@@ -11,11 +10,11 @@ import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {squareDistVec2} from "../utils/math/math.ts";
 import type {EntityDist} from "../apis/types.ts";
 import {spawnLaserByVec} from "../utils/ServerEffect.ts";
-import {Box} from "../utils/math/Box.ts";
+import {AABB} from "../utils/math/AABB.ts";
 import {EntityPredicates} from "../predicate/EntityPredicates.ts";
 
 export class PointDefense extends Item {
-    public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean) {
+    public override inventoryTick(stack: ItemStack, world: ServerWorld, holder: Entity, slot: number, selected: boolean) {
         super.inventoryTick(stack, world, holder, slot, selected);
 
         if (world.isClient || holder.age % 12 !== 0) return;
@@ -27,7 +26,7 @@ export class PointDefense extends Item {
         const holderPos = holder.getPositionRef;
         const validThreats: EntityDist<ProjectileEntity>[] = [];
 
-        const box = Box.fromCenter(holderPos.x, holderPos.y, 256, 256);
+        const box = AABB.fromCenter(holderPos.x, holderPos.y, 256, 256);
         const entities = world.searchOtherEntities(holder, box, EntityPredicates.DEFENSE);
         for (const entity of entities) {
             if (!BallisticsUtils.isViableThreat(entity.getPositionRef, entity.getVelocityRef, holderPos)) continue;

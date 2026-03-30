@@ -1,6 +1,5 @@
 import {World} from "../../world/World.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
-import {SoundEvents} from "../../sound/SoundEvents.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponents} from "../../component/DataComponents.ts";
@@ -23,8 +22,6 @@ export class BombWeapon extends SpecialWeapon {
                 visual
             );
         }
-
-        world.playSound(attacker, SoundEvents.EXPLOSION);
         this.setCooldown(stack, this.getMaxCooldown(stack));
     }
 

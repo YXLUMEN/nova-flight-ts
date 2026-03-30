@@ -36,6 +36,7 @@ import {ClientConnection} from "./network/ClientConnection.ts";
 import {WorldRender} from "./render/WorldRender.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
+import {TipManager} from "./tips/TipManager.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -206,12 +207,14 @@ export class NovaFlightClient {
             AudioManager.pause();
             SoundSystem.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
             if (this.isIntegrated && this.world) this.world.worldSound.pauseAll().catch(console.error);
+            TipManager.carousel();
         } else if (!bl && this.pause) {
             this.server?.postMessage({type: 'start_ticking'});
 
             AudioManager.resume();
             SoundSystem.globalSound.playSound(SoundEvents.UI_PAGE_SWITCH);
             this.world?.worldSound.resumeAll().catch(console.error);
+            TipManager.cancel();
         }
 
         this.pause = bl;
@@ -484,6 +487,7 @@ export class NovaFlightClient {
         this.worldRender.setWorld(null);
         this.world?.close();
         this.world = null;
+        this.window.hud.setPlayer(null);
         this.player = null;
     }
 
@@ -612,6 +616,7 @@ export class NovaFlightClient {
                     this.toggleTechTree();
                     return;
                 }
+                if (this.player) this.player.openInventory = false;
                 this.togglePause();
                 break;
             }
@@ -628,6 +633,12 @@ export class NovaFlightClient {
             case 'Tab':
                 const ping = `Ping ${Math.floor(this.networkHandler.getLatency())}ms`;
                 this.clientCommandManager.addPlainMessage(ping);
+                break;
+            case 'KeyE':
+                if (this.player) {
+                    this.player.openInventory = !this.player.openInventory;
+                    this.setPause(this.player.openInventory);
+                }
                 break;
         }
     }
@@ -740,8 +751,7 @@ export class NovaFlightClient {
         });
 
         this.window.canvas.addEventListener('click', event => {
-            const world = this.world;
-            if (world && this.pause) {
+            if (this.world && this.pause && (this.player && !this.player.openInventory)) {
                 this.window.pauseOverlay.handleClick(event.offsetX, event.offsetY);
             }
         });

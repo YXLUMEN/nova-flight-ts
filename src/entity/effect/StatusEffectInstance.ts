@@ -64,7 +64,7 @@ export class StatusEffectInstance {
         return this.duration === -1;
     }
 
-    public getEffectType() {
+    public getEffect() {
         return this.type;
     }
 
@@ -76,30 +76,38 @@ export class StatusEffectInstance {
         return this.amplifier;
     }
 
-    public update(entity: LivingEntity): boolean {
-        if (this.isActive()) {
-            const effect = this.type.getValue();
-            if (effect.canApplyUpdateEffect(this.duration, this.amplifier) && !effect.applyUpdateEffect(entity, this.amplifier)) {
-                entity.removeStatusEffect(this.type);
-            }
+    public tickServer(entity: LivingEntity): boolean {
+        if (!this.hasRemaining()) return false;
 
-            if (this.isInfinite()) return true;
-
-            this.duration -= 1;
-            if (this.duration === 0) {
-                entity.removeStatusEffect(this.type);
-            }
+        const effect = this.type.getValue();
+        if (effect.shouldApplyThisTick(this.duration, this.amplifier) &&
+            !effect.applyEffectTick(entity, this.amplifier)) {
+            return false;
         }
 
-        return this.isActive();
+        if (!this.isInfinite() && this.duration > 0) {
+            this.duration -= 1;
+        }
+        return this.hasRemaining();
+    }
+
+    public tickClient() {
+        if (!this.hasRemaining()) return;
+        if (!this.isInfinite() && this.duration > 0) {
+            this.duration -= 1;
+        }
     }
 
     public onApplied(entity: LivingEntity) {
         this.type.getValue().onAppliedAt(entity, this.amplifier);
     }
 
-    public onEntityRemoval(entity: LivingEntity) {
-        this.type.getValue().onEntityRemoval(entity, this.amplifier);
+    public onEffectStarted(entity: LivingEntity) {
+        this.type.getValue().onEffectStarted(entity, this.amplifier);
+    }
+
+    public onEntityRemoved(entity: LivingEntity) {
+        this.type.getValue().onEntityRemoved(entity, this.amplifier);
     }
 
     public onEntityDamage(entity: LivingEntity, source: DamageSource, amount: number) {
@@ -141,7 +149,7 @@ export class StatusEffectInstance {
         return !this.isInfinite() && (this.duration < effect.duration || effect.isInfinite());
     }
 
-    private isActive(): boolean {
+    private hasRemaining(): boolean {
         return this.isInfinite() || this.duration > 0;
     }
 }

@@ -1,3 +1,55 @@
 {
+  "nova-flight.title": "提示",
+  "nova-flight.mob.tank": "装备了活性装甲的敌舰会逐渐减少受到的伤害",
+  "nova-flight.mob.speedster": "高速移动的目标更难被命中，优先消灭它们",
+  "nova-flight.mob.bomber": "炼狱射线会对灼烧目标造成额外伤害",
+  "nova-flight.mob.fighter": "导弹攻击机擅长发射强追踪导弹，保持走位进行攻击",
 
+  "nova-flight.weapon.laser": "激光武器射程远但瞬时伤害较低，适合骚扰敌人，或者当气氛组",
+  "nova-flight.weapon.missile": "导弹追踪能力强，但容易被拦截系统摧毁，并且很容易被诱饵弹拐跑",
+  "nova-flight.weapon.plasma": "等离子武器蓄力时间越长，伤害越高",
+  "nova-flight.weapon.missile_guided": "导弹会自动追踪目标，升级你的导弹，让他们更具杀伤力",
+  "nova-flight.weapon.cold": "冷却技术会大大减少激光武器的冷却时间",
+  "nova-flight.weapon.plasma_cannon": "动能火炮采用强相互作用材料，能够一次击穿多艘敌舰",
+  "nova-flight.weapon.electric-weapon": "电能武器具有一定的范围伤害",
+  "nova-flight.weapon.cannon": "90mm和125mm炮具有惊人的爆炸威力",
+  "nova-flight.weapon.explosion": "鱼雷是可摧毁地形爆炸中范围最大的",
+  "nova-flight.weapon.ciws": "近防炮真的很卡",
+
+  "nova-flight.defense.shield": "emp 护盾可以抵挡伤害，但需要时间充能",
+  "nova-flight.defense.armor": "装甲提供永久防护，但一些侵蚀类武器会腐蚀装甲",
+
+  "nova-flight.strategy.flank": "尝试从侧翼包抄敌人，避免正面冲突，很多人只会朝前面开枪！",
+  "nova-flight.strategy.focus": "集中火力攻击 BOSS，以免给你带来过多麻烦",
+  "nova-flight.strategy.retreat": "当生命值过低时，及时暂停，深呼一口气，重整旗鼓或者英勇就义",
+  "nova-flight.strategy.escape": "导弹锁定你的时候，不要慌张，用诱饵弹（按下 X），或者使用近防炮打掉他们",
+
+  "nova-flight.upgrade.damage": "升级武器可以提升所有装备的伤害输出，按 G 就可以打开研发部门页面",
+  "nova-flight.upgrade.speed": "没有人能拒绝方向机",
+  "nova-flight.upgrade.hull": "强化船体可以增加最大生命值",
+  "nova-flight.upgrade.cold": "冷知识，我知道你正在玩电脑",
+  "nova-flight.upgrade.emp": "EMP 可以清除一定范围内的弹幕",
+  "nova-flight.upgrade.radombomb": "随机炮弹经常打出意想不到的弹药，是强力的升级，虽然价格十分昂贵",
+  "nova-flight.upgrade.radargun": "高射炮可以自动攻击敌人，防御导弹，升级你的高射炮以获得更好的支援",
+
+  "nova-flight.lore.shadow_race": "暗影族拥有无损耗维度转换技术，在长老'居者'带领下频繁骚扰帝国边境",
+  "nova-flight.lore.emp_tech": "电磁震荡技术的发明改变了战局，可以瘫痪敌方战舰",
+  "nova-flight.lore.logic_war": "据说北极防卫阵线的由来是抵抗军首领看到了一只北极熊",
+  "nova-flight.lore.polaris_birth": "面对帝国的腐朽和虫族威胁，北极星抵抗组织应运而生",
+  "nova-flight.lore.northern_alliance": "北方联盟为北极防卫阵线提供军火与科技支持",
+
+  "nova-flight.easteregg.ancient_tech": "某些战机残骸中仍能检测到暗影族的维度转换技术痕迹...",
+  "nova-flight.easteregg.nest_heart": "传说暗影族巢母的核心仍在某处跳动，为帝国舰队提供跃迁能源",
+  "nova-flight.easteregg.polaris_symbol": "北极星标志的五颗星星代表着希望、勇气、智慧、团结和自由",
+  "nova-flight.easteregg.colossus_shadow": "有人声称在深空中看到了巨大的阴影，那是未被摧毁的巨像吗？",
+  "nova-flight.easteregg.truso_trade": "特鲁索联邦的商船仍在某些航线航行，但他们保持中立",
+  "nova-flight.easteregg.horus_legacy": "荷鲁斯中将的叛军残部据说仍在某个星系苟延残喘",
+  "nova-flight.easteregg.quantum_spear": "光能族的量子光矛技术已失传，但其原理仍被研究，现在是坏一个少一个",
+  "nova-flight.easteregg.fourth_emperor": "歼星舰具有极强的火力输出能力，但是由于太笨重，回港时需要驳船进行牵引掉头",
+  "nova-flight.easteregg.dimension_gate": "暗影族的空间跃迁门技术，人类至今无法完全理解，只是单纯停留在能用这个阶段",
+  "nova-flight.easteregg.location": "北极防卫阵线虽然听起来很冷，但她的总部在一个温带海洋气候的星球上",
+
+  "nova-flight.technicality.blocks": "地图方块比看上去的要小一点",
+  "nova-flight.technicality.bullet": "你知道从哪个版本开始, 子弹的判定体积变小了吗",
+  "nova-flight.technicality.missile": "导弹似乎看不见地形"
 }

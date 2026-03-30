@@ -41,14 +41,14 @@ export class ServerDefaultEvents {
                     const effect = mob.getStatusEffect(StatusEffects.EROSION);
                     if (effect) {
                         const amplifier = Math.min(10, effect.getAmplifier() + 1);
-                        mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EROSION, 400, amplifier), attacker);
+                        mob.addEffect(new StatusEffectInstance(StatusEffects.EROSION, 400, amplifier), attacker);
                     }
                 }
-                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EROSION, 400, 1), attacker);
+                mob.addEffect(new StatusEffectInstance(StatusEffects.EROSION, 400, 1), attacker);
             }
 
             if (damageSource.isOf(DamageTypes.ARC) && attacker.getTechs().isUnlocked(Techs.STATIC_ELECTRICITY)) {
-                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, 40, 0), attacker);
+                mob.addEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, 40, 0), attacker);
             }
         });
 

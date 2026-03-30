@@ -25,10 +25,12 @@ import {BlockPos} from "../../world/map/BlockPos.ts";
 import type {BlockChange} from "../../world/map/BlockChange.ts";
 import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
 import type {Channel} from "../../network/Channel.ts";
+import {Weapon} from "../../item/weapon/Weapon.ts";
 
 export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     public readonly profile: GameProfile;
     public readonly input: KeyboardInput;
+    public openInventory: boolean = false;
 
     private specialWeapons: SpecialWeapon[];
     private quickFireIndex = 0;
@@ -52,7 +54,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         this.profile = profile;
         this.techTree = new ClientTechTree(this);
 
-        this.specialWeapons = this.items
+        this.specialWeapons = this.getInventory()
             .keys()
             .filter(item => item instanceof SpecialWeapon)
             .toArray();
@@ -106,14 +108,12 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
         if (this.input.wasPressed('KeyF')) {
             this.switchWeapon();
-            return;
-        }
-        if (this.input.wasPressed('KeyR')) {
+        } else if (this.input.wasPressed('KeyR')) {
             this.wpnReload();
         }
     }
 
-    public override tickMovement() {
+    public override aiStep() {
         let dx = 0, dy = 0;
         if (this.input.isDown("ArrowLeft", "KeyA")) dx -= 1;
         if (this.input.isDown("ArrowRight", "KeyD")) dx += 1;
@@ -167,7 +167,8 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             this.updateVelocity(speed, dx, dy);
         }
 
-        super.tickMovement();
+        super.aiStep();
+        this.fireSpecials();
 
         if (updatePos && updateYaw) {
             this.getNetworkChannel().send(new FullMove(dx, dy, this.getYaw()));
@@ -178,30 +179,30 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         }
     }
 
-    protected override tickInventory(world: ClientWorld) {
-        this.weaponFire(world);
-        const currentItem = this.getCurrentItem();
+    private fireSpecials() {
+        const world = this.getWorld() as ClientWorld;
+        this.mainWeaponFire(world);
 
-        for (const [item, stack] of this.items) {
-            if (item instanceof SpecialWeapon) {
-                const bind = item.bindKey();
-                const key = bind === null ? this.weaponKeys.get(item)! : bind;
+        const inventory = this.getInventory();
+        for (const [item, assign] of this.weaponKeys) {
+            const stack = inventory.searchItem(item);
+            if (stack.isEmpty()) continue;
 
-                if (this.isDevMode() && item.getCooldown(stack) > 0.5) {
-                    item.setCooldown(stack, 0.5);
-                }
-                if (item.canFire(stack) && this.input.wasPressed(key)) {
-                    item.tryFire(stack, world, this);
-                    this.getNetworkChannel().send(new PlayerInputC2SPacket(key));
-                }
+            const bind = item.bindKey();
+            const key = bind === null ? assign : bind;
+
+            if (this.input.wasPressed(key) && item.canFire(stack)) {
+                item.tryFire(stack, world, this);
+                this.getNetworkChannel().send(new PlayerInputC2SPacket(key));
             }
-            item.inventoryTick(stack, world, this, 0, currentItem === item);
         }
     }
 
-    private weaponFire(world: ClientWorld) {
-        const item = this.baseWeapons[this.currentBaseIndex];
-        const stack = this.items.get(item)!;
+    private mainWeaponFire(world: ClientWorld) {
+        const stack = this.getInventory().getSelectedItem();
+        const item = stack.getItem();
+        if (stack.isEmpty() || !(item instanceof Weapon)) return;
+
         const isFiring = this.input.isDown("Space") || WorldConfig.autoShoot;
 
         const hasAmmo = stack.getDurability() > 0 || !stack.isDamageable();
@@ -228,7 +229,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     }
 
     private wpnReload() {
-        const stack = this.getCurrentItemStack();
+        const stack = this.getInventory().getSelectedItem();
         if (stack.getDamage() === 0 || stack.getOrDefault(DataComponents.RELOADING, false)) {
             return;
         }
@@ -247,7 +248,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     public override addItem(item: Item, stack?: ItemStack): void {
         super.addItem(item, stack);
-        this.specialWeapons = this.items
+        this.specialWeapons = this.getInventory()
             .keys()
             .filter(item => item instanceof SpecialWeapon)
             .toArray()
@@ -264,8 +265,8 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     public launchQuickFire() {
         const item = this.getQuickFire();
-        const stack = this.items.get(item);
-        if (stack && item.canFire(stack)) {
+        const stack = this.getInventory().searchItem(item);
+        if (!stack.isEmpty() && item.canFire(stack)) {
             item.tryFire(stack, this.getWorld(), this);
             const key = this.weaponKeys.get(item)!;
             this.getNetworkChannel().send(new PlayerInputC2SPacket(key));
@@ -292,12 +293,14 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     }
 
     public updateSlotStacks(revision: number, stacks: Iterable<ItemStack>) {
-        for (const itemStack of stacks) {
-            const item = itemStack.getItem();
-            const playerItemStack = this.items.get(item);
-            if (playerItemStack) {
-                playerItemStack.applyUnvalidatedChanges(itemStack.getComponents().getChanges());
+        const inventory = this.getInventory();
+        for (const stack of stacks) {
+            const item = stack.getItem();
+            const playerStack = inventory.searchItem(item);
+            if (!playerStack.isEmpty()) {
+                playerStack.applyUnvalidatedChanges(stack.getComponents().getChanges());
             }
+            if (!inventory.hasItem(item)) this.addItem(item, stack);
         }
 
         this.revision = revision;
@@ -305,7 +308,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     public override switchWeapon(dir: number = 1) {
         super.switchWeapon(dir);
-        this.getNetworkChannel().send(new PlayerSwitchSlotC2SPacket(this.currentBaseIndex));
+        this.getNetworkChannel().send(new PlayerSwitchSlotC2SPacket(this.getInventory().getSelectedSlot()));
     }
 
     public override addScore(score: number): void {

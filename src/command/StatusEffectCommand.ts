@@ -15,6 +15,8 @@ import {CommandUtil} from "./CommandUtil.ts";
 
 export class StatusEffectCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {
+        const applyEffect = this.applyEffect.bind(this);
+
         dispatcher.registry(
             literal<T>('effect')
                 .then(
@@ -23,14 +25,14 @@ export class StatusEffectCommand {
                             argument<T, EntitySelector>('selector', EntitySelectorArgumentType.entities())
                                 .then(
                                     argument<T, Identifier>('effect_id', IdentifierArgumentType.identifier())
-                                        .executes(this.applyEffect.bind(this))
+                                        .executes(applyEffect)
                                         .suggests(CommandUtil.createIdentifierSuggestion(Registries.STATUS_EFFECT))
                                         .then(
                                             argument<T, number>('duration', IntArgumentType.int())
-                                                .executes(this.applyEffect.bind(this))
+                                                .executes(applyEffect)
                                                 .then(
                                                     argument<T, number>('amplifier', IntArgumentType.int())
-                                                        .executes(this.applyEffect.bind(this))
+                                                        .executes(applyEffect)
                                                 )
                                         )
                                 )
@@ -89,7 +91,7 @@ export class StatusEffectCommand {
         if (entities.length === 1) {
             const target = entities[0];
             if (target instanceof LivingEntity) {
-                target.addStatusEffect(new StatusEffectInstance(effect, duration, amplifier), null);
+                target.addEffect(new StatusEffectInstance(effect, duration, amplifier), null);
                 ctx.source.outPut.sendMessage(`Give effect ${effectIdResult.result} to \x1b[32m${target.getUUID()}`);
             }
             return;
@@ -97,7 +99,7 @@ export class StatusEffectCommand {
 
         for (const entity of entities) {
             if (entity instanceof LivingEntity) {
-                entity.addStatusEffect(new StatusEffectInstance(effect, duration, amplifier), null);
+                entity.addEffect(new StatusEffectInstance(effect, duration, amplifier), null);
             }
         }
         ctx.source.outPut.sendMessage(`Give effect ${effectIdResult.result} for ${entities.length} entities`);
@@ -108,7 +110,7 @@ export class StatusEffectCommand {
         if (!selectorResult) {
             const target = ctx.source.entity;
             if (target instanceof LivingEntity) {
-                target.clearStatuesEffects();
+                target.clearEffects();
             }
             return;
         }
@@ -127,7 +129,7 @@ export class StatusEffectCommand {
         if (!effectIdResult) {
             for (const entity of entities) {
                 if (entity instanceof LivingEntity) {
-                    entity.clearStatuesEffects();
+                    entity.clearEffects();
                 }
             }
             return;
@@ -140,7 +142,7 @@ export class StatusEffectCommand {
 
         for (const entity of entities) {
             if (entity instanceof LivingEntity) {
-                entity.removeStatusEffect(effect);
+                entity.removeEffect(effect);
                 ctx.source.outPut.sendMessage(`Remove effect ${effectIdResult.result} on \x1b[32m${entity.getUUID()}`);
             }
         }

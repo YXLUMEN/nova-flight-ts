@@ -2,7 +2,7 @@ import {StatusEffect} from "./StatusEffect.ts";
 import {type LivingEntity} from "../LivingEntity.ts";
 
 export class MeltdownEffect extends StatusEffect {
-    public override applyUpdateEffect(entity: LivingEntity, amplifier: number): boolean {
+    public override applyEffectTick(entity: LivingEntity, amplifier: number): boolean {
         const source = entity
             .getWorld()
             .getDamageSources()
@@ -17,7 +17,7 @@ export class MeltdownEffect extends StatusEffect {
         return true;
     }
 
-    public override canApplyUpdateEffect(duration: number): boolean {
+    public override shouldApplyThisTick(duration: number): boolean {
         return duration % 10 === 0;
     }
 }

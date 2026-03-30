@@ -77,7 +77,7 @@ export class GammaLasers extends BaseWeapon {
             if (target.getShieldAmount() === 0) {
                 const effect = target.getStatusEffect(StatusEffects.MELTDOWN);
                 const amplifier = effect ? Math.min(effect.getAmplifier() + 1, 3) : 0;
-                target.addStatusEffect(new StatusEffectInstance(StatusEffects.MELTDOWN, 60, amplifier), attacker);
+                target.addEffect(new StatusEffectInstance(StatusEffects.MELTDOWN, 60, amplifier), attacker);
             }
         } else if (!hitBlock.missed) {
             end.set(hitBlock.pos.x, hitBlock.pos.y);

@@ -1,5 +1,5 @@
 import type {BlockPos} from "./BlockPos.ts";
-import type {Box} from "../../utils/math/Box.ts";
+import type {AABB} from "../../utils/math/AABB.ts";
 import type {BlockChange} from "./BlockChange.ts";
 import type {NbtSerializable} from "../../nbt/NbtSerializable.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
@@ -98,7 +98,7 @@ export class BitBlockMap implements NbtSerializable {
         return this.getBlockPos(pos) !== 0;
     }
 
-    public intersectsBox(box: Box): boolean {
+    public intersectsBox(box: AABB): boolean {
         const sx = Math.floor(box.minX / BitBlockMap.BLOCK_SIZE);
         const sy = Math.floor(box.minY / BitBlockMap.BLOCK_SIZE);
         const ex = Math.floor((box.maxX - 1e-5) / BitBlockMap.BLOCK_SIZE);

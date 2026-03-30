@@ -8,7 +8,7 @@ import {EntitySelector} from "./EntitySelector.ts";
 import {EntitySelectorOptions} from "./EntitySelectorOptions.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {Entity} from "../entity/Entity.ts";
-import {Box} from "../utils/math/Box.ts";
+import {AABB} from "../utils/math/AABB.ts";
 import type {EntityType} from "../entity/EntityType.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import type {NumRange} from "../predicate/NumberRange.ts";
@@ -65,14 +65,14 @@ export class EntitySelectorReader {
     }
 
     public build(): EntitySelector {
-        let box: Box | null = null;
+        let box: AABB | null = null;
         if (this.centerX === null && this.centerY === null) {
             if (this.distance[1] !== null) {
                 const d = this.distance[1];
-                box = new Box(-d, -d, d + 1, d + 1);
+                box = new AABB(-d, -d, d + 1, d + 1);
             }
         } else {
-            box = new Box(this.centerX ?? 0, this.centerY ?? 0);
+            box = new AABB(this.centerX ?? 0, this.centerY ?? 0);
         }
 
         if (this.entityType) {

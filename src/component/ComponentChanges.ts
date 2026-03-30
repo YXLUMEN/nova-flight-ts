@@ -1,4 +1,4 @@
-import {ComponentType} from "./ComponentType.ts";
+import {DataComponentType} from "./DataComponentType.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {Optional} from "../utils/Optional.ts";
@@ -31,7 +31,7 @@ export class ComponentChanges {
             const keys = input.getKeys();
             if (keys.size === 0) return ComponentChanges.EMPTY;
 
-            const map = new Map<ComponentType<any>, Optional<any>>();
+            const map = new Map<DataComponentType<any>, Optional<any>>();
             for (const key of keys) {
                 const nbt = input.get(key);
                 if (!nbt) continue;
@@ -76,14 +76,14 @@ export class ComponentChanges {
 
             for (const [componentType, optional] of components) {
                 if (optional.isPresent()) {
-                    ComponentType.PACKET_CODEC.encode(writer, componentType);
+                    DataComponentType.PACKET_CODEC.encode(writer, componentType);
                     componentType.packetCodec.encode(writer, optional.get());
                 }
             }
 
             for (const [componentType, optional] of components) {
                 if (optional.isEmpty()) {
-                    ComponentType.PACKET_CODEC.encode(writer, componentType);
+                    DataComponentType.PACKET_CODEC.encode(writer, componentType);
                 }
             }
         },
@@ -95,16 +95,16 @@ export class ComponentChanges {
                 return ComponentChanges.EMPTY;
             }
 
-            const map = new Map<ComponentType<any>, Optional<any>>();
+            const map = new Map<DataComponentType<any>, Optional<any>>();
 
             for (let l = 0; l < updateCount; l++) {
-                const componentType = ComponentType.PACKET_CODEC.decode(reader);
+                const componentType = DataComponentType.PACKET_CODEC.decode(reader);
                 const value = componentType.packetCodec.decode(reader);
                 map.set(componentType, Optional.of(value));
             }
 
             for (let l = 0; l < removeCount; l++) {
-                const componentType = ComponentType.PACKET_CODEC.decode(reader);
+                const componentType = DataComponentType.PACKET_CODEC.decode(reader);
                 map.set(componentType, Optional.empty());
             }
 
@@ -112,9 +112,9 @@ export class ComponentChanges {
         }
     );
 
-    public readonly changedComponents = new Map<ComponentType<any>, Optional<any>>();
+    public readonly changedComponents = new Map<DataComponentType<any>, Optional<any>>();
 
-    public constructor(changedComponents: Map<ComponentType<any>, Optional<any>>) {
+    public constructor(changedComponents: Map<DataComponentType<any>, Optional<any>>) {
         this.changedComponents = changedComponents;
     }
 }

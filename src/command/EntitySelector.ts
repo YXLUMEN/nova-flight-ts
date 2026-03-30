@@ -4,7 +4,7 @@ import type {Entity} from "../entity/Entity.ts";
 import type {BiConsumer, UUID} from "../apis/types.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
-import type {Box} from "../utils/math/Box.ts";
+import type {AABB} from "../utils/math/AABB.ts";
 import {NumberRange, type NumRange} from "../predicate/NumberRange.ts";
 import {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
@@ -17,7 +17,7 @@ export class EntitySelector {
     public readonly includesNonPlayers: boolean;
     public readonly senderOnly: boolean;
     public readonly sqrtDistance: NumRange;
-    public readonly box: Box | null;
+    public readonly box: AABB | null;
     public readonly playerName: string | null;
     public readonly uuid: UUID | null;
     public readonly useAt: boolean;
@@ -30,7 +30,7 @@ export class EntitySelector {
         includesNonPlayers: boolean,
         filters: EntityFilter[],
         sqrtDistance: NumRange,
-        box: Box | null,
+        box: AABB | null,
         sorter: BiConsumer<IVec, Entity[]>,
         senderOnly: boolean,
         playerName: string | null,
@@ -146,7 +146,7 @@ export class EntitySelector {
         return results;
     }
 
-    private getPositionFilters(pos: IVec, box: Box | null) {
+    private getPositionFilters(pos: IVec, box: AABB | null) {
         const hasBox = box !== null;
         const hasDistance = this.sqrtDistance[0] !== null && this.sqrtDistance[1] !== null;
 

@@ -8,7 +8,7 @@ import type {World} from "../world/World.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {DataComponents} from "../component/DataComponents.ts";
 import {clamp} from "../utils/math/math.ts";
-import type {ComponentType} from "../component/ComponentType.ts";
+import type {DataComponentType} from "../component/DataComponentType.ts";
 import type {LivingEntity} from "../entity/LivingEntity.ts";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {Registries} from "../registry/Registries.ts";
@@ -30,8 +30,10 @@ export class ItemStack {
     public static readonly CODEC: Codec<ItemStack> = Codecs.of(
         value => {
             const compound = new NbtCompound();
+
             compound.putString('type', value.getItem().getRegistryEntry().toString());
             compound.putInt8('counts', value.getCount());
+            if (value.isEmpty()) return compound;
 
             const changes = value.components.getChanges();
             compound.put('compounds', ComponentChanges.CODEC.encode(changes));
@@ -125,23 +127,23 @@ export class ItemStack {
         return this.components;
     }
 
-    public has(type: ComponentType<any>): boolean {
+    public has(type: DataComponentType<any>): boolean {
         return this.components.has(type);
     }
 
-    public set<T>(type: ComponentType<T>, value: T | null): void {
+    public set<T>(type: DataComponentType<T>, value: T | null): void {
         this.components.set(type, value);
     }
 
-    public get<T>(type: ComponentType<T>): T | null {
+    public get<T>(type: DataComponentType<T>): T | null {
         return this.components.get(type);
     }
 
-    public getOrDefault<T>(type: ComponentType<T>, fallback: T): T {
+    public getOrDefault<T>(type: DataComponentType<T>, fallback: T): T {
         return this.components.getOrDefault(type, fallback);
     }
 
-    public remove<T>(type: ComponentType<T>): void {
+    public remove<T>(type: DataComponentType<T>): void {
         return this.components.remove(type);
     }
 
@@ -161,12 +163,12 @@ export class ItemStack {
         return this.getItem() === item;
     }
 
-    public contains<T>(type: ComponentType<T>): boolean {
+    public contains<T>(type: DataComponentType<T>): boolean {
         return this.getComponents().contains(type);
     }
 
     public rightClick(world: World, user: PlayerEntity) {
-        this.getItem().rightClick(world, user);
+        this.getItem().onUseTick(world, user);
     }
 
     public leftClick(world: World, user: PlayerEntity) {
@@ -246,9 +248,12 @@ export class ItemStack {
     }
 
     public inventoryTick(world: World, entity: Entity, slot: number, selected: boolean): void {
-        if (this.getItem() !== null) {
-            this.getItem().inventoryTick(this, world, entity, slot, selected);
-        }
+        // if (world instanceof ServerWorld) {
+        //     this.getItem().inventoryTick(this, world, entity, slot, selected);
+        // }
+        // todo
+        // @ts-ignore
+        this.getItem().inventoryTick(this, world, entity, slot, selected);
     }
 
     public setHolder(holder: Entity | null): void {

@@ -180,7 +180,9 @@ export class WorldRender {
         ctx.restore();
 
         this.client.window.hud.render(ctx);
-        if (this.client.isPause() && !this.world.isOver) this.client.window.pauseOverlay.render(ctx);
+        if (this.client.isPause() && !this.world.isOver && (player && !player.openInventory)) {
+            this.client.window.pauseOverlay.render(ctx);
+        }
     }
 
     private renderBoundingBox(ctx: CanvasRenderingContext2D, entity: Entity, tickDelta: number) {

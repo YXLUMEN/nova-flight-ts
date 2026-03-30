@@ -11,7 +11,7 @@ export class FastBulletEntity extends BulletEntity {
     public override tick() {
         super.tick();
 
-        if (!this.getWorld().isClient) return;
+        if (!this.isClient()) return;
         this.getWorld().addParticle(
             this.prevX, this.prevY,
             0, 0,

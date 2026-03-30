@@ -1,4 +1,4 @@
-import {type ComponentType} from "./ComponentType.ts";
+import {type DataComponentType} from "./DataComponentType.ts";
 import {Compare} from "../utils/collection/Compare.ts";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {Identifier} from "../registry/Identifier.ts";
@@ -8,34 +8,34 @@ import type {ComponentMap} from "./ComponentMap.ts";
 export class SimpleComponentMap implements ComponentMap {
     public static readonly EMPTY = new SimpleComponentMap(null);
 
-    public readonly baseComponents: Map<ComponentType<any>, any>;
+    public readonly baseComponents: Map<DataComponentType<any>, any>;
 
     public constructor(components: ComponentMap | null = null) {
         if (components) {
             this.baseComponents = new Map(components.getComponents());
             return;
         }
-        this.baseComponents = new Map<ComponentType<any>, any>();
+        this.baseComponents = new Map<DataComponentType<any>, any>();
     }
 
-    public get<T>(type: ComponentType<T>): T | null {
+    public get<T>(type: DataComponentType<T>): T | null {
         return this.baseComponents.get(type) ?? null;
     }
 
-    public set<T>(type: ComponentType<T>, value: T | null): void {
+    public set<T>(type: DataComponentType<T>, value: T | null): void {
         this.baseComponents.set(type, value);
     }
 
-    public has<T>(type: ComponentType<T>): boolean {
+    public has<T>(type: DataComponentType<T>): boolean {
         return this.baseComponents.has(type);
     }
 
-    public getOrDefault<T>(type: ComponentType<T>, fallback: T): T {
+    public getOrDefault<T>(type: DataComponentType<T>, fallback: T): T {
         const component = this.baseComponents.get(type);
         return component !== undefined ? component : fallback;
     }
 
-    public contains(type: ComponentType<any>): boolean {
+    public contains(type: DataComponentType<any>): boolean {
         return this.get(type) != null;
     }
 
@@ -53,7 +53,7 @@ export class SimpleComponentMap implements ComponentMap {
             Compare.mapsEqual(this.baseComponents, o.baseComponents);
     }
 
-    public getComponents(): Map<ComponentType<any>, any> {
+    public getComponents(): Map<DataComponentType<any>, any> {
         return this.baseComponents;
     }
 

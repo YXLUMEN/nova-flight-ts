@@ -1,4 +1,4 @@
-import {Box} from "../utils/math/Box.ts";
+import {AABB} from "../utils/math/AABB.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 
 export class EntityDimensions {
@@ -19,8 +19,8 @@ export class EntityDimensions {
         return new EntityDimensions(width, height);
     }
 
-    public getBoxAt(x: number, y: number): Box {
-        return new Box(x - this.halfWidth, y - this.halfHeight, x + this.halfWidth, y + this.halfHeight);
+    public getBoxAt(x: number, y: number): AABB {
+        return new AABB(x - this.halfWidth, y - this.halfHeight, x + this.halfWidth, y + this.halfHeight);
     }
 
     public getBoxAtByVec(pos: IVec) {

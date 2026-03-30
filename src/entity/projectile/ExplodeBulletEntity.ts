@@ -51,14 +51,13 @@ export class ExplodeBulletEntity extends ProjectileEntity {
     }
 
     protected override onEntityHit(hitResult: EntityHitResult): void {
-        this.discard();
-
         const world = this.getWorld();
-
         if (world.isClient) {
             world.playSound(null, SoundEvents.MISSILE_EXPLOSION, 0.3);
             return;
         }
+
+        this.discard();
         const attacker = this.getOwner();
         hitResult.entity.takeDamage(this.getWorld().getDamageSources().projectile(this, attacker), this.getHitDamage());
         world.createExplosion(this, null, this.getX(), this.getY(), this.power, this.behaviour, this.visual);

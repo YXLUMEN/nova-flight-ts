@@ -13,6 +13,8 @@ export class ArtilleryEntity extends FastBulletEntity {
     private readonly hit = new WeakSet<Entity>();
 
     protected override onEntityHit(hitResult: EntityHitResult): void {
+        if (this.isClient()) return;
+
         const entity = hitResult.entity;
         if (this.hit.has(entity)) return;
         this.hit.add(entity);
@@ -31,13 +33,11 @@ export class ArtilleryEntity extends FastBulletEntity {
         }
 
         entity.takeDamage(sources.kinetic(this, owner), hitDamage);
-        if (!world.isClient) {
-            (world as ServerWorld).spawnParticle(
-                this.getX(), this.getY(), 0, 0,
-                6, 100, 0.5, 4,
-                '#ffd8b6'
-            );
-        }
+        (world as ServerWorld).spawnParticle(
+            this.getX(), this.getY(), 0, 0,
+            6, 100, 0.5, 4,
+            '#ffd8b6'
+        );
     }
 
     protected override onBlockHit(hitResult: BlockHitResult) {

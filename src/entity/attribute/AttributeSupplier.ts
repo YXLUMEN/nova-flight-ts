@@ -1,4 +1,4 @@
-import {EntityAttributeInstance} from "./EntityAttributeInstance.ts";
+import {AttributeInstance} from "./AttributeInstance.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {EntityAttribute} from "./EntityAttribute.ts";
 import type {Identifier} from "../../registry/Identifier.ts";
@@ -7,9 +7,9 @@ import type {EntityType} from "../EntityType.ts";
 import type {LivingEntity} from "../LivingEntity.ts";
 import {DefaultAttributeRegistry} from "./DefaultAttributeRegistry.ts";
 
-export class DefaultAttributeContainer {
+export class AttributeSupplier {
     public static Builder = class Builder {
-        private readonly instances = new Map<RegistryEntry<EntityAttribute>, EntityAttributeInstance>();
+        private readonly instances = new Map<RegistryEntry<EntityAttribute>, AttributeInstance>();
         private unmodifiable: boolean = false;
 
         public add(attribute: RegistryEntry<EntityAttribute>): Builder {
@@ -23,18 +23,18 @@ export class DefaultAttributeContainer {
             return this;
         }
 
-        public build(type: EntityType<LivingEntity>): DefaultAttributeContainer {
+        public build(type: EntityType<LivingEntity>): AttributeSupplier {
             this.unmodifiable = true;
             const attr = DefaultAttributeRegistry.get(type);
             if (attr) return attr;
 
-            const newAttr = new DefaultAttributeContainer(new Map(this.instances));
+            const newAttr = new AttributeSupplier(new Map(this.instances));
             DefaultAttributeRegistry.set(type, newAttr);
             return newAttr;
         }
 
-        private checkedAdd(attribute: RegistryEntry<EntityAttribute>): EntityAttributeInstance {
-            const instance = new EntityAttributeInstance(attribute, () => {
+        private checkedAdd(attribute: RegistryEntry<EntityAttribute>): AttributeInstance {
+            const instance = new AttributeInstance(attribute, () => {
                 if (this.unmodifiable) {
                     throw new Error(`Tried to change value for default attribute instance: ${attribute.toString()}`);
                 }
@@ -43,14 +43,15 @@ export class DefaultAttributeContainer {
             return instance;
         }
     }
-    private readonly instances = new Map<RegistryEntry<EntityAttribute>, EntityAttributeInstance>();
 
-    public constructor(instances: Map<RegistryEntry<EntityAttribute>, EntityAttributeInstance>) {
+    private readonly instances = new Map<RegistryEntry<EntityAttribute>, AttributeInstance>();
+
+    public constructor(instances: Map<RegistryEntry<EntityAttribute>, AttributeInstance>) {
         this.instances = instances;
     }
 
-    public static builder(): InstanceType<typeof DefaultAttributeContainer.Builder> {
-        return new DefaultAttributeContainer.Builder();
+    public static builder(): InstanceType<typeof AttributeSupplier.Builder> {
+        return new AttributeSupplier.Builder();
     }
 
     public getValue(attribute: RegistryEntry<EntityAttribute>): number {
@@ -70,12 +71,12 @@ export class DefaultAttributeContainer {
         return modifier.value;
     }
 
-    public createOverride(updateCallback: Consumer<EntityAttributeInstance>, attribute: RegistryEntry<EntityAttribute>) {
+    public createOverride(updateCallback: Consumer<AttributeInstance>, attribute: RegistryEntry<EntityAttribute>) {
         const instance = this.instances.get(attribute);
         if (!instance) {
             return null;
         } else {
-            const newInstance = new EntityAttributeInstance(attribute, updateCallback);
+            const newInstance = new AttributeInstance(attribute, updateCallback);
             newInstance.setFrom(instance);
             return newInstance;
         }
@@ -90,7 +91,7 @@ export class DefaultAttributeContainer {
         return instance !== undefined && instance.getModifier(id) !== undefined;
     }
 
-    private require(attribute: RegistryEntry<EntityAttribute>): EntityAttributeInstance {
+    private require(attribute: RegistryEntry<EntityAttribute>): AttributeInstance {
         const instance = this.instances.get(attribute);
         if (!instance) {
             throw new ReferenceError(`Can't find attribute: ${attribute.toString()}`);

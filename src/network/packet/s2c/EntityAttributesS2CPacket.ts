@@ -1,16 +1,16 @@
-import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
-import type {EntityAttributeInstance} from "../../../entity/attribute/EntityAttributeInstance.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {AttributeInstance} from "../../../entity/attribute/AttributeInstance.ts";
 import type {RegistryEntry} from "../../../registry/tag/RegistryEntry.ts";
 import {EntityAttribute} from "../../../entity/attribute/EntityAttribute.ts";
-import type {EntityAttributeModifier} from "../../../entity/attribute/EntityAttributeModifier.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
 import {Registries} from "../../../registry/Registries.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {createClean} from "../../../utils/uit.ts";
+import type {AttributeModifier} from "../../../component/type/AttributeModifier.ts";
 
 class Entry {
-    public static readonly MODIFIER_CODEC: PacketCodec<EntityAttributeModifier> = PacketCodecs.of(
+    public static readonly MODIFIER_CODEC: PacketCodec<AttributeModifier> = PacketCodecs.of(
         (writer, value) => {
             Identifier.PACKET_CODEC.encode(writer, value.id);
             writer.writeDouble(value.value);
@@ -19,7 +19,7 @@ class Entry {
             return createClean({
                 id: Identifier.PACKET_CODEC.decode(reader),
                 value: reader.readDouble()
-            }) satisfies EntityAttributeModifier;
+            }) satisfies AttributeModifier;
         }
     );
 
@@ -39,9 +39,9 @@ class Entry {
 
     public readonly attribute: RegistryEntry<EntityAttribute>;
     public readonly base: number;
-    public readonly modifiers: Set<EntityAttributeModifier>;
+    public readonly modifiers: Set<AttributeModifier>;
 
-    public constructor(attribute: RegistryEntry<EntityAttribute>, base: number, modifiers: Set<EntityAttributeModifier>) {
+    public constructor(attribute: RegistryEntry<EntityAttribute>, base: number, modifiers: Set<AttributeModifier>) {
         this.attribute = attribute;
         this.base = base;
         this.modifiers = modifiers;
@@ -70,13 +70,13 @@ export class EntityAttributesS2CPacket implements Payload {
         return new EntityAttributesS2CPacket(entityId, entries);
     }
 
-    public static create(entityId: number, attributes: Iterable<EntityAttributeInstance>): EntityAttributesS2CPacket {
+    public static create(entityId: number, attributes: Iterable<AttributeInstance>): EntityAttributesS2CPacket {
         const entries: Entry[] = [];
         for (const entry of attributes) {
             entries.push(new Entry(
                 entry.getAttribute(),
                 entry.getBaseValue(),
-                entry.getModifiers() as Set<EntityAttributeModifier>
+                entry.getModifiers() as Set<AttributeModifier>
             ));
         }
 

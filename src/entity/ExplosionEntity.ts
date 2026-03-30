@@ -49,6 +49,6 @@ export class ExplosionEntity extends Entity {
     public onTrackedDataSet(): void {
     }
 
-    protected initDataTracker(): void {
+    protected defineSyncedData(): void {
     }
 }

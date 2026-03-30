@@ -1,4 +1,4 @@
-import type {Box} from "../../utils/math/Box.ts";
+import type {AABB} from "../../utils/math/AABB.ts";
 import type {BlockPos} from "./BlockPos.ts";
 import type {NbtSerializable} from "../../nbt/NbtSerializable.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
@@ -70,7 +70,7 @@ export class BlockMap implements NbtSerializable {
         return this.get(pos.getX(), pos.getY()) !== 0;
     }
 
-    public intersectsBox(box: Box): boolean {
+    public intersectsBox(box: AABB): boolean {
         const startTileX = box.minX >> BlockMap.POWER;
         const startTileY = box.minY >> BlockMap.POWER;
         const endTileX = (box.maxX - 1E-5) >> BlockMap.POWER;

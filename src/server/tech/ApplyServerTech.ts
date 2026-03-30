@@ -229,7 +229,7 @@ export class ApplyServerTech {
                 break;
             }
             case Techs.SHIP_OPT: {
-                player.addStatusEffect(new StatusEffectInstance(StatusEffects.HEALTH_BOOST, -1, 3), null);
+                player.addEffect(new StatusEffectInstance(StatusEffects.HEALTH_BOOST, -1, 3), null);
 
                 if (player.getTags().has('Repaired')) return;
                 player.addTag('Repaired');
@@ -341,14 +341,14 @@ export class ApplyServerTech {
                 break;
             }
             case Techs.CORONA_DISCHARGE: {
-                player.getInventory().forEach(stack => {
+                for (const stack of player.getInventory()) {
                     const type = stack.get(DataComponents.WEAPON_TYPE);
-                    if (type === null || !BitFlag.has(type, WeaponType.ARC)) return;
+                    if (type === null || !BitFlag.has(type, WeaponType.ARC)) continue;
 
                     const base = stack.get(DataComponents.ATTACK_RANGE);
-                    if (!base) return;
+                    if (!base) continue;
                     stack.set(DataComponents.ATTACK_RANGE, Math.ceil(base * 1.2));
-                })
+                }
                 break;
             }
         }

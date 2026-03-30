@@ -119,6 +119,10 @@ export class MobAI {
         return this.behavior;
     }
 
+    public isSimple() {
+        return this.behavior === AiBehavior.Simple;
+    }
+
     private moveToward(mob: MobEntity, speed: number): void {
         if (speed <= 0) return;
         const yaw = mob.getYaw();

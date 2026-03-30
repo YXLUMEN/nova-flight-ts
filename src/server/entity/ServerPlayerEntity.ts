@@ -1,13 +1,8 @@
 import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import type {ServerWorld} from "../ServerWorld.ts";
 import {ServerTechTree} from "../tech/ServerTechTree.ts";
-import type {World} from "../../world/World.ts";
-import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
-import type {ItemStack} from "../../item/ItemStack.ts";
-import {clamp} from "../../utils/math/math.ts";
-import type {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
+import {type ItemStack} from "../../item/ItemStack.ts";
 import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
-import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
 import type {GameProfile} from "./GameProfile.ts";
 import {type DamageSource} from "../../entity/damage/DamageSource.ts";
 import type {ServerStableHandler} from "../network/handler/ServerStableHandler.ts";
@@ -20,6 +15,9 @@ import {Techs} from "../../tech/Techs.ts";
 import {EdgeGlowEffect} from "../../effect/EdgeGlowEffect.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 import {TranslatableTextS2CPacket} from "../../network/packet/s2c/TranslatableTextS2CPacket.ts";
+import {Weapon} from "../../item/weapon/Weapon.ts";
+import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
+import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
 
 export class ServerPlayerEntity extends PlayerEntity {
     public readonly playerProfile: GameProfile;
@@ -43,6 +41,10 @@ export class ServerPlayerEntity extends PlayerEntity {
 
     public override tick() {
         super.tick();
+        if (this.invulnerableTime > 0) {
+            this.invulnerableTime--;
+        }
+
         if (this.wasFiring) this.handleFire();
         this.inputKeys.clear();
 
@@ -61,24 +63,32 @@ export class ServerPlayerEntity extends PlayerEntity {
         }
     }
 
-    protected override tickInventory(world: World) {
+    public override aiStep() {
+        super.aiStep();
+        this.fireSpecials();
+    }
+
+    private fireSpecials() {
         const isDev = this.isDevMode();
-        const currentItem = this.getCurrentItem();
+        const world = this.getWorld();
+        const inventory = this.getInventory();
 
-        for (const [item, stack] of this.items) {
-            if (item instanceof SpecialWeapon) {
-                const bind = item.bindKey();
-                const key = bind === null ? this.weaponKeys.get(item)! : bind;
+        for (const [item, assign] of this.weaponKeys) {
+            const stack = inventory.searchItem(item);
+            if (stack.isEmpty()) continue;
 
-                if (isDev && item.getCooldown(stack) > 0.5) {
-                    item.setCooldown(stack, 0.5);
-                    this.pendingSyncStack.add(stack);
-                }
-                if (item.canFire(stack) && this.inputKeys.delete(key)) {
-                    item.tryFire(stack, world, this);
-                }
+            const bind = item.bindKey();
+            const key = bind === null ? assign : bind;
+
+            if (isDev && item.getCooldown(stack) > 0.5) {
+                item.setCooldown(stack, 0.5);
+                this.pendingSyncStack.add(stack);
             }
-            item.inventoryTick(stack, world, this, 0, currentItem === item);
+
+            if (this.inputKeys.delete(key) && item.canFire(stack)) {
+                item.tryFire(stack, world, this);
+                this.pendingSyncStack.add(stack);
+            }
         }
     }
 
@@ -90,21 +100,18 @@ export class ServerPlayerEntity extends PlayerEntity {
                 (this.getWorld() as ServerWorld).spawnEffect(null,
                     new EdgeGlowEffect('#ff3333', 32, 0.8, 4));
             }
-
             return true;
         }
         return false;
     }
 
-    public syncStack(itemStack: ItemStack): void {
-        this.pendingSyncStack.add(itemStack);
-    }
-
     public setFiring(active: boolean) {
         this.wasFiring = active;
 
-        const current = this.getCurrentItemStack();
-        const item = current.getItem() as BaseWeapon;
+        const current = this.getCurrentItem();
+        const item = current.getItem();
+        if (!(item instanceof Weapon)) return;
+
         if (active) {
             item.onStartFire(current, this.getWorld(), this);
         } else {
@@ -113,18 +120,25 @@ export class ServerPlayerEntity extends PlayerEntity {
     }
 
     public handleFire() {
-        const item = this.baseWeapons[this.currentBaseIndex];
-        const stack = this.items.get(item)!;
+        const stack = this.getCurrentItem();
+        const item = stack.getItem();
 
-        if (item.canFire(stack)) {
+        if (item instanceof BaseWeapon && item.canFire(stack)) {
             item.tryFire(stack, this.getWorld(), this);
         }
     }
 
+    public syncStack(itemStack: ItemStack): void {
+        this.pendingSyncStack.add(itemStack);
+    }
+
     public setCurrentItem(slot: number) {
-        const current = this.getCurrentItemStack();
-        this.getCurrentItem().onEndFire(current, this.getWorld(), this);
-        this.currentBaseIndex = clamp(slot, 0, this.baseWeapons.length - 1);
+        const stack = this.getCurrentItem();
+        const item = stack.getItem();
+        if (item instanceof Weapon) {
+            item.onEndFire(stack, this.getWorld(), this);
+        }
+        this.getInventory().setSelectedSlot(slot);
     }
 
     public override isInvulnerableTo(damageSource: DamageSource): boolean {
@@ -156,19 +170,19 @@ export class ServerPlayerEntity extends PlayerEntity {
         this.networkHandler.send(new PlayerSetScoreS2CPacket(score));
     }
 
-    protected override onStatusEffectApplied(effect: StatusEffectInstance, source: Entity | null) {
-        super.onStatusEffectApplied(effect, source);
+    protected override onEffectAdded(effect: StatusEffectInstance, source: Entity | null) {
+        super.onEffectAdded(effect, source);
         this.networkHandler.send(EntityStatusEffectS2CPacket.create(this.getId(), effect));
     }
 
-    protected override onStatusEffectUpgraded(effect: StatusEffectInstance, reapplyEffect: boolean, source: Entity | null) {
-        super.onStatusEffectUpgraded(effect, reapplyEffect, source);
+    protected override onEffectUpdated(effect: StatusEffectInstance, reapplyEffect: boolean, source: Entity | null) {
+        super.onEffectUpdated(effect, reapplyEffect, source);
         this.networkHandler.send(EntityStatusEffectS2CPacket.create(this.getId(), effect));
     }
 
-    protected override onStatusEffectRemoved(effect: StatusEffectInstance) {
-        super.onStatusEffectRemoved(effect);
-        this.networkHandler.send(new RemoveEntityStatusEffectS2CPacket(this.getId(), effect.getEffectType()));
+    protected override onEffectRemoved(effect: StatusEffectInstance) {
+        super.onEffectRemoved(effect);
+        this.networkHandler.send(new RemoveEntityStatusEffectS2CPacket(this.getId(), effect.getEffect()));
     }
 
     public copyFrom(oldPlayer: ServerPlayerEntity, alive: boolean): void {
@@ -179,11 +193,11 @@ export class ServerPlayerEntity extends PlayerEntity {
         if (alive) {
             this.setHealth(oldPlayer.getHealth());
 
-            for (const [item, stack] of oldPlayer.getInventory()) {
-                this.addItem(item, stack);
+            for (const stack of oldPlayer.getInventory()) {
+                this.addItem(stack.getItem(), stack);
             }
             for (const effect of oldPlayer.getStatusEffects()) {
-                this.addStatusEffect(StatusEffectInstance.fromOther(effect), null);
+                this.addEffect(StatusEffectInstance.fromOther(effect), null);
             }
 
             this.setScore(oldPlayer.getScore());

@@ -1,4 +1,4 @@
-import type {Inventory} from "../../inventory/Inventory.ts";
+import type {Container} from "../../inventory/Container.ts";
 import {type PlayerEntity} from "./PlayerEntity.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
 import {DefaultedList} from "../../utils/collection/DefaultedList.ts";
@@ -6,36 +6,35 @@ import {DataComponents} from "../../component/DataComponents.ts";
 import type {Item} from "../../item/Item.ts";
 import {Inventories} from "../../inventory/Inventories.ts";
 
-export class PlayerInventory implements Inventory {
+// @ts-ignore 未使用
+export class PlayerInventory implements Container {
     public readonly main = DefaultedList.ofSizeAndValue(36, ItemStack.EMPTY);
     public readonly refit = DefaultedList.ofSizeAndValue(6, ItemStack.EMPTY);
+
     public selectedSlot: number = 0;
     public readonly player: PlayerEntity;
+
     private readonly combinedInventory: ReadonlyArray<DefaultedList<ItemStack>> = [this.main, this.refit];
     private changeCount: number = 0;
+
+    public static getHotBarSize() {
+        return 5;
+    }
+
+    public static isValidHotbarIndex(slot: number): boolean {
+        return slot >= 0 && slot < 5;
+    }
 
     public constructor(player: PlayerEntity) {
         this.player = player;
     }
 
-    public static getHotBarSize() {
-        return 6;
+    protected canStackAddMore(existingStack: ItemStack, stack: ItemStack): boolean {
+        return !existingStack.isEmpty() &&
+            ItemStack.areItemsAndComponentsEqual(existingStack, stack) &&
+            existingStack.isStackable() &&
+            existingStack.getCount() < this.getMaxCount(existingStack);
     }
-
-    public static isValidHotbarIndex(slot: number): boolean {
-        return slot >= 0 && slot < 9;
-    }
-
-    public getCurrentStack(): ItemStack {
-        return PlayerInventory.isValidHotbarIndex(this.selectedSlot) ? this.main.get(this.selectedSlot) : ItemStack.EMPTY;
-    }
-
-    // private canStackAddMore(existingStack: ItemStack, stack: ItemStack): boolean {
-    //     return !existingStack.isEmpty() &&
-    //         ItemStack.areItemsAndComponentsEqual(existingStack, stack) &&
-    //         existingStack.isStackable() &&
-    //         existingStack.getCount() < this.getMaxCount(existingStack);
-    // }
 
     public getEmptySlot(): number {
         for (let i = 0; i < this.main.length; i++) {
@@ -57,7 +56,7 @@ export class PlayerInventory implements Inventory {
         return -1;
     }
 
-    public indexOf(stack: ItemStack) {
+    public indexOf(stack: ItemStack): number {
         for (let i = 0; i < this.main.length; i++) {
             const itemStack = this.main.get(i);
             if (!itemStack.isEmpty()
@@ -69,6 +68,56 @@ export class PlayerInventory implements Inventory {
         }
 
         return -1;
+    }
+
+    public getItem(slot: number): ItemStack {
+        let list: DefaultedList<ItemStack> | null = null;
+
+        for (const defaultList of this.combinedInventory) {
+            if (slot < defaultList.length) {
+                list = defaultList;
+                break;
+            }
+            slot -= defaultList.length;
+        }
+
+        return list === null ? ItemStack.EMPTY : list.get(slot);
+    }
+
+    public getCurrentStack(): ItemStack {
+        return PlayerInventory.isValidHotbarIndex(this.selectedSlot) ? this.main.get(this.selectedSlot) : ItemStack.EMPTY;
+    }
+
+    public removeItem(slot: number, amount: number = 1): ItemStack {
+        let list: DefaultedList<ItemStack> | null = null;
+
+        for (const defaultList of this.combinedInventory) {
+            if (slot < defaultList.length) {
+                list = defaultList;
+                break;
+            }
+
+            slot -= defaultList.length;
+        }
+
+        return list !== null && !list.get(slot).isEmpty() ? Inventories.splitStack(list, slot, amount) : ItemStack.EMPTY;
+    }
+
+    public setItem(slot: number, stack: ItemStack): void {
+        let defaultedList: DefaultedList<ItemStack> | null = null;
+
+        for (const defaultedList2 of this.combinedInventory) {
+            if (slot < defaultedList2.length) {
+                defaultedList = defaultedList2;
+                break;
+            }
+
+            slot -= defaultedList2.length;
+        }
+
+        if (defaultedList != null) {
+            defaultedList.set(slot, stack);
+        }
     }
 
     public updateItems(): void {
@@ -84,11 +133,22 @@ export class PlayerInventory implements Inventory {
         return false;
     }
 
-    public count(item: Item): number {
+    public contains(targetStack: ItemStack): boolean {
+        for (const list of this.combinedInventory) {
+            for (const stack of list) {
+                if (stack.isEmpty() || !ItemStack.areItemsAndComponentsEqual(stack, targetStack)) continue;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public countItem(item: Item): number {
         let i = 0;
 
-        for (let j = 0; j < this.length(); j++) {
-            const itemStack = this.getStack(j);
+        for (let j = 0; j < this.size(); j++) {
+            const itemStack = this.getItem(j);
             if (itemStack.getItem() === item) {
                 i += itemStack.getCount();
             }
@@ -97,26 +157,12 @@ export class PlayerInventory implements Inventory {
         return i;
     }
 
-    public getMaxCountPerStack(): number {
+    public getMaxStackSize(): number {
         return 64;
     }
 
     public getMaxCount(stack: ItemStack): number {
-        return Math.min(this.getMaxCountPerStack(), stack.getMaxCount());
-    }
-
-    public getStack(slot: number): ItemStack {
-        let list: DefaultedList<ItemStack> | null = null;
-
-        for (const defaultList of this.combinedInventory) {
-            if (slot < defaultList.length) {
-                list = defaultList;
-                break;
-            }
-            slot -= defaultList.length;
-        }
-
-        return list === null ? ItemStack.EMPTY : list.get(slot);
+        return Math.min(this.getMaxStackSize(), stack.getMaxCount());
     }
 
     public isEmpty(): boolean {
@@ -135,7 +181,7 @@ export class PlayerInventory implements Inventory {
         return true;
     }
 
-    public markDirty(): void {
+    public setChanged(): void {
         this.changeCount++;
     }
 
@@ -143,39 +189,7 @@ export class PlayerInventory implements Inventory {
         return this.changeCount;
     }
 
-    public removeStack(slot: number, amount: number = 1): ItemStack {
-        let list: DefaultedList<ItemStack> | null = null;
-
-        for (const defaultList of this.combinedInventory) {
-            if (slot < defaultList.length) {
-                list = defaultList;
-                break;
-            }
-
-            slot -= defaultList.length;
-        }
-
-        return list !== null && !list.get(slot).isEmpty() ? Inventories.splitStack(list, slot, amount) : ItemStack.EMPTY;
-    }
-
-    public setStack(slot: number, stack: ItemStack): void {
-        let defaultedList: DefaultedList<ItemStack> | null = null;
-
-        for (const defaultedList2 of this.combinedInventory) {
-            if (slot < defaultedList2.length) {
-                defaultedList = defaultedList2;
-                break;
-            }
-
-            slot -= defaultedList2.length;
-        }
-
-        if (defaultedList != null) {
-            defaultedList.set(slot, stack);
-        }
-    }
-
-    public length(): number {
+    public size(): number {
         return this.main.length + this.refit.length;
     }
 }

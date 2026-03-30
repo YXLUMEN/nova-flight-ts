@@ -56,6 +56,6 @@ export class SpawnMarkerEntity extends Entity {
     public override onTrackedDataSet(_data: TrackedData<any>): void {
     }
 
-    protected override initDataTracker(_builder: InstanceType<typeof DataTracker.Builder>): void {
+    protected override defineSyncedData(_builder: InstanceType<typeof DataTracker.Builder>): void {
     }
 }

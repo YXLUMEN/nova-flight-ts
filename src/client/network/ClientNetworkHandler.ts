@@ -85,7 +85,7 @@ import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPac
 import type {ClientConnection} from "./ClientConnection.ts";
 import type {PacketListener} from "../../server/network/handler/PacketListener.ts";
 import {ConnectionState, type ConnectionStateType} from "../../server/network/ConnectionState.ts";
-import {squareDist} from "../../utils/math/math.ts";
+import {SetPlayerInventoryS2CPacket} from "../../network/packet/s2c/SetPlayerInventoryPacket.ts";
 
 export class ClientNetworkHandler implements PacketListener {
     private readonly handlers = new HashMap<Identifier, Consumer<Payload>>();
@@ -225,6 +225,7 @@ export class ClientNetworkHandler implements PacketListener {
         this.client.player.setId(packet.playerEntityId);
         this.world.addEntity(this.client.player);
         this.client.setPause(false);
+        this.client.window.hud.setPlayer(this.client.player);
         this.send(new PlayerFinishLoginC2SPacket());
 
         clearInterval(this.pingInterval);
@@ -278,11 +279,10 @@ export class ClientNetworkHandler implements PacketListener {
         const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
 
-        entity.syncPositionDelta(packet.x, packet.y);
+        entity.setDeltaMovement(packet.x, packet.y);
         if (!entity.isLogicalSide()) {
             entity.updatePositionAndAngles(packet.x, packet.y, packet.yaw, 3);
         } else if (entity === this.client.player) {
-            if (squareDist(packet.x, packet.y, entity.getX(), entity.getY()) < 128) return;
             entity.setPosition(packet.x, packet.y);
         }
     }
@@ -291,7 +291,7 @@ export class ClientNetworkHandler implements PacketListener {
         const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
 
-        entity.syncPositionDelta(packet.x, packet.y);
+        entity.setDeltaMovement(packet.x, packet.y);
         entity.updatePositionAndAngles(packet.x, packet.y, packet.yaw, 3);
         entity.updatePosition(packet.x, packet.y);
         entity.updateYaw(packet.yaw);
@@ -461,7 +461,16 @@ export class ClientNetworkHandler implements PacketListener {
     }
 
     public onInventory(packet: InventoryS2CPacket): void {
-        this.client.player!.updateSlotStacks(packet.revision, packet.contents);
+        if (!this.client.player) return;
+
+        if (packet.revision === 0 || packet.revision > this.client.player.getRevision()) {
+            this.client.player.updateSlotStacks(packet.revision, packet.contents);
+        }
+    }
+
+    public onSetInventory(packet: SetPlayerInventoryS2CPacket): void {
+        if (!this.client.player) return;
+        this.client.player.getInventory().setItem(packet.slot, packet.contents);
     }
 
     public onEffectCreate(packet: EffectCreateS2CPacket) {
@@ -557,7 +566,7 @@ export class ClientNetworkHandler implements PacketListener {
     public onRemoveEntityStatusEffect(packet: RemoveEntityStatusEffectS2CPacket): void {
         const entity = this.world?.getEntityById(packet.entityId);
         if (entity instanceof LivingEntity) {
-            entity.removeStatusEffectInternal(packet.effectId);
+            entity.removeEffectNoUpdate(packet.effectId);
         }
     }
 
@@ -710,5 +719,6 @@ export class ClientNetworkHandler implements PacketListener {
         this.register(DifficultChangeS2CPacket.ID, this.onDifficultChange);
         this.register(BlockChangeS2CPacket.ID, this.onBlockChange);
         this.register(BatchBlockChangesPacket.ID, this.onBatchChanges);
+        this.register(SetPlayerInventoryS2CPacket.ID, this.onSetInventory);
     }
 }

@@ -41,7 +41,7 @@ export class CIWS extends BaseWeapon {
         stack.remove(DataComponents.FIRING);
     }
 
-    public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean) {
+    public override inventoryTick(stack: ItemStack, world: ServerWorld, holder: Entity, slot: number, selected: boolean) {
         super.inventoryTick(stack, world, holder, slot, selected);
 
         if (!holder.isPlayer() || stack.get(DataComponents.FIRING)) return;

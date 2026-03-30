@@ -26,7 +26,7 @@ export class EntityStatusEffectS2CPacket implements Payload {
     public static create(entityId: number, effect: StatusEffectInstance): EntityStatusEffectS2CPacket {
         return new EntityStatusEffectS2CPacket(
             entityId,
-            effect.getEffectType(),
+            effect.getEffect(),
             effect.getAmplifier(),
             effect.getDuration(),
         );

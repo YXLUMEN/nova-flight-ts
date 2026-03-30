@@ -1,5 +1,5 @@
 import type {EntityLike} from "./EntityLike.ts";
-import type {Box} from "../../utils/math/Box.ts";
+import type {AABB} from "../../utils/math/AABB.ts";
 import type {Consumer, Predicate} from "../../apis/types.ts";
 
 type GridCell<T extends EntityLike> = Set<T>;
@@ -30,7 +30,7 @@ export class GridSpatialIndex<T extends EntityLike> {
         return Math.max(0, Math.min(maxIndex, Math.floor(value / this.cellSize)));
     }
 
-    private getCoveredCells(box: Box): Index[] {
+    private getCoveredCells(box: AABB): Index[] {
         const startCol = this.toGridCoord(box.minX, this.cols - 1);
         const endCol = this.toGridCoord(box.maxX, this.cols - 1);
         const startRow = this.toGridCoord(box.minY, this.rows - 1);
@@ -68,7 +68,7 @@ export class GridSpatialIndex<T extends EntityLike> {
         return true;
     }
 
-    public* search(region: Box) {
+    public* search(region: AABB) {
         const startCol = this.toGridCoord(region.minX, this.cols - 1);
         const endCol = this.toGridCoord(region.maxX, this.cols - 1);
         const startRow = this.toGridCoord(region.minY, this.rows - 1);
@@ -95,13 +95,13 @@ export class GridSpatialIndex<T extends EntityLike> {
         }
     }
 
-    public forEach(region: Box, consumer: Consumer<T>): void {
+    public forEach(region: AABB, consumer: Consumer<T>): void {
         for (const entity of this.search(region)) {
             consumer(entity);
         }
     }
 
-    public findFirst(region: Box, predicate: Predicate<T>): void {
+    public findFirst(region: AABB, predicate: Predicate<T>): void {
         for (const entity of this.search(region)) {
             if (predicate(entity)) return;
         }

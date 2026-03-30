@@ -1,3 +1,5 @@
+import {clamp} from "../math/math.ts";
+
 export class DefaultedList<E> implements ArrayLike<E>, Iterable<E> {
     private readonly delegate: E[];
     private readonly initialElement: E | null;
@@ -35,6 +37,7 @@ export class DefaultedList<E> implements ArrayLike<E>, Iterable<E> {
     }
 
     public set(index: number, value: E): void {
+        index = clamp(index, 0, this.delegate.length - 1);
         this.delegate[index] = value;
     }
 
@@ -46,8 +49,12 @@ export class DefaultedList<E> implements ArrayLike<E>, Iterable<E> {
         this.delegate.splice(index, 1);
     }
 
+    public indexOf(value: E): number {
+        return this.delegate.indexOf(value);
+    }
+
     public clear(): void {
-        if (this.initialElement === null) {
+        if (this.initialElement == null) {
             this.delegate.length = 0;
         } else {
             this.delegate.fill(this.initialElement);
@@ -58,10 +65,8 @@ export class DefaultedList<E> implements ArrayLike<E>, Iterable<E> {
 
     * [Symbol.iterator](): IterableIterator<E> {
         for (let i = 0; i < this.delegate.length; i++) {
-            const value = this.delegate[i];
-            yield value === undefined && this.initialElement !== null
-                ? this.initialElement
-                : value;
+            const value = this.delegate.at(i);
+            yield value === undefined ? this.initialElement! : value;
         }
     }
 }

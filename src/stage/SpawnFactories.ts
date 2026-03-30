@@ -8,7 +8,7 @@ import {EntityTypes} from "../entity/EntityTypes.ts";
 import type {SpawnContext} from "./SpawnContext.ts";
 import type {BiConsumer} from "../apis/types.ts";
 import {ExplosionEntity} from "../entity/ExplosionEntity.ts";
-import {Box} from "../utils/math/Box.ts";
+import {AABB} from "../utils/math/AABB.ts";
 
 // 顶部随机生成
 export function spawnTopRandomCtor<T extends MobEntity>(
@@ -147,7 +147,7 @@ export function spawnAvoidPlayerCtor<T extends MobEntity>(
         let x: number, y: number;
         let tries = 0;
         const maxTries = 100;
-        const candidateAABB = new Box(0, 0);
+        const candidateAABB = new AABB(0, 0);
 
         do {
             const bx = randInt(blockMinX, blockMaxX);

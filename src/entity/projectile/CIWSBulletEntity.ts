@@ -39,6 +39,7 @@ export class CIWSBulletEntity extends BulletEntity {
     protected override onEntityHit(hitResult: EntityHitResult) {
         super.onEntityHit(hitResult);
 
+        if (this.isClient()) return;
         const entity = hitResult.entity;
         if (entity instanceof ProjectileEntity && entity.getOwner() !== this.getOwner()) {
             entity.onIntercept(this.getHitDamage());

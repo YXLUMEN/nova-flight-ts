@@ -2,6 +2,9 @@ import {LangManager} from "./LangManager.ts";
 import {StringReader} from "../brigadier/StringReader.ts";
 
 export class TranslatableText {
+    private ordered: string = '';
+    private lang: string = '';
+
     private readonly key: string;
     private readonly args: string[] | null;
 
@@ -61,5 +64,14 @@ export class TranslatableText {
         if (template === undefined) return this.key;
         if (!this.args) return template;
         return this.format(template);
+    }
+
+    public asString(): string {
+        const lang = LangManager.getCurrentLangName();
+        if (this.lang !== lang) {
+            this.ordered = this.toString();
+            this.lang = lang;
+        }
+        return this.ordered;
     }
 }

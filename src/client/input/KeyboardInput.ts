@@ -126,7 +126,7 @@ export class KeyboardInput implements IInput {
 
             if (client.world && !client.world.isTechTreeHidden()) return;
             client.player?.switchWeapon(e.deltaY > 0 ? 1 : -1);
-        }, 100);
+        }, 20);
         window.addEventListener('wheel', onWheel, {passive: true});
 
         target.addEventListener('mousemove', e => {

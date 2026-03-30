@@ -33,7 +33,7 @@ export class RocketEntity extends ProjectileEntity {
     }
 
     protected override onEntityHit(hitResult: EntityHitResult): void {
-        if (this.getWorld().isClient) return;
+        if (this.isClient()) return;
 
         const damage = this.getHitDamage();
         const sources = this.getWorld().getDamageSources();
@@ -44,8 +44,9 @@ export class RocketEntity extends ProjectileEntity {
     }
 
     protected override onBlockHit(hitResult: BlockHitResult) {
-        if (this.getWorld().isClient) return;
         super.onBlockHit(hitResult);
+
+        if (this.isClient()) return;
         this.explode();
     }
 

@@ -1,6 +1,7 @@
 import type {IUi} from "./IUi.ts";
 import {UIButton} from "./UIButton.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
+import {TipManager} from "../../tips/TipManager.ts";
 
 export class PauseOverlay implements IUi {
     private readonly buttons: UIButton[] = [];
@@ -8,7 +9,7 @@ export class PauseOverlay implements IUi {
 
     private worldW: number = 0;
     private worldH: number = 0;
-    private halfW = 0;
+    private halfW: number = 0;
     private halfH: number = 0;
 
     public setSize(w: number, h: number) {
@@ -72,6 +73,23 @@ export class PauseOverlay implements IUi {
         // 按钮
         for (const btn of this.buttons) {
             btn.render(ctx);
+        }
+
+        const tipText = TipManager.get();
+        if (tipText !== null) {
+            ctx.textAlign = "right";
+            ctx.textBaseline = "bottom";
+
+            let height = this.worldH - 50;
+            const left = this.worldW - 10;
+            ctx.fillStyle = 'rgb(255,233,174)';
+            ctx.font = '20px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
+            ctx.fillText(TipManager.title.asString(), left, height);
+
+            height += 30;
+            ctx.fillStyle = 'rgb(255,255,255)';
+            ctx.font = '16px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
+            ctx.fillText(tipText.asString(), left, height);
         }
 
         ctx.restore();

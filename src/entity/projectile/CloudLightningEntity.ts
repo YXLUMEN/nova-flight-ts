@@ -14,7 +14,9 @@ export class CloudLightningEntity extends ProjectileEntity {
     }
 
     protected onEntityHit(hitResult: EntityHitResult): void {
-        this.discard();
+        super.onEntityHit(hitResult);
+
+        if (this.isClient()) return;
 
         const damage = this.getHitDamage();
         hitResult.entity.takeDamage(

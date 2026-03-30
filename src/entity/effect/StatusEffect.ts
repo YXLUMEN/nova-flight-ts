@@ -1,14 +1,13 @@
 import type {Entity} from "../Entity.ts";
 import type {AttributeContainer} from "../attribute/AttributeContainer.ts";
 import type {Identifier} from "../../registry/Identifier.ts";
-import type {EntityAttributeModifier} from "../attribute/EntityAttributeModifier.ts";
-import {createClean} from "../../utils/uit.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {EntityAttribute} from "../attribute/EntityAttribute.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import type {LivingEntity} from "../LivingEntity.ts";
 import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
 import {Registries} from "../../registry/Registries.ts";
+import {AttributeModifier} from "../../component/type/AttributeModifier.ts";
 
 // 0 BENEFICIAL; 1 HARMFUL; 2 NEUTRAL;
 export type StatusEffectCategory = 0 | 1 | 2;
@@ -25,11 +24,8 @@ export class StatusEffect {
             this.baseValue = baseValue;
         }
 
-        public createAttributeModifier(amplifier: number): EntityAttributeModifier {
-            return createClean({
-                id: this.id,
-                value: this.baseValue * (amplifier + 1)
-            });
+        public createAttributeModifier(amplifier: number): AttributeModifier {
+            return new AttributeModifier(this.id, this.baseValue * (amplifier + 1));
         }
     }
 
@@ -42,22 +38,28 @@ export class StatusEffect {
         this.color = color;
     }
 
-    public applyUpdateEffect(_entity: LivingEntity, _amplifier: number): boolean {
+    public applyEffectTick(_entity: LivingEntity, _amplifier: number): boolean {
         return true;
-    };
-
-    public applyInstantEffect(_source: Entity | null, _attacker: Entity | null, target: LivingEntity, amplifier: number, _proximity: number): void {
-        this.applyUpdateEffect(target, amplifier);
     }
 
-    public canApplyUpdateEffect(_duration: number, _amplifier: number): boolean {
+    public tickClient(_entity: LivingEntity, _amplifier: number) {
+    }
+
+    public applyInstantEffect(_source: Entity | null, _attacker: Entity | null, target: LivingEntity, amplifier: number, _proximity: number): void {
+        this.applyEffectTick(target, amplifier);
+    }
+
+    public shouldApplyThisTick(_duration: number, _amplifier: number): boolean {
         return false;
     };
 
     public onAppliedAt(_entity: LivingEntity, _amplifier: number): void {
     }
 
-    public onEntityRemoval(_entity: LivingEntity, _amplifier: number): void {
+    public onEffectStarted(_entity: LivingEntity, _amplifier: number): void {
+    }
+
+    public onEntityRemoved(_entity: LivingEntity, _amplifier: number): void {
     }
 
     public onEntityDamage(_entity: LivingEntity, _amplifier: number, _source: DamageSource, _amount: number) {
@@ -72,7 +74,7 @@ export class StatusEffect {
         return this;
     }
 
-    public onApplied(attributeContainer: AttributeContainer, amplifier: number): void {
+    public addAttributeModifiers(attributeContainer: AttributeContainer, amplifier: number): void {
         for (const entry of this.attributeModifiers.entries()) {
             const attrInstance = attributeContainer.getCustomInstance(entry[0]);
             if (attrInstance) {
@@ -82,7 +84,7 @@ export class StatusEffect {
         }
     }
 
-    public onRemoved(attributeContainer: AttributeContainer): void {
+    public removeAttributeModifiers(attributeContainer: AttributeContainer): void {
         for (const entry of this.attributeModifiers.entries()) {
             const attrInstance = attributeContainer.getCustomInstance(entry[0]);
             if (attrInstance) attrInstance.removeModifierById(entry[1].id);

@@ -1,5 +1,5 @@
 import {BitBlockMap} from "../map/BitBlockMap.ts";
-import {Box} from "../../utils/math/Box.ts";
+import {AABB} from "../../utils/math/AABB.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
 import {BlockPos} from "../map/BlockPos.ts";
 import {fractionalPart, lerp} from "../../utils/math/math.ts";
@@ -12,13 +12,13 @@ import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {World} from "../World.ts";
 
 export class BlockCollision {
-    public static fastCollision(map: BitBlockMap, bounds: Box, movement: IVec): boolean {
+    public static fastCollision(map: BitBlockMap, bounds: AABB, movement: IVec): boolean {
         if (movement.x === 0 && movement.y === 0) return false;
         const nextBox = bounds.stretch(movement.x, movement.y);
         return map.intersectsBox(nextBox);
     }
 
-    public static separatingCollision(map: BitBlockMap, bounds: Box, movement: MutVec2): MutVec2 {
+    public static separatingCollision(map: BitBlockMap, bounds: AABB, movement: MutVec2): MutVec2 {
         if (movement.x === 0 && movement.y === 0) return movement;
 
         if (movement.x !== 0) {
@@ -37,7 +37,7 @@ export class BlockCollision {
     public static findEjectionVector(
         map: BitBlockMap,
         pos: IVec,
-        box: Box,
+        box: AABB,
         maxBlocks: number = 32
     ): MutVec2 | null {
         const blockSize = BitBlockMap.BLOCK_SIZE;
@@ -82,7 +82,7 @@ export class BlockCollision {
         return bestEject;
     }
 
-    public static pushOutOfBlocks(map: BitBlockMap, bounds: Box, x: number, y: number) {
+    public static pushOutOfBlocks(map: BitBlockMap, bounds: AABB, x: number, y: number) {
         const box = bounds.contractAll(1E-7);
         if (!map.intersectsBox(box)) return;
         const dx = x % 8;

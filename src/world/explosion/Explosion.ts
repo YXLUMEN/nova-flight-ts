@@ -13,7 +13,8 @@ import type {BlockChange} from "../map/BlockChange.ts";
 import {BlockCollision} from "../collision/BlockCollision.ts";
 import {BehaviourEnum, EffectEnum, ExplosionBehavior} from "./ExplosionBehavior.ts";
 import {ExplosionVisual} from "./ExplosionVisual.ts";
-import {Box} from "../../utils/math/Box.ts";
+import {AABB} from "../../utils/math/AABB.ts";
+import {SoundEvents} from "../../sound/SoundEvents.ts";
 
 export class Explosion {
     public static readonly DEFAULT_BEHAVIOUR = new ExplosionBehavior();
@@ -77,7 +78,7 @@ export class Explosion {
         const radiusSq = this.visual.radius * this.visual.radius;
         const source = this.source instanceof ProjectileEntity ? this.source.getOwner() : this.source;
 
-        const box = Box.fromCenter(this.x, this.y, this.visual.radius, this.visual.radius);
+        const box = AABB.fromCenter(this.x, this.y, this.visual.radius, this.visual.radius);
         const entities = this.world.searchOtherEntities(
             source,
             box,
@@ -91,7 +92,7 @@ export class Explosion {
 
             entity.takeDamage(this.damageSource, this.power);
             if (this.behaviour.statusEffect && entity instanceof LivingEntity) {
-                entity.addStatusEffect(this.behaviour.statusEffect, source);
+                entity.addEffect(this.behaviour.statusEffect, source);
             }
 
             if (halfR2 > 0 && halfR2 >= dist) {
@@ -104,7 +105,7 @@ export class Explosion {
         // power * 2 * 8
         // 系数 * 方块大小
         const radius = this.power * 16;
-        const box = new Box(
+        const box = new AABB(
             Math.floor(this.x - radius - 1),
             Math.floor(this.y - radius - 1),
             Math.floor(this.x + radius + 1),
@@ -124,7 +125,7 @@ export class Explosion {
         for (const entity of candidates) {
             const box = entity.getBoundingBox();
             const pos = entity.getPositionRef;
-            const entityHit = box.raycast(start, pos);
+            const entityHit = box.containsVec(start) ? pos : box.raycast(start, pos);
             if (!entityHit) continue;
 
             const blockHit = this.world.raycast(start, pos);
@@ -134,7 +135,7 @@ export class Explosion {
 
             entity.takeDamage(this.damageSource, this.power);
             if (this.behaviour.statusEffect && entity instanceof LivingEntity) {
-                entity.addStatusEffect(this.behaviour.statusEffect, source);
+                entity.addEffect(this.behaviour.statusEffect, source);
             }
 
             if (halfR2 > 0 && halfR2 >= squareDistVec2(start, pos)) {
@@ -254,6 +255,8 @@ export class Explosion {
                     0.8, '#e13600'
                 ));
             });
+
+        if (this.behaviour.playSound) world.playSound(null, SoundEvents.EXPLOSION);
     }
 
     public getX() {

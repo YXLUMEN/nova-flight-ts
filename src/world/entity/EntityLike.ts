@@ -1,12 +1,12 @@
 import type {UUID} from "../../apis/types.ts";
-import type {Box} from "../../utils/math/Box.ts";
+import type {AABB} from "../../utils/math/AABB.ts";
 
 export interface EntityLike {
     getId(): number;
 
     getUUID(): UUID;
 
-    getBoundingBox(): Box;
+    getBoundingBox(): AABB;
 
     shouldSave(): boolean;
 

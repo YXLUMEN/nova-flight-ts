@@ -3,7 +3,7 @@ import {BitBlockMap} from "../map/BitBlockMap.ts";
 import type {World} from "../World.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
-import type {Box} from "../../utils/math/Box.ts";
+import type {AABB} from "../../utils/math/AABB.ts";
 import type {Predicate} from "../../apis/types.ts";
 import {EntityHitResult} from "./EntityHitResult.ts";
 import {squareDistVec2} from "../../utils/math/math.ts";
@@ -131,10 +131,11 @@ export class ProjectRaycastUtil {
         except: Entity,
         min: IVec,
         max: IVec,
-        box: Box,
+        box: AABB,
         predicate: Predicate<Entity>,
         margin: number = 0
     ): EntityHitResult | null {
+        let hit: IVec | null = null;
         let dist = Infinity;
         let candidate: Entity | null = null;
 
@@ -144,7 +145,7 @@ export class ProjectRaycastUtil {
                 return EntityHitResult.create(entity);
             }
 
-            const hit = targetBox.raycast(min, max);
+            hit = targetBox.raycast(min, max);
             if (!hit) continue;
 
             const sqDist = squareDistVec2(min, hit);
@@ -154,6 +155,6 @@ export class ProjectRaycastUtil {
             }
         }
 
-        return candidate === null ? null : EntityHitResult.create(candidate);
+        return candidate === null ? null : new EntityHitResult(hit!, candidate);
     }
 }

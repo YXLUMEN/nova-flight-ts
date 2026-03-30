@@ -20,7 +20,7 @@ export class DataTracker {
             this.entries = new Array(length);
         }
 
-        public add<T>(data: TrackedData<T>, value: T): Builder {
+        public define<T>(data: TrackedData<T>, value: T): Builder {
             const id = data.id;
             if (id > this.entries.length) {
                 throw new RangeError(`Data value id is too big with ${id}; Max is ${this.entries.length}`);

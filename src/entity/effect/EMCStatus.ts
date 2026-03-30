@@ -1,16 +1,14 @@
 import {StatusEffect} from "./StatusEffect.ts";
-import type {Entity} from "../Entity.ts";
 import {PI2} from "../../utils/math/math.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
+import type {LivingEntity} from "../LivingEntity.ts";
 
 export class EMCStatus extends StatusEffect {
     public constructor() {
         super(2, '#0033ff');
     }
 
-    public override applyUpdateEffect(entity: Entity, _amplifier: number): boolean {
-        if (!entity.getWorld().isClient) return true;
-
+    public override tickClient(entity: LivingEntity) {
         const angle = Math.random() * PI2;
         const pos = entity.getPositionRef.clone()
             .add(Math.cos(angle) * 16, Math.sin(angle) * 16);
@@ -28,7 +26,7 @@ export class EMCStatus extends StatusEffect {
         return true;
     }
 
-    public override canApplyUpdateEffect(duration: number, _amplifier: number): boolean {
+    public override shouldApplyThisTick(duration: number): boolean {
         return duration % 8 === 0;
     }
 }

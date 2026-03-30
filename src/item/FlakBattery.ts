@@ -1,6 +1,5 @@
 import {Item} from "./Item.ts";
 import type {ItemStack} from "./ItemStack.ts";
-import type {World} from "../world/World.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
@@ -12,7 +11,7 @@ import {DataComponents} from "../component/DataComponents.ts";
 import {LivingEntity} from "../entity/LivingEntity.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import type {EntityDist} from "../apis/types.ts";
-import {Box} from "../utils/math/Box.ts";
+import {AABB} from "../utils/math/AABB.ts";
 import {EntityPredicates} from "../predicate/EntityPredicates.ts";
 
 export class FlakBattery extends Item {
@@ -20,7 +19,7 @@ export class FlakBattery extends Item {
 
     private static readonly targets = new WeakMap<Entity, Set<ProjectileEntity>>();
 
-    public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean) {
+    public override inventoryTick(stack: ItemStack, world: ServerWorld, holder: Entity, slot: number, selected: boolean) {
         super.inventoryTick(stack, world, holder, slot, selected);
 
         if (world.isClient || (holder.age & 1) !== 0) return;
@@ -83,7 +82,7 @@ export class FlakBattery extends Item {
 
         const validThreats: EntityDist<ProjectileEntity>[] = [];
 
-        const box = Box.fromCenter(selfPos.x, selfPos.y, 256, 256);
+        const box = AABB.fromCenter(selfPos.x, selfPos.y, 256, 256);
         const entities = world.searchOtherEntities(holder, box, EntityPredicates.DEFENSE);
 
         for (const entity of entities) {

@@ -65,8 +65,7 @@ export class PlayerManager {
         newPlayer.copyFrom(player, alive);
 
         const targetPos = player.getPositionRef;
-        newPlayer.lastDamageTime = 60;
-        newPlayer.refreshPositionAndAngles(targetPos.x, targetPos.y, player.getYaw());
+        newPlayer.snapTo(targetPos.x, targetPos.y, player.getYaw());
 
         (newPlayer.getWorld() as ServerWorld).addPlayer(newPlayer);
         this.uuidToPlayer.set(newPlayer.getUUID(), newPlayer);

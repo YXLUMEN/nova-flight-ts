@@ -6,8 +6,7 @@ export class InstantHealthEffect extends InstantStatusEffect {
         super(0, '#ff2424');
     }
 
-    public override applyUpdateEffect(entity: LivingEntity, amplifier: number): boolean {
-        if (entity.getWorld().isClient) return true;
+    public override applyEffectTick(entity: LivingEntity, amplifier: number): boolean {
         entity.heal(Math.max((4 << amplifier), 0));
         return true;
     }

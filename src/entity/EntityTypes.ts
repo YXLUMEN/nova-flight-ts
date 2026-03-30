@@ -24,6 +24,7 @@ import {TargetDrone} from "./TargetDrone.ts";
 import {TNTBossEntity} from "./mob/TNTBossEntity.ts";
 import {BaseBossEntity} from "./mob/BaseBossEntity.ts";
 import {MobBulletEntity} from "./projectile/MobBulletEntity.ts";
+import {MagneticTorpedoEntity} from "./projectile/MagneticTorpedoEntity.ts";
 
 export class EntityTypes {
     public static readonly BASE_ENEMY = EntityType.register("base_enemy",
@@ -136,6 +137,10 @@ export class EntityTypes {
     public static readonly TNT_BOSS_ENTITY = EntityType.register('tnt_boss',
         EntityType.Builder.create(TNTBossEntity)
             .setDimensions(128, 128)
+    );
+    public static readonly MAGNETIC_TORPEDO_ENTITY = EntityType.register('magnetic_torpedo_entity',
+        EntityType.Builder.create(MagneticTorpedoEntity)
+            .setDimensions(12)
     );
 
     public static init() {

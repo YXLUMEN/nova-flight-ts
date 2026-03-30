@@ -38,11 +38,6 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
 
         const pos = this.getPositionRef;
         const velocity = this.getVelocityRef;
-        if (this.isClient()) {
-            this.setPosition(pos.x + velocity.x, pos.y + velocity.y);
-            return;
-        }
-
         const hitResult = ProjectRaycastUtil.getCollision(
             this,
             entity => this.canHit(entity),
@@ -76,10 +71,12 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
     }
 
     protected onEntityHit(_hitResult: EntityHitResult): void {
+        if (this.isClient()) return;
         this.discard();
     }
 
     protected onBlockHit(_hitResult: BlockHitResult): void {
+        if (this.isClient()) return;
         this.discard();
     }
 
@@ -124,7 +121,6 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
     }
 
     protected override onOutOffBound() {
-        super.onOutOffBound();
         this.discard();
     }
 
@@ -185,6 +181,6 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
         return entity.getUUID() === this.ownerUuid;
     }
 
-    protected initDataTracker(_builder: InstanceType<typeof DataTracker.Builder>): void {
+    protected defineSyncedData(_builder: InstanceType<typeof DataTracker.Builder>): void {
     }
 }

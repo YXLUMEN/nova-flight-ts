@@ -44,10 +44,13 @@ export class GiveCommand {
                                     for (const entity of entities) {
                                         if (!(entity instanceof ServerPlayerEntity)) continue;
                                         const stack = entity.getItem(item);
-                                        if (stack) {
-                                            stack.increment(1);
-                                        } else {
+                                        if (stack.isEmpty()) {
                                             entity.addItem(item);
+                                            const s = entity.getItem(item);
+                                            if (!s.isEmpty()) entity.syncStack(s);
+                                        } else {
+                                            stack.increment(1);
+                                            entity.syncStack(stack);
                                         }
                                         entity.sendMessage(`Give item "${itemResult.result}" to ${entity.getProfile().name}`);
                                     }

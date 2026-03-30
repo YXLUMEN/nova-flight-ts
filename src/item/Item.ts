@@ -2,21 +2,22 @@ import type {World} from "../world/World.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
-import type {ItemStack} from "./ItemStack.ts";
+import {ItemStack} from "./ItemStack.ts";
 import type {LivingEntity} from "../entity/LivingEntity.ts";
 import {SimpleComponentMap} from "../component/SimpleComponentMap.ts";
 import {DataComponents} from "../component/DataComponents.ts";
-import type {ComponentType} from "../component/ComponentType.ts";
+import type {DataComponentType} from "../component/DataComponentType.ts";
 import type {ComponentMap} from "../component/ComponentMap.ts";
 import {Registries} from "../registry/Registries.ts";
 import {BitFlag} from "../utils/BitFlag.ts";
 import {createTranslationKey} from "../utils/uit.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
+import type {ServerWorld} from "../server/ServerWorld.ts";
 
-export type ItemSettings = InstanceType<typeof Item.Settings>;
+export type ItemProperties = InstanceType<typeof Item.Properties>;
 
 export class Item {
-    public static readonly Settings = class Settings {
+    public static readonly Properties = class Properties {
         private components: SimpleComponentMap | null = null;
 
         public maxCount(maxCount: number): this {
@@ -46,7 +47,7 @@ export class Item {
             return this.component(DataComponents.WEAPON_TYPE, BitFlag.combine(...type));
         }
 
-        public component<T>(type: ComponentType<T>, value: T): this {
+        public component<T>(type: DataComponentType<T>, value: T): this {
             if (this.components === null) {
                 this.components = this.getComponents();
             }
@@ -74,12 +75,13 @@ export class Item {
             return this.components;
         }
     }
+
     public readonly registryEntry!: RegistryEntry<Item>;
     private readonly components: SimpleComponentMap;
 
     private translation: TranslatableText | null = null;
 
-    public constructor(settings: ItemSettings) {
+    public constructor(settings: ItemProperties) {
         this.components = settings.getValidatedComponents();
     }
 
@@ -95,7 +97,11 @@ export class Item {
         return this.components;
     }
 
-    public inventoryTick(_stack: ItemStack, _world: World, _holder: Entity, _slot: number, _selected: boolean): void {
+    public getDefaultStack() {
+        return new ItemStack(this);
+    }
+
+    public inventoryTick(_stack: ItemStack, _world: ServerWorld, _holder: Entity, _slot: number, _selected: boolean): void {
     }
 
     public leftClick(_world: World, _user: PlayerEntity): boolean {
@@ -106,7 +112,7 @@ export class Item {
         return false;
     }
 
-    public rightClick(_world: World, _user: PlayerEntity): boolean {
+    public onUseTick(_world: World, _user: PlayerEntity): boolean {
         return false;
     }
 

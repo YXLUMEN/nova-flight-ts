@@ -83,9 +83,9 @@ export class EntitySpawnS2CPacket implements Payload {
         const velocityY = reader.readInt16();
         const color = PacketCodecs.COLOR_HEX.decode(reader);
         const edgeColor = PacketCodecs.COLOR_HEX.decode(reader);
-        const ownerId = reader.readVarUint();
+        const data = reader.readVarUint();
 
-        return new EntitySpawnS2CPacket(entityId, uuid, x, y, yaw, entityType, velocityX, velocityY, color, edgeColor, ownerId);
+        return new EntitySpawnS2CPacket(entityId, uuid, x, y, yaw, entityType, velocityX, velocityY, color, edgeColor, data);
     }
 
     protected static write(writer: BinaryWriter, value: EntitySpawnS2CPacket): void {

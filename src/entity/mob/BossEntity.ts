@@ -41,6 +41,10 @@ export abstract class BossEntity extends MobEntity {
         }
     }
 
+    public override isPushAble(): boolean {
+        return false;
+    }
+
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (this.damageCooldown > 0 && !damageSource.isIn(DamageTypeTags.BYPASSES_INVULNERABLE)) return false;
 

@@ -2,29 +2,31 @@ import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {EntityAttribute} from "./EntityAttribute.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import type {Consumer} from "../../apis/types.ts";
-import type {EntityAttributeModifier} from "./EntityAttributeModifier.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {HashMap} from "../../utils/collection/HashMap.ts";
 import {createClean} from "../../utils/uit.ts";
+import type {AttributeModifier} from "../../component/type/AttributeModifier.ts";
 
 
-export class EntityAttributeInstance {
-    private readonly type: RegistryEntry<EntityAttribute>;
-    private readonly updateCallback: Consumer<EntityAttributeInstance>;
+export class AttributeInstance {
+    private readonly attribute: RegistryEntry<EntityAttribute>;
+
     private baseValue: number;
     private value: number = 0;
+
     private dirty: boolean = true;
+    private readonly onDirty: Consumer<AttributeInstance>;
 
-    private readonly idToModifiers = new HashMap<Identifier, EntityAttributeModifier>();
+    private readonly modifierById = new HashMap<Identifier, AttributeModifier>();
 
-    public constructor(type: RegistryEntry<EntityAttribute>, updateCallback: Consumer<EntityAttributeInstance>) {
-        this.type = type;
-        this.updateCallback = updateCallback;
+    public constructor(type: RegistryEntry<EntityAttribute>, onDirty: Consumer<AttributeInstance>) {
+        this.attribute = type;
+        this.onDirty = onDirty;
         this.baseValue = type.getValue().getDefaultValue();
     }
 
     public getAttribute(): RegistryEntry<EntityAttribute> {
-        return this.type;
+        return this.attribute;
     }
 
     public getBaseValue(): number {
@@ -34,55 +36,55 @@ export class EntityAttributeInstance {
     public setBaseValue(baseValue: number): void {
         if (this.baseValue !== baseValue) {
             this.baseValue = baseValue;
-            this.onUpdate();
+            this.setDirty();
         }
     }
 
-    public getModifiers(): ReadonlySet<EntityAttributeModifier> {
-        return new Set<EntityAttributeModifier>(this.idToModifiers.values());
+    public getModifiers(): ReadonlySet<AttributeModifier> {
+        return new Set<AttributeModifier>(this.modifierById.values());
     }
 
     public getModifier(id: Identifier) {
-        return this.idToModifiers.get(id)!;
+        return this.modifierById.get(id);
     }
 
     public hasModifier(id: Identifier): boolean {
-        return this.idToModifiers.has(id);
+        return this.modifierById.has(id);
     }
 
-    public addModifier(modifier: EntityAttributeModifier): void {
-        const oldModifier = this.idToModifiers.get(modifier.id);
-        if (oldModifier !== undefined) {
+    public addModifier(modifier: AttributeModifier): void {
+        const previous = this.modifierById.get(modifier.id);
+        if (previous !== undefined) {
             throw new Error('Modifier is already applied on this attribute');
         }
-        this.idToModifiers.set(modifier.id, modifier);
-        this.onUpdate();
+        this.modifierById.set(modifier.id, modifier);
+        this.setDirty();
 
     }
 
-    public updateModifier(modifier: EntityAttributeModifier): void {
-        const oldModifier = this.idToModifiers.get(modifier.id);
-        this.idToModifiers.set(modifier.id, modifier);
-        if (oldModifier !== modifier) {
-            this.onUpdate();
+    public updateModifier(modifier: AttributeModifier): void {
+        const previous = this.modifierById.get(modifier.id);
+        this.modifierById.set(modifier.id, modifier);
+        if (previous !== modifier) {
+            this.setDirty();
         }
     }
 
-    public removeModifier(modifier: EntityAttributeModifier): void {
+    public removeModifier(modifier: AttributeModifier): void {
         this.removeModifierById(modifier.id);
     }
 
     public removeModifierById(id: Identifier): boolean {
-        const result = this.idToModifiers.delete(id);
+        const result = this.modifierById.delete(id);
         if (!result) return false;
-        this.onUpdate();
+        this.setDirty();
         return true;
     }
 
     public clearModifiers(): void {
-        if (this.idToModifiers.size === 0) return;
-        this.idToModifiers.clear();
-        this.onUpdate();
+        if (this.modifierById.size === 0) return;
+        this.modifierById.clear();
+        this.setDirty();
     }
 
     public getValue(): number {
@@ -93,9 +95,9 @@ export class EntityAttributeInstance {
         return this.value;
     }
 
-    private onUpdate(): void {
+    private setDirty(): void {
         this.dirty = true;
-        this.updateCallback(this);
+        this.onDirty(this);
     }
 
     public isDirty(): boolean {
@@ -104,31 +106,31 @@ export class EntityAttributeInstance {
 
     private computeValue(): number {
         let value = this.baseValue;
-        for (const modifier of this.idToModifiers.values()) {
+        for (const modifier of this.modifierById.values()) {
             value += modifier.value;
         }
-        return this.type.getValue().clamp(value);
+        return this.attribute.getValue().clamp(value);
     }
 
-    public setFrom(other: EntityAttributeInstance): void {
+    public setFrom(other: AttributeInstance): void {
         this.baseValue = other.baseValue;
-        this.idToModifiers.clear();
-        other.idToModifiers.entries().forEach(([id, modifier]) => {
-            this.idToModifiers.set(id, modifier);
+        this.modifierById.clear();
+        other.modifierById.entries().forEach(([id, modifier]) => {
+            this.modifierById.set(id, modifier);
         });
-        this.onUpdate();
+        this.setDirty();
 
     }
 
     public toNbt(): NbtCompound {
         const nbt = new NbtCompound();
 
-        nbt.putString('id', this.type.getRegistryKey().getValue().toString());
+        nbt.putString('id', this.attribute.getRegistryKey().getValue().toString());
         nbt.putDouble('base', this.baseValue);
 
-        if (this.idToModifiers.size > 0) {
+        if (this.modifierById.size > 0) {
             const nbtList: NbtCompound[] = [];
-            for (const modifier of this.idToModifiers.values()) {
+            for (const modifier of this.modifierById.values()) {
                 const modNbt = new NbtCompound();
                 modNbt.putString('id', modifier.id.toString());
                 modNbt.putDouble('value', modifier.value);
@@ -154,11 +156,11 @@ export class EntityAttributeInstance {
                 if (!id) continue;
                 const value = modifierNbt.getDouble('value');
 
-                const modifier: EntityAttributeModifier = createClean({id, value});
-                this.idToModifiers.set(id, modifier);
+                const modifier: AttributeModifier = createClean({id, value});
+                this.modifierById.set(id, modifier);
             }
         }
 
-        this.onUpdate();
+        this.setDirty();
     }
 }

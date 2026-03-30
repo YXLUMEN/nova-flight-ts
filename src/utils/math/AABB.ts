@@ -4,7 +4,7 @@ import type {BlockPos} from "../../world/map/BlockPos.ts";
 import {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 import type {Vec2} from "./Vec2.ts";
 
-export class Box {
+export class AABB {
     public readonly minX: number;
     public readonly minY: number;
     public readonly maxX: number;
@@ -18,11 +18,11 @@ export class Box {
     }
 
     public static byVec(pos1: IVec, pos2: IVec) {
-        return new Box(pos1.x, pos1.y, pos2.x, pos2.y);
+        return new AABB(pos1.x, pos1.y, pos2.x, pos2.y);
     }
 
-    public static fromCenter(cx: number, cy: number, halfWidth: number, halfHeight: number): Box {
-        return new Box(
+    public static fromCenter(cx: number, cy: number, halfWidth: number, halfHeight: number): AABB {
+        return new AABB(
             cx - halfWidth,
             cy - halfHeight,
             cx + halfWidth,
@@ -52,7 +52,7 @@ export class Box {
         return (this.getWidth() + this.getHeight()) / 2;
     }
 
-    public intersectsByBox(box: Box): boolean {
+    public intersectsByBox(box: AABB): boolean {
         return this.intersects(box.minX, box.minY, box.maxX, box.maxY);
     }
 
@@ -68,16 +68,16 @@ export class Box {
         return this.contains(vec.x, vec.y);
     }
 
-    public offset(x: number, y: number): Box {
-        return new Box(this.minX + x, this.minY + y, this.maxX + x, this.maxY + y);
+    public offset(x: number, y: number): AABB {
+        return new AABB(this.minX + x, this.minY + y, this.maxX + x, this.maxY + y);
     }
 
-    public offsetByVec(vec: IVec): Box {
+    public offsetByVec(vec: IVec): AABB {
         return this.offset(vec.x, vec.y);
     }
 
-    public offsetByBlockPos(blockPos: BlockPos): Box {
-        return new Box(
+    public offsetByBlockPos(blockPos: BlockPos): AABB {
+        return new AABB(
             this.minX + blockPos.getX(),
             this.minY + blockPos.getY(),
             this.maxX + blockPos.getX(),
@@ -86,7 +86,7 @@ export class Box {
     }
 
     public expand(x: number, y: number) {
-        return new Box(
+        return new AABB(
             this.minX - x,
             this.minY - y,
             this.maxX + x,
@@ -98,16 +98,16 @@ export class Box {
         return this.expand(value, value);
     }
 
-    public contract(x: number, y: number): Box {
+    public contract(x: number, y: number): AABB {
         return this.expand(-x, -y);
     }
 
-    public contractAll(value: number): Box {
+    public contractAll(value: number): AABB {
         return this.expandAll(-value);
     }
 
-    public union(box: Box) {
-        return new Box(
+    public union(box: AABB) {
+        return new AABB(
             Math.min(this.minX, box.minX),
             Math.min(this.minY, box.minY),
             Math.max(this.maxX, box.maxX),
@@ -115,7 +115,7 @@ export class Box {
         );
     }
 
-    public stretch(x: number, y: number): Box {
+    public stretch(x: number, y: number): AABB {
         let minX = this.minX;
         let minY = this.minY;
         let maxX = this.maxX;
@@ -133,10 +133,10 @@ export class Box {
             maxY += y;
         }
 
-        return new Box(minX, minY, maxX, maxY);
+        return new AABB(minX, minY, maxX, maxY);
     }
 
-    public stretchByVec(vec: IVec): Box {
+    public stretchByVec(vec: IVec): AABB {
         return this.stretch(vec.x, vec.y);
     }
 
@@ -144,14 +144,14 @@ export class Box {
         const ds = [1];
         const d = max.x - min.x;
         const e = max.y - min.y;
-        const dir = Box.traceCollisionSide(this, min, ds, null, d, e);
+        const dir = AABB.traceCollisionSide(this, min, ds, null, d, e);
         if (dir === null) return null;
 
         const g = ds[0];
         return min.add(g * d, g * e);
     }
 
-    public static raycastEach(boxes: Iterable<Box>, from: Vec2, to: Vec2, pos: BlockPos) {
+    public static raycastEach(boxes: Iterable<AABB>, from: Vec2, to: Vec2, pos: BlockPos) {
         const ds = [1];
         let direction: Direction | null = null;
         const d = to.x - from.x;
@@ -167,7 +167,7 @@ export class Box {
     }
 
     public static traceCollisionSide(
-        box: Box,
+        box: AABB,
         intersectingVector: IVec,
         traceDistanceResult: number[],
         approachDirection: Direction | null,

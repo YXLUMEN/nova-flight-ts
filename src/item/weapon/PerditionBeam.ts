@@ -14,10 +14,10 @@ import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
 import {LivingEntity} from "../../entity/LivingEntity.ts";
 import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {Identifier} from "../../registry/Identifier.ts";
-import {AttributeModifiersComponent} from "../../component/type/AttributeModifiersComponent.ts";
+import {AttributeModifier} from "../../component/type/AttributeModifier.ts";
 
 export class PerditionBeam extends PhaseLasers {
-    private static readonly DEFAULT_MODIFIER = new AttributeModifiersComponent(
+    private static readonly DEFAULT_MODIFIER = new AttributeModifier(
         Identifier.ofVanilla('perdition_beam_charging'),
         -0.7
     );
@@ -88,7 +88,7 @@ export class PerditionBeam extends PhaseLasers {
                 pos.x, pos.y, mob.getWidth())) {
                 mob.takeDamage(damageSource, damage);
                 if (mob.getShieldAmount() > 0) continue;
-                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.MELTDOWN, 80, 10), holder);
+                mob.addEffect(new StatusEffectInstance(StatusEffects.MELTDOWN, 80, 10), holder);
             }
         }
     }
@@ -108,10 +108,13 @@ export class PerditionBeam extends PhaseLasers {
             if (instance) instance.removeModifier(PerditionBeam.DEFAULT_MODIFIER);
         }
 
-        world.stopLoopSound(attacker, SoundEvents.LASER_BEAM);
+        if (!world.isClient) return;
 
-        world.playSound(attacker, SoundEvents.STEAM_RELEASE);
-        world.playSound(attacker, SoundEvents.LASER_SPINDOWN);
+        world.stopLoopSound(attacker, SoundEvents.LASER_CHARGE_UP_LONG);
+        if (world.stopLoopSound(attacker, SoundEvents.LASER_BEAM)) {
+            world.playSound(attacker, SoundEvents.STEAM_RELEASE);
+            world.playSound(attacker, SoundEvents.LASER_SPINDOWN);
+        }
     }
 
     protected override overHeatAlert() {

@@ -252,11 +252,6 @@ export class MissileEntity extends RocketEntity {
         return 400;
     }
 
-    protected override onOutOffBound() {
-        super.onOutOffBound();
-        this.discard();
-    }
-
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
         nbt.putUint32('age', this.age);

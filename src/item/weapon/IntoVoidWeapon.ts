@@ -14,7 +14,7 @@ import {type Entity} from "../../entity/Entity.ts";
 import {LivingEntity} from "../../entity/LivingEntity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponents} from "../../component/DataComponents.ts";
-import {AttributeModifiersComponent} from "../../component/type/AttributeModifiersComponent.ts";
+import {AttributeModifier} from "../../component/type/AttributeModifier.ts";
 import {Items} from "../Items.ts";
 import {Techs} from "../../tech/Techs.ts";
 
@@ -22,7 +22,7 @@ export class IntoVoidWeapon extends SpecialWeapon {
     public static readonly displayName = "遁入虚空";
     public static readonly uiColor = "#7945ff";
 
-    public static readonly DEFAULT_MODIFIER = new AttributeModifiersComponent(
+    public static readonly DEFAULT_MODIFIER = new AttributeModifier(
         Identifier.ofVanilla('weapon.into_void'),
         0.4
     );

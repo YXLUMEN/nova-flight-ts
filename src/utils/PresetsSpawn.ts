@@ -38,7 +38,7 @@ function modifyEntity(
 
     if (ctx.difficulty > 2 && Math.random() > 0.7) {
         const scaledShield = Math.max(ctx.difficulty, scaledHp / 6);
-        mob.addStatusEffect(
+        mob.addEffect(
             new StatusEffectInstance(StatusEffects.SHIELD, -1, scaledShield),
             null
         );
@@ -46,7 +46,7 @@ function modifyEntity(
     }
 
     if (ctx.difficulty > 8 && Math.random() > 0.9 && !(mob instanceof TankEnemy)) {
-        mob.addStatusEffect(
+        mob.addEffect(
             new StatusEffectInstance(StatusEffects.RESISTANCE, 800, Math.min(7, ctx.difficulty)),
             null
         );

@@ -1,4 +1,4 @@
-import {type ComponentType} from "./ComponentType.ts";
+import {type DataComponentType} from "./DataComponentType.ts";
 import {Compare} from "../utils/collection/Compare.ts";
 import {ComponentChanges} from "./ComponentChanges.ts";
 import {Optional} from "../utils/Optional.ts";
@@ -7,11 +7,11 @@ import type {ComponentMap} from "./ComponentMap.ts";
 export class ComponentMapImpl implements ComponentMap {
     public static readonly EMPTY = Object.freeze(new ComponentMapImpl()) as ComponentMapImpl;
 
-    private readonly baseComponents: Map<ComponentType<any>, any>;
-    private changedComponents: Map<ComponentType<any>, Optional<any>>;
+    private readonly baseComponents: Map<DataComponentType<any>, any>;
+    private changedComponents: Map<DataComponentType<any>, Optional<any>>;
     private copyOnWrite: boolean;
 
-    public constructor(components?: ComponentMap, changedComponents?: Map<ComponentType<any>, Optional<any>>, copyOnWrite = true) {
+    public constructor(components?: ComponentMap, changedComponents?: Map<DataComponentType<any>, Optional<any>>, copyOnWrite = true) {
         if (!components) {
             this.baseComponents = new Map();
         } else {
@@ -36,7 +36,7 @@ export class ComponentMapImpl implements ComponentMap {
         return cMap;
     }
 
-    private static shouldReuseChangesMap(base: ComponentMap, changes: Map<ComponentType<any>, Optional<any>>): boolean {
+    private static shouldReuseChangesMap(base: ComponentMap, changes: Map<DataComponentType<any>, Optional<any>>): boolean {
         for (const [type, optional] of changes) {
             const object = base.get(type);
             if (optional.isPresent() && optional.get() === object) {
@@ -50,12 +50,12 @@ export class ComponentMapImpl implements ComponentMap {
         return true;
     }
 
-    public get<T>(type: ComponentType<T>): T | null {
+    public get<T>(type: DataComponentType<T>): T | null {
         const changed = this.changedComponents.get(type) ?? null;
         return changed !== null ? changed.orElse(null) : this.baseComponents.get(type) ?? null;
     }
 
-    public set<T>(type: ComponentType<T>, value: T | null): void {
+    public set<T>(type: DataComponentType<T>, value: T | null): void {
         this.onWrite();
 
         const object = this.baseComponents.get(type);
@@ -66,7 +66,7 @@ export class ComponentMapImpl implements ComponentMap {
         }
     }
 
-    public remove<T>(type: ComponentType<T>): void {
+    public remove<T>(type: DataComponentType<T>): void {
         this.onWrite();
 
         const object = this.baseComponents.get(type);
@@ -85,7 +85,7 @@ export class ComponentMapImpl implements ComponentMap {
         }
     }
 
-    public applyChange(type: ComponentType<any>, optional: Optional<any>) {
+    public applyChange(type: DataComponentType<any>, optional: Optional<any>) {
         const value = this.baseComponents.get(type) ?? null;
         if (optional.isPresent()) {
             if (optional.get() === value) {
@@ -108,16 +108,16 @@ export class ComponentMapImpl implements ComponentMap {
         });
     }
 
-    public has<T>(type: ComponentType<T>): boolean {
+    public has<T>(type: DataComponentType<T>): boolean {
         return this.baseComponents.has(type);
     }
 
-    public getOrDefault<T>(type: ComponentType<T>, fallback: T): T {
+    public getOrDefault<T>(type: DataComponentType<T>, fallback: T): T {
         const component = this.get(type);
         return component !== null ? component : fallback;
     }
 
-    public contains(type: ComponentType<any>): boolean {
+    public contains(type: DataComponentType<any>): boolean {
         return this.get(type) != null;
     }
 
@@ -125,7 +125,7 @@ export class ComponentMapImpl implements ComponentMap {
         return this.baseComponents.size;
     }
 
-    public getComponents(): Map<ComponentType<any>, any> {
+    public getComponents(): Map<DataComponentType<any>, any> {
         return this.baseComponents;
     }
 

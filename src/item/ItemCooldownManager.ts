@@ -11,7 +11,7 @@ export class ItemCooldownManager {
         return this.cooldowns.get(item) ?? 0;
     }
 
-    public update(): void {
+    public tick(): void {
         if (this.cooldowns.size === 0) return;
 
         this.cooldowns.entries().forEach(([item, value]) => {

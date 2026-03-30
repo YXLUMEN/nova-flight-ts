@@ -4,6 +4,8 @@ import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 export class MiniBulletEntity extends BulletEntity {
     protected override onEntityHit(hitResult: EntityHitResult) {
         super.onEntityHit(hitResult);
+
+        if (this.isClient()) return;
         hitResult.entity.getVelocityRef.multiply(0.8);
     }
 }

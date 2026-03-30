@@ -11,6 +11,9 @@ export abstract class Weapon extends Item {
     public onStartFire(_stack: ItemStack, _world: World, _attacker: Entity): void {
     }
 
+    /**
+     * 停止开火以及删除物品时触发
+     * */
     public onEndFire(_stack: ItemStack, _world: World, _attacker: Entity): void {
     }
 
