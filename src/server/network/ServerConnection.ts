@@ -4,9 +4,9 @@ import type {ServerChannel} from "./ServerChannel.ts";
 import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
 import type {Payload} from "../../network/Payload.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
-import type {UUID} from "../../apis/types.ts";
+import type {UUID} from "../../type/types.ts";
 import type {PacketListener} from "./handler/PacketListener.ts";
-import {IllegalStateException} from "../../apis/errors.ts";
+import {IllegalStateException} from "../../type/errors.ts";
 import {RelayActionBuilder} from "./RelayActionBuilder.ts";
 
 export class ServerConnection {
@@ -54,7 +54,7 @@ export class ServerConnection {
     }
 
     public recv(packet: Payload): void {
-        if (this.state !== ConnectionState.STABLE && !packet.canProcessInTransition?.()) return;
+        if (this.state !== ConnectionState.PLAY && !packet.canProcessInTransition?.()) return;
 
         this.lastActivityTime = performance.now();
         this.receiveQueue.push(packet);

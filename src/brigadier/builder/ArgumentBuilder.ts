@@ -1,5 +1,5 @@
 import type {Command} from "../Command.ts";
-import type {Predicate} from "../../apis/types.ts";
+import type {Predicate} from "../../type/types.ts";
 import type {CommandNode} from "../tree/CommandNode.ts";
 import {RootCommandNode} from "../tree/RootCommandNode.ts";
 

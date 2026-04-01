@@ -1,7 +1,7 @@
 import {GameProfile} from "./GameProfile.ts";
 import {ServerPlayerEntity} from "./ServerPlayerEntity.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import type {UUID} from "../../apis/types.ts";
+import type {UUID} from "../../type/types.ts";
 
 export interface IPlayerManager {
     onPlayerAttemptLogin(profile: GameProfile, player: ServerPlayerEntity, session?: any): Promise<void>;

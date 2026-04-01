@@ -1,7 +1,7 @@
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {CommandError} from "../apis/errors.ts";
+import {CommandError} from "../type/errors.ts";
 import {PlayerSelectorArgumentType} from "./argument/PlayerSelectorArgumentType.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";

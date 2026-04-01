@@ -1,4 +1,4 @@
-import type {StarLayer} from "../apis/IStarLayer.ts";
+import type {StarLayer} from "../type/IStarLayer.ts";
 import type {Camera} from "../client/render/Camera.ts";
 import {lerp, PI2, rand} from "../utils/math/math.ts";
 import {World} from "../world/World.ts";

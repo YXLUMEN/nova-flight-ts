@@ -1,7 +1,7 @@
 import {NovaFlightServer} from "./NovaFlightServer.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
-import type {UUID} from "../apis/types.ts";
+import type {UUID} from "../type/types.ts";
 import type {GameProfile} from "./entity/GameProfile.ts";
 import {ServerStorage} from "./ServerStorage.ts";
 import {TutorialStage} from "../configs/TutorialStage.ts";
@@ -12,7 +12,7 @@ import type {Result} from "../utils/result/Result.ts";
 import {ServerNetworkChannel} from "./network/ServerNetworkChannel.ts";
 import {PlayerManager} from "./entity/PlayerManager.ts";
 import {Log} from "../worker/log.ts";
-import {NoResultsError, StatusError} from "../apis/errors.ts";
+import {NoResultsError, StatusError} from "../type/errors.ts";
 
 export class IntegratedServer extends NovaFlightServer {
     private readonly hostUUID: UUID;
@@ -96,5 +96,9 @@ export class IntegratedServer extends NovaFlightServer {
 
     public override isHostUUID(uuid: UUID): boolean {
         return uuid === this.hostUUID;
+    }
+
+    public getHostUUID(): UUID {
+        return this.hostUUID;
     }
 }

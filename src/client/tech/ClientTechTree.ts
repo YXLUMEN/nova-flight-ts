@@ -1,20 +1,20 @@
-import {TechState} from "../../tech/TechState.ts";
+import {TechState} from "../../world/tech/TechState.ts";
 import {clamp} from "../../utils/math/math.ts";
-import {EVENTS} from "../../apis/IEvents.ts";
+import {EVENTS} from "../../type/IEvents.ts";
 import {Items} from "../../item/Items.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import {SoundSystem} from "../../sound/SoundSystem.ts";
-import type {TechTree} from "../../tech/TechTree.ts";
+import type {TechTree} from "../../world/tech/TechTree.ts";
 import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
 import {PlayerResetAllTechC2SPacket} from "../../network/packet/c2s/PlayerResetAllTechC2SPacket.ts";
 import {ApplyClientTech} from "./ApplyClientTech.ts";
 import {Registries} from "../../registry/Registries.ts";
-import {type Tech} from "../../tech/Tech.ts";
+import {type Tech} from "../../world/tech/Tech.ts";
 import {type RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
-import {Techs} from "../../tech/Techs.ts";
+import {Techs} from "../../world/tech/Techs.ts";
 import {AnsiParser} from "../../utils/AnsiParser.ts";
+import {NovaFlightClient} from "../NovaFlightClient.ts";
 
 type Adjacency = {
     successors: Map<Tech, Tech[]>; // tech -> successors
@@ -31,6 +31,7 @@ export class ClientTechTree implements TechTree {
     private readonly resetBtn = document.getElementById('reset') as HTMLButtonElement;
     private readonly resetAllBtn = document.getElementById('reset-all') as HTMLButtonElement;
     private readonly techTitle = document.getElementById('d-title')!;
+    private readonly techTexture = document.getElementById('d-texture') as HTMLImageElement;
     private readonly metaShow = document.getElementById('d-meta')!;
 
     private readonly nodeWidth = 144;
@@ -73,6 +74,11 @@ export class ClientTechTree implements TechTree {
         this.renderEdges();
         this.renderNodes();
         this.bindInteractions();
+
+        this.techTexture.addEventListener('error', () => {
+            if (this.techTexture.src === '/texture/default.png') return;
+            this.techTexture.src = '/texture/default.png';
+        }, {signal: this.abortCtrl.signal});
     }
 
     public applyUnlockUpdates(tech: Tech) {
@@ -216,7 +222,7 @@ export class ClientTechTree implements TechTree {
         parent.addEventListener('wheel', e => {
             scale = clamp(scale * Math.pow(1.1, -e.deltaY / 100), 0.5, 2);
             applyTransform();
-            SoundSystem.globalSound.playSound(SoundEvents.UI_HOVER);
+            NovaFlightClient.getInstance().globalSound.playSound(SoundEvents.UI_HOVER);
         }, {passive: true, signal: abortCtrl.signal});
 
         const applyTransform = () => {
@@ -288,7 +294,7 @@ export class ClientTechTree implements TechTree {
             this.selectNodeId = id;
             this.onSelect(id);
 
-            SoundSystem.globalSound.playSound(SoundEvents.UI_SELECT);
+            NovaFlightClient.getInstance().globalSound.playSound(SoundEvents.UI_SELECT);
         }, {signal: this.abortCtrl.signal});
 
         this.nodesLayer.addEventListener('dblclick', this.tryApply, {signal: this.abortCtrl.signal});
@@ -321,7 +327,7 @@ export class ClientTechTree implements TechTree {
         const world = this.player.getWorld();
         const score = this.player.getScore() - tech.cost;
         if (score < 0 && !this.player.isDevMode()) {
-            SoundSystem.globalSound.playSound(SoundEvents.UI_ERROR);
+            NovaFlightClient.getInstance().globalSound.playSound(SoundEvents.UI_ERROR);
             return;
         }
 
@@ -329,9 +335,9 @@ export class ClientTechTree implements TechTree {
             this.player.setScore(score);
             this.applyUnlockUpdates(tech);
             world.events.emit(EVENTS.UNLOCK_TECH, {tech});
-            SoundSystem.globalSound.playSound(SoundEvents.UI_APPLY, 1.5);
+            NovaFlightClient.getInstance().globalSound.playSound(SoundEvents.UI_APPLY, 1.5);
         } else {
-            SoundSystem.globalSound.playSound(SoundEvents.UI_ERROR);
+            NovaFlightClient.getInstance().globalSound.playSound(SoundEvents.UI_ERROR);
         }
     }
 
@@ -339,6 +345,9 @@ export class ClientTechTree implements TechTree {
         this.submitBtn.disabled = !id;
         if (!id) {
             this.selectNodeId = null;
+            this.techTexture.classList.add('hidden');
+            this.techTexture.src = '';
+            this.techTexture.alt = '';
             this.techTitle.textContent = '';
             this.metaShow.textContent = '';
             return;
@@ -390,7 +399,15 @@ export class ClientTechTree implements TechTree {
             frag.append(conflictDiv);
         }
 
-        this.techTitle.textContent = tech.name.toString();
+        const name = tech.name.toString();
+        const identifier = Registries.TECH.getId(tech);
+        if (identifier) {
+            this.techTexture.classList.remove('hidden');
+            this.techTexture.src = `/texture/tech/${identifier.getPath()}.png`;
+            this.techTexture.alt = name;
+        }
+
+        this.techTitle.textContent = name;
         this.metaShow.replaceChildren(frag);
     }
 
@@ -560,7 +577,7 @@ export class ClientTechTree implements TechTree {
     private resetPlayer() {
         this.player.clearItems();
 
-        this.player.addItem(Items.CANNON40_WEAPON);
+        this.player.addItem(Items.CANNON40);
         this.player.addItem(Items.BOMB_WEAPON);
 
         this.player.steeringGear = false;

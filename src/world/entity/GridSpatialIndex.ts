@@ -1,6 +1,6 @@
 import type {EntityLike} from "./EntityLike.ts";
 import type {AABB} from "../../utils/math/AABB.ts";
-import type {Consumer, Predicate} from "../../apis/types.ts";
+import type {Consumer, Predicate} from "../../type/types.ts";
 
 type GridCell<T extends EntityLike> = Set<T>;
 type Index = { col: number; row: number };

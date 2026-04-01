@@ -6,11 +6,10 @@ import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import type {AutoAim} from "../tech/AutoAim.ts";
 import type {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
-import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
-import {squareDistVec2, wrapRadians} from "../../utils/math/math.ts";
+import {clamp, squareDistVec2, wrapRadians} from "../../utils/math/math.ts";
 import {type ItemStack} from "../../item/ItemStack.ts";
-import type {Item} from "../../item/Item.ts";
+import {type Item} from "../../item/Item.ts";
 import {AbstractClientPlayerEntity} from "./AbstractClientPlayerEntity.ts";
 import {BallisticCalculator} from "../tech/BallisticCalculator.ts";
 import type {GameProfile} from "../../server/entity/GameProfile.ts";
@@ -26,14 +25,19 @@ import type {BlockChange} from "../../world/map/BlockChange.ts";
 import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
 import type {Channel} from "../../network/Channel.ts";
 import {Weapon} from "../../item/weapon/Weapon.ts";
+import {FireSpecialC2SPacket} from "../../network/packet/c2s/FireSpecialC2SPacket.ts";
+import {ClientInventory} from "../ClientInventory.ts";
+import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 
 export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     public readonly profile: GameProfile;
     public readonly input: KeyboardInput;
-    public openInventory: boolean = false;
 
-    private specialWeapons: SpecialWeapon[];
+    public readonly clientInventory: ClientInventory;
+
     private quickFireIndex = 0;
+    private readonly activeSpecials: Map<string, SpecialWeapon>;
+    private readonly orderSpecials: SpecialWeapon[];
 
     private autoAimEnable: boolean = false;
     public autoAim: AutoAim | null = null;
@@ -52,13 +56,13 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
         this.input = input;
         this.profile = profile;
+        this.clientInventory = new ClientInventory(this);
         this.techTree = new ClientTechTree(this);
 
-        this.specialWeapons = this.getInventory()
-            .keys()
-            .filter(item => item instanceof SpecialWeapon)
-            .toArray();
-        this.switchQuickFire();
+        this.giveInitWeapon();
+
+        this.activeSpecials = new Map();
+        this.orderSpecials = [];
     }
 
     public override tick() {
@@ -83,17 +87,17 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
         // debug
         if (this.input.isDown('KeyL')) {
-            const pos = this.input.getPointer;
+            const pos = this.input.getWorldPointer();
             this.placeBlock(0, pos.x, pos.y);
         }
 
         if (this.input.isDown('KeyP')) {
-            const pos = this.input.getPointer;
+            const pos = this.input.getWorldPointer();
             this.placeBlock(1, pos.x, pos.y);
         }
 
         if (this.input.wasPressed('KeyO')) {
-            let {x, y} = this.input.getPointer;
+            let {x, y} = this.input.getWorldPointer();
             x = BlockPos.alignValue(x);
             y = BlockPos.alignValue(y);
 
@@ -137,7 +141,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             }
         } else if (this.steeringGear) {
             const pos = this.getPositionRef;
-            const pointer = this.input.getPointer;
+            const pointer = this.input.getWorldPointer();
             const yaw = Math.atan2(
                 pointer.y - pos.y,
                 pointer.x - pos.x
@@ -150,7 +154,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             if (this.bc) this.bc.tick();
         } else if (this.followPointer && WorldConfig.follow) {
             const pos = this.getPositionRef;
-            const pointer = this.input.getPointer;
+            const pointer = this.input.getWorldPointer();
             const pdx = pointer.x - pos.x;
             const pdy = pointer.y - pos.y;
 
@@ -168,7 +172,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         }
 
         super.aiStep();
-        this.fireSpecials();
+        this.tryFireWeapons();
 
         if (updatePos && updateYaw) {
             this.getNetworkChannel().send(new FullMove(dx, dy, this.getYaw()));
@@ -179,12 +183,12 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         }
     }
 
-    private fireSpecials() {
+    private tryFireWeapons() {
         const world = this.getWorld() as ClientWorld;
         this.mainWeaponFire(world);
 
         const inventory = this.getInventory();
-        for (const [item, assign] of this.weaponKeys) {
+        for (const [assign, item] of this.activeSpecials) {
             const stack = inventory.searchItem(item);
             if (stack.isEmpty()) continue;
 
@@ -193,7 +197,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
             if (this.input.wasPressed(key) && item.canFire(stack)) {
                 item.tryFire(stack, world, this);
-                this.getNetworkChannel().send(new PlayerInputC2SPacket(key));
+                this.getNetworkChannel().send(new FireSpecialC2SPacket(item));
             }
         }
     }
@@ -237,30 +241,65 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         this.wasFiring = true;
     }
 
-    public getSpecials() {
-        return this.specialWeapons;
+    public reloadActiveSpecials() {
+        if (!this.activeSpecials) return;
+        this.activeSpecials.clear();
+        this.orderSpecials.length = 0;
+
+        const inventory = this.getInventory();
+        const len = inventory.hotbarLength();
+        const sLen = inventory.specialLength();
+
+        for (let i = 0; i < inventory.maxSize(); i++) {
+            if (i < len) continue;
+            if (i >= sLen) break;
+
+            const stack = inventory.getItem(i);
+            const item = stack.getItem();
+            if (!stack.isEmpty() && item instanceof SpecialWeapon) {
+                this.orderSpecials.push(item);
+                this.activeSpecials.set(`Digit${this.orderSpecials.length}`, item);
+            }
+        }
+        this.quickFireIndex = clamp(this.quickFireIndex, 0, this.orderSpecials.length - 1);
+    }
+
+    public getActiveSpecials() {
+        return this.orderSpecials;
     }
 
     public override clearItems(): void {
         super.clearItems();
-        this.specialWeapons.length = 0;
+        this.activeSpecials.clear();
+        this.orderSpecials.length = 0;
     }
 
     public override addItem(item: Item, stack?: ItemStack): void {
         super.addItem(item, stack);
-        this.specialWeapons = this.getInventory()
-            .keys()
-            .filter(item => item instanceof SpecialWeapon)
-            .toArray()
-            .sort((a, b) => a.getSortIndex() - b.getSortIndex());
+        this.reloadActiveSpecials();
+    }
+
+    public override removeItem(item: Item): boolean {
+        const result = super.removeItem(item);
+        this.reloadActiveSpecials();
+        return result;
+    }
+
+    public isOpenInventory() {
+        return this.clientInventory.isOpen;
+    }
+
+    public setOpenInventory(value: boolean) {
+        this.clientInventory.isOpen = value;
+        if (!value) this.clientInventory.reset();
     }
 
     public switchQuickFire(): void {
-        this.quickFireIndex = (this.quickFireIndex + 1) % this.specialWeapons.length;
+        this.quickFireIndex = (this.quickFireIndex + 1) % this.orderSpecials.length;
     }
 
     public getQuickFire() {
-        return this.specialWeapons[this.quickFireIndex];
+        return this.orderSpecials[this.quickFireIndex];
     }
 
     public launchQuickFire() {
@@ -268,8 +307,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         const stack = this.getInventory().searchItem(item);
         if (!stack.isEmpty() && item.canFire(stack)) {
             item.tryFire(stack, this.getWorld(), this);
-            const key = this.weaponKeys.get(item)!;
-            this.getNetworkChannel().send(new PlayerInputC2SPacket(key));
+            this.getNetworkChannel().send(new FireSpecialC2SPacket(item));
         }
     }
 
@@ -333,5 +371,10 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     public getNetworkChannel(): Channel {
         return this.getWorld().getNetworkChannel();
+    }
+
+    public override readNBT(nbt: NbtCompound) {
+        super.readNBT(nbt);
+        this.reloadActiveSpecials();
     }
 }

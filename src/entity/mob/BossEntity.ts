@@ -5,7 +5,7 @@ import {clamp, rand} from "../../utils/math/math.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import {EntityType} from "../EntityType.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
-import {EVENTS} from "../../apis/IEvents.ts";
+import {EVENTS} from "../../type/IEvents.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 

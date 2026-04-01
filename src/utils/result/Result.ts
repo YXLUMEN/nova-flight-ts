@@ -1,4 +1,4 @@
-import type {FunctionReturn} from "../../apis/types.ts";
+import type {FunctionReturn} from "../../type/types.ts";
 import {Optional} from "../Optional.ts";
 
 export interface Ok<T> {

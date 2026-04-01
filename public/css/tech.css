@@ -178,6 +178,21 @@ svg.edges {
     color: var(--muted);
 }
 
+.details .tech-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.details .tech-title img {
+    width: 52px;
+    height: 52px;
+}
+
+.details .tech-title .hidden {
+    display: none;
+}
+
 .details .list {
     display: grid;
     gap: 6px;

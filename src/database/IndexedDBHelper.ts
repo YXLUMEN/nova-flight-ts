@@ -1,4 +1,4 @@
-import type {StoreConfig} from "../apis/types.ts";
+import type {StoreConfig} from "../type/types.ts";
 import {Result} from "../utils/result/Result.ts";
 
 export class IndexedDBHelper {

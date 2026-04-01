@@ -1,11 +1,11 @@
-import {EVENTS} from "../apis/IEvents.ts";
+import {EVENTS} from "../type/IEvents.ts";
 import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
 import type {ClientWorld} from "./ClientWorld.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {PlayerUnlockTechC2SPacket} from "../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
 import {ApplyClientTech} from "./tech/ApplyClientTech.ts";
-import {Tech} from "../tech/Tech.ts";
+import {Tech} from "../world/tech/Tech.ts";
 import {Registries} from "../registry/Registries.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
 

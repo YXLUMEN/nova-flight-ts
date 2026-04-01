@@ -6,33 +6,23 @@ import {Identifier} from "./Identifier.ts";
 export class Registries {
     private static readonly ROOT = new Registry(RegistryKey.ofRegistry(Identifier.ROOT));
     private static readonly DEFAULT_ENTRIES = new Map<Identifier, CallableFunction>();
+    private static readonly EMPTY_INIT = () => {
+    };
 
-    public static readonly DAMAGE_TYPE = this.simpleCreate(RegistryKeys.DAMAGE_TYPE, () => {
-    });
-    public static readonly STATUS_EFFECT = this.simpleCreate(RegistryKeys.STATUS_EFFECT, () => {
-    });
-    public static readonly ENTITY_TYPE = this.simpleCreate(RegistryKeys.ENTITY_TYPE, () => {
-    });
-    public static readonly ATTRIBUTE = this.simpleCreate(RegistryKeys.ATTRIBUTE, () => {
-    });
-    public static readonly SOUND_EVENT = this.simpleCreate(RegistryKeys.SOUND_EVENT, () => {
-    });
-    public static readonly AUDIOS = this.simpleCreate(RegistryKeys.AUDIOS, () => {
-    });
-    public static readonly GAME_EVENT = this.simpleCreate(RegistryKeys.GAME_EVENT, () => {
-    });
-    public static readonly ITEM = this.simpleCreate(RegistryKeys.ITEM, () => {
-    });
-    public static readonly DATA_COMPONENT_TYPE = this.simpleCreate(RegistryKeys.DATA_COMPONENT_TYPE, () => {
-    });
-    public static readonly EFFECT_TYPE = this.simpleCreate(RegistryKeys.EFFECT_TYPE, () => {
-    });
-    public static readonly TECH = this.simpleCreate(RegistryKeys.TECH, () => {
-    });
-    public static readonly WORLD_EVENT = this.simpleCreate(RegistryKeys.WORLD_EVENT, () => {
-    });
-    public static readonly BLOCK = this.simpleCreate(RegistryKeys.BLOCK, () => {
-    });
+    public static readonly DAMAGE_TYPE = this.simpleCreate(RegistryKeys.DAMAGE_TYPE, this.EMPTY_INIT);
+    public static readonly STATUS_EFFECT = this.simpleCreate(RegistryKeys.STATUS_EFFECT, this.EMPTY_INIT);
+    public static readonly ENTITY_TYPE = this.simpleCreate(RegistryKeys.ENTITY_TYPE, this.EMPTY_INIT);
+    public static readonly ATTRIBUTE = this.simpleCreate(RegistryKeys.ATTRIBUTE, this.EMPTY_INIT);
+    public static readonly SOUND_EVENT = this.simpleCreate(RegistryKeys.SOUND_EVENT, this.EMPTY_INIT);
+    public static readonly AUDIOS = this.simpleCreate(RegistryKeys.AUDIOS, this.EMPTY_INIT);
+    public static readonly GAME_EVENT = this.simpleCreate(RegistryKeys.GAME_EVENT, this.EMPTY_INIT);
+    public static readonly ITEM = this.simpleCreate(RegistryKeys.ITEM, this.EMPTY_INIT);
+    public static readonly DATA_COMPONENT_TYPE = this.simpleCreate(RegistryKeys.DATA_COMPONENT_TYPE, this.EMPTY_INIT);
+    public static readonly EFFECT_TYPE = this.simpleCreate(RegistryKeys.EFFECT_TYPE, this.EMPTY_INIT);
+    public static readonly TECH = this.simpleCreate(RegistryKeys.TECH, this.EMPTY_INIT);
+    public static readonly WORLD_EVENT = this.simpleCreate(RegistryKeys.WORLD_EVENT, this.EMPTY_INIT);
+    public static readonly BLOCK = this.simpleCreate(RegistryKeys.BLOCK, this.EMPTY_INIT);
+    public static readonly RESOURCES = this.simpleCreate(RegistryKeys.RESOURCE, this.EMPTY_INIT);
 
     public static async complete() {
         const attr = await import('../entity/attribute/EntityAttributes.ts');

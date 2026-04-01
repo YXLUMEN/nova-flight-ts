@@ -4,7 +4,7 @@ import type {World} from "../World.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
 import type {AABB} from "../../utils/math/AABB.ts";
-import type {Predicate} from "../../apis/types.ts";
+import type {Predicate} from "../../type/types.ts";
 import {EntityHitResult} from "./EntityHitResult.ts";
 import {squareDistVec2} from "../../utils/math/math.ts";
 import type {HitResult} from "./HitResult.ts";

@@ -1,15 +1,15 @@
-import type {UUID} from "../../apis/types.ts";
+import type {UUID} from "../../type/types.ts";
 import {ServerPlayerEntity} from "./ServerPlayerEntity.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {NovaFlightServer} from "../NovaFlightServer.ts";
 import {ServerStorage} from "../ServerStorage.ts";
 import {GameProfile} from "./GameProfile.ts";
-import {ServerStableHandler} from "../network/handler/ServerStableHandler.ts";
+import {ServerPlayHandler} from "../network/handler/ServerPlayHandler.ts";
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
 import {PlayerJoinS2CPacket} from "../../network/packet/s2c/PlayerJoinS2CPacket.ts";
 import type {ServerWorld} from "../ServerWorld.ts";
 import {Log} from "../../worker/log.ts";
-import {NoResultsError} from "../../apis/errors.ts";
+import {NoResultsError} from "../../type/errors.ts";
 import type {ServerConnection} from "../network/ServerConnection.ts";
 import {ConnectionState} from "../network/ConnectionState.ts";
 import {ServerCommonHandler} from "../network/handler/ServerCommonHandler.ts";
@@ -29,8 +29,8 @@ export class PlayerManager {
         if (!world) return;
 
         player.setUuid(profile.clientId);
-        const handler = new ServerStableHandler(this.server, connection, player);
-        connection.setPacketListener(ConnectionState.STABLE, handler);
+        const handler = new ServerPlayHandler(this.server, connection, player);
+        connection.setPacketListener(ConnectionState.PLAY, handler);
 
         this.uuidToPlayer.set(profile.clientId, player);
         this.sessionToPlayer.set(profile.sessionId, player);

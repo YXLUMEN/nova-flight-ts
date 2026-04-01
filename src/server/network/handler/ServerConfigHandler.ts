@@ -5,7 +5,7 @@ import type {ServerConnection} from "../ServerConnection.ts";
 import {ClientReadyC2SPacket} from "../../../network/packet/c2s/ClientReadyC2SPacket.ts";
 import {ServerReadyS2CPacket} from "../../../network/packet/s2c/ServerReadyS2CPacket.ts";
 import {PlayerAttemptLoginC2SPacket} from "../../../network/packet/c2s/PlayerAttemptLoginC2SPacket.ts";
-import type {UUID} from "../../../apis/types.ts";
+import type {UUID} from "../../../type/types.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {ConnectionState, type ConnectionStateType} from "../ConnectionState.ts";
 

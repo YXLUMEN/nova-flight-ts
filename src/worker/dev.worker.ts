@@ -1,7 +1,7 @@
 import {ClientPackets} from "../client/network/ClientPackets.ts";
 import {ServerPackets} from "../server/network/ServerPackets.ts";
 import {DevServer} from "../server/DevServer.ts";
-import type {StartServer} from "../apis/startup.ts";
+import type {StartServer} from "../type/startup.ts";
 import {RelayPackets} from "../network/RelayPackets.ts";
 
 let server: DevServer | null = null;
@@ -60,12 +60,6 @@ async function handleEvent(event: MessageEvent<any>) {
 
 function handleDev(key: string) {
     switch (key) {
-        case 'KeyF': {
-            const world = server?.world;
-            if (!world) return;
-            world.freeze = !world.freeze;
-            break;
-        }
         case 'KeyL': {
             const world = server?.world;
             if (!world) return;

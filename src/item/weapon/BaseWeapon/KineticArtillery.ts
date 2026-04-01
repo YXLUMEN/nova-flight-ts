@@ -21,14 +21,9 @@ export class KineticArtillery extends BaseWeapon {
             }
         }
 
-        if (!holder.isPlayer()) return;
-
+        if (!holder.isPlayer() || world.isClient) return;
         if (stack.getOrDefault(DataComponents.RELOADING, false)) {
             this.reloadAction(holder, stack, selected);
-        }
-
-        if (world.isClient && holder.cooldownManager.getCooldownTicks(this) === 12) {
-            world.playSound(null, SoundEvents.KINETIC_ARTILLERY_LOAD)
         }
     }
 

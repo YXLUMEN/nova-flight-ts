@@ -5,11 +5,11 @@ import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
-import {IntoVoidWeapon} from "../../item/weapon/IntoVoidWeapon.ts";
+import {VoidEnginWeapon} from "../../item/weapon/VoidEnginWeapon.ts";
 import type {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
-import type {Tech} from "../../tech/Tech.ts";
+import type {Tech} from "../../world/tech/Tech.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
-import {Techs} from "../../tech/Techs.ts";
+import {Techs} from "../../world/tech/Techs.ts";
 import {BitFlag} from "../../utils/BitFlag.ts";
 import {WeaponType} from "../../item/WeaponType.ts";
 
@@ -28,7 +28,6 @@ export class ApplyServerTech {
             case Techs.COILGUNS : {
                 const stack = new ItemStack(Items.COILGUN);
                 player.addItem(Items.COILGUN, stack);
-                player.removeItem(Items.CANNON40_WEAPON);
 
                 this.onUnlockBulletWpn(stack, player);
                 break;
@@ -36,7 +35,6 @@ export class ApplyServerTech {
             case Techs.RAILGUNS: {
                 const stack = new ItemStack(Items.RAILGUN);
                 player.addItem(Items.RAILGUN, stack);
-                player.removeItem(Items.COILGUN);
 
                 this.onUnlockBulletWpn(stack, player);
                 break;
@@ -49,8 +47,8 @@ export class ApplyServerTech {
                 break;
             }
             case Techs.CANNON90: {
-                const stack = new ItemStack(Items.CANNON90_WEAPON);
-                player.addItem(Items.CANNON90_WEAPON, stack);
+                const stack = new ItemStack(Items.CANNON90);
+                player.addItem(Items.CANNON90, stack);
 
                 this.onUnlockBulletWpn(stack, player);
                 this.onUnlockExplosionWpn(stack, player);
@@ -65,23 +63,23 @@ export class ApplyServerTech {
                 break;
             }
             case Techs.ROCKET_LAUNCHER: {
-                const stack = new ItemStack(Items.ROCKET_WEAPON);
-                player.addItem(Items.ROCKET_WEAPON, stack);
+                const stack = new ItemStack(Items.ROCKET_LAUNCHER);
+                player.addItem(Items.ROCKET_LAUNCHER, stack);
 
                 this.onUnlockBulletWpn(stack, player);
                 this.onUnlockExplosionWpn(stack, player);
                 break;
             }
-            case Techs.MINI_GUN: {
-                const stack = new ItemStack(Items.MINIGUN_WEAPON);
-                player.addItem(Items.MINIGUN_WEAPON, stack);
+            case Techs.MINIGUN: {
+                const stack = new ItemStack(Items.MINIGUN);
+                player.addItem(Items.MINIGUN, stack);
 
                 this.onUnlockBulletWpn(stack, player);
                 break;
             }
             case Techs.CIWS: {
-                const stack = new ItemStack(Items.CIWS_WEAPON);
-                player.addItem(Items.CIWS_WEAPON);
+                const stack = new ItemStack(Items.CIWS);
+                player.addItem(Items.CIWS);
 
                 this.onUnlockBulletWpn(stack, player);
                 this.onHasHeatWpn(stack, player);
@@ -121,16 +119,12 @@ export class ApplyServerTech {
                 break;
             }
             case Techs.TACHYON_LANCE: {
-                player.removeItem(Items.PARTICLE_LANCE);
-
                 const stack = new ItemStack(Items.TACHYON_LANCE);
                 player.addItem(Items.TACHYON_LANCE);
                 this.onEnergyWpn(stack, player);
                 break;
             }
             case Techs.PERDITION_BEAM: {
-                player.removeItem(Items.PHASE_LASERS);
-
                 const stack = new ItemStack(Items.PERDITION_BEAM);
                 player.addItem(Items.PERDITION_BEAM, stack);
                 this.onEnergyWpn(stack, player);
@@ -236,12 +230,12 @@ export class ApplyServerTech {
                 player.setHealth(player.getMaxHealth());
                 break;
             }
-            case Techs.INTO_VOID: {
-                player.addItem(Items.INTO_VOID_WEAPON);
+            case Techs.VOID_ENGIN: {
+                player.addItem(Items.VOID_ENGIN);
                 break;
             }
             case Techs.VOID_LEAP: {
-                const intoVoid = Items.INTO_VOID_WEAPON as IntoVoidWeapon;
+                const intoVoid = Items.VOID_ENGIN as VoidEnginWeapon;
                 const stack = player.getItem(intoVoid);
                 if (stack) {
                     stack.set(DataComponents.EFFECT_DURATION, stack.getOrDefault(DataComponents.EFFECT_DURATION, 1) * 0.1);
@@ -252,7 +246,7 @@ export class ApplyServerTech {
                 break;
             }
             case Techs.VOID_DWELLER: {
-                const intoVoid = Items.INTO_VOID_WEAPON as IntoVoidWeapon;
+                const intoVoid = Items.VOID_ENGIN as VoidEnginWeapon;
                 const stack = player.getItem(intoVoid);
                 if (stack) {
                     stack.set(DataComponents.EFFECT_DURATION, stack.getOrDefault(DataComponents.EFFECT_DURATION, 1) * 2);
@@ -261,7 +255,7 @@ export class ApplyServerTech {
                 break;
             }
             case Techs.SPACE_TEAR: {
-                const stack = player.getItem(Items.INTO_VOID_WEAPON);
+                const stack = player.getItem(Items.VOID_ENGIN);
                 if (stack) stack.set(DataComponents.EFFECT_RANGE, 128);
                 break;
             }
@@ -270,8 +264,6 @@ export class ApplyServerTech {
                 break;
             }
             case Techs.MISSILE: {
-                player.removeItem(Items.BOMB_WEAPON);
-
                 const missile = new ItemStack(Items.MISSILE_WEAPON);
                 player.addItem(Items.MISSILE_WEAPON, missile);
                 this.onUnlockExplosionWpn(missile, player);
@@ -288,8 +280,6 @@ export class ApplyServerTech {
                 break;
             }
             case Techs.SPACE_TORPEDOES: {
-                player.removeItem(Items.MISSILE_WEAPON);
-
                 const stack = new ItemStack(Items.SPACE_TORPEDOES);
                 player.addItem(Items.SPACE_TORPEDOES, stack);
 
@@ -298,7 +288,7 @@ export class ApplyServerTech {
                 break;
             }
             case Techs.RANDOM_ROCKET: {
-                const rocket = player.getItem(Items.ROCKET_WEAPON);
+                const rocket = player.getItem(Items.ROCKET_LAUNCHER);
                 if (rocket) {
                     rocket.set(DataComponents.MISSILE_RANDOM_ENABLE, true);
                 }

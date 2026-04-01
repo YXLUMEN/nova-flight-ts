@@ -1,5 +1,5 @@
 import type {IVec} from "../../utils/math/IVec.ts";
-import type {Comparable} from "../../apis/types.ts";
+import type {Comparable} from "../../type/types.ts";
 import type {Direction} from "../collision/Direction.ts";
 
 /**

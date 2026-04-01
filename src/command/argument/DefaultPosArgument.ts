@@ -3,7 +3,7 @@ import {CoordinateArgument} from "./CoordinateArgument.ts";
 import type {ServerCommandSource} from "../../server/command/ServerCommandSource.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import type {StringReader} from "../../brigadier/StringReader.ts";
-import {IllegalArgumentError} from "../../apis/errors.ts";
+import {IllegalArgumentError} from "../../type/errors.ts";
 
 export class DefaultPosArgument implements PosArgument {
     private readonly x: CoordinateArgument;

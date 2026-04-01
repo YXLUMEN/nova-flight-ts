@@ -81,7 +81,7 @@ export class BallisticCalculator {
         const mobs = world.getMobs();
         if (mobs.size === 0) return null;
 
-        const cursorWorldPos = this.owner.input.getPointer;
+        const cursorWorldPos = this.owner.input.getWorldPointer();
         let nearest: MobEntity | null = null;
         let nearestDist2 = Infinity;
 

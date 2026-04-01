@@ -1,0 +1,188 @@
+import {Registry} from "../../registry/Registry.ts";
+import {Registries} from "../../registry/Registries.ts";
+import {Identifier} from "../../registry/Identifier.ts";
+import {Tech} from "./Tech.ts";
+import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import {TechState} from "./TechState.ts";
+import tech from "./tech-data.json" with {type: "json"};
+
+export class Techs {
+    public static COILGUNS;
+    public static RAILGUNS;
+    public static KINETIC_ARTILLERY;
+
+    public static AUTOCANNON;
+    public static MINIGUN;
+    public static CIWS;
+
+    // 爆炸类
+    public static EXPLOSIVE;
+
+    public static CANNON90;
+    public static ARTILLERY125;
+
+    public static MISSILE;
+    public static HONEYCOMB_MISSILE;
+    public static SPACE_TORPEDOES;
+
+    // 能量类
+    public static LASER;
+    public static GAMMA_LASERS;
+    public static PHASE_LASERS;
+
+    // 重型武器
+    public static HEAVY_WEAPON;
+
+    public static ROCKET_LAUNCHER;
+    public static RANDOM_ROCKET;
+
+    public static CLOUD_LIGHTNING;
+    public static ARC_EMITTER;
+    public static FOCUSED_ARC_EMITTER;
+
+    public static PARTICLE_LANCE;
+    public static TACHYON_LANCE;
+    public static PERDITION_BEAM;
+
+    // 炮艇专精
+    public static GUNBOAT_FOCUS;
+
+    public static HD_BULLET;
+    public static AD_LOADING;
+    public static ANTIMATTER_WARHEAD;
+
+    public static HV_WARHEAD;
+    public static HD_EXPLOSIVES;
+    public static SERIAL_WARHEAD;
+    public static FUSION_BOMB;
+
+    // 能源专精
+    public static ENERGY_FORCE;
+
+    public static ELECTRICAL_SURGES;
+    public static AD_CAPACITANCE;
+    public static ELE_OSCILLATION;
+    public static QUICK_CHARGE;
+    public static ELE_SHIELD;
+
+    public static HIGH_EFFICIENCY_COOLANT;
+    public static HARMONIC_ANALYSIS;
+    public static HIGH_TEMPERATURE_ALLOY;
+    public static ENERGY_RECOVERY;
+
+    public static CORONA_DISCHARGE;
+    public static STATIC_ELECTRICITY;
+
+    public static VOID_ENGIN;
+    public static VOID_DISTURBANCE;
+    public static SPACE_TEAR;
+    public static VOID_DWELLER;
+    public static VOID_ENERGY_EXTRACTION;
+    public static VOID_LEAP;
+
+    public static SHIP_OPT;
+    public static EXPLOSIVE_ARMOR;
+    public static EMERGENCY_REPAIR;
+    public static DECOY_RELEASER;
+
+    public static NANOTECHNOLOGY;
+    public static NANO_MENDING;
+    public static ARMOR_EROSION;
+    public static GRAY;
+
+    public static STEERING_GEAR;
+    public static BALLISTIC_CALCULATOR;
+    public static FIRE_CONTROL_COMPUTER;
+    public static INSTANT_RESPONSE;
+    public static EMERGENCY_WARP;
+
+    public static SENTINEL_POINT_DEFENSE;
+    public static BARRIER_POINT_DEFENSE;
+    public static GUARDIAN_POINT_DEFENSE;
+    public static FLAK_BATTERY;
+    public static FLAK_CANNONS;
+    public static FLAK_ARTILLERY;
+
+    static {
+        const parsed = TechState.normalizeTechs(tech);
+        const registerFromJson = (name: string) => {
+            return this.register(name, parsed.get(name)!);
+        }
+
+        this.ENERGY_FORCE = registerFromJson('energy_focus');
+        this.ELECTRICAL_SURGES = registerFromJson('electrical_energy_surges');
+        this.AD_CAPACITANCE = registerFromJson('ad_capacitance');
+        this.ELE_OSCILLATION = registerFromJson('ele_oscillation');
+        this.QUICK_CHARGE = registerFromJson('quick_charge');
+        this.ELE_SHIELD = registerFromJson('ele_shield');
+        this.LASER = registerFromJson('laser');
+        this.HIGH_EFFICIENCY_COOLANT = registerFromJson('high_efficiency_coolant');
+        this.HARMONIC_ANALYSIS = registerFromJson('harmonic_analysis');
+        this.HIGH_TEMPERATURE_ALLOY = registerFromJson('high_temperature_alloy');
+        this.ENERGY_RECOVERY = registerFromJson('energy_recovery');
+        this.GUNBOAT_FOCUS = registerFromJson('gunboat_focus');
+        this.MINIGUN = registerFromJson('minigun');
+        this.CIWS = registerFromJson('ciws');
+        this.HD_BULLET = registerFromJson('hd_bullet');
+        this.AD_LOADING = registerFromJson('ad_loading');
+        this.ANTIMATTER_WARHEAD = registerFromJson('antimatter_warhead');
+        this.CANNON90 = registerFromJson('cannon90');
+        this.ARTILLERY125 = registerFromJson('artillery125');
+        this.FUSION_BOMB = registerFromJson('fusion_bomb');
+        this.HV_WARHEAD = registerFromJson('hv_warhead');
+        this.HD_EXPLOSIVES = registerFromJson('hd_explosives');
+        this.SERIAL_WARHEAD = registerFromJson('serial_warhead');
+        this.HEAVY_WEAPON = registerFromJson('heavy_weapon');
+        this.ROCKET_LAUNCHER = registerFromJson('rocket_launcher');
+        this.RANDOM_ROCKET = registerFromJson('random_rocket');
+        this.VOID_ENGIN = registerFromJson('void_engin');
+        this.VOID_DISTURBANCE = registerFromJson('void_disturbance');
+        this.SPACE_TEAR = registerFromJson('space_tear');
+        this.VOID_DWELLER = registerFromJson('void_dweller');
+        this.VOID_ENERGY_EXTRACTION = registerFromJson('void_energy_extraction');
+        this.VOID_LEAP = registerFromJson('void_leap');
+        this.SHIP_OPT = registerFromJson('ship_opt');
+        this.EXPLOSIVE_ARMOR = registerFromJson('explosive_armor');
+        this.EMERGENCY_REPAIR = registerFromJson('emergency_repair');
+        this.DECOY_RELEASER = registerFromJson('decoy_releaser');
+        this.ARMOR_EROSION = registerFromJson('armor_erosion');
+        this.GRAY = registerFromJson('gray');
+        this.MISSILE = registerFromJson('missile');
+        this.HONEYCOMB_MISSILE = registerFromJson('honeycomb_missile');
+        this.STEERING_GEAR = registerFromJson('steering_gear');
+        this.FIRE_CONTROL_COMPUTER = registerFromJson('fire_control_computer');
+        this.INSTANT_RESPONSE = registerFromJson('pointer_following');
+        this.EMERGENCY_WARP = registerFromJson('emergency_warp');
+        this.NANOTECHNOLOGY = registerFromJson('nanotechnology');
+        this.NANO_MENDING = registerFromJson('nano_mending');
+        this.CLOUD_LIGHTNING = registerFromJson('cloud_lightning');
+        this.ARC_EMITTER = registerFromJson('arc_emitter');
+        this.FOCUSED_ARC_EMITTER = registerFromJson('focused_arc_emitter');
+        this.SENTINEL_POINT_DEFENSE = registerFromJson('sentinel_point_defense');
+        this.BARRIER_POINT_DEFENSE = registerFromJson('barrier_point_defense');
+        this.GUARDIAN_POINT_DEFENSE = registerFromJson('guardian_point_defense');
+        this.FLAK_BATTERY = registerFromJson('flak_battery');
+        this.FLAK_CANNONS = registerFromJson('flak_cannons');
+        this.FLAK_ARTILLERY = registerFromJson('flak_artillery');
+        this.COILGUNS = registerFromJson('coilguns');
+        this.RAILGUNS = registerFromJson('railguns');
+        this.KINETIC_ARTILLERY = registerFromJson('kinetic_artillery');
+        this.AUTOCANNON = registerFromJson('autocannon');
+        this.EXPLOSIVE = registerFromJson('explosive');
+        this.SPACE_TORPEDOES = registerFromJson('space_torpedoes');
+        this.GAMMA_LASERS = registerFromJson('gamma_lasers');
+        this.PHASE_LASERS = registerFromJson('phase_lasers');
+        this.PARTICLE_LANCE = registerFromJson('particle_lance');
+        this.TACHYON_LANCE = registerFromJson('tachyon_lance');
+        this.BALLISTIC_CALCULATOR = registerFromJson('ballistic_calculator');
+        this.PERDITION_BEAM = registerFromJson('perdition_beam');
+        this.CORONA_DISCHARGE = registerFromJson('corona_discharge');
+        this.STATIC_ELECTRICITY = registerFromJson('static_electricity');
+
+        Registries.TECH.getEntries().forEach(entry => entry.getValue().complete());
+    }
+
+    public static register(name: string, builder: InstanceType<typeof Tech.Builder>): RegistryEntry<Tech> {
+        return Registry.registerReferenceById(Registries.TECH, Identifier.ofVanilla(name), builder.build());
+    }
+}

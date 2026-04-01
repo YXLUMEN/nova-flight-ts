@@ -7,7 +7,7 @@ import {DataComponents} from "../../../component/DataComponents.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {C125BulletEntity} from "../../../entity/projectile/C125BulletEntity.ts";
 import {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
-import {Techs} from "../../../tech/Techs.ts";
+import {Techs} from "../../../world/tech/Techs.ts";
 import {EffectEnum, ExplosionBehavior} from "../../../world/explosion/ExplosionBehavior.ts";
 import {ExplosionVisual} from "../../../world/explosion/ExplosionVisual.ts";
 

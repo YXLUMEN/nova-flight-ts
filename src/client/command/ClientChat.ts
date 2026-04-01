@@ -16,6 +16,6 @@ export class ClientChat {
             );
             return;
         }
-        this.client.networkChannel.send(new ChatMessageC2SPacket(input));
+        this.client.connection.send(new ChatMessageC2SPacket(input));
     }
 }

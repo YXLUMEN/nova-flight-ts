@@ -17,8 +17,8 @@ export class MissileWeapon extends SpecialWeapon {
         const hitDamage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 10);
         const explosionDamage = stack.getOrDefault(DataComponents.EXPLOSION_POWER, 10);
         const explosionRadius = stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 72);
-        let i = 1;
 
+        let i = 1;
         const schedule = world.scheduleInterval(0.1, () => {
             if (i++ > missileCounts) {
                 schedule.cancel();
@@ -58,9 +58,5 @@ export class MissileWeapon extends SpecialWeapon {
 
     public override getUiColor(): string {
         return '#ff9f43';
-    }
-
-    public override getSortIndex(): number {
-        return 0;
     }
 }

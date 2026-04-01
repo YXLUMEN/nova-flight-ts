@@ -1,4 +1,4 @@
-import type {Comparable} from "../../apis/types.ts";
+import type {Comparable} from "../../type/types.ts";
 
 export class HashMap<K extends Comparable, V> implements Map<K, V> {
     private readonly buckets: Map<string, { key: K, value: V }[]> = new Map();

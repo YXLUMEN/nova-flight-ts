@@ -1,6 +1,6 @@
 import {ExplosionBehavior} from "./ExplosionBehavior.ts";
 import type {Entity} from "../../entity/Entity.ts";
-import type {Predicate} from "../../apis/types.ts";
+import type {Predicate} from "../../type/types.ts";
 
 export class FilterBehaviour extends ExplosionBehavior {
     public filter: Predicate<Entity> | null = null;

@@ -1,4 +1,4 @@
-import type {UUID} from "../apis/types.ts";
+import type {UUID} from "../type/types.ts";
 import {config} from "./uit.ts";
 
 export class UUIDUtil {

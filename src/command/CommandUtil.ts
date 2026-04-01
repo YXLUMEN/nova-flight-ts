@@ -1,6 +1,6 @@
 import type {Identifier} from "../registry/Identifier.ts";
 import {type SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
-import type {Consumer, FunctionReturn, Predicate} from "../apis/types.ts";
+import type {Consumer, FunctionReturn, Predicate} from "../type/types.ts";
 import {commonPrefix} from "../utils/Strings.ts";
 import {type Suggestions} from "../brigadier/suggestion/Suggestions.ts";
 import type {SuggestionProvider} from "../brigadier/suggestion/SuggestionProvider.ts";

@@ -7,14 +7,21 @@ import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import {Window} from "../Window.ts";
 
 export class LoadingScreen implements IUi {
-    private width: number = 0;
-    private height: number = 0;
     private readonly ctx: CanvasRenderingContext2D;
     private readonly ctrl = new AbortController();
+
+    private width: number = 0;
+    private height: number = 0;
 
     private currentProgress: number = 0;
     private targetProgress: number = 0;
     private message: string = '';
+
+    private currentSubProgress: number = 0;
+    private targetSubProgress: number = 0;
+    private subMessage: string = '';
+    private showSubBar: boolean = false;
+
     private done: boolean = false;
 
     public constructor(ctx: CanvasRenderingContext2D) {
@@ -33,9 +40,22 @@ export class LoadingScreen implements IUi {
         }
     }
 
+    public setSubProgress(progress: number, message?: string) {
+        this.targetSubProgress = clamp(progress, 0, 1);
+        this.showSubBar = true;
+        if (message !== undefined) {
+            this.subMessage = message;
+        }
+    }
+
+    public hideSubBar() {
+        this.showSubBar = false;
+    }
+
     private update() {
         const speed = 0.1;
         this.currentProgress += (this.targetProgress - this.currentProgress) * speed;
+        this.currentSubProgress += (this.targetSubProgress - this.currentSubProgress) * speed;
     }
 
     public render() {
@@ -77,6 +97,29 @@ export class LoadingScreen implements IUi {
             if (this.message) {
                 ctx.fillText(this.message, width / 2, barY + 40);
             }
+
+            if (!this.showSubBar) return;
+
+            const subBarHeight = 8;
+            const subBarWidth = barWidth * 0.8;
+            const subBarX = (width - subBarWidth) / 2;
+            const subBarY = barY + 70;
+
+            ctx.fillStyle = '#333';
+            UiTools.roundRect(ctx, subBarX, subBarY, subBarWidth, subBarHeight, subBarHeight / 4);
+            ctx.fill();
+
+            const subFilledWidth = subBarWidth * this.currentSubProgress;
+            if (subFilledWidth > 0) {
+                ctx.fillStyle = UITheme.accent || '#66aaff';
+                UiTools.roundRect(ctx, subBarX, subBarY, subFilledWidth, subBarHeight, subBarHeight / 4);
+                ctx.fill();
+            }
+
+            if (this.subMessage) {
+                ctx.fillStyle = UITheme.foreground;
+                ctx.fillText(this.subMessage, width / 2, subBarY + 20);
+            }
         } catch (error) {
             console.error(error);
         }
@@ -96,6 +139,7 @@ export class LoadingScreen implements IUi {
         if (this.done) return;
 
         this.currentProgress = 1;
+        this.currentSubProgress = 1;
         await sleep(300);
 
         this.done = true;

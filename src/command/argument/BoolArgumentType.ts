@@ -1,6 +1,6 @@
 import type {ArgumentType} from "../../brigadier/ArgumentType.ts";
 import type {StringReader} from "../../brigadier/StringReader.ts";
-import {IllegalArgumentError} from "../../apis/errors.ts";
+import {IllegalArgumentError} from "../../type/errors.ts";
 import type {CommandContext} from "../../brigadier/context/CommandContext.ts";
 import type {SuggestionsBuilder} from "../../brigadier/suggestion/SuggestionsBuilder.ts";
 import type {Suggestions} from "../../brigadier/suggestion/Suggestions.ts";

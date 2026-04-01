@@ -4,7 +4,7 @@ import type {Identifier} from "./Identifier.ts";
 import type {TagKey} from "./tag/TagKey.ts";
 import {HashMap} from "../utils/collection/HashMap.ts";
 import type {IndexedIterable} from "../utils/collection/IndexedIterable.ts";
-import {IllegalStateException} from "../apis/errors.ts";
+import {IllegalStateException} from "../type/errors.ts";
 import {deepFreeze} from "../utils/uit.ts";
 
 export class Registry<T> implements IndexedIterable<T> {

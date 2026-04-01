@@ -9,22 +9,24 @@ import {DefaultedList} from "../../utils/collection/DefaultedList.ts";
 import {NbtTypeId} from "../../nbt/NbtType.ts";
 
 export class UniqueInventory implements Container, NbtSerializable, Iterable<ItemStack> {
+    public static readonly INVENTORY_GRID_COLS = 6;
     public readonly player: PlayerEntity;
 
-    private readonly inventory = DefaultedList.ofSizeAndValue(24, ItemStack.EMPTY);
+    private readonly inventory = DefaultedList.ofSizeAndValue(30, ItemStack.EMPTY);
     private readonly items = new Map<Item, ItemStack>();
 
     private selected: number = 0;
-
     private timesChanged: number = 0;
 
     public constructor(player: PlayerEntity) {
         this.player = player;
     }
 
-    public tick() {
+    public tick(limit: number = this.inventory.length) {
+        limit = clamp(limit, 0, this.inventory.length);
+
         const world = this.player.getWorld();
-        for (let i = 0; i < this.inventory.length; i++) {
+        for (let i = 0; i < limit; i++) {
             const stack = this.inventory.get(i);
             if (!stack.isEmpty()) {
                 stack.inventoryTick(world, this.player, i, this.selected === i);
@@ -110,10 +112,14 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
     }
 
     public setItem(slot: number, stack: ItemStack): void {
-        if (slot < 0 || slot >= this.inventory.length || this.canNotAdd(stack)) return;
+        if (!this.validateSlot(slot)) return;
 
         this.inventory.set(slot, stack);
-        this.items.set(stack.getItem(), stack);
+        if (stack.isEmpty() && this.items.has(stack.getItem())) {
+            this.items.delete(stack.getItem());
+        } else {
+            this.items.set(stack.getItem(), stack);
+        }
     }
 
     public addItem(stack: ItemStack): boolean {
@@ -152,6 +158,10 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
         return 6;
     }
 
+    public specialLength(): number {
+        return 11;
+    }
+
     public setChanged(): void {
         this.timesChanged++;
     }
@@ -160,8 +170,12 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
         return this.timesChanged;
     }
 
-    private canNotAdd(stack: ItemStack): boolean {
+    public canNotAdd(stack: ItemStack): boolean {
         return stack.isEmpty() || this.items.has(stack.getItem());
+    }
+
+    public validateSlot(slot: number): boolean {
+        return slot >= 0 && slot < this.inventory.length;
     }
 
     [Symbol.iterator](): Iterator<ItemStack> {

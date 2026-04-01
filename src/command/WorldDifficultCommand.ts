@@ -1,7 +1,7 @@
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {IllegalArgumentError} from "../apis/errors.ts";
+import {IllegalArgumentError} from "../type/errors.ts";
 import {IntArgumentType} from "./argument/IntArgumentType.ts";
 
 export class WorldDifficultCommand {

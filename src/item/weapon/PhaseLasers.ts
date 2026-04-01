@@ -229,8 +229,4 @@ export class PhaseLasers extends SpecialWeapon {
     public setCoolRate(stack: ItemStack, value: number) {
         stack.set(DataComponents.COOLDOWN_RATE, value);
     }
-
-    public override getSortIndex(): number {
-        return 2;
-    }
 }

@@ -1,5 +1,5 @@
 import type {TrackedDataHandler} from "./TrackedDataHandler.ts";
-import type {Comparable} from "../../apis/types.ts";
+import type {Comparable} from "../../type/types.ts";
 
 export class TrackedData<T> implements Comparable {
     public id: number;

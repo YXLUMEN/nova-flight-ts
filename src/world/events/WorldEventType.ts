@@ -1,4 +1,4 @@
-import type {Constructor} from "../../apis/types.ts";
+import type {Constructor} from "../../type/types.ts";
 import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
 import {Registries} from "../../registry/Registries.ts";

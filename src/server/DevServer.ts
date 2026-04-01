@@ -1,6 +1,6 @@
 import {NovaFlightServer} from "./NovaFlightServer.ts";
 import {IntegratedServer} from "./IntegratedServer.ts";
-import type {UUID} from "../apis/types.ts";
+import type {UUID} from "../type/types.ts";
 
 export class DevServer extends IntegratedServer {
     private willCrash = 0;

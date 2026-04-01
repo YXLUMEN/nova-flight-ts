@@ -1,6 +1,6 @@
 import {Entity} from "../../entity/Entity.ts";
 import {MobEntity} from "../../entity/mob/MobEntity.ts";
-import type {Consumer} from "../../apis/types.ts";
+import type {Consumer} from "../../type/types.ts";
 import type {EntityType} from "../../entity/EntityType.ts";
 
 export class EntityList {

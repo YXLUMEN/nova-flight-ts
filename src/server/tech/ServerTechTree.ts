@@ -1,14 +1,14 @@
-import type {TechTree} from "../../tech/TechTree.ts";
-import {TechState} from "../../tech/TechState.ts";
+import type {TechTree} from "../../world/tech/TechTree.ts";
+import {TechState} from "../../world/tech/TechState.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
 import {Items} from "../../item/Items.ts";
 import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {type RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
-import {type Tech} from "../../tech/Tech.ts";
+import {type Tech} from "../../world/tech/Tech.ts";
 import {ApplyServerTech} from "./ApplyServerTech.ts";
-import {Techs} from "../../tech/Techs.ts";
+import {Techs} from "../../world/tech/Techs.ts";
 
 export class ServerTechTree implements TechTree {
     private readonly player: ServerPlayerEntity;
@@ -125,7 +125,7 @@ export class ServerTechTree implements TechTree {
         this.player.clearItems();
         this.player.onDamageExplosionRadius = 320;
 
-        this.player.addItem(Items.CANNON40_WEAPON);
+        this.player.addItem(Items.CANNON40);
         this.player.addItem(Items.BOMB_WEAPON);
         this.player.setYaw(-1.57079);
     }
@@ -148,7 +148,10 @@ export class ServerTechTree implements TechTree {
 
         for (const id of techs) {
             const tech = this.state.getTech(id);
-            if (!tech) throw new Error(`Fail to parse tech with id: ${id}`);
+            if (!tech) {
+                console.warn(`Fail to parse tech with id: ${id}`);
+                continue;
+            }
 
             this.state.unlock(tech);
         }

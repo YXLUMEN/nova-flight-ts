@@ -7,7 +7,7 @@ import type {ItemStack} from "../../ItemStack.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
-import {Techs} from "../../../tech/Techs.ts";
+import {Techs} from "../../../world/tech/Techs.ts";
 import {EffectEnum, ExplosionBehavior} from "../../../world/explosion/ExplosionBehavior.ts";
 import {ExplosionVisual} from "../../../world/explosion/ExplosionVisual.ts";
 

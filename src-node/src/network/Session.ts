@@ -1,4 +1,4 @@
-import type {UUID} from "../../../src/apis/types.ts";
+import type {UUID} from "../../../src/type/types.ts";
 import {WebSocket} from "ws";
 
 export class Session {

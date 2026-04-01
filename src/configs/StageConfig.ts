@@ -1,9 +1,9 @@
-import {Stage} from "../stage/Stage.ts";
+import {Stage} from "../world/stage/Stage.ts";
 import {spawnAtTop, spawnAtTopInLine, spawnAtTopS, spawnInMap, spawnMiniGun,} from "../utils/PresetsSpawn.ts";
-import {EVENTS} from "../apis/IEvents.ts";
+import {EVENTS} from "../type/IEvents.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
-import {PhaseConfigBuilder} from "../stage/PhaseConfig.ts";
-import {spawnExplosion} from "../stage/SpawnFactories.ts";
+import {PhaseConfigBuilder} from "../world/stage/PhaseConfig.ts";
+import {spawnExplosion} from "../world/stage/SpawnFactories.ts";
 
 const p0 = PhaseConfigBuilder.create({
     name: "P0",

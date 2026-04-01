@@ -5,7 +5,7 @@ import type {Registry} from "../../registry/Registry.ts";
 import type {IndexedIterable} from "../../utils/collection/IndexedIterable.ts";
 import {type BinaryReader} from "../../nbt/BinaryReader.ts";
 import {type BinaryWriter} from "../../nbt/BinaryWriter.ts";
-import type {Comparable, Constructor, FunctionReturn, Supplier, UUID} from "../../apis/types.ts";
+import type {Comparable, Constructor, FunctionReturn, Supplier, UUID} from "../../type/types.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {config} from "../../utils/uit.ts";
 import {Optional} from "../../utils/Optional.ts";
@@ -17,7 +17,7 @@ import type {Codec} from "../../serialization/Codec.ts";
 import type {NbtElement} from "../../nbt/element/NbtElement.ts";
 import {NbtEnd} from "../../nbt/element/NbtEnd.ts";
 import {NbtTypes} from "../../nbt/NbtTypes.ts";
-import {IllegalStateException} from "../../apis/errors.ts";
+import {IllegalStateException} from "../../type/errors.ts";
 import {BlockPos} from "../../world/map/BlockPos.ts";
 
 export class PacketCodecs {

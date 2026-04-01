@@ -15,11 +15,12 @@
     "@tauri-apps/plugin-fs": "^2.4.4",
     "@tauri-apps/plugin-log": "^2.7.0",
     "@tauri-apps/plugin-opener": "^2",
-    "@tauri-apps/plugin-updater": "^2.9.0"
+    "@tauri-apps/plugin-updater": "^2.9.0",
+    "pixi.js": "^8.17.1"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.8.3",
-    "terser": "^5.44.1",
+    "terser": "^5.46.1",
     "typescript": "^5.8.3",
     "vite": "^7.2.0"
   }

@@ -92,7 +92,6 @@ export class WorldRender {
         this.renderBackground(ctx);
         if (!this.world) {
             ctx.restore();
-            this.client.window.hud.render(ctx);
             return;
         }
 
@@ -157,7 +156,7 @@ export class WorldRender {
             }
 
             if (player.followPointer && WorldConfig.follow) {
-                const pointer = player.input.getPointer;
+                const pointer = player.input.getWorldPointer();
                 ctx.strokeStyle = '#fff';
                 ctx.beginPath();
                 ctx.moveTo(playerPos.x, playerPos.y);
@@ -180,7 +179,7 @@ export class WorldRender {
         ctx.restore();
 
         this.client.window.hud.render(ctx);
-        if (this.client.isPause() && !this.world.isOver && (player && !player.openInventory)) {
+        if (this.client.isPause() && !this.world.isOver && (player && !player.isOpenInventory())) {
             this.client.window.pauseOverlay.render(ctx);
         }
     }

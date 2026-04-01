@@ -6,7 +6,6 @@ import type {Payload, PayloadId} from "../../network/Payload.ts";
 import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
 import {PlayerUnlockTechC2SPacket} from "../../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
-import {RequestPositionC2SPacket} from "../../network/packet/c2s/RequestPositionC2SPacket.ts";
 import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 import {PlayerFinishLoginC2SPacket} from "../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
 import {PlayerResetAllTechC2SPacket} from "../../network/packet/c2s/PlayerResetAllTechC2SPacket.ts";
@@ -19,6 +18,8 @@ import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTech
 import {PingC2SPacket} from "../../network/packet/c2s/PingC2SPacket.ts";
 import {BlockChangeC2SPacket} from "../../network/packet/c2s/BlockChangeC2SPacket.ts";
 import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
+import {FireSpecialC2SPacket} from "../../network/packet/c2s/FireSpecialC2SPacket.ts";
+import {PlayerInventorySwapC2SPacket} from "../../network/packet/c2s/PlayerInventorySwapC2SPacket.ts";
 
 export class ClientPackets {
     public static registerNetworkPacket(): void {
@@ -31,7 +32,6 @@ export class ClientPackets {
         this.register(PlayerFireC2SPacket.ID, PlayerFireC2SPacket.CODEC);
         this.register(PlayerUnlockTechC2SPacket.ID, PlayerUnlockTechC2SPacket.CODEC);
         this.register(PlayerSwitchSlotC2SPacket.ID, PlayerSwitchSlotC2SPacket.CODEC);
-        this.register(RequestPositionC2SPacket.ID, RequestPositionC2SPacket.CODEC);
         this.register(PlayerFinishLoginC2SPacket.ID, PlayerFinishLoginC2SPacket.CODEC);
         this.register(PlayerResetAllTechC2SPacket.ID, PlayerResetAllTechC2SPacket.CODEC);
         this.register(CommandExecutionC2SPacket.ID, CommandExecutionC2SPacket.CODEC);
@@ -42,6 +42,8 @@ export class ClientPackets {
         this.register(PlayerResetTechC2SPacket.ID, PlayerResetTechC2SPacket.CODEC);
         this.register(BlockChangeC2SPacket.ID, BlockChangeC2SPacket.CODEC);
         this.register(BatchBlockChangesPacket.ID, BatchBlockChangesPacket.CODEC);
+        this.register(FireSpecialC2SPacket.ID, FireSpecialC2SPacket.CODEC);
+        this.register(PlayerInventorySwapC2SPacket.ID, PlayerInventorySwapC2SPacket.CODEC);
         PayloadTypeRegistry.playC2S().settle();
     }
 

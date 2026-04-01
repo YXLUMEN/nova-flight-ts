@@ -32,8 +32,4 @@ export class BombWeapon extends SpecialWeapon {
     public override getUiColor(): string {
         return '#ff9f43';
     }
-
-    public override getSortIndex(): number {
-        return 0;
-    }
 }

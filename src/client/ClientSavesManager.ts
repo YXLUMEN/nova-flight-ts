@@ -1,5 +1,5 @@
 import {ServerStorage} from "../server/ServerStorage.ts";
-import type {SaveMeta} from "../apis/Saves.ts";
+import type {SaveMeta} from "../type/Saves.ts";
 import {error, warn} from "@tauri-apps/plugin-log";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {documentDir, resolve} from "@tauri-apps/api/path";

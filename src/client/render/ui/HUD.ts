@@ -1,4 +1,3 @@
-import {BaseWeapon} from "../../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {clamp, lerp, PI2} from "../../../utils/math/math.ts";
 import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import type {ItemStack} from "../../../item/ItemStack.ts";
@@ -9,6 +8,7 @@ import {DataComponents} from "../../../component/DataComponents.ts";
 import type {SpecialWeapon} from "../../../item/weapon/SpecialWeapon.ts";
 import type {ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
 import {InventoryRender} from "./InventoryRender.ts";
+import {Weapon} from "../../../item/weapon/Weapon.ts";
 
 export class HUD implements IUi {
     private readonly font: string = '14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
@@ -39,8 +39,7 @@ export class HUD implements IUi {
         if (player) {
             this.inventoryRender = new InventoryRender(player);
             this.inventoryRender.setSize(this.worldW, this.worldH);
-        }
-        else this.inventoryRender = null;
+        } else this.inventoryRender = null;
     }
 
     public tick(tickDelta: number) {
@@ -53,9 +52,10 @@ export class HUD implements IUi {
         } else {
             this.displayHealth = realHealth;
         }
+        this.inventoryRender!.tick();
     }
 
-    public render(ctx: CanvasRenderingContext2D) {
+    public render(ctx: CanvasRenderingContext2D): void {
         const client = NovaFlightClient.getInstance();
         const world = client.world;
         if (!world) return;
@@ -91,7 +91,7 @@ export class HUD implements IUi {
         y += this.barHeight + this.lineGap;
 
         // 武器冷却条
-        const items = this.player.getSpecials();
+        const items = this.player.getActiveSpecials();
         if (items.length > 0) {
             const quickFire = this.player.getQuickFire();
             for (const item of items) {
@@ -163,7 +163,7 @@ export class HUD implements IUi {
 
         const stack = this.player.getCurrentItem();
         const item = stack.getItem();
-        if (stack.isEmpty() || !(item instanceof BaseWeapon)) return;
+        if (stack.isEmpty() || !(item instanceof Weapon)) return;
 
         let ratio: number;
         const reloadLeft = this.player.cooldownManager.getCooldownTicks(item);

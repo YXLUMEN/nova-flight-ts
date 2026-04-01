@@ -1,5 +1,5 @@
 import type {StringReader} from "../../brigadier/StringReader.ts";
-import {IllegalArgumentError} from "../../apis/errors.ts";
+import {IllegalArgumentError} from "../../type/errors.ts";
 
 export class CoordinateArgument {
     private readonly relative: boolean;

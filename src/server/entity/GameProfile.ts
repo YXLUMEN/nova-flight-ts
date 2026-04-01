@@ -1,4 +1,4 @@
-import type {UUID} from "../../apis/types.ts";
+import type {UUID} from "../../type/types.ts";
 
 export class GameProfile {
     public readonly sessionId: number;

@@ -4,7 +4,7 @@ import {rand} from "../../utils/math/math.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import type {EntityType} from "../EntityType.ts";
-import {EVENTS} from "../../apis/IEvents.ts";
+import {EVENTS} from "../../type/IEvents.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {AiBehavior, MobAI} from "../ai/MobAI.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";

@@ -18,7 +18,7 @@ import type {BinaryWriter} from "../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../nbt/BinaryReader.ts";
 import {ComponentChanges} from "../component/ComponentChanges.ts";
 import {ComponentMapImpl} from "../component/ComponentMapImpl.ts";
-import type {Consumer} from "../apis/types.ts";
+import type {Consumer} from "../type/types.ts";
 import type {Codec} from "../serialization/Codec.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {Codecs} from "../serialization/Codecs.ts";

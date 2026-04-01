@@ -6,5 +6,6 @@
   "disconnect.duplicate_player": "已有玩家在线",
   "disconnect.kicked": "被服务器踢出",
   "disconnect.invalid_state": "连接状态异常",
-  "disconnect.promote_fail": "会话提升失败"
+  "disconnect.promote_fail": "会话提升失败",
+  "disconnect.move_too_fast": "移动过快"
 }

@@ -4,7 +4,7 @@ import {ClientWorld} from "../ClientWorld.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
-import type {Consumer, UUID} from "../../apis/types.ts";
+import type {Consumer, UUID} from "../../type/types.ts";
 import {EntityRemoveS2CPacket} from "../../network/packet/s2c/EntityRemoveS2CPacket.ts";
 import {EntityPositionS2CPacket} from "../../network/packet/s2c/EntityPositionS2CPacket.ts";
 import {ExplosionS2CPacket} from "../../network/packet/s2c/ExplosionS2CPacket.ts";
@@ -27,11 +27,10 @@ import {LivingEntity} from "../../entity/LivingEntity.ts";
 import {GaussianRandom} from "../../utils/math/GaussianRandom.ts";
 import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.ts";
 import {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
-import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
 import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacket.ts";
 import {PlayerFinishLoginC2SPacket} from "../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
 import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
-import {EVENTS} from "../../apis/IEvents.ts";
+import {EVENTS} from "../../type/IEvents.ts";
 import {EntityNbtS2CPacket} from "../../network/packet/s2c/EntityNbtS2CPacket.ts";
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
 import {EffectCreateS2CPacket} from "../../network/packet/s2c/EffectCreateS2CPacket.ts";
@@ -86,6 +85,7 @@ import type {ClientConnection} from "./ClientConnection.ts";
 import type {PacketListener} from "../../server/network/handler/PacketListener.ts";
 import {ConnectionState, type ConnectionStateType} from "../../server/network/ConnectionState.ts";
 import {SetPlayerInventoryS2CPacket} from "../../network/packet/s2c/SetPlayerInventoryPacket.ts";
+import {PlayerPositionS2CPacket} from "../../network/packet/s2c/PlayerPositionS2CPacket.ts";
 
 export class ClientNetworkHandler implements PacketListener {
     private readonly handlers = new HashMap<Identifier, Consumer<Payload>>();
@@ -111,7 +111,7 @@ export class ClientNetworkHandler implements PacketListener {
         this.connection = connection;
         this.commandSource = new ClientCommandSource(this, client);
 
-        connection.setPacketListener(ConnectionState.STABLE, this);
+        connection.setPacketListener(ConnectionState.PLAY, this);
         this.registryHandler();
     }
 
@@ -134,7 +134,7 @@ export class ClientNetworkHandler implements PacketListener {
     }
 
     public getPhase(): ConnectionStateType {
-        return ConnectionState.STABLE;
+        return ConnectionState.PLAY;
     }
 
     public checkServer() {
@@ -189,7 +189,7 @@ export class ClientNetworkHandler implements PacketListener {
         this.stopSniff();
         this.sendImmediate(new PlayerAttemptLoginC2SPacket(
             this.client.clientId,
-            this.client.networkChannel.getSessionId(),
+            this.client.connection.getSessionId(),
             this.client.playerName
         ));
     }
@@ -212,7 +212,7 @@ export class ClientNetworkHandler implements PacketListener {
         await this.client.joinGame(this.world);
         if (this.client.player === null) {
             const profile = new GameProfile(
-                this.client.networkChannel.getSessionId(),
+                this.client.connection.getSessionId(),
                 this.client.clientId,
                 this.client.playerName
             );
@@ -258,6 +258,12 @@ export class ClientNetworkHandler implements PacketListener {
             .then(() => this.client.requestStop());
     }
 
+    public onPlayerMove(_packet: PlayerPositionS2CPacket): void {
+        const player = this.client.player;
+        if (!player) return;
+
+    }
+
     public onEntity(packet: EntityS2CPacket) {
         const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
@@ -285,16 +291,6 @@ export class ClientNetworkHandler implements PacketListener {
         } else if (entity === this.client.player) {
             entity.setPosition(packet.x, packet.y);
         }
-    }
-
-    public onEntityPositionForce(packet: EntityPositionForceS2CPacket): void {
-        const entity = this.world?.getEntityById(packet.entityId);
-        if (!entity) return;
-
-        entity.setDeltaMovement(packet.x, packet.y);
-        entity.updatePositionAndAngles(packet.x, packet.y, packet.yaw, 3);
-        entity.updatePosition(packet.x, packet.y);
-        entity.updateYaw(packet.yaw);
     }
 
     public onEntitySpawn(packet: EntitySpawnS2CPacket): void {
@@ -471,6 +467,7 @@ export class ClientNetworkHandler implements PacketListener {
     public onSetInventory(packet: SetPlayerInventoryS2CPacket): void {
         if (!this.client.player) return;
         this.client.player.getInventory().setItem(packet.slot, packet.contents);
+        this.client.player.reloadActiveSpecials();
     }
 
     public onEffectCreate(packet: EffectCreateS2CPacket) {
@@ -682,7 +679,6 @@ export class ClientNetworkHandler implements PacketListener {
         this.register(EntitySpawnS2CPacket.ID, this.onEntitySpawn);
         this.register(EntityRemoveS2CPacket.ID, this.onEntityRemove);
         this.register(EntityPositionS2CPacket.ID, this.onEntityPosition);
-        this.register(EntityPositionForceS2CPacket.ID, this.onEntityPositionForce);
         this.register(ExplosionS2CPacket.ID, this.onExplosion);
         this.register(EntityVelocityUpdateS2CPacket.ID, this.onEntityVelocityUpdate);
         this.register(EntityTrackerUpdateS2CPacket.ID, this.onEntityTrackerUpdate);
@@ -720,5 +716,6 @@ export class ClientNetworkHandler implements PacketListener {
         this.register(BlockChangeS2CPacket.ID, this.onBlockChange);
         this.register(BatchBlockChangesPacket.ID, this.onBatchChanges);
         this.register(SetPlayerInventoryS2CPacket.ID, this.onSetInventory);
+        this.register(PlayerPositionS2CPacket.ID, this.onPlayerMove);
     }
 }

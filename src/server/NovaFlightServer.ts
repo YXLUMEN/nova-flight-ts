@@ -1,6 +1,6 @@
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
-import type {Constructor, Consumer, UUID} from "../apis/types.ts";
+import type {Constructor, Consumer, UUID} from "../type/types.ts";
 import {ServerWorld} from "./ServerWorld.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import {ServerCommandSource} from "./command/ServerCommandSource.ts";

@@ -1,4 +1,4 @@
-import type {Comparable} from "../../apis/types.ts";
+import type {Comparable} from "../../type/types.ts";
 
 export class HashSet<T extends Comparable> {
     public readonly [Symbol.toStringTag]: string = 'HashSet';

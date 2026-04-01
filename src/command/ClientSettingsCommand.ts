@@ -3,7 +3,7 @@ import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import {WorldConfig} from "../configs/WorldConfig.ts";
 import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
 import {invoke} from "@tauri-apps/api/core";
-import {CommandError, IllegalArgumentError} from "../apis/errors.ts";
+import {CommandError, IllegalArgumentError} from "../type/errors.ts";
 import {IntArgumentType} from "./argument/IntArgumentType.ts";
 import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
 import {ServerStorage} from "../server/ServerStorage.ts";

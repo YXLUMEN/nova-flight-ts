@@ -3,7 +3,7 @@ import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
-import {IllegalArgumentError} from "../apis/errors.ts";
+import {IllegalArgumentError} from "../type/errors.ts";
 
 export class StageCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {

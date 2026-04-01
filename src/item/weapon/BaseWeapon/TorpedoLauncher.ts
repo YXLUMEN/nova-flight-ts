@@ -5,6 +5,7 @@ import {BaseWeapon} from "./BaseWeapon.ts";
 import {EntityTypes} from "../../../entity/EntityTypes.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import {MagneticTorpedoEntity} from "../../../entity/projectile/MagneticTorpedoEntity.ts";
+import {SoundEvents} from "../../../sound/SoundEvents.ts";
 
 export class TorpedoLauncher extends BaseWeapon {
     private readonly speed = 32;
@@ -20,6 +21,7 @@ export class TorpedoLauncher extends BaseWeapon {
 
         this.setBullet(bullet, attacker, this.speed, 0, 0);
         world.spawnEntity(bullet);
+        world.playSound(null, SoundEvents.TORPEDOES_FIRE, 0.6);
     }
 
     public override getUiColor(): string {

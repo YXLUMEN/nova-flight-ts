@@ -1,5 +1,5 @@
 import type {StringReader} from "../../brigadier/StringReader.ts";
-import {IllegalArgumentError} from "../../apis/errors.ts";
+import {IllegalArgumentError} from "../../type/errors.ts";
 import type {PosArgument} from "./PosArgument.ts";
 import {type ServerCommandSource} from "../../server/command/ServerCommandSource.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";

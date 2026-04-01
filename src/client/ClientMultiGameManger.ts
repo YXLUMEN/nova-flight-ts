@@ -1,4 +1,4 @@
-import type {Consumer} from "../apis/types.ts";
+import type {Consumer} from "../type/types.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {ClientStorage} from "./ClientStorage.ts";
 

@@ -67,7 +67,7 @@ export class TranslatableText {
     }
 
     public asString(): string {
-        const lang = LangManager.getCurrentLangName();
+        const lang = LangManager.getCurrentLang();
         if (this.lang !== lang) {
             this.ordered = this.toString();
             this.lang = lang;

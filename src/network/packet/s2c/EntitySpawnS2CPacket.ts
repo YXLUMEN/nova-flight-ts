@@ -1,5 +1,5 @@
 import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
-import type {UUID} from "../../../apis/types.ts";
+import type {UUID} from "../../../type/types.ts";
 import {EntityType} from "../../../entity/EntityType.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";

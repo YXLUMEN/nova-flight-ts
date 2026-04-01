@@ -3,7 +3,7 @@ import type {Payload} from "../../network/Payload.ts";
 import type {PacketListener} from "../../server/network/handler/PacketListener.ts";
 import {ConnectionState, type ConnectionStateType} from "../../server/network/ConnectionState.ts";
 import type {ClientNetworkChannel} from "./ClientNetworkChannel.ts";
-import {IllegalStateException} from "../../apis/errors.ts";
+import {IllegalStateException} from "../../type/errors.ts";
 
 export class ClientConnection {
     private readonly channel: ClientNetworkChannel;
@@ -69,5 +69,9 @@ export class ClientConnection {
         this.packetListener?.clear();
         this.packetListener = null;
         this.sendQueue.clear();
+    }
+
+    public getSessionId(): number {
+        return this.channel.getSessionId();
     }
 }

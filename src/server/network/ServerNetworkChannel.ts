@@ -1,12 +1,12 @@
 import {NetworkChannel} from "../../network/NetworkChannel.ts";
 import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
 import type {Payload} from "../../network/Payload.ts";
-import type {BiConsumer, UUID} from "../../apis/types.ts";
+import type {BiConsumer, UUID} from "../../type/types.ts";
 import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 import type {ServerChannel} from "./ServerChannel.ts";
 import {BinaryReader} from "../../nbt/BinaryReader.ts";
 import type {GameProfile} from "../entity/GameProfile.ts";
-import {PacketTooLargeError} from "../../apis/errors.ts";
+import {PacketTooLargeError} from "../../type/errors.ts";
 import {RelayPackets} from "../../network/RelayPackets.ts";
 
 export class ServerNetworkChannel extends NetworkChannel implements ServerChannel {

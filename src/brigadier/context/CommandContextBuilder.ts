@@ -6,7 +6,7 @@ import {CommandContext} from "./CommandContext.ts";
 import type {ParsedArgument} from "./ParsedArgument.ts";
 import {SuggestionContext} from "./SuggestionContext.ts";
 import {ParsedCommandNode} from "./ParsedCommandNode.ts";
-import {IllegalStateException} from "../../apis/errors.ts";
+import {IllegalStateException} from "../../type/errors.ts";
 
 export class CommandContextBuilder<S> {
     public readonly dispatcher: CommandDispatcher<S>;

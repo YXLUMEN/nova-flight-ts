@@ -1,14 +1,14 @@
 import {Entity} from "../entity/Entity.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 import type {VisualEffect} from "../effect/VisualEffect.ts";
-import type {Schedule, TimerTask} from "../apis/ITimer.ts";
+import type {Schedule, TimerTask} from "../type/ITimer.ts";
 import {DamageSources} from "../entity/damage/DamageSources.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
-import {EVENTS, type IEvents} from "../apis/IEvents.ts";
+import {EVENTS, type IEvents} from "../type/IEvents.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
 import type {Payload} from "../network/Payload.ts";
-import type {Consumer, Predicate, Supplier} from "../apis/types.ts";
+import type {Consumer, Predicate, Supplier} from "../type/types.ts";
 import type {EntityList} from "./entity/EntityList.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {Explosion} from "./explosion/Explosion.ts";
@@ -45,7 +45,6 @@ export abstract class World {
     // ticking
     public readonly isClient: boolean;
     private stageDifficulty = 1;
-    public freeze = false;
     protected over = false;
 
     private readonly registryManager: RegistryManager;

@@ -5,7 +5,7 @@ import type {Identifier} from "../registry/Identifier.ts";
 import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
 import {CommandUtil} from "./CommandUtil.ts";
 import {Registries} from "../registry/Registries.ts";
-import {CommandError, IllegalArgumentError, IllegalStateException} from "../apis/errors.ts";
+import {CommandError, IllegalArgumentError, IllegalStateException} from "../type/errors.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {PosArgument} from "./argument/PosArgument.ts";
 import {PosArgumentType} from "./argument/PosArgumentType.ts";

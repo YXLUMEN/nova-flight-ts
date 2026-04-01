@@ -1,4 +1,4 @@
-import {ServerStableHandler} from "../../../src/server/network/handler/ServerStableHandler.ts";
+import {ServerPlayHandler} from "../../../src/server/network/handler/ServerPlayHandler.ts";
 import type {Session} from "./Session.ts";
 import type {NovaFlightServer} from "../../../src/server/NovaFlightServer.ts";
 import {ServerPlayerEntity} from "../../../src/server/entity/ServerPlayerEntity.ts";
@@ -6,7 +6,7 @@ import {BinaryReader} from "../../../src/nbt/BinaryReader.ts";
 import {PayloadTypeRegistry} from "../../../src/network/PayloadTypeRegistry.ts";
 import type {ServerConnection} from "../../../src/server/network/ServerConnection.ts";
 
-export class NodeServerPlayNetworkHandler extends ServerStableHandler {
+export class NodeServerPlayNetworkHandler extends ServerPlayHandler {
     public constructor(server: NovaFlightServer, connection: ServerConnection, player: ServerPlayerEntity, session: Session) {
         super(server, connection, player);
 

@@ -1,7 +1,7 @@
 import {FastBulletEntity} from "./FastBulletEntity.ts";
 import {type Entity} from "../Entity.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
-import {Techs} from "../../tech/Techs.ts";
+import {Techs} from "../../world/tech/Techs.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
@@ -34,7 +34,7 @@ export class ArtilleryEntity extends FastBulletEntity {
 
         entity.takeDamage(sources.kinetic(this, owner), hitDamage);
         (world as ServerWorld).spawnParticle(
-            this.getX(), this.getY(), 0, 0,
+            hitResult.pos.x, hitResult.pos.y, 0, 0,
             6, 100, 0.5, 4,
             '#ffd8b6'
         );

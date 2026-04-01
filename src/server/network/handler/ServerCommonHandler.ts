@@ -3,7 +3,7 @@ import type {GameProfile} from "../../entity/GameProfile.ts";
 import type {Payload, PayloadId} from "../../../network/Payload.ts";
 import {HashMap} from "../../../utils/collection/HashMap.ts";
 import type {Identifier} from "../../../registry/Identifier.ts";
-import type {Consumer, FunctionReturn} from "../../../apis/types.ts";
+import type {Consumer, FunctionReturn} from "../../../type/types.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {PongS2CPacket} from "../../../network/packet/s2c/PongS2CPacket.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
@@ -15,6 +15,7 @@ import {NetworkChannel} from "../../../network/NetworkChannel.ts";
 export abstract class ServerCommonHandler implements PacketListener {
     public static readonly LOGOUT = TranslatableText.of('network.disconnect.logout');
     public static readonly ILLEGAL_CHARACTER = TranslatableText.of('network.disconnect.illegal_character');
+    public static readonly MOVE_TOO_FAST = TranslatableText.of('network.disconnect.move_too_fast');
 
     protected readonly server: NovaFlightServer;
     protected readonly connection: ServerConnection;

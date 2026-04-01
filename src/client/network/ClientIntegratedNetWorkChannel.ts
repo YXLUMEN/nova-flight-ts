@@ -1,4 +1,4 @@
-import type {Consumer, UUID} from "../../apis/types.ts";
+import type {Consumer, UUID} from "../../type/types.ts";
 import type {Channel} from "../../network/Channel.ts";
 import type {Payload, PayloadId} from "../../network/Payload.ts";
 import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";

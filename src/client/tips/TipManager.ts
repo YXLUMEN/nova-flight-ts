@@ -1,42 +1,32 @@
-import {resolveResource} from "@tauri-apps/api/path";
-import {readTextFile} from "@tauri-apps/plugin-fs";
-import {error, warn} from "@tauri-apps/plugin-log";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
 import {randInt} from "../../utils/math/math.ts";
+import type {TipResource} from "../../resource/TipResource.ts";
+import {ResourceManager} from "../../resource/ResourceManager.ts";
+import {Resources} from "../../resource/Resources.ts";
 
 export class TipManager {
     public static title: TranslatableText;
 
+    private static cache: TipResource | null = null;
     private static interval: number | undefined;
     private static index: number = 0;
     private static current: TranslatableText | null = null;
-    private static tips: TranslatableText[] | null = null;
 
-    public static async load(): Promise<void> {
-        try {
-            const jsonPath = await resolveResource(`resources/nova-flight/tips.json`);
-            const json = JSON.parse(await readTextFile(jsonPath));
-            if (!Array.isArray(json) || !json.every(item => typeof item === "string")) {
-                await warn('Wrong syntax with tips.json');
-                return;
-            }
-
-            this.tips = json.length === 0 ?
-                [TranslatableText.of('')] :
-                json.map(item => TranslatableText.of(`tips.${item}`));
-            this.title = TranslatableText.of('tips.nova-flight.title');
-
-            this.index = randInt(0, this.tips.length - 1);
-            this.current = this.tips[this.index];
-        } catch (e) {
-            await error(`Could not load tips.json: ${e}`);
-        }
+    private static get module() {
+        if (!this.cache) this.cache = ResourceManager.get<TipResource>(Resources.TIP);
+        return this.cache;
     }
 
-    public static next() {
-        if (this.tips) {
-            this.current = this.tips[this.index];
-            this.index = (this.index + 1) % this.tips.length;
+    public static init(): void {
+        this.title = TranslatableText.of('tips.nova-flight.title');
+        this.index = randInt(0, this.module.tips.length - 1);
+        this.current = this.module.tips[this.index];
+    }
+
+    public static next(): TranslatableText | null {
+        if (this.module.tips.length > 0) {
+            this.current = this.module.tips[this.index];
+            this.index = (this.index + 1) % this.module.tips.length;
         }
         return this.current;
     }

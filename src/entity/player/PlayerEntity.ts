@@ -12,13 +12,12 @@ import {Items} from "../../item/Items.ts";
 import type {EMPWeapon} from "../../item/weapon/EMPWeapon.ts";
 import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {clamp} from "../../utils/math/math.ts";
-import type {TechTree} from "../../tech/TechTree.ts";
+import type {TechTree} from "../../world/tech/TechTree.ts";
 import {DataTracker, type DataTrackerSerializedEntry} from "../data/DataTracker.ts";
-import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts";
 import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
-import type {Constructor} from "../../apis/types.ts";
-import {Techs} from "../../tech/Techs.ts";
+import type {Constructor} from "../../type/types.ts";
+import {Techs} from "../../world/tech/Techs.ts";
 import {Weapon} from "../../item/weapon/Weapon.ts";
 import {BehaviourEnum, ExplosionBehavior} from "../../world/explosion/ExplosionBehavior.ts";
 import {ExplosionVisual} from "../../world/explosion/ExplosionVisual.ts";
@@ -35,7 +34,6 @@ export abstract class PlayerEntity extends LivingEntity {
     public readonly cooldownManager!: ItemCooldownManager;
 
     private readonly inventory: UniqueInventory;
-    protected readonly weaponKeys = new Map<SpecialWeapon, string>();
 
     public wasFiring: boolean = false;
     protected invulnerableTime = 0;
@@ -53,8 +51,6 @@ export abstract class PlayerEntity extends LivingEntity {
 
         this.inventory = new UniqueInventory(this);
         this.cooldownManager = new itemCooldownManager();
-        this.addItem(Items.CANNON40_WEAPON);
-        this.addItem(Items.BOMB_WEAPON);
     }
 
     public override createLivingAttributes() {
@@ -73,7 +69,7 @@ export abstract class PlayerEntity extends LivingEntity {
     }
 
     public override aiStep() {
-        this.inventory.tick();
+        this.inventory.tick(this.inventory.specialLength());
         super.aiStep();
 
         this.move(this.getVelocityRef);
@@ -178,15 +174,6 @@ export abstract class PlayerEntity extends LivingEntity {
         return this.techTree!;
     }
 
-    private assignKeys() {
-        for (const stack of this.inventory) {
-            const item = stack.getItem();
-            if (item instanceof SpecialWeapon) {
-                this.weaponKeys.set(item, `Digit${item.getSortIndex() + 1}`);
-            }
-        }
-    }
-
     public getItem(item: Item): ItemStack {
         return this.inventory.searchItem(item);
     }
@@ -210,7 +197,6 @@ export abstract class PlayerEntity extends LivingEntity {
             }
             this.inventory.setItem(index, stack);
         }
-        this.assignKeys();
     }
 
     public removeItem(item: Item): boolean {
@@ -221,7 +207,6 @@ export abstract class PlayerEntity extends LivingEntity {
             item.onEndFire(stack, this.getWorld(), this);
         }
         this.inventory.removeInventoryItem(item);
-        this.assignKeys();
         return true;
     }
 
@@ -232,7 +217,6 @@ export abstract class PlayerEntity extends LivingEntity {
             if (item instanceof Weapon) item.onEndFire(stack, world, this);
         }
         this.inventory.clearContent();
-        this.weaponKeys.clear();
     }
 
     public switchWeapon(dir = 1) {
@@ -285,6 +269,11 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public isUsedBeDev(): boolean {
         return this.usedDev;
+    }
+
+    protected giveInitWeapon(): void {
+        this.addItem(Items.CANNON40);
+        this.addItem(Items.BOMB_WEAPON);
     }
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {

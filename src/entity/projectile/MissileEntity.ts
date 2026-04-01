@@ -3,7 +3,7 @@ import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
 import {PI2, rand} from "../../utils/math/math.ts";
 import {RocketEntity} from "./RocketEntity.ts";
-import {EVENTS} from "../../apis/IEvents.ts";
+import {EVENTS} from "../../type/IEvents.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacket.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";

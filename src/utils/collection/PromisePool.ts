@@ -1,4 +1,4 @@
-import type {Supplier} from "../../apis/types.ts";
+import type {Supplier} from "../../type/types.ts";
 
 export class PromisePool {
     private readonly activeTasks = new Set();

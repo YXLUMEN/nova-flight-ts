@@ -2,7 +2,7 @@ import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
-import {CommandError} from "../apis/errors.ts";
+import {CommandError} from "../type/errors.ts";
 import {EntitySelectorArgumentType} from "./argument/EntitySelectorArgumentType.ts";
 import {EntitySelector} from "./EntitySelector.ts";
 import type {Identifier} from "../registry/Identifier.ts";

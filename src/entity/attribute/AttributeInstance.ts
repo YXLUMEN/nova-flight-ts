@@ -1,7 +1,7 @@
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {EntityAttribute} from "./EntityAttribute.ts";
 import {Identifier} from "../../registry/Identifier.ts";
-import type {Consumer} from "../../apis/types.ts";
+import type {Consumer} from "../../type/types.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {HashMap} from "../../utils/collection/HashMap.ts";
 import {createClean} from "../../utils/uit.ts";

@@ -10,7 +10,7 @@ import {MutVec2} from "../utils/math/MutVec2.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import type {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
-import {EVENTS} from "../apis/IEvents.ts";
+import {EVENTS} from "../type/IEvents.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
@@ -105,7 +105,7 @@ export class ClientWorld extends World {
     }
 
     public override getNetworkChannel(): ClientNetworkChannel {
-        return this.client.networkChannel;
+        return this.client.channel;
     }
 
     public override getServer(): NovaFlightServer | null {

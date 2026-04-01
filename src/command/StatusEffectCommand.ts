@@ -1,7 +1,7 @@
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {CommandError, IllegalArgumentError} from "../apis/errors.ts";
+import {CommandError, IllegalArgumentError} from "../type/errors.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {Registries} from "../registry/Registries.ts";
 import {LivingEntity} from "../entity/LivingEntity.ts";

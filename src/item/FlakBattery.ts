@@ -10,7 +10,7 @@ import {BallisticsUtils} from "../utils/math/BallisticsUtils.ts";
 import {DataComponents} from "../component/DataComponents.ts";
 import {LivingEntity} from "../entity/LivingEntity.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
-import type {EntityDist} from "../apis/types.ts";
+import type {EntityDist} from "../type/types.ts";
 import {AABB} from "../utils/math/AABB.ts";
 import {EntityPredicates} from "../predicate/EntityPredicates.ts";
 

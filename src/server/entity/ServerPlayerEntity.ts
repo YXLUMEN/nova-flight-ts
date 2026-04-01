@@ -5,24 +5,26 @@ import {type ItemStack} from "../../item/ItemStack.ts";
 import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
 import type {GameProfile} from "./GameProfile.ts";
 import {type DamageSource} from "../../entity/damage/DamageSource.ts";
-import type {ServerStableHandler} from "../network/handler/ServerStableHandler.ts";
+import type {ServerPlayHandler} from "../network/handler/ServerPlayHandler.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
 import {type Entity} from "../../entity/Entity.ts";
 import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
 import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
 import {ServerItemCooldownManager} from "../item/ServerItemCooldownManager.ts";
-import {Techs} from "../../tech/Techs.ts";
+import {Techs} from "../../world/tech/Techs.ts";
 import {EdgeGlowEffect} from "../../effect/EdgeGlowEffect.ts";
 import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
 import {TranslatableTextS2CPacket} from "../../network/packet/s2c/TranslatableTextS2CPacket.ts";
 import {Weapon} from "../../item/weapon/Weapon.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
+import type {Item} from "../../item/Item.ts";
+import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 
 export class ServerPlayerEntity extends PlayerEntity {
     public readonly playerProfile: GameProfile;
 
-    public networkHandler!: ServerStableHandler;
+    public networkHandler!: ServerPlayHandler;
     public watchTechPage = false;
     private readonly inputKeys = new Set<string>();
     private readonly pendingSyncStack: Set<ItemStack> = new Set();
@@ -37,6 +39,7 @@ export class ServerPlayerEntity extends PlayerEntity {
         this.playerProfile = playerProfile;
         this.techTree = new ServerTechTree(this);
         (this.cooldownManager as ServerItemCooldownManager).setPlayer(this);
+        this.giveInitWeapon();
     }
 
     public override tick() {
@@ -63,32 +66,15 @@ export class ServerPlayerEntity extends PlayerEntity {
         }
     }
 
-    public override aiStep() {
-        super.aiStep();
-        this.fireSpecials();
-    }
-
-    private fireSpecials() {
-        const isDev = this.isDevMode();
-        const world = this.getWorld();
+    public fireSpecials(item: Item) {
         const inventory = this.getInventory();
+        const stack = inventory.searchItem(item);
+        if (stack.isEmpty()) return;
 
-        for (const [item, assign] of this.weaponKeys) {
-            const stack = inventory.searchItem(item);
-            if (stack.isEmpty()) continue;
-
-            const bind = item.bindKey();
-            const key = bind === null ? assign : bind;
-
-            if (isDev && item.getCooldown(stack) > 0.5) {
-                item.setCooldown(stack, 0.5);
-                this.pendingSyncStack.add(stack);
-            }
-
-            if (this.inputKeys.delete(key) && item.canFire(stack)) {
-                item.tryFire(stack, world, this);
-                this.pendingSyncStack.add(stack);
-            }
+        const world = this.getWorld();
+        if (item instanceof SpecialWeapon && item.canFire(stack)) {
+            item.tryFire(stack, world, this);
+            this.pendingSyncStack.add(stack);
         }
     }
 
@@ -110,12 +96,10 @@ export class ServerPlayerEntity extends PlayerEntity {
 
         const current = this.getCurrentItem();
         const item = current.getItem();
-        if (!(item instanceof Weapon)) return;
-
-        if (active) {
-            item.onStartFire(current, this.getWorld(), this);
-        } else {
-            item.onEndFire(current, this.getWorld(), this);
+        if (item instanceof BaseWeapon) {
+            active ? item.onStartFire(current, this.getWorld(), this) : item.onEndFire(current, this.getWorld(), this);
+        } else if (active && item instanceof SpecialWeapon) {
+            this.fireSpecials(item);
         }
     }
 
@@ -139,6 +123,16 @@ export class ServerPlayerEntity extends PlayerEntity {
             item.onEndFire(stack, this.getWorld(), this);
         }
         this.getInventory().setSelectedSlot(slot);
+    }
+
+    public cdAllSpecials() {
+        for (const stack of this.getInventory()) {
+            const item = stack.getItem();
+            if (item instanceof SpecialWeapon) {
+                item.setCooldown(stack, 0.5);
+                this.pendingSyncStack.add(stack);
+            }
+        }
     }
 
     public override isInvulnerableTo(damageSource: DamageSource): boolean {

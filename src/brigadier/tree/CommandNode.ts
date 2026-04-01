@@ -1,4 +1,4 @@
-import type {Predicate} from "../../apis/types.ts";
+import type {Predicate} from "../../type/types.ts";
 import type {Command} from "../Command.ts";
 import type {LiteralCommandNode} from "./LiteralCommandNode.ts";
 import type {ArgumentCommandNode} from "./ArgumentCommandNode.ts";

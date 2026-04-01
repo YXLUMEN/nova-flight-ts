@@ -4,8 +4,8 @@ import type {GameProfile} from "../../../src/server/entity/GameProfile.ts";
 import {NodeWebSocketServer} from "./NodeWebSocketServer.ts";
 import {PayloadTypeRegistry} from "../../../src/network/PayloadTypeRegistry.ts";
 import {BinaryWriter} from "../../../src/nbt/BinaryWriter.ts";
-import {PacketTooLargeError} from "../../../src/apis/errors.ts";
-import type {Consumer, UUID} from "../../../src/apis/types.ts";
+import {PacketTooLargeError} from "../../../src/type/errors.ts";
+import type {Consumer, UUID} from "../../../src/type/types.ts";
 import {Session} from "./Session.ts";
 
 export class NodeServerChannel implements ServerChannel {

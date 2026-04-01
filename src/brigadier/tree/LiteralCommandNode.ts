@@ -1,6 +1,6 @@
 import {CommandNode} from "./CommandNode.ts";
 import type {Command} from "../Command.ts";
-import type {Predicate} from "../../apis/types.ts";
+import type {Predicate} from "../../type/types.ts";
 import type {StringReader} from "../StringReader.ts";
 import type {CommandContextBuilder} from "../context/CommandContextBuilder.ts";
 import {StringRange} from "../context/StringRange.ts";

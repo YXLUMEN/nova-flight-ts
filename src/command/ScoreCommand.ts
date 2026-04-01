@@ -4,7 +4,7 @@ import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import {EntitySelector} from "./EntitySelector.ts";
 import {EntitySelectorArgumentType} from "./argument/EntitySelectorArgumentType.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
-import {CommandError} from "../apis/errors.ts";
+import {CommandError} from "../type/errors.ts";
 import {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 import {IntArgumentType} from "./argument/IntArgumentType.ts";
 import type {CommandContext} from "../brigadier/context/CommandContext.ts";

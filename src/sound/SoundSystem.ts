@@ -1,129 +1,44 @@
 import type {SoundEvent} from "./SoundEvent.ts";
 import {HashMap} from "../utils/collection/HashMap.ts";
 import {Identifier} from "../registry/Identifier.ts";
-import {resolveResource} from "@tauri-apps/api/path";
-import {readFile, readTextFile} from "@tauri-apps/plugin-fs";
-import type {RegistryManager} from "../registry/RegistryManager.ts";
-import {RegistryKeys} from "../registry/RegistryKeys.ts";
 import {clamp} from "../utils/math/math.ts";
-import {deepFreeze} from "../utils/uit.ts";
-import {isServer} from "../configs/WorldConfig.ts";
-import {PromisePool} from "../utils/collection/PromisePool.ts";
+import type {SoundModule} from "../resource/SoundModule.ts";
+import {ResourceManager} from "../resource/ResourceManager.ts";
+import {Resources} from "../resource/Resources.ts";
 
-// noinspection DuplicatedCode
 export class SoundSystem {
-    public static readonly globalSound: SoundSystem;
-    private static readonly loadedSounds = new HashMap<Identifier, AudioBuffer[]>();
-
+    private readonly module: SoundModule;
     private readonly activeLoops = new HashMap<Identifier, AudioBufferSourceNode>();
-    private audioContext = new AudioContext();
-    private gainNode = this.audioContext.createGain();
-
-    static {
-        if (!isServer) {
-            (this.globalSound as any) = new SoundSystem();
-        }
-    }
+    private readonly audioContext: AudioContext;
+    private readonly gainNode: GainNode;
 
     public constructor() {
+        this.module = ResourceManager.get(Resources.SOUND);
+        this.audioContext = new AudioContext();
+        this.gainNode = this.audioContext.createGain();
         this.gainNode.connect(this.audioContext.destination);
     }
 
-    public static async loadSounds(manager: RegistryManager): Promise<any> {
-        const soundRegister = manager.get(RegistryKeys.SOUND_EVENT);
-        const sounds = soundRegister.getIdSet();
-
-        const soundJson = await resolveResource('resources/nova-flight/sounds.json');
-        const json = JSON.parse(await readTextFile(soundJson));
-        const audioContext = new AudioContext();
-
-        const pool = new PromisePool();
-        const loadTasks: Promise<void>[] = [];
-        const buffersMap = new Map<Identifier, AudioBuffer[]>();
-
-        for (const soundId of sounds) {
-            try {
-                const id = soundId.getPath();
-                const entry = json[id];
-                if (!entry) {
-                    console.warn(`SoundID ${id} not found in sounds.json`);
-                    continue;
-                }
-
-                const sounds = entry.sounds;
-                if (!Array.isArray(sounds) || !sounds.every(value => typeof value === 'string')) {
-                    console.warn(`SoundID ${id} has invalid sounds format (must be array)`);
-                    continue;
-                }
-
-                const buffers: AudioBuffer[] = [];
-                buffersMap.set(soundId, buffers);
-
-                for (const soundEntry of sounds) {
-                    const soundPath = soundEntry.split(':').pop();
-                    if (!soundPath) continue;
-
-                    loadTasks.push(pool.submit(async () => {
-                        const buffer = await this.loadStatic(soundPath, audioContext);
-                        if (buffer) buffers.push(buffer);
-                    }));
-                }
-            } catch (error) {
-                console.warn(error);
-            }
-        }
-
-        await Promise.all(loadTasks);
-
-        for (const [id, buffers] of buffersMap) {
-            if (buffers.length > 0) this.loadedSounds.set(id, buffers);
-        }
-
-        deepFreeze(this.loadedSounds);
-        await audioContext.close();
-    }
-
-    private static async loadStatic(path: string, audioContext: AudioContext): Promise<AudioBuffer | null> {
-        try {
-            const res = await resolveResource(`resources/nova-flight/sounds/${path}.wav`);
-            const fileData = await readFile(res);
-            return await audioContext.decodeAudioData(fileData.buffer);
-        } catch (e) {
-            console.warn(`Failed to load sound: ${path}`, e);
-            return null;
-        }
-    }
-
     public playSound(event: SoundEvent, volume: number = 1, pitch: number = 1): void {
-        const buffers = SoundSystem.loadedSounds.get(event.getId());
-        if (!buffers || buffers.length === 0) return;
-
-        const buffer = buffers[(Math.random() * buffers.length) | 0];
-
-        const source = this.audioContext.createBufferSource();
-        source.buffer = buffer;
-        source.playbackRate.value = pitch;
-
-        const gainNode = this.audioContext.createGain();
-        gainNode.gain.value = clamp(volume, 0, 1);
-
-        source.connect(gainNode);
-        gainNode.connect(this.gainNode);
-        source.start(0);
+        this.loadSound(event, volume, pitch, false);
     }
 
     public playLoopSound(event: SoundEvent, volume: number = 1, pitch: number = 1): void {
+        this.loadSound(event, volume, pitch, true);
+    }
+
+    private loadSound(event: SoundEvent, volume: number = 1, pitch: number = 1, loop: boolean = false): void {
         const key = event.getId();
         if (this.activeLoops.has(key)) return;
 
-        const buffers = SoundSystem.loadedSounds.get(event.getId());
+        const buffers = this.module.buffers.get(event.getId());
         if (!buffers || buffers.length === 0) return;
 
         const buffer = buffers[(Math.random() * buffers.length) | 0];
         const source = this.audioContext.createBufferSource();
 
         source.buffer = buffer;
-        source.loop = true;
+        source.loop = loop;
         source.playbackRate.value = pitch;
 
         const gainNode = this.audioContext.createGain();
@@ -131,10 +46,9 @@ export class SoundSystem {
 
         source.connect(gainNode);
         gainNode.connect(this.gainNode);
-
         source.start(0);
 
-        this.activeLoops.set(key, source);
+        if (loop) this.activeLoops.set(key, source);
     }
 
     public stopLoopSound(event: SoundEvent): boolean {

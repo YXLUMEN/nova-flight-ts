@@ -1,9 +1,9 @@
 import {GeneralEventBus} from "../../event/GeneralEventBus.ts";
-import {EVENTS} from "../../apis/IEvents.ts";
+import {EVENTS} from "../../type/IEvents.ts";
 import {NovaFlightServer} from "../NovaFlightServer.ts";
 import {sleep} from "../../utils/uit.ts";
 import type {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
-import type {Consumer} from "../../apis/types.ts";
+import type {Consumer} from "../../type/types.ts";
 import {WorldConfig} from "../../configs/WorldConfig.ts";
 import {BossEntity} from "../../entity/mob/BossEntity.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
@@ -13,7 +13,7 @@ import type {MobEntity} from "../../entity/mob/MobEntity.ts";
 import type {DamageSource} from "../../entity/damage/DamageSource.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
 import {STAGE} from "../../configs/StageConfig.ts";
-import {Techs} from "../../tech/Techs.ts";
+import {Techs} from "../../world/tech/Techs.ts";
 import {BaseBossEntity} from "../../entity/mob/BaseBossEntity.ts";
 
 export class TutorialEvents {

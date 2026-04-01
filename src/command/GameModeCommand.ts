@@ -1,6 +1,6 @@
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {IllegalArgumentError} from "../apis/errors.ts";
+import {IllegalArgumentError} from "../type/errors.ts";
 import {BoolArgumentType} from "./argument/BoolArgumentType.ts";
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";

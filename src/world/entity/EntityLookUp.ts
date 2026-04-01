@@ -1,5 +1,5 @@
 import type {EntityIndex} from "./EntityIndex.ts";
-import type {Consumer, Predicate, UUID} from "../../apis/types.ts";
+import type {Consumer, Predicate, UUID} from "../../type/types.ts";
 import type {EntityLike} from "./EntityLike.ts";
 import type {AABB} from "../../utils/math/AABB.ts";
 import type {GridSpatialIndex} from "./GridSpatialIndex.ts";

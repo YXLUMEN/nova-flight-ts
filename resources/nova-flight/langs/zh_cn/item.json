@@ -1,13 +1,13 @@
 {
   "nova-flight.air": "空气",
-  "nova-flight.emp_weapon": "电磁脉冲",
-  "nova-flight.cannon40_weapon": "40mm 机炮",
-  "nova-flight.minigun_weapon": "MiniGun",
+  "nova-flight.emp": "电磁脉冲",
+  "nova-flight.cannon40": "40mm 机炮",
+  "nova-flight.minigun": "MiniGun",
   "nova-flight.bomb_weapon": "炸弹",
-  "nova-flight.cannon90_weapon": "90mm 机炮",
-  "nova-flight.rocket_weapon": "火箭发射器",
-  "nova-flight.missile_weapon": "追猎者导弹",
-  "nova-flight.ciws_weapon": "近防炮",
+  "nova-flight.cannon90": "90mm 机炮",
+  "nova-flight.rocket_launcher": "火箭发射器",
+  "nova-flight.missile": "追猎者导弹",
+  "nova-flight.ciws": "近防炮",
   "nova-flight.decoy_releaser": "干扰弹",
   "nova-flight.cloud_lightning": "天云闪电",
   "nova-flight.arc_emitter": "电弧发射器",
@@ -23,6 +23,6 @@
   "nova-flight.particle_lance": "粒子光矛",
   "nova-flight.tachyon_lance": "快子光矛",
   "nova-flight.perdition_beam": "炼狱射线",
-  "nova-flight.into_void_weapon": "遁入虚空",
+  "nova-flight.void_engin": "虚空引擎",
   "nova-flight.phase_lasers": "相位激光"
 }

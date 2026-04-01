@@ -1,4 +1,4 @@
-import type {Consumer} from "../../apis/types.ts";
+import type {Consumer} from "../../type/types.ts";
 import type {NovaFlightServer} from "../NovaFlightServer.ts";
 import {HashMap} from "../../utils/collection/HashMap.ts";
 import type {Identifier} from "../../registry/Identifier.ts";

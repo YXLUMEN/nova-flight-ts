@@ -48,8 +48,4 @@ export class SpaceTorpedoes extends SpecialWeapon {
     public override getDisplayName(): string {
         return '鱼雷发射器';
     }
-
-    public override getSortIndex(): number {
-        return 0;
-    }
 }

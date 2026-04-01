@@ -1,7 +1,7 @@
 import {squareDistVec2} from "../utils/math/math.ts";
 import type {EntityFilter} from "./SelectorArguments.ts";
 import type {Entity} from "../entity/Entity.ts";
-import type {BiConsumer, UUID} from "../apis/types.ts";
+import type {BiConsumer, UUID} from "../type/types.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import type {AABB} from "../utils/math/AABB.ts";

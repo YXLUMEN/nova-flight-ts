@@ -2,7 +2,7 @@ import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {RegistryEntry} from "../../../registry/tag/RegistryEntry.ts";
-import {Tech} from "../../../tech/Tech.ts";
+import {Tech} from "../../../world/tech/Tech.ts";
 
 export class PlayerResetTechC2SPacket implements Payload {
     public static readonly ID: PayloadId<PlayerResetTechC2SPacket> = payloadId('player_reset_tech');

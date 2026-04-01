@@ -1,78 +1,64 @@
-import {MutVec2} from "../../utils/math/MutVec2.ts";
-import {WorldConfig} from "../../configs/WorldConfig.ts";
 import type {IInput} from "./IInput.ts";
-// @ts-ignore
-import {World} from "../../world/World.ts";
-import {NovaFlightClient} from "../NovaFlightClient.ts";
-import type {Consumer} from "../../apis/types.ts";
+import type {InputEvents} from "./InputEvent.ts";
+import type {MutVec2} from "../../utils/math/MutVec2.ts";
+import {InputBinding} from "./InputBinding.ts";
+import {MouseState} from "./MouseState.ts";
+import {KeyboardState} from "./KeyboardState.ts";
 import {throttleTimeOut} from "../../utils/uit.ts";
 
 export class KeyboardInput implements IInput {
+    private readonly keyboardState = new KeyboardState();
+    private readonly mouseState = new MouseState();
+    private readonly inputBinding = new InputBinding();
+
     private disableHandler = false;
     private globalInput = false;
-
-    private readonly keys = new Set<string>();
-    private prevKeys = new Set<string>();
-
-    private readonly bindings = new Map<string, string[]>();
-    private keyHandler: Consumer<KeyboardEvent> | null = null;
-    private wheelHandler: Consumer<WheelEvent> | null = null;
-
-    private readonly pointer = MutVec2.zero();
+    private inputEvents: InputEvents = {};
 
     public constructor(target: HTMLElement) {
         this.registryListener(target);
     }
 
-    public get getPointer(): MutVec2 {
-        return this.pointer;
+    public getWorldPointer(): MutVec2 {
+        return this.mouseState.getWorldPointer();
+    }
+
+    public getScreenPointer(): MutVec2 {
+        return this.mouseState.getScreenPointer();
+    }
+
+    public isMouseDown(): boolean {
+        return this.mouseState.isMouseDown();
     }
 
     public updateEndFrame(): void {
-        this.prevKeys = new Set(this.keys);
+        this.keyboardState.updateEndFrame();
     }
 
-    public isDown(...ks: string[]) {
-        return ks.some(k => this.keys.has(k));
+    public isDown(...ks: string[]): boolean {
+        return this.keyboardState.isDownAny(...ks);
     }
 
     public wasPressed(key: string): boolean {
-        return this.keys.has(key) && !this.prevKeys.has(key);
+        return this.keyboardState.wasPressed(key);
     }
 
     public wasComboPressed(...keys: string[]): boolean {
-        return keys.every(k => this.keys.has(k)) &&
-            !keys.every(k => this.prevKeys.has(k));
+        return this.keyboardState.wasComboPressed(...keys);
     }
 
     public bindAction(action: string, keys: string[]): void {
-        this.bindings.set(action, keys);
+        this.inputBinding.bindAction(action, keys);
     }
 
     public isActionDown(action: string): boolean {
-        const keys = this.bindings.get(action);
-        return keys ? this.isDown(...keys) : false;
+        const keys = this.inputBinding.getKeys(action);
+        return keys ? this.keyboardState.isDownAny(...keys) : false;
     }
 
     public wasActionPressed(action: string): boolean {
-        const keys = this.bindings.get(action);
-        return keys ? this.wasComboPressed(...keys) : false;
-    }
-
-    public onKeyDown(handler: Consumer<KeyboardEvent>): void {
-        this.keyHandler = handler;
-    }
-
-    public onWheeling(handler: Consumer<WheelEvent>): void {
-        this.wheelHandler = handler;
-    }
-
-    public clearKeyDown(): void {
-        this.keyHandler = null;
-    }
-
-    public clearWheeling(): void {
-        this.wheelHandler = null
+        const keys = this.inputBinding.getKeys(action);
+        return keys ? this.keyboardState.wasComboPressed(...keys) : false;
     }
 
     public startInput(on: boolean): void {
@@ -83,71 +69,77 @@ export class KeyboardInput implements IInput {
         this.disableHandler = disabled;
     }
 
-    private registryListener(target: HTMLElement) {
-        const client = NovaFlightClient.getInstance();
-        const commandManager = client.clientCommandManager;
+    public setInputEvents(events: InputEvents): void {
+        this.inputEvents = events;
+    }
 
-        const allowedShortcuts = new Set(['KeyA', 'KeyC', 'KeyV', 'KeyX', 'KeyZ',]);
+    private registryListener(target: HTMLElement): void {
+        this.registerKeyboardListener();
+        this.registerMouseListener(target);
+        this.registerWheelListener();
+    }
+
+    private registerKeyboardListener(): void {
+        const allowedShortcuts = new Set(['KeyA', 'KeyC', 'KeyV', 'KeyX', 'KeyZ']);
 
         window.addEventListener('keydown', event => {
             const code = event.code;
+
             if (code === 'F5' || ((event.ctrlKey || event.metaKey) && !allowedShortcuts.has(code))) {
                 event.preventDefault();
             }
 
             if (this.globalInput) return;
 
-            if (code === 'Escape' && commandManager.isShow()) {
-                const hide = commandManager.onEsc();
-                if (hide) this.setHandlerDisabled(false);
-                return;
-            }
-
-            if ((code === 'Slash' || code === 'KeyT') && !commandManager.isShow()) {
-                if (code === 'Slash' && commandManager.getInput().length > 0) {
-                    event.preventDefault();
-                }
-                if (code === 'KeyT') event.preventDefault();
-
-                commandManager.switchPanel(true);
-                this.setHandlerDisabled(true);
-            }
-
+            if (this.handleCommandPanelShortcuts(event, code)) return;
             if (this.disableHandler) return;
+
             event.preventDefault();
-            this.keys.add(code);
-            this.keyHandler?.(event);
+            this.keyboardState.addKey(code);
+            this.inputEvents.onKeyPress?.(code, event);
         });
-        window.addEventListener('keyup', e => this.keys.delete(e.code));
-        window.addEventListener('blur', () => this.keys.clear());
+        window.addEventListener('keyup', e => {
+            this.keyboardState.removeKey(e.code);
+        });
+        window.addEventListener('blur', () => {
+            this.keyboardState.clear();
+        });
+    }
 
-        const onWheel = throttleTimeOut((e: WheelEvent) => {
-            this.wheelHandler?.(e);
+    private handleCommandPanelShortcuts(event: KeyboardEvent, code: string): boolean {
+        if (code === 'Escape') {
+            this.inputEvents.onKeyPress?.('Escape', event);
+            return true;
+        }
+        if (code === 'Slash' || code === 'KeyT') {
+            this.inputEvents.onKeyPress?.(code, event);
+            if (code === 'KeyT') event.preventDefault();
+            return true;
+        }
+        return false;
+    }
 
-            if (client.world && !client.world.isTechTreeHidden()) return;
-            client.player?.switchWeapon(e.deltaY > 0 ? 1 : -1);
-        }, 20);
-        window.addEventListener('wheel', onWheel, {passive: true});
+    private registerMouseListener(target: HTMLElement): void {
+        target.addEventListener('mousemove', event => {
+            this.mouseState.setScreenPointer(event.offsetX, event.offsetY);
 
-        target.addEventListener('mousemove', e => {
-            const offset = client.window.camera.cameraOffset;
-            this.pointer.set(e.offsetX + offset.x, e.offsetY + offset.y);
+            this.inputEvents.onMouseMove?.(event);
         }, {passive: true});
-        target.addEventListener('mousedown', e => {
-            if (e.button === 0) {
-                WorldConfig.autoShoot = true;
-            }
-            if (e.button === 1) {
-                client.player?.switchQuickFire();
-            }
-            if (e.button === 2) {
-                client.player?.launchQuickFire();
-            }
+        target.addEventListener('mousedown', event => {
+            this.mouseState.setMouseDown(true);
+            this.inputEvents.onMouseDown?.(event.button, event);
         });
-        target.addEventListener('mouseup', e => {
-            if (e.button === 0) {
-                WorldConfig.autoShoot = false;
-            }
+        target.addEventListener('mouseup', event => {
+            this.mouseState.setMouseDown(false);
+            this.inputEvents.onMouseUp?.(event.button, event);
         });
+    }
+
+    private registerWheelListener(): void {
+        const onWheel = throttleTimeOut((e: WheelEvent) => {
+            this.inputEvents.onWheel?.(e);
+        }, 20);
+
+        window.addEventListener('wheel', onWheel, {passive: true});
     }
 }

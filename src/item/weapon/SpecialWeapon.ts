@@ -3,12 +3,20 @@ import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {type World} from "../../world/World.ts";
 import {type Entity} from "../../entity/Entity.ts";
 import {type ItemStack} from "../ItemStack.ts";
+import {DataComponents} from "../../component/DataComponents.ts";
 
 export abstract class SpecialWeapon extends Weapon {
     public override inventoryTick(stack: ItemStack, world: World, _holder: Entity) {
-        const cooldown = this.getCooldown(stack);
-        if (cooldown === 0) return;
-        if (this.isReady(stack)) this.onReady(world);
+        const triggered = stack.get(DataComponents.READY_TRIGGERED);
+
+        if (this.isReady(stack)) {
+            if (!triggered) {
+                stack.set(DataComponents.READY_TRIGGERED, true);
+                this.onReady(world);
+            }
+        } else if (triggered) {
+            stack.remove(DataComponents.READY_TRIGGERED);
+        }
     }
 
     public isReady(stack: ItemStack): boolean {
@@ -34,6 +42,4 @@ export abstract class SpecialWeapon extends Weapon {
     public bindKey(): string | null {
         return null;
     }
-
-    public abstract getSortIndex(): number;
 }

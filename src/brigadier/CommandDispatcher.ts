@@ -3,7 +3,7 @@ import {StringReader} from "./StringReader.ts";
 import {CommandContextBuilder} from "./context/CommandContextBuilder.ts";
 import {ParseResults} from "./ParseResults.ts";
 import {RootCommandNode} from "./tree/RootCommandNode.ts";
-import {CommandError} from "../apis/errors.ts";
+import {CommandError} from "../type/errors.ts";
 import {Suggestions} from "./suggestion/Suggestions.ts";
 import {SuggestionsBuilder} from "./suggestion/SuggestionsBuilder.ts";
 import type {LiteralArgumentBuilder} from "./builder/LiteralArgumentBuilder.ts";

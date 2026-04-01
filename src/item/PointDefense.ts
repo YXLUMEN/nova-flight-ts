@@ -8,7 +8,7 @@ import type {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 import {LivingEntity} from "../entity/LivingEntity.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {squareDistVec2} from "../utils/math/math.ts";
-import type {EntityDist} from "../apis/types.ts";
+import type {EntityDist} from "../type/types.ts";
 import {spawnLaserByVec} from "../utils/ServerEffect.ts";
 import {AABB} from "../utils/math/AABB.ts";
 import {EntityPredicates} from "../predicate/EntityPredicates.ts";

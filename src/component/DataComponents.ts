@@ -1,9 +1,9 @@
 import {Registry} from "../registry/Registry.ts";
 import {Registries} from "../registry/Registries.ts";
 import {Identifier} from "../registry/Identifier.ts";
-import {DataComponentType, ComponentTypeBuilder} from "./DataComponentType.ts";
+import {ComponentTypeBuilder, DataComponentType} from "./DataComponentType.ts";
 import {Codecs} from "../serialization/Codecs.ts";
-import type {UnaryOperator} from "../apis/types.ts";
+import type {UnaryOperator} from "../type/types.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {AttributeModifier} from "./type/AttributeModifier.ts";
 import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
@@ -117,6 +117,9 @@ export class DataComponents {
 
     public static readonly ATTACK_RANGE: DataComponentType<number> = this.register('attack_range',
         builder => builder.persistent(Codecs.FLOAT).network(PacketCodecs.FLOAT)
+    );
+    public static readonly READY_TRIGGERED: DataComponentType<boolean> = this.register("ready_triggered",
+        builder => builder.persistent(Codecs.BOOLEAN).network(PacketCodecs.BOOL)
     );
 
     private static register<T>(id: string, builderOperator: UnaryOperator<ComponentTypeBuilder<T>>): DataComponentType<T> {

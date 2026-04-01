@@ -4,7 +4,7 @@ import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import {LivingEntity} from "../LivingEntity.ts";
-import {Techs} from "../../tech/Techs.ts";
+import {Techs} from "../../world/tech/Techs.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 
 export class BulletEntity extends ProjectileEntity {

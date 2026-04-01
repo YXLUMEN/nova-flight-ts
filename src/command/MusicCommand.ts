@@ -5,7 +5,7 @@ import {Registries} from "../registry/Registries.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
-import {CommandError} from "../apis/errors.ts";
+import {CommandError} from "../type/errors.ts";
 import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
 import {CommandUtil} from "./CommandUtil.ts";
 import {DoubleArgumentType} from "./argument/DoubleArgumentType.ts";

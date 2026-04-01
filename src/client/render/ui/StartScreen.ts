@@ -7,7 +7,7 @@ import {UIButton} from "./UIButton.ts";
 import {UITheme} from "./theme.ts";
 import {Window} from "../Window.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
-import type {Consumer} from "../../../apis/types.ts";
+import type {Consumer} from "../../../type/types.ts";
 
 type StartScreenOptions = {
     title: string;

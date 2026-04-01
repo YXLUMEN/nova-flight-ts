@@ -1,7 +1,7 @@
 import {WebSocket, WebSocketServer} from 'ws';
 import {SessionAllocator} from "./SessionAllocator.ts";
 import {Session} from "./Session.ts";
-import type {Consumer, UUID} from "../../../src/apis/types.ts";
+import type {Consumer, UUID} from "../../../src/type/types.ts";
 import {UUIDUtil} from "../../../src/utils/UUIDUtil.ts";
 
 export class NodeWebSocketServer {

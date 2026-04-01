@@ -2,7 +2,7 @@ import type {IUi} from "./IUi.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import {Window} from "../Window.ts";
 import {UIButton} from "./UIButton.ts";
-import type {Consumer} from "../../../apis/types.ts";
+import type {Consumer} from "../../../type/types.ts";
 
 export class ConnectInfo implements IUi {
     private readonly ctx: CanvasRenderingContext2D;

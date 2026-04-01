@@ -13,11 +13,11 @@ export class LangCommand {
                         .executes(ctx => {
                             const args = ctx.args.get('name');
                             if (!args) {
-                                ctx.source.addMessage(`Current language is "${LangManager.getCurrentLangName()}"`);
+                                ctx.source.addMessage(`Current language is "${LangManager.getCurrentLang()}"`);
                                 return;
                             }
 
-                            LangManager.loadLang(args.result)
+                            LangManager.changeLang(args.result)
                                 .then(() => {
                                     ctx.source.addMessage(`Set lang to ${args.result}`);
                                 })
@@ -27,7 +27,7 @@ export class LangCommand {
                         })
                 )
                 .executes(ctx => {
-                    ctx.source.addMessage(`Current language is "${LangManager.getCurrentLangName()}"`);
+                    ctx.source.addMessage(`Current language is "${LangManager.getCurrentLang()}"`);
                 })
         );
     }

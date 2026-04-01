@@ -1,18 +1,18 @@
-import type {MobFactory} from "../apis/IStage.ts";
+import type {MobFactory} from "../type/IStage.ts";
 import {
     spawnAvoidPlayerCtor,
     spawnFormation,
     spawnLineCtor,
     spawnTopRandomCtor,
     spawnTopRandomCtorS
-} from "../stage/SpawnFactories.ts";
+} from "../world/stage/SpawnFactories.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {EntityAttributes} from "../entity/attribute/EntityAttributes.ts";
 import type {EntityType} from "../entity/EntityType.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import {AiBehavior} from "../entity/ai/MobAI.ts";
-import type {SpawnContext} from "../stage/SpawnContext.ts";
-import type {FunctionReturn} from "../apis/types.ts";
+import type {SpawnContext} from "../world/stage/SpawnContext.ts";
+import type {FunctionReturn} from "../type/types.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {TankEnemy} from "../entity/mob/TankEnemy.ts";

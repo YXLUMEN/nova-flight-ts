@@ -1,5 +1,5 @@
 import type {World} from "../../world/World.ts";
-import {EVENTS} from "../../apis/IEvents.ts";
+import {EVENTS} from "../../type/IEvents.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
@@ -27,9 +27,5 @@ export class EMPWeapon extends SpecialWeapon {
 
     public override getUiColor(): string {
         return '#5ec8ff'
-    }
-
-    public override getSortIndex(): number {
-        return 1;
     }
 }

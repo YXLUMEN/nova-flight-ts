@@ -1,5 +1,5 @@
 import type {ServerWorld} from "../ServerWorld.ts";
-import {EVENTS} from "../../apis/IEvents.ts";
+import {EVENTS} from "../../type/IEvents.ts";
 import {BossEntity} from "../../entity/mob/BossEntity.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {World} from "../../world/World.ts";
@@ -15,7 +15,7 @@ import type {DamageSource} from "../../entity/damage/DamageSource.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {Items} from "../../item/Items.ts";
 import type {PhaseLasers} from "../../item/weapon/PhaseLasers.ts";
-import {Techs} from "../../tech/Techs.ts";
+import {Techs} from "../../world/tech/Techs.ts";
 import type {Explosion} from "../../world/explosion/Explosion.ts";
 import {DamageTypes} from "../../entity/damage/DamageTypes.ts";
 import {BaseBossEntity} from "../../entity/mob/BaseBossEntity.ts";

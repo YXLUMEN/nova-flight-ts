@@ -8,7 +8,7 @@ import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {IColorEntity} from "../IColorEntity.ts";
 import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
-import type {UUID} from "../../apis/types.ts";
+import type {UUID} from "../../type/types.ts";
 import {NbtTypeId} from "../../nbt/NbtType.ts";
 import {UUIDUtil} from "../../utils/UUIDUtil.ts";
 import {decodeColorToHex, encodeColorHex} from "../../utils/NetUtil.ts";

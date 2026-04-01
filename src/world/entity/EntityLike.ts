@@ -1,4 +1,4 @@
-import type {UUID} from "../../apis/types.ts";
+import type {UUID} from "../../type/types.ts";
 import type {AABB} from "../../utils/math/AABB.ts";
 
 export interface EntityLike {

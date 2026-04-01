@@ -1,7 +1,7 @@
 import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import type {UUID} from "../../../apis/types.ts";
+import type {UUID} from "../../../type/types.ts";
 
 export class PlayerJoinS2CPacket implements Payload {
     public static readonly ID: PayloadId<PlayerJoinS2CPacket> = payloadId('player_join');

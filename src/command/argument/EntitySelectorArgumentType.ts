@@ -6,7 +6,7 @@ import {CommandSource} from "../CommandSource.ts";
 import type {SuggestionsBuilder} from "../../brigadier/suggestion/SuggestionsBuilder.ts";
 import {EntitySelectorReader} from "../EntitySelectorReader.ts";
 import type {EntitySelector} from "../EntitySelector.ts";
-import {CommandError} from "../../apis/errors.ts";
+import {CommandError} from "../../type/errors.ts";
 import {CommandUtil} from "../CommandUtil.ts";
 
 export class EntitySelectorArgumentType implements ArgumentType<EntitySelector> {

@@ -7,8 +7,6 @@ export class SoundEvent {
     public static AUDIO_PACKET_CODEC = PacketCodecs.registryValue(Registries.AUDIOS);
 
     private readonly id: Identifier;
-    // private readonly distanceToTravel: number;
-    // private readonly staticDistance: boolean;
 
     private constructor(id: Identifier) {
         this.id = id;

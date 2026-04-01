@@ -1,7 +1,7 @@
 import type {Entity} from "../entity/Entity.ts";
 import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
-import type {Predicate} from "../apis/types.ts";
+import type {Predicate} from "../type/types.ts";
 import {squareDistVec2} from "../utils/math/math.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 

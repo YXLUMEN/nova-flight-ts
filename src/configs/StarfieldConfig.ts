@@ -1,4 +1,4 @@
-import type {StarLayer} from "../apis/IStarLayer.ts";
+import type {StarLayer} from "../type/IStarLayer.ts";
 import {createClean, deepFreeze} from "../utils/uit.ts";
 
 export const defaultLayers: Readonly<StarLayer[]> = deepFreeze([

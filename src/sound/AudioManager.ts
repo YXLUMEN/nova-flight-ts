@@ -1,22 +1,19 @@
-import type {Identifier} from "../registry/Identifier.ts";
 import {clamp} from "../utils/math/math.ts";
-import {readTextFile} from "@tauri-apps/plugin-fs";
-import {resolveResource} from "@tauri-apps/api/path";
-import {RegistryKeys} from "../registry/RegistryKeys.ts";
-import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {SoundEvent} from "./SoundEvent.ts";
-import {convertFileSrc} from "@tauri-apps/api/core";
 import {isServer} from "../configs/WorldConfig.ts";
-import {MediaWithoutSrc} from "../apis/errors.ts";
-import type {Consumer} from "../apis/types.ts";
+import {MediaWithoutSrc} from "../type/errors.ts";
+import type {Consumer} from "../type/types.ts";
+import type {AudioModule} from "../resource/AudioModule.ts";
+import {ResourceManager} from "../resource/ResourceManager.ts";
+import {Resources} from "../resource/Resources.ts";
 
 export class AudioManager {
     private static readonly audio: HTMLAudioElement;
+    private static readonly eventMap = new Map<string, AbortController>();
 
+    private static cache: AudioModule | null = null;
     private static disable = false;
     private static currentPlaying: SoundEvent | null = null;
-    private static readonly audioMap = new Map<Identifier, string>();
-    private static readonly eventMap = new Map<string, AbortController>();
 
     static {
         if (!isServer) {
@@ -25,40 +22,16 @@ export class AudioManager {
         }
     }
 
-    public static async loadFiles(manager: RegistryManager): Promise<void> {
-        const audioRegister = manager.get(RegistryKeys.AUDIOS);
-        const audios = audioRegister.getIdSet();
-
-        const jsonPath = await resolveResource(`resources/nova-flight/audios.json`);
-        const json = JSON.parse(await readTextFile(jsonPath));
-
-        for (const audioId of audios) {
-            try {
-                const id = audioId.getPath();
-                const entry = json[id];
-                const audioEntry = entry['file'];
-
-                if (!entry || !audioEntry) {
-                    console.warn(`AudioID ${id} not found in audios.json`);
-                    continue;
-                }
-
-                const audioPath = audioEntry.split(':').pop();
-                if (!audioPath) continue;
-
-                const url = await resolveResource(`resources/nova-flight/audios${audioPath}`);
-                this.audioMap.set(audioId, convertFileSrc(url));
-            } catch (err) {
-                console.warn(err, audioId);
-            }
-        }
+    private static get module(): AudioModule {
+        if (!this.cache) this.cache = ResourceManager.get<AudioModule>(Resources.AUDIO);
+        return this.cache;
     }
 
     public static playAudio(event: SoundEvent, loop = false) {
         if (this.disable) return;
 
         const id = event.getId();
-        const url = this.audioMap.get(id);
+        const url = this.module.buffers.get(id);
         if (!url) {
             console.warn(`Can't find sound with id: ${id}`);
             return;

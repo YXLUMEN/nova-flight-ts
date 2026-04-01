@@ -10,7 +10,7 @@ import type {GameEvent} from "../event/GameEvent.ts";
 import type {Item} from "../item/Item.ts";
 import type {DataComponentType} from "../component/DataComponentType.ts";
 import type {VisualEffectType} from "../effect/VisualEffectType.ts";
-import type {Tech} from "../tech/Tech.ts";
+import type {Tech} from "../world/tech/Tech.ts";
 import type {WorldEventType} from "../world/events/WorldEventType.ts";
 import type {Block} from "../block/Block.ts";
 
@@ -28,6 +28,7 @@ export class RegistryKeys {
     public static readonly TECH: RegistryKey<Registry<Tech>> = this.of("tech");
     public static readonly WORLD_EVENT: RegistryKey<Registry<WorldEventType<any>>> = this.of("world_event");
     public static readonly BLOCK: RegistryKey<Registry<Block>> = this.of("block");
+    public static readonly RESOURCE: RegistryKey<Registry<string>> = this.of("resource");
 
     private static of<T>(id: string): RegistryKey<T> {
         return RegistryKey.ofRegistry(Identifier.ofVanilla(id));

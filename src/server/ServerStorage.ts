@@ -1,12 +1,12 @@
 import {IndexedDBHelper} from "../database/IndexedDBHelper.ts";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
-import type {Consumer, UUID} from "../apis/types.ts";
+import type {Consumer, UUID} from "../type/types.ts";
 import type {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
 import {Result} from "../utils/result/Result.ts";
-import type {MetaStatus, PlayerData, Save, SaveMeta} from "../apis/Saves.ts";
+import type {MetaStatus, PlayerData, Save, SaveMeta} from "../type/Saves.ts";
 import {NbtSerialization} from "../nbt/NbtSerialization.ts";
 import {NbtUnserialization} from "../nbt/NbtUnserialization.ts";
-import {NoResultsError, StatusError, VersionError} from "../apis/errors.ts";
+import {NoResultsError, StatusError, VersionError} from "../type/errors.ts";
 import {DEFAULT_CONFIG} from "../configs/WorldConfig.ts";
 
 export class ServerStorage {

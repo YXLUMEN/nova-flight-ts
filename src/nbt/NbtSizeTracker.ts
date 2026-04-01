@@ -1,4 +1,4 @@
-import {NbtSizeValidationException} from "../apis/errors.ts";
+import {NbtSizeValidationException} from "../type/errors.ts";
 
 export class NbtSizeTracker {
     private readonly maxBytes: number;

@@ -1,7 +1,7 @@
 import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {Tech} from "../../../tech/Tech.ts";
+import {Tech} from "../../../world/tech/Tech.ts";
 import type {RegistryEntry} from "../../../registry/tag/RegistryEntry.ts";
 
 export class PlayerUnlockTechC2SPacket implements Payload {

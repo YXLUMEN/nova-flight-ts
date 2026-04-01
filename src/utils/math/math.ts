@@ -1,7 +1,7 @@
 import type {MutVec2} from "./MutVec2.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {IVec} from "./IVec.ts";
-import type {Predicate} from "../../apis/types.ts";
+import type {Predicate} from "../../type/types.ts";
 
 export function clamp(value: number, min: number, max: number) {
     return Math.max(min, Math.min(max, value));

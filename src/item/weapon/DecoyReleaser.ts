@@ -7,6 +7,7 @@ import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {HALF_PI, rand} from "../../utils/math/math.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
+import {ServerPlayerEntity} from "../../server/entity/ServerPlayerEntity.ts";
 
 export class DecoyReleaser extends SpecialWeapon {
     private readonly countPerRelease = 8;
@@ -65,6 +66,7 @@ export class DecoyReleaser extends SpecialWeapon {
         });
 
         this.setCooldown(stack, this.getMaxCooldown(stack));
+        if (!world.isClient && attacker instanceof ServerPlayerEntity) attacker.syncStack(stack);
     }
 
     public bindKey(): string {
@@ -77,9 +79,5 @@ export class DecoyReleaser extends SpecialWeapon {
 
     public override getDisplayName(): string {
         return "干扰弹";
-    }
-
-    public override getSortIndex(): number {
-        return Infinity;
     }
 }

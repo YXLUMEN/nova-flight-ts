@@ -1,7 +1,7 @@
 import {ClientPackets} from "../client/network/ClientPackets.ts";
 import {ServerPackets} from "../server/network/ServerPackets.ts";
 import {IntegratedServer} from "../server/IntegratedServer.ts";
-import type {StartServer} from "../apis/startup.ts";
+import type {StartServer} from "../type/startup.ts";
 import {RelayPackets} from "../network/RelayPackets.ts";
 
 let server: IntegratedServer | null = null;
@@ -48,6 +48,13 @@ async function handleEvent(event: MessageEvent) {
             self.postMessage({type: 'saved'});
             break;
         }
+        case 'cd_all' : {
+            if (!server || !server.world) return;
+            const host = server.getHostUUID();
+            const player = server.playerManager.getPlayer(host);
+            player?.cdAllSpecials();
+        }
+
     }
 }
 

@@ -1,8 +1,8 @@
-import {Stage} from "../stage/Stage.ts";
+import {Stage} from "../world/stage/Stage.ts";
 import {spawnAtTop, spawnAtTopS} from "../utils/PresetsSpawn.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
-import {EVENTS} from "../apis/IEvents.ts";
-import {PhaseConfigBuilder} from "../stage/PhaseConfig.ts";
+import {EVENTS} from "../type/IEvents.ts";
+import {PhaseConfigBuilder} from "../world/stage/PhaseConfig.ts";
 
 const intro = PhaseConfigBuilder.create({
     name: 'intro',

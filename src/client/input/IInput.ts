@@ -15,5 +15,5 @@ export interface IInput {
 
     wasActionPressed(action: string): boolean;
 
-    get getPointer(): Readonly<MutVec2>;
+    getWorldPointer(): Readonly<MutVec2>;
 }

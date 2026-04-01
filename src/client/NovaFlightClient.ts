@@ -1,10 +1,9 @@
 import {KeyboardInput} from "./input/KeyboardInput.ts";
 import {Window} from "./render/Window.ts";
 import {isDev, WorldConfig} from "../configs/WorldConfig.ts";
-import {mainWindow} from "../main.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
 import {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
-import type {Supplier, UUID} from "../apis/types.ts";
+import type {Supplier, UUID} from "../type/types.ts";
 import {ClientWorld} from "./ClientWorld.ts";
 import {ClientPlayerEntity} from "./entity/ClientPlayerEntity.ts";
 import {LoadingScreen} from "./render/ui/LoadingScreen.ts";
@@ -23,13 +22,12 @@ import {ClientMultiGameManger} from "./ClientMultiGameManger.ts";
 import {ConnectInfo} from "./render/ui/ConnectInfo.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {ClientChat} from "./command/ClientChat.ts";
-import type {StartServer} from "../apis/startup.ts";
-import {PlayerInputC2SPacket} from "../network/packet/c2s/PlayerInputC2SPacket.ts";
+import type {StartServer} from "../type/startup.ts";
 import {documentDir, resolve, resolveResource} from "@tauri-apps/api/path";
 import {exists, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs";
 import {ClientSavesManager} from "./ClientSavesManager.ts";
 import {confirm, message} from "@tauri-apps/plugin-dialog";
-import {EVENTS} from "../apis/IEvents.ts";
+import {EVENTS} from "../type/IEvents.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {StatisticManager} from "./render/statistic/StatisticManager.ts";
 import {ClientConnection} from "./network/ClientConnection.ts";
@@ -37,20 +35,24 @@ import {WorldRender} from "./render/WorldRender.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import {TipManager} from "./tips/TipManager.ts";
+import {TranslatableText} from "../i18n/TranslatableText.ts";
+import {ClientInputEvents} from "./input/ClientInputEvents.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
     private static readonly SERVER_START_TIMEOUT = 5000;
 
     private static instance: NovaFlightClient;
+
     public readonly clientId: UUID;
     public playerName: string;
 
     public readonly window: Window;
     public readonly input: KeyboardInput;
+    public globalSound!: SoundSystem;
 
-    public readonly networkChannel: ClientNetworkChannel;
-    private readonly connection: ClientConnection;
+    public readonly channel: ClientNetworkChannel;
+    public readonly connection: ClientConnection;
     public readonly networkHandler: ClientNetworkHandler;
 
     private server: ServerWorker | null = null;
@@ -100,11 +102,11 @@ export class NovaFlightClient {
         this.window = new Window();
         this.worldRender = new WorldRender(this);
 
-        this.networkChannel = new ClientNetworkChannel(
+        this.channel = new ClientNetworkChannel(
             `127.0.0.1:${WorldConfig.port}`,
             this.clientId
         );
-        this.connection = new ClientConnection(this.networkChannel);
+        this.connection = new ClientConnection(this.channel);
         this.networkHandler = new ClientNetworkHandler(this, this.connection);
 
         this.multiGameManager = new ClientMultiGameManger();
@@ -115,8 +117,7 @@ export class NovaFlightClient {
         this.clientChat = new ClientChat(this);
 
         this.input = new KeyboardInput(this.window.canvas);
-        this.input.onKeyDown(this.registryInput.bind(this));
-        this.registryListener();
+        ClientInputEvents.registryAll(this, this.input);
 
         this.createWorldStopPromise();
     }
@@ -142,7 +143,7 @@ export class NovaFlightClient {
             // wait for user input
             const startScreen = new StartScreen(this.window.ctx, {
                 title: `Nova Flight (${WorldConfig.version})`,
-                subtitle: '点击按钮 开始',
+                subtitle: TranslatableText.of('start.subtitle').toString(),
             });
 
             const action = await startScreen.onConfirm();
@@ -183,7 +184,7 @@ export class NovaFlightClient {
     }
 
     public async joinGame(world: ClientWorld) {
-        this.connectInfo?.setMessage('加入世界中...');
+        this.connectInfo?.setMessage(TranslatableText.of('start.join_game').toString());
         await sleep(200);
 
         this.world = world;
@@ -205,14 +206,14 @@ export class NovaFlightClient {
             this.server?.postMessage({type: 'stop_ticking'});
 
             AudioManager.pause();
-            SoundSystem.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
+            this.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
             if (this.isIntegrated && this.world) this.world.worldSound.pauseAll().catch(console.error);
             TipManager.carousel();
         } else if (!bl && this.pause) {
             this.server?.postMessage({type: 'start_ticking'});
 
             AudioManager.resume();
-            SoundSystem.globalSound.playSound(SoundEvents.UI_PAGE_SWITCH);
+            this.globalSound.playSound(SoundEvents.UI_PAGE_SWITCH);
             this.world?.worldSound.resumeAll().catch(console.error);
             TipManager.cancel();
         }
@@ -325,31 +326,32 @@ export class NovaFlightClient {
             this.stopWorld();
             return;
         }
-        this.networkChannel.setServerAddress(address);
+        this.channel.setServerAddress(address);
 
         const connectInfo = new ConnectInfo(this.window.ctx, this.stopWorld.bind(this));
         this.connectInfo?.destroy();
         this.connectInfo = connectInfo;
-        connectInfo.setMessage('尝试连接...');
+        connectInfo.setMessage(TranslatableText.of('start.remote.connecting').toString());
 
-        const result = await this.networkChannel.sniff(
+        const result = await this.channel.sniff(
             address,
             1000,
             3,
             (num, max) => {
-                connectInfo.setMessage(`尝试连接(${num + 1}/${max})...`);
+                const args = [num + 1, max].map(String);
+                connectInfo.setMessage(new TranslatableText('start.remote.retry', args).toString());
             });
 
         if (!result) {
-            await connectInfo.setError('未能找到服务器');
+            await connectInfo.setError(TranslatableText.of('start.remote.fail.found_server').toString());
             this.stopWorld();
             return;
         }
 
-        connectInfo.setMessage('开始连接...');
+        connectInfo.setMessage(TranslatableText.of('start.connecting').toString());
 
         try {
-            await this.networkChannel.connect();
+            await this.channel.connect();
         } catch (err) {
             await connectInfo.setError(String(err));
             return;
@@ -367,7 +369,7 @@ export class NovaFlightClient {
         const connectInfo = new ConnectInfo(this.window.ctx, this.stopWorld.bind(this));
         this.connectInfo?.destroy();
         this.connectInfo = connectInfo;
-        connectInfo.setMessage('准备启动内置服务器...');
+        connectInfo.setMessage(TranslatableText.of('start.integrated.start').toString());
 
         // 启动中继服务器
         let key: ArrayBuffer;
@@ -390,24 +392,24 @@ export class NovaFlightClient {
         await sleep(300);
 
         const addr = `127.0.0.1:${WorldConfig.port}`;
-        this.networkChannel.setServerAddress(addr);
+        this.channel.setServerAddress(addr);
 
         // 确认中继服务器开启
-        const canConnect = await this.networkChannel.sniff(addr);
+        const canConnect = await this.channel.sniff(addr);
         if (!canConnect) {
-            await connectInfo.setError('连接已丢失: 无法启动内置服务器');
+            await connectInfo.setError(TranslatableText.of('start.integrated.fail.start').toString());
             return;
         }
 
         const connectToServer = async () => {
-            connectInfo.setMessage('开始连接...');
+            connectInfo.setMessage(TranslatableText.of('start.connecting').toString());
             try {
-                await this.networkChannel.connect();
+                await this.channel.connect();
                 this.networkHandler.checkServer();
             } catch (err) {
                 console.error(err);
                 await error(String(err));
-                await connectInfo.setError(`连接失败`);
+                await connectInfo.setError(TranslatableText.of('start.fail.connect').toString());
                 this.stopWorld();
             }
         };
@@ -430,7 +432,7 @@ export class NovaFlightClient {
         const worker = this.server.getWorker();
 
         const startTimeout = setTimeout(() => {
-            connectInfo.setError('连接超时');
+            connectInfo.setError(TranslatableText.of('network.disconnect.timeout').toString());
             server.terminate();
         }, NovaFlightClient.SERVER_START_TIMEOUT);
 
@@ -535,13 +537,14 @@ export class NovaFlightClient {
         await sleep(200);
 
         loadingScreen.setProgress(0.6, '加载资源');
-        await DataLoader.init(manager);
+        await DataLoader.registerAndLoad(manager, loadingScreen);
+        this.globalSound = new SoundSystem();
 
         loadingScreen.setProgress(0.8, '冻结资源');
         manager.freeze();
         await sleep(200);
 
-        loadingScreen.setProgress(1, '创建世界');
+        loadingScreen.setProgress(1, '启动游戏');
         await sleep(200);
         await loadingScreen.setDone();
     }
@@ -585,65 +588,7 @@ export class NovaFlightClient {
         await sleep(500);
     }
 
-    private registryInput(event: KeyboardEvent): void {
-        const world = this.world;
-        if (world && world.isOver) {
-            this.connection.disconnect();
-            this.requestStop();
-            return;
-        }
-
-        const code = event.code;
-        // 开发者模式
-        if (event.ctrlKey) {
-            if (code === 'KeyV') this.switchDevMode();
-            if (this.player?.isDevMode() && world) this.devFunc(code, world);
-            return;
-        }
-
-        switch (code) {
-            case 'F11':
-                mainWindow.isFullscreen()
-                    .then(isFull => mainWindow.setFullscreen(!isFull))
-                    .catch(console.error);
-                break;
-            case 'KeyI':
-                WorldConfig.autoShoot = !WorldConfig.autoShoot;
-                break;
-            case 'Escape': {
-                const techTree = document.getElementById('tech-shell')!;
-                if (!techTree.classList.contains('hidden')) {
-                    this.toggleTechTree();
-                    return;
-                }
-                if (this.player) this.player.openInventory = false;
-                this.togglePause();
-                break;
-            }
-            case 'KeyG':
-                this.toggleTechTree();
-                this.networkChannel.send(new PlayerInputC2SPacket('KeyG'));
-                break;
-            case 'KeyL':
-                WorldConfig.follow = !WorldConfig.follow;
-                break;
-            case 'F3':
-                WorldConfig.renderHitBox = !WorldConfig.renderHitBox;
-                break;
-            case 'Tab':
-                const ping = `Ping ${Math.floor(this.networkHandler.getLatency())}ms`;
-                this.clientCommandManager.addPlainMessage(ping);
-                break;
-            case 'KeyE':
-                if (this.player) {
-                    this.player.openInventory = !this.player.openInventory;
-                    this.setPause(this.player.openInventory);
-                }
-                break;
-        }
-    }
-
-    private toggleTechTree() {
+    public toggleTechTree() {
         const ticking = document.getElementById('tech-shell')!.classList.toggle('hidden');
         this.worldRender.rendering = ticking;
         this.setPause(!ticking);
@@ -654,39 +599,6 @@ export class NovaFlightClient {
         if (!player) return;
 
         this.networkHandler.sendCommand(`/gamemode ${bool ?? !player.isDevMode()}`);
-    }
-
-    private devFunc(code: string, world: ClientWorld): void {
-        const player = this.player;
-        if (!player) return;
-
-        this.server?.postMessage({type: 'dev_mode', payload: {code}});
-        switch (code) {
-            case 'KeyH':
-                player.setHealth(player.getMaxHealth());
-                break;
-            case 'KeyO':
-                player.getTechs().unlockAll();
-                break;
-            case 'KeyF':
-                world.freeze = !world.freeze;
-                break;
-            case 'NumpadSubtract': {
-                WorldConfig.enableCameraOffset = !WorldConfig.enableCameraOffset;
-                this.window.camera.cameraOffset.set(0, 0);
-                break;
-            }
-            case 'NumpadAdd': {
-                BGMManager.next();
-                break;
-            }
-            case 'KeyP':
-                localStorage.removeItem('guided');
-                break;
-            case 'F8':
-                this.server?.postMessage({type: 'crash_the_server'});
-                break;
-        }
     }
 
     private async serverReadFile(data: any) {
@@ -725,35 +637,5 @@ export class NovaFlightClient {
 
         const resolved = await resolve(saveRoot, path);
         await writeFile(resolved, new Uint8Array(buffer), {create: true});
-    }
-
-    private registryListener(): void {
-        mainWindow.listen('tauri://focus', () => {
-            WorldConfig.fps = WorldConfig.lastFps;
-            WorldConfig.perFrame = 1000 / WorldConfig.fps;
-        }).catch(console.error);
-
-        mainWindow.listen('tauri://blur', () => {
-            if (!this.clientCommandManager.isShow()) {
-                this.setPause(true);
-            }
-            WorldConfig.lastFps = WorldConfig.fps;
-            WorldConfig.fps = 5;
-            WorldConfig.perFrame = 1000 / WorldConfig.fps;
-        }).catch(console.error);
-
-        mainWindow.listen('tauri://resize', async () => {
-            this.worldRender.rendering = !await mainWindow.isMinimized();
-        }).catch(console.error);
-
-        window.addEventListener('resize', () => {
-            this.window.resize();
-        });
-
-        this.window.canvas.addEventListener('click', event => {
-            if (this.world && this.pause && (this.player && !this.player.openInventory)) {
-                this.window.pauseOverlay.handleClick(event.offsetX, event.offsetY);
-            }
-        });
     }
 }
