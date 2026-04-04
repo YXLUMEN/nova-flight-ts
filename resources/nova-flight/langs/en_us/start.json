@@ -1,0 +1,11 @@
+{
+  "subtitle": "Click to Start",
+  "join_game": "Joining World...",
+  "connecting": "Connecting...",
+  "fail.connect": "Connect Fail",
+  "remote.fail.found_server": "Could not found server",
+  "remote.connecting": "Connecting...",
+  "remote.retry": "Connecting ({}/{})...",
+  "integrated.start": "Start integrated server...",
+  "integrated.fail.start": "Fail to start integrated server"
+}

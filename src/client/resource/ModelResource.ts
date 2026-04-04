@@ -9,6 +9,7 @@ import type {TextureResource} from "./TextureResource.ts";
 import {Model} from "../render/model/Model.ts";
 import {ResourceManager} from "./ResourceManager.ts";
 import type {DisplayConfig} from "../render/model/DisplayConfig.ts";
+import {wrapRadians} from "../../utils/math/math.ts";
 
 export class ModelResource implements ResourceModule {
     private readonly models: Map<string, Model> = new Map<string, Model>();
@@ -51,34 +52,100 @@ export class ModelResource implements ResourceModule {
         }
 
         const parsedModels = await Promise.allSettled(tasks);
+        const modelJson = new Map<string, any>();
+
         for (const task of parsedModels) {
             if (task.status === 'rejected') continue;
-
             const json = task.value;
-
             const key = json.normalizeKey;
-            if (!key || typeof key !== 'string') continue;
-
-            const textures = json.textures;
-            if (textures && typeof textures === 'object') {
-                this.parseTextures(key, textures);
+            if (key && typeof key === 'string') {
+                modelJson.set(key, json);
             }
+        }
+
+        for (const key of modelJson.keys()) {
+            const module = this.resolveModel(modelJson, key);
+            if (module) this.models.set(key, module);
         }
     }
 
-    private parseTextures(key: string, textures: object): void {
-        // 当前只需要单层
-        for (const textureKey of Object.values(textures)) {
-            if (typeof textureKey !== 'string') continue;
+    private resolveModel(modelJsons: Map<string, any>, key: string): Model | null {
+        let finalTextures: Record<string, string> | null = null;
+        let finalDisplay: DisplayConfig | undefined;
 
-            if (!this.resource!.hasTexture(textureKey)) {
-                console.warn(`[TextureResource] Model ${textureKey} references missing texture: ${textureKey}`);
-                continue;
+        let currentKey = key;
+        const visited = new Set<string>();
+
+        while (currentKey) {
+            if (visited.has(currentKey)) {
+                console.warn(`[ModelResource] Circular inheritance detected for ${key}`);
+                break;
+            }
+            visited.add(currentKey);
+
+            const currentJson = modelJsons.get(currentKey);
+            if (!currentJson) {
+                if (currentKey !== key) {
+                    console.warn(`[ModelResource] Parent model ${currentKey} not found for ${key}`);
+                }
+                break;
             }
 
-            this.models.set(key, this.createModel(textureKey));
-            break;
+            if (currentJson.textures && typeof currentJson.textures === 'object') {
+                finalTextures = currentJson.textures;
+            }
+
+            if (currentJson.display) {
+                finalDisplay = this.parseDisplayConfig(currentJson.display);
+            }
+
+            currentKey = currentJson.parent;
         }
+
+        if (!finalTextures || Object.keys(finalTextures).length === 0) {
+            return null;
+        }
+
+        const textureKey = Object.values(finalTextures)[0];
+        if (!textureKey) {
+            return null;
+        }
+
+        if (!this.resource!.hasTexture(textureKey)) {
+            console.warn(`[ModelResource] Model ${key} references missing texture: ${textureKey}`);
+            return null;
+        }
+
+        return this.createModel(textureKey, finalDisplay);
+    }
+
+    private parseDisplayConfig(display: any): DisplayConfig | undefined {
+        if (!display || typeof display !== 'object') return;
+
+        const config: DisplayConfig = {};
+        if (typeof display.rotation === 'number') {
+            config.rotation = wrapRadians(display.rotation);
+        }
+
+        if (Array.isArray(display.scale) && display.scale.length === 2) {
+            let x = Number(display.scale[0]);
+            let y = Number(display.scale[1]);
+            x = isFinite(x) ? x : 1;
+            y = isFinite(y) ? y : 1;
+
+            config.scale = [x, y];
+        }
+
+        if (Array.isArray(display.offset) && display.offset.length === 2) {
+            let x = Number(display.offset[0]);
+            let y = Number(display.offset[1]);
+            x = isFinite(x) ? x : 0;
+            y = isFinite(y) ? y : 0;
+
+            config.offset = [x, y];
+        }
+
+        return config;
     }
 
     public reload(): Promise<void> {

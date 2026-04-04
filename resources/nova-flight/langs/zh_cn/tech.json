@@ -50,7 +50,7 @@
   "name.nova-flight.cloud_lightning": "天云闪电",
   "desc.nova-flight.cloud_lightning": "以雷霆击碎黑暗! 通过电磁生成器凝聚而成的球状闪电, 可以有效穿透敌舰防御",
   "name.nova-flight.arc_emitter": "电弧发射器",
-  "desc.nova-flight.arc_emitter": "电弧发射器会向距离最近的6个目标发射电弧.",
+  "desc.nova-flight.arc_emitter": "电弧发射器会向距离最近的 6 个目标发射电弧.",
   "name.nova-flight.focused_arc_emitter": "聚能电弧发射器",
   "desc.nova-flight.focused_arc_emitter": "激发一道电弧, 从命中位置释放两道连锁电弧.",
   "name.nova-flight.particle_lance": "粒子光矛",
