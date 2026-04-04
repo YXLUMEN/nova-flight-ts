@@ -11,13 +11,11 @@ const DEFAULT_CONFIG = config({
     per: 50,
     fps: 100,
     perFrame: 1000 / 100,
-    version: '26v20',
+    version: '26v21',
     gameVersion: 10,
 });
 
 const WorldConfig = status({
-    lowPowerMode: false,
-
     tick: DEFAULT_CONFIG.tick,
     mbps: DEFAULT_CONFIG.mbps,
     per: DEFAULT_CONFIG.per,
@@ -30,7 +28,7 @@ const WorldConfig = status({
 
     follow: true,
     autoShoot: false,
-    version: DEFAULT_CONFIG.version,
+    devVersion: DEFAULT_CONFIG.version,
     port: 25566,
     serverAddr: '127.0.0.1:25566',
 

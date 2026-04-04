@@ -466,6 +466,7 @@ export class ClientNetworkHandler implements PacketListener {
 
     public onSetInventory(packet: SetPlayerInventoryS2CPacket): void {
         if (!this.client.player) return;
+        packet.contents.setHolder(this.client.player);
         this.client.player.getInventory().setItem(packet.slot, packet.contents);
         this.client.player.reloadActiveSpecials();
     }

@@ -9,8 +9,7 @@ import {ClientPlayerEntity} from "./entity/ClientPlayerEntity.ts";
 import {LoadingScreen} from "./render/ui/LoadingScreen.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import {sleep} from "../utils/uit.ts";
-import {EntityRenderers} from "./render/entity/EntityRenderers.ts";
-import {DataLoader} from "./DataLoader.ts";
+import {DataLoader} from "./resource/DataLoader.ts";
 import {check} from "@tauri-apps/plugin-updater";
 import {StartScreen} from "./render/ui/StartScreen.ts";
 import {ClientNetworkHandler} from "./network/ClientNetworkHandler.ts";
@@ -29,7 +28,7 @@ import {ClientSavesManager} from "./ClientSavesManager.ts";
 import {confirm, message} from "@tauri-apps/plugin-dialog";
 import {EVENTS} from "../type/IEvents.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
-import {StatisticManager} from "./render/statistic/StatisticManager.ts";
+import {StatisticManager} from "./statistic/StatisticManager.ts";
 import {ClientConnection} from "./network/ClientConnection.ts";
 import {WorldRender} from "./render/WorldRender.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
@@ -37,6 +36,7 @@ import {SoundEvents} from "../sound/SoundEvents.ts";
 import {TipManager} from "./tips/TipManager.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
 import {ClientInputEvents} from "./input/ClientInputEvents.ts";
+import {RenderLoader} from "./render/RenderLoader.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -140,9 +140,8 @@ export class NovaFlightClient {
             if (this.waitWorldStop === null) this.createWorldStopPromise();
             this.connection.setPacketListener(this.networkHandler.getPhase(), this.networkHandler);
 
-            // wait for user input
             const startScreen = new StartScreen(this.window.ctx, {
-                title: `Nova Flight (${WorldConfig.version})`,
+                title: `Nova Flight (${WorldConfig.devVersion})`,
                 subtitle: TranslatableText.of('start.subtitle').toString(),
             });
 
@@ -303,7 +302,7 @@ export class NovaFlightClient {
             };
 
             const shutTimeout = setTimeout(() => {
-                warn('[Client] Waiting worker terminate timeout');
+                void warn('[Client] Waiting worker terminate timeout');
                 terminate();
             }, NovaFlightClient.SERVER_SHUTDOWN_TIMEOUT);
 
@@ -448,10 +447,10 @@ export class NovaFlightClient {
                 case 'saved':
                     this.clientCommandManager.addPlainMessage('\x1b[32m游戏已保存');
                     break;
-                case 'readFile':
+                case 'read_file':
                     this.serverReadFile(event.data);
                     break;
-                case 'writeFile':
+                case 'write_file':
                     this.serverWriteFile(event.data);
                     break;
                 case 'log':
@@ -497,10 +496,6 @@ export class NovaFlightClient {
         return this.server;
     }
 
-    public isRunning(): boolean {
-        return this.playing;
-    }
-
     public requestStop(): void {
         this.playing = false;
     }
@@ -515,7 +510,8 @@ export class NovaFlightClient {
         this.gameOverAbort = ctrl;
         window.addEventListener('keydown', () => {
             this.leaveGame();
-        }, {signal: ctrl.signal, once: true});
+            ctrl.abort();
+        }, {signal: ctrl.signal});
     }
 
     // 其他
@@ -532,13 +528,13 @@ export class NovaFlightClient {
         await manager.registerAll();
         await sleep(200);
 
-        loadingScreen.setProgress(0.4, '初始化渲染器');
-        EntityRenderers.registryRenders();
-        await sleep(200);
-
-        loadingScreen.setProgress(0.6, '加载资源');
+        loadingScreen.setProgress(0.4, '加载资源');
         await DataLoader.registerAndLoad(manager, loadingScreen);
         this.globalSound = new SoundSystem();
+
+        loadingScreen.setProgress(0.6, '初始化渲染器');
+        await RenderLoader.registerAndLoad(loadingScreen);
+        await sleep(200);
 
         loadingScreen.setProgress(0.8, '冻结资源');
         manager.freeze();

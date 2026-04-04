@@ -15,22 +15,7 @@
     "fs:default",
     "fs:allow-exists",
     "fs:allow-resource-read-recursive",
-    {
-      "identifier": "fs:scope-document-recursive",
-      "allow": [
-        {
-          "path": "$DOCUMENT/NovaFlight/**"
-        }
-      ]
-    },
-    {
-      "identifier": "fs:allow-document-write",
-      "allow": [
-        {
-          "path": "$DOCUMENT/NovaFlight/**"
-        }
-      ]
-    },
+    "fs:allow-resource-write",
     "log:allow-log",
     "dialog:default"
   ]

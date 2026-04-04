@@ -3,15 +3,15 @@ import type {SoundEvent} from "./SoundEvent.ts";
 import {isServer} from "../configs/WorldConfig.ts";
 import {MediaWithoutSrc} from "../type/errors.ts";
 import type {Consumer} from "../type/types.ts";
-import type {AudioModule} from "../resource/AudioModule.ts";
-import {ResourceManager} from "../resource/ResourceManager.ts";
-import {Resources} from "../resource/Resources.ts";
+import type {AudioResource} from "../client/resource/AudioResource.ts";
+import {ResourceManager} from "../client/resource/ResourceManager.ts";
+import {Resources} from "../client/resource/Resources.ts";
 
 export class AudioManager {
     private static readonly audio: HTMLAudioElement;
     private static readonly eventMap = new Map<string, AbortController>();
 
-    private static cache: AudioModule | null = null;
+    private static cache: AudioResource | null = null;
     private static disable = false;
     private static currentPlaying: SoundEvent | null = null;
 
@@ -22,8 +22,8 @@ export class AudioManager {
         }
     }
 
-    private static get module(): AudioModule {
-        if (!this.cache) this.cache = ResourceManager.get<AudioModule>(Resources.AUDIO);
+    private static get module(): AudioResource {
+        if (!this.cache) this.cache = ResourceManager.get<AudioResource>(Resources.AUDIO);
         return this.cache;
     }
 

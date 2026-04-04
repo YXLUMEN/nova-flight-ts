@@ -2,7 +2,7 @@ import {ServerStorage} from "../server/ServerStorage.ts";
 import type {SaveMeta} from "../type/Saves.ts";
 import {error, warn} from "@tauri-apps/plugin-log";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
-import {documentDir, resolve} from "@tauri-apps/api/path";
+import {resolve, resolveResource} from "@tauri-apps/api/path";
 import {exists, mkdir, readFile, readTextFile, writeFile, writeTextFile} from "@tauri-apps/plugin-fs";
 import {NbtSerialization} from "../nbt/NbtSerialization.ts";
 import {NbtUnserialization} from "../nbt/NbtUnserialization.ts";
@@ -313,8 +313,8 @@ export class ClientSavesManager {
 
     private async exportSave(saveName: string) {
         try {
-            const documentPath = await documentDir();
-            const saveDir = await resolve(documentPath, 'NovaFlight', 'saves', saveName);
+            const root = await resolveResource('saves');
+            const saveDir = await resolve(root, saveName);
             await mkdir(saveDir, {recursive: true});
 
             const worldPath = await resolve(saveDir, `world.dat`);
@@ -345,7 +345,7 @@ export class ClientSavesManager {
                 }
             });
 
-            await message('已导出至 "Document/NovaFlight"');
+            await message('已导出至 "安装目录/saves"');
         } catch (err) {
             await message('导出失败', {kind: 'error'});
             console.error(err);
@@ -354,8 +354,8 @@ export class ClientSavesManager {
 
     private async exportAsSNbt(saveName: string) {
         try {
-            const documentPath = await documentDir();
-            const saveDir = await resolve(documentPath, 'NovaFlight', 'saves', saveName);
+            const root = await resolveResource('saves');
+            const saveDir = await resolve(root, saveName);
             await mkdir(saveDir, {recursive: true});
 
             const worldPath = await resolve(saveDir, `world.snbt`);
@@ -380,7 +380,7 @@ export class ClientSavesManager {
                 return true;
             });
 
-            await message('已导出至 "文档"');
+            await message('已导出至 "安装目录/saves"');
         } catch (err) {
             await message('导出失败', {kind: 'error'});
             console.error(err);
@@ -393,7 +393,7 @@ export class ClientSavesManager {
             results = await invoke('chose_dir');
         } catch (err) {
             console.error(err);
-            await message('未能读取目录', {kind: 'error'});
+            await message('未能读取目录,尝试将存档移动至"安装目录/saves"', {kind: 'error'});
         }
         if (!results || results.root.length === 0 || results.files.length === 0) return;
 

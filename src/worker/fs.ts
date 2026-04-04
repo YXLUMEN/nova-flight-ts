@@ -14,7 +14,7 @@ export class WorkerFS {
         }, timeout);
 
         self.addEventListener('message', event => {
-            if (event.data.type !== 'readFile' || event.data.id !== id) return;
+            if (event.data.type !== 'read_file' || event.data.id !== id) return;
 
             clearTimeout(timeoutId);
             resolve(event.data.buffer);
@@ -22,7 +22,7 @@ export class WorkerFS {
         }, {signal: ctrl.signal});
 
         self.postMessage({
-            type: "readFile",
+            type: "read_file",
             id,
             path,
         });
@@ -32,7 +32,7 @@ export class WorkerFS {
 
     public static writeFile(path: string, buffer: ArrayBuffer) {
         self.postMessage({
-            type: "writeFile",
+            type: "write_file",
             path,
             buffer
         }, {transfer: [buffer]});

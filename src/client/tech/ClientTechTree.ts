@@ -15,6 +15,7 @@ import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTech
 import {Techs} from "../../world/tech/Techs.ts";
 import {AnsiParser} from "../../utils/AnsiParser.ts";
 import {NovaFlightClient} from "../NovaFlightClient.ts";
+import {ModelManager} from "../render/model/ModelManager.ts";
 
 type Adjacency = {
     successors: Map<Tech, Tech[]>; // tech -> successors
@@ -399,13 +400,11 @@ export class ClientTechTree implements TechTree {
             frag.append(conflictDiv);
         }
 
-        const name = tech.name.toString();
-        const identifier = Registries.TECH.getId(tech);
-        if (identifier) {
-            this.techTexture.classList.remove('hidden');
-            this.techTexture.src = `/texture/tech/${identifier.getPath()}.png`;
-            this.techTexture.alt = name;
-        }
+        const name = tech.name.asString();
+        const src = ModelManager.getTechModel(tech).getCovered();
+        this.techTexture.classList.remove('hidden');
+        this.techTexture.src = src;
+        this.techTexture.alt = name;
 
         this.techTitle.textContent = name;
         this.metaShow.replaceChildren(frag);

@@ -7,7 +7,7 @@ import type {ClientWorld} from "../../ClientWorld.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import type {SpecialWeapon} from "../../../item/weapon/SpecialWeapon.ts";
 import type {ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
-import {InventoryRender} from "./InventoryRender.ts";
+import {InventoryRender} from "../../inventory/InventoryRender.ts";
 import {Weapon} from "../../../item/weapon/Weapon.ts";
 
 export class HUD implements IUi {

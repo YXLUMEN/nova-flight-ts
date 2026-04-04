@@ -1,13 +1,13 @@
-import type {LangModule} from "../resource/LangModule.ts";
-import {ResourceManager} from "../resource/ResourceManager.ts";
-import {Resources} from "../resource/Resources.ts";
+import type {LangResource} from "../client/resource/LangResource.ts";
+import {ResourceManager} from "../client/resource/ResourceManager.ts";
+import {Resources} from "../client/resource/Resources.ts";
 
 export class LangManager {
-    private static cache: LangModule | null = null;
+    private static resource: LangResource | null = null;
 
-    private static get module(): LangModule {
-        if (!this.cache) this.cache = ResourceManager.get<LangModule>(Resources.LANG);
-        return this.cache;
+    private static get module(): LangResource {
+        if (!this.resource) this.resource = ResourceManager.get<LangResource>(Resources.LANG);
+        return this.resource;
     }
 
     public static getText(key: string): string | undefined {

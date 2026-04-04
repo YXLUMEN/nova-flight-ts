@@ -2,12 +2,12 @@ import type {SoundEvent} from "./SoundEvent.ts";
 import {HashMap} from "../utils/collection/HashMap.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {clamp} from "../utils/math/math.ts";
-import type {SoundModule} from "../resource/SoundModule.ts";
-import {ResourceManager} from "../resource/ResourceManager.ts";
-import {Resources} from "../resource/Resources.ts";
+import type {SoundResource} from "../client/resource/SoundResource.ts";
+import {ResourceManager} from "../client/resource/ResourceManager.ts";
+import {Resources} from "../client/resource/Resources.ts";
 
 export class SoundSystem {
-    private readonly module: SoundModule;
+    private readonly module: SoundResource;
     private readonly activeLoops = new HashMap<Identifier, AudioBufferSourceNode>();
     private readonly audioContext: AudioContext;
     private readonly gainNode: GainNode;

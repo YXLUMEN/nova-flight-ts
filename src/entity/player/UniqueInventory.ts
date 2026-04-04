@@ -22,11 +22,9 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
         this.player = player;
     }
 
-    public tick(limit: number = this.inventory.length) {
-        limit = clamp(limit, 0, this.inventory.length);
-
+    public tick() {
         const world = this.player.getWorld();
-        for (let i = 0; i < limit; i++) {
+        for (let i = 0; i < this.inventory.length; i++) {
             const stack = this.inventory.get(i);
             if (!stack.isEmpty()) {
                 stack.inventoryTick(world, this.player, i, this.selected === i);
@@ -115,7 +113,7 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
         if (!this.validateSlot(slot)) return;
 
         this.inventory.set(slot, stack);
-        if (stack.isEmpty() && this.items.has(stack.getItem())) {
+        if (stack.isEmpty()) {
             this.items.delete(stack.getItem());
         } else {
             this.items.set(stack.getItem(), stack);
@@ -158,7 +156,7 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
         return 6;
     }
 
-    public specialLength(): number {
+    public tickSlotsLen(): number {
         return 11;
     }
 

@@ -20,6 +20,7 @@ import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
 import type {Item} from "../../item/Item.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
+import {randInt} from "../../utils/math/math.ts";
 
 export class ServerPlayerEntity extends PlayerEntity {
     public readonly playerProfile: GameProfile;
@@ -78,19 +79,6 @@ export class ServerPlayerEntity extends PlayerEntity {
         }
     }
 
-    public override takeDamage(damageSource: DamageSource, damage: number): boolean {
-        if (super.takeDamage(damageSource, damage)) {
-            this.mendingCooldown = 100;
-
-            if (this.getHealth() / this.getMaxHealth() <= 0.2) {
-                (this.getWorld() as ServerWorld).spawnEffect(null,
-                    new EdgeGlowEffect('#ff3333', 32, 0.8, 4));
-            }
-            return true;
-        }
-        return false;
-    }
-
     public setFiring(active: boolean) {
         this.wasFiring = active;
 
@@ -98,8 +86,6 @@ export class ServerPlayerEntity extends PlayerEntity {
         const item = current.getItem();
         if (item instanceof BaseWeapon) {
             active ? item.onStartFire(current, this.getWorld(), this) : item.onEndFire(current, this.getWorld(), this);
-        } else if (active && item instanceof SpecialWeapon) {
-            this.fireSpecials(item);
         }
     }
 
@@ -129,7 +115,7 @@ export class ServerPlayerEntity extends PlayerEntity {
         for (const stack of this.getInventory()) {
             const item = stack.getItem();
             if (item instanceof SpecialWeapon) {
-                item.setCooldown(stack, 0.5);
+                item.setCooldown(stack, 0);
                 this.pendingSyncStack.add(stack);
             }
         }
@@ -137,6 +123,17 @@ export class ServerPlayerEntity extends PlayerEntity {
 
     public override isInvulnerableTo(damageSource: DamageSource): boolean {
         return super.isInvulnerableTo(damageSource) || this.isDevMode();
+    }
+
+    public override takeDamage(damageSource: DamageSource, damage: number): boolean {
+        if (!super.takeDamage(damageSource, damage)) return false;
+        this.mendingCooldown = 100;
+
+        if (this.getHealth() / this.getMaxHealth() <= 0.2) {
+            (this.getWorld() as ServerWorld).spawnEffect(null,
+                new EdgeGlowEffect('#ff3333', 32, 0.8, 4));
+        }
+        return true;
     }
 
     public override kill() {
@@ -147,11 +144,9 @@ export class ServerPlayerEntity extends PlayerEntity {
     public override onDeath(damageSource: DamageSource) {
         super.onDeath(damageSource);
 
-        const mag = Math.random() > 0.5 ?
-            `${this.getProfile().name} 船毁人亡` :
-            `${this.getProfile().name} 坠机了`;
-
-        this.networkHandler.broadcast(new GameMessageS2CPacket(mag));
+        // TODO 不依赖索引
+        const packet = new TranslatableTextS2CPacket(`entity.player.death_${randInt(0, 2)}`, [this.getProfile().name]);
+        this.networkHandler.broadcast(packet);
     }
 
     public override addScore(score: number) {

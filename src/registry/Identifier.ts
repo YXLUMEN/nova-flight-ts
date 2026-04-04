@@ -26,6 +26,7 @@ export class Identifier implements Comparable {
 
     private readonly namespace: string;
     private readonly path: string;
+    private readonly hashcode: string;
 
     public constructor(namespace: string, path: string) {
         if (!Identifier.isNamespaceValid(namespace)) throw new SyntaxError(`Invalid namespace: ${namespace}`);
@@ -33,6 +34,7 @@ export class Identifier implements Comparable {
 
         this.namespace = namespace;
         this.path = path;
+        this.hashcode = `${this.namespace}:${this.path}`;
     }
 
     public static of(namespace: string, path: string): Identifier {
@@ -137,8 +139,16 @@ export class Identifier implements Comparable {
         return this.namespace;
     }
 
+    public withPath(newPath: string): Identifier {
+        return new Identifier(this.namespace, Identifier.validatePath(this.namespace, newPath));
+    }
+
+    public withPrefix(prefix: string): Identifier {
+        return this.withPath(prefix + this.path);
+    }
+
     public toString(): string {
-        return `${this.namespace}:${this.path}`;
+        return this.hashcode;
     }
 
     public equals(o: Object): boolean {

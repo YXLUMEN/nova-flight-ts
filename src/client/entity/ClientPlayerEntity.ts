@@ -26,7 +26,7 @@ import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPac
 import type {Channel} from "../../network/Channel.ts";
 import {Weapon} from "../../item/weapon/Weapon.ts";
 import {FireSpecialC2SPacket} from "../../network/packet/c2s/FireSpecialC2SPacket.ts";
-import {ClientInventory} from "../ClientInventory.ts";
+import {ClientInventory} from "../inventory/ClientInventory.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 
 export class ClientPlayerEntity extends AbstractClientPlayerEntity {
@@ -113,7 +113,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         if (this.input.wasPressed('KeyF')) {
             this.switchWeapon();
         } else if (this.input.wasPressed('KeyR')) {
-            this.wpnReload();
+            this.weaponReload();
         }
     }
 
@@ -172,7 +172,6 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         }
 
         super.aiStep();
-        this.tryFireWeapons();
 
         if (updatePos && updateYaw) {
             this.getNetworkChannel().send(new FullMove(dx, dy, this.getYaw()));
@@ -183,10 +182,14 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         }
     }
 
-    private tryFireWeapons() {
-        const world = this.getWorld() as ClientWorld;
-        this.mainWeaponFire(world);
+    protected override inventoryTick() {
+        super.inventoryTick();
+        this.fireMainWeapon();
+        this.fireSpecials();
+    }
 
+    private fireSpecials() {
+        const world = this.getWorld();
         const inventory = this.getInventory();
         for (const [assign, item] of this.activeSpecials) {
             const stack = inventory.searchItem(item);
@@ -202,7 +205,8 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         }
     }
 
-    private mainWeaponFire(world: ClientWorld) {
+    private fireMainWeapon() {
+        const world = this.getWorld();
         const stack = this.getInventory().getSelectedItem();
         const item = stack.getItem();
         if (stack.isEmpty() || !(item instanceof Weapon)) return;
@@ -227,12 +231,12 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         }
 
         if (isFiring && stack.getDurability() === 0 && stack.isDamageable()) {
-            this.wpnReload();
+            this.weaponReload();
             this.wasFiring = false;
         }
     }
 
-    private wpnReload() {
+    private weaponReload() {
         const stack = this.getInventory().getSelectedItem();
         if (stack.getDamage() === 0 || stack.getOrDefault(DataComponents.RELOADING, false)) {
             return;
@@ -247,12 +251,10 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         this.orderSpecials.length = 0;
 
         const inventory = this.getInventory();
-        const len = inventory.hotbarLength();
-        const sLen = inventory.specialLength();
+        const hotbarLen = inventory.hotbarLength();
 
-        for (let i = 0; i < inventory.maxSize(); i++) {
-            if (i < len) continue;
-            if (i >= sLen) break;
+        for (let i = 0; i < inventory.tickSlotsLen(); i++) {
+            if (i < hotbarLen) continue;
 
             const stack = inventory.getItem(i);
             const item = stack.getItem();

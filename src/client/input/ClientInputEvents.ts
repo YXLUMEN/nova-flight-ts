@@ -5,6 +5,7 @@ import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import {BGMManager} from "../../sound/BGMManager.ts";
 import type {KeyboardInput} from "./KeyboardInput.ts";
 import {createClean} from "../../utils/uit.ts";
+import {DataLoader} from "../resource/DataLoader.ts";
 
 export class ClientInputEvents {
     public static registryAll(client: NovaFlightClient, input: KeyboardInput): void {
@@ -63,17 +64,16 @@ export class ClientInputEvents {
 
     private static onKeyDown(client: NovaFlightClient, event: KeyboardEvent): void {
         const world = client.world;
-        if (world && world.isOver) {
-            client.connection.disconnect();
-            client.requestStop();
-            return;
-        }
+        if (world && world.isOver) return;
 
         const code = event.code;
         if (event.ctrlKey) {
             if (code === 'KeyV') client.switchDevMode();
             if (client.player?.isDevMode() && world) {
                 this.devFunc(client, code);
+            }
+            if (event.shiftKey && code === 'KeyP') {
+                void DataLoader.reloadModel(client.registryManager);
             }
             return;
         }

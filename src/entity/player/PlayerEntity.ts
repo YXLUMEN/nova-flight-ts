@@ -69,11 +69,22 @@ export abstract class PlayerEntity extends LivingEntity {
     }
 
     public override aiStep() {
-        this.inventory.tick(this.inventory.specialLength());
+        this.inventoryTick();
         super.aiStep();
 
         this.move(this.getVelocityRef);
         this.clampPosition();
+    }
+
+    protected inventoryTick() {
+        const world = this.getWorld();
+        const selected = this.inventory.getSelectedSlot();
+
+        for (let i = 0; i < this.inventory.tickSlotsLen(); i++) {
+            const stack = this.inventory.getItem(i);
+            if (stack.isEmpty()) continue;
+            stack.inventoryTick(world, this, i, i === selected);
+        }
     }
 
     protected override adjustBlockCollision(movement: MutVec2): MutVec2 {
