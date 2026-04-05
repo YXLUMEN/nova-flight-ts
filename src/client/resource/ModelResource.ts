@@ -71,7 +71,7 @@ export class ModelResource implements ResourceModule {
 
     private resolveModel(modelJsons: Map<string, any>, key: string): Model | null {
         let finalTextures: Record<string, string> | null = null;
-        let finalDisplay: DisplayConfig | undefined;
+        let finalDisplay: DisplayConfig | null = null;
 
         let currentKey = key;
         const visited = new Set<string>();
@@ -102,25 +102,23 @@ export class ModelResource implements ResourceModule {
             currentKey = currentJson.parent;
         }
 
-        if (!finalTextures || Object.keys(finalTextures).length === 0) {
-            return null;
-        }
+        if (!finalTextures) return null;
 
-        const textureKey = Object.values(finalTextures)[0];
+        const textureKey = Object.values(finalTextures).at(0);
         if (!textureKey) {
             return null;
         }
 
-        if (!this.resource!.hasTexture(textureKey)) {
-            console.warn(`[ModelResource] Model ${key} references missing texture: ${textureKey}`);
-            return null;
+        if (this.resource!.hasTexture(textureKey)) {
+            return this.createModel(textureKey, finalDisplay ?? undefined);
         }
 
-        return this.createModel(textureKey, finalDisplay);
+        console.warn(`[ModelResource] Model ${key} references missing texture: ${textureKey}`);
+        return null;
     }
 
-    private parseDisplayConfig(display: any): DisplayConfig | undefined {
-        if (!display || typeof display !== 'object') return;
+    private parseDisplayConfig(display: any): DisplayConfig | null {
+        if (!display || typeof display !== 'object') return null;
 
         const config: DisplayConfig = {};
         if (typeof display.rotation === 'number') {
