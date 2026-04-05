@@ -58,7 +58,7 @@ export class TextureResource implements ResourceModule, TextureProvider {
             return this.defaultTexture!;
         }
 
-        // 先占位
+        // 占位防重入
         this.textureCache.set(key, this.transparent!);
         this.loadTexture(key).catch(err => {
             const msg = `[TextureResource] Failed to load texture ${key}: ${err}`;
@@ -72,7 +72,7 @@ export class TextureResource implements ResourceModule, TextureProvider {
     public getCovered(key: string): string {
         const path = this.texturePaths.get(key);
         if (path) return path.covered;
-        return '/textures/default.png'
+        return '/textures/default.png';
     }
 
     public hasTexture(key: string): boolean {
