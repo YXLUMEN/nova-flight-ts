@@ -13,7 +13,7 @@ export abstract class BossEntity extends MobEntity {
     public static hasBoss: boolean = false;
 
     public override color = '#b30000';
-    public override yStep = 0;
+    public override verticalMovementDir = 0;
 
     private readonly maxDamageCanTake: number;
     private damageCooldown: number = 0;

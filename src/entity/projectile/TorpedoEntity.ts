@@ -3,7 +3,7 @@ import {MissileEntity} from "./MissileEntity.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 
 export class TorpedoEntity extends MissileEntity {
-    protected readonly maxReLockCD = 10;
+    protected readonly maxRelockCooldown = 10;
 
     protected readonly driftAttenuation = false;
     protected readonly driftSpeed = 2;

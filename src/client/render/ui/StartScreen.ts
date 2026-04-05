@@ -7,7 +7,7 @@ import {UIButton} from "./UIButton.ts";
 import {UITheme} from "./theme.ts";
 import {Window} from "../Window.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
-import type {Consumer} from "../../../type/types.ts";
+import type {Consumer, Supplier} from "../../../type/types.ts";
 
 type StartScreenOptions = {
     title: string;
@@ -22,9 +22,9 @@ export class StartScreen implements IUi {
     private readonly tempCamera: Camera = new Camera();
     private readonly starField: StarField = new StarField(96, lowPowerLayers, 8);
 
-    private ctrl = new AbortController();
+    private readonly ctrl = new AbortController();
+    private readonly options: Required<StartScreenOptions>;
     private running = false
-    private options: Required<StartScreenOptions>;
 
     private tickInterval = 1000 / 50;
     private lastTickTime = 0;
@@ -34,21 +34,27 @@ export class StartScreen implements IUi {
 
     private buttons: UIButton[] = [];
     private bindTick = this.tick.bind(this);
+    private readonly unsubResize: Supplier<void>;
 
-    public constructor(ctx: CanvasRenderingContext2D, options: StartScreenOptions) {
+    public constructor(client: NovaFlightClient, options: StartScreenOptions) {
         const {promise, resolve} = Promise.withResolvers<number>();
         this.waitConfirm = promise;
-        this.complete = resolve;
+        this.complete = (action: number) => {
+            resolve(action);
+            this.destroy();
+        };
 
-        this.ctx = ctx;
+        this.ctx = client.window.ctx;
         this.options = {
             title: options.title,
             subtitle: options.subtitle
         };
 
         this.starField.init();
-
         this.setSize(Window.VIEW_W, Window.VIEW_H);
+
+        this.unsubResize = client.window.onResize(this.setSize.bind(this));
+
         this.start();
     }
 
@@ -63,11 +69,6 @@ export class StartScreen implements IUi {
                     btn.onClick();
                 }
             }
-        }, {signal: this.ctrl.signal});
-
-        window.addEventListener('resize', () => {
-            NovaFlightClient.getInstance().window.resize();
-            this.setSize(Window.VIEW_W, Window.VIEW_H);
         }, {signal: this.ctrl.signal});
     }
 
@@ -122,6 +123,7 @@ export class StartScreen implements IUi {
     public destroy() {
         this.running = false;
         this.ctrl.abort();
+        this.unsubResize();
 
         (this.ctx as any) = null;
         (this.starField as any) = null;
@@ -142,46 +144,26 @@ export class StartScreen implements IUi {
                 startX, startY,
                 200, 50,
                 '开始游戏',
-                this.newGame.bind(this),
+                () => this.complete(0),
             ),
             new UIButton(
                 startX, startY + 60,
                 200, 50,
                 '加入游戏',
-                this.joinGame.bind(this),
+                () => this.complete(1),
             ),
             new UIButton(
                 startX, startY + 120,
                 200, 50,
                 '统计数据',
-                this.statistics.bind(this),
+                () => this.complete(2),
             ),
             new UIButton(
                 startX, startY + 180,
                 200, 50,
                 '退出游戏',
-                this.exitGame.bind(this),
+                () => this.complete(-1),
             )
         );
-    }
-
-    private exitGame(): void {
-        this.destroy();
-        this.complete(-1);
-    }
-
-    private newGame(): void {
-        this.destroy();
-        this.complete(0);
-    }
-
-    private joinGame(): void {
-        this.destroy();
-        this.complete(1);
-    }
-
-    private statistics(): void {
-        this.destroy();
-        this.complete(2);
     }
 }

@@ -19,7 +19,7 @@ import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 
 export abstract class MobEntity extends LivingEntity implements IColorEntity {
     public color = '#ff6b6b';
-    public yStep = 1;
+    public verticalMovementDir = 1;
 
     private worth: number;
     private readonly AI: MobAI;
@@ -176,11 +176,11 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         return this.AI.getBehavior() === AiBehavior.Simple ? 80 : 0;
     }
 
-    protected override onOutOffBound(x: number, y: number) {
+    protected override onOutOfBounds(x: number, y: number) {
         if (y !== this.getY() && this.AI.isSimple()) {
             this.discard();
             return;
         }
-        super.onOutOffBound(x, y);
+        super.onOutOfBounds(x, y);
     }
 }

@@ -19,8 +19,8 @@ export class MissileEntity extends RocketEntity {
     protected target: Entity | null = null;
     protected lastTarget: Entity | null = null;
 
-    protected reLockCD = 0;
-    protected maxReLockCD = 5;
+    protected relockCooldown = 0;
+    protected maxRelockCooldown = 5;
 
     protected igniteDelayTicks = 16;
     protected lockDelayTicks = 40;
@@ -104,11 +104,11 @@ export class MissileEntity extends RocketEntity {
         this.applyDecoy();
 
         // 重新锁定
-        if (this.reLockCD > 0) this.reLockCD--;
+        if (this.relockCooldown > 0) this.relockCooldown--;
         if (!this.target || this.target.isRemoved()) {
             let target: Entity | null = null;
 
-            if (cd && this.reLockCD <= 0) {
+            if (cd && this.relockCooldown <= 0) {
                 target = this.acquireTarget();
             }
 
@@ -120,7 +120,7 @@ export class MissileEntity extends RocketEntity {
             }
 
             this.target = target;
-            this.reLockCD = this.maxReLockCD;
+            this.relockCooldown = this.maxRelockCooldown;
 
             const count = MissileEntity.lockedEntity.get(this.target) ?? 0;
             MissileEntity.lockedEntity.set(this.target, count + 1);
@@ -131,7 +131,7 @@ export class MissileEntity extends RocketEntity {
         // 追踪
         const targetPos = this.target.getPositionRef;
         const targetVel = this.target.getVelocityRef;
-        const desiredYaw = this.predictMethod(pos, targetPos, targetVel);
+        const desiredYaw = this.predictInterceptYaw(pos, targetPos, targetVel);
 
         this.setClampYaw(desiredYaw, this.turnRate);
 
@@ -139,7 +139,7 @@ export class MissileEntity extends RocketEntity {
         this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
     }
 
-    protected predictMethod(pos: MutVec2, targetPos: MutVec2, targetVel: IVec) {
+    protected predictInterceptYaw(pos: MutVec2, targetPos: MutVec2, targetVel: IVec) {
         return BallisticsUtils.guidedIntercept(
             pos,
             targetPos,

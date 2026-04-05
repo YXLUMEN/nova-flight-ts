@@ -44,15 +44,12 @@ export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
 
     public stage: Stage;
-    private phaseScore: number = 0;
+    private phase: number = 0;
 
     private readonly entities: EntityList = new EntityList();
     private readonly entityManager: ServerEntityManager<Entity>;
     private readonly trackedEntities = new Map<number, EntityTrackerEntry>();
     private finishInit = false;
-
-    // private times = 0;
-    // private total = 0;
 
     public constructor(registryManager: RegistryManager, server: NovaFlightServer) {
         super(registryManager, false);
@@ -70,21 +67,11 @@ export class ServerWorld extends World implements NbtSerializable {
 
         this.stage.tick(this);
 
-        // this.times++;
-        // const s = performance.now();
         for (const entity of this.entities.values()) {
             if (entity.isRemoved()) continue;
             this.tickEntity(this.bindTickEntity, entity);
             if (this.over) break;
         }
-        // const e = performance.now();
-        // this.total += e - s;
-        // if (this.times % 20 === 0) {
-        //     const avg = this.total / this.times;
-        //     console.log('Avg: ' + avg.toFixed(4));
-        //     this.times = 0;
-        //     this.total = 0;
-        // }
 
         this.entities.processRemovals();
         for (const entry of this.trackedEntities.values()) {
@@ -215,15 +202,15 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public getPhase(): number {
-        return this.phaseScore;
+        return this.phase;
     }
 
     public setPhase(phase: number): void {
-        this.phaseScore = Math.max(0, phase);
+        this.phase = Math.max(0, phase);
     }
 
     public addPhase(phase: number): void {
-        this.setPhase(this.phaseScore + phase);
+        this.setPhase(this.phase + phase);
     }
 
     public override getServer(): NovaFlightServer {
@@ -346,7 +333,7 @@ export class ServerWorld extends World implements NbtSerializable {
         const stageNbt = new NbtCompound();
         this.stage.writeNBT(stageNbt);
         root.putCompound('stage', stageNbt);
-        root.putUint32('phase_score', this.phaseScore);
+        root.putUint32('phase_score', this.phase);
         root.putInt8('difficulty', this.getDifficulty());
 
         const map = new NbtCompound();
@@ -362,7 +349,7 @@ export class ServerWorld extends World implements NbtSerializable {
 
         const stageNbt = nbt.getCompound('stage');
         if (stageNbt) this.stage.readNBT(stageNbt);
-        this.phaseScore = nbt.getUint32('phase_score');
+        this.phase = nbt.getUint32('phase_score');
         this.setDifficulty(nbt.getInt8('difficulty', 1));
 
         if (nbt.contains('map', NbtTypeId.Compound)) {

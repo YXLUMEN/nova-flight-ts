@@ -107,14 +107,15 @@ export class ServerStorage {
         const db = await this.db.init();
         const tx = db.transaction(['save_meta', 'player_data'], 'readwrite');
 
-        const metaTask = new Promise<boolean>((resolve) => {
+        const metaExists = await new Promise<boolean>((resolve) => {
             const store = tx.objectStore('save_meta');
             const request = store.getKey(saveName);
             request.onsuccess = () => resolve(!!request.result);
             request.onerror = () => resolve(false);
         });
 
-        if (!metaTask) {
+        if (!metaExists) {
+            tx.abort();
             return Result.err(new NoResultsError(`World ${saveName} not found.`));
         }
 

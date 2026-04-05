@@ -206,7 +206,7 @@ export class WorldRender {
         ctx: CanvasRenderingContext2D,
         missile: MissileEntity,
         playerPos: IVec,
-        my: number, x: number, y: number,
+        tipLength: number, wingWidth: number, wingHeight: number,
         tickDelta: number
     ) {
         const mPos = missile.getLerpPos(tickDelta);
@@ -220,9 +220,9 @@ export class WorldRender {
         ctx.translate(arrowX, arrowY);
         ctx.rotate(angle + HALF_PI);
         ctx.beginPath();
-        ctx.moveTo(0, -my);
-        ctx.lineTo(x, y);
-        ctx.lineTo(-x, y);
+        ctx.moveTo(0, -tipLength);
+        ctx.lineTo(wingWidth, wingHeight);
+        ctx.lineTo(-wingWidth, wingHeight);
         ctx.closePath();
         ctx.fill();
         ctx.restore();

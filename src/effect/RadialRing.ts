@@ -34,7 +34,7 @@ export class RadialRing implements VisualEffect {
     private readonly life: number;
     private readonly color: string;
 
-    private preT = 0;
+    private prevT = 0;
     private t = 0;
 
     public constructor(center: IVec, r0: number, r1: number, life: number, color: string) {
@@ -46,7 +46,7 @@ export class RadialRing implements VisualEffect {
     }
 
     public tick(dt: number) {
-        this.preT = this.t;
+        this.prevT = this.t;
         this.t += dt;
         if (this.t >= this.life) {
             this.alive = false;
@@ -54,7 +54,7 @@ export class RadialRing implements VisualEffect {
     }
 
     public render(ctx: CanvasRenderingContext2D, tickDelta: number) {
-        const lerpT = lerp(tickDelta, this.preT, this.t);
+        const lerpT = lerp(tickDelta, this.prevT, this.t);
         const k = Math.min(1, lerpT / this.life);
         const r = this.r0 + (this.r1 - this.r0) * k;
         const alpha = 1 - k;

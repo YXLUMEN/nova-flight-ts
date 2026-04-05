@@ -4,11 +4,12 @@ import {UITheme} from "./theme.ts";
 import {UiTools} from "./UiTools.ts";
 import type {IUi} from "./IUi.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
-import {Window} from "../Window.ts";
+import type {Supplier} from "../../../type/types.ts";
 
 export class LoadingScreen implements IUi {
     private readonly ctx: CanvasRenderingContext2D;
     private readonly ctrl = new AbortController();
+    private readonly unsubResize: Supplier<void>;
 
     private width: number = 0;
     private height: number = 0;
@@ -24,13 +25,9 @@ export class LoadingScreen implements IUi {
 
     private done: boolean = false;
 
-    public constructor(ctx: CanvasRenderingContext2D) {
-        this.ctx = ctx;
-
-        window.addEventListener('resize', () => {
-            NovaFlightClient.getInstance().window.resize();
-            this.setSize(Window.VIEW_W, Window.VIEW_H);
-        }, {signal: this.ctrl.signal});
+    public constructor(client: NovaFlightClient) {
+        this.ctx = client.window.ctx;
+        this.unsubResize = client.window.onResize(this.setSize.bind(this));
     }
 
     public setProgress(progress: number, message?: string) {
@@ -152,7 +149,7 @@ export class LoadingScreen implements IUi {
     }
 
     public destroy(): void {
-        (this.ctx as any) = null;
         this.ctrl.abort();
+        this.unsubResize();
     }
 }
