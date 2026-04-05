@@ -139,32 +139,8 @@ export class NovaFlightClient {
         while (true) {
             if (this.waitWorldStop === null) this.createWorldStopPromise();
             this.connection.setPacketListener(this.networkHandler.getPhase(), this.networkHandler);
-
-            const startScreen = new StartScreen(this.window.ctx, {
-                title: `Nova Flight (${WorldConfig.devVersion})`,
-                subtitle: TranslatableText.of('start.subtitle').toString(),
-            });
-
-            const action = await startScreen.onConfirm();
-
-            if (action === -1) break;
-
-            if (action === 0) {
-                this.isIntegrated = true;
-                const saveName = await this.saveManager.choseSaves();
-                this.saveManager.hide();
-                if (saveName === null) {
-                    this.stopWorld();
-                } else {
-                    await this.startIntegratedServer(saveName);
-                }
-            } else if (action === 1) {
-                this.isIntegrated = false;
-                await this.connectToServer();
-            } else if (action === 2) {
-                await this.statisticManager.selectItem();
-                this.stopWorld();
-            }
+            const breakLoop = await this.userSelect();
+            if (breakLoop) break;
 
             this.world?.events.emit(EVENTS.GAME_START, null);
             await this.waitWorldStop;
@@ -180,6 +156,34 @@ export class NovaFlightClient {
 
         this.connection.clean();
         this.networkHandler.destroy();
+    }
+
+    private async userSelect(): Promise<boolean> {
+        const startScreen = new StartScreen(this, {
+            title: `Nova Flight (${WorldConfig.devVersion})`,
+            subtitle: TranslatableText.of('start.subtitle').toString(),
+        });
+
+        const action = await startScreen.onConfirm();
+        if (action === -1) return true;
+
+        if (action === 0) {
+            this.isIntegrated = true;
+            const saveName = await this.saveManager.chooseSave();
+            this.saveManager.hide();
+            if (saveName === null) {
+                this.stopWorld();
+            } else {
+                await this.startIntegratedServer(saveName);
+            }
+        } else if (action === 1) {
+            this.isIntegrated = false;
+            await this.connectToServer();
+        } else if (action === 2) {
+            await this.statisticManager.selectItem();
+            this.stopWorld();
+        }
+        return false;
     }
 
     public async joinGame(world: ClientWorld) {
@@ -327,7 +331,7 @@ export class NovaFlightClient {
         }
         this.channel.setServerAddress(address);
 
-        const connectInfo = new ConnectInfo(this.window.ctx, this.stopWorld.bind(this));
+        const connectInfo = new ConnectInfo(this, this.stopWorld.bind(this));
         this.connectInfo?.destroy();
         this.connectInfo = connectInfo;
         connectInfo.setMessage(TranslatableText.of('start.remote.connecting').toString());
@@ -365,7 +369,7 @@ export class NovaFlightClient {
         if (this.server) return;
 
         // 全屏提示
-        const connectInfo = new ConnectInfo(this.window.ctx, this.stopWorld.bind(this));
+        const connectInfo = new ConnectInfo(this, this.stopWorld.bind(this));
         this.connectInfo?.destroy();
         this.connectInfo = connectInfo;
         connectInfo.setMessage(TranslatableText.of('start.integrated.start').toString());
@@ -517,7 +521,7 @@ export class NovaFlightClient {
     // 其他
 
     public async initResources(): Promise<void> {
-        const loadingScreen = new LoadingScreen(this.window.ctx);
+        const loadingScreen = new LoadingScreen(this);
         loadingScreen.setSize(Window.VIEW_W, Window.VIEW_H);
         loadingScreen.loop();
 

@@ -2,7 +2,7 @@ import type {IUi} from "./IUi.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import {Window} from "../Window.ts";
 import {UIButton} from "./UIButton.ts";
-import type {Consumer} from "../../../type/types.ts";
+import type {Consumer, Supplier} from "../../../type/types.ts";
 
 export class ConnectInfo implements IUi {
     private readonly ctx: CanvasRenderingContext2D;
@@ -15,12 +15,13 @@ export class ConnectInfo implements IUi {
     private message = '';
     private error: boolean = false;
 
+    private readonly unsubResize: Supplier<void>;
     private readonly onErr: Consumer<void> | undefined;
     private readonly promise: Promise<void>;
     private readonly resolve: Consumer<void>;
 
-    public constructor(ctx: CanvasRenderingContext2D, onErr?: Consumer<void>) {
-        this.ctx = ctx;
+    public constructor(client: NovaFlightClient, onErr?: Consumer<void>) {
+        this.ctx = client.window.ctx;
         this.ctrl = new AbortController();
 
         const {promise, resolve} = Promise.withResolvers<void>();
@@ -31,10 +32,7 @@ export class ConnectInfo implements IUi {
         this.setSize(Window.VIEW_W, Window.VIEW_H);
         this.setBtn();
 
-        window.addEventListener('resize', () => {
-            NovaFlightClient.getInstance().window.resize();
-            this.setSize(Window.VIEW_W, Window.VIEW_H);
-        }, {signal: this.ctrl.signal});
+        this.unsubResize = client.window.onResize(this.setSize.bind(this));
 
         window.addEventListener('click', (event) => {
             if (this.error && this.backBtn && this.backBtn.hitTest(event.offsetX, event.offsetY)) {
@@ -94,6 +92,7 @@ export class ConnectInfo implements IUi {
         this.running = false;
         this.ctrl.abort();
         this.backBtn = null;
+        this.unsubResize();
         this.resolve();
     }
 

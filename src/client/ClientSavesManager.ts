@@ -13,6 +13,8 @@ import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {BinaryWriter} from "../nbt/BinaryWriter.ts";
 
 export class ClientSavesManager {
+    private static readonly RESERVED_NAMES = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'];
+    private static readonly INVALID_CHARS = /[@#$%^&!<>:"/\\|?*\x00]/;
     private readonly saveContainer: HTMLElement;
     private readonly saveList: HTMLElement;
     private readonly buttonBox: HTMLElement;
@@ -33,7 +35,7 @@ export class ClientSavesManager {
         this.inputButtonBox = document.getElementById('save-name-buttons')!;
     }
 
-    public async choseSaves() {
+    public async chooseSave() {
         await ServerStorage.updateStatus();
         await this.refreshSaveDisplay();
 
@@ -43,7 +45,7 @@ export class ClientSavesManager {
         const ctrl = new AbortController();
 
         this.saveList.addEventListener('click', event => {
-            this.deChose();
+            this.clearSelection();
 
             const target = event.target;
             if (!(target instanceof HTMLElement)) return;
@@ -52,7 +54,7 @@ export class ClientSavesManager {
             if (!item) return;
 
             this.chosenItem = target;
-            this.onChose();
+            this.onItemChosen();
         }, {signal: ctrl.signal});
 
         this.saveList.addEventListener('dblclick', event => {
@@ -80,62 +82,70 @@ export class ClientSavesManager {
             const action = actionBtn.getAttribute('action');
             if (!action) return;
 
-            if (action === 'back') {
-                resolve(null);
-                ctrl.abort();
-                return;
-            }
-
-            if (action === 'create-world') {
-                this.createNewWorld().then(result => {
-                    if (result === null) return;
-                    resolve(result);
-                    ctrl.abort();
-                });
-                return;
-            }
-
-            if (action === 'import-world') {
-                this.importSave();
-                return;
-            }
-
-            if (this.chosenItem === null) return;
-
-            if (action === 'delete-world') {
-                this.deleteWorld();
-                return;
-            }
-
-            const saveName = this.chosenItem.dataset.saveName;
-            if (!saveName) {
-                message('未能读取此存档信息, 可能文件已损坏', {kind: 'warning'});
-                return;
-            }
-
-            if (action === 'load-world') {
-                resolve(saveName);
-                ctrl.abort();
-                return;
-            }
-
-            if (action === 'rename') {
-                this.renameSave(saveName);
-                return;
-            }
-
-            if (action === 'export-world') {
-                this.exportSave(saveName);
-                return;
-            }
-
-            if (action === 'export-world-snbt') {
-                this.exportAsSNbt(saveName);
-                return;
-            }
+            this.handleButtonAction(action, resolve, ctrl);
         }, {signal: ctrl.signal});
 
         return promise;
+    }
+
+    private handleButtonAction(
+        action: string,
+        resolve: (value: string | null) => void,
+        ctrl: AbortController
+    ): void {
+        if (action === 'back') {
+            resolve(null);
+            ctrl.abort();
+            return;
+        }
+
+        if (action === 'create-world') {
+            this.createNewWorld().then(result => {
+                if (result === null) return;
+                resolve(result);
+                ctrl.abort();
+            });
+            return;
+        }
+
+        if (action === 'import-world') {
+            void this.importSave();
+            return;
+        }
+
+        if (this.chosenItem === null) return;
+
+        if (action === 'delete-world') {
+            void this.deleteWorld();
+            return;
+        }
+
+        const saveName = this.chosenItem.dataset.saveName;
+        if (!saveName) {
+            void message('未能读取此存档信息, 可能文件已损坏', {kind: 'warning'});
+            return;
+        }
+
+        if (action === 'load-world') {
+            resolve(saveName);
+            ctrl.abort();
+            return;
+        }
+
+        if (action === 'rename') {
+            void this.renameSave(saveName);
+            return;
+        }
+
+        if (action === 'export-world') {
+            void this.exportSave(saveName);
+            return;
+        }
+
+        if (action === 'export-world-snbt') {
+            void this.exportAsSNbt(saveName);
+            return;
+        }
     }
 
     private async refreshSaveDisplay(): Promise<void> {
@@ -164,7 +174,7 @@ export class ClientSavesManager {
         const input = await this.getInputSaveName();
         if (!input) return null;
 
-        if (ClientSavesManager.isinValidName(input)) {
+        if (ClientSavesManager.isInvalidName(input)) {
             await message('输入不合法, 字符长度必须在 1-120 内, 且不包含 下划线 外的特殊字符');
             return null;
         }
@@ -192,11 +202,10 @@ export class ClientSavesManager {
         return saveName;
     }
 
-    private static isinValidName(name: string) {
+    private static isInvalidName(name: string) {
         if (!name || name.length === 0 || name.length > 120) return true;
-        if (/[@#$%^&!<>:"/\\|?*\x00]/.test(name)) return true;
-        const reserved = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'];
-        return reserved.includes(name.toUpperCase());
+        if (ClientSavesManager.INVALID_CHARS.test(name)) return true;
+        return ClientSavesManager.RESERVED_NAMES.includes(name.toUpperCase());
     }
 
     private async genSaveName(saveName: string) {
@@ -256,7 +265,7 @@ export class ClientSavesManager {
         const name = await this.getInputSaveName();
         if (!name) return;
 
-        if (ClientSavesManager.isinValidName(name)) {
+        if (ClientSavesManager.isInvalidName(name)) {
             await message('输入不合法, 字符长度必须在 1-120 内, 且不包含 下划线 外的特殊字符');
             return;
         }
@@ -289,7 +298,7 @@ export class ClientSavesManager {
             })) return;
 
             this.chosenItem.remove();
-            this.deChose();
+            this.clearSelection();
             return;
         }
 
@@ -301,7 +310,7 @@ export class ClientSavesManager {
         result
             .map(() => {
                 this.chosenItem?.remove();
-                this.deChose();
+                this.clearSelection();
             })
             .mapErr(err => {
                 const msg = `[Client] Error while deleting save "${saveName}", ${err.name}:${err.message} because ${err.cause} at\n ${err.stack}`;
@@ -526,7 +535,7 @@ export class ClientSavesManager {
         return promise;
     }
 
-    private onChose() {
+    private onItemChosen() {
         this.chosenItem?.classList.add('chosen');
         for (const element of this.buttonBox.children) {
             if (element.classList.contains('always')) continue;
@@ -534,7 +543,7 @@ export class ClientSavesManager {
         }
     }
 
-    private deChose() {
+    private clearSelection() {
         this.chosenItem = null;
 
         this.saveList.querySelectorAll('.save-list-item.chosen')
@@ -581,7 +590,7 @@ export class ClientSavesManager {
 
     public hide() {
         this.saveContainer.classList.add('hidden');
-        this.deChose();
+        this.clearSelection();
     }
 }
 

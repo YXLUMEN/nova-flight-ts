@@ -44,7 +44,7 @@ export abstract class World {
 
     // ticking
     public readonly isClient: boolean;
-    private stageDifficulty = 1;
+    private difficultyLevel = 1;
     protected over = false;
 
     private readonly registryManager: RegistryManager;
@@ -74,11 +74,11 @@ export abstract class World {
     }
 
     public getDifficulty(): number {
-        return this.stageDifficulty;
+        return this.difficultyLevel;
     }
 
     public setDifficulty(difficulty: number) {
-        this.stageDifficulty = clamp(difficulty, 0, 16) | 0;
+        this.difficultyLevel = clamp(difficulty, 0, 16) | 0;
         this.events.emit(EVENTS.DIFFICULT_CHANGE, {difficult: difficulty});
     }
 
@@ -263,33 +263,25 @@ export abstract class World {
     }
 
     public schedule(delaySec: number, fn: Supplier<void>): Schedule {
-        const t: TimerTask = {
-            id: this.nextTimerId.incrementAndGet(),
-            at: this.time + Math.max(0, delaySec),
-            fn,
-            repeat: false,
-            canceled: false
-        };
+        const t: TimerTask = this.createTimerTask(fn, delaySec, false);
         this.insertTimer(t);
-        return {
-            id: t.id,
-            cancel: () => t.canceled = true
-        };
+        return {id: t.id, cancel: () => (t.canceled = true)};
     }
 
     public scheduleInterval(intervalSec: number, fn: () => void): Schedule {
-        const t: TimerTask = {
-            id: this.nextTimerId.incrementAndGet(),
-            at: this.time + Math.max(0, intervalSec),
-            fn,
-            repeat: true,
-            interval: Math.max(0, intervalSec),
-            canceled: false
-        };
+        const t: TimerTask = this.createTimerTask(fn, intervalSec, true, intervalSec);
         this.insertTimer(t);
+        return {id: t.id, cancel: () => (t.canceled = true)};
+    }
+
+    private createTimerTask(fn: Supplier<void>, delaySec: number, repeat: boolean, interval?: number): TimerTask {
         return {
-            id: t.id,
-            cancel: () => t.canceled = true
+            id: this.nextTimerId.incrementAndGet(),
+            at: this.time + Math.max(0, delaySec),
+            fn,
+            repeat,
+            interval: interval !== undefined ? Math.max(0, interval) : undefined,
+            canceled: false
         };
     }
 
@@ -298,7 +290,7 @@ export abstract class World {
     }
 
     public isPeaceMode(): boolean {
-        return this.stageDifficulty === 0;
+        return this.difficultyLevel === 0;
     }
 
     // 二分插入 保持 timers 按 at 升序

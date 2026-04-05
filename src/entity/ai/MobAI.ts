@@ -29,7 +29,7 @@ export class MobAI {
         const speed = mob.getMovementSpeed() * speedMultiplier;
         const vx = Math.sin(mob.age * 0.1) * 0.8 * speedMultiplier;
 
-        mob.updateVelocity(speed, vx, mob.yStep);
+        mob.updateVelocity(speed, vx, mob.verticalMovementDir);
     }
 
     public constructor(seed: number = 6) {

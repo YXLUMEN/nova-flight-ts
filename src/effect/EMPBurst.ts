@@ -11,7 +11,7 @@ import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 export class EMPBurst implements VisualEffect {
     public static readonly PACKET_CODEC: PacketCodec<EMPBurst> = PacketCodecs.of(
         (writer, value) => {
-            const flag = value.modifiedFlag();
+            const flag = value.buildDeltaFlag();
             writer.writeVarUint(flag);
 
             PacketCodecs.VECTOR2D.encode(writer, value.pos);
@@ -45,7 +45,7 @@ export class EMPBurst implements VisualEffect {
     );
 
     private alive = true;
-    private preT = 0;
+    private prevT = 0;
     private t = 0;
 
     private pos: IVec;
@@ -85,7 +85,7 @@ export class EMPBurst implements VisualEffect {
 
     public tick(dt: number): void {
         if (!this.alive) return;
-        this.preT = this.t;
+        this.prevT = this.t;
         this.t += dt;
         if (this.t >= this.duration) this.alive = false;
     }
@@ -93,7 +93,7 @@ export class EMPBurst implements VisualEffect {
     public render(ctx: CanvasRenderingContext2D, tickDelta: number): void {
         if (!this.alive) return;
 
-        const lerpT = lerp(tickDelta, this.preT, this.t);
+        const lerpT = lerp(tickDelta, this.prevT, this.t);
         const p = lerpT / this.duration;
         const easeOut = 1 - (1 - p) * (1 - p);
         const rNow = this.radius * easeOut;
@@ -151,7 +151,7 @@ export class EMPBurst implements VisualEffect {
         return VisualEffectTypes.EMP_BURST;
     }
 
-    public modifiedFlag(): number {
+    public buildDeltaFlag(): number {
         let flag = 0;
         if (this.duration !== 0.6) flag |= 1 << 0;
         if (this.bolts !== 8) flag |= 1 << 1;
@@ -159,7 +159,7 @@ export class EMPBurst implements VisualEffect {
         if (this.color !== '#66ccff') flag |= 1 << 3;
         if (this.thickness !== 2) flag |= 1 << 4;
         if (this.jitter !== 0.9) flag |= 1 << 5;
-        if (this.glow != 12) flag |= 1 << 6;
+        if (this.glow !== 12) flag |= 1 << 6;
         if (!this.drawRing) flag |= 1 << 7;
         return flag;
     }

@@ -16,7 +16,7 @@ export class MobMissileEntity extends MissileEntity {
     private static readonly EXPLOSION = new FilterBehaviour(BehaviourEnum.ONLY_DAMAGE)
         .withFiler(EntityPredicates.ONLY_PLAYER);
 
-    protected override maxReLockCD = 15;
+    protected override maxRelockCooldown = 15;
     protected override driftSpeed = 1.4;
     protected override trackingSpeed = 2;
 
@@ -47,7 +47,7 @@ export class MobMissileEntity extends MissileEntity {
         return movement;
     }
 
-    protected override predictMethod(pos: IVec, targetPos: IVec, targetVel: IVec): number {
+    protected override predictInterceptYaw(pos: IVec, targetPos: IVec, targetVel: IVec): number {
         return BallisticsUtils.getLeadYaw(pos, targetPos, targetVel, this.trackingSpeed);
     }
 
@@ -63,10 +63,10 @@ export class MobMissileEntity extends MissileEntity {
         const rand = Math.random();
 
         if (rand < 0.2) {
-            this.reLockCD = 40;
+            this.relockCooldown = 40;
             this.target = null;
         } else if (rand < 0.8) {
-            this.reLockCD = 100;
+            this.relockCooldown = 100;
             let closest = null;
             let minDist = Infinity;
 

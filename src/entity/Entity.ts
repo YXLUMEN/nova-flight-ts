@@ -74,10 +74,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     protected constructor(type: EntityType<any>, world: World) {
         this.type = type;
         this.world = world;
-
         this.position = MutVec2.zero();
-        this.prevX = 0;
-        this.prevY = 0;
         this.dimensions = type.getDimensions();
 
         const builder = new DataTracker.Builder(this);
@@ -151,7 +148,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     public addTag(tag: string): boolean {
-        if (this.tags.size > 1024) return false;
+        if (this.tags.size >= 1024) return false;
         this.tags.add(tag);
         return true;
     }
@@ -272,10 +269,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     public setClampYaw(target: number, maxStep: number = 0.0785375): void {
         let delta = target - this.yaw;
         delta = Math.atan2(Math.sin(delta), Math.cos(delta));
-
-        if (delta > maxStep) delta = maxStep;
-        if (delta < -maxStep) delta = -maxStep;
-
+        delta = Math.min(maxStep, Math.max(-maxStep, delta));
         this.setYaw(this.yaw + delta);
     }
 
@@ -440,13 +434,13 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         }
 
         if (x !== this.position.x || y !== this.position.y) {
-            this.onOutOffBound(x, y);
+            this.onOutOfBounds(x, y);
             return true;
         }
         return false;
     }
 
-    protected onOutOffBound(x: number, y: number): void {
+    protected onOutOfBounds(x: number, y: number): void {
         this.overwritePos(x, y);
     }
 
@@ -690,9 +684,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         const tags = nbt.getStringArray('tags');
         if (tags.length > 0) {
             this.tags.clear();
-            for (const tag of tags) {
-                this.tags.add(tag);
-            }
+            tags.forEach(tag => this.tags.add(tag));
         }
     }
 

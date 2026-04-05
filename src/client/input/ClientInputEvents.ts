@@ -176,10 +176,6 @@ export class ClientInputEvents {
             client.worldRender.rendering = !await mainWindow.isMinimized();
         }).catch(console.error);
 
-        window.addEventListener('resize', () => {
-            client.window.resize();
-        });
-
         client.window.canvas.addEventListener('click', event => {
             if (!client.player) return;
             client.player.clientInventory.justClicked = true;

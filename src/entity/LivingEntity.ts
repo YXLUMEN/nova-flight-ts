@@ -76,11 +76,8 @@ export abstract class LivingEntity extends Entity {
         }
 
         const velocity = this.getVelocityRef.multiply(0.9);
-
-        let vx = velocity.x;
-        let vy = velocity.y;
-        if (Math.abs(vx) < 0.003) vx = 0;
-        if (Math.abs(vy) < 0.003) vy = 0;
+        const vx = Math.abs(velocity.x) < 0.003 ? 0 : velocity.x;
+        const vy = Math.abs(velocity.y) < 0.003 ? 0 : velocity.y;
         velocity.set(vx, vy);
 
         if (this.canMoveVoluntarily()) {
@@ -189,8 +186,8 @@ export abstract class LivingEntity extends Entity {
 
         if (this.hasStatusEffect(StatusEffects.RESISTANCE) && !source.isIn(DamageTypeTags.BYPASSES_RESISTANCE)) {
             const reduce = this.getStatusEffect(StatusEffects.RESISTANCE)!.getAmplifier();
-            const precent = (8 - reduce) * 0.1;
-            damage = Math.max(0, damage * precent);
+            const percent = (8 - reduce) * 0.1;
+            damage = Math.max(0, damage * percent);
         }
 
         return damage > 1E-5 ? damage : 0;
@@ -279,20 +276,21 @@ export abstract class LivingEntity extends Entity {
 
         const type = effect.getEffect();
         const instance = this.activeEffects.get(type);
-        let changed = false;
 
         if (!instance) {
             this.activeEffects.set(type, effect);
             this.onEffectAdded(effect, source);
-            changed = true;
             effect.onApplied(this);
-        } else if (instance.upgrade(effect)) {
-            this.onEffectUpdated(instance, true, source);
-            changed = true;
+            effect.onEffectStarted(this);
+            return true;
         }
 
+        const upgraded = instance.upgrade(effect);
+        if (upgraded) {
+            this.onEffectUpdated(instance, true, source);
+        }
         effect.onEffectStarted(this);
-        return changed;
+        return upgraded;
     }
 
     public canHaveEffect(_effect: StatusEffectInstance): boolean {

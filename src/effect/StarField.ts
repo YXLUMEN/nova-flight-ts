@@ -9,9 +9,9 @@ export class StarField {
     private readonly count: number;
     private readonly currX: Float32Array;
     private readonly currY: Float32Array;
-    private readonly r: Float32Array;
+    private readonly radius: Float32Array;
     private readonly speed: Float32Array;
-    private lastTickDelta: number = 0.02;
+    private prevDt: number = 0.02;
 
     private readonly layers: ReadonlyArray<StarLayer>;
     private readonly margin: number;
@@ -30,7 +30,7 @@ export class StarField {
 
         this.currX = new Float32Array(this.count);
         this.currY = new Float32Array(this.count);
-        this.r = new Float32Array(this.count);
+        this.radius = new Float32Array(this.count);
         this.speed = new Float32Array(this.count);
 
         // 计算每层的连续段范围
@@ -67,7 +67,7 @@ export class StarField {
             for (let i = this.start[li]; i < this.end[li]; i++) {
                 this.currX[i] = rand(0, World.WORLD_W);
                 this.currY[i] = rand(0, World.WORLD_H);
-                this.r[i] = rand(L.radiusMin, L.radiusMax);
+                this.radius[i] = rand(L.radiusMin, L.radiusMax);
                 this.speed[i] = rand(L.speedMin, L.speedMax);
             }
         }
@@ -88,7 +88,7 @@ export class StarField {
                 else if (this.currX[i] > v.right + m) this.reseed(li, i, v.left - m, rand(v.top, v.bottom));
             }
         }
-        this.lastTickDelta = dt;
+        this.prevDt = dt;
     }
 
     public render(ctx: CanvasRenderingContext2D, cam: Camera, alpha: number) {
@@ -113,16 +113,16 @@ export class StarField {
 
             for (let i = this.start[li]; i < this.end[li]; i++) {
                 const px = lerp(alpha, this.currX[i], this.currX[i] + sx);
-                const py = lerp(alpha, this.currY[i] - this.speed[i] * this.lastTickDelta, this.currY[i] + sy);
+                const py = lerp(alpha, this.currY[i] - this.speed[i] * this.prevDt, this.currY[i] + sy);
                 if (px < vr.left - m - maxR || px > vr.right + m + maxR ||
                     py < vr.top - m - maxR || py > vr.bottom + m + maxR) continue;
 
                 // 小星用 fillRect
-                if (this.r[i] <= 1) {
+                if (this.radius[i] <= 1) {
                     ctx.rect(px, py, 1, 1);
                 } else {
-                    ctx.moveTo(px + this.r[i], py);
-                    ctx.arc(px, py, this.r[i], 0, PI2);
+                    ctx.moveTo(px + this.radius[i], py);
+                    ctx.arc(px, py, this.radius[i], 0, PI2);
                 }
             }
             ctx.restore();
@@ -136,7 +136,7 @@ export class StarField {
         const L = this.layers[li];
         this.currX[i] = x;
         this.currY[i] = y;
-        this.r[i] = rand(L.radiusMin, L.radiusMax);
+        this.radius[i] = rand(L.radiusMin, L.radiusMax);
         this.speed[i] = rand(L.speedMin, L.speedMax);
     }
 }

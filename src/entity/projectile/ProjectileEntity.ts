@@ -120,7 +120,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
         return 80;
     }
 
-    protected override onOutOffBound() {
+    protected override onOutOfBounds() {
         this.discard();
     }
 
