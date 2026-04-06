@@ -18,6 +18,10 @@ export class RailGun extends BaseWeapon {
         world.playSound(null, SoundEvents.RAILGUNS_FIRE, 0.3);
     }
 
+    public override getMaxSpread(): number {
+        return 1;
+    }
+
     public override getUiColor(): string {
         return '#e3e3e3';
     }

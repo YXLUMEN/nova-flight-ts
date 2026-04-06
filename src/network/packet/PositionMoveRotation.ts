@@ -17,7 +17,7 @@ export class PositionMoveRotation implements Payload {
 
     public readonly position: IVec;
     public readonly delta: IVec;
-    private readonly yaw: number;
+    public readonly yaw: number;
 
     public constructor(position: IVec, delta: IVec, yaw: number) {
         this.position = position;

@@ -241,7 +241,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         if (stack.getDamage() === 0 || stack.getOrDefault(DataComponents.RELOADING, false)) {
             return;
         }
-        this.getNetworkChannel().send(new PlayerReloadC2SPacket());
+        this.getNetworkChannel().send(PlayerReloadC2SPacket.INSTANCE);
         this.wasFiring = true;
     }
 

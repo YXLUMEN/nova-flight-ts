@@ -31,6 +31,10 @@ export class Cannon90 extends BaseWeapon {
         world.playSound(null, SoundEvents.CANNON90_FIRE);
     }
 
+    public override getMaxSpread(): number {
+        return 1;
+    }
+
     public override getDisplayName(): string {
         return "90mm机炮";
     }

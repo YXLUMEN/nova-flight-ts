@@ -86,6 +86,7 @@ import type {PacketListener} from "../../server/network/handler/PacketListener.t
 import {ConnectionState, type ConnectionStateType} from "../../server/network/ConnectionState.ts";
 import {SetPlayerInventoryS2CPacket} from "../../network/packet/s2c/SetPlayerInventoryPacket.ts";
 import {PlayerPositionS2CPacket} from "../../network/packet/s2c/PlayerPositionS2CPacket.ts";
+import {squareDist} from "../../utils/math/math.ts";
 
 export class ClientNetworkHandler implements PacketListener {
     private readonly handlers = new HashMap<Identifier, Consumer<Payload>>();
@@ -160,7 +161,7 @@ export class ClientNetworkHandler implements PacketListener {
 
     public ping() {
         this.lastPingTime = performance.now();
-        this.sendImmediate(new PingC2SPacket());
+        this.sendImmediate(PingC2SPacket.INSTANCE);
     }
 
     private onRelayServer(packet: RelayMessage) {
@@ -226,7 +227,7 @@ export class ClientNetworkHandler implements PacketListener {
         this.world.addEntity(this.client.player);
         this.client.setPause(false);
         this.client.window.hud.setPlayer(this.client.player);
-        this.send(new PlayerFinishLoginC2SPacket());
+        this.send(PlayerFinishLoginC2SPacket.INSTANCE);
 
         clearInterval(this.pingInterval);
         this.pingInterval = setInterval(() => this.ping(), 2000);
@@ -253,15 +254,18 @@ export class ClientNetworkHandler implements PacketListener {
         this.client.setPause(true);
 
         this.client.connectInfo?.destroy();
-        this.client.connectInfo = new ConnectInfo(this.client.window.ctx);
+        this.client.connectInfo = new ConnectInfo(this.client);
         this.client.connectInfo.setError(packet.reason.toString())
             .then(() => this.client.requestStop());
     }
 
-    public onPlayerMove(_packet: PlayerPositionS2CPacket): void {
+    public onPlayerMove(packet: PlayerPositionS2CPacket): void {
         const player = this.client.player;
         if (!player) return;
 
+        const change = packet.change;
+        player.snapTo(change.position.x, change.position.y, change.yaw);
+        player.setDeltaMovement(change.delta.x, change.delta.y);
     }
 
     public onEntity(packet: EntityS2CPacket) {
@@ -289,7 +293,10 @@ export class ClientNetworkHandler implements PacketListener {
         if (!entity.isLogicalSide()) {
             entity.updatePositionAndAngles(packet.x, packet.y, packet.yaw, 3);
         } else if (entity === this.client.player) {
-            entity.setPosition(packet.x, packet.y);
+            if (squareDist(entity.getX(), entity.getY(), packet.x, packet.y) >= 128) {
+                entity.updatePosition(packet.x, packet.y);
+                entity.setDeltaMovement(0, 0);
+            }
         }
     }
 

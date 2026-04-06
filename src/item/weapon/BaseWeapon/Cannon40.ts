@@ -29,6 +29,10 @@ export class Cannon40 extends BaseWeapon {
         }
     }
 
+    public override getMaxSpread(): number {
+        return 2;
+    }
+
     public override getDisplayName(): string {
         return '40mm机炮';
     }

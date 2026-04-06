@@ -56,6 +56,10 @@ export class CIWS extends BaseWeapon {
         if (!world.isClient) (holder as ServerPlayerEntity).syncStack(stack);
     }
 
+    public override getMaxSpread(): number {
+        return 2;
+    }
+
     protected override getMuzzleParticles(): number {
         return 1;
     }

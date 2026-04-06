@@ -77,6 +77,10 @@ export class RocketLauncher extends BaseWeapon {
         return RocketLauncher.BULLET_SPEED;
     }
 
+    public override getMaxSpread(): number {
+        return 2;
+    }
+
     protected override getAmmoConsume(): number {
         return 0;
     }

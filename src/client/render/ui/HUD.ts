@@ -1,14 +1,14 @@
-import {clamp, lerp, PI2} from "../../../utils/math/math.ts";
+import {clamp, PI2} from "../../../utils/math/math.ts";
 import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import type {ItemStack} from "../../../item/ItemStack.ts";
 import type {IUi} from "./IUi.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {ClientWorld} from "../../ClientWorld.ts";
-import {DataComponents} from "../../../component/DataComponents.ts";
 import type {SpecialWeapon} from "../../../item/weapon/SpecialWeapon.ts";
 import type {ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
 import {InventoryRender} from "../../inventory/InventoryRender.ts";
 import {Weapon} from "../../../item/weapon/Weapon.ts";
+import {Crosshair} from "./Crosshair.ts";
 
 export class HUD implements IUi {
     private readonly font: string = '14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
@@ -16,6 +16,8 @@ export class HUD implements IUi {
 
     private player: ClientPlayerEntity | null = null;
     private inventoryRender: InventoryRender | null = null;
+
+    private readonly crosshair: Crosshair = new Crosshair();
 
     // HUD 布局参数
     private worldW: number = 0;
@@ -26,7 +28,6 @@ export class HUD implements IUi {
     private readonly barWidth = 140;
     private readonly barHeight = 10;
     private displayHealth: number = 0;
-    private displayRatio: number = 0;
 
     public setSize(w: number, h: number) {
         this.worldW = w;
@@ -156,23 +157,16 @@ export class HUD implements IUi {
         ctx.fillText('船体值', (x + this.barWidth + 8) | 0, (y | 0) - 1);
     }
 
-    public drawPrimaryWeapons(ctx: CanvasRenderingContext2D, tickDelta: number) {
+    public renderMainWeapon(ctx: CanvasRenderingContext2D, tickDelta: number) {
         if (!this.player) return;
 
         const pos = this.player.getLerpPos(tickDelta);
 
         const stack = this.player.getCurrentItem();
         const item = stack.getItem();
-        if (stack.isEmpty() || !(item instanceof Weapon)) return;
+        const hasWeapon = this.crosshair.update(this.player, tickDelta);
+        if (!hasWeapon || !(item instanceof Weapon)) return;
 
-        let ratio: number;
-        const reloadLeft = this.player.cooldownManager.getCooldownTicks(item);
-        if (reloadLeft > 0) {
-            ratio = clamp(1 - reloadLeft / stack.getOrDefault(DataComponents.MAX_RELOAD_TIME, 1), 0, 1);
-        } else {
-            ratio = clamp(1 - item.getCooldown(stack) / item.getMaxCooldown(stack), 0, 1);
-        }
-        this.displayRatio = lerp(tickDelta, this.displayRatio, ratio);
         const anchorX = Math.floor(pos.x + this.player.getWidth() / 2 + 12);
 
         ctx.save();
@@ -180,9 +174,9 @@ export class HUD implements IUi {
         ctx.textBaseline = 'middle';
         ctx.font = this.font;
 
-        ctx.fillStyle = item.getUiColor(stack) ?? '#5ec8ff';
+        ctx.fillStyle = item.getUiColor(stack) ?? '#fff';
         ctx.globalAlpha = 0.6;
-        ctx.fillRect(anchorX, pos.y, (64 * this.displayRatio) | 0, 2);
+        ctx.fillRect(anchorX, pos.y, (64 * this.crosshair.displayRatio) | 0, 2);
 
         ctx.fillStyle = this.hudColor;
         const name = item.getDisplayName();
@@ -196,7 +190,7 @@ export class HUD implements IUi {
             if (currentAmmo / maxAmmo <= 0.2) ctx.fillStyle = '#ff0000';
             ctx.fillText(`${currentAmmo}/${maxAmmo}`, textWidth, pos.y - 16);
         } else {
-            ctx.fillText('∞', textWidth, pos.y - 16);
+            ctx.fillText('\u221e', textWidth, pos.y - 16);
         }
 
         ctx.restore();
@@ -297,36 +291,8 @@ export class HUD implements IUi {
         ctx.restore();
     }
 
-    // @ts-ignore
-    private renderStuckOverlay(ctx: CanvasRenderingContext2D, player: ClientPlayerEntity) {
-        const now = performance.now();
-        const elapsed = now - player.stuckTicks;
-        const remaining = Math.max(0, 12000 - elapsed);
-        if (remaining > 10000) return;
-
-        const seconds = Math.ceil(remaining / 1000);
-
-        const width = this.worldW;
-        const height = this.worldH;
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-        ctx.fillRect(0, 0, width, height);
-
-        const message = `回到战斗区域\n${seconds}`;
-
-        ctx.font = 'bold 32px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#ffffff';
-
-        // 支持换行
-        const lines = message.split('\n');
-        const lineHeight = 40;
-        const startY = height / 2 - (lines.length - 1) * lineHeight / 2;
-
-        for (let i = 0; i < lines.length; i++) {
-            ctx.fillText(lines[i], width / 2, startY + i * lineHeight);
-        }
+    public renderPointer(ctx: CanvasRenderingContext2D, client: NovaFlightClient): void {
+        this.crosshair.render(ctx, client);
     }
 
     public destroy() {

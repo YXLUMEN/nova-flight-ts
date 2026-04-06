@@ -20,6 +20,7 @@ import {BlockChangeC2SPacket} from "../../network/packet/c2s/BlockChangeC2SPacke
 import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
 import {FireSpecialC2SPacket} from "../../network/packet/c2s/FireSpecialC2SPacket.ts";
 import {PlayerInventorySwapC2SPacket} from "../../network/packet/c2s/PlayerInventorySwapC2SPacket.ts";
+import {RequestTeleportC2SPacket} from "../../network/packet/c2s/RequestTeleportC2SPacket.ts";
 
 export class ClientPackets {
     public static registerNetworkPacket(): void {
@@ -44,6 +45,7 @@ export class ClientPackets {
         this.register(BatchBlockChangesPacket.ID, BatchBlockChangesPacket.CODEC);
         this.register(FireSpecialC2SPacket.ID, FireSpecialC2SPacket.CODEC);
         this.register(PlayerInventorySwapC2SPacket.ID, PlayerInventorySwapC2SPacket.CODEC);
+        this.register(RequestTeleportC2SPacket.ID, RequestTeleportC2SPacket.CODEC);
         PayloadTypeRegistry.playC2S().settle();
     }
 
