@@ -194,6 +194,7 @@ export class NovaFlightClient {
         this.worldRender.setWorld(world);
         this.playing = true;
         this.loop(0);
+        this.window.canvas.style.cursor = 'none';
 
         this.connectInfo?.destroy();
         this.clientCommandManager.clearParseCache();
@@ -212,6 +213,7 @@ export class NovaFlightClient {
             this.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
             if (this.isIntegrated && this.world) this.world.worldSound.pauseAll().catch(console.error);
             TipManager.carousel();
+            this.window.canvas.style.cursor = 'crosshair';
         } else if (!bl && this.pause) {
             this.server?.postMessage({type: 'start_ticking'});
 
@@ -219,6 +221,7 @@ export class NovaFlightClient {
             this.globalSound.playSound(SoundEvents.UI_PAGE_SWITCH);
             this.world?.worldSound.resumeAll().catch(console.error);
             TipManager.cancel();
+            this.window.canvas.style.cursor = 'none';
         }
 
         this.pause = bl;

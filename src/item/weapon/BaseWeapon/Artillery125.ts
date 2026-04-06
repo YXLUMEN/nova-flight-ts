@@ -30,7 +30,11 @@ export class Artillery125 extends BaseWeapon {
         world.playSound(null, SoundEvents.CANNON125_FIRE, 0.3);
     }
 
-    public getUiColor(): string {
+    public override getMaxSpread(): number {
+        return 1;
+    }
+
+    public override getUiColor(): string {
         return '#c18505';
     }
 

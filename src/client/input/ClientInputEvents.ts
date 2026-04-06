@@ -40,12 +40,12 @@ export class ClientInputEvents {
                     WorldConfig.autoShoot = true;
                 }
 
-                if (client.player?.isOpenInventory()) return;
+                if (!client.player || client.player.isOpenInventory()) return;
                 if (button === 1) {
-                    client.player?.switchQuickFire();
+                    client.player.switchQuickFire();
                 }
                 if (button === 2) {
-                    client.player?.launchQuickFire();
+                    client.player.launchQuickFire();
                 }
             },
 

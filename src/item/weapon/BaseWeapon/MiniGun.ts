@@ -29,6 +29,10 @@ export class MiniGun extends BaseWeapon {
         }
     }
 
+    public override getMaxSpread(): number {
+        return 3;
+    }
+
     protected override getMuzzleParticles(): number {
         return 3;
     }

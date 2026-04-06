@@ -570,7 +570,7 @@ export class ClientTechTree implements TechTree {
         this.updateAllEdgeClasses();
         this.renderNodes();
 
-        player.getNetworkChannel().send(new PlayerResetAllTechC2SPacket());
+        player.getNetworkChannel().send(PlayerResetAllTechC2SPacket.INSTANCE);
     }
 
     private resetPlayer() {

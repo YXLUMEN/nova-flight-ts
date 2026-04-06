@@ -174,7 +174,7 @@ export class WorldRender {
             }
         }
 
-        this.client.window.hud.drawPrimaryWeapons(ctx, tickDelta);
+        this.client.window.hud.renderMainWeapon(ctx, tickDelta);
         this.client.window.damagePopup.render(ctx, tickDelta);
         ctx.restore();
 
@@ -182,6 +182,7 @@ export class WorldRender {
         if (this.client.isPause() && !this.world.isOver && (player && !player.isOpenInventory())) {
             this.client.window.pauseOverlay.render(ctx);
         }
+        this.client.window.hud.renderPointer(ctx, this.client);
     }
 
     private renderBoundingBox(ctx: CanvasRenderingContext2D, entity: Entity, tickDelta: number) {

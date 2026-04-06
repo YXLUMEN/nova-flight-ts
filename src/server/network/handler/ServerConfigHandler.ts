@@ -30,7 +30,7 @@ export class ServerConfigHandler extends ServerCommonHandler {
         if (this.server.world === null) return;
 
         this.attemptUUID = packet.clientId;
-        this.send(new ServerReadyS2CPacket());
+        this.send(ServerReadyS2CPacket.INSTANCE);
     }
 
     private onPlayerAttemptLogin(packet: PlayerAttemptLoginC2SPacket) {

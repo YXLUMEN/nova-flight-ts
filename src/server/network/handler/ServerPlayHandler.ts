@@ -43,14 +43,15 @@ import {SetPlayerInventoryS2CPacket} from "../../../network/packet/s2c/SetPlayer
 import {Vec2} from "../../../utils/math/Vec2.ts";
 import {PositionMoveRotation} from "../../../network/packet/PositionMoveRotation.ts";
 import {PlayerPositionS2CPacket} from "../../../network/packet/s2c/PlayerPositionS2CPacket.ts";
+import {RequestTeleportC2SPacket} from "../../../network/packet/c2s/RequestTeleportC2SPacket.ts";
 
 export class ServerPlayHandler extends ServerCommonHandler {
     public readonly player: ServerPlayerEntity;
     private readonly world: ServerWorld;
 
-    private awaitingTeleport = 0;
+    private awaitingTeleport: number = 0;
     private messageCooldown: number = 0;
-    private moveTimes = 0;
+    private moveTimes: number = 0;
 
     public constructor(server: NovaFlightServer, connection: ServerConnection, player: ServerPlayerEntity) {
         super(server, connection);
@@ -107,8 +108,8 @@ export class ServerPlayHandler extends ServerCommonHandler {
     public onPlayerMove(packet: PlayerMoveC2SPacket) {
         if (this.moveTimes > 1) {
             console.warn(`[Server] Player ${this.player.getProfile().name} move too fast`);
-            if (this.moveTimes > 4) {
-                this.disconnect(ServerCommonHandler.MOVE_TOO_FAST);
+            if (this.moveTimes > 3) {
+                this.teleport(this.player.getX(), this.player.getY(), this.player.getYaw());
                 return;
             }
         }
@@ -132,6 +133,10 @@ export class ServerPlayHandler extends ServerCommonHandler {
 
         const change = new PositionMoveRotation(new Vec2(x, y), Vec2.ZERO, yaw);
         this.send(new PlayerPositionS2CPacket(this.awaitingTeleport, change));
+    }
+
+    public onRequestTeleport() {
+        this.teleport(this.player.getX(), this.player.getY(), this.player.getYaw());
     }
 
     public onPlayerInput(packet: PlayerInputC2SPacket): void {
@@ -290,5 +295,6 @@ export class ServerPlayHandler extends ServerCommonHandler {
         this.bindSelf(BatchBlockChangesPacket.ID, this.onBatchPlace);
         this.bindSelf(FireSpecialC2SPacket.ID, this.onPlayerFireSpecial);
         this.bindSelf(PlayerInventorySwapC2SPacket.ID, this.onPlayerInventorySwap);
+        this.bindSelf(RequestTeleportC2SPacket.ID, this.onRequestTeleport);
     }
 }

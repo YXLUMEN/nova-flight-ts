@@ -22,6 +22,10 @@ export class CloudLightningConduits extends BaseWeapon {
         world.playSound(null, SoundEvents.CLOUD_LIGHTNING_FIRE);
     }
 
+    public override getMaxSpread(): number {
+        return 0;
+    }
+
     public override getUiColor(): string {
         return '#b09eff';
     }

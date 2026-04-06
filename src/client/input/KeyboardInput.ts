@@ -1,5 +1,5 @@
 import type {IInput} from "./IInput.ts";
-import type {InputEvents} from "./InputEvent.ts";
+import {EMPTY_INPUT, type InputEvents} from "./InputEvent.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {InputBinding} from "./InputBinding.ts";
 import {MouseState} from "./MouseState.ts";
@@ -13,7 +13,7 @@ export class KeyboardInput implements IInput {
 
     private disableHandler = false;
     private globalInput = false;
-    private inputEvents: InputEvents = {};
+    private inputEvents: InputEvents = EMPTY_INPUT;
 
     public constructor(target: HTMLElement) {
         this.registryListener(target);
@@ -96,7 +96,7 @@ export class KeyboardInput implements IInput {
 
             event.preventDefault();
             this.keyboardState.addKey(code);
-            this.inputEvents.onKeyPress?.(code, event);
+            this.inputEvents.onKeyPress(code, event);
         });
         window.addEventListener('keyup', e => {
             this.keyboardState.removeKey(e.code);
@@ -108,11 +108,11 @@ export class KeyboardInput implements IInput {
 
     private handleCommandPanelShortcuts(event: KeyboardEvent, code: string): boolean {
         if (code === 'Escape') {
-            this.inputEvents.onKeyPress?.('Escape', event);
+            this.inputEvents.onKeyPress('Escape', event);
             return true;
         }
         if (code === 'Slash' || code === 'KeyT') {
-            this.inputEvents.onKeyPress?.(code, event);
+            this.inputEvents.onKeyPress(code, event);
             if (code === 'KeyT') event.preventDefault();
             return true;
         }
@@ -122,22 +122,21 @@ export class KeyboardInput implements IInput {
     private registerMouseListener(target: HTMLElement): void {
         target.addEventListener('mousemove', event => {
             this.mouseState.setScreenPointer(event.offsetX, event.offsetY);
-
-            this.inputEvents.onMouseMove?.(event);
+            this.inputEvents.onMouseMove(event);
         }, {passive: true});
         target.addEventListener('mousedown', event => {
             this.mouseState.setMouseDown(true);
-            this.inputEvents.onMouseDown?.(event.button, event);
+            this.inputEvents.onMouseDown(event.button, event);
         });
         target.addEventListener('mouseup', event => {
             this.mouseState.setMouseDown(false);
-            this.inputEvents.onMouseUp?.(event.button, event);
+            this.inputEvents.onMouseUp(event.button, event);
         });
     }
 
     private registerWheelListener(): void {
         const onWheel = throttleTimeOut((e: WheelEvent) => {
-            this.inputEvents.onWheel?.(e);
+            this.inputEvents.onWheel(e);
         }, 20);
 
         window.addEventListener('wheel', onWheel, {passive: true});
