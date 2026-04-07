@@ -96,7 +96,6 @@ export class Crosshair {
     public render(ctx: CanvasRenderingContext2D, client: NovaFlightClient): void {
         if (client.isPause()) return;
 
-        // 后坐力衰减
         if (this.recoilPeak > 0) {
             this.recoilPeak *= Crosshair.RECOIL_DECAY;
             this.recoilX *= Crosshair.RECOIL_DECAY;
