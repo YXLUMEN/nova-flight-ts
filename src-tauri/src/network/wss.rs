@@ -22,6 +22,7 @@ pub static OPEN_FLAG: OnceCell<AtomicBool> = OnceCell::const_new();
 const MAX_PAYLOAD_LEN: usize = 6144; // 6 KB upper bound for a single frame
 const MAX_EXCLUDES: u32 = 16; // exclude uuid count
 const MAX_BACKOFF: Duration = Duration::from_secs(5);
+const MAX_CONNECTIONS: usize = 64; // u8 session id space upper bound with margin
 
 pub async fn run_ws_server(
     listener: TcpListener,
@@ -47,6 +48,12 @@ pub async fn run_ws_server(
                         let is_local = address.ip().is_loopback();
                         if !is_open() && !is_local {
                             warn!("Rejected non-local connection from {}", address);
+                            continue;
+                        }
+
+                        if state.size() >= MAX_CONNECTIONS {
+                            warn!("Connection limit reached ({}), rejecting {}", MAX_CONNECTIONS, address);
+                            drop(stream);
                             continue;
                         }
 
@@ -237,7 +244,7 @@ async fn attach_session(
                 .map(|h| &h.secret)
                 .ok_or("No server handle")?;
 
-            if provided_secret != expected_secret {
+            if !constant_time_eq(provided_secret, expected_secret.as_ref()) {
                 send_message(&tx, "ERR:Invalid secret");
                 return Err("Server secret mismatch");
             }
@@ -351,8 +358,7 @@ async fn on_recv_client(
                 return false;
             }
 
-            relay_client_message(&state, &session, payload).await;
-            true
+            relay_client_message(&state, &session, payload).await
         }
         Ok(Message::Close(_)) => false,
         Ok(_) => true,
@@ -403,22 +409,26 @@ async fn server_relay(
 /// 0x11 = Server -> Client 广播 + 单个排除
 /// 0x12 = Server -> Client 单发
 /// 0xff = Server -> Relay 操作
-async fn relay_client_message(state: &Arc<RelayState>, session: &Arc<Session>, payload: Bytes) {
+async fn relay_client_message(
+    state: &Arc<RelayState>,
+    session: &Arc<Session>,
+    payload: Bytes,
+) -> bool {
     if payload.is_empty() {
         info!("Empty message received");
-        return;
+        return true;
     }
 
     match payload[0] {
         0x10 => {
             // Client → Server
             let Some(server) = state.get_server().await else {
-                return;
+                return true;
             };
 
             if payload.len() < 3 {
                 warn!("InvalidPacket: Client message too short");
-                return;
+                return true;
             }
 
             // 解析验证 sessionId
@@ -426,11 +436,11 @@ async fn relay_client_message(state: &Arc<RelayState>, session: &Arc<Session>, p
             let session_id = cursor.get_u8();
             if session_id != session.session_id {
                 warn!("Invalid sessionId from client, dropping connection");
-                return;
+                return false;
             }
 
             let Err(e) = server.tx.try_send(payload) else {
-                return;
+                return true;
             };
             error!(
                 "Failed to forward message from Client {}: {}",
@@ -440,8 +450,9 @@ async fn relay_client_message(state: &Arc<RelayState>, session: &Arc<Session>, p
                     .unwrap_or_else(|| "<no-id>".to_string()),
                 e
             );
+            false
         }
-        _ => {}
+        _ => true,
     }
 }
 
@@ -582,7 +593,11 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
 }
 
 async fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload: Bytes) -> () {
-    // [Header 1][Type 1][Data n]
+    // 协议格式: [Header 0xff][Type 1][Data n]
+    // Action 类型表:
+    //   0x00 = Kick         [session_id 1]         踢出指定客户端
+    //   0x01 = Permit       [session_id 1]         放行客户端流量
+    //   0x02 = QueryClients (no data)              查询当前在线客户端列表
     if payload.len() < 2 {
         action_fail(&session.tx, "Invalid action packet").await;
         return;
@@ -597,9 +612,9 @@ async fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload:
             }
 
             let session_id = &data[0];
-            if let Some(session) = state.get_by_id(session_id) {
-                send_message(&session.tx, "Kicked");
-                session.close(state);
+            if let Some(client) = state.get_by_id(session_id) {
+                send_message(&client.tx, "Kicked");
+                client.close(state);
             }
         }
         0x01 => {
@@ -609,8 +624,16 @@ async fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload:
             }
             state.permit(&data[0]);
         }
+        0x02 => {
+            // QueryClients: 查询当前所有在线客户端列表
+            // 回包格式: [0x00][0x04][count u8]([session_id u8][uuid 16B])*
+            let clients = state.collect_client_list();
+            let result = QueryClientsResult { clients };
+            send_packet(&session.tx, result, Duration::from_secs(2)).await;
+        }
         _ => {
-            warn!("Invalid packet type");
+            warn!("Invalid action type: 0x{:02x}", payload[1]);
+            action_fail(&session.tx, "Unknown action type").await;
         }
     };
 }
@@ -649,8 +672,16 @@ fn send_message(tx: &Tx, reason: &str) -> () {
 
 /// 广播
 fn send_or_drop(tx: &Tx, payload: &Bytes) -> bool {
-    match tx.try_send(payload.clone()) {
-        Ok(()) => false,
-        Err(_) => true,
+    tx.try_send(payload.clone()).is_err()
+}
+
+/// 常量时间字节比较,防止时序侧信道攻击
+fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
+    if a.len() != b.len() {
+        return false;
     }
+    a.iter()
+        .zip(b.iter())
+        .fold(0u8, |acc, (x, y)| acc | (x ^ y))
+        == 0
 }
