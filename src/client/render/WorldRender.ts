@@ -155,7 +155,7 @@ export class WorldRender {
                 }
             }
 
-            if (player.followPointer && WorldConfig.follow) {
+            if (player.followPointer && WorldConfig.cameraFollow) {
                 const pointer = player.input.getWorldPointer();
                 ctx.strokeStyle = '#fff';
                 ctx.beginPath();

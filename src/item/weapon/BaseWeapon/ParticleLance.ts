@@ -109,6 +109,10 @@ export class ParticleLance extends BaseWeapon {
         );
     }
 
+    public getChargingProgress(stack: ItemStack): number {
+        return stack.getOrDefault(DataComponents.CHARGING_PROGRESS, 0);
+    }
+
     public override getUiColor(): string {
         return "#ff5d5d";
     }

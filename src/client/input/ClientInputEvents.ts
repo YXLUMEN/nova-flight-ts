@@ -63,10 +63,17 @@ export class ClientInputEvents {
     }
 
     private static onKeyDown(client: NovaFlightClient, event: KeyboardEvent): void {
+        const code = event.code;
+        if (code === 'F11') {
+            mainWindow.isFullscreen()
+                .then(isFull => mainWindow.setFullscreen(!isFull))
+                .catch(console.error);
+            return;
+        }
+
         const world = client.world;
         if (world && world.isOver) return;
 
-        const code = event.code;
         if (event.ctrlKey) {
             if (code === 'KeyV') client.switchDevMode();
             if (client.player?.isDevMode() && world) {
@@ -78,12 +85,8 @@ export class ClientInputEvents {
             return;
         }
 
+        if (!world) return;
         switch (code) {
-            case 'F11':
-                mainWindow.isFullscreen()
-                    .then(isFull => mainWindow.setFullscreen(!isFull))
-                    .catch(console.error);
-                break;
             case 'KeyI':
                 WorldConfig.autoShoot = !WorldConfig.autoShoot;
                 break;
@@ -98,12 +101,12 @@ export class ClientInputEvents {
                 break;
             }
             case 'KeyG':
-                if (!world) return;
+                client.player?.setOpenInventory(false);
                 client.toggleTechTree();
                 client.connection.send(new PlayerInputC2SPacket('KeyG'));
                 break;
             case 'KeyL':
-                WorldConfig.follow = !WorldConfig.follow;
+                WorldConfig.cameraFollow = !WorldConfig.cameraFollow;
                 break;
             case 'F3':
                 WorldConfig.renderHitBox = !WorldConfig.renderHitBox;
@@ -143,6 +146,10 @@ export class ClientInputEvents {
             }
             case 'NumpadAdd': {
                 BGMManager.next();
+                break;
+            }
+            case 'NumpadMultiply': {
+                WorldConfig.crosshairRecoil = !WorldConfig.crosshairRecoil;
                 break;
             }
             case 'KeyP':

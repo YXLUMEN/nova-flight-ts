@@ -12,7 +12,7 @@ import {EffectEnum, ExplosionBehavior} from "../../../world/explosion/ExplosionB
 import {ExplosionVisual} from "../../../world/explosion/ExplosionVisual.ts";
 
 export class Artillery125 extends BaseWeapon {
-    private readonly speed = 14;
+    private readonly BULLET_SPEED = 14;
 
     protected onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
         const fusion = attacker instanceof PlayerEntity && attacker.getTechs().isUnlocked(Techs.FUSION_BOMB);
@@ -25,7 +25,7 @@ export class Artillery125 extends BaseWeapon {
             new ExplosionBehavior(undefined, fusion ? EffectEnum.FUSION : EffectEnum.NONE),
             new ExplosionVisual(stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 16), undefined, 6, 3));
 
-        this.setBullet(bullet, attacker, this.speed, 20, 1);
+        this.setBullet(bullet, attacker, this.BULLET_SPEED, 20, 1);
         world.spawnEntity(bullet);
         world.playSound(null, SoundEvents.CANNON125_FIRE, 0.3);
     }
@@ -43,7 +43,7 @@ export class Artillery125 extends BaseWeapon {
     }
 
     public override getBallisticSpeed(): number {
-        return this.speed;
+        return this.BULLET_SPEED;
     }
 
     protected override getMuzzleParticles(): number {

@@ -11,7 +11,7 @@ const DEFAULT_CONFIG = config({
     per: 50,
     fps: 100,
     perFrame: 1000 / 100,
-    version: '26v22',
+    version: '26v23',
     gameVersion: 10,
 });
 
@@ -26,13 +26,14 @@ const WorldConfig = status({
 
     enableCameraOffset: !isDev,
 
-    follow: true,
     autoShoot: false,
     devVersion: DEFAULT_CONFIG.version,
     port: 25566,
     serverAddr: '127.0.0.1:25566',
 
+    cameraFollow: true,
     renderHitBox: false,
+    crosshairRecoil: true,
 });
 
 export {DEFAULT_CONFIG, WorldConfig, isDev, isServer};

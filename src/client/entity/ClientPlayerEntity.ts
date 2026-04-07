@@ -152,7 +152,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
                 updateYaw = true;
             }
             if (this.bc) this.bc.tick();
-        } else if (this.followPointer && WorldConfig.follow) {
+        } else if (this.followPointer && WorldConfig.cameraFollow) {
             const pos = this.getPositionRef;
             const pointer = this.input.getWorldPointer();
             const pdx = pointer.x - pos.x;

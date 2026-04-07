@@ -155,6 +155,6 @@ export class ProjectRaycastUtil {
             }
         }
 
-        return candidate === null ? null : new EntityHitResult(hit!, candidate);
+        return candidate === null ? null : hit === null ? EntityHitResult.create(candidate) : new EntityHitResult(hit, candidate);
     }
 }
