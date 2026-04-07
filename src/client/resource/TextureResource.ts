@@ -16,6 +16,7 @@ export class TextureResource implements ResourceModule, TextureProvider {
     private readonly texturePaths = new Map<string, TexturePath>();
     private readonly textureCache = new Map<string, ImageBitmap>();
 
+    private defaultTexturePath: string = '/textures/default.png';
     private defaultTexture: ImageBitmap | null = null;
     private transparent: ImageBitmap | null = null;
 
@@ -24,12 +25,8 @@ export class TextureResource implements ResourceModule, TextureProvider {
     }
 
     public async load(): Promise<void> {
-        if (!this.defaultTexture) {
-            this.defaultTexture = await this.builtinDefault();
-        }
-        if (!this.transparent) {
-            this.transparent = await this.builtinTransparent();
-        }
+        if (!this.defaultTexture) await this.builtinDefault();
+        if (!this.transparent) await this.builtinTransparent();
 
         const root = await resolveResource(`resources/nova-flight`);
         const textureDir = await resolve(root, 'textures');
@@ -46,7 +43,7 @@ export class TextureResource implements ResourceModule, TextureProvider {
             this.texturePaths.set(key, config({abs, covered}));
         });
 
-        this.textureCache.set('builtin/default', this.defaultTexture);
+        this.textureCache.set('builtin/default', this.defaultTexture!);
     }
 
     public getTexture(key: string): ImageBitmap {
@@ -72,7 +69,7 @@ export class TextureResource implements ResourceModule, TextureProvider {
     public getCovered(key: string): string {
         const path = this.texturePaths.get(key);
         if (path) return path.covered;
-        return '/textures/default.png';
+        return this.defaultTexturePath;
     }
 
     public hasTexture(key: string): boolean {
@@ -89,7 +86,7 @@ export class TextureResource implements ResourceModule, TextureProvider {
         this.textureCache.set(key, bitmap);
     }
 
-    private builtinDefault(): Promise<ImageBitmap> {
+    private async builtinDefault(): Promise<void> {
         const size = 16;
         const cell = 8;
         const canvas = new OffscreenCanvas(size, size);
@@ -101,15 +98,17 @@ export class TextureResource implements ResourceModule, TextureProvider {
         ctx.fillRect(0, 0, cell, cell);
         ctx.fillRect(cell, cell, cell, cell);
 
-        return createImageBitmap(canvas);
+        const blob = await canvas.convertToBlob();
+        this.defaultTexture = await createImageBitmap(blob);
+        this.defaultTexturePath = URL.createObjectURL(blob);
     }
 
-    private builtinTransparent(): Promise<ImageBitmap> {
+    private async builtinTransparent(): Promise<void> {
         const canvas = new OffscreenCanvas(1, 1);
         const ctx = canvas.getContext('2d')!;
         ctx.fillStyle = 'rgba(0,0,0,0)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        return createImageBitmap(canvas);
+        this.transparent = await createImageBitmap(canvas);
     }
 
     public reload(): Promise<void> {
@@ -126,8 +125,10 @@ export class TextureResource implements ResourceModule, TextureProvider {
 
         this.defaultTexture?.close();
         this.transparent?.close();
+        URL.revokeObjectURL(this.defaultTexturePath);
         this.defaultTexture = null;
         this.transparent = null;
+        this.defaultTexturePath = '/textures/default.png';
     }
 
     public dispose(key: string): void {
