@@ -6,16 +6,13 @@ pub fn is_nil_uuid(uuid: &[u8]) -> bool {
 }
 
 pub fn format_uuid(bytes: &[u8; 16]) -> String {
-    assert_eq!(bytes.len(), 16);
-    let hex: Vec<String> = bytes.iter().map(|b| format!("{:02x}", b)).collect();
-    let s = hex.join("");
     format!(
-        "{}-{}-{}-{}-{}",
-        &s[0..8],
-        &s[8..12],
-        &s[12..16],
-        &s[16..20],
-        &s[20..32]
+        "{:02x}{:02x}{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
+        bytes[0], bytes[1], bytes[2], bytes[3],
+        bytes[4], bytes[5],
+        bytes[6], bytes[7],
+        bytes[8], bytes[9],
+        bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]
     )
 }
 

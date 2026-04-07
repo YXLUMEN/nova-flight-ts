@@ -120,12 +120,19 @@ impl RelayState {
         self.client_waiting.clear();
     }
 
+    pub fn collect_client_list(&self) -> Vec<(u8, [u8; 16])> {
+        self.client_ids
+            .iter()
+            .filter_map(|entry| entry.value().uuid.map(|uuid| (*entry.key(), uuid)))
+            .collect()
+    }
+
     pub fn schedule_shutdown(&self) {
-        self.shutting_down.store(true, Ordering::SeqCst);
+        self.shutting_down.store(true, Ordering::Release);
     }
 
     pub fn is_shutdown(&self) -> bool {
-        self.shutting_down.load(Ordering::Relaxed)
+        self.shutting_down.load(Ordering::Acquire)
     }
 }
 
