@@ -42,7 +42,7 @@ export class StartScreen implements IUi {
     private parallaxX: number = 0;
     private parallaxY: number = 0;
     // 星空视差最大像素偏移
-    private readonly STAR_PARALLAX_STRENGTH = 18;
+    private readonly STAR_PARALLAX_STRENGTH = 24;
     // UI 元素视差最大像素偏移
     private readonly UI_PARALLAX_STRENGTH = 6;
     // 视差平滑插值系数,越小越滞后，越大越灵敏
