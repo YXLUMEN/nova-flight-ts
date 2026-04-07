@@ -11,6 +11,7 @@ import {invoke} from "@tauri-apps/api/core";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {BinaryWriter} from "../nbt/BinaryWriter.ts";
+import type {Consumer} from "../type/types.ts";
 
 export class ClientSavesManager {
     private static readonly RESERVED_NAMES = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'];
@@ -85,12 +86,24 @@ export class ClientSavesManager {
             this.handleButtonAction(action, resolve, ctrl);
         }, {signal: ctrl.signal});
 
+        window.addEventListener('keydown', event => {
+            if (event.code === 'Escape') {
+                resolve(null);
+                ctrl.abort();
+            } else if (event.code === 'Enter' && this.chosenItem) {
+                const saveName = this.chosenItem.dataset.saveName;
+                if (!saveName) return;
+                resolve(saveName);
+                ctrl.abort();
+            }
+        }, {signal: ctrl.signal});
+
         return promise;
     }
 
     private handleButtonAction(
         action: string,
-        resolve: (value: string | null) => void,
+        resolve: Consumer<string | null>,
         ctrl: AbortController
     ): void {
         if (action === 'back') {

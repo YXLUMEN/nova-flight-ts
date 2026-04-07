@@ -7,53 +7,50 @@ import {RocketLauncher} from "../../../item/weapon/BaseWeapon/RocketLauncher.ts"
 import {ParticleLance} from "../../../item/weapon/BaseWeapon/ParticleLance.ts";
 import {ArcEmitter} from "../../../item/weapon/BaseWeapon/ArcEmitter.ts";
 import {FocusedArcEmitter} from "../../../item/weapon/BaseWeapon/FocusedArcEmitter.ts";
+import {CIWS} from "../../../item/weapon/BaseWeapon/CIWS.ts";
+import {MiniGun} from "../../../item/weapon/BaseWeapon/MiniGun.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import type {ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
+import {config} from "../../../utils/uit.ts";
+import {WorldConfig} from "../../../configs/WorldConfig.ts";
 
-export const CrosshairType = {
+export const CrosshairType = config({
     DEFAULT: 0,
     BASE_WEAPON: 1,
     MISSILE: 2,
     LANCE: 3,
     ARC: 4,
-} as const;
+    CIWS: 5,
+    MINIGUN: 6
+})
 
 export type CrosshairTypeValue = typeof CrosshairType[keyof typeof CrosshairType];
 
 export class Crosshair {
     private reloading = false;
 
-    /** 准星扩散量 [0, 1]，由发射冷却比率驱动，lerp 平滑 */
     private spreadAmount: number = 0;
-
-    /** 当前武器 getMaxSpread() 缓存，用于缩放视觉扩散幅度 */
     private maxSpread: number = 0;
-
-    /** 后坐力水平偏移（指数衰减） */
     private recoilX: number = 0;
-
-    /** 后坐力垂直偏移（指数衰减） */
     private recoilY: number = 0;
-
-    /** 后坐力峰值门控，0 时停止衰减计算 */
     private recoilPeak: number = 0;
 
-    /** 当前准星类型，对应 CrosshairType 常量 */
     private crosshairType: CrosshairTypeValue = CrosshairType.DEFAULT;
-
-    /** 当前武器 UI 颜色缓存 */
     private weaponColor: string = '#fff';
 
-    /** 上一帧冷却比率，用于差分检测开火瞬间 */
     private prevCooldownRatio: number = 1;
-
-    /** 当前武器冷却比率（0=冷却中 → 1=就绪），供 HUD 读取绘制冷却条 */
     public displayRatio: number = 0;
+
+    // 光矛充能进度插值（0=未充能, 1=充能满）
+    private chargeT: number = 0;
+
+    // 机枪扩散归一化插值（0=精准, 1=最散；越打越小）
+    private minigunSpreadT: number = 1;
 
     private static readonly RECOIL_DECAY = 0.82;
     private static readonly SPREAD_LERP = 0.12;
 
-    public update(player: ClientPlayerEntity, tickDelta: number): boolean {
+    public tick(player: ClientPlayerEntity) {
         const stack = player.getCurrentItem();
         const item = stack.getItem();
 
@@ -65,7 +62,9 @@ export class Crosshair {
         }
 
         this.detectWeaponType(item, stack);
+    }
 
+    public update(player: ClientPlayerEntity, stack: ItemStack, item: Weapon, tickDelta: number): void {
         let ratio: number;
         const reloadLeft = player.cooldownManager.getCooldownTicks(item);
         if (reloadLeft > 0) {
@@ -78,7 +77,7 @@ export class Crosshair {
 
         this.displayRatio = lerp(tickDelta, this.displayRatio, ratio);
 
-        if (!this.reloading) {
+        if (!this.reloading && WorldConfig.crosshairRecoil) {
             const cooldownDrop = this.prevCooldownRatio - ratio;
             if (cooldownDrop > 0.3) {
                 const angle = Math.random() * PI2;
@@ -92,8 +91,6 @@ export class Crosshair {
 
         const targetSpread = this.reloading ? 1 : (1 - ratio);
         this.spreadAmount += (targetSpread - this.spreadAmount) * Crosshair.SPREAD_LERP;
-
-        return true;
     }
 
     public render(ctx: CanvasRenderingContext2D, client: NovaFlightClient): void {
@@ -129,6 +126,12 @@ export class Crosshair {
             case CrosshairType.ARC:
                 this.renderArc(ctx, client);
                 break;
+            case CrosshairType.CIWS:
+                this.renderCIWS(ctx, client);
+                break;
+            case CrosshairType.MINIGUN:
+                this.renderMiniGun(ctx, client);
+                break;
             default:
                 this.renderDefault(ctx, client);
         }
@@ -142,19 +145,35 @@ export class Crosshair {
         } else if (item instanceof FocusedArcEmitter || item instanceof ArcEmitter) {
             this.crosshairType = CrosshairType.ARC;
             this.weaponColor = item.getUiColor();
-            this.maxSpread = item.getMaxSpread();
+            this.maxSpread = item.getMaxSpread(stack);
         } else if (item instanceof ParticleLance) {
             this.crosshairType = CrosshairType.LANCE;
             this.weaponColor = item.getUiColor();
+            this.maxSpread = item.getMaxSpread(stack);
+
+            const rawChargeT = stack.getOrDefault(DataComponents.CHARGING_PROGRESS, 0) / ParticleLance.CHARGING_TIME;
+            this.chargeT += (rawChargeT - this.chargeT) * 0.18;
+        } else if (item instanceof CIWS) {
+            this.crosshairType = CrosshairType.CIWS;
+            this.weaponColor = item.getUiColor(stack);
             this.maxSpread = item.getMaxSpread();
+        } else if (item instanceof MiniGun) {
+            this.crosshairType = CrosshairType.MINIGUN;
+            this.weaponColor = item.getUiColor();
+            this.maxSpread = item.getMaxSpread(stack);
+
+            const rawSpreadT = clamp((item.getMaxSpread(stack) - 0.5) / 3.5, 0, 1);
+            this.minigunSpreadT += (rawSpreadT - this.minigunSpreadT) * 0.12;
         } else if (item instanceof BaseWeapon) {
             this.crosshairType = CrosshairType.BASE_WEAPON;
             this.weaponColor = item.getUiColor(stack);
-            this.maxSpread = item.getMaxSpread();
+            this.maxSpread = item.getMaxSpread(stack);
         } else {
             this.crosshairType = CrosshairType.DEFAULT;
             this.weaponColor = '#fff';
             this.maxSpread = 0;
+            this.chargeT = 0;
+            this.minigunSpreadT = 1;
         }
     }
 
@@ -275,54 +294,146 @@ export class Crosshair {
         ctx.lineWidth = 1;
     }
 
-    /**
-     * 光矛分支（ParticleLance / TachyonLance）：
-     * 窄缝准星 — 上下两条平行短线 + 中心点
-     * 充能冷却时线条向中心收拢（gap 缩小）。
-     */
     private renderLance(ctx: CanvasRenderingContext2D, client: NovaFlightClient): void {
         const ptr = client.input.getScreenPointer();
         const cx = ptr.x + this.recoilX;
         const cy = ptr.y + this.recoilY;
 
-        // 充能中 spread 趋近 1 → gap 最大；就绪时 spread ≈ 0 → gap 最小
-        const gap = 3 + this.spreadAmount * 6;
-        const halfLen = 14 - this.spreadAmount * 4;
-        const lw = 1.5;
+        const c = this.chargeT;
+        const s = this.spreadAmount;
         const color = this.weaponColor;
+
+        const readyGlow = s < 0.12 && c < 0.05;
+
+        // gap：充能时收窄（9→3），冷却时扩大（3→10）
+        const gapCharge = lerp(c, 9, 3);
+        const gap = lerp(s, gapCharge, 10);
+
+        // halfLen：充能时延长（12→18），冷却时缩短至8
+        const halfLenCharge = lerp(c, 12, 18);
+        const halfLen = lerp(s, halfLenCharge, 8);
+
+        // lineWidth：充能时加粗（1.5→2.5），冷却时变细（1.0）
+        const lwCharge = lerp(c, 1.5, 2.5);
+        const lw = lerp(s, lwCharge, 1.0);
+
+        // shadowBlur：充能渐强（4→16），就绪峰值18，冷却衰减至2
+        const blurCharge = lerp(c, 4, 16);
+        const shadowBlur = readyGlow ? 18 : lerp(s, blurCharge, 2);
+
+        const tickH = 2 + c * 2;
 
         ctx.lineWidth = lw;
         ctx.strokeStyle = color;
         ctx.shadowColor = color;
-        ctx.shadowBlur = this.spreadAmount < 0.15 ? 10 : 4;
+        ctx.shadowBlur = shadowBlur;
 
-        // 上边水平线
         ctx.beginPath();
-        ctx.moveTo(cx - halfLen, cy - gap);
-        ctx.lineTo(cx + halfLen, cy - gap);
+        // 左
+        ctx.moveTo(cx - gap - halfLen, cy - tickH);
+        ctx.lineTo(cx - gap - halfLen, cy + tickH);
+        ctx.moveTo(cx - gap, cy);
+        ctx.lineTo(cx - gap - halfLen, cy);
+        // 右
+        ctx.moveTo(cx + gap + halfLen, cy - tickH);
+        ctx.lineTo(cx + gap + halfLen, cy + tickH);
+        ctx.moveTo(cx + gap, cy);
+        ctx.lineTo(cx + gap + halfLen, cy);
         ctx.stroke();
 
-        // 下边水平线
+        // 中心圆点：充能完成/就绪态时扩大并高亮
+        const dotRadius = 1.5 + c * 0.8;
+        ctx.shadowBlur = (readyGlow || c > 0.8) ? 14 : (shadowBlur * 0.6);
+        ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.moveTo(cx - halfLen, cy + gap);
-        ctx.lineTo(cx + halfLen, cy + gap);
+        ctx.arc(cx, cy, dotRadius, 0, PI2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.lineWidth = 1;
+    }
+
+    private renderCIWS(ctx: CanvasRenderingContext2D, client: NovaFlightClient): void {
+        const ptr = client.input.getScreenPointer();
+        const cx = ptr.x + this.recoilX;
+        const cy = ptr.y + this.recoilY;
+
+        const color = this.weaponColor;
+        const heatRatio = 1 - this.displayRatio;
+        const overheatT = clamp((heatRatio - 0.70) / 0.15, 0, 1);
+
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = color;
+        ctx.shadowColor = color;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 8, 0, PI2);
         ctx.stroke();
 
-        // 竖向中心刻度（仅两端极短竖线，不遮挡视野）
-        const tickH = 3;
-        ctx.beginPath();
-        ctx.moveTo(cx - halfLen, cy - gap);
-        ctx.lineTo(cx - halfLen, cy - gap - tickH);
-        ctx.moveTo(cx + halfLen, cy - gap);
-        ctx.lineTo(cx + halfLen, cy - gap - tickH);
-        ctx.moveTo(cx - halfLen, cy + gap);
-        ctx.lineTo(cx - halfLen, cy + gap + tickH);
-        ctx.moveTo(cx + halfLen, cy + gap);
-        ctx.lineTo(cx + halfLen, cy + gap + tickH);
-        ctx.stroke();
+        if (heatRatio > 1E-3) {
+            const g = Math.round(252 * (1 - overheatT));
+            const b = Math.round(224 * (1 - overheatT));
+            const arcColor = overheatT > 0 ? `rgb(${255},${g},${b})` : color;
 
-        // 中心点（就绪时发光，充能时正常）
-        ctx.shadowBlur = this.spreadAmount < 0.15 ? 12 : 0;
+            ctx.fillStyle = arcColor;
+            ctx.shadowColor = arcColor;
+            ctx.shadowBlur = overheatT > 0 ? 10 : 4;
+
+            const totalDots = 20;
+            const visibleDots = Math.max(1, Math.round(heatRatio * totalDots));
+            const angleStep = PI2 / totalDots;
+
+            ctx.beginPath();
+            for (let i = 0; i < visibleDots; i++) {
+                const angle = -HALF_PI + i * angleStep;
+                const px = cx + Math.cos(angle) * 14;
+                const py = cy + Math.sin(angle) * 14;
+                ctx.moveTo(px + 1.2, py + 1.2);
+                ctx.arc(px, py, 1.2, 0, PI2);
+            }
+            ctx.fill();
+        }
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 1.5, 0, PI2);
+        ctx.fill();
+        ctx.lineWidth = 1;
+    }
+
+    private renderMiniGun(ctx: CanvasRenderingContext2D, client: NovaFlightClient): void {
+        const ptr = client.input.getScreenPointer();
+        const cx = ptr.x + this.recoilX;
+        const cy = ptr.y + this.recoilY;
+
+        const t = this.minigunSpreadT;
+        const color = this.weaponColor;
+
+        const preciseGlow = t < 0.08;
+
+        // 准星半径
+        const radius = lerp(t, 10, 32);
+
+        // 弧段间隔角,最散时 30°间隔（弧段=60°），精准时 3°间隔（弧段=87°，近满圆）
+        const gapAngle = lerp(t, Math.PI / 60, Math.PI / 6); // 3°→30°
+        const arcSpan = HALF_PI - gapAngle * 2;              // 每段弧长
+
+        const lw = lerp(t, 2.0, 1.2);
+        const shadowBlur = preciseGlow ? 14 : lerp(t, 6, 3);
+
+        ctx.lineWidth = lw;
+        ctx.strokeStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = shadowBlur;
+
+        for (let i = 0; i < 4; i++) {
+            const center = i * HALF_PI;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, center + gapAngle, center + gapAngle + arcSpan);
+            ctx.stroke();
+        }
+
+        ctx.shadowBlur = preciseGlow ? 16 : shadowBlur * 0.5;
         ctx.fillStyle = color;
         ctx.beginPath();
         ctx.arc(cx, cy, 1.5, 0, PI2);
@@ -332,11 +443,6 @@ export class Crosshair {
         ctx.lineWidth = 1;
     }
 
-    /**
-     * 电弧分支（ArcEmitter / FocusedArcEmitter）：
-     * 弧形准星 — 四个 90° 缺口弧段 + 中心圆点，体现范围辐射感。
-     * 扩散时弧段张开（radius 增大），冷却就绪时收拢并发光。
-     */
     private renderArc(ctx: CanvasRenderingContext2D, client: NovaFlightClient): void {
         const ptr = client.input.getScreenPointer();
         const cx = ptr.x + this.recoilX;
@@ -353,16 +459,15 @@ export class Crosshair {
 
         // 四段 70° 弧（每段中心对齐上/下/左/右，两侧各留 20° 缺口）
         const gapAngle = Math.PI / 9; // 20°
-        const arcSpan = Math.PI / 2 - gapAngle * 2;
+        const arcSpan = HALF_PI - gapAngle * 2;
 
         for (let i = 0; i < 4; i++) {
-            const center = i * HALF_PI; // 0°, 90°, 180°, 270°
+            const center = i * HALF_PI;
             ctx.beginPath();
             ctx.arc(cx, cy, radius, center + gapAngle, center + gapAngle + arcSpan);
             ctx.stroke();
         }
 
-        // 中心圆点
         ctx.shadowBlur = glow ? 14 : 2;
         ctx.fillStyle = color;
         ctx.beginPath();

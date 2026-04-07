@@ -111,7 +111,7 @@ export abstract class BaseWeapon extends Weapon {
         return 4;
     }
 
-    public getMaxSpread(): number {
+    public getMaxSpread(_item: ItemStack): number {
         return 0;
     }
 

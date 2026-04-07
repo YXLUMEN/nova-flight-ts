@@ -220,5 +220,6 @@ export class InventoryRender implements IUi {
     }
 
     public destroy(): void {
+        this.slotPositions = null;
     }
 }

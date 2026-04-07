@@ -53,6 +53,9 @@ export class DataComponents {
     public static readonly EXPLOSION_POWER: DataComponentType<number> = this.register("explosion_power",
         builder => builder.persistent(Codecs.DOABLE).network(PacketCodecs.DOUBLE)
     );
+    public static readonly MAX_SPREAD: DataComponentType<number> = this.register("max_spread",
+        builder => builder.persistent(Codecs.FLOAT).network(PacketCodecs.FLOAT)
+    );
 
     public static readonly RELOADING: DataComponentType<boolean> = this.register("reloading",
         builder => builder.persistent(Codecs.BOOLEAN).network(PacketCodecs.BOOL)
@@ -120,6 +123,9 @@ export class DataComponents {
     );
     public static readonly READY_TRIGGERED: DataComponentType<boolean> = this.register("ready_triggered",
         builder => builder.persistent(Codecs.BOOLEAN).network(PacketCodecs.BOOL)
+    );
+    public static readonly COOLDOWN_COUNTDOWN: DataComponentType<number> = this.register("cd_countdown",
+        builder => builder.persistent(Codecs.INT32).network(PacketCodecs.INT32)
     );
 
     private static register<T>(id: string, builderOperator: UnaryOperator<ComponentTypeBuilder<T>>): DataComponentType<T> {

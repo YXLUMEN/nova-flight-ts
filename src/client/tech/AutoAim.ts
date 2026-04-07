@@ -36,6 +36,7 @@ export class AutoAim {
 
         const targetYaw = BallisticsUtils.getLeadYaw(pos, mobPos, mobVel, bulletSpeed);
         this.owner.setClampYaw(targetYaw, 0.1963);
+        this.owner.input.getScreenPointer().set(target.getX(), target.getY());
 
         const currentYaw = this.owner.getYaw();
         const yawDiff = Math.abs(wrapRadians(targetYaw - currentYaw));

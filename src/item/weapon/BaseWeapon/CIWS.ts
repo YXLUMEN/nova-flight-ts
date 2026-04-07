@@ -27,6 +27,7 @@ export class CIWS extends BaseWeapon {
         this.setHeat(stack, increaseHeat);
         if (increaseHeat > this.getMaxHeat(stack)) {
             stack.setAvailable(false);
+            stack.set(DataComponents.COOLDOWN_COUNTDOWN, 30);
             this.onEndFire(stack, world, attacker);
         }
     }
@@ -48,10 +49,17 @@ export class CIWS extends BaseWeapon {
         const currentHeat = this.getHeat(stack);
         if (currentHeat === 0) return;
 
+        const countdown = stack.getOrDefault(DataComponents.COOLDOWN_COUNTDOWN, 0);
+        if (countdown > 0) {
+            stack.set(DataComponents.COOLDOWN_COUNTDOWN, countdown - 1);
+            return;
+        }
+
         const cooldown = Math.max(0, currentHeat - 3);
         this.setHeat(stack, cooldown);
         if (cooldown === 0) {
             stack.setAvailable(true);
+            stack.remove(DataComponents.COOLDOWN_COUNTDOWN);
         }
         if (!world.isClient) (holder as ServerPlayerEntity).syncStack(stack);
     }

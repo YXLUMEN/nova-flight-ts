@@ -40,7 +40,10 @@ export class HUD implements IUi {
         if (player) {
             this.inventoryRender = new InventoryRender(player);
             this.inventoryRender.setSize(this.worldW, this.worldH);
-        } else this.inventoryRender = null;
+        } else {
+            this.inventoryRender?.destroy();
+            this.inventoryRender = null;
+        }
     }
 
     public tick(tickDelta: number) {
@@ -53,6 +56,8 @@ export class HUD implements IUi {
         } else {
             this.displayHealth = realHealth;
         }
+
+        this.crosshair.tick(this.player);
         this.inventoryRender!.tick();
     }
 
@@ -164,10 +169,11 @@ export class HUD implements IUi {
 
         const stack = this.player.getCurrentItem();
         const item = stack.getItem();
-        const hasWeapon = this.crosshair.update(this.player, tickDelta);
-        if (!hasWeapon || !(item instanceof Weapon)) return;
 
-        const anchorX = Math.floor(pos.x + this.player.getWidth() / 2 + 12);
+        if (stack.isEmpty() || !(item instanceof Weapon)) return;
+        this.crosshair.update(this.player, stack, item, tickDelta);
+
+        const anchorX = Math.floor(pos.x + this.player.getDimensions().halfWidth + 12);
 
         ctx.save();
         ctx.textAlign = 'left';
