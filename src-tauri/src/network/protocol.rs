@@ -74,3 +74,27 @@ impl Payload for RelayMessage {
         buf.freeze()
     }
 }
+
+/// Server 查询当前在线客户端列表的回包
+/// 格式: [0x00][0x04][count u8]([session_id u8][uuid 16B])*
+pub struct QueryClientsResult {
+    /// (session_id, uuid) 对列表
+    pub clients: Vec<(u8, [u8; 16])>,
+}
+impl Payload for QueryClientsResult {
+    const PAYLOAD_TYPE: u8 = 0x04;
+
+    fn to_bytes(&self) -> Bytes {
+        let count = self.clients.len().min(u8::MAX as usize);
+        // header(2) + count(1) + count * (session_id(1) + uuid(16))
+        let mut buf = BytesMut::with_capacity(3 + count * 17);
+        buf.put_u8(0x00);
+        buf.put_u8(Self::PAYLOAD_TYPE);
+        buf.put_u8(count as u8);
+        for (sid, uuid) in self.clients.iter().take(count) {
+            buf.put_u8(*sid);
+            buf.put_slice(uuid.as_ref());
+        }
+        buf.freeze()
+    }
+}
