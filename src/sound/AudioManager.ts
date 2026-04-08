@@ -1,6 +1,6 @@
 import {clamp} from "../utils/math/math.ts";
 import type {SoundEvent} from "./SoundEvent.ts";
-import {isServer} from "../configs/WorldConfig.ts";
+import {isServer} from "../configs/GlobalConfig.ts";
 import {MediaWithoutSrc} from "../type/errors.ts";
 import type {Consumer} from "../type/types.ts";
 import type {AudioResource} from "../client/resource/AudioResource.ts";

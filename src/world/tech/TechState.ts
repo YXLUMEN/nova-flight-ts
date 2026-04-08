@@ -4,7 +4,7 @@ import {Tech} from "./Tech.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import {TechLayoutParser} from "../../client/tech/TechLayoutParser.ts";
-import {isServer} from "../../configs/WorldConfig.ts";
+import {isServer} from "../../configs/GlobalConfig.ts";
 
 export class TechState {
     public readonly allTechs: Tech[];

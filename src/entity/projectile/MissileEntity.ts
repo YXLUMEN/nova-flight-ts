@@ -6,7 +6,7 @@ import {RocketEntity} from "./RocketEntity.ts";
 import {EVENTS} from "../../type/IEvents.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacket.ts";
-import {WorldConfig} from "../../configs/WorldConfig.ts";
+import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
@@ -146,7 +146,7 @@ export class MissileEntity extends RocketEntity {
             targetVel,
             this.trackingSpeed,
             this.turnRate,
-            WorldConfig.mbps
+            GlobalConfig.mbps
         );
     }
 

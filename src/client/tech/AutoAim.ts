@@ -2,7 +2,7 @@ import type {IVec} from "../../utils/math/IVec.ts";
 import type {MobEntity} from "../../entity/mob/MobEntity.ts";
 import {PI2, wrapRadians} from "../../utils/math/math.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
-import {WorldConfig} from "../../configs/WorldConfig.ts";
+import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
 import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
@@ -41,7 +41,7 @@ export class AutoAim {
         const currentYaw = this.owner.getYaw();
         const yawDiff = Math.abs(wrapRadians(targetYaw - currentYaw));
 
-        WorldConfig.autoShoot = yawDiff <= AutoAim.FIRE_THRESHOLD;
+        GlobalConfig.autoShoot = yawDiff <= AutoAim.FIRE_THRESHOLD;
     }
 
     public getTarget(): MobEntity | null {

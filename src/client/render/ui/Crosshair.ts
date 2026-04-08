@@ -12,7 +12,7 @@ import {MiniGun} from "../../../item/weapon/BaseWeapon/MiniGun.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import type {ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
 import {config} from "../../../utils/uit.ts";
-import {WorldConfig} from "../../../configs/WorldConfig.ts";
+import {GlobalConfig} from "../../../configs/GlobalConfig.ts";
 
 export const CrosshairType = config({
     DEFAULT: 0,
@@ -77,7 +77,7 @@ export class Crosshair {
 
         this.displayRatio = lerp(tickDelta, this.displayRatio, ratio);
 
-        if (!this.reloading && WorldConfig.crosshairRecoil) {
+        if (!this.reloading && GlobalConfig.crosshairRecoil) {
             const cooldownDrop = this.prevCooldownRatio - ratio;
             if (cooldownDrop > 0.3) {
                 const angle = Math.random() * PI2;

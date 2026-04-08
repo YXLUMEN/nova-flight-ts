@@ -2,7 +2,7 @@ import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {Constructor, Consumer, UUID} from "../type/types.ts";
 import {ServerWorld} from "./ServerWorld.ts";
-import {WorldConfig} from "../configs/WorldConfig.ts";
+import {GlobalConfig} from "../configs/GlobalConfig.ts";
 import {ServerCommandSource} from "./command/ServerCommandSource.ts";
 import type {CommandOutput} from "./command/CommandOutput.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
@@ -116,10 +116,10 @@ export abstract class NovaFlightServer implements CommandOutput {
             this.last = now;
             this.accumulator += tickDelta;
 
-            while (this.accumulator >= WorldConfig.mbps) {
+            while (this.accumulator >= GlobalConfig.mbps) {
                 this.networkManager!.tick();
-                if (!this.pause) world.tick(WorldConfig.mbps);
-                this.accumulator -= WorldConfig.mbps;
+                if (!this.pause) world.tick(GlobalConfig.mbps);
+                this.accumulator -= GlobalConfig.mbps;
             }
         } catch (error) {
             Log.error(`[Server] Server runtime error: ${error}`);

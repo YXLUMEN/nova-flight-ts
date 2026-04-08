@@ -1,5 +1,5 @@
 import {MutVec2} from "../../utils/math/MutVec2.ts";
-import {WorldConfig} from "../../configs/WorldConfig.ts";
+import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 import {PI2} from "../../utils/math/math.ts";
 import {Window} from "./Window.ts";
 
@@ -45,7 +45,7 @@ export class Camera {
     private uiShakeFactor = 0.5;
 
     public update(target: MutVec2, tickDelta: number): void {
-        if (WorldConfig.enableCameraOffset) {
+        if (GlobalConfig.enableCameraOffset) {
             this.follow(target, tickDelta);
         }
         this.updateShake(tickDelta);

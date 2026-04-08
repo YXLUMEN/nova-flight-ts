@@ -1,5 +1,5 @@
 import {mainWindow} from "../../main.ts";
-import {WorldConfig} from "../../configs/WorldConfig.ts";
+import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import {BGMManager} from "../../sound/BGMManager.ts";
@@ -37,7 +37,7 @@ export class ClientInputEvents {
 
             onMouseDown: (button) => {
                 if (button === 0) {
-                    WorldConfig.autoShoot = true;
+                    GlobalConfig.autoShoot = true;
                 }
 
                 if (!client.player || client.player.isOpenInventory()) return;
@@ -51,7 +51,7 @@ export class ClientInputEvents {
 
             onMouseUp: (button) => {
                 if (button === 0) {
-                    WorldConfig.autoShoot = false;
+                    GlobalConfig.autoShoot = false;
                 }
             },
 
@@ -88,7 +88,7 @@ export class ClientInputEvents {
         if (!world) return;
         switch (code) {
             case 'KeyI':
-                WorldConfig.autoShoot = !WorldConfig.autoShoot;
+                GlobalConfig.autoShoot = !GlobalConfig.autoShoot;
                 break;
             case 'Escape': {
                 const techTree = document.getElementById('tech-shell')!;
@@ -106,10 +106,10 @@ export class ClientInputEvents {
                 client.connection.send(new PlayerInputC2SPacket('KeyG'));
                 break;
             case 'KeyL':
-                WorldConfig.cameraFollow = !WorldConfig.cameraFollow;
+                GlobalConfig.cameraFollow = !GlobalConfig.cameraFollow;
                 break;
             case 'F3':
-                WorldConfig.renderHitBox = !WorldConfig.renderHitBox;
+                GlobalConfig.renderHitBox = !GlobalConfig.renderHitBox;
                 break;
             case 'Tab':
                 const ping = `Ping ${Math.floor(client.networkHandler.getLatency())}ms`;
@@ -140,7 +140,7 @@ export class ClientInputEvents {
                 player.getTechs().unlockAll();
                 break;
             case 'NumpadSubtract': {
-                WorldConfig.enableCameraOffset = !WorldConfig.enableCameraOffset;
+                GlobalConfig.enableCameraOffset = !GlobalConfig.enableCameraOffset;
                 client.window.camera.cameraOffset.set(0, 0);
                 break;
             }
@@ -149,7 +149,7 @@ export class ClientInputEvents {
                 break;
             }
             case 'NumpadMultiply': {
-                WorldConfig.crosshairRecoil = !WorldConfig.crosshairRecoil;
+                GlobalConfig.crosshairRecoil = !GlobalConfig.crosshairRecoil;
                 break;
             }
             case 'KeyP':
@@ -166,17 +166,17 @@ export class ClientInputEvents {
 
     private static windowEvents(client: NovaFlightClient) {
         mainWindow.listen('tauri://focus', () => {
-            WorldConfig.fps = WorldConfig.lastFps;
-            WorldConfig.perFrame = 1000 / WorldConfig.fps;
+            GlobalConfig.fps = GlobalConfig.lastFps;
+            GlobalConfig.perFrame = 1000 / GlobalConfig.fps;
         }).catch(console.error);
 
         mainWindow.listen('tauri://blur', () => {
             if (!client.clientCommandManager.isShow()) {
                 client.setPause(true);
             }
-            WorldConfig.lastFps = WorldConfig.fps;
-            WorldConfig.fps = 5;
-            WorldConfig.perFrame = 1000 / WorldConfig.fps;
+            GlobalConfig.lastFps = GlobalConfig.fps;
+            GlobalConfig.fps = 5;
+            GlobalConfig.perFrame = 1000 / GlobalConfig.fps;
         }).catch(console.error);
 
         mainWindow.listen('tauri://resize', async () => {
