@@ -7,7 +7,7 @@ import type {MetaStatus, PlayerData, Save, SaveMeta} from "../type/Saves.ts";
 import {NbtSerialization} from "../nbt/NbtSerialization.ts";
 import {NbtUnserialization} from "../nbt/NbtUnserialization.ts";
 import {NoResultsError, StatusError, VersionError} from "../type/errors.ts";
-import {DEFAULT_CONFIG} from "../configs/WorldConfig.ts";
+import {DEFAULT_CONFIG} from "../configs/GlobalConfig.ts";
 
 export class ServerStorage {
     public static readonly db = new IndexedDBHelper('nova-flight-server', 6, [

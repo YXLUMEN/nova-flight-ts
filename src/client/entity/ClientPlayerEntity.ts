@@ -1,7 +1,7 @@
 import type {KeyboardInput} from "../input/KeyboardInput.ts";
 import {ClientTechTree} from "../tech/ClientTechTree.ts";
 import type {World} from "../../world/World.ts";
-import {WorldConfig} from "../../configs/WorldConfig.ts";
+import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import type {AutoAim} from "../tech/AutoAim.ts";
@@ -126,7 +126,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         if (this.input.wasPressed('AltLeft') && this.autoAim) {
             this.autoAimEnable = !this.autoAimEnable;
             this.autoAim.setTarget(null);
-            WorldConfig.autoShoot = false;
+            GlobalConfig.autoShoot = false;
         }
 
         let updatePos = dx !== 0 || dy !== 0;
@@ -152,7 +152,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
                 updateYaw = true;
             }
             if (this.bc) this.bc.tick();
-        } else if (this.followPointer && WorldConfig.cameraFollow) {
+        } else if (this.followPointer && GlobalConfig.cameraFollow) {
             const pos = this.positionRef;
             const pointer = this.input.getWorldPointer();
             const pdx = pointer.x - pos.x;
@@ -211,7 +211,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         const item = stack.getItem();
         if (stack.isEmpty() || !(item instanceof Weapon)) return;
 
-        const isFiring = this.input.isDown("Space") || WorldConfig.autoShoot;
+        const isFiring = this.input.isDown("Space") || GlobalConfig.autoShoot;
 
         const hasAmmo = stack.getDurability() > 0 || !stack.isDamageable();
 

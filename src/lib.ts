@@ -4,7 +4,7 @@ import {UUIDUtil} from "./utils/UUIDUtil.ts";
 import {NovaFlightClient} from "./client/NovaFlightClient.ts";
 import {mainWindow} from "./main.ts";
 import {error} from "@tauri-apps/plugin-log";
-import {isDev} from "./configs/WorldConfig.ts";
+import {isDev} from "./configs/GlobalConfig.ts";
 import {PayloadTypeRegistry} from "./network/PayloadTypeRegistry.ts";
 import {RelayPackets} from "./network/RelayPackets.ts";
 

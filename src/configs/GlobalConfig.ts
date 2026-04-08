@@ -1,11 +1,11 @@
 import {config, status} from "../utils/uit.ts";
 
 // @ts-expect-error
-const isDev = import.meta.env.MODE === 'development';
+export const isDev = import.meta.env.MODE === 'development';
 
-const isServer = typeof window === 'undefined';
+export const isServer = typeof window === 'undefined';
 
-const DEFAULT_CONFIG = config({
+export const DEFAULT_CONFIG = config({
     tick: 20,
     mbps: 0.05,
     per: 50,
@@ -15,7 +15,7 @@ const DEFAULT_CONFIG = config({
     gameVersion: 10,
 });
 
-const WorldConfig = status({
+export const GlobalConfig = status({
     tick: DEFAULT_CONFIG.tick,
     mbps: DEFAULT_CONFIG.mbps,
     per: DEFAULT_CONFIG.per,
@@ -35,5 +35,3 @@ const WorldConfig = status({
     renderHitBox: false,
     crosshairRecoil: true,
 });
-
-export {DEFAULT_CONFIG, WorldConfig, isDev, isServer};

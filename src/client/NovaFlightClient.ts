@@ -1,6 +1,6 @@
 import {KeyboardInput} from "./input/KeyboardInput.ts";
 import {Window} from "./render/Window.ts";
-import {isDev, WorldConfig} from "../configs/WorldConfig.ts";
+import {isDev, GlobalConfig} from "../configs/GlobalConfig.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
 import {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
 import type {Supplier, UUID} from "../type/types.ts";
@@ -103,7 +103,7 @@ export class NovaFlightClient {
         this.worldRender = new WorldRender(this);
 
         this.channel = new ClientNetworkChannel(
-            `127.0.0.1:${WorldConfig.port}`,
+            `127.0.0.1:${GlobalConfig.port}`,
             this.clientId
         );
         this.connection = new ClientConnection(this.channel);
@@ -160,7 +160,7 @@ export class NovaFlightClient {
 
     private async userSelect(): Promise<boolean> {
         const startScreen = new StartScreen(this, {
-            title: `Nova Flight (${WorldConfig.devVersion})`,
+            title: `Nova Flight (${GlobalConfig.devVersion})`,
             subtitle: TranslatableText.of('start.subtitle').toString(),
         });
 
@@ -246,13 +246,13 @@ export class NovaFlightClient {
             this.last = ts;
             this.accumulator += tickDelta;
 
-            while (this.accumulator >= WorldConfig.mbps) {
+            while (this.accumulator >= GlobalConfig.mbps) {
                 this.tick();
-                this.accumulator -= WorldConfig.mbps;
+                this.accumulator -= GlobalConfig.mbps;
             }
 
-            if (ts - this.lastRenderTime >= WorldConfig.perFrame) {
-                this.worldRender.render(this.pause ? 1 : this.accumulator / WorldConfig.mbps);
+            if (ts - this.lastRenderTime >= GlobalConfig.perFrame) {
+                this.worldRender.render(this.pause ? 1 : this.accumulator / GlobalConfig.mbps);
                 this.lastRenderTime = ts;
             }
 
@@ -273,7 +273,7 @@ export class NovaFlightClient {
     private tick() {
         this.connection.tick();
 
-        const dt = this.pause ? 1 : WorldConfig.mbps;
+        const dt = this.pause ? 1 : GlobalConfig.mbps;
         this.window.hud.tick(dt);
         if (this.world && !this.pause) {
             this.worldRender.tick(dt);
@@ -381,7 +381,7 @@ export class NovaFlightClient {
         let key: ArrayBuffer;
         try {
             await invoke('stop_server');
-            const obj = await invoke('start_server', {port: WorldConfig.port});
+            const obj = await invoke('start_server', {port: GlobalConfig.port});
 
             if (!Array.isArray(obj)) {
                 // noinspection ExceptionCaughtLocallyJS
@@ -397,7 +397,7 @@ export class NovaFlightClient {
 
         await sleep(300);
 
-        const addr = `127.0.0.1:${WorldConfig.port}`;
+        const addr = `127.0.0.1:${GlobalConfig.port}`;
         this.channel.setServerAddress(addr);
 
         // 确认中继服务器开启

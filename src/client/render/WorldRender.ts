@@ -9,7 +9,7 @@ import {StarField} from "../../effect/StarField.ts";
 import {ParticlePool} from "../../effect/ParticlePool.ts";
 import type {VisualEffect} from "../../effect/VisualEffect.ts";
 import {EntityRenderers} from "./entity/EntityRenderers.ts";
-import {WorldConfig} from "../../configs/WorldConfig.ts";
+import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 import type {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
 import {World} from "../../world/World.ts";
@@ -160,7 +160,7 @@ export class WorldRender {
                 }
             }
 
-            if (player.followPointer && WorldConfig.cameraFollow) {
+            if (player.followPointer && GlobalConfig.cameraFollow) {
                 const pointer = player.input.getWorldPointer();
                 ctx.strokeStyle = '#fff';
                 ctx.beginPath();
@@ -170,7 +170,7 @@ export class WorldRender {
             }
         }
 
-        if (WorldConfig.renderHitBox) {
+        if (GlobalConfig.renderHitBox) {
             for (const entity of this.world.getEntities().values()) {
                 this.renderBoundingBox(ctx, entity, tickDelta);
             }

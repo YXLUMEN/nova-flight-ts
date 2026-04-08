@@ -18,7 +18,7 @@ import type {ExplosionVisual} from "../world/explosion/ExplosionVisual.ts";
 import type {Explosion} from "../world/explosion/Explosion.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import {Particle} from "../effect/Particle.ts";
-import {DEFAULT_CONFIG} from "../configs/WorldConfig.ts";
+import {DEFAULT_CONFIG} from "../configs/GlobalConfig.ts";
 import {AbstractClientPlayerEntity} from "./entity/AbstractClientPlayerEntity.ts";
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import {HistoricalScore} from "../statistics/HistoricalScore.ts";

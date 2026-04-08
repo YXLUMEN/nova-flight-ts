@@ -1,6 +1,6 @@
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {WorldConfig} from "../configs/WorldConfig.ts";
+import {GlobalConfig} from "../configs/GlobalConfig.ts";
 import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
 import {invoke} from "@tauri-apps/api/core";
 import {CommandError, IllegalArgumentError} from "../type/errors.ts";
@@ -30,7 +30,7 @@ export class ClientSettingsCommand {
                                             if (ip.length < 9) {
                                                 throw new IllegalArgumentError(`\x1b[31mAddress length must be at least 9 characters, but current is ${ip.length}`);
                                             }
-                                            WorldConfig.serverAddr = ip;
+                                            GlobalConfig.serverAddr = ip;
                                             ctx.source.addMessage(`Set address to: \x1b[32m"${ip}"`);
                                         })
                                 )
@@ -50,7 +50,7 @@ export class ClientSettingsCommand {
                                             if (port < 0 || port > 65535) {
                                                 throw new IllegalArgumentError("\x1b[31mPort must in 0-65535");
                                             }
-                                            WorldConfig.port = port;
+                                            GlobalConfig.port = port;
                                             ctx.source.addMessage(`Set port: \x1b[32m"${port}"`);
                                         })
                                 )
@@ -94,8 +94,8 @@ export class ClientSettingsCommand {
                                                 throw new IllegalArgumentError("\x1b[31mFps should greater than 0");
                                             }
                                             fps = clamp(fps, 0, 165);
-                                            WorldConfig.fps = fps;
-                                            WorldConfig.perFrame = 1000 / fps;
+                                            GlobalConfig.fps = fps;
+                                            GlobalConfig.perFrame = 1000 / fps;
                                             ctx.source.addMessage(`Set Maxfps: \x1b[32m"${fps}"`);
                                         })
                                 )
@@ -106,13 +106,13 @@ export class ClientSettingsCommand {
                         .then(
                             literal<T>('server_addr')
                                 .executes(ctx => {
-                                    ctx.source.addMessage(`Current address \x1b[32m"${WorldConfig.serverAddr}"`);
+                                    ctx.source.addMessage(`Current address \x1b[32m"${GlobalConfig.serverAddr}"`);
                                 })
                         )
                         .then(
                             literal<T>('port')
                                 .executes(ctx => {
-                                    ctx.source.addMessage(`Current port is: \x1b[32m"${WorldConfig.port}"`);
+                                    ctx.source.addMessage(`Current port is: \x1b[32m"${GlobalConfig.port}"`);
                                 })
                         )
                         .then(
@@ -120,7 +120,7 @@ export class ClientSettingsCommand {
                                 .executes(async ctx => {
                                     const isOpen = await invoke('is_open');
                                     let message = isOpen ?
-                                        `World is open on \x1b[32m"${WorldConfig.port}"` :
+                                        `World is open on \x1b[32m"${GlobalConfig.port}"` :
                                         `No open on web`;
                                     ctx.source.addMessage(message);
                                 })

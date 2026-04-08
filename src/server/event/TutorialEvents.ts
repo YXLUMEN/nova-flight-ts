@@ -4,7 +4,7 @@ import {NovaFlightServer} from "../NovaFlightServer.ts";
 import {sleep} from "../../utils/uit.ts";
 import type {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
 import type {Consumer} from "../../type/types.ts";
-import {WorldConfig} from "../../configs/WorldConfig.ts";
+import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 import {BossEntity} from "../../entity/mob/BossEntity.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {World} from "../../world/World.ts";
@@ -32,7 +32,7 @@ export class TutorialEvents {
         eventBus.on(EVENTS.MOB_KILLED, this.bindOnMobKill);
 
         clearInterval(this.loop);
-        this.loop = setInterval(() => this.tick(WorldConfig.mbps), WorldConfig.mbps);
+        this.loop = setInterval(() => this.tick(GlobalConfig.mbps), GlobalConfig.mbps);
     }
 
     private static tick(dt: number) {
