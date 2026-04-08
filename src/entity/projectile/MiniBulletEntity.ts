@@ -6,6 +6,6 @@ export class MiniBulletEntity extends BulletEntity {
         super.onEntityHit(hitResult);
 
         if (this.isClient()) return;
-        hitResult.entity.getVelocityRef.multiply(0.8);
+        hitResult.entity.velocityRef.multiply(0.8);
     }
 }

@@ -61,7 +61,7 @@ export class ParticleLance extends BaseWeapon {
     }
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        const start = attacker.getPositionRef;
+        const start = attacker.positionRef;
         const yaw = attacker.getYaw();
         const end = new MutVec2(
             start.x + Math.cos(yaw) * PhaseLasers.LASER_HEIGHT,
@@ -79,7 +79,7 @@ export class ParticleLance extends BaseWeapon {
 
         const mobs = world.getMobs();
         for (const mob of mobs) {
-            const pos = mob.getPositionRef;
+            const pos = mob.positionRef;
             if (!mob.isRemoved() && thickLineCircleHit(
                 start.x, start.y,
                 end.x, end.y,

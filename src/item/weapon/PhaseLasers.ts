@@ -83,7 +83,7 @@ export class PhaseLasers extends SpecialWeapon {
 
         // 光束端点
         const entityId = holder.getId();
-        const start = holder.getPositionRef;
+        const start = holder.positionRef;
         const yaw = holder.getYaw();
         const end = new Vec2(
             start.x + Math.cos(yaw) * PhaseLasers.LASER_HEIGHT,
@@ -137,7 +137,7 @@ export class PhaseLasers extends SpecialWeapon {
             .setShieldMulti(0.1);
 
         for (const mob of world.getMobs()) {
-            const pos = mob.getPositionRef;
+            const pos = mob.positionRef;
             if (!mob.isRemoved() && thickLineCircleHit(
                 start.x, start.y,
                 end.x, end.y,

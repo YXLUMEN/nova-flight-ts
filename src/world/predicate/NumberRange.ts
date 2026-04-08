@@ -1,4 +1,4 @@
-import type {StringReader} from "../brigadier/StringReader.ts";
+import type {StringReader} from "../../brigadier/StringReader.ts";
 
 export type NumRange = [number | null, number | null];
 

@@ -80,7 +80,7 @@ export class PerditionBeam extends PhaseLasers {
             .setShieldMulti(0.8);
 
         for (const mob of world.getMobs()) {
-            const pos = mob.getPositionRef;
+            const pos = mob.positionRef;
             if (!mob.isRemoved() && thickLineCircleHit(
                 start.x, start.y,
                 end.x, end.y,

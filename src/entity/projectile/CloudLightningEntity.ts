@@ -26,7 +26,7 @@ export class CloudLightningEntity extends ProjectileEntity {
 
         this.getWorld().createEMP(
             this.getOwner(),
-            this.getPositionRef,
+            this.positionRef,
             this.radius,
             30,
             Math.max(damage * 0.4, 1) | 0

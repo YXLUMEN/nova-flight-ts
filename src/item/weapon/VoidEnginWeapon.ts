@@ -162,7 +162,7 @@ export class VoidEnginWeapon extends SpecialWeapon {
         if (!world.isClient) {
             const box = attacker.getWidth() + stack.getOrDefault(DataComponents.EFFECT_RANGE, 32);
             for (const mob of world.getMobs()) {
-                if (mob.isRemoved() || !pointInCircleVec2(attacker.getPositionRef, mob.getPositionRef, box + mob.getWidth())) continue;
+                if (mob.isRemoved() || !pointInCircleVec2(attacker.positionRef, mob.positionRef, box + mob.getWidth())) continue;
                 if (mob instanceof BossEntity) continue;
                 mob.onDeath(world.getDamageSources().void(attacker as PlayerEntity));
             }

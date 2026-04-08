@@ -15,7 +15,7 @@ export class ClusterRocketEntity extends FuseRocketEntity {
         if (world.isClient) return;
 
         const yaw = this.getYaw();
-        const pos = this.getPositionRef;
+        const pos = this.positionRef;
 
         for (let i = this.rocketCounts; i--;) {
             const rocket = new FuseRocketEntity(EntityTypes.ROCKET_ENTITY, world, this.getOwner(), 8, randInt(8, 30));

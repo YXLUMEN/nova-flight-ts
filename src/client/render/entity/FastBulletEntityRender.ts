@@ -7,8 +7,8 @@ export class FastBulletEntityRender implements EntityRenderer<FastBulletEntity> 
         const pos = entity.getLerpPos(tickDelta);
         const x = pos.x + offsetX;
         const y = pos.y + offsetY;
-        const tailX = x - entity.getVelocityRef.x;
-        const tailY = y - entity.getVelocityRef.y;
+        const tailX = x - entity.velocityRef.x;
+        const tailY = y - entity.velocityRef.y;
 
         const gradient = ctx.createLinearGradient(tailX, tailY, x, y);
         gradient.addColorStop(0, 'rgba(166,166,166,0)');

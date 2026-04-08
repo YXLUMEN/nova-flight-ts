@@ -14,7 +14,7 @@ export class FocusedArcEmitter extends BaseWeapon {
     private readonly arcLength = World.WORLD_H * 2;
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        const start = attacker.getPositionRef;
+        const start = attacker.positionRef;
         const yaw = attacker.getYaw();
         const endX = start.x + Math.cos(yaw) * this.arcLength;
         const endY = start.y + Math.sin(yaw) * this.arcLength;
@@ -27,7 +27,7 @@ export class FocusedArcEmitter extends BaseWeapon {
 
         // 主闪电
         for (const mob of mobs) {
-            const pos = mob.getPositionRef;
+            const pos = mob.positionRef;
             if (!mob.isRemoved() && thickLineCircleHit(
                 start.x, start.y,
                 endX, endY, this.arcWidth,
@@ -54,7 +54,7 @@ export class FocusedArcEmitter extends BaseWeapon {
 
         for (const source of initialTargets) {
             let targetCount = 0;
-            const sourcePos = source.getPositionRef;
+            const sourcePos = source.positionRef;
 
             for (const mob of mobs) {
                 if (targetCount >= 3) break;
@@ -63,12 +63,12 @@ export class FocusedArcEmitter extends BaseWeapon {
                 const hitTime = subHitCount.get(mob) ?? 0;
                 if (hitTime >= 2) continue;
 
-                if (squareDistVec2(sourcePos, mob.getPositionRef) <= range) {
+                if (squareDistVec2(sourcePos, mob.positionRef) <= range) {
                     targetCount++;
                     subHitCount.set(mob, hitTime + 1);
 
                     mob.takeDamage(damageSource, chainDamage);
-                    const targetPos = mob.getPositionRef;
+                    const targetPos = mob.positionRef;
 
                     world.spawnEffect(null, new ArcEffect(
                         sourcePos.x, sourcePos.y, targetPos.x, targetPos.y,

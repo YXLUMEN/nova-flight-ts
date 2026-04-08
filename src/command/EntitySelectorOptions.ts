@@ -2,7 +2,7 @@ import type {EntitySelectorReader} from "./EntitySelectorReader.ts";
 import type {SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
 import type {Consumer, Predicate} from "../type/types.ts";
 import {IllegalArgumentError} from "../type/errors.ts";
-import {NumberRange} from "../predicate/NumberRange.ts";
+import {NumberRange} from "../world/predicate/NumberRange.ts";
 import {CommandUtil} from "./CommandUtil.ts";
 import {Registries} from "../registry/Registries.ts";
 import {Identifier} from "../registry/Identifier.ts";

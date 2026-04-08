@@ -9,7 +9,7 @@ export class ShieldStatusEffect extends StatusEffect {
 
     public override tickClient(entity: LivingEntity, amplifier: number) {
         const world = entity.getWorld();
-        const pos = entity.getPositionRef;
+        const pos = entity.positionRef;
 
         const rad = (entity.age * 12) % 360 * (Math.PI / 180);
         const radius = 0.4 + amplifier * 0.15;

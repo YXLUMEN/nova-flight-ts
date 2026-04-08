@@ -101,7 +101,7 @@ export class ProjectRaycastUtil {
     }
 
     public static getCollision(entity: Entity, predicate: Predicate<Entity>, margin: number = 0.3): HitResult {
-        const velocity = entity.getVelocityRef;
+        const velocity = entity.velocityRef;
         const world = entity.getWorld();
         const pos = entity.getPosition();
 

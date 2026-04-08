@@ -12,7 +12,7 @@ import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.
 
 export class MissileWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
-        const pos = attacker.getPositionRef;
+        const pos = attacker.positionRef;
         const missileCounts = stack.getOrDefault(DataComponents.LAUNCH_COUNT, 8);
         const hitDamage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 10);
         const explosionDamage = stack.getOrDefault(DataComponents.EXPLOSION_POWER, 10);

@@ -5,7 +5,7 @@ import type {BiConsumer, UUID} from "../type/types.ts";
 import type {IVec} from "../utils/math/IVec.ts";
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import type {AABB} from "../utils/math/AABB.ts";
-import {NumberRange, type NumRange} from "../predicate/NumberRange.ts";
+import {NumberRange, type NumRange} from "../world/predicate/NumberRange.ts";
 import {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {EntitySelectorArgumentType} from "./argument/EntitySelectorArgumentType.ts";
@@ -159,7 +159,7 @@ export class EntitySelector {
             filters.push(entity => box.intersectsByBox(entity.getBoundingBox()));
         }
         if (hasDistance) {
-            filters.push(entity => NumberRange.test(this.sqrtDistance, squareDistVec2(entity.getPositionRef, pos)));
+            filters.push(entity => NumberRange.test(this.sqrtDistance, squareDistVec2(entity.positionRef, pos)));
         }
 
         return filters;

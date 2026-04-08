@@ -46,7 +46,7 @@ export class CIWSBulletEntity extends BulletEntity {
             return;
         }
         if (entity instanceof MobEntity) {
-            entity.getVelocityRef.multiply(0.8);
+            entity.velocityRef.multiply(0.8);
         }
     }
 }

@@ -36,8 +36,8 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
 
         if (this.clampPosition()) return;
 
-        const pos = this.getPositionRef;
-        const velocity = this.getVelocityRef;
+        const pos = this.positionRef;
+        const velocity = this.velocityRef;
         const hitResult = ProjectRaycastUtil.getCollision(
             this,
             entity => this.canHit(entity),

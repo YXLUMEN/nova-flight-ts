@@ -30,8 +30,8 @@ export class EntityTrackerEntry {
         this.entity = entity;
         this.tickInterval = tickInterval;
         this.alwaysUpdateVelocity = alwaysUpdateVelocity;
-        this.posDelta.setPos(entity.getPositionRef.x, entity.getPositionRef.y);
-        this.velocity = entity.getVelocityRef.clone();
+        this.posDelta.setPos(entity.positionRef.x, entity.positionRef.y);
+        this.velocity = entity.velocityRef.clone();
         this.lastYawUint8 = encodeYaw(entity.getYaw());
     }
 
@@ -73,7 +73,7 @@ export class EntityTrackerEntry {
             }
 
             if (this.alwaysUpdateVelocity || this.entity.velocityDirty) {
-                const velocity = this.entity.getVelocityRef;
+                const velocity = this.entity.velocityRef;
                 const delta = squareDistVec2(velocity, this.velocity);
 
                 if (delta > 1E-7 || delta > 0 && velocity.lengthSquared() === 0) {

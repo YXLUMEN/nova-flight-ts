@@ -9,7 +9,7 @@ import {squareDistVec2} from "../utils/math/math.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import {BallisticsUtils} from "../utils/math/BallisticsUtils.ts";
 import {spawnLaserByVec} from "../utils/ServerEffect.ts";
-import {EntityPredicates} from "../predicate/EntityPredicates.ts";
+import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
 
 export class ADSEntity extends Entity implements IOwnable {
     private static readonly RADIUS = 256 * 256;
@@ -33,9 +33,9 @@ export class ADSEntity extends Entity implements IOwnable {
 
         let intercepted = 0;
         for (const projectile of entities) {
-            const projPos = projectile.getPositionRef;
+            const projPos = projectile.positionRef;
             if (squareDistVec2(projPos, selfPos) > ADSEntity.RADIUS ||
-                !BallisticsUtils.isViableThreat(projPos, projectile.getVelocityRef, selfPos)
+                !BallisticsUtils.isViableThreat(projPos, projectile.velocityRef, selfPos)
             ) continue;
 
             spawnLaserByVec(world, selfPos, projPos);

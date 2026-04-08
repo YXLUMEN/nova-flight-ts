@@ -4,7 +4,7 @@ import {PI2, rand, randInt} from "./math/math.ts";
 
 export class ClientEffect {
     public static spawnChargingParticles(world: ClientWorld, entity: Entity, particles: number, colorFrom: string, colorTo?: string): void {
-        const pos = entity.getPositionRef;
+        const pos = entity.positionRef;
         const yaw = entity.getYaw();
         const offset = entity.getWidth() / 2;
         const x = Math.cos(yaw) * offset + pos.x;
@@ -43,7 +43,7 @@ export class ClientEffect {
         offset: number = 1,
         maxSpread: number = 0.41886
     ): void {
-        const pos = entity.getPositionRef;
+        const pos = entity.positionRef;
         const yaw = entity.getYaw();
         const x = Math.cos(yaw) * offset + pos.x;
         const y = Math.sin(yaw) * offset + pos.y;

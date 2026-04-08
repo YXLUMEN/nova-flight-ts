@@ -24,6 +24,7 @@ import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import {HistoricalScore} from "../statistics/HistoricalScore.ts";
 import type {ExplosionBehavior} from "../world/explosion/ExplosionBehavior.ts";
 import type {WorldRender} from "./render/WorldRender.ts";
+import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
 
 export class ClientWorld extends World {
     public readonly worldName: string;
@@ -180,6 +181,10 @@ export class ClientWorld extends World {
             colorFrom, colorTo,
             drag, gravity
         ));
+    }
+
+    public addPreparedParticle(type: ParticleEffectType, pos: IVec, count: number, baseAngle: number = 0) {
+        this.worldRender.addPreparedParticle(type, pos, count, baseAngle);
     }
 
     public override addEffect(_: Entity | null, effect: VisualEffect) {

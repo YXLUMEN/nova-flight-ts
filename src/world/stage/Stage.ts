@@ -1,14 +1,14 @@
 import {SpawnRule} from "./SpawnRule.ts";
-import type {RNG} from "../../type/IStage.ts";
 import type {NbtSerializable} from "../../nbt/NbtSerializable.ts";
 import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {clamp} from "../../utils/math/math.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {PhaseConfig} from "./PhaseConfig.ts";
 import type {SpawnContext} from "./SpawnContext.ts";
+import type {Supplier} from "../../type/types.ts";
 
 export class Stage implements NbtSerializable {
-    private readonly rng: RNG;
+    private readonly rng: Supplier<number>;
     private readonly phases: PhaseConfig[];
 
     private paused = false;
@@ -17,7 +17,7 @@ export class Stage implements NbtSerializable {
     private index = 0;
     private rules: SpawnRule[] = [];
 
-    public constructor(phases: PhaseConfig[], rng?: RNG) {
+    public constructor(phases: PhaseConfig[], rng?: Supplier<number>) {
         this.phases = phases;
         this.rng = rng ?? Math.random;
         this.loadPhase(0);

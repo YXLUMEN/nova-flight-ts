@@ -53,8 +53,8 @@ export class EntitySpawnS2CPacket implements Payload {
 
     public static create(entity: Entity, ownerId = 0): EntitySpawnS2CPacket {
         const yaw = encodeYaw(entity.getYaw());
-        const vx = encodeVelocity(entity.getVelocityRef.x);
-        const vy = encodeVelocity(entity.getVelocityRef.y);
+        const vx = encodeVelocity(entity.velocityRef.x);
+        const vy = encodeVelocity(entity.velocityRef.y);
 
         return new EntitySpawnS2CPacket(
             entity.getId(),

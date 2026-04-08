@@ -13,7 +13,7 @@ export class EMPWeapon extends SpecialWeapon {
         world.events.emit(EVENTS.EMP_BURST, {entity: attacker, duration: this.duration});
 
         const radius = stack.getOrDefault(DataComponents.EFFECT_RANGE, 480);
-        world.createEMP(attacker, attacker.getPositionRef, radius, this.duration, 1);
+        world.createEMP(attacker, attacker.positionRef, radius, this.duration, 1);
         this.setCooldown(stack, this.getMaxCooldown(stack));
 
         if (!world.isClient && attacker.isPlayer()) {

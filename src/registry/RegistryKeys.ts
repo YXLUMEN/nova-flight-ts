@@ -13,6 +13,7 @@ import type {VisualEffectType} from "../effect/VisualEffectType.ts";
 import type {Tech} from "../world/tech/Tech.ts";
 import type {WorldEventType} from "../world/events/WorldEventType.ts";
 import type {Block} from "../block/Block.ts";
+import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
 
 export class RegistryKeys {
     public static readonly DAMAGE_TYPE: RegistryKey<Registry<DamageType>> = this.of("damage_type");
@@ -29,6 +30,7 @@ export class RegistryKeys {
     public static readonly WORLD_EVENT: RegistryKey<Registry<WorldEventType<any>>> = this.of("world_event");
     public static readonly BLOCK: RegistryKey<Registry<Block>> = this.of("block");
     public static readonly RESOURCE: RegistryKey<Registry<string>> = this.of("resource");
+    public static readonly PARTICLE: RegistryKey<Registry<ParticleEffectType>> = this.of("particle");
 
     private static of<T>(id: string): RegistryKey<T> {
         return RegistryKey.ofRegistry(Identifier.ofVanilla(id));

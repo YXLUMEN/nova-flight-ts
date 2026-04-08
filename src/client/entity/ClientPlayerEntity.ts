@@ -70,14 +70,14 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
         // 锁定
         if (this.lockedMissile.size > 0) {
-            const pos = this.getPositionRef;
+            const pos = this.positionRef;
             for (const missile of this.lockedMissile.keys()) {
                 if (missile.isRemoved() || missile.getTarget() !== this) {
                     this.lockedMissile.delete(missile);
                     this.approachMissile.delete(missile);
                     continue;
                 }
-                if (squareDistVec2(missile.getPositionRef, pos) <= 1E5) {
+                if (squareDistVec2(missile.positionRef, pos) <= 1E5) {
                     this.approachMissile.add(missile);
                 } else {
                     this.approachMissile.delete(missile);
@@ -140,7 +140,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
                 updateYaw = true;
             }
         } else if (this.steeringGear) {
-            const pos = this.getPositionRef;
+            const pos = this.positionRef;
             const pointer = this.input.getWorldPointer();
             const yaw = Math.atan2(
                 pointer.y - pos.y,
@@ -153,7 +153,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             }
             if (this.bc) this.bc.tick();
         } else if (this.followPointer && WorldConfig.cameraFollow) {
-            const pos = this.getPositionRef;
+            const pos = this.positionRef;
             const pointer = this.input.getWorldPointer();
             const pdx = pointer.x - pos.x;
             const pdy = pointer.y - pos.y;

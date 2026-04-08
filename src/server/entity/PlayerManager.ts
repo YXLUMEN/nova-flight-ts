@@ -64,7 +64,7 @@ export class PlayerManager {
         newPlayer.setId(player.getId());
         newPlayer.copyFrom(player, alive);
 
-        const targetPos = player.getPositionRef;
+        const targetPos = player.positionRef;
         newPlayer.snapTo(targetPos.x, targetPos.y, player.getYaw());
 
         (newPlayer.getWorld() as ServerWorld).addPlayer(newPlayer);

@@ -44,7 +44,7 @@ export class MissileEntity extends RocketEntity {
         if (this.clampPosition()) return;
 
         this.prevYaw = this.getYaw();
-        this.track(this.getVelocityRef);
+        this.track(this.velocityRef);
 
         const world = this.getWorld();
         if (!world.isClient && this.lastTarget !== this.target) {
@@ -67,12 +67,12 @@ export class MissileEntity extends RocketEntity {
             const vy1 = Math.sin(this.driftAngle);
             this.updateVelocity(this.driftSpeed, vx1, vy1);
 
-            this.getVelocityRef.multiply(0.8);
+            this.velocityRef.multiply(0.8);
             this.velocityDirty = true;
             return;
         }
 
-        const pos = this.getPositionRef;
+        const pos = this.positionRef;
         const cd = (this.age & 3) === 0;
 
         if (world.isClient) {
@@ -90,7 +90,7 @@ export class MissileEntity extends RocketEntity {
             return;
         }
 
-        this.getVelocityRef.multiply(0.8);
+        this.velocityRef.multiply(0.8);
         this.velocityDirty = true;
 
         // 开始锁定
@@ -129,8 +129,8 @@ export class MissileEntity extends RocketEntity {
         }
 
         // 追踪
-        const targetPos = this.target.getPositionRef;
-        const targetVel = this.target.getVelocityRef;
+        const targetPos = this.target.positionRef;
+        const targetVel = this.target.velocityRef;
         const desiredYaw = this.predictInterceptYaw(pos, targetPos, targetVel);
 
         this.setClampYaw(desiredYaw, this.turnRate);
@@ -151,7 +151,7 @@ export class MissileEntity extends RocketEntity {
     }
 
     protected track(movement: IVec) {
-        const pos = this.getPositionRef;
+        const pos = this.positionRef;
         const hitResult = ProjectRaycastUtil.getCollision(this, entity => this.canHit(entity));
         if (hitResult.getType() !== HitTypes.MISS) {
             this.onCollision(hitResult);
@@ -212,7 +212,7 @@ export class MissileEntity extends RocketEntity {
         const mobs = world.getMobs();
         if (mobs.size === 0) return null;
 
-        const pos = this.getPositionRef;
+        const pos = this.positionRef;
         const yaw = this.getYaw();
         let best: Entity | null = null;
         let bestScore = -Infinity;
@@ -225,7 +225,7 @@ export class MissileEntity extends RocketEntity {
 
             if (currentLocks * totalDamage >= mob.getMaxHealth()) continue;
 
-            const mobPos = mob.getPositionRef;
+            const mobPos = mob.positionRef;
             const dx = mobPos.x - pos.x;
             const dy = mobPos.y - pos.y;
             const dist2 = dx * dx + dy * dy;

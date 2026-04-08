@@ -77,11 +77,11 @@ export class MobAI {
         const world = mob.getWorld();
         if (world.isClient) return;
 
-        const pos = mob.getPositionRef;
+        const pos = mob.positionRef;
         const target = getNearestEntity(pos, world.getPlayers());
         if (!target) return;
 
-        const playerPos = target.getPositionRef;
+        const playerPos = target.positionRef;
         this.targetPos.set(playerPos.x, playerPos.y);
 
         const dx = playerPos.x - pos.x;
@@ -132,7 +132,7 @@ export class MobAI {
 
     private moveAway(mob: MobEntity, target: IVec, speed: number): void {
         if (speed <= 0) return;
-        const pos = mob.getPositionRef;
+        const pos = mob.positionRef;
         const dx = pos.x - target.x;
         const dy = pos.y - target.y;
         this.dir.set(dx, dy).normalize();
@@ -140,7 +140,7 @@ export class MobAI {
     }
 
     public faceTarget(mob: MobEntity, target: IVec, maxStep: number = 0.19634375): void {
-        const pos = mob.getPositionRef;
+        const pos = mob.positionRef;
         const dx = target.x - pos.x;
         const dy = target.y - pos.y;
         mob.setClampYaw(Math.atan2(dy, dx), maxStep);

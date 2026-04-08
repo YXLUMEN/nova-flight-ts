@@ -124,7 +124,7 @@ export class Explosion {
         const halfR2 = this.behaviour.effect === EffectEnum.FUSION ? Math.floor(this.visual.radius / 2) ** 2 : 0;
         for (const entity of candidates) {
             const box = entity.getBoundingBox();
-            const pos = entity.getPositionRef;
+            const pos = entity.positionRef;
             const entityHit = box.containsVec(start) ? pos : box.raycast(start, pos);
             if (!entityHit) continue;
 

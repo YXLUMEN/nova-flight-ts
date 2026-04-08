@@ -12,7 +12,7 @@ import {LivingEntity} from "../entity/LivingEntity.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import type {EntityDist} from "../type/types.ts";
 import {AABB} from "../utils/math/AABB.ts";
-import {EntityPredicates} from "../predicate/EntityPredicates.ts";
+import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
 
 export class FlakBattery extends Item {
     public static readonly BULLET_SPEED = 40;
@@ -48,11 +48,11 @@ export class FlakBattery extends Item {
     }
 
     private static intercept(world: ServerWorld, defender: Entity, target: ProjectileEntity, damage: number) {
-        const pos = defender.getPositionRef;
+        const pos = defender.positionRef;
         const yaw = BallisticsUtils.getLeadYaw(
             pos,
-            target.getPositionRef,
-            target.getVelocityRef,
+            target.positionRef,
+            target.velocityRef,
             FlakBattery.BULLET_SPEED
         ) + rand(-0.03490658, 0.03490658);
 
@@ -72,7 +72,7 @@ export class FlakBattery extends Item {
     }
 
     private static choseTarget(world: ServerWorld, holder: Entity, limit: number = 1) {
-        const selfPos = holder.getPositionRef;
+        const selfPos = holder.positionRef;
 
         let targets = this.targets.get(holder);
         if (!targets) {
@@ -86,10 +86,10 @@ export class FlakBattery extends Item {
         const entities = world.searchOtherEntities(holder, box, EntityPredicates.DEFENSE);
 
         for (const entity of entities) {
-            if (!BallisticsUtils.isViableThreat(entity.getPositionRef, entity.getVelocityRef, selfPos)) continue;
+            if (!BallisticsUtils.isViableThreat(entity.positionRef, entity.velocityRef, selfPos)) continue;
             validThreats.push({
                 entity: entity as ProjectileEntity,
-                distSq: squareDistVec2(selfPos, entity.getPositionRef)
+                distSq: squareDistVec2(selfPos, entity.positionRef)
             });
             if (validThreats.length > 32) break;
         }
