@@ -92,7 +92,7 @@ export class ServerDefaultEvents {
                 boss.setPosition(World.WORLD_W / 2, 64);
 
                 const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
-                mark.setPositionByVec(boss.getPositionRef);
+                mark.setPositionByVec(boss.positionRef);
                 world.spawnEntity(mark);
             });
 
@@ -122,7 +122,7 @@ export class ServerDefaultEvents {
                     boss.setPosition(World.WORLD_W / 2, 64);
 
                     const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
-                    mark.setPositionByVec(boss.getPositionRef);
+                    mark.setPositionByVec(boss.positionRef);
                     world.spawnEntity(mark);
                 });
             }

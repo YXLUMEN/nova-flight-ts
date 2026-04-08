@@ -11,7 +11,7 @@ import type {Entity} from "../entity/Entity.ts";
 import {AABB} from "../utils/math/AABB.ts";
 import type {EntityType} from "../entity/EntityType.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
-import type {NumRange} from "../predicate/NumberRange.ts";
+import type {NumRange} from "../world/predicate/NumberRange.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {squareDistVec2} from "../utils/math/math.ts";
 import {shuffleArray} from "../utils/uit.ts";
@@ -25,12 +25,12 @@ export class EntitySelectorReader {
     };
     public static readonly NEAREST: BiConsumer<IVec, Entity[]> = (pos, entities) => {
         entities.sort((e1, e2) => {
-            return squareDistVec2(e1.getPositionRef, pos) - squareDistVec2(e2.getPositionRef, pos)
+            return squareDistVec2(e1.positionRef, pos) - squareDistVec2(e2.positionRef, pos)
         });
     };
     public static readonly FURTHEST: BiConsumer<IVec, Entity[]> = (pos, entities) => {
         entities.sort((e1, e2) => {
-            return squareDistVec2(e2.getPositionRef, pos) - squareDistVec2(e1.getPositionRef, pos)
+            return squareDistVec2(e2.positionRef, pos) - squareDistVec2(e1.positionRef, pos)
         });
     };
     public static readonly RANDOM: BiConsumer<IVec, Entity[]> = (_, entities) => {

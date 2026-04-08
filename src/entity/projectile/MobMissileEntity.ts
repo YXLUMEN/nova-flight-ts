@@ -10,7 +10,7 @@ import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 import {BehaviourEnum} from "../../world/explosion/ExplosionBehavior.ts";
 import {FilterBehaviour} from "../../world/explosion/FilterBehaviour.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
-import {EntityPredicates} from "../../predicate/EntityPredicates.ts";
+import {EntityPredicates} from "../../world/predicate/EntityPredicates.ts";
 
 export class MobMissileEntity extends MissileEntity {
     private static readonly EXPLOSION = new FilterBehaviour(BehaviourEnum.ONLY_DAMAGE)
@@ -71,7 +71,7 @@ export class MobMissileEntity extends MissileEntity {
             let minDist = Infinity;
 
             for (const decoyEntity of decoyEntities) {
-                const d = squareDistVec2(decoyEntity.getPositionRef, this.getPositionRef);
+                const d = squareDistVec2(decoyEntity.positionRef, this.positionRef);
                 if (d < minDist) {
                     minDist = d;
                     closest = decoyEntity;
@@ -84,6 +84,6 @@ export class MobMissileEntity extends MissileEntity {
 
     protected override acquireTarget(): Entity | null {
         const players = this.getWorld().getPlayers();
-        return getNearestEntity(this.getPositionRef, players);
+        return getNearestEntity(this.positionRef, players);
     }
 }

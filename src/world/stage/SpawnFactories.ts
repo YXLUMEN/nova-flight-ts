@@ -159,7 +159,7 @@ export function spawnAvoidPlayerCtor<T extends MobEntity>(
 
             let tooCloseToPlayer = false;
             for (const p of players) {
-                const pos = p.getPositionRef;
+                const pos = p.positionRef;
                 const dx = x - pos.x;
                 const dy = y - pos.y;
                 if (dx * dx + dy * dy < safeRadius) {
@@ -200,7 +200,7 @@ export function spawnExplosion(): MobFactory {
         if (!player) return null;
 
         const explosion = new ExplosionEntity(EntityTypes.EXPLOSION_ENTITY, ctx.world);
-        explosion.setPositionByVec(player.getPositionRef);
+        explosion.setPositionByVec(player.positionRef);
         return explosion;
     }
 }

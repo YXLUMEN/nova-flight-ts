@@ -116,7 +116,7 @@ export abstract class BaseWeapon extends Weapon {
     }
 
     protected setBullet(bullet: ProjectileEntity, attacker: Entity, speed: number, offset: number, maxSpread = 1, margin = 0): void {
-        const pos = attacker.getPositionRef;
+        const pos = attacker.positionRef;
 
         const yaw = attacker.getYaw();
 
@@ -136,7 +136,7 @@ export abstract class BaseWeapon extends Weapon {
     }
 
     protected spawnMuzzle(world: ClientWorld, entity: Entity, particles: number): void {
-        const pos = entity.getPositionRef;
+        const pos = entity.positionRef;
         const yaw = entity.getYaw();
         const offset = entity.getDimensions().halfWidth;
         const x = Math.cos(yaw) * offset + pos.x;

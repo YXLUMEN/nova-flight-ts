@@ -19,10 +19,10 @@ export class C125BulletEntity extends ExplodeBulletEntity {
         const f = Math.cos(yaw);
         const g = Math.sin(yaw);
         if (this.getOwner() instanceof PlayerEntity) {
-            const pos = this.getPositionRef;
+            const pos = this.positionRef;
 
             for (const mob of this.getWorld().getMobs()) {
-                if (mob.isRemoved() || squareDistVec2(pos, mob.getPositionRef) > 4096) continue;
+                if (mob.isRemoved() || squareDistVec2(pos, mob.positionRef) > 4096) continue;
                 mob.updateVelocity(12, f, g);
             }
         }

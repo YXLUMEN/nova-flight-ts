@@ -201,7 +201,7 @@ export function getNearestEntity<T extends Entity>(
     for (const entity of entities) {
         if (entity.isRemoved() || filter?.(entity)) continue;
 
-        const pos = entity.getPositionRef;
+        const pos = entity.positionRef;
         const dx = pos.x - center.x;
         const dy = pos.y - center.y;
         const distSq = dx * dx + dy * dy;

@@ -176,7 +176,7 @@ export class TutorialEvents {
             boss.setPosition(World.WORLD_W / 2, 64);
 
             const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
-            mark.setPositionByVec(boss.getPositionRef);
+            mark.setPositionByVec(boss.positionRef);
             world.spawnEntity(mark);
 
             await sleep(4000);
@@ -244,7 +244,7 @@ export class TutorialEvents {
         const condition = this.conditions.get('move');
         if (!condition || !this.hostPlayer) return;
 
-        if (this.hostPlayer.getVelocityRef.lengthSquared() < 150) return;
+        if (this.hostPlayer.velocityRef.lengthSquared() < 150) return;
 
         condition.acc += dt;
         if (condition.acc > condition.require) {

@@ -55,8 +55,8 @@ export class MagneticTorpedoEntity extends ProjectileEntity {
         this.countdown--;
 
         if (!this.hitOffset) {
-            const pos = this.getPositionRef;
-            const velocity = this.getVelocityRef;
+            const pos = this.positionRef;
+            const velocity = this.velocityRef;
             this.setPosition(pos.x + velocity.x, pos.y + velocity.y);
             return;
         }
@@ -77,7 +77,7 @@ export class MagneticTorpedoEntity extends ProjectileEntity {
         }
 
         // 吸附目标
-        const targetPos = this.hitEntity.getPositionRef;
+        const targetPos = this.hitEntity.positionRef;
         this.setPositionByVec(targetPos);
     }
 
@@ -90,9 +90,9 @@ export class MagneticTorpedoEntity extends ProjectileEntity {
         );
         this.relativeYaw = wrapRadians(this.getYaw() - this.hitEntity.getYaw());
 
-        const targetPos = this.hitEntity.getPositionRef;
+        const targetPos = this.hitEntity.positionRef;
         const targetYaw = this.hitEntity.getYaw();
-        const collisionPos = hitResult.pos.equals(targetPos) ? this.getPositionRef : hitResult.pos;
+        const collisionPos = hitResult.pos.equals(targetPos) ? this.positionRef : hitResult.pos;
 
         const offsetX = collisionPos.x - targetPos.x;
         const offsetY = collisionPos.y - targetPos.y;
@@ -144,8 +144,8 @@ export class MagneticTorpedoEntity extends ProjectileEntity {
         }
 
         const offset = this.hitEntity && this.hitOffset ?
-            MagneticTorpedoEntity.getExploreOffset(this.hitEntity.getPositionRef, this.hitEntity.getYaw(), this.hitOffset) :
-            this.getPositionRef;
+            MagneticTorpedoEntity.getExploreOffset(this.hitEntity.positionRef, this.hitEntity.getYaw(), this.hitOffset) :
+            this.positionRef;
         this.getWorld().createExplosion(
             this,
             null,

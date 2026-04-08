@@ -1,11 +1,16 @@
 import {Particle} from "./Particle.ts";
 import type {IVec} from "../utils/math/IVec.ts";
+import type {ParticleEffectType} from "./ParticleEffectType.ts";
+import {MutVec2} from "../utils/math/MutVec2.ts";
+import {rand} from "../utils/math/math.ts";
 
 export class ParticlePool {
     private readonly active: Particle[] = [];
     private readonly pool: Particle[] = [];
 
     private readonly capacity: number;
+
+    private readonly tmpVel = MutVec2.zero();
 
     public constructor(capacity: number = 1000) {
         this.capacity = capacity;
@@ -31,6 +36,31 @@ export class ParticlePool {
         return p;
     }
 
+    public spawnEffect(
+        type: ParticleEffectType,
+        pos: IVec,
+        count: number,
+        baseAngle: number = 0
+    ): void {
+        const v = this.tmpVel;
+
+        for (let i = 0; i < count; i++) {
+            const speed = rand(type.speedMin, type.speedMax);
+            const spread = rand(type.spreadMin, type.spreadMax);
+            const sign = Math.random() < 0.5 ? 1 : -1;
+            const angle = baseAngle + sign * spread;
+            v.set(Math.cos(angle) * speed, Math.sin(angle) * speed);
+
+            this.spawn(
+                pos, v,
+                rand(type.lifeMin, type.lifeMax),
+                rand(type.sizeMin, type.sizeMax),
+                type.colorFrom, type.colorTo,
+                type.drag, type.gravity
+            );
+        }
+    }
+
     public tick(tickDelta: number) {
         for (let i = this.active.length - 1; i >= 0; i--) {
             const p = this.active[i];
@@ -44,8 +74,17 @@ export class ParticlePool {
     }
 
     public render(ctx: CanvasRenderingContext2D, tickDelta: number) {
-        for (let i = 0; i < this.active.length; i++) {
+        const len = this.active.length;
+        for (let i = 0; i < len; i++) {
             this.active[i].render(ctx, tickDelta);
         }
+    }
+
+    public get activeCount(): number {
+        return this.active.length;
+    }
+
+    public get pooledCount(): number {
+        return this.pool.length;
     }
 }

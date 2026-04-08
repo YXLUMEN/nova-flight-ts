@@ -12,6 +12,7 @@ import {PhaseLasers} from "../PhaseLasers.ts";
 import {LivingEntity} from "../../../entity/LivingEntity.ts";
 import {spawnLaserByVec} from "../../../utils/ServerEffect.ts";
 import type {IVec} from "../../../utils/math/IVec.ts";
+import {ParticleEffects} from "../../../effect/ParticleEffects.ts";
 
 export class GammaLasers extends BaseWeapon {
     public static readonly LASER_WIDTH = 3;
@@ -21,7 +22,7 @@ export class GammaLasers extends BaseWeapon {
         const f = Math.cos(yaw);
         const g = Math.sin(yaw);
 
-        const start = attacker.getPositionRef;
+        const start = attacker.positionRef;
         const end = new MutVec2(
             start.x + f * PhaseLasers.LASER_HEIGHT,
             start.y + g * PhaseLasers.LASER_HEIGHT
@@ -37,7 +38,7 @@ export class GammaLasers extends BaseWeapon {
 
         const candidates: LivingEntity[] = [];
         for (const mob of world.getMobs()) {
-            const pos = mob.getPositionRef;
+            const pos = mob.positionRef;
             if (!mob.isRemoved() && thickLineCircleHit(
                 start.x, start.y,
                 end.x, end.y,
@@ -51,12 +52,12 @@ export class GammaLasers extends BaseWeapon {
         }
 
         candidates.sort((a, b) => {
-            return squareDistVec2(start, a.getPositionRef) - squareDistVec2(start, b.getPositionRef);
+            return squareDistVec2(start, a.positionRef) - squareDistVec2(start, b.positionRef);
         });
 
         const target = candidates[0];
         if (target) {
-            if (!hitBlock.missed && squareDistVec2(start, target.getPositionRef) > squareDistVec2(start, hitBlock.pos)) {
+            if (!hitBlock.missed && squareDistVec2(start, target.positionRef) > squareDistVec2(start, hitBlock.pos)) {
                 end.set(hitBlock.pos.x, hitBlock.pos.y);
                 this.onHit(world, start, end);
                 return;
@@ -87,14 +88,7 @@ export class GammaLasers extends BaseWeapon {
 
     private onHit(world: ServerWorld, start: IVec, end: IVec): void {
         spawnLaserByVec(world, start, end, '#ffca59', GammaLasers.LASER_WIDTH, 0.2);
-        world.spawnParticle(
-            end.x, end.y,
-            0, 0,
-            8,
-            80,
-            0.5, 4,
-            '#ffcbb7',
-        );
+        world.spawnPreparedParticle(ParticleEffects.POWER_FULL_BLOW, end, 8);
         world.playSound(null, SoundEvents.LASER_FIRE_BEAM, 0.4);
     }
 

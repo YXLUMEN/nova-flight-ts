@@ -4,7 +4,7 @@ import type {CIWSBulletEntity} from "../../../entity/projectile/CIWSBulletEntity
 export class CIWSBulletEntityRender implements EntityRenderer<CIWSBulletEntity> {
     public render(entity: CIWSBulletEntity, ctx: CanvasRenderingContext2D, tickDelta: number) {
         const pos = entity.getLerpPos(tickDelta);
-        const vel = entity.getVelocityRef;
+        const vel = entity.velocityRef;
 
         const tailX = pos.x - vel.x;
         const tailY = pos.y - vel.y;

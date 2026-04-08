@@ -7,6 +7,7 @@ import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 import {BlockChangeS2CPacket} from "../../network/packet/s2c/BlockChangeS2CPacket.ts";
+import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 
 export class ArtilleryEntity extends FastBulletEntity {
     public override noClip = true;
@@ -33,11 +34,7 @@ export class ArtilleryEntity extends FastBulletEntity {
         }
 
         entity.takeDamage(sources.kinetic(this, owner), hitDamage);
-        (world as ServerWorld).spawnParticle(
-            hitResult.pos.x, hitResult.pos.y, 0, 0,
-            6, 100, 0.5, 4,
-            '#ffd8b6'
-        );
+        (world as ServerWorld).spawnPreparedParticle(ParticleEffects.POWER_FULL_BLOW, hitResult.pos, 6);
     }
 
     protected override onBlockHit(hitResult: BlockHitResult) {

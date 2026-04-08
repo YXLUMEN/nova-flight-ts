@@ -23,7 +23,7 @@ export class EntityPositionForceS2CPacket implements Payload {
     }
 
     public static create(entity: Entity) {
-        const pos = entity.getPositionRef;
+        const pos = entity.positionRef;
         const x = pos.x;
         const y = pos.y;
         const yawByte = encodeYaw(entity.getYaw());

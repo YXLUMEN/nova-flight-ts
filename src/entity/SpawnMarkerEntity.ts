@@ -27,11 +27,11 @@ export class SpawnMarkerEntity extends Entity {
             if (world.isPeaceMode() || world.isClient) return;
 
             if (!this.force) {
-                const {x, y} = this.spawnMob.getPositionRef;
+                const {x, y} = this.spawnMob.positionRef;
                 const canSpawn = world.getPlayers().every(player => {
                     if (player.isRemoved()) return true;
-                    const dx = x - player.getPositionRef.x;
-                    const dy = y - player.getPositionRef.y;
+                    const dx = x - player.positionRef.x;
+                    const dy = y - player.positionRef.y;
                     const distSq = dx * dx + dy * dy;
                     return distSq >= 6144;
                 });

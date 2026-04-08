@@ -63,7 +63,7 @@ export abstract class BossEntity extends MobEntity {
         const world = this.getWorld();
         if (world.isClient) return;
 
-        const pos = this.getPositionRef;
+        const pos = this.positionRef;
         (world as ServerWorld).spawnParticle(
             pos.x, pos.y, 1, 1, 32,
             rand(240, 360),

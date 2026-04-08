@@ -1,6 +1,5 @@
 import {LivingEntity} from "../LivingEntity.ts";
 import {World} from "../../world/World.ts";
-import {rand} from "../../utils/math/math.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import type {EntityType} from "../EntityType.ts";
@@ -16,6 +15,7 @@ import {decodeColorToHex, encodeColorHex} from "../../utils/NetUtil.ts";
 import {NbtTypeId} from "../../nbt/NbtType.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
+import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 
 export abstract class MobEntity extends LivingEntity implements IColorEntity {
     public color = '#ff6b6b';
@@ -40,7 +40,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
             this.AI.updateAction(this);
         }
 
-        this.move(this.getVelocityRef);
+        this.move(this.velocityRef);
         this.clampPosition();
     }
 
@@ -61,19 +61,11 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
 
         world.events.emit(EVENTS.MOB_DAMAGE, {mob: this, damageSource});
         if (this.getShieldAmount() > 0) {
-            world.spawnParticleVec(
-                this.getPositionRef, 1, 1, 1, rand(10, 30),
-                rand(0.2, 0.6), rand(4, 6),
-                "#5095ff", "#73c4ff"
-            );
+            world.spawnPreparedParticle(ParticleEffects.SHIELD_HIT, this.positionRef, 2);
             return true;
         }
 
-        world.spawnParticleVec(
-            this.getPositionRef, 1, 1, 1, rand(20, 60),
-            rand(0.2, 0.6), rand(4, 6),
-            "#ffaa33", "#ff5454"
-        );
+        world.spawnPreparedParticle(ParticleEffects.HIT, this.positionRef, 2);
         return true;
     }
 
@@ -83,14 +75,8 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         const world = this.getWorld() as ServerWorld;
         if (world.isClient) return;
 
-        world.events.emit(EVENTS.MOB_KILLED, {mob: this, damageSource, pos: this.getPositionRef});
-
-        world.spawnParticle(
-            this.getPositionRef.x, this.getPositionRef.y,
-            1, 1, 4, rand(80, 100),
-            rand(0.6, 0.8), rand(4, 6),
-            "#ffaa33", "#ff5454"
-        );
+        world.events.emit(EVENTS.MOB_KILLED, {mob: this, damageSource, pos: this.positionRef});
+        world.spawnPreparedParticle(ParticleEffects.ENTITY_DEATH, this.positionRef, 4);
     }
 
     public attack(player: PlayerEntity) {
@@ -156,7 +142,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
             this.stuckTicks++;
 
             if (this.ejectCooldown <= 0) {
-                const eject = BlockCollision.findEjectionVector(map, this.getPositionRef, bounds, 24);
+                const eject = BlockCollision.findEjectionVector(map, this.positionRef, bounds, 24);
                 if (eject) {
                     this.stuckTicks = 0;
                     this.ejectCooldown = 0;

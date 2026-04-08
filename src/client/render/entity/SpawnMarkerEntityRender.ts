@@ -3,7 +3,7 @@ import type {SpawnMarkerEntity} from "../../../entity/SpawnMarkerEntity.ts";
 
 export class SpawnMarkerEntityRender implements EntityRenderer<SpawnMarkerEntity> {
     public render(entity: SpawnMarkerEntity, ctx: CanvasRenderingContext2D, _: number, offsetX: number = 0, offsetY: number = 0) {
-        const pos = entity.getPositionRef;
+        const pos = entity.positionRef;
         const size = entity.getWidth();
         const gapRatio = 0.3;
         const half = size / 2;

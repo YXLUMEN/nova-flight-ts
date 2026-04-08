@@ -44,7 +44,7 @@ export class BaseBossEntity extends BossEntity {
         if (world.isClient) return;
 
         if (this.selectCooldown-- <= 0) {
-            this.primaryTarget = getNearestEntity(this.getPositionRef, world.getPlayers());
+            this.primaryTarget = getNearestEntity(this.positionRef, world.getPlayers());
             this.selectCooldown = this.primaryTarget === null ? 20 : 60;
         }
 
@@ -63,7 +63,7 @@ export class BaseBossEntity extends BossEntity {
         const extraCD = this.hasStatusEffect(StatusEffects.EMC_STATUS) ? 50 : 0;
         this.attackCooldown = randInt(15, 40) + extraCD;
 
-        const basePos = this.getPositionRef.clone().add(0, this.getHeight() / 2);
+        const basePos = this.positionRef.clone().add(0, this.getHeight() / 2);
 
         for (let i = 0; i < this.FIRE_OFFSETS.length; i++) {
             const offset = this.FIRE_OFFSETS[i];
@@ -79,7 +79,7 @@ export class BaseBossEntity extends BossEntity {
                 continue;
             }
 
-            const targetPos = this.primaryTarget.getPositionRef;
+            const targetPos = this.primaryTarget.positionRef;
             const aimAngle = Math.atan2(targetPos.y - firePos.y, targetPos.x - firePos.x);
 
             // 90° 扇形
@@ -109,7 +109,7 @@ export class BaseBossEntity extends BossEntity {
         this.releasingMissile = true;
         this.missileCooldown = randInt(320, 400);
 
-        const pos = this.getPositionRef.clone().add(0, this.getHeight() / 2);
+        const pos = this.positionRef.clone().add(0, this.getHeight() / 2);
         let i = 1;
         const schedule = world.scheduleInterval(0.3, () => {
             if (i++ > 6 || this.isRemoved()) {

@@ -20,7 +20,7 @@ export class EntityVelocityFloatS2CPacket implements Payload {
     }
 
     public static create(entity: Entity) {
-        const vel = entity.getVelocityRef;
+        const vel = entity.velocityRef;
         return new EntityVelocityFloatS2CPacket(entity.getId(), vel.x, vel.y);
     }
 

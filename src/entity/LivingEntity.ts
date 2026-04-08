@@ -75,7 +75,7 @@ export abstract class LivingEntity extends Entity {
             this.positionIncrements--;
         }
 
-        const velocity = this.getVelocityRef.multiply(0.9);
+        const velocity = this.velocityRef.multiply(0.9);
         const vx = Math.abs(velocity.x) < 0.003 ? 0 : velocity.x;
         const vy = Math.abs(velocity.y) < 0.003 ? 0 : velocity.y;
         velocity.set(vx, vy);
@@ -211,7 +211,7 @@ export abstract class LivingEntity extends Entity {
             this.setShieldAmount(shieldAmount - hitShield + remain);
 
             if (hitShield > 0) {
-                channel.send(EntityDamageS2CPacket.create(this.getId(), this.getPositionRef, hitShield, '#73c4ff'));
+                channel.send(EntityDamageS2CPacket.create(this.getId(), this.positionRef, hitShield, '#73c4ff'));
             }
         }
 
@@ -225,11 +225,11 @@ export abstract class LivingEntity extends Entity {
             }
             if (this.isDead()) this.onDeath(damageSource);
 
-            channel.send(EntityDamageS2CPacket.create(this.getId(), this.getPositionRef, remain));
+            channel.send(EntityDamageS2CPacket.create(this.getId(), this.positionRef, remain));
         }
 
         if (damage === 0) {
-            channel.send(EntityDamageS2CPacket.create(this.getId(), this.getPositionRef, 0, '#979797'));
+            channel.send(EntityDamageS2CPacket.create(this.getId(), this.positionRef, 0, '#979797'));
         }
 
         return true;

@@ -22,7 +22,7 @@ export class BallisticCalculator {
         } else {
             this.lockedTarget = this.findTargetUnderCursor();
             if (this.lockedTarget) {
-                const {x, y} = this.lockedTarget.getPositionRef;
+                const {x, y} = this.lockedTarget.positionRef;
                 this.prevLeadX = x;
                 this.prevLeadY = y;
             }
@@ -39,9 +39,9 @@ export class BallisticCalculator {
         const handItem = this.owner.getCurrentItem().getItem();
         if (!(handItem instanceof BaseWeapon)) return;
 
-        const tPos = target.getPositionRef;
-        const tVelocity = target.getVelocityRef;
-        const oPos = this.owner.getPositionRef;
+        const tPos = target.positionRef;
+        const tVelocity = target.velocityRef;
+        const oPos = this.owner.positionRef;
 
         const dx = tPos.x - oPos.x;
         const dy = tPos.y - oPos.y;
@@ -86,7 +86,7 @@ export class BallisticCalculator {
         let nearestDist2 = Infinity;
 
         for (const mob of mobs.values()) {
-            const mobPos = mob.getPositionRef;
+            const mobPos = mob.positionRef;
             const dx = mobPos.x - cursorWorldPos.x;
             const dy = mobPos.y - cursorWorldPos.y;
             const dist2 = dx * dx + dy * dy;

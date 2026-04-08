@@ -26,12 +26,12 @@ export class AutoAim {
         const mobs = world.getMobs();
         if (mobs.size === 0) return;
 
-        const pos = this.owner.getPositionRef;
+        const pos = this.owner.positionRef;
         const target = this.acquireTarget(mobs, pos);
         if (!target) return;
 
-        const mobPos = target.getPositionRef;
-        const mobVel = target.getVelocityRef;
+        const mobPos = target.positionRef;
+        const mobVel = target.velocityRef;
         const bulletSpeed = handItem.getBallisticSpeed();
 
         const targetYaw = BallisticsUtils.getLeadYaw(pos, mobPos, mobVel, bulletSpeed);
@@ -65,13 +65,13 @@ export class AutoAim {
         for (const mob of mobs) {
             if (mob.isRemoved()) continue;
 
-            const mobPos = mob.getPositionRef;
+            const mobPos = mob.positionRef;
             const dx = mobPos.x - pos.x;
             const dy = mobPos.y - pos.y;
             const distSq = dx * dx + dy * dy;
             if (distSq < 1E-6) continue;
 
-            const mobVel = mob.getVelocityRef;
+            const mobVel = mob.velocityRef;
             const approaching = (dx * mobVel.x + dy * mobVel.y) < 0;
 
             let angleDiff = Math.atan2(dy, dx) - ownerYaw;

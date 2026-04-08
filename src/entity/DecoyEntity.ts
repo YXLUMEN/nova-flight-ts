@@ -30,12 +30,12 @@ export class DecoyEntity extends Entity implements IOwnable {
         }
 
         const yaw = this.getYaw();
-        const velocity = this.getVelocityRef;
+        const velocity = this.velocityRef;
         this.updateVelocity(0.05, Math.cos(yaw), Math.sin(yaw));
         this.move(velocity);
         velocity.multiply(0.98);
 
-        const pos = this.getPositionRef;
+        const pos = this.positionRef;
         if (pos.x < -20 || pos.x > World.WORLD_W + 20) {
             this.discard();
         }

@@ -23,6 +23,7 @@ export class Registries {
     public static readonly WORLD_EVENT = this.simpleCreate(RegistryKeys.WORLD_EVENT, this.EMPTY_INIT);
     public static readonly BLOCK = this.simpleCreate(RegistryKeys.BLOCK, this.EMPTY_INIT);
     public static readonly RESOURCES = this.simpleCreate(RegistryKeys.RESOURCE, this.EMPTY_INIT);
+    public static readonly PARTICLES = this.simpleCreate(RegistryKeys.PARTICLE, this.EMPTY_INIT);
 
     public static async complete() {
         const attr = await import('../entity/attribute/EntityAttributes.ts');

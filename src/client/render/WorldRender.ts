@@ -14,6 +14,7 @@ import type {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
 import type {IVec} from "../../utils/math/IVec.ts";
 import {World} from "../../world/World.ts";
 import {BitBlockMap} from "../../world/map/BitBlockMap.ts";
+import type {ParticleEffectType} from "../../effect/ParticleEffectType.ts";
 
 export class WorldRender {
     private readonly client: NovaFlightClient;
@@ -65,6 +66,10 @@ export class WorldRender {
             colorFrom, colorTo,
             drag, gravity
         );
+    }
+
+    public addPreparedParticle(type: ParticleEffectType, pos: IVec, count: number, baseAngle: number = 0) {
+        this.particlePool.spawnEffect(type, pos, count, baseAngle);
     }
 
     public addEffect(effect: VisualEffect) {

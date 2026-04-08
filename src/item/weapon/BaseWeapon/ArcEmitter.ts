@@ -11,7 +11,7 @@ import type {World} from "../../../world/World.ts";
 
 export class ArcEmitter extends BaseWeapon {
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        const pos = attacker.getPositionRef;
+        const pos = attacker.positionRef;
         const yaw = attacker.getYaw();
 
         const range = stack.getOrDefault(DataComponents.ATTACK_RANGE, 65536);
@@ -20,7 +20,7 @@ export class ArcEmitter extends BaseWeapon {
         for (const mob of world.getMobs()) {
             if (mob.isRemoved()) continue;
 
-            const mobPos = mob.getPositionRef;
+            const mobPos = mob.positionRef;
             const dx = mobPos.x - pos.x;
             const dy = mobPos.y - pos.y;
             const distSq = dx * dx + dy * dy;
@@ -49,7 +49,7 @@ export class ArcEmitter extends BaseWeapon {
 
         for (let i = 0; i < maxTarget; i++) {
             const mob = candidates[i].mob;
-            const mobPos = mob.getPositionRef;
+            const mobPos = mob.positionRef;
 
             mob.takeDamage(damageSource, damage);
             world.spawnEffect(null, new ArcEffect(

@@ -72,7 +72,7 @@ export abstract class PlayerEntity extends LivingEntity {
         this.inventoryTick();
         super.aiStep();
 
-        this.move(this.getVelocityRef);
+        this.move(this.velocityRef);
         this.clampPosition();
     }
 
@@ -93,7 +93,7 @@ export abstract class PlayerEntity extends LivingEntity {
         if (map.intersectsBox(bounds)) {
             if (this.stuckTicks % 2 === 0) return movement.multiply(0.4);
 
-            const eject = BlockCollision.findEjectionVector(map, this.getPositionRef, bounds);
+            const eject = BlockCollision.findEjectionVector(map, this.positionRef, bounds);
             if (eject) return movement.set(eject.x, eject.y);
             return movement.multiply(0.4);
         }

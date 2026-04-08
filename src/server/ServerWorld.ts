@@ -39,6 +39,9 @@ import {EntityHitResult} from "../world/collision/EntityHitResult.ts";
 import {MobBulletEntity} from "../entity/projectile/MobBulletEntity.ts";
 import {MobMissileEntity} from "../entity/projectile/MobMissileEntity.ts";
 import type {ExplosionBehavior} from "../world/explosion/ExplosionBehavior.ts";
+import type {IVec} from "../utils/math/IVec.ts";
+import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
+import {PreparedParticleS2CPacket} from "../network/packet/s2c/PreparedParticleS2CPacket.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
@@ -107,7 +110,7 @@ export class ServerWorld extends World implements NbtSerializable {
             }
 
             if (entity instanceof MobBulletEntity || entity instanceof MobMissileEntity) {
-                entity.onCollision(new EntityHitResult(player.getPositionRef, player));
+                entity.onCollision(new EntityHitResult(player.positionRef, player));
             }
         }
     }
@@ -282,13 +285,8 @@ export class ServerWorld extends World implements NbtSerializable {
         ));
     }
 
-    public spawnParticleVec(
-        pos: MutVec2, offsetX: number, offsetY: number,
-        count: number, speed: number, life: number, size: number,
-        colorFrom: string, colorTo: string): void {
-        this.getNetworkChannel().send(ParticleS2CPacket.create(
-            pos.x, pos.y, offsetX, offsetY, count, speed, life, size, colorFrom, colorTo
-        ));
+    public spawnPreparedParticle(type: ParticleEffectType, pos: IVec, count: number, baseAngle: number = 0) {
+        this.getNetworkChannel().send(new PreparedParticleS2CPacket(type, pos, count, baseAngle));
     }
 
     public override addImportantParticle() {

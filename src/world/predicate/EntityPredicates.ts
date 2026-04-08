@@ -1,9 +1,9 @@
-import type {Entity} from "../entity/Entity.ts";
-import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
-import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
-import type {Predicate} from "../type/types.ts";
-import {squareDistVec2} from "../utils/math/math.ts";
-import type {IVec} from "../utils/math/IVec.ts";
+import type {Entity} from "../../entity/Entity.ts";
+import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
+import {ProjectileEntity} from "../../entity/projectile/ProjectileEntity.ts";
+import type {Predicate} from "../../type/types.ts";
+import {squareDistVec2} from "../../utils/math/math.ts";
+import type {IVec} from "../../utils/math/IVec.ts";
 
 export class EntityPredicates {
     public static readonly ANY = () => true;
@@ -12,7 +12,7 @@ export class EntityPredicates {
     public static readonly ONLY_PLAYER = (entity: Entity) => entity instanceof PlayerEntity;
 
     public static inRange(center: IVec, r2: number) {
-        return (entity: Entity) => squareDistVec2(center, entity.getPositionRef) <= r2;
+        return (entity: Entity) => squareDistVec2(center, entity.positionRef) <= r2;
     };
 
     public static canBePushBy() {

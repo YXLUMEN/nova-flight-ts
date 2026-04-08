@@ -106,10 +106,15 @@ export class Particle implements VisualEffect {
         const r = this.size * (1 - 0.6 * k);
 
         ctx.globalAlpha = 1 - k;
-        const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-        g.addColorStop(0, this.colorFrom);
-        g.addColorStop(1, this.colorTo);
-        ctx.fillStyle = g;
+        if (this.colorFrom === this.colorTo) {
+            ctx.fillStyle = this.colorFrom;
+        } else {
+            const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+            g.addColorStop(0, this.colorFrom);
+            g.addColorStop(1, this.colorTo);
+            ctx.fillStyle = g;
+        }
+
         ctx.beginPath();
         ctx.arc(x, y, r, 0, PI2);
         ctx.fill();

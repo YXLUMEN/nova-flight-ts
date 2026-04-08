@@ -1,12 +1,11 @@
 import {Entity} from "../entity/Entity.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 import type {VisualEffect} from "../effect/VisualEffect.ts";
-import type {Schedule, TimerTask} from "../type/ITimer.ts";
+import type {Schedule} from "../type/ITimer.ts";
 import {DamageSources} from "../entity/damage/DamageSources.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import {EVENTS, type IEvents} from "../type/IEvents.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
-import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
 import type {Payload} from "../network/Payload.ts";
 import type {Consumer, Predicate, Supplier} from "../type/types.ts";
 import type {EntityList} from "./entity/EntityList.ts";
@@ -31,7 +30,8 @@ import {AABB} from "../utils/math/AABB.ts";
 import {BlockCollision} from "./collision/BlockCollision.ts";
 import {LivingEntity} from "../entity/LivingEntity.ts";
 import type {ExplosionBehavior} from "./explosion/ExplosionBehavior.ts";
-import {EntityPredicates} from "../predicate/EntityPredicates.ts";
+import {EntityPredicates} from "./predicate/EntityPredicates.ts";
+import {ScheduleTask} from "./ScheduleTask.ts";
 
 export abstract class World {
     public static readonly WORLD_W = 1760;
@@ -49,15 +49,12 @@ export abstract class World {
 
     private readonly registryManager: RegistryManager;
     private readonly damageSources: DamageSources;
-
-    // schedule
-    private time = 0;
-    private nextTimerId = new AtomicInteger();
-    private timers: TimerTask[] = [];
+    private readonly scheduleTask: ScheduleTask;
 
     protected constructor(registryManager: RegistryManager, isClient: boolean) {
         this.isClient = isClient;
         this.registryManager = registryManager;
+        this.scheduleTask = new ScheduleTask();
         this.damageSources = new DamageSources(registryManager);
     }
 
@@ -155,19 +152,11 @@ export abstract class World {
     }
 
     public clear(): void {
-        this.timers.length = 0;
-        this.time = 0;
-        this.nextTimerId.reset();
-    }
-
-    public reset(): void {
-        this.clear();
-        this.over = false;
+        this.scheduleTask.clear();
     }
 
     public tick(dt: number): void {
-        this.time += dt;
-        this.processTimers();
+        this.scheduleTask.tick(dt);
     }
 
     public tickEntity<T extends Entity>(tickConsumer: Consumer<T>, entity: T) {
@@ -263,68 +252,18 @@ export abstract class World {
     }
 
     public schedule(delaySec: number, fn: Supplier<void>): Schedule {
-        const t: TimerTask = this.createTimerTask(fn, delaySec, false);
-        this.insertTimer(t);
-        return {id: t.id, cancel: () => (t.canceled = true)};
+        return this.scheduleTask.schedule(delaySec, fn);
     }
 
-    public scheduleInterval(intervalSec: number, fn: () => void): Schedule {
-        const t: TimerTask = this.createTimerTask(fn, intervalSec, true, intervalSec);
-        this.insertTimer(t);
-        return {id: t.id, cancel: () => (t.canceled = true)};
-    }
-
-    private createTimerTask(fn: Supplier<void>, delaySec: number, repeat: boolean, interval?: number): TimerTask {
-        return {
-            id: this.nextTimerId.incrementAndGet(),
-            at: this.time + Math.max(0, delaySec),
-            fn,
-            repeat,
-            interval: interval !== undefined ? Math.max(0, interval) : undefined,
-            canceled: false
-        };
-    }
-
-    public getTime(): number {
-        return this.time;
+    public scheduleInterval(intervalSec: number, fn: Supplier<void>): Schedule {
+        return this.scheduleTask.scheduleInterval(intervalSec, fn);
     }
 
     public isPeaceMode(): boolean {
         return this.difficultyLevel === 0;
     }
 
-    // 二分插入 保持 timers 按 at 升序
-    private insertTimer(t: TimerTask) {
-        let lo = 0, hi = this.timers.length;
-        while (lo < hi) {
-            const mid = (lo + hi) >>> 1;
-            if (this.timers[mid].at <= t.at) lo = mid + 1;
-            else hi = mid;
-        }
-        this.timers.splice(lo, 0, t);
-    }
-
-    private processTimers() {
-        while (this.timers.length && this.timers[0].at <= this.time) {
-            const t = this.timers.shift()!;
-            if (t.canceled) continue;
-
-            if (!t.repeat) {
-                t.fn();
-                continue;
-            }
-
-            // 重复任务,补齐到当前世界时间; 可能在长时间卡顿时触发多次
-            if (t.interval! <= 0) {
-                t.fn();
-                continue;
-            } // 容错
-            do {
-                t.fn();
-                t.at += t.interval!;
-            } while (t.at <= this.time && !t.canceled);
-
-            if (!t.canceled) this.insertTimer(t);
-        }
+    public getTime(): number {
+        return this.scheduleTask.getTime();
     }
 }

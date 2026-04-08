@@ -32,7 +32,7 @@ export class MissileEnemyEntity extends MobEntity {
         if (this.cooldown-- > 0) return;
         this.cooldown = 500;
 
-        const pos = this.getPositionRef;
+        const pos = this.positionRef;
         const yaw = this.getYaw();
         const missile = new MobMissileEntity(EntityTypes.MOB_MISSILE_ENTITY, world, this, yaw);
         missile.color = '#ff7777';

@@ -87,6 +87,7 @@ import {ConnectionState, type ConnectionStateType} from "../../server/network/Co
 import {SetPlayerInventoryS2CPacket} from "../../network/packet/s2c/SetPlayerInventoryPacket.ts";
 import {PlayerPositionS2CPacket} from "../../network/packet/s2c/PlayerPositionS2CPacket.ts";
 import {squareDist} from "../../utils/math/math.ts";
+import {PreparedParticleS2CPacket} from "../../network/packet/s2c/PreparedParticleS2CPacket.ts";
 
 export class ClientNetworkHandler implements PacketListener {
     private readonly handlers = new HashMap<Identifier, Consumer<Payload>>();
@@ -346,7 +347,7 @@ export class ClientNetworkHandler implements PacketListener {
             entity.push(packet.damage);
         }
 
-        const pos = entity.getPositionRef;
+        const pos = entity.positionRef;
         this.client.window.damagePopup.spawnPopup(
             pos.x,
             pos.y - entity.getHeight(),
@@ -410,6 +411,11 @@ export class ClientNetworkHandler implements PacketListener {
             const vy = this.random.nextGaussian() * packet.speed;
             world.addParticle(packet.posX + ox, packet.posY + oy, vx, vy, packet.life, packet.size, packet.colorFrom, packet.colorTo);
         }
+    }
+
+    public onPreparedParticle(packet: PreparedParticleS2CPacket): void {
+        if (!this.world) return;
+        this.world.addPreparedParticle(packet.particle, packet.pos, packet.count, packet.baseAngle);
     }
 
     public onEntityAttributes(packet: EntityAttributesS2CPacket): void {
@@ -725,5 +731,6 @@ export class ClientNetworkHandler implements PacketListener {
         this.register(BatchBlockChangesPacket.ID, this.onBatchChanges);
         this.register(SetPlayerInventoryS2CPacket.ID, this.onSetInventory);
         this.register(PlayerPositionS2CPacket.ID, this.onPlayerMove);
+        this.register(PreparedParticleS2CPacket.ID, this.onPreparedParticle);
     }
 }

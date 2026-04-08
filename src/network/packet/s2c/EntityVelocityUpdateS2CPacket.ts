@@ -22,7 +22,7 @@ export class EntityVelocityUpdateS2CPacket implements Payload {
     }
 
     public static create(entity: Entity) {
-        const vel = entity.getVelocityRef;
+        const vel = entity.velocityRef;
         return new EntityVelocityUpdateS2CPacket(entity.getId(), encodeVelocity(vel.x), encodeVelocity(vel.y));
     }
 

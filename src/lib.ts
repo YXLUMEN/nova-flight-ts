@@ -9,17 +9,17 @@ import {PayloadTypeRegistry} from "./network/PayloadTypeRegistry.ts";
 import {RelayPackets} from "./network/RelayPackets.ts";
 
 export function run() {
-    RelayPackets.registerNetworkPacket();
-    ServerPackets.registerNetworkPacket();
-    ClientPackets.registerNetworkPacket();
-    PayloadTypeRegistry.freeze();
-
     window.oncontextmenu = event => event.preventDefault();
 
     const ctrl = new AbortController();
     window.addEventListener('keydown', event => {
         event.preventDefault();
     }, {signal: ctrl.signal});
+
+    RelayPackets.registerNetworkPacket();
+    ServerPackets.registerNetworkPacket();
+    ClientPackets.registerNetworkPacket();
+    PayloadTypeRegistry.freeze();
 
     const playerName = localStorage.getItem('playerName') ?? 'null';
     UUIDUtil.uuidFromUsername(playerName)

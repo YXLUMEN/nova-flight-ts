@@ -18,7 +18,7 @@ export class DecoyReleaser extends SpecialWeapon {
 
     private static releaseDecoy(perRelease: number, world: World, attacker: Entity): void {
         if (!world.isClient) {
-            const pos = attacker.getPositionRef;
+            const pos = attacker.positionRef;
             const yaw = attacker.getYaw();
             const f = Math.cos(yaw) * -0.5;
             const g = Math.sin(yaw) * -0.5;

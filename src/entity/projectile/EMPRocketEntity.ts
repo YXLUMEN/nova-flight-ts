@@ -8,7 +8,7 @@ export class EMPRocketEntity extends RocketEntity {
     public override explode() {
         this.getWorld().createEMP(
             this.getOwner(),
-            this.getPositionRef,
+            this.positionRef,
             this.explosionRadius * 2,
             this.duration,
             1

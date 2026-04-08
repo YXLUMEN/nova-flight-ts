@@ -22,7 +22,7 @@ export class TargetDrone extends MobEntity {
 
     public override tick() {
         this.tickStatusEffects();
-        this.getVelocityRef.set(0, 0);
+        this.velocityRef.set(0, 0);
 
         if (this.clearTime > 0) {
             this.clearTime--;

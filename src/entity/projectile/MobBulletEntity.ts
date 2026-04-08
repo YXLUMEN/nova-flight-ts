@@ -5,13 +5,13 @@ import type {MutVec2} from "../../utils/math/MutVec2.ts";
 
 export class MobBulletEntity extends BulletEntity {
     public override tick() {
-        const pos = this.getPositionRef;
+        const pos = this.positionRef;
         if (pos.y < -20 || pos.y > World.WORLD_H + 20 || pos.x < -20 || pos.x > World.WORLD_W + 20) {
             this.discard();
             return;
         }
 
-        this.move(this.getVelocityRef);
+        this.move(this.velocityRef);
     }
 
     protected override adjustBlockCollision(movement: MutVec2): MutVec2 {

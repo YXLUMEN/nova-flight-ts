@@ -34,7 +34,7 @@ export class GunEnemyEntity extends MobEntity {
         if (this.cooldown-- > 0) return;
         this.cooldown = 150;
 
-        const pos = this.getPositionRef;
+        const pos = this.positionRef;
         const yaw = this.getYaw();
         const b = new MobBulletEntity(EntityTypes.ENEMY_BULLET_ENTITY, world, this, 1);
         b.setVelocity(Math.cos(yaw) * GunEnemyEntity.bulletSpeed, Math.sin(yaw) * GunEnemyEntity.bulletSpeed);

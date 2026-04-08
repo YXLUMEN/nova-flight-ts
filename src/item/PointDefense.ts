@@ -11,7 +11,7 @@ import {squareDistVec2} from "../utils/math/math.ts";
 import type {EntityDist} from "../type/types.ts";
 import {spawnLaserByVec} from "../utils/ServerEffect.ts";
 import {AABB} from "../utils/math/AABB.ts";
-import {EntityPredicates} from "../predicate/EntityPredicates.ts";
+import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
 
 export class PointDefense extends Item {
     public override inventoryTick(stack: ItemStack, world: ServerWorld, holder: Entity, slot: number, selected: boolean) {
@@ -23,16 +23,16 @@ export class PointDefense extends Item {
             return;
         }
 
-        const holderPos = holder.getPositionRef;
+        const holderPos = holder.positionRef;
         const validThreats: EntityDist<ProjectileEntity>[] = [];
 
         const box = AABB.fromCenter(holderPos.x, holderPos.y, 256, 256);
         const entities = world.searchOtherEntities(holder, box, EntityPredicates.DEFENSE);
         for (const entity of entities) {
-            if (!BallisticsUtils.isViableThreat(entity.getPositionRef, entity.getVelocityRef, holderPos)) continue;
+            if (!BallisticsUtils.isViableThreat(entity.positionRef, entity.velocityRef, holderPos)) continue;
             validThreats.push({
                 entity: entity as ProjectileEntity,
-                distSq: squareDistVec2(holderPos, entity.getPositionRef)
+                distSq: squareDistVec2(holderPos, entity.positionRef)
             });
             if (validThreats.length > 32) break;
         }
@@ -47,7 +47,7 @@ export class PointDefense extends Item {
             const entity = validThreats[i].entity;
 
             entity.onIntercept(damage);
-            spawnLaserByVec(world as ServerWorld, holderPos, entity.getPositionRef);
+            spawnLaserByVec(world as ServerWorld, holderPos, entity.positionRef);
         }
     }
 }

@@ -172,7 +172,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     // 位置相关
 
-    public get getPositionRef(): Readonly<MutVec2> {
+    public get positionRef(): Readonly<MutVec2> {
         return this.position;
     }
 
@@ -308,7 +308,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     // 速度与移动
 
-    public get getVelocityRef(): MutVec2 {
+    public get velocityRef(): MutVec2 {
         return this.velocity;
     }
 
