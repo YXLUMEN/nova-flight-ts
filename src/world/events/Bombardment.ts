@@ -2,9 +2,9 @@ import type {WorldEvent} from "./WorldEvent.ts";
 import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
 import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 import type {World} from "../World.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
 import {type WorldEventType} from "./WorldEventType.ts";
 import {WorldEventTypes} from "./WorldEventTypes.ts";
+import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class Bombardment implements WorldEvent {
     public static readonly PACKET_CODEC: PacketCodec<Bombardment> = PacketCodecs.of(
@@ -27,12 +27,12 @@ export class Bombardment implements WorldEvent {
     private activate: boolean = true;
     private age: number = 0;
 
-    private readonly position: IVec;
+    private readonly position: Vec2;
     private readonly countdown: number;
     private readonly damage: number;
     private readonly radius: number;
 
-    public constructor(position: IVec, countdown: number = 60, damage: number = 16, radius: number = 128) {
+    public constructor(position: Vec2, countdown: number = 60, damage: number = 16, radius: number = 128) {
         this.position = position;
         this.countdown = countdown;
         this.damage = damage;

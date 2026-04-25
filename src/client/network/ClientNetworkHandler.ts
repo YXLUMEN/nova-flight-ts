@@ -56,7 +56,7 @@ import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts
 import {AudioManager} from "../../sound/AudioManager.ts";
 import {ConnectInfo} from "../render/ui/ConnectInfo.ts";
 import {GameOverS2CPacket} from "../../network/packet/s2c/GameOverS2CPacket.ts";
-import {AudioControlS2CPacket} from "../../network/packet/s2c/AudioControlS2CPacket.ts";
+import {AudioControlS2CPacket, AudioLeapS2CPacket} from "../../network/packet/s2c/AudioControlS2CPacket.ts";
 import {BGMManager} from "../../sound/BGMManager.ts";
 import {AudioStopS2CPacket} from "../../network/packet/s2c/AudioStopS2CPacket.ts";
 import {Audios} from "../../sound/Audios.ts";
@@ -88,6 +88,8 @@ import {SetPlayerInventoryS2CPacket} from "../../network/packet/s2c/SetPlayerInv
 import {PlayerPositionS2CPacket} from "../../network/packet/s2c/PlayerPositionS2CPacket.ts";
 import {squareDist} from "../../utils/math/math.ts";
 import {PreparedParticleS2CPacket} from "../../network/packet/s2c/PreparedParticleS2CPacket.ts";
+import {ScreenShakeS2CPacket} from "../../network/packet/s2c/ScreenShakeS2CPacket.ts";
+import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
 
 export class ClientNetworkHandler implements PacketListener {
     private readonly handlers = new HashMap<Identifier, Consumer<Payload>>();
@@ -301,6 +303,15 @@ export class ClientNetworkHandler implements PacketListener {
         }
     }
 
+    public onForceEntityPosition(packet: EntityPositionForceS2CPacket): void {
+        const entity = this.world?.getEntityById(packet.entityId);
+        if (!entity) return;
+
+        entity.updatePosition(packet.x, packet.y);
+        entity.setDeltaMovement(0, 0);
+        entity.updateYaw(packet.yaw);
+    }
+
     public onEntitySpawn(packet: EntitySpawnS2CPacket): void {
         if (!this.world) return;
         const entity = this.createEntity(packet);
@@ -506,7 +517,7 @@ export class ClientNetworkHandler implements PacketListener {
     }
 
     public onPlayAudio(packet: PlayAudioS2CPacket): void {
-        AudioManager.playAudio(packet.audio);
+        AudioManager.playAudio(packet.audio, packet.loop);
         AudioManager.setVolume(packet.volume);
     }
 
@@ -523,6 +534,9 @@ export class ClientNetworkHandler implements PacketListener {
                 break;
             case 3:
                 BGMManager.next();
+                break;
+            case 4:
+                AudioManager.leap(packet.leap);
                 break;
         }
     }
@@ -632,6 +646,10 @@ export class ClientNetworkHandler implements PacketListener {
         packet.foreach((type, x, y) => map.set(x, y, type));
     }
 
+    public onScreenShake(packet: ScreenShakeS2CPacket): void {
+        this.client.window.camera.addShake(packet.amount, packet.limit);
+    }
+
     public sendCommand(input: string): boolean {
         const command = input.startsWith('/') ? input.slice(1) : input;
         if (this.parse(command).exceptions.size === 0) {
@@ -722,6 +740,7 @@ export class ClientNetworkHandler implements PacketListener {
         this.register(PlayAudioS2CPacket.ID, this.onPlayAudio);
         this.register(GameOverS2CPacket.ID, this.onGameOver);
         this.register(AudioControlS2CPacket.ID, this.onAudioControl);
+        this.register(AudioLeapS2CPacket.ID, this.onAudioControl)
         this.register(AudioStopS2CPacket.ID, this.onAudioStop);
         this.register(LaserWeaponActivate.ID, this.onLaserWeapon);
         this.register(LaserWeaponDeactivate.ID, this.onLaserWeapon);
@@ -732,5 +751,7 @@ export class ClientNetworkHandler implements PacketListener {
         this.register(SetPlayerInventoryS2CPacket.ID, this.onSetInventory);
         this.register(PlayerPositionS2CPacket.ID, this.onPlayerMove);
         this.register(PreparedParticleS2CPacket.ID, this.onPreparedParticle);
+        this.register(ScreenShakeS2CPacket.ID, this.onScreenShake);
+        this.register(EntityPositionForceS2CPacket.ID, this.onForceEntityPosition);
     }
 }

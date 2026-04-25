@@ -3,7 +3,7 @@ import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import {ProjectileEntity} from "../../entity/projectile/ProjectileEntity.ts";
 import type {Predicate} from "../../type/types.ts";
 import {squareDistVec2} from "../../utils/math/math.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
+import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class EntityPredicates {
     public static readonly ANY = () => true;
@@ -11,7 +11,7 @@ export class EntityPredicates {
     public static readonly DEFENSE = (entity: Entity) => entity instanceof ProjectileEntity && entity.isAlive() && !(entity.getOwner() instanceof PlayerEntity);
     public static readonly ONLY_PLAYER = (entity: Entity) => entity instanceof PlayerEntity;
 
-    public static inRange(center: IVec, r2: number) {
+    public static inRange(center: Vec2, r2: number) {
         return (entity: Entity) => squareDistVec2(center, entity.positionRef) <= r2;
     };
 

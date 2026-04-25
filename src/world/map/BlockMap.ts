@@ -87,11 +87,11 @@ export class BlockMap implements NbtSerializable {
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
-        nbt.putUint32('width', this.width);
-        nbt.putUint32('height', this.height);
+        nbt.setUint32('width', this.width);
+        nbt.setUint32('height', this.height);
 
         const element = new NbtUint8Array(this.blocks);
-        nbt.put('blocks', element);
+        nbt.set('blocks', element);
         return nbt;
     }
 

@@ -1,9 +1,9 @@
 import type {TrackedDataHandler} from "./TrackedDataHandler.ts";
-import type {Comparable} from "../../type/types.ts";
+import type {Comparable} from "../../type/Comparable.ts";
 
 export class TrackedData<T> implements Comparable {
-    public id: number;
-    public dataType: TrackedDataHandler<T>;
+    public readonly id: number;
+    public readonly dataType: TrackedDataHandler<T>;
 
     public constructor(id: number, dataType: TrackedDataHandler<T>) {
         this.id = id;

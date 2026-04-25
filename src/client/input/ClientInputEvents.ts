@@ -18,6 +18,7 @@ export class ClientInputEvents {
                 if (code === 'Escape' && commandManager.isShow()) {
                     const hide = commandManager.onEsc();
                     if (hide) input.setHandlerDisabled(false);
+                    return;
                 }
 
                 if ((code === 'Slash' || code === 'KeyT') && !commandManager.isShow()) {

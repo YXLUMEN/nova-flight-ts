@@ -1,5 +1,4 @@
 import {MutVec2} from "../utils/math/MutVec2.ts";
-import type {IVec} from "../utils/math/IVec.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 
 export class VecDeltaCodec {
@@ -15,15 +14,15 @@ export class VecDeltaCodec {
         return new Vec2(x, y);
     }
 
-    public getDeltaX(pos: IVec): number {
+    public getDeltaX(pos: Vec2): number {
         return quantize(pos.x) - quantize(this.pos.x);
     }
 
-    public getDeltaY(pos: IVec): number {
+    public getDeltaY(pos: Vec2): number {
         return quantize(pos.y) - quantize(this.pos.y);
     }
 
-    public subtract(pos: IVec): IVec {
+    public subtract(pos: Vec2): Vec2 {
         return pos.subVec(this.pos);
     }
 

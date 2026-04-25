@@ -76,5 +76,11 @@
   },
   "tropic_thunder": {
     "file": "nova-flight:/tropic_thunder.ogg"
+  },
+  "scourge_of_the_universe": {
+    "file": "nova-flight:/scourge_of_the_universe.ogg"
+  },
+  "universal_collapse" : {
+    "file": "nova-flight:/universal_collapse.ogg"
   }
 }

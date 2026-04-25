@@ -1,4 +1,4 @@
-import type {Comparable} from "../../type/types.ts";
+import type {Comparable} from "../../type/Comparable.ts";
 
 export class StringRange implements Comparable {
     private readonly start: number;

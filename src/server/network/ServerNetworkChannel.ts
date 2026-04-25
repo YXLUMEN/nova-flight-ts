@@ -24,7 +24,7 @@ export class ServerNetworkChannel extends NetworkChannel implements ServerChanne
      * 触发中继服务器操作
      * 必须由 0xFF 开头
      * */
-    public action(buffer: Uint8Array) {
+    public action(buffer: Uint8Array<ArrayBuffer>) {
         if (!this.isOpen()) return;
 
         if (buffer[0] !== 0xff) {

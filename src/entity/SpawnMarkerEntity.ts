@@ -21,25 +21,25 @@ export class SpawnMarkerEntity extends Entity {
 
     public override tick() {
         super.tick();
-        if (this.age >= 80) {
-            this.discard();
-            const world = this.getWorld() as ServerWorld;
-            if (world.isPeaceMode() || world.isClient) return;
+        if (this.age < 80) return;
 
-            if (!this.force) {
-                const {x, y} = this.spawnMob.positionRef;
-                const canSpawn = world.getPlayers().every(player => {
-                    if (player.isRemoved()) return true;
-                    const dx = x - player.positionRef.x;
-                    const dy = y - player.positionRef.y;
-                    const distSq = dx * dx + dy * dy;
-                    return distSq >= 6144;
-                });
-                if (!canSpawn) return;
-            }
+        this.discard();
+        const world = this.getWorld() as ServerWorld;
+        if (world.isPeaceMode() || world.isClient) return;
 
-            world.spawnEntity(this.spawnMob);
+        if (!this.force) {
+            const {x, y} = this.spawnMob.positionRef;
+            const canSpawn = world.getPlayers().every(player => {
+                if (player.isRemoved()) return true;
+                const dx = x - player.positionRef.x;
+                const dy = y - player.positionRef.y;
+                const distSq = dx * dx + dy * dy;
+                return distSq >= 6144;
+            });
+            if (!canSpawn) return;
         }
+
+        world.spawnEntity(this.spawnMob);
     }
 
     public override canHitByProjectile(): boolean {

@@ -1,6 +1,6 @@
-import type {IVec} from "../../utils/math/IVec.ts";
-import type {Comparable} from "../../type/types.ts";
 import type {Direction} from "../collision/Direction.ts";
+import type {Comparable} from "../../type/Comparable.ts";
+import type {Vec2} from "../../utils/math/Vec2.ts";
 
 /**
  * 这个类默认不保证值有效,合理使用提供的安全工具方法
@@ -33,7 +33,7 @@ export class BlockPos implements Comparable {
         return (value / 8) >>> 0;
     }
 
-    public static fromVec(vec: IVec) {
+    public static fromVec(vec: Vec2) {
         return this.align(vec.x, vec.y);
     }
 

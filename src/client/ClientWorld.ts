@@ -16,7 +16,6 @@ import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExplosionVisual} from "../world/explosion/ExplosionVisual.ts";
 import type {Explosion} from "../world/explosion/Explosion.ts";
-import type {IVec} from "../utils/math/IVec.ts";
 import {Particle} from "../effect/Particle.ts";
 import {DEFAULT_CONFIG} from "../configs/GlobalConfig.ts";
 import {AbstractClientPlayerEntity} from "./entity/AbstractClientPlayerEntity.ts";
@@ -25,6 +24,7 @@ import {HistoricalScore} from "../statistics/HistoricalScore.ts";
 import type {ExplosionBehavior} from "../world/explosion/ExplosionBehavior.ts";
 import type {WorldRender} from "./render/WorldRender.ts";
 import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
 
 export class ClientWorld extends World {
     public readonly worldName: string;
@@ -102,7 +102,7 @@ export class ClientWorld extends World {
         this.events.emit(EVENTS.GAME_OVER, null);
         setTimeout(() => {
             this.client.onGameOver();
-        }, 6000);
+        }, 2500);
     }
 
     public override getNetworkChannel(): ClientNetworkChannel {
@@ -142,7 +142,7 @@ export class ClientWorld extends World {
     }
 
     public override addParticleByVec(
-        pos: IVec, vel: IVec,
+        pos: Vec2, vel: Vec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
         drag = 0.0, gravity = 0.0
@@ -183,7 +183,7 @@ export class ClientWorld extends World {
         ));
     }
 
-    public addPreparedParticle(type: ParticleEffectType, pos: IVec, count: number, baseAngle: number = 0) {
+    public addPreparedParticle(type: ParticleEffectType, pos: Vec2, count: number, baseAngle: number = 0) {
         this.worldRender.addPreparedParticle(type, pos, count, baseAngle);
     }
 

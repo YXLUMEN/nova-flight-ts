@@ -1,6 +1,6 @@
 import type {Identifier} from "../registry/Identifier.ts";
 import {type SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
-import type {Consumer, FunctionReturn, Predicate} from "../type/types.ts";
+import type {Consumer, Return, Predicate} from "../type/types.ts";
 import {commonPrefix} from "../utils/Strings.ts";
 import {type Suggestions} from "../brigadier/suggestion/Suggestions.ts";
 import type {SuggestionProvider} from "../brigadier/suggestion/SuggestionProvider.ts";
@@ -14,7 +14,7 @@ export class CommandUtil {
     public static forEachMatching<T>(
         candidates: Iterable<T>,
         remaining: string,
-        identifier: FunctionReturn<T, Identifier>,
+        identifier: Return<T, Identifier>,
         action: Consumer<T>
     ): void {
         const bl = remaining.indexOf(':') > -1;
@@ -40,7 +40,7 @@ export class CommandUtil {
         candidates: Iterable<T>,
         remaining: string,
         prefix: string,
-        identifier: FunctionReturn<T, Identifier>,
+        identifier: Return<T, Identifier>,
         action: Consumer<T>
     ): void {
         if (remaining.length === 0) {

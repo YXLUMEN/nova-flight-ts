@@ -33,6 +33,9 @@ export class Audios {
     public static readonly STEEL_REQUIEM = this.register('steel_requiem');
     public static readonly TROPIC_THUNDER = this.register('tropic_thunder');
 
+    public static readonly SCOURGE_OF_THE_UNIVERSE = this.register('scourge_of_the_universe');
+    public static readonly UNIVERSAL_COLLAPSE = this.register('universal_collapse');
+
     private static register(id: string) {
         const identifier = Identifier.ofVanilla(id);
         return Registry.registerReferenceById(Registries.AUDIOS, identifier, SoundEvent.of(identifier)).getValue();

@@ -138,9 +138,9 @@ export class StatusEffectInstance {
 
     public toNbt(): NbtCompound {
         const nbt = new NbtCompound();
-        nbt.putString('type', this.type.getRegistryKey().getValue().toString());
-        nbt.putDouble('duration', this.duration);
-        nbt.putUint32('amplifier', this.amplifier);
+        nbt.setString('type', this.type.getRegistryKey().getValue().toString());
+        nbt.setDouble('duration', this.duration);
+        nbt.setUint32('amplifier', this.amplifier);
 
         return nbt
     }

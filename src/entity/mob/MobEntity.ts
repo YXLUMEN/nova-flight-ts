@@ -30,14 +30,14 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         this.age += (Math.random() * 10) | 0;
         this.setYaw(1.57079);
 
-        this.AI = new MobAI(this.getId());
+        this.AI = new MobAI(this, this.getId());
     }
 
     public override tick(): void {
         super.tick();
 
         if (!this.isClient() && this.stuckTicks === 0) {
-            this.AI.updateAction(this);
+            this.AI.decision();
         }
 
         this.move(this.velocityRef);
@@ -45,10 +45,10 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
     }
 
     protected override tickAi() {
-        this.AI.tickAi(this);
+        this.AI.tick();
     }
 
-    public getAi() {
+    public getAi(): MobAI {
         return this.AI;
     }
 
@@ -95,7 +95,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
     }
 
     public override canMoveVoluntarily(): boolean {
-        return super.canMoveVoluntarily() && !this.AI.disable;
+        return super.canMoveVoluntarily() && !this.AI.isDisabled();
     }
 
     public override onSpawnPacket(packet: EntitySpawnS2CPacket) {
@@ -108,10 +108,10 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
 
-        nbt.putUint32('worth', this.worth);
-        nbt.putUint32('color', encodeColorHex(this.color));
-        nbt.putInt8('ai_behavior', this.AI.getBehavior());
-        nbt.putUint32('age', this.age);
+        nbt.setUint32('worth', this.worth);
+        nbt.setUint32('color', encodeColorHex(this.color));
+        nbt.setInt8('ai_behavior', this.AI.getBehavior());
+        nbt.setUint32('age', this.age);
         return nbt;
     }
 

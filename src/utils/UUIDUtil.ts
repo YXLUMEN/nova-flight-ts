@@ -2,8 +2,7 @@ import type {UUID} from "../type/types.ts";
 import {config} from "./uit.ts";
 
 export class UUIDUtil {
-    public static readonly EMPTY_UUID = new Uint8Array(16);
-    public static readonly EMPTY_UUID_STRING: UUID = '0000-0000-0000-0000-0000';
+    public static readonly REG = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
 
     private static readonly HEX_CHAR_TO_BYTE: Record<string, number> = config({
         '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
@@ -81,11 +80,6 @@ export class UUIDUtil {
     }
 
     public static isValidUUID(uuid: string): uuid is UUID {
-        const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
-        return uuidRegex.test(uuid);
-    }
-
-    public static nil(): Uint8Array {
-        return new Uint8Array(16);
+        return this.REG.test(uuid);
     }
 }

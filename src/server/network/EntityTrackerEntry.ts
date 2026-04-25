@@ -16,7 +16,7 @@ export class EntityTrackerEntry {
     private readonly world: ServerWorld;
     private readonly entity: Entity;
     private readonly tickInterval: number;
-    private readonly alwaysUpdateVelocity: boolean;
+    private readonly trackDelta: boolean;
     private readonly posDelta = new VecDeltaCodec();
     private readonly velocity: MutVec2;
 
@@ -25,18 +25,18 @@ export class EntityTrackerEntry {
     private trackingTick: number = 0;
     private updates: number = 0;
 
-    public constructor(world: ServerWorld, entity: Entity, tickInterval: number, alwaysUpdateVelocity: boolean) {
+    public constructor(world: ServerWorld, entity: Entity, tickInterval: number, trackDelta: boolean) {
         this.world = world;
         this.entity = entity;
         this.tickInterval = tickInterval;
-        this.alwaysUpdateVelocity = alwaysUpdateVelocity;
+        this.trackDelta = trackDelta;
         this.posDelta.setPos(entity.positionRef.x, entity.positionRef.y);
         this.velocity = entity.velocityRef.clone();
         this.lastYawUint8 = encodeYaw(entity.getYaw());
     }
 
     public tick() {
-        if (this.trackingTick % this.tickInterval === 0 || this.entity.velocityDirty || this.entity.getDataTracker().isDirty()) {
+        if (this.trackingTick % this.tickInterval === 0 || this.entity.needSync || this.entity.getDataTracker().isDirty()) {
             this.updates++;
 
             const yawUint8 = encodeYaw(this.entity.getYaw());
@@ -72,7 +72,7 @@ export class EntityTrackerEntry {
                 syncYaw = true;
             }
 
-            if (this.alwaysUpdateVelocity || this.entity.velocityDirty) {
+            if (this.entity.needSync || this.trackDelta) {
                 const velocity = this.entity.velocityRef;
                 const delta = squareDistVec2(velocity, this.velocity);
 
@@ -95,7 +95,7 @@ export class EntityTrackerEntry {
                 this.lastYawUint8 = yawUint8;
             }
 
-            this.entity.velocityDirty = false;
+            this.entity.needSync = false;
         }
 
         this.trackingTick++;

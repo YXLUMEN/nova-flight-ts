@@ -1,10 +1,10 @@
 import {type VisualEffect} from "./VisualEffect.ts";
-import type {IVec} from "../utils/math/IVec.ts";
 import {lerp, PI2} from "../utils/math/math.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
 
 export class RadialRing implements VisualEffect {
     public static readonly PACKET_CODEC: PacketCodec<RadialRing> = PacketCodecs.of(
@@ -28,7 +28,7 @@ export class RadialRing implements VisualEffect {
 
     private alive = true;
 
-    private readonly center: IVec;
+    private readonly center: Vec2;
     private readonly r0: number;
     private readonly r1: number;
     private readonly life: number;
@@ -37,7 +37,7 @@ export class RadialRing implements VisualEffect {
     private prevT = 0;
     private t = 0;
 
-    public constructor(center: IVec, r0: number, r1: number, life: number, color: string) {
+    public constructor(center: Vec2, r0: number, r1: number, life: number, color: string) {
         this.color = color;
         this.life = life;
         this.r1 = r1;

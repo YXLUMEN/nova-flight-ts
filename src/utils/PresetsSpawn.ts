@@ -12,7 +12,7 @@ import type {EntityType} from "../entity/EntityType.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import {AiBehavior} from "../entity/ai/MobAI.ts";
 import type {SpawnContext} from "../world/stage/SpawnContext.ts";
-import type {FunctionReturn} from "../type/types.ts";
+import type {Return} from "../type/types.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {TankEnemy} from "../entity/mob/TankEnemy.ts";
@@ -23,7 +23,7 @@ function modifyEntity(
     speed: number,
     extraHp: number,
     color: string,
-    hpScaleFn?: FunctionReturn<SpawnContext, number>
+    hpScaleFn?: Return<SpawnContext, number>
 ): void {
     mob.color = color;
     mob.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.setBaseValue(speed);
@@ -69,7 +69,7 @@ const spawnAtTopS = (
     extraHp = 0,
     worth = 1,
     color = '#ff6b6b',
-    hpScaleFn?: FunctionReturn<SpawnContext, number>
+    hpScaleFn?: Return<SpawnContext, number>
 ): MobFactory => (ctx) => {
     return spawnTopRandomCtorS(type, [worth], (mob) => {
         modifyEntity(ctx, mob, speed, extraHp, color, hpScaleFn);
@@ -83,7 +83,7 @@ const spawnInMap = (
     worth = 1,
     color = '#ff6b6b',
     opts: { margin?: number, safeRadius?: number } = {},
-    hpScaleFn?: FunctionReturn<SpawnContext, number>
+    hpScaleFn?: Return<SpawnContext, number>
 ): MobFactory => (ctx) => {
     return spawnAvoidPlayerCtor(type, [worth], (mob) => {
         modifyEntity(ctx, mob, speed, extraHp, color, hpScaleFn);

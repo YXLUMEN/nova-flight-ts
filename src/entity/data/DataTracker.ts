@@ -24,12 +24,12 @@ export class DataTracker {
             const id = data.id;
             if (id > this.entries.length) {
                 throw new RangeError(`Data value id is too big with ${id}; Max is ${this.entries.length}`);
-            } else if (this.entries[id] !== undefined) {
-                throw new Error(`Duplicate value id: ${id}`);
-            } else {
-                this.entries[id] = new DataEntry(data, value);
-                return this;
             }
+            if (this.entries[id] !== undefined) {
+                throw new Error(`Duplicate value id: ${id}`);
+            }
+            this.entries[id] = new DataEntry(data, value);
+            return this;
         }
 
         public build(): DataTracker {
@@ -115,7 +115,7 @@ export class DataTracker {
         if (!this.dirty) return null;
 
         this.dirty = false;
-        const list = [];
+        const list: DataTrackerSerializedEntry<any>[] = [];
         for (const entry of this.entries) {
             if (entry.dirty) {
                 entry.dirty = false;

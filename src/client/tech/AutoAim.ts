@@ -1,4 +1,3 @@
-import type {IVec} from "../../utils/math/IVec.ts";
 import type {MobEntity} from "../../entity/mob/MobEntity.ts";
 import {PI2, wrapRadians} from "../../utils/math/math.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
@@ -6,6 +5,7 @@ import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
 import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
+import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class AutoAim {
     public static readonly FIRE_THRESHOLD = Math.PI / 90;
@@ -36,7 +36,6 @@ export class AutoAim {
 
         const targetYaw = BallisticsUtils.getLeadYaw(pos, mobPos, mobVel, bulletSpeed);
         this.owner.setClampYaw(targetYaw, 0.1963);
-        this.owner.input.getScreenPointer().set(target.getX(), target.getY());
 
         const currentYaw = this.owner.getYaw();
         const yawDiff = Math.abs(wrapRadians(targetYaw - currentYaw));
@@ -52,7 +51,7 @@ export class AutoAim {
         this.currentTarget = target;
     }
 
-    private acquireTarget(mobs: ReadonlySet<MobEntity>, pos: IVec) {
+    private acquireTarget(mobs: ReadonlySet<MobEntity>, pos: Vec2) {
         const now = performance.now();
 
         if (this.currentTarget && !this.currentTarget.isRemoved() && now - this.targetLockTime < 500) {

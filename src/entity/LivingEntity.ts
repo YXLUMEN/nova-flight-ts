@@ -427,11 +427,11 @@ export abstract class LivingEntity extends Entity {
         super.writeNBT(nbt);
 
         const health = this.getHealth();
-        nbt.putFloat('health', Number.isFinite(health) ? health : 5);
+        nbt.setFloat('health', Number.isFinite(health) ? health : 5);
 
         const shield = this.getShieldAmount();
-        nbt.putFloat('shield', Number.isFinite(shield) ? shield : 0);
-        nbt.putCompoundArray('attributes', this.getAttributes().toNbt());
+        nbt.setFloat('shield', Number.isFinite(shield) ? shield : 0);
+        nbt.setCompoundArray('attributes', this.getAttributes().toNbt());
 
         if (this.activeEffects.size > 0) {
             const nbtList: NbtCompound[] = [];
@@ -439,7 +439,7 @@ export abstract class LivingEntity extends Entity {
                 nbtList.push(effect.toNbt());
             }
 
-            nbt.putCompoundArray('active_effects', nbtList);
+            nbt.setCompoundArray('active_effects', nbtList);
         }
 
         return nbt

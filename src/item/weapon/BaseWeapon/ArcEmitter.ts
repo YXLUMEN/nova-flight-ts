@@ -5,9 +5,9 @@ import type {ItemStack} from "../../ItemStack.ts";
 import {randInt, wrapRadians} from "../../../utils/math/math.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import {ArcEffect} from "../../../effect/ArcEffect.ts";
-import type {IVec} from "../../../utils/math/IVec.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import type {World} from "../../../world/World.ts";
+import type {Vec2} from "../../../utils/math/Vec2.ts";
 
 export class ArcEmitter extends BaseWeapon {
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
@@ -70,7 +70,7 @@ export class ArcEmitter extends BaseWeapon {
         world.stopLoopSound(attacker, SoundEvents.ARC_LOOP);
     }
 
-    private randomArc(world: ServerWorld, pos: IVec, yaw: number) {
+    private randomArc(world: ServerWorld, pos: Vec2, yaw: number) {
         // 在 ±60° 内随机偏移
         const offset = yaw + (Math.random() - 0.5) * Math.PI / 1.5;
         const length = 48 + Math.random() * 64; // 48～112 像素

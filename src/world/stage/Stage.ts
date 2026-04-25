@@ -98,7 +98,7 @@ export class Stage implements NbtSerializable {
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
-        return nbt.putInt8('stage_index', this.index);
+        return nbt.setInt8('stage_index', this.index);
     }
 
     public readNBT(nbt: NbtCompound) {

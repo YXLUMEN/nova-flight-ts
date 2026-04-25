@@ -1,7 +1,7 @@
 import type {ServerWorld} from "../server/ServerWorld.ts";
-import type {IVec} from "./math/IVec.ts";
+import type {Vec2} from "./math/Vec2.ts";
 
-export function spawnLaserByVec(world: ServerWorld, start: IVec, end: IVec, color = '#fff', width = 1, life = 0.1) {
+export function spawnLaserByVec(world: ServerWorld, start: Vec2, end: Vec2, color = '#fff', width = 1, life = 0.1) {
     spawnLaser(world, start.x, start.y, end.x, end.y, color, width, life);
 }
 

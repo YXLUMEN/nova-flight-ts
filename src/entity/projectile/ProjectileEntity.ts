@@ -109,7 +109,7 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
 
     public override setVelocity(x: number, y: number) {
         super.setVelocity(x, y);
-        this.velocityDirty = true;
+        this.needSync = true;
     }
 
     protected override getMapOffsetX(): number {
@@ -139,10 +139,10 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
         if (this.ownerUuid) {
-            nbt.putString('owner', this.ownerUuid);
+            nbt.setString('owner', this.ownerUuid);
         }
-        nbt.putFloat('damage', this.damage);
-        nbt.putUint32Array('colors', [encodeColorHex(this.color), encodeColorHex(this.edgeColor)]);
+        nbt.setFloat('damage', this.damage);
+        nbt.setUint32Array('colors', [encodeColorHex(this.color), encodeColorHex(this.edgeColor)]);
         return nbt;
     }
 

@@ -207,7 +207,7 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
-        nbt.putInt8('selected_slot', this.selected);
+        nbt.setInt8('selected_slot', this.selected);
 
         const inventory: NbtCompound[] = [];
         for (let i = 0; i < this.inventory.length; i++) {
@@ -215,11 +215,11 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
             if (stack.isEmpty()) continue;
 
             const compound = new NbtCompound();
-            compound.putInt8('slot', i);
-            compound.put('stack', ItemStack.CODEC.encode(stack));
+            compound.setInt8('slot', i);
+            compound.set('stack', ItemStack.CODEC.encode(stack));
             inventory.push(compound);
         }
-        nbt.putCompoundArray('inventory', inventory);
+        nbt.setCompoundArray('inventory', inventory);
 
         return nbt;
     }

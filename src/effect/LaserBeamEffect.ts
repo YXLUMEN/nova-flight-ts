@@ -3,9 +3,9 @@ import {MutVec2} from "../utils/math/MutVec2.ts";
 import {lerp} from "../utils/math/math.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
-import type {IVec} from "../utils/math/IVec.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
 
 export class LaserBeamEffect implements VisualEffect {
     public static readonly PACKET_CODEC: PacketCodec<LaserBeamEffect> = PacketCodecs.of(
@@ -47,7 +47,7 @@ export class LaserBeamEffect implements VisualEffect {
         this.life = life;
     }
 
-    public setByVec(start: IVec, end: IVec) {
+    public setByVec(start: Vec2, end: Vec2) {
         this.prevStart.set(this.start.x, this.start.y);
         this.prevEnd.set(this.end.x, this.end.y);
         this.start.x = start.x;
@@ -67,7 +67,7 @@ export class LaserBeamEffect implements VisualEffect {
         this.t = 0;
     }
 
-    public reset(start: IVec, end: IVec) {
+    public reset(start: Vec2, end: Vec2) {
         this.start.set(start.x, start.y);
         this.end.set(end.x, end.y);
         this.prevStart.set(start.x, start.y);

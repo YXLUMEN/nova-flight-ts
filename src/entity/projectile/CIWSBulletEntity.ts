@@ -23,7 +23,7 @@ export class CIWSBulletEntity extends BulletEntity {
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
-        nbt.putUint32('age', this.age);
+        nbt.setUint32('age', this.age);
         return nbt
     }
 

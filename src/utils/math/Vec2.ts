@@ -1,7 +1,4 @@
-import type {IVec} from "./IVec.ts";
-import {MutVec2} from "./MutVec2.ts";
-
-export class Vec2 implements IVec {
+export class Vec2 {
     public static readonly ZERO = new Vec2(0, 0);
 
     public readonly x: number;
@@ -12,7 +9,7 @@ export class Vec2 implements IVec {
         this.y = y;
     }
 
-    public static formVec(vel: IVec): Vec2 {
+    public static formVec(vel: Vec2): Vec2 {
         return new Vec2(vel.x, vel.y);
     }
 
@@ -24,7 +21,7 @@ export class Vec2 implements IVec {
         return new Vec2(this.x + x, this.y + y);
     }
 
-    public addVec(v: IVec) {
+    public addVec(v: Vec2) {
         return this.add(v.x, v.y);
     }
 
@@ -32,7 +29,7 @@ export class Vec2 implements IVec {
         return new Vec2(this.x - x, this.y - y);
     }
 
-    public subVec(v: IVec): Vec2 {
+    public subVec(v: Vec2): Vec2 {
         return this.subtract(v.x, v.y);
     }
 
@@ -52,11 +49,11 @@ export class Vec2 implements IVec {
         return Math.hypot(this.x, this.y);
     }
 
-    public equals(v: IVec, epsilon = 1e-6): boolean {
+    public equals(v: Vec2, epsilon = 1e-6): boolean {
         return Math.abs(this.x - v.x) <= epsilon && Math.abs(this.y - v.y) <= epsilon;
     }
 
-    public equalsSq(v: IVec, epsilon = 1e-6): boolean {
+    public equalsSq(v: Vec2, epsilon = 1e-6): boolean {
         const dx = this.x - v.x;
         const dy = this.y - v.y;
         return (dx * dx + dy * dy) <= (epsilon * epsilon);
@@ -65,10 +62,6 @@ export class Vec2 implements IVec {
     public normalize() {
         const len = this.length();
         return len === 0 ? Vec2.ZERO : this.multiply(1 / len);
-    }
-
-    public toMut(): MutVec2 {
-        return new MutVec2(this.x, this.y);
     }
 
     public toImmut(): Vec2 {

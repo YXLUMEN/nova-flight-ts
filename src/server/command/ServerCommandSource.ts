@@ -1,15 +1,15 @@
 import type {CommandOutput} from "./CommandOutput.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
 import type {ServerWorld} from "../ServerWorld.ts";
 import type {NovaFlightServer} from "../NovaFlightServer.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
 import {CommandSource} from "../../command/CommandSource.ts";
 import type {World} from "../../world/World.ts";
+import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class ServerCommandSource extends CommandSource {
     public readonly outPut: CommandOutput;
-    public readonly position: IVec;
+    public readonly position: Vec2;
     public readonly yaw: number;
     private readonly world: ServerWorld | null;
     private readonly level: number;
@@ -22,7 +22,7 @@ export class ServerCommandSource extends CommandSource {
 
     public constructor(
         outPut: CommandOutput,
-        position: IVec,
+        position: Vec2,
         yaw: number,
         world: ServerWorld | null,
         level: number,

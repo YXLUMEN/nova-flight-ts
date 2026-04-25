@@ -11,10 +11,10 @@ import {World} from "../../world/World.ts";
 import {SpawnMarkerEntity} from "../../entity/SpawnMarkerEntity.ts";
 import type {MobEntity} from "../../entity/mob/MobEntity.ts";
 import type {DamageSource} from "../../entity/damage/DamageSource.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
 import {STAGE} from "../../configs/StageConfig.ts";
 import {Techs} from "../../world/tech/Techs.ts";
 import {BaseBossEntity} from "../../entity/mob/BaseBossEntity.ts";
+import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class TutorialEvents {
     private static loop: number | undefined = undefined;
@@ -209,7 +209,7 @@ export class TutorialEvents {
         }
     }
 
-    private static onMobKill(event: { mob: MobEntity; damageSource: DamageSource; pos: IVec }) {
+    private static onMobKill(event: { mob: MobEntity; damageSource: DamageSource; pos: Vec2 }) {
         const enemyCondition = this.conditions.get('enemy');
         if (enemyCondition) {
             enemyCondition.acc++;

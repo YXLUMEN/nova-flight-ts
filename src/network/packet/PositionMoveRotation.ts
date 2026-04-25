@@ -1,7 +1,7 @@
 import {type Payload, payloadId, type PayloadId} from "../Payload.ts";
 import type {PacketCodec} from "../codec/PacketCodec.ts";
 import {PacketCodecs} from "../codec/PacketCodecs.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
+import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class PositionMoveRotation implements Payload {
     public static readonly ID: PayloadId<PositionMoveRotation> = payloadId('position_move_rotation');
@@ -15,17 +15,17 @@ export class PositionMoveRotation implements Payload {
         PositionMoveRotation.new
     );
 
-    public readonly position: IVec;
-    public readonly delta: IVec;
+    public readonly position: Vec2;
+    public readonly delta: Vec2;
     public readonly yaw: number;
 
-    public constructor(position: IVec, delta: IVec, yaw: number) {
+    public constructor(position: Vec2, delta: Vec2, yaw: number) {
         this.position = position;
         this.delta = delta;
         this.yaw = yaw;
     }
 
-    public static new(position: IVec, delta: IVec, yaw: number) {
+    public static new(position: Vec2, delta: Vec2, yaw: number) {
         return new PositionMoveRotation(position, delta, yaw);
     }
 

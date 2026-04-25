@@ -595,7 +595,7 @@ export class ClientTechTree implements TechTree {
             .map(id => id.toString())
             .toArray();
 
-        nbt.putStringArray('techs', ids);
+        nbt.setStringArray('techs', ids);
         return nbt
     }
 
