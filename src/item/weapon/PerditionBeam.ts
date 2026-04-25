@@ -6,7 +6,6 @@ import type {ClientWorld} from "../../client/ClientWorld.ts";
 import {ClientEffect} from "../../utils/ClientEffect.ts";
 import {PhaseLasers} from "./PhaseLasers.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
 import {thickLineCircleHit} from "../../utils/math/math.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
@@ -15,6 +14,7 @@ import {LivingEntity} from "../../entity/LivingEntity.ts";
 import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import {AttributeModifier} from "../../component/type/AttributeModifier.ts";
+import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class PerditionBeam extends PhaseLasers {
     private static readonly DEFAULT_MODIFIER = new AttributeModifier(
@@ -72,7 +72,7 @@ export class PerditionBeam extends PhaseLasers {
         super.inventoryTick(stack, world, holder);
     }
 
-    protected damage(world: ServerWorld, stack: ItemStack, holder: Entity, start: IVec, end: IVec) {
+    protected damage(world: ServerWorld, stack: ItemStack, holder: Entity, start: Vec2, end: Vec2) {
         const damage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
         const damageSource = world.getDamageSources()
             .laser(holder)

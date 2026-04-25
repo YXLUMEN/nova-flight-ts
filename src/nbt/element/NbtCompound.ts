@@ -35,7 +35,7 @@ export class NbtCompound implements NbtElement {
 
                 const key = reader.readString();
                 const nbt = NbtTypes.getTypeByIndex(type).read(reader);
-                compound.put(key, nbt);
+                compound.set(key, nbt);
             }
             return compound;
         }
@@ -47,98 +47,98 @@ export class NbtCompound implements NbtElement {
         this.entries = map ?? new Map();
     }
 
-    public put(key: string, nbt: NbtElement) {
+    public set(key: string, nbt: NbtElement) {
         this.entries.set(key, nbt);
     }
 
-    public putInt8(key: string, value: number): this {
+    public setInt8(key: string, value: number): this {
         console.assert(Number.isInteger(value) && value >= -128 && value <= 127, "Int8 out of range");
         this.entries.set(key, NbtInt8.of(value));
         return this;
     }
 
-    public putInt16(key: string, value: number): this {
+    public setInt16(key: string, value: number): this {
         console.assert(Number.isInteger(value) && value >= -32768 && value <= 32767, "Int16 out of range");
         this.entries.set(key, NbtInt16.of(value));
         return this;
     }
 
-    public putInt32(key: string, value: number): this {
+    public setInt32(key: string, value: number): this {
         console.assert(Number.isInteger(value) && value >= -2147483648 && value <= 2147483647, "Int32 out of range");
         this.entries.set(key, NbtInt32.of(value));
         return this;
     }
 
-    public putFloat(key: string, value: number): this {
+    public setFloat(key: string, value: number): this {
         console.assert(Number.isFinite(value), "Float must be finite");
         this.entries.set(key, NbtFloat.of(value));
         return this;
     }
 
-    public putDouble(key: string, value: number): this {
+    public setDouble(key: string, value: number): this {
         console.assert(Number.isFinite(value), "Double must be finite");
         this.entries.set(key, NbtDouble.of(value));
         return this;
     }
 
-    public putUint32(key: string, value: number): this {
+    public setUint32(key: string, value: number): this {
         console.assert(Number.isInteger(value) && value >= 0 && value <= 0xFFFFFFFF,
             `[NBT] ${key} expected uint32 (0 ~ ${0xFFFFFFFF}), got ${value}`);
         this.entries.set(key, NbtUint32.of(value));
         return this;
     }
 
-    public putString(key: string, value: string): this {
+    public setString(key: string, value: string): this {
         this.entries.set(key, NbtString.of(value));
         return this;
     }
 
-    public putBoolean(key: string, value: boolean): this {
+    public setBoolean(key: string, value: boolean): this {
         this.entries.set(key, NbtInt8.bool(value));
         return this;
     }
 
-    public putInt8Array(key: string, value: number[]): this {
+    public setInt8Array(key: string, value: number[]): this {
         this.entries.set(key, NbtInt8Array.create(value));
         return this;
     }
 
-    public putInt16Array(key: string, value: number[]): this {
+    public setInt16Array(key: string, value: number[]): this {
         this.entries.set(key, NbtInt16Array.create(value));
         return this;
     }
 
-    public putInt32Array(key: string, value: number[]): this {
+    public setInt32Array(key: string, value: number[]): this {
         this.entries.set(key, NbtInt32Array.create(value));
         return this;
     }
 
-    public putFloatArray(key: string, value: number[]): this {
+    public setFloatArray(key: string, value: number[]): this {
         this.entries.set(key, NbtFloatArray.create(value));
         return this;
     }
 
-    public putDoubleArray(key: string, value: number[]): this {
+    public setDoubleArray(key: string, value: number[]): this {
         this.entries.set(key, NbtDoubleArray.create(value));
         return this;
     }
 
-    public putUint32Array(key: string, value: number[]): this {
+    public setUint32Array(key: string, value: number[]): this {
         this.entries.set(key, NbtUint32Array.create(value));
         return this;
     }
 
-    public putStringArray(key: string, value: string[]): this {
+    public setStringArray(key: string, value: string[]): this {
         this.entries.set(key, new NbtStringArray(value));
         return this;
     }
 
-    public putCompound(key: string, value: NbtCompound): this {
+    public setCompound(key: string, value: NbtCompound): this {
         this.entries.set(key, value);
         return this;
     }
 
-    public putCompoundArray(key: string, value: NbtCompound[]) {
+    public setCompoundArray(key: string, value: NbtCompound[]) {
         this.entries.set(key, new NbtCompoundArray(value));
         return this;
     }

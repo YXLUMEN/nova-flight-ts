@@ -1,12 +1,12 @@
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {type VisualEffect} from "./VisualEffect.ts";
 import {lerp, PI2} from "../utils/math/math.ts";
-import type {IVec} from "../utils/math/IVec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {decodeFromInt16, decodeFromUnsignedByte, encodeToInt16, encodeToUnsignedByte} from "../utils/NetUtil.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
 
 export class Particle implements VisualEffect {
     public static readonly PACKET_CODEC: PacketCodec<Particle> = PacketCodecs.of(
@@ -49,7 +49,7 @@ export class Particle implements VisualEffect {
     private t = 0;
 
     public constructor(
-        pos: IVec, vel: IVec,
+        pos: Vec2, vel: Vec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
         drag = 0.0, gravity = 0.0
@@ -66,7 +66,7 @@ export class Particle implements VisualEffect {
     }
 
     public reset(
-        pos: IVec, vel: IVec,
+        pos: Vec2, vel: Vec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
         drag = 0.0, gravity = 0.0

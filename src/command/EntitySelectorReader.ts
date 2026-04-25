@@ -6,7 +6,6 @@ import {CommandError, IllegalArgumentError} from "../type/errors.ts";
 import type {BiConsumer, Consumer, UUID} from "../type/types.ts";
 import {EntitySelector} from "./EntitySelector.ts";
 import {EntitySelectorOptions} from "./EntitySelectorOptions.ts";
-import type {IVec} from "../utils/math/IVec.ts";
 import type {Entity} from "../entity/Entity.ts";
 import {AABB} from "../utils/math/AABB.ts";
 import type {EntityType} from "../entity/EntityType.ts";
@@ -15,32 +14,33 @@ import type {NumRange} from "../world/predicate/NumberRange.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {squareDistVec2} from "../utils/math/math.ts";
 import {shuffleArray} from "../utils/uit.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
 
 type provider = (builder: SuggestionsBuilder, consumer: Consumer<SuggestionsBuilder>) => Promise<Suggestions>;
 
 export class EntitySelectorReader {
     public static readonly INVALID_ENTITY_EXCEPTION = new CommandError('Invalid entity');
     public static readonly DEFAULT_SUGGESTION_PROVIDER: provider = (builder, _) => builder.buildPromise();
-    public static readonly ARBITRARY: BiConsumer<IVec, Entity[]> = () => {
+    public static readonly ARBITRARY: BiConsumer<Vec2, Entity[]> = () => {
     };
-    public static readonly NEAREST: BiConsumer<IVec, Entity[]> = (pos, entities) => {
+    public static readonly NEAREST: BiConsumer<Vec2, Entity[]> = (pos, entities) => {
         entities.sort((e1, e2) => {
             return squareDistVec2(e1.positionRef, pos) - squareDistVec2(e2.positionRef, pos)
         });
     };
-    public static readonly FURTHEST: BiConsumer<IVec, Entity[]> = (pos, entities) => {
+    public static readonly FURTHEST: BiConsumer<Vec2, Entity[]> = (pos, entities) => {
         entities.sort((e1, e2) => {
             return squareDistVec2(e2.positionRef, pos) - squareDistVec2(e1.positionRef, pos)
         });
     };
-    public static readonly RANDOM: BiConsumer<IVec, Entity[]> = (_, entities) => {
+    public static readonly RANDOM: BiConsumer<Vec2, Entity[]> = (_, entities) => {
         shuffleArray(entities);
     };
 
     private readonly reader: StringReader;
 
     private senderOnly: boolean = false;
-    private sorter: BiConsumer<IVec, Entity[]> = EntitySelectorReader.ARBITRARY;
+    private sorter: BiConsumer<Vec2, Entity[]> = EntitySelectorReader.ARBITRARY;
 
     private startCursor: number = 0;
     private limit: number = 1;

@@ -5,24 +5,28 @@ import {SoundEvent} from "../../../sound/SoundEvent.ts";
 
 export class PlayAudioS2CPacket implements Payload {
     public static readonly ID: PayloadId<PlayAudioS2CPacket> = payloadId('play_audio');
-    public static readonly CODEC: PacketCodec<PlayAudioS2CPacket> = PacketCodecs.adapt2(
+    public static readonly CODEC: PacketCodec<PlayAudioS2CPacket> = PacketCodecs.adapt3(
         SoundEvent.AUDIO_PACKET_CODEC,
         val => val.audio,
         PacketCodecs.FLOAT,
         val => val.volume,
+        PacketCodecs.BOOL,
+        val => val.loop,
         PlayAudioS2CPacket.new
     );
 
     public readonly audio: SoundEvent;
     public readonly volume: number;
+    public readonly loop: boolean;
 
-    public constructor(soundEvent: SoundEvent, volume: number) {
+    public constructor(soundEvent: SoundEvent, volume: number, loop: boolean = false) {
         this.audio = soundEvent;
         this.volume = volume;
+        this.loop = loop;
     }
 
-    public static new(soundEvent: SoundEvent, volume: number) {
-        return new PlayAudioS2CPacket(soundEvent, volume);
+    public static new(soundEvent: SoundEvent, volume: number, loop: boolean = false): PlayAudioS2CPacket {
+        return new PlayAudioS2CPacket(soundEvent, volume, loop);
     }
 
     public getId(): PayloadId<PlayAudioS2CPacket> {

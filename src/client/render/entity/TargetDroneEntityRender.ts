@@ -3,7 +3,7 @@ import type {TargetDrone} from "../../../entity/TargetDrone.ts";
 import {UITheme} from "../ui/theme.ts";
 
 export class TargetDroneEntityRender implements EntityRenderer<TargetDrone> {
-    public render(entity: TargetDrone, ctx: CanvasRenderingContext2D, tickDelta: number, offsetX: number, offsetY: number): void {
+    public render(entity: TargetDrone, ctx: CanvasRenderingContext2D, tickDelta: number): void {
         const pos = entity.getLerpPos(tickDelta);
         const dim = entity.getDimensions();
 
@@ -11,7 +11,7 @@ export class TargetDroneEntityRender implements EntityRenderer<TargetDrone> {
 
         ctx.save();
         ctx.fillStyle = entity.color;
-        ctx.fillRect(pos.x - r + offsetX, pos.y - r + offsetY, dim.width, dim.height);
+        ctx.fillRect(pos.x - r, pos.y - r, dim.width, dim.height);
 
         ctx.font = UITheme.font;
         ctx.fillStyle = '#fff';

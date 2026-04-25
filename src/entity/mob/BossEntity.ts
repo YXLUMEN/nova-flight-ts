@@ -8,6 +8,8 @@ import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {EVENTS} from "../../type/IEvents.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
+import {EntityTypes} from "../EntityTypes.ts";
+import {MobBulletEntity} from "../projectile/MobBulletEntity.ts";
 
 export abstract class BossEntity extends MobEntity {
     public static hasBoss: boolean = false;
@@ -82,12 +84,8 @@ export abstract class BossEntity extends MobEntity {
         player.takeDamage(
             world.getDamageSources().mobAttack(this), this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE));
     }
-}
 
-export type FireWave = {
-    count: number,
-    speed: number,
-    delay: number,
-    face: boolean,
-    type: number,
+    protected createBullet(): MobBulletEntity {
+        return new MobBulletEntity(EntityTypes.ENEMY_BULLET_ENTITY, this.getWorld(), this, 2);
+    }
 }

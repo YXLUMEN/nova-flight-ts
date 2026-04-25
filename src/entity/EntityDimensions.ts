@@ -1,5 +1,5 @@
 import {AABB} from "../utils/math/AABB.ts";
-import type {IVec} from "../utils/math/IVec.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
 
 export class EntityDimensions {
     public readonly width: number;
@@ -23,7 +23,7 @@ export class EntityDimensions {
         return new AABB(x - this.halfWidth, y - this.halfHeight, x + this.halfWidth, y + this.halfHeight);
     }
 
-    public getBoxAtByVec(pos: IVec) {
+    public getBoxAtByVec(pos: Vec2): AABB {
         return this.getBoxAt(pos.x, pos.y);
     }
 }

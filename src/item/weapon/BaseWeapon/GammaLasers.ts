@@ -11,8 +11,8 @@ import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {PhaseLasers} from "../PhaseLasers.ts";
 import {LivingEntity} from "../../../entity/LivingEntity.ts";
 import {spawnLaserByVec} from "../../../utils/ServerEffect.ts";
-import type {IVec} from "../../../utils/math/IVec.ts";
 import {ParticleEffects} from "../../../effect/ParticleEffects.ts";
+import type {Vec2} from "../../../utils/math/Vec2.ts";
 
 export class GammaLasers extends BaseWeapon {
     public static readonly LASER_WIDTH = 3;
@@ -86,7 +86,7 @@ export class GammaLasers extends BaseWeapon {
         this.onHit(world, start, end);
     }
 
-    private onHit(world: ServerWorld, start: IVec, end: IVec): void {
+    private onHit(world: ServerWorld, start: Vec2, end: Vec2): void {
         spawnLaserByVec(world, start, end, '#ffca59', GammaLasers.LASER_WIDTH, 0.2);
         world.spawnPreparedParticle(ParticleEffects.POWER_FULL_BLOW, end, 8);
         world.playSound(null, SoundEvents.LASER_FIRE_BEAM, 0.4);

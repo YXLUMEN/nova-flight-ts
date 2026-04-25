@@ -1,8 +1,8 @@
 import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import type {IVec} from "../../../utils/math/IVec.ts";
 import {clamp} from "../../../utils/math/math.ts";
+import type {Vec2} from "../../../utils/math/Vec2.ts";
 
 export class EntityDamageS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityDamageS2CPacket> = payloadId('entity_damage');
@@ -24,18 +24,18 @@ export class EntityDamageS2CPacket implements Payload {
     );
 
     public readonly entityId: number;
-    public readonly pos: IVec;
+    public readonly pos: Vec2;
     private readonly damageUint16: number;
     public readonly color: string;
 
-    public constructor(entityId: number, pos: IVec, damageUint16: number, color: string) {
+    public constructor(entityId: number, pos: Vec2, damageUint16: number, color: string) {
         this.entityId = entityId;
         this.pos = pos;
         this.damageUint16 = damageUint16;
         this.color = color;
     }
 
-    public static create(entityId: number, pos: IVec, damage: number, color: string = '#ff3434'): EntityDamageS2CPacket {
+    public static create(entityId: number, pos: Vec2, damage: number, color: string = '#ff3434'): EntityDamageS2CPacket {
         return new EntityDamageS2CPacket(
             entityId,
             pos,

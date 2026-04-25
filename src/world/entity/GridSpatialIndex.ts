@@ -2,14 +2,13 @@ import type {EntityLike} from "./EntityLike.ts";
 import type {AABB} from "../../utils/math/AABB.ts";
 import type {Consumer, Predicate} from "../../type/types.ts";
 
-type GridCell<T extends EntityLike> = Set<T>;
 type Index = { col: number; row: number };
 
 export class GridSpatialIndex<T extends EntityLike> {
     private readonly cellSize: number;
     private readonly cols: number;
     private readonly rows: number;
-    private readonly grid: GridCell<T>[][];
+    private readonly grid: Set<T>[][];
     private readonly filter: Set<T> = new Set<T>();
 
     private entityGridCells: Map<T, Index[]> = new Map<T, Index[]>();

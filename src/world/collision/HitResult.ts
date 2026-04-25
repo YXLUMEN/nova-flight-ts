@@ -1,10 +1,10 @@
-import type {IVec} from "../../utils/math/IVec.ts";
 import {config} from "../../utils/uit.ts";
+import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export abstract class HitResult {
-    public readonly pos: IVec;
+    public readonly pos: Vec2;
 
-    protected constructor(pos: IVec) {
+    protected constructor(pos: Vec2) {
         this.pos = pos;
     }
 

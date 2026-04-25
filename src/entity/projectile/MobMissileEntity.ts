@@ -3,14 +3,14 @@ import {World} from "../../world/World.ts";
 import type {EntityType} from "../EntityType.ts";
 import {type Entity} from "../Entity.ts";
 import {DecoyEntity} from "../DecoyEntity.ts";
-import {getNearestEntity, squareDistVec2} from "../../utils/math/math.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
+import {getNearestEntityByVec, squareDistVec2} from "../../utils/math/math.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 import {BehaviourEnum} from "../../world/explosion/ExplosionBehavior.ts";
 import {FilterBehaviour} from "../../world/explosion/FilterBehaviour.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EntityPredicates} from "../../world/predicate/EntityPredicates.ts";
+import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class MobMissileEntity extends MissileEntity {
     private static readonly EXPLOSION = new FilterBehaviour(BehaviourEnum.ONLY_DAMAGE)
@@ -31,7 +31,7 @@ export class MobMissileEntity extends MissileEntity {
         super(type, world, owner, driftAngle, 5);
     }
 
-    protected override track(movement: IVec) {
+    protected override track(movement: Vec2) {
         super.move(movement);
     }
 
@@ -47,7 +47,7 @@ export class MobMissileEntity extends MissileEntity {
         return movement;
     }
 
-    protected override predictInterceptYaw(pos: IVec, targetPos: IVec, targetVel: IVec): number {
+    protected override predictInterceptYaw(pos: Vec2, targetPos: Vec2, targetVel: Vec2): number {
         return BallisticsUtils.getLeadYaw(pos, targetPos, targetVel, this.trackingSpeed);
     }
 
@@ -84,6 +84,6 @@ export class MobMissileEntity extends MissileEntity {
 
     protected override acquireTarget(): Entity | null {
         const players = this.getWorld().getPlayers();
-        return getNearestEntity(this.positionRef, players);
+        return getNearestEntityByVec(this.positionRef, players);
     }
 }

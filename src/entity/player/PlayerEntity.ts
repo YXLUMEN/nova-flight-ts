@@ -289,9 +289,9 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
-        nbt.putUint32('score', this.score);
-        nbt.putBoolean('dev_mode', this.isDevMode());
-        nbt.putBoolean('used_be_dev', this.isUsedBeDev());
+        nbt.setUint32('score', this.score);
+        nbt.setBoolean('dev_mode', this.isDevMode());
+        nbt.setBoolean('used_be_dev', this.isUsedBeDev());
 
         this.inventory.writeNBT(nbt);
         this.techTree!.writeNBT(nbt);

@@ -2,12 +2,12 @@ import type {BlockRaycastResult} from "./BlockRaycastResult.ts";
 import {BitBlockMap} from "../map/BitBlockMap.ts";
 import type {World} from "../World.ts";
 import type {Entity} from "../../entity/Entity.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
 import type {AABB} from "../../utils/math/AABB.ts";
 import type {Predicate} from "../../type/types.ts";
 import {EntityHitResult} from "./EntityHitResult.ts";
 import {squareDistVec2} from "../../utils/math/math.ts";
 import type {HitResult} from "./HitResult.ts";
+import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class ProjectRaycastUtil {
     public static raycast(
@@ -129,13 +129,13 @@ export class ProjectRaycastUtil {
     public static getEntityCollision(
         world: World,
         except: Entity,
-        min: IVec,
-        max: IVec,
+        min: Vec2,
+        max: Vec2,
         box: AABB,
         predicate: Predicate<Entity>,
         margin: number = 0
     ): EntityHitResult | null {
-        let hit: IVec | null = null;
+        let hit: Vec2 | null = null;
         let dist = Infinity;
         let candidate: Entity | null = null;
 

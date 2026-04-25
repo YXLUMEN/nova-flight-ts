@@ -11,11 +11,11 @@ import type {PosArgument} from "./argument/PosArgument.ts";
 import {PosArgumentType} from "./argument/PosArgumentType.ts";
 import type {CommandContext} from "../brigadier/context/CommandContext.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
-import type {IVec} from "../utils/math/IVec.ts";
 import {IntArgumentType} from "./argument/IntArgumentType.ts";
 import type {EntityType} from "../entity/EntityType.ts";
 import {NbtCompoundArgumentType} from "./argument/NbtCompoundArgumentType.ts";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
 
 export class SummonEntityCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -76,7 +76,7 @@ export class SummonEntityCommand {
         }
     }
 
-    private static getSpawnPos<T extends ServerCommandSource>(ctx: CommandContext<T>): IVec {
+    private static getSpawnPos<T extends ServerCommandSource>(ctx: CommandContext<T>): Vec2 {
         const arg = ctx.args.get('pos');
         if (!arg) return ctx.source.position;
 

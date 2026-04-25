@@ -1,12 +1,12 @@
 import type {MobEntity} from "../mob/MobEntity.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
-import {createClean} from "../../utils/uit.ts";
-import {getNearestEntity} from "../../utils/math/math.ts";
+import {config} from "../../utils/uit.ts";
+import {getNearestEntityByVec} from "../../utils/math/math.ts";
 import {Random} from "../../utils/math/Random.ts";
+import type {Vec2} from "../../utils/math/Vec2.ts";
 
-export const AiBehavior = createClean({
+export const AiBehavior = config({
     Wander: 0,
     Chase: 1,
     Flee: 2,
@@ -14,7 +14,9 @@ export const AiBehavior = createClean({
 } as const);
 
 export class MobAI {
-    public disable = false;
+    private disable = false;
+
+    private readonly entity: MobEntity;
     private readonly dir = new MutVec2(1, 0);
     private readonly targetPos = MutVec2.zero();
     private readonly random: Random;
@@ -22,63 +24,53 @@ export class MobAI {
     private changeTimer = 0;
     private behavior: number = AiBehavior.Simple;
 
-    public static simpleMove(mob: MobEntity) {
-        const speedMultiplier = mob.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-        if (speedMultiplier <= 0) return;
-
-        const speed = mob.getMovementSpeed() * speedMultiplier;
-        const vx = Math.sin(mob.age * 0.1) * 0.8 * speedMultiplier;
-
-        mob.updateVelocity(speed, vx, mob.verticalMovementDir);
-    }
-
-    public constructor(seed: number = 6) {
+    public constructor(entity: MobEntity, seed: number = 6) {
+        this.entity = entity;
         this.random = new Random(seed);
     }
 
-    public setSeed(seed: number) {
-        this.random.setState(seed);
-    }
-
-    public tickAi(mob: MobEntity) {
+    public tick(): void {
         if (this.disable) return;
 
-        const speedMultiplier = mob.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        const speedMultiplier = this.entity.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
         if (speedMultiplier <= 0) return;
-        const speed = mob.getMovementSpeed() * speedMultiplier;
+        const speed = this.entity.getMovementSpeed() * speedMultiplier;
 
         switch (this.behavior) {
             case AiBehavior.Chase:
-                this.moveToward(mob, speed);
-                this.faceTarget(mob, this.targetPos, 0.19634375);
+                this.moveToward(speed);
+                this.faceTarget(this.targetPos, 0.19634375);
                 break;
             case AiBehavior.Flee:
-                this.moveAway(mob, this.targetPos, speed);
-                this.faceTarget(mob, this.targetPos, 0.19634375);
+                this.moveAway(this.targetPos, speed);
+                this.faceTarget(this.targetPos, 0.19634375);
                 break;
             case AiBehavior.Simple:
-                MobAI.simpleMove(mob);
+                this.simpleMove();
                 break;
             default:
-                this.wander(mob, speed);
-                this.faceTarget(mob, this.targetPos, 0.19634375);
+                this.wander(speed);
+                this.faceTarget(this.targetPos, 0.19634375);
                 break;
         }
 
-        mob.velocityDirty = true;
+        this.entity.needSync = true;
     }
 
-    public updateAction(mob: MobEntity) {
-        const isSimple = this.behavior === AiBehavior.Simple;
-        if (!isSimple && (mob.age & 23) !== 0) this.chooseTarget(mob);
+    public decision() {
+        if (this.disable) return;
+
+        if (this.behavior !== AiBehavior.Simple && (this.entity.age & 23) !== 0) {
+            this.chooseTarget();
+        }
     }
 
-    public chooseTarget(mob: MobEntity) {
-        const world = mob.getWorld();
+    private chooseTarget() {
+        const world = this.entity.getWorld();
         if (world.isClient) return;
 
-        const pos = mob.positionRef;
-        const target = getNearestEntity(pos, world.getPlayers());
+        const pos = this.entity.positionRef;
+        const target = getNearestEntityByVec(pos, world.getPlayers());
         if (!target) return;
 
         const playerPos = target.positionRef;
@@ -88,7 +80,7 @@ export class MobAI {
         const dy = playerPos.y - pos.y;
         const distSq = dx * dx + dy * dy;
 
-        if (mob.isRangedAttacker()) {
+        if (this.entity.isRangedAttacker()) {
             if (distSq < 230400) {
                 this.setBehavior(AiBehavior.Flee);
             } else {
@@ -99,16 +91,20 @@ export class MobAI {
         }
     }
 
-    public setTarget(pos: IVec) {
-        this.targetPos.set(pos.x, pos.y);
+    public setSeed(seed: number): void {
+        this.random.setState(seed);
     }
 
-    public wander(mob: MobEntity, speed: number): void {
-        if (this.changeTimer-- <= 0) {
-            this.dir.set(this.random.nextFloat() - 0.5, this.random.nextFloat() - 0.5);
-            this.changeTimer = 50;
-        }
-        mob.updateVelocity(speed, this.dir.x, this.dir.y);
+    public isDisabled(): boolean {
+        return this.disable;
+    }
+
+    public setDisable(value: boolean): void {
+        this.disable = value;
+    }
+
+    public setTarget(pos: Vec2) {
+        this.targetPos.set(pos.x, pos.y);
     }
 
     public setBehavior(behavior: number): void {
@@ -123,26 +119,44 @@ export class MobAI {
         return this.behavior === AiBehavior.Simple;
     }
 
-    private moveToward(mob: MobEntity, speed: number): void {
-        if (speed <= 0) return;
-        const yaw = mob.getYaw();
-        this.dir.set(Math.cos(yaw), Math.sin(yaw));
-        mob.updateVelocity(speed, this.dir.x, this.dir.y);
+    private wander(speed: number): void {
+        if (this.changeTimer-- <= 0) {
+            this.dir.set(this.random.nextFloat() - 0.5, this.random.nextFloat() - 0.5);
+            this.changeTimer = 50;
+        }
+        this.entity.updateVelocity(speed, this.dir.x, this.dir.y);
     }
 
-    private moveAway(mob: MobEntity, target: IVec, speed: number): void {
+    private moveToward(speed: number): void {
         if (speed <= 0) return;
-        const pos = mob.positionRef;
+        const yaw = this.entity.getYaw();
+        this.dir.set(Math.cos(yaw), Math.sin(yaw));
+        this.entity.updateVelocity(speed, this.dir.x, this.dir.y);
+    }
+
+    private moveAway(target: Vec2, speed: number): void {
+        if (speed <= 0) return;
+        const pos = this.entity.positionRef;
         const dx = pos.x - target.x;
         const dy = pos.y - target.y;
         this.dir.set(dx, dy).normalize();
-        mob.updateVelocity(speed, this.dir.x, this.dir.y);
+        this.entity.updateVelocity(speed, this.dir.x, this.dir.y);
     }
 
-    public faceTarget(mob: MobEntity, target: IVec, maxStep: number = 0.19634375): void {
-        const pos = mob.positionRef;
+    private faceTarget(target: Vec2, maxStep: number = 0.19634375): void {
+        const pos = this.entity.positionRef;
         const dx = target.x - pos.x;
         const dy = target.y - pos.y;
-        mob.setClampYaw(Math.atan2(dy, dx), maxStep);
+        this.entity.setClampYaw(Math.atan2(dy, dx), maxStep);
+    }
+
+    private simpleMove() {
+        const speedMultiplier = this.entity.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        if (speedMultiplier <= 0) return;
+
+        const speed = this.entity.getMovementSpeed() * speedMultiplier;
+        const vx = Math.sin(this.entity.age * 0.1) * 0.8 * speedMultiplier;
+
+        this.entity.updateVelocity(speed, vx, this.entity.verticalMovementDir);
     }
 }

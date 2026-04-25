@@ -1,7 +1,7 @@
 import type {MutVec2} from "./MutVec2.ts";
 import type {Entity} from "../../entity/Entity.ts";
-import type {IVec} from "./IVec.ts";
 import type {Predicate} from "../../type/types.ts";
+import type {Vec2} from "./Vec2.ts";
 
 export function clamp(value: number, min: number, max: number) {
     return Math.max(min, Math.min(max, value));
@@ -45,7 +45,7 @@ export function collideCircle(
     return dx * dx + dy * dy < r * r;
 }
 
-export function squareDistVec2(a: IVec, b: IVec) {
+export function squareDistVec2(a: Vec2, b: Vec2) {
     const dx = a.x - b.x, dy = a.y - b.y;
     return dx * dx + dy * dy;
 }
@@ -182,37 +182,40 @@ export function doubleEquals(a: number, b: number, epsilon = 1E-6): boolean {
     return Math.abs(a - b) <= epsilon;
 }
 
-/**
- * @param center 起始点
- * @param entities 可迭代集合
- * @param maxDistanceSq 最大搜索距离
- * @param filter 排除满足条件
- * */
 export function getNearestEntity<T extends Entity>(
-    center: IVec,
+    x: number, y: number,
     entities: Iterable<T>,
     maxDistanceSq?: number,
-    filter?: Predicate<T>): T | null {
+    predicate?: Predicate<T>
+): T | null {
     let nearest = null;
     let nearestDistSq = maxDistanceSq !== undefined
         ? maxDistanceSq
         : Infinity;
 
     for (const entity of entities) {
-        if (entity.isRemoved() || filter?.(entity)) continue;
+        if (entity.isRemoved() || predicate?.(entity)) continue;
 
         const pos = entity.positionRef;
-        const dx = pos.x - center.x;
-        const dy = pos.y - center.y;
+        const dx = pos.x - x;
+        const dy = pos.y - y;
         const distSq = dx * dx + dy * dy;
 
-        if (distSq <= nearestDistSq) {
-            nearestDistSq = distSq;
-            nearest = entity;
-        }
+        if (distSq > nearestDistSq) continue;
+        nearestDistSq = distSq;
+        nearest = entity;
     }
 
     return nearest;
+}
+
+export function getNearestEntityByVec<T extends Entity>(
+    center: Vec2,
+    entities: Iterable<T>,
+    maxDistanceSq?: number,
+    predicate?: Predicate<T>
+): T | null {
+    return getNearestEntity(center.x, center.y, entities, maxDistanceSq, predicate);
 }
 
 export function randomFromIterator<T>(iter: Iterator<T>): T | undefined {

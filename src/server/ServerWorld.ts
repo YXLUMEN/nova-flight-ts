@@ -39,9 +39,9 @@ import {EntityHitResult} from "../world/collision/EntityHitResult.ts";
 import {MobBulletEntity} from "../entity/projectile/MobBulletEntity.ts";
 import {MobMissileEntity} from "../entity/projectile/MobMissileEntity.ts";
 import type {ExplosionBehavior} from "../world/explosion/ExplosionBehavior.ts";
-import type {IVec} from "../utils/math/IVec.ts";
 import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
 import {PreparedParticleS2CPacket} from "../network/packet/s2c/PreparedParticleS2CPacket.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
@@ -285,7 +285,7 @@ export class ServerWorld extends World implements NbtSerializable {
         ));
     }
 
-    public spawnPreparedParticle(type: ParticleEffectType, pos: IVec, count: number, baseAngle: number = 0) {
+    public spawnPreparedParticle(type: ParticleEffectType, pos: Vec2, count: number, baseAngle: number = 0) {
         this.getNetworkChannel().send(new PreparedParticleS2CPacket(type, pos, count, baseAngle));
     }
 
@@ -322,21 +322,21 @@ export class ServerWorld extends World implements NbtSerializable {
             }
 
             const nbt = new NbtCompound();
-            nbt.putString('type', typeId.toString());
+            nbt.setString('type', typeId.toString());
             entity.writeNBT(nbt);
             entityList.push(nbt);
         });
-        root.putCompoundArray('entities', entityList);
+        root.setCompoundArray('entities', entityList);
 
         const stageNbt = new NbtCompound();
         this.stage.writeNBT(stageNbt);
-        root.putCompound('stage', stageNbt);
-        root.putUint32('phase_score', this.phase);
-        root.putInt8('difficulty', this.getDifficulty());
+        root.setCompound('stage', stageNbt);
+        root.setUint32('phase_score', this.phase);
+        root.setInt8('difficulty', this.getDifficulty());
 
         const map = new NbtCompound();
         this.blockMap.writeNBT(map);
-        root.putCompound('map', map);
+        root.setCompound('map', map);
 
         return root;
     }

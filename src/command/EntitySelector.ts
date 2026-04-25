@@ -2,7 +2,6 @@ import {squareDistVec2} from "../utils/math/math.ts";
 import type {EntityFilter} from "./SelectorArguments.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {BiConsumer, UUID} from "../type/types.ts";
-import type {IVec} from "../utils/math/IVec.ts";
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import type {AABB} from "../utils/math/AABB.ts";
 import {NumberRange, type NumRange} from "../world/predicate/NumberRange.ts";
@@ -10,6 +9,7 @@ import {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {EntitySelectorArgumentType} from "./argument/EntitySelectorArgumentType.ts";
 import {EntitySelectorReader} from "./EntitySelectorReader.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
 
 
 export class EntitySelector {
@@ -23,7 +23,7 @@ export class EntitySelector {
     public readonly useAt: boolean;
 
     private readonly filters: EntityFilter[];
-    private readonly sorter: BiConsumer<IVec, Entity[]>;
+    private readonly sorter: BiConsumer<Vec2, Entity[]>;
 
     public constructor(
         limit: number,
@@ -31,7 +31,7 @@ export class EntitySelector {
         filters: EntityFilter[],
         sqrtDistance: NumRange,
         box: AABB | null,
-        sorter: BiConsumer<IVec, Entity[]>,
+        sorter: BiConsumer<Vec2, Entity[]>,
         senderOnly: boolean,
         playerName: string | null,
         uuid: UUID | null,
@@ -146,7 +146,7 @@ export class EntitySelector {
         return results;
     }
 
-    private getPositionFilters(pos: IVec, box: AABB | null) {
+    private getPositionFilters(pos: Vec2, box: AABB | null) {
         const hasBox = box !== null;
         const hasDistance = this.sqrtDistance[0] !== null && this.sqrtDistance[1] !== null;
 
@@ -169,7 +169,7 @@ export class EntitySelector {
         return this.sorter == EntitySelectorReader.ARBITRARY ? this.limit : Number.MAX_SAFE_INTEGER;
     }
 
-    private findEntities(pos: IVec, entities: Entity[]) {
+    private findEntities(pos: Vec2, entities: Entity[]) {
         if (entities.length > 0) {
             this.sorter(pos, entities);
         }

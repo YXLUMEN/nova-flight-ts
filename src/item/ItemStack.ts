@@ -31,12 +31,12 @@ export class ItemStack {
         value => {
             const compound = new NbtCompound();
 
-            compound.putString('type', value.getItem().getRegistryEntry().toString());
-            compound.putInt8('counts', value.getCount());
+            compound.setString('type', value.getItem().getRegistryEntry().toString());
+            compound.setInt8('counts', value.getCount());
             if (value.isEmpty()) return compound;
 
             const changes = value.components.getChanges();
-            compound.put('compounds', ComponentChanges.CODEC.encode(changes));
+            compound.set('compounds', ComponentChanges.CODEC.encode(changes));
 
             return compound;
         },

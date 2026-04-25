@@ -1,6 +1,5 @@
 import {BitBlockMap} from "../map/BitBlockMap.ts";
 import {AABB} from "../../utils/math/AABB.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
 import {BlockPos} from "../map/BlockPos.ts";
 import {fractionalPart, lerp} from "../../utils/math/math.ts";
 import {MutBlockPos} from "../map/MutBlockPos.ts";
@@ -12,7 +11,7 @@ import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {World} from "../World.ts";
 
 export class BlockCollision {
-    public static fastCollision(map: BitBlockMap, bounds: AABB, movement: IVec): boolean {
+    public static fastCollision(map: BitBlockMap, bounds: AABB, movement: Vec2): boolean {
         if (movement.x === 0 && movement.y === 0) return false;
         const nextBox = bounds.stretch(movement.x, movement.y);
         return map.intersectsBox(nextBox);
@@ -36,7 +35,7 @@ export class BlockCollision {
 
     public static findEjectionVector(
         map: BitBlockMap,
-        pos: IVec,
+        pos: Vec2,
         box: AABB,
         maxBlocks: number = 32
     ): MutVec2 | null {
@@ -106,8 +105,8 @@ export class BlockCollision {
     }
 
     public static raycast<T, C>(
-        start: IVec,
-        end: IVec,
+        start: Vec2,
+        end: Vec2,
         context: C,
         forHit: (ctx: C, pos: BlockPos, t: number, dir: Direction) => T | null,
         forMiss: (ctx: C) => T

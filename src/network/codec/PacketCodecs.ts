@@ -1,11 +1,10 @@
-import type {IVec} from "../../utils/math/IVec.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import type {PacketCodec} from "./PacketCodec.ts";
 import type {Registry} from "../../registry/Registry.ts";
 import type {IndexedIterable} from "../../utils/collection/IndexedIterable.ts";
 import {type BinaryReader} from "../../nbt/BinaryReader.ts";
 import {type BinaryWriter} from "../../nbt/BinaryWriter.ts";
-import type {Comparable, Constructor, FunctionReturn, Supplier, UUID} from "../../type/types.ts";
+import type {Constructor, Return, Supplier, UUID} from "../../type/types.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {config} from "../../utils/uit.ts";
 import {Optional} from "../../utils/Optional.ts";
@@ -19,6 +18,7 @@ import {NbtEnd} from "../../nbt/element/NbtEnd.ts";
 import {NbtTypes} from "../../nbt/NbtTypes.ts";
 import {IllegalStateException} from "../../type/errors.ts";
 import {BlockPos} from "../../world/map/BlockPos.ts";
+import type {Comparable} from "../../type/Comparable.ts";
 
 export class PacketCodecs {
     public static readonly INT8: PacketCodec<number> = PacketCodecs.of(
@@ -91,7 +91,7 @@ export class PacketCodecs {
         reader => decodeColorToHex(reader.readUint32())
     );
 
-    public static readonly VECTOR2F: PacketCodec<IVec> = PacketCodecs.of(
+    public static readonly VECTOR2F: PacketCodec<Vec2> = PacketCodecs.of(
         (writer, value) => {
             writer.writeFloat(value.x);
             writer.writeFloat(value.y);
@@ -99,7 +99,7 @@ export class PacketCodecs {
         reader => new Vec2(reader.readFloat(), reader.readFloat())
     );
 
-    public static readonly VECTOR2D: PacketCodec<IVec> = PacketCodecs.of(
+    public static readonly VECTOR2D: PacketCodec<Vec2> = PacketCodecs.of(
         (writer, value) => {
             writer.writeDouble(value.x);
             writer.writeDouble(value.y);
@@ -313,7 +313,7 @@ export class PacketCodecs {
 
     public static registry<T, R>(
         registry: Registry<T>,
-        registryTransformer: FunctionReturn<Registry<T>, IndexedIterable<R>>
+        registryTransformer: Return<Registry<T>, IndexedIterable<R>>
     ): PacketCodec<R> {
         return config({
             encode(writer: BinaryWriter, object: R): void {
@@ -336,7 +336,7 @@ export class PacketCodecs {
      * Projects type C to T1 for encoding,
      * then reconstructs C on decode. Ideal for single-field extraction.
      * */
-    public static adapt<C, T1>(codec: PacketCodec<T1>, from: FunctionReturn<C, T1>, to: FunctionReturn<T1, C>): PacketCodec<C> {
+    public static adapt<C, T1>(codec: PacketCodec<T1>, from: Return<C, T1>, to: Return<T1, C>): PacketCodec<C> {
         return config({
             encode(writer: BinaryWriter, value: C) {
                 codec.encode(writer, from(value));
@@ -348,8 +348,8 @@ export class PacketCodecs {
     }
 
     public static adapt2<C, T1, T2>(
-        codec1: PacketCodec<T1>, from1: FunctionReturn<C, T1>,
-        codec2: PacketCodec<T2>, from2: FunctionReturn<C, T2>,
+        codec1: PacketCodec<T1>, from1: Return<C, T1>,
+        codec2: PacketCodec<T2>, from2: Return<C, T2>,
         to: (v1: T1, v2: T2) => C): PacketCodec<C> {
         return config({
             encode(writer: BinaryWriter, value: C) {
@@ -371,9 +371,9 @@ export class PacketCodecs {
      * @see {@link PacketCodecs.of()}
      * */
     public static adapt3<C, T1, T2, T3>(
-        codec1: PacketCodec<T1>, from1: FunctionReturn<C, T1>,
-        codec2: PacketCodec<T2>, from2: FunctionReturn<C, T2>,
-        codec3: PacketCodec<T3>, from3: FunctionReturn<C, T3>,
+        codec1: PacketCodec<T1>, from1: Return<C, T1>,
+        codec2: PacketCodec<T2>, from2: Return<C, T2>,
+        codec3: PacketCodec<T3>, from3: Return<C, T3>,
         to: (v1: T1, v2: T2, v3: T3) => C): PacketCodec<C> {
         return config({
             encode(writer: BinaryWriter, value: C) {

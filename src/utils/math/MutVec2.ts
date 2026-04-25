@@ -1,19 +1,16 @@
-import type {IVec} from "./IVec.ts";
 import {Vec2} from "./Vec2.ts";
 
-/**
- * 特别注意: 所有方法都会改变值, 需要独立时调用 clone 或使用 Vec2
- * */
-export class MutVec2 implements IVec {
+export class MutVec2 extends Vec2 {
     public x: number;
     public y: number;
 
     public constructor(x: number, y: number) {
+        super(x, y);
         this.y = y;
         this.x = x;
     }
 
-    public static distSq(a: IVec, b: IVec): number {
+    public static distSq(a: Vec2, b: Vec2): number {
         const dx = a.x - b.x;
         const dy = a.y - b.y;
         return dx * dx + dy * dy;
@@ -39,7 +36,7 @@ export class MutVec2 implements IVec {
         return this;
     }
 
-    public addVec(v: IVec): this {
+    public addVec(v: Vec2): this {
         return this.add(v.x, v.y);
     }
 
@@ -49,7 +46,7 @@ export class MutVec2 implements IVec {
         return this;
     }
 
-    public subVec(v: IVec): this {
+    public subVec(v: Vec2): this {
         return this.subtract(v.x, v.y);
     }
 
@@ -78,18 +75,14 @@ export class MutVec2 implements IVec {
         return len === 0 ? this.set(0, 0) : this.multiply(1 / len);
     }
 
-    public equals(v: IVec, epsilon = 1e-6): boolean {
+    public equals(v: Vec2, epsilon = 1e-6): boolean {
         return Math.abs(this.x - v.x) <= epsilon && Math.abs(this.y - v.y) <= epsilon;
     }
 
-    public equalsSq(v: IVec, epsilon = 1e-6): boolean {
+    public equalsSq(v: Vec2, epsilon = 1e-6): boolean {
         const dx = this.x - v.x;
         const dy = this.y - v.y;
         return (dx * dx + dy * dy) <= (epsilon * epsilon);
-    }
-
-    public toMut(): MutVec2 {
-        return this;
     }
 
     public toImmut(): Vec2 {

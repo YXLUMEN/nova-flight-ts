@@ -3,7 +3,7 @@ import type {GameProfile} from "../../entity/GameProfile.ts";
 import type {Payload, PayloadId} from "../../../network/Payload.ts";
 import {HashMap} from "../../../utils/collection/HashMap.ts";
 import type {Identifier} from "../../../registry/Identifier.ts";
-import type {Consumer, FunctionReturn} from "../../../type/types.ts";
+import type {Consumer, Return} from "../../../type/types.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {PongS2CPacket} from "../../../network/packet/s2c/PongS2CPacket.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
@@ -72,8 +72,8 @@ export abstract class ServerCommonHandler implements PacketListener {
 
     public static* buildBatch<T, P extends Payload, B extends Payload>(
         entries: Iterable<T>,
-        c0: FunctionReturn<T, P>,
-        c1: FunctionReturn<P[], B>,
+        c0: Return<T, P>,
+        c1: Return<P[], B>,
         maxSize = NetworkChannel.MAX_PACKET_SIZE - 14
     ) {
         let currentSize = 0;
@@ -103,8 +103,8 @@ export abstract class ServerCommonHandler implements PacketListener {
 
     public static* buildBatchWithEst<T, B>(
         entries: Iterable<T>,
-        estimateSize: FunctionReturn<T, number>,
-        buildBatch: FunctionReturn<T[], B>,
+        estimateSize: Return<T, number>,
+        buildBatch: Return<T[], B>,
         maxPacketSize = NetworkChannel.MAX_PACKET_SIZE - 14
     ) {
         let currentSize = 0;

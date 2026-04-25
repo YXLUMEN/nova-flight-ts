@@ -125,20 +125,20 @@ export class AttributeInstance {
     public toNbt(): NbtCompound {
         const nbt = new NbtCompound();
 
-        nbt.putString('id', this.attribute.getRegistryKey().getValue().toString());
-        nbt.putDouble('base', this.baseValue);
+        nbt.setString('id', this.attribute.getRegistryKey().getValue().toString());
+        nbt.setDouble('base', this.baseValue);
 
         if (this.modifierById.size > 0) {
             const nbtList: NbtCompound[] = [];
             for (const modifier of this.modifierById.values()) {
                 const modNbt = new NbtCompound();
-                modNbt.putString('id', modifier.id.toString());
-                modNbt.putDouble('value', modifier.value);
+                modNbt.setString('id', modifier.id.toString());
+                modNbt.setDouble('value', modifier.value);
 
                 nbtList.push(modNbt);
             }
 
-            nbt.putCompoundArray('modifiers', nbtList);
+            nbt.setCompoundArray('modifiers', nbtList);
         }
 
         return nbt;

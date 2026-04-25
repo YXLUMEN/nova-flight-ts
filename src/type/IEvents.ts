@@ -4,11 +4,11 @@ import type {MobEntity} from "../entity/mob/MobEntity.ts";
 import {createClean} from "../utils/uit.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
-import type {IVec} from "../utils/math/IVec.ts";
 import type {Tech} from "../world/tech/Tech.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import type {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 import type {Explosion} from "../world/explosion/Explosion.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
 
 export const EVENTS = createClean({
     GAME_START: "game:start",
@@ -35,7 +35,7 @@ export type IEvents = {
     [EVENTS.ENTITY_REMOVED]: { entity: Entity; };
     [EVENTS.BOSS_SPAWN]: { entity: BossEntity };
     [EVENTS.BOSS_KILLED]: { entity: BossEntity | null };
-    [EVENTS.MOB_KILLED]: { mob: MobEntity; damageSource: DamageSource; pos: IVec };
+    [EVENTS.MOB_KILLED]: { mob: MobEntity; damageSource: DamageSource; pos: Vec2 };
     [EVENTS.MOB_DAMAGE]: { mob: MobEntity; damageSource: DamageSource; };
     [EVENTS.UNLOCK_TECH]: { tech: Tech; silent?: boolean };
     [EVENTS.UNLOCK_TECH_SERVER]: { tech: RegistryEntry<Tech>, player: ServerPlayerEntity };

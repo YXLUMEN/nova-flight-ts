@@ -1,6 +1,9 @@
-import type {Comparable} from "../../type/types.ts";
+import type {Comparable} from "../../type/Comparable.ts";
+import type {Return} from "../../type/types.ts";
 
 export class HashMap<K extends Comparable, V> implements Map<K, V> {
+    public readonly [Symbol.toStringTag]: string = 'HashMap';
+
     private readonly buckets: Map<string, { key: K, value: V }[]> = new Map();
     private _size: number = 0;
 
@@ -101,5 +104,20 @@ export class HashMap<K extends Comparable, V> implements Map<K, V> {
         return this.entries();
     }
 
-    public readonly [Symbol.toStringTag]: string = 'HashMap';
+    public getOrInsert(key: K, defaultValue: V): V {
+        const value = this.get(key);
+        if (value !== undefined) return value;
+
+        this.set(key, defaultValue);
+        return defaultValue;
+    }
+
+    public getOrInsertComputed(key: K, callback: Return<K, V>): V {
+        const value = this.get(key);
+        if (value !== undefined) return value;
+
+        const newValue = callback(key);
+        this.set(key, newValue);
+        return newValue;
+    }
 }

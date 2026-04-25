@@ -1,12 +1,12 @@
 import {type VisualEffect} from "./VisualEffect.ts";
 import {lerp, PI2} from "../utils/math/math.ts";
-import type {IVec} from "../utils/math/IVec.ts";
 import {withAlpha} from "../utils/uit.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {decodeFromByte, encodeToByte} from "../utils/NetUtil.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
 
 export class EMPBurst implements VisualEffect {
     public static readonly PACKET_CODEC: PacketCodec<EMPBurst> = PacketCodecs.of(
@@ -48,7 +48,7 @@ export class EMPBurst implements VisualEffect {
     private prevT = 0;
     private t = 0;
 
-    private pos: IVec;
+    private pos: Vec2;
     private readonly radius: number;
     private readonly duration: number;
     private readonly bolts: number;
@@ -60,7 +60,7 @@ export class EMPBurst implements VisualEffect {
     private readonly drawRing: boolean;
 
     public constructor(
-        pos: IVec,
+        pos: Vec2,
         radius: number,
         duration = 0.6,
         bolts = 8,

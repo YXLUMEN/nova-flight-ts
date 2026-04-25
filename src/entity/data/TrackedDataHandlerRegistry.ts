@@ -1,7 +1,7 @@
 import {TrackedData} from "./TrackedData.ts";
 import type {TrackedDataHandler} from "./TrackedDataHandler.ts";
 import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
-import {createClean} from "../../utils/uit.ts";
+import {config} from "../../utils/uit.ts";
 import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 
 export class TrackedDataHandlerRegistry {
@@ -10,13 +10,15 @@ export class TrackedDataHandlerRegistry {
 
     public static readonly BOOL = this.create(PacketCodecs.BOOL);
     public static readonly INT8 = this.create(PacketCodecs.INT8);
-    public static readonly INTEGER = this.create(PacketCodecs.VAR_UINT);
+    public static readonly VAR_UINT = this.create(PacketCodecs.VAR_UINT);
     public static readonly FLOAT = this.create(PacketCodecs.FLOAT);
     public static readonly DOUBLE = this.create(PacketCodecs.DOUBLE);
 
     private static create<T>(codec: PacketCodec<T>): TrackedDataHandler<T> {
-        const handler = createClean({
-            codec: () => codec,
+        const handler = config({
+            codec(): PacketCodec<T> {
+                return codec;
+            },
             createData(id: number): TrackedData<T> {
                 return new TrackedData(id, this);
             },

@@ -35,7 +35,7 @@ import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/Remove
 import {ItemCooldownUpdateS2CPacket} from "../../network/packet/s2c/ItemCooldownUpdateS2CPacket.ts";
 import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {GameOverS2CPacket} from "../../network/packet/s2c/GameOverS2CPacket.ts";
-import {AudioControlS2CPacket} from "../../network/packet/s2c/AudioControlS2CPacket.ts";
+import {AudioControlS2CPacket, AudioLeapS2CPacket} from "../../network/packet/s2c/AudioControlS2CPacket.ts";
 import {AudioStopS2CPacket} from "../../network/packet/s2c/AudioStopS2CPacket.ts";
 import {
     LaserWeaponActivate,
@@ -53,6 +53,7 @@ import {SetPlayerInventoryS2CPacket} from "../../network/packet/s2c/SetPlayerInv
 import {PlayerPositionS2CPacket} from "../../network/packet/s2c/PlayerPositionS2CPacket.ts";
 import {PositionMoveRotation} from "../../network/packet/PositionMoveRotation.ts";
 import {PreparedParticleS2CPacket} from "../../network/packet/s2c/PreparedParticleS2CPacket.ts";
+import {ScreenShakeS2CPacket} from "../../network/packet/s2c/ScreenShakeS2CPacket.ts";
 
 export class ServerPackets {
     /**
@@ -98,6 +99,7 @@ export class ServerPackets {
         this.register(PlayAudioS2CPacket.ID, PlayAudioS2CPacket.CODEC);
         this.register(GameOverS2CPacket.ID, GameOverS2CPacket.CODEC);
         this.register(AudioControlS2CPacket.ID, AudioControlS2CPacket.CODEC);
+        this.register(AudioLeapS2CPacket.ID, AudioLeapS2CPacket.CODEC);
         this.register(AudioStopS2CPacket.ID, AudioStopS2CPacket.CODEC);
         this.register(LaserWeaponActivate.ID, LaserWeaponActivate.CODEC);
         this.register(LaserWeaponDeactivate.ID, LaserWeaponDeactivate.CODEC);
@@ -111,6 +113,7 @@ export class ServerPackets {
         this.register(PlayerPositionS2CPacket.ID, PlayerPositionS2CPacket.CODEC);
         this.register(PositionMoveRotation.ID, PositionMoveRotation.CODEC);
         this.register(PreparedParticleS2CPacket.ID, PreparedParticleS2CPacket.CODEC);
+        this.register(ScreenShakeS2CPacket.ID, ScreenShakeS2CPacket.CODEC);
         PayloadTypeRegistry.playS2C().settle();
     }
 

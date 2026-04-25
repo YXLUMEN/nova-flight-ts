@@ -22,6 +22,7 @@ import {CloudLightningEntityRender} from "./CloudLightningEntityRender.ts";
 import {ExplosionEntityRender} from "./ExplosionEntityRender.ts";
 import {TargetDroneEntityRender} from "./TargetDroneEntityRender.ts";
 import {MagneticTorpedoEntityRender} from "./MagneticTorpedoEntityRender.ts";
+import {DevourerBossRender} from "./DevourerBossRender.ts";
 
 export class EntityRenderers {
     private static readonly RENDERER_FACTORIES = new Map<EntityType<Entity>, EntityRenderer<Entity>>();
@@ -62,7 +63,8 @@ export class EntityRenderers {
         this.register(EntityTypes.CLOUD_LIGHTNING_ENTITY, new CloudLightningEntityRender());
         this.register(EntityTypes.EXPLOSION_ENTITY, new ExplosionEntityRender());
         this.register(EntityTypes.TARGET_DRONE, new TargetDroneEntityRender());
-        this.register(EntityTypes.MAGNETIC_TORPEDO_ENTITY, new MagneticTorpedoEntityRender())
+        this.register(EntityTypes.MAGNETIC_TORPEDO_ENTITY, new MagneticTorpedoEntityRender());
+        this.register(EntityTypes.DEVOURER_BOSS_ENTITY, new DevourerBossRender());
         this.compileRenders();
     }
 

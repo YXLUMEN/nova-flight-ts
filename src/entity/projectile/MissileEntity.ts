@@ -7,13 +7,16 @@ import {EVENTS} from "../../type/IEvents.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacket.ts";
 import {GlobalConfig} from "../../configs/GlobalConfig.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {ProjectRaycastUtil} from "../../world/collision/ProjectRaycastUtil.ts";
 import {HitTypes} from "../../world/collision/HitResult.ts";
+import type {Vec2} from "../../utils/math/Vec2.ts";
+import {DataTracker} from "../data/DataTracker.ts";
+import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts";
 
 export class MissileEntity extends RocketEntity {
+    public static readonly IS_IGNITE = DataTracker.registerData(Object(MissileEntity), TrackedDataHandlerRegistry.BOOL);
     public static readonly lockedEntity = new WeakMap<Entity, number>();
 
     protected target: Entity | null = null;
@@ -25,6 +28,7 @@ export class MissileEntity extends RocketEntity {
     protected igniteDelayTicks = 16;
     protected lockDelayTicks = 40;
     protected maxLifetimeTicks = 400;
+    private ignite = false;
 
     protected driftAttenuation = true;
     protected driftSpeed = 2;
@@ -38,6 +42,11 @@ export class MissileEntity extends RocketEntity {
     public constructor(type: EntityType<MissileEntity>, world: World, owner: Entity, driftAngle: number, damage = 5) {
         super(type, world, owner, damage);
         this.driftAngle = driftAngle;
+    }
+
+    protected override defineSyncedData(builder: InstanceType<typeof DataTracker.Builder>) {
+        super.defineSyncedData(builder);
+        builder.define(MissileEntity.IS_IGNITE, false);
     }
 
     public override tick() {
@@ -55,6 +64,10 @@ export class MissileEntity extends RocketEntity {
         // 燃料耗尽
         if (this.age > this.maxLifetimeTicks) {
             this.target = null;
+            if (this.ignite) {
+                this.ignite = false;
+                this.dataTracker.set(MissileEntity.IS_IGNITE, false);
+            }
             return;
         }
 
@@ -68,7 +81,7 @@ export class MissileEntity extends RocketEntity {
             this.updateVelocity(this.driftSpeed, vx1, vy1);
 
             this.velocityRef.multiply(0.8);
-            this.velocityDirty = true;
+            this.needSync = true;
             return;
         }
 
@@ -76,7 +89,7 @@ export class MissileEntity extends RocketEntity {
         const cd = (this.age & 3) === 0;
 
         if (world.isClient) {
-            if (!cd) return;
+            if (!cd || !this.isIgnite()) return;
 
             const yaw = this.getYaw();
             const dx = Math.cos(yaw) * 32;
@@ -90,8 +103,13 @@ export class MissileEntity extends RocketEntity {
             return;
         }
 
+        if (!this.ignite) {
+            this.ignite = true;
+            this.dataTracker.set(MissileEntity.IS_IGNITE, true);
+        }
+
         this.velocityRef.multiply(0.8);
-        this.velocityDirty = true;
+        this.needSync = true;
 
         // 开始锁定
         if (this.age < this.lockDelayTicks) {
@@ -139,7 +157,7 @@ export class MissileEntity extends RocketEntity {
         this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
     }
 
-    protected predictInterceptYaw(pos: MutVec2, targetPos: MutVec2, targetVel: IVec) {
+    protected predictInterceptYaw(pos: MutVec2, targetPos: MutVec2, targetVel: Vec2): number {
         return BallisticsUtils.guidedIntercept(
             pos,
             targetPos,
@@ -150,7 +168,7 @@ export class MissileEntity extends RocketEntity {
         );
     }
 
-    protected track(movement: IVec) {
+    protected track(movement: Vec2) {
         const pos = this.positionRef;
         const hitResult = ProjectRaycastUtil.getCollision(this, entity => this.canHit(entity));
         if (hitResult.getType() !== HitTypes.MISS) {
@@ -179,7 +197,7 @@ export class MissileEntity extends RocketEntity {
     }
 
     public isIgnite(): boolean {
-        return this.age > this.igniteDelayTicks && this.age <= this.maxLifetimeTicks;
+        return this.dataTracker.get(MissileEntity.IS_IGNITE);
     }
 
     public setLockedDelay(value: number): void {
@@ -254,7 +272,7 @@ export class MissileEntity extends RocketEntity {
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
-        nbt.putUint32('age', this.age);
+        nbt.setUint32('age', this.age);
         return nbt;
     }
 

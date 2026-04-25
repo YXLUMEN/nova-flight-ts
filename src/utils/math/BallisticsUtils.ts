@@ -1,9 +1,9 @@
-import type {IVec} from "./IVec.ts";
 import {wrapRadians} from "./math.ts";
 import type {MutVec2} from "./MutVec2.ts";
+import type {Vec2} from "./Vec2.ts";
 
 export class BallisticsUtils {
-    public static getLeadYaw(shooterPos: IVec, targetPos: IVec, targetVel: IVec, bulletSpeed: number): number {
+    public static getLeadYaw(shooterPos: Vec2, targetPos: Vec2, targetVel: Vec2, bulletSpeed: number): number {
         const dx = targetPos.x - shooterPos.x;
         const dy = targetPos.y - shooterPos.y;
         const vx = targetVel.x;
@@ -38,9 +38,9 @@ export class BallisticsUtils {
     }
 
     public static isViableThreat(
-        threatPos: IVec,
-        threatVel: IVec,
-        defenderPos: IVec,
+        threatPos: Vec2,
+        threatVel: Vec2,
+        defenderPos: Vec2,
     ): boolean {
         const velSq = threatVel.x * threatVel.x + threatVel.y * threatVel.y;
         if (velSq < 1e-6) return false; // 静止目标不构成紧急威胁
@@ -56,10 +56,10 @@ export class BallisticsUtils {
     }
 
     public static isViableThreatRelative(
-        threatPos: IVec,
-        threatVel: IVec,
-        defenderPos: IVec,
-        defenderVel: IVec,
+        threatPos: Vec2,
+        threatVel: Vec2,
+        defenderPos: Vec2,
+        defenderVel: Vec2,
     ): boolean {
         const relPosX = threatPos.x - defenderPos.x;
         const relPosY = threatPos.y - defenderPos.y;
@@ -79,7 +79,7 @@ export class BallisticsUtils {
     public static guidedIntercept(
         shooterPos: MutVec2,
         targetPos: MutVec2,
-        targetVel: IVec,
+        targetVel: Vec2,
         missileSpeed: number,
         turnRateLimit: number,
         deltaTime: number,

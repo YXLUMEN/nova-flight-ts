@@ -8,12 +8,11 @@ import type {EntityDimensions} from "./EntityDimensions.ts";
 import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
 import type {DataTracked} from "./data/DataTracked.ts";
 import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
-import type {IVec} from "../utils/math/IVec.ts";
 import {AABB} from "../utils/math/AABB.ts";
 import {clamp, doubleEquals, lerp, lerpRadians} from "../utils/math/math.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
-import type {Comparable, UUID} from "../type/types.ts";
+import type {UUID} from "../type/types.ts";
 import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {VecDeltaCodec} from "./VecDeltaCodec.ts";
 import type {PlayerEntity} from "./player/PlayerEntity.ts";
@@ -27,6 +26,9 @@ import {NbtTypeId} from "../nbt/NbtType.ts";
 import {EMPTY_LISTENER, type EntityChangeListener} from "../world/entity/EntityChangeListener.ts";
 import type {EntityRenderer} from "../client/render/entity/EntityRenderer.ts";
 import {BlockCollision} from "../world/collision/BlockCollision.ts";
+import type {Comparable} from "../type/Comparable.ts";
+import type {ViewRect} from "../client/render/Camera.ts";
+import {isBoxInView} from "../utils/render/render.ts";
 
 
 export abstract class Entity implements EntityLike, DataTracked, Comparable, NbtSerializable, CommandOutput {
@@ -34,7 +36,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     private static readonly INITIAL_AABB = new AABB(0.0, 0.0, 0.0, 0.0);
 
     public invulnerable: boolean = false;
-    public velocityDirty: boolean = false;
+    public needSync: boolean = false;
     public velocityModified: boolean = false;
     public prevX: number = 0;
     public prevY: number = 0;
@@ -210,7 +212,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.setBoundingBox(this.calculateBoundingBox());
     }
 
-    public setPositionByVec(pos: IVec): void {
+    public setPositionByVec(pos: Vec2): void {
         this.setPosition(pos.x, pos.y);
     }
 
@@ -320,7 +322,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.velocity.set(x, y);
     }
 
-    public setVelocityByVec(velocity: IVec): void {
+    public setVelocityByVec(velocity: Vec2): void {
         this.setVelocity(velocity.x, velocity.y);
     }
 
@@ -330,7 +332,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     public addVelocity(deltaX: number, deltaY: number): void {
         this.setVelocity(this.velocity.x + deltaX, this.velocity.y + deltaY);
-        this.velocityDirty = true;
+        this.needSync = true;
     }
 
     public updateVelocity(speed: number, x: number, y: number): void {
@@ -342,7 +344,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         }
     }
 
-    public updateVelocityByVec(speed: number, movementInput: IVec): void {
+    public updateVelocityByVec(speed: number, movementInput: Vec2): void {
         if (movementInput.lengthSquared() < 1e-6) return;
         const dir = movementInput.length() > 1 ? movementInput.normalize() : movementInput;
         this.velocity.addVec(dir.multiply(speed));
@@ -358,7 +360,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     // 移动控制
 
-    public move(movement: IVec): void {
+    public move(movement: Vec2): void {
         if (this.noClip) {
             this.setPosition(this.position.x + movement.x, this.position.y + movement.y);
             return;
@@ -519,8 +521,8 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     // 渲染与可见性
 
-    public shouldRender(): boolean {
-        return true;
+    public shouldRender(view: ViewRect): boolean {
+        return isBoxInView(this.boundingBox, view);
     }
 
     /**
@@ -633,16 +635,16 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
         try {
-            nbt.putDoubleArray('pos', [this.position.x, this.position.y]);
-            nbt.putFloatArray('velocity', [this.velocity.x, this.velocity.y]);
+            nbt.setDoubleArray('pos', [this.position.x, this.position.y]);
+            nbt.setFloatArray('velocity', [this.velocity.x, this.velocity.y]);
 
-            nbt.putDouble('yaw', this.yaw);
-            nbt.putDouble('speed', this.movementSpeed);
-            nbt.putBoolean('invulnerable', this.invulnerable);
-            nbt.putString('uuid', this.uuid);
+            nbt.setDouble('yaw', this.yaw);
+            nbt.setDouble('speed', this.movementSpeed);
+            nbt.setBoolean('invulnerable', this.invulnerable);
+            nbt.setString('uuid', this.uuid);
 
             if (this.tags.size > 0) {
-                nbt.putStringArray('tags', Array.from(this.tags));
+                nbt.setStringArray('tags', Array.from(this.tags));
             }
             return nbt;
         } catch (err) {
@@ -662,6 +664,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
             clamp(velocity[0] ?? 0, -1E3, 1E3),
             clamp(velocity[1] ?? 0, -1E3, 1E3)
         );
+        this.needSync = true;
         this.setYaw(nbt.getDouble('yaw'));
         this.resetPrevious();
 

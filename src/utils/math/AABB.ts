@@ -1,4 +1,3 @@
-import type {IVec} from "./IVec.ts";
 import {type Direction, Directions} from "../../world/collision/Direction.ts";
 import type {BlockPos} from "../../world/map/BlockPos.ts";
 import {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
@@ -17,7 +16,7 @@ export class AABB {
         this.maxY = Math.max(y1, y2);
     }
 
-    public static byVec(pos1: IVec, pos2: IVec) {
+    public static byVec(pos1: Vec2, pos2: Vec2) {
         return new AABB(pos1.x, pos1.y, pos2.x, pos2.y);
     }
 
@@ -64,7 +63,7 @@ export class AABB {
         return x >= this.minX && x < this.maxX && y >= this.minY && y < this.maxY;
     }
 
-    public containsVec(vec: IVec): boolean {
+    public containsVec(vec: Vec2): boolean {
         return this.contains(vec.x, vec.y);
     }
 
@@ -72,7 +71,7 @@ export class AABB {
         return new AABB(this.minX + x, this.minY + y, this.maxX + x, this.maxY + y);
     }
 
-    public offsetByVec(vec: IVec): AABB {
+    public offsetByVec(vec: Vec2): AABB {
         return this.offset(vec.x, vec.y);
     }
 
@@ -136,11 +135,11 @@ export class AABB {
         return new AABB(minX, minY, maxX, maxY);
     }
 
-    public stretchByVec(vec: IVec): AABB {
+    public stretchByVec(vec: Vec2): AABB {
         return this.stretch(vec.x, vec.y);
     }
 
-    public raycast(min: IVec, max: IVec) {
+    public raycast(min: Vec2, max: Vec2) {
         const ds = [1];
         const d = max.x - min.x;
         const e = max.y - min.y;
@@ -168,7 +167,7 @@ export class AABB {
 
     public static traceCollisionSide(
         box: AABB,
-        intersectingVector: IVec,
+        intersectingVector: Vec2,
         traceDistanceResult: number[],
         approachDirection: Direction | null,
         deltaX: number,

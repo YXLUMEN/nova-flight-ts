@@ -1,19 +1,18 @@
 import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
-import type {IVec} from "../../../utils/math/IVec.ts";
 import {Vec2} from "../../../utils/math/Vec2.ts";
 
 export abstract class LaserWeaponS2CPacket implements Payload {
     public readonly entityId: number;
-    public readonly start: IVec;
-    public readonly end: IVec;
+    public readonly start: Vec2;
+    public readonly end: Vec2;
     public readonly width: number;
     public readonly color: string;
     public readonly activate: boolean;
     public readonly change: boolean
 
-    protected constructor(entityId: number, start: IVec, end: IVec, width: number, color: string, activate: boolean, change: boolean) {
+    protected constructor(entityId: number, start: Vec2, end: Vec2, width: number, color: string, activate: boolean, change: boolean) {
         this.entityId = entityId;
         this.start = start;
         this.end = end;
@@ -47,7 +46,7 @@ export class LaserWeaponActivate extends LaserWeaponS2CPacket {
         }
     );
 
-    public constructor(entityId: number, start: IVec, end: IVec, width: number, color: string) {
+    public constructor(entityId: number, start: Vec2, end: Vec2, width: number, color: string) {
         super(entityId, start, end, width, color, true, false);
     }
 
@@ -90,7 +89,7 @@ export class LaserWeaponChange extends LaserWeaponS2CPacket {
         }
     );
 
-    public constructor(entityId: number, start: IVec, end: IVec) {
+    public constructor(entityId: number, start: Vec2, end: Vec2) {
         super(entityId, start, end, 0, '', false, true);
     }
 

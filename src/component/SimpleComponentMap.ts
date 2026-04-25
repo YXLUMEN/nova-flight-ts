@@ -62,7 +62,7 @@ export class SimpleComponentMap implements ComponentMap {
         for (const [type, value] of this.baseComponents) {
             const id = Registries.DATA_COMPONENT_TYPE.getId(type);
             if (!id) continue;
-            nbt.put(id.toString(), type.codec.encode(value))
+            nbt.set(id.toString(), type.codec.encode(value))
         }
         return nbt;
     }

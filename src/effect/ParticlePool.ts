@@ -1,8 +1,8 @@
 import {Particle} from "./Particle.ts";
-import type {IVec} from "../utils/math/IVec.ts";
 import type {ParticleEffectType} from "./ParticleEffectType.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {rand} from "../utils/math/math.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
 
 export class ParticlePool {
     private readonly active: Particle[] = [];
@@ -17,7 +17,7 @@ export class ParticlePool {
     }
 
     public spawn(
-        pos: IVec, vel: IVec,
+        pos: Vec2, vel: Vec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
         drag = 0.0, gravity = 0.0
@@ -38,7 +38,7 @@ export class ParticlePool {
 
     public spawnEffect(
         type: ParticleEffectType,
-        pos: IVec,
+        pos: Vec2,
         count: number,
         baseAngle: number = 0
     ): void {

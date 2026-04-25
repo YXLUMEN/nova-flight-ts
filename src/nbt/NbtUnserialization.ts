@@ -105,7 +105,7 @@ export class NbtUnserialization {
             const nestedLen = reader.readVarUint();
             const nestedBuf = reader.readSlice(nestedLen);
             const nested = this.parsePayload(nestedBuf, scheme);
-            compound.putCompound(key, nested);
+            compound.setCompound(key, nested);
             return;
         }
         if (type === NbtTypeId.CompoundArray) {
@@ -117,10 +117,10 @@ export class NbtUnserialization {
                 const nested = this.parsePayload(nestedBuf, scheme);
                 list.push(nested);
             }
-            compound.putCompoundArray(key, list);
+            compound.setCompoundArray(key, list);
             return;
         }
-        compound.put(key, NbtTypes.getTypeByIndex(type).read(reader));
+        compound.set(key, NbtTypes.getTypeByIndex(type).read(reader));
     }
 
     public static fromSNbt(snbt: string): NbtCompound {
@@ -151,7 +151,7 @@ export class NbtUnserialization {
             reader.expect(':');
 
             const nbt = this.parseValue(reader);
-            compound.put(key, nbt);
+            compound.set(key, nbt);
 
             reader.skipAnyWhitespace();
             if (reader.peek() === ',') {

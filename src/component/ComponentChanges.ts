@@ -22,7 +22,7 @@ export class ComponentChanges {
                 const id = Registries.DATA_COMPONENT_TYPE.getId(type);
                 if (!id) continue;
 
-                compound.put(id.toString(), type.codec.encode(optional.get()));
+                compound.set(id.toString(), type.codec.encode(optional.get()));
             }
 
             return compound;

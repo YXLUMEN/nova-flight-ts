@@ -14,7 +14,6 @@ import {Explosion} from "./explosion/Explosion.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExplosionVisual} from "./explosion/ExplosionVisual.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
-import type {IVec} from "../utils/math/IVec.ts";
 import type {ClientWorld} from "../client/ClientWorld.ts";
 import {EntityType} from "../entity/EntityType.ts";
 import type {Channel} from "../network/Channel.ts";
@@ -32,6 +31,7 @@ import {LivingEntity} from "../entity/LivingEntity.ts";
 import type {ExplosionBehavior} from "./explosion/ExplosionBehavior.ts";
 import {EntityPredicates} from "./predicate/EntityPredicates.ts";
 import {ScheduleTask} from "./ScheduleTask.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
 
 export abstract class World {
     public static readonly WORLD_W = 1760;
@@ -90,7 +90,7 @@ export abstract class World {
     public abstract stopLoopSound(entity: Entity | null, sound: SoundEvent): boolean;
 
     public abstract addParticleByVec(
-        pos: IVec, vel: IVec,
+        pos: Vec2, vel: Vec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
         drag?: number, gravity?: number
@@ -126,7 +126,7 @@ export abstract class World {
         return explosion;
     }
 
-    public createEMP(attacker: Entity | null, pos: IVec, radius: number, duration: number = 40, damage: number = 0) {
+    public createEMP(attacker: Entity | null, pos: Vec2, radius: number, duration: number = 40, damage: number = 0) {
         const r2 = radius * radius;
         const box = AABB.fromCenter(pos.x, pos.y, radius, radius);
 
@@ -227,7 +227,7 @@ export abstract class World {
         return candidates;
     }
 
-    public raycast(start: IVec, end: IVec) {
+    public raycast(start: Vec2, end: Vec2) {
         return BlockCollision.raycastBlock({
             start: start.toImmut(),
             end: end.toImmut(),

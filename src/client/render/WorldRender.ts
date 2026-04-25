@@ -11,10 +11,10 @@ import type {VisualEffect} from "../../effect/VisualEffect.ts";
 import {EntityRenderers} from "./entity/EntityRenderers.ts";
 import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 import type {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
 import {World} from "../../world/World.ts";
 import {BitBlockMap} from "../../world/map/BitBlockMap.ts";
 import type {ParticleEffectType} from "../../effect/ParticleEffectType.ts";
+import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class WorldRender {
     private readonly client: NovaFlightClient;
@@ -55,7 +55,7 @@ export class WorldRender {
     }
 
     public addParticle(
-        pos: IVec, vel: IVec,
+        pos: Vec2, vel: Vec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
         drag = 0.0, gravity = 0.0
@@ -68,7 +68,7 @@ export class WorldRender {
         );
     }
 
-    public addPreparedParticle(type: ParticleEffectType, pos: IVec, count: number, baseAngle: number = 0) {
+    public addPreparedParticle(type: ParticleEffectType, pos: Vec2, count: number, baseAngle: number = 0) {
         this.particlePool.spawnEffect(type, pos, count, baseAngle);
     }
 
@@ -102,15 +102,13 @@ export class WorldRender {
 
         this.renderBlocks(ctx);
 
-        // 其他实体. client 下 entities 不包含玩家
         for (const entity of this.world.getEntities().values()) {
-            const bounds = entity.getBoundingBox();
-            if (!isBoxInView(bounds, viewRect)) continue;
+            if (!entity.shouldRender(viewRect)) continue;
 
             if (entity.renderer === null) {
                 entity.renderer = EntityRenderers.getRenderer(entity);
             }
-            entity.renderer.render(entity, ctx, tickDelta, 0, 0);
+            entity.renderer.render(entity, ctx, tickDelta);
         }
 
         // 特效
@@ -129,7 +127,7 @@ export class WorldRender {
             if (player.renderer === null) {
                 player.renderer = EntityRenderers.getRenderer(player);
             }
-            player.renderer.render(player, ctx, tickDelta, 0, 0);
+            player.renderer.render(player, ctx, tickDelta);
         }
 
         // 主要玩家
@@ -139,7 +137,7 @@ export class WorldRender {
                 player.renderer = EntityRenderers.getRenderer(player);
             }
 
-            player.renderer.render(player, ctx, tickDelta, 0, 0);
+            player.renderer.render(player, ctx, tickDelta);
             player.bc?.drawAimIndicator(ctx, tickDelta);
 
             const playerPos = player.getLerpPos(tickDelta);
@@ -172,6 +170,7 @@ export class WorldRender {
 
         if (GlobalConfig.renderHitBox) {
             for (const entity of this.world.getEntities().values()) {
+                if (!entity.shouldRender(viewRect)) continue;
                 this.renderBoundingBox(ctx, entity, tickDelta);
             }
             for (const player of this.world.getPlayers()) {
@@ -211,7 +210,7 @@ export class WorldRender {
     private renderLockedDir(
         ctx: CanvasRenderingContext2D,
         missile: MissileEntity,
-        playerPos: IVec,
+        playerPos: Vec2,
         tipLength: number, wingWidth: number, wingHeight: number,
         tickDelta: number
     ) {

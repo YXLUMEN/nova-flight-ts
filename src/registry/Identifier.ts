@@ -1,10 +1,10 @@
 import type {Codec} from "../serialization/Codec.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
-import type {Comparable} from "../type/types.ts";
 import {StringReader} from "../brigadier/StringReader.ts";
 import {Codecs} from "../serialization/Codecs.ts";
 import {NbtString} from "../nbt/element/NbtString.ts";
+import type {Comparable} from "../type/Comparable.ts";
 
 export class Identifier implements Comparable {
     private static readonly validNamespace = /^[a-z0-9_.-]+$/;

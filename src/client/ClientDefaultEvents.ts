@@ -8,6 +8,7 @@ import {ApplyClientTech} from "./tech/ApplyClientTech.ts";
 import {Tech} from "../world/tech/Tech.ts";
 import {Registries} from "../registry/Registries.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
+import {DevourerBossEntity} from "../entity/mob/DevourerBossEntity.ts";
 
 export class ClientDefaultEvents {
     public static registryEvents(world: ClientWorld) {
@@ -50,7 +51,8 @@ export class ClientDefaultEvents {
             BGMManager.onDifficultRaise(event.difficult);
         });
 
-        events.on(EVENTS.BOSS_SPAWN, () => {
+        events.on(EVENTS.BOSS_SPAWN, ({entity}) => {
+            if (entity instanceof DevourerBossEntity) return;
             BGMManager.onBossSpawn();
         });
 

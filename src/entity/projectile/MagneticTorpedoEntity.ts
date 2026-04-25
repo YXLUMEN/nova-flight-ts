@@ -3,7 +3,6 @@ import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
 import {Entity} from "../Entity.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
@@ -16,7 +15,7 @@ export class MagneticTorpedoEntity extends ProjectileEntity {
 
     public hitEntity: Entity | null = null;
     public relativeYaw: number | null = null;
-    public hitOffset: IVec | null = null;
+    public hitOffset: Vec2 | null = null;
 
     private countdown: number;
     private readonly power: number;
@@ -165,7 +164,7 @@ export class MagneticTorpedoEntity extends ProjectileEntity {
         return this.countdown;
     }
 
-    public static getExploreOffset(targetPos: IVec, targetYaw: number, hitOffset: IVec) {
+    public static getExploreOffset(targetPos: Vec2, targetYaw: number, hitOffset: Vec2) {
         const cos = Math.cos(targetYaw);
         const sin = Math.sin(targetYaw);
 

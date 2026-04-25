@@ -13,7 +13,6 @@ import {
     LaserWeaponChange,
     LaserWeaponDeactivate
 } from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
-import type {IVec} from "../../utils/math/IVec.ts";
 
 
 export class PhaseLasers extends SpecialWeapon {
@@ -129,7 +128,7 @@ export class PhaseLasers extends SpecialWeapon {
         if (!world.isClient) world.sendPacket(new LaserWeaponDeactivate(entityId));
     }
 
-    protected damage(world: ServerWorld, stack: ItemStack, holder: Entity, start: IVec, end: IVec) {
+    protected damage(world: ServerWorld, stack: ItemStack, holder: Entity, start: Vec2, end: Vec2) {
         const damage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
         const damageSource = world.getDamageSources()
             .laser(holder)
