@@ -1,25 +1,23 @@
 import type {EntityRenderer} from "./EntityRenderer.ts";
-import {DevourerBossEntity} from "../../../entity/mob/DevourerBossEntity.ts";
-import {DevourerPhase} from "../../../entity/ai/DevourerBossAI.ts";
+import {DevourerBoss} from "../../../entity/mob/DevourerBoss.ts";
 import {HALF_PI, lerp, PI2} from "../../../utils/math/math.ts";
 
 type ColorConfig = { body: string; head: string; border: string; glow: string };
 
-export class DevourerBossRender implements EntityRenderer<DevourerBossEntity> {
-    public render(entity: DevourerBossEntity, ctx: CanvasRenderingContext2D, tickDelta: number): void {
+export class DevourerBossRender implements EntityRenderer<DevourerBoss> {
+    public render(entity: DevourerBoss, ctx: CanvasRenderingContext2D, tickDelta: number): void {
         const positions = entity.segmentPoses;
         const prevPositions = entity.prevSegmentPoses;
 
         const phase = entity.getPhase();
-        const colors = this.getPhaseColors(phase);
+        const colors = this.phaseColors[phase];
 
         ctx.save();
-
         ctx.fillStyle = colors.body;
         ctx.strokeStyle = colors.border;
 
         ctx.beginPath();
-        for (let i = entity.SEGMENT_COUNT - 1; i > 0; i--) {
+        for (let i = entity.segmentCount - 1; i > 0; i--) {
             const curr = i << 1;
             const prevX = prevPositions[curr];
             const prevY = prevPositions[curr + 1];
@@ -45,7 +43,7 @@ export class DevourerBossRender implements EntityRenderer<DevourerBossEntity> {
 
     private drawHead(
         ctx: CanvasRenderingContext2D,
-        entity: DevourerBossEntity,
+        entity: DevourerBoss,
         x: number, y: number,
         tickDelta: number,
         colors: ColorConfig
@@ -73,29 +71,30 @@ export class DevourerBossRender implements EntityRenderer<DevourerBossEntity> {
         ctx.restore();
     }
 
-    private getPhaseColors(phase: number): ColorConfig {
-        switch (phase) {
-            case DevourerPhase.PHASE_2:
-                return {
-                    body: '#9932cc',
-                    head: '#aa33aa',
-                    border: '#551155',
-                    glow: '#ff44ff'
-                }
-            case DevourerPhase.PHASE_3:
-                return {
-                    body: '#cc2222',
-                    head: '#ff3333',
-                    border: '#880000',
-                    glow: '#ff6600'
-                };
-            default :
-                return {
-                    body: '#6a5acd',
-                    head: '#5a4abd',
-                    border: '#332277',
-                    glow: '#aa99ff'
-                };
+    private phaseColors: ColorConfig[] = [
+        {
+            body: '#6a5acd',
+            head: '#5a4abd',
+            border: '#332277',
+            glow: '#aa99ff'
+        },
+        {
+            body: '#9932cc',
+            head: '#aa33aa',
+            border: '#551155',
+            glow: '#ff44ff'
+        },
+        {
+            body: '#9932cc',
+            head: '#aa33aa',
+            border: '#551155',
+            glow: '#ff44ff'
+        },
+        {
+            body: '#cc2222',
+            head: '#ff3333',
+            border: '#880000',
+            glow: '#ff6600'
         }
-    }
+    ];
 }

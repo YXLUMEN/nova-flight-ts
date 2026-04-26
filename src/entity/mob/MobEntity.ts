@@ -5,7 +5,6 @@ import {PlayerEntity} from "../player/PlayerEntity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {EVENTS} from "../../type/IEvents.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
-import {AiBehavior, MobAI} from "../ai/MobAI.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {IColorEntity} from "../IColorEntity.ts";
 import type {DataTrackerSerializedEntry} from "../data/DataTracker.ts";
@@ -16,13 +15,15 @@ import {NbtTypeId} from "../../nbt/NbtType.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
+import {EmptyAi} from "../ai/EmptyAi.ts";
+import type {EntityAi} from "../ai/EntityAi.ts";
 
 export abstract class MobEntity extends LivingEntity implements IColorEntity {
     public color = '#ff6b6b';
     public verticalMovementDir = 1;
 
+    protected readonly AI: EntityAi;
     private worth: number;
-    private readonly AI: MobAI;
 
     protected constructor(type: EntityType<MobEntity>, world: World, worth: number = 1) {
         super(type, world);
@@ -30,25 +31,28 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         this.age += (Math.random() * 10) | 0;
         this.setYaw(1.57079);
 
-        this.AI = new MobAI(this, this.getId());
+        this.AI = this.createAi();
     }
 
     public override tick(): void {
         super.tick();
-
-        if (!this.isClient() && this.stuckTicks === 0) {
-            this.AI.decision();
-        }
 
         this.move(this.velocityRef);
         this.clampPosition();
     }
 
     protected override tickAi() {
+        if (this.stuckTicks === 0) {
+            this.AI.decision();
+        }
         this.AI.tick();
     }
 
-    public getAi(): MobAI {
+    protected createAi(): EntityAi {
+        return EmptyAi.INSTANCE;
+    }
+
+    public getAi(): EntityAi {
         return this.AI;
     }
 
@@ -105,27 +109,6 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         this.AI.setSeed(this.getId());
     }
 
-    public override writeNBT(nbt: NbtCompound): NbtCompound {
-        super.writeNBT(nbt);
-
-        nbt.setUint32('worth', this.worth);
-        nbt.setUint32('color', encodeColorHex(this.color));
-        nbt.setInt8('ai_behavior', this.AI.getBehavior());
-        nbt.setUint32('age', this.age);
-        return nbt;
-    }
-
-    public override readNBT(nbt: NbtCompound): void {
-        super.readNBT(nbt);
-
-        this.worth = nbt.getUint32('worth', this.worth);
-        if (nbt.contains('color', NbtTypeId.Uint32)) {
-            this.color = decodeColorToHex(nbt.getUint32('color'));
-        }
-        this.AI.setBehavior(nbt.getInt8('ai_behavior', 3));
-        this.age = nbt.getUint32('age', 0);
-    }
-
     public isRangedAttacker(): boolean {
         return false;
     }
@@ -159,7 +142,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
     }
 
     protected override getMapOffsetY(): number {
-        return this.AI.getBehavior() === AiBehavior.Simple ? 80 : 0;
+        return this.AI.isSimple() ? 80 : 0;
     }
 
     protected override onOutOfBounds(x: number, y: number) {
@@ -168,5 +151,26 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
             return;
         }
         super.onOutOfBounds(x, y);
+    }
+
+    public override writeNBT(nbt: NbtCompound): NbtCompound {
+        super.writeNBT(nbt);
+
+        nbt.setUint32('worth', this.worth);
+        nbt.setUint32('color', encodeColorHex(this.color));
+        nbt.setUint32('age', this.age);
+        this.AI.writeNBT(nbt);
+        return nbt;
+    }
+
+    public override readNBT(nbt: NbtCompound): void {
+        super.readNBT(nbt);
+
+        this.worth = nbt.getUint32('worth', this.worth);
+        if (nbt.contains('color', NbtTypeId.Uint32)) {
+            this.color = decodeColorToHex(nbt.getUint32('color'));
+        }
+        this.age = nbt.getUint32('age', 0);
+        this.AI.readNBT(nbt);
     }
 }

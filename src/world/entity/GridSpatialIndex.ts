@@ -11,7 +11,7 @@ export class GridSpatialIndex<T extends EntityLike> {
     private readonly grid: Set<T>[][];
     private readonly filter: Set<T> = new Set<T>();
 
-    private entityGridCells: Map<T, Index[]> = new Map<T, Index[]>();
+    private readonly entityGridCells: Map<T, Index[]> = new Map<T, Index[]>();
 
     public constructor(width: number, height: number, cellSize: number = 80) {
         this.cellSize = cellSize;
@@ -25,15 +25,15 @@ export class GridSpatialIndex<T extends EntityLike> {
                 .map(() => new Set()));
     }
 
-    private toGridCoord(value: number, maxIndex: number): number {
+    private toCoord(value: number, maxIndex: number): number {
         return Math.max(0, Math.min(maxIndex, Math.floor(value / this.cellSize)));
     }
 
     private getCoveredCells(box: AABB): Index[] {
-        const startCol = this.toGridCoord(box.minX, this.cols - 1);
-        const endCol = this.toGridCoord(box.maxX, this.cols - 1);
-        const startRow = this.toGridCoord(box.minY, this.rows - 1);
-        const endRow = this.toGridCoord(box.maxY, this.rows - 1);
+        const startCol = this.toCoord(box.minX, this.cols - 1);
+        const endCol = this.toCoord(box.maxX, this.cols - 1);
+        const startRow = this.toCoord(box.minY, this.rows - 1);
+        const endRow = this.toCoord(box.maxY, this.rows - 1);
 
         const cells: Index[] = [];
         for (let r = startRow; r <= endRow; r++) {
@@ -68,10 +68,10 @@ export class GridSpatialIndex<T extends EntityLike> {
     }
 
     public* search(region: AABB) {
-        const startCol = this.toGridCoord(region.minX, this.cols - 1);
-        const endCol = this.toGridCoord(region.maxX, this.cols - 1);
-        const startRow = this.toGridCoord(region.minY, this.rows - 1);
-        const endRow = this.toGridCoord(region.maxY, this.rows - 1);
+        const startCol = this.toCoord(region.minX, this.cols - 1);
+        const endCol = this.toCoord(region.maxX, this.cols - 1);
+        const startRow = this.toCoord(region.minY, this.rows - 1);
+        const endRow = this.toCoord(region.maxY, this.rows - 1);
 
         if (startCol === endCol && startRow === endRow) {
             for (const entity of this.grid[startRow][startCol]) {

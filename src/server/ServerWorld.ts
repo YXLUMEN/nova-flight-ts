@@ -42,6 +42,7 @@ import type {ExplosionBehavior} from "../world/explosion/ExplosionBehavior.ts";
 import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
 import {PreparedParticleS2CPacket} from "../network/packet/s2c/PreparedParticleS2CPacket.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
+import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
@@ -52,7 +53,6 @@ export class ServerWorld extends World implements NbtSerializable {
     private readonly entities: EntityList = new EntityList();
     private readonly entityManager: ServerEntityManager<Entity>;
     private readonly trackedEntities = new Map<number, EntityTrackerEntry>();
-    private finishInit = false;
 
     public constructor(registryManager: RegistryManager, server: NovaFlightServer) {
         super(registryManager, false);
@@ -62,7 +62,7 @@ export class ServerWorld extends World implements NbtSerializable {
         this.stage = STAGE;
 
         this.registerEvents();
-        this.finishInit = true;
+        this.serverTickEntity = this.serverTickEntity.bind(this);
     }
 
     public override tick(dt: number) {
@@ -72,7 +72,7 @@ export class ServerWorld extends World implements NbtSerializable {
 
         for (const entity of this.entities.values()) {
             if (entity.isRemoved()) continue;
-            this.tickEntity(this.bindTickEntity, entity);
+            this.tickEntity(this.serverTickEntity, entity);
             if (this.over) break;
         }
 
@@ -83,8 +83,6 @@ export class ServerWorld extends World implements NbtSerializable {
 
         if (this.empBurst > 0) this.empBurst--;
     }
-
-    private bindTickEntity = this.serverTickEntity.bind(this);
 
     private serverTickEntity(entity: Entity): void {
         entity.resetPrevious();
@@ -100,8 +98,7 @@ export class ServerWorld extends World implements NbtSerializable {
         if (player.invulnerable) return;
 
         const box = player.getBoundingBox();
-        const predicate = (entity: Entity) => entity.isAlive() && !entity.isPlayer();
-        const search = this.searchOtherEntities(player, box, predicate);
+        const search = this.searchOtherEntities(player, box, EntityPredicates.ALIVE_NOT_PLAYER);
 
         for (const entity of search) {
             if (entity instanceof MobEntity) {
@@ -299,8 +296,6 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     private registerEvents() {
-        if (this.finishInit) return;
-
         this.events.on(EVENTS.ENTITY_REMOVED, event => {
             this.entityManager.remove(event.entity);
         });
@@ -390,22 +385,18 @@ export class ServerWorld extends World implements NbtSerializable {
     public readonly ServerEntityHandler: EntityHandler<Entity> = {
         startTicking: (entity: Entity) => {
             this.entities.add(entity);
-
+        },
+        stopTicking: (entity: Entity) => {
+            this.entities.remove(entity);
+        },
+        startTracking: (entity: Entity) => {
             const tracker = new EntityTrackerEntry(this, entity, entity.getType().getTrackingTickInterval(), false);
             this.trackedEntities.set(entity.getId(), tracker);
             this.getNetworkChannel().send(entity.createSpawnPacket());
         },
-
-        stopTicking: (entity: Entity) => {
-            this.entities.remove(entity);
+        stopTracking: (entity: Entity) => {
             this.trackedEntities.delete(entity.getId());
             this.getNetworkChannel().send(new EntityRemoveS2CPacket(entity.getId()));
-        },
-
-        startTracking: (_entity: Entity) => {
-        },
-
-        stopTracking: (_entity: Entity) => {
         }
     };
 }

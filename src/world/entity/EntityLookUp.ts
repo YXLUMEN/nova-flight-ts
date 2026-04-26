@@ -13,11 +13,11 @@ export class EntityLookUp<T extends EntityLike> {
         this.grid = grid;
     }
 
-    public get(id: number) {
+    public get(id: number): T | null {
         return this.index.get(id);
     }
 
-    public getByUUID(uuid: UUID) {
+    public getByUUID(uuid: UUID): T | null {
         return this.index.getByUUID(uuid);
     }
 
@@ -25,7 +25,7 @@ export class EntityLookUp<T extends EntityLike> {
         return this.index.iterate();
     }
 
-    public search(box: AABB) {
+    public search(box: AABB): Generator<T, void> {
         return this.grid.search(box);
     }
 
@@ -35,9 +35,5 @@ export class EntityLookUp<T extends EntityLike> {
 
     public findFirst(box: AABB, predicate: Predicate<T>): void {
         this.grid.findFirst(box, predicate);
-    }
-
-    public getStats() {
-        return this.grid.getStatsDetail();
     }
 }

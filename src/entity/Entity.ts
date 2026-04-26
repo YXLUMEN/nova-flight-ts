@@ -172,6 +172,10 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         return this.id.toString();
     }
 
+    public is(entity: Entity): boolean {
+        return this === entity;
+    }
+
     // 位置相关
 
     public get positionRef(): Readonly<MutVec2> {

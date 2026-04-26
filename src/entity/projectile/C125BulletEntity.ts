@@ -1,5 +1,4 @@
 import {ExplodeBulletEntity} from "./ExplodeBulletEntity.ts";
-import {BossEntity} from "../mob/BossEntity.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import {squareDistVec2} from "../../utils/math/math.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
@@ -13,7 +12,7 @@ export class C125BulletEntity extends ExplodeBulletEntity {
         if (this.isClient()) return;
 
         const entity = hitResult.entity;
-        if (entity instanceof BossEntity) return;
+        if (!entity.isPushAble()) return;
 
         const yaw = this.getYaw();
         const f = Math.cos(yaw);

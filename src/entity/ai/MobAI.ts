@@ -5,15 +5,17 @@ import {config} from "../../utils/uit.ts";
 import {getNearestEntityByVec} from "../../utils/math/math.ts";
 import {Random} from "../../utils/math/Random.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
+import type {EntityAi} from "./EntityAi.ts";
+import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 
 export const AiBehavior = config({
     Wander: 0,
     Chase: 1,
     Flee: 2,
     Simple: 3
-} as const);
+});
 
-export class MobAI {
+export class MobAI implements EntityAi {
     private disable = false;
 
     private readonly entity: MobEntity;
@@ -24,9 +26,9 @@ export class MobAI {
     private changeTimer = 0;
     private behavior: number = AiBehavior.Simple;
 
-    public constructor(entity: MobEntity, seed: number = 6) {
+    public constructor(entity: MobEntity) {
         this.entity = entity;
-        this.random = new Random(seed);
+        this.random = new Random(entity.getId());
     }
 
     public tick(): void {
@@ -99,7 +101,7 @@ export class MobAI {
         return this.disable;
     }
 
-    public setDisable(value: boolean): void {
+    public setDisabled(value: boolean): void {
         this.disable = value;
     }
 
@@ -158,5 +160,14 @@ export class MobAI {
         const vx = Math.sin(this.entity.age * 0.1) * 0.8 * speedMultiplier;
 
         this.entity.updateVelocity(speed, vx, this.entity.verticalMovementDir);
+    }
+
+    public writeNBT(nbt: NbtCompound): NbtCompound {
+        nbt.setInt8('ai_behavior', this.behavior);
+        return nbt;
+    }
+
+    public readNBT(nbt: NbtCompound): void {
+        this.setBehavior(nbt.getInt8('ai_behavior', AiBehavior.Simple));
     }
 }

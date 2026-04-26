@@ -4,6 +4,8 @@ import {DamageTypes} from "./damage/DamageTypes.ts";
 import type {EntityType} from "./EntityType.ts";
 import type {World} from "../world/World.ts";
 import {EntityAttributes} from "./attribute/EntityAttributes.ts";
+import type {EntityAi} from "./ai/EntityAi.ts";
+import {EmptyAi} from "./ai/EmptyAi.ts";
 
 export class TargetDrone extends MobEntity {
     private static readonly MAX_CD = 20;
@@ -18,6 +20,10 @@ export class TargetDrone extends MobEntity {
         super(type, world, 0);
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(100);
         this.setHealth(this.getMaxHealth());
+    }
+
+    protected override createAi(): EntityAi {
+        return EmptyAi.INSTANCE;
     }
 
     public override tick() {

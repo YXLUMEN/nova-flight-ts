@@ -3,7 +3,7 @@ import {World} from "../../world/World.ts";
 import {type DamageSource} from "../damage/DamageSource.ts";
 import {EntityType} from "../EntityType.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
-import {clamp, getNearestEntityByVec, PI2, rand, thickLineCircleHit} from "../../utils/math/math.ts";
+import {getNearestEntityByVec, HALF_PI, PI2, rand, thickLineCircleHit} from "../../utils/math/math.ts";
 import {DataTracker} from "../data/DataTracker.ts";
 import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
@@ -11,14 +11,13 @@ import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
-import {DevourerBehavior, DevourerBossAI, DevourerPhase} from "../ai/DevourerBossAI.ts";
+import {DevourerBossAI, DevourerPhase} from "../ai/DevourerBossAI.ts";
 import type {Entity} from "../Entity.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {FireWave} from "../ai/FireWave.ts";
 import {spawnLaser} from "../../utils/ServerEffect.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {ScreenShakeS2CPacket} from "../../network/packet/s2c/ScreenShakeS2CPacket.ts";
-import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {Audios} from "../../sound/Audios.ts";
 import {AudioStopS2CPacket} from "../../network/packet/s2c/AudioStopS2CPacket.ts";
@@ -26,21 +25,21 @@ import {AudioLeapS2CPacket} from "../../network/packet/s2c/AudioControlS2CPacket
 import {ExplosionEntity} from "../ExplosionEntity.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
-import type {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import {type EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
 
-export class DevourerBossEntity extends BossEntity {
-    private static readonly PHASE_TRACKER = DataTracker.registerData(Object(DevourerBossEntity),
+export class DevourerBoss extends BossEntity {
+    private static readonly PHASE_TRACKER = DataTracker.registerData(Object(DevourerBoss),
         TrackedDataHandlerRegistry.VAR_UINT
     );
-    private static readonly RESET_SEG = DataTracker.registerData(Object(DevourerBossEntity),
+    private static readonly RESET_SEG = DataTracker.registerData(Object(DevourerBoss),
         TrackedDataHandlerRegistry.BOOL
     );
 
-    private readonly PHASE2_HP_RATIO = 0.66;
-    private readonly PHASE3_HP_RATIO = 0.2;
-    public readonly SEGMENT_COUNT = 48;
-    public readonly SEGMENT_SPACING = 44;
-    public readonly SEGMENT_SPACING_SQ = this.SEGMENT_SPACING * this.SEGMENT_SPACING;
+    public readonly segmentCount = 48;
+    private readonly segmentSpacing = 44;
+    private readonly segmentSpacingSq = this.segmentSpacing * this.segmentSpacing;
+    private turnRate = 0.034906;
 
     private bulletCooldown: number = 60;
     private missileCooldown: number = 200;
@@ -51,66 +50,68 @@ export class DevourerBossEntity extends BossEntity {
     private currentPhase: DevourerPhase = DevourerPhase.PHASE_1;
     private phase2Triggered: boolean = false;
     private phase3Triggered: boolean = false;
-
-    private readonly devAI: DevourerBossAI = new DevourerBossAI();
+    private isSpawn = true;
 
     public readonly segmentPoses: Float32Array;
     public readonly prevSegmentPoses: Float32Array;
     private readonly segShootCds: Uint8Array;
 
     private readonly bulletWaves: FireWave[] = [
-        new FireWave(1, 5, 0, true, 0, 3.2),
-        new FireWave(8, 5, 0, false, 0, 1.2),
-        new FireWave(10, 6, 0, false, 0, 1.4),
-        new FireWave(6, 4.5, 8, false, 0, PI2),
-        new FireWave(12, 6.5, 0, true, 0, 1.6),
-        new FireWave(8, 5, 0, false, 0, PI2 * 0.6),
-        new FireWave(16, 4, 6, false, 0, PI2),
+        new FireWave(1, 11, 0, true, 0, 3.2),
+        new FireWave(8, 11, 0, false, 0, 1.2),
+        new FireWave(10, 8, 0, false, 0, 1.4),
+        new FireWave(6, 9, 8, false, 0, PI2),
+        new FireWave(12, 7, 0, true, 0, 1.6),
+        new FireWave(8, 12, 0, false, 0, PI2 * 0.6),
+        new FireWave(16, 10, 6, false, 0, PI2),
     ];
 
-    public constructor(type: EntityType<DevourerBossEntity>, world: World, worth: number) {
+    public constructor(type: EntityType<DevourerBoss>, world: World, worth: number) {
         if (!BossEntity.hasBoss && !world.isClient) {
             world.sendPacket(new PlayAudioS2CPacket(Audios.SCOURGE_OF_THE_UNIVERSE, 1, true));
         }
 
-        super(type, world, worth, 80);
+        super(type, world, worth, 120);
 
         this.noClip = true;
-        this.getAi().setDisable(true);
 
-        this.segmentPoses = new Float32Array(this.SEGMENT_COUNT * this.SEGMENT_COUNT);
-        this.prevSegmentPoses = new Float32Array(this.SEGMENT_COUNT * this.SEGMENT_COUNT);
+        this.segmentPoses = new Float32Array(this.segmentCount * this.segmentCount);
+        this.prevSegmentPoses = new Float32Array(this.segmentCount * this.segmentCount);
 
-        const segCount = this.SEGMENT_COUNT >> 1;
-        this.segShootCds = new Uint8Array(segCount);
-        for (let i = 0; i < segCount; i++) {
+        this.segShootCds = new Uint8Array(this.segmentCount);
+        for (let i = 0; i < this.segShootCds.length; i++) {
             this.segShootCds[i] = 1 + i * 3;
         }
 
-        if (!world.isClient) this.restSeg();
+        this.setMovementSpeed(10);
+        this.addEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, -1, 1), null);
         this.createBullet = this.createBullet.bind(this);
     }
 
     public override createLivingAttributes() {
         return super.createLivingAttributes()
-            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 400)
+            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 1600)
             .addWithBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE, 10)
             .addWithBaseValue(EntityAttributes.GENERIC_MOVEMENT_SPEED, 10);
     }
 
-    protected override defineSyncedData(builder: InstanceType<typeof DataTracker.Builder>) {
+    protected override defineSyncedData(builder: InstanceType<typeof DataTracker.Builder>): void {
         super.defineSyncedData(builder);
-        builder.define(DevourerBossEntity.PHASE_TRACKER, DevourerPhase.PHASE_1);
-        builder.define(DevourerBossEntity.RESET_SEG, false);
+        builder.define(DevourerBoss.PHASE_TRACKER, DevourerPhase.PHASE_1);
+        builder.define(DevourerBoss.RESET_SEG, false);
+    }
+
+    protected createAi() {
+        return new DevourerBossAI();
     }
 
     public override tick(): void {
         if (this.getPhase() === DevourerPhase.STAGE_TRANSITION) return;
         super.tick();
-
         this.updateSegmentPositions();
+    }
 
-        if (this.isClient()) return;
+    protected override tickAi() {
         const world = this.getWorld() as ServerWorld;
 
         this.tickTargetSelection(world);
@@ -118,48 +119,6 @@ export class DevourerBossEntity extends BossEntity {
         this.tickDevourerMovement();
         this.tickAttacks(world);
         this.tickSegmentAttacks(world);
-    }
-
-    private updateSegmentPositions(): void {
-        const pos = this.positionRef;
-
-        this.segmentPoses[0] = pos.x;
-        this.segmentPoses[1] = pos.y;
-        this.prevSegmentPoses[0] = this.prevX;
-        this.prevSegmentPoses[1] = this.prevY;
-
-        for (let i = 1; i < this.SEGMENT_COUNT; i++) {
-            const pIdx = (i - 1) << 1;
-            const prevX = this.segmentPoses[pIdx];
-            const prevY = this.segmentPoses[pIdx + 1];
-
-            const idx = i << 1;
-            const currX = this.segmentPoses[idx];
-            const currY = this.segmentPoses[idx + 1];
-
-            const dx = prevX - currX;
-            const dy = prevY - currY;
-            const distSq = dx * dx + dy * dy;
-            if (distSq <= this.SEGMENT_SPACING_SQ) continue;
-            const dist = Math.sqrt(distSq);
-            const ratio = this.SEGMENT_SPACING / dist;
-
-            this.prevSegmentPoses[idx] = currX;
-            this.prevSegmentPoses[idx + 1] = currY;
-            this.segmentPoses[idx] = prevX - dx * ratio;
-            this.segmentPoses[idx + 1] = prevY - dy * ratio;
-        }
-    }
-
-    private restSeg(): void {
-        const {x, y} = this.positionRef;
-        for (let i = 0; i < this.SEGMENT_COUNT; i++) {
-            const idx = i << 1;
-            this.segmentPoses[idx] = x;
-            this.segmentPoses[idx + 1] = y;
-            this.prevSegmentPoses[idx] = x;
-            this.prevSegmentPoses[idx + 1] = y;
-        }
     }
 
     private tickTargetSelection(world: ServerWorld): void {
@@ -172,10 +131,10 @@ export class DevourerBossEntity extends BossEntity {
     private checkPhaseTransition(world: ServerWorld): void {
         const hpRatio = this.getHealth() / this.getMaxHealth();
 
-        if (!this.phase2Triggered && hpRatio < this.PHASE2_HP_RATIO) {
+        if (!this.phase2Triggered && hpRatio < 0.66) {
             this.phase2Triggered = true;
             this.enterPhase(DevourerPhase.PHASE_2, world);
-        } else if (!this.phase3Triggered && hpRatio < this.PHASE3_HP_RATIO) {
+        } else if (!this.phase3Triggered && hpRatio < 0.34) {
             this.phase3Triggered = true;
             this.enterPhase(DevourerPhase.STAGE_TRANSITION, world);
         }
@@ -183,7 +142,7 @@ export class DevourerBossEntity extends BossEntity {
 
     private enterPhase(phase: DevourerPhase, world: ServerWorld): void {
         this.currentPhase = phase;
-        this.dataTracker.set(DevourerBossEntity.PHASE_TRACKER, phase);
+        this.dataTracker.set(DevourerBoss.PHASE_TRACKER, phase);
         this.invulnerable = true;
 
         if (phase === DevourerPhase.STAGE_TRANSITION) {
@@ -203,7 +162,10 @@ export class DevourerBossEntity extends BossEntity {
         );
 
         if (phase === DevourerPhase.PHASE_3) {
-            this.setDevSpeed(this.getDevSpeed() * 1.5);
+            this.turnRate = 0.06283;
+            this.setMovementSpeed(this.getMovementSpeed() * 1.5);
+            this.addEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, -1, 3), null);
+
             for (const instance of this.getStatusEffects()) {
                 const effect = instance.getEffect();
                 if (effect.getValue().isBeneficial()) continue;
@@ -233,39 +195,61 @@ export class DevourerBossEntity extends BossEntity {
             exp.setPositionByVec(selfPos);
             world.spawnEntity(exp);
         });
-
         world.schedule(9.6, () => {
-            this.dataTracker.set(DevourerBossEntity.RESET_SEG, true);
-            world.sendPacket(new ScreenShakeS2CPacket(0.6, 1));
+            this.dataTracker.set(DevourerBoss.RESET_SEG, true);
+            world.sendPacket(new ScreenShakeS2CPacket(0.8, 1.5));
             world.sendPacket(new AudioLeapS2CPacket(9.6));
             this.enterPhase(DevourerPhase.PHASE_3, world);
         });
     }
 
     private tickDevourerMovement(): void {
-        const intent = this.devAI.computeIntent(
+        const intent = (this.AI as DevourerBossAI).computeIntent(
             this.positionRef,
             this.primaryTarget?.positionRef ?? null,
             this.currentPhase,
             this.age,
-            this.getDevSpeed()
+            this.getMovementSpeed()
         );
 
         if (intent.speed > 0.001) {
-            const turnRate = this.currentPhase === DevourerPhase.PHASE_3 ? 0.06283 : 0.034906;
-            this.setClampYaw(intent.targetYaw, turnRate);
+            this.setClampYaw(intent.targetYaw, this.turnRate);
         }
 
         const yaw = this.getYaw();
         this.setVelocity(Math.cos(yaw) * intent.speed, Math.sin(yaw) * intent.speed);
+        this.needSync = true;
+    }
 
-        const target = this.primaryTarget;
-        if (!target) {
-            this.devAI.setBehavior(DevourerBehavior.CHASE);
-            return;
+    private updateSegmentPositions(): void {
+        const pos = this.positionRef;
+
+        this.segmentPoses[0] = pos.x;
+        this.segmentPoses[1] = pos.y;
+        this.prevSegmentPoses[0] = this.prevX;
+        this.prevSegmentPoses[1] = this.prevY;
+
+        for (let i = 1; i < this.segmentCount; i++) {
+            const pIdx = (i - 1) << 1;
+            const prevX = this.segmentPoses[pIdx];
+            const prevY = this.segmentPoses[pIdx + 1];
+
+            const idx = i << 1;
+            const currX = this.segmentPoses[idx];
+            const currY = this.segmentPoses[idx + 1];
+
+            const dx = prevX - currX;
+            const dy = prevY - currY;
+            const distSq = dx * dx + dy * dy;
+            if (distSq <= this.segmentSpacingSq) continue;
+            const dist = Math.sqrt(distSq);
+            const ratio = this.segmentSpacing / dist;
+
+            this.prevSegmentPoses[idx] = currX;
+            this.prevSegmentPoses[idx + 1] = currY;
+            this.segmentPoses[idx] = prevX - dx * ratio;
+            this.segmentPoses[idx + 1] = prevY - dy * ratio;
         }
-
-        this.devAI.setBehavior(DevourerBehavior.CHASE);
     }
 
     private tickAttacks(world: ServerWorld): void {
@@ -301,11 +285,11 @@ export class DevourerBossEntity extends BossEntity {
     private getMissileCooldown(): number {
         switch (this.currentPhase) {
             case DevourerPhase.PHASE_3:
-                return 120;
+                return 160;
             case DevourerPhase.PHASE_2:
-                return 180;
+                return 240;
             default:
-                return 260;
+                return 300;
         }
     }
 
@@ -358,7 +342,7 @@ export class DevourerBossEntity extends BossEntity {
 
             const angle = Math.atan2(pPos.y - sy, pPos.x - sx);
             wave.fireBulletWaveD(world, this.createBullet, sx, sy, angle, angle);
-            this.segShootCds[i] = 20 + (Math.random() * 10) | 0;
+            this.segShootCds[i] = 40 + (Math.random() * 10) | 0;
         }
     }
 
@@ -378,7 +362,7 @@ export class DevourerBossEntity extends BossEntity {
 
             const side = fired % 2 === 0 ? 1 : -1;
             const yaw = this.getYaw();
-            const driftAngle = yaw + side * (Math.PI / 2 + (Math.random() - 0.5) * 0.3);
+            const driftAngle = yaw + side * (HALF_PI + (Math.random() - 0.5) * 0.3);
 
             const missile = new MobMissileEntity(
                 EntityTypes.MOB_MISSILE_ENTITY, world, this, driftAngle
@@ -423,13 +407,6 @@ export class DevourerBossEntity extends BossEntity {
         });
     }
 
-    public override takeDamage(damageSource: DamageSource, damage: number): boolean {
-        if (this.currentPhase === DevourerPhase.PHASE_3 && !damageSource.isIn(DamageTypeTags.BYPASSES_INVULNERABLE)) {
-            damage *= 0.7;
-        }
-        return super.takeDamage(damageSource, damage);
-    }
-
     public override canHitByProjectile(): boolean {
         return this.getPhase() !== DevourerPhase.STAGE_TRANSITION && super.canHitByProjectile();
     }
@@ -442,7 +419,7 @@ export class DevourerBossEntity extends BossEntity {
 
         let times = 0;
         const pos = this.positionRef;
-        const schedule = world.scheduleInterval(0.8, () => {
+        const schedule = world.scheduleInterval(0.4, () => {
             if (times++ >= 3) {
                 schedule.cancel();
                 return;
@@ -462,35 +439,50 @@ export class DevourerBossEntity extends BossEntity {
     }
 
     public getPhase(): DevourerPhase {
-        return this.dataTracker.get(DevourerBossEntity.PHASE_TRACKER);
-    }
-
-    private getDevSpeed(): number {
-        return this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-    }
-
-    private setDevSpeed(speed: number): void {
-        const inst = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-        if (inst) inst.setBaseValue(clamp(speed, 0, 256));
-    }
-
-    protected override onOutOfBounds() {
+        return this.dataTracker.get(DevourerBoss.PHASE_TRACKER);
     }
 
     public override shouldRender(): boolean {
         return this.getPhase() !== DevourerPhase.STAGE_TRANSITION;
     }
 
-    public override onTrackedDataSet(data: TrackedData<any>) {
+    protected getMapOffsetX(): number {
+        return 1E4;
+    }
+
+    protected override getMapOffsetY(): number {
+        return 1E4;
+    }
+
+    public override onTrackedDataSet(data: TrackedData<any>): void {
         super.onTrackedDataSet(data);
-        if (data === DevourerBossEntity.RESET_SEG && this.dataTracker.get(DevourerBossEntity.RESET_SEG)) {
+        if (data === DevourerBoss.RESET_SEG && this.dataTracker.get(DevourerBoss.RESET_SEG)) {
             this.restSeg();
         }
+    }
+
+    public override createSpawnPacket(): EntitySpawnS2CPacket {
+        if (this.isSpawn) {
+            this.isSpawn = false;
+            this.restSeg();
+        }
+        return super.createSpawnPacket();
     }
 
     public override onSpawnPacket(packet: EntitySpawnS2CPacket): void {
         super.onSpawnPacket(packet);
         this.restSeg();
+    }
+
+    private restSeg(): void {
+        const {x, y} = this.positionRef;
+        for (let i = 0; i < this.segmentCount; i++) {
+            const idx = i << 1;
+            this.segmentPoses[idx] = x;
+            this.segmentPoses[idx + 1] = y;
+            this.prevSegmentPoses[idx] = x;
+            this.prevSegmentPoses[idx + 1] = y;
+        }
     }
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {
@@ -511,7 +503,7 @@ export class DevourerBossEntity extends BossEntity {
     public override readNBT(nbt: NbtCompound): void {
         super.readNBT(nbt);
         this.currentPhase = nbt.getInt8('devourer_phase', DevourerPhase.PHASE_1) as DevourerPhase;
-        this.dataTracker.set(DevourerBossEntity.PHASE_TRACKER, this.currentPhase);
+        this.dataTracker.set(DevourerBoss.PHASE_TRACKER, this.currentPhase);
 
         this.bulletCooldown = nbt.getInt8('bullet_cd', 60);
         this.missileCooldown = nbt.getInt16('missile_cd', 200);

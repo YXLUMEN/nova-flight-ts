@@ -21,6 +21,7 @@ import {DamageTypes} from "../../entity/damage/DamageTypes.ts";
 import {BaseBossEntity} from "../../entity/mob/BaseBossEntity.ts";
 import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
 import {EffectEnum} from "../../world/explosion/ExplosionBehavior.ts";
+import {DevourerBoss} from "../../entity/mob/DevourerBoss.ts";
 
 export class ServerDefaultEvents {
     public static registerEvent(world: ServerWorld) {
@@ -88,7 +89,9 @@ export class ServerDefaultEvents {
                 world.stage.reset();
                 world.stage.setStage('P6');
 
-                const boss = new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64);
+                const boss = Math.random() > 0.5 ?
+                    new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64) :
+                    new DevourerBoss(EntityTypes.DEVOURER_BOSS_ENTITY, world, 96);
                 boss.setPosition(World.WORLD_W / 2, 64);
 
                 const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);

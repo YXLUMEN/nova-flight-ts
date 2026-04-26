@@ -239,9 +239,8 @@ export abstract class LivingEntity extends Entity {
         if (this.activeEffects.size === 0) return;
 
         if (this.isClient()) {
-            for (const [type, effect] of this.activeEffects) {
-                type.getValue().tickClient(this, effect.getDuration());
-                effect.tickClient();
+            for (const effect of this.activeEffects.values()) {
+                effect.tickClient(this);
             }
 
             return;

@@ -69,13 +69,18 @@ export class FireWave {
         predicate?: Supplier<boolean>,
         color: string = '#b10000',
         edgeColor: string = '#ff0000'
-    ): Schedule | null {
+    ): void {
         const step = (endAngle - startAngle) / Math.max(1, this.count - 1);
-        const angles: number[] = [];
         for (let i = 0; i < this.count; i++) {
-            angles.push(startAngle + step * i);
+            if (predicate && !predicate()) continue;
+            const projectile = supplier();
+            const angle = startAngle + step * i;
+            projectile.setVelocity(Math.cos(angle) * this.speed, Math.sin(angle) * this.speed);
+            projectile.setPosition(x, y);
+            projectile.color = color;
+            projectile.edgeColor = edgeColor;
+            world.spawnEntity(projectile);
         }
-        return this.fireAngles(world, supplier, new Vec2(x, y), angles, predicate, color, edgeColor);
     }
 
     public fireWithSpread(

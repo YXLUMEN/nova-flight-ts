@@ -25,7 +25,6 @@ export class BulletEntity extends ProjectileEntity {
         if (owner instanceof PlayerEntity && owner.getTechs().isUnlocked(Techs.ANTIMATTER_WARHEAD)) {
             let damage = hitDamage;
             if (entity instanceof LivingEntity) damage = hitDamage + (entity.getMaxHealth() * 0.08) | 0;
-            else damage *= 2;
             entity.takeDamage(sources.projectile(this, owner), damage);
             return;
         }
