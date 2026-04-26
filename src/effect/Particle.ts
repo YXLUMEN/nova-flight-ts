@@ -18,7 +18,6 @@ export class Particle implements VisualEffect {
             PacketCodecs.COLOR_HEX.encode(writer, value.colorFrom);
             PacketCodecs.COLOR_HEX.encode(writer, value.colorTo);
             writer.writeFloat(value.drag);
-            writer.writeFloat(value.gravity);
         },
         reader => {
             return new Particle(
@@ -29,7 +28,6 @@ export class Particle implements VisualEffect {
                 PacketCodecs.COLOR_HEX.decode(reader),
                 PacketCodecs.COLOR_HEX.decode(reader),
                 reader.readFloat(),
-                reader.readFloat(),
             );
         }
     );
@@ -39,12 +37,12 @@ export class Particle implements VisualEffect {
     private prevPos = MutVec2.zero();
     private pos = MutVec2.zero();
     private vel = MutVec2.zero();
+
     private life: number;
     private size: number;
     private colorFrom: string;
     private colorTo: string;
     private drag: number;
-    private gravity: number;
 
     private t = 0;
 
@@ -52,12 +50,11 @@ export class Particle implements VisualEffect {
         pos: Vec2, vel: Vec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
-        drag = 0.0, gravity = 0.0
+        drag = 0.0
     ) {
         this.vel.set(vel.x, vel.y);
         this.prevPos.set(pos.x, pos.y);
         this.pos.set(pos.x, pos.y);
-        this.gravity = gravity;
         this.drag = drag;
         this.colorTo = colorTo;
         this.colorFrom = colorFrom;
@@ -69,7 +66,7 @@ export class Particle implements VisualEffect {
         pos: Vec2, vel: Vec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
-        drag = 0.0, gravity = 0.0
+        drag = 0.0
     ) {
         this.vel.set(vel.x, vel.y);
         this.prevPos.set(pos.x, pos.y);
@@ -79,7 +76,6 @@ export class Particle implements VisualEffect {
         this.colorFrom = colorFrom;
         this.colorTo = colorTo;
         this.drag = drag;
-        this.gravity = gravity;
         this.t = 0;
         this.alive = true;
     }
@@ -91,7 +87,7 @@ export class Particle implements VisualEffect {
             return;
         }
         this.vel.x *= (1 - this.drag * dt);
-        this.vel.y = this.vel.y * (1 - this.drag * dt) + this.gravity * dt;
+        this.vel.y = this.vel.y * (1 - this.drag * dt);
 
         this.prevPos.set(this.pos.x, this.pos.y);
         this.pos.x += this.vel.x * dt;
@@ -105,7 +101,6 @@ export class Particle implements VisualEffect {
         const k = this.t / this.life;
         const r = this.size * (1 - 0.6 * k);
 
-        ctx.globalAlpha = 1 - k;
         if (this.colorFrom === this.colorTo) {
             ctx.fillStyle = this.colorFrom;
         } else {
@@ -118,7 +113,6 @@ export class Particle implements VisualEffect {
         ctx.beginPath();
         ctx.arc(x, y, r, 0, PI2);
         ctx.fill();
-        ctx.globalAlpha = 1;
     }
 
     public isAlive(): boolean {

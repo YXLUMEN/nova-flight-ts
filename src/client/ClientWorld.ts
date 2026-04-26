@@ -145,13 +145,13 @@ export class ClientWorld extends World {
         pos: Vec2, vel: Vec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
-        drag = 0.0, gravity = 0.0
+        drag = 0.0
     ): void {
         this.worldRender.addParticle(
             pos, vel,
             life, size,
             colorFrom, colorTo,
-            drag, gravity
+            drag
         );
     }
 
@@ -159,13 +159,13 @@ export class ClientWorld extends World {
         posX: number, posY: number, velX: number, velY: number,
         life: number, size: number,
         colorFrom: string, colorTo: string = colorFrom,
-        drag = 0.0, gravity = 0.0
+        drag = 0.0
     ) {
         this.worldRender.addParticle(
             new MutVec2(posX, posY), new MutVec2(velX, velY),
             life, size,
             colorFrom, colorTo,
-            drag, gravity
+            drag
         );
     }
 
@@ -173,13 +173,13 @@ export class ClientWorld extends World {
         posX: number, posY: number, velX: number, velY: number,
         life: number, size: number,
         colorFrom: string, colorTo: string = colorFrom,
-        drag = 0.0, gravity = 0.0
+        drag = 0.0
     ) {
         this.addEffect(null, new Particle(
             new MutVec2(posX, posY), new MutVec2(velX, velY),
             life, size,
             colorFrom, colorTo,
-            drag, gravity
+            drag
         ));
     }
 

@@ -10,6 +10,7 @@ import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
 import {EntityType} from "../EntityType.ts";
 import type {World} from "../../world/World.ts";
 import {FireWave} from "../ai/FireWave.ts";
+import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 
 export class BaseBossEntity extends BossEntity {
     protected attackCooldown: number = 0;
@@ -35,7 +36,14 @@ export class BaseBossEntity extends BossEntity {
 
     public constructor(type: EntityType<BossEntity>, world: World, worth: number, maxKillTime: number = 56) {
         super(type, world, worth, maxKillTime);
+        this.setMovementSpeed(0.08);
         this.createBullet = this.createBullet.bind(this);
+    }
+
+    public override createLivingAttributes() {
+        return super.createLivingAttributes()
+            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 160)
+            .addWithBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE, 10);
     }
 
     public override tick() {

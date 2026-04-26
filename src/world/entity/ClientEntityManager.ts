@@ -44,14 +44,24 @@ export class ClientEntityManager<T extends Entity> {
     }
 
     private createListener(entity: T): EntityChangeListener {
-        const self = this;
-        return {
-            updateEntityPosition() {
-                self.grid.insert(entity);
-            },
-            remove() {
-                self.remove(entity);
-            }
+        return new ClientEntityManager.EntityChangeListenerImpl(entity, this);
+    }
+
+    private static EntityChangeListenerImpl = class impl implements EntityChangeListener {
+        private readonly entity: Entity;
+        private readonly manager: ClientEntityManager<Entity>;
+
+        public constructor(entity: Entity, manager: ClientEntityManager<Entity>) {
+            this.entity = entity;
+            this.manager = manager;
+        }
+
+        public updateEntityPosition(): void {
+            this.manager.grid.insert(this.entity);
+        }
+
+        public remove(): void {
+            this.manager.remove(this.entity);
         }
     }
 }

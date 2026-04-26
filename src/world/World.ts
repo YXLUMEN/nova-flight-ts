@@ -100,14 +100,14 @@ export abstract class World {
         posX: number, posY: number, velX: number, velY: number,
         life: number, size: number,
         colorFrom: string, colorTo?: string,
-        drag?: number, gravity?: number
+        drag?: number
     ): void;
 
     public abstract addImportantParticle(
         posX: number, posY: number, velX: number, velY: number,
         life: number, size: number,
         colorFrom: string, colorTo?: string,
-        drag?: number, gravity?: number
+        drag?: number
     ): void;
 
     public abstract addEffect(source: Entity | null, effect: VisualEffect): void;

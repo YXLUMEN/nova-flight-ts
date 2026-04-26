@@ -228,12 +228,12 @@ export class Explosion {
             if (important) {
                 world.addImportantParticle(ePos.x, ePos.y, vel.x, vel.y,
                     rand(0.6, 1.2), rand(4, 10),
-                    "#ffaa33", "rgba(255,140,0,0)", 0.6, 80
+                    "#ffaa33", "rgba(255,140,0,0)", 0.6
                 );
             } else {
                 world.addParticleByVec(
                     ePos, vel, rand(0.6, 1.2), rand(4, 10),
-                    "#ffaa33", "rgba(255,140,0,0)", 0.6, 80
+                    "#ffaa33", "rgba(255,140,0,0)", 0.6
                 );
             }
         }

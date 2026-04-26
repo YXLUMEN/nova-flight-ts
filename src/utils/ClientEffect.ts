@@ -29,7 +29,7 @@ export class ClientEffect {
                 dirX * speed, dirY * speed,
                 rand(0.4, 0.6), rand(2, 3),
                 colorFrom, colorTo,
-                0.6, 80
+                0.6
             );
         }
     }
@@ -64,7 +64,7 @@ export class ClientEffect {
                 px * speed, py * speed,
                 rand(0.4, 0.6), rand(2, 3),
                 colorFrom, colorTo,
-                0.6, 80
+                0.6
             );
         }
     }

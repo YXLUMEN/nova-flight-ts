@@ -91,8 +91,10 @@ export class StatusEffectInstance {
         return this.hasRemaining();
     }
 
-    public tickClient() {
+    public tickClient(entity: LivingEntity): void {
         if (!this.hasRemaining()) return;
+        this.type.getValue().tickClient(entity, this.duration);
+
         if (!this.isInfinite() && this.duration > 0) {
             this.duration -= 1;
         }

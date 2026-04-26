@@ -25,7 +25,7 @@ import {TNTBossEntity} from "./mob/TNTBossEntity.ts";
 import {BaseBossEntity} from "./mob/BaseBossEntity.ts";
 import {MobBulletEntity} from "./projectile/MobBulletEntity.ts";
 import {MagneticTorpedoEntity} from "./projectile/MagneticTorpedoEntity.ts";
-import {DevourerBossEntity} from "./mob/DevourerBossEntity.ts";
+import {DevourerBoss} from "./mob/DevourerBoss.ts";
 
 export class EntityTypes {
     public static readonly BASE_ENEMY = EntityType.register("base_enemy",
@@ -144,9 +144,8 @@ export class EntityTypes {
             .setDimensions(12)
     );
     public static readonly DEVOURER_BOSS_ENTITY = EntityType.register('devourer_boss',
-        EntityType.Builder.create(DevourerBossEntity)
+        EntityType.Builder.create(DevourerBoss)
             .setDimensions(48)
-            .setTrackingTickInterval(3)
     );
 
     public static init() {

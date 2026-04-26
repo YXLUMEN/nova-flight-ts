@@ -24,35 +24,30 @@ export abstract class BossEntity extends MobEntity {
         super(type, world, worth);
 
         this.maxDamageCanTake = Math.floor(this.getMaxHealth() / maxKillTime);
-        this.setMovementSpeed(0.08);
         BossEntity.hasBoss = true;
 
         world.events.emit(EVENTS.BOSS_SPAWN, {entity: this});
     }
 
-    public override createLivingAttributes() {
-        return super.createLivingAttributes()
-            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 160)
-            .addWithBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE, 10);
-    }
-
     public override tick() {
         super.tick();
-        if (this.damageCooldown > 0) {
-            this.damageCooldown -= 1;
-        }
+        if (this.damageCooldown > 0) this.damageCooldown--;
     }
 
     public override isPushAble(): boolean {
         return false;
     }
 
+    protected getDamageCd(): number {
+        return 8;
+    }
+
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (this.damageCooldown > 0 && !damageSource.isIn(DamageTypeTags.BYPASSES_INVULNERABLE)) return false;
 
-        const clampDamage = clamp((damage * 0.1) | 0, 1, this.maxDamageCanTake);
+        const clampDamage = clamp(damage, 1, this.maxDamageCanTake);
         if (super.takeDamage(damageSource, clampDamage)) {
-            this.damageCooldown = 16;
+            this.damageCooldown = this.getDamageCd();
             return true;
         }
         return false;

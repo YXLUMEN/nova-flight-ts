@@ -20,16 +20,16 @@ export class ServerEntityManager<T extends Entity> {
         this.handler = handler;
     }
 
-    public addEntity(entity: T, existed = false): boolean {
+    public addEntity(entity: T): boolean {
         if (!this.index.add(entity)) {
             return false;
         }
         this.grid.insert(entity);
         entity.setChangeListener(this.createListener(entity));
 
-        if (!existed) {
-            this.handler.startTicking(entity);
-        }
+        // 可能进行区分
+        this.handler.startTicking(entity);
+        this.handler.startTracking(entity);
         return true;
     }
 
@@ -42,7 +42,9 @@ export class ServerEntityManager<T extends Entity> {
     public remove(entity: T) {
         this.grid.remove(entity);
         this.index.remove(entity);
+
         this.handler.stopTicking(entity);
+        this.handler.stopTracking(entity);
         entity.setChangeListener(EMPTY_LISTENER);
     }
 
@@ -61,14 +63,24 @@ export class ServerEntityManager<T extends Entity> {
     }
 
     private createListener(entity: T): EntityChangeListener {
-        const self = this;
-        return {
-            updateEntityPosition() {
-                self.grid.insert(entity);
-            },
-            remove() {
-                self.remove(entity);
-            }
-        };
+        return new ServerEntityManager.EntityChangeListenerImpl(entity, this);
+    }
+
+    private static EntityChangeListenerImpl = class impl implements EntityChangeListener {
+        private readonly entity: Entity;
+        private readonly manager: ServerEntityManager<Entity>;
+
+        public constructor(entity: Entity, manager: ServerEntityManager<Entity>) {
+            this.entity = entity;
+            this.manager = manager;
+        }
+
+        public updateEntityPosition(): void {
+            this.manager.grid.insert(this.entity);
+        }
+
+        public remove(): void {
+            this.manager.remove(this.entity);
+        }
     }
 }

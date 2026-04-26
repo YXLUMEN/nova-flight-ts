@@ -8,6 +8,7 @@ import {ArcEffect} from "../../../effect/ArcEffect.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import type {World} from "../../../world/World.ts";
 import type {Vec2} from "../../../utils/math/Vec2.ts";
+import type {EntityDist} from "../../../type/types.ts";
 
 export class ArcEmitter extends BaseWeapon {
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
@@ -15,12 +16,12 @@ export class ArcEmitter extends BaseWeapon {
         const yaw = attacker.getYaw();
 
         const range = stack.getOrDefault(DataComponents.ATTACK_RANGE, 65536);
-        const candidates: { mob: Entity; distSq: number }[] = [];
+        const candidates: EntityDist<Entity>[] = [];
 
-        for (const mob of world.getMobs()) {
-            if (mob.isRemoved()) continue;
+        for (const entity of world.getMobs()) {
+            if (entity.isRemoved()) continue;
 
-            const mobPos = mob.positionRef;
+            const mobPos = entity.positionRef;
             const dx = mobPos.x - pos.x;
             const dy = mobPos.y - pos.y;
             const distSq = dx * dx + dy * dy;
@@ -32,7 +33,7 @@ export class ArcEmitter extends BaseWeapon {
 
             // 54
             if (Math.abs(diff) <= 0.94247) {
-                candidates.push({mob, distSq});
+                candidates.push({entity, distSq});
             }
         }
 
@@ -48,7 +49,7 @@ export class ArcEmitter extends BaseWeapon {
         const maxTarget = Math.min(6, candidates.length);
 
         for (let i = 0; i < maxTarget; i++) {
-            const mob = candidates[i].mob;
+            const mob = candidates[i].entity;
             const mobPos = mob.positionRef;
 
             mob.takeDamage(damageSource, damage);

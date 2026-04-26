@@ -10,7 +10,7 @@ export class EMCStatus extends StatusEffect {
 
     public override tickClient(entity: LivingEntity) {
         const angle = Math.random() * PI2;
-        const pos = entity.positionRef.clone()
+        const pos = entity.positionRef
             .add(Math.cos(angle) * 16, Math.sin(angle) * 16);
 
         const speed = 100 + Math.random() * 50;

@@ -231,10 +231,18 @@ export abstract class PlayerEntity extends LivingEntity {
     }
 
     public switchWeapon(dir = 1) {
-        const slot = this.inventory.getSelectedSlot();
+        const startSlot = this.inventory.getSelectedSlot();
         const len = this.inventory.hotbarLength();
-        const next = ((slot + dir) % len + len) % len;
-        if (next === slot) return;
+        let next = startSlot;
+
+        do {
+            next = ((next + dir) % len + len) % len;
+            if (!this.inventory.getItem(next).isEmpty()) {
+                break;
+            }
+        } while (next !== startSlot);
+
+        if (next === startSlot) return;
 
         const stack = this.inventory.getSelectedItem();
         if (!stack.isEmpty()) {

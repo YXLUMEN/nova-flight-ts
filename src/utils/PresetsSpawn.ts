@@ -10,7 +10,7 @@ import {EntityTypes} from "../entity/EntityTypes.ts";
 import {EntityAttributes} from "../entity/attribute/EntityAttributes.ts";
 import type {EntityType} from "../entity/EntityType.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
-import {AiBehavior} from "../entity/ai/MobAI.ts";
+import {AiBehavior, MobAI} from "../entity/ai/MobAI.ts";
 import type {SpawnContext} from "../world/stage/SpawnContext.ts";
 import type {Return} from "../type/types.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
@@ -87,7 +87,10 @@ const spawnInMap = (
 ): MobFactory => (ctx) => {
     return spawnAvoidPlayerCtor(type, [worth], (mob) => {
         modifyEntity(ctx, mob, speed, extraHp, color, hpScaleFn);
-        mob.getAi().setBehavior(AiBehavior.Wander);
+        const ai = mob.getAi();
+        if (ai instanceof MobAI) {
+            ai.setBehavior(AiBehavior.Wander);
+        }
     }, opts)(ctx);
 }
 

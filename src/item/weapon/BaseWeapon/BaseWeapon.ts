@@ -156,7 +156,7 @@ export abstract class BaseWeapon extends Weapon {
                 px * speed, py * speed,
                 rand(0.4, 0.6), rand(2, 3),
                 "#ffaa33", "#ff5454",
-                0.6, 80
+                0.6
             );
         }
     }
