@@ -2,18 +2,19 @@ import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
 import type {Payload} from "../../network/Payload.ts";
 import type {PacketListener} from "../../server/network/handler/PacketListener.ts";
 import {ConnectionState, type ConnectionStateType} from "../../server/network/ConnectionState.ts";
-import type {ClientNetworkChannel} from "./ClientNetworkChannel.ts";
 import {IllegalStateException} from "../../type/errors.ts";
+import type {Connection} from "../../network/Connection.ts";
+import type {ClientChannel} from "./ClientChannel.ts";
 
-export class ClientConnection {
-    private readonly channel: ClientNetworkChannel;
+export class ClientConnection implements Connection {
+    private channel: ClientChannel;
     private readonly sendQueue: RingBuffer<Payload> = new RingBuffer(16);
 
     private packetListener: PacketListener | null = null;
 
     private state: ConnectionStateType = ConnectionState.HANDSHAKING;
 
-    public constructor(channel: ClientNetworkChannel) {
+    public constructor(channel: ClientChannel) {
         this.channel = channel;
         channel.setHandler(this.recv.bind(this));
     }
@@ -62,6 +63,16 @@ export class ClientConnection {
         }
         this.packetListener = listener;
         this.changeState(state);
+    }
+
+    public changeChannel(channel: ClientChannel): void {
+        this.channel.disconnect();
+        this.channel = channel;
+        channel.setHandler(this.recv.bind(this));
+    }
+
+    public getChannel(): ClientChannel {
+        return this.channel;
     }
 
     public clean(): void {

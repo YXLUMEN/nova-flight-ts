@@ -104,6 +104,7 @@ export abstract class NetworkChannel implements Channel {
         this.isConnected = false;
         this.ws?.close(1000, 'Connection Closed');
         this.ws = null;
+        this.clearHandlers();
     }
 
     public async sniff(

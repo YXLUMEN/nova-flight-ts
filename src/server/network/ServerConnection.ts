@@ -8,8 +8,9 @@ import type {UUID} from "../../type/types.ts";
 import type {PacketListener} from "./handler/PacketListener.ts";
 import {IllegalStateException} from "../../type/errors.ts";
 import {RelayActionBuilder} from "./RelayActionBuilder.ts";
+import type {Connection} from "../../network/Connection.ts";
 
-export class ServerConnection {
+export class ServerConnection implements Connection {
     public static readonly TIMEOUT = TranslatableText.of('network.disconnect.timeout');
     public static readonly AFK_TIMEOUT_MS = 60000; // 60s
 

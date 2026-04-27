@@ -8,6 +8,7 @@ import {IntArgumentType} from "./argument/IntArgumentType.ts";
 import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
 import {ServerStorage} from "../server/ServerStorage.ts";
 import {clamp} from "../utils/math/math.ts";
+import {NovaFlightClient} from "../client/NovaFlightClient.ts";
 
 export class ClientSettingsCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -57,7 +58,15 @@ export class ClientSettingsCommand {
                         )
                         .then(
                             literal<T>('open')
-                                .executes(() => invoke('set_open'))
+                                .executes(async () => {
+                                    const value = await invoke('set_open');
+                                    NovaFlightClient.getInstance().requestStop();
+                                    if (typeof value === 'boolean') {
+                                        GlobalConfig.generalMode = value;
+                                        return;
+                                    }
+                                    throw new IllegalArgumentError(`\x1b[31mUnexpected value: ${value} \x1b[0m`);
+                                })
                         )
                         .then(
                             literal<T>('playerName')

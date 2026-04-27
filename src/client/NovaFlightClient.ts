@@ -1,6 +1,6 @@
 import {KeyboardInput} from "./input/KeyboardInput.ts";
 import {Window} from "./render/Window.ts";
-import {isDev, GlobalConfig} from "../configs/GlobalConfig.ts";
+import {GlobalConfig, isDev} from "../configs/GlobalConfig.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
 import {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
 import type {Supplier, UUID} from "../type/types.ts";
@@ -37,6 +37,8 @@ import {TipManager} from "./tips/TipManager.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
 import {ClientInputEvents} from "./input/ClientInputEvents.ts";
 import {RenderLoader} from "./render/RenderLoader.ts";
+import {ClientIntegratedChannel} from "./network/ClientIntegratedChannel.ts";
+import type {ClientChannel} from "./network/ClientChannel.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -51,7 +53,7 @@ export class NovaFlightClient {
     public readonly input: KeyboardInput;
     public globalSound!: SoundSystem;
 
-    public readonly channel: ClientNetworkChannel;
+    private channel: ClientChannel;
     public readonly connection: ClientConnection;
     public readonly networkHandler: ClientNetworkHandler;
 
@@ -174,7 +176,8 @@ export class NovaFlightClient {
             if (saveName === null) {
                 this.stopWorld();
             } else {
-                await this.startIntegratedServer(saveName);
+                if (GlobalConfig.generalMode) await this.startGeneralServer(saveName);
+                else await this.startIntegratedServer(saveName);
             }
         } else if (action === 1) {
             this.isIntegrated = false;
@@ -332,7 +335,13 @@ export class NovaFlightClient {
             this.stopWorld();
             return;
         }
+
+        this.channel = new ClientNetworkChannel(
+            `127.0.0.1:${GlobalConfig.port}`,
+            this.clientId
+        );
         this.channel.setServerAddress(address);
+        this.connection.changeChannel(this.channel);
 
         const connectInfo = new ConnectInfo(this, this.stopWorld.bind(this));
         this.connectInfo?.destroy();
@@ -377,6 +386,103 @@ export class NovaFlightClient {
         this.connectInfo = connectInfo;
         connectInfo.setMessage(TranslatableText.of('start.integrated.start').toString());
 
+        // 内置服务器配置
+        const startUp: StartServer = {
+            addr: `127.0.0.1:${GlobalConfig.port}`,
+            key: new ArrayBuffer(0),
+            hostUUID: this.clientId,
+            saveName
+        };
+
+        // Vite 规定的格式 integrated dev
+        const server = new ServerWorker(new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
+            type: 'module',
+            name: 'server',
+        }));
+
+        this.server = server;
+        const worker = this.server.getWorker();
+
+        this.channel = new ClientIntegratedChannel(worker, this.clientId);
+        this.connection.changeChannel(this.channel);
+
+        // noinspection DuplicatedCode
+        const connectToServer = async () => {
+            connectInfo.setMessage(TranslatableText.of('start.connecting').toString());
+            try {
+                await this.channel.connect();
+                this.networkHandler.checkServer();
+            } catch (err) {
+                console.error(err);
+                await error(String(err));
+                await connectInfo.setError(TranslatableText.of('start.fail.connect').toString());
+                this.stopWorld();
+            }
+        };
+
+        const startTimeout = setTimeout(() => {
+            connectInfo.setError(TranslatableText.of('network.disconnect.timeout').toString());
+            server.terminate();
+        }, NovaFlightClient.SERVER_START_TIMEOUT);
+
+        worker.onmessage = event => {
+            switch (event.data.type) {
+                case 'server_start':
+                    clearTimeout(startTimeout);
+                    connectToServer();
+                    break;
+                case 'server_stop':
+                    this.stopWorld();
+                    break;
+                case 'saved':
+                    this.clientCommandManager.addPlainMessage('\x1b[32m游戏已保存');
+                    break;
+                case 'read_file':
+                    this.serverReadFile(event.data);
+                    break;
+                case 'write_file':
+                    this.serverWriteFile(event.data);
+                    break;
+                case 'log':
+                    const level = event.data.level;
+                    if (level === 'info') info(event.data.message);
+                    else if (level === 'warn') warn(event.data.message);
+                    else if (level === 'error') error(event.data.message);
+                    break;
+                case 'message':
+                    message(event.data.message, {kind: event.data.kind});
+                    break;
+            }
+        };
+
+        worker.onerror = event => {
+            const err = event.error;
+            const msg = err instanceof Error ?
+                `[Server Thread] Crash ${err.name}:${err.message} because ${err.cause} at\n ${err.stack}` :
+                `[Server Thread] Crash ${event.type}:${event.message} because ${event.error}`;
+
+            console.error(msg);
+            error(msg);
+            this.requestStop();
+        }
+
+        server.postMessage({
+            type: 'start_server',
+            payload: startUp
+        }, {transfer: [new ArrayBuffer(0)]});
+
+        await connectInfo.waitConfirm();
+    }
+
+    private async startGeneralServer(saveName: string): Promise<void> {
+        if (this.server) return;
+
+        // 全屏提示
+        const connectInfo = new ConnectInfo(this, this.stopWorld.bind(this));
+        this.connectInfo?.destroy();
+        this.connectInfo = connectInfo;
+        connectInfo.setMessage(TranslatableText.of('start.integrated.start').toString());
+
         // 启动中继服务器
         let key: ArrayBuffer;
         try {
@@ -398,7 +504,9 @@ export class NovaFlightClient {
         await sleep(300);
 
         const addr = `127.0.0.1:${GlobalConfig.port}`;
+        this.channel = new ClientNetworkChannel(addr, this.clientId);
         this.channel.setServerAddress(addr);
+        this.connection.changeChannel(this.channel);
 
         // 确认中继服务器开启
         const canConnect = await this.channel.sniff(addr);
@@ -407,6 +515,7 @@ export class NovaFlightClient {
             return;
         }
 
+        // noinspection DuplicatedCode
         const connectToServer = async () => {
             connectInfo.setMessage(TranslatableText.of('start.connecting').toString());
             try {

@@ -11,7 +11,7 @@ export const DEFAULT_CONFIG = config({
     per: 50,
     fps: 100,
     perFrame: 1000 / 100,
-    version: '26v24',
+    version: '26v25',
     gameVersion: 10,
 });
 
@@ -30,6 +30,7 @@ export const GlobalConfig = status({
     devVersion: DEFAULT_CONFIG.version,
     port: 25566,
     serverAddr: '127.0.0.1:25566',
+    generalMode: false,
 
     cameraFollow: true,
     renderHitBox: false,

@@ -13,14 +13,17 @@ import {ServerNetworkChannel} from "./network/ServerNetworkChannel.ts";
 import {PlayerManager} from "./entity/PlayerManager.ts";
 import {Log} from "../worker/log.ts";
 import {NoResultsError, StatusError} from "../type/errors.ts";
+import {ServerIntegratedChannel} from "./network/ServerIntegratedChannel.ts";
 
 export class IntegratedServer extends NovaFlightServer {
     private readonly hostUUID: UUID;
 
     public constructor(secretKey: Uint8Array, host: UUID, saveName: string) {
-        const channel = new ServerNetworkChannel('127.0.0.1:25566', secretKey);
-        super(saveName, channel, PlayerManager);
+        const channel = secretKey.length === 0 ?
+            new ServerIntegratedChannel() :
+            new ServerNetworkChannel('127.0.0.1:25566', secretKey);
 
+        super(saveName, channel, PlayerManager);
         this.hostUUID = host;
     }
 

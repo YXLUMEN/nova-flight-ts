@@ -3,8 +3,9 @@ import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
 import type {Consumer, UUID} from "../../type/types.ts";
 import {UUIDUtil} from "../../utils/UUIDUtil.ts";
 import type {Payload} from "../../network/Payload.ts";
+import type {ClientChannel} from "./ClientChannel.ts";
 
-export class ClientNetworkChannel extends NetworkChannel {
+export class ClientNetworkChannel extends NetworkChannel implements ClientChannel {
     private readonly clientId: UUID;
     private handler: Consumer<Payload> = () => {
     };

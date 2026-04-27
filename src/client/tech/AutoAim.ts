@@ -59,10 +59,10 @@ export class AutoAim {
         }
 
         const ownerYaw = this.owner.getYaw();
-        let best: { mob: MobEntity; dist2: number; angleDiff: number; approaching: boolean } | null = null;
+        let best: Target | null = null;
 
         for (const mob of mobs) {
-            if (mob.isRemoved()) continue;
+            if (mob.isRemoved() || mob.invulnerable) continue;
 
             const mobPos = mob.positionRef;
             const dx = mobPos.x - pos.x;
@@ -94,3 +94,5 @@ export class AutoAim {
         return this.currentTarget;
     }
 }
+
+type Target = { mob: MobEntity; dist2: number; angleDiff: number; approaching: boolean };

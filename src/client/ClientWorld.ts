@@ -9,7 +9,6 @@ import type {SoundEvent} from "../sound/SoundEvent.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
-import type {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
 import {EVENTS} from "../type/IEvents.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
@@ -25,6 +24,7 @@ import type {ExplosionBehavior} from "../world/explosion/ExplosionBehavior.ts";
 import type {WorldRender} from "./render/WorldRender.ts";
 import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
+import type {ClientChannel} from "./network/ClientChannel.ts";
 
 export class ClientWorld extends World {
     public readonly worldName: string;
@@ -105,8 +105,8 @@ export class ClientWorld extends World {
         }, 2500);
     }
 
-    public override getNetworkChannel(): ClientNetworkChannel {
-        return this.client.channel;
+    public override getNetworkChannel(): ClientChannel {
+        return this.client.connection.getChannel();
     }
 
     public override getServer(): NovaFlightServer | null {

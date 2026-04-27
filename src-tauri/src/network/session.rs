@@ -13,7 +13,7 @@ pub struct Session {
     pub uuid: Option<[u8; 16]>,
 }
 
-pub struct SessionContext {
+pub(crate) struct SessionContext {
     pub session: Arc<Session>,
     pub allow: Option<oneshot::Receiver<()>>,
     pub close: Option<oneshot::Receiver<()>>,
@@ -33,7 +33,7 @@ impl SessionAllocatorInner {
     }
 }
 
-pub struct SessionAllocator {
+pub(crate) struct SessionAllocator {
     inner: Arc<Mutex<SessionAllocatorInner>>,
 }
 

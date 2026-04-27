@@ -4,5 +4,5 @@ export interface StartServer {
     addr: string;
     key: ArrayBuffer;
     hostUUID: UUID;
-    saveName: string
+    saveName: string;
 }

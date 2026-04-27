@@ -63,7 +63,7 @@ export class PayloadTypeRegistry {
         return this.packetTypes.get(id) ?? null;
     }
 
-    public settle() {
+    public settle(): void {
         deepFreeze(this);
     }
 

@@ -24,6 +24,9 @@ export class ClientInputEvents {
                 if ((code === 'Slash' || code === 'KeyT') && !commandManager.isShow()) {
                     commandManager.switchPanel(true);
                     input.setHandlerDisabled(true);
+                    if (code === 'KeyT' || commandManager.getInput().length !== 0) {
+                        event.preventDefault();
+                    }
                 }
                 this.onKeyDown(client, event);
             },
