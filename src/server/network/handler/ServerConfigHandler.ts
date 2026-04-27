@@ -1,13 +1,13 @@
 import {GameProfile} from "../../entity/GameProfile.ts";
 import {ServerCommonHandler} from "./ServerCommonHandler.ts";
-import type {NovaFlightServer} from "../../NovaFlightServer.ts";
-import type {ServerConnection} from "../ServerConnection.ts";
 import {ClientReadyC2SPacket} from "../../../network/packet/c2s/ClientReadyC2SPacket.ts";
 import {ServerReadyS2CPacket} from "../../../network/packet/s2c/ServerReadyS2CPacket.ts";
 import {PlayerAttemptLoginC2SPacket} from "../../../network/packet/c2s/PlayerAttemptLoginC2SPacket.ts";
 import type {UUID} from "../../../type/types.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {ConnectionState, type ConnectionStateType} from "../ConnectionState.ts";
+import type {NovaFlightServer} from "../../NovaFlightServer.ts";
+import type {ServerConnection} from "../ServerConnection.ts";
 
 export class ServerConfigHandler extends ServerCommonHandler {
     public static readonly DUPLICATE_PLAYER = TranslatableText.of('network.disconnect.duplicate_player');
@@ -19,7 +19,6 @@ export class ServerConfigHandler extends ServerCommonHandler {
 
     public constructor(server: NovaFlightServer, connection: ServerConnection) {
         super(server, connection);
-        this.registryHandler();
     }
 
     public onClientReady(packet: ClientReadyC2SPacket) {
@@ -33,7 +32,7 @@ export class ServerConfigHandler extends ServerCommonHandler {
         this.send(ServerReadyS2CPacket.INSTANCE);
     }
 
-    private onPlayerAttemptLogin(packet: PlayerAttemptLoginC2SPacket) {
+    public onPlayerAttemptLogin(packet: PlayerAttemptLoginC2SPacket) {
         if (this.connection.getState() !== this.getPhase() || this.attemptUUID !== packet.clientId) {
             this.disconnect(ServerConfigHandler.INVALID_STATE);
             return;
@@ -84,10 +83,5 @@ export class ServerConfigHandler extends ServerCommonHandler {
 
     public getPhase(): ConnectionStateType {
         return ConnectionState.CONFIGURATION;
-    }
-
-    private registryHandler() {
-        this.register(ClientReadyC2SPacket.ID, this.onClientReady.bind(this));
-        this.register(PlayerAttemptLoginC2SPacket.ID, this.onPlayerAttemptLogin.bind(this));
     }
 }

@@ -3,6 +3,7 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {EntitySpawnS2CPacket} from "./EntitySpawnS2CPacket.ts";
 import type {Entity} from "../../../entity/Entity.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class EntityBatchSpawnS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityBatchSpawnS2CPacket> = payloadId('spawn_entity_batch');
@@ -31,5 +32,9 @@ export class EntityBatchSpawnS2CPacket implements Payload {
 
     public getId(): PayloadId<any> {
         return EntityBatchSpawnS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onEntityBatchSpawn(this);
     }
 }

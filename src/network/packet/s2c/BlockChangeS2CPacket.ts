@@ -3,6 +3,7 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {BlockPos} from "../../../world/map/BlockPos.ts";
 import type {BlockChange} from "../../../world/map/BlockChange.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class BlockChangeS2CPacket implements Payload {
     public static readonly ID: PayloadId<BlockChangeS2CPacket> = payloadId('block_change');
@@ -40,6 +41,10 @@ export class BlockChangeS2CPacket implements Payload {
 
     public getId(): PayloadId<BlockChangeS2CPacket> {
         return BlockChangeS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onBlockChange(this);
     }
 
     public estimateSize(): number {

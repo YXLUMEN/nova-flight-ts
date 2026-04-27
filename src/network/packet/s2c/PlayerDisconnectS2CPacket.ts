@@ -3,6 +3,7 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {UUID} from "../../../type/types.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class PlayerDisconnectS2CPacket implements Payload {
     public static readonly ID: PayloadId<PlayerDisconnectS2CPacket> = payloadId('player_disconnect');
@@ -28,5 +29,9 @@ export class PlayerDisconnectS2CPacket implements Payload {
 
     public getId(): PayloadId<PlayerDisconnectS2CPacket> {
         return PlayerDisconnectS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onPlayerDisconnect(this);
     }
 }

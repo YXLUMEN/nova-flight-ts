@@ -3,6 +3,7 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {RegistryEntry} from "../../../registry/tag/RegistryEntry.ts";
 import {StatusEffect} from "../../../entity/effect/StatusEffect.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class RemoveEntityStatusEffectS2CPacket implements Payload {
     public static readonly ID: PayloadId<RemoveEntityStatusEffectS2CPacket> = payloadId('entity_remove_effect');
@@ -28,5 +29,9 @@ export class RemoveEntityStatusEffectS2CPacket implements Payload {
 
     public getId(): PayloadId<any> {
         return RemoveEntityStatusEffectS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onRemoveEntityEffect(this);
     }
 }

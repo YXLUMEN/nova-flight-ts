@@ -3,6 +3,7 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {UUID} from "../../../type/types.ts";
 import type {RelayPayload} from "../../RelayPayload.ts";
+import type {ServerNetworkManager} from "../../../server/network/ServerNetworkManager.ts";
 
 export class ClientAttached implements RelayPayload {
     public static readonly TYPE_ID = 0x02;
@@ -29,5 +30,9 @@ export class ClientAttached implements RelayPayload {
 
     public getId(): PayloadId<ClientAttached> {
         return ClientAttached.ID;
+    }
+
+    public accept(listener: ServerNetworkManager): void {
+        listener.onClientAttached(this);
     }
 }

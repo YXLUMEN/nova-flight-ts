@@ -4,6 +4,8 @@ import {PacketCodecs} from "../codec/PacketCodecs.ts";
 import type {BlockChange} from "../../world/map/BlockChange.ts";
 import type {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../nbt/BinaryReader.ts";
+import type {ClientNetworkHandler} from "../../client/network/ClientNetworkHandler.ts";
+import type {ServerPlayHandler} from "../../server/network/handler/ServerPlayHandler.ts";
 
 export class BatchBlockChangesPacket implements Payload {
     public static readonly ID: PayloadId<BatchBlockChangesPacket> = payloadId('batch_block_changes');
@@ -85,6 +87,10 @@ export class BatchBlockChangesPacket implements Payload {
 
     public getId(): PayloadId<BatchBlockChangesPacket> {
         return BatchBlockChangesPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler | ServerPlayHandler): void {
+        listener.onBatchChanges(this);
     }
 
     public foreach(consumer: (type: number, x: number, y: number) => void) {

@@ -1,7 +1,8 @@
-import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {SoundEvent} from "../../../sound/SoundEvent.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class AudioStopS2CPacket implements Payload {
     public static readonly ID: PayloadId<AudioStopS2CPacket> = payloadId('audio_stop');
@@ -19,5 +20,9 @@ export class AudioStopS2CPacket implements Payload {
 
     public getId(): PayloadId<AudioStopS2CPacket> {
         return AudioStopS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler) {
+        listener.onAudioStop(this);
     }
 }

@@ -1,6 +1,7 @@
-import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class EntityHealthS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityHealthS2CPacket> = payloadId('entity_health');
@@ -26,5 +27,8 @@ export class EntityHealthS2CPacket implements Payload {
 
     public getId(): PayloadId<EntityHealthS2CPacket> {
         return EntityHealthS2CPacket.ID;
+    }
+
+    public accept(_listener: ClientNetworkHandler): void {
     }
 }

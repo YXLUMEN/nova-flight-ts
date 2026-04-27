@@ -1,6 +1,7 @@
 import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class ScreenShakeS2CPacket implements Payload {
     public static readonly ID: PayloadId<ScreenShakeS2CPacket> = payloadId('screen_shake');
@@ -26,5 +27,9 @@ export class ScreenShakeS2CPacket implements Payload {
 
     public getId(): PayloadId<ScreenShakeS2CPacket> {
         return ScreenShakeS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onScreenShake(this);
     }
 }

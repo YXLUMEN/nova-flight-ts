@@ -1,9 +1,10 @@
-import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import {DataTracker, type DataTrackerSerializedEntry} from "../../../entity/data/DataTracker.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class EntityTrackerUpdateS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityTrackerUpdateS2CPacket> = payloadId('entity_tracker_update');
@@ -40,5 +41,9 @@ export class EntityTrackerUpdateS2CPacket implements Payload {
 
     public getId(): PayloadId<EntityTrackerUpdateS2CPacket> {
         return EntityTrackerUpdateS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onEntityTrackerUpdate(this);
     }
 }

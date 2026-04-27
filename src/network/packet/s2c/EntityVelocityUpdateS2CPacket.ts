@@ -6,6 +6,7 @@ import {decodeVelocity, encodeVelocity} from "../../../utils/NetUtil.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {Vec2} from "../../../utils/math/Vec2.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class EntityVelocityUpdateS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityVelocityUpdateS2CPacket> = payloadId('entity_velocity');
@@ -46,6 +47,10 @@ export class EntityVelocityUpdateS2CPacket implements Payload {
 
     public getId(): PayloadId<EntityVelocityUpdateS2CPacket> {
         return EntityVelocityUpdateS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onEntityVelocityUpdate(this);
     }
 
     public get velocityX() {

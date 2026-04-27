@@ -4,6 +4,7 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {ItemStack} from "../../../item/ItemStack.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class ContainerSetSlotS2CPacket implements Payload {
     public static readonly ID: PayloadId<ContainerSetSlotS2CPacket> = payloadId('container_set_slot');
@@ -39,5 +40,8 @@ export class ContainerSetSlotS2CPacket implements Payload {
 
     public getId(): PayloadId<ContainerSetSlotS2CPacket> {
         return ContainerSetSlotS2CPacket.ID;
+    }
+
+    public accept(_listener: ClientNetworkHandler): void {
     }
 }

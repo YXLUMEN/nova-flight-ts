@@ -2,6 +2,7 @@ import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {Vec2} from "../../../utils/math/Vec2.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export abstract class LaserWeaponS2CPacket implements Payload {
     public readonly entityId: number;
@@ -22,7 +23,11 @@ export abstract class LaserWeaponS2CPacket implements Payload {
         this.change = change;
     }
 
-    abstract getId(): PayloadId<LaserWeaponS2CPacket>;
+    public abstract getId(): PayloadId<LaserWeaponS2CPacket>;
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onLaserWeapon(this);
+    }
 }
 
 export class LaserWeaponActivate extends LaserWeaponS2CPacket {

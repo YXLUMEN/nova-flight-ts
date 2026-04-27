@@ -7,7 +7,7 @@ import {IllegalStateException} from "../../type/errors.ts";
 
 export class ClientConnection {
     private readonly channel: ClientNetworkChannel;
-    private readonly sendQueue: RingBuffer<Payload> = new RingBuffer(8);
+    private readonly sendQueue: RingBuffer<Payload> = new RingBuffer(16);
 
     private packetListener: PacketListener | null = null;
 

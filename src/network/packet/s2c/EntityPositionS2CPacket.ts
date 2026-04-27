@@ -1,10 +1,11 @@
-import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import {decodeYaw, encodeYaw} from "../../../utils/NetUtil.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class EntityPositionS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityPositionS2CPacket> = payloadId('entity_position');
@@ -48,6 +49,10 @@ export class EntityPositionS2CPacket implements Payload {
 
     public getId(): PayloadId<EntityPositionS2CPacket> {
         return EntityPositionS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onEntityPosition(this);
     }
 
     public get yaw() {

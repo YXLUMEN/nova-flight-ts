@@ -1,6 +1,7 @@
 import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class TranslatableTextS2CPacket implements Payload {
     public static readonly ID: PayloadId<TranslatableTextS2CPacket> = payloadId('translatable_text');
@@ -26,5 +27,9 @@ export class TranslatableTextS2CPacket implements Payload {
 
     public getId(): PayloadId<TranslatableTextS2CPacket> {
         return TranslatableTextS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onTranslateText(this);
     }
 }

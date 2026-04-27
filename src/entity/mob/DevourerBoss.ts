@@ -77,14 +77,12 @@ export class DevourerBoss extends BossEntity {
 
         this.segmentPoses = new Float32Array(this.segmentCount * this.segmentCount);
         this.prevSegmentPoses = new Float32Array(this.segmentCount * this.segmentCount);
-
         this.segShootCds = new Uint8Array(this.segmentCount);
         for (let i = 0; i < this.segShootCds.length; i++) {
             this.segShootCds[i] = 1 + i * 3;
         }
 
         this.setMovementSpeed(10);
-        this.addEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, -1, 1), null);
         this.createBullet = this.createBullet.bind(this);
     }
 
@@ -102,6 +100,7 @@ export class DevourerBoss extends BossEntity {
     }
 
     protected createAi() {
+        // TODO 行为由AI决定
         return new DevourerBossAI();
     }
 

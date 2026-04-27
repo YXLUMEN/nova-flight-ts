@@ -1,6 +1,7 @@
-import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import type {ServerPlayHandler} from "../../../server/network/handler/ServerPlayHandler.ts";
 
 export class ChatMessageC2SPacket implements Payload {
     public static readonly ID: PayloadId<ChatMessageC2SPacket> = payloadId('chat_msg_c');
@@ -18,5 +19,9 @@ export class ChatMessageC2SPacket implements Payload {
 
     public getId(): PayloadId<ChatMessageC2SPacket> {
         return ChatMessageC2SPacket.ID;
+    }
+
+    public accept(listener: ServerPlayHandler): void {
+        listener.onChatMessage(this);
     }
 }

@@ -16,7 +16,7 @@ export class TextureResource implements ResourceModule, TextureProvider {
     private readonly texturePaths = new Map<string, TexturePath>();
     private readonly textureCache = new Map<string, ImageBitmap>();
 
-    private defaultTexturePath: string = '/textures/default.png';
+    private readonly defaultTexturePath: string = '/textures/default.png';
     private defaultTexture: ImageBitmap | null = null;
     private transparent: ImageBitmap | null = null;
 
@@ -98,9 +98,7 @@ export class TextureResource implements ResourceModule, TextureProvider {
         ctx.fillRect(0, 0, cell, cell);
         ctx.fillRect(cell, cell, cell, cell);
 
-        const blob = await canvas.convertToBlob();
-        this.defaultTexture = await createImageBitmap(blob);
-        this.defaultTexturePath = URL.createObjectURL(blob);
+        this.defaultTexture = await createImageBitmap(canvas);
     }
 
     private async builtinTransparent(): Promise<void> {
@@ -125,10 +123,8 @@ export class TextureResource implements ResourceModule, TextureProvider {
 
         this.defaultTexture?.close();
         this.transparent?.close();
-        URL.revokeObjectURL(this.defaultTexturePath);
         this.defaultTexture = null;
         this.transparent = null;
-        this.defaultTexturePath = '/textures/default.png';
     }
 
     public dispose(key: string): void {

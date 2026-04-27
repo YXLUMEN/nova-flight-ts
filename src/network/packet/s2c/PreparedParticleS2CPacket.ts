@@ -3,6 +3,7 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {ParticleEffectType} from "../../../effect/ParticleEffectType.ts";
 import type {Vec2} from "../../../utils/math/Vec2.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class PreparedParticleS2CPacket implements Payload {
     public static readonly ID: PayloadId<PreparedParticleS2CPacket> = payloadId('prepared_particle');
@@ -37,5 +38,9 @@ export class PreparedParticleS2CPacket implements Payload {
 
     public getId(): PayloadId<PreparedParticleS2CPacket> {
         return PreparedParticleS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onPreparedParticle(this);
     }
 }

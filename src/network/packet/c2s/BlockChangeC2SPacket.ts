@@ -2,6 +2,7 @@ import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {BlockPos} from "../../../world/map/BlockPos.ts";
+import type {ServerPlayHandler} from "../../../server/network/handler/ServerPlayHandler.ts";
 
 export class BlockChangeC2SPacket implements Payload {
     public static readonly ID: PayloadId<BlockChangeC2SPacket> = payloadId('block_change_c');
@@ -35,5 +36,9 @@ export class BlockChangeC2SPacket implements Payload {
 
     public getId(): PayloadId<BlockChangeC2SPacket> {
         return BlockChangeC2SPacket.ID;
+    }
+
+    public accept(listener: ServerPlayHandler) {
+        listener.onPlaceBlock(this);
     }
 }

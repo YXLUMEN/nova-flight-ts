@@ -4,23 +4,17 @@ import {ClientWorld} from "../ClientWorld.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
-import type {Consumer, UUID} from "../../type/types.ts";
+import type {UUID} from "../../type/types.ts";
 import {EntityRemoveS2CPacket} from "../../network/packet/s2c/EntityRemoveS2CPacket.ts";
 import {EntityPositionS2CPacket} from "../../network/packet/s2c/EntityPositionS2CPacket.ts";
 import {ExplosionS2CPacket} from "../../network/packet/s2c/ExplosionS2CPacket.ts";
 import {EntityVelocityUpdateS2CPacket} from "../../network/packet/s2c/EntityVelocityUpdateS2CPacket.ts";
 import {EntityTrackerUpdateS2CPacket} from "../../network/packet/s2c/EntityTrackerUpdateS2CPacket.ts";
-import {
-    EntityS2CPacket,
-    MoveRelative,
-    Rotate,
-    RotateAndMoveRelative
-} from "../../network/packet/s2c/EntityS2CPacket.ts";
+import {EntityS2CPacket} from "../../network/packet/s2c/EntityS2CPacket.ts";
 import {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
 import {ServerReadyS2CPacket} from "../../network/packet/s2c/ServerReadyS2CPacket.ts";
 import {PlayerAttemptLoginC2SPacket} from "../../network/packet/c2s/PlayerAttemptLoginC2SPacket.ts";
 import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
-import {EntityKilledS2CPacket} from "../../network/packet/s2c/EntityKilledS2CPacket.ts";
 import {ParticleS2CPacket} from "../../network/packet/s2c/ParticleS2CPacket.ts";
 import {EntityAttributesS2CPacket} from "../../network/packet/s2c/EntityAttributesS2CPacket.ts";
 import {LivingEntity} from "../../entity/LivingEntity.ts";
@@ -35,19 +29,18 @@ import {EntityNbtS2CPacket} from "../../network/packet/s2c/EntityNbtS2CPacket.ts
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
 import {EffectCreateS2CPacket} from "../../network/packet/s2c/EffectCreateS2CPacket.ts";
 import {SoundEventS2CPacket} from "../../network/packet/s2c/SoundEventS2CPacket.ts";
-import {StopSoundS2CPacket} from "../../network/packet/s2c/StopSoundS2CPacket.ts";
 import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
 import {PlayerAddScoreS2CPacket} from "../../network/packet/s2c/PlayerAddScoreS2CPacket.ts";
 import {ClientCommandSource} from "../command/ClientCommandSource.ts";
 import {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
-import type {Payload, PayloadId} from "../../network/Payload.ts";
+import type {Payload} from "../../network/Payload.ts";
 import {CommandExecutionC2SPacket} from "../../network/packet/c2s/CommandExecutionC2SPacket.ts";
 import {OtherClientPlayerEntity} from "../entity/OtherClientPlayerEntity.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import {ClientReadyC2SPacket} from "../../network/packet/c2s/ClientReadyC2SPacket.ts";
 import {PlayerJoinS2CPacket} from "../../network/packet/s2c/PlayerJoinS2CPacket.ts";
 import {GameProfile} from "../../server/entity/GameProfile.ts";
-import {PlayerGameModeS2CPacket} from "../../network/packet/s2c/PlayerGameModeS2CPacket.ts";
+import {PlayerProfileSyncS2CPacket} from "../../network/packet/s2c/PlayerProfileSyncS2CPacket.ts";
 import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
 import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
@@ -55,17 +48,11 @@ import {ItemCooldownUpdateS2CPacket} from "../../network/packet/s2c/ItemCooldown
 import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {AudioManager} from "../../sound/AudioManager.ts";
 import {ConnectInfo} from "../render/ui/ConnectInfo.ts";
-import {GameOverS2CPacket} from "../../network/packet/s2c/GameOverS2CPacket.ts";
-import {AudioControlS2CPacket, AudioLeapS2CPacket} from "../../network/packet/s2c/AudioControlS2CPacket.ts";
+import {AudioControlS2CPacket} from "../../network/packet/s2c/AudioControlS2CPacket.ts";
 import {BGMManager} from "../../sound/BGMManager.ts";
 import {AudioStopS2CPacket} from "../../network/packet/s2c/AudioStopS2CPacket.ts";
 import {Audios} from "../../sound/Audios.ts";
-import {
-    LaserWeaponActivate,
-    LaserWeaponChange,
-    LaserWeaponDeactivate,
-    type LaserWeaponS2CPacket
-} from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
+import {type LaserWeaponS2CPacket} from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
 import {LaserBeamEffect} from "../../effect/LaserBeamEffect.ts";
 import {PhaseLasers} from "../../item/weapon/PhaseLasers.ts";
 import {TargetDrone} from "../../entity/TargetDrone.ts";
@@ -76,8 +63,6 @@ import {TranslatableText} from "../../i18n/TranslatableText.ts";
 import {PongS2CPacket} from "../../network/packet/s2c/PongS2CPacket.ts";
 import {PingC2SPacket} from "../../network/packet/c2s/PingC2SPacket.ts";
 import {ServerStartS2CPacket} from "../../network/packet/s2c/ServerStartS2CPacket.ts";
-import {HashMap} from "../../utils/collection/HashMap.ts";
-import type {Identifier} from "../../registry/Identifier.ts";
 import {RelayMessage} from "../../network/packet/relay/RelayMessage.ts";
 import {BlockChangeS2CPacket} from "../../network/packet/s2c/BlockChangeS2CPacket.ts";
 import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
@@ -90,9 +75,9 @@ import {squareDist} from "../../utils/math/math.ts";
 import {PreparedParticleS2CPacket} from "../../network/packet/s2c/PreparedParticleS2CPacket.ts";
 import {ScreenShakeS2CPacket} from "../../network/packet/s2c/ScreenShakeS2CPacket.ts";
 import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
+import type {StopSoundS2CPacket} from "../../network/packet/s2c/StopSoundS2CPacket.ts";
 
 export class ClientNetworkHandler implements PacketListener {
-    private readonly handlers = new HashMap<Identifier, Consumer<Payload>>();
     private readonly playerProfiles: Map<UUID, GameProfile> = new Map();
 
     private readonly commandSource: ClientCommandSource;
@@ -116,7 +101,6 @@ export class ClientNetworkHandler implements PacketListener {
         this.commandSource = new ClientCommandSource(this, client);
 
         connection.setPacketListener(ConnectionState.PLAY, this);
-        this.registryHandler();
     }
 
     public send(packet: Payload) {
@@ -131,10 +115,7 @@ export class ClientNetworkHandler implements PacketListener {
     }
 
     public accepts(packet: Payload): void {
-        const task = this.handlers.get(packet.getId().id);
-        if (!task) return;
-        Promise.resolve()
-            .then(() => task(packet));
+        packet.accept(this);
     }
 
     public getPhase(): ConnectionStateType {
@@ -167,7 +148,7 @@ export class ClientNetworkHandler implements PacketListener {
         this.sendImmediate(PingC2SPacket.INSTANCE);
     }
 
-    private onRelayServer(packet: RelayMessage) {
+    public onRelayMessage(packet: RelayMessage): void {
         const parts = packet.msg.split(':');
         const type = parts[0];
         const msg = parts.slice(1).join(':');
@@ -307,9 +288,8 @@ export class ClientNetworkHandler implements PacketListener {
         const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
 
-        entity.updatePosition(packet.x, packet.y);
         entity.setDeltaMovement(0, 0);
-        entity.updateYaw(packet.yaw);
+        entity.snapTo(packet.x, packet.y, packet.yaw);
     }
 
     public onEntitySpawn(packet: EntitySpawnS2CPacket): void {
@@ -472,10 +452,7 @@ export class ClientNetworkHandler implements PacketListener {
     }
 
     public onEntityNbt(packet: EntityNbtS2CPacket) {
-        const world = this.world;
-        if (!world) return;
-
-        const entity = world.getEntityLookup().getByUUID(packet.entityUuid);
+        const entity = this.world?.getEntityLookup().get(packet.entityId);
         if (!entity) return;
         entity.readNBT(packet.nbt);
     }
@@ -510,7 +487,7 @@ export class ClientNetworkHandler implements PacketListener {
         }
     }
 
-    public onStopSound(packet: SoundEventS2CPacket): void {
+    public onStopSound(packet: StopSoundS2CPacket): void {
         const world = this.world;
         if (!world) return;
         world.stopLoopSound(null, packet.soundEvent);
@@ -572,14 +549,14 @@ export class ClientNetworkHandler implements PacketListener {
         this.client.clientCommandManager.addPlainMessage(text.toString());
     }
 
-    public onSyncProfile(packet: PlayerGameModeS2CPacket): void {
+    public onSyncProfile(packet: PlayerProfileSyncS2CPacket): void {
         const player = this.client.player;
         if (!player) return;
 
         player.setDevMode(packet.devMode);
     }
 
-    public onEntityStatusEffect(packet: EntityStatusEffectS2CPacket): void {
+    public onEntityEffect(packet: EntityStatusEffectS2CPacket): void {
         const entity = this.world?.getEntityById(packet.entityId);
         if (entity instanceof LivingEntity) {
             const registryEntry = packet.effectId;
@@ -588,7 +565,7 @@ export class ClientNetworkHandler implements PacketListener {
         }
     }
 
-    public onRemoveEntityStatusEffect(packet: RemoveEntityStatusEffectS2CPacket): void {
+    public onRemoveEntityEffect(packet: RemoveEntityStatusEffectS2CPacket): void {
         const entity = this.world?.getEntityById(packet.entityId);
         if (entity instanceof LivingEntity) {
             entity.removeEffectNoUpdate(packet.effectId);
@@ -686,7 +663,6 @@ export class ClientNetworkHandler implements PacketListener {
 
     public destroy() {
         this.clear();
-        this.handlers.clear();
     }
 
     public clear(): void {
@@ -694,64 +670,5 @@ export class ClientNetworkHandler implements PacketListener {
         clearInterval(this.sniffInterval);
         this.playerProfiles.clear();
         this.world = null;
-    }
-
-    private register<T extends Payload>(id: PayloadId<T>, handler: Consumer<T>): void {
-        this.handlers.set(id.id, handler.bind(this) as Consumer<Payload>);
-    }
-
-    private registryHandler() {
-        this.register(RelayMessage.ID, this.onRelayServer);
-        this.register(ServerStartS2CPacket.ID, this.onServerStart);
-        this.register(ServerReadyS2CPacket.ID, this.onServerReady);
-        this.register(PongS2CPacket.ID, this.onPong);
-        this.register(JoinGameS2CPacket.ID, this.onGameJoin);
-        this.register(PlayerJoinS2CPacket.ID, this.onPlayerJoin);
-        this.register(PlayerDisconnectS2CPacket.ID, this.onPlayerDisconnect);
-        this.register(EntitySpawnS2CPacket.ID, this.onEntitySpawn);
-        this.register(EntityRemoveS2CPacket.ID, this.onEntityRemove);
-        this.register(EntityPositionS2CPacket.ID, this.onEntityPosition);
-        this.register(ExplosionS2CPacket.ID, this.onExplosion);
-        this.register(EntityVelocityUpdateS2CPacket.ID, this.onEntityVelocityUpdate);
-        this.register(EntityTrackerUpdateS2CPacket.ID, this.onEntityTrackerUpdate);
-        this.register(Rotate.ID, this.onEntity);
-        this.register(MoveRelative.ID, this.onEntity);
-        this.register(RotateAndMoveRelative.ID, this.onEntity);
-        this.register(EntityKilledS2CPacket.ID, this.onEntityKilled);
-        this.register(EntityDamageS2CPacket.ID, this.onEntityDamage);
-        this.register(ParticleS2CPacket.ID, this.onParticle);
-        this.register(EntityAttributesS2CPacket.ID, this.onEntityAttributes);
-        this.register(MissileSetS2CPacket.ID, this.onMissileSet);
-        this.register(MissileLockS2CPacket.ID, this.onMissileLock);
-        this.register(EntityBatchSpawnS2CPacket.ID, this.onEntityBatchSpawn);
-        this.register(EntityNbtS2CPacket.ID, this.onEntityNbt);
-        this.register(InventoryS2CPacket.ID, this.onInventory);
-        this.register(EffectCreateS2CPacket.ID, this.onEffectCreate);
-        this.register(SoundEventS2CPacket.ID, this.onPlaySound);
-        this.register(StopSoundS2CPacket.ID, this.onStopSound);
-        this.register(PlayerSetScoreS2CPacket.ID, this.onPlayerScore);
-        this.register(PlayerAddScoreS2CPacket.ID, this.onPlayerAddScore);
-        this.register(GameMessageS2CPacket.ID, this.onGameMessage);
-        this.register(TranslatableTextS2CPacket.ID, this.onTranslateText);
-        this.register(PlayerGameModeS2CPacket.ID, this.onSyncProfile);
-        this.register(EntityStatusEffectS2CPacket.ID, this.onEntityStatusEffect);
-        this.register(RemoveEntityStatusEffectS2CPacket.ID, this.onRemoveEntityStatusEffect);
-        this.register(ItemCooldownUpdateS2CPacket.ID, this.onItemCooldown);
-        this.register(PlayAudioS2CPacket.ID, this.onPlayAudio);
-        this.register(GameOverS2CPacket.ID, this.onGameOver);
-        this.register(AudioControlS2CPacket.ID, this.onAudioControl);
-        this.register(AudioLeapS2CPacket.ID, this.onAudioControl)
-        this.register(AudioStopS2CPacket.ID, this.onAudioStop);
-        this.register(LaserWeaponActivate.ID, this.onLaserWeapon);
-        this.register(LaserWeaponDeactivate.ID, this.onLaserWeapon);
-        this.register(LaserWeaponChange.ID, this.onLaserWeapon);
-        this.register(DifficultChangeS2CPacket.ID, this.onDifficultChange);
-        this.register(BlockChangeS2CPacket.ID, this.onBlockChange);
-        this.register(BatchBlockChangesPacket.ID, this.onBatchChanges);
-        this.register(SetPlayerInventoryS2CPacket.ID, this.onSetInventory);
-        this.register(PlayerPositionS2CPacket.ID, this.onPlayerMove);
-        this.register(PreparedParticleS2CPacket.ID, this.onPreparedParticle);
-        this.register(ScreenShakeS2CPacket.ID, this.onScreenShake);
-        this.register(EntityPositionForceS2CPacket.ID, this.onForceEntityPosition);
     }
 }

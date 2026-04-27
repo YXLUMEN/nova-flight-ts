@@ -6,14 +6,13 @@ import {DecoyEntity} from "../DecoyEntity.ts";
 import {getNearestEntityByVec, squareDistVec2} from "../../utils/math/math.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
-import {BehaviourEnum} from "../../world/explosion/ExplosionBehavior.ts";
 import {FilterBehaviour} from "../../world/explosion/FilterBehaviour.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EntityPredicates} from "../../world/predicate/EntityPredicates.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class MobMissileEntity extends MissileEntity {
-    private static readonly EXPLOSION = new FilterBehaviour(BehaviourEnum.ONLY_DAMAGE)
+    private static readonly EXPLOSION = new FilterBehaviour()
         .withFiler(EntityPredicates.ONLY_PLAYER);
 
     protected override maxRelockCooldown = 15;

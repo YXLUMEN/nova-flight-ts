@@ -8,10 +8,10 @@ import {decodeVelocity, decodeYaw, encodeVelocity, encodeYaw, varUintSize} from 
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {Registries} from "../../../registry/Registries.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class EntitySpawnS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntitySpawnS2CPacket> = payloadId('spawn_entity');
-
     public static readonly CODEC: PacketCodec<EntitySpawnS2CPacket> = PacketCodecs.of<EntitySpawnS2CPacket>(this.write, this.read);
 
     public readonly entityId: number;
@@ -27,6 +27,7 @@ export class EntitySpawnS2CPacket implements Payload {
     public readonly color: string;
     public readonly edgeColor: string;
     public readonly entityData: number;
+    public readonly extraData: Uint8Array | null;
 
     public constructor(
         entityId: number,
@@ -37,6 +38,7 @@ export class EntitySpawnS2CPacket implements Payload {
         vxInt16: number, vyInt16: number,
         color: string, edgeColor: string,
         entityData: number,
+        extraData: Uint8Array | null = null
     ) {
         this.entityId = entityId;
         this.uuid = uuid;
@@ -49,9 +51,10 @@ export class EntitySpawnS2CPacket implements Payload {
         this.color = color;
         this.edgeColor = edgeColor;
         this.entityData = entityData;
+        this.extraData = extraData;
     }
 
-    public static create(entity: Entity, ownerId = 0): EntitySpawnS2CPacket {
+    public static create(entity: Entity, entityData: number = 0, extraData: Uint8Array | null = null): EntitySpawnS2CPacket {
         const yaw = encodeYaw(entity.getYaw());
         const vx = encodeVelocity(entity.velocityRef.x);
         const vy = encodeVelocity(entity.velocityRef.y);
@@ -67,13 +70,14 @@ export class EntitySpawnS2CPacket implements Payload {
             vy,
             entity.color.length > 0 ? entity.color : '#fff',
             entity.edgeColor.length > 0 ? entity.edgeColor : '#fff',
-            ownerId
+            entityData,
+            extraData
         );
     }
 
     protected static read(reader: BinaryReader): EntitySpawnS2CPacket {
         const entityId = reader.readVarUint();
-        const uuid = reader.readUUID();
+        const uuid: UUID = reader.readUUID();
 
         const entityType = EntityType.PACKET_CODEC.decode(reader);
         const x = reader.readDouble();
@@ -85,7 +89,11 @@ export class EntitySpawnS2CPacket implements Payload {
         const edgeColor = PacketCodecs.COLOR_HEX.decode(reader);
         const data = reader.readVarUint();
 
-        return new EntitySpawnS2CPacket(entityId, uuid, x, y, yaw, entityType, velocityX, velocityY, color, edgeColor, data);
+        let extra: Uint8Array | null = null;
+        const len = reader.readVarUint();
+        if (len > 0) extra = reader.readSlice(len);
+
+        return new EntitySpawnS2CPacket(entityId, uuid, x, y, yaw, entityType, velocityX, velocityY, color, edgeColor, data, extra);
     }
 
     protected static write(writer: BinaryWriter, value: EntitySpawnS2CPacket): void {
@@ -100,10 +108,21 @@ export class EntitySpawnS2CPacket implements Payload {
         PacketCodecs.COLOR_HEX.encode(writer, value.color);
         PacketCodecs.COLOR_HEX.encode(writer, value.edgeColor);
         writer.writeVarUint(value.entityData);
+
+        if (value.extraData === null) {
+            writer.writeVarUint(0);
+            return;
+        }
+        writer.writeVarUint(value.extraData.length);
+        writer.pushBytes(value.extraData);
     }
 
     public getId(): PayloadId<EntitySpawnS2CPacket> {
         return EntitySpawnS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onEntitySpawn(this);
     }
 
     public estimateSize(): number {
@@ -132,6 +151,12 @@ export class EntitySpawnS2CPacket implements Payload {
 
         // entityData (VarInt)
         size += varUintSize(this.entityData);
+
+        // extraData
+        if (this.extraData !== null) {
+            size += varUintSize(this.extraData.length);
+            size += this.extraData.length;
+        } else size += 1;
         return size;
     }
 

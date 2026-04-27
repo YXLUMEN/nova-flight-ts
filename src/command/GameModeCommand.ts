@@ -5,7 +5,7 @@ import {BoolArgumentType} from "./argument/BoolArgumentType.ts";
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
-import {PlayerGameModeS2CPacket} from "../network/packet/s2c/PlayerGameModeS2CPacket.ts";
+import {PlayerProfileSyncS2CPacket} from "../network/packet/s2c/PlayerProfileSyncS2CPacket.ts";
 
 export class GameModeCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -39,7 +39,7 @@ export class GameModeCommand {
 
         entity.setDevMode(bool ?? !entity.isDevMode());
         (source.getWorld() as ServerWorld)?.getNetworkChannel().sendTo(
-            new PlayerGameModeS2CPacket(entity.isDevMode()),
+            new PlayerProfileSyncS2CPacket(entity.isDevMode()),
             entity.getProfile()
         );
 

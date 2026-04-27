@@ -3,6 +3,7 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {ExplosionBehavior} from "../../../world/explosion/ExplosionBehavior.ts";
 import {ExplosionVisual} from "../../../world/explosion/ExplosionVisual.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class ExplosionS2CPacket implements Payload {
     public static readonly ID: PayloadId<ExplosionS2CPacket> = payloadId('explosion');
@@ -41,5 +42,9 @@ export class ExplosionS2CPacket implements Payload {
 
     public getId(): PayloadId<ExplosionS2CPacket> {
         return ExplosionS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onExplosion(this);
     }
 }

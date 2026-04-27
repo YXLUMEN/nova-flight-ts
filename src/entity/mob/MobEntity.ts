@@ -15,8 +15,8 @@ import {NbtTypeId} from "../../nbt/NbtType.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
-import {EmptyAi} from "../ai/EmptyAi.ts";
 import type {EntityAi} from "../ai/EntityAi.ts";
+import {MobAI} from "../ai/MobAI.ts";
 
 export abstract class MobEntity extends LivingEntity implements IColorEntity {
     public color = '#ff6b6b';
@@ -49,7 +49,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
     }
 
     protected createAi(): EntityAi {
-        return EmptyAi.INSTANCE;
+        return new MobAI(this);
     }
 
     public getAi(): EntityAi {
@@ -94,18 +94,12 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         return this.worth;
     }
 
-    public override createSpawnPacket(): EntitySpawnS2CPacket {
-        return EntitySpawnS2CPacket.create(this, this.worth);
-    }
-
     public override canMoveVoluntarily(): boolean {
         return super.canMoveVoluntarily() && !this.AI.isDisabled();
     }
 
     public override onSpawnPacket(packet: EntitySpawnS2CPacket) {
         super.onSpawnPacket(packet);
-        const worth = packet.entityData;
-        if (worth > 0) this.worth = worth;
         this.AI.setSeed(this.getId());
     }
 

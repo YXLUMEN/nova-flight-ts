@@ -43,7 +43,7 @@ export class ClientIntegratedNetWorkChannel implements Channel {
         };
 
         this.worker.addEventListener("message", event => {
-            if (event.type !== "sniff") return;
+            if (event.data.type !== "sniff") return;
             done(true);
         }, {signal: ctrl.signal});
 

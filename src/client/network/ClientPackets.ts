@@ -10,7 +10,6 @@ import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 import {PlayerFinishLoginC2SPacket} from "../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
 import {PlayerResetAllTechC2SPacket} from "../../network/packet/c2s/PlayerResetAllTechC2SPacket.ts";
 import {CommandExecutionC2SPacket} from "../../network/packet/c2s/CommandExecutionC2SPacket.ts";
-import {PlayerDisconnectC2SPacket} from "../../network/packet/c2s/PlayerDisconnectC2SPacket.ts";
 import {ClientReadyC2SPacket} from "../../network/packet/c2s/ClientReadyC2SPacket.ts";
 import {ChatMessageC2SPacket} from "../../network/packet/c2s/ChatMessageC2SPacket.ts";
 import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPacket.ts";
@@ -36,7 +35,6 @@ export class ClientPackets {
         this.register(PlayerFinishLoginC2SPacket.ID, PlayerFinishLoginC2SPacket.CODEC);
         this.register(PlayerResetAllTechC2SPacket.ID, PlayerResetAllTechC2SPacket.CODEC);
         this.register(CommandExecutionC2SPacket.ID, CommandExecutionC2SPacket.CODEC);
-        this.register(PlayerDisconnectC2SPacket.ID, PlayerDisconnectC2SPacket.CODEC);
         this.register(ClientReadyC2SPacket.ID, ClientReadyC2SPacket.CODEC);
         this.register(ChatMessageC2SPacket.ID, ChatMessageC2SPacket.CODEC);
         this.register(PlayerReloadC2SPacket.ID, PlayerReloadC2SPacket.CODEC);

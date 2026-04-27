@@ -1,6 +1,7 @@
 import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import type {ServerPlayHandler} from "../../../server/network/handler/ServerPlayHandler.ts";
 
 export abstract class PlayerMoveC2SPacket implements Payload {
     public static readonly ID: PayloadId<PlayerMoveC2SPacket> = payloadId('player_move');
@@ -21,6 +22,10 @@ export abstract class PlayerMoveC2SPacket implements Payload {
     }
 
     public abstract getId(): PayloadId<PlayerMoveC2SPacket>;
+
+    public accept(listener: ServerPlayHandler): void {
+        listener.onPlayerMove(this);
+    }
 }
 
 export class FullMove extends PlayerMoveC2SPacket {

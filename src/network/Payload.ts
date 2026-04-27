@@ -1,5 +1,6 @@
 import {Identifier} from "../registry/Identifier.ts";
 import {config} from "../utils/uit.ts";
+import type {PacketListener} from "../server/network/handler/PacketListener.ts";
 
 // @ts-ignore
 export interface PayloadId<T extends Payload> {
@@ -12,6 +13,8 @@ export function payloadId<T extends Payload>(name: string): PayloadId<T> {
 
 export interface Payload {
     getId(): PayloadId<any>;
+
+    accept(listener: PacketListener): void;
 
     /**
      * 估算数据包长度, 尽可能将复杂度控制为 O(1).

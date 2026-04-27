@@ -3,6 +3,7 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {Item} from "../../../item/Item.ts";
 import {ItemStack} from "../../../item/ItemStack.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class ItemCooldownUpdateS2CPacket implements Payload {
     public static readonly ID: PayloadId<ItemCooldownUpdateS2CPacket> = payloadId('item_cooldown_update');
@@ -29,5 +30,9 @@ export class ItemCooldownUpdateS2CPacket implements Payload {
 
     public getId(): PayloadId<any> {
         return ItemCooldownUpdateS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onItemCooldown(this);
     }
 }

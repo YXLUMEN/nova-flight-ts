@@ -2,10 +2,10 @@ import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import {SoundEvent} from "../../../sound/SoundEvent.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class SoundEventS2CPacket implements Payload {
     public static readonly ID: PayloadId<SoundEventS2CPacket> = payloadId('sound_event');
-
     public static readonly CODEC: PacketCodec<SoundEventS2CPacket> = PacketCodecs.of<SoundEventS2CPacket>(
         (writer, value) => {
             SoundEvent.SOUND_PACKET_CODEC.encode(writer, value.soundEvent);
@@ -33,5 +33,9 @@ export class SoundEventS2CPacket implements Payload {
 
     public getId(): PayloadId<SoundEventS2CPacket> {
         return SoundEventS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onPlaySound(this);
     }
 }
