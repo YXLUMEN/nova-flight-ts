@@ -113,7 +113,6 @@ export class KeyboardInput implements IInput {
         }
         if (code === 'Slash' || code === 'KeyT') {
             this.inputEvents.onKeyPress(code, event);
-            if (code === 'KeyT') event.preventDefault();
             return true;
         }
         return false;

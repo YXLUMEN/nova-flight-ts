@@ -1,7 +1,7 @@
 import {NetworkChannel} from "../../network/NetworkChannel.ts";
 import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
 import type {Payload} from "../../network/Payload.ts";
-import type {BiConsumer, UUID} from "../../type/types.ts";
+import type {BiConsumer} from "../../type/types.ts";
 import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 import type {ServerChannel} from "./ServerChannel.ts";
 import {BinaryReader} from "../../nbt/BinaryReader.ts";
@@ -51,17 +51,6 @@ export class ServerNetworkChannel extends NetworkChannel implements ServerChanne
         writer.writeInt8(0x12);
         // 利用协议节省R端的数据重组
         writer.writeInt8(target);
-        this.checkAndSend(writer, type, payload);
-    }
-
-    public sendToUUID<T extends Payload>(payload: T, target: UUID): void {
-        const type = this.registry.get(payload.getId().id);
-        if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
-
-        const writer = new BinaryWriter();
-        writer.writeInt8(0x13);
-        writer.writeInt8(this.getSessionId());
-        writer.writeUUID(target);
         this.checkAndSend(writer, type, payload);
     }
 

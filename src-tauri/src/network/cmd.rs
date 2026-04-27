@@ -74,9 +74,13 @@ pub async fn stop_server() -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn set_open() {
+pub fn set_open() -> bool {
     if let Some(flag) = OPEN_FLAG.get() {
-        flag.store(true, Ordering::SeqCst);
+        let value = !flag.load(Ordering::SeqCst);
+        flag.store(value, Ordering::SeqCst);
+        value
+    } else {
+        false
     }
 }
 
