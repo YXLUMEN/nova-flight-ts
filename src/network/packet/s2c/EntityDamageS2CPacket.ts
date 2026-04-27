@@ -3,6 +3,7 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {clamp} from "../../../utils/math/math.ts";
 import type {Vec2} from "../../../utils/math/Vec2.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class EntityDamageS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityDamageS2CPacket> = payloadId('entity_damage');
@@ -46,6 +47,10 @@ export class EntityDamageS2CPacket implements Payload {
 
     public getId(): PayloadId<any> {
         return EntityDamageS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onEntityDamage(this);
     }
 
     public get damage() {

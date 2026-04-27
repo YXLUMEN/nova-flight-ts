@@ -1,6 +1,7 @@
 import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class PlayerAddScoreS2CPacket implements Payload {
     public static readonly ID: PayloadId<PlayerAddScoreS2CPacket> = payloadId('player_add_score');
@@ -26,5 +27,9 @@ export class PlayerAddScoreS2CPacket implements Payload {
 
     public getId(): PayloadId<PlayerAddScoreS2CPacket> {
         return PlayerAddScoreS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onPlayerAddScore(this);
     }
 }

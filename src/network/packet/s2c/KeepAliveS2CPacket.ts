@@ -1,6 +1,7 @@
 import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class KeepAliveS2CPacket implements Payload {
     public static readonly ID: PayloadId<KeepAliveS2CPacket> = payloadId('keep_alive_s2c');
@@ -17,5 +18,8 @@ export class KeepAliveS2CPacket implements Payload {
 
     public getId(): PayloadId<KeepAliveS2CPacket> {
         return KeepAliveS2CPacket.ID;
+    }
+
+    public accept(_listener: ClientNetworkHandler): void {
     }
 }

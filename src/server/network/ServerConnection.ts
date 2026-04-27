@@ -18,7 +18,7 @@ export class ServerConnection {
     private readonly uuid: UUID;
     private readonly isLocal: boolean;
 
-    private readonly receiveQueue: RingBuffer<Payload> = new RingBuffer(8);
+    private readonly receiveQueue: RingBuffer<Payload> = new RingBuffer(64);
     private packetListener: PacketListener | null = null;
 
     private state: ConnectionStateType = ConnectionState.HANDSHAKING;

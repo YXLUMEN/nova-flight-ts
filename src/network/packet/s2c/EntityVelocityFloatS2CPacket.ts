@@ -4,6 +4,7 @@ import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class EntityVelocityFloatS2CPacket implements Payload {
     public static readonly ID: PayloadId<EntityVelocityFloatS2CPacket> = payloadId('entity_velocity_float');
@@ -40,5 +41,8 @@ export class EntityVelocityFloatS2CPacket implements Payload {
 
     public getId(): PayloadId<EntityVelocityFloatS2CPacket> {
         return EntityVelocityFloatS2CPacket.ID;
+    }
+
+    public accept(_listener: ClientNetworkHandler): void {
     }
 }

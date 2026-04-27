@@ -21,4 +21,7 @@ export class Attached implements RelayPayload {
     public getId(): PayloadId<Attached> {
         return Attached.ID;
     }
+
+    public accept(): void {
+    }
 }

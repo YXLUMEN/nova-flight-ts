@@ -8,6 +8,7 @@ import {Registries} from "../../../registry/Registries.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {createClean} from "../../../utils/uit.ts";
 import type {AttributeModifier} from "../../../component/type/AttributeModifier.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 class Entry {
     public static readonly MODIFIER_CODEC: PacketCodec<AttributeModifier> = PacketCodecs.of(
@@ -85,5 +86,9 @@ export class EntityAttributesS2CPacket implements Payload {
 
     public getId(): PayloadId<EntityAttributesS2CPacket> {
         return EntityAttributesS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onEntityAttributes(this);
     }
 }

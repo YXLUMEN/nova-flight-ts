@@ -26,10 +26,6 @@ export class BinaryReader {
         return v;
     }
 
-    public readBoolean(): boolean {
-        return this.readInt8() !== 0;
-    }
-
     public readUint8(): number {
         const v = this.view.getUint8(this.offset);
         this.offset += 1;
@@ -95,6 +91,10 @@ export class BinaryReader {
         }
 
         return num;
+    }
+
+    public readBoolean(): boolean {
+        return this.readInt8() !== 0;
     }
 
     public readString(): string {

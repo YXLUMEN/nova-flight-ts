@@ -129,7 +129,7 @@ export class PacketCodecs {
         return config({
             encode(): void {
             },
-            decode() {
+            decode(): V {
                 return value;
             }
         });
@@ -141,7 +141,7 @@ export class PacketCodecs {
                 if (object.equals(value)) return;
                 throw new IllegalStateException(`Can't encode "${object}", expected "${value}"`);
             },
-            decode() {
+            decode(): V {
                 return value;
             }
         });

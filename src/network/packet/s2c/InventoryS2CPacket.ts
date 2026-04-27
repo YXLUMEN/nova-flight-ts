@@ -4,6 +4,7 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {ItemStack} from "../../../item/ItemStack.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class InventoryS2CPacket implements Payload {
     public static readonly ID: PayloadId<InventoryS2CPacket> = payloadId('inventory_sync');
@@ -35,5 +36,9 @@ export class InventoryS2CPacket implements Payload {
 
     public getId(): PayloadId<any> {
         return InventoryS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onInventory(this);
     }
 }

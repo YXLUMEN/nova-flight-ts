@@ -390,7 +390,10 @@ export class ServerWorld extends World implements NbtSerializable {
             this.entities.remove(entity);
         },
         startTracking: (entity: Entity) => {
-            const tracker = new EntityTrackerEntry(this, entity, entity.getType().getTrackingTickInterval(), false);
+            const interval = entity.getType().getTrackingTickInterval();
+            if (interval < 0) return;
+
+            const tracker = new EntityTrackerEntry(this, entity, interval, false);
             this.trackedEntities.set(entity.getId(), tracker);
             this.getNetworkChannel().send(entity.createSpawnPacket());
         },

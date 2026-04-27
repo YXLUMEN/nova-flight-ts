@@ -81,7 +81,7 @@ export abstract class NovaFlightServer implements CommandOutput {
 
         this.profile = new GameProfile(this.networkChannel.getSessionId(), this.serverId, this.worldName);
         this.networkManager = new ServerNetworkManager(this);
-        this.networkChannel.send(new ServerStartS2CPacket());
+        this.networkChannel.send(ServerStartS2CPacket.INSTANCE);
         self.postMessage({type: 'server_start'});
 
         this.last = performance.now();

@@ -1,8 +1,9 @@
-import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {type VisualEffect} from "../../../effect/VisualEffect.ts";
 import {VisualEffectType} from "../../../effect/VisualEffectType.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class EffectCreateS2CPacket implements Payload {
     public static readonly ID: PayloadId<EffectCreateS2CPacket> = payloadId('effect_create');
@@ -27,5 +28,9 @@ export class EffectCreateS2CPacket implements Payload {
 
     public getId(): PayloadId<EffectCreateS2CPacket> {
         return EffectCreateS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onEffectCreate(this);
     }
 }

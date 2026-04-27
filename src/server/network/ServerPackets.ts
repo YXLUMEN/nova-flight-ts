@@ -20,7 +20,6 @@ import {EntityAttributesS2CPacket} from "../../network/packet/s2c/EntityAttribut
 import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.ts";
 import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
 import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacket.ts";
-import {ServerShutdownS2CPacket} from "../../network/packet/s2c/ServerShutdownS2CPacket.ts";
 import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
 import {EntityNbtS2CPacket} from "../../network/packet/s2c/EntityNbtS2CPacket.ts";
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
@@ -29,7 +28,7 @@ import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2
 import {PlayerAddScoreS2CPacket} from "../../network/packet/s2c/PlayerAddScoreS2CPacket.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import {PlayerJoinS2CPacket} from "../../network/packet/s2c/PlayerJoinS2CPacket.ts";
-import {PlayerGameModeS2CPacket} from "../../network/packet/s2c/PlayerGameModeS2CPacket.ts";
+import {PlayerProfileSyncS2CPacket} from "../../network/packet/s2c/PlayerProfileSyncS2CPacket.ts";
 import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
 import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
 import {ItemCooldownUpdateS2CPacket} from "../../network/packet/s2c/ItemCooldownUpdateS2CPacket.ts";
@@ -83,7 +82,6 @@ export class ServerPackets {
         this.register(MissileSetS2CPacket.ID, MissileSetS2CPacket.CODEC);
         this.register(EntityPositionForceS2CPacket.ID, EntityPositionForceS2CPacket.CODEC);
         this.register(MissileLockS2CPacket.ID, MissileLockS2CPacket.CODEC);
-        this.register(ServerShutdownS2CPacket.ID, ServerShutdownS2CPacket.CODEC);
         this.register(EntityBatchSpawnS2CPacket.ID, EntityBatchSpawnS2CPacket.CODEC);
         this.register(EntityNbtS2CPacket.ID, EntityNbtS2CPacket.CODEC);
         this.register(InventoryS2CPacket.ID, InventoryS2CPacket.CODEC);
@@ -92,7 +90,7 @@ export class ServerPackets {
         this.register(PlayerAddScoreS2CPacket.ID, PlayerAddScoreS2CPacket.CODEC);
         this.register(PlayerDisconnectS2CPacket.ID, PlayerDisconnectS2CPacket.CODEC);
         this.register(PlayerJoinS2CPacket.ID, PlayerJoinS2CPacket.CODEC);
-        this.register(PlayerGameModeS2CPacket.ID, PlayerGameModeS2CPacket.CODEC);
+        this.register(PlayerProfileSyncS2CPacket.ID, PlayerProfileSyncS2CPacket.CODEC);
         this.register(EntityStatusEffectS2CPacket.ID, EntityStatusEffectS2CPacket.CODEC);
         this.register(RemoveEntityStatusEffectS2CPacket.ID, RemoveEntityStatusEffectS2CPacket.CODEC);
         this.register(ItemCooldownUpdateS2CPacket.ID, ItemCooldownUpdateS2CPacket.CODEC);

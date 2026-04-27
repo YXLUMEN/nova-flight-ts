@@ -1,6 +1,7 @@
 import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class MissileSetS2CPacket implements Payload {
     public static readonly ID: PayloadId<MissileSetS2CPacket> = payloadId('missile_set');
@@ -31,5 +32,9 @@ export class MissileSetS2CPacket implements Payload {
 
     public getId(): PayloadId<MissileSetS2CPacket> {
         return MissileSetS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onMissileSet(this);
     }
 }

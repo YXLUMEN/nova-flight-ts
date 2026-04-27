@@ -57,19 +57,21 @@ export abstract class NetworkChannel implements Channel {
             const buffer = new Uint8Array(binary);
             if (buffer[0] !== 0x00) return;
 
-            const payload = this.decodePayload(buffer);
-            if (payload instanceof RelayMessage) {
-                const [type, msg] = payload.msg.split(':');
-                if (type === 'ERR') {
-                    connectFail(msg);
-                }
+            const packet = this.decodePayload(buffer);
+
+            if (packet instanceof RelayMessage) {
+                const parts = packet.msg.split(':');
+                const type = parts[0];
+                const msg = parts.slice(1).join(':');
+
+                if (type === 'ERR') connectFail(msg);
                 console.log(msg);
                 return;
             }
 
-            if (!(payload instanceof Attached)) return;
+            if (!(packet instanceof Attached)) return;
 
-            const sessionId = payload.sessionId;
+            const sessionId = packet.sessionId;
             if (!Number.isSafeInteger(sessionId) || sessionId <= 0 || sessionId > 255) {
                 connectFail(`[${this.getSide()}] Invalid session ID`);
                 return;

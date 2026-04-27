@@ -3,6 +3,7 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {Item} from "../../../item/Item.ts";
 import {ItemStack} from "../../../item/ItemStack.ts";
+import type {ServerPlayHandler} from "../../../server/network/handler/ServerPlayHandler.ts";
 
 export class FireSpecialC2SPacket implements Payload {
     public static readonly ID: PayloadId<FireSpecialC2SPacket> = payloadId('fire_special');
@@ -20,5 +21,9 @@ export class FireSpecialC2SPacket implements Payload {
 
     public getId(): PayloadId<FireSpecialC2SPacket> {
         return FireSpecialC2SPacket.ID;
+    }
+
+    public accept(listener: ServerPlayHandler): void {
+        listener.onPlayerFireSpecial(this);
     }
 }

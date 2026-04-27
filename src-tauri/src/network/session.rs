@@ -1,4 +1,4 @@
-use crate::network::states::{RelayState, Role, Tx};
+use crate::network::states::{Role, Tx};
 use std::collections::VecDeque;
 use std::sync::{Arc, LazyLock};
 use tokio::sync::{oneshot, Mutex};
@@ -91,9 +91,5 @@ impl Session {
             session_id,
             uuid: None,
         })
-    }
-
-    pub fn close(&self, state: &Arc<RelayState>) {
-        state.close(&self.session_id)
     }
 }

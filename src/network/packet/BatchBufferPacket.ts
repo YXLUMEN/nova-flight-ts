@@ -4,6 +4,7 @@ import {PacketCodecs} from "../codec/PacketCodecs.ts";
 import type {BinaryWriter} from "../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../nbt/BinaryReader.ts";
 import {PayloadTypeRegistry} from "../PayloadTypeRegistry.ts";
+import type {ClientNetworkHandler} from "../../client/network/ClientNetworkHandler.ts";
 
 export class BatchBufferPacket implements Payload {
     public static readonly ID: PayloadId<BatchBufferPacket> = payloadId('batch_buffer');
@@ -36,12 +37,15 @@ export class BatchBufferPacket implements Payload {
             const type = PayloadTypeRegistry.getGlobal(payload.getId().id);
             if (!type) throw new Error(`Missing packet type ${payload.getId().id}`);
 
-            writer.writeFloat(type.index);
+            writer.writeVarUint(type.index);
             type.codec.encode(writer, payload);
         }
     }
 
     public getId(): PayloadId<BatchBufferPacket> {
         return BatchBufferPacket.ID;
+    }
+
+    public accept(_listener: ClientNetworkHandler): void {
     }
 }

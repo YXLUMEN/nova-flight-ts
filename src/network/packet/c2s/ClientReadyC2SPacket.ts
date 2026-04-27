@@ -2,6 +2,7 @@ import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {UUID} from "../../../type/types.ts";
+import type {ServerConfigHandler} from "../../../server/network/handler/ServerConfigHandler.ts";
 
 export class ClientReadyC2SPacket implements Payload {
     public static readonly ID: PayloadId<ClientReadyC2SPacket> = payloadId('client_ready');
@@ -23,5 +24,9 @@ export class ClientReadyC2SPacket implements Payload {
 
     public canProcessInTransition(): boolean {
         return true;
+    }
+
+    public accept(listener: ServerConfigHandler): void {
+        listener.onClientReady(this);
     }
 }

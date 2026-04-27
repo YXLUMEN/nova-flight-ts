@@ -1,45 +1,42 @@
-import type {Consumer} from "../../type/types.ts";
 import type {NovaFlightServer} from "../NovaFlightServer.ts";
-import {HashMap} from "../../utils/collection/HashMap.ts";
-import type {Identifier} from "../../registry/Identifier.ts";
-import type {Payload, PayloadId} from "../../network/Payload.ts";
+import type {Payload} from "../../network/Payload.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
 import {ServerConfigHandler} from "./handler/ServerConfigHandler.ts";
 import {ClientReadyC2SPacket} from "../../network/packet/c2s/ClientReadyC2SPacket.ts";
 import {ServerConnection} from "./ServerConnection.ts";
 import {Log} from "../../worker/log.ts";
-import {ConnectionState} from "./ConnectionState.ts";
+import {ConnectionState, type ConnectionStateType} from "./ConnectionState.ts";
 import {RelayMessage} from "../../network/packet/relay/RelayMessage.ts";
 import {RelayActionBuilder} from "./RelayActionBuilder.ts";
 import {ClientAttached} from "../../network/packet/relay/ClientAttached.ts";
 import {Detached} from "../../network/packet/relay/Detached.ts";
+import type {PacketListener} from "./handler/PacketListener.ts";
 
-export class ServerNetworkManager {
+export class ServerNetworkManager implements PacketListener {
     public static readonly SERVER_CLOSE = TranslatableText.of('network.disconnect.server_close');
 
     private readonly server: NovaFlightServer;
     private readonly connections = new Map<number, ServerConnection>();
-    private readonly globals = new HashMap<Identifier, Consumer<Payload>>();
 
     public constructor(server: NovaFlightServer) {
         this.server = server;
-        this.registryHandler();
+
         this.server.networkChannel.setHandler(this.onReceive.bind(this));
     }
 
-    private onRelayMessage(packet: RelayMessage) {
+    public onRelayMessage(packet: RelayMessage) {
         const parts = packet.msg.split(':');
         const type = parts[0];
         const msg = parts.slice(1).join(':');
         console.log(type, msg);
     }
 
-    private onDetached(packet: Detached) {
+    public onDetached(packet: Detached) {
         const conn = this.connections.get(packet.sessionId);
         if (conn) this.removeConnection(conn);
     }
 
-    private onClientAttached(packet: ClientAttached) {
+    public onClientAttached(packet: ClientAttached) {
         // 触发则代表新客户端,踢掉旧连接
         const id = packet.sessionId;
         const conn = this.connections.get(id);
@@ -78,7 +75,7 @@ export class ServerNetworkManager {
 
     private onReceive(sessionId: number, packet: Payload) {
         if (sessionId === 0) {
-            this.globals.get(packet.getId().id)?.(packet);
+            packet.accept(this);
             return;
         }
 
@@ -105,17 +102,20 @@ export class ServerNetworkManager {
         this.server.networkChannel.action(RelayActionBuilder.forceDisconnect(sessionId));
     }
 
-    private register<T extends Payload>(id: PayloadId<T>, handler: Consumer<T>): void {
-        this.globals.set(id.id, handler.bind(this) as Consumer<Payload>);
-    }
-
-    private registryHandler() {
-        this.register(Detached.ID, this.onDetached);
-        this.register(ClientAttached.ID, this.onClientAttached);
-        this.register(RelayMessage.ID, this.onRelayMessage);
-    }
-
     private permit(sessionId: number) {
         this.server.networkChannel.action(RelayActionBuilder.allowTraffic(sessionId));
+    }
+
+    public onDisconnected(): void {
+    }
+
+    public accepts(): void {
+    }
+
+    public getPhase(): ConnectionStateType {
+        return ConnectionState.CONFIGURATION;
+    }
+
+    public clear(): void {
     }
 }

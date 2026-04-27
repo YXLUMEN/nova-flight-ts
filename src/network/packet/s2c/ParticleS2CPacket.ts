@@ -11,6 +11,7 @@ import {
 } from "../../../utils/NetUtil.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class ParticleS2CPacket implements Payload {
     public static readonly ID: PayloadId<ParticleS2CPacket> = payloadId('particle');
@@ -89,6 +90,10 @@ export class ParticleS2CPacket implements Payload {
 
     public getId(): PayloadId<any> {
         return ParticleS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onParticle(this);
     }
 
     public get offsetX() {

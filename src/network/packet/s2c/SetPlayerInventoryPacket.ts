@@ -2,6 +2,7 @@ import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {ItemStack} from "../../../item/ItemStack.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class SetPlayerInventoryS2CPacket implements Payload {
     public static readonly ID: PayloadId<SetPlayerInventoryS2CPacket> = payloadId('set_player_inventory');
@@ -23,5 +24,9 @@ export class SetPlayerInventoryS2CPacket implements Payload {
 
     public getId(): PayloadId<SetPlayerInventoryS2CPacket> {
         return SetPlayerInventoryS2CPacket.ID;
+    }
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onSetInventory(this);
     }
 }

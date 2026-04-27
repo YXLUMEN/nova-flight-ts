@@ -538,11 +538,11 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     // 网络同步
 
-    public createSpawnPacket() {
+    public createSpawnPacket(): EntitySpawnS2CPacket {
         return EntitySpawnS2CPacket.create(this);
     }
 
-    public onSpawnPacket(packet: EntitySpawnS2CPacket) {
+    public onSpawnPacket(packet: EntitySpawnS2CPacket): void {
         this.setDeltaMovement(packet.x, packet.y);
         this.snapTo(packet.x, packet.y, packet.yaw);
         this.setId(packet.entityId);

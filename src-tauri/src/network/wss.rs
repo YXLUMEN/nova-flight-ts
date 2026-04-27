@@ -113,7 +113,7 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
 
     // tcp + 消息管道
     let (mut writer, mut reader) = ws_stream.split();
-    let (tx, mut rx) = mpsc::channel::<Bytes>(512);
+    let (tx, mut rx) = mpsc::channel::<Bytes>(256);
 
     // 向此连接发送
     let send_task = tokio::spawn(async move {
@@ -179,9 +179,10 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
                 .unwrap_or(false)
             {
                 info!("Server disconnected");
-                state.iter_ids().for_each(|client| {
-                    client.close(&state);
-                });
+                let ids: Vec<u8> = state.iter_clients().map(|e| *e.key()).collect();
+                for id in ids {
+                    state.close(&id);
+                }
                 state.clear_server().await;
             }
         }
@@ -295,8 +296,8 @@ async fn attach_session(
                     let (c_tx, c_rx) = oneshot::channel::<()>();
                     let session = Session::new_client(tx, session_id, uuid);
 
-                    v.insert(session.clone());
-                    state.complete_client(session_id, session.clone(), permit_tx, c_tx);
+                    v.insert(session_id);
+                    state.insert_client_entry(session_id, session.clone(), permit_tx, c_tx);
 
                     let packet = Attached {
                         session_id: session.session_id,
@@ -466,18 +467,23 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
         0x11 => {
             // [Header][Id][Data]
             // Server → 广播给所有 Client
-            state.iter_ids().for_each(|client| {
-                if !send_or_drop(&client.tx, &payload) {
+            let mut to_close = Vec::new();
+            state.iter_clients().for_each(|entry| {
+                let session = &entry.value().session;
+                if !send_or_drop(&session.tx, &payload) {
                     return;
                 }
-                client.close(state);
-                if let Some(uuid) = client.uuid {
+                if let Some(uuid) = session.uuid {
                     warn!(
                         "[Broadcast] Dropping unresponsive client {}",
                         format_uuid(&uuid)
                     );
                 }
+                to_close.push(*entry.key());
             });
+            for id in to_close {
+                state.close(&id);
+            }
         }
         0x12 => {
             // [Header][TargetId][Data]
@@ -488,12 +494,12 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
             }
 
             // SessionId
-            let target_id = &payload[1];
-            let Some(client) = state.get_by_id(target_id) else {
+            let target_id = payload[1];
+            let Some(session) = state.get_by_id(&target_id) else {
                 return;
             };
-            if client.tx.send(payload).await.is_err() {
-                client.close(state);
+            if session.tx.send(payload).await.is_err() {
+                state.close(&target_id);
             }
         }
         0x13 => {
@@ -513,7 +519,7 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
                 return;
             }
 
-            let Some(client) = state.get_by_uuid(&target_client_id) else {
+            let Some(session) = state.get_by_uuid(&target_client_id) else {
                 return;
             };
 
@@ -525,8 +531,8 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
             buf.put_slice(&remaining);
             let forwarded = buf.freeze();
 
-            if client.tx.send(forwarded).await.is_err() {
-                client.close(state);
+            if session.tx.send(forwarded).await.is_err() {
+                state.close(&session.session_id);
             }
         }
         0x14 => {
@@ -570,22 +576,27 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
             buf.put_slice(rest_payload);
             let forwarded = buf.freeze();
 
-            state.iter_ids().for_each(|client| {
-                let id = *client.key();
+            let mut to_close = Vec::new();
+            state.iter_clients().for_each(|entry| {
+                let id = *entry.key();
                 if excludes.iter().any(|ex| ex == &id) {
                     return;
                 }
-                if !send_or_drop(&client.tx, &forwarded) {
+                let session = &entry.value().session;
+                if !send_or_drop(&session.tx, &forwarded) {
                     return;
                 }
-                client.close(state);
-                if let Some(uuid) = client.uuid {
+                if let Some(uuid) = session.uuid {
                     warn!(
                         "[Excludes] Dropping unresponsive client {}",
                         format_uuid(&uuid)
                     );
                 }
+                to_close.push(id);
             });
+            for id in to_close {
+                state.close(&id);
+            }
         }
         0xff => relay_actions(state, session, payload).await,
         _ => {}
@@ -611,10 +622,10 @@ async fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload:
                 return;
             }
 
-            let session_id = &data[0];
-            if let Some(client) = state.get_by_id(session_id) {
-                send_message(&client.tx, "Kicked");
-                client.close(state);
+            let session_id = data[0];
+            if let Some(session) = state.get_by_id(&session_id) {
+                send_message(&session.tx, "Kicked");
+                state.close(&session_id);
             }
         }
         0x01 => {

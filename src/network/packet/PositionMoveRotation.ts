@@ -32,4 +32,7 @@ export class PositionMoveRotation implements Payload {
     public getId(): PayloadId<any> {
         return PositionMoveRotation.ID;
     }
+
+    public accept(): void {
+    }
 }

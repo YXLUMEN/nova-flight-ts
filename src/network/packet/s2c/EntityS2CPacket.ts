@@ -1,9 +1,10 @@
-import {payloadId, type Payload, type PayloadId} from "../../Payload.ts";
+import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
 import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {decodeYaw} from "../../../utils/NetUtil.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export abstract class EntityS2CPacket implements Payload {
     public readonly entityId: number;
@@ -23,6 +24,10 @@ export abstract class EntityS2CPacket implements Payload {
     }
 
     abstract getId(): PayloadId<any>;
+
+    public accept(listener: ClientNetworkHandler): void {
+        listener.onEntity(this);
+    }
 
     public get yaw() {
         return decodeYaw(this.yawUint8);

@@ -3,6 +3,7 @@ import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {WorldEvent} from "../../../world/events/WorldEvent.ts";
 import {WorldEventType} from "../../../world/events/WorldEventType.ts";
+import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class SpawnWorldEventS2CPacket implements Payload {
     public static readonly ID: PayloadId<SpawnWorldEventS2CPacket> = payloadId('spawn_world_event');
@@ -27,5 +28,8 @@ export class SpawnWorldEventS2CPacket implements Payload {
 
     public getId(): PayloadId<SpawnWorldEventS2CPacket> {
         return SpawnWorldEventS2CPacket.ID;
+    }
+
+    public accept(_listener: ClientNetworkHandler): void {
     }
 }
