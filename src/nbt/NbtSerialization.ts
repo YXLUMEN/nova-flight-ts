@@ -26,7 +26,7 @@ export class NbtSerialization {
     }
 
     public static toCompactBinary(compound: NbtCompound, writer?: BinaryWriter): Uint8Array<ArrayBuffer> {
-        if (!writer) writer = new BinaryWriter();
+        if (!writer) writer = new BinaryWriter(1024);
         const scheme = new Map<string, KeyIndex>();
 
         this.updateScheme(compound, scheme);

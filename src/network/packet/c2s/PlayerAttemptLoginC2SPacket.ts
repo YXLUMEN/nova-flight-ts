@@ -42,4 +42,8 @@ export class PlayerAttemptLoginC2SPacket implements Payload {
     public canProcessInTransition(): boolean {
         return true;
     }
+
+    public estimateSize(): number {
+        return 17 + (this.playerName.length << 2);
+    }
 }
