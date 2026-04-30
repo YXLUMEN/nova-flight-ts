@@ -2,10 +2,6 @@ import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {Registries} from "../registry/Registries.ts";
 
-/**
- * Describes a named particle effect preset.
- * Stores randomized spawn parameters (ranges) for convenient bulk emission.
- */
 export class ParticleEffectType {
     public static readonly PACKET_CODEC: PacketCodec<ParticleEffectType> = PacketCodecs.registryValue(Registries.PARTICLES);
 
@@ -37,9 +33,6 @@ export class ParticleEffectType {
     /** Velocity drag coefficient (0 = no drag). */
     public readonly drag: number;
 
-    /** Gravity acceleration (units/s²). */
-    public readonly gravity: number;
-
     /** @internal */
     public constructor(builder: ParticleEffectTypeBuilder) {
         this.lifeMin = builder.lifeMin;
@@ -53,7 +46,6 @@ export class ParticleEffectType {
         this.spreadMin = builder.spreadMin;
         this.spreadMax = builder.spreadMax;
         this.drag = builder.drag;
-        this.gravity = builder.gravity;
     }
 
     /** Start building a new ParticleEffectType. */
@@ -79,7 +71,6 @@ export class ParticleEffectTypeBuilder {
     public spreadMax: number = Math.PI;
 
     public drag: number = 0.5;
-    public gravity: number = 0;
 
     public life(min: number, max: number): this {
         this.lifeMin = min;
@@ -105,14 +96,12 @@ export class ParticleEffectTypeBuilder {
         return this;
     }
 
-    /** Emit in all directions (full circle). */
     public omnidirectional(): this {
         this.spreadMin = 0;
         this.spreadMax = Math.PI;
         return this;
     }
 
-    /** Emit within ±halfAngle around the base direction. */
     public spread(halfAngle: number): this {
         this.spreadMin = 0;
         this.spreadMax = halfAngle;
@@ -121,11 +110,6 @@ export class ParticleEffectTypeBuilder {
 
     public withDrag(drag: number): this {
         this.drag = drag;
-        return this;
-    }
-
-    public withGravity(gravity: number): this {
-        this.gravity = gravity;
         return this;
     }
 

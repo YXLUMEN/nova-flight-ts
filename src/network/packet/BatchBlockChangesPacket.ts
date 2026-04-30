@@ -2,20 +2,21 @@ import {type Payload, payloadId, type PayloadId} from "../Payload.ts";
 import type {PacketCodec} from "../codec/PacketCodec.ts";
 import {PacketCodecs} from "../codec/PacketCodecs.ts";
 import type {BlockChange} from "../../world/map/BlockChange.ts";
-import type {BinaryWriter} from "../../nbt/BinaryWriter.ts";
-import type {BinaryReader} from "../../nbt/BinaryReader.ts";
+import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
+import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {ClientNetworkHandler} from "../../client/network/ClientNetworkHandler.ts";
 import type {ServerPlayHandler} from "../../server/network/handler/ServerPlayHandler.ts";
+import {varUintSize} from "../../utils/NetUtil.ts";
 
 export class BatchBlockChangesPacket implements Payload {
     public static readonly ID: PayloadId<BatchBlockChangesPacket> = payloadId('batch_block_changes');
     public static readonly CODEC: PacketCodec<BatchBlockChangesPacket> = PacketCodecs.of(this.write, this.read);
 
-    private readonly types: Uint8Array;
-    private readonly xs: Uint32Array;
-    private readonly ys: Uint32Array;
+    private readonly types: Uint8Array<ArrayBuffer>;
+    private readonly xs: Uint32Array<ArrayBuffer>;
+    private readonly ys: Uint32Array<ArrayBuffer>;
 
-    public constructor(types: Uint8Array, xs: Uint32Array, ys: Uint32Array) {
+    public constructor(types: Uint8Array<ArrayBuffer>, xs: Uint32Array<ArrayBuffer>, ys: Uint32Array<ArrayBuffer>) {
         this.types = types;
         this.xs = xs;
         this.ys = ys;
@@ -91,6 +92,14 @@ export class BatchBlockChangesPacket implements Payload {
 
     public accept(listener: ClientNetworkHandler | ServerPlayHandler): void {
         listener.onBatchChanges(this);
+    }
+
+    public estimateSize(): number {
+        const len = this.types.length;
+        const varUintLen = varUintSize(len);
+        const prePadding = varUintLen + len;
+        const padding = (4 - (prePadding % 4)) % 4;
+        return prePadding + padding + (len << 3);
     }
 
     public foreach(consumer: (type: number, x: number, y: number) => void) {

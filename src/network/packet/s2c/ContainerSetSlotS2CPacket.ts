@@ -2,8 +2,8 @@ import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {ItemStack} from "../../../item/ItemStack.ts";
-import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
-import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
+import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
+import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class ContainerSetSlotS2CPacket implements Payload {

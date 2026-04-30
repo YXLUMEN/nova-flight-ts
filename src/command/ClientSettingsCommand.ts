@@ -9,6 +9,7 @@ import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
 import {ServerStorage} from "../server/ServerStorage.ts";
 import {clamp} from "../utils/math/math.ts";
 import {NovaFlightClient} from "../client/NovaFlightClient.ts";
+import {BoolArgumentType} from "./argument/BoolArgumentType.ts";
 
 export class ClientSettingsCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -58,15 +59,28 @@ export class ClientSettingsCommand {
                         )
                         .then(
                             literal<T>('open')
-                                .executes(async () => {
-                                    const value = await invoke('set_open');
-                                    NovaFlightClient.getInstance().requestStop();
-                                    if (typeof value === 'boolean') {
-                                        GlobalConfig.generalMode = value;
-                                        return;
-                                    }
-                                    throw new IllegalArgumentError(`\x1b[31mUnexpected value: ${value} \x1b[0m`);
-                                })
+                                .then(
+                                    argument<T, boolean>('open', BoolArgumentType.bool())
+                                        .executes(async (ctx) => {
+                                            const arg = ctx.args.get('open');
+                                            if (!arg) throw new CommandError('\x1b[31m<open> is required');
+
+                                            const bl: unknown = arg.result;
+                                            if (typeof bl !== 'boolean') {
+                                                throw new IllegalArgumentError(`\x1b[31mUnexpected value: ${bl} \x1b[0m`);
+                                            }
+
+                                            const success: boolean = await invoke('set_open', {bl});
+                                            if (!success) {
+                                                throw new CommandError(bl ? '\x1b[31mCannot open on LAN' : '\x1b[31mCannot close port');
+                                            }
+
+                                            NovaFlightClient.getInstance().requestStop();
+
+                                            GlobalConfig.generalMode = bl;
+                                            ctx.source.addMessage(bl ? 'Now is open on LAN' : 'Close port');
+                                        })
+                                )
                         )
                         .then(
                             literal<T>('playerName')

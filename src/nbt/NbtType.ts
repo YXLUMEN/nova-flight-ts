@@ -1,5 +1,5 @@
 import type {NbtElement} from "./element/NbtElement.ts";
-import type {BinaryReader} from "./BinaryReader.ts";
+import type {BinaryReader} from "../serialization/BinaryReader.ts";
 import {config} from "../utils/uit.ts";
 
 export interface NbtType<T extends NbtElement> {

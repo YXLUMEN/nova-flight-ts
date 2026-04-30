@@ -6,7 +6,7 @@ import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 
 export class TrackedDataHandlerRegistry {
     private static readonly DATA_HANDLERS_ID = new Map<TrackedDataHandler<any>, number>();
-    private static readonly DATA_ID_HANDLERS = new Map<number, TrackedDataHandler<any>>();
+    private static readonly DATA_ID_HANDLERS: TrackedDataHandler<any>[] = [];
 
     public static readonly BOOL = this.create(PacketCodecs.BOOL);
     public static readonly INT8 = this.create(PacketCodecs.INT8);
@@ -27,8 +27,8 @@ export class TrackedDataHandlerRegistry {
             }
         });
 
-        const index = this.DATA_HANDLERS_ID.size;
-        this.DATA_ID_HANDLERS.set(index, handler);
+        const index = this.DATA_ID_HANDLERS.length;
+        this.DATA_ID_HANDLERS[index] = handler;
         this.DATA_HANDLERS_ID.set(handler, index);
         return handler;
     }
@@ -38,6 +38,6 @@ export class TrackedDataHandlerRegistry {
     }
 
     public static getHandler(id: number): TrackedDataHandler<any> | null {
-        return this.DATA_ID_HANDLERS.get(id) ?? null;
+        return this.DATA_ID_HANDLERS[id] ?? null;
     }
 }

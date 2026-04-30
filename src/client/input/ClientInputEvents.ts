@@ -133,7 +133,7 @@ export class ClientInputEvents {
         const player = client.player;
         if (!player) return;
 
-        const worker = client.getServerWorker()?.getWorker();
+        const worker = client.getServerWorker();
         worker?.postMessage({type: 'dev_mode', payload: {code}});
 
         switch (code) {

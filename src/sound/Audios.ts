@@ -35,6 +35,7 @@ export class Audios {
 
     public static readonly SCOURGE_OF_THE_UNIVERSE = this.register('scourge_of_the_universe');
     public static readonly UNIVERSAL_COLLAPSE = this.register('universal_collapse');
+    public static readonly THE_TALE_OF_A_CRUEL_WORLD = this.register('the_tale_of_a_cruel_world');
 
     private static register(id: string) {
         const identifier = Identifier.ofVanilla(id);

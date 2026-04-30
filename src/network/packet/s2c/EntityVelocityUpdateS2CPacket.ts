@@ -1,7 +1,7 @@
 import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {Entity} from "../../../entity/Entity.ts";
-import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
-import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
+import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
+import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import {decodeVelocity, encodeVelocity} from "../../../utils/NetUtil.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
@@ -51,6 +51,10 @@ export class EntityVelocityUpdateS2CPacket implements Payload {
 
     public accept(listener: ClientNetworkHandler): void {
         listener.onEntityVelocityUpdate(this);
+    }
+
+    public estimateSize(): number {
+        return 8;
     }
 
     public get velocityX() {

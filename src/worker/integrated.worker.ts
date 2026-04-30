@@ -3,12 +3,11 @@ import {ServerPackets} from "../server/network/ServerPackets.ts";
 import {IntegratedServer} from "../server/IntegratedServer.ts";
 import type {StartServer} from "../type/startup.ts";
 import {RelayPackets} from "../network/RelayPackets.ts";
-import {ServerIntegratedChannel} from "../server/network/ServerIntegratedChannel.ts";
 
 let server: IntegratedServer | null = null;
 let pendingStop = false;
 
-self.addEventListener("message", handleEvent.bind(this));
+self.addEventListener("message", handleEvent);
 
 async function handleEvent(event: MessageEvent) {
     const {type, payload} = event.data;
@@ -53,28 +52,6 @@ async function handleEvent(event: MessageEvent) {
             const host = server.getHostUUID();
             const player = server.playerManager.getPlayer(host);
             player?.cdAllSpecials();
-            break;
-        }
-        case 'connect': {
-            self.postMessage({type: 'connect'});
-            break;
-        }
-        case 'disconnect': {
-            if (server && server.networkChannel instanceof ServerIntegratedChannel) {
-                server.networkChannel.disconnect();
-            }
-            break;
-        }
-        case 'sniff': {
-            self.postMessage({type: 'sniff'});
-            break;
-        }
-        case 'packet': {
-            if (!server) return;
-            const integratedChannel = server.networkChannel;
-            if (integratedChannel instanceof ServerIntegratedChannel) {
-                integratedChannel.receivePacket(new Uint8Array(event.data.packet));
-            }
             break;
         }
     }

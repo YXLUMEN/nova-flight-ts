@@ -25,4 +25,8 @@ export class AudioStopS2CPacket implements Payload {
     public accept(listener: ClientNetworkHandler) {
         listener.onAudioStop(this);
     }
+
+    public estimateSize(): number {
+        return 4;
+    }
 }

@@ -12,6 +12,7 @@ import type {Vec2} from "../utils/math/Vec2.ts";
 
 export const EVENTS = createClean({
     GAME_START: "game:start",
+    GAME_END: "game:end",
     ENTITY_REMOVED: "entity:mob:removed",
     BOSS_KILLED: "entity:boss:killed",
     BOSS_SPAWN: "entity:boss:spawn",
@@ -32,6 +33,7 @@ export const EVENTS = createClean({
 
 export type IEvents = {
     [EVENTS.GAME_START]: null;
+    [EVENTS.GAME_END]: null;
     [EVENTS.ENTITY_REMOVED]: { entity: Entity; };
     [EVENTS.BOSS_SPAWN]: { entity: BossEntity };
     [EVENTS.BOSS_KILLED]: { entity: BossEntity | null };

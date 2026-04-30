@@ -43,4 +43,8 @@ export class PreparedParticleS2CPacket implements Payload {
     public accept(listener: ClientNetworkHandler): void {
         listener.onPreparedParticle(this);
     }
+
+    public estimateSize(): number {
+        return 20;
+    }
 }

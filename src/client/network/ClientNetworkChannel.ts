@@ -4,11 +4,11 @@ import type {Consumer, UUID} from "../../type/types.ts";
 import {UUIDUtil} from "../../utils/UUIDUtil.ts";
 import type {Payload} from "../../network/Payload.ts";
 import type {ClientChannel} from "./ClientChannel.ts";
+import {empty} from "../../utils/uit.ts";
 
 export class ClientNetworkChannel extends NetworkChannel implements ClientChannel {
     private readonly clientId: UUID;
-    private handler: Consumer<Payload> = () => {
-    };
+    private handler: Consumer<Payload> = empty;
 
     public constructor(url: string, clientId: UUID) {
         super(url, PayloadTypeRegistry.playC2S());
@@ -26,8 +26,7 @@ export class ClientNetworkChannel extends NetworkChannel implements ClientChanne
     }
 
     public override clearHandlers(): void {
-        this.handler = () => {
-        };
+        this.handler = empty;
     }
 
     protected override getSide(): string {

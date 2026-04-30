@@ -4,9 +4,9 @@ import {ClassToNum} from "../../utils/collection/ClassToNum.ts";
 import {TrackedData} from "./TrackedData.ts";
 import type {Constructor} from "../../type/types.ts";
 import type {TrackedDataHandler} from "./TrackedDataHandler.ts";
-import type {BinaryWriter} from "../../nbt/BinaryWriter.ts";
+import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {TrackedDataHandlerRegistry} from "./TrackedDataHandlerRegistry.ts";
-import type {BinaryReader} from "../../nbt/BinaryReader.ts";
+import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 
 export class DataTracker {
     public static readonly CLASS_TP_ID = new ClassToNum();

@@ -94,7 +94,7 @@ export class Particle implements VisualEffect {
         this.pos.y += this.vel.y * dt;
     }
 
-    public render(ctx: CanvasRenderingContext2D, tickDelta: number) {
+    public render(ctx: CanvasRenderingContext2D, tickDelta: number): void {
         const x = lerp(tickDelta, this.prevPos.x, this.pos.x);
         const y = lerp(tickDelta, this.prevPos.y, this.pos.y);
 

@@ -1,6 +1,6 @@
 import type {NbtElement} from "./NbtElement.ts";
 import {type NbtType, NbtTypeId, type NbtTypeIndex} from "../NbtType.ts";
-import type {BinaryWriter} from "../BinaryWriter.ts";
+import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {NbtInt8} from "./NbtInt8.ts";
 import {NbtInt16} from "./NbtInt16.ts";
 import {NbtInt32} from "./NbtInt32.ts";
@@ -17,7 +17,7 @@ import {NbtDoubleArray} from "./NbtDoubleArray.ts";
 import {NbtUint32Array} from "./NbtUint32Array.ts";
 import {NbtCompoundArray} from "./NbtCompoundArray.ts";
 import {config} from "../../utils/uit.ts";
-import type {BinaryReader} from "../BinaryReader.ts";
+import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import {NbtTypes} from "../NbtTypes.ts";
 import {NbtSerialization} from "../NbtSerialization.ts";
 import type {NbtUint8Array} from "./NbtUint8Array.ts";

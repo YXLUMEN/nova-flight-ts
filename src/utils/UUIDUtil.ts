@@ -14,7 +14,7 @@ export class UUIDUtil {
         i.toString(16).padStart(2, '0')
     );
 
-    public static parse(uuid: string): Uint8Array {
+    public static parse(uuid: string): Uint8Array<ArrayBuffer> {
         if (uuid.length !== 36 || uuid[8] !== '-' || uuid[13] !== '-' || uuid[18] !== '-' || uuid[23] !== '-') {
             throw new Error("Invalid UUID format");
         }

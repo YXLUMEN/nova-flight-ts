@@ -18,4 +18,8 @@ export class PingC2SPacket implements Payload {
     public accept(listener: ServerCommonHandler): void {
         listener.onPing();
     }
+
+    public estimateSize(): number {
+        return 0;
+    }
 }

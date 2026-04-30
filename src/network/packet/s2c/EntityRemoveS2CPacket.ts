@@ -32,4 +32,9 @@ export class EntityRemoveS2CPacket implements Payload {
     public accept(listener: ClientNetworkHandler): void {
         listener.onEntityRemove(this);
     }
+
+    public estimateSize(): number {
+        // varUint + u16
+        return 6 + (this.reason.length << 2);
+    }
 }

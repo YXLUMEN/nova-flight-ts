@@ -129,3 +129,6 @@ export function createTranslationKey(type: string, id: Identifier | null) {
         `${type}.unregistered` :
         `${type}.${id.getNamespace()}.${id.getPath().replace('/', '.')}`
 }
+
+export function empty(): void {
+}

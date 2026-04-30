@@ -2,7 +2,7 @@ use crate::network::states::{RelayState, ServerHandle, ServerManager};
 use crate::network::wss::{run_ws_server, OPEN_FLAG, SERVER_MANAGER};
 use log::{error, info};
 use rand::RngCore;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio::sync::{oneshot, Mutex};
@@ -17,11 +17,6 @@ pub async fn start_server(port: u16) -> Result<[u8; 32], String> {
             })
         })
         .await;
-
-    OPEN_FLAG
-        .get_or_init(|| async { AtomicBool::new(false) })
-        .await
-        .store(false, Ordering::SeqCst);
 
     let mut guard = state_cell.lock().await;
     if let Some(handle) = guard.handle.as_ref() {
@@ -74,11 +69,10 @@ pub async fn stop_server() -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn set_open() -> bool {
+pub fn set_open(bl: bool) -> bool {
     if let Some(flag) = OPEN_FLAG.get() {
-        let value = !flag.load(Ordering::SeqCst);
-        flag.store(value, Ordering::SeqCst);
-        value
+        flag.store(bl, Ordering::SeqCst);
+        true
     } else {
         false
     }

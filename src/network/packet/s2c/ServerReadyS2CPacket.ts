@@ -18,4 +18,8 @@ export class ServerReadyS2CPacket implements Payload {
     public accept(listener: ClientNetworkHandler): void {
         listener.onServerReady(this);
     }
+
+    public estimateSize(): number {
+        return 0;
+    }
 }

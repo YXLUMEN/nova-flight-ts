@@ -18,4 +18,8 @@ export class PongS2CPacket implements Payload {
     public accept(listener: ClientNetworkHandler): void {
         listener.onPong(this);
     }
+
+    public estimateSize(): number {
+        return 0;
+    }
 }

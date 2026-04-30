@@ -37,4 +37,8 @@ export class PlayAudioS2CPacket implements Payload {
     public accept(listener: ClientNetworkHandler): void {
         listener.onPlayAudio(this);
     }
+
+    public estimateSize(): number {
+        return 16;
+    }
 }

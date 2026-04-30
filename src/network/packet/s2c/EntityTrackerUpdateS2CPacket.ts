@@ -1,6 +1,6 @@
 import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
-import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
-import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
+import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
+import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import {DataTracker, type DataTrackerSerializedEntry} from "../../../entity/data/DataTracker.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";

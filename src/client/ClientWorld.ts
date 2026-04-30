@@ -239,7 +239,7 @@ export class ClientWorld extends World {
     }
 
     public saveAll() {
-        this.client.getServerWorker()?.getWorker()?.postMessage({type: 'save_all'});
+        this.client.getServerWorker()?.postMessage({type: 'save_all'});
     }
 
     public readonly ClientEntityHandler: EntityHandler<Entity> = {

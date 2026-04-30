@@ -53,6 +53,10 @@ export class EntityDamageS2CPacket implements Payload {
         listener.onEntityDamage(this);
     }
 
+    public estimateSize(): number {
+        return 32;
+    }
+
     public get damage() {
         return this.damageUint16 / 10;
     }

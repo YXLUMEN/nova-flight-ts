@@ -24,4 +24,8 @@ export class DifficultChangeS2CPacket implements Payload {
     public accept(listener: ClientNetworkHandler): void {
         listener.onDifficultChange(this);
     }
+
+    public estimateSize(): number {
+        return 1;
+    }
 }
