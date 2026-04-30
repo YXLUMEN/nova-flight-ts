@@ -2,18 +2,17 @@ import {NetworkChannel} from "../../network/NetworkChannel.ts";
 import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
 import type {Payload} from "../../network/Payload.ts";
 import type {BiConsumer} from "../../type/types.ts";
-import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
+import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import type {ServerChannel} from "./ServerChannel.ts";
-import {BinaryReader} from "../../nbt/BinaryReader.ts";
+import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {GameProfile} from "../entity/GameProfile.ts";
 import {PacketTooLargeError} from "../../type/errors.ts";
 import {RelayPackets} from "../../network/RelayPackets.ts";
+import {empty} from "../../utils/uit.ts";
 
 export class ServerNetworkChannel extends NetworkChannel implements ServerChannel {
     private secretKey: Uint8Array | null;
-
-    private handler: BiConsumer<number, Payload> = () => {
-    };
+    private handler: BiConsumer<number, Payload> = empty;
 
     public constructor(address: string, secretKey: Uint8Array) {
         super(address, PayloadTypeRegistry.playS2C());
@@ -39,15 +38,17 @@ export class ServerNetworkChannel extends NetworkChannel implements ServerChanne
         this.ws!.send(buffer);
     }
 
-    public sendTo<T extends Payload>(payload: T, target: GameProfile) {
-        this.sendToSessionId(payload, target.sessionId);
+    public sendTo<T extends Payload>(payload: T, target: GameProfile): void {
+        this.sendToId(payload, target.sessionId);
     }
 
-    public sendToSessionId<T extends Payload>(payload: T, target: number) {
+    public sendToId<T extends Payload>(payload: T, target: number) {
         const type = this.registry.get(payload.getId().id);
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
 
-        const writer = new BinaryWriter();
+        const size = payload.estimateSize?.() ?? 60;
+        // 2 + index(2)
+        const writer = new BinaryWriter(size + 4);
         writer.writeInt8(0x12);
         // 利用协议节省R端的数据重组
         writer.writeInt8(target);
@@ -98,16 +99,15 @@ export class ServerNetworkChannel extends NetworkChannel implements ServerChanne
         this.handler = handler;
     }
 
-    public override clearHandlers() {
-        this.handler = () => {
-        };
+    public override clearHandlers(): void {
+        this.handler = empty;
     }
 
-    protected override getSide() {
+    protected override getSide(): string {
         return 'Server';
     }
 
-    protected override getHeader() {
+    protected override getHeader(): number {
         return 0x11;
     }
 

@@ -8,7 +8,6 @@ import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponents} from "../../component/DataComponents.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
-import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.ts";
 
 export class MissileWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
@@ -39,7 +38,6 @@ export class MissileWeapon extends SpecialWeapon {
             missile.setYaw(yaw);
             missile.setPosition(pos.x, pos.y);
             (world as ServerWorld).spawnEntity(missile);
-            world.getNetworkChannel().send(new MissileSetS2CPacket(missile.getId(), missile.driftAngle, missile.hoverDir));
         });
 
         world.schedule(0.8, () => world.playSound(attacker, SoundEvents.MISSILE_BLASTOFF));

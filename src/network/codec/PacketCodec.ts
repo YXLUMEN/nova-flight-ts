@@ -1,5 +1,5 @@
-import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
-import {BinaryReader} from "../../nbt/BinaryReader.ts";
+import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
+import {BinaryReader} from "../../serialization/BinaryReader.ts";
 
 export interface PacketCodec<T> {
     encode(writer: BinaryWriter, value: T): void;

@@ -125,7 +125,7 @@ export class BinaryReader {
         return bytes;
     }
 
-    public getBuffer() {
+    public getBuffer(): Uint8Array<ArrayBuffer> {
         return new Uint8Array(this.view.buffer);
     }
 

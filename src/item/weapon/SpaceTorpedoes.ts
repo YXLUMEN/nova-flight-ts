@@ -5,7 +5,6 @@ import {SpecialWeapon} from "./SpecialWeapon.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {DataComponents} from "../../component/DataComponents.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
-import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.ts";
 import {TorpedoEntity} from "../../entity/projectile/TorpedoEntity.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 
@@ -35,7 +34,6 @@ export class SpaceTorpedoes extends SpecialWeapon {
             torpedo.setYaw(yaw);
             torpedo.setPosition(pos.x, pos.y);
             (world as ServerWorld).spawnEntity(torpedo);
-            world.getNetworkChannel().send(new MissileSetS2CPacket(torpedo.getId(), torpedo.driftAngle, torpedo.hoverDir));
         });
 
         this.setCooldown(stack, this.getMaxCooldown(stack));

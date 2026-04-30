@@ -35,4 +35,8 @@ export class ItemCooldownUpdateS2CPacket implements Payload {
     public accept(listener: ClientNetworkHandler): void {
         listener.onItemCooldown(this);
     }
+
+    public estimateSize(): number {
+        return 8;
+    }
 }

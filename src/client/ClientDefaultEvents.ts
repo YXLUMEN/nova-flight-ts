@@ -15,7 +15,11 @@ export class ClientDefaultEvents {
         const events = GeneralEventBus.getEventBus();
 
         events.on(EVENTS.GAME_START, () => {
-            BGMManager.onGameStart().then();
+            void BGMManager.onGameStart();
+        });
+
+        events.on(EVENTS.GAME_END, () => {
+            BGMManager.playMainTheme();
         });
 
         events.on(EVENTS.GAME_OVER, () => {

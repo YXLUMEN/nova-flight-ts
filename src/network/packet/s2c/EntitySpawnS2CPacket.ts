@@ -1,8 +1,8 @@
 import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
 import type {UUID} from "../../../type/types.ts";
 import {EntityType} from "../../../entity/EntityType.ts";
-import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
-import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
+import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
+import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import {decodeVelocity, decodeYaw, encodeVelocity, encodeYaw, varUintSize} from "../../../utils/NetUtil.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
@@ -27,7 +27,7 @@ export class EntitySpawnS2CPacket implements Payload {
     public readonly color: string;
     public readonly edgeColor: string;
     public readonly entityData: number;
-    public readonly extraData: Uint8Array | null;
+    public readonly extraData: Uint8Array<ArrayBuffer> | null;
 
     public constructor(
         entityId: number,
@@ -38,7 +38,7 @@ export class EntitySpawnS2CPacket implements Payload {
         vxInt16: number, vyInt16: number,
         color: string, edgeColor: string,
         entityData: number,
-        extraData: Uint8Array | null = null
+        extraData: Uint8Array<ArrayBuffer> | null = null
     ) {
         this.entityId = entityId;
         this.uuid = uuid;
@@ -54,7 +54,7 @@ export class EntitySpawnS2CPacket implements Payload {
         this.extraData = extraData;
     }
 
-    public static create(entity: Entity, entityData: number = 0, extraData: Uint8Array | null = null): EntitySpawnS2CPacket {
+    public static create(entity: Entity, entityData: number = 0, extraData: Uint8Array<ArrayBuffer> | null = null): EntitySpawnS2CPacket {
         const yaw = encodeYaw(entity.getYaw());
         const vx = encodeVelocity(entity.velocityRef.x);
         const vy = encodeVelocity(entity.velocityRef.y);
@@ -89,7 +89,7 @@ export class EntitySpawnS2CPacket implements Payload {
         const edgeColor = PacketCodecs.COLOR_HEX.decode(reader);
         const data = reader.readVarUint();
 
-        let extra: Uint8Array | null = null;
+        let extra: Uint8Array<ArrayBuffer> | null = null;
         const len = reader.readVarUint();
         if (len > 0) extra = reader.readSlice(len);
 

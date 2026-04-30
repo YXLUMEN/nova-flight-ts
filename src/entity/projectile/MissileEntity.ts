@@ -5,7 +5,6 @@ import {PI2, rand} from "../../utils/math/math.ts";
 import {RocketEntity} from "./RocketEntity.ts";
 import {EVENTS} from "../../type/IEvents.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
-import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacket.ts";
 import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
@@ -14,10 +13,17 @@ import {HitTypes} from "../../world/collision/HitResult.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 import {DataTracker} from "../data/DataTracker.ts";
 import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts";
+import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
+import {BinaryReader} from "../../serialization/BinaryReader.ts";
+import type {TrackedData} from "../data/TrackedData.ts";
+import type {ClientPlayerEntity} from "../../client/entity/ClientPlayerEntity.ts";
 
 export class MissileEntity extends RocketEntity {
     public static readonly IS_IGNITE = DataTracker.registerData(Object(MissileEntity), TrackedDataHandlerRegistry.BOOL);
-    public static readonly lockedEntity = new WeakMap<Entity, number>();
+    public static readonly TARGET_ID = DataTracker.registerData(Object(MissileEntity), TrackedDataHandlerRegistry.VAR_UINT);
+
+    public static readonly LOCKED_ENTITY = new WeakMap<Entity, number>();
 
     protected target: Entity | null = null;
     protected lastTarget: Entity | null = null;
@@ -37,7 +43,7 @@ export class MissileEntity extends RocketEntity {
     protected turnRate = Math.PI / 20;
 
     public hoverDir: number = 1;
-    public driftAngle: number;
+    private driftAngle: number;
 
     public constructor(type: EntityType<MissileEntity>, world: World, owner: Entity, driftAngle: number, damage = 5) {
         super(type, world, owner, damage);
@@ -47,6 +53,7 @@ export class MissileEntity extends RocketEntity {
     protected override defineSyncedData(builder: InstanceType<typeof DataTracker.Builder>) {
         super.defineSyncedData(builder);
         builder.define(MissileEntity.IS_IGNITE, false);
+        builder.define(MissileEntity.TARGET_ID, 0);
     }
 
     public override tick() {
@@ -58,7 +65,7 @@ export class MissileEntity extends RocketEntity {
         const world = this.getWorld();
         if (!world.isClient && this.lastTarget !== this.target) {
             this.lastTarget = this.target;
-            world.getNetworkChannel().send(new MissileLockS2CPacket(this.getId(), this.target?.getId() ?? 0));
+            this.setTarget(this.target);
         }
 
         // 燃料耗尽
@@ -140,8 +147,8 @@ export class MissileEntity extends RocketEntity {
             this.target = target;
             this.relockCooldown = this.maxRelockCooldown;
 
-            const count = MissileEntity.lockedEntity.get(this.target) ?? 0;
-            MissileEntity.lockedEntity.set(this.target, count + 1);
+            const count = MissileEntity.LOCKED_ENTITY.get(this.target) ?? 0;
+            MissileEntity.LOCKED_ENTITY.set(this.target, count + 1);
 
             world.events.emit(EVENTS.ENTITY_LOCKED, {missile: this});
         }
@@ -185,11 +192,11 @@ export class MissileEntity extends RocketEntity {
         super.onDiscard();
 
         if (this.target) {
-            const count = MissileEntity.lockedEntity.get(this.target) ?? 0;
+            const count = MissileEntity.LOCKED_ENTITY.get(this.target) ?? 0;
             if (count > 1) {
-                MissileEntity.lockedEntity.set(this.target, count - 1);
+                MissileEntity.LOCKED_ENTITY.set(this.target, count - 1);
             } else {
-                MissileEntity.lockedEntity.delete(this.target);
+                MissileEntity.LOCKED_ENTITY.delete(this.target);
             }
         }
         this.target = null;
@@ -218,6 +225,8 @@ export class MissileEntity extends RocketEntity {
 
     public setTarget(target: Entity | null): void {
         this.target = target;
+        if (this.isClient()) return;
+        this.dataTracker.set(MissileEntity.TARGET_ID, target?.getId() ?? 0);
     }
 
     public getLastTarget(): Entity | null {
@@ -238,7 +247,7 @@ export class MissileEntity extends RocketEntity {
         for (const mob of mobs) {
             if (mob.isRemoved() || mob === this.getOwner()) continue;
 
-            const currentLocks = MissileEntity.lockedEntity.get(mob) ?? 0;
+            const currentLocks = MissileEntity.LOCKED_ENTITY.get(mob) ?? 0;
             const totalDamage = this.getHitDamage() + this.explosionDamage;
 
             if (currentLocks * totalDamage >= mob.getMaxHealth()) continue;
@@ -268,6 +277,37 @@ export class MissileEntity extends RocketEntity {
 
     protected override getMapOffsetY(): number {
         return 400;
+    }
+
+    public override onTrackedDataSet(data: TrackedData<any>) {
+        super.onTrackedDataSet(data);
+        if (data !== MissileEntity.TARGET_ID) return;
+
+        const world = this.getWorld();
+        if (!world.isClient) return;
+
+        const id = this.dataTracker.get(MissileEntity.TARGET_ID);
+        this.target = world.getEntityById(id);
+        if (this.target && this.target.isPlayer()) {
+            (this.target as ClientPlayerEntity).lockedMissile.add(this);
+        }
+    }
+
+    public override createSpawnPacket(): EntitySpawnS2CPacket {
+        const ownerId = this.getOwner()?.getId() ?? 0;
+        const writer = new BinaryWriter(5);
+        writer.writeFloat(this.driftAngle);
+        writer.writeInt8(this.hoverDir);
+        return EntitySpawnS2CPacket.create(this, ownerId, writer.toUint8Array());
+    }
+
+    public override onSpawnPacket(packet: EntitySpawnS2CPacket) {
+        super.onSpawnPacket(packet);
+        if (packet.extraData) {
+            const reader = new BinaryReader(packet.extraData);
+            this.driftAngle = reader.readFloat();
+            this.hoverDir = reader.readInt8();
+        }
     }
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {

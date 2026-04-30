@@ -4,8 +4,8 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {RegistryEntry} from "../../../registry/tag/RegistryEntry.ts";
 import {StatusEffect} from "../../../entity/effect/StatusEffect.ts";
 import type {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
-import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
-import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
+import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
+import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
 
 export class EntityStatusEffectS2CPacket implements Payload {

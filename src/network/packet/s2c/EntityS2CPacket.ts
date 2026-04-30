@@ -1,6 +1,6 @@
 import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
-import type {BinaryWriter} from "../../../nbt/BinaryWriter.ts";
-import type {BinaryReader} from "../../../nbt/BinaryReader.ts";
+import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
+import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {decodeYaw} from "../../../utils/NetUtil.ts";
@@ -59,6 +59,10 @@ export class MoveRelative extends EntityS2CPacket {
     public getId(): PayloadId<any> {
         return MoveRelative.ID;
     }
+
+    public estimateSize(): number {
+        return 8;
+    }
 }
 
 export class Rotate extends EntityS2CPacket {
@@ -83,6 +87,10 @@ export class Rotate extends EntityS2CPacket {
 
     public getId(): PayloadId<any> {
         return Rotate.ID;
+    }
+
+    public estimateSize(): number {
+        return 8;
     }
 }
 
@@ -112,5 +120,9 @@ export class RotateAndMoveRelative extends EntityS2CPacket {
 
     public getId(): PayloadId<any> {
         return RotateAndMoveRelative.ID;
+    }
+
+    public estimateSize(): number {
+        return 16;
     }
 }

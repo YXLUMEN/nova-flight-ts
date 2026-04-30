@@ -31,8 +31,7 @@ export class BinaryWriter {
         }
     }
 
-    public pushBytes(buf: ArrayBuffer | Uint8Array) {
-        // 实际有效
+    public pushBytes(buf: ArrayBuffer | Uint8Array<ArrayBuffer>): void {
         const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
         this.ensure(bytes.length);
         this.buffer.set(bytes, this.offset);

@@ -85,8 +85,8 @@ export class StatusEffectInstance {
             return false;
         }
 
-        if (!this.isInfinite() && this.duration > 0) {
-            this.duration -= 1;
+        if (this.duration > 0) {
+            this.duration--;
         }
         return this.hasRemaining();
     }
@@ -95,8 +95,8 @@ export class StatusEffectInstance {
         if (!this.hasRemaining()) return;
         this.type.getValue().tickClient(entity, this.duration);
 
-        if (!this.isInfinite() && this.duration > 0) {
-            this.duration -= 1;
+        if (this.duration > 0) {
+            this.duration--;
         }
     }
 

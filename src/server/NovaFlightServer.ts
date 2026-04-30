@@ -42,8 +42,6 @@ export abstract class NovaFlightServer implements CommandOutput {
     private waitServerHalt: Promise<void> | null = null;
     private stopWorld: Consumer<void> | null = null;
 
-    private bindTick = this.tick.bind(this);
-
     protected constructor(worldName: string, channel: ServerChannel, playerManagerCon: Constructor<PlayerManager>) {
         this.serverId = crypto.randomUUID();
 
@@ -51,6 +49,7 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.playerManager = new playerManagerCon(this);
         this.networkChannel = channel;
         this.serverCommandManager = new ServerCommandManager(this.getCommandSource());
+        this.tick = this.tick.bind(this);
     }
 
     public static getInstance(): NovaFlightServer {
@@ -85,7 +84,7 @@ export abstract class NovaFlightServer implements CommandOutput {
         self.postMessage({type: 'server_start'});
 
         this.last = performance.now();
-        this.tickInterval = setInterval(this.bindTick, 25);
+        this.tickInterval = setInterval(this.tick, 25);
     }
 
     private async loadWorld(): Promise<Result<boolean, string>> {

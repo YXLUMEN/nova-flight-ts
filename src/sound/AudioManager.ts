@@ -65,6 +65,10 @@ export class AudioManager {
         this.audio.pause();
     }
 
+    public static isPaused(): boolean {
+        return this.audio.paused || this.currentPlaying === null;
+    }
+
     public static resume(): void {
         if (this.currentPlaying) {
             this.audio.play().catch(console.error);
@@ -160,6 +164,7 @@ export class AudioManager {
         if (!ctrl) return;
 
         ctrl.abort(reason);
+        this.eventMap.delete(name);
     }
 
     public static hasListener(name: string) {

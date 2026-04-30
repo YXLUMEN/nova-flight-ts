@@ -10,7 +10,7 @@ import {confirm, message} from "@tauri-apps/plugin-dialog";
 import {invoke} from "@tauri-apps/api/core";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
-import {BinaryWriter} from "../nbt/BinaryWriter.ts";
+import {BinaryWriter} from "../serialization/BinaryWriter.ts";
 import type {Consumer} from "../type/types.ts";
 
 export class ClientSavesManager {

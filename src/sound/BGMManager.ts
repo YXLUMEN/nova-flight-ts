@@ -8,10 +8,17 @@ import {clamp, randInt} from "../utils/math/math.ts";
 export class BGMManager {
     private static readonly playList = [
         Audios.VOID_SHOWDOWN,
-        Audios.WARSAW,
         Audios.MAKING_LEGENDS,
         Audios.STEEL_REQUIEM,
         Audios.COME_ON_MABO,
+        Audios.LAVA_CHICKEN,
+        Audios.ZERG
+    ];
+    private static readonly mainTheme = [
+        Audios.MAIN_THEME,
+        Audios.THE_TALE_OF_A_CRUEL_WORLD,
+        Audios.DELTA_FORCE_THEME,
+        Audios.WARSAW
     ];
 
     private static current = 0;
@@ -21,7 +28,20 @@ export class BGMManager {
 
     public static init() {
         shuffleArray(this.playList);
-        AudioManager.playAudio(Audios.MAIN_THEME, true);
+        this.playMainTheme();
+    }
+
+    public static playMainTheme() {
+        if (!AudioManager.isPaused()) return;
+
+        let index = randInt(0, this.mainTheme.length - 1);
+        AudioManager.playAudio(this.mainTheme[index]);
+
+        AudioManager.removeListener('main');
+        AudioManager.addListener('main', 'ended', () => {
+            const i = (index + 1) % this.mainTheme.length;
+            AudioManager.playAudio(this.mainTheme[i]);
+        });
     }
 
     public static next() {
@@ -31,7 +51,7 @@ export class BGMManager {
 
     public static async onGameStart() {
         const current = AudioManager.getCurrentPlaying();
-        if (current === null || current === Audios.MAIN_THEME) {
+        if (current === null || this.mainTheme.includes(current)) {
             await AudioManager.fadeOutAndPause();
             AudioManager.playAudio(this.playList[this.current]);
         }
@@ -39,6 +59,7 @@ export class BGMManager {
         if (AudioManager.hasListener('bgm')) return;
 
         let last: number | undefined;
+        AudioManager.removeListener('main');
         AudioManager.addListener('bgm', 'ended', () => {
             clearTimeout(last);
             last = setTimeout(() => {
@@ -69,7 +90,9 @@ export class BGMManager {
 
     public static onBossDead(): void {
         AudioManager.fadeOutAndPause().then(() => {
-            this.next();
+            const rand = Math.random();
+            if (rand < 0.5) AudioManager.playAudio(Audios.THE_TALE_OF_A_CRUEL_WORLD);
+            else this.next();
         });
     }
 

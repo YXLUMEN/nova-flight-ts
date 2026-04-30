@@ -1,8 +1,8 @@
 import type {NbtElement} from "./NbtElement.ts";
 import {NbtCompound} from "./NbtCompound.ts";
 import {type NbtType, NbtTypeId, type NbtTypeIndex} from "../NbtType.ts";
-import type {BinaryWriter} from "../BinaryWriter.ts";
-import type {BinaryReader} from "../BinaryReader.ts";
+import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
+import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import {config} from "../../utils/uit.ts";
 
 export class NbtCompoundArray implements NbtElement {

@@ -4,7 +4,6 @@ import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import type {Entity} from "../Entity.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
-import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
 import {EntityType} from "../EntityType.ts";
@@ -129,7 +128,6 @@ export class BaseBossEntity extends BossEntity {
             missile.setPosition(pos.x, pos.y);
             missile.setYaw(yaw);
             world.spawnEntity(missile);
-            world.getNetworkChannel().send(new MissileSetS2CPacket(missile.getId(), missile.driftAngle, missile.hoverDir));
         });
     }
 }

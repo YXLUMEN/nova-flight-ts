@@ -26,6 +26,10 @@ export class AudioControlS2CPacket implements Payload {
     public accept(listener: ClientNetworkHandler) {
         listener.onAudioControl(this);
     }
+
+    public estimateSize(): number {
+        return 1;
+    }
 }
 
 export class AudioLeapS2CPacket extends AudioControlS2CPacket {
@@ -42,5 +46,9 @@ export class AudioLeapS2CPacket extends AudioControlS2CPacket {
 
     public getId(): PayloadId<AudioLeapS2CPacket> {
         return AudioLeapS2CPacket.ID;
+    }
+
+    public estimateSize(): number {
+        return 4;
     }
 }

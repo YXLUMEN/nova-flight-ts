@@ -9,7 +9,6 @@ import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts"
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
 import {EntityTypes} from "../EntityTypes.ts";
-import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
 import {DevourerBossAI, DevourerPhase} from "../ai/DevourerBossAI.ts";
 import type {Entity} from "../Entity.ts";
@@ -100,7 +99,6 @@ export class DevourerBoss extends BossEntity {
     }
 
     protected createAi() {
-        // TODO 行为由AI决定
         return new DevourerBossAI();
     }
 
@@ -370,9 +368,6 @@ export class DevourerBoss extends BossEntity {
             missile.setPosition(pos.x, pos.y);
             missile.setYaw(yaw);
             world.spawnEntity(missile);
-            world.getNetworkChannel().send(
-                new MissileSetS2CPacket(missile.getId(), missile.driftAngle, missile.hoverDir)
-            );
         });
     }
 
@@ -408,6 +403,13 @@ export class DevourerBoss extends BossEntity {
 
     public override canHitByProjectile(): boolean {
         return this.getPhase() !== DevourerPhase.STAGE_TRANSITION && super.canHitByProjectile();
+    }
+
+    public override takeDamage(damageSource: DamageSource, damage: number): boolean {
+        if (!damageSource.getAttacker()?.isPlayer()) {
+            damage *= 0.1;
+        }
+        return super.takeDamage(damageSource, damage);
     }
 
     public override onDeath(damageSource: DamageSource): void {

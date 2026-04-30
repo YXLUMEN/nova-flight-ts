@@ -25,4 +25,8 @@ export class StopSoundS2CPacket implements Payload {
     public accept(listener: ClientNetworkHandler): void {
         listener.onStopSound(this);
     }
+
+    public estimateSize(): number {
+        return 4;
+    }
 }

@@ -1,7 +1,7 @@
 import type {Payload} from "./Payload.ts";
 import {type PayloadType, PayloadTypeRegistry} from "./PayloadTypeRegistry.ts";
-import {BinaryWriter} from "../nbt/BinaryWriter.ts";
-import {BinaryReader} from "../nbt/BinaryReader.ts";
+import {BinaryWriter} from "../serialization/BinaryWriter.ts";
+import {BinaryReader} from "../serialization/BinaryReader.ts";
 import type {Consumer} from "../type/types.ts";
 import type {Channel} from "./Channel.ts";
 import {sleep} from "../utils/uit.ts";
@@ -29,7 +29,7 @@ export abstract class NetworkChannel implements Channel {
         this.registry = registry;
     }
 
-    public async connect() {
+    public async connect(): Promise<void> {
         if (this.isConnected) return;
 
         const {promise, resolve, reject} = Promise.withResolvers<void>();
@@ -72,7 +72,7 @@ export abstract class NetworkChannel implements Channel {
             if (!(packet instanceof Attached)) return;
 
             const sessionId = packet.sessionId;
-            if (!Number.isSafeInteger(sessionId) || sessionId <= 0 || sessionId > 255) {
+            if (!Number.isSafeInteger(sessionId) || sessionId <= 0 || sessionId > 64) {
                 connectFail(`[${this.getSide()}] Invalid session ID`);
                 return;
             }
@@ -147,7 +147,8 @@ export abstract class NetworkChannel implements Channel {
         const type = this.registry.get(payload.getId().id);
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
 
-        const writer = new BinaryWriter();
+        const size = payload.estimateSize?.() ?? 60;
+        const writer = new BinaryWriter(size + 4);
         writer.writeInt8(this.getHeader());
         writer.writeInt8(this.getSessionId());
 

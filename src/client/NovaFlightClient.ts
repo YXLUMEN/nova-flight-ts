@@ -8,7 +8,7 @@ import {ClientWorld} from "./ClientWorld.ts";
 import {ClientPlayerEntity} from "./entity/ClientPlayerEntity.ts";
 import {LoadingScreen} from "./render/ui/LoadingScreen.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
-import {sleep} from "../utils/uit.ts";
+import {empty, sleep} from "../utils/uit.ts";
 import {DataLoader} from "./resource/DataLoader.ts";
 import {check} from "@tauri-apps/plugin-updater";
 import {StartScreen} from "./render/ui/StartScreen.ts";
@@ -16,14 +16,11 @@ import {ClientNetworkHandler} from "./network/ClientNetworkHandler.ts";
 import {error, info, warn} from "@tauri-apps/plugin-log";
 import {ClientCommandManager} from "./command/ClientCommandManager.ts";
 import {invoke} from "@tauri-apps/api/core";
-import {ServerWorker} from "../worker/ServerWorker.ts";
 import {ClientMultiGameManger} from "./ClientMultiGameManger.ts";
 import {ConnectInfo} from "./render/ui/ConnectInfo.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {ClientChat} from "./command/ClientChat.ts";
 import type {StartServer} from "../type/startup.ts";
-import {documentDir, resolve, resolveResource} from "@tauri-apps/api/path";
-import {exists, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs";
 import {ClientSavesManager} from "./ClientSavesManager.ts";
 import {confirm, message} from "@tauri-apps/plugin-dialog";
 import {EVENTS} from "../type/IEvents.ts";
@@ -39,6 +36,8 @@ import {ClientInputEvents} from "./input/ClientInputEvents.ts";
 import {RenderLoader} from "./render/RenderLoader.ts";
 import {ClientIntegratedChannel} from "./network/ClientIntegratedChannel.ts";
 import type {ClientChannel} from "./network/ClientChannel.ts";
+import {ClientCommandSource} from "./command/ClientCommandSource.ts";
+import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -56,8 +55,9 @@ export class NovaFlightClient {
     private channel: ClientChannel;
     public readonly connection: ClientConnection;
     public readonly networkHandler: ClientNetworkHandler;
+    public readonly commandSource: ClientCommandSource;
 
-    private server: ServerWorker | null = null;
+    private worker: Worker | null = null;
     private isIntegrated = false;
 
     public world: ClientWorld | null = null;
@@ -78,8 +78,7 @@ export class NovaFlightClient {
 
     private gameOverAbort: AbortController | null = null;
     private waitWorldStop: Promise<void> | null = null;
-    private stopWorld: Supplier<void> = () => {
-    };
+    private stopWorld: Supplier<void> = empty;
 
     public readonly registryManager: RegistryManager;
     public readonly clientCommandManager: ClientCommandManager;
@@ -104,10 +103,7 @@ export class NovaFlightClient {
         this.window = new Window();
         this.worldRender = new WorldRender(this);
 
-        this.channel = new ClientNetworkChannel(
-            `127.0.0.1:${GlobalConfig.port}`,
-            this.clientId
-        );
+        this.channel = new ClientNetworkChannel('', this.clientId);
         this.connection = new ClientConnection(this.channel);
         this.networkHandler = new ClientNetworkHandler(this, this.connection);
 
@@ -115,7 +111,8 @@ export class NovaFlightClient {
         this.saveManager = new ClientSavesManager();
         this.statisticManager = new StatisticManager();
 
-        this.clientCommandManager = new ClientCommandManager(this.networkHandler.getCommandSource());
+        this.commandSource = new ClientCommandSource(this);
+        this.clientCommandManager = new ClientCommandManager(this.commandSource);
         this.clientChat = new ClientChat(this);
 
         this.input = new KeyboardInput(this.window.canvas);
@@ -144,7 +141,7 @@ export class NovaFlightClient {
             const breakLoop = await this.userSelect();
             if (breakLoop) break;
 
-            this.world?.events.emit(EVENTS.GAME_START, null);
+            GeneralEventBus.getEventBus().emit(EVENTS.GAME_START, null);
             await this.waitWorldStop;
 
             // cleanup
@@ -175,10 +172,10 @@ export class NovaFlightClient {
             this.saveManager.hide();
             if (saveName === null) {
                 this.stopWorld();
-            } else {
-                if (GlobalConfig.generalMode) await this.startGeneralServer(saveName);
-                else await this.startIntegratedServer(saveName);
+                return false;
             }
+            if (GlobalConfig.generalMode) await this.startGeneralServer(saveName);
+            else await this.startIntegratedServer(saveName);
         } else if (action === 1) {
             this.isIntegrated = false;
             await this.connectToServer();
@@ -210,7 +207,7 @@ export class NovaFlightClient {
 
     public setPause(bl: boolean): void {
         if (bl && !this.pause) {
-            this.server?.postMessage({type: 'stop_ticking'});
+            this.worker?.postMessage({type: 'stop_ticking'});
 
             AudioManager.pause();
             this.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
@@ -218,7 +215,7 @@ export class NovaFlightClient {
             TipManager.carousel();
             this.window.canvas.style.cursor = 'crosshair';
         } else if (!bl && this.pause) {
-            this.server?.postMessage({type: 'start_ticking'});
+            this.worker?.postMessage({type: 'start_ticking'});
 
             AudioManager.resume();
             this.globalSound.playSound(SoundEvents.UI_PAGE_SWITCH);
@@ -297,15 +294,15 @@ export class NovaFlightClient {
             this.last = 0;
             this.accumulator = 0;
 
-            if (!this.server) {
+            if (!this.worker) {
                 resolve();
                 this.waitWorldStop = null;
                 return;
             }
 
             const terminate = () => {
-                this.server?.terminate();
-                this.server = null;
+                this.worker?.terminate();
+                this.worker = null;
 
                 resolve();
                 this.waitWorldStop = null;
@@ -316,14 +313,14 @@ export class NovaFlightClient {
                 terminate();
             }, NovaFlightClient.SERVER_SHUTDOWN_TIMEOUT);
 
-            this.server.getWorker().onmessage = event => {
+            this.worker.onmessage = event => {
                 if (event.data.type !== 'server_shutdown') return;
 
                 clearTimeout(shutTimeout);
                 terminate();
             };
 
-            this.server.postMessage({type: 'stop_server'});
+            this.worker.postMessage({type: 'stop_server'});
         };
     }
 
@@ -336,10 +333,7 @@ export class NovaFlightClient {
             return;
         }
 
-        this.channel = new ClientNetworkChannel(
-            `127.0.0.1:${GlobalConfig.port}`,
-            this.clientId
-        );
+        this.channel = new ClientNetworkChannel(address, this.clientId);
         this.channel.setServerAddress(address);
         this.connection.changeChannel(this.channel);
 
@@ -378,7 +372,7 @@ export class NovaFlightClient {
     }
 
     private async startIntegratedServer(saveName: string): Promise<void> {
-        if (this.server) return;
+        if (this.worker) return;
 
         // 全屏提示
         const connectInfo = new ConnectInfo(this, this.stopWorld.bind(this));
@@ -386,104 +380,28 @@ export class NovaFlightClient {
         this.connectInfo = connectInfo;
         connectInfo.setMessage(TranslatableText.of('start.integrated.start').toString());
 
-        // 内置服务器配置
-        const startUp: StartServer = {
-            addr: `127.0.0.1:${GlobalConfig.port}`,
-            key: new ArrayBuffer(0),
-            hostUUID: this.clientId,
-            saveName
-        };
-
         // Vite 规定的格式 integrated dev
-        const server = new ServerWorker(new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
+        const worker = new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
             type: 'module',
             name: 'server',
-        }));
+        });
+        this.worker = worker;
 
-        this.server = server;
-        const worker = this.server.getWorker();
-
+        const addr = `127.0.0.1:${GlobalConfig.port}`;
         this.channel = new ClientIntegratedChannel(worker, this.clientId);
         this.connection.changeChannel(this.channel);
 
-        // noinspection DuplicatedCode
-        const connectToServer = async () => {
-            connectInfo.setMessage(TranslatableText.of('start.connecting').toString());
-            try {
-                await this.channel.connect();
-                this.networkHandler.checkServer();
-            } catch (err) {
-                console.error(err);
-                await error(String(err));
-                await connectInfo.setError(TranslatableText.of('start.fail.connect').toString());
-                this.stopWorld();
-            }
-        };
-
-        const startTimeout = setTimeout(() => {
-            connectInfo.setError(TranslatableText.of('network.disconnect.timeout').toString());
-            server.terminate();
-        }, NovaFlightClient.SERVER_START_TIMEOUT);
-
-        worker.onmessage = event => {
-            switch (event.data.type) {
-                case 'server_start':
-                    clearTimeout(startTimeout);
-                    connectToServer();
-                    break;
-                case 'server_stop':
-                    this.stopWorld();
-                    break;
-                case 'saved':
-                    this.clientCommandManager.addPlainMessage('\x1b[32m游戏已保存');
-                    break;
-                case 'read_file':
-                    this.serverReadFile(event.data);
-                    break;
-                case 'write_file':
-                    this.serverWriteFile(event.data);
-                    break;
-                case 'log':
-                    const level = event.data.level;
-                    if (level === 'info') info(event.data.message);
-                    else if (level === 'warn') warn(event.data.message);
-                    else if (level === 'error') error(event.data.message);
-                    break;
-                case 'message':
-                    message(event.data.message, {kind: event.data.kind});
-                    break;
-            }
-        };
-
-        worker.onerror = event => {
-            const err = event.error;
-            const msg = err instanceof Error ?
-                `[Server Thread] Crash ${err.name}:${err.message} because ${err.cause} at\n ${err.stack}` :
-                `[Server Thread] Crash ${event.type}:${event.message} because ${event.error}`;
-
-            console.error(msg);
-            error(msg);
-            this.requestStop();
-        }
-
-        server.postMessage({
-            type: 'start_server',
-            payload: startUp
-        }, {transfer: [new ArrayBuffer(0)]});
-
-        await connectInfo.waitConfirm();
+        await this.checkAndConnect(addr, connectInfo, new ArrayBuffer(0), saveName, worker);
     }
 
     private async startGeneralServer(saveName: string): Promise<void> {
-        if (this.server) return;
+        if (this.worker) return;
 
-        // 全屏提示
         const connectInfo = new ConnectInfo(this, this.stopWorld.bind(this));
         this.connectInfo?.destroy();
         this.connectInfo = connectInfo;
         connectInfo.setMessage(TranslatableText.of('start.integrated.start').toString());
 
-        // 启动中继服务器
         let key: ArrayBuffer;
         try {
             await invoke('stop_server');
@@ -508,14 +426,22 @@ export class NovaFlightClient {
         this.channel.setServerAddress(addr);
         this.connection.changeChannel(this.channel);
 
-        // 确认中继服务器开启
-        const canConnect = await this.channel.sniff(addr);
+        await this.checkAndConnect(addr, connectInfo, key, saveName);
+    }
+
+    private async checkAndConnect(
+        addr: string,
+        connectInfo: ConnectInfo,
+        key: ArrayBuffer,
+        saveName: string,
+        worker?: Worker
+    ): Promise<void> {
+        const canConnect: boolean = await this.channel.sniff(addr);
         if (!canConnect) {
             await connectInfo.setError(TranslatableText.of('start.integrated.fail.start').toString());
             return;
         }
 
-        // noinspection DuplicatedCode
         const connectToServer = async () => {
             connectInfo.setMessage(TranslatableText.of('start.connecting').toString());
             try {
@@ -537,18 +463,15 @@ export class NovaFlightClient {
             saveName
         };
 
-        // Vite 规定的格式 integrated dev
-        const server = new ServerWorker(new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
+        worker = worker === undefined ? new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
             type: 'module',
             name: 'server',
-        }));
-
-        this.server = server;
-        const worker = this.server.getWorker();
+        }) : worker;
+        this.worker = worker;
 
         const startTimeout = setTimeout(() => {
             connectInfo.setError(TranslatableText.of('network.disconnect.timeout').toString());
-            server.terminate();
+            worker.terminate();
         }, NovaFlightClient.SERVER_START_TIMEOUT);
 
         worker.onmessage = event => {
@@ -562,12 +485,6 @@ export class NovaFlightClient {
                     break;
                 case 'saved':
                     this.clientCommandManager.addPlainMessage('\x1b[32m游戏已保存');
-                    break;
-                case 'read_file':
-                    this.serverReadFile(event.data);
-                    break;
-                case 'write_file':
-                    this.serverWriteFile(event.data);
                     break;
                 case 'log':
                     const level = event.data.level;
@@ -592,7 +509,7 @@ export class NovaFlightClient {
             this.requestStop();
         }
 
-        server.postMessage({
+        worker.postMessage({
             type: 'start_server',
             payload: startUp
         }, {transfer: [key]});
@@ -608,8 +525,8 @@ export class NovaFlightClient {
         this.player = null;
     }
 
-    public getServerWorker(): ServerWorker | null {
-        return this.server;
+    public getServerWorker(): Worker | null {
+        return this.worker;
     }
 
     public requestStop(): void {
@@ -711,43 +628,5 @@ export class NovaFlightClient {
         if (!player) return;
 
         this.networkHandler.sendCommand(`/gamemode ${bool ?? !player.isDevMode()}`);
-    }
-
-    private async serverReadFile(data: any) {
-        if (!this.server) return;
-
-        const path = data.path as string;
-        const res = await resolveResource(`resources/nova-flight/${path}`);
-
-        if (!(await exists(res))) {
-            this.server.postMessage({
-                type: 'readFile',
-                id: data.id,
-                buffer: null
-            });
-            return;
-        }
-
-        const buffer = await readFile(res);
-        this.server.postMessage({
-            type: 'readFile',
-            id: data.id,
-            buffer: buffer
-        }, {transfer: [buffer.buffer]});
-    }
-
-    private async serverWriteFile(data: any) {
-        const path = data.path as string;
-        const buffer = data.buffer;
-        if (!(buffer instanceof ArrayBuffer)) throw new TypeError('BufferData must be an ArrayBuffer');
-
-        const documentPath = await documentDir();
-        const saveRoot = await resolve(documentPath, 'saves');
-        if (!await exists(saveRoot)) {
-            await mkdir(saveRoot);
-        }
-
-        const resolved = await resolve(saveRoot, path);
-        await writeFile(resolved, new Uint8Array(buffer), {create: true});
     }
 }

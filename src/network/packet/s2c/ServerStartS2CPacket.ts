@@ -22,4 +22,8 @@ export class ServerStartS2CPacket implements Payload {
     public accept(listener: ClientNetworkHandler): void {
         listener.onServerStart(this);
     }
+
+    public estimateSize(): number {
+        return 0;
+    }
 }

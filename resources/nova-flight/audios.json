@@ -80,7 +80,10 @@
   "scourge_of_the_universe": {
     "file": "nova-flight:/scourge_of_the_universe.ogg"
   },
-  "universal_collapse" : {
+  "universal_collapse": {
     "file": "nova-flight:/universal_collapse.ogg"
+  },
+  "the_tale_of_a_cruel_world": {
+    "file": "nova-flight:/the_tale_of_a_cruel_world.ogg"
   }
 }

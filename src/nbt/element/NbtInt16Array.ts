@@ -1,8 +1,8 @@
 import type {NbtElement} from "./NbtElement.ts";
 import {type NbtType, NbtTypeId, type NbtTypeIndex} from "../NbtType.ts";
-import type {BinaryWriter} from "../BinaryWriter.ts";
+import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {config} from "../../utils/uit.ts";
-import type {BinaryReader} from "../BinaryReader.ts";
+import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 
 export class NbtInt16Array implements NbtElement {
     public static readonly TYPE: NbtType<NbtInt16Array> = config({

@@ -23,7 +23,6 @@ export class ParticleEffects {
             .speed(80, 200)
             .omnidirectional()
             .withDrag(0.5)
-            .withGravity(60)
             .build()
     );
 
@@ -57,7 +56,6 @@ export class ParticleEffects {
             .speed(20, 60)
             .omnidirectional()
             .withDrag(0.3)
-            .withGravity(-15)
             .build()
     );
 
@@ -69,7 +67,6 @@ export class ParticleEffects {
             .speed(30, 100)
             .omnidirectional()
             .withDrag(0.4)
-            .withGravity(40)
             .build()
     );
 

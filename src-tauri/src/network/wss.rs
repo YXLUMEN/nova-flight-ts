@@ -17,7 +17,7 @@ use tokio_tungstenite::tungstenite::{Bytes, Error, Message};
 use tokio_tungstenite::{accept_async, WebSocketStream};
 
 pub static SERVER_MANAGER: OnceCell<Mutex<ServerManager>> = OnceCell::const_new();
-pub static OPEN_FLAG: OnceCell<AtomicBool> = OnceCell::const_new();
+pub static OPEN_FLAG: OnceCell<AtomicBool> = OnceCell::const_new_with(AtomicBool::new(false));
 
 const MAX_PAYLOAD_LEN: usize = 6144; // 6 KB upper bound for a single frame
 const MAX_EXCLUDES: u32 = 16; // exclude uuid count

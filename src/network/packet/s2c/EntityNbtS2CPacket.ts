@@ -41,4 +41,8 @@ export class EntityNbtS2CPacket implements Payload {
     public accept(listener: ClientNetworkHandler): void {
         listener.onEntityNbt(this);
     }
+
+    public estimateSize(): number {
+        return 128;
+    }
 }

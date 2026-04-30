@@ -23,6 +23,8 @@ export class DevourerBossAI implements EntityAi {
 
     public readonly targetPos: MutVec2 = MutVec2.zero();
 
+    public tick() {
+    }
 
     public computeIntent(
         pos: Vec2,
@@ -75,9 +77,6 @@ export class DevourerBossAI implements EntityAi {
 
     private wanderIntent(age: number, speed: number): MoveIntent {
         return {targetYaw: age * 0.02, speed: speed * 0.5};
-    }
-
-    public tick(): void {
     }
 
     public decision(): void {

@@ -46,7 +46,7 @@ export class ServerConnection implements Connection {
 
     public send(packet: Payload): void {
         if (this.state === ConnectionState.CLOSED) return;
-        this.channel.sendToSessionId(packet, this.sessionId);
+        this.channel.sendToId(packet, this.sessionId);
     }
 
     public broadcast(packet: Payload): void {

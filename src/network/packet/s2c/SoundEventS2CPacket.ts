@@ -38,4 +38,8 @@ export class SoundEventS2CPacket implements Payload {
     public accept(listener: ClientNetworkHandler): void {
         listener.onPlaySound(this);
     }
+
+    public estimateSize(): number {
+        return 16;
+    }
 }

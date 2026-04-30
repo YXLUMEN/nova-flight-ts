@@ -1,5 +1,5 @@
 import {NbtCompound} from "./element/NbtCompound.ts";
-import {BinaryWriter} from "./BinaryWriter.ts";
+import {BinaryWriter} from "../serialization/BinaryWriter.ts";
 import {NbtTypeId} from "./NbtType.ts";
 import type {NbtCompoundArray} from "./element/NbtCompoundArray.ts";
 

@@ -29,4 +29,8 @@ export class ClientReadyC2SPacket implements Payload {
     public accept(listener: ServerConfigHandler): void {
         listener.onClientReady(this);
     }
+
+    public estimateSize(): number {
+        return 17;
+    }
 }

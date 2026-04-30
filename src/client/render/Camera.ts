@@ -36,13 +36,13 @@ export class Camera {
     private readonly friction: number = 12;
 
     private shakeTrauma = 0;       // [0,1]
-    private traumaPower = 2;       // 非线性放大, 常用 2 或 3
-    private shakeDecay = 0.8;      // 每秒衰减量
-    private maxShake = 48;         // 最大像素抖动
-    private shakeOffset = MutVec2.zero();
+    private readonly traumaPower = 2;       // 非线性放大, 常用 2 或 3
+    private readonly shakeDecay = 0.8;      // 每秒衰减量
+    private readonly maxShake = 48;         // 最大像素抖动
+    private readonly shakeOffset = MutVec2.zero();
 
-    private uiMaxDrift = 128;      // HUD 最大漂移像素(镜头快速移动时)
-    private uiShakeFactor = 0.5;
+    private readonly uiMaxDrift = 128;      // HUD 最大漂移像素(镜头快速移动时)
+    private readonly uiShakeFactor = 0.5;
 
     public update(target: MutVec2, tickDelta: number): void {
         if (GlobalConfig.enableCameraOffset) {
@@ -120,12 +120,12 @@ export class Camera {
             const theta = Math.random() * PI2;
             this.shakeOffset.x = Math.cos(theta) * r;
             this.shakeOffset.y = Math.sin(theta) * r;
-        } else {
-            // 归零, 避免长尾抖动
-            if (this.shakeOffset.x !== 0 || this.shakeOffset.y !== 0) {
-                this.shakeOffset.x = 0;
-                this.shakeOffset.y = 0;
-            }
+            return;
+        }
+        // 归零, 避免长尾抖动
+        if (this.shakeOffset.x !== 0 || this.shakeOffset.y !== 0) {
+            this.shakeOffset.x = 0;
+            this.shakeOffset.y = 0;
         }
     }
 

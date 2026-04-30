@@ -19,12 +19,8 @@ import {ParticleS2CPacket} from "../../network/packet/s2c/ParticleS2CPacket.ts";
 import {EntityAttributesS2CPacket} from "../../network/packet/s2c/EntityAttributesS2CPacket.ts";
 import {LivingEntity} from "../../entity/LivingEntity.ts";
 import {GaussianRandom} from "../../utils/math/GaussianRandom.ts";
-import {MissileSetS2CPacket} from "../../network/packet/s2c/MissileSetS2CPacket.ts";
-import {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
-import {MissileLockS2CPacket} from "../../network/packet/s2c/MissileLockS2CPacket.ts";
 import {PlayerFinishLoginC2SPacket} from "../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
 import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
-import {EVENTS} from "../../type/IEvents.ts";
 import {EntityNbtS2CPacket} from "../../network/packet/s2c/EntityNbtS2CPacket.ts";
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
 import {EffectCreateS2CPacket} from "../../network/packet/s2c/EffectCreateS2CPacket.ts";
@@ -80,7 +76,6 @@ import type {StopSoundS2CPacket} from "../../network/packet/s2c/StopSoundS2CPack
 export class ClientNetworkHandler implements PacketListener {
     private readonly playerProfiles: Map<UUID, GameProfile> = new Map();
 
-    private readonly commandSource: ClientCommandSource;
     private readonly commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
 
     private readonly client: NovaFlightClient;
@@ -98,7 +93,6 @@ export class ClientNetworkHandler implements PacketListener {
     public constructor(client: NovaFlightClient, connection: ClientConnection) {
         this.client = client;
         this.connection = connection;
-        this.commandSource = new ClientCommandSource(this, client);
 
         connection.setPacketListener(ConnectionState.PLAY, this);
     }
@@ -430,27 +424,6 @@ export class ClientNetworkHandler implements PacketListener {
         }
     }
 
-    public onMissileSet(packet: MissileSetS2CPacket): void {
-        const missile = this.world?.getEntityById(packet.entityId);
-        if (missile instanceof MissileEntity) {
-            missile.driftAngle = packet.driftAngle;
-            missile.hoverDir = packet.hoverDir;
-        }
-    }
-
-    public onMissileLock(packet: MissileLockS2CPacket): void {
-        const world = this.world;
-        if (!world) return;
-
-        const missile = world.getEntityById(packet.entityId);
-        if (missile instanceof MissileEntity) {
-            const locked = world.getEntityById(packet.lockEntityId);
-
-            missile.setTarget(locked);
-            world.events.emit(EVENTS.ENTITY_LOCKED, {missile});
-        }
-    }
-
     public onEntityNbt(packet: EntityNbtS2CPacket) {
         const entity = this.world?.getEntityLookup().get(packet.entityId);
         if (!entity) return;
@@ -637,15 +610,11 @@ export class ClientNetworkHandler implements PacketListener {
     }
 
     public parse(command: string) {
-        return this.commandDispatcher.parse(command, this.commandSource);
+        return this.commandDispatcher.parse(command, this.client.commandSource);
     }
 
     public getCommandDispatcher() {
         return this.commandDispatcher;
-    }
-
-    public getCommandSource() {
-        return this.commandSource;
     }
 
     public getPlayerList() {

@@ -37,4 +37,8 @@ export class EntityBatchSpawnS2CPacket implements Payload {
     public accept(listener: ClientNetworkHandler): void {
         listener.onEntityBatchSpawn(this);
     }
+
+    public estimateSize(): number {
+        return this.entities.reduce((acc, entity) => acc + entity.estimateSize(), 0);
+    }
 }

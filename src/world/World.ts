@@ -147,6 +147,7 @@ export abstract class World {
 
     public close(): void {
         this.clear();
+        this.events.emit(EVENTS.GAME_END, null);
         this.events.clear();
         Entity.resetCounter();
     }

@@ -1,8 +1,8 @@
 import type {NbtElement} from "./NbtElement.ts";
 import {type NbtType, NbtTypeId, type NbtTypeIndex} from "../NbtType.ts";
 import {config, deepFreeze} from "../../utils/uit.ts";
-import type {BinaryReader} from "../BinaryReader.ts";
-import type {BinaryWriter} from "../BinaryWriter.ts";
+import type {BinaryReader} from "../../serialization/BinaryReader.ts";
+import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 
 export class NbtUint32 implements NbtElement {
     public static readonly TYPE: NbtType<NbtUint32> = config({

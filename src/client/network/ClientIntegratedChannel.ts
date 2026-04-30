@@ -1,9 +1,10 @@
 import type {Consumer, UUID} from "../../type/types.ts";
 import type {Payload} from "../../network/Payload.ts";
 import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
-import {BinaryWriter} from "../../nbt/BinaryWriter.ts";
-import {BinaryReader} from "../../nbt/BinaryReader.ts";
+import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
+import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {ClientChannel} from "./ClientChannel.ts";
+import {empty} from "../../utils/uit.ts";
 
 export class ClientIntegratedChannel implements ClientChannel {
     private readonly clientId: UUID;
@@ -11,39 +12,41 @@ export class ClientIntegratedChannel implements ClientChannel {
 
     private readonly registry = PayloadTypeRegistry.playC2S();
 
-    private connected: boolean = false;
-    private ctrl = new AbortController();
-    private handler: Consumer<Payload> = () => {
-    };
+    private ctrl: AbortController | null = null;
+    private handler: Consumer<Payload> = empty;
 
     public constructor(worker: Worker, clientId: UUID) {
         this.worker = worker;
         this.clientId = clientId;
+        this.onMessage = this.onMessage.bind(this);
     }
 
     public async connect(): Promise<void> {
+        if (this.ctrl) return;
+
         const {promise, resolve} = Promise.withResolvers<void>();
         const ctrl = new AbortController();
+        this.ctrl = new AbortController();
 
         const onConnect = (event: MessageEvent) => {
             if (event.data.type !== 'connect') return;
-            this.connected = true;
             resolve();
             ctrl.abort();
+            this.worker.addEventListener('message', this.onMessage, {signal: this.ctrl!.signal});
         };
 
         this.worker.addEventListener('message', onConnect, {signal: ctrl.signal});
-        this.worker.addEventListener('message', this.onMessage.bind(this), {signal: this.ctrl.signal});
         this.worker.postMessage({type: 'connect', clientId: this.clientId});
 
         return promise;
     }
 
     public disconnect(): void {
-        if (!this.connected) return;
-        this.connected = false;
-        this.worker.postMessage({type: 'disconnect'});
+        if (!this.ctrl || !this.ctrl.signal.aborted) return;
         this.ctrl.abort();
+
+        this.worker.postMessage({type: 'disconnect'});
+        this.ctrl = null;
     }
 
     public sniff(): Promise<boolean> {
@@ -51,24 +54,25 @@ export class ClientIntegratedChannel implements ClientChannel {
     }
 
     public send<T extends Payload>(payload: T): void {
+        // noinspection DuplicatedCode
         const type = this.registry.get(payload.getId().id);
         if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
 
-        const writer = new BinaryWriter();
+        const size = payload.estimateSize?.() ?? 6;
+        const writer = new BinaryWriter(size + 2);
         writer.writeVarUint(type.index);
         type.codec.encode(writer, payload);
 
         const buffer = writer.toUint8Array();
         this.worker.postMessage({
             type: 'packet',
-            packet: buffer
+            packet: buffer.buffer
         }, {transfer: [buffer.buffer]});
     }
 
     private onMessage(event: MessageEvent): void {
         if (event.data.type === 'packet') {
-            const binary = event.data.packet as ArrayBuffer;
-            const reader = new BinaryReader(new Uint8Array(binary));
+            const reader = new BinaryReader(new Uint8Array(event.data.packet));
 
             const index = reader.readVarUint();
             const type = PayloadTypeRegistry.getGlobalByIndex(index);
@@ -80,8 +84,7 @@ export class ClientIntegratedChannel implements ClientChannel {
         }
 
         if (event.data.type === 'disconnect') {
-            this.connected = false;
-            this.ctrl.abort();
+            this.disconnect();
         }
     }
 
@@ -90,8 +93,7 @@ export class ClientIntegratedChannel implements ClientChannel {
     }
 
     public clearHandlers(): void {
-        this.handler = () => {
-        };
+        this.handler = empty;
     }
 
     public getSessionId(): number {
@@ -106,6 +108,6 @@ export class ClientIntegratedChannel implements ClientChannel {
     }
 
     public isOpen(): boolean {
-        return this.connected;
+        return !!this.ctrl && !this.ctrl.signal.aborted;
     }
 }

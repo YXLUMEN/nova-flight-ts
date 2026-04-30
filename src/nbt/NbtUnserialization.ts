@@ -1,4 +1,4 @@
-import {BinaryReader} from "./BinaryReader.ts";
+import {BinaryReader} from "../serialization/BinaryReader.ts";
 import {NbtCompound} from "./element/NbtCompound.ts";
 import {StringReader} from "../brigadier/StringReader.ts";
 import {NbtTypeId} from "./NbtType.ts";
