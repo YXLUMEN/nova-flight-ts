@@ -1,10 +1,11 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class EntityHealthS2CPacket implements Payload {
-    public static readonly ID: PayloadId<EntityHealthS2CPacket> = payloadId('entity_health');
+    public static readonly ID: PayloadType<EntityHealthS2CPacket> = payloadType('entity_health');
     public static readonly CODEC: PacketCodec<EntityHealthS2CPacket> = PacketCodecs.adapt2(
         PacketCodecs.VAR_UINT,
         val => val.entityId,
@@ -25,10 +26,10 @@ export class EntityHealthS2CPacket implements Payload {
         return new EntityHealthS2CPacket(entityId, amount);
     }
 
-    public getId(): PayloadId<EntityHealthS2CPacket> {
+    public type(): PayloadType<EntityHealthS2CPacket> {
         return EntityHealthS2CPacket.ID;
     }
 
-    public accept(_listener: ClientNetworkHandler): void {
+    public accept(_listener: ClientPlayHandler): void {
     }
 }

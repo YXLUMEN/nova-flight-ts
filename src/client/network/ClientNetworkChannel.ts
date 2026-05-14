@@ -1,24 +1,59 @@
-import {NetworkChannel} from "../../network/NetworkChannel.ts";
-import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
+import {WSNetworkChannel} from "../../network/WSNetworkChannel.ts";
+import {CodecRegistry} from "../../network/CodecRegistry.ts";
 import type {Consumer, UUID} from "../../type/types.ts";
 import {UUIDUtil} from "../../utils/UUIDUtil.ts";
 import type {Payload} from "../../network/Payload.ts";
 import type {ClientChannel} from "./ClientChannel.ts";
 import {empty} from "../../utils/uit.ts";
+import {BinaryReader} from "../../serialization/BinaryReader.ts";
+import {PacketHeader} from "../../network/PacketHeader.ts";
+import {NetworkSide} from "../../network/NetworkSide.ts";
+import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 
-export class ClientNetworkChannel extends NetworkChannel implements ClientChannel {
+export class ClientNetworkChannel extends WSNetworkChannel implements ClientChannel {
     private readonly clientId: UUID;
     private handler: Consumer<Payload> = empty;
 
     public constructor(url: string, clientId: UUID) {
-        super(url, PayloadTypeRegistry.playC2S());
+        super(NetworkSide.CLIENT, url, CodecRegistry.PLAY_C2S);
         this.clientId = clientId;
     }
 
-    protected override handleMessage(event: MessageEvent) {
+    public send(payload: Payload) {
+        const type = this.registry.get(payload.type());
+        if (!type) throw new Error(`[${this.side}] Unknown payload type: ${payload.type().id}`);
+
+        const size = payload.estimateSize?.() ?? 7;
+        const writer = new BinaryWriter(size + 4);
+        writer.writeInt8(PacketHeader.C2S);
+        writer.writeInt8(this.getSessionId());
+
+        this.checkAndSend(writer, type, payload);
+    }
+
+    protected override handleMessage(event: MessageEvent): void {
         const binary = new Uint8Array(event.data as ArrayBuffer);
-        const payload = this.decodePayload(binary);
-        if (payload) this.handler(payload);
+        const reader = new BinaryReader(binary);
+
+        const header = reader.readUint8();
+        if (header === PacketHeader.RELAY) {
+            const index = reader.readUint8();
+            const codec = CodecRegistry.getGlobalByIndex(index);
+            if (codec) this.handler(codec.codec.decode(reader));
+            return;
+        }
+
+        if (header !== PacketHeader.SERVER_BROADCAST && header !== PacketHeader.SERVER_SINGLE) {
+            console.warn(`[${this.side}] Unknown header: ${header}`);
+            return;
+        }
+
+        reader.readUint8();
+        const index = reader.readVarUint();
+        const codec = CodecRegistry.getGlobalByIndex(index);
+        if (!codec) return;
+
+        this.handler(codec.codec.decode(reader));
     }
 
     public setHandler(handler: Consumer<Payload>) {
@@ -29,21 +64,13 @@ export class ClientNetworkChannel extends NetworkChannel implements ClientChanne
         this.handler = empty;
     }
 
-    protected override getSide(): string {
-        return 'Client';
-    }
-
-    protected override getHeader(): number {
-        return 0x10;
-    }
-
     protected override register(): void {
-        const idBytes = UUIDUtil.parse(this.clientId);
-        const buf = new Uint8Array(1 + idBytes.length);
-        buf[0] = 0x02;
-        buf.set(idBytes, 1);
+        const uuid = UUIDUtil.parse(this.clientId);
+        const buf = new Uint8Array(1 + uuid.length);
+        buf[0] = PacketHeader.CLIENT;
+        buf.set(uuid, 1);
 
-        this.ws!.send(buf);
+        this.sendRaw(buf);
         console.log(`Client ${this.clientId} registered`);
     }
 }

@@ -1,15 +1,42 @@
 import {clamp} from "./math/math.ts";
 import type {Identifier} from "../registry/Identifier.ts";
+import type {Return} from "../type/types.ts";
 
 export const DPR = Math.max(1, Math.min(2, globalThis.devicePixelRatio || 1));
 
-export function throttleTimeOut<T extends (...args: any[]) => any>(func: T, wait: number = 200) {
+export function throttleTimeOut<Z, T extends (...args: any[]) => any>(
+    func: T,
+    wait: number = 200
+) {
     let timer: number | null = null;
-    return function (...args: Parameters<T>) {
+    return function (this: Z, ...args: Parameters<T>) {
         if (timer) return;
-        // @ts-ignore
         func.apply(this, args);
         timer = setTimeout((): any => timer = null, wait);
+    }
+}
+
+export function throttleTimeOutScope<S, T extends (...args: any[]) => any>(
+    func: T,
+    wait: number = 200,
+    scope: S
+) {
+    let timer: number | null = null;
+    return function (this: S, ...args: Parameters<T>) {
+        if (timer) return;
+        func.apply(scope, args);
+        timer = setTimeout(() => timer = null, wait);
+    };
+}
+
+export function debounce<Z, T extends (...args: any[]) => any>(
+    func: T,
+    wait: number = 50
+) {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    return function (this: Z, ...args: Parameters<T>) {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => func.apply(this, args), wait);
     }
 }
 
@@ -29,9 +56,8 @@ export function deepFreeze<T>(obj: T, seen = new WeakSet()): Readonly<T> {
         }
     } else {
         for (const key of Reflect.ownKeys(obj)) {
-            // @ts-ignore
-            const value = obj[key];
-            if (typeof value === 'object' && value !== null && !Object.isFrozen(value)) {
+            const value = (obj as any)[key];
+            if (typeof value === 'object' && value !== null) {
                 deepFreeze(value, seen);
             }
         }
@@ -56,7 +82,7 @@ export function sleep(time: number) {
     return new Promise(resolve => setTimeout(resolve, time));
 }
 
-export function groupBy<T>(arr: T[], keyFn: (t: T) => string) {
+export function groupBy<T>(arr: T[], keyFn: Return<T, string>): Map<string, T[]> {
     const m = new Map<string, T[]>();
     for (const item of arr) {
         const k = keyFn(item);
@@ -68,6 +94,13 @@ export function groupBy<T>(arr: T[], keyFn: (t: T) => string) {
 
 export function isNonEmptyString(v: unknown): v is string {
     return typeof v === 'string' && v.trim().length > 0;
+}
+
+export function isAscii(str: string): boolean {
+    for (let i = 0; i < str.length; i++) {
+        if (str.charCodeAt(i) > 0x7F) return false;
+    }
+    return true;
 }
 
 export function hexToRgb(hex: string) {
@@ -95,15 +128,6 @@ export function hexToRgba(hex: string, a: number): string {
     return `rgba(${r},${g},${b},${clamp(a, 0, 1).toFixed(3)})`;
 }
 
-export function debounce<T extends (...args: any[]) => any>(func: T, wait: number = 50) {
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    return function (...args: Parameters<T>) {
-        if (timer) clearTimeout(timer);
-        // @ts-ignore
-        timer = setTimeout(() => func.apply(this, args), wait);
-    }
-}
-
 export function shuffleArray<T>(array: T[]): T[] {
     for (let i = array.length; i--;) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -112,23 +136,14 @@ export function shuffleArray<T>(array: T[]): T[] {
     return array;
 }
 
-export function getCompactTimestamp() {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    const h = String(now.getHours()).padStart(2, '0');
-    const min = String(now.getMinutes()).padStart(2, '0');
-    const s = String(now.getSeconds()).padStart(2, '0');
-
-    return `${y}${m}${d}_${h}${min}${s}`;
-}
-
 export function createTranslationKey(type: string, id: Identifier | null) {
     return id == null ?
         `${type}.unregistered` :
         `${type}.${id.getNamespace()}.${id.getPath().replace('/', '.')}`
 }
 
+/**
+ * 空方法
+ * */
 export function empty(): void {
 }

@@ -25,11 +25,14 @@ export class RocketEntity extends ProjectileEntity {
         world: World,
         owner: Entity | null,
         damage: number = 8,
-        health: number = 6) {
+        health: number = 6,
+        behaviour?: ExplosionBehavior
+    ) {
         super(type, world, owner, damage);
 
         this.maxHealth = health;
         this.health = health;
+        this.behaviour = behaviour ?? null;
     }
 
     protected override onEntityHit(hitResult: EntityHitResult): void {

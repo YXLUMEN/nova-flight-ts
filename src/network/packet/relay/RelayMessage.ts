@@ -1,13 +1,13 @@
-import {payloadId, type PayloadId} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {RelayPayload} from "../../RelayPayload.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
-import type {ServerNetworkManager} from "../../../server/network/ServerNetworkManager.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
+import type {ServerRelayHandler} from "../../../server/network/handler/ServerRelayHandler.ts";
 
 export class RelayMessage implements RelayPayload {
     public static readonly TYPE_ID = 0x03;
-    public static readonly ID: PayloadId<RelayMessage> = payloadId('attached');
+    public static readonly ID: PayloadType<RelayMessage> = payloadType('attached');
     public static readonly CODEC: PacketCodec<RelayMessage> = PacketCodecs.adapt(
         PacketCodecs.STRING,
         val => val.msg,
@@ -16,15 +16,15 @@ export class RelayMessage implements RelayPayload {
 
     public readonly msg: string;
 
-    public constructor(msg: string) {
+    private constructor(msg: string) {
         this.msg = msg;
     }
 
-    public getId(): PayloadId<RelayMessage> {
+    public type(): PayloadType<RelayMessage> {
         return RelayMessage.ID;
     }
 
-    public accept(listener: ClientNetworkHandler | ServerNetworkManager): void {
+    public accept(listener: ClientPlayHandler | ServerRelayHandler): void {
         listener.onRelayMessage(this);
     }
 }

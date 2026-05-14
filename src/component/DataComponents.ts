@@ -127,6 +127,9 @@ export class DataComponents {
     public static readonly COOLDOWN_COUNTDOWN: DataComponentType<number> = this.register("cd_countdown",
         builder => builder.persistent(Codecs.INT32).network(PacketCodecs.INT32)
     );
+    public static readonly LASER_ID: DataComponentType<number> = this.register("laser_id",
+        builder => builder.persistent(Codecs.INT32).network(PacketCodecs.VAR_UINT)
+    )
 
     private static register<T>(id: string, builderOperator: UnaryOperator<ComponentTypeBuilder<T>>): DataComponentType<T> {
         const ide = Identifier.ofVanilla(id);

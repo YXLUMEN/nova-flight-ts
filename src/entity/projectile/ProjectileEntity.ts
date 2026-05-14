@@ -1,6 +1,6 @@
 import {Entity} from "../Entity.ts";
 import {World} from "../../world/World.ts";
-import type {IOwnable} from "../IOwnable.ts";
+import type {Ownable} from "../Ownable.ts";
 import type {EntityType} from "../EntityType.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import {DataTracker, type DataTrackerSerializedEntry} from "../data/DataTracker.ts";
@@ -17,7 +17,7 @@ import {type HitResult, HitTypes} from "../../world/collision/HitResult.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 
-export abstract class ProjectileEntity extends Entity implements IOwnable, IColorEntity {
+export abstract class ProjectileEntity extends Entity implements Ownable, IColorEntity {
     private damage: number = 0;
     public color: string = "#8cf5ff";
     public edgeColor: string = '';
@@ -113,11 +113,11 @@ export abstract class ProjectileEntity extends Entity implements IOwnable, IColo
     }
 
     protected override getMapOffsetX(): number {
-        return 80;
+        return World.MAX_X_CROSS;
     }
 
     protected override getMapOffsetY(): number {
-        return 80;
+        return World.MAX_Y_CROSS;
     }
 
     protected override onOutOfBounds() {

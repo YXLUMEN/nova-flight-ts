@@ -1,4 +1,5 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {Tech} from "../../../world/tech/Tech.ts";
@@ -6,7 +7,7 @@ import type {RegistryEntry} from "../../../registry/tag/RegistryEntry.ts";
 import type {ServerPlayHandler} from "../../../server/network/handler/ServerPlayHandler.ts";
 
 export class PlayerUnlockTechC2SPacket implements Payload {
-    public static readonly ID: PayloadId<PlayerUnlockTechC2SPacket> = payloadId('player_unlock_tech');
+    public static readonly ID: PayloadType<PlayerUnlockTechC2SPacket> = payloadType('player_unlock_tech');
     public static readonly CODEC: PacketCodec<PlayerUnlockTechC2SPacket> = PacketCodecs.adapt(
         Tech.PACKET_CODEC,
         val => val.tech,
@@ -19,7 +20,7 @@ export class PlayerUnlockTechC2SPacket implements Payload {
         this.tech = tech;
     }
 
-    public getId(): PayloadId<PlayerUnlockTechC2SPacket> {
+    public type(): PayloadType<PlayerUnlockTechC2SPacket> {
         return PlayerUnlockTechC2SPacket.ID;
     }
 

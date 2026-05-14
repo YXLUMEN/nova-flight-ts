@@ -1,10 +1,11 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class JoinGameS2CPacket implements Payload {
-    public static readonly ID: PayloadId<JoinGameS2CPacket> = payloadId('join_game');
+    public static readonly ID: PayloadType<JoinGameS2CPacket> = payloadType('join_game');
     public static readonly CODEC: PacketCodec<JoinGameS2CPacket> = PacketCodecs.adapt2(
         PacketCodecs.VAR_UINT,
         val => val.playerEntityId,
@@ -25,11 +26,11 @@ export class JoinGameS2CPacket implements Payload {
         return new JoinGameS2CPacket(playerEntityId, worldName)
     }
 
-    public getId(): PayloadId<JoinGameS2CPacket> {
+    public type(): PayloadType<JoinGameS2CPacket> {
         return JoinGameS2CPacket.ID;
     }
 
-    public accept(listener: ClientNetworkHandler): void {
+    public accept(listener: ClientPlayHandler): void {
         void listener.onGameJoin(this);
     }
 }

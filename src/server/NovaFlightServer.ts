@@ -2,7 +2,6 @@ import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {Constructor, Consumer, UUID} from "../type/types.ts";
 import {ServerWorld} from "./ServerWorld.ts";
-import {GlobalConfig} from "../configs/GlobalConfig.ts";
 import {ServerCommandSource} from "./command/ServerCommandSource.ts";
 import type {CommandOutput} from "./command/CommandOutput.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
@@ -16,6 +15,7 @@ import {Log} from "../worker/log.ts";
 import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.ts";
 import {TranslatableTextS2CPacket} from "../network/packet/s2c/TranslatableTextS2CPacket.ts";
 import {ServerStartS2CPacket} from "../network/packet/s2c/ServerStartS2CPacket.ts";
+import {TickRateManager} from "../world/TickRateManager.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static instance: NovaFlightServer;
@@ -33,6 +33,7 @@ export abstract class NovaFlightServer implements CommandOutput {
     // startGame 后初始化
     public world: ServerWorld | null = null;
 
+    private readonly tickManager: TickRateManager;
     private pause: boolean = false;
     private tickInterval: number | undefined;
     private last = 0;
@@ -47,6 +48,7 @@ export abstract class NovaFlightServer implements CommandOutput {
 
         this.worldName = worldName;
         this.playerManager = new playerManagerCon(this);
+        this.tickManager = new TickRateManager();
         this.networkChannel = channel;
         this.serverCommandManager = new ServerCommandManager(this.getCommandSource());
         this.tick = this.tick.bind(this);
@@ -115,10 +117,14 @@ export abstract class NovaFlightServer implements CommandOutput {
             this.last = now;
             this.accumulator += tickDelta;
 
-            while (this.accumulator >= GlobalConfig.mbps) {
+            let step = 0;
+            const maxStep = this.tickManager.getMaxStep();
+            const perTick = this.tickManager.perTick();
+            while (this.accumulator >= perTick && step < maxStep) {
                 this.networkManager!.tick();
-                if (!this.pause) world.tick(GlobalConfig.mbps);
-                this.accumulator -= GlobalConfig.mbps;
+                if (!this.pause) world.tick(perTick);
+                this.accumulator -= perTick;
+                step++;
             }
         } catch (error) {
             Log.error(`[Server] Server runtime error: ${error}`);
@@ -144,7 +150,7 @@ export abstract class NovaFlightServer implements CommandOutput {
             Log.error(`[Server] At NovaFlightServer, Error while saving game: ${err}`);
         }
 
-        this.networkManager!.disconnectAllPlayer();
+        this.networkManager!.close();
         this.world!.close();
         this.networkChannel.disconnect();
 
@@ -195,11 +201,11 @@ export abstract class NovaFlightServer implements CommandOutput {
     }
 
     public sendMessage(msg: string): void {
-        this.networkChannel.send(new GameMessageS2CPacket(msg));
+        this.networkChannel.enqueue(new GameMessageS2CPacket(msg));
     }
 
     public sendTranslatable(key: string, args?: string[]): void {
-        this.networkChannel.send(new TranslatableTextS2CPacket(key, args ?? []));
+        this.networkChannel.enqueue(new TranslatableTextS2CPacket(key, args ?? []));
     }
 
     public shouldTrackOutput(): boolean {

@@ -54,7 +54,7 @@ export class ClientInventory {
     private sendChange(from: number, to: number, item: ItemStack): void {
         this.inventory.removeItem(from);
         this.inventory.setItem(to, item);
-        this.player.getNetworkChannel().send(new PlayerInventorySwapC2SPacket(from, to));
+        this.player.sendPacket(new PlayerInventorySwapC2SPacket(from, to));
     }
 
     public cancelInteraction(): void {

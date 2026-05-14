@@ -30,6 +30,7 @@ import {TachyonLance} from "./weapon/BaseWeapon/TachyonLance.ts";
 import {PerditionBeam} from "./weapon/PerditionBeam.ts";
 import {WeaponType} from "./WeaponType.ts";
 import {TorpedoLauncher} from "./weapon/BaseWeapon/TorpedoLauncher.ts";
+import {AreaBombing} from "./weapon/AreaBombing.ts";
 
 export class Items {
     public static AIR = this.register("air", new Item(new Item.Properties()));
@@ -90,7 +91,7 @@ export class Items {
         .type(WeaponType.KINETIC)
         .component(DataComponents.MAX_HEAT, 144)
     ));
-    public static readonly PHASE_LASERS: Item;
+    public static readonly PHASE_LASERS: PhaseLasers;
     public static readonly DECOY_RELEASER = this.register("decoy_releaser", new DecoyReleaser(new Item.Properties()
         .attackDamage(0)
         .maxCooldown(450)
@@ -199,6 +200,12 @@ export class Items {
         .component(DataComponents.MAX_RELOAD_TIME, 32)
         .component(DataComponents.EXPLOSION_RADIUS, 32)
         .component(DataComponents.EXPLOSION_POWER, 12)
+    ));
+    public static readonly AREA_BOMBING = this.register('area_bombing', new AreaBombing(new Item.Properties()
+        .maxCooldown(1200)
+        .type(WeaponType.EXPLOSIVE)
+        .component(DataComponents.EXPLOSION_RADIUS, 96)
+        .component(DataComponents.EXPLOSION_POWER, 128)
     ));
 
     // 避免引用问题

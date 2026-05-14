@@ -15,7 +15,7 @@ export class ServerEntityManager<T extends Entity> {
 
     public constructor(handler: EntityHandler<T>) {
         this.index = new EntityIndex();
-        this.grid = new GridSpatialIndex(World.WORLD_W, World.WORLD_H);
+        this.grid = new GridSpatialIndex(World.MAP_WIDTH, World.MAP_HEIGHT);
         this.lookup = new EntityLookUp(this.index, this.grid);
         this.handler = handler;
     }

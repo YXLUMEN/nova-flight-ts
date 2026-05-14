@@ -7,7 +7,7 @@ import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import type {AutoAim} from "../tech/AutoAim.ts";
 import type {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
-import {clamp, squareDistVec2, wrapRadians} from "../../utils/math/math.ts";
+import {clamp, lerp, squareDistVec2, wrapRadians} from "../../utils/math/math.ts";
 import {type ItemStack} from "../../item/ItemStack.ts";
 import {type Item} from "../../item/Item.ts";
 import {AbstractClientPlayerEntity} from "./AbstractClientPlayerEntity.ts";
@@ -18,16 +18,16 @@ import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPac
 import {DataComponents} from "../../component/DataComponents.ts";
 import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
-import {FullMove, PositionOnly, Steering} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
 import {BlockChangeC2SPacket} from "../../network/packet/c2s/BlockChangeC2SPacket.ts";
 import {BlockPos} from "../../world/map/BlockPos.ts";
 import type {BlockChange} from "../../world/map/BlockChange.ts";
 import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
-import type {Channel} from "../../network/Channel.ts";
 import {Weapon} from "../../item/weapon/Weapon.ts";
 import {FireSpecialC2SPacket} from "../../network/packet/c2s/FireSpecialC2SPacket.ts";
 import {ClientInventory} from "../inventory/ClientInventory.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
+import type {Payload} from "../../network/Payload.ts";
+import {FullMove, PositionOnly, Steering} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
 
 export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     public readonly profile: GameProfile;
@@ -118,6 +118,8 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     }
 
     public override aiStep() {
+        this.interpolatePos();
+
         let dx = 0, dy = 0;
         if (this.input.isDown("ArrowLeft", "KeyA")) dx -= 1;
         if (this.input.isDown("ArrowRight", "KeyD")) dx += 1;
@@ -174,12 +176,23 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         super.aiStep();
 
         if (updatePos && updateYaw) {
-            this.getNetworkChannel().send(new FullMove(dx, dy, this.getYaw()));
+            this.sendPacket(new FullMove(dx, dy, this.getYaw()));
         } else if (updatePos) {
-            this.getNetworkChannel().send(new PositionOnly(dx, dy));
+            this.sendPacket(new PositionOnly(dx, dy));
         } else if (updateYaw) {
-            this.getNetworkChannel().send(new Steering(this.getYaw()));
+            this.sendPacket(new Steering(this.getYaw()));
         }
+    }
+
+    private interpolatePos(): void {
+        if (this.positionIncrements <= 0) return;
+
+        const t = 1 / this.positionIncrements;
+        const dx = lerp(t, this.getX(), this.serverX);
+        const dy = lerp(t, this.getY(), this.serverY);
+        this.setPosition(dx, dy);
+
+        this.positionIncrements--;
     }
 
     protected override inventoryTick() {
@@ -200,7 +213,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
             if (this.input.wasPressed(key) && item.canFire(stack)) {
                 item.tryFire(stack, world, this);
-                this.getNetworkChannel().send(new FireSpecialC2SPacket(item));
+                this.sendPacket(new FireSpecialC2SPacket(item));
             }
         }
     }
@@ -217,10 +230,10 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
         if (isFiring !== this.wasFiring) {
             if (!this.wasFiring && hasAmmo) {
-                this.getNetworkChannel().send(new PlayerFireC2SPacket(true));
+                this.sendPacket(new PlayerFireC2SPacket(true));
                 item.onStartFire(stack, world, this);
             } else {
-                this.getNetworkChannel().send(new PlayerFireC2SPacket(false));
+                this.sendPacket(new PlayerFireC2SPacket(false));
                 item.onEndFire(stack, world, this);
             }
             this.wasFiring = isFiring;
@@ -241,7 +254,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         if (stack.getDamage() === 0 || stack.getOrDefault(DataComponents.RELOADING, false)) {
             return;
         }
-        this.getNetworkChannel().send(PlayerReloadC2SPacket.INSTANCE);
+        this.sendPacket(PlayerReloadC2SPacket.INSTANCE);
         this.wasFiring = true;
     }
 
@@ -309,14 +322,14 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         const stack = this.getInventory().searchItem(item);
         if (!stack.isEmpty() && item.canFire(stack)) {
             item.tryFire(stack, this.getWorld(), this);
-            this.getNetworkChannel().send(new FireSpecialC2SPacket(item));
+            this.sendPacket(new FireSpecialC2SPacket(item));
         }
     }
 
     public placeBlock(type: number, x: number, y: number): void {
         const map = this.getWorld().getMap();
         if (map.getAt(x, y) === type) return;
-        this.getNetworkChannel().send(new BlockChangeC2SPacket(type, BlockPos.alignValue(x), BlockPos.alignValue(y)));
+        this.sendPacket(new BlockChangeC2SPacket(type, BlockPos.alignValue(x), BlockPos.alignValue(y)));
     }
 
     public placeBlocks(changes: BlockChange[]): void {
@@ -325,7 +338,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         const solid = changes
             .filter(change => map.get(change.x, change.y) === 0);
 
-        this.getNetworkChannel().send(BatchBlockChangesPacket.from(solid));
+        this.sendPacket(BatchBlockChangesPacket.from(solid));
     }
 
     public getRevision(): number {
@@ -348,7 +361,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     public override switchWeapon(dir: number = 1) {
         super.switchWeapon(dir);
-        this.getNetworkChannel().send(new PlayerSwitchSlotC2SPacket(this.getInventory().getSelectedSlot()));
+        this.sendPacket(new PlayerSwitchSlotC2SPacket(this.getInventory().getSelectedSlot()));
     }
 
     public override addScore(score: number): void {
@@ -371,8 +384,8 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         return 10;
     }
 
-    public getNetworkChannel(): Channel {
-        return this.getWorld().getNetworkChannel();
+    public sendPacket(payload: Payload): void {
+        this.getWorld().sendPacket(payload);
     }
 
     public override readNBT(nbt: NbtCompound) {

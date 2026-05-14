@@ -5,7 +5,7 @@ import {NovaFlightClient} from "./client/NovaFlightClient.ts";
 import {mainWindow} from "./main.ts";
 import {error} from "@tauri-apps/plugin-log";
 import {isDev} from "./configs/GlobalConfig.ts";
-import {PayloadTypeRegistry} from "./network/PayloadTypeRegistry.ts";
+import {CodecRegistry} from "./network/CodecRegistry.ts";
 import {RelayPackets} from "./network/RelayPackets.ts";
 
 export function run() {
@@ -19,7 +19,7 @@ export function run() {
     RelayPackets.registerNetworkPacket();
     ServerPackets.registerNetworkPacket();
     ClientPackets.registerNetworkPacket();
-    PayloadTypeRegistry.freeze();
+    CodecRegistry.settle();
 
     const playerName = localStorage.getItem('playerName') ?? 'null';
     UUIDUtil.uuidFromUsername(playerName)

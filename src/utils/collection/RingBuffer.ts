@@ -1,6 +1,6 @@
 import {clamp} from "../math/math.ts";
 
-export class RingBuffer<T> {
+export class RingBuffer<T> implements Iterable<T> {
     private buffer: (T | null)[];
     private head: number = 0;
     private tail: number = 0;
@@ -43,6 +43,10 @@ export class RingBuffer<T> {
         return this.size;
     }
 
+    public full(): boolean {
+        return this.size === this.capacity;
+    }
+
     private resize(): void {
         const newCapacity = this.capacity * 2;
         const newBuffer: (T | null)[] = new Array(newCapacity).fill(null);
@@ -66,5 +70,11 @@ export class RingBuffer<T> {
     public clear(): void {
         this.reset();
         this.buffer.length = 0;
+    }
+
+    public* [Symbol.iterator](): Generator<T> {
+        for (let i = 0; i < this.size; i++) {
+            yield this.buffer[(this.head + i) % this.capacity]!;
+        }
     }
 }

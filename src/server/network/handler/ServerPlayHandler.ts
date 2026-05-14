@@ -22,10 +22,9 @@ import {BaseWeapon} from "../../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {EntitySpawnS2CPacket} from "../../../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {PlayerResetTechC2SPacket} from "../../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
 import {ApplyServerTech} from "../../tech/ApplyServerTech.ts";
-import {EntityAttributes} from "../../../entity/attribute/EntityAttributes.ts";
 import {GameMessageS2CPacket} from "../../../network/packet/s2c/GameMessageS2CPacket.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
-import {ConnectionState, type ConnectionStateType} from "../ConnectionState.ts";
+import {ConnectionState} from "../ConnectionState.ts";
 import {BlockChangeC2SPacket} from "../../../network/packet/c2s/BlockChangeC2SPacket.ts";
 import {BlockChangeS2CPacket} from "../../../network/packet/s2c/BlockChangeS2CPacket.ts";
 import {World} from "../../../world/World.ts";
@@ -37,6 +36,7 @@ import {Vec2} from "../../../utils/math/Vec2.ts";
 import {PositionMoveRotation} from "../../../network/packet/PositionMoveRotation.ts";
 import {PlayerPositionS2CPacket} from "../../../network/packet/s2c/PlayerPositionS2CPacket.ts";
 import {RequestTeleportC2SPacket} from "../../../network/packet/c2s/RequestTeleportC2SPacket.ts";
+import {EntityAttributes} from "../../../entity/attribute/EntityAttributes.ts";
 
 export class ServerPlayHandler extends ServerCommonHandler {
     public readonly player: ServerPlayerEntity;
@@ -184,23 +184,23 @@ export class ServerPlayHandler extends ServerCommonHandler {
     }
 
     public onPlaceBlock(packet: BlockChangeC2SPacket): void {
-        if (packet.x < 0 || packet.x > World.WORLD_W ||
-            packet.y < 0 || packet.y > World.WORLD_H) {
+        if (packet.x < 0 || packet.x > World.MAP_WIDTH ||
+            packet.y < 0 || packet.y > World.MAP_HEIGHT) {
             this.send(new BlockChangeS2CPacket(0, packet.x, packet.y));
             return;
         }
 
-        this.world.getMap().set(packet.x, packet.y, packet.type);
-        this.broadcast(new BlockChangeS2CPacket(packet.type, packet.x, packet.y));
+        this.world.getMap().set(packet.x, packet.y, packet.block);
+        this.broadcast(new BlockChangeS2CPacket(packet.block, packet.x, packet.y));
     }
 
     public onBatchChanges(packet: BatchBlockChangesPacket): void {
         const map = this.world.getMap();
         const changes = packet
             .filter((_, x, y) => x > 0 ||
-                x < World.WORLD_W ||
+                x < World.MAP_WIDTH ||
                 y > 0 ||
-                y < World.WORLD_H
+                y < World.MAP_HEIGHT
             );
         changes.foreach((type, x, y) => map.set(x, y, type));
         this.broadcast(changes);
@@ -258,7 +258,7 @@ export class ServerPlayHandler extends ServerCommonHandler {
         return false;
     }
 
-    public getPhase(): ConnectionStateType {
+    public getPhase(): ConnectionState {
         return ConnectionState.PLAY;
     }
 }

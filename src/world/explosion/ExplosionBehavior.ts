@@ -1,24 +1,20 @@
 import type {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
 import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
-import {config} from "../../utils/uit.ts";
 import type {Entity} from "../../entity/Entity.ts";
 
-export const BehaviourEnum = config({
-    BOTH: 0,
-    ONLY_DAMAGE: 1,
-    ONLY_DESTROY: 2,
-    EITHER: 3
-});
+export const enum ExplosionBehaviour {
+    BOTH,
+    ONLY_DAMAGE,
+    ONLY_DESTROY,
+    EITHER
+}
 
-export const EffectEnum = config({
-    NONE: 0,
-    TRIGGERED: 1,
-    FUSION: 2
-});
-
-export type Behaviour = typeof BehaviourEnum[keyof typeof BehaviourEnum];
-export type ExpEffect = typeof EffectEnum[keyof typeof EffectEnum];
+export const enum ExplosionEffect {
+    NONE,
+    TRIGGERED,
+    FUSION
+}
 
 export class ExplosionBehavior {
     public static readonly CODEC: PacketCodec<ExplosionBehavior> = PacketCodecs.of(
@@ -44,18 +40,18 @@ export class ExplosionBehavior {
         }
     );
 
-    public readonly behaviour: Behaviour;
+    public readonly behaviour: ExplosionBehaviour;
 
     // 爆炸伤害等于爆炸强度,爆炸范围等于视觉范围
     public readonly decay: boolean;
 
-    public effect: ExpEffect;
+    public effect: ExplosionEffect;
     public playSound: boolean;
     public readonly statusEffect?: StatusEffectInstance;
 
     public constructor(
-        behaviour: Behaviour = BehaviourEnum.BOTH,
-        effect: ExpEffect = EffectEnum.NONE,
+        behaviour: ExplosionBehaviour = ExplosionBehaviour.BOTH,
+        effect: ExplosionEffect = ExplosionEffect.NONE,
         decay: boolean = true,
         playSound: boolean = true,
         statusEffect?: StatusEffectInstance
@@ -73,8 +69,8 @@ export class ExplosionBehavior {
 
     public modifiedFlag(): number {
         let flag = 0;
-        if (this.behaviour !== BehaviourEnum.BOTH) flag |= 1 << 0;
-        if (this.effect !== EffectEnum.NONE) flag |= 1 << 1;
+        if (this.behaviour !== ExplosionBehaviour.BOTH) flag |= 1 << 0;
+        if (this.effect !== ExplosionEffect.NONE) flag |= 1 << 1;
         if (!this.decay) flag |= 1 << 2;
         if (!this.playSound) flag |= 1 << 3;
         return flag;

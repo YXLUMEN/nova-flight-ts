@@ -16,7 +16,7 @@ export class ConnectInfo implements IUi {
     private error: boolean = false;
 
     private readonly unsubResize: Supplier<void>;
-    private readonly onErr: Consumer<void> | undefined;
+    private readonly onErr: Consumer<void> | null;
     private readonly promise: Promise<void>;
     private readonly resolve: Consumer<void>;
 
@@ -27,13 +27,12 @@ export class ConnectInfo implements IUi {
         const {promise, resolve} = Promise.withResolvers<void>();
         this.promise = promise;
         this.resolve = resolve;
-        this.onErr = onErr;
+        this.onErr = onErr ?? null;
 
         this.setSize(Window.VIEW_W, Window.VIEW_H);
         this.setBtn();
 
         this.unsubResize = client.window.onResize(this.setSize.bind(this));
-
         window.addEventListener('click', (event) => {
             if (this.error && this.backBtn && this.backBtn.hitTest(event.offsetX, event.offsetY)) {
                 this.backBtn.onClick();
@@ -41,15 +40,14 @@ export class ConnectInfo implements IUi {
         }, {signal: this.ctrl.signal});
 
         this.running = true;
+        this.loop = this.loop.bind(this);
         this.loop();
     }
-
-    private readonly bindLoop = this.loop.bind(this);
 
     private loop(): void {
         if (!this.running) return;
         this.render(this.ctx);
-        requestAnimationFrame(this.bindLoop);
+        requestAnimationFrame(this.loop);
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
@@ -89,7 +87,9 @@ export class ConnectInfo implements IUi {
     }
 
     public destroy(): void {
+        if (!this.running) return;
         this.running = false;
+
         this.ctrl.abort();
         this.backBtn = null;
         this.unsubResize();
@@ -97,7 +97,7 @@ export class ConnectInfo implements IUi {
     }
 
     public isError() {
-        return this.error;
+        return this.error && this.running;
     }
 
     public waitConfirm(): Promise<void> {

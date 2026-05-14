@@ -36,6 +36,8 @@ export class IntegratedServer extends NovaFlightServer {
     }
 
     public override async runServer(): Promise<void> {
+        await (await import('@bokuweb/zstd-wasm')).init();
+
         const manager = new RegistryManager();
         await manager.registerAll();
         manager.freeze();
@@ -49,7 +51,7 @@ export class IntegratedServer extends NovaFlightServer {
             this.world.stage = TutorialStage;
             this.world.stage.reset();
             TutorialEvents.register();
-            this.world.getNetworkChannel().send(new PlayAudioS2CPacket(Audios.WE_MADE_IT, 0.8));
+            this.world.sendPacket(new PlayAudioS2CPacket(Audios.WE_MADE_IT, 0.8));
         }
 
         await this.waitForStop();

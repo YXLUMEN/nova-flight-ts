@@ -261,7 +261,7 @@ export class WorldRender {
         // 边界线
         ctx.strokeStyle = "rgba(230,240,255,0.3)";
         ctx.beginPath();
-        ctx.rect(0, 0, World.WORLD_W, World.WORLD_H);
+        ctx.rect(0, 0, World.MAP_WIDTH, World.MAP_HEIGHT);
         ctx.stroke();
 
         ctx.restore();
@@ -296,7 +296,7 @@ export class WorldRender {
                     start * blocksize,
                     by * blocksize,
                     (bx - start) * blocksize,
-                    blocksize + 1
+                    blocksize + 1 // 避免浮点数带来的缝隙
                 );
             }
         }

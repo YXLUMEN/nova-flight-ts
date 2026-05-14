@@ -3,7 +3,7 @@ import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import type {EntityAi} from "./EntityAi.ts";
 
-export enum DevourerPhase {
+export const enum DevourerPhase {
     PHASE_1,
     PHASE_2,
     STAGE_TRANSITION,

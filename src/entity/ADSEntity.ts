@@ -3,7 +3,7 @@ import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.t
 import type {TrackedData} from "./data/TrackedData.ts";
 import type {EntityType} from "./EntityType.ts";
 import {World} from "../world/World.ts";
-import type {IOwnable} from "./IOwnable.ts";
+import type {Ownable} from "./Ownable.ts";
 import type {LivingEntity} from "./LivingEntity.ts";
 import {squareDistVec2} from "../utils/math/math.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
@@ -11,7 +11,7 @@ import {BallisticsUtils} from "../utils/math/BallisticsUtils.ts";
 import {spawnLaserByVec} from "../utils/ServerEffect.ts";
 import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
 
-export class ADSEntity extends Entity implements IOwnable {
+export class ADSEntity extends Entity implements Ownable {
     private static readonly RADIUS = 256 * 256;
     private readonly owner: LivingEntity | null;
 

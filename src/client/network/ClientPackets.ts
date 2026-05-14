@@ -1,8 +1,9 @@
-import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
+import {CodecRegistry} from "../../network/CodecRegistry.ts";
 import {FullMove, PositionOnly, Steering} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import {PlayerAttemptLoginC2SPacket} from "../../network/packet/c2s/PlayerAttemptLoginC2SPacket.ts";
-import type {Payload, PayloadId} from "../../network/Payload.ts";
+import type {Payload} from "../../network/Payload.ts";
+import type {PayloadType} from "../../network/PayloadType.ts";
 import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
 import {PlayerUnlockTechC2SPacket} from "../../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
@@ -20,6 +21,7 @@ import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPac
 import {FireSpecialC2SPacket} from "../../network/packet/c2s/FireSpecialC2SPacket.ts";
 import {PlayerInventorySwapC2SPacket} from "../../network/packet/c2s/PlayerInventorySwapC2SPacket.ts";
 import {RequestTeleportC2SPacket} from "../../network/packet/c2s/RequestTeleportC2SPacket.ts";
+import {BatchBufferPacket} from "../../network/packet/BatchBufferPacket.ts";
 
 export class ClientPackets {
     public static registerNetworkPacket(): void {
@@ -44,10 +46,10 @@ export class ClientPackets {
         this.register(FireSpecialC2SPacket.ID, FireSpecialC2SPacket.CODEC);
         this.register(PlayerInventorySwapC2SPacket.ID, PlayerInventorySwapC2SPacket.CODEC);
         this.register(RequestTeleportC2SPacket.ID, RequestTeleportC2SPacket.CODEC);
-        PayloadTypeRegistry.playC2S().settle();
+        this.register(BatchBufferPacket.ID, BatchBufferPacket.CODEC);
     }
 
-    private static register<T extends Payload>(payloadId: PayloadId<T>, codec: PacketCodec<T>): void {
-        PayloadTypeRegistry.playC2S().register(payloadId, codec)
+    private static register<T extends Payload>(payloadId: PayloadType<T>, codec: PacketCodec<T>): void {
+        CodecRegistry.PLAY_C2S.register(payloadId, codec)
     }
 }

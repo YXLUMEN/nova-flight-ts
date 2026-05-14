@@ -4,7 +4,7 @@ import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponents} from "../../component/DataComponents.ts";
 import {ExplosionVisual} from "../../world/explosion/ExplosionVisual.ts";
-import {BehaviourEnum, ExplosionBehavior} from "../../world/explosion/ExplosionBehavior.ts";
+import {ExplosionBehaviour, ExplosionBehavior} from "../../world/explosion/ExplosionBehavior.ts";
 
 export class BombWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
@@ -18,7 +18,7 @@ export class BombWeapon extends SpecialWeapon {
                 attacker.getX(),
                 attacker.getY(),
                 stack.getOrDefault(DataComponents.EXPLOSION_POWER, 16),
-                new ExplosionBehavior(BehaviourEnum.ONLY_DAMAGE, undefined, false),
+                new ExplosionBehavior(ExplosionBehaviour.ONLY_DAMAGE, undefined, false),
                 visual
             );
         }

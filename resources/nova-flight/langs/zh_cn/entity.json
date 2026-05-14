@@ -1,5 +1,9 @@
 {
   "player.death_0": "{} 船毁人亡",
   "player.death_1": "{} 坠机了",
-  "player.death_2": "{} 没肘赢复活赛"
+  "player.death_2": "{} 没肘赢复活赛",
+  "player.death_3": "{} 的内脏变成了外脏",
+  "player.death_4": "{} 被撕碎了",
+  "player.death_5": "{} 变成了太空垃圾",
+  "player.death_6": "{} 停止了思考"
 }

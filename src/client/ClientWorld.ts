@@ -24,7 +24,8 @@ import type {ExplosionBehavior} from "../world/explosion/ExplosionBehavior.ts";
 import type {WorldRender} from "./render/WorldRender.ts";
 import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
-import type {ClientChannel} from "./network/ClientChannel.ts";
+import type {ClientConnection} from "./network/ClientConnection.ts";
+import type {Payload} from "../network/Payload.ts";
 
 export class ClientWorld extends World {
     public readonly worldName: string;
@@ -95,7 +96,7 @@ export class ClientWorld extends World {
             playerName: this.client.playerName,
             worldName: this.worldName,
             version: DEFAULT_CONFIG.version,
-            recordTime: Date.now(),
+            recordTime: Temporal.Now.instant().epochMilliseconds,
             devMode: this.client.player!.isUsedBeDev(),
         }).catch(console.error);
 
@@ -105,8 +106,12 @@ export class ClientWorld extends World {
         }, 2500);
     }
 
-    public override getNetworkChannel(): ClientChannel {
-        return this.client.connection.getChannel();
+    public getConnection(): ClientConnection {
+        return this.client.connection;
+    }
+
+    public sendPacket(payload: Payload): void {
+        this.client.connection.send(payload);
     }
 
     public override getServer(): NovaFlightServer | null {

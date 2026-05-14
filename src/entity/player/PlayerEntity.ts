@@ -19,7 +19,7 @@ import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
 import type {Constructor} from "../../type/types.ts";
 import {Techs} from "../../world/tech/Techs.ts";
 import {Weapon} from "../../item/weapon/Weapon.ts";
-import {BehaviourEnum, ExplosionBehavior} from "../../world/explosion/ExplosionBehavior.ts";
+import {ExplosionBehaviour, ExplosionBehavior} from "../../world/explosion/ExplosionBehavior.ts";
 import {ExplosionVisual} from "../../world/explosion/ExplosionVisual.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
@@ -47,7 +47,7 @@ export abstract class PlayerEntity extends LivingEntity {
 
         this.setMovementSpeed(2);
         this.setYaw(-1.57079);
-        this.setPosition(World.WORLD_W / 2, World.WORLD_H - 100);
+        this.setPosition(World.MAP_WIDTH / 2, World.MAP_HEIGHT - 100);
 
         this.inventory = new UniqueInventory(this);
         this.cooldownManager = new itemCooldownManager();
@@ -122,7 +122,7 @@ export abstract class PlayerEntity extends LivingEntity {
         const world = this.getWorld();
         world.createExplosion(this, null, this.getX(), this.getY(),
             2,
-            new ExplosionBehavior(BehaviourEnum.ONLY_DAMAGE, undefined, false),
+            new ExplosionBehavior(ExplosionBehaviour.ONLY_DAMAGE, undefined, false),
             visual
         );
 

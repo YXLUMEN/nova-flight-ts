@@ -36,7 +36,7 @@ export class ClientDefaultEvents {
                 const entry = Registries.TECH.getEntryByValue(tech);
                 if (!entry) throw new Error(`Tech not found: ${tech})`);
 
-                if (!event.silent) world.getNetworkChannel().send(new PlayerUnlockTechC2SPacket(entry));
+                if (!event.silent) world.sendPacket(new PlayerUnlockTechC2SPacket(entry));
                 ApplyClientTech.apply(entry);
             }
         });

@@ -1,12 +1,13 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {clamp} from "../../../utils/math/math.ts";
 import type {Vec2} from "../../../utils/math/Vec2.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class EntityDamageS2CPacket implements Payload {
-    public static readonly ID: PayloadId<EntityDamageS2CPacket> = payloadId('entity_damage');
+    public static readonly ID: PayloadType<EntityDamageS2CPacket> = payloadType('entity_damage');
     public static readonly CODEC: PacketCodec<EntityDamageS2CPacket> = PacketCodecs.of(
         (writer, value) => {
             writer.writeVarUint(value.entityId);
@@ -45,11 +46,11 @@ export class EntityDamageS2CPacket implements Payload {
         );
     }
 
-    public getId(): PayloadId<any> {
+    public type(): PayloadType<any> {
         return EntityDamageS2CPacket.ID;
     }
 
-    public accept(listener: ClientNetworkHandler): void {
+    public accept(listener: ClientPlayHandler): void {
         listener.onEntityDamage(this);
     }
 

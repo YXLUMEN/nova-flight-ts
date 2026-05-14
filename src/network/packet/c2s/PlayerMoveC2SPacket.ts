@@ -1,10 +1,11 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {ServerPlayHandler} from "../../../server/network/handler/ServerPlayHandler.ts";
 
 export abstract class PlayerMoveC2SPacket implements Payload {
-    public static readonly ID: PayloadId<PlayerMoveC2SPacket> = payloadId('player_move');
+    public static readonly ID: PayloadType<PlayerMoveC2SPacket> = payloadType('player_move');
 
     public readonly dx: number;
     public readonly dy: number;
@@ -21,7 +22,7 @@ export abstract class PlayerMoveC2SPacket implements Payload {
         this.changeYaw = changeYaw;
     }
 
-    public abstract getId(): PayloadId<PlayerMoveC2SPacket>;
+    public abstract type(): PayloadType<PlayerMoveC2SPacket>;
 
     public accept(listener: ServerPlayHandler): void {
         listener.onPlayerMove(this);
@@ -29,7 +30,7 @@ export abstract class PlayerMoveC2SPacket implements Payload {
 }
 
 export class FullMove extends PlayerMoveC2SPacket {
-    public static readonly ID: PayloadId<FullMove> = payloadId('player_move_full');
+    public static readonly ID: PayloadType<FullMove> = payloadType('player_move_full');
     public static readonly CODEC: PacketCodec<FullMove> = PacketCodecs.of(
         (writer, value) => {
             writer.writeInt8(value.dx);
@@ -49,13 +50,17 @@ export class FullMove extends PlayerMoveC2SPacket {
         super(dx, dy, yaw, true, true);
     }
 
-    public override getId(): PayloadId<FullMove> {
+    public override type(): PayloadType<FullMove> {
         return FullMove.ID;
+    }
+
+    public estimateSize(): number {
+        return 6;
     }
 }
 
 export class PositionOnly extends PlayerMoveC2SPacket {
-    public static readonly ID: PayloadId<PositionOnly> = payloadId('player_move_pos');
+    public static readonly ID: PayloadType<PositionOnly> = payloadType('player_move_pos');
     public static readonly CODEC: PacketCodec<PositionOnly> = PacketCodecs.adapt2(
         PacketCodecs.INT8,
         val => val.dx,
@@ -72,13 +77,17 @@ export class PositionOnly extends PlayerMoveC2SPacket {
         return new PositionOnly(dx, dy);
     }
 
-    public override getId(): PayloadId<PlayerMoveC2SPacket> {
+    public override type(): PayloadType<PlayerMoveC2SPacket> {
         return PositionOnly.ID;
+    }
+
+    public estimateSize(): number {
+        return 2;
     }
 }
 
 export class Steering extends PlayerMoveC2SPacket {
-    public static readonly ID: PayloadId<Steering> = payloadId('player_move_steering');
+    public static readonly ID: PayloadType<Steering> = payloadType('player_move_steering');
     public static readonly CODEC: PacketCodec<Steering> = PacketCodecs.adapt(
         PacketCodecs.FLOAT,
         val => val.yaw,
@@ -89,7 +98,11 @@ export class Steering extends PlayerMoveC2SPacket {
         super(0, 0, yaw, false, true);
     }
 
-    public override getId(): PayloadId<Steering> {
+    public override type(): PayloadType<Steering> {
         return Steering.ID;
+    }
+
+    public estimateSize(): number {
+        return 4;
     }
 }

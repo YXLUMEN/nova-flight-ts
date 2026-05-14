@@ -51,7 +51,7 @@ export async function compressUint8Array(
     return new Uint8Array(compressedBuffer);
 }
 
-export async function DecompressBlob(
+export async function decompressBlob(
     data: Uint8Array<ArrayBuffer>,
     format: CompressionFormat = 'deflate-raw'
 ): Promise<Uint8Array<ArrayBuffer>> {

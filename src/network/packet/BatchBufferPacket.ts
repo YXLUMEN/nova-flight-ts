@@ -1,51 +1,123 @@
-import {type Payload, payloadId, type PayloadId} from "../Payload.ts";
+import type {Payload} from "../Payload.ts";
+import {payloadType, type PayloadType} from "../PayloadType.ts";
 import type {PacketCodec} from "../codec/PacketCodec.ts";
 import {PacketCodecs} from "../codec/PacketCodecs.ts";
-import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
-import type {BinaryReader} from "../../serialization/BinaryReader.ts";
-import {PayloadTypeRegistry} from "../PayloadTypeRegistry.ts";
-import type {ClientNetworkHandler} from "../../client/network/ClientNetworkHandler.ts";
+import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
+import {BinaryReader} from "../../serialization/BinaryReader.ts";
+import {CodecRegistry} from "../CodecRegistry.ts";
+import {WSNetworkChannel} from "../WSNetworkChannel.ts";
+import {PacketTooLargeError} from "../../type/errors.ts";
+import type {ClientCommonHandler} from "../../client/network/handler/ClientCommonHandler.ts";
+import {compress, decompress} from "lz4-wasm";
 
 export class BatchBufferPacket implements Payload {
-    public static readonly ID: PayloadId<BatchBufferPacket> = payloadId('batch_buffer');
+    public static readonly ID: PayloadType<BatchBufferPacket> = payloadType('batch_buffer');
     public static readonly CODEC: PacketCodec<BatchBufferPacket> = PacketCodecs.of(this.write, this.read);
 
-    public readonly payloads: Payload[];
+    private readonly payloadCount: number;
+    private readonly compressed: boolean;
+    public readonly buffer: Uint8Array<ArrayBuffer>;
 
-    public constructor(payloads: Payload[]) {
-        this.payloads = payloads;
+    private constructor(payloadCount: number, compressed: boolean, buffer: Uint8Array<ArrayBuffer>) {
+        this.payloadCount = payloadCount;
+        this.compressed = compressed;
+        this.buffer = buffer;
+    }
+
+    public static create(payloads: Iterable<Payload>, registry: CodecRegistry): Payload[] {
+        const maxSize = WSNetworkChannel.MAX_PACKET_SIZE - 16;
+        const batches: Payload[] = [];
+        const writer = new BinaryWriter(9216); // MAX_PACKET_SIZE * 1.5
+
+        let count = 0;
+        for (const payload of payloads) {
+            const codec = registry.get(payload.type());
+            if (!codec) throw new Error(`Missing packet type ${payload.type().id}`);
+
+            const offset = writer.getOffset();
+            writer.writeVarUint(codec.index);
+            codec.codec.encode(writer, payload);
+
+            if (writer.getOffset() <= maxSize) {
+                count++;
+                continue;
+            }
+            writer.truncate(offset);
+
+            if (count > 0) {
+                batches.push(this.pack(count, writer));
+                count = 0;
+                writer.reset();
+            }
+
+            writer.writeVarUint(codec.index);
+            codec.codec.encode(writer, payload);
+            count = 1;
+
+            if (writer.getOffset() > maxSize) {
+                throw new PacketTooLargeError(`Packet ${payload.type().id} exceeds ${maxSize} bytes: ${writer.getOffset()}`);
+            }
+        }
+
+        if (count > 0) {
+            batches.push(this.pack(count, writer));
+        }
+
+        return batches;
+    }
+
+    private static pack(count: number, writer: BinaryWriter): Payload {
+        const raw = writer.toUint8Array();
+        if (raw.length < 1024) {
+            return new BatchBufferPacket(count, false, raw.slice());
+        }
+
+        const compressed = compress(raw) as Uint8Array<ArrayBuffer>;
+        return compressed.length >= raw.length ?
+            new BatchBufferPacket(count, false, raw.slice()) :
+            new BatchBufferPacket(count, true, compressed);
+    }
+
+    public parse(): Payload[] {
+        const buf = this.compressed ? decompress(this.buffer) : this.buffer;
+        const reader = new BinaryReader(buf as Uint8Array<ArrayBuffer>);
+        const payloads: Payload[] = new Array(this.payloadCount);
+
+        for (let i = 0; i < payloads.length; i++) {
+            const index = reader.readVarUint();
+            const type = CodecRegistry.getGlobalByIndex(index);
+            if (!type) throw new Error(`Unrecognized packet: ${index}`);
+            payloads[i] = type.codec.decode(reader);
+        }
+
+        return payloads;
     }
 
     private static read(reader: BinaryReader): BatchBufferPacket {
         const count = reader.readVarUint();
-        const payloads: Payload[] = [];
+        const compressed = reader.readBoolean();
+        const len = reader.readVarUint();
+        const buffer = reader.readSlice(len);
 
-        for (let i = 0; i < count; i++) {
-            const index = reader.readVarUint();
-            const type = PayloadTypeRegistry.getGlobalByIndex(index);
-            if (!type) throw new Error(`Unrecognized packet: ${index}`);
-
-            payloads.push(type.codec.decode(reader));
-        }
-
-        return new BatchBufferPacket(payloads);
+        return new BatchBufferPacket(count, compressed, buffer);
     }
 
     private static write(writer: BinaryWriter, value: BatchBufferPacket): void {
-        writer.writeVarUint(value.payloads.length);
-        for (const payload of value.payloads) {
-            const type = PayloadTypeRegistry.getGlobal(payload.getId().id);
-            if (!type) throw new Error(`Missing packet type ${payload.getId().id}`);
-
-            writer.writeVarUint(type.index);
-            type.codec.encode(writer, payload);
-        }
+        writer.writeVarUint(value.payloadCount);
+        writer.writeBoolean(value.compressed);
+        writer.writeVarUint(value.buffer.length);
+        writer.pushBytes(value.buffer);
     }
 
-    public getId(): PayloadId<BatchBufferPacket> {
+    public type(): PayloadType<BatchBufferPacket> {
         return BatchBufferPacket.ID;
     }
 
-    public accept(_listener: ClientNetworkHandler): void {
+    public accept(listener: ClientCommonHandler): void {
+        listener.onBatch(this);
+    }
+
+    public estimateSize(): number {
+        return 9 + this.buffer.length;
     }
 }

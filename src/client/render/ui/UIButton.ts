@@ -1,4 +1,5 @@
 import {UITheme} from "./theme.ts";
+import type {Consumer} from "../../../type/types.ts";
 
 export class UIButton {
     public x: number;
@@ -7,9 +8,9 @@ export class UIButton {
     public height: number;
 
     public label: string;
-    public onClick: () => void;
+    public onClick: Consumer<void>;
 
-    public constructor(x: number, y: number, width: number, height: number, label: string, onClick: () => void) {
+    public constructor(x: number, y: number, width: number, height: number, label: string, onClick: Consumer<void>) {
         this.x = x;
         this.y = y;
         this.width = width;

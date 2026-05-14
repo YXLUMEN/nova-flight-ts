@@ -1,189 +1,89 @@
-import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
-import type {Entity} from "../../entity/Entity.ts";
-import {ClientWorld} from "../ClientWorld.ts";
-import type {NovaFlightClient} from "../NovaFlightClient.ts";
-import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
-import {EntityTypes} from "../../entity/EntityTypes.ts";
-import type {UUID} from "../../type/types.ts";
-import {EntityRemoveS2CPacket} from "../../network/packet/s2c/EntityRemoveS2CPacket.ts";
-import {EntityPositionS2CPacket} from "../../network/packet/s2c/EntityPositionS2CPacket.ts";
-import {ExplosionS2CPacket} from "../../network/packet/s2c/ExplosionS2CPacket.ts";
-import {EntityVelocityUpdateS2CPacket} from "../../network/packet/s2c/EntityVelocityUpdateS2CPacket.ts";
-import {EntityTrackerUpdateS2CPacket} from "../../network/packet/s2c/EntityTrackerUpdateS2CPacket.ts";
-import {EntityS2CPacket} from "../../network/packet/s2c/EntityS2CPacket.ts";
-import {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
-import {ServerReadyS2CPacket} from "../../network/packet/s2c/ServerReadyS2CPacket.ts";
-import {PlayerAttemptLoginC2SPacket} from "../../network/packet/c2s/PlayerAttemptLoginC2SPacket.ts";
-import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
-import {ParticleS2CPacket} from "../../network/packet/s2c/ParticleS2CPacket.ts";
-import {EntityAttributesS2CPacket} from "../../network/packet/s2c/EntityAttributesS2CPacket.ts";
-import {LivingEntity} from "../../entity/LivingEntity.ts";
-import {GaussianRandom} from "../../utils/math/GaussianRandom.ts";
-import {PlayerFinishLoginC2SPacket} from "../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
-import {EntityBatchSpawnS2CPacket} from "../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
-import {EntityNbtS2CPacket} from "../../network/packet/s2c/EntityNbtS2CPacket.ts";
-import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
-import {EffectCreateS2CPacket} from "../../network/packet/s2c/EffectCreateS2CPacket.ts";
-import {SoundEventS2CPacket} from "../../network/packet/s2c/SoundEventS2CPacket.ts";
-import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
-import {PlayerAddScoreS2CPacket} from "../../network/packet/s2c/PlayerAddScoreS2CPacket.ts";
-import {ClientCommandSource} from "../command/ClientCommandSource.ts";
-import {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
-import type {Payload} from "../../network/Payload.ts";
-import {CommandExecutionC2SPacket} from "../../network/packet/c2s/CommandExecutionC2SPacket.ts";
-import {OtherClientPlayerEntity} from "../entity/OtherClientPlayerEntity.ts";
-import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
-import {ClientReadyC2SPacket} from "../../network/packet/c2s/ClientReadyC2SPacket.ts";
-import {PlayerJoinS2CPacket} from "../../network/packet/s2c/PlayerJoinS2CPacket.ts";
-import {GameProfile} from "../../server/entity/GameProfile.ts";
-import {PlayerProfileSyncS2CPacket} from "../../network/packet/s2c/PlayerProfileSyncS2CPacket.ts";
-import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
-import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
-import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
-import {ItemCooldownUpdateS2CPacket} from "../../network/packet/s2c/ItemCooldownUpdateS2CPacket.ts";
-import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
-import {AudioManager} from "../../sound/AudioManager.ts";
-import {ConnectInfo} from "../render/ui/ConnectInfo.ts";
-import {AudioControlS2CPacket} from "../../network/packet/s2c/AudioControlS2CPacket.ts";
-import {BGMManager} from "../../sound/BGMManager.ts";
-import {AudioStopS2CPacket} from "../../network/packet/s2c/AudioStopS2CPacket.ts";
-import {Audios} from "../../sound/Audios.ts";
-import {type LaserWeaponS2CPacket} from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
-import {LaserBeamEffect} from "../../effect/LaserBeamEffect.ts";
-import {PhaseLasers} from "../../item/weapon/PhaseLasers.ts";
-import {TargetDrone} from "../../entity/TargetDrone.ts";
-import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
-import {GameMessageS2CPacket} from "../../network/packet/s2c/GameMessageS2CPacket.ts";
-import {TranslatableTextS2CPacket} from "../../network/packet/s2c/TranslatableTextS2CPacket.ts";
-import {TranslatableText} from "../../i18n/TranslatableText.ts";
-import {PongS2CPacket} from "../../network/packet/s2c/PongS2CPacket.ts";
-import {PingC2SPacket} from "../../network/packet/c2s/PingC2SPacket.ts";
-import {ServerStartS2CPacket} from "../../network/packet/s2c/ServerStartS2CPacket.ts";
-import {RelayMessage} from "../../network/packet/relay/RelayMessage.ts";
-import {BlockChangeS2CPacket} from "../../network/packet/s2c/BlockChangeS2CPacket.ts";
-import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
-import type {ClientConnection} from "./ClientConnection.ts";
-import type {PacketListener} from "../../server/network/handler/PacketListener.ts";
-import {ConnectionState, type ConnectionStateType} from "../../server/network/ConnectionState.ts";
-import {SetPlayerInventoryS2CPacket} from "../../network/packet/s2c/SetPlayerInventoryPacket.ts";
-import {PlayerPositionS2CPacket} from "../../network/packet/s2c/PlayerPositionS2CPacket.ts";
-import {squareDist} from "../../utils/math/math.ts";
-import {PreparedParticleS2CPacket} from "../../network/packet/s2c/PreparedParticleS2CPacket.ts";
-import {ScreenShakeS2CPacket} from "../../network/packet/s2c/ScreenShakeS2CPacket.ts";
-import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
-import type {StopSoundS2CPacket} from "../../network/packet/s2c/StopSoundS2CPacket.ts";
+import {EntitySpawnS2CPacket} from "../../../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import type {Entity} from "../../../entity/Entity.ts";
+import {ClientWorld} from "../../ClientWorld.ts";
+import type {NovaFlightClient} from "../../NovaFlightClient.ts";
+import {JoinGameS2CPacket} from "../../../network/packet/s2c/JoinGameS2CPacket.ts";
+import {EntityTypes} from "../../../entity/EntityTypes.ts";
+import type {UUID} from "../../../type/types.ts";
+import {EntityRemoveS2CPacket} from "../../../network/packet/s2c/EntityRemoveS2CPacket.ts";
+import {EntityPositionS2CPacket} from "../../../network/packet/s2c/EntityPositionS2CPacket.ts";
+import {ExplosionS2CPacket} from "../../../network/packet/s2c/ExplosionS2CPacket.ts";
+import {EntityVelocityUpdateS2CPacket} from "../../../network/packet/s2c/EntityVelocityUpdateS2CPacket.ts";
+import {EntityTrackerUpdateS2CPacket} from "../../../network/packet/s2c/EntityTrackerUpdateS2CPacket.ts";
+import {EntityS2CPacket} from "../../../network/packet/s2c/EntityS2CPacket.ts";
+import {ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
+import {EntityDamageS2CPacket} from "../../../network/packet/s2c/EntityDamageS2CPacket.ts";
+import {ParticleS2CPacket} from "../../../network/packet/s2c/ParticleS2CPacket.ts";
+import {EntityAttributesS2CPacket} from "../../../network/packet/s2c/EntityAttributesS2CPacket.ts";
+import {LivingEntity} from "../../../entity/LivingEntity.ts";
+import {PlayerFinishLoginC2SPacket} from "../../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
+import {EntityBatchSpawnS2CPacket} from "../../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
+import {EntityNbtS2CPacket} from "../../../network/packet/s2c/EntityNbtS2CPacket.ts";
+import {InventoryS2CPacket} from "../../../network/packet/s2c/InventoryS2CPacket.ts";
+import {EffectCreateS2CPacket} from "../../../network/packet/s2c/EffectCreateS2CPacket.ts";
+import {SoundEventS2CPacket} from "../../../network/packet/s2c/SoundEventS2CPacket.ts";
+import {PlayerSetScoreS2CPacket} from "../../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
+import {PlayerAddScoreS2CPacket} from "../../../network/packet/s2c/PlayerAddScoreS2CPacket.ts";
+import {ClientCommandSource} from "../../command/ClientCommandSource.ts";
+import {CommandDispatcher} from "../../../brigadier/CommandDispatcher.ts";
+import {CommandExecutionC2SPacket} from "../../../network/packet/c2s/CommandExecutionC2SPacket.ts";
+import {RemotePlayerEntity} from "../../entity/RemotePlayerEntity.ts";
+import {PlayerDisconnectS2CPacket} from "../../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
+import {PlayerJoinS2CPacket} from "../../../network/packet/s2c/PlayerJoinS2CPacket.ts";
+import {GameProfile} from "../../../server/entity/GameProfile.ts";
+import {PlayerProfileSyncS2CPacket} from "../../../network/packet/s2c/PlayerProfileSyncS2CPacket.ts";
+import {EntityStatusEffectS2CPacket} from "../../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
+import {RemoveEntityStatusEffectS2CPacket} from "../../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
+import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
+import {ItemCooldownUpdateS2CPacket} from "../../../network/packet/s2c/ItemCooldownUpdateS2CPacket.ts";
+import {PlayAudioS2CPacket} from "../../../network/packet/s2c/PlayAudioS2CPacket.ts";
+import {AudioManager} from "../../../sound/AudioManager.ts";
+import {ConnectInfo} from "../../render/ui/ConnectInfo.ts";
+import {AudioControlS2CPacket} from "../../../network/packet/s2c/AudioControlS2CPacket.ts";
+import {BGMManager} from "../../../sound/BGMManager.ts";
+import {AudioStopS2CPacket} from "../../../network/packet/s2c/AudioStopS2CPacket.ts";
+import {Audios} from "../../../sound/Audios.ts";
+import {type LaserWeaponS2CPacket} from "../../../network/packet/s2c/LaserWeaponS2CPacket.ts";
+import {LaserBeamEffect} from "../../../effect/LaserBeamEffect.ts";
+import {TargetDrone} from "../../../entity/TargetDrone.ts";
+import {DifficultChangeS2CPacket} from "../../../network/packet/s2c/DifficultChangeS2CPacket.ts";
+import {GameMessageS2CPacket} from "../../../network/packet/s2c/GameMessageS2CPacket.ts";
+import {TranslatableTextS2CPacket} from "../../../network/packet/s2c/TranslatableTextS2CPacket.ts";
+import {TranslatableText} from "../../../i18n/TranslatableText.ts";
+import {PongS2CPacket} from "../../../network/packet/s2c/PongS2CPacket.ts";
+import {PingC2SPacket} from "../../../network/packet/c2s/PingC2SPacket.ts";
+import {BlockChangeS2CPacket} from "../../../network/packet/s2c/BlockChangeS2CPacket.ts";
+import {BatchBlockChangesPacket} from "../../../network/packet/BatchBlockChangesPacket.ts";
+import type {ClientConnection} from "../ClientConnection.ts";
+import {ConnectionState} from "../../../server/network/ConnectionState.ts";
+import {SetPlayerInventoryS2CPacket} from "../../../network/packet/s2c/SetPlayerInventoryPacket.ts";
+import {PlayerPositionS2CPacket} from "../../../network/packet/s2c/PlayerPositionS2CPacket.ts";
+import {PreparedParticleS2CPacket} from "../../../network/packet/s2c/PreparedParticleS2CPacket.ts";
+import {ScreenShakeS2CPacket} from "../../../network/packet/s2c/ScreenShakeS2CPacket.ts";
+import {EntityPositionForceS2CPacket} from "../../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
+import type {StopSoundS2CPacket} from "../../../network/packet/s2c/StopSoundS2CPacket.ts";
+import {ClientCommonHandler} from "./ClientCommonHandler.ts";
+import type {GameOverS2CPacket} from "../../../network/packet/s2c/GameOverS2CPacket.ts";
+import {LatencyCalculator} from "../../../network/LatencyCalculator.ts";
+import {squareDist} from "../../../utils/math/math.ts";
+import {PhaseLasers} from "../../../item/weapon/PhaseLasers.ts";
 
-export class ClientNetworkHandler implements PacketListener {
+export class ClientPlayHandler extends ClientCommonHandler {
     private readonly playerProfiles: Map<UUID, GameProfile> = new Map();
 
     private readonly commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
-
-    private readonly client: NovaFlightClient;
-    private readonly connection: ClientConnection;
-    private readonly random = new GaussianRandom();
     private world: ClientWorld | null = null;
 
-    private maxSniffTimes = 32;
-    private sniffInterval: number | undefined = undefined;
-
+    private readonly latency: LatencyCalculator;
     private pingInterval: number | undefined = undefined;
-    private lastPingTime: number = 0;
-    private latency: number = 0;
 
     public constructor(client: NovaFlightClient, connection: ClientConnection) {
-        this.client = client;
-        this.connection = connection;
-
-        connection.setPacketListener(ConnectionState.PLAY, this);
+        super(client, connection);
+        this.latency = new LatencyCalculator();
     }
 
-    public send(packet: Payload) {
-        this.connection.send(packet);
-    }
-
-    public sendImmediate(packet: Payload) {
-        this.connection.sendImmediately(packet);
-    }
-
-    public onDisconnected(): void {
-    }
-
-    public accepts(packet: Payload): void {
-        packet.accept(this);
-    }
-
-    public getPhase(): ConnectionStateType {
-        return ConnectionState.PLAY;
-    }
-
-    public checkServer() {
-        if (this.sniffInterval !== undefined) return;
-
-        this.sendImmediate(new ClientReadyC2SPacket(this.client.clientId));
-
-        let times = 0;
-        this.sniffInterval = setInterval(() => {
-            times++;
-            try {
-                this.sendImmediate(new ClientReadyC2SPacket(this.client.clientId));
-            } catch (e) {
-                this.stopSniff();
-                console.error(e);
-            }
-            if (times >= this.maxSniffTimes) {
-                this.stopSniff();
-                this.client.connectInfo?.setError('无法连接至服务器');
-            }
-        }, 2000);
-    }
-
-    public ping() {
-        this.lastPingTime = performance.now();
-        this.sendImmediate(PingC2SPacket.INSTANCE);
-    }
-
-    public onRelayMessage(packet: RelayMessage): void {
-        const parts = packet.msg.split(':');
-        const type = parts[0];
-        const msg = parts.slice(1).join(':');
-
-        if (type === 'INFO') this.relayInfoHandler(msg);
-        else if (type === 'ERR') this.relayErrorHandler(msg);
-    }
-
-    private relayInfoHandler(_message: string) {
-    }
-
-    private relayErrorHandler(message: string) {
-        this.stopSniff();
-        this.client.connectInfo?.setError(message);
-    }
-
-    public onServerStart(_: ServerStartS2CPacket) {
-        this.stopSniff();
-        this.checkServer();
-    }
-
-    public onServerReady(_: ServerReadyS2CPacket) {
-        this.stopSniff();
-        this.sendImmediate(new PlayerAttemptLoginC2SPacket(
-            this.client.clientId,
-            this.client.connection.getSessionId(),
-            this.client.playerName
-        ));
-    }
-
-    public onPong(_: PongS2CPacket) {
-        this.smoothLatency(performance.now() - this.lastPingTime);
-    }
-
-    private smoothLatency(rrt: number) {
-        rrt /= 2;
-        if (this.latency === 0) {
-            this.latency = rrt;
-            return;
-        }
-        this.latency = this.latency * (1 - 0.2) + rrt * 0.2;
+    public onPong(_: PongS2CPacket): void {
+        this.latency.onPong();
     }
 
     public async onGameJoin(packet: JoinGameS2CPacket) {
@@ -211,7 +111,7 @@ export class ClientNetworkHandler implements PacketListener {
         this.pingInterval = setInterval(() => this.ping(), 2000);
     }
 
-    public onPlayerJoin(packet: PlayerJoinS2CPacket) {
+    public onPlayerJoin(packet: PlayerJoinS2CPacket): void {
         if (this.playerProfiles.has(packet.uuid)) return;
         this.playerProfiles.set(packet.uuid, new GameProfile(0, packet.uuid, packet.playerName));
         this.client.clientCommandManager.addPlainMessage(`\x1b[32m${packet.playerName}\x1b[0m join the game`);
@@ -231,9 +131,9 @@ export class ClientNetworkHandler implements PacketListener {
         clearInterval(this.pingInterval);
         this.client.setPause(true);
 
-        this.client.connectInfo?.destroy();
-        this.client.connectInfo = new ConnectInfo(this.client);
-        this.client.connectInfo.setError(packet.reason.toString())
+        const info = new ConnectInfo(this.client);
+        this.client.setConnectInfo(info);
+        info.setError(packet.reason.toString())
             .then(() => this.client.requestStop());
     }
 
@@ -254,12 +154,12 @@ export class ClientNetworkHandler implements PacketListener {
         if (packet.positionChanged) {
             const trackedPos = entity.getPositionDelta();
             const deltaPos = trackedPos.withDelta(packet.deltaX, packet.deltaY);
-            trackedPos.setPos(deltaPos.x, deltaPos.y);
+            trackedPos.setBase(deltaPos.x, deltaPos.y);
 
             const yaw = packet.rotate ? packet.yaw : entity.getLerpTargetYaw();
-            entity.updatePositionAndAngles(deltaPos.x, deltaPos.y, yaw, 3);
+            entity.moveOrInterpolateTo(deltaPos.x, deltaPos.y, yaw, 3);
         } else if (packet.rotate) {
-            entity.updatePositionAndAngles(entity.getLerpTargetX(), entity.getLerpTargetY(), packet.yaw, 3);
+            entity.moveOrInterpolateTo(entity.getLerpTargetX(), entity.getLerpTargetY(), packet.yaw, 3);
         }
     }
 
@@ -268,13 +168,13 @@ export class ClientNetworkHandler implements PacketListener {
         if (!entity) return;
 
         entity.setDeltaMovement(packet.x, packet.y);
-        if (!entity.isLogicalSide()) {
-            entity.updatePositionAndAngles(packet.x, packet.y, packet.yaw, 3);
-        } else if (entity === this.client.player) {
-            if (squareDist(entity.getX(), entity.getY(), packet.x, packet.y) >= 128) {
-                entity.updatePosition(packet.x, packet.y);
-                entity.setDeltaMovement(0, 0);
-            }
+        if (entity.isLogicalSide() && entity !== this.client.player) return;
+
+        const dist = squareDist(entity.getX(), entity.getY(), packet.x, packet.y);
+        if (dist > 4096) {
+            entity.snapTo(packet.x, packet.y, packet.yaw);
+        } else {
+            entity.moveOrInterpolateTo(packet.x, packet.y, packet.yaw, 3);
         }
     }
 
@@ -299,7 +199,7 @@ export class ClientNetworkHandler implements PacketListener {
         const entityType = packet.entityType;
         if (entityType === EntityTypes.PLAYER) {
             if (this.playerProfiles.has(packet.uuid)) return null;
-            return new OtherClientPlayerEntity(this.world!);
+            return new RemotePlayerEntity(this.world!);
         }
 
         return entityType.create(this.world!);
@@ -343,13 +243,10 @@ export class ClientNetworkHandler implements PacketListener {
         );
     }
 
-    public onGameOver(): void {
+    public onGameOver(_: GameOverS2CPacket): void {
         if (this.world && this.client.player) {
             this.world.gameOver();
         }
-    }
-
-    public onEntityKilled(): void {
     }
 
     public onEntityRemove(packet: EntityRemoveS2CPacket): void {
@@ -366,7 +263,7 @@ export class ClientNetworkHandler implements PacketListener {
     public onEntityTrackerUpdate(packet: EntityTrackerUpdateS2CPacket): void {
         const entity = this.world?.getEntityById(packet.entityId);
         if (entity) {
-            entity.getDataTracker().writeUpdatedEntries(packet.trackedValues);
+            entity.getDataTracker().assignValues(packet.trackedValues);
         }
     }
 
@@ -551,43 +448,35 @@ export class ClientNetworkHandler implements PacketListener {
         player.cooldownManager.set(packet.item, packet.duration);
     }
 
-    public onLaserWeapon(packet: LaserWeaponS2CPacket) {
-        const holder = this.world?.getEntityById(packet.entityId);
-        if (!holder || holder === this.client.player) return;
+    public onLaserWeapon(packet: LaserWeaponS2CPacket): void {
+        const manager = PhaseLasers.manager;
 
         if (packet.activate) {
-            const beamFx = PhaseLasers.id2EffectMap.get(packet.entityId);
+            const beamFx = manager.get(packet.laserId);
             if (beamFx && beamFx.isAlive()) {
                 beamFx.kill();
             }
+
             const newBeamFx = new LaserBeamEffect(packet.color, packet.width, 0.5);
             newBeamFx.reset(packet.start, packet.end);
-            PhaseLasers.id2EffectMap.set(packet.entityId, newBeamFx);
+            manager.set(packet.laserId, newBeamFx);
             this.world!.addEffect(null, newBeamFx);
         } else if (packet.change) {
-            const beamFx = PhaseLasers.id2EffectMap.get(packet.entityId);
-            if (beamFx) {
-                beamFx.setByVec(packet.start, packet.end);
+            const beamFx = manager.get(packet.laserId);
+            if (beamFx && beamFx.isAlive()) {
+                beamFx?.setByVec(packet.start, packet.end);
             }
         } else {
-            const beamFx = PhaseLasers.id2EffectMap.get(packet.entityId);
-            if (beamFx) {
-                beamFx.kill();
-                PhaseLasers.id2EffectMap.delete(packet.entityId);
-            }
+            manager.release(packet.laserId);
         }
     }
 
     public onDifficultChange(packet: DifficultChangeS2CPacket): void {
-        if (this.world) {
-            this.world.setDifficulty(packet.difficult);
-        }
+        this.world?.setDifficulty(packet.difficult);
     }
 
     public onBlockChange(packet: BlockChangeS2CPacket): void {
-        if (this.world) {
-            this.world.getMap().set(packet.x, packet.y, packet.type);
-        }
+        this.world?.getMap().set(packet.x, packet.y, packet.block);
     }
 
     public onBatchChanges(packet: BatchBlockChangesPacket): void {
@@ -621,22 +510,23 @@ export class ClientNetworkHandler implements PacketListener {
         return this.playerProfiles.values();
     }
 
-    public getLatency() {
-        return this.latency;
+    public ping() {
+        this.latency.onPing();
+        this.sendImmediately(PingC2SPacket.INSTANCE);
     }
 
-    private stopSniff() {
-        clearInterval(this.sniffInterval);
-        this.sniffInterval = undefined;
+    public getLatency(): number {
+        return this.latency.getLatency();
     }
 
-    public destroy() {
-        this.clear();
+    public getPhase(): ConnectionState {
+        return ConnectionState.PLAY;
     }
 
     public clear(): void {
+        super.clear();
+
         clearInterval(this.pingInterval);
-        clearInterval(this.sniffInterval);
         this.playerProfiles.clear();
         this.world = null;
     }

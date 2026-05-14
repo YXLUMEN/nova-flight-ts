@@ -1,4 +1,3 @@
-import {LaserBeamEffect} from '../../effect/LaserBeamEffect.ts';
 import {World} from '../../world/World.ts';
 import {clamp, thickLineCircleHit} from '../../utils/math/math.ts';
 import {SoundEvents} from "../../sound/SoundEvents.ts";
@@ -8,21 +7,17 @@ import type {ItemStack} from "../ItemStack.ts";
 import {DataComponents} from "../../component/DataComponents.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
-import {
-    LaserWeaponActivate,
-    LaserWeaponChange,
-    LaserWeaponDeactivate
-} from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
+import {LaserWeaponActivate, LaserWeaponDeactivate} from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
+import {LaserBeamManger} from "../../world/LaserBeamManger.ts";
 
 
 export class PhaseLasers extends SpecialWeapon {
     public static readonly COLOR = '#8bff5e';
     public static readonly OVERHEAT_COLOR = '#ff5e5e';
 
-    public static readonly LASER_HEIGHT = World.WORLD_H * 2;
+    public static readonly LASER_HEIGHT = World.MAP_HEIGHT * 2;
 
-    public static readonly id2EffectMap = new Map<number, LaserBeamEffect>();
-    private static readonly activateBeam = new Set<number>();
+    public static readonly manager = new LaserBeamManger();
 
     protected width = 6;
 
@@ -59,7 +54,7 @@ export class PhaseLasers extends SpecialWeapon {
                 this.setHeat(stack, maxHeat);
                 stack.setAvailable(false);
                 this.setActive(stack, false);
-                this.removeLaser(world, holder.getId());
+                this.removeLaser(world, stack);
                 this.onEndFire(stack, world, holder);
             }
             if (stack.getOrDefault(DataComponents.ANY_BOOLEAN, false) && heatLeft <= 40) {
@@ -76,12 +71,17 @@ export class PhaseLasers extends SpecialWeapon {
         }
 
         if (!this.getActive(stack)) {
-            this.removeLaser(world, holder.getId());
+            this.removeLaser(world, stack);
             return;
         }
 
         // 光束端点
-        const entityId = holder.getId();
+        let laserId = stack.getOrDefault(DataComponents.LASER_ID, -1);
+        if (laserId < 0) {
+            laserId = PhaseLasers.manager.allocate();
+            stack.set(DataComponents.LASER_ID, laserId);
+        }
+
         const start = holder.positionRef;
         const yaw = holder.getYaw();
         const end = new Vec2(
@@ -90,42 +90,34 @@ export class PhaseLasers extends SpecialWeapon {
         );
 
         if (world.isClient) {
-            // 刷新/创建光束效果
-            const beamFx = PhaseLasers.id2EffectMap.get(entityId);
-            if (beamFx && beamFx.isAlive()) {
-                beamFx.setByVec(start, end);
-            } else {
-                const newBeamFx = new LaserBeamEffect(stack.getOrDefault(DataComponents.UI_COLOR, PhaseLasers.COLOR), this.width);
-                newBeamFx.reset(start, end);
-                world.addEffect(null, newBeamFx);
-                PhaseLasers.id2EffectMap.set(entityId, newBeamFx);
-            }
+            const beamFx = PhaseLasers.manager.get(laserId);
+            if (beamFx && beamFx.isAlive()) beamFx.setByVec(start, end);
             return;
         }
 
-        if (PhaseLasers.activateBeam.has(entityId)) {
-            world.sendPacket(new LaserWeaponChange(entityId, start, end));
-        } else {
+        if (!PhaseLasers.manager.isActivated(laserId)) {
             world.sendPacket(new LaserWeaponActivate(
-                entityId,
+                laserId,
                 start,
                 end,
                 this.width,
                 stack.getOrDefault(DataComponents.UI_COLOR, PhaseLasers.COLOR)
             ));
+            PhaseLasers.manager.markActivated(laserId);
         }
 
         this.damage(world as ServerWorld, stack, holder, start, end);
     }
 
-    private removeLaser(world: World, entityId: number) {
-        const beamFx = PhaseLasers.id2EffectMap.get(entityId);
-        if (beamFx) {
-            beamFx.kill();
-            PhaseLasers.id2EffectMap.delete(entityId);
+    private removeLaser(world: World, stack: ItemStack): void {
+        const laserId = stack.getOrDefault(DataComponents.LASER_ID, -1);
+        if (laserId < 0) return;
+
+        PhaseLasers.manager.release(laserId);
+        stack.remove(DataComponents.LASER_ID);
+        if (!world.isClient) {
+            world.sendPacket(new LaserWeaponDeactivate(laserId));
         }
-        PhaseLasers.activateBeam.delete(entityId);
-        if (!world.isClient) world.sendPacket(new LaserWeaponDeactivate(entityId));
     }
 
     protected damage(world: ServerWorld, stack: ItemStack, holder: Entity, start: Vec2, end: Vec2) {

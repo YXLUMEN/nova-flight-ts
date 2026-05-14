@@ -1,40 +1,44 @@
 import {defineConfig} from 'vite';
+import wasm from 'vite-plugin-wasm';
 
 // @ts-expect-error process is a Node.js global
 const env = process.env;
+// @ts-expect-error process is a Node.js global
+const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig({
     clearScreen: false,
     server: {
+        port: 5173,
+        strictPort: true,
+        host: host || false,
+        hmr: host
+            ? {
+                protocol: "ws",
+                host,
+                port: 5173,
+            }
+            : undefined,
         watch: {
             ignored: ['**/src-tauri/**'],
         }
     },
     build: {
         outDir: 'dist',
-        target:
-            env.TAURI_ENV_PLATFORM === 'windows'
-                ? 'chrome105'
-                : 'safari13',
-        // 在 debug 构建中不使用 minify
-        minify: !env.TAURI_ENV_DEBUG ? 'terser' : false,
-        // 在 debug 构建中生成 sourcemap
-        sourcemap: !!env.TAURI_ENV_DEBUG,
+        minify: 'terser',
         terserOptions: {
             compress: {
                 drop_console: true,
                 drop_debugger: true,
-                pure_funcs: [
-                    'console.log',
-                    'console.info',
-                    'console.warn',
-                    'console.error',
-                    'console.debug',
-                    'console.assert',
-                ],
                 ecma: 2020
-            }
+            },
         },
+    },
+    plugins: [
+        wasm()
+    ],
+    optimizeDeps: {
+        exclude: ['lz4-wasm'],
     },
     worker: {
         format: 'es'

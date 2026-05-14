@@ -9,8 +9,15 @@ export class FuseRocketEntity extends RocketEntity {
     private fuse: number;
     public playSound = true;
 
-    public constructor(type: EntityType<RocketEntity>, world: World, owner: Entity | null, damage: number = 8, fuse: number = 20) {
-        super(type, world, owner, damage);
+    public constructor(
+        type: EntityType<RocketEntity>,
+        world: World,
+        owner: Entity | null,
+        damage: number = 8,
+        fuse: number = 20,
+        behaviour?: ExplosionBehavior
+    ) {
+        super(type, world, owner, damage, 6, behaviour);
         this.fuse = fuse;
     }
 
@@ -25,7 +32,7 @@ export class FuseRocketEntity extends RocketEntity {
     public override explode() {
         this.getWorld().createExplosion(this, null,
             this.getX(), this.getY(), this.explosionDamage,
-            new ExplosionBehavior(undefined, undefined, true, this.playSound),
+            new ExplosionBehavior(this.behaviour?.behaviour, this.behaviour?.effect, this.behaviour?.decay, this.playSound),
             new ExplosionVisual(this.explosionRadius, this.explodeColor, 5, 2)
         );
     }

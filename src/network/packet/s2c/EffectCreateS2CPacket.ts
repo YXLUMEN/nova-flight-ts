@@ -1,12 +1,13 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {type VisualEffect} from "../../../effect/VisualEffect.ts";
 import {VisualEffectType} from "../../../effect/VisualEffectType.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class EffectCreateS2CPacket implements Payload {
-    public static readonly ID: PayloadId<EffectCreateS2CPacket> = payloadId('effect_create');
+    public static readonly ID: PayloadType<EffectCreateS2CPacket> = payloadType('effect_create');
     public static readonly CODEC: PacketCodec<EffectCreateS2CPacket> = PacketCodecs.of(
         (writer, value) => {
             const type = value.effect.getType();
@@ -26,11 +27,11 @@ export class EffectCreateS2CPacket implements Payload {
         this.effect = effect;
     }
 
-    public getId(): PayloadId<EffectCreateS2CPacket> {
+    public type(): PayloadType<EffectCreateS2CPacket> {
         return EffectCreateS2CPacket.ID;
     }
 
-    public accept(listener: ClientNetworkHandler): void {
+    public accept(listener: ClientPlayHandler): void {
         listener.onEffectCreate(this);
     }
 }

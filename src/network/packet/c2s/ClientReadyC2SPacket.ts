@@ -1,11 +1,12 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {UUID} from "../../../type/types.ts";
 import type {ServerConfigHandler} from "../../../server/network/handler/ServerConfigHandler.ts";
 
 export class ClientReadyC2SPacket implements Payload {
-    public static readonly ID: PayloadId<ClientReadyC2SPacket> = payloadId('client_ready');
+    public static readonly ID: PayloadType<ClientReadyC2SPacket> = payloadType('client_ready');
     public static readonly CODEC: PacketCodec<ClientReadyC2SPacket> = PacketCodecs.adapt(
         PacketCodecs.UUID,
         val => val.clientId,
@@ -18,7 +19,7 @@ export class ClientReadyC2SPacket implements Payload {
         this.clientId = uuid;
     }
 
-    public getId(): PayloadId<ClientReadyC2SPacket> {
+    public type(): PayloadType<ClientReadyC2SPacket> {
         return ClientReadyC2SPacket.ID;
     }
 

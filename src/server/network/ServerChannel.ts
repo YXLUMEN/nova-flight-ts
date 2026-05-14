@@ -4,19 +4,17 @@ import type {GameProfile} from "../entity/GameProfile.ts";
 import type {BiConsumer} from "../../type/types.ts";
 
 export interface ServerChannel extends Channel {
-    getSessionId(): number;
-
-    setServerAddress(address: string): void;
-
     action(buf: Uint8Array<ArrayBuffer>): void;
 
-    sendTo<T extends Payload>(payload: T, target: GameProfile): void;
+    enqueue(payload: Payload): void;
 
-    sendToId<T extends Payload>(payload: T, target: number): void;
+    flush(): void;
 
-    sendExclude<T extends Payload>(payload: T, ...excludes: GameProfile[]): void;
+    sendTo(payload: Payload, target: GameProfile): void;
 
-    setHandler(handler: BiConsumer<number, Payload>): void;
+    sendToId(payload: Payload, target: number): void;
 
-    clearHandlers(): void;
+    sendExclude(payload: Payload, ...excludes: GameProfile[]): void;
+
+    setHandler(handler: BiConsumer<number, Payload>): void
 }

@@ -1,13 +1,14 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {ItemStack} from "../../../item/ItemStack.ts";
 import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class ContainerSetSlotS2CPacket implements Payload {
-    public static readonly ID: PayloadId<ContainerSetSlotS2CPacket> = payloadId('container_set_slot');
+    public static readonly ID: PayloadType<ContainerSetSlotS2CPacket> = payloadType('container_set_slot');
     public static readonly CODEC: PacketCodec<ContainerSetSlotS2CPacket> = PacketCodecs.of(this.write, this.read);
 
     public readonly syncId: number;
@@ -38,10 +39,10 @@ export class ContainerSetSlotS2CPacket implements Payload {
         );
     }
 
-    public getId(): PayloadId<ContainerSetSlotS2CPacket> {
+    public type(): PayloadType<ContainerSetSlotS2CPacket> {
         return ContainerSetSlotS2CPacket.ID;
     }
 
-    public accept(_listener: ClientNetworkHandler): void {
+    public accept(_listener: ClientPlayHandler): void {
     }
 }

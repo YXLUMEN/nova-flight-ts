@@ -25,7 +25,7 @@ import type {NbtUint8Array} from "./NbtUint8Array.ts";
 
 export class NbtCompound implements NbtElement {
     public static readonly MAGIC = 0x6E627430;
-    public static readonly VERSION = 7;
+    public static readonly VERSION = 8;
     public static readonly TYPE: NbtType<NbtCompound> = config({
         read(reader: BinaryReader): NbtCompound {
             const compound = new NbtCompound();

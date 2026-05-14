@@ -103,6 +103,7 @@ export class KeyboardInput implements IInput {
         });
         window.addEventListener('blur', () => {
             this.keyboardState.clear();
+            this.mouseState.setMouseDown(false);
         });
     }
 

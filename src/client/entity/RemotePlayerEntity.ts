@@ -4,7 +4,7 @@ import type {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2C
 import {AbstractClientPlayerEntity} from "./AbstractClientPlayerEntity.ts";
 import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
 
-export class OtherClientPlayerEntity extends AbstractClientPlayerEntity {
+export class RemotePlayerEntity extends AbstractClientPlayerEntity {
     private readonly clientVelocity = MutVec2.zero();
     private velocityLerpDivisor: number = 0;
 

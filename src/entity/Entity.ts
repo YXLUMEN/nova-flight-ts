@@ -5,7 +5,7 @@ import {Vec2} from "../utils/math/Vec2.ts";
 import type {DamageSource} from "./damage/DamageSource.ts";
 import type {EntityType} from "./EntityType.ts";
 import type {EntityDimensions} from "./EntityDimensions.ts";
-import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
+import {DataTracker, type DataTrackerBuilder, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
 import type {DataTracked} from "./data/DataTracked.ts";
 import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
 import {AABB} from "../utils/math/AABB.ts";
@@ -234,7 +234,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.resetPrevious();
     }
 
-    public updatePositionAndAngles(x: number, y: number, yaw: number, _interpolationSteps: number): void {
+    public moveOrInterpolateTo(x: number, y: number, yaw: number, _interpolationSteps: number): void {
         this.setPosition(x, y);
         this.setYaw(yaw);
     }
@@ -246,7 +246,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     public setDeltaMovement(x: number, y: number): void {
-        this.positionDelta.setPos(x, y);
+        this.positionDelta.setBase(x, y);
     }
 
     public getPositionDelta() {
@@ -426,16 +426,16 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
             x = dim.halfWidth;
             this.velocity.x = 0;
         }
-        if (x > World.WORLD_W - dim.halfWidth + ox) {
-            x = World.WORLD_W - dim.halfWidth;
+        if (x > World.MAP_WIDTH - dim.halfWidth + ox) {
+            x = World.MAP_WIDTH - dim.halfWidth;
             this.velocity.x = 0;
         }
         if (y < dim.halfHeight - oy) {
             y = dim.halfHeight;
             this.velocity.y = 0;
         }
-        if (y > World.WORLD_H - dim.halfHeight + oy) {
-            y = World.WORLD_H - dim.halfHeight;
+        if (y > World.MAP_HEIGHT - dim.halfHeight + oy) {
+            y = World.MAP_HEIGHT - dim.halfHeight;
             this.velocity.y = 0;
         }
 
@@ -585,7 +585,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     public abstract onTrackedDataSet(data: TrackedData<any>): void;
 
-    protected abstract defineSyncedData(builder: InstanceType<typeof DataTracker.Builder>): void;
+    protected abstract defineSyncedData(builder: DataTrackerBuilder): void;
 
     // 权限与命令
 

@@ -44,6 +44,6 @@ export class ArtilleryEntity extends FastBulletEntity {
         if (world.isClient || hitResult.missed) return;
 
         world.getMap().setBlock(hitResult.blockPos, 0);
-        world.getNetworkChannel().send(BlockChangeS2CPacket.from(0, hitResult.blockPos));
+        world.sendPacket(BlockChangeS2CPacket.from(0, hitResult.blockPos));
     }
 }

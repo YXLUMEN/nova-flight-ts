@@ -1,10 +1,11 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class ScreenShakeS2CPacket implements Payload {
-    public static readonly ID: PayloadId<ScreenShakeS2CPacket> = payloadId('screen_shake');
+    public static readonly ID: PayloadType<ScreenShakeS2CPacket> = payloadType('screen_shake');
     public static readonly CODEC: PacketCodec<ScreenShakeS2CPacket> = PacketCodecs.adapt2(
         PacketCodecs.FLOAT,
         val => val.amount,
@@ -25,11 +26,11 @@ export class ScreenShakeS2CPacket implements Payload {
         return new ScreenShakeS2CPacket(amount, limit);
     }
 
-    public getId(): PayloadId<ScreenShakeS2CPacket> {
+    public type(): PayloadType<ScreenShakeS2CPacket> {
         return ScreenShakeS2CPacket.ID;
     }
 
-    public accept(listener: ClientNetworkHandler): void {
+    public accept(listener: ClientPlayHandler): void {
         listener.onScreenShake(this);
     }
 }

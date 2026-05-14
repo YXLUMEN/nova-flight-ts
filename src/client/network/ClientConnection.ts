@@ -1,10 +1,10 @@
-import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
 import type {Payload} from "../../network/Payload.ts";
-import type {PacketListener} from "../../server/network/handler/PacketListener.ts";
-import {ConnectionState, type ConnectionStateType} from "../../server/network/ConnectionState.ts";
+import type {PacketListener} from "../../network/handler/PacketListener.ts";
+import {ConnectionState} from "../../server/network/ConnectionState.ts";
 import {IllegalStateException} from "../../type/errors.ts";
 import type {Connection} from "../../network/Connection.ts";
 import type {ClientChannel} from "./ClientChannel.ts";
+import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
 
 export class ClientConnection implements Connection {
     private readonly sendQueue: RingBuffer<Payload> = new RingBuffer(16);
@@ -12,7 +12,7 @@ export class ClientConnection implements Connection {
     private channel: ClientChannel;
     private packetListener: PacketListener | null = null;
 
-    private state: ConnectionStateType = ConnectionState.HANDSHAKING;
+    private state: ConnectionState = ConnectionState.HANDSHAKING;
 
     public constructor(channel: ClientChannel) {
         this.channel = channel;
@@ -30,17 +30,17 @@ export class ClientConnection implements Connection {
         this.packetListener.tick?.();
     }
 
+    public send(packet: Payload): void {
+        this.sendQueue.push(packet);
+    }
+
     public sendImmediately(packet: Payload): void {
         if (this.state === ConnectionState.CLOSED) return;
         this.channel.send(packet);
     }
 
-    public send(packet: Payload): void {
-        this.sendQueue.push(packet);
-    }
-
     public recv(packet: Payload): void {
-        this.packetListener?.accepts(packet);
+        this.packetListener?.accept(packet);
     }
 
     public disconnect(): void {
@@ -48,17 +48,17 @@ export class ClientConnection implements Connection {
         this.channel.disconnect();
     }
 
-    public changeState(state: ConnectionStateType): boolean {
+    public changeState(state: ConnectionState): boolean {
         if (state < this.state) return false;
         this.state = state;
         return true;
     }
 
-    public getState(): ConnectionStateType {
+    public getState(): ConnectionState {
         return this.state;
     }
 
-    public setPacketListener(state: ConnectionStateType, listener: PacketListener): void {
+    public setPacketListener(state: ConnectionState, listener: PacketListener): void {
         if (state !== listener.getPhase()) {
             throw new IllegalStateException(`Listener protocol (${listener.getPhase()}) does not match requested one ${state}`);
         }
@@ -72,15 +72,10 @@ export class ClientConnection implements Connection {
         channel.setHandler(this.recv);
     }
 
-    public getChannel(): ClientChannel {
-        return this.channel;
-    }
-
     public clean(): void {
         this.disconnect();
         this.packetListener?.clear();
         this.packetListener = null;
-        this.sendQueue.clear();
     }
 
     public getSessionId(): number {

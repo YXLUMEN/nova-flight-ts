@@ -30,7 +30,7 @@ export class EntityTrackerEntry {
         this.entity = entity;
         this.tickInterval = tickInterval;
         this.trackDelta = trackDelta;
-        this.posDelta.setPos(entity.positionRef.x, entity.positionRef.y);
+        this.posDelta.setBase(entity.positionRef.x, entity.positionRef.y);
         this.velocity = entity.velocityRef.clone();
         this.lastYawUint8 = encodeYaw(entity.getYaw());
     }
@@ -41,7 +41,7 @@ export class EntityTrackerEntry {
 
             const yawUint8 = encodeYaw(this.entity.getYaw());
             const entityPos = this.entity.getPosition();
-            const lenDelta = this.posDelta.subtract(entityPos).lengthSquared() >= 7.6293945E-6;
+            const lenDelta = this.posDelta.delta(entityPos).lengthSquared() >= 7.6293945E-6;
 
             let packet: Payload | null = null;
             let relativePos = lenDelta || this.trackingTick % 60 === 0;
@@ -50,8 +50,8 @@ export class EntityTrackerEntry {
             let syncYaw = false;
 
             // 同步位置
-            const dx = this.posDelta.getDeltaX(entityPos);
-            const dy = this.posDelta.getDeltaY(entityPos);
+            const dx = this.posDelta.encodeX(entityPos);
+            const dy = this.posDelta.encodeY(entityPos);
             const posDelta = dx < -32768 || dx > 32768 || dy < -32768 || dy > 32768;
             if (posDelta || this.updates > 400) {
                 this.updates = 0;
@@ -88,7 +88,7 @@ export class EntityTrackerEntry {
 
             this.syncEntityData();
             if (syncPos) {
-                this.posDelta.setPos(entityPos.x, entityPos.y);
+                this.posDelta.setBase(entityPos.x, entityPos.y);
             }
 
             if (syncYaw) {
@@ -123,6 +123,6 @@ export class EntityTrackerEntry {
     }
 
     private sendSync(packet: Payload) {
-        this.world.getNetworkChannel().send(packet);
+        this.world.sendPacket(packet);
     }
 }

@@ -3,7 +3,15 @@ import {World} from "../../world/World.ts";
 import {type DamageSource} from "../damage/DamageSource.ts";
 import {EntityType} from "../EntityType.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
-import {getNearestEntityByVec, HALF_PI, PI2, rand, thickLineCircleHit} from "../../utils/math/math.ts";
+import {
+    getNearestEntityByVec,
+    HALF_PI,
+    PI2,
+    rand,
+    randInt,
+    randNeg,
+    thickLineCircleHit
+} from "../../utils/math/math.ts";
 import {DataTracker} from "../data/DataTracker.ts";
 import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
@@ -263,7 +271,7 @@ export class DevourerBoss extends BossEntity {
         }
 
         if (this.currentPhase === DevourerPhase.PHASE_3 && this.laserCooldown-- <= 0) {
-            this.laserCooldown = 300;
+            this.laserCooldown = randInt(240, 320);
             this.fireSkyLaser(world);
         }
     }
@@ -359,12 +367,10 @@ export class DevourerBoss extends BossEntity {
 
             const side = fired % 2 === 0 ? 1 : -1;
             const yaw = this.getYaw();
-            const driftAngle = yaw + side * (HALF_PI + (Math.random() - 0.5) * 0.3);
+            const driftAngle = yaw + side * (HALF_PI + randNeg(0, 0.3));
 
-            const missile = new MobMissileEntity(
-                EntityTypes.MOB_MISSILE_ENTITY, world, this, driftAngle
-            );
-            missile.color = this.currentPhase === DevourerPhase.PHASE_3 ? '#ff2200' : '#cc0000';
+            const missile = new MobMissileEntity(EntityTypes.MOB_MISSILE_ENTITY, world, this, driftAngle);
+            missile.color = '#cc0000';
             missile.setPosition(pos.x, pos.y);
             missile.setYaw(yaw);
             world.spawnEntity(missile);
@@ -381,7 +387,7 @@ export class DevourerBoss extends BossEntity {
         const startX = tx + offset;
         const startY = -80;
         const endX = tx - offset;
-        const endY = World.WORLD_H + 80;
+        const endY = World.MAP_HEIGHT + 80;
 
         spawnLaser(world, startX, startY, endX, endY, '#ff1100', 5, 0.8);
         world.schedule(0.85, () => {

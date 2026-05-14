@@ -1,4 +1,5 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import {
@@ -11,10 +12,10 @@ import {
 } from "../../../utils/NetUtil.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class ParticleS2CPacket implements Payload {
-    public static readonly ID: PayloadId<ParticleS2CPacket> = payloadId('particle');
+    public static readonly ID: PayloadType<ParticleS2CPacket> = payloadType('particle');
     public static readonly CODEC: PacketCodec<ParticleS2CPacket> = PacketCodecs.of(this.write, this.read);
 
     public readonly posX: number;
@@ -88,11 +89,11 @@ export class ParticleS2CPacket implements Payload {
         writer.writeUint32(value.colorToInt32);
     }
 
-    public getId(): PayloadId<any> {
+    public type(): PayloadType<any> {
         return ParticleS2CPacket.ID;
     }
 
-    public accept(listener: ClientNetworkHandler): void {
+    public accept(listener: ClientPlayHandler): void {
         listener.onParticle(this);
     }
 

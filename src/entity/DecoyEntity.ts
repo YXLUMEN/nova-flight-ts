@@ -3,13 +3,13 @@ import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.t
 import type {TrackedData} from "./data/TrackedData.ts";
 import type {EntityType} from "./EntityType.ts";
 import {World} from "../world/World.ts";
-import type {IOwnable} from "./IOwnable.ts";
+import type {Ownable} from "./Ownable.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import {randInt} from "../utils/math/math.ts";
 import type {UUID} from "../type/types.ts";
 import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
 
-export class DecoyEntity extends Entity implements IOwnable {
+export class DecoyEntity extends Entity implements Ownable {
     public static readonly Entities = new Set<DecoyEntity>();
     private owner: Entity | null = null;
     private ownerUuid: UUID | null = null;
@@ -36,7 +36,7 @@ export class DecoyEntity extends Entity implements IOwnable {
         velocity.multiply(0.98);
 
         const pos = this.positionRef;
-        if (pos.x < -20 || pos.x > World.WORLD_W + 20) {
+        if (pos.x < -20 || pos.x > World.MAP_WIDTH + 20) {
             this.discard();
         }
     }

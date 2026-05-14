@@ -3,7 +3,7 @@ import {Window} from "./render/Window.ts";
 import {GlobalConfig, isDev} from "../configs/GlobalConfig.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
 import {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
-import type {Supplier, UUID} from "../type/types.ts";
+import type {Consumer, UUID} from "../type/types.ts";
 import {ClientWorld} from "./ClientWorld.ts";
 import {ClientPlayerEntity} from "./entity/ClientPlayerEntity.ts";
 import {LoadingScreen} from "./render/ui/LoadingScreen.ts";
@@ -12,7 +12,6 @@ import {empty, sleep} from "../utils/uit.ts";
 import {DataLoader} from "./resource/DataLoader.ts";
 import {check} from "@tauri-apps/plugin-updater";
 import {StartScreen} from "./render/ui/StartScreen.ts";
-import {ClientNetworkHandler} from "./network/ClientNetworkHandler.ts";
 import {error, info, warn} from "@tauri-apps/plugin-log";
 import {ClientCommandManager} from "./command/ClientCommandManager.ts";
 import {invoke} from "@tauri-apps/api/core";
@@ -38,6 +37,9 @@ import {ClientIntegratedChannel} from "./network/ClientIntegratedChannel.ts";
 import type {ClientChannel} from "./network/ClientChannel.ts";
 import {ClientCommandSource} from "./command/ClientCommandSource.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
+import {ClientConfigHandler} from "./network/handler/ClientConfigHandler.ts";
+import {ClientPlayHandler} from "./network/handler/ClientPlayHandler.ts";
+import {TickRateManager} from "../world/TickRateManager.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -54,7 +56,7 @@ export class NovaFlightClient {
 
     private channel: ClientChannel;
     public readonly connection: ClientConnection;
-    public readonly networkHandler: ClientNetworkHandler;
+    public readonly networkHandler: ClientPlayHandler;
     public readonly commandSource: ClientCommandSource;
 
     private worker: Worker | null = null;
@@ -68,8 +70,9 @@ export class NovaFlightClient {
     private readonly saveManager: ClientSavesManager;
     private readonly statisticManager: StatisticManager;
 
-    public connectInfo: ConnectInfo | null = null;
+    private connectInfo: ConnectInfo | null = null;
 
+    private readonly tickManager: TickRateManager;
     private pause = true;
     private playing = false;
     private last = 0;
@@ -78,7 +81,7 @@ export class NovaFlightClient {
 
     private gameOverAbort: AbortController | null = null;
     private waitWorldStop: Promise<void> | null = null;
-    private stopWorld: Supplier<void> = empty;
+    private stopWorld: Consumer<void> = empty;
 
     public readonly registryManager: RegistryManager;
     public readonly clientCommandManager: ClientCommandManager;
@@ -102,10 +105,11 @@ export class NovaFlightClient {
         this.registryManager = new RegistryManager();
         this.window = new Window();
         this.worldRender = new WorldRender(this);
+        this.tickManager = new TickRateManager();
 
         this.channel = new ClientNetworkChannel('', this.clientId);
         this.connection = new ClientConnection(this.channel);
-        this.networkHandler = new ClientNetworkHandler(this, this.connection);
+        this.networkHandler = new ClientPlayHandler(this, this.connection);
 
         this.multiGameManager = new ClientMultiGameManger();
         this.saveManager = new ClientSavesManager();
@@ -119,6 +123,7 @@ export class NovaFlightClient {
         ClientInputEvents.registryAll(this, this.input);
 
         this.createWorldStopPromise();
+        this.loop = this.loop.bind(this);
     }
 
     public static getInstance(): NovaFlightClient {
@@ -137,7 +142,6 @@ export class NovaFlightClient {
 
         while (true) {
             if (this.waitWorldStop === null) this.createWorldStopPromise();
-            this.connection.setPacketListener(this.networkHandler.getPhase(), this.networkHandler);
             const breakLoop = await this.userSelect();
             if (breakLoop) break;
 
@@ -154,7 +158,6 @@ export class NovaFlightClient {
         }
 
         this.connection.clean();
-        this.networkHandler.destroy();
     }
 
     private async userSelect(): Promise<boolean> {
@@ -196,13 +199,8 @@ export class NovaFlightClient {
         this.loop(0);
         this.window.canvas.style.cursor = 'none';
 
-        this.connectInfo?.destroy();
+        this.setConnectInfo(null);
         this.clientCommandManager.clearParseCache();
-    }
-
-    public leaveGame() {
-        this.connection.disconnect();
-        this.requestStop();
     }
 
     public setPause(bl: boolean): void {
@@ -246,34 +244,36 @@ export class NovaFlightClient {
             this.last = ts;
             this.accumulator += tickDelta;
 
-            while (this.accumulator >= GlobalConfig.mbps) {
-                this.tick();
-                this.accumulator -= GlobalConfig.mbps;
+            let step = 0;
+            const maxStep = this.tickManager.getMaxStep();
+            const preTick = this.tickManager.perTick();
+            while (this.accumulator >= preTick && step < maxStep) {
+                this.tick(preTick);
+                this.accumulator -= preTick;
+                step++
             }
 
             if (ts - this.lastRenderTime >= GlobalConfig.perFrame) {
-                this.worldRender.render(this.pause ? 1 : this.accumulator / GlobalConfig.mbps);
+                this.worldRender.render(this.pause ? 1 : this.accumulator / preTick);
                 this.lastRenderTime = ts;
             }
 
-            requestAnimationFrame(this.bindLoop);
+            requestAnimationFrame(this.loop);
         } catch (err) {
             const msg = err instanceof Error ?
                 `[Client] Crash ${err.name}:${err.message} because ${err.cause} at\n${err.stack}` :
                 `[Client] Crash ${err}`;
 
             console.error(msg);
-            error(msg).then();
+            void error(msg);
             this.stopWorld();
         }
     }
 
-    private bindLoop = this.loop.bind(this);
-
-    private tick() {
+    private tick(preTick: number): void {
         this.connection.tick();
 
-        const dt = this.pause ? 1 : GlobalConfig.mbps;
+        const dt = this.pause ? 1 : preTick;
         this.window.hud.tick(dt);
         if (this.world && !this.pause) {
             this.worldRender.tick(dt);
@@ -283,13 +283,15 @@ export class NovaFlightClient {
     }
 
     private createWorldStopPromise(): void {
+        this.stopWorld();
+
         const {promise, resolve} = Promise.withResolvers<void>();
         this.waitWorldStop = promise;
         this.stopWorld = () => {
             console.log('[Client] Stopping world');
 
             if (!this.waitWorldStop) return;
-            this.connectInfo?.destroy();
+            this.setConnectInfo(null);
             this.clearWorld();
             this.last = 0;
             this.accumulator = 0;
@@ -334,16 +336,13 @@ export class NovaFlightClient {
         }
 
         this.channel = new ClientNetworkChannel(address, this.clientId);
-        this.channel.setServerAddress(address);
         this.connection.changeChannel(this.channel);
 
-        const connectInfo = new ConnectInfo(this, this.stopWorld.bind(this));
-        this.connectInfo?.destroy();
-        this.connectInfo = connectInfo;
+        const connectInfo = new ConnectInfo(this, this.stopWorld);
+        this.setConnectInfo(connectInfo);
         connectInfo.setMessage(TranslatableText.of('start.remote.connecting').toString());
 
         const result = await this.channel.sniff(
-            address,
             1000,
             3,
             (num, max) => {
@@ -366,7 +365,8 @@ export class NovaFlightClient {
             return;
         }
 
-        this.networkHandler.checkServer();
+        const config = new ClientConfigHandler(this, this.connection);
+        config.clientReady();
 
         await connectInfo.waitConfirm();
     }
@@ -374,13 +374,10 @@ export class NovaFlightClient {
     private async startIntegratedServer(saveName: string): Promise<void> {
         if (this.worker) return;
 
-        // 全屏提示
-        const connectInfo = new ConnectInfo(this, this.stopWorld.bind(this));
-        this.connectInfo?.destroy();
-        this.connectInfo = connectInfo;
+        const connectInfo = new ConnectInfo(this, this.stopWorld);
+        this.setConnectInfo(connectInfo);
         connectInfo.setMessage(TranslatableText.of('start.integrated.start').toString());
 
-        // Vite 规定的格式 integrated dev
         const worker = new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
             type: 'module',
             name: 'server',
@@ -397,9 +394,8 @@ export class NovaFlightClient {
     private async startGeneralServer(saveName: string): Promise<void> {
         if (this.worker) return;
 
-        const connectInfo = new ConnectInfo(this, this.stopWorld.bind(this));
-        this.connectInfo?.destroy();
-        this.connectInfo = connectInfo;
+        const connectInfo = new ConnectInfo(this, this.stopWorld);
+        this.setConnectInfo(connectInfo);
         connectInfo.setMessage(TranslatableText.of('start.integrated.start').toString());
 
         let key: ArrayBuffer;
@@ -423,7 +419,6 @@ export class NovaFlightClient {
 
         const addr = `127.0.0.1:${GlobalConfig.port}`;
         this.channel = new ClientNetworkChannel(addr, this.clientId);
-        this.channel.setServerAddress(addr);
         this.connection.changeChannel(this.channel);
 
         await this.checkAndConnect(addr, connectInfo, key, saveName);
@@ -436,17 +431,19 @@ export class NovaFlightClient {
         saveName: string,
         worker?: Worker
     ): Promise<void> {
-        const canConnect: boolean = await this.channel.sniff(addr);
+        const canConnect: boolean = await this.channel.sniff();
         if (!canConnect) {
             await connectInfo.setError(TranslatableText.of('start.integrated.fail.start').toString());
             return;
         }
 
+        const config = new ClientConfigHandler(this, this.connection);
+
         const connectToServer = async () => {
             connectInfo.setMessage(TranslatableText.of('start.connecting').toString());
             try {
                 await this.channel.connect();
-                this.networkHandler.checkServer();
+                config.clientReady();
             } catch (err) {
                 console.error(err);
                 await error(String(err));
@@ -470,12 +467,19 @@ export class NovaFlightClient {
         this.worker = worker;
 
         const startTimeout = setTimeout(() => {
-            connectInfo.setError(TranslatableText.of('network.disconnect.timeout').toString());
+            void connectInfo.setError(TranslatableText.of('network.disconnect.timeout').toString());
             worker.terminate();
+            this.worker = null;
         }, NovaFlightClient.SERVER_START_TIMEOUT);
 
         worker.onmessage = event => {
             switch (event.data.type) {
+                case 'worker_ready':
+                    worker.postMessage({
+                        type: 'start_server',
+                        payload: startUp
+                    }, {transfer: [key]});
+                    break;
                 case 'server_start':
                     clearTimeout(startTimeout);
                     connectToServer();
@@ -509,11 +513,6 @@ export class NovaFlightClient {
             this.requestStop();
         }
 
-        worker.postMessage({
-            type: 'start_server',
-            payload: startUp
-        }, {transfer: [key]});
-
         await connectInfo.waitConfirm();
     }
 
@@ -533,6 +532,20 @@ export class NovaFlightClient {
         this.playing = false;
     }
 
+    public leaveGame(): void {
+        this.connection.disconnect();
+        this.requestStop();
+    }
+
+    public setConnectError(message: string): void {
+        this.connectInfo?.setError(message);
+    }
+
+    public setConnectInfo(info: ConnectInfo | null): void {
+        this.connectInfo?.destroy();
+        this.connectInfo = info;
+    }
+
     public onGameOver(): void {
         this.networkHandler.clear();
 
@@ -549,12 +562,16 @@ export class NovaFlightClient {
 
     // 其他
 
-    public async initResources(): Promise<void> {
+    private async initResources(): Promise<void> {
         const loadingScreen = new LoadingScreen(this);
         loadingScreen.setSize(Window.VIEW_W, Window.VIEW_H);
         loadingScreen.loop();
 
         await this.update(loadingScreen);
+
+        loadingScreen.setProgress(0.1, '加载依赖');
+        await this.initWasm();
+        await sleep(100);
 
         loadingScreen.setProgress(0.2, '注册资源');
         const manager = this.registryManager;
@@ -576,6 +593,10 @@ export class NovaFlightClient {
         loadingScreen.setProgress(1, '启动游戏');
         await sleep(200);
         await loadingScreen.setDone();
+    }
+
+    private async initWasm(): Promise<void> {
+        await (await import('@bokuweb/zstd-wasm')).init();
     }
 
     private async update(loadingScreen: LoadingScreen): Promise<void> {
