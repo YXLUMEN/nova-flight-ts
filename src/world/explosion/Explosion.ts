@@ -11,7 +11,7 @@ import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPac
 import {ServerCommonHandler} from "../../server/network/handler/ServerCommonHandler.ts";
 import type {BlockChange} from "../map/BlockChange.ts";
 import {BlockCollision} from "../collision/BlockCollision.ts";
-import {BehaviourEnum, EffectEnum, ExplosionBehavior} from "./ExplosionBehavior.ts";
+import {ExplosionBehavior, ExplosionBehaviour, ExplosionEffect} from "./ExplosionBehavior.ts";
 import {ExplosionVisual} from "./ExplosionVisual.ts";
 import {AABB} from "../../utils/math/AABB.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
@@ -61,14 +61,14 @@ export class Explosion {
         if (this.power === 0) return;
 
         const behavior = this.behaviour.behaviour;
-        if (behavior === BehaviourEnum.EITHER) return;
+        if (behavior === ExplosionBehaviour.EITHER) return;
 
-        if (behavior === BehaviourEnum.BOTH ||
-            behavior === BehaviourEnum.ONLY_DESTROY) {
+        if (behavior === ExplosionBehaviour.BOTH ||
+            behavior === ExplosionBehaviour.ONLY_DESTROY) {
             this.destroyBlock();
         }
-        if (behavior === BehaviourEnum.BOTH ||
-            behavior === BehaviourEnum.ONLY_DAMAGE) {
+        if (behavior === ExplosionBehaviour.BOTH ||
+            behavior === ExplosionBehaviour.ONLY_DAMAGE) {
             if (this.behaviour.decay) this.damageEntities();
             else this.damageEntitiesInRange();
         }
@@ -85,7 +85,7 @@ export class Explosion {
             entity => this.behaviour.canDamage(entity)
         );
 
-        const halfR2 = this.behaviour.effect === EffectEnum.FUSION ? Math.floor(this.visual.radius / 2) ** 2 : 0;
+        const halfR2 = this.behaviour.effect === ExplosionEffect.FUSION ? Math.floor(this.visual.radius / 2) ** 2 : 0;
         for (const entity of entities) {
             const dist = squareDist(entity.getX(), entity.getY(), this.x, this.y);
             if (dist > radiusSq) continue;
@@ -121,7 +121,7 @@ export class Explosion {
         );
         const start = new Vec2(this.x, this.y);
 
-        const halfR2 = this.behaviour.effect === EffectEnum.FUSION ? Math.floor(this.visual.radius / 2) ** 2 : 0;
+        const halfR2 = this.behaviour.effect === ExplosionEffect.FUSION ? Math.floor(this.visual.radius / 2) ** 2 : 0;
         for (const entity of candidates) {
             const box = entity.getBoundingBox();
             const pos = entity.positionRef;
@@ -185,9 +185,8 @@ export class Explosion {
         }
 
         if (changes.length === 0) return;
-        const channel = this.world.getNetworkChannel();
         ServerCommonHandler.buildBatchWithEst(changes, () => 9, BatchBlockChangesPacket.from)
-            .forEach(packet => channel.send(packet));
+            .forEach(packet => this.world.sendPacket(packet));
     }
 
     private fusion(entity: Entity, damage: number) {
@@ -247,7 +246,7 @@ export class Explosion {
                     this.visual.radius * 0.2, this.visual.radius * 1.1,
                     0.35, this.visual.color
                 ));
-                if (this.behaviour.effect !== EffectEnum.FUSION) return;
+                if (this.behaviour.effect !== ExplosionEffect.FUSION) return;
                 const r = this.visual.radius / 2;
                 world.addEffect(null, new mod.RadialRing(
                     vec,

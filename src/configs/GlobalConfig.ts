@@ -6,8 +6,6 @@ export const isDev = import.meta.env.MODE === 'development';
 export const isServer = typeof window === 'undefined';
 
 export const DEFAULT_CONFIG = config({
-    tick: 20,
-    mbps: 0.05,
     per: 50,
     fps: 100,
     perFrame: 1000 / 100,
@@ -16,8 +14,6 @@ export const DEFAULT_CONFIG = config({
 });
 
 export const GlobalConfig = status({
-    tick: DEFAULT_CONFIG.tick,
-    mbps: DEFAULT_CONFIG.mbps,
     per: DEFAULT_CONFIG.per,
 
     lastFps: DEFAULT_CONFIG.fps.valueOf(),

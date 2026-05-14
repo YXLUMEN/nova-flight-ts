@@ -6,6 +6,8 @@ import {StatusEffects} from "../effect/StatusEffects.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
+import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
+import {randInt} from "../../utils/math/math.ts";
 
 export class MissileEnemyEntity extends MobEntity {
     public color = "#ff6b6b";
@@ -42,5 +44,15 @@ export class MissileEnemyEntity extends MobEntity {
 
     public override isRangedAttacker(): boolean {
         return true;
+    }
+
+    public override writeNBT(nbt: NbtCompound): NbtCompound {
+        nbt.setInt16('missile_cooldown', this.cooldown);
+        return super.writeNBT(nbt);
+    }
+
+    public override readNBT(nbt: NbtCompound): void {
+        this.cooldown = nbt.getInt16('missile_cooldown', randInt(100, 200));
+        super.readNBT(nbt);
     }
 }

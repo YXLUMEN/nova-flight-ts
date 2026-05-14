@@ -2,13 +2,13 @@ import type {Payload} from "../../network/Payload.ts";
 import type {ServerChannel} from "./ServerChannel.ts";
 import type {GameProfile} from "../entity/GameProfile.ts";
 import type {BiConsumer} from "../../type/types.ts";
-import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
+import {CodecRegistry} from "../../network/CodecRegistry.ts";
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import {empty} from "../../utils/uit.ts";
 
 export class ServerIntegratedChannel implements ServerChannel {
-    private readonly registry = PayloadTypeRegistry.playS2C();
+    private readonly registry = CodecRegistry.PLAY_S2C;
 
     private clientSessionId: number = 2;
     private ctrl = new AbortController();
@@ -18,36 +18,35 @@ export class ServerIntegratedChannel implements ServerChannel {
         this.onMessage = this.onMessage.bind(this);
     }
 
-    public connect(): Promise<void> {
-        self.addEventListener("message", this.onMessage, {signal: this.ctrl.signal});
-        return Promise.resolve();
+    public getSessionId(): number {
+        return 1;
     }
 
-    public disconnect(): void {
-        this.ctrl.abort();
-        this.ctrl = new AbortController();
-        this.clearHandlers();
+    public isConnected(): boolean {
+        return !this.ctrl.signal.aborted;
     }
 
-    public sniff(): Promise<boolean> {
-        return Promise.resolve(true);
-    }
-
-    public send<T extends Payload>(payload: T): void {
-        // noinspection DuplicatedCode
-        const type = this.registry.get(payload.getId().id);
-        if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
+    public send(payload: Payload): void {
+        const codec = this.registry.get(payload.type());
+        if (!codec) throw new Error(`Unknown payload type: ${payload.type().id}`);
 
         const size = payload.estimateSize?.() ?? 62;
         const writer = new BinaryWriter(size + 2);
-        writer.writeVarUint(type.index);
-        type.codec.encode(writer, payload);
+        writer.writeVarUint(codec.index);
+        codec.codec.encode(writer, payload);
 
         const buffer = writer.toUint8Array();
         self.postMessage({
             type: 'packet',
             packet: buffer.buffer
         }, {transfer: [buffer.buffer]});
+    }
+
+    public enqueue(payload: Payload) {
+        this.send(payload);
+    }
+
+    public flush() {
     }
 
     public sendTo<T extends Payload>(payload: T, target: GameProfile): void {
@@ -67,14 +66,29 @@ export class ServerIntegratedChannel implements ServerChannel {
     public action(): void {
     }
 
+    public connect(): Promise<void> {
+        self.addEventListener("message", this.onMessage, {signal: this.ctrl.signal});
+        return Promise.resolve();
+    }
+
+    public disconnect(): void {
+        this.ctrl.abort();
+        this.ctrl = new AbortController();
+        this.clearHandlers();
+    }
+
+    public sniff(): Promise<boolean> {
+        return Promise.resolve(true);
+    }
+
     private receivePacket(buf: ArrayBuffer): void {
         const reader = new BinaryReader(new Uint8Array(buf));
 
         const index = reader.readVarUint();
-        const type = PayloadTypeRegistry.getGlobalByIndex(index);
-        if (!type) return;
+        const codec = CodecRegistry.getGlobalByIndex(index);
+        if (!codec) return;
 
-        const payload = type.codec.decode(reader);
+        const payload = codec.codec.decode(reader);
         if (payload) this.handler(2, payload);
     }
 
@@ -108,14 +122,6 @@ export class ServerIntegratedChannel implements ServerChannel {
         this.handler = empty;
     }
 
-    public getSessionId(): number {
-        return 1;
-    }
-
-    public setServerAddress(): void {
-    }
-
-    public isOpen(): boolean {
-        return !this.ctrl.signal.aborted;
+    public setRemote() {
     }
 }

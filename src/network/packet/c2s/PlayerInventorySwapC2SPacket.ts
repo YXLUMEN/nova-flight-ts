@@ -1,10 +1,11 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {ServerPlayHandler} from "../../../server/network/handler/ServerPlayHandler.ts";
 
 export class PlayerInventorySwapC2SPacket implements Payload {
-    public static readonly ID: PayloadId<PlayerInventorySwapC2SPacket> = payloadId('player_inventory_swap');
+    public static readonly ID: PayloadType<PlayerInventorySwapC2SPacket> = payloadType('player_inventory_swap');
     public static readonly CODEC: PacketCodec<PlayerInventorySwapC2SPacket> = PacketCodecs.adapt2(
         PacketCodecs.VAR_UINT,
         val => val.to,
@@ -25,7 +26,7 @@ export class PlayerInventorySwapC2SPacket implements Payload {
         return new PlayerInventorySwapC2SPacket(to, from);
     }
 
-    public getId(): PayloadId<PlayerInventorySwapC2SPacket> {
+    public type(): PayloadType<PlayerInventorySwapC2SPacket> {
         return PlayerInventorySwapC2SPacket.ID;
     }
 

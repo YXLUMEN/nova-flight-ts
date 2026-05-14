@@ -115,10 +115,17 @@ export class BinaryWriter {
         return this.offset;
     }
 
-    public reset(shrink = false) {
+    public truncate(offset: number): void {
+        if (offset < 0 || offset > this.offset) {
+            throw new RangeError(`Invalid offset ${offset}. Must be between 0 and current offset ${this.offset}.`);
+        }
+        this.offset = offset;
+    }
+
+    public reset(shrinkTo: number = -1) {
         this.offset = 0;
-        if (shrink && this.buffer.length > 128) {
-            this.buffer = new Uint8Array(128);
+        if (shrinkTo > 0 && this.buffer.length > shrinkTo) {
+            this.buffer = new Uint8Array(shrinkTo);
             this.view = new DataView(this.buffer.buffer);
         }
     }

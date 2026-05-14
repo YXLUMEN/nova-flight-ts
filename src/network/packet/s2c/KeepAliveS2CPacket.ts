@@ -1,10 +1,11 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class KeepAliveS2CPacket implements Payload {
-    public static readonly ID: PayloadId<KeepAliveS2CPacket> = payloadId('keep_alive_s2c');
+    public static readonly ID: PayloadType<KeepAliveS2CPacket> = payloadType('keep_alive_s2c');
     public static readonly CODEC: PacketCodec<KeepAliveS2CPacket> = PacketCodecs.adapt(
         PacketCodecs.UINT32,
         val => val.id,
@@ -16,10 +17,10 @@ export class KeepAliveS2CPacket implements Payload {
         this.id = id;
     }
 
-    public getId(): PayloadId<KeepAliveS2CPacket> {
+    public type(): PayloadType<KeepAliveS2CPacket> {
         return KeepAliveS2CPacket.ID;
     }
 
-    public accept(_listener: ClientNetworkHandler): void {
+    public accept(_listener: ClientPlayHandler): void {
     }
 }

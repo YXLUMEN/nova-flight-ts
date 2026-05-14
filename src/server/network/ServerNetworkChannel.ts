@@ -1,21 +1,24 @@
-import {NetworkChannel} from "../../network/NetworkChannel.ts";
-import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
+import {WSNetworkChannel} from "../../network/WSNetworkChannel.ts";
+import {CodecRegistry} from "../../network/CodecRegistry.ts";
 import type {Payload} from "../../network/Payload.ts";
 import type {BiConsumer} from "../../type/types.ts";
-import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import type {ServerChannel} from "./ServerChannel.ts";
 import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {GameProfile} from "../entity/GameProfile.ts";
-import {PacketTooLargeError} from "../../type/errors.ts";
-import {RelayPackets} from "../../network/RelayPackets.ts";
 import {empty} from "../../utils/uit.ts";
+import {PacketHeader} from "../../network/PacketHeader.ts";
+import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
+import {NetworkSide} from "../../network/NetworkSide.ts";
+import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
+import {BatchBufferPacket} from "../../network/packet/BatchBufferPacket.ts";
 
-export class ServerNetworkChannel extends NetworkChannel implements ServerChannel {
+export class ServerNetworkChannel extends WSNetworkChannel implements ServerChannel {
+    private readonly sendQueue = new RingBuffer<Payload>(32);
     private secretKey: Uint8Array | null;
     private handler: BiConsumer<number, Payload> = empty;
 
     public constructor(address: string, secretKey: Uint8Array) {
-        super(address, PayloadTypeRegistry.playS2C());
+        super(NetworkSide.SERVER, address, CodecRegistry.PLAY_S2C);
         this.secretKey = secretKey;
     }
 
@@ -24,75 +27,92 @@ export class ServerNetworkChannel extends NetworkChannel implements ServerChanne
      * 必须由 0xFF 开头
      * */
     public action(buffer: Uint8Array<ArrayBuffer>) {
-        if (!this.isOpen()) return;
+        if (!this.isConnected()) return;
 
-        if (buffer[0] !== 0xff) {
+        if (buffer[0] !== PacketHeader.SERVER_ACTION) {
             console.warn('Relay action packet must start with 0xFF');
             return;
         }
 
-        if (buffer.length > NetworkChannel.MAX_PACKET_SIZE) {
-            throw new PacketTooLargeError(`Action packet exceeds 6144 bytes: ${buffer.length}`);
-        }
+        this.sendRaw(buffer);
+    }
 
-        this.ws!.send(buffer);
+    public send(payload: Payload): void {
+        const type = this.registry.get(payload.type());
+        if (!type) throw new Error(`[${this.side}] Unknown payload type: ${payload.type().id}`);
+
+        const size = payload.estimateSize?.() ?? 60;
+        const writer = new BinaryWriter(size + 4);
+        writer.writeInt8(PacketHeader.SERVER_BROADCAST);
+        writer.writeInt8(0);
+
+        this.checkAndSend(writer, type, payload);
+    }
+
+    public enqueue(payload: Payload): void {
+        if (this.sendQueue.full()) this.flush();
+        this.sendQueue.push(payload);
+    }
+
+    public flush(): void {
+        if (this.sendQueue.isEmpty()) return;
+        const packets = BatchBufferPacket.create(this.sendQueue, this.registry);
+        this.sendQueue.clear();
+        for (const packet of packets) this.send(packet);
     }
 
     public sendTo<T extends Payload>(payload: T, target: GameProfile): void {
         this.sendToId(payload, target.sessionId);
     }
 
-    public sendToId<T extends Payload>(payload: T, target: number) {
-        const type = this.registry.get(payload.getId().id);
-        if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
+    public sendToId<T extends Payload>(payload: T, target: number): void {
+        const codec = this.registry.get(payload.type());
+        if (!codec) throw new Error(`[Server] Unknown payload type: ${payload.type().id}`);
 
         const size = payload.estimateSize?.() ?? 60;
-        // 2 + index(2)
         const writer = new BinaryWriter(size + 4);
-        writer.writeInt8(0x12);
-        // 利用协议节省R端的数据重组
+        writer.writeInt8(PacketHeader.SERVER_SINGLE);
         writer.writeInt8(target);
-        this.checkAndSend(writer, type, payload);
+        this.checkAndSend(writer, codec, payload);
     }
 
     public sendExclude<T extends Payload>(payload: T, ...excludes: GameProfile[]): void {
-        const type = this.registry.get(payload.getId().id);
-        if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
+        const codec = this.registry.get(payload.type());
+        if (!codec) throw new Error(`[Server] Unknown payload type: ${payload.type().id}`);
 
         const writer = new BinaryWriter();
-        writer.writeInt8(0x14);
+        writer.writeInt8(PacketHeader.SERVER_EXCLUDE);
         writer.writeInt8(this.getSessionId());
 
         writer.writeVarUint(excludes.length);
         for (const session of excludes) {
             writer.writeInt8(session.sessionId);
         }
-        this.checkAndSend(writer, type, payload);
+        this.checkAndSend(writer, codec, payload);
     }
 
-    protected override handleMessage(event: MessageEvent) {
+    protected override handleMessage(event: MessageEvent): void {
         const binary = new Uint8Array(event.data as ArrayBuffer);
         const reader = new BinaryReader(binary);
 
         const header = reader.readUint8();
-        if (header === 0x00) {
+        if (header === PacketHeader.RELAY) {
             const index = reader.readUint8();
-            const type = RelayPackets.getType(index);
-            if (!type) return;
-            return this.handler(0, type.codec.decode(reader));
+            const codec = CodecRegistry.getGlobalByIndex(index);
+            if (codec) this.handler(0, codec.codec.decode(reader));
+            return;
         }
-        if (header !== 0x10) {
-            console.warn(`[${this.getSide()}] Unknown header: ${header}`);
+        if (header !== PacketHeader.C2S) {
+            console.warn(`[${this.side}] Unknown header: ${header}`);
             return;
         }
 
         const sessionId = reader.readUint8();
         const index = reader.readVarUint();
-        const type = PayloadTypeRegistry.getGlobalByIndex(index);
-        if (!type) return;
+        const codec = CodecRegistry.getGlobalByIndex(index);
+        if (!codec) return;
 
-        const payload = type.codec.decode(reader);
-        if (payload) this.handler(sessionId, payload);
+        this.handler(sessionId, codec.codec.decode(reader));
     }
 
     public setHandler(handler: BiConsumer<number, Payload>) {
@@ -103,22 +123,14 @@ export class ServerNetworkChannel extends NetworkChannel implements ServerChanne
         this.handler = empty;
     }
 
-    protected override getSide(): string {
-        return 'Server';
-    }
-
-    protected override getHeader(): number {
-        return 0x11;
-    }
-
     protected register() {
         if (!this.secretKey) throw new Error(`Cannot register without a secret key`);
 
-        const payload = new Uint8Array(1 + this.secretKey.length);
-        payload[0] = 0x01;
-        payload.set(this.secretKey, 1);
+        const buf = new Uint8Array(1 + this.secretKey.length);
+        buf[0] = PacketHeader.SERVER;
+        buf.set(this.secretKey, 1);
 
-        this.ws!.send(payload);
+        this.sendRaw(buf);
         console.log("Server registered");
 
         this.secretKey.fill(0);

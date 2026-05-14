@@ -29,7 +29,6 @@ import {ParticleS2CPacket} from "../network/packet/s2c/ParticleS2CPacket.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {type VisualEffect} from "../effect/VisualEffect.ts";
 import {EffectCreateS2CPacket} from "../network/packet/s2c/EffectCreateS2CPacket.ts";
-import type {ServerChannel} from "./network/ServerChannel.ts";
 import {GameOverS2CPacket} from "../network/packet/s2c/GameOverS2CPacket.ts";
 import {EMPBurst} from "../effect/EMPBurst.ts";
 import {DifficultChangeS2CPacket} from "../network/packet/s2c/DifficultChangeS2CPacket.ts";
@@ -43,6 +42,7 @@ import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
 import {PreparedParticleS2CPacket} from "../network/packet/s2c/PreparedParticleS2CPacket.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
+import type {Payload} from "../network/Payload.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
@@ -120,12 +120,12 @@ export class ServerWorld extends World implements NbtSerializable {
 
         this.over = true;
         this.server.setPause(true);
-        this.getNetworkChannel().send(GameOverS2CPacket.INSTANCE);
+        this.sendPacket(GameOverS2CPacket.INSTANCE);
         this.events.emit(EVENTS.GAME_OVER, null);
     }
 
-    public override getNetworkChannel(): ServerChannel {
-        return this.server.networkChannel;
+    public sendPacket(payload: Payload, flush = false): void {
+        flush ? this.server.networkChannel.send(payload) : this.server.networkChannel.enqueue(payload);
     }
 
     /**
@@ -219,24 +219,24 @@ export class ServerWorld extends World implements NbtSerializable {
 
     public override playSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
         if (entity instanceof ServerPlayerEntity) {
-            this.getNetworkChannel()
+            this.server.networkChannel
                 .sendExclude(new SoundEventS2CPacket(sound, volume, pitch, false), entity.getProfile());
             return;
         }
-        this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, false));
+        this.sendPacket(new SoundEventS2CPacket(sound, volume, pitch, false));
     }
 
     public override playLoopSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
         if (entity instanceof ServerPlayerEntity) {
-            this.getNetworkChannel()
+            this.server.networkChannel
                 .sendExclude(new SoundEventS2CPacket(sound, volume, pitch, true), entity.getProfile());
             return;
         }
-        this.getNetworkChannel().send(new SoundEventS2CPacket(sound, volume, pitch, true));
+        this.sendPacket(new SoundEventS2CPacket(sound, volume, pitch, true));
     }
 
     public override stopLoopSound(_: Entity | null, sounds: SoundEvent): boolean {
-        this.getNetworkChannel().send(new StopSoundS2CPacket(sounds));
+        this.sendPacket(new StopSoundS2CPacket(sounds));
         return true;
     }
 
@@ -245,10 +245,10 @@ export class ServerWorld extends World implements NbtSerializable {
 
     public spawnEffect(source: Entity | null, effect: VisualEffect): void {
         if (source instanceof ServerPlayerEntity) {
-            this.getNetworkChannel().sendExclude(new EffectCreateS2CPacket(effect), source.getProfile());
+            this.server.networkChannel.sendExclude(new EffectCreateS2CPacket(effect), source.getProfile());
             return;
         }
-        this.getNetworkChannel().send(new EffectCreateS2CPacket(effect));
+        this.sendPacket(new EffectCreateS2CPacket(effect));
     }
 
     public override createExplosion(
@@ -262,7 +262,7 @@ export class ServerWorld extends World implements NbtSerializable {
     ): Explosion {
         const explosion = super.createExplosion(source, damageSource, x, y, power, behaviour, visual);
         const packet = new ExplosionS2CPacket(x, y, power, behaviour, visual);
-        this.getNetworkChannel().send(packet);
+        this.sendPacket(packet);
 
         this.events.emit(EVENTS.EXPLOSION, {explosion});
         return explosion;
@@ -277,13 +277,13 @@ export class ServerWorld extends World implements NbtSerializable {
         posX: number, posY: number, offsetX: number, offsetY: number,
         count: number, speed: number, life: number, size: number,
         colorFrom: string, colorTo?: string): void {
-        this.getNetworkChannel().send(ParticleS2CPacket.create(
+        this.sendPacket(ParticleS2CPacket.create(
             posX, posY, offsetX, offsetY, count, speed, life, size, colorFrom, colorTo ?? colorFrom
         ));
     }
 
     public spawnPreparedParticle(type: ParticleEffectType, pos: Vec2, count: number, baseAngle: number = 0) {
-        this.getNetworkChannel().send(new PreparedParticleS2CPacket(type, pos, count, baseAngle));
+        this.sendPacket(new PreparedParticleS2CPacket(type, pos, count, baseAngle));
     }
 
     public override addImportantParticle() {
@@ -395,11 +395,11 @@ export class ServerWorld extends World implements NbtSerializable {
 
             const tracker = new EntityTrackerEntry(this, entity, interval, false);
             this.trackedEntities.set(entity.getId(), tracker);
-            this.getNetworkChannel().send(entity.createSpawnPacket());
+            this.sendPacket(entity.createSpawnPacket());
         },
         stopTracking: (entity: Entity) => {
             this.trackedEntities.delete(entity.getId());
-            this.getNetworkChannel().send(new EntityRemoveS2CPacket(entity.getId()));
+            this.sendPacket(new EntityRemoveS2CPacket(entity.getId()));
         }
     };
 }

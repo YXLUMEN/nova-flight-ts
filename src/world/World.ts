@@ -16,7 +16,6 @@ import type {ExplosionVisual} from "./explosion/ExplosionVisual.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import type {ClientWorld} from "../client/ClientWorld.ts";
 import {EntityType} from "../entity/EntityType.ts";
-import type {Channel} from "../network/Channel.ts";
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 import {clamp} from "../utils/math/math.ts";
@@ -34,11 +33,14 @@ import {ScheduleTask} from "./ScheduleTask.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 
 export abstract class World {
-    public static readonly WORLD_W = 1760;
-    public static readonly WORLD_H = 1120;
-    public static readonly BLOCK_SIZE = 8;
+    public static readonly MAP_WIDTH = 1760;
+    public static readonly MAP_HEIGHT = 1120;
+    public static readonly WORLD_WIDTH = 2640;
+    public static readonly WORLD_HEIGHT = 1680;
+    public static readonly MAX_X_CROSS = this.WORLD_WIDTH - this.MAP_WIDTH;
+    public static readonly MAX_Y_CROSS = this.WORLD_HEIGHT - this.MAP_HEIGHT;
 
-    protected readonly blockMap: BitBlockMap = new BitBlockMap(World.WORLD_W, World.WORLD_H);
+    protected readonly blockMap: BitBlockMap = new BitBlockMap(World.MAP_WIDTH, World.MAP_HEIGHT);
     public readonly events: GeneralEventBus<IEvents> = GeneralEventBus.getEventBus();
     public empBurst: number = 0
 
@@ -246,11 +248,7 @@ export abstract class World {
         return this.registryManager;
     }
 
-    public abstract getNetworkChannel(): Channel;
-
-    public sendPacket(payload: Payload) {
-        this.getNetworkChannel().send(payload);
-    }
+    public abstract sendPacket(payload: Payload): void;
 
     public schedule(delaySec: number, fn: Supplier<void>): Schedule {
         return this.scheduleTask.schedule(delaySec, fn);

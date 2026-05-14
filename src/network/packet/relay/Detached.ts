@@ -1,12 +1,12 @@
-import {payloadId, type PayloadId} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {RelayPayload} from "../../RelayPayload.ts";
-import type {ServerNetworkManager} from "../../../server/network/ServerNetworkManager.ts";
+import type {ServerRelayHandler} from "../../../server/network/handler/ServerRelayHandler.ts";
 
 export class Detached implements RelayPayload {
     public static readonly TYPE_ID = 0x00;
-    public static readonly ID: PayloadId<Detached> = payloadId('detached');
+    public static readonly ID: PayloadType<Detached> = payloadType('detached');
     public static readonly CODEC: PacketCodec<Detached> = PacketCodecs.adapt(
         PacketCodecs.UINT8,
         val => val.sessionId,
@@ -15,15 +15,15 @@ export class Detached implements RelayPayload {
 
     public readonly sessionId: number;
 
-    public constructor(sessionId: number) {
+    private constructor(sessionId: number) {
         this.sessionId = sessionId;
     }
 
-    public getId(): PayloadId<Detached> {
+    public type(): PayloadType<Detached> {
         return Detached.ID;
     }
 
-    public accept(listener: ServerNetworkManager): void {
+    public accept(listener: ServerRelayHandler): void {
         listener.onDetached(this);
     }
 }

@@ -1,12 +1,13 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {ExplosionBehavior} from "../../../world/explosion/ExplosionBehavior.ts";
 import {ExplosionVisual} from "../../../world/explosion/ExplosionVisual.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class ExplosionS2CPacket implements Payload {
-    public static readonly ID: PayloadId<ExplosionS2CPacket> = payloadId('explosion');
+    public static readonly ID: PayloadType<ExplosionS2CPacket> = payloadType('explosion');
     public static readonly CODEC: PacketCodec<ExplosionS2CPacket> = PacketCodecs.of<ExplosionS2CPacket>(
         (writer, value) => {
             writer.writeFloat(value.x);
@@ -40,11 +41,11 @@ export class ExplosionS2CPacket implements Payload {
         this.visual = visual ?? new ExplosionVisual();
     }
 
-    public getId(): PayloadId<ExplosionS2CPacket> {
+    public type(): PayloadType<ExplosionS2CPacket> {
         return ExplosionS2CPacket.ID;
     }
 
-    public accept(listener: ClientNetworkHandler): void {
+    public accept(listener: ClientPlayHandler): void {
         listener.onExplosion(this);
     }
 }

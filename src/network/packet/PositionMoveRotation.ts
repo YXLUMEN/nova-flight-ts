@@ -1,10 +1,11 @@
-import {type Payload, payloadId, type PayloadId} from "../Payload.ts";
+import type {Payload} from "../Payload.ts";
+import {payloadType, type PayloadType} from "../PayloadType.ts";
 import type {PacketCodec} from "../codec/PacketCodec.ts";
 import {PacketCodecs} from "../codec/PacketCodecs.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class PositionMoveRotation implements Payload {
-    public static readonly ID: PayloadId<PositionMoveRotation> = payloadId('position_move_rotation');
+    public static readonly ID: PayloadType<PositionMoveRotation> = payloadType('position_move_rotation');
     public static readonly CODEC: PacketCodec<PositionMoveRotation> = PacketCodecs.adapt3(
         PacketCodecs.VECTOR2D,
         val => val.position,
@@ -29,7 +30,7 @@ export class PositionMoveRotation implements Payload {
         return new PositionMoveRotation(position, delta, yaw);
     }
 
-    public getId(): PayloadId<any> {
+    public type(): PayloadType<any> {
         return PositionMoveRotation.ID;
     }
 

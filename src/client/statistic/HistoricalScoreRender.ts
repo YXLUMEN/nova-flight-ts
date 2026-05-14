@@ -1,6 +1,7 @@
 import {HistoricalScore, type ScoreRecord} from "../../statistics/HistoricalScore.ts";
 import type {StatisticItem} from "./StatisticItem.ts";
 import {randInt} from "../../utils/math/math.ts";
+import {toLocalTime} from "../../utils/time.ts";
 
 export class HistoricalScoreRender implements StatisticItem {
     private static readonly cheatPrompt = ['没关就是开了?', '我 {} 没有开挂', '纯绿玩', '小透不是挂'];
@@ -39,7 +40,7 @@ export class HistoricalScoreRender implements StatisticItem {
         this.appendSubitem(root, '玩家名称', record.playerName);
         this.appendSubitem(root, '存档名称', record.worldName);
         this.appendSubitem(root, '游戏版本', record.version);
-        this.appendSubitem(root, '记录时间', new Date(record.recordTime).toLocaleString());
+        this.appendSubitem(root, '记录时间', toLocalTime(record.recordTime));
         if (record.devMode) {
             const prompt = HistoricalScoreRender.cheatPrompt[randInt(0, HistoricalScoreRender.cheatPrompt.length - 1)]
                 .replace('{}', record.playerName);

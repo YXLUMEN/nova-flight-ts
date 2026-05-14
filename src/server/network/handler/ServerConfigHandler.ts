@@ -5,7 +5,7 @@ import {ServerReadyS2CPacket} from "../../../network/packet/s2c/ServerReadyS2CPa
 import {PlayerAttemptLoginC2SPacket} from "../../../network/packet/c2s/PlayerAttemptLoginC2SPacket.ts";
 import type {UUID} from "../../../type/types.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
-import {ConnectionState, type ConnectionStateType} from "../ConnectionState.ts";
+import {ConnectionState} from "../ConnectionState.ts";
 import type {NovaFlightServer} from "../../NovaFlightServer.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
 
@@ -81,7 +81,7 @@ export class ServerConfigHandler extends ServerCommonHandler {
         return this.profile;
     }
 
-    public getPhase(): ConnectionStateType {
+    public getPhase(): ConnectionState {
         return ConnectionState.CONFIGURATION;
     }
 }

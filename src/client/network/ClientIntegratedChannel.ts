@@ -1,6 +1,6 @@
 import type {Consumer, UUID} from "../../type/types.ts";
 import type {Payload} from "../../network/Payload.ts";
-import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
+import {CodecRegistry} from "../../network/CodecRegistry.ts";
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {ClientChannel} from "./ClientChannel.ts";
@@ -10,7 +10,7 @@ export class ClientIntegratedChannel implements ClientChannel {
     private readonly clientId: UUID;
     private readonly worker: Worker;
 
-    private readonly registry = PayloadTypeRegistry.playC2S();
+    private readonly registry = CodecRegistry.PLAY_C2S;
 
     private ctrl: AbortController | null = null;
     private handler: Consumer<Payload> = empty;
@@ -19,6 +19,14 @@ export class ClientIntegratedChannel implements ClientChannel {
         this.worker = worker;
         this.clientId = clientId;
         this.onMessage = this.onMessage.bind(this);
+    }
+
+    public getSessionId(): number {
+        return 2;
+    }
+
+    public isConnected(): boolean {
+        return this.ctrl !== null ? !this.ctrl.signal.aborted : false;
     }
 
     public async connect(): Promise<void> {
@@ -49,19 +57,14 @@ export class ClientIntegratedChannel implements ClientChannel {
         this.ctrl = null;
     }
 
-    public sniff(): Promise<boolean> {
-        return Promise.resolve(true);
-    }
-
-    public send<T extends Payload>(payload: T): void {
-        // noinspection DuplicatedCode
-        const type = this.registry.get(payload.getId().id);
-        if (!type) throw new Error(`Unknown payload type: ${payload.getId().id}`);
+    public send(payload: Payload): void {
+        const code = this.registry.get(payload.type());
+        if (!code) throw new Error(`Unknown payload type: ${payload.type().id}`);
 
         const size = payload.estimateSize?.() ?? 6;
         const writer = new BinaryWriter(size + 2);
-        writer.writeVarUint(type.index);
-        type.codec.encode(writer, payload);
+        writer.writeVarUint(code.index);
+        code.codec.encode(writer, payload);
 
         const buffer = writer.toUint8Array();
         this.worker.postMessage({
@@ -75,10 +78,10 @@ export class ClientIntegratedChannel implements ClientChannel {
             const reader = new BinaryReader(new Uint8Array(event.data.packet));
 
             const index = reader.readVarUint();
-            const type = PayloadTypeRegistry.getGlobalByIndex(index);
-            if (!type) return;
+            const codec = CodecRegistry.getGlobalByIndex(index);
+            if (!codec) return;
 
-            const payload = type.codec.decode(reader);
+            const payload = codec.codec.decode(reader);
             if (payload) this.handler(payload);
             return;
         }
@@ -86,6 +89,10 @@ export class ClientIntegratedChannel implements ClientChannel {
         if (event.data.type === 'disconnect') {
             this.disconnect();
         }
+    }
+
+    public sniff(): Promise<boolean> {
+        return Promise.resolve(true);
     }
 
     public setHandler(handler: Consumer<Payload>): void {
@@ -96,18 +103,6 @@ export class ClientIntegratedChannel implements ClientChannel {
         this.handler = empty;
     }
 
-    public getSessionId(): number {
-        return 2;
-    }
-
-    public setServerAddress(): void {
-    }
-
-    public getServerAddress(): string {
-        return '127.0.0.1';
-    }
-
-    public isOpen(): boolean {
-        return !!this.ctrl && !this.ctrl.signal.aborted;
+    public setRemote() {
     }
 }

@@ -8,6 +8,7 @@ let server: IntegratedServer | null = null;
 let pendingStop = false;
 
 self.addEventListener("message", handleEvent);
+self.postMessage({type: 'worker_ready'});
 
 async function handleEvent(event: MessageEvent) {
     const {type, payload} = event.data;
@@ -17,7 +18,7 @@ async function handleEvent(event: MessageEvent) {
             if (server) return;
             const startUp = payload as StartServer;
             server = IntegratedServer.startServer(new Uint8Array(startUp.key), startUp.hostUUID, startUp.saveName) as IntegratedServer;
-            server.networkChannel.setServerAddress(startUp.addr);
+            server.networkChannel.setRemote(startUp.addr);
             return server.runServer();
         }
         case 'stop_server': {

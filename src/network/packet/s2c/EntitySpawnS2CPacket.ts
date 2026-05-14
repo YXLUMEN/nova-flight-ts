@@ -1,4 +1,5 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {UUID} from "../../../type/types.ts";
 import {EntityType} from "../../../entity/EntityType.ts";
 import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
@@ -8,10 +9,10 @@ import {decodeVelocity, decodeYaw, encodeVelocity, encodeYaw, varUintSize} from 
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {Registries} from "../../../registry/Registries.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class EntitySpawnS2CPacket implements Payload {
-    public static readonly ID: PayloadId<EntitySpawnS2CPacket> = payloadId('spawn_entity');
+    public static readonly ID: PayloadType<EntitySpawnS2CPacket> = payloadType('spawn_entity');
     public static readonly CODEC: PacketCodec<EntitySpawnS2CPacket> = PacketCodecs.of<EntitySpawnS2CPacket>(this.write, this.read);
 
     public readonly entityId: number;
@@ -117,11 +118,11 @@ export class EntitySpawnS2CPacket implements Payload {
         writer.pushBytes(value.extraData);
     }
 
-    public getId(): PayloadId<EntitySpawnS2CPacket> {
+    public type(): PayloadType<EntitySpawnS2CPacket> {
         return EntitySpawnS2CPacket.ID;
     }
 
-    public accept(listener: ClientNetworkHandler): void {
+    public accept(listener: ClientPlayHandler): void {
         listener.onEntitySpawn(this);
     }
 

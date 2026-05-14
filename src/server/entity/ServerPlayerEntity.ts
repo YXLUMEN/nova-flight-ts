@@ -145,7 +145,7 @@ export class ServerPlayerEntity extends PlayerEntity {
         super.onDeath(damageSource);
 
         // TODO 不依赖索引
-        const packet = new TranslatableTextS2CPacket(`entity.player.death_${randInt(0, 2)}`, [this.getProfile().name]);
+        const packet = new TranslatableTextS2CPacket(`entity.player.death_${randInt(0, 6)}`, [this.getProfile().name]);
         this.networkHandler.broadcast(packet);
     }
 
@@ -237,6 +237,6 @@ export class ServerPlayerEntity extends PlayerEntity {
     }
 
     public override sendTranslatable(key: string, args?: string[]) {
-        this.networkHandler.send(new TranslatableTextS2CPacket(key, args ?? []));
+        this.networkHandler.send(new TranslatableTextS2CPacket(key, args));
     }
 }

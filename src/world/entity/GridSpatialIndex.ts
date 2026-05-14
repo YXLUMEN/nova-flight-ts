@@ -5,15 +5,18 @@ import type {Consumer, Predicate} from "../../type/types.ts";
 type Index = { col: number; row: number };
 
 export class GridSpatialIndex<T extends EntityLike> {
+    private readonly width: number;
+    private readonly height: number;
     private readonly cellSize: number;
     private readonly cols: number;
     private readonly rows: number;
     private readonly grid: Set<T>[][];
-    private readonly filter: Set<T> = new Set<T>();
 
     private readonly entityGridCells: Map<T, Index[]> = new Map<T, Index[]>();
 
     public constructor(width: number, height: number, cellSize: number = 80) {
+        this.width = width;
+        this.height = height;
         this.cellSize = cellSize;
         this.cols = Math.ceil(width / this.cellSize);
         this.rows = Math.ceil(height / this.cellSize);
@@ -30,6 +33,10 @@ export class GridSpatialIndex<T extends EntityLike> {
     }
 
     private getCoveredCells(box: AABB): Index[] {
+        if (box.maxX < 0 || box.minX > this.width ||
+            box.maxY < 0 || box.minY > this.height
+        ) return [];
+
         const startCol = this.toCoord(box.minX, this.cols - 1);
         const endCol = this.toCoord(box.maxX, this.cols - 1);
         const startRow = this.toCoord(box.minY, this.rows - 1);
@@ -82,12 +89,12 @@ export class GridSpatialIndex<T extends EntityLike> {
             return;
         }
 
-        this.filter.clear();
+        const filter = new Set();
         for (let r = startRow; r <= endRow; r++) {
             for (let c = startCol; c <= endCol; c++) {
                 for (const entity of this.grid[r][c]) {
-                    if (this.filter.has(entity) || !region.intersectsByBox(entity.getBoundingBox())) continue;
-                    this.filter.add(entity);
+                    if (filter.has(entity) || !region.intersectsByBox(entity.getBoundingBox())) continue;
+                    filter.add(entity);
                     yield entity;
                 }
             }

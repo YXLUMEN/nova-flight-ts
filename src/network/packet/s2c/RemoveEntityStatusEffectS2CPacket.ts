@@ -1,12 +1,13 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {RegistryEntry} from "../../../registry/tag/RegistryEntry.ts";
 import {StatusEffect} from "../../../entity/effect/StatusEffect.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class RemoveEntityStatusEffectS2CPacket implements Payload {
-    public static readonly ID: PayloadId<RemoveEntityStatusEffectS2CPacket> = payloadId('entity_remove_effect');
+    public static readonly ID: PayloadType<RemoveEntityStatusEffectS2CPacket> = payloadType('entity_remove_effect');
     public static readonly CODEC: PacketCodec<RemoveEntityStatusEffectS2CPacket> = PacketCodecs.adapt2(
         PacketCodecs.VAR_UINT,
         val => val.entityId,
@@ -27,11 +28,11 @@ export class RemoveEntityStatusEffectS2CPacket implements Payload {
         return new RemoveEntityStatusEffectS2CPacket(entityId, effectId);
     }
 
-    public getId(): PayloadId<any> {
+    public type(): PayloadType<any> {
         return RemoveEntityStatusEffectS2CPacket.ID;
     }
 
-    public accept(listener: ClientNetworkHandler): void {
+    public accept(listener: ClientPlayHandler): void {
         listener.onRemoveEntityEffect(this);
     }
 }

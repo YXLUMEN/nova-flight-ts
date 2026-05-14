@@ -1,12 +1,13 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {ParticleEffectType} from "../../../effect/ParticleEffectType.ts";
 import type {Vec2} from "../../../utils/math/Vec2.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class PreparedParticleS2CPacket implements Payload {
-    public static readonly ID: PayloadId<PreparedParticleS2CPacket> = payloadId('prepared_particle');
+    public static readonly ID: PayloadType<PreparedParticleS2CPacket> = payloadType('prepared_particle');
     public static readonly CODEC: PacketCodec<PreparedParticleS2CPacket> = PacketCodecs.of(
         (writer, value) => {
             ParticleEffectType.PACKET_CODEC.encode(writer, value.particle);
@@ -36,11 +37,11 @@ export class PreparedParticleS2CPacket implements Payload {
         this.baseAngle = baseAngle;
     }
 
-    public getId(): PayloadId<PreparedParticleS2CPacket> {
+    public type(): PayloadType<PreparedParticleS2CPacket> {
         return PreparedParticleS2CPacket.ID;
     }
 
-    public accept(listener: ClientNetworkHandler): void {
+    public accept(listener: ClientPlayHandler): void {
         listener.onPreparedParticle(this);
     }
 

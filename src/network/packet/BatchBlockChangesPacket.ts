@@ -1,15 +1,16 @@
-import {type Payload, payloadId, type PayloadId} from "../Payload.ts";
+import type {Payload} from "../Payload.ts";
+import {payloadType, type PayloadType} from "../PayloadType.ts";
 import type {PacketCodec} from "../codec/PacketCodec.ts";
 import {PacketCodecs} from "../codec/PacketCodecs.ts";
 import type {BlockChange} from "../../world/map/BlockChange.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
-import type {ClientNetworkHandler} from "../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../client/network/handler/ClientPlayHandler.ts";
 import type {ServerPlayHandler} from "../../server/network/handler/ServerPlayHandler.ts";
 import {varUintSize} from "../../utils/NetUtil.ts";
 
 export class BatchBlockChangesPacket implements Payload {
-    public static readonly ID: PayloadId<BatchBlockChangesPacket> = payloadId('batch_block_changes');
+    public static readonly ID: PayloadType<BatchBlockChangesPacket> = payloadType('batch_block_changes');
     public static readonly CODEC: PacketCodec<BatchBlockChangesPacket> = PacketCodecs.of(this.write, this.read);
 
     private readonly types: Uint8Array<ArrayBuffer>;
@@ -74,8 +75,8 @@ export class BatchBlockChangesPacket implements Payload {
 
         const types = reader.readSlice(len);
 
-        const current = reader.getOffset();
-        const padding = (4 - (current % 4)) % 4;
+        const absCursor = types.byteOffset + types.length;
+        const padding = (4 - (absCursor % 4)) % 4;
         if (padding > 0) reader.skip(padding);
 
         const xsBytes = reader.readSlice(4 * len);
@@ -86,11 +87,11 @@ export class BatchBlockChangesPacket implements Payload {
         return new BatchBlockChangesPacket(types, xs, ys);
     }
 
-    public getId(): PayloadId<BatchBlockChangesPacket> {
+    public type(): PayloadType<BatchBlockChangesPacket> {
         return BatchBlockChangesPacket.ID;
     }
 
-    public accept(listener: ClientNetworkHandler | ServerPlayHandler): void {
+    public accept(listener: ClientPlayHandler | ServerPlayHandler): void {
         listener.onBatchChanges(this);
     }
 
@@ -99,7 +100,7 @@ export class BatchBlockChangesPacket implements Payload {
         const varUintLen = varUintSize(len);
         const prePadding = varUintLen + len;
         const padding = (4 - (prePadding % 4)) % 4;
-        return prePadding + padding + (len << 3);
+        return prePadding + padding + (len << 3) + 3; // v % 4 !== 0 的情况下最多大3b
     }
 
     public foreach(consumer: (type: number, x: number, y: number) => void) {

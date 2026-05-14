@@ -11,7 +11,7 @@ import {SoundEvents} from "../../../sound/SoundEvents.ts";
 
 export class FocusedArcEmitter extends BaseWeapon {
     private readonly arcWidth = 5;
-    private readonly arcLength = World.WORLD_H * 2;
+    private readonly arcLength = World.MAP_HEIGHT * 2;
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
         const start = attacker.positionRef;

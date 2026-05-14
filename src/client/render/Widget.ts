@@ -46,7 +46,7 @@ export abstract class Widget {
     public getId() {
         let id = this.element.dataset.id;
         if (id === undefined) {
-            id = `${shortUUID()}-${Date.now()}`;
+            id = `${shortUUID()}-${Temporal.Now.instant().epochMilliseconds}`;
             this.element.dataset.id = id;
         }
 

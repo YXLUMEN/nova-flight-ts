@@ -1,4 +1,5 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {RegistryEntry} from "../../../registry/tag/RegistryEntry.ts";
@@ -6,10 +7,10 @@ import {StatusEffect} from "../../../entity/effect/StatusEffect.ts";
 import type {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
 import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class EntityStatusEffectS2CPacket implements Payload {
-    public static readonly ID: PayloadId<EntityStatusEffectS2CPacket> = payloadId('entity_status_effect');
+    public static readonly ID: PayloadType<EntityStatusEffectS2CPacket> = payloadType('entity_status_effect');
     public static readonly CODEC: PacketCodec<EntityStatusEffectS2CPacket> = PacketCodecs.of(this.write, this.read);
 
     public readonly entityId: number;
@@ -52,11 +53,11 @@ export class EntityStatusEffectS2CPacket implements Payload {
         );
     }
 
-    public getId(): PayloadId<EntityStatusEffectS2CPacket> {
+    public type(): PayloadType<EntityStatusEffectS2CPacket> {
         return EntityStatusEffectS2CPacket.ID;
     }
 
-    public accept(listener: ClientNetworkHandler): void {
+    public accept(listener: ClientPlayHandler): void {
         listener.onEntityEffect(this);
     }
 }

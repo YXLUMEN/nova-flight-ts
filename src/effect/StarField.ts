@@ -65,8 +65,8 @@ export class StarField {
         for (let li = 0; li < this.layers.length; li++) {
             const L = this.layers[li];
             for (let i = this.start[li]; i < this.end[li]; i++) {
-                this.currX[i] = rand(0, World.WORLD_W);
-                this.currY[i] = rand(0, World.WORLD_H);
+                this.currX[i] = rand(0, World.MAP_WIDTH);
+                this.currY[i] = rand(0, World.MAP_HEIGHT);
                 this.radius[i] = rand(L.radiusMin, L.radiusMax);
                 this.speed[i] = rand(L.speedMin, L.speedMax);
             }

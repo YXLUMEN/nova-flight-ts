@@ -1,12 +1,13 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import {NbtCompound} from "../../../nbt/element/NbtCompound.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class EntityNbtS2CPacket implements Payload {
-    public static readonly ID: PayloadId<EntityNbtS2CPacket> = payloadId('entity_nbt');
+    public static readonly ID: PayloadType<EntityNbtS2CPacket> = payloadType('entity_nbt');
     public static readonly CODEC: PacketCodec<EntityNbtS2CPacket> = PacketCodecs.adapt2(
         PacketCodecs.VAR_UINT,
         val => val.entityId,
@@ -34,15 +35,15 @@ export class EntityNbtS2CPacket implements Payload {
         );
     }
 
-    public getId(): PayloadId<any> {
+    public type(): PayloadType<any> {
         return EntityNbtS2CPacket.ID;
     }
 
-    public accept(listener: ClientNetworkHandler): void {
+    public accept(listener: ClientPlayHandler): void {
         listener.onEntityNbt(this);
     }
 
     public estimateSize(): number {
-        return 128;
+        return 256;
     }
 }

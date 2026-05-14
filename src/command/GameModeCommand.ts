@@ -4,7 +4,6 @@ import {IllegalArgumentError} from "../type/errors.ts";
 import {BoolArgumentType} from "./argument/BoolArgumentType.ts";
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
-import type {ServerWorld} from "../server/ServerWorld.ts";
 import {PlayerProfileSyncS2CPacket} from "../network/packet/s2c/PlayerProfileSyncS2CPacket.ts";
 
 export class GameModeCommand {
@@ -38,10 +37,7 @@ export class GameModeCommand {
         }
 
         entity.setDevMode(bool ?? !entity.isDevMode());
-        (source.getWorld() as ServerWorld)?.getNetworkChannel().sendTo(
-            new PlayerProfileSyncS2CPacket(entity.isDevMode()),
-            entity.getProfile()
-        );
+        entity.networkHandler.send(new PlayerProfileSyncS2CPacket(entity.isDevMode()));
 
         source.outPut.sendMessage(`Set dev mode \x1b[32m${entity.isDevMode()}`);
     }

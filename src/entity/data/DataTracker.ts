@@ -84,7 +84,7 @@ export class DataTracker {
 
     // public copyToFrom<T>(to: DataEntry<T>, from: DataTrackerSerializedEntry<any>) {}
 
-    public writeUpdatedEntries(entries: DataTrackerSerializedEntry<any>[]): void {
+    public assignValues(entries: DataTrackerSerializedEntry<any>[]): void {
         for (const serializedEntry of entries) {
             const entry = this.entries[serializedEntry.id];
             entry.value = serializedEntry.value;
@@ -138,8 +138,7 @@ export class DataTracker {
         }
 
         public static of<T>(data: TrackedData<T>, value: T): DataTrackerSerializedEntry<T> {
-            const handler = data.dataType;
-            return new SerializedEntry(data.id, handler, value);
+            return new SerializedEntry(data.id, data.dataType, value);
         }
 
         public write(writer: BinaryWriter): void {
@@ -163,5 +162,7 @@ export class DataTracker {
         }
     }
 }
+
+export type DataTrackerBuilder = InstanceType<typeof DataTracker.Builder>;
 
 export type DataTrackerSerializedEntry<T> = InstanceType<typeof DataTracker.SerializedEntry<T>>;

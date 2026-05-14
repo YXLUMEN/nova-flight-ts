@@ -1,3 +1,5 @@
+import type {UUID} from "./types.ts";
+
 export type MetaStatus = 'available' | 'pending' | 'broken' | 'outdated';
 
 export interface SaveMeta {
@@ -16,7 +18,7 @@ export interface Save {
 
 export interface PlayerData {
     readonly save_name: string,
-    readonly uuid: string,
+    readonly uuid: UUID,
     data: Uint8Array<ArrayBuffer>,
     format_version: number;
     game_version: number;

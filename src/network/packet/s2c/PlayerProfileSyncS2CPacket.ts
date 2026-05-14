@@ -1,10 +1,11 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class PlayerProfileSyncS2CPacket implements Payload {
-    public static readonly ID: PayloadId<PlayerProfileSyncS2CPacket> = payloadId('profile_sync');
+    public static readonly ID: PayloadType<PlayerProfileSyncS2CPacket> = payloadType('profile_sync');
     public static readonly CODEC: PacketCodec<PlayerProfileSyncS2CPacket> = PacketCodecs.adapt(
         PacketCodecs.BOOL,
         val => val.devMode,
@@ -17,11 +18,11 @@ export class PlayerProfileSyncS2CPacket implements Payload {
         this.devMode = devMode;
     }
 
-    public getId(): PayloadId<PlayerProfileSyncS2CPacket> {
+    public type(): PayloadType<PlayerProfileSyncS2CPacket> {
         return PlayerProfileSyncS2CPacket.ID;
     }
 
-    public accept(listener: ClientNetworkHandler): void {
+    public accept(listener: ClientPlayHandler): void {
         listener.onSyncProfile(this);
     }
 }

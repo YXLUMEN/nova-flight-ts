@@ -17,7 +17,7 @@ export function spawnTopRandomCtor<T extends MobEntity>(
     init?: BiConsumer<T, SpawnContext>
 ): MobFactory {
     return (ctx) => {
-        const x = randInt(24, World.WORLD_W - 24);
+        const x = randInt(24, World.MAP_WIDTH - 24);
         const mob = type.create(ctx.world, ...args);
         mob.setPosition(x, -30);
         init?.(mob, ctx);
@@ -80,7 +80,7 @@ export function spawnTopRandomCtorS<T extends MobEntity>(
 
     return (ctx) => {
         const minX = margin;
-        const maxX = World.WORLD_W - margin;
+        const maxX = World.MAP_WIDTH - margin;
         const x = sampleX(minX, maxX);
         const mob = type.create(ctx.world, ...args);
         mob.setPosition(x, -30);
@@ -98,7 +98,7 @@ export function spawnLineCtor<T extends MobEntity>(
 ): MobFactory {
     const {gap = 48, startY = -30} = opts;
     return (ctx) => {
-        const startX = randInt(24, World.WORLD_W - 24 - gap * (count - 1));
+        const startX = randInt(24, World.MAP_WIDTH - 24 - gap * (count - 1));
         const arr: MobEntity[] = [];
         for (let i = 0; i < count; i++) {
             const mob = type.create(ctx.world, ...args);
@@ -113,7 +113,7 @@ export function spawnLineCtor<T extends MobEntity>(
 export function spawnFormation(configs: SpawnConfig<MobEntity>[]): MobFactory {
     return (ctx) => {
         const arr: MobEntity[] = [];
-        const x = randInt(24, World.WORLD_W - 24);
+        const x = randInt(24, World.MAP_WIDTH - 24);
         for (let i = 0; i < configs.length; i += 1) {
             const config = configs[i];
             const mob = config.type.create(ctx.world, ...config.args) as MobEntity;
@@ -136,9 +136,9 @@ export function spawnAvoidPlayerCtor<T extends MobEntity>(
     const {halfWidth, halfHeight} = type.getDimensions();
 
     const blockMinX = Math.ceil(margin / 8);
-    const blockMaxX = Math.floor((World.WORLD_W - margin) / 8) - 1;
+    const blockMaxX = Math.floor((World.MAP_WIDTH - margin) / 8) - 1;
     const blockMinY = Math.ceil(margin / 8);
-    const blockMaxY = Math.floor((World.WORLD_H - margin) / 8) - 1;
+    const blockMaxY = Math.floor((World.MAP_HEIGHT - margin) / 8) - 1;
 
     return (ctx) => {
         const blockMap = ctx.world.getMap();

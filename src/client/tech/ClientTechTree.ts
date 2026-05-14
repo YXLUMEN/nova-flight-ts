@@ -542,7 +542,7 @@ export class ClientTechTree implements TechTree {
         this.updateAllEdgeClasses();
         this.renderNodes();
 
-        this.player.getNetworkChannel().send(new PlayerResetTechC2SPacket(entry));
+        this.player.sendPacket(new PlayerResetTechC2SPacket(entry));
         return true;
     }
 
@@ -570,7 +570,7 @@ export class ClientTechTree implements TechTree {
         this.updateAllEdgeClasses();
         this.renderNodes();
 
-        player.getNetworkChannel().send(PlayerResetAllTechC2SPacket.INSTANCE);
+        player.sendPacket(PlayerResetAllTechC2SPacket.INSTANCE);
     }
 
     private resetPlayer() {

@@ -99,3 +99,5 @@ export class AttributeSupplier {
         return instance;
     }
 }
+
+export type AttributeSupplierBuilder = InstanceType<typeof AttributeSupplier.Builder>;

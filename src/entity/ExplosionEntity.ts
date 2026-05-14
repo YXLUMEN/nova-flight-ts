@@ -1,7 +1,7 @@
 import {Entity} from "./Entity.ts";
 import type {EntityType} from "./EntityType.ts";
 import {World} from "../world/World.ts";
-import {BehaviourEnum, ExplosionBehavior} from "../world/explosion/ExplosionBehavior.ts";
+import {ExplosionBehaviour, ExplosionBehavior} from "../world/explosion/ExplosionBehavior.ts";
 import {ExplosionVisual} from "../world/explosion/ExplosionVisual.ts";
 import {FilterBehaviour} from "../world/explosion/FilterBehaviour.ts";
 
@@ -10,16 +10,26 @@ export class ExplosionEntity extends Entity {
 
     public readonly invulnerable = true;
     public readonly countdown: number;
+    public readonly power: number;
     public readonly behavior: ExplosionBehavior;
     public readonly visual: ExplosionVisual;
 
-    public constructor(type: EntityType<ExplosionEntity>, world: World, countdown: number = 60, behavior?: ExplosionBehavior, visual?: ExplosionVisual) {
+    public constructor(
+        type: EntityType<ExplosionEntity>,
+        world: World,
+        countdown: number = 60,
+        behavior?: ExplosionBehavior,
+        visual?: ExplosionVisual,
+        power?: number
+    ) {
         super(type, world);
 
         this.countdown = countdown;
-        this.behavior = behavior ?? new FilterBehaviour(BehaviourEnum.ONLY_DAMAGE, undefined, false, false)
-            .withFiler(entity => entity.isPlayer());
+        this.behavior = behavior ??
+            new FilterBehaviour(ExplosionBehaviour.ONLY_DAMAGE, undefined, false, false)
+                .withFiler(entity => entity.isPlayer());
         this.visual = visual ?? new ExplosionVisual(128);
+        this.power = power ?? 16;
     }
 
     public override tick() {
@@ -32,7 +42,7 @@ export class ExplosionEntity extends Entity {
         if (world.isClient) return;
 
         const source = world.getDamageSources().explosion(this, this);
-        world.createExplosion(this, source, this.getX(), this.getY(), 16, this.behavior, this.visual);
+        world.createExplosion(this, source, this.getX(), this.getY(), this.power, this.behavior, this.visual);
     }
 
     public override canHitByProjectile(): boolean {

@@ -26,6 +26,7 @@ import {BaseBossEntity} from "./mob/BaseBossEntity.ts";
 import {MobBulletEntity} from "./projectile/MobBulletEntity.ts";
 import {MagneticTorpedoEntity} from "./projectile/MagneticTorpedoEntity.ts";
 import {DevourerBoss} from "./mob/DevourerBoss.ts";
+import {TrailblazerEntity} from "./TrailblazerEntity.ts";
 
 export class EntityTypes {
     public static readonly BASE_ENEMY = EntityType.register("base_enemy",
@@ -146,6 +147,10 @@ export class EntityTypes {
     public static readonly DEVOURER_BOSS_ENTITY = EntityType.register('devourer_boss',
         EntityType.Builder.create(DevourerBoss)
             .setDimensions(48)
+    );
+    public static readonly TRAILBLAZER_ENTITY = EntityType.register('trailblazer_entity',
+        EntityType.Builder.create(TrailblazerEntity)
+            .setDimensions(24)
     );
 
     public static init() {

@@ -18,12 +18,22 @@ export class CombineServerChannel implements ServerChannel {
         return this.network.getSessionId();
     }
 
-    public setServerAddress(address: string): void {
-        this.network.setServerAddress(address);
-    }
-
     public action(buf: Uint8Array<ArrayBuffer>): void {
         this.network.action(buf);
+    }
+
+    public send<T extends Payload>(payload: T): void {
+        this.network.send(payload);
+        this.integrated.send(payload);
+    }
+
+    public enqueue(payload: Payload) {
+        this.network.enqueue(payload);
+        this.integrated.enqueue(payload);
+    }
+
+    public flush() {
+        this.network.flush();
     }
 
     public sendTo<T extends Payload>(payload: T, target: GameProfile): void {
@@ -65,12 +75,11 @@ export class CombineServerChannel implements ServerChannel {
         return this.integrated.sniff();
     }
 
-    public send<T extends Payload>(payload: T): void {
-        this.network.send(payload);
-        this.integrated.send(payload);
+    public isConnected(): boolean {
+        return this.network.isConnected() && this.integrated.isConnected();
     }
 
-    public isOpen(): boolean {
-        return this.network.isOpen() && this.integrated.isOpen();
+    public setRemote(addr: string) {
+        this.network.setRemote(addr);
     }
 }

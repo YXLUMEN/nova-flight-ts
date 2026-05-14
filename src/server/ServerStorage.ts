@@ -1,6 +1,6 @@
 import {IndexedDBHelper} from "../database/IndexedDBHelper.ts";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
-import type {Consumer, UUID} from "../type/types.ts";
+import type {BiConsumer, Consumer, UUID} from "../type/types.ts";
 import type {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
 import {Result} from "../utils/result/Result.ts";
 import type {MetaStatus, PlayerData, Save, SaveMeta} from "../type/Saves.ts";
@@ -8,6 +8,7 @@ import {NbtSerialization} from "../nbt/NbtSerialization.ts";
 import {NbtUnserialization} from "../nbt/NbtUnserialization.ts";
 import {NoResultsError, StatusError, VersionError} from "../type/errors.ts";
 import {DEFAULT_CONFIG} from "../configs/GlobalConfig.ts";
+import {compress, decompress} from "@bokuweb/zstd-wasm";
 
 export class ServerStorage {
     public static readonly db = new IndexedDBHelper('nova-flight-server', 6, [
@@ -40,7 +41,7 @@ export class ServerStorage {
             display_name: saveName,
             format_version: NbtCompound.VERSION,
             game_version: DEFAULT_CONFIG.gameVersion,
-            timestamp: Date.now(),
+            timestamp: Temporal.Now.instant().epochMilliseconds,
             status: 'pending',
         } satisfies SaveMeta);
         request.onsuccess = () => resolve(Result.ok(undefined));
@@ -60,7 +61,7 @@ export class ServerStorage {
                 display_name: saveName,
                 format_version: NbtCompound.VERSION,
                 game_version: DEFAULT_CONFIG.gameVersion,
-                timestamp: Date.now(),
+                timestamp: Temporal.Now.instant().epochMilliseconds,
                 status: status,
             } satisfies SaveMeta);
             request.onsuccess = () => resolve();
@@ -75,9 +76,12 @@ export class ServerStorage {
 
         const saveTask = new Promise<void | Error>((resolve) => {
             const store = tx.objectStore('saves');
+            const raw = NbtSerialization.toCompactBinary(compound);
+            const data = compress(raw, 7) as Uint8Array<ArrayBuffer>;
+
             const request = store.put({
                 save_name: saveName,
-                data: NbtSerialization.toCompactBinary(compound),
+                data
             } satisfies Save);
             request.onsuccess = () => resolve();
             request.onerror = () => resolve(this.mapErr(request.error));
@@ -121,10 +125,14 @@ export class ServerStorage {
 
         const {promise, resolve} = Promise.withResolvers<Result<void, Error>>();
         const store = tx.objectStore('player_data');
+
+        const raw = NbtSerialization.toCompactBinary(compound);
+        const data = compress(raw, 7) as Uint8Array<ArrayBuffer>;
+
         const request = store.put({
             save_name: saveName,
             uuid,
-            data: NbtSerialization.toCompactBinary(compound),
+            data,
             format_version: NbtCompound.VERSION,
             game_version: DEFAULT_CONFIG.gameVersion,
         } satisfies PlayerData);
@@ -175,7 +183,8 @@ export class ServerStorage {
         }
 
         try {
-            const compound = NbtUnserialization.fromCompactBinary(save.data);
+            const data = decompress(save.data) as Uint8Array<ArrayBuffer>;
+            const compound = NbtUnserialization.fromCompactBinary(data);
             return Result.ok(compound);
         } catch (err) {
             return Result.err(this.mapErr(err));
@@ -214,8 +223,10 @@ export class ServerStorage {
                 resolve();
                 return;
             }
+            const playerData = cursor.value as PlayerData;
+            playerData.data = decompress(playerData.data) as Uint8Array<ArrayBuffer>;
 
-            consumer(cursor.value);
+            consumer(playerData);
             cursor.continue();
         };
         request.onerror = () => resolve(this.mapErr(request.error));
@@ -225,6 +236,16 @@ export class ServerStorage {
             return Result.err(error);
         }
         return Result.ok(undefined);
+    }
+
+    public static loadPlayerNbtInWorld(saveName: string, consumer: BiConsumer<UUID, NbtCompound>): Promise<Result<void, Error>> {
+        return this.loadPlayerInWorld(saveName, (player) => {
+            const nbt = this.playerNbt(player);
+            const ok = nbt.ok();
+            if (ok.isPresent()) {
+                consumer(player.uuid, ok.get());
+            }
+        });
     }
 
     public static async loadPlayer(player: ServerPlayerEntity): Promise<Result<NbtCompound, Error>> {
@@ -237,18 +258,21 @@ export class ServerStorage {
         if (result.isErr()) {
             return Result.err(result.unwrapErr());
         }
+        return this.playerNbt(result.unwrap())
+    }
 
-        const playerData = result.ok().get();
-        if (!playerData.data || playerData.data.length === 0) {
+    private static playerNbt(player: PlayerData): Result<NbtCompound, Error> {
+        if (!player.data || player.data.length === 0) {
             return Result.err(new NoResultsError());
         }
 
-        if (playerData.format_version !== NbtCompound.VERSION) {
-            return Result.err(new VersionError(`Target version is ${playerData.format_version}, but require ${NbtCompound.VERSION}.`));
+        if (player.format_version !== NbtCompound.VERSION) {
+            return Result.err(new VersionError(`Target version is ${player.format_version}, but require ${NbtCompound.VERSION}.`));
         }
 
         try {
-            const compound = NbtUnserialization.fromCompactBinary(playerData.data);
+            const data = decompress(player.data) as Uint8Array<ArrayBuffer>;
+            const compound = NbtUnserialization.fromCompactBinary(data);
             return Result.ok(compound);
         } catch (err) {
             return Result.err(this.mapErr(err));

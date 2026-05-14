@@ -44,9 +44,9 @@ export class PlayerManager {
             player.readNBT(playerData);
         }
 
-        world.addPlayer(player);
         handler.send(new JoinGameS2CPacket(player.getId(), this.server.worldName));
         connection.broadcast(new PlayerJoinS2CPacket(profile.name, profile.clientId));
+        world.addPlayer(player);
 
         console.log(`[Server] Player ${profile.clientId} login`);
     }

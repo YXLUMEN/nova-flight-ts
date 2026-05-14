@@ -1,11 +1,12 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {UUID} from "../../../type/types.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class PlayerJoinS2CPacket implements Payload {
-    public static readonly ID: PayloadId<PlayerJoinS2CPacket> = payloadId('player_join');
+    public static readonly ID: PayloadType<PlayerJoinS2CPacket> = payloadType('player_join');
     public static readonly CODEC: PacketCodec<PlayerJoinS2CPacket> = PacketCodecs.adapt2(
         PacketCodecs.STRING,
         val => val.playerName,
@@ -26,11 +27,11 @@ export class PlayerJoinS2CPacket implements Payload {
         return new PlayerJoinS2CPacket(playerName, uuid);
     }
 
-    public getId(): PayloadId<PlayerJoinS2CPacket> {
+    public type(): PayloadType<PlayerJoinS2CPacket> {
         return PlayerJoinS2CPacket.ID;
     }
 
-    public accept(listener: ClientNetworkHandler): void {
+    public accept(listener: ClientPlayHandler): void {
         listener.onPlayerJoin(this);
     }
 }

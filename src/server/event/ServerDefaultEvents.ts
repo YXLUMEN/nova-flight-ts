@@ -20,7 +20,7 @@ import type {Explosion} from "../../world/explosion/Explosion.ts";
 import {DamageTypes} from "../../entity/damage/DamageTypes.ts";
 import {BaseBossEntity} from "../../entity/mob/BaseBossEntity.ts";
 import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
-import {EffectEnum} from "../../world/explosion/ExplosionBehavior.ts";
+import {ExplosionEffect} from "../../world/explosion/ExplosionBehavior.ts";
 import {DevourerBoss} from "../../entity/mob/DevourerBoss.ts";
 
 export class ServerDefaultEvents {
@@ -92,7 +92,7 @@ export class ServerDefaultEvents {
                 const boss = Math.random() > 0.5 ?
                     new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64) :
                     new DevourerBoss(EntityTypes.DEVOURER_BOSS_ENTITY, world, 96);
-                boss.setPosition(World.WORLD_W / 2, 64);
+                boss.setPosition(World.MAP_WIDTH / 2, 64);
 
                 const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
                 mark.setPositionByVec(boss.positionRef);
@@ -101,7 +101,7 @@ export class ServerDefaultEvents {
 
             if (world.getDifficulty() > 0) {
                 world.setDifficulty(world.getDifficulty() + 1);
-                world.getNetworkChannel().send(new DifficultChangeS2CPacket(world.getDifficulty()));
+                world.sendPacket(new DifficultChangeS2CPacket(world.getDifficulty()));
             }
 
             if (world.stage.getCurrentName() === 'P6') {
@@ -122,7 +122,7 @@ export class ServerDefaultEvents {
 
                 world.schedule(10, () => {
                     const boss = new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64);
-                    boss.setPosition(World.WORLD_W / 2, 64);
+                    boss.setPosition(World.MAP_WIDTH / 2, 64);
 
                     const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
                     mark.setPositionByVec(boss.positionRef);
@@ -136,8 +136,8 @@ export class ServerDefaultEvents {
         events.on(EVENTS.EXPLOSION, ({explosion}) => {
             const exp = explosion as Explosion;
             const effect = exp.getBehaviour().effect;
-            exp.getBehaviour().effect = EffectEnum.TRIGGERED;
-            if (effect !== EffectEnum.TRIGGERED) {
+            exp.getBehaviour().effect = ExplosionEffect.TRIGGERED;
+            if (effect !== ExplosionEffect.TRIGGERED) {
                 this.serialWarhead(world, explosion);
             }
         });

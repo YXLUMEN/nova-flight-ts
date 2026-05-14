@@ -1,5 +1,5 @@
 import {ServerStorage} from "../server/ServerStorage.ts";
-import type {SaveMeta} from "../type/Saves.ts";
+import type {PlayerData, SaveMeta} from "../type/Saves.ts";
 import {error, warn} from "@tauri-apps/plugin-log";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {resolve, resolveResource} from "@tauri-apps/api/path";
@@ -10,8 +10,8 @@ import {confirm, message} from "@tauri-apps/plugin-dialog";
 import {invoke} from "@tauri-apps/api/core";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
-import {BinaryWriter} from "../serialization/BinaryWriter.ts";
-import type {Consumer} from "../type/types.ts";
+import type {Consumer, UUID} from "../type/types.ts";
+import {toLocalTime} from "../utils/time.ts";
 
 export class ClientSavesManager {
     private static readonly RESERVED_NAMES = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'];
@@ -351,21 +351,15 @@ export class ClientSavesManager {
             const playerDir = await resolve(saveDir, `players`);
             await mkdir(playerDir, {recursive: true});
 
-            // 添加头部
-            const writer = new BinaryWriter();
-            writer.writeInt32(NbtCompound.MAGIC);
-            writer.writeInt16(NbtCompound.VERSION);
-            const header = writer.toUint8Array();
-
-            await ServerStorage.loadPlayerInWorld(saveName, async (data) => {
-                try {
-                    const path = await resolve(playerDir, `${data.uuid}.dat`);
-                    await writeFile(path, header);
-                    return await writeFile(path, data.data, {append: true});
-                } catch (err) {
-                    return console.error(err);
-                }
-            });
+            const tasks: Promise<void>[] = [];
+            const feature = (uuid: UUID, nbt: NbtCompound) => {
+                const task = resolve(playerDir, `${uuid}.dat`)
+                    .then(path => writeFile(path, NbtSerialization.toRootCompactBinary(nbt)))
+                    .catch(error);
+                tasks.push(task);
+            };
+            await ServerStorage.loadPlayerNbtInWorld(saveName, feature);
+            await Promise.all(tasks);
 
             await message('已导出至 "安装目录/saves"');
         } catch (err) {
@@ -392,15 +386,18 @@ export class ClientSavesManager {
             const playerDir = await resolve(saveDir, `players`);
             await mkdir(playerDir, {recursive: true});
 
-            await ServerStorage.loadPlayerInWorld(saveName, (data) => {
-                resolve(playerDir, `${data.uuid}.snbt`)
+            const tasks: Promise<void>[] = [];
+            const feature = (player: PlayerData) => {
+                const task = resolve(playerDir, `${player.uuid}.snbt`)
                     .then(path => {
-                        const nbt = NbtUnserialization.fromCompactBinary(data.data)
-                        writeTextFile(path, NbtSerialization.toSNbt(nbt, true))
+                        const nbt = NbtUnserialization.fromCompactBinary(player.data);
+                        return writeTextFile(path, NbtSerialization.toSNbt(nbt, true));
                     })
                     .catch(err => console.error(err));
-                return true;
-            });
+                tasks.push(task);
+            };
+            await ServerStorage.loadPlayerInWorld(saveName, feature);
+            await Promise.all(tasks);
 
             await message('已导出至 "安装目录/saves"');
         } catch (err) {
@@ -590,7 +587,7 @@ export class ClientSavesManager {
 
         const timestamp = document.createElement('div');
         timestamp.className = 'time';
-        timestamp.textContent = new Date(save.timestamp).toLocaleString();
+        timestamp.textContent = toLocalTime(save.timestamp);
         right.append(status, timestamp);
 
         item.append(displayName, saveName, right);

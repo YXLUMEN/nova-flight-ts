@@ -6,12 +6,12 @@ import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {StatusEffectInstance} from "./effect/StatusEffectInstance.ts";
 import type {StatusEffect} from "./effect/StatusEffect.ts";
 import type {EntityType} from "./EntityType.ts";
-import {DataTracker} from "./data/DataTracker.ts";
+import {DataTracker, type DataTrackerBuilder} from "./data/DataTracker.ts";
 import {AttributeContainer} from "./attribute/AttributeContainer.ts";
 import type {EntityAttribute} from "./attribute/EntityAttribute.ts";
 import {EntityAttributes} from "./attribute/EntityAttributes.ts";
 import type {AttributeInstance} from "./attribute/AttributeInstance.ts";
-import {AttributeSupplier} from "./attribute/AttributeSupplier.ts";
+import {AttributeSupplier, type AttributeSupplierBuilder} from "./attribute/AttributeSupplier.ts";
 import {type NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {TrackedDataHandlerRegistry} from "./data/TrackedDataHandlerRegistry.ts";
 import type {TrackedData} from "./data/TrackedData.ts";
@@ -43,14 +43,14 @@ export abstract class LivingEntity extends Entity {
         this.positionIncrements = 0;
     }
 
-    public createLivingAttributes(): InstanceType<typeof AttributeSupplier.Builder> {
+    public createLivingAttributes(): AttributeSupplierBuilder {
         return AttributeSupplier.builder()
             .add(EntityAttributes.GENERIC_MAX_HEALTH)
             .add(EntityAttributes.GENERIC_MOVEMENT_SPEED)
             .add(EntityAttributes.GENERIC_MAX_SHIELD);
     }
 
-    protected override defineSyncedData(builder: InstanceType<typeof DataTracker.Builder>) {
+    protected override defineSyncedData(builder: DataTrackerBuilder): void {
         builder.define(LivingEntity.HEALTH, 1);
     }
 
@@ -99,6 +99,7 @@ export abstract class LivingEntity extends Entity {
     }
 
     protected tickCramming(): void {
+        if (this.isClient()) return;
         const entities = this.getWorld()
             .searchOtherEntities(this, this.getBoundingBox(), entity => entity.isPushAble());
         for (const entity of entities) {
@@ -195,13 +196,13 @@ export abstract class LivingEntity extends Entity {
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (this.isInvulnerableTo(damageSource)) return false;
-        if (this.getWorld().isClient) return false;
+        if (this.isClient()) return false;
         if (this.isDead()) return false;
 
         damage = this.modifyAppliedDamage(damageSource, damage);
         let remain = damage;
 
-        const channel = this.getWorld().getNetworkChannel();
+        const world = this.getWorld();
         const shieldAmount = this.getShieldAmount();
 
         if (shieldAmount > 0 && !damageSource.isIn(DamageTypeTags.BYPASSES_SHIELD)) {
@@ -211,7 +212,7 @@ export abstract class LivingEntity extends Entity {
             this.setShieldAmount(shieldAmount - hitShield + remain);
 
             if (hitShield > 0) {
-                channel.send(EntityDamageS2CPacket.create(this.getId(), this.positionRef, hitShield, '#73c4ff'));
+                world.sendPacket(EntityDamageS2CPacket.create(this.getId(), this.positionRef, hitShield, '#73c4ff'));
             }
         }
 
@@ -225,11 +226,11 @@ export abstract class LivingEntity extends Entity {
             }
             if (this.isDead()) this.onDeath(damageSource);
 
-            channel.send(EntityDamageS2CPacket.create(this.getId(), this.positionRef, remain));
+            world.sendPacket(EntityDamageS2CPacket.create(this.getId(), this.positionRef, remain));
         }
 
         if (damage === 0) {
-            channel.send(EntityDamageS2CPacket.create(this.getId(), this.positionRef, 0, '#979797'));
+            world.sendPacket(EntityDamageS2CPacket.create(this.getId(), this.positionRef, 0, '#979797'));
         }
 
         return true;
@@ -403,7 +404,7 @@ export abstract class LivingEntity extends Entity {
         return this.isAlive();
     }
 
-    public override updatePositionAndAngles(x: number, y: number, yaw: number, interpolationSteps: number) {
+    public override moveOrInterpolateTo(x: number, y: number, yaw: number, interpolationSteps: number) {
         this.serverX = x;
         this.serverY = y;
         this.serverYaw = yaw;

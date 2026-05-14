@@ -1,10 +1,11 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {ServerPlayHandler} from "../../../server/network/handler/ServerPlayHandler.ts";
 
 export class CommandExecutionC2SPacket implements Payload {
-    public static readonly ID: PayloadId<CommandExecutionC2SPacket> = payloadId('command_exec');
+    public static readonly ID: PayloadType<CommandExecutionC2SPacket> = payloadType('command_exec');
     public static readonly CODEC: PacketCodec<CommandExecutionC2SPacket> = PacketCodecs.adapt(
         PacketCodecs.STRING,
         val => val.command,
@@ -16,7 +17,7 @@ export class CommandExecutionC2SPacket implements Payload {
         this.command = command;
     }
 
-    public getId(): PayloadId<CommandExecutionC2SPacket> {
+    public type(): PayloadType<CommandExecutionC2SPacket> {
         return CommandExecutionC2SPacket.ID;
     }
 

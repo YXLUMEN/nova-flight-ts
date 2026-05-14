@@ -1,11 +1,12 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {SoundEvent} from "../../../sound/SoundEvent.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class PlayAudioS2CPacket implements Payload {
-    public static readonly ID: PayloadId<PlayAudioS2CPacket> = payloadId('play_audio');
+    public static readonly ID: PayloadType<PlayAudioS2CPacket> = payloadType('play_audio');
     public static readonly CODEC: PacketCodec<PlayAudioS2CPacket> = PacketCodecs.adapt3(
         SoundEvent.AUDIO_PACKET_CODEC,
         val => val.audio,
@@ -30,11 +31,11 @@ export class PlayAudioS2CPacket implements Payload {
         return new PlayAudioS2CPacket(soundEvent, volume, loop);
     }
 
-    public getId(): PayloadId<PlayAudioS2CPacket> {
+    public type(): PayloadType<PlayAudioS2CPacket> {
         return PlayAudioS2CPacket.ID;
     }
 
-    public accept(listener: ClientNetworkHandler): void {
+    public accept(listener: ClientPlayHandler): void {
         listener.onPlayAudio(this);
     }
 

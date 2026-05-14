@@ -1,11 +1,11 @@
-import {ConnectionState, type ConnectionStateType} from "./ConnectionState.ts";
+import {ConnectionState} from "./ConnectionState.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
 import type {ServerChannel} from "./ServerChannel.ts";
 import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
 import type {Payload} from "../../network/Payload.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import type {UUID} from "../../type/types.ts";
-import type {PacketListener} from "./handler/PacketListener.ts";
+import type {PacketListener} from "../../network/handler/PacketListener.ts";
 import {IllegalStateException} from "../../type/errors.ts";
 import {RelayActionBuilder} from "./RelayActionBuilder.ts";
 import type {Connection} from "../../network/Connection.ts";
@@ -19,10 +19,10 @@ export class ServerConnection implements Connection {
     private readonly uuid: UUID;
     private readonly isLocal: boolean;
 
-    private readonly receiveQueue: RingBuffer<Payload> = new RingBuffer(64);
+    private readonly receiveQueue: RingBuffer<Payload> = new RingBuffer(32);
     private packetListener: PacketListener | null = null;
 
-    private state: ConnectionStateType = ConnectionState.HANDSHAKING;
+    private state: ConnectionState = ConnectionState.HANDSHAKING;
     private lastActivityTime: number;
     private disconnectStartTime: number = 0;
 
@@ -37,28 +37,28 @@ export class ServerConnection implements Connection {
     public tick(): void {
         if (!this.packetListener) return;
         while (!this.receiveQueue.isEmpty()) {
-            const packet = this.receiveQueue.shift();
-            if (!packet) break;
-            this.packetListener.accepts(packet);
+            const payload = this.receiveQueue.shift();
+            if (!payload) break;
+            this.packetListener.accept(payload);
         }
         this.packetListener.tick?.();
     }
 
-    public send(packet: Payload): void {
+    public send(payload: Payload): void {
         if (this.state === ConnectionState.CLOSED) return;
-        this.channel.sendToId(packet, this.sessionId);
+        this.channel.sendToId(payload, this.sessionId);
     }
 
-    public broadcast(packet: Payload): void {
+    public broadcast(payload: Payload, flush = false): void {
         if (this.state === ConnectionState.CLOSED) return;
-        this.channel.send(packet);
+        flush ? this.channel.send(payload) : this.channel.enqueue(payload);
     }
 
-    public recv(packet: Payload): void {
-        if (this.state !== ConnectionState.PLAY && !packet.canProcessInTransition?.()) return;
+    public recv(payload: Payload): void {
+        if (this.state !== ConnectionState.PLAY && !payload.canProcessInTransition?.()) return;
 
         this.lastActivityTime = performance.now();
-        this.receiveQueue.push(packet);
+        this.receiveQueue.push(payload);
     }
 
     public disconnect(reason: TranslatableText): void {
@@ -73,26 +73,26 @@ export class ServerConnection implements Connection {
         this.channel.action(RelayActionBuilder.forceDisconnect(this.sessionId));
     }
 
-    public changeState(state: ConnectionStateType): boolean {
+    public changeState(state: ConnectionState): boolean {
         if (state < this.state) return false;
         this.state = state;
         return true;
     }
 
-    public getState(): ConnectionStateType {
+    public getState(): ConnectionState {
         return this.state;
     }
 
     public handlerDisconnection(): void {
         if (this.state === ConnectionState.CLOSED) {
-            console.warn('handlerDisconnect call twice');
+            console.warn('ServerConnection disconnect call twice');
             return;
         }
         this.packetListener?.onDisconnected();
         this.forceDisconnect();
     }
 
-    public setPacketListener(state: ConnectionStateType, listener: PacketListener): void {
+    public setPacketListener(state: ConnectionState, listener: PacketListener): void {
         if (state !== listener.getPhase()) {
             throw new IllegalStateException(`Listener protocol (${listener.getPhase()}) does not match requested one ${state}`);
         }
@@ -100,7 +100,7 @@ export class ServerConnection implements Connection {
         this.changeState(state);
     }
 
-    public checkActivate(timeout: number = 60000): void {
+    public checkActivate(timeout: number = ServerConnection.AFK_TIMEOUT_MS): void {
         if (performance.now() - this.lastActivityTime >= timeout) {
             this.disconnect(ServerConnection.TIMEOUT);
         }
@@ -120,10 +120,6 @@ export class ServerConnection implements Connection {
 
     public getUUID(): UUID {
         return this.uuid;
-    }
-
-    public isEmpty(): boolean {
-        return this.receiveQueue.isEmpty();
     }
 
     public isHost(): boolean {

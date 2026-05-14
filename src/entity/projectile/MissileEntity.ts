@@ -5,7 +5,6 @@ import {PI2, rand} from "../../utils/math/math.ts";
 import {RocketEntity} from "./RocketEntity.ts";
 import {EVENTS} from "../../type/IEvents.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
-import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {ProjectRaycastUtil} from "../../world/collision/ProjectRaycastUtil.ts";
@@ -144,6 +143,10 @@ export class MissileEntity extends RocketEntity {
                 return;
             }
 
+            if (target !== this.target) {
+                this.onChangeTarget();
+            }
+
             this.target = target;
             this.relockCooldown = this.maxRelockCooldown;
 
@@ -171,7 +174,7 @@ export class MissileEntity extends RocketEntity {
             targetVel,
             this.trackingSpeed,
             this.turnRate,
-            GlobalConfig.mbps
+            0.02
         );
     }
 
@@ -188,19 +191,22 @@ export class MissileEntity extends RocketEntity {
     public applyDecoy(): void {
     }
 
-    public override onDiscard() {
+    public override onDiscard(): void {
         super.onDiscard();
 
-        if (this.target) {
-            const count = MissileEntity.LOCKED_ENTITY.get(this.target) ?? 0;
-            if (count > 1) {
-                MissileEntity.LOCKED_ENTITY.set(this.target, count - 1);
-            } else {
-                MissileEntity.LOCKED_ENTITY.delete(this.target);
-            }
-        }
+        this.onChangeTarget();
         this.target = null;
         this.lastTarget = null;
+    }
+
+    private onChangeTarget(): void {
+        if (!this.target) return;
+        const count = MissileEntity.LOCKED_ENTITY.get(this.target) ?? 0;
+        if (count > 1) {
+            MissileEntity.LOCKED_ENTITY.set(this.target, count - 1);
+        } else {
+            MissileEntity.LOCKED_ENTITY.delete(this.target);
+        }
     }
 
     public isIgnite(): boolean {
@@ -269,14 +275,6 @@ export class MissileEntity extends RocketEntity {
             }
         }
         return best;
-    }
-
-    protected override getMapOffsetX(): number {
-        return 400;
-    }
-
-    protected override getMapOffsetY(): number {
-        return 400;
     }
 
     public override onTrackedDataSet(data: TrackedData<any>) {

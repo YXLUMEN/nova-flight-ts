@@ -1,18 +1,9 @@
-import {Identifier} from "../registry/Identifier.ts";
-import {config} from "../utils/uit.ts";
-import type {PacketListener} from "../server/network/handler/PacketListener.ts";
+import type {PacketListener} from "./handler/PacketListener.ts";
+import type {PayloadType} from "./PayloadType.ts";
 
-// @ts-ignore
-export interface PayloadId<T extends Payload> {
-    id: Identifier;
-}
-
-export function payloadId<T extends Payload>(name: string): PayloadId<T> {
-    return config({id: Identifier.ofVanilla(name)});
-}
 
 export interface Payload {
-    getId(): PayloadId<any>;
+    type(): PayloadType<any>;
 
     accept(listener: PacketListener): void;
 
@@ -25,4 +16,3 @@ export interface Payload {
 
     canProcessInTransition?(): boolean;
 }
-

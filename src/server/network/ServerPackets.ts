@@ -1,9 +1,9 @@
-import {PayloadTypeRegistry} from "../../network/PayloadTypeRegistry.ts";
+import {CodecRegistry} from "../../network/CodecRegistry.ts";
 import {SoundEventS2CPacket} from "../../network/packet/s2c/SoundEventS2CPacket.ts";
 import {StopSoundS2CPacket} from "../../network/packet/s2c/StopSoundS2CPacket.ts";
 import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
-import type {Payload, PayloadId} from "../../network/Payload.ts";
+import type {Payload} from "../../network/Payload.ts";
 import {EntityHealthS2CPacket} from "../../network/packet/s2c/EntityHealthS2CPacket.ts";
 import {EntityRemoveS2CPacket} from "../../network/packet/s2c/EntityRemoveS2CPacket.ts";
 import {EntityPositionS2CPacket} from "../../network/packet/s2c/EntityPositionS2CPacket.ts";
@@ -51,6 +51,8 @@ import {PlayerPositionS2CPacket} from "../../network/packet/s2c/PlayerPositionS2
 import {PositionMoveRotation} from "../../network/packet/PositionMoveRotation.ts";
 import {PreparedParticleS2CPacket} from "../../network/packet/s2c/PreparedParticleS2CPacket.ts";
 import {ScreenShakeS2CPacket} from "../../network/packet/s2c/ScreenShakeS2CPacket.ts";
+import type {PayloadType} from "../../network/PayloadType.ts";
+import {BatchBufferPacket} from "../../network/packet/BatchBufferPacket.ts";
 
 export class ServerPackets {
     /**
@@ -108,10 +110,10 @@ export class ServerPackets {
         this.register(PositionMoveRotation.ID, PositionMoveRotation.CODEC);
         this.register(PreparedParticleS2CPacket.ID, PreparedParticleS2CPacket.CODEC);
         this.register(ScreenShakeS2CPacket.ID, ScreenShakeS2CPacket.CODEC);
-        PayloadTypeRegistry.playS2C().settle();
+        this.register(BatchBufferPacket.ID, BatchBufferPacket.CODEC);
     }
 
-    private static register<T extends Payload>(payloadId: PayloadId<T>, codec: PacketCodec<T>): void {
-        PayloadTypeRegistry.playS2C().register(payloadId, codec);
+    private static register<T extends Payload>(type: PayloadType<T>, codec: PacketCodec<T>): void {
+        CodecRegistry.PLAY_S2C.register(type, codec);
     }
 }

@@ -1,20 +1,24 @@
+import type {BiConsumer} from "../type/types.ts";
 import type {Payload} from "./Payload.ts";
-import type {BiConsumer, Consumer} from "../type/types.ts";
 
 export interface Channel {
+    getSessionId(): number;
+
+    isConnected(): boolean;
+
+    send(payload: Payload): void;
+
     connect(): Promise<void>;
 
     disconnect(): void;
 
     sniff(
-        url: string,
         retryDelay?: number,
         maxRetries?: number,
         tryCallback?: BiConsumer<number, number>,
-        failCallback?: Consumer<void>
     ): Promise<boolean>;
 
-    send<T extends Payload>(payload: T): void;
+    clearHandlers(): void;
 
-    isOpen(): boolean;
+    setRemote(addr: string): void;
 }

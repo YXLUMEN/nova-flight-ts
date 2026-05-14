@@ -5,11 +5,11 @@ import type {Return} from "../../../type/types.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {PongS2CPacket} from "../../../network/packet/s2c/PongS2CPacket.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
-import type {PacketListener} from "./PacketListener.ts";
-import {type ConnectionStateType} from "../ConnectionState.ts";
+import type {PacketListener} from "../../../network/handler/PacketListener.ts";
+import {type ConnectionState} from "../ConnectionState.ts";
 import {Log} from "../../../worker/log.ts";
-import {NetworkChannel} from "../../../network/NetworkChannel.ts";
-import {EmptyHandler} from "./EmptyHandler.ts";
+import {WSNetworkChannel} from "../../../network/WSNetworkChannel.ts";
+import {EmptyHandler} from "../../../network/handler/EmptyHandler.ts";
 
 export abstract class ServerCommonHandler implements PacketListener {
     public static readonly LOGOUT = TranslatableText.of('network.disconnect.logout');
@@ -35,7 +35,7 @@ export abstract class ServerCommonHandler implements PacketListener {
         this.send(PongS2CPacket.INSTANCE);
     }
 
-    public accepts(packet: Payload): void {
+    public accept(packet: Payload): void {
         packet.accept(this);
     }
 
@@ -71,7 +71,7 @@ export abstract class ServerCommonHandler implements PacketListener {
         entries: Iterable<T>,
         c0: Return<T, P>,
         c1: Return<P[], B>,
-        maxSize = NetworkChannel.MAX_PACKET_SIZE - 14
+        maxSize = WSNetworkChannel.MAX_PACKET_SIZE - 14
     ) {
         let currentSize = 0;
         const currentBatch: P[] = [];
@@ -102,7 +102,7 @@ export abstract class ServerCommonHandler implements PacketListener {
         entries: Iterable<T>,
         estimateSize: Return<T, number>,
         buildBatch: Return<T[], B>,
-        maxPacketSize = NetworkChannel.MAX_PACKET_SIZE - 14
+        maxPacketSize = WSNetworkChannel.MAX_PACKET_SIZE - 14
     ) {
         let currentSize = 0;
         const currentBatch: T[] = [];
@@ -130,7 +130,7 @@ export abstract class ServerCommonHandler implements PacketListener {
         }
     }
 
-    public abstract getPhase(): ConnectionStateType;
+    public abstract getPhase(): ConnectionState;
 
     protected abstract getProfile(): GameProfile;
 }

@@ -24,7 +24,7 @@ export class PerditionBeam extends PhaseLasers {
     protected override width = 12;
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
-        if (this.getActive(stack)) return;
+        if (this.getActive(stack) || !stack.isAvailable()) return;
 
         if (stack.getOrDefault(DataComponents.SCHEDULE_FIRE, false)) {
             stack.remove(DataComponents.SCHEDULE_FIRE);
@@ -59,12 +59,14 @@ export class PerditionBeam extends PhaseLasers {
             if (charging <= 0) {
                 this.setActive(stack, true);
                 stack.remove(DataComponents.SCHEDULE_FIRE);
+                stack.remove(DataComponents.CHARGING_PROGRESS);
 
                 this.onStartFire(stack, world, holder);
-            } else if (world.isClient) {
+                return;
+            }
+            if (world.isClient) {
                 ClientEffect.spawnChargingParticles(world as ClientWorld, holder, 4, '#ff8282', '#ff0a0a');
             }
-
             stack.set(DataComponents.CHARGING_PROGRESS, Math.max(charging, 0));
             return;
         }

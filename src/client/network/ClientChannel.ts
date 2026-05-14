@@ -4,12 +4,4 @@ import type {Payload} from "../../network/Payload.ts";
 
 export interface ClientChannel extends Channel {
     setHandler(handler: Consumer<Payload>): void;
-
-    clearHandlers(): void;
-
-    getSessionId(): number;
-
-    getServerAddress(): string;
-
-    setServerAddress(address: string): void;
 }

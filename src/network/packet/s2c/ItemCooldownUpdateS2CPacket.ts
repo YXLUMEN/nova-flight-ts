@@ -1,12 +1,13 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {Item} from "../../../item/Item.ts";
 import {ItemStack} from "../../../item/ItemStack.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class ItemCooldownUpdateS2CPacket implements Payload {
-    public static readonly ID: PayloadId<ItemCooldownUpdateS2CPacket> = payloadId('item_cooldown_update');
+    public static readonly ID: PayloadType<ItemCooldownUpdateS2CPacket> = payloadType('item_cooldown_update');
     public static readonly CODEC: PacketCodec<ItemCooldownUpdateS2CPacket> = PacketCodecs.of(
         (writer, value) => {
             ItemStack.ITEM_VALUE_PACKET_CODEC.encode(writer, value.item);
@@ -28,11 +29,11 @@ export class ItemCooldownUpdateS2CPacket implements Payload {
         this.duration = duration;
     }
 
-    public getId(): PayloadId<any> {
+    public type(): PayloadType<any> {
         return ItemCooldownUpdateS2CPacket.ID;
     }
 
-    public accept(listener: ClientNetworkHandler): void {
+    public accept(listener: ClientPlayHandler): void {
         listener.onItemCooldown(this);
     }
 

@@ -40,8 +40,8 @@ export class BlockCollision {
         maxBlocks: number = 32
     ): MutVec2 | null {
         const blockSize = BitBlockMap.BLOCK_SIZE;
-        const worldW = World.WORLD_W;
-        const worldH = World.WORLD_H;
+        const worldW = World.MAP_WIDTH;
+        const worldH = World.MAP_HEIGHT;
 
         maxBlocks = Math.ceil(maxBlocks);
 

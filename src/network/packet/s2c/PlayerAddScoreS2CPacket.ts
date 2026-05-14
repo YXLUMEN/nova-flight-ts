@@ -1,10 +1,11 @@
-import {type Payload, payloadId, type PayloadId} from "../../Payload.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import type {ClientNetworkHandler} from "../../../client/network/ClientNetworkHandler.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class PlayerAddScoreS2CPacket implements Payload {
-    public static readonly ID: PayloadId<PlayerAddScoreS2CPacket> = payloadId('player_add_score');
+    public static readonly ID: PayloadType<PlayerAddScoreS2CPacket> = payloadType('player_add_score');
     public static readonly CODEC: PacketCodec<PlayerAddScoreS2CPacket> = PacketCodecs.adapt2(
         PacketCodecs.BOOL,
         val => val.decrease,
@@ -25,11 +26,11 @@ export class PlayerAddScoreS2CPacket implements Payload {
         return new PlayerAddScoreS2CPacket(decrease, score);
     }
 
-    public getId(): PayloadId<PlayerAddScoreS2CPacket> {
+    public type(): PayloadType<PlayerAddScoreS2CPacket> {
         return PlayerAddScoreS2CPacket.ID;
     }
 
-    public accept(listener: ClientNetworkHandler): void {
+    public accept(listener: ClientPlayHandler): void {
         listener.onPlayerAddScore(this);
     }
 }

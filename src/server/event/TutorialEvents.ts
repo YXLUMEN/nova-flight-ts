@@ -4,7 +4,6 @@ import {NovaFlightServer} from "../NovaFlightServer.ts";
 import {sleep} from "../../utils/uit.ts";
 import type {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
 import type {Consumer} from "../../type/types.ts";
-import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 import {BossEntity} from "../../entity/mob/BossEntity.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {World} from "../../world/World.ts";
@@ -32,7 +31,7 @@ export class TutorialEvents {
         eventBus.on(EVENTS.MOB_KILLED, this.bindOnMobKill);
 
         clearInterval(this.loop);
-        this.loop = setInterval(() => this.tick(GlobalConfig.mbps), GlobalConfig.mbps);
+        this.loop = setInterval(() => this.tick(0.02), 0.02);
     }
 
     private static tick(dt: number) {
@@ -173,7 +172,7 @@ export class TutorialEvents {
             await sleep(2000);
 
             const boss = new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64);
-            boss.setPosition(World.WORLD_W / 2, 64);
+            boss.setPosition(World.MAP_WIDTH / 2, 64);
 
             const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
             mark.setPositionByVec(boss.positionRef);
