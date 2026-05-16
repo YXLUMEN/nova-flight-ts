@@ -1,8 +1,5 @@
 import {defineConfig} from 'vite';
-import wasm from 'vite-plugin-wasm';
 
-// @ts-expect-error process is a Node.js global
-const env = process.env;
 // @ts-expect-error process is a Node.js global
 const host = process.env.TAURI_DEV_HOST;
 
@@ -33,12 +30,6 @@ export default defineConfig({
                 ecma: 2020
             },
         },
-    },
-    plugins: [
-        wasm()
-    ],
-    optimizeDeps: {
-        exclude: ['lz4-wasm'],
     },
     worker: {
         format: 'es'

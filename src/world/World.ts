@@ -248,7 +248,7 @@ export abstract class World {
         return this.registryManager;
     }
 
-    public abstract sendPacket(payload: Payload): void;
+    public abstract sendPacket(payload: Payload, flush?: boolean): void;
 
     public schedule(delaySec: number, fn: Supplier<void>): Schedule {
         return this.scheduleTask.schedule(delaySec, fn);

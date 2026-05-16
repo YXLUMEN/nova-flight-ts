@@ -81,8 +81,7 @@ export class ClientIntegratedChannel implements ClientChannel {
             const codec = CodecRegistry.getGlobalByIndex(index);
             if (!codec) return;
 
-            const payload = codec.codec.decode(reader);
-            if (payload) this.handler(payload);
+            this.handler(codec.codec.decode(reader));
             return;
         }
 
