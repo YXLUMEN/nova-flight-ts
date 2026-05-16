@@ -56,6 +56,7 @@ export class BatchBlockChangesPacket implements Payload {
     public static write(writer: BinaryWriter, value: BatchBlockChangesPacket): void {
         const len = value.types.length;
         writer.writeVarUint(len);
+        if (len === 0) return;
 
         writer.pushBytes(value.types);
         const padding = (4 - (writer.getOffset() % 4)) % 4;
@@ -63,8 +64,11 @@ export class BatchBlockChangesPacket implements Payload {
             writer.writeInt8(0);
         }
 
-        for (let i = 0; i < len; i++) writer.writeUint32(value.xs[i]);
-        for (let i = 0; i < len; i++) writer.writeUint32(value.ys[i]);
+        const xsBytes = new Uint8Array(value.xs.buffer, value.xs.byteOffset, value.xs.byteLength);
+        const ysBytes = new Uint8Array(value.ys.buffer, value.ys.byteOffset, value.ys.byteLength);
+
+        writer.pushBytes(xsBytes);
+        writer.pushBytes(ysBytes);
     }
 
     public static read(reader: BinaryReader): BatchBlockChangesPacket {
@@ -75,12 +79,18 @@ export class BatchBlockChangesPacket implements Payload {
 
         const types = reader.readSlice(len);
 
-        const absCursor = types.byteOffset + types.length;
-        const padding = (4 - (absCursor % 4)) % 4;
+        const padding = (4 - (reader.getOffset() % 4)) % 4;
         if (padding > 0) reader.skip(padding);
 
         const xsBytes = reader.readSlice(4 * len);
         const ysBytes = reader.readSlice(4 * len);
+
+        const abs = (4 - ((types.byteOffset + types.length) % 4)) % 4;
+        if (abs !== padding) {
+            const xs = new Uint32Array(xsBytes.slice().buffer);
+            const ys = new Uint32Array(ysBytes.slice().buffer);
+            return new BatchBlockChangesPacket(types, xs, ys);
+        }
 
         const xs = new Uint32Array(xsBytes.buffer, xsBytes.byteOffset, len);
         const ys = new Uint32Array(ysBytes.buffer, ysBytes.byteOffset, len);

@@ -4,7 +4,9 @@ import {PacketCodecs} from "../codec/PacketCodecs.ts";
 import type {PacketCodec} from "../codec/PacketCodec.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
-import {compress, decompress} from "lz4-wasm";
+import {compress, decompress} from "@bokuweb/zstd-wasm";
+import type {ClientCommonHandler} from "../../client/network/handler/ClientCommonHandler.ts";
+import type {ServerCommonHandler} from "../../server/network/handler/ServerCommonHandler.ts";
 
 export class CompressedPacket implements Payload {
     public static readonly ID: PayloadType<CompressedPacket> = payloadType('compressed_packet');
@@ -40,6 +42,7 @@ export class CompressedPacket implements Payload {
         return CompressedPacket.ID;
     }
 
-    public accept(): void {
+    public accept(listener: ClientCommonHandler | ServerCommonHandler): void {
+        listener.accept(this);
     }
 }

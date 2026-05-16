@@ -10,7 +10,7 @@ import {empty} from "../../utils/uit.ts";
 export class ServerIntegratedChannel implements ServerChannel {
     private readonly registry = CodecRegistry.PLAY_S2C;
 
-    private clientSessionId: number = 2;
+    private clientId: number = 2;
     private ctrl = new AbortController();
     private handler: BiConsumer<number, Payload> = empty;
 
@@ -54,12 +54,12 @@ export class ServerIntegratedChannel implements ServerChannel {
     }
 
     public sendToId<T extends Payload>(payload: T, target: number): void {
-        if (target !== this.clientSessionId) return;
+        if (target !== this.clientId) return;
         this.send(payload);
     }
 
     public sendExclude<T extends Payload>(payload: T, ...excludes: GameProfile[]): void {
-        if (excludes.some(p => p.sessionId === 2)) return;
+        if (excludes.some(p => p.sessionId === this.clientId)) return;
         this.send(payload);
     }
 
@@ -88,8 +88,7 @@ export class ServerIntegratedChannel implements ServerChannel {
         const codec = CodecRegistry.getGlobalByIndex(index);
         if (!codec) return;
 
-        const payload = codec.codec.decode(reader);
-        if (payload) this.handler(2, payload);
+        this.handler(this.clientId, codec.codec.decode(reader));
     }
 
     private onMessage(event: MessageEvent): void {
@@ -122,6 +121,6 @@ export class ServerIntegratedChannel implements ServerChannel {
         this.handler = empty;
     }
 
-    public setRemote() {
+    public setRemote(): void {
     }
 }

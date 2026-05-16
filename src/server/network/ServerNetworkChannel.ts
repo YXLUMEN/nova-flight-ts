@@ -13,7 +13,7 @@ import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
 import {BatchBufferPacket} from "../../network/packet/BatchBufferPacket.ts";
 
 export class ServerNetworkChannel extends WSNetworkChannel implements ServerChannel {
-    private readonly sendQueue = new RingBuffer<Payload>(32);
+    private readonly sendQueue = new RingBuffer<Payload>(48);
     private secretKey: Uint8Array | null;
     private handler: BiConsumer<number, Payload> = empty;
 

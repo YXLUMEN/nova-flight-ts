@@ -8,7 +8,7 @@ import {CodecRegistry} from "../CodecRegistry.ts";
 import {WSNetworkChannel} from "../WSNetworkChannel.ts";
 import {PacketTooLargeError} from "../../type/errors.ts";
 import type {ClientCommonHandler} from "../../client/network/handler/ClientCommonHandler.ts";
-import {compress, decompress} from "lz4-wasm";
+import {compress, decompress} from "@bokuweb/zstd-wasm";
 
 export class BatchBufferPacket implements Payload {
     public static readonly ID: PayloadType<BatchBufferPacket> = payloadType('batch_buffer');
@@ -34,15 +34,18 @@ export class BatchBufferPacket implements Payload {
             const codec = registry.get(payload.type());
             if (!codec) throw new Error(`Missing packet type ${payload.type().id}`);
 
-            const offset = writer.getOffset();
-            writer.writeVarUint(codec.index);
-            codec.codec.encode(writer, payload);
+            const start = writer.getOffset();
+            const est = payload.estimateSize?.() ?? 0;
+            if (start + est <= maxSize) {
+                writer.writeVarUint(codec.index);
+                codec.codec.encode(writer, payload);
 
-            if (writer.getOffset() <= maxSize) {
-                count++;
-                continue;
+                if (writer.getOffset() <= maxSize) {
+                    count++;
+                    continue;
+                }
             }
-            writer.truncate(offset);
+            writer.truncate(start);
 
             if (count > 0) {
                 batches.push(this.pack(count, writer));
@@ -68,11 +71,11 @@ export class BatchBufferPacket implements Payload {
 
     private static pack(count: number, writer: BinaryWriter): Payload {
         const raw = writer.toUint8Array();
-        if (raw.length < 1024) {
+        if (raw.length < 512) {
             return new BatchBufferPacket(count, false, raw.slice());
         }
 
-        const compressed = compress(raw) as Uint8Array<ArrayBuffer>;
+        const compressed = compress(raw, 1) as Uint8Array<ArrayBuffer>;
         return compressed.length >= raw.length ?
             new BatchBufferPacket(count, false, raw.slice()) :
             new BatchBufferPacket(count, true, compressed);

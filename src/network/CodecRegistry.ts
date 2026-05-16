@@ -29,13 +29,10 @@ export class CodecRegistry {
     }
 
     public static settle(): void {
-        const set = new Set(this.PACKET_TYPES);
-        this.PACKET_TYPES.length = 0;
-        for (const p of set) this.PACKET_TYPES.push(p);
         deepFreeze(this);
     }
 
-    public constructor(side: NetworkSide) {
+    private constructor(side: NetworkSide) {
         this.side = side;
     }
 
