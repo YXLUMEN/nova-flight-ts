@@ -12,9 +12,9 @@ import {EntityRenderers} from "./entity/EntityRenderers.ts";
 import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 import type {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
 import {World} from "../../world/World.ts";
-import {BitBlockMap} from "../../world/map/BitBlockMap.ts";
 import type {ParticleEffectType} from "../../effect/ParticleEffectType.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
+import {BlockMapRender} from "./BlockMapRender.ts";
 
 export class WorldRender {
     private readonly client: NovaFlightClient;
@@ -24,6 +24,7 @@ export class WorldRender {
     private readonly effects: VisualEffect[] = [];
     private readonly particlePool: ParticlePool = new ParticlePool(256);
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
+    private mapRender: BlockMapRender | null = null;
 
     public constructor(client: NovaFlightClient) {
         this.client = client;
@@ -33,6 +34,8 @@ export class WorldRender {
     public setWorld(world: ClientWorld | null) {
         this.world = world;
         this.effects.forEach(effect => effect.kill());
+        this.mapRender?.dispose();
+        this.mapRender = world === null ? null : new BlockMapRender(this.client.window, world.getMap());
     }
 
     public tick(dt: number) {
@@ -100,7 +103,7 @@ export class WorldRender {
             return;
         }
 
-        this.renderBlocks(ctx);
+        this.mapRender!.renderBlocks(ctx);
 
         for (const entity of this.world.getEntities().values()) {
             if (!entity.shouldRender(viewRect)) continue;
@@ -267,38 +270,7 @@ export class WorldRender {
         ctx.restore();
     }
 
-    private renderBlocks(ctx: CanvasRenderingContext2D) {
-        const view = this.client.window.camera.viewRect;
-        const blocksize = BitBlockMap.BLOCK_SIZE;
-        const power = BitBlockMap.POWER;
-
-        const blockMap = this.world!.getMap();
-
-        const sx = Math.max(0, view.left >> power);
-        const sy = Math.max(0, view.top >> power);
-        const ex = Math.min(blockMap.getWidth(), (view.right + blocksize - 1) >> power);
-        const ey = Math.min(blockMap.getHeight(), (view.bottom + blocksize - 1) >> power);
-
-        ctx.fillStyle = '#555';
-        for (let by = sy; by < ey; by++) {
-            let bx = sx;
-            while (bx < ex) {
-                if (blockMap.get(bx, by) === 0) {
-                    bx++;
-                    continue;
-                }
-
-                const start = bx;
-                while (bx < ex && blockMap.get(bx, by) !== 0) {
-                    bx++;
-                }
-                ctx.fillRect(
-                    start * blocksize,
-                    by * blocksize,
-                    (bx - start) * blocksize,
-                    blocksize + 1 // 避免浮点数带来的缝隙
-                );
-            }
-        }
+    public onBlockChange(): void {
+        this.mapRender?.markDirty();
     }
 }

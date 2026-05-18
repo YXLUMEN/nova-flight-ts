@@ -6,8 +6,8 @@ type ColorConfig = { body: string; head: string; border: string; glow: string };
 
 export class DevourerBossRender implements EntityRenderer<DevourerBoss> {
     public render(entity: DevourerBoss, ctx: CanvasRenderingContext2D, tickDelta: number): void {
-        const positions = entity.segmentPoses;
-        const prevPositions = entity.prevSegmentPoses;
+        const positions = entity.segPoses;
+        const prevPositions = entity.prevSegPoses;
 
         const phase = entity.getPhase();
         const colors = this.phaseColors[phase];
