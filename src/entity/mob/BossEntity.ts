@@ -10,6 +10,8 @@ import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {MobBulletEntity} from "../projectile/MobBulletEntity.ts";
+import type {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
+import {StatusEffects} from "../effect/StatusEffects.ts";
 
 export abstract class BossEntity extends MobEntity {
     public static hasBoss: boolean = false;
@@ -45,12 +47,19 @@ export abstract class BossEntity extends MobEntity {
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (this.damageCooldown > 0 && !damageSource.isIn(DamageTypeTags.BYPASSES_INVULNERABLE)) return false;
 
-        const clampDamage = clamp(damage, 1, this.maxDamageCanTake);
+        const attacker = damageSource.getAttacker();
+        if (!attacker || !attacker.isPlayer()) damage = 0.1;
+
+        const clampDamage = clamp(damage, 0.1, this.maxDamageCanTake);
         if (super.takeDamage(damageSource, clampDamage)) {
             this.damageCooldown = this.getDamageCd();
             return true;
         }
         return false;
+    }
+
+    public override canHaveEffect(effect: StatusEffectInstance): boolean {
+        return effect.getEffect() !== StatusEffects.EROSION;
     }
 
     public override onDeath(damageSource: DamageSource) {
@@ -81,6 +90,6 @@ export abstract class BossEntity extends MobEntity {
     }
 
     protected createBullet(): MobBulletEntity {
-        return new MobBulletEntity(EntityTypes.ENEMY_BULLET_ENTITY, this.getWorld(), this, 2);
+        return new MobBulletEntity(EntityTypes.ENEMY_BULLET_ENTITY, this.getWorld(), this, 4);
     }
 }

@@ -49,7 +49,7 @@ export class ClientPackets {
         this.register(BatchBufferPacket.ID, BatchBufferPacket.CODEC);
     }
 
-    private static register<T extends Payload>(payloadId: PayloadType<T>, codec: PacketCodec<T>): void {
-        CodecRegistry.PLAY_C2S.register(payloadId, codec)
+    private static register<T extends Payload>(type: PayloadType<T>, codec: PacketCodec<T>): void {
+        CodecRegistry.PLAY_C2S.register(type, codec)
     }
 }

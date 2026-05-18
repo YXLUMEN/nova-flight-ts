@@ -6,7 +6,7 @@ import type {EntityAi} from "./EntityAi.ts";
 export const enum DevourerPhase {
     PHASE_1,
     PHASE_2,
-    STAGE_TRANSITION,
+    PHASE_2_TO_3,
     PHASE_3,
 }
 

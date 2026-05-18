@@ -168,7 +168,12 @@ export class ClientPlayHandler extends ClientCommonHandler {
         if (!entity) return;
 
         entity.setDeltaMovement(packet.x, packet.y);
-        if (entity.isLogicalSide() && entity !== this.client.player) return;
+        if (entity === this.client.player) {
+            this.handleLocalPlayer(this.client.player, packet);
+            return;
+        }
+
+        if (entity.isLogicalSide()) return;
 
         const dist = squareDist(entity.getX(), entity.getY(), packet.x, packet.y);
         if (dist > 4096) {
@@ -176,6 +181,20 @@ export class ClientPlayHandler extends ClientCommonHandler {
         } else {
             entity.moveOrInterpolateTo(packet.x, packet.y, packet.yaw, 3);
         }
+    }
+
+    private handleLocalPlayer(player: ClientPlayerEntity, packet: EntityPositionS2CPacket): void {
+        const dx = packet.x - player.getX();
+        const dy = packet.y - player.getY();
+        const dist = dx * dx + dy * dy;
+        if (dist < 64) return;
+
+        if (dist > 1024) {
+            player.snapTo(packet.x, packet.y, packet.yaw);
+            return;
+        }
+
+        player.moveOrInterpolateTo(packet.x, packet.y, 0, 3);
     }
 
     public onForceEntityPosition(packet: EntityPositionForceS2CPacket): void {
@@ -477,12 +496,14 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
     public onBlockChange(packet: BlockChangeS2CPacket): void {
         this.world?.getMap().set(packet.x, packet.y, packet.block);
+        this.client.worldRender.onBlockChange();
     }
 
     public onBatchChanges(packet: BatchBlockChangesPacket): void {
         if (!this.world) return;
         const map = this.world.getMap();
         packet.foreach((type, x, y) => map.set(x, y, type));
+        this.client.worldRender.onBlockChange();
     }
 
     public onScreenShake(packet: ScreenShakeS2CPacket): void {

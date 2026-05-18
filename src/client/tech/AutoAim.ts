@@ -8,7 +8,7 @@ import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class AutoAim {
-    public static readonly FIRE_THRESHOLD = Math.PI / 90;
+    public static readonly FIRE_THRESHOLD = Math.PI / 225;
     private readonly owner: ClientPlayerEntity;
 
     private currentTarget: MobEntity | null = null;

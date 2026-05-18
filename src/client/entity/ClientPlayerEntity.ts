@@ -1,6 +1,6 @@
 import type {KeyboardInput} from "../input/KeyboardInput.ts";
 import {ClientTechTree} from "../tech/ClientTechTree.ts";
-import type {World} from "../../world/World.ts";
+import {World} from "../../world/World.ts";
 import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
@@ -167,13 +167,13 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             }
         }
 
+        super.aiStep();
+
         if (updatePos) {
             const speedMultiplier = this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
             const speed = this.getMovementSpeed() * speedMultiplier;
             this.updateVelocity(speed, dx, dy);
         }
-
-        super.aiStep();
 
         if (updatePos && updateYaw) {
             this.sendPacket(new FullMove(dx, dy, this.getYaw()));

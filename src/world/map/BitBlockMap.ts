@@ -129,6 +129,8 @@ export class BitBlockMap implements NbtSerializable {
         nbt.setUint32('width', this.width);
         nbt.setUint32('height', this.height);
 
+        if (this.data.every(v => v === 0)) return nbt;
+
         const element = new NbtUint8Array(this.data);
         nbt.set('blocks', element);
         return nbt;
@@ -138,14 +140,14 @@ export class BitBlockMap implements NbtSerializable {
         this.width = nbt.getUint32('width', this.width);
         this.height = nbt.getUint32('height', this.height);
 
+        if (!nbt.contains('blocks', NbtTypeId.Uint8Array)) return;
+
         const totalBlocks = this.width * this.height;
         const byteLength = Math.ceil(totalBlocks / 8);
 
-        if (nbt.contains('blocks', NbtTypeId.Uint8Array)) {
-            const data = nbt.getUint8Array('blocks');
-            if (data.byteLength === byteLength) {
-                this.data = data;
-            }
+        const data = nbt.getUint8Array('blocks');
+        if (data.byteLength === byteLength) {
+            this.data = data;
         }
     }
 }
