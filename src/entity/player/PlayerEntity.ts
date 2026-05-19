@@ -175,6 +175,7 @@ export abstract class PlayerEntity extends LivingEntity {
     protected override onDiscard() {
         super.onDiscard();
         this.clearItems();
+        this.techTree!.destroy();
     }
 
     public override isPlayer(): this is PlayerEntity {

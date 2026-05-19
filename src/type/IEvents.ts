@@ -1,7 +1,7 @@
 import type {BossEntity} from "../entity/mob/BossEntity.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {MobEntity} from "../entity/mob/MobEntity.ts";
-import {createClean} from "../utils/uit.ts";
+import {cleanObj} from "../utils/uit.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
 import type {Tech} from "../world/tech/Tech.ts";
@@ -10,7 +10,7 @@ import type {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 import type {Explosion} from "../world/explosion/Explosion.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 
-export const EVENTS = createClean({
+export const EVENTS = cleanObj({
     GAME_START: "game:start",
     GAME_END: "game:end",
     ENTITY_REMOVED: "entity:mob:removed",

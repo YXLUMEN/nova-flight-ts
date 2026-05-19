@@ -172,7 +172,7 @@ export class DevourerBoss extends BossEntity {
 
         if (phase === DevourerPhase.PHASE_3) {
             this.turnRate = 0.06283;
-            this.setMovementSpeed(this.getMovementSpeed() * 1.5);
+            this.setMovementSpeed(15);
         }
 
         world.schedule(2, () => this.invulnerable = false);

@@ -1,17 +1,10 @@
 import {Window} from "./Window.ts";
 import {BitBlockMap} from "../../world/map/BitBlockMap.ts";
 
-interface FillRectCmd {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-}
-
 export class BlockMapRender {
     private readonly window: Window;
     private readonly map: BitBlockMap;
-    private readonly command: FillRectCmd[] = [];
+    private readonly command: number[] = [];
     private dirty = true;
 
     private debounceTimer: number | undefined;
@@ -65,14 +58,17 @@ export class BlockMapRender {
         const view = this.window.camera.viewRect;
 
         ctx.fillStyle = '#555';
-        for (const cmd of this.command) {
-            if (cmd.x + cmd.w < view.left ||
-                cmd.x > view.right ||
-                cmd.y + cmd.h < view.top ||
-                cmd.y > view.bottom
+        for (let i = 0; i < this.command.length; i += 4) {
+            const x = this.command[i];
+            const y = this.command[i + 1];
+            const w = this.command[i + 2];
+            const h = this.command[i + 3];
+
+            if (x + w < view.left || x > view.right ||
+                y + h < view.top || y > view.bottom
             ) continue;
 
-            ctx.fillRect(cmd.x, cmd.y, cmd.w, cmd.h);
+            ctx.fillRect(x, y, w, h);
         }
     }
 
@@ -95,12 +91,12 @@ export class BlockMapRender {
                 while (bx < ex && this.map.get(bx, by) !== 0) {
                     bx++;
                 }
-                this.command.push({
-                    x: start * blocksize,
-                    y: by * blocksize,
-                    w: (bx - start) * blocksize,
-                    h: blocksize + 1
-                });
+                this.command.push(
+                    start * blocksize,
+                    by * blocksize,
+                    (bx - start) * blocksize,
+                    blocksize + 1
+                );
             }
         }
 
@@ -124,6 +120,7 @@ export class BlockMapRender {
     }
 
     public dispose(): void {
+        this.command.length = 0;
         clearTimeout(this.debounceTimer);
         this.debounceTimer = undefined;
     }

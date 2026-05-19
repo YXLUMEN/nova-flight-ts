@@ -67,9 +67,9 @@ export class ServerTechTree implements TechTree {
         if (techsToRevoke.length === 0) return false;
 
         let backScore = 0;
-        for (const tech of techsToRevoke) {
-            this.state.unlocked.delete(tech);
-            backScore += tech.cost;
+        for (const revoke of techsToRevoke) {
+            this.state.unlocked.delete(revoke);
+            backScore += revoke.cost;
         }
 
         const unlocked: Tech[] = [];
@@ -77,7 +77,7 @@ export class ServerTechTree implements TechTree {
             if (this.state.isUnlocked(tech)) unlocked.push(tech);
         }
 
-        const finalScore = this.player.getScore() + (backScore * 0.8) | 0;
+        const finalScore = this.player.getScore() + Math.floor(backScore * 0.8);
         this.player.setScore(finalScore);
 
         const yaw = this.player.getYaw();
@@ -112,7 +112,7 @@ export class ServerTechTree implements TechTree {
             backScore += tech.cost;
         }
 
-        const finalScore = player.getScore() + (backScore * 0.8) | 0;
+        const finalScore = player.getScore() + Math.floor(backScore * 0.8);
         player.setScore(finalScore);
         this.resetPlayer();
 
@@ -128,6 +128,10 @@ export class ServerTechTree implements TechTree {
         this.player.addItem(Items.CANNON40);
         this.player.addItem(Items.BOMB_WEAPON);
         this.player.setYaw(-1.57079);
+    }
+
+    public destroy(): void {
+        this.state.clear();
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {

@@ -1,6 +1,8 @@
+import {config} from "./uit.ts";
+
 export class AnsiParser {
     private static regex: RegExp = /\x1b\[(\d+)m/g;
-    private static readonly colorMap: Record<string, string> = {
+    private static readonly colorMap: Record<string, string> = config({
         '30': 'black',
         '31': 'red',
         '32': 'green',
@@ -10,7 +12,7 @@ export class AnsiParser {
         '36': 'cyan',
         '37': 'white',
         '90': 'gray'
-    };
+    });
 
     public static parseToElement(msg: string): HTMLDivElement {
         const container = document.createElement('div');

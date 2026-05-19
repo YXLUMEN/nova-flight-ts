@@ -121,7 +121,7 @@ export class Tech {
         }
 
         public cost(cost: number) {
-            this._cost = clamp(cost, 0, 65535) | 0;
+            this._cost = clamp(Math.floor(cost), 0, 65535);
             return this;
         }
 

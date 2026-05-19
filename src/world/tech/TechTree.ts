@@ -16,4 +16,6 @@ export interface TechTree extends NbtSerializable {
     resetAllTech(): void;
 
     unloadedTechCount(): number;
+
+    destroy(): void;
 }

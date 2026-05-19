@@ -1,5 +1,6 @@
 // 创建一个监控系统
 import type {Entity} from "../src/entity/Entity.ts";
+import {AtomicInteger} from "../src/utils/collection/AtomicInteger";
 
 type EntityInfo = {
     id: number;
@@ -26,9 +27,34 @@ export class EntityGCWatchdog {
         const stillAlive: Entity[] = [];
         for (const weakRef of this.weakRefs.values()) {
             const entity = weakRef.deref();
-            if (entity) {
-                stillAlive.push(entity);
-            }
+            if (entity) stillAlive.push(entity);
+        }
+        return stillAlive;
+    }
+}
+
+export class ObjGCWatchdog {
+    private static id = new AtomicInteger();
+    private static registry = new FinalizationRegistry<number>(id => {
+        const remain = this.checkAlive().length;
+        console.log(`对象 ID ${id} 已被垃圾回收, 剩余: ${remain}`);
+    });
+
+    private static weakRefs = new Map<number, WeakRef<Object>>();
+
+    public static watch(obj: Object): void {
+        const weakRef = new WeakRef(obj);
+        // maybe use string
+        const id = this.id.getAndIncrement();
+        this.weakRefs.set(id, weakRef);
+        this.registry.register(obj, id);
+    }
+
+    public static checkAlive(): Object[] {
+        const stillAlive: Object[] = [];
+        for (const weakRef of this.weakRefs.values()) {
+            const entity = weakRef.deref();
+            if (entity) stillAlive.push(entity);
         }
         return stillAlive;
     }

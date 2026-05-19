@@ -700,6 +700,9 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.ENTITY_COUNTER.reset();
     }
 
+    // 由索引控制
+    public searchGen = 0;
+
     // 用于缓存,渲染器自动处理,一般不需要手动管理
     public renderer: EntityRenderer<Entity> | null = null;
 }

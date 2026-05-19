@@ -8,6 +8,7 @@ import {deepFreeze} from "../utils/uit.ts";
 import {DamageTypes} from "../entity/damage/DamageTypes.ts";
 import {EntitySelectorOptions} from "../command/EntitySelectorOptions.ts";
 import {NbtTypes} from "../nbt/NbtTypes.ts";
+import {Techs} from "../world/tech/Techs.ts";
 
 export class RegistryManager {
     private readonly registers = new Map<RegistryKey<any>, Registry<any>>();
@@ -26,6 +27,7 @@ export class RegistryManager {
         this.registers.set(RegistryKeys.ITEM, Registries.ITEM);
         this.registers.set(RegistryKeys.GAME_EVENT, Registries.GAME_EVENT);
 
+        await Techs.init();
         await DamageTypes.init();
         EntityTypes.init();
         Items.init();

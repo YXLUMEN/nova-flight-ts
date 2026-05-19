@@ -187,7 +187,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
         const dx = packet.x - player.getX();
         const dy = packet.y - player.getY();
         const dist = dx * dx + dy * dy;
-        if (dist < 64) return;
+        if (dist < 32) return;
 
         if (dist > 1024) {
             player.snapTo(packet.x, packet.y, packet.yaw);

@@ -37,6 +37,7 @@ export class ClientEntityManager<T extends Entity> {
     public clear(): void {
         this.index.iterate()
             .forEach(entity => this.remove(entity));
+        this.grid.clear();
     }
 
     public getLookup(): EntityLookUp<T> {

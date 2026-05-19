@@ -4,14 +4,14 @@ import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacke
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import {BGMManager} from "../../sound/BGMManager.ts";
 import type {KeyboardInput} from "./KeyboardInput.ts";
-import {createClean} from "../../utils/uit.ts";
+import {cleanObj} from "../../utils/uit.ts";
 import {DataLoader} from "../resource/DataLoader.ts";
 
 export class ClientInputEvents {
     public static registryAll(client: NovaFlightClient, input: KeyboardInput): void {
         this.windowEvents(client);
 
-        input.setInputEvents(createClean({
+        input.setInputEvents(cleanObj({
             onKeyPress: (code, event) => {
                 const commandManager = client.clientCommandManager;
 

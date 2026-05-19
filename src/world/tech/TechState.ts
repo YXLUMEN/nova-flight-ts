@@ -187,7 +187,9 @@ export class TechState {
     }
 
     public clear(): void {
-        this.unlocked.clear();
+        this.allTechs.length = 0;
         this.branchGroups.clear();
+        this.unlocked.clear();
+        this.dependentsMap.clear();
     }
 }

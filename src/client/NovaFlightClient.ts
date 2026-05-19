@@ -40,6 +40,7 @@ import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 import {ClientConfigHandler} from "./network/handler/ClientConfigHandler.ts";
 import {ClientPlayHandler} from "./network/handler/ClientPlayHandler.ts";
 import {TickRateManager} from "../world/TickRateManager.ts";
+import {ClientWorkerFS} from "./ClientWorkerFS.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -61,6 +62,7 @@ export class NovaFlightClient {
 
     private worker: Worker | null = null;
     private isIntegrated = false;
+    private readonly workerFs: ClientWorkerFS = new ClientWorkerFS();
 
     public world: ClientWorld | null = null;
     public player: ClientPlayerEntity | null = null;
@@ -498,6 +500,15 @@ export class NovaFlightClient {
                     break;
                 case 'message':
                     message(event.data.message, {kind: event.data.kind});
+                    break;
+                case 'read_file':
+                    this.workerFs.readFile(event.data, worker);
+                    break;
+                case 'write_file':
+                    this.workerFs.writeFile(event.data);
+                    break;
+                case 'fetch':
+                    this.workerFs.fetch(event.data, worker);
                     break;
             }
         };
