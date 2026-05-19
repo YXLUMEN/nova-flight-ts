@@ -1,6 +1,6 @@
 import type {NbtElement} from "./NbtElement.ts";
 import {type NbtType, NbtTypeId, type NbtTypeIndex} from "../NbtType.ts";
-import {config, deepFreeze} from "../../utils/uit.ts";
+import {config} from "../../utils/uit.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 
@@ -13,7 +13,7 @@ export class NbtInt32 implements NbtElement {
 
     public static of(value: number): NbtInt32 {
         value = Math.floor(value);
-        return value >= -128 && value <= 512 ? this.cache[value + 128] : new NbtInt32(value);
+        return new NbtInt32(value);
     }
 
     public readonly value: number;
@@ -32,14 +32,6 @@ export class NbtInt32 implements NbtElement {
 
     public copy(): NbtInt32 {
         return this;
-    }
-
-    private static readonly cache: NbtInt32[] = new Array<NbtInt32>(641);
-    static {
-        for (let i = 0; i < this.cache.length; i++) {
-            this.cache[i] = new NbtInt32(i - 128);
-        }
-        deepFreeze(this.cache);
     }
 
     public toString(): string {
