@@ -5,7 +5,7 @@ import {PauseOverlay} from "./ui/PauseOverlay.ts";
 import {NotificationManager} from "./ui/NotificationManager.ts";
 import {UITheme} from "./ui/theme.ts";
 import {DamagePopupRender} from "./ui/DamagePopupRender.ts";
-import type {BiConsumer} from "../../type/types.ts";
+import type {BiConsumer, Consumer} from "../../type/types.ts";
 
 export class Window {
     public static VIEW_W = 800;
@@ -25,11 +25,12 @@ export class Window {
         this.ctx.font = UITheme.font;
         this.ctx.textAlign = "center";
         this.ctx.textBaseline = "middle";
+        this.ctx.imageSmoothingEnabled = false;
 
         window.onresize = this.resize.bind(this);
     }
 
-    public onResize(cb: BiConsumer<number, number>): () => void {
+    public onResize(cb: BiConsumer<number, number>): Consumer<void> {
         this.resizeCallbacks.add(cb);
         return () => this.resizeCallbacks.delete(cb);
     }
