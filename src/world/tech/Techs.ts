@@ -4,109 +4,121 @@ import {Identifier} from "../../registry/Identifier.ts";
 import {Tech} from "./Tech.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {TechState} from "./TechState.ts";
-import tech from "./tech-data.json" with {type: "json"};
+import {isServer} from "../../configs/GlobalConfig.ts";
 
 export class Techs {
-    public static COILGUNS;
-    public static RAILGUNS;
-    public static KINETIC_ARTILLERY;
+    public static COILGUNS: RegistryEntry<Tech>;
+    public static RAILGUNS: RegistryEntry<Tech>;
+    public static KINETIC_ARTILLERY: RegistryEntry<Tech>;
 
-    public static AUTOCANNON;
-    public static MINIGUN;
-    public static CIWS;
+    public static AUTOCANNON: RegistryEntry<Tech>;
+    public static MINIGUN: RegistryEntry<Tech>;
+    public static CIWS: RegistryEntry<Tech>;
 
     // 爆炸类
-    public static EXPLOSIVE;
+    public static EXPLOSIVE: RegistryEntry<Tech>;
 
-    public static CANNON90;
-    public static ARTILLERY125;
+    public static CANNON90: RegistryEntry<Tech>;
+    public static ARTILLERY125: RegistryEntry<Tech>;
 
-    public static MISSILE;
-    public static HONEYCOMB_MISSILE;
-    public static SPACE_TORPEDOES;
+    public static MISSILE: RegistryEntry<Tech>;
+    public static HONEYCOMB_MISSILE: RegistryEntry<Tech>;
+    public static SPACE_TORPEDOES: RegistryEntry<Tech>;
 
     // 能量类
-    public static LASER;
-    public static GAMMA_LASERS;
-    public static PHASE_LASERS;
+    public static LASER: RegistryEntry<Tech>;
+    public static GAMMA_LASERS: RegistryEntry<Tech>;
+    public static PHASE_LASERS: RegistryEntry<Tech>;
 
     // 重型武器
-    public static HEAVY_WEAPON;
+    public static HEAVY_WEAPON: RegistryEntry<Tech>;
 
-    public static ROCKET_LAUNCHER;
-    public static RANDOM_ROCKET;
+    public static ROCKET_LAUNCHER: RegistryEntry<Tech>;
+    public static RANDOM_ROCKET: RegistryEntry<Tech>;
 
-    public static CLOUD_LIGHTNING;
-    public static ARC_EMITTER;
-    public static FOCUSED_ARC_EMITTER;
+    public static CLOUD_LIGHTNING: RegistryEntry<Tech>;
+    public static ARC_EMITTER: RegistryEntry<Tech>;
+    public static FOCUSED_ARC_EMITTER: RegistryEntry<Tech>;
 
-    public static PARTICLE_LANCE;
-    public static TACHYON_LANCE;
-    public static PERDITION_BEAM;
+    public static PARTICLE_LANCE: RegistryEntry<Tech>;
+    public static TACHYON_LANCE: RegistryEntry<Tech>;
+    public static PERDITION_BEAM: RegistryEntry<Tech>;
 
     // 炮艇专精
-    public static GUNBOAT_FOCUS;
+    public static GUNBOAT_FOCUS: RegistryEntry<Tech>;
 
-    public static HD_BULLET;
-    public static AD_LOADING;
-    public static ANTIMATTER_WARHEAD;
+    public static HD_BULLET: RegistryEntry<Tech>;
+    public static AD_LOADING: RegistryEntry<Tech>;
+    public static ANTIMATTER_WARHEAD: RegistryEntry<Tech>;
 
-    public static HV_WARHEAD;
-    public static HD_EXPLOSIVES;
-    public static SERIAL_WARHEAD;
-    public static FUSION_BOMB;
+    public static HV_WARHEAD: RegistryEntry<Tech>;
+    public static HD_EXPLOSIVES: RegistryEntry<Tech>;
+    public static SERIAL_WARHEAD: RegistryEntry<Tech>;
+    public static FUSION_BOMB: RegistryEntry<Tech>;
 
     // 能源专精
-    public static ENERGY_FORCE;
+    public static ENERGY_FORCE: RegistryEntry<Tech>;
 
-    public static ELECTRICAL_SURGES;
-    public static AD_CAPACITANCE;
-    public static ELE_OSCILLATION;
-    public static QUICK_CHARGE;
-    public static ELE_SHIELD;
+    public static ELECTRICAL_SURGES: RegistryEntry<Tech>;
+    public static AD_CAPACITANCE: RegistryEntry<Tech>;
+    public static ELE_OSCILLATION: RegistryEntry<Tech>;
+    public static QUICK_CHARGE: RegistryEntry<Tech>;
+    public static ELE_SHIELD: RegistryEntry<Tech>;
 
-    public static HIGH_EFFICIENCY_COOLANT;
-    public static HARMONIC_ANALYSIS;
-    public static HIGH_TEMPERATURE_ALLOY;
-    public static ENERGY_RECOVERY;
+    public static HIGH_EFFICIENCY_COOLANT: RegistryEntry<Tech>;
+    public static HARMONIC_ANALYSIS: RegistryEntry<Tech>;
+    public static HIGH_TEMPERATURE_ALLOY: RegistryEntry<Tech>;
+    public static ENERGY_RECOVERY: RegistryEntry<Tech>;
 
-    public static CORONA_DISCHARGE;
-    public static STATIC_ELECTRICITY;
+    public static CORONA_DISCHARGE: RegistryEntry<Tech>;
+    public static STATIC_ELECTRICITY: RegistryEntry<Tech>;
 
-    public static VOID_ENGIN;
-    public static VOID_DISTURBANCE;
-    public static SPACE_TEAR;
-    public static VOID_DWELLER;
-    public static VOID_ENERGY_EXTRACTION;
-    public static VOID_LEAP;
+    public static VOID_ENGIN: RegistryEntry<Tech>;
+    public static VOID_DISTURBANCE: RegistryEntry<Tech>;
+    public static SPACE_TEAR: RegistryEntry<Tech>;
+    public static VOID_DWELLER: RegistryEntry<Tech>;
+    public static VOID_ENERGY_EXTRACTION: RegistryEntry<Tech>;
+    public static VOID_LEAP: RegistryEntry<Tech>;
 
-    public static SHIP_OPT;
-    public static EXPLOSIVE_ARMOR;
-    public static EMERGENCY_REPAIR;
-    public static DECOY_RELEASER;
+    public static SHIP_OPT: RegistryEntry<Tech>;
+    public static EXPLOSIVE_ARMOR: RegistryEntry<Tech>;
+    public static EMERGENCY_REPAIR: RegistryEntry<Tech>;
+    public static DECOY_RELEASER: RegistryEntry<Tech>;
 
-    public static NANOTECHNOLOGY;
-    public static NANO_MENDING;
-    public static ARMOR_EROSION;
-    public static GRAY;
+    public static NANOTECHNOLOGY: RegistryEntry<Tech>;
+    public static NANO_MENDING: RegistryEntry<Tech>;
+    public static ARMOR_EROSION: RegistryEntry<Tech>;
+    public static GRAY: RegistryEntry<Tech>;
 
-    public static STEERING_GEAR;
-    public static BALLISTIC_CALCULATOR;
-    public static FIRE_CONTROL_COMPUTER;
-    public static INSTANT_RESPONSE;
-    public static EMERGENCY_WARP;
+    public static STEERING_GEAR: RegistryEntry<Tech>;
+    public static BALLISTIC_CALCULATOR: RegistryEntry<Tech>;
+    public static FIRE_CONTROL_COMPUTER: RegistryEntry<Tech>;
+    public static INSTANT_RESPONSE: RegistryEntry<Tech>;
+    public static EMERGENCY_WARP: RegistryEntry<Tech>;
 
-    public static SENTINEL_POINT_DEFENSE;
-    public static BARRIER_POINT_DEFENSE;
-    public static GUARDIAN_POINT_DEFENSE;
-    public static FLAK_BATTERY;
-    public static FLAK_CANNONS;
-    public static FLAK_ARTILLERY;
+    public static SENTINEL_POINT_DEFENSE: RegistryEntry<Tech>;
+    public static BARRIER_POINT_DEFENSE: RegistryEntry<Tech>;
+    public static GUARDIAN_POINT_DEFENSE: RegistryEntry<Tech>;
+    public static FLAK_BATTERY: RegistryEntry<Tech>;
+    public static FLAK_CANNONS: RegistryEntry<Tech>;
+    public static FLAK_ARTILLERY: RegistryEntry<Tech>;
 
-    static {
+    public static async init(): Promise<void> {
+        let tech: unknown;
+        if (isServer) {
+            const mod = await import('../../worker/fs.ts');
+            const buffer = await mod.WorkerFS.fetch('./tech-data.json');
+            if (!buffer) throw new Error('Failed to load tech data');
+            const json = new TextDecoder("utf-8", {fatal: true}).decode(buffer);
+            tech = JSON.parse(json);
+        } else {
+            const resp = await fetch('./tech-data.json');
+            tech = await resp.json();
+        }
+
         const parsed = TechState.normalizeTechs(tech);
         const registerFromJson = (name: string) => {
-            return this.register(name, parsed.get(name)!);
+            return this.register(name, parsed.get(name)!.build());
         }
 
         this.ENERGY_FORCE = registerFromJson('energy_focus');
@@ -182,7 +194,7 @@ export class Techs {
         Registries.TECH.getEntries().forEach(entry => entry.getValue().complete());
     }
 
-    public static register(name: string, builder: InstanceType<typeof Tech.Builder>): RegistryEntry<Tech> {
-        return Registry.registerReferenceById(Registries.TECH, Identifier.ofVanilla(name), builder.build());
+    private static register(name: string, tech: Tech): RegistryEntry<Tech> {
+        return Registry.registerReferenceById(Registries.TECH, Identifier.ofVanilla(name), tech);
     }
 }

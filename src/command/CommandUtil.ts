@@ -5,7 +5,7 @@ import {commonPrefix} from "../utils/Strings.ts";
 import {type Suggestions} from "../brigadier/suggestion/Suggestions.ts";
 import type {SuggestionProvider} from "../brigadier/suggestion/SuggestionProvider.ts";
 import type {CommandContext} from "../brigadier/context/CommandContext.ts";
-import {createClean} from "../utils/uit.ts";
+import {cleanObj} from "../utils/uit.ts";
 import type {Registry} from "../registry/Registry.ts";
 import {RelativePosition} from "../utils/math/RelativePosition.ts";
 import {StringReader} from "../brigadier/StringReader.ts";
@@ -70,7 +70,7 @@ export class CommandUtil {
     }
 
     public static createIdentifierSuggestion<T>(registry: Registry<any>): SuggestionProvider<T> {
-        return createClean({
+        return cleanObj({
             getSuggestions(_: CommandContext<T>, builder: SuggestionsBuilder): Promise<Suggestions> {
                 return CommandUtil.suggestIdentifiers(registry.getIds(), builder);
             }

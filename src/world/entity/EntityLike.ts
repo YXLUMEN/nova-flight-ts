@@ -11,4 +11,7 @@ export interface EntityLike {
     shouldSave(): boolean;
 
     isPlayer(): boolean;
+
+    // 由索引控制,禁止手动管理
+    searchGen: number;
 }

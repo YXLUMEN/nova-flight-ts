@@ -1,8 +1,8 @@
 import type {StarLayer} from "../type/IStarLayer.ts";
-import {createClean, deepFreeze} from "../utils/uit.ts";
+import {config, deepFreeze} from "../utils/uit.ts";
 
 export const defaultLayers: Readonly<StarLayer[]> = deepFreeze([
-    createClean({
+    config({
         count: 10,
         alpha: 0.9,
         radiusMin: 1.4,
@@ -12,7 +12,7 @@ export const defaultLayers: Readonly<StarLayer[]> = deepFreeze([
         shakeFactor: 0.9,
         parallax: 0.8
     }),
-    createClean({
+    config({
         count: 40,
         alpha: 0.55,
         radiusMin: 0.7,
@@ -22,7 +22,7 @@ export const defaultLayers: Readonly<StarLayer[]> = deepFreeze([
         shakeFactor: 0.3,
         parallax: 0.5
     }),
-    createClean({
+    config({
         count: 80,
         alpha: 0.35,
         radiusMin: 0.5,
@@ -35,7 +35,7 @@ export const defaultLayers: Readonly<StarLayer[]> = deepFreeze([
 ]);
 
 export const lowPowerLayers: Readonly<StarLayer[]> = deepFreeze([
-    createClean({
+    config({
         count: 20,
         alpha: 0.9,
         radiusMin: 1.4,
@@ -45,7 +45,7 @@ export const lowPowerLayers: Readonly<StarLayer[]> = deepFreeze([
         shakeFactor: 0.9,
         parallax: 0.8
     }),
-    createClean({
+    config({
         count: 60,
         alpha: 0.35,
         radiusMin: 0.5,

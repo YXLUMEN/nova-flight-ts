@@ -66,16 +66,16 @@ export function deepFreeze<T>(obj: T, seen = new WeakSet()): Readonly<T> {
     return Object.freeze(obj);
 }
 
-export function createClean<T>(obj: T): T {
+export function cleanObj<T>(obj: T): T {
     return Object.assign(Object.create(null), obj);
 }
 
 export function config<T>(obj: T): T {
-    return deepFreeze(createClean(obj));
+    return deepFreeze(cleanObj(obj));
 }
 
 export function status<T>(obj: T): T {
-    return Object.seal(createClean(obj));
+    return Object.seal(cleanObj(obj));
 }
 
 export function sleep(time: number) {

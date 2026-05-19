@@ -2,8 +2,6 @@ import type {EntityLike} from "./EntityLike.ts";
 import type {AABB} from "../../utils/math/AABB.ts";
 import type {Consumer, Predicate} from "../../type/types.ts";
 
-type Index = { col: number; row: number };
-
 export class GridSpatialIndex<T extends EntityLike> {
     private readonly width: number;
     private readonly height: number;
@@ -12,7 +10,8 @@ export class GridSpatialIndex<T extends EntityLike> {
     private readonly rows: number;
     private readonly grid: Set<T>[][];
 
-    private readonly entityGridCells: Map<T, Index[]> = new Map<T, Index[]>();
+    private readonly entityGridCells: Map<T, number[]> = new Map();
+    private searchGeneration = 0;
 
     public constructor(width: number, height: number, cellSize: number = 80) {
         this.width = width;
@@ -32,7 +31,7 @@ export class GridSpatialIndex<T extends EntityLike> {
         return Math.max(0, Math.min(maxIndex, Math.floor(value / this.cellSize)));
     }
 
-    private getCoveredCells(box: AABB): Index[] {
+    private getCoveredCells(box: AABB): number[] {
         if (box.maxX < 0 || box.minX > this.width ||
             box.maxY < 0 || box.minY > this.height
         ) return [];
@@ -42,10 +41,10 @@ export class GridSpatialIndex<T extends EntityLike> {
         const startRow = this.toCoord(box.minY, this.rows - 1);
         const endRow = this.toCoord(box.maxY, this.rows - 1);
 
-        const cells: Index[] = [];
+        const cells: number[] = [];
         for (let r = startRow; r <= endRow; r++) {
             for (let c = startCol; c <= endCol; c++) {
-                cells.push({col: c, row: r});
+                cells.push(r, c);
             }
         }
         return cells;
@@ -57,8 +56,8 @@ export class GridSpatialIndex<T extends EntityLike> {
         const cells = this.getCoveredCells(entity.getBoundingBox());
         this.entityGridCells.set(entity, cells);
 
-        for (const cell of cells) {
-            this.grid[cell.row][cell.col].add(entity);
+        for (let i = 0; i < cells.length; i += 2) {
+            this.grid[cells[i]][cells[i + 1]].add(entity);
         }
     }
 
@@ -66,8 +65,8 @@ export class GridSpatialIndex<T extends EntityLike> {
         const cells = this.entityGridCells.get(entity);
         if (!cells) return false;
 
-        for (const cell of cells) {
-            this.grid[cell.row][cell.col].delete(entity);
+        for (let i = 0; i < cells.length; i += 2) {
+            this.grid[cells[i]][cells[i + 1]].delete(entity);
         }
 
         this.entityGridCells.delete(entity);
@@ -89,12 +88,14 @@ export class GridSpatialIndex<T extends EntityLike> {
             return;
         }
 
-        const filter = new Set();
+        const gen = ++this.searchGeneration;
         for (let r = startRow; r <= endRow; r++) {
             for (let c = startCol; c <= endCol; c++) {
                 for (const entity of this.grid[r][c]) {
-                    if (filter.has(entity) || !region.intersectsByBox(entity.getBoundingBox())) continue;
-                    filter.add(entity);
+                    if (entity.searchGen === gen) continue;
+                    if (!region.intersectsByBox(entity.getBoundingBox())) continue;
+
+                    entity.searchGen = gen;
                     yield entity;
                 }
             }
@@ -119,73 +120,7 @@ export class GridSpatialIndex<T extends EntityLike> {
                 this.grid[r][c].clear();
             }
         }
+        this.grid.length = 0;
         this.entityGridCells.clear();
-    }
-
-    public getStats() {
-        let totalEntities = 0;
-        let occupiedCells = 0;
-        for (let r = 0; r < this.rows; r++) {
-            for (let c = 0; c < this.cols; c++) {
-                const count = this.grid[r][c].size;
-                if (count > 0) occupiedCells++;
-                totalEntities += count;
-            }
-        }
-        return {
-            totalEntities,
-            occupiedCells,
-            totalCells: this.rows * this.cols,
-            avgEntitiesPerCell: totalEntities / (this.rows * this.cols),
-        };
-    }
-
-    public getStatsDetail() {
-        let totalEntities = 0;
-        let occupiedCells = 0;
-        let maxEntitiesInCell = 0;
-        let cellsWithOneEntity = 0;
-        let cellsWithManyEntities = 0; // >= 20
-        const entityCellCounts: number[] = []; // 每个非空 cell 的实体数（用于分布分析）
-
-        for (let r = 0; r < this.rows; r++) {
-            for (let c = 0; c < this.cols; c++) {
-                const count = this.grid[r][c].size;
-                if (count > 0) {
-                    occupiedCells++;
-                    entityCellCounts.push(count);
-                    if (count === 1) cellsWithOneEntity++;
-                    if (count >= 20) cellsWithManyEntities++;
-                    if (count > maxEntitiesInCell) maxEntitiesInCell = count;
-                }
-                totalEntities += count;
-            }
-        }
-
-        const totalCells = this.rows * this.cols;
-        const avgEntitiesPerCellGlobal = totalEntities / totalCells;
-        const avgEntitiesPerOccupiedCell = occupiedCells > 0 ? totalEntities / occupiedCells : 0;
-
-        const sortedCounts = [...entityCellCounts].sort((a, b) => a - b);
-        const p50Index = Math.floor(sortedCounts.length * 0.5);
-        const p90Index = Math.floor(sortedCounts.length * 0.9);
-        const medianLoad = sortedCounts[p50Index] ?? 0;
-        const p90Load = sortedCounts[p90Index] ?? 0;
-
-        return {
-            totalEntities,
-            totalCells,
-            occupiedCells,
-
-            utilization: occupiedCells / totalCells, // 网格利用率 [0~1]
-            avgEntitiesPerCellGlobal,               // 全局平均
-            avgEntitiesPerOccupiedCell,             // 非空 cell 平均负载
-
-            medianLoad,                             // 50% 的非空 cell ≤ 此值
-            p90Load,                                // 90% 的非空 cell ≤ 此值
-            maxEntitiesInCell,                      // 最差情况
-            cellsWithOneEntity,                     // 理想单元（无冗余）
-            cellsWithManyEntities,                  // 警戒：可能退化
-        };
     }
 }

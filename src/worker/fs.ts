@@ -37,4 +37,31 @@ export class WorkerFS {
             buffer
         }, {transfer: [buffer]});
     }
+
+    public static fetch(url: string, timeout: number = 1000) {
+        const {promise, resolve, reject} = Promise.withResolvers<ArrayBuffer | null>();
+        const ctrl = new AbortController();
+        const id = this.autoInt.get();
+
+        const timeoutId = setTimeout(() => {
+            reject(`Timeout while fetch ${url}`);
+            ctrl.abort();
+        }, timeout);
+
+        self.addEventListener('message', event => {
+            if (event.data.type !== 'fetch' || event.data.id !== id) return;
+
+            clearTimeout(timeoutId);
+            resolve(event.data.buffer);
+            ctrl.abort();
+        }, {signal: ctrl.signal});
+
+        self.postMessage({
+            type: "fetch",
+            id,
+            url,
+        });
+
+        return promise;
+    }
 }

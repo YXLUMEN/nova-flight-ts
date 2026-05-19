@@ -16,13 +16,14 @@ import {Techs} from "../../world/tech/Techs.ts";
 import {AnsiParser} from "../../utils/AnsiParser.ts";
 import {NovaFlightClient} from "../NovaFlightClient.ts";
 import {ModelManager} from "../render/model/ModelManager.ts";
+import {cleanObj} from "../../utils/uit.ts";
 
-type Adjacency = {
+interface Adjacency {
     successors: Map<Tech, Tech[]>; // tech -> successors
     conflicts: Map<Tech, Tech[]>; // tech -> conflicts
     branchGroupOf: Map<Tech, string | null>; // tech -> branchGroup
     techsInBranch: Map<string, Tech[]>; // branchGroup -> Techs
-};
+}
 
 
 export class ClientTechTree implements TechTree {
@@ -153,6 +154,7 @@ export class ClientTechTree implements TechTree {
     }
 
     public destroy() {
+        this.abortCtrl.abort();
         this.adj.successors.clear();
         this.adj.techsInBranch.clear();
         this.adj.branchGroupOf.clear();
@@ -160,7 +162,8 @@ export class ClientTechTree implements TechTree {
         this.state.clear();
 
         this.container.replaceChildren();
-        this.abortCtrl.abort();
+        this.svg.remove();
+        this.nodesLayer.remove();
         this.playerScore.textContent = '0';
     }
 
@@ -347,7 +350,7 @@ export class ClientTechTree implements TechTree {
         if (!id) {
             this.selectNodeId = null;
             this.techTexture.classList.add('hidden');
-            this.techTexture.src = '';
+            this.techTexture.removeAttribute('src');
             this.techTexture.alt = '';
             this.techTitle.textContent = '';
             this.metaShow.textContent = '';
@@ -467,7 +470,7 @@ export class ClientTechTree implements TechTree {
                 techsInBranch.get(tech.branchGroup)!.push(tech);
             }
         }
-        return {successors, conflicts, branchGroupOf, techsInBranch};
+        return cleanObj({successors, conflicts, branchGroupOf, techsInBranch});
     }
 
     private successorsClosure(tech: Tech): Tech[] {
@@ -514,9 +517,9 @@ export class ClientTechTree implements TechTree {
         if (techsToRevoke.length === 0) return false;
 
         let backScore = 0;
-        for (const tech of techsToRevoke) {
-            this.state.unlocked.delete(tech);
-            backScore += tech.cost;
+        for (const revoke of techsToRevoke) {
+            this.state.unlocked.delete(revoke);
+            backScore += revoke.cost;
         }
 
         const unlocked: Tech[] = [];
@@ -524,7 +527,7 @@ export class ClientTechTree implements TechTree {
             if (this.state.isUnlocked(tech)) unlocked.push(tech);
         }
 
-        const finalScore = this.player.getScore() + (backScore * 0.8) | 0;
+        const finalScore = this.player.getScore() + Math.floor(backScore * 0.8);
         this.player.setScore(finalScore);
 
         const yaw = this.player.getYaw();
@@ -559,11 +562,10 @@ export class ClientTechTree implements TechTree {
 
         let backScore = 0;
         for (const tech of unlocked) {
-            const cost = tech.cost;
-            if (cost) backScore += cost;
+            backScore += tech.cost;
         }
 
-        player.setScore(player.getScore() + (backScore * 0.8) | 0);
+        player.setScore(player.getScore() + Math.floor(backScore * 0.8));
         this.resetPlayer();
 
         this.state.reset();

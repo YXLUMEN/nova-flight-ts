@@ -6,9 +6,6 @@ type ColorConfig = { body: string; head: string; border: string; glow: string };
 
 export class DevourerBossRender implements EntityRenderer<DevourerBoss> {
     public render(entity: DevourerBoss, ctx: CanvasRenderingContext2D, tickDelta: number): void {
-        const positions = entity.segPoses;
-        const prevPositions = entity.prevSegPoses;
-
         const phase = entity.getPhase();
         const colors = this.phaseColors[phase];
 
@@ -19,11 +16,11 @@ export class DevourerBossRender implements EntityRenderer<DevourerBoss> {
         ctx.beginPath();
         for (let i = entity.segmentCount - 1; i > 0; i--) {
             const curr = i << 1;
-            const prevX = prevPositions[curr];
-            const prevY = prevPositions[curr + 1];
+            const prevX = entity.prevSegPoses[curr];
+            const prevY = entity.prevSegPoses[curr + 1];
 
-            const currX = positions[curr];
-            const currY = positions[curr + 1];
+            const currX = entity.segPoses[curr];
+            const currY = entity.segPoses[curr + 1];
 
             const x = lerp(tickDelta, prevX, currX);
             const y = lerp(tickDelta, prevY, currY);
@@ -34,8 +31,8 @@ export class DevourerBossRender implements EntityRenderer<DevourerBoss> {
         ctx.fill();
         ctx.stroke();
 
-        const hx = lerp(tickDelta, prevPositions[0], positions[0]);
-        const hy = lerp(tickDelta, prevPositions[1], positions[1]);
+        const hx = lerp(tickDelta, entity.prevSegPoses[0], entity.segPoses[0]);
+        const hy = lerp(tickDelta, entity.prevSegPoses[1], entity.segPoses[1]);
         this.drawHead(ctx, entity, hx, hy, tickDelta, colors);
 
         ctx.restore();

@@ -52,6 +52,7 @@ export class ServerEntityManager<T extends Entity> {
         this.index.iterate().forEach(entity => {
             this.remove(entity);
         });
+        this.grid.clear();
     }
 
     public getIndexSize(): number {
