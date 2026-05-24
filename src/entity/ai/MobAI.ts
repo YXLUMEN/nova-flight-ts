@@ -1,19 +1,18 @@
 import type {MobEntity} from "../mob/MobEntity.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
-import {config} from "../../utils/uit.ts";
 import {getNearestEntityByVec} from "../../utils/math/math.ts";
 import {Random} from "../../utils/math/Random.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 import type {EntityAi} from "./EntityAi.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 
-export const AiBehavior = config({
-    Wander: 0,
-    Chase: 1,
-    Flee: 2,
-    Simple: 3
-});
+export const enum AiBehavior {
+    Wander,
+    Chase,
+    Flee,
+    Simple
+}
 
 export class MobAI implements EntityAi {
     private disable = false;

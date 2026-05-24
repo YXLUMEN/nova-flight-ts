@@ -1,4 +1,4 @@
-import type {NbtType, NbtTypeIndex} from "../NbtType.ts";
+import type {NbtType, NbtTypeId} from "../NbtType.ts";
 
 export class NbtInvalid implements NbtType<any> {
     private readonly type: number;
@@ -11,7 +11,7 @@ export class NbtInvalid implements NbtType<any> {
         throw new TypeError(`Invalid type ${this.type}`);
     }
 
-    public getType(): NbtTypeIndex {
+    public getType(): NbtTypeId {
         return this.type;
     }
 

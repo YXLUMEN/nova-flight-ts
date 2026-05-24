@@ -20,10 +20,10 @@ export class Cannon90 extends BaseWeapon {
         const bullet = new ExplodeBulletEntity(EntityTypes.EXPLODE_BULLET_ENTITY,
             world,
             attacker,
-            stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1),
-            stack.getOrDefault(DataComponents.EXPLOSION_POWER, 5),
+            stack.getOr(DataComponents.ATTACK_DAMAGE, 1),
+            stack.getOr(DataComponents.EXPLOSION_POWER, 5),
             new ExplosionBehavior(undefined, fusion ? ExplosionEffect.FUSION : ExplosionEffect.NONE),
-            new ExplosionVisual(stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 16), undefined, 4, 2)
+            new ExplosionVisual(stack.getOr(DataComponents.EXPLOSION_RADIUS, 16), undefined, 4, 2)
         );
 
         this.setBullet(bullet, attacker, this.speed, 20, 1);

@@ -41,7 +41,7 @@ export class VoidEnginWeapon extends SpecialWeapon {
         stack.set(DataComponents.ANY_BOOLEAN, attacker.invulnerable);
         attacker.invulnerable = true;
 
-        const modifier = stack.getOrDefault(
+        const modifier = stack.getOr(
             DataComponents.ATTRIBUTE_MODIFIERS,
             VoidEnginWeapon.DEFAULT_MODIFIER
         );
@@ -101,7 +101,7 @@ export class VoidEnginWeapon extends SpecialWeapon {
     }
 
     public getActive(stack: ItemStack): boolean {
-        return stack.getOrDefault(DataComponents.FIRING, true);
+        return stack.getOr(DataComponents.FIRING, true);
     }
 
     public setActive(stack: ItemStack, value: boolean): void {
@@ -109,7 +109,7 @@ export class VoidEnginWeapon extends SpecialWeapon {
     }
 
     public getDuration(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponents.EFFECT_DURATION, 0);
+        return stack.getOr(DataComponents.EFFECT_DURATION, 0);
     }
 
     public setDuration(stack: ItemStack, value: number): void {
@@ -117,7 +117,7 @@ export class VoidEnginWeapon extends SpecialWeapon {
     }
 
     public getTimeLeft(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponents.EFFECT_TIME_LEFT, 0);
+        return stack.getOr(DataComponents.EFFECT_TIME_LEFT, 0);
     }
 
     public setTimeLeft(stack: ItemStack, value: number): void {
@@ -156,11 +156,11 @@ export class VoidEnginWeapon extends SpecialWeapon {
 
         if (!(attacker instanceof PlayerEntity)) return;
 
-        attacker.invulnerable = stack.getOrDefault(DataComponents.ANY_BOOLEAN, false);
+        attacker.invulnerable = stack.getOr(DataComponents.ANY_BOOLEAN, false);
         stack.remove(DataComponents.ANY_BOOLEAN);
 
         if (!world.isClient) {
-            const box = attacker.getWidth() + stack.getOrDefault(DataComponents.EFFECT_RANGE, 32);
+            const box = attacker.getWidth() + stack.getOr(DataComponents.EFFECT_RANGE, 32);
             for (const mob of world.getMobs()) {
                 if (mob.isRemoved() || !pointInCircleVec2(attacker.positionRef, mob.positionRef, box + mob.getWidth())) continue;
                 if (mob instanceof BossEntity) continue;

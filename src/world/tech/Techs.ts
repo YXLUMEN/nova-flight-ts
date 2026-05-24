@@ -12,7 +12,7 @@ export class Techs {
     public static KINETIC_ARTILLERY: RegistryEntry<Tech>;
 
     public static AUTOCANNON: RegistryEntry<Tech>;
-    public static MINIGUN: RegistryEntry<Tech>;
+    public static STORM_FIRE: RegistryEntry<Tech>;
     public static CIWS: RegistryEntry<Tech>;
 
     // 爆炸类
@@ -133,8 +133,8 @@ export class Techs {
         this.HIGH_TEMPERATURE_ALLOY = registerFromJson('high_temperature_alloy');
         this.ENERGY_RECOVERY = registerFromJson('energy_recovery');
         this.GUNBOAT_FOCUS = registerFromJson('gunboat_focus');
-        this.MINIGUN = registerFromJson('minigun');
         this.CIWS = registerFromJson('ciws');
+        this.STORM_FIRE = registerFromJson('storm_fire');
         this.HD_BULLET = registerFromJson('hd_bullet');
         this.AD_LOADING = registerFromJson('ad_loading');
         this.ANTIMATTER_WARHEAD = registerFromJson('antimatter_warhead');

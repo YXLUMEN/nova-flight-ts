@@ -13,9 +13,9 @@ export class MiniGun extends BaseWeapon {
     private readonly BULLET_SPEED = 45;
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        const bullet = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1));
+        const bullet = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, attacker, stack.getOr(DataComponents.ATTACK_DAMAGE, 1));
 
-        const maxSpread = stack.getOrDefault(DataComponents.MAX_SPREAD, this.MAX_SPREAD);
+        const maxSpread = stack.getOr(DataComponents.MAX_SPREAD, this.MAX_SPREAD);
         this.setBullet(bullet, attacker, this.BULLET_SPEED, 4, maxSpread);
         if (maxSpread > 0.5) stack.set(DataComponents.MAX_SPREAD, maxSpread - 0.1);
 
@@ -37,7 +37,7 @@ export class MiniGun extends BaseWeapon {
     }
 
     public override getMaxSpread(item: ItemStack): number {
-        return item.getOrDefault(DataComponents.MAX_SPREAD, this.MAX_SPREAD);
+        return item.getOr(DataComponents.MAX_SPREAD, this.MAX_SPREAD);
     }
 
     protected override getMuzzleParticles(): number {

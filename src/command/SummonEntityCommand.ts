@@ -19,21 +19,22 @@ import type {Vec2} from "../utils/math/Vec2.ts";
 
 export class SummonEntityCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {
+        const summonEntity = this.summonEntity.bind(this);
         dispatcher.registry(
             literal<T>('summon')
                 .then(
                     argument<T, Identifier>('entity', IdentifierArgumentType.identifier())
-                        .executes(this.summonEntity.bind(this))
+                        .executes(summonEntity)
                         .suggests(CommandUtil.createIdentifierSuggestion(Registries.ENTITY_TYPE))
                         .then(
                             argument<T, PosArgument>('pos', PosArgumentType.pos())
-                                .executes(this.summonEntity.bind(this))
+                                .executes(summonEntity)
                                 .then(
                                     argument<T, number>('count', IntArgumentType.int())
-                                        .executes(this.summonEntity.bind(this))
+                                        .executes(summonEntity)
                                         .then(
                                             argument<T, NbtCompound>('nbt', NbtCompoundArgumentType.nbt())
-                                                .executes(this.summonEntity.bind(this))
+                                                .executes(summonEntity)
                                         )
                                 )
                         )

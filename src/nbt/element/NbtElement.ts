@@ -1,8 +1,8 @@
-import type {NbtTypeIndex} from "../NbtType.ts";
+import type {NbtTypeId} from "../NbtType.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 
 export interface NbtElement {
-    getType(): NbtTypeIndex;
+    getType(): NbtTypeId;
 
     write(writer: BinaryWriter): void;
 

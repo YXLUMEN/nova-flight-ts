@@ -5,7 +5,7 @@ import {Registries} from "../registry/Registries.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
-import {CommandError} from "../type/errors.ts";
+import {CommandError, IllegalArgumentError} from "../type/errors.ts";
 import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
 import {CommandUtil} from "./CommandUtil.ts";
 import {DoubleArgumentType} from "./argument/DoubleArgumentType.ts";
@@ -35,7 +35,7 @@ export class MusicCommand {
                                         return;
                                     }
                                     AudioManager.playAudio(event);
-                                    ctx.source.addMessage(`Start to play \x1b[32m"${event.getId()}"\x1b[0m`);
+                                    ctx.source.addMessage(`Start to play \x1b[32m"${event.id}"\x1b[0m`);
                                 })
                                 .suggests(CommandUtil.createIdentifierSuggestion(Registries.AUDIOS))
                         )
@@ -70,40 +70,46 @@ export class MusicCommand {
                                 ctx.source.addMessage(`No music is playing`);
                                 return;
                             }
-                            ctx.source.addMessage(`Current playing is \x1b[32m"${current.getId().toString()}"`);
+                            ctx.source.addMessage(`Current playing is \x1b[32m"${current.id.toString()}"`);
                         })
                 )
                 .then(
                     literal<T>('pause')
-                        .executes(() => {
-                            AudioManager.pause();
-                        })
+                        .executes(() => AudioManager.pause())
                 )
                 .then(
-                    literal<T>('resum')
-                        .executes(() => {
-                            AudioManager.resume();
-                        })
+                    literal<T>('resum').executes(() => AudioManager.resume()
+                    )
                 )
                 .then(
                     literal<T>('stop')
-                        .executes(() => {
-                            AudioManager.stop();
-                        })
+                        .executes(() => AudioManager.stop())
                 )
                 .then(
                     literal<T>('next')
-                        .executes(() => {
-                            BGMManager.next();
-                        })
+                        .executes(() => BGMManager.next())
                 )
                 .then(
                     literal<T>('disable')
                         .then(
                             argument<T, boolean>('bool', BoolArgumentType.bool())
-                                .executes(this.toggleDisable.bind(this))
+                                .executes(this.toggleDisable)
                         )
-                        .executes(this.toggleDisable.bind(this))
+                        .executes(this.toggleDisable)
+                )
+                .then(
+                    argument<T, number>('volume', DoubleArgumentType.double())
+                        .executes(ctx => {
+                            const arg = ctx.args.get('volume');
+                            if (!arg) throw new CommandError("\x1b[33m<volume> is required");
+
+                            const volume = Number(arg.result);
+                            if (!Number.isFinite(volume) || volume < 0.0 || volume > 1.0) {
+                                throw new IllegalArgumentError("Volume must be between 0.0 and 1.0");
+                            }
+                            AudioManager.setVolume(volume);
+                            ctx.source.addMessage(`Set volume to \x1b[32m"${volume.toFixed(2)}"`);
+                        })
                 )
         );
     }

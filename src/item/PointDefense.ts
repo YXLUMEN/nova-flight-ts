@@ -40,8 +40,8 @@ export class PointDefense extends Item {
         if (validThreats.length === 0) return;
         validThreats.sort((a, b) => a.distSq - b.distSq);
 
-        const damage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
-        const maxIntercepted = stack.getOrDefault(DataComponents.MAX_DEFENSE, 1);
+        const damage = stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
+        const maxIntercepted = stack.getOr(DataComponents.MAX_DEFENSE, 1);
         const limit = Math.min(maxIntercepted, validThreats.length);
         for (let i = 0; i < limit; i++) {
             const entity = validThreats[i].entity;

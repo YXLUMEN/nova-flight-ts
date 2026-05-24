@@ -16,8 +16,8 @@ import {spawnLaser} from "../../../utils/ServerEffect.ts";
 import {MutVec2} from "../../../utils/math/MutVec2.ts";
 
 export class ParticleLance extends BaseWeapon {
-    public static readonly LASER_WIDTH = 8;
-    public static readonly CHARGING_TIME = 10;
+    public readonly LASER_WIDTH = 8;
+    public readonly CHARGING_TIME = 10;
 
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity, _slot: number, selected: boolean): void {
         if (stack.get(DataComponents.SCHEDULE_FIRE)) {
@@ -27,7 +27,7 @@ export class ParticleLance extends BaseWeapon {
                 return;
             }
 
-            const charging = stack.getOrDefault(DataComponents.CHARGING_PROGRESS, 0) - 1;
+            const charging = stack.getOr(DataComponents.CHARGING_PROGRESS, 0) - 1;
             if (charging <= 0) {
                 if (!world.isClient) this.onFire(stack, world as ServerWorld, holder);
 
@@ -42,16 +42,16 @@ export class ParticleLance extends BaseWeapon {
             return;
         }
 
-        const cooldown = stack.getOrDefault(DataComponents.COOLDOWN, 0);
+        const cooldown = stack.getOr(DataComponents.COOLDOWN, 0);
         if (cooldown > 0 && this.shouldCooldown(stack)) {
             this.setCooldown(stack, cooldown - 1);
         }
     }
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
-        if (stack.getOrDefault(DataComponents.SCHEDULE_FIRE, false)) return;
-        stack.set(DataComponents.CHARGING_PROGRESS, ParticleLance.CHARGING_TIME);
+        if (stack.getOr(DataComponents.SCHEDULE_FIRE, false)) return;
         stack.set(DataComponents.SCHEDULE_FIRE, true);
+        stack.set(DataComponents.CHARGING_PROGRESS, this.CHARGING_TIME);
 
         if (world.isClient) return;
         world.playSound(null, SoundEvents.LASER_CHARGE_UP, 0.5);
@@ -68,7 +68,7 @@ export class ParticleLance extends BaseWeapon {
             start.y + Math.sin(yaw) * PhaseLasers.LASER_HEIGHT
         );
 
-        const damage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 20);
+        const damage = stack.getOr(DataComponents.ATTACK_DAMAGE, 20);
         const damageSource = world.getDamageSources()
             .laser(attacker)
             .setShieldMulti(0.5)
@@ -83,7 +83,7 @@ export class ParticleLance extends BaseWeapon {
             if (!mob.isRemoved() && thickLineCircleHit(
                 start.x, start.y,
                 end.x, end.y,
-                ParticleLance.LASER_WIDTH,
+                this.LASER_WIDTH,
                 pos.x, pos.y,
                 mob.getWidth() / 2)
             ) {
@@ -110,7 +110,7 @@ export class ParticleLance extends BaseWeapon {
     }
 
     public getChargingProgress(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponents.CHARGING_PROGRESS, 0);
+        return stack.getOr(DataComponents.CHARGING_PROGRESS, 0);
     }
 
     public override getUiColor(): string {

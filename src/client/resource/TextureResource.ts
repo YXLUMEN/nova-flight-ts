@@ -7,7 +7,6 @@ import {exists, readFile} from "@tauri-apps/plugin-fs";
 import {convertFileSrc} from "@tauri-apps/api/core";
 import {error} from "@tauri-apps/plugin-log";
 import type {TexturePath} from "../render/model/TexturePath.ts";
-import {config} from "../../utils/uit.ts";
 import type {TextureProvider} from "../render/model/TextureProvider.ts";
 
 export class TextureResource implements ResourceModule, TextureProvider {
@@ -40,7 +39,7 @@ export class TextureResource implements ResourceModule, TextureProvider {
 
             const abs = `${absParent}\\${name}.png`;
             const covered = convertFileSrc(abs);
-            this.texturePaths.set(key, config({abs, covered}));
+            this.texturePaths.set(key, {abs, covered});
         });
 
         this.textureCache.set('builtin/default', this.defaultTexture!);

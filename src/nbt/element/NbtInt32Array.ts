@@ -1,11 +1,10 @@
 import type {NbtElement} from "./NbtElement.ts";
-import {type NbtType, NbtTypeId, type NbtTypeIndex} from "../NbtType.ts";
-import {config} from "../../utils/uit.ts";
+import {type NbtType, NbtTypeId} from "../NbtType.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 
 export class NbtInt32Array implements NbtElement {
-    public static readonly TYPE: NbtType<NbtInt32Array> = config({
+    public static readonly TYPE: NbtType<NbtInt32Array> = {
         read(reader: BinaryReader): NbtInt32Array {
             const len = reader.readVarUint();
             const array = new Int32Array(len);
@@ -16,7 +15,7 @@ export class NbtInt32Array implements NbtElement {
 
             return new NbtInt32Array(array);
         }
-    });
+    };
 
     public readonly value: Int32Array;
 
@@ -28,7 +27,7 @@ export class NbtInt32Array implements NbtElement {
         return new NbtInt32Array(new Int32Array(list));
     }
 
-    public getType(): NbtTypeIndex {
+    public getType(): NbtTypeId {
         return NbtTypeId.Int32Array;
     }
 

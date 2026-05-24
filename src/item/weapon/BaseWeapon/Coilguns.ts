@@ -12,7 +12,7 @@ export class Coilguns extends BaseWeapon {
     public static readonly SPEED = 38;
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        const bullet = new FastBulletEntity(EntityTypes.FAST_BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 4));
+        const bullet = new FastBulletEntity(EntityTypes.FAST_BULLET_ENTITY, world, attacker, stack.getOr(DataComponents.ATTACK_DAMAGE, 4));
         this.setBullet(bullet, attacker, Coilguns.SPEED, 6, 1);
         world.spawnEntity(bullet);
     }

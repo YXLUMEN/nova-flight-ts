@@ -1,15 +1,14 @@
-import {type NbtType, NbtTypeId, type NbtTypeIndex} from "../NbtType.ts";
-import {config} from "../../utils/uit.ts";
+import {type NbtType, NbtTypeId} from "../NbtType.ts";
 import type {NbtElement} from "./NbtElement.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 
 export class NbtString implements NbtElement {
-    public static readonly TYPE: NbtType<NbtString> = config({
+    public static readonly TYPE: NbtType<NbtString> = {
         read(reader: BinaryReader) {
             return NbtString.of(reader.readString());
         }
-    });
+    };
     public static readonly EMPTY = new NbtString('');
 
     public static of(value: string): NbtString {
@@ -22,7 +21,7 @@ export class NbtString implements NbtElement {
         this.value = value;
     }
 
-    public getType(): NbtTypeIndex {
+    public getType(): NbtTypeId {
         return NbtTypeId.String;
     }
 

@@ -12,7 +12,7 @@ export class Cannon40 extends BaseWeapon {
     private readonly speed = 35;
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        const bullet = new FastBulletEntity(EntityTypes.FAST_BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 3));
+        const bullet = new FastBulletEntity(EntityTypes.FAST_BULLET_ENTITY, world, attacker, stack.getOr(DataComponents.ATTACK_DAMAGE, 3));
         this.setBullet(bullet, attacker, this.speed, 6, 2);
         world.spawnEntity(bullet);
     }

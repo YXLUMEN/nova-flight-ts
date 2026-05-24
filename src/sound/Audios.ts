@@ -37,6 +37,8 @@ export class Audios {
     public static readonly UNIVERSAL_COLLAPSE = this.register('universal_collapse');
     public static readonly THE_TALE_OF_A_CRUEL_WORLD = this.register('the_tale_of_a_cruel_world');
 
+    public static readonly ASSUMPTIONS = this.register('assumptions');
+
     private static register(id: string) {
         const identifier = Identifier.ofVanilla(id);
         return Registry.registerReferenceById(Registries.AUDIOS, identifier, SoundEvent.of(identifier)).getValue();

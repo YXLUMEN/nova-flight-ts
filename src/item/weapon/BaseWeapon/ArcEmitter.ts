@@ -15,7 +15,7 @@ export class ArcEmitter extends BaseWeapon {
         const pos = attacker.positionRef;
         const yaw = attacker.getYaw();
 
-        const range = stack.getOrDefault(DataComponents.ATTACK_RANGE, 65536);
+        const range = stack.getOr(DataComponents.ATTACK_RANGE, 65536);
         const candidates: EntityDist<Entity>[] = [];
 
         for (const entity of world.getMobs()) {
@@ -44,7 +44,7 @@ export class ArcEmitter extends BaseWeapon {
 
         candidates.sort((a, b) => a.distSq - b.distSq);
 
-        const damage = randInt(1, stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 10));
+        const damage = randInt(1, stack.getOr(DataComponents.ATTACK_DAMAGE, 10));
         const damageSource = world.getDamageSources().arc(attacker);
         const maxTarget = Math.min(6, candidates.length);
 

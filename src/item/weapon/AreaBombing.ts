@@ -12,7 +12,7 @@ export class AreaBombing extends SpecialWeapon {
         this.setCooldown(stack, this.getMaxCooldown(stack));
 
         if (world.isClient) return;
-        const power = stack.getOrDefault(DataComponents.EXPLOSION_POWER, 32);
+        const power = stack.getOr(DataComponents.EXPLOSION_POWER, 32);
 
         const trailblazer = new TrailblazerEntity(EntityTypes.TRAILBLAZER_ENTITY, world, attacker, power);
         const yaw = attacker.getYaw();

@@ -59,7 +59,7 @@ export class Item {
         public getValidatedComponents(): SimpleComponentMap {
             const componentMap = this.getComponents();
             if (componentMap.has(DataComponents.DURABILITY) &&
-                componentMap.getOrDefault(DataComponents.MAX_STACK_SIZE, 1) > 1) {
+                componentMap.getOr(DataComponents.MAX_STACK_SIZE, 1) > 1) {
                 throw Error("Item cannot have both durability and be stackable");
             }
             return componentMap;

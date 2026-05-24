@@ -28,10 +28,10 @@ export class SoundSystem {
     }
 
     private loadSound(event: SoundEvent, volume: number = 1, pitch: number = 1, loop: boolean = false): void {
-        const key = event.getId();
+        const key = event.id;
         if (this.activeLoops.has(key)) return;
 
-        const buffers = this.module.buffers.get(event.getId());
+        const buffers = this.module.buffers.get(event.id);
         if (!buffers || buffers.length === 0) return;
 
         const buffer = buffers[(Math.random() * buffers.length) | 0];
@@ -52,7 +52,7 @@ export class SoundSystem {
     }
 
     public stopLoopSound(event: SoundEvent): boolean {
-        const key = event.getId();
+        const key = event.id;
         const source = this.activeLoops.get(key);
         if (source) {
             source.stop();

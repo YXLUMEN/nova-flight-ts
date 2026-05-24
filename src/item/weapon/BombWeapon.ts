@@ -9,7 +9,7 @@ import {ExplosionBehaviour, ExplosionBehavior} from "../../world/explosion/Explo
 export class BombWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
         if (!world.isClient) {
-            const visual = new ExplosionVisual(stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 256));
+            const visual = new ExplosionVisual(stack.getOr(DataComponents.EXPLOSION_RADIUS, 256));
             visual.shake = 0.3;
 
             world.createExplosion(
@@ -17,7 +17,7 @@ export class BombWeapon extends SpecialWeapon {
                 null,
                 attacker.getX(),
                 attacker.getY(),
-                stack.getOrDefault(DataComponents.EXPLOSION_POWER, 16),
+                stack.getOr(DataComponents.EXPLOSION_POWER, 16),
                 new ExplosionBehavior(ExplosionBehaviour.ONLY_DAMAGE, undefined, false),
                 visual
             );

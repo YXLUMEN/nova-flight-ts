@@ -12,7 +12,7 @@ import {EntityPredicates} from "../../world/predicate/EntityPredicates.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class MobMissileEntity extends MissileEntity {
-    private static readonly EXPLOSION = new FilterBehaviour()
+    private static readonly EXPLOSION = new FilterBehaviour(undefined, undefined, undefined, false)
         .withFiler(EntityPredicates.ONLY_PLAYER);
 
     protected override maxRelockCooldown = 15;

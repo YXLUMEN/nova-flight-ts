@@ -1,5 +1,4 @@
 import type {Codec} from "./Codec.ts";
-import {config} from "../utils/uit.ts";
 import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {NbtInt8} from "../nbt/element/NbtInt8.ts";
 import {NbtInt32} from "../nbt/element/NbtInt32.ts";
@@ -8,6 +7,8 @@ import {NbtFloat} from "../nbt/element/NbtFloat.ts";
 import {NbtDouble} from "../nbt/element/NbtDouble.ts";
 import {NbtString} from "../nbt/element/NbtString.ts";
 import type {NbtElement} from "../nbt/element/NbtElement.ts";
+import {CodecImpl} from "./CodecImpl.ts";
+import type {Return} from "../type/types.ts";
 
 export class Codecs {
     public static readonly INT8: Codec<number> = this.of(
@@ -50,13 +51,7 @@ export class Codecs {
         input => input
     );
 
-    public static of<A, T extends NbtElement>(
-        encoder: (value: A) => T,
-        decoder: (value: T) => A | null
-    ): Codec<A> {
-        return config({
-            encode: encoder,
-            decode: decoder
-        });
+    public static of<A, T extends NbtElement>(encoder: Return<A, T>, decoder: Return<T, A | null>): Codec<A> {
+        return new CodecImpl(encoder, decoder);
     }
 }

@@ -26,7 +26,7 @@ export class PerditionBeam extends PhaseLasers {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         if (this.getActive(stack) || !stack.isAvailable()) return;
 
-        if (stack.getOrDefault(DataComponents.SCHEDULE_FIRE, false)) {
+        if (stack.getOr(DataComponents.SCHEDULE_FIRE, false)) {
             stack.remove(DataComponents.SCHEDULE_FIRE);
             stack.remove(DataComponents.CHARGING_PROGRESS);
 
@@ -54,8 +54,8 @@ export class PerditionBeam extends PhaseLasers {
     }
 
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity) {
-        if (stack.getOrDefault(DataComponents.SCHEDULE_FIRE, false)) {
-            const charging = stack.getOrDefault(DataComponents.CHARGING_PROGRESS, 0) - 1;
+        if (stack.getOr(DataComponents.SCHEDULE_FIRE, false)) {
+            const charging = stack.getOr(DataComponents.CHARGING_PROGRESS, 0) - 1;
             if (charging <= 0) {
                 this.setActive(stack, true);
                 stack.remove(DataComponents.SCHEDULE_FIRE);
@@ -75,7 +75,7 @@ export class PerditionBeam extends PhaseLasers {
     }
 
     protected damage(world: ServerWorld, stack: ItemStack, holder: Entity, start: Vec2, end: Vec2) {
-        const damage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
+        const damage = stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
         const damageSource = world.getDamageSources()
             .laser(holder)
             .setHealthMulti(4)

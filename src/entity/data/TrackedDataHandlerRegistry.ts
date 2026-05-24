@@ -1,8 +1,7 @@
-import {TrackedData} from "./TrackedData.ts";
 import type {TrackedDataHandler} from "./TrackedDataHandler.ts";
 import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
-import {config} from "../../utils/uit.ts";
 import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
+import {TrackedData} from "./TrackedData.ts";
 
 export class TrackedDataHandlerRegistry {
     private static readonly DATA_HANDLERS_ID = new Map<TrackedDataHandler<any>, number>();
@@ -15,7 +14,7 @@ export class TrackedDataHandlerRegistry {
     public static readonly DOUBLE = this.create(PacketCodecs.DOUBLE);
 
     private static create<T>(codec: PacketCodec<T>): TrackedDataHandler<T> {
-        const handler = config({
+        const handler: TrackedDataHandler<T> = {
             codec(): PacketCodec<T> {
                 return codec;
             },
@@ -25,7 +24,7 @@ export class TrackedDataHandlerRegistry {
             copy(data: T): T {
                 return data;
             }
-        });
+        };
 
         const index = this.DATA_ID_HANDLERS.length;
         this.DATA_ID_HANDLERS[index] = handler;

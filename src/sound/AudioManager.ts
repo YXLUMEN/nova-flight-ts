@@ -30,7 +30,7 @@ export class AudioManager {
     public static playAudio(event: SoundEvent, loop = false) {
         if (this.disable) return;
 
-        const id = event.getId();
+        const id = event.id;
         const url = this.module.buffers.get(id);
         if (!url) {
             console.warn(`Can't find sound with id: ${id}`);

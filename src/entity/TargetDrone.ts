@@ -8,13 +8,12 @@ import type {EntityAi} from "./ai/EntityAi.ts";
 import {EmptyAi} from "./ai/EmptyAi.ts";
 
 export class TargetDrone extends MobEntity {
-    private static readonly MAX_CD = 20;
+    public dps = '';
 
-    public readonly damage: string[] = [];
-
+    private ticks = 0;
+    private acc = 0;
     private clearTime = 0;
-    private currentCd = TargetDrone.MAX_CD;
-    private clearCd = 0;
+    private dirty = true;
 
     public constructor(type: EntityType<TargetDrone>, world: World) {
         super(type, world, 0);
@@ -32,26 +31,26 @@ export class TargetDrone extends MobEntity {
 
         if (this.clearTime > 0) {
             this.clearTime--;
+            this.ticks++;
+
+            if (!this.dirty) return;
+            this.dps = this.ticks > 0
+                ? `${(this.acc / this.ticks).toFixed(1)}/t`
+                : '0.0/t';
+
+            this.dirty = false;
             return;
         }
 
-        if (this.clearCd > 0) {
-            this.clearCd--;
-            return;
-        }
-        this.clearCd = this.currentCd;
-        this.currentCd = Math.max(5, this.currentCd -= 5);
-
-        this.damage.shift();
+        this.acc = 0;
+        this.dps = '';
+        this.ticks = 0;
     }
 
-    public push(damage: number) {
-        this.damage.push(damage.toString());
-
+    public push(damage: number): void {
         this.clearTime = 40;
-        this.currentCd = TargetDrone.MAX_CD;
-
-        if (this.damage.length > 7) this.damage.shift();
+        this.acc += damage;
+        this.dirty = true;
     }
 
     public override onDeath(damageSource: DamageSource) {

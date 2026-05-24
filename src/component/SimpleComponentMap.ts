@@ -30,7 +30,7 @@ export class SimpleComponentMap implements ComponentMap {
         return this.baseComponents.has(type);
     }
 
-    public getOrDefault<T>(type: DataComponentType<T>, fallback: T): T {
+    public getOr<T>(type: DataComponentType<T>, fallback: T): T {
         const component = this.baseComponents.get(type);
         return component !== undefined ? component : fallback;
     }

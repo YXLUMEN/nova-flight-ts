@@ -11,15 +11,15 @@ import {clamp} from "../../../utils/math/math.ts";
 import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
 
 export class CIWS extends BaseWeapon {
-    private static readonly BULLET_SPEED = 60;
+    private readonly BULLET_SPEED = 60;
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
         stack.set(DataComponents.FIRING, true);
 
-        const damage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
+        const damage = stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
         for (let i = 4; i--;) {
             const bullet = new CIWSBulletEntity(EntityTypes.CIWS_BULLET_ENTITY, world, attacker, damage);
-            this.setBullet(bullet, attacker, CIWS.BULLET_SPEED, 2, 2, i * 20);
+            this.setBullet(bullet, attacker, this.BULLET_SPEED, 2, 2, i * 20);
             world.spawnEntity(bullet);
         }
 
@@ -49,7 +49,7 @@ export class CIWS extends BaseWeapon {
         const currentHeat = this.getHeat(stack);
         if (currentHeat === 0) return;
 
-        const countdown = stack.getOrDefault(DataComponents.COOLDOWN_COUNTDOWN, 0);
+        const countdown = stack.getOr(DataComponents.COOLDOWN_COUNTDOWN, 0);
         if (countdown > 0) {
             stack.set(DataComponents.COOLDOWN_COUNTDOWN, countdown - 1);
             return;
@@ -89,7 +89,7 @@ export class CIWS extends BaseWeapon {
     }
 
     public getMaxHeat(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponents.MAX_HEAT, 300);
+        return stack.getOr(DataComponents.MAX_HEAT, 300);
     }
 
     public setMaxHeat(stack: ItemStack, value: number): void {
@@ -97,7 +97,7 @@ export class CIWS extends BaseWeapon {
     }
 
     public getHeat(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponents.HEAT, 0);
+        return stack.getOr(DataComponents.HEAT, 0);
     }
 
     public setHeat(stack: ItemStack, value: number): void {
@@ -113,6 +113,6 @@ export class CIWS extends BaseWeapon {
     }
 
     public override getBallisticSpeed(): number {
-        return CIWS.BULLET_SPEED;
+        return this.BULLET_SPEED;
     }
 }

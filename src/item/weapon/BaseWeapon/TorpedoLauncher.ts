@@ -15,8 +15,8 @@ export class TorpedoLauncher extends BaseWeapon {
             EntityTypes.MAGNETIC_TORPEDO_ENTITY,
             world,
             attacker,
-            stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1),
-            stack.getOrDefault(DataComponents.EXPLOSION_POWER, 16),
+            stack.getOr(DataComponents.ATTACK_DAMAGE, 1),
+            stack.getOr(DataComponents.EXPLOSION_POWER, 16),
         );
 
         this.setBullet(bullet, attacker, this.speed, 0, 0);

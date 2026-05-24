@@ -7,8 +7,6 @@
   "desc.nova-flight.kinetic_artillery": "射程远, 威力大, 准确度高, 是动能火炮的座右铭, 动能火炮发射出的炮弹不会爆炸, 但是会穿透所有阻碍, 并一直飞...一直飞...",
   "name.nova-flight.autocannon": "机关炮",
   "desc.nova-flight.autocannon": "解锁速射武器分支, 缩小的弹丸体积允许以更高的频率发射. \"自从加特林医生发明机枪之后, 人们对这种压制性武器的研究乐此不疲, 一直到30k的现代\"",
-  "name.nova-flight.minigun": "MiniGun",
-  "desc.nova-flight.minigun": "解锁 \"MiniGun(微针)\", 微针机炮采用25mm口径, 虽然伤害和穿甲能力有所降低, 但是大幅度提高的射速能够阻挡敌舰的前进.",
   "name.nova-flight.ciws": "近防炮",
   "desc.nova-flight.ciws": "解锁 \"近防炮\", 那是在一个遥远的星球, 淳朴的村民向您分享了进防炮技术, 在拦截飞弹, 清除近身的敌人时效果无与伦比, 但其极高的射速非常容易过热.",
   "name.nova-flight.flak_battery": "高射炮",
@@ -136,5 +134,7 @@
   "name.nova-flight.fire_control_computer": "火控计算机",
   "desc.nova-flight.fire_control_computer": "弹道计算机将自动计算并瞄准!\u001B[90m (左Alt开启) \u001B[0m\n “忘关了就是开了?” ——帝国旗舰指挥官“大姐头”凯瑟琳的嘲讽",
   "name.nova-flight.pointer_following": "指针跟随",
-  "desc.nova-flight.pointer_following": "舰艇将跟随鼠标位置. \n牺牲方向机得来的导航系统, 通过引导信标来实现更灵活的机动."
+  "desc.nova-flight.pointer_following": "舰艇将跟随鼠标位置. \n牺牲方向机得来的导航系统, 通过引导信标来实现更灵活的机动.",
+  "name.nova-flight.storm_fire": "火风暴机关炮",
+  "desc.nova-flight.storm_fire": "设计先进的自动火炮，能够向目标倾泻一片由高爆炮弹构成的弹幕。"
 }

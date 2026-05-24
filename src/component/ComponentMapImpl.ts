@@ -112,7 +112,7 @@ export class ComponentMapImpl implements ComponentMap {
         return this.baseComponents.has(type);
     }
 
-    public getOrDefault<T>(type: DataComponentType<T>, fallback: T): T {
+    public getOr<T>(type: DataComponentType<T>, fallback: T): T {
         const component = this.get(type);
         return component !== null ? component : fallback;
     }

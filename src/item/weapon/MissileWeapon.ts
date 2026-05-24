@@ -12,10 +12,10 @@ import type {ServerWorld} from "../../server/ServerWorld.ts";
 export class MissileWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         const pos = attacker.positionRef;
-        const missileCounts = stack.getOrDefault(DataComponents.LAUNCH_COUNT, 8);
-        const hitDamage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 10);
-        const explosionDamage = stack.getOrDefault(DataComponents.EXPLOSION_POWER, 10);
-        const explosionRadius = stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 72);
+        const missileCounts = stack.getOr(DataComponents.LAUNCH_COUNT, 8);
+        const hitDamage = stack.getOr(DataComponents.ATTACK_DAMAGE, 10);
+        const explosionDamage = stack.getOr(DataComponents.EXPLOSION_POWER, 10);
+        const explosionRadius = stack.getOr(DataComponents.EXPLOSION_RADIUS, 72);
 
         let i = 1;
         const schedule = world.scheduleInterval(0.1, () => {

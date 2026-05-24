@@ -139,8 +139,8 @@ export class ItemStack {
         return this.components.get(type);
     }
 
-    public getOrDefault<T>(type: DataComponentType<T>, fallback: T): T {
-        return this.components.getOrDefault(type, fallback);
+    public getOr<T>(type: DataComponentType<T>, fallback: T): T {
+        return this.components.getOr(type, fallback);
     }
 
     public remove<T>(type: DataComponentType<T>): void {
@@ -176,7 +176,7 @@ export class ItemStack {
     }
 
     public isAvailable(): boolean {
-        return this.getOrDefault(DataComponents.ITEM_AVAILABLE, true);
+        return this.getOr(DataComponents.ITEM_AVAILABLE, true);
     }
 
     public setAvailable(value: boolean): void {
@@ -200,7 +200,7 @@ export class ItemStack {
     }
 
     public getDurability(): number {
-        return clamp(this.components.getOrDefault(DataComponents.DURABILITY, 0), 0, this.getMaxDurability());
+        return clamp(this.components.getOr(DataComponents.DURABILITY, 0), 0, this.getMaxDurability());
     }
 
     public setDurability(value: number) {
@@ -208,7 +208,7 @@ export class ItemStack {
     }
 
     public getMaxDurability(): number {
-        return this.components.getOrDefault(DataComponents.MAX_DURABILITY, 0);
+        return this.components.getOr(DataComponents.MAX_DURABILITY, 0);
     }
 
     public damage(amount: number, breakCallback?: Consumer<Item>): void {
@@ -275,7 +275,7 @@ export class ItemStack {
     }
 
     public getMaxCount(): number {
-        return this.components.getOrDefault(DataComponents.MAX_STACK_SIZE, 1);
+        return this.components.getOr(DataComponents.MAX_STACK_SIZE, 1);
     }
 
     public isStackable(): boolean {

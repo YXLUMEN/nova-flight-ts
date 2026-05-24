@@ -13,29 +13,50 @@ import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import type {EntityDist} from "../type/types.ts";
 import {AABB} from "../utils/math/AABB.ts";
 import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
+import {SoundEvents} from "../sound/SoundEvents.ts";
+import type {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
+import {SoundEventS2CPacket} from "../network/packet/s2c/SoundEventS2CPacket.ts";
 
 export class FlakBattery extends Item {
-    public static readonly BULLET_SPEED = 40;
-
-    private static readonly targets = new WeakMap<Entity, Set<ProjectileEntity>>();
+    private static readonly BULLET_SPEED = 40;
+    private static readonly TARGETS = new WeakMap<Entity, Set<ProjectileEntity>>();
 
     public override inventoryTick(stack: ItemStack, world: ServerWorld, holder: Entity, slot: number, selected: boolean) {
         super.inventoryTick(stack, world, holder, slot, selected);
 
-        if (world.isClient || (holder.age & 1) !== 0) return;
+        if (world.isClient) {
+            if (!holder.isPlayer()) return;
+
+            if (holder.cooldownManager.getCooldownTicks(this) === 10) {
+                world.playSound(null, SoundEvents.SHELL_RELOAD, 0.6);
+            }
+            return;
+        }
+
+        if ((holder.age & 1) !== 0) return;
 
         if (holder instanceof LivingEntity && holder.hasStatusEffect(StatusEffects.EMC_STATUS)) {
             return;
         }
 
-        if ((holder.age & 15) !== 0) {
-            FlakBattery.choseTarget(world as ServerWorld, holder, stack.getOrDefault(DataComponents.MAX_DEFENSE, 1));
+        if (holder.isPlayer()) {
+            if (holder.cooldownManager.isCoolingDown(this)) return;
+
+            if (stack.getOr(DataComponents.RELOADING, false)) {
+                stack.setDurability(stack.getMaxDurability());
+                stack.remove(DataComponents.RELOADING);
+                (holder as ServerPlayerEntity).syncStack(stack);
+            }
         }
 
-        const targets = FlakBattery.targets.get(holder);
+        if ((holder.age & 15) !== 0) {
+            FlakBattery.choseTarget(world as ServerWorld, holder, stack.getOr(DataComponents.MAX_DEFENSE, 1));
+        }
+
+        const targets = FlakBattery.TARGETS.get(holder);
         if (!targets || targets.size === 0) return;
 
-        const damage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
+        const damage = stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
 
         for (const target of targets) {
             if (target.isRemoved()) {
@@ -45,6 +66,17 @@ export class FlakBattery extends Item {
 
             FlakBattery.intercept(world as ServerWorld, holder, target, damage);
         }
+
+        if (!holder.isPlayer()) return;
+
+        const left = stack.getDurability() - 1;
+        stack.setDurability(left);
+        if (left > 0) return;
+
+        stack.set(DataComponents.RELOADING, true);
+        holder.cooldownManager.set(this, 40);
+        (holder as ServerPlayerEntity).networkHandler.send(new SoundEventS2CPacket(SoundEvents.BARREL_OPEN, 0.8, 1, false));
+        (holder as ServerPlayerEntity).syncStack(stack);
     }
 
     private static intercept(world: ServerWorld, defender: Entity, target: ProjectileEntity, damage: number) {
@@ -74,10 +106,10 @@ export class FlakBattery extends Item {
     private static choseTarget(world: ServerWorld, holder: Entity, limit: number = 1) {
         const selfPos = holder.positionRef;
 
-        let targets = this.targets.get(holder);
+        let targets = this.TARGETS.get(holder);
         if (!targets) {
             targets = new Set();
-            this.targets.set(holder, targets);
+            this.TARGETS.set(holder, targets);
         } else targets.clear();
 
         const validThreats: EntityDist<ProjectileEntity>[] = [];

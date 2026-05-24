@@ -24,14 +24,29 @@ export default defineConfig({
         outDir: 'dist',
         minify: 'terser',
         terserOptions: {
+            ecma: 2025,
             compress: {
                 drop_console: true,
                 drop_debugger: true,
-                ecma: 2020
             },
         },
     },
+    plugins: [serverFlagPlugin(false)],
     worker: {
-        format: 'es'
+        format: 'es',
+        plugins: () => [serverFlagPlugin(true)]
     }
 });
+
+function serverFlagPlugin(value: boolean) {
+    return {
+        name: 'server-flag',
+        enforce: 'pre',
+        transform(code: string) {
+            return {
+                code: code.replace(/__IS_SERVER__/g, value ? 'true' : 'false'),
+                map: null,
+            }
+        },
+    }
+}

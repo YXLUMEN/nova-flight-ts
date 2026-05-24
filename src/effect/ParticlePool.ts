@@ -1,12 +1,12 @@
-import {Particle} from "./Particle.ts";
+import {CircleParticle} from "./CircleParticle.ts";
 import type {ParticleEffectType} from "./ParticleEffectType.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {rand} from "../utils/math/math.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 
 export class ParticlePool {
-    private readonly active: Particle[] = [];
-    private readonly pool: Particle[] = [];
+    private readonly active: CircleParticle[] = [];
+    private readonly pool: CircleParticle[] = [];
 
     private readonly capacity: number;
 
@@ -20,17 +20,17 @@ export class ParticlePool {
         pos: Vec2, vel: Vec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
-        drag = 0.0
-    ): Particle {
-        let p: Particle;
+        drag = 0.0, decrease = true
+    ): CircleParticle {
+        let p: CircleParticle;
         if (this.pool.length > 0) {
             p = this.pool.pop()!;
-            p.reset(pos, vel, life, size, colorFrom, colorTo, drag);
+            p.reset(pos, vel, life, size, colorFrom, colorTo, drag, decrease);
         } else if (this.active.length < this.capacity) {
-            p = new Particle(pos, vel, life, size, colorFrom, colorTo, drag);
+            p = new CircleParticle(pos, vel, life, size, colorFrom, colorTo, drag, decrease);
         } else {
             p = this.active.shift()!;
-            p.reset(pos, vel, life, size, colorFrom, colorTo, drag);
+            p.reset(pos, vel, life, size, colorFrom, colorTo, drag, decrease);
         }
         this.active.push(p);
         return p;

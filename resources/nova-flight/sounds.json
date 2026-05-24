@@ -337,5 +337,40 @@
       "nova-flight:torpedoes/fire_02",
       "nova-flight:torpedoes/fire_03"
     ]
+  },
+  "barrel_open": {
+    "subtitle": "sound.nova-flight.barrel_open",
+    "sounds": [
+      "nova-flight:barrel_open"
+    ]
+  },
+  "shell_reload": {
+    "subtitle": "sound.nova-flight.shell_reload",
+    "sounds": [
+      "nova-flight:shell_reload"
+    ]
+  },
+  "storm_fire.warm_up": {
+    "subtitle": "sound.nova-flight.storm_fire.warm_up",
+    "sounds": [
+      "nova-flight:storm_fire/warm_up_01",
+      "nova-flight:storm_fire/warm_up_02",
+      "nova-flight:storm_fire/warm_up_03"
+    ]
+  },
+  "storm_fire.fire_end": {
+    "subtitle": "sound.nova-flight.storm_fire.fire_end",
+    "sounds": [
+      "nova-flight:storm_fire/fire_end_01",
+      "nova-flight:storm_fire/fire_end_02",
+      "nova-flight:storm_fire/fire_end_03"
+    ]
+  },
+  "storm_fire.fire_loop": {
+    "subtitle": "sound.nova-flight.storm_fire.fire_loop",
+    "sounds": [
+      "nova-flight:storm_fire/fire_loop_01",
+      "nova-flight:storm_fire/fire_loop_02"
+    ]
   }
 }

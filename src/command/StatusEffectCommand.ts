@@ -15,8 +15,6 @@ import {CommandUtil} from "./CommandUtil.ts";
 
 export class StatusEffectCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {
-        const applyEffect = this.applyEffect.bind(this);
-
         dispatcher.registry(
             literal<T>('effect')
                 .then(
@@ -25,14 +23,14 @@ export class StatusEffectCommand {
                             argument<T, EntitySelector>('selector', EntitySelectorArgumentType.entities())
                                 .then(
                                     argument<T, Identifier>('effect_id', IdentifierArgumentType.identifier())
-                                        .executes(applyEffect)
+                                        .executes(this.applyEffect)
                                         .suggests(CommandUtil.createIdentifierSuggestion(Registries.STATUS_EFFECT))
                                         .then(
                                             argument<T, number>('duration', IntArgumentType.int())
-                                                .executes(applyEffect)
+                                                .executes(this.applyEffect)
                                                 .then(
                                                     argument<T, number>('amplifier', IntArgumentType.int())
-                                                        .executes(applyEffect)
+                                                        .executes(this.applyEffect)
                                                 )
                                         )
                                 )
@@ -40,13 +38,13 @@ export class StatusEffectCommand {
                 )
                 .then(
                     literal<T>('clear')
-                        .executes(this.removeStatus.bind(this))
+                        .executes(this.removeStatus)
                         .then(
                             argument<T, EntitySelector>('selector', EntitySelectorArgumentType.entities())
-                                .executes((this.removeStatus.bind(this)))
+                                .executes((this.removeStatus))
                                 .then(
                                     argument<T, Identifier>('effect_id', IdentifierArgumentType.identifier())
-                                        .executes((this.removeStatus.bind(this)))
+                                        .executes((this.removeStatus))
                                         .suggests(CommandUtil.createIdentifierSuggestion(Registries.STATUS_EFFECT))
                                 )
                         )

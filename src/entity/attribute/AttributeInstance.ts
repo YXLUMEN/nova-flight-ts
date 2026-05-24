@@ -4,8 +4,7 @@ import {Identifier} from "../../registry/Identifier.ts";
 import type {Consumer} from "../../type/types.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {HashMap} from "../../utils/collection/HashMap.ts";
-import {cleanObj} from "../../utils/uit.ts";
-import type {AttributeModifier} from "../../component/type/AttributeModifier.ts";
+import {AttributeModifier} from "../../component/type/AttributeModifier.ts";
 
 
 export class AttributeInstance {
@@ -156,7 +155,7 @@ export class AttributeInstance {
                 if (!id) continue;
                 const value = modifierNbt.getDouble('value');
 
-                const modifier: AttributeModifier = cleanObj({id, value});
+                const modifier: AttributeModifier = new AttributeModifier(id, value);
                 this.modifierById.set(id, modifier);
             }
         }

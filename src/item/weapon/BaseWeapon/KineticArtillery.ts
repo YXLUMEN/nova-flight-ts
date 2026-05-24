@@ -22,7 +22,7 @@ export class KineticArtillery extends BaseWeapon {
         }
 
         if (!holder.isPlayer() || world.isClient) return;
-        if (stack.getOrDefault(DataComponents.RELOADING, false)) {
+        if (stack.getOr(DataComponents.RELOADING, false)) {
             this.reloadAction(holder, stack, selected);
         }
     }
@@ -31,7 +31,7 @@ export class KineticArtillery extends BaseWeapon {
         const bullet = new ArtilleryEntity(EntityTypes.KINETIC_ARTILLERY_ENTITY,
             world,
             attacker,
-            stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 32)
+            stack.getOr(DataComponents.ATTACK_DAMAGE, 32)
         );
         this.setBullet(bullet, attacker, KineticArtillery.SPEED, 8, 0);
         world.spawnEntity(bullet);

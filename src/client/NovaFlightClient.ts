@@ -235,7 +235,7 @@ export class NovaFlightClient {
         this.setPause(!this.pause);
     }
 
-    private loop(ts: number) {
+    private loop(ts: number): void {
         try {
             if (!this.playing) {
                 this.stopWorld();
@@ -248,7 +248,7 @@ export class NovaFlightClient {
 
             let step = 0;
             const maxStep = this.tickManager.getMaxStep();
-            const preTick = this.tickManager.perTick();
+            const preTick = this.tickManager.mspt();
             while (this.accumulator >= preTick && step < maxStep) {
                 this.tick(preTick);
                 this.accumulator -= preTick;

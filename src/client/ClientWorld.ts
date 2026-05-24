@@ -15,7 +15,7 @@ import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExplosionVisual} from "../world/explosion/ExplosionVisual.ts";
 import type {Explosion} from "../world/explosion/Explosion.ts";
-import {Particle} from "../effect/Particle.ts";
+import {CircleParticle} from "../effect/CircleParticle.ts";
 import {DEFAULT_CONFIG} from "../configs/GlobalConfig.ts";
 import {AbstractClientPlayerEntity} from "./entity/AbstractClientPlayerEntity.ts";
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
@@ -164,13 +164,13 @@ export class ClientWorld extends World {
         posX: number, posY: number, velX: number, velY: number,
         life: number, size: number,
         colorFrom: string, colorTo: string = colorFrom,
-        drag = 0.0
+        drag?: number, decrease?: boolean
     ) {
         this.worldRender.addParticle(
             new MutVec2(posX, posY), new MutVec2(velX, velY),
             life, size,
             colorFrom, colorTo,
-            drag
+            drag, decrease
         );
     }
 
@@ -178,13 +178,13 @@ export class ClientWorld extends World {
         posX: number, posY: number, velX: number, velY: number,
         life: number, size: number,
         colorFrom: string, colorTo: string = colorFrom,
-        drag = 0.0
+        drag?: number, decrease?: boolean
     ) {
-        this.addEffect(null, new Particle(
+        this.addEffect(null, new CircleParticle(
             new MutVec2(posX, posY), new MutVec2(velX, velY),
             life, size,
             colorFrom, colorTo,
-            drag
+            drag, decrease
         ));
     }
 

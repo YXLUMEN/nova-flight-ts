@@ -36,7 +36,7 @@ export class ApplyClientTech {
                 const emp = Items.EMP_WEAPON as EMPWeapon;
                 const stack = player.getItem(emp);
                 if (stack) {
-                    const base = stack.getOrDefault(DataComponents.EFFECT_RANGE, 480);
+                    const base = stack.getOr(DataComponents.EFFECT_RANGE, 480);
                     stack.set(DataComponents.EFFECT_RANGE, base * 1.5);
                     emp.setMaxCooldown(stack, emp.getMaxCooldown(stack) * 1.2);
                 }
@@ -46,7 +46,7 @@ export class ApplyClientTech {
                 const emp = Items.EMP_WEAPON as EMPWeapon;
                 const stack = player.getItem(emp);
                 if (stack) {
-                    const base = stack.getOrDefault(DataComponents.EFFECT_RANGE, 480);
+                    const base = stack.getOr(DataComponents.EFFECT_RANGE, 480);
                     stack.set(DataComponents.EFFECT_RANGE, base * 0.5);
                     emp.setMaxCooldown(stack, emp.getMaxCooldown(stack) * 0.5);
                 }
@@ -68,7 +68,7 @@ export class ApplyClientTech {
                 });
                 break;
             }
-            case Techs.MINIGUN: {
+            case Techs.AUTOCANNON: {
                 player.addItem(Items.MINIGUN);
                 break;
             }
@@ -76,7 +76,7 @@ export class ApplyClientTech {
                 player.getInventory().values().forEach(stack => {
                     const item = stack.getItem();
                     if (item instanceof BaseWeapon) {
-                        const base = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
+                        const base = stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
                         stack.set(DataComponents.ATTACK_DAMAGE, Math.ceil(base * 2));
                     }
                 });
@@ -93,7 +93,7 @@ export class ApplyClientTech {
                 player.addItem(Items.CANNON90, c90);
 
                 if (player.getTechs().isUnlocked(Techs.HD_BULLET)) {
-                    const base = c90.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
+                    const base = c90.getOr(DataComponents.ATTACK_DAMAGE, 1);
                     c90.set(DataComponents.ATTACK_DAMAGE, base * 2);
                 }
                 break;
@@ -103,7 +103,7 @@ export class ApplyClientTech {
                 player.addItem(Items.ARTILLERY125, c125);
 
                 if (player.getTechs().isUnlocked(Techs.HD_BULLET)) {
-                    const base = c125.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
+                    const base = c125.getOr(DataComponents.ATTACK_DAMAGE, 1);
                     c125.set(DataComponents.ATTACK_DAMAGE, base * 2);
                 }
                 break;
@@ -142,7 +142,7 @@ export class ApplyClientTech {
                 const intoVoid = Items.VOID_ENGIN as VoidEnginWeapon;
                 const stack = player.getItem(intoVoid);
                 if (stack) {
-                    stack.set(DataComponents.EFFECT_DURATION, stack.getOrDefault(DataComponents.EFFECT_DURATION, 1) * 0.1);
+                    stack.set(DataComponents.EFFECT_DURATION, stack.getOr(DataComponents.EFFECT_DURATION, 1) * 0.1);
                     intoVoid.setMaxCooldown(stack, intoVoid.accuratelyMaxCooldown(stack) * 0.2);
                     const modifier = stack.get(DataComponents.ATTRIBUTE_MODIFIERS);
                     if (modifier) modifier.value = 1.5;
@@ -153,7 +153,7 @@ export class ApplyClientTech {
                 const intoVoid = Items.VOID_ENGIN as VoidEnginWeapon;
                 const stack = player.getItem(intoVoid);
                 if (stack) {
-                    stack.set(DataComponents.EFFECT_DURATION, stack.getOrDefault(DataComponents.EFFECT_DURATION, 1) * 2);
+                    stack.set(DataComponents.EFFECT_DURATION, stack.getOr(DataComponents.EFFECT_DURATION, 1) * 2);
                     intoVoid.setMaxCooldown(stack, intoVoid.accuratelyMaxCooldown(stack) * 1.4);
                 }
                 break;
@@ -224,6 +224,10 @@ export class ApplyClientTech {
             }
             case Techs.CIWS: {
                 player.addItem(Items.CIWS);
+                break;
+            }
+            case Techs.STORM_FIRE : {
+                player.addItem(Items.STORM_FIRE);
                 break;
             }
             case Techs.INSTANT_RESPONSE: {

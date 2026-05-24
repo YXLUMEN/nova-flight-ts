@@ -12,12 +12,12 @@ import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity
 
 export abstract class BaseWeapon extends Weapon {
     public override inventoryTick(stack: ItemStack, _world: World, holder: Entity, _slot: number, selected: boolean): void {
-        const cooldown = stack.getOrDefault(DataComponents.COOLDOWN, 0);
+        const cooldown = stack.getOr(DataComponents.COOLDOWN, 0);
         if (cooldown > 0 && this.shouldCooldown(stack)) {
             this.setCooldown(stack, cooldown - 1);
         }
 
-        if (holder.isPlayer() && stack.getOrDefault(DataComponents.RELOADING, false)) {
+        if (holder.isPlayer() && stack.getOr(DataComponents.RELOADING, false)) {
             this.reloadAction(holder, stack, selected);
         }
     }
@@ -36,7 +36,7 @@ export abstract class BaseWeapon extends Weapon {
         const player = attacker as ServerPlayerEntity;
         const manager = player.cooldownManager;
         if (manager.isCoolingDown(this)) {
-            if (!stack.getOrDefault(DataComponents.RELOADING, false)) {
+            if (!stack.getOr(DataComponents.RELOADING, false)) {
                 return;
             }
             manager.set(this, 0);
@@ -96,7 +96,7 @@ export abstract class BaseWeapon extends Weapon {
     }
 
     public getReloadTick(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponents.MAX_RELOAD_TIME, 0);
+        return stack.getOr(DataComponents.MAX_RELOAD_TIME, 0);
     }
 
     public getBallisticSpeed(): number {

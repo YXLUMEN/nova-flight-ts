@@ -1,13 +1,19 @@
 import type {Payload} from "./Payload.ts";
-import {config, deepFreeze} from "../utils/uit.ts";
+import {deepFreeze} from "../utils/uit.ts";
 import type {PacketCodec} from "./codec/PacketCodec.ts";
 import type {PayloadType} from "./PayloadType.ts";
 import {NetworkSide} from "./NetworkSide.ts";
 
-export interface CodecEntry<T extends Payload> {
-    readonly type: PayloadType<T>;
-    readonly index: number;
-    readonly codec: PacketCodec<T>;
+export class CodecEntry<T extends Payload> {
+    public readonly type: PayloadType<T>;
+    public readonly index: number;
+    public readonly codec: PacketCodec<T>;
+
+    public constructor(type: PayloadType<T>, index: number, codec: PacketCodec<T>) {
+        this.type = type;
+        this.index = index;
+        this.codec = codec;
+    }
 }
 
 export class CodecRegistry {
@@ -44,7 +50,7 @@ export class CodecRegistry {
         }
 
         const index = CodecRegistry.PACKET_TYPES.length;
-        const payload: CodecEntry<T> = config({type, index, codec});
+        const payload: CodecEntry<T> = new CodecEntry<T>(type, index, codec);
         CodecRegistry.PACKET_TYPES.push(payload);
         this.codecs.set(type, payload);
         return payload;

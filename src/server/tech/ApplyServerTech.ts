@@ -70,7 +70,7 @@ export class ApplyServerTech {
                 this.onUnlockExplosionWpn(stack, player);
                 break;
             }
-            case Techs.MINIGUN: {
+            case Techs.AUTOCANNON: {
                 const stack = new ItemStack(Items.MINIGUN);
                 player.addItem(Items.MINIGUN, stack);
 
@@ -83,6 +83,12 @@ export class ApplyServerTech {
 
                 this.onUnlockBulletWpn(stack, player);
                 this.onHasHeatWpn(stack, player);
+                break;
+            }
+            case Techs.STORM_FIRE : {
+                const stack = new ItemStack(Items.STORM_FIRE);
+                player.addItem(Items.STORM_FIRE);
+                this.onUnlockBulletWpn(stack, player);
                 break;
             }
             case Techs.CLOUD_LIGHTNING: {
@@ -152,7 +158,7 @@ export class ApplyServerTech {
                 const stack = player.getItem(emp);
                 if (!stack) break;
 
-                const base = stack.getOrDefault(DataComponents.EFFECT_RANGE, 480);
+                const base = stack.getOr(DataComponents.EFFECT_RANGE, 480);
                 stack.set(DataComponents.EFFECT_RANGE, base * 1.5);
                 emp.setMaxCooldown(stack, emp.getMaxCooldown(stack) * 1.2);
                 break;
@@ -161,7 +167,7 @@ export class ApplyServerTech {
                 const emp = Items.EMP_WEAPON as EMPWeapon;
                 const stack = player.getItem(emp);
                 if (stack) {
-                    const base = stack.getOrDefault(DataComponents.EFFECT_RANGE, 480);
+                    const base = stack.getOr(DataComponents.EFFECT_RANGE, 480);
                     stack.set(DataComponents.EFFECT_RANGE, base * 0.5);
                     emp.setMaxCooldown(stack, emp.getMaxCooldown(stack) * 0.5);
                 }
@@ -238,7 +244,7 @@ export class ApplyServerTech {
                 const intoVoid = Items.VOID_ENGIN as VoidEnginWeapon;
                 const stack = player.getItem(intoVoid);
                 if (stack) {
-                    stack.set(DataComponents.EFFECT_DURATION, stack.getOrDefault(DataComponents.EFFECT_DURATION, 1) * 0.1);
+                    stack.set(DataComponents.EFFECT_DURATION, stack.getOr(DataComponents.EFFECT_DURATION, 1) * 0.1);
                     intoVoid.setMaxCooldown(stack, intoVoid.accuratelyMaxCooldown(stack) * 0.2);
                     const modifier = stack.get(DataComponents.ATTRIBUTE_MODIFIERS);
                     if (modifier) modifier.value = 1.5;
@@ -249,7 +255,7 @@ export class ApplyServerTech {
                 const intoVoid = Items.VOID_ENGIN as VoidEnginWeapon;
                 const stack = player.getItem(intoVoid);
                 if (stack) {
-                    stack.set(DataComponents.EFFECT_DURATION, stack.getOrDefault(DataComponents.EFFECT_DURATION, 1) * 2);
+                    stack.set(DataComponents.EFFECT_DURATION, stack.getOr(DataComponents.EFFECT_DURATION, 1) * 2);
                     intoVoid.setMaxCooldown(stack, intoVoid.accuratelyMaxCooldown(stack) * 1.4);
                 }
                 break;
@@ -348,7 +354,7 @@ export class ApplyServerTech {
         const tech = player.getTechs();
 
         if (tech.isUnlocked(Techs.HD_BULLET)) {
-            const base = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
+            const base = stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
             stack.set(DataComponents.ATTACK_DAMAGE, base * 2);
 
             player.syncStack(stack);
