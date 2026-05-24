@@ -1,15 +1,15 @@
 import type {NbtElement} from "./NbtElement.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
-import {type NbtType, NbtTypeId, type NbtTypeIndex} from "../NbtType.ts";
-import {config, deepFreeze} from "../../utils/uit.ts";
+import {type NbtType, NbtTypeId} from "../NbtType.ts";
+import {deepFreeze} from "../../utils/uit.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 
 export class NbtInt8 implements NbtElement {
-    public static readonly TYPE: NbtType<NbtInt8> = config({
+    public static readonly TYPE: NbtType<NbtInt8> = {
         read(reader: BinaryReader) {
             return NbtInt8.of(reader.readInt8());
         }
-    });
+    };
 
     public static of(value: number): NbtInt8 {
         return this.cache[128 + Math.floor(value)];
@@ -25,7 +25,7 @@ export class NbtInt8 implements NbtElement {
         this.value = value;
     }
 
-    public getType(): NbtTypeIndex {
+    public getType(): NbtTypeId {
         return NbtTypeId.Int8;
     }
 

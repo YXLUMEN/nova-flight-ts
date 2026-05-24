@@ -6,7 +6,7 @@ export class SoundEvent {
     public static SOUND_PACKET_CODEC = PacketCodecs.registryValue(Registries.SOUND_EVENT);
     public static AUDIO_PACKET_CODEC = PacketCodecs.registryValue(Registries.AUDIOS);
 
-    private readonly id: Identifier;
+    public readonly id: Identifier;
 
     private constructor(id: Identifier) {
         this.id = id;
@@ -14,9 +14,5 @@ export class SoundEvent {
 
     public static of(id: Identifier): SoundEvent {
         return new SoundEvent(id);
-    }
-
-    public getId(): Identifier {
-        return this.id;
     }
 }

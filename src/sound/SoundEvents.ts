@@ -33,6 +33,10 @@ export class SoundEvents {
     public static readonly MINIGUN_FIRE_TAIL = this.registerSound("minigun.fire_tail");
     public static readonly MINIGUN_FIRE_LOOP = this.registerSound("minigun.fire_loop");
 
+    public static readonly STORM_FIRE_WARMUP = this.registerSound("storm_fire.warm_up");
+    public static readonly STORM_FIRE_LOOP = this.registerSound("storm_fire.fire_loop");
+    public static readonly STORM_FIRE_END = this.registerSound("storm_fire.fire_end");
+
     public static readonly CANNON90_FIRE = this.registerSound("cannon90.fire");
     public static readonly CANNON125_FIRE = this.registerSound("cannon125.fire");
 
@@ -67,6 +71,9 @@ export class SoundEvents {
     public static readonly KINETIC_ARTILLERY_LOAD = this.registerSound("kinetic_artillery.load");
 
     public static readonly TORPEDOES_FIRE = this.registerSound("torpedoes.fire");
+
+    public static readonly BARREL_OPEN = this.registerSound("barrel_open");
+    public static readonly SHELL_RELOAD = this.registerSound("shell_reload");
 
     private static registerSound(id: string) {
         const identifier = Identifier.ofVanilla(id);

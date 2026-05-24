@@ -57,7 +57,7 @@ export class PhaseLasers extends SpecialWeapon {
                 this.removeLaser(world, stack);
                 this.onEndFire(stack, world, holder);
             }
-            if (stack.getOrDefault(DataComponents.ANY_BOOLEAN, false) && heatLeft <= 40) {
+            if (stack.getOr(DataComponents.ANY_BOOLEAN, false) && heatLeft <= 40) {
                 this.overHeatAlert(world, holder);
                 stack.set(DataComponents.ANY_BOOLEAN, false);
             }
@@ -76,7 +76,7 @@ export class PhaseLasers extends SpecialWeapon {
         }
 
         // 光束端点
-        let laserId = stack.getOrDefault(DataComponents.LASER_ID, -1);
+        let laserId = stack.getOr(DataComponents.LASER_ID, -1);
         if (laserId < 0) {
             laserId = PhaseLasers.manager.allocate();
             stack.set(DataComponents.LASER_ID, laserId);
@@ -101,7 +101,7 @@ export class PhaseLasers extends SpecialWeapon {
                 start,
                 end,
                 this.width,
-                stack.getOrDefault(DataComponents.UI_COLOR, PhaseLasers.COLOR)
+                stack.getOr(DataComponents.UI_COLOR, PhaseLasers.COLOR)
             ));
             PhaseLasers.manager.markActivated(laserId);
         }
@@ -110,7 +110,7 @@ export class PhaseLasers extends SpecialWeapon {
     }
 
     private removeLaser(world: World, stack: ItemStack): void {
-        const laserId = stack.getOrDefault(DataComponents.LASER_ID, -1);
+        const laserId = stack.getOr(DataComponents.LASER_ID, -1);
         if (laserId < 0) return;
 
         PhaseLasers.manager.release(laserId);
@@ -121,7 +121,7 @@ export class PhaseLasers extends SpecialWeapon {
     }
 
     protected damage(world: ServerWorld, stack: ItemStack, holder: Entity, start: Vec2, end: Vec2) {
-        const damage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
+        const damage = stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
         const damageSource = world.getDamageSources()
             .laser(holder)
             .setHealthMulti(1.2)
@@ -186,11 +186,11 @@ export class PhaseLasers extends SpecialWeapon {
     }
 
     public getActive(stack: ItemStack): boolean {
-        return stack.getOrDefault(DataComponents.FIRING, false);
+        return stack.getOr(DataComponents.FIRING, false);
     }
 
     public getMaxHeat(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponents.MAX_HEAT, 0);
+        return stack.getOr(DataComponents.MAX_HEAT, 0);
     }
 
     public setMaxHeat(stack: ItemStack, maxHeat: number): void {
@@ -198,7 +198,7 @@ export class PhaseLasers extends SpecialWeapon {
     }
 
     public getHeat(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponents.HEAT, 0);
+        return stack.getOr(DataComponents.HEAT, 0);
     }
 
     public setHeat(stack: ItemStack, value: number): void {
@@ -206,7 +206,7 @@ export class PhaseLasers extends SpecialWeapon {
     }
 
     public getDrainRate(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponents.DRAIN_RATE, 2);
+        return stack.getOr(DataComponents.DRAIN_RATE, 2);
     }
 
     public setDrainRate(stack: ItemStack, value: number) {
@@ -214,7 +214,7 @@ export class PhaseLasers extends SpecialWeapon {
     }
 
     public getCoolRate(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponents.COOLDOWN_RATE, 1);
+        return stack.getOr(DataComponents.COOLDOWN_RATE, 1);
     }
 
     public setCoolRate(stack: ItemStack, value: number) {

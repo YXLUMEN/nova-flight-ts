@@ -11,7 +11,7 @@ export class RailGun extends BaseWeapon {
     public static readonly SPEED = 52;
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        const bullet = new FastBulletEntity(EntityTypes.FAST_BULLET_ENTITY, world, attacker, stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 16));
+        const bullet = new FastBulletEntity(EntityTypes.FAST_BULLET_ENTITY, world, attacker, stack.getOr(DataComponents.ATTACK_DAMAGE, 16));
         this.setBullet(bullet, attacker, RailGun.SPEED, 6, 1);
         world.spawnEntity(bullet);
 

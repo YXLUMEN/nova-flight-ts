@@ -31,6 +31,7 @@ import {PerditionBeam} from "./weapon/PerditionBeam.ts";
 import {WeaponType} from "./WeaponType.ts";
 import {TorpedoLauncher} from "./weapon/BaseWeapon/TorpedoLauncher.ts";
 import {AreaBombing} from "./weapon/AreaBombing.ts";
+import {StormFire} from "./weapon/BaseWeapon/StormFire.ts";
 
 export class Items {
     public static AIR = this.register("air", new Item(new Item.Properties()));
@@ -132,6 +133,8 @@ export class Items {
         .component(DataComponents.MAX_DEFENSE, 1)
     ));
     public static readonly FLAK_BATTERY = this.register("flak_battery", new FlakBattery(new Item.Properties()
+        .maxDurability(80)
+        .maxCooldown(30)
         .attackDamage(1)
         .type(WeaponType.KINETIC)
         .component(DataComponents.MAX_DEFENSE, 1)
@@ -206,6 +209,13 @@ export class Items {
         .type(WeaponType.EXPLOSIVE)
         .component(DataComponents.EXPLOSION_RADIUS, 96)
         .component(DataComponents.EXPLOSION_POWER, 128)
+    ));
+    public static readonly STORM_FIRE = this.register('storm_fire', new StormFire(new Item.Properties()
+        .attackDamage(2)
+        .type(WeaponType.KINETIC)
+        .maxDurability(500)
+        .maxCooldown(1)
+        .component(DataComponents.MAX_RELOAD_TIME, 20)
     ));
 
     // 避免引用问题

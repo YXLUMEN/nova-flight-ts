@@ -1,13 +1,12 @@
 import type {NbtElement} from "./NbtElement.ts";
-import {type NbtType, NbtTypeId, type NbtTypeIndex} from "../NbtType.ts";
-import {config} from "../../utils/uit.ts";
+import {type NbtType, NbtTypeId} from "../NbtType.ts";
 
 export class NbtEnd implements NbtElement {
-    public static readonly TYPE: NbtType<NbtEnd> = config({
+    public static readonly TYPE: NbtType<NbtEnd> = {
         read(): NbtEnd {
             return NbtEnd.INSTANCE;
         }
-    });
+    };
 
     public readonly type = NbtTypeId.End;
     public static readonly INSTANCE = new NbtEnd();
@@ -15,7 +14,7 @@ export class NbtEnd implements NbtElement {
     private constructor() {
     }
 
-    public getType(): NbtTypeIndex {
+    public getType(): NbtTypeId {
         return 0;
     }
 

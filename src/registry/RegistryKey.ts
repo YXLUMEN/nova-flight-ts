@@ -1,11 +1,10 @@
 import {Identifier} from "./Identifier.ts";
-import {cleanObj} from "../utils/uit.ts";
 import type {Registry} from "./Registry.ts";
 
 
 // @ts-ignore
 export class RegistryKey<T> {
-    private static readonly REGISTRY = new Map<RegistryIdPair, RegistryKey<any>>();
+    private static readonly REGISTRY = new Map<string, RegistryKey<any>>();
 
     private readonly registry: Identifier;
     private readonly value: Identifier;
@@ -24,7 +23,7 @@ export class RegistryKey<T> {
     }
 
     private static ofKey<T>(registry: Identifier, id: Identifier): RegistryKey<T> {
-        const pair: RegistryIdPair = cleanObj({registry, id});
+        const pair = `${registry.toString()}:${id.toString()}`;
         const existKey = RegistryKey.REGISTRY.get(pair);
         if (existKey) return existKey;
 
@@ -45,9 +44,4 @@ export class RegistryKey<T> {
     public getRegistry(): Identifier {
         return this.registry;
     }
-}
-
-interface RegistryIdPair {
-    registry: Identifier,
-    id: Identifier
 }

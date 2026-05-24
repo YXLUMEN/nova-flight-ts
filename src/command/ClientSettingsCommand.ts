@@ -171,15 +171,11 @@ export class ClientSettingsCommand {
                     literal<T>('force')
                         .then(
                             literal<T>('shutdown')
-                                .executes(ctx => {
-                                    ctx.source.getClient().requestStop();
-                                })
+                                .executes(ctx => ctx.source.getClient().requestStop())
                         )
                         .then(
                             literal<T>('shut_relay')
-                                .executes(() => {
-                                    return invoke('stop_server');
-                                })
+                                .executes(() => invoke('stop_server'))
                         )
                         .then(
                             literal<T>('reset_tutorial')

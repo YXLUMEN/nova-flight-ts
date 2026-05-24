@@ -12,7 +12,7 @@ export class EMPWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
         world.events.emit(EVENTS.EMP_BURST, {entity: attacker, duration: this.duration});
 
-        const radius = stack.getOrDefault(DataComponents.EFFECT_RANGE, 480);
+        const radius = stack.getOr(DataComponents.EFFECT_RANGE, 480);
         world.createEMP(attacker, attacker.positionRef, radius, this.duration, 1);
         this.setCooldown(stack, this.getMaxCooldown(stack));
 

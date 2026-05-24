@@ -22,19 +22,19 @@ export abstract class Weapon extends Item {
     }
 
     public getAttackPower(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 1);
+        return stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
     }
 
     public getMaxCooldown(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponents.MAX_COOLDOWN, 1);
+        return stack.getOr(DataComponents.MAX_COOLDOWN, 1);
     }
 
     public setMaxCooldown(stack: ItemStack, value: number) {
-        stack.set(DataComponents.MAX_COOLDOWN, clamp(value, 0, 256));
+        stack.set(DataComponents.MAX_COOLDOWN, clamp(value, 1, 256));
     }
 
     public getCooldown(stack: ItemStack): number {
-        return stack.getOrDefault(DataComponents.COOLDOWN, 10);
+        return stack.getOr(DataComponents.COOLDOWN, 10);
     }
 
     public setCooldown(stack: ItemStack, value: number) {

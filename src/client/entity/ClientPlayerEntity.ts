@@ -251,7 +251,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     private weaponReload() {
         const stack = this.getInventory().getSelectedItem();
-        if (stack.getDamage() === 0 || stack.getOrDefault(DataComponents.RELOADING, false)) {
+        if (stack.getDamage() === 0 || stack.getOr(DataComponents.RELOADING, false)) {
             return;
         }
         this.sendPacket(PlayerReloadC2SPacket.INSTANCE);
@@ -386,6 +386,14 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     public sendPacket(payload: Payload): void {
         this.getWorld().sendPacket(payload);
+    }
+
+    protected override onDiscard() {
+        super.onDiscard();
+        this.lockedMissile.clear();
+        this.approachMissile.clear();
+        this.autoAim = null;
+        this.bc = null;
     }
 
     public override readNBT(nbt: NbtCompound) {

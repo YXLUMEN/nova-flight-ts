@@ -1,8 +1,8 @@
 import {config} from "./uit.ts";
 
 export class AnsiParser {
-    private static regex: RegExp = /\x1b\[(\d+)m/g;
-    private static readonly colorMap: Record<string, string> = config({
+    private static REGEX: RegExp = /\x1b\[(\d+)m/g;
+    private static readonly COLOR_MAP: Record<string, string> = config({
         '30': 'black',
         '31': 'red',
         '32': 'green',
@@ -21,7 +21,7 @@ export class AnsiParser {
         let currentColor: string | null = null;
 
         let match: RegExpExecArray | null;
-        while ((match = this.regex.exec(msg)) !== null) {
+        while ((match = this.REGEX.exec(msg)) !== null) {
             // 添加前一段普通文本
             if (match.index > lastIndex) {
                 const text = msg.slice(lastIndex, match.index);
@@ -32,10 +32,10 @@ export class AnsiParser {
             if (code === '0') {
                 currentColor = null; // 重置
             } else {
-                currentColor = this.colorMap[code] || null;
+                currentColor = this.COLOR_MAP[code] || null;
             }
 
-            lastIndex = this.regex.lastIndex;
+            lastIndex = this.REGEX.lastIndex;
         }
 
         // 添加最后一段文本

@@ -1,15 +1,14 @@
 import type {NbtElement} from "./NbtElement.ts";
-import {type NbtType, NbtTypeId, type NbtTypeIndex} from "../NbtType.ts";
-import {config} from "../../utils/uit.ts";
+import {type NbtType, NbtTypeId} from "../NbtType.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 
 export class NbtInt16 implements NbtElement {
-    public static readonly TYPE: NbtType<NbtInt16> = config({
+    public static readonly TYPE: NbtType<NbtInt16> = {
         read(reader: BinaryReader) {
             return NbtInt16.of(reader.readInt16());
         }
-    });
+    };
 
     public static of(value: number): NbtInt16 {
         value = Math.floor(value);
@@ -22,7 +21,7 @@ export class NbtInt16 implements NbtElement {
         this.value = value;
     }
 
-    public getType(): NbtTypeIndex {
+    public getType(): NbtTypeId {
         return NbtTypeId.Int16;
     }
 

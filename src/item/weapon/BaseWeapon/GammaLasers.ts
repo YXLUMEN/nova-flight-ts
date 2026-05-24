@@ -28,7 +28,7 @@ export class GammaLasers extends BaseWeapon {
             start.y + g * PhaseLasers.LASER_HEIGHT
         );
 
-        const damage = stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 10);
+        const damage = stack.getOr(DataComponents.ATTACK_DAMAGE, 10);
         const damageSource = world.getDamageSources()
             .laser(attacker)
             .setShieldMulti(0.4)

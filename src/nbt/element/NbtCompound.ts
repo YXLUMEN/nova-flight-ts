@@ -1,5 +1,5 @@
 import type {NbtElement} from "./NbtElement.ts";
-import {type NbtType, NbtTypeId, type NbtTypeIndex} from "../NbtType.ts";
+import {type NbtType, NbtTypeId} from "../NbtType.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {NbtInt8} from "./NbtInt8.ts";
 import {NbtInt16} from "./NbtInt16.ts";
@@ -16,7 +16,6 @@ import {NbtFloatArray} from "./NbtFloatArray.ts";
 import {NbtDoubleArray} from "./NbtDoubleArray.ts";
 import {NbtUint32Array} from "./NbtUint32Array.ts";
 import {NbtCompoundArray} from "./NbtCompoundArray.ts";
-import {config} from "../../utils/uit.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import {NbtTypes} from "../NbtTypes.ts";
 import {NbtSerialization} from "../NbtSerialization.ts";
@@ -26,7 +25,7 @@ import type {NbtUint8Array} from "./NbtUint8Array.ts";
 export class NbtCompound implements NbtElement {
     public static readonly MAGIC = 0x6E627430;
     public static readonly VERSION = 8;
-    public static readonly TYPE: NbtType<NbtCompound> = config({
+    public static readonly TYPE: NbtType<NbtCompound> = {
         read(reader: BinaryReader): NbtCompound {
             const compound = new NbtCompound();
             while (true) {
@@ -39,7 +38,7 @@ export class NbtCompound implements NbtElement {
             }
             return compound;
         }
-    });
+    };
 
     private readonly entries: Map<string, NbtElement>;
 
@@ -147,7 +146,7 @@ export class NbtCompound implements NbtElement {
         return this.entries.get(key) ?? null;
     }
 
-    public getKeyType(key: string): NbtTypeIndex {
+    public getKeyType(key: string): NbtTypeId {
         const v = this.entries.get(key);
         return v === undefined ? NbtTypeId.End : v.getType();
     }
@@ -156,7 +155,7 @@ export class NbtCompound implements NbtElement {
         return this.entries.has(key);
     }
 
-    public contains(key: string, type: NbtTypeIndex): boolean {
+    public contains(key: string, type: NbtTypeId): boolean {
         const i = this.getKeyType(key);
         if (i === type) return true;
         return type !== NbtTypeId.Number ? false : 1 <= i && i <= 6;
@@ -296,7 +295,7 @@ export class NbtCompound implements NbtElement {
         return new NbtCompound(map);
     }
 
-    public getType(): NbtTypeIndex {
+    public getType(): NbtTypeId {
         return NbtTypeId.Compound;
     }
 

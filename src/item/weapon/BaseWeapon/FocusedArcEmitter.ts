@@ -19,7 +19,7 @@ export class FocusedArcEmitter extends BaseWeapon {
         const endX = start.x + Math.cos(yaw) * this.arcLength;
         const endY = start.y + Math.sin(yaw) * this.arcLength;
 
-        const damage = randInt(4, stack.getOrDefault(DataComponents.ATTACK_DAMAGE, 48));
+        const damage = randInt(4, stack.getOr(DataComponents.ATTACK_DAMAGE, 48));
         const damageSource = world.getDamageSources().arc(attacker);
 
         const initialTargets: MobEntity[] = [];
@@ -48,7 +48,7 @@ export class FocusedArcEmitter extends BaseWeapon {
         if (initialTargets.length === 0) return;
 
         // 连锁
-        const range = stack.getOrDefault(DataComponents.ATTACK_RANGE, 16384);
+        const range = stack.getOr(DataComponents.ATTACK_RANGE, 16384);
         const subHitCount = new Map<Entity, number>();
         const chainDamage = Math.floor(damage * 0.5);
 

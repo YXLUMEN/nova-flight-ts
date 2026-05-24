@@ -25,8 +25,8 @@ export class RocketLauncher extends BaseWeapon {
     protected onFire(stack: ItemStack, world: World, attacker: Entity): void {
         stack.set(DataComponents.FIRING, true);
 
-        const rocketCounts = stack.getOrDefault(DataComponents.LAUNCH_COUNT, 8);
-        const randomRocketEnable = stack.getOrDefault(DataComponents.MISSILE_RANDOM_ENABLE, false);
+        const rocketCounts = stack.getOr(DataComponents.LAUNCH_COUNT, 8);
+        const randomRocketEnable = stack.getOr(DataComponents.MISSILE_RANDOM_ENABLE, false);
 
         let i = 1;
         const schedule = world.scheduleInterval(0.1, () => {
@@ -52,8 +52,8 @@ export class RocketLauncher extends BaseWeapon {
             }
             if (rocket === null) {
                 rocket = new RocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker);
-                rocket.explosionDamage = stack.getOrDefault(DataComponents.EXPLOSION_POWER, 12);
-                rocket.explosionRadius = stack.getOrDefault(DataComponents.EXPLOSION_RADIUS, 72);
+                rocket.explosionDamage = stack.getOr(DataComponents.EXPLOSION_POWER, 12);
+                rocket.explosionRadius = stack.getOr(DataComponents.EXPLOSION_RADIUS, 72);
             }
 
             this.setBullet(rocket, attacker, RocketLauncher.BULLET_SPEED, 4, 2);
@@ -86,7 +86,7 @@ export class RocketLauncher extends BaseWeapon {
     }
 
     public override shouldCooldown(stack: ItemStack): boolean {
-        return !stack.getOrDefault(DataComponents.FIRING, false);
+        return !stack.getOr(DataComponents.FIRING, false);
     }
 
     private randomRocket(world: World, attacker: Entity): RocketEntity | null {

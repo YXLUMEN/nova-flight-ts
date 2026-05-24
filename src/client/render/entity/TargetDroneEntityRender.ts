@@ -15,21 +15,7 @@ export class TargetDroneEntityRender implements EntityRenderer<TargetDrone> {
 
         ctx.font = UITheme.font;
         ctx.fillStyle = '#fff';
-
-        let totalWidth = 0;
-        for (const txt of entity.damage) {
-            totalWidth += ctx.measureText(txt).width + r;
-        }
-        if (entity.damage.length > 0) {
-            totalWidth -= r;
-        }
-
-        let currentX = pos.x - (totalWidth / 2) | 0;
-        for (let i = 0; i < entity.damage.length; i++) {
-            const txt = entity.damage[i];
-            ctx.fillText(txt, currentX, pos.y + 32);
-            currentX += ctx.measureText(txt).width + r;
-        }
+        ctx.fillText(entity.dps, pos.x, pos.y + 32);
         ctx.restore();
     }
 }

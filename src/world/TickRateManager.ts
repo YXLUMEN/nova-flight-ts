@@ -8,15 +8,15 @@ export class TickRateManager {
         this.msPerTick = 1 / this.tickRate;
     }
 
-    public getRate() {
+    public getRate(): number {
         return this.tickRate;
     }
 
-    public perTick() {
+    public mspt(): number {
         return this.msPerTick;
     }
 
-    public getMaxStep() {
+    public getMaxStep(): number {
         return this.maxStep;
     }
 }

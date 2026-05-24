@@ -4,9 +4,9 @@ import type {Registry} from "../../registry/Registry.ts";
 import type {IndexedIterable} from "../../utils/collection/IndexedIterable.ts";
 import {type BinaryReader} from "../../serialization/BinaryReader.ts";
 import {type BinaryWriter} from "../../serialization/BinaryWriter.ts";
-import type {Constructor, Return, Supplier, UUID} from "../../type/types.ts";
+import type {BiConsumer, Constructor, Return, Supplier, UUID} from "../../type/types.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
-import {config} from "../../utils/uit.ts";
+import {empty} from "../../utils/uit.ts";
 import {Optional} from "../../utils/Optional.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {decodeColorToHex, encodeColorHex} from "../../utils/NetUtil.ts";
@@ -19,6 +19,7 @@ import {NbtTypes} from "../../nbt/NbtTypes.ts";
 import {IllegalStateException} from "../../type/errors.ts";
 import {BlockPos} from "../../world/map/BlockPos.ts";
 import type {Comparable} from "../../type/Comparable.ts";
+import {PacketCodecImpl} from "./PacketCodecImpl.ts";
 
 export class PacketCodecs {
     public static readonly INT8: PacketCodec<number> = PacketCodecs.of(
@@ -116,64 +117,43 @@ export class PacketCodecs {
     );
 
     public static of<T>(
-        encoder: (writer: BinaryWriter, value: T) => void,
-        decoder: (reader: BinaryReader) => T
+        encoder: BiConsumer<BinaryWriter, T>,
+        decoder: Return<BinaryReader, T>
     ): PacketCodec<T> {
-        return config({
-            encode: encoder,
-            decode: decoder
-        });
+        return new PacketCodecImpl(encoder, decoder);
     }
 
     public static uint<V>(value: V): PacketCodec<V> {
-        return config({
-            encode(): void {
-            },
-            decode(): V {
-                return value;
-            }
-        });
+        return new PacketCodecImpl(empty, () => value);
     }
 
     public static uintStrict<V extends Comparable>(value: V): PacketCodec<V> {
-        return config({
-            encode(_: BinaryWriter, object: V): void {
+        return new PacketCodecImpl(
+            (_: BinaryWriter, object: V): void => {
                 if (object.equals(value)) return;
                 throw new IllegalStateException(`Can't encode "${object}", expected "${value}"`);
             },
-            decode(): V {
-                return value;
-            }
-        });
+            (): V => value
+        );
     }
 
     /**
      * Codec that writes nothing and reconstructs an object via new T(). Requires a no-arg constructor.
      * */
     public static emptyNew<T>(decoder: Constructor<T>): PacketCodec<T> {
-        return config({
-            encode(): void {
-            },
-            decode(): T {
-                return new decoder();
-            }
-        });
+        return new PacketCodecImpl(empty, (): T => new decoder());
     }
 
     /**
      * Like emptyNew, but uses a factory function instead of new
      * */
     public static empty<T>(decoder: Supplier<T>): PacketCodec<T> {
-        return config({
-            encode() {
-            },
-            decode: decoder
-        });
+        return new PacketCodecImpl(empty, decoder);
     }
 
     public static optional<T>(codec: PacketCodec<T>): PacketCodec<Optional<T>> {
-        return config({
-            encode(writer: BinaryWriter, optional: Optional<T>) {
+        return new PacketCodecImpl(
+            (writer: BinaryWriter, optional: Optional<T>): void => {
                 if (optional.isPresent()) {
                     writer.writeBoolean(true);
                     codec.encode(writer, optional.get());
@@ -181,21 +161,21 @@ export class PacketCodecs {
                     writer.writeBoolean(false);
                 }
             },
-            decode(reader: BinaryReader): Optional<T> {
+            (reader: BinaryReader): Optional<T> => {
                 return reader.readBoolean() ? Optional.of(codec.decode(reader)) : Optional.empty();
             }
-        });
+        );
     }
 
     public static collection<V>(elementCodec: PacketCodec<V>, maxSize: number = 2147483647): PacketCodec<V[]> {
-        return config({
-            encode(writer: BinaryWriter, array: V[]) {
+        return new PacketCodecImpl(
+            (writer: BinaryWriter, array: V[]): void => {
                 PacketCodecs.writeCollectionSize(writer, array.length, maxSize);
                 for (const v of array) {
                     elementCodec.encode(writer, v);
                 }
             },
-            decode(reader: BinaryReader): V[] {
+            (reader: BinaryReader): V[] => {
                 const size = PacketCodecs.readCollectionSize(reader, maxSize);
                 const list: V[] = new Array(size);
                 for (let i = 0; i < size; i++) {
@@ -203,18 +183,18 @@ export class PacketCodecs {
                 }
                 return list;
             }
-        });
+        );
     }
 
     public static collectionSet<V>(elementCodec: PacketCodec<V>, maxSize: number = 2147483647): PacketCodec<Set<V>> {
-        return config({
-            encode(writer: BinaryWriter, set: Set<V>) {
+        return new PacketCodecImpl(
+            (writer: BinaryWriter, set: Set<V>): void => {
                 PacketCodecs.writeCollectionSize(writer, set.size, maxSize);
                 for (const v of set) {
                     elementCodec.encode(writer, v);
                 }
             },
-            decode(reader: BinaryReader): Set<V> {
+            (reader: BinaryReader): Set<V> => {
                 const size = PacketCodecs.readCollectionSize(reader, maxSize);
                 const set = new Set<V>();
                 for (let i = 0; i < size; i++) {
@@ -222,21 +202,21 @@ export class PacketCodecs {
                 }
                 return set;
             }
-        });
+        );
     }
 
     public static map<K, V, M extends Map<K, V>>(
         constructor: Constructor<M>, keyCodec: PacketCodec<K>, valueCodec: PacketCodec<V>, maxSize: number = 2147483647
     ): PacketCodec<M> {
-        return config({
-            encode(writer: BinaryWriter, map: M) {
+        return new PacketCodecImpl(
+            (writer: BinaryWriter, map: M): void => {
                 PacketCodecs.writeCollectionSize(writer, map.size, maxSize);
                 for (const [key, value] of map) {
                     keyCodec.encode(writer, key);
                     valueCodec.encode(writer, value);
                 }
             },
-            decode(reader: BinaryReader): M {
+            (reader: BinaryReader): M => {
                 const size = PacketCodecs.readCollectionSize(reader, maxSize);
                 const map: M = new constructor();
                 for (let i = 0; i < size; i++) {
@@ -244,7 +224,7 @@ export class PacketCodecs {
                 }
                 return map;
             }
-        });
+        );
     }
 
     private static readCollectionSize(reader: BinaryReader, maxSize: number): number {
@@ -263,30 +243,30 @@ export class PacketCodecs {
     }
 
     public static nbt(): PacketCodec<NbtElement> {
-        return config({
-            encode(writer: BinaryWriter, nbt: NbtElement) {
+        return new PacketCodecImpl(
+            (writer: BinaryWriter, nbt: NbtElement): void => {
                 if (nbt === NbtEnd.INSTANCE) {
                     throw new TypeError("Expected non-null compound tag");
                 }
                 writer.writeInt8(nbt.getType());
                 nbt.write(writer);
             },
-            decode(reader: BinaryReader): NbtElement {
+            (reader: BinaryReader): NbtElement => {
                 const type = reader.readInt8();
                 if (type === 0) return NbtEnd.INSTANCE;
                 return NbtTypes.getTypeByIndex(type).read(reader);
             }
-        });
+        );
     }
 
     public static registryCodec<T>(codec: Codec<T>): PacketCodec<T> {
         const packetCodec = this.nbt();
-        return config({
-            encode(writer: BinaryWriter, object: T) {
+        return new PacketCodecImpl(
+            (writer: BinaryWriter, object: T): void => {
                 const nbt = codec.encode(object);
                 packetCodec.encode(writer, nbt);
             },
-            decode(reader: BinaryReader): T {
+            (reader: BinaryReader): T => {
                 const nbt = packetCodec.decode(reader);
                 const obj = codec.decode(nbt);
                 if (obj === null) {
@@ -294,7 +274,7 @@ export class PacketCodecs {
                 }
                 return obj;
             }
-        });
+        );
     }
 
     /**
@@ -315,21 +295,21 @@ export class PacketCodecs {
         registry: Registry<T>,
         registryTransformer: Return<Registry<T>, IndexedIterable<R>>
     ): PacketCodec<R> {
-        return config({
-            encode(writer: BinaryWriter, object: R): void {
+        return new PacketCodecImpl(
+            (writer: BinaryWriter, object: R): void => {
                 const iterable = registryTransformer(registry);
                 const id = iterable.getIndex(object) ?? null;
                 if (id === null) throw new Error(`Object not registered`);
                 writer.writeVarUint(id);
             },
-            decode(reader: BinaryReader): R {
+            (reader: BinaryReader): R => {
                 const i = reader.readVarUint();
                 const iterable = registryTransformer(registry);
                 const value = iterable.getByIndex(i);
                 if (value === null) throw new Error(`No entry at index ${i}`);
                 return value;
             }
-        });
+        );
     }
 
     /**
@@ -337,32 +317,32 @@ export class PacketCodecs {
      * then reconstructs C on decode. Ideal for single-field extraction.
      * */
     public static adapt<C, T1>(codec: PacketCodec<T1>, from: Return<C, T1>, to: Return<T1, C>): PacketCodec<C> {
-        return config({
-            encode(writer: BinaryWriter, value: C) {
+        return new PacketCodecImpl(
+            (writer: BinaryWriter, value: C): void => {
                 codec.encode(writer, from(value));
             },
-            decode(reader: BinaryReader): C {
+            (reader: BinaryReader): C => {
                 return to(codec.decode(reader));
             }
-        });
+        );
     }
 
     public static adapt2<C, T1, T2>(
         codec1: PacketCodec<T1>, from1: Return<C, T1>,
         codec2: PacketCodec<T2>, from2: Return<C, T2>,
         to: (v1: T1, v2: T2) => C): PacketCodec<C> {
-        return config({
-            encode(writer: BinaryWriter, value: C) {
+        return new PacketCodecImpl(
+            (writer: BinaryWriter, value: C): void => {
                 codec1.encode(writer, from1(value));
                 codec2.encode(writer, from2(value));
             },
-            decode(reader: BinaryReader): C {
+            (reader: BinaryReader): C => {
                 return to(
                     codec1.decode(reader),
                     codec2.decode(reader),
                 );
             }
-        });
+        );
     }
 
     /**
@@ -375,20 +355,20 @@ export class PacketCodecs {
         codec2: PacketCodec<T2>, from2: Return<C, T2>,
         codec3: PacketCodec<T3>, from3: Return<C, T3>,
         to: (v1: T1, v2: T2, v3: T3) => C): PacketCodec<C> {
-        return config({
-            encode(writer: BinaryWriter, value: C) {
+        return new PacketCodecImpl(
+            (writer: BinaryWriter, value: C): void => {
                 codec1.encode(writer, from1(value));
                 codec2.encode(writer, from2(value));
                 codec3.encode(writer, from3(value));
             },
-            decode(reader: BinaryReader): C {
+            (reader: BinaryReader): C => {
                 return to(
                     codec1.decode(reader),
                     codec2.decode(reader),
                     codec3.decode(reader),
                 );
             }
-        });
+        );
     }
 
     /**
@@ -414,20 +394,20 @@ export class PacketCodecs {
             throw new Error('Reflection fieldCodecs cannot be empty');
         }
 
-        return config({
-            encode(writer: BinaryWriter, object: T) {
+        return new PacketCodecImpl(
+            (writer: BinaryWriter, object: T): void => {
                 for (const [key, codec] of entries) {
                     const value = object[key];
                     codec.encode(writer, value);
                 }
             },
-            decode(reader: BinaryReader): T {
+            (reader: BinaryReader): T => {
                 const instance = new constructor();
                 for (const [key, codec] of entries) {
                     instance[key] = codec.decode(reader);
                 }
                 return instance;
             }
-        });
+        );
     }
 }

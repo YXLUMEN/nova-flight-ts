@@ -14,7 +14,9 @@ export abstract class SpecialWeapon extends Weapon {
                 stack.set(DataComponents.READY_TRIGGERED, true);
                 this.onReady(world);
             }
-        } else if (triggered) {
+            return;
+        }
+        if (triggered) {
             stack.remove(DataComponents.READY_TRIGGERED);
         }
     }
@@ -27,7 +29,7 @@ export abstract class SpecialWeapon extends Weapon {
         if (world.isClient) world.playSound(null, SoundEvents.WEAPON_READY);
     }
 
-    public override setCooldown(stack: ItemStack, value: number) {
+    public override setCooldown(stack: ItemStack, value: number): void {
         const holder = stack.getHolder();
         if (!holder || !holder.isPlayer()) return super.setCooldown(stack, value);
         holder.cooldownManager.set(this, value);

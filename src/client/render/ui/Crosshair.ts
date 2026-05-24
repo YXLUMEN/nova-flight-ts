@@ -6,25 +6,23 @@ import {BaseWeapon} from "../../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {RocketLauncher} from "../../../item/weapon/BaseWeapon/RocketLauncher.ts";
 import {ParticleLance} from "../../../item/weapon/BaseWeapon/ParticleLance.ts";
 import {ArcEmitter} from "../../../item/weapon/BaseWeapon/ArcEmitter.ts";
-import {FocusedArcEmitter} from "../../../item/weapon/BaseWeapon/FocusedArcEmitter.ts";
-import {CIWS} from "../../../item/weapon/BaseWeapon/CIWS.ts";
 import {MiniGun} from "../../../item/weapon/BaseWeapon/MiniGun.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import type {ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
-import {config} from "../../../utils/uit.ts";
 import {GlobalConfig} from "../../../configs/GlobalConfig.ts";
+import {Items} from "../../../item/Items.ts";
+import type {StormFire} from "../../../item/weapon/BaseWeapon/StormFire.ts";
 
-export const CrosshairType = config({
-    DEFAULT: 0,
-    BASE_WEAPON: 1,
-    MISSILE: 2,
-    LANCE: 3,
-    ARC: 4,
-    CIWS: 5,
-    MINIGUN: 6
-})
-
-export type CrosshairTypeValue = typeof CrosshairType[keyof typeof CrosshairType];
+const enum CrosshairType {
+    DEFAULT,
+    BASE_WEAPON,
+    MISSILE,
+    LANCE,
+    ARC,
+    CIWS,
+    MINIGUN,
+    STORM_FIRE
+}
 
 export class Crosshair {
     private reloading = false;
@@ -35,7 +33,7 @@ export class Crosshair {
     private recoilY: number = 0;
     private recoilPeak: number = 0;
 
-    private crosshairType: CrosshairTypeValue = CrosshairType.DEFAULT;
+    private crosshairType: CrosshairType = CrosshairType.DEFAULT;
     private weaponColor: string = '#fff';
 
     private prevCooldownRatio: number = 1;
@@ -44,8 +42,12 @@ export class Crosshair {
     // 光矛充能进度插值（0=未充能, 1=充能满）
     private chargeT: number = 0;
 
-    // 机枪扩散归一化插值（0=精准, 1=最散；越打越小）
+    // 机枪扩散（0=精准, 1=最散；越打越小）
     private minigunSpreadT: number = 1;
+
+    // StormFire
+    private stormFireIntensity: number = 0;
+    private stormFireSpinAngle: number = 0;
 
     private static readonly RECOIL_DECAY = 0.82;
     private static readonly SPREAD_LERP = 0.12;
@@ -58,7 +60,7 @@ export class Crosshair {
             this.crosshairType = CrosshairType.DEFAULT;
             this.spreadAmount = 0;
             this.reloading = false;
-            return false;
+            return;
         }
 
         this.detectWeaponType(item, stack);
@@ -68,16 +70,17 @@ export class Crosshair {
         let ratio: number;
         const reloadLeft = player.cooldownManager.getCooldownTicks(item);
         if (reloadLeft > 0) {
-            ratio = clamp(1 - reloadLeft / stack.getOrDefault(DataComponents.MAX_RELOAD_TIME, 1), 0, 1);
+            ratio = clamp(1 - reloadLeft / stack.getOr(DataComponents.MAX_RELOAD_TIME, 1), 0, 1);
             this.reloading = true;
         } else {
             ratio = clamp(1 - item.getCooldown(stack) / item.getMaxCooldown(stack), 0, 1);
             this.reloading = false;
         }
+        ratio = Number.isFinite(ratio) ? ratio : 1;
 
         this.displayRatio = lerp(tickDelta, this.displayRatio, ratio);
 
-        if (!this.reloading && GlobalConfig.crosshairRecoil) {
+        if (!this.reloading && this.maxSpread > 0 && GlobalConfig.crosshairRecoil) {
             const cooldownDrop = this.prevCooldownRatio - ratio;
             if (cooldownDrop > 0.3) {
                 const angle = Math.random() * PI2;
@@ -131,39 +134,77 @@ export class Crosshair {
             case CrosshairType.MINIGUN:
                 this.renderMiniGun(ctx, client);
                 break;
+            case CrosshairType.STORM_FIRE:
+                this.renderStormFire(ctx, client);
+                break;
             default:
                 this.renderDefault(ctx, client);
         }
     }
 
     private detectWeaponType(item: Weapon, stack: ItemStack): void {
-        if (item instanceof RocketLauncher) {
-            this.crosshairType = CrosshairType.MISSILE;
-            this.weaponColor = item.getUiColor();
-            this.maxSpread = item.getMaxSpread();
-        } else if (item instanceof FocusedArcEmitter || item instanceof ArcEmitter) {
-            this.crosshairType = CrosshairType.ARC;
-            this.weaponColor = item.getUiColor();
-            this.maxSpread = item.getMaxSpread(stack);
-        } else if (item instanceof ParticleLance) {
-            this.crosshairType = CrosshairType.LANCE;
-            this.weaponColor = item.getUiColor();
-            this.maxSpread = item.getMaxSpread(stack);
+        switch (item) {
+            case Items.CIWS: {
+                this.crosshairType = CrosshairType.CIWS;
+                this.weaponColor = item.getUiColor(stack);
+                this.maxSpread = 0;
+                return;
+            }
+            case Items.TACHYON_LANCE:
+            case Items.PARTICLE_LANCE: {
+                this.crosshairType = CrosshairType.LANCE;
+                this.weaponColor = item.getUiColor(stack);
+                this.maxSpread = 0;
 
-            const rawChargeT = stack.getOrDefault(DataComponents.CHARGING_PROGRESS, 0) / ParticleLance.CHARGING_TIME;
-            this.chargeT += (rawChargeT - this.chargeT) * 0.18;
-        } else if (item instanceof CIWS) {
-            this.crosshairType = CrosshairType.CIWS;
-            this.weaponColor = item.getUiColor(stack);
-            this.maxSpread = item.getMaxSpread();
-        } else if (item instanceof MiniGun) {
-            this.crosshairType = CrosshairType.MINIGUN;
-            this.weaponColor = item.getUiColor();
-            this.maxSpread = item.getMaxSpread(stack);
+                const rawChargeT = stack.getOr(DataComponents.CHARGING_PROGRESS, 0) / (item as ParticleLance).CHARGING_TIME;
+                this.chargeT += (rawChargeT - this.chargeT) * 0.18;
+                return;
+            }
+            case Items.STORM_FIRE: {
+                this.crosshairType = CrosshairType.STORM_FIRE;
+                this.weaponColor = item.getUiColor(stack);
+                this.maxSpread = 0;
 
-            const rawSpreadT = clamp((item.getMaxSpread(stack) - 0.5) / 3.5, 0, 1);
-            this.minigunSpreadT += (rawSpreadT - this.minigunSpreadT) * 0.12;
-        } else if (item instanceof BaseWeapon) {
+                const firing = stack.getOr(DataComponents.FIRING, false);
+                const charging = stack.getOr(DataComponents.CHARGING_PROGRESS, 0);
+
+                let target: number;
+                if (charging > 0) {
+                    target = 1 - charging / (item as StormFire).CHARGING_TIME;
+                } else if (firing) {
+                    target = 1;
+                } else {
+                    target = 0;
+                }
+
+                this.stormFireIntensity += (target - this.stormFireIntensity) * 0.15;
+                return;
+            }
+            case Items.MINIGUN: {
+                this.crosshairType = CrosshairType.MINIGUN;
+                this.weaponColor = item.getUiColor(stack);
+                this.maxSpread = (item as MiniGun).getMaxSpread(stack);
+
+                const rawSpreadT = clamp(((item as MiniGun).getMaxSpread(stack) - 0.5) / 3.5, 0, 1);
+                this.minigunSpreadT += (rawSpreadT - this.minigunSpreadT) * 0.12;
+                return;
+            }
+            case Items.ROCKET_LAUNCHER: {
+                this.crosshairType = CrosshairType.MISSILE;
+                this.weaponColor = item.getUiColor(stack);
+                this.maxSpread = (item as RocketLauncher).getMaxSpread();
+                return;
+            }
+            case Items.FOCUSED_ARC_EMITTER:
+            case Items.ARC_EMITTER: {
+                this.crosshairType = CrosshairType.ARC;
+                this.weaponColor = item.getUiColor(stack);
+                this.maxSpread = (item as ArcEmitter).getMaxSpread(stack);
+                return;
+            }
+        }
+
+        if (item instanceof BaseWeapon) {
             this.crosshairType = CrosshairType.BASE_WEAPON;
             this.weaponColor = item.getUiColor(stack);
             this.maxSpread = item.getMaxSpread(stack);
@@ -173,6 +214,7 @@ export class Crosshair {
             this.maxSpread = 0;
             this.chargeT = 0;
             this.minigunSpreadT = 1;
+            this.stormFireIntensity = 0;
         }
     }
 
@@ -471,6 +513,47 @@ export class Crosshair {
         ctx.fillStyle = color;
         ctx.beginPath();
         ctx.arc(cx, cy, 2, 0, PI2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.lineWidth = 1;
+    }
+
+    private renderStormFire(ctx: CanvasRenderingContext2D, client: NovaFlightClient): void {
+        const ptr = client.input.getScreenPointer();
+        const cx = ptr.x + this.recoilX;
+        const cy = ptr.y + this.recoilY;
+
+        const color = this.weaponColor;
+        const t = this.stormFireIntensity;
+
+        this.stormFireSpinAngle += t * 0.25;
+
+        const isFiring = t > 0.85;
+        const angle = this.stormFireSpinAngle;
+
+        const radius = lerp(t, 18, 12);
+        const gap = lerp(t, Math.PI / 6, Math.PI / 60);
+        const arcLen = HALF_PI - gap * 2;
+        const lw = lerp(t, 1.5, 2.0);
+        const blur = isFiring ? 12 : lerp(t, 2, 8);
+
+        ctx.lineWidth = lw;
+        ctx.strokeStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = blur;
+
+        for (let i = 0; i < 4; i++) {
+            const base = i * HALF_PI + angle;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, base + gap, base + gap + arcLen);
+            ctx.stroke();
+        }
+
+        ctx.shadowBlur = isFiring ? 14 : lerp(t, 1, 7);
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 1.5 + t * 0.5, 0, PI2);
         ctx.fill();
 
         ctx.shadowBlur = 0;

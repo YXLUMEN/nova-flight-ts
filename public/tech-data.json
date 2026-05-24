@@ -35,15 +35,15 @@
     "x": 0,
     "y": 1,
     "desc": "tech.desc.nova-flight.autocannon",
-    "cost": 32
+    "cost": 80
   },
   {
-    "id": "minigun",
-    "name": "tech.name.nova-flight.minigun",
+    "id": "storm_fire",
+    "name": "tech.name.nova-flight.storm_fire",
     "x": 1,
     "y": 1,
-    "desc": "tech.desc.nova-flight.minigun",
-    "cost": 80,
+    "desc": "tech.desc.nova-flight.storm_fire",
+    "cost": 120,
     "requires": [
       "autocannon"
     ]
@@ -56,7 +56,7 @@
     "desc": "tech.desc.nova-flight.ciws",
     "cost": 120,
     "requires": [
-      "minigun"
+      "storm_fire"
     ]
   },
   {

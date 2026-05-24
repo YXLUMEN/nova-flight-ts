@@ -85,5 +85,8 @@
   },
   "the_tale_of_a_cruel_world": {
     "file": "nova-flight:/the_tale_of_a_cruel_world.ogg"
+  },
+  "assumptions": {
+    "file": "nova-flight:/assumptions.ogg"
   }
 }

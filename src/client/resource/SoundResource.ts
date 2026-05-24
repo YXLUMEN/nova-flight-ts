@@ -2,7 +2,7 @@ import type {RegistryManager} from "../../registry/RegistryManager.ts";
 import type {ResourceModule} from "./ResourceModule.ts";
 import {RegistryKeys} from "../../registry/RegistryKeys.ts";
 import {resolveResource} from "@tauri-apps/api/path";
-import {readFile, readTextFile} from "@tauri-apps/plugin-fs";
+import {exists, readFile, readTextFile} from "@tauri-apps/plugin-fs";
 import {PromisePool} from "../../utils/collection/PromisePool.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import {deepFreeze} from "../../utils/uit.ts";
@@ -74,7 +74,9 @@ export class SoundResource implements ResourceModule {
 
     private async decodeAudios(path: string, audioContext: AudioContext): Promise<AudioBuffer | null> {
         try {
-            const res = await resolveResource(`resources/nova-flight/sounds/${path}.wav`);
+            let res = await resolveResource(`resources/nova-flight/sounds/${path}.ogg`);
+            if (!await exists(res)) res = await resolveResource(`resources/nova-flight/sounds/${path}.wav`);
+
             const fileData = await readFile(res);
             return await audioContext.decodeAudioData(fileData.buffer);
         } catch (e) {

@@ -6,7 +6,7 @@ import {Registry} from "../registry/Registry.ts";
 import {EdgeGlowEffect} from "./EdgeGlowEffect.ts";
 import {EMPBurst} from "./EMPBurst.ts";
 import {LaserBeamEffect} from "./LaserBeamEffect.ts";
-import {Particle} from "./Particle.ts";
+import {CircleParticle} from "./CircleParticle.ts";
 import {RadialRing} from "./RadialRing.ts";
 import {ScreenFlash} from "./ScreenFlash.ts";
 import {WindowOverlay} from "./WindowOverlay.ts";
@@ -22,8 +22,8 @@ export class VisualEffectTypes {
     public static readonly LASER_BEAM: VisualEffectType<LaserBeamEffect> = this.registry('laser_beam',
         VisualEffectType.create(LaserBeamEffect, LaserBeamEffect.PACKET_CODEC)
     );
-    public static readonly PARTICLE: VisualEffectType<Particle> = this.registry('particle',
-        VisualEffectType.create(Particle, Particle.PACKET_CODEC)
+    public static readonly PARTICLE: VisualEffectType<CircleParticle> = this.registry('particle',
+        VisualEffectType.create(CircleParticle, CircleParticle.PACKET_CODEC)
     );
     public static readonly RADIAL_RING: VisualEffectType<RadialRing> = this.registry('radial_ring',
         VisualEffectType.create(RadialRing, RadialRing.PACKET_CODEC)
