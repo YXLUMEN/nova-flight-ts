@@ -98,18 +98,21 @@ export class MusicCommand {
                         .executes(this.toggleDisable)
                 )
                 .then(
-                    argument<T, number>('volume', DoubleArgumentType.double())
-                        .executes(ctx => {
-                            const arg = ctx.args.get('volume');
-                            if (!arg) throw new CommandError("\x1b[33m<volume> is required");
+                    literal<T>('volume')
+                        .then(
+                            argument<T, number>('volume', DoubleArgumentType.double())
+                                .executes(ctx => {
+                                    const arg = ctx.args.get('volume');
+                                    if (!arg) throw new CommandError("\x1b[33m<volume> is required");
 
-                            const volume = Number(arg.result);
-                            if (!Number.isFinite(volume) || volume < 0.0 || volume > 1.0) {
-                                throw new IllegalArgumentError("Volume must be between 0.0 and 1.0");
-                            }
-                            AudioManager.setVolume(volume);
-                            ctx.source.addMessage(`Set volume to \x1b[32m"${volume.toFixed(2)}"`);
-                        })
+                                    const volume = Number(arg.result);
+                                    if (!Number.isFinite(volume) || volume < 0.0 || volume > 1.0) {
+                                        throw new IllegalArgumentError("Volume must be between 0.0 and 1.0");
+                                    }
+                                    AudioManager.setVolume(volume);
+                                    ctx.source.addMessage(`Set volume to \x1b[32m"${volume.toFixed(2)}"`);
+                                })
+                        )
                 )
         );
     }
