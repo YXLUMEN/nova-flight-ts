@@ -1,76 +1,109 @@
 import {Stage} from "../world/stage/Stage.ts";
-import {spawnAtTop, spawnAtTopS} from "../utils/PresetsSpawn.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {EVENTS} from "../type/IEvents.ts";
-import {PhaseConfigBuilder} from "../world/stage/PhaseConfig.ts";
+import {createPhase} from "../world/stage/PhaseConfig.ts";
+import {spawnAtTop, spawnAtTopBest} from "../world/stage/SpawnStrategy.ts";
+import {MobBlueprintBuilder} from "../world/stage/MobBlueprint.ts";
 
-const intro = PhaseConfigBuilder.create({
+const intro = createPhase({
     name: 'intro',
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'tutorial_intro'}),
     rules: [],
 });
 
-const move = PhaseConfigBuilder.create({
+const move = createPhase({
     name: 'move',
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'tutorial_move'}),
     rules: [],
 });
 
-const fire = PhaseConfigBuilder.create({
+const fire = createPhase({
     name: 'fire',
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'tutorial_fire'}),
     rules: [],
 });
 
-const enemy = PhaseConfigBuilder.create({
+const enemy = createPhase({
     name: 'enemy',
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'tutorial_enemy'}),
     rules: [{
         every: 30,
         jitter: 0.3,
-        factory: spawnAtTop(EntityTypes.BASE_ENEMY, 1, 0, 100),
+        factory: spawnAtTop(
+            MobBlueprintBuilder.of(EntityTypes.BASE_ENEMY)
+                .speed(1)
+                .bonusHp(0)
+                .worth(100)
+                .build()
+        ),
         cap: 24
     }],
 });
 
-const tech = PhaseConfigBuilder.create({
+const tech = createPhase({
     name: 'tech',
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'tutorial_tech'}),
     rules: [
         {
             every: 20,
             jitter: 0.3,
-            factory: spawnAtTop(EntityTypes.BASE_ENEMY, 1, 512, 200),
+            factory: spawnAtTop(
+                MobBlueprintBuilder.of(EntityTypes.BASE_ENEMY)
+                    .speed(1)
+                    .bonusHp(512)
+                    .worth(200)
+                    .build()
+            ),
             cap: 32
         },
         {
             every: 30,
             jitter: 0.3,
-            factory: spawnAtTop(EntityTypes.TANK_ENEMY_ENTITY, 1, 0, 8, '#6e3400'),
+            factory: spawnAtTop(
+                MobBlueprintBuilder.of(EntityTypes.TANK_ENEMY_ENTITY)
+                    .speed(1)
+                    .bonusHp(0)
+                    .worth(8)
+                    .color('#6e3400')
+                    .build()
+            ),
             cap: 24
         },],
 });
 
-const boss = PhaseConfigBuilder.create({
+const boss = createPhase({
     name: 'boss',
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'tutorial_boss'}),
     rules: [
         {
             every: 30,
             jitter: 0.3,
-            factory: spawnAtTop(EntityTypes.TANK_ENEMY_ENTITY, 1, 0, 8, '#6e3400'),
+            factory: spawnAtTop(
+                MobBlueprintBuilder.of(EntityTypes.TANK_ENEMY_ENTITY)
+                    .speed(1)
+                    .bonusHp(0)
+                    .worth(8)
+                    .color('#6e3400')
+                    .build()
+            ),
             cap: 16
         },
         {
             every: 30,
             jitter: 0.5,
-            factory: spawnAtTopS(EntityTypes.GUN_ENEMY_ENTITY, 1, 1, 4),
+            factory: spawnAtTopBest(
+                MobBlueprintBuilder.of(EntityTypes.GUN_ENEMY_ENTITY)
+                    .speed(1)
+                    .bonusHp(1)
+                    .worth(4)
+                    .build(),
+            ),
             cap: 16
         },
     ],
 });
 
-const end = PhaseConfigBuilder.create({
+const end = createPhase({
     name: 'end',
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'tutorial_end'}),
     rules: [],

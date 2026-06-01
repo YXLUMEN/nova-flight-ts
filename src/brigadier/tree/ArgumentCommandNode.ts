@@ -34,7 +34,7 @@ export class ArgumentCommandNode<S, T> extends CommandNode<S> {
         return `<${this.name}>`;
     }
 
-    public override parse(reader: StringReader, contextBuilder: CommandContextBuilder<S>) {
+    public override parse(reader: StringReader, contextBuilder: CommandContextBuilder<S>): void {
         const start = reader.getCursor();
         const result = this.type.parse(reader);
         const parsed = new ParsedArgument(start, reader.getCursor(), result);

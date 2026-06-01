@@ -19,7 +19,7 @@ export class RequiredArgumentBuilder<S, T> extends ArgumentBuilder<S, RequiredAr
         return this;
     }
 
-    public suggests(provider: SuggestionProvider<S>) {
+    public suggests(provider: SuggestionProvider<S>): RequiredArgumentBuilder<S, T> {
         this.suggestionsProvider = provider;
         return this.getThis();
     }

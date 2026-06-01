@@ -164,13 +164,13 @@ export class ClientWorld extends World {
         posX: number, posY: number, velX: number, velY: number,
         life: number, size: number,
         colorFrom: string, colorTo: string = colorFrom,
-        drag?: number, decrease?: boolean
+        drag?: number
     ) {
         this.worldRender.addParticle(
             new MutVec2(posX, posY), new MutVec2(velX, velY),
             life, size,
             colorFrom, colorTo,
-            drag, decrease
+            drag
         );
     }
 
@@ -178,13 +178,13 @@ export class ClientWorld extends World {
         posX: number, posY: number, velX: number, velY: number,
         life: number, size: number,
         colorFrom: string, colorTo: string = colorFrom,
-        drag?: number, decrease?: boolean
+        drag?: number
     ) {
         this.addEffect(null, new CircleParticle(
             new MutVec2(posX, posY), new MutVec2(velX, velY),
             life, size,
             colorFrom, colorTo,
-            drag, decrease
+            drag
         ));
     }
 

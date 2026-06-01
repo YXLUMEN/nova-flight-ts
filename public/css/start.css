@@ -39,7 +39,7 @@
     }
 
     &.chosen {
-        border: 1px solid #dcdcdc;
+        outline: 1px solid #dcdcdc;
     }
 
     .display-name {

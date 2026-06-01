@@ -1,6 +1,6 @@
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
-import type {Constructor, Consumer, UUID} from "../type/types.ts";
+import type {Consumer, UUID} from "../type/types.ts";
 import {ServerWorld} from "./ServerWorld.ts";
 import {ServerCommandSource} from "./command/ServerCommandSource.ts";
 import type {CommandOutput} from "./command/CommandOutput.ts";
@@ -43,11 +43,11 @@ export abstract class NovaFlightServer implements CommandOutput {
     private waitServerHalt: Promise<void> | null = null;
     private stopWorld: Consumer<void> | null = null;
 
-    protected constructor(worldName: string, channel: ServerChannel, playerManagerCon: Constructor<PlayerManager>) {
+    protected constructor(worldName: string, channel: ServerChannel) {
         this.serverId = crypto.randomUUID();
 
         this.worldName = worldName;
-        this.playerManager = new playerManagerCon(this);
+        this.playerManager = new PlayerManager(this);
         this.tickManager = new TickRateManager();
         this.networkChannel = channel;
         this.serverCommandManager = new ServerCommandManager(this.getCommandSource());

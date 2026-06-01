@@ -10,7 +10,13 @@ import {MobEntity} from "../mob/MobEntity.ts";
 export class CIWSBulletEntity extends BulletEntity {
     private readonly maxAge: number;
 
-    public constructor(type: EntityType<CIWSBulletEntity>, world: World, owner: Entity | null, damage: number, maxAge: number = 8) {
+    public constructor(
+        type: EntityType<CIWSBulletEntity>,
+        world: World,
+        owner: Entity | null,
+        damage: number,
+        maxAge: number = 8
+    ) {
         super(type, world, owner, damage);
         this.maxAge = maxAge;
     }

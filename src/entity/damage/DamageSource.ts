@@ -20,7 +20,12 @@ export class DamageSource {
     private armorMulti: number = 1;
     private shieldMulti: number = 1;
 
-    public constructor(type: RegistryEntry<DamageType>, attacker: Entity | null = null, source: Entity | null = null, position: Vec2 | null = null) {
+    public constructor(
+        type: RegistryEntry<DamageType>,
+        attacker: Entity | null = null,
+        source: Entity | null = null,
+        position: Vec2 | null = null
+    ) {
         this.type = type;
         this.attacker = attacker;
         this.source = source;
@@ -42,9 +47,8 @@ export class DamageSource {
     public getPosition(): Vec2 | null {
         if (this.position != null) {
             return this.position;
-        } else {
-            return this.source != null ? this.source.getPosition() : null;
         }
+        return this.source != null ? this.source.getPosition() : null;
     }
 
     public getHealthMulti(): number {
@@ -78,12 +82,20 @@ export class DamageSource {
         return this.position;
     }
 
-    public isIn(...type: TagKey<DamageType>[]): boolean {
-        return type.some((v: TagKey<DamageType>) => this.type.isIn(v));
+    public isIn(type: TagKey<DamageType>): boolean {
+        return this.type.isIn(type);
     }
 
-    public isOf(typeKey: RegistryKey<DamageType>) {
+    public isIns(...types: TagKey<DamageType>[]): boolean {
+        return types.some(v => this.type.isIn(v));
+    }
+
+    public isOf(typeKey: RegistryKey<DamageType>): boolean {
         return this.type.matchesKey(typeKey);
+    }
+
+    public isOfs(...types: RegistryKey<DamageType>[]): boolean {
+        return types.some(v => this.isOf(v));
     }
 
     public getType() {

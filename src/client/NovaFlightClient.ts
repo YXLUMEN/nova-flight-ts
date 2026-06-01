@@ -41,6 +41,7 @@ import {ClientConfigHandler} from "./network/handler/ClientConfigHandler.ts";
 import {ClientPlayHandler} from "./network/handler/ClientPlayHandler.ts";
 import {TickRateManager} from "../world/TickRateManager.ts";
 import {ClientWorkerFS} from "./ClientWorkerFS.ts";
+import {ClientTechManager} from "./tech/ClientTechManager.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -229,10 +230,6 @@ export class NovaFlightClient {
 
     public isPause(): boolean {
         return this.pause;
-    }
-
-    public togglePause(): void {
-        this.setPause(!this.pause);
     }
 
     private loop(ts: number): void {
@@ -587,6 +584,7 @@ export class NovaFlightClient {
         loadingScreen.setProgress(0.2, '注册资源');
         const manager = this.registryManager;
         await manager.registerAll();
+        ClientTechManager.init();
         await sleep(200);
 
         loadingScreen.setProgress(0.4, '加载资源');
@@ -647,12 +645,6 @@ export class NovaFlightClient {
             loadingScreen.setProgress(0, '检查更新失败');
         }
         await sleep(500);
-    }
-
-    public toggleTechTree() {
-        const ticking = document.getElementById('tech-shell')!.classList.toggle('hidden');
-        this.worldRender.rendering = ticking;
-        this.setPause(!ticking);
     }
 
     public switchDevMode(bool?: boolean): void {

@@ -4,8 +4,8 @@ import {ComponentChanges} from "./ComponentChanges.ts";
 import {Optional} from "../utils/Optional.ts";
 import type {ComponentMap} from "./ComponentMap.ts";
 
-export class ComponentMapImpl implements ComponentMap {
-    public static readonly EMPTY = Object.freeze(new ComponentMapImpl()) as ComponentMapImpl;
+export class PatchComponentMap implements ComponentMap {
+    public static readonly EMPTY = Object.freeze(new PatchComponentMap()) as PatchComponentMap;
 
     private readonly baseComponents: Map<DataComponentType<any>, any>;
     private changedComponents: Map<DataComponentType<any>, Optional<any>>;
@@ -28,10 +28,10 @@ export class ComponentMapImpl implements ComponentMap {
 
     public static create(base: ComponentMap, changes: ComponentChanges) {
         if (this.shouldReuseChangesMap(base, changes.changedComponents)) {
-            return new ComponentMapImpl(base, changes.changedComponents);
+            return new PatchComponentMap(base, changes.changedComponents);
         }
 
-        const cMap = new ComponentMapImpl(base);
+        const cMap = new PatchComponentMap(base);
         cMap.applyChanges(changes);
         return cMap;
     }
@@ -51,8 +51,8 @@ export class ComponentMapImpl implements ComponentMap {
     }
 
     public get<T>(type: DataComponentType<T>): T | null {
-        const changed = this.changedComponents.get(type) ?? null;
-        return changed !== null ? changed.orElse(null) : this.baseComponents.get(type) ?? null;
+        const changed = this.changedComponents.get(type);
+        return changed !== undefined ? changed.orElse(null) : this.baseComponents.get(type) ?? null;
     }
 
     public set<T>(type: DataComponentType<T>, value: T | null): void {
@@ -75,6 +75,11 @@ export class ComponentMapImpl implements ComponentMap {
         } else {
             this.changedComponents.delete(type);
         }
+    }
+
+    public removeChange<T>(type: DataComponentType<T>): boolean {
+        this.onWrite();
+        return this.changedComponents.delete(type);
     }
 
     public applyChanges(changes: ComponentChanges): void {
@@ -146,12 +151,12 @@ export class ComponentMapImpl implements ComponentMap {
 
     public copy() {
         this.copyOnWrite = true;
-        return new ComponentMapImpl(this, this.changedComponents, true);
+        return new PatchComponentMap(this, this.changedComponents, true);
     }
 
     public equals(o: Object): boolean {
         return this === o ? true :
-            o instanceof ComponentMapImpl &&
+            o instanceof PatchComponentMap &&
             Compare.mapsEqual(this.baseComponents, o.baseComponents);
     }
 }

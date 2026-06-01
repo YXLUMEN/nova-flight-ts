@@ -99,7 +99,7 @@ export class ClientCommandPanel {
             return false;
         }
 
-        for (const child of Array.from(element.children)) {
+        for (const child of element.children) {
             const tag = child.tagName;
 
             if (!allowed.includes(tag)) {
@@ -115,6 +115,10 @@ export class ClientCommandPanel {
     }
 
     public clearAllMessages(): void {
-        this.commandPanel.textContent = '';
+        this.commandPanel.replaceChildren();
+        for (const timer of this.hiddenTimer) {
+            clearTimeout(timer);
+        }
+        this.hiddenTimer.clear();
     }
 }

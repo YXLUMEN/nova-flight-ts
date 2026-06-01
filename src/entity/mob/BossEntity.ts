@@ -40,10 +40,6 @@ export abstract class BossEntity extends MobEntity {
         return false;
     }
 
-    protected getDamageCd(): number {
-        return 8;
-    }
-
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (this.damageCooldown > 0 && !damageSource.isIn(DamageTypeTags.BYPASSES_INVULNERABLE)) return false;
 
@@ -52,7 +48,7 @@ export abstract class BossEntity extends MobEntity {
 
         const clampDamage = clamp(damage, 0.1, this.maxDamageCanTake);
         if (super.takeDamage(damageSource, clampDamage)) {
-            this.damageCooldown = this.getDamageCd();
+            this.damageCooldown = 10;
             return true;
         }
         return false;

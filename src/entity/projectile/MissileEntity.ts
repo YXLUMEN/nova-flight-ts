@@ -1,14 +1,14 @@
 import {type Entity} from "../Entity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
-import {PI2, rand} from "../../utils/math/math.ts";
+import {rand} from "../../utils/math/math.ts";
 import {RocketEntity} from "./RocketEntity.ts";
 import {EVENTS} from "../../type/IEvents.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {ProjectRaycastUtil} from "../../world/collision/ProjectRaycastUtil.ts";
-import {HitTypes} from "../../world/collision/HitResult.ts";
+import {HitType} from "../../world/collision/HitResult.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 import {DataTracker} from "../data/DataTracker.ts";
 import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts";
@@ -17,6 +17,7 @@ import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import type {ClientPlayerEntity} from "../../client/entity/ClientPlayerEntity.ts";
+import {PlayerMissileTargetSelector} from "../../utils/math/MissileTargetSelector.ts";
 
 export class MissileEntity extends RocketEntity {
     public static readonly IS_IGNITE = DataTracker.registerData(Object(MissileEntity), TrackedDataHandlerRegistry.BOOL);
@@ -69,102 +70,120 @@ export class MissileEntity extends RocketEntity {
 
         // 燃料耗尽
         if (this.age > this.maxLifetimeTicks) {
-            this.target = null;
-            if (this.ignite) {
-                this.ignite = false;
-                this.dataTracker.set(MissileEntity.IS_IGNITE, false);
-            }
+            this.onFuelExhausted();
             return;
         }
 
         // 点燃延迟
         if (this.age <= this.igniteDelayTicks) {
-            if (this.driftSpeed > 0.01 && this.driftAttenuation) this.driftSpeed *= 0.98;
-            if (world.isClient) return;
-
-            const vx1 = Math.cos(this.driftAngle);
-            const vy1 = Math.sin(this.driftAngle);
-            this.updateVelocity(this.driftSpeed, vx1, vy1);
-
-            this.velocityRef.multiply(0.8);
-            this.needSync = true;
+            this.tickDrift(world);
             return;
         }
 
-        const pos = this.positionRef;
-        const cd = (this.age & 3) === 0;
+        this.emitClientParticles(world);
+        if (world.isClient) return;
 
-        if (world.isClient) {
-            if (!cd || !this.isIgnite()) return;
+        this.ensureIgnited();
 
-            const yaw = this.getYaw();
-            const dx = Math.cos(yaw) * 32;
-            const dy = Math.sin(yaw) * 32;
-            world.addParticle(
-                pos.x - dx, pos.y - dy,
-                rand(-1, 1), rand(-1, 1),
-                rand(1, 1.5), rand(4, 6),
-                "#986900", "#575757", 0.3
-            );
+        if (this.age < this.lockDelayTicks) {
+            this.tickLock();
             return;
         }
+        this.tickTracking(world);
+    }
 
-        if (!this.ignite) {
-            this.ignite = true;
-            this.dataTracker.set(MissileEntity.IS_IGNITE, true);
+    private tickDrift(world: World): void {
+        if (this.driftSpeed > 0.01 && this.driftAttenuation) {
+            this.driftSpeed *= 0.98;
         }
+        if (world.isClient) return;
 
+        const vx1 = Math.cos(this.driftAngle);
+        const vy1 = Math.sin(this.driftAngle);
+        this.updateVelocity(this.driftSpeed, vx1, vy1);
         this.velocityRef.multiply(0.8);
         this.needSync = true;
+    }
 
-        // 开始锁定
-        if (this.age < this.lockDelayTicks) {
-            const yaw = this.getYaw();
-            this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
-            return;
-        }
-
-        // 干扰逻辑
-        this.applyDecoy();
-
-        // 重新锁定
-        if (this.relockCooldown > 0) this.relockCooldown--;
-        if (!this.target || this.target.isRemoved()) {
-            let target: Entity | null = null;
-
-            if (cd && this.relockCooldown <= 0) {
-                target = this.acquireTarget();
-            }
-
-            if (!target) {
-                const yaw = this.getYaw();
-                this.setYaw(yaw + this.turnRate * this.hoverDir);
-                this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
-                return;
-            }
-
-            if (target !== this.target) {
-                this.onChangeTarget();
-            }
-
-            this.target = target;
-            this.relockCooldown = this.maxRelockCooldown;
-
-            const count = MissileEntity.LOCKED_ENTITY.get(this.target) ?? 0;
-            MissileEntity.LOCKED_ENTITY.set(this.target, count + 1);
-
-            world.events.emit(EVENTS.ENTITY_LOCKED, {missile: this});
-        }
-
-        // 追踪
-        const targetPos = this.target.positionRef;
-        const targetVel = this.target.velocityRef;
-        const desiredYaw = this.predictInterceptYaw(pos, targetPos, targetVel);
-
-        this.setClampYaw(desiredYaw, this.turnRate);
-
+    private tickLock(): void {
         const yaw = this.getYaw();
         this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
+        this.velocityRef.multiply(0.8);
+        this.needSync = true;
+    }
+
+    private tickTracking(world: World): void {
+        this.applyDecoy();
+        this.maintainTargetLock(world);
+
+        if (this.target === null || this.target.isRemoved()) {
+            this.hoverWithoutTarget();
+            return;
+        }
+        this.applyGuidance();
+    }
+
+    private maintainTargetLock(world: World): void {
+        if (this.relockCooldown > 0) this.relockCooldown--;
+        if (this.target !== null && !this.target.isRemoved()) return;
+        if ((this.age & 3) !== 0 || this.relockCooldown > 0) return;
+
+        const newTarget = this.acquireTarget();
+        if (newTarget === null) return;
+        if (newTarget !== this.target) {
+            this.onChangeTarget();
+        }
+        this.target = newTarget;
+        this.relockCooldown = this.maxRelockCooldown;
+
+        const count = MissileEntity.LOCKED_ENTITY.get(this.target) ?? 0;
+        MissileEntity.LOCKED_ENTITY.set(this.target, count + 1);
+        world.events.emit(EVENTS.ENTITY_LOCKED, {missile: this});
+    }
+
+    private applyGuidance(): void {
+        const target = this.target!;
+        const desiredYaw = this.predictInterceptYaw(this.positionRef, target.positionRef, target.velocityRef);
+
+        this.setClampYaw(desiredYaw, this.turnRate);
+        const yaw = this.getYaw();
+        this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
+        this.velocityRef.multiply(0.8);
+        this.needSync = true;
+    }
+
+    private hoverWithoutTarget(): void {
+        const yaw = this.getYaw();
+        this.setYaw(yaw + this.turnRate * this.hoverDir);
+        this.updateVelocity(this.trackingSpeed, Math.cos(yaw), Math.sin(yaw));
+        this.velocityRef.multiply(0.8);
+        this.needSync = true;
+    }
+
+    private emitClientParticles(world: World): void {
+        if (!world.isClient || (this.age & 3) !== 0 || !this.isIgnite()) return;
+        const pos = this.positionRef;
+        const yaw = this.getYaw();
+        world.addParticle(
+            pos.x - Math.cos(yaw) * 32,
+            pos.y - Math.sin(yaw) * 32,
+            rand(-1, 1), rand(-1, 1),
+            rand(1, 1.5), rand(4, 6),
+            "#986900", "#575757", 0.3,
+        );
+    }
+
+    private ensureIgnited(): void {
+        if (this.ignite) return;
+        this.ignite = true;
+        this.dataTracker.set(MissileEntity.IS_IGNITE, true);
+    }
+
+    private onFuelExhausted(): void {
+        this.target = null;
+        if (!this.ignite) return;
+        this.ignite = false;
+        this.dataTracker.set(MissileEntity.IS_IGNITE, false);
     }
 
     protected predictInterceptYaw(pos: MutVec2, targetPos: MutVec2, targetVel: Vec2): number {
@@ -181,7 +200,7 @@ export class MissileEntity extends RocketEntity {
     protected track(movement: Vec2) {
         const pos = this.positionRef;
         const hitResult = ProjectRaycastUtil.getCollision(this, entity => this.canHit(entity));
-        if (hitResult.getType() !== HitTypes.MISS) {
+        if (hitResult.getType() !== HitType.MISS) {
             this.onCollision(hitResult);
         }
 
@@ -213,18 +232,6 @@ export class MissileEntity extends RocketEntity {
         return this.dataTracker.get(MissileEntity.IS_IGNITE);
     }
 
-    public setLockedDelay(value: number): void {
-        this.lockDelayTicks = value;
-    }
-
-    public setMaxLifeTick(value: number): void {
-        this.maxLifetimeTicks = value;
-    }
-
-    public setDriftSpeed(value: number): void {
-        this.driftSpeed = value;
-    }
-
     public getTarget(): Entity | null {
         return this.target;
     }
@@ -235,46 +242,15 @@ export class MissileEntity extends RocketEntity {
         this.dataTracker.set(MissileEntity.TARGET_ID, target?.getId() ?? 0);
     }
 
-    public getLastTarget(): Entity | null {
-        return this.lastTarget;
-    }
-
     protected acquireTarget(): Entity | null {
-        const world = this.getWorld();
-
-        const mobs = world.getMobs();
-        if (mobs.size === 0) return null;
-
-        const pos = this.positionRef;
-        const yaw = this.getYaw();
-        let best: Entity | null = null;
-        let bestScore = -Infinity;
-
-        for (const mob of mobs) {
-            if (mob.isRemoved() || mob === this.getOwner()) continue;
-
-            const currentLocks = MissileEntity.LOCKED_ENTITY.get(mob) ?? 0;
-            const totalDamage = this.getHitDamage() + this.explosionDamage;
-
-            if (currentLocks * totalDamage >= mob.getMaxHealth()) continue;
-
-            const mobPos = mob.positionRef;
-            const dx = mobPos.x - pos.x;
-            const dy = mobPos.y - pos.y;
-            const dist2 = dx * dx + dy * dy;
-
-            // 正前方优先
-            const yawToMob = Math.atan2(dy, dx);
-            const yawDiff = Math.abs(((yawToMob - yaw + Math.PI) % PI2) - Math.PI);
-            const facingScore = -yawDiff * 200;
-
-            const totalScore = facingScore - dist2;
-            if (totalScore > bestScore) {
-                bestScore = totalScore;
-                best = mob;
-            }
-        }
-        return best;
+        return PlayerMissileTargetSelector.acquireTarget(
+            this.getWorld(),
+            this.positionRef,
+            this.getYaw(),
+            this.getOwner(),
+            this.getHitDamage(),
+            this.explosionDamage,
+        );
     }
 
     public override onTrackedDataSet(data: TrackedData<any>) {

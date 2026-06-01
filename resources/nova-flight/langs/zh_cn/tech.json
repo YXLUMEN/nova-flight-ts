@@ -64,7 +64,7 @@
   "name.nova-flight.ad_loading": "先进装填器",
   "desc.nova-flight.ad_loading": "机炮射速\u001B[32m +20% \u001B[0m, 采用先进的链式传动! 包括弹壳回收以及3d打印的带弹头",
   "name.nova-flight.antimatter_warhead": "反物质弹头",
-  "desc.nova-flight.antimatter_warhead": "造成目标最大生命8%的伤害, 弹头附着的反物质能够轻易泯灭装甲.",
+  "desc.nova-flight.antimatter_warhead": "额外造成目标当前生命\u001B[31m 8% \u001B[0m的伤害, 弹头附着的反物质能够轻易泯灭装甲.",
   "name.nova-flight.hv_warhead": "高爆战斗部",
   "desc.nova-flight.hv_warhead": "爆炸半径\u001B[32m +50% \u001B[0m.\n 在无数同志们的无私奉献之下, 我们终究研制出了高爆炸药.",
   "name.nova-flight.hd_explosives": "高密度炸药",

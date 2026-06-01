@@ -1,17 +1,30 @@
 import {Stage} from "../world/stage/Stage.ts";
-import {spawnAtTop, spawnAtTopInLine, spawnAtTopS, spawnInMap, spawnMiniGun,} from "../utils/PresetsSpawn.ts";
 import {EVENTS} from "../type/IEvents.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
-import {PhaseConfigBuilder} from "../world/stage/PhaseConfig.ts";
-import {spawnExplosion} from "../world/stage/SpawnFactories.ts";
+import {createPhase} from "../world/stage/PhaseConfig.ts";
+import {
+    spawnAtTop,
+    spawnAtTopBest,
+    spawnAtTopLine,
+    spawnExplosion,
+    spawnFormation,
+    spawnInMap
+} from "../world/stage/SpawnStrategy.ts";
+import {MobBlueprintBuilder} from "../world/stage/MobBlueprint.ts";
 
-const p0 = PhaseConfigBuilder.create({
+const B = EntityTypes.BASE_ENEMY;
+const G = EntityTypes.GUN_ENEMY_ENTITY;
+const T = EntityTypes.TANK_ENEMY_ENTITY;
+const M = EntityTypes.MISSILE_ENEMY_ENTITY;
+const MG = EntityTypes.MINIGUN_ENEMY_ENTITY;
+
+const p0 = createPhase({
     name: "P0",
     ticks: 60,
     rules: []
 });
 
-const p1 = PhaseConfigBuilder.create({
+const p1 = createPhase({
     name: "P1",
     ticks: 2400,
     until: ({score}) => score >= 64,
@@ -20,13 +33,18 @@ const p1 = PhaseConfigBuilder.create({
         {
             every: 20,
             jitter: 0.3,
-            factory: spawnAtTop(EntityTypes.BASE_ENEMY, 1.5, 0),
+            factory: spawnAtTop(
+                MobBlueprintBuilder
+                    .of(B)
+                    .speed(1.5)
+                    .build()
+            ),
             cap: 48
         },
     ],
 });
 
-const p2 = PhaseConfigBuilder.create({
+const p2 = createPhase({
     name: "P2",
     until: ({score}) => score >= 200,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P2'}),
@@ -34,19 +52,31 @@ const p2 = PhaseConfigBuilder.create({
         {
             every: 20,
             jitter: 0.3,
-            factory: spawnAtTop(EntityTypes.BASE_ENEMY, 1.5, 2, 4),
+            factory: spawnAtTop(
+                MobBlueprintBuilder.of(B)
+                    .speed(1.5)
+                    .bonusHp(2)
+                    .worth(4)
+                    .build()
+            ),
             cap: 16
         },
         {
             every: 40,
             jitter: 0.2,
-            factory: spawnAtTopInLine(EntityTypes.BASE_ENEMY, 4, 56, 1.8, 0, 2),
+            factory: spawnAtTopLine(
+                MobBlueprintBuilder.of(B)
+                    .speed(1.8)
+                    .worth(2)
+                    .build(),
+                4, 56
+            ),
             cap: 48
         },
     ],
 });
 
-const p3 = PhaseConfigBuilder.create({
+const p3 = createPhase({
     name: "P3",
     until: ({score}) => score >= 512,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P3'}),
@@ -54,25 +84,44 @@ const p3 = PhaseConfigBuilder.create({
         {
             every: 20,
             jitter: 0.4,
-            factory: spawnAtTop(EntityTypes.BASE_ENEMY, 1.6, 2, 6, '#ff2121'),
+            factory: spawnAtTop(
+                MobBlueprintBuilder.of(B)
+                    .speed(1.6)
+                    .bonusHp(2)
+                    .worth(6)
+                    .color('#ff2121')
+                    .build()
+            ),
             cap: 64,
         },
         {
             every: 40,
             jitter: 0.5,
-            factory: spawnAtTopS(EntityTypes.GUN_ENEMY_ENTITY, 1.5, 1, 4),
+            factory: spawnAtTopBest(
+                MobBlueprintBuilder.of(G)
+                    .speed(1.5)
+                    .bonusHp(1)
+                    .worth(4)
+                    .build()
+            ),
             cap: 24
         },
         {
             every: 45,
             jitter: 0.35,
-            factory: spawnAtTopInLine(EntityTypes.BASE_ENEMY, 4, 64, 1.9, 0, 2),
+            factory: spawnAtTopLine(
+                MobBlueprintBuilder.of(B)
+                    .speed(1.9)
+                    .worth(2)
+                    .build(),
+                4, 64
+            ),
             cap: 48
         },
     ],
 });
 
-const p4 = PhaseConfigBuilder.create({
+const p4 = createPhase({
     name: "P4",
     until: ({score}) => score >= 1024,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P4'}),
@@ -80,25 +129,45 @@ const p4 = PhaseConfigBuilder.create({
         {
             every: 22,
             jitter: 0.4,
-            factory: spawnAtTopS(EntityTypes.BASE_ENEMY, 1.3, 4, 8, '#c10000'),
+            factory: spawnAtTopBest(
+                MobBlueprintBuilder.of(B)
+                    .speed(1.3)
+                    .bonusHp(4)
+                    .worth(8)
+                    .color('#c10000')
+                    .build()
+            ),
             cap: 64,
         },
         {
             every: 34,
             jitter: 0.5,
-            factory: spawnAtTopS(EntityTypes.GUN_ENEMY_ENTITY, 1.5, 2, 6),
+            factory: spawnAtTopBest(
+                MobBlueprintBuilder.of(G)
+                    .speed(1.5)
+                    .bonusHp(2)
+                    .worth(6)
+                    .build()
+            ),
             cap: 32
         },
         {
             every: 50,
             jitter: 0.35,
-            factory: spawnAtTopInLine(EntityTypes.BASE_ENEMY, 6, 72, 1.4, 1, 4),
+            factory: spawnAtTopLine(
+                MobBlueprintBuilder.of(B)
+                    .speed(1.4)
+                    .bonusHp(1)
+                    .worth(4)
+                    .build(),
+                6, 72
+            ),
             cap: 64
         },
     ],
 });
 
-const p5 = PhaseConfigBuilder.create({
+const p5 = createPhase({
     name: "P5",
     until: ({score}) => score >= 2048,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P5'}),
@@ -106,59 +175,90 @@ const p5 = PhaseConfigBuilder.create({
         {
             every: 20,
             jitter: 0.4,
-            factory: spawnAtTopS(EntityTypes.BASE_ENEMY,
-                1, 6, 10,
-                '#910000'
+            factory: spawnAtTopBest(
+                MobBlueprintBuilder.of(B)
+                    .speed(1)
+                    .bonusHp(6)
+                    .worth(10)
+                    .color('#910000')
+                    .build()
             ),
             cap: 90
         },
         {
             every: 25,
             jitter: 0.8,
-            factory: spawnAtTopS(EntityTypes.BASE_ENEMY,
-                1.4, 4, 7,
-                '#ff2121',
+            factory: spawnAtTopBest(
+                MobBlueprintBuilder.of(B)
+                    .speed(1.4)
+                    .bonusHp(4)
+                    .worth(7)
+                    .color('#ff2121')
+                    .build()
             ),
             cap: 96,
         },
         {
             every: 45,
             jitter: 0.5,
-            factory: spawnAtTopInLine(EntityTypes.GUN_ENEMY_ENTITY, 3, 72, 0.82, 2, 6),
+            factory: spawnAtTopLine(
+                MobBlueprintBuilder.of(G)
+                    .speed(0.82)
+                    .bonusHp(2)
+                    .worth(6)
+                    .build(),
+                3, 72
+            ),
             cap: 64
         },
         {
             every: 80,
             jitter: 0.35,
-            factory: spawnAtTopInLine(EntityTypes.BASE_ENEMY, 6, 64, 1, 1, 4),
+            factory: spawnAtTopLine(
+                MobBlueprintBuilder.of(B)
+                    .speed(1)
+                    .bonusHp(1)
+                    .worth(4)
+                    .build(),
+                6, 64
+            ),
             cap: 72
         },
     ],
 });
 
-const p6 = PhaseConfigBuilder.create({
+const p6 = createPhase({
     name: "P6",
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P6'}),
     rules: [
         {
             every: 50,
             jitter: 0.4,
-            factory: spawnAtTop(EntityTypes.BASE_ENEMY,
-                0.98, 14, 8,
-                '#910000'
+            factory: spawnAtTop(
+                MobBlueprintBuilder.of(B)
+                    .speed(0.98)
+                    .bonusHp(14)
+                    .worth(8)
+                    .color('#910000')
+                    .build()
             ),
             cap: 32
         },
         {
             every: 80,
             jitter: 0.5,
-            factory: spawnAtTopS(EntityTypes.GUN_ENEMY_ENTITY, 0.83, 6),
+            factory: spawnAtTopBest(
+                MobBlueprintBuilder.of(G)
+                    .speed(0.83)
+                    .bonusHp(6)
+                    .build()
+            ),
             cap: 32
         },
     ],
 });
 
-const p7 = PhaseConfigBuilder.create({
+const p7 = createPhase({
     name: "P7",
     until: ({score}) => score >= 7168,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P7'}),
@@ -167,34 +267,58 @@ const p7 = PhaseConfigBuilder.create({
         {
             every: 40,
             jitter: 0.4,
-            factory: spawnAtTopS(EntityTypes.BASE_ENEMY,
-                1, 8, 10,
-                '#910000',
-                (ctx) => 1 + (ctx.score / 600) | 0
+            factory: spawnAtTopBest(
+                MobBlueprintBuilder.of(B)
+                    .speed(1)
+                    .bonusHp(8)
+                    .worth(10)
+                    .color('#910000')
+                    .scale((ctx) => 1 + (ctx.score / 600) | 0)
+                    .build()
             ),
             cap: 94
         },
         {
             every: 20,
             jitter: 0.6,
-            factory: spawnAtTopS(EntityTypes.TANK_ENEMY_ENTITY,
-                0.9, 0, 16,
-                '#9f3b00',
-                (ctx) => 1 + (ctx.score / 800) | 0
+            factory: spawnAtTopBest(
+                MobBlueprintBuilder.of(T)
+                    .speed(0.9)
+                    .worth(16)
+                    .color('#9f3b00')
+                    .scale((ctx) => 1 + (ctx.score / 800) | 0)
+                    .build()
             ),
             cap: 72,
         },
         {
             every: 80,
             jitter: 0.5,
-            factory: spawnAtTopS(EntityTypes.MISSILE_ENEMY_ENTITY,
-                0.8, 4, 4, '#ac0000'),
+            factory: spawnAtTopBest(
+                MobBlueprintBuilder.of(M)
+                    .speed(0.8)
+                    .bonusHp(4)
+                    .worth(4)
+                    .color('#ac0000')
+                    .build()
+            ),
             cap: 70
         },
         {
             every: 120,
             jitter: 0.4,
-            factory: spawnMiniGun(0.5, 0, 12),
+            factory: spawnFormation([
+                MobBlueprintBuilder.of(T)
+                    .speed(0.5)
+                    .worth(12)
+                    .color('#ac0000')
+                    .build(),
+                MobBlueprintBuilder.of(MG)
+                    .speed(0.5)
+                    .worth(12)
+                    .color('#ac0000')
+                    .build()
+            ]),
             cap: 96
         },
         {
@@ -206,7 +330,7 @@ const p7 = PhaseConfigBuilder.create({
     ],
 });
 
-const p8 = PhaseConfigBuilder.create({
+const p8 = createPhase({
     name: "P8",
     until: ({score}) => score >= 9216,
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P8'}),
@@ -214,39 +338,59 @@ const p8 = PhaseConfigBuilder.create({
         {
             every: 80,
             jitter: 0.4,
-            factory: spawnInMap(EntityTypes.BASE_ENEMY,
-                1.2, 8, 8,
-                '#910000',
-                {},
-                (ctx) => 1 + (ctx.score / 500) | 0
+            factory: spawnInMap(
+                MobBlueprintBuilder.of(B)
+                    .speed(1.2)
+                    .bonusHp(8)
+                    .worth(8)
+                    .color('#910000')
+                    .scale((ctx) => 1 + (ctx.score / 500) | 0)
+                    .setWander()
+                    .build()
             ),
             cap: 64
         },
         {
             every: 50,
             jitter: 0.6,
-            factory: spawnInMap(EntityTypes.TANK_ENEMY_ENTITY,
-                1, 1, 8,
-                '#9f3b00',
-                {safeRadius: 248},
-                (ctx) => 1 + (ctx.score / 800) | 0
+            factory: spawnInMap(
+                MobBlueprintBuilder.of(T)
+                    .speed(1)
+                    .bonusHp(1)
+                    .worth(8)
+                    .color('#9f3b00')
+                    .scale((ctx) => 1 + (ctx.score / 800) | 0)
+                    .build(),
+                undefined, 248
             ),
             cap: 64
         },
         {
             every: 200,
             jitter: 0.5,
-            factory: spawnInMap(EntityTypes.MISSILE_ENEMY_ENTITY,
-                0.8, 4, 4,
-                '#ac0000',
-                {safeRadius: 480}
+            factory: spawnInMap(
+                MobBlueprintBuilder.of(M)
+                    .speed(0.8)
+                    .bonusHp(4)
+                    .worth(4)
+                    .color('#ac0000')
+                    .setWander()
+                    .build(),
+                undefined, 480
             ),
             cap: (ctx) => ctx.difficulty + 48
         },
         {
             every: 250,
             jitter: 0.4,
-            factory: spawnInMap(EntityTypes.GUN_ENEMY_ENTITY, 0.72, 4, 3),
+            factory: spawnInMap(
+                MobBlueprintBuilder.of(G)
+                    .speed(0.72)
+                    .bonusHp(4)
+                    .worth(3)
+                    .setWander()
+                    .build()
+            ),
             cap: (ctx) => ctx.difficulty + 48
         },
         {
@@ -258,49 +402,68 @@ const p8 = PhaseConfigBuilder.create({
     ],
 });
 
-const p9 = PhaseConfigBuilder.create({
+const p9 = createPhase({
     name: "P9",
     onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P9'}),
     rules: [
         {
             every: 80,
             jitter: 0.4,
-            factory: spawnInMap(EntityTypes.BASE_ENEMY,
-                1.2, 8, 8,
-                '#910000',
-                {},
-                (ctx) => 1 + (ctx.score / 400) | 0
+            factory: spawnInMap(
+                MobBlueprintBuilder.of(B)
+                    .speed(1.2)
+                    .bonusHp(8)
+                    .worth(8)
+                    .color('#910000')
+                    .scale((ctx) => 1 + (ctx.score / 400) | 0)
+                    .setWander()
+                    .build()
             ),
             cap: 81
         },
         {
             every: 50,
             jitter: 0.6,
-            factory: spawnInMap(EntityTypes.TANK_ENEMY_ENTITY,
-                1.1, 1, 8,
-                '#9f3b00',
-                {safeRadius: 248},
-                (ctx) => 1 + (ctx.score / 600) | 0
+            factory: spawnInMap(
+                MobBlueprintBuilder.of(T)
+                    .speed(1.1)
+                    .bonusHp(1)
+                    .worth(8)
+                    .color('#9f3b00')
+                    .scale((ctx) => 1 + (ctx.score / 600) | 0)
+                    .setWander()
+                    .build(),
+                undefined, 248
             ),
             cap: (ctx) => ctx.difficulty + 64,
         },
         {
             every: 200,
             jitter: 0.5,
-            factory: spawnInMap(EntityTypes.MISSILE_ENEMY_ENTITY,
-                0.8, 4, 4,
-                '#ac0000',
-                {safeRadius: 480}
+            factory: spawnInMap(
+                MobBlueprintBuilder.of(M)
+                    .speed(0.8)
+                    .bonusHp(4)
+                    .worth(4)
+                    .color('#ac0000')
+                    .setWander()
+                    .build(),
+                undefined, 480
             ),
             cap: (ctx) => ctx.difficulty * 2 + 48
         },
         {
             every: 250,
             jitter: 0.4,
-            factory: spawnInMap(EntityTypes.MINIGUN_ENEMY_ENTITY,
-                0.72, 8, 12,
-                "#ff4444",
-                {safeRadius: 640}
+            factory: spawnInMap(
+                MobBlueprintBuilder.of(MG)
+                    .speed(0.72)
+                    .bonusHp(8)
+                    .worth(12)
+                    .color('#ff4444')
+                    .setWander()
+                    .build(),
+                undefined, 640
             ),
             cap: (ctx) => ctx.difficulty * 2 + 48
         },

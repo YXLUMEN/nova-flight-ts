@@ -1,4 +1,4 @@
-import type {EntityAttribute} from "./EntityAttribute.ts";
+import type {Attribute} from "./Attribute.ts";
 import {Registry} from "../../registry/Registry.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {Identifier} from "../../registry/Identifier.ts";
@@ -17,12 +17,15 @@ export class EntityAttributes {
     public static readonly GENERIC_MAX_SHIELD = this.register('generic.max_shield',
         new ClampedEntityAttribute(0, 0, 2048).setTracked(true)
     );
+    public static readonly PLAYER_EXPLODE_RANGE = this.register('generic.player_explode_range',
+        new ClampedEntityAttribute(320, 0, 2048)
+    );
 
-    public static registerAndGetDefault(_registry: Registry<EntityAttribute>) {
+    public static registerAndGetDefault(_registry: Registry<Attribute>) {
         return this.GENERIC_MAX_HEALTH;
     }
 
-    private static register(id: string, attribute: EntityAttribute) {
+    private static register(id: string, attribute: Attribute) {
         return Registry.registerReferenceById(Registries.ATTRIBUTE, Identifier.ofVanilla(id), attribute);
     }
 }

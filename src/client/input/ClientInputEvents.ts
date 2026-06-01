@@ -6,6 +6,7 @@ import {BGMManager} from "../../sound/BGMManager.ts";
 import type {KeyboardInput} from "./KeyboardInput.ts";
 import {cleanObj} from "../../utils/uit.ts";
 import {DataLoader} from "../resource/DataLoader.ts";
+import type {ClientTechTree} from "../tech/ClientTechTree.ts";
 
 export class ClientInputEvents {
     public static registryAll(client: NovaFlightClient, input: KeyboardInput): void {
@@ -95,18 +96,23 @@ export class ClientInputEvents {
                 GlobalConfig.autoShoot = !GlobalConfig.autoShoot;
                 break;
             case 'Escape': {
-                const techTree = document.getElementById('tech-shell')!;
-                if (!techTree.classList.contains('hidden')) {
-                    client.toggleTechTree();
+                if (!client.player) return;
+                const tech = <ClientTechTree>client.player.getTechs();
+                if (tech.isShowing()) {
+                    tech.displayTechTree(false);
                     return;
                 }
-                client.player?.setOpenInventory(false);
-                client.togglePause();
+
+                client.player.setOpenInventory(false);
+                client.setPause(!client.isPause());
                 break;
             }
             case 'KeyG':
-                client.player?.setOpenInventory(false);
-                client.toggleTechTree();
+                if (!client.player) return;
+                const tech = <ClientTechTree>client.player.getTechs();
+                tech.toggleTechTree();
+
+                client.player.setOpenInventory(false);
                 client.connection.send(new PlayerInputC2SPacket('KeyG'));
                 break;
             case 'KeyL':
@@ -120,7 +126,7 @@ export class ClientInputEvents {
                 client.clientCommandManager.addPlainMessage(ping);
                 break;
             case 'KeyE':
-                if (client.player) {
+                if (client.player && !(client.player.getTechs() as ClientTechTree).isShowing()) {
                     const shouldClose = !client.player.isOpenInventory();
                     client.player.setOpenInventory(shouldClose);
                     client.setPause(shouldClose);

@@ -1,0 +1,112 @@
+:root {
+    --cmd-bg: #0f1117;
+    --cmd-panel: rgba(15, 17, 23, .88);
+    --cmd-text: #e6e9ef;
+    --cmd-muted: #c9cbd8;
+    --cmd-warn: #ffcc66;
+}
+
+.command-panel {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    width: 60%;
+    max-height: 60%;
+    left: 0;
+    bottom: 32px;
+    padding: 12px 12px 0 0;
+    overflow: hidden;
+    overflow-y: auto;
+    overflow-wrap: break-word;
+    z-index: 100;
+}
+
+.command-panel.hidden {
+    pointer-events: none;
+}
+
+/* 单条通知 */
+.command-panel .notify {
+    color: var(--cmd-text);
+    padding: 1px 0 1px 12px;
+    margin: 0;
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.05);
+    transition: opacity 300ms;
+    animation: notify-in 200ms ease;
+}
+
+.command-panel .notify.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+@keyframes notify-in {
+    from {
+        opacity: 0;
+        transform: translateX(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.command-bar {
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    bottom: 0;
+    left: 0;
+    padding: 0 8px 8px 8px;
+    background: none;
+    transition: 100ms transform;
+    font-size: 16px;
+    z-index: 100;
+    box-sizing: border-box;
+}
+
+.command-bar.hidden {
+    pointer-events: none;
+    transform: translateY(100%);
+}
+
+.command-input {
+    z-index: 1000;
+    font-size: 18px;
+    width: 100%;
+    height: 24px;
+    border: none;
+    border-radius: 4px;
+    outline: none;
+    padding: 0 8px;
+    font-family: Consolas, Monaco, "Andale Mono", "Lucida Console", monospace;
+}
+
+/* 建议弹窗 */
+.suggestion-popup {
+    position: absolute;
+    bottom: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    max-height: 40vh;
+
+    color: var(--cmd-text);
+    background-color: #040404;
+    overflow-y: auto;
+    z-index: 50;
+}
+
+.suggestion-popup .suggestion-item {
+    min-width: 80px;
+    padding: 3px;
+    color: var(--cmd-muted);
+}
+
+.suggestion-popup .suggestion-item.active {
+    color: var(--cmd-warn);
+    background-color: rgba(255, 245, 223, 0.1);
+}

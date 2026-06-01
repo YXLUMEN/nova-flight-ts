@@ -35,7 +35,7 @@ export class ModelResource implements ResourceModule {
             if (!entry.isFile || !entry.name.endsWith('.json')) return;
 
             const key = normalizedDir(modelDir, absParent, entry.name, 'nova-flight');
-            const abs = `${absParent}\\${entry.name}`;
+            const abs = `${absParent}/${entry.name}`;
             modelAbsPaths.set(key, abs);
         });
 
@@ -55,7 +55,10 @@ export class ModelResource implements ResourceModule {
         const modelJson = new Map<string, any>();
 
         for (const task of parsedModels) {
-            if (task.status === 'rejected') continue;
+            if (task.status === 'rejected') {
+                console.warn(`[ModelResource] Failed to load a model:`, task.reason);
+                continue;
+            }
             const json = task.value;
             const key = json.normalizeKey;
             if (key && typeof key === 'string') {
@@ -92,11 +95,11 @@ export class ModelResource implements ResourceModule {
             }
 
             if (currentJson.textures && typeof currentJson.textures === 'object') {
-                finalTextures = currentJson.textures;
+                if (!finalTextures) finalTextures = currentJson.textures;
             }
 
             if (currentJson.display) {
-                finalDisplay = this.parseDisplayConfig(currentJson.display);
+                if (!finalDisplay) finalDisplay = this.parseDisplayConfig(currentJson.display);
             }
 
             currentKey = currentJson.parent;
@@ -121,7 +124,7 @@ export class ModelResource implements ResourceModule {
         if (!display || typeof display !== 'object') return null;
 
         const config: DisplayConfig = {};
-        if (typeof display.rotation === 'number') {
+        if (typeof display.rotation === 'number' && isFinite(display.rotation)) {
             config.rotation = wrapRadians(display.rotation);
         }
 
@@ -154,6 +157,7 @@ export class ModelResource implements ResourceModule {
     public unload(): void {
         this.resource = null;
         this.models.clear();
+        this.defaultModel = null;
     }
 
     private createModel(textureKey: string, config?: DisplayConfig) {

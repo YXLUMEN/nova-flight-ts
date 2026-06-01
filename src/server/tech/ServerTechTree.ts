@@ -7,8 +7,8 @@ import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2
 import {Registries} from "../../registry/Registries.ts";
 import {type RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {type Tech} from "../../world/tech/Tech.ts";
-import {ApplyServerTech} from "./ApplyServerTech.ts";
 import {Techs} from "../../world/tech/Techs.ts";
+import {ServerTechManager} from "./ServerTechManager.ts";
 
 export class ServerTechTree implements TechTree {
     private readonly player: ServerPlayerEntity;
@@ -41,7 +41,7 @@ export class ServerTechTree implements TechTree {
 
     public forceUnlock(tech: RegistryEntry<Tech>): void {
         this.state.forceUnlock(tech.getValue());
-        ApplyServerTech.apply(tech, this.player);
+        ServerTechManager.apply(tech, this.player);
     }
 
     public unlockAll() {
@@ -57,7 +57,6 @@ export class ServerTechTree implements TechTree {
     }
 
     public resetTech(entry: RegistryEntry<Tech>): boolean {
-        // noinspection DuplicatedCode
         const tech = entry.getValue();
         if (!this.state.isUnlocked(tech)) {
             return false;
@@ -68,28 +67,19 @@ export class ServerTechTree implements TechTree {
 
         let backScore = 0;
         for (const revoke of techsToRevoke) {
+            const entry = Registries.TECH.getEntryByValue(revoke);
+            if (!entry) continue;
+
             this.state.unlocked.delete(revoke);
             backScore += revoke.cost;
-        }
-
-        const unlocked: Tech[] = [];
-        for (const tech of this.state.allTechs) {
-            if (this.state.isUnlocked(tech)) unlocked.push(tech);
+            ServerTechManager.remove(entry, this.player);
         }
 
         const finalScore = this.player.getScore() + Math.floor(backScore * 0.8);
         this.player.setScore(finalScore);
 
-        const yaw = this.player.getYaw();
-        this.resetPlayer();
-
-        for (const tech of unlocked) {
-            const entry = Registries.TECH.getEntryByValue(tech);
-            if (entry) this.forceUnlock(entry);
-        }
-
-        if (this.isUnlocked(Techs.STEERING_GEAR)) {
-            this.player.setYaw(yaw);
+        if (!this.isUnlocked(Techs.STEERING_GEAR)) {
+            this.player.setYaw(-1.57079);
         }
 
         this.player.networkHandler.send(new PlayerSetScoreS2CPacket(this.player.getScore()));
@@ -123,7 +113,6 @@ export class ServerTechTree implements TechTree {
 
     private resetPlayer() {
         this.player.clearItems();
-        this.player.onDamageExplosionRadius = 320;
 
         this.player.addItem(Items.CANNON40);
         this.player.addItem(Items.BOMB_WEAPON);

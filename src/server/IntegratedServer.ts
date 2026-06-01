@@ -10,10 +10,10 @@ import {PlayAudioS2CPacket} from "../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {Audios} from "../sound/Audios.ts";
 import type {Result} from "../utils/result/Result.ts";
 import {ServerNetworkChannel} from "./network/ServerNetworkChannel.ts";
-import {PlayerManager} from "./entity/PlayerManager.ts";
 import {Log} from "../worker/log.ts";
 import {NoResultsError, StatusError} from "../type/errors.ts";
 import {ServerIntegratedChannel} from "./network/ServerIntegratedChannel.ts";
+import {ServerTechManager} from "./tech/ServerTechManager.ts";
 
 export class IntegratedServer extends NovaFlightServer {
     private readonly hostUUID: UUID;
@@ -23,7 +23,7 @@ export class IntegratedServer extends NovaFlightServer {
             new ServerIntegratedChannel() :
             new ServerNetworkChannel('127.0.0.1:25566', secretKey);
 
-        super(saveName, channel, PlayerManager);
+        super(saveName, channel);
         this.hostUUID = host;
     }
 
@@ -41,6 +41,7 @@ export class IntegratedServer extends NovaFlightServer {
         const manager = new RegistryManager();
         await manager.registerAll();
         manager.freeze();
+        ServerTechManager.init();
 
         await this.startGame(manager);
 

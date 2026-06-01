@@ -1,6 +1,5 @@
 import type {Consumer, Predicate} from "../../type/types.ts";
 import type {SpawnContext} from "./SpawnContext.ts";
-import {config} from "../../utils/uit.ts";
 import type {SpawnRuleConfig} from "./SpawnRuleConfig.ts";
 
 export interface PhaseConfig {
@@ -15,9 +14,13 @@ export interface PhaseConfig {
     readonly onExit?: Consumer<SpawnContext>;
 }
 
-
-export class PhaseConfigBuilder {
-    public static create(obj: PhaseConfig) {
-        return config(obj);
-    }
+export function createPhase(obj: PhaseConfig): PhaseConfig {
+    return {
+        name: obj.name,
+        rules: obj.rules,
+        ticks: obj.ticks ?? undefined,
+        until: obj.until ?? undefined,
+        onEnter: obj.onEnter ?? undefined,
+        onExit: obj.onExit ?? undefined,
+    };
 }

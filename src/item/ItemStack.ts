@@ -17,7 +17,7 @@ import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import type {BinaryWriter} from "../serialization/BinaryWriter.ts";
 import type {BinaryReader} from "../serialization/BinaryReader.ts";
 import {ComponentChanges} from "../component/ComponentChanges.ts";
-import {ComponentMapImpl} from "../component/ComponentMapImpl.ts";
+import {PatchComponentMap} from "../component/PatchComponentMap.ts";
 import type {Consumer} from "../type/types.ts";
 import type {Codec} from "../serialization/Codec.ts";
 import {Identifier} from "../registry/Identifier.ts";
@@ -57,8 +57,8 @@ export class ItemStack {
             return new ItemStack(type.getValue(), counts, compounds);
         }
     );
-    public static readonly PACKET_CODEC: PacketCodec<ItemStack> = {
-        encode(writer: BinaryWriter, itemStack: ItemStack): void {
+    public static readonly PACKET_CODEC: PacketCodec<ItemStack> = PacketCodecs.of(
+        (writer: BinaryWriter, itemStack: ItemStack): void => {
             if (itemStack.isEmpty()) {
                 writer.writeVarUint(0);
             } else {
@@ -68,33 +68,33 @@ export class ItemStack {
             }
             return;
         },
-        decode(reader: BinaryReader): ItemStack {
+        (reader: BinaryReader): ItemStack => {
             const count = reader.readVarUint();
             if (count <= 0) {
                 return ItemStack.EMPTY;
             }
             const item = ItemStack.ITEM_PACKET_CODEC.decode(reader).getValue();
             const componentChanges = ComponentChanges.PACKET_CODEC.decode(reader);
-            return new ItemStack(item, count, ComponentMapImpl.create(item.getComponents(), componentChanges));
+            return new ItemStack(item, count, PatchComponentMap.create(item.getComponents(), componentChanges));
         }
-    };
+    );
     public static readonly LIST_PACKET_CODEC = PacketCodecs.collectionSet(this.PACKET_CODEC);
-
 
     // @ts-ignore
     public static readonly EMPTY = new ItemStack(null, 0, SimpleComponentMap.EMPTY);
 
     private readonly item: Item | null;
-    private readonly components: ComponentMapImpl;
+    private readonly components: PatchComponentMap;
+
     private count: number;
     private holder: Entity | null = null;
 
-    public constructor(item: Item, count: number = 1, components: ComponentMapImpl | ComponentChanges | null = null) {
+    public constructor(item: Item, count: number = 1, components: PatchComponentMap | ComponentChanges | null = null) {
         this.item = item;
         if (!components) {
-            this.components = new ComponentMapImpl(item.getComponents());
+            this.components = new PatchComponentMap(item.getComponents());
         } else if (components instanceof ComponentChanges) {
-            this.components = ComponentMapImpl.create(item.getComponents(), components);
+            this.components = PatchComponentMap.create(item.getComponents(), components);
         } else {
             this.components = components;
         }
@@ -123,7 +123,7 @@ export class ItemStack {
         return this.isEmpty() ? Items.AIR : this.item!;
     }
 
-    public getComponents() {
+    public getComponents(): PatchComponentMap {
         return this.components;
     }
 
@@ -144,7 +144,11 @@ export class ItemStack {
     }
 
     public remove<T>(type: DataComponentType<T>): void {
-        return this.components.remove(type);
+        this.components.remove(type);
+    }
+
+    public removeChange<T>(type: DataComponentType<T>): boolean {
+        return this.components.removeChange(type);
     }
 
     public applyUnvalidatedChanges(changes: ComponentChanges): void {

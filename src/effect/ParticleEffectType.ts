@@ -48,7 +48,6 @@ export class ParticleEffectType {
         this.drag = builder.drag;
     }
 
-    /** Start building a new ParticleEffectType. */
     public static builder(): ParticleEffectTypeBuilder {
         return new ParticleEffectTypeBuilder();
     }

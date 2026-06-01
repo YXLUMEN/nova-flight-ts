@@ -14,7 +14,7 @@ import {type Entity} from "../../entity/Entity.ts";
 import {LivingEntity} from "../../entity/LivingEntity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponents} from "../../component/DataComponents.ts";
-import {AttributeModifier} from "../../component/type/AttributeModifier.ts";
+import {AttributeModifier, Operation} from "../../component/type/AttributeModifier.ts";
 import {Items} from "../Items.ts";
 import {Techs} from "../../world/tech/Techs.ts";
 import type {ServerPlayerEntity} from "../../server/entity/ServerPlayerEntity.ts";
@@ -25,7 +25,8 @@ export class VoidEnginWeapon extends SpecialWeapon {
 
     public static readonly DEFAULT_MODIFIER = new AttributeModifier(
         Identifier.ofVanilla('weapon.into_void'),
-        0.4
+        0.4,
+        Operation.ADD
     );
 
     private static readonly id2EffectMap = new Map<number, WindowOverlay>();

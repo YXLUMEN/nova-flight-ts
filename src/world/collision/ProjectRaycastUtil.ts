@@ -120,10 +120,8 @@ export class ProjectRaycastUtil {
             predicate,
             margin
         );
-        if (entityHit) {
-            return entityHit;
-        }
-        return blockHit;
+
+        return entityHit === null ? blockHit : entityHit;
     }
 
     public static getEntityCollision(

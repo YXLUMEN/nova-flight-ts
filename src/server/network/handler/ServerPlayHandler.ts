@@ -21,7 +21,6 @@ import {PlayerReloadC2SPacket} from "../../../network/packet/c2s/PlayerReloadC2S
 import {BaseWeapon} from "../../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {EntitySpawnS2CPacket} from "../../../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {PlayerResetTechC2SPacket} from "../../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
-import {ApplyServerTech} from "../../tech/ApplyServerTech.ts";
 import {GameMessageS2CPacket} from "../../../network/packet/s2c/GameMessageS2CPacket.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
 import {ConnectionState} from "../ConnectionState.ts";
@@ -37,6 +36,7 @@ import {PositionMoveRotation} from "../../../network/packet/PositionMoveRotation
 import {PlayerPositionS2CPacket} from "../../../network/packet/s2c/PlayerPositionS2CPacket.ts";
 import {RequestTeleportC2SPacket} from "../../../network/packet/c2s/RequestTeleportC2SPacket.ts";
 import {EntityAttributes} from "../../../entity/attribute/EntityAttributes.ts";
+import {ServerTechManager} from "../../tech/ServerTechManager.ts";
 
 export class ServerPlayHandler extends ServerCommonHandler {
     public readonly player: ServerPlayerEntity;
@@ -171,7 +171,7 @@ export class ServerPlayHandler extends ServerCommonHandler {
 
     public onUnlockTech(packet: PlayerUnlockTechC2SPacket): void {
         if (this.player.getTechs().unlock(packet.tech)) {
-            ApplyServerTech.apply(packet.tech, this.player);
+            ServerTechManager.apply(packet.tech, this.player);
         }
     }
 

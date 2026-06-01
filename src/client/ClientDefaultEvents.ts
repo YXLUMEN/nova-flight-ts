@@ -1,14 +1,13 @@
 import {EVENTS} from "../type/IEvents.ts";
-import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
 import type {ClientWorld} from "./ClientWorld.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {PlayerUnlockTechC2SPacket} from "../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
-import {ApplyClientTech} from "./tech/ApplyClientTech.ts";
 import {Tech} from "../world/tech/Tech.ts";
 import {Registries} from "../registry/Registries.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
 import {DevourerBoss} from "../entity/mob/DevourerBoss.ts";
+import {ClientTechManager} from "./tech/ClientTechManager.ts";
 
 export class ClientDefaultEvents {
     public static registryEvents(world: ClientWorld) {
@@ -26,23 +25,21 @@ export class ClientDefaultEvents {
             BGMManager.onGameOver();
         });
 
-        events.on(EVENTS.UNLOCK_TECH, event => {
+        events.on(EVENTS.UNLOCK_TECH, ({tech, silent}) => {
             const player = NovaFlightClient.getInstance().player;
             if (!player) return;
             BGMManager.onTechUnlock(player);
 
-            const tech = event.tech;
             if (tech instanceof Tech) {
                 const entry = Registries.TECH.getEntryByValue(tech);
                 if (!entry) throw new Error(`Tech not found: ${tech})`);
 
-                if (!event.silent) world.sendPacket(new PlayerUnlockTechC2SPacket(entry));
-                ApplyClientTech.apply(entry);
+                if (!silent) world.sendPacket(new PlayerUnlockTechC2SPacket(entry));
+                ClientTechManager.apply(entry, player);
             }
         });
 
-        events.on(EVENTS.ENTITY_LOCKED, event => {
-            const missile = event.missile as MissileEntity;
+        events.on(EVENTS.ENTITY_LOCKED, ({missile}) => {
             const target = missile.getTarget();
             if (missile.isRemoved() || !target || !target.isPlayer()) return;
 

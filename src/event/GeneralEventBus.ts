@@ -1,13 +1,15 @@
+import type {IEvents} from "../type/IEvents.ts";
+
 type Listener<Payload> = (payload: Payload) => void;
 
 export class GeneralEventBus<Events extends Record<string, any>> {
-    private static GLOBAL_EVENT: GeneralEventBus<any> | null = null;
+    private static GLOBAL_EVENT: GeneralEventBus<IEvents> | null = null;
 
     private readonly listeners: Map<keyof Events, Set<Listener<any>>> = new Map();
 
-    public static getEventBus<E extends Record<string, any>>(): GeneralEventBus<E> {
-        if (!this.GLOBAL_EVENT) this.GLOBAL_EVENT = new GeneralEventBus<E>();
-        return this.GLOBAL_EVENT as GeneralEventBus<E>;
+    public static getEventBus(): GeneralEventBus<IEvents> {
+        if (!this.GLOBAL_EVENT) this.GLOBAL_EVENT = new GeneralEventBus<IEvents>();
+        return this.GLOBAL_EVENT;
     }
 
     public on<K extends keyof Events>(type: K, listener: Listener<Events[K]>): void {
@@ -17,6 +19,14 @@ export class GeneralEventBus<Events extends Record<string, any>> {
             this.listeners.set(type, set);
         }
         set.add(listener);
+    }
+
+    public once<K extends keyof Events>(type: K, listener: Listener<Events[K]>): void {
+        const wrapper: Listener<Events[K]> = (payload) => {
+            this.off(type, wrapper);
+            listener(payload);
+        };
+        this.on(type, wrapper);
     }
 
     public off<K extends keyof Events>(type: K, listener: Listener<Events[K]>): void {
@@ -38,6 +48,10 @@ export class GeneralEventBus<Events extends Record<string, any>> {
                 console.warn(`EventBus listener for "${String(type)}" threw:`, err);
             }
         }
+    }
+
+    public waitFor<K extends keyof Events>(type: K): Promise<Events[K]> {
+        return new Promise(resolve => this.once(type, resolve));
     }
 
     public clear() {

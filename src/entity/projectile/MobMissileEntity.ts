@@ -12,7 +12,7 @@ import {EntityPredicates} from "../../world/predicate/EntityPredicates.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class MobMissileEntity extends MissileEntity {
-    private static readonly EXPLOSION = new FilterBehaviour(undefined, undefined, undefined, false)
+    private static readonly EXPLOSION = new FilterBehaviour()
         .withFiler(EntityPredicates.ONLY_PLAYER);
 
     protected override maxRelockCooldown = 15;
@@ -64,7 +64,9 @@ export class MobMissileEntity extends MissileEntity {
         if (rand < 0.2) {
             this.relockCooldown = 40;
             this.target = null;
-        } else if (rand < 0.8) {
+            return;
+        }
+        if (rand < 0.8) {
             this.relockCooldown = 100;
             let closest = null;
             let minDist = Infinity;

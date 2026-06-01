@@ -61,13 +61,13 @@ export class WorldRender {
         pos: Vec2, vel: Vec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
-        drag?: number, decrease?: boolean
+        drag?: number
     ) {
         this.particlePool.spawn(
             pos, vel,
             life, size,
             colorFrom, colorTo,
-            drag, decrease
+            drag
         );
     }
 

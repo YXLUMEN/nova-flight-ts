@@ -43,98 +43,18 @@ canvas {
     border-radius: 3px;
 }
 
-.command-panel {
-    & {
-        position: absolute;
-        display: flex;
-        flex-direction: column;
-        width: 60%;
-        max-height: 60%;
-        left: 0;
-        bottom: 24px;
-        padding: 12px 12px 0 0;
-        overflow: hidden;
-        overflow-y: auto;
-        overflow-wrap: break-word;
-        z-index: 100;
-    }
-
-    &.hidden {
-        pointer-events: none;
-    }
-
-    .notify {
-        color: #fff;
-        padding: 1px 0 1px 12px;
-        margin: 0;
-        outline: none;
-        background-color: rgba(255, 255, 255, 0.05);
-        transition: opacity 300ms;
-    }
-
-    .notify.hidden {
-        opacity: 0;
-        pointer-events: none;
-    }
-}
-
-.command-bar {
-    position: fixed;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    bottom: 0;
-    left: 0;
-    background-color: #fff;
-    transition: 100ms transform;
-    font-size: 16px;
-    z-index: 100;
-}
-
-.command-bar.hidden {
-    pointer-events: none;
-    transform: translateY(100%);
-}
-
-.suggestion-popup {
-    position: absolute;
-    bottom: 24px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    max-height: 40vh;
-
-    color: #fff;
-    background-color: #040404;
-    overflow-y: auto;
-    z-index: 50;
-}
-
-.suggestion-popup span {
-    & {
-        min-width: 80px;
-        padding: 3px;
-    }
-
-    &.active {
-        color: #ffcc66;
-        background-color: rgba(255, 245, 223, 0.1);
-    }
-}
-
-.command-input {
-    z-index: 1000;
-    font-size: 18px;
-    width: 100vw;
-    height: 24px;
-    border: none;
-    outline: none;
-    padding: 0 8px;
-    font-family: Consolas, Monaco, "Andale Mono", "Lucida Console", monospace;
-}
-
 .line {
     border-bottom: 1px solid rgba(230, 230, 230, 0.1);
     width: 100%;
     pointer-events: none;
+}
+
+.btn {
+    width: 20%;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: 200ms;
+    font-weight: 600;
 }

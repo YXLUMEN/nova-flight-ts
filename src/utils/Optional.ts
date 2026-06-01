@@ -5,9 +5,7 @@ export class Optional<T> {
     private readonly value: T;
 
     public static empty<T>() {
-        const t = this.EMPTY as Optional<T>;
-        Object.freeze(t);
-        return t;
+        return this.EMPTY as Optional<T>;
     }
 
     private constructor(value: T) {
@@ -15,14 +13,14 @@ export class Optional<T> {
     }
 
     public static of<T>(value: T): Optional<T> {
-        if (value === null || value === undefined) {
+        if (value == null) {
             throw new Error(`Optional cannot be a null or undefined`);
         }
         return new Optional(value);
     }
 
     public static ofNullable<T>(value: T | null | undefined): Optional<T> {
-        return (value === null || value === undefined) ? this.EMPTY as Optional<T> : new Optional<T>(value);
+        return value == null ? this.EMPTY as Optional<T> : new Optional<T>(value);
     }
 
     public get(): T {

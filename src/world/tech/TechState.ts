@@ -37,7 +37,7 @@ export class TechState {
             y = Math.floor(80);
         }
 
-        const parser = new TechLayoutParser(x, y, 160, 80);
+        const parser = new TechLayoutParser(x, y, 180, 80);
 
         raw.forEach((item, idx) => {
             if (item == null || typeof item !== 'object') {

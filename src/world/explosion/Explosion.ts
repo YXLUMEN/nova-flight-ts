@@ -15,6 +15,7 @@ import {ExplosionBehavior, ExplosionBehaviour, ExplosionEffect} from "./Explosio
 import {ExplosionVisual} from "./ExplosionVisual.ts";
 import {AABB} from "../../utils/math/AABB.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
+import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
 
 export class Explosion {
     public static readonly DEFAULT_BEHAVIOUR = new ExplosionBehavior();
@@ -92,7 +93,7 @@ export class Explosion {
 
             entity.takeDamage(this.damageSource, this.power);
             if (this.behaviour.statusEffect && entity instanceof LivingEntity) {
-                entity.addEffect(this.behaviour.statusEffect, source);
+                entity.addEffect(StatusEffectInstance.fromOther(this.behaviour.statusEffect), source);
             }
 
             if (halfR2 > 0 && halfR2 >= dist) {
@@ -105,6 +106,8 @@ export class Explosion {
         // power * 2 * 8
         // 系数 * 方块大小
         const radius = this.power * 16;
+        const radiusSq = radius * radius;
+
         const box = new AABB(
             Math.floor(this.x - radius - 1),
             Math.floor(this.y - radius - 1),
@@ -129,13 +132,15 @@ export class Explosion {
             if (!entityHit) continue;
 
             const blockHit = this.world.raycast(start, pos);
-            if (!blockHit.missed && squareDistVec2(blockHit.pos, start) < squareDistVec2(entityHit, start)) {
+            const entityDist = squareDistVec2(entityHit, start);
+            if (!blockHit.missed && squareDistVec2(blockHit.pos, start) < entityDist) {
                 continue;
             }
 
-            entity.takeDamage(this.damageSource, this.power);
+            const damage = this.power * (1 - entityDist / radiusSq);
+            entity.takeDamage(this.damageSource, damage);
             if (this.behaviour.statusEffect && entity instanceof LivingEntity) {
-                entity.addEffect(this.behaviour.statusEffect, source);
+                entity.addEffect(StatusEffectInstance.fromOther(this.behaviour.statusEffect), source);
             }
 
             if (halfR2 > 0 && halfR2 >= squareDistVec2(start, pos)) {
