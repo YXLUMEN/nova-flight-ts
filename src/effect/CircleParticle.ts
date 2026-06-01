@@ -18,7 +18,6 @@ export class CircleParticle implements Particle {
             PacketCodecs.COLOR_HEX.encode(writer, value.colorFrom);
             PacketCodecs.COLOR_HEX.encode(writer, value.colorTo);
             writer.writeFloat(value.drag);
-            writer.writeBoolean(value.decrease);
         },
         reader => {
             return new CircleParticle(
@@ -29,7 +28,6 @@ export class CircleParticle implements Particle {
                 PacketCodecs.COLOR_HEX.decode(reader),
                 PacketCodecs.COLOR_HEX.decode(reader),
                 reader.readFloat(),
-                reader.readBoolean()
             );
         }
     );
@@ -45,7 +43,6 @@ export class CircleParticle implements Particle {
     private colorFrom: string;
     private colorTo: string;
     private drag: number;
-    private decrease: boolean;
 
     private t = 0;
 
@@ -53,7 +50,7 @@ export class CircleParticle implements Particle {
         pos: Vec2, vel: Vec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
-        drag = 0.0, decrease = true
+        drag = 0.0
     ) {
         this.vel.set(vel.x, vel.y);
         this.prevPos.set(pos.x, pos.y);
@@ -63,14 +60,13 @@ export class CircleParticle implements Particle {
         this.colorFrom = colorFrom;
         this.size = Math.max(0, size);
         this.life = Math.max(0, life);
-        this.decrease = decrease;
     }
 
     public reset(
         pos: Vec2, vel: Vec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
-        drag = 0.0, decrease = true
+        drag = 0.0
     ) {
         this.vel.set(vel.x, vel.y);
         this.prevPos.set(pos.x, pos.y);
@@ -82,7 +78,6 @@ export class CircleParticle implements Particle {
         this.drag = drag;
         this.t = 0;
         this.alive = true;
-        this.decrease = decrease;
     }
 
     public tick(dt: number) {
@@ -104,7 +99,7 @@ export class CircleParticle implements Particle {
         const y = lerp(tickDelta, this.prevPos.y, this.pos.y);
 
         const k = this.t / this.life;
-        const r = this.decrease ? this.size * (1 - 0.6 * k) : this.size;
+        const r = this.size * (1 - 0.6 * k);
 
         if (this.colorFrom === this.colorTo) {
             ctx.fillStyle = this.colorFrom;

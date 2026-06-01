@@ -1,8 +1,5 @@
 import {FastBulletEntity} from "./FastBulletEntity.ts";
 import {type Entity} from "../Entity.ts";
-import {PlayerEntity} from "../player/PlayerEntity.ts";
-import {Techs} from "../../world/tech/Techs.ts";
-import {LivingEntity} from "../LivingEntity.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
@@ -21,19 +18,10 @@ export class ArtilleryEntity extends FastBulletEntity {
         this.hit.add(entity);
 
         const world = this.getWorld();
-        const sources = world.getDamageSources();
         const owner = this.getOwner();
 
-        const hitDamage = this.getHitDamage();
-        if (owner instanceof PlayerEntity && owner.getTechs().isUnlocked(Techs.ANTIMATTER_WARHEAD)) {
-            let damage = hitDamage;
-            if (entity instanceof LivingEntity) damage = hitDamage + (entity.getMaxHealth() * 0.08) | 0;
-            else damage *= 2;
-            entity.takeDamage(sources.kinetic(this, owner), damage);
-            return;
-        }
-
-        entity.takeDamage(sources.kinetic(this, owner), hitDamage);
+        const source = world.getDamageSources().kinetic(this, owner);
+        entity.takeDamage(source, this.getHitDamage());
         (world as ServerWorld).spawnPreparedParticle(ParticleEffects.POWER_FULL_BLOW, hitResult.pos, 6);
     }
 

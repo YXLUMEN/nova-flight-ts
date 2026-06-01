@@ -1,4 +1,3 @@
-import {config} from "../../utils/uit.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export abstract class HitResult {
@@ -11,10 +10,8 @@ export abstract class HitResult {
     public abstract getType(): HitType;
 }
 
-export const HitTypes = config({
-    MISS: 0,
-    BLOCK: 1,
-    ENTITY: 2
-});
-
-export type HitType = typeof HitTypes[keyof typeof HitTypes];
+export const enum HitType {
+    MISS,
+    BLOCK,
+    ENTITY
+}

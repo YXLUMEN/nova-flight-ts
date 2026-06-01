@@ -1,7 +1,7 @@
-import {EntityAttribute} from "./EntityAttribute.ts";
+import {Attribute} from "./Attribute.ts";
 import {clamp} from "../../utils/math/math.ts";
 
-export class ClampedEntityAttribute extends EntityAttribute {
+export class ClampedEntityAttribute extends Attribute {
     private readonly minValue: number;
     private readonly maxValue: number;
 

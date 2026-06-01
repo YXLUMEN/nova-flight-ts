@@ -6,13 +6,6 @@
     text-align: center;
 }
 
-.statistic .control-buttons {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-}
-
 .statistic .container {
     display: flex;
     align-items: start;
@@ -41,7 +34,6 @@
     width: 120px;
     height: 32px;
     padding: 6px;
-    margin: 0;
     border-radius: 6px;
     border: 1px solid #7c7c7c;
     font-size: 20px;
@@ -92,4 +84,11 @@
         top: 0;
         left: -32px;
     }
+}
+
+.statistic .control-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
 }

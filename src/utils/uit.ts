@@ -82,7 +82,7 @@ export function sleep(time: number) {
     return new Promise(resolve => setTimeout(resolve, time));
 }
 
-export function groupBy<T>(arr: T[], keyFn: Return<T, string>): Map<string, T[]> {
+export function groupBy<T>(arr: Iterable<T>, keyFn: Return<T, string>): Map<string, T[]> {
     const m = new Map<string, T[]>();
     for (const item of arr) {
         const k = keyFn(item);

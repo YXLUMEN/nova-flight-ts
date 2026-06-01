@@ -2,7 +2,7 @@ import type {Payload} from "../../Payload.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {AttributeInstance} from "../../../entity/attribute/AttributeInstance.ts";
 import type {RegistryEntry} from "../../../registry/tag/RegistryEntry.ts";
-import {EntityAttribute} from "../../../entity/attribute/EntityAttribute.ts";
+import {Attribute} from "../../../entity/attribute/Attribute.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {Registries} from "../../../registry/Registries.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
@@ -12,23 +12,23 @@ import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlay
 class AttrEntry {
     public static readonly PACKET_CODEC: PacketCodec<AttrEntry> = PacketCodecs.of(
         (writer, value) => {
-            EntityAttribute.PACKET_CODEC.encode(writer, value.attribute.getValue());
+            Attribute.PACKET_CODEC.encode(writer, value.attribute.getValue());
             writer.writeDouble(value.base);
             PacketCodecs.collectionSet(AttributeModifier.PACKET_CODEC).encode(writer, value.modifiers);
         },
         reader => {
-            const attr = EntityAttribute.PACKET_CODEC.decode(reader);
+            const attr = Attribute.PACKET_CODEC.decode(reader);
             const base = reader.readDouble();
             const set = PacketCodecs.collectionSet(AttributeModifier.PACKET_CODEC).decode(reader);
             return new AttrEntry(Registries.ATTRIBUTE.getEntryByValue(attr)!, base, set);
         }
     );
 
-    public readonly attribute: RegistryEntry<EntityAttribute>;
+    public readonly attribute: RegistryEntry<Attribute>;
     public readonly base: number;
     public readonly modifiers: Set<AttributeModifier>;
 
-    public constructor(attribute: RegistryEntry<EntityAttribute>, base: number, modifiers: Set<AttributeModifier>) {
+    public constructor(attribute: RegistryEntry<Attribute>, base: number, modifiers: Set<AttributeModifier>) {
         this.attribute = attribute;
         this.base = base;
         this.modifiers = modifiers;

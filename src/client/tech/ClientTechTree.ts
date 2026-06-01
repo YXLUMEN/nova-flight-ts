@@ -7,16 +7,15 @@ import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {TechTree} from "../../world/tech/TechTree.ts";
 import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
 import {PlayerResetAllTechC2SPacket} from "../../network/packet/c2s/PlayerResetAllTechC2SPacket.ts";
-import {ApplyClientTech} from "./ApplyClientTech.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {type Tech} from "../../world/tech/Tech.ts";
 import {type RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
-import {Techs} from "../../world/tech/Techs.ts";
 import {AnsiParser} from "../../utils/AnsiParser.ts";
 import {NovaFlightClient} from "../NovaFlightClient.ts";
 import {ModelManager} from "../render/model/ModelManager.ts";
 import {cleanObj} from "../../utils/uit.ts";
+import {ClientTechManager} from "./ClientTechManager.ts";
 
 interface Adjacency {
     successors: Map<Tech, Tech[]>; // tech -> successors
@@ -29,6 +28,7 @@ interface Adjacency {
 export class ClientTechTree implements TechTree {
     public readonly playerScore = document.getElementById('player-money')!;
 
+    private readonly techShell = document.getElementById('tech-shell')!;
     private readonly submitBtn = document.getElementById('d-unlock') as HTMLButtonElement;
     private readonly resetBtn = document.getElementById('reset') as HTMLButtonElement;
     private readonly resetAllBtn = document.getElementById('reset-all') as HTMLButtonElement;
@@ -105,7 +105,9 @@ export class ClientTechTree implements TechTree {
         for (const p of conflictPeers) add(this.successorsClosure(p));
 
         // 更新节点
-        for (const t of affected) this.updateNodeClass(t);
+        for (const t of affected) {
+            this.updateNodeClass(t);
+        }
 
         // 更新相关边
         this.updateEdgesAround(affected
@@ -123,7 +125,7 @@ export class ClientTechTree implements TechTree {
 
     public forceUnlock(tech: RegistryEntry<Tech>): void {
         this.state.forceUnlock(tech.getValue());
-        ApplyClientTech.apply(tech);
+        ClientTechManager.apply(tech, this.player);
     }
 
     public isUnlocked(tech: RegistryEntry<Tech>): boolean {
@@ -139,7 +141,7 @@ export class ClientTechTree implements TechTree {
             this.updateNodeClass(tech);
             const entry = Registries.TECH.getEntryByValue(tech);
             if (!entry) throw new Error(`Unbound value ${tech}`);
-            ApplyClientTech.apply(entry);
+            ClientTechManager.apply(entry, this.player);
         }
         this.updateEdgesAround(allTech.values()
             .map(tech => this.state.getTechId(tech))
@@ -149,8 +151,29 @@ export class ClientTechTree implements TechTree {
         );
     }
 
-    public getSelected() {
-        return this.selectNodeId;
+    public toggleTechTree(): void {
+        const hidden = this.techShell.classList.toggle('hidden');
+        const client = NovaFlightClient.getInstance();
+        client.setPause(!hidden);
+        client.worldRender.rendering = hidden;
+    }
+
+    public displayTechTree(show: boolean = true): void {
+        const client = NovaFlightClient.getInstance();
+        if (show) {
+            this.techShell.classList.remove('hidden');
+            client.setPause(true);
+            client.worldRender.rendering = false;
+            return;
+        }
+
+        this.techShell.classList.add('hidden');
+        client.setPause(false);
+        client.worldRender.rendering = true;
+    }
+
+    public isShowing(): boolean {
+        return !this.techShell.classList.contains('hidden');
     }
 
     public destroy() {
@@ -416,24 +439,32 @@ export class ClientTechTree implements TechTree {
     private updateNodeClass(tech: Tech) {
         const id = this.state.getTechId(tech)?.toString();
         if (!id) return;
-        const el = this.nodesLayer.querySelector<HTMLElement>(`.node[data-id="${CSS.escape(id)}"]`);
-        if (!el) return;
+        const ele = this.nodesLayer.querySelector<HTMLElement>(`.node[data-id="${CSS.escape(id)}"]`);
+        if (!ele) return;
 
-        el.classList.remove('unlocked', 'unlockable', 'locked', 'conflicted');
-        el.classList.add(this.state.computeStatus(tech));
+        ele.classList.remove('unlocked', 'unlockable', 'locked', 'conflicted');
+        ele.classList.add(this.state.computeStatus(tech));
+
+        if (!this.state.isUnlocked(tech)) return;
+        ele.classList.add('just-unlocked');
     }
 
     private updateEdgesAround(ids: string[]) {
         const selector = ids
             .map(id => `[data-from="${CSS.escape(id)}"],[data-to="${CSS.escape(id)}"]`)
             .join(',');
+
         const edges = this.svg.querySelectorAll<SVGLineElement>(selector);
-        edges.forEach(line => this.updateEdgeClass(line));
+        for (const line of edges) {
+            this.updateEdgeClass(line);
+        }
     }
 
     private updateAllEdgeClasses() {
         const edges = this.svg.querySelectorAll<SVGLineElement>('.edge');
-        edges.forEach(line => this.updateEdgeClass(line));
+        for (const line of edges) {
+            this.updateEdgeClass(line);
+        }
     }
 
     private updateEdgeClass(line: SVGLineElement) {
@@ -448,7 +479,6 @@ export class ClientTechTree implements TechTree {
         line.classList.toggle('blocked', toStatus === 'conflicted' || toStatus === 'locked');
     }
 
-    // -------- Adjacency helpers --------
     private buildAdjacency(techs: Tech[]): Adjacency {
         const successors = new Map<Tech, Tech[]>();
         const conflicts = new Map<Tech, Tech[]>();
@@ -507,7 +537,6 @@ export class ClientTechTree implements TechTree {
     }
 
     public resetTech(entry: RegistryEntry<Tech>): boolean {
-        // noinspection DuplicatedCode
         const tech = entry.getValue();
         if (!this.state.isUnlocked(tech)) {
             return false;
@@ -518,29 +547,16 @@ export class ClientTechTree implements TechTree {
 
         let backScore = 0;
         for (const revoke of techsToRevoke) {
+            const entry = Registries.TECH.getEntryByValue(revoke);
+            if (!entry) continue;
+
             this.state.unlocked.delete(revoke);
             backScore += revoke.cost;
-        }
-
-        const unlocked: Tech[] = [];
-        for (const tech of this.state.allTechs) {
-            if (this.state.isUnlocked(tech)) unlocked.push(tech);
+            ClientTechManager.remove(entry, this.player);
         }
 
         const finalScore = this.player.getScore() + Math.floor(backScore * 0.8);
         this.player.setScore(finalScore);
-
-        const yaw = this.player.getYaw();
-        this.resetPlayer();
-
-        for (const tech of unlocked) {
-            const entry = Registries.TECH.getEntryByValue(tech);
-            if (entry) this.forceUnlock(entry);
-        }
-
-        if (this.isUnlocked(Techs.STEERING_GEAR)) {
-            this.player.setYaw(yaw);
-        }
 
         this.updateAllEdgeClasses();
         this.renderNodes();
@@ -585,7 +601,6 @@ export class ClientTechTree implements TechTree {
         this.player.followPointer = false;
         this.player.autoAim = null;
         this.player.bc = null;
-        this.player.onDamageExplosionRadius = 320;
         this.player.setYaw(-1.57079);
     }
 
@@ -611,8 +626,10 @@ export class ClientTechTree implements TechTree {
             if (!tech) throw new Error(`Fail to parse tech with id: ${id}`);
 
             this.state.unlock(tech);
-            this.applyUnlockUpdates(tech);
             world.events.emit(EVENTS.UNLOCK_TECH, {tech, silent: true});
         }
+
+        this.updateAllEdgeClasses();
+        this.renderNodes();
     }
 }

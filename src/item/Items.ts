@@ -215,7 +215,7 @@ export class Items {
         .type(WeaponType.KINETIC)
         .maxDurability(500)
         .maxCooldown(1)
-        .component(DataComponents.MAX_RELOAD_TIME, 20)
+        .component(DataComponents.MAX_RELOAD_TIME, 54)
     ));
 
     // 避免引用问题
@@ -234,7 +234,7 @@ export class Items {
             .component(DataComponents.FIRING, false)
             .component(DataComponents.HEAT, 0)
             .component(DataComponents.DRAIN_RATE, 3)
-            .component(DataComponents.COOLDOWN_RATE, 1)
+            .component(DataComponents.COOLDOWN_RATE, 2)
         ));
     }
 

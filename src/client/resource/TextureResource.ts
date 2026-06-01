@@ -37,7 +37,7 @@ export class TextureResource implements ResourceModule, TextureProvider {
             const key = normalizedDir(textureDir, absParent, entry.name, 'nova-flight');
             const name = pruneSuffix(entry.name);
 
-            const abs = `${absParent}\\${name}.png`;
+            const abs = `${absParent}/${name}.png`;
             const covered = convertFileSrc(abs);
             this.texturePaths.set(key, {abs, covered});
         });
@@ -57,6 +57,7 @@ export class TextureResource implements ResourceModule, TextureProvider {
         // 占位防重入
         this.textureCache.set(key, this.transparent!);
         this.loadTexture(key).catch(err => {
+            this.textureCache.delete(key);
             const msg = `[TextureResource] Failed to load texture ${key}: ${err}`;
             console.error(msg);
             void error(msg);
@@ -67,8 +68,7 @@ export class TextureResource implements ResourceModule, TextureProvider {
 
     public getCovered(key: string): string {
         const path = this.texturePaths.get(key);
-        if (path) return path.covered;
-        return this.defaultTexturePath;
+        return path ? path.covered : this.defaultTexturePath;
     }
 
     public hasTexture(key: string): boolean {
@@ -82,6 +82,7 @@ export class TextureResource implements ResourceModule, TextureProvider {
         const buffer = await readFile(texture.abs);
         const blob = new Blob([buffer], {type: "image/png"});
         const bitmap = await createImageBitmap(blob);
+        // maybe check if close
         this.textureCache.set(key, bitmap);
     }
 
@@ -127,6 +128,8 @@ export class TextureResource implements ResourceModule, TextureProvider {
     }
 
     public dispose(key: string): void {
+        if (key === TextureResource.DEFAULT_TEXTURE_ID) return;
+
         if (this.textureCache.has(key)) {
             this.textureCache.get(key)!.close();
             this.textureCache.delete(key);

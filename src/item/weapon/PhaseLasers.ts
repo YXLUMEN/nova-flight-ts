@@ -14,9 +14,7 @@ import {LaserBeamManger} from "../../world/LaserBeamManger.ts";
 export class PhaseLasers extends SpecialWeapon {
     public static readonly COLOR = '#8bff5e';
     public static readonly OVERHEAT_COLOR = '#ff5e5e';
-
     public static readonly LASER_HEIGHT = World.MAP_HEIGHT * 2;
-
     public static readonly manager = new LaserBeamManger();
 
     protected width = 6;

@@ -15,7 +15,7 @@ export class Stage implements NbtSerializable {
     private ticks = 0;
     private phaseTime = 0;
     private index = 0;
-    private rules: SpawnRule[] = [];
+    private readonly rules: SpawnRule[] = [];
 
     public constructor(phases: PhaseConfig[], rng?: Supplier<number>) {
         this.phases = phases;
@@ -110,7 +110,10 @@ export class Stage implements NbtSerializable {
         this.index = index;
         this.phaseTime = 0;
 
-        this.rules = this.phases[index].rules.map(r => new SpawnRule(r));
+        this.rules.length = 0;
+        for (const r of this.phases[index].rules) {
+            this.rules.push(new SpawnRule(r));
+        }
         for (const r of this.rules) r.reset();
     }
 }

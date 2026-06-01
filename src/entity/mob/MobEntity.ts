@@ -61,8 +61,6 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         if (!result) return false;
 
         const world = this.getWorld() as ServerWorld;
-        if (world.isClient) return true;
-
         world.events.emit(EVENTS.MOB_DAMAGE, {mob: this, damageSource});
         if (this.getShieldAmount() > 0) {
             world.spawnPreparedParticle(ParticleEffects.SHIELD_HIT, this.positionRef, 2);
@@ -79,7 +77,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         const world = this.getWorld() as ServerWorld;
         if (world.isClient) return;
 
-        world.events.emit(EVENTS.MOB_KILLED, {mob: this, damageSource, pos: this.positionRef});
+        world.events.emit(EVENTS.MOB_KILLED, {mob: this, damageSource});
         world.spawnPreparedParticle(ParticleEffects.ENTITY_DEATH, this.positionRef, 4);
     }
 

@@ -15,6 +15,10 @@ export class StormFire extends BaseWeapon {
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean) {
         super.inventoryTick(stack, world, holder, slot, selected);
 
+        if (world.isClient && holder.isPlayer() && holder.cooldownManager.getCooldownTicks(this) === 10) {
+            world.playSound(null, SoundEvents.SHELL_RELOAD);
+        }
+
         if (!stack.contains(DataComponents.CHARGING_PROGRESS)) return;
         if (!selected) {
             stack.remove(DataComponents.CHARGING_PROGRESS);
@@ -50,7 +54,7 @@ export class StormFire extends BaseWeapon {
         stack.set(DataComponents.CHARGING_PROGRESS, this.CHARGING_TIME);
 
         if (!world.isClient) return;
-        world.playSound(attacker, SoundEvents.STORM_FIRE_WARMUP);
+        world.playSound(attacker, SoundEvents.STORM_FIRE_WARMUP, 0.8);
     }
 
     public override onEndFire(stack: ItemStack, world: World, attacker: Entity) {

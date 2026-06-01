@@ -25,8 +25,7 @@ import {ScoreCommand} from "../../command/ScoreCommand.ts";
 import {ClientStorage} from "../ClientStorage.ts";
 import {LangCommand} from "../../command/LangCommand.ts";
 import {ClientFixCommand} from "../../command/ClientFixCommand.ts";
-
-export type CommandNotifyCategory = 'info' | 'success' | 'warning' | 'error';
+import {Suggestions} from "../../brigadier/suggestion/Suggestions.ts";
 
 export class ClientCommandManager extends CommandManager {
     private readonly clientDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
@@ -224,10 +223,14 @@ export class ClientCommandManager extends CommandManager {
         // @ts-expect-error 尝试服务端命令解析
         const serverResults = this.dispatcher.parseReader(cloneReader, this.source);
 
-        const clientSuggestions = await this.clientDispatcher.getCompletionSuggestionsWithCursor(clientResults, cursor);
-        const serverSuggestions = await this.dispatcher.getCompletionSuggestionsWithCursor(serverResults, cursor);
+        const clientSuggestions = serverResults.context.nodes.length > 0 ?
+            await Suggestions.empty() :
+            await this.clientDispatcher.getCompletionSuggestionsWithCursor(clientResults, cursor);
+        const serverSuggestions = clientResults.context.nodes.length > 0 ?
+            await Suggestions.empty() :
+            await this.dispatcher.getCompletionSuggestionsWithCursor(serverResults, cursor);
 
-        const suggestions = [...clientSuggestions.getList(), ...serverSuggestions.getList()];
+        const suggestions = clientSuggestions.getList().concat(serverSuggestions.getList());
         this.suggestionCache.set(command, suggestions);
         this.parseCache.set(command, [clientResults, serverResults]);
 

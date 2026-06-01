@@ -18,7 +18,7 @@ import {TranslatableTextS2CPacket} from "../../network/packet/s2c/TranslatableTe
 import {Weapon} from "../../item/weapon/Weapon.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
-import type {Item} from "../../item/Item.ts";
+import {type Item} from "../../item/Item.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import {randInt} from "../../utils/math/math.ts";
 

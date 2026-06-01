@@ -19,7 +19,7 @@ import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
 import type {Constructor} from "../../type/types.ts";
 import {Techs} from "../../world/tech/Techs.ts";
 import {Weapon} from "../../item/weapon/Weapon.ts";
-import {ExplosionBehaviour, ExplosionBehavior} from "../../world/explosion/ExplosionBehavior.ts";
+import {ExplosionBehavior, ExplosionBehaviour} from "../../world/explosion/ExplosionBehavior.ts";
 import {ExplosionVisual} from "../../world/explosion/ExplosionVisual.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
@@ -28,7 +28,6 @@ import {UniqueInventory} from "./UniqueInventory.ts";
 export abstract class PlayerEntity extends LivingEntity {
     private static readonly SHIELD_AMOUNT = DataTracker.registerData(Object(PlayerEntity), TrackedDataHandlerRegistry.FLOAT);
 
-    public onDamageExplosionRadius = 320;
     protected techTree: TechTree | null = null;
 
     public readonly cooldownManager!: ItemCooldownManager;
@@ -55,7 +54,8 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public override createLivingAttributes() {
         return super.createLivingAttributes()
-            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 20);
+            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 20)
+            .addWithBaseValue(EntityAttributes.PLAYER_EXPLODE_RANGE, 320);
     }
 
     protected override defineSyncedData(builder: InstanceType<typeof DataTracker.Builder>) {
@@ -116,7 +116,7 @@ export abstract class PlayerEntity extends LivingEntity {
 
         const raw = Math.pow(damage * 0.3, 0.8);
         const shake = clamp(raw, 0.4, 0.9);
-        const visual = new ExplosionVisual(this.onDamageExplosionRadius);
+        const visual = new ExplosionVisual(this.getAttributeValue(EntityAttributes.PLAYER_EXPLODE_RANGE));
         visual.shake = shake;
 
         const world = this.getWorld();
@@ -201,14 +201,14 @@ export abstract class PlayerEntity extends LivingEntity {
         stack.setHolder(this);
         if (item instanceof BaseWeapon) {
             this.inventory.addItem(stack);
-        } else {
-            const index = this.inventory.getEmptySlot(this.inventory.hotbarLength());
-            if (index === -1) {
-                this.sendMessage('背包已满');
-                return;
-            }
-            this.inventory.setItem(index, stack);
+            return;
         }
+        const index = this.inventory.getEmptySlot(this.inventory.hotbarLength());
+        if (index === -1) {
+            this.sendMessage('背包已满');
+            return;
+        }
+        this.inventory.setItem(index, stack);
     }
 
     public removeItem(item: Item): boolean {

@@ -1,14 +1,14 @@
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
-import type {EntityAttribute} from "./EntityAttribute.ts";
+import type {Attribute} from "./Attribute.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import type {Consumer} from "../../type/types.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {HashMap} from "../../utils/collection/HashMap.ts";
-import {AttributeModifier} from "../../component/type/AttributeModifier.ts";
+import {AttributeModifier, Operation} from "../../component/type/AttributeModifier.ts";
 
 
 export class AttributeInstance {
-    private readonly attribute: RegistryEntry<EntityAttribute>;
+    private readonly attribute: RegistryEntry<Attribute>;
 
     private baseValue: number;
     private value: number = 0;
@@ -18,13 +18,13 @@ export class AttributeInstance {
 
     private readonly modifierById = new HashMap<Identifier, AttributeModifier>();
 
-    public constructor(type: RegistryEntry<EntityAttribute>, onDirty: Consumer<AttributeInstance>) {
+    public constructor(type: RegistryEntry<Attribute>, onDirty: Consumer<AttributeInstance>) {
         this.attribute = type;
         this.onDirty = onDirty;
         this.baseValue = type.getValue().getDefaultValue();
     }
 
-    public getAttribute(): RegistryEntry<EntityAttribute> {
+    public getAttribute(): RegistryEntry<Attribute> {
         return this.attribute;
     }
 
@@ -58,7 +58,6 @@ export class AttributeInstance {
         }
         this.modifierById.set(modifier.id, modifier);
         this.setDirty();
-
     }
 
     public updateModifier(modifier: AttributeModifier): void {
@@ -106,7 +105,14 @@ export class AttributeInstance {
     private computeValue(): number {
         let value = this.baseValue;
         for (const modifier of this.modifierById.values()) {
-            value += modifier.value;
+            if (modifier.operation === Operation.ADD) {
+                value += modifier.amount;
+            }
+        }
+        for (const modifier of this.modifierById.values()) {
+            if (modifier.operation === Operation.MULTIPLY) {
+                value *= modifier.amount;
+            }
         }
         return this.attribute.getValue().clamp(value);
     }
@@ -130,10 +136,7 @@ export class AttributeInstance {
         if (this.modifierById.size > 0) {
             const nbtList: NbtCompound[] = [];
             for (const modifier of this.modifierById.values()) {
-                const modNbt = new NbtCompound();
-                modNbt.setString('id', modifier.id.toString());
-                modNbt.setDouble('value', modifier.value);
-
+                const modNbt = AttributeModifier.CODEC.encode(modifier) as NbtCompound;
                 nbtList.push(modNbt);
             }
 
@@ -151,12 +154,10 @@ export class AttributeInstance {
         const nbtList = nbt.getCompoundArray('modifiers');
         if (nbtList) {
             for (const modifierNbt of nbtList) {
-                const id = Identifier.tryParse(modifierNbt.getString('id'));
-                if (!id) continue;
-                const value = modifierNbt.getDouble('value');
+                const modifier = AttributeModifier.CODEC.decode(modifierNbt);
+                if (!modifier) continue;
 
-                const modifier: AttributeModifier = new AttributeModifier(id, value);
-                this.modifierById.set(id, modifier);
+                this.modifierById.set(modifier.id, modifier);
             }
         }
 

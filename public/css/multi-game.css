@@ -1,8 +1,37 @@
+:root {
+    --server-bg: #0f1117;
+    --server-panel: #151926;
+    --server-text: #e6e9ef;
+    --server-muted: #a0a6b6;
+    --server-accent: #61d0ff;
+    --server-good: #42d392;
+    --server-bad: #ff6b6b;
+    --server-border: #1e2740;
+    --server-item-bg: #1a1f31;
+}
+
+.multi-game.background {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--server-bg);
+    color: var(--server-text);
+}
+
+.multi-game.background.hidden {
+    display: none;
+}
+
 .multi-game .title {
     width: 100%;
-    padding: 24px 0;
-    color: #fff;
-    font-size: 28px;
+    padding: 20px 0 16px;
+    color: var(--server-text);
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
     text-align: center;
 }
 
@@ -10,80 +39,141 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    width: 80%;
-    height: 60%;
+    width: 80vw;
+    height: 60vh;
     margin: 8px 0;
     padding: 16px;
     border-radius: 8px;
-    border: 1px solid #676767;
+    border: 1px solid var(--server-border);
+    background: var(--server-panel);
+    overflow-y: auto;
+}
+
+.server-list:empty::after {
+    content: '暂无可用服务器';
+    display: block;
+    text-align: center;
+    color: var(--server-muted);
+    font-size: 14px;
+    padding: 32px 0;
+}
+
+.server-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.server-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.server-list::-webkit-scrollbar-thumb {
+    background: #252e44;
+    border-radius: 999px;
 }
 
 .server-select {
-    & {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 8px;
-        border-radius: 6px;
-        background-color: #e7f2ff;
-        cursor: pointer;
-    }
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: var(--server-item-bg);
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
 
-    .name {
-        font-size: 18px;
-        pointer-events: none;
-    }
+.server-select:hover {
+    border-color: #2d3a58;
+    background: #1f2540;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+}
 
-    .addr {
-        color: #8a8a8a;
-        pointer-events: none;
-    }
+.server-select:focus-visible {
+    outline: none;
+    border-color: var(--server-accent);
+    box-shadow: 0 0 0 2px rgba(97, 208, 255, .2);
+}
+
+.server-select .name {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--server-text);
+    pointer-events: none;
+}
+
+.server-select .addr {
+    font-size: 13px;
+    color: var(--server-muted);
+    pointer-events: none;
 }
 
 .server-input-box {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    width: 80%;
-    gap: 8px;
-    margin: 0 0 12px 0;
+    width: 480px;
+    max-width: 86vw;
+    gap: 10px;
+    margin: 16px 0 12px;
+}
+
+.server-input-box label {
+    display: none;
+}
+
+.server-input-box .btn {
+    width: 50%;
 }
 
 .server-address {
-    width: 40%;
-    padding: 12px;
-    border-radius: 4px;
-    border: 1px solid #5ec8ff;
-    background: rgba(0, 0, 0, 0.3);
-    color: #ffffff;
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 8px;
+    border: 1px solid #252e44;
+    background: var(--server-panel);
+    color: var(--server-text);
+    font-size: 14px;
+    font-family: inherit;
+    letter-spacing: 0.02em;
+    outline: none;
+    transition: border-color .18s ease, box-shadow .18s ease;
+    box-sizing: border-box;
 }
 
-.btn {
-    width: 20%;
-    border: none;
-    border-radius: 4px;
-    padding: 6px 12px;
-    cursor: pointer;
-    transition: 200ms;
-    font-weight: bold;
+.server-address::placeholder {
+    color: #5a6170;
+}
+
+.server-address:focus {
+    border-color: var(--server-accent);
+    box-shadow: 0 0 0 2px rgba(97, 208, 255, .12);
 }
 
 .confirm-btn {
-    background-color: #5ec8ff;
-    color: #000;
+    background: var(--server-accent);
+    color: #0d131f;
 }
 
 .confirm-btn:hover {
-    background-color: #00ff99;
+    background: #00ff99;
+    box-shadow: 0 2px 10px rgba(97, 208, 255, .18);
+}
+
+.confirm-btn:active {
+    background: #4db8e8;
+    box-shadow: none;
 }
 
 .cancel-btn {
-    background-color: #ff3333;
-    color: #fff;
+    background: transparent;
+    color: var(--server-muted);
+    border: 1px solid #252e44;
+    font-weight: 500;
 }
 
 .cancel-btn:hover {
-    background-color: #ffffff;
-    color: #000;
+    color: var(--server-text);
+    border-color: #3d4b6b;
+    background: rgba(255, 255, 255, .03);
 }

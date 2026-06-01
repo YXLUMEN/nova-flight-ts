@@ -7,8 +7,8 @@ import {StatusEffectInstance} from "./effect/StatusEffectInstance.ts";
 import type {StatusEffect} from "./effect/StatusEffect.ts";
 import type {EntityType} from "./EntityType.ts";
 import {DataTracker, type DataTrackerBuilder} from "./data/DataTracker.ts";
-import {AttributeContainer} from "./attribute/AttributeContainer.ts";
-import type {EntityAttribute} from "./attribute/EntityAttribute.ts";
+import {AttributeMap} from "./attribute/AttributeMap.ts";
+import type {Attribute} from "./attribute/Attribute.ts";
 import {EntityAttributes} from "./attribute/EntityAttributes.ts";
 import type {AttributeInstance} from "./attribute/AttributeInstance.ts";
 import {AttributeSupplier, type AttributeSupplierBuilder} from "./attribute/AttributeSupplier.ts";
@@ -20,6 +20,9 @@ import {EntityDamageS2CPacket} from "../network/packet/s2c/EntityDamageS2CPacket
 import {DamageTypeTags} from "../registry/tag/DamageTypeTags.ts";
 import {StatusEffects} from "./effect/StatusEffects.ts";
 import {NbtTypeId} from "../nbt/NbtType.ts";
+import {Techs} from "../world/tech/Techs.ts";
+import {DamageTypes} from "./damage/DamageTypes.ts";
+import {PlayerEntity} from "./player/PlayerEntity.ts";
 
 
 export abstract class LivingEntity extends Entity {
@@ -31,13 +34,13 @@ export abstract class LivingEntity extends Entity {
     protected serverY: number = 0;
     protected serverYaw: number = 0;
 
-    private readonly attributes: AttributeContainer;
+    private readonly attributes: AttributeMap;
     private readonly activeEffects = new Map<RegistryEntry<StatusEffect>, StatusEffectInstance>();
 
     protected constructor(type: EntityType<LivingEntity>, world: World) {
         super(type, world);
 
-        this.attributes = new AttributeContainer(this.createLivingAttributes().build(type));
+        this.attributes = new AttributeMap(this.createLivingAttributes().build(type));
         this.setHealth(this.getMaxHealth());
 
         this.positionIncrements = 0;
@@ -120,19 +123,19 @@ export abstract class LivingEntity extends Entity {
         this.activeEffects.clear();
     }
 
-    public getAttributes(): AttributeContainer {
+    public getAttributes(): AttributeMap {
         return this.attributes;
     }
 
-    public getAttributeInstance(attribute: RegistryEntry<EntityAttribute>): AttributeInstance | null {
-        return this.attributes.getCustomInstance(attribute);
+    public getAttributeInstance(attribute: RegistryEntry<Attribute>): AttributeInstance | null {
+        return this.attributes.getInstance(attribute);
     }
 
-    public getAttributeValue(attribute: RegistryEntry<EntityAttribute>): number {
+    public getAttributeValue(attribute: RegistryEntry<Attribute>): number {
         return this.attributes.getValue(attribute);
     }
 
-    public getAttributeBaseValue(attribute: RegistryEntry<EntityAttribute>): number {
+    public getAttributeBaseValue(attribute: RegistryEntry<Attribute>): number {
         return this.attributes.getBaseValue(attribute);
     }
 
@@ -183,6 +186,14 @@ export abstract class LivingEntity extends Entity {
     protected modifyAppliedDamage(source: DamageSource, damage: number): number {
         if (source.isIn(DamageTypeTags.BYPASSES_EFFECTS)) {
             return damage;
+        }
+
+        const attacker = source.getAttacker();
+        if (attacker instanceof PlayerEntity &&
+            source.isOfs(DamageTypes.MOB_PROJECTILE, DamageTypes.KINETIC, DamageTypes.PLAYER_ATTACK) &&
+            attacker.getTechs().isUnlocked(Techs.ANTIMATTER_WARHEAD)
+        ) {
+            damage += Math.floor(this.getHealth() * 0.08);
         }
 
         if (this.hasStatusEffect(StatusEffects.RESISTANCE) && !source.isIn(DamageTypeTags.BYPASSES_RESISTANCE)) {
@@ -367,7 +378,7 @@ export abstract class LivingEntity extends Entity {
         pendingAttr.clear();
     }
 
-    private updateAttribute(attribute: RegistryEntry<EntityAttribute>): void {
+    private updateAttribute(attribute: RegistryEntry<Attribute>): void {
         if (attribute.matches(EntityAttributes.GENERIC_MAX_HEALTH)) {
             const maxHealth = this.getMaxHealth();
             if (this.getHealth() > maxHealth) {

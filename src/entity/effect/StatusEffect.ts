@@ -1,13 +1,13 @@
 import type {Entity} from "../Entity.ts";
-import type {AttributeContainer} from "../attribute/AttributeContainer.ts";
+import type {AttributeMap} from "../attribute/AttributeMap.ts";
 import type {Identifier} from "../../registry/Identifier.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
-import type {EntityAttribute} from "../attribute/EntityAttribute.ts";
+import type {Attribute} from "../attribute/Attribute.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import type {LivingEntity} from "../LivingEntity.ts";
 import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
 import {Registries} from "../../registry/Registries.ts";
-import {AttributeModifier} from "../../component/type/AttributeModifier.ts";
+import {AttributeModifier, Operation} from "../../component/type/AttributeModifier.ts";
 
 // 0 BENEFICIAL; 1 HARMFUL; 2 NEUTRAL;
 export type StatusEffectCategory = 0 | 1 | 2;
@@ -25,11 +25,11 @@ export class StatusEffect {
         }
 
         public createAttributeModifier(amplifier: number): AttributeModifier {
-            return new AttributeModifier(this.id, this.baseValue * (amplifier + 1));
+            return new AttributeModifier(this.id, this.baseValue * (amplifier + 1), Operation.ADD);
         }
     }
 
-    private readonly attributeModifiers = new Map<RegistryEntry<EntityAttribute>, InstanceType<typeof StatusEffect.EffectAttributeModifierCreator>>();
+    private readonly attributeModifiers = new Map<RegistryEntry<Attribute>, InstanceType<typeof StatusEffect.EffectAttributeModifierCreator>>();
     private readonly category: StatusEffectCategory;
     private readonly color: string;
 
@@ -69,14 +69,14 @@ export class StatusEffect {
         return false;
     }
 
-    public addAttributeModifier(attribute: RegistryEntry<EntityAttribute>, id: Identifier, amount: number): StatusEffect {
+    public addAttributeModifier(attribute: RegistryEntry<Attribute>, id: Identifier, amount: number): StatusEffect {
         this.attributeModifiers.set(attribute, new StatusEffect.EffectAttributeModifierCreator(id, amount));
         return this;
     }
 
-    public addAttributeModifiers(attributeContainer: AttributeContainer, amplifier: number): void {
+    public addAttributeModifiers(attributeContainer: AttributeMap, amplifier: number): void {
         for (const entry of this.attributeModifiers.entries()) {
-            const attrInstance = attributeContainer.getCustomInstance(entry[0]);
+            const attrInstance = attributeContainer.getInstance(entry[0]);
             if (attrInstance) {
                 attrInstance.removeModifierById(entry[1].id);
                 attrInstance.addModifier(entry[1].createAttributeModifier(amplifier));
@@ -84,9 +84,9 @@ export class StatusEffect {
         }
     }
 
-    public removeAttributeModifiers(attributeContainer: AttributeContainer): void {
+    public removeAttributeModifiers(attributeContainer: AttributeMap): void {
         for (const entry of this.attributeModifiers.entries()) {
-            const attrInstance = attributeContainer.getCustomInstance(entry[0]);
+            const attrInstance = attributeContainer.getInstance(entry[0]);
             if (attrInstance) attrInstance.removeModifierById(entry[1].id);
         }
     }

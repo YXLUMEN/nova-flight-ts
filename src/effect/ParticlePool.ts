@@ -20,17 +20,17 @@ export class ParticlePool {
         pos: Vec2, vel: Vec2,
         life: number, size: number,
         colorFrom: string, colorTo: string,
-        drag = 0.0, decrease = true
+        drag = 0.0
     ): CircleParticle {
         let p: CircleParticle;
         if (this.pool.length > 0) {
             p = this.pool.pop()!;
-            p.reset(pos, vel, life, size, colorFrom, colorTo, drag, decrease);
+            p.reset(pos, vel, life, size, colorFrom, colorTo, drag);
         } else if (this.active.length < this.capacity) {
-            p = new CircleParticle(pos, vel, life, size, colorFrom, colorTo, drag, decrease);
+            p = new CircleParticle(pos, vel, life, size, colorFrom, colorTo, drag);
         } else {
             p = this.active.shift()!;
-            p.reset(pos, vel, life, size, colorFrom, colorTo, drag, decrease);
+            p.reset(pos, vel, life, size, colorFrom, colorTo, drag);
         }
         this.active.push(p);
         return p;

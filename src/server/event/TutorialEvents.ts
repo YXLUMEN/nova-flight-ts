@@ -1,5 +1,5 @@
 import {GeneralEventBus} from "../../event/GeneralEventBus.ts";
-import {EVENTS} from "../../type/IEvents.ts";
+import {EVENTS, type IEvents} from "../../type/IEvents.ts";
 import {NovaFlightServer} from "../NovaFlightServer.ts";
 import {sleep} from "../../utils/uit.ts";
 import type {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
@@ -8,12 +8,9 @@ import {BossEntity} from "../../entity/mob/BossEntity.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {World} from "../../world/World.ts";
 import {SpawnMarkerEntity} from "../../entity/SpawnMarkerEntity.ts";
-import type {MobEntity} from "../../entity/mob/MobEntity.ts";
-import type {DamageSource} from "../../entity/damage/DamageSource.ts";
 import {STAGE} from "../../configs/StageConfig.ts";
 import {Techs} from "../../world/tech/Techs.ts";
 import {BaseBossEntity} from "../../entity/mob/BaseBossEntity.ts";
-import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class TutorialEvents {
     private static loop: number | undefined = undefined;
@@ -48,9 +45,10 @@ export class TutorialEvents {
     private static bindOnStageEnter = this.onStageEnter.bind(this);
     private static bindOnMobKill = this.onMobKill.bind(this);
 
-    private static async onStageEnter(event: { name: string }) {
+    private static async onStageEnter(event: IEvents['world:stage:enter']) {
         const server = NovaFlightServer.getInstance();
         const name = event.name;
+
         if (this.currentPhase !== name) {
             this.conditions.clear();
             this.pendingAchievement = null;
@@ -208,7 +206,7 @@ export class TutorialEvents {
         }
     }
 
-    private static onMobKill(event: { mob: MobEntity; damageSource: DamageSource; pos: Vec2 }) {
+    private static onMobKill(event: IEvents["entity:mob:killed"]) {
         const enemyCondition = this.conditions.get('enemy');
         if (enemyCondition) {
             enemyCondition.acc++;

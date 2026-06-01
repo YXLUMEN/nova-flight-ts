@@ -13,16 +13,17 @@ import {NbtTypeId} from "../../nbt/NbtType.ts";
 import {UUIDUtil} from "../../utils/UUIDUtil.ts";
 import {decodeColorToHex, encodeColorHex} from "../../utils/NetUtil.ts";
 import {ProjectRaycastUtil} from "../../world/collision/ProjectRaycastUtil.ts";
-import {type HitResult, HitTypes} from "../../world/collision/HitResult.ts";
+import {type HitResult, HitType} from "../../world/collision/HitResult.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 
 export abstract class ProjectileEntity extends Entity implements Ownable, IColorEntity {
     private damage: number = 0;
-    public color: string = "#8cf5ff";
-    public edgeColor: string = '';
     private ownerUuid: UUID | null = null;
     private owner: Entity | null = null;
+
+    public color: string = "#8cf5ff";
+    public edgeColor: string = '';
 
     protected constructor(type: EntityType<ProjectileEntity>, world: World, owner: Entity | null, damage: number) {
         super(type, world);
@@ -43,7 +44,7 @@ export abstract class ProjectileEntity extends Entity implements Ownable, IColor
             entity => this.canHit(entity),
             this.getWidth()
         );
-        if (hitResult.getType() !== HitTypes.MISS) {
+        if (hitResult.getType() !== HitType.MISS) {
             this.onCollision(hitResult);
         }
         this.setPosition(pos.x + velocity.x, pos.y + velocity.y);
@@ -58,14 +59,13 @@ export abstract class ProjectileEntity extends Entity implements Ownable, IColor
     }
 
     public canHit(entity: Entity): boolean {
-        if (!entity.canHitByProjectile()) return false;
-        return entity !== this.getOwner();
+        return entity.canHitByProjectile() && entity !== this.getOwner();
     }
 
     public onCollision(hitResult: HitResult) {
-        if (hitResult.getType() === HitTypes.ENTITY) {
+        if (hitResult.getType() === HitType.ENTITY) {
             this.onEntityHit(hitResult as EntityHitResult);
-        } else if (hitResult.getType() === HitTypes.BLOCK) {
+        } else if (hitResult.getType() === HitType.BLOCK) {
             this.onBlockHit(hitResult as BlockHitResult);
         }
     }

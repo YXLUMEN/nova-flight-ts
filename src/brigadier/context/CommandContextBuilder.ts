@@ -57,7 +57,7 @@ export class CommandContextBuilder<S> {
         const copy = new CommandContextBuilder<S>(this.dispatcher, this.source, this.rootNode, this.range.getStart());
         copy.command = this.command;
         this.args.forEach((v, k) => copy.args.set(k, v));
-        copy.nodes.concat(this.nodes);
+        copy.nodes.push(...this.nodes);
         copy.child = this.child;
         copy.range = this.range;
         return copy;

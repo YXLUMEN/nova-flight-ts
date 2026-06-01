@@ -13,13 +13,14 @@ import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
 import {LivingEntity} from "../../entity/LivingEntity.ts";
 import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {Identifier} from "../../registry/Identifier.ts";
-import {AttributeModifier} from "../../component/type/AttributeModifier.ts";
+import {AttributeModifier, Operation} from "../../component/type/AttributeModifier.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class PerditionBeam extends PhaseLasers {
     private static readonly DEFAULT_MODIFIER = new AttributeModifier(
         Identifier.ofVanilla('perdition_beam_charging'),
-        -0.7
+        0.4,
+        Operation.MULTIPLY
     );
     protected override width = 12;
 

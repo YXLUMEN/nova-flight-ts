@@ -1,19 +1,15 @@
 import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
 import {Registries} from "../../registry/Registries.ts";
+import {AttributeCategory} from "./AttributeCategory.ts";
 
-export const EntityAttributeCategory = {
-    POSITIVE: 0,
-    NEUTRAL: 1,
-    NEGATIVE: 2
-} as const;
 
-export class EntityAttribute {
-    public static readonly PACKET_CODEC: PacketCodec<EntityAttribute> = PacketCodecs.registryValue(Registries.ATTRIBUTE);
+export class Attribute {
+    public static readonly PACKET_CODEC: PacketCodec<Attribute> = PacketCodecs.registryValue(Registries.ATTRIBUTE);
 
     private readonly fallback: number;
     private tracked: boolean = false;
-    private category: 0 | 1 | 2 = EntityAttributeCategory.POSITIVE;
+    private category: AttributeCategory = AttributeCategory.POSITIVE;
 
     protected constructor(fallback: number) {
         this.fallback = fallback;
@@ -27,12 +23,12 @@ export class EntityAttribute {
         return this.tracked;
     }
 
-    public setTracked(tracked: boolean): EntityAttribute {
+    public setTracked(tracked: boolean): Attribute {
         this.tracked = tracked;
         return this;
     }
 
-    public setCategory(category: 0 | 1 | 2): EntityAttribute {
+    public setCategory(category: AttributeCategory): Attribute {
         this.category = category;
         return this;
     }

@@ -506,8 +506,8 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     // 伤害
 
-    public isInvulnerableTo(damageSource: DamageSource): boolean {
-        return this.removed || this.invulnerable && !damageSource.isIn();
+    public isInvulnerableTo(_damageSource: DamageSource): boolean {
+        return this.removed || this.invulnerable;
     }
 
     /**
@@ -515,7 +515,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
      *
      * @see{@link isInvulnerableTo}
      * */
-    public isImmuneToExplosion() {
+    public isImmuneToExplosion(): boolean {
         return false;
     }
 
@@ -523,15 +523,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         return this.isInvulnerableTo(damageSource);
     }
 
-    // 渲染与可见性
-
-    public shouldRender(view: ViewRect): boolean {
-        return isBoxInView(this.boundingBox, view);
-    }
-
-    /**
-     * 是否可以成为"弹射物/射线"的目标
-     * */
+    // 是否可以成为"弹射物/射线"的目标
     public canHitByProjectile(): boolean {
         return this.isAlive();
     }
@@ -695,14 +687,20 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         }
     }
 
-    // 仅限清理. 用别怕,怕别用
-    public static resetCounter() {
-        this.ENTITY_COUNTER.reset();
-    }
-
     // 由索引控制
     public searchGen = 0;
 
+    // 渲染与可见性
+
+    public shouldRender(view: ViewRect): boolean {
+        return isBoxInView(this.boundingBox, view);
+    }
+
     // 用于缓存,渲染器自动处理,一般不需要手动管理
     public renderer: EntityRenderer<Entity> | null = null;
+
+    // 仅限清理,严禁在游戏阶段调用
+    public static resetCounter() {
+        this.ENTITY_COUNTER.reset();
+    }
 }

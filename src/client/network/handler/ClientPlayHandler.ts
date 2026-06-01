@@ -322,13 +322,15 @@ export class ClientPlayHandler extends ClientCommonHandler {
     public onEntityAttributes(packet: EntityAttributesS2CPacket): void {
         const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
-        if (!(entity instanceof LivingEntity)) throw new Error(`Server tried to update attributes of a non-living entity: ${entity}`);
-        const container = entity.getAttributes();
+        if (!(entity instanceof LivingEntity)) {
+            throw new Error(`Server tried to update attributes of a non-living entity: ${entity}`);
+        }
 
+        const container = entity.getAttributes();
         for (const entry of packet.entries) {
-            const instance = container.getCustomInstance(entry.attribute);
+            const instance = container.getInstance(entry.attribute);
             if (!instance) {
-                console.warn(`Entity ${entity} does not have attribute ${entry.attribute.getRegistryKey().getValue().toString()}`);
+                console.warn(`Entity ${entity} does not have attribute ${entry.attribute.getRegistryKey().getValue()}`);
                 continue;
             }
             instance.setBaseValue(entry.base);

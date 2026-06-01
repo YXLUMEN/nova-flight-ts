@@ -361,6 +361,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     public override switchWeapon(dir: number = 1) {
         super.switchWeapon(dir);
+        this.wasFiring = false;
         this.sendPacket(new PlayerSwitchSlotC2SPacket(this.getInventory().getSelectedSlot()));
     }
 

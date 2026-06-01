@@ -9,9 +9,6 @@ import {GeneralEventBus} from "../../event/GeneralEventBus.ts";
 import {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
 import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
-import type {MobEntity} from "../../entity/mob/MobEntity.ts";
-import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
-import type {DamageSource} from "../../entity/damage/DamageSource.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {Items} from "../../item/Items.ts";
 import type {PhaseLasers} from "../../item/weapon/PhaseLasers.ts";
@@ -27,12 +24,9 @@ export class ServerDefaultEvents {
     public static registerEvent(world: ServerWorld) {
         const events = GeneralEventBus.getEventBus();
 
-        events.on(EVENTS.MOB_DAMAGE, event => {
-            const mob = event.mob as MobEntity;
-            const damageSource = event.damageSource as DamageSource;
-
+        events.on(EVENTS.MOB_DAMAGE, ({mob, damageSource}) => {
             const attacker = damageSource.getAttacker();
-            if (!(attacker instanceof PlayerEntity)) return;
+            if (!attacker?.isPlayer()) return;
 
             if (!damageSource.isIn(DamageTypeTags.NOT_TRIGGER_EROSION)) {
                 const techTree = attacker.getTechs();
@@ -53,15 +47,13 @@ export class ServerDefaultEvents {
             }
         });
 
-        events.on(EVENTS.MOB_KILLED, event => {
-            const damageSource = event.damageSource as DamageSource;
-
+        events.on(EVENTS.MOB_KILLED, ({mob, damageSource}) => {
             const player = damageSource.getAttacker();
             if (!(player instanceof ServerPlayerEntity)) return;
 
             const techTree = player.getTechs();
             if (!damageSource.isIn(DamageTypeTags.NOT_GAIN_SCORE)) {
-                player.addScore(event.mob.getWorth());
+                player.addScore(mob.getWorth());
             }
 
             if (damageSource.isIn(DamageTypeTags.REPLY_LASER) && techTree.isUnlocked(Techs.ENERGY_RECOVERY)) {
@@ -109,15 +101,14 @@ export class ServerDefaultEvents {
             }
         });
 
-        events.on(EVENTS.EMP_BURST, event => {
-            const player = event.entity;
-            if (player instanceof ServerPlayerEntity && player.getTechs().isUnlocked(Techs.ELE_OSCILLATION)) {
-                world.empBurst = event.duration;
+        events.on(EVENTS.EMP_BURST, ({entity, duration}) => {
+            if (entity instanceof ServerPlayerEntity && entity.getTechs().isUnlocked(Techs.ELE_OSCILLATION)) {
+                world.empBurst = duration;
             }
         });
 
-        events.on(EVENTS.STAGE_ENTER, event => {
-            if (event.name === 'P6' || event.name === 'mP3') {
+        events.on(EVENTS.STAGE_ENTER, ({name}) => {
+            if (name === 'P6' || name === 'mP3') {
                 if (BossEntity.hasBoss) return;
 
                 world.schedule(10, () => {
@@ -134,9 +125,8 @@ export class ServerDefaultEvents {
         });
 
         events.on(EVENTS.EXPLOSION, ({explosion}) => {
-            const exp = explosion as Explosion;
-            const effect = exp.getBehaviour().effect;
-            exp.getBehaviour().effect = ExplosionEffect.TRIGGERED;
+            const effect = explosion.getBehaviour().effect;
+            explosion.getBehaviour().effect = ExplosionEffect.TRIGGERED;
             if (effect !== ExplosionEffect.TRIGGERED) {
                 this.serialWarhead(world, explosion);
             }
