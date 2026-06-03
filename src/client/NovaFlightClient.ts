@@ -259,7 +259,7 @@ export class NovaFlightClient {
 
             requestAnimationFrame(this.loop);
         } catch (err) {
-            const msg = err instanceof Error ?
+            const msg = Error.isError(err) ?
                 `[Client] Crash ${err.name}:${err.message} because ${err.cause} at\n${err.stack}` :
                 `[Client] Crash ${err}`;
 
@@ -512,7 +512,7 @@ export class NovaFlightClient {
 
         worker.onerror = event => {
             const err = event.error;
-            const msg = err instanceof Error ?
+            const msg = Error.isError(err) ?
                 `[Server Thread] Crash ${err.name}:${err.message} because ${err.cause} at\n ${err.stack}` :
                 `[Server Thread] Crash ${event.type}:${event.message} because ${event.error}`;
 

@@ -39,7 +39,7 @@ export abstract class CommandManager {
                 console.warn(exception);
             }
 
-            if (err instanceof Error) {
+            if (Error.isError(err)) {
                 output.sendMessage(err.message);
             }
         }

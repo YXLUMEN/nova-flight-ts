@@ -1,4 +1,4 @@
-import {groupBy, isNonEmptyString} from '../../utils/uit.ts';
+import {isNonEmptyString} from '../../utils/uit.ts';
 import type {RawTech, TechAvailable} from '../../type/ITech.ts';
 import {Tech} from "./Tech.ts";
 import {Registries} from "../../registry/Registries.ts";
@@ -14,7 +14,11 @@ export class TechState {
 
     public constructor(techs: Tech[]) {
         this.allTechs = techs;
-        this.branchGroups = groupBy(techs.filter(t => t.branchGroup), t => t.branchGroup!);
+
+        const group = Map.groupBy(techs, t => t.branchGroup);
+        group.delete(null);
+        this.branchGroups = group as Map<string, Tech[]>;
+
         this.dependentsMap = this.buildDependentsMap();
     }
 

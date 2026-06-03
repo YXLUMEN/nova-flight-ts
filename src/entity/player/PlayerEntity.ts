@@ -24,6 +24,7 @@ import {ExplosionVisual} from "../../world/explosion/ExplosionVisual.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {UniqueInventory} from "./UniqueInventory.ts";
+import {EVENTS} from "../../type/IEvents.ts";
 
 export abstract class PlayerEntity extends LivingEntity {
     private static readonly SHIELD_AMOUNT = DataTracker.registerData(Object(PlayerEntity), TrackedDataHandlerRegistry.FLOAT);
@@ -168,8 +169,13 @@ export abstract class PlayerEntity extends LivingEntity {
     }
 
     public override onDeath(damageSource: DamageSource) {
+        const world = this.getWorld();
+        const event = {player: this, cancel: false};
+        world.events.emit(EVENTS.PLAYER_DEAD, event);
+        if (event.cancel) return;
+
         super.onDeath(damageSource);
-        this.getWorld().gameOver(this);
+        world.gameOver(this);
     }
 
     protected override onDiscard() {

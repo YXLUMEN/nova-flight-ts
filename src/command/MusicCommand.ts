@@ -55,7 +55,7 @@ export class MusicCommand {
                                 .suggests({
                                     getSuggestions(_: CommandContext<T>, builder: SuggestionsBuilder): Promise<Suggestions> {
                                         let duration = AudioManager.getDuration();
-                                        if (isNaN(duration)) duration = 0;
+                                        if (!Number.isFinite(duration)) duration = 0;
                                         builder.suggest(duration.toString());
                                         return builder.buildPromise();
                                     }
@@ -75,19 +75,36 @@ export class MusicCommand {
                 )
                 .then(
                     literal<T>('pause')
-                        .executes(() => AudioManager.pause())
+                        .executes(ctx => {
+                            AudioManager.pause();
+                            ctx.source.addMessage('Music paused');
+                        })
                 )
                 .then(
-                    literal<T>('resum').executes(() => AudioManager.resume()
-                    )
+                    literal<T>('resum').executes(ctx => {
+                        AudioManager.resume();
+                        ctx.source.addMessage(`Music resume`);
+                    })
                 )
                 .then(
                     literal<T>('stop')
-                        .executes(() => AudioManager.stop())
+                        .executes(ctx => {
+                            AudioManager.stop();
+                            ctx.source.addMessage('Music stopped');
+                        })
                 )
                 .then(
                     literal<T>('next')
-                        .executes(() => BGMManager.next())
+                        .executes(ctx => {
+                            BGMManager.next();
+                            const current = AudioManager.getCurrentPlaying();
+                            if (!current) {
+                                ctx.source.addMessage(`No music is playing`);
+                                return;
+                            }
+
+                            ctx.source.addMessage(`Now is playing ${current.id.toString()}`);
+                        })
                 )
                 .then(
                     literal<T>('disable')
@@ -120,10 +137,13 @@ export class MusicCommand {
     private static toggleDisable<T extends ClientCommandSource>(ctx: CommandContext<T>): void {
         const arg = ctx.args.get('bool');
         if (!arg) {
-            AudioManager.setDisable(!AudioManager.isDisable());
+            const bl = !AudioManager.isDisable();
+            ctx.source.addMessage(`Music ${bl ? 'disabled' : 'enabled'}`);
+            AudioManager.setDisable(bl);
             return;
         }
         const bl = Boolean(arg.result);
         AudioManager.setDisable(bl);
+        ctx.source.addMessage(`Music ${bl ? 'disabled' : 'enabled'}`);
     }
 }

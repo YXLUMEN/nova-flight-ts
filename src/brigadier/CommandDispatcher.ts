@@ -46,7 +46,7 @@ export class CommandDispatcher<S> {
             } catch (err) {
                 if (err instanceof CommandError) {
                     errors.set(child, err);
-                } else if (err instanceof Error) {
+                } else if (Error.isError(err)) {
                     const commandError = new CommandError(`${err.name}: ${err.message}`);
                     errors.set(child, commandError);
                 } else {

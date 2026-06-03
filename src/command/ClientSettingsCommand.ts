@@ -10,6 +10,7 @@ import {ServerStorage} from "../server/ServerStorage.ts";
 import {clamp} from "../utils/math/math.ts";
 import {NovaFlightClient} from "../client/NovaFlightClient.ts";
 import {BoolArgumentType} from "./argument/BoolArgumentType.ts";
+import {error} from "@tauri-apps/plugin-log";
 
 export class ClientSettingsCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -170,17 +171,30 @@ export class ClientSettingsCommand {
                 .then(
                     literal<T>('force')
                         .then(
-                            literal<T>('shutdown')
-                                .executes(ctx => ctx.source.getClient().requestStop())
+                            literal<T>('stop_game')
+                                .executes(ctx => {
+                                    ctx.source.getClient().requestStop();
+                                    ctx.source.addMessage('Schedule to stop the game');
+                                })
                         )
                         .then(
                             literal<T>('shut_relay')
-                                .executes(() => invoke('stop_server'))
+                                .executes(async (ctx) => {
+                                    const result = await invoke<boolean>('stop_server');
+                                    ctx.source.addMessage(result ? 'Stopping server' : 'Server not running');
+                                })
                         )
                         .then(
                             literal<T>('reset_tutorial')
-                                .executes(() => {
-                                    return ServerStorage.db.delete('user_info', 'tutorial');
+                                .executes(async (ctx) => {
+                                    const result = await ServerStorage.db.delete('user_info', 'tutorial');
+                                    if (result.isOk()) {
+                                        ctx.source.addMessage('Reset success');
+                                        return;
+                                    }
+
+                                    await error(result.unwrapErr().toString());
+                                    ctx.source.addMessage('Action failed, the detail will write to log');
                                 })
                         )
                 )

@@ -40,10 +40,10 @@ export class HUD implements IUi {
         if (player) {
             this.inventoryRender = new InventoryRender(player);
             this.inventoryRender.setSize(this.worldW, this.worldH);
-        } else {
-            this.inventoryRender?.destroy();
-            this.inventoryRender = null;
+            return;
         }
+        this.inventoryRender?.destroy();
+        this.inventoryRender = null;
     }
 
     public tick(tickDelta: number) {

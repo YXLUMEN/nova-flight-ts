@@ -154,7 +154,7 @@ export class ServerStorage {
         });
 
         const meta = await metaTask;
-        if (meta instanceof Error) {
+        if (Error.isError(meta)) {
             return Result.err(meta);
         }
 
@@ -174,7 +174,7 @@ export class ServerStorage {
         });
 
         const save = await saveTask;
-        if (save instanceof Error) {
+        if (Error.isError(save)) {
             return Result.err(save);
         }
 
@@ -304,10 +304,11 @@ export class ServerStorage {
 
         const uuid: UUID = player.getProfile().clientId;
         const result = await this.db.delete('player_data', [saveName, uuid]);
-        return result
-            .mapErr(err => console.error(err))
-            .ok()
-            .get()
+        if (result.isErr()) {
+            console.error(result.unwrapErr());
+            return false;
+        }
+        return true;
     }
 
     private static getSaveName(player: ServerPlayerEntity): string | null {
@@ -358,7 +359,7 @@ export class ServerStorage {
     }
 
     private static mapErr(error: unknown) {
-        if (error instanceof Error) return error;
+        if (Error.isError(error)) return error;
         return new Error('Unknown error occurred.');
     }
 }

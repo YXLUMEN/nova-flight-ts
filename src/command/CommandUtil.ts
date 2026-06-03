@@ -25,7 +25,9 @@ export class CommandUtil {
                 if (this.shouldSuggest(remaining, idStr)) {
                     action(candidate);
                 }
-            } else if (
+                continue;
+            }
+            if (
                 this.shouldSuggest(remaining, id.getNamespace()) ||
                 id.getNamespace() === 'nova-flight' &&
                 this.shouldSuggest(remaining, id.getPath())

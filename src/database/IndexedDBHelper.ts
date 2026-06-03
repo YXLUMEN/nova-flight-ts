@@ -121,14 +121,14 @@ export class IndexedDBHelper {
         return promise;
     }
 
-    public async delete(storeName: string, key: IDBValidKey | IDBKeyRange): Promise<Result<boolean, Error>> {
+    public async delete(storeName: string, key: IDBValidKey | IDBKeyRange): Promise<Result<void, Error>> {
         const db = await this.init();
-        const {promise, resolve} = Promise.withResolvers<Result<boolean, Error>>();
+        const {promise, resolve} = Promise.withResolvers<Result<void, Error>>();
 
         const tx = db.transaction(storeName, 'readwrite');
         const store = tx.objectStore(storeName);
         const request = store.delete(key);
-        request.onsuccess = () => resolve(Result.ok(true));
+        request.onsuccess = () => resolve(Result.ok(undefined));
         request.onerror = () => resolve(Result.err(IndexedDBHelper.mapErr(request.error)));
 
         return promise;

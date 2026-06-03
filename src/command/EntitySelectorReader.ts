@@ -94,7 +94,7 @@ export class EntitySelectorReader {
         );
     }
 
-    protected readRegular(): void {
+    protected readNameOrUUID(): void {
         if (this.reader.canRead()) {
             this.suggestionProvider = this.suggestNormal;
         }
@@ -133,7 +133,7 @@ export class EntitySelectorReader {
                 this.limit = Number.MAX_SAFE_INTEGER;
                 this.includesNonPlayers = false;
                 this.sorter = EntitySelectorReader.ARBITRARY;
-                this.setEntityType(EntityTypes.PLAYER);
+                this.limitType(EntityTypes.PLAYER);
                 break;
             }
             case 'e': {
@@ -152,14 +152,14 @@ export class EntitySelectorReader {
                 this.limit = 1;
                 this.includesNonPlayers = false;
                 this.sorter = EntitySelectorReader.NEAREST;
-                this.setEntityType(EntityTypes.PLAYER);
+                this.limitType(EntityTypes.PLAYER);
                 break;
             }
             case 'r': {
                 this.limit = 1;
                 this.includesNonPlayers = false;
                 this.sorter = EntitySelectorReader.RANDOM;
-                this.setEntityType(EntityTypes.PLAYER);
+                this.limitType(EntityTypes.PLAYER);
                 break;
             }
             case 's': {
@@ -236,7 +236,7 @@ export class EntitySelectorReader {
             this.reader.skip();
             this.readAtVariable();
         } else {
-            this.readRegular();
+            this.readNameOrUUID();
         }
 
         return this.build();
@@ -341,7 +341,7 @@ export class EntitySelectorReader {
         this.suggestionProvider = suggestionProvider;
     }
 
-    public setEntityType(type: EntityType<any>) {
+    public limitType(type: EntityType<any>) {
         this.entityType = type;
     }
 

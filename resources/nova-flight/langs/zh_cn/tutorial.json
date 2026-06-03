@@ -1,5 +1,5 @@
 {
-  "intro.welcome": "指挥官 ,欢迎来到 \u001B[32m\"Nova Flight\"",
+  "intro.welcome": "指挥官, 欢迎来到 \u001B[32m\"Nova Flight\"",
   "intro.teach": "接下来我会重复一遍基础驾驶操作(如果需要重复观看, 请按下 \u001B[32mT\u001B[0m)",
   "move": "按下 \u001B[32mwasd\u001B[0m 或者 \u001B[32m方向键\u001B[0m 进行移动",
   "fire.space": "按下 \u001B[32mSpace/空格\u001B[0m 或者 \u001B[32m鼠标左键\u001B[0m 进行基础攻击",

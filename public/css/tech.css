@@ -226,7 +226,6 @@ svg.edges {
 .details .tech-title img {
     width: 54px;
     height: 54px;
-    border-radius: 8px;
     object-fit: cover;
     flex-shrink: 0;
 }
