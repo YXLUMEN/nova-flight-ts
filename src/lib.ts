@@ -33,7 +33,7 @@ export function run() {
         })
         .then(() => mainWindow.close())
         .catch(err => {
-            if (err instanceof Error) {
+            if (Error.isError(err)) {
                 const msg = `Error while starting client: ${err.message} by ${err.cause}\n at ${err.stack}`;
                 console.error(msg);
                 return error(msg);

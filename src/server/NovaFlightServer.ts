@@ -96,10 +96,10 @@ export abstract class NovaFlightServer implements CommandOutput {
 
             this.world!.readNBT(saves);
             return Result.ok(true);
-        } catch (error) {
-            const msg = error instanceof Error
-                ? `[Server] Error while loading save ${error.name}:${error.message} because ${error.cause} at\n${error.stack}`
-                : `[Server] Error while loading save ${error}`;
+        } catch (err) {
+            const msg = Error.isError(err)
+                ? `[Server] Error while loading save ${err.name}:${err.message} because ${err.cause} at\n${err.stack}`
+                : `[Server] Error while loading save ${err}`;
 
             Log.error(msg);
             return Result.err(msg);

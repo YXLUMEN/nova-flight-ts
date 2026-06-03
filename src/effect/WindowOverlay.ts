@@ -3,6 +3,7 @@ import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
+import {clamp} from "../utils/math/math.ts";
 
 export class WindowOverlay implements VisualEffect {
     public static readonly PACKET_CODEC: PacketCodec<WindowOverlay> = PacketCodecs.of(
@@ -44,7 +45,7 @@ export class WindowOverlay implements VisualEffect {
         composite: GlobalCompositeOperation = 'screen' // 混合模式
     ) {
         this.color = color;
-        this.maxAlpha = maxAlpha ?? 0.28;
+        this.maxAlpha = clamp(maxAlpha, 0, 1);
         this.fadeIn = Math.max(0, fadeIn);
         this.fadeOut = Math.max(0, fadeOut);
         this.composite = composite;
@@ -90,14 +91,12 @@ export class WindowOverlay implements VisualEffect {
     public render(ctx: CanvasRenderingContext2D): void {
         if (!this.alive || this.alpha <= 0) return;
 
-        const canvas = ctx.canvas;
         ctx.save();
-
         ctx.resetTransform();
         ctx.globalCompositeOperation = this.composite;
         ctx.globalAlpha = this.alpha;
         ctx.fillStyle = this.color;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
         ctx.restore();
     }

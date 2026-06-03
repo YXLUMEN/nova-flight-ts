@@ -6,6 +6,8 @@ import type {Entity} from "../entity/Entity.ts";
 import type {MissileEntity} from "../entity/projectile/MissileEntity.ts";
 import type {Tech} from "../world/tech/Tech.ts";
 import type {Explosion} from "../world/explosion/Explosion.ts";
+import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
+import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 
 export const EVENTS = config({
     GAME_START: "game:start",
@@ -15,8 +17,9 @@ export const EVENTS = config({
     BOSS_SPAWN: "entity:boss:spawn",
     MOB_KILLED: "entity:mob:killed",
     MOB_DAMAGE: "entity:mob:damage",
-    ENTITY_DIE: "entity:die",
+    PLAYER_DEAD: "entity:player.dead",
     UNLOCK_TECH: "player:tech:unlock",
+    UNLOCK_TECH_ENTRY: "player:tech:unlock_entry",
     EXPLOSION: "world:explosion",
     EMP_BURST: "world:emp_burst",
     STAGE_ENTER: "world:stage:enter",
@@ -34,7 +37,9 @@ export type IEvents = {
     [EVENTS.BOSS_KILLED]: { entity: BossEntity | null };
     [EVENTS.MOB_KILLED]: { mob: MobEntity; damageSource: DamageSource; };
     [EVENTS.MOB_DAMAGE]: { mob: MobEntity; damageSource: DamageSource; };
+    [EVENTS.PLAYER_DEAD]: { player: PlayerEntity; cancel: boolean };
     [EVENTS.UNLOCK_TECH]: { tech: Tech; silent?: boolean };
+    [EVENTS.UNLOCK_TECH_ENTRY]: { tech: RegistryEntry<Tech>; };
     [EVENTS.EXPLOSION]: { explosion: Explosion };
     [EVENTS.EMP_BURST]: { entity: Entity, duration: number };
     [EVENTS.STAGE_ENTER]: { name: string };

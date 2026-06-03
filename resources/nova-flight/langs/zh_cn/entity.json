@@ -5,5 +5,11 @@
   "player.death_3": "{} 的内脏变成了外脏",
   "player.death_4": "{} 被撕碎了",
   "player.death_5": "{} 变成了太空垃圾",
-  "player.death_6": "{} 停止了思考"
+  "player.respawn_0": "Not Give Up Now",
+  "player.respawn_1": "不是现在!",
+  "player.respawn_2": "你的使命还没有结束",
+  "player.respawn_3": "不能止步于此",
+  "player.respawn_4": "深呼吸",
+  "player.respawn_5": "Let's not give up just yet.",
+  "player.respawn_6": "坚持住,同志"
 }

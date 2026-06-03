@@ -86,7 +86,7 @@ export class EntitySelectorOptions {
                 reader.includesNonPlayers = false;
             }
 
-            reader.setEntityType(entityType);
+            reader.limitType(entityType);
         }, reader => !reader.selectsEntityType());
     }
 

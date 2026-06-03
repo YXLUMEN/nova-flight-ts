@@ -65,8 +65,11 @@ import type {StopSoundS2CPacket} from "../../../network/packet/s2c/StopSoundS2CP
 import {ClientCommonHandler} from "./ClientCommonHandler.ts";
 import type {GameOverS2CPacket} from "../../../network/packet/s2c/GameOverS2CPacket.ts";
 import {LatencyCalculator} from "../../../network/LatencyCalculator.ts";
-import {squareDist} from "../../../utils/math/math.ts";
+import {randInt, squareDist} from "../../../utils/math/math.ts";
 import {PhaseLasers} from "../../../item/weapon/PhaseLasers.ts";
+import type {NotGiveUpS2CPacket} from "../../../network/packet/s2c/NotGiveUpS2CPacket.ts";
+import {WindowOverlay} from "../../../effect/WindowOverlay.ts";
+import {TitleEffect} from "../../../effect/TitleEffect.ts";
 
 export class ClientPlayHandler extends ClientCommonHandler {
     private readonly playerProfiles: Map<UUID, GameProfile> = new Map();
@@ -510,6 +513,25 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
     public onScreenShake(packet: ScreenShakeS2CPacket): void {
         this.client.window.camera.addShake(packet.amount, packet.limit);
+    }
+
+    public onNGU(_: NotGiveUpS2CPacket): void {
+        if (!this.world) return;
+
+        const effect = new WindowOverlay(
+            '#000',
+            1,
+            0.2,
+            0.5,
+            'copy'
+        );
+
+        this.world.addEffect(null, effect);
+        this.world.schedule(2, () => {
+            const text = TranslatableText.of(`entity.player.respawn_${randInt(0, 6)}`);
+            this.client.worldRender.setTitle(new TitleEffect(text.toString(), 6));
+        });
+        this.world.schedule(5, () => effect.end());
     }
 
     public sendCommand(input: string): boolean {

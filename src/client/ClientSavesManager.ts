@@ -197,7 +197,7 @@ export class ClientSavesManager {
 
     private async tryInsertWorld(input: string) {
         const saveName = await this.genSaveName(input);
-        if (!saveName || saveName instanceof Error) {
+        if (!saveName || Error.isError(saveName)) {
             return null
         }
 

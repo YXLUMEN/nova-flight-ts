@@ -1,6 +1,5 @@
 export class ClientSuggestionPopup {
     private readonly measureCtx: OffscreenCanvasRenderingContext2D;
-    private font: string = '';
 
     private readonly commandBar: HTMLLabelElement;
     private readonly commandInput: HTMLInputElement;
@@ -8,7 +7,10 @@ export class ClientSuggestionPopup {
 
     public constructor(commandBar: HTMLLabelElement, commandInput: HTMLInputElement) {
         const canvas = new OffscreenCanvas(1, 1);
-        this.measureCtx = canvas.getContext('2d')!;
+        this.measureCtx = canvas.getContext('2d', {
+            alpha: false
+        })!;
+        this.measureCtx.imageSmoothingEnabled = false;
 
         this.commandBar = commandBar
         this.commandInput = commandInput
@@ -48,14 +50,9 @@ export class ClientSuggestionPopup {
         if (!this.popupItems) return;
 
         const input = this.commandInput.value;
-        if (input.lastIndexOf(' ') === -1) {
-            this.popupItems.style.left = '0px';
-            return;
-        }
-
-        this.changeFont();
-
-        const width = this.measureCtx.measureText(input).width;
+        const cursor = this.commandInput.selectionStart ?? input.length;
+        const text = input.substring(0, cursor);
+        const width = this.measureCtx.measureText(text).width;
         this.popupItems.style.left = `${width}px`;
     }
 
@@ -105,9 +102,7 @@ export class ClientSuggestionPopup {
         const style = window.getComputedStyle(this.commandInput);
         const font = `${style.fontStyle} ${style.fontVariant} ${style.fontWeight} ${style.fontSize} / ${style.lineHeight} ${style.fontFamily}`;
 
-        if (this.font === font) return;
-
-        this.font = font;
+        if (this.measureCtx.font === font) return;
         this.measureCtx.font = font;
     }
 }

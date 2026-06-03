@@ -58,3 +58,10 @@ canvas {
     transition: 200ms;
     font-weight: 600;
 }
+
+@font-face {
+    font-family: "Minecraft";
+    src: url("/font/minecraft.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
+}

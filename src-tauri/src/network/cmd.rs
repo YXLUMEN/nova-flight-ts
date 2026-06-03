@@ -51,21 +51,21 @@ pub async fn start_server(port: u16) -> Result<[u8; 32], String> {
 }
 
 #[tauri::command]
-pub async fn stop_server() -> Result<(), String> {
+pub async fn stop_server() -> Result<bool, String> {
     let Some(state_cell) = SERVER_MANAGER.get() else {
         info!("Server not initialized");
-        return Ok(());
+        return Ok(false);
     };
 
     let mut guard = state_cell.lock().await;
     if let Some(tx) = guard.stop_tx.take() {
         let _ = tx.send(());
         info!("Stopping server");
+        Ok(true)
     } else {
         info!("Server not running");
+        Ok(false)
     }
-
-    Ok(())
 }
 
 #[tauri::command]

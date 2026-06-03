@@ -55,7 +55,7 @@ export class ServerConfigHandler extends ServerCommonHandler {
                 this.disconnect(ServerConfigHandler.PROMOTE_FAIL);
             });
         } catch (err) {
-            if (err instanceof Error) {
+            if (Error.isError(err)) {
                 console.error(`Couldn't place player in world: ${err.name}:${err.message} at\n ${err.stack}`);
             } else console.error(err);
 

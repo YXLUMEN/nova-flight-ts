@@ -1,386 +1,299 @@
 import {GeneralEventBus} from "../../event/GeneralEventBus.ts";
 import {EVENTS, type IEvents} from "../../type/IEvents.ts";
 import {NovaFlightServer} from "../NovaFlightServer.ts";
-import {sleep} from "../../utils/uit.ts";
-import type {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
-import type {Consumer} from "../../type/types.ts";
-import {BossEntity} from "../../entity/mob/BossEntity.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {World} from "../../world/World.ts";
 import {SpawnMarkerEntity} from "../../entity/SpawnMarkerEntity.ts";
 import {STAGE} from "../../configs/StageConfig.ts";
 import {Techs} from "../../world/tech/Techs.ts";
 import {BaseBossEntity} from "../../entity/mob/BaseBossEntity.ts";
+import {SequenceEngine} from "../../world/sequence/SequenceEngine.ts";
+import {SequenceBuilder, type SequenceDef} from "../../world/sequence/SequenceBuilder.ts";
+import type {SequenceContext} from "../../world/sequence/SequenceContext.ts";
+import {config} from "../../utils/uit.ts";
+import type {Consumer} from "../../type/types.ts";
+import {NotGiveUpS2CPacket} from "../../network/packet/s2c/NotGiveUpS2CPacket.ts";
 
 export class TutorialEvents {
-    private static loop: number | undefined = undefined;
-    private static hostPlayer: ServerPlayerEntity | null = null;
+    private readonly server: NovaFlightServer;
+    private readonly engine: SequenceEngine;
 
-    private static readonly conditions = new Map<string, any>();
-    private static pendingAchievement: Consumer<number> | null = null;
-    private static currentPhase: string = '';
-    private static isPending = false;
+    private readonly sequences: Record<string, SequenceDef>;
 
-    public static register() {
+    public constructor(server: NovaFlightServer) {
+        this.server = server;
+        this.engine = new SequenceEngine(server);
+
         const eventBus = GeneralEventBus.getEventBus();
+        const onStageEnter = this.onStageEnter.bind(this);
+        const onPlayerDead = this.onPlayerDead.bind(this);
+        eventBus.on(EVENTS.STAGE_ENTER, onStageEnter);
+        eventBus.on(EVENTS.PLAYER_DEAD, onPlayerDead);
 
-        eventBus.on(EVENTS.STAGE_ENTER, this.bindOnStageEnter);
-        eventBus.on(EVENTS.MOB_KILLED, this.bindOnMobKill);
-
-        clearInterval(this.loop);
-        this.loop = setInterval(() => this.tick(0.02), 0.02);
+        this.sequences = this.createSequences(eventBus, onStageEnter, onPlayerDead);
     }
 
-    private static tick(dt: number) {
-        if (!this.hostPlayer) {
-            const server = NovaFlightServer.getInstance();
-            this.hostPlayer = server.playerManager.getAllPlayers()
-                .find(player => server.isHost(player.getProfile())) ?? null;
-        }
-
-        if (this.isPending) return;
-        this.pendingAchievement?.(dt);
-    }
-
-    private static bindOnStageEnter = this.onStageEnter.bind(this);
-    private static bindOnMobKill = this.onMobKill.bind(this);
-
-    private static async onStageEnter(event: IEvents['world:stage:enter']) {
-        const server = NovaFlightServer.getInstance();
+    private onStageEnter(event: IEvents['world:stage:enter']) {
         const name = event.name;
-
-        if (this.currentPhase !== name) {
-            this.conditions.clear();
-            this.pendingAchievement = null;
-        }
-
-        if (name === 'tutorial_intro') {
-            if (this.conditions.has('intro')) return;
-            this.conditions.set('intro', true);
-            this.currentPhase = name;
-
-            await sleep(1000);
-            server.sendTranslatable('tutorial.intro.welcome');
-            await sleep(3000);
-            server.sendTranslatable('tutorial.intro.teach');
-
-            this.conditions.clear();
-            this.nextPhase();
-            return;
-        }
-
-        if (name === 'tutorial_move') {
-            if (this.conditions.has('move')) return;
-            this.conditions.set('move', {
-                require: 6,
-                acc: 0,
-            });
-            this.currentPhase = name;
-
-            await sleep(3000);
-            server.sendTranslatable('tutorial.move');
-            await sleep(3000);
-
-            this.pendingAchievement = this.move.bind(this);
-            return;
-        }
-
-        if (name === 'tutorial_fire') {
-            if (this.conditions.has('fire')) return;
-            this.conditions.set('fire', {
-                require: 5,
-                acc: 0
-            });
-            this.currentPhase = name;
-
-            await sleep(3000);
-            server.sendTranslatable('tutorial.fire.space');
-            await sleep(3000);
-            server.sendTranslatable('tutorial.fire.ammo');
-            await sleep(3000);
-
-            this.pendingAchievement = this.fire.bind(this);
-            return;
-        }
-
-        if (name === 'tutorial_enemy') {
-            if (this.conditions.has('enemy')) return;
-            this.conditions.set('enemy', {
-                require: 12,
-                acc: 0
-            });
-            this.currentPhase = name;
-
-            await sleep(1000);
-            server.sendTranslatable('tutorial.enemy');
-            return;
-        }
-
-        if (name === 'tutorial_tech') {
-            if (this.conditions.has('tech')) return;
-            this.conditions.set('tech', {
-                requireFire: 5,
-                fireAcc: 0,
-                fireAchieve: false,
-                requireOpenPage: false,
-                requireTech: Techs.ANTIMATTER_WARHEAD,
-                currentUnlocked: 0,
-                showWarn: false,
-                unloaded: false,
-                requireKill: 12,
-                killAcc: 0,
-            });
-            this.currentPhase = name;
-
-            await sleep(4000);
-            server.sendTranslatable('tutorial.tech.special');
-            await sleep(4000);
-            server.sendTranslatable('tutorial.tech.bomb');
-            await sleep(4000);
-            server.sendTranslatable('tutorial.tech.quick_release');
-            await sleep(4000);
-            server.sendTranslatable('tutorial.tech.change');
-            await sleep(4000);
-            server.sendTranslatable('tutorial.tech.no_choice');
-            await sleep(3000);
-
-            this.pendingAchievement = this.tech.bind(this);
-            return;
-        }
-
-        if (name === 'tutorial_boss') {
-            if (this.conditions.has('boss')) return;
-            const world = server.world!;
-
-            const cancel = world.schedule(120, () => server.world!
-                .getEntities()
-                .getMobs()
-                .forEach(entity => entity.kill())
-            );
-
-            this.conditions.set('boss', {
-                require: 125,
-                acc: 0,
-                cancel,
-            });
-            this.currentPhase = name;
-
-            await sleep(2000);
-            server.sendTranslatable('tutorial.boss.intro');
-            await sleep(2000);
-
-            const boss = new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64);
-            boss.setPosition(World.MAP_WIDTH / 2, 64);
-
-            const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
-            mark.setPositionByVec(boss.positionRef);
-            world.spawnEntity(mark);
-
-            await sleep(4000);
-            server.sendTranslatable('tutorial.boss.heavy');
-            await sleep(3000);
-            server.sendTranslatable('tutorial.boss.tech');
-            await sleep(3000);
-            server.sendTranslatable('tutorial.boss.recommend');
-            await sleep(3000);
-            server.sendTranslatable('tutorial.boss.introduction');
-            await sleep(3000);
-            server.sendTranslatable('tutorial.boss.rocket');
-        }
-
-        if (name === 'tutorial_end') {
-            this.currentPhase = name;
-            await sleep(2000);
-            server.sendTranslatable('tutorial.end');
-            await sleep(3000);
-            server.sendTranslatable('tutorial.end.exit');
-            await sleep(500);
-            this.deregister();
-
-            this.pendingAchievement = null;
-            this.conditions.clear();
-
-            await sleep(2000);
-            server.world!.stage = STAGE;
-            server.world!.stage.setStage('P7');
-        }
+        const seq = this.sequences[name];
+        if (!seq) return;
+        void this.engine.play(seq);
     }
 
-    private static onMobKill(event: IEvents["entity:mob:killed"]) {
-        const enemyCondition = this.conditions.get('enemy');
-        if (enemyCondition) {
-            enemyCondition.acc++;
-            if (enemyCondition.acc >= enemyCondition.require) {
-                this.conditions.delete('enemy');
-                this.pendingAchievement = null;
-                this.nextPhase();
-            }
-            return;
-        }
+    private onPlayerDead(event: IEvents['entity:player.dead']) {
+        const player = event.player;
+        const world = player.getWorld();
 
-        const techCondition = this.conditions.get('tech');
-        if (techCondition && techCondition.unloaded) {
-            techCondition.killAcc++;
-            if (techCondition.killAcc >= techCondition.requireKill) {
-                this.conditions.delete('tech');
-                this.pendingAchievement = null;
-                this.nextPhase();
-            }
-        }
+        player.invulnerable = true;
+        event.cancel = true;
 
-        const bossCondition = this.conditions.get('boss');
-        if (bossCondition && event.mob instanceof BossEntity) {
-            bossCondition?.cancel();
-            this.conditions.delete('boss');
-            this.pendingAchievement = null;
-            this.nextPhase();
-        }
+        world.sendPacket(NotGiveUpS2CPacket.INSTANCE);
+        world.schedule(7, () => {
+            world.createEMP(player, player.positionRef, 480, 0);
+            player.setHealth(player.getMaxHealth());
+            player.invulnerable = false;
+        });
     }
 
-    private static move(dt: number) {
-        const condition = this.conditions.get('move');
-        if (!condition || !this.hostPlayer) return;
+    private buildEnemySequence(eventBus: GeneralEventBus<IEvents>): SequenceDef {
+        return new SequenceBuilder('tutorial_enemy')
+            .wait(1000).say('tutorial.enemy')
+            .waitResolve('next_on_kill', ctx => {
+                const {promise, resolve} = Promise.withResolvers<void>();
 
-        if (this.hostPlayer.velocityRef.lengthSquared() < 150) return;
+                let killCount = 0;
+                const condition = () => {
+                    if (++killCount !== 12) return;
+                    eventBus.off(EVENTS.MOB_KILLED, condition);
+                    resolve();
+                    this.nextPhase(ctx);
+                }
 
-        condition.acc += dt;
-        if (condition.acc > condition.require) {
-            this.pendingAchievement = null;
-            this.conditions.delete('move');
-            this.nextPhase();
-        }
+                eventBus.on(EVENTS.MOB_KILLED, condition);
+                ctx.onDispose(() => eventBus.off(EVENTS.MOB_KILLED, condition));
+                return promise;
+            })
+            .build();
     }
 
-    private static fire(dt: number) {
-        const condition = this.conditions.get('fire');
-        if (!condition || !this.hostPlayer) return;
+    private buildTechSequence(eventBus: GeneralEventBus<IEvents>): SequenceDef {
+        return new SequenceBuilder('tutorial_tech')
+            .saySequence([
+                'tutorial.tech.special',
+                'tutorial.tech.bomb',
+                'tutorial.tech.quick_release',
+                'tutorial.tech.change',
+                'tutorial.tech.no_choice'
+            ], 4000)
+            .wait(3000)
+            // 玩家尝试攻击 4s
+            .accumulate(
+                'wait_fire',
+                ctx => !!ctx.getHostPlayer()?.wasFiring,
+                4000
+            )
+            .say('tutorial.tech.armor')
+            .wait(3000).say('tutorial.tech.call')
+            .wait(3000).say('tutorial.tech.teach')
+            .wait(2000)
+            // 玩家打开面板
+            .waitCondition('open_tech_page', ctx => !!ctx.getHostPlayer()?.watchTechPage)
+            .say('tutorial.tech.teach.conflict')
+            .saySequence([
+                'tutorial.tech.teach.antimatter',
+                'tutorial.tech.teach.requires',
+                'tutorial.tech.teach.cost'
+            ], 4000)
+            // 解锁前置科技,简化后续判断流程
+            .callback('unlock_tech', ctx => {
+                const player = ctx.getHostPlayer();
+                if (!player) return;
+                const tech = player.getTechs();
+                tech.forceUnlock(Techs.GUNBOAT_FOCUS);
+                tech.forceUnlock(Techs.HD_BULLET);
+                tech.forceUnlock(Techs.AD_LOADING);
+            })
+            .wait(3000).say('tutorial.tech.teach.switch')
+            .wait(3000).say('tutorial.tech.teach.fire')
+            .wait(2000)
+            // 目标科技解锁则终止
+            .callback('unlock_tech', ctx => {
+                const condition = (event: IEvents['player:tech:unlock_entry']) => {
+                    const techEntry = event.tech;
+                    if (techEntry === Techs.ANTIMATTER_WARHEAD) {
+                        eventBus.off(EVENTS.UNLOCK_TECH_ENTRY, condition);
+                        this.nextPhase(ctx);
+                        return;
+                    }
+                };
 
-        if (!this.hostPlayer.wasFiring) return;
-        condition.acc += dt;
-        if (condition.acc > condition.require) {
-            this.pendingAchievement = null;
-            this.conditions.delete('fire');
-            this.nextPhase();
-        }
+                eventBus.on(EVENTS.UNLOCK_TECH_ENTRY, condition);
+                ctx.onDispose(() => eventBus.off(EVENTS.UNLOCK_TECH_ENTRY, condition));
+            })
+            // 解锁非目标科技触发对话
+            .waitResolve('many_tech', ctx => {
+                const {promise, resolve} = Promise.withResolvers<void>();
+                const condition = () => {
+                    const player = ctx.getHostPlayer();
+                    if (!player) return;
+
+                    const count = player.getTechs().unloadedTechCount();
+                    if (count < 4) return;
+                    eventBus.off(EVENTS.UNLOCK_TECH_ENTRY, condition);
+                    resolve();
+                };
+
+                eventBus.on(EVENTS.UNLOCK_TECH_ENTRY, condition);
+                ctx.onDispose(() => eventBus.off(EVENTS.UNLOCK_TECH_ENTRY, condition));
+                return promise;
+            })
+            .say('tutorial.tech.score.intro')
+            .wait(3000)
+            .say('tutorial.tech.score.reset')
+            .wait(3000)
+            // 一直解锁错误科技触发彩蛋
+            .waitResolve('add_score', ctx => {
+                const {promise, resolve} = Promise.withResolvers<void>();
+                const condition = (event: IEvents['player:tech:unlock_entry']) => {
+                    if (event.tech === Techs.ANTIMATTER_WARHEAD) {
+                        eventBus.off(EVENTS.UNLOCK_TECH_ENTRY, condition);
+                        resolve();
+                        return;
+                    }
+
+                    const player = ctx.getHostPlayer();
+                    if (!player) return;
+
+                    const count = player.getTechs().unloadedTechCount();
+                    switch (count) {
+                        case 5:
+                            ctx.say('tutorial.tech.score.first');
+                            player.addScore(900);
+                            break;
+                        case 6:
+                            ctx.say('tutorial.tech.score.second');
+                            player.addScore(900);
+                            break;
+                        case 7:
+                            ctx.say('tutorial.tech.score.third');
+                            player.addScore(900);
+                            break;
+                        case 8:
+                            ctx.say('tutorial.tech.score.fourth');
+                            player.addScore(900);
+                            break;
+                        case 9:
+                            ctx.say('tutorial.tech.score.fifth');
+                            player.addScore(900);
+                            break;
+                        case 10:
+                            ctx.say('tutorial.tech.score.sixth');
+                            const tech = Techs.ANTIMATTER_WARHEAD;
+                            player.getTechs().forceUnlock(tech);
+                            eventBus.emit(EVENTS.UNLOCK_TECH_ENTRY, {tech});
+                            break;
+                    }
+                };
+
+                eventBus.on(EVENTS.UNLOCK_TECH_ENTRY, condition);
+                ctx.onDispose(() => eventBus.off(EVENTS.UNLOCK_TECH_ENTRY, condition));
+                return promise;
+            })
+            .keepCtx()
+            .build()
     }
 
-    private static async tech(dt: number) {
-        const condition = this.conditions.get('tech');
-        if (!condition || !this.hostPlayer) return;
+    private buildBossSequence(eventBus: GeneralEventBus<IEvents>): SequenceDef {
+        return new SequenceBuilder('tutorial_boss')
+            .wait(2000).say('tutorial.boss.intro')
+            .wait(2000)
+            // 生成
+            .callback('spawn_boss', ctx => {
+                const world = ctx.server.world!;
+                const boss = new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64);
+                boss.setPosition(World.MAP_WIDTH / 2, 64);
+                const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
+                mark.setPositionByVec(boss.positionRef);
+                world.spawnEntity(mark);
+            })
+            .wait(4000).say('tutorial.boss.heavy')
+            .wait(3000).say('tutorial.boss.tech')
+            .wait(3000).say('tutorial.boss.recommend')
+            .wait(3000).say('tutorial.boss.rocket')
+            // 击败后清空怪物
+            .waitResolve('wait_boss_kill', ctx => {
+                const {promise, resolve} = Promise.withResolvers<void>();
+                const condition = () => {
+                    eventBus.off(EVENTS.BOSS_KILLED, condition);
+                    this.server.world!
+                        .getEntities()
+                        .getMobs()
+                        .forEach(entity => entity.kill());
+                    resolve();
+                    this.nextPhase(ctx);
+                };
 
-        if (!condition.fireAchieve) {
-            if (!this.hostPlayer.wasFiring) return;
-            condition.fireAcc += dt;
-
-            if (condition.fireAcc < condition.requireFire) return;
-            condition.fireAchieve = true;
-
-            this.isPending = true;
-            const server = NovaFlightServer.getInstance();
-            server.sendTranslatable('tutorial.tech.armor');
-            await sleep(3000);
-            server.sendTranslatable('tutorial.tech.call');
-            await sleep(3000);
-            server.sendTranslatable('tutorial.tech.teach');
-            await sleep(2000);
-            this.isPending = false;
-            return;
-        }
-
-        if (!condition.requireOpenPage) {
-            if (!this.hostPlayer.watchTechPage) return;
-
-            this.isPending = true;
-            const server = NovaFlightServer.getInstance();
-            server.sendTranslatable('tutorial.tech.teach.conflict');
-            await sleep(4000);
-            server.sendTranslatable('tutorial.tech.teach.antimatter');
-            await sleep(4000);
-            server.sendTranslatable('tutorial.tech.teach.requires');
-            await sleep(4000);
-            server.sendTranslatable('tutorial.tech.teach.cost');
-            this.isPending = false;
-            condition.requireOpenPage = true;
-
-            const tech = this.hostPlayer.getTechs();
-            tech.forceUnlock(Techs.GUNBOAT_FOCUS);
-            tech.forceUnlock(Techs.HD_BULLET);
-            tech.forceUnlock(Techs.AD_LOADING);
-            return;
-        }
-
-        if (condition.unloaded) return;
-        const tech = this.hostPlayer.getTechs();
-
-        if (tech.isUnlocked(condition.requireTech)) {
-            this.isPending = true;
-            const server = NovaFlightServer.getInstance();
-            await sleep(3000);
-            server.sendTranslatable('tutorial.tech.teach.switch');
-            await sleep(3000);
-            server.sendTranslatable('tutorial.tech.teach.fire');
-            await sleep(2000);
-            this.isPending = false;
-
-            condition.unloaded = true;
-            this.pendingAchievement = null;
-            return;
-        }
-
-        const count = tech.unloadedTechCount();
-        if (count >= 4 && !condition.showWarn) {
-            this.isPending = true;
-            const server = NovaFlightServer.getInstance();
-            server.sendTranslatable('tutorial.tech.score.intro');
-            await sleep(3000);
-            server.sendTranslatable('tutorial.tech.score.reset');
-            await sleep(3000);
-            this.hostPlayer.addScore(900);
-            condition.showWarn = true;
-            this.isPending = false;
-            return;
-        }
-
-        if (condition.currentUnlocked === count) return;
-        condition.currentUnlocked = count;
-        const server = NovaFlightServer.getInstance();
-        switch (condition.currentUnlocked) {
-            case 5:
-                server.sendTranslatable('tutorial.tech.score.first');
-                this.hostPlayer.addScore(900);
-                break;
-            case 6:
-                server.sendTranslatable('tutorial.tech.score.second');
-                this.hostPlayer.addScore(900);
-                break;
-            case 7:
-                server.sendTranslatable('tutorial.tech.score.third');
-                this.hostPlayer.addScore(900);
-                break;
-            case 8:
-                server.sendTranslatable('tutorial.tech.score.fourth');
-                this.hostPlayer.addScore(900);
-                break;
-            case 9:
-                server.sendTranslatable('tutorial.tech.score.fifth');
-                this.hostPlayer.addScore(900);
-                break;
-            case 10:
-                server.sendTranslatable('tutorial.tech.score.sixth');
-                tech.forceUnlock(condition.requireTech);
-                break;
-        }
+                eventBus.on(EVENTS.BOSS_KILLED, condition);
+                ctx.onDispose(() => eventBus.off(EVENTS.BOSS_KILLED, condition));
+                return promise;
+            })
+            .build();
     }
 
-    private static nextPhase() {
-        NovaFlightServer.getInstance().world!.stage.nextPhase();
+    private createSequences(
+        eventBus: GeneralEventBus<IEvents>,
+        onStageEnter: Consumer<IEvents['world:stage:enter']>,
+        onPlayerDead: Consumer<IEvents['entity:player.dead']>
+    ): Record<string, SequenceDef> {
+        return config({
+            tutorial_intro: new SequenceBuilder('tutorial_intro')
+                .wait(1000).say('tutorial.intro.welcome')
+                .wait(3000).say('tutorial.intro.teach')
+                .callback('next', this.nextPhase)
+                .build(),
+            tutorial_move: new SequenceBuilder('tutorial_move')
+                .wait(3000).say('tutorial.move')
+                .wait(3000)
+                .accumulate(
+                    'player_moving',
+                    ctx => {
+                        const p = ctx.getHostPlayer();
+                        return !!p && p.velocityRef.lengthSquared() >= 150;
+                    },
+                    5000
+                )
+                .callback('next', this.nextPhase)
+                .build(),
+            tutorial_fire: new SequenceBuilder('tutorial_fire')
+                .wait(3000).say('tutorial.fire.space')
+                .wait(3000).say('tutorial.fire.ammo')
+                .wait(3000)
+                .accumulate(
+                    'player_firing',
+                    ctx => !!ctx.getHostPlayer()?.wasFiring,
+                    5000
+                )
+                .callback('next', this.nextPhase)
+                .build(),
+            tutorial_enemy: this.buildEnemySequence(eventBus),
+            tutorial_tech: this.buildTechSequence(eventBus),
+            tutorial_boss: this.buildBossSequence(eventBus),
+            tutorial_end: new SequenceBuilder('tutorial_end')
+                .wait(2000).say('tutorial.end')
+                .wait(3000).say('tutorial.end.exit')
+                .wait(2000)
+                // 流程结束,重置阶段
+                .callback('finalize', ctx => {
+                    eventBus.off(EVENTS.STAGE_ENTER, onStageEnter);
+                    eventBus.off(EVENTS.PLAYER_DEAD, onPlayerDead);
+                    ctx.server.world!.stage = STAGE;
+                    ctx.server.world!.stage.setStage('P7');
+                })
+                .build(),
+        });
     }
 
-    public static deregister() {
-        clearInterval(this.loop);
-        const eventBus = GeneralEventBus.getEventBus();
-
-        eventBus.off(EVENTS.STAGE_ENTER, this.bindOnStageEnter);
-        eventBus.off(EVENTS.MOB_KILLED, this.bindOnMobKill);
+    private nextPhase(ctx: SequenceContext) {
+        ctx.server.world!.stage.nextPhase();
     }
 }

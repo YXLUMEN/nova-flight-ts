@@ -19,7 +19,7 @@ export class SuggestionsBuilder {
     }
 
     public build() {
-        return Suggestions.create(this.input, new Set(this.result));
+        return Suggestions.create(this.input, this.result);
     }
 
     public async buildPromise() {

@@ -15,12 +15,14 @@ import {World} from "../../world/World.ts";
 import type {ParticleEffectType} from "../../effect/ParticleEffectType.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 import {BlockMapRender} from "./BlockMapRender.ts";
+import type {TitleEffect} from "../../effect/TitleEffect.ts";
 
 export class WorldRender {
     private readonly client: NovaFlightClient;
     private world: ClientWorld | null = null;
 
     public rendering = true;
+    private title: TitleEffect | null = null;
     private readonly effects: VisualEffect[] = [];
     private readonly particlePool: ParticlePool = new ParticlePool(256);
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
@@ -34,6 +36,7 @@ export class WorldRender {
     public setWorld(world: ClientWorld | null) {
         this.world = world;
         this.effects.forEach(effect => effect.kill());
+        this.effects.length = 0;
         this.mapRender?.dispose();
         this.mapRender = world === null ? null : new BlockMapRender(this.client.window, world.getMap());
     }
@@ -52,6 +55,10 @@ export class WorldRender {
             this.effects.pop();
         }
 
+        if (this.title) {
+            this.title.tick(dt);
+            if (!this.title.isAlive()) this.title = null;
+        }
         this.particlePool.tick(dt);
         this.starField.update(dt, camera);
         this.client.window.damagePopup.tick(dt);
@@ -77,6 +84,10 @@ export class WorldRender {
 
     public addEffect(effect: VisualEffect) {
         this.effects.push(effect);
+    }
+
+    public setTitle(title: TitleEffect) {
+        this.title = title;
     }
 
     public render(tickDelta: number) {
@@ -185,6 +196,7 @@ export class WorldRender {
         this.client.window.damagePopup.render(ctx, tickDelta);
         ctx.restore();
 
+        this.title?.render(ctx);
         this.client.window.hud.render(ctx);
         if (this.client.isPause() && !this.world.isOver && (player && !player.isOpenInventory())) {
             this.client.window.pauseOverlay.render(ctx);

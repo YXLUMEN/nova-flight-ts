@@ -62,21 +62,9 @@ export class ClientCommandManager extends CommandManager {
         commandBar.addEventListener('keydown', event => {
             if (event.key === 'Enter') {
                 event.preventDefault();
+                this.popup.cleanPopup();
+
                 const input = this.commandInput.value;
-
-                if (this.popup.getPopups()) {
-                    const activeItem = this.popup.getActiveItem();
-                    if (!activeItem) return;
-
-                    this.popup.applySuggestion(
-                        activeItem.textContent!,
-                        this.tokenStart,
-                        input.length
-                    );
-                    this.popup.cleanPopup();
-                    return;
-                }
-
                 if (input.length <= 0) return;
 
                 if (this.usedCommands.at(-1) !== input) {
@@ -152,7 +140,7 @@ export class ClientCommandManager extends CommandManager {
                 if (!activeItem) return;
 
                 this.popup.applySuggestion(
-                    activeItem.textContent!,
+                    activeItem.textContent,
                     this.tokenStart,
                     this.commandInput.value.length,
                 );
@@ -263,22 +251,23 @@ export class ClientCommandManager extends CommandManager {
     }
 
     private renderSuggestions(suggestions: Suggestion[]) {
-        if (suggestions.length > 0) {
-            const texts = suggestions.map(s => s.getText());
-            const range = suggestions[0].getRange();
-
-            this.popup.renderPopup(texts, range.getStart(), range.getEnd());
-
-            this.suggestionsLength = texts.length;
-            this.tokenStart = range.getStart();
-            this.completionIndex = 0;
-
-            this.popup.highlightPopupItem(this.completionIndex);
-        } else {
+        if (suggestions.length === 0) {
             this.resetSuggestionLen();
             this.popup.cleanPopup();
             this.showUsages();
+            return;
         }
+
+        const texts = suggestions.map(s => s.getText());
+        const range = suggestions[0].getRange();
+
+        this.popup.renderPopup(texts, range.getStart(), range.getEnd());
+
+        this.suggestionsLength = texts.length;
+        this.tokenStart = range.getStart();
+        this.completionIndex = 0;
+
+        this.popup.highlightPopupItem(this.completionIndex);
     }
 
     private resetSuggestionLen() {
@@ -445,7 +434,7 @@ export class ClientCommandManager extends CommandManager {
                 console.warn(exception);
             }
 
-            if (err instanceof Error) {
+            if (Error.isError(err)) {
                 this.commandPanel.addPlainMessage(err.message);
             }
         }

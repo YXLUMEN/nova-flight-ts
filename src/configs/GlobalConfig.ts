@@ -10,8 +10,8 @@ export const DEFAULT_CONFIG = config({
     per: 50,
     fps: 100,
     perFrame: 1000 / 100,
-    version: '26v26',
-    gameVersion: 10,
+    version: '26v27',
+    gameVersion: 11,
 });
 
 export const GlobalConfig = status({

@@ -32,8 +32,11 @@ export class Suggestions {
         return this.create(command, texts);
     }
 
-    public static create(command: string, suggestions: Set<Suggestion>): Suggestions {
-        if (suggestions.size === 0) {
+    public static create(command: string, suggestions: Set<Suggestion> | Suggestion[]): Suggestions {
+        if (suggestions instanceof Set && suggestions.size === 0) {
+            return this.EMPTY;
+        }
+        if (suggestions instanceof Array && suggestions.length === 0) {
             return this.EMPTY;
         }
 

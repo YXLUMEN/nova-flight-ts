@@ -1,6 +1,5 @@
 import {clamp} from "./math/math.ts";
 import type {Identifier} from "../registry/Identifier.ts";
-import type {Return} from "../type/types.ts";
 
 export const DPR = Math.max(1, Math.min(2, globalThis.devicePixelRatio || 1));
 
@@ -80,16 +79,6 @@ export function status<T>(obj: T): T {
 
 export function sleep(time: number) {
     return new Promise(resolve => setTimeout(resolve, time));
-}
-
-export function groupBy<T>(arr: Iterable<T>, keyFn: Return<T, string>): Map<string, T[]> {
-    const m = new Map<string, T[]>();
-    for (const item of arr) {
-        const k = keyFn(item);
-        if (!m.has(k)) m.set(k, []);
-        m.get(k)!.push(item);
-    }
-    return m;
 }
 
 export function isNonEmptyString(v: unknown): v is string {
