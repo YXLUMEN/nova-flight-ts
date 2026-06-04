@@ -1,57 +1,54 @@
 import type {IEvents} from "../type/IEvents.ts";
-
-type Listener<Payload> = (payload: Payload) => void;
+import type {Consumer} from "../type/types.ts";
 
 export class GeneralEventBus<Events extends Record<string, any>> {
     private static GLOBAL_EVENT: GeneralEventBus<IEvents> | null = null;
-
-    private readonly listeners: Map<keyof Events, Set<Listener<any>>> = new Map();
 
     public static getEventBus(): GeneralEventBus<IEvents> {
         if (!this.GLOBAL_EVENT) this.GLOBAL_EVENT = new GeneralEventBus<IEvents>();
         return this.GLOBAL_EVENT;
     }
 
-    public on<K extends keyof Events>(type: K, listener: Listener<Events[K]>): void {
-        let set = this.listeners.get(type);
-        if (!set) {
-            set = new Set();
-            this.listeners.set(type, set);
-        }
-        set.add(listener);
+    private readonly listeners: Map<keyof Events, Set<Consumer<any>>> = new Map();
+
+    public on<K extends keyof Events>(event: K, listener: Consumer<Events[K]>): void {
+        const bucket = this.listeners.getOrInsertComputed(event, () => new Set());
+        bucket.add(listener);
     }
 
-    public once<K extends keyof Events>(type: K, listener: Listener<Events[K]>): void {
-        const wrapper: Listener<Events[K]> = (payload) => {
-            this.off(type, wrapper);
+    public once<K extends keyof Events>(event: K, listener: Consumer<Events[K]>): void {
+        const wrapper: Consumer<Events[K]> = (payload) => {
+            this.off(event, wrapper);
             listener(payload);
         };
-        this.on(type, wrapper);
+        this.on(event, wrapper);
     }
 
-    public off<K extends keyof Events>(type: K, listener: Listener<Events[K]>): void {
-        const set = this.listeners.get(type);
-        if (!set) return;
-        set.delete(listener);
-        if (set.size === 0) {
-            this.listeners.delete(type);
+    public off<K extends keyof Events>(event: K, listener: Consumer<Events[K]>): void {
+        const bucket = this.listeners.get(event);
+        if (!bucket) return;
+
+        bucket.delete(listener);
+        if (bucket.size === 0) {
+            this.listeners.delete(event);
         }
     }
 
-    public emit<K extends keyof Events>(type: K, payload: Events[K]): void {
-        const set = this.listeners.get(type);
-        if (!set) return;
-        for (const fn of set) {
+    public emit<K extends keyof Events>(event: K, payload: Events[K]): void {
+        const bucket = this.listeners.get(event);
+        if (!bucket) return;
+
+        for (const listener of bucket) {
             try {
-                fn(payload);
+                listener(payload);
             } catch (err) {
-                console.warn(`EventBus listener for "${String(type)}" threw:`, err);
+                console.warn(`EventBus listener for "${String(event)}" threw:`, err);
             }
         }
     }
 
-    public waitFor<K extends keyof Events>(type: K): Promise<Events[K]> {
-        return new Promise(resolve => this.once(type, resolve));
+    public waitFor<K extends keyof Events>(event: K): Promise<Events[K]> {
+        return new Promise(resolve => this.once(event, resolve));
     }
 
     public clear() {

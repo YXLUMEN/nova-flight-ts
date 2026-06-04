@@ -49,7 +49,7 @@ export class TutorialEvents {
 
         world.sendPacket(NotGiveUpS2CPacket.INSTANCE);
         world.schedule(7, () => {
-            world.createEMP(player, player.positionRef, 480, 0);
+            world.createEMP(player, player.positionRef, 1024, 5);
             player.setHealth(player.getMaxHealth());
             player.invulnerable = false;
         });
