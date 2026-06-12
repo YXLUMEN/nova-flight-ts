@@ -26,8 +26,12 @@ import {ClientStorage} from "../ClientStorage.ts";
 import {LangCommand} from "../../command/LangCommand.ts";
 import {ClientFixCommand} from "../../command/ClientFixCommand.ts";
 import {Suggestions} from "../../brigadier/suggestion/Suggestions.ts";
+import {DamageCommand} from "../../command/DamageCommand.ts";
+import {SoundCommand} from "../../command/SoundCommand.ts";
 
 export class ClientCommandManager extends CommandManager {
+    private static readonly COMMAND_HISTORY_ID = 'history';
+
     private readonly clientDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
     private readonly source: ClientCommandSource;
 
@@ -43,7 +47,6 @@ export class ClientCommandManager extends CommandManager {
     private parseCache: MemoryLRU<string, ParseResults<any>[]> = new MemoryLRU(24);
     private suggestionCache: MemoryLRU<string, Suggestion[]> = new MemoryLRU(24);
     private suggestionsLength = 0;
-    private tokenStart = -1;
     private completionIndex = -1;
 
     public constructor(source: ClientCommandSource) {
@@ -139,11 +142,7 @@ export class ClientCommandManager extends CommandManager {
 
                 if (!activeItem) return;
 
-                this.popup.applySuggestion(
-                    activeItem.textContent,
-                    this.tokenStart,
-                    this.commandInput.value.length,
-                );
+                this.popup.applySuggestion(activeItem.textContent);
                 return;
             }
 
@@ -172,7 +171,7 @@ export class ClientCommandManager extends CommandManager {
         commandInput.addEventListener('input', bounceGiveSuggestions);
 
         this.registry();
-        this.loadPersistentStorage().then();
+        void this.loadPersistentStorage();
     }
 
     public onEsc() {
@@ -264,7 +263,6 @@ export class ClientCommandManager extends CommandManager {
         this.popup.renderPopup(texts, range.getStart(), range.getEnd());
 
         this.suggestionsLength = texts.length;
-        this.tokenStart = range.getStart();
         this.completionIndex = 0;
 
         this.popup.highlightPopupItem(this.completionIndex);
@@ -272,47 +270,28 @@ export class ClientCommandManager extends CommandManager {
 
     private resetSuggestionLen() {
         this.suggestionsLength = 0;
-        this.tokenStart = -1;
         this.completionIndex = -1;
     }
 
     private async loadPersistentStorage(): Promise<void> {
-        const db = await ClientStorage.db.init();
-        const tx = db.transaction('command_history', 'readonly');
-        const store = tx.objectStore('command_history');
+        const result = await ClientStorage.db.get<{ id: string; commands: string[] }>(
+            'command_history',
+            ClientCommandManager.COMMAND_HISTORY_ID
+        );
+        if (result.isErr()) return;
 
-        const {promise, resolve} = Promise.withResolvers<void>();
-        const request = store.get(this.source.getClient().clientId);
-
-        request.onsuccess = () => {
-            if (!request.result) return resolve();
-            const array = request.result.commands;
-            if (Array.isArray(array)) {
-                this.usedCommands.length = 0;
-                this.usedCommands.push(...array);
-            }
-            resolve();
-        };
-        request.onerror = () => resolve();
-
-        return promise;
+        const array = result.unwrap().commands;
+        if (Array.isArray(array)) {
+            this.usedCommands.length = 0;
+            this.usedCommands.push(...array);
+        }
     }
 
-    private async persistentStorage() {
-        const db = await ClientStorage.db.init();
-        const tx = db.transaction('command_history', 'readwrite');
-        const store = tx.objectStore('command_history');
-
-        const {promise, resolve} = Promise.withResolvers<void>();
-        const request = store.put({
-            client_uuid: this.source.getClient().clientId,
-            commands: this.usedCommands
+    private persistentStorage(): void {
+        void ClientStorage.db.update('command_history', {
+            id: ClientCommandManager.COMMAND_HISTORY_ID,
+            commands: this.usedCommands,
         });
-
-        request.onsuccess = () => resolve();
-        request.onerror = () => resolve();
-
-        return promise;
     }
 
     /**
@@ -361,6 +340,7 @@ export class ClientCommandManager extends CommandManager {
         ClientSettingsCommand.registry(this.clientDispatcher);
         CommandBarCommand.registry(this.clientDispatcher);
         LangCommand.registry(this.clientDispatcher);
+        SoundCommand.registry(this.clientDispatcher);
 
         // noinspection DuplicatedCode
         KillCommand.registry(this.dispatcher);
@@ -372,6 +352,7 @@ export class ClientCommandManager extends CommandManager {
         KickCommand.registry(this.dispatcher);
         GiveCommand.registry(this.dispatcher);
         ScoreCommand.registry(this.dispatcher);
+        DamageCommand.registry(this.dispatcher);
     }
 
     public executeWithPrefix(source: CommandSource, input: string): void {

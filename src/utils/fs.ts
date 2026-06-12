@@ -2,7 +2,12 @@ import {resolve} from "@tauri-apps/api/path";
 import {type DirEntry, exists, readDir} from "@tauri-apps/plugin-fs";
 import type {BiConsumer} from "../type/types.ts";
 
-export async function traverse_dir(parent: string, callback: BiConsumer<string, DirEntry>, depth: number = 0, maxDepth = 3): Promise<void> {
+export async function traverse_dir(
+    parent: string,
+    callback: BiConsumer<string, DirEntry>,
+    maxDepth = 3,
+    depth: number = 0,
+): Promise<void> {
     if (depth >= maxDepth) {
         return;
     }
@@ -17,7 +22,7 @@ export async function traverse_dir(parent: string, callback: BiConsumer<string, 
 
         if (dir.isDirectory) {
             const child = await resolve(parent, dir.name);
-            await traverse_dir(child, callback, depth + 1, maxDepth);
+            await traverse_dir(child, callback, maxDepth, depth + 1);
         }
     }
 }

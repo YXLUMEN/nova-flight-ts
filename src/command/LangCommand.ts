@@ -3,6 +3,11 @@ import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
 import {LangManager} from "../i18n/LangManager.ts";
+import {warn} from "@tauri-apps/plugin-log";
+import type {CommandContext} from "../brigadier/context/CommandContext.ts";
+import type {SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
+import type {Suggestions} from "../brigadier/suggestion/Suggestions.ts";
+import {CommandUtil} from "./CommandUtil.ts";
 
 export class LangCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -19,11 +24,19 @@ export class LangCommand {
 
                             LangManager.changeLang(args.result)
                                 .then(() => {
-                                    ctx.source.addMessage(`Set lang to ${args.result}`);
+                                    ctx.source.addMessage(`Set lang to \x1b[32m${args.result}`);
                                 })
-                                .catch(() => {
-                                    ctx.source.addMessage(`Fail to load lang ${args.result}`);
+                                .catch(err => {
+                                    ctx.source.addMessage(`Fail to load lang \x1b[31m${args.result}`);
+                                    return warn(`Could not load lang ${err}`);
                                 });
+                        })
+                        .suggests({
+                            async getSuggestions(_: CommandContext<T>, builder: SuggestionsBuilder): Promise<Suggestions> {
+                                const mod = await import('../i18n/LangManager.ts');
+                                const lang = mod.LangManager.getAllLang();
+                                return CommandUtil.suggestMatching(lang, builder);
+                            }
                         })
                 )
                 .executes(ctx => {

@@ -1,15 +1,15 @@
-import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import type {ResourceModule} from "./ResourceModule.ts";
 import {Resources} from "./Resources.ts";
 import {resolve, resolveResource} from "@tauri-apps/api/path";
-import {normalizedDir, traverse_dir} from "../../utils/fs.ts";
-import {PromisePool} from "../../utils/collection/PromisePool.ts";
+import {normalizedDir, traverse_dir} from "../utils/fs.ts";
+import {PromisePool} from "../utils/collection/PromisePool.ts";
 import {readTextFile} from "@tauri-apps/plugin-fs";
 import type {TextureResource} from "./TextureResource.ts";
-import {Model} from "../render/model/Model.ts";
+import {Model} from "../client/render/model/Model.ts";
 import {ResourceManager} from "./ResourceManager.ts";
-import type {DisplayConfig} from "../render/model/DisplayConfig.ts";
-import {wrapRadians} from "../../utils/math/math.ts";
+import type {DisplayConfig} from "../client/render/model/DisplayConfig.ts";
+import {wrapRadians} from "../utils/math/math.ts";
 
 export class ModelResource implements ResourceModule {
     private readonly models: Map<string, Model> = new Map<string, Model>();

@@ -1,16 +1,16 @@
-import {RegistryManager} from "../../registry/RegistryManager.ts";
+import {RegistryManager} from "../registry/RegistryManager.ts";
 import {ResourceManager} from "./ResourceManager.ts";
 import {LangResource} from "./LangResource.ts";
 import {SoundResource} from "./SoundResource.ts";
 import {AudioResource} from "./AudioResource.ts";
 import {TipResource} from "./TipResource.ts";
 import {TextureResource} from "./TextureResource.ts";
-import type {LoadingScreen} from "../render/ui/LoadingScreen.ts";
+import type {LoadingScreen} from "../client/render/ui/LoadingScreen.ts";
 import type {ResourceModule} from "./ResourceModule.ts";
-import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {ModelResource} from "./ModelResource.ts";
 import {Resources} from "./Resources.ts";
-import {sleep} from "../../utils/uit.ts";
+import {sleep} from "../utils/uit.ts";
 
 export class DataLoader {
     private static loading = false;

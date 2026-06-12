@@ -79,6 +79,8 @@
   "desc.nova-flight.electrical_energy_surges": "受击时立即触发\u001B[32m 电磁脉冲 \u001B[0m, 这种受人欢迎的自卫系统名叫电棘刺, 在一些近卫飞行员的座驾上常常出现",
   "name.nova-flight.ele_shield": "电磁护盾",
   "desc.nova-flight.ele_shield": "受击触发\u001B[32m 电磁脉冲 \u001B[0m并抵消伤害, EMP进入冷却, 人们巧妙地将护盾和emp结合, 创造出了电磁护盾, 当受到弹药伤害时能够触发机体表面的emp防护",
+  "name.nova-flight.deflector": "偏射盾",
+  "desc.nova-flight.deflector": "能量偏射屏障可在过载前化解一定敌方火力",
   "name.nova-flight.ad_capacitance": "强化电容",
   "desc.nova-flight.ad_capacitance": "\u001B[32m 电磁脉冲 \u001B[0m影响范围\u001B[32m +50% \u001B[0m, 充能冷却速度\u001B[32m -20% \u001B[0m, 多亏了格雷老爷子的废寝忘食, 现在有了超级电容, 量大管饱, 把那些废电池扔在一边吧!",
   "name.nova-flight.ele_oscillation": "电磁震荡",

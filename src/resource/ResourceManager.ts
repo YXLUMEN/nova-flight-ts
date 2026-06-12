@@ -1,7 +1,7 @@
 import type {ResourceModule} from "./ResourceModule.ts";
-import type {RegistryManager} from "../../registry/RegistryManager.ts";
-import {sleep} from "../../utils/uit.ts";
-import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import type {RegistryManager} from "../registry/RegistryManager.ts";
+import {sleep} from "../utils/uit.ts";
+import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 
 export class ResourceManager {
     private static readonly modules = new Map<RegistryEntry<string>, ResourceModule>();

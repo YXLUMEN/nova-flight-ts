@@ -2,12 +2,14 @@ import type {ResourceModule} from "./ResourceModule.ts";
 import {resolve, resolveResource} from "@tauri-apps/api/path";
 import {type DirEntry, exists, readDir, readTextFile} from "@tauri-apps/plugin-fs";
 import {warn} from "@tauri-apps/plugin-log";
-import {PromisePool} from "../../utils/collection/PromisePool.ts";
-import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import {PromisePool} from "../utils/collection/PromisePool.ts";
+import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {Resources} from "./Resources.ts";
+import {traverse_dir} from "../utils/fs.ts";
 
 export class LangResource implements ResourceModule {
-    public readonly data: Map<string, string> = new Map();
+    private readonly allLang: string[] = [];
+    private readonly data: Map<string, string> = new Map();
 
     private currentLang: string = 'zh_cn';
 
@@ -16,22 +18,32 @@ export class LangResource implements ResourceModule {
     }
 
     public async load(): Promise<void> {
-        const lang = this.currentLang;
-        const root = await resolveResource(`resources/nova-flight/langs/${lang}`);
+        const root = await resolveResource('resources/nova-flight/langs');
 
-        if (!await exists(root)) {
-            await warn(`Lang ${lang} not found`);
-            return;
+        this.allLang.length = 0;
+        await traverse_dir(root, (_, entry) => {
+            if (entry.isDirectory) this.allLang.push(entry.name);
+        }, 1);
+
+        const lang = this.currentLang;
+        if (!this.allLang.includes(this.currentLang)) {
+            throw new Error(`Lang ${lang} not found`);
+        }
+
+        const targetRoot = await resolve(root, lang);
+
+        if (!await exists(targetRoot)) {
+            throw new Error(`Lang ${lang} not found`);
         }
 
         const files: DirEntry[] = [];
         try {
-            const dirs = await readDir(root);
+            const dirs = await readDir(targetRoot);
             for (const entry of dirs) {
                 if (entry.isFile) files.push(entry);
             }
         } catch (err) {
-            await warn(`[Client] Error while recursive directory ${root}, because: ${err}`);
+            await warn(`[Client] Error while recursive directory ${targetRoot}, because: ${err}`);
         }
 
         if (files.length === 0) return;
@@ -41,7 +53,7 @@ export class LangResource implements ResourceModule {
 
         for (const file of files) {
             loadTasks.push(pool.submit(async () => {
-                const path = await resolve(root, file.name);
+                const path = await resolve(targetRoot, file.name);
                 const raw = await readTextFile(path);
                 const json = JSON.parse(raw);
 
@@ -85,11 +97,17 @@ export class LangResource implements ResourceModule {
     }
 
     public unload(): void {
+        this.allLang.length = 0;
         this.data.clear();
     }
 
     public reload(): Promise<void> {
+        this.unload();
         return this.load();
+    }
+
+    public getText(key: string): string | undefined {
+        return this.data.get(key);
     }
 
     public setLang(lang: string): Promise<void> {
@@ -100,5 +118,9 @@ export class LangResource implements ResourceModule {
 
     public getCurrentLang(): string {
         return this.currentLang;
+    }
+
+    public getAllLang(): ReadonlyArray<string> {
+        return this.allLang;
     }
 }

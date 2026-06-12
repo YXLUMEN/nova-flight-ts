@@ -18,7 +18,7 @@ import type {Vec2} from "../utils/math/Vec2.ts";
 
 type provider = (builder: SuggestionsBuilder, consumer: Consumer<SuggestionsBuilder>) => Promise<Suggestions>;
 
-export class EntitySelectorReader {
+export class EntitySelectorParser {
     public static readonly INVALID_ENTITY_EXCEPTION = new CommandError('Invalid entity');
     public static readonly DEFAULT_SUGGESTION_PROVIDER: provider = (builder, _) => builder.buildPromise();
     public static readonly ARBITRARY: BiConsumer<Vec2, Entity[]> = () => {
@@ -40,7 +40,7 @@ export class EntitySelectorReader {
     private readonly reader: StringReader;
 
     private senderOnly: boolean = false;
-    private sorter: BiConsumer<Vec2, Entity[]> = EntitySelectorReader.ARBITRARY;
+    private sorter: BiConsumer<Vec2, Entity[]> = EntitySelectorParser.ARBITRARY;
 
     private startCursor: number = 0;
     private limit: number = 1;
@@ -56,7 +56,7 @@ export class EntitySelectorReader {
     private entityType: EntityType<any> | null = null;
     private excludeMode: boolean = false;
 
-    private suggestionProvider: provider = EntitySelectorReader.DEFAULT_SUGGESTION_PROVIDER;
+    private suggestionProvider: provider = EntitySelectorParser.DEFAULT_SUGGESTION_PROVIDER;
     private filters: EntityFilter[] = [];
     private useAt = false;
 
@@ -94,7 +94,7 @@ export class EntitySelectorReader {
         );
     }
 
-    protected readNameOrUUID(): void {
+    protected parserNameOrUUID(): void {
         if (this.reader.canRead()) {
             this.suggestionProvider = this.suggestNormal;
         }
@@ -108,7 +108,7 @@ export class EntitySelectorReader {
         } else {
             if (str.length === 0 || str.length > 16) {
                 this.reader.setCursor(start);
-                throw EntitySelectorReader.INVALID_ENTITY_EXCEPTION;
+                throw EntitySelectorParser.INVALID_ENTITY_EXCEPTION;
             }
 
             this.includesNonPlayers = false;
@@ -118,7 +118,7 @@ export class EntitySelectorReader {
         this.limit = 1;
     }
 
-    protected readAtVariable(): void {
+    protected parserAtVariable(): void {
         this.useAt = true;
         this.suggestionProvider = this.suggestSelectorRest;
         if (!this.reader.canRead()) {
@@ -132,33 +132,33 @@ export class EntitySelectorReader {
             case 'a': {
                 this.limit = Number.MAX_SAFE_INTEGER;
                 this.includesNonPlayers = false;
-                this.sorter = EntitySelectorReader.ARBITRARY;
+                this.sorter = EntitySelectorParser.ARBITRARY;
                 this.limitType(EntityTypes.PLAYER);
                 break;
             }
             case 'e': {
                 this.limit = Number.MAX_SAFE_INTEGER;
                 this.includesNonPlayers = true;
-                this.sorter = EntitySelectorReader.ARBITRARY;
+                this.sorter = EntitySelectorParser.ARBITRARY;
                 break;
             }
             case 'n': {
                 this.limit = 1;
                 this.includesNonPlayers = true;
-                this.sorter = EntitySelectorReader.NEAREST;
+                this.sorter = EntitySelectorParser.NEAREST;
                 break;
             }
             case 'p': {
                 this.limit = 1;
                 this.includesNonPlayers = false;
-                this.sorter = EntitySelectorReader.NEAREST;
+                this.sorter = EntitySelectorParser.NEAREST;
                 this.limitType(EntityTypes.PLAYER);
                 break;
             }
             case 'r': {
                 this.limit = 1;
                 this.includesNonPlayers = false;
-                this.sorter = EntitySelectorReader.RANDOM;
+                this.sorter = EntitySelectorParser.RANDOM;
                 this.limitType(EntityTypes.PLAYER);
                 break;
             }
@@ -178,11 +178,11 @@ export class EntitySelectorReader {
         if (this.reader.canRead() && this.reader.peek() === '[') {
             this.reader.skip();
             this.suggestionProvider = this.suggestOptionOrEnd;
-            this.readArguments();
+            this.parserArguments();
         }
     }
 
-    protected readArguments(): void {
+    protected parserArguments(): void {
         this.suggestionProvider = this.suggestOption;
         this.reader.skipWhitespace();
 
@@ -201,7 +201,7 @@ export class EntitySelectorReader {
 
             this.reader.skip();
             this.reader.skipWhitespace();
-            this.suggestionProvider = EntitySelectorReader.DEFAULT_SUGGESTION_PROVIDER;
+            this.suggestionProvider = EntitySelectorParser.DEFAULT_SUGGESTION_PROVIDER;
             selectorHandler(this);
 
             this.reader.skipWhitespace();
@@ -222,7 +222,7 @@ export class EntitySelectorReader {
 
         if (this.reader.canRead()) {
             this.reader.skip();
-            this.suggestionProvider = EntitySelectorReader.DEFAULT_SUGGESTION_PROVIDER;
+            this.suggestionProvider = EntitySelectorParser.DEFAULT_SUGGESTION_PROVIDER;
         } else {
             throw new SyntaxError('Unterminated');
         }
@@ -234,9 +234,9 @@ export class EntitySelectorReader {
 
         if (this.reader.canRead() && this.reader.peek() === '@') {
             this.reader.skip();
-            this.readAtVariable();
+            this.parserAtVariable();
         } else {
-            this.readNameOrUUID();
+            this.parserNameOrUUID();
         }
 
         return this.build();
@@ -297,7 +297,7 @@ export class EntitySelectorReader {
 
     private suggestSelector(builder: SuggestionsBuilder, consumer: Consumer<SuggestionsBuilder>): Promise<Suggestions> {
         consumer(builder);
-        EntitySelectorReader.suggestSelector(builder);
+        EntitySelectorParser.suggestSelector(builder);
         return builder.buildPromise();
     }
 
@@ -310,7 +310,7 @@ export class EntitySelectorReader {
 
     private suggestSelectorRest(builder: SuggestionsBuilder): Promise<Suggestions> {
         const suggestionsBuilder = builder.createOffset(builder.start - 1);
-        EntitySelectorReader.suggestSelector(builder);
+        EntitySelectorParser.suggestSelector(builder);
         builder.add(suggestionsBuilder);
         return builder.buildPromise();
     }

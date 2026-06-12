@@ -9,12 +9,10 @@ export class ClientFixCommand {
             literal<T>('client_fix')
                 .then(
                     literal<T>('statistic')
-                        .executes(async () => {
-                            const db = await ClientStorage.db.init();
-                            const tx = db.transaction('statistics', 'readwrite');
-                            const store = tx.objectStore('statistics');
-                            store.clear();
+                        .executes(() => {
+                            void ClientStorage.db.clearStore('statistics');
                         })
-                ));
+                )
+        );
     }
 }

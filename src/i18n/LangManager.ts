@@ -1,6 +1,6 @@
-import type {LangResource} from "../client/resource/LangResource.ts";
-import {ResourceManager} from "../client/resource/ResourceManager.ts";
-import {Resources} from "../client/resource/Resources.ts";
+import type {LangResource} from "../resource/LangResource.ts";
+import {ResourceManager} from "../resource/ResourceManager.ts";
+import {Resources} from "../resource/Resources.ts";
 
 export class LangManager {
     private static resource: LangResource | null = null;
@@ -11,7 +11,7 @@ export class LangManager {
     }
 
     public static getText(key: string): string | undefined {
-        return this.module.data.get(key);
+        return this.module.getText(key);
     }
 
     public static changeLang(lang: string): Promise<void> {
@@ -20,5 +20,9 @@ export class LangManager {
 
     public static getCurrentLang(): string {
         return this.module.getCurrentLang();
+    }
+
+    public static getAllLang(): ReadonlyArray<string> {
+        return this.module.getAllLang();
     }
 }

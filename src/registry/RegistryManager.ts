@@ -45,7 +45,6 @@ export class RegistryManager {
     }
 
     public freeze() {
-        this.registers.values().forEach(value => value.freeze());
         deepFreeze(this);
     }
 }

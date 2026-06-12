@@ -1,11 +1,11 @@
-import type {RegistryManager} from "../../registry/RegistryManager.ts";
+import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {ResourceModule} from "./ResourceModule.ts";
-import {RegistryKeys} from "../../registry/RegistryKeys.ts";
+import {RegistryKeys} from "../registry/RegistryKeys.ts";
 import {resolveResource} from "@tauri-apps/api/path";
 import {readTextFile} from "@tauri-apps/plugin-fs";
-import type {Identifier} from "../../registry/Identifier.ts";
+import type {Identifier} from "../registry/Identifier.ts";
 import {convertFileSrc} from "@tauri-apps/api/core";
-import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {Resources} from "./Resources.ts";
 
 export class AudioResource implements ResourceModule {

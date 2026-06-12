@@ -208,7 +208,10 @@
   "shield.crash": {
     "subtitle": "sound.nova-flight.shield.crash",
     "sounds": [
-      "nova-flight:/shield_crash"
+      "nova-flight:shield/shield_crash_01",
+      "nova-flight:shield/shield_crash_02",
+      "nova-flight:shield/shield_crash_03",
+      "nova-flight:shield/shield_crash_04"
     ]
   },
   "missile.launch": {

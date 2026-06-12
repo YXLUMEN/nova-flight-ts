@@ -10,6 +10,9 @@ import type {HitResult} from "./HitResult.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 
 export class ProjectRaycastUtil {
+    /**
+     * @deprecated
+     * */
     public static raycast(
         map: BitBlockMap,
         startX: number,

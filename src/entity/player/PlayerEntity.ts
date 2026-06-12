@@ -130,8 +130,11 @@ export abstract class PlayerEntity extends LivingEntity {
         damage = this.modifyAppliedDamage(damageSource, damage);
         const remainDamage = Math.max(damage - this.getShieldAmount(), 0);
         this.setShieldAmount(this.getShieldAmount() - damage + remainDamage);
+        if (remainDamage !== damage && this.getShieldAmount() === 0) {
+            world.playSound(null, SoundEvents.SHIELD_CRASH);
+        }
 
-        // emp免伤
+        // 触发emp
         const stack = this.inventory.searchItem(Items.EMP_WEAPON);
         if (!stack.isEmpty() && this.techTree!.isUnlocked(Techs.ELECTRICAL_SURGES)) {
             const emp = Items.EMP_WEAPON as EMPWeapon;
@@ -140,11 +143,11 @@ export abstract class PlayerEntity extends LivingEntity {
             emp.setCooldown(stack, cd);
         }
 
+        // emp免伤
         if (remainDamage !== 0) {
             const emp = Items.EMP_WEAPON as EMPWeapon;
             if (!stack.isEmpty() && emp.canFire(stack) && this.techTree!.isUnlocked(Techs.ELE_SHIELD)) {
                 emp.tryFire(stack, world, this);
-                world.playSound(this, SoundEvents.SHIELD_CRASH);
                 return false;
             }
 

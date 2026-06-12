@@ -24,7 +24,7 @@ export class ClientAttached implements RelayPayload {
         this.uuid = uuid;
     }
 
-    public static new(sessionId: number, uuid: UUID) {
+    private static new(sessionId: number, uuid: UUID) {
         return new ClientAttached(sessionId, uuid);
     }
 

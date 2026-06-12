@@ -18,6 +18,7 @@ export class AttributeMap {
 
     public constructor(supplier: AttributeSupplier) {
         this.supplier = supplier;
+        this.onAttributeModified = this.onAttributeModified.bind(this);
     }
 
     private onAttributeModified(instance: AttributeInstance): void {
@@ -47,7 +48,7 @@ export class AttributeMap {
             return instance;
         }
 
-        const newInstance = this.supplier.createOverride(this.onAttributeModified.bind(this), attribute);
+        const newInstance = this.supplier.createOverride(this.onAttributeModified, attribute);
         if (newInstance) {
             this.attributes.set(attribute, newInstance);
             return newInstance;
