@@ -465,6 +465,17 @@
     ]
   },
   {
+    "id": "deflector",
+    "name": "tech.name.nova-flight.deflector",
+    "x": 3,
+    "y": 9,
+    "desc": "tech.desc.nova-flight.deflector",
+    "cost": 240,
+    "requires": [
+      "ele_shield"
+    ]
+  },
+  {
     "id": "ad_capacitance",
     "name": "tech.name.nova-flight.ad_capacitance",
     "x": 2,

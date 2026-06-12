@@ -3,7 +3,6 @@ import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {UUID} from "../../../type/types.ts";
-import type {ServerConfigHandler} from "../../../server/network/handler/ServerConfigHandler.ts";
 
 export class ClientReadyC2SPacket implements Payload {
     public static readonly ID: PayloadType<ClientReadyC2SPacket> = payloadType('client_ready');
@@ -27,8 +26,7 @@ export class ClientReadyC2SPacket implements Payload {
         return true;
     }
 
-    public accept(listener: ServerConfigHandler): void {
-        listener.onClientReady(this);
+    public accept(): void {
     }
 
     public estimateSize(): number {

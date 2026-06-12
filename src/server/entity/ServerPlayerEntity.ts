@@ -33,6 +33,7 @@ export class ServerPlayerEntity extends PlayerEntity {
     private revision = 0;
 
     private mendingCooldown = 0;
+    private chargeShieldCooldown = 0;
 
     public constructor(world: ServerWorld, playerProfile: GameProfile) {
         super(world, ServerItemCooldownManager);
@@ -64,6 +65,13 @@ export class ServerPlayerEntity extends PlayerEntity {
             this.mendingCooldown-- <= 0) {
             this.heal(1);
             this.mendingCooldown = 60;
+        }
+
+        if (this.getShieldAmount() < this.getMaxShield() &&
+            this.techTree!.isUnlocked(Techs.DEFLECTOR) &&
+            this.chargeShieldCooldown-- <= 0) {
+            this.setShieldAmount(this.getShieldAmount() + 2);
+            this.chargeShieldCooldown = 60;
         }
     }
 
@@ -128,6 +136,7 @@ export class ServerPlayerEntity extends PlayerEntity {
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (!super.takeDamage(damageSource, damage)) return false;
         this.mendingCooldown = 100;
+        this.chargeShieldCooldown = 60;
 
         if (this.getHealth() / this.getMaxHealth() <= 0.2) {
             (this.getWorld() as ServerWorld).spawnEffect(null,

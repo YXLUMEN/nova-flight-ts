@@ -10,6 +10,7 @@ import {StageCommand} from "../../command/StageCommand.ts";
 import {KickCommand} from "../../command/KickCommand.ts";
 import {GiveCommand} from "../../command/GiveCommand.ts";
 import {ScoreCommand} from "../../command/ScoreCommand.ts";
+import {DamageCommand} from "../../command/DamageCommand.ts";
 
 export class ServerCommandManager extends CommandManager {
     public readonly source: ServerCommandSource;
@@ -35,5 +36,6 @@ export class ServerCommandManager extends CommandManager {
         KickCommand.registry(this.dispatcher);
         GiveCommand.registry(this.dispatcher);
         ScoreCommand.registry(this.dispatcher);
+        DamageCommand.registry(this.dispatcher);
     }
 }

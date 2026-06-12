@@ -34,7 +34,7 @@ export abstract class WSNetworkChannel implements Channel {
         return this.ws ? this.ws.readyState === WebSocket.OPEN : false;
     }
 
-    public sendRaw(buf: Uint8Array<ArrayBuffer>): void {
+    protected sendRaw(buf: Uint8Array<ArrayBuffer>): void {
         if (buf.length > WSNetworkChannel.MAX_PACKET_SIZE) {
             throw new PacketTooLargeError(`Packet exceeds ${WSNetworkChannel.MAX_PACKET_SIZE} bytes: ${buf.length}`);
         }

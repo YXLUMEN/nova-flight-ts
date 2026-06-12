@@ -46,6 +46,9 @@ export class SequenceBuilder {
         return this;
     }
 
+    /**
+     * 避免长时间挂起,系统只能保证顺序,无法取消你的任务
+     * */
     public waitResolve(
         name: string,
         factory: Return<SequenceContext, Promise<void>>,

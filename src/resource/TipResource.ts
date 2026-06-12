@@ -1,9 +1,9 @@
 import type {ResourceModule} from "./ResourceModule.ts";
-import {TranslatableText} from "../../i18n/TranslatableText.ts";
+import {TranslatableText} from "../i18n/TranslatableText.ts";
 import {resolveResource} from "@tauri-apps/api/path";
 import {readTextFile} from "@tauri-apps/plugin-fs";
 import {error, warn} from "@tauri-apps/plugin-log";
-import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {Resources} from "./Resources.ts";
 
 export class TipResource implements ResourceModule {

@@ -75,7 +75,7 @@ export class CommandUtil {
             getSuggestions(_: CommandContext<T>, builder: SuggestionsBuilder): Promise<Suggestions> {
                 return CommandUtil.suggestIdentifiers(registry.getIds(), builder);
             }
-        } satisfies SuggestionProvider<T>;
+        };
     }
 
     public static suggestPositions(remain: string, candidates: RelativePosition[], builder: SuggestionsBuilder, predicate: Predicate<string>) {

@@ -1,10 +1,10 @@
-import {ResourceManager} from "../../resource/ResourceManager.ts";
-import {Resources} from "../../resource/Resources.ts";
+import {ResourceManager} from "../../../resource/ResourceManager.ts";
+import {Resources} from "../../../resource/Resources.ts";
 import {Registries} from "../../../registry/Registries.ts";
 import type {Item} from "../../../item/Item.ts";
 import {TextureMapping} from "./TextureMapping.ts";
 import type {Tech} from "../../../world/tech/Tech.ts";
-import type {ModelResource} from "../../resource/ModelResource.ts";
+import type {ModelResource} from "../../../resource/ModelResource.ts";
 import type {Model} from "./Model.ts";
 import {resolve, resolveResource} from "@tauri-apps/api/path";
 import {exists, mkdir, writeTextFile} from "@tauri-apps/plugin-fs";

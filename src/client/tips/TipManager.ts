@@ -1,8 +1,8 @@
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
 import {randInt} from "../../utils/math/math.ts";
-import type {TipResource} from "../resource/TipResource.ts";
-import {ResourceManager} from "../resource/ResourceManager.ts";
-import {Resources} from "../resource/Resources.ts";
+import type {TipResource} from "../../resource/TipResource.ts";
+import {ResourceManager} from "../../resource/ResourceManager.ts";
+import {Resources} from "../../resource/Resources.ts";
 
 export class TipManager {
     public static readonly title: TranslatableText = TranslatableText.of('tips.nova-flight.title');

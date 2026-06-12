@@ -1,4 +1,4 @@
-import type {EntitySelectorReader} from "./EntitySelectorReader.ts";
+import type {EntitySelectorParser} from "./EntitySelectorParser.ts";
 import type {SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
 import type {Consumer, Predicate} from "../type/types.ts";
 import {IllegalArgumentError} from "../type/errors.ts";
@@ -9,14 +9,14 @@ import {Identifier} from "../registry/Identifier.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 
 interface SelectorOption {
-    handler: Consumer<EntitySelectorReader>;
-    condition: Predicate<EntitySelectorReader>;
+    readonly handler: Consumer<EntitySelectorParser>;
+    readonly condition: Predicate<EntitySelectorParser>;
 }
 
 export class EntitySelectorOptions {
     private static readonly OPTIONS = new Map<string, SelectorOption>();
 
-    public static putOption(id: string, handler: Consumer<EntitySelectorReader>, condition: Predicate<EntitySelectorReader>) {
+    public static putOption(id: string, handler: Consumer<EntitySelectorParser>, condition: Predicate<EntitySelectorParser>) {
         this.OPTIONS.set(id, {handler, condition});
     }
 
@@ -90,7 +90,7 @@ export class EntitySelectorOptions {
         }, reader => !reader.selectsEntityType());
     }
 
-    public static getHandler(reader: EntitySelectorReader, option: string, restoreCursor: number): Consumer<EntitySelectorReader> {
+    public static getHandler(reader: EntitySelectorParser, option: string, restoreCursor: number): Consumer<EntitySelectorParser> {
         const selectorOption = this.OPTIONS.get(option);
         if (!selectorOption) {
             reader.getReader().setCursor(restoreCursor);
@@ -103,7 +103,7 @@ export class EntitySelectorOptions {
         throw new IllegalArgumentError('Inapplicable option');
     }
 
-    public static suggestOptions(reader: EntitySelectorReader, builder: SuggestionsBuilder) {
+    public static suggestOptions(reader: EntitySelectorParser, builder: SuggestionsBuilder) {
         const text = builder.remainingLowerCase;
 
         for (const [key, option] of this.OPTIONS) {

@@ -33,11 +33,10 @@ export class Suggestions {
     }
 
     public static create(command: string, suggestions: Set<Suggestion> | Suggestion[]): Suggestions {
-        if (suggestions instanceof Set && suggestions.size === 0) {
-            return this.EMPTY;
-        }
-        if (suggestions instanceof Array && suggestions.length === 0) {
-            return this.EMPTY;
+        if (Array.isArray(suggestions)) {
+            if (suggestions.length === 0) return this.EMPTY;
+        } else {
+            if (suggestions.size === 0) return this.EMPTY;
         }
 
         let start = Number.MAX_SAFE_INTEGER;

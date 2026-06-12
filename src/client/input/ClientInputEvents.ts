@@ -5,7 +5,7 @@ import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import {BGMManager} from "../../sound/BGMManager.ts";
 import type {KeyboardInput} from "./KeyboardInput.ts";
 import {cleanObj} from "../../utils/uit.ts";
-import {DataLoader} from "../resource/DataLoader.ts";
+import {DataLoader} from "../../resource/DataLoader.ts";
 import type {ClientTechTree} from "../tech/ClientTechTree.ts";
 
 export class ClientInputEvents {

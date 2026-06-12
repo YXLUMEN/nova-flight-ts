@@ -3,9 +3,9 @@ import type {SoundEvent} from "./SoundEvent.ts";
 import {isServer} from "../configs/GlobalConfig.ts";
 import {MediaWithoutSrc} from "../type/errors.ts";
 import type {Consumer} from "../type/types.ts";
-import type {AudioResource} from "../client/resource/AudioResource.ts";
-import {ResourceManager} from "../client/resource/ResourceManager.ts";
-import {Resources} from "../client/resource/Resources.ts";
+import type {AudioResource} from "../resource/AudioResource.ts";
+import {ResourceManager} from "../resource/ResourceManager.ts";
+import {Resources} from "../resource/Resources.ts";
 
 export class AudioManager {
     private static readonly audio: HTMLAudioElement;

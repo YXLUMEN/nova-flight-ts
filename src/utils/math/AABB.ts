@@ -16,7 +16,7 @@ export class AABB {
         this.maxY = Math.max(y1, y2);
     }
 
-    public static byVec(pos1: Vec2, pos2: Vec2) {
+    public static byVec(pos1: Vec2, pos2: Vec2): AABB {
         return new AABB(pos1.x, pos1.y, pos2.x, pos2.y);
     }
 
@@ -40,7 +40,7 @@ export class AABB {
     /**
      * @danger 非必要不使用
      * */
-    public set(x1: number, y1: number, x2 = x1, y2 = y1) {
+    public set(x1: number, y1: number, x2 = x1, y2 = y1): void {
         (this.minX as any) = Math.min(x1, x2);
         (this.minY as any) = Math.min(y1, y2);
         (this.maxX as any) = Math.max(x1, x2);
@@ -55,7 +55,7 @@ export class AABB {
         return this.intersects(box.minX, box.minY, box.maxX, box.maxY);
     }
 
-    public intersects(minX: number, minY: number, maxX: number, maxY: number) {
+    public intersects(minX: number, minY: number, maxX: number, maxY: number): boolean {
         return this.minX < maxX && this.maxX > minX && this.minY < maxY && this.maxY > minY;
     }
 
@@ -168,14 +168,14 @@ export class AABB {
     public static traceCollisionSide(
         box: AABB,
         intersectingVector: Vec2,
-        traceDistanceResult: number[],
+        bestT: number[],
         approachDirection: Direction | null,
         deltaX: number,
         deltaY: number
     ): Direction | null {
         if (deltaX > 1E-7) {
             approachDirection = this.traceSide(
-                traceDistanceResult,
+                bestT,
                 approachDirection,
                 deltaX,
                 deltaY,
@@ -188,7 +188,7 @@ export class AABB {
             );
         } else if (deltaX < -1.0E-7) {
             approachDirection = this.traceSide(
-                traceDistanceResult,
+                bestT,
                 approachDirection,
                 deltaX,
                 deltaY,
@@ -203,7 +203,7 @@ export class AABB {
 
         if (deltaY > 1.0E-7) {
             approachDirection = this.traceSide(
-                traceDistanceResult,
+                bestT,
                 approachDirection,
                 deltaY,
                 deltaX,
@@ -216,7 +216,7 @@ export class AABB {
             );
         } else if (deltaY < -1.0E-7) {
             approachDirection = this.traceSide(
-                traceDistanceResult,
+                bestT,
                 approachDirection,
                 deltaY,
                 deltaX,
@@ -233,7 +233,7 @@ export class AABB {
     }
 
     private static traceSide(
-        traceDistanceResult: number[],
+        bestT: number[],
         approachDirection: Direction | null,
         deltaX: number,
         deltaY: number,
@@ -244,13 +244,12 @@ export class AABB {
         startX: number,
         startY: number
     ): Direction | null {
-        const d = (begin - startX) / deltaX;
-        const e = startY + d * deltaY;
-        if (0.0 < d && d < traceDistanceResult[0] && minY - 1.0E-7 < e && e < maxY + 1.0E-7) {
-            traceDistanceResult[0] = d;
+        const t = (begin - startX) / deltaX;
+        const hit = startY + t * deltaY;
+        if (0.0 < t && t < bestT[0] && minY - 1.0E-7 < hit && hit < maxY + 1.0E-7) {
+            bestT[0] = t;
             return resultDirection;
-        } else {
-            return approachDirection;
         }
+        return approachDirection;
     }
 }

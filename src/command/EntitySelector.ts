@@ -8,7 +8,7 @@ import {NumberRange, type NumRange} from "../world/predicate/NumberRange.ts";
 import {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {EntitySelectorArgumentType} from "./argument/EntitySelectorArgumentType.ts";
-import {EntitySelectorReader} from "./EntitySelectorReader.ts";
+import {EntitySelectorParser} from "./EntitySelectorParser.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 
 
@@ -166,7 +166,7 @@ export class EntitySelector {
     }
 
     private getAppendLimit() {
-        return this.sorter == EntitySelectorReader.ARBITRARY ? this.limit : Number.MAX_SAFE_INTEGER;
+        return this.sorter == EntitySelectorParser.ARBITRARY ? this.limit : Number.MAX_SAFE_INTEGER;
     }
 
     private findEntities(pos: Vec2, entities: Entity[]) {

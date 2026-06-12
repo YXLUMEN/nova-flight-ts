@@ -1,6 +1,6 @@
-import {Registry} from "../../registry/Registry.ts";
-import {Registries} from "../../registry/Registries.ts";
-import {Identifier} from "../../registry/Identifier.ts";
+import {Registry} from "../registry/Registry.ts";
+import {Registries} from "../registry/Registries.ts";
+import {Identifier} from "../registry/Identifier.ts";
 
 export class Resources {
     public static readonly LANG = this.registry('lang');

@@ -9,7 +9,7 @@ import {ClientPlayerEntity} from "./entity/ClientPlayerEntity.ts";
 import {LoadingScreen} from "./render/ui/LoadingScreen.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import {empty, sleep} from "../utils/uit.ts";
-import {DataLoader} from "./resource/DataLoader.ts";
+import {DataLoader} from "../resource/DataLoader.ts";
 import {check} from "@tauri-apps/plugin-updater";
 import {StartScreen} from "./render/ui/StartScreen.ts";
 import {error, info, warn} from "@tauri-apps/plugin-log";

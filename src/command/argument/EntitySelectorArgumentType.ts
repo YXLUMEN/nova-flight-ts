@@ -4,7 +4,7 @@ import {type CommandContext} from "../../brigadier/context/CommandContext.ts";
 import {Suggestions} from "../../brigadier/suggestion/Suggestions.ts";
 import {CommandSource} from "../CommandSource.ts";
 import type {SuggestionsBuilder} from "../../brigadier/suggestion/SuggestionsBuilder.ts";
-import {EntitySelectorReader} from "../EntitySelectorReader.ts";
+import {EntitySelectorParser} from "../EntitySelectorParser.ts";
 import type {EntitySelector} from "../EntitySelector.ts";
 import {CommandError} from "../../type/errors.ts";
 import {CommandUtil} from "../CommandUtil.ts";
@@ -41,7 +41,7 @@ export class EntitySelectorArgumentType implements ArgumentType<EntitySelector> 
     }
 
     public parse(reader: StringReader): EntitySelector {
-        const entitySelectorReader = new EntitySelectorReader(reader);
+        const entitySelectorReader = new EntitySelectorParser(reader);
         const selector = entitySelectorReader.read();
 
         if (selector.limit > 1 && this.singleTarget) {
@@ -64,7 +64,7 @@ export class EntitySelectorArgumentType implements ArgumentType<EntitySelector> 
 
         const reader = new StringReader(builder.input);
         reader.setCursor(builder.start);
-        const entitySelectorReader = new EntitySelectorReader(reader);
+        const entitySelectorReader = new EntitySelectorParser(reader);
 
         try {
             entitySelectorReader.read();

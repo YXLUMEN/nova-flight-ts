@@ -1,13 +1,13 @@
 import type {ResourceModule} from "./ResourceModule.ts";
 import {resolve, resolveResource} from "@tauri-apps/api/path";
-import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {Resources} from "./Resources.ts";
-import {normalizedDir, pruneSuffix, traverse_dir} from "../../utils/fs.ts";
+import {normalizedDir, pruneSuffix, traverse_dir} from "../utils/fs.ts";
 import {exists, readFile} from "@tauri-apps/plugin-fs";
 import {convertFileSrc} from "@tauri-apps/api/core";
 import {error} from "@tauri-apps/plugin-log";
-import type {TexturePath} from "../render/model/TexturePath.ts";
-import type {TextureProvider} from "../render/model/TextureProvider.ts";
+import type {TexturePath} from "../client/render/model/TexturePath.ts";
+import type {TextureProvider} from "../client/render/model/TextureProvider.ts";
 
 export class TextureResource implements ResourceModule, TextureProvider {
     public static readonly DEFAULT_TEXTURE_ID = 'builtin/default';

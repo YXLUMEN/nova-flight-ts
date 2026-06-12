@@ -1,14 +1,14 @@
-import type {RegistryManager} from "../../registry/RegistryManager.ts";
+import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {ResourceModule} from "./ResourceModule.ts";
-import {RegistryKeys} from "../../registry/RegistryKeys.ts";
+import {RegistryKeys} from "../registry/RegistryKeys.ts";
 import {resolveResource} from "@tauri-apps/api/path";
 import {exists, readFile, readTextFile} from "@tauri-apps/plugin-fs";
-import {PromisePool} from "../../utils/collection/PromisePool.ts";
-import {Identifier} from "../../registry/Identifier.ts";
-import {deepFreeze} from "../../utils/uit.ts";
-import {HashMap} from "../../utils/collection/HashMap.ts";
+import {PromisePool} from "../utils/collection/PromisePool.ts";
+import {Identifier} from "../registry/Identifier.ts";
+import {deepFreeze} from "../utils/uit.ts";
+import {HashMap} from "../utils/collection/HashMap.ts";
 import {warn} from "@tauri-apps/plugin-log";
-import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {Resources} from "./Resources.ts";
 
 export class SoundResource implements ResourceModule {

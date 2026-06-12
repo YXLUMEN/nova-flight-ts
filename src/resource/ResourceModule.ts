@@ -1,5 +1,5 @@
-import type {RegistryManager} from "../../registry/RegistryManager.ts";
-import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import type {RegistryManager} from "../registry/RegistryManager.ts";
+import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 
 export interface ResourceModule {
     getId(): RegistryEntry<string>;
