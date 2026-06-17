@@ -50,6 +50,6 @@ export class ClientPackets {
     }
 
     private static register<T extends Payload>(type: PayloadType<T>, codec: PacketCodec<T>): void {
-        CodecRegistry.PLAY_C2S.register(type, codec)
+        CodecRegistry.C2S.register(type, codec)
     }
 }

@@ -1,8 +1,11 @@
 use crate::network::cmd::is_open;
+use crate::network::header::*;
 use crate::network::protocol::*;
 use crate::network::session::{Session, SessionContext, NEXT_SESSION_ID};
 use crate::network::states::{RelayState, Role, ServerManager, Tx};
-use crate::network::util::{format_uuid, get_time, is_nil_uuid, parse_session_id, read_var_uint};
+use crate::network::util::{
+    constant_time_eq, format_uuid, get_time, is_nil_uuid, parse_session_id, read_var_uint,
+};
 use bytes::{Buf, BufMut, BytesMut};
 use dashmap::Entry;
 use futures_util::stream::SplitStream;
@@ -11,6 +14,7 @@ use log::{error, info, warn};
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use tokio::net::{TcpListener, TcpStream};
+use tokio::sync::mpsc::error::TrySendError;
 use tokio::sync::{mpsc, oneshot, Mutex, OnceCell};
 use tokio::time::{timeout, Duration};
 use tokio_tungstenite::tungstenite::{Bytes, Error, Message};
@@ -220,7 +224,7 @@ async fn attach_session(
     }
 
     match incoming[0] {
-        0x01 => {
+        REG_SERVER => {
             // 注册服务端
             if incoming.len() < 33 {
                 return Err("Invalid server register packet");
@@ -269,7 +273,7 @@ async fn attach_session(
                 close: None,
             })
         }
-        0x02 => {
+        REG_CLIENT => {
             // 注册 Client
             if incoming.len() < 17 {
                 send_message(&tx, "ERR:Invalid register packet");
@@ -421,7 +425,7 @@ async fn relay_client_message(
     }
 
     match payload[0] {
-        0x10 => {
+        C2S => {
             // Client → Server
             let Some(server) = state.get_server().await else {
                 return true;
@@ -464,15 +468,16 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
     }
 
     match payload[0] {
-        0x11 => {
+        SERVER_BROADCAST => {
             // [Header][Id][Data]
             // Server → 广播给所有 Client
             let mut to_close = Vec::new();
-            state.iter_clients().for_each(|entry| {
+            for entry in state.iter_clients() {
                 let session = &entry.value().session;
-                if !send_or_drop(&session.tx, &payload) {
-                    return;
+                if send_or_drop(&session.tx, &payload) {
+                    continue;
                 }
+
                 if let Some(uuid) = session.uuid {
                     warn!(
                         "[Broadcast] Dropping unresponsive client {}",
@@ -480,12 +485,13 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
                     );
                 }
                 to_close.push(*entry.key());
-            });
+            }
+
             for id in to_close {
                 state.close(&id);
             }
         }
-        0x12 => {
+        SERVER_SINGLE => {
             // [Header][TargetId][Data]
             // Server → 指定 Client SessionId
             if payload.len() < 2 {
@@ -502,7 +508,7 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
                 state.close(&target_id);
             }
         }
-        0x13 => {
+        SERVER_SINGLE_UUID => {
             // [Header][Id][TargetUuid][Data]
             // Server → 指定 Client UUID
             if payload.len() < 18 {
@@ -535,7 +541,7 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
                 state.close(&session.session_id);
             }
         }
-        0x14 => {
+        SERVER_EXCLUDE => {
             // [Header][Id][TargetIds][Data]
             // Server → 广播给未被排除的 Client
             if payload.len() < 3 {
@@ -577,15 +583,17 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
             let forwarded = buf.freeze();
 
             let mut to_close = Vec::new();
-            state.iter_clients().for_each(|entry| {
+            for entry in state.iter_clients() {
                 let id = *entry.key();
                 if excludes.iter().any(|ex| ex == &id) {
-                    return;
+                    continue;
                 }
+
                 let session = &entry.value().session;
-                if !send_or_drop(&session.tx, &forwarded) {
-                    return;
+                if send_or_drop(&session.tx, &forwarded) {
+                    continue;
                 }
+
                 if let Some(uuid) = session.uuid {
                     warn!(
                         "[Excludes] Dropping unresponsive client {}",
@@ -593,12 +601,13 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
                     );
                 }
                 to_close.push(id);
-            });
+            }
+
             for id in to_close {
                 state.close(&id);
             }
         }
-        0xff => relay_actions(state, session, payload).await,
+        SERVER_ACTION => relay_actions(state, session, payload).await,
         _ => {}
     }
 }
@@ -616,7 +625,7 @@ async fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload:
 
     let data = &payload[2..];
     match payload[1] {
-        0x00 => {
+        TICK => {
             if data.len() < 1 {
                 action_fail(&session.tx, "[Kick] Session id cannot be empty").await;
                 return;
@@ -628,14 +637,14 @@ async fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload:
                 state.close(&session_id);
             }
         }
-        0x01 => {
+        PERMIT => {
             if data.len() < 1 {
                 action_fail(&session.tx, "[Permit] Session id cannot be empty").await;
                 return;
             }
             state.permit(&data[0]);
         }
-        0x02 => {
+        QUERY => {
             // QueryClients: 查询当前所有在线客户端列表
             // 回包格式: [0x00][0x04][count u8]([session_id u8][uuid 16B])*
             let clients = state.collect_client_list();
@@ -674,6 +683,7 @@ async fn action_fail(tx: &Tx, reason: &str) -> () {
     send_packet(tx, packet, Duration::from_secs(2)).await;
 }
 
+/// 中继通知,目前为纯文本
 fn send_message(tx: &Tx, reason: &str) -> () {
     let packet = RelayMessage {
         message: reason.to_string(),
@@ -683,16 +693,9 @@ fn send_message(tx: &Tx, reason: &str) -> () {
 
 /// 广播
 fn send_or_drop(tx: &Tx, payload: &Bytes) -> bool {
-    tx.try_send(payload.clone()).is_err()
-}
-
-/// 常量时间字节比较,防止时序侧信道攻击
-fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
-    if a.len() != b.len() {
-        return false;
+    match tx.try_send(payload.clone()) {
+        Ok(_) => true,
+        Err(TrySendError::Full(_)) => true,
+        Err(TrySendError::Closed(_)) => false,
     }
-    a.iter()
-        .zip(b.iter())
-        .fold(0u8, |acc, (x, y)| acc | (x ^ y))
-        == 0
 }

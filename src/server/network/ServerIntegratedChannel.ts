@@ -8,7 +8,7 @@ import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import {empty} from "../../utils/uit.ts";
 
 export class ServerIntegratedChannel implements ServerChannel {
-    private readonly registry = CodecRegistry.PLAY_S2C;
+    private readonly registry = CodecRegistry.S2C;
 
     private clientId: number = 2;
     private ctrl = new AbortController();
@@ -85,7 +85,7 @@ export class ServerIntegratedChannel implements ServerChannel {
         const reader = new BinaryReader(new Uint8Array(buf));
 
         const index = reader.readVarUint();
-        const codec = CodecRegistry.getGlobalByIndex(index);
+        const codec = CodecRegistry.getCodec(index);
         if (!codec) return;
 
         this.handler(this.clientId, codec.codec.decode(reader));

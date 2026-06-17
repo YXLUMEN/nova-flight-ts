@@ -4,7 +4,7 @@ import type {PacketCodec} from "./codec/PacketCodec.ts";
 import type {PayloadType} from "./PayloadType.ts";
 import {NetworkSide} from "./NetworkSide.ts";
 
-export class CodecEntry<T extends Payload> {
+class CodecEntry<T extends Payload> {
     public readonly type: PayloadType<T>;
     public readonly index: number;
     public readonly codec: PacketCodec<T>;
@@ -18,25 +18,21 @@ export class CodecEntry<T extends Payload> {
 
 export class CodecRegistry {
     public static readonly RELAY = new CodecRegistry(NetworkSide.RELAY);
-    public static readonly PLAY_S2C = new CodecRegistry(NetworkSide.SERVER);
-    public static readonly PLAY_C2S = new CodecRegistry(NetworkSide.CLIENT);
+    public static readonly S2C = new CodecRegistry(NetworkSide.SERVER);
+    public static readonly C2S = new CodecRegistry(NetworkSide.CLIENT);
 
     private static readonly PACKET_TYPES: CodecEntry<any>[] = [];
 
-    private readonly codecs = new Map<PayloadType<any>, CodecEntry<any>>();
-    private readonly side: NetworkSide;
-
-    public static getGlobal(type: PayloadType<any>): CodecEntry<any> | null {
-        return this.PLAY_S2C.get(type) ?? this.PLAY_C2S.get(type);
-    }
-
-    public static getGlobalByIndex(index: number): CodecEntry<any> | null {
+    public static getCodec(index: number): CodecEntry<any> | null {
         return this.PACKET_TYPES[index] ?? null;
     }
 
     public static settle(): void {
         deepFreeze(this);
     }
+
+    private readonly codecs = new Map<PayloadType<any>, CodecEntry<any>>();
+    private readonly side: NetworkSide;
 
     private constructor(side: NetworkSide) {
         this.side = side;
@@ -64,3 +60,5 @@ export class CodecRegistry {
         return this.side;
     }
 }
+
+export {type CodecEntry};

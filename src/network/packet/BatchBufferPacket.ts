@@ -7,8 +7,8 @@ import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import {CodecRegistry} from "../CodecRegistry.ts";
 import {WSNetworkChannel} from "../WSNetworkChannel.ts";
 import {PacketTooLargeError} from "../../type/errors.ts";
-import type {ClientCommonHandler} from "../../client/network/handler/ClientCommonHandler.ts";
 import {compress, decompress} from "@bokuweb/zstd-wasm";
+import type {ClientCommonHandler} from "../../client/network/handler/ClientCommonHandler.ts";
 
 export class BatchBufferPacket implements Payload {
     public static readonly ID: PayloadType<BatchBufferPacket> = payloadType('batch_buffer');
@@ -88,7 +88,7 @@ export class BatchBufferPacket implements Payload {
 
         for (let i = 0; i < payloads.length; i++) {
             const index = reader.readVarUint();
-            const type = CodecRegistry.getGlobalByIndex(index);
+            const type = CodecRegistry.getCodec(index);
             if (!type) throw new Error(`Unrecognized packet: ${index}`);
             payloads[i] = type.codec.decode(reader);
         }

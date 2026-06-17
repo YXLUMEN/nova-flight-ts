@@ -116,6 +116,6 @@ export class ServerPackets {
     }
 
     private static register<T extends Payload>(type: PayloadType<T>, codec: PacketCodec<T>): void {
-        CodecRegistry.PLAY_S2C.register(type, codec);
+        CodecRegistry.S2C.register(type, codec);
     }
 }

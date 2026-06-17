@@ -18,7 +18,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
     private handler: BiConsumer<number, Payload> = empty;
 
     public constructor(address: string, secretKey: Uint8Array) {
-        super(NetworkSide.SERVER, address, CodecRegistry.PLAY_S2C);
+        super(NetworkSide.SERVER, address, CodecRegistry.S2C);
         this.secretKey = secretKey;
     }
 
@@ -98,7 +98,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
         const header = reader.readUint8();
         if (header === PacketHeader.RELAY) {
             const index = reader.readUint8();
-            const codec = CodecRegistry.getGlobalByIndex(index);
+            const codec = CodecRegistry.getCodec(index);
             if (codec) this.handler(0, codec.codec.decode(reader));
             return;
         }
@@ -109,7 +109,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
 
         const sessionId = reader.readUint8();
         const index = reader.readVarUint();
-        const codec = CodecRegistry.getGlobalByIndex(index);
+        const codec = CodecRegistry.getCodec(index);
         if (!codec) return;
 
         this.handler(sessionId, codec.codec.decode(reader));
