@@ -4,14 +4,16 @@ import type {ClientConnection} from "../ClientConnection.ts";
 import {GaussianRandom} from "../../../utils/math/GaussianRandom.ts";
 import type {Payload} from "../../../network/Payload.ts";
 import type {ConnectionState} from "../../../server/network/ConnectionState.ts";
-import {EmptyHandler} from "../../../network/handler/EmptyHandler.ts";
 import type {RelayMessage} from "../../../network/packet/relay/RelayMessage.ts";
 import type {BatchBufferPacket} from "../../../network/packet/BatchBufferPacket.ts";
+import type {Consumer} from "../../../type/types.ts";
+import {EmptyHandler} from "../../../network/handler/EmptyHandler.ts";
 
 export abstract class ClientCommonHandler implements PacketListener {
     protected readonly connection: ClientConnection;
     protected readonly client: NovaFlightClient;
     protected readonly random = new GaussianRandom();
+    protected readonly handlers: Consumer<Payload>[] = [];
 
     protected constructor(client: NovaFlightClient, connection: ClientConnection) {
         this.client = client;

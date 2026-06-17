@@ -5,7 +5,7 @@ export const enum PacketHeader {
     C2S = 0x10,
     SERVER_BROADCAST = 0x11,
     SERVER_SINGLE = 0x12,
-    SERVER_EXCLUDE_UUID = 0x13,
+    SERVER_SINGLE_UUID = 0x13,
     SERVER_EXCLUDE = 0x14,
     SERVER_ACTION = 0xFF,
 }
@@ -13,4 +13,5 @@ export const enum PacketHeader {
 export const enum ServerAction {
     TICK = 0x00,
     PERMIT = 0x01,
+    QUERY = 0x02,
 }

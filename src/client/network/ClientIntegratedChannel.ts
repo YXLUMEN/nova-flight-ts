@@ -10,7 +10,7 @@ export class ClientIntegratedChannel implements ClientChannel {
     private readonly clientId: UUID;
     private readonly worker: Worker;
 
-    private readonly registry = CodecRegistry.PLAY_C2S;
+    private readonly registry = CodecRegistry.C2S;
 
     private ctrl: AbortController | null = null;
     private handler: Consumer<Payload> = empty;
@@ -78,7 +78,7 @@ export class ClientIntegratedChannel implements ClientChannel {
             const reader = new BinaryReader(new Uint8Array(event.data.packet));
 
             const index = reader.readVarUint();
-            const codec = CodecRegistry.getGlobalByIndex(index);
+            const codec = CodecRegistry.getCodec(index);
             if (!codec) return;
 
             this.handler(codec.codec.decode(reader));

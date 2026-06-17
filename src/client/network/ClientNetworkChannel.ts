@@ -15,7 +15,7 @@ export class ClientNetworkChannel extends WSNetworkChannel implements ClientChan
     private handler: Consumer<Payload> = empty;
 
     public constructor(url: string, clientId: UUID) {
-        super(NetworkSide.CLIENT, url, CodecRegistry.PLAY_C2S);
+        super(NetworkSide.CLIENT, url, CodecRegistry.C2S);
         this.clientId = clientId;
     }
 
@@ -38,7 +38,7 @@ export class ClientNetworkChannel extends WSNetworkChannel implements ClientChan
         const header = reader.readUint8();
         if (header === PacketHeader.RELAY) {
             const index = reader.readUint8();
-            const codec = CodecRegistry.getGlobalByIndex(index);
+            const codec = CodecRegistry.getCodec(index);
             if (codec) this.handler(codec.codec.decode(reader));
             return;
         }
@@ -50,13 +50,13 @@ export class ClientNetworkChannel extends WSNetworkChannel implements ClientChan
 
         reader.readUint8();
         const index = reader.readVarUint();
-        const codec = CodecRegistry.getGlobalByIndex(index);
+        const codec = CodecRegistry.getCodec(index);
         if (!codec) return;
 
         this.handler(codec.codec.decode(reader));
     }
 
-    public setHandler(handler: Consumer<Payload>) {
+    public setHandler(handler: Consumer<Payload>): void {
         this.handler = handler;
     }
 
