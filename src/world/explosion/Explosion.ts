@@ -9,7 +9,7 @@ import {ProjectileEntity} from "../../entity/projectile/ProjectileEntity.ts";
 import {LivingEntity} from "../../entity/LivingEntity.ts";
 import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
 import {ServerCommonHandler} from "../../server/network/handler/ServerCommonHandler.ts";
-import type {BlockChange} from "../map/BlockChange.ts";
+import type {BlockChange} from "../section/BlockChange.ts";
 import {BlockCollision} from "../collision/BlockCollision.ts";
 import {ExplosionBehavior, ExplosionBehaviour, ExplosionEffect} from "./ExplosionBehavior.ts";
 import {ExplosionVisual} from "./ExplosionVisual.ts";
@@ -173,8 +173,8 @@ export class Explosion {
                 end,
                 {map, centerX: this.x, centerY: this.y, changes, power},
                 (ctx, pos) => {
-                    const x = pos.getX();
-                    const y = pos.getY();
+                    const x = pos.x;
+                    const y = pos.y;
 
                     ctx.power -= 0.225;
                     if (ctx.power <= 0.1) return true;

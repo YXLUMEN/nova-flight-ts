@@ -25,7 +25,6 @@ export class RegistryManager {
         this.registers.set(RegistryKeys.ENTITY_TYPE, Registries.ENTITY_TYPE);
         this.registers.set(RegistryKeys.ATTRIBUTE, Registries.ATTRIBUTE);
         this.registers.set(RegistryKeys.ITEM, Registries.ITEM);
-        this.registers.set(RegistryKeys.GAME_EVENT, Registries.GAME_EVENT);
 
         await Techs.init();
         await DamageTypes.init();

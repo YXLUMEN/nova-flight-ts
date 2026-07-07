@@ -6,7 +6,7 @@ import {CommandContext} from "./CommandContext.ts";
 import type {ParsedArgument} from "./ParsedArgument.ts";
 import {SuggestionContext} from "./SuggestionContext.ts";
 import {ParsedCommandNode} from "./ParsedCommandNode.ts";
-import {IllegalStateException} from "../../type/errors.ts";
+import {IllegalStateError} from "../../type/errors.ts";
 
 export class CommandContextBuilder<S> {
     public readonly dispatcher: CommandDispatcher<S>;
@@ -77,7 +77,7 @@ export class CommandContextBuilder<S> {
 
     public findSuggestionContext(cursor: number): SuggestionContext<S> {
         if (this.range.getStart() > cursor) {
-            throw new IllegalStateException("Can't find node before cursor");
+            throw new IllegalStateError("Can't find node before cursor");
         }
 
         if (this.range.getEnd() < cursor) {
@@ -100,7 +100,7 @@ export class CommandContextBuilder<S> {
             prev = node.node;
         }
         if (prev === null) {
-            throw new IllegalStateException("Can't find node before cursor");
+            throw new IllegalStateError("Can't find node before cursor");
         }
         return new SuggestionContext(prev, this.range.getStart());
     }

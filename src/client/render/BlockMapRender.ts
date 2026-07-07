@@ -1,5 +1,6 @@
 import {Window} from "./Window.ts";
-import {BitBlockMap} from "../../world/map/BitBlockMap.ts";
+import {BitBlockMap} from "../../world/section/BitBlockMap.ts";
+import {WorldConstants} from "../../world/section/WorldConstants.ts";
 
 export class BlockMapRender {
     private readonly window: Window;
@@ -23,8 +24,8 @@ export class BlockMapRender {
 
     private promptRender(ctx: CanvasRenderingContext2D) {
         const view = this.window.camera.viewRect;
-        const blocksize = BitBlockMap.BLOCK_SIZE;
-        const power = BitBlockMap.POWER;
+        const blocksize = WorldConstants.BLOCK_SIZE;
+        const power = WorldConstants.BLOCK_SIZE_LOG2;
 
         const sx = Math.max(0, view.left >> power);
         const sy = Math.max(0, view.top >> power);
@@ -73,7 +74,7 @@ export class BlockMapRender {
     }
 
     private buildCmd(): void {
-        const blocksize = BitBlockMap.BLOCK_SIZE;
+        const blocksize = WorldConstants.BLOCK_SIZE;
 
         const ex = this.map.getWidth();
         const ey = this.map.getHeight();

@@ -264,5 +264,12 @@ export function absMax(a: number, b: number): number {
     return Math.max(a, b);
 }
 
+export function cartesian(...arrays: any[][]) {
+    if (arrays.length === 0) return [[]];
+    return arrays.reduce((acc, curr) =>
+        acc.flatMap(a => curr.map(b => [...a, b]))
+    );
+}
+
 export const PI2 = Math.PI * 2;
 export const HALF_PI = Math.PI / 2;

@@ -4,7 +4,8 @@ use crate::network::protocol::*;
 use crate::network::session::{Session, SessionContext, NEXT_SESSION_ID};
 use crate::network::states::{RelayState, Role, ServerManager, Tx};
 use crate::network::util::{
-    constant_time_eq, format_uuid, get_time, is_nil_uuid, parse_session_id, read_var_uint,
+    constant_time_eq, format_uuid, get_time, is_nil_uuid, parse_ipv4, parse_session_id,
+    read_var_uint,
 };
 use bytes::{Buf, BufMut, BytesMut};
 use dashmap::Entry;
@@ -52,6 +53,12 @@ pub async fn run_ws_server(
                         let is_local = address.ip().is_loopback();
                         if !is_open() && !is_local {
                             warn!("Rejected non-local connection from {}", address);
+                            continue;
+                        }
+
+                        let is_banned = state.is_banned(&address.ip()).await;
+                        if is_banned {
+                            info!("A banned IP attempt to connect {}", address);
                             continue;
                         }
 
@@ -650,6 +657,28 @@ async fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload:
             let clients = state.collect_client_list();
             let result = QueryClientsResult { clients };
             send_packet(&session.tx, result, Duration::from_secs(2)).await;
+        }
+        BAN_IP => {
+            let addr = parse_ipv4(data);
+            let Some(ip) = addr else {
+                action_fail(&session.tx, "[Ban] Ipv4 syntax error").await;
+                return;
+            };
+
+            state.ban(ip.into()).await;
+        }
+        UNBAN_IP => {
+            let addr = parse_ipv4(data);
+            let Some(ip) = addr else {
+                action_fail(&session.tx, "[Ban] Ipv4 syntax error").await;
+                return;
+            };
+
+            if state.unban(&ip.into()).await {
+                send_message(&session.tx, "Unban");
+            } else {
+                send_message(&session.tx, "This ip is not banned");
+            }
         }
         _ => {
             warn!("Invalid action type: 0x{:02x}", payload[1]);

@@ -1,5 +1,5 @@
-import type {BlockPos} from "../map/BlockPos.ts";
-import type {Direction} from "./Direction.ts";
+import type {BlockPos} from "../section/pos/BlockPos.ts";
+import type {Direction} from "../../utils/math/Direction.ts";
 import {HitResult, type HitType} from "./HitResult.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 

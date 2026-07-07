@@ -2,7 +2,7 @@ import type {Payload} from "../../Payload.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import type {BlockPos} from "../../../world/map/BlockPos.ts";
+import type {BlockPos} from "../../../world/section/pos/BlockPos.ts";
 import type {ServerPlayHandler} from "../../../server/network/handler/ServerPlayHandler.ts";
 
 export class BlockChangeC2SPacket implements Payload {
@@ -32,7 +32,7 @@ export class BlockChangeC2SPacket implements Payload {
     }
 
     public static from(type: number, pos: BlockPos): BlockChangeC2SPacket {
-        return new BlockChangeC2SPacket(type, pos.getX(), pos.getY());
+        return new BlockChangeC2SPacket(type, pos.x, pos.y);
     }
 
     public type(): PayloadType<BlockChangeC2SPacket> {

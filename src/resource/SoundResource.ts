@@ -30,6 +30,11 @@ export class SoundResource implements ResourceModule {
         const loadTasks: Promise<void>[] = [];
         const buffersMap = new Map<Identifier, AudioBuffer[]>();
 
+        const job = async (buffers: AudioBuffer[], soundPath: string) => {
+            const buffer = await this.decodeAudios(soundPath, audioContext);
+            if (buffer) buffers.push(buffer);
+        };
+
         for (const soundId of sounds) {
             try {
                 const id = soundId.getPath();
@@ -52,10 +57,7 @@ export class SoundResource implements ResourceModule {
                     const soundPath = soundEntry.split(':').pop();
                     if (!soundPath) continue;
 
-                    loadTasks.push(pool.submit(async () => {
-                        const buffer = await this.decodeAudios(soundPath, audioContext);
-                        if (buffer) buffers.push(buffer);
-                    }));
+                    loadTasks.push(pool.submit(job, buffers, soundPath));
                 }
             } catch (error) {
                 await warn(String(error));

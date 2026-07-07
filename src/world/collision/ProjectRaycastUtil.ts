@@ -1,5 +1,5 @@
 import type {BlockRaycastResult} from "./BlockRaycastResult.ts";
-import {BitBlockMap} from "../map/BitBlockMap.ts";
+import {BitBlockMap} from "../section/BitBlockMap.ts";
 import type {World} from "../World.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {AABB} from "../../utils/math/AABB.ts";
@@ -8,6 +8,7 @@ import {EntityHitResult} from "./EntityHitResult.ts";
 import {squareDistVec2} from "../../utils/math/math.ts";
 import type {HitResult} from "./HitResult.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
+import {WorldConstants} from "../section/WorldConstants.ts";
 
 export class ProjectRaycastUtil {
     /**
@@ -20,8 +21,8 @@ export class ProjectRaycastUtil {
         endX: number,
         endY: number
     ): BlockRaycastResult {
-        const tileSize = BitBlockMap.BLOCK_SIZE;
-        const power = BitBlockMap.POWER;
+        const tileSize = WorldConstants.BLOCK_SIZE;
+        const power = WorldConstants.BLOCK_SIZE_LOG2;
 
         const dx = endX - startX;
         const dy = endY - startY;

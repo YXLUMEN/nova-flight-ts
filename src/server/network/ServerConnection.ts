@@ -6,7 +6,7 @@ import type {Payload} from "../../network/Payload.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import type {UUID} from "../../type/types.ts";
 import type {PacketListener} from "../../network/handler/PacketListener.ts";
-import {IllegalStateException} from "../../type/errors.ts";
+import {IllegalStateError} from "../../type/errors.ts";
 import {RelayActionBuilder} from "./RelayActionBuilder.ts";
 import type {Connection} from "../../network/Connection.ts";
 
@@ -94,7 +94,7 @@ export class ServerConnection implements Connection {
 
     public setPacketListener(state: ConnectionState, listener: PacketListener): void {
         if (state !== listener.getPhase()) {
-            throw new IllegalStateException(`Listener protocol (${listener.getPhase()}) does not match requested one ${state}`);
+            throw new IllegalStateError(`Listener protocol (${listener.getPhase()}) does not match requested one ${state}`);
         }
         this.packetListener = listener;
         this.changeState(state);

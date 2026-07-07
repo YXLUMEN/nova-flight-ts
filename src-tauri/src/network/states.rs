@@ -1,7 +1,9 @@
 use crate::network::session::Session;
+use ahash::AHashSet;
 use bytes::Bytes;
 use dashmap::iter::Iter;
 use dashmap::{DashMap, Entry};
+use std::net::IpAddr;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
@@ -21,10 +23,11 @@ pub(crate) struct ClientEntry {
     close_tx: Option<oneshot::Sender<()>>,
 }
 
-pub struct RelayState {
+pub(crate) struct RelayState {
     server: RwLock<Option<Arc<Session>>>,
     clients: DashMap<u8, ClientEntry>,
     client_uuids: DashMap<[u8; 16], u8>,
+    banned: RwLock<AHashSet<IpAddr>>,
     shutting_down: AtomicBool,
 }
 
@@ -34,6 +37,7 @@ impl RelayState {
             server: RwLock::new(None),
             clients: DashMap::new(),
             client_uuids: DashMap::new(),
+            banned: RwLock::new(AHashSet::new()),
             shutting_down: AtomicBool::new(false),
         }
     }
@@ -140,6 +144,19 @@ impl RelayState {
 
     pub fn is_shutdown(&self) -> bool {
         self.shutting_down.load(Ordering::Acquire)
+    }
+
+    pub async fn is_banned(&self, ip: &IpAddr) -> bool {
+        let guard = self.banned.read().await;
+        guard.contains(ip)
+    }
+
+    pub async fn ban(&self, ip: IpAddr) -> bool {
+        self.banned.write().await.insert(ip)
+    }
+
+    pub async fn unban(&self, ip: &IpAddr) -> bool {
+        self.banned.write().await.remove(ip)
     }
 }
 

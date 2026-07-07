@@ -5,7 +5,7 @@ import type {Identifier} from "../registry/Identifier.ts";
 import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
 import {CommandUtil} from "./CommandUtil.ts";
 import {Registries} from "../registry/Registries.ts";
-import {CommandError, IllegalArgumentError, IllegalStateException} from "../type/errors.ts";
+import {CommandError, IllegalArgumentError, IllegalStateError} from "../type/errors.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {PosArgument} from "./argument/PosArgument.ts";
 import {PosArgumentType} from "./argument/PosArgumentType.ts";
@@ -105,7 +105,7 @@ export class SummonEntityCommand {
             }
             ctx.source.outPut.sendMessage(`Success summon ${type.toString()}`);
         } catch (error) {
-            if (error instanceof IllegalArgumentError || error instanceof IllegalStateException) {
+            if (error instanceof IllegalArgumentError || error instanceof IllegalStateError) {
                 throw error;
             }
             throw new CommandError(`\x1b[33mFail to summon entity`);

@@ -40,6 +40,7 @@ futures-util = "0.3.31"
 bytes = "1.10.1"
 dashmap = "6.1.0"
 rand = "0.8.5"
+ahash = "0.8.12"
 
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]

@@ -14,7 +14,6 @@ export class Registries {
     public static readonly ATTRIBUTE = this.simpleCreate(RegistryKeys.ATTRIBUTE, empty);
     public static readonly SOUND_EVENT = this.simpleCreate(RegistryKeys.SOUND_EVENT, empty);
     public static readonly AUDIOS = this.simpleCreate(RegistryKeys.AUDIOS, empty);
-    public static readonly GAME_EVENT = this.simpleCreate(RegistryKeys.GAME_EVENT, empty);
     public static readonly ITEM = this.simpleCreate(RegistryKeys.ITEM, empty);
     public static readonly DATA_COMPONENT_TYPE = this.simpleCreate(RegistryKeys.DATA_COMPONENT_TYPE, empty);
     public static readonly EFFECT_TYPE = this.simpleCreate(RegistryKeys.EFFECT_TYPE, empty);

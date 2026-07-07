@@ -21,7 +21,7 @@ import {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import type {EntityLike} from "../world/entity/EntityLike.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
-import {IllegalArgumentError, IllegalStateException} from "../type/errors.ts";
+import {IllegalArgumentError, IllegalStateError} from "../type/errors.ts";
 import {NbtTypeId} from "../nbt/NbtType.ts";
 import {EMPTY_LISTENER, type EntityChangeListener} from "../world/entity/EntityChangeListener.ts";
 import type {EntityRenderer} from "../client/render/entity/EntityRenderer.ts";
@@ -674,7 +674,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         }
 
         if (!Number.isFinite(this.getX()) || !Number.isFinite(this.getY())) {
-            throw new IllegalStateException('Entity has invalid position');
+            throw new IllegalStateError('Entity has invalid position');
         }
         if (!Number.isFinite(this.getYaw())) {
             throw new IllegalArgumentError('Entity has invalid rotation');

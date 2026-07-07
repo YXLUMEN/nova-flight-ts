@@ -1,22 +1,20 @@
-import type {BlockPos} from "./BlockPos.ts";
+import type {BlockPos} from "./pos/BlockPos.ts";
 import type {AABB} from "../../utils/math/AABB.ts";
 import type {BlockChange} from "./BlockChange.ts";
 import type {NbtSerializable} from "../../nbt/NbtSerializable.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {NbtUint8Array} from "../../nbt/element/NbtUint8Array.ts";
 import {NbtTypeId} from "../../nbt/NbtType.ts";
+import {WorldConstants} from "./WorldConstants.ts";
 
 export class BitBlockMap implements NbtSerializable {
-    public static readonly BLOCK_SIZE = 8;
-    public static readonly POWER = 3;
-
     private width: number;
     private height: number;
     private data: Uint8Array;
 
     public constructor(widthInPixels: number, heightInPixels: number) {
-        this.width = Math.ceil(widthInPixels >> BitBlockMap.POWER);
-        this.height = Math.ceil(heightInPixels >> BitBlockMap.POWER);
+        this.width = Math.ceil(widthInPixels >> WorldConstants.BLOCK_SIZE_LOG2);
+        this.height = Math.ceil(heightInPixels >> WorldConstants.BLOCK_SIZE_LOG2);
 
         const totalBlocks = this.width * this.height;
         const byteLength = Math.ceil(totalBlocks / 8);
@@ -71,22 +69,22 @@ export class BitBlockMap implements NbtSerializable {
     }
 
     public setBlock(pos: BlockPos, value: number = 1): void {
-        this.set(pos.getX(), pos.getY(), value);
+        this.set(pos.x, pos.y, value);
     }
 
     public getBlockPos(pos: BlockPos): number {
-        return this.get(pos.getX(), pos.getY());
+        return this.get(pos.x, pos.y);
     }
 
     public setAt(x: number, y: number, value: number = 1): void {
-        const bx = x >> BitBlockMap.POWER;
-        const by = y >> BitBlockMap.POWER;
+        const bx = x >> WorldConstants.BLOCK_SIZE_LOG2;
+        const by = y >> WorldConstants.BLOCK_SIZE_LOG2;
         this.set(bx, by, value);
     }
 
     public getAt(x: number, y: number): number {
-        const bx = x >> BitBlockMap.POWER;
-        const by = y >> BitBlockMap.POWER;
+        const bx = x >> WorldConstants.BLOCK_SIZE_LOG2;
+        const by = y >> WorldConstants.BLOCK_SIZE_LOG2;
         return this.get(bx, by);
     }
 
@@ -99,10 +97,10 @@ export class BitBlockMap implements NbtSerializable {
     }
 
     public intersectsBox(box: AABB): boolean {
-        const sx = Math.floor(box.minX / BitBlockMap.BLOCK_SIZE);
-        const sy = Math.floor(box.minY / BitBlockMap.BLOCK_SIZE);
-        const ex = Math.floor((box.maxX - 1e-5) / BitBlockMap.BLOCK_SIZE);
-        const ey = Math.floor((box.maxY - 1e-5) / BitBlockMap.BLOCK_SIZE);
+        const sx = Math.floor(box.minX / WorldConstants.BLOCK_SIZE);
+        const sy = Math.floor(box.minY / WorldConstants.BLOCK_SIZE);
+        const ex = Math.floor((box.maxX - 1e-5) / WorldConstants.BLOCK_SIZE);
+        const ey = Math.floor((box.maxY - 1e-5) / WorldConstants.BLOCK_SIZE);
 
         for (let by = sy; by <= ey; by++) {
             for (let bx = sx; bx <= ex; bx++) {

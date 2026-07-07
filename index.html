@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/css/statistic.css"/>
     <link rel="stylesheet" href="/css/setting.css"/>
     <link rel="stylesheet" href="/css/command.css"/>
+    <link rel="stylesheet" href="/css/page-sys.css"/>
 </head>
 <body>
 
@@ -21,97 +22,14 @@
     <input class="command-input" id="command-input" type="text" autocomplete="off" spellcheck="false">
 </label>
 
-<div class="start background hidden" id="start">
-    <div class="title">存档</div>
+<page name="archive"></page>
 
-    <div class="save-list" id="save-list"></div>
+<page name="multi-game"></page>
 
-    <div class="start-buttons" id="start-buttons">
-        <button class="btn always" action="back">返回标题</button>
-        <button class="btn always" action="create-world">新建世界</button>
+<page name="statistic"></page>
 
-        <button class="btn disabled" action="load-world">进入世界</button>
-        <button class="btn disabled" action="delete-world">删除存档</button>
-        <button class="btn disabled" action="rename">重命名</button>
-        <button class="btn disabled" action="export-world">导出存档</button>
-        <button class="btn disabled" action="export-world-snbt">导出为S-NBT</button>
-        <button class="btn always" action="import-world">导入存档</button>
-    </div>
+<page name="tech-shell"></page>
 
-    <div class="save-name-label hidden" id="save-name-label">
-        <div class="input-title">存档名称</div>
-        <label for="save-name-input"></label>
-        <input class="save-name-input" id="save-name-input" type="text" autocomplete="off" spellcheck="false">
-
-        <div class="save-name-buttons" id="save-name-buttons">
-            <button class="btn confirm-btn" action="confirm">确认</button>
-            <button class="btn cancel-btn" action="cancel">取消</button>
-        </div>
-    </div>
-</div>
-
-<div class="multi-game background hidden" id="multi-game">
-    <div class="title">服务器列表</div>
-
-    <div class="server-list" id="server-list"></div>
-
-    <div class="server-input-box">
-        <label for="server-address"></label>
-        <input class="server-address" id="server-address" type="text" autocomplete="off" spellcheck="false"
-               placeholder="输入服务器地址 (ip:port)"/>
-        <button class="btn confirm-btn" id="connect-btn">连接</button>
-        <button class="btn cancel-btn" id="cancel-btn">返回主页</button>
-    </div>
-</div>
-
-<div class="statistic background hidden" id="statistic">
-    <div class="title">统计数据</div>
-
-    <div class="container">
-        <div class="directory" id="statistic-directory">
-            <div class="item" data-name="historical-score">历史得分</div>
-        </div>
-
-        <div class="statistic-displayer hidden" id="statistic-displayer"></div>
-    </div>
-
-    <div class="control-buttons">
-        <button class="btn confirm-btn" id="statistic-back">返回</button>
-    </div>
-</div>
-
-<div class="setting background hidden" id="settings">
-    <div class="title" id="setting-title">游戏设置</div>
-    <div class="container" id="setting-container"></div>
-</div>
-
-<div class="tech-shell hidden" id="tech-shell">
-    <div class="player-money" id="player-money">点数: 0</div>
-    <div class="tech-tree" id="tree">
-        <div class="viewport" id="viewport"></div>
-    </div>
-    <aside class="details" id="details">
-        <div class="toolbar">
-            <div class="legend">
-                <span class="sample"></span>前置
-                <span class="sample req"></span>已达成前置
-                <span class="sample conflict"></span>冲突
-            </div>
-        </div>
-        <div class="tech-title">
-            <img class="hidden" id="d-texture" src="" alt="">
-            <h2 id="d-title">选择一个节点</h2>
-        </div>
-        <div>
-            <div class="list" id="d-meta"></div>
-        </div>
-        <div class="actions">
-            <button class="action primary" id="d-unlock" disabled>解锁</button>
-            <button class="action" id="reset" title="重置科技并返还 80% 点数">重置</button>
-            <button class="action" id="reset-all" title="重置科技并返还 80% 点数">重置全部</button>
-        </div>
-    </aside>
-</div>
-<script type="module" src="/src/main.ts"></script>
 </body>
+<script type="module" src="/src/main.ts"></script>
 </html>
