@@ -1,0 +1,14 @@
+page {
+    display: block;
+    position: relative;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.page-sys-err {
+    padding: 1rem;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+    border-radius: 4px;
+    background: #f8d7da;
+}

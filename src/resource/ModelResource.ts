@@ -41,14 +41,15 @@ export class ModelResource implements ResourceModule {
 
         const pool = new PromisePool(16);
         const tasks: Promise<any>[] = [];
+        const job = async (key: string, abs: string) => {
+            const text = await readTextFile(abs);
+            const json = JSON.parse(text);
+            json.normalizeKey = key;
+            return json;
+        };
 
         for (const [key, abs] of modelAbsPaths) {
-            tasks.push(pool.submit(async () => {
-                const text = await readTextFile(abs);
-                const json = JSON.parse(text);
-                json.normalizeKey = key;
-                return json;
-            }));
+            tasks.push(pool.submit(job, key, abs));
         }
 
         const parsedModels = await Promise.allSettled(tasks);

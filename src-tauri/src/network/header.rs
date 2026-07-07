@@ -15,3 +15,5 @@ pub const SERVER_ACTION: u8 = 0xFF;
 pub const TICK: u8 = 0x00;
 pub const PERMIT: u8 = 0x01;
 pub const QUERY: u8 = 0x02;
+pub const BAN_IP: u8 = 0x03;
+pub const UNBAN_IP: u8 = 0x04;

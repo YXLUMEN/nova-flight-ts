@@ -1,7 +1,7 @@
-import {type Direction, Directions} from "../../world/collision/Direction.ts";
-import type {BlockPos} from "../../world/map/BlockPos.ts";
+import type {BlockPos} from "../../world/section/pos/BlockPos.ts";
 import {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 import type {Vec2} from "./Vec2.ts";
+import {Direction} from "./Direction.ts";
 
 export class AABB {
     public readonly minX: number;
@@ -77,10 +77,10 @@ export class AABB {
 
     public offsetByBlockPos(blockPos: BlockPos): AABB {
         return new AABB(
-            this.minX + blockPos.getX(),
-            this.minY + blockPos.getY(),
-            this.maxX + blockPos.getX(),
-            this.maxY + blockPos.getY(),
+            this.minX + blockPos.x,
+            this.minY + blockPos.y,
+            this.maxX + blockPos.x,
+            this.maxY + blockPos.y,
         );
     }
 
@@ -182,7 +182,7 @@ export class AABB {
                 box.minX,
                 box.minY,
                 box.maxY,
-                Directions.WEST,
+                Direction.RIGHT,
                 intersectingVector.x,
                 intersectingVector.y,
             );
@@ -195,7 +195,7 @@ export class AABB {
                 box.maxX,
                 box.minY,
                 box.maxY,
-                Directions.EAST,
+                Direction.LEFT,
                 intersectingVector.x,
                 intersectingVector.y,
             );
@@ -210,7 +210,7 @@ export class AABB {
                 box.minY,
                 box.minX,
                 box.maxX,
-                Directions.SOUTH,
+                Direction.UP,
                 intersectingVector.y,
                 intersectingVector.x
             );
@@ -223,7 +223,7 @@ export class AABB {
                 box.maxY,
                 box.minX,
                 box.maxX,
-                Directions.NORTH,
+                Direction.DOWN,
                 intersectingVector.y,
                 intersectingVector.x
             );

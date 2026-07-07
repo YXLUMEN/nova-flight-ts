@@ -6,7 +6,7 @@ export const mainWindow = new Window('main');
 
 function main() {
     if (isServer) return;
-    run();
+    void run();
 }
 
 main();

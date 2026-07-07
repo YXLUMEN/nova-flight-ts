@@ -1,7 +1,7 @@
 export class IllegalArgumentError extends Error {
 }
 
-export class IllegalStateException extends Error {
+export class IllegalStateError extends Error {
 }
 
 export class CommandError extends Error {

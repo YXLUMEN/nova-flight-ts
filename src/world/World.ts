@@ -23,7 +23,7 @@ import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import type {EntityLookUp} from "./entity/EntityLookUp.ts";
-import {BitBlockMap} from "./map/BitBlockMap.ts";
+import {BitBlockMap} from "./section/BitBlockMap.ts";
 import {AABB} from "../utils/math/AABB.ts";
 import {BlockCollision} from "./collision/BlockCollision.ts";
 import {LivingEntity} from "../entity/LivingEntity.ts";

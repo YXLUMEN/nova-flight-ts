@@ -1,14 +1,15 @@
-import {BitBlockMap} from "../map/BitBlockMap.ts";
+import {BitBlockMap} from "../section/BitBlockMap.ts";
 import {AABB} from "../../utils/math/AABB.ts";
-import {BlockPos} from "../map/BlockPos.ts";
+import {BlockPos} from "../section/pos/BlockPos.ts";
 import {fractionalPart, lerp} from "../../utils/math/math.ts";
-import {MutBlockPos} from "../map/MutBlockPos.ts";
+import {MutBlockPos} from "../section/pos/MutBlockPos.ts";
 import type {RaycastContext} from "./RaycastContext.ts";
 import {BlockHitResult} from "./BlockHitResult.ts";
-import {AllDirs, type Direction, Directions, getFacing} from "./Direction.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {World} from "../World.ts";
+import {Direction} from "../../utils/math/Direction.ts";
+import {WorldConstants} from "../section/WorldConstants.ts";
 
 export class BlockCollision {
     public static fastCollision(map: BitBlockMap, bounds: AABB, movement: Vec2): boolean {
@@ -39,7 +40,7 @@ export class BlockCollision {
         box: AABB,
         maxBlocks: number = 32
     ): MutVec2 | null {
-        const blockSize = BitBlockMap.BLOCK_SIZE;
+        const blockSize = WorldConstants.BLOCK_SIZE;
         const worldW = World.MAP_WIDTH;
         const worldH = World.MAP_HEIGHT;
 
@@ -48,9 +49,9 @@ export class BlockCollision {
         let bestEject: MutVec2 | null = null;
         let minDist = maxBlocks + 1;
 
-        for (const dir of AllDirs) {
-            const dx = dir.dir.x;
-            const dy = dir.dir.y;
+        for (const dir of Direction.ALL_DIRS) {
+            const dx = dir.normal.x;
+            const dy = dir.normal.y;
 
             for (let step = 1; step <= maxBlocks; step++) {
                 if (step >= minDist) break;
@@ -83,25 +84,23 @@ export class BlockCollision {
 
     public static pushOutOfBlocks(map: BitBlockMap, bounds: AABB, x: number, y: number) {
         const box = bounds.contractAll(1E-7);
-        if (!map.intersectsBox(box)) return;
+        if (!map.intersectsBox(box)) return null;
         const dx = x % 8;
         const dy = y % 8;
 
         let pushDir: Direction | null = null;
         let dist = Infinity;
 
-        for (const direction of AllDirs) {
-            const g = direction.dir.x === 0 ? dy : dx;
-            const h = direction.direction === 1 ? 1 - g : g;
-            if (h < dist && !map.intersectsBox(box.offset(direction.dir.x * 8, direction.dir.y * 8))) {
+        for (const direction of Direction.ALL_DIRS) {
+            const g = direction.normal.x === 0 ? dy : dx;
+            const h = direction.dir === 1 ? 1 - g : g;
+            if (h < dist && !map.intersectsBox(box.offset(direction.normal.x * 8, direction.normal.y * 8))) {
                 dist = h;
                 pushDir = direction;
             }
         }
 
-        if (pushDir) {
-            return pushDir.dir;
-        }
+        return pushDir === null ? null : pushDir.normal;
     }
 
     public static raycast<T, C>(
@@ -119,7 +118,7 @@ export class BlockCollision {
         let cellY = Math.floor(oy);
 
         const mutPos = MutBlockPos.align(cellX, cellY);
-        let ctx = forHit(context, mutPos, 0, Directions.NORTH);
+        let ctx = forHit(context, mutPos, 0, Direction.DOWN);
         if (ctx !== null) return ctx;
 
         const dx = end.x - start.x;
@@ -142,12 +141,12 @@ export class BlockCollision {
                 cellX += stepX;
                 t = distX;
                 distX += deltaDistX;
-                dir = stepX > 0 ? Directions.WEST : Directions.EAST;
+                dir = stepX > 0 ? Direction.RIGHT : Direction.LEFT;
             } else {
                 cellY += stepY;
                 t = distY;
                 distY += deltaDistY;
-                dir = stepY > 0 ? Directions.NORTH : Directions.SOUTH;
+                dir = stepY > 0 ? Direction.DOWN : Direction.UP;
             }
 
             ctx = forHit(context, mutPos.setPixel(cellX, cellY), t, dir);
@@ -172,12 +171,12 @@ export class BlockCollision {
 
     public static raycastBlock(context: RaycastContext): BlockHitResult {
         return this.raycast(context.start, context.end, context, (innerContext, pos, t, dir) => {
-            const block = innerContext.map.get(pos.getX(), pos.getY());
+            const block = innerContext.map.get(pos.x, pos.y);
             if (block === 0) return null;
             return this.computeHitResult(context.start, context.end, pos, t, dir);
         }, innerContext => {
             const vec = innerContext.start.subVec(innerContext.end);
-            return BlockHitResult.missed(innerContext.end, getFacing(vec.x, vec.y), BlockPos.fromVec(innerContext.end));
+            return BlockHitResult.missed(innerContext.end, Direction.getFacing(vec.x, vec.y), BlockPos.fromVec(innerContext.end));
         });
     }
 }

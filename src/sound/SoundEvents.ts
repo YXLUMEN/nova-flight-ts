@@ -4,6 +4,8 @@ import {Identifier} from "../registry/Identifier.ts";
 import {SoundEvent} from "./SoundEvent.ts";
 
 export class SoundEvents {
+    public static readonly EMPTY = this.registerSound('empty');
+
     public static readonly UI_APPLY = this.registerSound("ui.apply");
     public static readonly UI_BUTTON_PRESSED = this.registerSound("ui.button_press");
     public static readonly UI_HOVER = this.registerSound("ui.hover");

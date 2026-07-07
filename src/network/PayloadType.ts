@@ -1,7 +1,7 @@
 import {Identifier} from "../registry/Identifier.ts";
 import type {Payload} from "./Payload.ts";
 
-// @ts-ignore
+// @ts-ignore 忽略未使用的泛型
 export interface PayloadType<T extends Payload> {
     readonly id: Identifier;
 }

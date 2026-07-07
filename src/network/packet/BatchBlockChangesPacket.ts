@@ -2,7 +2,7 @@ import type {Payload} from "../Payload.ts";
 import {payloadType, type PayloadType} from "../PayloadType.ts";
 import type {PacketCodec} from "../codec/PacketCodec.ts";
 import {PacketCodecs} from "../codec/PacketCodecs.ts";
-import type {BlockChange} from "../../world/map/BlockChange.ts";
+import type {BlockChange} from "../../world/section/BlockChange.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {ClientPlayHandler} from "../../client/network/handler/ClientPlayHandler.ts";

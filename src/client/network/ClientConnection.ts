@@ -1,7 +1,7 @@
 import type {Payload} from "../../network/Payload.ts";
 import type {PacketListener} from "../../network/handler/PacketListener.ts";
 import {ConnectionState} from "../../server/network/ConnectionState.ts";
-import {IllegalStateException} from "../../type/errors.ts";
+import {IllegalStateError} from "../../type/errors.ts";
 import type {Connection} from "../../network/Connection.ts";
 import type {ClientChannel} from "./ClientChannel.ts";
 import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
@@ -60,7 +60,7 @@ export class ClientConnection implements Connection {
 
     public setPacketListener(state: ConnectionState, listener: PacketListener): void {
         if (state !== listener.getPhase()) {
-            throw new IllegalStateException(`Listener protocol (${listener.getPhase()}) does not match requested one ${state}`);
+            throw new IllegalStateError(`Listener protocol (${listener.getPhase()}) does not match requested one ${state}`);
         }
         this.packetListener = listener;
         this.changeState(state);

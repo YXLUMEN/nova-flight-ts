@@ -1,3 +1,4 @@
+use std::net::Ipv4Addr;
 use log::error;
 use std::time::SystemTime;
 
@@ -71,4 +72,17 @@ pub fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
         .zip(b.iter())
         .fold(0u8, |acc, (x, y)| acc | (x ^ y))
         == 0
+}
+
+pub fn parse_ipv4(data: &[u8]) -> Option<Ipv4Addr> {
+    if data.len() < 4 {
+        return None;
+    }
+
+    let bytes: [u8; 4] = data[..4].try_into().ok()?;
+
+    let ip_num = u32::from_le_bytes(bytes);
+    let ip = Ipv4Addr::from(ip_num);
+
+    Some(ip)
 }

@@ -16,8 +16,8 @@ import type {Codec} from "../../serialization/Codec.ts";
 import type {NbtElement} from "../../nbt/element/NbtElement.ts";
 import {NbtEnd} from "../../nbt/element/NbtEnd.ts";
 import {NbtTypes} from "../../nbt/NbtTypes.ts";
-import {IllegalStateException} from "../../type/errors.ts";
-import {BlockPos} from "../../world/map/BlockPos.ts";
+import {IllegalStateError} from "../../type/errors.ts";
+import {BlockPos} from "../../world/section/pos/BlockPos.ts";
 import type {Comparable} from "../../type/Comparable.ts";
 import {PacketCodecImpl} from "./PacketCodecImpl.ts";
 
@@ -110,8 +110,8 @@ export class PacketCodecs {
 
     public static readonly BLOCK_POS: PacketCodec<BlockPos> = PacketCodecs.of(
         (writer, value) => {
-            writer.writeUint32(value.getX());
-            writer.writeUint32(value.getY());
+            writer.writeUint32(value.x);
+            writer.writeUint32(value.y);
         },
         reader => BlockPos.of(reader.readUint32(), reader.readUint32())
     );
@@ -131,7 +131,7 @@ export class PacketCodecs {
         return new PacketCodecImpl(
             (_: BinaryWriter, object: V): void => {
                 if (object.equals(value)) return;
-                throw new IllegalStateException(`Can't encode "${object}", expected "${value}"`);
+                throw new IllegalStateError(`Can't encode "${object}", expected "${value}"`);
             },
             (): V => value
         );
