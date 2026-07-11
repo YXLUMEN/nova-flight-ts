@@ -1,5 +1,6 @@
 import type {TrackedDataHandler} from "./TrackedDataHandler.ts";
 import type {Comparable} from "../../type/Comparable.ts";
+import {stringHashCode} from "../../utils/hash.ts";
 
 export class TrackedData<T> implements Comparable {
     public readonly id: number;
@@ -10,7 +11,7 @@ export class TrackedData<T> implements Comparable {
         this.dataType = dataType;
     }
 
-    public equals(other: Object): boolean {
+    public equal(other: Object): boolean {
         if (this === other) {
             return true;
         }
@@ -20,7 +21,7 @@ export class TrackedData<T> implements Comparable {
         return false;
     }
 
-    public hashCode(): string {
-        return `TrackedData:${this.dataType}:${this.id}}`;
+    public hashCode(): number {
+        return (stringHashCode(this.dataType.toString()) * 31 + this.id) | 0;
     }
 }

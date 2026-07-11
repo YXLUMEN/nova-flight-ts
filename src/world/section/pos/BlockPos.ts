@@ -43,7 +43,7 @@ export class BlockPos extends Vec2 {
         return `B[${this.x},${this.y}]`;
     }
 
-    public equals(other: Comparable): boolean {
+    public equal(other: Comparable): boolean {
         if (other === this) return true;
         if (!(other instanceof BlockPos)) {
             return false;

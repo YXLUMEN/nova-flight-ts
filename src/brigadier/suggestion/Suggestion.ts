@@ -41,7 +41,7 @@ export class Suggestion {
     }
 
     public expend(command: string, range: StringRange): Suggestion {
-        if (range.equals(this.range)) {
+        if (range.equal(this.range)) {
             return this;
         }
 

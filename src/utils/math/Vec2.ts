@@ -74,11 +74,11 @@ export class Vec2 implements Comparable {
         return `V[${this.x},${this.y}]`;
     }
 
-    public hashCode(): string {
-        return this.toString();
+    public hashCode(): number {
+        return (this.y * 31 + this.x) | 0;
     }
 
-    public equals(other: unknown): boolean {
+    public equal(other: unknown): boolean {
         if (this === other) return true;
         if (other instanceof Vec2) {
             return this.x === other.x && this.y === other.y;

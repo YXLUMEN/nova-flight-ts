@@ -1,5 +1,6 @@
 export interface Comparable {
-    equals(other: Comparable): boolean;
+    equal(other: unknown): boolean;
 
-    hashCode(): string;
+    // i32
+    hashCode(): number;
 }

@@ -161,15 +161,15 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     // 相等性与哈希
 
-    public equals(other: unknown): boolean {
+    public equal(other: unknown): boolean {
         if (other instanceof Entity) {
             return other.id === this.id
         }
         return false;
     }
 
-    public hashCode(): string {
-        return this.id.toString();
+    public hashCode(): number {
+        return this.id;
     }
 
     public is(entity: Entity): boolean {
