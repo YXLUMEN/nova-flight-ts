@@ -91,7 +91,7 @@ export class MagneticTorpedoEntity extends ProjectileEntity {
 
         const targetPos = this.hitEntity.positionRef;
         const targetYaw = this.hitEntity.getYaw();
-        const collisionPos = hitResult.pos.equals(targetPos) ? this.positionRef : hitResult.pos;
+        const collisionPos = hitResult.pos.equal(targetPos) ? this.positionRef : hitResult.pos;
 
         const offsetX = collisionPos.x - targetPos.x;
         const offsetY = collisionPos.y - targetPos.y;

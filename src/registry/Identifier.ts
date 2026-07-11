@@ -5,6 +5,7 @@ import {StringReader} from "../brigadier/StringReader.ts";
 import {Codecs} from "../serialization/Codecs.ts";
 import {NbtString} from "../nbt/element/NbtString.ts";
 import type {Comparable} from "../type/Comparable.ts";
+import {stringHashCode} from "../utils/hash.ts";
 
 export class Identifier implements Comparable {
     private static readonly validNamespace = /^[a-z0-9_.-]+$/;
@@ -20,13 +21,13 @@ export class Identifier implements Comparable {
         reader => this.splitOn(reader.readString())
     );
 
-    public static readonly ROOT: Identifier = Identifier.ofVanilla("root");
     public static readonly NAMESPACE_SEPARATOR: string = ':';
     public static readonly DEFAULT_NAMESPACE: string = 'nova-flight';
+    public static readonly ROOT: Identifier = Identifier.ofVanilla("root");
 
     private readonly namespace: string;
     private readonly path: string;
-    private readonly hashcode: string;
+    private readonly hashCache: number;
 
     public constructor(namespace: string, path: string) {
         if (!Identifier.isNamespaceValid(namespace)) throw new SyntaxError(`Invalid namespace: ${namespace}`);
@@ -34,7 +35,7 @@ export class Identifier implements Comparable {
 
         this.namespace = namespace;
         this.path = path;
-        this.hashcode = `${this.namespace}:${this.path}`;
+        this.hashCache = (stringHashCode(namespace) * 31 + stringHashCode(path)) | 0;
     }
 
     public static of(namespace: string, path: string): Identifier {
@@ -148,18 +149,17 @@ export class Identifier implements Comparable {
     }
 
     public toString(): string {
-        return this.hashcode;
+        return `${this.namespace}:${this.path}`;
     }
 
-    public equals(o: Object): boolean {
+    public equal(o: unknown): boolean {
         if (this === o) {
             return true;
-        } else {
-            return !(o instanceof Identifier) ? false : this.namespace === o.namespace && this.path === o.path;
         }
+        return !(o instanceof Identifier) ? false : this.namespace === o.namespace && this.path === o.path;
     }
 
-    public hashCode(): string {
-        return this.toString();
+    public hashCode(): number {
+        return this.hashCache;
     }
 }

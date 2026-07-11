@@ -2,7 +2,7 @@ import type {Comparable} from "../../type/Comparable.ts";
 
 export class HashSet<T extends Comparable> {
     public readonly [Symbol.toStringTag]: string = 'HashSet';
-    private readonly buckets: Map<string, T[]> = new Map();
+    private readonly buckets: Map<number, T[]> = new Map();
     private _size: number = 0;
 
     public add(value: T): this {
@@ -15,7 +15,7 @@ export class HashSet<T extends Comparable> {
             return this;
         }
 
-        const exists = bucket.some(entry => entry.equals(value));
+        const exists = bucket.some(entry => entry.equal(value));
         if (!exists) {
             bucket.push(value);
             this._size++;
@@ -33,7 +33,7 @@ export class HashSet<T extends Comparable> {
         const bucket = this.buckets.get(key);
         if (!bucket) return false;
 
-        const index = bucket.findIndex(existing => existing.equals(value));
+        const index = bucket.findIndex(existing => existing.equal(value));
         if (index === -1) return false;
 
         bucket.splice(index, 1);
@@ -55,7 +55,7 @@ export class HashSet<T extends Comparable> {
         const bucket = this.buckets.get(key);
         if (!bucket) return false;
 
-        return bucket.some(existing => existing.equals(value));
+        return bucket.some(existing => existing.equal(value));
     }
 
     public get size(): number {

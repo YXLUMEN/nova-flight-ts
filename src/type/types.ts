@@ -21,3 +21,5 @@ export type Supplier<T> = () => T;
 export type Predicate<T> = (val: T) => boolean;
 
 export type EntityDist<T extends Entity> = { entity: T, distSq: number };
+
+export type Pair<K, V> = { key: K, value: V };

@@ -1,4 +1,3 @@
-import {mainWindow} from "../../main.ts";
 import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
@@ -7,6 +6,7 @@ import type {KeyboardInput} from "./KeyboardInput.ts";
 import {cleanObj} from "../../utils/uit.ts";
 import {DataLoader} from "../../resource/DataLoader.ts";
 import type {ClientTechTree} from "../tech/ClientTechTree.ts";
+import {app} from "../../lib.ts";
 
 export class ClientInputEvents {
     public static registryAll(client: NovaFlightClient, input: KeyboardInput): void {
@@ -70,8 +70,8 @@ export class ClientInputEvents {
     private static onKeyDown(client: NovaFlightClient, event: KeyboardEvent): void {
         const code = event.code;
         if (code === 'F11') {
-            mainWindow.isFullscreen()
-                .then(isFull => mainWindow.setFullscreen(!isFull))
+            app.isFullscreen()
+                .then(isFull => app.setFullscreen(!isFull))
                 .catch(console.error);
             return;
         }
@@ -175,12 +175,12 @@ export class ClientInputEvents {
     }
 
     private static windowEvents(client: NovaFlightClient) {
-        mainWindow.listen('tauri://focus', () => {
+        app.listen('tauri://focus', () => {
             GlobalConfig.fps = GlobalConfig.lastFps;
             GlobalConfig.perFrame = 1000 / GlobalConfig.fps;
         }).catch(console.error);
 
-        mainWindow.listen('tauri://blur', () => {
+        app.listen('tauri://blur', () => {
             if (!client.clientCommandManager.isShow()) {
                 client.setPause(true);
             }
@@ -189,8 +189,8 @@ export class ClientInputEvents {
             GlobalConfig.perFrame = 1000 / GlobalConfig.fps;
         }).catch(console.error);
 
-        mainWindow.listen('tauri://resize', async () => {
-            client.worldRender.rendering = !await mainWindow.isMinimized();
+        app.listen('tauri://resize', async () => {
+            client.worldRender.rendering = !await app.isMinimized();
         }).catch(console.error);
 
         client.window.canvas.addEventListener('click', event => {

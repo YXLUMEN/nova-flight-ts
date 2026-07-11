@@ -5,8 +5,8 @@ export class StringRange implements Comparable {
     private readonly end: number;
 
     public constructor(start: number, end: number) {
-        this.start = start;
-        this.end = end;
+        this.start = Math.floor(start);
+        this.end = Math.floor(end);
     }
 
     public static at(pos: number) {
@@ -37,7 +37,7 @@ export class StringRange implements Comparable {
         return this.end - this.start;
     }
 
-    public equals(o: object): boolean {
+    public equal(o: unknown): boolean {
         if (this === o) return true;
 
         if (o instanceof StringRange) {
@@ -47,7 +47,11 @@ export class StringRange implements Comparable {
         return false;
     }
 
-    public hashCode(): string {
+    public hashCode(): number {
+        return (this.start * 31 + this.end) | 0;
+    }
+
+    public toString(): string {
         return `StringRange(${this.getStart()}${this.getEnd()}${this.getLength()})`;
     }
 }

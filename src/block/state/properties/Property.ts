@@ -1,11 +1,12 @@
 import {Optional} from "../../../utils/Optional.ts";
 import type {Comparable} from "../../../type/Comparable.ts";
+import {stringHashCode} from "../../../utils/hash.ts";
 
 
 export abstract class Property<T> implements Comparable {
     protected readonly name: string;
     protected readonly typeName: string;
-    private cacheHash: string | null = null;
+    private cacheHash: number | null = null;
 
     protected constructor(name: string, typeName?: string) {
         this.name = name;
@@ -28,7 +29,7 @@ export abstract class Property<T> implements Comparable {
         return `Property[name,${this.name};values,${this.getPossibleValues()}]`;
     }
 
-    public equals(other: unknown): boolean {
+    public equal(other: unknown): boolean {
         if (this === other) return true;
         if (other instanceof Property) {
             return this.name === other.name && this.typeName === other.typeName;
@@ -37,7 +38,7 @@ export abstract class Property<T> implements Comparable {
         return false;
     }
 
-    public hashCode(): string {
+    public hashCode(): number {
         if (this.cacheHash === null) {
             this.cacheHash = this.generateHashCode();
         }
@@ -45,7 +46,7 @@ export abstract class Property<T> implements Comparable {
         return this.cacheHash;
     }
 
-    public generateHashCode(): string {
-        return `Property[${this.typeName}:${this.name}]`;
+    public generateHashCode(): number {
+        return (stringHashCode(this.typeName) * 31 + stringHashCode(this.name)) | 0;
     }
 }

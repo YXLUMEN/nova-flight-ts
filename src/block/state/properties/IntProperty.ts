@@ -23,7 +23,7 @@ export class IntProperty extends Property<number> {
     }
 
     public static create(name: string, min: number, max: number): IntProperty {
-        return new IntProperty(name, min, max);
+        return new IntProperty(name, Math.floor(min), Math.floor(max));
     }
 
     public getPossibleValues(): number[] {
@@ -59,8 +59,8 @@ export class IntProperty extends Property<number> {
         return this.values[this.values.length - 1];
     }
 
-    public equals(other: unknown): boolean {
-        if (!super.equals(other)) {
+    public equal(other: unknown): boolean {
+        if (!super.equal(other)) {
             return false;
         }
 
@@ -71,7 +71,10 @@ export class IntProperty extends Property<number> {
         return false;
     }
 
-    public override generateHashCode(): string {
-        return `Property[${this.typeName}:${this.name}:${this.min}:${this.max}]`;
+    public override generateHashCode(): number {
+        let h = super.generateHashCode();
+        h = (h * 31 + this.min) | 0;
+        h = (h * 31 + this.max) | 0;
+        return h;
     }
 }
