@@ -29,6 +29,7 @@ export class CIWS extends BaseWeapon {
             stack.setAvailable(false);
             stack.set(DataComponents.COOLDOWN_COUNTDOWN, 30);
             this.onEndFire(stack, world, attacker);
+            world.playSound(null, SoundEvents.STEAM_RELEASE);
         }
     }
 

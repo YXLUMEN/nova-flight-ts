@@ -16,7 +16,7 @@ export class AttributeInstance {
     private dirty: boolean = true;
     private readonly onDirty: Consumer<AttributeInstance>;
 
-    private readonly modifierById = new HashMap<Identifier, AttributeModifier>();
+    private readonly modifierById = new HashMap<Identifier, AttributeModifier>(8);
 
     public constructor(type: RegistryEntry<Attribute>, onDirty: Consumer<AttributeInstance>) {
         this.attribute = type;

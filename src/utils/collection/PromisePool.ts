@@ -1,61 +1,48 @@
-import type {Supplier} from "../../type/types.ts";
-
 export class PromisePool {
     private readonly activeTasks = new Set();
 
-    private readonly maxConcurrentTasks: number = 8;
-    private readonly abortController: AbortController = new AbortController();
+    private readonly maxTasks: number = 8;
+    private readonly abortCtrl: AbortController = new AbortController();
 
     private defaultTimeout: number = 0;
-    private aborted: boolean = false;
 
-    public constructor(maxConcurrentTasks = 8) {
-        if (!Number.isInteger(maxConcurrentTasks) || maxConcurrentTasks < 1) {
+    public constructor(maxTasks: number = 8) {
+        if (!Number.isInteger(maxTasks) || maxTasks < 1) {
             throw new Error('maxConcurrentTasks must be a positive integer');
         }
-        this.maxConcurrentTasks = maxConcurrentTasks;
+        this.maxTasks = maxTasks;
     }
 
     /**
      * 提交一个任务到池中执行
-     * @param {Function} callable  任务函数
-     * @param  {...any} args 任务的其他参数
      * @returns {Promise} 包装后的任务Promise
-     * @throws {TypeError} 如果callable不是函数或池已被abort
+     * @throws {Error} 如果池已被abort
      */
-    public async submit(callable: Function, ...args: any[]): Promise<any> {
-        if (this.aborted) {
+    public async submit<T, U extends unknown[]>(
+        callback: (...args: U) => T | PromiseLike<T>,
+        ...args: U
+    ): Promise<Awaited<T>> {
+        if (this.abortCtrl.signal.aborted) {
             throw new Error("Pool aborted");
         }
-        if (typeof callable !== 'function') {
-            throw new TypeError('Callable must be a function');
-        }
 
-        const task: Supplier<any> = () => callable(...args, this.abortController.signal);
-
-        while (this.activeTasks.size >= this.maxConcurrentTasks) {
+        while (this.activeTasks.size >= this.maxTasks) {
             await Promise.race(this.activeTasks);
-            if (this.aborted) {
+            if (this.abortCtrl.signal.aborted) {
                 throw new Error("Pool aborted");
             }
         }
 
-        return this.executeTask(task);
+        return this.executeTask(callback, ...args);
     }
 
-    /**
-     * 内部方法，执行实际的任务并做timeout/abort包装
-     * @param {Function} task - 已包装好的任务函数
-     * @returns {Promise} 包装后的任务 Promise
-     * @private
-     */
-    private executeTask<T>(task: Supplier<T>): Promise<T> {
-        // Promise.resolve().then(task) 保证 task 的返回值(无论是否为 Promise)都被转化为 Promise
-        const rawPromise = Promise.resolve().then(task);
-        // 使用包装函数将 rawPromise 与 timeout 和 abort 机制结合
-        const wrappedPromise = this.withTimeoutAndAbort(rawPromise);
-        // 当任务结束时，从活跃任务集合删除
-        wrappedPromise.finally(() => this.activeTasks.delete(wrappedPromise));
+    private executeTask<T, U extends unknown[]>(
+        callback: (...args: U) => T | PromiseLike<T>,
+        ...args: U
+    ): Promise<Awaited<T>> {
+        const rawPromise = Promise.try(callback, ...args);
+        const wrappedPromise = this.withTimeoutAndAbort(rawPromise)
+            .finally(() => this.activeTasks.delete(wrappedPromise));
         this.activeTasks.add(wrappedPromise);
         return wrappedPromise;
     }
@@ -64,8 +51,7 @@ export class PromisePool {
      * 包装给定的 Promise，使之支持全局 abort 与默认 timeout(通过 race 的方式)
      */
     private async withTimeoutAndAbort<T>(task: Promise<T>): Promise<T> {
-        const signal = this.abortController.signal;
-
+        const signal = this.abortCtrl.signal;
         if (signal.aborted) {
             throw new Error('Task aborted');
         }
@@ -115,10 +101,8 @@ export class PromisePool {
      * 注意: 对于已启动的异步操作,若内部不支持abort则不能真正取消其执行.
      */
     public abort() {
-        if (!this.aborted) {
-            this.aborted = true;
-            this.abortController.abort();
-        }
+        if (this.abortCtrl.signal.aborted) return;
+        this.abortCtrl.abort();
     }
 
     /**
@@ -133,7 +117,11 @@ export class PromisePool {
      * 获取并发上限
      * @returns {number}
      */
-    public getMaxConcurrentTasks(): number {
-        return this.maxConcurrentTasks;
+    public getMaxTasks(): number {
+        return this.maxTasks;
+    }
+
+    public signal() {
+        return this.abortCtrl.signal;
     }
 }

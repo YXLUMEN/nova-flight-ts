@@ -50,25 +50,8 @@ export class LangResource implements ResourceModule {
 
         const pool = new PromisePool();
         const loadTasks: Promise<[string, unknown][]>[] = [];
-
         for (const file of files) {
-            loadTasks.push(pool.submit(async () => {
-                const path = await resolve(targetRoot, file.name);
-                const raw = await readTextFile(path);
-                const json = JSON.parse(raw);
-
-                const entries = Object.entries(json);
-                const resolves: [string, unknown][] = [];
-
-                const i = file.name.lastIndexOf('.');
-                const name = i < 0 ? file.name : file.name.substring(0, i);
-
-                for (const entry of entries) {
-                    entry[0] = `${name}.${entry[0]}`;
-                    resolves.push(entry);
-                }
-                return resolves;
-            }));
+            loadTasks.push(pool.submit(this.loadFile, targetRoot, file));
         }
 
         const results = await Promise.allSettled(loadTasks);
@@ -94,6 +77,24 @@ export class LangResource implements ResourceModule {
                 this.data.set(key, value);
             }
         }
+    }
+
+    private async loadFile(root: string, file: DirEntry) {
+        const path = await resolve(root, file.name);
+        const raw = await readTextFile(path);
+        const json = JSON.parse(raw);
+
+        const entries = Object.entries(json);
+        const resolves: [string, unknown][] = [];
+
+        const i = file.name.lastIndexOf('.');
+        const name = i < 0 ? file.name : file.name.substring(0, i);
+
+        for (const entry of entries) {
+            entry[0] = `${name}.${entry[0]}`;
+            resolves.push(entry);
+        }
+        return resolves;
     }
 
     public unload(): void {

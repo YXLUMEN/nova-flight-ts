@@ -61,7 +61,8 @@ export class ClientInputEvents {
             },
 
             onWheel: (event) => {
-                if (client.world && !client.world.isTechTreeHidden()) return;
+                if (!client.world) return;
+                if (client.clientCommandManager.isShow() || !client.world.isTechTreeHidden()) return;
                 client.player?.switchWeapon(event.deltaY > 0 ? 1 : -1);
             }
         }));

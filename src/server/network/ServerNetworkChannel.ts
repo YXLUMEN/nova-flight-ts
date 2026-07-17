@@ -131,7 +131,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
         buf.set(this.secretKey, 1);
 
         this.sendRaw(buf);
-        console.log("Server registered");
+        console.log('Server registered');
 
         this.secretKey.fill(0);
         this.secretKey = null;

@@ -40,8 +40,8 @@ export class ModelResource implements ResourceModule {
         });
 
         const pool = new PromisePool(16);
-        const tasks: Promise<any>[] = [];
-        const job = async (key: string, abs: string) => {
+        const tasks: Promise<NormalizedJson>[] = [];
+        const job = async (key: string, abs: string): Promise<NormalizedJson> => {
             const text = await readTextFile(abs);
             const json = JSON.parse(text);
             json.normalizeKey = key;
@@ -169,4 +169,8 @@ export class ModelResource implements ResourceModule {
         if (!key) return this.defaultModel!;
         return this.models.get(key) ?? this.defaultModel!;
     }
+}
+
+interface NormalizedJson extends Record<string, unknown> {
+    normalizeKey: string;
 }

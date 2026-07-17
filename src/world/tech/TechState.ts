@@ -30,8 +30,7 @@ export class TechState {
 
         let x: number, y: number;
         if (isServer) {
-            x = 0;
-            y = 0;
+            x = y = 0;
         } else {
             const ele = document.getElementById('tech-shell')!;
             ele.classList.remove('hidden');
