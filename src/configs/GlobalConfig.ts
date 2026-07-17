@@ -2,8 +2,6 @@ import {config, status} from "../utils/uit.ts";
 
 // @ts-expect-error
 export const isDev = import.meta.env.MODE === 'development';
-
-// @ts-expect-error
 export const isServer = isDev ? typeof window === 'undefined' : __IS_SERVER__;
 
 export const DEFAULT_CONFIG = config({

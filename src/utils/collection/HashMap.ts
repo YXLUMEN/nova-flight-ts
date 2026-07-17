@@ -4,7 +4,7 @@ import type {Return} from "../../type/types.ts";
 export class HashMap<K extends Comparable, V> implements Map<K, V> {
     public readonly [Symbol.toStringTag]: string = 'HashMap';
 
-    private readonly loadFactor = 0.75;
+    private readonly loadFactor = 0.8;
     private readonly initCapacity: number;
 
     private buckets: Array<BucketEntry<K, V>[] | null>;

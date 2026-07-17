@@ -30,7 +30,7 @@ export class RelayHandshake {
             clearTimeout(timeout);
             reject(reason);
         };
-        timeout = setTimeout(() => connectFail(`[${this.side}] Connected timeout`), 6000);
+        timeout = setTimeout(connectFail, 6000, `[${this.side}] Connected timeout`);
 
         console.log(`A ${this.side} side connecting start at ${ISOTime()}`);
 

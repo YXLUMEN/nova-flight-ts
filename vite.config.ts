@@ -1,4 +1,6 @@
-import {defineConfig} from 'vite';
+import {defineConfig} from "vite";
+import {injectPlugin} from "./vite-plugin/InjectPlugin";
+import InlineEnum from 'unplugin-inline-enum/vite';
 
 // @ts-expect-error process is a Node.js global
 const host = process.env.TAURI_DEV_HOST;
@@ -32,22 +34,24 @@ export default defineConfig({
             },
         },
     },
-    plugins: [serverFlagPlugin(false)],
+    define: {},
+    plugins: [
+        injectPlugin({
+            defines: {
+                __IS_SERVER__: false
+            }
+        }),
+        InlineEnum()
+    ],
     worker: {
         format: 'es',
-        plugins: () => [serverFlagPlugin(true)]
+        plugins: () => [
+            injectPlugin({
+                defines: {
+                    __IS_SERVER__: true
+                }
+            }),
+            InlineEnum()
+        ]
     }
 });
-
-function serverFlagPlugin(value: boolean) {
-    return {
-        name: 'server-flag',
-        enforce: 'pre',
-        transform(code: string) {
-            return {
-                code: code.replace(/__IS_SERVER__/g, value ? 'true' : 'false'),
-                map: null,
-            }
-        },
-    }
-}

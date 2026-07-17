@@ -29,12 +29,8 @@ export class AnsiParser {
             }
 
             const code = match[1];
-            if (code === '0') {
-                currentColor = null; // 重置
-            } else {
-                currentColor = this.COLOR_MAP[code] || null;
-            }
-
+            // 重置
+            currentColor = code === '0' ? null : this.COLOR_MAP[code] ?? null;
             lastIndex = this.REGEX.lastIndex;
         }
 
