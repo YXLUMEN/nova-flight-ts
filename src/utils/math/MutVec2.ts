@@ -1,8 +1,8 @@
 import {Vec2} from "./Vec2.ts";
 
 export class MutVec2 extends Vec2 {
-    public x: number;
-    public y: number;
+    declare public x: number;
+    declare public y: number;
 
     public constructor(x: number, y: number) {
         super(x, y);

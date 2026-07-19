@@ -9,6 +9,7 @@ export class CodecImpl<A, T extends NbtElement> implements Codec<A> {
     public constructor(encoder: Return<A, T>, decoder: Return<T, A | null>) {
         this.encoder = encoder;
         this.decoder = decoder;
+        Object.freeze(this);
     }
 
     public encode(value: any): NbtElement {

@@ -14,17 +14,15 @@ export class RegistryEntry<T> {
     public getRegistryKey(): RegistryKey<T> {
         if (this.registryKey === null) {
             throw new Error("Registry key was not found");
-        } else {
-            return this.registryKey;
         }
+        return this.registryKey;
     }
 
     public getValue(): T {
         if (this.value === null) {
             throw new Error("Value was not found");
-        } else {
-            return this.value;
         }
+        return this.value;
     }
 
     public isIn(tag: TagKey<T>): boolean {
@@ -38,9 +36,8 @@ export class RegistryEntry<T> {
     public setRegistryKey(registryKey: RegistryKey<T>): void {
         if (this.registryKey !== null && this.registryKey !== registryKey) {
             throw new Error(`Can't change holder key: existing=${this.registryKey} new=${registryKey}`);
-        } else {
-            this.registryKey = registryKey;
         }
+        this.registryKey = registryKey;
     }
 
     public matches(entry: RegistryEntry<T>) {

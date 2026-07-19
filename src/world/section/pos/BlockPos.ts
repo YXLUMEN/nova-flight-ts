@@ -1,5 +1,4 @@
 import type {Direction} from "../../../utils/math/Direction.ts";
-import type {Comparable} from "../../../type/Comparable.ts";
 import {Vec2} from "../../../utils/math/Vec2.ts";
 
 export class BlockPos extends Vec2 {
@@ -41,13 +40,5 @@ export class BlockPos extends Vec2 {
 
     public toString(): string {
         return `B[${this.x},${this.y}]`;
-    }
-
-    public equal(other: Comparable): boolean {
-        if (other === this) return true;
-        if (!(other instanceof BlockPos)) {
-            return false;
-        }
-        return other.x === this.x && other.y === this.y;
     }
 }

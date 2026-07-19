@@ -3,10 +3,10 @@ import {randInt, randomFromIterator} from "../../utils/math/math.ts";
 import {MobBlueprint} from "./MobBlueprint.ts";
 import {World} from "../World.ts";
 import type {MobEntity} from "../../entity/mob/MobEntity.ts";
-import {AABB} from "../../utils/math/AABB.ts";
 import {SpawnMarkerEntity} from "../../entity/SpawnMarkerEntity.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {ExplosionEntity} from "../../entity/ExplosionEntity.ts";
+import {MutAABB} from "../../utils/math/MutAABB.ts";
 
 export function spawnAtTop(bp: MobBlueprint): MobFactory {
     return (ctx) => {
@@ -114,7 +114,7 @@ export function spawnInMap(bp: MobBlueprint, margin: number = 24, safeRadius: nu
     return (ctx) => {
         const blockMap = ctx.world.getMap();
         const players = ctx.world.getPlayers();
-        const candidateAABB = new AABB(0, 0);
+        const candidateAABB = new MutAABB(0, 0);
         let x = 0, y = 0;
         for (let tries = 0; tries < 100; tries++) {
             const bx = randInt(blockMinX, blockMaxX);
