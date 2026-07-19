@@ -162,8 +162,9 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     // 相等性与哈希
 
     public equal(other: unknown): boolean {
+        if (other === this) return true;
         if (other instanceof Entity) {
-            return other.id === this.id
+            return other.id === this.id;
         }
         return false;
     }
@@ -688,7 +689,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     // 由索引控制
-    public searchGen = 0;
+    public searchGen: number = 0;
 
     // 渲染与可见性
 

@@ -41,7 +41,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "msi",
+    "targets": ["msi"],
     "resources": {
       "../resources/": "resources/"
     },

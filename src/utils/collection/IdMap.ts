@@ -1,11 +1,9 @@
 import type {IndexedIterable} from "./IndexedIterable.ts";
 
 export class IdMap<T> implements IndexedIterable<T> {
-
-    private nextId: number = 0;
-
     private readonly tToId: Map<T, number> = new Map();
     private readonly idToT: Array<T | null> = [];
+    private nextId: number = 0;
 
     public addMapping(thing: T, id: number): void {
         this.tToId.set(thing, id);

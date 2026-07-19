@@ -72,7 +72,7 @@ export class Registry<T> implements IndexedIterable<T> {
      * */
     public getId(value: T): Identifier | null {
         const entry = this.valueToEntry.get(value);
-        return entry !== undefined ? entry.getRegistryKey().getValue() : null
+        return entry !== undefined ? entry.getRegistryKey().getValue() : null;
     }
 
     /**

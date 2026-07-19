@@ -1,8 +1,8 @@
 import {SectionPos} from "./SectionPos.ts";
 
 export class MutSectionPos extends SectionPos {
-    public x: number;
-    public y: number;
+    declare public x: number;
+    declare public y: number;
 
     public constructor(x: number, y: number) {
         super(Math.floor(x), Math.floor(y));

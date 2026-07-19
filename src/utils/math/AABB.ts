@@ -2,8 +2,9 @@ import type {BlockPos} from "../../world/section/pos/BlockPos.ts";
 import {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 import type {Vec2} from "./Vec2.ts";
 import {Direction} from "./Direction.ts";
+import type {Comparable} from "../../type/Comparable.ts";
 
-export class AABB {
+export class AABB implements Comparable {
     public readonly minX: number;
     public readonly minY: number;
     public readonly maxX: number;
@@ -29,22 +30,32 @@ export class AABB {
         );
     }
 
+    public hashCode(): number {
+        let h = this.minX | 0;
+        h = (31 * h + this.minY) | 0;
+        h = (31 * h + this.maxX) | 0;
+        h = (31 * h + this.maxY) | 0;
+        return h;
+    }
+
+    public equal(other: unknown): boolean {
+        if (other === this) return true;
+        if (other instanceof AABB) {
+            return this.minX === other.minX &&
+                this.minY === other.minY &&
+                this.maxX === other.maxX &&
+                this.maxY === other.maxY;
+        }
+
+        return false;
+    }
+
     public getWidth(): number {
         return this.maxX - this.minX;
     }
 
     public getHeight(): number {
         return this.maxY - this.minY;
-    }
-
-    /**
-     * @danger 非必要不使用
-     * */
-    public set(x1: number, y1: number, x2 = x1, y2 = y1): void {
-        (this.minX as any) = Math.min(x1, x2);
-        (this.minY as any) = Math.min(y1, y2);
-        (this.maxX as any) = Math.max(x1, x2);
-        (this.maxY as any) = Math.max(y1, y2);
     }
 
     public getAverageSideLength(): number {
@@ -202,6 +213,7 @@ export class AABB {
         }
 
         if (deltaY > 1.0E-7) {
+            // noinspection JSSuspiciousNameCombination
             approachDirection = this.traceSide(
                 bestT,
                 approachDirection,
@@ -215,6 +227,7 @@ export class AABB {
                 intersectingVector.x
             );
         } else if (deltaY < -1.0E-7) {
+            // noinspection JSSuspiciousNameCombination
             approachDirection = this.traceSide(
                 bestT,
                 approachDirection,

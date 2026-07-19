@@ -280,7 +280,7 @@ export class ClientCommandManager extends CommandManager {
         );
         if (result.isErr()) return;
 
-        const array = result.unwrap().commands;
+        const array = result.unwrap()?.commands;
         if (Array.isArray(array)) {
             this.usedCommands.length = 0;
             this.usedCommands.push(...array);

@@ -10,6 +10,7 @@ export class PacketCodecImpl<T> implements PacketCodec<T> {
     public constructor(encoder: BiConsumer<BinaryWriter, T>, decoder: Return<BinaryReader, T>) {
         this.encoder = encoder;
         this.decoder = decoder;
+        Object.freeze(this);
     }
 
     public encode(writer: BinaryWriter, value: T): void {

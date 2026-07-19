@@ -284,13 +284,17 @@ export class ClientSavesManager {
         }
 
         const result = await ServerStorage.db.get<SaveMeta>('save_meta', origin);
-        const optional = result.ok();
-        if (optional.isEmpty()) {
+        if (result.isErr()) {
+            console.error(result.unwrapErr());
+            await message('读取时出现错误', {kind: 'error'});
+        }
+
+        const meta = result.unwrap();
+        if (!meta) {
             await message('未能读取到原始存档');
             return;
         }
 
-        const meta = optional.get();
         meta.display_name = name;
         const isSuccess = await ServerStorage.db.update('save_meta', meta);
         if (isSuccess.isErr()) {

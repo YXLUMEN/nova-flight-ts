@@ -253,12 +253,14 @@ export class ServerStorage {
         if (!saveName) return Result.err(new NoResultsError());
 
         const uuid: UUID = player.getProfile().clientId;
-
         const result = await this.db.get<PlayerData>('player_data', [saveName, uuid]);
         if (result.isErr()) {
             return Result.err(result.unwrapErr());
         }
-        return this.playerNbt(result.unwrap())
+
+        const data = result.unwrap();
+        if (!data) return Result.err(new NoResultsError());
+        return this.playerNbt(data);
     }
 
     private static playerNbt(player: PlayerData): Result<NbtCompound, Error> {
