@@ -1,6 +1,5 @@
 use std::net::Ipv4Addr;
-use log::error;
-use std::time::SystemTime;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn is_nil_uuid(uuid: &[u8]) -> bool {
     uuid.iter().all(|&b| b == 0)
@@ -52,15 +51,11 @@ pub fn read_var_uint(mut buf: &[u8]) -> Result<(u32, &[u8]), &'static str> {
     Ok((result, buf))
 }
 
-pub fn get_time() -> u128 {
-    let time = match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
-        Ok(d) => d.as_millis(),
-        Err(e) => {
-            error!("Error when getting system time: {}", e);
-            0
-        }
-    };
-    time
+pub fn now_ms() -> u128 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis())
+        .unwrap_or(0)
 }
 
 /// 常量时间字节比较,防止时序侧信道攻击

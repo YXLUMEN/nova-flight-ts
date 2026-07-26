@@ -426,7 +426,7 @@ export class ClientTechTree implements TechTree {
             frag.append(conflictDiv);
         }
 
-        const name = tech.name.asString();
+        const name = tech.name.toString();
         const src = ModelManager.getTechModel(tech).getCovered();
         this.techTexture.classList.remove('hidden');
         this.techTexture.src = src;

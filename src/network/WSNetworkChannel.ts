@@ -1,7 +1,6 @@
 import type {Payload} from "./Payload.ts";
 import {type CodecEntry, CodecRegistry} from "./CodecRegistry.ts";
 import {BinaryWriter} from "../serialization/BinaryWriter.ts";
-import type {BiConsumer} from "../type/types.ts";
 import type {Channel} from "./Channel.ts";
 import {sleep} from "../utils/uit.ts";
 import {PacketTooLargeError} from "../type/errors.ts";
@@ -82,7 +81,11 @@ export abstract class WSNetworkChannel implements Channel {
         this.clearHandlers();
     }
 
-    public async sniff(retryDelay = 2000, maxRetries = 5, onTry?: BiConsumer<number, number>): Promise<boolean> {
+    public async sniff(
+        retryDelay: number = 2000,
+        maxRetries: number = 5,
+        onTry?: (attempts: number, maxRetries: number) => boolean
+    ): Promise<boolean> {
         const addr = `ws://${this.address}`;
 
         for (let attempts = 0; attempts < maxRetries; attempts++) {
@@ -103,7 +106,9 @@ export abstract class WSNetworkChannel implements Channel {
 
             if (await ok) return true;
 
-            onTry?.(attempts, maxRetries);
+            if (onTry?.(attempts, maxRetries)) {
+                break;
+            }
             if (attempts < maxRetries - 1) {
                 await sleep(retryDelay);
             }

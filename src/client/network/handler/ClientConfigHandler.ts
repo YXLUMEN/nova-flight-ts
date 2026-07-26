@@ -8,7 +8,7 @@ import type {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {ClientConnection} from "../ClientConnection.ts";
 
 export class ClientConfigHandler extends ClientCommonHandler {
-    private maxSniffTimes = 32;
+    private maxSniffTimes = 16;
     private sniffInterval: number | undefined = undefined;
 
     public constructor(client: NovaFlightClient, connection: ClientConnection) {

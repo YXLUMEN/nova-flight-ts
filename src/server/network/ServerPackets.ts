@@ -54,6 +54,7 @@ import {ScreenShakeS2CPacket} from "../../network/packet/s2c/ScreenShakeS2CPacke
 import type {PayloadType} from "../../network/PayloadType.ts";
 import {BatchBufferPacket} from "../../network/packet/BatchBufferPacket.ts";
 import {NotGiveUpS2CPacket} from "../../network/packet/s2c/NotGiveUpS2CPacket.ts";
+import {TickChangeS2CPacket} from "../../network/packet/s2c/TickChangeS2CPacket.ts";
 
 export class ServerPackets {
     /**
@@ -113,6 +114,7 @@ export class ServerPackets {
         this.register(ScreenShakeS2CPacket.ID, ScreenShakeS2CPacket.CODEC);
         this.register(BatchBufferPacket.ID, BatchBufferPacket.CODEC);
         this.register(NotGiveUpS2CPacket.ID, NotGiveUpS2CPacket.CODEC);
+        this.register(TickChangeS2CPacket.ID, TickChangeS2CPacket.CODEC);
     }
 
     private static register<T extends Payload>(type: PayloadType<T>, codec: PacketCodec<T>): void {

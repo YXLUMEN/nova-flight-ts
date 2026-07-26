@@ -1,5 +1,6 @@
 import {clamp} from "./math/math.ts";
 import type {Identifier} from "../registry/Identifier.ts";
+import type {Predicate} from "../type/types.ts";
 
 export const DPR = Math.max(1, Math.min(2, globalThis.devicePixelRatio || 1));
 
@@ -39,25 +40,30 @@ export function debounce<Z, T extends (...args: any[]) => any>(
     }
 }
 
-export function deepFreeze<T>(obj: T, seen = new WeakSet()): Readonly<T> {
+export function deepFreeze<T>(
+    obj: T,
+    shouldSkip?: Predicate<object>,
+    seen = new WeakSet()
+): Readonly<T> {
     if (obj === null || typeof obj !== 'object') return obj;
+    if (shouldSkip?.(obj)) return obj;
     if (seen.has(obj)) return obj;
     seen.add(obj);
 
     if (obj instanceof Map) {
         for (const [k, v] of obj) {
-            deepFreeze(k as any, seen);
-            deepFreeze(v as any, seen);
+            deepFreeze(k as any, shouldSkip, seen);
+            deepFreeze(v as any, shouldSkip, seen);
         }
     } else if (obj instanceof Set) {
         for (const v of obj) {
-            deepFreeze(v as any, seen);
+            deepFreeze(v as any, shouldSkip, seen);
         }
     } else {
         for (const key of Reflect.ownKeys(obj)) {
             const value = (obj as any)[key];
             if (typeof value === 'object' && value !== null) {
-                deepFreeze(value, seen);
+                deepFreeze(value, shouldSkip, seen);
             }
         }
     }

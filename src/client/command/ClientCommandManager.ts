@@ -28,6 +28,7 @@ import {ClientFixCommand} from "../../command/ClientFixCommand.ts";
 import {Suggestions} from "../../brigadier/suggestion/Suggestions.ts";
 import {DamageCommand} from "../../command/DamageCommand.ts";
 import {SoundCommand} from "../../command/SoundCommand.ts";
+import {TickCommand} from "../../command/TickCommand.ts";
 
 export class ClientCommandManager extends CommandManager {
     private static readonly COMMAND_HISTORY_ID = 'history';
@@ -353,6 +354,7 @@ export class ClientCommandManager extends CommandManager {
         GiveCommand.registry(this.dispatcher);
         ScoreCommand.registry(this.dispatcher);
         DamageCommand.registry(this.dispatcher);
+        TickCommand.registry(this.dispatcher);
     }
 
     public executeWithPrefix(source: CommandSource, input: string): void {

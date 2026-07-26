@@ -3,44 +3,48 @@ import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import {Window} from "../Window.ts";
 import {UIButton} from "./UIButton.ts";
 import type {Consumer, Supplier} from "../../../type/types.ts";
+import {empty} from "../../../utils/uit.ts";
+import type {TranslatableText} from "../../../i18n/TranslatableText.ts";
 
 export class ConnectInfo implements IUi {
     private readonly ctx: CanvasRenderingContext2D;
     private readonly ctrl: AbortController;
-    private backBtn: UIButton | null = null;
 
     private width: number = 0;
     private height: number = 0;
     private running = false;
     private message = '';
-    private error: boolean = false;
+    private label = '';
 
+    private backBtn: UIButton | null = null;
     private readonly unsubResize: Supplier<void>;
-    private readonly onErr: Consumer<void> | null;
+    private onDestroy: Consumer<void>;
+
     private readonly promise: Promise<void>;
     private readonly resolve: Consumer<void>;
 
-    public constructor(client: NovaFlightClient, onErr?: Consumer<void>) {
+    public constructor(client: NovaFlightClient, onDestroy?: Consumer<void>) {
         this.ctx = client.window.ctx;
         this.ctrl = new AbortController();
 
         const {promise, resolve} = Promise.withResolvers<void>();
         this.promise = promise;
         this.resolve = resolve;
-        this.onErr = onErr ?? null;
+
+        this.onDestroy = onDestroy ?? empty;
+        this.unsubResize = client.window.onResize(this.setSize.bind(this));
+        this.loop = this.loop.bind(this);
+        this.destroy = this.destroy.bind(this);
 
         this.setSize(Window.VIEW_W, Window.VIEW_H);
-        this.setBtn();
 
-        this.unsubResize = client.window.onResize(this.setSize.bind(this));
-        window.addEventListener('click', (event) => {
-            if (this.error && this.backBtn && this.backBtn.hitTest(event.offsetX, event.offsetY)) {
+        window.addEventListener('click', event => {
+            if (this.backBtn && this.backBtn.hitTest(event.offsetX, event.offsetY)) {
                 this.backBtn.onClick();
             }
         }, {signal: this.ctrl.signal});
 
         this.running = true;
-        this.loop = this.loop.bind(this);
         this.loop();
     }
 
@@ -60,24 +64,29 @@ export class ConnectInfo implements IUi {
         ctx.textBaseline = 'middle';
 
         ctx.fillText(this.message, this.width / 2, this.height / 2);
-        if (this.error) {
+        if (this.backBtn) {
             ctx.font = '18px sans-serif';
-            this.backBtn!.render(ctx);
+            this.backBtn.render(ctx);
         }
         ctx.restore();
     }
 
-    public setMessage(message: string): void {
-        this.message = message;
+    public setMessage(message: string | TranslatableText): void {
+        this.message = message.toString();
     }
 
-    public async setError(message: string): Promise<void> {
-        if (this.error) return;
-        this.setMessage(message);
-        this.error = true;
+    public setLabel(label: string | TranslatableText | null): void {
+        if (label === null) {
+            this.label = '';
+            this.backBtn = null;
+            return;
+        }
+        this.label = label.toString();
+        this.setBtn();
+    }
 
-        await this.promise;
-        this.onErr?.();
+    public setOnDestroy(fn: Consumer<void>) {
+        this.onDestroy = fn;
     }
 
     public setSize(w: number, h: number): void {
@@ -94,14 +103,15 @@ export class ConnectInfo implements IUi {
         this.backBtn = null;
         this.unsubResize();
         this.resolve();
-    }
-
-    public isError() {
-        return this.error && this.running;
+        this.onDestroy();
     }
 
     public waitConfirm(): Promise<void> {
         return this.promise;
+    }
+
+    public isAbort() {
+        return this.ctrl.signal.aborted;
     }
 
     private setBtn(): void {
@@ -109,6 +119,6 @@ export class ConnectInfo implements IUi {
         const btnH = 40;
         const btnX = this.width / 2 - btnW / 2;
         const btnY = this.height / 2 + 80;
-        this.backBtn = new UIButton(btnX, btnY, btnW, btnH, '确认', this.destroy.bind(this));
+        this.backBtn = new UIButton(btnX, btnY, btnW, btnH, this.label, this.destroy);
     }
 }

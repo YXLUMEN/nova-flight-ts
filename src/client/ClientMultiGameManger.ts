@@ -27,7 +27,10 @@ export class ClientMultiGameManger {
         ClientStorage.db.getAll<ServerSelect>('server_addr_list')
             .then(result => result
                 .map(list => list.forEach(
-                    each => this.serverList.appendChild(ClientMultiGameManger.createServerSelect(each.addr, each.name))
+                    each => {
+                        const element = this.createServerSelect(each.addr, each.name);
+                        this.serverList.appendChild(element);
+                    }
                 ))
                 .mapErr(
                     err => console.error(err)
@@ -41,9 +44,10 @@ export class ClientMultiGameManger {
 
         const {promise, resolve} = Promise.withResolvers<string | null>();
         const ctrl = new AbortController();
+        const signal = ctrl.signal;
 
         this.resolveLast = (result: string | null) => {
-            if (ctrl.signal.aborted) return;
+            if (signal.aborted) return;
 
             resolve(result);
             ctrl.abort();
@@ -54,29 +58,37 @@ export class ClientMultiGameManger {
             const addr = this.addrInput.value.trim();
             if (addr.length === 0) return;
 
-            const select = ClientMultiGameManger.createServerSelect(addr, '服务器');
-            const id = select.id;
-            if (!document.getElementById(id)) {
+            const select = this.createServerSelect(addr, '服务器');
+            const id = select.getAttribute('data-id')!;
+
+            const exist = this.serverList.querySelector(`[data-id="${id}"]`);
+            if (!exist) {
                 const [_, addr, name] = id.split('-');
                 this.serverList.appendChild(select);
                 await ClientStorage.db.add('server_addr_list', {addr, name});
             }
 
             this.resolveLast?.(addr);
-        }, {signal: ctrl.signal});
+        }, {signal});
 
         this.cancelBtn.addEventListener('click', () => {
             this.cancelInput();
             this.hide();
-        }, {signal: ctrl.signal});
+        }, {signal});
 
         this.serverList.addEventListener('click', event => {
             const target = event.target;
             if (target instanceof HTMLElement && target.className === 'server-select') {
-                const [_, addr, _name] = target.id.split('-');
+                const id = target.getAttribute('data-id');
+                if (!id) {
+                    this.addrInput.value = '<empty>';
+                    return;
+                }
+
+                const [_, addr, _name] = id.split('-');
                 this.addrInput.value = addr;
             }
-        }, {signal: ctrl.signal});
+        }, {signal});
 
         this.serverList.addEventListener('auxclick', async event => {
             const target = event.target;
@@ -85,7 +97,7 @@ export class ClientMultiGameManger {
                 target.remove();
                 await ClientStorage.deleteServer(addr, name);
             }
-        }, {signal: ctrl.signal});
+        }, {signal});
 
         return promise;
     }
@@ -104,7 +116,7 @@ export class ClientMultiGameManger {
         this.multiGame.classList.add('hidden');
     }
 
-    private static createServerSelect(addr: string, name: string): HTMLDivElement {
+    private createServerSelect(addr: string, name: string): HTMLDivElement {
         const select = document.createElement('div');
         select.classList.add('server-select');
 
@@ -118,7 +130,7 @@ export class ClientMultiGameManger {
 
         select.appendChild(nameSpan);
         select.appendChild(addrSpan);
-        select.id = `server-${addr}-${name}`;
+        select.setAttribute('data-id', `server-${addr}-${name}`);
 
         return select;
     }

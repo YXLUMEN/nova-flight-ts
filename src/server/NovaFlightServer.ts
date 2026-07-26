@@ -150,12 +150,12 @@ export abstract class NovaFlightServer implements CommandOutput {
             Log.error(`[Server] At NovaFlightServer, Error while saving game: ${err}`);
         }
 
-        this.networkManager!.close();
-        this.world!.close();
+        this.networkManager?.close();
+        this.world?.close();
         this.networkChannel.disconnect();
 
         await this.onHalted();
-        this.stopWorld!();
+        this.stopWorld?.();
     }
 
     public setPause(bl: boolean): void {
@@ -185,6 +185,10 @@ export abstract class NovaFlightServer implements CommandOutput {
     public abstract isHost(profile: GameProfile): boolean;
 
     public abstract isHostUUID(uuid: UUID): boolean;
+
+    public getTickManager() {
+        return this.tickManager;
+    }
 
     public getCommandSource(): ServerCommandSource {
         return new ServerCommandSource(

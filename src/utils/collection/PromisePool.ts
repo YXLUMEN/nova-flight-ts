@@ -1,8 +1,9 @@
-export class PromisePool {
-    private readonly activeTasks = new Set();
+export class PromisePool<T = void> implements AsyncDisposable {
+    private readonly activeTasks = new Set<Promise<Awaited<T>>>();
+    private queue: Promise<Awaited<T>>[] | null = null;
 
     private readonly maxTasks: number = 8;
-    private readonly abortCtrl: AbortController = new AbortController();
+    private readonly ctrl: AbortController = new AbortController();
 
     private defaultTimeout: number = 0;
 
@@ -18,25 +19,46 @@ export class PromisePool {
      * @returns {Promise} 包装后的任务Promise
      * @throws {Error} 如果池已被abort
      */
-    public async submit<T, U extends unknown[]>(
+    public async submit<U extends unknown[]>(
         callback: (...args: U) => T | PromiseLike<T>,
         ...args: U
     ): Promise<Awaited<T>> {
-        if (this.abortCtrl.signal.aborted) {
+        if (this.ctrl.signal.aborted) {
             throw new Error("Pool aborted");
         }
 
         while (this.activeTasks.size >= this.maxTasks) {
+            this.shouldAbort();
             await Promise.race(this.activeTasks);
-            if (this.abortCtrl.signal.aborted) {
-                throw new Error("Pool aborted");
-            }
+            this.shouldAbort();
         }
 
         return this.executeTask(callback, ...args);
     }
 
-    private executeTask<T, U extends unknown[]>(
+    public spawn<U extends unknown[]>(
+        callback: (...args: U) => T | PromiseLike<T>,
+        ...args: U
+    ): Promise<T> {
+        const feature = this.submit(callback, ...args);
+        if (!this.queue) this.queue = [];
+        this.queue.push(feature);
+        return feature;
+    }
+
+    public join(): Promise<PromiseSettledResult<T>[]> {
+        return this.queue === null ? Promise.resolve([]) : Promise.allSettled(this.queue);
+    }
+
+    private shouldAbort() {
+        const signal = this.ctrl.signal;
+        if (!signal.aborted) return;
+        if (signal.reason === 'soft') return;
+
+        throw new Error("Pool aborted");
+    }
+
+    private executeTask<U extends unknown[]>(
         callback: (...args: U) => T | PromiseLike<T>,
         ...args: U
     ): Promise<Awaited<T>> {
@@ -51,7 +73,7 @@ export class PromisePool {
      * 包装给定的 Promise，使之支持全局 abort 与默认 timeout(通过 race 的方式)
      */
     private async withTimeoutAndAbort<T>(task: Promise<T>): Promise<T> {
-        const signal = this.abortCtrl.signal;
+        const signal = this.ctrl.signal;
         if (signal.aborted) {
             throw new Error('Task aborted');
         }
@@ -100,28 +122,33 @@ export class PromisePool {
      * 全局中断池中任务.后续提交将立即报错,且所有包装中的任务会因abort而reject.
      * 注意: 对于已启动的异步操作,若内部不支持abort则不能真正取消其执行.
      */
-    public abort() {
-        if (this.abortCtrl.signal.aborted) return;
-        this.abortCtrl.abort();
+    public abort(wait: boolean = true) {
+        if (this.ctrl.signal.aborted) return;
+        this.ctrl.abort(wait ? 'soft' : 'hard');
     }
 
-    /**
-     * 获取当前活跃的任务数
-     * @returns {number}
-     */
-    public get activeTaskCount(): number {
+    public taskCounts() {
+        return this.queue === null ? this.activeCount() : this.queue.length;
+    }
+
+    public activeCount(): number {
         return this.activeTasks.size;
     }
 
-    /**
-     * 获取并发上限
-     * @returns {number}
-     */
     public getMaxTasks(): number {
         return this.maxTasks;
     }
 
     public signal() {
-        return this.abortCtrl.signal;
+        return this.ctrl.signal;
+    }
+
+    public async [Symbol.asyncDispose](): Promise<void> {
+        if (this.queue) {
+            await Promise.allSettled(this.queue);
+            this.queue.length = 0;
+        }
+        await Promise.allSettled(this.activeTasks);
+        this.activeTasks.clear();
     }
 }

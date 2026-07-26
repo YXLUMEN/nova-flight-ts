@@ -5,7 +5,8 @@ import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
 import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
-import type {Vec2} from "../../utils/math/Vec2.ts";
+import {Vec2} from "../../utils/math/Vec2.ts";
+import {NovaFlightClient} from "../NovaFlightClient.ts";
 
 export class AutoAim {
     public static readonly FIRE_THRESHOLD = Math.PI / 225;
@@ -41,6 +42,13 @@ export class AutoAim {
         const yawDiff = Math.abs(wrapRadians(targetYaw - currentYaw));
 
         GlobalConfig.autoShoot = yawDiff <= AutoAim.FIRE_THRESHOLD;
+    }
+
+    public render() {
+        if (!this.currentTarget) return;
+        const view = NovaFlightClient.getInstance().window.camera.viewOffset;
+        const pos = this.currentTarget.positionRef;
+        this.owner.input.getScreenPointer().set(pos.x - view.x, pos.y - view.y);
     }
 
     public getTarget(): MobEntity | null {

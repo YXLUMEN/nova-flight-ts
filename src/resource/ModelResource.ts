@@ -39,8 +39,7 @@ export class ModelResource implements ResourceModule {
             modelAbsPaths.set(key, abs);
         });
 
-        const pool = new PromisePool(16);
-        const tasks: Promise<NormalizedJson>[] = [];
+        const pool = new PromisePool<NormalizedJson>(16);
         const job = async (key: string, abs: string): Promise<NormalizedJson> => {
             const text = await readTextFile(abs);
             const json = JSON.parse(text);
@@ -49,11 +48,11 @@ export class ModelResource implements ResourceModule {
         };
 
         for (const [key, abs] of modelAbsPaths) {
-            tasks.push(pool.submit(job, key, abs));
+            void pool.spawn(job, key, abs);
         }
 
-        const parsedModels = await Promise.allSettled(tasks);
-        const modelJson = new Map<string, any>();
+        const parsedModels = await pool.join();
+        const modelJson = new Map<string, NormalizedJson>();
 
         for (const task of parsedModels) {
             if (task.status === 'rejected') {
@@ -73,11 +72,11 @@ export class ModelResource implements ResourceModule {
         }
     }
 
-    private resolveModel(modelJsons: Map<string, any>, key: string): Model | null {
+    private resolveModel(modelJsons: Map<string, NormalizedJson>, key: string): Model | null {
         let finalTextures: Record<string, string> | null = null;
         let finalDisplay: DisplayConfig | null = null;
 
-        let currentKey = key;
+        let currentKey: string | null = key;
         const visited = new Set<string>();
 
         while (currentKey) {
@@ -95,15 +94,17 @@ export class ModelResource implements ResourceModule {
                 break;
             }
 
-            if (currentJson.textures && typeof currentJson.textures === 'object') {
-                if (!finalTextures) finalTextures = currentJson.textures;
+            if (typeof currentJson.textures === 'object') {
+                if (!finalTextures) finalTextures = this.parseTextures(currentJson.textures);
             }
 
             if (currentJson.display) {
                 if (!finalDisplay) finalDisplay = this.parseDisplayConfig(currentJson.display);
             }
 
-            currentKey = currentJson.parent;
+            if (typeof currentJson.parent === 'string') {
+                currentKey = currentJson.parent;
+            } else currentKey = null;
         }
 
         if (!finalTextures) return null;
@@ -121,26 +122,27 @@ export class ModelResource implements ResourceModule {
         return null;
     }
 
-    private parseDisplayConfig(display: any): DisplayConfig | null {
-        if (!display || typeof display !== 'object') return null;
+    private parseDisplayConfig(json: unknown): DisplayConfig | null {
+        if (!json || typeof json !== 'object') return null;
+        const record = json as Record<string, unknown>;
 
         const config: DisplayConfig = {};
-        if (typeof display.rotation === 'number' && isFinite(display.rotation)) {
-            config.rotation = wrapRadians(display.rotation);
+        if (typeof record.rotation === 'number' && isFinite(record.rotation)) {
+            config.rotation = wrapRadians(record.rotation);
         }
 
-        if (Array.isArray(display.scale) && display.scale.length === 2) {
-            let x = Number(display.scale[0]);
-            let y = Number(display.scale[1]);
+        if (Array.isArray(record.scale) && record.scale.length === 2) {
+            let x = Number(record.scale[0]);
+            let y = Number(record.scale[1]);
             x = isFinite(x) ? x : 1;
             y = isFinite(y) ? y : 1;
 
             config.scale = [x, y];
         }
 
-        if (Array.isArray(display.offset) && display.offset.length === 2) {
-            let x = Number(display.offset[0]);
-            let y = Number(display.offset[1]);
+        if (Array.isArray(record.offset) && record.offset.length === 2) {
+            let x = Number(record.offset[0]);
+            let y = Number(record.offset[1]);
             x = isFinite(x) ? x : 0;
             y = isFinite(y) ? y : 0;
 
@@ -148,6 +150,17 @@ export class ModelResource implements ResourceModule {
         }
 
         return config;
+    }
+
+    private parseTextures(textures: object | null): Record<string, string> | null {
+        if (textures === null) return null;
+
+        const entries = Object.values(textures);
+        if (entries.every(value => typeof value === 'string')) {
+            return textures as Record<string, string>;
+        }
+
+        return null;
     }
 
     public reload(): Promise<void> {

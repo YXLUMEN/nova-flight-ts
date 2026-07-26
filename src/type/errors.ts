@@ -27,3 +27,6 @@ export class StatusError extends Error {
 
 export class NbtSizeValidationException extends Error {
 }
+
+export class ConnectionAbort extends Error {
+}

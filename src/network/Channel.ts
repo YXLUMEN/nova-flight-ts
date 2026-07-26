@@ -1,4 +1,3 @@
-import type {BiConsumer} from "../type/types.ts";
 import type {Payload} from "./Payload.ts";
 
 export interface Channel {
@@ -15,7 +14,7 @@ export interface Channel {
     sniff(
         retryDelay?: number,
         maxRetries?: number,
-        tryCallback?: BiConsumer<number, number>,
+        tryCallback?: (attempts: number, maxRetries: number) => boolean,
     ): Promise<boolean>;
 
     clearHandlers(): void;

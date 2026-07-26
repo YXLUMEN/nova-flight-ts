@@ -16,7 +16,7 @@ export class TipResource implements ResourceModule {
     public async load(): Promise<void> {
         try {
             const jsonPath = await resolveResource(`resources/nova-flight/tips.json`);
-            const json = JSON.parse(await readTextFile(jsonPath));
+            const json: unknown = JSON.parse(await readTextFile(jsonPath));
             if (!Array.isArray(json) || !json.every(item => typeof item === "string")) {
                 await warn('Wrong syntax with tips.json');
                 return;
