@@ -7,5 +7,7 @@
   "remote.connecting": "尝试连接...",
   "remote.retry": "尝试连接 ({}/{})...",
   "integrated.start": "准备启动内置服务器...",
-  "integrated.fail.start": "连接已丢失: 无法启动内置服务器"
+  "integrated.fail.start": "连接已丢失: 无法启动内置服务器",
+  "confirm": "确认",
+  "cancel": "取消"
 }

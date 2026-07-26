@@ -15,7 +15,10 @@ export class StormFire extends BaseWeapon {
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean) {
         super.inventoryTick(stack, world, holder, slot, selected);
 
-        if (world.isClient && holder.isPlayer() && holder.cooldownManager.getCooldownTicks(this) === 10) {
+        if (world.isClient &&
+            holder.isPlayer() &&
+            holder.cooldownManager.getCooldownTicks(this) === 10
+        ) {
             world.playSound(null, SoundEvents.SHELL_RELOAD);
         }
 
@@ -29,7 +32,7 @@ export class StormFire extends BaseWeapon {
         if (charging <= 0) {
             if (world.isClient) {
                 stack.set(DataComponents.FIRING, true);
-                world.playLoopSound(holder, SoundEvents.STORM_FIRE_LOOP, 0.6);
+                world.playLoopSound(holder, SoundEvents.STORM_FIRE_LOOP, 0.2);
             }
             stack.remove(DataComponents.CHARGING_PROGRESS);
             return;
@@ -54,7 +57,7 @@ export class StormFire extends BaseWeapon {
         stack.set(DataComponents.CHARGING_PROGRESS, this.CHARGING_TIME);
 
         if (!world.isClient) return;
-        world.playSound(attacker, SoundEvents.STORM_FIRE_WARMUP, 0.8);
+        world.playSound(attacker, SoundEvents.STORM_FIRE_WARMUP, 0.4);
     }
 
     public override onEndFire(stack: ItemStack, world: World, attacker: Entity) {
@@ -65,7 +68,7 @@ export class StormFire extends BaseWeapon {
 
         stack.remove(DataComponents.FIRING);
         if (world.stopLoopSound(attacker, SoundEvents.STORM_FIRE_LOOP)) {
-            world.playSound(attacker, SoundEvents.STORM_FIRE_END);
+            world.playSound(attacker, SoundEvents.STORM_FIRE_END, 0.4);
         }
     }
 

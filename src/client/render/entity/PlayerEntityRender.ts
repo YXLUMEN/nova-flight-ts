@@ -1,10 +1,13 @@
 import type {EntityRenderer} from "./EntityRenderer.ts";
-import {type PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
+import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import {HALF_PI} from "../../../utils/math/math.ts";
+import type {ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
 
 export class PlayerEntityRender implements EntityRenderer<PlayerEntity> {
-    public render(player: PlayerEntity, ctx: CanvasRenderingContext2D, tickDelta: number, offsetX: number = 0, offsetY: number = 0) {
+    public render(player: ClientPlayerEntity, ctx: CanvasRenderingContext2D, tickDelta: number, offsetX: number = 0, offsetY: number = 0) {
         const pos = player.getLerpPos(tickDelta);
+
+        player.autoAim?.render();
 
         ctx.save();
         ctx.translate(pos.x + offsetX, pos.y + offsetY);

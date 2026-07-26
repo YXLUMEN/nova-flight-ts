@@ -8,7 +8,7 @@ import {Resources} from "../resource/Resources.ts";
 
 export class SoundSystem {
     private readonly module: SoundResource;
-    private readonly activeLoops = new HashMap<Identifier, AudioBufferSourceNode>();
+    private readonly activeLoops: HashMap<Identifier, AudioBufferSourceNode> = new HashMap();
     private readonly audioContext: AudioContext;
     private readonly gainNode: GainNode;
 
@@ -24,13 +24,19 @@ export class SoundSystem {
     }
 
     public playLoopSound(event: SoundEvent, volume: number = 1, pitch: number = 1): void {
+        if (this.activeLoops.has(event.id)) return;
+        if (this.activeLoops.size >= 8) {
+            const entry = this.activeLoops.entries().next().value;
+            if (entry) {
+                entry[1].stop();
+                this.activeLoops.delete(entry[0]);
+            }
+        }
+
         this.loadSound(event, volume, pitch, true);
     }
 
     private loadSound(event: SoundEvent, volume: number = 1, pitch: number = 1, loop: boolean = false): void {
-        const key = event.id;
-        if (this.activeLoops.has(key)) return;
-
         const buffers = this.module.buffers.get(event.id);
         if (!buffers || buffers.length === 0) return;
 
@@ -48,7 +54,7 @@ export class SoundSystem {
         gainNode.connect(this.gainNode);
         source.start(0);
 
-        if (loop) this.activeLoops.set(key, source);
+        if (loop) this.activeLoops.set(event.id, source);
     }
 
     public stopLoopSound(event: SoundEvent): boolean {

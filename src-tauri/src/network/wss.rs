@@ -4,7 +4,7 @@ use crate::network::protocol::*;
 use crate::network::session::{Session, SessionContext, NEXT_SESSION_ID};
 use crate::network::states::{RelayState, Role, ServerManager, Tx};
 use crate::network::util::{
-    constant_time_eq, format_uuid, get_time, is_nil_uuid, parse_ipv4, parse_session_id,
+    constant_time_eq, format_uuid, now_ms, is_nil_uuid, parse_ipv4, parse_session_id,
     read_var_uint,
 };
 use bytes::{Buf, BufMut, BytesMut};
@@ -138,7 +138,7 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
         }
     });
 
-    info!("Start to registry {}", get_time());
+    info!("Start to registry {}", now_ms());
 
     let ctx = match attach_session(&state, tx, &mut reader).await {
         Ok(s) => s,
@@ -273,7 +273,7 @@ async fn attach_session(
                 session_id: session.session_id,
             };
             send_packet(&session.tx, packet, Duration::from_secs(2)).await;
-            info!("Server registered at {}", get_time());
+            info!("Server registered at {}", now_ms());
             Ok(SessionContext {
                 session,
                 allow: None,
@@ -324,7 +324,7 @@ async fn attach_session(
                         send_packet(&server.tx, packet, Duration::from_secs(2)).await;
                     }
 
-                    info!("Client {} registered at {}", format_uuid(&uuid), get_time());
+                    info!("Client {} registered at {}", format_uuid(&uuid), now_ms());
                     Ok(SessionContext {
                         session,
                         allow: Some(permit_rx),

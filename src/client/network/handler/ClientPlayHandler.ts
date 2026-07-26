@@ -70,6 +70,7 @@ import {PhaseLasers} from "../../../item/weapon/PhaseLasers.ts";
 import type {NotGiveUpS2CPacket} from "../../../network/packet/s2c/NotGiveUpS2CPacket.ts";
 import {WindowOverlay} from "../../../effect/WindowOverlay.ts";
 import {TitleEffect} from "../../../effect/TitleEffect.ts";
+import type {TickChangeS2CPacket} from "../../../network/packet/s2c/TickChangeS2CPacket.ts";
 
 export class ClientPlayHandler extends ClientCommonHandler {
     private readonly playerProfiles: Map<UUID, GameProfile> = new Map();
@@ -136,7 +137,10 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
         const info = new ConnectInfo(this.client);
         this.client.setConnectInfo(info);
-        info.setError(packet.reason.toString())
+
+        info.setMessage(packet.reason);
+        info.setLabel(TranslatableText.of('start.confirm'));
+        info.waitConfirm()
             .then(() => this.client.requestStop());
     }
 
@@ -513,6 +517,10 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
     public onScreenShake(packet: ScreenShakeS2CPacket): void {
         this.client.window.camera.addShake(packet.amount, packet.limit);
+    }
+
+    public onTickChange(packet: TickChangeS2CPacket): void {
+        this.client.getTickManager().setRate(packet.rate);
     }
 
     public onNGU(_: NotGiveUpS2CPacket): void {

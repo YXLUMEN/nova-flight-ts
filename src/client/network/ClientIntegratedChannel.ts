@@ -34,27 +34,36 @@ export class ClientIntegratedChannel implements ClientChannel {
 
         const {promise, resolve} = Promise.withResolvers<void>();
         const ctrl = new AbortController();
-        this.ctrl = new AbortController();
+        const signal = ctrl.signal;
+
+        const limiter = new AbortController();
+        this.ctrl = limiter;
 
         const onConnect = (event: MessageEvent) => {
             if (event.data.type !== 'connect') return;
             resolve();
             ctrl.abort();
-            this.worker.addEventListener('message', this.onMessage, {signal: this.ctrl!.signal});
+            this.worker.addEventListener('message', this.onMessage, {signal: limiter.signal});
         };
 
-        this.worker.addEventListener('message', onConnect, {signal: ctrl.signal});
+        signal.addEventListener('abort', () => {
+            resolve();
+        }, {once: true});
+
+        limiter.signal.addEventListener('abort', () => {
+            ctrl.abort();
+        }, {once: true, signal});
+
+        this.worker.addEventListener('message', onConnect, {signal});
         this.worker.postMessage({type: 'connect', clientId: this.clientId});
 
         return promise;
     }
 
     public disconnect(): void {
-        if (!this.ctrl || !this.ctrl.signal.aborted) return;
-        this.ctrl.abort();
-
-        this.worker.postMessage({type: 'disconnect'});
+        this.ctrl?.abort();
         this.ctrl = null;
+        this.worker.postMessage({type: 'disconnect'});
     }
 
     public send(payload: Payload): void {

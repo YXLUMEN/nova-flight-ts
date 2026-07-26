@@ -1,5 +1,9 @@
 use crate::file::chose_dir;
 use crate::network::cmd::{is_open, set_open, start_server, stop_server};
+use crate::network::discovery::cmd::{
+    is_lan_sniffing, list_lan_servers, start_lan_announce, start_lan_sniff, stop_lan_announce,
+    stop_lan_sniff,
+};
 
 mod file;
 mod network;
@@ -41,6 +45,12 @@ pub fn run() {
             set_open,
             is_open,
             chose_dir,
+            start_lan_announce,
+            stop_lan_announce,
+            start_lan_sniff,
+            stop_lan_sniff,
+            list_lan_servers,
+            is_lan_sniffing,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

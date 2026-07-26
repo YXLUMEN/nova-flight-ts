@@ -27,6 +27,7 @@ export function hashCode(...object: Comparable[]): number {
     let hash = 0;
     for (const value of object) {
         hash = 31 * hash + (value == null ? 0 : value.hashCode());
+        hash |= 0;
     }
     return hash;
 }
@@ -36,7 +37,7 @@ export function arrayHash(arr: number[]): number {
 
     let hash = 0;
     for (const value of arr) {
-        hash = 31 * hash + value;
+        hash = (31 * hash + value) | 0;
     }
     return hash;
 }

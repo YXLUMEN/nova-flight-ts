@@ -93,7 +93,10 @@ export class ClientSettingsCommand {
 
                                             const playerName = String(arg.result);
                                             if (playerName.length < 1) {
-                                                throw new IllegalArgumentError('\x1b[31mUsername cannot be empty');
+                                                throw new IllegalArgumentError('\x1b[31mPlayer name cannot be empty');
+                                            }
+                                            if (playerName.length > 64) {
+                                                throw new IllegalArgumentError('\x1b[31mPlayer name cannot longer then 64 char');
                                             }
 
                                             localStorage.setItem('playerName', playerName);
@@ -152,7 +155,7 @@ export class ClientSettingsCommand {
                         .then(
                             literal<T>('playerName')
                                 .executes(ctx => {
-                                    const playerName = localStorage.getItem('playerName') ?? '<null>';
+                                    const playerName = localStorage.getItem('playerName') ?? '<player>';
                                     ctx.source.addMessage(`Current playerName is: \x1b[32m"${playerName}"`);
                                 })
                         )
@@ -162,7 +165,7 @@ export class ClientSettingsCommand {
                         .then(
                             literal<T>('playerName')
                                 .executes(ctx => {
-                                    const playerName = localStorage.getItem('playerName') ?? '<null>';
+                                    const playerName = localStorage.getItem('playerName') ?? '<player>';
                                     localStorage.removeItem('playerName');
                                     ctx.source.addMessage(`\x1b[32mClear playerName, used be: ${playerName}`);
                                 })

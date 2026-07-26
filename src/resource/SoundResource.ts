@@ -23,11 +23,16 @@ export class SoundResource implements ResourceModule {
         const sounds = soundRegister.getIdSet();
 
         const soundJson = await resolveResource('resources/nova-flight/sounds.json');
-        const json = JSON.parse(await readTextFile(soundJson));
+        const json: unknown = JSON.parse(await readTextFile(soundJson));
         const audioContext = new AudioContext();
 
+        if (!json || typeof json !== 'object') {
+            console.warn('no sound.json was found');
+            return;
+        }
+
+        const mapped = json as Record<string, any>;
         const pool = new PromisePool();
-        const loadTasks: Promise<void>[] = [];
         const buffersMap = new Map<Identifier, AudioBuffer[]>();
 
         const job = async (buffers: AudioBuffer[], soundPath: string) => {
@@ -38,13 +43,13 @@ export class SoundResource implements ResourceModule {
         for (const soundId of sounds) {
             try {
                 const id = soundId.getPath();
-                const entry = json[id];
+                const entry = mapped[id];
                 if (!entry) {
                     await warn(`SoundID ${id} not found in sounds.json`);
                     continue;
                 }
 
-                const sounds = entry.sounds;
+                const sounds: unknown = entry.sounds;
                 if (!Array.isArray(sounds) || !sounds.every(value => typeof value === 'string')) {
                     await warn(`SoundID ${id} has invalid sounds format (must be array)`);
                     continue;
@@ -57,14 +62,14 @@ export class SoundResource implements ResourceModule {
                     const soundPath = soundEntry.split(':').pop();
                     if (!soundPath) continue;
 
-                    loadTasks.push(pool.submit(job, buffers, soundPath));
+                    void pool.spawn(job, buffers, soundPath);
                 }
             } catch (error) {
                 await warn(String(error));
             }
         }
 
-        await Promise.all(loadTasks);
+        await pool.join();
 
         for (const [id, buffers] of buffersMap) {
             if (buffers.length > 0) this.buffers.set(id, buffers);
@@ -77,7 +82,9 @@ export class SoundResource implements ResourceModule {
     private async decodeAudios(path: string, audioContext: AudioContext): Promise<AudioBuffer | null> {
         try {
             let res = await resolveResource(`resources/nova-flight/sounds/${path}.ogg`);
-            if (!await exists(res)) res = await resolveResource(`resources/nova-flight/sounds/${path}.wav`);
+            if (!await exists(res)) {
+                res = await resolveResource(`resources/nova-flight/sounds/${path}.wav`);
+            }
 
             const fileData = await readFile(res);
             return await audioContext.decodeAudioData(fileData.buffer);

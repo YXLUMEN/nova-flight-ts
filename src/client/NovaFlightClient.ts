@@ -6,22 +6,16 @@ import {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
 import type {Consumer, UUID} from "../type/types.ts";
 import {ClientWorld} from "./ClientWorld.ts";
 import {ClientPlayerEntity} from "./entity/ClientPlayerEntity.ts";
-import {LoadingScreen} from "./render/ui/LoadingScreen.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import {empty, sleep} from "../utils/uit.ts";
-import {DataLoader} from "../resource/DataLoader.ts";
-import {check} from "@tauri-apps/plugin-updater";
 import {StartScreen} from "./render/ui/StartScreen.ts";
-import {error, info, warn} from "@tauri-apps/plugin-log";
+import {error, warn} from "@tauri-apps/plugin-log";
 import {ClientCommandManager} from "./command/ClientCommandManager.ts";
 import {invoke} from "@tauri-apps/api/core";
 import {ClientMultiGameManger} from "./ClientMultiGameManger.ts";
 import {ConnectInfo} from "./render/ui/ConnectInfo.ts";
-import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {ClientChat} from "./command/ClientChat.ts";
-import type {StartServer} from "../type/startup.ts";
 import {ClientSavesManager} from "./ClientSavesManager.ts";
-import {confirm, message} from "@tauri-apps/plugin-dialog";
 import {EVENTS} from "../type/IEvents.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {StatisticManager} from "./statistic/StatisticManager.ts";
@@ -32,20 +26,18 @@ import {SoundEvents} from "../sound/SoundEvents.ts";
 import {TipManager} from "./tips/TipManager.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
 import {ClientInputEvents} from "./input/ClientInputEvents.ts";
-import {RenderLoader} from "./render/RenderLoader.ts";
-import {ClientIntegratedChannel} from "./network/ClientIntegratedChannel.ts";
 import type {ClientChannel} from "./network/ClientChannel.ts";
 import {ClientCommandSource} from "./command/ClientCommandSource.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
-import {ClientConfigHandler} from "./network/handler/ClientConfigHandler.ts";
 import {ClientPlayHandler} from "./network/handler/ClientPlayHandler.ts";
 import {TickRateManager} from "../world/TickRateManager.ts";
 import {ClientWorkerFS} from "./ClientWorkerFS.ts";
-import {ClientTechManager} from "./tech/ClientTechManager.ts";
+import {ClientConnector} from "./network/ClientConnector.ts";
+import type {ConnectionContext} from "./network/ConnectionContext.ts";
+import {ClientInit} from "./ClientInit.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
-    private static readonly SERVER_START_TIMEOUT = 5000;
 
     private static instance: NovaFlightClient;
 
@@ -90,19 +82,9 @@ export class NovaFlightClient {
     public readonly clientCommandManager: ClientCommandManager;
     public readonly clientChat: ClientChat;
 
-    public constructor() {
+    public constructor(clientId: UUID, playerName: string) {
         NovaFlightClient.instance = this;
-
-        const clientId = localStorage.getItem('clientId');
-        if (clientId && UUIDUtil.isValidUUID(clientId)) {
-            this.clientId = clientId;
-        } else {
-            this.clientId = crypto.randomUUID();
-            localStorage.setItem('clientId', this.clientId);
-        }
-
-        const playerName = localStorage.getItem('playerName');
-        if (playerName === null) throw new Error("Player name is required");
+        this.clientId = clientId;
         this.playerName = playerName;
 
         this.registryManager = new RegistryManager();
@@ -135,7 +117,7 @@ export class NovaFlightClient {
 
     public async startClient() {
         this.window.resize();
-        await this.initResources();
+        await new ClientInit(this).initResources();
 
         if (!isDev) {
             BGMManager.init();
@@ -172,6 +154,9 @@ export class NovaFlightClient {
         const action = await startScreen.onConfirm();
         if (action === -1) return true;
 
+        const ctx = new NovaFlightClient.ConnectCtx(this);
+        const connector = new ClientConnector(this, ctx);
+
         if (action === 0) {
             this.isIntegrated = true;
             const saveName = await this.saveManager.chooseSave();
@@ -180,20 +165,31 @@ export class NovaFlightClient {
                 this.stopWorld();
                 return false;
             }
-            if (GlobalConfig.generalMode) await this.startGeneralServer(saveName);
-            else await this.startIntegratedServer(saveName);
-        } else if (action === 1) {
+
+            if (GlobalConfig.generalMode) await connector.startGeneralServer(saveName);
+            else await connector.startIntegratedServer(saveName);
+            return false;
+        }
+        if (action === 1) {
             this.isIntegrated = false;
-            await this.connectToServer();
-        } else if (action === 2) {
+            await connector.connectToServer();
+            return false;
+        }
+        if (action === 2) {
             await this.statisticManager.selectItem();
             this.stopWorld();
+            return false;
         }
         return false;
     }
 
     public async joinGame(world: ClientWorld) {
-        this.connectInfo?.setMessage(TranslatableText.of('start.join_game').toString());
+        if (this.connectInfo) {
+            this.connectInfo.setOnDestroy(empty);
+            this.connectInfo.setMessage(TranslatableText.of('start.join_game'));
+            this.connectInfo.setLabel(null);
+        }
+
         await sleep(200);
 
         this.world = world;
@@ -204,6 +200,10 @@ export class NovaFlightClient {
 
         this.setConnectInfo(null);
         this.clientCommandManager.clearParseCache();
+    }
+
+    public isPause(): boolean {
+        return this.pause;
     }
 
     public setPause(bl: boolean): void {
@@ -226,10 +226,6 @@ export class NovaFlightClient {
         }
 
         this.pause = bl;
-    }
-
-    public isPause(): boolean {
-        return this.pause;
     }
 
     private loop(ts: number): void {
@@ -301,8 +297,9 @@ export class NovaFlightClient {
                 return;
             }
 
+            const worker = this.worker;
             const terminate = () => {
-                this.worker?.terminate();
+                worker.terminate();
                 this.worker = null;
 
                 resolve();
@@ -314,7 +311,7 @@ export class NovaFlightClient {
                 terminate();
             }, NovaFlightClient.SERVER_SHUTDOWN_TIMEOUT);
 
-            this.worker.onmessage = event => {
+            worker.onmessage = event => {
                 if (event.data.type !== 'server_shutdown') return;
 
                 clearTimeout(shutTimeout);
@@ -325,215 +322,14 @@ export class NovaFlightClient {
         };
     }
 
-    private async connectToServer(): Promise<void> {
-        const address = await this.multiGameManager.getServerAddress();
-        this.multiGameManager.hide();
-
-        if (address === null) {
-            this.stopWorld();
-            return;
-        }
-
-        this.channel = new ClientNetworkChannel(address, this.clientId);
-        this.connection.changeChannel(this.channel);
-
-        const connectInfo = new ConnectInfo(this, this.stopWorld);
-        this.setConnectInfo(connectInfo);
-        connectInfo.setMessage(TranslatableText.of('start.remote.connecting').toString());
-
-        const result = await this.channel.sniff(
-            1000,
-            3,
-            (num, max) => {
-                const args = [num + 1, max].map(String);
-                connectInfo.setMessage(new TranslatableText('start.remote.retry', args).toString());
-            });
-
-        if (!result) {
-            await connectInfo.setError(TranslatableText.of('start.remote.fail.found_server').toString());
-            this.stopWorld();
-            return;
-        }
-
-        connectInfo.setMessage(TranslatableText.of('start.connecting').toString());
-
-        try {
-            await this.channel.connect();
-        } catch (err) {
-            await connectInfo.setError(String(err));
-            return;
-        }
-
-        const config = new ClientConfigHandler(this, this.connection);
-        config.clientReady();
-
-        await connectInfo.waitConfirm();
-    }
-
-    private async startIntegratedServer(saveName: string): Promise<void> {
-        if (this.worker) return;
-
-        const connectInfo = new ConnectInfo(this, this.stopWorld);
-        this.setConnectInfo(connectInfo);
-        connectInfo.setMessage(TranslatableText.of('start.integrated.start').toString());
-
-        const worker = new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
-            type: 'module',
-            name: 'server',
-        });
-        this.worker = worker;
-
-        const addr = `127.0.0.1:${GlobalConfig.port}`;
-        this.channel = new ClientIntegratedChannel(worker, this.clientId);
-        this.connection.changeChannel(this.channel);
-
-        await this.checkAndConnect(addr, connectInfo, new ArrayBuffer(0), saveName, worker);
-    }
-
-    private async startGeneralServer(saveName: string): Promise<void> {
-        if (this.worker) return;
-
-        const connectInfo = new ConnectInfo(this, this.stopWorld);
-        this.setConnectInfo(connectInfo);
-        connectInfo.setMessage(TranslatableText.of('start.integrated.start').toString());
-
-        let key: ArrayBuffer;
-        try {
-            await invoke('stop_server');
-            const obj = await invoke('start_server', {port: GlobalConfig.port});
-
-            if (!Array.isArray(obj)) {
-                // noinspection ExceptionCaughtLocallyJS
-                throw new TypeError("Key must be an number array");
-            }
-            key = new Uint8Array(obj).buffer;
-        } catch (err) {
-            console.error(err);
-            await error(String(err));
-            await connectInfo.setError(String(err));
-            return;
-        }
-
-        await sleep(300);
-
-        const addr = `127.0.0.1:${GlobalConfig.port}`;
-        this.channel = new ClientNetworkChannel(addr, this.clientId);
-        this.connection.changeChannel(this.channel);
-
-        await this.checkAndConnect(addr, connectInfo, key, saveName);
-    }
-
-    private async checkAndConnect(
-        addr: string,
-        connectInfo: ConnectInfo,
-        key: ArrayBuffer,
-        saveName: string,
-        worker?: Worker
-    ): Promise<void> {
-        const canConnect: boolean = await this.channel.sniff();
-        if (!canConnect) {
-            await connectInfo.setError(TranslatableText.of('start.integrated.fail.start').toString());
-            return;
-        }
-
-        const config = new ClientConfigHandler(this, this.connection);
-
-        const connectToServer = async () => {
-            connectInfo.setMessage(TranslatableText.of('start.connecting').toString());
-            try {
-                await this.channel.connect();
-                config.clientReady();
-            } catch (err) {
-                console.error(err);
-                await error(String(err));
-                await connectInfo.setError(TranslatableText.of('start.fail.connect').toString());
-                this.stopWorld();
-            }
-        };
-
-        // 内置服务器配置
-        const startUp: StartServer = {
-            addr,
-            key,
-            hostUUID: this.clientId,
-            saveName
-        };
-
-        worker = worker === undefined ? new Worker(new URL('../worker/integrated.worker.ts', import.meta.url), {
-            type: 'module',
-            name: 'server',
-        }) : worker;
-        this.worker = worker;
-
-        const startTimeout = setTimeout(() => {
-            void connectInfo.setError(TranslatableText.of('network.disconnect.timeout').toString());
-            worker.terminate();
-            this.worker = null;
-        }, NovaFlightClient.SERVER_START_TIMEOUT);
-
-        worker.onmessage = event => {
-            switch (event.data.type) {
-                case 'worker_ready':
-                    worker.postMessage({
-                        type: 'start_server',
-                        payload: startUp
-                    }, {transfer: [key]});
-                    break;
-                case 'server_start':
-                    clearTimeout(startTimeout);
-                    connectToServer();
-                    break;
-                case 'server_stop':
-                    this.stopWorld();
-                    break;
-                case 'saved':
-                    this.clientCommandManager.addPlainMessage('\x1b[32m游戏已保存');
-                    break;
-                case 'log':
-                    const level = event.data.level;
-                    if (level === 'info') info(event.data.message);
-                    else if (level === 'warn') warn(event.data.message);
-                    else if (level === 'error') error(event.data.message);
-                    break;
-                case 'message':
-                    message(event.data.message, {kind: event.data.kind});
-                    break;
-                case 'read_file':
-                    this.workerFs.readFile(event.data, worker);
-                    break;
-                case 'write_file':
-                    this.workerFs.writeFile(event.data);
-                    break;
-                case 'fetch':
-                    this.workerFs.fetch(event.data, worker);
-                    break;
-            }
-        };
-
-        worker.onerror = event => {
-            const err = event.error;
-            const msg = Error.isError(err) ?
-                `[Server Thread] Crash ${err.name}:${err.message} because ${err.cause} at\n ${err.stack}` :
-                `[Server Thread] Crash ${event.type}:${event.message} because ${event.error}`;
-
-            console.error(msg);
-            error(msg);
-            this.requestStop();
-        }
-
-        await connectInfo.waitConfirm();
-    }
-
     private clearWorld(): void {
         this.worldRender.setWorld(null);
+
         this.world?.close();
         this.world = null;
+
         this.window.hud.setPlayer(null);
         this.player = null;
-    }
-
-    public getServerWorker(): Worker | null {
-        return this.worker;
     }
 
     public requestStop(): void {
@@ -546,7 +342,8 @@ export class NovaFlightClient {
     }
 
     public setConnectError(message: string): void {
-        this.connectInfo?.setError(message);
+        this.connectInfo?.setMessage(message);
+        this.connectInfo?.setLabel(TranslatableText.of('start.confirm'));
     }
 
     public setConnectInfo(info: ConnectInfo | null): void {
@@ -563,88 +360,20 @@ export class NovaFlightClient {
         this.gameOverAbort?.abort();
         this.gameOverAbort = ctrl;
         window.addEventListener('keydown', () => {
-            this.leaveGame();
             ctrl.abort();
+            this.leaveGame();
+            this.gameOverAbort = null;
         }, {signal: ctrl.signal});
     }
 
     // 其他
 
-    private async initResources(): Promise<void> {
-        const loadingScreen = new LoadingScreen(this);
-        loadingScreen.setSize(Window.VIEW_W, Window.VIEW_H);
-        loadingScreen.loop();
-
-        await this.update(loadingScreen);
-
-        loadingScreen.setProgress(0.1, '加载依赖');
-        await this.initWasm();
-        await sleep(100);
-
-        loadingScreen.setProgress(0.2, '注册资源');
-        const manager = this.registryManager;
-        await manager.registerAll();
-        ClientTechManager.init();
-        await sleep(200);
-
-        loadingScreen.setProgress(0.4, '加载资源');
-        await DataLoader.registerAndLoad(manager, loadingScreen);
-        this.globalSound = new SoundSystem();
-
-        loadingScreen.setProgress(0.6, '初始化渲染器');
-        await RenderLoader.registerAndLoad(loadingScreen);
-        await sleep(200);
-
-        loadingScreen.setProgress(0.8, '冻结资源');
-        manager.freeze();
-        await sleep(200);
-
-        loadingScreen.setProgress(1, '启动游戏');
-        await sleep(200);
-        await loadingScreen.setDone();
+    public getServerWorker(): Worker | null {
+        return this.worker;
     }
 
-    private async initWasm(): Promise<void> {
-        await (await import('@bokuweb/zstd-wasm')).init();
-    }
-
-    private async update(loadingScreen: LoadingScreen): Promise<void> {
-        try {
-            loadingScreen.setProgress(0, '检测更新');
-            await sleep(200);
-
-            const update = await check({timeout: 2000});
-            if (!update) return;
-
-            if (!await confirm(`当前游戏版本为 "${update.currentVersion}" 存在更新版本 "${update.version}"`, {
-                title: '发现更新',
-                okLabel: '更新',
-                cancelLabel: '忽略'
-            })) return;
-
-            let contentLength: number = 0;
-            let downloaded = 0;
-            await update.downloadAndInstall(event => {
-                switch (event.event) {
-                    case 'Started':
-                        contentLength = event.data.contentLength ?? 0;
-                        loadingScreen.setProgress(0, `开始下载, 总共: ${contentLength} bytes`);
-                        break;
-                    case 'Progress':
-                        downloaded += event.data.chunkLength;
-                        loadingScreen.setProgress(downloaded / contentLength, `正在下载...`);
-                        break;
-                    case 'Finished':
-                        loadingScreen.setProgress(1, '下载完成, 程序即将重启');
-                        loadingScreen.setDone();
-                        break;
-                }
-            });
-        } catch (error) {
-            console.error(error);
-            loadingScreen.setProgress(0, '检查更新失败');
-        }
-        await sleep(500);
+    public getTickManager() {
+        return this.tickManager;
     }
 
     public switchDevMode(bool?: boolean): void {
@@ -652,5 +381,54 @@ export class NovaFlightClient {
         if (!player) return;
 
         this.networkHandler.sendCommand(`/gamemode ${bool ?? !player.isDevMode()}`);
+    }
+
+    private static readonly ConnectCtx = class implements ConnectionContext {
+        private readonly client: NovaFlightClient;
+
+        public constructor(client: NovaFlightClient) {
+            this.client = client;
+            this.stop = this.stop.bind(this);
+        }
+
+        public async getServerAddr(): Promise<string | null> {
+            const result = await this.client.multiGameManager.getServerAddress();
+            this.client.multiGameManager.hide();
+            return result;
+        }
+
+        public setChannel(channel: ClientChannel) {
+            this.client.channel = channel;
+            this.client.connection.changeChannel(channel);
+        }
+
+        public sniff(
+            retryDelay?: number,
+            maxRetries?: number,
+            onTry?: (attempts: number, maxRetries: number) => boolean
+        ): Promise<boolean> {
+            return this.client.channel.sniff(retryDelay, maxRetries, onTry);
+        }
+
+        public connect(): Promise<void> {
+            return this.client.channel.connect();
+        }
+
+        public hasWorker(): boolean {
+            return this.client.worker !== null;
+        }
+
+        public setWorker(worker: Worker | null) {
+            if (worker === null) this.client.worker?.terminate();
+            this.client.worker = worker;
+        }
+
+        public stop() {
+            this.client.stopWorld();
+        }
+
+        public workerFs(): ClientWorkerFS {
+            return this.client.workerFs;
+        }
     }
 }

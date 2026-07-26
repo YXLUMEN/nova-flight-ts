@@ -222,7 +222,7 @@ export class HUD implements IUi {
 
         // 文本标签
         ctx.fillStyle = this.hudColor;
-        ctx.fillText(item.getName().toString(), (x + w + 8) | 0, (y | 0) - 1);
+        ctx.fillText(item.getName().asString(), (x + w + 8) | 0, (y | 0) - 1);
     }
 
     private renderEndOverlay(ctx: CanvasRenderingContext2D, world: ClientWorld) {

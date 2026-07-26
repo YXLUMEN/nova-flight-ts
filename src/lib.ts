@@ -8,16 +8,13 @@ import {isDev} from "./configs/GlobalConfig.ts";
 import {CodecRegistry} from "./network/CodecRegistry.ts";
 import {RelayPackets} from "./network/RelayPackets.ts";
 import {PageSplicer} from "./client/page/PageSplicer.ts";
+import type {UUID} from "./type/types.ts";
 
 export const app = new Window('main');
 
 export async function run() {
-    window.oncontextmenu = event => event.preventDefault();
-
     const ctrl = new AbortController();
-    window.addEventListener('keydown', event => {
-        event.preventDefault();
-    }, {signal: ctrl.signal});
+    preventEvents(ctrl.signal);
 
     const pages = new PageSplicer({
         basePath: 'pages',
@@ -33,13 +30,17 @@ export async function run() {
     ClientPackets.registerNetworkPacket();
     CodecRegistry.settle();
 
-    const playerName = localStorage.getItem('playerName') ?? 'null';
     try {
-        const uuid = await UUIDUtil.uuidFromUsername(playerName);
-        localStorage.setItem('clientId', uuid);
+        const rawName = localStorage.getItem('playerName') ?? 'player';
+        const playerName = rawName.slice(0, 64);
+
+        const uuid: UUID = await UUIDUtil.uuidFromUsername(playerName);
+        const clientId: UUID = UUIDUtil.isValidUUID(uuid) ? uuid : crypto.randomUUID();
+
+        localStorage.setItem('clientId', clientId);
         localStorage.setItem('playerName', playerName);
 
-        const client = new NovaFlightClient();
+        const client = new NovaFlightClient(clientId, playerName);
         ctrl.abort();
 
         await client.startClient();
@@ -57,4 +58,17 @@ export async function run() {
         if (isDev) return;
         await app.close();
     }
+}
+
+function preventEvents(signal: AbortSignal) {
+    window.oncontextmenu = event => event.preventDefault();
+
+    window.addEventListener('keydown', event => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+    }, {signal});
+
+    window.addEventListener('beforeunload', event => {
+        event.preventDefault();
+    }, {signal});
 }

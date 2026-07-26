@@ -9,6 +9,7 @@ import {DamageTypes} from "../entity/damage/DamageTypes.ts";
 import {EntitySelectorOptions} from "../command/EntitySelectorOptions.ts";
 import {NbtTypes} from "../nbt/NbtTypes.ts";
 import {Techs} from "../world/tech/Techs.ts";
+import {TranslatableText} from "../i18n/TranslatableText.ts";
 
 export class RegistryManager {
     private readonly registers = new Map<RegistryKey<any>, Registry<any>>();
@@ -44,6 +45,6 @@ export class RegistryManager {
     }
 
     public freeze() {
-        deepFreeze(this);
+        deepFreeze(this, obj => obj instanceof TranslatableText);
     }
 }

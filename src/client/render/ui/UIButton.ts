@@ -2,10 +2,10 @@ import {UITheme} from "./theme.ts";
 import type {Consumer} from "../../../type/types.ts";
 
 export class UIButton {
-    public x: number;
-    public y: number;
-    public width: number;
-    public height: number;
+    public readonly x: number;
+    public readonly y: number;
+    public readonly width: number;
+    public readonly height: number;
 
     public label: string;
     public onClick: Consumer<void>;
@@ -33,7 +33,9 @@ export class UIButton {
     }
 
     public hitTest(mx: number, my: number) {
-        return mx >= this.x && mx <= this.x + this.width &&
-            my >= this.y && my <= this.y + this.height;
+        return mx >= this.x &&
+            mx <= this.x + this.width &&
+            my >= this.y &&
+            my <= this.y + this.height;
     }
 }

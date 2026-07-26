@@ -1,5 +1,5 @@
 pub mod cmd;
-mod discovery;
+pub mod discovery;
 mod protocol;
 mod session;
 mod states;

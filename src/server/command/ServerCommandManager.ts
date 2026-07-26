@@ -11,6 +11,7 @@ import {KickCommand} from "../../command/KickCommand.ts";
 import {GiveCommand} from "../../command/GiveCommand.ts";
 import {ScoreCommand} from "../../command/ScoreCommand.ts";
 import {DamageCommand} from "../../command/DamageCommand.ts";
+import {TickCommand} from "../../command/TickCommand.ts";
 
 export class ServerCommandManager extends CommandManager {
     public readonly source: ServerCommandSource;
@@ -37,5 +38,6 @@ export class ServerCommandManager extends CommandManager {
         GiveCommand.registry(this.dispatcher);
         ScoreCommand.registry(this.dispatcher);
         DamageCommand.registry(this.dispatcher);
+        TickCommand.registry(this.dispatcher);
     }
 }
