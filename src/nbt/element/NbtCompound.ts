@@ -191,7 +191,7 @@ export class NbtCompound implements NbtElement {
         return v && v.getType() === NbtTypeId.Uint32 ? v.value : d;
     }
 
-    public getString(key: string, d = ""): string {
+    public getString(key: string, d = ''): string {
         const v = this.entries.get(key) as NbtString;
         return v && v.getType() === NbtTypeId.String ? v.value : d;
     }
@@ -235,9 +235,9 @@ export class NbtCompound implements NbtElement {
         return v && v.getType() === NbtTypeId.Uint32Array ? v.value : new Uint32Array();
     }
 
-    public getStringArray(key: string, d: string[] = []): string[] {
+    public getStringArray(key: string, d?: string[]): string[] {
         const v = this.entries.get(key) as NbtStringArray;
-        return v && v.getType() === NbtTypeId.StringArray ? v.value : d;
+        return v && v.getType() === NbtTypeId.StringArray ? v.value : d ?? [];
     }
 
     public getCompound(key: string): NbtCompound {
