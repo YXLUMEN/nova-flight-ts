@@ -39,7 +39,7 @@ import {ItemCooldownUpdateS2CPacket} from "../../../network/packet/s2c/ItemCoold
 import {PlayAudioS2CPacket} from "../../../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {AudioManager} from "../../../sound/AudioManager.ts";
 import {ConnectInfo} from "../../render/ui/ConnectInfo.ts";
-import {AudioControlS2CPacket} from "../../../network/packet/s2c/AudioControlS2CPacket.ts";
+import {AudioControlS2CPacket, AudioControlType} from "../../../network/packet/s2c/AudioControlS2CPacket.ts";
 import {BGMManager} from "../../../sound/BGMManager.ts";
 import {AudioStopS2CPacket} from "../../../network/packet/s2c/AudioStopS2CPacket.ts";
 import {Audios} from "../../../sound/Audios.ts";
@@ -398,19 +398,19 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
     public onAudioControl(packet: AudioControlS2CPacket): void {
         switch (packet.action) {
-            case 0:
+            case AudioControlType.PAUSE:
                 AudioManager.pause();
                 break;
-            case 1:
+            case AudioControlType.RESUME:
                 AudioManager.resume();
                 break;
-            case 2:
+            case AudioControlType.RESET:
                 AudioManager.reset()
                 break;
-            case 3:
+            case AudioControlType.NEXT:
                 BGMManager.next();
                 break;
-            case 4:
+            case AudioControlType.LEAP:
                 AudioManager.leap(packet.leap);
                 break;
         }

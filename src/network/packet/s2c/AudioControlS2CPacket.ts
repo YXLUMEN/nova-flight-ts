@@ -12,10 +12,10 @@ export class AudioControlS2CPacket implements Payload {
         to => new AudioControlS2CPacket(to)
     );
 
-    public readonly action: number
+    public readonly action: AudioControlType;
     public readonly leap: number;
 
-    public constructor(action: number, leap: number = 0) {
+    public constructor(action: AudioControlType, leap: number = 0) {
         this.action = action;
         this.leap = leap;
     }
@@ -42,7 +42,7 @@ export class AudioLeapS2CPacket extends AudioControlS2CPacket {
     );
 
     public constructor(leap: number) {
-        super(4, leap);
+        super(AudioControlType.LEAP, leap);
     }
 
     public type(): PayloadType<AudioLeapS2CPacket> {
@@ -52,4 +52,12 @@ export class AudioLeapS2CPacket extends AudioControlS2CPacket {
     public estimateSize(): number {
         return 4;
     }
+}
+
+export const enum AudioControlType {
+    PAUSE,
+    RESUME,
+    RESET,
+    NEXT,
+    LEAP
 }
