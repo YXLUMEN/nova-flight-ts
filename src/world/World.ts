@@ -7,7 +7,7 @@ import {RegistryManager} from "../registry/RegistryManager.ts";
 import {EVENTS, type IEvents} from "../type/IEvents.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import type {Payload} from "../network/Payload.ts";
-import type {Consumer, Predicate, Supplier} from "../type/types.ts";
+import type {Consumer, HexColor, Predicate, Supplier} from "../type/types.ts";
 import type {EntityList} from "./entity/EntityList.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {Explosion} from "./explosion/Explosion.ts";
@@ -31,6 +31,7 @@ import type {ExplosionBehavior} from "./explosion/ExplosionBehavior.ts";
 import {EntityPredicates} from "./predicate/EntityPredicates.ts";
 import {ScheduleTask} from "./ScheduleTask.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
+import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
 
 export abstract class World {
     public static readonly MAP_WIDTH = 1760;
@@ -93,23 +94,28 @@ export abstract class World {
 
     public abstract addParticleByVec(
         pos: Vec2, vel: Vec2,
-        life: number, size: number,
-        colorFrom: string, colorTo: string,
-        drag?: number, gravity?: number
+        life: number,
+        size: number,
+        colorFrom: HexColor, colorTo?: HexColor,
+        type?: number,
+        drag?: number
     ): void;
 
     public abstract addParticle(
-        posX: number, posY: number, velX: number, velY: number,
-        life: number, size: number,
-        colorFrom: string, colorTo?: string,
+        posX: number, posY: number,
+        velX: number, velY: number,
+        life: number,
+        size: number,
+        colorFrom: HexColor, colorTo?: HexColor,
+        type?: number,
         drag?: number
     ): void;
 
-    public abstract addImportantParticle(
-        posX: number, posY: number, velX: number, velY: number,
-        life: number, size: number,
-        colorFrom: string, colorTo?: string,
-        drag?: number
+    public abstract addPreparedParticle(
+        type: ParticleEffectType,
+        pos: Vec2,
+        count: number,
+        baseAngle?: number
     ): void;
 
     public abstract addEffect(source: Entity | null, effect: VisualEffect): void;
@@ -131,8 +137,9 @@ export abstract class World {
     public createEMP(attacker: Entity | null, pos: Vec2, radius: number, duration: number = 40, damage: number = 0) {
         const r2 = radius * radius;
         const box = AABB.fromCenter(pos.x, pos.y, radius, radius);
+        const search = this.searchOtherEntities(attacker, box, EntityPredicates.inRange(pos, r2));
 
-        for (const entity of this.searchOtherEntities(attacker, box, EntityPredicates.inRange(pos, r2))) {
+        for (const entity of search) {
             if (entity instanceof ProjectileEntity) {
                 if (entity.getOwner() !== attacker) entity.discard();
                 continue;

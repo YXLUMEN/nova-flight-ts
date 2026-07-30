@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "useDefineForClassFields": true,
     "module": "ESNext",
     "lib": [
       "ESNext",
@@ -13,6 +12,7 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
+    "useDefineForClassFields": true,
     "moduleDetection": "force",
     "noEmit": true,
     /* Linting */

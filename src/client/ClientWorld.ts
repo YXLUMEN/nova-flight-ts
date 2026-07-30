@@ -6,7 +6,6 @@ import {RegistryManager} from "../registry/RegistryManager.ts";
 import type {EntityHandler} from "../world/entity/EntityHandler.ts";
 import type {VisualEffect} from "../effect/VisualEffect.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
-import {MutVec2} from "../utils/math/MutVec2.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {EVENTS} from "../type/IEvents.ts";
@@ -15,7 +14,6 @@ import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExplosionVisual} from "../world/explosion/ExplosionVisual.ts";
 import type {Explosion} from "../world/explosion/Explosion.ts";
-import {CircleParticle} from "../effect/CircleParticle.ts";
 import {DEFAULT_CONFIG} from "../configs/GlobalConfig.ts";
 import {AbstractClientPlayerEntity} from "./entity/AbstractClientPlayerEntity.ts";
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
@@ -26,6 +24,7 @@ import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import type {ClientConnection} from "./network/ClientConnection.ts";
 import type {Payload} from "../network/Payload.ts";
+import type {HexColor} from "../type/types.ts";
 
 export class ClientWorld extends World {
     public readonly worldName: string;
@@ -148,47 +147,49 @@ export class ClientWorld extends World {
 
     public override addParticleByVec(
         pos: Vec2, vel: Vec2,
-        life: number, size: number,
-        colorFrom: string, colorTo: string,
-        drag = 0.0
+        life: number,
+        size: number,
+        colorFrom: HexColor, colorTo?: HexColor,
+        type: number = 0,
+        drag?: number
     ): void {
         this.worldRender.addParticle(
-            pos, vel,
-            life, size,
+            pos.x, pos.y,
+            vel.x, vel.y,
+            life,
+            size, size,
+            type,
             colorFrom, colorTo,
             drag
         );
     }
 
     public override addParticle(
-        posX: number, posY: number, velX: number, velY: number,
-        life: number, size: number,
-        colorFrom: string, colorTo: string = colorFrom,
+        posX: number, posY: number,
+        velX: number, velY: number,
+        life: number,
+        size: number,
+        colorFrom: HexColor, colorTo?: HexColor,
+        type: number = 0,
         drag?: number
     ) {
         this.worldRender.addParticle(
-            new MutVec2(posX, posY), new MutVec2(velX, velY),
-            life, size,
+            posX, posY,
+            velX, velY,
+            life,
+            size, size,
+            type,
             colorFrom, colorTo,
             drag
         );
     }
 
-    public override addImportantParticle(
-        posX: number, posY: number, velX: number, velY: number,
-        life: number, size: number,
-        colorFrom: string, colorTo: string = colorFrom,
-        drag?: number
+    public addPreparedParticle(
+        type: ParticleEffectType,
+        pos: Vec2,
+        count: number,
+        baseAngle: number = 0
     ) {
-        this.addEffect(null, new CircleParticle(
-            new MutVec2(posX, posY), new MutVec2(velX, velY),
-            life, size,
-            colorFrom, colorTo,
-            drag
-        ));
-    }
-
-    public addPreparedParticle(type: ParticleEffectType, pos: Vec2, count: number, baseAngle: number = 0) {
         this.worldRender.addPreparedParticle(type, pos, count, baseAngle);
     }
 

@@ -10,8 +10,9 @@ export class BulletEntity extends ProjectileEntity {
     }
 
     protected override onEntityHit(hitResult: EntityHitResult): void {
+        super.onEntityHit(hitResult);
+
         if (this.isClient()) return;
-        this.discard();
 
         const sources = this.getWorld().getDamageSources();
         hitResult.entity.takeDamage(

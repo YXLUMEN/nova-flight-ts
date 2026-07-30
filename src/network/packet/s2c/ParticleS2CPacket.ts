@@ -13,6 +13,7 @@ import {
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
+import type {HexColor} from "../../../type/types.ts";
 
 export class ParticleS2CPacket implements Payload {
     public static readonly ID: PayloadType<ParticleS2CPacket> = payloadType('particle');
@@ -44,7 +45,15 @@ export class ParticleS2CPacket implements Payload {
         this.colorToInt32 = colorToInt32;
     }
 
-    public static create(posX: number, posY: number, offsetX: number, offsetY: number, count: number, speed: number, life: number, size: number, colorFrom: string, colorTo: string): ParticleS2CPacket {
+    public static create(
+        posX: number, posY: number,
+        offsetX: number, offsetY: number,
+        count: number,
+        speed: number,
+        life: number,
+        size: number,
+        colorFrom: HexColor, colorTo: HexColor
+    ): ParticleS2CPacket {
         return new ParticleS2CPacket(
             posX,
             posY,

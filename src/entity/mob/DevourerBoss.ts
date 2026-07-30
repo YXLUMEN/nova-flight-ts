@@ -41,7 +41,7 @@ export class DevourerBoss extends BossEntity {
         TrackedDataHandlerRegistry.BOOL
     );
 
-    public readonly segmentCount = 72;
+    public readonly segmentCount = 96;
     private readonly segmentSpacing = 44;
     private readonly segmentSpacingSq = this.segmentSpacing * this.segmentSpacing;
     private turnRate = 0.034906;
@@ -136,7 +136,8 @@ export class DevourerBoss extends BossEntity {
         if (this.currentPhase < DevourerPhase.PHASE_2 && hpRatio < 0.66) {
             this.enterPhase(DevourerPhase.PHASE_2, world);
             return false;
-        } else if (this.currentPhase < DevourerPhase.PHASE_2_TO_3 && hpRatio < 0.34) {
+        }
+        if (this.currentPhase < DevourerPhase.PHASE_2_TO_3 && hpRatio < 0.34) {
             this.enterPhase(DevourerPhase.PHASE_2_TO_3, world);
             return false;
         }

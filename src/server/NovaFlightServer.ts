@@ -15,7 +15,7 @@ import {Log} from "../worker/log.ts";
 import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.ts";
 import {TranslatableTextS2CPacket} from "../network/packet/s2c/TranslatableTextS2CPacket.ts";
 import {ServerStartS2CPacket} from "../network/packet/s2c/ServerStartS2CPacket.ts";
-import {TickRateManager} from "../world/TickRateManager.ts";
+import {ServerTickManager} from "./ServerTickManager.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static instance: NovaFlightServer;
@@ -33,7 +33,7 @@ export abstract class NovaFlightServer implements CommandOutput {
     // startGame 后初始化
     public world: ServerWorld | null = null;
 
-    private readonly tickManager: TickRateManager;
+    private readonly tickManager: ServerTickManager;
     private pause: boolean = false;
     private tickInterval: number | undefined;
     private last = 0;
@@ -48,7 +48,7 @@ export abstract class NovaFlightServer implements CommandOutput {
 
         this.worldName = worldName;
         this.playerManager = new PlayerManager(this);
-        this.tickManager = new TickRateManager();
+        this.tickManager = new ServerTickManager(this);
         this.networkChannel = channel;
         this.serverCommandManager = new ServerCommandManager(this.getCommandSource());
         this.tick = this.tick.bind(this);

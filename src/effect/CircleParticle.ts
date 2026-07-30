@@ -6,9 +6,8 @@ import {decodeFromInt16, decodeFromUnsignedByte, encodeToInt16, encodeToUnsigned
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
-import type {Particle} from "./Particle.ts";
 
-export class CircleParticle implements Particle {
+export class CircleParticle {
     public static readonly PACKET_CODEC: PacketCodec<CircleParticle> = PacketCodecs.of(
         (writer, value) => {
             PacketCodecs.VECTOR2D.encode(writer, value.pos);
@@ -86,9 +85,7 @@ export class CircleParticle implements Particle {
             this.alive = false;
             return;
         }
-        this.vel.x *= (1 - this.drag * dt);
-        this.vel.y = this.vel.y * (1 - this.drag * dt);
-
+        this.vel.multiply(1 - this.drag * dt);
         this.prevPos.set(this.pos.x, this.pos.y);
         this.pos.x += this.vel.x * dt;
         this.pos.y += this.vel.y * dt;

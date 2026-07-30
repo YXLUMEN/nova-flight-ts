@@ -6,6 +6,7 @@ import {World} from "../../world/World.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import {ProjectileEntity} from "./ProjectileEntity.ts";
 import {MobEntity} from "../mob/MobEntity.ts";
+import {rand} from "../../utils/math/math.ts";
 
 export class CIWSBulletEntity extends BulletEntity {
     private readonly maxAge: number;
@@ -39,7 +40,17 @@ export class CIWSBulletEntity extends BulletEntity {
     }
 
     public override canHit(entity: Entity): boolean {
-        return entity.isAlive() && entity !== this.getOwner();
+        if (entity.isRemoved()) return false;
+
+        if (entity === this.getOwner()) {
+            return false;
+        }
+
+        if (entity instanceof ProjectileEntity) {
+            return entity.getOwner() !== this.getOwner();
+        }
+
+        return true;
     }
 
     protected override onEntityHit(hitResult: EntityHitResult) {

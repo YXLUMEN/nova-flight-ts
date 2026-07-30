@@ -102,11 +102,11 @@ export class StarField {
         ctx.beginPath();
 
         for (let li = 0; li < this.layers.length; li++) {
-            const L = this.layers[li];
-            const ox = base.x * L.parallax;
-            const oy = base.y * L.parallax;
-            const sx = (view.x - base.x) * L.shakeFactor;
-            const sy = (view.y - base.y) * L.shakeFactor;
+            const layer = this.layers[li];
+            const ox = base.x * layer.parallax;
+            const oy = base.y * layer.parallax;
+            const sx = (view.x - base.x) * layer.shakeFactor;
+            const sy = (view.y - base.y) * layer.shakeFactor;
 
             ctx.save();
             ctx.translate(-ox, -oy);

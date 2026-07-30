@@ -32,8 +32,8 @@ export class ShieldStatusEffect extends StatusEffect {
             2,
             "#AA40A0FF",
             "#4080FFFF",
+            1,
             0.96,
-            -0.01
         );
     }
 

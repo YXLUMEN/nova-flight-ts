@@ -1,4 +1,3 @@
-import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {PI2, rand, squareDist, squareDistVec2} from "../../utils/math/math.ts";
 import type {ClientWorld} from "../../client/ClientWorld.ts";
 import type {World} from "../World.ts";
@@ -16,6 +15,7 @@ import {ExplosionVisual} from "./ExplosionVisual.ts";
 import {AABB} from "../../utils/math/AABB.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
+import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 
 export class Explosion {
     public static readonly DEFAULT_BEHAVIOUR = new ExplosionBehavior();
@@ -202,45 +202,21 @@ export class Explosion {
     }
 
     public summonExplosionVisual(world: ClientWorld) {
-        const sparks = this.visual.sparks;
-        const fastSparks = this.visual.fastSparks;
+        const pos = new Vec2(this.x, this.y);
 
-        const important = this.visual.important;
-        for (let i = 0; i < sparks; i++) {
-            const a = rand(0, PI2);
-            const speed = rand(120, 360);
-            const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
-            const ePos = new MutVec2(this.x, this.y);
+        world.addPreparedParticle(
+            ParticleEffects.EXPLOSION,
+            pos,
+            this.visual.sparks,
+            rand(0, PI2)
+        );
 
-            if (important) {
-                world.addImportantParticle(ePos.x, ePos.y, vel.x, vel.y,
-                    rand(0.25, 0.6), rand(3, 8),
-                    "#ffd966", "rgba(255,69,0,0)")
-            } else {
-                world.addParticleByVec(
-                    ePos, vel, rand(0.25, 0.6), rand(3, 8),
-                    "#ffd966", "rgba(255,69,0,0)");
-            }
-        }
-
-        for (let i = 0; i < fastSparks; i++) {
-            const a = rand(0, PI2);
-            const speed = rand(80, 180);
-            const vel = new MutVec2(Math.cos(a) * speed, Math.sin(a) * speed);
-            const ePos = new MutVec2(this.x, this.y);
-
-            if (important) {
-                world.addImportantParticle(ePos.x, ePos.y, vel.x, vel.y,
-                    rand(0.6, 1.2), rand(4, 10),
-                    "#ffaa33", "rgba(255,140,0,0)", 0.6
-                );
-            } else {
-                world.addParticleByVec(
-                    ePos, vel, rand(0.6, 1.2), rand(4, 10),
-                    "#ffaa33", "rgba(255,140,0,0)", 0.6
-                );
-            }
-        }
+        world.addPreparedParticle(
+            ParticleEffects.EXPLOSION_DEBRIS,
+            pos,
+            this.visual.fastSparks,
+            rand(0, PI2)
+        );
 
         import('../../effect/RadialRing.ts')
             .then(mod => {

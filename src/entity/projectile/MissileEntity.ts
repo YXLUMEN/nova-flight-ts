@@ -169,7 +169,9 @@ export class MissileEntity extends RocketEntity {
             pos.y - Math.sin(yaw) * 32,
             rand(-1, 1), rand(-1, 1),
             rand(1, 1.5), rand(4, 6),
-            "#986900", "#575757", 0.3,
+            "#986900", "#575757",
+            0,
+            0.3,
         );
     }
 

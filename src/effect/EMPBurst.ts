@@ -101,8 +101,8 @@ export class EMPBurst implements VisualEffect {
 
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
+        ctx.lineCap = 'square';
+        ctx.lineJoin = 'miter';
         ctx.shadowColor = this.color;
         ctx.shadowBlur = this.glow;
 
@@ -116,12 +116,12 @@ export class EMPBurst implements VisualEffect {
         }
 
         // 电弧
+        ctx.beginPath();
         for (let b = 0; b < this.bolts; b++) {
             const a = (b / this.bolts) * PI2 + (Math.random() - 0.5) * 0.3;
             ctx.lineWidth = this.thickness;
             ctx.strokeStyle = withAlpha(this.color, alpha);
 
-            ctx.beginPath();
             ctx.moveTo(this.pos.x, this.pos.y);
             for (let s = 1; s <= this.segs; s++) {
                 const tSeg = s / this.segs;
@@ -133,9 +133,9 @@ export class EMPBurst implements VisualEffect {
                 const y = this.pos.y + ny * r + py * off;
                 ctx.lineTo(x, y);
             }
-            ctx.stroke();
         }
 
+        ctx.stroke();
         ctx.restore();
     }
 

@@ -14,6 +14,7 @@ import type {ClientWorld} from "../../../client/ClientWorld.ts";
 import {ClientEffect} from "../../../utils/ClientEffect.ts";
 import {spawnLaser} from "../../../utils/ServerEffect.ts";
 import {MutVec2} from "../../../utils/math/MutVec2.ts";
+import type {HexColor} from "../../../type/types.ts";
 
 export class ParticleLance extends BaseWeapon {
     public readonly LASER_WIDTH = 8;
@@ -35,7 +36,7 @@ export class ParticleLance extends BaseWeapon {
 
                 stack.set(DataComponents.SCHEDULE_FIRE, false);
             } else if (world.isClient) {
-                ClientEffect.spawnChargingParticles(world as ClientWorld, holder, 4, this.getUiColor());
+                ClientEffect.spawnChargingParticles(world as ClientWorld, holder, 4, this.getUiColor() as HexColor);
             }
 
             stack.set(DataComponents.CHARGING_PROGRESS, Math.max(charging, 0));
@@ -105,7 +106,7 @@ export class ParticleLance extends BaseWeapon {
             8,
             80,
             0.5, 4,
-            this.getUiColor(),
+            this.getUiColor() as HexColor,
         );
     }
 

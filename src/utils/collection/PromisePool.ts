@@ -29,7 +29,10 @@ export class PromisePool<T = void> implements AsyncDisposable {
 
         while (this.activeTasks.size >= this.maxTasks) {
             this.shouldAbort();
-            await Promise.race(this.activeTasks);
+            try {
+                await Promise.race(this.activeTasks);
+            } catch (_) {
+            }
             this.shouldAbort();
         }
 
@@ -39,15 +42,17 @@ export class PromisePool<T = void> implements AsyncDisposable {
     public spawn<U extends unknown[]>(
         callback: (...args: U) => T | PromiseLike<T>,
         ...args: U
-    ): Promise<T> {
+    ): void {
         const feature = this.submit(callback, ...args);
         if (!this.queue) this.queue = [];
         this.queue.push(feature);
-        return feature;
     }
 
     public join(): Promise<PromiseSettledResult<T>[]> {
-        return this.queue === null ? Promise.resolve([]) : Promise.allSettled(this.queue);
+        if (this.queue === null) return Promise.resolve([]);
+        const current = this.queue;
+        this.queue = null;
+        return Promise.allSettled(current);
     }
 
     private shouldAbort() {
