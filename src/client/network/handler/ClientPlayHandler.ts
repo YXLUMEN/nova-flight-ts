@@ -308,7 +308,14 @@ export class ClientPlayHandler extends ClientCommonHandler {
         if (packet.count === 0) {
             const vx = packet.speed * packet.offsetX;
             const vy = packet.speed * packet.offsetY;
-            world.addParticle(packet.posX, packet.posY, vx, vy, packet.life, packet.size, packet.colorFrom, packet.colorTo);
+            world.addParticle(
+                packet.posX, packet.posY,
+                vx, vy,
+                packet.life,
+                packet.size,
+                packet.colorFrom,
+                packet.colorTo
+            );
             return;
         }
 
@@ -317,7 +324,13 @@ export class ClientPlayHandler extends ClientCommonHandler {
             const oy = this.random.nextGaussian() * packet.offsetY;
             const vx = this.random.nextGaussian() * packet.speed;
             const vy = this.random.nextGaussian() * packet.speed;
-            world.addParticle(packet.posX + ox, packet.posY + oy, vx, vy, packet.life, packet.size, packet.colorFrom, packet.colorTo);
+            world.addParticle(
+                packet.posX + ox, packet.posY + oy,
+                vx, vy,
+                packet.life,
+                packet.size,
+                packet.colorFrom, packet.colorTo
+            );
         }
     }
 
@@ -456,6 +469,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
     public onEntityEffect(packet: EntityStatusEffectS2CPacket): void {
         const entity = this.world?.getEntityById(packet.entityId);
+        console.log(entity, packet);
         if (entity instanceof LivingEntity) {
             const registryEntry = packet.effectId;
             const instance = new StatusEffectInstance(registryEntry, packet.duration, packet.amplifier);

@@ -62,7 +62,7 @@ export class SoundResource implements ResourceModule {
                     const soundPath = soundEntry.split(':').pop();
                     if (!soundPath) continue;
 
-                    void pool.spawn(job, buffers, soundPath);
+                    pool.spawn(job, buffers, soundPath);
                 }
             } catch (error) {
                 await warn(String(error));

@@ -17,6 +17,7 @@ import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 import type {EntityAi} from "../ai/EntityAi.ts";
 import {MobAI} from "../ai/MobAI.ts";
+import type {HexColor} from "../../type/types.ts";
 
 export abstract class MobEntity extends LivingEntity implements IColorEntity {
     public color = '#ff6b6b';
@@ -149,7 +150,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         super.writeNBT(nbt);
 
         nbt.setUint32('worth', this.worth);
-        nbt.setUint32('color', encodeColorHex(this.color));
+        nbt.setUint32('color', encodeColorHex(this.color as HexColor));
         nbt.setUint32('age', this.age);
         this.AI.writeNBT(nbt);
         return nbt;

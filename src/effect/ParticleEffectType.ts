@@ -1,6 +1,7 @@
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {Registries} from "../registry/Registries.ts";
+import type {HexColor} from "../type/types.ts";
 
 export class ParticleEffectType {
     public static readonly PACKET_CODEC: PacketCodec<ParticleEffectType> = PacketCodecs.registryValue(Registries.PARTICLES);
@@ -14,11 +15,12 @@ export class ParticleEffectType {
     public readonly sizeMin: number;
     /** Maximum spawn radius size. */
     public readonly sizeMax: number;
+    public readonly type: number;
 
     /** Start color (CSS hex/rgba) at t=0. */
-    public readonly colorFrom: string;
+    public readonly colorFrom: HexColor;
     /** End color (CSS hex/rgba) at t=life. */
-    public readonly colorTo: string;
+    public readonly colorTo: HexColor;
 
     /** Minimum emission speed (units/s). */
     public readonly speedMin: number;
@@ -39,6 +41,7 @@ export class ParticleEffectType {
         this.lifeMax = builder.lifeMax;
         this.sizeMin = builder.sizeMin;
         this.sizeMax = builder.sizeMax;
+        this.type = builder.type;
         this.colorFrom = builder.colorFrom;
         this.colorTo = builder.colorTo;
         this.speedMin = builder.speedMin;
@@ -59,9 +62,10 @@ export class ParticleEffectTypeBuilder {
 
     public sizeMin: number = 2;
     public sizeMax: number = 5;
+    public type: number = 0;
 
-    public colorFrom: string = '#ffffff';
-    public colorTo: string = 'rgba(255,255,255,0)';
+    public colorFrom: HexColor = '#ffffff';
+    public colorTo: HexColor = '#FFFFFF00';
 
     public speedMin: number = 60;
     public speedMax: number = 160;
@@ -83,7 +87,12 @@ export class ParticleEffectTypeBuilder {
         return this;
     }
 
-    public colors(from: string, to?: string): this {
+    public setType(type: number): this {
+        this.type = Math.floor(type);
+        return this;
+    }
+
+    public colors(from: HexColor, to?: HexColor): this {
         this.colorFrom = from;
         this.colorTo = to ?? from;
         return this;

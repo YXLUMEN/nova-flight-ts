@@ -50,7 +50,7 @@ export class LangResource implements ResourceModule {
 
         const pool = new PromisePool<[string, unknown][]>();
         for (const file of files) {
-            void pool.spawn(this.loadFile, targetRoot, file);
+            pool.spawn(this.loadFile, targetRoot, file);
         }
 
         const results = await pool.join();

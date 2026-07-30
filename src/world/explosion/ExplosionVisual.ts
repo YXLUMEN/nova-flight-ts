@@ -15,8 +15,7 @@ export class ExplosionVisual {
             if (flag & 1 << 3) writer.writeInt8(value.fastSparks);
             if (flag & 1 << 4) writer.writeBoolean(value.ring);
             if (flag & 1 << 5) writer.writeInt8(encodeToUnsignedByte(value.shake, 1));
-            if (flag & 1 << 6) writer.writeBoolean(value.important);
-            if (flag & 1 << 7) writer.writeBoolean(value.screenFlash);
+            if (flag & 1 << 6) writer.writeBoolean(value.screenFlash);
         },
         reader => {
             const modified = reader.readInt8();
@@ -27,8 +26,7 @@ export class ExplosionVisual {
             if (modified & 1 << 3) visual.fastSparks = reader.readInt8();
             if (modified & 1 << 4) visual.ring = reader.readBoolean();
             if (modified & 1 << 5) visual.shake = decodeFromUnsignedByte(reader.readUint8(), 1);
-            if (modified & 1 << 6) visual.important = reader.readBoolean();
-            if (modified & 1 << 7) visual.screenFlash = reader.readBoolean();
+            if (modified & 1 << 6) visual.screenFlash = reader.readBoolean();
             return visual;
         }
     );
@@ -44,7 +42,6 @@ export class ExplosionVisual {
     // 火花数量
     public sparks: number;
     public fastSparks: number;
-    public important: boolean;
 
     public constructor(
         radius: number = 96,
@@ -53,7 +50,6 @@ export class ExplosionVisual {
         fastSparks: number = 4,
         ring: boolean = true,
         shake: number = 0,
-        important: boolean = false,
         screenFlash: boolean = false,
         flash?: VisualEffect,
     ) {
@@ -63,7 +59,6 @@ export class ExplosionVisual {
         this.shake = shake;
         this.sparks = sparks;
         this.fastSparks = fastSparks;
-        this.important = important;
         this.screenFlash = screenFlash;
         this.flash = flash;
     }
@@ -76,9 +71,8 @@ export class ExplosionVisual {
         if (this.fastSparks !== 4) flag |= 1 << 3;
         if (!this.ring) flag |= 1 << 4;
         if (this.shake !== 0) flag |= 1 << 5;
-        if (this.important) flag |= 1 << 6;
-        if (this.screenFlash) flag |= 1 << 7;
-        if (this.flash) flag |= 1 << 8;
+        if (this.screenFlash) flag |= 1 << 6;
+        if (this.flash) flag |= 1 << 7;
         return flag;
     }
 }

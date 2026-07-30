@@ -1,9 +1,10 @@
 import type {ClientWorld} from "../client/ClientWorld.ts";
 import type {Entity} from "../entity/Entity.ts";
 import {PI2, rand, randInt} from "./math/math.ts";
+import type {HexColor} from "../type/types.ts";
 
 export class ClientEffect {
-    public static spawnChargingParticles(world: ClientWorld, entity: Entity, particles: number, colorFrom: string, colorTo?: string): void {
+    public static spawnChargingParticles(world: ClientWorld, entity: Entity, particles: number, colorFrom: HexColor, colorTo?: HexColor): void {
         const pos = entity.positionRef;
         const yaw = entity.getYaw();
         const offset = entity.getWidth() / 2;
@@ -29,6 +30,7 @@ export class ClientEffect {
                 dirX * speed, dirY * speed,
                 rand(0.4, 0.6), rand(2, 3),
                 colorFrom, colorTo,
+                0,
                 0.6
             );
         }
@@ -38,8 +40,8 @@ export class ClientEffect {
         world: ClientWorld,
         entity: Entity,
         particles: number,
-        colorFrom: string,
-        colorTo?: string,
+        colorFrom: HexColor,
+        colorTo?: HexColor,
         offset: number = 1,
         maxSpread: number = 0.41886
     ): void {
@@ -64,6 +66,7 @@ export class ClientEffect {
                 px * speed, py * speed,
                 rand(0.4, 0.6), rand(2, 3),
                 colorFrom, colorTo,
+                0,
                 0.6
             );
         }

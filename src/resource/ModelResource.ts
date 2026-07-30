@@ -48,7 +48,7 @@ export class ModelResource implements ResourceModule {
         };
 
         for (const [key, abs] of modelAbsPaths) {
-            void pool.spawn(job, key, abs);
+            pool.spawn(job, key, abs);
         }
 
         const parsedModels = await pool.join();

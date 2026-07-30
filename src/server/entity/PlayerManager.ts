@@ -14,6 +14,7 @@ import type {ServerConnection} from "../network/ServerConnection.ts";
 import {ConnectionState} from "../network/ConnectionState.ts";
 import {ServerCommonHandler} from "../network/handler/ServerCommonHandler.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
+import {TickChangeS2CPacket} from "../../network/packet/s2c/TickChangeS2CPacket.ts";
 
 export class PlayerManager {
     private readonly server: NovaFlightServer;
@@ -45,6 +46,7 @@ export class PlayerManager {
         }
 
         handler.send(new JoinGameS2CPacket(player.getId(), this.server.worldName));
+        handler.send(new TickChangeS2CPacket(this.server.getTickManager().getRate()));
         connection.broadcast(new PlayerJoinS2CPacket(profile.name, profile.clientId));
         world.addPlayer(player);
 

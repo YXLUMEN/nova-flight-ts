@@ -6,7 +6,6 @@ import {isBoxInView} from "../../utils/render/render.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
 import {defaultLayers} from "../../configs/StarfieldConfig.ts";
 import {StarField} from "../../effect/StarField.ts";
-import {ParticlePool} from "../../effect/ParticlePool.ts";
 import type {VisualEffect} from "../../effect/VisualEffect.ts";
 import {EntityRenderers} from "./entity/EntityRenderers.ts";
 import {GlobalConfig} from "../../configs/GlobalConfig.ts";
@@ -16,6 +15,8 @@ import type {ParticleEffectType} from "../../effect/ParticleEffectType.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 import {BlockMapRender} from "./BlockMapRender.ts";
 import type {TitleEffect} from "../../effect/TitleEffect.ts";
+import {ParticlePool} from "../../effect/ParticlePool.ts";
+import type {HexColor} from "../../type/types.ts";
 
 export class WorldRender {
     private readonly client: NovaFlightClient;
@@ -24,7 +25,7 @@ export class WorldRender {
     public rendering = true;
     private title: TitleEffect | null = null;
     private readonly effects: VisualEffect[] = [];
-    private readonly particlePool: ParticlePool = new ParticlePool(256);
+    private readonly particlePool: ParticlePool = new ParticlePool(512);
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
     private mapRender: BlockMapRender | null = null;
 
@@ -65,14 +66,20 @@ export class WorldRender {
     }
 
     public addParticle(
-        pos: Vec2, vel: Vec2,
-        life: number, size: number,
-        colorFrom: string, colorTo: string,
+        x: number, y: number,
+        vx: number, vy: number,
+        life: number,
+        halfW: number, halfH: number,
+        type: number,
+        colorFrom: HexColor, colorTo?: HexColor,
         drag?: number
     ) {
         this.particlePool.spawn(
-            pos, vel,
-            life, size,
+            x, y,
+            vx, vy,
+            life,
+            halfW, halfH,
+            type,
             colorFrom, colorTo,
             drag
         );

@@ -1,4 +1,5 @@
 import {clamp, PI2} from "./math/math.ts";
+import type {HexColor} from "../type/types.ts";
 
 const VELOCITY_SCALE = 32767 / 60.0;
 
@@ -92,7 +93,7 @@ export function encodeColorHex(hex: string): number {
  * Decodes a u32-bit RGBA integer (0xRRGGBBAA) into a normalized 8-digit hex string.
  * Always returns uppercase with leading '#'.
  */
-export function decodeColorToHex(colorInt: number): string {
+export function decodeColorToHex(colorInt: number): HexColor {
     if (!Number.isInteger(colorInt) || colorInt < 0 || colorInt > 0xFFFFFFFF) {
         throw new Error(`Expected a 32-bit unsigned integer, got: ${colorInt}`);
     }

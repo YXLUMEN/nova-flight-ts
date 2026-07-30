@@ -23,3 +23,5 @@ export type Predicate<T> = (val: T) => boolean;
 export type EntityDist<T extends Entity> = { entity: T, distSq: number };
 
 export type Pair<K, V> = { key: K, value: V };
+
+export type HexColor = `#${string}`;

@@ -11,7 +11,7 @@ import {EntityType} from "../entity/EntityType.ts";
 import {EntityList} from "../world/entity/EntityList.ts";
 import {ServerEntityManager} from "../world/entity/ServerEntityManager.ts";
 import type {EntityHandler} from "../world/entity/EntityHandler.ts";
-import type {UUID} from "../type/types.ts";
+import type {HexColor, UUID} from "../type/types.ts";
 import {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import type {Stage} from "../world/stage/Stage.ts";
@@ -276,7 +276,7 @@ export class ServerWorld extends World implements NbtSerializable {
     public spawnParticle(
         posX: number, posY: number, offsetX: number, offsetY: number,
         count: number, speed: number, life: number, size: number,
-        colorFrom: string, colorTo?: string): void {
+        colorFrom: HexColor, colorTo?: HexColor): void {
         this.sendPacket(ParticleS2CPacket.create(
             posX, posY, offsetX, offsetY, count, speed, life, size, colorFrom, colorTo ?? colorFrom
         ));
@@ -286,7 +286,7 @@ export class ServerWorld extends World implements NbtSerializable {
         this.sendPacket(new PreparedParticleS2CPacket(type, pos, count, baseAngle));
     }
 
-    public override addImportantParticle() {
+    public override addPreparedParticle() {
     }
 
     public override addParticleByVec(): void {
