@@ -162,17 +162,17 @@ export class AABB implements Comparable {
     }
 
     public static raycastEach(boxes: Iterable<AABB>, from: Vec2, to: Vec2, pos: BlockPos) {
-        const ds = [1];
+        const bestT = [1];
         let direction: Direction | null = null;
         const d = to.x - from.x;
         const e = to.y - from.y;
 
         for (const box of boxes) {
-            direction = this.traceCollisionSide(box.offsetByBlockPos(pos), from, ds, direction, d, e);
+            direction = this.traceCollisionSide(box.offsetByBlockPos(pos), from, bestT, direction, d, e);
         }
 
         if (direction === null) return null;
-        const g = ds[0];
+        const g = bestT[0];
         return new BlockHitResult(from.add(g * d, g * e), direction, pos, false);
     }
 

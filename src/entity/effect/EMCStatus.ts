@@ -1,6 +1,6 @@
 import {StatusEffect} from "./StatusEffect.ts";
-import {PI2} from "../../utils/math/math.ts";
 import type {LivingEntity} from "../LivingEntity.ts";
+import {PI2} from "../../utils/math/math.ts";
 
 export class EMCStatus extends StatusEffect {
     public constructor() {

@@ -35,6 +35,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     public readonly clientInventory: ClientInventory;
 
+    declare protected techTree: ClientTechTree;
     private quickFireIndex = 0;
     private readonly activeSpecials: Map<string, SpecialWeapon>;
     private readonly orderSpecials: SpecialWeapon[];
@@ -374,7 +375,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     public override setScore(score: number) {
         super.setScore(score);
         (this.getWorld() as ClientWorld).setTotalScore(score);
-        (this.techTree as ClientTechTree).playerScore.textContent = `点数: ${this.getScore()}`;
+        this.techTree.playerScore.textContent = `点数: ${this.getScore()}`;
     }
 
     public override canMoveVoluntarily(): boolean {

@@ -2,6 +2,8 @@ import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {Registries} from "../registry/Registries.ts";
 import type {HexColor} from "../type/types.ts";
+import {encodeColorHex} from "../utils/NetUtil.ts";
+import {ParticleShape} from "./ParticlePool.ts";
 
 export class ParticleEffectType {
     public static readonly PACKET_CODEC: PacketCodec<ParticleEffectType> = PacketCodecs.registryValue(Registries.PARTICLES);
@@ -10,17 +12,18 @@ export class ParticleEffectType {
     public readonly lifeMin: number;
     /** Maximum particle lifetime (seconds). */
     public readonly lifeMax: number;
+    public readonly recession: number;
 
     /** Minimum spawn radius size. */
     public readonly sizeMin: number;
     /** Maximum spawn radius size. */
     public readonly sizeMax: number;
-    public readonly type: number;
+    public readonly shape: ParticleShape;
 
     /** Start color (CSS hex/rgba) at t=0. */
-    public readonly colorFrom: HexColor;
+    public readonly colorFrom: number;
     /** End color (CSS hex/rgba) at t=life. */
-    public readonly colorTo: HexColor;
+    public readonly colorTo: number;
 
     /** Minimum emission speed (units/s). */
     public readonly speedMin: number;
@@ -39,11 +42,12 @@ export class ParticleEffectType {
     public constructor(builder: ParticleEffectTypeBuilder) {
         this.lifeMin = builder.lifeMin;
         this.lifeMax = builder.lifeMax;
+        this.recession = builder.recession;
         this.sizeMin = builder.sizeMin;
         this.sizeMax = builder.sizeMax;
-        this.type = builder.type;
-        this.colorFrom = builder.colorFrom;
-        this.colorTo = builder.colorTo;
+        this.shape = builder.particleShape;
+        this.colorFrom = encodeColorHex(builder.colorFrom);
+        this.colorTo = encodeColorHex(builder.colorTo);
         this.speedMin = builder.speedMin;
         this.speedMax = builder.speedMax;
         this.spreadMin = builder.spreadMin;
@@ -59,19 +63,20 @@ export class ParticleEffectType {
 export class ParticleEffectTypeBuilder {
     public lifeMin: number = 0.3;
     public lifeMax: number = 0.8;
+    public recession: number = 0.6;
 
     public sizeMin: number = 2;
     public sizeMax: number = 5;
-    public type: number = 0;
+    public particleShape: ParticleShape = ParticleShape.Circle;
 
     public colorFrom: HexColor = '#ffffff';
     public colorTo: HexColor = '#FFFFFF00';
 
-    public speedMin: number = 60;
-    public speedMax: number = 160;
+    public speedMin: number = 0;
+    public speedMax: number = 0;
 
     public spreadMin: number = 0;
-    public spreadMax: number = Math.PI;
+    public spreadMax: number = 0;
 
     public drag: number = 0.5;
 
@@ -81,14 +86,19 @@ export class ParticleEffectTypeBuilder {
         return this;
     }
 
+    public setRecession(value: number): this {
+        this.recession = value;
+        return this;
+    }
+
     public size(min: number, max: number): this {
         this.sizeMin = min;
         this.sizeMax = max;
         return this;
     }
 
-    public setType(type: number): this {
-        this.type = Math.floor(type);
+    public shape(shape: ParticleShape): this {
+        this.particleShape = Math.floor(shape);
         return this;
     }
 
@@ -105,14 +115,20 @@ export class ParticleEffectTypeBuilder {
     }
 
     public omnidirectional(): this {
-        this.spreadMin = 0;
+        this.spreadMin = -Math.PI;
         this.spreadMax = Math.PI;
         return this;
     }
 
-    public spread(halfAngle: number): this {
-        this.spreadMin = 0;
+    public symmetry(halfAngle: number): this {
+        this.spreadMin = -halfAngle;
         this.spreadMax = halfAngle;
+        return this;
+    }
+
+    public spread(min: number, max: number) {
+        this.spreadMin = min;
+        this.spreadMax = max;
         return this;
     }
 

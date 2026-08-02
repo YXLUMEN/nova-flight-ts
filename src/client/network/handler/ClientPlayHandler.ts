@@ -71,6 +71,7 @@ import type {NotGiveUpS2CPacket} from "../../../network/packet/s2c/NotGiveUpS2CP
 import {WindowOverlay} from "../../../effect/WindowOverlay.ts";
 import {TitleEffect} from "../../../effect/TitleEffect.ts";
 import type {TickChangeS2CPacket} from "../../../network/packet/s2c/TickChangeS2CPacket.ts";
+import type {PlayerProfilesS2CPacket} from "../../../network/packet/s2c/PlayerProfilesS2CPacket.ts";
 
 export class ClientPlayHandler extends ClientCommonHandler {
     private readonly playerProfiles: Map<UUID, GameProfile> = new Map();
@@ -99,7 +100,6 @@ export class ClientPlayHandler extends ClientCommonHandler {
                 this.client.clientId,
                 this.client.playerName
             );
-            this.playerProfiles.set(profile.clientId, profile);
             this.client.player = new ClientPlayerEntity(this.world, this.client.input, profile);
             this.client.player.setYaw(-1.57079);
         }
@@ -119,6 +119,14 @@ export class ClientPlayHandler extends ClientCommonHandler {
         if (this.playerProfiles.has(packet.uuid)) return;
         this.playerProfiles.set(packet.uuid, new GameProfile(0, packet.uuid, packet.playerName));
         this.client.clientCommandManager.addPlainMessage(`\x1b[32m${packet.playerName}\x1b[0m join the game`);
+    }
+
+    public onPlayerProfiles(packet: PlayerProfilesS2CPacket) {
+        for (let i = 0; i < packet.uuids.length; i++) {
+            const uuid = packet.uuids[i];
+            if (this.playerProfiles.has(uuid)) continue;
+            this.playerProfiles.set(uuid, new GameProfile(0, uuid, packet.playerNames[i]));
+        }
     }
 
     public onPlayerDisconnect(packet: PlayerDisconnectS2CPacket) {
@@ -224,7 +232,14 @@ export class ClientPlayHandler extends ClientCommonHandler {
     private createEntity(packet: EntitySpawnS2CPacket): Entity | null {
         const entityType = packet.entityType;
         if (entityType === EntityTypes.PLAYER) {
-            if (this.playerProfiles.has(packet.uuid)) return null;
+            if (packet.uuid === this.client.clientId) {
+                console.warn(`Conflict uuid with client ${packet.uuid}`);
+                return null;
+            }
+            if (!this.playerProfiles.has(packet.uuid)) {
+                console.warn(`Server attempted to add player prior to sending player info (Player id ${packet.uuid})`);
+                return null;
+            }
             return new RemotePlayerEntity(this.world!);
         }
 
@@ -336,7 +351,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
     public onPreparedParticle(packet: PreparedParticleS2CPacket): void {
         if (!this.world) return;
-        this.world.addPreparedParticle(packet.particle, packet.pos, packet.count, packet.baseAngle);
+        this.world.addPreparedParticleVec(packet.particle, packet.pos, packet.count, packet.baseAngle);
     }
 
     public onEntityAttributes(packet: EntityAttributesS2CPacket): void {
@@ -469,7 +484,6 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
     public onEntityEffect(packet: EntityStatusEffectS2CPacket): void {
         const entity = this.world?.getEntityById(packet.entityId);
-        console.log(entity, packet);
         if (entity instanceof LivingEntity) {
             const registryEntry = packet.effectId;
             const instance = new StatusEffectInstance(registryEntry, packet.duration, packet.amplifier);

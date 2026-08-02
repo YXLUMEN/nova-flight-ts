@@ -42,7 +42,7 @@ export class FireWave {
         return fallback;
     }
 
-    public fireBulletWave(
+    public fireBulletWaveVec(
         world: ServerWorld,
         supplier: Supplier<ProjectileEntity>,
         pos: Vec2,
@@ -60,7 +60,7 @@ export class FireWave {
         return this.fireAngles(world, supplier, pos, angles, predicate, color, edgeColor);
     }
 
-    public fireBulletWaveD(
+    public fireBulletWave(
         world: ServerWorld,
         supplier: Supplier<ProjectileEntity>,
         x: number, y: number,

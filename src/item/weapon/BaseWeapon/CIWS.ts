@@ -35,7 +35,7 @@ export class CIWS extends BaseWeapon {
 
     public override onStartFire(stack: ItemStack, world: World, attacker: Entity): void {
         if (!stack.isAvailable()) return;
-        world.playLoopSound(attacker, SoundEvents.CIWS_FIRE_LOOP, 0.8);
+        world.playLoopSound(attacker, SoundEvents.CIWS_FIRE_LOOP, 0.5);
     }
 
     public override onEndFire(stack: ItemStack, world: World, attacker: Entity): void {

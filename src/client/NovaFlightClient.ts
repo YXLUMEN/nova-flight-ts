@@ -138,6 +138,7 @@ export class NovaFlightClient {
             this.connection.clean();
             if (this.isIntegrated) {
                 await invoke('stop_server');
+                await invoke('stop_lan_announce');
             }
             this.window.resize();
         }

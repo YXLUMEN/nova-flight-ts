@@ -184,7 +184,7 @@ export abstract class PlayerEntity extends LivingEntity {
     protected override onDiscard() {
         super.onDiscard();
         this.clearItems();
-        this.techTree!.destroy();
+        this.techTree?.destroy();
     }
 
     public override isPlayer(): this is PlayerEntity {
@@ -312,7 +312,7 @@ export abstract class PlayerEntity extends LivingEntity {
         nbt.setBoolean('used_be_dev', this.isUsedBeDev());
 
         this.inventory.writeNBT(nbt);
-        this.techTree!.writeNBT(nbt);
+        this.techTree?.writeNBT(nbt);
         return nbt;
     }
 
@@ -322,7 +322,7 @@ export abstract class PlayerEntity extends LivingEntity {
         this.setDevMode(nbt.getBoolean('dev_mode'));
         this.usedDev = nbt.getBoolean('used_be_dev');
 
-        this.techTree!.readNBT(nbt);
+        this.techTree?.readNBT(nbt);
         this.inventory.readNBT(nbt);
         // todo 玩家重生
         if (this.getHealth() === 0) this.setHealth(this.getMaxHealth());

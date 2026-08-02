@@ -16,12 +16,13 @@ import {NovaFlightClient} from "../NovaFlightClient.ts";
 import {ModelManager} from "../render/model/ModelManager.ts";
 import {cleanObj} from "../../utils/uit.ts";
 import {ClientTechManager} from "./ClientTechManager.ts";
+import type {ClientTech} from "./ClientTech.ts";
 
 interface Adjacency {
-    successors: Map<Tech, Tech[]>; // tech -> successors
-    conflicts: Map<Tech, Tech[]>; // tech -> conflicts
-    branchGroupOf: Map<Tech, string | null>; // tech -> branchGroup
-    techsInBranch: Map<string, Tech[]>; // branchGroup -> Techs
+    successors: Map<ClientTech, ClientTech[]>; // tech -> successors
+    conflicts: Map<ClientTech, ClientTech[]>; // tech -> conflicts
+    branchGroupOf: Map<ClientTech, string | null>; // tech -> branchGroup
+    techsInBranch: Map<string, ClientTech[]>; // branchGroup -> Techs
 }
 
 
@@ -45,7 +46,7 @@ export class ClientTechTree implements TechTree {
     private readonly svg: SVGSVGElement;
     private readonly nodesLayer: HTMLElement;
 
-    private readonly state: TechState;
+    private readonly state: TechState<ClientTech>;
     private readonly adj: Adjacency;
 
     private readonly abortCtrl: AbortController = new AbortController();
@@ -59,8 +60,8 @@ export class ClientTechTree implements TechTree {
         const techState = Registries.TECH
             .getEntries()
             .map(entry => entry.getValue())
-            .toArray();
-        this.state = new TechState(techState);
+            .toArray() as ClientTech[];
+        this.state = new TechState<ClientTech>(techState);
         this.adj = this.buildAdjacency(techState);
 
         this.tryApply = this.tryApply.bind(this);
@@ -83,10 +84,10 @@ export class ClientTechTree implements TechTree {
         }, {signal: this.abortCtrl.signal});
     }
 
-    public applyUnlockUpdates(tech: Tech) {
-        const affected = new Set<Tech>();
+    public applyUnlockUpdates(tech: ClientTech) {
+        const affected = new Set<ClientTech>();
 
-        const add = (ids: Iterable<Tech>) => {
+        const add = (ids: Iterable<ClientTech>) => {
             for (const x of ids) affected.add(x);
         };
 
@@ -119,16 +120,16 @@ export class ClientTechTree implements TechTree {
         );
     }
 
-    public unlock(tech: RegistryEntry<Tech>): boolean {
+    public unlock(tech: RegistryEntry<ClientTech>): boolean {
         return this.state.unlock(tech.getValue());
     }
 
-    public forceUnlock(tech: RegistryEntry<Tech>): void {
+    public forceUnlock(tech: RegistryEntry<ClientTech>): void {
         this.state.forceUnlock(tech.getValue());
         ClientTechManager.apply(tech, this.player);
     }
 
-    public isUnlocked(tech: RegistryEntry<Tech>): boolean {
+    public isUnlocked(tech: RegistryEntry<ClientTech>): boolean {
         return this.state.isUnlocked(tech.getValue());
     }
 
@@ -190,7 +191,7 @@ export class ClientTechTree implements TechTree {
         this.playerScore.textContent = '0';
     }
 
-    private linkTo(from: Tech, to: Tech) {
+    private linkTo(from: ClientTech, to: ClientTech) {
         const fx = from.x + this.nodeWidth / 2;
         const fy = from.y + this.nodeHeight / 2;
         const tx = to.x + this.nodeWidth / 2;
@@ -269,10 +270,10 @@ export class ClientTechTree implements TechTree {
                 if (to.drawExcept && to.drawExcept.has(from)) return;
 
                 const line = document.createElementNS(svgNS, 'line');
-                line.dataset.from = this.state.getTechId(from)!.toString();
+                line.dataset.from = this.state.getTechId(from as ClientTech)!.toString();
                 line.dataset.to = this.state.getTechId(to)!.toString();
 
-                const {x1, y1, x2, y2} = this.linkTo(from, to);
+                const {x1, y1, x2, y2} = this.linkTo(from as ClientTech, to);
 
                 line.setAttribute('x1', `${x1}`);
                 line.setAttribute('y1', `${y1}`);
@@ -294,7 +295,7 @@ export class ClientTechTree implements TechTree {
         this.nodesLayer.replaceChildren(frag);
     }
 
-    private createNodeElement(tech: Tech): HTMLElement {
+    private createNodeElement(tech: ClientTech): HTMLElement {
         const div = document.createElement('div');
         div.dataset.id = this.state.getTechId(tech)!.toString();
         div.className = `node ${this.state.computeStatus(tech)}`;
@@ -335,7 +336,7 @@ export class ClientTechTree implements TechTree {
             const entry = Registries.TECH.getEntryByValue(tech);
             if (!entry) return;
 
-            this.resetTech(entry);
+            this.resetTech(entry as RegistryEntry<ClientTech>);
         }, {signal: this.abortCtrl.signal});
         this.resetAllBtn.addEventListener('click', this.resetAllTech.bind(this), {signal: this.abortCtrl.signal});
 
@@ -436,7 +437,7 @@ export class ClientTechTree implements TechTree {
         this.metaShow.replaceChildren(frag);
     }
 
-    private updateNodeClass(tech: Tech) {
+    private updateNodeClass(tech: ClientTech) {
         const id = this.state.getTechId(tech)?.toString();
         if (!id) return;
         const ele = this.nodesLayer.querySelector<HTMLElement>(`.node[data-id="${CSS.escape(id)}"]`);
@@ -479,19 +480,18 @@ export class ClientTechTree implements TechTree {
         line.classList.toggle('blocked', toStatus === 'conflicted' || toStatus === 'locked');
     }
 
-    private buildAdjacency(techs: Tech[]): Adjacency {
-        const successors = new Map<Tech, Tech[]>();
-        const conflicts = new Map<Tech, Tech[]>();
-        const branchGroupOf = new Map<Tech, string | null>();
-        const techsInBranch = new Map<string, Tech[]>();
+    private buildAdjacency(techs: ClientTech[]): Adjacency {
+        const successors = new Map<ClientTech, ClientTech[]>();
+        const conflicts = new Map<ClientTech, ClientTech[]>();
+        const branchGroupOf = new Map<ClientTech, string | null>();
+        const techsInBranch = new Map<string, ClientTech[]>();
 
         for (const tech of techs) {
             if (tech.requires) for (const require of tech.requires) {
-                if (!successors.has(require)) successors.set(require, []);
-                successors.get(require)!.push(tech);
+                successors.getOrInsertComputed(require as ClientTech, () => []).push(tech);
             }
             if (tech.conflicts && tech.conflicts.size > 0) {
-                conflicts.set(tech, Array.from(tech.conflicts));
+                conflicts.set(tech, Array.from(tech.conflicts) as ClientTech[]);
             }
 
             branchGroupOf.set(tech, tech.branchGroup);
@@ -503,9 +503,9 @@ export class ClientTechTree implements TechTree {
         return cleanObj({successors, conflicts, branchGroupOf, techsInBranch});
     }
 
-    private successorsClosure(tech: Tech): Tech[] {
-        const res: Tech[] = [];
-        const seen = new Set<Tech>();
+    private successorsClosure(tech: ClientTech): ClientTech[] {
+        const res: ClientTech[] = [];
+        const seen = new Set<ClientTech>();
         const stack = this.adj.successors.get(tech);
         if (!stack) return [];
 
@@ -520,7 +520,7 @@ export class ClientTechTree implements TechTree {
         return res;
     }
 
-    private branchPeers(tech: Tech): Tech[] {
+    private branchPeers(tech: ClientTech): ClientTech[] {
         const group = this.adj.branchGroupOf.get(tech);
         if (!group) return [];
         const inGroup = this.adj.techsInBranch.get(group);
@@ -528,7 +528,7 @@ export class ClientTechTree implements TechTree {
         return inGroup.filter(x => x !== tech);
     }
 
-    private conflictPeers(tech: Tech): Tech[] {
+    private conflictPeers(tech: ClientTech): ClientTech[] {
         return this.adj.conflicts.get(tech) ?? [];
     }
 
@@ -536,7 +536,7 @@ export class ClientTechTree implements TechTree {
         return this.state.unlocked.size;
     }
 
-    public resetTech(entry: RegistryEntry<Tech>): boolean {
+    public resetTech(entry: RegistryEntry<ClientTech>): boolean {
         const tech = entry.getValue();
         if (!this.state.isUnlocked(tech)) {
             return false;

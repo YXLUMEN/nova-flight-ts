@@ -35,6 +35,8 @@ export class ServerPlayerEntity extends PlayerEntity {
     private mendingCooldown = 0;
     private chargeShieldCooldown = 0;
 
+    declare protected techTree: ServerTechTree;
+
     public constructor(world: ServerWorld, playerProfile: GameProfile) {
         super(world, ServerItemCooldownManager);
 
@@ -61,14 +63,14 @@ export class ServerPlayerEntity extends PlayerEntity {
 
         // 没有采用效果方便精细控制
         if (this.getHealth() < this.getMaxHealth() &&
-            this.techTree!.isUnlocked(Techs.NANO_MENDING) &&
+            this.techTree.isUnlocked(Techs.NANO_MENDING) &&
             this.mendingCooldown-- <= 0) {
             this.heal(1);
             this.mendingCooldown = 60;
         }
 
         if (this.getShieldAmount() < this.getMaxShield() &&
-            this.techTree!.isUnlocked(Techs.DEFLECTOR) &&
+            this.techTree.isUnlocked(Techs.DEFLECTOR) &&
             this.chargeShieldCooldown-- <= 0) {
             this.setShieldAmount(this.getShieldAmount() + 2);
             this.chargeShieldCooldown = 60;

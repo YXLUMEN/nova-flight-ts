@@ -18,12 +18,11 @@ import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import type {ClientPlayerEntity} from "../../client/entity/ClientPlayerEntity.ts";
 import {PlayerMissileTargetSelector} from "../../utils/math/MissileTargetSelector.ts";
+import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 
 export class MissileEntity extends RocketEntity {
     public static readonly IS_IGNITE = DataTracker.registerData(Object(MissileEntity), TrackedDataHandlerRegistry.BOOL);
     public static readonly TARGET_ID = DataTracker.registerData(Object(MissileEntity), TrackedDataHandlerRegistry.VAR_UINT);
-
-    public static readonly LOCKED_ENTITY = new WeakMap<Entity, number>();
 
     protected target: Entity | null = null;
     protected lastTarget: Entity | null = null;
@@ -35,6 +34,7 @@ export class MissileEntity extends RocketEntity {
     protected lockDelayTicks = 40;
     protected maxLifetimeTicks = 400;
     private ignite = false;
+    private ignited = false;
 
     protected driftAttenuation = true;
     protected driftSpeed = 2;
@@ -130,14 +130,9 @@ export class MissileEntity extends RocketEntity {
 
         const newTarget = this.acquireTarget();
         if (newTarget === null) return;
-        if (newTarget !== this.target) {
-            this.onChangeTarget();
-        }
         this.target = newTarget;
         this.relockCooldown = this.maxRelockCooldown;
 
-        const count = MissileEntity.LOCKED_ENTITY.get(this.target) ?? 0;
-        MissileEntity.LOCKED_ENTITY.set(this.target, count + 1);
         world.events.emit(EVENTS.ENTITY_LOCKED, {missile: this});
     }
 
@@ -161,7 +156,20 @@ export class MissileEntity extends RocketEntity {
     }
 
     private emitClientParticles(world: World): void {
-        if (!world.isClient || (this.age & 3) !== 0 || !this.isIgnite()) return;
+        if (!world.isClient || !this.isIgnite()) return;
+
+        if (!this.ignited) {
+            this.ignited = true;
+            world.addPreparedParticleVec(
+                ParticleEffects.BURST,
+                this.positionRef,
+                8,
+                this.getYaw() + Math.PI
+            );
+        }
+
+        if ((this.age & 3) !== 0) return;
+
         const pos = this.positionRef;
         const yaw = this.getYaw();
         world.addParticle(
@@ -215,19 +223,8 @@ export class MissileEntity extends RocketEntity {
     public override onDiscard(): void {
         super.onDiscard();
 
-        this.onChangeTarget();
         this.target = null;
         this.lastTarget = null;
-    }
-
-    private onChangeTarget(): void {
-        if (!this.target) return;
-        const count = MissileEntity.LOCKED_ENTITY.get(this.target) ?? 0;
-        if (count > 1) {
-            MissileEntity.LOCKED_ENTITY.set(this.target, count - 1);
-        } else {
-            MissileEntity.LOCKED_ENTITY.delete(this.target);
-        }
     }
 
     public isIgnite(): boolean {
@@ -249,9 +246,7 @@ export class MissileEntity extends RocketEntity {
             this.getWorld(),
             this.positionRef,
             this.getYaw(),
-            this.getOwner(),
-            this.getHitDamage(),
-            this.explosionDamage,
+            this.getOwner()
         );
     }
 

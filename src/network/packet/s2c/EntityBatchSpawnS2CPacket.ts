@@ -25,10 +25,11 @@ export class EntityBatchSpawnS2CPacket implements Payload {
     }
 
     public static create(entities: Iterable<Entity>) {
-        const list = [...entities];
-        return new EntityBatchSpawnS2CPacket(
-            list.map(entity => entity.createSpawnPacket())
-        );
+        const list = Iterator.from(entities)
+            .map(entity => entity.createSpawnPacket())
+            .toArray();
+
+        return new EntityBatchSpawnS2CPacket(list);
     }
 
     public type(): PayloadType<any> {

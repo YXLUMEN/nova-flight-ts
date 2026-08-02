@@ -50,6 +50,7 @@ import {TechRocketLauncher} from "../../world/tech/apply/TechRocketLauncher.ts";
 import {TechPerditionBeam} from "../../world/tech/apply/TechPerditionBeam.ts";
 import {TechAdLoading} from "../../world/tech/apply/TechAdLoading.ts";
 import {TechDeflector} from "../../world/tech/apply/TechDeflector.ts";
+import {TechSmokeLauncher} from "../../world/tech/apply/TechSmokeLauncher.ts";
 
 export class ServerTechManager {
     private static readonly techMap: Map<RegistryEntry<Tech>, ApplyTech> = new Map();
@@ -118,5 +119,6 @@ export class ServerTechManager {
         this.register(Techs.VOID_ENGIN, TechVoidEngin);
         this.register(Techs.VOID_LEAP, TechVoidLeap);
         this.register(Techs.DEFLECTOR, TechDeflector);
+        this.register(Techs.SMOKE_LAUNCHER, TechSmokeLauncher);
     }
 }

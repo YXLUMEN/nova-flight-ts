@@ -66,7 +66,8 @@ export class EntityRenderers {
         this.register(EntityTypes.TARGET_DRONE, new TargetDroneEntityRender());
         this.register(EntityTypes.MAGNETIC_TORPEDO_ENTITY, new MagneticTorpedoEntityRender());
         this.register(EntityTypes.DEVOURER_BOSS_ENTITY, new DevourerBossRender());
-        this.register(EntityTypes.TRAILBLAZER_ENTITY, new TrailblazerEntityRender())
+        this.register(EntityTypes.TRAILBLAZER_ENTITY, new TrailblazerEntityRender());
+        this.register(EntityTypes.SMOKE_BOMB, bullet);
         this.compileRenders();
     }
 

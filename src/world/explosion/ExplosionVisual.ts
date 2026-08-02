@@ -31,9 +31,9 @@ export class ExplosionVisual {
         }
     );
 
+    /** @deprecated 未来将合并至 power. 视觉半径 */
     public radius: number;
     public color: string;
-    // 视觉半径
     public ring: boolean;
     public flash?: VisualEffect;
     public screenFlash: boolean;

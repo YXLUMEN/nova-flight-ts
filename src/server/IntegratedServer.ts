@@ -46,7 +46,7 @@ export class IntegratedServer extends NovaFlightServer {
         await this.startGame(manager);
 
         const isTutorial = await ServerStorage.db.get<string>('user_info', 'tutorial');
-        if (isTutorial.ok().isEmpty() && this.world) {
+        if (isTutorial.isOk() && isTutorial.unwrap() === null && this.world) {
             await ServerStorage.db.update('user_info', {name: 'tutorial'});
 
             this.world.stage = TutorialStage;

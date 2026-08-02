@@ -1,5 +1,5 @@
 import {Weapon} from "../Weapon.ts";
-import {rand, randInt} from "../../../utils/math/math.ts";
+import {rand} from "../../../utils/math/math.ts";
 import type {ProjectileEntity} from "../../../entity/projectile/ProjectileEntity.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {ItemStack} from "../../ItemStack.ts";
@@ -9,6 +9,7 @@ import type {ClientWorld} from "../../../client/ClientWorld.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
+import {ParticleEffects} from "../../../effect/ParticleEffects.ts";
 
 export abstract class BaseWeapon extends Weapon {
     public override inventoryTick(stack: ItemStack, _world: World, holder: Entity, _slot: number, selected: boolean): void {
@@ -138,26 +139,15 @@ export abstract class BaseWeapon extends Weapon {
         const pos = entity.positionRef;
         const yaw = entity.getYaw();
         const offset = entity.getDimensions().halfWidth;
+
         const x = Math.cos(yaw) * offset + pos.x;
         const y = Math.sin(yaw) * offset + pos.y;
 
-        for (let i = 0; i < particles; i++) {
-            const angleOffset = rand(-0.41886, 0.41886);
-            const particleYaw = yaw + angleOffset;
-
-            const px = Math.cos(particleYaw);
-            const py = Math.sin(particleYaw);
-
-            const speed = randInt(100, 210);
-
-            world.addParticle(
-                x, y,
-                px * speed, py * speed,
-                rand(0.4, 0.6), rand(2, 3),
-                "#ffaa33", "#ff5454",
-                0,
-                0.6
-            );
-        }
+        world.addPreparedParticle(
+            ParticleEffects.MUZZLE_SPARK,
+            x, y,
+            particles,
+            yaw
+        );
     }
 }

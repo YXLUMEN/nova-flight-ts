@@ -19,7 +19,7 @@ export class ParticleEffects {
         ParticleEffectType.builder()
             .life(0.3, 0.6)
             .size(1.5, 4)
-            .colors('#ff4422', '#64140000')
+            .colors('#ff4422')
             .speed(80, 200)
             .omnidirectional()
             .withDrag(0.5)
@@ -31,19 +31,19 @@ export class ParticleEffects {
             .life(0.15, 0.4)
             .size(1, 3)
             .colors('#dedede')
-            .speed(30, 50)
-            .omnidirectional()
+            .speed(50, 70)
+            .symmetry(0.5235)
             .withDrag(0.9)
             .build()
     );
 
     public static readonly MUZZLE_SPARK = ParticleEffects.register('muzzle_spark',
         ParticleEffectType.builder()
-            .life(0.1, 0.35)
-            .size(1, 2.5)
-            .colors('#ffe066', '#FF8C0000')
-            .speed(100, 250)
-            .spread(0.42)          // ~24°
+            .life(0.4, 0.6)
+            .size(2, 3)
+            .colors('#ffaa33', '#ff5454')
+            .speed(100, 240)
+            .symmetry(0.42)          // ~24°
             .withDrag(0.8)
             .build()
     );
@@ -52,32 +52,42 @@ export class ParticleEffects {
         ParticleEffectType.builder()
             .life(0.8, 1.6)
             .size(4, 10)
-            .colors('#A0A0A099', '#50505000')
+            .colors('#A0A0A099')
             .speed(20, 60)
             .omnidirectional()
             .withDrag(0.3)
             .build()
     );
 
+    public static readonly LARGE_SMOKE = ParticleEffects.register('large_smoke',
+        ParticleEffectType.builder()
+            .life(20, 30)
+            .size(24, 36)
+            .setRecession(-0.8)
+            .colors('#a0a0a0')
+            .speed(10, 80)
+            .omnidirectional()
+            .withDrag(0.9)
+            .build()
+    );
+
     public static readonly EMBER = ParticleEffects.register('ember',
         ParticleEffectType.builder()
             .life(0.6, 1.2)
-            .size(1, 2.5)
-            .colors('#ffaa44', '#FF3C0000')
-            .speed(30, 100)
-            .omnidirectional()
-            .withDrag(0.4)
+            .size(4, 8)
+            .colors('#ffd16b', '#cab981')
+            .speed(10, 30)
             .build()
     );
 
     public static readonly EMP_SPARK = ParticleEffects.register('emp_spark',
         ParticleEffectType.builder()
-            .life(0.2, 0.5)
-            .size(2, 5)
-            .colors('#44ffee', '#00B4FF00')
-            .speed(100, 280)
+            .life(0.2, 0.4)
+            .size(1, 2)
+            .colors('#66ccff')
+            .speed(100, 150)
             .omnidirectional()
-            .withDrag(0.8)
+            .withDrag(1.5)
             .build()
     );
 
@@ -106,7 +116,7 @@ export class ParticleEffects {
         ParticleEffectType.builder()
             .life(0.2, 0.6)
             .size(6, 8)
-            .setType(1)
+            .shape(1)
             .colors('#5095ff', '#73c4ff')
             .speed(10, 30)
             .omnidirectional()
@@ -129,7 +139,7 @@ export class ParticleEffects {
             .size(2, 5)
             .colors('#88ccff', '#2864FF1A')
             .speed(60, 140)
-            .spread(0.3)
+            .symmetry(0.3)
             .withDrag(0.5)
             .build()
     );
@@ -141,6 +151,37 @@ export class ParticleEffects {
             .colors('#ffd8b6')
             .speed(100, 140)
             .omnidirectional()
+            .build()
+    );
+
+    public static readonly ASH = ParticleEffects.register('ash',
+        ParticleEffectType.builder()
+            .life(0.8, 1.6)
+            .size(1, 3)
+            .colors('#A0A0A099')
+            .speed(30, 70)
+            .omnidirectional()
+            .withDrag(0.3)
+            .build()
+    );
+
+    public static readonly WAKE = ParticleEffects.register('wake',
+        ParticleEffectType.builder()
+            .life(0.8, 1.6)
+            .size(1, 3)
+            .colors('#A0A0A099')
+            .speed(50, 70)
+            .symmetry(Math.PI / 8)
+            .build()
+    );
+
+    public static readonly BURST = ParticleEffects.register('burst',
+        ParticleEffectType.builder()
+            .life(0.8, 1.2)
+            .size(1, 3)
+            .colors('#ffd88c')
+            .speed(100, 160)
+            .symmetry(Math.PI / 8)
             .build()
     );
 

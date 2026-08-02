@@ -5,19 +5,21 @@ import {Registries} from "../../registry/Registries.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import {TechLayoutParser} from "../../client/tech/TechLayoutParser.ts";
 import {isServer} from "../../configs/GlobalConfig.ts";
+import {TechBuilder} from "./TechBuilder.ts";
+import {ClientTechBuilder} from "../../client/tech/ClientTechBuilder.ts";
 
-export class TechState {
-    public readonly allTechs: Tech[];
-    public readonly branchGroups: Map<string, Tech[]>;
-    public readonly unlocked = new Set<Tech>();
-    public readonly dependentsMap: Map<Tech, Set<Tech>>;
+export class TechState<T extends Tech = Tech> {
+    public readonly allTechs: T[];
+    public readonly branchGroups: Map<string, T[]>;
+    public readonly unlocked = new Set<T>();
+    public readonly dependentsMap: Map<T, Set<T>>;
 
-    public constructor(techs: Tech[]) {
+    public constructor(techs: T[]) {
         this.allTechs = techs;
 
         const group = Map.groupBy(techs, t => t.branchGroup);
         group.delete(null);
-        this.branchGroups = group as Map<string, Tech[]>;
+        this.branchGroups = group as Map<string, T[]>;
 
         this.dependentsMap = this.buildDependentsMap();
     }
@@ -26,7 +28,7 @@ export class TechState {
         if (!Array.isArray(raw)) {
             throw new Error('Tech JSON must be an array');
         }
-        const out: Map<string, InstanceType<typeof Tech.Builder>> = new Map();
+        const out: Map<string, TechBuilder> = new Map();
 
         let x: number, y: number;
         if (isServer) {
@@ -42,15 +44,15 @@ export class TechState {
 
         const parser = new TechLayoutParser(x, y, 180, 80);
 
-        raw.forEach((item, idx) => {
+        raw.forEach((item, index) => {
             if (item == null || typeof item !== 'object') {
-                throw new Error(`Tech[${idx}] must be an object`);
+                throw new Error(`Tech[${index}] must be an object`);
             }
 
             const rawTech = item as RawTech;
 
             if (!isNonEmptyString(rawTech['id'])) {
-                throw new Error(`Tech[${idx}]: 'id' is required and must be a non-empty string`);
+                throw new Error(`Tech[${index}]: 'id' is required and must be a non-empty string`);
             }
 
             const id = rawTech['id'].trim();
@@ -63,12 +65,12 @@ export class TechState {
             const x = rawTech['x'];
             const y = rawTech['y'];
             if (typeof x !== 'number' || !Number.isFinite(x) || typeof y !== 'number' || !Number.isFinite(y)) {
-                throw new Error(`Tech[${idx}]: invalid position (${rawTech.x}, ${rawTech.y})`);
+                throw new Error(`Tech[${index}]: invalid position (${rawTech.x}, ${rawTech.y})`);
             }
 
             const cost = rawTech['cost'];
             if (typeof cost !== 'number' || !Number.isFinite(cost)) {
-                throw new Error(`Tech[${idx}]: invalid cost '${rawTech.cost}'`);
+                throw new Error(`Tech[${index}]: invalid cost '${rawTech.cost}'`);
             }
 
             const desc = isNonEmptyString(rawTech['desc']) ? rawTech['desc'].trim() : '';
@@ -78,8 +80,18 @@ export class TechState {
             const conflicts = Array.isArray(rawTech['conflicts']) ? rawTech['conflicts'] : null;
             const branchGroup = isNonEmptyString(rawTech['branchGroup']) ? rawTech['branchGroup'].trim() : null;
 
+            if (isServer) {
+                out.set(id, new TechBuilder()
+                    .name(name)
+                    .cost(cost)
+                    .requires(requires)
+                    .conflicts(conflicts)
+                    .branchGroup(branchGroup));
+                return;
+            }
+
             const parsedPos = parser.parse(x, y);
-            out.set(id, Tech.create()
+            out.set(id, new ClientTechBuilder()
                 .name(name)
                 .desc(desc)
                 .cost(cost)
@@ -95,8 +107,8 @@ export class TechState {
         return out;
     }
 
-    private buildDependentsMap(): Map<Tech, Set<Tech>> {
-        const map = new Map<Tech, Set<Tech>>();
+    private buildDependentsMap(): Map<T, Set<T>> {
+        const map = new Map<T, Set<T>>();
 
         for (const tech of this.allTechs) {
             map.set(tech, new Set());
@@ -105,16 +117,16 @@ export class TechState {
         for (const tech of this.allTechs) {
             if (!tech.requires) continue;
             for (const require of tech.requires) {
-                map.get(require)?.add(tech);
+                map.get(require as T)?.add(tech);
             }
         }
 
         return map;
     }
 
-    public collectDescendantsToRevoke(rootTech: Tech): Tech[] {
-        const toRevoke = new Set<Tech>();
-        const queue: Tech[] = [rootTech];
+    public collectDescendantsToRevoke(rootTech: T): T[] {
+        const toRevoke = new Set<T>();
+        const queue: T[] = [rootTech];
 
         while (queue.length > 0) {
             const current = queue.pop()!;
@@ -136,7 +148,7 @@ export class TechState {
         return toRevoke.values().toArray();
     }
 
-    public computeStatus(tech: Tech): TechAvailable {
+    public computeStatus(tech: T): TechAvailable {
         if (this.unlocked.has(tech)) return 'unlocked';
         if (tech.cost < 0) return 'locked';
 
@@ -156,32 +168,32 @@ export class TechState {
         const requires = tech.requires;
         if (!requires) return 'unlockable';
 
-        return requires.values().every(tech => this.unlocked.has(tech)) ? 'unlockable' : 'locked';
+        return requires.values().every(tech => this.unlocked.has(tech as T)) ? 'unlockable' : 'locked';
     }
 
-    public getTechId(tech: Tech) {
+    public getTechId(tech: T) {
         return Registries.TECH.getId(tech);
     }
 
-    public getTech(id: string) {
-        return Registries.TECH.getById(Identifier.tryParse(id));
+    public getTech(id: string): T | null {
+        return Registries.TECH.getById(Identifier.tryParse(id)) as T | null;
     }
 
-    public canUnlock(tech: Tech) {
+    public canUnlock(tech: T) {
         return this.computeStatus(tech) === 'unlockable';
     }
 
-    public isUnlocked(tech: Tech) {
+    public isUnlocked(tech: T) {
         return this.unlocked.has(tech);
     }
 
-    public unlock(tech: Tech): boolean {
+    public unlock(tech: T): boolean {
         if (!this.canUnlock(tech)) return false;
         this.unlocked.add(tech);
         return true;
     }
 
-    public forceUnlock(tech: Tech): void {
+    public forceUnlock(tech: T): void {
         this.unlocked.add(tech);
     }
 

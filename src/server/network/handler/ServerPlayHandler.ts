@@ -38,6 +38,7 @@ import {RequestTeleportC2SPacket} from "../../../network/packet/c2s/RequestTelep
 import {EntityAttributes} from "../../../entity/attribute/EntityAttributes.ts";
 import {ServerTechManager} from "../../tech/ServerTechManager.ts";
 import {EVENTS} from "../../../type/IEvents.ts";
+import {PlayerProfilesS2CPacket} from "../../../network/packet/s2c/PlayerProfilesS2CPacket.ts";
 
 export class ServerPlayHandler extends ServerCommonHandler {
     public readonly player: ServerPlayerEntity;
@@ -83,7 +84,12 @@ export class ServerPlayHandler extends ServerCommonHandler {
         }
 
         this.send(EntityNbtS2CPacket.create(this.player));
-        const entities = this.world.getEntities().values();
+        const players = this.world.getPlayers();
+        this.send(PlayerProfilesS2CPacket.create(players));
+
+        const entities = this.world.getEntities()
+            .values()
+            .filter(e => e !== this.player);
         ServerCommonHandler.buildBatch(entities, EntitySpawnS2CPacket.create, EntityBatchSpawnS2CPacket.new)
             .forEach(packet => this.send(packet));
 

@@ -9,7 +9,7 @@ import {DataTracker, type DataTrackerBuilder, type DataTrackerSerializedEntry} f
 import type {DataTracked} from "./data/DataTracked.ts";
 import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
 import {AABB} from "../utils/math/AABB.ts";
-import {clamp, doubleEquals, lerp, lerpRadians} from "../utils/math/math.ts";
+import {clamp, doubleEquals, lerp, lerpRadians, wrapRadians} from "../utils/math/math.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {UUID} from "../type/types.ts";
@@ -277,7 +277,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         let delta = target - this.yaw;
         delta = Math.atan2(Math.sin(delta), Math.cos(delta));
         delta = Math.min(maxStep, Math.max(-maxStep, delta));
-        this.setYaw(this.yaw + delta);
+        this.setYaw(wrapRadians(this.yaw + delta));
     }
 
     // 插值与渲染辅助
