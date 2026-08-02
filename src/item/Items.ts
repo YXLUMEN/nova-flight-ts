@@ -32,6 +32,7 @@ import {WeaponType} from "./WeaponType.ts";
 import {TorpedoLauncher} from "./weapon/BaseWeapon/TorpedoLauncher.ts";
 import {AreaBombing} from "./weapon/AreaBombing.ts";
 import {StormFire} from "./weapon/BaseWeapon/StormFire.ts";
+import {SmokeLauncher} from "./weapon/SmokeLauncher.ts";
 
 export class Items {
     public static AIR = this.register("air", new Item(new Item.Properties()));
@@ -216,6 +217,10 @@ export class Items {
         .maxDurability(500)
         .maxCooldown(1)
         .component(DataComponents.MAX_RELOAD_TIME, 54)
+    ));
+    public static readonly SMOKE_LAUNCHER = this.register('smoke_launcher', new SmokeLauncher(new Item.Properties()
+        .maxCooldown(400)
+        .attackDamage(1)
     ));
 
     // 避免引用问题

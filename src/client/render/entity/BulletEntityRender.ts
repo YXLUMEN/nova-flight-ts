@@ -3,10 +3,10 @@ import type {EntityRenderer} from "./EntityRenderer.ts";
 import {PI2} from "../../../utils/math/math.ts";
 
 export class BulletEntityRender implements EntityRenderer<BulletEntity> {
-    public render(entity: BulletEntity, ctx: CanvasRenderingContext2D, tickDelta: number, offsetX: number = 0, offsetY: number = 0) {
+    public render(entity: BulletEntity, ctx: CanvasRenderingContext2D, tickDelta: number) {
         const pos = entity.getLerpPos(tickDelta);
-        const x = pos.x + offsetX;
-        const y = pos.y + offsetY;
+        const x = pos.x;
+        const y = pos.y;
 
         const r = entity.getDimensions().halfWidth;
 

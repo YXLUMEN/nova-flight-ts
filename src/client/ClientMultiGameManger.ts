@@ -1,6 +1,8 @@
 import type {Consumer} from "../type/types.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {ClientStorage} from "./ClientStorage.ts";
+import {error} from "@tauri-apps/plugin-log";
+import {invoke} from "@tauri-apps/api/core";
 
 interface ServerSelect {
     addr: string;
@@ -24,23 +26,38 @@ export class ClientMultiGameManger {
         this.connectBtn = document.getElementById('connect-btn') as HTMLButtonElement;
         this.cancelBtn = document.getElementById('cancel-btn') as HTMLButtonElement;
 
-        ClientStorage.db.getAll<ServerSelect>('server_addr_list')
-            .then(result => result
-                .map(list => list.forEach(
-                    each => {
-                        const element = this.createServerSelect(each.addr, each.name);
-                        this.serverList.appendChild(element);
-                    }
-                ))
-                .mapErr(
-                    err => console.error(err)
-                ))
-            .catch(err => console.error(err));
+        this.loadDB().catch(console.error);
+    }
+
+    private async loadDB() {
+        const result = await ClientStorage.db.getAll<ServerSelect>('server_addr_list');
+        if (result.isErr()) {
+            await error(String(result.unwrapErr()));
+            return;
+        }
+
+        const list = result.unwrap();
+        const frag = document.createDocumentFragment();
+        for (const item of list) {
+            const element = this.createServerSelect(item.addr, item.name);
+            frag.appendChild(element);
+        }
+
+        this.serverList.appendChild(frag);
+    }
+
+    private async scanLAN() {
+        try {
+            await invoke('start_lan_sniff');
+        } catch (err) {
+            console.warn('[Client] Fail to open scanner', err);
+        }
     }
 
     public getServerAddress(): Promise<string | null> {
         this.show();
         this.cancelInput();
+        void this.scanLAN();
 
         const {promise, resolve} = Promise.withResolvers<string | null>();
         const ctrl = new AbortController();
@@ -98,6 +115,8 @@ export class ClientMultiGameManger {
                 await ClientStorage.deleteServer(addr, name);
             }
         }, {signal});
+
+        promise.finally(() => invoke('stop_lan_sniff'));
 
         return promise;
     }

@@ -138,5 +138,7 @@
   "name.nova-flight.pointer_following": "指针跟随",
   "desc.nova-flight.pointer_following": "舰艇将跟随鼠标位置. \n牺牲方向机得来的导航系统, 通过引导信标来实现更灵活的机动.",
   "name.nova-flight.storm_fire": "火风暴机关炮",
-  "desc.nova-flight.storm_fire": "设计先进的自动火炮，能够向目标倾泻一片由高爆炮弹构成的弹幕。"
+  "desc.nova-flight.storm_fire": "设计先进的自动火炮, 能够向目标倾泻一片由高爆炮弹构成的弹幕.",
+  "name.nova-flight.smoke_launcher": "烟雾弹发射器",
+  "desc.nova-flight.smoke_launcher": "发射一连串的烟雾弹, 制造视野盲区."
 }

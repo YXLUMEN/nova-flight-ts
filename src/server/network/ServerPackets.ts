@@ -55,6 +55,7 @@ import type {PayloadType} from "../../network/PayloadType.ts";
 import {BatchBufferPacket} from "../../network/packet/BatchBufferPacket.ts";
 import {NotGiveUpS2CPacket} from "../../network/packet/s2c/NotGiveUpS2CPacket.ts";
 import {TickChangeS2CPacket} from "../../network/packet/s2c/TickChangeS2CPacket.ts";
+import {PlayerProfilesS2CPacket} from "../../network/packet/s2c/PlayerProfilesS2CPacket.ts";
 
 export class ServerPackets {
     /**
@@ -115,6 +116,7 @@ export class ServerPackets {
         this.register(BatchBufferPacket.ID, BatchBufferPacket.CODEC);
         this.register(NotGiveUpS2CPacket.ID, NotGiveUpS2CPacket.CODEC);
         this.register(TickChangeS2CPacket.ID, TickChangeS2CPacket.CODEC);
+        this.register(PlayerProfilesS2CPacket.ID, PlayerProfilesS2CPacket.CODEC);
     }
 
     private static register<T extends Payload>(type: PayloadType<T>, codec: PacketCodec<T>): void {

@@ -20,7 +20,7 @@ import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import {HistoricalScore} from "../statistics/HistoricalScore.ts";
 import type {ExplosionBehavior} from "../world/explosion/ExplosionBehavior.ts";
 import type {WorldRender} from "./render/WorldRender.ts";
-import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
+import {type ParticleEffectType} from "../effect/ParticleEffectType.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import type {ClientConnection} from "./network/ClientConnection.ts";
 import type {Payload} from "../network/Payload.ts";
@@ -184,13 +184,22 @@ export class ClientWorld extends World {
         );
     }
 
-    public addPreparedParticle(
+    public addPreparedParticleVec(
         type: ParticleEffectType,
         pos: Vec2,
         count: number,
-        baseAngle: number = 0
+        baseAngle?: number
     ) {
-        this.worldRender.addPreparedParticle(type, pos, count, baseAngle);
+        this.worldRender.addPreparedParticle(type, pos.x, pos.y, count, baseAngle);
+    }
+
+    public addPreparedParticle(
+        type: ParticleEffectType,
+        x: number, y: number,
+        count: number,
+        baseAngle?: number
+    ) {
+        this.worldRender.addPreparedParticle(type, x, y, count, baseAngle);
     }
 
     public override addEffect(_: Entity | null, effect: VisualEffect) {

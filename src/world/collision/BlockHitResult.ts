@@ -13,7 +13,13 @@ export class BlockHitResult extends HitResult {
         return new BlockHitResult(pos, direction, blockPos, false, true);
     }
 
-    public constructor(pos: Vec2, direction: Direction, blockPos: BlockPos, insideBlock: boolean, missed: boolean = false) {
+    public constructor(
+        pos: Vec2,
+        direction: Direction,
+        blockPos: BlockPos,
+        insideBlock: boolean,
+        missed: boolean = false
+    ) {
         super(pos);
         this.direction = direction;
         this.blockPos = blockPos;

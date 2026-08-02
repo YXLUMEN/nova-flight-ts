@@ -3,11 +3,11 @@ import type {World} from "../../world/World.ts";
 import {Entity} from "../Entity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
-import {randInt, randNeg} from "../../utils/math/math.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 import {ExplosionVisual} from "../../world/explosion/ExplosionVisual.ts";
 import {ExplosionBehavior} from "../../world/explosion/ExplosionBehavior.ts";
+import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 
 export class ExplodeBulletEntity extends ProjectileEntity {
     public override color = '#ffae00';
@@ -42,11 +42,10 @@ export class ExplodeBulletEntity extends ProjectileEntity {
         const offsetX = -Math.cos(yaw) * height;
         const offsetY = -Math.sin(yaw) * height;
 
-        world.addParticle(
+        world.addPreparedParticle(
+            ParticleEffects.EMBER,
             this.prevX + offsetX, this.prevY + offsetY,
-            randNeg(10, 30), randNeg(10, 30),
-            0.6, randInt(4, 8),
-            '#ffd16b', '#cab981',
+            1
         );
     }
 

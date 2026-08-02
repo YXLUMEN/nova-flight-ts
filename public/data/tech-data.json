@@ -704,6 +704,17 @@
     ]
   },
   {
+    "id": "smoke_launcher",
+    "name": "tech.name.nova-flight.smoke_launcher",
+    "x": -1,
+    "y": 13,
+    "desc": "tech.desc.nova-flight.smoke_launcher",
+    "cost": 30,
+    "requires": [
+      "ship_opt"
+    ]
+  },
+  {
     "id": "nanotechnology",
     "name": "tech.name.nova-flight.nanotechnology",
     "x": 0,

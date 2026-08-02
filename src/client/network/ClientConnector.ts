@@ -2,7 +2,7 @@ import {ClientNetworkChannel} from "./ClientNetworkChannel.ts";
 import {ConnectInfo} from "../render/ui/ConnectInfo.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
 import {ClientConfigHandler} from "./handler/ClientConfigHandler.ts";
-import {GlobalConfig} from "../../configs/GlobalConfig.ts";
+import {DEFAULT_CONFIG, GlobalConfig} from "../../configs/GlobalConfig.ts";
 import {ClientIntegratedChannel} from "./ClientIntegratedChannel.ts";
 import {invoke} from "@tauri-apps/api/core";
 import {error, info, warn} from "@tauri-apps/plugin-log";
@@ -127,6 +127,15 @@ export class ClientConnector {
             info.setLabel(TranslatableText.of('start.confirm'));
             await info.waitConfirm();
             return;
+        }
+
+        try {
+            await invoke('start_lan_announce', {
+                port: GlobalConfig.port, name: `${this.client.playerName}'s game`, gameVersion: DEFAULT_CONFIG.gameVersion
+            });
+        } catch (err) {
+            await error(this.mapErr(err));
+            await invoke('stop_lan_announce');
         }
 
         await sleep(300);

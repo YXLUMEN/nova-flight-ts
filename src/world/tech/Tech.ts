@@ -1,41 +1,27 @@
-import {clamp} from "../../utils/math/math.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
-import {TranslatableText} from "../../i18n/TranslatableText.ts";
+import type {TranslatableText} from "../../i18n/TranslatableText.ts";
 
 export class Tech {
     public static readonly PACKET_CODEC = PacketCodecs.registryEntry(Registries.TECH);
 
-    public readonly name: TranslatableText;
-    public readonly desc: TranslatableText;
+    public readonly name: TranslatableText
     public readonly cost: number;
 
-    public readonly x: number;
-    public readonly y: number;
-
-    public readonly drawExcept: Set<string | Tech> | null;
     private readonly requireTechs: Set<string | Tech> | null;
     private readonly conflictTechs: Set<string | Tech> | null;
     public readonly branchGroup: string | null;
 
     public constructor(
         name: TranslatableText,
-        desc: TranslatableText,
         cost: number,
-        x: number,
-        y: number,
-        drawExcept: Iterable<string> | null,
         requires: Iterable<string> | null,
         conflicts: Iterable<string> | null,
         branchGroup: string | null,
     ) {
         this.name = name;
-        this.desc = desc;
         this.cost = cost;
-        this.x = x;
-        this.y = y;
-        this.drawExcept = drawExcept !== null ? new Set(drawExcept) : null;
         this.requireTechs = requires !== null ? new Set(requires) : null;
         this.conflictTechs = conflicts !== null ? new Set(conflicts) : null;
         this.branchGroup = branchGroup;
@@ -68,19 +54,9 @@ export class Tech {
             this.conflictTechs.union(parsed);
             parsed.forEach(item => this.conflictTechs!.add(item));
         }
-
-        if (this.drawExcept &&
-            this.drawExcept.size > 0 &&
-            this.drawExcept.values().every(tech => typeof tech === 'string')
-        ) {
-            const parsed = this.parseTechs(this.drawExcept as Set<string>);
-            this.drawExcept.clear();
-            this.drawExcept.union(parsed);
-            parsed.forEach(item => this.drawExcept!.add(item));
-        }
     }
 
-    private parseTechs(techs: Set<string>): Set<Tech> {
+    protected parseTechs(techs: Set<string>): Set<Tech> {
         const parsed: Set<Tech> = new Set();
         for (const require of techs) {
             const id = Identifier.tryParse(require);
@@ -91,87 +67,5 @@ export class Tech {
             parsed.add(tech);
         }
         return parsed;
-    }
-
-    public static create() {
-        return new this.Builder();
-    }
-
-    public static readonly Builder = class Builder {
-        private _name: string = 'unknown';
-        private _desc: string = '';
-        private _cost: number = 0;
-
-        private _x: number = 0;
-        private _y: number = 0;
-
-        private _drawExcept: string[] | null = null;
-        private _requires: string[] | null = null;
-        private _conflicts: string[] | null = null;
-        private _branchGroup: string | null = null;
-
-        public name(name: string) {
-            this._name = name;
-            return this;
-        }
-
-        public desc(desc: string) {
-            this._desc = desc;
-            return this;
-        }
-
-        public cost(cost: number) {
-            this._cost = clamp(Math.floor(cost), 0, 65535);
-            return this;
-        }
-
-        public costUnclamp(cost: number) {
-            this._cost = cost | 0;
-            return this;
-        }
-
-        public x(x: number) {
-            this._x = x;
-            return this;
-        }
-
-        public y(y: number) {
-            this._y = y;
-            return this;
-        }
-
-        public drawExcept(except: string[] | null) {
-            this._drawExcept = except;
-            return this;
-        }
-
-        public requires(requires: string[] | null) {
-            this._requires = requires;
-            return this;
-        }
-
-        public conflicts(conflicts: string[] | null) {
-            this._conflicts = conflicts;
-            return this;
-        }
-
-        public branchGroup(branchGroup: string | null) {
-            this._branchGroup = branchGroup;
-            return this;
-        }
-
-        public build() {
-            return new Tech(
-                TranslatableText.of(this._name),
-                TranslatableText.of(this._desc),
-                this._cost,
-                this._x,
-                this._y,
-                this._drawExcept,
-                this._requires,
-                this._conflicts,
-                this._branchGroup
-            );
-        }
     }
 }

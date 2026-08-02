@@ -16,7 +16,6 @@ import {ProjectRaycastUtil} from "../../world/collision/ProjectRaycastUtil.ts";
 import {type HitResult, HitType} from "../../world/collision/HitResult.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
-import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 
 export abstract class ProjectileEntity extends Entity implements Ownable, IColorEntity {
     private damage: number = 0;
@@ -71,26 +70,14 @@ export abstract class ProjectileEntity extends Entity implements Ownable, IColor
         }
     }
 
-    protected onEntityHit(hitResult: EntityHitResult): void {
+    protected onEntityHit(_hitResult: EntityHitResult): void {
         if (this.isClient()) return;
         this.discard();
-
-        (this.getWorld() as ServerWorld).spawnPreparedParticle(
-            ParticleEffects.SPARK,
-            hitResult.pos,
-            4
-        );
     }
 
-    protected onBlockHit(hitResult: BlockHitResult): void {
+    protected onBlockHit(_hitResult: BlockHitResult): void {
         if (this.isClient()) return;
         this.discard();
-
-        (this.getWorld() as ServerWorld).spawnPreparedParticle(
-            ParticleEffects.SPARK,
-            hitResult.pos,
-            4
-        );
     }
 
     public onIntercept(_damage: number): void {

@@ -284,9 +284,7 @@ export class Crosshair {
 
         ctx.fillStyle = color;
         ctx.shadowBlur = 0;
-        ctx.beginPath();
-        ctx.arc(cx, cy, 1.5, 0, PI2);
-        ctx.fill();
+        ctx.fillRect(cx - 1, cy - 1, 2, 2);
 
         ctx.lineWidth = 1;
     }
@@ -327,10 +325,8 @@ export class Crosshair {
         ctx.stroke();
 
         ctx.shadowBlur = 0;
-        ctx.beginPath();
-        ctx.arc(cx, cy, 2, 0, PI2);
         ctx.fillStyle = color;
-        ctx.fill();
+        ctx.fillRect(cx - 1, cy - 1, 2, 2);
 
         ctx.lineWidth = 1;
     }
@@ -428,17 +424,14 @@ export class Crosshair {
                 const angle = -HALF_PI + i * angleStep;
                 const px = cx + Math.cos(angle) * 14;
                 const py = cy + Math.sin(angle) * 14;
-                ctx.moveTo(px + 1.2, py + 1.2);
-                ctx.arc(px, py, 1.2, 0, PI2);
+                ctx.rect(px - 1, py - 1, 2, 2);
             }
             ctx.fill();
         }
 
         ctx.shadowBlur = 0;
         ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(cx, cy, 1.5, 0, PI2);
-        ctx.fill();
+        ctx.fillRect(cx - 1, cy - 1, 2, 2);
         ctx.lineWidth = 1;
     }
 
@@ -476,9 +469,7 @@ export class Crosshair {
 
         ctx.shadowBlur = preciseGlow ? 16 : shadowBlur * 0.5;
         ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(cx, cy, 1.5, 0, PI2);
-        ctx.fill();
+        ctx.fillRect(cx - 1, cy - 1, 2, 2);
 
         ctx.shadowBlur = 0;
         ctx.lineWidth = 1;
@@ -511,9 +502,7 @@ export class Crosshair {
 
         ctx.shadowBlur = glow ? 14 : 2;
         ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(cx, cy, 2, 0, PI2);
-        ctx.fill();
+        ctx.fillRect(cx - 1, cy - 1, 2, 2);
 
         ctx.shadowBlur = 0;
         ctx.lineWidth = 1;

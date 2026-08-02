@@ -97,7 +97,7 @@ export abstract class World {
         life: number,
         size: number,
         colorFrom: HexColor, colorTo?: HexColor,
-        type?: number,
+        shape?: number,
         drag?: number
     ): void;
 
@@ -107,13 +107,20 @@ export abstract class World {
         life: number,
         size: number,
         colorFrom: HexColor, colorTo?: HexColor,
-        type?: number,
+        shape?: number,
         drag?: number
+    ): void;
+
+    public abstract addPreparedParticleVec(
+        type: ParticleEffectType,
+        pos: Vec2,
+        count: number,
+        baseAngle?: number
     ): void;
 
     public abstract addPreparedParticle(
         type: ParticleEffectType,
-        pos: Vec2,
+        x: number, y: number,
         count: number,
         baseAngle?: number
     ): void;

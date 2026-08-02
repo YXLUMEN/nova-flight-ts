@@ -2,7 +2,6 @@ import {defineConfig} from "vite";
 import {injectPlugin} from "./vite-plugin/InjectPlugin";
 import InlineEnum from 'unplugin-inline-enum/vite';
 
-// @ts-expect-error process is a Node.js global
 const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig({

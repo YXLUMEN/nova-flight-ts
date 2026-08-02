@@ -1,4 +1,4 @@
-import {PI2, rand, squareDist, squareDistVec2} from "../../utils/math/math.ts";
+import {PI2, squareDist, squareDistVec2} from "../../utils/math/math.ts";
 import type {ClientWorld} from "../../client/ClientWorld.ts";
 import type {World} from "../World.ts";
 import type {Entity} from "../../entity/Entity.ts";
@@ -202,20 +202,16 @@ export class Explosion {
     }
 
     public summonExplosionVisual(world: ClientWorld) {
-        const pos = new Vec2(this.x, this.y);
-
         world.addPreparedParticle(
             ParticleEffects.EXPLOSION,
-            pos,
-            this.visual.sparks,
-            rand(0, PI2)
+            this.x, this.y,
+            this.visual.sparks
         );
 
         world.addPreparedParticle(
             ParticleEffects.EXPLOSION_DEBRIS,
-            pos,
-            this.visual.fastSparks,
-            rand(0, PI2)
+            this.x, this.y,
+            this.visual.fastSparks
         );
 
         import('../../effect/RadialRing.ts')
@@ -236,7 +232,7 @@ export class Explosion {
                 ));
             });
 
-        if (this.behaviour.playSound) world.playSound(null, SoundEvents.EXPLOSION);
+        if (this.behaviour.playSound) world.playSound(null, SoundEvents.EXPLOSION, 0.6);
     }
 
     public getX() {

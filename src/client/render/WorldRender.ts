@@ -1,6 +1,6 @@
 import type {Entity} from "../../entity/Entity.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
-import {HALF_PI, lerp, PI2} from "../../utils/math/math.ts";
+import {clamp, HALF_PI, lerp, PI2} from "../../utils/math/math.ts";
 import {Window} from "./Window.ts";
 import {isBoxInView} from "../../utils/render/render.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
@@ -38,6 +38,7 @@ export class WorldRender {
         this.world = world;
         this.effects.forEach(effect => effect.kill());
         this.effects.length = 0;
+        this.particlePool.clear();
         this.mapRender?.dispose();
         this.mapRender = world === null ? null : new BlockMapRender(this.client.window, world.getMap());
     }
@@ -85,8 +86,14 @@ export class WorldRender {
         );
     }
 
-    public addPreparedParticle(type: ParticleEffectType, pos: Vec2, count: number, baseAngle: number = 0) {
-        this.particlePool.spawnEffect(type, pos, count, baseAngle);
+    public addPreparedParticle(
+        type: ParticleEffectType,
+        x: number, y: number,
+        count: number,
+        baseAngle?: number
+    ) {
+        count = clamp(Math.floor(count), 0, 255);
+        this.particlePool.spawnEffect(type, x, y, count, baseAngle);
     }
 
     public addEffect(effect: VisualEffect) {

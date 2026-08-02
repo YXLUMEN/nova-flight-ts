@@ -83,7 +83,7 @@ export class BaseBossEntity extends BossEntity {
                 const startAngle = centerAngle - 0.7; // ～80° 宽度
                 const endAngle = centerAngle + 0.7;
 
-                this.bulletWaves[0].fireBulletWave(world, this.createBullet, firePos, startAngle, endAngle);
+                this.bulletWaves[0].fireBulletWaveVec(world, this.createBullet, firePos, startAngle, endAngle);
                 continue;
             }
 
@@ -99,7 +99,7 @@ export class BaseBossEntity extends BossEntity {
                 const startAngle = wave.face ? faceStartAngle : 0.4537722; // 26
                 const endAngle = wave.face ? faceEndAngle : 2.6859825; // 154
 
-                wave.fireBulletWave(world, this.createBullet, firePos, startAngle, endAngle, () => !this.isRemoved());
+                wave.fireBulletWaveVec(world, this.createBullet, firePos, startAngle, endAngle, () => !this.isRemoved());
             }
         }
     }

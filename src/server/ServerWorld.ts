@@ -38,7 +38,7 @@ import {EntityHitResult} from "../world/collision/EntityHitResult.ts";
 import {MobBulletEntity} from "../entity/projectile/MobBulletEntity.ts";
 import {MobMissileEntity} from "../entity/projectile/MobMissileEntity.ts";
 import type {ExplosionBehavior} from "../world/explosion/ExplosionBehavior.ts";
-import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
+import {type ParticleEffectType} from "../effect/ParticleEffectType.ts";
 import {PreparedParticleS2CPacket} from "../network/packet/s2c/PreparedParticleS2CPacket.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
@@ -284,6 +284,9 @@ export class ServerWorld extends World implements NbtSerializable {
 
     public spawnPreparedParticle(type: ParticleEffectType, pos: Vec2, count: number, baseAngle: number = 0) {
         this.sendPacket(new PreparedParticleS2CPacket(type, pos, count, baseAngle));
+    }
+
+    public override addPreparedParticleVec() {
     }
 
     public override addPreparedParticle() {

@@ -4,6 +4,7 @@ import {type DamageSource} from "../damage/DamageSource.ts";
 import {EntityType} from "../EntityType.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {
+    doubleEquals,
     getNearestEntityByVec,
     HALF_PI,
     PI2,
@@ -32,6 +33,9 @@ import {ExplosionEntity} from "../ExplosionEntity.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
 import {type EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import {Vec2} from "../../utils/math/Vec2.ts";
+import {MutVec2} from "../../utils/math/MutVec2.ts";
+import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 
 export class DevourerBoss extends BossEntity {
     private static readonly PHASE_TRACKER = DataTracker.registerData(Object(DevourerBoss),
@@ -120,6 +124,23 @@ export class DevourerBoss extends BossEntity {
         this.tickDevourerMovement();
         this.tickAttacks(world);
         this.tickSegmentAttacks(world);
+    }
+
+    public override move(movement: Vec2): void {
+        const adjusted = new MutVec2(movement.x, movement.y);
+        this.adjustBlockCollision(adjusted);
+
+        const cx = !doubleEquals(movement.x, adjusted.x, 1E-5);
+        const cy = !doubleEquals(movement.y, adjusted.y, 1E-5);
+
+        if (cx || cy) {
+            this.getWorld().addPreparedParticleVec(
+                ParticleEffects.SMOKE,
+                this.positionRef,
+                6
+            );
+        }
+        super.move(movement);
     }
 
     private tickTargetSelection(world: ServerWorld): void {
@@ -324,7 +345,7 @@ export class DevourerBoss extends BossEntity {
             const sy = this.segPoses[idx + 1];
 
             const angle = Math.atan2(pPos.y - sy, pPos.x - sx);
-            wave.fireBulletWaveD(world, this.createBullet, sx, sy, angle, angle);
+            wave.fireBulletWave(world, this.createBullet, sx, sy, angle, angle);
             this.segFireCds[i] = 40 + (Math.random() * 10) | 0;
         }
     }
