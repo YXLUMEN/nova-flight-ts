@@ -3,10 +3,10 @@ import type {EntityRenderer} from "./EntityRenderer.ts";
 import type {FastBulletEntity} from "../../../entity/projectile/FastBulletEntity.ts";
 
 export class FastBulletEntityRender implements EntityRenderer<FastBulletEntity> {
-    public render(entity: BulletEntity, ctx: CanvasRenderingContext2D, tickDelta: number, offsetX: number = 0, offsetY: number = 0) {
+    public render(entity: BulletEntity, ctx: CanvasRenderingContext2D, tickDelta: number) {
         const pos = entity.getLerpPos(tickDelta);
-        const x = pos.x + offsetX;
-        const y = pos.y + offsetY;
+        const x = pos.x;
+        const y = pos.y;
         const tailX = x - entity.velocityRef.x;
         const tailY = y - entity.velocityRef.y;
 

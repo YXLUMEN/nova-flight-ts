@@ -1,8 +1,8 @@
 import {RocketEntity} from "./RocketEntity.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
-import {ExplosionBehavior, ExplosionBehaviour} from "../../world/explosion/ExplosionBehavior.ts";
-import {ExplosionVisual} from "../../world/explosion/ExplosionVisual.ts";
+import {ExplosionBehavior, ExplosionBehaviour} from "../../world/element/explosion/ExplosionBehavior.ts";
+import {ExplosionVisual} from "../../world/element/explosion/ExplosionVisual.ts";
 import {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
 
 export class BurstRocketEntity extends RocketEntity {

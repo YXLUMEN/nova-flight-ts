@@ -123,10 +123,6 @@ export class PerditionBeam extends PhaseLasers {
     protected override overHeatAlert() {
     }
 
-    public override getDisplayName(): string {
-        return '炼狱射线';
-    }
-
     public override getUiColor(): string {
         return '#ff4927';
     }

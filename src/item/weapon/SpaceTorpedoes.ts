@@ -42,8 +42,4 @@ export class SpaceTorpedoes extends SpecialWeapon {
     public override getUiColor(): string {
         return '#d19000';
     }
-
-    public override getDisplayName(): string {
-        return '鱼雷发射器';
-    }
 }

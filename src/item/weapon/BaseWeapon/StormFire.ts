@@ -72,10 +72,6 @@ export class StormFire extends BaseWeapon {
         }
     }
 
-    public override getDisplayName(): string {
-        return '火风暴机关炮';
-    }
-
     public override getMaxSpread(): number {
         return 2;
     }

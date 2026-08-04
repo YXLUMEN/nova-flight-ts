@@ -4,34 +4,30 @@ import type {VisualEffect} from "../effect/VisualEffect.ts";
 import type {Schedule} from "../type/ITimer.ts";
 import {DamageSources} from "../entity/damage/DamageSources.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
-import {EVENTS, type IEvents} from "../type/IEvents.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import type {Payload} from "../network/Payload.ts";
 import type {Consumer, HexColor, Predicate, Supplier} from "../type/types.ts";
 import type {EntityList} from "./entity/EntityList.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
-import {Explosion} from "./explosion/Explosion.ts";
+import {Explosion} from "./element/explosion/Explosion.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
-import type {ExplosionVisual} from "./explosion/ExplosionVisual.ts";
+import type {ExplosionVisual} from "./element/explosion/ExplosionVisual.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
-import type {ClientWorld} from "../client/ClientWorld.ts";
 import {EntityType} from "../entity/EntityType.ts";
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
-import {ProjectileEntity} from "../entity/projectile/ProjectileEntity.ts";
 import {clamp} from "../utils/math/math.ts";
-import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
-import {StatusEffects} from "../entity/effect/StatusEffects.ts";
-import {SoundEvents} from "../sound/SoundEvents.ts";
 import type {EntityLookUp} from "./entity/EntityLookUp.ts";
 import {BitBlockMap} from "./section/BitBlockMap.ts";
 import {AABB} from "../utils/math/AABB.ts";
 import {BlockCollision} from "./collision/BlockCollision.ts";
-import {LivingEntity} from "../entity/LivingEntity.ts";
-import type {ExplosionBehavior} from "./explosion/ExplosionBehavior.ts";
+import type {ExplosionBehavior} from "./element/explosion/ExplosionBehavior.ts";
 import {EntityPredicates} from "./predicate/EntityPredicates.ts";
 import {ScheduleTask} from "./ScheduleTask.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
+import {DifficultChange} from "../event/events/DifficultChange.ts";
+import {GameEnd} from "../event/events/GameEnd.ts";
+import type {WorldMutation} from "./element/WorldMutation.ts";
 
 export abstract class World {
     public static readonly MAP_WIDTH = 1760;
@@ -42,7 +38,7 @@ export abstract class World {
     public static readonly MAX_Y_CROSS = this.WORLD_HEIGHT - this.MAP_HEIGHT;
 
     protected readonly blockMap: BitBlockMap = new BitBlockMap(World.MAP_WIDTH, World.MAP_HEIGHT);
-    public readonly events: GeneralEventBus<IEvents> = GeneralEventBus.getEventBus();
+    public readonly events: GeneralEventBus = GeneralEventBus.getEventBus();
     public empBurst: number = 0
 
     // ticking
@@ -61,12 +57,8 @@ export abstract class World {
         this.damageSources = new DamageSources(registryManager);
     }
 
-    public get isOver(): boolean {
+    public isOver(): boolean {
         return this.over;
-    }
-
-    public getIsClient(): this is ClientWorld {
-        return this.isClient;
     }
 
     public getServer(): NovaFlightServer | null {
@@ -78,8 +70,8 @@ export abstract class World {
     }
 
     public setDifficulty(difficulty: number) {
-        this.difficultyLevel = clamp(difficulty, 0, 16) | 0;
-        this.events.emit(EVENTS.DIFFICULT_CHANGE, {difficult: difficulty});
+        this.difficultyLevel = clamp(Math.floor(difficulty), 0, 16);
+        this.events.emit(new DifficultChange(this.difficultyLevel));
     }
 
     public getMap() {
@@ -127,6 +119,10 @@ export abstract class World {
 
     public abstract addEffect(source: Entity | null, effect: VisualEffect): void;
 
+    public applyElement(element: WorldMutation) {
+        element.apply(this);
+    }
+
     public createExplosion(
         source: Entity | null,
         damageSource: DamageSource | null,
@@ -141,29 +137,9 @@ export abstract class World {
         return explosion;
     }
 
-    public createEMP(attacker: Entity | null, pos: Vec2, radius: number, duration: number = 40, damage: number = 0) {
-        const r2 = radius * radius;
-        const box = AABB.fromCenter(pos.x, pos.y, radius, radius);
-        const search = this.searchOtherEntities(attacker, box, EntityPredicates.inRange(pos, r2));
-
-        for (const entity of search) {
-            if (entity instanceof ProjectileEntity) {
-                if (entity.getOwner() !== attacker) entity.discard();
-                continue;
-            }
-            if (entity instanceof LivingEntity) {
-                entity.addEffect(new StatusEffectInstance(
-                    StatusEffects.EMC_STATUS, duration, 1), attacker);
-                entity.takeDamage(this.damageSources.arc(attacker), damage);
-            }
-        }
-
-        this.playSound(attacker, SoundEvents.EMP_BURST);
-    }
-
     public close(): void {
         this.clear();
-        this.events.emit(EVENTS.GAME_END, null);
+        this.events.emit(new GameEnd());
         this.events.clear();
         Entity.resetCounter();
     }

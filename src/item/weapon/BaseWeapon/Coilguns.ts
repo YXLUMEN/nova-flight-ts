@@ -27,10 +27,6 @@ export class Coilguns extends BaseWeapon {
         world.stopLoopSound(attacker, SoundEvents.COILGUNS_FIRE_LOOP);
     }
 
-    public override getDisplayName(): string {
-        return '线圈炮';
-    }
-
     public override getUiColor(): string {
         return '#e3e3e3';
     }

@@ -264,7 +264,31 @@
   "explosion.normal": {
     "subtitle": "sound.nova-flight.explosion.normal",
     "sounds": [
-      "nova-flight:/explosion_01"
+      "nova-flight:explosion/explosion_01"
+    ]
+  },
+  "explosion.blast": {
+    "subtitle": "sound.nova-flight.explosion.blast",
+    "sounds": [
+      "nova-flight:explosion/blast"
+    ]
+  },
+  "explosion.blast_far": {
+    "subtitle": "sound.nova-flight.explosion.blast_far",
+    "sounds": [
+      "nova-flight:explosion/blast_far"
+    ]
+  },
+  "explosion.large_blast": {
+    "subtitle": "sound.nova-flight.explosion.largeblast",
+    "sounds": [
+      "nova-flight:explosion/largeblast"
+    ]
+  },
+  "explosion.large_blast_far": {
+    "subtitle": "sound.nova-flight.explosion.largeblast_far",
+    "sounds": [
+      "nova-flight:explosion/largeblast_far"
     ]
   },
   "decoy.fire": {

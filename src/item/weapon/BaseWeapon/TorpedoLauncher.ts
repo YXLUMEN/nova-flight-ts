@@ -27,8 +27,4 @@ export class TorpedoLauncher extends BaseWeapon {
     public override getUiColor(): string {
         return '#5095ff'
     }
-
-    public override getDisplayName(): string {
-        return '磁吸鱼雷发射器';
-    }
 }

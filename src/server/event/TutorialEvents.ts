@@ -1,5 +1,4 @@
 import {GeneralEventBus} from "../../event/GeneralEventBus.ts";
-import {EVENTS, type IEvents} from "../../type/IEvents.ts";
 import {NovaFlightServer} from "../NovaFlightServer.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {World} from "../../world/World.ts";
@@ -13,6 +12,10 @@ import type {SequenceContext} from "../../world/sequence/SequenceContext.ts";
 import {config} from "../../utils/uit.ts";
 import type {Consumer} from "../../type/types.ts";
 import {NotGiveUpS2CPacket} from "../../network/packet/s2c/NotGiveUpS2CPacket.ts";
+import type {StageEnter} from "../../event/events/StageEnter.ts";
+import type {PlayerDead} from "../../event/events/PlayerDead.ts";
+import {UnlockTechEntry} from "../../event/events/UnlockTechEntry.ts";
+import {Emp} from "../../world/element/Emp.ts";
 
 export class TutorialEvents {
     private readonly server: NovaFlightServer;
@@ -27,35 +30,35 @@ export class TutorialEvents {
         const eventBus = GeneralEventBus.getEventBus();
         const onStageEnter = this.onStageEnter.bind(this);
         const onPlayerDead = this.onPlayerDead.bind(this);
-        eventBus.on(EVENTS.STAGE_ENTER, onStageEnter);
-        eventBus.on(EVENTS.PLAYER_DEAD, onPlayerDead);
+        eventBus.on('world:stage:enter', onStageEnter);
+        eventBus.on('entity:player:dead', onPlayerDead);
 
         this.sequences = this.createSequences(eventBus, onStageEnter, onPlayerDead);
     }
 
-    private onStageEnter(event: IEvents['world:stage:enter']) {
+    private onStageEnter(event: StageEnter) {
         const name = event.name;
         const seq = this.sequences[name];
         if (!seq) return;
         void this.engine.play(seq);
     }
 
-    private onPlayerDead(event: IEvents['entity:player.dead']) {
+    private onPlayerDead(event: PlayerDead) {
         const player = event.player;
         const world = player.getWorld();
 
         player.invulnerable = true;
-        event.cancel = true;
+        event.cancel();
 
         world.sendPacket(NotGiveUpS2CPacket.INSTANCE);
         world.schedule(7, () => {
-            world.createEMP(player, player.positionRef, 1024, 5);
+            world.applyElement(Emp.create(player, player.positionRef, 1024, 5));
             player.setHealth(player.getMaxHealth());
             player.invulnerable = false;
         });
     }
 
-    private buildEnemySequence(eventBus: GeneralEventBus<IEvents>): SequenceDef {
+    private buildEnemySequence(eventBus: GeneralEventBus): SequenceDef {
         return new SequenceBuilder('tutorial_enemy')
             .wait(1000).say('tutorial.enemy')
             .waitResolve('next_on_kill', ctx => {
@@ -64,19 +67,19 @@ export class TutorialEvents {
                 let killCount = 0;
                 const condition = () => {
                     if (++killCount !== 12) return;
-                    eventBus.off(EVENTS.MOB_KILLED, condition);
+                    eventBus.off('entity:mob:killed', condition);
                     resolve();
                     this.nextPhase(ctx);
                 }
 
-                eventBus.on(EVENTS.MOB_KILLED, condition);
-                ctx.onDispose(() => eventBus.off(EVENTS.MOB_KILLED, condition));
+                eventBus.on('entity:mob:killed', condition);
+                ctx.onDispose(() => eventBus.off('entity:mob:killed', condition));
                 return promise;
             })
             .build();
     }
 
-    private buildTechSequence(eventBus: GeneralEventBus<IEvents>): SequenceDef {
+    private buildTechSequence(eventBus: GeneralEventBus): SequenceDef {
         return new SequenceBuilder('tutorial_tech')
             .saySequence([
                 'tutorial.tech.special',
@@ -118,17 +121,17 @@ export class TutorialEvents {
             .wait(2000)
             // 目标科技解锁则终止
             .callback('unlock_tech', ctx => {
-                const condition = (event: IEvents['player:tech:unlock_entry']) => {
+                const condition = (event: UnlockTechEntry) => {
                     const techEntry = event.tech;
                     if (techEntry === Techs.ANTIMATTER_WARHEAD) {
-                        eventBus.off(EVENTS.UNLOCK_TECH_ENTRY, condition);
+                        eventBus.off('player:tech:unlock_entry', condition);
                         this.nextPhase(ctx);
                         return;
                     }
                 };
 
-                eventBus.on(EVENTS.UNLOCK_TECH_ENTRY, condition);
-                ctx.onDispose(() => eventBus.off(EVENTS.UNLOCK_TECH_ENTRY, condition));
+                eventBus.on('player:tech:unlock_entry', condition);
+                ctx.onDispose(() => eventBus.off('player:tech:unlock_entry', condition));
             })
             // 解锁非目标科技触发对话
             .waitResolve('many_tech', ctx => {
@@ -139,12 +142,12 @@ export class TutorialEvents {
 
                     const count = player.getTechs().unloadedTechCount();
                     if (count < 4) return;
-                    eventBus.off(EVENTS.UNLOCK_TECH_ENTRY, condition);
+                    eventBus.off('player:tech:unlock_entry', condition);
                     resolve();
                 };
 
-                eventBus.on(EVENTS.UNLOCK_TECH_ENTRY, condition);
-                ctx.onDispose(() => eventBus.off(EVENTS.UNLOCK_TECH_ENTRY, condition));
+                eventBus.on('player:tech:unlock_entry', condition);
+                ctx.onDispose(() => eventBus.off('player:tech:unlock_entry', condition));
                 return promise;
             })
             .say('tutorial.tech.score.intro')
@@ -154,9 +157,9 @@ export class TutorialEvents {
             // 一直解锁错误科技触发彩蛋
             .waitResolve('add_score', ctx => {
                 const {promise, resolve} = Promise.withResolvers<void>();
-                const condition = (event: IEvents['player:tech:unlock_entry']) => {
+                const condition = (event: UnlockTechEntry) => {
                     if (event.tech === Techs.ANTIMATTER_WARHEAD) {
-                        eventBus.off(EVENTS.UNLOCK_TECH_ENTRY, condition);
+                        eventBus.off('player:tech:unlock_entry', condition);
                         resolve();
                         return;
                     }
@@ -190,20 +193,20 @@ export class TutorialEvents {
                             ctx.say('tutorial.tech.score.sixth');
                             const tech = Techs.ANTIMATTER_WARHEAD;
                             player.getTechs().forceUnlock(tech);
-                            eventBus.emit(EVENTS.UNLOCK_TECH_ENTRY, {tech});
+                            eventBus.emit(new UnlockTechEntry(tech));
                             break;
                     }
                 };
 
-                eventBus.on(EVENTS.UNLOCK_TECH_ENTRY, condition);
-                ctx.onDispose(() => eventBus.off(EVENTS.UNLOCK_TECH_ENTRY, condition));
+                eventBus.on('player:tech:unlock_entry', condition);
+                ctx.onDispose(() => eventBus.off('player:tech:unlock_entry', condition));
                 return promise;
             })
             .keepCtx()
             .build()
     }
 
-    private buildBossSequence(eventBus: GeneralEventBus<IEvents>): SequenceDef {
+    private buildBossSequence(eventBus: GeneralEventBus): SequenceDef {
         return new SequenceBuilder('tutorial_boss')
             .wait(2000).say('tutorial.boss.intro')
             .wait(2000)
@@ -224,7 +227,7 @@ export class TutorialEvents {
             .waitResolve('wait_boss_kill', ctx => {
                 const {promise, resolve} = Promise.withResolvers<void>();
                 const condition = () => {
-                    eventBus.off(EVENTS.BOSS_KILLED, condition);
+                    eventBus.off('entity:boss:killed', condition);
                     this.server.world!
                         .getEntities()
                         .getMobs()
@@ -233,17 +236,17 @@ export class TutorialEvents {
                     this.nextPhase(ctx);
                 };
 
-                eventBus.on(EVENTS.BOSS_KILLED, condition);
-                ctx.onDispose(() => eventBus.off(EVENTS.BOSS_KILLED, condition));
+                eventBus.on('entity:boss:killed', condition);
+                ctx.onDispose(() => eventBus.off('entity:boss:killed', condition));
                 return promise;
             })
             .build();
     }
 
     private createSequences(
-        eventBus: GeneralEventBus<IEvents>,
-        onStageEnter: Consumer<IEvents['world:stage:enter']>,
-        onPlayerDead: Consumer<IEvents['entity:player.dead']>
+        eventBus: GeneralEventBus,
+        onStageEnter: Consumer<StageEnter>,
+        onPlayerDead: Consumer<PlayerDead>
     ): Record<string, SequenceDef> {
         return config({
             tutorial_intro: new SequenceBuilder('tutorial_intro')
@@ -284,8 +287,8 @@ export class TutorialEvents {
                 .wait(2000)
                 // 流程结束,重置阶段
                 .callback('finalize', ctx => {
-                    eventBus.off(EVENTS.STAGE_ENTER, onStageEnter);
-                    eventBus.off(EVENTS.PLAYER_DEAD, onPlayerDead);
+                    eventBus.off('world:stage:enter', onStageEnter);
+                    eventBus.off('entity:player:dead', onPlayerDead);
                     ctx.server.world!.stage = STAGE;
                     ctx.server.world!.stage.setStage('P7');
                 })

@@ -66,7 +66,7 @@ export class HUD implements IUi {
         const world = client.world;
         if (!world) return;
 
-        if (world.isOver) {
+        if (world.isOver()) {
             this.renderEndOverlay(ctx, world);
             return;
         }
@@ -88,7 +88,7 @@ export class HUD implements IUi {
         y += 20;
 
         if (this.player.isDevMode()) {
-            ctx.fillText('已启用dev模式,将不再记录成绩', x, y);
+            ctx.fillText('已启用开发者模式,将不再记录成绩', x, y);
             y += 20;
         }
         y += 4;
@@ -185,7 +185,8 @@ export class HUD implements IUi {
         ctx.fillRect(anchorX, pos.y, (64 * this.crosshair.displayRatio) | 0, 2);
 
         ctx.fillStyle = this.hudColor;
-        const name = item.getDisplayName();
+
+        const name = item.getName().asString();
         ctx.fillText(name, anchorX, pos.y - 16);
 
         const textWidth = ctx.measureText(name).width + anchorX + 8;

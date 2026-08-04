@@ -8,23 +8,23 @@ import type {VisualEffect} from "../effect/VisualEffect.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
-import {EVENTS} from "../type/IEvents.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
-import type {ExplosionVisual} from "../world/explosion/ExplosionVisual.ts";
-import type {Explosion} from "../world/explosion/Explosion.ts";
+import type {ExplosionVisual} from "../world/element/explosion/ExplosionVisual.ts";
+import type {Explosion} from "../world/element/explosion/Explosion.ts";
 import {DEFAULT_CONFIG} from "../configs/GlobalConfig.ts";
 import {AbstractClientPlayerEntity} from "./entity/AbstractClientPlayerEntity.ts";
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import {HistoricalScore} from "../statistics/HistoricalScore.ts";
-import type {ExplosionBehavior} from "../world/explosion/ExplosionBehavior.ts";
+import type {ExplosionBehavior} from "../world/element/explosion/ExplosionBehavior.ts";
 import type {WorldRender} from "./render/WorldRender.ts";
 import {type ParticleEffectType} from "../effect/ParticleEffectType.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import type {ClientConnection} from "./network/ClientConnection.ts";
 import type {Payload} from "../network/Payload.ts";
 import type {HexColor} from "../type/types.ts";
+import {GameOver} from "../event/events/GameOver.ts";
 
 export class ClientWorld extends World {
     public readonly worldName: string;
@@ -99,7 +99,7 @@ export class ClientWorld extends World {
             devMode: this.client.player!.isUsedBeDev(),
         }).catch(console.error);
 
-        this.events.emit(EVENTS.GAME_OVER, null);
+        this.events.emit(new GameOver());
         setTimeout(() => {
             this.client.onGameOver();
         }, 2500);
@@ -222,7 +222,7 @@ export class ClientWorld extends World {
     }
 
     private registerEvents() {
-        this.events.on(EVENTS.ENTITY_REMOVED, event => {
+        this.events.on('entity:mob:removed', event => {
             this.entityManager.remove(event.entity);
         });
 

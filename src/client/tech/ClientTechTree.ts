@@ -1,6 +1,5 @@
 import {TechState} from "../../world/tech/TechState.ts";
 import {clamp} from "../../utils/math/math.ts";
-import {EVENTS} from "../../type/IEvents.ts";
 import {Items} from "../../item/Items.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
@@ -17,6 +16,7 @@ import {ModelManager} from "../render/model/ModelManager.ts";
 import {cleanObj} from "../../utils/uit.ts";
 import {ClientTechManager} from "./ClientTechManager.ts";
 import type {ClientTech} from "./ClientTech.ts";
+import {UnlockTech} from "../../event/events/UnlockTech.ts";
 
 interface Adjacency {
     successors: Map<ClientTech, ClientTech[]>; // tech -> successors
@@ -362,7 +362,7 @@ export class ClientTechTree implements TechTree {
         if (this.state.unlock(tech)) {
             this.player.setScore(score);
             this.applyUnlockUpdates(tech);
-            world.events.emit(EVENTS.UNLOCK_TECH, {tech});
+            world.events.emit(new UnlockTech(tech));
             NovaFlightClient.getInstance().globalSound.playSound(SoundEvents.UI_APPLY, 1.5);
         } else {
             NovaFlightClient.getInstance().globalSound.playSound(SoundEvents.UI_ERROR);
@@ -626,7 +626,7 @@ export class ClientTechTree implements TechTree {
             if (!tech) throw new Error(`Fail to parse tech with id: ${id}`);
 
             this.state.unlock(tech);
-            world.events.emit(EVENTS.UNLOCK_TECH, {tech, silent: true});
+            world.events.emit(new UnlockTech(tech, true));
         }
 
         this.updateAllEdgeClasses();

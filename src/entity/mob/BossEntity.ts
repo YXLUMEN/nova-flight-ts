@@ -5,13 +5,14 @@ import {clamp, rand} from "../../utils/math/math.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import {EntityType} from "../EntityType.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
-import {EVENTS} from "../../type/IEvents.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {MobBulletEntity} from "../projectile/MobBulletEntity.ts";
 import type {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
+import {BossKilled} from "../../event/events/BossKilled.ts";
+import {BossSpawn} from "../../event/events/BossSpawn.ts";
 
 export abstract class BossEntity extends MobEntity {
     public static hasBoss: boolean = false;
@@ -28,7 +29,7 @@ export abstract class BossEntity extends MobEntity {
         this.maxDamageCanTake = Math.floor(this.getMaxHealth() / maxKillTime);
         BossEntity.hasBoss = true;
 
-        world.events.emit(EVENTS.BOSS_SPAWN, {entity: this});
+        world.events.emit(new BossSpawn(this));
     }
 
     public override tick() {
@@ -76,7 +77,7 @@ export abstract class BossEntity extends MobEntity {
 
     protected override onDiscard() {
         super.onDiscard();
-        this.getWorld().events.emit(EVENTS.BOSS_KILLED, {entity: this});
+        this.getWorld().events.emit(new BossKilled(this));
     }
 
     public override attack(player: PlayerEntity) {

@@ -50,10 +50,6 @@ export class MissileWeapon extends SpecialWeapon {
         this.setCooldown(stack, this.getMaxCooldown(stack));
     }
 
-    public override getDisplayName(): string {
-        return '导弹';
-    }
-
     public override getUiColor(): string {
         return '#ff9f43';
     }

@@ -2,7 +2,7 @@ import type {Entity} from "../../entity/Entity.ts";
 import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import {ProjectileEntity} from "../../entity/projectile/ProjectileEntity.ts";
 import type {Predicate} from "../../type/types.ts";
-import {squareDistVec2} from "../../utils/math/math.ts";
+import {squareDist, squareDistVec2} from "../../utils/math/math.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 import {MobEntity} from "../../entity/mob/MobEntity.ts";
 
@@ -15,13 +15,15 @@ export class EntityPredicates {
     public static readonly MOB = (entity: Entity) => entity instanceof MobEntity;
     public static readonly POSSIBLE_MOB = (entity: Entity) => entity.valueOf() instanceof MobEntity;
 
-    public static inRange(center: Vec2, r2: number) {
+    public static inRangeVec(center: Vec2, radius: number) {
+        const r2 = radius * radius;
         return (entity: Entity) => squareDistVec2(center, entity.positionRef) <= r2;
     };
 
-    public static canBePushBy() {
-
-    }
+    public static inRange(x: number, y: number, radius: number) {
+        const r2 = radius * radius;
+        return (entity: Entity) => squareDist(x, y, entity.getX(), entity.getY()) <= r2;
+    };
 
     public static all(predicates: Predicate<Entity>[]) {
         return (entity: Entity) => {

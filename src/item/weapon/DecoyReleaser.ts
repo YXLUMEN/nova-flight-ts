@@ -76,8 +76,4 @@ export class DecoyReleaser extends SpecialWeapon {
     public override getUiColor(): string {
         return "#fffeb7";
     }
-
-    public override getDisplayName(): string {
-        return "干扰弹";
-    }
 }

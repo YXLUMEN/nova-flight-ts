@@ -27,7 +27,7 @@ export class SoundResource implements ResourceModule {
         const audioContext = new AudioContext();
 
         if (!json || typeof json !== 'object') {
-            console.warn('no sound.json was found');
+            console.warn('[Client] No sound.json was found');
             return;
         }
 

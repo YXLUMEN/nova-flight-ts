@@ -53,7 +53,7 @@ export class ArcEmitter extends BaseWeapon {
             const mobPos = mob.positionRef;
 
             mob.takeDamage(damageSource, damage);
-            world.spawnEffect(null, new ArcEffect(
+            world.spawnVisual(null, new ArcEffect(
                 pos.x, pos.y,
                 mobPos.x, mobPos.y,
                 0.25, 0.8,
@@ -79,7 +79,7 @@ export class ArcEmitter extends BaseWeapon {
         const endX = pos.x + Math.cos(offset) * length;
         const endY = pos.y + Math.sin(offset) * length;
 
-        world.spawnEffect(null, new ArcEffect(
+        world.spawnVisual(null, new ArcEffect(
             pos.x, pos.y,
             endX, endY,
             0.2, 0.6,
@@ -90,10 +90,6 @@ export class ArcEmitter extends BaseWeapon {
 
     public override getUiColor(): string {
         return '#86b4ff';
-    }
-
-    public override getDisplayName(): string {
-        return '电弧发射器';
     }
 
     protected override getMuzzleParticles(): number {

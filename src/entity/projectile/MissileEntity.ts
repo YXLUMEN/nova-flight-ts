@@ -3,7 +3,6 @@ import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
 import {rand} from "../../utils/math/math.ts";
 import {RocketEntity} from "./RocketEntity.ts";
-import {EVENTS} from "../../type/IEvents.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
@@ -19,6 +18,7 @@ import type {TrackedData} from "../data/TrackedData.ts";
 import type {ClientPlayerEntity} from "../../client/entity/ClientPlayerEntity.ts";
 import {PlayerMissileTargetSelector} from "../../utils/math/MissileTargetSelector.ts";
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
+import {MissileLockEntity} from "../../event/events/MissileLockEntity.ts";
 
 export class MissileEntity extends RocketEntity {
     public static readonly IS_IGNITE = DataTracker.registerData(Object(MissileEntity), TrackedDataHandlerRegistry.BOOL);
@@ -133,7 +133,7 @@ export class MissileEntity extends RocketEntity {
         this.target = newTarget;
         this.relockCooldown = this.maxRelockCooldown;
 
-        world.events.emit(EVENTS.ENTITY_LOCKED, {missile: this});
+        world.events.emit(new MissileLockEntity(this));
     }
 
     private applyGuidance(): void {

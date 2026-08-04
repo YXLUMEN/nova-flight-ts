@@ -7,8 +7,8 @@ import {TrackedDataHandlerRegistry} from "./data/TrackedDataHandlerRegistry.ts";
 import {EntityTypes} from "./EntityTypes.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import {ClusterRocketEntity} from "./projectile/ClusterRocketEntity.ts";
-import type {ExplosionBehavior} from "../world/explosion/ExplosionBehavior.ts";
-import {FilterBehaviour} from "../world/explosion/FilterBehaviour.ts";
+import type {ExplosionBehavior} from "../world/element/explosion/ExplosionBehavior.ts";
+import {FilterBehaviour} from "../world/element/explosion/FilterBehaviour.ts";
 
 export class TrailblazerEntity extends Entity implements Ownable {
     private static readonly BOMBS = DataTracker.registerData(Object(TrailblazerEntity), TrackedDataHandlerRegistry.VAR_UINT);

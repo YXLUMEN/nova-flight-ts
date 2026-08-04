@@ -57,7 +57,12 @@ export class SoundEvents {
     public static readonly CIWS_FIRE_LOOP = this.registerSound("ciws.fire");
 
     public static readonly WEAPON_READY = this.registerSound("weapon.ready");
+
     public static readonly EXPLOSION = this.registerSound("explosion.normal");
+    public static readonly BLAST = this.registerSound('explosion.blast');
+    public static readonly BLAST_FAR = this.registerSound('explosion.blast_far');
+    public static readonly LARGE_BLAST = this.registerSound('explosion.large_blast');
+    public static readonly LARGE_BLAST_FAR = this.registerSound('explosion.large_blast_far');
 
     public static readonly DECOY_FIRE = this.registerSound("decoy.fire");
 

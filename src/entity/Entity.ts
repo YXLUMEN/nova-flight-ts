@@ -43,7 +43,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     public prevYaw: number = 0;
 
     public noClip: boolean = false;
-    public stuckTicks: number = -1;
+    protected stuckTicks: number = -1;
     protected ejectCooldown = 0;
 
     private readonly dimensions: EntityDimensions;

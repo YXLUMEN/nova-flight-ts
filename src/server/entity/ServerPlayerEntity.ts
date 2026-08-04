@@ -21,12 +21,15 @@ import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts
 import {type Item} from "../../item/Item.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import {randInt} from "../../utils/math/math.ts";
+import {EffectCreateS2CPacket} from "../../network/packet/s2c/EffectCreateS2CPacket.ts";
 
 export class ServerPlayerEntity extends PlayerEntity {
     public readonly playerProfile: GameProfile;
 
     public networkHandler!: ServerPlayHandler;
     public watchTechPage = false;
+    declare protected readonly techTree: ServerTechTree;
+
     private readonly inputKeys = new Set<string>();
     private readonly pendingSyncStack: Set<ItemStack> = new Set();
 
@@ -34,8 +37,6 @@ export class ServerPlayerEntity extends PlayerEntity {
 
     private mendingCooldown = 0;
     private chargeShieldCooldown = 0;
-
-    declare protected techTree: ServerTechTree;
 
     public constructor(world: ServerWorld, playerProfile: GameProfile) {
         super(world, ServerItemCooldownManager);
@@ -141,8 +142,9 @@ export class ServerPlayerEntity extends PlayerEntity {
         this.chargeShieldCooldown = 60;
 
         if (this.getHealth() / this.getMaxHealth() <= 0.2) {
-            (this.getWorld() as ServerWorld).spawnEffect(null,
-                new EdgeGlowEffect('#ff3333', 32, 0.8, 4));
+            this.networkHandler.send(new EffectCreateS2CPacket(
+                new EdgeGlowEffect('#ff3333', 32, 0.8, 4)
+            ));
         }
         return true;
     }

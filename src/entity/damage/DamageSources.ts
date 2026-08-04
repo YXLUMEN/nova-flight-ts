@@ -8,7 +8,7 @@ import {RegistryManager} from "../../registry/RegistryManager.ts";
 import {RegistryKeys} from "../../registry/RegistryKeys.ts";
 import type {PlayerEntity} from "../player/PlayerEntity.ts";
 import type {MobEntity} from "../mob/MobEntity.ts";
-import type {Explosion} from "../../world/explosion/Explosion.ts";
+import type {Explosion} from "../../world/element/explosion/Explosion.ts";
 
 export class DamageSources {
     private readonly registry: Registry<DamageType>;

@@ -68,14 +68,11 @@ export class EntityRenderers {
         this.register(EntityTypes.DEVOURER_BOSS_ENTITY, new DevourerBossRender());
         this.register(EntityTypes.TRAILBLAZER_ENTITY, new TrailblazerEntityRender());
         this.register(EntityTypes.SMOKE_BOMB, bullet);
-        this.compileRenders();
+        this.register(EntityTypes.BLAST_BULLET, fastBullet);
+        deepFreeze(this);
     }
 
     private static register<T extends Entity>(type: EntityType<T>, renderer: EntityRenderer<T>): void {
         this.RENDERER_FACTORIES.set(type, renderer);
-    }
-
-    private static compileRenders() {
-        deepFreeze(this);
     }
 }

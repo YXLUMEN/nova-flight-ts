@@ -3,8 +3,8 @@ import {SpecialWeapon} from "./SpecialWeapon.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponents} from "../../component/DataComponents.ts";
-import {ExplosionVisual} from "../../world/explosion/ExplosionVisual.ts";
-import {ExplosionBehaviour, ExplosionBehavior} from "../../world/explosion/ExplosionBehavior.ts";
+import {ExplosionVisual} from "../../world/element/explosion/ExplosionVisual.ts";
+import {ExplosionBehavior, ExplosionBehaviour} from "../../world/element/explosion/ExplosionBehavior.ts";
 
 export class BombWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
@@ -23,10 +23,6 @@ export class BombWeapon extends SpecialWeapon {
             );
         }
         this.setCooldown(stack, this.getMaxCooldown(stack));
-    }
-
-    public override getDisplayName(): string {
-        return '炸弹';
     }
 
     public override getUiColor(): string {

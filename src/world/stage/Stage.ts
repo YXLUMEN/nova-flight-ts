@@ -6,6 +6,8 @@ import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {PhaseConfig} from "./PhaseConfig.ts";
 import type {SpawnContext} from "./SpawnContext.ts";
 import type {Supplier} from "../../type/types.ts";
+import {StageEnter} from "../../event/events/StageEnter.ts";
+import {StageExit} from "../../event/events/StageExit.ts";
 
 export class Stage implements NbtSerializable {
     private readonly rng: Supplier<number>;
@@ -62,8 +64,9 @@ export class Stage implements NbtSerializable {
 
         const phase = this.phases[this.index];
 
-        if (this.phaseTime === 1 && phase.onEnter) {
-            phase.onEnter(ctx);
+        if (this.phaseTime === 1) {
+            phase.onEnter?.(ctx);
+            world.events.emit(new StageEnter(phase.name));
         }
 
         for (const r of this.rules) r.tick(ctx);
@@ -72,7 +75,9 @@ export class Stage implements NbtSerializable {
         const until = phase.until ? phase.until(ctx) : false;
 
         if (timeUp || until) {
-            if (phase.onExit) phase.onExit(ctx);
+            phase.onExit?.(ctx);
+            world.events.emit(new StageExit(phase.name));
+
             if (this.index + 1 < this.phases.length) {
                 this.loadPhase(this.index + 1);
             } else {

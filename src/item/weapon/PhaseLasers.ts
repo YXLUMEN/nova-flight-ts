@@ -171,10 +171,6 @@ export class PhaseLasers extends SpecialWeapon {
         return this.getMaxHeat(stack);
     }
 
-    public override getDisplayName(): string {
-        return '相位镭射';
-    }
-
     public override getUiColor(stack: ItemStack): string {
         return stack.isAvailable() ? PhaseLasers.COLOR : PhaseLasers.OVERHEAT_COLOR;
     }

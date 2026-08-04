@@ -13,27 +13,25 @@ import type {EMPWeapon} from "../../item/weapon/EMPWeapon.ts";
 import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {clamp} from "../../utils/math/math.ts";
 import type {TechTree} from "../../world/tech/TechTree.ts";
-import {DataTracker, type DataTrackerSerializedEntry} from "../data/DataTracker.ts";
+import {DataTracker, type DataTrackerBuilder, type DataTrackerSerializedEntry} from "../data/DataTracker.ts";
 import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts";
 import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
 import type {Constructor} from "../../type/types.ts";
 import {Techs} from "../../world/tech/Techs.ts";
 import {Weapon} from "../../item/weapon/Weapon.ts";
-import {ExplosionBehavior, ExplosionBehaviour} from "../../world/explosion/ExplosionBehavior.ts";
-import {ExplosionVisual} from "../../world/explosion/ExplosionVisual.ts";
+import {ExplosionBehavior, ExplosionBehaviour} from "../../world/element/explosion/ExplosionBehavior.ts";
+import {ExplosionVisual} from "../../world/element/explosion/ExplosionVisual.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {UniqueInventory} from "./UniqueInventory.ts";
-import {EVENTS} from "../../type/IEvents.ts";
+import {PlayerDead} from "../../event/events/PlayerDead.ts";
 
 export abstract class PlayerEntity extends LivingEntity {
     private static readonly SHIELD_AMOUNT = DataTracker.registerData(Object(PlayerEntity), TrackedDataHandlerRegistry.FLOAT);
 
-    protected techTree: TechTree | null = null;
-
-    public readonly cooldownManager!: ItemCooldownManager;
-
+    public readonly cooldownManager: ItemCooldownManager;
     private readonly inventory: UniqueInventory;
+    protected techTree: TechTree | null = null;
 
     public wasFiring: boolean = false;
     protected invulnerableTime = 0;
@@ -59,7 +57,7 @@ export abstract class PlayerEntity extends LivingEntity {
             .addWithBaseValue(EntityAttributes.PLAYER_EXPLODE_RANGE, 320);
     }
 
-    protected override defineSyncedData(builder: InstanceType<typeof DataTracker.Builder>) {
+    protected override defineSyncedData(builder: DataTrackerBuilder) {
         super.defineSyncedData(builder);
         builder.define(PlayerEntity.SHIELD_AMOUNT, 0);
     }
@@ -108,7 +106,7 @@ export abstract class PlayerEntity extends LivingEntity {
         if (this.isDead()) return false;
 
         if (this.invulnerableTime > 0) return false;
-        this.invulnerableTime = 20;
+        this.invulnerableTime = 10;
 
         if (this.techTree!.isUnlocked(Techs.EMERGENCY_WARP) && Math.random() >= 0.3) {
             this.invulnerableTime = 30;
@@ -173,9 +171,9 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public override onDeath(damageSource: DamageSource) {
         const world = this.getWorld();
-        const event = {player: this, cancel: false};
-        world.events.emit(EVENTS.PLAYER_DEAD, event);
-        if (event.cancel) return;
+        const event = new PlayerDead(this);
+        world.events.emit(event);
+        if (event.isCanceled()) return;
 
         super.onDeath(damageSource);
         world.gameOver(this);
