@@ -8,8 +8,8 @@ import {DataComponents} from "../../../component/DataComponents.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import {Techs} from "../../../world/tech/Techs.ts";
-import {ExplosionBehavior, ExplosionEffect} from "../../../world/explosion/ExplosionBehavior.ts";
-import {ExplosionVisual} from "../../../world/explosion/ExplosionVisual.ts";
+import {ExplosionBehavior, ExplosionEffect} from "../../../world/element/explosion/ExplosionBehavior.ts";
+import {ExplosionVisual} from "../../../world/element/explosion/ExplosionVisual.ts";
 
 export class Cannon90 extends BaseWeapon {
     private readonly speed = 16;
@@ -33,10 +33,6 @@ export class Cannon90 extends BaseWeapon {
 
     public override getMaxSpread(): number {
         return 1;
-    }
-
-    public override getDisplayName(): string {
-        return "90mm机炮";
     }
 
     public override getUiColor(): string {

@@ -160,7 +160,7 @@ export class WorldRender {
 
         // 主要玩家
         const player = this.client.player;
-        if (!this.world.isOver && player) {
+        if (!this.world.isOver() && player) {
             if (player.renderer === null) {
                 player.renderer = EntityRenderers.getRenderer(player);
             }
@@ -212,7 +212,7 @@ export class WorldRender {
 
         this.title?.render(ctx);
         this.client.window.hud.render(ctx);
-        if (this.client.isPause() && !this.world.isOver && (player && !player.isOpenInventory())) {
+        if (this.client.isPause() && !this.world.isOver() && (player && !player.isOpenInventory())) {
             this.client.window.pauseOverlay.render(ctx);
         }
         this.client.window.hud.renderPointer(ctx, this.client);

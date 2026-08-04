@@ -21,10 +21,6 @@ export abstract class Weapon extends Item {
         return this.getCooldown(stack) <= 0;
     }
 
-    public getAttackPower(stack: ItemStack): number {
-        return stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
-    }
-
     public getMaxCooldown(stack: ItemStack): number {
         return stack.getOr(DataComponents.MAX_COOLDOWN, 1);
     }

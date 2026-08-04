@@ -18,6 +18,6 @@ export function spawnLaser(
         .then(mod => {
             const effect = new mod.LaserBeamEffect(color, width, life);
             effect.set(startX, startY, endX, endY);
-            world.spawnEffect(null, effect);
+            world.spawnVisual(null, effect);
         });
 }

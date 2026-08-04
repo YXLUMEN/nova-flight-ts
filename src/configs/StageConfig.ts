@@ -1,5 +1,4 @@
 import {Stage} from "../world/stage/Stage.ts";
-import {EVENTS} from "../type/IEvents.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {createPhase} from "../world/stage/PhaseConfig.ts";
 import {
@@ -28,7 +27,6 @@ const p1 = createPhase({
     name: "P1",
     ticks: 2400,
     until: ({score}) => score >= 64,
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P1'}),
     rules: [
         {
             every: 20,
@@ -47,7 +45,6 @@ const p1 = createPhase({
 const p2 = createPhase({
     name: "P2",
     until: ({score}) => score >= 200,
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P2'}),
     rules: [
         {
             every: 20,
@@ -79,7 +76,6 @@ const p2 = createPhase({
 const p3 = createPhase({
     name: "P3",
     until: ({score}) => score >= 512,
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P3'}),
     rules: [
         {
             every: 20,
@@ -124,7 +120,6 @@ const p3 = createPhase({
 const p4 = createPhase({
     name: "P4",
     until: ({score}) => score >= 1024,
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P4'}),
     rules: [
         {
             every: 22,
@@ -170,7 +165,6 @@ const p4 = createPhase({
 const p5 = createPhase({
     name: "P5",
     until: ({score}) => score >= 2048,
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P5'}),
     rules: [
         {
             every: 20,
@@ -229,7 +223,6 @@ const p5 = createPhase({
 
 const p6 = createPhase({
     name: "P6",
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P6'}),
     rules: [
         {
             every: 50,
@@ -261,8 +254,6 @@ const p6 = createPhase({
 const p7 = createPhase({
     name: "P7",
     until: ({score}) => score >= 7168,
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P7'}),
-    onExit: ({world}) => world.events.emit(EVENTS.STAGE_EXIT, {name: 'P7'}),
     rules: [
         {
             every: 40,
@@ -333,7 +324,6 @@ const p7 = createPhase({
 const p8 = createPhase({
     name: "P8",
     until: ({score}) => score >= 9216,
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P8'}),
     rules: [
         {
             every: 80,
@@ -404,7 +394,6 @@ const p8 = createPhase({
 
 const p9 = createPhase({
     name: "P9",
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'P9'}),
     rules: [
         {
             every: 80,

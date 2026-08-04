@@ -1,23 +1,24 @@
-import {PI2, squareDist, squareDistVec2} from "../../utils/math/math.ts";
-import type {ClientWorld} from "../../client/ClientWorld.ts";
-import type {World} from "../World.ts";
-import type {Entity} from "../../entity/Entity.ts";
-import type {DamageSource} from "../../entity/damage/DamageSource.ts";
-import {Vec2} from "../../utils/math/Vec2.ts";
-import {ProjectileEntity} from "../../entity/projectile/ProjectileEntity.ts";
-import {LivingEntity} from "../../entity/LivingEntity.ts";
-import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
-import {ServerCommonHandler} from "../../server/network/handler/ServerCommonHandler.ts";
-import type {BlockChange} from "../section/BlockChange.ts";
-import {BlockCollision} from "../collision/BlockCollision.ts";
+import {PI2, squareDist, squareDistVec2} from "../../../utils/math/math.ts";
+import type {ClientWorld} from "../../../client/ClientWorld.ts";
+import type {World} from "../../World.ts";
+import type {Entity} from "../../../entity/Entity.ts";
+import type {DamageSource} from "../../../entity/damage/DamageSource.ts";
+import {Vec2} from "../../../utils/math/Vec2.ts";
+import {ProjectileEntity} from "../../../entity/projectile/ProjectileEntity.ts";
+import {LivingEntity} from "../../../entity/LivingEntity.ts";
+import {BatchBlockChangesPacket} from "../../../network/packet/BatchBlockChangesPacket.ts";
+import {ServerCommonHandler} from "../../../server/network/handler/ServerCommonHandler.ts";
+import type {BlockChange} from "../../section/BlockChange.ts";
+import {BlockCollision} from "../../collision/BlockCollision.ts";
 import {ExplosionBehavior, ExplosionBehaviour, ExplosionEffect} from "./ExplosionBehavior.ts";
 import {ExplosionVisual} from "./ExplosionVisual.ts";
-import {AABB} from "../../utils/math/AABB.ts";
-import {SoundEvents} from "../../sound/SoundEvents.ts";
-import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
-import {ParticleEffects} from "../../effect/ParticleEffects.ts";
+import {AABB} from "../../../utils/math/AABB.ts";
+import {SoundEvents} from "../../../sound/SoundEvents.ts";
+import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
+import {ParticleEffects} from "../../../effect/ParticleEffects.ts";
+import type {WorldMutation} from "../WorldMutation.ts";
 
-export class Explosion {
+export class Explosion implements WorldMutation {
     public static readonly DEFAULT_BEHAVIOUR = new ExplosionBehavior();
     public static readonly DEFAULT_VISUAL = new ExplosionVisual();
 
@@ -214,7 +215,7 @@ export class Explosion {
             this.visual.fastSparks
         );
 
-        import('../../effect/RadialRing.ts')
+        import('../../../effect/RadialRing.ts')
             .then(mod => {
                 const vec = new Vec2(this.x, this.y);
 

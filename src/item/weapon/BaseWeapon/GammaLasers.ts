@@ -95,8 +95,4 @@ export class GammaLasers extends BaseWeapon {
     public override getUiColor(): string {
         return '#ffca59';
     }
-
-    public override getDisplayName(): string {
-        return '伽马激光';
-    }
 }

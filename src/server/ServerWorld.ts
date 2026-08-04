@@ -16,33 +16,32 @@ import {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
 import type {Stage} from "../world/stage/Stage.ts";
 import {STAGE} from "../configs/StageConfig.ts";
-import {EVENTS} from "../type/IEvents.ts";
 import {EntityRemoveS2CPacket} from "../network/packet/s2c/EntityRemoveS2CPacket.ts";
 import {EntityTrackerEntry} from "./network/EntityTrackerEntry.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
-import type {ExplosionVisual} from "../world/explosion/ExplosionVisual.ts";
-import type {Explosion} from "../world/explosion/Explosion.ts";
+import type {ExplosionVisual} from "../world/element/explosion/ExplosionVisual.ts";
+import type {Explosion} from "../world/element/explosion/Explosion.ts";
 import {ExplosionS2CPacket} from "../network/packet/s2c/ExplosionS2CPacket.ts";
 import {ServerDefaultEvents} from "./event/ServerDefaultEvents.ts";
-import {type MutVec2} from "../utils/math/MutVec2.ts";
 import {ParticleS2CPacket} from "../network/packet/s2c/ParticleS2CPacket.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {type VisualEffect} from "../effect/VisualEffect.ts";
 import {EffectCreateS2CPacket} from "../network/packet/s2c/EffectCreateS2CPacket.ts";
 import {GameOverS2CPacket} from "../network/packet/s2c/GameOverS2CPacket.ts";
-import {EMPBurst} from "../effect/EMPBurst.ts";
 import {DifficultChangeS2CPacket} from "../network/packet/s2c/DifficultChangeS2CPacket.ts";
 import {Log} from "../worker/log.ts";
 import {NbtTypeId} from "../nbt/NbtType.ts";
 import {EntityHitResult} from "../world/collision/EntityHitResult.ts";
 import {MobBulletEntity} from "../entity/projectile/MobBulletEntity.ts";
 import {MobMissileEntity} from "../entity/projectile/MobMissileEntity.ts";
-import type {ExplosionBehavior} from "../world/explosion/ExplosionBehavior.ts";
+import type {ExplosionBehavior} from "../world/element/explosion/ExplosionBehavior.ts";
 import {type ParticleEffectType} from "../effect/ParticleEffectType.ts";
 import {PreparedParticleS2CPacket} from "../network/packet/s2c/PreparedParticleS2CPacket.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
 import type {Payload} from "../network/Payload.ts";
+import {ExplosionEvent} from "../event/events/ExplosionEvent.ts";
+import {GameOver} from "../event/events/GameOver.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
@@ -121,7 +120,7 @@ export class ServerWorld extends World implements NbtSerializable {
         this.over = true;
         this.server.setPause(true);
         this.sendPacket(GameOverS2CPacket.INSTANCE);
-        this.events.emit(EVENTS.GAME_OVER, null);
+        this.events.emit(new GameOver());
     }
 
     public sendPacket(payload: Payload, flush = false): void {
@@ -243,7 +242,7 @@ export class ServerWorld extends World implements NbtSerializable {
     public override addEffect(): void {
     }
 
-    public spawnEffect(source: Entity | null, effect: VisualEffect): void {
+    public spawnVisual(source: Entity | null, effect: VisualEffect): void {
         if (source instanceof ServerPlayerEntity) {
             this.server.networkChannel.sendExclude(new EffectCreateS2CPacket(effect), source.getProfile());
             return;
@@ -264,13 +263,8 @@ export class ServerWorld extends World implements NbtSerializable {
         const packet = new ExplosionS2CPacket(x, y, power, behaviour, visual);
         this.sendPacket(packet);
 
-        this.events.emit(EVENTS.EXPLOSION, {explosion});
+        this.events.emit(new ExplosionEvent(explosion));
         return explosion;
-    }
-
-    public override createEMP(attacker: Entity | null, pos: MutVec2, radius: number, duration: number = 40, damage: number) {
-        super.createEMP(attacker, pos, radius, duration, damage);
-        this.spawnEffect(null, new EMPBurst(pos, radius));
     }
 
     public spawnParticle(
@@ -299,7 +293,7 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     private registerEvents() {
-        this.events.on(EVENTS.ENTITY_REMOVED, event => {
+        this.events.on('entity:mob:removed', event => {
             this.entityManager.remove(event.entity);
         });
 

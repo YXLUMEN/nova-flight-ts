@@ -1,54 +1,60 @@
-import type {IEvents} from "../type/IEvents.ts";
 import type {Consumer} from "../type/types.ts";
+import type {AppEvents} from "./AppEvents.ts";
+import type {GameEvent} from "./events/GameEvent.ts";
 
-export class GeneralEventBus<Events extends Record<string, any>> {
-    private static GLOBAL_EVENT: GeneralEventBus<IEvents> | null = null;
+export class GeneralEventBus {
+    private static GLOBAL_EVENT: GeneralEventBus;
 
-    public static getEventBus(): GeneralEventBus<IEvents> {
-        if (!this.GLOBAL_EVENT) this.GLOBAL_EVENT = new GeneralEventBus<IEvents>();
+    private readonly listeners: Map<string, Set<Consumer<any>>> = new Map();
+
+    public static getEventBus(): GeneralEventBus {
+        if (!this.GLOBAL_EVENT) this.GLOBAL_EVENT = new GeneralEventBus();
         return this.GLOBAL_EVENT;
     }
 
-    private readonly listeners: Map<keyof Events, Set<Consumer<any>>> = new Map();
-
-    public on<K extends keyof Events>(event: K, listener: Consumer<Events[K]>): void {
-        const bucket = this.listeners.getOrInsertComputed(event, () => new Set());
-        bucket.add(listener);
+    public on<K extends keyof AppEvents>(
+        type: K,
+        handler: Consumer<AppEvents[K]>,
+    ): void {
+        const bucket = this.listeners.getOrInsertComputed(type, () => new Set());
+        bucket.add(handler);
     }
 
-    public once<K extends keyof Events>(event: K, listener: Consumer<Events[K]>): void {
-        const wrapper: Consumer<Events[K]> = (payload) => {
-            this.off(event, wrapper);
-            listener(payload);
+    public once<K extends keyof AppEvents>(
+        type: K,
+        handler: Consumer<AppEvents[K]>,
+    ): void {
+        const wrapper: Consumer<AppEvents[K]> = (payload) => {
+            this.off(type, wrapper);
+            handler(payload);
         };
-        this.on(event, wrapper);
+        this.on(type, wrapper);
     }
 
-    public off<K extends keyof Events>(event: K, listener: Consumer<Events[K]>): void {
-        const bucket = this.listeners.get(event);
+    public off<K extends keyof AppEvents>(
+        type: K,
+        handler: Consumer<AppEvents[K]>,
+    ): void {
+        const bucket = this.listeners.get(type);
         if (!bucket) return;
 
-        bucket.delete(listener);
+        bucket.delete(handler);
         if (bucket.size === 0) {
-            this.listeners.delete(event);
+            this.listeners.delete(type);
         }
     }
 
-    public emit<K extends keyof Events>(event: K, payload: Events[K]): void {
-        const bucket = this.listeners.get(event);
+    public emit(event: GameEvent): void {
+        const bucket = this.listeners.get(event.type);
         if (!bucket) return;
 
         for (const listener of bucket) {
             try {
-                listener(payload);
+                listener(event);
             } catch (err) {
-                console.warn(`EventBus listener for "${String(event)}" threw:`, err);
+                console.warn(`EventBus listener for "${event}" threw:`, err);
             }
         }
-    }
-
-    public waitFor<K extends keyof Events>(event: K): Promise<Events[K]> {
-        return new Promise(resolve => this.once(event, resolve));
     }
 
     public clear() {

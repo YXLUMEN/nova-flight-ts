@@ -105,10 +105,6 @@ export class CIWS extends BaseWeapon {
         stack.set(DataComponents.HEAT, clamp(value, 0, this.getMaxHeat(stack)));
     }
 
-    public override getDisplayName(): string {
-        return '近防炮';
-    }
-
     public override getUiColor(stack: ItemStack): string {
         return stack.isAvailable() ? '#fffce0' : '#ff3636';
     }

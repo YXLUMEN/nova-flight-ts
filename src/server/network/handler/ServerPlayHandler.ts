@@ -37,8 +37,8 @@ import {PlayerPositionS2CPacket} from "../../../network/packet/s2c/PlayerPositio
 import {RequestTeleportC2SPacket} from "../../../network/packet/c2s/RequestTeleportC2SPacket.ts";
 import {EntityAttributes} from "../../../entity/attribute/EntityAttributes.ts";
 import {ServerTechManager} from "../../tech/ServerTechManager.ts";
-import {EVENTS} from "../../../type/IEvents.ts";
 import {PlayerProfilesS2CPacket} from "../../../network/packet/s2c/PlayerProfilesS2CPacket.ts";
+import {UnlockTechEntry} from "../../../event/events/UnlockTechEntry.ts";
 
 export class ServerPlayHandler extends ServerCommonHandler {
     public readonly player: ServerPlayerEntity;
@@ -179,7 +179,7 @@ export class ServerPlayHandler extends ServerCommonHandler {
     public onUnlockTech(packet: PlayerUnlockTechC2SPacket): void {
         if (this.player.getTechs().unlock(packet.tech)) {
             ServerTechManager.apply(packet.tech, this.player);
-            this.world.events.emit(EVENTS.UNLOCK_TECH_ENTRY, {tech: packet.tech});
+            this.world.events.emit(new UnlockTechEntry(packet.tech));
         }
     }
 

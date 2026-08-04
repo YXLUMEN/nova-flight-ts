@@ -248,5 +248,5 @@ export class ParticlePool {
 
 export const enum ParticleShape {
     Circle,
-    Rect
+    Rect,
 }

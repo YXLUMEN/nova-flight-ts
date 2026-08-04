@@ -44,10 +44,6 @@ export class MiniGun extends BaseWeapon {
         return 3;
     }
 
-    public override getDisplayName(): string {
-        return 'MiniGun';
-    }
-
     public override getUiColor(): string {
         return '#dcdcdc';
     }

@@ -3,7 +3,6 @@ import {World} from "../../world/World.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import type {EntityType} from "../EntityType.ts";
-import {EVENTS} from "../../type/IEvents.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {IColorEntity} from "../IColorEntity.ts";
@@ -18,6 +17,8 @@ import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 import type {EntityAi} from "../ai/EntityAi.ts";
 import {MobAI} from "../ai/MobAI.ts";
 import type {HexColor} from "../../type/types.ts";
+import {MobKilled} from "../../event/events/MobKilled.ts";
+import {MobDamage} from "../../event/events/MobDamage.ts";
 
 export abstract class MobEntity extends LivingEntity implements IColorEntity {
     public color = '#ff6b6b';
@@ -62,7 +63,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         if (!result) return false;
 
         const world = this.getWorld() as ServerWorld;
-        world.events.emit(EVENTS.MOB_DAMAGE, {mob: this, damageSource});
+        world.events.emit(new MobDamage(this, damage, damageSource));
         if (this.getShieldAmount() > 0) {
             world.spawnPreparedParticle(ParticleEffects.SHIELD_HIT, this.positionRef, 2);
             return true;
@@ -78,7 +79,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         const world = this.getWorld() as ServerWorld;
         if (world.isClient) return;
 
-        world.events.emit(EVENTS.MOB_KILLED, {mob: this, damageSource});
+        world.events.emit(new MobKilled(this, damageSource));
         world.spawnPreparedParticle(ParticleEffects.ENTITY_DEATH, this.positionRef, 4);
     }
 

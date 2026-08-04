@@ -26,10 +26,6 @@ export class RailGun extends BaseWeapon {
         return '#e3e3e3';
     }
 
-    public override getDisplayName(): string {
-        return '轨道炮';
-    }
-
     public override getBallisticSpeed(): number {
         return RailGun.SPEED;
     }

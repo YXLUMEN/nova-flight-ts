@@ -8,8 +8,8 @@ import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {C125BulletEntity} from "../../../entity/projectile/C125BulletEntity.ts";
 import {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import {Techs} from "../../../world/tech/Techs.ts";
-import {ExplosionBehavior, ExplosionEffect} from "../../../world/explosion/ExplosionBehavior.ts";
-import {ExplosionVisual} from "../../../world/explosion/ExplosionVisual.ts";
+import {ExplosionBehavior, ExplosionEffect} from "../../../world/element/explosion/ExplosionBehavior.ts";
+import {ExplosionVisual} from "../../../world/element/explosion/ExplosionVisual.ts";
 
 export class Artillery125 extends BaseWeapon {
     private readonly BULLET_SPEED = 14;
@@ -36,10 +36,6 @@ export class Artillery125 extends BaseWeapon {
 
     public override getUiColor(): string {
         return '#c18505';
-    }
-
-    public override getDisplayName(): string {
-        return '125火炮';
     }
 
     public override getBallisticSpeed(): number {

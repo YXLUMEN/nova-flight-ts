@@ -1,31 +1,26 @@
 import {Stage} from "../world/stage/Stage.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
-import {EVENTS} from "../type/IEvents.ts";
 import {createPhase} from "../world/stage/PhaseConfig.ts";
 import {spawnAtTop, spawnAtTopBest} from "../world/stage/SpawnStrategy.ts";
 import {MobBlueprintBuilder} from "../world/stage/MobBlueprint.ts";
 
 const intro = createPhase({
-    name: 'intro',
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'tutorial_intro'}),
+    name: 'tutorial_intro',
     rules: [],
 });
 
 const move = createPhase({
-    name: 'move',
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'tutorial_move'}),
+    name: 'tutorial_move',
     rules: [],
 });
 
 const fire = createPhase({
-    name: 'fire',
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'tutorial_fire'}),
+    name: 'tutorial_fire',
     rules: [],
 });
 
 const enemy = createPhase({
-    name: 'enemy',
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'tutorial_enemy'}),
+    name: 'tutorial_enemy',
     rules: [{
         every: 30,
         jitter: 0.3,
@@ -41,8 +36,7 @@ const enemy = createPhase({
 });
 
 const tech = createPhase({
-    name: 'tech',
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'tutorial_tech'}),
+    name: 'tutorial_tech',
     rules: [
         {
             every: 20,
@@ -72,8 +66,7 @@ const tech = createPhase({
 });
 
 const boss = createPhase({
-    name: 'boss',
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'tutorial_boss'}),
+    name: 'tutorial_boss',
     rules: [
         {
             every: 30,
@@ -104,8 +97,7 @@ const boss = createPhase({
 });
 
 const end = createPhase({
-    name: 'end',
-    onEnter: ({world}) => world.events.emit(EVENTS.STAGE_ENTER, {name: 'tutorial_end'}),
+    name: 'tutorial_end',
     rules: [],
 });
 

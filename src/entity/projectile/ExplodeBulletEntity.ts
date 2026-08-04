@@ -5,8 +5,8 @@ import type {EntityType} from "../EntityType.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
-import {ExplosionVisual} from "../../world/explosion/ExplosionVisual.ts";
-import {ExplosionBehavior} from "../../world/explosion/ExplosionBehavior.ts";
+import {ExplosionVisual} from "../../world/element/explosion/ExplosionVisual.ts";
+import {ExplosionBehavior} from "../../world/element/explosion/ExplosionBehavior.ts";
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 
 export class ExplodeBulletEntity extends ProjectileEntity {

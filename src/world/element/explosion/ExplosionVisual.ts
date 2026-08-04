@@ -1,7 +1,7 @@
-import type {VisualEffect} from "../../effect/VisualEffect.ts";
-import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
-import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
-import {decodeFromUnsignedByte, encodeToUnsignedByte} from "../../utils/NetUtil.ts";
+import type {VisualEffect} from "../../../effect/VisualEffect.ts";
+import type {PacketCodec} from "../../../network/codec/PacketCodec.ts";
+import {PacketCodecs} from "../../../network/codec/PacketCodecs.ts";
+import {decodeFromUnsignedByte, encodeToUnsignedByte} from "../../../utils/NetUtil.ts";
 
 export class ExplosionVisual {
     public static readonly CODEC: PacketCodec<ExplosionVisual> = PacketCodecs.of(

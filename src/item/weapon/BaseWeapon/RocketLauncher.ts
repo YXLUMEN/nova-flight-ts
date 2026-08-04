@@ -65,10 +65,6 @@ export class RocketLauncher extends BaseWeapon {
         world.playSound(attacker, SoundEvents.MISSILE_LAUNCH, 0.5);
     }
 
-    public override getDisplayName(): string {
-        return "火箭发射器";
-    }
-
     public override getUiColor(): string {
         return "#ffdc92";
     }

@@ -1,7 +1,7 @@
-import type {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
-import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
-import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
-import type {Entity} from "../../entity/Entity.ts";
+import type {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
+import type {PacketCodec} from "../../../network/codec/PacketCodec.ts";
+import {PacketCodecs} from "../../../network/codec/PacketCodecs.ts";
+import type {Entity} from "../../../entity/Entity.ts";
 
 export const enum ExplosionBehaviour {
     BOTH,

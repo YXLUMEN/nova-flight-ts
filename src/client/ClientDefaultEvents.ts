@@ -1,4 +1,3 @@
-import {EVENTS} from "../type/IEvents.ts";
 import type {ClientWorld} from "./ClientWorld.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
@@ -13,19 +12,19 @@ export class ClientDefaultEvents {
     public static registryEvents(world: ClientWorld) {
         const events = GeneralEventBus.getEventBus();
 
-        events.on(EVENTS.GAME_START, () => {
+        events.on('game:start', () => {
             void BGMManager.onGameStart();
         });
 
-        events.on(EVENTS.GAME_END, () => {
+        events.on('game:end', () => {
             BGMManager.playMainTheme();
         });
 
-        events.on(EVENTS.GAME_OVER, () => {
+        events.on('game:over', () => {
             BGMManager.onGameOver();
         });
 
-        events.on(EVENTS.UNLOCK_TECH, ({tech, silent}) => {
+        events.on('player:tech:unlock', ({tech, silent}) => {
             const player = NovaFlightClient.getInstance().player;
             if (!player) return;
             BGMManager.onTechUnlock(player);
@@ -39,7 +38,7 @@ export class ClientDefaultEvents {
             }
         });
 
-        events.on(EVENTS.ENTITY_LOCKED, ({missile}) => {
+        events.on('entity:missile:locked', ({missile}) => {
             const target = missile.getTarget();
             if (missile.isRemoved() || !target || !target.isPlayer()) return;
 
@@ -48,16 +47,16 @@ export class ClientDefaultEvents {
             player.lockedMissile.add(missile);
         });
 
-        events.on(EVENTS.DIFFICULT_CHANGE, event => {
+        events.on('world:stage:difficult', event => {
             BGMManager.onDifficultRaise(event.difficult);
         });
 
-        events.on(EVENTS.BOSS_SPAWN, ({entity}) => {
-            if (entity instanceof DevourerBoss) return;
+        events.on('entity:boss:spawn', ({boss}) => {
+            if (boss instanceof DevourerBoss) return;
             BGMManager.onBossSpawn();
         });
 
-        events.on(EVENTS.BOSS_KILLED, () => {
+        events.on('entity:boss:killed', () => {
             BGMManager.onBossDead();
         });
     }

@@ -116,7 +116,14 @@ export abstract class BaseWeapon extends Weapon {
         return 0;
     }
 
-    protected setBullet(bullet: ProjectileEntity, attacker: Entity, speed: number, offset: number, maxSpread = 1, margin = 0): void {
+    protected setBullet(
+        bullet: ProjectileEntity,
+        attacker: Entity,
+        speed: number,
+        offset: number,
+        maxSpread = 1,
+        margin = 0
+    ): void {
         const pos = attacker.positionRef;
         const yaw = attacker.getYaw();
 

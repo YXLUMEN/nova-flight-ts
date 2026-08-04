@@ -16,7 +16,6 @@ import {ClientMultiGameManger} from "./ClientMultiGameManger.ts";
 import {ConnectInfo} from "./render/ui/ConnectInfo.ts";
 import {ClientChat} from "./command/ClientChat.ts";
 import {ClientSavesManager} from "./ClientSavesManager.ts";
-import {EVENTS} from "../type/IEvents.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {StatisticManager} from "./statistic/StatisticManager.ts";
 import {ClientConnection} from "./network/ClientConnection.ts";
@@ -35,6 +34,7 @@ import {ClientWorkerFS} from "./ClientWorkerFS.ts";
 import {ClientConnector} from "./network/ClientConnector.ts";
 import type {ConnectionContext} from "./network/ConnectionContext.ts";
 import {ClientInit} from "./ClientInit.ts";
+import {GameStart} from "../event/events/GameStart.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -130,7 +130,7 @@ export class NovaFlightClient {
             const breakLoop = await this.userSelect();
             if (breakLoop) break;
 
-            GeneralEventBus.getEventBus().emit(EVENTS.GAME_START, null);
+            GeneralEventBus.getEventBus().emit(new GameStart());
             await this.waitWorldStop;
 
             // cleanup

@@ -78,7 +78,7 @@ export class ClientInputEvents {
         }
 
         const world = client.world;
-        if (world && world.isOver) return;
+        if (world && world.isOver()) return;
 
         if (event.ctrlKey) {
             if (code === 'KeyV') client.switchDevMode();

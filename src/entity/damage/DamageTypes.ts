@@ -31,7 +31,7 @@ export class DamageTypes {
         damage.add(this.EXPLOSION, 'explosion');
         damage.add(this.LASER, 'laser', DamageTypeTags.REPLY_LASER, DamageTypeTags.NOT_TRIGGER_EROSION);
         damage.add(this.PLAYER_IMPACT, 'playerImpact', DamageTypeTags.NOT_GAIN_SCORE);
-        damage.add(this.VOID, 'void', DamageTypeTags.NOT_GAIN_SCORE);
+        damage.add(this.VOID, 'void', DamageTypeTags.NOT_GAIN_SCORE, DamageTypeTags.BYPASSES_INVULNERABLE, DamageTypeTags.BYPASSES_EFFECTS);
         damage.add(this.EROSION, 'onFire', DamageTypeTags.REPLY_LASER, DamageTypeTags.NOT_TRIGGER_EROSION);
         damage.add(this.AP_DAMAGE, 'apDamage', DamageTypeTags.BYPASSES_INVULNERABLE);
         damage.add(this.ARC, 'arc', DamageTypeTags.REPLY_LASER, DamageTypeTags.BYPASSES_INVULNERABLE, DamageTypeTags.BYPASSES_EFFECTS, DamageTypeTags.BYPASSES_SHIELD, DamageTypeTags.NOT_TRIGGER_EROSION);

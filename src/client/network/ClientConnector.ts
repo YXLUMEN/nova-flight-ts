@@ -13,8 +13,6 @@ import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import type {ConnectionContext} from "./ConnectionContext.ts";
 
 export class ClientConnector {
-    private static readonly SERVER_START_TIMEOUT = 5000;
-
     private readonly client: NovaFlightClient;
     private readonly ctx: ConnectionContext;
 
@@ -131,7 +129,9 @@ export class ClientConnector {
 
         try {
             await invoke('start_lan_announce', {
-                port: GlobalConfig.port, name: `${this.client.playerName}'s game`, gameVersion: DEFAULT_CONFIG.gameVersion
+                port: GlobalConfig.port,
+                name: `${this.client.playerName}'s game`,
+                gameVersion: DEFAULT_CONFIG.gameVersion
             });
         } catch (err) {
             await error(this.mapErr(err));
@@ -185,14 +185,6 @@ export class ClientConnector {
         }) : worker;
         this.ctx.setWorker(worker);
 
-        const startTimeout = setTimeout(() => {
-            connectInfo.setMessage(TranslatableText.of('network.disconnect.timeout'));
-            connectInfo.setLabel(TranslatableText.of('start.confirm'));
-
-            worker.terminate();
-            this.ctx.setWorker(null);
-        }, ClientConnector.SERVER_START_TIMEOUT);
-
         const connectToServer = async () => {
             connectInfo.setMessage(TranslatableText.of('start.connecting'));
             try {
@@ -222,7 +214,6 @@ export class ClientConnector {
                     }, {transfer: [key]});
                     break;
                 case 'server_start':
-                    clearTimeout(startTimeout);
                     connectToServer();
                     break;
                 case 'server_stop':

@@ -6,7 +6,7 @@ import {DecoyEntity} from "../DecoyEntity.ts";
 import {getNearestEntityByVec, squareDistVec2} from "../../utils/math/math.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
-import {FilterBehaviour} from "../../world/explosion/FilterBehaviour.ts";
+import {FilterBehaviour} from "../../world/element/explosion/FilterBehaviour.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EntityPredicates} from "../../world/predicate/EntityPredicates.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";

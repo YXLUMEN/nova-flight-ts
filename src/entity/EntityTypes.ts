@@ -28,6 +28,7 @@ import {MagneticTorpedoEntity} from "./projectile/MagneticTorpedoEntity.ts";
 import {DevourerBoss} from "./mob/DevourerBoss.ts";
 import {TrailblazerEntity} from "./TrailblazerEntity.ts";
 import {SmokeBomb} from "./projectile/SmokeBomb.ts";
+import {BlastBullet} from "./projectile/BlastBullet.ts";
 
 export class EntityTypes {
     public static readonly BASE_ENEMY = EntityType.register("base_enemy",
@@ -156,6 +157,12 @@ export class EntityTypes {
     public static readonly SMOKE_BOMB = EntityType.register('smoke_bomb',
         EntityType.Builder.create(SmokeBomb)
             .setDimensions(20)
+            .setTrackingTickInterval(10)
+    );
+    public static readonly BLAST_BULLET = EntityType.register('blast_bullet',
+        EntityType.Builder.create(BlastBullet)
+            .setDimensions(4)
+            .setTrackingTickInterval(10)
     );
 
     public static init() {

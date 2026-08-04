@@ -30,10 +30,6 @@ export class CloudLightningConduits extends BaseWeapon {
         return '#b09eff';
     }
 
-    public override getDisplayName(): string {
-        return '天云闪电';
-    }
-
     public override getBallisticSpeed(): number {
         return this.speed;
     }

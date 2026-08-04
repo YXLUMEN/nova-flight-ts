@@ -6,8 +6,8 @@ import {clamp} from "../../utils/math/math.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
-import {ExplosionVisual} from "../../world/explosion/ExplosionVisual.ts";
-import type {ExplosionBehavior} from "../../world/explosion/ExplosionBehavior.ts";
+import {ExplosionVisual} from "../../world/element/explosion/ExplosionVisual.ts";
+import type {ExplosionBehavior} from "../../world/element/explosion/ExplosionBehavior.ts";
 
 export class RocketEntity extends ProjectileEntity {
     public explosionRadius = 64;

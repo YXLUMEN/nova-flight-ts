@@ -43,7 +43,7 @@ export class LangResource implements ResourceModule {
                 if (entry.isFile) files.push(entry);
             }
         } catch (err) {
-            await warn(`[Client] Error while recursive directory ${targetRoot}, because: ${err}`);
+            await warn(`[Client] Error while traverse directory ${targetRoot}, because: ${err}`);
         }
 
         if (files.length === 0) return;
@@ -64,13 +64,13 @@ export class LangResource implements ResourceModule {
 
             const entries = result.value;
             if (!Array.isArray(entries)) {
-                await warn(`Lang entry not array.`);
+                await warn(`[Client] Lang entry not array.`);
                 continue;
             }
 
             for (const [key, value] of entries) {
                 if (typeof value !== 'string') {
-                    await warn(`Invalid value ${value} in ${lang}`);
+                    await warn(`[Client] Invalid value ${value} in ${lang}`);
                     continue;
                 }
                 this.data.set(key, value);

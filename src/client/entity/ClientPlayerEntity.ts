@@ -35,7 +35,7 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
 
     public readonly clientInventory: ClientInventory;
 
-    declare protected techTree: ClientTechTree;
+    declare protected readonly techTree: ClientTechTree;
     private quickFireIndex = 0;
     private readonly activeSpecials: Map<string, SpecialWeapon>;
     private readonly orderSpecials: SpecialWeapon[];

@@ -20,9 +20,6 @@ import {Techs} from "../../world/tech/Techs.ts";
 import type {ServerPlayerEntity} from "../../server/entity/ServerPlayerEntity.ts";
 
 export class VoidEnginWeapon extends SpecialWeapon {
-    public static readonly displayName = "遁入虚空";
-    public static readonly uiColor = "#7945ff";
-
     public static readonly DEFAULT_MODIFIER = new AttributeModifier(
         Identifier.ofVanilla('weapon.into_void'),
         0.4,
@@ -50,7 +47,7 @@ export class VoidEnginWeapon extends SpecialWeapon {
 
         if (world.isClient) {
             const mask = new WindowOverlay(
-                VoidEnginWeapon.uiColor,
+                '#7945ff',
                 0.28,
                 0.2,
                 0.4,
@@ -129,12 +126,8 @@ export class VoidEnginWeapon extends SpecialWeapon {
         return super.getMaxCooldown(stack);
     }
 
-    public override getDisplayName(): string {
-        return VoidEnginWeapon.displayName;
-    }
-
     public override getUiColor(): string {
-        return VoidEnginWeapon.uiColor;
+        return '#7945ff';
     }
 
     private exitVoid(stack: ItemStack, world: World, attacker: LivingEntity, keepCooldown = true): void {

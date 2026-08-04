@@ -1,4 +1,5 @@
 import {RocketEntity} from "./RocketEntity.ts";
+import {Emp} from "../../world/element/Emp.ts";
 
 export class EMPRocketEntity extends RocketEntity {
     public override explosionRadius = 160;
@@ -6,12 +7,12 @@ export class EMPRocketEntity extends RocketEntity {
     private duration = 300;
 
     public override explode() {
-        this.getWorld().createEMP(
+        this.getWorld().applyElement(Emp.create(
             this.getOwner(),
             this.positionRef,
             this.explosionRadius * 2,
             this.duration,
             1
-        );
+        ));
     }
 }

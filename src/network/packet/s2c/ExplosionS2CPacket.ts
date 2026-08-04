@@ -2,8 +2,8 @@ import type {Payload} from "../../Payload.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {ExplosionBehavior} from "../../../world/explosion/ExplosionBehavior.ts";
-import {ExplosionVisual} from "../../../world/explosion/ExplosionVisual.ts";
+import {ExplosionBehavior} from "../../../world/element/explosion/ExplosionBehavior.ts";
+import {ExplosionVisual} from "../../../world/element/explosion/ExplosionVisual.ts";
 import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class ExplosionS2CPacket implements Payload {

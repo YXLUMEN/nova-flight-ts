@@ -43,10 +43,6 @@ export class KineticArtillery extends BaseWeapon {
         return '#ffdddd';
     }
 
-    public override getDisplayName(): string {
-        return '动能火炮';
-    }
-
     public override getBallisticSpeed(): number {
         return KineticArtillery.SPEED;
     }

@@ -1,9 +1,9 @@
 import {Entity} from "./Entity.ts";
 import type {EntityType} from "./EntityType.ts";
 import {World} from "../world/World.ts";
-import {ExplosionBehaviour, ExplosionBehavior} from "../world/explosion/ExplosionBehavior.ts";
-import {ExplosionVisual} from "../world/explosion/ExplosionVisual.ts";
-import {FilterBehaviour} from "../world/explosion/FilterBehaviour.ts";
+import {ExplosionBehaviour, ExplosionBehavior} from "../world/element/explosion/ExplosionBehavior.ts";
+import {ExplosionVisual} from "../world/element/explosion/ExplosionVisual.ts";
+import {FilterBehaviour} from "../world/element/explosion/FilterBehaviour.ts";
 
 export class ExplosionEntity extends Entity {
     public override noClip = true;

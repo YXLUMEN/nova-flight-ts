@@ -1,5 +1,4 @@
 import type {ServerWorld} from "../ServerWorld.ts";
-import {EVENTS} from "../../type/IEvents.ts";
 import {BossEntity} from "../../entity/mob/BossEntity.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {World} from "../../world/World.ts";
@@ -13,18 +12,18 @@ import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {Items} from "../../item/Items.ts";
 import type {PhaseLasers} from "../../item/weapon/PhaseLasers.ts";
 import {Techs} from "../../world/tech/Techs.ts";
-import type {Explosion} from "../../world/explosion/Explosion.ts";
+import type {Explosion} from "../../world/element/explosion/Explosion.ts";
 import {DamageTypes} from "../../entity/damage/DamageTypes.ts";
 import {BaseBossEntity} from "../../entity/mob/BaseBossEntity.ts";
 import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
-import {ExplosionEffect} from "../../world/explosion/ExplosionBehavior.ts";
+import {ExplosionEffect} from "../../world/element/explosion/ExplosionBehavior.ts";
 import {DevourerBoss} from "../../entity/mob/DevourerBoss.ts";
 
 export class ServerDefaultEvents {
     public static registerEvent(world: ServerWorld) {
         const events = GeneralEventBus.getEventBus();
 
-        events.on(EVENTS.MOB_DAMAGE, ({mob, damageSource}) => {
+        events.on('entity:mob:damage', ({mob, damageSource}) => {
             const attacker = damageSource.getAttacker();
             if (!attacker?.isPlayer()) return;
 
@@ -47,7 +46,7 @@ export class ServerDefaultEvents {
             }
         });
 
-        events.on(EVENTS.MOB_KILLED, ({mob, damageSource}) => {
+        events.on('entity:mob:killed', ({mob, damageSource}) => {
             const player = damageSource.getAttacker();
             if (!(player instanceof ServerPlayerEntity)) return;
 
@@ -69,8 +68,8 @@ export class ServerDefaultEvents {
             }
         });
 
-        events.on(EVENTS.BOSS_KILLED, event => {
-            if (!event.entity) {
+        events.on('entity:boss:killed', event => {
+            if (!event.boss) {
                 world.stage.nextPhase();
                 return;
             }
@@ -101,13 +100,13 @@ export class ServerDefaultEvents {
             }
         });
 
-        events.on(EVENTS.EMP_BURST, ({entity, duration}) => {
+        events.on('world:emp_burst', ({entity, duration}) => {
             if (entity instanceof ServerPlayerEntity && entity.getTechs().isUnlocked(Techs.ELE_OSCILLATION)) {
                 world.empBurst = duration;
             }
         });
 
-        events.on(EVENTS.STAGE_ENTER, ({name}) => {
+        events.on('world:stage:enter', ({name}) => {
             if (name === 'P6' || name === 'mP3') {
                 if (BossEntity.hasBoss) return;
 
@@ -124,7 +123,7 @@ export class ServerDefaultEvents {
             world.playSound(null, SoundEvents.PHASE_CHANGE);
         });
 
-        events.on(EVENTS.EXPLOSION, ({explosion}) => {
+        events.on('world:explosion', ({explosion}) => {
             const effect = explosion.getBehaviour().effect;
             explosion.getBehaviour().effect = ExplosionEffect.TRIGGERED;
             if (effect !== ExplosionEffect.TRIGGERED) {

@@ -14,9 +14,60 @@ import {createTranslationKey} from "../utils/uit.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 
-export type ItemProperties = InstanceType<typeof Item.Properties>;
 
 export class Item {
+    public readonly registryEntry!: RegistryEntry<Item>;
+    private readonly components: SimpleComponentMap;
+
+    private translation: TranslatableText | null = null;
+
+    public constructor(settings: ItemProperties) {
+        this.components = settings.getValidatedComponents();
+    }
+
+    public static getIndex(item: Item | null) {
+        return item === null ? 0 : Registries.ITEM.getIndex(item);
+    }
+
+    public getRegistryEntry(): RegistryEntry<Item> {
+        return this.registryEntry;
+    }
+
+    public getComponents(): ComponentMap {
+        return this.components;
+    }
+
+    public getDefaultStack() {
+        return new ItemStack(this);
+    }
+
+    public inventoryTick(_stack: ItemStack, _world: ServerWorld, _holder: Entity, _slot: number, _selected: boolean): void {
+    }
+
+    public leftClick(_world: World, _user: PlayerEntity): boolean {
+        return false;
+    }
+
+    public postHit(_stack: ItemStack, _target: LivingEntity, _attacker: LivingEntity): boolean {
+        return false;
+    }
+
+    public onUseTick(_world: World, _user: PlayerEntity): boolean {
+        return false;
+    }
+
+    public getName(): TranslatableText {
+        if (this.translation === null) {
+            this.translation = TranslatableText.of(createTranslationKey('item', Registries.ITEM.getId(this)));
+        }
+
+        return this.translation;
+    }
+
+    public toString() {
+        return Registries.ITEM.getEntryByValue(this)?.toString() ?? `Item[${this.registryEntry}]`;
+    }
+
     public static readonly Properties = class Properties {
         private components: SimpleComponentMap | null = null;
 
@@ -74,61 +125,8 @@ export class Item {
             }
             return this.components;
         }
-    }
-
-    public readonly registryEntry!: RegistryEntry<Item>;
-    private readonly components: SimpleComponentMap;
-
-    private translation: TranslatableText | null = null;
-
-    public constructor(settings: ItemProperties) {
-        this.components = settings.getValidatedComponents();
-    }
-
-    public static getIndex(item: Item | null) {
-        return item === null ? 0 : Registries.ITEM.getIndex(item);
-    }
-
-    public getRegistryEntry(): RegistryEntry<Item> {
-        return this.registryEntry;
-    }
-
-    public getComponents(): ComponentMap {
-        return this.components;
-    }
-
-    public getDefaultStack() {
-        return new ItemStack(this);
-    }
-
-    public inventoryTick(_stack: ItemStack, _world: ServerWorld, _holder: Entity, _slot: number, _selected: boolean): void {
-    }
-
-    public leftClick(_world: World, _user: PlayerEntity): boolean {
-        return false;
-    }
-
-    public postHit(_stack: ItemStack, _target: LivingEntity, _attacker: LivingEntity): boolean {
-        return false;
-    }
-
-    public onUseTick(_world: World, _user: PlayerEntity): boolean {
-        return false;
-    }
-
-    public getDisplayName(): string {
-        return "Item";
-    }
-
-    public getName(): TranslatableText {
-        if (this.translation === null) {
-            this.translation = TranslatableText.of(createTranslationKey('item', Registries.ITEM.getId(this)));
-        }
-
-        return this.translation;
-    }
-
-    public toString() {
-        return Registries.ITEM.getEntryByValue(this)?.toString() ?? this.getDisplayName();
-    }
+    };
 }
+
+
+export type ItemProperties = InstanceType<typeof Item.Properties>;

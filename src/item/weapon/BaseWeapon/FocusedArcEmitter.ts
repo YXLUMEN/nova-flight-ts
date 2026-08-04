@@ -38,7 +38,7 @@ export class FocusedArcEmitter extends BaseWeapon {
             }
         }
 
-        world.spawnEffect(null, new ArcEffect(
+        world.spawnVisual(null, new ArcEffect(
             start.x, start.y, endX, endY,
             0.2, 1,
             '#7f54ff'));
@@ -70,7 +70,7 @@ export class FocusedArcEmitter extends BaseWeapon {
                     mob.takeDamage(damageSource, chainDamage);
                     const targetPos = mob.positionRef;
 
-                    world.spawnEffect(null, new ArcEffect(
+                    world.spawnVisual(null, new ArcEffect(
                         sourcePos.x, sourcePos.y, targetPos.x, targetPos.y,
                         0.2, 1,
                         '#7f54ff',
@@ -83,10 +83,6 @@ export class FocusedArcEmitter extends BaseWeapon {
 
     public override getUiColor(): string {
         return '#7f54ff';
-    }
-
-    public override getDisplayName(): string {
-        return '聚能电弧发射器';
     }
 
     protected override getMuzzleParticles(): number {

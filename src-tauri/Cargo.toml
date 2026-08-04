@@ -9,14 +9,14 @@ edition = "2021"
 rust-version = "1.77.2"
 
 [profile.dev]
-incremental = true # 以较小的步骤编译二进制文件。
+incremental = true # 以较小的步骤编译二进制文件
 opt-level = 1
 
 [profile.release]
 codegen-units = 1 # 允许 LLVM 执行更好地优化
 lto = true # 启用链接时优化
 opt-level = 3 # 最高优化
-panic = "abort" # 通过禁用 panic 处理程序来提高性能。
+panic = "abort" # 通过禁用 panic 处理程序来提高性能
 strip = true # 确保移除调试符号
 
 [lib]
@@ -34,7 +34,7 @@ tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-fs = "2"
 tauri-plugin-log = "2"
 tauri-plugin-dialog = "2"
-tokio = { version = "1.50.1", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.50.1", default-features = false, features = ["rt-multi-thread", "macros"] }
 tokio-tungstenite = "0.28.0"
 futures-util = "0.3.31"
 bytes = "1.10.1"

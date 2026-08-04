@@ -3,27 +3,14 @@ import {World} from "../../world/World.ts";
 import {type DamageSource} from "../damage/DamageSource.ts";
 import {EntityType} from "../EntityType.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
-import {
-    doubleEquals,
-    getNearestEntityByVec,
-    HALF_PI,
-    PI2,
-    rand,
-    randInt,
-    randNeg,
-    thickLineCircleHit
-} from "../../utils/math/math.ts";
+import {doubleEquals, getNearestEntityByVec, rand} from "../../utils/math/math.ts";
 import {DataTracker, type DataTrackerBuilder} from "../data/DataTracker.ts";
 import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
-import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
 import {EntityTypes} from "../EntityTypes.ts";
-import {DevourerBossAI, DevourerPhase} from "../ai/DevourerBossAI.ts";
+import {DevourerBossAI, DevourerPhase} from "../ai/devourer/DevourerBossAI.ts";
 import type {Entity} from "../Entity.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import {FireWave} from "../ai/FireWave.ts";
-import {spawnLaser} from "../../utils/ServerEffect.ts";
-import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {ScreenShakeS2CPacket} from "../../network/packet/s2c/ScreenShakeS2CPacket.ts";
 import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {Audios} from "../../sound/Audios.ts";
@@ -48,32 +35,16 @@ export class DevourerBoss extends BossEntity {
     public readonly segmentCount = 96;
     private readonly segmentSpacing = 44;
     private readonly segmentSpacingSq = this.segmentSpacing * this.segmentSpacing;
-    private turnRate = 0.034906;
+    public turnRate = 0.034906;
 
-    private bulletCooldown: number = 60;
-    private missileCooldown: number = 200;
     private selectCooldown: number = 0;
-    private laserCooldown: number = 300;
-
-    private readonly phaseBulletCd = [45, 28, 28, 18];
-    private readonly phaseMissileCd = [300, 240, 240, 160];
-
     private primaryTarget: Entity | null = null;
+
     private currentPhase: DevourerPhase = DevourerPhase.PHASE_1;
+    declare protected readonly AI: DevourerBossAI;
 
     public readonly segPoses: Float32Array;
     public readonly prevSegPoses: Float32Array;
-    private readonly segFireCds: Uint8Array;
-
-    private readonly bulletWaves: FireWave[] = [
-        new FireWave(1, 14, 0, true, 0, 3.2),
-        new FireWave(8, 11, 0, false, 0, 1.2),
-        new FireWave(10, 8, 0, false, 0, 1.4),
-        new FireWave(6, 9, 8, false, 0, PI2),
-        new FireWave(12, 7, 0, true, 0, 1.6),
-        new FireWave(8, 12, 0, false, 0, PI2 * 0.6),
-        new FireWave(16, 10, 6, false, 0, PI2),
-    ];
 
     public constructor(type: EntityType<DevourerBoss>, world: World, worth: number) {
         super(type, world, worth, 120);
@@ -82,14 +53,8 @@ export class DevourerBoss extends BossEntity {
 
         this.segPoses = new Float32Array(this.segmentCount * this.segmentCount);
         this.prevSegPoses = new Float32Array(this.segmentCount * this.segmentCount);
-        this.segFireCds = new Uint8Array(48);
-        for (let i = 0; i < this.segFireCds.length; i++) {
-            this.segFireCds[i] = 1 + i * 3;
-        }
 
         this.setMovementSpeed(12);
-        this.createBullet = this.createBullet.bind(this);
-
         if (!world.isClient) {
             world.sendPacket(new PlayAudioS2CPacket(Audios.SCOURGE_OF_THE_UNIVERSE, 1, true));
         }
@@ -108,7 +73,7 @@ export class DevourerBoss extends BossEntity {
     }
 
     protected createAi() {
-        return new DevourerBossAI();
+        return new DevourerBossAI(this, this.createBullet);
     }
 
     public override tick(): void {
@@ -118,12 +83,16 @@ export class DevourerBoss extends BossEntity {
     }
 
     protected override tickAi() {
-        const world = this.getWorld() as ServerWorld;
+        this.tickTargetSelection();
+        this.AI.tick();
+        this.checkPhaseTransition();
+    }
 
-        this.tickTargetSelection(world);
-        this.tickDevourerMovement();
-        this.tickAttacks(world);
-        this.tickSegmentAttacks(world);
+    private tickTargetSelection(): void {
+        if (this.selectCooldown-- > 0) return;
+
+        this.primaryTarget = getNearestEntityByVec(this.positionRef, this.getWorld().getPlayers());
+        this.selectCooldown = this.primaryTarget ? 40 : 15;
     }
 
     public override move(movement: Vec2): void {
@@ -143,26 +112,19 @@ export class DevourerBoss extends BossEntity {
         super.move(movement);
     }
 
-    private tickTargetSelection(world: ServerWorld): void {
-        if (this.selectCooldown-- > 0) return;
-
-        this.primaryTarget = getNearestEntityByVec(this.positionRef, world.getPlayers());
-        this.selectCooldown = this.primaryTarget ? 40 : 15;
-    }
-
-    private checkPhaseTransition(): boolean {
+    private checkPhaseTransition(): void {
         const world = this.getWorld() as ServerWorld;
         const hpRatio = this.getHealth() / this.getMaxHealth();
 
         if (this.currentPhase < DevourerPhase.PHASE_2 && hpRatio < 0.66) {
             this.enterPhase(DevourerPhase.PHASE_2, world);
-            return false;
+            return;
         }
         if (this.currentPhase < DevourerPhase.PHASE_2_TO_3 && hpRatio < 0.34) {
             this.enterPhase(DevourerPhase.PHASE_2_TO_3, world);
-            return false;
+            return;
         }
-        return true;
+        return;
     }
 
     private enterPhase(phase: DevourerPhase, world: ServerWorld): void {
@@ -231,24 +193,6 @@ export class DevourerBoss extends BossEntity {
         });
     }
 
-    private tickDevourerMovement(): void {
-        const intent = (this.AI as DevourerBossAI).computeIntent(
-            this.positionRef,
-            this.primaryTarget?.positionRef ?? null,
-            this.currentPhase,
-            this.age,
-            this.getMovementSpeed()
-        );
-
-        if (intent.speed > 0.001) {
-            this.setClampYaw(intent.targetYaw, this.turnRate);
-        }
-
-        const yaw = this.getYaw();
-        this.setVelocity(Math.cos(yaw) * intent.speed, Math.sin(yaw) * intent.speed);
-        this.needSync = true;
-    }
-
     private updateSegmentPositions(): void {
         const pos = this.positionRef;
 
@@ -280,138 +224,12 @@ export class DevourerBoss extends BossEntity {
         }
     }
 
-    private tickAttacks(world: ServerWorld): void {
-        if (this.bulletCooldown-- <= 0) {
-            this.bulletCooldown = this.phaseBulletCd[this.currentPhase];
-            this.fireBulletSpread(world);
-        }
-
-        if (this.missileCooldown-- <= 0) {
-            this.missileCooldown = this.phaseMissileCd[this.currentPhase];
-            this.tryFireMissiles(world);
-        }
-
-        if (this.currentPhase === DevourerPhase.PHASE_3 && this.laserCooldown-- <= 0) {
-            this.laserCooldown = randInt(240, 300);
-            this.fireSkyLaser(world);
-        }
-    }
-
-    private fireBulletSpread(world: ServerWorld): void {
-        if (!this.primaryTarget) return;
-
-        const yaw = this.getYaw();
-        const pos = this.positionRef;
-        const targetPos = this.primaryTarget.positionRef;
-
-        let start = 1;
-        let end = 1;
-        if (this.currentPhase === DevourerPhase.PHASE_2) {
-            start = 2;
-            end = 3;
-        } else if (this.currentPhase === DevourerPhase.PHASE_3) {
-            start = 4;
-            end = 6;
-        }
-
-        const predicate = () => !this.isRemoved() && this.getPhase() !== DevourerPhase.PHASE_2_TO_3;
-        for (let i = start; i < end + 1; i++) {
-            const wave = this.bulletWaves[i];
-            wave.fireWithSpread(
-                world,
-                this.createBullet,
-                pos,
-                wave.resolveRadiusVec(pos, targetPos, yaw),
-                predicate
-            );
-        }
-    }
-
-    private tickSegmentAttacks(world: ServerWorld): void {
-        if (!this.primaryTarget || (this.age & 2) !== 0) return;
-
-        const pPos = this.primaryTarget.positionRef;
-        const wave = this.bulletWaves[0];
-
-        for (let i = 0; i < this.segFireCds.length; i++) {
-            if (this.segFireCds[i] > 0) {
-                this.segFireCds[i]--;
-                continue;
-            }
-            if (Math.random() > 0.04) continue;
-
-            const idx = i << 1;
-            const sx = this.segPoses[idx];
-            const sy = this.segPoses[idx + 1];
-
-            const angle = Math.atan2(pPos.y - sy, pPos.x - sx);
-            wave.fireBulletWave(world, this.createBullet, sx, sy, angle, angle);
-            this.segFireCds[i] = 40 + (Math.random() * 10) | 0;
-        }
-    }
-
-    private tryFireMissiles(world: ServerWorld): void {
-        if (this.currentPhase === DevourerPhase.PHASE_1) return;
-        if (!this.primaryTarget) return;
-
-        const missileCount = this.currentPhase === DevourerPhase.PHASE_3 ? 4 : 2;
-        const pos = this.positionRef;
-        let fired = 0;
-
-        const interval = world.scheduleInterval(0.25, () => {
-            if (fired++ >= missileCount || this.isRemoved()) {
-                interval.cancel();
-                return;
-            }
-
-            const side = fired % 2 === 0 ? 1 : -1;
-            const yaw = this.getYaw();
-            const driftAngle = yaw + side * (HALF_PI + randNeg(0, 0.3));
-
-            const missile = new MobMissileEntity(EntityTypes.MOB_MISSILE_ENTITY, world, this, driftAngle);
-            missile.color = '#cc0000';
-            missile.setPosition(pos.x, pos.y);
-            missile.setYaw(yaw);
-            world.spawnEntity(missile);
-        });
-    }
-
-    private fireSkyLaser(world: ServerWorld): void {
-        const target = this.primaryTarget;
-        if (!target) return;
-
-        const offset = rand(-50, 50);
-        const tx = target.positionRef.x;
-
-        const startX = tx + offset;
-        const startY = -80;
-        const endX = tx - offset;
-        const endY = World.MAP_HEIGHT + 80;
-
-        spawnLaser(world, startX, startY, endX, endY, '#ff1100', 5, 0.8);
-        world.schedule(0.85, () => {
-            const laserWidth = 24;
-
-            spawnLaser(world, startX, startY, endX, endY, '#372aff', laserWidth, 0.3);
-            world.sendPacket(new ScreenShakeS2CPacket(0.4, 1));
-            world.playSound(null, SoundEvents.ARC_BURST, 1, 0.8);
-
-            const damageSource = world.getDamageSources().laser(this).setShieldMulti(0.2);
-            for (const player of world.getPlayers()) {
-                const pPos = player.positionRef;
-                if (thickLineCircleHit(startX, startY, endX, endY, laserWidth, pPos.x, pPos.y, player.getDimensions().halfWidth)) {
-                    player.takeDamage(damageSource, 15);
-                }
-            }
-        });
-    }
-
     public override canHitByProjectile(): boolean {
         return this.getPhase() !== DevourerPhase.PHASE_2_TO_3 && super.canHitByProjectile();
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
-        return super.takeDamage(damageSource, damage) && this.checkPhaseTransition();
+        return super.takeDamage(damageSource, damage);
     }
 
     public override onDeath(damageSource: DamageSource): void {
@@ -439,6 +257,10 @@ export class DevourerBoss extends BossEntity {
             );
         });
         world.sendPacket(new AudioStopS2CPacket(Audios.UNIVERSAL_COLLAPSE));
+    }
+
+    public target() {
+        return this.primaryTarget;
     }
 
     public getPhase(): DevourerPhase {
@@ -491,10 +313,6 @@ export class DevourerBoss extends BossEntity {
         super.writeNBT(nbt);
         const phase = this.getPhase() === DevourerPhase.PHASE_2_TO_3 ? DevourerPhase.PHASE_2 : this.getPhase();
         nbt.setInt8('devourer_phase', phase);
-
-        nbt.setInt8('bullet_cd', this.bulletCooldown);
-        nbt.setInt16('missile_cd', this.missileCooldown);
-        nbt.setInt16('laser_cd', this.laserCooldown);
         return nbt;
     }
 
@@ -502,9 +320,5 @@ export class DevourerBoss extends BossEntity {
         super.readNBT(nbt);
         this.currentPhase = nbt.getInt8('devourer_phase', DevourerPhase.PHASE_1) as DevourerPhase;
         this.dataTracker.set(DevourerBoss.PHASE_TRACKER, this.currentPhase);
-
-        this.bulletCooldown = nbt.getInt8('bullet_cd', 60);
-        this.missileCooldown = nbt.getInt16('missile_cd', 200);
-        this.laserCooldown = nbt.getInt8('laser_cd', 300);
     }
 }
