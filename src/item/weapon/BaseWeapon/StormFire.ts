@@ -29,12 +29,11 @@ export class StormFire extends BaseWeapon {
         }
 
         const charging = stack.getOr(DataComponents.CHARGING_PROGRESS, 0) - 1;
-        if (charging <= 0) {
-            if (world.isClient) {
-                stack.set(DataComponents.FIRING, true);
-                world.playLoopSound(holder, SoundEvents.STORM_FIRE_LOOP, 0.2);
-            }
-            stack.remove(DataComponents.CHARGING_PROGRESS);
+        if (charging < 0) return;
+
+        if (charging === 0 && world.isClient) {
+            stack.set(DataComponents.FIRING, true);
+            world.playLoopSound(holder, SoundEvents.STORM_FIRE_LOOP, 0.2);
             return;
         }
 
@@ -42,7 +41,7 @@ export class StormFire extends BaseWeapon {
     }
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
-        if (stack.contains(DataComponents.CHARGING_PROGRESS)) return;
+        if (stack.get(DataComponents.CHARGING_PROGRESS) !== 0) return;
         super.tryFire(stack, world, attacker);
     }
 
@@ -53,7 +52,7 @@ export class StormFire extends BaseWeapon {
     }
 
     public override onStartFire(stack: ItemStack, world: World, attacker: Entity): void {
-        if (stack.contains(DataComponents.CHARGING_PROGRESS) || this.getCooldown(stack) > 0) return;
+        if (stack.getOr(DataComponents.CHARGING_PROGRESS, 0) !== 0 || this.getCooldown(stack) > 0) return;
         stack.set(DataComponents.CHARGING_PROGRESS, this.CHARGING_TIME);
 
         if (!world.isClient) return;

@@ -1,6 +1,6 @@
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import type {TrackedData} from "./data/TrackedData.ts";
-import {World} from "../world/World.ts";
+import type {World} from "../world/World.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 import type {DamageSource} from "./damage/DamageSource.ts";
 import type {EntityType} from "./EntityType.ts";
@@ -29,6 +29,7 @@ import {BlockCollision} from "../world/collision/BlockCollision.ts";
 import type {Comparable} from "../type/Comparable.ts";
 import type {ViewRect} from "../client/render/Camera.ts";
 import {isBoxInView} from "../utils/render/render.ts";
+import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 
 
 export abstract class Entity implements EntityLike, DataTracked, Comparable, NbtSerializable, CommandOutput {
@@ -427,16 +428,18 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
             x = dim.halfWidth;
             this.velocity.x = 0;
         }
-        if (x > World.MAP_WIDTH - dim.halfWidth + ox) {
-            x = World.MAP_WIDTH - dim.halfWidth;
+
+        const map = this.getWorld().getMap();
+        if (x > map.getWidthPx() - dim.halfWidth + ox) {
+            x = map.getWidthPx() - dim.halfWidth;
             this.velocity.x = 0;
         }
         if (y < dim.halfHeight - oy) {
             y = dim.halfHeight;
             this.velocity.y = 0;
         }
-        if (y > World.MAP_HEIGHT - dim.halfHeight + oy) {
-            y = World.MAP_HEIGHT - dim.halfHeight;
+        if (y > map.getHeightPx() - dim.halfHeight + oy) {
+            y = map.getHeightPx() - dim.halfHeight;
             this.velocity.y = 0;
         }
 
@@ -700,8 +703,9 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     // 用于缓存,渲染器自动处理,一般不需要手动管理
     public renderer: EntityRenderer<Entity> | null = null;
 
-    // 仅限清理,严禁在游戏阶段调用
-    public static resetCounter() {
-        this.ENTITY_COUNTER.reset();
+    static {
+        GeneralEventBus.getEventBus().on('game:end', () => {
+            this.ENTITY_COUNTER.reset();
+        });
     }
 }

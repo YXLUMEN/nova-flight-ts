@@ -15,31 +15,31 @@ import {TitleEffect} from "./TitleEffect.ts";
 
 export class VisualEffectTypes {
     public static readonly EDGE_GLOW: VisualEffectType<EdgeGlowEffect> = this.registry('edge_glow',
-        VisualEffectType.create(EdgeGlowEffect, EdgeGlowEffect.PACKET_CODEC)
+        VisualEffectType.create(EdgeGlowEffect.PACKET_CODEC)
     );
     public static readonly EMP_BURST: VisualEffectType<EMPBurst> = this.registry('emp_burst',
-        VisualEffectType.create(EMPBurst, EMPBurst.PACKET_CODEC)
+        VisualEffectType.create(EMPBurst.PACKET_CODEC)
     );
     public static readonly LASER_BEAM: VisualEffectType<LaserBeamEffect> = this.registry('laser_beam',
-        VisualEffectType.create(LaserBeamEffect, LaserBeamEffect.PACKET_CODEC)
+        VisualEffectType.create(LaserBeamEffect.PACKET_CODEC)
     );
     public static readonly PARTICLE: VisualEffectType<CircleParticle> = this.registry('particle',
-        VisualEffectType.create(CircleParticle, CircleParticle.PACKET_CODEC)
+        VisualEffectType.create(CircleParticle.PACKET_CODEC)
     );
     public static readonly RADIAL_RING: VisualEffectType<RadialRing> = this.registry('radial_ring',
-        VisualEffectType.create(RadialRing, RadialRing.PACKET_CODEC)
+        VisualEffectType.create(RadialRing.PACKET_CODEC)
     );
     public static readonly SCREEN_FLASH: VisualEffectType<ScreenFlash> = this.registry('screen_flight',
-        VisualEffectType.create(ScreenFlash, ScreenFlash.PACKET_CODEC)
+        VisualEffectType.create(ScreenFlash.PACKET_CODEC)
     );
     public static readonly WINDOW_OVERLAY: VisualEffectType<WindowOverlay> = this.registry('window_overlay',
-        VisualEffectType.create(WindowOverlay, WindowOverlay.PACKET_CODEC)
+        VisualEffectType.create(WindowOverlay.PACKET_CODEC)
     );
     public static readonly ARC: VisualEffectType<ArcEffect> = this.registry('arc',
-        VisualEffectType.create(ArcEffect, ArcEffect.PACKET_CODEC)
+        VisualEffectType.create(ArcEffect.PACKET_CODEC)
     );
     public static readonly TITLE: VisualEffectType<TitleEffect> = this.registry('title',
-        VisualEffectType.create(TitleEffect, TitleEffect.PACKET_CODEC)
+        VisualEffectType.create(TitleEffect.PACKET_CODEC)
     );
 
     private static registry<T extends VisualEffect>(

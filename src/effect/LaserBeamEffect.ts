@@ -1,4 +1,4 @@
-import {type VisualEffect} from "./VisualEffect.ts";
+import type {VisualEffect} from "./VisualEffect.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {lerp} from "../utils/math/math.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";

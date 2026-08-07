@@ -5,7 +5,7 @@ import {BGMManager} from "../sound/BGMManager.ts";
 import {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
 import type {Consumer, UUID} from "../type/types.ts";
 import {ClientWorld} from "./ClientWorld.ts";
-import {ClientPlayerEntity} from "./entity/ClientPlayerEntity.ts";
+import type {ClientPlayerEntity} from "./entity/ClientPlayerEntity.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import {empty, sleep} from "../utils/uit.ts";
 import {StartScreen} from "./render/ui/StartScreen.ts";
@@ -375,13 +375,6 @@ export class NovaFlightClient {
 
     public getTickManager() {
         return this.tickManager;
-    }
-
-    public switchDevMode(bool?: boolean): void {
-        const player = this.player;
-        if (!player) return;
-
-        this.networkHandler.sendCommand(`/gamemode ${bool ?? !player.isDevMode()}`);
     }
 
     private static readonly ConnectCtx = class implements ConnectionContext {

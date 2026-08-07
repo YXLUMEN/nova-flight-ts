@@ -81,7 +81,12 @@ export class ClientInputEvents {
         if (world && world.isOver()) return;
 
         if (event.ctrlKey) {
-            if (code === 'KeyV') client.switchDevMode();
+            if (code === 'KeyV') {
+                const player = client.player;
+                if (player) {
+                    client.networkHandler.sendCommand(`/gamemode ${!player.isDevMode()}`);
+                }
+            }
             if (client.player?.isDevMode() && world) {
                 this.devFunc(client, code);
             }

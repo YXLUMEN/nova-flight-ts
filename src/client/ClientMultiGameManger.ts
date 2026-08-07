@@ -169,8 +169,12 @@ export class ClientMultiGameManger {
 
         this.serverList.addEventListener('auxclick', async event => {
             const target = event.target;
-            if (target instanceof HTMLElement && target.className === 'server-select') {
-                const [_, addr, name] = target.id.split('-');
+            if (target instanceof HTMLElement &&
+                target.className === 'server-select' &&
+                target.hasAttribute('data-id')
+            ) {
+                const id = target.getAttribute('data-id')!;
+                const [_, addr, name] = id.split('-');
                 target.remove();
                 await ClientStorage.deleteServer(addr, name);
             }

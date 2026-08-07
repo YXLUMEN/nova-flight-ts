@@ -1,4 +1,4 @@
-import {Entity} from "../entity/Entity.ts";
+import type {Entity} from "../entity/Entity.ts";
 import {GeneralEventBus} from "../event/GeneralEventBus.ts";
 import type {VisualEffect} from "../effect/VisualEffect.ts";
 import type {Schedule} from "../type/ITimer.ts";
@@ -141,7 +141,6 @@ export abstract class World {
         this.clear();
         this.events.emit(new GameEnd());
         this.events.clear();
-        Entity.resetCounter();
     }
 
     public clear(): void {

@@ -32,7 +32,7 @@ export class DevourerBoss extends BossEntity {
         TrackedDataHandlerRegistry.BOOL
     );
 
-    public readonly segmentCount = 96;
+    public readonly segmentCount = 72;
     private readonly segmentSpacing = 44;
     private readonly segmentSpacingSq = this.segmentSpacing * this.segmentSpacing;
     public turnRate = 0.034906;
