@@ -1,5 +1,4 @@
-import {type VisualEffect} from "./VisualEffect.ts";
-import {Window} from "../client/render/Window.ts";
+import type {VisualEffect} from "./VisualEffect.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
@@ -8,6 +7,8 @@ import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 export class ScreenFlash implements VisualEffect {
     public static readonly PACKET_CODEC: PacketCodec<ScreenFlash> = PacketCodecs.of(
         (writer, value) => {
+            writer.writeFloat(value.w);
+            writer.writeFloat(value.h);
             writer.writeFloat(value.life);
             writer.writeFloat(value.maxAlpha);
             PacketCodecs.COLOR_HEX.encode(writer, value.color);
@@ -16,19 +17,30 @@ export class ScreenFlash implements VisualEffect {
             return new ScreenFlash(
                 reader.readFloat(),
                 reader.readFloat(),
+                reader.readFloat(),
+                reader.readFloat(),
                 PacketCodecs.COLOR_HEX.decode(reader)
             );
         }
     );
 
     private alive = true;
+    private readonly w: number;
+    private readonly h: number;
     private readonly life: number;
     private readonly maxAlpha: number;
     private readonly color: string;
 
     private t = 0;
 
-    public constructor(life: number = 0.08, maxAlpha: number = 0.25, color: string = '#ffffff') {
+    public constructor(
+        w: number, h: number,
+        life: number = 0.08,
+        maxAlpha: number = 0.25,
+        color: string = '#ffffff'
+    ) {
+        this.w = w;
+        this.h = h;
         this.maxAlpha = maxAlpha;
         this.life = life;
         this.color = color;
@@ -44,7 +56,7 @@ export class ScreenFlash implements VisualEffect {
         ctx.save();
         ctx.globalAlpha = (1 - k) * this.maxAlpha;
         ctx.fillStyle = this.color;
-        ctx.fillRect(0, 0, Window.VIEW_W, Window.VIEW_H);
+        ctx.fillRect(0, 0, this.w, this.h);
         ctx.restore();
     }
 

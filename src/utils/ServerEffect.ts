@@ -13,7 +13,8 @@ export function spawnLaser(
     endY: number,
     color = '#fff',
     width = 1,
-    life = 0.1) {
+    life = 0.1
+) {
     import('../effect/LaserBeamEffect.ts')
         .then(mod => {
             const effect = new mod.LaserBeamEffect(color, width, life);

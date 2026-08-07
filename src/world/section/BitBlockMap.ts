@@ -8,13 +8,18 @@ import {NbtTypeId} from "../../nbt/NbtType.ts";
 import {WorldConstants} from "./WorldConstants.ts";
 
 export class BitBlockMap implements NbtSerializable {
+    private widthPx: number;
+    private heightPx: number;
     private width: number;
     private height: number;
     private data: Uint8Array;
 
     public constructor(widthInPixels: number, heightInPixels: number) {
-        this.width = Math.ceil(widthInPixels >> WorldConstants.BLOCK_SIZE_LOG2);
-        this.height = Math.ceil(heightInPixels >> WorldConstants.BLOCK_SIZE_LOG2);
+        this.widthPx = Math.floor(widthInPixels);
+        this.heightPx = Math.floor(heightInPixels);
+
+        this.width = Math.ceil(this.widthPx >> WorldConstants.BLOCK_SIZE_LOG2);
+        this.height = Math.ceil(this.heightPx >> WorldConstants.BLOCK_SIZE_LOG2);
 
         const totalBlocks = this.width * this.height;
         const byteLength = Math.ceil(totalBlocks / 8);
@@ -49,6 +54,14 @@ export class BitBlockMap implements NbtSerializable {
 
     public getHeight(): number {
         return this.height;
+    }
+
+    public getWidthPx(): number {
+        return this.widthPx;
+    }
+
+    public getHeightPx(): number {
+        return this.heightPx;
     }
 
     public set(bx: number, by: number, value: number = 1): void {
@@ -124,6 +137,8 @@ export class BitBlockMap implements NbtSerializable {
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
+        nbt.setUint32('width_px', this.widthPx);
+        nbt.setUint32('height_px', this.heightPx);
         nbt.setUint32('width', this.width);
         nbt.setUint32('height', this.height);
 
@@ -135,6 +150,8 @@ export class BitBlockMap implements NbtSerializable {
     }
 
     public readNBT(nbt: NbtCompound) {
+        this.widthPx = nbt.getUint32('width_px', this.widthPx);
+        this.heightPx = nbt.getUint32('height_px', this.heightPx);
         this.width = nbt.getUint32('width', this.width);
         this.height = nbt.getUint32('height', this.height);
 

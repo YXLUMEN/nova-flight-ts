@@ -152,7 +152,7 @@ export class DevourerAttack {
                 }
             }
 
-            spawnLaser(world, startX, startY, endX, endY, '#8a2aff', 24, 0.3);
+            spawnLaser(world, startX, startY, endX, endY, '#39008a', 24, 0.3);
             world.sendPacket(new ScreenShakeS2CPacket(0.4, 1));
             world.playSound(null, SoundEvents.ARC_BURST, 1, 0.8);
         });

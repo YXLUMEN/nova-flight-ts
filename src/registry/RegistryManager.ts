@@ -39,9 +39,8 @@ export class RegistryManager {
         const entry = this.registers.get(key);
         if (entry) {
             return entry;
-        } else {
-            throw new ReferenceError(`Missing registry: ${key}`);
         }
+        throw new ReferenceError(`Missing registry: ${key}`);
     }
 
     public freeze() {
