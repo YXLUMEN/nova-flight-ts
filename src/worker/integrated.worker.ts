@@ -1,9 +1,6 @@
-import {ClientPackets} from "../client/network/ClientPackets.ts";
-import {ServerPackets} from "../server/network/ServerPackets.ts";
+import {ProtocolRegistry} from "../network/packet/ProtocolRegistry.ts";
 import {IntegratedServer} from "../server/IntegratedServer.ts";
 import type {StartServer} from "../type/startup.ts";
-import {RelayPackets} from "../network/RelayPackets.ts";
-import {CodecRegistry} from "../network/CodecRegistry.ts";
 
 let server: IntegratedServer | null = null;
 let pendingStop = false;
@@ -59,7 +56,4 @@ async function handleEvent(event: MessageEvent) {
     }
 }
 
-RelayPackets.registerNetworkPacket();
-ServerPackets.registerNetworkPacket();
-ClientPackets.registerNetworkPacket();
-CodecRegistry.settle();
+ProtocolRegistry.register();

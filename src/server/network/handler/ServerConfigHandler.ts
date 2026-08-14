@@ -1,26 +1,23 @@
 import {GameProfile} from "../../entity/GameProfile.ts";
 import {ServerCommonHandler} from "./ServerCommonHandler.ts";
-import {ClientReadyC2SPacket} from "../../../network/packet/c2s/ClientReadyC2SPacket.ts";
-import {ServerReadyS2CPacket} from "../../../network/packet/s2c/ServerReadyS2CPacket.ts";
-import {PlayerAttemptLoginC2SPacket} from "../../../network/packet/c2s/PlayerAttemptLoginC2SPacket.ts";
-import type {UUID} from "../../../type/types.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {ConnectionState} from "../ConnectionState.ts";
 import type {NovaFlightServer} from "../../NovaFlightServer.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
 import {PendingSpawn} from "./PendingSpawn.ts";
 import {TimeoutError} from "../../../type/errors.ts";
+import {ServerFinishConfigS2CPacket} from "../../../network/packet/config/ServerFinishConfigS2CPacket.ts";
 
 export class ServerConfigHandler extends ServerCommonHandler {
     public static readonly PROMOTE_FAIL = TranslatableText.of('network.disconnect.promote.fail');
     public static readonly PROMOTE_TIMEOUT = TranslatableText.of('network.disconnect.promote.timeout');
 
-    private attemptUUID: UUID | null = null;
-    private profile: GameProfile | null = null;
+    private readonly profile: GameProfile;
     private spawnTask: PendingSpawn | null = null;
 
-    public constructor(server: NovaFlightServer, connection: ServerConnection) {
+    public constructor(server: NovaFlightServer, connection: ServerConnection, profile: GameProfile) {
         super(server, connection);
+        this.profile = profile;
     }
 
     public onDisconnected() {
@@ -30,35 +27,19 @@ export class ServerConfigHandler extends ServerCommonHandler {
         super.onDisconnected();
     }
 
-    public onClientReady(packet: ClientReadyC2SPacket) {
-        if (this.attemptUUID !== null && this.attemptUUID !== packet.clientId) {
+    public startConfiguration() {
+        if (this.connection.getState() !== this.getPhase()) {
             this.disconnect(ServerConfigHandler.INVALID_STATE);
             return;
         }
 
-        if (this.server.world === null) return;
-
-        this.attemptUUID = packet.clientId;
-        this.send(ServerReadyS2CPacket.INSTANCE);
-    }
-
-    public onPlayerAttemptLogin(packet: PlayerAttemptLoginC2SPacket) {
-        if (this.connection.getState() !== this.getPhase() || this.attemptUUID !== packet.clientId) {
-            this.disconnect(ServerConfigHandler.INVALID_STATE);
-            return;
-        }
-
-        if (this.spawnTask !== null) return;
-
-        if (this.server.playerManager.hasLogin(this.attemptUUID)) {
-            console.warn(`[Server] A duplicate player try to login with uuid ${this.attemptUUID}`);
+        if (this.server.playerManager.hasLogin(this.profile.clientId)) {
+            console.warn(`[Server] A duplicate player try to login with profile ${this.profile}`);
             this.disconnect(ServerConfigHandler.DUPLICATE_PLAYER);
             return;
         }
 
-        this.profile = new GameProfile(packet.sessionId, packet.clientId, packet.playerName);
         this.spawnTask = new PendingSpawn(this.server, this.profile);
-
         void this.promoteToPlaySession(this.spawnTask);
     }
 
@@ -70,7 +51,7 @@ export class ServerConfigHandler extends ServerCommonHandler {
                 return;
             }
 
-            // this.send(ServerFinishConfigS2CPacket.INSTANCE);
+            this.send(ServerFinishConfigS2CPacket.INSTANCE);
 
             const success = spawn.spawn(this.connection);
             if (success) return;

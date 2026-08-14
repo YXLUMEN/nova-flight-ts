@@ -12,6 +12,7 @@ export class LangResource implements ResourceModule {
     private readonly data: Map<string, string> = new Map();
 
     private currentLang: string = 'zh_cn';
+    private targetLang: string = 'zh_cn';
 
     public getId(): RegistryEntry<string> {
         return Resources.LANG;
@@ -25,8 +26,8 @@ export class LangResource implements ResourceModule {
             if (entry.isDirectory) this.allLang.push(entry.name);
         }, 1);
 
-        const lang = this.currentLang;
-        if (!this.allLang.includes(this.currentLang)) {
+        const lang = this.targetLang;
+        if (!this.allLang.includes(this.targetLang)) {
             throw new Error(`Lang ${lang} not found`);
         }
 
@@ -110,10 +111,11 @@ export class LangResource implements ResourceModule {
         return this.data.get(key);
     }
 
-    public setLang(lang: string): Promise<void> {
+    public async setLang(lang: string): Promise<void> {
         if (this.currentLang === lang) return Promise.resolve();
+        this.targetLang = lang;
+        await this.reload();
         this.currentLang = lang;
-        return this.reload();
     }
 
     public getCurrentLang(): string {

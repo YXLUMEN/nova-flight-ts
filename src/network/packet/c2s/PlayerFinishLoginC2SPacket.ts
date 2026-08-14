@@ -16,10 +16,6 @@ export class PlayerFinishLoginC2SPacket implements Payload {
         return PlayerFinishLoginC2SPacket.ID;
     }
 
-    public canProcessInTransition(): boolean {
-        return true;
-    }
-
     public accept(listener: ServerPlayHandler): void {
         listener.onPlayerFinishLogin(this);
     }

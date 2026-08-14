@@ -5,8 +5,13 @@
   "disconnect.server_close": "服务器关闭",
   "disconnect.duplicate_player": "已有玩家在线",
   "disconnect.kicked": "被服务器踢出",
-  "disconnect.invalid_state": "连接状态异常",
+  "disconnect.invalid.state": "连接状态异常",
+  "disconnect.invalid.uuid": "不合法的 UUID",
+  "disconnect.invalid.session_id": "不合法的 Session",
   "disconnect.promote.fail": "会话提升失败",
   "disconnect.promote.timeout": "会话提升超时",
+  "disconnect.still_loading": "服务器正在启动",
+  "disconnect.unmach.protocal": "不匹配的网络协议",
+  "disconnect.unmach.game": "不兼容的游戏版本 需要 \"{}\" 但当前为 \"{}\"",
   "disconnect.move_too_fast": "移动过快"
 }

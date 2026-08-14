@@ -1,8 +1,8 @@
-import type {Payload} from "../Payload.ts";
-import {payloadType, type PayloadType} from "../PayloadType.ts";
-import type {PacketCodec} from "../codec/PacketCodec.ts";
-import {PacketCodecs} from "../codec/PacketCodecs.ts";
-import type {Vec2} from "../../utils/math/Vec2.ts";
+import type {Payload} from "../../Payload.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
+import type {PacketCodec} from "../../codec/PacketCodec.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import type {Vec2} from "../../../utils/math/Vec2.ts";
 
 export class PositionMoveRotation implements Payload {
     public static readonly ID: PayloadType<PositionMoveRotation> = payloadType('position_move_rotation');

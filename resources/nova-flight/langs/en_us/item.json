@@ -23,6 +23,8 @@
   "nova-flight.particle_lance": "Particle Lance",
   "nova-flight.tachyon_lance": "Tachyon Lance",
   "nova-flight.perdition_beam": "Perdition Beam",
-  "nova-flight.void_engin": "Void Engin",
-  "nova-flight.phase_lasers": "Phase Lasers"
+  "nova-flight.void_engin": "Void Engine",
+  "nova-flight.phase_lasers": "Phase Lasers",
+  "nova-flight.storm_fire": "Firestorm Autocannon",
+  "nova-flight.smoke_launcher": "Smoke Launcher"
 }

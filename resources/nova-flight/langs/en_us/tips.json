@@ -1,0 +1,55 @@
+{
+  "nova-flight.title": "Tips",
+  "nova-flight.mob.tank": "Enemy ships with reactive armor gradually reduce incoming damage",
+  "nova-flight.mob.speedster": "Fast-moving targets are harder to hit — take them out first",
+  "nova-flight.mob.bomber": "The Perdition Beam deals bonus damage to burning targets",
+  "nova-flight.mob.fighter": "Missile fighters excel at hard-tracking missiles — keep moving while you attack",
+
+  "nova-flight.weapon.laser": "Lasers have long range but low burst damage — great for harassment, or moral support",
+  "nova-flight.weapon.missile": "Missiles track strongly but are easily shot down by point defense and fooled by decoys",
+  "nova-flight.weapon.plasma": "Plasma weapons deal more damage the longer they charge",
+  "nova-flight.weapon.missile_guided": "Missiles home in automatically — upgrade them to make them deadlier",
+  "nova-flight.weapon.cold": "Cooling tech greatly reduces laser cooldown time",
+  "nova-flight.weapon.plasma_cannon": "Kinetic artillery uses strong-interaction materials, punching through multiple ships in one shot",
+  "nova-flight.weapon.electric-weapon": "Electric weapons deal area damage",
+  "nova-flight.weapon.cannon": "90mm and 125mm cannons pack devastating explosive power",
+  "nova-flight.weapon.explosion": "Torpedoes have the largest blast radius among terrain-destroying explosions",
+  "nova-flight.weapon.ciws": "The CIWS is a real frame-killer",
+
+  "nova-flight.defense.shield": "The EMP shield blocks damage, but needs time to recharge",
+  "nova-flight.defense.armor": "Armor gives permanent protection, but erosion weapons can corrode it",
+
+  "nova-flight.strategy.flank": "Try flanking instead of head-on fights — most people only shoot straight ahead!",
+  "nova-flight.strategy.focus": "Focus fire on the BOSS before it causes too much trouble",
+  "nova-flight.strategy.retreat": "When health gets low, pause and take a deep breath — regroup, or go out gloriously",
+  "nova-flight.strategy.escape": "When missiles lock on, stay calm: pop decoys (press X) or shoot them down with CIWS",
+
+  "nova-flight.upgrade.damage": "Upgrading weapons boosts the damage of all equipment — press G to open the R&D page",
+  "nova-flight.upgrade.speed": "No one can resist the traverse gear",
+  "nova-flight.upgrade.hull": "Reinforcing the hull increases your max health",
+  "nova-flight.upgrade.cold": "Fun fact: I know you're playing on a computer right now",
+  "nova-flight.upgrade.emp": "EMP clears enemy fire within a radius",
+  "nova-flight.upgrade.radombomb": "Random shells often fire something unexpected — a powerful upgrade, though pricey",
+  "nova-flight.upgrade.radargun": "Flak guns auto-attack enemies and intercept missiles — upgrade them for better support",
+
+  "nova-flight.lore.shadow_race": "The Shadow Clan's lossless dimensional-shift tech lets them harass Imperial borders under Elder \"Dweller\"",
+  "nova-flight.lore.emp_tech": "The invention of electromagnetic oscillation changed the war — it can paralyze enemy warships",
+  "nova-flight.lore.logic_war": "Rumor has it the Polar Defense Front was born when its leader spotted a polar bear",
+  "nova-flight.lore.polaris_birth": "Facing Imperial decay and the bug threat, the Polaris resistance rose",
+  "nova-flight.lore.northern_alliance": "The Northern Alliance supplies the Polar Defense Front with arms and tech",
+
+  "nova-flight.easteregg.ancient_tech": "Some fighter wrecks still show traces of Shadow Clan dimensional-shift tech...",
+  "nova-flight.easteregg.nest_heart": "Legend says the Shadow Clan hive mother's core still beats somewhere, fueling Imperial fleet jumps",
+  "nova-flight.easteregg.polaris_symbol": "The five stars of the Polaris emblem stand for hope, courage, wisdom, unity, and freedom",
+  "nova-flight.easteregg.colossus_shadow": "Some claim to have seen a colossal shadow in deep space — an undestroyed Colossus?",
+  "nova-flight.easteregg.truso_trade": "Truso Federation merchants still sail certain routes, but they stay neutral",
+  "nova-flight.easteregg.horus_legacy": "Vice Admiral Horus's rebel remnants are said to still linger in some star system",
+  "nova-flight.easteregg.quantum_spear": "The Luminari quantum spear tech is lost, though its principles are still studied — now each loss is permanent",
+  "nova-flight.easteregg.fourth_emperor": "The Star Destroyer boasts immense firepower, but it's so unwieldy it needs tugboats to turn around in port",
+  "nova-flight.easteregg.dimension_gate": "Shadow Clan dimensional gates — humanity still can't fully understand them, only that they work",
+  "nova-flight.easteregg.location": "Despite the cold name, the Polar Defense Front HQ sits on a temperate oceanic planet",
+
+  "nova-flight.technicality.blocks": "Map blocks are a bit smaller than they look",
+  "nova-flight.technicality.bullet": "Do you know which version made bullet hitboxes smaller?",
+  "nova-flight.technicality.missile": "Missiles seem to ignore terrain"
+}

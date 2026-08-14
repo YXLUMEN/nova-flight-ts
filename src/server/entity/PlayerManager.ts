@@ -39,8 +39,9 @@ export class PlayerManager {
         if (!world) return;
 
         player.setUuid(profile.clientId);
-        const handler = new ServerPlayHandler(this.server, connection, player);
-        connection.setPacketListener(ConnectionState.PLAY, handler);
+        connection.cleanBuffer();
+        const playHandler = new ServerPlayHandler(this.server, connection, player);
+        connection.setPacketListener(ConnectionState.PLAY, playHandler);
 
         this.uuidToPlayer.set(profile.clientId, player);
         this.sessionToPlayer.set(profile.sessionId, player);
@@ -49,8 +50,8 @@ export class PlayerManager {
             this.server.isMultiPlayer = true;
         }
 
-        handler.send(new JoinGameS2CPacket(player.getId(), this.server.worldName));
-        handler.send(new TickChangeS2CPacket(this.server.getTickManager().getRate()));
+        playHandler.send(new JoinGameS2CPacket(player.getId(), this.server.worldName));
+        playHandler.send(new TickChangeS2CPacket(this.server.getTickManager().getRate()));
         connection.broadcast(new PlayerJoinS2CPacket(profile.name, profile.clientId));
         world.addPlayer(player);
 

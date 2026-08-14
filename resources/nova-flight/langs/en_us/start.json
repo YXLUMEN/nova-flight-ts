@@ -1,11 +1,17 @@
 {
+  "start": "Start Game",
+  "multiplayer": "MultiPlayer",
+  "statistic": "Statistic",
+  "exit": "Exit",
   "subtitle": "Click to Start",
   "join_game": "Joining World...",
   "connecting": "Connecting...",
-  "fail.connect": "Connect Fail",
-  "remote.fail.found_server": "Could not found server",
+  "fail.connect": "Connection Failed",
+  "remote.fail.found_server": "Could not find server",
   "remote.connecting": "Connecting...",
   "remote.retry": "Connecting ({}/{})...",
   "integrated.start": "Start integrated server...",
-  "integrated.fail.start": "Fail to start integrated server"
+  "integrated.fail.start": "Failed to start integrated server",
+  "confirm": "Confirm",
+  "cancel": "Cancel"
 }

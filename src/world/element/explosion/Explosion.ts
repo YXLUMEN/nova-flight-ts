@@ -6,7 +6,7 @@ import type {DamageSource} from "../../../entity/damage/DamageSource.ts";
 import {Vec2} from "../../../utils/math/Vec2.ts";
 import {ProjectileEntity} from "../../../entity/projectile/ProjectileEntity.ts";
 import {LivingEntity} from "../../../entity/LivingEntity.ts";
-import {BatchBlockChangesPacket} from "../../../network/packet/BatchBlockChangesPacket.ts";
+import {BatchBlockChangesPacket} from "../../../network/packet/common/BatchBlockChangesPacket.ts";
 import {ServerCommonHandler} from "../../../server/network/handler/ServerCommonHandler.ts";
 import type {BlockChange} from "../../section/BlockChange.ts";
 import {BlockCollision} from "../../collision/BlockCollision.ts";

@@ -13,6 +13,7 @@ import type {Connection} from "../../network/Connection.ts";
 export class ServerConnection implements Connection {
     public static readonly TIMEOUT = TranslatableText.of('network.disconnect.timeout');
     public static readonly AFK_TIMEOUT_MS = 60_000; // 60s
+    public static readonly DISCONNECT_ANNOUNCE_CD = 500;
 
     private readonly channel: ServerChannel;
     private readonly sessionId: number;
@@ -26,6 +27,8 @@ export class ServerConnection implements Connection {
     private lastActivityTime: number;
     private disconnectStartTime: number = 0;
     private handlerDisconnected = false;
+
+    private announceTime = 0;
 
     public constructor(channel: ServerChannel, sessionId: number, uuid: UUID, isHost: boolean) {
         this.channel = channel;
@@ -104,7 +107,11 @@ export class ServerConnection implements Connection {
     }
 
     public checkActivate(timeout: number = ServerConnection.AFK_TIMEOUT_MS): void {
-        if (performance.now() - this.lastActivityTime >= timeout) {
+        const now = performance.now();
+        if (now - this.lastActivityTime >= timeout &&
+            now - this.announceTime >= ServerConnection.DISCONNECT_ANNOUNCE_CD
+        ) {
+            this.announceTime = now;
             this.disconnect(ServerConnection.TIMEOUT);
         }
     }
@@ -119,10 +126,6 @@ export class ServerConnection implements Connection {
 
     public getId(): number {
         return this.sessionId;
-    }
-
-    public getUUID(): UUID {
-        return this.uuid;
     }
 
     public isHost(): boolean {

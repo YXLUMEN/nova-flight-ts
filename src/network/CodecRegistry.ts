@@ -20,16 +20,9 @@ export class CodecRegistry {
     public static readonly RELAY = new CodecRegistry(NetworkSide.RELAY);
     public static readonly S2C = new CodecRegistry(NetworkSide.SERVER);
     public static readonly C2S = new CodecRegistry(NetworkSide.CLIENT);
+    public static VERSION: number;
 
     private static readonly PACKET_TYPES: CodecEntry<any>[] = [];
-
-    public static getCodec(index: number): CodecEntry<any> | null {
-        return this.PACKET_TYPES[index] ?? null;
-    }
-
-    public static settle(): void {
-        deepFreeze(this);
-    }
 
     private readonly codecs = new Map<PayloadType<any>, CodecEntry<any>>();
     private readonly side: NetworkSide;
@@ -52,12 +45,26 @@ export class CodecRegistry {
         return payload;
     }
 
-    public get(type: PayloadType<any>): CodecEntry<any> | null {
-        return this.codecs.get(type) ?? null;
+    public get(type: PayloadType<any>): CodecEntry<any> | undefined {
+        return this.codecs.get(type);
     }
 
     public getSide(): NetworkSide {
         return this.side;
+    }
+
+    public static idBy(index: number): CodecEntry<any> | undefined {
+        return this.PACKET_TYPES[index];
+    }
+
+    public static settle(): void {
+        let hash = 0;
+        for (const entry of this.PACKET_TYPES) {
+            hash = (31 * hash + entry.index) | 0;
+            hash = (31 * hash + entry.type.id.hashCode()) | 0;
+        }
+        this.VERSION = hash;
+        deepFreeze(this);
     }
 }
 

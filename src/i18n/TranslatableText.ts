@@ -60,18 +60,18 @@ export class TranslatableText {
     }
 
     public toString(): string {
+        const lang = LangManager.getCurrentLang();
+        if (this.lang !== lang) {
+            this.ordered = this.asString();
+            this.lang = lang;
+        }
+        return this.ordered;
+    }
+
+    public asString(): string {
         const template = LangManager.getText(this.key);
         if (template === undefined) return this.key;
         if (!this.args) return template;
         return this.format(template);
-    }
-
-    public asString(): string {
-        const lang = LangManager.getCurrentLang();
-        if (this.lang !== lang) {
-            this.ordered = this.toString();
-            this.lang = lang;
-        }
-        return this.ordered;
     }
 }

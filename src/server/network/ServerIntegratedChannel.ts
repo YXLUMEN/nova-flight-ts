@@ -85,7 +85,7 @@ export class ServerIntegratedChannel implements ServerChannel {
         const reader = new BinaryReader(new Uint8Array(buf));
 
         const index = reader.readVarUint();
-        const codec = CodecRegistry.getCodec(index);
+        const codec = CodecRegistry.idBy(index);
         if (!codec) return;
 
         this.handler(this.clientId, codec.codec.decode(reader));

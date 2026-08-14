@@ -45,17 +45,19 @@ import {TranslatableTextS2CPacket} from "../../network/packet/s2c/TranslatableTe
 import {PongS2CPacket} from "../../network/packet/s2c/PongS2CPacket.ts";
 import {ServerStartS2CPacket} from "../../network/packet/s2c/ServerStartS2CPacket.ts";
 import {BlockChangeS2CPacket} from "../../network/packet/s2c/BlockChangeS2CPacket.ts";
-import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
+import {BatchBlockChangesPacket} from "../../network/packet/common/BatchBlockChangesPacket.ts";
 import {SetPlayerInventoryS2CPacket} from "../../network/packet/s2c/SetPlayerInventoryPacket.ts";
 import {PlayerPositionS2CPacket} from "../../network/packet/s2c/PlayerPositionS2CPacket.ts";
-import {PositionMoveRotation} from "../../network/packet/PositionMoveRotation.ts";
+import {PositionMoveRotation} from "../../network/packet/common/PositionMoveRotation.ts";
 import {PreparedParticleS2CPacket} from "../../network/packet/s2c/PreparedParticleS2CPacket.ts";
 import {ScreenShakeS2CPacket} from "../../network/packet/s2c/ScreenShakeS2CPacket.ts";
 import type {PayloadType} from "../../network/PayloadType.ts";
-import {BatchBufferPacket} from "../../network/packet/BatchBufferPacket.ts";
+import {BatchBufferPacket} from "../../network/packet/common/BatchBufferPacket.ts";
 import {NotGiveUpS2CPacket} from "../../network/packet/s2c/NotGiveUpS2CPacket.ts";
 import {TickChangeS2CPacket} from "../../network/packet/s2c/TickChangeS2CPacket.ts";
 import {PlayerProfilesS2CPacket} from "../../network/packet/s2c/PlayerProfilesS2CPacket.ts";
+import {ServerAllowConfigS2CPacket} from "../../network/packet/handshake/ServerAllowConfigS2CPacket.ts";
+import {ServerFinishConfigS2CPacket} from "../../network/packet/config/ServerFinishConfigS2CPacket.ts";
 
 export class ServerPackets {
     /**
@@ -64,6 +66,9 @@ export class ServerPackets {
     public static registerNetworkPacket() {
         this.register(ServerStartS2CPacket.ID, ServerStartS2CPacket.CODEC);
         this.register(ServerReadyS2CPacket.ID, ServerReadyS2CPacket.CODEC);
+        this.register(ServerAllowConfigS2CPacket.ID, ServerAllowConfigS2CPacket.CODEC);
+        this.register(ServerFinishConfigS2CPacket.ID, ServerFinishConfigS2CPacket.CODEC);
+
         this.register(PongS2CPacket.ID, PongS2CPacket.CODEC);
         this.register(SoundEventS2CPacket.ID, SoundEventS2CPacket.CODEC);
         this.register(StopSoundS2CPacket.ID, StopSoundS2CPacket.CODEC);

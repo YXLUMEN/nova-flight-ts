@@ -4,7 +4,7 @@ import type {ConnectionState} from "../../server/network/ConnectionState.ts";
 export interface PacketListener {
     onDisconnected(): void;
 
-    accept(packet: Payload): void;
+    accept(payload: Payload): void;
 
     getPhase(): ConnectionState;
 

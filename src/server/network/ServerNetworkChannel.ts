@@ -10,7 +10,7 @@ import {PacketHeader} from "../../network/PacketHeader.ts";
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {NetworkSide} from "../../network/NetworkSide.ts";
 import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
-import {BatchBufferPacket} from "../../network/packet/BatchBufferPacket.ts";
+import {BatchBufferPacket} from "../../network/packet/common/BatchBufferPacket.ts";
 
 export class ServerNetworkChannel extends WSNetworkChannel implements ServerChannel {
     private readonly sendQueue = new RingBuffer<Payload>(48);
@@ -98,7 +98,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
         const header = reader.readUint8();
         if (header === PacketHeader.RELAY) {
             const index = reader.readUint8();
-            const codec = CodecRegistry.getCodec(index);
+            const codec = CodecRegistry.idBy(index);
             if (codec) this.handler(0, codec.codec.decode(reader));
             return;
         }
@@ -109,7 +109,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
 
         const sessionId = reader.readUint8();
         const index = reader.readVarUint();
-        const codec = CodecRegistry.getCodec(index);
+        const codec = CodecRegistry.idBy(index);
         if (!codec) return;
 
         this.handler(sessionId, codec.codec.decode(reader));

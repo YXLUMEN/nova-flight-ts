@@ -1,9 +1,6 @@
-import {ClientPackets} from "../client/network/ClientPackets.ts";
-import {ServerPackets} from "../server/network/ServerPackets.ts";
 import {DevServer} from "../server/DevServer.ts";
 import type {StartServer} from "../type/startup.ts";
-import {RelayPackets} from "../network/RelayPackets.ts";
-import {CodecRegistry} from "../network/CodecRegistry.ts";
+import {ProtocolRegistry} from "../network/packet/ProtocolRegistry.ts";
 
 let server: DevServer | null = null;
 
@@ -76,7 +73,4 @@ function handleDev(key: string) {
     }
 }
 
-RelayPackets.registerNetworkPacket();
-ServerPackets.registerNetworkPacket();
-ClientPackets.registerNetworkPacket();
-CodecRegistry.settle();
+ProtocolRegistry.register();

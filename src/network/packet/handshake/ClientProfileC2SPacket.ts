@@ -3,18 +3,18 @@ import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {UUID} from "../../../type/types.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import type {ServerConfigHandler} from "../../../server/network/handler/ServerConfigHandler.ts";
+import type {ServerHandshakeHandler} from "../../../server/network/handler/ServerHandshakeHandler.ts";
 
-export class PlayerAttemptLoginC2SPacket implements Payload {
-    public static readonly ID: PayloadType<PlayerAttemptLoginC2SPacket> = payloadType('player_attempt_login');
-    public static readonly CODEC: PacketCodec<PlayerAttemptLoginC2SPacket> = PacketCodecs.of<PlayerAttemptLoginC2SPacket>(
+export class ClientProfileC2SPacket implements Payload {
+    public static readonly ID: PayloadType<ClientProfileC2SPacket> = payloadType('player_attempt_login');
+    public static readonly CODEC: PacketCodec<ClientProfileC2SPacket> = PacketCodecs.of<ClientProfileC2SPacket>(
         (writer, value) => {
             writer.writeUUID(value.clientId);
             writer.writeInt8(value.sessionId);
             writer.writeString(value.playerName);
         },
         (reader) => {
-            return new PlayerAttemptLoginC2SPacket(
+            return new ClientProfileC2SPacket(
                 reader.readUUID(),
                 reader.readUint8(),
                 reader.readString()
@@ -32,12 +32,12 @@ export class PlayerAttemptLoginC2SPacket implements Payload {
         this.playerName = playerName;
     }
 
-    public type(): PayloadType<PlayerAttemptLoginC2SPacket> {
-        return PlayerAttemptLoginC2SPacket.ID;
+    public type(): PayloadType<ClientProfileC2SPacket> {
+        return ClientProfileC2SPacket.ID;
     }
 
-    public accept(listener: ServerConfigHandler): void {
-        listener.onPlayerAttemptLogin?.(this);
+    public accept(listener: ServerHandshakeHandler): void {
+        listener.onClientProfile?.(this);
     }
 
     public canProcessInTransition(): boolean {

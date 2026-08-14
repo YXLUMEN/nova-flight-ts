@@ -5,21 +5,24 @@ import {GaussianRandom} from "../../../utils/math/GaussianRandom.ts";
 import type {Payload} from "../../../network/Payload.ts";
 import type {ConnectionState} from "../../../server/network/ConnectionState.ts";
 import type {RelayMessage} from "../../../network/packet/relay/RelayMessage.ts";
-import type {BatchBufferPacket} from "../../../network/packet/BatchBufferPacket.ts";
+import type {BatchBufferPacket} from "../../../network/packet/common/BatchBufferPacket.ts";
 import type {PlayerDisconnectS2CPacket} from "../../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
-import {ConnectInfo} from "../../render/ui/ConnectInfo.ts";
-import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 
 export abstract class ClientCommonHandler implements PacketListener {
     protected readonly connection: ClientConnection;
     protected readonly client: NovaFlightClient;
     protected readonly random = new GaussianRandom();
+    private readonly phase: ConnectionState;
 
     // protected readonly handlers: Consumer<Payload>[] = [];
 
-    protected constructor(client: NovaFlightClient, connection: ClientConnection) {
+    protected constructor(client: NovaFlightClient, connection: ClientConnection, phase: ConnectionState) {
         this.client = client;
         this.connection = connection;
+        this.phase = phase;
+    }
+
+    public onDisconnected(): void {
     }
 
     public onRelayMessage(packet: RelayMessage): void {
@@ -51,15 +54,10 @@ export abstract class ClientCommonHandler implements PacketListener {
 
     public onPlayerDisconnect(packet: PlayerDisconnectS2CPacket) {
         if (packet.uuid !== this.client.clientId) return;
+        this.connection.disconnect();
+
         this.client.setPause(true);
-
-        const info = new ConnectInfo(this.client);
-        this.client.setConnectInfo(info);
-
-        info.setMessage(packet.reason);
-        info.setLabel(TranslatableText.of('start.confirm'));
-        info.waitConfirm()
-            .then(() => this.client.requestStop());
+        this.client.setConnectError(packet.reason);
     }
 
     public send(packet: Payload): void {
@@ -70,11 +68,8 @@ export abstract class ClientCommonHandler implements PacketListener {
         this.connection.sendImmediately(packet);
     }
 
-    public accept(packet: Payload): void {
-        packet.accept(this);
-    }
-
-    public onDisconnected(): void {
+    public accept(payload: Payload): void {
+        payload.accept(this);
     }
 
     public tick() {
@@ -83,5 +78,7 @@ export abstract class ClientCommonHandler implements PacketListener {
     public clear() {
     }
 
-    public abstract getPhase(): ConnectionState;
+    public getPhase(): ConnectionState {
+        return this.phase;
+    };
 }

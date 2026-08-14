@@ -8,6 +8,7 @@ import {UITheme} from "./theme.ts";
 import {Window} from "../Window.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {Consumer, Supplier} from "../../../type/types.ts";
+import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 
 type StartScreenOptions = {
     title: string;
@@ -29,10 +30,11 @@ export class StartScreen implements IUi {
     private tickInterval = 1000 / 50;
     private lastTickTime = 0;
 
-    private readonly waitConfirm: Promise<number>;
-    private readonly complete: Consumer<number>;
+    private readonly waitConfirm: Promise<StartAction>;
+    private readonly complete: Consumer<StartAction>;
     private readonly unsubResize: Supplier<void>;
 
+    private readonly text: TranslatableText[];
     private readonly buttons: UIButton[] = [];
     private readonly bindTick = this.tick.bind(this);
 
@@ -51,7 +53,7 @@ export class StartScreen implements IUi {
     public constructor(client: NovaFlightClient, options: StartScreenOptions) {
         const {promise, resolve} = Promise.withResolvers<number>();
         this.waitConfirm = promise;
-        this.complete = (action: number) => {
+        this.complete = (action: StartAction) => {
             resolve(action);
             this.destroy();
         };
@@ -63,10 +65,15 @@ export class StartScreen implements IUi {
         };
 
         this.starField.init();
+
+        this.text = [
+            TranslatableText.of('start.start'),
+            TranslatableText.of('start.multiplayer'),
+            TranslatableText.of('start.statistic'),
+            TranslatableText.of('start.exit'),
+        ];
         this.setSize(Window.VIEW_W, Window.VIEW_H);
-
         this.unsubResize = client.window.onResize(this.setSize.bind(this));
-
         this.start();
     }
 
@@ -154,6 +161,8 @@ export class StartScreen implements IUi {
         this.running = false;
         this.ctrl.abort();
         this.unsubResize();
+        this.text.length = 0;
+        this.buttons.length = 0;
 
         (this.ctx as any) = null;
         (this.starField as any) = null;
@@ -172,10 +181,17 @@ export class StartScreen implements IUi {
 
         this.buttons.length = 0;
         this.buttons.push(
-            new UIButton(startX, startY, w, h, '开始游戏', () => this.complete(0)),
-            new UIButton(startX, startY + 60, w, h, '加入游戏', () => this.complete(1)),
-            new UIButton(startX, startY + 120, w, h, '统计数据', () => this.complete(2)),
-            new UIButton(startX, startY + 180, w, h, '退出游戏', () => this.complete(-1))
+            new UIButton(startX, startY, w, h, this.text[0], () => this.complete(StartAction.START)),
+            new UIButton(startX, startY + 60, w, h, this.text[1], () => this.complete(StartAction.MULTIPLAYER)),
+            new UIButton(startX, startY + 120, w, h, this.text[2], () => this.complete(StartAction.STATISTIC)),
+            new UIButton(startX, startY + 180, w, h, this.text[3], () => this.complete(StartAction.EXIT))
         );
     }
+}
+
+export const enum StartAction {
+    START,
+    MULTIPLAYER,
+    STATISTIC,
+    EXIT,
 }

@@ -72,7 +72,7 @@ export class InventoryRender implements IUi {
         const padding = 16;
         const lineGap = 4;
 
-        const itemName = item.getItem().getName().asString();
+        const itemName = item.getItem().getName().toString();
         const namespace = item.getItem().getRegistryEntry().getRegistryKey().getValue().getNamespace();
 
         ctx.font = mainFont;

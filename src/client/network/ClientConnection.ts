@@ -11,7 +11,6 @@ export class ClientConnection implements Connection {
 
     private channel: ClientChannel;
     private packetListener: PacketListener | null = null;
-
     private state: ConnectionState = ConnectionState.HANDSHAKING;
 
     public constructor(channel: ClientChannel) {
@@ -39,8 +38,8 @@ export class ClientConnection implements Connection {
         this.channel.send(packet);
     }
 
-    public recv(packet: Payload): void {
-        this.packetListener?.accept(packet);
+    public recv(payload: Payload): void {
+        this.packetListener?.accept(payload);
     }
 
     public disconnect(): void {

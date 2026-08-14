@@ -1,5 +1,6 @@
 import {UITheme} from "./theme.ts";
 import type {Consumer} from "../../../type/types.ts";
+import type {TranslatableText} from "../../../i18n/TranslatableText.ts";
 
 export class UIButton {
     public readonly x: number;
@@ -7,10 +8,17 @@ export class UIButton {
     public readonly width: number;
     public readonly height: number;
 
-    public label: string;
+    public label: string | TranslatableText;
     public onClick: Consumer<void>;
 
-    public constructor(x: number, y: number, width: number, height: number, label: string, onClick: Consumer<void>) {
+    public constructor(
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        label: string | TranslatableText,
+        onClick: Consumer<void>
+    ) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -29,7 +37,7 @@ export class UIButton {
         ctx.stroke();
 
         ctx.fillStyle = UITheme.foreground;
-        ctx.fillText(this.label, this.x + this.width / 2, this.y + this.height / 2);
+        ctx.fillText(this.label.toString(), this.x + this.width / 2, this.y + this.height / 2);
     }
 
     public hitTest(mx: number, my: number) {

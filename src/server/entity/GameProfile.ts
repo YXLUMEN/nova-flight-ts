@@ -9,5 +9,14 @@ export class GameProfile {
         this.sessionId = sessionId;
         this.clientId = clientId;
         this.name = name;
+        Object.freeze(this);
+    }
+
+    public toString(): string {
+        return JSON.stringify({
+            id: this.sessionId,
+            uuid: this.clientId,
+            name: this.name,
+        });
     }
 }
