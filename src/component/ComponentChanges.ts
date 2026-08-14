@@ -3,38 +3,33 @@ import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {Optional} from "../utils/Optional.ts";
 import type {Codec} from "../serialization/Codec.ts";
-import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {Registries} from "../registry/Registries.ts";
 import {Codecs} from "../serialization/Codecs.ts";
+import {DataResult} from "../serialization/result/DataResult.ts";
+import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 
 export class ComponentChanges {
     public static readonly EMPTY = new ComponentChanges(new Map());
     public static readonly CODEC: Codec<ComponentChanges> = Codecs.of(
         value => {
             const compound = new NbtCompound();
-            if (value.changedComponents.size === 0) {
-                return compound;
-            }
-
             for (const [type, optional] of value.changedComponents) {
-                if (optional.isEmpty()) continue;
+                if (type.codec === null || optional.isEmpty()) continue;
                 const id = Registries.DATA_COMPONENT_TYPE.getId(type);
                 if (!id) continue;
-
                 compound.set(id.toString(), type.codec.encode(optional.get()));
             }
-
             return compound;
         },
         input => {
-            const keys = input.getKeys();
-            if (keys.size === 0) return ComponentChanges.EMPTY;
-
+            if (!(input instanceof NbtCompound)) {
+                return DataResult.error(`Expected NbtCompound, got ${input.getType()}`);
+            }
             const map = new Map<DataComponentType<any>, Optional<any>>();
-            for (const key of keys) {
+            for (const key of input.getKeys()) {
                 const nbt = input.get(key);
-                if (!nbt) continue;
+                if (nbt === null) continue;
 
                 const id = Identifier.tryParse(key);
                 if (!id) continue;
@@ -43,10 +38,13 @@ export class ComponentChanges {
                 if (!entry) continue;
 
                 const type = entry.getValue();
-                const compound = type.codec.decode(nbt);
-                map.set(type, Optional.of(compound));
+                if (type.codec === null) continue;
+
+                const value = type.codec.decode(nbt).getOrNull();
+                if (value === null) continue;
+                map.set(type, Optional.of(value));
             }
-            return new ComponentChanges(map);
+            return DataResult.success(new ComponentChanges(map));
         }
     );
 

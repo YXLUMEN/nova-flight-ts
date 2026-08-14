@@ -20,6 +20,9 @@ import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import {NbtTypes} from "../NbtTypes.ts";
 import {NbtSerialization} from "../NbtSerialization.ts";
 import type {NbtUint8Array} from "./NbtUint8Array.ts";
+import {Optional} from "../../utils/Optional.ts";
+import {ErrorResult, SuccessResult} from "../../serialization/result/DataResult.ts";
+import type {Codec} from "../../serialization/Codec.ts";
 
 
 export class NbtCompound implements NbtElement {
@@ -140,6 +143,17 @@ export class NbtCompound implements NbtElement {
     public setCompoundArray(key: string, value: NbtCompound[]) {
         this.entries.set(key, new NbtCompoundArray(value));
         return this;
+    }
+
+    public read<T>(codec: Codec<T>): Optional<T> {
+        const result = codec.decode(this);
+        if (result instanceof SuccessResult) {
+            return Optional.of(result.value);
+        }
+        if (result instanceof ErrorResult) {
+            return result.partial;
+        }
+        throw new Error('MatchException');
     }
 
     public get(key: string): NbtElement | null {

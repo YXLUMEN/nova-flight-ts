@@ -1,6 +1,7 @@
 import {clamp} from "./math/math.ts";
 import type {Identifier} from "../registry/Identifier.ts";
 import type {Predicate} from "../type/types.ts";
+import {TimeoutError} from "../type/errors.ts";
 
 export const DPR = Math.max(1, Math.min(2, globalThis.devicePixelRatio || 1));
 
@@ -85,6 +86,24 @@ export function status<T>(obj: T): T {
 
 export function sleep(time: number) {
     return new Promise(resolve => setTimeout(resolve, time));
+}
+
+export function timeout(time: number, signal: AbortSignal) {
+    const {promise, resolve, reject} = Promise.withResolvers<void>();
+
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => {
+        reject(new TimeoutError());
+        ctrl.abort();
+    }, time);
+
+    signal.addEventListener('abort', () => {
+        resolve();
+        clearTimeout(timer);
+        ctrl.abort();
+    }, {once: true, signal: ctrl.signal});
+
+    return promise;
 }
 
 export function isNonEmptyString(v: unknown): v is string {

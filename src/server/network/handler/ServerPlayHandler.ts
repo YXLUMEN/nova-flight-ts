@@ -65,12 +65,12 @@ export class ServerPlayHandler extends ServerCommonHandler {
         this.moveTimes = 0;
     }
 
-    protected override getProfile(): GameProfile {
-        return this.player.getProfile();
+    private profile(): GameProfile {
+        return this.player.profile();
     }
 
     public override onDisconnected() {
-        const profile = this.getProfile();
+        const profile = this.profile();
 
         this.broadcast(new GameMessageS2CPacket(`\x1b[32m${profile.name}\x1b[0m leave the game`));
         this.server.playerManager.removePlayer(this.player);
@@ -78,7 +78,7 @@ export class ServerPlayHandler extends ServerCommonHandler {
     }
 
     public onPlayerFinishLogin(_: PlayerFinishLoginC2SPacket) {
-        const uuid: UUID = this.getProfile().clientId;
+        const uuid: UUID = this.profile().clientId;
         if (!this.server.playerManager.isPlayerExists(uuid)) {
             return;
         }
@@ -105,7 +105,7 @@ export class ServerPlayHandler extends ServerCommonHandler {
 
     public onPlayerMove(packet: PlayerMoveC2SPacket) {
         if (this.moveTimes > 1) {
-            console.warn(`[Server] Player ${this.player.getProfile().name} move too fast`);
+            console.warn(`[Server] Player ${this.player.profile().name} move too fast`);
             if (this.moveTimes > 3) {
                 this.teleport(this.player.getX(), this.player.getY(), this.player.getYaw());
                 return;
@@ -231,7 +231,7 @@ export class ServerPlayHandler extends ServerCommonHandler {
     public onChatMessage(packet: ChatMessageC2SPacket): void {
         const message = packet.msg;
         if (message.length <= 64) {
-            const name = this.getProfile().name;
+            const name = this.profile().name;
             this.broadcast(new GameMessageS2CPacket(`[${name}] ${message}`));
         }
         this.checkForSpam();

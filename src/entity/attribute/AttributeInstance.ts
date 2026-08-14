@@ -154,7 +154,7 @@ export class AttributeInstance {
         const nbtList = nbt.getCompoundArray('modifiers');
         if (nbtList) {
             for (const modifierNbt of nbtList) {
-                const modifier = AttributeModifier.CODEC.decode(modifierNbt);
+                const modifier = AttributeModifier.CODEC.decode(modifierNbt).getOrNull();
                 if (!modifier) continue;
 
                 this.modifierById.set(modifier.id, modifier);

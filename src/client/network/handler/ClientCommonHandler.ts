@@ -6,7 +6,9 @@ import type {Payload} from "../../../network/Payload.ts";
 import type {ConnectionState} from "../../../server/network/ConnectionState.ts";
 import type {RelayMessage} from "../../../network/packet/relay/RelayMessage.ts";
 import type {BatchBufferPacket} from "../../../network/packet/BatchBufferPacket.ts";
-import {EmptyHandler} from "../../../network/handler/EmptyHandler.ts";
+import type {PlayerDisconnectS2CPacket} from "../../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
+import {ConnectInfo} from "../../render/ui/ConnectInfo.ts";
+import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 
 export abstract class ClientCommonHandler implements PacketListener {
     protected readonly connection: ClientConnection;
@@ -47,6 +49,19 @@ export abstract class ClientCommonHandler implements PacketListener {
         }
     }
 
+    public onPlayerDisconnect(packet: PlayerDisconnectS2CPacket) {
+        if (packet.uuid !== this.client.clientId) return;
+        this.client.setPause(true);
+
+        const info = new ConnectInfo(this.client);
+        this.client.setConnectInfo(info);
+
+        info.setMessage(packet.reason);
+        info.setLabel(TranslatableText.of('start.confirm'));
+        info.waitConfirm()
+            .then(() => this.client.requestStop());
+    }
+
     public send(packet: Payload): void {
         this.connection.send(packet);
     }
@@ -62,8 +77,10 @@ export abstract class ClientCommonHandler implements PacketListener {
     public onDisconnected(): void {
     }
 
+    public tick() {
+    }
+
     public clear() {
-        this.connection.setPacketListener(this.getPhase(), new EmptyHandler(this.getPhase()));
     }
 
     public abstract getPhase(): ConnectionState;

@@ -42,6 +42,9 @@ export class ServerRelayHandler implements PacketListener {
         return ConnectionState.HANDSHAKING;
     }
 
+    public tick() {
+    }
+
     public clear(): void {
     }
 }

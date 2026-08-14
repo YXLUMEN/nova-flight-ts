@@ -37,7 +37,7 @@ export class PlayerAttemptLoginC2SPacket implements Payload {
     }
 
     public accept(listener: ServerConfigHandler): void {
-        listener.onPlayerAttemptLogin(this);
+        listener.onPlayerAttemptLogin?.(this);
     }
 
     public canProcessInTransition(): boolean {

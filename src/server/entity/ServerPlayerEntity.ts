@@ -2,7 +2,6 @@ import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import type {ServerWorld} from "../ServerWorld.ts";
 import {ServerTechTree} from "../tech/ServerTechTree.ts";
 import {type ItemStack} from "../../item/ItemStack.ts";
-import {PlayerSetScoreS2CPacket} from "../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
 import type {GameProfile} from "./GameProfile.ts";
 import {type DamageSource} from "../../entity/damage/DamageSource.ts";
 import type {ServerPlayHandler} from "../network/handler/ServerPlayHandler.ts";
@@ -158,18 +157,13 @@ export class ServerPlayerEntity extends PlayerEntity {
         super.onDeath(damageSource);
 
         // TODO 不依赖索引
-        const packet = new TranslatableTextS2CPacket(`entity.player.death_${randInt(0, 6)}`, [this.getProfile().name]);
+        const packet = new TranslatableTextS2CPacket(`entity.player.death_${randInt(0, 6)}`, [this.profile().name]);
         this.networkHandler.broadcast(packet);
     }
 
     public override addScore(score: number) {
         super.addScore(score);
         (this.getWorld() as ServerWorld).addPhase(score);
-    }
-
-    public override setScore(score: number) {
-        super.setScore(score);
-        this.networkHandler.send(new PlayerSetScoreS2CPacket(score));
     }
 
     protected override onEffectAdded(effect: StatusEffectInstance, source: Entity | null) {
@@ -234,7 +228,7 @@ export class ServerPlayerEntity extends PlayerEntity {
         }
     }
 
-    public getProfile(): GameProfile {
+    public profile(): GameProfile {
         return this.playerProfile;
     }
 
@@ -242,7 +236,7 @@ export class ServerPlayerEntity extends PlayerEntity {
         const server = this.getWorld().getServer();
         if (!server) return 0;
 
-        return server.isHost(this.getProfile()) ? 9 : super.getPermissionLevel();
+        return server.isHost(this.profile()) ? 9 : super.getPermissionLevel();
     }
 
     public override sendMessage(msg: string) {

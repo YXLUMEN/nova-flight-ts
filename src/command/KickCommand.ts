@@ -29,7 +29,7 @@ export class KickCommand {
 
                             const players = world
                                 .getPlayers()
-                                .filter(player => player.getProfile().name === playerName)
+                                .filter(player => player.profile().name === playerName)
                                 .toArray();
 
                             if (players.length === 0) {
@@ -37,7 +37,7 @@ export class KickCommand {
                             }
 
                             for (const player of players) {
-                                if (world.getServer().isHost(player.getProfile())) {
+                                if (world.getServer().isHost(player.profile())) {
                                     ctx.source.outPut.sendMessage(`Can not kick the host player`);
                                     continue;
                                 }

@@ -27,7 +27,7 @@ export class ClientConnection implements Connection {
             if (!packet) break;
             this.sendImmediately(packet);
         }
-        this.packetListener.tick?.();
+        this.packetListener.tick();
     }
 
     public send(packet: Payload): void {

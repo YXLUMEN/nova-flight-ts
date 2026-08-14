@@ -63,7 +63,7 @@ export class DefaultedList<E> implements ArrayLike<E>, Iterable<E> {
 
     [n: number]: E;
 
-    * [Symbol.iterator](): IterableIterator<E> {
+    public* [Symbol.iterator](): IterableIterator<E> {
         for (let i = 0; i < this.delegate.length; i++) {
             const value = this.delegate.at(i);
             yield value === undefined ? this.initialElement! : value;

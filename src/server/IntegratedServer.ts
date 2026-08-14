@@ -3,7 +3,7 @@ import {RegistryManager} from "../registry/RegistryManager.ts";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {UUID} from "../type/types.ts";
 import type {GameProfile} from "./entity/GameProfile.ts";
-import {ServerStorage} from "./ServerStorage.ts";
+import {ServerStorage} from "./storage/ServerStorage.ts";
 import {TutorialStage} from "../configs/TutorialStage.ts";
 import {TutorialEvents} from "./event/TutorialEvents.ts";
 import {PlayAudioS2CPacket} from "../network/packet/s2c/PlayAudioS2CPacket.ts";

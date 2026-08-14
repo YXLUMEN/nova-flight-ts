@@ -8,17 +8,26 @@ import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {ConnectionState} from "../ConnectionState.ts";
 import type {NovaFlightServer} from "../../NovaFlightServer.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
+import {PendingSpawn} from "./PendingSpawn.ts";
+import {TimeoutError} from "../../../type/errors.ts";
 
 export class ServerConfigHandler extends ServerCommonHandler {
-    public static readonly DUPLICATE_PLAYER = TranslatableText.of('network.disconnect.duplicate_player');
-    public static readonly PROMOTE_FAIL = TranslatableText.of('network.disconnect.promote_fail');
-    public static readonly INVALID_STATE = TranslatableText.of("network.disconnect.invalid_state");
+    public static readonly PROMOTE_FAIL = TranslatableText.of('network.disconnect.promote.fail');
+    public static readonly PROMOTE_TIMEOUT = TranslatableText.of('network.disconnect.promote.timeout');
 
     private attemptUUID: UUID | null = null;
     private profile: GameProfile | null = null;
+    private spawnTask: PendingSpawn | null = null;
 
     public constructor(server: NovaFlightServer, connection: ServerConnection) {
         super(server, connection);
+    }
+
+    public onDisconnected() {
+        this.spawnTask?.close();
+        this.spawnTask = null;
+
+        super.onDisconnected();
     }
 
     public onClientReady(packet: ClientReadyC2SPacket) {
@@ -26,6 +35,7 @@ export class ServerConfigHandler extends ServerCommonHandler {
             this.disconnect(ServerConfigHandler.INVALID_STATE);
             return;
         }
+
         if (this.server.world === null) return;
 
         this.attemptUUID = packet.clientId;
@@ -38,47 +48,51 @@ export class ServerConfigHandler extends ServerCommonHandler {
             return;
         }
 
+        if (this.spawnTask !== null) return;
+
+        if (this.server.playerManager.hasLogin(this.attemptUUID)) {
+            console.warn(`[Server] A duplicate player try to login with uuid ${this.attemptUUID}`);
+            this.disconnect(ServerConfigHandler.DUPLICATE_PLAYER);
+            return;
+        }
+
+        this.profile = new GameProfile(packet.sessionId, packet.clientId, packet.playerName);
+        this.spawnTask = new PendingSpawn(this.server, this.profile);
+
+        void this.promoteToPlaySession(this.spawnTask);
+    }
+
+    private async promoteToPlaySession(spawn: PendingSpawn) {
         try {
-            const uuid: UUID = packet.clientId;
-            const manager = this.server.playerManager;
-            if (manager.isPlayerExists(uuid)) {
-                console.warn(`A duplicate player try to login with uuid ${uuid}`);
-                this.disconnect(ServerConfigHandler.DUPLICATE_PLAYER);
+            await spawn.start();
+            if (!spawn.ready()) {
+                this.disconnect(ServerConfigHandler.PROMOTE_FAIL);
                 return;
             }
 
-            // 同步销毁监听器,不处理第二次登录
-            this.clear();
-            this.profile = new GameProfile(packet.sessionId, packet.clientId, packet.playerName);
-            this.promoteToPlaySession().catch(err => {
-                console.error(err);
-                this.disconnect(ServerConfigHandler.PROMOTE_FAIL);
-            });
-        } catch (err) {
-            if (Error.isError(err)) {
-                console.error(`Couldn't place player in world: ${err.name}:${err.message} at\n ${err.stack}`);
-            } else console.error(err);
+            // this.send(ServerFinishConfigS2CPacket.INSTANCE);
 
+            const success = spawn.spawn(this.connection);
+            if (success) return;
             this.disconnect(ServerConfigHandler.PROMOTE_FAIL);
+        } catch (err) {
+            if (err instanceof TimeoutError) {
+                console.warn(`[Server] Promote player ${this.profile?.name} timeout`);
+                this.disconnect(ServerConfigHandler.PROMOTE_TIMEOUT);
+                return;
+            }
+
+            console.error('[Server] Error occurrence when promote player session', err);
+            this.disconnect(ServerConfigHandler.PROMOTE_FAIL);
+        } finally {
+            spawn.close();
         }
-    }
-
-    private async promoteToPlaySession() {
-        if (!this.profile) throw new Error('Profile not created');
-
-        const player = this.server.playerManager.createPlayer(this.profile);
-        await this.server.playerManager.onPlayerLogin(this.connection, this.profile, player);
     }
 
     public tick() {
         if (!this.isHost()) {
-            this.connection.checkActivate(10000);
+            this.connection.checkActivate(10_000);
         }
-    }
-
-    protected override getProfile(): GameProfile {
-        if (!this.profile) throw new Error("Profile not available in config state");
-        return this.profile;
     }
 
     public getPhase(): ConnectionState {

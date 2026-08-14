@@ -1,4 +1,4 @@
-import type {Consumer, Predicate, Supplier} from "../type/types.ts";
+import type {Consumer, Predicate, Return, Supplier} from "../type/types.ts";
 
 export class Optional<T> {
     private static readonly EMPTY = Object.freeze(new Optional(null)) as Optional<null>;
@@ -58,6 +58,14 @@ export class Optional<T> {
             return this;
         }
         return predicate(this.value) ? this : Optional.empty();
+    }
+
+    public map<U>(mapper: Return<T, U>): Optional<U> {
+        return this.isEmpty() ? Optional.empty() : Optional.ofNullable(mapper(this.value));
+    }
+
+    public flatMap<U>(mapper: Return<T, Optional<U>>): Optional<U> {
+        return this.isEmpty() ? Optional.empty() : mapper(this.value);
     }
 
     public or(supplier: Supplier<Optional<T>>): Optional<T> {

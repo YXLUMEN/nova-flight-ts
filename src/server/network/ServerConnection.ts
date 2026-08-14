@@ -12,7 +12,7 @@ import type {Connection} from "../../network/Connection.ts";
 
 export class ServerConnection implements Connection {
     public static readonly TIMEOUT = TranslatableText.of('network.disconnect.timeout');
-    public static readonly AFK_TIMEOUT_MS = 60000; // 60s
+    public static readonly AFK_TIMEOUT_MS = 60_000; // 60s
 
     private readonly channel: ServerChannel;
     private readonly sessionId: number;
@@ -25,6 +25,7 @@ export class ServerConnection implements Connection {
     private state: ConnectionState = ConnectionState.HANDSHAKING;
     private lastActivityTime: number;
     private disconnectStartTime: number = 0;
+    private handlerDisconnected = false;
 
     public constructor(channel: ServerChannel, sessionId: number, uuid: UUID, isHost: boolean) {
         this.channel = channel;
@@ -41,7 +42,7 @@ export class ServerConnection implements Connection {
             if (!payload) break;
             this.packetListener.accept(payload);
         }
-        this.packetListener.tick?.();
+        this.packetListener.tick();
     }
 
     public send(payload: Payload): void {
@@ -84,10 +85,12 @@ export class ServerConnection implements Connection {
     }
 
     public handlerDisconnection(): void {
-        if (this.state === ConnectionState.CLOSED) {
-            console.warn('ServerConnection disconnect call twice');
+        if (this.handlerDisconnected) {
+            console.warn('[Server] Connection disconnect call twice');
             return;
         }
+
+        this.handlerDisconnected = true;
         this.packetListener?.onDisconnected();
         this.forceDisconnect();
     }

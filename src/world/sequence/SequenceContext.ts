@@ -37,7 +37,7 @@ export class SequenceContext {
 
     private resolveHostPlayer(): ServerPlayerEntity | null {
         return this.server.playerManager.getAllPlayers()
-            .find(player => this.server.isHost(player.getProfile())) ?? null;
+            .find(player => this.server.isHost(player.profile())) ?? null;
     }
 
     public clear() {

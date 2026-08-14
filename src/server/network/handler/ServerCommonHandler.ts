@@ -1,5 +1,4 @@
 import type {NovaFlightServer} from "../../NovaFlightServer.ts";
-import type {GameProfile} from "../../entity/GameProfile.ts";
 import type {Payload} from "../../../network/Payload.ts";
 import type {Return} from "../../../type/types.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
@@ -9,12 +8,12 @@ import type {PacketListener} from "../../../network/handler/PacketListener.ts";
 import {type ConnectionState} from "../ConnectionState.ts";
 import {Log} from "../../../worker/log.ts";
 import {WSNetworkChannel} from "../../../network/WSNetworkChannel.ts";
-import {EmptyHandler} from "../../../network/handler/EmptyHandler.ts";
 
 export abstract class ServerCommonHandler implements PacketListener {
     public static readonly LOGOUT = TranslatableText.of('network.disconnect.logout');
     public static readonly ILLEGAL_CHARACTER = TranslatableText.of('network.disconnect.illegal_character');
-    public static readonly MOVE_TOO_FAST = TranslatableText.of('network.disconnect.move_too_fast');
+    public static readonly INVALID_STATE = TranslatableText.of("network.disconnect.invalid_state");
+    public static readonly DUPLICATE_PLAYER = TranslatableText.of('network.disconnect.duplicate_player');
 
     protected readonly server: NovaFlightServer;
     protected readonly connection: ServerConnection;
@@ -63,9 +62,13 @@ export abstract class ServerCommonHandler implements PacketListener {
         return this.connection.isHost();
     }
 
-    public clear(): void {
-        this.connection.setPacketListener(this.getPhase(), new EmptyHandler(this.getPhase()));
+    public tick() {
     }
+
+    public clear(): void {
+    }
+
+    public abstract getPhase(): ConnectionState;
 
     public static* buildBatch<T, P extends Payload, B extends Payload>(
         entries: Iterable<T>,
@@ -129,8 +132,4 @@ export abstract class ServerCommonHandler implements PacketListener {
             yield buildBatch(currentBatch);
         }
     }
-
-    public abstract getPhase(): ConnectionState;
-
-    protected abstract getProfile(): GameProfile;
 }
