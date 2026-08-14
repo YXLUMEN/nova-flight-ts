@@ -2,7 +2,7 @@ import type {Payload} from "../../Payload.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import type {ClientConfigHandler} from "../../../client/network/handler/ClientConfigHandler.ts";
+import type {ClientHandshakeHandler} from "../../../client/network/handler/ClientHandshakeHandler.ts";
 
 export class ServerStartS2CPacket implements Payload {
     public static readonly INSTANCE = new ServerStartS2CPacket();
@@ -20,8 +20,8 @@ export class ServerStartS2CPacket implements Payload {
         return true;
     }
 
-    public accept(listener: ClientConfigHandler): void {
-        listener.onServerStart(this);
+    public accept(listener: ClientHandshakeHandler): void {
+        listener.onServerStart?.(this);
     }
 
     public estimateSize(): number {

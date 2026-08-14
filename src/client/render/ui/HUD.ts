@@ -9,10 +9,12 @@ import type {ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
 import {InventoryRender} from "../../inventory/InventoryRender.ts";
 import {Weapon} from "../../../item/weapon/Weapon.ts";
 import {Crosshair} from "./Crosshair.ts";
+import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 
 export class HUD implements IUi {
     private readonly font: string = '14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
     private readonly hudColor: string = '#fff';
+    private readonly healthText = TranslatableText.of('hud.health');
 
     private player: ClientPlayerEntity | null = null;
     private inventoryRender: InventoryRender | null = null;
@@ -159,7 +161,7 @@ export class HUD implements IUi {
 
         // 文字
         ctx.fillStyle = this.hudColor;
-        ctx.fillText('船体值', (x + this.barWidth + 8) | 0, (y | 0) - 1);
+        ctx.fillText(this.healthText.toString(), (x + this.barWidth + 8) | 0, (y | 0) - 1);
     }
 
     public renderMainWeapon(ctx: CanvasRenderingContext2D, tickDelta: number) {
@@ -186,7 +188,7 @@ export class HUD implements IUi {
 
         ctx.fillStyle = this.hudColor;
 
-        const name = item.getName().asString();
+        const name = item.getName().toString();
         ctx.fillText(name, anchorX, pos.y - 16);
 
         const textWidth = ctx.measureText(name).width + anchorX + 8;
@@ -223,7 +225,7 @@ export class HUD implements IUi {
 
         // 文本标签
         ctx.fillStyle = this.hudColor;
-        ctx.fillText(item.getName().asString(), (x + w + 8) | 0, (y | 0) - 1);
+        ctx.fillText(item.getName().toString(), (x + w + 8) | 0, (y | 0) - 1);
     }
 
     private renderEndOverlay(ctx: CanvasRenderingContext2D, world: ClientWorld) {

@@ -1,6 +1,6 @@
 import {KeyboardInput} from "./input/KeyboardInput.ts";
 import {Window} from "./render/Window.ts";
-import {GlobalConfig, isDev} from "../configs/GlobalConfig.ts";
+import {DEFAULT_CONFIG, GlobalConfig, isDev} from "../configs/GlobalConfig.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
 import {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
 import type {Consumer, UUID} from "../type/types.ts";
@@ -8,7 +8,7 @@ import {ClientWorld} from "./ClientWorld.ts";
 import type {ClientPlayerEntity} from "./entity/ClientPlayerEntity.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import {empty, sleep} from "../utils/uit.ts";
-import {StartScreen} from "./render/ui/StartScreen.ts";
+import {StartAction, StartScreen} from "./render/ui/StartScreen.ts";
 import {error, warn} from "@tauri-apps/plugin-log";
 import {ClientCommandManager} from "./command/ClientCommandManager.ts";
 import {invoke} from "@tauri-apps/api/core";
@@ -42,6 +42,8 @@ export class NovaFlightClient {
     private static instance: NovaFlightClient;
 
     public readonly clientId: UUID;
+    public readonly version: number;
+    public readonly protocolVersion: number;
     public playerName: string;
 
     public readonly window: Window;
@@ -82,9 +84,11 @@ export class NovaFlightClient {
     public readonly clientCommandManager: ClientCommandManager;
     public readonly clientChat: ClientChat;
 
-    public constructor(clientId: UUID, playerName: string) {
+    public constructor(clientId: UUID, playerName: string, protocolVersion: number) {
         NovaFlightClient.instance = this;
         this.clientId = clientId;
+        this.version = DEFAULT_CONFIG.gameVersion;
+        this.protocolVersion = protocolVersion;
         this.playerName = playerName;
 
         this.registryManager = new RegistryManager();
@@ -153,12 +157,12 @@ export class NovaFlightClient {
         });
 
         const action = await startScreen.onConfirm();
-        if (action === -1) return true;
+        if (action === StartAction.EXIT) return true;
 
         const ctx = new NovaFlightClient.ConnectCtx(this);
         const connector = new ClientConnector(this, ctx);
 
-        if (action === 0) {
+        if (action === StartAction.START) {
             this.isIntegrated = true;
             const saveName = await this.saveManager.chooseSave();
             this.saveManager.hide();
@@ -171,12 +175,12 @@ export class NovaFlightClient {
             else await connector.startIntegratedServer(saveName);
             return false;
         }
-        if (action === 1) {
+        if (action === StartAction.MULTIPLAYER) {
             this.isIntegrated = false;
             await connector.connectToServer();
             return false;
         }
-        if (action === 2) {
+        if (action === StartAction.STATISTIC) {
             await this.statisticManager.selectItem();
             this.stopWorld();
             return false;
@@ -342,9 +346,12 @@ export class NovaFlightClient {
         this.requestStop();
     }
 
-    public setConnectError(message: string): void {
-        this.connectInfo?.setMessage(message);
-        this.connectInfo?.setLabel(TranslatableText.of('start.confirm'));
+    public setConnectError(message: string | TranslatableText): void {
+        if (!this.connectInfo) {
+            this.connectInfo = new ConnectInfo(this, () => this.requestStop());
+        }
+        this.connectInfo.setMessage(message);
+        this.connectInfo.setLabel(TranslatableText.of('start.confirm'));
     }
 
     public setConnectInfo(info: ConnectInfo | null): void {

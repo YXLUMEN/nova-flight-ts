@@ -16,6 +16,8 @@ import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.t
 import {TranslatableTextS2CPacket} from "../network/packet/s2c/TranslatableTextS2CPacket.ts";
 import {ServerStartS2CPacket} from "../network/packet/s2c/ServerStartS2CPacket.ts";
 import {ServerTickManager} from "./ServerTickManager.ts";
+import {DEFAULT_CONFIG} from "../configs/GlobalConfig.ts";
+import {CodecRegistry} from "../network/CodecRegistry.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static instance: NovaFlightServer;
@@ -23,6 +25,8 @@ export abstract class NovaFlightServer implements CommandOutput {
     public readonly worldName: string;
     public readonly serverId: UUID;
 
+    public readonly version: number;
+    public readonly protocolVersion: number;
     public readonly networkChannel: ServerChannel;
     public readonly serverCommandManager: ServerCommandManager;
     public readonly playerManager: PlayerManager;
@@ -34,7 +38,7 @@ export abstract class NovaFlightServer implements CommandOutput {
     public world: ServerWorld | null = null;
 
     private readonly tickManager: ServerTickManager;
-    private pause: boolean = false;
+    private pause: boolean = true;
     private tickInterval: number | undefined;
     private last = 0;
     private accumulator = 0;
@@ -47,6 +51,8 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.serverId = crypto.randomUUID();
 
         this.worldName = worldName;
+        this.version = DEFAULT_CONFIG.gameVersion;
+        this.protocolVersion = CodecRegistry.VERSION;
         this.playerManager = new PlayerManager(this);
         this.tickManager = new ServerTickManager(this);
         this.networkChannel = channel;

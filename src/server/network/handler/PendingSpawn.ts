@@ -37,6 +37,8 @@ export class PendingSpawn implements Disposable {
     private spawnYaw: number = 0;
 
     public constructor(server: NovaFlightServer, profile: GameProfile, timeout: number = 8000) {
+        if (server.playerManager.hasLogin(profile.clientId)) throw new Error();
+
         this.server = server;
         this.profile = profile;
         this.timeout = timeout;

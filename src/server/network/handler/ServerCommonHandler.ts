@@ -12,7 +12,7 @@ import {WSNetworkChannel} from "../../../network/WSNetworkChannel.ts";
 export abstract class ServerCommonHandler implements PacketListener {
     public static readonly LOGOUT = TranslatableText.of('network.disconnect.logout');
     public static readonly ILLEGAL_CHARACTER = TranslatableText.of('network.disconnect.illegal_character');
-    public static readonly INVALID_STATE = TranslatableText.of("network.disconnect.invalid_state");
+    public static readonly INVALID_STATE = TranslatableText.of("network.disconnect.invalid.state");
     public static readonly DUPLICATE_PLAYER = TranslatableText.of('network.disconnect.duplicate_player');
 
     protected readonly server: NovaFlightServer;

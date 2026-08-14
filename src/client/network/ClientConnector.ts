@@ -1,7 +1,6 @@
 import {ClientNetworkChannel} from "./ClientNetworkChannel.ts";
 import {ConnectInfo} from "../render/ui/ConnectInfo.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
-import {ClientConfigHandler} from "./handler/ClientConfigHandler.ts";
 import {DEFAULT_CONFIG, GlobalConfig} from "../../configs/GlobalConfig.ts";
 import {ClientIntegratedChannel} from "./ClientIntegratedChannel.ts";
 import {invoke} from "@tauri-apps/api/core";
@@ -11,6 +10,7 @@ import type {StartServer} from "../../type/startup.ts";
 import {message} from "@tauri-apps/plugin-dialog";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import type {ConnectionContext} from "./ConnectionContext.ts";
+import {ClientHandshakeHandler} from "./handler/ClientHandshakeHandler.ts";
 
 export class ClientConnector {
     private readonly client: NovaFlightClient;
@@ -71,7 +71,7 @@ export class ClientConnector {
 
         if (info.isAbort()) return;
 
-        const config = new ClientConfigHandler(this.client, this.client.connection);
+        const config = new ClientHandshakeHandler(this.client, this.client.connection);
         config.clientReady();
 
         await info.waitConfirm();
@@ -169,7 +169,7 @@ export class ClientConnector {
             return;
         }
 
-        const config = new ClientConfigHandler(this.client, this.client.connection);
+        const config = new ClientHandshakeHandler(this.client, this.client.connection);
 
         // 内置服务器配置
         const startUp: StartServer = {

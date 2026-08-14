@@ -52,7 +52,7 @@ import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {PongS2CPacket} from "../../../network/packet/s2c/PongS2CPacket.ts";
 import {PingC2SPacket} from "../../../network/packet/c2s/PingC2SPacket.ts";
 import {BlockChangeS2CPacket} from "../../../network/packet/s2c/BlockChangeS2CPacket.ts";
-import {BatchBlockChangesPacket} from "../../../network/packet/BatchBlockChangesPacket.ts";
+import {BatchBlockChangesPacket} from "../../../network/packet/common/BatchBlockChangesPacket.ts";
 import type {ClientConnection} from "../ClientConnection.ts";
 import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 import {SetPlayerInventoryS2CPacket} from "../../../network/packet/s2c/SetPlayerInventoryPacket.ts";
@@ -82,7 +82,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
     private pingInterval: number | undefined = undefined;
 
     public constructor(client: NovaFlightClient, connection: ClientConnection) {
-        super(client, connection);
+        super(client, connection, ConnectionState.PLAY);
         this.latency = new LatencyCalculator();
     }
 
@@ -130,14 +130,12 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
     public onPlayerDisconnect(packet: PlayerDisconnectS2CPacket) {
         const world = this.world;
-        if (!world) return;
+        if (world) {
+            const player = world.getEntityLookup().getByUUID(packet.uuid);
+            if (player) world.removeEntity(player.getId());
+        }
 
         this.playerProfiles.delete(packet.uuid);
-
-        const player = world.getEntityLookup().getByUUID(packet.uuid);
-        if (player) world.removeEntity(player.getId());
-
-        if (packet.uuid !== this.client.clientId) return;
         super.onPlayerDisconnect(packet);
     }
 
@@ -587,10 +585,6 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
     public getLatency(): number {
         return this.latency.getLatency();
-    }
-
-    public getPhase(): ConnectionState {
-        return ConnectionState.PLAY;
     }
 
     public clear(): void {

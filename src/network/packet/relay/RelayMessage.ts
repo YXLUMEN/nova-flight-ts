@@ -27,4 +27,8 @@ export class RelayMessage implements RelayPayload {
     public accept(listener: ClientPlayHandler | ServerRelayHandler): void {
         listener.onRelayMessage(this);
     }
+
+    public canProcessInTransition(): boolean {
+        return true;
+    }
 }

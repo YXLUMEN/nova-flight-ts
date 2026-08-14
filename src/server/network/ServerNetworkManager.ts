@@ -1,13 +1,13 @@
 import type {NovaFlightServer} from "../NovaFlightServer.ts";
 import type {Payload} from "../../network/Payload.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
-import {ServerConfigHandler} from "./handler/ServerConfigHandler.ts";
-import {ClientReadyC2SPacket} from "../../network/packet/c2s/ClientReadyC2SPacket.ts";
 import {ServerConnection} from "./ServerConnection.ts";
 import {Log} from "../../worker/log.ts";
 import {ConnectionState} from "./ConnectionState.ts";
 import {RelayActionBuilder} from "./RelayActionBuilder.ts";
 import {ServerRelayHandler} from "./handler/ServerRelayHandler.ts";
+import {ServerHandshakeHandler} from "./handler/ServerHandshakeHandler.ts";
+import {ClientHandshakeC2SPacket} from "../../network/packet/handshake/ClientHandshakeC2SPacket.ts";
 
 export class ServerNetworkManager {
     public static readonly SERVER_CLOSE = TranslatableText.of('network.disconnect.server_close');
@@ -70,13 +70,13 @@ export class ServerNetworkManager {
         }
 
         // negotiation
-        if (packet instanceof ClientReadyC2SPacket) {
+        if (packet instanceof ClientHandshakeC2SPacket) {
             const isHost = this.server.isHostUUID(packet.clientId);
 
             const connection = new ServerConnection(this.server.networkChannel, sessionId, packet.clientId, isHost);
-            const config = new ServerConfigHandler(this.server, connection);
-            connection.setPacketListener(ConnectionState.CONFIGURATION, config);
-            config.onClientReady(packet);
+            const handshake = new ServerHandshakeHandler(this.server, connection);
+            connection.setPacketListener(ConnectionState.HANDSHAKING, handshake);
+            handshake.onClientHandshake(packet);
 
             this.connections.set(sessionId, connection);
             return;

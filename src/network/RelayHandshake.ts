@@ -52,7 +52,7 @@ export class RelayHandshake {
         const reader = new BinaryReader(buf);
         reader.readUint8();
         const index = reader.readUint8();
-        const codec = CodecRegistry.getCodec(index);
+        const codec = CodecRegistry.idBy(index);
         if (!codec) return;
 
         const packet = codec.codec.decode(reader);

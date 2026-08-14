@@ -4,7 +4,14 @@
   "disconnect.illegal_character": "Illegal Character",
   "disconnect.server_close": "Server Closed",
   "disconnect.duplicate_player": "Duplicate login",
-  "disconnect.kicked": "Kick by the sever",
-  "disconnect.invalid_state": "Invalid connection state",
-  "disconnect.promote_fail": "Promote session fail"
+  "disconnect.kicked": "Kicked by the server",
+  "disconnect.invalid.state": "Invalid connection state",
+  "disconnect.invalid.uuid": "Invalid UUID",
+  "disconnect.invalid.session_id": "Invalid Session",
+  "disconnect.promote.fail": "Session promotion failed",
+  "disconnect.promote.timeout": "Session promotion timed out",
+  "disconnect.still_loading": "Server is still starting",
+  "disconnect.unmach.protocal": "Mismatched network protocol",
+  "disconnect.unmach.game": "Incompatible game version. Required \"{}\" but current is \"{}\"",
+  "disconnect.move_too_fast": "Moved too fast"
 }

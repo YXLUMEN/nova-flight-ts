@@ -1,12 +1,10 @@
 import {Window} from "@tauri-apps/api/window";
-import {ClientPackets} from "./client/network/ClientPackets.ts";
-import {ServerPackets} from "./server/network/ServerPackets.ts";
+import {ProtocolRegistry} from "./network/packet/ProtocolRegistry.ts";
 import {UUIDUtil} from "./utils/UUIDUtil.ts";
 import {NovaFlightClient} from "./client/NovaFlightClient.ts";
 import {error} from "@tauri-apps/plugin-log";
 import {isDev} from "./configs/GlobalConfig.ts";
 import {CodecRegistry} from "./network/CodecRegistry.ts";
-import {RelayPackets} from "./network/RelayPackets.ts";
 import {PageSplicer} from "./client/page/PageSplicer.ts";
 import type {UUID} from "./type/types.ts";
 
@@ -25,10 +23,7 @@ export async function run() {
     });
     await pages.bootstrap(document.body);
 
-    RelayPackets.registerNetworkPacket();
-    ServerPackets.registerNetworkPacket();
-    ClientPackets.registerNetworkPacket();
-    CodecRegistry.settle();
+    ProtocolRegistry.register();
 
     try {
         const rawName = localStorage.getItem('playerName') ?? 'player';
@@ -40,7 +35,7 @@ export async function run() {
         localStorage.setItem('clientId', clientId);
         localStorage.setItem('playerName', playerName);
 
-        const client = new NovaFlightClient(clientId, playerName);
+        const client = new NovaFlightClient(clientId, playerName, CodecRegistry.VERSION);
         ctrl.abort();
 
         await client.startClient();

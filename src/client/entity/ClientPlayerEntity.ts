@@ -21,7 +21,7 @@ import type {ClientWorld} from "../ClientWorld.ts";
 import {BlockChangeC2SPacket} from "../../network/packet/c2s/BlockChangeC2SPacket.ts";
 import {BlockPos} from "../../world/section/pos/BlockPos.ts";
 import type {BlockChange} from "../../world/section/BlockChange.ts";
-import {BatchBlockChangesPacket} from "../../network/packet/BatchBlockChangesPacket.ts";
+import {BatchBlockChangesPacket} from "../../network/packet/common/BatchBlockChangesPacket.ts";
 import {Weapon} from "../../item/weapon/Weapon.ts";
 import {FireSpecialC2SPacket} from "../../network/packet/c2s/FireSpecialC2SPacket.ts";
 import {ClientInventory} from "../inventory/ClientInventory.ts";

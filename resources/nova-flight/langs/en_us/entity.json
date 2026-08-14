@@ -1,0 +1,16 @@
+{
+  "player.death_0": "{} ship destroyed, all hands lost",
+  "player.death_1": "{} crashed",
+  "player.death_2": "{} couldn't elbow their way back to life",
+  "player.death_3": "{}'s insides became outsides",
+  "player.death_4": "{} was torn to shreds",
+  "player.death_5": "{} became space junk",
+  "player.death_6": "{} was reduced to elementary particles",
+  "player.respawn_0": "Not Give Up Now.",
+  "player.respawn_1": "Not now",
+  "player.respawn_2": "Your mission isn't over yet",
+  "player.respawn_3": "You can't stop here",
+  "player.respawn_4": "Take a deep breath",
+  "player.respawn_5": "Let's not give up just yet.",
+  "player.respawn_6": "Hang in there, comrade"
+}

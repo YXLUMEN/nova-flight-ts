@@ -2,7 +2,7 @@ import type {Payload} from "../../Payload.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {PositionMoveRotation} from "../PositionMoveRotation.ts";
+import {PositionMoveRotation} from "../common/PositionMoveRotation.ts";
 import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class PlayerPositionS2CPacket implements Payload {

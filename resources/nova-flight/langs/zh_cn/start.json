@@ -1,4 +1,8 @@
 {
+  "start": "开始游戏",
+  "multiplayer": "多人游戏",
+  "statistic": "统计数据",
+  "exit": "退出游戏",
   "subtitle": "点击按钮开始",
   "join_game": "加入世界中...",
   "connecting": "开始连接...",

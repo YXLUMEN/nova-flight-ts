@@ -87,7 +87,7 @@ export class ClientIntegratedChannel implements ClientChannel {
             const reader = new BinaryReader(new Uint8Array(event.data.packet));
 
             const index = reader.readVarUint();
-            const codec = CodecRegistry.getCodec(index);
+            const codec = CodecRegistry.idBy(index);
             if (!codec) return;
 
             this.handler(codec.codec.decode(reader));

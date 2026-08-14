@@ -2,8 +2,10 @@ import type {IUi} from "./IUi.ts";
 import {UIButton} from "./UIButton.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import {TipManager} from "../../tips/TipManager.ts";
+import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 
 export class PauseOverlay implements IUi {
+    private readonly text: TranslatableText[];
     private readonly buttons: UIButton[] = [];
     private pulse = 1;
 
@@ -11,6 +13,17 @@ export class PauseOverlay implements IUi {
     private worldH: number = 0;
     private halfW: number = 0;
     private halfH: number = 0;
+
+    public constructor() {
+        this.text = [
+            TranslatableText.of('pause.back_to_game'),
+            TranslatableText.of('pause.settings'),
+            TranslatableText.of('pause.save'),
+            TranslatableText.of('pause.save_and_exit'),
+            TranslatableText.of('pause.paused'),
+            TranslatableText.of('pause.press_esc'),
+        ];
+    }
 
     public setSize(w: number, h: number) {
         this.worldW = w;
@@ -28,7 +41,7 @@ export class PauseOverlay implements IUi {
             new UIButton(
                 centerX - 60, centerY - 50,
                 120, 36,
-                '继续游戏',
+                this.text[0],
                 () => {
                     const client = NovaFlightClient.getInstance();
                     client.setPause(!client.isPause());
@@ -36,18 +49,18 @@ export class PauseOverlay implements IUi {
             new UIButton(
                 centerX - 60, centerY,
                 120, 36,
-                '设置',
+                this.text[1],
                 () => {
                 }),
             new UIButton(
                 centerX - 60, centerY + 50,
                 120, 36,
-                '保存',
+                this.text[2],
                 () => NovaFlightClient.getInstance().world!.saveAll()),
             new UIButton(
                 centerX - 60, centerY + 100,
                 120, 36,
-                '保存并退出',
+                this.text[3],
                 () => NovaFlightClient.getInstance().leaveGame()),
         );
     }
@@ -66,12 +79,12 @@ export class PauseOverlay implements IUi {
         // 主标题
         ctx.fillStyle = `rgba(255,255,255,${this.pulse.toFixed(3)})`;
         ctx.font = 'bold 32px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
-        ctx.fillText('已暂停', this.halfW, this.halfH - 100);
+        ctx.fillText(this.text[4].toString(), this.halfW, this.halfH - 100);
 
         // 副提示
         ctx.fillStyle = 'rgba(255,255,255,0.9)';
         ctx.font = '16px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
-        ctx.fillText('按 Esc 继续', this.halfW, this.halfH - 70);
+        ctx.fillText(this.text[5].toString(), this.halfW, this.halfH - 70);
 
         // 按钮
         for (const btn of this.buttons) {
@@ -87,12 +100,12 @@ export class PauseOverlay implements IUi {
             const left = this.worldW - 10;
             ctx.fillStyle = 'rgb(255,233,174)';
             ctx.font = '20px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
-            ctx.fillText(TipManager.title.asString(), left, height);
+            ctx.fillText(TipManager.title.toString(), left, height);
 
             height += 30;
             ctx.fillStyle = 'rgb(255,255,255)';
             ctx.font = '16px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
-            ctx.fillText(tipText.asString(), left, height);
+            ctx.fillText(tipText.toString(), left, height);
         }
 
         ctx.restore();
@@ -110,5 +123,6 @@ export class PauseOverlay implements IUi {
 
     public destroy() {
         this.buttons.length = 0;
+        this.text.length = 0;
     }
 }
