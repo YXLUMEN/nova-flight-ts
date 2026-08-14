@@ -3,6 +3,7 @@ import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {StringReader} from "../brigadier/StringReader.ts";
 import {Codecs} from "../serialization/Codecs.ts";
+import {DataResult} from "../serialization/result/DataResult.ts";
 import {NbtString} from "../nbt/element/NbtString.ts";
 import type {Comparable} from "../type/Comparable.ts";
 import {stringHashCode} from "../utils/hash.ts";
@@ -14,7 +15,15 @@ export class Identifier implements Comparable {
 
     public static readonly CODEC: Codec<Identifier> = Codecs.of(
         value => NbtString.of(value.toString()),
-        input => Identifier.tryParse(input.value)
+        input => {
+            if (!(input instanceof NbtString)) {
+                return DataResult.error(`Expected NbtString, got ${input.getType()}`);
+            }
+            const id = Identifier.tryParse(input.value);
+            return id
+                ? DataResult.success(id)
+                : DataResult.error(`Invalid identifier: ${input.value}`);
+        }
     );
     public static readonly PACKET_CODEC: PacketCodec<Identifier> = PacketCodecs.of(
         (writer, value) => writer.writeString(value.toString()),

@@ -6,16 +6,17 @@ import {Registries} from "../registry/Registries.ts";
 export class DataComponentType<T> {
     public static readonly PACKET_CODEC: PacketCodec<DataComponentType<any>> = PacketCodecs.registryValue(Registries.DATA_COMPONENT_TYPE);
 
-    public readonly codec: Codec<T>
+    public readonly codec: Codec<T> | null;
     public readonly packetCodec: PacketCodec<T>;
 
     public constructor(builder: ComponentTypeBuilder<T>) {
-        this.codec = builder.codec!;
+        this.codec = builder.codec;
         this.packetCodec = builder.packetCodec!;
+        Object.freeze(this);
     }
 
-    public static builder<T>() {
-        return new ComponentTypeBuilder<T>();
+    public isTransient() {
+        return this.codec === null;
     }
 }
 
@@ -34,10 +35,8 @@ export class ComponentTypeBuilder<T> {
     }
 
     public build(): DataComponentType<T> {
-        if (!this.codec) {
-            throw new Error("Missing Codec for component");
-        }
         if (!this.packetCodec) {
+            if (!this.codec) throw new Error("Missing Codec for component");
             this.packetCodec = PacketCodecs.registryCodec(this.codec);
         }
         return new DataComponentType<T>(this);

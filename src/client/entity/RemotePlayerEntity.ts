@@ -8,6 +8,8 @@ export class RemotePlayerEntity extends AbstractClientPlayerEntity {
     private readonly clientVelocity = MutVec2.zero();
     private velocityLerpDivisor: number = 0;
 
+    declare protected readonly techTree: null;
+
     public constructor(world: World) {
         super(world, ItemCooldownManager);
     }

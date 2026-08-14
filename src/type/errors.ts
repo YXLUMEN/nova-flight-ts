@@ -30,3 +30,10 @@ export class NbtSizeValidationException extends Error {
 
 export class ConnectionAbort extends Error {
 }
+
+export class TimeoutError extends Error {
+    public constructor(time?: number) {
+        const msg = time ? `Beyond the expected time window: ${time}` : undefined;
+        super(msg);
+    }
+}

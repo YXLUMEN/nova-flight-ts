@@ -6,7 +6,7 @@ import {invoke} from "@tauri-apps/api/core";
 import {CommandError, IllegalArgumentError} from "../type/errors.ts";
 import {IntArgumentType} from "./argument/IntArgumentType.ts";
 import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
-import {ServerStorage} from "../server/ServerStorage.ts";
+import {ServerStorage} from "../server/storage/ServerStorage.ts";
 import {clamp} from "../utils/math/math.ts";
 import {NovaFlightClient} from "../client/NovaFlightClient.ts";
 import {BoolArgumentType} from "./argument/BoolArgumentType.ts";

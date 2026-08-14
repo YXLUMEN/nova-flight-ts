@@ -52,7 +52,7 @@ export class GiveCommand {
                                             stack.increment(1);
                                             entity.syncStack(stack);
                                         }
-                                        entity.sendMessage(`Give item "${itemResult.result}" to ${entity.getProfile().name}`);
+                                        entity.sendMessage(`Give item "${itemResult.result}" to ${entity.profile().name}`);
                                     }
                                 })
                                 .suggests(CommandUtil.createIdentifierSuggestion(Registries.ITEM))

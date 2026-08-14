@@ -18,6 +18,9 @@ export class EmptyHandler implements PacketListener {
         return this.phase;
     }
 
+    public tick() {
+    }
+
     public clear(): void {
     }
 }

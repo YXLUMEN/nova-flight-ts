@@ -22,7 +22,7 @@ export class PlayerSelectorArgumentType implements ArgumentType<string> {
         if (!world || world.isClient) return Suggestions.empty();
 
         for (const player of world.getPlayers()) {
-            const name = player.getProfile().name;
+            const name = player.profile().name;
             if (name.startsWith(builder.remainingLowerCase)) {
                 builder.suggest(name);
             }

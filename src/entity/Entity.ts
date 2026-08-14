@@ -638,7 +638,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
             nbt.setDoubleArray('pos', [this.position.x, this.position.y]);
             nbt.setFloatArray('velocity', [this.velocity.x, this.velocity.y]);
 
-            nbt.setDouble('yaw', this.yaw);
+            nbt.setFloat('yaw', this.yaw);
             nbt.setDouble('speed', this.movementSpeed);
             nbt.setBoolean('invulnerable', this.invulnerable);
             nbt.setString('uuid', this.uuid);
@@ -665,7 +665,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
             clamp(velocity[1] ?? 0, -1E3, 1E3)
         );
         this.needSync = true;
-        this.setYaw(nbt.getDouble('yaw'));
+        this.setYaw(nbt.getFloat('yaw'));
         this.resetPrevious();
 
         this.setMovementSpeed(nbt.getDouble('speed'));

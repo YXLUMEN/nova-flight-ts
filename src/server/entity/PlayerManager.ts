@@ -2,7 +2,7 @@ import type {UUID} from "../../type/types.ts";
 import {ServerPlayerEntity} from "./ServerPlayerEntity.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {NovaFlightServer} from "../NovaFlightServer.ts";
-import {ServerStorage} from "../ServerStorage.ts";
+import {ServerStorage} from "../storage/ServerStorage.ts";
 import {GameProfile} from "./GameProfile.ts";
 import {ServerPlayHandler} from "../network/handler/ServerPlayHandler.ts";
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
@@ -15,17 +15,26 @@ import {ConnectionState} from "../network/ConnectionState.ts";
 import {ServerCommonHandler} from "../network/handler/ServerCommonHandler.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import {TickChangeS2CPacket} from "../../network/packet/s2c/TickChangeS2CPacket.ts";
+import {PlayerDataStorage} from "../storage/PlayerDataStorage.ts";
 
 export class PlayerManager {
     private readonly server: NovaFlightServer;
     private readonly uuidToPlayer: Map<UUID, ServerPlayerEntity> = new Map();
     private readonly sessionToPlayer: Map<number, ServerPlayerEntity> = new Map();
+    private readonly pendingLogin: Set<UUID> = new Set();
+
+    private readonly playerIo: PlayerDataStorage;
 
     public constructor(server: NovaFlightServer) {
         this.server = server;
+        this.playerIo = new PlayerDataStorage(this.server.worldName, ServerStorage.db);
     }
 
-    public async onPlayerLogin(connection: ServerConnection, profile: GameProfile, player: ServerPlayerEntity): Promise<void> {
+    public placePlayer(
+        connection: ServerConnection,
+        profile: GameProfile,
+        player: ServerPlayerEntity,
+    ): void {
         const world = this.server.world;
         if (!world) return;
 
@@ -40,11 +49,6 @@ export class PlayerManager {
             this.server.isMultiPlayer = true;
         }
 
-        const playerData = await this.loadPlayerData(player);
-        if (playerData !== null) {
-            player.readNBT(playerData);
-        }
-
         handler.send(new JoinGameS2CPacket(player.getId(), this.server.worldName));
         handler.send(new TickChangeS2CPacket(this.server.getTickManager().getRate()));
         connection.broadcast(new PlayerJoinS2CPacket(profile.name, profile.clientId));
@@ -53,15 +57,16 @@ export class PlayerManager {
         console.log(`[Server] Player ${profile.clientId} login`);
     }
 
-    public createPlayer(profile: GameProfile): ServerPlayerEntity {
-        return new ServerPlayerEntity(this.server.world!, profile);
-    }
-
+    /**
+     * @reserve
+     *
+     * 使用前检查,此版本可能与当前实现不符.
+     * */
     public respawnPlayer(player: ServerPlayerEntity, alive: boolean): void {
         this.uuidToPlayer.delete(player.getUUID());
         (player.getWorld() as ServerWorld).removePlayer(player);
 
-        const newPlayer = this.createPlayer(player.getProfile());
+        const newPlayer = new ServerPlayerEntity(this.server.world!, player.profile());
         newPlayer.networkHandler = player.networkHandler;
         newPlayer.setId(player.getId());
         newPlayer.copyFrom(player, alive);
@@ -71,11 +76,11 @@ export class PlayerManager {
 
         (newPlayer.getWorld() as ServerWorld).addPlayer(newPlayer);
         this.uuidToPlayer.set(newPlayer.getUUID(), newPlayer);
-        this.sessionToPlayer.set(newPlayer.getProfile().sessionId, newPlayer);
+        this.sessionToPlayer.set(newPlayer.profile().sessionId, newPlayer);
     }
 
-    public async loadPlayerData(player: ServerPlayerEntity): Promise<NbtCompound | null> {
-        const result = await ServerStorage.loadPlayer(player);
+    public async loadPlayerData(profile: GameProfile): Promise<NbtCompound | null> {
+        const result = await this.playerIo.loadPlayer(profile);
         if (result.isOk()) return result.unwrap();
 
         const err = result.unwrapErr();
@@ -86,7 +91,7 @@ export class PlayerManager {
     }
 
     protected async savePlayerData(player: ServerPlayerEntity): Promise<void> {
-        const result = await ServerStorage.savePlayer(player);
+        const result = await this.playerIo.savePlayer(player);
         if (result.isErr()) {
             Log.error(result.unwrapErr().message);
         }
@@ -94,17 +99,22 @@ export class PlayerManager {
 
     public removePlayer(player: ServerPlayerEntity): void {
         const world = player.getWorld() as ServerWorld;
-        this.savePlayerData(player).then();
+        void this.savePlayerData(player);
 
         world.removePlayer(player);
-        const uuid = player.getUUID();
+
+        const uuid: UUID = player.getUUID();
         const exist = this.uuidToPlayer.get(uuid);
         if (exist === player) {
             this.uuidToPlayer.delete(uuid);
-            this.sessionToPlayer.delete(player.getProfile().sessionId);
+            this.sessionToPlayer.delete(player.profile().sessionId);
         }
 
-        this.server.networkChannel.send(new PlayerDisconnectS2CPacket(player.getUUID(), ServerCommonHandler.LOGOUT));
+        // 允许回退,启用混合服务器后注意适配
+        if (this.uuidToPlayer.size === 1) {
+            this.server.isMultiPlayer = false;
+        }
+        this.server.networkChannel.send(new PlayerDisconnectS2CPacket(uuid, ServerCommonHandler.LOGOUT));
     }
 
     public getPlayer(uuid: UUID): ServerPlayerEntity | null {
@@ -115,7 +125,7 @@ export class PlayerManager {
         const lowerName = playerName.toLowerCase();
 
         for (const player of this.uuidToPlayer.values()) {
-            if (player.getProfile().name.toLowerCase() === lowerName) {
+            if (player.profile().name.toLowerCase() === lowerName) {
                 return player;
             }
         }
@@ -124,6 +134,15 @@ export class PlayerManager {
 
     public getPlayerBySessionId(sessionId: number): ServerPlayerEntity | null {
         return this.sessionToPlayer.get(sessionId) ?? null;
+    }
+
+    public hasLogin(uuid: UUID): boolean {
+        return this.isPlayerExists(uuid) || this.pendingLogin.has(uuid);
+    }
+
+    public addLogin(uuid: UUID) {
+        this.pendingLogin.add(uuid);
+        return () => this.pendingLogin.delete(uuid);
     }
 
     public isPlayerExists(uuid: UUID): boolean {
@@ -137,7 +156,7 @@ export class PlayerManager {
     public getPlayerNames() {
         return this.uuidToPlayer
             .values()
-            .map(player => player.getProfile().name);
+            .map(player => player.profile().name);
     }
 
     public async saveAllPlayerData(): Promise<void> {

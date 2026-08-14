@@ -1,4 +1,4 @@
-import {ServerStorage} from "../server/ServerStorage.ts";
+import {ServerStorage} from "../server/storage/ServerStorage.ts";
 import type {PlayerData, SaveMeta} from "../type/Saves.ts";
 import {error, warn} from "@tauri-apps/plugin-log";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
@@ -12,6 +12,7 @@ import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import type {Consumer, UUID} from "../type/types.ts";
 import {toLocalTime} from "../utils/time.ts";
+import {PlayerDataStorage} from "../server/storage/PlayerDataStorage.ts";
 
 export class ClientSavesManager {
     private static readonly RESERVED_NAMES = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'];
@@ -362,7 +363,9 @@ export class ClientSavesManager {
                     .catch(error);
                 tasks.push(task);
             };
-            await ServerStorage.loadPlayerNbtInWorld(saveName, feature);
+
+            const io = new PlayerDataStorage(saveName, ServerStorage.db);
+            await io.loadPlayerNbtInWorld(feature);
             await Promise.all(tasks);
 
             await message('已导出至 "安装目录/saves"');
@@ -400,7 +403,9 @@ export class ClientSavesManager {
                     .catch(err => console.error(err));
                 tasks.push(task);
             };
-            await ServerStorage.loadPlayerInWorld(saveName, feature);
+
+            const io = new PlayerDataStorage(saveName, ServerStorage.db);
+            await io.loadPlayerInWorld(feature);
             await Promise.all(tasks);
 
             await message('已导出至 "安装目录/saves"');
@@ -458,6 +463,7 @@ export class ClientSavesManager {
             }
         };
 
+        const io = new PlayerDataStorage(saveName, ServerStorage.db);
         for (const fullPath of results.files) {
             const path = fullPath.split(/[\\/]/).pop();
             if (!path) continue;
@@ -487,7 +493,7 @@ export class ClientSavesManager {
                 const compound = await parseNbt(fullPath, path, fileName, ext);
                 if (compound === null) continue;
 
-                const playerResult = await ServerStorage.savePlayerNbt(saveName, fileName, compound);
+                const playerResult = await io.savePlayerNbt(fileName, compound);
                 if (playerResult.isErr()) {
                     failTasks.push({path, reason: playerResult.unwrapErr().message});
                     console.error(playerResult.unwrapErr());

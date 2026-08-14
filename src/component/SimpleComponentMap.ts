@@ -61,8 +61,8 @@ export class SimpleComponentMap implements ComponentMap {
         const nbt = new NbtCompound();
         for (const [type, value] of this.baseComponents) {
             const id = Registries.DATA_COMPONENT_TYPE.getId(type);
-            if (!id) continue;
-            nbt.set(id.toString(), type.codec.encode(value))
+            if (!id || type.codec === null) continue;
+            nbt.set(id.toString(), type.codec.encode(value));
         }
         return nbt;
     }
@@ -79,7 +79,9 @@ export class SimpleComponentMap implements ComponentMap {
             if (!nbtEntry) continue;
 
             const type = entry.getValue();
-            const compound = type.codec.decode(nbtEntry);
+            if (type.codec === null) continue;
+            const compound = type.codec.decode(nbtEntry).getOrNull();
+            if (compound === null) continue;
             map.set(type, compound);
         }
         return map;

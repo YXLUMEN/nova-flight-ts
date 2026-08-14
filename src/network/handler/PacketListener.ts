@@ -8,7 +8,7 @@ export interface PacketListener {
 
     getPhase(): ConnectionState;
 
-    tick?(): void;
+    tick(): void;
 
     clear(): void;
 }

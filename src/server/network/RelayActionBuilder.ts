@@ -6,7 +6,7 @@ export class RelayActionBuilder {
     public static forceDisconnect(sessionId: number) {
         const buf = new Uint8Array(3);
         buf[0] = PacketHeader.SERVER_ACTION;
-        buf[1] = ServerAction.TICK;
+        buf[1] = ServerAction.KICK;
         buf[2] = sessionId & 0xFF;
         return buf;
     }

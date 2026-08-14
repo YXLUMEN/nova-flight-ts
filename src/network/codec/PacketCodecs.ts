@@ -177,7 +177,7 @@ export class PacketCodecs {
             },
             (reader: BinaryReader): V[] => {
                 const size = PacketCodecs.readCollectionSize(reader, maxSize);
-                const list: V[] = new Array(size);
+                const list: V[] = new Array(size).fill(null);
                 for (let i = 0; i < size; i++) {
                     list[i] = elementCodec.decode(reader);
                 }
@@ -268,7 +268,7 @@ export class PacketCodecs {
             },
             (reader: BinaryReader): T => {
                 const nbt = packetCodec.decode(reader);
-                const obj = codec.decode(nbt);
+                const obj = codec.decode(nbt).getOrNull();
                 if (obj === null) {
                     throw new Error(`Failed to decode: ${nbt}`);
                 }

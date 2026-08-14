@@ -17,12 +17,10 @@ export class ClientConfigHandler extends ClientCommonHandler {
     }
 
     public onServerStart(_: ServerStartS2CPacket) {
-        this.stopSniff();
         this.clientReady();
     }
 
     public onServerReady(_: ServerReadyS2CPacket) {
-        this.stopSniff();
         this.clear();
 
         this.connection.setPacketListener(ConnectionState.PLAY, this.client.networkHandler);
@@ -34,15 +32,16 @@ export class ClientConfigHandler extends ClientCommonHandler {
     }
 
     public clientReady() {
-        if (this.sniffInterval !== undefined) return;
+        this.stopSniff();
 
-        this.sendImmediately(new ClientReadyC2SPacket(this.client.clientId));
+        const packet = new ClientReadyC2SPacket(this.client.clientId);
+        this.sendImmediately(packet);
 
         let times = 0;
         this.sniffInterval = setInterval(() => {
             times++;
             try {
-                this.sendImmediately(new ClientReadyC2SPacket(this.client.clientId));
+                this.sendImmediately(packet);
             } catch (e) {
                 this.stopSniff();
                 console.error(e);

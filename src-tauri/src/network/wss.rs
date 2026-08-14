@@ -4,8 +4,7 @@ use crate::network::protocol::*;
 use crate::network::session::{Session, SessionContext, NEXT_SESSION_ID};
 use crate::network::states::{RelayState, Role, ServerManager, Tx};
 use crate::network::util::{
-    constant_time_eq, format_uuid, now_ms, is_nil_uuid, parse_ipv4, parse_session_id,
-    read_var_uint,
+    constant_time_eq, format_uuid, is_nil_uuid, now_ms, parse_ipv4, parse_session_id, read_var_uint,
 };
 use bytes::{Buf, BufMut, BytesMut};
 use dashmap::Entry;
@@ -162,6 +161,11 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
                 info!("Client {} released {}", session.session_id, allow);
                 if allow {
                     if let Some(close_rx) = ctx.close {
+                        let packet = Attached {
+                            session_id: session.session_id,
+                        };
+                        send_packet(&session.tx, packet, Duration::from_secs(2)).await;
+
                         client_relay(&state, &session, &mut reader, close_rx).await;
                     }
                 }
@@ -309,11 +313,6 @@ async fn attach_session(
 
                     v.insert(session_id);
                     state.insert_client_entry(session_id, session.clone(), permit_tx, c_tx);
-
-                    let packet = Attached {
-                        session_id: session.session_id,
-                    };
-                    send_packet(&session.tx, packet, Duration::from_secs(2)).await;
 
                     // 向服务端发送注册消息
                     if let Some(server) = state.get_server().await {
@@ -511,9 +510,10 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
             let Some(session) = state.get_by_id(&target_id) else {
                 return;
             };
-            if session.tx.send(payload).await.is_err() {
-                state.close(&target_id);
+            if send_or_drop_move(&session.tx, payload) {
+                return;
             }
+            state.close(&target_id);
         }
         SERVER_SINGLE_UUID => {
             // [Header][Id][TargetUuid][Data]
@@ -544,9 +544,10 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
             buf.put_slice(&remaining);
             let forwarded = buf.freeze();
 
-            if session.tx.send(forwarded).await.is_err() {
-                state.close(&session.session_id);
+            if send_or_drop_move(&session.tx, forwarded) {
+                return;
             }
+            state.close(&session.session_id);
         }
         SERVER_EXCLUDE => {
             // [Header][Id][TargetIds][Data]
@@ -640,7 +641,7 @@ async fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload:
 
             let session_id = data[0];
             if let Some(session) = state.get_by_id(&session_id) {
-                send_message(&session.tx, "Kicked");
+                send_message(&session.tx, "INFO:Kicked");
                 state.close(&session_id);
             }
         }
@@ -675,9 +676,9 @@ async fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload:
             };
 
             if state.unban(&ip.into()).await {
-                send_message(&session.tx, "Unban");
+                send_message(&session.tx, "INFO:Unban");
             } else {
-                send_message(&session.tx, "This ip is not banned");
+                send_message(&session.tx, "INFO:This ip is not banned");
             }
         }
         _ => {
@@ -724,7 +725,21 @@ fn send_message(tx: &Tx, reason: &str) -> () {
 fn send_or_drop(tx: &Tx, payload: &Bytes) -> bool {
     match tx.try_send(payload.clone()) {
         Ok(_) => true,
-        Err(TrySendError::Full(_)) => true,
+        Err(TrySendError::Full(_)) => {
+            warn!("Payload drop because channel full");
+            true
+        }
+        Err(TrySendError::Closed(_)) => false,
+    }
+}
+
+fn send_or_drop_move(tx: &Tx, payload: Bytes) -> bool {
+    match tx.try_send(payload) {
+        Ok(_) => true,
+        Err(TrySendError::Full(_)) => {
+            warn!("Payload drop because channel full");
+            true
+        }
         Err(TrySendError::Closed(_)) => false,
     }
 }

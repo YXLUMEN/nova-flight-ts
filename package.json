@@ -20,9 +20,9 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.11.1",
-    "terser": "^5.49.0",
+    "terser": "^5.50.0",
     "typescript": "^7.0.2",
     "unplugin-inline-enum": "^0.8.2",
-    "vite": "^8.1.5"
+    "vite": "^8.2.1"
   }
 }

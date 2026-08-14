@@ -11,7 +11,7 @@ export const enum PacketHeader {
 }
 
 export const enum ServerAction {
-    TICK = 0x00,
+    KICK = 0x00,
     PERMIT = 0x01,
     QUERY = 0x02,
     BAN = 0x03,

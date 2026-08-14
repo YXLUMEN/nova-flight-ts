@@ -198,7 +198,7 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
                 const slot = compound.getInt8('slot');
                 if (!compound.contains('stack', NbtTypeId.Compound)) continue;
 
-                const stack = ItemStack.CODEC.decode(compound.getCompound('stack')) ?? ItemStack.EMPTY;
+                const stack = ItemStack.CODEC.decode(compound.getCompound('stack')).orElse(ItemStack.EMPTY);
                 stack.setHolder(this.player);
                 this.setItem(slot, stack);
             }

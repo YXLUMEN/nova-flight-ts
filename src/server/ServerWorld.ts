@@ -112,7 +112,7 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public override gameOver(player: ServerPlayerEntity): void {
-        if (!this.server.isHost(player.getProfile())) {
+        if (!this.server.isHost(player.profile())) {
             player.networkHandler!.send(GameOverS2CPacket.INSTANCE);
             return;
         }
@@ -219,7 +219,7 @@ export class ServerWorld extends World implements NbtSerializable {
     public override playSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
         if (entity instanceof ServerPlayerEntity) {
             this.server.networkChannel
-                .sendExclude(new SoundEventS2CPacket(sound, volume, pitch, false), entity.getProfile());
+                .sendExclude(new SoundEventS2CPacket(sound, volume, pitch, false), entity.profile());
             return;
         }
         this.sendPacket(new SoundEventS2CPacket(sound, volume, pitch, false));
@@ -228,7 +228,7 @@ export class ServerWorld extends World implements NbtSerializable {
     public override playLoopSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
         if (entity instanceof ServerPlayerEntity) {
             this.server.networkChannel
-                .sendExclude(new SoundEventS2CPacket(sound, volume, pitch, true), entity.getProfile());
+                .sendExclude(new SoundEventS2CPacket(sound, volume, pitch, true), entity.profile());
             return;
         }
         this.sendPacket(new SoundEventS2CPacket(sound, volume, pitch, true));
@@ -244,7 +244,7 @@ export class ServerWorld extends World implements NbtSerializable {
 
     public spawnVisual(source: Entity | null, effect: VisualEffect): void {
         if (source instanceof ServerPlayerEntity) {
-            this.server.networkChannel.sendExclude(new EffectCreateS2CPacket(effect), source.getProfile());
+            this.server.networkChannel.sendExclude(new EffectCreateS2CPacket(effect), source.profile());
             return;
         }
         this.sendPacket(new EffectCreateS2CPacket(effect));

@@ -38,7 +38,6 @@ import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.
 import {ItemCooldownUpdateS2CPacket} from "../../../network/packet/s2c/ItemCooldownUpdateS2CPacket.ts";
 import {PlayAudioS2CPacket} from "../../../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {AudioManager} from "../../../sound/AudioManager.ts";
-import {ConnectInfo} from "../../render/ui/ConnectInfo.ts";
 import {AudioControlS2CPacket, AudioControlType} from "../../../network/packet/s2c/AudioControlS2CPacket.ts";
 import {BGMManager} from "../../../sound/BGMManager.ts";
 import {AudioStopS2CPacket} from "../../../network/packet/s2c/AudioStopS2CPacket.ts";
@@ -139,17 +138,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
         if (player) world.removeEntity(player.getId());
 
         if (packet.uuid !== this.client.clientId) return;
-
-        clearInterval(this.pingInterval);
-        this.client.setPause(true);
-
-        const info = new ConnectInfo(this.client);
-        this.client.setConnectInfo(info);
-
-        info.setMessage(packet.reason);
-        info.setLabel(TranslatableText.of('start.confirm'));
-        info.waitConfirm()
-            .then(() => this.client.requestStop());
+        super.onPlayerDisconnect(packet);
     }
 
     public onPlayerMove(packet: PlayerPositionS2CPacket): void {

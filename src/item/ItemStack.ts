@@ -22,6 +22,7 @@ import type {Consumer} from "../type/types.ts";
 import type {Codec} from "../serialization/Codec.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {Codecs} from "../serialization/Codecs.ts";
+import {DataResult} from "../serialization/result/DataResult.ts";
 
 
 export class ItemStack {
@@ -40,21 +41,24 @@ export class ItemStack {
 
             return compound;
         },
-        value => {
-            const typeName = value.getString('type');
+        input => {
+            if (!(input instanceof NbtCompound)) {
+                return DataResult.error(`Expected NbtCompound, got ${input.getType()}`);
+            }
+            const typeName = input.getString('type');
             const id = Identifier.tryParse(typeName);
-            if (!id) return null;
+            if (!id) return DataResult.error(`Invalid item type: ${typeName}`);
 
             const type = Registries.ITEM.getEntryById(id);
-            if (!type) return null;
+            if (!type) return DataResult.error(`Unknown item type: ${typeName}`);
 
-            const counts = value.getInt8('counts');
+            const counts = input.getInt8('counts');
 
             let compounds: ComponentChanges | null = null;
-            const compoundsNbt = value.get('compounds');
-            if (compoundsNbt) compounds = ComponentChanges.CODEC.decode(compoundsNbt);
+            const compoundsNbt = input.get('compounds');
+            if (compoundsNbt) compounds = ComponentChanges.CODEC.decode(compoundsNbt).getOrNull();
 
-            return new ItemStack(type.getValue(), counts, compounds);
+            return DataResult.success(new ItemStack(type.getValue(), counts, compounds));
         }
     );
     public static readonly PACKET_CODEC: PacketCodec<ItemStack> = PacketCodecs.of(

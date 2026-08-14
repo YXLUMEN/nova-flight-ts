@@ -28,6 +28,7 @@ import {PlayerDead} from "../../event/events/PlayerDead.ts";
 
 export abstract class PlayerEntity extends LivingEntity {
     private static readonly SHIELD_AMOUNT = DataTracker.registerData(Object(PlayerEntity), TrackedDataHandlerRegistry.FLOAT);
+    private static readonly SCORE = DataTracker.registerData(Object(PlayerEntity), TrackedDataHandlerRegistry.VAR_UINT);
 
     public readonly cooldownManager: ItemCooldownManager;
     private readonly inventory: UniqueInventory;
@@ -60,6 +61,7 @@ export abstract class PlayerEntity extends LivingEntity {
     protected override defineSyncedData(builder: DataTrackerBuilder) {
         super.defineSyncedData(builder);
         builder.define(PlayerEntity.SHIELD_AMOUNT, 0);
+        builder.define(PlayerEntity.SCORE, 0);
     }
 
     public override tick() {
@@ -267,22 +269,15 @@ export abstract class PlayerEntity extends LivingEntity {
     }
 
     public getScore(): number {
-        return this.score;
+        return this.dataTracker.get(PlayerEntity.SCORE);
     }
 
     public addScore(score: number): void {
-        this.setScore(this.score + score);
+        this.setScore(this.getScore() + score);
     }
 
     public setScore(score: number): void {
-        this.score = Math.max(0, score);
-    }
-
-    public consumeScore(value: number): boolean {
-        const remain = this.score - value;
-        if (remain < 0) return false;
-        this.setScore(remain);
-        return true;
+        this.dataTracker.set(PlayerEntity.SCORE, Math.max(0, score));
     }
 
     public isDevMode(): boolean {

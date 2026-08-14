@@ -39,7 +39,7 @@ export class DataComponents {
         builder => builder.persistent(Codecs.STRING).network(PacketCodecs.COLOR_HEX)
     );
     public static readonly ATTACK_DAMAGE: DataComponentType<number> = this.register("attack_damage",
-        builder => builder.persistent(Codecs.DOABLE).network(PacketCodecs.DOUBLE)
+        builder => builder.persistent(Codecs.DOUBLE).network(PacketCodecs.DOUBLE)
     );
     public static readonly MAX_COOLDOWN: DataComponentType<number> = this.register("max_cooldown",
         builder => builder.persistent(Codecs.UINT32).network(PacketCodecs.UINT32)
@@ -48,10 +48,10 @@ export class DataComponents {
         builder => builder.persistent(Codecs.UINT32).network(PacketCodecs.UINT32)
     );
     public static readonly EXPLOSION_RADIUS: DataComponentType<number> = this.register("explosion_radius",
-        builder => builder.persistent(Codecs.DOABLE).network(PacketCodecs.DOUBLE)
+        builder => builder.persistent(Codecs.DOUBLE).network(PacketCodecs.DOUBLE)
     );
     public static readonly EXPLOSION_POWER: DataComponentType<number> = this.register("explosion_power",
-        builder => builder.persistent(Codecs.DOABLE).network(PacketCodecs.DOUBLE)
+        builder => builder.persistent(Codecs.DOUBLE).network(PacketCodecs.DOUBLE)
     );
     public static readonly MAX_SPREAD: DataComponentType<number> = this.register("max_spread",
         builder => builder.persistent(Codecs.FLOAT).network(PacketCodecs.FLOAT)
@@ -80,16 +80,16 @@ export class DataComponents {
         builder => builder.persistent(Codecs.INT32).network(PacketCodecs.INT32)
     );
     public static readonly COOLDOWN_RATE: DataComponentType<number> = this.register("cooldown_rate",
-        builder => builder.persistent(Codecs.DOABLE).network(PacketCodecs.DOUBLE)
+        builder => builder.persistent(Codecs.DOUBLE).network(PacketCodecs.DOUBLE)
     );
     public static readonly EFFECT_DURATION: DataComponentType<number> = this.register("effect_duration",
-        builder => builder.persistent(Codecs.DOABLE).network(PacketCodecs.DOUBLE)
+        builder => builder.persistent(Codecs.DOUBLE).network(PacketCodecs.DOUBLE)
     );
     public static readonly EFFECT_TIME_LEFT: DataComponentType<number> = this.register("effect_time_left",
-        builder => builder.persistent(Codecs.DOABLE).network(PacketCodecs.DOUBLE)
+        builder => builder.persistent(Codecs.DOUBLE).network(PacketCodecs.DOUBLE)
     );
     public static readonly EFFECT_RANGE: DataComponentType<number> = this.register("effect_range",
-        builder => builder.persistent(Codecs.DOABLE).network(PacketCodecs.DOUBLE)
+        builder => builder.persistent(Codecs.DOUBLE).network(PacketCodecs.DOUBLE)
     );
     public static readonly ANY_BOOLEAN: DataComponentType<boolean> = this.register("any_bool",
         builder => builder.persistent(Codecs.BOOLEAN).network(PacketCodecs.BOOL)
