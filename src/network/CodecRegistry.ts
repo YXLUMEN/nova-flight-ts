@@ -53,7 +53,7 @@ export class CodecRegistry {
         return this.side;
     }
 
-    public static idBy(index: number): CodecEntry<any> | undefined {
+    public static byId(index: number): CodecEntry<any> | undefined {
         return this.PACKET_TYPES[index];
     }
 

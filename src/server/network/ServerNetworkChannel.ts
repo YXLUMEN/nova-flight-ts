@@ -98,7 +98,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
         const header = reader.readUint8();
         if (header === PacketHeader.RELAY) {
             const index = reader.readUint8();
-            const codec = CodecRegistry.idBy(index);
+            const codec = CodecRegistry.byId(index);
             if (codec) this.handler(0, codec.codec.decode(reader));
             return;
         }
@@ -109,7 +109,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
 
         const sessionId = reader.readUint8();
         const index = reader.readVarUint();
-        const codec = CodecRegistry.idBy(index);
+        const codec = CodecRegistry.byId(index);
         if (!codec) return;
 
         this.handler(sessionId, codec.codec.decode(reader));

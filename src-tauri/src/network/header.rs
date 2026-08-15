@@ -12,7 +12,7 @@ pub const SERVER_EXCLUDE: u8 = 0x14;
 pub const SERVER_ACTION: u8 = 0xFF;
 
 /// 中继控制命令
-pub const TICK: u8 = 0x00;
+pub const KICK: u8 = 0x00;
 pub const PERMIT: u8 = 0x01;
 pub const QUERY: u8 = 0x02;
 pub const BAN_IP: u8 = 0x03;
