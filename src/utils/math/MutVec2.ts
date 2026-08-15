@@ -75,7 +75,7 @@ export class MutVec2 extends Vec2 {
         return len === 0 ? this.set(0, 0) : this.multiply(1 / len);
     }
 
-    public equal(v: Vec2, epsilon = 1e-6): boolean {
+    public equals(v: Vec2, epsilon = 1e-6): boolean {
         return Math.abs(this.x - v.x) <= epsilon && Math.abs(this.y - v.y) <= epsilon;
     }
 

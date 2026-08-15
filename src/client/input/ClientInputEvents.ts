@@ -18,7 +18,10 @@ export class ClientInputEvents {
 
                 if (code === 'Escape' && commandManager.isShow()) {
                     const hide = commandManager.onEsc();
-                    if (hide) input.setHandlerDisabled(false);
+                    if (hide) {
+                        event.stopImmediatePropagation();
+                        input.setHandlerDisabled(false);
+                    }
                     return;
                 }
 

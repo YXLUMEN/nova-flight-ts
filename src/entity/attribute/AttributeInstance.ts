@@ -3,8 +3,9 @@ import type {Attribute} from "./Attribute.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import type {Consumer} from "../../type/types.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import {HashMap} from "../../utils/collection/HashMap.ts";
 import {AttributeModifier, Operation} from "../../component/type/AttributeModifier.ts";
+import {WrapperMap} from "../../utils/collection/WrapperMap.ts";
+import type {HashMap} from "../../utils/collection/HashMap.ts";
 
 
 export class AttributeInstance {
@@ -15,8 +16,7 @@ export class AttributeInstance {
 
     private dirty: boolean = true;
     private readonly onDirty: Consumer<AttributeInstance>;
-
-    private readonly modifierById = new HashMap<Identifier, AttributeModifier>(8);
+    private readonly modifierById: HashMap<Identifier, AttributeModifier> = new WrapperMap();
 
     public constructor(type: RegistryEntry<Attribute>, onDirty: Consumer<AttributeInstance>) {
         this.attribute = type;

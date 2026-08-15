@@ -245,15 +245,15 @@ export class HUD implements IUi {
 
         ctx.fillStyle = 'rgb(255,255,255)';
         ctx.font = 'bold 32px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
-        ctx.fillText('游戏结束', width / 2, y);
+        ctx.fillText(TranslatableText.of('hud.game_over').toString(), width / 2, y);
         y += 48;
 
         ctx.font = '16px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
-        ctx.fillText(`游戏时长: ${time}, 得分: ${score}, 击杀效率: ${(score / time).toFixed(2)}`, width / 2, y);
+        const text = new TranslatableText('hud.summary', [time.toString(), score.toString(), (score / time).toFixed(2)]);
+        ctx.fillText(text.toString(), width / 2, y);
         y += 32;
 
-        ctx.fillText('按 任意键 返回标题页面', width / 2, y);
-
+        ctx.fillText(TranslatableText.of('hud.back').toString(), width / 2, y);
         ctx.restore();
     }
 

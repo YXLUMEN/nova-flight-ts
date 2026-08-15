@@ -22,7 +22,7 @@ import {StageCommand} from "../../command/StageCommand.ts";
 import {KickCommand} from "../../command/KickCommand.ts";
 import {GiveCommand} from "../../command/GiveCommand.ts";
 import {ScoreCommand} from "../../command/ScoreCommand.ts";
-import {ClientStorage} from "../ClientStorage.ts";
+import {ClientStorage} from "../storage/ClientStorage.ts";
 import {LangCommand} from "../../command/LangCommand.ts";
 import {ClientFixCommand} from "../../command/ClientFixCommand.ts";
 import {Suggestions} from "../../brigadier/suggestion/Suggestions.ts";
@@ -66,6 +66,7 @@ export class ClientCommandManager extends CommandManager {
         commandBar.addEventListener('keydown', event => {
             if (event.key === 'Enter') {
                 event.preventDefault();
+                event.stopImmediatePropagation();
                 this.popup.cleanPopup();
 
                 const input = this.commandInput.value;
@@ -97,6 +98,7 @@ export class ClientCommandManager extends CommandManager {
 
             if (event.code === 'ArrowUp') {
                 event.preventDefault();
+                event.stopImmediatePropagation();
                 if (this.popup.getPopups()) {
                     this.completionIndex = (this.completionIndex - 1 + this.suggestionsLength) % this.suggestionsLength;
                     this.popup.highlightPopupItem(this.completionIndex);
@@ -115,6 +117,7 @@ export class ClientCommandManager extends CommandManager {
 
             if (event.code === 'ArrowDown') {
                 event.preventDefault();
+                event.stopImmediatePropagation();
                 if (this.popup.getPopups()) {
                     this.completionIndex = (this.completionIndex + 1) % this.suggestionsLength;
                     this.popup.highlightPopupItem(this.completionIndex);
@@ -134,6 +137,7 @@ export class ClientCommandManager extends CommandManager {
 
             if (event.code === 'Tab') {
                 event.preventDefault();
+                event.stopImmediatePropagation();
                 if (!this.popup.getPopups()) return;
 
                 // 轮询并应用
@@ -149,11 +153,13 @@ export class ClientCommandManager extends CommandManager {
 
             if (event.ctrlKey && event.code === 'Space') {
                 event.preventDefault();
+                event.stopImmediatePropagation();
                 bounceGiveSuggestions();
             }
 
             if (event.ctrlKey && event.code === 'KeyW') {
                 event.preventDefault();
+                event.stopImmediatePropagation();
                 const cursor = this.commandInput.selectionStart ?? 0;
                 const text = this.commandInput.value;
 

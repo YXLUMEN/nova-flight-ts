@@ -1,0 +1,14 @@
+{
+  "title": "Archive",
+  "back": "Back to Title",
+  "create": "New World",
+  "load": "Enter the World",
+  "delete": "Delete the World",
+  "rename": "Rename",
+  "export": "Export",
+  "export_snbt": "Export as SNBT",
+  "import": "Import Archive",
+  "archive_name": "Archive Name",
+  "confirm": "Confirm",
+  "cancel": "Cancel"
+}

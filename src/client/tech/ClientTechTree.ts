@@ -568,12 +568,7 @@ export class ClientTechTree implements TechTree {
     public resetAllTech() {
         // noinspection DuplicatedCode
         const player = this.player;
-
-        const allTech = this.state.allTechs;
-        const unlocked: Tech[] = [];
-        for (const tech of allTech) {
-            if (this.state.isUnlocked(tech)) unlocked.push(tech);
-        }
+        const unlocked: Tech[] = this.state.getUnlocked().toArray();
         if (unlocked.length === 0) return;
 
         let backScore = 0;

@@ -110,7 +110,7 @@ export class BlockCollision {
         forHit: (ctx: C, pos: BlockPos, t: number, dir: Direction) => T | null,
         forMiss: (ctx: C) => T
     ): T {
-        if (start.equal(end)) return forMiss(context);
+        if (start.equals(end)) return forMiss(context);
         const ox = lerp(-1.0E-7, start.x, end.x);
         const oy = lerp(-1.0E-7, start.y, end.y);
 

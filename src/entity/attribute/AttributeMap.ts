@@ -107,6 +107,10 @@ export class AttributeMap {
         });
     }
 
+    public iter() {
+        return this.attributes.entries();
+    }
+
     public toNbt(): NbtCompound[] {
         const nbtList: NbtCompound[] = [];
 

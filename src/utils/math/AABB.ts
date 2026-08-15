@@ -38,7 +38,7 @@ export class AABB implements Comparable {
         return h;
     }
 
-    public equal(other: unknown): boolean {
+    public equals(other: unknown): boolean {
         if (other === this) return true;
         if (other instanceof AABB) {
             return this.minX === other.minX &&

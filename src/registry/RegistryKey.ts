@@ -34,7 +34,7 @@ export class RegistryKey<T> {
     }
 
     public isOf(registry: RegistryKey<any>) {
-        return this.registry.equal(registry.getValue());
+        return this.registry.equals(registry.getValue());
     }
 
     public getValue(): Identifier {

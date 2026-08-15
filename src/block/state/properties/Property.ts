@@ -29,7 +29,7 @@ export abstract class Property<T> implements Comparable {
         return `Property[name,${this.name};values,${this.getPossibleValues()}]`;
     }
 
-    public equal(other: unknown): boolean {
+    public equals(other: unknown): boolean {
         if (this === other) return true;
         if (other instanceof Property) {
             return this.name === other.name && this.typeName === other.typeName;

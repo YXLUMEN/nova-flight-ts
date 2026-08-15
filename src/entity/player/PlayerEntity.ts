@@ -183,8 +183,17 @@ export abstract class PlayerEntity extends LivingEntity {
 
     protected override onDiscard() {
         super.onDiscard();
+
+        this.clearAttributeModifier();
         this.clearItems();
         this.techTree?.destroy();
+        this.setYaw(-1.57079);
+    }
+
+    private clearAttributeModifier() {
+        for (const [_, instance] of this.getAttributes().iter()) {
+            instance.clearModifiers();
+        }
     }
 
     public override isPlayer(): this is PlayerEntity {

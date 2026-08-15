@@ -1,6 +1,6 @@
 import type {Consumer} from "../type/types.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
-import {ClientStorage} from "./ClientStorage.ts";
+import {ClientStorage} from "./storage/ClientStorage.ts";
 import {error} from "@tauri-apps/plugin-log";
 import {invoke} from "@tauri-apps/api/core";
 

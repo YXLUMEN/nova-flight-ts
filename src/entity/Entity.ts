@@ -162,7 +162,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     // 相等性与哈希
 
-    public equal(other: unknown): boolean {
+    public equals(other: unknown): boolean {
         if (other === this) return true;
         if (other instanceof Entity) {
             return other.id === this.id;

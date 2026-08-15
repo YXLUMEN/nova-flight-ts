@@ -1,22 +1,25 @@
-import {ServerStorage} from "../server/storage/ServerStorage.ts";
-import type {PlayerData, SaveMeta} from "../type/Saves.ts";
+import {ServerStorage} from "../../server/storage/ServerStorage.ts";
+import type {PlayerData, SaveMeta} from "../../type/Saves.ts";
 import {error, warn} from "@tauri-apps/plugin-log";
-import {NovaFlightClient} from "./NovaFlightClient.ts";
+import {NovaFlightClient} from "../NovaFlightClient.ts";
 import {resolve, resolveResource} from "@tauri-apps/api/path";
 import {exists, mkdir, readFile, readTextFile, writeFile, writeTextFile} from "@tauri-apps/plugin-fs";
-import {NbtSerialization} from "../nbt/NbtSerialization.ts";
-import {NbtUnserialization} from "../nbt/NbtUnserialization.ts";
+import {NbtSerialization} from "../../nbt/NbtSerialization.ts";
+import {NbtUnserialization} from "../../nbt/NbtUnserialization.ts";
 import {confirm, message} from "@tauri-apps/plugin-dialog";
 import {invoke} from "@tauri-apps/api/core";
-import {NbtCompound} from "../nbt/element/NbtCompound.ts";
-import {UUIDUtil} from "../utils/UUIDUtil.ts";
-import type {Consumer, UUID} from "../type/types.ts";
-import {toLocalTime} from "../utils/time.ts";
-import {PlayerDataStorage} from "../server/storage/PlayerDataStorage.ts";
+import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
+import {UUIDUtil} from "../../utils/UUIDUtil.ts";
+import type {Consumer, UUID} from "../../type/types.ts";
+import {toLocalTime} from "../../utils/time.ts";
+import {PlayerDataStorage} from "../../server/storage/PlayerDataStorage.ts";
+import {ClientSavePage} from "./ClientSavePage.ts";
 
 export class ClientSavesManager {
     private static readonly RESERVED_NAMES = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'];
     private static readonly INVALID_CHARS = /[@#$%^&!<>:"/\\|?*\x00]/;
+
+    public readonly page: ClientSavePage;
     private readonly saveContainer: HTMLElement;
     private readonly saveList: HTMLElement;
     private readonly buttonBox: HTMLElement;
@@ -28,6 +31,7 @@ export class ClientSavesManager {
     private chosenItem: HTMLElement | null = null;
 
     public constructor() {
+        this.page = new ClientSavePage();
         this.saveContainer = document.getElementById('start')!;
         this.saveList = document.getElementById('save-list')!;
         this.buttonBox = document.getElementById('start-buttons')!;

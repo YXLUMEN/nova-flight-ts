@@ -161,7 +161,7 @@ export class Identifier implements Comparable {
         return `${this.namespace}:${this.path}`;
     }
 
-    public equal(o: unknown): boolean {
+    public equals(o: unknown): boolean {
         if (this === o) {
             return true;
         }
