@@ -15,7 +15,7 @@ import {invoke} from "@tauri-apps/api/core";
 import {ClientMultiGameManger} from "./ClientMultiGameManger.ts";
 import {ConnectInfo} from "./render/ui/ConnectInfo.ts";
 import {ClientChat} from "./command/ClientChat.ts";
-import {ClientSavesManager} from "./ClientSavesManager.ts";
+import {ClientSavesManager} from "./storage/ClientSavesManager.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {StatisticManager} from "./statistic/StatisticManager.ts";
 import {ClientConnection} from "./network/ClientConnection.ts";
@@ -335,6 +335,7 @@ export class NovaFlightClient {
 
         this.window.hud.setPlayer(null);
         this.player = null;
+        this.saveManager.page.registerEvent();
     }
 
     public requestStop(): void {

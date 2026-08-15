@@ -78,7 +78,7 @@ export class Vec2 implements Comparable {
         return (this.y * 31 + this.x) | 0;
     }
 
-    public equal(other: unknown): boolean {
+    public equals(other: unknown): boolean {
         if (this === other) return true;
         if (other instanceof Vec2) {
             return this.x === other.x && this.y === other.y;

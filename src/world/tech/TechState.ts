@@ -187,6 +187,10 @@ export class TechState<T extends Tech = Tech> {
         return this.unlocked.has(tech);
     }
 
+    public getUnlocked() {
+        return this.unlocked.values();
+    }
+
     public unlock(tech: T): boolean {
         if (!this.canUnlock(tech)) return false;
         this.unlocked.add(tech);

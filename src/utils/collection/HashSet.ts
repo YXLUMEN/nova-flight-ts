@@ -15,7 +15,7 @@ export class HashSet<T extends Comparable> {
             return this;
         }
 
-        const exists = bucket.some(entry => entry.equal(value));
+        const exists = bucket.some(entry => entry.equals(value));
         if (!exists) {
             bucket.push(value);
             this._size++;
@@ -33,7 +33,7 @@ export class HashSet<T extends Comparable> {
         const bucket = this.buckets.get(key);
         if (!bucket) return false;
 
-        const index = bucket.findIndex(existing => existing.equal(value));
+        const index = bucket.findIndex(existing => existing.equals(value));
         if (index === -1) return false;
 
         bucket.splice(index, 1);
@@ -55,7 +55,7 @@ export class HashSet<T extends Comparable> {
         const bucket = this.buckets.get(key);
         if (!bucket) return false;
 
-        return bucket.some(existing => existing.equal(value));
+        return bucket.some(existing => existing.equals(value));
     }
 
     public get size(): number {

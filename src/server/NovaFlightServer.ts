@@ -184,10 +184,6 @@ export abstract class NovaFlightServer implements CommandOutput {
 
     public abstract readSave(): Promise<NbtCompound | null>;
 
-    public isRunning(): boolean {
-        return this.running;
-    }
-
     public abstract isHost(profile: GameProfile): boolean;
 
     public abstract isHostUUID(uuid: UUID): boolean;

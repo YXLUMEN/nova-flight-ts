@@ -1,14 +1,15 @@
 import type {SoundEvent} from "./SoundEvent.ts";
-import {HashMap} from "../utils/collection/HashMap.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {clamp} from "../utils/math/math.ts";
 import type {SoundResource} from "../resource/SoundResource.ts";
 import {ResourceManager} from "../resource/ResourceManager.ts";
 import {Resources} from "../resource/Resources.ts";
+import type {HashMap} from "../utils/collection/HashMap.ts";
+import {WrapperMap} from "../utils/collection/WrapperMap.ts";
 
 export class SoundSystem {
     private readonly module: SoundResource;
-    private readonly activeLoops: HashMap<Identifier, AudioBufferSourceNode> = new HashMap();
+    private readonly activeLoops: HashMap<Identifier, AudioBufferSourceNode> = new WrapperMap();
     private readonly audioContext: AudioContext;
     private readonly gainNode: GainNode;
 

@@ -130,7 +130,7 @@ export class PacketCodecs {
     public static uintStrict<V extends Comparable>(value: V): PacketCodec<V> {
         return new PacketCodecImpl(
             (_: BinaryWriter, object: V): void => {
-                if (object.equal(value)) return;
+                if (object.equals(value)) return;
                 throw new IllegalStateError(`Can't encode "${object}", expected "${value}"`);
             },
             (): V => value

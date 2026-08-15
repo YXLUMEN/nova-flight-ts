@@ -1,4 +1,4 @@
-import {ClientStorage} from "../client/ClientStorage.ts";
+import {ClientStorage} from "../client/storage/ClientStorage.ts";
 
 export class HistoricalScore {
     public static async recordScore(record: ScoreRecord) {

@@ -37,7 +37,7 @@ export class StringRange implements Comparable {
         return this.end - this.start;
     }
 
-    public equal(o: unknown): boolean {
+    public equals(o: unknown): boolean {
         if (this === o) return true;
 
         if (o instanceof StringRange) {

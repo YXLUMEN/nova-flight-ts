@@ -11,7 +11,7 @@ export class TrackedData<T> implements Comparable {
         this.dataType = dataType;
     }
 
-    public equal(other: Object): boolean {
+    public equals(other: Object): boolean {
         if (this === other) {
             return true;
         }

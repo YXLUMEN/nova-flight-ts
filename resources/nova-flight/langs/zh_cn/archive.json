@@ -1,0 +1,14 @@
+{
+  "title": "存档",
+  "back": "返回标题",
+  "create": "新建世界",
+  "load": "进入世界",
+  "delete": "删除存档",
+  "rename": "重命名",
+  "export": "导出存档",
+  "export_snbt": "导出为S-NBT",
+  "import": "导入存档",
+  "archive_name": "存档名称",
+  "confirm": "确认",
+  "cancel": "取消"
+}

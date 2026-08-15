@@ -15,11 +15,13 @@ import type {StageEnter} from "./events/StageEnter.ts";
 import type {StageExit} from "./events/StageExit.ts";
 import type {MissileLockEntity} from "./events/MissileLockEntity.ts";
 import type {DifficultChange} from "./events/DifficultChange.ts";
+import type {ChangeLang} from "./events/ChangeLang.ts";
 
 export interface AppEvents {
     'game:start': GameStart;
     'game:end': GameEnd;
     'game:over': GameOver;
+    'res:lang': ChangeLang;
     'world:explosion': ExplosionEvent;
     'world:emp_burst': EmpBurstEvent;
     'world:stage:enter': StageEnter;

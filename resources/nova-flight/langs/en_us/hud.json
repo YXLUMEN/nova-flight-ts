@@ -1,3 +1,6 @@
 {
-  "health": "Health"
+  "health": "Health",
+  "game_over": "Game Over",
+  "summary": "Game duration \"{}\" Score \"{}\" Kill efficiency \"{}\"",
+  "back": "Press \"Any Key\" to return to the title page"
 }
