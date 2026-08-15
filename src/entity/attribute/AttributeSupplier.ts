@@ -97,6 +97,10 @@ export class AttributeSupplier {
         }
         return instance;
     }
+
+    public toString(): string {
+        return `[AttrSupplier] ${this.instances}`;
+    }
 }
 
 export type AttributeSupplierBuilder = InstanceType<typeof AttributeSupplier.Builder>;

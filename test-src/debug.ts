@@ -35,17 +35,19 @@ export class EntityGCWatchdog {
 
 export class ObjGCWatchdog {
     private static id = new AtomicInteger();
-    private static registry = new FinalizationRegistry<number>(id => {
+    private static registry = new FinalizationRegistry<string>(id => {
         const remain = this.checkAlive().length;
-        console.log(`对象 ID ${id} 已被垃圾回收, 剩余: ${remain}`);
+        console.log(`对象 ${id} 已被垃圾回收, 剩余: ${remain}`);
     });
 
-    private static weakRefs = new Map<number, WeakRef<Object>>();
+    private static weakRefs = new Map<string, WeakRef<Object>>();
 
     public static watch(obj: Object): void {
         const weakRef = new WeakRef(obj);
         // maybe use string
-        const id = this.id.getAndIncrement();
+        const idx = this.id.getAndIncrement();
+        const id = `${idx}:${obj.toString()}`;
+
         this.weakRefs.set(id, weakRef);
         this.registry.register(obj, id);
     }

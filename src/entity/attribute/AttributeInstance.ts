@@ -163,4 +163,8 @@ export class AttributeInstance {
 
         this.setDirty();
     }
+
+    public toString(): string {
+        return `[AttrInstance] ${this.attribute.toString()}:${this.baseValue}`;
+    }
 }

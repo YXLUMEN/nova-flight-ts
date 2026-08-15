@@ -691,6 +691,10 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         }
     }
 
+    public toString() {
+        return `[Entity] ${this.type.toString()}:${this.id}:${this.uuid}`;
+    }
+
     // 由索引控制
     public searchGen: number = 0;
 
