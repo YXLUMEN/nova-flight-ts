@@ -349,7 +349,7 @@ async fn client_relay(
                 let Some(msg) = msg else {
                     return;
                 };
-                if !on_recv_client(state,session, msg).await {
+                if !on_recv_client(state, session, msg).await {
                     break;
                 }
             }
@@ -633,7 +633,7 @@ async fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload:
 
     let data = &payload[2..];
     match payload[1] {
-        TICK => {
+        KICK => {
             if data.len() < 1 {
                 action_fail(&session.tx, "[Kick] Session id cannot be empty").await;
                 return;

@@ -38,7 +38,7 @@ export class ClientNetworkChannel extends WSNetworkChannel implements ClientChan
         const header = reader.readUint8();
         if (header === PacketHeader.RELAY) {
             const index = reader.readUint8();
-            const codec = CodecRegistry.idBy(index);
+            const codec = CodecRegistry.byId(index);
             if (codec) this.handler(codec.codec.decode(reader));
             return;
         }
@@ -50,7 +50,7 @@ export class ClientNetworkChannel extends WSNetworkChannel implements ClientChan
 
         reader.readUint8();
         const index = reader.readVarUint();
-        const codec = CodecRegistry.idBy(index);
+        const codec = CodecRegistry.byId(index);
         if (!codec) return;
 
         this.handler(codec.codec.decode(reader));

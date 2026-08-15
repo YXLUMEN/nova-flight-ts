@@ -88,7 +88,7 @@ export class BatchBufferPacket implements Payload {
 
         for (let i = 0; i < payloads.length; i++) {
             const index = reader.readVarUint();
-            const type = CodecRegistry.idBy(index);
+            const type = CodecRegistry.byId(index);
             if (!type) throw new Error(`Unrecognized packet: ${index}`);
             payloads[i] = type.codec.decode(reader);
         }
