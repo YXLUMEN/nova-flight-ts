@@ -6,6 +6,7 @@ import {CodecRegistry} from "./CodecRegistry.ts";
 import {Detached} from "./packet/relay/Detached.ts";
 import {Attached} from "./packet/relay/Attached.ts";
 import type {NetworkSide} from "./NetworkSide.ts";
+import {RelayMessage} from "./packet/relay/RelayMessage.ts";
 
 export class RelayHandshake {
     private readonly ws: WebSocket;
@@ -58,6 +59,14 @@ export class RelayHandshake {
         const packet = codec.codec.decode(reader);
         if (packet instanceof Detached) {
             fail(`[${this.side}] Ticked by relay`);
+            return;
+        }
+
+        if (packet instanceof RelayMessage) {
+            const parts = packet.msg.split(':');
+            const type = parts[0];
+            if (type === 'ERR') fail(packet.msg);
+            else console.log(packet.msg);
             return;
         }
 

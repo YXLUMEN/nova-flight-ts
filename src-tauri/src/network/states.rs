@@ -27,6 +27,7 @@ pub(crate) struct RelayState {
     server: RwLock<Option<Arc<Session>>>,
     clients: DashMap<u8, ClientEntry>,
     client_uuids: DashMap<[u8; 16], u8>,
+    active: DashMap<u8, Arc<Session>>,
     banned: RwLock<AHashSet<IpAddr>>,
     shutting_down: AtomicBool,
 }
@@ -37,22 +38,31 @@ impl RelayState {
             server: RwLock::new(None),
             clients: DashMap::new(),
             client_uuids: DashMap::new(),
+            active: DashMap::new(),
             banned: RwLock::new(AHashSet::new()),
             shutting_down: AtomicBool::new(false),
         }
     }
 
-    pub fn get_by_uuid(&self, uuid: &[u8; 16]) -> Option<Arc<Session>> {
-        let session_id = *self.client_uuids.get(uuid)?.value();
-        Some(self.clients.get(&session_id)?.value().session.clone())
+    pub fn any_by_id(&self, session_id: &u8) -> Option<Arc<Session>> {
+        Some(self.clients.get(session_id)?.value().session.clone())
     }
 
-    pub fn get_by_id(&self, session_id: &u8) -> Option<Arc<Session>> {
-        Some(self.clients.get(session_id)?.value().session.clone())
+    pub fn by_id(&self, session_id: &u8) -> Option<Arc<Session>> {
+        Some(self.active.get(session_id)?.value().clone())
+    }
+
+    pub fn by_uuid(&self, uuid: &[u8; 16]) -> Option<Arc<Session>> {
+        let session_id = *self.client_uuids.get(uuid)?.value();
+        self.by_id(&session_id)
     }
 
     pub fn iter_clients(&self) -> Iter<'_, u8, ClientEntry> {
         self.clients.iter()
+    }
+
+    pub fn iter(&self) -> Iter<'_, u8, Arc<Session>> {
+        self.active.iter()
     }
 
     pub fn size(&self) -> usize {
@@ -97,6 +107,10 @@ impl RelayState {
         );
     }
 
+    pub fn active_client(&self, session_id: u8, session: Arc<Session>) {
+        self.active.insert(session_id, session);
+    }
+
     pub fn permit(&self, session_id: &u8) {
         if let Some(mut entry) = self.clients.get_mut(session_id) {
             if let Some(tx) = entry.permit_tx.take() {
@@ -115,7 +129,9 @@ impl RelayState {
 
     /// NOT manually remove from only one map. Use this method to remove the session.
     pub fn remove_by_id(&self, id: u8) -> Option<[u8; 16]> {
+        let _ = self.active.remove(&id);
         let (_, entry) = self.clients.remove(&id)?;
+
         let client_id = entry.session.uuid;
         if let Some(uuid) = client_id {
             self.client_uuids.remove(&uuid);
@@ -126,6 +142,7 @@ impl RelayState {
     pub fn clear_clients(&self) {
         self.client_uuids.clear();
         self.clients.clear();
+        self.active.clear();
     }
 
     pub fn collect_client_list(&self) -> Vec<(u8, [u8; 16])> {

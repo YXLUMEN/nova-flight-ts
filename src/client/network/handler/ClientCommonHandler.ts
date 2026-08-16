@@ -34,6 +34,10 @@ export abstract class ClientCommonHandler implements PacketListener {
         else if (type === 'ERR') this.relayErrorHandler(msg);
     }
 
+    public onDetached() {
+        this.connection.disconnect();
+    }
+
     private relayInfoHandler(_message: string): void {
     }
 
