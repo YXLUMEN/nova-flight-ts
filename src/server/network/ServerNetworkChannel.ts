@@ -45,7 +45,6 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
         const writer = new BinaryWriter(size + 4);
         writer.writeInt8(PacketHeader.SERVER_BROADCAST);
         writer.writeInt8(0);
-
         this.checkAndSend(writer, type, payload);
     }
 

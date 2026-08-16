@@ -151,23 +151,23 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
     let session = ctx.session;
     match session.role {
         Role::Client => {
-            if let Some(allow_rx) = ctx.allow {
+            if let Some((allow_rx, mut close_rx)) = ctx.allow.zip(ctx.close) {
                 info!("Client {} waiting release", session.session_id);
-                let allow = tokio::select! {
+                let is_allow = tokio::select! {
                     _ = allow_rx => true,
+                    _ = &mut close_rx => false,
                     _ = tokio::time::sleep(Duration::from_secs(4)) => false,
                 };
 
-                info!("Client {} released {}", session.session_id, allow);
-                if allow {
-                    if let Some(close_rx) = ctx.close {
-                        let packet = Attached {
-                            session_id: session.session_id,
-                        };
-                        send_packet(&session.tx, packet, Duration::from_secs(2)).await;
+                info!("Client {} released {}", session.session_id, is_allow);
+                if is_allow {
+                    state.active_client(session.session_id, session.clone());
 
-                        client_relay(&state, &session, &mut reader, close_rx).await;
-                    }
+                    let packet = Attached {
+                        session_id: session.session_id,
+                    };
+                    send_packet(&session.tx, packet, Duration::from_secs(2)).await;
+                    client_relay(&state, &session, &mut reader, close_rx).await;
                 }
             }
 
@@ -203,8 +203,11 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
         }
     }
 
-    info!("Connection closed {}", session.session_id);
-    info!("Left {} client conn", state.size());
+    info!(
+        "\"{:?}\" side connection closed with SID {}",
+        session.role, session.session_id
+    );
+    info!("Left {} connections", state.size());
 
     NEXT_SESSION_ID.deallocate(session.session_id).await;
     drop(session);
@@ -271,7 +274,10 @@ async fn attach_session(
                 .ok_or("No session id allocated")?;
 
             let session = Session::new_server(tx, session_id);
-            state.register_server(session.clone()).await?;
+            if let Err(e) = state.register_server(session.clone()).await {
+                NEXT_SESSION_ID.deallocate(session_id).await;
+                return Err(e);
+            }
 
             let packet = Attached {
                 session_id: session.session_id,
@@ -478,8 +484,8 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
             // [Header][Id][Data]
             // Server → 广播给所有 Client
             let mut to_close = Vec::new();
-            for entry in state.iter_clients() {
-                let session = &entry.value().session;
+            for entry in state.iter() {
+                let session = entry.value();
                 if send_or_drop(&session.tx, &payload) {
                     continue;
                 }
@@ -507,7 +513,7 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
 
             // SessionId
             let target_id = payload[1];
-            let Some(session) = state.get_by_id(&target_id) else {
+            let Some(session) = state.by_id(&target_id) else {
                 return;
             };
             if send_or_drop_move(&session.tx, payload) {
@@ -532,14 +538,15 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
                 return;
             }
 
-            let Some(session) = state.get_by_uuid(&target_client_id) else {
+            let Some(session) = state.by_uuid(&target_client_id) else {
                 return;
             };
 
             let remaining = payload.slice(18..);
 
             let mut buf = BytesMut::with_capacity(2 + remaining.len());
-            buf.put_u8(0x11);
+            // 客户端不需要路由语义, 这里是故意设计的
+            buf.put_u8(SERVER_BROADCAST);
             buf.put_u8(session.session_id);
             buf.put_slice(&remaining);
             let forwarded = buf.freeze();
@@ -585,19 +592,19 @@ async fn relay_server_message(state: &Arc<RelayState>, session: &Arc<Session>, p
             };
 
             let mut buf = BytesMut::with_capacity(2 + rest_payload.len());
-            buf.put_u8(0x11);
+            buf.put_u8(SERVER_BROADCAST);
             buf.put_u8(session.session_id);
             buf.put_slice(rest_payload);
             let forwarded = buf.freeze();
 
             let mut to_close = Vec::new();
-            for entry in state.iter_clients() {
+            for entry in state.iter() {
                 let id = *entry.key();
                 if excludes.iter().any(|ex| ex == &id) {
                     continue;
                 }
 
-                let session = &entry.value().session;
+                let session = entry.value();
                 if send_or_drop(&session.tx, &forwarded) {
                     continue;
                 }
@@ -640,7 +647,7 @@ async fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload:
             }
 
             let session_id = data[0];
-            if let Some(session) = state.get_by_id(&session_id) {
+            if let Some(session) = state.any_by_id(&session_id) {
                 send_message(&session.tx, "INFO:Kicked");
                 state.close(&session_id);
             }
