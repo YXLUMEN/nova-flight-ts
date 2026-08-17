@@ -5,8 +5,8 @@ import {GaussianRandom} from "../../../utils/math/GaussianRandom.ts";
 import type {Payload} from "../../../network/Payload.ts";
 import type {ConnectionState} from "../../../server/network/ConnectionState.ts";
 import type {RelayMessage} from "../../../network/packet/relay/RelayMessage.ts";
-import type {BatchBufferPacket} from "../../../network/packet/common/BatchBufferPacket.ts";
 import type {PlayerDisconnectS2CPacket} from "../../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
+import type {BatchBuffer} from "../../../network/packet/common/BatchBuffer.ts";
 
 export abstract class ClientCommonHandler implements PacketListener {
     protected readonly connection: ClientConnection;
@@ -45,7 +45,7 @@ export abstract class ClientCommonHandler implements PacketListener {
         this.client.setConnectError(message);
     }
 
-    public onBatch(packet: BatchBufferPacket): void {
+    public onBatch(packet: BatchBuffer): void {
         const packets = packet.parse();
         for (const p of packets) {
             try {

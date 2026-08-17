@@ -58,6 +58,7 @@ import {TickChangeS2CPacket} from "../../network/packet/s2c/TickChangeS2CPacket.
 import {PlayerProfilesS2CPacket} from "../../network/packet/s2c/PlayerProfilesS2CPacket.ts";
 import {ServerAllowConfigS2CPacket} from "../../network/packet/handshake/ServerAllowConfigS2CPacket.ts";
 import {ServerFinishConfigS2CPacket} from "../../network/packet/config/ServerFinishConfigS2CPacket.ts";
+import {IntegratedBatchBufferPacket} from "../../network/packet/common/IntegratedBatchBufferPacket.ts";
 
 export class ServerPackets {
     /**
@@ -70,6 +71,8 @@ export class ServerPackets {
         this.register(ServerFinishConfigS2CPacket.ID, ServerFinishConfigS2CPacket.CODEC);
 
         this.register(PongS2CPacket.ID, PongS2CPacket.CODEC);
+        this.register(BatchBufferPacket.ID, BatchBufferPacket.CODEC);
+        this.register(IntegratedBatchBufferPacket.ID, IntegratedBatchBufferPacket.CODEC);
         this.register(SoundEventS2CPacket.ID, SoundEventS2CPacket.CODEC);
         this.register(StopSoundS2CPacket.ID, StopSoundS2CPacket.CODEC);
         this.register(EntitySpawnS2CPacket.ID, EntitySpawnS2CPacket.CODEC);
@@ -118,7 +121,6 @@ export class ServerPackets {
         this.register(PositionMoveRotation.ID, PositionMoveRotation.CODEC);
         this.register(PreparedParticleS2CPacket.ID, PreparedParticleS2CPacket.CODEC);
         this.register(ScreenShakeS2CPacket.ID, ScreenShakeS2CPacket.CODEC);
-        this.register(BatchBufferPacket.ID, BatchBufferPacket.CODEC);
         this.register(NotGiveUpS2CPacket.ID, NotGiveUpS2CPacket.CODEC);
         this.register(TickChangeS2CPacket.ID, TickChangeS2CPacket.CODEC);
         this.register(PlayerProfilesS2CPacket.ID, PlayerProfilesS2CPacket.CODEC);

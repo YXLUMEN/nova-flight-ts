@@ -5,6 +5,7 @@ import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {ClientChannel} from "./ClientChannel.ts";
 import {empty} from "../../utils/uit.ts";
+import {IntegratedBatchBufferPacket} from "../../network/packet/common/IntegratedBatchBufferPacket.ts";
 
 export class ClientIntegratedChannel implements ClientChannel {
     private readonly clientId: UUID;
@@ -83,19 +84,29 @@ export class ClientIntegratedChannel implements ClientChannel {
     }
 
     private onMessage(event: MessageEvent): void {
-        if (event.data.type === 'packet') {
-            const reader = new BinaryReader(new Uint8Array(event.data.packet));
+        switch (event.data.type) {
+            case 'packet': {
+                const reader = new BinaryReader(new Uint8Array(event.data.packet));
 
-            const index = reader.readVarUint();
-            const codec = CodecRegistry.byId(index);
-            if (!codec) return;
+                const index = reader.readVarUint();
+                const codec = CodecRegistry.byId(index);
+                if (!codec) return;
 
-            this.handler(codec.codec.decode(reader));
-            return;
-        }
+                this.handler(codec.codec.decode(reader));
+                return;
+            }
+            case 'batch' : {
+                const {count, len, packet} = event.data;
+                // console.assert(count > 0 && len > 0 && packet instanceof ArrayBuffer, 'Broken batched packet');
 
-        if (event.data.type === 'disconnect') {
-            this.disconnect();
+                const buffer = new Uint8Array(packet, 0, len);
+                const batch = new IntegratedBatchBufferPacket(count, buffer);
+                this.handler(batch);
+                return;
+            }
+            case 'disconnect': {
+                this.disconnect();
+            }
         }
     }
 

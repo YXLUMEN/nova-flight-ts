@@ -6,9 +6,12 @@ import {CodecRegistry} from "../../network/CodecRegistry.ts";
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import {empty} from "../../utils/uit.ts";
+import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
+import {IntegratedBatchBufferPacket} from "../../network/packet/common/IntegratedBatchBufferPacket.ts";
 
 export class ServerIntegratedChannel implements ServerChannel {
     private readonly registry = CodecRegistry.S2C;
+    private readonly sendQueue = new RingBuffer<Payload>(48);
 
     private clientId: number = 2;
     private ctrl = new AbortController();
@@ -43,10 +46,24 @@ export class ServerIntegratedChannel implements ServerChannel {
     }
 
     public enqueue(payload: Payload) {
-        this.send(payload);
+        if (this.sendQueue.full()) this.flush();
+        this.sendQueue.push(payload);
     }
 
     public flush() {
+        // 集成模式下,合并不是必须的
+        if (this.sendQueue.isEmpty()) return;
+        const {payloadCount, buffer} = IntegratedBatchBufferPacket.create(this.sendQueue, this.registry);
+        this.sendQueue.clear();
+
+        self.postMessage({
+            type: 'batch',
+            count: payloadCount,
+            len: buffer.length,
+            packet: buffer.buffer
+        }, {transfer: [buffer.buffer]});
+
+        // console.assert(buffer.buffer.detached, '未分离的 buffer');
     }
 
     public sendTo<T extends Payload>(payload: T, target: GameProfile): void {

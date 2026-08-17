@@ -22,7 +22,7 @@ export class ServerNetworkManager {
         this.relayHandler = new ServerRelayHandler(this);
         this.server.networkChannel.setHandler(this.onReceive.bind(this));
 
-        this.flushTimer = setInterval(() => this.server.networkChannel.flush(), 20);
+        this.flushTimer = setInterval(() => this.server.networkChannel.flush(), 25);
     }
 
     public tick(): void {

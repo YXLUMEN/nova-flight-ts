@@ -9,8 +9,9 @@ import {WSNetworkChannel} from "../../WSNetworkChannel.ts";
 import {PacketTooLargeError} from "../../../type/errors.ts";
 import {compress, decompress} from "@bokuweb/zstd-wasm";
 import type {ClientCommonHandler} from "../../../client/network/handler/ClientCommonHandler.ts";
+import type {BatchBuffer} from "./BatchBuffer.ts";
 
-export class BatchBufferPacket implements Payload {
+export class BatchBufferPacket implements Payload, BatchBuffer {
     public static readonly ID: PayloadType<BatchBufferPacket> = payloadType('batch_buffer');
     public static readonly CODEC: PacketCodec<BatchBufferPacket> = PacketCodecs.of(this.write, this.read);
 

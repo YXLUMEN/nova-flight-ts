@@ -69,7 +69,7 @@ export class RingBuffer<T> implements Iterable<T> {
 
     public clear(): void {
         this.reset();
-        this.buffer.length = 0;
+        this.buffer.fill(null);
     }
 
     public* [Symbol.iterator](): Generator<T> {
