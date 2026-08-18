@@ -59,7 +59,7 @@ export class BatchBufferPacket implements Payload, BatchBuffer {
             count = 1;
 
             if (writer.getOffset() > maxSize) {
-                throw new PacketTooLargeError(`Packet ${payload.type().id} exceeds ${maxSize} bytes: ${writer.getOffset()}`);
+                throw new PacketTooLargeError(writer.getOffset(), maxSize, {cause: payload.type()});
             }
         }
 
