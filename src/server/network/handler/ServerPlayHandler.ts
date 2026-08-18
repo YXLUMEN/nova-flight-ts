@@ -205,9 +205,10 @@ export class ServerPlayHandler extends ServerCommonHandler {
     public onBatchChanges(packet: BatchBlockChangesPacket): void {
         const map = this.world.getMap();
         const changes = packet
-            .filter((_, x, y) => x > 0 ||
-                x < World.MAP_WIDTH ||
-                y > 0 ||
+            .filter((_, x, y) =>
+                x > 0 &&
+                x < World.MAP_WIDTH &&
+                y > 0 &&
                 y < World.MAP_HEIGHT
             );
         changes.foreach((type, x, y) => map.set(x, y, type));

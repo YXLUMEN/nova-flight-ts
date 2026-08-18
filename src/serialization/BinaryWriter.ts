@@ -1,27 +1,92 @@
 import type {UUID} from "../type/types.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
+import {PacketTooLargeError} from "../type/errors.ts";
 
 export class BinaryWriter {
     public static readonly MAX_BUFFER_SIZE = 16 * 1024 * 1024;
 
+    private readonly maxSize: number;
     private buffer: Uint8Array<ArrayBuffer>;
     private view: DataView<ArrayBuffer>;
     private offset: number = 0;
 
-    public constructor(initialSize = 128) {
-        this.buffer = new Uint8Array(initialSize);
+    public constructor(size = 128, max = BinaryWriter.MAX_BUFFER_SIZE) {
+        BinaryWriter.checkMaxSize(max);
+        this.maxSize = max;
+        this.buffer = new Uint8Array(size);
         this.view = new DataView(this.buffer.buffer);
+    }
+
+    public static alloc(size = 128): BinaryWriter {
+        return new BinaryWriter(size);
+    }
+
+    public static from(data: Uint8Array<ArrayBuffer>, maxSize?: number): BinaryWriter;
+    public static from(data: ArrayBuffer, byteOffset?: number, length?: number, maxSize?: number): BinaryWriter;
+    public static from(data: Iterable<number>, maxSize?: number): BinaryWriter;
+    public static from(data: string, maxSize?: number): BinaryWriter;
+    public static from(
+        data: string | ArrayBuffer | Uint8Array<ArrayBuffer> | Iterable<number>,
+        byteOffset?: number,
+        length?: number,
+        maxSize?: number,
+    ): BinaryWriter {
+        const limit = maxSize ?? this.MAX_BUFFER_SIZE;
+        if (typeof data === 'string') {
+            return this.createWithData(new TextEncoder().encode(data), limit);
+        }
+        if (data instanceof ArrayBuffer) {
+            const start = byteOffset ?? 0;
+            const len = length ?? data.byteLength - start;
+            if (start < 0 || len < 0 || start + len > data.byteLength) {
+                throw new RangeError(
+                    `Invalid range [${start}, ${start + len}) for ArrayBuffer of byteLength ${data.byteLength}`
+                );
+            }
+            return this.createWithData(new Uint8Array(data, start, len), limit);
+        }
+        // Uint8Array 及其他 TypedArray / ArrayLike / Iterable 逐元素复制
+        return this.createWithData(new Uint8Array(data), limit);
+    }
+
+    private static create(
+        buffer: Uint8Array<ArrayBuffer>,
+        offset: number = 0,
+        max: number = BinaryWriter.MAX_BUFFER_SIZE
+    ): BinaryWriter {
+        const writer = Object.create(BinaryWriter.prototype) as BinaryWriter;
+        // @ts-ignore
+        writer.maxSize = max;
+        writer.buffer = buffer;
+        writer.view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+        writer.offset = offset;
+        return writer;
+    }
+
+    private static createWithData(
+        buffer: Uint8Array<ArrayBuffer>,
+        max: number = BinaryWriter.MAX_BUFFER_SIZE
+    ): BinaryWriter {
+        return this.create(buffer, buffer.length, max);
+    }
+
+    private static checkMaxSize(maxSize: number): void {
+        if (maxSize !== Infinity && (!Number.isInteger(maxSize) || maxSize < 0)) {
+            throw new RangeError(`Invalid max buffer size ${maxSize}: expected a non-negative integer or Infinity`);
+        }
     }
 
     private ensure(extra: number) {
         const required = this.offset + extra;
-        if (required > this.buffer.length) {
-            let newLen = this.buffer.length;
-            while (newLen < required) newLen *= 2;
 
-            if (newLen > BinaryWriter.MAX_BUFFER_SIZE) {
-                throw new Error(`Packet too large (> ${BinaryWriter.MAX_BUFFER_SIZE} bytes)`);
-            }
+        if (required > this.maxSize) {
+            throw new PacketTooLargeError(required, this.maxSize);
+        }
+
+        if (required > this.buffer.length) {
+            let newLen = this.buffer.length || 1;
+            while (newLen < required) newLen *= 2;
+            if (newLen > this.maxSize) newLen = this.maxSize;
 
             const newBuf = new Uint8Array(newLen);
             newBuf.set(this.buffer, 0);

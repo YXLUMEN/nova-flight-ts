@@ -7,7 +7,16 @@ export class IllegalStateError extends Error {
 export class CommandError extends Error {
 }
 
-export class PacketTooLargeError extends Error {
+export class PacketTooLargeError extends RangeError {
+    public readonly required: number;
+    public readonly limit: number;
+
+    public constructor(required: number, limit: number, options?: ErrorOptions) {
+        super(`Packet too large: ${required} bytes exceeds the limit of ${limit} bytes`, options);
+        this.name = 'PacketTooLargeError';
+        this.required = required;
+        this.limit = limit;
+    }
 }
 
 export class MediaWithoutSrc extends Error {
