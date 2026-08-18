@@ -35,7 +35,7 @@ export abstract class WSNetworkChannel implements Channel {
 
     protected sendRaw(buf: Uint8Array<ArrayBuffer>): void {
         if (buf.length > WSNetworkChannel.MAX_PACKET_SIZE) {
-            throw new PacketTooLargeError(`Packet exceeds ${WSNetworkChannel.MAX_PACKET_SIZE} bytes: ${buf.length}`);
+            throw new PacketTooLargeError(buf.length, WSNetworkChannel.MAX_PACKET_SIZE);
         }
 
         this.ws!.send(buf);
@@ -50,7 +50,7 @@ export abstract class WSNetworkChannel implements Channel {
         const buffer = writer.toUint8Array();
         if (buffer.length > WSNetworkChannel.MAX_PACKET_SIZE) {
             const max = WSNetworkChannel.MAX_PACKET_SIZE;
-            throw new PacketTooLargeError(`Packet ${payload.type().id} exceeds ${max} bytes: ${buffer.length}`);
+            throw new PacketTooLargeError(buffer.length, max, {cause: payload.type()});
         }
 
         this.ws!.send(buffer);
@@ -63,15 +63,15 @@ export abstract class WSNetworkChannel implements Channel {
         this.ws.binaryType = 'arraybuffer';
 
         this.ws.onopen = () => this.register();
-        this.ws.onclose = event => {
-            console.log(`[${this.side}] Connection to ${this.address} closed because ${event.type}:${event.reason || 'unknown'}`);
-        }
 
         const handShake = new RelayHandshake(this.ws, this.side);
         this.sessionId = await handShake.alloc();
 
-        this.ws!.onmessage = this.handleMessage.bind(this);
-        this.ws!.onerror = event =>
+        this.ws.onmessage = this.handleMessage.bind(this);
+        this.ws.onclose = event => {
+            console.log(`[${this.side}] Connection to ${this.address} closed because ${event.type}:${event.reason || 'unknown'}`);
+        }
+        this.ws.onerror = event =>
             console.error(`[${this.side}] Connection Error: ${event.type}:${event.target}`);
     }
 
