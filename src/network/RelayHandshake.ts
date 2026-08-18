@@ -36,6 +36,10 @@ export class RelayHandshake {
         console.log(`A ${this.side} side connecting start at ${ISOTime()}`);
 
         this.ws.onmessage = event => this.onRelayMsg(event, connectReady, connectFail);
+        this.ws.onclose = event => {
+            console.warn(event.reason);
+            connectFail('Server deny connect');
+        }
         this.ws.onerror = event => {
             const msg = `[${this.side}] Connection Error: ${event.type}:${event.target}`;
             console.error(msg);

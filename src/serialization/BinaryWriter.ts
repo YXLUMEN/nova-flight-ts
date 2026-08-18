@@ -1,27 +1,43 @@
 import type {UUID} from "../type/types.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
+import {PacketTooLargeError} from "../type/errors.ts";
 
 export class BinaryWriter {
     public static readonly MAX_BUFFER_SIZE = 16 * 1024 * 1024;
 
+    private readonly maxSize: number;
     private buffer: Uint8Array<ArrayBuffer>;
     private view: DataView<ArrayBuffer>;
     private offset: number = 0;
 
-    public constructor(initialSize = 128) {
-        this.buffer = new Uint8Array(initialSize);
+    public constructor(size = 128, max = BinaryWriter.MAX_BUFFER_SIZE) {
+        BinaryWriter.checkMaxSize(max);
+        this.maxSize = max;
+        this.buffer = new Uint8Array(size);
         this.view = new DataView(this.buffer.buffer);
+    }
+
+    public static alloc(size = 128): BinaryWriter {
+        return new BinaryWriter(size);
+    }
+
+    private static checkMaxSize(maxSize: number): void {
+        if (maxSize !== Infinity && (!Number.isInteger(maxSize) || maxSize < 0)) {
+            throw new RangeError(`Invalid max buffer size ${maxSize}: expected a non-negative integer or Infinity`);
+        }
     }
 
     private ensure(extra: number) {
         const required = this.offset + extra;
-        if (required > this.buffer.length) {
-            let newLen = this.buffer.length;
-            while (newLen < required) newLen *= 2;
 
-            if (newLen > BinaryWriter.MAX_BUFFER_SIZE) {
-                throw new Error(`Packet too large (> ${BinaryWriter.MAX_BUFFER_SIZE} bytes)`);
-            }
+        if (required > this.maxSize) {
+            throw new PacketTooLargeError(required, this.maxSize);
+        }
+
+        if (required > this.buffer.length) {
+            let newLen = this.buffer.length || 1;
+            while (newLen < required) newLen *= 2;
+            if (newLen > this.maxSize) newLen = this.maxSize;
 
             const newBuf = new Uint8Array(newLen);
             newBuf.set(this.buffer, 0);
