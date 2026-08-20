@@ -68,6 +68,18 @@ export class BinaryReader {
         return v;
     }
 
+    public readInt64(): bigint {
+        const v = this.view.getBigInt64(this.offset, true);
+        this.offset += 8;
+        return v;
+    }
+
+    public readUint64(): bigint {
+        const v = this.view.getBigUint64(this.offset, true);
+        this.offset += 8;
+        return v;
+    }
+
     public readVarUint(): number {
         let num = 0;
         let shift = 0;

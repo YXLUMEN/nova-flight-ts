@@ -95,7 +95,6 @@ export class ServerConnection implements Connection {
 
         this.handlerDisconnected = true;
         this.packetListener?.onDisconnected();
-        this.forceDisconnect();
     }
 
     public setPacketListener(state: ConnectionState, listener: PacketListener): void {

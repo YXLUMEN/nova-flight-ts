@@ -19,12 +19,15 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
     private static readonly INVALID_UUID = TranslatableText.of('network.disconnect.invalid.uuid');
     private static readonly INVALID_SESSION_ID = TranslatableText.of('network.disconnect.invalid.session_id');
 
+    private static readonly MAX_HANDSHAKE_RETRY = 5;
+
     private readonly protocolVersion: number;
     private readonly gameVersion: number;
 
     private state: HandshakeState = HandshakeState.HELLO;
     private attemptUUID: UUID | null = null;
     private authProfile: GameProfile | null = null;
+    private retransmitCount: number = 0;
 
     public constructor(server: NovaFlightServer, connection: ServerConnection) {
         super(server, connection);
@@ -33,7 +36,17 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
     }
 
     public onClientHandshake(packet: ClientHandshakeC2SPacket) {
-        if (this.attemptUUID !== null) return;
+        if (this.attemptUUID !== null) {
+            if (this.attemptUUID !== packet.clientId) {
+                this.disconnect(ServerHandshakeHandler.INVALID_UUID);
+                return;
+            }
+            if (++this.retransmitCount > ServerHandshakeHandler.MAX_HANDSHAKE_RETRY) {
+                this.disconnect(ServerHandshakeHandler.INVALID_STATE);
+            }
+            return;
+        }
+
         if (this.isInvalid(HandshakeState.HELLO)) return;
 
         if (this.protocolVersion !== packet.protocolVersion) {
@@ -53,11 +66,6 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
         if (this.server.world === null) {
             if (this.connection.isHost()) return;
             this.disconnect(ServerHandshakeHandler.STILL_LOADING);
-            return;
-        }
-
-        if (this.attemptUUID !== null && this.attemptUUID !== packet.clientId) {
-            this.disconnect(ServerHandshakeHandler.INVALID_UUID);
             return;
         }
 
