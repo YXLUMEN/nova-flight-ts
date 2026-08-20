@@ -6,6 +6,7 @@ import {Detached} from "./packet/relay/Detached.ts";
 import {ClientAttached} from "./packet/relay/ClientAttached.ts";
 import {RelayMessage} from "./packet/relay/RelayMessage.ts";
 import type {PayloadType} from "./PayloadType.ts";
+import {Query} from "./packet/relay/Query.ts";
 
 export class RelayPackets {
     public static registerNetworkPacket(): void {
@@ -13,6 +14,7 @@ export class RelayPackets {
         this.register(Attached.ID, Attached.CODEC);
         this.register(ClientAttached.ID, ClientAttached.CODEC);
         this.register(RelayMessage.ID, RelayMessage.CODEC);
+        this.register(Query.ID, Query.CODEC);
     }
 
     private static register<T extends Payload>(type: PayloadType<T>, codec: PacketCodec<T>): void {

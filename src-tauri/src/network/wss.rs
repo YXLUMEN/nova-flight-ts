@@ -240,7 +240,7 @@ async fn attach_session(
     match incoming[0] {
         REG_SERVER => {
             // 注册服务端
-            if incoming.len() < 33 {
+            if incoming.len() != 33 {
                 return Err("Invalid server register packet");
             }
 
@@ -292,7 +292,7 @@ async fn attach_session(
         }
         REG_CLIENT => {
             // 注册 Client
-            if incoming.len() < 17 {
+            if incoming.len() != 17 {
                 send_message(&tx, "ERR:Invalid register packet");
                 return Err("Invalid client register packet");
             }
@@ -641,7 +641,7 @@ async fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload:
     let data = &payload[2..];
     match payload[1] {
         KICK => {
-            if data.len() < 1 {
+            if data.len() != 1 {
                 action_fail(&session.tx, "[Kick] Session id cannot be empty").await;
                 return;
             }
@@ -653,7 +653,7 @@ async fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload:
             }
         }
         PERMIT => {
-            if data.len() < 1 {
+            if data.len() != 1 {
                 action_fail(&session.tx, "[Permit] Session id cannot be empty").await;
                 return;
             }

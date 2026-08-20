@@ -95,6 +95,18 @@ export class BinaryWriter {
         this.offset += 4;
     }
 
+    public writeInt64(v: bigint) {
+        this.ensure(8);
+        this.view.setBigInt64(this.offset, v, true);
+        this.offset += 8;
+    }
+
+    public writeUint64(v: bigint) {
+        this.ensure(8);
+        this.view.setBigUint64(this.offset, v, true);
+        this.offset += 8;
+    }
+
     public writeVarUint(v: number) {
         let i = v >>> 0;
         while ((i & ~0x7F) !== 0) {

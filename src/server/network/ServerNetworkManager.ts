@@ -29,6 +29,7 @@ export class ServerNetworkManager {
         for (const conn of this.connections.values()) {
             if (conn.shouldRemove()) {
                 this.removeConnection(conn);
+                conn.forceDisconnect();
                 continue;
             }
 
@@ -46,6 +47,7 @@ export class ServerNetworkManager {
         return this.connections.get(sessionId);
     }
 
+    // 销毁会话. 不会通知断线.
     public removeConnection(conn: ServerConnection): void {
         conn.handlerDisconnection();
         this.connections.delete(conn.getId());
