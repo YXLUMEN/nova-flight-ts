@@ -136,7 +136,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
     }
 
     protected override getMapOffsetY(): number {
-        return this.AI.isSimple() ? 80 : 0;
+        return this.AI.isSimple() ? 200 : 0;
     }
 
     protected override onOutOfBounds(x: number, y: number) {

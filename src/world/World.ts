@@ -1,5 +1,5 @@
 import type {Entity} from "../entity/Entity.ts";
-import {GeneralEventBus} from "../event/GeneralEventBus.ts";
+import {EventBus} from "../event/EventBus.ts";
 import type {VisualEffect} from "../effect/VisualEffect.ts";
 import type {Schedule} from "../type/ITimer.ts";
 import {DamageSources} from "../entity/damage/DamageSources.ts";
@@ -38,7 +38,7 @@ export abstract class World {
     public static readonly MAX_Y_CROSS = this.WORLD_HEIGHT - this.MAP_HEIGHT;
 
     protected readonly blockMap: BitBlockMap = new BitBlockMap(World.MAP_WIDTH, World.MAP_HEIGHT);
-    public readonly events: GeneralEventBus = GeneralEventBus.getEventBus();
+    public readonly events: EventBus = EventBus.instance();
     public empBurst: number = 0
 
     // ticking
@@ -140,7 +140,6 @@ export abstract class World {
     public close(): void {
         this.clear();
         this.events.emit(new GameEnd());
-        this.events.clear();
     }
 
     public clear(): void {
@@ -156,8 +155,7 @@ export abstract class World {
             tickConsumer(entity);
         } catch (err) {
             const type = EntityType.getId(entity.getType())?.toString() ?? 'UnknownType';
-            console.error(`Tick Entity with id:${entity.getUUID()} at ${type}`);
-            console.error(err);
+            console.error(`Tick Entity with id:${entity.getUUID()} at ${type}\n`, err);
             throw err;
         }
     }
@@ -187,17 +185,6 @@ export abstract class World {
         }
     }
 
-    public getOtherEntities(except: Entity | null, box: AABB, predicate: Predicate<Entity>) {
-        const candidates: Entity[] = [];
-        this.getEntityLookup().forEachInBox(box, entity => {
-            if (entity !== except && predicate(entity)) {
-                candidates.push(entity);
-            }
-        });
-
-        return candidates;
-    }
-
     public getFirstOtherEntity(except: Entity | null, box: AABB, predicate?: Predicate<Entity>): Entity | null {
         if (!predicate) predicate = EntityPredicates.ANY;
 
@@ -214,9 +201,11 @@ export abstract class World {
 
     public getEntityCollisions(entity: Entity | null, box: AABB): Entity[] {
         if (box.getAverageSideLength() < 1E-7) return [];
-        const candidates = this.getOtherEntities(entity, box.expandAll(1E-7), entity => !entity.noClip);
-        if (candidates.length === 0) return [];
-        return candidates;
+        return this.searchOtherEntities(
+            entity,
+            box.expandAll(1E-7),
+            entity => !entity.noClip
+        ).toArray();
     }
 
     public raycast(start: Vec2, end: Vec2) {

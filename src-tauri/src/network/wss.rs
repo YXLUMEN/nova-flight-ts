@@ -324,7 +324,6 @@ async fn attach_session(
                     if let Some(server) = state.get_server().await {
                         let packet = ClientAttached {
                             session_id: session.session_id,
-                            uuid,
                         };
                         send_packet(&server.tx, packet, Duration::from_secs(2)).await;
                     }

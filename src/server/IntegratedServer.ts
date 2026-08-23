@@ -14,6 +14,7 @@ import {Log} from "../worker/log.ts";
 import {NoResultsError, StatusError} from "../type/errors.ts";
 import {ServerIntegratedChannel} from "./network/ServerIntegratedChannel.ts";
 import {ServerTechManager} from "./tech/ServerTechManager.ts";
+import {ServerDefaultEvents} from "./event/ServerDefaultEvents.ts";
 
 export class IntegratedServer extends NovaFlightServer {
     private readonly hostUUID: UUID;
@@ -42,6 +43,7 @@ export class IntegratedServer extends NovaFlightServer {
         await manager.registerAll();
         manager.freeze();
         ServerTechManager.init();
+        ServerDefaultEvents.registerEvent();
 
         await this.startGame(manager);
 

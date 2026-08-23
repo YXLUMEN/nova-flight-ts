@@ -2,13 +2,13 @@ import type {Consumer} from "../type/types.ts";
 import type {AppEvents} from "./AppEvents.ts";
 import type {GameEvent} from "./events/GameEvent.ts";
 
-export class GeneralEventBus {
-    private static GLOBAL_EVENT: GeneralEventBus;
+export class EventBus {
+    private static GLOBAL_EVENT: EventBus;
 
     private readonly listeners: Map<string, Set<Consumer<any>>> = new Map();
 
-    public static getEventBus(): GeneralEventBus {
-        if (!this.GLOBAL_EVENT) this.GLOBAL_EVENT = new GeneralEventBus();
+    public static instance(): EventBus {
+        if (!this.GLOBAL_EVENT) this.GLOBAL_EVENT = new EventBus();
         return this.GLOBAL_EVENT;
     }
 
@@ -49,12 +49,21 @@ export class GeneralEventBus {
         if (!bucket) return;
 
         for (const listener of bucket) {
+            if (event.isCanceled()) return;
+
             try {
                 listener(event);
             } catch (err) {
                 console.warn(`EventBus listener for "${event}" threw:`, err);
             }
         }
+    }
+
+    public removeAll<K extends keyof AppEvents>(type: K) {
+        const bucket = this.listeners.get(type);
+        if (!bucket) return;
+        bucket.clear();
+        this.listeners.delete(type);
     }
 
     public clear() {

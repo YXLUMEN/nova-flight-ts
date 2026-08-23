@@ -17,7 +17,7 @@ export class DataTracker {
         public constructor(entity: DataTracked) {
             this.entity = entity;
             const length = DataTracker.CLASS_TP_ID.getNext(Object(entity).constructor);
-            this.entries = new Array(length);
+            this.entries = new Array(length).fill(null);
         }
 
         public define<T>(data: TrackedData<T>, value: T): Builder {
@@ -25,7 +25,7 @@ export class DataTracker {
             if (id > this.entries.length) {
                 throw new RangeError(`Data value id is too big with ${id}; Max is ${this.entries.length}`);
             }
-            if (this.entries[id] !== undefined) {
+            if (this.entries[id] != null) {
                 throw new Error(`Duplicate value id: ${id}`);
             }
             this.entries[id] = new DataEntry(data, value);
@@ -34,7 +34,7 @@ export class DataTracker {
 
         public build(): DataTracker {
             for (let i = 0; i < this.entries.length; i++) {
-                if (this.entries[i] === undefined) {
+                if (this.entries[i] == null) {
                     throw new ReferenceError(`Entity ${Object(this.entity).constructor} has not defined data value ${i}`);
                 }
             }

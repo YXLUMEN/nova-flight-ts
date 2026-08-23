@@ -1,4 +1,4 @@
-import {GeneralEventBus} from "../../event/GeneralEventBus.ts";
+import {EventBus} from "../../event/EventBus.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
 
 export class ClientSavePage {
@@ -34,8 +34,8 @@ export class ClientSavePage {
     }
 
     public registerEvent() {
-        GeneralEventBus.getEventBus().off('res:lang', this.updateText);
-        GeneralEventBus.getEventBus().on('res:lang', this.updateText);
+        EventBus.instance().off('res:lang', this.updateText);
+        EventBus.instance().on('res:lang', this.updateText);
     }
 
     private updateText() {

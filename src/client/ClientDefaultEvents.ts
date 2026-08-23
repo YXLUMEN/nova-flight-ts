@@ -1,5 +1,4 @@
-import type {ClientWorld} from "./ClientWorld.ts";
-import {GeneralEventBus} from "../event/GeneralEventBus.ts";
+import {EventBus} from "../event/EventBus.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {PlayerUnlockTechC2SPacket} from "../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
 import {Tech} from "../world/tech/Tech.ts";
@@ -9,8 +8,8 @@ import {DevourerBoss} from "../entity/mob/DevourerBoss.ts";
 import {ClientTechManager} from "./tech/ClientTechManager.ts";
 
 export class ClientDefaultEvents {
-    public static registryEvents(world: ClientWorld) {
-        const events = GeneralEventBus.getEventBus();
+    public static registryEvents() {
+        const events = EventBus.instance();
 
         events.on('game:start', () => {
             void BGMManager.onGameStart();
@@ -33,7 +32,7 @@ export class ClientDefaultEvents {
                 const entry = Registries.TECH.getEntryByValue(tech);
                 if (!entry) throw new Error(`Tech not found: ${tech})`);
 
-                if (!silent) world.sendPacket(new PlayerUnlockTechC2SPacket(entry));
+                if (!silent) player.sendPacket(new PlayerUnlockTechC2SPacket(entry));
                 ClientTechManager.apply(entry, player);
             }
         });

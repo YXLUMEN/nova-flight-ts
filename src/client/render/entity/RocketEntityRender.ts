@@ -1,17 +1,17 @@
-import type {EntityRenderer} from "./EntityRenderer.ts";
 import {HALF_PI} from "../../../utils/math/math.ts";
-import type {RocketEntity} from "../../../entity/projectile/RocketEntity.ts";
+import {type RocketEntity} from "../../../entity/projectile/RocketEntity.ts";
+import {CachedSpriteRenderer} from "./CachedSpriteRenderer.ts";
+import {RenderCache, type SpriteCtx} from "./RenderCache.ts";
+import {stringHashCode} from "../../../utils/hash.ts";
 
-export class RocketEntityRender implements EntityRenderer<RocketEntity> {
-    public render(entity: RocketEntity, ctx: CanvasRenderingContext2D, tickDelta: number): void {
-        const pos = entity.getLerpPos(tickDelta);
+export class RocketEntityRender extends CachedSpriteRenderer<RocketEntity> {
+    public constructor() {
+        super(new RenderCache(8));
+    }
 
-        ctx.save();
-        ctx.translate(pos.x, pos.y);
-        ctx.rotate(entity.getLerpYaw(tickDelta) + HALF_PI);
-
+    protected drawSprite(ctx: SpriteCtx, entity: RocketEntity): void {
         ctx.fillStyle = entity.color;
-        ctx.strokeStyle = "rgba(0,0,0,.2)";
+        ctx.strokeStyle = 'rgba(0,0,0,.2)';
 
         ctx.beginPath();
         ctx.moveTo(0, -9);
@@ -22,6 +22,21 @@ export class RocketEntityRender implements EntityRenderer<RocketEntity> {
 
         ctx.fill();
         ctx.stroke();
-        ctx.restore();
+    }
+
+    protected spriteKey(entity: RocketEntity): number {
+        return stringHashCode(entity.color);
+    }
+
+    protected applyTransform(ctx: CanvasRenderingContext2D, entity: RocketEntity, alpha: number) {
+        ctx.rotate(entity.getLerpYaw(alpha) + HALF_PI);
+    }
+
+    protected width(): number {
+        return 14;
+    }
+
+    protected height(): number {
+        return 16;
     }
 }

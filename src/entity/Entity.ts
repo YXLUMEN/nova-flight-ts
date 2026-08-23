@@ -29,7 +29,7 @@ import {BlockCollision} from "../world/collision/BlockCollision.ts";
 import type {Comparable} from "../type/Comparable.ts";
 import type {ViewRect} from "../client/render/Camera.ts";
 import {isBoxInView} from "../utils/render/render.ts";
-import {GeneralEventBus} from "../event/GeneralEventBus.ts";
+import {EventBus} from "../event/EventBus.ts";
 
 
 export abstract class Entity implements EntityLike, DataTracked, Comparable, NbtSerializable, CommandOutput {
@@ -708,7 +708,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     public renderer: EntityRenderer<Entity> | null = null;
 
     static {
-        GeneralEventBus.getEventBus().on('game:end', () => {
+        EventBus.instance().on('game:end', () => {
             this.ENTITY_COUNTER.reset();
         });
     }

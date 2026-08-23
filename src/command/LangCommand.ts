@@ -8,7 +8,7 @@ import type {CommandContext} from "../brigadier/context/CommandContext.ts";
 import type {SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
 import type {Suggestions} from "../brigadier/suggestion/Suggestions.ts";
 import {CommandUtil} from "./CommandUtil.ts";
-import {GeneralEventBus} from "../event/GeneralEventBus.ts";
+import {EventBus} from "../event/EventBus.ts";
 import {ChangeLang} from "../event/events/ChangeLang.ts";
 
 export class LangCommand {
@@ -26,7 +26,7 @@ export class LangCommand {
 
                             LangManager.changeLang(args.result)
                                 .then(() => {
-                                    GeneralEventBus.getEventBus().emit(new ChangeLang(args.result));
+                                    EventBus.instance().emit(new ChangeLang(args.result));
                                     ctx.source.addMessage(`Set lang to \x1b[32m${args.result}`);
                                 })
                                 .catch(err => {

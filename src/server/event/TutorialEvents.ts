@@ -1,4 +1,4 @@
-import {GeneralEventBus} from "../../event/GeneralEventBus.ts";
+import {EventBus} from "../../event/EventBus.ts";
 import {NovaFlightServer} from "../NovaFlightServer.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {World} from "../../world/World.ts";
@@ -27,7 +27,7 @@ export class TutorialEvents {
         this.server = server;
         this.engine = new SequenceEngine(server);
 
-        const eventBus = GeneralEventBus.getEventBus();
+        const eventBus = EventBus.instance();
         const onStageEnter = this.onStageEnter.bind(this);
         const onPlayerDead = this.onPlayerDead.bind(this);
         eventBus.on('world:stage:enter', onStageEnter);
@@ -58,7 +58,7 @@ export class TutorialEvents {
         });
     }
 
-    private buildEnemySequence(eventBus: GeneralEventBus): SequenceDef {
+    private buildEnemySequence(eventBus: EventBus): SequenceDef {
         return new SequenceBuilder('tutorial_enemy')
             .wait(1000).say('tutorial.enemy')
             .waitResolve('next_on_kill', ctx => {
@@ -79,7 +79,7 @@ export class TutorialEvents {
             .build();
     }
 
-    private buildTechSequence(eventBus: GeneralEventBus): SequenceDef {
+    private buildTechSequence(eventBus: EventBus): SequenceDef {
         return new SequenceBuilder('tutorial_tech')
             .saySequence([
                 'tutorial.tech.special',
@@ -206,7 +206,7 @@ export class TutorialEvents {
             .build()
     }
 
-    private buildBossSequence(eventBus: GeneralEventBus): SequenceDef {
+    private buildBossSequence(eventBus: EventBus): SequenceDef {
         return new SequenceBuilder('tutorial_boss')
             .wait(2000).say('tutorial.boss.intro')
             .wait(2000)
@@ -244,7 +244,7 @@ export class TutorialEvents {
     }
 
     private createSequences(
-        eventBus: GeneralEventBus,
+        eventBus: EventBus,
         onStageEnter: Consumer<StageEnter>,
         onPlayerDead: Consumer<PlayerDead>
     ): Record<string, SequenceDef> {
@@ -256,14 +256,13 @@ export class TutorialEvents {
                 .build(),
             tutorial_move: new SequenceBuilder('tutorial_move')
                 .wait(3000).say('tutorial.move')
-                .wait(3000)
                 .accumulate(
                     'player_moving',
                     ctx => {
                         const p = ctx.getHostPlayer();
                         return !!p && p.velocityRef.lengthSquared() >= 150;
                     },
-                    5000
+                    3000
                 )
                 .callback('next', this.nextPhase)
                 .build(),
@@ -274,7 +273,7 @@ export class TutorialEvents {
                 .accumulate(
                     'player_firing',
                     ctx => !!ctx.getHostPlayer()?.wasFiring,
-                    5000
+                    3000
                 )
                 .callback('next', this.nextPhase)
                 .build(),

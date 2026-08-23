@@ -298,8 +298,8 @@ export class PacketCodecs {
         return new PacketCodecImpl(
             (writer: BinaryWriter, object: R): void => {
                 const iterable = registryTransformer(registry);
-                const id = iterable.getIndex(object) ?? null;
-                if (id === null) throw new Error(`Object not registered`);
+                const id = iterable.getIndex(object);
+                if (id === -1) throw new Error(`Object not registered`);
                 writer.writeVarUint(id);
             },
             (reader: BinaryReader): R => {

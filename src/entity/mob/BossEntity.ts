@@ -77,7 +77,7 @@ export abstract class BossEntity extends MobEntity {
 
     protected override onDiscard() {
         super.onDiscard();
-        this.getWorld().events.emit(new BossKilled(this));
+        this.getWorld().events.emit(new BossKilled(this.getWorld() as ServerWorld, this));
     }
 
     public override attack(player: PlayerEntity) {

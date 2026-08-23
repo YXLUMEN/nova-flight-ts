@@ -5,8 +5,9 @@ import {Identifier} from "../registry/Identifier.ts";
 import {EntityDimensions} from "./EntityDimensions.ts";
 import type {Constructor} from "../type/types.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import type {Comparable} from "../type/Comparable.ts";
 
-export class EntityType<T extends Entity, F extends Constructor<T> = Constructor<T>> {
+export class EntityType<T extends Entity, F extends Constructor<T> = Constructor<T>> implements Comparable {
     public static readonly PACKET_CODEC = PacketCodecs.registryValue(Registries.ENTITY_TYPE);
 
     private readonly id: Identifier;
@@ -51,6 +52,18 @@ export class EntityType<T extends Entity, F extends Constructor<T> = Constructor
 
     public toString(): string {
         return this.id.toString();
+    }
+
+    public equals(other: unknown): boolean {
+        if (other === this) return true;
+        if (other instanceof EntityType) {
+            return other.id.equals(this.id);
+        }
+        return false;
+    }
+
+    public hashCode(): number {
+        return this.id.hashCode();
     }
 
     public static Builder = class Builder<T extends Entity> {

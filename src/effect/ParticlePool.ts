@@ -212,12 +212,12 @@ export class ParticlePool {
                 pathOpen = true;
             }
 
-            if (this.shape[i] === ParticleShape.Circle && halfW >= 2) {
+            if (this.shape[i] === ParticleShape.Circle && halfW >= 1.5) {
                 ctx.moveTo(x + halfW, y);
                 ctx.arc(x, y, halfW, 0, PI2);
             } else {
                 const halfH = this.halfH[i] * (1 - this.recession[i] * t);
-                ctx.rect(x - halfW, y - halfH, halfW, halfH);
+                ctx.rect(x - halfW, y - halfH, halfW * 2, halfH * 2);
             }
         }
 

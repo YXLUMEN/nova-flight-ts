@@ -34,17 +34,12 @@ impl Payload for Attached {
 /// 这是给服务端的通知
 pub struct ClientAttached {
     pub session_id: u8,
-    pub uuid: [u8; 16],
 }
 impl Payload for ClientAttached {
     const PAYLOAD_TYPE: u8 = 0x02;
 
     fn to_bytes(&self) -> Bytes {
-        let mut buf: [u8; 19] = [0; 19];
-        buf[0] = 0x00;
-        buf[1] = Self::PAYLOAD_TYPE;
-        buf[2] = self.session_id;
-        buf[3..].copy_from_slice(&self.uuid);
+        let buf: [u8; 3] = [0x00, Self::PAYLOAD_TYPE, self.session_id];
         Bytes::copy_from_slice(&buf)
     }
 }

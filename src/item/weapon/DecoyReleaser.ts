@@ -17,28 +17,30 @@ export class DecoyReleaser extends SpecialWeapon {
     private readonly sustainReleaseTimes = 8;
 
     private static releaseDecoy(perRelease: number, world: World, attacker: Entity): void {
-        if (!world.isClient) {
-            const pos = attacker.positionRef;
-            const yaw = attacker.getYaw();
-            const f = Math.cos(yaw) * -0.5;
-            const g = Math.sin(yaw) * -0.5;
+        if (world.isClient) {
+            world.playSound(attacker, SoundEvents.DECOY_FIRE);
+            return;
+        }
 
-            for (let i = 0; i < perRelease; i++) {
-                const t = (i / (perRelease - 1)) - 0.5;
-                const angle = yaw + t * Math.PI / 3;
+        const pos = attacker.positionRef;
+        const yaw = attacker.getYaw();
+        const f = Math.cos(yaw) * -0.5;
+        const g = Math.sin(yaw) * -0.5;
 
-                const offsetX = Math.cos(angle) * 1.5 + f;
-                const offsetY = Math.sin(angle) * 1.5 + g;
+        for (let i = 0; i < perRelease; i++) {
+            const t = (i / (perRelease - 1)) - 0.5;
+            const angle = yaw + t * Math.PI / 3;
 
-                const decoy = new DecoyEntity(EntityTypes.DECOY_ENTITY, world, attacker);
-                decoy.setPosition(pos.x + offsetX, pos.y + offsetY);
+            const decoy = new DecoyEntity(EntityTypes.DECOY_ENTITY, world, attacker);
 
-                const sideAngle = yaw + rand(-0.26179935, 0.26179935) + HALF_PI * (t >= 0 ? 1 : -1);
-                decoy.setYaw(sideAngle);
-                decoy.updateVelocity(8, Math.cos(sideAngle), Math.sin(sideAngle));
+            const offsetX = Math.cos(angle) * 1.5 + f;
+            const offsetY = Math.sin(angle) * 1.5 + g;
+            const sideAngle = yaw + rand(-0.26179935, 0.26179935) + HALF_PI * (t >= 0 ? 1 : -1);
 
-                (world as ServerWorld).spawnEntity(decoy);
-            }
+            decoy.snapTo(pos.x + offsetX, pos.y + offsetY, sideAngle);
+            decoy.updateVelocity(8, Math.cos(sideAngle), Math.sin(sideAngle));
+
+            (world as ServerWorld).spawnEntity(decoy);
         }
         world.playSound(attacker, SoundEvents.DECOY_FIRE);
     }

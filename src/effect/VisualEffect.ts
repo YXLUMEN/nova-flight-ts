@@ -7,7 +7,7 @@ export interface VisualEffect {
 
     tick(tickDelta: number): void;
 
-    render(ctx: CanvasRenderingContext2D, tickDelta: number): void;
+    render(ctx: CanvasRenderingContext2D, alpha: number): void;
 
     kill(): void;
 }

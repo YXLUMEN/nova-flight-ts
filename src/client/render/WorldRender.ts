@@ -36,6 +36,8 @@ export class WorldRender {
 
     public setWorld(world: ClientWorld | null) {
         this.world = world;
+
+        EntityRenderers.clearCache();
         this.effects.forEach(effect => effect.kill());
         this.effects.length = 0;
         this.particlePool.clear();
@@ -104,19 +106,19 @@ export class WorldRender {
         this.title = title;
     }
 
-    public render(tickDelta: number) {
+    public render(alpha: number) {
         if (!this.rendering) return;
 
         const ctx = this.client.window.ctx;
         ctx.clearRect(0, 0, Window.VIEW_W, Window.VIEW_H);
 
-        this.starField.render(ctx, this.client.window.camera, tickDelta);
+        this.starField.render(ctx, this.client.window.camera, alpha);
 
         const viewRect = this.client.window.camera.viewRect;
         const offset = this.client.window.camera.viewOffset;
         const lastOffset = this.client.window.camera.lastViewOffset;
-        const ox = lerp(tickDelta, lastOffset.x, offset.x);
-        const oy = lerp(tickDelta, lastOffset.y, offset.y);
+        const ox = lerp(alpha, lastOffset.x, offset.x);
+        const oy = lerp(alpha, lastOffset.y, offset.y);
 
         ctx.save();
         ctx.translate(-ox, -oy);
@@ -136,14 +138,14 @@ export class WorldRender {
             if (entity.renderer === null) {
                 entity.renderer = EntityRenderers.getRenderer(entity);
             }
-            entity.renderer.render(entity, ctx, tickDelta);
+            entity.renderer.render(entity, ctx, alpha);
         }
 
         // 特效
         for (let i = 0; i < this.effects.length; i++) {
-            this.effects[i].render(ctx, tickDelta);
+            this.effects[i].render(ctx, alpha);
         }
-        this.particlePool.render(ctx, tickDelta);
+        this.particlePool.render(ctx, alpha);
 
         // 其他玩家
         for (const player of this.world.getPlayers()) {
@@ -155,7 +157,7 @@ export class WorldRender {
             if (player.renderer === null) {
                 player.renderer = EntityRenderers.getRenderer(player);
             }
-            player.renderer.render(player, ctx, tickDelta);
+            player.renderer.render(player, ctx, alpha);
         }
 
         // 主要玩家
@@ -165,15 +167,15 @@ export class WorldRender {
                 player.renderer = EntityRenderers.getRenderer(player);
             }
 
-            player.renderer.render(player, ctx, tickDelta);
-            player.bc?.drawAimIndicator(ctx, tickDelta);
+            player.renderer.render(player, ctx, alpha);
+            player.bc?.drawAimIndicator(ctx, alpha);
 
-            const playerPos = player.getLerpPos(tickDelta);
+            const playerPos = player.getLerpPos(alpha);
             if (player.lockedMissile.size > 0) {
                 ctx.fillStyle = '#ff7f50';
                 for (const missile of player.lockedMissile) {
                     if (player.approachMissile.has(missile)) continue;
-                    this.renderLockedDir(ctx, missile, playerPos, 8, 6, 6, tickDelta);
+                    this.renderLockedDir(ctx, missile, playerPos, 8, 6, 6, alpha);
                 }
             }
 
@@ -182,7 +184,7 @@ export class WorldRender {
                 const pulse = (Math.sin(t * PI2) + 1) / 2;
                 ctx.fillStyle = `rgba(255,27,27,${0.35 + 0.45 * pulse})`;
                 for (const missile of player.approachMissile) {
-                    this.renderLockedDir(ctx, missile, playerPos, 10, 6, 8, tickDelta);
+                    this.renderLockedDir(ctx, missile, playerPos, 10, 6, 8, alpha);
                 }
             }
 
@@ -199,15 +201,15 @@ export class WorldRender {
         if (GlobalConfig.renderHitBox) {
             for (const entity of this.world.getEntities().values()) {
                 if (!entity.shouldRender(viewRect)) continue;
-                this.renderBoundingBox(ctx, entity, tickDelta);
+                this.renderBoundingBox(ctx, entity, alpha);
             }
             for (const player of this.world.getPlayers()) {
-                this.renderBoundingBox(ctx, player, tickDelta);
+                this.renderBoundingBox(ctx, player, alpha);
             }
         }
 
-        this.client.window.hud.renderMainWeapon(ctx, tickDelta);
-        this.client.window.damagePopup.render(ctx, tickDelta);
+        this.client.window.hud.renderMainWeapon(ctx, alpha);
+        this.client.window.damagePopup.render(ctx, alpha);
         ctx.restore();
 
         this.title?.render(ctx);
