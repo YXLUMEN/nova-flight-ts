@@ -72,8 +72,10 @@ export class StartScreen implements IUi {
             TranslatableText.of('start.statistic'),
             TranslatableText.of('start.exit'),
         ];
+
+        this.setSize = this.setSize.bind(this);
         this.setSize(Window.VIEW_W, Window.VIEW_H);
-        this.unsubResize = client.window.onResize(this.setSize.bind(this));
+        this.unsubResize = client.window.onResize(this.setSize);
         this.start();
     }
 

@@ -1,27 +1,14 @@
 import {type DecoyEntity} from "../../../entity/DecoyEntity.ts";
 import {PI2} from "../../../utils/math/math.ts";
-import {CachedSpriteRenderer} from "./CachedSpriteRenderer.ts";
-import {RenderCache, type SpriteCtx} from "./RenderCache.ts";
+import {type SpriteCtx} from "./RenderCache.ts";
+import {SingleCachedSpriteRenderer} from "./SingleCachedSpriteRenderer.ts";
 
-export class DecoyEntityRender extends CachedSpriteRenderer<DecoyEntity> {
-    private static readonly PHASE_BUCKETS = 8;
+export class DecoyEntityRender extends SingleCachedSpriteRenderer<DecoyEntity> {
     private static readonly PULSE_PERIOD = PI2 / 0.25;
 
-    public constructor() {
-        super(new RenderCache(32));
-    }
-
     protected drawSprite(ctx: SpriteCtx, entity: DecoyEntity): void {
-        const pulsePeriod = DecoyEntityRender.PULSE_PERIOD;
-        const phaseBuckets = DecoyEntityRender.PHASE_BUCKETS;
-
-        const phase = Math.floor((entity.age % pulsePeriod) / pulsePeriod * phaseBuckets);
-        const pulse = 1 + Math.sin(phase / phaseBuckets * PI2) * 0.1;
-
         const size = entity.getWidth();
         const glowColor = 'rgba(255,254,183,0.8)';
-
-        ctx.scale(pulse, pulse);
 
         // 渐变描边
         const gradient = ctx.createLinearGradient(-size, -size, size, size);
@@ -49,16 +36,12 @@ export class DecoyEntityRender extends CachedSpriteRenderer<DecoyEntity> {
         ctx.fill();
     }
 
-    protected spriteKey(entity: DecoyEntity): number {
-        const pulsePeriod = DecoyEntityRender.PULSE_PERIOD;
-        const phaseBuckets = DecoyEntityRender.PHASE_BUCKETS;
+    protected applyTransform(ctx: CanvasRenderingContext2D, entity: DecoyEntity) {
+        const pulse = 1 + Math.sin((entity.age % DecoyEntityRender.PULSE_PERIOD)
+            / DecoyEntityRender.PULSE_PERIOD * PI2) * 0.1;
 
-        const phase = Math.floor((entity.age % pulsePeriod) / pulsePeriod * phaseBuckets);
-        return (entity.getWidth() * 31 + phase) | 0;
-    }
-
-    protected applyTransform(ctx: CanvasRenderingContext2D, entity: DecoyEntity,) {
         ctx.rotate(entity.age * 0.02);
+        ctx.scale(pulse, pulse);
     }
 
     protected width(): number {

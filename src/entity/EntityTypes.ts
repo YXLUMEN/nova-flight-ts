@@ -31,145 +31,146 @@ import {SmokeBomb} from "./projectile/SmokeBomb.ts";
 import {BlastBullet} from "./projectile/BlastBullet.ts";
 
 export class EntityTypes {
-    public static readonly BASE_ENEMY = EntityType.register("base_enemy",
+    public static readonly BASE_ENEMY = EntityType.register('base_enemy',
         EntityType.Builder.create(BaseEnemy)
-            .setDimensions(30)
+            .sized(30)
     );
-    public static readonly GUN_ENEMY_ENTITY = EntityType.register("gun_enemy",
+    public static readonly GUN_ENEMY_ENTITY = EntityType.register('gun_enemy',
         EntityType.Builder.create(GunEnemyEntity)
-            .setDimensions(20)
+            .sized(20)
     );
-    public static readonly MINIGUN_ENEMY_ENTITY = EntityType.register("minigun_enemy",
+    public static readonly MINIGUN_ENEMY_ENTITY = EntityType.register('minigun_enemy',
         EntityType.Builder.create(MiniGunEnemyEntity)
-            .setDimensions(32)
+            .sized(32)
     );
-    public static readonly MISSILE_ENEMY_ENTITY = EntityType.register("missile_enemy",
+    public static readonly MISSILE_ENEMY_ENTITY = EntityType.register('missile_enemy',
         EntityType.Builder.create(MissileEnemyEntity)
-            .setDimensions(24)
+            .sized(24)
             .setTrackingTickInterval(4)
     );
-    public static readonly TANK_ENEMY_ENTITY = EntityType.register("tank_enemy",
+    public static readonly TANK_ENEMY_ENTITY = EntityType.register('tank_enemy',
         EntityType.Builder.create(TankEnemy)
-            .setDimensions(30)
+            .sized(30)
     );
-    public static readonly BULLET_ENTITY = EntityType.register("bullet",
+    public static readonly BULLET_ENTITY = EntityType.register('bullet',
         EntityType.Builder.create(BulletEntity)
-            .setDimensions(10)
+            .sized(10)
             .setTrackingTickInterval(10)
     );
-    public static readonly FAST_BULLET_ENTITY = EntityType.register("fast_bullet",
+    public static readonly FAST_BULLET_ENTITY = EntityType.register('fast_bullet',
         EntityType.Builder.create(FastBulletEntity)
-            .setDimensions(6)
+            .sized(6)
             .setTrackingTickInterval(10)
     );
-    public static readonly KINETIC_ARTILLERY_ENTITY = EntityType.register("kinetic_artillery",
+    public static readonly KINETIC_ARTILLERY_ENTITY = EntityType.register('kinetic_artillery',
         EntityType.Builder.create(ArtilleryEntity)
-            .setDimensions(10)
+            .sized(10)
     );
-    public static readonly ENEMY_BULLET_ENTITY = EntityType.register("enemy_bullet",
+    public static readonly ENEMY_BULLET_ENTITY = EntityType.register('enemy_bullet',
         EntityType.Builder.create(MobBulletEntity)
-            .setDimensions(8)
+            .sized(8)
             .setTrackingTickInterval(10)
     );
-    public static readonly MINI_BULLET_ENTITY = EntityType.register("mini_bullet",
+    public static readonly MINI_BULLET_ENTITY = EntityType.register('mini_bullet',
         EntityType.Builder.create(MiniBulletEntity)
-            .setDimensions(4)
+            .sized(4)
             .setTrackingTickInterval(10)
     );
-    public static readonly EXPLODE_BULLET_ENTITY = EntityType.register("explode_bullet",
+    public static readonly EXPLODE_BULLET_ENTITY = EntityType.register('explode_bullet',
         EntityType.Builder.create(ExplodeBulletEntity)
-            .setDimensions(16, 18)
+            .sized(16, 18)
     );
     public static readonly PLAYER: EntityType<PlayerEntity>;
-    public static readonly MISSILE_ENTITY = EntityType.register("missile_entity",
+    public static readonly MISSILE_ENTITY = EntityType.register('missile_entity',
         EntityType.Builder.create(MissileEntity)
-            .setDimensions(16)
+            .sized(16)
     );
-    public static readonly MOB_MISSILE_ENTITY = EntityType.register("mob_missile_entity",
+    public static readonly MOB_MISSILE_ENTITY = EntityType.register('mob_missile_entity',
         EntityType.Builder.create(MobMissileEntity)
-            .setDimensions(16)
+            .sized(16)
             .setTrackingTickInterval(6)
     );
-    public static readonly ROCKET_ENTITY = EntityType.register("rocket_entity",
+    public static readonly ROCKET_ENTITY = EntityType.register('rocket_entity',
         EntityType.Builder.create(RocketEntity)
-            .setDimensions(16)
+            .sized(16)
             .setTrackingTickInterval(5)
     );
-    public static readonly SPAWN_MARK_ENTITY = EntityType.register("spawn_marker_entity",
+    public static readonly SPAWN_MARK_ENTITY = EntityType.register('spawn_marker_entity',
         EntityType.Builder.create(SpawnMarkerEntity)
-            .setDimensions(24)
+            .sized(24)
             .setTrackingTickInterval(20)
     );
-    public static readonly DECOY_ENTITY = EntityType.register("decoy_entity",
+    public static readonly DECOY_ENTITY = EntityType.register('decoy_entity',
         EntityType.Builder.create(DecoyEntity)
-            .setDimensions(6)
+            .sized(6)
             .setTrackingTickInterval(10)
     );
-    public static readonly CIWS_BULLET_ENTITY = EntityType.register("ciws_bullet",
+    public static readonly CIWS_BULLET_ENTITY = EntityType.register('ciws_bullet',
         EntityType.Builder.create(CIWSBulletEntity)
-            .setDimensions(4)
+            .sized(4)
             .setTrackingTickInterval(10)
     );
-    public static readonly ADS_ENTITY = EntityType.register("ads_entity",
+    public static readonly ADS_ENTITY = EntityType.register('ads_entity',
         EntityType.Builder.create(ADSEntity)
-            .setDimensions(16)
+            .sized(16)
             .setTrackingTickInterval(20)
     );
-    public static readonly CLOUD_LIGHTNING_ENTITY = EntityType.register("cloud_lightning",
+    public static readonly CLOUD_LIGHTNING_ENTITY = EntityType.register('cloud_lightning',
         EntityType.Builder.create(CloudLightningEntity)
-            .setDimensions(40)
+            .sized(40)
             .setTrackingTickInterval(10)
     );
-    public static readonly TORPEDO_ENTITY = EntityType.register("torpedo",
+    public static readonly TORPEDO_ENTITY = EntityType.register('torpedo',
         EntityType.Builder.create(TorpedoEntity)
-            .setDimensions(10)
+            .sized(10)
     );
     public static readonly EXPLOSION_ENTITY = EntityType.register('explosion',
         EntityType.Builder.create(ExplosionEntity)
-            .setDimensions(0)
+            .sized(0)
             .setTrackingTickInterval(40)
     );
     public static readonly TARGET_DRONE = EntityType.register('target_drone',
         EntityType.Builder.create(TargetDrone)
-            .setDimensions(32)
+            .sized(32)
             .setTrackingTickInterval(40)
     );
-    public static readonly BASE_BOSS_ENTITY = EntityType.register("base_boss_entity",
+    public static readonly BASE_BOSS_ENTITY = EntityType.register('base_boss_entity',
         EntityType.Builder.create(BaseBossEntity)
-            .setDimensions(148, 160)
+            .sized(148, 160)
     );
     public static readonly TNT_BOSS_ENTITY = EntityType.register('tnt_boss',
         EntityType.Builder.create(TNTBossEntity)
-            .setDimensions(128)
+            .sized(128)
     );
     public static readonly MAGNETIC_TORPEDO_ENTITY = EntityType.register('magnetic_torpedo_entity',
         EntityType.Builder.create(MagneticTorpedoEntity)
-            .setDimensions(12)
+            .sized(12)
     );
     public static readonly DEVOURER_BOSS_ENTITY = EntityType.register('devourer_boss',
         EntityType.Builder.create(DevourerBoss)
-            .setDimensions(48)
+            .sized(48)
     );
     public static readonly TRAILBLAZER_ENTITY = EntityType.register('trailblazer_entity',
         EntityType.Builder.create(TrailblazerEntity)
-            .setDimensions(24)
+            .sized(24)
     );
     public static readonly SMOKE_BOMB = EntityType.register('smoke_bomb',
         EntityType.Builder.create(SmokeBomb)
-            .setDimensions(20)
+            .sized(20)
             .setTrackingTickInterval(10)
     );
     public static readonly BLAST_BULLET = EntityType.register('blast_bullet',
         EntityType.Builder.create(BlastBullet)
-            .setDimensions(4)
+            .sized(4)
             .setTrackingTickInterval(10)
     );
 
     public static init() {
-        (this.PLAYER as any) = EntityType.register("player",
+        (this.PLAYER as any) = EntityType.register('player',
             // @ts-ignore
             EntityType.Builder.create(PlayerEntity)
-                .setDimensions(32)
+                .sized(32)
         );
+        Object.freeze(this);
     }
 }

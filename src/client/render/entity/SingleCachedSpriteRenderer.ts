@@ -1,14 +1,11 @@
 import type {Entity} from "../../../entity/Entity.ts";
 import type {EntityRenderer} from "./EntityRenderer.ts";
 import type {Vec2} from "../../../utils/math/Vec2.ts";
-import type {RenderCache, SpriteCtx} from "./RenderCache.ts";
+import type {SpriteCtx} from "./RenderCache.ts";
+import {DPR} from "../../../utils/uit.ts";
 
-export abstract class CachedSpriteRenderer<E extends Entity> implements EntityRenderer<E> {
-    private readonly cache: RenderCache;
-
-    protected constructor(cache: RenderCache) {
-        this.cache = cache;
-    }
+export abstract class SingleCachedSpriteRenderer<E extends Entity> implements EntityRenderer<E> {
+    private sprite: ImageBitmap | null = null;
 
     public render(entity: E, ctx: CanvasRenderingContext2D, alpha: number): void {
         const {x, y} = this.getAnchor(entity, alpha);
@@ -16,22 +13,14 @@ export abstract class CachedSpriteRenderer<E extends Entity> implements EntityRe
         const width = this.width(entity);
         const height = this.height(entity);
 
-        const sprite = this.cache.get(
-            this.spriteKey(entity),
-            width,
-            height,
-            this.drawSprite,
-            entity,
-        );
+        if (!this.sprite) {
+            this.sprite = this.buildSprite(width, height, entity);
+        }
 
         ctx.save();
         ctx.translate(x, y);
         this.applyTransform(ctx, entity, alpha);
-        ctx.drawImage(
-            sprite,
-            -width / 2, -height / 2,
-            width, height
-        );
+        ctx.drawImage(this.sprite, -width / 2, -height / 2, width, height);
         ctx.restore();
     }
 
@@ -40,8 +29,6 @@ export abstract class CachedSpriteRenderer<E extends Entity> implements EntityRe
     }
 
     protected abstract drawSprite(ctx: SpriteCtx, entity: E): void;
-
-    protected abstract spriteKey(entity: E): number;
 
     protected applyTransform(_ctx: CanvasRenderingContext2D, _entity: E, _alpha: number): void {
     }
@@ -53,7 +40,16 @@ export abstract class CachedSpriteRenderer<E extends Entity> implements EntityRe
     protected abstract height(entity: E): number;
 
     public clearCache() {
-        this.cache.clear();
+        this.sprite?.close();
+        this.sprite = null;
+    }
+
+    private buildSprite(width: number, height: number, entity: E): ImageBitmap {
+        const canvas = new OffscreenCanvas(Math.ceil(width * DPR), Math.ceil(height * DPR));
+        const ctx = canvas.getContext('2d')!;
+        ctx.scale(DPR, DPR);
+        ctx.translate(width / 2, height / 2);
+        this.drawSprite(ctx, entity);
+        return canvas.transferToImageBitmap();
     }
 }
-

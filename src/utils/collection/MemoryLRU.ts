@@ -12,9 +12,9 @@ export class MemoryLRU<K, V> {
     }
 
     public get(key: K): V | null {
-        if (!this.cacheMap.has(key)) return null;
+        const value = this.cacheMap.get(key);
+        if (value === undefined) return null;
 
-        const value = this.cacheMap.get(key)!;
         this.cacheMap.delete(key);
         this.cacheMap.set(key, value);
         return value;
@@ -28,6 +28,7 @@ export class MemoryLRU<K, V> {
 
         const oldest = this.cacheMap.keys().next().value;
         if (oldest === undefined) return;
+
         const ov = this.cacheMap.get(oldest);
         this.cacheMap.delete(oldest);
         this.notify(oldest, ov);
