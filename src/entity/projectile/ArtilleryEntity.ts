@@ -22,6 +22,13 @@ export class ArtilleryEntity extends FastBulletEntity {
 
         const source = world.getDamageSources().kinetic(this, owner);
         entity.takeDamage(source, this.getHitDamage());
+        if (!entity.isPushAble()) return;
+
+        const yaw = this.getYaw();
+        const f = Math.cos(yaw);
+        const g = Math.sin(yaw);
+        entity.updateVelocity(12, f, g);
+
         (world as ServerWorld).spawnPreparedParticle(ParticleEffects.POWER_FULL_BLOW, hitResult.pos, 6);
     }
 

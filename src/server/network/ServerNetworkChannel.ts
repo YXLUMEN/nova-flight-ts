@@ -111,7 +111,14 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
         const codec = CodecRegistry.byId(index);
         if (!codec) return;
 
-        this.handler(sessionId, codec.codec.decode(reader));
+        let payload: Payload;
+        try {
+            payload = codec.codec.decode(reader);
+        } catch (err) {
+            console.error(`[Server] Fail to decode packet for "${sessionId}"`);
+            return;
+        }
+        this.handler(sessionId, payload);
     }
 
     public setHandler(handler: BiConsumer<number, Payload>) {

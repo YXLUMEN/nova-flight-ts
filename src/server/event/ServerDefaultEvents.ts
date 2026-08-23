@@ -4,7 +4,7 @@ import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {World} from "../../world/World.ts";
 import {SpawnMarkerEntity} from "../../entity/SpawnMarkerEntity.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
-import {GeneralEventBus} from "../../event/GeneralEventBus.ts";
+import {EventBus} from "../../event/EventBus.ts";
 import {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
 import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
@@ -20,8 +20,8 @@ import {ExplosionEffect} from "../../world/element/explosion/ExplosionBehavior.t
 import {DevourerBoss} from "../../entity/mob/DevourerBoss.ts";
 
 export class ServerDefaultEvents {
-    public static registerEvent(world: ServerWorld) {
-        const events = GeneralEventBus.getEventBus();
+    public static registerEvent() {
+        const events = EventBus.instance();
 
         events.on('entity:mob:damage', ({mob, damageSource}) => {
             const attacker = damageSource.getAttacker();
@@ -69,6 +69,8 @@ export class ServerDefaultEvents {
         });
 
         events.on('entity:boss:killed', event => {
+            const world = event.world;
+
             if (!event.boss) {
                 world.stage.nextPhase();
                 return;
@@ -102,12 +104,12 @@ export class ServerDefaultEvents {
 
         events.on('world:emp_burst', ({entity, duration}) => {
             if (entity instanceof ServerPlayerEntity && entity.getTechs().isUnlocked(Techs.ELE_OSCILLATION)) {
-                world.empBurst = duration;
+                entity.getWorld().empBurst = duration;
             }
         });
 
-        events.on('world:stage:enter', ({name}) => {
-            if (name === 'P6' || name === 'mP3') {
+        events.on('world:stage:enter', ({world, name}) => {
+            if (name === 'P6') {
                 if (BossEntity.hasBoss) return;
 
                 world.schedule(10, () => {
@@ -123,7 +125,7 @@ export class ServerDefaultEvents {
             world.playSound(null, SoundEvents.PHASE_CHANGE);
         });
 
-        events.on('world:explosion', ({explosion}) => {
+        events.on('world:explosion', ({world, explosion}) => {
             const effect = explosion.getBehaviour().effect;
             explosion.getBehaviour().effect = ExplosionEffect.TRIGGERED;
             if (effect !== ExplosionEffect.TRIGGERED) {

@@ -22,7 +22,6 @@ import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExplosionVisual} from "../world/element/explosion/ExplosionVisual.ts";
 import type {Explosion} from "../world/element/explosion/Explosion.ts";
 import {ExplosionS2CPacket} from "../network/packet/s2c/ExplosionS2CPacket.ts";
-import {ServerDefaultEvents} from "./event/ServerDefaultEvents.ts";
 import {ParticleS2CPacket} from "../network/packet/s2c/ParticleS2CPacket.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {type VisualEffect} from "../effect/VisualEffect.ts";
@@ -263,7 +262,7 @@ export class ServerWorld extends World implements NbtSerializable {
         const packet = new ExplosionS2CPacket(x, y, power, behaviour, visual);
         this.sendPacket(packet);
 
-        this.events.emit(new ExplosionEvent(explosion));
+        this.events.emit(new ExplosionEvent(this, explosion));
         return explosion;
     }
 
@@ -296,8 +295,6 @@ export class ServerWorld extends World implements NbtSerializable {
         this.events.on('entity:mob:removed', event => {
             this.entityManager.remove(event.entity);
         });
-
-        ServerDefaultEvents.registerEvent(this);
     }
 
     public writeNBT(root: NbtCompound): NbtCompound {
@@ -373,6 +370,7 @@ export class ServerWorld extends World implements NbtSerializable {
         this.entities.clear();
         this.trackedEntities.clear();
         this.entityManager.clear();
+        this.events.removeAll('entity:mob:removed');
     }
 
     public saveAll(): NbtCompound {

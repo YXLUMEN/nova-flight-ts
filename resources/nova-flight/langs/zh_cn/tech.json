@@ -88,7 +88,7 @@
   "name.nova-flight.quick_charge": "快充电容",
   "desc.nova-flight.quick_charge": "\u001B[32m电磁脉冲 \u001B[m范围\u001B[32m -50% \u001B[0m, 冷却速度\u001B[32m +50% \u001B[0m, 与格雷的发明相反, 弗兰克认为作为自卫系统的emp高速充能才是王道, 于是快充电容诞生了.",
   "name.nova-flight.high_efficiency_coolant": "高效冷却剂",
-  "desc.nova-flight.high_efficiency_coolant": "武器散热速率\u001B[32m +50% \u001B[0m, 新增了散热槽! 这样会变得更凉快",
+  "desc.nova-flight.high_efficiency_coolant": "武器散热速率\u001B[32m +100% \u001B[0m, 新增了散热槽! 这样会变得更凉快",
   "name.nova-flight.harmonic_analysis": "谐波分析",
   "desc.nova-flight.harmonic_analysis": "能量武器伤害\u001B[32m +40% \u001B[0m, 帝国的光谱分析学家们研制出了一款基于表面材料调整光波的系统, 后来被反抗军间谍“红鹰”获取, 据说其原理来自于宇宙深处某种巨大的鳞翅目昆虫。。。",
   "name.nova-flight.high_temperature_alloy": "耐高温合金",

@@ -3,6 +3,7 @@
   "nova-flight.mob.speedster",
   "nova-flight.mob.bomber",
   "nova-flight.mob.fighter",
+  "nova-flight.mob.spawn",
   "nova-flight.weapon.laser",
   "nova-flight.weapon.missile",
   "nova-flight.weapon.plasma",

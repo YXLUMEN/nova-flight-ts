@@ -113,13 +113,13 @@ export class MobBlueprint {
 
 export class MobBlueprintBuilder {
     private readonly type: EntityType<MobEntity>;
-    private _worth: number = 1;
-    private _speed: number = 1.0;
-    private _bonusHp: number = 0;
-    private _color: string = '#ff6b6b';
-    private _hpScale: boolean | Return<SpawnContext, number> = true;
+    private worth_: number = 1;
+    private speed_: number = 1.0;
+    private bonusHp_: number = 0;
+    private color_: string = '#ff6b6b';
+    private hpScale_: boolean | Return<SpawnContext, number> = true;
     private elite: boolean = false;
-    private wander: boolean = false;
+    private wander_: boolean = false;
 
     public constructor(type: EntityType<MobEntity>) {
         this.type = type;
@@ -130,32 +130,32 @@ export class MobBlueprintBuilder {
     }
 
     public worth(worth: number): this {
-        this._worth = Math.floor(worth);
+        this.worth_ = Math.floor(worth);
         return this;
     }
 
     public speed(speed: number): this {
-        this._speed = clamp(speed, 0, 256);
+        this.speed_ = clamp(speed, 0, 256);
         return this;
     }
 
     public bonusHp(hp: number): this {
-        this._bonusHp = hp;
+        this.bonusHp_ = hp;
         return this;
     }
 
     public color(color: string): this {
-        this._color = color;
+        this.color_ = color;
         return this;
     }
 
     public noScale(): this {
-        this._hpScale = false;
+        this.hpScale_ = false;
         return this;
     }
 
     public scale(hpScale: Return<SpawnContext, number>): this {
-        this._hpScale = hpScale;
+        this.hpScale_ = hpScale;
         return this;
     }
 
@@ -164,21 +164,21 @@ export class MobBlueprintBuilder {
         return this;
     }
 
-    public setWander(): this {
-        this.wander = true;
+    public wander(): this {
+        this.wander_ = true;
         return this;
     }
 
     public build(): MobBlueprint {
         return new MobBlueprint(
             this.type,
-            this._worth,
-            this._speed,
-            this._bonusHp,
-            this._color,
-            this._hpScale,
+            this.worth_,
+            this.speed_,
+            this.bonusHp_,
+            this.color_,
+            this.hpScale_,
             this.elite,
-            this.wander,
+            this.wander_,
         );
     }
 }

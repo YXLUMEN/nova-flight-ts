@@ -9,7 +9,6 @@ import type {SoundEvent} from "../sound/SoundEvent.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
-import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExplosionVisual} from "../world/element/explosion/ExplosionVisual.ts";
 import type {Explosion} from "../world/element/explosion/Explosion.ts";
@@ -225,8 +224,6 @@ export class ClientWorld extends World {
         this.events.on('entity:mob:removed', event => {
             this.entityManager.remove(event.entity);
         });
-
-        ClientDefaultEvents.registryEvents(this);
     }
 
     public setTotalScore(score: number): void {
@@ -251,6 +248,7 @@ export class ClientWorld extends World {
         this.entities.forEach(entity => entity.discard());
         this.entities.clear();
         this.entityManager.clear();
+        this.events.removeAll('entity:mob:removed');
     }
 
     public saveAll() {

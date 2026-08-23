@@ -1,17 +1,17 @@
-import type {EntityRenderer} from "./EntityRenderer.ts";
-import type {BaseEnemy} from "../../../entity/mob/BaseEnemy.ts";
+import {type BaseEnemy} from "../../../entity/mob/BaseEnemy.ts";
 import {HALF_PI} from "../../../utils/math/math.ts";
+import {CachedSpriteRenderer} from "./CachedSpriteRenderer.ts";
+import {stringHashCode} from "../../../utils/hash.ts";
+import {RenderCache} from "./RenderCache.ts";
 
-export class BaseEnemyRender implements EntityRenderer<BaseEnemy> {
-    public render(entity: BaseEnemy, ctx: CanvasRenderingContext2D, tickDelta: number) {
-        const pos = entity.getLerpPos(tickDelta);
-        ctx.save();
+export class BaseEnemyRender extends CachedSpriteRenderer<BaseEnemy> {
+    public constructor() {
+        super(new RenderCache(16));
+    }
 
+    protected drawSprite(ctx: CanvasRenderingContext2D, entity: BaseEnemy) {
         ctx.fillStyle = entity.color;
-        ctx.strokeStyle = "rgba(0,0,0,.2)";
-
-        ctx.translate(pos.x, pos.y);
-        ctx.rotate(entity.getLerpYaw(tickDelta) + HALF_PI);
+        ctx.strokeStyle = 'rgba(0,0,0,.2)';
 
         ctx.beginPath();
         ctx.moveTo(0, -18);
@@ -22,6 +22,21 @@ export class BaseEnemyRender implements EntityRenderer<BaseEnemy> {
 
         ctx.fill();
         ctx.stroke();
-        ctx.restore();
+    }
+
+    protected spriteKey(entity: BaseEnemy): number {
+        return stringHashCode(entity.color);
+    }
+
+    protected applyTransform(ctx: CanvasRenderingContext2D, entity: BaseEnemy, alpha: number) {
+        ctx.rotate(entity.getLerpYaw(alpha) + HALF_PI);
+    }
+
+    protected width(): number {
+        return 28;
+    }
+
+    protected height(): number {
+        return 36;
     }
 }

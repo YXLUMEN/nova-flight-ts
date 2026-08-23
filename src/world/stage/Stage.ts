@@ -66,7 +66,7 @@ export class Stage implements NbtSerializable {
 
         if (this.phaseTime === 1) {
             phase.onEnter?.(ctx);
-            world.events.emit(new StageEnter(phase.name));
+            world.events.emit(new StageEnter(world, phase.name));
         }
 
         for (const r of this.rules) r.tick(ctx);

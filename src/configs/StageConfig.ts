@@ -335,7 +335,7 @@ const p8 = createPhase({
                     .worth(8)
                     .color('#910000')
                     .scale((ctx) => 1 + (ctx.score / 500) | 0)
-                    .setWander()
+                    .wander()
                     .build()
             ),
             cap: 64
@@ -350,6 +350,7 @@ const p8 = createPhase({
                     .worth(8)
                     .color('#9f3b00')
                     .scale((ctx) => 1 + (ctx.score / 800) | 0)
+                    .wander()
                     .build(),
                 undefined, 248
             ),
@@ -364,7 +365,7 @@ const p8 = createPhase({
                     .bonusHp(4)
                     .worth(4)
                     .color('#ac0000')
-                    .setWander()
+                    .wander()
                     .build(),
                 undefined, 480
             ),
@@ -378,7 +379,7 @@ const p8 = createPhase({
                     .speed(0.72)
                     .bonusHp(4)
                     .worth(3)
-                    .setWander()
+                    .wander()
                     .build()
             ),
             cap: (ctx) => ctx.difficulty + 48
@@ -405,7 +406,7 @@ const p9 = createPhase({
                     .worth(8)
                     .color('#910000')
                     .scale((ctx) => 1 + (ctx.score / 400) | 0)
-                    .setWander()
+                    .wander()
                     .build()
             ),
             cap: 81
@@ -420,7 +421,7 @@ const p9 = createPhase({
                     .worth(8)
                     .color('#9f3b00')
                     .scale((ctx) => 1 + (ctx.score / 600) | 0)
-                    .setWander()
+                    .wander()
                     .build(),
                 undefined, 248
             ),
@@ -435,7 +436,7 @@ const p9 = createPhase({
                     .bonusHp(4)
                     .worth(4)
                     .color('#ac0000')
-                    .setWander()
+                    .wander()
                     .build(),
                 undefined, 480
             ),
@@ -450,7 +451,7 @@ const p9 = createPhase({
                     .bonusHp(8)
                     .worth(12)
                     .color('#ff4444')
-                    .setWander()
+                    .wander()
                     .build(),
                 undefined, 640
             ),

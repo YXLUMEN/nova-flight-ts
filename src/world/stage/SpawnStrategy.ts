@@ -116,7 +116,7 @@ export function spawnInMap(bp: MobBlueprint, margin: number = 24, safeRadius: nu
         const players = ctx.world.getPlayers();
         const candidateAABB = new MutAABB(0, 0);
         let x = 0, y = 0;
-        for (let tries = 0; tries < 100; tries++) {
+        for (let tries = 0; tries < 20; tries++) {
             const bx = randInt(blockMinX, blockMaxX);
             const by = randInt(blockMinY, blockMaxY);
             x = bx * 8 + 4;

@@ -7,7 +7,7 @@ export class TechHighEfficiencyCoolant implements ApplyTech {
         player.getInventory().values().forEach(stack => {
             const base = stack.get(DataComponents.COOLDOWN_RATE);
             if (!base) return;
-            stack.set(DataComponents.COOLDOWN_RATE, base * 1.5);
+            stack.set(DataComponents.COOLDOWN_RATE, base * 2);
             player.syncStack(stack);
         });
     }

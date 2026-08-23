@@ -27,7 +27,7 @@ import {TranslatableText} from "../i18n/TranslatableText.ts";
 import {ClientInputEvents} from "./input/ClientInputEvents.ts";
 import type {ClientChannel} from "./network/ClientChannel.ts";
 import {ClientCommandSource} from "./command/ClientCommandSource.ts";
-import {GeneralEventBus} from "../event/GeneralEventBus.ts";
+import {EventBus} from "../event/EventBus.ts";
 import {ClientPlayHandler} from "./network/handler/ClientPlayHandler.ts";
 import {TickRateManager} from "../world/TickRateManager.ts";
 import {ClientWorkerFS} from "./ClientWorkerFS.ts";
@@ -35,6 +35,7 @@ import {ClientConnector} from "./network/ClientConnector.ts";
 import type {ConnectionContext} from "./network/ConnectionContext.ts";
 import {ClientInit} from "./ClientInit.ts";
 import {GameStart} from "../event/events/GameStart.ts";
+import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -122,6 +123,7 @@ export class NovaFlightClient {
     public async startClient() {
         this.window.resize();
         await new ClientInit(this).initResources();
+        ClientDefaultEvents.registryEvents();
 
         if (!isDev) {
             BGMManager.init();
@@ -134,7 +136,7 @@ export class NovaFlightClient {
             const breakLoop = await this.userSelect();
             if (breakLoop) break;
 
-            GeneralEventBus.getEventBus().emit(new GameStart());
+            EventBus.instance().emit(new GameStart());
             await this.waitWorldStop;
 
             // cleanup
@@ -335,7 +337,6 @@ export class NovaFlightClient {
 
         this.window.hud.setPlayer(null);
         this.player = null;
-        this.saveManager.page.registerEvent();
     }
 
     public requestStop(): void {

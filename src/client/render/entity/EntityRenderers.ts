@@ -26,10 +26,16 @@ import {DevourerBossRender} from "./DevourerBossRender.ts";
 import {TrailblazerEntityRender} from "./TrailblazerEntityRender.ts";
 
 export class EntityRenderers {
-    private static readonly RENDERER_FACTORIES = new Map<EntityType<Entity>, EntityRenderer<Entity>>();
+    private static readonly RENDERER_FACTORIES: Map<EntityType<Entity>, EntityRenderer<Entity>> = new Map();
 
     public static getRenderer<T extends Entity>(entity: T): EntityRenderer<T> {
         return this.RENDERER_FACTORIES.get(entity.getType())!;
+    }
+
+    public static clearCache() {
+        for (const render of this.RENDERER_FACTORIES.values()) {
+            render.clearCache?.();
+        }
     }
 
     public static registryRenders(): void {
@@ -39,6 +45,7 @@ export class EntityRenderers {
         const rocket = new RocketEntityRender();
         const missile = new MissileEntityRender();
         const boss = new BossEntityRender();
+
         this.register(EntityTypes.BASE_ENEMY, baseEnemy);
         this.register(EntityTypes.TANK_ENEMY_ENTITY, baseEnemy);
         this.register(EntityTypes.BASE_BOSS_ENTITY, boss);
