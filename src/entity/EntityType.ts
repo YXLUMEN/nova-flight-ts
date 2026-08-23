@@ -69,7 +69,7 @@ export class EntityType<T extends Entity, F extends Constructor<T> = Constructor
     public static Builder = class Builder<T extends Entity> {
         private readonly factory: Constructor<T>;
         private trackTickInterval = 3;
-        private dimensions = EntityDimensions.changing(1, 1);
+        private dimensions = EntityDimensions.scalable(1, 1);
 
         public constructor(factory: Constructor<T>) {
             this.factory = factory;
@@ -79,8 +79,8 @@ export class EntityType<T extends Entity, F extends Constructor<T> = Constructor
             return new Builder(factory);
         }
 
-        public setDimensions(width: number, height?: number) {
-            this.dimensions = EntityDimensions.changing(width, height ?? width);
+        public sized(width: number, height?: number) {
+            this.dimensions = EntityDimensions.scalable(width, height ?? width);
             return this;
         }
 

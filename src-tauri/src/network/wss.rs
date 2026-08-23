@@ -166,7 +166,7 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
                     let packet = Attached {
                         session_id: session.session_id,
                     };
-                    send_packet(&session.tx, packet, Duration::from_secs(2)).await;
+                    send_timeout(&session.tx, packet, Duration::from_secs(2)).await;
                     client_relay(&state, &session, &mut reader, close_rx).await;
                 }
             }
@@ -178,7 +178,7 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
                     let packet = Detached {
                         session_id: session.session_id,
                     };
-                    send_packet(&server.tx, packet, Duration::from_secs(2)).await;
+                    send_timeout(&server.tx, packet, Duration::from_secs(2)).await;
                 }
             }
         }
@@ -282,7 +282,7 @@ async fn attach_session(
             let packet = Attached {
                 session_id: session.session_id,
             };
-            send_packet(&session.tx, packet, Duration::from_secs(2)).await;
+            send_timeout(&session.tx, packet, Duration::from_secs(2)).await;
             info!("Server registered at {}", now_ms());
             Ok(SessionContext {
                 session,
@@ -325,7 +325,7 @@ async fn attach_session(
                         let packet = ClientAttached {
                             session_id: session.session_id,
                         };
-                        send_packet(&server.tx, packet, Duration::from_secs(2)).await;
+                        send_timeout(&server.tx, packet, Duration::from_secs(2)).await;
                     }
 
                     info!("Client {} registered at {}", format_uuid(&uuid), now_ms());
@@ -663,7 +663,7 @@ async fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload:
             // 回包格式: [0x00][0x04][count u8]([session_id u8][uuid 16B])*
             let clients = state.collect_client_list();
             let result = QueryClientsResult { clients };
-            send_packet(&session.tx, result, Duration::from_secs(2)).await;
+            send_timeout(&session.tx, result, Duration::from_secs(2)).await;
         }
         BAN_IP => {
             let addr = parse_ipv4(data);
@@ -695,7 +695,7 @@ async fn relay_actions(state: &Arc<RelayState>, session: &Arc<Session>, payload:
 }
 
 /// 中继服务器发送
-async fn send_packet<T: Payload>(tx: &Tx, payload: T, timeout: Duration) -> () {
+async fn send_timeout<T: Payload>(tx: &Tx, payload: T, timeout: Duration) -> () {
     let buf = payload.to_bytes();
     match tx.send_timeout(buf, timeout).await {
         Ok(()) => {}
@@ -716,7 +716,7 @@ async fn action_fail(tx: &Tx, reason: &str) -> () {
     let packet = RelayMessage {
         message: reason.to_string(),
     };
-    send_packet(tx, packet, Duration::from_secs(2)).await;
+    send_timeout(tx, packet, Duration::from_secs(2)).await;
 }
 
 /// 中继通知,目前为纯文本
