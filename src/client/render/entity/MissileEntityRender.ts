@@ -1,5 +1,5 @@
 import type {EntityRenderer} from "./EntityRenderer.ts";
-import {type MissileEntity} from "../../../entity/projectile/MissileEntity.ts";
+import type {MissileEntity} from "../../../entity/projectile/MissileEntity.ts";
 import {HALF_PI} from "../../../utils/math/math.ts";
 
 export class MissileEntityRender implements EntityRenderer<MissileEntity> {

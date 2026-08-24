@@ -1,12 +1,14 @@
-import {type BaseEnemy} from "../../../entity/mob/BaseEnemy.ts";
+import type {BaseEnemy} from "../../../entity/mob/BaseEnemy.ts";
 import {HALF_PI} from "../../../utils/math/math.ts";
-import {CachedSpriteRenderer} from "./CachedSpriteRenderer.ts";
-import {stringHashCode} from "../../../utils/hash.ts";
-import {RenderCache} from "./RenderCache.ts";
+import {AABB} from "../../../utils/math/AABB.ts";
+import {CachedSpriteRenderer} from "../cache/CachedSpriteRenderer.ts";
+import {MapRenderCache} from "../cache/MapRenderCache.ts";
 
-export class BaseEnemyRender extends CachedSpriteRenderer<BaseEnemy> {
+export class BaseEnemyRender extends CachedSpriteRenderer<string, BaseEnemy> {
+    private readonly bounding = new AABB(-15, -19, 15, 13);
+
     public constructor() {
-        super(new RenderCache(16));
+        super(new MapRenderCache(32));
     }
 
     protected drawSprite(ctx: CanvasRenderingContext2D, entity: BaseEnemy) {
@@ -24,19 +26,15 @@ export class BaseEnemyRender extends CachedSpriteRenderer<BaseEnemy> {
         ctx.stroke();
     }
 
-    protected spriteKey(entity: BaseEnemy): number {
-        return stringHashCode(entity.color);
+    protected spriteKey(entity: BaseEnemy): string {
+        return entity.color;
     }
 
     protected applyTransform(ctx: CanvasRenderingContext2D, entity: BaseEnemy, alpha: number) {
         ctx.rotate(entity.getLerpYaw(alpha) + HALF_PI);
     }
 
-    protected width(): number {
-        return 28;
-    }
-
-    protected height(): number {
-        return 36;
+    protected bounds(): AABB {
+        return this.bounding;
     }
 }

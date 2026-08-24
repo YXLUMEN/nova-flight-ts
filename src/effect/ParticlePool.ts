@@ -182,7 +182,6 @@ export class ParticlePool {
     }
 
     private drawUntextured(ctx: CanvasRenderingContext2D, alpha: number): void {
-        let curKey = -1;
         let pathOpen = false;
 
         for (let i = 0; i < this.active; i++) {
@@ -194,21 +193,22 @@ export class ParticlePool {
             const y = lerp(alpha, this.py[i], this.cy[i]);
 
             const color0 = this.color0[i], color1 = this.color1[i];
-            const key = color0 * 0x1_0000_0000 + color1;
 
-            if (key !== curKey) {
+            let cur0 = -1, cur1 = -1;
+            if (color0 !== cur0 || color1 !== cur1) {
                 if (pathOpen) ctx.fill();
                 if (color0 === color1 || halfW < 1) {
-                    ctx.fillStyle = `#${color0.toString(16)}`;
+                    ctx.fillStyle = `#${color0.toString(16).padStart(8, '0')}`;
                 } else {
                     const g = ctx.createRadialGradient(x, y, 0, x, y, halfW);
-                    g.addColorStop(0, `#${color0.toString(16)}`);
-                    g.addColorStop(1, `#${color1.toString(16)}`);
+                    g.addColorStop(0, `#${color0.toString(16).padStart(8, '0')}`);
+                    g.addColorStop(1, `#${color1.toString(16).padStart(8, '0')}`);
                     ctx.fillStyle = g;
                 }
 
                 ctx.beginPath();
-                curKey = key;
+                cur0 = color0;
+                cur1 = color1;
                 pathOpen = true;
             }
 
@@ -235,14 +235,6 @@ export class ParticlePool {
 
     public clear() {
         this.active = 0;
-    }
-
-    public count(): number {
-        return this.active;
-    }
-
-    public capacity(): number {
-        return this.cap;
     }
 }
 

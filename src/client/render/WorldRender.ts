@@ -133,7 +133,7 @@ export class WorldRender {
         this.mapRender!.renderBlocks(ctx);
 
         for (const entity of this.world.getEntities().values()) {
-            if (!entity.shouldRender(viewRect)) continue;
+            if (!entity.shouldRender() || !isBoxInView(entity.getBoundingBox(), viewRect)) continue;
 
             if (entity.renderer === null) {
                 entity.renderer = EntityRenderers.getRenderer(entity);
@@ -200,7 +200,8 @@ export class WorldRender {
 
         if (GlobalConfig.renderHitBox) {
             for (const entity of this.world.getEntities().values()) {
-                if (!entity.shouldRender(viewRect)) continue;
+                if (!entity.shouldRender() || !isBoxInView(entity.getBoundingBox(), viewRect)) continue;
+
                 this.renderBoundingBox(ctx, entity, alpha);
             }
             for (const player of this.world.getPlayers()) {
@@ -275,7 +276,6 @@ export class WorldRender {
         const startY = Math.floor(v.top / gridSize) * gridSize;
         const endY = Math.ceil(v.bottom / gridSize) * gridSize;
 
-        ctx.save();
         ctx.strokeStyle = "rgba(137,183,255,0.06)";
 
         ctx.beginPath();
@@ -294,8 +294,6 @@ export class WorldRender {
         ctx.beginPath();
         ctx.rect(0, 0, World.MAP_WIDTH, World.MAP_HEIGHT);
         ctx.stroke();
-
-        ctx.restore();
     }
 
     public onBlockChange(): void {

@@ -1,12 +1,16 @@
-import {type BulletEntity} from "../../../entity/projectile/BulletEntity.ts";
+import type {BulletEntity} from "../../../entity/projectile/BulletEntity.ts";
 import {PI2} from "../../../utils/math/math.ts";
-import {CachedSpriteRenderer} from "./CachedSpriteRenderer.ts";
+import {AABB} from "../../../utils/math/AABB.ts";
+import {CachedSpriteRenderer} from "../cache/CachedSpriteRenderer.ts";
 import {stringHashCode} from "../../../utils/hash.ts";
-import {RenderCache} from "./RenderCache.ts";
+import {MapRenderCache} from "../cache/MapRenderCache.ts";
+import type {EntityType} from "../../../entity/EntityType.ts";
 
-export class BulletEntityRender extends CachedSpriteRenderer<BulletEntity> {
+export class BulletEntityRender extends CachedSpriteRenderer<number, BulletEntity> {
+    private readonly bounding: Map<EntityType<any>, AABB> = new Map();
+
     public constructor() {
-        super(new RenderCache(16));
+        super(new MapRenderCache(16));
     }
 
     protected drawSprite(ctx: CanvasRenderingContext2D, entity: BulletEntity): void {
@@ -32,11 +36,15 @@ export class BulletEntityRender extends CachedSpriteRenderer<BulletEntity> {
         return hash;
     }
 
-    protected width(entity: BulletEntity): number {
-        return entity.getWidth() + 4;
+    protected bounds(entity: BulletEntity): AABB {
+        return this.bounding.getOrInsertComputed(entity.getType(), () => {
+            const r = entity.getDimensions().halfWidth + 1.5;
+            return new AABB(-r, -r, r, r);
+        });
     }
 
-    protected height(entity: BulletEntity): number {
-        return entity.getHeight() + 4;
+    public override clearCache() {
+        super.clearCache();
+        this.bounding.clear();
     }
 }

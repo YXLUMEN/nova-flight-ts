@@ -1,9 +1,17 @@
-import {type CIWSBulletEntity} from "../../../entity/projectile/CIWSBulletEntity.ts";
-import {type SpriteCtx} from "./RenderCache.ts";
+import type {CIWSBulletEntity} from "../../../entity/projectile/CIWSBulletEntity.ts";
+import type {SpriteCtx} from "../cache/LRURenderCache.ts";
 import {HALF_PI} from "../../../utils/math/math.ts";
-import {SingleCachedSpriteRenderer} from "./SingleCachedSpriteRenderer.ts";
+import {AABB} from "../../../utils/math/AABB.ts";
+import {CachedSpriteRenderer} from "../cache/CachedSpriteRenderer.ts";
+import {SingleCache} from "../cache/SingleCache.ts";
 
-export class CIWSBulletEntityRender extends SingleCachedSpriteRenderer<CIWSBulletEntity> {
+export class CIWSBulletEntityRender extends CachedSpriteRenderer<number, CIWSBulletEntity> {
+    private readonly bounding = new AABB(-1.5, -1.5, 1.5, 73.5);
+
+    public constructor() {
+        super(new SingleCache());
+    }
+
     protected drawSprite(ctx: SpriteCtx, entity: CIWSBulletEntity): void {
         const height = 72;
 
@@ -19,15 +27,15 @@ export class CIWSBulletEntityRender extends SingleCachedSpriteRenderer<CIWSBulle
         ctx.stroke();
     }
 
+    protected spriteKey(): number {
+        return 0;
+    }
+
     protected applyTransform(ctx: CanvasRenderingContext2D, entity: CIWSBulletEntity) {
         ctx.rotate(entity.getYaw() + HALF_PI);
     }
 
-    protected height(): number {
-        return 72;
-    }
-
-    protected width(): number {
-        return 3;
+    protected bounds(): AABB {
+        return this.bounding;
     }
 }

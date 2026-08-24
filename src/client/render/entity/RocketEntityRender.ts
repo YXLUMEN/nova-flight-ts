@@ -1,12 +1,15 @@
 import {HALF_PI} from "../../../utils/math/math.ts";
 import {type RocketEntity} from "../../../entity/projectile/RocketEntity.ts";
-import {CachedSpriteRenderer} from "./CachedSpriteRenderer.ts";
-import {RenderCache, type SpriteCtx} from "./RenderCache.ts";
-import {stringHashCode} from "../../../utils/hash.ts";
+import {AABB} from "../../../utils/math/AABB.ts";
+import {CachedSpriteRenderer} from "../cache/CachedSpriteRenderer.ts";
+import {type SpriteCtx} from "../cache/LRURenderCache.ts";
+import {MapRenderCache} from "../cache/MapRenderCache.ts";
 
-export class RocketEntityRender extends CachedSpriteRenderer<RocketEntity> {
+export class RocketEntityRender extends CachedSpriteRenderer<string, RocketEntity> {
+    private readonly bounding = new AABB(-7.5, -9.5, 7.5, 6.5);
+
     public constructor() {
-        super(new RenderCache(8));
+        super(new MapRenderCache(16));
     }
 
     protected drawSprite(ctx: SpriteCtx, entity: RocketEntity): void {
@@ -24,19 +27,15 @@ export class RocketEntityRender extends CachedSpriteRenderer<RocketEntity> {
         ctx.stroke();
     }
 
-    protected spriteKey(entity: RocketEntity): number {
-        return stringHashCode(entity.color);
+    protected spriteKey(entity: RocketEntity): string {
+        return entity.color;
     }
 
     protected applyTransform(ctx: CanvasRenderingContext2D, entity: RocketEntity, alpha: number) {
         ctx.rotate(entity.getLerpYaw(alpha) + HALF_PI);
     }
 
-    protected width(): number {
-        return 14;
-    }
-
-    protected height(): number {
-        return 16;
+    protected bounds(): AABB {
+        return this.bounding;
     }
 }

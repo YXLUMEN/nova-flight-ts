@@ -1,14 +1,24 @@
-import {type DecoyEntity} from "../../../entity/DecoyEntity.ts";
+import type {DecoyEntity} from "../../../entity/DecoyEntity.ts";
 import {PI2} from "../../../utils/math/math.ts";
-import {type SpriteCtx} from "./RenderCache.ts";
-import {SingleCachedSpriteRenderer} from "./SingleCachedSpriteRenderer.ts";
+import type {SpriteCtx} from "../cache/LRURenderCache.ts";
+import {AABB} from "../../../utils/math/AABB.ts";
+import {CachedSpriteRenderer} from "../cache/CachedSpriteRenderer.ts";
+import {SingleCache} from "../cache/SingleCache.ts";
 
-export class DecoyEntityRender extends SingleCachedSpriteRenderer<DecoyEntity> {
+export class DecoyEntityRender extends CachedSpriteRenderer<number, DecoyEntity> {
     private static readonly PULSE_PERIOD = PI2 / 0.25;
+    private readonly bounding = new AABB(-32, -32, 32, 32);
 
-    protected drawSprite(ctx: SpriteCtx, entity: DecoyEntity): void {
-        const size = entity.getWidth();
+    public constructor() {
+        super(new SingleCache());
+    }
+
+    protected drawSprite(ctx: SpriteCtx): void {
+        const size = 6;
         const glowColor = 'rgba(255,254,183,0.8)';
+
+        ctx.shadowBlur = 25;
+        ctx.shadowColor = glowColor;
 
         // 渐变描边
         const gradient = ctx.createLinearGradient(-size, -size, size, size);
@@ -36,6 +46,10 @@ export class DecoyEntityRender extends SingleCachedSpriteRenderer<DecoyEntity> {
         ctx.fill();
     }
 
+    protected spriteKey(): number {
+        return 0;
+    }
+
     protected applyTransform(ctx: CanvasRenderingContext2D, entity: DecoyEntity) {
         const pulse = 1 + Math.sin((entity.age % DecoyEntityRender.PULSE_PERIOD)
             / DecoyEntityRender.PULSE_PERIOD * PI2) * 0.1;
@@ -44,11 +58,7 @@ export class DecoyEntityRender extends SingleCachedSpriteRenderer<DecoyEntity> {
         ctx.scale(pulse, pulse);
     }
 
-    protected width(): number {
-        return 12;
-    }
-
-    protected height(): number {
-        return 12;
+    protected bounds(): AABB {
+        return this.bounding;
     }
 }
