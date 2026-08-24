@@ -1,9 +1,10 @@
 import {MemoryLRU} from "../../../utils/collection/MemoryLRU.ts";
 import type {BiConsumer} from "../../../type/types.ts";
-import {DPR} from "../../../utils/uit.ts";
+import type {AABB} from "../../../utils/math/AABB.ts";
+import {buildSprite, type RenderCache} from "./RenderCache.ts";
 
-export class RenderCache {
-    private readonly sprites: MemoryLRU<number, ImageBitmap>;
+export class LRURenderCache<K> implements RenderCache<K> {
+    private readonly sprites: MemoryLRU<K, ImageBitmap>;
 
     public constructor(capacity: number = 128) {
         this.sprites = new MemoryLRU(
@@ -13,22 +14,15 @@ export class RenderCache {
     }
 
     public get<E>(
-        key: number,
-        width: number,
-        height: number,
+        key: K,
+        bounds: AABB,
         draw: BiConsumer<SpriteCtx, E>,
         target: E
     ): ImageBitmap {
         const sprite = this.sprites.get(key);
         if (sprite) return sprite;
 
-        const canvas = new OffscreenCanvas(Math.ceil(width * DPR), Math.ceil(height * DPR));
-        const ctx = canvas.getContext('2d')!;
-        ctx.scale(DPR, DPR);
-        ctx.translate(width / 2, height / 2);
-        draw(ctx, target);
-
-        const bitmap = canvas.transferToImageBitmap();
+        const bitmap = buildSprite(bounds, draw, target);
         this.sprites.set(key, bitmap);
         return bitmap;
     }

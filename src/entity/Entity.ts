@@ -27,8 +27,6 @@ import {EMPTY_LISTENER, type EntityChangeListener} from "../world/entity/EntityC
 import type {EntityRenderer} from "../client/render/entity/EntityRenderer.ts";
 import {BlockCollision} from "../world/collision/BlockCollision.ts";
 import type {Comparable} from "../type/Comparable.ts";
-import type {ViewRect} from "../client/render/Camera.ts";
-import {isBoxInView} from "../utils/render/render.ts";
 import {EventBus} from "../event/EventBus.ts";
 
 
@@ -700,8 +698,8 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     // 渲染与可见性
 
-    public shouldRender(view: ViewRect): boolean {
-        return isBoxInView(this.boundingBox, view);
+    public shouldRender(): boolean {
+        return true;
     }
 
     // 用于缓存,渲染器自动处理,一般不需要手动管理

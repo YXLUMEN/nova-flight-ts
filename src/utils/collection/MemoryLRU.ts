@@ -2,7 +2,6 @@ import type {Consumer, Pair, Return} from "../../type/types.ts";
 
 export class MemoryLRU<K, V> {
     private readonly cacheMap = new Map<K, V>();
-
     private readonly capacity: number;
     private readonly onRemove: Consumer<Pair<K, V | null>> | null;
 

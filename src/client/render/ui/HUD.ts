@@ -167,14 +167,13 @@ export class HUD implements IUi {
     public renderMainWeapon(ctx: CanvasRenderingContext2D, tickDelta: number) {
         if (!this.player) return;
 
-        const pos = this.player.getLerpPos(tickDelta);
-
         const stack = this.player.getCurrentItem();
         const item = stack.getItem();
 
         if (stack.isEmpty() || !(item instanceof Weapon)) return;
         this.crosshair.update(this.player, stack, item, tickDelta);
 
+        const pos = this.player.getLerpPos(tickDelta);
         const anchorX = Math.floor(pos.x + this.player.getDimensions().halfWidth + 12);
 
         ctx.save();
