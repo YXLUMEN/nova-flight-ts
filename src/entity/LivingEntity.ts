@@ -407,8 +407,8 @@ export abstract class LivingEntity extends Entity {
         this.setVelocity(packet.velocityX, packet.velocityY);
         this.serverX = packet.x;
         this.serverY = packet.y;
-        this.color = packet.color;
-        this.edgeColor = packet.edgeColor;
+        this.color.hex = packet.color;
+        this.color.edgeHex = packet.edgeColor;
     }
 
     public override isPushAble(): boolean {

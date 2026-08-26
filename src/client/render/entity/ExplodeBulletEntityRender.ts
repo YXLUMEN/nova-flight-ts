@@ -1,21 +1,22 @@
-import type {EntityRenderer} from "./EntityRenderer.ts";
 import {type ExplodeBulletEntity} from "../../../entity/projectile/ExplodeBulletEntity.ts";
 import {HALF_PI} from "../../../utils/math/math.ts";
+import {CachedSpriteRenderer} from "../cache/CachedSpriteRenderer.ts";
+import type {SpriteCtx} from "../cache/LRURenderCache.ts";
+import {AABB} from "../../../utils/math/AABB.ts";
+import {MapRenderCache} from "../cache/MapRenderCache.ts";
 
-export class ExplodeBulletEntityRender implements EntityRenderer<ExplodeBulletEntity> {
-    public render(entity: ExplodeBulletEntity, ctx: CanvasRenderingContext2D, tickDelta: number, offsetX: number = 0, offsetY: number = 0) {
-        const pos = entity.getLerpPos(tickDelta);
-        const x = pos.x + offsetX;
-        const y = pos.y + offsetY;
+export class ExplodeBulletEntityRender extends CachedSpriteRenderer<number, ExplodeBulletEntity> {
+    private readonly bounding = new AABB(-19, -9, 9, 9);
 
-        const dim = entity.getDimensions();
-        const r = dim.halfWidth;
-        const tailLength = dim.height;
+    public constructor() {
+        super(new MapRenderCache(8));
+    }
 
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(entity.getYaw());
-        ctx.fillStyle = entity.color;
+    protected drawSprite(ctx: SpriteCtx, entity: ExplodeBulletEntity): void {
+        const r = 8;
+        const tailLength = 18;
+
+        ctx.fillStyle = entity.color.color;
 
         ctx.beginPath();
         ctx.arc(0, 0, r, -HALF_PI, HALF_PI, false);
@@ -30,7 +31,18 @@ export class ExplodeBulletEntityRender implements EntityRenderer<ExplodeBulletEn
         ctx.moveTo(-tailLength + 5, -r);
         ctx.lineTo(-tailLength + 5, r);
         ctx.stroke();
+    }
 
-        ctx.restore();
+    protected spriteKey(entity: ExplodeBulletEntity): number {
+        return entity.color.hex;
+    }
+
+    protected transform(ctx: CanvasRenderingContext2D, entity: ExplodeBulletEntity, alpha: number) {
+        super.transform(ctx, entity, alpha);
+        ctx.rotate(entity.getYaw());
+    }
+
+    protected bounds(): AABB {
+        return this.bounding;
     }
 }

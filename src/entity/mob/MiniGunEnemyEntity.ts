@@ -11,7 +11,6 @@ import {MobBulletEntity} from "../projectile/MobBulletEntity.ts";
 
 export class MiniGunEnemyEntity extends MobEntity {
     private static readonly bulletSpeed = 6;
-    public color = "#ac0000";
     private cooldown: number;
     private fireCount = 0;
     private fireCD = 0;
@@ -54,8 +53,8 @@ export class MiniGunEnemyEntity extends MobEntity {
         b.setVelocity(Math.cos(yaw) * MiniGunEnemyEntity.bulletSpeed, Math.sin(yaw) * MiniGunEnemyEntity.bulletSpeed);
         b.setPosition(pos.x, pos.y);
 
-        b.color = '#b10000';
-        b.edgeColor = '#ff0000';
+        b.color.color = '#b10000';
+        b.color.edge = '#ff0000';
         world.spawnEntity(b);
         this.fireCount++;
     }
@@ -74,5 +73,9 @@ export class MiniGunEnemyEntity extends MobEntity {
 
     public override isRangedAttacker(): boolean {
         return true;
+    }
+
+    protected override changeColor() {
+        this.color.color = '#ac0000';
     }
 }

@@ -12,22 +12,22 @@ import {FireWave} from "../ai/FireWave.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 
 export class BaseBossEntity extends BossEntity {
-    protected attackCooldown: number = 0;
-    protected missileCooldown: number = 0;
+    private attackCooldown: number = 0;
+    private missileCooldown: number = 0;
 
-    protected releasingMissile: boolean = false;
+    private releasingMissile: boolean = false;
 
-    protected primaryTarget: Entity | null = null;
-    protected selectCooldown = 0;
+    private primaryTarget: Entity | null = null;
+    private selectCooldown = 0;
 
-    protected bulletWaves: FireWave[] = [
+    private bulletWaves: FireWave[] = [
         new FireWave(5, 4),
         new FireWave(8, 4.5, 0, false, 0),
         new FireWave(12, 3, 4, false, 0),
         new FireWave(10, 6, 0, true, 0),
     ];
 
-    protected fireOffsets = [
+    private fireOffsets = [
         new Vec2(0, 0),
         new Vec2(-81, -16),
         new Vec2(81, -16),
@@ -50,6 +50,14 @@ export class BaseBossEntity extends BossEntity {
 
         const world = this.getWorld() as ServerWorld;
         if (world.isClient) return;
+
+        if (this.primaryTarget) {
+            const pos = this.primaryTarget.positionRef;
+            const self = this.positionRef;
+            this.setClampYaw(Math.atan2(pos.y - self.y, pos.x - self.x), 0.01745);
+        } else {
+            this.setClampYaw(1.57079, 0.01745);
+        }
 
         if (this.selectCooldown-- <= 0) {
             this.primaryTarget = getNearestEntityByVec(this.positionRef, world.getPlayers());
@@ -124,7 +132,7 @@ export class BaseBossEntity extends BossEntity {
             const driftAngle = yaw + side * (HALF_PI + (Math.random() - 0.5) * 0.2);
 
             const missile = new MobMissileEntity(EntityTypes.MOB_MISSILE_ENTITY, world, this, driftAngle);
-            missile.color = '#ff7777';
+            missile.color.color = '#ff7777';
             missile.setPosition(pos.x, pos.y);
             missile.setYaw(yaw);
             world.spawnEntity(missile);

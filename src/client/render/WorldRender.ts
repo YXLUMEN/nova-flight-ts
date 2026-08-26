@@ -1,6 +1,6 @@
 import type {Entity} from "../../entity/Entity.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
-import {clamp, HALF_PI, lerp, PI2} from "../../utils/math/math.ts";
+import {clamp, lerp, PI2} from "../../utils/math/math.ts";
 import {Window} from "./Window.ts";
 import {isBoxInView} from "../../utils/render/render.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
@@ -133,7 +133,7 @@ export class WorldRender {
         this.mapRender!.renderBlocks(ctx);
 
         for (const entity of this.world.getEntities().values()) {
-            if (!entity.shouldRender() || !isBoxInView(entity.getBoundingBox(), viewRect)) continue;
+            if (!entity.shouldRender(viewRect)) continue;
 
             if (entity.renderer === null) {
                 entity.renderer = EntityRenderers.getRenderer(entity);
@@ -181,11 +181,12 @@ export class WorldRender {
 
             if (player.approachMissile.size > 0) {
                 const t = performance.now() * 0.01;
-                const pulse = (Math.sin(t * PI2) + 1) / 2;
-                ctx.fillStyle = `rgba(255,27,27,${0.35 + 0.45 * pulse})`;
+                ctx.globalAlpha = (Math.sin(t * PI2) + 1) / 2;
+                ctx.fillStyle = '#ff1b1b';
                 for (const missile of player.approachMissile) {
                     this.renderLockedDir(ctx, missile, playerPos, 10, 6, 8, alpha);
                 }
+                ctx.globalAlpha = 1;
             }
 
             if (player.followPointer && GlobalConfig.cameraFollow) {
@@ -200,8 +201,7 @@ export class WorldRender {
 
         if (GlobalConfig.renderHitBox) {
             for (const entity of this.world.getEntities().values()) {
-                if (!entity.shouldRender() || !isBoxInView(entity.getBoundingBox(), viewRect)) continue;
-
+                if (!entity.shouldRender(viewRect)) continue;
                 this.renderBoundingBox(ctx, entity, alpha);
             }
             for (const player of this.world.getPlayers()) {
@@ -244,9 +244,9 @@ export class WorldRender {
         missile: MissileEntity,
         playerPos: Vec2,
         tipLength: number, wingWidth: number, wingHeight: number,
-        tickDelta: number
+        alpha: number
     ) {
-        const mPos = missile.getLerpPos(tickDelta);
+        const mPos = missile.getLerpPos(alpha);
         const dx = mPos.x - playerPos.x;
         const dy = mPos.y - playerPos.y;
         const angle = Math.atan2(dy, dx);
@@ -255,11 +255,11 @@ export class WorldRender {
 
         ctx.save();
         ctx.translate(arrowX, arrowY);
-        ctx.rotate(angle + HALF_PI);
+        ctx.rotate(angle);
         ctx.beginPath();
-        ctx.moveTo(0, -tipLength);
-        ctx.lineTo(wingWidth, wingHeight);
-        ctx.lineTo(-wingWidth, wingHeight);
+        ctx.moveTo(tipLength, 0);
+        ctx.lineTo(-wingHeight, wingWidth);
+        ctx.lineTo(-wingHeight, -wingWidth);
         ctx.closePath();
         ctx.fill();
         ctx.restore();

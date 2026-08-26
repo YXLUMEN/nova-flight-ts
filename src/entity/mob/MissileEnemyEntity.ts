@@ -10,7 +10,6 @@ import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {randInt} from "../../utils/math/math.ts";
 
 export class MissileEnemyEntity extends MobEntity {
-    public color = "#ff6b6b";
     protected cooldown = 0;
 
     public constructor(type: EntityType<MissileEnemyEntity>, world: World) {
@@ -36,7 +35,7 @@ export class MissileEnemyEntity extends MobEntity {
         const pos = this.positionRef;
         const yaw = this.getYaw();
         const missile = new MobMissileEntity(EntityTypes.MOB_MISSILE_ENTITY, world, this, yaw);
-        missile.color = '#ff7777';
+        missile.color.color = '#ff7777';
         missile.setPosition(pos.x, pos.y);
         missile.setYaw(yaw);
         world.spawnEntity(missile);
@@ -54,5 +53,9 @@ export class MissileEnemyEntity extends MobEntity {
     public override readNBT(nbt: NbtCompound): void {
         this.cooldown = nbt.getInt16('missile_cooldown', randInt(100, 200));
         super.readNBT(nbt);
+    }
+
+    protected override changeColor() {
+        this.color.color = '#ff6b6b';
     }
 }

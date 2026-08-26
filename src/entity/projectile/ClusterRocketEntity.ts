@@ -4,9 +4,7 @@ import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {randInt} from "../../utils/math/math.ts";
 
 export class ClusterRocketEntity extends FuseRocketEntity {
-    public override color = "#ff5d2a";
-
-    private rocketCounts = 12;
+    private readonly rocketCounts = 12;
 
     public override explode() {
         super.explode();
@@ -44,5 +42,9 @@ export class ClusterRocketEntity extends FuseRocketEntity {
             rocket.setYaw(bulletYaw);
             world.spawnEntity(rocket);
         }
+    }
+
+    protected override changeColor() {
+        this.color.color = '#ff5d2a';
     }
 }

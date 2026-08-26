@@ -13,7 +13,6 @@ export class RocketEntity extends ProjectileEntity {
     public explosionRadius = 64;
     public explosionDamage = 10;
 
-    public override color = "#ffaa4d";
     protected explodeColor = "#e3e3e3";
     protected behaviour: ExplosionBehavior | null = null;
 
@@ -68,5 +67,9 @@ export class RocketEntity extends ProjectileEntity {
             this.behaviour,
             new ExplosionVisual(this.explosionRadius, this.explodeColor, 5, 2)
         );
+    }
+
+    protected override changeColor() {
+        this.color.color = '#ffaa4d';
     }
 }

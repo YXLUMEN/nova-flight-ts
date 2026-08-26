@@ -30,7 +30,7 @@ export class SpaceTorpedoes extends SpecialWeapon {
             const torpedo = new TorpedoEntity(EntityTypes.TORPEDO_ENTITY, world, attacker, yaw, hitDamage);
             torpedo.explosionDamage = explosionDamage;
             torpedo.explosionRadius = explosionRadius;
-            torpedo.color = '#6c4b00';
+            torpedo.color.color = '#6c4b00';
             torpedo.setYaw(yaw);
             torpedo.setPosition(pos.x, pos.y);
             (world as ServerWorld).spawnEntity(torpedo);

@@ -7,7 +7,6 @@ import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {clamp} from "../../utils/math/math.ts";
 
 export class TankEnemy extends MobEntity {
-    public override color = '#ff6b6b';
     private toughness: number = 0;
 
     public constructor(type: EntityType<TankEnemy>, world: World, worth: number) {
@@ -36,5 +35,9 @@ export class TankEnemy extends MobEntity {
         }
 
         return super.takeDamage(damageSource, damage);
+    }
+
+    protected override changeColor() {
+        this.color.color = '#ff6b6b';
     }
 }

@@ -1,4 +1,10 @@
 use bytes::{BufMut, Bytes, BytesMut};
+use std::time::Duration;
+
+pub const MAX_PAYLOAD_LEN: usize = 6144; // 6 KB upper bound for a single frame
+pub const MAX_EXCLUDES: u32 = 16; // exclude uuid count
+pub const MAX_BACKOFF: Duration = Duration::from_secs(5);
+pub const MAX_CONNECTIONS: usize = 64; // u8 session id space upper bound with margin
 
 pub trait Payload {
     const PAYLOAD_TYPE: u8;

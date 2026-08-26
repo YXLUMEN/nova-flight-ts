@@ -10,8 +10,6 @@ import {ExplosionBehavior} from "../../world/element/explosion/ExplosionBehavior
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 
 export class ExplodeBulletEntity extends ProjectileEntity {
-    public override color = '#ffae00';
-
     private readonly power: number;
     private readonly behaviour: ExplosionBehavior;
     private readonly visual: ExplosionVisual
@@ -74,5 +72,9 @@ export class ExplodeBulletEntity extends ProjectileEntity {
         }
         world.createExplosion(this, null, hitResult.pos.x, hitResult.pos.y, this.power, this.behaviour, this.visual);
         world.playSound(this.getOwner(), SoundEvents.MISSILE_EXPLOSION, 0.3);
+    }
+
+    protected override changeColor() {
+        this.color.color = '#ffae00';
     }
 }

@@ -6,24 +6,19 @@ import type {TrackedData} from "../data/TrackedData.ts";
 import {DataTracker, type DataTrackerSerializedEntry} from "../data/DataTracker.ts";
 import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
-import type {IColorEntity} from "../IColorEntity.ts";
 import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
-import type {HexColor, UUID} from "../../type/types.ts";
+import type {UUID} from "../../type/types.ts";
 import {NbtTypeId} from "../../nbt/NbtType.ts";
 import {UUIDUtil} from "../../utils/UUIDUtil.ts";
-import {decodeColorToHex, encodeColorHex} from "../../utils/NetUtil.ts";
 import {ProjectRaycastUtil} from "../../world/collision/ProjectRaycastUtil.ts";
 import {type HitResult, HitType} from "../../world/collision/HitResult.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 
-export abstract class ProjectileEntity extends Entity implements Ownable, IColorEntity {
+export abstract class ProjectileEntity extends Entity implements Ownable {
     private damage: number = 0;
     private ownerUuid: UUID | null = null;
     private owner: Entity | null = null;
-
-    public color = "#8cf5ff";
-    public edgeColor = '';
 
     protected constructor(type: EntityType<ProjectileEntity>, world: World, owner: Entity | null, damage: number) {
         super(type, world);
@@ -142,7 +137,7 @@ export abstract class ProjectileEntity extends Entity implements Ownable, IColor
             nbt.setString('owner', this.ownerUuid);
         }
         nbt.setFloat('damage', this.damage);
-        nbt.setUint32Array('colors', [encodeColorHex(this.color as HexColor), encodeColorHex(this.edgeColor as HexColor)]);
+        nbt.setUint32Array('colors', [this.color.hex, this.color.edgeHex]);
         return nbt;
     }
 
@@ -163,10 +158,10 @@ export abstract class ProjectileEntity extends Entity implements Ownable, IColor
         if (nbt.contains('colors', NbtTypeId.Uint32Array)) {
             const colors = nbt.getUint32Array('colors');
             if (colors[0]) {
-                this.color = decodeColorToHex(colors[0]);
+                this.color.hex = colors[0];
             }
             if (colors[1]) {
-                this.edgeColor = decodeColorToHex(colors[1]);
+                this.color.edgeHex = colors[1];
             }
         }
     }
@@ -182,5 +177,9 @@ export abstract class ProjectileEntity extends Entity implements Ownable, IColor
     }
 
     protected defineSyncedData(_builder: InstanceType<typeof DataTracker.Builder>): void {
+    }
+
+    protected override changeColor() {
+        this.color.color = '#8cf5ff';
     }
 }

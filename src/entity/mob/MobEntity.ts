@@ -5,23 +5,19 @@ import {PlayerEntity} from "../player/PlayerEntity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import type {IColorEntity} from "../IColorEntity.ts";
 import type {DataTrackerSerializedEntry} from "../data/DataTracker.ts";
 import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
-import {decodeColorToHex, encodeColorHex} from "../../utils/NetUtil.ts";
 import {NbtTypeId} from "../../nbt/NbtType.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 import type {EntityAi} from "../ai/EntityAi.ts";
 import {MobAI} from "../ai/MobAI.ts";
-import type {HexColor} from "../../type/types.ts";
 import {MobKilled} from "../../event/events/MobKilled.ts";
 import {MobDamage} from "../../event/events/MobDamage.ts";
 
-export abstract class MobEntity extends LivingEntity implements IColorEntity {
-    public color = '#ff6b6b';
+export abstract class MobEntity extends LivingEntity {
     public verticalMovementDir = 1;
 
     protected readonly AI: EntityAi;
@@ -151,7 +147,7 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
         super.writeNBT(nbt);
 
         nbt.setUint32('worth', this.worth);
-        nbt.setUint32('color', encodeColorHex(this.color as HexColor));
+        nbt.setUint32('color', this.color.hex);
         nbt.setUint32('age', this.age);
         this.AI.writeNBT(nbt);
         return nbt;
@@ -162,9 +158,13 @@ export abstract class MobEntity extends LivingEntity implements IColorEntity {
 
         this.worth = nbt.getUint32('worth', this.worth);
         if (nbt.contains('color', NbtTypeId.Uint32)) {
-            this.color = decodeColorToHex(nbt.getUint32('color'));
+            this.color.hex = nbt.getUint32('color');
         }
         this.age = nbt.getUint32('age', 0);
         this.AI.readNBT(nbt);
+    }
+
+    protected override changeColor() {
+        this.color.color = '#ff6b6b';
     }
 }

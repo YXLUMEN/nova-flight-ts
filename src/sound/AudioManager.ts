@@ -6,6 +6,7 @@ import type {Consumer} from "../type/types.ts";
 import type {AudioResource} from "../resource/AudioResource.ts";
 import {ResourceManager} from "../resource/ResourceManager.ts";
 import {Resources} from "../resource/Resources.ts";
+import {EventBus} from "../event/EventBus.ts";
 
 export class AudioManager {
     private static readonly audio: HTMLAudioElement;
@@ -19,6 +20,7 @@ export class AudioManager {
         if (!isServer) {
             (this.audio as any) = new Audio();
             this.audio.addEventListener('ended', () => this.currentPlaying = null);
+            EventBus.instance().on('game:pause', ({paused}) => paused ? this.pause() : this.resume());
         }
     }
 

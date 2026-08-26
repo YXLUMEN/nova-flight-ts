@@ -1,8 +1,6 @@
+mod client;
 pub mod cmd;
 pub mod discovery;
-mod protocol;
-mod session;
-mod states;
-mod util;
+mod infrastructure;
+mod server;
 mod wss;
-mod header;

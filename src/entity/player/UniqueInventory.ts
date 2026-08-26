@@ -189,8 +189,6 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
     }
 
     public readNBT(nbt: NbtCompound) {
-        this.setSelectedSlot(nbt.getInt8('selected_slot'));
-
         const inventory = nbt.getCompoundArray('inventory');
         if (inventory.length > 0) {
             this.clearContent();
@@ -203,6 +201,7 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
                 this.setItem(slot, stack);
             }
         }
+        this.setSelectedSlot(nbt.getInt8('selected_slot'));
         return nbt;
     }
 

@@ -1,4 +1,4 @@
-use crate::network::states::{Role, Tx};
+use crate::network::infrastructure::states::{Role, Tx};
 use std::collections::VecDeque;
 use std::sync::{Arc, LazyLock};
 use tokio::sync::{oneshot, Mutex};

@@ -4,8 +4,6 @@ import {squareDistVec2} from "../../utils/math/math.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 
 export class C125BulletEntity extends ExplodeBulletEntity {
-    public override color = '#c68900';
-
     protected override onEntityHit(hitResult: EntityHitResult) {
         super.onEntityHit(hitResult);
 
@@ -27,5 +25,9 @@ export class C125BulletEntity extends ExplodeBulletEntity {
         }
 
         entity.updateVelocity(2, f, g);
+    }
+
+    protected override changeColor() {
+        this.color.color = '#c68900';
     }
 }
