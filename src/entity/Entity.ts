@@ -28,6 +28,9 @@ import type {EntityRenderer} from "../client/render/entity/EntityRenderer.ts";
 import {BlockCollision} from "../world/collision/BlockCollision.ts";
 import type {Comparable} from "../type/Comparable.ts";
 import {EventBus} from "../event/EventBus.ts";
+import {EntityColor} from "../world/entity/EntityColor.ts";
+import {isBoxInView} from "../utils/render/render.ts";
+import type {ViewRect} from "../client/render/Camera.ts";
 
 
 export abstract class Entity implements EntityLike, DataTracked, Comparable, NbtSerializable, CommandOutput {
@@ -49,9 +52,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     private boundingBox: AABB = Entity.INITIAL_AABB;
 
     public age: number = 0;
-
-    public color = '';
-    public edgeColor = '';
+    public readonly color: EntityColor = EntityColor.default();
 
     private readonly type: EntityType<any>;
     private uuid: UUID = crypto.randomUUID();
@@ -81,6 +82,8 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         const builder = new DataTracker.Builder(this);
         this.defineSyncedData(builder);
         this.dataTracker = builder.build();
+
+        this.changeColor();
     }
 
     public getType(): EntityType<any> {
@@ -541,8 +544,8 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.snapTo(packet.x, packet.y, packet.yaw);
         this.setId(packet.entityId);
         this.setUuid(packet.uuid);
-        this.color = packet.color;
-        this.edgeColor = packet.edgeColor;
+        this.color.hex = packet.color;
+        this.color.edgeHex = packet.edgeColor;
     }
 
     // 世界与环境
@@ -698,8 +701,11 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     // 渲染与可见性
 
-    public shouldRender(): boolean {
-        return true;
+    public shouldRender(view: ViewRect): boolean {
+        return isBoxInView(this.boundingBox, view);
+    }
+
+    protected changeColor() {
     }
 
     // 用于缓存,渲染器自动处理,一般不需要手动管理

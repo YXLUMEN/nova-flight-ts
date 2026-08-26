@@ -1,5 +1,5 @@
 import type {SpawnContext} from "./SpawnContext.ts";
-import type {Return} from "../../type/types.ts";
+import type {HexColor, Return} from "../../type/types.ts";
 import type {MobEntity} from "../../entity/mob/MobEntity.ts";
 import type {EntityType} from "../../entity/EntityType.ts";
 import {clamp} from "../../utils/math/math.ts";
@@ -18,7 +18,7 @@ export class MobBlueprint {
     /** 额外生命值(在基础最大生命之上叠加) */
     public readonly bonusHp: number;
     /** 着色，默认 '#ff6b6b' */
-    public readonly color: string;
+    public readonly color: HexColor;
     /**
      * HP 缩放策略:
      * - true:             bonusHp 会乘以 difficulty
@@ -36,7 +36,7 @@ export class MobBlueprint {
         worth: number,
         speed: number,
         bonusHp: number,
-        color: string,
+        color: HexColor,
         hpScale: boolean | Return<SpawnContext, number>,
         elite: boolean,
         wander: boolean,
@@ -54,7 +54,7 @@ export class MobBlueprint {
     public create(ctx: SpawnContext) {
         const mob = this.type.create(ctx.world, this.worth);
 
-        mob.color = this.color;
+        mob.color.color = this.color;
         mob.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)
             ?.setBaseValue(this.speed);
 
@@ -116,7 +116,7 @@ export class MobBlueprintBuilder {
     private worth_: number = 1;
     private speed_: number = 1.0;
     private bonusHp_: number = 0;
-    private color_: string = '#ff6b6b';
+    private color_: HexColor = '#ff6b6b';
     private hpScale_: boolean | Return<SpawnContext, number> = true;
     private elite: boolean = false;
     private wander_: boolean = false;
@@ -144,7 +144,7 @@ export class MobBlueprintBuilder {
         return this;
     }
 
-    public color(color: string): this {
+    public color(color: HexColor): this {
         this.color_ = color;
         return this;
     }

@@ -115,7 +115,7 @@ export class DevourerAttack {
             const driftAngle = yaw + side * (HALF_PI + randNeg(0, 0.3));
 
             const missile = new MobMissileEntity(EntityTypes.MOB_MISSILE_ENTITY, world, this.entity, driftAngle);
-            missile.color = '#cc0000';
+            missile.color.color = '#cc0000';
             missile.setPosition(pos.x, pos.y);
             missile.setYaw(yaw);
             world.spawnEntity(missile);

@@ -27,3 +27,5 @@ export type EntityDist<T extends Entity> = { entity: T, distSq: number };
 export type Pair<K, V> = { key: K, value: V };
 
 export type HexColor = `#${string}`;
+
+export type RGB = [number, number, number];

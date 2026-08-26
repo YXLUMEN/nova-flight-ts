@@ -1,15 +1,14 @@
 import type {EntityRenderer} from "./EntityRenderer.ts";
 import {DevourerBoss} from "../../../entity/mob/DevourerBoss.ts";
-import {HALF_PI, lerp, PI2} from "../../../utils/math/math.ts";
+import {lerp, PI2} from "../../../utils/math/math.ts";
 
-type ColorConfig = { body: string; head: string; border: string; glow: string };
+type ColorConfig = { body: string; head: string; border: string; };
 
 export class DevourerBossRender implements EntityRenderer<DevourerBoss> {
     public render(entity: DevourerBoss, ctx: CanvasRenderingContext2D, tickDelta: number): void {
         const phase = entity.getPhase();
         const colors = this.phaseColors[phase];
 
-        ctx.save();
         ctx.fillStyle = colors.body;
         ctx.strokeStyle = colors.border;
 
@@ -34,8 +33,6 @@ export class DevourerBossRender implements EntityRenderer<DevourerBoss> {
         const hx = lerp(tickDelta, entity.prevSegPoses[0], entity.segPoses[0]);
         const hy = lerp(tickDelta, entity.prevSegPoses[1], entity.segPoses[1]);
         this.drawHead(ctx, entity, hx, hy, tickDelta, colors);
-
-        ctx.restore();
     }
 
     private drawHead(
@@ -49,17 +46,17 @@ export class DevourerBossRender implements EntityRenderer<DevourerBoss> {
 
         ctx.save();
         ctx.translate(x, y);
-        ctx.rotate(yaw + HALF_PI);
+        ctx.rotate(yaw);
 
         ctx.fillStyle = colors.head;
         ctx.strokeStyle = colors.border;
         ctx.lineWidth = 2.5;
 
         ctx.beginPath();
-        ctx.moveTo(0, -30);
-        ctx.lineTo(18, 10);
-        ctx.lineTo(0, 20);
-        ctx.lineTo(-18, 10);
+        ctx.moveTo(30, 0);
+        ctx.lineTo(-10, 18);
+        ctx.lineTo(-20, 0);
+        ctx.lineTo(-10, -18);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
@@ -73,25 +70,21 @@ export class DevourerBossRender implements EntityRenderer<DevourerBoss> {
             body: '#6a5acd',
             head: '#5a4abd',
             border: '#332277',
-            glow: '#aa99ff'
         },
         {
-            body: '#9932cc',
-            head: '#aa33aa',
-            border: '#551155',
-            glow: '#ff44ff'
+            body: '#a02fd6',
+            head: '#c43ae0',
+            border: '#5a0d7a',
         },
         {
-            body: '#9932cc',
-            head: '#aa33aa',
-            border: '#551155',
-            glow: '#ff44ff'
+            body: '',
+            head: '',
+            border: '',
         },
         {
-            body: '#cc2222',
-            head: '#ff3333',
-            border: '#880000',
-            glow: '#ff6600'
+            body: '#d42a12',
+            head: '#ff3b20',
+            border: '#7a0c00',
         }
     ];
 }

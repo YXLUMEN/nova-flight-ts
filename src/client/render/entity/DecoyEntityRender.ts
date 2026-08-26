@@ -50,7 +50,9 @@ export class DecoyEntityRender extends CachedSpriteRenderer<number, DecoyEntity>
         return 0;
     }
 
-    protected applyTransform(ctx: CanvasRenderingContext2D, entity: DecoyEntity) {
+    protected transform(ctx: CanvasRenderingContext2D, entity: DecoyEntity, alpha: number) {
+        super.transform(ctx, entity, alpha);
+
         const pulse = 1 + Math.sin((entity.age % DecoyEntityRender.PULSE_PERIOD)
             / DecoyEntityRender.PULSE_PERIOD * PI2) * 0.1;
 

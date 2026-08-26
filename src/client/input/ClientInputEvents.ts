@@ -210,5 +210,10 @@ export class ClientInputEvents {
                 client.window.pauseOverlay.handleClick(event.offsetX, event.offsetY);
             }
         });
+
+        client.window.canvas.addEventListener('pointerup', () => {
+            if (!client.player) return;
+            client.player.clientInventory.justClicked = false;
+        });
     }
 }

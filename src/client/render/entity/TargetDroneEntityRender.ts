@@ -10,7 +10,7 @@ export class TargetDroneEntityRender implements EntityRenderer<TargetDrone> {
         const r = dim.halfWidth;
 
         ctx.save();
-        ctx.fillStyle = entity.color;
+        ctx.fillStyle = entity.color.color;
         ctx.fillRect(pos.x - r, pos.y - r, dim.width, dim.height);
 
         ctx.font = UITheme.font;

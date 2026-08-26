@@ -1,6 +1,6 @@
 import {clamp} from "./math/math.ts";
 import type {Identifier} from "../registry/Identifier.ts";
-import type {Predicate} from "../type/types.ts";
+import type {Predicate, RGB} from "../type/types.ts";
 import {TimeoutError} from "../type/errors.ts";
 
 export const DPR = Math.max(1, Math.min(2, globalThis.devicePixelRatio || 1));
@@ -117,18 +117,32 @@ export function isAscii(str: string): boolean {
     return true;
 }
 
-export function hexToRgb(hex: string) {
+export function hexToRgb(hex: string): RGB {
     const s = hex.replace('#', '');
-    return {
-        r: parseInt(s.slice(0, 2), 16),
-        g: parseInt(s.slice(2, 4), 16),
-        b: parseInt(s.slice(4, 6), 16)
-    };
+    return [
+        parseInt(s.slice(0, 2), 16),
+        parseInt(s.slice(2, 4), 16),
+        parseInt(s.slice(4, 6), 16)
+    ];
+}
+
+export function mix([r, g, b]: RGB, f: number): RGB {
+    const t = f < 0 ? 0 : 255;
+    const k = Math.abs(f);
+    return [Math.round(r + (t - r) * k), Math.round(g + (t - g) * k), Math.round(b + (t - b) * k)];
 }
 
 export function withAlpha(hex: string, a: number): string {
-    const c = hexToRgb(hex);
-    return `rgba(${c.r},${c.g},${c.b},${a.toFixed(3)})`;
+    const [r, g, b] = hexToRgb(hex);
+    return `rgba(${r},${g},${b},${a.toFixed(3)})`;
+}
+
+export function rgba([r, g, b]: RGB, a: number): string {
+    return `rgba(${r},${g},${b},${a})`;
+}
+
+export function rgb([r, g, b]: RGB): string {
+    return `rgb(${r},${g},${b})`;
 }
 
 export function hexToRgba(hex: string, a: number): string {

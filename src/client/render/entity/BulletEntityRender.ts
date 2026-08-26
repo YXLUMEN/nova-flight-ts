@@ -2,7 +2,6 @@ import type {BulletEntity} from "../../../entity/projectile/BulletEntity.ts";
 import {PI2} from "../../../utils/math/math.ts";
 import {AABB} from "../../../utils/math/AABB.ts";
 import {CachedSpriteRenderer} from "../cache/CachedSpriteRenderer.ts";
-import {stringHashCode} from "../../../utils/hash.ts";
 import {MapRenderCache} from "../cache/MapRenderCache.ts";
 import type {EntityType} from "../../../entity/EntityType.ts";
 
@@ -15,14 +14,14 @@ export class BulletEntityRender extends CachedSpriteRenderer<number, BulletEntit
 
     protected drawSprite(ctx: CanvasRenderingContext2D, entity: BulletEntity): void {
         const r = entity.getDimensions().halfWidth;
-        ctx.fillStyle = entity.color;
+        ctx.fillStyle = entity.color.color;
 
         ctx.beginPath();
         ctx.arc(0, 0, r, 0, PI2);
         ctx.fill();
 
-        if (entity.edgeColor) {
-            ctx.strokeStyle = entity.edgeColor;
+        if (entity.color.edgeHex !== 0) {
+            ctx.strokeStyle = entity.color.edge;
             ctx.arc(0, 0, r + 1, 0, PI2);
         }
 
@@ -30,10 +29,10 @@ export class BulletEntityRender extends CachedSpriteRenderer<number, BulletEntit
     }
 
     protected spriteKey(entity: BulletEntity): number {
-        let hash = entity.getType().hashCode();
-        hash = (hash * 31 + stringHashCode(entity.color)) | 0;
-        hash = (hash * 31 + stringHashCode(entity.edgeColor)) | 0;
-        return hash;
+        const type = entity.getType().hashCode();
+        const color = entity.color.hex;
+        const edge = entity.color.edgeHex;
+        return (type * 0x9E3779B1) ^ color ^ (edge >>> 1) | 0;
     }
 
     protected bounds(entity: BulletEntity): AABB {

@@ -1,6 +1,6 @@
 import {Vec2} from "../../utils/math/Vec2.ts";
 import type {Schedule} from "../../type/ITimer.ts";
-import type {Supplier} from "../../type/types.ts";
+import type {HexColor, Supplier} from "../../type/types.ts";
 import type {ProjectileEntity} from "../projectile/ProjectileEntity.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 
@@ -49,8 +49,8 @@ export class FireWave {
         startAngle: number,
         endAngle: number,
         predicate?: Supplier<boolean>,
-        color: string = '#b10000',
-        edgeColor: string = '#ff0000'
+        color: HexColor = '#b10000',
+        edgeColor: HexColor = '#ff0000'
     ): Schedule | null {
         const step = (endAngle - startAngle) / Math.max(1, this.count - 1);
         const angles: number[] = [];
@@ -67,8 +67,8 @@ export class FireWave {
         startAngle: number,
         endAngle: number,
         predicate?: Supplier<boolean>,
-        color: string = '#b10000',
-        edgeColor: string = '#ff0000'
+        color: HexColor = '#b10000',
+        edgeColor: HexColor = '#ff0000'
     ): void {
         const step = (endAngle - startAngle) / Math.max(1, this.count - 1);
         for (let i = 0; i < this.count; i++) {
@@ -77,8 +77,8 @@ export class FireWave {
             const angle = startAngle + step * i;
             projectile.setVelocity(Math.cos(angle) * this.speed, Math.sin(angle) * this.speed);
             projectile.setPosition(x, y);
-            projectile.color = color;
-            projectile.edgeColor = edgeColor;
+            projectile.color.color = color;
+            projectile.color.edge = edgeColor;
             world.spawnEntity(projectile);
         }
     }
@@ -89,8 +89,8 @@ export class FireWave {
         pos: Vec2,
         centerAngle: number,
         predicate?: Supplier<boolean>,
-        color: string = '#b10000',
-        edgeColor: string = '#ff0000'
+        color: HexColor = '#b10000',
+        edgeColor: HexColor = '#ff0000'
     ): Schedule | null {
         const angles = this.spreadAngles(this.count, centerAngle, this.spread);
         return this.fireAngles(world, supplier, pos, angles, predicate, color, edgeColor);
@@ -102,8 +102,8 @@ export class FireWave {
         pos: Vec2,
         angles: number[],
         predicate?: Supplier<boolean>,
-        color: string = '#b10000',
-        edgeColor: string = '#ff0000'
+        color: HexColor = '#b10000',
+        edgeColor: HexColor = '#ff0000'
     ): Schedule | null {
         const execute = () => {
             if (predicate && !predicate()) return;
@@ -111,8 +111,8 @@ export class FireWave {
                 const projectile = supplier();
                 projectile.setVelocity(Math.cos(angle) * this.speed, Math.sin(angle) * this.speed);
                 projectile.setPosition(pos.x, pos.y);
-                projectile.color = color;
-                projectile.edgeColor = edgeColor;
+                projectile.color.color = color;
+                projectile.color.edge = edgeColor;
                 world.spawnEntity(projectile);
             }
         };

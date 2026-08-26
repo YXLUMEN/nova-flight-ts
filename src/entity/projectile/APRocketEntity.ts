@@ -6,7 +6,6 @@ import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 export class APRocketEntity extends RocketEntity {
     public override noClip = true;
 
-    public override color = "#858585";
     private readonly damagedEntity = new WeakSet<Entity>();
 
     protected override onEntityHit(hitResult: EntityHitResult) {
@@ -29,5 +28,9 @@ export class APRocketEntity extends RocketEntity {
     }
 
     public override explode() {
+    }
+
+    protected override changeColor() {
+        this.color.color = '#858585';
     }
 }

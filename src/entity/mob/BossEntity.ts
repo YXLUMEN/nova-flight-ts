@@ -17,7 +17,6 @@ import {BossSpawn} from "../../event/events/BossSpawn.ts";
 export abstract class BossEntity extends MobEntity {
     public static hasBoss: boolean = false;
 
-    public override color = '#b30000';
     public override verticalMovementDir = 0;
 
     private readonly maxDamageCanTake: number;
@@ -88,5 +87,13 @@ export abstract class BossEntity extends MobEntity {
 
     protected createBullet(): MobBulletEntity {
         return new MobBulletEntity(EntityTypes.ENEMY_BULLET_ENTITY, this.getWorld(), this, 4);
+    }
+
+    public override shouldRender(): boolean {
+        return true;
+    }
+
+    protected override changeColor() {
+        this.color.color = '#b30000';
     }
 }

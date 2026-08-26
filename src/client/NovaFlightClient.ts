@@ -22,7 +22,6 @@ import {ClientConnection} from "./network/ClientConnection.ts";
 import {WorldRender} from "./render/WorldRender.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
-import {TipManager} from "./tips/TipManager.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
 import {ClientInputEvents} from "./input/ClientInputEvents.ts";
 import type {ClientChannel} from "./network/ClientChannel.ts";
@@ -36,6 +35,7 @@ import type {ConnectionContext} from "./network/ConnectionContext.ts";
 import {ClientInit} from "./ClientInit.ts";
 import {GameStart} from "../event/events/GameStart.ts";
 import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
+import {GamePause} from "../event/events/GamePause.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -51,7 +51,7 @@ export class NovaFlightClient {
     public readonly input: KeyboardInput;
     public globalSound!: SoundSystem;
 
-    private channel: ClientChannel;
+    protected channel: ClientChannel;
     public readonly connection: ClientConnection;
     public readonly networkHandler: ClientPlayHandler;
     public readonly commandSource: ClientCommandSource;
@@ -216,19 +216,17 @@ export class NovaFlightClient {
     public setPause(bl: boolean): void {
         if (bl && !this.pause) {
             this.worker?.postMessage({type: 'stop_ticking'});
+            EventBus.instance().emit(new GamePause(true));
 
-            AudioManager.pause();
             this.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
             if (this.isIntegrated && this.world) this.world.worldSound.pauseAll().catch(console.error);
-            TipManager.carousel();
             this.window.canvas.style.cursor = 'crosshair';
         } else if (!bl && this.pause) {
             this.worker?.postMessage({type: 'start_ticking'});
+            EventBus.instance().emit(new GamePause(false));
 
-            AudioManager.resume();
             this.globalSound.playSound(SoundEvents.UI_PAGE_SWITCH);
             this.world?.worldSound.resumeAll().catch(console.error);
-            TipManager.cancel();
             this.window.canvas.style.cursor = 'none';
         }
 

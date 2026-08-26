@@ -1,6 +1,5 @@
 import {type VisualEffect} from "./VisualEffect.ts";
 import {lerp, PI2} from "../utils/math/math.ts";
-import {withAlpha} from "../utils/uit.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {decodeFromByte, encodeToByte} from "../utils/NetUtil.ts";
@@ -103,12 +102,13 @@ export class EMPBurst implements VisualEffect {
         ctx.globalCompositeOperation = 'lighter';
         ctx.lineCap = 'square';
         ctx.lineJoin = 'miter';
+        ctx.strokeStyle = this.color;
         ctx.shadowColor = this.color;
         ctx.shadowBlur = this.glow;
 
         // 冲击环
         if (this.drawRing) {
-            ctx.strokeStyle = withAlpha(this.color, alpha * 0.6);
+            ctx.globalAlpha = alpha * 0.6;
             ctx.lineWidth = 6 * (1 - p * 0.5);
             ctx.beginPath();
             ctx.arc(this.pos.x, this.pos.y, rNow, 0, PI2);
@@ -116,11 +116,11 @@ export class EMPBurst implements VisualEffect {
         }
 
         // 电弧
+        ctx.globalAlpha = alpha;
         ctx.beginPath();
         for (let b = 0; b < this.bolts; b++) {
             const a = (b / this.bolts) * PI2 + (Math.random() - 0.5) * 0.3;
             ctx.lineWidth = this.thickness;
-            ctx.strokeStyle = withAlpha(this.color, alpha);
 
             ctx.moveTo(this.pos.x, this.pos.y);
             for (let s = 1; s <= this.segs; s++) {

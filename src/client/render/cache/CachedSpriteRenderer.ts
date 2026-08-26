@@ -13,7 +13,6 @@ export abstract class CachedSpriteRenderer<K, E extends Entity> implements Entit
     }
 
     public render(entity: E, ctx: CanvasRenderingContext2D, alpha: number): void {
-        const {x, y} = this.getAnchor(entity, alpha);
         const bounds = this.bounds(entity);
 
         const sprite = this.cache.get(
@@ -24,13 +23,13 @@ export abstract class CachedSpriteRenderer<K, E extends Entity> implements Entit
         );
 
         ctx.save();
-        ctx.translate(x, y);
-        this.applyTransform(ctx, entity, alpha);
+        this.transform(ctx, entity, alpha);
         ctx.drawImage(
             sprite,
             bounds.minX, bounds.minY,
             bounds.getWidth(), bounds.getHeight(),
         );
+        this.drawOverlay(ctx, entity, alpha);
         ctx.restore();
     }
 
@@ -45,7 +44,12 @@ export abstract class CachedSpriteRenderer<K, E extends Entity> implements Entit
     /**
      * 除了坐标变换外所需要应用的变换
      * */
-    protected applyTransform(_ctx: CanvasRenderingContext2D, _entity: E, _alpha: number): void {
+    protected transform(ctx: CanvasRenderingContext2D, entity: E, alpha: number): void {
+        const {x, y} = this.getAnchor(entity, alpha);
+        ctx.translate(x, y);
+    }
+
+    protected drawOverlay(_ctx: CanvasRenderingContext2D, _entity: E, _alpha: number): void {
     }
 
     /**

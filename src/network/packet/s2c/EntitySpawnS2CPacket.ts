@@ -25,8 +25,8 @@ export class EntitySpawnS2CPacket implements Payload {
     private readonly vyInt16: number;
     private readonly yawInt8: number;
 
-    public readonly color: string;
-    public readonly edgeColor: string;
+    public readonly color: number;
+    public readonly edgeColor: number;
     public readonly entityData: number;
     public readonly extraData: Uint8Array<ArrayBuffer> | null;
 
@@ -37,7 +37,7 @@ export class EntitySpawnS2CPacket implements Payload {
         yawInt8: number,
         entityType: EntityType<any>,
         vxInt16: number, vyInt16: number,
-        color: string, edgeColor: string,
+        color: number, edgeColor: number,
         entityData: number,
         extraData: Uint8Array<ArrayBuffer> | null = null
     ) {
@@ -69,8 +69,8 @@ export class EntitySpawnS2CPacket implements Payload {
             entity.getType(),
             vx,
             vy,
-            entity.color.length > 0 ? entity.color : '#fff',
-            entity.edgeColor.length > 0 ? entity.edgeColor : '#fff',
+            entity.color.hex,
+            entity.color.edgeHex,
             entityData,
             extraData
         );
@@ -86,8 +86,8 @@ export class EntitySpawnS2CPacket implements Payload {
         const yaw = reader.readUint8();
         const velocityX = reader.readInt16();
         const velocityY = reader.readInt16();
-        const color = PacketCodecs.COLOR_HEX.decode(reader);
-        const edgeColor = PacketCodecs.COLOR_HEX.decode(reader);
+        const color = reader.readUint32();
+        const edgeColor = reader.readUint32();
         const data = reader.readVarUint();
 
         let extra: Uint8Array<ArrayBuffer> | null = null;
@@ -106,8 +106,8 @@ export class EntitySpawnS2CPacket implements Payload {
         writer.writeInt8(value.yawInt8);
         writer.writeInt16(value.vxInt16);
         writer.writeInt16(value.vyInt16);
-        PacketCodecs.COLOR_HEX.encode(writer, value.color);
-        PacketCodecs.COLOR_HEX.encode(writer, value.edgeColor);
+        writer.writeUint32(value.color);
+        writer.writeUint32(value.edgeColor);
         writer.writeVarUint(value.entityData);
 
         if (value.extraData === null) {

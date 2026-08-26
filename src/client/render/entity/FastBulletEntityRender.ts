@@ -12,7 +12,7 @@ export class FastBulletEntityRender implements EntityRenderer<FastBulletEntity> 
 
         const gradient = ctx.createLinearGradient(tailX, tailY, x, y);
         gradient.addColorStop(0, 'rgba(166,166,166,0)');
-        gradient.addColorStop(1, entity.color);
+        gradient.addColorStop(1, entity.color.color);
 
         ctx.save();
         ctx.strokeStyle = gradient;

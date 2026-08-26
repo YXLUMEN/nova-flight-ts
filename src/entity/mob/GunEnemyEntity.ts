@@ -10,7 +10,6 @@ import {MobBulletEntity} from "../projectile/MobBulletEntity.ts";
 
 export class GunEnemyEntity extends MobEntity {
     private static readonly bulletSpeed = 8;
-    public color = "#ff6b6b";
     protected cooldown;
 
     public constructor(type: EntityType<GunEnemyEntity>, world: World) {
@@ -40,12 +39,14 @@ export class GunEnemyEntity extends MobEntity {
         b.setVelocity(Math.cos(yaw) * GunEnemyEntity.bulletSpeed, Math.sin(yaw) * GunEnemyEntity.bulletSpeed);
         b.setPosition(pos.x, pos.y);
 
-        b.color = '#b10000';
-        b.edgeColor = '#ff0000';
         world.spawnEntity(b);
     }
 
     public override isRangedAttacker(): boolean {
         return true;
+    }
+
+    protected override changeColor() {
+        this.color.color = '##ff6b6b';
     }
 }

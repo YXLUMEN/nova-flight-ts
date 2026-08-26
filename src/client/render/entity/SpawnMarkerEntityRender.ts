@@ -1,24 +1,21 @@
-import type {EntityRenderer} from "./EntityRenderer.ts";
-import type {SpawnMarkerEntity} from "../../../entity/SpawnMarkerEntity.ts";
+import {type SpawnMarkerEntity} from "../../../entity/SpawnMarkerEntity.ts";
+import {CachedSpriteRenderer} from "../cache/CachedSpriteRenderer.ts";
+import {SingleCache} from "../cache/SingleCache.ts";
+import {AABB} from "../../../utils/math/AABB.ts";
 
-export class SpawnMarkerEntityRender implements EntityRenderer<SpawnMarkerEntity> {
-    public render(entity: SpawnMarkerEntity, ctx: CanvasRenderingContext2D, _: number, offsetX: number = 0, offsetY: number = 0) {
-        const pos = entity.positionRef;
-        const size = entity.getWidth();
-        const gapRatio = 0.3;
-        const half = size / 2;
-        const gap = size * gapRatio;
+export class SpawnMarkerEntityRender extends CachedSpriteRenderer<number, SpawnMarkerEntity> {
+    private readonly bounding = new AABB(-13, -13, 13, 13);
 
-        let alpha = 1;
-        if (entity.age > 32) {
-            const speed = 0.3 + (1 - entity.age / 72);
-            alpha = 0.5 + 0.5 * Math.sin(entity.age * speed);
-        }
+    public constructor() {
+        super(new SingleCache());
+    }
 
-        ctx.save();
-        ctx.translate(pos.x + offsetX, pos.y + offsetY);
+    protected drawSprite(ctx: CanvasRenderingContext2D): void {
+        const half = 12;
+        const gap = 7.2;
+
         ctx.lineWidth = 2;
-        ctx.strokeStyle = `rgba(255,95,66,${alpha})`;
+        ctx.strokeStyle = '#ff5f42';
 
         // 顶边
         ctx.beginPath();
@@ -51,7 +48,24 @@ export class SpawnMarkerEntityRender implements EntityRenderer<SpawnMarkerEntity
         ctx.moveTo(-half, -gap / 2);
         ctx.lineTo(-half, -half);
         ctx.stroke();
+    }
 
-        ctx.restore();
+    protected spriteKey(): number {
+        return 0;
+    }
+
+    protected transform(ctx: CanvasRenderingContext2D, entity: SpawnMarkerEntity, alpha: number) {
+        super.transform(ctx, entity, alpha);
+
+        if (entity.age <= 32) return;
+
+        const progress = Math.min(entity.age / 80, 1);
+        const curve = Math.pow(10, progress) - 1;
+        const currentFrequency = 0.06 * (1 + curve);
+        ctx.globalAlpha = (Math.sin(entity.age * currentFrequency) + 1) / 2;
+    }
+
+    protected bounds(): AABB {
+        return this.bounding;
     }
 }

@@ -16,14 +16,14 @@ import {BaseEnemyRender} from "../src/client/render/entity/BaseEnemyRender.ts";
 import {BulletEntityRender} from "../src/client/render/entity/BulletEntityRender.ts";
 import {CIWSBulletEntityRender} from "../src/client/render/entity/CIWSBulletEntityRender.ts";
 import {DecoyEntityRender} from "../src/client/render/entity/DecoyEntityRender.ts";
-import {MissileEntityRender} from "../src/client/render/entity/MissileEntityRender.ts";
 import {MapRenderCache} from "../src/client/render/cache/MapRenderCache.ts";
 import {LRURenderCache} from "../src/client/render/cache/LRURenderCache.ts";
 import type {RenderCache} from "../src/client/render/cache/RenderCache.ts";
 import {buildSprite} from "../src/client/render/cache/RenderCache.ts";
 import {AABB} from "../src/utils/math/AABB.ts";
-import {HALF_PI} from "../src/utils/math/math.ts";
+
 import {DPR} from "../src/utils/uit.ts";
+import {EntityColor} from "../src/world/entity/EntityColor";
 
 // ---------- 目标画布（与游戏同构：DPR 变换） ----------
 const target = new OffscreenCanvas(1600, 900);
@@ -37,10 +37,10 @@ class EnemyProbe extends BaseEnemyRender {
     }
 
     public transform(ctx: any, e: any, a: number): void {
-        this.applyTransform(ctx, e, a);
+        this.transform(ctx, e, a);
     }
 
-    public key(e: any): string {
+    public key(e: any): number {
         return this.spriteKey(e);
     }
 
@@ -54,6 +54,10 @@ class BulletProbe extends BulletEntityRender {
         this.drawSprite(ctx, e);
     }
 
+    public transform(ctx: any, e: any, a: number): void {
+        this.transform(ctx, e, a);
+    }
+
     public key(e: any): number {
         return this.spriteKey(e);
     }
@@ -64,12 +68,12 @@ class BulletProbe extends BulletEntityRender {
 }
 
 class CIWSProbe extends CIWSBulletEntityRender {
-    public draw(ctx: any, e: any): void {
-        this.drawSprite(ctx, e);
+    public draw(ctx: any): void {
+        this.drawSprite(ctx);
     }
 
-    public transform(ctx: any, e: any): void {
-        this.applyTransform(ctx, e);
+    public transform(ctx: any, e: any, a: number): void {
+        this.transform(ctx, e, a);
     }
 
     public bnd(e: any): AABB {
@@ -78,12 +82,30 @@ class CIWSProbe extends CIWSBulletEntityRender {
 }
 
 class DecoyProbe extends DecoyEntityRender {
-    public draw(ctx: any, e: any): void {
-        this.drawSprite(ctx, e);
+    public draw(ctx: any): void {
+        this.drawSprite(ctx);
     }
 
-    public transform(ctx: any, e: any): void {
-        this.applyTransform(ctx, e);
+    public transform(ctx: any, e: any, a: number): void {
+        this.transform(ctx, e, a);
+    }
+
+    public bnd(e: any): AABB {
+        return (this as any).bounds(e);
+    }
+}
+
+class MissileProbe extends DecoyEntityRender {
+    public draw(ctx: any): void {
+        this.drawSprite(ctx);
+    }
+
+    public transform(ctx: any, e: any, a: number): void {
+        this.transform(ctx, e, a);
+    }
+
+    public key(e: any): number {
+        return this.spriteKey();
     }
 
     public bnd(e: any): AABB {
@@ -97,18 +119,17 @@ const enemyProbe = new EnemyProbe();
 const bulletProbe = new BulletProbe();
 const ciwsProbe = new CIWSProbe();
 const decoyProbe = new DecoyProbe();
+const missileProbe = new MissileProbe();
 
 const enemyFake = {
     getLerpPos: () => POS,
-    getLerpYaw: () => -HALF_PI,   // rotate 后为 0，便于像素对比
-    color: "#ff9940",
-    edgeColor: "rgba(255,153,64,.4)",
+    getLerpYaw: () => 0,   // rotate 后为 0，便于像素对比
+    color: new EntityColor('#ff9940', '#FF994066')
 };
 
 const bulletFake = {
     getLerpPos: () => POS,
-    color: "#ffd75e",
-    edgeColor: "#fff2b0",
+    color: new EntityColor('#ffd75e', '#fff2b0'),
     getType: () => ({hashCode: () => 7}),
     getDimensions: () => ({halfWidth: 2}),
     getWidth: () => 4,
@@ -117,8 +138,8 @@ const bulletFake = {
 
 const ciwsFake = {
     getLerpPos: () => POS,
-    getYaw: () => -HALF_PI,
-    color: "#66ccff",
+    getYaw: () => 0,
+    color: new EntityColor('#66ccff'),
 };
 
 const decoyFake = {
@@ -130,7 +151,7 @@ const decoyFake = {
 const missileFake = {
     getLerpPos: () => POS,
     getLerpYaw: () => 0.3,
-    color: "#ffd75e",
+    color: new EntityColor('#ffd75e'),
     isIgnite: () => true,
 };
 
@@ -213,7 +234,6 @@ function totalCalls(counts: Map<string, number>): number {
 // ---------- 各形状：direct / cached / miss（ctx 参数化，便于计时与计数复用） ----------
 const renderDirectEnemy = (ctx: any, e: any) => {
     ctx.save();
-    ctx.translate(POS.x, POS.y);
     enemyProbe.transform(ctx, e, 0.5);
     enemyProbe.draw(ctx, e);
     ctx.restore();
@@ -221,13 +241,12 @@ const renderDirectEnemy = (ctx: any, e: any) => {
 const renderCachedEnemy = (ctx: any, e: any) => enemyProbe.render(e, ctx, 0.5);
 const directEnemy = () => renderDirectEnemy(tctx, enemyFake);
 const cachedEnemy = () => renderCachedEnemy(tctx, enemyFake);
-const noCacheEnemy = new NoCache<string>();
+const noCacheEnemy = new NoCache<number>();
 const missEnemy = () => {
     const e = enemyFake;
     const b = enemyProbe.bnd(e);
     const s = noCacheEnemy.get(enemyProbe.key(e), b, (ctx: any, t: any) => enemyProbe.draw(ctx, t), e);
     tctx.save();
-    tctx.translate(POS.x, POS.y);
     enemyProbe.transform(tctx, e, 0.5);
     tctx.drawImage(s, b.minX, b.minY, b.getWidth(), b.getHeight());
     tctx.restore();
@@ -235,7 +254,7 @@ const missEnemy = () => {
 
 const renderDirectBullet = (ctx: any, e: any) => {
     ctx.save();
-    ctx.translate(POS.x, POS.y);
+    bulletProbe.transform(ctx, e, 0.5);
     bulletProbe.draw(ctx, e);
     ctx.restore();
 };
@@ -256,9 +275,8 @@ const missBullet = () => {
 
 const renderDirectCIWS = (ctx: any, e: any) => {
     ctx.save();
-    ctx.translate(POS.x, POS.y);
-    ciwsProbe.transform(ctx, e);
-    ciwsProbe.draw(ctx, e);
+    ciwsProbe.transform(ctx, e, 0.5);
+    ciwsProbe.draw(ctx);
     ctx.restore();
 };
 const renderCachedCIWS = (ctx: any, e: any) => ciwsProbe.render(e, ctx, 0.5);
@@ -267,9 +285,8 @@ const cachedCIWS = () => renderCachedCIWS(tctx, ciwsFake);
 
 const renderDirectDecoy = (ctx: any, e: any) => {
     ctx.save();
-    ctx.translate(POS.x, POS.y);
-    decoyProbe.transform(ctx, e);
-    decoyProbe.draw(ctx, e);
+    decoyProbe.transform(ctx, e, 0.5);
+    decoyProbe.draw(ctx);
     ctx.restore();
 };
 const renderCachedDecoy = (ctx: any, e: any) => decoyProbe.render(e, ctx, 0.5);
@@ -277,43 +294,17 @@ const directDecoy = () => renderDirectDecoy(tctx, decoyFake);
 const cachedDecoy = () => renderCachedDecoy(tctx, decoyFake);
 
 // ---------- 导弹 A/B：全量直接渲染 vs 弹体缓存 + 动态尾焰 ----------
-const missileProbe = new MissileEntityRender();
-const missileBody = new MapRenderCache<string>(8);
-const MISSILE_BODY_BOUNDS = new AABB(-7.5, -9.5, 7.5, 6.5);
-const bodyDraw = (ctx: any): void => {
-    ctx.fillStyle = "#ffd75e";
-    ctx.strokeStyle = "rgba(0,0,0,.2)";
-    ctx.beginPath();
-    ctx.moveTo(0, -9);
-    ctx.lineTo(7, 3);
-    ctx.lineTo(0, 6);
-    ctx.lineTo(-7, 3);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-};
-const flameDraw = (ctx: any): void => {
-    ctx.fillStyle = "rgba(255,200,120,.9)";
-    ctx.beginPath();
-    ctx.moveTo(-3, 8);
-    ctx.lineTo(0, 12 + Math.random() * 3);
-    ctx.lineTo(3, 8);
-    ctx.closePath();
-    ctx.fill();
-};
-// @ts-expect-error
-const missileDirect = () => missileProbe.render(missileFake, tctx, 0.5);
-const renderMissileCached = (ctx: any, e: any) => {
+const renderDirectMissile = (ctx: any, e: any) => {
     ctx.save();
-    ctx.translate(POS.x, POS.y);
-    ctx.rotate(0.3 + HALF_PI);
-    const s = missileBody.get(e.color, MISSILE_BODY_BOUNDS, bodyDraw, e);
-    ctx.drawImage(s, MISSILE_BODY_BOUNDS.minX, MISSILE_BODY_BOUNDS.minY,
-        MISSILE_BODY_BOUNDS.getWidth(), MISSILE_BODY_BOUNDS.getHeight());
-    flameDraw(ctx);           // 动态层每帧画
+    missileProbe.transform(ctx, e, 0.5);
+    missileProbe.draw(ctx);
     ctx.restore();
 };
-const missileCached = () => renderMissileCached(tctx, missileFake);
+const renderCacheMissile = (ctx: any, e: any) => missileProbe.render(e, ctx, 0.5);
+
+const directMissile = () => renderDirectMissile(tctx, missileFake);
+const cacheMissile = () => renderCacheMissile(tctx, missileFake);
+const missileCached = () => renderCacheMissile(tctx, missileFake);
 
 // ---------- 命中率模拟 ----------
 function mulberry32(seed: number): () => number {
@@ -406,7 +397,7 @@ countCalls("BaseEnemy", renderDirectEnemy, renderCachedEnemy, enemyFake);
 countCalls("Bullet", renderDirectBullet, renderCachedBullet, bulletFake);
 countCalls("CIWS", renderDirectCIWS, renderCachedCIWS, ciwsFake);
 countCalls("Decoy", renderDirectDecoy, renderCachedDecoy, decoyFake);
-countCalls("Missile", (ctx: any, e: any) => missileProbe.render(e, ctx, 0.5), renderMissileCached, missileFake);
+countCalls("Missile", renderDirectMissile, renderCacheMissile, missileFake);
 
 // 像素覆盖抽查：sprite(drawImage) 与直接绘制覆盖像素数是否一致（容差 ±25%）
 function pixelCoverage(canvas: OffscreenCanvas): number {
@@ -441,6 +432,7 @@ spotCheck("BaseEnemy", renderDirectEnemy, renderCachedEnemy, enemyFake);
 spotCheck("Bullet", renderDirectBullet, renderCachedBullet, bulletFake);
 spotCheck("CIWS", renderDirectCIWS, renderCachedCIWS, ciwsFake);
 spotCheck("Decoy", renderDirectDecoy, renderCachedDecoy, decoyFake);
+spotCheck("Missile", renderDirectMissile, renderCacheMissile, missileFake);
 
 // 计时（三次取中位数）
 interface Row {
@@ -464,12 +456,19 @@ function addRow(
     miss: (() => void) | null,
     build: number
 ): void {
-    const d = benchOpMed(direct, OPS) * 1000;   // µs
-    const c = benchOpMed(cached, OPS) * 1000;
-    const m = miss ? benchOpMed(miss, OPS) * 1000 : null;
+    const d0 = benchOpMed(direct, OPS) * 1000;   // µs
+    const c0 = benchOpMed(cached, OPS) * 1000;
+    // const m = miss ? benchOpMed(miss, OPS) * 1000 : null;
+
+    const c1 = benchOpMed(cached, OPS) * 1000;
+    const d1 = benchOpMed(direct, OPS) * 1000;   // µs
+
+    const d = (d0 + d1) / 2;
+    const c = (c0 + c1) / 2;
+
     const savingPerFrame = (d - c) * count;     // µs/帧（整群）
     rows.push({
-        shape, count, direct: d, cached: c, miss: m, build: build * 1000,
+        shape, count, direct: d, cached: c, miss: null, build: build * 1000,
         speedup: d / c,
         breakEven: savingPerFrame > 0 ? build * 1000 / savingPerFrame : -1,
     });
@@ -482,20 +481,17 @@ const bulletBuild = buildCost(() => new MapRenderCache<number>(4), bulletProbe.k
     bulletProbe.bnd(bulletFake),
     (ctx: any, e: any) => bulletProbe.draw(ctx, e), bulletFake);
 const ciwsBuild = buildCost(() => new MapRenderCache<string>(4), "c", ciwsProbe.bnd(ciwsFake),
-    (ctx: any, e: any) => ciwsProbe.draw(ctx, e), ciwsFake);
+    (ctx: any) => ciwsProbe.draw(ctx), ciwsFake);
 const decoyBuild = buildCost(() => new MapRenderCache<string>(4), "d", decoyProbe.bnd(decoyFake),
-    (ctx: any, e: any) => decoyProbe.draw(ctx, e), decoyFake);
-const missileBuild = buildCost(() => new MapRenderCache<string>(4), missileFake.color, MISSILE_BODY_BOUNDS,
-    bodyDraw, missileFake);
+    (ctx: any) => decoyProbe.draw(ctx), decoyFake);
+const missileBuild = buildCost(() => new MapRenderCache<string>(4), missileProbe.key(missileFake), missileProbe.bnd(missileFake),
+    (ctx: any) => missileProbe.draw(ctx), missileFake);
 
-addRow("BaseEnemy (30×32)", 60, directEnemy, cachedEnemy, missEnemy, enemyBuild);
+addRow("BaseEnemy (32×30)", 60, directEnemy, cachedEnemy, missEnemy, enemyBuild);
 addRow("Bullet (7×7)", 200, directBullet, cachedBullet, missBullet, bulletBuild);
-addRow("CIWS (3×75)", 6, directCIWS, cachedCIWS, null, ciwsBuild);
+addRow("CIWS (75×3)", 300, directCIWS, cachedCIWS, null, ciwsBuild);
 addRow("Decoy (64×64)", 12, directDecoy, cachedDecoy, null, decoyBuild);
-
-// 导弹 A/B
-const md = benchOpMed(missileDirect, OPS) * 1000;
-const mc = benchOpMed(missileCached, OPS) * 1000;
+addRow('Missile', 12, directMissile, cacheMissile, null, missileBuild);
 
 // LRU vs Map 命中率模拟
 const streams = buildStreams();
@@ -558,12 +554,7 @@ for (const r of rows) {
 const totalSave = rows.reduce((s, r) => s + Math.max(0, r.direct - r.cached) * r.count, 0) / 1000;
 html += `</table><p class="note">帧预算 10ms（perFrame=10ms）。上述场景合计：direct→cached 每帧最多省 <b>${totalSave.toFixed(2)}ms</b>。</p>`;
 
-html += `<h2>4. 导弹：全量直接渲染 vs 弹体缓存 + 动态尾焰（µs/实体）</h2>`;
-html += `<table><tr><th>direct（弹体+尾焰每帧重建）</th><th>缓存弹体 + 尾焰动态</th><th>节省</th></tr>`;
-html += `<tr><td>${md.toFixed(2)}</td><td>${mc.toFixed(2)}</td>
-    <td class="${md > mc ? "good" : "bad"}">${md > mc ? `省 ${(md - mc).toFixed(2)}µs（${(md / mc).toFixed(2)}×）` : "无收益"}</td></tr></table>`;
-
-html += `<h2>5. LRU vs Map 命中率（容量 16，2000 次 get）</h2>`;
+html += `<h2>4. LRU vs Map 命中率（容量 16，2000 次 get）</h2>`;
 html += `<table><tr><th>key 流</th><th>缓存</th><th>命中</th><th>重建</th><th>命中率</th></tr>`;
 for (const [stream, kind, hit, miss] of simRows) {
     html += `<tr><td>${stream}</td><td>${kind}</td><td>${hit}</td><td>${miss}</td><td>${(hit / 2000 * 100).toFixed(1)}%</td></tr>`;
@@ -583,7 +574,7 @@ console.table(rows.map(r => ({
     miss_us: r.miss?.toFixed(2) ?? "-", speedup: r.speedup.toFixed(2) + "x",
     build_us: r.build.toFixed(1), breakEven: r.breakEven > 0 ? r.breakEven.toFixed(1) : "-",
 })));
-console.log(`[导弹] direct=${md.toFixed(2)}µs  cachedBody+flame=${mc.toFixed(2)}µs`);
+// console.log(`[导弹] direct=${md.toFixed(2)}µs  cachedBody+flame=${mc.toFixed(2)}µs`);
 console.table(simRows.map(([s, k, hit, miss]) => ({
     stream: s,
     cache: k,

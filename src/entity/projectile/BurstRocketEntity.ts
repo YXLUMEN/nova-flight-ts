@@ -8,7 +8,7 @@ import {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
 export class BurstRocketEntity extends RocketEntity {
     public override explosionDamage = 1;
     public override explosionRadius = 240;
-    public override color = "#ff0000";
+
     protected override explodeColor = "#ff6161";
 
     public override explode() {
@@ -31,5 +31,9 @@ export class BurstRocketEntity extends RocketEntity {
             )
         );
         world.playSound(null, SoundEvents.MISSILE_EXPLOSION, 0.4);
+    }
+
+    protected override changeColor() {
+        this.color.color = '#ff0000';
     }
 }

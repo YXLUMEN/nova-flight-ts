@@ -24,8 +24,8 @@ export class TextureResource implements ResourceModule, TextureProvider {
     }
 
     public async load(): Promise<void> {
-        if (!this.defaultTexture) await this.builtinDefault();
-        if (!this.transparent) await this.builtinTransparent();
+        if (!this.defaultTexture) this.builtinDefault();
+        if (!this.transparent) this.builtinTransparent();
 
         const root = await resolveResource(`resources/nova-flight`);
         const textureDir = await resolve(root, 'textures');
@@ -86,7 +86,7 @@ export class TextureResource implements ResourceModule, TextureProvider {
         this.textureCache.set(key, bitmap);
     }
 
-    private async builtinDefault(): Promise<void> {
+    private builtinDefault(): void {
         const size = 16;
         const cell = 8;
         const canvas = new OffscreenCanvas(size, size);
@@ -98,15 +98,15 @@ export class TextureResource implements ResourceModule, TextureProvider {
         ctx.fillRect(0, 0, cell, cell);
         ctx.fillRect(cell, cell, cell, cell);
 
-        this.defaultTexture = await createImageBitmap(canvas);
+        this.defaultTexture = canvas.transferToImageBitmap();
     }
 
-    private async builtinTransparent(): Promise<void> {
+    private builtinTransparent(): void {
         const canvas = new OffscreenCanvas(1, 1);
         const ctx = canvas.getContext('2d')!;
         ctx.fillStyle = 'rgba(0,0,0,0)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        this.transparent = await createImageBitmap(canvas);
+        this.transparent = canvas.transferToImageBitmap();
     }
 
     public reload(): Promise<void> {
@@ -130,9 +130,10 @@ export class TextureResource implements ResourceModule, TextureProvider {
     public dispose(key: string): void {
         if (key === TextureResource.DEFAULT_TEXTURE_ID) return;
 
-        if (this.textureCache.has(key)) {
-            this.textureCache.get(key)!.close();
-            this.textureCache.delete(key);
-        }
+        const bitmap = this.textureCache.get(key);
+        if (!bitmap) return;
+
+        bitmap.close();
+        this.textureCache.delete(key);
     }
 }

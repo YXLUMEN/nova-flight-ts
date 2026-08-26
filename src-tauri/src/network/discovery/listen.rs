@@ -1,7 +1,7 @@
 use crate::network::discovery::protocol::{
     decode_announce, LanServerInfo, DISCOVERY_PORT, SERVER_TTL_MS,
 };
-use crate::network::util::now_ms;
+use crate::network::infrastructure::util::now_ms;
 use dashmap::DashMap;
 use log::{error, info, warn};
 use std::sync::Arc;
