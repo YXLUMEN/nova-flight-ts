@@ -136,7 +136,7 @@ export class EntityTypes {
     );
     public static readonly BASE_BOSS_ENTITY = EntityType.register('base_boss_entity',
         EntityType.Builder.create(BaseBossEntity)
-            .sized(148, 160)
+            .sized(180)
     );
     public static readonly TNT_BOSS_ENTITY = EntityType.register('tnt_boss',
         EntityType.Builder.create(TNTBossEntity)
