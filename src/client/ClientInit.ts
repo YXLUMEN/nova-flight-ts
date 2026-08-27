@@ -18,7 +18,7 @@ export class ClientInit {
 
     public async initResources(): Promise<void> {
         const loadingScreen = new LoadingScreen(this.client);
-        loadingScreen.setSize(Window.VIEW_W, Window.VIEW_H);
+        loadingScreen.setSize(Window.viewWidth, Window.viewHeight);
         loadingScreen.loop();
 
         await this.update(loadingScreen);

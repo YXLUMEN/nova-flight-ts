@@ -2,14 +2,25 @@ import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 import {PI2} from "../../utils/math/math.ts";
 import {Window} from "./Window.ts";
+import type {Vec2} from "../../utils/math/Vec2.ts";
 
-export interface ViewRect {
-    top: number;
-    bottom: number;
-    left: number;
-    right: number;
-    width: number;
-    height: number;
+class ViewRect {
+    public top: number = 0;
+    public bottom: number = 0;
+    public left: number = 0;
+    public right: number = 0;
+    public width: number = 0;
+    public height: number = 0;
+
+    public set(pos: Vec2, vw: number, vh: number) {
+        const {x, y} = pos;
+        this.left = x;
+        this.top = y;
+        this.right = x + vw;
+        this.bottom = y + vh;
+        this.width = vw;
+        this.height = vh;
+    }
 }
 
 export class Camera {
@@ -18,14 +29,7 @@ export class Camera {
     private readonly lastViewOffsetCache = MutVec2.zero();
     private readonly viewOffsetCache = MutVec2.zero();
     private readonly uiOffsetCache = MutVec2.zero();
-    private viewRectCache: ViewRect = {
-        top: 0,
-        bottom: 0,
-        left: 0,
-        right: 0,
-        width: 0,
-        height: 0,
-    };
+    private readonly viewRectCache: ViewRect = new ViewRect();
 
     private isDeadZone = false;
     private readonly outDeadZone: number = 40 ** 2;
@@ -44,7 +48,7 @@ export class Camera {
     private readonly uiMaxDrift = 128;      // HUD 最大漂移像素(镜头快速移动时)
     private readonly uiShakeFactor = 0.5;
 
-    public update(target: MutVec2, tickDelta: number): void {
+    public tick(target: MutVec2, tickDelta: number): void {
         if (GlobalConfig.enableCameraOffset) {
             this.follow(target, tickDelta);
         }
@@ -57,14 +61,7 @@ export class Camera {
         );
 
         const off = this.viewOffsetCache;
-        this.viewRectCache = {
-            left: off.x,
-            top: off.y,
-            right: off.x + Window.VIEW_W,
-            bottom: off.y + Window.VIEW_H,
-            width: Window.VIEW_W,
-            height: Window.VIEW_H,
-        };
+        this.viewRectCache.set(off, Window.viewWidth, Window.viewHeight);
     }
 
     public addShake(amount: number, limit = 1): void {
@@ -73,7 +70,7 @@ export class Camera {
     }
 
     private follow(target: MutVec2, tickDelta: number): void {
-        const desired = target.subtract(Window.VIEW_W / 2, Window.VIEW_H / 2);
+        const desired = target.subtract(Window.viewWidth / 2, Window.viewHeight / 2);
         const delta = desired.subVec(this.offset);
         const distSq = delta.lengthSquared();
 
@@ -107,7 +104,7 @@ export class Camera {
         this.velocity.y *= damping;
     }
 
-    private updateShake(tickDelta: number) {
+    private updateShake(tickDelta: number): void {
         // 衰减创伤
         if (this.shakeTrauma > 0) {
             this.shakeTrauma = Math.max(0, this.shakeTrauma - this.shakeDecay * tickDelta);
@@ -129,23 +126,23 @@ export class Camera {
         }
     }
 
-    public get cameraOffset(): MutVec2 {
+    public get cameraOffset(): Vec2 {
         return this.offset;
     }
 
-    public get viewOffset(): MutVec2 {
+    public get viewOffset(): Vec2 {
         return this.viewOffsetCache;
     }
 
-    public get lastViewOffset(): MutVec2 {
+    public get lastViewOffset(): Vec2 {
         return this.lastViewOffsetCache;
     }
 
-    public get viewRect(): ViewRect {
+    public get viewRect(): Readonly<ViewRect> {
         return this.viewRectCache;
     }
 
-    public get uiOffset(): MutVec2 {
+    public get uiOffset(): Vec2 {
         const vx = this.velocity.x, vy = this.velocity.y;
         const speed = Math.hypot(vx, vy);
         let dx = 0, dy = 0;
@@ -161,3 +158,4 @@ export class Camera {
     }
 }
 
+export {type ViewRect};

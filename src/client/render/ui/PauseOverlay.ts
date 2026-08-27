@@ -1,20 +1,19 @@
-import type {IUi} from "./IUi.ts";
 import {UIButton} from "./UIButton.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import {TipManager} from "../../tips/TipManager.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
+import {UiFramework} from "./UiFramework.ts";
+import {EventBus} from "../../../event/EventBus.ts";
+import {NewNotify} from "../../../event/events/NewNotify.ts";
 
-export class PauseOverlay implements IUi {
+export class PauseOverlay extends UiFramework {
     private readonly text: TranslatableText[];
     private readonly buttons: UIButton[] = [];
     private pulse = 1;
 
-    private worldW: number = 0;
-    private worldH: number = 0;
-    private halfW: number = 0;
-    private halfH: number = 0;
-
     public constructor() {
+        super();
+
         this.text = [
             TranslatableText.of('pause.back_to_game'),
             TranslatableText.of('pause.settings'),
@@ -26,16 +25,14 @@ export class PauseOverlay implements IUi {
     }
 
     public setSize(w: number, h: number) {
-        this.worldW = w;
-        this.worldH = h;
-        this.halfW = w / 2;
-        this.halfH = h / 2;
+        super.setSize(w, h);
         this.layoutButtons();
     }
 
     private layoutButtons() {
         const centerX = this.halfW;
         const centerY = this.halfH;
+
         this.buttons.length = 0;
         this.buttons.push(
             new UIButton(
@@ -51,6 +48,7 @@ export class PauseOverlay implements IUi {
                 120, 36,
                 this.text[1],
                 () => {
+                    EventBus.instance().emit(new NewNotify('WIP'));
                 }),
             new UIButton(
                 centerX - 60, centerY + 50,
@@ -70,7 +68,7 @@ export class PauseOverlay implements IUi {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillStyle = 'rgba(0,0,0,0.45)';
-        ctx.fillRect(0, 0, this.worldW, this.worldH);
+        ctx.fillRect(0, 0, this.width, this.height);
 
         // 脉冲
         const t = performance.now() * 0.002;
@@ -96,8 +94,8 @@ export class PauseOverlay implements IUi {
             ctx.textAlign = "right";
             ctx.textBaseline = "bottom";
 
-            let height = this.worldH - 50;
-            const left = this.worldW - 10;
+            let height = this.height - 50;
+            const left = this.width - 10;
             ctx.fillStyle = 'rgb(255,233,174)';
             ctx.font = '20px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
             ctx.fillText(TipManager.title.toString(), left, height);

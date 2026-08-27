@@ -1,9 +1,8 @@
-import {Window} from "./Window.ts";
 import {BitBlockMap} from "../../world/section/BitBlockMap.ts";
 import {WorldConstants} from "../../world/section/WorldConstants.ts";
+import type {ViewRect} from "./Camera.ts";
 
 export class BlockMapRender {
-    private readonly window: Window;
     private readonly map: BitBlockMap;
     private readonly command: number[] = [];
     private dirty = true;
@@ -11,19 +10,17 @@ export class BlockMapRender {
     private debounceTimer: number | undefined;
     private static readonly REBUILD_DELAY_MS = 3000;
 
-    public constructor(window: Window, map: BitBlockMap) {
-        this.window = window;
+    public constructor(map: BitBlockMap) {
         this.map = map;
         this.timer = this.timer.bind(this);
     }
 
-    public renderBlocks(ctx: CanvasRenderingContext2D): void {
+    public render(ctx: CanvasRenderingContext2D, view: ViewRect): void {
         if (this.dirty) this.buildCmd();
-        this.debounceTimer === undefined ? this.cmdRender(ctx) : this.promptRender(ctx);
+        this.debounceTimer === undefined ? this.cmdRender(ctx, view) : this.promptRender(ctx, view);
     }
 
-    private promptRender(ctx: CanvasRenderingContext2D) {
-        const view = this.window.camera.viewRect;
+    private promptRender(ctx: CanvasRenderingContext2D, view: ViewRect) {
         const blocksize = WorldConstants.BLOCK_SIZE;
         const power = WorldConstants.BLOCK_SIZE_LOG2;
 
@@ -55,9 +52,7 @@ export class BlockMapRender {
         }
     }
 
-    private cmdRender(ctx: CanvasRenderingContext2D): void {
-        const view = this.window.camera.viewRect;
-
+    private cmdRender(ctx: CanvasRenderingContext2D, view: ViewRect): void {
         ctx.fillStyle = '#555';
         for (let i = 0; i < this.command.length; i += 4) {
             const x = this.command[i];

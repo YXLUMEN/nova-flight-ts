@@ -1,6 +1,8 @@
-import type {IUi} from "./IUi.ts";
 import {UiTools} from "./UiTools.ts";
 import {UITheme} from "./theme.ts";
+import {UiFramework} from "./UiFramework.ts";
+import {EventBus} from "../../../event/EventBus.ts";
+import type {NewNotify} from "../../../event/events/NewNotify.ts";
 
 interface Notification {
     text: string;
@@ -9,23 +11,13 @@ interface Notification {
     fadeTime: number; // 淡入淡出时间
 }
 
-export class NotificationManager implements IUi {
-    private notifications: Notification[] = [];
-    private worldW = 0;
-    private worldH = 0;
+export class NotificationManager extends UiFramework {
+    private readonly notifications: Notification[] = [];
 
-    public setSize(w: number, h: number) {
-        this.worldW = w;
-        this.worldH = h;
-    }
-
-    public show(text: string, duration = 2000, fadeTime = 300) {
-        this.notifications.push({
-            text,
-            startTime: performance.now(),
-            duration,
-            fadeTime
-        });
+    public constructor() {
+        super();
+        this.onNotify = this.onNotify.bind(this);
+        EventBus.instance().on('ui:new:notify', this.onNotify);
     }
 
     public render(ctx: CanvasRenderingContext2D) {
@@ -59,8 +51,8 @@ export class NotificationManager implements IUi {
 
             ctx.globalAlpha = alpha;
             ctx.fillStyle = 'rgba(255,255,255,0.6)';
-            const x = this.worldW / 2;
-            const y = this.worldH - 50 - offsetY;
+            const x = this.width / 2;
+            const y = this.height - 50 - offsetY;
 
             const textWidth = ctx.measureText(n.text).width;
             const boxW = textWidth + 10 * 2;
@@ -87,7 +79,21 @@ export class NotificationManager implements IUi {
         ctx.restore();
     }
 
+    public show(text: string, duration = 2000, fadeTime = 300) {
+        this.notifications.push({
+            text,
+            startTime: performance.now(),
+            duration,
+            fadeTime
+        });
+    }
+
     public destroy(): void {
         this.notifications.length = 0;
+        EventBus.instance().off('ui:new:notify', this.onNotify);
+    }
+
+    private onNotify(event: NewNotify) {
+        this.show(event.text.toString(), event.duration, event.fadeTime);
     }
 }

@@ -1,7 +1,6 @@
 import {clamp, PI2} from "../../../utils/math/math.ts";
 import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import type {ItemStack} from "../../../item/ItemStack.ts";
-import type {IUi} from "./IUi.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {ClientWorld} from "../../ClientWorld.ts";
 import type {SpecialWeapon} from "../../../item/weapon/SpecialWeapon.ts";
@@ -10,8 +9,9 @@ import {InventoryRender} from "../../inventory/InventoryRender.ts";
 import {Weapon} from "../../../item/weapon/Weapon.ts";
 import {Crosshair} from "./Crosshair.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
+import {UiFramework} from "./UiFramework.ts";
 
-export class HUD implements IUi {
+export class HUD extends UiFramework {
     private readonly font: string = '14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
     private readonly hudColor: string = '#fff';
     private readonly healthText = TranslatableText.of('hud.health');
@@ -22,8 +22,6 @@ export class HUD implements IUi {
     private readonly crosshair: Crosshair = new Crosshair();
 
     // HUD 布局参数
-    private worldW: number = 0;
-    private worldH: number = 0;
     private readonly marginX = 20;
     private readonly marginY = 20;
     private readonly lineGap = 8;
@@ -32,8 +30,7 @@ export class HUD implements IUi {
     private displayHealth: number = 0;
 
     public setSize(w: number, h: number) {
-        this.worldW = w;
-        this.worldH = h;
+        super.setSize(w, h);
         this.inventoryRender?.setSize(w, h);
     }
 
@@ -41,7 +38,7 @@ export class HUD implements IUi {
         this.player = player;
         if (player) {
             this.inventoryRender = new InventoryRender(player);
-            this.inventoryRender.setSize(this.worldW, this.worldH);
+            this.inventoryRender.setSize(this.width, this.height);
             return;
         }
         this.inventoryRender?.destroy();
@@ -228,8 +225,8 @@ export class HUD implements IUi {
     }
 
     private renderEndOverlay(ctx: CanvasRenderingContext2D, world: ClientWorld) {
-        const width = this.worldW;
-        const height = this.worldH;
+        const halfW = this.halfW;
+        const height = this.height;
         let y = height / 2 - 64;
 
         const time = world.getTime() | 0;
@@ -237,28 +234,28 @@ export class HUD implements IUi {
 
         ctx.save();
         ctx.fillStyle = 'rgba(255,0,0,0.3)';
-        ctx.fillRect(0, 0, width, height);
+        ctx.fillRect(0, 0, this.width, height);
 
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         ctx.fillStyle = 'rgb(255,255,255)';
         ctx.font = 'bold 32px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
-        ctx.fillText(TranslatableText.of('hud.game_over').toString(), width / 2, y);
+        ctx.fillText(TranslatableText.of('hud.game_over').toString(), halfW, y);
         y += 48;
 
         ctx.font = '16px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
         const text = new TranslatableText('hud.summary', [time.toString(), score.toString(), (score / time).toFixed(2)]);
-        ctx.fillText(text.toString(), width / 2, y);
+        ctx.fillText(text.toString(), halfW, y);
         y += 32;
 
-        ctx.fillText(TranslatableText.of('hud.back').toString(), width / 2, y);
+        ctx.fillText(TranslatableText.of('hud.back').toString(), halfW, y);
         ctx.restore();
     }
 
     public renderLockAlert(ctx: CanvasRenderingContext2D, flag = 1) {
-        const x = (this.worldW - 120) / 2;
-        const y = this.worldH - 60;
+        const x = this.halfW - 60;
+        const y = this.height - 60;
 
         const t = performance.now() * 0.01;
         const pulse = (Math.sin(t * PI2) + 1) / 2;
@@ -304,5 +301,8 @@ export class HUD implements IUi {
     }
 
     public destroy() {
+        this.player = null;
+        this.inventoryRender?.destroy();
+        this.inventoryRender = null;
     }
 }

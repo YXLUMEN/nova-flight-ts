@@ -8,12 +8,14 @@ import type {ServerWorld} from "../server/ServerWorld.ts";
 import {randInt} from "../utils/math/math.ts";
 import type {UUID} from "../type/types.ts";
 import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import {ParticleEffects} from "../effect/ParticleEffects.ts";
 
 export class DecoyEntity extends Entity implements Ownable {
     public static readonly Entities = new Set<DecoyEntity>();
+
+    private readonly life = randInt(120, 160);
     private owner: Entity | null = null;
     private ownerUuid: UUID | null = null;
-    private readonly life = randInt(250, 320);
 
     public constructor(type: EntityType<DecoyEntity>, world: World, owner: Entity | null) {
         super(type, world);
@@ -26,6 +28,13 @@ export class DecoyEntity extends Entity implements Ownable {
 
         if (this.age >= this.life) {
             this.discard();
+            if (!this.isClient()) return;
+
+            this.getWorld().addPreparedParticleVec(
+                ParticleEffects.DECOY_FLASH,
+                this.positionRef,
+                8,
+            );
             return;
         }
 
@@ -35,10 +44,7 @@ export class DecoyEntity extends Entity implements Ownable {
         this.move(velocity);
         velocity.multiply(0.98);
 
-        const pos = this.positionRef;
-        if (pos.x < -20 || pos.x > World.MAP_WIDTH + 20) {
-            this.discard();
-        }
+        this.clampPosition();
     }
 
     public getOwner(): Entity | null {
@@ -82,6 +88,18 @@ export class DecoyEntity extends Entity implements Ownable {
 
     public override shouldSave(): boolean {
         return false;
+    }
+
+    protected override getMapOffsetX(): number {
+        return World.MAX_X_CROSS;
+    }
+
+    protected override getMapOffsetY(): number {
+        return World.MAX_Y_CROSS;
+    }
+
+    protected override onOutOfBounds() {
+        this.discard();
     }
 
     public override onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {

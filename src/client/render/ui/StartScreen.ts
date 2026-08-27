@@ -2,24 +2,21 @@ import {StarField} from "../../../effect/StarField.ts";
 import {lowPowerLayers} from "../../../configs/StarfieldConfig.ts";
 import {Camera} from "../Camera.ts";
 import {MutVec2} from "../../../utils/math/MutVec2.ts";
-import type {IUi} from "./IUi.ts";
 import {UIButton} from "./UIButton.ts";
 import {UITheme} from "./theme.ts";
 import {Window} from "../Window.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {Consumer, Supplier} from "../../../type/types.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
+import {UiFramework} from "./UiFramework.ts";
 
 type StartScreenOptions = {
     title: string;
     subtitle: string;
 };
 
-export class StartScreen implements IUi {
+export class StartScreen extends UiFramework {
     private readonly ctx: CanvasRenderingContext2D;
-    private width: number = 0;
-    private height: number = 0;
-
     private readonly tempCamera: Camera = new Camera();
     private readonly starField: StarField = new StarField(96, lowPowerLayers, 8);
 
@@ -51,6 +48,8 @@ export class StartScreen implements IUi {
     private readonly PARALLAX_LERP = 0.08;
 
     public constructor(client: NovaFlightClient, options: StartScreenOptions) {
+        super();
+
         const {promise, resolve} = Promise.withResolvers<number>();
         this.waitConfirm = promise;
         this.complete = (action: StartAction) => {
@@ -74,14 +73,14 @@ export class StartScreen implements IUi {
         ];
 
         this.setSize = this.setSize.bind(this);
-        this.setSize(Window.VIEW_W, Window.VIEW_H);
+        this.setSize(Window.viewWidth, Window.viewHeight);
         this.unsubResize = client.window.onResize(this.setSize);
         this.start();
     }
 
     public start() {
         this.running = true;
-        this.tempCamera.update(MutVec2.zero(), 0);
+        this.tempCamera.tick(MutVec2.zero(), 0);
         this.tick(0);
 
         window.addEventListener('click', (event) => {
@@ -99,8 +98,7 @@ export class StartScreen implements IUi {
     }
 
     public setSize(w: number, h: number) {
-        this.width = w;
-        this.height = h;
+        super.setSize(w, h);
         this.layoutButtons();
     }
 

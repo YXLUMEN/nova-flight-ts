@@ -33,9 +33,9 @@ import {ClientWorkerFS} from "./ClientWorkerFS.ts";
 import {ClientConnector} from "./network/ClientConnector.ts";
 import type {ConnectionContext} from "./network/ConnectionContext.ts";
 import {ClientInit} from "./ClientInit.ts";
-import {GameStart} from "../event/events/GameStart.ts";
+import {GameStart} from "../event/events/game/GameStart.ts";
 import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
-import {GamePause} from "../event/events/GamePause.ts";
+import {GamePause} from "../event/events/game/GamePause.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;

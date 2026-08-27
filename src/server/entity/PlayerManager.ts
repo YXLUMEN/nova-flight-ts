@@ -92,6 +92,8 @@ export class PlayerManager {
     }
 
     private async savePlayerData(player: ServerPlayerEntity): Promise<void> {
+        if (!player.shouldSave()) return;
+
         const result = await this.playerIo.savePlayer(player);
         if (result.isErr()) {
             Log.error(result.unwrapErr().message);

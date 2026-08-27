@@ -24,7 +24,7 @@ import {ExplosionVisual} from "../../world/element/explosion/ExplosionVisual.ts"
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {UniqueInventory} from "./UniqueInventory.ts";
-import {PlayerDead} from "../../event/events/PlayerDead.ts";
+import {PlayerDead} from "../../event/events/entity/PlayerDead.ts";
 
 export abstract class PlayerEntity extends LivingEntity {
     private static readonly SHIELD_AMOUNT = DataTracker.registerData(Object(PlayerEntity), TrackedDataHandlerRegistry.FLOAT);

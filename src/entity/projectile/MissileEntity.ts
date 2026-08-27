@@ -18,7 +18,7 @@ import type {TrackedData} from "../data/TrackedData.ts";
 import type {ClientPlayerEntity} from "../../client/entity/ClientPlayerEntity.ts";
 import {PlayerMissileTargetSelector} from "../../utils/math/MissileTargetSelector.ts";
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
-import {MissileLockEntity} from "../../event/events/MissileLockEntity.ts";
+import {MissileLockEntity} from "../../event/events/entity/MissileLockEntity.ts";
 
 export class MissileEntity extends RocketEntity {
     public static readonly IS_IGNITE = DataTracker.registerData(Object(MissileEntity), TrackedDataHandlerRegistry.BOOL);

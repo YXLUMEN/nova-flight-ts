@@ -1,22 +1,23 @@
-import type {GameStart} from "./events/GameStart.ts";
-import type {GameEnd} from "./events/GameEnd.ts";
-import type {GameOver} from "./events/GameOver.ts";
-import type {EntityRemoved} from "./events/EntityRemoved.ts";
-import type {BossKilled} from "./events/BossKilled.ts";
-import type {BossSpawn} from "./events/BossSpawn.ts";
-import type {MobKilled} from "./events/MobKilled.ts";
-import type {MobDamage} from "./events/MobDamage.ts";
-import type {PlayerDead} from "./events/PlayerDead.ts";
+import type {GameStart} from "./events/game/GameStart.ts";
+import type {GameEnd} from "./events/game/GameEnd.ts";
+import type {GameOver} from "./events/game/GameOver.ts";
+import type {EntityRemoved} from "./events/entity/EntityRemoved.ts";
+import type {BossKilled} from "./events/entity/BossKilled.ts";
+import type {BossSpawn} from "./events/entity/BossSpawn.ts";
+import type {MobKilled} from "./events/entity/MobKilled.ts";
+import type {MobDamage} from "./events/entity/MobDamage.ts";
+import type {PlayerDead} from "./events/entity/PlayerDead.ts";
 import type {UnlockTech} from "./events/UnlockTech.ts";
 import type {UnlockTechEntry} from "./events/UnlockTechEntry.ts";
 import type {ExplosionEvent} from "./events/ExplosionEvent.ts";
 import type {EmpBurstEvent} from "./events/EmpBurstEvent.ts";
-import type {StageEnter} from "./events/StageEnter.ts";
-import type {StageExit} from "./events/StageExit.ts";
-import type {MissileLockEntity} from "./events/MissileLockEntity.ts";
-import type {DifficultChange} from "./events/DifficultChange.ts";
+import type {StageEnter} from "./events/stage/StageEnter.ts";
+import type {StageExit} from "./events/stage/StageExit.ts";
+import type {MissileLockEntity} from "./events/entity/MissileLockEntity.ts";
+import type {DifficultChange} from "./events/stage/DifficultChange.ts";
 import type {ChangeLang} from "./events/ChangeLang.ts";
-import type {GamePause} from "./events/GamePause.ts";
+import type {GamePause} from "./events/game/GamePause.ts";
+import type {NewNotify} from "./events/NewNotify.ts";
 
 export interface AppEvents {
     'game:start': GameStart;
@@ -24,6 +25,7 @@ export interface AppEvents {
     'game:over': GameOver;
     'game:pause': GamePause;
     'res:lang': ChangeLang;
+    'ui:new:notify': NewNotify;
     'world:explosion': ExplosionEvent;
     'world:emp_burst': EmpBurstEvent;
     'world:stage:enter': StageEnter;

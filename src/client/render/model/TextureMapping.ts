@@ -1,10 +1,9 @@
-import type {Item} from "../../../item/Item.ts";
 import {Registries} from "../../../registry/Registries.ts";
-import type {Identifier} from "../../../registry/Identifier.ts";
+import type {Item} from "../../../item/Item.ts";
 import type {Tech} from "../../../world/tech/Tech.ts";
 
 export class TextureMapping {
-    public static layer0(item: Item): Identifier {
+    public static layer0(item: Item) {
         return this.getItemTexture(item);
     }
 

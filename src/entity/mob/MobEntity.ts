@@ -14,8 +14,8 @@ import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 import type {EntityAi} from "../ai/EntityAi.ts";
 import {MobAI} from "../ai/MobAI.ts";
-import {MobKilled} from "../../event/events/MobKilled.ts";
-import {MobDamage} from "../../event/events/MobDamage.ts";
+import {MobKilled} from "../../event/events/entity/MobKilled.ts";
+import {MobDamage} from "../../event/events/entity/MobDamage.ts";
 
 export abstract class MobEntity extends LivingEntity {
     public verticalMovementDir = 1;

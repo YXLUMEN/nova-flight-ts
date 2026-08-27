@@ -1,4 +1,4 @@
-import {GameEvent} from "./GameEvent.ts";
+import {GameEvent} from "../GameEvent.ts";
 
 export class StageExit extends GameEvent {
     public readonly name: string;

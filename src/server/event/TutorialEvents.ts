@@ -12,8 +12,8 @@ import type {SequenceContext} from "../../world/sequence/SequenceContext.ts";
 import {config} from "../../utils/uit.ts";
 import type {Consumer} from "../../type/types.ts";
 import {NotGiveUpS2CPacket} from "../../network/packet/s2c/NotGiveUpS2CPacket.ts";
-import type {StageEnter} from "../../event/events/StageEnter.ts";
-import type {PlayerDead} from "../../event/events/PlayerDead.ts";
+import type {StageEnter} from "../../event/events/stage/StageEnter.ts";
+import type {PlayerDead} from "../../event/events/entity/PlayerDead.ts";
 import {UnlockTechEntry} from "../../event/events/UnlockTechEntry.ts";
 import {Emp} from "../../world/element/Emp.ts";
 

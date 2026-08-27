@@ -40,7 +40,7 @@ import type {Vec2} from "../utils/math/Vec2.ts";
 import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
 import type {Payload} from "../network/Payload.ts";
 import {ExplosionEvent} from "../event/events/ExplosionEvent.ts";
-import {GameOver} from "../event/events/GameOver.ts";
+import {GameOver} from "../event/events/game/GameOver.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;

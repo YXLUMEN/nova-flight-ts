@@ -1,6 +1,6 @@
-import {GameEvent} from "./GameEvent.ts";
-import type {BossEntity} from "../../entity/mob/BossEntity.ts";
-import type {ServerWorld} from "../../server/ServerWorld.ts";
+import {GameEvent} from "../GameEvent.ts";
+import type {BossEntity} from "../../../entity/mob/BossEntity.ts";
+import type {ServerWorld} from "../../../server/ServerWorld.ts";
 
 export class BossKilled extends GameEvent {
     public readonly world: ServerWorld;
