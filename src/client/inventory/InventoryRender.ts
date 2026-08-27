@@ -1,13 +1,10 @@
-import type {IUi} from "../render/ui/IUi.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
 import {ClientInventory} from "./ClientInventory.ts";
 import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
 import {ModelManager} from "../render/model/ModelManager.ts";
+import {UiFramework} from "../render/ui/UiFramework.ts";
 
-export class InventoryRender implements IUi {
-    private width: number = 0;
-    private height: number = 0;
-
+export class InventoryRender extends UiFramework {
     private readonly player: ClientPlayerEntity;
     private readonly inventory: ClientInventory;
 
@@ -25,6 +22,7 @@ export class InventoryRender implements IUi {
     private slotPositions: Float32Array | null = null;
 
     public constructor(player: ClientPlayerEntity) {
+        super();
         this.player = player;
         this.inventory = player.clientInventory;
     }
@@ -212,8 +210,7 @@ export class InventoryRender implements IUi {
     }
 
     public setSize(w: number, h: number): void {
-        this.width = w;
-        this.height = h;
+        super.setSize(w, h);
 
         const inventory = this.inventory.getInventory();
         this.recalculateLayout(inventory.hotbarLength(), inventory.tickSlotsLen(), inventory.maxSize());

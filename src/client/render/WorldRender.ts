@@ -1,36 +1,43 @@
-import type {Entity} from "../../entity/Entity.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
-import {clamp, lerp, PI2} from "../../utils/math/math.ts";
+import {clamp, lerp} from "../../utils/math/math.ts";
 import {Window} from "./Window.ts";
-import {isBoxInView} from "../../utils/render/render.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
 import {defaultLayers} from "../../configs/StarfieldConfig.ts";
 import {StarField} from "../../effect/StarField.ts";
 import type {VisualEffect} from "../../effect/VisualEffect.ts";
 import {EntityRenderers} from "./entity/EntityRenderers.ts";
-import {GlobalConfig} from "../../configs/GlobalConfig.ts";
-import type {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
 import {World} from "../../world/World.ts";
 import type {ParticleEffectType} from "../../effect/ParticleEffectType.ts";
-import type {Vec2} from "../../utils/math/Vec2.ts";
 import {BlockMapRender} from "./BlockMapRender.ts";
 import type {TitleEffect} from "../../effect/TitleEffect.ts";
 import {ParticlePool} from "../../effect/ParticlePool.ts";
 import type {HexColor} from "../../type/types.ts";
+import {EntityRenderer} from "./EntityRenderer.ts";
+import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 
 export class WorldRender {
     private readonly client: NovaFlightClient;
+    private readonly window: Window;
+
     private world: ClientWorld | null = null;
 
-    public rendering = true;
-    private title: TitleEffect | null = null;
+    private readonly entityRenderer: EntityRenderer;
     private readonly effects: VisualEffect[] = [];
-    private readonly particlePool: ParticlePool = new ParticlePool(4096);
-    private readonly starField: StarField = new StarField(128, defaultLayers, 8);
+    private readonly particlePool: ParticlePool;
+    private readonly starField: StarField;
+
+    private title: TitleEffect | null = null;
     private mapRender: BlockMapRender | null = null;
+
+    public rendering = true;
 
     public constructor(client: NovaFlightClient) {
         this.client = client;
+        this.window = client.window;
+
+        this.entityRenderer = new EntityRenderer(client);
+        this.particlePool = new ParticlePool(2048);
+        this.starField = new StarField(128, defaultLayers, 8);
         this.starField.init();
     }
 
@@ -42,13 +49,13 @@ export class WorldRender {
         this.effects.length = 0;
         this.particlePool.clear();
         this.mapRender?.dispose();
-        this.mapRender = world === null ? null : new BlockMapRender(this.client.window, world.getMap());
+        this.mapRender = world === null ? null : new BlockMapRender(world.getMap());
     }
 
     public tick(dt: number) {
         const camera = this.client.window.camera;
         if (this.client.player) {
-            camera.update(this.client.player.getLerpPos(dt), dt);
+            camera.tick(this.client.player.getLerpPos(dt), dt);
         }
 
         for (let i = this.effects.length - 1; i >= 0; i--) {
@@ -65,7 +72,7 @@ export class WorldRender {
         }
         this.particlePool.tick(dt);
         this.starField.update(dt, camera);
-        this.client.window.damagePopup.tick(dt);
+        this.window.damagePopup.tick(dt);
     }
 
     public addParticle(
@@ -109,14 +116,15 @@ export class WorldRender {
     public render(alpha: number) {
         if (!this.rendering) return;
 
-        const ctx = this.client.window.ctx;
-        ctx.clearRect(0, 0, Window.VIEW_W, Window.VIEW_H);
+        const ctx = this.window.ctx;
+        ctx.clearRect(0, 0, Window.viewWidth, Window.viewHeight);
 
-        this.starField.render(ctx, this.client.window.camera, alpha);
+        this.starField.render(ctx, this.window.camera, alpha);
 
-        const viewRect = this.client.window.camera.viewRect;
-        const offset = this.client.window.camera.viewOffset;
-        const lastOffset = this.client.window.camera.lastViewOffset;
+        const camera = this.window.camera;
+        const viewRect = camera.viewRect;
+        const offset = camera.viewOffset;
+        const lastOffset = camera.lastViewOffset;
         const ox = lerp(alpha, lastOffset.x, offset.x);
         const oy = lerp(alpha, lastOffset.y, offset.y);
 
@@ -130,16 +138,10 @@ export class WorldRender {
             return;
         }
 
-        this.mapRender!.renderBlocks(ctx);
+        this.mapRender!.render(ctx, viewRect);
 
-        for (const entity of this.world.getEntities().values()) {
-            if (!entity.shouldRender(viewRect)) continue;
-
-            if (entity.renderer === null) {
-                entity.renderer = EntityRenderers.getRenderer(entity);
-            }
-            entity.renderer.render(entity, ctx, alpha);
-        }
+        const world = this.world;
+        this.entityRenderer.renderEntities(ctx, viewRect, world, alpha);
 
         // 特效
         for (let i = 0; i < this.effects.length; i++) {
@@ -148,125 +150,32 @@ export class WorldRender {
         this.particlePool.render(ctx, alpha);
 
         // 其他玩家
-        for (const player of this.world.getPlayers()) {
-            if (player === this.client.player) continue;
-
-            const bound = player.getBoundingBox();
-            if (!isBoxInView(bound, viewRect)) continue;
-
-            if (player.renderer === null) {
-                player.renderer = EntityRenderers.getRenderer(player);
-            }
-            player.renderer.render(player, ctx, alpha);
-        }
+        this.entityRenderer.renderOtherPlayer(ctx, viewRect, world, alpha);
 
         // 主要玩家
         const player = this.client.player;
-        if (!this.world.isOver() && player) {
-            if (player.renderer === null) {
-                player.renderer = EntityRenderers.getRenderer(player);
-            }
-
-            player.renderer.render(player, ctx, alpha);
-            player.bc?.drawAimIndicator(ctx, alpha);
-
-            const playerPos = player.getLerpPos(alpha);
-            if (player.lockedMissile.size > 0) {
-                ctx.fillStyle = '#ff7f50';
-                for (const missile of player.lockedMissile) {
-                    if (player.approachMissile.has(missile)) continue;
-                    this.renderLockedDir(ctx, missile, playerPos, 8, 6, 6, alpha);
-                }
-            }
-
-            if (player.approachMissile.size > 0) {
-                const t = performance.now() * 0.01;
-                ctx.globalAlpha = (Math.sin(t * PI2) + 1) / 2;
-                ctx.fillStyle = '#ff1b1b';
-                for (const missile of player.approachMissile) {
-                    this.renderLockedDir(ctx, missile, playerPos, 10, 6, 8, alpha);
-                }
-                ctx.globalAlpha = 1;
-            }
-
-            if (player.followPointer && GlobalConfig.cameraFollow) {
-                const pointer = player.input.getWorldPointer();
-                ctx.strokeStyle = '#fff';
-                ctx.beginPath();
-                ctx.moveTo(playerPos.x, playerPos.y);
-                ctx.lineTo(pointer.x, pointer.y);
-                ctx.stroke();
-            }
-        }
+        if (player) this.entityRenderer.renderMainPlayer(ctx, world, player, alpha);
 
         if (GlobalConfig.renderHitBox) {
-            for (const entity of this.world.getEntities().values()) {
-                if (!entity.shouldRender(viewRect)) continue;
-                this.renderBoundingBox(ctx, entity, alpha);
-            }
-            for (const player of this.world.getPlayers()) {
-                this.renderBoundingBox(ctx, player, alpha);
-            }
+            this.entityRenderer.renderDebug(ctx, viewRect, world, alpha);
         }
 
-        this.client.window.hud.renderMainWeapon(ctx, alpha);
-        this.client.window.damagePopup.render(ctx, alpha);
+        this.window.hud.renderMainWeapon(ctx, alpha);
+        this.window.damagePopup.render(ctx, alpha);
         ctx.restore();
 
         this.title?.render(ctx);
-        this.client.window.hud.render(ctx);
-        if (this.client.isPause() && !this.world.isOver() && (player && !player.isOpenInventory())) {
-            this.client.window.pauseOverlay.render(ctx);
+        this.window.hud.render(ctx);
+        if (this.client.isPause() && !world.isOver() && (player && !player.isOpenInventory())) {
+            this.window.pauseOverlay.render(ctx);
         }
-        this.client.window.hud.renderPointer(ctx, this.client);
-    }
 
-    private renderBoundingBox(ctx: CanvasRenderingContext2D, entity: Entity, tickDelta: number) {
-        const pos = entity.getLerpPos(tickDelta);
-        const yaw = entity.getLerpYaw(tickDelta);
-        const lerpBox = entity.getDimensions().getBoxAtByVec(pos);
-
-        const w = lerpBox.getWidth();
-        const h = lerpBox.getHeight();
-
-        ctx.beginPath();
-        ctx.strokeStyle = "#2aff00";
-        ctx.moveTo(pos.x, pos.y);
-        ctx.lineTo(Math.cos(yaw) * (w + 20) + pos.x, Math.sin(yaw) * (h + 20) + pos.y);
-        ctx.stroke();
-
-        ctx.strokeStyle = "#fff";
-        ctx.strokeRect(lerpBox.minX, lerpBox.minY, w, h);
-    }
-
-    private renderLockedDir(
-        ctx: CanvasRenderingContext2D,
-        missile: MissileEntity,
-        playerPos: Vec2,
-        tipLength: number, wingWidth: number, wingHeight: number,
-        alpha: number
-    ) {
-        const mPos = missile.getLerpPos(alpha);
-        const dx = mPos.x - playerPos.x;
-        const dy = mPos.y - playerPos.y;
-        const angle = Math.atan2(dy, dx);
-        const arrowX = playerPos.x + Math.cos(angle) * 64;
-        const arrowY = playerPos.y + Math.sin(angle) * 64;
-
-        ctx.save();
-        ctx.translate(arrowX, arrowY);
-        ctx.rotate(angle);
-        ctx.beginPath();
-        ctx.moveTo(tipLength, 0);
-        ctx.lineTo(-wingHeight, wingWidth);
-        ctx.lineTo(-wingHeight, -wingWidth);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
+        this.window.notify.render(ctx);
+        this.window.hud.renderPointer(ctx, this.client);
     }
 
     private renderBackground(ctx: CanvasRenderingContext2D) {
-        const v = this.client.window.camera.viewRect;
+        const v = this.window.camera.viewRect;
 
         // 网格
         const gridSize = 80;

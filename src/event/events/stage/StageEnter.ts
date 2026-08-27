@@ -1,5 +1,5 @@
-import {GameEvent} from "./GameEvent.ts";
-import type {ServerWorld} from "../../server/ServerWorld.ts";
+import {GameEvent} from "../GameEvent.ts";
+import type {ServerWorld} from "../../../server/ServerWorld.ts";
 
 export class StageEnter extends GameEvent {
     public readonly world: ServerWorld;

@@ -1,6 +1,6 @@
-import {GameEvent} from "./GameEvent.ts";
-import type {MobEntity} from "../../entity/mob/MobEntity.ts";
-import type {DamageSource} from "../../entity/damage/DamageSource.ts";
+import {GameEvent} from "../GameEvent.ts";
+import type {MobEntity} from "../../../entity/mob/MobEntity.ts";
+import type {DamageSource} from "../../../entity/damage/DamageSource.ts";
 
 export class MobKilled extends GameEvent {
     public readonly mob: MobEntity;

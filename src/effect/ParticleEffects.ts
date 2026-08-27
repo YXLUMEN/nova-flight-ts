@@ -80,28 +80,6 @@ export class ParticleEffects {
             .build()
     );
 
-    public static readonly EMP_SPARK = ParticleEffects.register('emp_spark',
-        ParticleEffectType.builder()
-            .life(0.2, 0.4)
-            .size(1, 2)
-            .colors('#66ccff')
-            .speed(100, 150)
-            .omnidirectional()
-            .withDrag(1.5)
-            .build()
-    );
-
-    public static readonly LASER_IMPACT = ParticleEffects.register('laser_impact',
-        ParticleEffectType.builder()
-            .life(0.1, 0.3)
-            .size(1.5, 4)
-            .colors('#aaeeff', '#1E64FF00')
-            .speed(200, 500)
-            .omnidirectional()
-            .withDrag(1.0)
-            .build()
-    );
-
     public static readonly HIT = ParticleEffects.register('hit',
         ParticleEffectType.builder()
             .life(0.2, 0.6)
@@ -133,17 +111,6 @@ export class ParticleEffects {
             .build()
     );
 
-    public static readonly ENGINE_EXHAUST = ParticleEffects.register('engine_exhaust',
-        ParticleEffectType.builder()
-            .life(0.2, 0.5)
-            .size(2, 5)
-            .colors('#88ccff', '#2864FF1A')
-            .speed(60, 140)
-            .symmetry(0.3)
-            .withDrag(0.5)
-            .build()
-    );
-
     public static readonly POWER_FULL_BLOW = ParticleEffects.register('power_full_blow',
         ParticleEffectType.builder()
             .life(0.5, 0.6)
@@ -165,16 +132,6 @@ export class ParticleEffects {
             .build()
     );
 
-    public static readonly WAKE = ParticleEffects.register('wake',
-        ParticleEffectType.builder()
-            .life(0.8, 1.6)
-            .size(1, 3)
-            .colors('#A0A0A099')
-            .speed(50, 70)
-            .symmetry(Math.PI / 8)
-            .build()
-    );
-
     public static readonly BURST = ParticleEffects.register('burst',
         ParticleEffectType.builder()
             .life(0.8, 1.2)
@@ -182,6 +139,16 @@ export class ParticleEffects {
             .colors('#ffd88c')
             .speed(100, 160)
             .symmetry(Math.PI / 8)
+            .build()
+    );
+
+    public static readonly DECOY_FLASH = ParticleEffects.register('decoy_flash',
+        ParticleEffectType.builder()
+            .life(0.8, 1.2)
+            .size(1, 2)
+            .colors('#ffd88c')
+            .speed(50, 80)
+            .omnidirectional()
             .build()
     );
 

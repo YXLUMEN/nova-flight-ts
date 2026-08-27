@@ -21,6 +21,7 @@ import {type Item} from "../../item/Item.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import {randInt} from "../../utils/math/math.ts";
 import {EffectCreateS2CPacket} from "../../network/packet/s2c/EffectCreateS2CPacket.ts";
+import {DataComponents} from "../../component/DataComponents.ts";
 
 export class ServerPlayerEntity extends PlayerEntity {
     public readonly playerProfile: GameProfile;
@@ -125,6 +126,10 @@ export class ServerPlayerEntity extends PlayerEntity {
         for (const stack of this.getInventory()) {
             const item = stack.getItem();
             if (item instanceof SpecialWeapon) {
+                if (stack.has(DataComponents.HEAT)) {
+                    stack.set(DataComponents.HEAT, 0);
+                }
+                stack.setAvailable(true);
                 item.setCooldown(stack, 0);
                 this.pendingSyncStack.add(stack);
             }

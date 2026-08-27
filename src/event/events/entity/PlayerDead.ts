@@ -1,5 +1,5 @@
-import {GameEvent} from "./GameEvent.ts";
-import type {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
+import {GameEvent} from "../GameEvent.ts";
+import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 
 export class PlayerDead extends GameEvent {
     public readonly player: PlayerEntity;

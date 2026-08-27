@@ -7,13 +7,11 @@ interface DamagePopupEvent {
     y: number;
     preY: number;
     age: number;
-    readonly  life: number;
+    readonly life: number;
     readonly entityId: number | null;
     value: string;
     color: string;
 }
-
-const FADE_DURATION = 0.25;
 
 export class DamagePopupRender implements IUi {
     private readonly activePopups: DamagePopupEvent[] = [];
@@ -75,6 +73,7 @@ export class DamagePopupRender implements IUi {
 
         ctx.save();
         ctx.font = UITheme.font;
+        const FADE_DURATION = 0.25;
 
         for (const popup of this.activePopups) {
             const riseOffset = this.riseOffset(popup.age, popup.life);

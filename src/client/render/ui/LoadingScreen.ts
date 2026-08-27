@@ -2,17 +2,14 @@ import {clamp} from "../../../utils/math/math.ts";
 import {sleep} from "../../../utils/uit.ts";
 import {UITheme} from "./theme.ts";
 import {UiTools} from "./UiTools.ts";
-import type {IUi} from "./IUi.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {Supplier} from "../../../type/types.ts";
+import {UiFramework} from "./UiFramework.ts";
 
-export class LoadingScreen implements IUi {
+export class LoadingScreen extends UiFramework {
     private readonly ctx: CanvasRenderingContext2D;
     private readonly ctrl = new AbortController();
     private readonly unsubResize: Supplier<void>;
-
-    private width: number = 0;
-    private height: number = 0;
 
     private currentProgress: number = 0;
     private targetProgress: number = 0;
@@ -26,7 +23,10 @@ export class LoadingScreen implements IUi {
     private done: boolean = false;
 
     public constructor(client: NovaFlightClient) {
+        super();
+
         this.ctx = client.window.ctx;
+        this.loop = this.loop.bind(this);
         this.unsubResize = client.window.onResize(this.setSize.bind(this));
     }
 
@@ -127,10 +127,8 @@ export class LoadingScreen implements IUi {
 
         this.update();
         this.render();
-        requestAnimationFrame(this.bindLoop);
+        requestAnimationFrame(this.loop);
     }
-
-    private bindLoop = this.loop.bind(this);
 
     public async setDone() {
         if (this.done) return;
@@ -141,11 +139,6 @@ export class LoadingScreen implements IUi {
 
         this.done = true;
         this.destroy();
-    }
-
-    public setSize(w: number, h: number): void {
-        this.width = w;
-        this.height = h;
     }
 
     public destroy(): void {

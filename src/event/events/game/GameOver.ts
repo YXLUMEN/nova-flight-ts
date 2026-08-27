@@ -1,4 +1,4 @@
-import {GameEvent} from "./GameEvent.ts";
+import {GameEvent} from "../GameEvent.ts";
 
 export class GameOver extends GameEvent {
     public constructor() {

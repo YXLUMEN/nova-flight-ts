@@ -36,7 +36,7 @@ export class ConnectInfo implements IUi {
         this.loop = this.loop.bind(this);
         this.destroy = this.destroy.bind(this);
 
-        this.setSize(Window.VIEW_W, Window.VIEW_H);
+        this.setSize(Window.viewWidth, Window.viewHeight);
 
         window.addEventListener('click', event => {
             if (this.backBtn && this.backBtn.hitTest(event.offsetX, event.offsetY)) {

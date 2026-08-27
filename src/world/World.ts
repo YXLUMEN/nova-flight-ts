@@ -25,8 +25,8 @@ import {EntityPredicates} from "./predicate/EntityPredicates.ts";
 import {ScheduleTask} from "./ScheduleTask.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
-import {DifficultChange} from "../event/events/DifficultChange.ts";
-import {GameEnd} from "../event/events/GameEnd.ts";
+import {DifficultChange} from "../event/events/stage/DifficultChange.ts";
+import {GameEnd} from "../event/events/game/GameEnd.ts";
 import type {WorldMutation} from "./element/WorldMutation.ts";
 
 export abstract class World {

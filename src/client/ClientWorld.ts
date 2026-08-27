@@ -23,7 +23,7 @@ import type {Vec2} from "../utils/math/Vec2.ts";
 import type {ClientConnection} from "./network/ClientConnection.ts";
 import type {Payload} from "../network/Payload.ts";
 import type {HexColor} from "../type/types.ts";
-import {GameOver} from "../event/events/GameOver.ts";
+import {GameOver} from "../event/events/game/GameOver.ts";
 
 export class ClientWorld extends World {
     public readonly worldName: string;

@@ -1,4 +1,4 @@
-import {DPR} from "../../utils/uit.ts";
+import {debounce, DPR} from "../../utils/uit.ts";
 import {HUD} from "./ui/HUD.ts";
 import {Camera} from "./Camera.ts";
 import {PauseOverlay} from "./ui/PauseOverlay.ts";
@@ -8,8 +8,9 @@ import {DamagePopupRender} from "./ui/DamagePopupRender.ts";
 import type {BiConsumer, Consumer} from "../../type/types.ts";
 
 export class Window {
-    public static VIEW_W = 800;
-    public static VIEW_H = 600;
+    public static viewWidth = 800;
+    public static viewHeight = 600;
+
     public readonly canvas = document.getElementById("game") as HTMLCanvasElement;
     public readonly ctx = this.canvas.getContext("2d")!;
 
@@ -19,7 +20,7 @@ export class Window {
     public readonly notify = new NotificationManager();
     public readonly damagePopup = new DamagePopupRender();
 
-    private readonly resizeCallbacks = new Set<BiConsumer<number, number>>();
+    private readonly resizeCallbacks: Set<BiConsumer<number, number>> = new Set();
 
     public constructor() {
         this.ctx.font = UITheme.font;
@@ -27,7 +28,8 @@ export class Window {
         this.ctx.textBaseline = "middle";
         this.ctx.imageSmoothingEnabled = false;
 
-        window.onresize = this.resize.bind(this);
+        this.resize = this.resize.bind(this);
+        window.onresize = debounce<unknown, any>(this.resize, 200);
     }
 
     public onResize(cb: BiConsumer<number, number>): Consumer<void> {
@@ -43,8 +45,8 @@ export class Window {
         this.canvas.width = Math.floor(rect.width * DPR);
         this.canvas.height = Math.floor(rect.height * DPR);
 
-        Window.VIEW_W = width;
-        Window.VIEW_H = height;
+        Window.viewWidth = width;
+        Window.viewHeight = height;
 
         this.ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 

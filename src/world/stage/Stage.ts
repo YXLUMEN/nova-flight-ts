@@ -6,8 +6,8 @@ import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {PhaseConfig} from "./PhaseConfig.ts";
 import type {SpawnContext} from "./SpawnContext.ts";
 import type {Supplier} from "../../type/types.ts";
-import {StageEnter} from "../../event/events/StageEnter.ts";
-import {StageExit} from "../../event/events/StageExit.ts";
+import {StageEnter} from "../../event/events/stage/StageEnter.ts";
+import {StageExit} from "../../event/events/stage/StageExit.ts";
 
 export class Stage implements NbtSerializable {
     private readonly rng: Supplier<number>;

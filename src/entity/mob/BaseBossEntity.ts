@@ -132,7 +132,7 @@ export class BaseBossEntity extends BossEntity {
 
         let times = 0;
         const schedule = world.scheduleInterval(0.3, () => {
-            if (times++ > 12 || this.isRemoved()) {
+            if (times++ > 8 || this.isRemoved()) {
                 schedule.cancel();
                 return;
             }
@@ -177,9 +177,10 @@ export class BaseBossEntity extends BossEntity {
         if (!this.primaryTarget) return;
 
         const start = this.positionRef.clone().add(58, 0);
-        const end = this.primaryTarget.positionRef;
-        const x = end.x;
-        const y = end.y + World.MAP_HEIGHT;
+        const target = this.primaryTarget.positionRef;
+
+        const x = (target.x - start.x) * World.MAP_HEIGHT * 2;
+        const y = (target.y - start.y) * World.MAP_HEIGHT * 2;
 
         spawnLaser(world,
             start.x, start.y,

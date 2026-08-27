@@ -11,8 +11,8 @@ import {EntityTypes} from "../EntityTypes.ts";
 import {MobBulletEntity} from "../projectile/MobBulletEntity.ts";
 import type {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
-import {BossKilled} from "../../event/events/BossKilled.ts";
-import {BossSpawn} from "../../event/events/BossSpawn.ts";
+import {BossKilled} from "../../event/events/entity/BossKilled.ts";
+import {BossSpawn} from "../../event/events/entity/BossSpawn.ts";
 
 export abstract class BossEntity extends MobEntity {
     public static hasBoss: boolean = false;
