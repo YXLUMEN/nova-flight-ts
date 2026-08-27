@@ -82,6 +82,8 @@ pub async fn run_ws_server(
     // 兜底清理
     state.clear_server().await;
     state.clear_clients();
+    state.unban_all().await;
+    drop(state);
     info!("Relay server shutdown");
 
     if let Some(state_cell) = SERVER_MANAGER.get() {

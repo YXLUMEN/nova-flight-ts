@@ -175,6 +175,10 @@ impl RelayState {
     pub async fn unban(&self, ip: &IpAddr) -> bool {
         self.banned.write().await.remove(ip)
     }
+
+    pub async fn unban_all(&self) {
+        self.banned.write().await.clear();
+    }
 }
 
 pub struct ServerHandle {
