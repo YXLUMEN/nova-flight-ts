@@ -9,7 +9,6 @@ import {buildSprite} from "../cache/RenderCache.ts";
 
 export class PlayerEntityRender extends CachedSpriteRenderer<number, PlayerEntity> {
     private readonly bounding = new AABB(-17, -15, 21, 15);
-    private readonly flameBounding = new AABB(-8, -6, 0, 6);
     private flame: ImageBitmap | null = null;
 
     public constructor() {
@@ -52,22 +51,7 @@ export class PlayerEntityRender extends CachedSpriteRenderer<number, PlayerEntit
 
     protected drawOverlay(ctx: CanvasRenderingContext2D) {
         if (!this.flame) {
-            this.flame = buildSprite(
-                this.flameBounding,
-                (spriteCtx) => {
-                    const g = spriteCtx.createLinearGradient(0, 0, -8, 0);
-                    g.addColorStop(0, "rgb(255 149 83 / 0.9)");
-                    g.addColorStop(1, "rgb(255 200 120 / 0.5)");
-                    spriteCtx.fillStyle = g;
-                    spriteCtx.beginPath();
-                    spriteCtx.moveTo(0, -6);
-                    spriteCtx.lineTo(-8, 0);
-                    spriteCtx.lineTo(0, 6);
-                    spriteCtx.closePath();
-                    spriteCtx.fill();
-                },
-                null
-            );
+            this.flame = buildSprite(new AABB(-8, -6, 0, 6), this.buildFlame, null);
         }
 
         const len = 8 + Math.random() * 6;
@@ -82,5 +66,25 @@ export class PlayerEntityRender extends CachedSpriteRenderer<number, PlayerEntit
         super.clearCache();
         this.flame?.close();
         this.flame = null;
+    }
+
+    private buildFlame(ctx: SpriteCtx) {
+        const g = ctx.createLinearGradient(0, 0, -8, 0);
+        g.addColorStop(0, "rgb(255 149 83 / 0.9)");
+        g.addColorStop(1, "rgb(255 200 120 / 0.5)");
+        ctx.fillStyle = g;
+
+        ctx.strokeStyle = 'rgb(255 247 188 / 0.2)';
+
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#fff';
+
+        ctx.beginPath();
+        ctx.moveTo(0, -6);
+        ctx.lineTo(-8, 0);
+        ctx.lineTo(0, 6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
     }
 }

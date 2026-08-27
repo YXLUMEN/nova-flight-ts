@@ -85,7 +85,6 @@ export class Techs {
     public static EXPLOSIVE_ARMOR: RegistryEntry<Tech>;
     public static EMERGENCY_REPAIR: RegistryEntry<Tech>;
     public static DECOY_RELEASER: RegistryEntry<Tech>;
-    public static SMOKE_LAUNCHER: RegistryEntry<Tech>;
 
     public static NANOTECHNOLOGY: RegistryEntry<Tech>;
     public static NANO_MENDING: RegistryEntry<Tech>;
@@ -195,7 +194,6 @@ export class Techs {
         this.PERDITION_BEAM = fromJson('perdition_beam');
         this.CORONA_DISCHARGE = fromJson('corona_discharge');
         this.STATIC_ELECTRICITY = fromJson('static_electricity');
-        this.SMOKE_LAUNCHER = fromJson('smoke_launcher');
 
         Registries.TECH.getEntries().forEach(entry => entry.getValue().complete());
     }

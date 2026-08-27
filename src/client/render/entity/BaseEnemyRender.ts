@@ -12,7 +12,6 @@ export class BaseEnemyRender extends CachedSpriteRenderer<number, BaseEnemy> {
 
     protected drawSprite(ctx: CanvasRenderingContext2D, entity: BaseEnemy) {
         ctx.fillStyle = entity.color.color;
-        ctx.strokeStyle = "rgba(0,0,0,.2)";
 
         ctx.beginPath();
         ctx.moveTo(18, 0);
@@ -20,8 +19,9 @@ export class BaseEnemyRender extends CachedSpriteRenderer<number, BaseEnemy> {
         ctx.lineTo(-12, 0);
         ctx.lineTo(-6, -14);
         ctx.closePath();
-
         ctx.fill();
+
+        ctx.strokeStyle = "rgba(0,0,0,.2)";
         ctx.stroke();
     }
 

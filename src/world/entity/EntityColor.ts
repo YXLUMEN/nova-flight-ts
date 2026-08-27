@@ -3,18 +3,18 @@ import type {HexColor} from "../../type/types.ts";
 import {decodeColorToHex, encodeColorHex} from "../../utils/NetUtil.ts";
 
 export class EntityColor {
-    private color_: HexColor;
+    private colorStr: HexColor;
     private edgeColor: HexColor;
 
-    private hex_: number;
-    private edgeHex_: number;
+    private colorHex: number;
+    private edgeColorHex: number;
 
     public constructor(color: HexColor, edgeColor?: HexColor) {
-        this.color_ = color;
+        this.colorStr = color;
         this.edgeColor = edgeColor ?? '#00000000';
 
-        this.hex_ = encodeColorHex(color);
-        this.edgeHex_ = edgeColor ? encodeColorHex(edgeColor) : 0;
+        this.colorHex = encodeColorHex(color);
+        this.edgeColorHex = edgeColor ? encodeColorHex(edgeColor) : 0;
     }
 
     public static default() {
@@ -22,12 +22,12 @@ export class EntityColor {
     }
 
     public get color() {
-        return this.color_;
+        return this.colorStr;
     }
 
     public set color(value: HexColor) {
-        this.hex_ = encodeColorHex(value);
-        this.color_ = value;
+        this.colorHex = encodeColorHex(value);
+        this.colorStr = value;
     }
 
     public get edge() {
@@ -35,25 +35,25 @@ export class EntityColor {
     }
 
     public set edge(value: HexColor) {
-        this.edgeHex_ = encodeColorHex(value);
+        this.edgeColorHex = encodeColorHex(value);
         this.edgeColor = value;
     }
 
     public get hex() {
-        return this.hex_;
+        return this.colorHex;
     }
 
     public set hex(value: number) {
-        this.color_ = decodeColorToHex(value);
-        this.hex_ = value;
+        this.colorStr = decodeColorToHex(value);
+        this.colorHex = value;
     }
 
     public get edgeHex() {
-        return this.edgeHex_;
+        return this.edgeColorHex;
     }
 
     public set edgeHex(value: number) {
         this.edgeColor = decodeColorToHex(value);
-        this.edgeHex_ = value;
+        this.edgeColorHex = value;
     }
 }

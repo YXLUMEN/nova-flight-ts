@@ -25,7 +25,7 @@ export class WorldRender {
     public rendering = true;
     private title: TitleEffect | null = null;
     private readonly effects: VisualEffect[] = [];
-    private readonly particlePool: ParticlePool = new ParticlePool(512);
+    private readonly particlePool: ParticlePool = new ParticlePool(4096);
     private readonly starField: StarField = new StarField(128, defaultLayers, 8);
     private mapRender: BlockMapRender | null = null;
 

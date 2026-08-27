@@ -6,8 +6,8 @@ import {hexToRgb, mix, rgb, rgba} from "../../../utils/uit.ts";
 export class BossEntityRender implements EntityRenderer<BaseBossEntity> {
     public render(entity: BaseBossEntity, ctx: CanvasRenderingContext2D, tickDelta: number) {
         const pos = entity.getLerpPos(tickDelta);
-        const yaw = entity.getLerpYaw(tickDelta);
-        const t = entity.age + tickDelta; // 动画时间轴
+        const yaw = entity.getYaw();
+        const t = entity.age; // 动画时间轴
 
         const base = hexToRgb(entity.color.color);
         const light = mix(base, 0.45);
@@ -92,7 +92,7 @@ export class BossEntityRender implements EntityRenderer<BaseBossEntity> {
 
         // ---------- 6. 核心反应堆（脉动发光） ----------
         const pulse = 0.5 + 0.5 * Math.sin(t * 0.12);
-        ctx.save();
+
         ctx.shadowColor = rgb(glow);
         ctx.shadowBlur = 20 + 16 * pulse;
         ctx.fillStyle = rgba(glow, 0.55 + 0.35 * pulse);
@@ -104,7 +104,6 @@ export class BossEntityRender implements EntityRenderer<BaseBossEntity> {
         ctx.beginPath();
         ctx.arc(18, 0, 6 + 1.5 * pulse, 0, PI2);
         ctx.fill();
-        ctx.restore();
 
         // ---------- 7. 霓虹机鼻描边 ----------
         ctx.strokeStyle = rgba(glow, 0.8);

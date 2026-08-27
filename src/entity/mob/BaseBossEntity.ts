@@ -1,5 +1,5 @@
 import {BossEntity} from "./BossEntity.ts";
-import {getNearestEntityByVec, HALF_PI, randInt} from "../../utils/math/math.ts";
+import {getNearestEntityByVec, HALF_PI, rand, randInt, thickLineCircleHit} from "../../utils/math/math.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import type {Entity} from "../Entity.ts";
@@ -7,24 +7,31 @@ import {StatusEffects} from "../effect/StatusEffects.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
 import {EntityType} from "../EntityType.ts";
-import type {World} from "../../world/World.ts";
+import {World} from "../../world/World.ts";
 import {FireWave} from "../ai/FireWave.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
+import {SmokeBomb} from "../projectile/SmokeBomb.ts";
+import {spawnLaser} from "../../utils/ServerEffect.ts";
+import {ScreenShakeS2CPacket} from "../../network/packet/s2c/ScreenShakeS2CPacket.ts";
+import {SoundEvents} from "../../sound/SoundEvents.ts";
 
 export class BaseBossEntity extends BossEntity {
     private attackCooldown: number = 0;
-    private missileCooldown: number = 0;
+    private missileCooldown: number = 100;
+    private smokeCooldown: number = 20;
+    private laserCooldown: number = 200;
 
     private releasingMissile: boolean = false;
 
     private primaryTarget: Entity | null = null;
+    private targetYaw: number = 1.57079;
     private selectCooldown = 0;
 
     private bulletWaves: FireWave[] = [
         new FireWave(5, 4),
-        new FireWave(8, 4.5, 0, false, 0),
-        new FireWave(12, 3, 4, false, 0),
-        new FireWave(10, 6, 0, true, 0),
+        new FireWave(6, 4.5, 0, false, 0),
+        new FireWave(6, 3, 4, false, 0),
+        new FireWave(6, 6, 0, true, 0),
     ];
 
     private fireOffsets = [
@@ -54,9 +61,9 @@ export class BaseBossEntity extends BossEntity {
         if (this.primaryTarget) {
             const pos = this.primaryTarget.positionRef;
             const self = this.positionRef;
-            this.setClampYaw(Math.atan2(pos.y - self.y, pos.x - self.x), 0.01745);
+            this.targetYaw = Math.atan2(pos.y - self.y, pos.x - self.x);
         } else {
-            this.setClampYaw(1.57079, 0.01745);
+            this.targetYaw = 1.57079;
         }
 
         if (this.selectCooldown-- <= 0) {
@@ -68,9 +75,15 @@ export class BaseBossEntity extends BossEntity {
             this.fireMainBarrage(world);
         }
 
-        if (this.releasingMissile) return;
+        if (this.smokeCooldown-- <= 0) {
+            this.releaseSmoke(world);
+        }
 
-        if (this.missileCooldown-- <= 0) {
+        if (this.laserCooldown-- <= 0) {
+            this.laser(world);
+        }
+
+        if (!this.releasingMissile && this.missileCooldown-- <= 0) {
             this.tryFireMissiles(world);
         }
     }
@@ -79,7 +92,7 @@ export class BaseBossEntity extends BossEntity {
         const extraCD = this.hasStatusEffect(StatusEffects.EMC_STATUS) ? 50 : 0;
         this.attackCooldown = randInt(15, 40) + extraCD;
 
-        const basePos = this.positionRef.clone().add(0, this.getHeight() / 2);
+        const basePos = this.positionRef.clone().add(0, this.getDimensions().halfHeight);
 
         for (let i = 0; i < this.fireOffsets.length; i++) {
             const offset = this.fireOffsets[i];
@@ -112,13 +125,35 @@ export class BaseBossEntity extends BossEntity {
         }
     }
 
+    private releaseSmoke(world: ServerWorld): void {
+        this.smokeCooldown = randInt(500, 600);
+
+        const basePos = this.positionRef.clone().add(-58, 0);
+
+        let times = 0;
+        const schedule = world.scheduleInterval(0.3, () => {
+            if (times++ > 12 || this.isRemoved()) {
+                schedule.cancel();
+                return;
+            }
+
+            const yaw = this.targetYaw + rand(-0.785398, 0.785398);
+            const smoke = new SmokeBomb(EntityTypes.SMOKE_BOMB, world, this, 0);
+            smoke.setPositionByVec(basePos);
+            smoke.setVelocity(Math.cos(yaw) * 8, Math.sin(yaw) * 8);
+            smoke.color.color = '#9d9d9d';
+            smoke.color.edge = '#ff2424';
+            world.spawnEntity(smoke);
+        });
+    }
+
     private tryFireMissiles(world: ServerWorld): void {
         if (Math.random() > 0.4) return;
 
         this.releasingMissile = true;
         this.missileCooldown = randInt(320, 400);
 
-        const pos = this.positionRef.clone().add(0, this.getHeight() / 2);
+        const pos = this.positionRef.clone().add(56, this.getDimensions().halfHeight);
         let i = 1;
         const schedule = world.scheduleInterval(0.3, () => {
             if (i++ > 6 || this.isRemoved()) {
@@ -127,15 +162,54 @@ export class BaseBossEntity extends BossEntity {
                 return;
             }
 
-            const side = (i % 2 === 0) ? 1 : -1;
             const yaw = this.getYaw();
-            const driftAngle = yaw + side * (HALF_PI + (Math.random() - 0.5) * 0.2);
+            const missile = new MobMissileEntity(EntityTypes.MOB_MISSILE_ENTITY, world, this, yaw);
 
-            const missile = new MobMissileEntity(EntityTypes.MOB_MISSILE_ENTITY, world, this, driftAngle);
             missile.color.color = '#ff7777';
             missile.setPosition(pos.x, pos.y);
             missile.setYaw(yaw);
             world.spawnEntity(missile);
         });
+    }
+
+    private laser(world: ServerWorld) {
+        this.laserCooldown = randInt(450, 500);
+        if (!this.primaryTarget) return;
+
+        const start = this.positionRef.clone().add(58, 0);
+        const end = this.primaryTarget.positionRef;
+        const x = end.x;
+        const y = end.y + World.MAP_HEIGHT;
+
+        spawnLaser(world,
+            start.x, start.y,
+            x, y,
+            '#ff2828',
+            5,
+            0.75
+        );
+
+        world.schedule(0.8, () => {
+            const damageSource = world.getDamageSources()
+                .laser(this)
+                .setShieldMulti(0.5);
+
+            for (const player of world.getPlayers()) {
+                const pPos = player.positionRef;
+                if (thickLineCircleHit(
+                    start.x, start.y,
+                    x, y,
+                    6,
+                    pPos.x, pPos.y,
+                    player.getDimensions().halfWidth
+                )) {
+                    player.takeDamage(damageSource, 4);
+                }
+            }
+
+            spawnLaser(world, start.x, start.y, x, y, '#d91b1b', 12, 0.5);
+            world.sendPacket(new ScreenShakeS2CPacket(0.4, 1));
+            world.playSound(null, SoundEvents.LASER_FIRE_BEAM, 1, 0.8);
+        })
     }
 }

@@ -121,7 +121,7 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
     }
 
     public tick() {
-        this.connection.checkActivate(30_000);
+        this.connection.checkActivate(15_000);
     }
 
     public getPhase(): ConnectionState {

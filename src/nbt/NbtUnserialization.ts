@@ -309,6 +309,7 @@ export class NbtUnserialization {
     private static parseNumArray(reader: StringReader, type: string): NbtElement {
         const items: number[] = [];
         while (true) {
+            reader.skipAnyWhitespace();
             const item = this.parseNumber(reader, true) as number;
             items.push(item);
 
