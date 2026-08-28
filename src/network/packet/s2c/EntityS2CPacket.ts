@@ -4,7 +4,7 @@ import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import {Identifier} from "../../../registry/Identifier.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {decodeYaw} from "../../../utils/NetUtil.ts";
+import {decodeYaw} from "../../../utils/net_util.ts";
 import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export abstract class EntityS2CPacket implements Payload {

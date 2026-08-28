@@ -1,9 +1,7 @@
 import type {World} from "../../world/World.ts";
-// @ts-ignore
-import {VisualEffectTypes} from "../../effect/VisualEffectTypes.ts";
 import {WindowOverlay} from "../../effect/WindowOverlay.ts";
 import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
-import {pointInCircleVec2} from "../../utils/math/math.ts";
+import {pointInCircleVec2} from "../../utils/math/collide.ts";
 import {EMPWeapon} from "./EMPWeapon.ts";
 import {PhaseLasers} from "./PhaseLasers.ts";
 import {BossEntity} from "../../entity/mob/BossEntity.ts";
@@ -18,6 +16,7 @@ import {AttributeModifier, Operation} from "../../component/type/AttributeModifi
 import {Items} from "../Items.ts";
 import {Techs} from "../../world/tech/Techs.ts";
 import type {ServerPlayerEntity} from "../../server/entity/ServerPlayerEntity.ts";
+import {isClient, isServer} from "../../configs/GlobalConfig.ts";
 
 export class VoidEnginWeapon extends SpecialWeapon {
     public static readonly DEFAULT_MODIFIER = new AttributeModifier(
@@ -45,7 +44,7 @@ export class VoidEnginWeapon extends SpecialWeapon {
         );
         attacker.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)?.addModifier(modifier);
 
-        if (world.isClient) {
+        if (isClient) {
             const mask = new WindowOverlay(
                 '#7945ff',
                 0.28,
@@ -63,7 +62,7 @@ export class VoidEnginWeapon extends SpecialWeapon {
             if (stack) emp.setCooldown(stack, 0);
         }
 
-        if (!world.isClient) {
+        if (isServer) {
             (attacker as ServerPlayerEntity).syncStack(stack);
         }
     }
@@ -110,10 +109,6 @@ export class VoidEnginWeapon extends SpecialWeapon {
         return stack.getOr(DataComponents.EFFECT_DURATION, 0);
     }
 
-    public setDuration(stack: ItemStack, value: number): void {
-        stack.set(DataComponents.EFFECT_DURATION, value);
-    }
-
     public getTimeLeft(stack: ItemStack): number {
         return stack.getOr(DataComponents.EFFECT_TIME_LEFT, 0);
     }
@@ -153,7 +148,7 @@ export class VoidEnginWeapon extends SpecialWeapon {
         attacker.invulnerable = stack.getOr(DataComponents.ANY_BOOLEAN, false);
         stack.remove(DataComponents.ANY_BOOLEAN);
 
-        if (!world.isClient) {
+        if (isServer) {
             const box = attacker.getWidth() + stack.getOr(DataComponents.EFFECT_RANGE, 32);
             for (const mob of world.getMobs()) {
                 if (mob.isRemoved() || !pointInCircleVec2(attacker.positionRef, mob.positionRef, box + mob.getWidth())) continue;

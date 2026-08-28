@@ -9,7 +9,7 @@ import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {empty} from "../../utils/uit.ts";
 import {Optional} from "../../utils/Optional.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import {decodeColorToHex, encodeColorHex} from "../../utils/NetUtil.ts";
+import {decodeColorToHex, encodeColorHex} from "../../utils/net_util.ts";
 import {NbtSerialization} from "../../nbt/NbtSerialization.ts";
 import {NbtUnserialization} from "../../nbt/NbtUnserialization.ts";
 import type {Codec} from "../../serialization/Codec.ts";

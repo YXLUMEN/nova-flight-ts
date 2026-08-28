@@ -13,6 +13,7 @@ import type {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
 import {BossKilled} from "../../event/events/entity/BossKilled.ts";
 import {BossSpawn} from "../../event/events/entity/BossSpawn.ts";
+import {isClient} from "../../configs/GlobalConfig.ts";
 
 export abstract class BossEntity extends MobEntity {
     public static hasBoss: boolean = false;
@@ -41,6 +42,7 @@ export abstract class BossEntity extends MobEntity {
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
+        if (isClient) return false;
         if (this.damageCooldown > 0 && !damageSource.isIn(DamageTypeTags.BYPASSES_INVULNERABLE)) return false;
 
         const attacker = damageSource.getAttacker();

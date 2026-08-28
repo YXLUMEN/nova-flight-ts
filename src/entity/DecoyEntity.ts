@@ -9,6 +9,7 @@ import {randInt} from "../utils/math/math.ts";
 import type {UUID} from "../type/types.ts";
 import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {ParticleEffects} from "../effect/ParticleEffects.ts";
+import {isClient} from "../configs/GlobalConfig.ts";
 
 export class DecoyEntity extends Entity implements Ownable {
     public static readonly Entities = new Set<DecoyEntity>();
@@ -28,14 +29,15 @@ export class DecoyEntity extends Entity implements Ownable {
 
         if (this.age >= this.life) {
             this.discard();
-            if (!this.isClient()) return;
+            return;
+        }
 
+        if (isClient && (this.age & 1) === 0) {
             this.getWorld().addPreparedParticleVec(
                 ParticleEffects.DECOY_FLASH,
                 this.positionRef,
-                8,
+                1,
             );
-            return;
         }
 
         const yaw = this.getYaw();

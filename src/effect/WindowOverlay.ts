@@ -2,10 +2,10 @@ import {type VisualEffect} from "./VisualEffect.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
-import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 import {clamp} from "../utils/math/math.ts";
 
 export class WindowOverlay implements VisualEffect {
+    public static TYPE: VisualEffectType<WindowOverlay> = null!;
     public static readonly PACKET_CODEC: PacketCodec<WindowOverlay> = PacketCodecs.of(
         (writer, value) => {
             PacketCodecs.COLOR_HEX.encode(writer, value.color);
@@ -51,6 +51,10 @@ export class WindowOverlay implements VisualEffect {
         this.composite = composite;
     }
 
+    public getType(): VisualEffectType<WindowOverlay> {
+        return WindowOverlay.TYPE;
+    }
+
     public tick(dt: number): void {
         if (!this.alive) return;
         this.t += dt;
@@ -82,12 +86,6 @@ export class WindowOverlay implements VisualEffect {
         }
     }
 
-    public end(): void {
-        if (this.state === "out") return;
-        this.state = "out";
-        this.t = 0;
-    }
-
     public render(ctx: CanvasRenderingContext2D): void {
         if (!this.alive || this.alpha <= 0) return;
 
@@ -109,7 +107,9 @@ export class WindowOverlay implements VisualEffect {
         this.alive = false;
     }
 
-    public getType(): VisualEffectType<WindowOverlay> {
-        return VisualEffectTypes.WINDOW_OVERLAY;
+    public end(): void {
+        if (this.state === "out") return;
+        this.state = "out";
+        this.t = 0;
     }
 }

@@ -2,12 +2,13 @@ import {MutVec2} from "../utils/math/MutVec2.ts";
 import {lerp, PI2} from "../utils/math/math.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
-import {decodeFromInt16, decodeFromUnsignedByte, encodeToInt16, encodeToUnsignedByte} from "../utils/NetUtil.ts";
+import {decodeFromInt16, decodeFromUnsignedByte, encodeToInt16, encodeToUnsignedByte} from "../utils/net_util.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
-import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
+import type {VisualEffect} from "./VisualEffect.ts";
 
-export class CircleParticle {
+export class CircleParticle implements VisualEffect {
+    public static TYPE: VisualEffectType<CircleParticle> = null!;
     public static readonly PACKET_CODEC: PacketCodec<CircleParticle> = PacketCodecs.of(
         (writer, value) => {
             PacketCodecs.VECTOR2D.encode(writer, value.pos);
@@ -61,22 +62,8 @@ export class CircleParticle {
         this.life = Math.max(0, life);
     }
 
-    public reset(
-        pos: Vec2, vel: Vec2,
-        life: number, size: number,
-        colorFrom: string, colorTo: string,
-        drag = 0.0
-    ) {
-        this.vel.set(vel.x, vel.y);
-        this.prevPos.set(pos.x, pos.y);
-        this.pos.set(pos.x, pos.y);
-        this.size = Math.max(0, size);
-        this.life = Math.max(0, life);
-        this.colorFrom = colorFrom;
-        this.colorTo = colorTo;
-        this.drag = drag;
-        this.t = 0;
-        this.alive = true;
+    public getType(): VisualEffectType<CircleParticle> {
+        return CircleParticle.TYPE;
     }
 
     public tick(dt: number) {
@@ -120,7 +107,21 @@ export class CircleParticle {
         this.alive = false;
     }
 
-    public getType(): VisualEffectType<CircleParticle> {
-        return VisualEffectTypes.PARTICLE;
+    public reset(
+        pos: Vec2, vel: Vec2,
+        life: number, size: number,
+        colorFrom: string, colorTo: string,
+        drag = 0.0
+    ) {
+        this.vel.set(vel.x, vel.y);
+        this.prevPos.set(pos.x, pos.y);
+        this.pos.set(pos.x, pos.y);
+        this.size = Math.max(0, size);
+        this.life = Math.max(0, life);
+        this.colorFrom = colorFrom;
+        this.colorTo = colorTo;
+        this.drag = drag;
+        this.t = 0;
+        this.alive = true;
     }
 }

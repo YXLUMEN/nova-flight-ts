@@ -5,13 +5,13 @@ import {BaseWeapon} from "./BaseWeapon.ts";
 import type {World} from "../../../world/World.ts";
 import {PhaseLasers} from "../PhaseLasers.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
-import {thickLineCircleHit} from "../../../utils/math/math.ts";
+import {thickLineCircleHit} from "../../../utils/math/collide.ts";
 import {StatusEffects} from "../../../entity/effect/StatusEffects.ts";
 import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
 import type {ClientWorld} from "../../../client/ClientWorld.ts";
-import {ClientEffect} from "../../../utils/ClientEffect.ts";
+import {spawnChargingParticles} from "../../../utils/ClientEffect.ts";
 import {spawnLaser} from "../../../utils/ServerEffect.ts";
 import {MutVec2} from "../../../utils/math/MutVec2.ts";
 import type {HexColor} from "../../../type/types.ts";
@@ -36,7 +36,7 @@ export class ParticleLance extends BaseWeapon {
 
                 stack.set(DataComponents.SCHEDULE_FIRE, false);
             } else if (world.isClient) {
-                ClientEffect.spawnChargingParticles(world as ClientWorld, holder, 4, this.getUiColor() as HexColor);
+                spawnChargingParticles(world as ClientWorld, holder, 4, this.getUiColor() as HexColor);
             }
 
             stack.set(DataComponents.CHARGING_PROGRESS, Math.max(charging, 0));

@@ -1,5 +1,5 @@
 import {World} from '../../world/World.ts';
-import {clamp, thickLineCircleHit} from '../../utils/math/math.ts';
+import {clamp} from '../../utils/math/math.ts';
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
 import type {Entity} from "../../entity/Entity.ts";
@@ -9,6 +9,7 @@ import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import {LaserWeaponActivate, LaserWeaponDeactivate} from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
 import {LaserBeamManger} from "../../world/LaserBeamManger.ts";
+import {thickLineCircleHit} from "../../utils/math/collide.ts";
 
 
 export class PhaseLasers extends SpecialWeapon {
@@ -122,8 +123,8 @@ export class PhaseLasers extends SpecialWeapon {
         const damage = stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
         const damageSource = world.getDamageSources()
             .laser(holder)
-            .setHealthMulti(1.2)
-            .setShieldMulti(0.1);
+            .setHealthMulti(3)
+            .setShieldMulti(0.4);
 
         for (const mob of world.getMobs()) {
             const pos = mob.positionRef;

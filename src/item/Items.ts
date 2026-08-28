@@ -41,7 +41,13 @@ export class Items {
         .maxCooldown(240)
         .component(DataComponents.EFFECT_RANGE, 480)
     ));
-    public static readonly VOID_ENGIN: Item;
+    public static readonly VOID_ENGIN = this.register('void_engin', new VoidEnginWeapon(new Item.Properties()
+        .attackDamage(0)
+        .maxCooldown(600)
+        .component(DataComponents.FIRING, false)
+        .component(DataComponents.EFFECT_RANGE, 32)
+        .component(DataComponents.EFFECT_DURATION, 100)
+    ));
     public static readonly CANNON40 = this.register('cannon40', new Cannon40(new Item.Properties()
         .maxDurability(50)
         .attackDamage(3)
@@ -95,26 +101,34 @@ export class Items {
         .component(DataComponents.COOLDOWN_RATE, 3)
     ));
     public static readonly STORM_FIRE = this.register('storm_fire', new StormFire(new Item.Properties()
-        .attackDamage(3)
+        .attackDamage(4)
         .type(WeaponType.KINETIC)
         .maxDurability(500)
         .maxCooldown(1)
         .component(DataComponents.MAX_RELOAD_TIME, 54)
     ));
-    public static readonly PHASE_LASERS: PhaseLasers;
+    public static readonly PHASE_LASERS = this.register('phase_lasers', new PhaseLasers(new Item.Properties()
+        .attackDamage(2)
+        .type(WeaponType.ENERGY)
+        .component(DataComponents.MAX_HEAT, 320)
+        .component(DataComponents.FIRING, false)
+        .component(DataComponents.HEAT, 0)
+        .component(DataComponents.DRAIN_RATE, 3)
+        .component(DataComponents.COOLDOWN_RATE, 2)
+    ));
     public static readonly DECOY_RELEASER = this.register('decoy_releaser', new DecoyReleaser(new Item.Properties()
         .attackDamage(0)
         .maxCooldown(450)
     ));
     public static readonly CLOUD_LIGHTNING = this.register('cloud_lightning', new CloudLightningConduits(new Item.Properties()
-        .attackDamage(16)
+        .attackDamage(20)
         .maxCooldown(40)
         .type(WeaponType.ENERGY, WeaponType.ARC)
         .unbreakable()
         .component(DataComponents.ATTACK_RANGE, 128) // 半径
     ));
     public static readonly ARC_EMITTER = this.register('arc_emitter', new ArcEmitter(new Item.Properties()
-        .attackDamage(10)
+        .attackDamage(12)
         .maxCooldown(4)
         .maxDurability(100)
         .type(WeaponType.ENERGY, WeaponType.ARC)
@@ -226,29 +240,13 @@ export class Items {
 
     // 避免引用问题
     public static init() {
-        (this.VOID_ENGIN as any) = this.register('void_engin', new VoidEnginWeapon(new Item.Properties()
-            .attackDamage(0)
-            .maxCooldown(600)
-            .component(DataComponents.FIRING, false)
-            .component(DataComponents.EFFECT_RANGE, 32)
-            .component(DataComponents.EFFECT_DURATION, 100)
-        ));
-        (this.PHASE_LASERS as any) = this.register('phase_lasers', new PhaseLasers(new Item.Properties()
-            .attackDamage(1)
-            .type(WeaponType.ENERGY)
-            .component(DataComponents.MAX_HEAT, 320)
-            .component(DataComponents.FIRING, false)
-            .component(DataComponents.HEAT, 0)
-            .component(DataComponents.DRAIN_RATE, 3)
-            .component(DataComponents.COOLDOWN_RATE, 2)
-        ));
         Object.freeze(this);
     }
 
-    private static register(id: string, item: Item): Item {
+    private static register<T extends Item>(id: string, item: T): T {
         const entry = Registry.registerReferenceById(Registries.ITEM, Identifier.ofVanilla(id), item).getValue();
         (item.registryEntry as any) = Registries.ITEM.getEntryByValue(item);
         item.getName();
-        return entry;
+        return entry as T;
     }
 }

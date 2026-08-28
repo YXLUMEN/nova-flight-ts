@@ -1,5 +1,5 @@
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
-import {HALF_PI, PI2, rand, randInt, randNeg, thickLineCircleHit} from "../../../utils/math/math.ts";
+import {HALF_PI, PI2, rand, randInt} from "../../../utils/math/math.ts";
 import type {Entity} from "../../Entity.ts";
 import type {DevourerBoss} from "../../mob/DevourerBoss.ts";
 import {DevourerPhase} from "./DevourerBossAI.ts";
@@ -12,6 +12,7 @@ import {World} from "../../../world/World.ts";
 import {spawnLaser} from "../../../utils/ServerEffect.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {ScreenShakeS2CPacket} from "../../../network/packet/s2c/ScreenShakeS2CPacket.ts";
+import {thickLineCircleHit} from "../../../utils/math/collide.ts";
 
 export class DevourerAttack {
     private readonly entity: DevourerBoss;
@@ -112,7 +113,7 @@ export class DevourerAttack {
 
             const side = fired % 2 === 0 ? 1 : -1;
             const yaw = this.entity.getYaw();
-            const driftAngle = yaw + side * (HALF_PI + randNeg(0, 0.3));
+            const driftAngle = yaw + side * (HALF_PI + rand(-0.3, 0.3));
 
             const missile = new MobMissileEntity(EntityTypes.MOB_MISSILE_ENTITY, world, this.entity, driftAngle);
             missile.color.color = '#cc0000';

@@ -1,5 +1,5 @@
 import {BossEntity} from "./BossEntity.ts";
-import {getNearestEntityByVec, HALF_PI, rand, randInt, thickLineCircleHit} from "../../utils/math/math.ts";
+import {getNearestEntityByVec, HALF_PI, rand, randInt} from "../../utils/math/math.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import type {Entity} from "../Entity.ts";
@@ -14,6 +14,7 @@ import {SmokeBomb} from "../projectile/SmokeBomb.ts";
 import {spawnLaser} from "../../utils/ServerEffect.ts";
 import {ScreenShakeS2CPacket} from "../../network/packet/s2c/ScreenShakeS2CPacket.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
+import {thickLineCircleHit} from "../../utils/math/collide.ts";
 
 export class BaseBossEntity extends BossEntity {
     private attackCooldown: number = 0;

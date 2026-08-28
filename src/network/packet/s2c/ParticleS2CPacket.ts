@@ -8,7 +8,7 @@ import {
     encodeColorHex,
     encodeToInt16,
     encodeToUnsignedByte,
-} from "../../../utils/NetUtil.ts";
+} from "../../../utils/net_util.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";

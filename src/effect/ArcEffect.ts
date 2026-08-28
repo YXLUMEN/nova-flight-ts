@@ -1,11 +1,11 @@
 import type {VisualEffect} from "./VisualEffect.ts";
 import {hexToRgba} from "../utils/uit.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
-import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 
 export class ArcEffect implements VisualEffect {
+    public static TYPE: VisualEffectType<ArcEffect> = null!;
     public static readonly PACKET_CODEC: PacketCodec<ArcEffect> = PacketCodecs.of(
         (writer, value) => {
             writer.writeFloat(value.startX);
@@ -73,7 +73,7 @@ export class ArcEffect implements VisualEffect {
     }
 
     public getType(): VisualEffectType<ArcEffect> {
-        return VisualEffectTypes.ARC;
+        return ArcEffect.TYPE;
     }
 
     public tick(tickDelta: number) {

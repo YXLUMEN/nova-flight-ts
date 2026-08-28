@@ -17,6 +17,8 @@ import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
 import {ParticleEffects} from "../../../effect/ParticleEffects.ts";
 import type {WorldMutation} from "../WorldMutation.ts";
+import {RadialRing} from "../../../effect/RadialRing.ts";
+import {isClient} from "../../../configs/GlobalConfig.ts";
 
 export class Explosion implements WorldMutation {
     public static readonly DEFAULT_BEHAVIOUR = new ExplosionBehavior();
@@ -54,7 +56,7 @@ export class Explosion implements WorldMutation {
     }
 
     public apply() {
-        this.world.isClient ?
+        isClient ?
             this.summonExplosionVisual(this.world as ClientWorld) :
             this.applyExplosion();
     }
@@ -215,23 +217,21 @@ export class Explosion implements WorldMutation {
             this.visual.fastSparks
         );
 
-        import('../../../effect/RadialRing.ts')
-            .then(mod => {
-                const vec = new Vec2(this.x, this.y);
+        const vec = new Vec2(this.x, this.y);
+        world.addEffect(null, new RadialRing(
+            vec,
+            this.visual.radius * 0.2, this.visual.radius * 1.1,
+            0.35, this.visual.color
+        ));
 
-                world.addEffect(null, new mod.RadialRing(
-                    vec,
-                    this.visual.radius * 0.2, this.visual.radius * 1.1,
-                    0.35, this.visual.color
-                ));
-                if (this.behaviour.effect !== ExplosionEffect.FUSION) return;
-                const r = this.visual.radius / 2;
-                world.addEffect(null, new mod.RadialRing(
-                    vec,
-                    r * 0.1, r * 1.1,
-                    0.8, '#e13600'
-                ));
-            });
+        if (this.behaviour.effect === ExplosionEffect.FUSION) {
+            const r = this.visual.radius / 2;
+            world.addEffect(null, new RadialRing(
+                vec,
+                r * 0.1, r * 1.1,
+                0.8, '#e13600'
+            ));
+        }
 
         if (this.behaviour.playSound) world.playSound(null, SoundEvents.EXPLOSION, 0.6);
     }

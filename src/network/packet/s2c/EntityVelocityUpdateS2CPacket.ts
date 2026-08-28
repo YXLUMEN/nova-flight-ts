@@ -3,7 +3,7 @@ import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
-import {decodeVelocity, encodeVelocity} from "../../../utils/NetUtil.ts";
+import {decodeVelocity, encodeVelocity} from "../../../utils/net_util.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {Vec2} from "../../../utils/math/Vec2.ts";

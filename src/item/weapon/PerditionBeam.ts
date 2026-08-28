@@ -3,10 +3,10 @@ import {DataComponents} from "../../component/DataComponents.ts";
 import {type World} from "../../world/World.ts";
 import {type Entity} from "../../entity/Entity.ts";
 import type {ClientWorld} from "../../client/ClientWorld.ts";
-import {ClientEffect} from "../../utils/ClientEffect.ts";
+import {spawnChargingParticles} from "../../utils/ClientEffect.ts";
 import {PhaseLasers} from "./PhaseLasers.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
-import {thickLineCircleHit} from "../../utils/math/math.ts";
+import {thickLineCircleHit} from "../../utils/math/collide.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
@@ -15,6 +15,7 @@ import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import {AttributeModifier, Operation} from "../../component/type/AttributeModifier.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
+import {isClient, isServer} from "../../configs/GlobalConfig.ts";
 
 export class PerditionBeam extends PhaseLasers {
     private static readonly DEFAULT_MODIFIER = new AttributeModifier(
@@ -36,7 +37,7 @@ export class PerditionBeam extends PhaseLasers {
                 if (instance) instance.removeModifier(PerditionBeam.DEFAULT_MODIFIER);
             }
 
-            if (world.isClient) {
+            if (isClient) {
                 world.stopLoopSound(attacker, SoundEvents.LASER_CHARGE_UP_LONG);
                 world.playSound(attacker, SoundEvents.LASER_CHARGE_DOWN);
             }
@@ -46,7 +47,7 @@ export class PerditionBeam extends PhaseLasers {
         stack.set(DataComponents.SCHEDULE_FIRE, true);
         stack.set(DataComponents.CHARGING_PROGRESS, 60);
 
-        if (world.isClient) {
+        if (isClient) {
             world.playLoopSound(attacker, SoundEvents.LASER_CHARGE_UP_LONG);
         } else if (attacker instanceof LivingEntity) {
             const instance = attacker.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
@@ -65,8 +66,8 @@ export class PerditionBeam extends PhaseLasers {
                 this.onStartFire(stack, world, holder);
                 return;
             }
-            if (world.isClient) {
-                ClientEffect.spawnChargingParticles(world as ClientWorld, holder, 4, '#ff8282', '#ff0a0a');
+            if (isClient) {
+                spawnChargingParticles(world as ClientWorld, holder, 4, '#ff8282', '#ff0a0a');
             }
             stack.set(DataComponents.CHARGING_PROGRESS, Math.max(charging, 0));
             return;
@@ -97,7 +98,7 @@ export class PerditionBeam extends PhaseLasers {
     }
 
     public override onStartFire(_stack: ItemStack, world: World, attacker: Entity) {
-        if (!world.isClient) return;
+        if (isServer) return;
 
         world.stopLoopSound(attacker, SoundEvents.LASER_CHARGE_UP_LONG);
 
@@ -111,7 +112,7 @@ export class PerditionBeam extends PhaseLasers {
             if (instance) instance.removeModifier(PerditionBeam.DEFAULT_MODIFIER);
         }
 
-        if (!world.isClient) return;
+        if (isServer) return;
 
         world.stopLoopSound(attacker, SoundEvents.LASER_CHARGE_UP_LONG);
         if (world.stopLoopSound(attacker, SoundEvents.LASER_BEAM)) {

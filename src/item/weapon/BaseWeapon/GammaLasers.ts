@@ -2,7 +2,7 @@ import type {Entity} from "../../../entity/Entity.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import type {ItemStack} from "../../ItemStack.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
-import {squareDistVec2, thickLineCircleHit} from "../../../utils/math/math.ts";
+import {squareDistVec2} from "../../../utils/math/math.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import {MutVec2} from "../../../utils/math/MutVec2.ts";
 import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
@@ -13,6 +13,7 @@ import {LivingEntity} from "../../../entity/LivingEntity.ts";
 import {spawnLaserByVec} from "../../../utils/ServerEffect.ts";
 import {ParticleEffects} from "../../../effect/ParticleEffects.ts";
 import type {Vec2} from "../../../utils/math/Vec2.ts";
+import {thickLineCircleHit} from "../../../utils/math/collide.ts";
 
 export class GammaLasers extends BaseWeapon {
     public static readonly LASER_WIDTH = 3;
