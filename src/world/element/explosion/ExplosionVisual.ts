@@ -1,7 +1,7 @@
 import type {VisualEffect} from "../../../effect/VisualEffect.ts";
 import type {PacketCodec} from "../../../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../../../network/codec/PacketCodecs.ts";
-import {decodeFromUnsignedByte, encodeToUnsignedByte} from "../../../utils/NetUtil.ts";
+import {decodeFromUnsignedByte, encodeToUnsignedByte} from "../../../utils/net_util.ts";
 
 export class ExplosionVisual {
     public static readonly CODEC: PacketCodec<ExplosionVisual> = PacketCodecs.of(
@@ -31,7 +31,6 @@ export class ExplosionVisual {
         }
     );
 
-    /** @deprecated 未来将合并至 power. 视觉半径 */
     public radius: number;
     public color: string;
     public ring: boolean;

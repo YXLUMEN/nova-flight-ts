@@ -20,11 +20,11 @@ export class SoundSystem {
         this.gainNode.connect(this.audioContext.destination);
     }
 
-    public playSound(event: SoundEvent, volume: number = 1, pitch: number = 1): void {
+    public playSound(event: SoundEvent, volume?: number, pitch?: number): void {
         this.loadSound(event, volume, pitch, false);
     }
 
-    public playLoopSound(event: SoundEvent, volume: number = 1, pitch: number = 1): void {
+    public playLoopSound(event: SoundEvent, volume?: number, pitch?: number): void {
         if (this.activeLoops.has(event.id)) return;
         if (this.activeLoops.size >= 8) {
             const entry = this.activeLoops.entries().next().value;

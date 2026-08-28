@@ -1,12 +1,12 @@
 import type {VisualEffect} from "./VisualEffect.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
-import {decodeFromByte, encodeToByte} from "../utils/NetUtil.ts";
+import {decodeFromByte, encodeToByte} from "../utils/net_util.ts";
 import {hexToRgba} from "../utils/uit.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
-import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 
 export class EdgeGlowEffect implements VisualEffect {
+    public static TYPE: VisualEffectType<EdgeGlowEffect> = null!;
     public static readonly PACKET_CODEC: PacketCodec<EdgeGlowEffect> = PacketCodecs.of(
         (writer, value) => {
             PacketCodecs.COLOR_HEX.encode(writer, value.color);
@@ -62,6 +62,10 @@ export class EdgeGlowEffect implements VisualEffect {
         this.fadeOut = fadeOut;
         this.pulse = pulse;
         this.composite = composite;
+    }
+
+    public getType(): VisualEffectType<EdgeGlowEffect> {
+        return EdgeGlowEffect.TYPE;
     }
 
     public tick(dt: number) {
@@ -165,9 +169,5 @@ export class EdgeGlowEffect implements VisualEffect {
         }
         ctx.fillStyle = grad!;
         ctx.fillRect(Math.floor(x), Math.floor(y), Math.ceil(w), Math.ceil(h));
-    }
-
-    public getType(): VisualEffectType<EdgeGlowEffect> {
-        return VisualEffectTypes.EDGE_GLOW;
     }
 }

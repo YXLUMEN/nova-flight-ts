@@ -7,6 +7,7 @@ import {EntityTypes} from "../../../entity/EntityTypes.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import {type World} from "../../../world/World.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
+import {isClient, isServer} from "../../../configs/GlobalConfig.ts";
 
 export class StormFire extends BaseWeapon {
     public readonly CHARGING_TIME = 14;
@@ -15,7 +16,7 @@ export class StormFire extends BaseWeapon {
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean) {
         super.inventoryTick(stack, world, holder, slot, selected);
 
-        if (world.isClient &&
+        if (isClient &&
             holder.isPlayer() &&
             holder.cooldownManager.getCooldownTicks(this) === 10
         ) {
@@ -31,7 +32,7 @@ export class StormFire extends BaseWeapon {
         const charging = stack.getOr(DataComponents.CHARGING_PROGRESS, 0) - 1;
         if (charging < 0) return;
 
-        if (charging === 0 && world.isClient) {
+        if (isClient && charging === 0) {
             stack.set(DataComponents.FIRING, true);
             world.playLoopSound(holder, SoundEvents.STORM_FIRE_LOOP, 0.2);
             return;
@@ -55,7 +56,7 @@ export class StormFire extends BaseWeapon {
         if (stack.getOr(DataComponents.CHARGING_PROGRESS, 0) !== 0 || this.getCooldown(stack) > 0) return;
         stack.set(DataComponents.CHARGING_PROGRESS, this.CHARGING_TIME);
 
-        if (!world.isClient) return;
+        if (isServer) return;
         world.playSound(attacker, SoundEvents.STORM_FIRE_WARMUP, 0.4);
     }
 
@@ -63,7 +64,7 @@ export class StormFire extends BaseWeapon {
         this.setCooldown(stack, 30);
         stack.remove(DataComponents.CHARGING_PROGRESS);
 
-        if (!world.isClient) return;
+        if (isServer) return;
 
         stack.remove(DataComponents.FIRING);
         if (world.stopLoopSound(attacker, SoundEvents.STORM_FIRE_LOOP)) {

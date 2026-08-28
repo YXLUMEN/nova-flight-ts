@@ -160,6 +160,7 @@ export class ClientInputEvents {
                 break;
             case 'NumpadSubtract': {
                 GlobalConfig.enableCameraOffset = !GlobalConfig.enableCameraOffset;
+                // @ts-expect-error Actually it's MutVec2
                 client.window.camera.cameraOffset.set(0, 0);
                 break;
             }

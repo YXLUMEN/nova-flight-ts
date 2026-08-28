@@ -2,9 +2,9 @@ import type {VisualEffect} from "./VisualEffect.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
-import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 
 export class TitleEffect implements VisualEffect {
+    public static TYPE: VisualEffectType<TitleEffect> = null!;
     public static readonly PACKET_CODEC: PacketCodec<TitleEffect> = PacketCodecs.of(
         (writer, value) => {
             writer.writeString(value.text);
@@ -25,11 +25,7 @@ export class TitleEffect implements VisualEffect {
     }
 
     public getType(): VisualEffectType<any> {
-        return VisualEffectTypes.TITLE;
-    }
-
-    public isAlive(): boolean {
-        return this.t > 0;
+        return TitleEffect.TYPE;
     }
 
     public tick(tickDelta: number): void {
@@ -49,6 +45,10 @@ export class TitleEffect implements VisualEffect {
         const centerY = ctx.canvas.height / 2;
         ctx.fillText(this.text, centerX, centerY);
         ctx.restore();
+    }
+
+    public isAlive(): boolean {
+        return this.t > 0;
     }
 
     public kill(): void {

@@ -5,7 +5,7 @@ import {EntityType} from "../../../entity/EntityType.ts";
 import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import type {Entity} from "../../../entity/Entity.ts";
-import {decodeVelocity, decodeYaw, encodeVelocity, encodeYaw, varUintSize} from "../../../utils/NetUtil.ts";
+import {decodeVelocity, decodeYaw, encodeVelocity, encodeYaw, varUintSize} from "../../../utils/net_util.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {Registries} from "../../../registry/Registries.ts";

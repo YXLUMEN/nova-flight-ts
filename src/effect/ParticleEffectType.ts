@@ -2,7 +2,7 @@ import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {Registries} from "../registry/Registries.ts";
 import type {HexColor} from "../type/types.ts";
-import {encodeColorHex} from "../utils/NetUtil.ts";
+import {encodeColorHex} from "../utils/net_util.ts";
 import {ParticleShape} from "./ParticlePool.ts";
 
 export class ParticleEffectType {

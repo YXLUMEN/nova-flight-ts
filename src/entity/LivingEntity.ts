@@ -23,6 +23,7 @@ import {NbtTypeId} from "../nbt/NbtType.ts";
 import {Techs} from "../world/tech/Techs.ts";
 import {DamageTypes} from "./damage/DamageTypes.ts";
 import {PlayerEntity} from "./player/PlayerEntity.ts";
+import {isClient} from "../configs/GlobalConfig.ts";
 
 
 export abstract class LivingEntity extends Entity {
@@ -207,7 +208,7 @@ export abstract class LivingEntity extends Entity {
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
         if (this.isInvulnerableTo(damageSource)) return false;
-        if (this.isClient()) return false;
+        if (isClient) return false;
         if (this.isDead()) return false;
 
         damage = this.modifyAppliedDamage(damageSource, damage);

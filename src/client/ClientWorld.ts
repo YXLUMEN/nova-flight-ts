@@ -27,6 +27,8 @@ import {GameOver} from "../event/events/game/GameOver.ts";
 
 export class ClientWorld extends World {
     public readonly worldName: string;
+    public readonly worldSound = new SoundSystem();
+
     private readonly client: NovaFlightClient = NovaFlightClient.getInstance();
     private readonly worldRender: WorldRender;
 
@@ -35,8 +37,7 @@ export class ClientWorld extends World {
     private readonly entityManager: ClientEntityManager<Entity>;
     private isMultiPlayer = false;
 
-    public readonly worldSound = new SoundSystem();
-    private totalScore = 0;
+    private phaseScore = 0;
 
     public constructor(registryManager: RegistryManager, worldRender: WorldRender, worldName: string) {
         super(registryManager, true);
@@ -227,11 +228,11 @@ export class ClientWorld extends World {
     }
 
     public setTotalScore(score: number): void {
-        this.totalScore = Math.max(score, this.totalScore);
+        this.phaseScore = Math.max(score, this.phaseScore);
     }
 
     public getTotalScore(): number {
-        return this.totalScore;
+        return this.phaseScore;
     }
 
     public tickWhenMultiPlayer() {

@@ -23,12 +23,12 @@ export class RegistryKeys {
     public static readonly AUDIOS: RegistryKey<Registry<SoundEvent>> = this.of("audios");
     public static readonly ITEM: RegistryKey<Registry<Item>> = this.of("item");
     public static readonly DATA_COMPONENT_TYPE: RegistryKey<Registry<DataComponentType<any>>> = this.of("data_component_type");
-    public static readonly EFFECT_TYPE: RegistryKey<Registry<VisualEffectType<any>>> = this.of("effect");
+    public static readonly VISUAL_EFFECT_TYPE: RegistryKey<Registry<VisualEffectType<any>>> = this.of("visual_effect");
     public static readonly TECH: RegistryKey<Registry<Tech>> = this.of("tech");
     public static readonly WORLD_EVENT: RegistryKey<Registry<WorldEventType<any>>> = this.of("world_event");
     public static readonly BLOCK: RegistryKey<Registry<Block>> = this.of("block");
     public static readonly RESOURCE: RegistryKey<Registry<string>> = this.of("resource");
-    public static readonly PARTICLE: RegistryKey<Registry<ParticleEffectType>> = this.of("particle");
+    public static readonly PARTICLES: RegistryKey<Registry<ParticleEffectType>> = this.of("particle");
 
     private static of<T>(id: string): RegistryKey<T> {
         return RegistryKey.ofRegistry(Identifier.ofVanilla(id));

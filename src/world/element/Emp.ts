@@ -10,6 +10,7 @@ import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
+import {EMPBurst} from "../../effect/EMPBurst.ts";
 
 export class Emp implements WorldMutation {
     private readonly attacker: Entity | null;
@@ -72,10 +73,7 @@ export class Emp implements WorldMutation {
 
         world.playSound(this.attacker, SoundEvents.EMP_BURST);
         if (!world.isClient) {
-            import('../../effect/EMPBurst.ts')
-                .then(mod => {
-                    (world as ServerWorld).spawnVisual(null, new mod.EMPBurst(new Vec2(this.x, this.y), this.radius));
-                })
+            (world as ServerWorld).spawnVisual(null, new EMPBurst(new Vec2(this.x, this.y), this.radius));
         }
     }
 }

@@ -7,7 +7,7 @@ import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 import type {ServerPlayHandler} from "../../../server/network/handler/ServerPlayHandler.ts";
-import {varUintSize} from "../../../utils/NetUtil.ts";
+import {varUintSize} from "../../../utils/net_util.ts";
 
 export class BatchBlockChangesPacket implements Payload {
     public static readonly ID: PayloadType<BatchBlockChangesPacket> = payloadType('batch_block_changes');

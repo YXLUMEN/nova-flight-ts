@@ -5,7 +5,7 @@ import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {decodeYaw, encodeYaw} from "../../../utils/NetUtil.ts";
+import {decodeYaw, encodeYaw} from "../../../utils/net_util.ts";
 import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class EntityPositionForceS2CPacket implements Payload {

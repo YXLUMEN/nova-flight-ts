@@ -16,12 +16,12 @@ export class Registries {
     public static readonly AUDIOS = this.simpleCreate(RegistryKeys.AUDIOS, empty);
     public static readonly ITEM = this.simpleCreate(RegistryKeys.ITEM, empty);
     public static readonly DATA_COMPONENT_TYPE = this.simpleCreate(RegistryKeys.DATA_COMPONENT_TYPE, empty);
-    public static readonly EFFECT_TYPE = this.simpleCreate(RegistryKeys.EFFECT_TYPE, empty);
+    public static readonly VISUAL_EFFECT_TYPE = this.simpleCreate(RegistryKeys.VISUAL_EFFECT_TYPE, empty);
     public static readonly TECH = this.simpleCreate(RegistryKeys.TECH, empty);
     public static readonly WORLD_EVENT = this.simpleCreate(RegistryKeys.WORLD_EVENT, empty);
     public static readonly BLOCK = this.simpleCreate(RegistryKeys.BLOCK, empty);
     public static readonly RESOURCES = this.simpleCreate(RegistryKeys.RESOURCE, empty);
-    public static readonly PARTICLES = this.simpleCreate(RegistryKeys.PARTICLE, empty);
+    public static readonly PARTICLES = this.simpleCreate(RegistryKeys.PARTICLES, empty);
 
     public static async complete() {
         const attr = await import('../entity/attribute/EntityAttributes.ts');

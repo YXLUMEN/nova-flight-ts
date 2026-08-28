@@ -2,12 +2,13 @@ import type {Entity} from "../../../entity/Entity.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import type {ItemStack} from "../../ItemStack.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
-import {randInt, squareDistVec2, thickLineCircleHit} from "../../../utils/math/math.ts";
+import {randInt, squareDistVec2} from "../../../utils/math/math.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import {World} from "../../../world/World.ts";
 import {ArcEffect} from "../../../effect/ArcEffect.ts";
 import type {MobEntity} from "../../../entity/mob/MobEntity.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
+import {thickLineCircleHit} from "../../../utils/math/collide.ts";
 
 export class FocusedArcEmitter extends BaseWeapon {
     private readonly arcWidth = 5;

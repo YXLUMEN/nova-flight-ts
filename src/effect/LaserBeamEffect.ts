@@ -4,10 +4,10 @@ import {lerp} from "../utils/math/math.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
-import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 
 export class LaserBeamEffect implements VisualEffect {
+    public static TYPE: VisualEffectType<LaserBeamEffect> = null!;
     public static readonly PACKET_CODEC: PacketCodec<LaserBeamEffect> = PacketCodecs.of(
         (writer, value) => {
             PacketCodecs.COLOR_HEX.encode(writer, value.color);
@@ -47,40 +47,8 @@ export class LaserBeamEffect implements VisualEffect {
         this.life = life;
     }
 
-    public setByVec(start: Vec2, end: Vec2) {
-        this.prevStart.set(this.start.x, this.start.y);
-        this.prevEnd.set(this.end.x, this.end.y);
-        this.start.x = start.x;
-        this.start.y = start.y;
-        this.end.x = end.x;
-        this.end.y = end.y;
-        this.t = 0; // 刷新寿命,保持常驻
-    }
-
-    public set(startX: number, startY: number, endX: number, endY: number) {
-        this.prevStart.set(this.start.x, this.start.y);
-        this.prevEnd.set(this.end.x, this.end.y);
-        this.start.x = startX;
-        this.start.y = startY;
-        this.end.x = endX;
-        this.end.y = endY;
-        this.t = 0;
-    }
-
-    public reset(start: Vec2, end: Vec2) {
-        this.start.set(start.x, start.y);
-        this.end.set(end.x, end.y);
-        this.prevStart.set(start.x, start.y);
-        this.prevEnd.set(end.x, end.y);
-        this.t = 0;
-    }
-
-    public isAlive(): boolean {
-        return this.alive;
-    }
-
-    public kill() {
-        this.alive = false;
+    public getType(): VisualEffectType<LaserBeamEffect> {
+        return LaserBeamEffect.TYPE;
     }
 
     public tick(dt: number) {
@@ -122,7 +90,39 @@ export class LaserBeamEffect implements VisualEffect {
         ctx.restore();
     }
 
-    public getType(): VisualEffectType<LaserBeamEffect> {
-        return VisualEffectTypes.LASER_BEAM;
+    public isAlive(): boolean {
+        return this.alive;
+    }
+
+    public kill() {
+        this.alive = false;
+    }
+
+    public setByVec(start: Vec2, end: Vec2) {
+        this.prevStart.set(this.start.x, this.start.y);
+        this.prevEnd.set(this.end.x, this.end.y);
+        this.start.x = start.x;
+        this.start.y = start.y;
+        this.end.x = end.x;
+        this.end.y = end.y;
+        this.t = 0; // 刷新寿命,保持常驻
+    }
+
+    public set(startX: number, startY: number, endX: number, endY: number) {
+        this.prevStart.set(this.start.x, this.start.y);
+        this.prevEnd.set(this.end.x, this.end.y);
+        this.start.x = startX;
+        this.start.y = startY;
+        this.end.x = endX;
+        this.end.y = endY;
+        this.t = 0;
+    }
+
+    public reset(start: Vec2, end: Vec2) {
+        this.start.set(start.x, start.y);
+        this.end.set(end.x, end.y);
+        this.prevStart.set(start.x, start.y);
+        this.prevEnd.set(end.x, end.y);
+        this.t = 0;
     }
 }

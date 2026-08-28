@@ -1,6 +1,6 @@
 import {PacketHeader, ServerAction} from "../../network/PacketHeader.ts";
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
-import {encodeIpv4} from "../../utils/NetUtil.ts";
+import {encodeIpv4} from "../../utils/net_util.ts";
 
 export class RelayActionBuilder {
     public static forceDisconnect(sessionId: number) {
