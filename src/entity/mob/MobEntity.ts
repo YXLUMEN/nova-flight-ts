@@ -58,14 +58,7 @@ export abstract class MobEntity extends LivingEntity {
         const result = super.takeDamage(damageSource, damage);
         if (!result) return false;
 
-        const world = this.getWorld() as ServerWorld;
-        world.events.emit(new MobDamage(this, damage, damageSource));
-        if (this.getShieldAmount() > 0) {
-            world.spawnPreparedParticle(ParticleEffects.SHIELD_HIT, this.positionRef, 2);
-            return true;
-        }
-
-        world.spawnPreparedParticle(ParticleEffects.HIT, this.positionRef, 2);
+        this.getWorld().events.emit(new MobDamage(this, damage, damageSource));
         return true;
     }
 

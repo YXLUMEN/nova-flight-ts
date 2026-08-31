@@ -1,4 +1,4 @@
-import {clamp, PI2} from "./math/math.ts";
+import {clamp, PI2, wrapRadians} from "./math/math.ts";
 import type {HexColor} from "../type/types.ts";
 
 const VELOCITY_SCALE = 32767 / 60.0;
@@ -9,7 +9,7 @@ export function encodeYaw(yawRad: number): number {
 }
 
 export function decodeYaw(yawByte: number): number {
-    return (yawByte & 0xFF) * PI2 / 256;
+    return wrapRadians((yawByte & 0xFF) * PI2 / 256);
 }
 
 export function encodeVelocity(v: number): number {

@@ -55,47 +55,25 @@ export class BallisticsUtils {
         return dot / velSq >= 0;
     }
 
-    public static isViableThreatRelative(
-        threatPos: Vec2,
-        threatVel: Vec2,
-        defenderPos: Vec2,
-        defenderVel: Vec2,
-    ): boolean {
-        const relPosX = threatPos.x - defenderPos.x;
-        const relPosY = threatPos.y - defenderPos.y;
-
-        const relVelX = threatVel.x - defenderVel.x;
-        const relVelY = threatVel.y - defenderVel.y;
-
-        const relPosSq = relPosX * relPosX + relPosY * relPosY;
-        if (relPosSq < 1e-6) return true;
-
-        const relVelSq = relVelX * relVelX + relVelY * relVelY;
-        if (relVelSq < 1e-6) return false; // 相对静止
-
-        return relVelX * relPosX + relVelY * relPosY < 0;
-    }
-
     public static guidedIntercept(
         shooterPos: MutVec2,
         targetPos: MutVec2,
         targetVel: Vec2,
         missileSpeed: number,
         turnRateLimit: number,
-        deltaTime: number,
         maxSteps: number = 8,
         sqHitRadius: number = 64,
     ): number {
         const mp = shooterPos.clone();
         const tp = targetPos.clone();
 
-        const stepSpeed = missileSpeed * deltaTime;
-        const maxTurn = turnRateLimit * deltaTime;
+        const stepSpeed = missileSpeed;
+        const maxTurn = turnRateLimit;
 
         let currentYaw = Math.atan2(tp.y - mp.y, tp.x - mp.x);
 
         for (let step = 0; step < maxSteps; step++) {
-            tp.add(targetVel.x * deltaTime, targetVel.y * deltaTime);
+            tp.add(targetVel.x, targetVel.y);
 
             const desiredYaw = this.getLeadYaw(mp, tp, targetVel, missileSpeed);
 

@@ -18,12 +18,20 @@ import {BaseBossEntity} from "../../entity/mob/BaseBossEntity.ts";
 import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
 import {ExplosionEffect} from "../../world/element/explosion/ExplosionBehavior.ts";
 import {DevourerBoss} from "../../entity/mob/DevourerBoss.ts";
+import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 
 export class ServerDefaultEvents {
     public static registerEvent() {
         const events = EventBus.instance();
 
         events.on('entity:mob:damage', ({mob, damageSource}) => {
+            const world = mob.getWorld() as ServerWorld;
+            if (mob.getShieldAmount() > 0) {
+                world.spawnPreparedParticle(ParticleEffects.SHIELD_HIT, mob.positionRef, 2);
+                return true;
+            }
+            world.spawnPreparedParticle(ParticleEffects.HIT, mob.positionRef, 2);
+
             const attacker = damageSource.getAttacker();
             if (!attacker?.isPlayer()) return;
 

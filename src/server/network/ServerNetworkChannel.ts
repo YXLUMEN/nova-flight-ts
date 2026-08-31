@@ -13,7 +13,8 @@ import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
 import {BatchBufferPacket} from "../../network/packet/common/BatchBufferPacket.ts";
 
 export class ServerNetworkChannel extends WSNetworkChannel implements ServerChannel {
-    private readonly sendQueue = new RingBuffer<Payload>(48);
+    private readonly sendQueue = new RingBuffer<Payload>(64);
+
     private secretKey: Uint8Array | null;
     private handler: BiConsumer<number, Payload> = empty;
 
@@ -54,7 +55,13 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
     }
 
     public flush(): void {
-        if (this.sendQueue.isEmpty()) return;
+        const size = this.sendQueue.getSize();
+        if (size === 0) return;
+        if (size === 1) {
+            this.send(this.sendQueue.shift()!);
+            return;
+        }
+
         const packets = BatchBufferPacket.create(this.sendQueue, this.registry);
         this.sendQueue.clear();
         for (const packet of packets) this.send(packet);

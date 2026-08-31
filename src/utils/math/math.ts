@@ -122,13 +122,8 @@ export function pointToAABBMinDistSq(px: number, py: number, left: number, top: 
     return dx * dx + dy * dy;
 }
 
-export function lfloor(value: number) {
-    const l = Math.floor(value);
-    return value < l ? l - 1 : l;
-}
-
-export function fractionalPart(value: number) {
-    return value - lfloor(value);
+export function frac(value: number) {
+    return value - Math.floor(value);
 }
 
 export function absMax(a: number, b: number): number {

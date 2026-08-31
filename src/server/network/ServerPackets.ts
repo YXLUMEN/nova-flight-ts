@@ -10,7 +10,7 @@ import {EntityPositionS2CPacket} from "../../network/packet/s2c/EntityPositionS2
 import {ExplosionS2CPacket} from "../../network/packet/s2c/ExplosionS2CPacket.ts";
 import {EntityVelocityUpdateS2CPacket} from "../../network/packet/s2c/EntityVelocityUpdateS2CPacket.ts";
 import {EntityTrackerUpdateS2CPacket} from "../../network/packet/s2c/EntityTrackerUpdateS2CPacket.ts";
-import {MoveRelative, Rotate, RotateAndMoveRelative} from "../../network/packet/s2c/EntityS2CPacket.ts";
+import {MoveRelative, Rotate, RotateAndMoveRelative} from "../../network/packet/s2c/EntityMoveS2CPacket.ts";
 import {ServerReadyS2CPacket} from "../../network/packet/s2c/ServerReadyS2CPacket.ts";
 import {EntityKilledS2CPacket} from "../../network/packet/s2c/EntityKilledS2CPacket.ts";
 import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
@@ -58,7 +58,6 @@ import {TickChangeS2CPacket} from "../../network/packet/s2c/TickChangeS2CPacket.
 import {PlayerProfilesS2CPacket} from "../../network/packet/s2c/PlayerProfilesS2CPacket.ts";
 import {ServerAllowConfigS2CPacket} from "../../network/packet/handshake/ServerAllowConfigS2CPacket.ts";
 import {ServerFinishConfigS2CPacket} from "../../network/packet/config/ServerFinishConfigS2CPacket.ts";
-import {IntegratedBatchBufferPacket} from "../../network/packet/common/IntegratedBatchBufferPacket.ts";
 
 export class ServerPackets {
     /**
@@ -72,7 +71,6 @@ export class ServerPackets {
 
         this.register(PongS2CPacket.ID, PongS2CPacket.CODEC);
         this.register(BatchBufferPacket.ID, BatchBufferPacket.CODEC);
-        this.register(IntegratedBatchBufferPacket.ID, IntegratedBatchBufferPacket.CODEC);
         this.register(SoundEventS2CPacket.ID, SoundEventS2CPacket.CODEC);
         this.register(StopSoundS2CPacket.ID, StopSoundS2CPacket.CODEC);
         this.register(EntitySpawnS2CPacket.ID, EntitySpawnS2CPacket.CODEC);

@@ -1,4 +1,5 @@
 import type {Comparable} from "../../type/Comparable.ts";
+import {doubleEquals} from "./math.ts";
 
 export class Vec2 implements Comparable {
     public static readonly ZERO = new Vec2(0, 0);
@@ -51,16 +52,6 @@ export class Vec2 implements Comparable {
         return Math.hypot(this.x, this.y);
     }
 
-    public epsilonEquals(v: Vec2, epsilon = 1e-6): boolean {
-        return Math.abs(this.x - v.x) <= epsilon && Math.abs(this.y - v.y) <= epsilon;
-    }
-
-    public epsilonEqualsSq(v: Vec2, epsilon = 1e-6): boolean {
-        const dx = this.x - v.x;
-        const dy = this.y - v.y;
-        return (dx * dx + dy * dy) <= (epsilon * epsilon);
-    }
-
     public normalize(): Vec2 {
         const len = this.length();
         return len === 0 ? Vec2.ZERO : this.multiply(1 / len);
@@ -81,13 +72,19 @@ export class Vec2 implements Comparable {
     public equals(other: unknown): boolean {
         if (this === other) return true;
         if (other instanceof Vec2) {
-            return this.x === other.x && this.y === other.y;
+            return doubleEquals(this.x, other.x) && doubleEquals(this.y, other.y);
         }
         return false;
     }
 
-    public quickEquals(other: Vec2): boolean {
-        return this.x === other.x && this.y === other.y;
+    public epsilonEqualsSq(v: Vec2, epsilon = 1e-6): boolean {
+        const dx = this.x - v.x;
+        const dy = this.y - v.y;
+        return (dx * dx + dy * dy) <= (epsilon * epsilon);
+    }
+
+    public valueEquals(other: Vec2): boolean {
+        return doubleEquals(this.x, other.x) && doubleEquals(this.y, other.y);
     }
 
     public static distSq(a: Vec2, b: Vec2): number {

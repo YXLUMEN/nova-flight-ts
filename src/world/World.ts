@@ -208,6 +208,10 @@ export abstract class World {
         ).toArray();
     }
 
+    public noCollision(entity: Entity | null, box: AABB): boolean {
+        return !this.getMap().intersectsBox(box) && this.getEntityCollisions(entity, box).length === 0;
+    }
+
     public raycast(start: Vec2, end: Vec2) {
         return BlockCollision.raycastBlock({
             start: start.toImmut(),

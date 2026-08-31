@@ -17,7 +17,7 @@ import {AbstractClientPlayerEntity} from "./entity/AbstractClientPlayerEntity.ts
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import {HistoricalScore} from "../statistics/HistoricalScore.ts";
 import type {ExplosionBehavior} from "../world/element/explosion/ExplosionBehavior.ts";
-import type {WorldRender} from "./render/WorldRender.ts";
+import type {WorldRenderer} from "./render/WorldRenderer.ts";
 import {type ParticleEffectType} from "../effect/ParticleEffectType.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import type {ClientConnection} from "./network/ClientConnection.ts";
@@ -30,7 +30,7 @@ export class ClientWorld extends World {
     public readonly worldSound = new SoundSystem();
 
     private readonly client: NovaFlightClient = NovaFlightClient.getInstance();
-    private readonly worldRender: WorldRender;
+    private readonly worldRender: WorldRenderer;
 
     private readonly players = new Set<AbstractClientPlayerEntity>();
     private readonly entities: EntityList = new EntityList();
@@ -39,7 +39,7 @@ export class ClientWorld extends World {
 
     private phaseScore = 0;
 
-    public constructor(registryManager: RegistryManager, worldRender: WorldRender, worldName: string) {
+    public constructor(registryManager: RegistryManager, worldRender: WorldRenderer, worldName: string) {
         super(registryManager, true);
 
         this.worldRender = worldRender;

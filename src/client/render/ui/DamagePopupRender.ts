@@ -71,10 +71,8 @@ export class DamagePopupRender implements IUi {
     public render(ctx: CanvasRenderingContext2D, tickDelta: number): void {
         if (this.activePopups.length === 0) return;
 
-        ctx.save();
         ctx.font = UITheme.font;
         const FADE_DURATION = 0.25;
-
         for (const popup of this.activePopups) {
             const riseOffset = this.riseOffset(popup.age, popup.life);
 
@@ -92,7 +90,7 @@ export class DamagePopupRender implements IUi {
             ctx.fillText(popup.value, popup.x, drawY);
         }
 
-        ctx.restore();
+        ctx.globalAlpha = 1;
     }
 
     public setSize(): void {

@@ -19,7 +19,7 @@ import {ClientSavesManager} from "./storage/ClientSavesManager.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {StatisticManager} from "./statistic/StatisticManager.ts";
 import {ClientConnection} from "./network/ClientConnection.ts";
-import {WorldRender} from "./render/WorldRender.ts";
+import {WorldRenderer} from "./render/WorldRenderer.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
@@ -62,7 +62,7 @@ export class NovaFlightClient {
 
     public world: ClientWorld | null = null;
     public player: ClientPlayerEntity | null = null;
-    public readonly worldRender: WorldRender;
+    public readonly worldRender: WorldRenderer;
 
     private readonly multiGameManager: ClientMultiGameManger;
     private readonly saveManager: ClientSavesManager;
@@ -94,7 +94,7 @@ export class NovaFlightClient {
 
         this.registryManager = new RegistryManager();
         this.window = new Window();
-        this.worldRender = new WorldRender(this);
+        this.worldRender = new WorldRenderer(this);
         this.tickManager = new TickRateManager();
 
         this.channel = new ClientNetworkChannel('', this.clientId);

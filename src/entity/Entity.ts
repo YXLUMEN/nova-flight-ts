@@ -31,6 +31,7 @@ import {EventBus} from "../event/EventBus.ts";
 import {EntityColor} from "../world/entity/EntityColor.ts";
 import {isBoxInView} from "../utils/render/render.ts";
 import type {ViewRect} from "../client/render/Camera.ts";
+import type {InterpolationHandler} from "../world/entity/InterpolationHandler.ts";
 
 
 export abstract class Entity implements EntityLike, DataTracked, Comparable, NbtSerializable, CommandOutput {
@@ -61,7 +62,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     private readonly world: World;
     protected readonly dataTracker: DataTracker;
 
-    private readonly position: MutVec2;
+    private readonly pos: MutVec2;
     private readonly positionDelta = new VecDeltaCodec();
 
     private readonly velocity: MutVec2 = MutVec2.zero();
@@ -76,7 +77,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     protected constructor(type: EntityType<any>, world: World) {
         this.type = type;
         this.world = world;
-        this.position = MutVec2.zero();
+        this.pos = MutVec2.zero();
         this.dimensions = type.getDimensions();
 
         const builder = new DataTracker.Builder(this);
@@ -182,19 +183,19 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     // 位置相关
 
     public get positionRef(): Readonly<MutVec2> {
-        return this.position;
+        return this.pos;
     }
 
-    public getPosition(): Vec2 {
-        return this.position.toImmut();
+    public position(): Vec2 {
+        return this.pos.toImmut();
     }
 
     public getX(): number {
-        return this.position.x;
+        return this.pos.x;
     }
 
     public getY(): number {
-        return this.position.y;
+        return this.pos.y;
     }
 
     // 位置设置与更新
@@ -209,12 +210,12 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     protected overwritePos(x: number, y: number): void {
-        this.position.set(x, y);
+        this.pos.set(x, y);
     }
 
     public setPosition(x: number, y: number): void {
-        if (this.position.x === x && this.position.y === y) return;
-        this.position.set(x, y);
+        if (this.pos.x === x && this.pos.y === y) return;
+        this.pos.set(x, y);
         this.changeListener.updateEntityPosition();
         this.setBoundingBox(this.calculateBoundingBox());
     }
@@ -235,11 +236,6 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.setPosition(x, y);
         this.setYaw(yaw);
         this.resetPrevious();
-    }
-
-    public moveOrInterpolateTo(x: number, y: number, yaw: number, _interpolationSteps: number): void {
-        this.setPosition(x, y);
-        this.setYaw(yaw);
     }
 
     public resetPrevious() {
@@ -284,35 +280,37 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     // 插值与渲染辅助
 
+    public getInterpolation(): InterpolationHandler | null {
+        return null;
+    }
+
+    public isInterpolating(): boolean {
+        const handler = this.getInterpolation();
+        return handler !== null ? handler.hasActivate() : false;
+    }
+
+    public moveOrInterpolateTo(pos?: Vec2, yaw?: number): void {
+        const handler = this.getInterpolation();
+        if (handler === null) {
+            if (pos != null) this.setPositionByVec(pos);
+            if (yaw != null) this.setYaw(yaw);
+            return;
+        }
+
+        handler.interpolateTo(
+            pos ?? handler.position(),
+            yaw ?? handler.yaw()
+        );
+    }
+
     public getLerpPos(tickDelta: number): MutVec2 {
         const x = lerp(tickDelta, this.prevX, this.getX());
         const y = lerp(tickDelta, this.prevY, this.getY());
         return new MutVec2(x, y);
     }
 
-    public getLerpTargetX() {
-        return this.getX();
-    }
-
-    public getLerpTargetY() {
-        return this.getY();
-    }
-
-    public getLerpTargetYaw() {
-        return this.getYaw();
-    }
-
     public getLerpYaw(tickDelta: number): number {
-        return tickDelta === 1.0 ? this.yaw : lerp(tickDelta, this.prevYaw, this.yaw);
-    }
-
-    protected lerpPosAndYaw(step: number, x: number, y: number, yaw: number): void {
-        const t = 1 / step;
-        const dx = lerp(t, this.getX(), x);
-        const dy = lerp(t, this.getY(), y);
-        const dYaw = lerpRadians(t, this.getYaw(), yaw);
-        this.setPosition(dx, dy);
-        this.setYaw(dYaw);
+        return tickDelta === 1.0 ? this.yaw : lerpRadians(tickDelta, this.prevYaw, this.yaw);
     }
 
     // 速度与移动
@@ -369,14 +367,14 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     public move(movement: Vec2): void {
         if (this.noClip) {
-            this.setPosition(this.position.x + movement.x, this.position.y + movement.y);
+            this.setPosition(this.pos.x + movement.x, this.pos.y + movement.y);
             return;
         }
 
         const adjusted = new MutVec2(movement.x, movement.y);
         this.adjustBlockCollision(adjusted);
         if (adjusted.lengthSquared() > 1E-7) {
-            this.setPosition(this.position.x + adjusted.x, this.position.y + adjusted.y);
+            this.setPosition(this.pos.x + adjusted.x, this.pos.y + adjusted.y);
         }
 
         const cx = !doubleEquals(movement.x, adjusted.x, 1E-5);
@@ -407,10 +405,10 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
             const overlapY = Math.min(selfBox.maxY - otherBox.minY, otherBox.maxY - selfBox.minY);
 
             if (overlapX < overlapY) {
-                const sign = this.position.x < entity.position.x ? -1 : 1;
+                const sign = this.pos.x < entity.pos.x ? -1 : 1;
                 movement.x = clamp(overlapX * sign, -movement.x, movement.x);
             } else {
-                const sign = this.position.y < entity.position.y ? -1 : 1;
+                const sign = this.pos.y < entity.pos.y ? -1 : 1;
                 movement.y = clamp(overlapY * sign, -movement.y, movement.y);
             }
         }
@@ -419,8 +417,8 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     protected clampPosition(): boolean {
         const dim = this.dimensions;
-        let x = this.position.x;
-        let y = this.position.y;
+        let x = this.pos.x;
+        let y = this.pos.y;
 
         const ox = this.getMapOffsetX();
         const oy = this.getMapOffsetY();
@@ -444,7 +442,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
             this.velocity.y = 0;
         }
 
-        if (x !== this.position.x || y !== this.position.y) {
+        if (x !== this.pos.x || y !== this.pos.y) {
             this.onOutOfBounds(x, y);
             return true;
         }
@@ -478,7 +476,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     protected calculateBoundingBox(): AABB {
-        return this.dimensions.getBoxAt(this.position.x, this.position.y);
+        return this.dimensions.getBoxAt(this.pos.x, this.pos.y);
     }
 
     public isCollisionTo(entity: Entity): boolean {
@@ -590,7 +588,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         const serverWorld = this.getWorld();
         return new ServerCommandSource(
             this,
-            this.getPosition(),
+            this.position(),
             this.getYaw(),
             serverWorld.isClient ? null : (serverWorld as ServerWorld),
             this.getPermissionLevel(),
@@ -636,7 +634,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
         try {
-            nbt.setDoubleArray('pos', [this.position.x, this.position.y]);
+            nbt.setDoubleArray('pos', [this.pos.x, this.pos.y]);
             nbt.setFloatArray('velocity', [this.velocity.x, this.velocity.y]);
 
             nbt.setFloat('yaw', this.yaw);

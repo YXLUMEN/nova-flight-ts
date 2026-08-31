@@ -46,14 +46,7 @@ export abstract class ClientCommonHandler implements PacketListener {
     }
 
     public onBatch(packet: BatchBuffer): void {
-        const packets = packet.parse();
-        for (const p of packets) {
-            try {
-                p.accept(this)
-            } catch (e) {
-                console.error(e);
-            }
-        }
+        packet.parse(this);
     }
 
     public onPlayerDisconnect(packet: PlayerDisconnectS2CPacket) {

@@ -19,10 +19,14 @@ import type {ClientPlayerEntity} from "../../client/entity/ClientPlayerEntity.ts
 import {PlayerMissileTargetSelector} from "../../utils/math/MissileTargetSelector.ts";
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 import {MissileLockEntity} from "../../event/events/entity/MissileLockEntity.ts";
+import {isClient, isServer} from "../../configs/GlobalConfig.ts";
+import {InterpolationHandler} from "../../world/entity/InterpolationHandler.ts";
 
 export class MissileEntity extends RocketEntity {
     public static readonly IS_IGNITE = DataTracker.registerData(Object(MissileEntity), TrackedDataHandlerRegistry.BOOL);
     public static readonly TARGET_ID = DataTracker.registerData(Object(MissileEntity), TrackedDataHandlerRegistry.VAR_UINT);
+
+    private readonly interpolation: InterpolationHandler | null;
 
     protected target: Entity | null = null;
     protected lastTarget: Entity | null = null;
@@ -45,9 +49,16 @@ export class MissileEntity extends RocketEntity {
     public hoverDir: number = 1;
     private driftAngle: number;
 
-    public constructor(type: EntityType<MissileEntity>, world: World, owner: Entity, driftAngle: number, damage = 5) {
+    public constructor(
+        type: EntityType<MissileEntity>,
+        world: World,
+        owner: Entity,
+        driftAngle: number = 0,
+        damage = 5
+    ) {
         super(type, world, owner, damage);
         this.driftAngle = driftAngle;
+        this.interpolation = isClient ? new InterpolationHandler(this) : null;
     }
 
     protected override defineSyncedData(builder: InstanceType<typeof DataTracker.Builder>) {
@@ -59,11 +70,17 @@ export class MissileEntity extends RocketEntity {
     public override tick() {
         if (this.clampPosition()) return;
 
-        this.prevYaw = this.getYaw();
-        this.track(this.velocityRef);
+        if (this.isInterpolating()) {
+            // client
+            this.getInterpolation()!.interpolate();
+            this.prevYaw = this.getYaw();
+        } else {
+            this.prevYaw = this.getYaw();
+            this.track(this.velocityRef);
+        }
 
         const world = this.getWorld();
-        if (!world.isClient && this.lastTarget !== this.target) {
+        if (isServer && this.lastTarget !== this.target) {
             this.lastTarget = this.target;
             this.setTarget(this.target);
         }
@@ -76,12 +93,12 @@ export class MissileEntity extends RocketEntity {
 
         // 点燃延迟
         if (this.age <= this.igniteDelayTicks) {
-            this.tickDrift(world);
+            this.tickDrift();
             return;
         }
 
         this.emitClientParticles(world);
-        if (world.isClient) return;
+        if (isClient) return;
 
         this.ensureIgnited();
 
@@ -92,11 +109,15 @@ export class MissileEntity extends RocketEntity {
         this.tickTracking(world);
     }
 
-    private tickDrift(world: World): void {
+    public override getInterpolation(): InterpolationHandler | null {
+        return this.interpolation;
+    }
+
+    private tickDrift(): void {
         if (this.driftSpeed > 0.01 && this.driftAttenuation) {
             this.driftSpeed *= 0.98;
         }
-        if (world.isClient) return;
+        if (isClient) return;
 
         const vx1 = Math.cos(this.driftAngle);
         const vy1 = Math.sin(this.driftAngle);
@@ -156,7 +177,7 @@ export class MissileEntity extends RocketEntity {
     }
 
     private emitClientParticles(world: World): void {
-        if (!world.isClient || !this.isIgnite()) return;
+        if (isServer || !this.isIgnite()) return;
 
         if (!this.ignited) {
             this.ignited = true;
@@ -203,7 +224,6 @@ export class MissileEntity extends RocketEntity {
             targetVel,
             this.trackingSpeed,
             this.turnRate,
-            0.02
         );
     }
 

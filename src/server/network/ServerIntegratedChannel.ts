@@ -6,10 +6,12 @@ import {CodecRegistry} from "../../network/CodecRegistry.ts";
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import {empty} from "../../utils/uit.ts";
+import {IntegratedBatchBufferPacket} from "../../network/packet/common/IntegratedBatchBufferPacket.ts";
+import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
 
 export class ServerIntegratedChannel implements ServerChannel {
     private readonly registry = CodecRegistry.S2C;
-    // private readonly sendQueue = new RingBuffer<Payload>(48);
+    private readonly sendQueue = new RingBuffer<Payload>(48);
 
     private clientId: number = 2;
     private ctrl = new AbortController();
@@ -44,22 +46,28 @@ export class ServerIntegratedChannel implements ServerChannel {
     }
 
     public enqueue(payload: Payload) {
-        this.send(payload);
-        // if (this.sendQueue.full()) this.flush();
-        // this.sendQueue.push(payload);
+        if (this.sendQueue.full()) this.flush();
+        this.sendQueue.push(payload);
     }
 
     public flush() {
-        // if (this.sendQueue.isEmpty()) return;
-        // const {payloadCount, buffer} = IntegratedBatchBufferPacket.create(this.sendQueue, this.registry);
-        // this.sendQueue.clear();
-        //
-        // self.postMessage({
-        //     type: 'batch',
-        //     count: payloadCount,
-        //     len: buffer.length,
-        //     packet: buffer.buffer
-        // }, {transfer: [buffer.buffer]});
+        const size = this.sendQueue.getSize();
+        if (size === 0) return;
+        if (size === 1) {
+            this.send(this.sendQueue.shift()!);
+            return;
+        }
+
+        const batches = IntegratedBatchBufferPacket.create(this.sendQueue, this.registry);
+        this.sendQueue.clear();
+        for (const {payloadCount, buffer} of batches) {
+            self.postMessage({
+                type: 'batch',
+                count: payloadCount,
+                len: buffer.length,
+                packet: buffer.buffer
+            }, {transfer: [buffer.buffer]});
+        }
     }
 
     public sendTo<T extends Payload>(payload: T, target: GameProfile): void {

@@ -19,9 +19,8 @@ export class RemotePlayerEntity extends AbstractClientPlayerEntity {
     }
 
     public override aiStep() {
-        if (this.positionIncrements > 0) {
-            this.lerpPosAndYaw(this.positionIncrements, this.serverX, this.serverY, this.serverYaw);
-            this.positionIncrements--;
+        if (this.isInterpolating()) {
+            this.getInterpolation()!.interpolate();
         }
 
         if (this.velocityLerpDivisor > 0) {

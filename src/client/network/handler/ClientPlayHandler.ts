@@ -10,7 +10,7 @@ import {EntityPositionS2CPacket} from "../../../network/packet/s2c/EntityPositio
 import {ExplosionS2CPacket} from "../../../network/packet/s2c/ExplosionS2CPacket.ts";
 import {EntityVelocityUpdateS2CPacket} from "../../../network/packet/s2c/EntityVelocityUpdateS2CPacket.ts";
 import {EntityTrackerUpdateS2CPacket} from "../../../network/packet/s2c/EntityTrackerUpdateS2CPacket.ts";
-import {EntityS2CPacket} from "../../../network/packet/s2c/EntityS2CPacket.ts";
+import {EntityMoveS2CPacket} from "../../../network/packet/s2c/EntityMoveS2CPacket.ts";
 import {ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
 import {EntityDamageS2CPacket} from "../../../network/packet/s2c/EntityDamageS2CPacket.ts";
 import {ParticleS2CPacket} from "../../../network/packet/s2c/ParticleS2CPacket.ts";
@@ -71,11 +71,13 @@ import {WindowOverlay} from "../../../effect/WindowOverlay.ts";
 import {TitleEffect} from "../../../effect/TitleEffect.ts";
 import type {TickChangeS2CPacket} from "../../../network/packet/s2c/TickChangeS2CPacket.ts";
 import type {PlayerProfilesS2CPacket} from "../../../network/packet/s2c/PlayerProfilesS2CPacket.ts";
+import {AcceptTeleportC2SPacket} from "../../../network/packet/c2s/AcceptTeleportC2SPacket.ts";
+import {Vec2} from "../../../utils/math/Vec2.ts";
 
 export class ClientPlayHandler extends ClientCommonHandler {
+    private readonly commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
     private readonly playerProfiles: Map<UUID, GameProfile> = new Map();
 
-    private readonly commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
     private world: ClientWorld | null = null;
 
     private readonly latency: LatencyCalculator;
@@ -139,16 +141,18 @@ export class ClientPlayHandler extends ClientCommonHandler {
         super.onPlayerDisconnect(packet);
     }
 
-    public onPlayerMove(packet: PlayerPositionS2CPacket): void {
+    public onPlayerTeleport(packet: PlayerPositionS2CPacket): void {
         const player = this.client.player;
         if (!player) return;
 
         const change = packet.change;
         player.snapTo(change.position.x, change.position.y, change.yaw);
         player.setDeltaMovement(change.delta.x, change.delta.y);
+
+        this.send(new AcceptTeleportC2SPacket(packet.id));
     }
 
-    public onEntity(packet: EntityS2CPacket) {
+    public onEntityMove(packet: EntityMoveS2CPacket) {
         const entity = this.world?.getEntityById(packet.entityId);
         if (!entity) return;
         if (entity.isLogicalSide()) return;
@@ -158,10 +162,10 @@ export class ClientPlayHandler extends ClientCommonHandler {
             const deltaPos = trackedPos.withDelta(packet.deltaX, packet.deltaY);
             trackedPos.setBase(deltaPos.x, deltaPos.y);
 
-            const yaw = packet.rotate ? packet.yaw : entity.getLerpTargetYaw();
-            entity.moveOrInterpolateTo(deltaPos.x, deltaPos.y, yaw, 3);
+            const yaw = packet.rotate ? packet.yaw : undefined;
+            entity.moveOrInterpolateTo(deltaPos, yaw);
         } else if (packet.rotate) {
-            entity.moveOrInterpolateTo(entity.getLerpTargetX(), entity.getLerpTargetY(), packet.yaw, 3);
+            entity.moveOrInterpolateTo(undefined, packet.yaw);
         }
     }
 
@@ -181,7 +185,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
         if (dist > 4096) {
             entity.snapTo(packet.x, packet.y, packet.yaw);
         } else {
-            entity.moveOrInterpolateTo(packet.x, packet.y, packet.yaw, 3);
+            entity.moveOrInterpolateTo(new Vec2(packet.x, packet.y), packet.yaw);
         }
     }
 
@@ -196,7 +200,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
             return;
         }
 
-        player.moveOrInterpolateTo(packet.x, packet.y, 0, 3);
+        player.moveOrInterpolateTo(new Vec2(packet.x, packet.y));
     }
 
     public onForceEntityPosition(packet: EntityPositionForceS2CPacket): void {

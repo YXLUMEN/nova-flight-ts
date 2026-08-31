@@ -27,7 +27,6 @@ export class KillCommand {
                             let count = 0;
                             const entities = selector.getEntities(ctx.source);
                             for (const entity of entities) {
-                                if (!entity) continue;
                                 count++;
                                 entity.kill();
                             }

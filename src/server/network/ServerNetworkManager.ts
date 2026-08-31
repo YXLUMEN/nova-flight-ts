@@ -15,14 +15,11 @@ export class ServerNetworkManager {
     private readonly server: NovaFlightServer;
     private readonly connections = new Map<number, ServerConnection>();
     private readonly relayHandler: ServerRelayHandler;
-    private readonly flushTimer: number | undefined;
 
     public constructor(server: NovaFlightServer) {
         this.server = server;
         this.relayHandler = new ServerRelayHandler(this);
         this.server.networkChannel.setHandler(this.onReceive.bind(this));
-
-        this.flushTimer = setInterval(() => this.server.networkChannel.flush(), 25);
     }
 
     public tick(): void {
@@ -94,6 +91,5 @@ export class ServerNetworkManager {
 
     public close(): void {
         this.disconnectAllPlayer();
-        clearInterval(this.flushTimer);
     }
 }

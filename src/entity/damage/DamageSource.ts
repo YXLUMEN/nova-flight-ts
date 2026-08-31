@@ -48,7 +48,7 @@ export class DamageSource {
         if (this.position != null) {
             return this.position;
         }
-        return this.source != null ? this.source.getPosition() : null;
+        return this.source != null ? this.source.position() : null;
     }
 
     public getHealthMulti(): number {

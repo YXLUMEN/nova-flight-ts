@@ -11,7 +11,7 @@ export class EntityHitResult extends HitResult {
     }
 
     public static create(entity: Entity) {
-        return new EntityHitResult(entity.getPosition(), entity);
+        return new EntityHitResult(entity.position(), entity);
     }
 
     public getType(): HitType {

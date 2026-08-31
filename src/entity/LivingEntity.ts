@@ -24,16 +24,14 @@ import {Techs} from "../world/tech/Techs.ts";
 import {DamageTypes} from "./damage/DamageTypes.ts";
 import {PlayerEntity} from "./player/PlayerEntity.ts";
 import {isClient} from "../configs/GlobalConfig.ts";
+import {InterpolationHandler} from "../world/entity/InterpolationHandler.ts";
 
 
 export abstract class LivingEntity extends Entity {
     private static readonly HEALTH = DataTracker.registerData(Object(LivingEntity), TrackedDataHandlerRegistry.FLOAT);
 
     private shieldAmount: number = 0;
-    protected positionIncrements: number;
-    protected serverX: number = 0;
-    protected serverY: number = 0;
-    protected serverYaw: number = 0;
+    private readonly interpolation: InterpolationHandler | null;
 
     private readonly attributes: AttributeMap;
     private readonly activeEffects = new Map<RegistryEntry<StatusEffect>, StatusEffectInstance>();
@@ -41,10 +39,9 @@ export abstract class LivingEntity extends Entity {
     protected constructor(type: EntityType<LivingEntity>, world: World) {
         super(type, world);
 
+        this.interpolation = isClient ? new InterpolationHandler(this) : null;
         this.attributes = new AttributeMap(this.createLivingAttributes().build(type));
         this.setHealth(this.getMaxHealth());
-
-        this.positionIncrements = 0;
     }
 
     public createLivingAttributes(): AttributeSupplierBuilder {
@@ -69,14 +66,10 @@ export abstract class LivingEntity extends Entity {
     }
 
     protected aiStep() {
-        if (this.isLogicalSide()) {
-            this.positionIncrements = 0;
+        if (this.isInterpolating()) {
+            this.getInterpolation()!.interpolate();
+        } else if (!this.isLogicalSide()) {
             this.setDeltaMovement(this.getX(), this.getY());
-        }
-
-        if (this.positionIncrements > 0) {
-            this.lerpPosAndYaw(this.positionIncrements, this.serverX, this.serverY, this.serverYaw);
-            this.positionIncrements--;
         }
 
         const velocity = this.velocityRef.multiply(0.9);
@@ -406,8 +399,7 @@ export abstract class LivingEntity extends Entity {
         this.updatePosition(x, y);
         this.updateYaw(yaw);
         this.setVelocity(packet.velocityX, packet.velocityY);
-        this.serverX = packet.x;
-        this.serverY = packet.y;
+
         this.color.hex = packet.color;
         this.color.edgeHex = packet.edgeColor;
     }
@@ -416,23 +408,8 @@ export abstract class LivingEntity extends Entity {
         return this.isAlive();
     }
 
-    public override moveOrInterpolateTo(x: number, y: number, yaw: number, interpolationSteps: number) {
-        this.serverX = x;
-        this.serverY = y;
-        this.serverYaw = yaw;
-        this.positionIncrements = interpolationSteps;
-    }
-
-    public getLerpTargetX() {
-        return this.positionIncrements > 0 ? this.serverX : this.getX();
-    }
-
-    public getLerpTargetY() {
-        return this.positionIncrements > 0 ? this.serverY : this.getY();
-    }
-
-    public getLerpTargetYaw() {
-        return this.positionIncrements > 0 ? this.serverYaw : this.getYaw();
+    public getInterpolation(): InterpolationHandler | null {
+        return this.interpolation;
     }
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {

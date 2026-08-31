@@ -1,18 +1,15 @@
-import type {IUi} from "./IUi.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import {Window} from "../Window.ts";
 import {UIButton} from "./UIButton.ts";
 import type {Consumer, Supplier} from "../../../type/types.ts";
 import {empty} from "../../../utils/uit.ts";
 import type {TranslatableText} from "../../../i18n/TranslatableText.ts";
+import {UiFramework} from "./UiFramework.ts";
 
-export class ConnectInfo implements IUi {
+export class ConnectInfo extends UiFramework {
     private readonly ctx: CanvasRenderingContext2D;
     private readonly ctrl: AbortController;
 
-    private width: number = 0;
-    private height: number = 0;
-    private running = false;
     private message = '';
     private label = '';
 
@@ -24,6 +21,7 @@ export class ConnectInfo implements IUi {
     private readonly resolve: Consumer<void>;
 
     public constructor(client: NovaFlightClient, onDestroy?: Consumer<void>) {
+        super();
         this.ctx = client.window.ctx;
         this.ctrl = new AbortController();
 
@@ -43,13 +41,12 @@ export class ConnectInfo implements IUi {
                 this.backBtn.onClick();
             }
         }, {signal: this.ctrl.signal});
-
-        this.running = true;
         this.loop();
     }
 
     private loop(): void {
-        if (!this.running) return;
+        if (this.ctrl.signal.aborted) return;
+
         this.render(this.ctx);
         requestAnimationFrame(this.loop);
     }
@@ -63,7 +60,7 @@ export class ConnectInfo implements IUi {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        ctx.fillText(this.message, this.width / 2, this.height / 2);
+        ctx.fillText(this.message, this.halfW, this.halfH);
         if (this.backBtn) {
             ctx.font = '18px sans-serif';
             this.backBtn.render(ctx);
@@ -90,14 +87,12 @@ export class ConnectInfo implements IUi {
     }
 
     public setSize(w: number, h: number): void {
-        this.width = w;
-        this.height = h
+        super.setSize(w, h);
         this.setBtn();
     }
 
     public destroy(): void {
-        if (!this.running) return;
-        this.running = false;
+        if (this.ctrl.signal.aborted) return;
 
         this.ctrl.abort();
         this.backBtn = null;
@@ -117,8 +112,8 @@ export class ConnectInfo implements IUi {
     private setBtn(): void {
         const btnW = 120;
         const btnH = 40;
-        const btnX = this.width / 2 - btnW / 2;
-        const btnY = this.height / 2 + 80;
+        const btnX = this.halfW - btnW / 2;
+        const btnY = this.halfH + 80;
         this.backBtn = new UIButton(btnX, btnY, btnW, btnH, this.label, this.destroy);
     }
 }

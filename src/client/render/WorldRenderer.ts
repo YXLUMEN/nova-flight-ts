@@ -15,7 +15,7 @@ import type {HexColor} from "../../type/types.ts";
 import {EntityRenderer} from "./EntityRenderer.ts";
 import {GlobalConfig} from "../../configs/GlobalConfig.ts";
 
-export class WorldRender {
+export class WorldRenderer {
     private readonly client: NovaFlightClient;
     private readonly window: Window;
 
@@ -36,7 +36,7 @@ export class WorldRender {
         this.window = client.window;
 
         this.entityRenderer = new EntityRenderer(client);
-        this.particlePool = new ParticlePool(2048);
+        this.particlePool = new ParticlePool(1024);
         this.starField = new StarField(128, defaultLayers, 8);
         this.starField.init();
     }
