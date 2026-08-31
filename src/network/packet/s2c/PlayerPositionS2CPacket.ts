@@ -32,6 +32,6 @@ export class PlayerPositionS2CPacket implements Payload {
     }
 
     public accept(listener: ClientPlayHandler): void {
-        listener.onPlayerMove(this);
+        listener.onPlayerTeleport(this);
     }
 }

@@ -100,7 +100,7 @@ export class ClientConnector {
     public async startGeneralServer(saveName: string): Promise<void> {
         if (this.ctx.hasWorker()) return;
 
-        const info = new ConnectInfo(this.client);
+        const info = new ConnectInfo(this.client, this.ctx.stop);
         this.client.setConnectInfo(info);
 
         info.setMessage(TranslatableText.of('start.integrated.start'));

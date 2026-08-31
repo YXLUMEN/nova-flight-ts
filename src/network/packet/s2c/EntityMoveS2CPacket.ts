@@ -7,7 +7,7 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {decodeYaw} from "../../../utils/net_util.ts";
 import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
-export abstract class EntityS2CPacket implements Payload {
+export abstract class EntityMoveS2CPacket implements Payload {
     public readonly entityId: number;
     public readonly deltaX: number;
     public readonly deltaY: number;
@@ -27,7 +27,7 @@ export abstract class EntityS2CPacket implements Payload {
     abstract type(): PayloadType<any>;
 
     public accept(listener: ClientPlayHandler): void {
-        listener.onEntity(this);
+        listener.onEntityMove(this);
     }
 
     public get yaw() {
@@ -35,15 +35,15 @@ export abstract class EntityS2CPacket implements Payload {
     }
 }
 
-export class MoveRelative extends EntityS2CPacket {
-    public static readonly ID: PayloadType<EntityS2CPacket> = payloadType('entity_move_pos');
+export class MoveRelative extends EntityMoveS2CPacket {
+    public static readonly ID: PayloadType<EntityMoveS2CPacket> = payloadType('entity_move_pos');
     public static readonly CODEC = PacketCodecs.of(this.write, this.read);
 
     public constructor(entityId: number, deltaX: number, deltaY: number) {
         super(entityId, deltaX, deltaY, 0, false, true);
     }
 
-    private static write(writer: BinaryWriter, value: EntityS2CPacket): void {
+    private static write(writer: BinaryWriter, value: EntityMoveS2CPacket): void {
         writer.writeVarUint(value.entityId);
         writer.writeInt16(value.deltaX);
         writer.writeInt16(value.deltaY);
@@ -66,7 +66,7 @@ export class MoveRelative extends EntityS2CPacket {
     }
 }
 
-export class Rotate extends EntityS2CPacket {
+export class Rotate extends EntityMoveS2CPacket {
     public static readonly ID: PayloadType<Rotate> = {id: Identifier.ofVanilla('entity_move_rotate')};
     public static readonly CODEC = PacketCodecs.of(this.write, this.read);
 
@@ -74,7 +74,7 @@ export class Rotate extends EntityS2CPacket {
         super(entityId, 0, 0, yawUint8, true, false);
     }
 
-    private static write(writer: BinaryWriter, value: EntityS2CPacket): void {
+    private static write(writer: BinaryWriter, value: EntityMoveS2CPacket): void {
         writer.writeVarUint(value.entityId);
         writer.writeInt8(value.yawUint8);
     }
@@ -95,7 +95,7 @@ export class Rotate extends EntityS2CPacket {
     }
 }
 
-export class RotateAndMoveRelative extends EntityS2CPacket {
+export class RotateAndMoveRelative extends EntityMoveS2CPacket {
     public static readonly ID: PayloadType<Rotate> = {id: Identifier.ofVanilla('entity_move_pos_rotate')};
     public static readonly CODEC = PacketCodecs.of(this.write, this.read);
 
@@ -103,7 +103,7 @@ export class RotateAndMoveRelative extends EntityS2CPacket {
         super(entityId, deltaX, deltaY, yawUint8, true, true);
     }
 
-    private static write(writer: BinaryWriter, value: EntityS2CPacket): void {
+    private static write(writer: BinaryWriter, value: EntityMoveS2CPacket): void {
         writer.writeVarUint(value.entityId);
         writer.writeInt16(value.deltaX);
         writer.writeInt16(value.deltaY);

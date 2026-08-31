@@ -290,7 +290,7 @@ async fn attach_session(
                 session_id: session.session_id,
             };
             send_timeout(&session.tx, packet, Duration::from_secs(2)).await;
-            info!("Server registered at {}", now_ms());
+            info!("Server registered at {} with id {}", now_ms(), session_id);
             Ok(SessionContext {
                 session,
                 allow: None,

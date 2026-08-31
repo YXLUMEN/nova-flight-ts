@@ -23,6 +23,7 @@ import {BatchBufferPacket} from "../../network/packet/common/BatchBufferPacket.t
 import {ClientHandshakeC2SPacket} from "../../network/packet/handshake/ClientHandshakeC2SPacket.ts";
 import {ClientProfileC2SPacket} from "../../network/packet/handshake/ClientProfileC2SPacket.ts";
 import {ClientStartConfigC2SPacket} from "../../network/packet/handshake/ClientStartConfigC2SPacket.ts";
+import {AcceptTeleportC2SPacket} from "../../network/packet/c2s/AcceptTeleportC2SPacket.ts";
 
 export class ClientPackets {
     public static registerNetworkPacket(): void {
@@ -31,6 +32,7 @@ export class ClientPackets {
         this.register(ClientProfileC2SPacket.ID, ClientProfileC2SPacket.CODEC);
         this.register(ClientStartConfigC2SPacket.ID, ClientStartConfigC2SPacket.CODEC);
         this.register(PlayerFinishLoginC2SPacket.ID, PlayerFinishLoginC2SPacket.CODEC);
+        this.register(BatchBufferPacket.ID, BatchBufferPacket.CODEC);
 
         this.register(FullMove.ID, FullMove.CODEC);
         this.register(PositionOnly.ID, PositionOnly.CODEC);
@@ -49,7 +51,7 @@ export class ClientPackets {
         this.register(FireSpecialC2SPacket.ID, FireSpecialC2SPacket.CODEC);
         this.register(PlayerInventorySwapC2SPacket.ID, PlayerInventorySwapC2SPacket.CODEC);
         this.register(RequestTeleportC2SPacket.ID, RequestTeleportC2SPacket.CODEC);
-        this.register(BatchBufferPacket.ID, BatchBufferPacket.CODEC);
+        this.register(AcceptTeleportC2SPacket.ID, AcceptTeleportC2SPacket.CODEC);
     }
 
     private static register<T extends Payload>(type: PayloadType<T>, codec: PacketCodec<T>): void {

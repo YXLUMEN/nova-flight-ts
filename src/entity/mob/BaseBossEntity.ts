@@ -205,7 +205,7 @@ export class BaseBossEntity extends BossEntity {
                     pPos.x, pPos.y,
                     player.getDimensions().halfWidth
                 )) {
-                    player.takeDamage(damageSource, 4);
+                    player.takeDamage(damageSource, 6);
                 }
             }
 

@@ -10,6 +10,7 @@ import {PacketTooLargeError} from "../../../type/errors.ts";
 import {compress, decompress} from "@bokuweb/zstd-wasm";
 import type {ClientCommonHandler} from "../../../client/network/handler/ClientCommonHandler.ts";
 import type {BatchBuffer} from "./BatchBuffer.ts";
+import type {PacketListener} from "../../handler/PacketListener.ts";
 
 export class BatchBufferPacket implements Payload, BatchBuffer {
     public static readonly ID: PayloadType<BatchBufferPacket> = payloadType('batch_buffer');
@@ -25,9 +26,9 @@ export class BatchBufferPacket implements Payload, BatchBuffer {
         this.buffer = buffer;
     }
 
-    public static create(payloads: Iterable<Payload>, registry: CodecRegistry): Payload[] {
+    public static create(payloads: Iterable<Payload>, registry: CodecRegistry): BatchBufferPacket[] {
         const maxSize = WSNetworkChannel.MAX_PACKET_SIZE - 16;
-        const batches: Payload[] = [];
+        const batches: BatchBufferPacket[] = [];
         const writer = new BinaryWriter(9216); // MAX_PACKET_SIZE * 1.5
 
         let count = 0;
@@ -70,7 +71,7 @@ export class BatchBufferPacket implements Payload, BatchBuffer {
         return batches;
     }
 
-    private static pack(count: number, writer: BinaryWriter): Payload {
+    private static pack(count: number, writer: BinaryWriter): BatchBufferPacket {
         const raw = writer.toUint8Array();
         if (raw.length < 512) {
             return new BatchBufferPacket(count, false, raw.slice());
@@ -82,19 +83,22 @@ export class BatchBufferPacket implements Payload, BatchBuffer {
             new BatchBufferPacket(count, true, compressed);
     }
 
-    public parse(): Payload[] {
+    public parse(handler: PacketListener): void {
         const buf = this.compressed ? decompress(this.buffer) : this.buffer;
         const reader = new BinaryReader(buf as Uint8Array<ArrayBuffer>);
-        const payloads: Payload[] = new Array(this.payloadCount);
 
-        for (let i = 0; i < payloads.length; i++) {
+        for (let i = 0; i < this.payloadCount; i++) {
             const index = reader.readVarUint();
             const type = CodecRegistry.byId(index);
             if (!type) throw new Error(`Unrecognized packet: ${index}`);
-            payloads[i] = type.codec.decode(reader);
-        }
+            const payload = type.codec.decode(reader);
 
-        return payloads;
+            try {
+                payload.accept(handler);
+            } catch (err) {
+                console.error('Decode batch', err);
+            }
+        }
     }
 
     private static read(reader: BinaryReader): BatchBufferPacket {

@@ -93,7 +93,7 @@ export class EntityTypes {
     public static readonly ROCKET_ENTITY = EntityType.register('rocket_entity',
         EntityType.Builder.create(RocketEntity)
             .sized(16)
-            .setTrackingTickInterval(5)
+            .setTrackingTickInterval(10)
     );
     public static readonly SPAWN_MARK_ENTITY = EntityType.register('spawn_marker_entity',
         EntityType.Builder.create(SpawnMarkerEntity)

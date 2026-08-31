@@ -45,7 +45,7 @@ export class CodecRegistry {
         return payload;
     }
 
-    public get(type: PayloadType<any>): CodecEntry<any> | undefined {
+    public get<T extends Payload>(type: PayloadType<T>): CodecEntry<T> | undefined {
         return this.codecs.get(type);
     }
 
@@ -53,7 +53,7 @@ export class CodecRegistry {
         return this.side;
     }
 
-    public static byId(index: number): CodecEntry<any> | undefined {
+    public static byId(index: number): CodecEntry<Payload> | undefined {
         return this.PACKET_TYPES[index];
     }
 

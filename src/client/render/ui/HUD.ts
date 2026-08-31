@@ -1,4 +1,4 @@
-import {clamp, PI2} from "../../../utils/math/math.ts";
+import {clamp} from "../../../utils/math/math.ts";
 import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import type {ItemStack} from "../../../item/ItemStack.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
@@ -10,16 +10,18 @@ import {Weapon} from "../../../item/weapon/Weapon.ts";
 import {Crosshair} from "./Crosshair.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {UiFramework} from "./UiFramework.ts";
+import {LockAlert} from "./LockAlert.ts";
 
 export class HUD extends UiFramework {
     private readonly font: string = '14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
     private readonly hudColor: string = '#fff';
     private readonly healthText = TranslatableText.of('hud.health');
 
+    private readonly crosshair: Crosshair = new Crosshair();
+    private readonly lockAlert: LockAlert = new LockAlert();
+
     private player: ClientPlayerEntity | null = null;
     private inventoryRender: InventoryRender | null = null;
-
-    private readonly crosshair: Crosshair = new Crosshair();
 
     // HUD 布局参数
     private readonly marginX = 20;
@@ -31,18 +33,19 @@ export class HUD extends UiFramework {
 
     public setSize(w: number, h: number) {
         super.setSize(w, h);
+        this.lockAlert.setPos(this.halfW - 60, this.height - 60);
         this.inventoryRender?.setSize(w, h);
     }
 
     public setPlayer(player: ClientPlayerEntity | null): void {
         this.player = player;
+        this.inventoryRender?.destroy();
+        this.inventoryRender = null;
+
         if (player) {
             this.inventoryRender = new InventoryRender(player);
             this.inventoryRender.setSize(this.width, this.height);
-            return;
         }
-        this.inventoryRender?.destroy();
-        this.inventoryRender = null;
     }
 
     public tick(tickDelta: number) {
@@ -119,10 +122,11 @@ export class HUD extends UiFramework {
         ctx.restore();
 
         if (this.player.approachMissile.size > 0) {
-            this.renderLockAlert(ctx, 2);
+            this.lockAlert.render(ctx, 2);
         } else if (this.player.lockedMissile.size > 0) {
-            this.renderLockAlert(ctx);
+            this.lockAlert.render(ctx, 1);
         }
+
         this.inventoryRender!.render(ctx);
     }
 
@@ -138,27 +142,27 @@ export class HUD extends UiFramework {
 
         // 背景
         ctx.fillStyle = 'rgba(255,255,255,0.12)';
-        ctx.fillRect(x | 0, y | 0, this.barWidth | 0, this.barHeight | 0);
+        ctx.fillRect(x, y, this.barWidth, this.barHeight);
 
         // 白色缓冲条
         ctx.fillStyle = '#fff';
-        ctx.fillRect(x | 0, y | 0, (this.barWidth * displayRatio) | 0, this.barHeight | 0);
+        ctx.fillRect(x, y, (this.barWidth * displayRatio) | 0, this.barHeight);
 
         // 红色当前血条
         ctx.fillStyle = '#ff0000';
-        ctx.fillRect(x | 0, y | 0, (this.barWidth * realRatio) | 0, this.barHeight | 0);
+        ctx.fillRect(x, y, (this.barWidth * realRatio) | 0, this.barHeight);
 
         // 护盾
         if (shieldRatio > 0) {
             const shieldWidth = (this.barWidth * shieldRatio) | 0;
 
             ctx.fillStyle = 'rgba(80,149,255,0.8)';
-            ctx.fillRect(x | 0, y | 0, shieldWidth, this.barHeight | 0);
+            ctx.fillRect(x, y, shieldWidth, this.barHeight);
         }
 
         // 文字
         ctx.fillStyle = this.hudColor;
-        ctx.fillText(this.healthText.toString(), (x + this.barWidth + 8) | 0, (y | 0) - 1);
+        ctx.fillText(this.healthText.toString(), x + this.barWidth + 8, y - 1);
     }
 
     public renderMainWeapon(ctx: CanvasRenderingContext2D, tickDelta: number) {
@@ -213,15 +217,15 @@ export class HUD extends UiFramework {
         const ratio = clamp(1 - item.getCooldown(stack) / item.getMaxCooldown(stack), 0, 1);
         // 背景槽
         ctx.fillStyle = 'rgba(255,255,255,0.12)';
-        ctx.fillRect(x | 0, y | 0, w | 0, h | 0);
+        ctx.fillRect(x, y, w, h);
 
         // 进度
         ctx.fillStyle = item.getUiColor(stack);
-        ctx.fillRect(x | 0, y | 0, (w * ratio) | 0, h | 0);
+        ctx.fillRect(x, y, (w * ratio) | 0, h);
 
         // 文本标签
         ctx.fillStyle = this.hudColor;
-        ctx.fillText(item.getName().toString(), (x + w + 8) | 0, (y | 0) - 1);
+        ctx.fillText(item.getName().toString(), x + w + 8, y - 1);
     }
 
     private renderEndOverlay(ctx: CanvasRenderingContext2D, world: ClientWorld) {
@@ -245,54 +249,12 @@ export class HUD extends UiFramework {
         y += 48;
 
         ctx.font = '16px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
-        const text = new TranslatableText('hud.summary', [time.toString(), score.toString(), (score / time).toFixed(2)]);
+        const text = new TranslatableText('hud.summary', [
+            time.toString(), score.toString(), (score / time).toFixed(2)]);
         ctx.fillText(text.toString(), halfW, y);
         y += 32;
 
         ctx.fillText(TranslatableText.of('hud.back').toString(), halfW, y);
-        ctx.restore();
-    }
-
-    public renderLockAlert(ctx: CanvasRenderingContext2D, flag = 1) {
-        const x = this.halfW - 60;
-        const y = this.height - 60;
-
-        const t = performance.now() * 0.01;
-        const pulse = (Math.sin(t * PI2) + 1) / 2;
-        const borderAlpha = 0.35 + 0.45 * pulse;
-        const fillAlpha = 0.6;
-
-        ctx.save();
-
-        // 背景板
-        ctx.fillStyle = `rgba(10,10,12,${fillAlpha})`;
-        ctx.shadowColor = `rgba(255,70,70,${borderAlpha})`;
-        ctx.shadowBlur = 16;
-        ctx.beginPath();
-        ctx.rect(x, y, 120, 32);
-        ctx.closePath();
-        ctx.fill();
-
-        // 外边框
-        ctx.shadowBlur = 0;
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = `rgba(255,80,80,${borderAlpha})`;
-        ctx.stroke();
-
-        // 文案
-        ctx.font = `bold 14px ui-monospace, Menlo, Consolas, monospace`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = 'rgba(255,255,255,0.92)';
-        ctx.shadowColor = 'rgba(255,60,60,0.4)';
-        if (flag === 0) {
-            ctx.fillText('敌锁定', x + 60, y + 16);
-        } else if (flag === 1) {
-            ctx.fillText('敌导弹', x + 60, y + 16);
-        } else if (flag === 2) {
-            ctx.fillText('即将到达', x + 60, y + 16);
-        }
-
         ctx.restore();
     }
 

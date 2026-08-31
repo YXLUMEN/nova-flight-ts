@@ -132,6 +132,7 @@ export abstract class NovaFlightServer implements CommandOutput {
                 this.accumulator -= perTick;
                 step++;
             }
+            this.networkChannel.flush();
         } catch (error) {
             Log.error(`[Server] Server runtime error: ${error}`);
             this.halt().catch(error => console.error(error));

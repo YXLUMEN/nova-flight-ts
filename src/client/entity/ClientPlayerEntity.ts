@@ -7,7 +7,7 @@ import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import type {AutoAim} from "../tech/AutoAim.ts";
 import type {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
-import {clamp, lerp, squareDistVec2, wrapRadians} from "../../utils/math/math.ts";
+import {clamp, squareDistVec2, wrapRadians} from "../../utils/math/math.ts";
 import {type ItemStack} from "../../item/ItemStack.ts";
 import {type Item} from "../../item/Item.ts";
 import {AbstractClientPlayerEntity} from "./AbstractClientPlayerEntity.ts";
@@ -119,8 +119,6 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
     }
 
     public override aiStep() {
-        this.interpolatePos();
-
         let dx = 0, dy = 0;
         if (this.input.isDown("ArrowLeft", "KeyA")) dx -= 1;
         if (this.input.isDown("ArrowRight", "KeyD")) dx += 1;
@@ -183,17 +181,6 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
         } else if (updateYaw) {
             this.sendPacket(new Steering(this.getYaw()));
         }
-    }
-
-    private interpolatePos(): void {
-        if (this.positionIncrements <= 0) return;
-
-        const t = 1 / this.positionIncrements;
-        const dx = lerp(t, this.getX(), this.serverX);
-        const dy = lerp(t, this.getY(), this.serverY);
-        this.setPosition(dx, dy);
-
-        this.positionIncrements--;
     }
 
     protected override inventoryTick() {

@@ -34,7 +34,10 @@ export class ClientConnection implements Connection {
     }
 
     public sendImmediately(packet: Payload): void {
-        if (this.state === ConnectionState.CLOSED) return;
+        if (this.state === ConnectionState.CLOSED) {
+            console.warn('Sending packet when connection closed', packet);
+            return;
+        }
         this.channel.send(packet);
     }
 
@@ -45,6 +48,8 @@ export class ClientConnection implements Connection {
     public disconnect(): void {
         if (!this.changeState(ConnectionState.DISCONNECTING)) return;
         this.channel.disconnect();
+
+        this.changeState(ConnectionState.CLOSED);
     }
 
     public changeState(state: ConnectionState): boolean {
@@ -75,6 +80,7 @@ export class ClientConnection implements Connection {
         this.disconnect();
         this.packetListener?.clear();
         this.packetListener = null;
+        this.state = ConnectionState.HANDSHAKING;
     }
 
     public getSessionId(): number {

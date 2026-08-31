@@ -173,7 +173,7 @@ export class ServerPlayerEntity extends PlayerEntity {
 
     protected override onEffectAdded(effect: StatusEffectInstance, source: Entity | null) {
         super.onEffectAdded(effect, source);
-        this.networkHandler.send(EntityStatusEffectS2CPacket.create(this.getId(), effect));
+        this.networkHandler?.send(EntityStatusEffectS2CPacket.create(this.getId(), effect));
     }
 
     protected override onEffectUpdated(effect: StatusEffectInstance, reapplyEffect: boolean, source: Entity | null) {

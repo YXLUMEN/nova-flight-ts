@@ -1,5 +1,5 @@
-import type {Payload} from "../../Payload.ts";
+import type {PacketListener} from "../../handler/PacketListener.ts";
 
 export interface BatchBuffer {
-    parse(): Payload[];
+    parse(handler: PacketListener): void;
 }

@@ -1,13 +1,14 @@
 import type {World} from "../../world/World.ts";
 import {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
-import {HALF_PI} from "../../utils/math/math.ts";
+import {HALF_PI, rand} from "../../utils/math/math.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponents} from "../../component/DataComponents.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
+import {isClient} from "../../configs/GlobalConfig.ts";
 
 export class MissileWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {
@@ -25,11 +26,11 @@ export class MissileWeapon extends SpecialWeapon {
                 return;
             }
 
-            if (world.isClient) return;
+            if (isClient) return;
             const side = (i % 2 === 0) ? 1 : -1;
             const yaw = attacker.getYaw();
 
-            const driftAngle = yaw + side * (HALF_PI + (Math.random() - 0.5) * 0.2);
+            const driftAngle = yaw + side * (HALF_PI + rand(-0.2, 0.2));
 
             const missile = new MissileEntity(EntityTypes.MISSILE_ENTITY, world, attacker, driftAngle, hitDamage);
             missile.explosionDamage = explosionDamage;

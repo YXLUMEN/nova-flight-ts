@@ -200,7 +200,7 @@ export class Explosion implements WorldMutation {
     private fusion(entity: Entity, damage: number) {
         if (!(entity instanceof LivingEntity)) return;
 
-        const final = damage + (entity.getHealth() * 0.3) | 0;
+        const final = damage + (entity.getHealth() * 0.4) | 0;
         entity.takeDamage(this.damageSource, final);
     }
 

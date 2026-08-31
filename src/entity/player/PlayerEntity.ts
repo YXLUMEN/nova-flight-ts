@@ -116,8 +116,7 @@ export abstract class PlayerEntity extends LivingEntity {
             return false;
         }
 
-        const raw = Math.pow(damage * 0.3, 0.8);
-        const shake = clamp(raw, 0.4, 0.9);
+        const shake = clamp(damage * 0.3, 0.1, 0.4);
         const visual = new ExplosionVisual(this.getAttributeValue(EntityAttributes.PLAYER_EXPLODE_RANGE));
         visual.shake = shake;
 

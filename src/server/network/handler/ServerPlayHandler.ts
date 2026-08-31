@@ -39,14 +39,19 @@ import {EntityAttributes} from "../../../entity/attribute/EntityAttributes.ts";
 import {ServerTechManager} from "../../tech/ServerTechManager.ts";
 import {PlayerProfilesS2CPacket} from "../../../network/packet/s2c/PlayerProfilesS2CPacket.ts";
 import {UnlockTechEntry} from "../../../event/events/UnlockTechEntry.ts";
+import type {AcceptTeleportC2SPacket} from "../../../network/packet/c2s/AcceptTeleportC2SPacket.ts";
+import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 
 export class ServerPlayHandler extends ServerCommonHandler {
     public readonly player: ServerPlayerEntity;
     private readonly world: ServerWorld;
 
-    private awaitingTeleport: number = 0;
-    private messageCooldown: number = 0;
+    private playerMove: PlayerMoveC2SPacket | null = null;
     private moveTimes: number = 0;
+    private awaitingTeleport: number = 0;
+    private awaitingPosition: Vec2 | null = null;
+
+    private messageCooldown: number = 0;
 
     public constructor(server: NovaFlightServer, connection: ServerConnection, player: ServerPlayerEntity) {
         super(server, connection);
@@ -62,7 +67,12 @@ export class ServerPlayHandler extends ServerCommonHandler {
         }
 
         if (this.messageCooldown > 0) this.messageCooldown--;
-        this.moveTimes = 0;
+
+        if (this.playerMove) {
+            this.applyPlayerMove(this.playerMove);
+            this.playerMove = null;
+            this.moveTimes = 0;
+        }
     }
 
     private profile(): GameProfile {
@@ -104,15 +114,15 @@ export class ServerPlayHandler extends ServerCommonHandler {
     }
 
     public onPlayerMove(packet: PlayerMoveC2SPacket) {
-        if (this.moveTimes > 1) {
+        if (this.moveTimes > 5) {
             console.warn(`[Server] Player ${this.player.profile().name} move too fast`);
-            if (this.moveTimes > 3) {
-                this.teleport(this.player.getX(), this.player.getY(), this.player.getYaw());
-                return;
-            }
         }
-        this.moveTimes++
 
+        this.playerMove = packet;
+        this.moveTimes++;
+    }
+
+    private applyPlayerMove(packet: PlayerMoveC2SPacket) {
         if (packet.changePosition) {
             const speedMultiplier = this.player.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
             const speed = this.player.getMovementSpeed() * speedMultiplier;
@@ -124,10 +134,24 @@ export class ServerPlayHandler extends ServerCommonHandler {
         }
     }
 
+    public onAcceptTeleport(packet: AcceptTeleportC2SPacket) {
+        if (packet.id !== this.awaitingTeleport) return;
+        if (this.awaitingPosition === null) {
+            this.disconnect(TranslatableText.of('network.disconnect.invalid_player_movement'));
+            return;
+        }
+
+        this.player.snapTo(this.awaitingPosition.x, this.awaitingPosition.y, this.player.getYaw());
+        this.awaitingPosition = null;
+    }
+
     public teleport(x: number, y: number, yaw: number) {
-        if (++this.awaitingTeleport === 65535) {
+        if (++this.awaitingTeleport === 2147483647) {
             this.awaitingTeleport = 0;
         }
+
+        this.player.snapTo(x, y, yaw);
+        this.awaitingPosition = this.player.position();
 
         const change = new PositionMoveRotation(new Vec2(x, y), Vec2.ZERO, yaw);
         this.send(new PlayerPositionS2CPacket(this.awaitingTeleport, change));

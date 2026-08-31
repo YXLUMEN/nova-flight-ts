@@ -1,7 +1,7 @@
 import {BitBlockMap} from "../section/BitBlockMap.ts";
 import {AABB} from "../../utils/math/AABB.ts";
 import {BlockPos} from "../section/pos/BlockPos.ts";
-import {fractionalPart, lerp} from "../../utils/math/math.ts";
+import {frac, lerp} from "../../utils/math/math.ts";
 import {MutBlockPos} from "../section/pos/MutBlockPos.ts";
 import type {RaycastContext} from "./RaycastContext.ts";
 import {BlockHitResult} from "./BlockHitResult.ts";
@@ -110,7 +110,7 @@ export class BlockCollision {
         forHit: (ctx: C, pos: BlockPos, t: number, dir: Direction) => T | null,
         forMiss: (ctx: C) => T
     ): T {
-        if (start.equals(end)) return forMiss(context);
+        if (start.valueEquals(end)) return forMiss(context);
         const ox = lerp(-1.0E-7, start.x, end.x);
         const oy = lerp(-1.0E-7, start.y, end.y);
 
@@ -129,14 +129,12 @@ export class BlockCollision {
         const deltaDistX = stepX === 0 ? Infinity : stepX / dx;
         const deltaDistY = stepY === 0 ? Infinity : stepY / dy;
 
-        let distX = deltaDistX * (stepX > 0 ? 1.0 - fractionalPart(ox) : fractionalPart(ox));
-        let distY = deltaDistY * (stepY > 0 ? 1.0 - fractionalPart(oy) : fractionalPart(oy));
+        let distX = stepX === 0 ? Infinity : deltaDistX * (stepX > 0 ? 1.0 - frac(ox) : frac(ox));
+        let distY = stepY === 0 ? Infinity : deltaDistY * (stepY > 0 ? 1.0 - frac(oy) : frac(oy));
 
         let t: number;
         let dir: Direction;
-        let step = 30;
-        while (distX <= 1.0 || distY <= 1.0 || step >= 0) {
-            step--;
+        while (distX <= 1.0 || distY <= 1.0) {
             if (distX < distY) {
                 cellX += stepX;
                 t = distX;

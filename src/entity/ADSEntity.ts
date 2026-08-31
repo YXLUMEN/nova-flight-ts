@@ -27,7 +27,7 @@ export class ADSEntity extends Entity implements Ownable {
         const world = this.getWorld() as ServerWorld;
         if (world.isClient) return;
 
-        const selfPos = this.getPosition();
+        const selfPos = this.positionRef;
         const box = this.getBoundingBox().expandAll(256);
         const entities = world.searchOtherEntities(this, box, EntityPredicates.DEFENSE);
 
