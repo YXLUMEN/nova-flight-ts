@@ -18,6 +18,7 @@ import type {DifficultChange} from "./events/stage/DifficultChange.ts";
 import type {ChangeLang} from "./events/ChangeLang.ts";
 import type {GamePause} from "./events/game/GamePause.ts";
 import type {NewNotify} from "./events/NewNotify.ts";
+import type {PlayerDamage} from "./events/entity/PlayerDamage.ts";
 
 export interface AppEvents {
     'game:start': GameStart;
@@ -38,6 +39,7 @@ export interface AppEvents {
     'entity:mob:killed': MobKilled;
     'entity:mob:damage': MobDamage;
     'entity:player:dead': PlayerDead;
+    'entity:player:damage': PlayerDamage;
     'player:tech:unlock': UnlockTech;
     'player:tech:unlock_entry': UnlockTechEntry;
 }

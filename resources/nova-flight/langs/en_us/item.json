@@ -26,5 +26,7 @@
   "nova-flight.void_engin": "Void Engine",
   "nova-flight.phase_lasers": "Phase Lasers",
   "nova-flight.storm_fire": "Firestorm Autocannon",
-  "nova-flight.smoke_launcher": "Smoke Launcher"
+  "nova-flight.smoke_launcher": "Smoke Launcher",
+  "nova-flight.pulse_cannon": "Pulse Cannon",
+  "nova-flight.ion_disruptor": "Ion Disruptor"
 }

@@ -14,6 +14,7 @@ interface DamagePopupEvent {
 }
 
 export class DamagePopupRender implements IUi {
+    private readonly font = `bold ${UITheme.font}`;
     private readonly activePopups: DamagePopupEvent[] = [];
     private readonly popups = new Map<number, DamagePopupEvent>();
 
@@ -71,7 +72,7 @@ export class DamagePopupRender implements IUi {
     public render(ctx: CanvasRenderingContext2D, tickDelta: number): void {
         if (this.activePopups.length === 0) return;
 
-        ctx.font = UITheme.font;
+        ctx.font = this.font;
         const FADE_DURATION = 0.25;
         for (const popup of this.activePopups) {
             const riseOffset = this.riseOffset(popup.age, popup.life);

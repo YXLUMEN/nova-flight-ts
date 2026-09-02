@@ -36,6 +36,8 @@ export class GunEnemyEntity extends MobEntity {
         const pos = this.positionRef;
         const yaw = this.getYaw();
         const b = new MobBulletEntity(EntityTypes.ENEMY_BULLET_ENTITY, world, this, 1);
+        b.color.color = '#b10000';
+        b.color.edge = '#ff0000';
         b.setVelocity(Math.cos(yaw) * GunEnemyEntity.bulletSpeed, Math.sin(yaw) * GunEnemyEntity.bulletSpeed);
         b.setPosition(pos.x, pos.y);
 
@@ -47,6 +49,6 @@ export class GunEnemyEntity extends MobEntity {
     }
 
     protected override changeColor() {
-        this.color.color = '##ff6b6b';
+        this.color.color = '#ff6b6b';
     }
 }

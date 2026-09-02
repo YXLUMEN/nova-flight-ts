@@ -16,7 +16,6 @@ import {TechCoilguns} from "../../world/tech/apply/TechCoilguns.ts";
 import {TechCoronaDischarge} from "../../world/tech/apply/TechCoronaDischarge.ts";
 import {TechDecoyReleaser} from "../../world/tech/apply/TechDecoyReleaser.ts";
 import {TechEnergyForce} from "../../world/tech/apply/TechEnergyForce.ts";
-import {TechExplosiveArmor} from "../../world/tech/apply/TechExplosiveArmor.ts";
 import {TechFlakArtillery} from "../../world/tech/apply/TechFlakArtillery.ts";
 import {TechFlakBattery} from "../../world/tech/apply/TechFlakBattery.ts";
 import {TechFocusedArcEmitter} from "../../world/tech/apply/TechFocusedArcEmitter.ts";
@@ -50,6 +49,7 @@ import {TechRocketLauncher} from "../../world/tech/apply/TechRocketLauncher.ts";
 import {TechPerditionBeam} from "../../world/tech/apply/TechPerditionBeam.ts";
 import {TechAdLoading} from "../../world/tech/apply/TechAdLoading.ts";
 import {TechDeflector} from "../../world/tech/apply/TechDeflector.ts";
+import {TechIonDisruptor} from "../../world/tech/apply/TechIonDisruptor.ts";
 
 export class ServerTechManager {
     private static readonly techMap: Map<RegistryEntry<Tech>, ApplyTech> = new Map();
@@ -85,7 +85,6 @@ export class ServerTechManager {
         this.register(Techs.CORONA_DISCHARGE, TechCoronaDischarge);
         this.register(Techs.DECOY_RELEASER, TechDecoyReleaser);
         this.register(Techs.ENERGY_FORCE, TechEnergyForce);
-        this.register(Techs.EXPLOSIVE_ARMOR, TechExplosiveArmor);
         this.register(Techs.FLAK_ARTILLERY, TechFlakArtillery);
         this.register(Techs.FLAK_BATTERY, TechFlakBattery);
         this.register(Techs.FLAK_CANNONS, TechFlakCannons);
@@ -118,5 +117,6 @@ export class ServerTechManager {
         this.register(Techs.VOID_ENGIN, TechVoidEngin);
         this.register(Techs.VOID_LEAP, TechVoidLeap);
         this.register(Techs.DEFLECTOR, TechDeflector);
+        this.register(Techs.ION_DISRUPTOR, TechIonDisruptor);
     }
 }

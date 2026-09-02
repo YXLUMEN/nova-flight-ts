@@ -1,10 +1,10 @@
 import type {Serializable} from "../../serialization/Seriable.ts";
 import {PalettedContainer} from "./palette/PalettedContainer.ts";
 import {Blocks} from "../../block/Blocks.ts";
-import {Block} from "../../block/Block.ts";
 import type {BlockState} from "../../block/state/BlockState.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
+import type {IndexedIterable} from "../../utils/collection/IndexedIterable.ts";
 
 
 export class LevelSection implements Serializable {
@@ -16,8 +16,8 @@ export class LevelSection implements Serializable {
         this.recalcBlockCounts();
     }
 
-    public static create() {
-        return new LevelSection(new PalettedContainer(Blocks.AIR.defaultState(), Block.BLOCK_STATE_REGISTRY));
+    public static create(register: IndexedIterable<BlockState>) {
+        return new LevelSection(new PalettedContainer(Blocks.AIR.defaultState(), register));
     }
 
     public getBlockState(localX: number, localY: number): BlockState {

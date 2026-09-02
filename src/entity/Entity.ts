@@ -14,7 +14,7 @@ import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {UUID} from "../type/types.ts";
 import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
-import {VecDeltaCodec} from "./VecDeltaCodec.ts";
+import {VecDeltaCodec} from "../world/entity/VecDeltaCodec.ts";
 import type {PlayerEntity} from "./player/PlayerEntity.ts";
 import type {CommandOutput} from "../server/command/CommandOutput.ts";
 import {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
@@ -55,7 +55,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     public age: number = 0;
     public readonly color: EntityColor = EntityColor.default();
 
-    private readonly type: EntityType<any>;
+    private readonly type: EntityType<Entity>;
     private uuid: UUID = crypto.randomUUID();
     private id: number = Entity.ENTITY_COUNTER.incrementAndGet();
 
@@ -87,7 +87,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.changeColor();
     }
 
-    public getType(): EntityType<any> {
+    public getType(): EntityType<Entity> {
         return this.type;
     }
 

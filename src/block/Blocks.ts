@@ -23,13 +23,4 @@ export class Blocks {
     private static register(id: string, block: Block): Block {
         return Registry.registerReferenceById(Registries.BLOCK, Identifier.ofVanilla(id), block).getValue();
     }
-
-    static {
-        for (const block of Registries.BLOCK) {
-            for (const state of block.getStateDefinition().getPossibleStates()) {
-                Block.BLOCK_STATE_REGISTRY.add(state);
-                state.initCache();
-            }
-        }
-    }
 }

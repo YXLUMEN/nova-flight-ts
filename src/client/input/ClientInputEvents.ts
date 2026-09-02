@@ -1,4 +1,4 @@
-import {GlobalConfig} from "../../configs/GlobalConfig.ts";
+import {GlobalConfig, isDev} from "../../configs/GlobalConfig.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import {BGMManager} from "../../sound/BGMManager.ts";
@@ -83,7 +83,7 @@ export class ClientInputEvents {
         const world = client.world;
         if (world && world.isOver()) return;
 
-        if (event.ctrlKey) {
+        if (isDev && event.ctrlKey) {
             if (code === 'KeyV') {
                 const player = client.player;
                 if (player) {

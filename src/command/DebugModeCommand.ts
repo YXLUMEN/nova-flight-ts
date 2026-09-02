@@ -6,7 +6,7 @@ import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts
 import {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 import {PlayerProfileSyncS2CPacket} from "../network/packet/s2c/PlayerProfileSyncS2CPacket.ts";
 
-export class GameModeCommand {
+export class DebugModeCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {
         dispatcher.registry(
             literal<T>('gamemode')

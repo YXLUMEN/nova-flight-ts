@@ -106,8 +106,10 @@ export class DamageSources {
         return this._void;
     }
 
-    public erosion() {
-        return this._erosion;
+    public erosion(attacker: Entity | null) {
+        return attacker !== null ?
+            this.createWithAttacker(DamageTypes.EROSION, attacker) :
+            this._erosion;
     }
 
     public arc(attacker: Entity | null) {

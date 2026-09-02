@@ -1,6 +1,6 @@
 import {CommandManager} from "../../command/CommandManager.ts";
 import {MusicCommand} from "../../command/MusicCommand.ts";
-import {GameModeCommand} from "../../command/GameModeCommand.ts";
+import {DebugModeCommand} from "../../command/DebugModeCommand.ts";
 import type {ClientCommandSource} from "./ClientCommandSource.ts";
 import {ClientSettingsCommand} from "../../command/ClientSettingsCommand.ts";
 import {CommandBarCommand} from "../../command/CommandBarCommand.ts";
@@ -351,7 +351,7 @@ export class ClientCommandManager extends CommandManager {
 
         // noinspection DuplicatedCode
         KillCommand.registry(this.dispatcher);
-        GameModeCommand.registry(this.dispatcher);
+        DebugModeCommand.registry(this.dispatcher);
         WorldDifficultCommand.registry(this.dispatcher);
         StatusEffectCommand.registry(this.dispatcher);
         SummonEntityCommand.registry(this.dispatcher);

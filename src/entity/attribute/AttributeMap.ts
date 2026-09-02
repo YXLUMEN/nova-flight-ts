@@ -6,6 +6,7 @@ import {Identifier} from "../../registry/Identifier.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {Registries} from "../../registry/Registries.ts";
 import type {AttributeModifier} from "../../component/type/AttributeModifier.ts";
+import {Log} from "../../worker/log.ts";
 
 export class AttributeMap {
     private readonly attributes = new Map<RegistryEntry<Attribute>, AttributeInstance>();
@@ -127,7 +128,10 @@ export class AttributeMap {
             if (!id) continue;
 
             const entry = Registries.ATTRIBUTE.getEntryById(id);
-            if (!entry) continue;
+            if (!entry) {
+                Log.warn(`Unknown attribute ${id}`);
+                continue;
+            }
 
             const instance = this.getInstance(entry);
             if (!instance) continue;

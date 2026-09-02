@@ -9,9 +9,7 @@ import {SoundEvents} from "../../sound/SoundEvents.ts";
 import type {Item} from "../../item/Item.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
 import {Items} from "../../item/Items.ts";
-import type {EMPWeapon} from "../../item/weapon/EMPWeapon.ts";
 import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import {clamp} from "../../utils/math/math.ts";
 import type {TechTree} from "../../world/tech/TechTree.ts";
 import {DataTracker, type DataTrackerBuilder, type DataTrackerSerializedEntry} from "../data/DataTracker.ts";
 import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts";
@@ -19,13 +17,14 @@ import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
 import type {Constructor} from "../../type/types.ts";
 import {Techs} from "../../world/tech/Techs.ts";
 import {Weapon} from "../../item/weapon/Weapon.ts";
-import {ExplosionBehavior, ExplosionBehaviour} from "../../world/element/explosion/ExplosionBehavior.ts";
-import {ExplosionVisual} from "../../world/element/explosion/ExplosionVisual.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {UniqueInventory} from "./UniqueInventory.ts";
 import {PlayerDead} from "../../event/events/entity/PlayerDead.ts";
 import {isClient} from "../../configs/GlobalConfig.ts";
+import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
+import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
+import {PlayerDamage} from "../../event/events/entity/PlayerDamage.ts";
 
 export abstract class PlayerEntity extends LivingEntity {
     private static readonly SHIELD_AMOUNT = DataTracker.registerData(Object(PlayerEntity), TrackedDataHandlerRegistry.FLOAT);
@@ -55,8 +54,7 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public override createLivingAttributes() {
         return super.createLivingAttributes()
-            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 20)
-            .addWithBaseValue(EntityAttributes.PLAYER_EXPLODE_RANGE, 320);
+            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 20);
     }
 
     protected override defineSyncedData(builder: DataTrackerBuilder) {
@@ -116,51 +114,33 @@ export abstract class PlayerEntity extends LivingEntity {
             return false;
         }
 
-        const shake = clamp(damage * 0.3, 0.1, 0.4);
-        const visual = new ExplosionVisual(this.getAttributeValue(EntityAttributes.PLAYER_EXPLODE_RANGE));
-        visual.shake = shake;
+        damage = this.modifyAppliedDamage(damageSource, damage);
+        let remain = damage;
 
         const world = this.getWorld();
-        world.createExplosion(this, null, this.getX(), this.getY(),
-            2,
-            new ExplosionBehavior(ExplosionBehaviour.ONLY_DAMAGE, undefined, false),
-            visual
-        );
+        const shieldAmount = this.getShieldAmount();
 
-        damage = this.modifyAppliedDamage(damageSource, damage);
-        const remainDamage = Math.max(damage - this.getShieldAmount(), 0);
-        this.setShieldAmount(this.getShieldAmount() - damage + remainDamage);
-        if (remainDamage !== damage && this.getShieldAmount() === 0) {
-            world.playSound(null, SoundEvents.SHIELD_CRASH);
-        }
+        // 计算护盾
+        if (shieldAmount > 0 && !damageSource.isIn(DamageTypeTags.BYPASSES_SHIELD)) {
+            const hitShield = damage * damageSource.getShieldMulti();
 
-        // 触发emp
-        const stack = this.inventory.searchItem(Items.EMP_WEAPON);
-        if (!stack.isEmpty() && this.techTree!.isUnlocked(Techs.ELECTRICAL_SURGES)) {
-            const emp = Items.EMP_WEAPON as EMPWeapon;
-            const cd = emp.getCooldown(stack);
-            emp.tryFire(stack, world, this);
-            emp.setCooldown(stack, cd);
-        }
+            remain = Math.max(hitShield - shieldAmount, 0);
+            const remainShield = shieldAmount - hitShield + remain;
+            this.setShieldAmount(remainShield);
 
-        // emp免伤
-        if (remainDamage !== 0) {
-            const emp = Items.EMP_WEAPON as EMPWeapon;
-            if (!stack.isEmpty() && emp.canFire(stack) && this.techTree!.isUnlocked(Techs.ELE_SHIELD)) {
-                emp.tryFire(stack, world, this);
-                return false;
+            let showDamage = 0;
+            if (remainShield === 0) {
+                world.playSound(null, SoundEvents.SHIELD_CRASH);
+                showDamage = shieldAmount;
+            } else if (hitShield > 0) {
+                showDamage = hitShield;
             }
-
-            this.setHealth(this.getHealth() - remainDamage);
-            this.setShieldAmount(this.getShieldAmount() - remainDamage);
-
-            for (const effect of this.getStatusEffects()) {
-                effect.onEntityDamage(this, damageSource, remainDamage);
-            }
-            if (this.isDead()) this.onDeath(damageSource);
+            world.sendPacket(EntityDamageS2CPacket.create(this.getId(), this.positionRef, showDamage, '#73c4ff'));
         }
 
-        return true;
+        const event = new PlayerDamage(this, damage, remain, damageSource);
+        world.events.emit(event);
+        return event.isCanceled();
     }
 
     public override getShieldAmount(): number {

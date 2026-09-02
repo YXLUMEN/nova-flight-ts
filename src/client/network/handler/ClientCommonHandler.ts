@@ -77,5 +77,5 @@ export abstract class ClientCommonHandler implements PacketListener {
 
     public getPhase(): ConnectionState {
         return this.phase;
-    };
+    }
 }

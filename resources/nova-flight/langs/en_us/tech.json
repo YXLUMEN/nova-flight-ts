@@ -139,6 +139,6 @@
   "desc.nova-flight.pointer_following": "Ship follows mouse position. A navigation system that sacrifices traverse gear for more flexible maneuvering via guidance beacons.",
   "name.nova-flight.storm_fire": "Firestorm Autocannon",
   "desc.nova-flight.storm_fire": "An advanced autocannon that pours a barrage of high-explosive shells onto its target.",
-  "name.nova-flight.smoke_launcher": "Smoke Launcher",
-  "desc.nova-flight.smoke_launcher": "Fires a stream of smoke grenades, creating blind spots."
+  "name.nova-flight.ion_disruptor": "离子裂解炮",
+  "desc.nova-flight.ion_disruptor": "裂解炮发射出的高能射束, 能够同时弱化并破坏构成目标原子间的分子键. 它们能够持续削弱舰船的攻击能力."
 }

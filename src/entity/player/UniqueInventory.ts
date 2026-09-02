@@ -138,6 +138,12 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
         return this.items.has(item);
     }
 
+    public indexOf(item: Item): number {
+        const stack = this.items.get(item);
+        if (!stack) return -1;
+        return this.inventory.indexOf(stack);
+    }
+
     public containsAny(items: Set<Item>): boolean {
         return items.values().some(item => this.items.has(item));
     }

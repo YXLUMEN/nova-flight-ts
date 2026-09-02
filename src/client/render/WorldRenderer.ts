@@ -161,7 +161,7 @@ export class WorldRenderer {
         }
 
         this.window.hud.renderMainWeapon(ctx, alpha);
-        this.window.damagePopup.render(ctx, alpha);
+        this.window.damagePopup.render(ctx, alpha); // 修改了字体
         ctx.restore();
 
         this.title?.render(ctx);

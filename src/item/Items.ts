@@ -33,6 +33,7 @@ import {TorpedoLauncher} from "./weapon/BaseWeapon/TorpedoLauncher.ts";
 import {AreaBombing} from "./weapon/AreaBombing.ts";
 import {StormFire} from "./weapon/BaseWeapon/StormFire.ts";
 import {SmokeLauncher} from "./weapon/SmokeLauncher.ts";
+import {IonDisruptor} from "./weapon/BaseWeapon/IonDisruptor.ts";
 
 export class Items {
     public static readonly AIR = this.register('air', new Item(new Item.Properties()));
@@ -236,6 +237,12 @@ export class Items {
     public static readonly SMOKE_LAUNCHER = this.register('smoke_launcher', new SmokeLauncher(new Item.Properties()
         .maxCooldown(400)
         .attackDamage(1)
+    ));
+    public static readonly ION_DISRUPTOR = this.register('ion_disruptor', new IonDisruptor(new Item.Properties()
+        .attackDamage(6)
+        .maxCooldown(14)
+        .unbreakable()
+        .type(WeaponType.ENERGY)
     ));
 
     // 避免引用问题

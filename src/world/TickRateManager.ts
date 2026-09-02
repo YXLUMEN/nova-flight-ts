@@ -6,12 +6,17 @@ export class TickRateManager {
     protected maxStep = 3;
 
     public constructor(rate: number = 20) {
-        this.tickRate = clamp(rate, 1, 256);
+        this.tickRate = clamp(rate, 1, 160);
         this.msPerTick = 1 / this.tickRate;
     }
 
-    public getRate(): number {
+    public rate(): number {
         return this.tickRate;
+    }
+
+    public setRate(rate: number) {
+        this.tickRate = clamp(rate, 1, 160);
+        this.msPerTick = 1 / this.tickRate;
     }
 
     public mspt(): number {
@@ -20,10 +25,5 @@ export class TickRateManager {
 
     public getMaxStep(): number {
         return this.maxStep;
-    }
-
-    public setRate(rate: number) {
-        this.tickRate = clamp(rate, 1, 256);
-        this.msPerTick = 1 / this.tickRate;
     }
 }

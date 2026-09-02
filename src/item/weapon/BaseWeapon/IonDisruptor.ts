@@ -11,32 +11,31 @@ import {ParticleEffects} from "../../../effect/ParticleEffects.ts";
 import type {Vec2} from "../../../utils/math/Vec2.ts";
 import {LaserPulseItem} from "./LaserPulseItem.ts";
 
-export class GammaLasers extends LaserPulseItem {
+export class IonDisruptor extends LaserPulseItem {
     protected override laserWidth(): number {
-        return 3;
+        return 4;
     }
 
     protected override onHit(world: ServerWorld, start: Vec2, end: Vec2): void {
-        spawnLaserByVec(world, start, end, '#ffca59', this.laserWidth(), 0.2);
-        world.spawnPreparedParticle(ParticleEffects.POWER_FULL_BLOW, end, 8);
-        world.playSound(null, SoundEvents.LASER_FIRE_BEAM, 0.4);
+        spawnLaserByVec(world, start, end, '#66e0ff', this.laserWidth(), 0.18);
+        world.spawnPreparedParticle(ParticleEffects.POWER_FULL_BLOW, end, 6);
+        world.playSound(null, SoundEvents.LASER_FIRE_BEAM, 0.35);
     }
 
     protected override onHitEntity(stack: ItemStack, world: ServerWorld, target: LivingEntity, attacker: Entity) {
-        const damage = stack.getOr(DataComponents.ATTACK_DAMAGE, 10);
+        const damage = stack.getOr(DataComponents.ATTACK_DAMAGE, 6);
         const damageSource = world.getDamageSources()
             .laser(attacker)
-            .setShieldMulti(0.4)
-            .setHealthMulti(1.5);
+            .setShieldMulti(1.6)
+            .setHealthMulti(0.7);
         target.takeDamage(damageSource, damage);
 
-        if (target.getShieldAmount() !== 0) return;
-        const effect = target.getStatusEffect(StatusEffects.MELTDOWN);
-        const amplifier = effect ? Math.min(effect.getAmplifier() + 1, 3) : 0;
-        target.addEffect(new StatusEffectInstance(StatusEffects.MELTDOWN, 60, amplifier), attacker);
+        const effect = target.getStatusEffect(StatusEffects.WEAKNESS);
+        const amplifier = effect ? Math.min(effect.getAmplifier() + 1, 4) : 0;
+        target.addEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 100, amplifier), attacker);
     }
 
     public override getUiColor(): string {
-        return '#ffca59';
+        return '#66e0ff';
     }
 }

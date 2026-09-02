@@ -10,13 +10,13 @@ export class ErosionEffect extends StatusEffect {
         this.damage = baseDps;
     }
 
-    public override applyEffectTick(entity: Entity, amplifier: number): boolean {
+    public override applyEffectTick(source: Entity | null, entity: Entity, amplifier: number): boolean {
         const world = entity.getWorld();
         let damage: number = this.damage * amplifier;
         if (amplifier > 8 && entity instanceof LivingEntity) {
             damage += entity.getMaxHealth() * 0.1;
         }
-        entity.takeDamage(world.getDamageSources().erosion(), damage);
+        entity.takeDamage(world.getDamageSources().erosion(source), damage);
         return true;
     }
 

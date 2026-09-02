@@ -2,11 +2,8 @@ import {BlockBehaviour} from "./state/BlockBehaviour.ts";
 import {BlockState} from "./state/BlockState.ts";
 import {BlockProperties} from "./state/BlockProperties.ts";
 import {StateDefinition, type StateDefinitionBuilder} from "./state/StateDefinition.ts";
-import {IdMap} from "../utils/collection/IdMap.ts";
 
 export class Block extends BlockBehaviour {
-    public static readonly BLOCK_STATE_REGISTRY: IdMap<BlockState> = new IdMap();
-
     protected readonly stateDefinition: StateDefinition<Block, BlockState>;
     private defaultBlockState: BlockState | null = null;
 

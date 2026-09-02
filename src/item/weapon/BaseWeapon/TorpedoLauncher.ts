@@ -27,4 +27,8 @@ export class TorpedoLauncher extends BaseWeapon {
     public override getUiColor(): string {
         return '#5095ff'
     }
+
+    public override getBallisticSpeed(): number {
+        return this.speed;
+    }
 }
