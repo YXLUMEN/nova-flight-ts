@@ -7,7 +7,7 @@ import {LivingEntity} from "../../entity/LivingEntity.ts";
 import {squareDistVec2} from "../../utils/math/math.ts";
 import {EntityVelocityUpdateS2CPacket} from "../../network/packet/s2c/EntityVelocityUpdateS2CPacket.ts";
 import {EntityTrackerUpdateS2CPacket} from "../../network/packet/s2c/EntityTrackerUpdateS2CPacket.ts";
-import {VecDeltaCodec} from "../../entity/VecDeltaCodec.ts";
+import {VecDeltaCodec} from "../../world/entity/VecDeltaCodec.ts";
 import {encodeYaw} from "../../utils/net_util.ts";
 import {MoveRelative, Rotate, RotateAndMoveRelative} from "../../network/packet/s2c/EntityMoveS2CPacket.ts";
 import {EntityAttributesS2CPacket} from "../../network/packet/s2c/EntityAttributesS2CPacket.ts";

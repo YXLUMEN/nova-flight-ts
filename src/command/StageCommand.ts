@@ -25,17 +25,18 @@ export class StageCommand {
                         .then(
                             argument<T, string>('name', NormalStringArgumentType.normalString())
                                 .executes(ctx => {
-                                    const world = ctx.source.getWorld();
+                                    const world = ctx.source.getWorld() as ServerWorld;
                                     if (!world) throw new Error('World not initialized');
 
                                     const arg = ctx.args.get('name');
                                     if (!arg) throw new IllegalArgumentError('<name> is require');
 
                                     const name = arg.result as string;
-                                    const stage = (world as ServerWorld).stage;
+                                    const stage = world.stage;
 
                                     const last = stage.getCurrentName();
                                     if (stage.setStage(name)) {
+                                        world.setPhase(0);
                                         ctx.source.outPut.sendMessage(`Set game stage to ${name}`);
                                         return;
                                     }

@@ -82,9 +82,9 @@ export class Techs {
     public static VOID_LEAP: RegistryEntry<Tech>;
 
     public static SHIP_OPT: RegistryEntry<Tech>;
-    public static EXPLOSIVE_ARMOR: RegistryEntry<Tech>;
     public static EMERGENCY_REPAIR: RegistryEntry<Tech>;
     public static DECOY_RELEASER: RegistryEntry<Tech>;
+    public static ION_DISRUPTOR: RegistryEntry<Tech>;
 
     public static NANOTECHNOLOGY: RegistryEntry<Tech>;
     public static NANO_MENDING: RegistryEntry<Tech>;
@@ -158,7 +158,6 @@ export class Techs {
         this.VOID_ENERGY_EXTRACTION = fromJson('void_energy_extraction');
         this.VOID_LEAP = fromJson('void_leap');
         this.SHIP_OPT = fromJson('ship_opt');
-        this.EXPLOSIVE_ARMOR = fromJson('explosive_armor');
         this.EMERGENCY_REPAIR = fromJson('emergency_repair');
         this.DECOY_RELEASER = fromJson('decoy_releaser');
         this.ARMOR_EROSION = fromJson('armor_erosion');
@@ -194,6 +193,7 @@ export class Techs {
         this.PERDITION_BEAM = fromJson('perdition_beam');
         this.CORONA_DISCHARGE = fromJson('corona_discharge');
         this.STATIC_ELECTRICITY = fromJson('static_electricity');
+        this.ION_DISRUPTOR = fromJson('ion_disruptor');
 
         Registries.TECH.getEntries().forEach(entry => entry.getValue().complete());
     }

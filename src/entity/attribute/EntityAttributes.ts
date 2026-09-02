@@ -17,9 +17,6 @@ export class EntityAttributes {
     public static readonly GENERIC_MAX_SHIELD = this.register('generic.max_shield',
         new ClampedEntityAttribute(0, 0, 2048).setTracked(true)
     );
-    public static readonly PLAYER_EXPLODE_RANGE = this.register('generic.player_explode_range',
-        new ClampedEntityAttribute(320, 0, 2048)
-    );
 
     public static registerAndGetDefault(_registry: Registry<Attribute>) {
         return this.GENERIC_MAX_HEALTH;

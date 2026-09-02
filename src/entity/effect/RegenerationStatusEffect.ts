@@ -1,8 +1,9 @@
 import {StatusEffect} from "./StatusEffect.ts";
 import type {LivingEntity} from "../LivingEntity.ts";
+import type {Entity} from "../Entity.ts";
 
 export class RegenerationStatusEffect extends StatusEffect {
-    public override applyEffectTick(entity: LivingEntity): boolean {
+    public override applyEffectTick(_source: Entity | null, entity: LivingEntity): boolean {
         if (entity.getHealth() < entity.getMaxHealth()) {
             entity.heal(1);
         }

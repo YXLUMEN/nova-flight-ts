@@ -10,6 +10,7 @@ import {InstantHealthEffect} from "./InstantHealthEffect.ts";
 import {ShieldStatusEffect} from "./ShieldStatusEffect.ts";
 import {RegenerationStatusEffect} from "./RegenerationStatusEffect.ts";
 import {MeltdownEffect} from "./MeltdownEffect.ts";
+import {ShieldRegenStatusEffect} from "./ShieldRegenStatusEffect.ts";
 
 export class StatusEffects {
     public static readonly SPEED = this.register("speed",
@@ -55,6 +56,22 @@ export class StatusEffects {
 
     public static readonly REGENERATION = this.register("regeneration",
         new RegenerationStatusEffect(0, '#ff5a5a')
+    );
+
+    public static readonly STRENGTH = this.register("strength",
+        new StatusEffect(0, '#ff6b4a')
+            .addAttributeModifier(
+                EntityAttributes.GENERIC_ATTACK_DAMAGE, Identifier.ofVanilla("effect.strength"), 2)
+    );
+
+    public static readonly WEAKNESS = this.register("weakness",
+        new StatusEffect(1, '#6b6b8a')
+            .addAttributeModifier(
+                EntityAttributes.GENERIC_ATTACK_DAMAGE, Identifier.ofVanilla("effect.weakness"), -2)
+    );
+
+    public static readonly SHIELD_REGEN = this.register("shield_regen",
+        new ShieldRegenStatusEffect()
     );
 
     private static register(id: string, statusEffect: StatusEffect): RegistryEntry<StatusEffect> {

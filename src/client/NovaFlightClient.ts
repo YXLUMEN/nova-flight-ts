@@ -36,6 +36,7 @@ import {ClientInit} from "./ClientInit.ts";
 import {GameStart} from "../event/events/game/GameStart.ts";
 import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
 import {GamePause} from "../event/events/game/GamePause.ts";
+import {Log} from "../worker/log.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -246,15 +247,21 @@ export class NovaFlightClient {
 
             let step = 0;
             const maxStep = this.tickManager.getMaxStep();
-            const preTick = this.tickManager.mspt();
-            while (this.accumulator >= preTick && step < maxStep) {
-                this.tick(preTick);
-                this.accumulator -= preTick;
+            const perTick = this.tickManager.mspt();
+            while (this.accumulator >= perTick && step < maxStep) {
+                this.tick(perTick);
+                this.accumulator -= perTick;
                 step++
             }
 
+            if (step >= maxStep && this.accumulator >= perTick) {
+                const dropped = this.accumulator - (this.accumulator % perTick);
+                Log.warn(`[Client] Dropped ${dropped.toFixed(1)}ms`);
+                this.accumulator %= perTick;
+            }
+
             if (ts - this.lastRenderTime >= GlobalConfig.perFrame) {
-                this.worldRender.render(this.pause ? 1 : this.accumulator / preTick);
+                this.worldRender.render(this.pause ? 1 : this.accumulator / perTick);
                 this.lastRenderTime = ts;
             }
 

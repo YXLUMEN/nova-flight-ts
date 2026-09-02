@@ -126,12 +126,21 @@ export abstract class NovaFlightServer implements CommandOutput {
             let step = 0;
             const maxStep = this.tickManager.getMaxStep();
             const perTick = this.tickManager.mspt();
+
             while (this.accumulator >= perTick && step < maxStep) {
                 this.networkManager!.tick();
                 if (!this.pause) world.tick(perTick);
                 this.accumulator -= perTick;
                 step++;
             }
+
+            if (step >= maxStep && this.accumulator >= perTick) {
+                const dropped = this.accumulator - (this.accumulator % perTick);
+                Log.warn(`[Server] Dropped ${dropped.toFixed(1)}ms`);
+                this.accumulator %= perTick;
+                // 通知客户端发生了时间跳跃
+            }
+
             this.networkChannel.flush();
         } catch (error) {
             Log.error(`[Server] Server runtime error: ${error}`);
@@ -181,15 +190,13 @@ export abstract class NovaFlightServer implements CommandOutput {
 
     public abstract saveWorld(compound: NbtCompound): Promise<void>;
 
-    public abstract deleteWorld(worldName: string): Promise<Result<void, Error>>;
-
     public abstract readSave(): Promise<NbtCompound | null>;
 
     public abstract isHost(profile: GameProfile): boolean;
 
     public abstract isHostUUID(uuid: UUID): boolean;
 
-    public getTickManager() {
+    public getTickManager(): ServerTickManager {
         return this.tickManager;
     }
 

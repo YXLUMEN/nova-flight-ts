@@ -51,7 +51,7 @@ export class PlayerManager {
         }
 
         playHandler.send(new JoinGameS2CPacket(player.getId(), this.server.worldName));
-        playHandler.send(new TickChangeS2CPacket(this.server.getTickManager().getRate()));
+        playHandler.send(new TickChangeS2CPacket(this.server.getTickManager().rate()));
         connection.broadcast(new PlayerJoinS2CPacket(profile.name, profile.clientId));
         world.addPlayer(player);
 

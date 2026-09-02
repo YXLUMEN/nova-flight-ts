@@ -1,12 +1,12 @@
 import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import type {ServerWorld} from "../ServerWorld.ts";
 import {ServerTechTree} from "../tech/ServerTechTree.ts";
-import {type ItemStack} from "../../item/ItemStack.ts";
+import {ItemStack} from "../../item/ItemStack.ts";
 import type {GameProfile} from "./GameProfile.ts";
-import {type DamageSource} from "../../entity/damage/DamageSource.ts";
+import type {DamageSource} from "../../entity/damage/DamageSource.ts";
 import type {ServerPlayHandler} from "../network/handler/ServerPlayHandler.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
-import {type Entity} from "../../entity/Entity.ts";
+import type {Entity} from "../../entity/Entity.ts";
 import {EntityStatusEffectS2CPacket} from "../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
 import {RemoveEntityStatusEffectS2CPacket} from "../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
 import {ServerItemCooldownManager} from "../item/ServerItemCooldownManager.ts";
@@ -17,11 +17,12 @@ import {TranslatableTextS2CPacket} from "../../network/packet/s2c/TranslatableTe
 import {Weapon} from "../../item/weapon/Weapon.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {InventoryS2CPacket} from "../../network/packet/s2c/InventoryS2CPacket.ts";
-import {type Item} from "../../item/Item.ts";
+import type {Item} from "../../item/Item.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import {randInt} from "../../utils/math/math.ts";
 import {EffectCreateS2CPacket} from "../../network/packet/s2c/EffectCreateS2CPacket.ts";
 import {DataComponents} from "../../component/DataComponents.ts";
+import {SetPlayerInventoryS2CPacket} from "../../network/packet/s2c/SetPlayerInventoryPacket.ts";
 
 export class ServerPlayerEntity extends PlayerEntity {
     public readonly playerProfile: GameProfile;
@@ -134,6 +135,17 @@ export class ServerPlayerEntity extends PlayerEntity {
                 this.pendingSyncStack.add(stack);
             }
         }
+    }
+
+    public override removeItem(item: Item): boolean {
+        const index = this.getInventory().indexOf(item);
+        if (index === -1) return false;
+
+        if (super.removeItem(item)) {
+            this.networkHandler.send(new SetPlayerInventoryS2CPacket(index, ItemStack.EMPTY));
+            return true;
+        }
+        return false;
     }
 
     public override isInvulnerableTo(damageSource: DamageSource): boolean {

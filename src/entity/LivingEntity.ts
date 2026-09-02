@@ -283,6 +283,7 @@ export abstract class LivingEntity extends Entity {
         const instance = this.activeEffects.get(type);
 
         if (!instance) {
+            effect.source = source;
             this.activeEffects.set(type, effect);
             this.onEffectAdded(effect, source);
             effect.onApplied(this);
@@ -292,6 +293,7 @@ export abstract class LivingEntity extends Entity {
 
         const upgraded = instance.upgrade(effect);
         if (upgraded) {
+            instance.source = source;
             this.onEffectUpdated(instance, true, source);
         }
         effect.onEffectStarted(this);

@@ -1,6 +1,7 @@
 import {ProtocolRegistry} from "../network/packet/ProtocolRegistry.ts";
 import {IntegratedServer} from "../server/IntegratedServer.ts";
 import type {StartServer} from "../type/startup.ts";
+import {isDev} from "../configs/GlobalConfig.ts";
 
 let server: IntegratedServer | null = null;
 let pendingStop = false;
@@ -38,6 +39,8 @@ async function handleEvent(event: MessageEvent) {
         case 'loaded_save_data':
             break;
         case 'save_all': {
+            if (!isDev) return;
+
             if (!server || !server.world) return;
 
             await server.playerManager.saveAllPlayerData();
@@ -47,6 +50,8 @@ async function handleEvent(event: MessageEvent) {
             break;
         }
         case 'cd_all' : {
+            if (!isDev) return;
+
             if (!server || !server.world) return;
             const host = server.getHostUUID();
             const player = server.playerManager.getPlayer(host);

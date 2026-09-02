@@ -26,5 +26,7 @@
   "nova-flight.void_engin": "虚空引擎",
   "nova-flight.phase_lasers": "相位激光",
   "nova-flight.storm_fire": "火风暴机关炮",
-  "nova-flight.smoke_launcher": "烟雾弹发射器"
+  "nova-flight.smoke_launcher": "烟雾弹发射器",
+  "nova-flight.pulse_cannon": "脉冲机炮",
+  "nova-flight.ion_disruptor": "离子裂解炮"
 }

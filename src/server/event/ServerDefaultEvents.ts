@@ -19,6 +19,9 @@ import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChange
 import {ExplosionEffect} from "../../world/element/explosion/ExplosionBehavior.ts";
 import {DevourerBoss} from "../../entity/mob/DevourerBoss.ts";
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
+import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
+import {ScreenShakeS2CPacket} from "../../network/packet/s2c/ScreenShakeS2CPacket.ts";
+import {clamp} from "../../utils/math/math.ts";
 
 export class ServerDefaultEvents {
     public static registerEvent() {
@@ -68,6 +71,7 @@ export class ServerDefaultEvents {
                 const stack = player.getItem(laser);
                 if (stack && stack.isAvailable()) {
                     laser.setCooldown(stack, laser.getCooldown(stack) - 25);
+                    player.syncStack(stack);
                 }
             }
 
@@ -139,6 +143,51 @@ export class ServerDefaultEvents {
             if (effect !== ExplosionEffect.TRIGGERED) {
                 this.serialWarhead(world, explosion);
             }
+        });
+
+        events.on('entity:player:damage', event => {
+            const {player, origin, remain, source} = event;
+            const world = player.getWorld();
+            const tech = player.getTechs();
+
+            const shake = clamp(origin * 0.3, 0.1, 0.5);
+            (player as ServerPlayerEntity).networkHandler.send(new ScreenShakeS2CPacket(shake, 1));
+
+            // 触发emp
+            const stack = player.getInventory().searchItem(Items.EMP_WEAPON);
+            if (!stack.isEmpty() && tech.isUnlocked(Techs.ELECTRICAL_SURGES)) {
+                const emp = Items.EMP_WEAPON;
+                const cd = emp.getCooldown(stack);
+                emp.tryFire(stack, world, player);
+                emp.setCooldown(stack, cd);
+            }
+
+            // emp免伤
+            if (remain <= 0) return;
+
+            const emp = Items.EMP_WEAPON;
+            if (!stack.isEmpty() && emp.canFire(stack) && tech.isUnlocked(Techs.ELE_SHIELD)) {
+                emp.tryFire(stack, world, player);
+
+                world.sendPacket(EntityDamageS2CPacket.create(
+                    player.getId(),
+                    player.positionRef,
+                    remain,
+                    '#979797'
+                ));
+                event.cancel();
+                return false;
+            }
+
+            player.setHealth(player.getHealth() - remain);
+            player.setShieldAmount(player.getShieldAmount() - remain);
+
+            for (const effect of player.getStatusEffects()) {
+                effect.onEntityDamage(player, source, remain);
+            }
+            if (player.isDead()) player.onDeath(source);
+
+            world.sendPacket(EntityDamageS2CPacket.create(player.getId(), player.positionRef, remain));
         });
     }
 

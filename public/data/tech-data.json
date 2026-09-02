@@ -670,26 +670,15 @@
     "cost": 180
   },
   {
-    "id": "explosive_armor",
-    "name": "tech.name.nova-flight.explosive_armor",
-    "x": 1,
-    "y": 14,
-    "desc": "tech.desc.nova-flight.explosive_armor",
-    "cost": 160,
-    "requires": [
-      "ship_opt"
-    ]
-  },
-  {
     "id": "emergency_repair",
     "name": "tech.name.nova-flight.emergency_repair",
-    "x": 2,
+    "x": 1,
     "y": 14,
     "branchGroup": "apex_upgrade",
     "desc": "tech.desc.nova-flight.emergency_repair",
     "cost": 320,
     "requires": [
-      "explosive_armor"
+      "ship_opt"
     ]
   },
   {
@@ -701,6 +690,17 @@
     "cost": 80,
     "requires": [
       "ship_opt"
+    ]
+  },
+  {
+    "id": "ion_disruptor",
+    "name": "tech.name.nova-flight.ion_disruptor",
+    "x": -2,
+    "y": 14,
+    "desc": "tech.desc.nova-flight.ion_disruptor",
+    "cost": 220,
+    "requires": [
+      "decoy_releaser"
     ]
   },
   {

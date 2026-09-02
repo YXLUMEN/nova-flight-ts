@@ -38,15 +38,15 @@ export class StatusEffect {
         this.color = color;
     }
 
-    public applyEffectTick(_entity: LivingEntity, _amplifier: number): boolean {
+    public applyEffectTick(_source: Entity | null, _entity: LivingEntity, _amplifier: number): boolean {
         return true;
     }
 
     public tickClient(_entity: LivingEntity, _amplifier: number) {
     }
 
-    public applyInstantEffect(_source: Entity | null, _attacker: Entity | null, target: LivingEntity, amplifier: number, _proximity: number): void {
-        this.applyEffectTick(target, amplifier);
+    public applyInstantEffect(source: Entity | null, _attacker: Entity | null, target: LivingEntity, amplifier: number, _proximity: number): void {
+        this.applyEffectTick(source, target, amplifier);
     }
 
     public shouldApplyThisTick(_duration: number, _amplifier: number): boolean {

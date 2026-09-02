@@ -6,6 +6,7 @@ import type {DamageSource} from "../damage/DamageSource.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {Identifier} from "../../registry/Identifier.ts";
+import type {Entity} from "../Entity.ts";
 
 export class StatusEffectInstance {
     public static readonly INFINITE = -1;
@@ -15,6 +16,8 @@ export class StatusEffectInstance {
     private readonly type: RegistryEntry<StatusEffect>;
     private duration: number;
     private amplifier: number;
+
+    public source: Entity | null = null;
 
     public constructor(type: RegistryEntry<StatusEffect>, duration: number, amplifier: number = 0) {
         this.type = type;
@@ -81,7 +84,7 @@ export class StatusEffectInstance {
 
         const effect = this.type.getValue();
         if (effect.shouldApplyThisTick(this.duration, this.amplifier) &&
-            !effect.applyEffectTick(entity, this.amplifier)) {
+            !effect.applyEffectTick(this.source, entity, this.amplifier)) {
             return false;
         }
 

@@ -8,7 +8,6 @@ import {TutorialStage} from "../configs/TutorialStage.ts";
 import {TutorialEvents} from "./event/TutorialEvents.ts";
 import {PlayAudioS2CPacket} from "../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {Audios} from "../sound/Audios.ts";
-import type {Result} from "../utils/result/Result.ts";
 import {ServerNetworkChannel} from "./network/ServerNetworkChannel.ts";
 import {Log} from "../worker/log.ts";
 import {NoResultsError, StatusError} from "../type/errors.ts";
@@ -92,10 +91,6 @@ export class IntegratedServer extends NovaFlightServer {
         if (result.isErr()) {
             Log.error(result.unwrapErr().message);
         }
-    }
-
-    public override deleteWorld(worldName: string): Promise<Result<void, Error>> {
-        return ServerStorage.deleteWorld(worldName);
     }
 
     public override isHost(profile: GameProfile): boolean {

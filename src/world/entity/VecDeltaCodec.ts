@@ -1,5 +1,5 @@
-import {MutVec2} from "../utils/math/MutVec2.ts";
-import {Vec2} from "../utils/math/Vec2.ts";
+import {MutVec2} from "../../utils/math/MutVec2.ts";
+import {Vec2} from "../../utils/math/Vec2.ts";
 
 export class VecDeltaCodec {
     private base = MutVec2.zero();
