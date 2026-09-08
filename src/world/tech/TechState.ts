@@ -4,7 +4,7 @@ import {Tech} from "./Tech.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import {TechLayoutParser} from "../../client/tech/TechLayoutParser.ts";
-import {isServer} from "../../configs/GlobalConfig.ts";
+import {isServer} from "../../configs/RuntimeConfig.ts";
 import {TechBuilder} from "./TechBuilder.ts";
 import {ClientTechBuilder} from "../../client/tech/ClientTechBuilder.ts";
 

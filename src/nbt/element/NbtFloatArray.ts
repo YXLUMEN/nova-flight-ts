@@ -27,7 +27,7 @@ export class NbtFloatArray implements NbtElement {
         return new NbtFloatArray(new Float32Array(list));
     }
 
-    public getType(): NbtTypeId {
+    public type(): NbtTypeId {
         return NbtTypeId.FloatArray;
     }
 

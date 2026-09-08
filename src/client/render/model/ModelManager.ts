@@ -10,8 +10,8 @@ import {resolve, resolveResource} from "@tauri-apps/api/path";
 import {exists, mkdir, writeTextFile} from "@tauri-apps/plugin-fs";
 
 export class ModelManager {
-    private static items = new Map<Item, string>();
-    private static techs = new Map<Tech, string>();
+    private static readonly items: Map<Item, string> = new Map();
+    private static readonly techs: Map<Tech, string> = new Map();
 
     private static model: ModelResource | null = null;
 
@@ -26,7 +26,7 @@ export class ModelManager {
     private static generateItemModel(): void {
         for (const entry of Registries.ITEM.getEntries()) {
             const item = entry.getValue();
-            const id = TextureMapping.layer0(item);
+            const id = TextureMapping.getItemTexture(item);
             this.items.set(item, id.toString());
         }
     }

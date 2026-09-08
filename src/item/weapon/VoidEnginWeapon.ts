@@ -16,7 +16,7 @@ import {AttributeModifier, Operation} from "../../component/type/AttributeModifi
 import {Items} from "../Items.ts";
 import {Techs} from "../../world/tech/Techs.ts";
 import type {ServerPlayerEntity} from "../../server/entity/ServerPlayerEntity.ts";
-import {isClient, isServer} from "../../configs/GlobalConfig.ts";
+import {isClient, isServer} from "../../configs/RuntimeConfig.ts";
 
 export class VoidEnginWeapon extends SpecialWeapon {
     public static readonly DEFAULT_MODIFIER = new AttributeModifier(

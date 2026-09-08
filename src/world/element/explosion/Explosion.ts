@@ -18,7 +18,7 @@ import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.
 import {ParticleEffects} from "../../../effect/ParticleEffects.ts";
 import type {WorldMutation} from "../WorldMutation.ts";
 import {RadialRing} from "../../../effect/RadialRing.ts";
-import {isClient} from "../../../configs/GlobalConfig.ts";
+import {isClient} from "../../../configs/RuntimeConfig.ts";
 
 export class Explosion implements WorldMutation {
     public static readonly DEFAULT_BEHAVIOUR = new ExplosionBehavior();

@@ -14,12 +14,8 @@ export class LangManager {
         return this.module.getText(key);
     }
 
-    public static changeLang(lang: string): Promise<void> {
-        return this.module.setLang(lang);
-    }
-
-    public static getCurrentLang(): string {
-        return this.module.getCurrentLang();
+    public static currentLang(): string {
+        return this.module.currentLang();
     }
 
     public static getAllLang(): ReadonlyArray<string> {

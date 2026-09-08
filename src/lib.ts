@@ -3,10 +3,12 @@ import {ProtocolRegistry} from "./network/packet/ProtocolRegistry.ts";
 import {UUIDUtil} from "./utils/UUIDUtil.ts";
 import {NovaFlightClient} from "./client/NovaFlightClient.ts";
 import {error} from "@tauri-apps/plugin-log";
-import {isDev} from "./configs/GlobalConfig.ts";
+import {isDev} from "./configs/RuntimeConfig.ts";
 import {CodecRegistry} from "./network/CodecRegistry.ts";
 import {PageSplicer} from "./client/page/PageSplicer.ts";
 import type {UUID} from "./type/types.ts";
+import {Settings} from "./client/settings/Settings.ts";
+import {BindSettings} from "./client/settings/BindSettings.ts";
 
 export const app = new Window('main');
 
@@ -26,6 +28,10 @@ export async function run() {
     ProtocolRegistry.register();
 
     try {
+        // 先加载偏好,后续系统可以据此加载
+        await Settings.OPTIONS.load();
+        BindSettings.init();
+
         const rawName = localStorage.getItem('playerName') ?? 'player';
         const playerName = rawName.slice(0, 64);
 
@@ -39,6 +45,7 @@ export async function run() {
         ctrl.abort();
 
         await client.startClient();
+        await Settings.OPTIONS.save();
         await app.close();
     } catch (err) {
         if (Error.isError(err)) {

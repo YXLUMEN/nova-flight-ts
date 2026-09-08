@@ -12,7 +12,7 @@ import {MobEntity} from "../entity/mob/MobEntity.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExplosionVisual} from "../world/element/explosion/ExplosionVisual.ts";
 import type {Explosion} from "../world/element/explosion/Explosion.ts";
-import {DEFAULT_CONFIG} from "../configs/GlobalConfig.ts";
+import {DEFAULT_CONFIG} from "../configs/RuntimeConfig.ts";
 import {AbstractClientPlayerEntity} from "./entity/AbstractClientPlayerEntity.ts";
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import {HistoricalScore} from "../statistics/HistoricalScore.ts";

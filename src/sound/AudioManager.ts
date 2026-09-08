@@ -1,26 +1,33 @@
 import {clamp} from "../utils/math/math.ts";
 import type {SoundEvent} from "./SoundEvent.ts";
-import {isServer} from "../configs/GlobalConfig.ts";
+import {isClient} from "../configs/RuntimeConfig.ts";
 import {MediaWithoutSrc} from "../type/errors.ts";
 import type {Consumer} from "../type/types.ts";
 import type {AudioResource} from "../resource/AudioResource.ts";
 import {ResourceManager} from "../resource/ResourceManager.ts";
 import {Resources} from "../resource/Resources.ts";
 import {EventBus} from "../event/EventBus.ts";
+import {Settings} from "../client/settings/Settings.ts";
 
 export class AudioManager {
     private static readonly audio: HTMLAudioElement;
-    private static readonly eventMap = new Map<string, AbortController>();
+    private static readonly eventMap: Map<string, AbortController>;
 
     private static cache: AudioResource | null = null;
-    private static disable = false;
+    private static disable = true;
     private static currentPlaying: SoundEvent | null = null;
 
     static {
-        if (!isServer) {
+        if (isClient) {
+            (this.eventMap as any) = new Map();
             (this.audio as any) = new Audio();
+
             this.audio.addEventListener('ended', () => this.currentPlaying = null);
+            this.audio.volume = Settings.MUSIC_VOLUME.get();
+            Settings.MUSIC_VOLUME.onChange(v => this.audio.volume = v);
+
             EventBus.instance().on('game:pause', ({paused}) => paused ? this.pause() : this.resume());
+            this.disable = false;
         }
     }
 
@@ -30,23 +37,19 @@ export class AudioManager {
     }
 
     public static playAudio(event: SoundEvent, loop = false) {
-        if (this.disable) return;
+        if (this.disable) return Promise.resolve();
 
         const id = event.id;
         const url = this.module.buffers.get(id);
         if (!url) {
             console.warn(`Can't find sound with id: ${id}`);
-            return;
+            return Promise.resolve();
         }
 
         this.audio.src = url;
         this.audio.loop = loop;
         this.currentPlaying = event;
         return this.audio.play().catch(console.error);
-    }
-
-    public static randomPlay(...event: SoundEvent[]) {
-        this.playAudio(event[Math.floor(Math.random() * event.length)]);
     }
 
     public static getCurrentPlaying(): SoundEvent | null {
@@ -127,10 +130,6 @@ export class AudioManager {
     public static reset(): void {
         this.audio.pause();
         this.audio.currentTime = 0;
-    }
-
-    public static setVolume(volume: number): void {
-        this.audio.volume = clamp(volume, 0, 1);
     }
 
     public static getRemainingTime(): number {

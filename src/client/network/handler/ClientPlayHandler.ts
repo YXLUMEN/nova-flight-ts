@@ -411,8 +411,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
     }
 
     public onPlayAudio(packet: PlayAudioS2CPacket): void {
-        AudioManager.playAudio(packet.audio, packet.loop);
-        AudioManager.setVolume(packet.volume);
+        void AudioManager.playAudio(packet.audio, packet.loop);
     }
 
     public onAudioControl(packet: AudioControlS2CPacket): void {

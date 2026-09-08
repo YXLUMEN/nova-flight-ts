@@ -15,13 +15,13 @@ export abstract class LaserPulseItem extends BaseWeapon {
         const f = Math.cos(yaw);
         const g = Math.sin(yaw);
 
+        // Extend to the entire map
         const start = attacker.positionRef;
         const end = new MutVec2(
             start.x + f * PhaseLasers.LASER_HEIGHT,
             start.y + g * PhaseLasers.LASER_HEIGHT
         );
 
-        const hitBlock = world.raycast(start, end);
         const width = this.laserWidth();
 
         const candidates: LivingEntity[] = [];
@@ -43,8 +43,16 @@ export abstract class LaserPulseItem extends BaseWeapon {
             return squareDistVec2(start, a.positionRef) - squareDistVec2(start, b.positionRef);
         });
 
+        // clamp to nearest entity, for performance
         const target = candidates[0];
         if (target) {
+            end.set(target.getX(), target.getY());
+        }
+
+        const hitBlock = world.raycast(start, end);
+
+        if (target) {
+            // compare abs distance, find actually hit target
             if (!hitBlock.missed && squareDistVec2(start, target.positionRef) > squareDistVec2(start, hitBlock.pos)) {
                 end.set(hitBlock.pos.x, hitBlock.pos.y);
                 this.onHit(world, start, end);

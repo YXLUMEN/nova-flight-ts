@@ -1,16 +1,16 @@
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {GlobalConfig} from "../configs/GlobalConfig.ts";
+import {RuntimeConfig} from "../configs/RuntimeConfig.ts";
 import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
 import {invoke} from "@tauri-apps/api/core";
 import {CommandError, IllegalArgumentError} from "../type/errors.ts";
 import {IntArgumentType} from "./argument/IntArgumentType.ts";
 import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
 import {ServerStorage} from "../server/storage/ServerStorage.ts";
-import {clamp} from "../utils/math/math.ts";
 import {NovaFlightClient} from "../client/NovaFlightClient.ts";
 import {BoolArgumentType} from "./argument/BoolArgumentType.ts";
 import {error} from "@tauri-apps/plugin-log";
+import {Settings} from "../client/settings/Settings.ts";
 
 export class ClientSettingsCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -33,7 +33,7 @@ export class ClientSettingsCommand {
                                             if (ip.length < 9) {
                                                 throw new IllegalArgumentError(`\x1b[31mAddress length must be at least 9 characters, but current is ${ip.length}`);
                                             }
-                                            GlobalConfig.serverAddr = ip;
+                                            RuntimeConfig.serverAddr = ip;
                                             ctx.source.addMessage(`Set address to: \x1b[32m"${ip}"`);
                                         })
                                 )
@@ -53,7 +53,7 @@ export class ClientSettingsCommand {
                                             if (port < 0 || port > 65535) {
                                                 throw new IllegalArgumentError("\x1b[31mPort must in 0-65535");
                                             }
-                                            GlobalConfig.port = port;
+                                            RuntimeConfig.port = port;
                                             ctx.source.addMessage(`Set port: \x1b[32m"${port}"`);
                                         })
                                 )
@@ -78,7 +78,7 @@ export class ClientSettingsCommand {
 
                                             NovaFlightClient.getInstance().requestStop();
 
-                                            GlobalConfig.generalMode = bl;
+                                            RuntimeConfig.generalMode = bl;
                                             ctx.source.addMessage(bl ? 'Now is open on LAN' : 'Close port');
                                         })
                                 )
@@ -113,16 +113,13 @@ export class ClientSettingsCommand {
                                             const arg = ctx.args.get('int');
                                             if (!arg) throw new CommandError('\x1b[31m<int> is required');
 
-                                            let fps = Number(arg.result);
-                                            if (!Number.isSafeInteger(fps)) {
-                                                throw new IllegalArgumentError(`\x1b[31mInvalid argument: "${fps}", int must be an integer`);
+                                            const fps = Number(arg.result);
+                                            const result = Settings.FPS.set(fps);
+                                            if (result.isErr()) {
+                                                ctx.source.addMessage(`\x1b[31mInvalid argument: "${fps}", value must be an integer and between 2-240`);
+                                                return;
                                             }
-                                            if (fps <= 0) {
-                                                throw new IllegalArgumentError("\x1b[31mFps should greater than 0");
-                                            }
-                                            fps = clamp(fps, 0, 165);
-                                            GlobalConfig.fps = fps;
-                                            GlobalConfig.perFrame = 1000 / fps;
+
                                             ctx.source.addMessage(`Set Maxfps: \x1b[32m"${fps}"`);
                                         })
                                 )
@@ -133,13 +130,13 @@ export class ClientSettingsCommand {
                         .then(
                             literal<T>('server_addr')
                                 .executes(ctx => {
-                                    ctx.source.addMessage(`Current address \x1b[32m"${GlobalConfig.serverAddr}"`);
+                                    ctx.source.addMessage(`Current address \x1b[32m"${RuntimeConfig.serverAddr}"`);
                                 })
                         )
                         .then(
                             literal<T>('port')
                                 .executes(ctx => {
-                                    ctx.source.addMessage(`Current port is: \x1b[32m"${GlobalConfig.port}"`);
+                                    ctx.source.addMessage(`Current port is: \x1b[32m"${RuntimeConfig.port}"`);
                                 })
                         )
                         .then(
@@ -147,7 +144,7 @@ export class ClientSettingsCommand {
                                 .executes(async ctx => {
                                     const isOpen = await invoke('is_open');
                                     let message = isOpen ?
-                                        `World is open on \x1b[32m"${GlobalConfig.port}"` :
+                                        `World is open on \x1b[32m"${RuntimeConfig.port}"` :
                                         `No open on web`;
                                     ctx.source.addMessage(message);
                                 })
@@ -198,6 +195,13 @@ export class ClientSettingsCommand {
 
                                     await error(result.unwrapErr().toString());
                                     ctx.source.addMessage('Action failed, the detail will write to log');
+                                })
+                        )
+                        .then(
+                            literal<T>('reload_settings')
+                                .executes(async ctx => {
+                                    await Settings.OPTIONS.load();
+                                    ctx.source.addMessage('Settings reloaded');
                                 })
                         )
                 )

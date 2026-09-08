@@ -27,7 +27,7 @@ export class NbtDoubleArray implements NbtElement {
         return new NbtDoubleArray(new Float64Array(array));
     }
 
-    public getType(): NbtTypeId {
+    public type(): NbtTypeId {
         return NbtTypeId.DoubleArray;
     }
 

@@ -1,9 +1,10 @@
 export class KeyboardState {
     private readonly keys = new Set<string>();
-    private prevKeys = new Set<string>();
+    private readonly prevKeys = new Set<string>();
 
     public updateEndFrame(): void {
-        this.prevKeys = new Set(this.keys);
+        this.prevKeys.clear();
+        for (const k of this.keys) this.prevKeys.add(k);
     }
 
     public isDown(key: string): boolean {

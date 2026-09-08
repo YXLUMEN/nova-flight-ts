@@ -19,11 +19,11 @@ export class DataLoader {
         if (this.loading) return;
         this.loading = true;
 
-        ResourceManager.register(new LangResource());
+        ResourceManager.register(new LangResource()); // 无特殊要求的话,推荐第一个加载
         ResourceManager.register(new SoundResource());
         ResourceManager.register(new AudioResource());
         ResourceManager.register(new TipResource());
-        ResourceManager.register(new TextureResource());
+        ResourceManager.register(new TextureResource()); // 必须在 Model 之前
         ResourceManager.register(new ModelResource());
 
         const consumer = (total: number, completed: number, module: ResourceModule) => {

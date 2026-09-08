@@ -48,11 +48,11 @@ export class FocusedArcEmitter extends BaseWeapon {
 
         if (initialTargets.length === 0) return;
 
-        // 连锁
         const range = stack.getOr(DataComponents.ATTACK_RANGE, 16384);
         const subHitCount = new Map<Entity, number>();
         const chainDamage = Math.floor(damage * 0.5);
 
+        // 在所有候选目标中连锁
         for (const source of initialTargets) {
             let targetCount = 0;
             const sourcePos = source.positionRef;

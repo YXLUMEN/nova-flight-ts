@@ -2,7 +2,6 @@ import {debounce, DPR} from "../../utils/uit.ts";
 import {HUD} from "./ui/HUD.ts";
 import {Camera} from "./Camera.ts";
 import {PauseOverlay} from "./ui/PauseOverlay.ts";
-import {NotificationManager} from "./ui/NotificationManager.ts";
 import {UITheme} from "./ui/theme.ts";
 import {DamagePopupRender} from "./ui/DamagePopupRender.ts";
 import type {BiConsumer, Consumer} from "../../type/types.ts";
@@ -17,7 +16,6 @@ export class Window {
     public readonly camera: Camera = new Camera();
     public readonly hud: HUD = new HUD();
     public readonly pauseOverlay = new PauseOverlay();
-    public readonly notify = new NotificationManager();
     public readonly damagePopup = new DamagePopupRender();
 
     private readonly resizeCallbacks: Set<BiConsumer<number, number>> = new Set();
@@ -52,7 +50,6 @@ export class Window {
 
         this.hud.setSize(width, height);
         this.pauseOverlay.setSize(width, height);
-        this.notify.setSize(width, height);
 
         for (const cb of this.resizeCallbacks) {
             cb(width, height);

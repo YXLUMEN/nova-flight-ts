@@ -49,7 +49,7 @@ export class NbtSerialization {
         const writer = new BinaryWriter();
 
         for (const [key, element] of compound.getEntries()) {
-            const type = element.getType();
+            const type = element.type();
             const index = scheme.get(`${key}:${type}`)!.index;
             writer.writeVarUint(index);
 
@@ -78,10 +78,10 @@ export class NbtSerialization {
     }
 
     private static updateScheme(compound: NbtCompound, scheme: Map<string, KeyIndex>) {
-        if (compound.getSize() === 0) return;
+        if (compound.size() === 0) return;
 
         for (const [key, element] of compound.getEntries()) {
-            const type = element.getType();
+            const type = element.type();
             const compositeKey = `${key}:${type}`;
             if (!scheme.has(compositeKey)) {
                 scheme.set(compositeKey, {key, type, index: scheme.size});
@@ -111,7 +111,7 @@ export class NbtSerialization {
 
         for (const [key, element] of compound.getEntries()) {
             const safeKey = reg.test(key) ? `"${key}"` : `"${key.replace(/"/g, '\\"')}"`;
-            const type = element.getType();
+            const type = element.type();
 
             let valStr: string;
             if (type === NbtTypeId.Compound) {

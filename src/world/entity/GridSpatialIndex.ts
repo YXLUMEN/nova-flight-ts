@@ -6,6 +6,7 @@ export class GridSpatialIndex<T extends EntityLike> {
     private readonly width: number;
     private readonly height: number;
     private readonly cellSize: number;
+
     private readonly cols: number;
     private readonly rows: number;
     private readonly grid: Set<T>[][];
@@ -31,31 +32,27 @@ export class GridSpatialIndex<T extends EntityLike> {
         return Math.max(0, Math.min(maxIndex, Math.floor(value / this.cellSize)));
     }
 
-    private getCoveredCells(box: AABB): number[] {
+    private coveredCells(box: AABB): number[] | null {
         if (box.maxX < 0 || box.minX > this.width ||
             box.maxY < 0 || box.minY > this.height
-        ) return [];
+        ) return null;
 
-        const startCol = this.toCoord(box.minX, this.cols - 1);
-        const endCol = this.toCoord(box.maxX, this.cols - 1);
-        const startRow = this.toCoord(box.minY, this.rows - 1);
-        const endRow = this.toCoord(box.maxY, this.rows - 1);
+        const c0 = this.toCoord(box.minX, this.cols - 1);
+        const r0 = this.toCoord(box.minY, this.rows - 1);
 
-        const cells: number[] = [];
-        for (let r = startRow; r <= endRow; r++) {
-            for (let c = startCol; c <= endCol; c++) {
-                cells.push(r, c);
-            }
-        }
-        return cells;
+        const c1 = this.toCoord(box.maxX, this.cols - 1);
+        const r1 = this.toCoord(box.maxY, this.rows - 1);
+
+        return c0 !== c1 || r0 !== r1 ? [r0, c0, r1, c1] : [r0, c0];
     }
 
     public insert(entity: T): void {
         this.remove(entity);
 
-        const cells = this.getCoveredCells(entity.getBoundingBox());
-        this.entityGridCells.set(entity, cells);
+        const cells = this.coveredCells(entity.getBoundingBox());
+        if (cells === null) return;
 
+        this.entityGridCells.set(entity, cells);
         for (let i = 0; i < cells.length; i += 2) {
             this.grid[cells[i]][cells[i + 1]].add(entity);
         }
@@ -68,19 +65,19 @@ export class GridSpatialIndex<T extends EntityLike> {
         for (let i = 0; i < cells.length; i += 2) {
             this.grid[cells[i]][cells[i + 1]].delete(entity);
         }
-
         this.entityGridCells.delete(entity);
         return true;
     }
 
     public* search(region: AABB) {
-        const startCol = this.toCoord(region.minX, this.cols - 1);
-        const endCol = this.toCoord(region.maxX, this.cols - 1);
-        const startRow = this.toCoord(region.minY, this.rows - 1);
-        const endRow = this.toCoord(region.maxY, this.rows - 1);
+        const c0 = this.toCoord(region.minX, this.cols - 1);
+        const r0 = this.toCoord(region.minY, this.rows - 1);
 
-        if (startCol === endCol && startRow === endRow) {
-            for (const entity of this.grid[startRow][startCol]) {
+        const c1 = this.toCoord(region.maxX, this.cols - 1);
+        const r1 = this.toCoord(region.maxY, this.rows - 1);
+
+        if (c0 === c1 && r0 === r1) {
+            for (const entity of this.grid[r0][c0]) {
                 if (region.intersectsByBox(entity.getBoundingBox())) {
                     yield entity;
                 }
@@ -89,8 +86,8 @@ export class GridSpatialIndex<T extends EntityLike> {
         }
 
         const gen = ++this.searchGeneration;
-        for (let r = startRow; r <= endRow; r++) {
-            for (let c = startCol; c <= endCol; c++) {
+        for (let r = r0; r <= r1; r++) {
+            for (let c = c0; c <= c1; c++) {
                 for (const entity of this.grid[r][c]) {
                     if (entity.searchGen === gen) continue;
                     if (!region.intersectsByBox(entity.getBoundingBox())) continue;
@@ -120,7 +117,6 @@ export class GridSpatialIndex<T extends EntityLike> {
                 this.grid[r][c].clear();
             }
         }
-        this.grid.length = 0;
         this.entityGridCells.clear();
     }
 }

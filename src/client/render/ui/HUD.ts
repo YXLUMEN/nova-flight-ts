@@ -24,9 +24,6 @@ export class HUD extends UiFramework {
     private inventoryRender: InventoryRender | null = null;
 
     // HUD 布局参数
-    private readonly marginX = 20;
-    private readonly marginY = 20;
-    private readonly lineGap = 8;
     private readonly barWidth = 140;
     private readonly barHeight = 10;
     private displayHealth: number = 0;
@@ -81,8 +78,8 @@ export class HUD extends UiFramework {
         ctx.textBaseline = 'top';
         ctx.fillStyle = this.hudColor;
 
-        let x = this.marginX;
-        let y = this.marginY;
+        let x = 20;
+        let y = 20;
         const uo = client.window.camera.uiOffset;
 
         ctx.translate(uo.x, uo.y);
@@ -96,7 +93,7 @@ export class HUD extends UiFramework {
         y += 4;
 
         this.renderHealth(ctx, this.player, x, y);
-        y += this.barHeight + this.lineGap;
+        y += this.barHeight + 16;
 
         // 武器冷却条
         const items = this.player.getActiveSpecials();
@@ -115,7 +112,7 @@ export class HUD extends UiFramework {
                     ctx.strokeRect(x - 2, y - 2, this.barWidth + 4, this.barHeight + 4);
                 }
 
-                y += this.barHeight + this.lineGap;
+                y += this.barHeight + 8;
             }
         }
 

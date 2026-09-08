@@ -7,28 +7,24 @@ import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlay
 
 export class PlayAudioS2CPacket implements Payload {
     public static readonly ID: PayloadType<PlayAudioS2CPacket> = payloadType('play_audio');
-    public static readonly CODEC: PacketCodec<PlayAudioS2CPacket> = PacketCodecs.adapt3(
+    public static readonly CODEC: PacketCodec<PlayAudioS2CPacket> = PacketCodecs.adapt2(
         SoundEvent.AUDIO_PACKET_CODEC,
         val => val.audio,
-        PacketCodecs.FLOAT,
-        val => val.volume,
         PacketCodecs.BOOL,
         val => val.loop,
         PlayAudioS2CPacket.new
     );
 
     public readonly audio: SoundEvent;
-    public readonly volume: number;
     public readonly loop: boolean;
 
-    public constructor(soundEvent: SoundEvent, volume: number, loop: boolean = false) {
+    public constructor(soundEvent: SoundEvent, loop: boolean = false) {
         this.audio = soundEvent;
-        this.volume = volume;
         this.loop = loop;
     }
 
-    public static new(soundEvent: SoundEvent, volume: number, loop: boolean = false): PlayAudioS2CPacket {
-        return new PlayAudioS2CPacket(soundEvent, volume, loop);
+    public static new(soundEvent: SoundEvent, loop: boolean = false): PlayAudioS2CPacket {
+        return new PlayAudioS2CPacket(soundEvent, loop);
     }
 
     public type(): PayloadType<PlayAudioS2CPacket> {

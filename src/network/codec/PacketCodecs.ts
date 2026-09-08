@@ -248,7 +248,7 @@ export class PacketCodecs {
                 if (nbt === NbtEnd.INSTANCE) {
                     throw new TypeError("Expected non-null compound tag");
                 }
-                writer.writeInt8(nbt.getType());
+                writer.writeInt8(nbt.type());
                 nbt.write(writer);
             },
             (reader: BinaryReader): NbtElement => {

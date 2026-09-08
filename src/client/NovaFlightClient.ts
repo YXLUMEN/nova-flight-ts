@@ -1,6 +1,6 @@
 import {KeyboardInput} from "./input/KeyboardInput.ts";
 import {Window} from "./render/Window.ts";
-import {DEFAULT_CONFIG, GlobalConfig, isDev} from "../configs/GlobalConfig.ts";
+import {DEFAULT_CONFIG, isDev, RuntimeConfig} from "../configs/RuntimeConfig.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
 import {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
 import type {Consumer, UUID} from "../type/types.ts";
@@ -155,8 +155,8 @@ export class NovaFlightClient {
 
     private async userSelect(): Promise<boolean> {
         const startScreen = new StartScreen(this, {
-            title: `Nova Flight (${GlobalConfig.devVersion})`,
-            subtitle: TranslatableText.of('start.subtitle').toString(),
+            title: `Nova Flight (${RuntimeConfig.devVersion})`,
+            subtitle: TranslatableText.of('start.subtitle'),
         });
 
         const action = await startScreen.onConfirm();
@@ -174,7 +174,7 @@ export class NovaFlightClient {
                 return false;
             }
 
-            if (GlobalConfig.generalMode) await connector.startGeneralServer(saveName);
+            if (RuntimeConfig.generalMode) await connector.startGeneralServer(saveName);
             else await connector.startIntegratedServer(saveName);
             return false;
         }
@@ -260,7 +260,7 @@ export class NovaFlightClient {
                 this.accumulator %= perTick;
             }
 
-            if (ts - this.lastRenderTime >= GlobalConfig.perFrame) {
+            if (ts - this.lastRenderTime >= RuntimeConfig.perFrame) {
                 this.worldRender.render(this.pause ? 1 : this.accumulator / perTick);
                 this.lastRenderTime = ts;
             }

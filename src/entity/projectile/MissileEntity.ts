@@ -19,7 +19,7 @@ import type {ClientPlayerEntity} from "../../client/entity/ClientPlayerEntity.ts
 import {PlayerMissileTargetSelector} from "../../utils/math/MissileTargetSelector.ts";
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 import {MissileLockEntity} from "../../event/events/entity/MissileLockEntity.ts";
-import {isClient, isServer} from "../../configs/GlobalConfig.ts";
+import {isClient, isServer} from "../../configs/RuntimeConfig.ts";
 import {InterpolationHandler} from "../../world/entity/InterpolationHandler.ts";
 
 export class MissileEntity extends RocketEntity {

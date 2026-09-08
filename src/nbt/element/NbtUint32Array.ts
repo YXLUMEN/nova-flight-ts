@@ -27,7 +27,7 @@ export class NbtUint32Array implements NbtElement {
         return new NbtUint32Array(new Uint32Array(list));
     }
 
-    public getType(): NbtTypeId {
+    public type(): NbtTypeId {
         return NbtTypeId.Uint32Array;
     }
 

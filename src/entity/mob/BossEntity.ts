@@ -13,7 +13,7 @@ import type {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
 import {BossKilled} from "../../event/events/entity/BossKilled.ts";
 import {BossSpawn} from "../../event/events/entity/BossSpawn.ts";
-import {isClient} from "../../configs/GlobalConfig.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
 
 export abstract class BossEntity extends MobEntity {
     public static hasBoss: boolean = false;

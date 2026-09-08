@@ -84,7 +84,7 @@ export function status<T>(obj: T): T {
     return Object.seal(cleanObj(obj));
 }
 
-export function sleep(time: number) {
+export function sleep(time: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, time));
 }
 
@@ -174,4 +174,12 @@ export function createTranslationKey(type: string, id: Identifier | null) {
  * 空方法
  * */
 export function empty(): void {
+}
+
+export function any(): boolean {
+    return true;
+}
+
+export function none(): boolean {
+    return false;
 }

@@ -15,7 +15,7 @@ import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import {AttributeModifier, Operation} from "../../component/type/AttributeModifier.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
-import {isClient, isServer} from "../../configs/GlobalConfig.ts";
+import {isClient, isServer} from "../../configs/RuntimeConfig.ts";
 
 export class PerditionBeam extends PhaseLasers {
     private static readonly DEFAULT_MODIFIER = new AttributeModifier(

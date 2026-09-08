@@ -17,6 +17,8 @@ export class MiniGun extends BaseWeapon {
 
         const maxSpread = stack.getOr(DataComponents.MAX_SPREAD, this.MAX_SPREAD);
         this.setBullet(bullet, attacker, this.BULLET_SPEED, 4, maxSpread);
+
+        // reduce spread while firing
         if (maxSpread > 0.5) stack.set(DataComponents.MAX_SPREAD, maxSpread - 0.1);
 
         world.spawnEntity(bullet);

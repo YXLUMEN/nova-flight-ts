@@ -21,6 +21,21 @@ export class BinaryWriter {
         return new BinaryWriter(size);
     }
 
+    public static withBuff(
+        buffer: Uint8Array<ArrayBuffer>,
+        max = BinaryWriter.MAX_BUFFER_SIZE
+    ): BinaryWriter {
+        BinaryWriter.checkMaxSize(max);
+
+        const writer = Object.create(BinaryWriter.prototype) as BinaryWriter;
+        // @ts-expect-error Just for set maxSize
+        writer.maxSize = max;
+        writer.buffer = buffer;
+        writer.view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+        writer.offset = 0;
+        return writer;
+    }
+
     private static checkMaxSize(maxSize: number): void {
         if (maxSize !== Infinity && (!Number.isInteger(maxSize) || maxSize < 0)) {
             throw new RangeError(`Invalid max buffer size ${maxSize}: expected a non-negative integer or Infinity`);
