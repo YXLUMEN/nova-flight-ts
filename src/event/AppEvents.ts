@@ -15,7 +15,6 @@ import type {StageEnter} from "./events/stage/StageEnter.ts";
 import type {StageExit} from "./events/stage/StageExit.ts";
 import type {MissileLockEntity} from "./events/entity/MissileLockEntity.ts";
 import type {DifficultChange} from "./events/stage/DifficultChange.ts";
-import type {ChangeLang} from "./events/ChangeLang.ts";
 import type {GamePause} from "./events/game/GamePause.ts";
 import type {NewNotify} from "./events/NewNotify.ts";
 import type {PlayerDamage} from "./events/entity/PlayerDamage.ts";
@@ -25,7 +24,6 @@ export interface AppEvents {
     'game:end': GameEnd;
     'game:over': GameOver;
     'game:pause': GamePause;
-    'res:lang': ChangeLang;
     'ui:new:notify': NewNotify;
     'world:explosion': ExplosionEvent;
     'world:emp_burst': EmpBurstEvent;

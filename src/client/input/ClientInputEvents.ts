@@ -1,4 +1,4 @@
-import {GlobalConfig, isDev} from "../../configs/GlobalConfig.ts";
+import {isDev, RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import {BGMManager} from "../../sound/BGMManager.ts";
@@ -7,6 +7,7 @@ import {cleanObj} from "../../utils/uit.ts";
 import {DataLoader} from "../../resource/DataLoader.ts";
 import type {ClientTechTree} from "../tech/ClientTechTree.ts";
 import {app} from "../../lib.ts";
+import {Settings} from "../settings/Settings.ts";
 
 export class ClientInputEvents {
     public static registryAll(client: NovaFlightClient, input: KeyboardInput): void {
@@ -45,7 +46,7 @@ export class ClientInputEvents {
 
             onMouseDown: (button) => {
                 if (button === 0) {
-                    GlobalConfig.autoShoot = true;
+                    RuntimeConfig.autoShoot = true;
                 }
 
                 if (!client.player || client.player.isOpenInventory()) return;
@@ -59,7 +60,7 @@ export class ClientInputEvents {
 
             onMouseUp: (button) => {
                 if (button === 0) {
-                    GlobalConfig.autoShoot = false;
+                    RuntimeConfig.autoShoot = false;
                 }
             },
 
@@ -102,7 +103,7 @@ export class ClientInputEvents {
         if (!world) return;
         switch (code) {
             case 'KeyI':
-                GlobalConfig.autoShoot = !GlobalConfig.autoShoot;
+                RuntimeConfig.autoShoot = !RuntimeConfig.autoShoot;
                 break;
             case 'Escape': {
                 if (!client.player) return;
@@ -125,10 +126,10 @@ export class ClientInputEvents {
                 client.connection.send(new PlayerInputC2SPacket('KeyG'));
                 break;
             case 'KeyL':
-                GlobalConfig.cameraFollow = !GlobalConfig.cameraFollow;
+                RuntimeConfig.cameraFollow = !RuntimeConfig.cameraFollow;
                 break;
             case 'F3':
-                GlobalConfig.renderHitBox = !GlobalConfig.renderHitBox;
+                RuntimeConfig.renderHitBox = !RuntimeConfig.renderHitBox;
                 break;
             case 'Tab':
                 const ping = `Ping ${Math.floor(client.networkHandler.getLatency())}ms`;
@@ -159,7 +160,7 @@ export class ClientInputEvents {
                 player.getTechs().unlockAll();
                 break;
             case 'NumpadSubtract': {
-                GlobalConfig.enableCameraOffset = !GlobalConfig.enableCameraOffset;
+                RuntimeConfig.enableCameraOffset = !RuntimeConfig.enableCameraOffset;
                 // @ts-expect-error Actually it's MutVec2
                 client.window.camera.cameraOffset.set(0, 0);
                 break;
@@ -169,7 +170,7 @@ export class ClientInputEvents {
                 break;
             }
             case 'NumpadMultiply': {
-                GlobalConfig.crosshairRecoil = !GlobalConfig.crosshairRecoil;
+                RuntimeConfig.crosshairRecoil = !RuntimeConfig.crosshairRecoil;
                 break;
             }
             case 'KeyP':
@@ -185,18 +186,18 @@ export class ClientInputEvents {
     }
 
     private static windowEvents(client: NovaFlightClient) {
+        let lastPerFrame = 1000 / Settings.FPS.get();
+
         app.listen('tauri://focus', () => {
-            GlobalConfig.fps = GlobalConfig.lastFps;
-            GlobalConfig.perFrame = 1000 / GlobalConfig.fps;
+            RuntimeConfig.perFrame = lastPerFrame;
         }).catch(console.error);
 
         app.listen('tauri://blur', () => {
             if (!client.clientCommandManager.isShow()) {
                 client.setPause(true);
             }
-            GlobalConfig.lastFps = GlobalConfig.fps;
-            GlobalConfig.fps = 5;
-            GlobalConfig.perFrame = 1000 / GlobalConfig.fps;
+            lastPerFrame = RuntimeConfig.perFrame;
+            RuntimeConfig.perFrame = 1000 / 5;
         }).catch(console.error);
 
         app.listen('tauri://resize', async () => {

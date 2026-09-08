@@ -1,7 +1,7 @@
 import {ProtocolRegistry} from "../network/packet/ProtocolRegistry.ts";
 import {IntegratedServer} from "../server/IntegratedServer.ts";
 import type {StartServer} from "../type/startup.ts";
-import {isDev} from "../configs/GlobalConfig.ts";
+import {isDev} from "../configs/RuntimeConfig.ts";
 
 let server: IntegratedServer | null = null;
 let pendingStop = false;

@@ -21,13 +21,13 @@ import {BitBlockMap} from "./section/BitBlockMap.ts";
 import {AABB} from "../utils/math/AABB.ts";
 import {BlockCollision} from "./collision/BlockCollision.ts";
 import type {ExplosionBehavior} from "./element/explosion/ExplosionBehavior.ts";
-import {EntityPredicates} from "./predicate/EntityPredicates.ts";
 import {ScheduleTask} from "./ScheduleTask.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
 import {DifficultChange} from "../event/events/stage/DifficultChange.ts";
 import {GameEnd} from "../event/events/game/GameEnd.ts";
 import type {WorldMutation} from "./element/WorldMutation.ts";
+import {any} from "../utils/uit.ts";
 
 export abstract class World {
     public static readonly MAP_WIDTH = 1760;
@@ -175,7 +175,7 @@ export abstract class World {
     public abstract getEntityLookup(): EntityLookUp<Entity>;
 
     public* searchOtherEntities(except: Entity | null, box: AABB, predicate?: Predicate<Entity>) {
-        if (!predicate) predicate = EntityPredicates.ANY;
+        if (!predicate) predicate = any;
         const search = this.getEntityLookup().search(box);
 
         for (const entity of search) {
@@ -186,7 +186,7 @@ export abstract class World {
     }
 
     public getFirstOtherEntity(except: Entity | null, box: AABB, predicate?: Predicate<Entity>): Entity | null {
-        if (!predicate) predicate = EntityPredicates.ANY;
+        if (!predicate) predicate = any;
 
         let target: Entity | null = null;
         this.getEntityLookup().findFirst(box, entity => {

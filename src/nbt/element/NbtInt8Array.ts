@@ -27,7 +27,7 @@ export class NbtInt8Array implements NbtElement {
         return new NbtInt8Array(new Int8Array(list));
     }
 
-    public getType(): NbtTypeId {
+    public type(): NbtTypeId {
         return NbtTypeId.Int8Array;
     }
 

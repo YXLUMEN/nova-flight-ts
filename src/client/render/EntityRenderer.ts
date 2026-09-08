@@ -1,7 +1,7 @@
 import {isBoxInView} from "../../utils/render/render.ts";
 import {EntityRenderers} from "./entity/EntityRenderers.ts";
 import {PI2} from "../../utils/math/math.ts";
-import {GlobalConfig} from "../../configs/GlobalConfig.ts";
+import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import type {ViewRect} from "./Camera.ts";
@@ -45,7 +45,7 @@ export class EntityRenderer {
             ctx.globalAlpha = 1;
         }
 
-        if (player.followPointer && GlobalConfig.cameraFollow) {
+        if (player.followPointer && RuntimeConfig.cameraFollow) {
             const pointer = player.input.getWorldPointer();
             ctx.strokeStyle = '#fff';
             ctx.beginPath();

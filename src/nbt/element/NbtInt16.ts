@@ -21,7 +21,7 @@ export class NbtInt16 implements NbtElement {
         this.value = value;
     }
 
-    public getType(): NbtTypeId {
+    public type(): NbtTypeId {
         return NbtTypeId.Int16;
     }
 

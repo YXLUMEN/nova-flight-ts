@@ -6,19 +6,45 @@ import {PromisePool} from "../utils/collection/PromisePool.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {Resources} from "./Resources.ts";
 import {traverse_dir} from "../utils/fs.ts";
+import {Settings} from "../client/settings/Settings.ts";
+import {Result} from "../utils/result/Result.ts";
+import type {SettingGuard} from "../client/settings/SettingGuard.ts";
+import {CallTwice} from "../type/errors.ts";
 
-export class LangResource implements ResourceModule {
+export class LangResource implements ResourceModule, SettingGuard<string> {
     private readonly allLang: string[] = [];
     private readonly data: Map<string, string> = new Map();
 
-    private currentLang: string = 'zh_cn';
-    private targetLang: string = 'zh_cn';
+    private pending: boolean = false;
+
+    public constructor() {
+        Settings.LANG.setGuard(this);
+    }
 
     public getId(): RegistryEntry<string> {
         return Resources.LANG;
     }
 
-    public async load(): Promise<void> {
+    public load(): Promise<void> {
+        return this.loadLang(Settings.LANG.get());
+    }
+
+    public async changeLang(lang: string): Promise<Result<string, Error>> {
+        if (lang === Settings.LANG.get()) return Result.ok(lang);
+        if (this.pending) return Result.err(new CallTwice('Task running'));
+        this.pending = true;
+
+        try {
+            await this.loadLang(lang);
+            return Settings.LANG.force(lang);
+        } catch (err) {
+            return Result.err(Result.mapErr(err));
+        } finally {
+            this.pending = false;
+        }
+    }
+
+    private async loadLang(lang: string): Promise<void> {
         const root = await resolveResource('resources/nova-flight/langs');
 
         this.allLang.length = 0;
@@ -26,8 +52,7 @@ export class LangResource implements ResourceModule {
             if (entry.isDirectory) this.allLang.push(entry.name);
         }, 1);
 
-        const lang = this.targetLang;
-        if (!this.allLang.includes(this.targetLang)) {
+        if (!this.allLang.includes(lang)) {
             throw new Error(`Lang ${lang} not found`);
         }
 
@@ -100,29 +125,32 @@ export class LangResource implements ResourceModule {
     public unload(): void {
         this.allLang.length = 0;
         this.data.clear();
+        Settings.LANG.setGuard(null);
     }
 
     public reload(): Promise<void> {
         this.unload();
+        Settings.LANG.setGuard(this);
         return this.load();
+    }
+
+    public currentLang() {
+        // Manager 不能直接引用 Settings, 否则会出现提前引用
+        return Settings.LANG.get();
     }
 
     public getText(key: string): string | undefined {
         return this.data.get(key);
     }
 
-    public async setLang(lang: string): Promise<void> {
-        if (this.currentLang === lang) return Promise.resolve();
-        this.targetLang = lang;
-        await this.reload();
-        this.currentLang = lang;
-    }
-
-    public getCurrentLang(): string {
-        return this.currentLang;
-    }
-
     public getAllLang(): ReadonlyArray<string> {
         return this.allLang;
+    }
+
+    public accept(value: string): Promise<Result<string, Error>> {
+        return this.changeLang(value);
+    }
+
+    public unbind(): void {
     }
 }

@@ -1,10 +1,10 @@
-import type {Container} from "../../inventory/Container.ts";
+import type {Container} from "../../world/inventory/Container.ts";
 import {type PlayerEntity} from "./PlayerEntity.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
 import {DefaultedList} from "../../utils/collection/DefaultedList.ts";
 import {DataComponents} from "../../component/DataComponents.ts";
 import type {Item} from "../../item/Item.ts";
-import {Inventories} from "../../inventory/Inventories.ts";
+import {Inventories} from "../../world/inventory/Inventories.ts";
 
 // @ts-ignore 未使用
 export class PlayerInventory implements Container {

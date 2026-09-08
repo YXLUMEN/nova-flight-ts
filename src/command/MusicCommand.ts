@@ -5,7 +5,7 @@ import {Registries} from "../registry/Registries.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
-import {CommandError, IllegalArgumentError} from "../type/errors.ts";
+import {CommandError} from "../type/errors.ts";
 import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
 import {CommandUtil} from "./CommandUtil.ts";
 import {DoubleArgumentType} from "./argument/DoubleArgumentType.ts";
@@ -13,6 +13,7 @@ import type {CommandContext} from "../brigadier/context/CommandContext.ts";
 import type {SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
 import type {Suggestions} from "../brigadier/suggestion/Suggestions.ts";
 import {BoolArgumentType} from "./argument/BoolArgumentType.ts";
+import {Settings} from "../client/settings/Settings.ts";
 
 export class MusicCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -114,6 +115,7 @@ export class MusicCommand {
                         )
                         .executes(this.toggleDisable)
                 )
+                /** @deprecated */
                 .then(
                     literal<T>('volume')
                         .then(
@@ -123,10 +125,11 @@ export class MusicCommand {
                                     if (!arg) throw new CommandError("\x1b[33m<volume> is required");
 
                                     const volume = Number(arg.result);
-                                    if (!Number.isFinite(volume) || volume < 0.0 || volume > 1.0) {
-                                        throw new IllegalArgumentError("Volume must be between 0.0 and 1.0");
+                                    const result = Settings.MUSIC_VOLUME.set(volume);
+                                    if (result.isErr()) {
+                                        ctx.source.addMessage(`\x1b[31mVolume must be between 0.0 and 1.0`);
+                                        return;
                                     }
-                                    AudioManager.setVolume(volume);
                                     ctx.source.addMessage(`Set volume to \x1b[32m"${volume.toFixed(2)}"`);
                                 })
                         )

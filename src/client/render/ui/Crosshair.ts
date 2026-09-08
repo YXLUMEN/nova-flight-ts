@@ -9,7 +9,7 @@ import {ArcEmitter} from "../../../item/weapon/BaseWeapon/ArcEmitter.ts";
 import {MiniGun} from "../../../item/weapon/BaseWeapon/MiniGun.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import type {ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
-import {GlobalConfig} from "../../../configs/GlobalConfig.ts";
+import {RuntimeConfig} from "../../../configs/RuntimeConfig.ts";
 import {Items} from "../../../item/Items.ts";
 import type {StormFire} from "../../../item/weapon/BaseWeapon/StormFire.ts";
 
@@ -80,7 +80,7 @@ export class Crosshair {
 
         this.displayRatio = lerp(tickDelta, this.displayRatio, ratio);
 
-        if (!this.reloading && this.maxSpread > 0 && GlobalConfig.crosshairRecoil) {
+        if (!this.reloading && this.maxSpread > 0 && RuntimeConfig.crosshairRecoil) {
             const cooldownDrop = this.prevCooldownRatio - ratio;
             if (cooldownDrop > 0.3) {
                 const angle = Math.random() * PI2;

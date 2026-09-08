@@ -16,7 +16,7 @@ import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.t
 import {TranslatableTextS2CPacket} from "../network/packet/s2c/TranslatableTextS2CPacket.ts";
 import {ServerStartS2CPacket} from "../network/packet/s2c/ServerStartS2CPacket.ts";
 import {ServerTickManager} from "./ServerTickManager.ts";
-import {DEFAULT_CONFIG} from "../configs/GlobalConfig.ts";
+import {DEFAULT_CONFIG} from "../configs/RuntimeConfig.ts";
 import {CodecRegistry} from "../network/CodecRegistry.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {

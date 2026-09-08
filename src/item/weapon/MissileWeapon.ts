@@ -8,7 +8,7 @@ import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
 import {DataComponents} from "../../component/DataComponents.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
-import {isClient} from "../../configs/GlobalConfig.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
 
 export class MissileWeapon extends SpecialWeapon {
     public override tryFire(stack: ItemStack, world: World, attacker: Entity): void {

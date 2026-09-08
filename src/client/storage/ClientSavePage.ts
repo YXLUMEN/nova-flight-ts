@@ -1,5 +1,5 @@
-import {EventBus} from "../../event/EventBus.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
+import {Settings} from "../settings/Settings.ts";
 
 export class ClientSavePage {
     private readonly texts: TranslatableText[];
@@ -30,12 +30,7 @@ export class ClientSavePage {
         ];
 
         this.updateText = this.updateText.bind(this);
-        this.registerEvent();
-    }
-
-    public registerEvent() {
-        EventBus.instance().off('res:lang', this.updateText);
-        EventBus.instance().on('res:lang', this.updateText);
+        Settings.LANG.onChange(this.updateText);
     }
 
     private updateText() {

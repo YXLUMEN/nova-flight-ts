@@ -2,7 +2,7 @@ import type {BiConsumer} from "../../../type/types.ts";
 import type {AABB} from "../../../utils/math/AABB.ts";
 import type {SpriteCtx} from "./LRURenderCache.ts";
 import {buildSprite, type RenderCache} from "./RenderCache.ts";
-import {isDev} from "../../../configs/GlobalConfig.ts";
+import {isDev} from "../../../configs/RuntimeConfig.ts";
 
 export class MapRenderCache<K> implements RenderCache<K> {
     private readonly sprites: Map<K, ImageBitmap>;

@@ -1,5 +1,5 @@
-import type {ItemStack} from "../item/ItemStack.ts";
-import type {Item} from "../item/Item.ts";
+import type {ItemStack} from "../../item/ItemStack.ts";
+import type {Item} from "../../item/Item.ts";
 
 export interface Container {
     size(): number;

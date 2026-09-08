@@ -111,17 +111,6 @@ export function randomFromIterator<T>(iter: Iterator<T>): T | undefined {
     return result;
 }
 
-export function pointToAABBMinDistSq(px: number, py: number, left: number, top: number, right: number, bottom: number): number {
-    let dx = 0, dy = 0;
-    if (px < left) dx = left - px;
-    else if (px > right) dx = px - right;
-
-    if (py < top) dy = top - py;
-    else if (py > bottom) dy = py - bottom;
-
-    return dx * dx + dy * dy;
-}
-
 export function frac(value: number) {
     return value - Math.floor(value);
 }
@@ -141,6 +130,12 @@ export function cartesian(...arrays: any[][]) {
     return arrays.reduce((acc, curr) =>
         acc.flatMap(a => curr.map(b => [...a, b]))
     );
+}
+
+export function assertClamp(value: number, min: number, max: number) {
+    if (max < min) throw new RangeError('max must larger than min');
+    if (value < min) throw new RangeError('default must larger than min');
+    if (value > max) throw new RangeError('default must smaller than max');
 }
 
 export const PI2 = Math.PI * 2;

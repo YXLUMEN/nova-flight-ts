@@ -1,4 +1,4 @@
-import type {Container} from "../../inventory/Container.ts";
+import type {Container} from "../../world/inventory/Container.ts";
 import type {Item} from "../../item/Item.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
 import type {PlayerEntity} from "./PlayerEntity.ts";

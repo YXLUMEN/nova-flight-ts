@@ -7,7 +7,7 @@ import {EntityTypes} from "../../../entity/EntityTypes.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import {type World} from "../../../world/World.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
-import {isClient, isServer} from "../../../configs/GlobalConfig.ts";
+import {isClient, isServer} from "../../../configs/RuntimeConfig.ts";
 
 export class StormFire extends BaseWeapon {
     public readonly CHARGING_TIME = 14;

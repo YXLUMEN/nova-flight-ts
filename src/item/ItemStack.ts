@@ -43,7 +43,7 @@ export class ItemStack {
         },
         input => {
             if (!(input instanceof NbtCompound)) {
-                return DataResult.error(`Expected NbtCompound, got ${input.getType()}`);
+                return DataResult.error(`Expected NbtCompound, got ${input.type()}`);
             }
             const typeName = input.getString('type');
             const id = Identifier.tryParse(typeName);

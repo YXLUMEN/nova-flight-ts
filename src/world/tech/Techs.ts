@@ -4,7 +4,7 @@ import {Identifier} from "../../registry/Identifier.ts";
 import {Tech} from "./Tech.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {TechState} from "./TechState.ts";
-import {isServer} from "../../configs/GlobalConfig.ts";
+import {isServer} from "../../configs/RuntimeConfig.ts";
 
 export class Techs {
     public static COILGUNS: RegistryEntry<Tech>;

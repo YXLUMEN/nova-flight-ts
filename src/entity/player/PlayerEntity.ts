@@ -21,7 +21,7 @@ import {BlockCollision} from "../../world/collision/BlockCollision.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {UniqueInventory} from "./UniqueInventory.ts";
 import {PlayerDead} from "../../event/events/entity/PlayerDead.ts";
-import {isClient} from "../../configs/GlobalConfig.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
 import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {PlayerDamage} from "../../event/events/entity/PlayerDamage.ts";

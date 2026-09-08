@@ -56,7 +56,7 @@ export class DevourerBoss extends BossEntity {
 
         this.setMovementSpeed(12);
         if (!world.isClient) {
-            world.sendPacket(new PlayAudioS2CPacket(Audios.SCOURGE_OF_THE_UNIVERSE, 1, true));
+            world.sendPacket(new PlayAudioS2CPacket(Audios.SCOURGE_OF_THE_UNIVERSE, true));
         }
     }
 
@@ -165,7 +165,7 @@ export class DevourerBoss extends BossEntity {
     private transitionToPhase3(world: ServerWorld): void {
         this.invulnerable = true;
 
-        world.sendPacket(new PlayAudioS2CPacket(Audios.UNIVERSAL_COLLAPSE, 1, true));
+        world.sendPacket(new PlayAudioS2CPacket(Audios.UNIVERSAL_COLLAPSE, true));
         world.schedule(7.6, () => {
             if (this.primaryTarget) {
                 this.setPositionByVec(this.primaryTarget.positionRef);

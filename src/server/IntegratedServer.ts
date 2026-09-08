@@ -53,7 +53,7 @@ export class IntegratedServer extends NovaFlightServer {
             this.world.stage = TutorialStage;
             this.world.stage.reset();
             new TutorialEvents(this);
-            this.world.sendPacket(new PlayAudioS2CPacket(Audios.WE_MADE_IT, 0.8), true);
+            this.world.sendPacket(new PlayAudioS2CPacket(Audios.WE_MADE_IT), true);
         }
 
         await this.waitForStop();

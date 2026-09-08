@@ -1,7 +1,7 @@
 import {ClientNetworkChannel} from "./ClientNetworkChannel.ts";
 import {ConnectInfo} from "../render/ui/ConnectInfo.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
-import {DEFAULT_CONFIG, GlobalConfig} from "../../configs/GlobalConfig.ts";
+import {DEFAULT_CONFIG, RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {ClientIntegratedChannel} from "./ClientIntegratedChannel.ts";
 import {invoke} from "@tauri-apps/api/core";
 import {error, info, warn} from "@tauri-apps/plugin-log";
@@ -91,7 +91,7 @@ export class ClientConnector {
         });
         this.ctx.setWorker(worker);
 
-        const addr = `127.0.0.1:${GlobalConfig.port}`;
+        const addr = `127.0.0.1:${RuntimeConfig.port}`;
         this.ctx.setChannel(new ClientIntegratedChannel(worker, this.client.clientId));
 
         await this.checkAndConnect(addr, info, new ArrayBuffer(0), saveName, worker);
@@ -108,7 +108,7 @@ export class ClientConnector {
         let key: ArrayBuffer;
         try {
             await invoke('stop_server');
-            const obj = await invoke('start_server', {port: GlobalConfig.port});
+            const obj = await invoke('start_server', {port: RuntimeConfig.port});
 
             if (!Array.isArray(obj)) {
                 // noinspection ExceptionCaughtLocallyJS
@@ -129,7 +129,7 @@ export class ClientConnector {
 
         try {
             await invoke('start_lan_announce', {
-                port: GlobalConfig.port,
+                port: RuntimeConfig.port,
                 name: `${this.client.playerName}'s game`,
                 gameVersion: DEFAULT_CONFIG.gameVersion
             });
@@ -140,7 +140,7 @@ export class ClientConnector {
 
         await sleep(300);
 
-        const addr = `127.0.0.1:${GlobalConfig.port}`;
+        const addr = `127.0.0.1:${RuntimeConfig.port}`;
         this.ctx.setChannel(new ClientNetworkChannel(addr, this.client.clientId));
 
         await this.checkAndConnect(addr, info, key, saveName);

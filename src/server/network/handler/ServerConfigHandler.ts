@@ -63,7 +63,7 @@ export class ServerConfigHandler extends ServerCommonHandler {
                 return;
             }
 
-            console.error('[Server] Error occurrence when promote player session', err);
+            console.error('[Server] Error occur when promote player session', err);
             this.disconnect(ServerConfigHandler.PROMOTE_FAIL);
         } finally {
             spawn.close();

@@ -9,7 +9,7 @@ import {compress, decompress} from "@bokuweb/zstd-wasm";
 import {NbtUnserialization} from "../../nbt/NbtUnserialization.ts";
 import type {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import {NbtSerialization} from "../../nbt/NbtSerialization.ts";
-import {DEFAULT_CONFIG} from "../../configs/GlobalConfig.ts";
+import {DEFAULT_CONFIG} from "../../configs/RuntimeConfig.ts";
 
 export class PlayerDataStorage {
     private readonly saveName: string;

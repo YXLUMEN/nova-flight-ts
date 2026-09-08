@@ -28,6 +28,10 @@ export class Result<T, E> {
         return new Result<T, E>({ok: false, error});
     }
 
+    public static mapErr(err: unknown): Error {
+        return Error.isError(err) ? err : new Error('Unknown error occur', {cause: err});
+    }
+
     public isOk(): boolean {
         return this.inner.ok;
     }

@@ -5,7 +5,7 @@ import type {MetaStatus, Save, SaveMeta} from "../../type/Saves.ts";
 import {NbtSerialization} from "../../nbt/NbtSerialization.ts";
 import {NbtUnserialization} from "../../nbt/NbtUnserialization.ts";
 import {NoResultsError, StatusError, VersionError} from "../../type/errors.ts";
-import {DEFAULT_CONFIG} from "../../configs/GlobalConfig.ts";
+import {DEFAULT_CONFIG} from "../../configs/RuntimeConfig.ts";
 import {compress, decompress} from "@bokuweb/zstd-wasm";
 
 export class ServerStorage {

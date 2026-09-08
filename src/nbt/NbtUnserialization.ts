@@ -279,13 +279,13 @@ export class NbtUnserialization {
         }
 
         // 推断数组类型
-        const types = new Set(items.map(i => i.getType()));
+        const types = new Set(items.map(i => i.type()));
         if (types.size === 0) {
             return new NbtInt32Array(new Int32Array(0));
         }
 
         if (types.size === 1) {
-            const t = items[0].getType();
+            const t = items[0].type();
             if (t === NbtTypeId.Compound) {
                 return new NbtCompoundArray(items as NbtCompound[]);
             }
@@ -301,7 +301,7 @@ export class NbtUnserialization {
 
         const numType: number[] = [NbtTypeId.Int8, NbtTypeId.Int16, NbtTypeId.Int32, NbtTypeId.Uint32, NbtTypeId.Float, NbtTypeId.Double];
         const nums = items
-            .filter(i => numType.includes(i.getType()))
+            .filter(i => numType.includes(i.type()))
             .map(num => (num as NbtDouble).value)
         return NbtDoubleArray.create(nums);
     }

@@ -16,6 +16,7 @@ import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import type {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 import {SoundEventS2CPacket} from "../network/packet/s2c/SoundEventS2CPacket.ts";
+import {isClient} from "../configs/RuntimeConfig.ts";
 
 export class FlakBattery extends Item {
     private static readonly BULLET_SPEED = 40;
@@ -24,9 +25,10 @@ export class FlakBattery extends Item {
     public override inventoryTick(stack: ItemStack, world: ServerWorld, holder: Entity, slot: number, selected: boolean) {
         super.inventoryTick(stack, world, holder, slot, selected);
 
-        if (world.isClient) {
+        if (isClient) {
             if (!holder.isPlayer()) return;
 
+            // play reload sound effect at client
             if (holder.cooldownManager.getCooldownTicks(this) === 10) {
                 world.playSound(null, SoundEvents.SHELL_RELOAD, 0.6);
             }
@@ -40,6 +42,7 @@ export class FlakBattery extends Item {
         }
 
         if (holder.isPlayer()) {
+            // player ammo limit
             if (holder.cooldownManager.isCoolingDown(this)) return;
 
             if (stack.getOr(DataComponents.RELOADING, false)) {

@@ -32,105 +32,105 @@ export class Codecs {
         value => NbtInt8.of(value),
         input => input instanceof NbtInt8
             ? DataResult.success(input.value)
-            : DataResult.error(`Expected NbtInt8, got ${input.getType()}`)
+            : DataResult.error(`Expected NbtInt8, got ${input.type()}`)
     );
 
     public static readonly INT16: Codec<number> = Codecs.of(
         value => NbtInt16.of(value),
         input => input instanceof NbtInt16
             ? DataResult.success(input.value)
-            : DataResult.error(`Expected NbtInt16, got ${input.getType()}`)
+            : DataResult.error(`Expected NbtInt16, got ${input.type()}`)
     );
 
     public static readonly INT32: Codec<number> = Codecs.of(
         value => NbtInt32.of(value),
         input => input instanceof NbtInt32
             ? DataResult.success(input.value)
-            : DataResult.error(`Expected NbtInt32, got ${input.getType()}`)
+            : DataResult.error(`Expected NbtInt32, got ${input.type()}`)
     );
 
     public static readonly UINT32: Codec<number> = Codecs.of(
         value => NbtUint32.of(value),
         input => input instanceof NbtUint32
             ? DataResult.success(input.value)
-            : DataResult.error(`Expected NbtUint32, got ${input.getType()}`)
+            : DataResult.error(`Expected NbtUint32, got ${input.type()}`)
     );
 
     public static readonly FLOAT: Codec<number> = Codecs.of(
         value => NbtFloat.of(value),
         input => input instanceof NbtFloat
             ? DataResult.success(input.value)
-            : DataResult.error(`Expected NbtFloat, got ${input.getType()}`)
+            : DataResult.error(`Expected NbtFloat, got ${input.type()}`)
     );
 
     public static readonly DOUBLE: Codec<number> = Codecs.of(
         value => NbtDouble.of(value),
         input => input instanceof NbtDouble
             ? DataResult.success(input.value)
-            : DataResult.error(`Expected NbtDouble, got ${input.getType()}`)
+            : DataResult.error(`Expected NbtDouble, got ${input.type()}`)
     );
 
     public static readonly STRING: Codec<string> = Codecs.of(
         value => NbtString.of(value),
         input => input instanceof NbtString
             ? DataResult.success(input.value)
-            : DataResult.error(`Expected NbtString, got ${input.getType()}`)
+            : DataResult.error(`Expected NbtString, got ${input.type()}`)
     );
 
     public static readonly BOOLEAN: Codec<boolean> = Codecs.of(
         value => NbtInt8.bool(value),
         input => input instanceof NbtInt8
             ? DataResult.success(input.value !== 0)
-            : DataResult.error(`Expected NbtInt8, got ${input.getType()}`)
+            : DataResult.error(`Expected NbtInt8, got ${input.type()}`)
     );
 
     public static readonly NBT_COMPOUND: Codec<NbtCompound> = Codecs.of(
         value => value,
         input => input instanceof NbtCompound
             ? DataResult.success(input)
-            : DataResult.error(`Expected NbtCompound, got ${input.getType()}`)
+            : DataResult.error(`Expected NbtCompound, got ${input.type()}`)
     );
 
     public static readonly INT8_ARRAY: Codec<number[]> = Codecs.of(
         value => NbtInt8Array.create(value),
         input => input instanceof NbtInt8Array
             ? DataResult.success(Array.from(input.value))
-            : DataResult.error(`Expected NbtInt8Array, got ${input.getType()}`)
+            : DataResult.error(`Expected NbtInt8Array, got ${input.type()}`)
     );
 
     public static readonly INT16_ARRAY: Codec<number[]> = Codecs.of(
         value => NbtInt16Array.create(value),
         input => input instanceof NbtInt16Array
             ? DataResult.success(Array.from(input.value))
-            : DataResult.error(`Expected NbtInt16Array, got ${input.getType()}`)
+            : DataResult.error(`Expected NbtInt16Array, got ${input.type()}`)
     );
 
     public static readonly INT32_ARRAY: Codec<number[]> = Codecs.of(
         value => NbtInt32Array.create(value),
         input => input instanceof NbtInt32Array
             ? DataResult.success(Array.from(input.value))
-            : DataResult.error(`Expected NbtInt32Array, got ${input.getType()}`)
+            : DataResult.error(`Expected NbtInt32Array, got ${input.type()}`)
     );
 
     public static readonly FLOAT_ARRAY: Codec<number[]> = Codecs.of(
         value => NbtFloatArray.create(value),
         input => input instanceof NbtFloatArray
             ? DataResult.success(Array.from(input.value))
-            : DataResult.error(`Expected NbtFloatArray, got ${input.getType()}`)
+            : DataResult.error(`Expected NbtFloatArray, got ${input.type()}`)
     );
 
     public static readonly DOUBLE_ARRAY: Codec<number[]> = Codecs.of(
         value => NbtDoubleArray.create(value),
         input => input instanceof NbtDoubleArray
             ? DataResult.success(Array.from(input.value))
-            : DataResult.error(`Expected NbtDoubleArray, got ${input.getType()}`)
+            : DataResult.error(`Expected NbtDoubleArray, got ${input.type()}`)
     );
 
     public static readonly STRING_ARRAY: Codec<string[]> = Codecs.of(
         value => new NbtStringArray(value),
         input => input instanceof NbtStringArray
             ? DataResult.success(Array.from(input.value))
-            : DataResult.error(`Expected NbtStringArray, got ${input.getType()}`)
+            : DataResult.error(`Expected NbtStringArray, got ${input.type()}`)
     );
 
     public static readonly VEC2: Codec<Vec2> = Codecs.map(Codecs.DOUBLE_ARRAY,
@@ -172,14 +172,14 @@ export class Codecs {
                         continue;
                     }
                     throw new TypeError(
-                        `listOf(${elementCodec}) element must encode to NbtCompound, got ${element.getType()}`
+                        `listOf(${elementCodec}) element must encode to NbtCompound, got ${element.type()}`
                     );
                 }
                 return new NbtCompoundArray(compounds);
             },
             (input) => {
                 if (!(input instanceof NbtCompoundArray)) {
-                    return DataResult.error(`Expected NbtCompoundArray, got ${input.getType()}`);
+                    return DataResult.error(`Expected NbtCompoundArray, got ${input.type()}`);
                 }
 
                 const list: A[] = new Array(input.value.length).fill(null);

@@ -12,7 +12,7 @@ import {UiFramework} from "./UiFramework.ts";
 
 type StartScreenOptions = {
     title: string;
-    subtitle: string;
+    subtitle: string | TranslatableText;
 };
 
 export class StartScreen extends UiFramework {
@@ -144,10 +144,10 @@ export class StartScreen extends UiFramework {
         ctx.font = 'bold 48px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(this.options.title, this.width / 2, this.height / 2 - 100);
+        ctx.fillText(this.options.title, this.halfW, this.halfH - 100);
 
         ctx.font = '24px sans-serif';
-        ctx.fillText(this.options.subtitle, this.width / 2, this.height / 2 - 50);
+        ctx.fillText(this.options.subtitle.toString(), this.halfW, this.halfH - 50);
 
         ctx.font = UITheme.font;
         for (const btn of this.buttons) {

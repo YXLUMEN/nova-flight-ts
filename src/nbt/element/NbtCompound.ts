@@ -162,7 +162,7 @@ export class NbtCompound implements NbtElement {
 
     public getKeyType(key: string): NbtTypeId {
         const v = this.entries.get(key);
-        return v === undefined ? NbtTypeId.End : v.getType();
+        return v === undefined ? NbtTypeId.End : v.type();
     }
 
     public has(key: string): boolean {
@@ -177,37 +177,37 @@ export class NbtCompound implements NbtElement {
 
     public getInt8(key: string, d = 0): number {
         const v = this.entries.get(key) as NbtInt8;
-        return v && v.getType() === NbtTypeId.Int8 ? v.value : d;
+        return v && v.type() === NbtTypeId.Int8 ? v.value : d;
     }
 
     public getInt16(key: string, d = 0): number {
         const v = this.entries.get(key) as NbtInt16;
-        return v && v.getType() === NbtTypeId.Int16 ? v.value : d;
+        return v && v.type() === NbtTypeId.Int16 ? v.value : d;
     }
 
     public getInt32(key: string, d = 0): number {
         const v = this.entries.get(key) as NbtInt32;
-        return v && v.getType() === NbtTypeId.Int32 ? v.value : d;
+        return v && v.type() === NbtTypeId.Int32 ? v.value : d;
     }
 
     public getFloat(key: string, d = 0): number {
         const v = this.entries.get(key) as NbtFloat;
-        return v && v.getType() === NbtTypeId.Float ? v.value : d;
+        return v && v.type() === NbtTypeId.Float ? v.value : d;
     }
 
     public getDouble(key: string, d = 0): number {
         const v = this.entries.get(key) as NbtDouble;
-        return v && v.getType() === NbtTypeId.Double ? v.value : d;
+        return v && v.type() === NbtTypeId.Double ? v.value : d;
     }
 
     public getUint32(key: string, d = 0): number {
         const v = this.entries.get(key) as NbtUint32;
-        return v && v.getType() === NbtTypeId.Uint32 ? v.value : d;
+        return v && v.type() === NbtTypeId.Uint32 ? v.value : d;
     }
 
     public getString(key: string, d = ''): string {
         const v = this.entries.get(key) as NbtString;
-        return v && v.getType() === NbtTypeId.String ? v.value : d;
+        return v && v.type() === NbtTypeId.String ? v.value : d;
     }
 
     public getBoolean(key: string, d: number = 0): boolean {
@@ -216,52 +216,52 @@ export class NbtCompound implements NbtElement {
 
     public getInt8Array(key: string): Int8Array {
         const v = this.entries.get(key) as NbtInt8Array;
-        return v && v.getType() === NbtTypeId.Int8Array ? v.value : new Int8Array();
+        return v && v.type() === NbtTypeId.Int8Array ? v.value : new Int8Array();
     }
 
     public getInt16Array(key: string): Int16Array {
         const v = this.entries.get(key) as NbtInt16Array;
-        return v && v.getType() === NbtTypeId.Int16Array ? v.value : new Int16Array();
+        return v && v.type() === NbtTypeId.Int16Array ? v.value : new Int16Array();
     }
 
     public getInt32Array(key: string): Int32Array {
         const v = this.entries.get(key) as NbtInt32Array;
-        return v && v.getType() === NbtTypeId.Int32Array ? v.value : new Int32Array();
+        return v && v.type() === NbtTypeId.Int32Array ? v.value : new Int32Array();
     }
 
     public getFloatArray(key: string): Float32Array {
         const v = this.entries.get(key) as NbtFloatArray;
-        return v && v.getType() === NbtTypeId.FloatArray ? v.value : new Float32Array();
+        return v && v.type() === NbtTypeId.FloatArray ? v.value : new Float32Array();
     }
 
     public getDoubleArray(key: string): Float64Array {
         const v = this.entries.get(key) as NbtDoubleArray;
-        return v && v.getType() === NbtTypeId.DoubleArray ? v.value : new Float64Array();
+        return v && v.type() === NbtTypeId.DoubleArray ? v.value : new Float64Array();
     }
 
     public getUint8Array(key: string): Uint8Array {
         const v = this.entries.get(key) as NbtUint8Array;
-        return v && v.getType() === NbtTypeId.Uint8Array ? v.value : new Uint8Array();
+        return v && v.type() === NbtTypeId.Uint8Array ? v.value : new Uint8Array();
     }
 
     public getUint32Array(key: string): Uint32Array {
         const v = this.entries.get(key) as NbtUint32Array;
-        return v && v.getType() === NbtTypeId.Uint32Array ? v.value : new Uint32Array();
+        return v && v.type() === NbtTypeId.Uint32Array ? v.value : new Uint32Array();
     }
 
     public getStringArray(key: string, d?: string[]): string[] {
         const v = this.entries.get(key) as NbtStringArray;
-        return v && v.getType() === NbtTypeId.StringArray ? v.value : d ?? [];
+        return v && v.type() === NbtTypeId.StringArray ? v.value : d ?? [];
     }
 
     public getCompound(key: string): NbtCompound {
         const v = this.entries.get(key) as NbtCompound;
-        return v && v.getType() === NbtTypeId.Compound ? v : new NbtCompound();
+        return v && v.type() === NbtTypeId.Compound ? v : new NbtCompound();
     }
 
     public getCompoundArray(key: string): NbtCompound[] {
         const v = this.entries.get(key) as NbtCompoundArray;
-        return v && v.getType() === NbtTypeId.CompoundArray ? v.value : [];
+        return v && v.type() === NbtTypeId.CompoundArray ? v.value : [];
     }
 
     public remove(key: string): this {
@@ -297,7 +297,7 @@ export class NbtCompound implements NbtElement {
         return new Set(this.entries.entries());
     }
 
-    public getSize(): number {
+    public size(): number {
         return this.entries.size;
     }
 
@@ -309,13 +309,13 @@ export class NbtCompound implements NbtElement {
         return new NbtCompound(map);
     }
 
-    public getType(): NbtTypeId {
+    public type(): NbtTypeId {
         return NbtTypeId.Compound;
     }
 
     public write(writer: BinaryWriter) {
         for (const [key, element] of this.entries) {
-            const type = element.getType();
+            const type = element.type();
             writer.writeInt8(type);
             if (type === 0) continue;
 

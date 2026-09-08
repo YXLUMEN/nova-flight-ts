@@ -11,7 +11,14 @@ export class CommandContext<S> {
     public readonly range: StringRange;
     public readonly nodes: ParsedCommandNode<S>[];
 
-    public constructor(source: S, input: string, args: Map<string, ParsedArgument<S, any>>, command: Command<S>, nodes: ParsedCommandNode<S>[], range: StringRange) {
+    public constructor(
+        source: S,
+        input: string,
+        args: Map<string, ParsedArgument<S, any>>,
+        command: Command<S>,
+        nodes: ParsedCommandNode<S>[],
+        range: StringRange
+    ) {
         this.source = source;
         this.command = command;
         this.input = input;

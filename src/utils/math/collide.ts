@@ -119,3 +119,14 @@ export function circleIntersectsAABB(
     const dy = cy - ny;
     return dx * dx + dy * dy <= r * r;
 }
+
+export function pointToAABBMinDistSq(px: number, py: number, left: number, top: number, right: number, bottom: number): number {
+    let dx = 0, dy = 0;
+    if (px < left) dx = left - px;
+    else if (px > right) dx = px - right;
+
+    if (py < top) dy = top - py;
+    else if (py > bottom) dy = py - bottom;
+
+    return dx * dx + dy * dy;
+}

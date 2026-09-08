@@ -29,7 +29,7 @@ export class GroupBuilder<C, V extends readonly unknown[]> {
             },
             (input: NbtElement): DataResult<C> => {
                 if (!(input instanceof NbtCompound)) {
-                    return DataResult.error(`Expected NbtCompound, got "${input.getType()}"`);
+                    return DataResult.error(`Expected NbtCompound, got "${input.type()}"`);
                 }
 
                 const values: unknown[] = new Array(fields.length).fill(null);

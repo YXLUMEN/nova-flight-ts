@@ -1,5 +1,5 @@
-import {ItemStack} from "../item/ItemStack.ts";
-import type {DefaultedList} from "../utils/collection/DefaultedList.ts";
+import {ItemStack} from "../../item/ItemStack.ts";
+import type {DefaultedList} from "../../utils/collection/DefaultedList.ts";
 
 export class Inventories {
     public static splitStack(stacks: DefaultedList<ItemStack>, slot: number, amount: number) {

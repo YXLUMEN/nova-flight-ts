@@ -5,11 +5,12 @@ import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {UiFramework} from "./UiFramework.ts";
 import {EventBus} from "../../../event/EventBus.ts";
 import {NewNotify} from "../../../event/events/NewNotify.ts";
+import type {GamePause} from "../../../event/events/game/GamePause.ts";
 
 export class PauseOverlay extends UiFramework {
     private readonly text: TranslatableText[];
     private readonly buttons: UIButton[] = [];
-    private pulse = 1;
+    private wasRendered = false;
 
     public constructor() {
         super();
@@ -22,6 +23,9 @@ export class PauseOverlay extends UiFramework {
             TranslatableText.of('pause.paused'),
             TranslatableText.of('pause.press_esc'),
         ];
+
+        this.resetPause = this.resetPause.bind(this);
+        EventBus.instance().on('game:pause', this.resetPause);
     }
 
     public setSize(w: number, h: number) {
@@ -64,18 +68,17 @@ export class PauseOverlay extends UiFramework {
     }
 
     public render(ctx: CanvasRenderingContext2D) {
+        if (this.wasRendered) return;
+        this.wasRendered = true;
+
         ctx.save();
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillStyle = 'rgba(0,0,0,0.45)';
         ctx.fillRect(0, 0, this.width, this.height);
 
-        // 脉冲
-        const t = performance.now() * 0.002;
-        this.pulse = 0.75 + 0.25 * Math.sin(t);
-
         // 主标题
-        ctx.fillStyle = `rgba(255,255,255,${this.pulse.toFixed(3)})`;
+        ctx.fillStyle = '#fff';
         ctx.font = 'bold 32px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
         ctx.fillText(this.text[4].toString(), this.halfW, this.halfH - 100);
 
@@ -119,8 +122,13 @@ export class PauseOverlay extends UiFramework {
         return false;
     }
 
+    private resetPause(event: GamePause) {
+        if (!event.paused) this.wasRendered = false;
+    }
+
     public destroy() {
         this.buttons.length = 0;
         this.text.length = 0;
+        EventBus.instance().off('game:pause', this.resetPause);
     }
 }

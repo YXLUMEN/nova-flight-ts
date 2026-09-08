@@ -21,7 +21,7 @@ export class NbtFloat implements NbtElement {
         this.value = value;
     }
 
-    public getType(): NbtTypeId {
+    public type(): NbtTypeId {
         return NbtTypeId.Float;
     }
 

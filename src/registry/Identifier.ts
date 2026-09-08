@@ -17,7 +17,7 @@ export class Identifier implements Comparable {
         value => NbtString.of(value.toString()),
         input => {
             if (!(input instanceof NbtString)) {
-                return DataResult.error(`Expected NbtString, got ${input.getType()}`);
+                return DataResult.error(`Expected NbtString, got ${input.type()}`);
             }
             const id = Identifier.tryParse(input.value);
             return id

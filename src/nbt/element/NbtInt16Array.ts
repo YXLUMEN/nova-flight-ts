@@ -27,7 +27,7 @@ export class NbtInt16Array implements NbtElement {
         return new NbtInt16Array(new Int16Array(list));
     }
 
-    public getType(): NbtTypeId {
+    public type(): NbtTypeId {
         return NbtTypeId.Int16Array;
     }
 

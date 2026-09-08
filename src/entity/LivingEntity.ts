@@ -23,7 +23,7 @@ import {NbtTypeId} from "../nbt/NbtType.ts";
 import {Techs} from "../world/tech/Techs.ts";
 import {DamageTypes} from "./damage/DamageTypes.ts";
 import {PlayerEntity} from "./player/PlayerEntity.ts";
-import {isClient} from "../configs/GlobalConfig.ts";
+import {isClient} from "../configs/RuntimeConfig.ts";
 import {InterpolationHandler} from "../world/entity/InterpolationHandler.ts";
 
 

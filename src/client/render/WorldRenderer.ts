@@ -13,7 +13,7 @@ import type {TitleEffect} from "../../effect/TitleEffect.ts";
 import {ParticlePool} from "../../effect/ParticlePool.ts";
 import type {HexColor} from "../../type/types.ts";
 import {EntityRenderer} from "./EntityRenderer.ts";
-import {GlobalConfig} from "../../configs/GlobalConfig.ts";
+import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 
 export class WorldRenderer {
     private readonly client: NovaFlightClient;
@@ -116,7 +116,19 @@ export class WorldRenderer {
     public render(alpha: number) {
         if (!this.rendering) return;
 
+        const world = this.world;
+        if (!world) return;
+
         const ctx = this.window.ctx;
+
+        if (this.client.isPause() && !world.isOver()) {
+            const player = this.client.player;
+            if (player === null || !player.isOpenInventory()) {
+                this.window.pauseOverlay.render(ctx);
+                return;
+            }
+        }
+
         ctx.clearRect(0, 0, Window.viewWidth, Window.viewHeight);
 
         this.starField.render(ctx, this.window.camera, alpha);
@@ -133,14 +145,8 @@ export class WorldRenderer {
 
         // 背景层
         this.renderBackground(ctx);
-        if (!this.world) {
-            ctx.restore();
-            return;
-        }
 
         this.mapRender!.render(ctx, viewRect);
-
-        const world = this.world;
         this.entityRenderer.renderEntities(ctx, viewRect, world, alpha);
 
         // 特效
@@ -156,7 +162,7 @@ export class WorldRenderer {
         const player = this.client.player;
         if (player) this.entityRenderer.renderMainPlayer(ctx, world, player, alpha);
 
-        if (GlobalConfig.renderHitBox) {
+        if (RuntimeConfig.renderHitBox) {
             this.entityRenderer.renderDebug(ctx, viewRect, world, alpha);
         }
 
@@ -166,11 +172,6 @@ export class WorldRenderer {
 
         this.title?.render(ctx);
         this.window.hud.render(ctx);
-        if (this.client.isPause() && !world.isOver() && (player && !player.isOpenInventory())) {
-            this.window.pauseOverlay.render(ctx);
-        }
-
-        this.window.notify.render(ctx);
         this.window.hud.renderPointer(ctx, this.client);
     }
 

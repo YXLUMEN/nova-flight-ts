@@ -46,3 +46,9 @@ export class TimeoutError extends Error {
         super(msg);
     }
 }
+
+export class CallTwice extends Error {
+}
+
+export class WithoutHandler extends Error {
+}

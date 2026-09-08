@@ -1,4 +1,4 @@
-import {isServer} from "./configs/GlobalConfig.ts";
+import {isServer} from "./configs/RuntimeConfig.ts";
 import {run} from "./lib.ts";
 
 

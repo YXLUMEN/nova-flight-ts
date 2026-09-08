@@ -24,7 +24,7 @@ export class ComponentChanges {
         },
         input => {
             if (!(input instanceof NbtCompound)) {
-                return DataResult.error(`Expected NbtCompound, got ${input.getType()}`);
+                return DataResult.error(`Expected NbtCompound, got ${input.type()}`);
             }
             const map = new Map<DataComponentType<any>, Optional<any>>();
             for (const key of input.getKeys()) {
