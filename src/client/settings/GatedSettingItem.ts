@@ -24,7 +24,7 @@ export class GatedSettingItem<T> extends SettingItem<T> {
     }
 
     /** 生命周期已交给外部系统,不再受全局重载影响. 热更新请使用专用通道. */
-    public override restore(value: T) {
+    public override restore(value: T): void {
         if (this.guard) return;
         super.restore(value);
     }

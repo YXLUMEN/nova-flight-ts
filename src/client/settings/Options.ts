@@ -1,6 +1,6 @@
 import type {SettingItem} from "./SettingItem.ts";
 import type {OptionStorage} from "./OptionStorage.ts";
-import {error} from "@tauri-apps/plugin-log";
+import {error, warn} from "@tauri-apps/plugin-log";
 
 export class Options {
     public static readonly VERSION = 1;
@@ -36,7 +36,7 @@ export class Options {
         try {
             this.fromJson(json);
         } catch (err) {
-            await error(`[Client] Invalid settings file, keep defaults. Cause by: ${err}`);
+            await error(`[Settings] Invalid settings file, keep defaults. Cause by: ${err}`);
         }
     }
 
@@ -53,7 +53,10 @@ export class Options {
         if (typeof parsed !== 'object' || parsed === null) return;
 
         const version: unknown = parsed.version;
-        if (typeof version !== 'number' || version !== Options.VERSION) return;
+        if (typeof version !== 'number' || version !== Options.VERSION) {
+            warn(`[Settings] Unmatch version "${version} but require "${Options.VERSION}"`).catch();
+            return;
+        }
 
         const values = parsed.values as Record<string, unknown>;
         if (typeof values !== 'object' || values === null) return;

@@ -1,39 +1,39 @@
-import type {EntityIndex} from "./EntityIndex.ts";
+import type {EntityMap} from "./EntityMap.ts";
 import type {Consumer, Predicate, UUID} from "../../type/types.ts";
 import type {EntityLike} from "./EntityLike.ts";
 import type {AABB} from "../../utils/math/AABB.ts";
-import type {GridSpatialIndex} from "./GridSpatialIndex.ts";
+import type {EntityIndex} from "./EntityIndex.ts";
 
 export class EntityLookUp<T extends EntityLike> {
+    private readonly map: EntityMap<T>;
     private readonly index: EntityIndex<T>;
-    private readonly grid: GridSpatialIndex<T>;
 
-    public constructor(index: EntityIndex<T>, grid: GridSpatialIndex<T>) {
-        this.index = index;
-        this.grid = grid;
+    public constructor(index: EntityMap<T>, grid: EntityIndex<T>) {
+        this.map = index;
+        this.index = grid;
     }
 
     public get(id: number): T | null {
-        return this.index.get(id);
+        return this.map.get(id);
     }
 
     public getByUUID(uuid: UUID): T | null {
-        return this.index.getByUUID(uuid);
+        return this.map.getByUUID(uuid);
     }
 
     public iterate(): Iterator<T> {
-        return this.index.iterate();
+        return this.map.iterate();
     }
 
     public search(box: AABB): Generator<T, void> {
-        return this.grid.search(box);
+        return this.index.search(box);
     }
 
     public forEachInBox(box: AABB, consumer: Consumer<T>): void {
-        this.grid.forEach(box, consumer);
+        this.index.forEach(box, consumer);
     }
 
     public findFirst(box: AABB, predicate: Predicate<T>): void {
-        this.grid.findFirst(box, predicate);
+        this.index.findFirst(box, predicate);
     }
 }

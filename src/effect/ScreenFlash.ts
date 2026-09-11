@@ -57,11 +57,10 @@ export class ScreenFlash implements VisualEffect {
 
     public render(ctx: CanvasRenderingContext2D) {
         const k = this.t / this.life;
-        ctx.save();
         ctx.globalAlpha = (1 - k) * this.maxAlpha;
         ctx.fillStyle = this.color;
         ctx.fillRect(0, 0, this.w, this.h);
-        ctx.restore();
+        ctx.globalAlpha = 1;
     }
 
     public isAlive(): boolean {

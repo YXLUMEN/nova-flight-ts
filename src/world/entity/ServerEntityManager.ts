@@ -1,30 +1,31 @@
-import {EntityIndex} from "./EntityIndex.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {EntityHandler} from "./EntityHandler.ts";
-import {GridSpatialIndex} from "./GridSpatialIndex.ts";
+import type {EntityIndex} from "./EntityIndex.ts";
+import {EntityMap} from "./EntityMap.ts";
 import {EntityLookUp} from "./EntityLookUp.ts";
-import {World} from "../World.ts";
 import {EMPTY_LISTENER, type EntityChangeListener} from "./EntityChangeListener.ts";
+import {World} from "../World.ts";
+import {GridSpatialIndex} from "./GridSpatialIndex.ts";
 
 
 export class ServerEntityManager<T extends Entity> {
+    private readonly map: EntityMap<T>;
     private readonly index: EntityIndex<T>;
-    private readonly grid: GridSpatialIndex<T>;
     private readonly lookup: EntityLookUp<T>
     private readonly handler: EntityHandler<T>;
 
     public constructor(handler: EntityHandler<T>) {
-        this.index = new EntityIndex();
-        this.grid = new GridSpatialIndex(World.MAP_WIDTH, World.MAP_HEIGHT);
-        this.lookup = new EntityLookUp(this.index, this.grid);
+        this.map = new EntityMap();
+        this.index = new GridSpatialIndex(World.MAP_WIDTH, World.MAP_HEIGHT, 80, 160);
+        this.lookup = new EntityLookUp(this.map, this.index);
         this.handler = handler;
     }
 
     public addEntity(entity: T): boolean {
-        if (!this.index.add(entity)) {
+        if (!this.map.add(entity)) {
             return false;
         }
-        this.grid.insert(entity);
+        this.index.insert(entity);
         entity.setChangeListener(this.createListener(entity));
 
         // 可能进行区分
@@ -40,8 +41,8 @@ export class ServerEntityManager<T extends Entity> {
     }
 
     public remove(entity: T) {
-        this.grid.remove(entity);
         this.index.remove(entity);
+        this.map.remove(entity);
 
         this.handler.stopTicking(entity);
         this.handler.stopTracking(entity);
@@ -49,14 +50,14 @@ export class ServerEntityManager<T extends Entity> {
     }
 
     public clear(): void {
-        this.index.iterate().forEach(entity => {
+        this.map.iterate().forEach(entity => {
             this.remove(entity);
         });
-        this.grid.clear();
+        this.index.clear();
     }
 
     public getIndexSize(): number {
-        return this.index.size;
+        return this.map.size;
     }
 
     public getLookup() {
@@ -77,7 +78,7 @@ export class ServerEntityManager<T extends Entity> {
         }
 
         public updateEntityPosition(): void {
-            this.manager.grid.insert(this.entity);
+            this.manager.index.insert(this.entity);
         }
 
         public remove(): void {

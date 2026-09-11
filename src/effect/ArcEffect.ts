@@ -1,8 +1,8 @@
 import type {VisualEffect} from "./VisualEffect.ts";
-import {hexToRgba} from "../utils/uit.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import {isClient} from "../configs/RuntimeConfig.ts";
 
 export class ArcEffect implements VisualEffect {
     public static TYPE: VisualEffectType<ArcEffect> = null!;
@@ -13,7 +13,7 @@ export class ArcEffect implements VisualEffect {
             writer.writeFloat(value.endX);
             writer.writeFloat(value.endY);
 
-            writer.writeFloat(value.lifetime);
+            writer.writeFloat(value.duration);
             writer.writeVarUint(value.width);
             PacketCodecs.COLOR_HEX.encode(writer, value.color);
             writer.writeVarUint(value.arcCount);
@@ -40,7 +40,7 @@ export class ArcEffect implements VisualEffect {
     private readonly endX: number;
     private readonly endY: number;
 
-    private readonly lifetime: number;
+    private readonly duration: number;
     private age: number = 0;
 
     private readonly arcCount: number;
@@ -48,7 +48,7 @@ export class ArcEffect implements VisualEffect {
     private readonly color: string;
     private readonly width: number;
 
-    private cachedArcs: { x: number; y: number }[][] = [];
+    private cachedArcs: number[][] = [];
 
     public constructor(
         x: number, y: number, tx: number, ty: number,
@@ -63,13 +63,13 @@ export class ArcEffect implements VisualEffect {
         this.endX = tx;
         this.endY = ty;
 
-        this.lifetime = duration;
+        this.duration = duration;
         this.width = width;
         this.color = color;
         this.arcCount = arcCount;
         this.segments = segments;
 
-        this.rebuildArcs();
+        if (isClient) this.rebuildArcs();
     }
 
     public getType(): VisualEffectType<ArcEffect> {
@@ -81,18 +81,16 @@ export class ArcEffect implements VisualEffect {
     }
 
     public render(ctx: CanvasRenderingContext2D) {
-        const progress = this.age / this.lifetime;
-        const alpha = 1.0 - progress;
-
         ctx.save();
-        ctx.strokeStyle = hexToRgba(this.color, alpha);
+        ctx.globalAlpha = 1.0 - (this.age / this.duration || 1);
+        ctx.strokeStyle = this.color;
         ctx.lineWidth = this.width;
 
         ctx.beginPath();
         for (const points of this.cachedArcs) {
-            ctx.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < points.length; i++) {
-                ctx.lineTo(points[i].x, points[i].y);
+            ctx.moveTo(points[0], points[1]);
+            for (let i = 2; i < points.length; i += 2) {
+                ctx.lineTo(points[i], points[i + 1]);
             }
         }
         ctx.stroke();
@@ -100,11 +98,11 @@ export class ArcEffect implements VisualEffect {
     }
 
     public isAlive(): boolean {
-        return this.age < this.lifetime;
+        return this.age < this.duration;
     }
 
     public kill() {
-        this.age = this.lifetime;
+        this.age = this.duration;
     }
 
     private rebuildArcs(): void {
@@ -118,7 +116,7 @@ export class ArcEffect implements VisualEffect {
         const perpY = dx / len;
 
         for (let arc = 0; arc < this.arcCount; arc++) {
-            const points = [{x: this.startX, y: this.startY}];
+            const points = [this.startX, this.startY];
             let currentOffset = 0;
 
             // 用“累积随机偏移”制造连续弯曲
@@ -138,13 +136,10 @@ export class ArcEffect implements VisualEffect {
                 const offsetX = perpX * currentOffset;
                 const offsetY = perpY * currentOffset;
 
-                points.push({
-                    x: baseX + offsetX,
-                    y: baseY + offsetY
-                });
+                points.push(baseX + offsetX, baseY + offsetY);
             }
 
-            points.push({x: this.endX, y: this.endY});
+            points.push(this.endX, this.endY);
             this.cachedArcs.push(points);
         }
     }

@@ -101,9 +101,12 @@ export class ServerWorld extends World implements NbtSerializable {
         for (const entity of search) {
             if (entity instanceof MobEntity) {
                 entity.attack(player);
+                // 约等于无敌时间. 后续版本可能考虑移除
                 return;
             }
 
+            // 下面优化基于两个假设:
+            // 敌方子弹慢速假设, 少量玩家假设
             if (entity instanceof MobBulletEntity || entity instanceof MobMissileEntity) {
                 entity.onCollision(new EntityHitResult(player.positionRef, player));
             }
