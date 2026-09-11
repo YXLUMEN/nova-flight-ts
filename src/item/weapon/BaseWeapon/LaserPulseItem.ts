@@ -1,13 +1,13 @@
-import {BaseWeapon} from "./BaseWeapon.ts";
+import type {Vec2} from "../../../utils/math/Vec2.ts";
 import type {ItemStack} from "../../ItemStack.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import type {Entity} from "../../../entity/Entity.ts";
+import type {LivingEntity} from "../../../entity/LivingEntity.ts";
 import {MutVec2} from "../../../utils/math/MutVec2.ts";
+import {BaseWeapon} from "./BaseWeapon.ts";
 import {PhaseLasers} from "../PhaseLasers.ts";
-import {LivingEntity} from "../../../entity/LivingEntity.ts";
 import {thickLineCircleHit} from "../../../utils/math/collide.ts";
 import {squareDistVec2} from "../../../utils/math/math.ts";
-import type {Vec2} from "../../../utils/math/Vec2.ts";
 
 export abstract class LaserPulseItem extends BaseWeapon {
     protected onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {

@@ -1,11 +1,10 @@
-import {RegistryKey} from "./RegistryKey.ts";
-import {RegistryEntry} from "./tag/RegistryEntry.ts";
 import type {Identifier} from "./Identifier.ts";
+import type {HashMap} from "../utils/collection/HashMap.ts";
 import type {TagKey} from "./tag/TagKey.ts";
 import type {IndexedIterable} from "../utils/collection/IndexedIterable.ts";
+import {RegistryKey} from "./RegistryKey.ts";
+import {RegistryEntry} from "./tag/RegistryEntry.ts";
 import {IllegalStateError} from "../type/errors.ts";
-import {deepFreeze} from "../utils/uit.ts";
-import type {HashMap} from "../utils/collection/HashMap.ts";
 import {WrapperMap} from "../utils/collection/WrapperMap.ts";
 
 export class Registry<T> implements IndexedIterable<T> {
@@ -191,11 +190,8 @@ export class Registry<T> implements IndexedIterable<T> {
         } satisfies IndexedIterable<RegistryEntry<T>>;
     }
 
-    public freeze() {
-        if (Object.isFrozen(this)) {
-            return;
-        }
-        deepFreeze(this);
+    public checkBeforeFreeze() {
+        if (Object.isFrozen(this)) return;
 
         const unbound = this.keyToEntry
             .entries()

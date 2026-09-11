@@ -1,6 +1,6 @@
 import type {DisplayConfig} from "./DisplayConfig.ts";
-import {config} from "../../../utils/uit.ts";
 import type {TextureProvider} from "./TextureProvider.ts";
+import {config} from "../../../utils/uit.ts";
 
 export class Model {
     public static readonly DEFAULT_CONFIG: DisplayConfig = config({

@@ -34,7 +34,7 @@ export class WindowOverlay implements VisualEffect {
     private readonly fadeOut: number;
 
     private alpha = 0;
-    private state: "in" | "steady" | "out" = "in";
+    private state: OverlayState = OverlayState.IN;
     private t = 0;
 
     public constructor(
@@ -59,31 +59,37 @@ export class WindowOverlay implements VisualEffect {
         if (!this.alive) return;
         this.t += dt;
 
-        if (this.state === "in") {
+        if (this.state === OverlayState.IN) {
             if (this.fadeIn <= 0) {
                 this.alpha = this.maxAlpha;
-                this.state = "steady";
+                this.state = OverlayState.STEADY;
                 this.t = 0;
-            } else {
-                const k = Math.min(1, this.t / this.fadeIn);
-                this.alpha = this.maxAlpha * k;
-                if (k >= 1) {
-                    this.state = "steady";
-                    this.t = 0;
-                }
+                return;
             }
-        } else if (this.state === "out") {
+
+            const k = Math.min(1, this.t / this.fadeIn);
+            this.alpha = this.maxAlpha * k;
+            if (k >= 1) {
+                this.state = OverlayState.STEADY;
+                this.t = 0;
+            }
+            return;
+        }
+
+        if (this.state === OverlayState.OUT) {
             if (this.fadeOut <= 0) {
                 this.alpha = 0;
                 this.alive = false;
-            } else {
-                const k = Math.min(1, this.t / this.fadeOut);
-                this.alpha = this.maxAlpha * (1 - k);
-                if (k >= 1) this.alive = false;
+                return;
             }
-        } else {
-            this.alpha = this.maxAlpha;
+
+            const k = Math.min(1, this.t / this.fadeOut);
+            this.alpha = this.maxAlpha * (1 - k);
+            if (k >= 1) this.alive = false;
+            return;
         }
+
+        this.alpha = this.maxAlpha;
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
@@ -95,7 +101,6 @@ export class WindowOverlay implements VisualEffect {
         ctx.globalAlpha = this.alpha;
         ctx.fillStyle = this.color;
         ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
         ctx.restore();
     }
 
@@ -108,8 +113,14 @@ export class WindowOverlay implements VisualEffect {
     }
 
     public end(): void {
-        if (this.state === "out") return;
-        this.state = "out";
+        if (this.state === OverlayState.OUT) return;
+        this.state = OverlayState.OUT;
         this.t = 0;
     }
+}
+
+const enum OverlayState {
+    IN,
+    STEADY,
+    OUT,
 }

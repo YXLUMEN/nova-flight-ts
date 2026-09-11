@@ -7,9 +7,10 @@ import {GatedSettingItem} from "./GatedSettingItem.ts";
 import {OptionStorage} from "./OptionStorage.ts";
 import {SettingPredicates} from "./SettingPredicates.ts";
 
+/** WIP */
 export class Settings {
     public static readonly OPTIONS = new Options(
-        new OptionStorage('resources/nova-flight/settings.json')
+        new OptionStorage('/configs', 'settings.json')
     );
 
     public static readonly FPS = this.item<number>(

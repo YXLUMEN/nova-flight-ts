@@ -14,8 +14,8 @@ export function randInt(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-export function shortUUID(): string {
-    return Math.random().toString(36).slice(2, 10);
+export function shortUUID(len: number): string {
+    return Math.random().toString(len).slice(2, 10);
 }
 
 export function squareDistVec2(a: Vec2, b: Vec2) {

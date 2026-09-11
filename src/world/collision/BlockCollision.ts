@@ -27,7 +27,7 @@ export class BlockCollision {
         }
 
         if (movement.y !== 0) {
-            const yBox = bounds.offset(0, movement.y);
+            const yBox = bounds.offset(movement.x, movement.y);
             if (map.intersectsBox(yBox)) movement.y = 0;
         }
 
@@ -85,8 +85,10 @@ export class BlockCollision {
     public static pushOutOfBlocks(map: BitBlockMap, bounds: AABB, x: number, y: number) {
         const box = bounds.contractAll(1E-7);
         if (!map.intersectsBox(box)) return null;
-        const dx = x % 8;
-        const dy = y % 8;
+
+        const blockSize = WorldConstants.BLOCK_SIZE;
+        const dx = x % blockSize;
+        const dy = y % blockSize;
 
         let pushDir: Direction | null = null;
         let dist = Infinity;
@@ -94,7 +96,8 @@ export class BlockCollision {
         for (const direction of Direction.ALL_DIRS) {
             const g = direction.normal.x === 0 ? dy : dx;
             const h = direction.dir === 1 ? 1 - g : g;
-            if (h < dist && !map.intersectsBox(box.offset(direction.normal.x * 8, direction.normal.y * 8))) {
+            const offsetBox = box.offset(direction.normal.x * blockSize, direction.normal.y * blockSize);
+            if (h < dist && !map.intersectsBox(offsetBox)) {
                 dist = h;
                 pushDir = direction;
             }
@@ -164,7 +167,7 @@ export class BlockCollision {
         const dx = end.x - start.x;
         const dy = end.y - start.y;
         const hitPos = new Vec2(start.x + t * dx, start.y + t * dy);
-        return new BlockHitResult(hitPos, enteringFrom, blockPos, false);
+        return new BlockHitResult(hitPos, enteringFrom, blockPos, t === 0);
     }
 
     public static raycastBlock(context: RaycastContext): BlockHitResult {

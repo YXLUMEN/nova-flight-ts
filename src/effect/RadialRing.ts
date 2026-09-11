@@ -26,8 +26,6 @@ export class RadialRing implements VisualEffect {
         }
     );
 
-    private alive = true;
-
     private readonly center: Vec2;
     private readonly r0: number;
     private readonly r1: number;
@@ -52,9 +50,6 @@ export class RadialRing implements VisualEffect {
     public tick(dt: number) {
         this.prevT = this.t;
         this.t += dt;
-        if (this.t >= this.life) {
-            this.alive = false;
-        }
     }
 
     public render(ctx: CanvasRenderingContext2D, tickDelta: number) {
@@ -73,10 +68,10 @@ export class RadialRing implements VisualEffect {
     }
 
     public isAlive(): boolean {
-        return this.alive;
+        return this.t >= this.life;
     }
 
     public kill() {
-        this.alive = false;
+        this.t = this.life;
     }
 }

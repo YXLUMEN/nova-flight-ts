@@ -13,9 +13,14 @@
     "core:window:allow-maximize",
     "core:window:allow-close",
     "fs:default",
-    "fs:allow-exists",
     "fs:allow-resource-read-recursive",
     "fs:allow-resource-write",
+    "fs:allow-applocaldata-write",
+    "fs:scope-applocaldata-recursive",
+    {
+      "identifier": "fs:allow-exists",
+      "allow": [{"path": "APPLOCALDATA/**"}, {"path": "$RESOURCE/**"}]
+    },
     "log:allow-log",
     "dialog:default"
   ]

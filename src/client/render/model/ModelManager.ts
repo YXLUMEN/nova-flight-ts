@@ -13,14 +13,14 @@ export class ModelManager {
     private static readonly items: Map<Item, string> = new Map();
     private static readonly techs: Map<Tech, string> = new Map();
 
-    private static model: ModelResource | null = null;
+    private static model: ModelResource = null!;
 
     public static getItemModel(item: Item): Model {
-        return this.model!.getModel(this.items.get(item));
+        return this.model.getModel(this.items.get(item));
     }
 
     public static getTechModel(tech: Tech): Model {
-        return this.model!.getModel(this.techs.get(tech));
+        return this.model.getModel(this.techs.get(tech));
     }
 
     private static generateItemModel(): void {

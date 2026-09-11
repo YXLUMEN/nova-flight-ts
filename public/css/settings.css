@@ -57,7 +57,7 @@
     }
 
     &::before {
-        content: "音量";
+        content: '';
         position: absolute;
         color: rgba(197, 197, 197, 0.5);
     }

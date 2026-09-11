@@ -1,19 +1,19 @@
-import {Registry} from "./Registry.ts";
-import {RegistryKey} from "./RegistryKey.ts";
+import type {Registry} from "./Registry.ts";
+import type {RegistryKey} from "./RegistryKey.ts";
+import {deepFreeze} from "../utils/uit.ts";
 import {RegistryKeys} from "./RegistryKeys.ts";
 import {Registries} from "./Registries.ts";
+import {TranslatableText} from "../i18n/TranslatableText.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {Items} from "../item/Items.ts";
-import {deepFreeze} from "../utils/uit.ts";
 import {DamageTypes} from "../entity/damage/DamageTypes.ts";
 import {EntitySelectorOptions} from "../command/EntitySelectorOptions.ts";
 import {NbtTypes} from "../nbt/NbtTypes.ts";
 import {Techs} from "../world/tech/Techs.ts";
-import {TranslatableText} from "../i18n/TranslatableText.ts";
 import {VisualEffectTypes} from "../effect/VisualEffectTypes.ts";
 
 export class RegistryManager {
-    private readonly registers = new Map<RegistryKey<any>, Registry<any>>();
+    private readonly registers: Map<RegistryKey<any>, Registry<any>> = new Map();
 
     public async registerAll(): Promise<void> {
         if (Object.isFrozen(this)) throw new Error('Registry already registered');
@@ -50,6 +50,7 @@ export class RegistryManager {
     }
 
     public freeze() {
+        this.registers.values().forEach(r => r.checkBeforeFreeze());
         deepFreeze(this, obj => obj instanceof TranslatableText);
     }
 }
