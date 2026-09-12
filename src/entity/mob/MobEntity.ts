@@ -114,7 +114,7 @@ export abstract class MobEntity extends LivingEntity {
                     this.ejectCooldown = 0;
                     return movement.set(eject.x, eject.y);
                 }
-                this.ejectCooldown = Math.min(1 << Math.min(this.stuckTicks - 1, 5), 32);
+                this.ejectCooldown = Math.min(1 << Math.min(this.stuckTicks - 1, 12), 32);
             } else this.ejectCooldown--;
 
             return movement.multiply(0);

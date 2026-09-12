@@ -98,7 +98,8 @@ export abstract class LivingEntity extends Entity {
     protected tickCramming(): void {
         if (this.isClient()) return;
         const entities = this.getWorld()
-            .searchOtherEntities(this, this.getBoundingBox(), entity => entity.isPushAble());
+            .searchOtherEntities(this, this.getBoundingBox(), entity => entity.isPushAble())
+            .take(32); // 过多实体进行挤压反而观察不出挤压效果,并且开销过大
         for (const entity of entities) {
             this.pushAwayFrom(entity);
         }

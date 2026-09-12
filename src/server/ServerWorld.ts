@@ -58,8 +58,6 @@ export class ServerWorld extends World implements NbtSerializable {
         this.server = server;
         this.entityManager = new ServerEntityManager(this.ServerEntityHandler);
         this.stage = STAGE;
-
-        this.registerEvents();
         this.serverTickEntity = this.serverTickEntity.bind(this);
     }
 
@@ -294,12 +292,6 @@ export class ServerWorld extends World implements NbtSerializable {
     public override addParticle(): void {
     }
 
-    private registerEvents() {
-        this.events.on('entity:mob:removed', event => {
-            this.entityManager.remove(event.entity);
-        });
-    }
-
     public writeNBT(root: NbtCompound): NbtCompound {
         const entityList: NbtCompound[] = [];
         this.entities.forEach(entity => {
@@ -373,7 +365,6 @@ export class ServerWorld extends World implements NbtSerializable {
         this.entities.clear();
         this.trackedEntities.clear();
         this.entityManager.clear();
-        this.events.removeAll('entity:mob:removed');
     }
 
     public saveAll(): NbtCompound {

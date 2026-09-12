@@ -45,7 +45,6 @@ export class ClientWorld extends World {
         this.worldRender = worldRender;
         this.worldName = worldName;
         this.entityManager = new ClientEntityManager(this.ClientEntityHandler);
-        this.registerEvents();
     }
 
     public override tick(dt: number) {
@@ -221,12 +220,6 @@ export class ClientWorld extends World {
         return super.createExplosion(source, damageSource, x, y, power, behaviour, visual);
     }
 
-    private registerEvents() {
-        this.events.on('entity:mob:removed', event => {
-            this.entityManager.remove(event.entity);
-        });
-    }
-
     public setTotalScore(score: number): void {
         this.phaseScore = Math.max(score, this.phaseScore);
     }
@@ -249,7 +242,6 @@ export class ClientWorld extends World {
         this.entities.forEach(entity => entity.discard());
         this.entities.clear();
         this.entityManager.clear();
-        this.events.removeAll('entity:mob:removed');
     }
 
     public saveAll() {
