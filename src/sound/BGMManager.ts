@@ -11,9 +11,10 @@ export class BGMManager {
         Audios.AIR_MINUET,
         Audios.FRONTIER_SKIES,
         Audios.ZERG,
-        Audios.THE_FINAL_ASCENT,
         Audios.UNBREAKABLE_WILL,
         Audios.WANA_HAVE_A_FLIGHT,
+        Audios.ENCOUNTER,
+        Audios.EASY_DAY_ALL_CLEAR,
     ];
     private static readonly mainTheme = [
         Audios.HANGAR_SILENCE,
@@ -75,18 +76,14 @@ export class BGMManager {
 
     private static async onGameOver() {
         await AudioManager.fadeOutAndPause();
-
-        if (Math.random() < 0.5) {
-            await AudioManager.playAudio(Audios.KEEP_FIGHTING, false);
-            AudioManager.leap(10);
-            return;
-        }
-
-        await AudioManager.playAudio(Audios.DUST2DUST, false)
+        await AudioManager.playAudio(Audios.KEEP_FIGHTING, false);
+        AudioManager.leap(10);
     }
 
     public static onBossSpawn(): void {
-        const shouldPlay = randomChose([Audios.NO_MERCY, Audios.FIRING_ON_FULL_POWER, Audios.ENCOUNTER]);
+        const shouldPlay = randomChose(
+            [Audios.NO_MERCY, Audios.FIRING_ON_FULL_POWER, Audios.DUST2DUST, Audios.THE_FINAL_ASCENT]
+        );
         AudioManager.fadeOutAndPause()
             .then(() => AudioManager.playAudio(shouldPlay));
     }

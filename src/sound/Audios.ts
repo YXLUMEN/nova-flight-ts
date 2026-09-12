@@ -22,6 +22,7 @@ export class Audios {
     public static readonly THE_FINAL_ASCENT = this.register('the_final_ascent');
     public static readonly UNBREAKABLE_WILL = this.register('unbreakable_will');
     public static readonly WANA_HAVE_A_FLIGHT = this.register('wana_have_a_flight');
+    public static readonly EASY_DAY_ALL_CLEAR = this.register('easy_day_all_clear')
 
     public static readonly DELTA_FORCE_THEME = this.register('delta_force_theme');
     public static readonly STEEL_REQUIEM = this.register('steel_requiem');
