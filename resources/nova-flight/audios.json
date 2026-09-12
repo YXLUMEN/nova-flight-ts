@@ -44,6 +44,9 @@
   "wana_have_a_flight": {
     "file": "nova-flight:/wana_have_a_flight.ogg"
   },
+  "easy_day_all_clear": {
+    "file": "nova-flight:/easy_day_all_clear.ogg"
+  },
   "delta_force_theme": {
     "file": "nova-flight:/delta_force_theme.ogg"
   },
