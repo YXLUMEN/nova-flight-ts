@@ -32,9 +32,7 @@ export class OptionStorage {
         const temp = `${path}.${shortUUID(8)}-temp`;
 
         try {
-            await writeTextFile(temp, json, {
-                create: true,
-            });
+            await writeTextFile(temp, json, {create: true});
             await rename(temp, path);
         } catch (err) {
             this.resolved = null;

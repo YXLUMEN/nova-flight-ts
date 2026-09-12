@@ -23,53 +23,35 @@
   "zerg": {
     "file": "nova-flight:/zerg.ogg"
   },
-  "void_showdown": {
-    "file": "nova-flight:/void_showdown.ogg"
+  "air_minuet": {
+    "file": "nova-flight:/air_minuet.ogg"
   },
-  "pixel_odyssey": {
-    "file": "nova-flight:/pixel_odyssey.ogg"
+  "dust_to_dust": {
+    "file": "nova-flight:/dust_to_dust.ogg"
   },
-  "boss_phase": {
-    "file": "nova-flight:/boss_phase.ogg"
+  "frontier_skies": {
+    "file": "nova-flight:/frontier_skies.ogg"
   },
-  "space_walk_mabo": {
-    "file": "nova-flight:/space_walk.ogg"
+  "hangar_silence": {
+    "file": "nova-flight:/hangar_silence.ogg"
   },
-  "no_more_mabo": {
-    "file": "nova-flight:/no_more_mabo.ogg"
+  "the_final_ascent": {
+    "file": "nova-flight:/the_final_ascent.ogg"
   },
-  "some_time_hjm": {
-    "file": "nova-flight:/sometime_hjm.ogg"
+  "unbreakable_will": {
+    "file": "nova-flight:/unbreakable_will.ogg"
+  },
+  "wana_have_a_flight": {
+    "file": "nova-flight:/wana_have_a_flight.ogg"
   },
   "delta_force_theme": {
     "file": "nova-flight:/delta_force_theme.ogg"
   },
-  "come_on_mabo": {
-    "file": "nova-flight:/come_on_mabo.ogg"
-  },
-  "mabo_2_23": {
-    "file": "nova-flight:/2_23mabo.ogg"
-  },
-  "mabo_3_30": {
-    "file": "nova-flight:/3_30am.ogg"
-  },
-  "ele_mabo": {
-    "file": "nova-flight:/ele_mabo.ogg"
-  },
-  "in_the_summer": {
-    "file": "nova-flight:/in_the_summer.ogg"
-  },
-  "making_legends": {
-    "file": "nova-flight:/making_legends.ogg"
-  },
   "victory": {
-    "file": "nova-flight:/victory_ow.ogg"
+    "file": "nova-flight:/victory.ogg"
   },
   "warsaw": {
     "file": "nova-flight:/warsaw.ogg"
-  },
-  "lava_chicken": {
-    "file": "nova-flight:/lava_chicken.ogg"
   },
   "steel_requiem": {
     "file": "nova-flight:/steel_requiem.ogg"
@@ -85,8 +67,5 @@
   },
   "the_tale_of_a_cruel_world": {
     "file": "nova-flight:/the_tale_of_a_cruel_world.ogg"
-  },
-  "assumptions": {
-    "file": "nova-flight:/assumptions.ogg"
   }
 }

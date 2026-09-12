@@ -16,6 +16,9 @@ import type {EntityType} from "../entity/EntityType.ts";
 import {NbtCompoundArgumentType} from "./argument/NbtCompoundArgumentType.ts";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
+import {isDev} from "../configs/RuntimeConfig.ts";
+import type {World} from "../world/World.ts";
+import type {Consumer} from "../type/types.ts";
 
 export class SummonEntityCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -85,11 +88,26 @@ export class SummonEntityCommand {
         return posArg.toAbsolutePos(ctx.source);
     }
 
-    private static summonBatch<T extends ServerCommandSource>(ctx: CommandContext<T>, count: number, type: EntityType<any>, nbt?: NbtCompound) {
-        if (count <= 0 || count > 255) throw new IllegalArgumentError('Summon count should in [1-255]');
+    private static summonBatch<T extends ServerCommandSource>(
+        ctx: CommandContext<T>,
+        count: number,
+        type: EntityType<any>,
+        nbt?: NbtCompound,
+    ) {
+        if (!isDev && (count <= 0 || count > 255)) {
+            throw new IllegalArgumentError('Summon count should in [1-255]');
+        }
 
         const world = ctx.source.getWorld()!;
         const pos = this.getSpawnPos(ctx);
+
+        if (count > 255) {
+            const task = new BatchTask(world, pos, count, type, nbt, undefined, total => {
+                ctx.source.outPut.sendMessage(`Success summon \x1b[32m${total}\x1b[0m "${type}"`);
+            });
+            task.start();
+            return;
+        }
 
         try {
             for (let i = 0; i < count; i++) {
@@ -103,12 +121,79 @@ export class SummonEntityCommand {
                 entity.setPositionByVec(pos);
                 world.addEntity(entity);
             }
-            ctx.source.outPut.sendMessage(`Success summon ${type.toString()}`);
+            ctx.source.outPut.sendMessage(`Success summon ${type}`);
         } catch (error) {
             if (error instanceof IllegalArgumentError || error instanceof IllegalStateError) {
                 throw error;
             }
             throw new CommandError(`\x1b[33mFail to summon entity`);
         }
+    }
+}
+
+class BatchTask {
+    private readonly world: World;
+    private readonly pos: Vec2;
+    private readonly total: number;
+    private readonly type: EntityType<any>;
+    private readonly nbt?: NbtCompound;
+    private readonly step: number;
+    private readonly onDone?: Consumer<number>;
+
+    private completed: number = 0;
+    private task?: number;
+
+    public constructor(
+        world: World,
+        pos: Vec2,
+        total: number,
+        type: EntityType<any>,
+        nbt?: NbtCompound,
+        step?: number,
+        onDone?: Consumer<number>,
+    ) {
+        this.world = world;
+        this.pos = pos;
+        this.total = total;
+        this.type = type;
+        this.nbt = nbt;
+        this.step = step ?? 255;
+        this.onDone = onDone;
+        this.spawn = this.spawn.bind(this);
+    }
+
+    public start() {
+        clearTimeout(this.task);
+        this.spawn();
+    }
+
+    private spawn() {
+        const {world, type, pos, nbt, step} = this;
+        const count = Math.min(this.total - this.completed, step);
+
+        for (let i = 0; i < count; i++) {
+            const entity = type.create(world) as Entity;
+
+            if (nbt) {
+                const compound = nbt.copy();
+                entity.readNBT(compound);
+            }
+
+            entity.setPositionByVec(pos);
+            world.addEntity(entity);
+        }
+
+        this.completed += count;
+        if (this.completed >= this.total) {
+            clearTimeout(this.task);
+            this.onDone?.(this.completed);
+            return;
+        }
+
+        this.task = setTimeout(this.spawn, 200);
+    }
+
+    public cancel() {
+        clearTimeout(this.task);
     }
 }

@@ -80,11 +80,12 @@ export class PlayerDataStorage {
     }
 
     public loadPlayerNbtInWorld(consumer: BiConsumer<UUID, NbtCompound>): Promise<Result<void, Error>> {
-        return this.loadPlayerInWorld((player) => {
-            const nbt = this.playerNbt(player);
-            const ok = nbt.ok();
-            if (ok.isPresent()) {
-                consumer(player.uuid, ok.get());
+        return this.loadPlayerInWorld(player => {
+            const nbt = this.playerNbt(player, false);
+            if (nbt.isOk()) {
+                consumer(player.uuid, nbt.unwrap());
+            } else {
+                console.error(nbt.unwrapErr());
             }
         });
     }
@@ -150,7 +151,7 @@ export class PlayerDataStorage {
         return true;
     }
 
-    private playerNbt(player: PlayerData): Result<NbtCompound, Error> {
+    private playerNbt(player: PlayerData, isCompressed = true): Result<NbtCompound, Error> {
         if (!player.data || player.data.length === 0) {
             return Result.err(new NoResultsError());
         }
@@ -160,7 +161,7 @@ export class PlayerDataStorage {
         }
 
         try {
-            const data = decompress(player.data) as Uint8Array<ArrayBuffer>;
+            const data = isCompressed ? decompress(player.data) as Uint8Array<ArrayBuffer> : player.data;
             const compound = NbtUnserialization.fromCompactBinary(data);
             return Result.ok(compound);
         } catch (err) {

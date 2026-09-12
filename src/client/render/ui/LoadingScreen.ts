@@ -56,69 +56,65 @@ export class LoadingScreen extends UiFramework {
     }
 
     public render() {
-        try {
-            const ctx = this.ctx;
-            const {width, height} = this;
+        const ctx = this.ctx;
+        const {width, height, halfW, halfH} = this;
 
-            // 背景
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#00050e';
-            ctx.fillRect(0, 0, width, height);
+        // 背景
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#00050e';
+        ctx.fillRect(0, 0, width, height);
 
-            // 进度条参数
-            const barWidth = width * 0.6;
-            const barHeight = 16;
-            const barX = (width - barWidth) / 2;
-            const barY = height / 2;
-            const radius = barHeight / 4;
+        // 进度条参数
+        const barWidth = width * 0.6;
+        const barHeight = 16;
+        const barX = (width - barWidth) / 2;
+        const barY = halfH;
+        const radius = barHeight / 4;
 
-            // 背景条
-            ctx.fillStyle = '#333';
-            UiTools.roundRect(ctx, barX, barY, barWidth, barHeight, radius);
-            ctx.fill();
+        // 背景条
+        ctx.fillStyle = '#333';
+        UiTools.roundRect(ctx, barX, barY, barWidth, barHeight, radius);
+        ctx.fill();
 
-            // 前景条
-            const filledWidth = barWidth * this.currentProgress;
-            if (filledWidth > 0) {
-                ctx.fillStyle = UITheme.foreground;
-                UiTools.roundRect(ctx, barX, barY, filledWidth, barHeight, radius);
-                ctx.fill();
-            }
-
-            // 百分比文字
+        // 前景条
+        const filledWidth = barWidth * this.currentProgress;
+        if (filledWidth > 0) {
             ctx.fillStyle = UITheme.foreground;
-            ctx.fillText(`${Math.floor(this.currentProgress * 100)}%`, width / 2, barY - 20);
-
-            // 提示文字
-            if (this.message) {
-                ctx.fillText(this.message, width / 2, barY + 40);
-            }
-
-            if (!this.showSubBar) return;
-
-            const subBarHeight = 8;
-            const subBarWidth = barWidth * 0.8;
-            const subBarX = (width - subBarWidth) / 2;
-            const subBarY = barY + 70;
-
-            ctx.fillStyle = '#333';
-            UiTools.roundRect(ctx, subBarX, subBarY, subBarWidth, subBarHeight, subBarHeight / 4);
+            UiTools.roundRect(ctx, barX, barY, filledWidth, barHeight, radius);
             ctx.fill();
+        }
 
-            const subFilledWidth = subBarWidth * this.currentSubProgress;
-            if (subFilledWidth > 0) {
-                ctx.fillStyle = UITheme.accent || '#66aaff';
-                UiTools.roundRect(ctx, subBarX, subBarY, subFilledWidth, subBarHeight, subBarHeight / 4);
-                ctx.fill();
-            }
+        // 百分比文字
+        ctx.fillStyle = UITheme.foreground;
+        ctx.fillText(`${Math.floor(this.currentProgress * 100)}%`, halfW, barY - 20);
 
-            if (this.subMessage) {
-                ctx.fillStyle = UITheme.foreground;
-                ctx.fillText(this.subMessage, width / 2, subBarY + 20);
-            }
-        } catch (error) {
-            console.error(error);
+        // 提示文字
+        if (this.message) {
+            ctx.fillText(this.message, halfW, barY + 40);
+        }
+
+        if (!this.showSubBar) return;
+
+        const subBarHeight = 8;
+        const subBarWidth = barWidth * 0.8;
+        const subBarX = (width - subBarWidth) / 2;
+        const subBarY = barY + 70;
+
+        ctx.fillStyle = '#333';
+        UiTools.roundRect(ctx, subBarX, subBarY, subBarWidth, subBarHeight, subBarHeight / 4);
+        ctx.fill();
+
+        const subFilledWidth = subBarWidth * this.currentSubProgress;
+        if (subFilledWidth > 0) {
+            ctx.fillStyle = '#bee2ff';
+            UiTools.roundRect(ctx, subBarX, subBarY, subFilledWidth, subBarHeight, subBarHeight / 4);
+            ctx.fill();
+        }
+
+        if (this.subMessage) {
+            ctx.fillStyle = UITheme.foreground;
+            ctx.fillText(this.subMessage, halfW, subBarY + 20);
         }
     }
 

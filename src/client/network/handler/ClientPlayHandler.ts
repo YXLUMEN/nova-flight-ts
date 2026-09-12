@@ -41,7 +41,6 @@ import {AudioManager} from "../../../sound/AudioManager.ts";
 import {AudioControlS2CPacket, AudioControlType} from "../../../network/packet/s2c/AudioControlS2CPacket.ts";
 import {BGMManager} from "../../../sound/BGMManager.ts";
 import {AudioStopS2CPacket} from "../../../network/packet/s2c/AudioStopS2CPacket.ts";
-import {Audios} from "../../../sound/Audios.ts";
 import {type LaserWeaponS2CPacket} from "../../../network/packet/s2c/LaserWeaponS2CPacket.ts";
 import {LaserBeamEffect} from "../../../effect/LaserBeamEffect.ts";
 import {TargetDrone} from "../../../entity/TargetDrone.ts";
@@ -437,10 +436,6 @@ export class ClientPlayHandler extends ClientCommonHandler {
     public onAudioStop(packet: AudioStopS2CPacket): void {
         if (packet.audio !== AudioManager.getCurrentPlaying()) return;
         AudioManager.stop();
-
-        if (packet.audio === Audios.BOSS_PHASE) {
-            BGMManager.next();
-        }
     }
 
     public onPlayerScore(packet: PlayerSetScoreS2CPacket): void {

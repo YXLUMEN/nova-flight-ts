@@ -2,7 +2,7 @@ import {ServerStorage} from "../../server/storage/ServerStorage.ts";
 import type {PlayerData, SaveMeta} from "../../type/Saves.ts";
 import {error, warn} from "@tauri-apps/plugin-log";
 import {NovaFlightClient} from "../NovaFlightClient.ts";
-import {resolve, resolveResource} from "@tauri-apps/api/path";
+import {join, resolveResource} from "@tauri-apps/api/path";
 import {exists, mkdir, readFile, readTextFile, writeFile, writeTextFile} from "@tauri-apps/plugin-fs";
 import {NbtSerialization} from "../../nbt/NbtSerialization.ts";
 import {NbtUnserialization} from "../../nbt/NbtUnserialization.ts";
@@ -345,10 +345,10 @@ export class ClientSavesManager {
     private async exportSave(saveName: string) {
         try {
             const root = await resolveResource('saves');
-            const saveDir = await resolve(root, saveName);
+            const saveDir = await join(root, saveName);
             await mkdir(saveDir, {recursive: true});
 
-            const worldPath = await resolve(saveDir, `world.dat`);
+            const worldPath = await join(saveDir, `world.dat`);
             const result = await ServerStorage.loadWorld(saveName);
             if (result.isErr()) {
                 const msg = result.unwrapErr().message || '未找到存档';
@@ -357,14 +357,14 @@ export class ClientSavesManager {
             }
             await writeFile(worldPath, NbtSerialization.toRootCompactBinary(result.unwrap()));
 
-            const playerDir = await resolve(saveDir, `players`);
+            const playerDir = await join(saveDir, `players`);
             await mkdir(playerDir, {recursive: true});
 
             const tasks: Promise<void>[] = [];
             const feature = (uuid: UUID, nbt: NbtCompound) => {
-                const task = resolve(playerDir, `${uuid}.dat`)
+                const task = join(playerDir, `${uuid}.dat`)
                     .then(path => writeFile(path, NbtSerialization.toRootCompactBinary(nbt)))
-                    .catch(error);
+                    .catch(err => console.error(err));
                 tasks.push(task);
             };
 
@@ -382,10 +382,10 @@ export class ClientSavesManager {
     private async exportAsSNbt(saveName: string) {
         try {
             const root = await resolveResource('saves');
-            const saveDir = await resolve(root, saveName);
+            const saveDir = await join(root, saveName);
             await mkdir(saveDir, {recursive: true});
 
-            const worldPath = await resolve(saveDir, `world.snbt`);
+            const worldPath = await join(saveDir, `world.snbt`);
             const result = await ServerStorage.loadWorld(saveName);
             if (result.isErr()) {
                 const msg = result.unwrapErr().message || '未找到存档';
@@ -394,12 +394,12 @@ export class ClientSavesManager {
             }
             await writeTextFile(worldPath, NbtSerialization.toSNbt(result.ok().get(), true));
 
-            const playerDir = await resolve(saveDir, `players`);
+            const playerDir = await join(saveDir, `players`);
             await mkdir(playerDir, {recursive: true});
 
             const tasks: Promise<void>[] = [];
             const feature = (player: PlayerData) => {
-                const task = resolve(playerDir, `${player.uuid}.snbt`)
+                const task = join(playerDir, `${player.uuid}.snbt`)
                     .then(path => {
                         const nbt = NbtUnserialization.fromCompactBinary(player.data);
                         return writeTextFile(path, NbtSerialization.toSNbt(nbt, true));

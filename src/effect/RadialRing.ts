@@ -68,7 +68,7 @@ export class RadialRing implements VisualEffect {
     }
 
     public isAlive(): boolean {
-        return this.t >= this.life;
+        return this.t < this.life;
     }
 
     public kill() {

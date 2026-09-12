@@ -1,5 +1,6 @@
-import {documentDir, resolve, resolveResource} from "@tauri-apps/api/path";
-import {exists, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs";
+import {appLocalDataDir, join, resolveResource} from "@tauri-apps/api/path";
+import {exists, mkdir, readFile, remove, rename, writeFile} from "@tauri-apps/plugin-fs";
+import {shortUUID} from "../utils/math/math.ts";
 
 export class ClientWorkerFS {
     public async readFile(data: any, worker: Worker) {
@@ -28,14 +29,19 @@ export class ClientWorkerFS {
         const buffer = data.buffer;
         if (!(buffer instanceof ArrayBuffer)) throw new TypeError('BufferData must be an ArrayBuffer');
 
-        const documentPath = await documentDir();
-        const saveRoot = await resolve(documentPath, 'saves');
-        if (!await exists(saveRoot)) {
-            await mkdir(saveRoot);
-        }
+        const root = await appLocalDataDir();
+        const saveRoot = await join(root, 'saves');
+        await mkdir(saveRoot, {recursive: true});
 
-        const resolved = await resolve(saveRoot, path);
-        await writeFile(resolved, new Uint8Array(buffer), {create: true});
+        const resolved = await join(saveRoot, path);
+        const temp = `${resolved}.${shortUUID(8)}-temp`;
+
+        try {
+            await writeFile(temp, new Uint8Array(buffer), {create: true});
+            await rename(temp, resolved);
+        } catch (err) {
+            await remove(temp).catch();
+        }
     }
 
     public async fetch(data: any, worker: Worker) {

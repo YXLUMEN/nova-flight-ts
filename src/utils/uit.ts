@@ -1,4 +1,4 @@
-import {clamp} from "./math/math.ts";
+import {clamp, randInt} from "./math/math.ts";
 import type {Identifier} from "../registry/Identifier.ts";
 import type {Predicate, RGB} from "../type/types.ts";
 import {TimeoutError} from "../type/errors.ts";
@@ -162,6 +162,10 @@ export function shuffleArray<T>(array: T[]): T[] {
         [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
+}
+
+export function randomChose<T>(candidates: T[]): T {
+    return candidates[randInt(0, candidates.length - 1)];
 }
 
 export function createTranslationKey(type: string, id: Identifier | null) {

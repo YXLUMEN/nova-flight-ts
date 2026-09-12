@@ -11,18 +11,6 @@ export class ClientDefaultEvents {
     public static registryEvents() {
         const events = EventBus.instance();
 
-        events.on('game:start', () => {
-            void BGMManager.onGameStart();
-        });
-
-        events.on('game:end', () => {
-            BGMManager.playMainTheme();
-        });
-
-        events.on('game:over', () => {
-            BGMManager.onGameOver();
-        });
-
         events.on('player:tech:unlock', ({tech, silent}) => {
             const player = NovaFlightClient.getInstance().player;
             if (!player) return;
