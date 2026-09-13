@@ -5,13 +5,14 @@ import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 import {BlockChangeS2CPacket} from "../../network/packet/s2c/BlockChangeS2CPacket.ts";
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
 
 export class ArtilleryEntity extends FastBulletEntity {
     public override noClip = true;
     private readonly hit = new WeakSet<Entity>();
 
     protected override onEntityHit(hitResult: EntityHitResult): void {
-        if (this.isClient()) return;
+        if (isClient) return;
 
         const entity = hitResult.entity;
         if (this.hit.has(entity)) return;
@@ -35,9 +36,9 @@ export class ArtilleryEntity extends FastBulletEntity {
     protected override onBlockHit(hitResult: BlockHitResult) {
         super.onBlockHit(hitResult);
 
-        const world = this.getWorld();
-        if (world.isClient || hitResult.missed) return;
+        if (isClient || hitResult.missed) return;
 
+        const world = this.getWorld();
         world.getMap().setBlock(hitResult.blockPos, 0);
         world.sendPacket(BlockChangeS2CPacket.from(0, hitResult.blockPos));
     }

@@ -5,6 +5,7 @@ import {World} from "../../world/World.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
 
 export class BulletEntity extends ProjectileEntity {
     public constructor(type: EntityType<BulletEntity>, world: World, owner: Entity | null, damage: number) {
@@ -14,7 +15,7 @@ export class BulletEntity extends ProjectileEntity {
     protected override onEntityHit(hitResult: EntityHitResult): void {
         super.onEntityHit(hitResult);
 
-        if (this.isClient()) {
+        if (isClient) {
             this.getWorld().addPreparedParticleVec(
                 ParticleEffects.SPARK,
                 hitResult.pos,
@@ -34,7 +35,7 @@ export class BulletEntity extends ProjectileEntity {
     protected override onBlockHit(hitResult: BlockHitResult) {
         super.onBlockHit(hitResult);
 
-        if (this.isClient()) {
+        if (isClient) {
             this.getWorld().addPreparedParticleVec(
                 ParticleEffects.SPARK,
                 hitResult.pos,

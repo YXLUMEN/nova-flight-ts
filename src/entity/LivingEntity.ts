@@ -23,7 +23,7 @@ import {NbtTypeId} from "../nbt/NbtType.ts";
 import {Techs} from "../world/tech/Techs.ts";
 import {DamageTypes} from "./damage/DamageTypes.ts";
 import {PlayerEntity} from "./player/PlayerEntity.ts";
-import {isClient} from "../configs/RuntimeConfig.ts";
+import {isClient, isServer} from "../configs/RuntimeConfig.ts";
 import {InterpolationHandler} from "../world/entity/InterpolationHandler.ts";
 
 
@@ -96,7 +96,7 @@ export abstract class LivingEntity extends Entity {
     }
 
     protected tickCramming(): void {
-        if (this.isClient()) return;
+        if (isClient) return;
         const entities = this.getWorld()
             .searchOtherEntities(this, this.getBoundingBox(), entity => entity.isPushAble())
             .take(32); // 过多实体进行挤压反而观察不出挤压效果,并且开销过大
@@ -245,7 +245,7 @@ export abstract class LivingEntity extends Entity {
     protected tickStatusEffects(): void {
         if (this.activeEffects.size === 0) return;
 
-        if (this.isClient()) {
+        if (isClient) {
             for (const effect of this.activeEffects.values()) {
                 effect.tickClient(this);
             }
@@ -334,7 +334,7 @@ export abstract class LivingEntity extends Entity {
     }
 
     public clearEffects(): boolean {
-        if (this.isClient()) return false;
+        if (isClient) return false;
         if (this.activeEffects.size === 0) return false;
 
         for (const effect of this.activeEffects.values()) {
@@ -346,12 +346,12 @@ export abstract class LivingEntity extends Entity {
     }
 
     protected onEffectAdded(effect: StatusEffectInstance, _source: Entity | null): void {
-        if (this.isClient()) return;
+        if (isClient) return;
         effect.getEffect().getValue().addAttributeModifiers(this.attributes, effect.getAmplifier());
     }
 
     protected onEffectUpdated(effect: StatusEffectInstance, reapplyEffect: boolean, _source: Entity | null): void {
-        if (reapplyEffect && !this.isClient()) {
+        if (reapplyEffect && isServer) {
             const statusEffect = effect.getEffect().getValue();
             statusEffect.removeAttributeModifiers(this.attributes);
             statusEffect.addAttributeModifiers(this.attributes, effect.getAmplifier());
@@ -360,7 +360,7 @@ export abstract class LivingEntity extends Entity {
     }
 
     protected onEffectRemoved(effect: StatusEffectInstance): void {
-        if (this.isClient()) return;
+        if (isClient) return;
 
         effect.getEffect().getValue().removeAttributeModifiers(this.attributes);
         this.onAttributeUpdated();

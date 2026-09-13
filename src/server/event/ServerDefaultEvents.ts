@@ -154,9 +154,10 @@ export class ServerDefaultEvents {
             (player as ServerPlayerEntity).networkHandler.send(new ScreenShakeS2CPacket(shake, 1));
 
             // 触发emp
+            if (origin <= 0) return;
+            const emp = Items.EMP_WEAPON;
             const stack = player.getInventory().searchItem(Items.EMP_WEAPON);
             if (!stack.isEmpty() && tech.isUnlocked(Techs.ELECTRICAL_SURGES)) {
-                const emp = Items.EMP_WEAPON;
                 const cd = emp.getCooldown(stack);
                 emp.tryFire(stack, world, player);
                 emp.setCooldown(stack, cd);
@@ -164,8 +165,6 @@ export class ServerDefaultEvents {
 
             // emp免伤
             if (remain <= 0) return;
-
-            const emp = Items.EMP_WEAPON;
             if (!stack.isEmpty() && emp.canFire(stack) && tech.isUnlocked(Techs.ELE_SHIELD)) {
                 emp.tryFire(stack, world, player);
 

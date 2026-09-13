@@ -2,12 +2,13 @@ import {ExplodeBulletEntity} from "./ExplodeBulletEntity.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import {squareDistVec2} from "../../utils/math/math.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
 
 export class C125BulletEntity extends ExplodeBulletEntity {
     protected override onEntityHit(hitResult: EntityHitResult) {
         super.onEntityHit(hitResult);
 
-        if (this.isClient()) return;
+        if (isClient) return;
 
         const entity = hitResult.entity;
         if (!entity.isPushAble()) return;

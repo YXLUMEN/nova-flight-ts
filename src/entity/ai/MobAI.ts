@@ -54,8 +54,6 @@ export class MobAI implements EntityAi {
                 this.faceTarget(this.targetPos, 0.19634375);
                 break;
         }
-
-        this.entity.needSync = true;
     }
 
     public decision() {
