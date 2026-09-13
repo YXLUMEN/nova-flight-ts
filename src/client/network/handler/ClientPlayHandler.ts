@@ -410,7 +410,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
     }
 
     public onPlayAudio(packet: PlayAudioS2CPacket): void {
-        void AudioManager.playAudio(packet.audio, packet.loop);
+        void AudioManager.play(packet.audio, packet.loop);
     }
 
     public onAudioControl(packet: AudioControlS2CPacket): void {
@@ -425,7 +425,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
                 AudioManager.reset()
                 break;
             case AudioControlType.NEXT:
-                BGMManager.next();
+                void BGMManager.next();
                 break;
             case AudioControlType.LEAP:
                 AudioManager.leap(packet.leap);

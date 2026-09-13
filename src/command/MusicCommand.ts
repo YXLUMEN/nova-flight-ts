@@ -35,7 +35,7 @@ export class MusicCommand {
                                         ctx.source.addMessage(`\x1b[33mMusic is disable now.`);
                                         return;
                                     }
-                                    AudioManager.playAudio(event);
+                                    AudioManager.play(event);
                                     ctx.source.addMessage(`Start to play \x1b[32m"${event.id}"\x1b[0m`);
                                 })
                                 .suggests(CommandUtil.createIdentifierSuggestion(Registries.AUDIOS))
@@ -96,8 +96,8 @@ export class MusicCommand {
                 )
                 .then(
                     literal<T>('next')
-                        .executes(ctx => {
-                            BGMManager.next();
+                        .executes(async ctx => {
+                            await BGMManager.next();
                             const current = AudioManager.getCurrentPlaying();
                             if (!current) {
                                 ctx.source.addMessage(`No music is playing`);

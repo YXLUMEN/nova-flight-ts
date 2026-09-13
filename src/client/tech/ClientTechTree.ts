@@ -362,7 +362,7 @@ export class ClientTechTree implements TechTree {
         if (this.state.unlock(tech)) {
             this.player.setScore(score);
             this.applyUnlockUpdates(tech);
-            world.events.emit(new UnlockTech(tech));
+            world.events.emit(new UnlockTech(this.player, tech));
             NovaFlightClient.getInstance().globalSound.playSound(SoundEvents.UI_APPLY, 1.5);
         } else {
             NovaFlightClient.getInstance().globalSound.playSound(SoundEvents.UI_ERROR);
@@ -621,7 +621,7 @@ export class ClientTechTree implements TechTree {
             if (!tech) throw new Error(`Fail to parse tech with id: ${id}`);
 
             this.state.unlock(tech);
-            world.events.emit(new UnlockTech(tech, true));
+            world.events.emit(new UnlockTech(this.player, tech, true));
         }
 
         this.updateAllEdgeClasses();

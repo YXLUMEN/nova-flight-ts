@@ -1,12 +1,12 @@
-import type {Codec} from "../serialization/Codec.ts";
-import type {PacketCodec} from "../network/codec/PacketCodec.ts";
-import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
-import {StringReader} from "../brigadier/StringReader.ts";
-import {Codecs} from "../serialization/Codecs.ts";
-import {DataResult} from "../serialization/result/DataResult.ts";
-import {NbtString} from "../nbt/element/NbtString.ts";
 import type {Comparable} from "../type/Comparable.ts";
+import type {PacketCodec} from "../network/codec/PacketCodec.ts";
+import type {Codec} from "../serialization/Codec.ts";
 import {stringHashCode} from "../utils/hash.ts";
+import {StringReader} from "../brigadier/StringReader.ts";
+import {DataResult} from "../serialization/result/DataResult.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import {Codecs} from "../serialization/Codecs.ts";
+import {NbtString} from "../nbt/element/NbtString.ts";
 
 export class Identifier implements Comparable {
     private static readonly validNamespace = /^[a-z0-9_.-]+$/;

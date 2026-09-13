@@ -34,6 +34,13 @@ export class Settings {
         SettingPredicates.clampNumber(0, 1),
     );
 
+    public static readonly SOUND_VOLUME = this.item<number>(
+        'sound_volume',
+        'settings.volume.sound',
+        1,
+        SettingPredicates.clampNumber(0, 1),
+    );
+
     private static item<T>(
         id: string,
         translate: string,

@@ -1,13 +1,10 @@
 import {Audios} from "./Audios.ts";
 import {AudioManager} from "./AudioManager.ts";
-import {randomChose, shuffleArray} from "../utils/uit.ts";
-import type {SoundEvent} from "./SoundEvent.ts";
-import type {ClientPlayerEntity} from "../client/entity/ClientPlayerEntity.ts";
-import {clamp, randInt} from "../utils/math/math.ts";
 import {EventBus} from "../event/EventBus.ts";
+import {SoundQueue} from "./SoundQueue.ts";
 
 export class BGMManager {
-    private static readonly playList = [
+    private static readonly IN_GAME = new SoundQueue([
         Audios.AIR_MINUET,
         Audios.FRONTIER_SKIES,
         Audios.ZERG,
@@ -15,50 +12,54 @@ export class BGMManager {
         Audios.WANA_HAVE_A_FLIGHT,
         Audios.ENCOUNTER,
         Audios.EASY_DAY_ALL_CLEAR,
-    ];
-    private static readonly mainTheme = [
+    ]);
+    private static readonly MAIN_THEME = new SoundQueue([
         Audios.HANGAR_SILENCE,
         Audios.THE_TALE_OF_A_CRUEL_WORLD,
-        Audios.VICTORY
-    ];
-    private static themeIndex = 0;
-
-    private static current = 0;
-    private static addDifficulty = false;
-    private static addTech = false;
+        Audios.VICTORY,
+    ]);
+    private static readonly BOSS_PHASE = new SoundQueue([
+        Audios.NO_MERCY,
+        Audios.FIRING_ON_FULL_POWER,
+        Audios.DUST2DUST,
+        Audios.THE_FINAL_ASCENT,
+    ]);
 
     public static init() {
-        this.nextTheme = this.nextTheme.bind(this);
+        if (AudioManager.hasListener('main')) return;
+
+        const nextTheme = async () => {
+            await AudioManager.fadeOutAndPause();
+            await AudioManager.play(this.MAIN_THEME.next());
+        };
 
         const events = EventBus.instance();
-        events.on('game:start', () => {
-            void this.onGameStart();
+        events.on('game:start', () => this.onGameStart());
+        events.on('game:over', () => this.onGameOver());
+        events.on('game:end', () => {
+            AudioManager.removeListener('main');
+            AudioManager.addListener('main', 'ended', nextTheme);
+            nextTheme();
         });
-        events.on('game:end', this.nextTheme);
-        events.on('game:over', () => {
-            void this.onGameOver();
-        });
-        AudioManager.addListener('main', 'ended', this.nextTheme);
+        events.on('entity:boss:killed', () => this.onBossDead());
+        AudioManager.addListener('main', 'ended', nextTheme);
+        this.conditionListener(events);
 
-        shuffleArray(this.playList);
-        void AudioManager.playAudio(this.mainTheme[0]);
+        this.IN_GAME.shuffle();
+        void AudioManager.play(this.MAIN_THEME.current());
     }
 
-    public static nextTheme() {
-        this.themeIndex = (this.themeIndex + 1) % this.mainTheme.length;
-        void AudioManager.playAudio(this.mainTheme[this.themeIndex]);
+    public static async next() {
+        await AudioManager.fadeOutAndPause();
+        await AudioManager.play(this.IN_GAME.next());
     }
 
-    public static next() {
-        this.current = (this.current + 1) % this.playList.length;
-        void AudioManager.playAudio(this.playList[this.current]);
-    }
-
-    private static async onGameStart() {
+    public static async onGameStart() {
         const current = AudioManager.getCurrentPlaying();
-        if (current === null || this.mainTheme.includes(current)) {
+
+        if (current === null || this.MAIN_THEME.indexOf(current) !== -1) {
             await AudioManager.fadeOutAndPause();
-            await AudioManager.playAudio(this.playList[this.current]);
+            await AudioManager.play(this.IN_GAME.current());
         }
 
         if (AudioManager.hasListener('bgm')) return;
@@ -69,53 +70,49 @@ export class BGMManager {
             clearTimeout(last);
             last = setTimeout(() => {
                 if (AudioManager.getCurrentPlaying() !== null) return;
-                this.next();
+                AudioManager.play(this.IN_GAME.next());
             }, 8000);
         });
     }
 
-    private static async onGameOver() {
+    public static async onGameOver() {
         await AudioManager.fadeOutAndPause();
-        await AudioManager.playAudio(Audios.KEEP_FIGHTING, false);
+        await AudioManager.play(Audios.KEEP_FIGHTING, false);
         AudioManager.leap(10);
     }
 
-    public static onBossSpawn(): void {
-        const shouldPlay = randomChose(
-            [Audios.NO_MERCY, Audios.FIRING_ON_FULL_POWER, Audios.DUST2DUST, Audios.THE_FINAL_ASCENT]
-        );
-        AudioManager.fadeOutAndPause()
-            .then(() => AudioManager.playAudio(shouldPlay));
+    public static async onBossSpawn(): Promise<void> {
+        const shouldPlay = this.BOSS_PHASE.random();
+        await AudioManager.fadeOutAndPause();
+        await AudioManager.play(shouldPlay);
     }
 
-    public static onBossDead(): void {
-        AudioManager.fadeOutAndPause().then(() => {
-            const rand = Math.random();
-            if (rand < 0.5) void AudioManager.playAudio(Audios.THE_TALE_OF_A_CRUEL_WORLD);
-            else this.next();
+    public static async onBossDead(): Promise<void> {
+        await AudioManager.fadeOutAndPause();
+
+        const rand = Math.random();
+        if (rand < 0.1) void AudioManager.play(Audios.THE_TALE_OF_A_CRUEL_WORLD);
+        else this.IN_GAME.next();
+    }
+
+    private static conditionListener(events: EventBus) {
+        this.IN_GAME.remove(Audios.TROPIC_THUNDER);
+        this.IN_GAME.remove(Audios.TECHNOLOGY_CHANGES_THE_UNIVERSE);
+
+        const offDiff = events.on('world:stage:difficult', async ({difficult}) => {
+            if (difficult < 3) return false;
+            offDiff();
+
+            await AudioManager.fadeOutAndPause();
+            const index = this.IN_GAME.randomInsert(Audios.TROPIC_THUNDER);
+            const sound = this.IN_GAME.switch(index);
+            await AudioManager.play(sound);
         });
-    }
 
-    public static onDifficultRaise(difficulty: number) {
-        if (this.addDifficulty || difficulty < 3) return;
-        this.addDifficulty = true;
-
-        AudioManager.fadeOutAndPause().then(() => {
-            const index = this.randomInsertAudio(Audios.TROPIC_THUNDER);
-            this.current = clamp(index, 0, this.playList.length - 1);
-            return AudioManager.playAudio(this.playList[this.current]);
-        })
-    }
-
-    public static onTechUnlock(player: ClientPlayerEntity): void {
-        if (this.addTech || player.getTechs().unloadedTechCount() <= 6) return;
-        this.addTech = true;
-        this.randomInsertAudio(Audios.TECHNOLOGY_CHANGES_THE_UNIVERSE);
-    }
-
-    private static randomInsertAudio(audio: SoundEvent) {
-        const insertIndex = randInt(0, this.playList.length);
-        this.playList.splice(insertIndex, 0, audio);
-        return insertIndex;
+        const offTech = events.on('player:tech:unlock', ({player}) => {
+            if (player.getTechs().unloadedTechCount() <= 6) return;
+            this.IN_GAME.randomInsert(Audios.TECHNOLOGY_CHANGES_THE_UNIVERSE);
+            offTech();
+        });
     }
 }
