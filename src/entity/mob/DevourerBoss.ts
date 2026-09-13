@@ -55,9 +55,6 @@ export class DevourerBoss extends BossEntity {
         this.prevSegPoses = new Float32Array(this.segmentCount * this.segmentCount);
 
         this.setMovementSpeed(12);
-        if (!world.isClient) {
-            world.sendPacket(new PlayAudioS2CPacket(Audios.SCOURGE_OF_THE_UNIVERSE, true));
-        }
     }
 
     public override createLivingAttributes() {

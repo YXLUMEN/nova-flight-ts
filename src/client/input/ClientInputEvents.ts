@@ -1,7 +1,6 @@
 import {isDev, RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
-import {BGMManager} from "../../sound/BGMManager.ts";
 import type {KeyboardInput} from "./KeyboardInput.ts";
 import {cleanObj} from "../../utils/uit.ts";
 import {DataLoader} from "../../resource/DataLoader.ts";
@@ -163,10 +162,6 @@ export class ClientInputEvents {
                 RuntimeConfig.enableCameraOffset = !RuntimeConfig.enableCameraOffset;
                 // @ts-expect-error Actually it's MutVec2
                 client.window.camera.cameraOffset.set(0, 0);
-                break;
-            }
-            case 'NumpadAdd': {
-                BGMManager.next();
                 break;
             }
             case 'NumpadMultiply': {

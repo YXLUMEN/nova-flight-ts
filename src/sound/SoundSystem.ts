@@ -1,11 +1,12 @@
 import type {SoundEvent} from "./SoundEvent.ts";
-import {Identifier} from "../registry/Identifier.ts";
-import {clamp} from "../utils/math/math.ts";
+import type {HashMap} from "../utils/collection/HashMap.ts";
 import type {SoundResource} from "../resource/SoundResource.ts";
+import {clamp} from "../utils/math/math.ts";
+import {WrapperMap} from "../utils/collection/WrapperMap.ts";
+import {Identifier} from "../registry/Identifier.ts";
 import {ResourceManager} from "../resource/ResourceManager.ts";
 import {Resources} from "../resource/Resources.ts";
-import type {HashMap} from "../utils/collection/HashMap.ts";
-import {WrapperMap} from "../utils/collection/WrapperMap.ts";
+import {Settings} from "../client/settings/Settings.ts";
 
 export class SoundSystem {
     private readonly module: SoundResource;
@@ -18,6 +19,9 @@ export class SoundSystem {
         this.audioContext = new AudioContext();
         this.gainNode = this.audioContext.createGain();
         this.gainNode.connect(this.audioContext.destination);
+
+        this.gainNode.gain.value = Settings.SOUND_VOLUME.get();
+        Settings.SOUND_VOLUME.onChange(v => this.gainNode.gain.value = v);
     }
 
     public playSound(event: SoundEvent, volume?: number, pitch?: number): void {

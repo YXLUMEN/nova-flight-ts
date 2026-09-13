@@ -1,17 +1,17 @@
-import {clamp} from "../utils/math/math.ts";
-import type {SoundEvent} from "./SoundEvent.ts";
-import {isClient} from "../configs/RuntimeConfig.ts";
-import {MediaWithoutSrc} from "../type/errors.ts";
 import type {Consumer} from "../type/types.ts";
 import type {AudioResource} from "../resource/AudioResource.ts";
+import type {SoundEvent} from "./SoundEvent.ts";
+import {isClient} from "../configs/RuntimeConfig.ts";
+import {clamp} from "../utils/math/math.ts";
+import {MediaWithoutSrc} from "../type/errors.ts";
 import {ResourceManager} from "../resource/ResourceManager.ts";
 import {Resources} from "../resource/Resources.ts";
 import {EventBus} from "../event/EventBus.ts";
 import {Settings} from "../client/settings/Settings.ts";
 
 export class AudioManager {
-    private static readonly audio: HTMLAudioElement;
-    private static readonly eventMap: Map<string, AbortController>;
+    private static audio: HTMLAudioElement = null!;
+    private static scope: Map<string, AbortController> = null!;
 
     private static cache: AudioResource | null = null;
     private static disable = true;
@@ -19,8 +19,8 @@ export class AudioManager {
 
     static {
         if (isClient) {
-            (this.eventMap as any) = new Map();
-            (this.audio as any) = new Audio();
+            this.scope = new Map();
+            this.audio = new Audio();
 
             this.audio.addEventListener('ended', () => this.currentPlaying = null);
             this.audio.volume = Settings.MUSIC_VOLUME.get();
@@ -36,7 +36,7 @@ export class AudioManager {
         return this.cache;
     }
 
-    public static playAudio(event: SoundEvent, loop = false) {
+    public static play(event: SoundEvent, loop = false): Promise<void> {
         if (this.disable) return Promise.resolve();
 
         const id = event.id;
@@ -117,9 +117,9 @@ export class AudioManager {
                 return;
             }
 
-            this.audio.volume = 0;
             this.audio.pause();
-            this.audio.volume = startVolume;
+            // 确保为最新设置
+            this.audio.volume = Settings.MUSIC_VOLUME.get();
             resolve();
         }
         fade();
@@ -141,9 +141,9 @@ export class AudioManager {
         name: string,
         type: keyof HTMLMediaElementEventMap,
         listener: Consumer<Event>,
-        options?: AddEventListenerOptions
+        options?: AudioListenerOptions
     ): AbortController | null {
-        if (this.eventMap.has(name)) {
+        if (this.scope.has(name)) {
             console.warn(`Already added listener for event ${type} for ${name}`);
             return null;
         }
@@ -151,24 +151,28 @@ export class AudioManager {
         const ctrl = new AbortController();
         const opts: AddEventListenerOptions = {
             ...options,
-            signal: ctrl.signal
+            signal: ctrl.signal,
         }
 
         this.audio.addEventListener(type, listener, opts);
-        this.eventMap.set(name, ctrl);
+        this.scope.set(name, ctrl);
 
         return ctrl;
     }
 
     public static removeListener(name: string, reason?: any): void {
-        const ctrl = this.eventMap.get(name);
+        const ctrl = this.scope.get(name);
         if (!ctrl) return;
 
         ctrl.abort(reason);
-        this.eventMap.delete(name);
+        this.scope.delete(name);
     }
 
     public static hasListener(name: string) {
-        return this.eventMap.has(name);
+        return this.scope.has(name);
     }
+}
+
+interface AudioListenerOptions extends EventListenerOptions {
+    passive?: boolean;
 }

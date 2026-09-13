@@ -15,9 +15,10 @@ export class EventBus {
     public on<K extends keyof AppEvents>(
         type: K,
         handler: Consumer<AppEvents[K]>,
-    ): void {
+    ): Consumer<void> {
         const bucket = this.listeners.getOrInsertComputed(type, () => new Set());
         bucket.add(handler);
+        return () => bucket.delete(handler);
     }
 
     public once<K extends keyof AppEvents>(
