@@ -257,7 +257,7 @@ export class MissileEntity extends RocketEntity {
 
     public setTarget(target: Entity | null): void {
         this.target = target;
-        if (this.isClient()) return;
+        if (isClient) return;
         this.dataTracker.set(MissileEntity.TARGET_ID, target?.getId() ?? 0);
     }
 
@@ -272,11 +272,11 @@ export class MissileEntity extends RocketEntity {
 
     public override onTrackedDataSet(data: TrackedData<any>) {
         super.onTrackedDataSet(data);
+
+        if (isServer) return;
         if (data !== MissileEntity.TARGET_ID) return;
 
         const world = this.getWorld();
-        if (!world.isClient) return;
-
         const id = this.dataTracker.get(MissileEntity.TARGET_ID);
         this.target = world.getEntityById(id);
         if (this.target && this.target.isPlayer()) {

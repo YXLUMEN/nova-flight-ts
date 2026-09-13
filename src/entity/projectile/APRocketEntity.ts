@@ -2,6 +2,7 @@ import {RocketEntity} from "./RocketEntity.ts";
 import type {Entity} from "../Entity.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
 
 export class APRocketEntity extends RocketEntity {
     public override noClip = true;
@@ -9,7 +10,7 @@ export class APRocketEntity extends RocketEntity {
     private readonly damagedEntity = new WeakSet<Entity>();
 
     protected override onEntityHit(hitResult: EntityHitResult) {
-        if (this.isClient()) return;
+        if (isClient) return;
 
         const entity = hitResult.entity;
         if (this.damagedEntity.has(entity)) return;
