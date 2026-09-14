@@ -21,6 +21,7 @@ import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 import {MissileLockEntity} from "../../event/events/entity/MissileLockEntity.ts";
 import {isClient, isServer} from "../../configs/RuntimeConfig.ts";
 import {InterpolationHandler} from "../../world/entity/InterpolationHandler.ts";
+import {ExplosionConfigs} from "../../world/element/explosion/ExplosionConfigs.ts";
 
 export class MissileEntity extends RocketEntity {
     public static readonly IS_IGNITE = DataTracker.registerData(Object(MissileEntity), TrackedDataHandlerRegistry.BOOL);
@@ -54,9 +55,11 @@ export class MissileEntity extends RocketEntity {
         world: World,
         owner: Entity,
         driftAngle: number = 0,
-        damage = 5
+        damage = 5,
+        health: number = 6,
+        behaviour?: ExplosionConfigs,
     ) {
-        super(type, world, owner, damage);
+        super(type, world, owner, damage, health, behaviour);
         this.driftAngle = driftAngle;
         this.interpolation = isClient ? new InterpolationHandler(this) : null;
     }

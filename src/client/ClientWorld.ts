@@ -16,7 +16,7 @@ import {DEFAULT_CONFIG} from "../configs/RuntimeConfig.ts";
 import {AbstractClientPlayerEntity} from "./entity/AbstractClientPlayerEntity.ts";
 import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
 import {HistoricalScore} from "../statistics/HistoricalScore.ts";
-import type {ExplosionBehavior} from "../world/element/explosion/ExplosionBehavior.ts";
+import type {ExplosionConfigs} from "../world/element/explosion/ExplosionConfigs.ts";
 import type {WorldRenderer} from "./render/WorldRenderer.ts";
 import {type ParticleEffectType} from "../effect/ParticleEffectType.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
@@ -45,6 +45,10 @@ export class ClientWorld extends World {
         this.worldRender = worldRender;
         this.worldName = worldName;
         this.entityManager = new ClientEntityManager(this.ClientEntityHandler);
+    }
+
+    public getClient() {
+        return this.client;
     }
 
     public override tick(dt: number) {
@@ -211,7 +215,7 @@ export class ClientWorld extends World {
         x: number,
         y: number,
         power: number,
-        behaviour: ExplosionBehavior | null = null,
+        behaviour: ExplosionConfigs | null = null,
         visual: ExplosionVisual | null = null
     ): Explosion {
         if (visual && visual.shake > 0) {

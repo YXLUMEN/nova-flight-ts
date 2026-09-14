@@ -6,12 +6,12 @@ import {SoundEvents} from "../../sound/SoundEvents.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 import {ExplosionVisual} from "../../world/element/explosion/ExplosionVisual.ts";
-import {ExplosionBehavior} from "../../world/element/explosion/ExplosionBehavior.ts";
+import {ExplosionConfigs} from "../../world/element/explosion/ExplosionConfigs.ts";
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 
 export class ExplodeBulletEntity extends ProjectileEntity {
     private readonly power: number;
-    private readonly behaviour: ExplosionBehavior;
+    private readonly behaviour: ExplosionConfigs;
     private readonly visual: ExplosionVisual
 
     public constructor(
@@ -20,12 +20,12 @@ export class ExplodeBulletEntity extends ProjectileEntity {
         owner: Entity,
         damage: number,
         power: number,
-        behaviour?: ExplosionBehavior,
+        behaviour?: ExplosionConfigs,
         visual?: ExplosionVisual
     ) {
         super(type, world, owner, damage);
         this.power = power;
-        this.behaviour = behaviour ?? new ExplosionBehavior();
+        this.behaviour = behaviour ?? new ExplosionConfigs();
         this.visual = visual ?? new ExplosionVisual();
     }
 

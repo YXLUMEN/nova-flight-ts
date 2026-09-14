@@ -13,14 +13,14 @@ export class StatusEffectInstance {
     public static readonly MIN_AMPLIFIER = 0;
     public static readonly MAX_AMPLIFIER = 255;
 
-    private readonly type: RegistryEntry<StatusEffect>;
+    private readonly effectType: RegistryEntry<StatusEffect>;
     private duration: number;
     private amplifier: number;
 
     public source: Entity | null = null;
 
     public constructor(type: RegistryEntry<StatusEffect>, duration: number, amplifier: number = 0) {
-        this.type = type;
+        this.effectType = type;
         this.duration = duration;
         this.amplifier = clamp(Math.floor(amplifier), 0, 255);
     }
@@ -41,11 +41,11 @@ export class StatusEffectInstance {
     }
 
     public static fromOther(other: StatusEffectInstance): StatusEffectInstance {
-        return new StatusEffectInstance(other.type, other.duration, other.amplifier);
+        return new StatusEffectInstance(other.effectType, other.duration, other.amplifier);
     }
 
     public upgrade(that: StatusEffectInstance): boolean {
-        if (this.type !== that.type) {
+        if (this.effectType !== that.effectType) {
             console.warn("This method should only be called for matching effects!");
         }
 
@@ -67,8 +67,8 @@ export class StatusEffectInstance {
         return this.duration === -1;
     }
 
-    public getEffect() {
-        return this.type;
+    public type() {
+        return this.effectType;
     }
 
     public getDuration(): number {
@@ -82,7 +82,7 @@ export class StatusEffectInstance {
     public tickServer(entity: LivingEntity): boolean {
         if (!this.hasRemaining()) return false;
 
-        const effect = this.type.getValue();
+        const effect = this.effectType.getValue();
         if (effect.shouldApplyThisTick(this.duration, this.amplifier) &&
             !effect.applyEffectTick(this.source, entity, this.amplifier)) {
             return false;
@@ -94,36 +94,34 @@ export class StatusEffectInstance {
         return this.hasRemaining();
     }
 
-    public tickClient(entity: LivingEntity): void {
+    public tickClient(): void {
         if (!this.hasRemaining()) return;
-        this.type.getValue().tickClient(entity, this.duration);
-
         if (this.duration > 0) {
             this.duration--;
         }
     }
 
     public onApplied(entity: LivingEntity) {
-        this.type.getValue().onAppliedAt(entity, this.amplifier);
+        this.effectType.getValue().onAppliedAt(entity, this.amplifier);
     }
 
     public onEffectStarted(entity: LivingEntity) {
-        this.type.getValue().onEffectStarted(entity, this.amplifier);
+        this.effectType.getValue().onEffectStarted(entity, this.amplifier);
     }
 
     public onEntityRemoved(entity: LivingEntity) {
-        this.type.getValue().onEntityRemoved(entity, this.amplifier);
+        this.effectType.getValue().onEntityRemoved(entity, this.amplifier);
     }
 
     public onEntityDamage(entity: LivingEntity, source: DamageSource, amount: number) {
-        this.type.getValue().onEntityDamage(entity, this.amplifier, source, amount);
+        this.effectType.getValue().onEntityDamage(entity, this.amplifier, source, amount);
     }
 
     public toString(): string {
         if (this.amplifier > 0) {
-            return `${this.type.toString()} x ${this.amplifier + 1}, duration: ${this.getDurationString()}`;
+            return `${this.effectType.toString()} x ${this.amplifier + 1}, duration: ${this.getDurationString()}`;
         } else {
-            return `${this.type.toString()}, duration: ${this.getDurationString()}`;
+            return `${this.effectType.toString()}, duration: ${this.getDurationString()}`;
         }
     }
 
@@ -136,14 +134,14 @@ export class StatusEffectInstance {
         if (o instanceof StatusEffectInstance) {
             return this.duration === o.duration &&
                 this.amplifier === o.amplifier &&
-                this.type === o.type;
+                this.effectType === o.effectType;
         }
         return false;
     }
 
     public toNbt(): NbtCompound {
         const nbt = new NbtCompound();
-        nbt.setString('type', this.type.getRegistryKey().getValue().toString());
+        nbt.setString('type', this.effectType.getRegistryKey().getValue().toString());
         nbt.setDouble('duration', this.duration);
         nbt.setUint32('amplifier', this.amplifier);
 

@@ -28,7 +28,7 @@ export class EntityStatusEffectS2CPacket implements Payload {
     public static create(entityId: number, effect: StatusEffectInstance): EntityStatusEffectS2CPacket {
         return new EntityStatusEffectS2CPacket(
             entityId,
-            effect.getEffect(),
+            effect.type(),
             effect.getAmplifier(),
             effect.getDuration(),
         );
@@ -59,5 +59,9 @@ export class EntityStatusEffectS2CPacket implements Payload {
 
     public accept(listener: ClientPlayHandler): void {
         listener.onEntityEffect(this);
+    }
+
+    public estimateSize(): number {
+        return 16;
     }
 }

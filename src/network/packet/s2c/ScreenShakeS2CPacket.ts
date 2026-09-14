@@ -17,7 +17,7 @@ export class ScreenShakeS2CPacket implements Payload {
     public readonly amount: number;
     public readonly limit: number;
 
-    public constructor(amount: number, limit: number) {
+    public constructor(amount: number, limit: number = 1) {
         this.amount = amount;
         this.limit = limit;
     }

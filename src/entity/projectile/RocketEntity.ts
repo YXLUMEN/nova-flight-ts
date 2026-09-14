@@ -7,14 +7,20 @@ import type {DamageSource} from "../damage/DamageSource.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 import {ExplosionVisual} from "../../world/element/explosion/ExplosionVisual.ts";
-import type {ExplosionBehavior} from "../../world/element/explosion/ExplosionBehavior.ts";
+import {ExplosionConfigs} from "../../world/element/explosion/ExplosionConfigs.ts";
+import {SoundEvents} from "../../sound/SoundEvents.ts";
+import {ExplosiveBuilder} from "../../world/element/explosion/ExplosiveBuilder.ts";
 
 export class RocketEntity extends ProjectileEntity {
+    private static readonly DEFAULT = new ExplosiveBuilder()
+        .sound(SoundEvents.MISSILE_EXPLOSION)
+        .build();
+
     public explosionRadius = 64;
     public explosionDamage = 10;
 
+    protected behaviour: ExplosionConfigs;
     protected explodeColor = "#e3e3e3";
-    protected behaviour: ExplosionBehavior | null = null;
 
     private readonly maxHealth: number;
     private health: number;
@@ -24,14 +30,14 @@ export class RocketEntity extends ProjectileEntity {
         world: World,
         owner: Entity | null,
         damage: number = 8,
-        health: number = 6,
-        behaviour?: ExplosionBehavior
+        health: number = 10,
+        behaviour?: ExplosionConfigs
     ) {
         super(type, world, owner, damage);
 
         this.maxHealth = health;
         this.health = health;
-        this.behaviour = behaviour ?? null;
+        this.behaviour = behaviour ?? RocketEntity.DEFAULT;
     }
 
     protected override onEntityHit(hitResult: EntityHitResult): void {

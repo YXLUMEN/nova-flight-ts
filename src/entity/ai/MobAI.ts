@@ -34,7 +34,7 @@ export class MobAI implements EntityAi {
         if (this.disable) return;
 
         const speedMultiplier = this.entity.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-        if (speedMultiplier <= 0) return;
+        if (speedMultiplier === 0) return;
         const speed = this.entity.getMovementSpeed() * speedMultiplier;
 
         switch (this.behavior) {

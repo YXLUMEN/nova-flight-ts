@@ -136,9 +136,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     /**
-     * 禁止重写
-     *
-     * 如需清理工作, 考虑 onDiscard
+     * @readonly **Do not override**
      * @see onDiscard
      * */
     public discard(): void {

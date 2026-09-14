@@ -6,13 +6,16 @@ import {DecoyEntity} from "../DecoyEntity.ts";
 import {getNearestEntityByVec, squareDistVec2} from "../../utils/math/math.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
-import {FilterBehaviour} from "../../world/element/explosion/FilterBehaviour.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EntityPredicates} from "../../world/predicate/EntityPredicates.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
+import {SoundEvents} from "../../sound/SoundEvents.ts";
+import {ExplosiveBuilder} from "../../world/element/explosion/ExplosiveBuilder.ts";
 
 export class MobMissileEntity extends MissileEntity {
-    private static readonly EXPLOSION = new FilterBehaviour()
+    private static readonly MOB_EXPLOSION = new ExplosiveBuilder()
+        .sound(SoundEvents.MISSILE_EXPLOSION)
+        .filter()
         .withFiler(EntityPredicates.ONLY_PLAYER);
 
     protected override maxRelockCooldown = 15;
@@ -24,10 +27,9 @@ export class MobMissileEntity extends MissileEntity {
     protected override maxLifetimeTicks = 220;
 
     protected turnRate = Math.PI / 24;
-    protected override behaviour = MobMissileEntity.EXPLOSION;
 
     public constructor(type: EntityType<MobMissileEntity>, world: World, owner: Entity, driftAngle: number) {
-        super(type, world, owner, driftAngle, 5);
+        super(type, world, owner, driftAngle, 5, undefined, MobMissileEntity.MOB_EXPLOSION);
     }
 
     protected override track(movement: Vec2) {

@@ -1,13 +1,13 @@
-import {StatusEffect} from "./StatusEffect.ts";
+import {StatusEffect, StatusEffectCategory} from "./StatusEffect.ts";
 import type {LivingEntity} from "../LivingEntity.ts";
 import {PI2} from "../../utils/math/math.ts";
 
 export class EMCStatus extends StatusEffect {
     public constructor() {
-        super(2, '#0033ff');
+        super(StatusEffectCategory.HARMFUL, '#0033ff', true);
     }
 
-    public override tickClient(entity: LivingEntity) {
+    public override clientVisual(entity: LivingEntity) {
         const angle = Math.random() * PI2;
         const pos = entity.positionRef;
         const speed = 100 + Math.random() * 50;

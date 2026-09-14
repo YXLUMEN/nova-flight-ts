@@ -57,7 +57,7 @@ export abstract class BossEntity extends MobEntity {
     }
 
     public override canHaveEffect(effect: StatusEffectInstance): boolean {
-        return effect.getEffect() !== StatusEffects.EROSION;
+        return effect.type() !== StatusEffects.EROSION;
     }
 
     public override onDeath(damageSource: DamageSource) {
@@ -78,7 +78,7 @@ export abstract class BossEntity extends MobEntity {
 
     protected override onDiscard() {
         super.onDiscard();
-        this.getWorld().events.emit(new BossKilled(this.getWorld() as ServerWorld, this));
+        this.getWorld().events.emit(new BossKilled(this.getWorld(), this));
     }
 
     public override attack(player: PlayerEntity) {

@@ -7,11 +7,10 @@ export class ParticleEffects {
     public static readonly EXPLOSION = ParticleEffects.register('explosion',
         ParticleEffectType.builder()
             .life(0.4, 0.9)
-            .size(3, 8)
-            .colors('#ff9940', '#FF500000')
+            .size(1, 3)
+            .colors('#ff9940', '#ffddb8')
             .speed(120, 320)
             .omnidirectional()
-            .withDrag(0.7)
             .build()
     );
 
@@ -22,7 +21,6 @@ export class ParticleEffects {
             .colors('#ff4422')
             .speed(80, 200)
             .omnidirectional()
-            .withDrag(0.5)
             .build()
     );
 

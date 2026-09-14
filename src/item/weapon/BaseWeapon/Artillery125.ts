@@ -8,7 +8,7 @@ import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {C125BulletEntity} from "../../../entity/projectile/C125BulletEntity.ts";
 import {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import {Techs} from "../../../world/tech/Techs.ts";
-import {ExplosionBehavior, ExplosionEffect} from "../../../world/element/explosion/ExplosionBehavior.ts";
+import {ExplosionConfigs, ExplosionTag} from "../../../world/element/explosion/ExplosionConfigs.ts";
 import {ExplosionVisual} from "../../../world/element/explosion/ExplosionVisual.ts";
 
 export class Artillery125 extends BaseWeapon {
@@ -22,7 +22,7 @@ export class Artillery125 extends BaseWeapon {
             attacker,
             stack.getOr(DataComponents.ATTACK_DAMAGE, 1),
             stack.getOr(DataComponents.EXPLOSION_POWER, 5),
-            new ExplosionBehavior(undefined, fusion ? ExplosionEffect.FUSION : ExplosionEffect.NONE),
+            new ExplosionConfigs(undefined, fusion ? ExplosionTag.FUSION : ExplosionTag.NONE),
             new ExplosionVisual(stack.getOr(DataComponents.EXPLOSION_RADIUS, 16), undefined, 6, 3));
 
         this.setBullet(bullet, attacker, this.BULLET_SPEED, 20, 1);

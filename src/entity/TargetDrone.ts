@@ -26,7 +26,7 @@ export class TargetDrone extends MobEntity {
     }
 
     public override tick() {
-        this.tickStatusEffects();
+        this.tickEffects();
         this.velocityRef.set(0, 0);
 
         if (this.clearTime > 0) {

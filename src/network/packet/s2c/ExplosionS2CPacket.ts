@@ -2,7 +2,7 @@ import type {Payload} from "../../Payload.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {ExplosionBehavior} from "../../../world/element/explosion/ExplosionBehavior.ts";
+import {ExplosionConfigs} from "../../../world/element/explosion/ExplosionConfigs.ts";
 import {ExplosionVisual} from "../../../world/element/explosion/ExplosionVisual.ts";
 import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
@@ -13,7 +13,7 @@ export class ExplosionS2CPacket implements Payload {
             writer.writeFloat(value.x);
             writer.writeFloat(value.y);
             writer.writeFloat(value.power);
-            ExplosionBehavior.CODEC.encode(writer, value.behaviour);
+            ExplosionConfigs.CODEC.encode(writer, value.configs);
             ExplosionVisual.CODEC.encode(writer, value.visual);
         },
         (reader) => {
@@ -21,7 +21,7 @@ export class ExplosionS2CPacket implements Payload {
                 reader.readFloat(),
                 reader.readFloat(),
                 reader.readFloat(),
-                ExplosionBehavior.CODEC.decode(reader),
+                ExplosionConfigs.CODEC.decode(reader),
                 ExplosionVisual.CODEC.decode(reader)
             );
         }
@@ -30,14 +30,14 @@ export class ExplosionS2CPacket implements Payload {
     public readonly x: number;
     public readonly y: number;
     public readonly power: number;
-    public readonly behaviour: ExplosionBehavior;
+    public readonly configs: ExplosionConfigs;
     public readonly visual: ExplosionVisual;
 
-    public constructor(x: number, y: number, power: number, behaviour: ExplosionBehavior | null, visual: ExplosionVisual | null) {
+    public constructor(x: number, y: number, power: number, configs: ExplosionConfigs | null, visual: ExplosionVisual | null) {
         this.x = x;
         this.y = y;
         this.power = power;
-        this.behaviour = behaviour ?? new ExplosionBehavior();
+        this.configs = configs ?? new ExplosionConfigs();
         this.visual = visual ?? new ExplosionVisual();
     }
 

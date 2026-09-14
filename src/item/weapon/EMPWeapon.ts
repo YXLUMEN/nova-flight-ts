@@ -6,6 +6,7 @@ import {DataComponents} from "../../component/DataComponents.ts";
 import type {ServerPlayerEntity} from "../../server/entity/ServerPlayerEntity.ts";
 import {EmpBurstEvent} from "../../event/events/EmpBurstEvent.ts";
 import {Emp} from "../../world/element/Emp.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
 
 export class EMPWeapon extends SpecialWeapon {
     private readonly duration = 200;
@@ -14,12 +15,12 @@ export class EMPWeapon extends SpecialWeapon {
         world.events.emit(new EmpBurstEvent(attacker, this.duration));
 
         const radius = stack.getOr(DataComponents.EFFECT_RANGE, 480);
-        world.applyElement(Emp.create(attacker, attacker.positionRef, radius, this.duration, 1));
         this.setCooldown(stack, this.getMaxCooldown(stack));
 
-        if (!world.isClient && attacker.isPlayer()) {
-            (attacker as ServerPlayerEntity).syncStack(stack);
-        }
+        if (isClient) return;
+
+        world.applyElement(Emp.create(attacker, attacker.positionRef, radius, this.duration, 1));
+        if (attacker.isPlayer()) (attacker as ServerPlayerEntity).syncStack(stack);
     }
 
     public override getUiColor(): string {

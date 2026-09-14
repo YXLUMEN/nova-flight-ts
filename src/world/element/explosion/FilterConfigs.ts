@@ -1,8 +1,8 @@
-import {ExplosionBehavior} from "./ExplosionBehavior.ts";
+import {ExplosionConfigs} from "./ExplosionConfigs.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {Predicate} from "../../../type/types.ts";
 
-export class FilterBehaviour extends ExplosionBehavior {
+export class FilterConfigs extends ExplosionConfigs {
     public filter: Predicate<Entity> | null = null;
 
     public override canDamage(entity: Entity): boolean {

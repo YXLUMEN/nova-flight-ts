@@ -1,18 +1,18 @@
 import {BulletEntity} from "./BulletEntity.ts";
 import {type HitResult, HitType} from "../../world/collision/HitResult.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
-import {ExplosionBehavior, ExplosionBehaviour} from "../../world/element/explosion/ExplosionBehavior.ts";
+import {ExplosionBehaviour} from "../../world/element/explosion/ExplosionConfigs.ts";
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 import {ExplosionVisual} from "../../world/element/explosion/ExplosionVisual.ts";
+import {ExplosiveBuilder} from "../../world/element/explosion/ExplosiveBuilder.ts";
 
 export class BlastBullet extends BulletEntity {
-    private static readonly behaviour = new ExplosionBehavior(
-        ExplosionBehaviour.ONLY_DAMAGE,
-        undefined,
-        false,
-        false
-    );
-    private static readonly visual = new ExplosionVisual(
+    private static readonly BEHAVIOUR = new ExplosiveBuilder()
+        .behaviour(ExplosionBehaviour.ONLY_DAMAGE)
+        .noDecay()
+        .build();
+
+    private static readonly VISUAL = new ExplosionVisual(
         32,
         undefined,
         2,
@@ -43,6 +43,6 @@ export class BlastBullet extends BulletEntity {
             source,
             hitResult.pos.x, hitResult.pos.y,
             2,
-            BlastBullet.behaviour, BlastBullet.visual);
+            BlastBullet.BEHAVIOUR, BlastBullet.VISUAL);
     }
 }

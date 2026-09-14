@@ -1,10 +1,10 @@
-import {StatusEffect} from "./StatusEffect.ts";
+import {StatusEffect, StatusEffectCategory} from "./StatusEffect.ts";
 import type {LivingEntity} from "../LivingEntity.ts";
 import type {Entity} from "../Entity.ts";
 
 export class ShieldRegenStatusEffect extends StatusEffect {
     public constructor() {
-        super(0, '#6ec8ff');
+        super(StatusEffectCategory.BENEFICIAL, '#6ec8ff');
     }
 
     public override applyEffectTick(_source: Entity | null, entity: LivingEntity, amplifier: number): boolean {

@@ -1,21 +1,21 @@
-import {Entity} from "./Entity.ts";
 import type {World} from "../world/World.ts";
-import {clamp, PI2} from "../utils/math/math.ts";
 import type {DamageSource} from "./damage/DamageSource.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
-import {StatusEffectInstance} from "./effect/StatusEffectInstance.ts";
+import type {TrackedData} from "./data/TrackedData.ts";
+import type {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import type {StatusEffect} from "./effect/StatusEffect.ts";
 import type {EntityType} from "./EntityType.ts";
+import type {Attribute} from "./attribute/Attribute.ts";
+import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
+import {clamp, PI2} from "../utils/math/math.ts";
+import {Entity} from "./Entity.ts";
+import {StatusEffectInstance} from "./effect/StatusEffectInstance.ts";
 import {DataTracker, type DataTrackerBuilder} from "./data/DataTracker.ts";
 import {AttributeMap} from "./attribute/AttributeMap.ts";
-import type {Attribute} from "./attribute/Attribute.ts";
 import {EntityAttributes} from "./attribute/EntityAttributes.ts";
 import type {AttributeInstance} from "./attribute/AttributeInstance.ts";
 import {AttributeSupplier, type AttributeSupplierBuilder} from "./attribute/AttributeSupplier.ts";
-import {type NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {TrackedDataHandlerRegistry} from "./data/TrackedDataHandlerRegistry.ts";
-import type {TrackedData} from "./data/TrackedData.ts";
-import type {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {EntityDamageS2CPacket} from "../network/packet/s2c/EntityDamageS2CPacket.ts";
 import {DamageTypeTags} from "../registry/tag/DamageTypeTags.ts";
 import {StatusEffects} from "./effect/StatusEffects.ts";
@@ -23,16 +23,23 @@ import {NbtTypeId} from "../nbt/NbtType.ts";
 import {Techs} from "../world/tech/Techs.ts";
 import {DamageTypes} from "./damage/DamageTypes.ts";
 import {PlayerEntity} from "./player/PlayerEntity.ts";
-import {isClient, isServer} from "../configs/RuntimeConfig.ts";
+import {isClient} from "../configs/RuntimeConfig.ts";
 import {InterpolationHandler} from "../world/entity/InterpolationHandler.ts";
 
 
 export abstract class LivingEntity extends Entity {
-    private static readonly HEALTH = DataTracker.registerData(Object(LivingEntity), TrackedDataHandlerRegistry.FLOAT);
+    private static readonly DATA_HEALTH = DataTracker.registerData(
+        Object(LivingEntity), TrackedDataHandlerRegistry.FLOAT
+    );
+
+    private static readonly DATA_EFFECT = DataTracker.registerData(
+        Object(LivingEntity), TrackedDataHandlerRegistry.STATUE_EFFECTS
+    );
 
     private shieldAmount: number = 0;
-    private readonly interpolation: InterpolationHandler | null;
+    private effectsDirty: boolean = true;
 
+    private readonly interpolation: InterpolationHandler | null;
     private readonly attributes: AttributeMap;
     private readonly activeEffects = new Map<RegistryEntry<StatusEffect>, StatusEffectInstance>();
 
@@ -52,7 +59,8 @@ export abstract class LivingEntity extends Entity {
     }
 
     protected override defineSyncedData(builder: DataTrackerBuilder): void {
-        builder.define(LivingEntity.HEALTH, 1);
+        builder.define(LivingEntity.DATA_HEALTH, 1);
+        builder.define(LivingEntity.DATA_EFFECT, []);
     }
 
     public override tick() {
@@ -62,7 +70,7 @@ export abstract class LivingEntity extends Entity {
             this.aiStep();
         }
 
-        this.tickStatusEffects();
+        this.tickEffects();
     }
 
     protected aiStep() {
@@ -139,11 +147,11 @@ export abstract class LivingEntity extends Entity {
     }
 
     public getHealth(): number {
-        return this.dataTracker.get(LivingEntity.HEALTH);
+        return this.dataTracker.get(LivingEntity.DATA_HEALTH);
     }
 
     public setHealth(health: number): void {
-        this.dataTracker.set(LivingEntity.HEALTH, clamp(health, 0, this.getMaxHealth()));
+        this.dataTracker.set(LivingEntity.DATA_HEALTH, clamp(health, 0, this.getMaxHealth()));
     }
 
     public getMaxShield(): number {
@@ -242,14 +250,30 @@ export abstract class LivingEntity extends Entity {
         return true;
     }
 
-    protected tickStatusEffects(): void {
-        if (this.activeEffects.size === 0) return;
+    public syncEffectVisual() {
+        if (isClient) return;
+        if (!this.effectsDirty) return;
+        this.effectsDirty = false;
 
+        if (this.activeEffects.size === 0) {
+            this.dataTracker.set(LivingEntity.DATA_EFFECT, []);
+            return;
+        }
+
+        const effects = this.activeEffects.values()
+            .map(v => v.type())
+            .filter(v => v.getValue().isVisible)
+            .toArray();
+        this.dataTracker.set(LivingEntity.DATA_EFFECT, effects);
+    }
+
+    protected tickEffects(): void {
         if (isClient) {
-            for (const effect of this.activeEffects.values()) {
-                effect.tickClient(this);
+            // 当前只有玩家需要准确的效果列表
+            const effects = this.dataTracker.get(LivingEntity.DATA_EFFECT);
+            for (const effect of effects) {
+                effect.getValue().clientVisual(this);
             }
-
             return;
         }
 
@@ -280,7 +304,7 @@ export abstract class LivingEntity extends Entity {
     public addEffect(effect: StatusEffectInstance, source: Entity | null): boolean {
         if (!this.canHaveEffect(effect)) return false;
 
-        const type = effect.getEffect();
+        const type = effect.type();
         const instance = this.activeEffects.get(type);
 
         if (!instance) {
@@ -308,11 +332,12 @@ export abstract class LivingEntity extends Entity {
     public setStatusEffect(effect: StatusEffectInstance, source: Entity | null): void {
         if (!this.canHaveEffect(effect)) return;
 
-        const previous = this.activeEffects.get(effect.getEffect());
-        if (!previous) {
-            this.onEffectAdded(effect, source);
-        } else {
+        const previous = this.activeEffects.has(effect.type());
+        this.activeEffects.set(effect.type(), effect);
+        if (previous) {
             this.onEffectUpdated(effect, true, source);
+        } else {
+            this.onEffectAdded(effect, source);
         }
     }
 
@@ -338,7 +363,7 @@ export abstract class LivingEntity extends Entity {
         if (this.activeEffects.size === 0) return false;
 
         for (const effect of this.activeEffects.values()) {
-            effect.getEffect().getValue().removeAttributeModifiers(this.attributes);
+            effect.type().getValue().removeAttributeModifiers(this.attributes);
         }
         this.activeEffects.clear();
         this.onAttributeUpdated();
@@ -347,12 +372,16 @@ export abstract class LivingEntity extends Entity {
 
     protected onEffectAdded(effect: StatusEffectInstance, _source: Entity | null): void {
         if (isClient) return;
-        effect.getEffect().getValue().addAttributeModifiers(this.attributes, effect.getAmplifier());
+        this.effectsDirty = true;
+        effect.type().getValue().addAttributeModifiers(this.attributes, effect.getAmplifier());
     }
 
     protected onEffectUpdated(effect: StatusEffectInstance, reapplyEffect: boolean, _source: Entity | null): void {
-        if (reapplyEffect && isServer) {
-            const statusEffect = effect.getEffect().getValue();
+        if (isClient) return;
+
+        this.effectsDirty = true;
+        if (reapplyEffect) {
+            const statusEffect = effect.type().getValue();
             statusEffect.removeAttributeModifiers(this.attributes);
             statusEffect.addAttributeModifiers(this.attributes, effect.getAmplifier());
             this.onAttributeUpdated();
@@ -362,7 +391,8 @@ export abstract class LivingEntity extends Entity {
     protected onEffectRemoved(effect: StatusEffectInstance): void {
         if (isClient) return;
 
-        effect.getEffect().getValue().removeAttributeModifiers(this.attributes);
+        this.effectsDirty = true;
+        effect.type().getValue().removeAttributeModifiers(this.attributes);
         this.onAttributeUpdated();
     }
 
@@ -453,6 +483,7 @@ export abstract class LivingEntity extends Entity {
                 const effect = StatusEffectInstance.fromNbt(effectNbt);
                 if (effect) this.addEffect(effect, null);
             }
+            this.effectsDirty = true;
         }
 
         if (nbt.contains('health', NbtTypeId.Number)) {

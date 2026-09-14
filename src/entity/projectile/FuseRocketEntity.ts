@@ -2,22 +2,21 @@ import {RocketEntity} from "./RocketEntity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
 import type {Entity} from "../Entity.ts";
-import {ExplosionBehavior} from "../../world/element/explosion/ExplosionBehavior.ts";
-import {ExplosionVisual} from "../../world/element/explosion/ExplosionVisual.ts";
+import {ExplosionConfigs} from "../../world/element/explosion/ExplosionConfigs.ts";
 
 export class FuseRocketEntity extends RocketEntity {
     private fuse: number;
-    public playSound = true;
 
     public constructor(
         type: EntityType<RocketEntity>,
         world: World,
         owner: Entity | null,
-        damage: number = 8,
+        damage?: number,
+        health?: number,
+        behaviour?: ExplosionConfigs,
         fuse: number = 20,
-        behaviour?: ExplosionBehavior
     ) {
-        super(type, world, owner, damage, 6, behaviour);
+        super(type, world, owner, damage, health, behaviour);
         this.fuse = fuse;
     }
 
@@ -27,13 +26,5 @@ export class FuseRocketEntity extends RocketEntity {
             this.explode();
             this.discard();
         }
-    }
-
-    public override explode() {
-        this.getWorld().createExplosion(this, null,
-            this.getX(), this.getY(), this.explosionDamage,
-            new ExplosionBehavior(this.behaviour?.behaviour, this.behaviour?.effect, this.behaviour?.decay, this.playSound),
-            new ExplosionVisual(this.explosionRadius, this.explodeColor, 5, 2)
-        );
     }
 }

@@ -91,8 +91,8 @@ export class BGMManager {
         await AudioManager.fadeOutAndPause();
 
         const rand = Math.random();
-        if (rand < 0.1) void AudioManager.play(Audios.THE_TALE_OF_A_CRUEL_WORLD);
-        else this.IN_GAME.next();
+        if (rand < 0.1) await AudioManager.play(Audios.THE_TALE_OF_A_CRUEL_WORLD);
+        else await AudioManager.play(this.IN_GAME.next());
     }
 
     private static conditionListener(events: EventBus) {
