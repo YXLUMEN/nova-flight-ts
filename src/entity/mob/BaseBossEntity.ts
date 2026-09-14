@@ -31,8 +31,8 @@ export class BaseBossEntity extends BossEntity {
     private bulletWaves: FireWave[] = [
         new FireWave(5, 4),
         new FireWave(6, 4.5, 0, false, 0),
-        new FireWave(6, 3, 4, false, 0),
-        new FireWave(6, 6, 0, true, 0),
+        new FireWave(7, 3, 4, false, 0),
+        new FireWave(8, 6, 0, true, 0),
     ];
 
     private fireOffsets = [
@@ -205,7 +205,7 @@ export class BaseBossEntity extends BossEntity {
                     pPos.x, pPos.y,
                     player.getDimensions().halfWidth
                 )) {
-                    player.takeDamage(damageSource, 6);
+                    player.takeDamage(damageSource, 8);
                 }
             }
 

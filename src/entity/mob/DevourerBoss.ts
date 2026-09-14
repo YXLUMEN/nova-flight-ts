@@ -47,7 +47,7 @@ export class DevourerBoss extends BossEntity {
     public readonly prevSegPoses: Float32Array;
 
     public constructor(type: EntityType<DevourerBoss>, world: World, worth: number) {
-        super(type, world, worth, 0);
+        super(type, world, worth, 50);
 
         this.noClip = true;
 
@@ -146,7 +146,7 @@ export class DevourerBoss extends BossEntity {
         );
 
         for (const instance of this.getStatusEffects()) {
-            const effect = instance.getEffect();
+            const effect = instance.type();
             if (effect.getValue().isBeneficial()) continue;
             this.removeEffect(effect);
         }

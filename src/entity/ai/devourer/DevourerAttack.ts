@@ -192,7 +192,7 @@ export class DevourerAttack {
                 const pR = player.getDimensions().halfWidth;
                 for (const [sx, sy, ex, ey] of lines) {
                     if (thickLineCircleHit(sx, sy, ex, ey, hitRadius, pPos.x, pPos.y, pR)) {
-                        player.takeDamage(source, 15);
+                        player.takeDamage(source, 4);
                         break;
                     }
                 }

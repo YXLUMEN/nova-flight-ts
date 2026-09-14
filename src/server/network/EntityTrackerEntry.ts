@@ -11,6 +11,7 @@ import {VecDeltaCodec} from "../../world/entity/VecDeltaCodec.ts";
 import {encodeYaw} from "../../utils/net_util.ts";
 import {MoveRelative, Rotate, RotateAndMoveRelative} from "../../network/packet/s2c/EntityMoveS2CPacket.ts";
 import {EntityAttributesS2CPacket} from "../../network/packet/s2c/EntityAttributesS2CPacket.ts";
+import {Log} from "../../worker/log.ts";
 
 export class EntityTrackerEntry {
     private readonly world: ServerWorld;
@@ -106,19 +107,25 @@ export class EntityTrackerEntry {
     }
 
     private syncEntityData() {
+        if (this.entity.isRemoved()) {
+            Log.warn(`Fetching packet for removed entity ${this.entity}`)
+        }
+
+        if (this.entity instanceof LivingEntity) {
+            this.entity.syncEffectVisual();
+
+            const pending = this.entity.getAttributes().getPendingSync();
+            if (pending.size > 0) {
+                const packet = EntityAttributesS2CPacket.create(this.entity.getId(), pending);
+                if (packet.entries.length > 0) this.sendSync(packet);
+                pending.clear();
+            }
+        }
+
         const tracker = this.entity.getDataTracker();
         const list = tracker.getDirtyEntries();
         if (list !== null) {
             this.sendSync(new EntityTrackerUpdateS2CPacket(this.entity.getId(), list));
-        }
-
-        if (this.entity instanceof LivingEntity) {
-            const pending = this.entity.getAttributes().getPendingSync();
-            if (pending.size === 0) return;
-
-            const packet = EntityAttributesS2CPacket.create(this.entity.getId(), pending);
-            if (packet.entries.length > 0) this.sendSync(packet);
-            pending.clear();
         }
     }
 

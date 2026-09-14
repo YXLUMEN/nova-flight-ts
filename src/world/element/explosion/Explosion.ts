@@ -3,25 +3,25 @@ import type {ClientWorld} from "../../../client/ClientWorld.ts";
 import type {World} from "../../World.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {DamageSource} from "../../../entity/damage/DamageSource.ts";
+import type {BlockChange} from "../../section/BlockChange.ts";
+import type {WorldMutation} from "../WorldMutation.ts";
 import {Vec2} from "../../../utils/math/Vec2.ts";
 import {ProjectileEntity} from "../../../entity/projectile/ProjectileEntity.ts";
 import {LivingEntity} from "../../../entity/LivingEntity.ts";
 import {BatchBlockChangesPacket} from "../../../network/packet/common/BatchBlockChangesPacket.ts";
 import {ServerCommonHandler} from "../../../server/network/handler/ServerCommonHandler.ts";
-import type {BlockChange} from "../../section/BlockChange.ts";
 import {BlockCollision} from "../../collision/BlockCollision.ts";
-import {ExplosionBehavior, ExplosionBehaviour, ExplosionEffect} from "./ExplosionBehavior.ts";
+import {ExplosionBehaviour, ExplosionConfigs, ExplosionTag} from "./ExplosionConfigs.ts";
 import {ExplosionVisual} from "./ExplosionVisual.ts";
 import {AABB} from "../../../utils/math/AABB.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
 import {ParticleEffects} from "../../../effect/ParticleEffects.ts";
-import type {WorldMutation} from "../WorldMutation.ts";
 import {RadialRing} from "../../../effect/RadialRing.ts";
 import {isClient} from "../../../configs/RuntimeConfig.ts";
 
 export class Explosion implements WorldMutation {
-    public static readonly DEFAULT_BEHAVIOUR = new ExplosionBehavior();
+    public static readonly DEFAULT_CONFIGS = new ExplosionConfigs();
     public static readonly DEFAULT_VISUAL = new ExplosionVisual();
 
     private readonly world: World;
@@ -32,7 +32,7 @@ export class Explosion implements WorldMutation {
     private readonly power: number;
     private readonly damageSource: DamageSource;
 
-    private readonly behaviour: ExplosionBehavior;
+    private readonly configs: ExplosionConfigs;
     private readonly visual: ExplosionVisual;
 
     public constructor(
@@ -42,7 +42,7 @@ export class Explosion implements WorldMutation {
         x: number,
         y: number,
         power: number,
-        behaviour: ExplosionBehavior | null,
+        configs: ExplosionConfigs | null,
         visual: ExplosionVisual | null
     ) {
         this.world = world;
@@ -51,7 +51,7 @@ export class Explosion implements WorldMutation {
         this.power = power;
         this.source = source;
         this.damageSource = damageSource === null ? world.getDamageSources().explosionInstance(this) : damageSource;
-        this.behaviour = behaviour === null ? Explosion.DEFAULT_BEHAVIOUR : behaviour;
+        this.configs = configs === null ? Explosion.DEFAULT_CONFIGS : configs;
         this.visual = visual === null ? Explosion.DEFAULT_VISUAL : visual;
     }
 
@@ -64,7 +64,7 @@ export class Explosion implements WorldMutation {
     public applyExplosion() {
         if (this.power === 0) return;
 
-        const behavior = this.behaviour.behaviour;
+        const behavior = this.configs.behaviour;
         if (behavior === ExplosionBehaviour.EITHER) return;
 
         if (behavior === ExplosionBehaviour.BOTH ||
@@ -73,7 +73,7 @@ export class Explosion implements WorldMutation {
         }
         if (behavior === ExplosionBehaviour.BOTH ||
             behavior === ExplosionBehaviour.ONLY_DAMAGE) {
-            if (this.behaviour.decay) this.damageEntities();
+            if (this.configs.decay) this.damageEntities();
             else this.damageEntitiesInRange();
         }
     }
@@ -86,17 +86,17 @@ export class Explosion implements WorldMutation {
         const entities = this.world.searchOtherEntities(
             source,
             box,
-            entity => this.behaviour.canDamage(entity)
+            entity => this.configs.canDamage(entity)
         );
 
-        const halfR2 = this.behaviour.effect === ExplosionEffect.FUSION ? Math.floor(this.visual.radius / 2) ** 2 : 0;
+        const halfR2 = this.configs.tag === ExplosionTag.FUSION ? Math.floor(this.visual.radius / 2) ** 2 : 0;
         for (const entity of entities) {
             const dist = squareDist(entity.getX(), entity.getY(), this.x, this.y);
             if (dist > radiusSq) continue;
 
             entity.takeDamage(this.damageSource, this.power);
-            if (this.behaviour.statusEffect && entity instanceof LivingEntity) {
-                entity.addEffect(StatusEffectInstance.fromOther(this.behaviour.statusEffect), source);
+            if (this.configs.statusEffect && entity instanceof LivingEntity) {
+                entity.addEffect(StatusEffectInstance.fromOther(this.configs.statusEffect), source);
             }
 
             if (halfR2 > 0 && halfR2 >= dist) {
@@ -123,11 +123,11 @@ export class Explosion implements WorldMutation {
         const candidates = this.world.searchOtherEntities(
             source,
             box,
-            entity => !entity.isImmuneToExplosion() && this.behaviour.canDamage(entity)
+            entity => !entity.isImmuneToExplosion() && this.configs.canDamage(entity)
         );
         const start = new Vec2(this.x, this.y);
 
-        const halfR2 = this.behaviour.effect === ExplosionEffect.FUSION ? Math.floor(this.visual.radius / 2) ** 2 : 0;
+        const halfR2 = this.configs.tag === ExplosionTag.FUSION ? Math.floor(this.visual.radius / 2) ** 2 : 0;
         for (const entity of candidates) {
             const box = entity.getBoundingBox();
             const pos = entity.positionRef;
@@ -142,8 +142,8 @@ export class Explosion implements WorldMutation {
 
             const damage = this.power * (1 - entityDist / radiusSq);
             entity.takeDamage(this.damageSource, damage);
-            if (this.behaviour.statusEffect && entity instanceof LivingEntity) {
-                entity.addEffect(StatusEffectInstance.fromOther(this.behaviour.statusEffect), source);
+            if (this.configs.statusEffect && entity instanceof LivingEntity) {
+                entity.addEffect(StatusEffectInstance.fromOther(this.configs.statusEffect), source);
             }
 
             if (halfR2 > 0 && halfR2 >= squareDistVec2(start, pos)) {
@@ -224,7 +224,7 @@ export class Explosion implements WorldMutation {
             0.35, this.visual.color
         ));
 
-        if (this.behaviour.effect === ExplosionEffect.FUSION) {
+        if (this.configs.tag === ExplosionTag.FUSION) {
             const r = this.visual.radius / 2;
             world.addEffect(null, new RadialRing(
                 vec,
@@ -233,7 +233,9 @@ export class Explosion implements WorldMutation {
             ));
         }
 
-        if (this.behaviour.playSound) world.playSound(null, SoundEvents.EXPLOSION, 0.6);
+        if (this.configs.sound !== SoundEvents.EMPTY) {
+            world.playSound(null, this.configs.sound, 0.6);
+        }
     }
 
     public getX() {
@@ -260,8 +262,8 @@ export class Explosion implements WorldMutation {
         return this.power;
     }
 
-    public getBehaviour() {
-        return this.behaviour;
+    public getConfigs() {
+        return this.configs;
     }
 
     public getVisual() {

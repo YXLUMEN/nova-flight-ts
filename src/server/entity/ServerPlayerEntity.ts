@@ -195,7 +195,7 @@ export class ServerPlayerEntity extends PlayerEntity {
 
     protected override onEffectRemoved(effect: StatusEffectInstance) {
         super.onEffectRemoved(effect);
-        this.networkHandler.send(new RemoveEntityStatusEffectS2CPacket(this.getId(), effect.getEffect()));
+        this.networkHandler.send(new RemoveEntityStatusEffectS2CPacket(this.getId(), effect.type()));
     }
 
     public copyFrom(oldPlayer: ServerPlayerEntity, alive: boolean): void {

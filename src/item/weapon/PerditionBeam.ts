@@ -1,7 +1,7 @@
-import {type ItemStack} from "../ItemStack.ts";
+import type {ItemStack} from "../ItemStack.ts";
 import {DataComponents} from "../../component/DataComponents.ts";
-import {type World} from "../../world/World.ts";
-import {type Entity} from "../../entity/Entity.ts";
+import type {World} from "../../world/World.ts";
+import type {Entity} from "../../entity/Entity.ts";
 import type {ClientWorld} from "../../client/ClientWorld.ts";
 import {spawnChargingParticles} from "../../utils/ClientEffect.ts";
 import {PhaseLasers} from "./PhaseLasers.ts";
@@ -104,6 +104,7 @@ export class PerditionBeam extends PhaseLasers {
 
         world.playSound(attacker, SoundEvents.LASER_FIRE_SYNTH);
         world.playLoopSound(attacker, SoundEvents.LASER_BEAM, 0.8);
+        (world as ClientWorld).getClient().window.camera.addShake(0.5, 0.6);
     }
 
     public override onEndFire(_stack: ItemStack, world: World, attacker: Entity) {

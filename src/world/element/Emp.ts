@@ -71,7 +71,7 @@ export class Emp implements WorldMutation {
             }
         }
 
-        world.playSound(this.attacker, SoundEvents.EMP_BURST);
+        world.playSound(null, SoundEvents.EMP_BURST);
         if (!world.isClient) {
             (world as ServerWorld).spawnVisual(null, new EMPBurst(new Vec2(this.x, this.y), this.radius));
         }

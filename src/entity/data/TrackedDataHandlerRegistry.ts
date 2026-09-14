@@ -1,7 +1,8 @@
+import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 import type {TrackedDataHandler} from "./TrackedDataHandler.ts";
 import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
-import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 import {TrackedData} from "./TrackedData.ts";
+import {StatusEffect} from "../effect/StatusEffect.ts";
 
 export class TrackedDataHandlerRegistry {
     private static readonly DATA_HANDLERS_ID = new Map<TrackedDataHandler<any>, number>();
@@ -12,6 +13,9 @@ export class TrackedDataHandlerRegistry {
     public static readonly VAR_UINT = this.create(PacketCodecs.VAR_UINT);
     public static readonly FLOAT = this.create(PacketCodecs.FLOAT);
     public static readonly DOUBLE = this.create(PacketCodecs.DOUBLE);
+    public static readonly STATUE_EFFECTS = this.create(
+        PacketCodecs.collection(StatusEffect.ENTRY_PACKET_CODEC)
+    );
 
     private static create<T>(codec: PacketCodec<T>): TrackedDataHandler<T> {
         const handler: TrackedDataHandler<T> = {

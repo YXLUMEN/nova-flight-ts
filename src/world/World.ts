@@ -20,7 +20,7 @@ import type {EntityLookUp} from "./entity/EntityLookUp.ts";
 import {BitBlockMap} from "./section/BitBlockMap.ts";
 import {AABB} from "../utils/math/AABB.ts";
 import {BlockCollision} from "./collision/BlockCollision.ts";
-import type {ExplosionBehavior} from "./element/explosion/ExplosionBehavior.ts";
+import type {ExplosionConfigs} from "./element/explosion/ExplosionConfigs.ts";
 import {ScheduleTask} from "./ScheduleTask.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
@@ -129,7 +129,7 @@ export abstract class World {
         x: number,
         y: number,
         power: number,
-        behaviour: ExplosionBehavior | null = null,
+        behaviour: ExplosionConfigs | null = null,
         visual: ExplosionVisual | null = null
     ) {
         const explosion = new Explosion(this, source, damageSource, x, y, power, behaviour, visual);

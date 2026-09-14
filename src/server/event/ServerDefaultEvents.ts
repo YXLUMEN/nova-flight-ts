@@ -16,25 +16,18 @@ import type {Explosion} from "../../world/element/explosion/Explosion.ts";
 import {DamageTypes} from "../../entity/damage/DamageTypes.ts";
 import {BaseBossEntity} from "../../entity/mob/BaseBossEntity.ts";
 import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
-import {ExplosionEffect} from "../../world/element/explosion/ExplosionBehavior.ts";
+import {ExplosionTag} from "../../world/element/explosion/ExplosionConfigs.ts";
 import {DevourerBoss} from "../../entity/mob/DevourerBoss.ts";
-import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
 import {ScreenShakeS2CPacket} from "../../network/packet/s2c/ScreenShakeS2CPacket.ts";
 import {clamp} from "../../utils/math/math.ts";
+import {ExplosiveBuilder} from "../../world/element/explosion/ExplosiveBuilder.ts";
 
 export class ServerDefaultEvents {
     public static registerEvent() {
         const events = EventBus.instance();
 
         events.on('entity:mob:damage', ({mob, damageSource}) => {
-            const world = mob.getWorld() as ServerWorld;
-            if (mob.getShieldAmount() > 0) {
-                world.spawnPreparedParticle(ParticleEffects.SHIELD_HIT, mob.positionRef, 2);
-                return true;
-            }
-            world.spawnPreparedParticle(ParticleEffects.HIT, mob.positionRef, 2);
-
             const attacker = damageSource.getAttacker();
             if (!attacker?.isPlayer()) return;
 
@@ -81,7 +74,7 @@ export class ServerDefaultEvents {
         });
 
         events.on('entity:boss:killed', event => {
-            const world = event.world;
+            const world = event.world as ServerWorld;
 
             if (!event.boss) {
                 world.stage.nextPhase();
@@ -138,9 +131,8 @@ export class ServerDefaultEvents {
         });
 
         events.on('world:explosion', ({world, explosion}) => {
-            const effect = explosion.getBehaviour().effect;
-            explosion.getBehaviour().effect = ExplosionEffect.TRIGGERED;
-            if (effect !== ExplosionEffect.TRIGGERED) {
+            const effect = explosion.getConfigs().tag;
+            if (effect !== ExplosionTag.TRIGGERED) {
                 this.serialWarhead(world, explosion);
             }
         });
@@ -199,7 +191,10 @@ export class ServerDefaultEvents {
 
         let count = 0;
         const margin = (explosion.getVisual().radius) / 3;
-        explosion.getBehaviour().playSound = false;
+        const configs = ExplosiveBuilder.from(explosion.getConfigs())
+            .tag(ExplosionTag.TRIGGERED)
+            .mute()
+            .build();
 
         const yaw = explosion.getSource()?.getYaw();
         const schedule = world.scheduleInterval(0.1, () => {
@@ -215,7 +210,7 @@ export class ServerDefaultEvents {
                     explosion.getX(),
                     explosion.getY(),
                     explosion.getPower(),
-                    explosion.getBehaviour(),
+                    configs,
                     explosion.getVisual()
                 );
                 return;
@@ -223,7 +218,7 @@ export class ServerDefaultEvents {
 
             const x = explosion.getX() + Math.cos(yaw) * margin * count;
             const y = explosion.getY() + Math.sin(yaw) * margin * count;
-            world.createExplosion(explosion.getSource(), damageSource, x, y, explosion.getPower(), explosion.getBehaviour(), explosion.getVisual());
+            world.createExplosion(explosion.getSource(), damageSource, x, y, explosion.getPower(), configs, explosion.getVisual());
         });
     }
 }

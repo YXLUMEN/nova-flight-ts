@@ -33,7 +33,7 @@ import {NbtTypeId} from "../nbt/NbtType.ts";
 import {EntityHitResult} from "../world/collision/EntityHitResult.ts";
 import {MobBulletEntity} from "../entity/projectile/MobBulletEntity.ts";
 import {MobMissileEntity} from "../entity/projectile/MobMissileEntity.ts";
-import type {ExplosionBehavior} from "../world/element/explosion/ExplosionBehavior.ts";
+import type {ExplosionConfigs} from "../world/element/explosion/ExplosionConfigs.ts";
 import {type ParticleEffectType} from "../effect/ParticleEffectType.ts";
 import {PreparedParticleS2CPacket} from "../network/packet/s2c/PreparedParticleS2CPacket.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
@@ -256,7 +256,7 @@ export class ServerWorld extends World implements NbtSerializable {
         x: number,
         y: number,
         power: number,
-        behaviour: ExplosionBehavior | null = null,
+        behaviour: ExplosionConfigs | null = null,
         visual: ExplosionVisual | null = null
     ): Explosion {
         const explosion = super.createExplosion(source, damageSource, x, y, power, behaviour, visual);

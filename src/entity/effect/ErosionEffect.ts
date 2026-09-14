@@ -1,4 +1,4 @@
-import {StatusEffect} from "./StatusEffect.ts";
+import {StatusEffect, StatusEffectCategory} from "./StatusEffect.ts";
 import type {Entity} from "../Entity.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 
@@ -6,7 +6,7 @@ export class ErosionEffect extends StatusEffect {
     private readonly damage: number;
 
     public constructor(baseDps: number) {
-        super(1, '#ff8000');
+        super(StatusEffectCategory.HARMFUL, '#ff8000');
         this.damage = baseDps;
     }
 

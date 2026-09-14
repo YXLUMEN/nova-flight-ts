@@ -1,27 +1,9 @@
+import type {Vec2} from "../../utils/math/Vec2.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
-import {PI2} from "../../utils/math/math.ts";
+import {noise1} from "../../utils/math/math.ts";
 import {Window} from "./Window.ts";
-import type {Vec2} from "../../utils/math/Vec2.ts";
 
-class ViewRect {
-    public top: number = 0;
-    public bottom: number = 0;
-    public left: number = 0;
-    public right: number = 0;
-    public width: number = 0;
-    public height: number = 0;
-
-    public set(pos: Vec2, vw: number, vh: number) {
-        const {x, y} = pos;
-        this.left = x;
-        this.top = y;
-        this.right = x + vw;
-        this.bottom = y + vh;
-        this.width = vw;
-        this.height = vh;
-    }
-}
 
 export class Camera {
     private readonly offset = MutVec2.zero();
@@ -40,10 +22,16 @@ export class Camera {
     private readonly friction: number = 12;
 
     private shakeTrauma = 0;       // [0,1]
-    private readonly traumaPower = 2;       // 非线性放大, 常用 2 或 3
+    private readonly traumaPower = 1.4;       // 非线性放大, 常用 2 或 3
     private readonly shakeDecay = 0.8;      // 每秒衰减量
-    private readonly maxShake = 48;         // 最大像素抖动
+    private readonly maxShake = 64;         // 最大像素抖动
+    private readonly shakeFreqFast = 24;    // 低强度时的频率(Hz)
+    private readonly shakeFreqSlow = 4;     // 高强度时的频率(Hz)
+    private readonly shakeRoughRatio = 2.5; // 细节噪声相对主噪声的倍频
+    private readonly shakeRoughFreqCap = 20;// 细节噪声频率上限, 防止采样率不足产生走样
     private readonly shakeOffset = MutVec2.zero();
+    private shakeTime = 0;                  // 主噪声相位
+    private shakeRoughTime = 0;             // 细节噪声相位
 
     private readonly uiMaxDrift = 128;      // HUD 最大漂移像素(镜头快速移动时)
     private readonly uiShakeFactor = 0.5;
@@ -65,8 +53,7 @@ export class Camera {
     }
 
     public addShake(amount: number, limit = 1): void {
-        if (this.shakeTrauma >= limit) return;
-        this.shakeTrauma = Math.min(1, this.shakeTrauma + amount);
+        this.shakeTrauma = Math.min(limit, this.shakeTrauma + amount);
     }
 
     private follow(target: MutVec2, tickDelta: number): void {
@@ -77,9 +64,7 @@ export class Camera {
         if (this.isDeadZone) {
             if (distSq > this.outDeadZone) {
                 this.isDeadZone = false;
-            } else {
-                return;
-            }
+            } else return;
         }
         if (distSq <= this.intoDeadZone) {
             this.isDeadZone = true;
@@ -110,15 +95,28 @@ export class Camera {
             this.shakeTrauma = Math.max(0, this.shakeTrauma - this.shakeDecay * tickDelta);
 
             // 非线性放大
-            const t = Math.pow(this.shakeTrauma, this.traumaPower);
-            const r = this.maxShake * t;
+            const trauma = this.shakeTrauma;
+            const amp = this.maxShake * Math.pow(trauma, this.traumaPower);
+            if (amp < 0.05) {
+                this.shakeOffset.x = 0;
+                this.shakeOffset.y = 0;
+                return;
+            }
 
-            // 生成随机方向的位移
-            const theta = Math.random() * PI2;
-            this.shakeOffset.x = Math.cos(theta) * r;
-            this.shakeOffset.y = Math.sin(theta) * r;
+            const freq = this.shakeFreqSlow + (this.shakeFreqFast - this.shakeFreqSlow) * (1 - trauma);
+            const roughFreq = Math.min(freq * this.shakeRoughRatio, this.shakeRoughFreqCap);
+
+            this.shakeTime += tickDelta * freq;
+            this.shakeRoughTime += tickDelta * roughFreq;
+
+            const nx = noise1(this.shakeTime) + noise1(this.shakeRoughTime);
+            const ny = noise1(this.shakeTime + 137.31) + noise1(this.shakeRoughTime + 71.53);
+
+            this.shakeOffset.x = nx * amp;
+            this.shakeOffset.y = ny * amp;
             return;
         }
+
         // 归零, 避免长尾抖动
         if (this.shakeOffset.x !== 0 || this.shakeOffset.y !== 0) {
             this.shakeOffset.x = 0;
@@ -155,6 +153,25 @@ export class Camera {
         }
 
         return this.uiOffsetCache.set(dx + this.shakeOffset.x * this.uiShakeFactor, dy + this.shakeOffset.y * this.uiShakeFactor);
+    }
+}
+
+class ViewRect {
+    public top: number = 0;
+    public bottom: number = 0;
+    public left: number = 0;
+    public right: number = 0;
+    public width: number = 0;
+    public height: number = 0;
+
+    public set(pos: Vec2, vw: number, vh: number) {
+        const {x, y} = pos;
+        this.left = x;
+        this.top = y;
+        this.right = x + vw;
+        this.bottom = y + vh;
+        this.width = vw;
+        this.height = vh;
     }
 }
 

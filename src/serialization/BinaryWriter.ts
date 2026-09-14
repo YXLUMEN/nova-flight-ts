@@ -154,6 +154,10 @@ export class BinaryWriter {
         return this.buffer.subarray(0, this.offset);
     }
 
+    public clone(): Uint8Array<ArrayBuffer> {
+        return this.buffer.slice(0, this.offset);
+    }
+
     public getOffset(): number {
         return this.offset;
     }

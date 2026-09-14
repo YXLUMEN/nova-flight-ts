@@ -126,11 +126,8 @@ export class NovaFlightClient {
         await new ClientInit(this).initResources();
         ClientDefaultEvents.registryEvents();
 
-        if (!isDev) {
-            BGMManager.init();
-        } else {
-            AudioManager.setDisable(true);
-        }
+        if (isDev) AudioManager.setDisable(true);
+        BGMManager.init();
 
         while (true) {
             if (this.waitWorldStop === null) this.createWorldStopPromise();

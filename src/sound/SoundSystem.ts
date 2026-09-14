@@ -1,8 +1,6 @@
 import type {SoundEvent} from "./SoundEvent.ts";
-import type {HashMap} from "../utils/collection/HashMap.ts";
 import type {SoundResource} from "../resource/SoundResource.ts";
 import {clamp} from "../utils/math/math.ts";
-import {WrapperMap} from "../utils/collection/WrapperMap.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {ResourceManager} from "../resource/ResourceManager.ts";
 import {Resources} from "../resource/Resources.ts";
@@ -10,7 +8,7 @@ import {Settings} from "../client/settings/Settings.ts";
 
 export class SoundSystem {
     private readonly module: SoundResource;
-    private readonly activeLoops: HashMap<Identifier, AudioBufferSourceNode> = new WrapperMap();
+    private readonly activeLoops: Map<Identifier, AudioBufferSourceNode> = new Map();
     private readonly audioContext: AudioContext;
     private readonly gainNode: GainNode;
 

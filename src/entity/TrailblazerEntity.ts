@@ -1,21 +1,21 @@
-import {Entity} from "./Entity.ts";
-import type {EntityType} from "./EntityType.ts";
-import {World} from "../world/World.ts";
 import type {Ownable} from "./Ownable.ts";
+import type {EntityType} from "./EntityType.ts";
+import type {ServerWorld} from "../server/ServerWorld.ts";
+import type {ExplosionConfigs} from "../world/element/explosion/ExplosionConfigs.ts";
+import {Entity} from "./Entity.ts";
+import {World} from "../world/World.ts";
 import {DataTracker, type DataTrackerBuilder} from "./data/DataTracker.ts";
 import {TrackedDataHandlerRegistry} from "./data/TrackedDataHandlerRegistry.ts";
 import {EntityTypes} from "./EntityTypes.ts";
-import type {ServerWorld} from "../server/ServerWorld.ts";
 import {ClusterRocketEntity} from "./projectile/ClusterRocketEntity.ts";
-import type {ExplosionBehavior} from "../world/element/explosion/ExplosionBehavior.ts";
-import {FilterBehaviour} from "../world/element/explosion/FilterBehaviour.ts";
+import {ExplosiveBuilder} from "../world/element/explosion/ExplosiveBuilder.ts";
 
 export class TrailblazerEntity extends Entity implements Ownable {
     private static readonly BOMBS = DataTracker.registerData(Object(TrailblazerEntity), TrackedDataHandlerRegistry.VAR_UINT);
 
     private readonly owner: Entity | null;
     private readonly power: number;
-    private readonly behaviour: ExplosionBehavior;
+    private readonly behaviour: ExplosionConfigs;
 
     private releaseCooldown = 6;
 
@@ -29,7 +29,9 @@ export class TrailblazerEntity extends Entity implements Ownable {
         this.noClip = true;
         this.power = power;
         this.owner = owner;
-        this.behaviour = new FilterBehaviour(undefined, undefined, false)
+        this.behaviour = new ExplosiveBuilder()
+            .noDecay()
+            .filter()
             .withFiler(e => e !== owner);
     }
 

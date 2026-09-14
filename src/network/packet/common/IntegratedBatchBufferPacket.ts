@@ -22,15 +22,17 @@ export class IntegratedBatchBufferPacket implements Payload, BatchBuffer {
     }
 
     public static create(payloads: Iterable<Payload>, registry: CodecRegistry): IntegratedBatchBufferPacket[] {
-        const maxSize = 9216;
+        const maxSize = 8192;
         const batches: IntegratedBatchBufferPacket[] = [];
-        const writer = new BinaryWriter(maxSize); // MAX_PACKET_SIZE * 1.5
+        const writer = new BinaryWriter(9216); // MAX_PACKET_SIZE * 1.5
 
         let count = 0;
         for (const payload of payloads) {
+            // noinspection DuplicatedCode
             const codec = registry.get(payload.type());
             if (!codec) throw new Error(`Missing packet type ${payload.type().id}`);
 
+            let last: Uint8Array<ArrayBuffer> | undefined;
             const start = writer.getOffset();
             const est = payload.estimateSize?.() ?? 0;
             if (start + est <= maxSize) {
@@ -41,26 +43,30 @@ export class IntegratedBatchBufferPacket implements Payload, BatchBuffer {
                     count++;
                     continue;
                 }
+                last = writer.toUint8Array().subarray(start);
             }
 
-            // 宽松截断
-            const last = writer.toUint8Array().subarray(start);
             writer.truncate(start);
 
             if (count > 0) {
-                const buffer = writer.toUint8Array().slice();
+                const buffer = writer.clone();
                 batches.push(new IntegratedBatchBufferPacket(count, buffer));
                 count = 0;
                 writer.reset();
             }
 
-            writer.writeVarUint(codec.index);
-            writer.pushBytes(last);
+            if (last) {
+                writer.pushBytes(last);
+            } else {
+                writer.writeVarUint(codec.index);
+                codec.codec.encode(writer, payload);
+            }
             count = 1;
         }
 
         if (count > 0) {
-            const buffer = writer.toUint8Array().slice();
+            // 队列为空说明完全包含, buffer 无偏移问题
+            const buffer = batches.length === 0 ? writer.toUint8Array() : writer.clone();
             batches.push(new IntegratedBatchBufferPacket(count, buffer));
         }
 
@@ -69,7 +75,7 @@ export class IntegratedBatchBufferPacket implements Payload, BatchBuffer {
 
     public parse(handler: PacketListener): void {
         const reader = new BinaryReader(this.buffer);
-
+        // noinspection DuplicatedCode
         for (let i = 0; i < this.payloadCount; i++) {
             const index = reader.readVarUint();
             const type = CodecRegistry.byId(index);

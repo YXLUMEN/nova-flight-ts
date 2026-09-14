@@ -1,9 +1,9 @@
 import {Entity} from "./Entity.ts";
 import type {EntityType} from "./EntityType.ts";
 import {World} from "../world/World.ts";
-import {ExplosionBehaviour, ExplosionBehavior} from "../world/element/explosion/ExplosionBehavior.ts";
+import {ExplosionBehaviour, ExplosionConfigs} from "../world/element/explosion/ExplosionConfigs.ts";
 import {ExplosionVisual} from "../world/element/explosion/ExplosionVisual.ts";
-import {FilterBehaviour} from "../world/element/explosion/FilterBehaviour.ts";
+import {ExplosiveBuilder} from "../world/element/explosion/ExplosiveBuilder.ts";
 
 export class ExplosionEntity extends Entity {
     public override noClip = true;
@@ -11,23 +11,27 @@ export class ExplosionEntity extends Entity {
     public readonly invulnerable = true;
     public readonly countdown: number;
     public readonly power: number;
-    public readonly behavior: ExplosionBehavior;
+    public readonly behavior: ExplosionConfigs;
     public readonly visual: ExplosionVisual;
 
     public constructor(
         type: EntityType<ExplosionEntity>,
         world: World,
         countdown: number = 60,
-        behavior?: ExplosionBehavior,
+        behavior?: ExplosionConfigs,
         visual?: ExplosionVisual,
         power?: number
     ) {
         super(type, world);
 
         this.countdown = countdown;
-        this.behavior = behavior ??
-            new FilterBehaviour(ExplosionBehaviour.ONLY_DAMAGE, undefined, false, false)
-                .withFiler(entity => entity.isPlayer());
+        this.behavior = behavior ?? new ExplosiveBuilder()
+            .behaviour(ExplosionBehaviour.ONLY_DAMAGE)
+            .noDecay()
+            .mute()
+            .filter()
+            .withFiler(entity => entity.isPlayer());
+
         this.visual = visual ?? new ExplosionVisual(128);
         this.power = power ?? 16;
     }

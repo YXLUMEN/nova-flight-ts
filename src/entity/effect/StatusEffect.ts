@@ -9,40 +9,25 @@ import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {AttributeModifier, Operation} from "../../component/type/AttributeModifier.ts";
 
-// 0 BENEFICIAL; 1 HARMFUL; 2 NEUTRAL;
-export type StatusEffectCategory = 0 | 1 | 2;
-
 export class StatusEffect {
     public static readonly ENTRY_PACKET_CODEC = PacketCodecs.registryEntry(Registries.STATUS_EFFECT);
 
-    public static EffectAttributeModifierCreator = class EffectAttributeModifierCreator {
-        public readonly id: Identifier;
-        public readonly baseValue: number;
+    private readonly attributeModifiers: Map<RegistryEntry<Attribute>, EffectAttributeModifierCreator> = new Map();
+    public readonly category: StatusEffectCategory;
+    public readonly color: string;
+    public readonly isVisible: boolean;
 
-        public constructor(id: Identifier, baseValue: number) {
-            this.id = id;
-            this.baseValue = baseValue;
-        }
-
-        public createAttributeModifier(amplifier: number): AttributeModifier {
-            return new AttributeModifier(this.id, this.baseValue * (amplifier + 1), Operation.ADD);
-        }
-    }
-
-    private readonly attributeModifiers = new Map<RegistryEntry<Attribute>, InstanceType<typeof StatusEffect.EffectAttributeModifierCreator>>();
-    private readonly category: StatusEffectCategory;
-    private readonly color: string;
-
-    public constructor(category: StatusEffectCategory, color: string) {
+    public constructor(category: StatusEffectCategory, color: string, isVisible = false) {
         this.category = category;
         this.color = color;
+        this.isVisible = isVisible;
     }
 
     public applyEffectTick(_source: Entity | null, _entity: LivingEntity, _amplifier: number): boolean {
         return true;
     }
 
-    public tickClient(_entity: LivingEntity, _amplifier: number) {
+    public clientVisual(_entity: LivingEntity) {
     }
 
     public applyInstantEffect(source: Entity | null, _attacker: Entity | null, target: LivingEntity, amplifier: number, _proximity: number): void {
@@ -70,7 +55,7 @@ export class StatusEffect {
     }
 
     public addAttributeModifier(attribute: RegistryEntry<Attribute>, id: Identifier, amount: number): StatusEffect {
-        this.attributeModifiers.set(attribute, new StatusEffect.EffectAttributeModifierCreator(id, amount));
+        this.attributeModifiers.set(attribute, new EffectAttributeModifierCreator(id, amount));
         return this;
     }
 
@@ -91,15 +76,27 @@ export class StatusEffect {
         }
     }
 
-    public getCategory(): StatusEffectCategory {
-        return this.category;
-    }
-
-    public getColor(): string {
-        return this.color;
-    }
-
     public isBeneficial() {
         return this.category === 0;
     }
+}
+
+class EffectAttributeModifierCreator {
+    public readonly id: Identifier;
+    public readonly baseValue: number;
+
+    public constructor(id: Identifier, baseValue: number) {
+        this.id = id;
+        this.baseValue = baseValue;
+    }
+
+    public createAttributeModifier(amplifier: number): AttributeModifier {
+        return new AttributeModifier(this.id, this.baseValue * (amplifier + 1), Operation.ADD);
+    }
+}
+
+export const enum StatusEffectCategory {
+    BENEFICIAL,
+    HARMFUL,
+    NEUTRAL,
 }
