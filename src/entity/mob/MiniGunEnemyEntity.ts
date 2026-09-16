@@ -10,7 +10,6 @@ import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {MobBulletEntity} from "../projectile/MobBulletEntity.ts";
 
 export class MiniGunEnemyEntity extends MobEntity {
-    private static readonly bulletSpeed = 6;
     private cooldown: number;
     private fireCount = 0;
     private fireCD = 0;
@@ -50,7 +49,7 @@ export class MiniGunEnemyEntity extends MobEntity {
         const pos = this.positionRef;
         const yaw = this.getYaw();
         const b = new MobBulletEntity(EntityTypes.ENEMY_BULLET_ENTITY, world, this, 1);
-        b.setVelocity(Math.cos(yaw) * MiniGunEnemyEntity.bulletSpeed, Math.sin(yaw) * MiniGunEnemyEntity.bulletSpeed);
+        b.setVelocity(Math.cos(yaw) * 6, Math.sin(yaw) * 6);
         b.setPosition(pos.x, pos.y);
 
         b.color.color = '#b10000';

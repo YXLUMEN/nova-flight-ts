@@ -41,7 +41,7 @@ export class FocusedArcEmitter extends BaseWeapon {
 
         world.spawnVisual(null, new ArcEffect(
             start.x, start.y, endX, endY,
-            0.2, 1,
+            0.2, 2,
             '#7f54ff'));
 
         world.playSound(null, SoundEvents.ARC_BURST);

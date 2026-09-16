@@ -1,17 +1,19 @@
+import type {Consumer, UUID} from "../type/types.ts";
+import type {ConnectionContext} from "./network/ConnectionContext.ts";
+import type {ClientChannel} from "./network/ClientChannel.ts";
+import type {LocalPlayerEntity} from "./entity/LocalPlayerEntity.ts";
+import {error, warn} from "@tauri-apps/plugin-log";
+import {invoke} from "@tauri-apps/api/core";
+import {empty, sleep, timeout} from "../utils/uit.ts";
 import {KeyboardInput} from "./input/KeyboardInput.ts";
 import {Window} from "./render/Window.ts";
 import {DEFAULT_CONFIG, isDev, RuntimeConfig} from "../configs/RuntimeConfig.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
 import {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
-import type {Consumer, UUID} from "../type/types.ts";
 import {ClientWorld} from "./ClientWorld.ts";
-import type {ClientPlayerEntity} from "./entity/ClientPlayerEntity.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
-import {empty, sleep} from "../utils/uit.ts";
 import {StartAction, StartScreen} from "./render/ui/StartScreen.ts";
-import {error, warn} from "@tauri-apps/plugin-log";
 import {ClientCommandManager} from "./command/ClientCommandManager.ts";
-import {invoke} from "@tauri-apps/api/core";
 import {ClientMultiGameManger} from "./ClientMultiGameManger.ts";
 import {ConnectInfo} from "./render/ui/ConnectInfo.ts";
 import {ClientChat} from "./command/ClientChat.ts";
@@ -24,19 +26,19 @@ import {SoundSystem} from "../sound/SoundSystem.ts";
 import {SoundEvents} from "../sound/SoundEvents.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
 import {ClientInputEvents} from "./input/ClientInputEvents.ts";
-import type {ClientChannel} from "./network/ClientChannel.ts";
 import {ClientCommandSource} from "./command/ClientCommandSource.ts";
 import {EventBus} from "../event/EventBus.ts";
 import {ClientPlayHandler} from "./network/handler/ClientPlayHandler.ts";
 import {TickRateManager} from "../world/TickRateManager.ts";
 import {ClientWorkerFS} from "./ClientWorkerFS.ts";
 import {ClientConnector} from "./network/ClientConnector.ts";
-import type {ConnectionContext} from "./network/ConnectionContext.ts";
 import {ClientInit} from "./ClientInit.ts";
 import {GameStart} from "../event/events/game/GameStart.ts";
 import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
 import {GamePause} from "../event/events/game/GamePause.ts";
 import {Log} from "../worker/log.ts";
+import {Main2WorkerType, Worker2MainType} from "../worker/WorkerMsgType.ts";
+import {RacePromise} from "../utils/RacePromise.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -50,7 +52,7 @@ export class NovaFlightClient {
 
     public readonly window: Window;
     public readonly input: KeyboardInput;
-    public globalSound!: SoundSystem;
+    public globalSound: SoundSystem = null!;
 
     protected channel: ClientChannel;
     public readonly connection: ClientConnection;
@@ -62,7 +64,7 @@ export class NovaFlightClient {
     private readonly workerFs: ClientWorkerFS = new ClientWorkerFS();
 
     public world: ClientWorld | null = null;
-    public player: ClientPlayerEntity | null = null;
+    public player: LocalPlayerEntity | null = null;
     public readonly worldRender: WorldRenderer;
 
     private readonly multiGameManager: ClientMultiGameManger;
@@ -213,14 +215,14 @@ export class NovaFlightClient {
 
     public setPause(bl: boolean): void {
         if (bl && !this.pause) {
-            this.worker?.postMessage({type: 'stop_ticking'});
+            this.worker?.postMessage({m2w: Main2WorkerType.STOP_TICKING});
             EventBus.instance().emit(new GamePause(true));
 
             this.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
             if (this.isIntegrated && this.world) this.world.worldSound.pauseAll().catch(console.error);
             this.window.canvas.style.cursor = 'crosshair';
         } else if (!bl && this.pause) {
-            this.worker?.postMessage({type: 'start_ticking'});
+            this.worker?.postMessage({m2w: Main2WorkerType.START_TICKING});
             EventBus.instance().emit(new GamePause(false));
 
             this.globalSound.playSound(SoundEvents.UI_PAGE_SWITCH);
@@ -321,13 +323,12 @@ export class NovaFlightClient {
             }, NovaFlightClient.SERVER_SHUTDOWN_TIMEOUT);
 
             worker.onmessage = event => {
-                if (event.data.type !== 'server_shutdown') return;
-
+                if (event.data.w2m !== Worker2MainType.SERVER_SHUTDOWN) return;
                 clearTimeout(shutTimeout);
                 terminate();
             };
 
-            this.worker.postMessage({type: 'stop_server'});
+            this.worker.postMessage({m2w: Main2WorkerType.STOP_SERVER});
         };
     }
 
@@ -345,7 +346,27 @@ export class NovaFlightClient {
         this.playing = false;
     }
 
-    public leaveGame(): void {
+    public async saveAll() {
+        if (!this.worker) return;
+        const {promise, resolve} = Promise.withResolvers<void>();
+        const ctrl = new AbortController();
+        const race = new RacePromise();
+
+        this.worker.postMessage({m2w: Main2WorkerType.SAVE_ALL});
+        this.worker.addEventListener('message', event => {
+            if (event.data.w2m === Worker2MainType.SAVED) {
+                resolve();
+                ctrl.abort();
+            }
+        }, {signal: ctrl.signal});
+
+        await race.wait(promise, timeout(NovaFlightClient.SERVER_SHUTDOWN_TIMEOUT, race.signal()));
+        resolve();
+        ctrl.abort();
+    }
+
+    public async leaveGame(): Promise<void> {
+        await this.saveAll();
         this.connection.disconnect();
         this.requestStop();
     }

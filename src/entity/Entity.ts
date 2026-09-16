@@ -1,38 +1,37 @@
-import {MutVec2} from "../utils/math/MutVec2.ts";
 import type {TrackedData} from "./data/TrackedData.ts";
+import type {DataTracked} from "./data/DataTracked.ts";
 import type {World} from "../world/World.ts";
-import {Vec2} from "../utils/math/Vec2.ts";
+import type {ServerWorld} from "../server/ServerWorld.ts";
+import type {EntityLike} from "../world/entity/EntityLike.ts";
+import type {Comparable} from "../type/Comparable.ts";
 import type {DamageSource} from "./damage/DamageSource.ts";
 import type {EntityType} from "./EntityType.ts";
 import type {EntityDimensions} from "./EntityDimensions.ts";
-import {DataTracker, type DataTrackerBuilder, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
-import type {DataTracked} from "./data/DataTracked.ts";
-import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
-import {AABB} from "../utils/math/AABB.ts";
-import {clamp, doubleEquals, lerp, lerpRadians, wrapRadians} from "../utils/math/math.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {UUID} from "../type/types.ts";
-import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
-import {VecDeltaCodec} from "../world/entity/VecDeltaCodec.ts";
 import type {PlayerEntity} from "./player/PlayerEntity.ts";
 import type {CommandOutput} from "../server/command/CommandOutput.ts";
+import type {EntityRenderer} from "../client/render/entity/EntityRenderer.ts";
+import type {ViewRect} from "../client/render/Camera.ts";
+import type {InterpolationHandler} from "../world/entity/InterpolationHandler.ts";
+import {Vec2} from "../utils/math/Vec2.ts";
+import {MutVec2} from "../utils/math/MutVec2.ts";
+import {AABB} from "../utils/math/AABB.ts";
+import {clamp, doubleEquals, lerp, lerpRadians, wrapRadians} from "../utils/math/math.ts";
+import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
+import {DataTracker, type DataTrackerBuilder, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
+import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import {VecDeltaCodec} from "../world/entity/VecDeltaCodec.ts";
 import {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
-import type {ServerWorld} from "../server/ServerWorld.ts";
-import type {EntityLike} from "../world/entity/EntityLike.ts";
 import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {IllegalArgumentError, IllegalStateError} from "../type/errors.ts";
 import {NbtTypeId} from "../nbt/NbtType.ts";
 import {EMPTY_LISTENER, type EntityChangeListener} from "../world/entity/EntityChangeListener.ts";
-import type {EntityRenderer} from "../client/render/entity/EntityRenderer.ts";
 import {BlockCollision} from "../world/collision/BlockCollision.ts";
-import type {Comparable} from "../type/Comparable.ts";
 import {EventBus} from "../event/EventBus.ts";
 import {EntityColor} from "../world/entity/EntityColor.ts";
 import {isBoxInView} from "../utils/render/render.ts";
-import type {ViewRect} from "../client/render/Camera.ts";
-import type {InterpolationHandler} from "../world/entity/InterpolationHandler.ts";
-
 
 export abstract class Entity implements EntityLike, DataTracked, Comparable, NbtSerializable, CommandOutput {
     private static readonly ENTITY_COUNTER = new AtomicInteger();
@@ -120,9 +119,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         return !this.isRemoved();
     }
 
-    /**
-     * 用于丢弃后的清理, 必须保证清除有效
-     */
+    /** 用于丢弃后的清理, 必须保证清除有效 */
     protected onDiscard(): void {
     }
 
@@ -172,10 +169,6 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     public hashCode(): number {
         return this.id;
-    }
-
-    public is(entity: Entity): boolean {
-        return this === entity;
     }
 
     // 位置相关
@@ -389,12 +382,13 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         return BlockCollision.separatingCollision(map, bounds, movement);
     }
 
+    // 硬实体碰撞
     protected adjustEntityCollision(movement: MutVec2): MutVec2 {
         if (this.noClip) return movement;
 
         const selfBox = this.getBoundingBox().stretchByVec(movement);
         const entities = this.getWorld().getEntityCollisions(this, selfBox);
-        if (entities.length === 0) return movement;
+        if (entities.next().value === undefined) return movement;
 
         for (const entity of entities) {
             const otherBox = entity.getBoundingBox();
@@ -413,6 +407,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         return movement;
     }
 
+    /** @readonly call this at tick tail */
     protected clampPosition(): boolean {
         const dim = this.dimensions;
         let x = this.pos.x;
@@ -451,7 +446,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.overwritePos(x, y);
     }
 
-    // 碰撞与尺寸
+    // 尺寸与包围盒
 
     public getWidth(): number {
         return this.dimensions.width;
@@ -475,10 +470,6 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     protected calculateBoundingBox(): AABB {
         return this.dimensions.getBoxAt(this.pos.x, this.pos.y);
-    }
-
-    public isCollisionTo(entity: Entity): boolean {
-        return this.boundingBox.intersectsByBox(entity.getBoundingBox());
     }
 
     // 推挤行为
@@ -514,7 +505,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     /**
      * 和 isInvulnerableTo 不同,此方法使得实体免疫爆炸伤害以及后续效果
      *
-     * @see{@link isInvulnerableTo}
+     * @see {isInvulnerableTo}
      * */
     public isImmuneToExplosion(): boolean {
         return false;
@@ -527,6 +518,31 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     // 是否可以成为"弹射物/射线"的目标
     public canHitByProjectile(): boolean {
         return this.isAlive();
+    }
+
+    // 世界与环境
+
+    public getWorld(): World {
+        return this.world;
+    }
+
+    public isClient(): boolean {
+        return this.world.isClient;
+    }
+
+    // 行为逻辑
+
+    // 是否是权威端
+    public isLogicalSide(): boolean {
+        return this.canMoveVoluntarily();
+    }
+
+    public canMoveVoluntarily(): boolean {
+        return !this.world.isClient;
+    }
+
+    public isPlayer(): this is PlayerEntity {
+        return false;
     }
 
     // 网络同步
@@ -544,34 +560,13 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.color.edgeHex = packet.edgeColor;
     }
 
-    // 世界与环境
-
-    public getWorld(): World {
-        return this.world;
-    }
-
-    public isClient(): boolean {
-        return this.world.isClient;
-    }
-
-    // 行为逻辑
-
-    public isLogicalSide(): boolean {
-        return this.canMoveVoluntarily();
-    }
-
-    public canMoveVoluntarily(): boolean {
-        return !this.world.isClient;
-    }
-
-    public isPlayer(): this is PlayerEntity {
-        return false;
-    }
-
     // 数据追踪
 
     public getDataTracker(): DataTracker {
         return this.dataTracker;
+    }
+
+    public updateSyncData(): void {
     }
 
     public abstract onDataTrackerUpdate(entries: DataTrackerSerializedEntry<any>[]): void;

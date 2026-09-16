@@ -6,6 +6,7 @@ import type {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPac
 import type {StatusEffect} from "./effect/StatusEffect.ts";
 import type {EntityType} from "./EntityType.ts";
 import type {Attribute} from "./attribute/Attribute.ts";
+import type {AttributeInstance} from "./attribute/AttributeInstance.ts";
 import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {clamp, PI2} from "../utils/math/math.ts";
 import {Entity} from "./Entity.ts";
@@ -13,7 +14,6 @@ import {StatusEffectInstance} from "./effect/StatusEffectInstance.ts";
 import {DataTracker, type DataTrackerBuilder} from "./data/DataTracker.ts";
 import {AttributeMap} from "./attribute/AttributeMap.ts";
 import {EntityAttributes} from "./attribute/EntityAttributes.ts";
-import type {AttributeInstance} from "./attribute/AttributeInstance.ts";
 import {AttributeSupplier, type AttributeSupplierBuilder} from "./attribute/AttributeSupplier.ts";
 import {TrackedDataHandlerRegistry} from "./data/TrackedDataHandlerRegistry.ts";
 import {EntityDamageS2CPacket} from "../network/packet/s2c/EntityDamageS2CPacket.ts";
@@ -41,7 +41,8 @@ export abstract class LivingEntity extends Entity {
 
     private readonly interpolation: InterpolationHandler | null;
     private readonly attributes: AttributeMap;
-    private readonly activeEffects = new Map<RegistryEntry<StatusEffect>, StatusEffectInstance>();
+    // noop in client, except local player
+    private readonly activeEffects: Map<RegistryEntry<StatusEffect>, StatusEffectInstance> = new Map();
 
     protected constructor(type: EntityType<LivingEntity>, world: World) {
         super(type, world);
@@ -113,18 +114,20 @@ export abstract class LivingEntity extends Entity {
         }
     }
 
-    protected override onDiscard(): void {
-        this.onRemoval();
-        super.onDiscard();
+    public override isPushAble(): boolean {
+        return this.isAlive();
     }
 
-    protected onRemoval(): void {
+    /** 重写时必须调用 */
+    protected override onDiscard(): void {
         for (const instance of this.getStatusEffects()) {
             instance.onEntityRemoved(this);
         }
-
         this.activeEffects.clear();
+        super.onDiscard();
     }
+
+    // 实体属性
 
     public getAttributes(): AttributeMap {
         return this.attributes;
@@ -141,6 +144,31 @@ export abstract class LivingEntity extends Entity {
     public getAttributeBaseValue(attribute: RegistryEntry<Attribute>): number {
         return this.attributes.getBaseValue(attribute);
     }
+
+    private onAttributeUpdated(): void {
+        const pendingAttr = this.attributes.getPendingUpdate();
+        for (const attr of pendingAttr) {
+            this.updateAttribute(attr.getAttribute());
+        }
+
+        pendingAttr.clear();
+    }
+
+    private updateAttribute(attribute: RegistryEntry<Attribute>): void {
+        if (attribute.match(EntityAttributes.GENERIC_MAX_HEALTH)) {
+            const maxHealth = this.getMaxHealth();
+            if (this.getHealth() > maxHealth) {
+                this.setHealth(maxHealth);
+            }
+        } else if (attribute.match(EntityAttributes.GENERIC_MAX_SHIELD)) {
+            const maxShield = this.getMaxShield();
+            if (this.getShieldAmount() > maxShield) {
+                this.setShieldAmount(maxShield);
+            }
+        }
+    }
+
+    // 生命与护盾
 
     public getMaxHealth(): number {
         return this.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH);
@@ -162,7 +190,7 @@ export abstract class LivingEntity extends Entity {
         return this.shieldAmount;
     }
 
-    // 不应该重写此方法
+    /** @readonly **Do not override** */
     public setShieldAmount(amount: number): void {
         this.setShieldAmountUnclamped(clamp(amount, 0, this.getMaxShield()));
     }
@@ -200,7 +228,7 @@ export abstract class LivingEntity extends Entity {
         }
 
         if (this.hasStatusEffect(StatusEffects.RESISTANCE) && !source.isIn(DamageTypeTags.BYPASSES_RESISTANCE)) {
-            const reduce = this.getStatusEffect(StatusEffects.RESISTANCE)!.getAmplifier();
+            const reduce = this.getStatusEffect(StatusEffects.RESISTANCE)!.amplifier();
             const percent = (8 - reduce) * 0.1;
             damage = Math.max(0, damage * percent);
         }
@@ -226,7 +254,7 @@ export abstract class LivingEntity extends Entity {
             this.setShieldAmount(shieldAmount - hitShield + remain);
 
             if (hitShield > 0) {
-                world.sendPacket(EntityDamageS2CPacket.create(this.getId(), this.positionRef, hitShield, '#73c4ff'));
+                world.sendPacket(EntityDamageS2CPacket.fromEntity(this, hitShield, '#73c4ff'));
             }
         }
 
@@ -234,44 +262,27 @@ export abstract class LivingEntity extends Entity {
             remain *= damageSource.getHealthMulti();
 
             this.setHealth(this.getHealth() - remain);
-
             for (const effect of this.getStatusEffects()) {
                 effect.onEntityDamage(this, damageSource, remain);
             }
             if (this.isDead()) this.onDeath(damageSource);
 
-            world.sendPacket(EntityDamageS2CPacket.create(this.getId(), this.positionRef, remain));
+            world.sendPacket(EntityDamageS2CPacket.fromEntity(this, remain));
         }
 
         if (damage === 0) {
-            world.sendPacket(EntityDamageS2CPacket.create(this.getId(), this.positionRef, 0, '#979797'));
+            world.sendPacket(EntityDamageS2CPacket.fromEntity(this, 0, '#979797'));
         }
 
         return true;
     }
 
-    public syncEffectVisual() {
-        if (isClient) return;
-        if (!this.effectsDirty) return;
-        this.effectsDirty = false;
-
-        if (this.activeEffects.size === 0) {
-            this.dataTracker.set(LivingEntity.DATA_EFFECT, []);
-            return;
-        }
-
-        const effects = this.activeEffects.values()
-            .map(v => v.type())
-            .filter(v => v.getValue().isVisible)
-            .toArray();
-        this.dataTracker.set(LivingEntity.DATA_EFFECT, effects);
-    }
+    // 状态效果
 
     protected tickEffects(): void {
         if (isClient) {
-            // 当前只有玩家需要准确的效果列表
-            const effects = this.dataTracker.get(LivingEntity.DATA_EFFECT);
-            for (const effect of effects) {
+            const dataEffects = this.dataTracker.get(LivingEntity.DATA_EFFECT);
+            for (const effect of dataEffects) {
                 effect.getValue().clientVisual(this);
             }
             return;
@@ -301,7 +312,11 @@ export abstract class LivingEntity extends Entity {
         return this.activeEffects.get(effect);
     }
 
-    public addEffect(effect: StatusEffectInstance, source: Entity | null): boolean {
+    public canHaveEffect(_effect: StatusEffectInstance): boolean {
+        return true;
+    }
+
+    public addStatusEffect(effect: StatusEffectInstance, source: Entity | null): boolean {
         if (!this.canHaveEffect(effect)) return false;
 
         const type = effect.type();
@@ -325,10 +340,6 @@ export abstract class LivingEntity extends Entity {
         return upgraded;
     }
 
-    public canHaveEffect(_effect: StatusEffectInstance): boolean {
-        return true;
-    }
-
     public setStatusEffect(effect: StatusEffectInstance, source: Entity | null): void {
         if (!this.canHaveEffect(effect)) return;
 
@@ -341,7 +352,7 @@ export abstract class LivingEntity extends Entity {
         }
     }
 
-    public removeEffectNoUpdate(effect: RegistryEntry<StatusEffect>): StatusEffectInstance | null {
+    public forceRemoveEffect(effect: RegistryEntry<StatusEffect>): StatusEffectInstance | null {
         const instance = this.activeEffects.get(effect);
         if (instance) {
             this.activeEffects.delete(effect);
@@ -350,7 +361,7 @@ export abstract class LivingEntity extends Entity {
     }
 
     public removeEffect(effect: RegistryEntry<StatusEffect>): boolean {
-        const instance = this.removeEffectNoUpdate(effect);
+        const instance = this.forceRemoveEffect(effect);
         if (instance) {
             this.onEffectRemoved(instance);
             return true;
@@ -363,8 +374,9 @@ export abstract class LivingEntity extends Entity {
         if (this.activeEffects.size === 0) return false;
 
         for (const effect of this.activeEffects.values()) {
-            effect.type().getValue().removeAttributeModifiers(this.attributes);
+            this.onEffectRemoved(effect);
         }
+
         this.activeEffects.clear();
         this.onAttributeUpdated();
         return true;
@@ -373,7 +385,7 @@ export abstract class LivingEntity extends Entity {
     protected onEffectAdded(effect: StatusEffectInstance, _source: Entity | null): void {
         if (isClient) return;
         this.effectsDirty = true;
-        effect.type().getValue().addAttributeModifiers(this.attributes, effect.getAmplifier());
+        effect.type().getValue().addAttributeModifiers(this.attributes, effect.amplifier());
     }
 
     protected onEffectUpdated(effect: StatusEffectInstance, reapplyEffect: boolean, _source: Entity | null): void {
@@ -383,7 +395,7 @@ export abstract class LivingEntity extends Entity {
         if (reapplyEffect) {
             const statusEffect = effect.type().getValue();
             statusEffect.removeAttributeModifiers(this.attributes);
-            statusEffect.addAttributeModifiers(this.attributes, effect.getAmplifier());
+            statusEffect.addAttributeModifiers(this.attributes, effect.amplifier());
             this.onAttributeUpdated();
         }
     }
@@ -396,27 +408,23 @@ export abstract class LivingEntity extends Entity {
         this.onAttributeUpdated();
     }
 
-    private onAttributeUpdated(): void {
-        const pendingAttr = this.attributes.getPendingUpdate();
-        for (const attr of pendingAttr) {
-            this.updateAttribute(attr.getAttribute());
+    // 数据同步
+
+    public updateSyncData() {
+        super.updateSyncData();
+
+        if (!this.effectsDirty) return;
+        this.effectsDirty = false;
+
+        if (this.activeEffects.size === 0) {
+            this.dataTracker.set(LivingEntity.DATA_EFFECT, []);
+            return;
         }
 
-        pendingAttr.clear();
-    }
-
-    private updateAttribute(attribute: RegistryEntry<Attribute>): void {
-        if (attribute.matches(EntityAttributes.GENERIC_MAX_HEALTH)) {
-            const maxHealth = this.getMaxHealth();
-            if (this.getHealth() > maxHealth) {
-                this.setHealth(maxHealth);
-            }
-        } else if (attribute.matches(EntityAttributes.GENERIC_MAX_SHIELD)) {
-            const maxShield = this.getMaxShield();
-            if (this.getShieldAmount() > maxShield) {
-                this.setShieldAmount(maxShield);
-            }
-        }
+        const effects = this.activeEffects.keys()
+            .filter(v => v.getValue().isVisible)
+            .toArray();
+        this.dataTracker.set(LivingEntity.DATA_EFFECT, effects);
     }
 
     public override onTrackedDataSet(_data: TrackedData<any>) {
@@ -437,13 +445,13 @@ export abstract class LivingEntity extends Entity {
         this.color.edgeHex = packet.edgeColor;
     }
 
-    public override isPushAble(): boolean {
-        return this.isAlive();
-    }
+    // 插值
 
     public getInterpolation(): InterpolationHandler | null {
         return this.interpolation;
     }
+
+    // 持久化
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
@@ -481,7 +489,7 @@ export abstract class LivingEntity extends Entity {
         if (effects.length > 0) {
             for (const effectNbt of effects) {
                 const effect = StatusEffectInstance.fromNbt(effectNbt);
-                if (effect) this.addEffect(effect, null);
+                if (effect) this.addStatusEffect(effect, null);
             }
             this.effectsDirty = true;
         }

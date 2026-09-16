@@ -15,7 +15,6 @@ import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {SpecialWeapon} from "../../item/weapon/SpecialWeapon.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
-import {AbstractClientPlayerEntity} from "./AbstractClientPlayerEntity.ts";
 import {BallisticCalculator} from "../tech/BallisticCalculator.ts";
 import {PlayerFireC2SPacket} from "../../network/packet/c2s/PlayerFireC2SPacket.ts";
 import {PlayerReloadC2SPacket} from "../../network/packet/c2s/PlayerReloadC2SPacket.ts";
@@ -28,14 +27,16 @@ import {Weapon} from "../../item/weapon/Weapon.ts";
 import {FireSpecialC2SPacket} from "../../network/packet/c2s/FireSpecialC2SPacket.ts";
 import {ClientInventory} from "../inventory/ClientInventory.ts";
 import {FullMove, PositionOnly, Steering} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
+import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 
-export class ClientPlayerEntity extends AbstractClientPlayerEntity {
+export class LocalPlayerEntity extends PlayerEntity {
     public readonly profile: GameProfile;
     public readonly input: KeyboardInput;
 
     public readonly clientInventory: ClientInventory;
 
     declare protected readonly techTree: ClientTechTree;
+
     private quickFireIndex = 0;
     private readonly activeSpecials: Map<string, SpecialWeapon>;
     private readonly orderSpecials: SpecialWeapon[];
@@ -180,6 +181,13 @@ export class ClientPlayerEntity extends AbstractClientPlayerEntity {
             this.sendPacket(new PositionOnly(dx, dy));
         } else if (updateYaw) {
             this.sendPacket(new Steering(this.getYaw()));
+        }
+    }
+
+    protected override tickEffects() {
+        super.tickEffects();
+        for (const effect of this.getStatusEffects()) {
+            effect.tickClient();
         }
     }
 

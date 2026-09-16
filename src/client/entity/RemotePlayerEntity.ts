@@ -1,10 +1,10 @@
 import type {World} from "../../world/World.ts";
-import {MutVec2} from "../../utils/math/MutVec2.ts";
 import type {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
-import {AbstractClientPlayerEntity} from "./AbstractClientPlayerEntity.ts";
+import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
+import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 
-export class RemotePlayerEntity extends AbstractClientPlayerEntity {
+export class RemotePlayerEntity extends PlayerEntity {
     private readonly clientVelocity = MutVec2.zero();
     private velocityLerpDivisor: number = 0;
 

@@ -23,7 +23,7 @@ export class Cannon90 extends BaseWeapon {
             stack.getOr(DataComponents.ATTACK_DAMAGE, 1),
             stack.getOr(DataComponents.EXPLOSION_POWER, 5),
             new ExplosionConfigs(undefined, fusion ? ExplosionTag.FUSION : ExplosionTag.NONE),
-            new ExplosionVisual(stack.getOr(DataComponents.EXPLOSION_RADIUS, 16), undefined, 4, 2)
+            new ExplosionVisual(stack.getOr(DataComponents.EXPLOSION_RADIUS, 16), undefined, 8, 6)
         );
 
         this.setBullet(bullet, attacker, this.speed, 20, 1);

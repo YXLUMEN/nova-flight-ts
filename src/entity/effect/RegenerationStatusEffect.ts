@@ -11,8 +11,8 @@ export class RegenerationStatusEffect extends StatusEffect {
         return true;
     }
 
-    public override shouldApplyThisTick(duration: number, amplifier: number): boolean {
+    public override shouldApplyThisTick(tickCount: number, amplifier: number): boolean {
         const i = 50 >> amplifier;
-        return i > 0 ? duration % i === 0 : true;
+        return i > 0 ? tickCount % i === 0 : true;
     }
 }

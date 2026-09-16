@@ -1,12 +1,11 @@
 import type {MissileEntity} from "../../../entity/projectile/MissileEntity.ts";
-
-import {CachedSpriteRenderer} from "../cache/CachedSpriteRenderer.ts";
 import {MapRenderCache} from "../cache/MapRenderCache.ts";
 import type {SpriteCtx} from "../cache/LRURenderCache.ts";
 import {AABB} from "../../../utils/math/AABB.ts";
 import {buildSprite} from "../cache/RenderCache.ts";
+import {CachedEntityRender} from "../cache/CachedEntityRender.ts";
 
-export class MissileEntityRender extends CachedSpriteRenderer<number, MissileEntity> {
+export class MissileEntityRender extends CachedEntityRender<number, MissileEntity> {
     private readonly bounding = new AABB(-7, -8, 10, 8);
     private readonly flameBounding = new AABB(-4, -3, 0, 3);
     private flame: ImageBitmap | null = null;

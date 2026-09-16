@@ -1,27 +1,26 @@
+import type {DamageSource} from "../damage/DamageSource.ts";
+import type {Item} from "../../item/Item.ts";
+import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
+import type {TechTree} from "../../world/tech/TechTree.ts";
+import type {Constructor} from "../../type/types.ts";
+import type {MutVec2} from "../../utils/math/MutVec2.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
 import {World} from "../../world/World.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
-import {type DamageSource} from "../damage/DamageSource.ts";
-import type {TrackedData} from "../data/TrackedData.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
-import type {Item} from "../../item/Item.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
 import {Items} from "../../item/Items.ts";
-import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import type {TechTree} from "../../world/tech/TechTree.ts";
-import {DataTracker, type DataTrackerBuilder, type DataTrackerSerializedEntry} from "../data/DataTracker.ts";
+import {DataTracker, type DataTrackerBuilder} from "../data/DataTracker.ts";
 import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts";
 import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
-import type {Constructor} from "../../type/types.ts";
 import {Techs} from "../../world/tech/Techs.ts";
 import {Weapon} from "../../item/weapon/Weapon.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
-import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {UniqueInventory} from "./UniqueInventory.ts";
 import {PlayerDead} from "../../event/events/entity/PlayerDead.ts";
-import {isClient} from "../../configs/RuntimeConfig.ts";
 import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {PlayerDamage} from "../../event/events/entity/PlayerDamage.ts";
@@ -76,17 +75,6 @@ export abstract class PlayerEntity extends LivingEntity {
         this.clampPosition();
     }
 
-    protected inventoryTick() {
-        const world = this.getWorld();
-        const selected = this.inventory.getSelectedSlot();
-
-        for (let i = 0; i < this.inventory.tickSlotsLen(); i++) {
-            const stack = this.inventory.getItem(i);
-            if (stack.isEmpty()) continue;
-            stack.inventoryTick(world, this, i, i === selected);
-        }
-    }
-
     protected override adjustBlockCollision(movement: MutVec2): MutVec2 {
         const map = this.getWorld().getMap();
         const bounds = this.getBoundingBox();
@@ -99,6 +87,14 @@ export abstract class PlayerEntity extends LivingEntity {
         }
 
         return BlockCollision.separatingCollision(map, bounds, movement);
+    }
+
+    public override getShieldAmount(): number {
+        return this.dataTracker.get(PlayerEntity.SHIELD_AMOUNT);
+    }
+
+    protected override setShieldAmountUnclamped(amount: number) {
+        this.dataTracker.set(PlayerEntity.SHIELD_AMOUNT, amount);
     }
 
     public override takeDamage(damageSource: DamageSource, damage: number): boolean {
@@ -143,14 +139,6 @@ export abstract class PlayerEntity extends LivingEntity {
         return event.isCanceled();
     }
 
-    public override getShieldAmount(): number {
-        return this.dataTracker.get(PlayerEntity.SHIELD_AMOUNT);
-    }
-
-    protected override setShieldAmountUnclamped(amount: number) {
-        this.dataTracker.set(PlayerEntity.SHIELD_AMOUNT, amount);
-    }
-
     public override onDeath(damageSource: DamageSource) {
         const world = this.getWorld();
         const event = new PlayerDead(this);
@@ -176,12 +164,15 @@ export abstract class PlayerEntity extends LivingEntity {
         }
     }
 
-    public override isPlayer(): this is PlayerEntity {
-        return true;
-    }
+    protected inventoryTick() {
+        const world = this.getWorld();
+        const selected = this.inventory.getSelectedSlot();
 
-    public getTechs(): TechTree {
-        return this.techTree!;
+        for (let i = 0; i < this.inventory.tickSlotsLen(); i++) {
+            const stack = this.inventory.getItem(i);
+            if (stack.isEmpty()) continue;
+            stack.inventoryTick(world, this, i, i === selected);
+        }
     }
 
     public getItem(item: Item): ItemStack {
@@ -257,6 +248,11 @@ export abstract class PlayerEntity extends LivingEntity {
         return this.inventory.getSelectedItem();
     }
 
+    protected giveInitWeapon(): void {
+        this.addItem(Items.CANNON40);
+        this.addItem(Items.BOMB_WEAPON);
+    }
+
     public getScore(): number {
         return this.dataTracker.get(PlayerEntity.SCORE);
     }
@@ -267,6 +263,10 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public setScore(score: number): void {
         this.dataTracker.set(PlayerEntity.SCORE, Math.max(0, score));
+    }
+
+    public getTechs(): TechTree {
+        return this.techTree!;
     }
 
     public isDevMode(): boolean {
@@ -282,9 +282,11 @@ export abstract class PlayerEntity extends LivingEntity {
         return this.usedDev;
     }
 
-    protected giveInitWeapon(): void {
-        this.addItem(Items.CANNON40);
-        this.addItem(Items.BOMB_WEAPON);
+    public override isPlayer(): this is PlayerEntity {
+        return true;
+    }
+
+    public onDataTrackerUpdate(): void {
     }
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {
@@ -308,11 +310,5 @@ export abstract class PlayerEntity extends LivingEntity {
         this.inventory.readNBT(nbt);
         // todo 玩家重生
         if (this.getHealth() === 0) this.setHealth(this.getMaxHealth());
-    }
-
-    public onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {
-    }
-
-    public onTrackedDataSet(_data: TrackedData<any>): void {
     }
 }

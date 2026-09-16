@@ -1,11 +1,11 @@
 import type {BulletEntity} from "../../../entity/projectile/BulletEntity.ts";
 import {PI2} from "../../../utils/math/math.ts";
 import {AABB} from "../../../utils/math/AABB.ts";
-import {CachedSpriteRenderer} from "../cache/CachedSpriteRenderer.ts";
 import {MapRenderCache} from "../cache/MapRenderCache.ts";
 import type {EntityType} from "../../../entity/EntityType.ts";
+import {CachedEntityRender} from "../cache/CachedEntityRender.ts";
 
-export class BulletEntityRender extends CachedSpriteRenderer<number, BulletEntity> {
+export class BulletEntityRender extends CachedEntityRender<number, BulletEntity> {
     private readonly bounding: Map<EntityType<any>, AABB> = new Map();
 
     public constructor() {

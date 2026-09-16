@@ -1,9 +1,9 @@
 import {type SpawnMarkerEntity} from "../../../entity/SpawnMarkerEntity.ts";
-import {CachedSpriteRenderer} from "../cache/CachedSpriteRenderer.ts";
 import {SingleCache} from "../cache/SingleCache.ts";
 import {AABB} from "../../../utils/math/AABB.ts";
+import {CachedEntityRender} from "../cache/CachedEntityRender.ts";
 
-export class SpawnMarkerEntityRender extends CachedSpriteRenderer<number, SpawnMarkerEntity> {
+export class SpawnMarkerEntityRender extends CachedEntityRender<number, SpawnMarkerEntity> {
     private readonly bounding = new AABB(-13, -13, 13, 13);
 
     public constructor() {

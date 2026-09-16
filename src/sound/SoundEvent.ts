@@ -8,11 +8,7 @@ export class SoundEvent {
 
     public readonly id: Identifier;
 
-    private constructor(id: Identifier) {
+    public constructor(id: Identifier) {
         this.id = id;
-    }
-
-    public static of(id: Identifier): SoundEvent {
-        return new SoundEvent(id);
     }
 }

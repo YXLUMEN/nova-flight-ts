@@ -7,10 +7,11 @@ import {invoke} from "@tauri-apps/api/core";
 import {error, info, warn} from "@tauri-apps/plugin-log";
 import {sleep} from "../../utils/uit.ts";
 import type {StartServer} from "../../type/startup.ts";
-import {message} from "@tauri-apps/plugin-dialog";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import type {ConnectionContext} from "./ConnectionContext.ts";
 import {ClientHandshakeHandler} from "./handler/ClientHandshakeHandler.ts";
+import {Main2WorkerType, Worker2MainType} from "../../worker/WorkerMsgType.ts";
+import {message} from "@tauri-apps/plugin-dialog";
 
 export class ClientConnector {
     private readonly client: NovaFlightClient;
@@ -206,38 +207,42 @@ export class ClientConnector {
 
         const workerFs = this.ctx.workerFs();
         worker.onmessage = event => {
-            switch (event.data.type) {
-                case 'worker_ready':
+            const w2m = event.data.w2m as Worker2MainType;
+            if (w2m === undefined) return;
+
+            switch (w2m) {
+                case Worker2MainType.WORKER_READY:
                     worker.postMessage({
-                        type: 'start_server',
+                        m2w: Main2WorkerType.START_SERVER,
                         payload: startUp
                     }, {transfer: [key]});
                     break;
-                case 'server_start':
+                case Worker2MainType.SERVER_START:
                     connectToServer();
                     break;
-                case 'server_stop':
+                case Worker2MainType.SERVER_STOP:
                     this.ctx.stop();
                     break;
-                case 'saved':
+                case Worker2MainType.SAVED:
                     this.client.clientCommandManager.addPlainMessage('\x1b[32m游戏已保存');
                     break;
-                case 'log':
+                case Worker2MainType.LOG: {
                     const level = event.data.level;
                     if (level === 'info') info(event.data.message);
                     else if (level === 'warn') warn(event.data.message);
                     else if (level === 'error') error(event.data.message);
                     break;
-                case 'message':
+                }
+                case Worker2MainType.POPUP:
                     message(event.data.message, {kind: event.data.kind});
                     break;
-                case 'read_file':
+                case Worker2MainType.READ_FILE:
                     workerFs.readFile(event.data, worker);
                     break;
-                case 'write_file':
+                case Worker2MainType.WRITE_FILE:
                     workerFs.writeFile(event.data);
                     break;
-                case 'fetch':
+                case Worker2MainType.FETCH:
                     workerFs.fetch(event.data, worker);
                     break;
             }

@@ -66,12 +66,12 @@ export class Emp implements WorldMutation {
                 continue;
             }
             if (entity instanceof LivingEntity) {
-                entity.addEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, this.duration, 1), this.attacker);
+                entity.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, this.duration, 1), this.attacker);
                 entity.takeDamage(source, this.damage);
             }
         }
 
-        world.playSound(null, SoundEvents.EMP_BURST);
+        world.playSound(null, SoundEvents.EMP_BURST, 0.8);
         if (!world.isClient) {
             (world as ServerWorld).spawnVisual(null, new EMPBurst(new Vec2(this.x, this.y), this.radius));
         }

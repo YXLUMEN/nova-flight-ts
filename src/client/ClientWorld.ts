@@ -1,29 +1,28 @@
-import {World} from "../world/World.ts";
-import {type Entity} from "../entity/Entity.ts";
-import {ClientEntityManager} from "../world/entity/ClientEntityManager.ts";
-import {EntityList} from "../world/entity/EntityList.ts";
-import {RegistryManager} from "../registry/RegistryManager.ts";
+import type {Entity} from "../entity/Entity.ts";
 import type {EntityHandler} from "../world/entity/EntityHandler.ts";
 import type {VisualEffect} from "../effect/VisualEffect.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
-import {SoundSystem} from "../sound/SoundSystem.ts";
-import {NovaFlightClient} from "./NovaFlightClient.ts";
-import {MobEntity} from "../entity/mob/MobEntity.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExplosionVisual} from "../world/element/explosion/ExplosionVisual.ts";
-import type {Explosion} from "../world/element/explosion/Explosion.ts";
-import {DEFAULT_CONFIG} from "../configs/RuntimeConfig.ts";
-import {AbstractClientPlayerEntity} from "./entity/AbstractClientPlayerEntity.ts";
-import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
-import {HistoricalScore} from "../statistics/HistoricalScore.ts";
 import type {ExplosionConfigs} from "../world/element/explosion/ExplosionConfigs.ts";
 import type {WorldRenderer} from "./render/WorldRenderer.ts";
-import {type ParticleEffectType} from "../effect/ParticleEffectType.ts";
+import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import type {ClientConnection} from "./network/ClientConnection.ts";
 import type {Payload} from "../network/Payload.ts";
 import type {HexColor} from "../type/types.ts";
+import {World} from "../world/World.ts";
+import {ClientEntityManager} from "../world/entity/ClientEntityManager.ts";
+import {EntityList} from "../world/entity/EntityList.ts";
+import {RegistryManager} from "../registry/RegistryManager.ts";
+import {SoundSystem} from "../sound/SoundSystem.ts";
+import {NovaFlightClient} from "./NovaFlightClient.ts";
+import {MobEntity} from "../entity/mob/MobEntity.ts";
+import type {Explosion} from "../world/element/explosion/Explosion.ts";
+import {DEFAULT_CONFIG} from "../configs/RuntimeConfig.ts";
+import {HistoricalScore} from "../statistics/HistoricalScore.ts";
 import {GameOver} from "../event/events/game/GameOver.ts";
+import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 
 export class ClientWorld extends World {
     public readonly worldName: string;
@@ -32,7 +31,7 @@ export class ClientWorld extends World {
     private readonly client: NovaFlightClient = NovaFlightClient.getInstance();
     private readonly worldRender: WorldRenderer;
 
-    private readonly players = new Set<AbstractClientPlayerEntity>();
+    private readonly players = new Set<PlayerEntity>();
     private readonly entities: EntityList = new EntityList();
     private readonly entityManager: ClientEntityManager<Entity>;
     private isMultiPlayer = false;
@@ -116,7 +115,7 @@ export class ClientWorld extends World {
         this.client.connection.send(payload);
     }
 
-    public override getServer(): NovaFlightServer | null {
+    public override getServer(): null {
         return null;
     }
 
@@ -248,13 +247,9 @@ export class ClientWorld extends World {
         this.entityManager.clear();
     }
 
-    public saveAll() {
-        this.client.getServerWorker()?.postMessage({type: 'save_all'});
-    }
-
     public readonly ClientEntityHandler: EntityHandler<Entity> = {
         startTicking: (entity: Entity) => {
-            if (entity instanceof AbstractClientPlayerEntity) {
+            if (entity instanceof PlayerEntity) {
                 this.players.add(entity);
                 if (this.players.size > 1) this.isMultiPlayer = true;
                 return;
@@ -263,7 +258,7 @@ export class ClientWorld extends World {
         },
 
         stopTicking: (entity: Entity) => {
-            if (entity instanceof AbstractClientPlayerEntity) {
+            if (entity instanceof PlayerEntity) {
                 this.players.delete(entity);
                 return;
             }

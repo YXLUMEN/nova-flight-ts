@@ -89,7 +89,7 @@ export class StatusEffectCommand {
         if (entities.length === 1) {
             const target = entities[0];
             if (target instanceof LivingEntity) {
-                target.addEffect(new StatusEffectInstance(effect, duration, amplifier), null);
+                target.addStatusEffect(new StatusEffectInstance(effect, duration, amplifier), null);
                 ctx.source.outPut.sendMessage(`Give effect ${effectIdResult.result} to \x1b[32m${target.getUUID()}`);
             }
             return;
@@ -97,7 +97,7 @@ export class StatusEffectCommand {
 
         for (const entity of entities) {
             if (entity instanceof LivingEntity) {
-                entity.addEffect(new StatusEffectInstance(effect, duration, amplifier), null);
+                entity.addStatusEffect(new StatusEffectInstance(effect, duration, amplifier), null);
             }
         }
         ctx.source.outPut.sendMessage(`Give effect ${effectIdResult.result} for ${entities.length} entities`);

@@ -13,7 +13,7 @@ export const DEFAULT_CONFIG = config({
 
 export const RuntimeConfig = status({
     per: DEFAULT_CONFIG.per,
-    perFrame: 1000 / 100,
+    perFrame: 1000 / 100, // 越小渲染越快
 
     enableCameraOffset: !isDev,
 

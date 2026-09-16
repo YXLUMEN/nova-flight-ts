@@ -1,11 +1,11 @@
 import {ItemStack} from "../../item/ItemStack.ts";
 import {ClientInventory} from "./ClientInventory.ts";
-import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
+import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
 import {ModelManager} from "../render/model/ModelManager.ts";
 import {UiFramework} from "../render/ui/UiFramework.ts";
 
 export class InventoryRender extends UiFramework {
-    private readonly player: ClientPlayerEntity;
+    private readonly player: LocalPlayerEntity;
     private readonly inventory: ClientInventory;
 
     private readonly ICON_SIZE = 38;
@@ -21,7 +21,7 @@ export class InventoryRender extends UiFramework {
     private specialLen: number = 0;
     private slotPositions: Float32Array | null = null;
 
-    public constructor(player: ClientPlayerEntity) {
+    public constructor(player: LocalPlayerEntity) {
         super();
         this.player = player;
         this.inventory = player.clientInventory;

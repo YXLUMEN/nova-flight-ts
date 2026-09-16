@@ -1,15 +1,15 @@
 import type {MobEntity} from "../../entity/mob/MobEntity.ts";
 import {lerp, PI2} from "../../utils/math/math.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
-import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
+import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
 
 export class BallisticCalculator {
-    private owner: ClientPlayerEntity;
+    private owner: LocalPlayerEntity;
     private lockedTarget: MobEntity | null = null;
     private prevLeadX = 0;
     private prevLeadY = 0;
 
-    public constructor(owner: ClientPlayerEntity) {
+    public constructor(owner: LocalPlayerEntity) {
         this.owner = owner;
     }
 

@@ -5,7 +5,7 @@ import {Registries} from "../registry/Registries.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
 import {DevourerBoss} from "../entity/mob/DevourerBoss.ts";
 import {ClientTechManager} from "./tech/ClientTechManager.ts";
-import type {ClientPlayerEntity} from "./entity/ClientPlayerEntity.ts";
+import type {LocalPlayerEntity} from "./entity/LocalPlayerEntity.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {Audios} from "../sound/Audios.ts";
 
@@ -15,7 +15,7 @@ export class ClientDefaultEvents {
 
         events.on('player:tech:unlock', event => {
             const {tech, silent} = event;
-            const player = event.player as ClientPlayerEntity;
+            const player = event.player as LocalPlayerEntity;
 
             const entry = Registries.TECH.getEntryByValue(tech);
             if (!entry) throw new Error(`Tech not found: ${tech})`);

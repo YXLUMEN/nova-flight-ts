@@ -399,6 +399,10 @@ export class ClientCommandManager extends CommandManager {
             const node = lastNode.node;
             const cmd = node.getCommand();
             if (cmd) {
+                if (parseResults.reader.canRead()) {
+                    this.commandPanel.addPlainMessage(this.unconsumed(parseResults));
+                    return;
+                }
                 cmd(context);
                 return;
             }

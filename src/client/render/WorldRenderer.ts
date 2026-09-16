@@ -12,7 +12,7 @@ import {BlockMapRender} from "./BlockMapRender.ts";
 import type {TitleEffect} from "../../effect/TitleEffect.ts";
 import {ParticlePool} from "../../effect/ParticlePool.ts";
 import type {HexColor} from "../../type/types.ts";
-import {EntityRenderer} from "./EntityRenderer.ts";
+import {WorldEntityRenderer} from "./WorldEntityRenderer.ts";
 import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 
 export class WorldRenderer {
@@ -21,7 +21,7 @@ export class WorldRenderer {
 
     private world: ClientWorld | null = null;
 
-    private readonly entityRenderer: EntityRenderer;
+    private readonly entityRenderer: WorldEntityRenderer;
     private readonly effects: VisualEffect[] = [];
     private readonly particlePool: ParticlePool;
     private readonly starField: StarField;
@@ -35,7 +35,7 @@ export class WorldRenderer {
         this.client = client;
         this.window = client.window;
 
-        this.entityRenderer = new EntityRenderer(client);
+        this.entityRenderer = new WorldEntityRenderer(client);
         this.particlePool = new ParticlePool(1024);
         this.starField = new StarField(128, defaultLayers, 8);
         this.starField.init();
@@ -62,6 +62,7 @@ export class WorldRenderer {
             const effect = this.effects[i];
             effect.tick(dt);
             if (effect.isAlive()) continue;
+            effect.kill();
             this.effects[i] = this.effects[this.effects.length - 1];
             this.effects.pop();
         }
@@ -116,19 +117,7 @@ export class WorldRenderer {
     public render(alpha: number) {
         if (!this.rendering) return;
 
-        const world = this.world;
-        if (!world) return;
-
         const ctx = this.window.ctx;
-
-        if (this.client.isPause() && !world.isOver()) {
-            const player = this.client.player;
-            if (player === null || !player.isOpenInventory()) {
-                this.window.pauseOverlay.render(ctx);
-                return;
-            }
-        }
-
         ctx.clearRect(0, 0, Window.viewWidth, Window.viewHeight);
 
         this.starField.render(ctx, this.window.camera, alpha);
@@ -145,6 +134,11 @@ export class WorldRenderer {
 
         // 背景层
         this.renderBackground(ctx);
+        const world = this.world;
+        if (!world) {
+            ctx.restore();
+            return;
+        }
 
         this.mapRender!.render(ctx, viewRect);
         this.entityRenderer.renderEntities(ctx, viewRect, world, alpha);
@@ -172,6 +166,10 @@ export class WorldRenderer {
 
         this.title?.render(ctx);
         this.window.hud.render(ctx);
+        if (this.client.isPause() && !world.isOver() && (player && !player.isOpenInventory())) {
+            this.window.pauseOverlay.render(ctx);
+        }
+
         this.window.hud.renderPointer(ctx, this.client);
     }
 

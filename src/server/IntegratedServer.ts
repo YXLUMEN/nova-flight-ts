@@ -14,6 +14,7 @@ import {NoResultsError, StatusError} from "../type/errors.ts";
 import {ServerIntegratedChannel} from "./network/ServerIntegratedChannel.ts";
 import {ServerTechManager} from "./tech/ServerTechManager.ts";
 import {ServerDefaultEvents} from "./event/ServerDefaultEvents.ts";
+import {Worker2MainType} from "../worker/WorkerMsgType.ts";
 
 export class IntegratedServer extends NovaFlightServer {
     private readonly hostUUID: UUID;
@@ -61,7 +62,7 @@ export class IntegratedServer extends NovaFlightServer {
 
     public override onHalted(): Promise<void> {
         console.log('[Server] Notify client the integrated server shutdown.');
-        self.postMessage({type: 'server_stop'});
+        self.postMessage({w2m: Worker2MainType.SERVER_STOP});
         return Promise.resolve();
     }
 

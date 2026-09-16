@@ -6,7 +6,7 @@ import {cleanObj} from "../../utils/uit.ts";
 import {DataLoader} from "../../resource/DataLoader.ts";
 import type {ClientTechTree} from "../tech/ClientTechTree.ts";
 import {app} from "../../lib.ts";
-import {Settings} from "../settings/Settings.ts";
+import {Main2WorkerType} from "../../worker/WorkerMsgType.ts";
 
 export class ClientInputEvents {
     public static registryAll(client: NovaFlightClient, input: KeyboardInput): void {
@@ -171,28 +171,22 @@ export class ClientInputEvents {
             case 'KeyP':
                 localStorage.removeItem('guided');
                 break;
-            case 'F8':
-                worker?.postMessage({type: 'crash_the_server'});
-                break;
             case 'KeyC':
-                worker?.postMessage({type: 'cd_all'});
+                worker?.postMessage({m2w: Main2WorkerType.CD_ALL});
                 break;
         }
     }
 
     private static windowEvents(client: NovaFlightClient) {
-        let lastPerFrame = 1000 / Settings.FPS.get();
-
         app.listen('tauri://focus', () => {
-            RuntimeConfig.perFrame = lastPerFrame;
+            client.worldRender.rendering = true;
         }).catch(console.error);
 
         app.listen('tauri://blur', () => {
             if (!client.clientCommandManager.isShow()) {
                 client.setPause(true);
             }
-            lastPerFrame = RuntimeConfig.perFrame;
-            RuntimeConfig.perFrame = 1000 / 5;
+            client.worldRender.rendering = false;
         }).catch(console.error);
 
         app.listen('tauri://resize', async () => {

@@ -18,7 +18,7 @@ export class MeltdownEffect extends StatusEffect {
         return true;
     }
 
-    public override shouldApplyThisTick(duration: number): boolean {
-        return duration % 10 === 0;
+    public override shouldApplyThisTick(tickCount: number): boolean {
+        return tickCount % 10 === 0;
     }
 }

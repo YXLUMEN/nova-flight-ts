@@ -11,7 +11,7 @@ import {ExplosionS2CPacket} from "../../../network/packet/s2c/ExplosionS2CPacket
 import {EntityVelocityUpdateS2CPacket} from "../../../network/packet/s2c/EntityVelocityUpdateS2CPacket.ts";
 import {EntityTrackerUpdateS2CPacket} from "../../../network/packet/s2c/EntityTrackerUpdateS2CPacket.ts";
 import {EntityMoveS2CPacket} from "../../../network/packet/s2c/EntityMoveS2CPacket.ts";
-import {ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
+import {LocalPlayerEntity} from "../../entity/LocalPlayerEntity.ts";
 import {EntityDamageS2CPacket} from "../../../network/packet/s2c/EntityDamageS2CPacket.ts";
 import {ParticleS2CPacket} from "../../../network/packet/s2c/ParticleS2CPacket.ts";
 import {EntityAttributesS2CPacket} from "../../../network/packet/s2c/EntityAttributesS2CPacket.ts";
@@ -72,7 +72,6 @@ import type {TickChangeS2CPacket} from "../../../network/packet/s2c/TickChangeS2
 import type {PlayerProfilesS2CPacket} from "../../../network/packet/s2c/PlayerProfilesS2CPacket.ts";
 import {AcceptTeleportC2SPacket} from "../../../network/packet/c2s/AcceptTeleportC2SPacket.ts";
 import {Vec2} from "../../../utils/math/Vec2.ts";
-import {ParticleEffects} from "../../../effect/ParticleEffects.ts";
 
 export class ClientPlayHandler extends ClientCommonHandler {
     private readonly commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
@@ -101,7 +100,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
                 this.client.clientId,
                 this.client.playerName
             );
-            this.client.player = new ClientPlayerEntity(this.world, this.client.input, profile);
+            this.client.player = new LocalPlayerEntity(this.world, this.client.input, profile);
             this.client.player.setYaw(-1.57079);
         }
 
@@ -189,7 +188,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
         }
     }
 
-    private handleLocalPlayer(player: ClientPlayerEntity, packet: EntityPositionS2CPacket): void {
+    private handleLocalPlayer(player: LocalPlayerEntity, packet: EntityPositionS2CPacket): void {
         const dx = packet.x - player.getX();
         const dy = packet.y - player.getY();
         const dist = dx * dx + dy * dy;
@@ -260,15 +259,9 @@ export class ClientPlayHandler extends ClientCommonHandler {
             return;
         }
 
-        if (entity instanceof LivingEntity) {
-            if (entity.getShieldAmount() > 0) {
-                world.addPreparedParticleVec(ParticleEffects.SHIELD_HIT, entity.positionRef, 2);
-            } else {
-                world.addPreparedParticleVec(ParticleEffects.HIT, entity.positionRef, 2);
-            }
-        }
-
-        if (entity instanceof TargetDrone) {
+        if (entity === this.client.player) {
+            this.client.window.hud.onPlayerDamage(packet.damage);
+        } else if (entity instanceof TargetDrone) {
             entity.push(packet.damage);
         }
 
@@ -488,7 +481,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
     public onRemoveEntityEffect(packet: RemoveEntityStatusEffectS2CPacket): void {
         const entity = this.world?.getEntityById(packet.entityId);
         if (entity instanceof LivingEntity) {
-            entity.removeEffectNoUpdate(packet.effectId);
+            entity.forceRemoveEffect(packet.effectId);
         }
     }
 

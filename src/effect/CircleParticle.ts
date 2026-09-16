@@ -32,8 +32,6 @@ export class CircleParticle implements VisualEffect {
         }
     );
 
-    public alive = true;
-
     private prevPos = MutVec2.zero();
     private pos = MutVec2.zero();
     private vel = MutVec2.zero();
@@ -45,6 +43,7 @@ export class CircleParticle implements VisualEffect {
     private drag: number;
 
     private t = 0;
+    private age = 0;
 
     public constructor(
         pos: Vec2, vel: Vec2,
@@ -68,10 +67,7 @@ export class CircleParticle implements VisualEffect {
 
     public tick(dt: number) {
         this.t += dt;
-        if (this.t >= this.life) {
-            this.alive = false;
-            return;
-        }
+        this.age += dt;
         this.vel.multiply(1 - this.drag * dt);
         this.prevPos.set(this.pos.x, this.pos.y);
         this.pos.x += this.vel.x * dt;
@@ -100,11 +96,11 @@ export class CircleParticle implements VisualEffect {
     }
 
     public isAlive(): boolean {
-        return this.alive;
+        return this.age < this.life;
     }
 
     public kill() {
-        this.alive = false;
+        this.age = this.life;
     }
 
     public reset(
@@ -122,6 +118,6 @@ export class CircleParticle implements VisualEffect {
         this.colorTo = colorTo;
         this.drag = drag;
         this.t = 0;
-        this.alive = true;
+        this.age = 0;
     }
 }

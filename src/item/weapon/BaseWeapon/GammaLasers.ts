@@ -32,8 +32,8 @@ export class GammaLasers extends LaserPulseItem {
 
         if (target.getShieldAmount() !== 0) return;
         const effect = target.getStatusEffect(StatusEffects.MELTDOWN);
-        const amplifier = effect ? Math.min(effect.getAmplifier() + 1, 3) : 0;
-        target.addEffect(new StatusEffectInstance(StatusEffects.MELTDOWN, 60, amplifier), attacker);
+        const amplifier = effect ? Math.min(effect.amplifier() + 1, 3) : 0;
+        target.addStatusEffect(new StatusEffectInstance(StatusEffects.MELTDOWN, 60, amplifier), attacker);
     }
 
     public override getUiColor(): string {

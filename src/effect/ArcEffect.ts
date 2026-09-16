@@ -13,8 +13,8 @@ export class ArcEffect implements VisualEffect {
             writer.writeFloat(value.endX);
             writer.writeFloat(value.endY);
 
-            writer.writeFloat(value.duration);
-            writer.writeVarUint(value.width);
+            writer.writeFloat(value.life);
+            writer.writeFloat(value.width);
             PacketCodecs.COLOR_HEX.encode(writer, value.color);
             writer.writeVarUint(value.arcCount);
             writer.writeVarUint(value.segments);
@@ -27,7 +27,7 @@ export class ArcEffect implements VisualEffect {
                 reader.readFloat(),
 
                 reader.readFloat(),
-                reader.readVarUint(),
+                reader.readFloat(),
                 PacketCodecs.COLOR_HEX.decode(reader),
                 reader.readVarUint(),
                 reader.readVarUint()
@@ -40,19 +40,20 @@ export class ArcEffect implements VisualEffect {
     private readonly endX: number;
     private readonly endY: number;
 
-    private readonly duration: number;
+    private readonly life: number;
     private age: number = 0;
 
     private readonly arcCount: number;
     private readonly segments: number;
     private readonly color: string;
     private readonly width: number;
+    private readonly blur: boolean;
 
     private cachedArcs: number[][] = [];
 
     public constructor(
         x: number, y: number, tx: number, ty: number,
-        duration: number = 2,
+        life: number = 2,
         width: number = 2,
         color: string = '#8af',
         arcCount: number = 3,
@@ -63,11 +64,12 @@ export class ArcEffect implements VisualEffect {
         this.endX = tx;
         this.endY = ty;
 
-        this.duration = duration;
+        this.life = life;
         this.width = width;
         this.color = color;
         this.arcCount = arcCount;
         this.segments = segments;
+        this.blur = width > 1;
 
         if (isClient) this.rebuildArcs();
     }
@@ -82,7 +84,12 @@ export class ArcEffect implements VisualEffect {
 
     public render(ctx: CanvasRenderingContext2D) {
         ctx.save();
-        ctx.globalAlpha = 1.0 - (this.age / this.duration || 1);
+        if (this.blur) {
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = this.color;
+        }
+
+        ctx.globalAlpha = 1.0 - (this.age / this.life || 1);
         ctx.strokeStyle = this.color;
         ctx.lineWidth = this.width;
 
@@ -98,15 +105,15 @@ export class ArcEffect implements VisualEffect {
     }
 
     public isAlive(): boolean {
-        return this.age < this.duration;
+        return this.age < this.life;
     }
 
     public kill() {
-        this.age = this.duration;
+        this.age = this.life;
     }
 
     private rebuildArcs(): void {
-        this.cachedArcs = [];
+        this.cachedArcs.length = 0;
         const dx = this.endX - this.startX;
         const dy = this.endY - this.startY;
         const len = Math.hypot(dx, dy);

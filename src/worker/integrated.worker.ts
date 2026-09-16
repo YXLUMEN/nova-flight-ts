@@ -2,43 +2,45 @@ import {ProtocolRegistry} from "../network/packet/ProtocolRegistry.ts";
 import {IntegratedServer} from "../server/IntegratedServer.ts";
 import type {StartServer} from "../type/startup.ts";
 import {isDev} from "../configs/RuntimeConfig.ts";
+import {Main2WorkerType, Worker2MainType} from "./WorkerMsgType.ts";
 
 let server: IntegratedServer | null = null;
 let pendingStop = false;
 
-self.addEventListener("message", handleEvent);
-self.postMessage({type: 'worker_ready'});
+self.addEventListener('message', handleEvent);
+self.postMessage({w2m: Worker2MainType.WORKER_READY});
 
 async function handleEvent(event: MessageEvent) {
-    const {type, payload} = event.data;
+    const m2w = event.data.m2w as Main2WorkerType;
+    if (m2w === undefined) return;
 
-    switch (type) {
-        case 'start_server': {
+    switch (m2w) {
+        case Main2WorkerType.START_SERVER: {
             if (server) return;
-            const startUp = payload as StartServer;
+            const startUp = event.data.payload as StartServer;
             server = IntegratedServer.startServer(new Uint8Array(startUp.key), startUp.hostUUID, startUp.saveName) as IntegratedServer;
             server.networkChannel.setRemote(startUp.addr);
             return server.runServer();
         }
-        case 'stop_server': {
+        case Main2WorkerType.STOP_SERVER: {
             if (!server || pendingStop) return;
             pendingStop = true;
             await server.halt();
             server = null;
-            self.postMessage({type: 'server_shutdown'});
+            self.postMessage({w2m: Worker2MainType.SERVER_SHUTDOWN});
             break;
         }
-        case 'start_ticking': {
+        case Main2WorkerType.START_TICKING: {
             server?.setPause(false);
             break;
         }
-        case 'stop_ticking': {
+        case Main2WorkerType.STOP_TICKING: {
             server?.setPause(true);
             break;
         }
-        case 'loaded_save_data':
+        case Main2WorkerType.LOADED_SAVE_DATA:
             break;
-        case 'save_all': {
+        case Main2WorkerType.SAVE_ALL: {
             if (!isDev) return;
 
             if (!server || !server.world) return;
@@ -46,10 +48,10 @@ async function handleEvent(event: MessageEvent) {
             await server.playerManager.saveAllPlayerData();
             const nbt = server.world.saveAll();
             await server.saveWorld(nbt);
-            self.postMessage({type: 'saved'});
+            self.postMessage({w2m: Worker2MainType.SAVED});
             break;
         }
-        case 'cd_all' : {
+        case Main2WorkerType.CD_ALL : {
             if (!isDev) return;
 
             if (!server || !server.world) return;

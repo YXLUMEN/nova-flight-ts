@@ -91,7 +91,7 @@ export class DamageSource {
     }
 
     public isOf(typeKey: RegistryKey<DamageType>): boolean {
-        return this.type.matchesKey(typeKey);
+        return this.type.matchKey(typeKey);
     }
 
     public isOfs(...types: RegistryKey<DamageType>[]): boolean {

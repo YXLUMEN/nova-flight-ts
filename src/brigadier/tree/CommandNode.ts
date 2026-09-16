@@ -7,13 +7,14 @@ import type {CommandContextBuilder} from "../context/CommandContextBuilder.ts";
 import type {CommandContext} from "../context/CommandContext.ts";
 import type {SuggestionsBuilder} from "../suggestion/SuggestionsBuilder.ts";
 import type {Suggestions} from "../suggestion/Suggestions.ts";
+import {any} from "../../utils/uit.ts";
 
 export abstract class CommandNode<S> {
     private readonly children: Map<string, CommandNode<S>> = new Map();
     private readonly literals: Map<string, LiteralCommandNode<S>> = new Map();
     private readonly arguments: Map<string, ArgumentCommandNode<S, any>> = new Map();
 
-    private readonly requirement: Predicate<S>;
+    private readonly requirement: Predicate<S> = any;
     private command: Command<S> | null;
 
     protected constructor(command: Command<S> | null, requirement: Predicate<S>) {
@@ -52,6 +53,8 @@ export abstract class CommandNode<S> {
 
         const child = this.children.get(node.getName());
         if (child) {
+            this.assertMergeable(child, node);
+
             if (node.getCommand() !== null) {
                 child.command = node.getCommand();
             }
@@ -66,6 +69,29 @@ export abstract class CommandNode<S> {
             this.literals.set(node.getName(), node as LiteralCommandNode<S>);
         } else if (node.getType() === 2) {
             this.arguments.set(node.getName(), node as ArgumentCommandNode<S, any>);
+        }
+    }
+
+    private assertMergeable(child: CommandNode<S>, node: CommandNode<S>): void {
+        const typeName = (target: CommandNode<S>) =>
+            target.getType() === 1 ? "literal" : "argument";
+
+        if (child.getType() !== node.getType()) {
+            throw new Error(
+                `Command name "${child.getName()}" is already registered as a ${typeName(child)}, it cannot be re-registered as a ${typeName(node)}`
+            );
+        }
+
+        if (child.requirement !== node.requirement) {
+            throw new Error(
+                `Command "${child.getName()}" is already registered with a different requires() predicate; the incoming requirement would be silently ignored`
+            );
+        }
+
+        if (child.getCommand() !== null && node.getCommand() !== null) {
+            throw new Error(
+                `Command "${child.getName()}" already has an executable handler; duplicate executes() registration will not overwrite it`
+            );
         }
     }
 

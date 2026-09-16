@@ -3,19 +3,19 @@ import {PI2, wrapRadians} from "../../utils/math/math.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
-import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
+import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import {NovaFlightClient} from "../NovaFlightClient.ts";
 
 export class AutoAim {
     public static readonly FIRE_THRESHOLD = Math.PI / 225;
-    private readonly owner: ClientPlayerEntity;
+    private readonly owner: LocalPlayerEntity;
 
     private currentTarget: MobEntity | null = null;
     private targetLockTime = 0;
 
-    public constructor(owner: ClientPlayerEntity) {
+    public constructor(owner: LocalPlayerEntity) {
         this.owner = owner;
     }
 

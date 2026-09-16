@@ -95,7 +95,7 @@ export class MobBlueprint {
     private applyEliteEffects(ctx: SpawnContext, mob: MobEntity, health: number): void {
         if (ctx.difficulty > 2 && ctx.rng() > 0.7) {
             const shieldAmount = Math.max(ctx.difficulty, health / 6);
-            mob.addEffect(
+            mob.addStatusEffect(
                 new StatusEffectInstance(StatusEffects.SHIELD, -1, shieldAmount),
                 null,
             );
@@ -103,7 +103,7 @@ export class MobBlueprint {
         }
 
         if (ctx.difficulty > 8 && ctx.rng() > 0.9 && !(mob instanceof TankEnemy)) {
-            mob.addEffect(
+            mob.addStatusEffect(
                 new StatusEffectInstance(StatusEffects.RESISTANCE, 800, Math.min(7, ctx.difficulty)),
                 null,
             );

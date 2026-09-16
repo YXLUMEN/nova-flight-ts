@@ -4,6 +4,7 @@ import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {decodeFromByte, encodeToByte} from "../utils/net_util.ts";
 import {hexToRgba} from "../utils/uit.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
+import {PI2} from "../utils/math/math.ts";
 
 export class EdgeGlowEffect implements VisualEffect {
     public static TYPE: VisualEffectType<EdgeGlowEffect> = null!;
@@ -32,7 +33,6 @@ export class EdgeGlowEffect implements VisualEffect {
         }
     );
 
-    private alive = true;
     private t = 0;
 
     private readonly color: string;
@@ -69,16 +69,11 @@ export class EdgeGlowEffect implements VisualEffect {
     }
 
     public tick(dt: number) {
-        if (!this.alive) return;
+        if (!this.isAlive()) return;
         this.t += dt;
-        if (this.t >= this.duration) {
-            this.alive = false;
-        }
     }
 
     public render(ctx: CanvasRenderingContext2D) {
-        if (!this.alive) return;
-
         const tMat = ctx.getTransform();
         // 将平移归零，但保留缩放（DPR）
         ctx.save();
@@ -113,16 +108,16 @@ export class EdgeGlowEffect implements VisualEffect {
     }
 
     public isAlive(): boolean {
-        return this.alive;
+        return this.t < this.duration;
     }
 
     public kill() {
-        this.alive = false;
+        this.t = this.duration;
     }
 
     private currentAlpha(): number {
         let env = 1;
-        if (isFinite(this.duration)) {
+        if (Number.isFinite(this.duration)) {
             if (this.t < this.fadeIn) {
                 const u = this.t / this.fadeIn;
                 env = u * u * (3 - 2 * u); // smoothstep
@@ -134,7 +129,7 @@ export class EdgeGlowEffect implements VisualEffect {
             }
         }
 
-        const pulseMul = this.pulse ? (0.85 + 0.15 * Math.sin(this.t * 2 * Math.PI * 2)) : 1;
+        const pulseMul = this.pulse ? (0.85 + 0.15 * Math.sin(this.t * 2 * PI2)) : 1;
         return Math.max(0, Math.min(1, this.intensity * env * pulseMul));
     }
 
@@ -169,5 +164,9 @@ export class EdgeGlowEffect implements VisualEffect {
         }
         ctx.fillStyle = grad!;
         ctx.fillRect(Math.floor(x), Math.floor(y), Math.ceil(w), Math.ceil(h));
+    }
+
+    public reset() {
+        this.t = 0;
     }
 }

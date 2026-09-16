@@ -5,6 +5,7 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {clamp} from "../../../utils/math/math.ts";
 import type {Vec2} from "../../../utils/math/Vec2.ts";
 import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
+import type {Entity} from "../../../entity/Entity.ts";
 
 export class EntityDamageS2CPacket implements Payload {
     public static readonly ID: PayloadType<EntityDamageS2CPacket> = payloadType('entity_damage');
@@ -41,6 +42,15 @@ export class EntityDamageS2CPacket implements Payload {
         return new EntityDamageS2CPacket(
             entityId,
             pos,
+            clamp((damage * 10) | 0, 0, 65535),
+            color
+        );
+    }
+
+    public static fromEntity(entity: Entity, damage: number, color: string = '#ff3434') {
+        return new EntityDamageS2CPacket(
+            entity.getId(),
+            entity.positionRef,
             clamp((damage * 10) | 0, 0, 65535),
             color
         );
