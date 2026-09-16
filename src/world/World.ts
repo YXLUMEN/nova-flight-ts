@@ -199,17 +199,17 @@ export abstract class World {
         return target;
     }
 
-    public getEntityCollisions(entity: Entity | null, box: AABB): Entity[] {
-        if (box.getAverageSideLength() < 1E-7) return [];
-        return this.searchOtherEntities(
+    public* getEntityCollisions(entity: Entity | null, box: AABB) {
+        if (box.getAverageSideLength() < 1E-7) return;
+        yield* this.searchOtherEntities(
             entity,
             box.expandAll(1E-7),
             entity => !entity.noClip
-        ).toArray();
+        );
     }
 
     public noCollision(entity: Entity | null, box: AABB): boolean {
-        return !this.getMap().intersectsBox(box) && this.getEntityCollisions(entity, box).length === 0;
+        return !this.getMap().intersectsBox(box) && this.getEntityCollisions(entity, box).next().value === undefined;
     }
 
     public raycast(start: Vec2, end: Vec2) {

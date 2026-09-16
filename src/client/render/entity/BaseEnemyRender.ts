@@ -1,9 +1,9 @@
 import type {BaseEnemy} from "../../../entity/mob/BaseEnemy.ts";
 import {AABB} from "../../../utils/math/AABB.ts";
-import {CachedSpriteRenderer} from "../cache/CachedSpriteRenderer.ts";
 import {MapRenderCache} from "../cache/MapRenderCache.ts";
+import {CachedEntityRender} from "../cache/CachedEntityRender.ts";
 
-export class BaseEnemyRender extends CachedSpriteRenderer<number, BaseEnemy> {
+export class BaseEnemyRender extends CachedEntityRender<number, BaseEnemy> {
     private readonly bounding = new AABB(-13, -15, 19, 15);
 
     public constructor() {

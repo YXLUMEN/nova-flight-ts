@@ -1,14 +1,14 @@
 import type {SoundEvent} from "./SoundEvent.ts";
 import type {SoundResource} from "../resource/SoundResource.ts";
 import {clamp} from "../utils/math/math.ts";
-import {Identifier} from "../registry/Identifier.ts";
 import {ResourceManager} from "../resource/ResourceManager.ts";
 import {Resources} from "../resource/Resources.ts";
 import {Settings} from "../client/settings/Settings.ts";
 
 export class SoundSystem {
     private readonly module: SoundResource;
-    private readonly activeLoops: Map<Identifier, AudioBufferSourceNode> = new Map();
+    private readonly activeLoops: Map<SoundEvent, AudioBufferSourceNode> = new Map();
+    private readonly lastSoundAt: Map<SoundEvent, number> = new Map();
     private readonly audioContext: AudioContext;
     private readonly gainNode: GainNode;
 
@@ -27,7 +27,8 @@ export class SoundSystem {
     }
 
     public playLoopSound(event: SoundEvent, volume?: number, pitch?: number): void {
-        if (this.activeLoops.has(event.id)) return;
+        if (this.activeLoops.has(event)) return;
+
         if (this.activeLoops.size >= 8) {
             const entry = this.activeLoops.entries().next().value;
             if (entry) {
@@ -40,8 +41,13 @@ export class SoundSystem {
     }
 
     private loadSound(event: SoundEvent, volume: number = 1, pitch: number = 1, loop: boolean = false): void {
+        const now = performance.now();
+        const last = this.lastSoundAt.get(event);
+        if (last !== undefined && now - last <= 25) return;
+
         const buffers = this.module.buffers.get(event.id);
         if (!buffers || buffers.length === 0) return;
+        this.lastSoundAt.set(event, now);
 
         const buffer = buffers[(Math.random() * buffers.length) | 0];
         const source = this.audioContext.createBufferSource();
@@ -57,15 +63,14 @@ export class SoundSystem {
         gainNode.connect(this.gainNode);
         source.start(0);
 
-        if (loop) this.activeLoops.set(event.id, source);
+        if (loop) this.activeLoops.set(event, source);
     }
 
     public stopLoopSound(event: SoundEvent): boolean {
-        const key = event.id;
-        const source = this.activeLoops.get(key);
+        const source = this.activeLoops.get(event);
         if (source) {
             source.stop();
-            this.activeLoops.delete(key);
+            this.activeLoops.delete(event);
             return true;
         }
         return false;

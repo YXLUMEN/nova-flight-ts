@@ -96,7 +96,7 @@ export class Explosion implements WorldMutation {
 
             entity.takeDamage(this.damageSource, this.power);
             if (this.configs.statusEffect && entity instanceof LivingEntity) {
-                entity.addEffect(StatusEffectInstance.fromOther(this.configs.statusEffect), source);
+                entity.addStatusEffect(StatusEffectInstance.fromOther(this.configs.statusEffect), source);
             }
 
             if (halfR2 > 0 && halfR2 >= dist) {
@@ -143,7 +143,7 @@ export class Explosion implements WorldMutation {
             const damage = this.power * (1 - entityDist / radiusSq);
             entity.takeDamage(this.damageSource, damage);
             if (this.configs.statusEffect && entity instanceof LivingEntity) {
-                entity.addEffect(StatusEffectInstance.fromOther(this.configs.statusEffect), source);
+                entity.addStatusEffect(StatusEffectInstance.fromOther(this.configs.statusEffect), source);
             }
 
             if (halfR2 > 0 && halfR2 >= squareDistVec2(start, pos)) {
@@ -221,7 +221,7 @@ export class Explosion implements WorldMutation {
         world.addEffect(null, new RadialRing(
             vec,
             this.visual.radius * 0.2, this.visual.radius * 1.1,
-            0.35, this.visual.color
+            0.4, this.visual.color
         ));
 
         if (this.configs.tag === ExplosionTag.FUSION) {

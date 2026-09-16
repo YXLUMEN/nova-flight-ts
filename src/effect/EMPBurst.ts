@@ -16,14 +16,13 @@ export class EMPBurst implements VisualEffect {
             PacketCodecs.VECTOR2D.encode(writer, value.pos);
             writer.writeUint16(value.radius);
 
-            if (flag & 1 << 0) writer.writeFloat(value.duration);
+            if (flag & 1 << 0) writer.writeFloat(value.life);
             if (flag & 1 << 1) writer.writeInt8(value.bolts);
             if (flag & 1 << 2) writer.writeInt8(value.segs);
             if (flag & 1 << 3) PacketCodecs.COLOR_HEX.encode(writer, value.color);
             if (flag & 1 << 4) writer.writeInt8(value.thickness);
             if (flag & 1 << 5) writer.writeInt8(encodeToByte(value.jitter, 1));
             if (flag & 1 << 6) writer.writeInt8(value.glow);
-            if (flag & 1 << 7) writer.writeBoolean(value.drawRing);
         },
         reader => {
             const flag = reader.readVarUint();
@@ -38,46 +37,41 @@ export class EMPBurst implements VisualEffect {
                 (flag & 1 << 4) ? reader.readUint8() : undefined,
                 (flag & 1 << 5) ? decodeFromByte(reader.readUint8(), 1) : undefined,
                 (flag & 1 << 6) ? reader.readUint8() : undefined,
-                (flag & 1 << 7) ? reader.readBoolean() : undefined,
             );
         }
     );
 
-    private alive = true;
     private prevT = 0;
     private t = 0;
 
-    private pos: Vec2;
+    private readonly pos: Vec2;
     private readonly radius: number;
-    private readonly duration: number;
+    private readonly life: number;
     private readonly bolts: number;
     private readonly segs: number;
     private readonly color: string;
     private readonly thickness: number;
     private readonly jitter: number;
     private readonly glow: number;
-    private readonly drawRing: boolean;
 
     public constructor(
         pos: Vec2,
         radius: number,
-        duration = 0.6,
+        life = 0.6,
         bolts = 8,
         segs = 12,
         color = '#66ccff',
         thickness = 2,
         jitter = 0.9,
         glow = 12,
-        drawRing = true
     ) {
-        this.drawRing = drawRing;
         this.glow = glow;
         this.jitter = jitter;
         this.thickness = thickness;
         this.color = color;
         this.segs = segs;
         this.bolts = bolts;
-        this.duration = duration;
+        this.life = life;
         this.radius = radius;
         this.pos = pos;
     }
@@ -87,17 +81,13 @@ export class EMPBurst implements VisualEffect {
     }
 
     public tick(dt: number): void {
-        if (!this.alive) return;
         this.prevT = this.t;
         this.t += dt;
-        if (this.t >= this.duration) this.alive = false;
     }
 
     public render(ctx: CanvasRenderingContext2D, tickDelta: number): void {
-        if (!this.alive) return;
-
         const lerpT = lerp(tickDelta, this.prevT, this.t);
-        const p = lerpT / this.duration;
+        const p = lerpT / this.life;
         const easeOut = 1 - (1 - p) * (1 - p);
         const rNow = this.radius * easeOut;
         const alpha = 1 - p;
@@ -111,13 +101,11 @@ export class EMPBurst implements VisualEffect {
         ctx.shadowBlur = this.glow;
 
         // 冲击环
-        if (this.drawRing) {
-            ctx.globalAlpha = alpha * 0.6;
-            ctx.lineWidth = 6 * (1 - p * 0.5);
-            ctx.beginPath();
-            ctx.arc(this.pos.x, this.pos.y, rNow, 0, PI2);
-            ctx.stroke();
-        }
+        ctx.globalAlpha = alpha * 0.6;
+        ctx.lineWidth = 6 * (1 - p * 0.5);
+        ctx.beginPath();
+        ctx.arc(this.pos.x, this.pos.y, rNow, 0, PI2);
+        ctx.stroke();
 
         // 电弧
         ctx.globalAlpha = alpha;
@@ -144,23 +132,22 @@ export class EMPBurst implements VisualEffect {
     }
 
     public isAlive(): boolean {
-        return this.alive;
+        return this.t < this.life;
     }
 
     public kill() {
-        this.alive = false;
+        this.t = this.life;
     }
 
     public buildDeltaFlag(): number {
         let flag = 0;
-        if (this.duration !== 0.6) flag |= 1 << 0;
+        if (this.life !== 0.6) flag |= 1 << 0;
         if (this.bolts !== 8) flag |= 1 << 1;
         if (this.segs !== 12) flag |= 1 << 2;
         if (this.color !== '#66ccff') flag |= 1 << 3;
         if (this.thickness !== 2) flag |= 1 << 4;
         if (this.jitter !== 0.9) flag |= 1 << 5;
         if (this.glow !== 12) flag |= 1 << 6;
-        if (!this.drawRing) flag |= 1 << 7;
         return flag;
     }
 }

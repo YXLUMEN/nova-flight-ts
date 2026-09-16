@@ -1,7 +1,7 @@
-import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
+import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
 
 export interface ClientApplyTech {
-    apply(player: ClientPlayerEntity): void;
+    apply(player: LocalPlayerEntity): void;
 
-    remove(player: ClientPlayerEntity): void;
+    remove(player: LocalPlayerEntity): void;
 }

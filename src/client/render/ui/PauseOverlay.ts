@@ -6,11 +6,13 @@ import {UiFramework} from "./UiFramework.ts";
 import {EventBus} from "../../../event/EventBus.ts";
 import {NewNotify} from "../../../event/events/NewNotify.ts";
 import type {GamePause} from "../../../event/events/game/GamePause.ts";
+import {RuntimeConfig} from "../../../configs/RuntimeConfig.ts";
 
 export class PauseOverlay extends UiFramework {
     private readonly text: TranslatableText[];
     private readonly buttons: UIButton[] = [];
-    private wasRendered = false;
+
+    private lastPerFrame = RuntimeConfig.perFrame;
 
     public constructor() {
         super();
@@ -58,7 +60,7 @@ export class PauseOverlay extends UiFramework {
                 centerX - 60, centerY + 50,
                 120, 36,
                 this.text[2],
-                () => NovaFlightClient.getInstance().world!.saveAll()),
+                () => NovaFlightClient.getInstance().saveAll()),
             new UIButton(
                 centerX - 60, centerY + 100,
                 120, 36,
@@ -68,9 +70,6 @@ export class PauseOverlay extends UiFramework {
     }
 
     public render(ctx: CanvasRenderingContext2D) {
-        if (this.wasRendered) return;
-        this.wasRendered = true;
-
         ctx.save();
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -123,7 +122,12 @@ export class PauseOverlay extends UiFramework {
     }
 
     private resetPause(event: GamePause) {
-        if (!event.paused) this.wasRendered = false;
+        if (event.paused) {
+            this.lastPerFrame = RuntimeConfig.perFrame;
+            RuntimeConfig.perFrame = Math.max(RuntimeConfig.perFrame, 1000 / 10);
+        } else {
+            RuntimeConfig.perFrame = Math.min(this.lastPerFrame, RuntimeConfig.perFrame);
+        }
     }
 
     public destroy() {

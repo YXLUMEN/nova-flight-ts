@@ -2,10 +2,10 @@ import type {DecoyEntity} from "../../../entity/DecoyEntity.ts";
 import {PI2} from "../../../utils/math/math.ts";
 import type {SpriteCtx} from "../cache/LRURenderCache.ts";
 import {AABB} from "../../../utils/math/AABB.ts";
-import {CachedSpriteRenderer} from "../cache/CachedSpriteRenderer.ts";
 import {SingleCache} from "../cache/SingleCache.ts";
+import {CachedEntityRender} from "../cache/CachedEntityRender.ts";
 
-export class DecoyEntityRender extends CachedSpriteRenderer<number, DecoyEntity> {
+export class DecoyEntityRender extends CachedEntityRender<number, DecoyEntity> {
     private static readonly PULSE_PERIOD = PI2 / 0.25;
     private readonly bounding = new AABB(-32, -32, 32, 32);
 

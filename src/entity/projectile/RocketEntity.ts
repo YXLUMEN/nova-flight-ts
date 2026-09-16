@@ -71,7 +71,7 @@ export class RocketEntity extends ProjectileEntity {
         this.getWorld().createExplosion(this, damageSource ?? null,
             this.getX(), this.getY(), this.explosionDamage,
             this.behaviour,
-            new ExplosionVisual(this.explosionRadius, this.explodeColor, 5, 2)
+            new ExplosionVisual(this.explosionRadius, this.explodeColor, 3, 2)
         );
     }
 

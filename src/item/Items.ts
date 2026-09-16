@@ -245,13 +245,13 @@ export class Items {
         .type(WeaponType.ENERGY)
     ));
 
-    // 避免引用问题
     public static init() {
         Object.freeze(this);
     }
 
     private static register<T extends Item>(id: string, item: T): T {
         const entry = Registry.registerReferenceById(Registries.ITEM, Identifier.ofVanilla(id), item).getValue();
+        // 只用于注入
         (item.registryEntry as any) = Registries.ITEM.getEntryByValue(item);
         item.getName();
         return entry as T;

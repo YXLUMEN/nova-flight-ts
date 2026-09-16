@@ -3,7 +3,7 @@ import type {Tech} from "../../world/tech/Tech.ts";
 import type {Constructor} from "../../type/types.ts";
 import {Techs} from "../../world/tech/Techs.ts";
 import type {ClientApplyTech} from "./ClientApplyTech.ts";
-import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
+import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
 import {TechSteeringGear} from "./apply/TechSteeringGear.ts";
 import {TechFireCC} from "./apply/TechFireCC.ts";
 import {TechBC} from "./apply/TechBC.ts";
@@ -12,11 +12,11 @@ import {TechFollow} from "./apply/TechFollow.ts";
 export class ClientTechManager {
     private static readonly techMap: Map<RegistryEntry<Tech>, ClientApplyTech> = new Map();
 
-    public static apply(tech: RegistryEntry<Tech>, player: ClientPlayerEntity): void {
+    public static apply(tech: RegistryEntry<Tech>, player: LocalPlayerEntity): void {
         this.techMap.get(tech)?.apply(player);
     }
 
-    public static remove(tech: RegistryEntry<Tech>, player: ClientPlayerEntity): void {
+    public static remove(tech: RegistryEntry<Tech>, player: LocalPlayerEntity): void {
         this.techMap.get(tech)?.remove(player);
     }
 

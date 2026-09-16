@@ -1,3 +1,4 @@
+import type {Consumer} from "../type/types.ts";
 import type {VisualEffect} from "./VisualEffect.ts";
 import {VisualEffectType} from "./VisualEffectType.ts";
 import {Registries} from "../registry/Registries.ts";
@@ -12,7 +13,7 @@ import {ScreenFlash} from "./ScreenFlash.ts";
 import {WindowOverlay} from "./WindowOverlay.ts";
 import {ArcEffect} from "./ArcEffect.ts";
 import {TitleEffect} from "./TitleEffect.ts";
-import type {Consumer} from "../type/types.ts";
+import {ShieldAuraEffect} from "./ShieldAuraEffect.ts";
 
 export class VisualEffectTypes {
     public static readonly EDGE_GLOW: VisualEffectType<EdgeGlowEffect> = this.registry('edge_glow',
@@ -41,6 +42,9 @@ export class VisualEffectTypes {
     );
     public static readonly TITLE: VisualEffectType<TitleEffect> = this.registry('title',
         VisualEffectType.create(TitleEffect.PACKET_CODEC), val => TitleEffect.TYPE = val
+    );
+    public static readonly SHIELD_AURA: VisualEffectType<ShieldAuraEffect> = this.registry('shield_aura',
+        VisualEffectType.create(ShieldAuraEffect.PACKET_CODEC), val => ShieldAuraEffect.TYPE = val
     );
 
     private static registry<T extends VisualEffect>(

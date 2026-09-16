@@ -92,7 +92,7 @@ export class PerditionBeam extends PhaseLasers {
                 pos.x, pos.y, mob.getWidth())) {
                 mob.takeDamage(damageSource, damage);
                 if (mob.getShieldAmount() > 0) continue;
-                mob.addEffect(new StatusEffectInstance(StatusEffects.MELTDOWN, 80, 10), holder);
+                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.MELTDOWN, 80, 10), holder);
             }
         }
     }

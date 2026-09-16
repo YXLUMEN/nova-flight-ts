@@ -19,8 +19,6 @@ import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChange
 import {ExplosionTag} from "../../world/element/explosion/ExplosionConfigs.ts";
 import {DevourerBoss} from "../../entity/mob/DevourerBoss.ts";
 import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
-import {ScreenShakeS2CPacket} from "../../network/packet/s2c/ScreenShakeS2CPacket.ts";
-import {clamp} from "../../utils/math/math.ts";
 import {ExplosiveBuilder} from "../../world/element/explosion/ExplosiveBuilder.ts";
 
 export class ServerDefaultEvents {
@@ -38,15 +36,15 @@ export class ServerDefaultEvents {
                 if (techTree.isUnlocked(Techs.GRAY)) {
                     const effect = mob.getStatusEffect(StatusEffects.EROSION);
                     if (effect) {
-                        const amplifier = Math.min(10, effect.getAmplifier() + 1);
-                        mob.addEffect(new StatusEffectInstance(StatusEffects.EROSION, 400, amplifier), attacker);
+                        const amplifier = Math.min(10, effect.amplifier() + 1);
+                        mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EROSION, 400, amplifier), attacker);
                     }
                 }
-                mob.addEffect(new StatusEffectInstance(StatusEffects.EROSION, 400, 1), attacker);
+                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EROSION, 400, 1), attacker);
             }
 
             if (damageSource.isOf(DamageTypes.ARC) && attacker.getTechs().isUnlocked(Techs.STATIC_ELECTRICITY)) {
-                mob.addEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, 40, 0), attacker);
+                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.EMC_STATUS, 40, 0), attacker);
             }
         });
 
@@ -142,22 +140,21 @@ export class ServerDefaultEvents {
             const world = player.getWorld();
             const tech = player.getTechs();
 
-            const shake = clamp(origin * 0.3, 0.1, 0.5);
-            (player as ServerPlayerEntity).networkHandler.send(new ScreenShakeS2CPacket(shake, 1));
-
             // 触发emp
             if (origin <= 0) return;
             const emp = Items.EMP_WEAPON;
             const stack = player.getInventory().searchItem(Items.EMP_WEAPON);
-            if (!stack.isEmpty() && tech.isUnlocked(Techs.ELECTRICAL_SURGES)) {
-                const cd = emp.getCooldown(stack);
+            const empReady = !stack.isEmpty() && emp.canFire(stack);
+
+            if (empReady && tech.isUnlocked(Techs.ELECTRICAL_SURGES)) {
+                const cd = emp.getMaxCooldown(stack) * 0.5;
                 emp.tryFire(stack, world, player);
                 emp.setCooldown(stack, cd);
             }
 
-            // emp免伤
             if (remain <= 0) return;
-            if (!stack.isEmpty() && emp.canFire(stack) && tech.isUnlocked(Techs.ELE_SHIELD)) {
+            // emp免伤
+            if (empReady && tech.isUnlocked(Techs.ELE_SHIELD)) {
                 emp.tryFire(stack, world, player);
 
                 world.sendPacket(EntityDamageS2CPacket.create(
@@ -167,7 +164,7 @@ export class ServerDefaultEvents {
                     '#979797'
                 ));
                 event.cancel();
-                return false;
+                return;
             }
 
             player.setHealth(player.getHealth() - remain);

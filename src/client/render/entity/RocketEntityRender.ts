@@ -1,10 +1,10 @@
 import {type RocketEntity} from "../../../entity/projectile/RocketEntity.ts";
 import {AABB} from "../../../utils/math/AABB.ts";
-import {CachedSpriteRenderer} from "../cache/CachedSpriteRenderer.ts";
 import {type SpriteCtx} from "../cache/LRURenderCache.ts";
 import {MapRenderCache} from "../cache/MapRenderCache.ts";
+import {CachedEntityRender} from "../cache/CachedEntityRender.ts";
 
-export class RocketEntityRender extends CachedSpriteRenderer<number, RocketEntity> {
+export class RocketEntityRender extends CachedEntityRender<number, RocketEntity> {
     private readonly bounding = new AABB(-7, -8, 10, 8);
 
     public constructor() {

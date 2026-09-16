@@ -56,7 +56,7 @@ export class ArcEmitter extends BaseWeapon {
             world.spawnVisual(null, new ArcEffect(
                 pos.x, pos.y,
                 mobPos.x, mobPos.y,
-                0.25, 0.8,
+                0.25, 2,
                 '#5d9cff',
                 1, 16
             ));
@@ -82,7 +82,7 @@ export class ArcEmitter extends BaseWeapon {
         world.spawnVisual(null, new ArcEffect(
             pos.x, pos.y,
             endX, endY,
-            0.2, 0.6,
+            0.2, 1,
             '#5d9cff',
             1, 12
         ));

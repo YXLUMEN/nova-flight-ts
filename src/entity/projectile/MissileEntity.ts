@@ -1,4 +1,4 @@
-import {type Entity} from "../Entity.ts";
+import type {Entity} from "../Entity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
 import {rand} from "../../utils/math/math.ts";
@@ -15,7 +15,6 @@ import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacke
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
-import type {ClientPlayerEntity} from "../../client/entity/ClientPlayerEntity.ts";
 import {PlayerMissileTargetSelector} from "../../utils/math/MissileTargetSelector.ts";
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 import {MissileLockEntity} from "../../event/events/entity/MissileLockEntity.ts";
@@ -109,7 +108,7 @@ export class MissileEntity extends RocketEntity {
             this.tickLock();
             return;
         }
-        this.tickTracking(world);
+        this.tickTracking();
     }
 
     public override getInterpolation(): InterpolationHandler | null {
@@ -136,9 +135,9 @@ export class MissileEntity extends RocketEntity {
         this.needSync = true;
     }
 
-    private tickTracking(world: World): void {
+    private tickTracking(): void {
         this.applyDecoy();
-        this.maintainTargetLock(world);
+        this.maintainTargetLock();
 
         if (this.target === null || this.target.isRemoved()) {
             this.hoverWithoutTarget();
@@ -147,7 +146,7 @@ export class MissileEntity extends RocketEntity {
         this.applyGuidance();
     }
 
-    private maintainTargetLock(world: World): void {
+    private maintainTargetLock(): void {
         if (this.relockCooldown > 0) this.relockCooldown--;
         if (this.target !== null && !this.target.isRemoved()) return;
         if ((this.age & 3) !== 0 || this.relockCooldown > 0) return;
@@ -156,8 +155,6 @@ export class MissileEntity extends RocketEntity {
         if (newTarget === null) return;
         this.target = newTarget;
         this.relockCooldown = this.maxRelockCooldown;
-
-        world.events.emit(new MissileLockEntity(this));
     }
 
     private applyGuidance(): void {
@@ -273,20 +270,6 @@ export class MissileEntity extends RocketEntity {
         );
     }
 
-    public override onTrackedDataSet(data: TrackedData<any>) {
-        super.onTrackedDataSet(data);
-
-        if (isServer) return;
-        if (data !== MissileEntity.TARGET_ID) return;
-
-        const world = this.getWorld();
-        const id = this.dataTracker.get(MissileEntity.TARGET_ID);
-        this.target = world.getEntityById(id);
-        if (this.target && this.target.isPlayer()) {
-            (this.target as ClientPlayerEntity).lockedMissile.add(this);
-        }
-    }
-
     public override createSpawnPacket(): EntitySpawnS2CPacket {
         const ownerId = this.getOwner()?.getId() ?? 0;
         const writer = new BinaryWriter(5);
@@ -301,6 +284,20 @@ export class MissileEntity extends RocketEntity {
             const reader = new BinaryReader(packet.extraData);
             this.driftAngle = reader.readFloat();
             this.hoverDir = reader.readInt8();
+        }
+    }
+
+    public override onTrackedDataSet(data: TrackedData<any>) {
+        super.onTrackedDataSet(data);
+
+        if (isServer) return;
+        if (data !== MissileEntity.TARGET_ID) return;
+
+        const world = this.getWorld();
+        const id = this.dataTracker.get(MissileEntity.TARGET_ID);
+        this.target = world.getEntityById(id);
+        if (this.target && this.target.isPlayer()) {
+            world.events.emit(new MissileLockEntity(this));
         }
     }
 

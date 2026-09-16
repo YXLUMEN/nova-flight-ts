@@ -1,3 +1,4 @@
+/** @deprecated */
 import {DevServer} from "../server/DevServer.ts";
 import type {StartServer} from "../type/startup.ts";
 import {ProtocolRegistry} from "../network/packet/ProtocolRegistry.ts";

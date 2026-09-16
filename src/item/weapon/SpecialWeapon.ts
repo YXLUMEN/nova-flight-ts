@@ -4,16 +4,16 @@ import {type World} from "../../world/World.ts";
 import {type Entity} from "../../entity/Entity.ts";
 import {type ItemStack} from "../ItemStack.ts";
 import {DataComponents} from "../../component/DataComponents.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
 
 export abstract class SpecialWeapon extends Weapon {
     public override inventoryTick(stack: ItemStack, world: World, _holder: Entity) {
         const triggered = stack.get(DataComponents.READY_TRIGGERED);
 
         if (this.isReady(stack)) {
-            if (!triggered) {
-                stack.set(DataComponents.READY_TRIGGERED, true);
-                this.onReady(world);
-            }
+            if (triggered) return;
+            stack.set(DataComponents.READY_TRIGGERED, true);
+            this.onReady(world);
             return;
         }
         if (triggered) {
@@ -26,7 +26,7 @@ export abstract class SpecialWeapon extends Weapon {
     }
 
     public onReady(world: World): void {
-        if (world.isClient) world.playSound(null, SoundEvents.WEAPON_READY);
+        if (isClient) world.playSound(null, SoundEvents.WEAPON_READY);
     }
 
     public override setCooldown(stack: ItemStack, value: number): void {

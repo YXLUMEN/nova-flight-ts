@@ -18,14 +18,14 @@ export class EMCStatus extends StatusEffect {
             Math.cos(angle) * speed,
             Math.sin(angle) * speed,
             0.3, 1.5,
-            '#66ccff', undefined,
+            '#2a83ab', undefined,
             0,
             1.5
         );
         return true;
     }
 
-    public override shouldApplyThisTick(duration: number): boolean {
-        return duration % 8 === 0;
+    public override shouldApplyThisTick(tickCount: number): boolean {
+        return tickCount % 8 === 0;
     }
 }

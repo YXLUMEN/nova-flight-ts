@@ -8,7 +8,7 @@ import {ParticleLance} from "../../../item/weapon/BaseWeapon/ParticleLance.ts";
 import {ArcEmitter} from "../../../item/weapon/BaseWeapon/ArcEmitter.ts";
 import {MiniGun} from "../../../item/weapon/BaseWeapon/MiniGun.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
-import type {ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
+import type {LocalPlayerEntity} from "../../entity/LocalPlayerEntity.ts";
 import {RuntimeConfig} from "../../../configs/RuntimeConfig.ts";
 import {Items} from "../../../item/Items.ts";
 import type {StormFire} from "../../../item/weapon/BaseWeapon/StormFire.ts";
@@ -52,7 +52,7 @@ export class Crosshair {
     private static readonly RECOIL_DECAY = 0.82;
     private static readonly SPREAD_LERP = 0.12;
 
-    public tick(player: ClientPlayerEntity) {
+    public tick(player: LocalPlayerEntity) {
         const stack = player.getCurrentItem();
         const item = stack.getItem();
 
@@ -66,7 +66,7 @@ export class Crosshair {
         this.detectWeaponType(item, stack);
     }
 
-    public update(player: ClientPlayerEntity, stack: ItemStack, item: Weapon, tickDelta: number): void {
+    public update(player: LocalPlayerEntity, stack: ItemStack, item: Weapon, tickDelta: number): void {
         let ratio: number;
         const reloadLeft = player.cooldownManager.getCooldownTicks(item);
         if (reloadLeft > 0) {

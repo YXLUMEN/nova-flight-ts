@@ -4,7 +4,7 @@ import {Items} from "../../item/Items.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {TechTree} from "../../world/tech/TechTree.ts";
-import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
+import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
 import {PlayerResetAllTechC2SPacket} from "../../network/packet/c2s/PlayerResetAllTechC2SPacket.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {type Tech} from "../../world/tech/Tech.ts";
@@ -40,7 +40,7 @@ export class ClientTechTree implements TechTree {
     private readonly nodeWidth = 144;
     private readonly nodeHeight = 40;
 
-    private readonly player: ClientPlayerEntity;
+    private readonly player: LocalPlayerEntity;
 
     private readonly container: HTMLElement;
     private readonly svg: SVGSVGElement;
@@ -53,7 +53,7 @@ export class ClientTechTree implements TechTree {
 
     private selectNodeId: string | null = null;
 
-    public constructor(player: ClientPlayerEntity, container?: HTMLElement) {
+    public constructor(player: LocalPlayerEntity, container?: HTMLElement) {
         this.player = player;
         this.container = container ?? document.getElementById('viewport')!;
 

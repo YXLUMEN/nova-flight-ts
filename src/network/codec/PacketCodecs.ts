@@ -116,6 +116,10 @@ export class PacketCodecs {
         reader => BlockPos.of(reader.readUint32(), reader.readUint32())
     );
 
+    public static readonly NEVER: PacketCodec<any> = PacketCodecs.of(empty, () => {
+        throw new Error('This packet is uncallable');
+    });
+
     public static of<T>(
         encoder: BiConsumer<BinaryWriter, T>,
         decoder: Return<BinaryReader, T>

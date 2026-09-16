@@ -18,6 +18,7 @@ export class TipManager {
         this.index = randInt(0, this.resource!.tips.length - 1);
         this.current = this.resource!.tips[this.index];
 
+        this.next = this.next.bind(this);
         EventBus.instance().on('game:pause', ({paused}) => paused ? this.carousel() : this.cancel());
     }
 
@@ -33,11 +34,9 @@ export class TipManager {
         return this.current;
     }
 
-    private static bindNext = this.next.bind(this);
-
     public static carousel() {
         clearInterval(this.interval);
-        this.interval = setInterval(this.bindNext, 8000);
+        this.interval = setInterval(this.next, 8000);
     }
 
     public static cancel() {

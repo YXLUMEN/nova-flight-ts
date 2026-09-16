@@ -6,7 +6,7 @@ export class ErosionEffect extends StatusEffect {
     private readonly damage: number;
 
     public constructor(baseDps: number) {
-        super(StatusEffectCategory.HARMFUL, '#ff8000');
+        super(StatusEffectCategory.HARMFUL, '#91745d');
         this.damage = baseDps;
     }
 
@@ -20,7 +20,7 @@ export class ErosionEffect extends StatusEffect {
         return true;
     }
 
-    public override shouldApplyThisTick(duration: number, _amplifier: number): boolean {
-        return duration % 10 === 0;
+    public override shouldApplyThisTick(tickCount: number): boolean {
+        return tickCount % 10 === 0;
     }
 }

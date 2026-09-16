@@ -4,13 +4,14 @@ import type {ItemStack} from "../../../item/ItemStack.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {ClientWorld} from "../../ClientWorld.ts";
 import type {SpecialWeapon} from "../../../item/weapon/SpecialWeapon.ts";
-import type {ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
+import type {LocalPlayerEntity} from "../../entity/LocalPlayerEntity.ts";
 import {InventoryRender} from "../../inventory/InventoryRender.ts";
 import {Weapon} from "../../../item/weapon/Weapon.ts";
 import {Crosshair} from "./Crosshair.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {UiFramework} from "./UiFramework.ts";
 import {LockAlert} from "./LockAlert.ts";
+import {EdgeGlowEffect} from "../../../effect/EdgeGlowEffect.ts";
 
 export class HUD extends UiFramework {
     private readonly font: string = '14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
@@ -20,8 +21,9 @@ export class HUD extends UiFramework {
     private readonly crosshair: Crosshair = new Crosshair();
     private readonly lockAlert: LockAlert = new LockAlert();
 
-    private player: ClientPlayerEntity | null = null;
+    private player: LocalPlayerEntity | null = null;
     private inventoryRender: InventoryRender | null = null;
+    private damageOverlay: EdgeGlowEffect | null = null;
 
     // HUD 布局参数
     private readonly barWidth = 140;
@@ -34,14 +36,18 @@ export class HUD extends UiFramework {
         this.inventoryRender?.setSize(w, h);
     }
 
-    public setPlayer(player: ClientPlayerEntity | null): void {
+    public setPlayer(player: LocalPlayerEntity | null): void {
         this.player = player;
         this.inventoryRender?.destroy();
         this.inventoryRender = null;
+        this.damageOverlay?.kill();
+        this.damageOverlay = null;
 
         if (player) {
             this.inventoryRender = new InventoryRender(player);
             this.inventoryRender.setSize(this.width, this.height);
+            this.damageOverlay = new EdgeGlowEffect('#ff3333', 24, 0.6, 0.4);
+            this.damageOverlay.kill(); // 确保第一次触发被推入特性队列
         }
     }
 
@@ -257,6 +263,19 @@ export class HUD extends UiFramework {
 
     public renderPointer(ctx: CanvasRenderingContext2D, client: NovaFlightClient): void {
         this.crosshair.render(ctx, client);
+    }
+
+    public onPlayerDamage(damage: number) {
+        const client = NovaFlightClient.getInstance();
+        const world = client.world;
+        if (!world) return;
+
+        const shake = clamp(damage * 0.3, 0.1, 0.5);
+        client.window.camera.addShake(shake, 0.5);
+
+        if (this.damageOverlay!.isAlive()) return;
+        this.damageOverlay!.reset();
+        world.addEffect(null, this.damageOverlay!);
     }
 
     public destroy() {

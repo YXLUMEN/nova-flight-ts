@@ -2,6 +2,7 @@ import type {Command} from "../Command.ts";
 import type {StringRange} from "./StringRange.ts";
 import type {ParsedArgument} from "./ParsedArgument.ts";
 import type {ParsedCommandNode} from "./ParsedCommandNode.ts";
+import {CommandError} from "../../type/errors.ts";
 
 export class CommandContext<S> {
     public readonly source: S;
@@ -31,7 +32,7 @@ export class CommandContext<S> {
         const arg = this.args.get(name) ?? null;
 
         if (arg === null) {
-            throw new Error(`No such argument "${name}" exists on this command`);
+            throw new CommandError(`No such argument "${name}" exists on this command`);
         }
         return arg.result as V;
     }

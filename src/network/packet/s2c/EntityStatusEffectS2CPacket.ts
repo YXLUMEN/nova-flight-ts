@@ -29,7 +29,7 @@ export class EntityStatusEffectS2CPacket implements Payload {
         return new EntityStatusEffectS2CPacket(
             entityId,
             effect.type(),
-            effect.getAmplifier(),
+            effect.amplifier(),
             effect.getDuration(),
         );
     }

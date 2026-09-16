@@ -1,13 +1,13 @@
 import {type PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 
-import {type ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
-import {CachedSpriteRenderer} from "../cache/CachedSpriteRenderer.ts";
+import {type LocalPlayerEntity} from "../../entity/LocalPlayerEntity.ts";
 import {AABB} from "../../../utils/math/AABB.ts";
 import type {SpriteCtx} from "../cache/LRURenderCache.ts";
 import {SingleCache} from "../cache/SingleCache.ts";
 import {buildSprite} from "../cache/RenderCache.ts";
+import {CachedEntityRender} from "../cache/CachedEntityRender.ts";
 
-export class PlayerEntityRender extends CachedSpriteRenderer<number, PlayerEntity> {
+export class PlayerEntityRender extends CachedEntityRender<number, PlayerEntity> {
     private readonly bounding = new AABB(-17, -15, 21, 15);
     private flame: ImageBitmap | null = null;
 
@@ -15,7 +15,7 @@ export class PlayerEntityRender extends CachedSpriteRenderer<number, PlayerEntit
         super(new SingleCache());
     }
 
-    public render(entity: ClientPlayerEntity, ctx: CanvasRenderingContext2D, tickDelta: number) {
+    public render(entity: LocalPlayerEntity, ctx: CanvasRenderingContext2D, tickDelta: number) {
         entity.autoAim?.render();
         super.render(entity, ctx, tickDelta);
     }

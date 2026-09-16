@@ -1,8 +1,10 @@
+import {Worker2MainType} from "./WorkerMsgType.ts";
+
 export class Log {
     public static info(msg: string) {
         console.log(msg);
         self.postMessage({
-            type: 'log',
+            w2m: Worker2MainType.LOG,
             level: 'info',
             message: msg,
         });
@@ -11,7 +13,7 @@ export class Log {
     public static warn(msg: string) {
         console.warn(msg);
         self.postMessage({
-            type: 'log',
+            w2m: Worker2MainType.LOG,
             level: 'warn',
             message: msg,
         });
@@ -20,7 +22,7 @@ export class Log {
     public static error(msg: string) {
         console.error(msg);
         self.postMessage({
-            type: 'log',
+            w2m: Worker2MainType.LOG,
             level: 'error',
             message: msg,
         });
@@ -29,7 +31,7 @@ export class Log {
     public static message(msg: string, kind: 'info' | 'warning' | 'error' = 'info') {
         console.log(`[${kind}] ${msg}`);
         self.postMessage({
-            type: 'message',
+            w2m: Worker2MainType.POPUP,
             kind: kind,
             message: msg,
         });

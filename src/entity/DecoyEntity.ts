@@ -1,6 +1,4 @@
 import {Entity} from "./Entity.ts";
-import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
-import type {TrackedData} from "./data/TrackedData.ts";
 import type {EntityType} from "./EntityType.ts";
 import {World} from "../world/World.ts";
 import type {Ownable} from "./Ownable.ts";
@@ -49,6 +47,11 @@ export class DecoyEntity extends Entity implements Ownable {
         this.clampPosition();
     }
 
+    public override onDiscard() {
+        super.onDiscard();
+        DecoyEntity.Entities.delete(this);
+    }
+
     public getOwner(): Entity | null {
         if (this.owner && !this.owner.isRemoved()) {
             return this.owner;
@@ -68,30 +71,6 @@ export class DecoyEntity extends Entity implements Ownable {
         }
     }
 
-    public override createSpawnPacket(): EntitySpawnS2CPacket {
-        return EntitySpawnS2CPacket.create(this, this.getOwner()?.getId());
-    }
-
-    public override onSpawnPacket(packet: EntitySpawnS2CPacket) {
-        super.onSpawnPacket(packet);
-        this.setVelocity(packet.velocityX, packet.velocityY);
-        const owner = this.getWorld().getEntityById(packet.entityData);
-        if (owner) this.setOwner(owner);
-    }
-
-    public override onDiscard() {
-        super.onDiscard();
-        DecoyEntity.Entities.delete(this);
-    }
-
-    public override canHitByProjectile(): boolean {
-        return false;
-    }
-
-    public override shouldSave(): boolean {
-        return false;
-    }
-
     protected override getMapOffsetX(): number {
         return World.MAX_X_CROSS;
     }
@@ -104,12 +83,31 @@ export class DecoyEntity extends Entity implements Ownable {
         this.discard();
     }
 
-    public override onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {
+    public override canHitByProjectile(): boolean {
+        return false;
     }
 
-    public override onTrackedDataSet(_data: TrackedData<any>): void {
+    public override createSpawnPacket(): EntitySpawnS2CPacket {
+        return EntitySpawnS2CPacket.create(this, this.getOwner()?.getId());
     }
 
-    protected override defineSyncedData(_builder: InstanceType<typeof DataTracker.Builder>): void {
+    public override onSpawnPacket(packet: EntitySpawnS2CPacket) {
+        super.onSpawnPacket(packet);
+        this.setVelocity(packet.velocityX, packet.velocityY);
+        const owner = this.getWorld().getEntityById(packet.entityData);
+        if (owner) this.setOwner(owner);
+    }
+
+    public override onDataTrackerUpdate(): void {
+    }
+
+    public override onTrackedDataSet(): void {
+    }
+
+    protected override defineSyncedData(): void {
+    }
+
+    public override shouldSave(): boolean {
+        return false;
     }
 }

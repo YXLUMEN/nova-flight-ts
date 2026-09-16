@@ -34,9 +34,9 @@ export class StatusEffect {
         this.applyEffectTick(source, target, amplifier);
     }
 
-    public shouldApplyThisTick(_duration: number, _amplifier: number): boolean {
+    public shouldApplyThisTick(_tickCount: number, _amplifier: number): boolean {
         return false;
-    };
+    }
 
     public onAppliedAt(_entity: LivingEntity, _amplifier: number): void {
     }

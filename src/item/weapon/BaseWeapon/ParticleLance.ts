@@ -92,9 +92,9 @@ export class ParticleLance extends BaseWeapon {
                 if (mob.getShieldAmount() !== 0) continue;
 
                 const effect = mob.getStatusEffect(StatusEffects.MELTDOWN);
-                const amplifier = effect ? Math.min(effect.getAmplifier() + 1, 8) : 0;
+                const amplifier = effect ? Math.min(effect.amplifier() + 1, 8) : 0;
 
-                mob.addEffect(new StatusEffectInstance(StatusEffects.MELTDOWN, 80, amplifier), attacker);
+                mob.addStatusEffect(new StatusEffectInstance(StatusEffects.MELTDOWN, 80, amplifier), attacker);
             }
         }
 

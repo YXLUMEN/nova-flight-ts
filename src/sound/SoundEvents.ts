@@ -84,6 +84,6 @@ export class SoundEvents {
 
     private static register(id: string) {
         const identifier = Identifier.ofVanilla(id);
-        return Registry.registerReferenceById(Registries.SOUND_EVENT, identifier, SoundEvent.of(identifier)).getValue();
+        return Registry.registerReferenceById(Registries.SOUND_EVENT, identifier, new SoundEvent(identifier)).getValue();
     }
 }

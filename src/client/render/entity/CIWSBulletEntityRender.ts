@@ -1,10 +1,10 @@
 import type {CIWSBulletEntity} from "../../../entity/projectile/CIWSBulletEntity.ts";
 import type {SpriteCtx} from "../cache/LRURenderCache.ts";
 import {AABB} from "../../../utils/math/AABB.ts";
-import {CachedSpriteRenderer} from "../cache/CachedSpriteRenderer.ts";
 import {SingleCache} from "../cache/SingleCache.ts";
+import {CachedEntityRender} from "../cache/CachedEntityRender.ts";
 
-export class CIWSBulletEntityRender extends CachedSpriteRenderer<number, CIWSBulletEntity> {
+export class CIWSBulletEntityRender extends CachedEntityRender<number, CIWSBulletEntity> {
     private readonly bounding = new AABB(-73.5, -1.5, 1.5, 1.5);
 
     public constructor() {

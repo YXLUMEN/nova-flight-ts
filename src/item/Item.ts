@@ -16,7 +16,7 @@ import type {ServerWorld} from "../server/ServerWorld.ts";
 
 
 export class Item {
-    public readonly registryEntry!: RegistryEntry<Item>;
+    public readonly registryEntry: RegistryEntry<Item> = null!;
     private readonly components: SimpleComponentMap;
 
     private translation: TranslatableText | null = null;

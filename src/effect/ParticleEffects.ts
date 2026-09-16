@@ -8,8 +8,9 @@ export class ParticleEffects {
         ParticleEffectType.builder()
             .life(0.4, 0.9)
             .size(1, 3)
-            .colors('#ff9940', '#ffddb8')
+            .colors('#ff9940', '#FFDDB880')
             .speed(120, 320)
+            .withDrag(0.2)
             .omnidirectional()
             .build()
     );
@@ -20,6 +21,7 @@ export class ParticleEffects {
             .size(1.5, 4)
             .colors('#ff4422')
             .speed(80, 200)
+            .withDrag(0.1)
             .omnidirectional()
             .build()
     );

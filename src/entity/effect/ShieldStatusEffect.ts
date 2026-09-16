@@ -1,45 +1,39 @@
-import {StatusEffect, StatusEffectCategory} from "./StatusEffect.ts";
-import {type LivingEntity} from "../LivingEntity.ts";
-import {MutVec2} from "../../utils/math/MutVec2.ts";
+import type {LivingEntity} from "../LivingEntity.ts";
 import type {Entity} from "../Entity.ts";
+import type {Return} from "../../type/types.ts";
+import {StatusEffect, StatusEffectCategory} from "./StatusEffect.ts";
+import {ShieldAuraEffect} from "../../effect/ShieldAuraEffect.ts";
+import {isServer} from "../../configs/RuntimeConfig.ts";
+
 
 export class ShieldStatusEffect extends StatusEffect {
+    private readonly tracked: WeakMap<LivingEntity, ShieldAuraEffect> = null!;
+    private readonly summonVisual: Return<LivingEntity, ShieldAuraEffect> = null!;
+
     public constructor() {
         super(StatusEffectCategory.BENEFICIAL, '#5095ff', true);
+
+        if (isServer) return;
+        // 过渡方案,让状态效果间接控制特效渲染
+        this.tracked = new WeakMap();
+        this.summonVisual = (entity: LivingEntity) => {
+            const radius = entity.getDimensions().halfWidth + 8;
+            const effect = new ShieldAuraEffect(entity.position(), radius, 0.1, this.color, 'hexagon');
+            effect.bindEntity = entity;
+            effect.dispose = () => this.tracked.delete(entity);
+            entity.getWorld().addEffect(entity, effect);
+            return effect;
+        };
     }
 
     public override applyEffectTick(_source: Entity | null, entity: LivingEntity): boolean {
         return entity.getShieldAmount() > 0;
     }
 
-    public override clientVisual(entity: LivingEntity) {
-        const world = entity.getWorld();
-        const pos = entity.positionRef;
-        const half = entity.getDimensions().halfWidth;
-
-        const rad = (entity.age * 16) % 360 * (Math.PI / 180);
-        const particleX = pos.x + Math.cos(rad) * half;
-        const particleY = pos.y + Math.sin(rad) * half;
-
-        const jitterX = (Math.random() - 0.5) * 0.2;
-        const jitterY = (Math.random() - 0.5) * 0.2;
-
-        const finalPos = new MutVec2(particleX + jitterX, particleY + jitterY);
-        const vel = new MutVec2(
-            Math.cos(rad) * 0.02 + (Math.random() - 0.5) * 0.03,
-            Math.sin(rad) * 0.02 + (Math.random() - 0.5) * 0.03
-        );
-
-        world.addParticleByVec(
-            finalPos,
-            vel,
-            1 + Math.random() * 0.5,
-            2,
-            "#4080FF",
-            undefined,
-            1,
-            0.96,
-        );
+    public override clientVisual(entity: LivingEntity): void {
+        const arua = this.tracked.getOrInsertComputed(entity, this.summonVisual);
+        if (arua.isAlive()) arua.reset();
+        else this.tracked.delete(entity);
     }
 
     public onAppliedAt(entity: LivingEntity, amplifier: number) {

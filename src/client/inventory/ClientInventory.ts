@@ -1,19 +1,19 @@
 import type {UniqueInventory} from "../../entity/player/UniqueInventory.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
-import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
+import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
 import {PlayerInventorySwapC2SPacket} from "../../network/packet/c2s/PlayerInventorySwapC2SPacket.ts";
 
 export class ClientInventory {
     public isOpen = false;
     public justClicked = false;
 
-    private readonly player: ClientPlayerEntity;
+    private readonly player: LocalPlayerEntity;
     private readonly inventory: UniqueInventory;
 
     private heldItem: ItemStack = ItemStack.EMPTY;
     private heldFromSlot: number = -1;
 
-    public constructor(player: ClientPlayerEntity) {
+    public constructor(player: LocalPlayerEntity) {
         this.player = player;
         this.inventory = player.getInventory();
     }

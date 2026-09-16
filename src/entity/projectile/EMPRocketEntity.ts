@@ -3,7 +3,7 @@ import {Emp} from "../../world/element/Emp.ts";
 
 export class EMPRocketEntity extends RocketEntity {
     public override explosionRadius = 160;
-    private duration = 300;
+    private duration = 100;
 
     public override explode() {
         this.getWorld().applyElement(Emp.create(

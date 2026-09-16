@@ -1,22 +1,22 @@
-import {isBoxInView} from "../../utils/render/render.ts";
-import {EntityRenderers} from "./entity/EntityRenderers.ts";
-import {PI2} from "../../utils/math/math.ts";
-import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import type {ViewRect} from "./Camera.ts";
-import type {ClientPlayerEntity} from "../entity/ClientPlayerEntity.ts";
+import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 import type {Entity} from "../../entity/Entity.ts";
+import {PI2} from "../../utils/math/math.ts";
+import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
+import {isBoxInView} from "../../utils/render/render.ts";
+import {EntityRenderers} from "./entity/EntityRenderers.ts";
 
-export class EntityRenderer {
+export class WorldEntityRenderer {
     private readonly client: NovaFlightClient;
 
     public constructor(client: NovaFlightClient) {
         this.client = client;
     }
 
-    public renderMainPlayer(ctx: CanvasRenderingContext2D, world: ClientWorld, player: ClientPlayerEntity, alpha: number) {
+    public renderMainPlayer(ctx: CanvasRenderingContext2D, world: ClientWorld, player: LocalPlayerEntity, alpha: number) {
         if (world.isOver()) return
 
         if (player.renderer === null) {

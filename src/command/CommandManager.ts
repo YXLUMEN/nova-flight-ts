@@ -27,6 +27,11 @@ export abstract class CommandManager {
                 // noinspection ExceptionCaughtLocallyJS
                 throw Error(`\x1b[31mCommand "${node.getName()}" is not executable, with command: "${command}"`);
             }
+
+            if (parseResults.reader.canRead()) {
+                // noinspection ExceptionCaughtLocallyJS
+                throw Error(this.unconsumed(parseResults));
+            }
             cmd(context);
         } catch (err) {
             console.error(`Failed to execute command for command "${command}": ${err}`);
@@ -43,6 +48,10 @@ export abstract class CommandManager {
                 output.sendMessage(err.message);
             }
         }
+    }
+
+    protected unconsumed<T extends CommandSource>(parseResults: ParseResults<T>): string {
+        return `\x1b[31mIncorrect argument at position ${parseResults.reader.getCursor()}: "${parseResults.reader.getRemaining().trim()}"`;
     }
 
     public abstract registry(source: CommandSource): void;

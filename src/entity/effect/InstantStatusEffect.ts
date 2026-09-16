@@ -5,7 +5,7 @@ export class InstantStatusEffect extends StatusEffect {
         return true;
     }
 
-    public override shouldApplyThisTick(duration: number, _amplifier: number): boolean {
-        return duration >= 1;
+    public override shouldApplyThisTick(tickCount: number): boolean {
+        return tickCount >= 1;
     }
 }

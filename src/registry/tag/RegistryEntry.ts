@@ -40,11 +40,11 @@ export class RegistryEntry<T> {
         this.registryKey = registryKey;
     }
 
-    public matches(entry: RegistryEntry<T>) {
-        return entry.matchesKey(this.getRegistryKey());
+    public match(entry: RegistryEntry<T>) {
+        return entry.matchKey(this.getRegistryKey());
     }
 
-    public matchesKey(key: RegistryKey<T>): boolean {
+    public matchKey(key: RegistryKey<T>): boolean {
         return this.getRegistryKey() === key;
     }
 

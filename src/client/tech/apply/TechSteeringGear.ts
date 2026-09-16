@@ -1,12 +1,12 @@
 import type {ClientApplyTech} from "../ClientApplyTech.ts";
-import {type ClientPlayerEntity} from "../../entity/ClientPlayerEntity.ts";
+import {type LocalPlayerEntity} from "../../entity/LocalPlayerEntity.ts";
 
 export class TechSteeringGear implements ClientApplyTech {
-    public apply(player: ClientPlayerEntity) {
+    public apply(player: LocalPlayerEntity) {
         player.steeringGear = true;
     }
 
-    public remove(player: ClientPlayerEntity) {
+    public remove(player: LocalPlayerEntity) {
         player.steeringGear = false;
         player.setYaw(-1.57079);
     }

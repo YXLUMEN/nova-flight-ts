@@ -1,11 +1,11 @@
 import {type ExplodeBulletEntity} from "../../../entity/projectile/ExplodeBulletEntity.ts";
 import {HALF_PI} from "../../../utils/math/math.ts";
-import {CachedSpriteRenderer} from "../cache/CachedSpriteRenderer.ts";
 import type {SpriteCtx} from "../cache/LRURenderCache.ts";
 import {AABB} from "../../../utils/math/AABB.ts";
 import {MapRenderCache} from "../cache/MapRenderCache.ts";
+import {CachedEntityRender} from "../cache/CachedEntityRender.ts";
 
-export class ExplodeBulletEntityRender extends CachedSpriteRenderer<number, ExplodeBulletEntity> {
+export class ExplodeBulletEntityRender extends CachedEntityRender<number, ExplodeBulletEntity> {
     private readonly bounding = new AABB(-19, -9, 9, 9);
 
     public constructor() {

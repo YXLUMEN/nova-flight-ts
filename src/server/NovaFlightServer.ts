@@ -18,6 +18,7 @@ import {ServerStartS2CPacket} from "../network/packet/s2c/ServerStartS2CPacket.t
 import {ServerTickManager} from "./ServerTickManager.ts";
 import {DEFAULT_CONFIG} from "../configs/RuntimeConfig.ts";
 import {CodecRegistry} from "../network/CodecRegistry.ts";
+import {Worker2MainType} from "../worker/WorkerMsgType.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static instance: NovaFlightServer;
@@ -89,7 +90,7 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.profile = new GameProfile(this.networkChannel.getSessionId(), this.serverId, this.worldName);
         this.networkManager = new ServerNetworkManager(this);
         this.networkChannel.send(ServerStartS2CPacket.INSTANCE);
-        self.postMessage({type: 'server_start'});
+        self.postMessage({w2m: Worker2MainType.SERVER_START});
 
         this.last = performance.now();
         this.tickInterval = setInterval(this.tick, 25);

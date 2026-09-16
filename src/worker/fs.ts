@@ -1,4 +1,5 @@
 import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
+import {Main2WorkerType, Worker2MainType} from "./WorkerMsgType.ts";
 
 export class WorkerFS {
     private static autoInt = new AtomicInteger();
@@ -14,7 +15,7 @@ export class WorkerFS {
         }, timeout);
 
         self.addEventListener('message', event => {
-            if (event.data.type !== 'read_file' || event.data.id !== id) return;
+            if (event.data.m2w !== Main2WorkerType.READ_FILE || event.data.id !== id) return;
 
             clearTimeout(timeoutId);
             resolve(event.data.buffer);
@@ -22,7 +23,7 @@ export class WorkerFS {
         }, {signal: ctrl.signal});
 
         self.postMessage({
-            type: "read_file",
+            w2m: Worker2MainType.READ_FILE,
             id,
             path,
         });
@@ -32,7 +33,7 @@ export class WorkerFS {
 
     public static writeFile(path: string, buffer: ArrayBuffer) {
         self.postMessage({
-            type: "write_file",
+            w2m: Worker2MainType.WRITE_FILE,
             path,
             buffer
         }, {transfer: [buffer]});
@@ -49,7 +50,7 @@ export class WorkerFS {
         }, timeout);
 
         self.addEventListener('message', event => {
-            if (event.data.type !== 'fetch' || event.data.id !== id) return;
+            if (event.data.m2w !== Main2WorkerType.FETCH || event.data.id !== id) return;
 
             clearTimeout(timeoutId);
             resolve(event.data.buffer);
@@ -57,7 +58,7 @@ export class WorkerFS {
         }, {signal: ctrl.signal});
 
         self.postMessage({
-            type: "fetch",
+            w2m: Worker2MainType.FETCH,
             id,
             url,
         });

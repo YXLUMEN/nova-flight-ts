@@ -1,6 +1,7 @@
 import {appLocalDataDir, join, resolveResource} from "@tauri-apps/api/path";
 import {exists, mkdir, readFile, remove, rename, writeFile} from "@tauri-apps/plugin-fs";
 import {shortUUID} from "../utils/math/math.ts";
+import {Main2WorkerType} from "../worker/WorkerMsgType.ts";
 
 export class ClientWorkerFS {
     public async readFile(data: any, worker: Worker) {
@@ -9,7 +10,7 @@ export class ClientWorkerFS {
 
         if (!(await exists(res))) {
             worker.postMessage({
-                type: 'readFile',
+                m2w: Main2WorkerType.READ_FILE,
                 id: data.id,
                 buffer: null
             });
@@ -18,7 +19,7 @@ export class ClientWorkerFS {
 
         const buffer = await readFile(res);
         worker.postMessage({
-            type: 'readFile',
+            m2w: Main2WorkerType.READ_FILE,
             id: data.id,
             buffer: buffer.buffer
         }, {transfer: [buffer.buffer]});
@@ -50,7 +51,7 @@ export class ClientWorkerFS {
         const resp = await fetch(url);
         if (!resp.ok) {
             worker.postMessage({
-                type: 'fetch',
+                m2w: Main2WorkerType.FETCH,
                 id: data.id,
                 buffer: null
             });
@@ -59,7 +60,7 @@ export class ClientWorkerFS {
 
         const buffer = await resp.arrayBuffer();
         worker.postMessage({
-            type: 'fetch',
+            m2w: Main2WorkerType.FETCH,
             id: data.id,
             buffer: buffer
         }, {transfer: [buffer]});
