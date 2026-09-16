@@ -41,8 +41,6 @@ async function handleEvent(event: MessageEvent) {
         case Main2WorkerType.LOADED_SAVE_DATA:
             break;
         case Main2WorkerType.SAVE_ALL: {
-            if (!isDev) return;
-
             if (!server || !server.world) return;
 
             await server.playerManager.saveAllPlayerData();
