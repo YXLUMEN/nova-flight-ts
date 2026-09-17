@@ -99,6 +99,7 @@ export class ServerWorld extends World implements NbtSerializable {
         for (const entity of search) {
             if (entity instanceof MobEntity) {
                 entity.attack(player);
+                player.attack(entity);
                 // 约等于无敌时间. 后续版本可能考虑移除
                 return;
             }

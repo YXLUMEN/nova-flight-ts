@@ -1,7 +1,6 @@
 import {LivingEntity} from "../LivingEntity.ts";
 import {World} from "../../world/World.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
-import {PlayerEntity} from "../player/PlayerEntity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
@@ -16,6 +15,7 @@ import type {EntityAi} from "../ai/EntityAi.ts";
 import {MobAI} from "../ai/MobAI.ts";
 import {MobKilled} from "../../event/events/entity/MobKilled.ts";
 import {MobDamage} from "../../event/events/entity/MobDamage.ts";
+import type {Entity} from "../Entity.ts";
 
 export abstract class MobEntity extends LivingEntity {
     public verticalMovementDir = 1;
@@ -72,8 +72,8 @@ export abstract class MobEntity extends LivingEntity {
         world.spawnPreparedParticle(ParticleEffects.ENTITY_DEATH, this.positionRef, 4);
     }
 
-    public attack(player: PlayerEntity) {
-        player.takeDamage(
+    public attack(entity: Entity) {
+        entity.takeDamage(
             this.getWorld().getDamageSources().mobAttack(this),
             this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
         );

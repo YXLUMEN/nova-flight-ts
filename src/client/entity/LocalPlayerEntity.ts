@@ -8,6 +8,7 @@ import type {ItemStack} from "../../item/ItemStack.ts";
 import type {Item} from "../../item/Item.ts";
 import type {BlockChange} from "../../world/section/BlockChange.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
+import type {ShieldAuraEffect} from "../../effect/ShieldAuraEffect.ts";
 import {clamp, squareDistVec2, wrapRadians} from "../../utils/math/math.ts";
 import {ClientTechTree} from "../tech/ClientTechTree.ts";
 import {World} from "../../world/World.ts";
@@ -28,6 +29,7 @@ import {FireSpecialC2SPacket} from "../../network/packet/c2s/FireSpecialC2SPacke
 import {ClientInventory} from "../inventory/ClientInventory.ts";
 import {FullMove, PositionOnly, Steering} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
 import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
+import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
 
 export class LocalPlayerEntity extends PlayerEntity {
     public readonly profile: GameProfile;
@@ -45,9 +47,9 @@ export class LocalPlayerEntity extends PlayerEntity {
     public autoAim: AutoAim | null = null;
 
     public bc: BallisticCalculator | null = null;
-
     public steeringGear: boolean = false;
     public followPointer: boolean = false;
+    public deflector: ShieldAuraEffect | null = null;
 
     public readonly lockedMissile = new Set<MissileEntity>();
     public readonly approachMissile = new Set<MissileEntity>();
@@ -85,6 +87,16 @@ export class LocalPlayerEntity extends PlayerEntity {
                     this.approachMissile.delete(missile);
                 }
             }
+        }
+
+        if (this.deflector &&
+            !this.deflector.isAlive() &&
+            this.getShieldAmount() > 0 &&
+            !this.hasStatusEffect(StatusEffects.SHIELD)
+        ) {
+            this.deflector.bindEntity = this;
+            this.deflector.reset();
+            this.getWorld().addEffect(this, this.deflector);
         }
 
         // debug

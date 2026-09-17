@@ -25,7 +25,7 @@ export class ShieldAuraEffect implements VisualEffect {
     private prevT = 0;
     private t = 0;
 
-    public constructor(center: Vec2, radius = 24, life = 1, color = '#5095ff', shape: ShieldShape = 'bracket') {
+    public constructor(center: Vec2, radius = 24, life = 1, color = '#5095ff', shape: ShieldShape = 'hexagon') {
         this.center = center;
         this.radius = radius;
         this.life = life;
