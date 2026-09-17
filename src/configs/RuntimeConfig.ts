@@ -7,13 +7,14 @@ export const isClient = !isServer;
 
 export const DEFAULT_CONFIG = config({
     per: 50,
-    version: '26v28',
+    version: '26v29',
     gameVersion: 11,
 });
 
 export const RuntimeConfig = status({
     per: DEFAULT_CONFIG.per,
     perFrame: 1000 / 100, // 越小渲染越快
+    lastPerFrame: 1000 / 100,
 
     enableCameraOffset: !isDev,
 

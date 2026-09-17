@@ -2,6 +2,7 @@ import type {Consumer, Predicate} from "../../type/types.ts";
 import type {EntityLike} from "./EntityLike.ts";
 import type {AABB} from "../../utils/math/AABB.ts";
 import type {EntityIndex} from "./EntityIndex.ts";
+import {newSet} from "../../utils/uit.ts";
 
 export class PackedSpatialIndex<T extends EntityLike> implements EntityIndex<T> {
     /** half 硬上限: 47,453,132 */
@@ -73,7 +74,7 @@ export class PackedSpatialIndex<T extends EntityLike> implements EntityIndex<T> 
 
             for (let c = c0; c <= c1; c++) {
                 keys.push(key);
-                this.buckets.getOrInsertComputed(key, this.create).add(entity);
+                this.buckets.getOrInsertComputed(key, newSet).add(entity);
                 key += this.stride; // 列步进
             }
             keyRow += 1; // 行步进
@@ -153,9 +154,5 @@ export class PackedSpatialIndex<T extends EntityLike> implements EntityIndex<T> 
         this.buckets.clear();
         this.entityCells.clear();
         this.searchGeneration = 0;
-    }
-
-    private create() {
-        return new Set<T>();
     }
 }

@@ -1,7 +1,7 @@
 import {UiTools} from "./UiTools.ts";
 import {UITheme} from "./theme.ts";
 import {UiFramework} from "./UiFramework.ts";
-import {EventBus} from "../../../event/EventBus.ts";
+import {appEvent} from "../../../event/EventBus.ts";
 import type {NewNotify} from "../../../event/events/NewNotify.ts";
 
 interface Notification {
@@ -17,7 +17,7 @@ export class NotificationManager extends UiFramework {
     public constructor() {
         super();
         this.onNotify = this.onNotify.bind(this);
-        EventBus.instance().on('ui:new:notify', this.onNotify);
+        appEvent.on('ui:new:notify', this.onNotify);
     }
 
     public render(ctx: CanvasRenderingContext2D) {
@@ -90,7 +90,7 @@ export class NotificationManager extends UiFramework {
 
     public destroy(): void {
         this.notifications.length = 0;
-        EventBus.instance().off('ui:new:notify', this.onNotify);
+        appEvent.off('ui:new:notify', this.onNotify);
     }
 
     private onNotify(event: NewNotify) {

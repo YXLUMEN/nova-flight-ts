@@ -1,4 +1,4 @@
-import {EventBus} from "../event/EventBus.ts";
+import {appEvent} from "../event/EventBus.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {PlayerUnlockTechC2SPacket} from "../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
 import {Registries} from "../registry/Registries.ts";
@@ -11,9 +11,7 @@ import {Audios} from "../sound/Audios.ts";
 
 export class ClientDefaultEvents {
     public static registryEvents() {
-        const events = EventBus.instance();
-
-        events.on('player:tech:unlock', event => {
+        appEvent.on('player:tech:unlock', event => {
             const {tech, silent} = event;
             const player = event.player as LocalPlayerEntity;
 
@@ -24,7 +22,7 @@ export class ClientDefaultEvents {
             ClientTechManager.apply(entry, player);
         });
 
-        events.on('entity:missile:locked', ({missile}) => {
+        appEvent.on('entity:missile:locked', ({missile}) => {
             const target = missile.getTarget();
             if (missile.isRemoved() || !target || !target.isPlayer()) return;
 
@@ -33,7 +31,7 @@ export class ClientDefaultEvents {
             player.lockedMissile.add(missile);
         });
 
-        events.on('entity:boss:spawn', ({boss}) => {
+        appEvent.on('entity:boss:spawn', ({boss}) => {
             if (boss instanceof DevourerBoss) {
                 void AudioManager.play(Audios.SCOURGE_OF_THE_UNIVERSE, true);
                 return;

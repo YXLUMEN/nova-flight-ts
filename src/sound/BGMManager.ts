@@ -1,6 +1,6 @@
 import {Audios} from "./Audios.ts";
 import {AudioManager} from "./AudioManager.ts";
-import {EventBus} from "../event/EventBus.ts";
+import {appEvent, EventBus} from "../event/EventBus.ts";
 import {SoundQueue} from "./SoundQueue.ts";
 
 export class BGMManager {
@@ -33,17 +33,16 @@ export class BGMManager {
             await AudioManager.play(this.MAIN_THEME.next());
         };
 
-        const events = EventBus.instance();
-        events.on('game:start', () => this.onGameStart());
-        events.on('game:over', () => this.onGameOver());
-        events.on('game:end', () => {
+        appEvent.on('game:start', () => this.onGameStart());
+        appEvent.on('game:over', () => this.onGameOver());
+        appEvent.on('game:end', () => {
             AudioManager.removeListener('main');
             AudioManager.addListener('main', 'ended', nextTheme);
             nextTheme();
         });
-        events.on('entity:boss:killed', () => this.onBossDead());
+        appEvent.on('entity:boss:killed', () => this.onBossDead());
         AudioManager.addListener('main', 'ended', nextTheme);
-        this.conditionListener(events);
+        this.conditionListener(appEvent);
 
         this.IN_GAME.shuffle();
         void AudioManager.play(this.MAIN_THEME.current());

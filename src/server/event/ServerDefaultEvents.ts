@@ -4,7 +4,7 @@ import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {World} from "../../world/World.ts";
 import {SpawnMarkerEntity} from "../../entity/SpawnMarkerEntity.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
-import {EventBus} from "../../event/EventBus.ts";
+import {appEvent} from "../../event/EventBus.ts";
 import {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
 import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
@@ -23,9 +23,7 @@ import {ExplosiveBuilder} from "../../world/element/explosion/ExplosiveBuilder.t
 
 export class ServerDefaultEvents {
     public static registerEvent() {
-        const events = EventBus.instance();
-
-        events.on('entity:mob:damage', ({mob, damageSource}) => {
+        appEvent.on('entity:mob:damage', ({mob, damageSource}) => {
             const attacker = damageSource.getAttacker();
             if (!attacker?.isPlayer()) return;
 
@@ -48,7 +46,7 @@ export class ServerDefaultEvents {
             }
         });
 
-        events.on('entity:mob:killed', ({mob, damageSource}) => {
+        appEvent.on('entity:mob:killed', ({mob, damageSource}) => {
             const player = damageSource.getAttacker();
             if (!(player instanceof ServerPlayerEntity)) return;
 
@@ -71,7 +69,7 @@ export class ServerDefaultEvents {
             }
         });
 
-        events.on('entity:boss:killed', event => {
+        appEvent.on('entity:boss:killed', event => {
             const world = event.world as ServerWorld;
 
             if (!event.boss) {
@@ -105,13 +103,13 @@ export class ServerDefaultEvents {
             }
         });
 
-        events.on('world:emp_burst', ({entity, duration}) => {
+        appEvent.on('world:emp_burst', ({entity, duration}) => {
             if (entity instanceof ServerPlayerEntity && entity.getTechs().isUnlocked(Techs.ELE_OSCILLATION)) {
                 entity.getWorld().empBurst = duration;
             }
         });
 
-        events.on('world:stage:enter', ({world, name}) => {
+        appEvent.on('world:stage:enter', ({world, name}) => {
             if (name === 'P6') {
                 if (BossEntity.hasBoss) return;
 
@@ -128,14 +126,14 @@ export class ServerDefaultEvents {
             world.playSound(null, SoundEvents.PHASE_CHANGE);
         });
 
-        events.on('world:explosion', ({world, explosion}) => {
+        appEvent.on('world:explosion', ({world, explosion}) => {
             const effect = explosion.getConfigs().tag;
             if (effect !== ExplosionTag.TRIGGERED) {
                 this.serialWarhead(world, explosion);
             }
         });
 
-        events.on('entity:player:damage', event => {
+        appEvent.on('entity:player:damage', event => {
             const {player, origin, remain, source} = event;
             const world = player.getWorld();
             const tech = player.getTechs();

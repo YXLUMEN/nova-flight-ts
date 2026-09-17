@@ -29,7 +29,7 @@ import {IllegalArgumentError, IllegalStateError} from "../type/errors.ts";
 import {NbtTypeId} from "../nbt/NbtType.ts";
 import {EMPTY_LISTENER, type EntityChangeListener} from "../world/entity/EntityChangeListener.ts";
 import {BlockCollision} from "../world/collision/BlockCollision.ts";
-import {EventBus} from "../event/EventBus.ts";
+import {appEvent} from "../event/EventBus.ts";
 import {EntityColor} from "../world/entity/EntityColor.ts";
 import {isBoxInView} from "../utils/render/render.ts";
 
@@ -133,7 +133,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     /**
-     * @readonly **Do not override**
+     * @sealed **Do not override**
      * @see onDiscard
      * */
     public discard(): void {
@@ -703,7 +703,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     public renderer: EntityRenderer<Entity> | null = null;
 
     static {
-        EventBus.instance().on('game:end', () => {
+        appEvent.on('game:end', () => {
             this.ENTITY_COUNTER.reset();
         });
     }

@@ -3,16 +3,12 @@ import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import {TipManager} from "../../tips/TipManager.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {UiFramework} from "./UiFramework.ts";
-import {EventBus} from "../../../event/EventBus.ts";
+import {appEvent} from "../../../event/EventBus.ts";
 import {NewNotify} from "../../../event/events/NewNotify.ts";
-import type {GamePause} from "../../../event/events/game/GamePause.ts";
-import {RuntimeConfig} from "../../../configs/RuntimeConfig.ts";
 
 export class PauseOverlay extends UiFramework {
     private readonly text: TranslatableText[];
     private readonly buttons: UIButton[] = [];
-
-    private lastPerFrame = RuntimeConfig.perFrame;
 
     public constructor() {
         super();
@@ -25,9 +21,6 @@ export class PauseOverlay extends UiFramework {
             TranslatableText.of('pause.paused'),
             TranslatableText.of('pause.press_esc'),
         ];
-
-        this.resetPause = this.resetPause.bind(this);
-        EventBus.instance().on('game:pause', this.resetPause);
     }
 
     public setSize(w: number, h: number) {
@@ -54,7 +47,7 @@ export class PauseOverlay extends UiFramework {
                 120, 36,
                 this.text[1],
                 () => {
-                    EventBus.instance().emit(new NewNotify('WIP'));
+                    appEvent.emit(new NewNotify('WIP'));
                 }),
             new UIButton(
                 centerX - 60, centerY + 50,
@@ -121,18 +114,8 @@ export class PauseOverlay extends UiFramework {
         return false;
     }
 
-    private resetPause(event: GamePause) {
-        if (event.paused) {
-            this.lastPerFrame = RuntimeConfig.perFrame;
-            RuntimeConfig.perFrame = Math.max(RuntimeConfig.perFrame, 1000 / 10);
-        } else {
-            RuntimeConfig.perFrame = Math.min(this.lastPerFrame, RuntimeConfig.perFrame);
-        }
-    }
-
     public destroy() {
         this.buttons.length = 0;
         this.text.length = 0;
-        EventBus.instance().off('game:pause', this.resetPause);
     }
 }

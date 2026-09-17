@@ -1,22 +1,16 @@
 import type {Consumer} from "../type/types.ts";
 import type {AppEvents} from "./AppEvents.ts";
 import type {GameEvent} from "./events/GameEvent.ts";
+import {newSet} from "../utils/uit.ts";
 
 export class EventBus {
-    private static GLOBAL_EVENT: EventBus;
-
     private readonly listeners: Map<string, Set<Consumer<any>>> = new Map();
-
-    public static instance(): EventBus {
-        if (!this.GLOBAL_EVENT) this.GLOBAL_EVENT = new EventBus();
-        return this.GLOBAL_EVENT;
-    }
 
     public on<K extends keyof AppEvents>(
         type: K,
         handler: Consumer<AppEvents[K]>,
     ): Consumer<void> {
-        const bucket = this.listeners.getOrInsertComputed(type, () => new Set());
+        const bucket = this.listeners.getOrInsertComputed(type, newSet);
         bucket.add(handler);
         return () => bucket.delete(handler);
     }
@@ -71,3 +65,5 @@ export class EventBus {
         this.listeners.clear();
     }
 }
+
+export const appEvent = new EventBus();

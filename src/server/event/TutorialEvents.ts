@@ -1,4 +1,4 @@
-import {EventBus} from "../../event/EventBus.ts";
+import {appEvent, EventBus} from "../../event/EventBus.ts";
 import {NovaFlightServer} from "../NovaFlightServer.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {World} from "../../world/World.ts";
@@ -27,13 +27,12 @@ export class TutorialEvents {
         this.server = server;
         this.engine = new SequenceEngine(server);
 
-        const eventBus = EventBus.instance();
         const onStageEnter = this.onStageEnter.bind(this);
         const onPlayerDead = this.onPlayerDead.bind(this);
-        eventBus.on('world:stage:enter', onStageEnter);
-        eventBus.on('entity:player:dead', onPlayerDead);
+        appEvent.on('world:stage:enter', onStageEnter);
+        appEvent.on('entity:player:dead', onPlayerDead);
 
-        this.sequences = this.createSequences(eventBus, onStageEnter, onPlayerDead);
+        this.sequences = this.createSequences(appEvent, onStageEnter, onPlayerDead);
     }
 
     private onStageEnter(event: StageEnter) {
