@@ -8,6 +8,7 @@ import {TechSteeringGear} from "./apply/TechSteeringGear.ts";
 import {TechFireCC} from "./apply/TechFireCC.ts";
 import {TechBC} from "./apply/TechBC.ts";
 import {TechFollow} from "./apply/TechFollow.ts";
+import {TechDeflectorClient} from "./apply/TechDeflectorClient.ts";
 
 export class ClientTechManager {
     private static readonly techMap: Map<RegistryEntry<Tech>, ClientApplyTech> = new Map();
@@ -30,5 +31,6 @@ export class ClientTechManager {
         this.register(Techs.FIRE_CONTROL_COMPUTER, TechFireCC);
         this.register(Techs.BALLISTIC_CALCULATOR, TechBC);
         this.register(Techs.INSTANT_RESPONSE, TechFollow);
+        this.register(Techs.DEFLECTOR, TechDeflectorClient);
     }
 }

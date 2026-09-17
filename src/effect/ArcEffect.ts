@@ -69,7 +69,7 @@ export class ArcEffect implements VisualEffect {
         this.color = color;
         this.arcCount = arcCount;
         this.segments = segments;
-        this.blur = width > 1;
+        this.blur = width > 1.5;
 
         if (isClient) this.rebuildArcs();
     }

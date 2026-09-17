@@ -2,7 +2,7 @@ import {RocketEntity} from "./RocketEntity.ts";
 import {Emp} from "../../world/element/Emp.ts";
 
 export class EMPRocketEntity extends RocketEntity {
-    public override explosionRadius = 160;
+    public override explosionRadius = 100;
     private duration = 100;
 
     public override explode() {

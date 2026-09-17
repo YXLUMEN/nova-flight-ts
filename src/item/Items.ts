@@ -122,11 +122,11 @@ export class Items {
         .maxCooldown(450)
     ));
     public static readonly CLOUD_LIGHTNING = this.register('cloud_lightning', new CloudLightningConduits(new Item.Properties()
-        .attackDamage(20)
+        .attackDamage(24)
         .maxCooldown(40)
         .type(WeaponType.ENERGY, WeaponType.ARC)
         .unbreakable()
-        .component(DataComponents.ATTACK_RANGE, 128) // 半径
+        .component(DataComponents.ATTACK_RANGE, 180) // 半径
     ));
     public static readonly ARC_EMITTER = this.register('arc_emitter', new ArcEmitter(new Item.Properties()
         .attackDamage(12)
