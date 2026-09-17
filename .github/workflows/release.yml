@@ -1,0 +1,316 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号(如 0.2.17); 留空则读取 src-tauri/tauri.conf.json'
+        required: false
+        type: string
+      bump_and_tag:
+        description: '自动改写版本号并提交 + 打 tag + 推送(仅手动触发可用)'
+        required: false
+        default: false
+        type: boolean
+      prerelease:
+        description: '标记为预发布'
+        required: false
+        default: false
+        type: boolean
+
+# 创建 Release / 推送 tag 需要写权限
+permissions:
+  contents: write
+
+# 同一 tag 只允许串行发布, 避免并发互相覆盖 latest.json
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '24'
+  UPDATE_URL_TEMPLATE: ${{ vars.UPDATE_URL_TEMPLATE || 'https://arctic-red-tide.xyz/app/nova-flight/{name}' }}
+
+jobs:
+  prepare:
+    name: 解析版本号与更新说明
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      tag: ${{ steps.meta.outputs.tag }}
+      checkout_ref: ${{ steps.meta.outputs.checkout_ref }}
+      prerelease: ${{ steps.meta.outputs.prerelease }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: 准备 Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 确定目标版本 / 按需提交版本号并打 tag
+        id: meta
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+          BUMP_AND_TAG: ${{ inputs.bump_and_tag }}
+          PRERELEASE: ${{ inputs.prerelease }}
+        run: |
+          set -euo pipefail
+
+          # 1) 目标版本: tag 推送取 tag 名, 手动触发取输入值或配置文件当前值
+          current="$(node .github/scripts/get-version.mjs)"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            target="${INPUT_VERSION:-$current}"
+          else
+            target="${REF_NAME#v}"
+          fi
+          if ! node -e "process.exit(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(process.argv[1]) ? 0 : 1)" "$target"; then
+            echo "::error::版本号 '$target' 不是合法的 x.y.z 形式"
+            exit 1
+          fi
+          tag="v$target"
+          echo "当前版本: $current; 目标版本: $target (tag: $tag)"
+
+          if [ "$BUMP_AND_TAG" = "true" ]; then
+            # 2a) 自动改版本号: 仅改写 tauri.conf.json(版本号唯一来源), 提交并推送
+            node .github/scripts/set-version.mjs "$target"
+
+            if git diff --quiet; then
+              echo "版本号无变化, 跳过提交"
+            else
+              git config user.name 'github-actions[bot]'
+              git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+              git commit -am "chore: 发布 $tag"
+              git push origin "HEAD:${REF_NAME}"
+            fi
+
+            if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+              echo "::error::tag $tag 已存在, 请换一个版本号"
+              exit 1
+            fi
+            git tag -a "$tag" -m "release $tag"
+            git push origin "$tag"
+            checkout_ref="$tag"
+          else
+            # 2b) 不自动改版本号: 版本号必须与源码一致, 否则拒绝发布
+            node .github/scripts/get-version.mjs --verify "$target"
+
+            if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+              checkout_ref="$tag"
+            else
+              # 手动触发且尚未打过 tag 时, 在当前提交上补建 tag
+              echo "tag $tag 不存在, 将在当前提交上创建"
+              git tag -a "$tag" -m "release $tag"
+              git push origin "$tag"
+              checkout_ref="$tag"
+            fi
+          fi
+
+          # 3) 更新说明: 上一个版本 tag 到本版本之间的提交标题
+          previous="$(git describe --tags --abbrev=0 --match 'v[0-9]*' "${checkout_ref}^" 2>/dev/null || true)"
+          if [ -n "$previous" ]; then
+            range="${previous}..${checkout_ref}"
+            echo "更新说明范围: $range"
+          else
+            range="${checkout_ref}"
+            echo "未找到历史 tag, 仅输出最近 20 条提交"
+          fi
+
+          {
+            echo "## Nova Flight $tag"
+            echo
+            if [ -n "$previous" ]; then
+              git log --no-merges --invert-grep --grep='^chore: 发布 v' --pretty=format:'- %s' "$range"
+            else
+              git log --no-merges --invert-grep --grep='^chore: 发布 v' -20 --pretty=format:'- %s' "$checkout_ref"
+            fi
+            echo
+          } > release-notes.md
+
+          echo "version=$target" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "checkout_ref=$checkout_ref" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$PRERELEASE" >> "$GITHUB_OUTPUT"
+
+      - name: 上传更新说明
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-notes
+          path: release-notes.md
+          retention-days: 1
+
+  build:
+    name: 构建并发布
+    needs: prepare
+    runs-on: windows-latest
+    env:
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+      TAG: ${{ needs.prepare.outputs.tag }}
+      PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+
+      - name: 准备 Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: 准备 Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: 缓存 Rust 构建产物
+        uses: Swatinem/rust-cache@v2
+        with:
+          # Cargo.toml 位于 src-tauri, target 目录也随之外移
+          workspaces: src-tauri -> target
+          key: release-msi
+          # LTO + codegen-units=1 构建较慢, 失败时也保留缓存
+          cache-on-failure: true
+
+      - name: 校验签名私钥
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${TAURI_SIGNING_PRIVATE_KEY:-}" ]; then
+            echo "::error::未配置 TAURI_SIGNING_PRIVATE_KEY; updater 产物无法签名, 请在仓库 Secrets 中添加"
+            exit 1
+          fi
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 下载更新说明
+        uses: actions/download-artifact@v8
+        with:
+          name: release-notes
+
+      # 该命令内部会依次执行 beforeBuildCommand(npm run build) 与 tauri build,
+      # 产物位于 src-tauri/target/release/bundle/msi/, 签名文件为同名 *.msi.sig
+      - name: 构建 MSI 与 updater 签名
+        run: npm run tauri build
+
+      - name: 生成 latest.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          msi_files=(src-tauri/target/release/bundle/msi/*.msi)
+          if [ "${#msi_files[@]}" -ne 1 ]; then
+            echo "::error::期望 1 个 MSI, 实际得到 ${#msi_files[@]} 个"
+            exit 1
+          fi
+          msi="${msi_files[0]}"
+          if [ ! -f "$msi.sig" ]; then
+            echo "::error::缺少签名文件 $msi.sig"
+            exit 1
+          fi
+          # url 指向更新服务器, 与 tauri.conf.json 中 updater.endpoints 所在目录一致
+          msi_name="$(basename "$msi")"
+          url_template="${UPDATE_URL_TEMPLATE}"
+          url="${url_template//\{name\}/$msi_name}"
+          url="${url//\{version\}/$VERSION}"
+          url="${url//\{target\}/windows-x86_64}"
+          node .github/scripts/gen-latest-json.mjs \
+            --version "$VERSION" \
+            --notes-file release-notes.md \
+            --out latest.json \
+            --target windows-x86_64 \
+            --signature-file "$msi.sig" \
+            --url "$url"
+          cat latest.json
+
+      - name: 创建 / 更新 GitHub Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          assets=(src-tauri/target/release/bundle/msi/*.msi src-tauri/target/release/bundle/msi/*.msi.sig latest.json)
+
+          args=(--title "Nova Flight ${VERSION}" --notes-file release-notes.md)
+          if [ "${PRERELEASE:-false}" = "true" ]; then
+            args+=(--prerelease)
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${assets[@]}" --clobber
+            gh release edit "$TAG" "${args[@]}"
+          else
+            gh release create "$TAG" "${assets[@]}" "${args[@]}"
+          fi
+
+      - name: 输出本地产物清单
+        shell: bash
+        run: ls -l src-tauri/target/release/bundle/msi latest.json
+
+  publish-cdn:
+    name: 同步到自建站点
+    needs: [ prepare, build ]
+    # 未配置 CDN_HOST 变量时整个任务跳过(更新服务器改用 GitHub Release 时无需配置)
+    if: ${{ vars.CDN_HOST != '' }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAG: ${{ needs.prepare.outputs.tag }}
+      CDN_SSH_KEY: ${{ secrets.CDN_SSH_KEY }}
+      CDN_HOST: ${{ vars.CDN_HOST }}
+      CDN_USER: ${{ vars.CDN_USER }}
+      CDN_PATH: ${{ vars.CDN_PATH }}
+    steps:
+      - name: 校验部署配置
+        run: |
+          set -euo pipefail
+          if [ -z "${CDN_SSH_KEY:-}" ]; then
+            echo "::warning::未配置 CDN_SSH_KEY, 跳过自建站点发布(产物已在 GitHub Release 中)"
+            exit 0
+          fi
+          for name in CDN_HOST CDN_USER CDN_PATH; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::缺少配置 $name"
+              exit 1
+            fi
+          done
+          echo "deploy_target=${CDN_USER}@${CDN_HOST}:${CDN_PATH}" >> "$GITHUB_ENV"
+
+      - name: 下载 Release 产物
+        if: ${{ env.deploy_target != '' }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist-assets
+          gh release download "$TAG" --repo "${{ github.repository }}" --dir dist-assets --clobber \
+            --pattern '*.msi' --pattern '*.msi.sig' --pattern 'latest.json'
+          ls -l dist-assets
+
+      - name: 通过 rsync 发布
+        if: ${{ env.deploy_target != '' }}
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq rsync
+
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$CDN_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$CDN_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+          # 不删除远端历史版本: 旧安装包仍被老版本客户端的 latest.json 引用
+          rsync -avz --chmod=F644 \
+            -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=accept-new" \
+            dist-assets/ "${CDN_USER}@${CDN_HOST}:${CDN_PATH}"

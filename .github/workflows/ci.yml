@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, dev ]
+  pull_request:
+    branches: [ master, dev ]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '24'
+
+jobs:
+  frontend:
+    name: 前端类型检查与构建
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+
+      - name: 准备 Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 类型检查
+        run: npx tsc --noEmit
+
+      - name: 构建前端
+        run: npm run build
+
+      - name: 上传前端产物
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist
+          retention-days: 3
+
+  rust:
+    name: Rust 编译检查
+    runs-on: windows-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+
+      - name: 准备 Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: 准备 Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: 缓存 Rust 构建产物
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+          key: ci
+
+      - name: 安装依赖
+        run: npm ci
+
+      # tauri-build 会读取 tauri.conf.json 中的 frontendDist(../dist), 先产出前端以避免校验失败
+      - name: 构建前端
+        run: npm run build
+
+      - name: cargo check
+        run: cargo check --locked --manifest-path src-tauri/Cargo.toml
+
+      # 非阻塞: 便于渐进式统一代码风格, 习惯后可去掉 continue-on-error
+      - name: cargo fmt 检查(非阻塞)
+        continue-on-error: true
+        run: cargo fmt --all --manifest-path src-tauri/Cargo.toml -- --check
