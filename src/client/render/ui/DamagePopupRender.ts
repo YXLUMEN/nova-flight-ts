@@ -32,6 +32,7 @@ export class DamagePopupRender implements IUi {
 
     public spawnPopup(x: number, y: number, value: number, color: string, life: number, entityId?: number, force = false): void {
         if (!entityId) {
+            if (this.activePopups.length > 128) return;
             this.activePopups.push({
                 x: x, y: y, preY: y,
                 age: 0, life: life / 20,
@@ -44,6 +45,7 @@ export class DamagePopupRender implements IUi {
 
         const exist = this.popups.get(entityId);
         if (!exist || force) {
+            if (this.activePopups.length > 128) return;
             const event: DamagePopupEvent = {
                 x: x, y: y, preY: y,
                 age: 0, life: life / 20,

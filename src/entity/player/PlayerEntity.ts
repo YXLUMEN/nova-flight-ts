@@ -24,6 +24,7 @@ import {PlayerDead} from "../../event/events/entity/PlayerDead.ts";
 import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {PlayerDamage} from "../../event/events/entity/PlayerDamage.ts";
+import type {Entity} from "../Entity.ts";
 
 export abstract class PlayerEntity extends LivingEntity {
     private static readonly SHIELD_AMOUNT = DataTracker.registerData(Object(PlayerEntity), TrackedDataHandlerRegistry.FLOAT);
@@ -53,7 +54,8 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public override createLivingAttributes() {
         return super.createLivingAttributes()
-            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 20);
+            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 20)
+            .addWithBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE, 4);
     }
 
     protected override defineSyncedData(builder: DataTrackerBuilder) {
@@ -147,6 +149,13 @@ export abstract class PlayerEntity extends LivingEntity {
 
         super.onDeath(damageSource);
         world.gameOver(this);
+    }
+
+    public attack(entity: Entity) {
+        entity.takeDamage(
+            this.getWorld().getDamageSources().playerAttack(this),
+            this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+        );
     }
 
     protected override onDiscard() {

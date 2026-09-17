@@ -12,7 +12,7 @@ export class CloudLightningConduits extends BaseWeapon {
     private readonly speed = 12;
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        const damage = randInt(1, stack.getOr(DataComponents.ATTACK_DAMAGE, 12));
+        const damage = randInt(4, stack.getOr(DataComponents.ATTACK_DAMAGE, 12));
         const range = stack.getOr(DataComponents.ATTACK_RANGE, 128);
 
         const cloud = new CloudLightningEntity(EntityTypes.CLOUD_LIGHTNING_ENTITY, world, attacker, damage, range);

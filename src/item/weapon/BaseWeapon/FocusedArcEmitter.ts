@@ -34,7 +34,7 @@ export class FocusedArcEmitter extends BaseWeapon {
                 endX, endY, this.arcWidth,
                 pos.x, pos.y, mob.getWidth())
             ) {
-                mob.takeDamage(damageSource, damage + (mob.getHealth() * 0.2) | 0);
+                mob.takeDamage(damageSource, damage + mob.getHealth() * 0.2);
                 initialTargets.push(mob);
             }
         }
@@ -50,9 +50,10 @@ export class FocusedArcEmitter extends BaseWeapon {
 
         const range = stack.getOr(DataComponents.ATTACK_RANGE, 16384);
         const subHitCount = new Map<Entity, number>();
-        const chainDamage = Math.floor(damage * 0.5);
+        const chainDamage = damage * 0.5;
 
         // 在所有候选目标中连锁
+        const arcs: ArcEffect[] = [];
         for (const source of initialTargets) {
             let targetCount = 0;
             const sourcePos = source.positionRef;
@@ -64,22 +65,42 @@ export class FocusedArcEmitter extends BaseWeapon {
                 const hitTime = subHitCount.get(mob) ?? 0;
                 if (hitTime >= 2) continue;
 
-                if (squareDistVec2(sourcePos, mob.positionRef) <= range) {
+                const mobPos = mob.positionRef;
+                if (squareDistVec2(sourcePos, mobPos) <= range) {
                     targetCount++;
                     subHitCount.set(mob, hitTime + 1);
 
                     mob.takeDamage(damageSource, chainDamage);
-                    const targetPos = mob.positionRef;
+                    const arc = new ArcEffect(
+                        sourcePos.x, sourcePos.y, mobPos.x, mobPos.y,
+                        0.2, 1.5,
+                        '#7d89ff',
+                        1, 10);
 
-                    world.spawnVisual(null, new ArcEffect(
-                        sourcePos.x, sourcePos.y, targetPos.x, targetPos.y,
-                        0.2, 1,
-                        '#7f54ff',
-                        1, 10
-                    ));
+                    if (mob.isDead()) {
+                        world.spawnVisual(null, arc);
+                        continue;
+                    }
+                    arcs.push(arc);
                 }
             }
         }
+
+        if (arcs.length === 0) return;
+        const schedule = world.scheduleInterval(0.05, () => {
+            if (arcs.length === 0) {
+                schedule.cancel();
+                return;
+            }
+
+            let steps = 0;
+            for (let i = arcs.length - 1; i >= 0; i--) {
+                world.spawnVisual(null, arcs[i]);
+                arcs[i] = arcs[arcs.length - 1];
+                arcs.pop();
+                if (++steps >= 3) break;
+            }
+        });
     }
 
     public override getUiColor(): string {

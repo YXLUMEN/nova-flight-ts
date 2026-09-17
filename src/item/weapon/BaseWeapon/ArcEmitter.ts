@@ -7,12 +7,11 @@ import {DataComponents} from "../../../component/DataComponents.ts";
 import {ArcEffect} from "../../../effect/ArcEffect.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import type {World} from "../../../world/World.ts";
-import type {Vec2} from "../../../utils/math/Vec2.ts";
 import type {EntityDist} from "../../../type/types.ts";
 
 export class ArcEmitter extends BaseWeapon {
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        const pos = attacker.positionRef;
+        const {x, y} = attacker.positionRef;
         const yaw = attacker.getYaw();
 
         const range = stack.getOr(DataComponents.ATTACK_RANGE, 65536);
@@ -22,8 +21,8 @@ export class ArcEmitter extends BaseWeapon {
             if (entity.isRemoved()) continue;
 
             const mobPos = entity.positionRef;
-            const dx = mobPos.x - pos.x;
-            const dy = mobPos.y - pos.y;
+            const dx = mobPos.x - x;
+            const dy = mobPos.y - y;
             const distSq = dx * dx + dy * dy;
 
             if (distSq > range) continue;
@@ -38,7 +37,7 @@ export class ArcEmitter extends BaseWeapon {
         }
 
         if (candidates.length === 0) {
-            this.randomArc(world, pos, yaw);
+            this.randomArc(world, x, y, yaw);
             return;
         }
 
@@ -54,7 +53,7 @@ export class ArcEmitter extends BaseWeapon {
 
             mob.takeDamage(damageSource, damage);
             world.spawnVisual(null, new ArcEffect(
-                pos.x, pos.y,
+                x, y,
                 mobPos.x, mobPos.y,
                 0.25, 2,
                 '#5d9cff',
@@ -71,16 +70,16 @@ export class ArcEmitter extends BaseWeapon {
         world.stopLoopSound(attacker, SoundEvents.ARC_LOOP);
     }
 
-    private randomArc(world: ServerWorld, pos: Vec2, yaw: number) {
+    private randomArc(world: ServerWorld, x: number, y: number, yaw: number) {
         // 在 ±60° 内随机偏移
         const offset = yaw + (Math.random() - 0.5) * Math.PI / 1.5;
         const length = 48 + Math.random() * 64; // 48～112 像素
 
-        const endX = pos.x + Math.cos(offset) * length;
-        const endY = pos.y + Math.sin(offset) * length;
+        const endX = x + Math.cos(offset) * length;
+        const endY = y + Math.sin(offset) * length;
 
         world.spawnVisual(null, new ArcEffect(
-            pos.x, pos.y,
+            x, y,
             endX, endY,
             0.2, 1,
             '#5d9cff',
