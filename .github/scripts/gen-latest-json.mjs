@@ -95,7 +95,6 @@ for (const platform of options.platforms) {
 const manifest = {
     version: options.version,
     notes: options.notes ?? '',
-    // Tauri 期望 RFC3339, 去掉毫秒以获得更干净的时间戳
     pub_date: options.pubDate ?? new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
     platforms: Object.fromEntries(
         options.platforms.map((platform) => [
