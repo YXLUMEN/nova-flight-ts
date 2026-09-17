@@ -6,7 +6,7 @@ import {clamp} from "../utils/math/math.ts";
 import {MediaWithoutSrc} from "../type/errors.ts";
 import {ResourceManager} from "../resource/ResourceManager.ts";
 import {Resources} from "../resource/Resources.ts";
-import {EventBus} from "../event/EventBus.ts";
+import {appEvent} from "../event/EventBus.ts";
 import {Settings} from "../client/settings/Settings.ts";
 
 export class AudioManager {
@@ -26,7 +26,7 @@ export class AudioManager {
             this.audio.volume = Settings.MUSIC_VOLUME.get();
             Settings.MUSIC_VOLUME.onChange(v => this.audio.volume = v);
 
-            EventBus.instance().on('game:pause', ({paused}) => paused ? this.pause() : this.resume());
+            appEvent.on('game:pause', ({paused}) => paused ? this.pause() : this.resume());
             this.disable = false;
         }
     }

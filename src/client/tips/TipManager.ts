@@ -3,7 +3,7 @@ import {randInt} from "../../utils/math/math.ts";
 import type {TipResource} from "../../resource/TipResource.ts";
 import {ResourceManager} from "../../resource/ResourceManager.ts";
 import {Resources} from "../../resource/Resources.ts";
-import {EventBus} from "../../event/EventBus.ts";
+import {appEvent} from "../../event/EventBus.ts";
 
 export class TipManager {
     public static readonly title: TranslatableText = TranslatableText.of('tips.nova-flight.title');
@@ -19,7 +19,7 @@ export class TipManager {
         this.current = this.resource!.tips[this.index];
 
         this.next = this.next.bind(this);
-        EventBus.instance().on('game:pause', ({paused}) => paused ? this.carousel() : this.cancel());
+        appEvent.on('game:pause', ({paused}) => paused ? this.carousel() : this.cancel());
     }
 
     public static next(): TranslatableText | null {

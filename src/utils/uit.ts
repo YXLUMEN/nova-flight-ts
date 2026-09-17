@@ -170,9 +170,7 @@ export function createTranslationKey(type: string, id: Identifier | null) {
         `${type}.${id.getNamespace()}.${id.getPath().replace('/', '.')}`
 }
 
-/**
- * 空方法
- * */
+/** 空方法 */
 export function empty(): void {
 }
 
@@ -182,4 +180,9 @@ export function any(): boolean {
 
 export function none(): boolean {
     return false;
+}
+
+/** 需要懒创建的场景使用 */
+export function newSet<T>(): Set<T> {
+    return new Set();
 }

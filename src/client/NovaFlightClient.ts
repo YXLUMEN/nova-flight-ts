@@ -27,7 +27,7 @@ import {SoundEvents} from "../sound/SoundEvents.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
 import {ClientInputEvents} from "./input/ClientInputEvents.ts";
 import {ClientCommandSource} from "./command/ClientCommandSource.ts";
-import {EventBus} from "../event/EventBus.ts";
+import {appEvent} from "../event/EventBus.ts";
 import {ClientPlayHandler} from "./network/handler/ClientPlayHandler.ts";
 import {TickRateManager} from "../world/TickRateManager.ts";
 import {ClientWorkerFS} from "./ClientWorkerFS.ts";
@@ -136,7 +136,7 @@ export class NovaFlightClient {
             const breakLoop = await this.userSelect();
             if (breakLoop) break;
 
-            EventBus.instance().emit(new GameStart());
+            appEvent.emit(new GameStart());
             await this.waitWorldStop;
 
             // cleanup
@@ -216,14 +216,20 @@ export class NovaFlightClient {
     public setPause(bl: boolean): void {
         if (bl && !this.pause) {
             this.worker?.postMessage({m2w: Main2WorkerType.STOP_TICKING});
-            EventBus.instance().emit(new GamePause(true));
+            appEvent.emit(new GamePause(true));
+
+            if (!this.player?.isOpenInventory()) {
+                RuntimeConfig.lastPerFrame = RuntimeConfig.perFrame;
+                RuntimeConfig.perFrame = Math.max(RuntimeConfig.perFrame, 1000 / 10);
+            }
 
             this.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
             if (this.isIntegrated && this.world) this.world.worldSound.pauseAll().catch(console.error);
             this.window.canvas.style.cursor = 'crosshair';
         } else if (!bl && this.pause) {
             this.worker?.postMessage({m2w: Main2WorkerType.START_TICKING});
-            EventBus.instance().emit(new GamePause(false));
+            appEvent.emit(new GamePause(false));
+            RuntimeConfig.perFrame = Math.min(RuntimeConfig.lastPerFrame, RuntimeConfig.perFrame);
 
             this.globalSound.playSound(SoundEvents.UI_PAGE_SWITCH);
             this.world?.worldSound.resumeAll().catch(console.error);
@@ -365,8 +371,7 @@ export class NovaFlightClient {
         ctrl.abort();
     }
 
-    public async leaveGame(): Promise<void> {
-        await this.saveAll();
+    public leaveGame(): void {
         this.connection.disconnect();
         this.requestStop();
     }

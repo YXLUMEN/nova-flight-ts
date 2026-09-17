@@ -1,5 +1,5 @@
 import type {Entity} from "../entity/Entity.ts";
-import {EventBus} from "../event/EventBus.ts";
+import {appEvent, EventBus} from "../event/EventBus.ts";
 import type {VisualEffect} from "../effect/VisualEffect.ts";
 import type {Schedule} from "../type/ITimer.ts";
 import {DamageSources} from "../entity/damage/DamageSources.ts";
@@ -38,7 +38,7 @@ export abstract class World {
     public static readonly MAX_Y_CROSS = this.WORLD_HEIGHT - this.MAP_HEIGHT;
 
     protected readonly blockMap: BitBlockMap = new BitBlockMap(World.MAP_WIDTH, World.MAP_HEIGHT);
-    public readonly events: EventBus = EventBus.instance();
+    public readonly events: EventBus = appEvent;
     public empBurst: number = 0
 
     // ticking
