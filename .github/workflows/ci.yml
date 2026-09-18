@@ -7,6 +7,9 @@ on:
     branches: [ master, dev ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -21,6 +24,9 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v7
+        with:
+          # 不把 token 持久化到 .git/config, 避免依赖的安装脚本读到
+          persist-credentials: false
 
       - name: 准备 Node
         uses: actions/setup-node@v7
@@ -45,11 +51,31 @@ jobs:
           retention-days: 3
 
   rust:
-    name: Rust 编译检查
-    runs-on: windows-latest
+    name: Rust 编译检查(${{ matrix.os }})
+    strategy:
+      # 两个平台都查: 避免出现只在 Windows 能编译的平台相关代码
+      fail-fast: false
+      matrix:
+        os: [ windows-latest, ubuntu-22.04 ]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: 检出代码
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: 安装 Linux 系统依赖
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            xdg-utils \
+            libfuse2 \
+            file
 
       - name: 准备 Node
         uses: actions/setup-node@v7
@@ -58,15 +84,17 @@ jobs:
           cache: npm
 
       - name: 准备 Rust
-        uses: dtolnay/rust-toolchain@stable
+        # 固定到 commit + 固定工具链版本
+        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable 分支(2026-09-03)
         with:
+          toolchain: '1.98.0'
           components: rustfmt
 
       - name: 缓存 Rust 构建产物
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri -> target
-          key: ci
+          key: ci-${{ matrix.os }}
 
       - name: 安装依赖
         run: npm ci
