@@ -33,7 +33,7 @@
       "assetProtocol": {
         "enable": true,
         "scope": [
-          "**/*"
+          "$RESOURCE/**"
         ]
       },
       "freezePrototype": true
@@ -41,7 +41,9 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["msi"],
+    "targets": [
+      "msi"
+    ],
     "resources": {
       "../resources/": "resources/"
     },

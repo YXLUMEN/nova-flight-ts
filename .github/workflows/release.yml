@@ -47,6 +47,7 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v7
         with:
+          # 需要完整 tag 历史来生成更新说明
           fetch-depth: 0
 
       - name: 准备 Node
@@ -148,22 +149,55 @@ jobs:
           path: release-notes.md
           retention-days: 1
 
+      # 先建草稿: 各平台并行上传资源时不会露出半成品, 全部完成后由 manifest 任务转为正式发布
+      - name: 预创建草稿 Release
+        shell: bash
+        env:
+          # 只有这一步需要 gh; git push 用的是 checkout 持久化的凭据
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.meta.outputs.tag }}
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG 已存在, 跳过创建"
+          else
+            gh release create "$TAG" --draft --verify-tag \
+              --title "Nova Flight $VERSION" \
+              --notes-file release-notes.md
+            echo "已创建草稿 Release $TAG, 全部平台构建完成后自动转为正式发布"
+          fi
+
   build:
-    name: 构建并发布
+    name: 构建 ${{ matrix.platform }}
     needs: prepare
-    runs-on: windows-latest
+    strategy:
+      # 一个平台失败不影响其他平台继续构建, 便于一次性看到所有问题
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows-x86_64
+            # updater 产物(用于 latest.json 的 url 与 signature)
+            updater_glob: 'src-tauri/target/release/bundle/msi/*.msi'
+            # 其余需要一并上传到 Release 的文件; 签名文件由 <updater_glob>.sig 自动带上, 无需重复列
+            extra_glob: ''
+          - os: ubuntu-22.04
+            platform: linux-x86_64
+            # 必须用 ubuntu-22.04: 24.04 产出的二进制要求更新的 glibc, 用户侧可能跑不起来
+            updater_glob: 'src-tauri/target/release/bundle/appimage/*.tar.gz'
+            extra_glob: 'src-tauri/target/release/bundle/appimage/*.AppImage src-tauri/target/release/bundle/deb/*.deb'
+    runs-on: ${{ matrix.os }}
+    # 不放密钥: job 级 env 对每一步可见, 包含执行第三方安装脚本的 npm ci
     env:
-      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       VERSION: ${{ needs.prepare.outputs.version }}
       TAG: ${{ needs.prepare.outputs.tag }}
-      PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
     steps:
       - name: 检出代码
         uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
+          persist-credentials: false
 
       - name: 准备 Node
         uses: actions/setup-node@v7
@@ -172,109 +206,193 @@ jobs:
           cache: npm
 
       - name: 准备 Rust
-        uses: dtolnay/rust-toolchain@stable
+        # 固定到 commit + 固定工具链版本
+        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable 分支(2026-09-03)
         with:
-          targets: x86_64-pc-windows-msvc
+          toolchain: '1.98.0'
 
       - name: 缓存 Rust 构建产物
         uses: Swatinem/rust-cache@v2
         with:
           # Cargo.toml 位于 src-tauri, target 目录也随之外移
           workspaces: src-tauri -> target
-          key: release-msi
+          key: release-${{ matrix.platform }}
           # LTO + codegen-units=1 构建较慢, 失败时也保留缓存
           cache-on-failure: true
 
-      - name: 校验签名私钥
+      - name: 安装 Linux 系统依赖
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            xdg-utils \
+            libfuse2 \
+            file
+
+      - name: 安装依赖
+        run: npm ci
+
+      # 该命令内部会依次执行 beforeBuildCommand(npm run build) 与 tauri build
+      # 包类型: Windows 取 tauri.conf.json 的 targets, Linux 由 tauri.linux.conf.json 覆盖
+      # 签名私钥只在这一步注入
+      - name: 构建安装包与 updater 签名
         shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
           set -euo pipefail
           if [ -z "${TAURI_SIGNING_PRIVATE_KEY:-}" ]; then
             echo "::error::未配置 TAURI_SIGNING_PRIVATE_KEY; updater 产物无法签名, 请在仓库 Secrets 中添加"
             exit 1
           fi
+          npm run tauri build
 
-      - name: 安装依赖
-        run: npm ci
+      - name: 生成单平台更新清单
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          updater_files=(${{ matrix.updater_glob }})
+          if [ "${#updater_files[@]}" -ne 1 ]; then
+            echo "::error::期望 1 个 updater 产物, 实际得到 ${#updater_files[@]} 个"
+            ls -R src-tauri/target/release/bundle || true
+            exit 1
+          fi
+          updater_file="${updater_files[0]}"
+          if [ ! -f "$updater_file.sig" ]; then
+            echo "::error::缺少签名文件 $updater_file.sig; 确认 tauri.conf.json 的 createUpdaterArtifacts 为 true"
+            exit 1
+          fi
+
+          # url 指向更新服务器, 与 tauri.conf.json 中 updater.endpoints 所在位置保持一致
+          url_template="${UPDATE_URL_TEMPLATE}"
+          url="${url_template//\{name\}/$(basename "$updater_file")}"
+          url="${url//\{version\}/$VERSION}"
+          url="${url//\{target\}/${{ matrix.platform }}}"
+
+          mkdir -p manifest
+          node .github/scripts/gen-latest-json.mjs \
+            --version "$VERSION" \
+            --out "manifest/${{ matrix.platform }}.json" \
+            --target "${{ matrix.platform }}" \
+            --signature-file "$updater_file.sig" \
+            --url "$url"
+          cat "manifest/${{ matrix.platform }}.json"
+
+      - name: 上传产物到 Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          assets=(${{ matrix.updater_glob }} ${{ matrix.updater_glob }}.sig ${{ matrix.extra_glob }})
+          if [ "${#assets[@]}" -eq 0 ]; then
+            echo "::error::没有找到可上传的产物"
+            exit 1
+          fi
+          # 去重, 避免同一文件重复上传
+          unique=()
+          for asset in "${assets[@]}"; do
+            duplicate=false
+            for exist in "${unique[@]:-}"; do
+              if [ "$exist" = "$asset" ]; then duplicate=true; fi
+            done
+            if [ "$duplicate" = "false" ]; then unique+=("$asset"); fi
+          done
+          printf '上传: %s\n' "${unique[@]}"
+          gh release upload "$TAG" "${unique[@]}" --clobber
+
+      - name: 上传清单片段
+        uses: actions/upload-artifact@v7
+        with:
+          name: manifest-${{ matrix.platform }}
+          path: manifest/${{ matrix.platform }}.json
+          retention-days: 1
+
+  manifest:
+    name: 合并更新清单并发布
+    needs: [ prepare, build ]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      TAG: ${{ needs.prepare.outputs.tag }}
+      PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          persist-credentials: false
+
+      - name: 准备 Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 下载各平台清单片段
+        uses: actions/download-artifact@v8
+        with:
+          pattern: manifest-*
+          path: manifests
+          merge-multiple: true
 
       - name: 下载更新说明
         uses: actions/download-artifact@v8
         with:
           name: release-notes
 
-      # 该命令内部会依次执行 beforeBuildCommand(npm run build) 与 tauri build,
-      # 产物位于 src-tauri/target/release/bundle/msi/, 签名文件为同名 *.msi.sig
-      - name: 构建 MSI 与 updater 签名
-        run: npm run tauri build
-
-      - name: 生成 latest.json
+      # 所有平台构建完成后统一合并: updater 会先完整校验整份清单, 各平台各自写一份会互相覆盖
+      - name: 合并为 latest.json
         shell: bash
         run: |
           set -euo pipefail
           shopt -s nullglob
-          msi_files=(src-tauri/target/release/bundle/msi/*.msi)
-          if [ "${#msi_files[@]}" -ne 1 ]; then
-            echo "::error::期望 1 个 MSI, 实际得到 ${#msi_files[@]} 个"
+          fragments=(manifests/*.json)
+          if [ "${#fragments[@]}" -eq 0 ]; then
+            echo "::error::没有下载到任何清单片段"
             exit 1
           fi
-          msi="${msi_files[0]}"
-          if [ ! -f "$msi.sig" ]; then
-            echo "::error::缺少签名文件 $msi.sig"
-            exit 1
-          fi
-          # url 指向更新服务器, 与 tauri.conf.json 中 updater.endpoints 所在目录一致
-          msi_name="$(basename "$msi")"
-          url_template="${UPDATE_URL_TEMPLATE}"
-          url="${url_template//\{name\}/$msi_name}"
-          url="${url//\{version\}/$VERSION}"
-          url="${url//\{target\}/windows-x86_64}"
-          node .github/scripts/gen-latest-json.mjs \
+          node .github/scripts/merge-latest-json.mjs \
             --version "$VERSION" \
             --notes-file release-notes.md \
             --out latest.json \
-            --target windows-x86_64 \
-            --signature-file "$msi.sig" \
-            --url "$url"
+            "${fragments[@]}"
           cat latest.json
 
-      - name: 创建 / 更新 GitHub Release
+      - name: 上传清单并转为正式发布
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          shopt -s nullglob
-          assets=(src-tauri/target/release/bundle/msi/*.msi src-tauri/target/release/bundle/msi/*.msi.sig latest.json)
+          gh release upload "$TAG" latest.json --clobber
 
-          args=(--title "Nova Flight ${VERSION}" --notes-file release-notes.md)
+          args=(--title "Nova Flight $VERSION" --notes-file release-notes.md --draft=false)
           if [ "${PRERELEASE:-false}" = "true" ]; then
             args+=(--prerelease)
           fi
-
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "${assets[@]}" --clobber
-            gh release edit "$TAG" "${args[@]}"
-          else
-            gh release create "$TAG" "${assets[@]}" "${args[@]}"
-          fi
-
-      - name: 输出本地产物清单
-        shell: bash
-        run: ls -l src-tauri/target/release/bundle/msi latest.json
+          gh release edit "$TAG" "${args[@]}"
 
   publish-cdn:
     name: 同步到自建站点
-    needs: [ prepare, build ]
-    # 未配置 CDN_HOST 变量时整个任务跳过(更新服务器改用 GitHub Release 时无需配置)
+    needs: [ prepare, manifest ]
     if: ${{ vars.CDN_HOST != '' }}
     runs-on: ubuntu-latest
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       TAG: ${{ needs.prepare.outputs.tag }}
-      CDN_SSH_KEY: ${{ secrets.CDN_SSH_KEY }}
       CDN_HOST: ${{ vars.CDN_HOST }}
       CDN_USER: ${{ vars.CDN_USER }}
       CDN_PATH: ${{ vars.CDN_PATH }}
     steps:
       - name: 校验部署配置
+        env:
+          CDN_SSH_KEY: ${{ secrets.CDN_SSH_KEY }}
         run: |
           set -euo pipefail
           if [ -z "${CDN_SSH_KEY:-}" ]; then
@@ -291,20 +409,28 @@ jobs:
 
       - name: 下载 Release 产物
         if: ${{ env.deploy_target != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           mkdir -p dist-assets
-          gh release download "$TAG" --repo "${{ github.repository }}" --dir dist-assets --clobber \
-            --pattern '*.msi' --pattern '*.msi.sig' --pattern 'latest.json'
+          # 发布阶段所有平台的产物与 latest.json 都已就位, 整体拉取即可
+          gh release download "$TAG" --repo "${{ github.repository }}" --dir dist-assets --clobber --pattern '*'
           ls -l dist-assets
 
-      - name: 通过 rsync 发布
+      - name: 安装 rsync
         if: ${{ env.deploy_target != '' }}
         run: |
           set -euo pipefail
           sudo apt-get update -qq
           sudo apt-get install -y -qq rsync
 
+      - name: 通过 rsync 发布
+        if: ${{ env.deploy_target != '' }}
+        env:
+          CDN_SSH_KEY: ${{ secrets.CDN_SSH_KEY }}
+        run: |
+          set -euo pipefail
           install -m 700 -d ~/.ssh
           printf '%s\n' "$CDN_SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
