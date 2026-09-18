@@ -185,8 +185,9 @@ jobs:
           - os: ubuntu-22.04
             platform: linux-x86_64
             # 必须用 ubuntu-22.04: 24.04 产出的二进制要求更新的 glibc, 用户侧可能跑不起来
-            updater_glob: 'src-tauri/target/release/bundle/appimage/*.tar.gz'
-            extra_glob: 'src-tauri/target/release/bundle/appimage/*.AppImage src-tauri/target/release/bundle/deb/*.deb'
+            # v2 的 updater 产物就是 AppImage 本身(只有 v1 兼容模式才会额外打 .AppImage.tar.gz)
+            updater_glob: 'src-tauri/target/release/bundle/appimage/*.AppImage'
+            extra_glob: 'src-tauri/target/release/bundle/deb/*.deb src-tauri/target/release/bundle/deb/*.deb.sig'
     runs-on: ${{ matrix.os }}
     # 不放密钥: job 级 env 对每一步可见, 包含执行第三方安装脚本的 npm ci
     env:
@@ -260,7 +261,12 @@ jobs:
           updater_files=(${{ matrix.updater_glob }})
           if [ "${#updater_files[@]}" -ne 1 ]; then
             echo "::error::期望 1 个 updater 产物, 实际得到 ${#updater_files[@]} 个"
-            ls -R src-tauri/target/release/bundle || true
+            echo "::error::glob = ${{ matrix.updater_glob }}"
+            # 只列各构建目录的第一层: 递归会把 .AppDir 整棵树刷出来, 把报错行顶出日志可见范围
+            for dir in src-tauri/target/release/bundle/*/; do
+              echo "--- $dir"
+              ls -lh "$dir" || true
+            done
             exit 1
           fi
           updater_file="${updater_files[0]}"
