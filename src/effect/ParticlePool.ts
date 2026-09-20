@@ -74,7 +74,7 @@ export class ParticlePool {
         life: number,
         halfW: number,
         halfH: number = halfW,
-        shape: ParticleShape = ParticleShape.Circle,
+        shape: ParticleShape = ParticleShape.CIRCLE,
         colorFrom: number, colorTo: number = colorFrom,
         drag: number = 0,
         recession: number = 0.6
@@ -109,7 +109,7 @@ export class ParticlePool {
         life: number,
         halfW: number,
         halfH: number = halfW,
-        shape: ParticleShape = ParticleShape.Circle,
+        shape: ParticleShape = ParticleShape.CIRCLE,
         colorFrom: HexColor, colorTo: HexColor = colorFrom,
         drag: number = 0,
         recession: number = 0.6
@@ -213,10 +213,15 @@ export class ParticlePool {
             }
 
             const shape = this.shape[i];
-            if (shape === ParticleShape.Circle && halfW >= 1.5) {
+            if (shape === ParticleShape.CIRCLE && halfW >= 1.5) {
                 ctx.moveTo(x + halfW, y);
                 ctx.arc(x, y, halfW, 0, PI2);
             } else if (shape === ParticleShape.TRIANGLE) {
+                const halfH = this.halfH[i] * (1 - this.recession[i] * t);
+                ctx.moveTo(x, y - halfH);            // 顶点
+                ctx.lineTo(x + halfW, y + halfH);    // 右下
+                ctx.lineTo(x - halfW, y + halfH);    // 左下
+                ctx.closePath();
             } else {
                 const halfH = this.halfH[i] * (1 - this.recession[i] * t);
                 ctx.rect(x - halfW, y - halfH, halfW * 2, halfH * 2);
@@ -241,7 +246,10 @@ export class ParticlePool {
 }
 
 export const enum ParticleShape {
-    Circle,
-    Rect,
+    /** 圆形，半径为 halfW */
+    CIRCLE,
+    /** 矩形，半宽 halfW、半高 halfH */
+    RECT,
+    /** 等腰三角形，顶点朝上，内接于半宽 halfW、半高 halfH 的包围盒 */
     TRIANGLE
 }

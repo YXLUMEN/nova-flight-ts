@@ -2,6 +2,7 @@ import {ParticleEffectType} from "./ParticleEffectType.ts";
 import {Registries} from "../registry/Registries.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {Registry} from "../registry/Registry.ts";
+import {ParticleShape} from "./ParticlePool.ts";
 
 export class ParticleEffects {
     public static readonly EXPLOSION = ParticleEffects.register('explosion',
@@ -148,6 +149,17 @@ export class ParticleEffects {
             .size(1, 2)
             .colors('#ffd88c')
             .speed(50, 80)
+            .omnidirectional()
+            .build()
+    );
+
+    public static readonly SHIELD_CRASH = ParticleEffects.register('shield_crash',
+        ParticleEffectType.builder()
+            .life(0.8, 1.2)
+            .size(8, 10)
+            .colors('#5095FFCC', '#86B5FFCC')
+            .speed(160, 240)
+            .shape(ParticleShape.TRIANGLE)
             .omnidirectional()
             .build()
     );

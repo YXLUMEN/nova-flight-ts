@@ -67,7 +67,7 @@ export class ParticleEffectTypeBuilder {
 
     public sizeMin: number = 2;
     public sizeMax: number = 5;
-    public particleShape: ParticleShape = ParticleShape.Circle;
+    public particleShape: ParticleShape = ParticleShape.CIRCLE;
 
     public colorFrom: HexColor = '#ffffff';
     public colorTo: HexColor = '#FFFFFF00';
@@ -98,7 +98,7 @@ export class ParticleEffectTypeBuilder {
     }
 
     public shape(shape: ParticleShape): this {
-        this.particleShape = Math.floor(shape);
+        this.particleShape = shape;
         return this;
     }
 

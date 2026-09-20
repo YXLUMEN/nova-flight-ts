@@ -512,7 +512,7 @@ export class ClientSavesManager {
         }
 
         if (failTasks.find(fail => fail.reason === 'forbidden')) {
-            await message('读取时被拒绝, 尝试将存档文件夹转移至 "Document/NovaFlight" 再进行导入', {kind: 'warning'});
+            await message('读取时被拒绝, 尝试将存档文件夹转移至 "NovaFlight 安装目录" 再进行导入', {kind: 'warning'});
         } else {
             await message(`导入完成, 但存在 ${failTasks.length} 个文件无法加载`, {kind: 'warning'});
         }
@@ -526,10 +526,10 @@ export class ClientSavesManager {
 
         this.saveNameInput.value = 'New World';
         this.inputContainer.classList.remove('hidden');
-        NovaFlightClient.getInstance().input.startInput(true);
+        NovaFlightClient.instance().input.startInput(true);
 
         const settled = (result: string | null) => {
-            NovaFlightClient.getInstance().input.startInput(false);
+            NovaFlightClient.instance().input.startInput(false);
             this.inputContainer.classList.add('hidden');
             resolve(result);
             ctrl.abort();

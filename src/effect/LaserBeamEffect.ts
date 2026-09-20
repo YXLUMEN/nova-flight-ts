@@ -65,7 +65,7 @@ export class LaserBeamEffect implements VisualEffect {
         const ex = lerp(tickDelta, this.prevEnd.x, this.end.x);
         const ey = lerp(tickDelta, this.prevEnd.y, this.end.y);
 
-        const pulse = 0.85 + 0.15 * Math.sin(this.pulseTime * 20);
+        const pulse = 0.9 + 0.1 * Math.sin(this.pulseTime * 20);
 
         ctx.save();
         ctx.globalCompositeOperation = "lighter";

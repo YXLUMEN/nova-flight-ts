@@ -8,7 +8,7 @@ import type {ItemStack} from "../../item/ItemStack.ts";
 import type {Item} from "../../item/Item.ts";
 import type {BlockChange} from "../../world/section/BlockChange.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
-import type {ShieldAuraEffect} from "../../effect/ShieldAuraEffect.ts";
+import type {AuraEffect} from "../../effect/AuraEffect.ts";
 import {clamp, squareDistVec2, wrapRadians} from "../../utils/math/math.ts";
 import {ClientTechTree} from "../tech/ClientTechTree.ts";
 import {World} from "../../world/World.ts";
@@ -49,7 +49,7 @@ export class LocalPlayerEntity extends PlayerEntity {
     public bc: BallisticCalculator | null = null;
     public steeringGear: boolean = false;
     public followPointer: boolean = false;
-    public deflector: ShieldAuraEffect | null = null;
+    public deflector: AuraEffect | null = null;
 
     public readonly lockedMissile = new Set<MissileEntity>();
     public readonly approachMissile = new Set<MissileEntity>();

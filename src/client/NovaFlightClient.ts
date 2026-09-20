@@ -43,7 +43,7 @@ import {RacePromise} from "../utils/RacePromise.ts";
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
 
-    private static instance: NovaFlightClient;
+    private static INSTANCE: NovaFlightClient;
 
     public readonly clientId: UUID;
     public readonly version: number;
@@ -89,7 +89,7 @@ export class NovaFlightClient {
     public readonly clientChat: ClientChat;
 
     public constructor(clientId: UUID, playerName: string, protocolVersion: number) {
-        NovaFlightClient.instance = this;
+        NovaFlightClient.INSTANCE = this;
         this.clientId = clientId;
         this.version = DEFAULT_CONFIG.gameVersion;
         this.protocolVersion = protocolVersion;
@@ -119,8 +119,8 @@ export class NovaFlightClient {
         this.loop = this.loop.bind(this);
     }
 
-    public static getInstance(): NovaFlightClient {
-        return this.instance;
+    public static instance(): NovaFlightClient {
+        return this.INSTANCE;
     }
 
     public async startClient() {

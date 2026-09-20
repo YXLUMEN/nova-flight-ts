@@ -39,7 +39,7 @@ export class PauseOverlay extends UiFramework {
                 120, 36,
                 this.text[0],
                 () => {
-                    const client = NovaFlightClient.getInstance();
+                    const client = NovaFlightClient.instance();
                     client.setPause(!client.isPause());
                 }),
             new UIButton(
@@ -53,12 +53,12 @@ export class PauseOverlay extends UiFramework {
                 centerX - 60, centerY + 50,
                 120, 36,
                 this.text[2],
-                () => NovaFlightClient.getInstance().saveAll()),
+                () => NovaFlightClient.instance().saveAll()),
             new UIButton(
                 centerX - 60, centerY + 100,
                 120, 36,
                 this.text[3],
-                () => NovaFlightClient.getInstance().leaveGame()),
+                () => NovaFlightClient.instance().leaveGame()),
         );
     }
 

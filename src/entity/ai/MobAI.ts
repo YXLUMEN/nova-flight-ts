@@ -131,6 +131,7 @@ export class MobAI implements EntityAi {
         const yaw = this.entity.getYaw();
         this.dir.set(Math.cos(yaw), Math.sin(yaw));
         this.entity.updateVelocity(speed, this.dir.x, this.dir.y);
+        this.entity.needSync = true;
     }
 
     private moveAway(target: Vec2, speed: number): void {
@@ -140,6 +141,7 @@ export class MobAI implements EntityAi {
         const dy = pos.y - target.y;
         this.dir.set(dx, dy).normalize();
         this.entity.updateVelocity(speed, this.dir.x, this.dir.y);
+        this.entity.needSync = true;
     }
 
     private faceTarget(target: Vec2, maxStep: number = 0.19634375): void {

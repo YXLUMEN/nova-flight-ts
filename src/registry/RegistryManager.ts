@@ -37,7 +37,6 @@ export class RegistryManager {
         EntityTypes.init();
         Items.init();
         VisualEffectTypes.init();
-        await Registries.complete();
         EntitySelectorOptions.register();
     }
 

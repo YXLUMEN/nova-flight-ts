@@ -46,7 +46,7 @@ export class AutoAim {
 
     public render() {
         if (!this.currentTarget) return;
-        const view = NovaFlightClient.getInstance().window.camera.viewOffset;
+        const view = NovaFlightClient.instance().window.camera.viewOffset;
         const pos = this.currentTarget.positionRef;
         this.owner.input.getScreenPointer().set(pos.x - view.x, pos.y - view.y);
     }

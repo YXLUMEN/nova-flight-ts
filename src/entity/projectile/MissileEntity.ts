@@ -17,7 +17,7 @@ import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import {PlayerMissileTargetSelector} from "../../utils/math/MissileTargetSelector.ts";
 import {ParticleEffects} from "../../effect/ParticleEffects.ts";
-import {MissileLockEntity} from "../../event/events/entity/MissileLockEntity.ts";
+import {MissileLockEvent} from "../../event/events/entity/MissileLockEvent.ts";
 import {isClient, isServer} from "../../configs/RuntimeConfig.ts";
 import {InterpolationHandler} from "../../world/entity/InterpolationHandler.ts";
 import {ExplosionConfigs} from "../../world/element/explosion/ExplosionConfigs.ts";
@@ -243,6 +243,9 @@ export class MissileEntity extends RocketEntity {
     public override onDiscard(): void {
         super.onDiscard();
 
+        if (isClient) {
+            this.getWorld().events.emit(new MissileLockEvent(this, null, this.target));
+        }
         this.target = null;
         this.lastTarget = null;
     }
@@ -295,10 +298,10 @@ export class MissileEntity extends RocketEntity {
 
         const world = this.getWorld();
         const id = this.dataTracker.get(MissileEntity.TARGET_ID);
+
+        const last = this.target;
         this.target = world.getEntityById(id);
-        if (this.target && this.target.isPlayer()) {
-            world.events.emit(new MissileLockEntity(this));
-        }
+        world.events.emit(new MissileLockEvent(this, this.target, last));
     }
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {

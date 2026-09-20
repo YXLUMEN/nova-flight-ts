@@ -1,22 +1,20 @@
 import type {VisualEffect} from "./VisualEffect.ts";
 import {lerp, PI2} from "../utils/math/math.ts";
-import type {PacketCodec} from "../network/codec/PacketCodec.ts";
-import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {Consumer} from "../type/types.ts";
 import {BuiltInPath} from "../client/render/BuiltInPath.ts";
 
-export class ShieldAuraEffect implements VisualEffect {
-    public static TYPE: VisualEffectType<ShieldAuraEffect> = null!;
-    public static readonly PACKET_CODEC: PacketCodec<ShieldAuraEffect> = PacketCodecs.NEVER;
+export class AuraEffect implements VisualEffect {
+    public static TYPE: VisualEffectType<AuraEffect> = null!;
 
     public bindEntity: Entity | null = null;
+    public onTick: Consumer<AuraEffect> | null = null;
     public dispose: Consumer<void> | null = null;
 
     private center: Vec2;
-    private readonly shape: ShieldShape = 'bracket';
+    private readonly shape: ShieldShape;
     private readonly radius: number;
     private readonly life: number;
     private readonly color: string;
@@ -33,8 +31,8 @@ export class ShieldAuraEffect implements VisualEffect {
         this.shape = shape;
     }
 
-    public getType(): VisualEffectType<ShieldAuraEffect> {
-        return ShieldAuraEffect.TYPE;
+    public getType(): VisualEffectType<AuraEffect> {
+        return AuraEffect.TYPE;
     }
 
     public tick(dt: number): void {
@@ -46,6 +44,7 @@ export class ShieldAuraEffect implements VisualEffect {
         this.prevT = this.t;
         this.t += dt;
         this.age += dt;
+        this.onTick?.(this);
     }
 
     public render(ctx: CanvasRenderingContext2D, tickDelta: number): void {

@@ -67,7 +67,7 @@ export class HUD extends UiFramework {
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
-        const client = NovaFlightClient.getInstance();
+        const client = NovaFlightClient.instance();
         const world = client.world;
         if (!world) return;
 
@@ -237,7 +237,7 @@ export class HUD extends UiFramework {
         let y = height / 2 - 64;
 
         const time = world.getTime() | 0;
-        const score = NovaFlightClient.getInstance().world?.getTotalScore() ?? 0;
+        const score = NovaFlightClient.instance().world?.getTotalScore() ?? 0;
 
         ctx.save();
         ctx.fillStyle = 'rgba(255,0,0,0.3)';
@@ -266,7 +266,7 @@ export class HUD extends UiFramework {
     }
 
     public onPlayerDamage(damage: number) {
-        const client = NovaFlightClient.getInstance();
+        const client = NovaFlightClient.instance();
         const world = client.world;
         if (!world) return;
 

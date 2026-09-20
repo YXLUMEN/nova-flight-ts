@@ -3,6 +3,7 @@ import type {OptionStorage} from "./OptionStorage.ts";
 import {error, warn} from "@tauri-apps/plugin-log";
 
 export class Options {
+    // 协议版本,破坏性变更(如单位修改)时才更改此值
     public static readonly VERSION = 1;
 
     private readonly items = new Map<string, SettingItem<unknown>>();

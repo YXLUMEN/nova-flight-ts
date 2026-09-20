@@ -9,6 +9,7 @@ import {TrackedDataHandlerRegistry} from "./data/TrackedDataHandlerRegistry.ts";
 import {EntityTypes} from "./EntityTypes.ts";
 import {ClusterRocketEntity} from "./projectile/ClusterRocketEntity.ts";
 import {ExplosiveBuilder} from "../world/element/explosion/ExplosiveBuilder.ts";
+import {SoundEvents} from "../sound/SoundEvents.ts";
 
 export class TrailblazerEntity extends Entity implements Ownable {
     private static readonly BOMBS = DataTracker.registerData(Object(TrailblazerEntity), TrackedDataHandlerRegistry.VAR_UINT);
@@ -30,13 +31,14 @@ export class TrailblazerEntity extends Entity implements Ownable {
         this.power = power;
         this.owner = owner;
         this.behaviour = new ExplosiveBuilder()
+            .sound(SoundEvents.BLAST)
             .noDecay()
             .filter()
             .withFiler(e => e !== owner);
     }
 
     protected defineSyncedData(builder: DataTrackerBuilder): void {
-        builder.define(TrailblazerEntity.BOMBS, 12);
+        builder.define(TrailblazerEntity.BOMBS, 16);
     }
 
     public tick() {

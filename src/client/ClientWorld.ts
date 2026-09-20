@@ -28,7 +28,7 @@ export class ClientWorld extends World {
     public readonly worldName: string;
     public readonly worldSound = new SoundSystem();
 
-    private readonly client: NovaFlightClient = NovaFlightClient.getInstance();
+    private readonly client: NovaFlightClient = NovaFlightClient.instance();
     private readonly worldRender: WorldRenderer;
 
     private readonly players = new Set<PlayerEntity>();

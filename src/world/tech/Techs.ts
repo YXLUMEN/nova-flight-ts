@@ -1,10 +1,11 @@
+import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {Registry} from "../../registry/Registry.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import {Tech} from "./Tech.ts";
-import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {TechState} from "./TechState.ts";
 import {isServer} from "../../configs/RuntimeConfig.ts";
+import {WorkerFS} from "../../worker/fs.ts";
 
 export class Techs {
     public static COILGUNS: RegistryEntry<Tech>;
@@ -109,8 +110,7 @@ export class Techs {
         const filePath = './data/tech-data.json';
 
         if (isServer) {
-            const mod = await import('../../worker/fs.ts');
-            const buffer = await mod.WorkerFS.fetch(filePath);
+            const buffer = await WorkerFS.fetch(filePath);
             if (!buffer) throw new Error('Failed to load tech data');
             const json = new TextDecoder("utf-8", {fatal: true}).decode(buffer);
             tech = JSON.parse(json);

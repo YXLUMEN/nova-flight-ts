@@ -8,6 +8,7 @@ import {ClientTechManager} from "./tech/ClientTechManager.ts";
 import type {LocalPlayerEntity} from "./entity/LocalPlayerEntity.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {Audios} from "../sound/Audios.ts";
+import {MissileLockVisual} from "./entity/MissileLockVisual.ts";
 
 export class ClientDefaultEvents {
     public static registryEvents() {
@@ -22,13 +23,23 @@ export class ClientDefaultEvents {
             ClientTechManager.apply(entry, player);
         });
 
-        appEvent.on('entity:missile:locked', ({missile}) => {
-            const target = missile.getTarget();
-            if (missile.isRemoved() || !target || !target.isPlayer()) return;
+        const lockVisual = new MissileLockVisual();
+        appEvent.on('entity:missile:locked', ({missile, target, lastTarget}) => {
+            if (missile.isRemoved() || !target) {
+                lockVisual.onMiss(missile, lastTarget);
+                return;
+            }
 
-            const player = NovaFlightClient.getInstance().player;
-            if (!player || target !== player) return;
-            player.lockedMissile.add(missile);
+            if (target.isPlayer()) {
+                const player = NovaFlightClient.instance().player;
+                if (!player || target !== player) return;
+                player.lockedMissile.add(missile);
+                return;
+            }
+
+            if (missile.getOwner()?.isPlayer()) {
+                lockVisual.onTarget(missile, target);
+            }
         });
 
         appEvent.on('entity:boss:spawn', ({boss}) => {

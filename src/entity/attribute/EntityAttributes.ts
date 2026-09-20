@@ -18,10 +18,6 @@ export class EntityAttributes {
         new ClampedEntityAttribute(0, 0, 2048).setTracked(true)
     );
 
-    public static registerAndGetDefault(_registry: Registry<Attribute>) {
-        return this.GENERIC_MAX_HEALTH;
-    }
-
     private static register(id: string, attribute: Attribute) {
         return Registry.registerReferenceById(Registries.ATTRIBUTE, Identifier.ofVanilla(id), attribute);
     }

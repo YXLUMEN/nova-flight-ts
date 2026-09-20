@@ -13,7 +13,7 @@ import type {ExplosionEvent} from "./events/ExplosionEvent.ts";
 import type {EmpBurstEvent} from "./events/EmpBurstEvent.ts";
 import type {StageEnter} from "./events/stage/StageEnter.ts";
 import type {StageExit} from "./events/stage/StageExit.ts";
-import type {MissileLockEntity} from "./events/entity/MissileLockEntity.ts";
+import type {MissileLockEvent} from "./events/entity/MissileLockEvent.ts";
 import type {DifficultChange} from "./events/stage/DifficultChange.ts";
 import type {GamePause} from "./events/game/GamePause.ts";
 import type {NewNotify} from "./events/NewNotify.ts";
@@ -29,7 +29,7 @@ export interface AppEvents {
     'world:emp_burst': EmpBurstEvent;
     'world:stage:enter': StageEnter;
     'world:stage:exit': StageExit;
-    'entity:missile:locked': MissileLockEntity;
+    'entity:missile:locked': MissileLockEvent;
     'world:stage:difficult': DifficultChange;
     'entity:mob:removed': EntityRemoved;
     'entity:boss:killed': BossKilled;

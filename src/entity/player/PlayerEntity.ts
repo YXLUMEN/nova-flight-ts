@@ -24,6 +24,8 @@ import {PlayerDead} from "../../event/events/entity/PlayerDead.ts";
 import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {PlayerDamage} from "../../event/events/entity/PlayerDamage.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
+import {ParticleEffects} from "../../effect/ParticleEffects.ts";
 
 export abstract class PlayerEntity extends LivingEntity {
     private static readonly SHIELD_AMOUNT = DataTracker.registerData(Object(PlayerEntity), TrackedDataHandlerRegistry.FLOAT);
@@ -113,7 +115,7 @@ export abstract class PlayerEntity extends LivingEntity {
         damage = this.modifyAppliedDamage(damageSource, damage);
         let remain = damage;
 
-        const world = this.getWorld();
+        const world = this.getWorld() as ServerWorld;
         const shieldAmount = this.getShieldAmount();
 
         // 计算护盾
@@ -127,6 +129,7 @@ export abstract class PlayerEntity extends LivingEntity {
             let showDamage = 0;
             if (remainShield === 0) {
                 world.playSound(null, SoundEvents.SHIELD_CRASH);
+                world.spawnPreparedParticle(ParticleEffects.SHIELD_CRASH, this.positionRef, 16);
                 showDamage = shieldAmount;
             } else if (hitShield > 0) {
                 showDamage = hitShield;

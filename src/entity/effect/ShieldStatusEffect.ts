@@ -2,13 +2,13 @@ import type {LivingEntity} from "../LivingEntity.ts";
 import type {Entity} from "../Entity.ts";
 import type {Return} from "../../type/types.ts";
 import {StatusEffect, StatusEffectCategory} from "./StatusEffect.ts";
-import {ShieldAuraEffect} from "../../effect/ShieldAuraEffect.ts";
+import {AuraEffect} from "../../effect/AuraEffect.ts";
 import {isServer} from "../../configs/RuntimeConfig.ts";
 
 
 export class ShieldStatusEffect extends StatusEffect {
-    private readonly tracked: WeakMap<LivingEntity, ShieldAuraEffect> = null!;
-    private readonly summonVisual: Return<LivingEntity, ShieldAuraEffect> = null!;
+    private readonly tracked: WeakMap<LivingEntity, AuraEffect> = null!;
+    private readonly summonVisual: Return<LivingEntity, AuraEffect> = null!;
 
     public constructor() {
         super(StatusEffectCategory.BENEFICIAL, '#5095ff', true);
@@ -18,7 +18,7 @@ export class ShieldStatusEffect extends StatusEffect {
         this.tracked = new WeakMap();
         this.summonVisual = (entity: LivingEntity) => {
             const radius = entity.getDimensions().halfWidth + 8;
-            const effect = new ShieldAuraEffect(entity.position(), radius, 0.1, this.color);
+            const effect = new AuraEffect(entity.position(), radius, 0.1, this.color);
             effect.bindEntity = entity;
             effect.dispose = () => this.tracked.delete(entity);
             entity.getWorld().addEffect(entity, effect);

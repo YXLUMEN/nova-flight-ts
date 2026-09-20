@@ -8,18 +8,12 @@ import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 import {ExplosionVisual} from "../../world/element/explosion/ExplosionVisual.ts";
 import {ExplosionConfigs} from "../../world/element/explosion/ExplosionConfigs.ts";
-import {SoundEvents} from "../../sound/SoundEvents.ts";
-import {ExplosiveBuilder} from "../../world/element/explosion/ExplosiveBuilder.ts";
 
 export class RocketEntity extends ProjectileEntity {
-    private static readonly DEFAULT = new ExplosiveBuilder()
-        .sound(SoundEvents.MISSILE_EXPLOSION)
-        .build();
-
     public explosionRadius = 64;
     public explosionDamage = 10;
 
-    protected behaviour: ExplosionConfigs;
+    protected behaviour?: ExplosionConfigs;
     protected explodeColor = "#e3e3e3";
 
     private readonly maxHealth: number;
@@ -37,7 +31,7 @@ export class RocketEntity extends ProjectileEntity {
 
         this.maxHealth = health;
         this.health = health;
-        this.behaviour = behaviour ?? RocketEntity.DEFAULT;
+        this.behaviour = behaviour;
     }
 
     protected override onEntityHit(hitResult: EntityHitResult): void {

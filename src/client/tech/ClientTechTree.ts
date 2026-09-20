@@ -154,13 +154,13 @@ export class ClientTechTree implements TechTree {
 
     public toggleTechTree(): void {
         const hidden = this.techShell.classList.toggle('hidden');
-        const client = NovaFlightClient.getInstance();
+        const client = NovaFlightClient.instance();
         client.setPause(!hidden);
         client.worldRender.rendering = hidden;
     }
 
     public displayTechTree(show: boolean = true): void {
-        const client = NovaFlightClient.getInstance();
+        const client = NovaFlightClient.instance();
         if (show) {
             this.techShell.classList.remove('hidden');
             client.setPause(true);
@@ -250,7 +250,7 @@ export class ClientTechTree implements TechTree {
         parent.addEventListener('wheel', e => {
             scale = clamp(scale * Math.pow(1.1, -e.deltaY / 100), 0.5, 2);
             applyTransform();
-            NovaFlightClient.getInstance().globalSound.playSound(SoundEvents.UI_HOVER);
+            NovaFlightClient.instance().globalSound.playSound(SoundEvents.UI_HOVER);
         }, {passive: true, signal: abortCtrl.signal});
 
         const applyTransform = () => {
@@ -322,7 +322,7 @@ export class ClientTechTree implements TechTree {
             this.selectNodeId = id;
             this.onSelect(id);
 
-            NovaFlightClient.getInstance().globalSound.playSound(SoundEvents.UI_SELECT);
+            NovaFlightClient.instance().globalSound.playSound(SoundEvents.UI_SELECT);
         }, {signal: this.abortCtrl.signal});
 
         this.nodesLayer.addEventListener('dblclick', this.tryApply, {signal: this.abortCtrl.signal});
@@ -355,7 +355,7 @@ export class ClientTechTree implements TechTree {
         const world = this.player.getWorld();
         const score = this.player.getScore() - tech.cost;
         if (score < 0 && !this.player.isDevMode()) {
-            NovaFlightClient.getInstance().globalSound.playSound(SoundEvents.UI_ERROR);
+            NovaFlightClient.instance().globalSound.playSound(SoundEvents.UI_ERROR);
             return;
         }
 
@@ -363,9 +363,9 @@ export class ClientTechTree implements TechTree {
             this.player.setScore(score);
             this.applyUnlockUpdates(tech);
             world.events.emit(new UnlockTech(this.player, tech));
-            NovaFlightClient.getInstance().globalSound.playSound(SoundEvents.UI_APPLY, 1.5);
+            NovaFlightClient.instance().globalSound.playSound(SoundEvents.UI_APPLY, 1.5);
         } else {
-            NovaFlightClient.getInstance().globalSound.playSound(SoundEvents.UI_ERROR);
+            NovaFlightClient.instance().globalSound.playSound(SoundEvents.UI_ERROR);
         }
     }
 
