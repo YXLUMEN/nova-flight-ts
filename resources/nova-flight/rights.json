@@ -1,0 +1,467 @@
+{
+  "schema": 1,
+  "base": "resources/nova-flight",
+  "defaultTier": "owned",
+  "_readme": "资源权利清单。未在 resources 中出现的文件默认按 defaultTier(=owned,All Rights Reserved)处理,因此本清单只需登记\"例外项\"。tier: owned=有所有权(All Rights Reserved,须授权) | unowned=无所有权(同人,本项目不主张任何权利) | public=公有领域/CC0(可再分发)。可选字段 authorized:true 表示该 owned 条目已获权利人授权,可进入商业发行包。新增/替换资源时同步更新本文件与根目录 CREDITS.md。",
+  "resources": [
+    {
+      "path": "audios/main_theme.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
+      "path": "audios/no_mercy.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
+      "path": "audios/encounter.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
+      "path": "audios/firing_on_full_power.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
+      "path": "audios/keep_fighting.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
+      "path": "audios/technology_changes_the_universe.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
+      "path": "audios/we_made_it.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
+      "path": "audios/zerg.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
+      "path": "audios/air_minuet.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
+      "path": "audios/dust_to_dust.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
+      "path": "audios/frontier_skies.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
+      "path": "audios/hangar_silence.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
+      "path": "audios/the_final_ascent.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
+      "path": "audios/unbreakable_will.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
+      "path": "audios/wana_have_a_flight.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
+      "path": "audios/easy_day_all_clear.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
+      "path": "audios/delta_force_theme.ogg",
+      "tier": "unowned"
+    },
+    {
+      "path": "audios/victory.ogg",
+      "tier": "unowned"
+    },
+    {
+      "path": "audios/warsaw.ogg",
+      "tier": "unowned"
+    },
+    {
+      "path": "audios/steel_requiem.ogg",
+      "tier": "unowned"
+    },
+    {
+      "path": "audios/tropic_thunder.ogg",
+      "tier": "unowned"
+    },
+    {
+      "path": "audios/scourge_of_the_universe.ogg",
+      "tier": "unowned"
+    },
+    {
+      "path": "audios/universal_collapse.ogg",
+      "tier": "unowned"
+    },
+    {
+      "path": "audios/the_tale_of_a_cruel_world.ogg",
+      "tier": "unowned"
+    },
+    {
+      "path": "textures/**",
+      "tier": "unowned"
+    },
+    {
+      "path": "sounds/arc/**",
+      "tier": "public",
+      "author": "",
+      "source": "https://pixabay.com/",
+      "license": "https://pixabay.com/service/terms/"
+    },
+    {
+      "path": "sounds/cannon40/**",
+      "tier": "unowned"
+    },
+    {
+      "path": "sounds/cannon90/fire_01.ogg",
+      "tier": "public",
+      "author": "",
+      "source": "https://pixabay.com/",
+      "license": "https://pixabay.com/service/terms/"
+    },
+    {
+      "path": "sounds/cannon125/fire_01.ogg",
+      "tier": "public",
+      "author": "",
+      "source": "https://pixabay.com/",
+      "license": "https://pixabay.com/service/terms/"
+    },
+    {
+      "path": "sounds/ciws/fire.wav",
+      "tier": "public"
+    },
+    {
+      "path": "sounds/cloud_lighning/**",
+      "tier": "unowned"
+    },
+    {
+      "path": "sounds/coilguns/**",
+      "tier": "unowned"
+    },
+    {
+      "path": "sounds/emp/**",
+      "tier": "unowned"
+    },
+    {
+      "path": "sounds/explosion/**",
+      "tier": "unowned"
+    },
+    {
+      "path": "sounds/kinetic_artillery/**",
+      "tier": "public",
+      "author": "",
+      "source": "https://pixabay.com/",
+      "license": "https://pixabay.com/service/terms/"
+    },
+    {
+      "path": "sounds/laser/**",
+      "tier": "unowned"
+    },
+    {
+      "path": "sounds/minigun/**",
+      "tier": "unowned"
+    },
+    {
+      "path": "sounds/missile/**",
+      "tier": "unowned"
+    },
+    {
+      "path": "sounds/railguns/**",
+      "tier": "unowned"
+    },
+    {
+      "path": "sounds/shield/**",
+      "tier": "unowned"
+    },
+    {
+      "path": "sounds/storm_fire/**",
+      "tier": "public",
+      "license": "CC0-1.0"
+    },
+    {
+      "path": "sounds/torpedoes/**",
+      "tier": "unowned"
+    },
+    {
+      "path": "sounds/ui/**",
+      "tier": "unowned"
+    },
+    {
+      "path": "sounds/barrel_open.ogg",
+      "tier": "public",
+      "license": "CC0-1.0"
+    },
+    {
+      "path": "sounds/charge_ready.wav",
+      "tier": "unowned"
+    },
+    {
+      "path": "sounds/decoy_fire.wav",
+      "tier": "public",
+      "license": "CC0-1.0"
+    },
+    {
+      "path": "sounds/phase_change.ogg",
+      "tier": "unowned"
+    },
+    {
+      "path": "sounds/shell_reload.ogg",
+      "tier": "public",
+      "license": "CC0-1.0"
+    }
+  ],
+  "_example": [
+    {
+      "path": "textures/item/xxx.png",
+      "tier": "unowned",
+      "author": "",
+      "source": "",
+      "license": "Fanwork",
+      "note": "本项目不主张权利,仅供非商业同人使用"
+    },
+    {
+      "path": "sounds/example.ogg",
+      "tier": "public",
+      "author": "",
+      "source": "https://example.com",
+      "license": "CC0-1.0",
+      "note": ""
+    },
+    {
+      "path": "audios/example.ogg",
+      "tier": "owned",
+      "author": "",
+      "source": "",
+      "license": "All-Rights-Reserved",
+      "authorized": false,
+      "note": "取得授权后置 authorized:true 方可进商业包"
+    }
+  ]
+}
