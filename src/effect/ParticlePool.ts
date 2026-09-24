@@ -1,6 +1,6 @@
-import {lerp, PI2, rand} from "../utils/math/math.ts";
 import type {ParticleEffectType} from "./ParticleEffectType.ts";
 import type {HexColor} from "../type/types.ts";
+import {lerp, PI2, rand} from "../utils/math/math.ts";
 import {encodeColorHex} from "../utils/net_util.ts";
 
 export class ParticlePool {

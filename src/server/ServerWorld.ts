@@ -327,7 +327,7 @@ export class ServerWorld extends World implements NbtSerializable {
 
     public readNBT(nbt: NbtCompound) {
         const entityNbt = nbt.getCompoundArray('entities');
-        if (entityNbt) this.loadEntity(entityNbt);
+        this.loadEntity(entityNbt);
 
         const stageNbt = nbt.getCompound('stage');
         if (stageNbt) this.stage.readNBT(stageNbt);

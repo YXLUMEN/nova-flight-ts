@@ -13,6 +13,7 @@ import {ClusterRocketEntity} from "../../../entity/projectile/ClusterRocketEntit
 import type {ClientWorld} from "../../../client/ClientWorld.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
+import {isClient, isServer} from "../../../configs/RuntimeConfig.ts";
 
 export class RocketLauncher extends BaseWeapon {
     private static readonly BULLET_SPEED: number = 15;
@@ -33,13 +34,13 @@ export class RocketLauncher extends BaseWeapon {
             if (i++ > rocketCounts) {
                 schedule.cancel();
                 stack.remove(DataComponents.FIRING);
-                if (!world.isClient && attacker.isPlayer()) {
+                if (isServer && attacker.isPlayer()) {
                     (attacker as ServerPlayerEntity).syncStack(stack);
                 }
                 return;
             }
 
-            if (world.isClient) {
+            if (isClient) {
                 this.spawnMuzzle(world as ClientWorld, attacker, this.getMuzzleParticles());
                 const yaw = attacker.getYaw();
                 attacker.updateVelocity(-0.6, Math.cos(yaw), Math.sin(yaw));

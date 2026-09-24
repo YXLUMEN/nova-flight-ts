@@ -10,6 +10,7 @@ import {Vec2} from "../../utils/math/Vec2.ts";
 import {LaserWeaponActivate, LaserWeaponDeactivate} from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
 import {LaserBeamManger} from "../../world/LaserBeamManger.ts";
 import {thickLineCircleHit} from "../../utils/math/collide.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
 
 
 export class PhaseLasers extends SpecialWeapon {
@@ -45,7 +46,7 @@ export class PhaseLasers extends SpecialWeapon {
 
         const heat = this.getHeat(stack);
         const heatLeft = maxHeat - heat;
-        if (heatLeft > 60) stack.set(DataComponents.ANY_BOOLEAN, true);
+        if (isClient && heatLeft > 60) stack.set(DataComponents.SOUND_COOLING, true);
 
         // 触发过热: 立即停火并锁定
         if (stack.isAvailable()) {
@@ -56,9 +57,9 @@ export class PhaseLasers extends SpecialWeapon {
                 this.removeLaser(world, stack);
                 this.onEndFire(stack, world, holder);
             }
-            if (stack.getOr(DataComponents.ANY_BOOLEAN, false) && heatLeft <= 40) {
+            if (isClient && stack.getOr(DataComponents.SOUND_COOLING, false) && heatLeft <= 40) {
                 this.overHeatAlert(world, holder);
-                stack.set(DataComponents.ANY_BOOLEAN, false);
+                stack.set(DataComponents.SOUND_COOLING, false);
             }
         }
 

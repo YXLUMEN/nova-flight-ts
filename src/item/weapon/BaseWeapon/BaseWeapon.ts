@@ -10,6 +10,7 @@ import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
 import {ParticleEffects} from "../../../effect/ParticleEffects.ts";
+import {isClient} from "../../../configs/RuntimeConfig.ts";
 
 export abstract class BaseWeapon extends Weapon {
     public override inventoryTick(stack: ItemStack, _world: World, holder: Entity, _slot: number, selected: boolean): void {
@@ -28,7 +29,7 @@ export abstract class BaseWeapon extends Weapon {
 
         const currentAmmo = stack.getDurability();
         if (currentAmmo === 0 && stack.isDamageable()) return;
-        if (world.isClient) {
+        if (isClient) {
             this.spawnMuzzle(world as ClientWorld, attacker, this.getMuzzleParticles());
             return;
         }

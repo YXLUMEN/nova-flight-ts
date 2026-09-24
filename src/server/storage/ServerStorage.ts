@@ -52,11 +52,21 @@ export class ServerStorage {
         const db = await this.db.init();
         const tx = db.transaction(['save_meta', 'saves'], 'readwrite');
 
+        const existingMeta = new Promise<SaveMeta | Error>((resolve) => {
+            const store = tx.objectStore('save_meta');
+            const request = store.get(saveName);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => resolve(this.mapErr(request.error));
+        });
+
+        const meta = await existingMeta;
+        const displayName = Error.isError(meta) ? saveName : meta.display_name;
+
         const metaTask = new Promise<void | Error>((resolve) => {
             const store = tx.objectStore('save_meta');
             const request = store.put({
                 save_name: saveName,
-                display_name: saveName,
+                display_name: displayName,
                 format_version: NbtCompound.VERSION,
                 game_version: DEFAULT_CONFIG.gameVersion,
                 timestamp: Temporal.Now.instant().epochMilliseconds,
@@ -202,6 +212,6 @@ export class ServerStorage {
 
     private static mapErr(error: unknown) {
         if (Error.isError(error)) return error;
-        return new Error('Unknown error occurred.');
+        return new Error(`[Storage] Unknown error occurred, cause by: ${error}`);
     }
 }

@@ -94,6 +94,9 @@ export class DataComponents {
     public static readonly ANY_BOOLEAN: DataComponentType<boolean> = this.register("any_bool",
         builder => builder.persistent(Codecs.BOOLEAN).network(PacketCodecs.BOOL)
     );
+    public static readonly SOUND_COOLING: DataComponentType<boolean> = this.register('sound_cooling',
+        builder => builder.persistent(Codecs.BOOLEAN).network(PacketCodecs.BOOL)
+    );
     public static readonly LAUNCH_COUNT: DataComponentType<number> = this.register("launch_count",
         builder => builder.persistent(Codecs.INT32).network(PacketCodecs.INT32)
     );

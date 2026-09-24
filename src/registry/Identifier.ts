@@ -162,9 +162,7 @@ export class Identifier implements Comparable {
     }
 
     public equals(o: unknown): boolean {
-        if (this === o) {
-            return true;
-        }
+        if (this === o) return true;
         return !(o instanceof Identifier) ? false : this.namespace === o.namespace && this.path === o.path;
     }
 

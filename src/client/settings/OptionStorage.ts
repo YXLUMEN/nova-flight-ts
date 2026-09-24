@@ -19,7 +19,7 @@ export class OptionStorage {
         if (!await exists(path)) return null;
 
         try {
-            return readTextFile(path);
+            return await readTextFile(path);
         } catch (err) {
             this.resolved = null;
             await error(`[Settings] Can not load settings. Cause by: ${err}`);

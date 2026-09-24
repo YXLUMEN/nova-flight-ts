@@ -85,7 +85,7 @@ export class ClientSavesManager {
             const actionBtn = target.closest('.btn');
             if (!actionBtn) return;
 
-            const action = actionBtn.getAttribute('action');
+            const action = actionBtn.getAttribute('data-action');
             if (!action) return;
 
             this.handleButtonAction(action, resolve, ctrl);
@@ -542,7 +542,7 @@ export class ClientSavesManager {
             const actionBtn = target.closest('.btn');
             if (!actionBtn) return;
 
-            const action = actionBtn.getAttribute('action');
+            const action = actionBtn.getAttribute('data-action');
             if (!action) return;
             if (action === 'confirm') {
                 const input = this.saveNameInput.value.trim();
