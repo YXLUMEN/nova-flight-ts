@@ -14,6 +14,7 @@ export class GuiLabel extends GuiNode {
     private color: string = GuiTheme.colors.text;
     private fontSize = 14;
     private weight: string | number = 400;
+    private fontFamily: string = GuiTheme.fontFamily;
     private align: GuiAlign = "start";
 
     public constructor(text: GuiText) {
@@ -22,6 +23,8 @@ export class GuiLabel extends GuiNode {
     }
 
     public setText(text: GuiText): this {
+        if (textOf(text) === textOf(this.value)) return this;
+
         this.value = text;
         this.markLayoutDirty();
         return this;
@@ -34,6 +37,12 @@ export class GuiLabel extends GuiNode {
     public setColor(color: string): this {
         this.color = color;
         this.markPaintDirty();
+        return this;
+    }
+
+    public setFontFamily(font: string): this {
+        this.fontFamily = font;
+        this.markLayoutDirty();
         return this;
     }
 
@@ -55,42 +64,49 @@ export class GuiLabel extends GuiNode {
         return this;
     }
 
-    public override measure(_ctx:CanvasRenderingContext2D): void {
+    public override measure(): void {
+        if (!this.layoutDirty) return;
+
         if (this.width === 0) this.autoWidth = true;
         if (this.height === 0) this.autoHeight = true;
         if (!this.autoWidth && !this.autoHeight) return;
 
-        const font = GuiTheme.font(this.fontSize, this.weight);
+        const font = GuiTheme.font(this.fontSize, this.weight, this.fontFamily);
         if (this.autoWidth) {
             this.width = Math.ceil(GuiDraw.measure(textOf(this.value), font));
         }
         if (this.autoHeight) {
             this.height = GuiTheme.lineHeight(this.fontSize);
         }
+        this.layoutDirty = false;
     }
 
     protected override renderSelf(ctx: CanvasRenderingContext2D): void {
-        const font = GuiTheme.font(this.fontSize, this.weight);
+        const font = GuiTheme.font(this.fontSize, this.weight, this.fontFamily);
         ctx.save();
 
         let alignX: number;
         switch (this.align) {
-            case "center":
+            case 'center':
                 alignX = this.width / 2;
                 break;
-            case "end":
+            case 'end':
                 alignX = this.width;
                 break;
             default:
                 alignX = 0;
         }
 
-        GuiDraw.text(ctx, alignX, this.height / 2, textOf(this.value), {
+        GuiDraw.text(
+            ctx,
+            alignX,
+            this.height / 2,
+            textOf(this.value),
             font,
-            color: this.color,
-            align: this.align === "center" ? "center" : this.align === "end" ? "right" : "left",
-            baseline: "middle",
-        });
+            this.color,
+            this.align === "center" ? "center" : this.align === "end" ? "right" : "left",
+            'middle'
+        );
         ctx.restore();
     }
 }

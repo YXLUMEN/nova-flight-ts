@@ -58,7 +58,7 @@ export class Items {
     ));
     public static readonly MINIGUN = this.register('minigun', new MiniGun(new Item.Properties()
         .maxDurability(250)
-        .attackDamage(1)
+        .attackDamage(2)
         .maxCooldown(2)
         .type(WeaponType.KINETIC)
         .component(DataComponents.MAX_RELOAD_TIME, 40)

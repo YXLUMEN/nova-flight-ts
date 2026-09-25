@@ -179,7 +179,7 @@ export class Explosion implements WorldMutation {
                     const x = pos.x;
                     const y = pos.y;
 
-                    ctx.power -= 0.225;
+                    ctx.power -= 0.25;
                     if (ctx.power <= 0.1) return true;
                     if (ctx.map.get(x, y) === 0) return null;
 

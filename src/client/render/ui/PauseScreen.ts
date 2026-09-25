@@ -32,7 +32,9 @@ export class PauseScreen extends GuiScreen {
         .setAlign('end')
         .setColor('rgb(255,233,174)');
 
-    private readonly tip = new GuiLabel('').setFontSize(16).setAlign('end');
+    private readonly tip = new GuiLabel('')
+        .setFontSize(16)
+        .setAlign('end');
 
     public constructor(client: NovaFlightClient) {
         super();

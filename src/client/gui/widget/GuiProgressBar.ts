@@ -71,12 +71,16 @@ export class GuiProgressBar extends GuiNode {
         // 文本
         if (this.centerText !== null) {
             const font = GuiTheme.font(11, 600);
-            GuiDraw.text(ctx, this.width / 2, this.height / 2, this.centerText, {
+            GuiDraw.text(
+                ctx,
+                this.width / 2,
+                this.height / 2,
+                this.centerText,
                 font,
-                color: "#ffffff",
-                align: "center",
-                baseline: "middle",
-            });
+                '#fff',
+                'center',
+                'middle'
+            );
         }
         ctx.restore();
     }

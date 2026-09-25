@@ -15,7 +15,6 @@ import {RegistryManager} from "../registry/RegistryManager.ts";
 import {StartAction, StartScreen} from "./render/ui/StartScreen.ts";
 import {ClientCommandManager} from "./command/ClientCommandManager.ts";
 import {ClientMultiGameManger} from "./ClientMultiGameManger.ts";
-import {ConnectInfo} from "./render/ui/ConnectInfo.ts";
 import {ClientChat} from "./command/ClientChat.ts";
 import {ClientSavesManager} from "./storage/ClientSavesManager.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
@@ -75,8 +74,6 @@ export class NovaFlightClient {
     private readonly saveManager: ClientSavesManager;
     private readonly statisticManager: StatisticManager;
 
-    private connectInfo: ConnectInfo | null = null;
-
     private readonly tickManager: TickRateManager;
     private pause = true;
     private playing = false;
@@ -85,7 +82,6 @@ export class NovaFlightClient {
     private lastRenderTime = 0;
     private renderDisable: Consumer<void> = empty;
 
-    private gameOverAbort: AbortController | null = null;
     private waitWorldStop: Promise<void> | null = null;
     private stopWorld: Consumer<void> = empty;
 
@@ -148,7 +144,6 @@ export class NovaFlightClient {
             await this.waitWorldStop;
 
             // cleanup
-            this.gameOverAbort?.abort();
             this.connection.clean();
             if (this.isIntegrated) {
                 await invoke('stop_server');
@@ -199,10 +194,8 @@ export class NovaFlightClient {
     }
 
     public async joinGame(world: ClientWorld) {
-        if (this.connectInfo) {
-            this.connectInfo.setOnDestroy(empty);
-            this.connectInfo.setMessage(TranslatableText.of('start.join_game'));
-            this.connectInfo.setLabel(null);
+        if (this.screens.hasNotice()) {
+            this.screens.showNotice(TranslatableText.of('start.join_game'), null, empty);
         }
 
         await sleep(200);
@@ -213,7 +206,7 @@ export class NovaFlightClient {
         this.loop(0);
         this.window.canvas.style.cursor = 'none';
 
-        this.setConnectInfo(null);
+        this.screens.closeNotice();
         this.clientCommandManager.clearParseCache();
     }
 
@@ -314,7 +307,7 @@ export class NovaFlightClient {
             console.log('[Client] Stopping world');
 
             if (!this.waitWorldStop) return;
-            this.setConnectInfo(null);
+            this.screens.closeNotice();
             this.clearWorld();
             this.last = 0;
             this.accumulator = 0;
@@ -389,31 +382,12 @@ export class NovaFlightClient {
     }
 
     public setConnectError(message: string | TranslatableText): void {
-        if (!this.connectInfo) {
-            this.connectInfo = new ConnectInfo(this, () => this.requestStop());
-        }
-        this.connectInfo.setMessage(message);
-        this.connectInfo.setLabel(TranslatableText.of('start.confirm'));
-    }
-
-    public setConnectInfo(info: ConnectInfo | null): void {
-        this.connectInfo?.destroy();
-        this.connectInfo = info;
+        this.screens.showNotice(message, TranslatableText.of('start.confirm'), () => this.requestStop());
     }
 
     public onGameOver(): void {
         this.networkHandler.clear();
-
         document.getElementById('tech-shell')!.classList.add('hidden');
-
-        const ctrl = new AbortController();
-        this.gameOverAbort?.abort();
-        this.gameOverAbort = ctrl;
-        window.addEventListener('keydown', () => {
-            ctrl.abort();
-            this.leaveGame();
-            this.gameOverAbort = null;
-        }, {signal: ctrl.signal});
     }
 
     // 其他

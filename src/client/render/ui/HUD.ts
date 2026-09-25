@@ -2,7 +2,6 @@ import {clamp} from "../../../utils/math/math.ts";
 import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import type {ItemStack} from "../../../item/ItemStack.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
-import type {ClientWorld} from "../../ClientWorld.ts";
 import type {SpecialWeapon} from "../../../item/weapon/SpecialWeapon.ts";
 import type {LocalPlayerEntity} from "../../entity/LocalPlayerEntity.ts";
 import {InventoryRender} from "../../inventory/InventoryRender.ts";
@@ -69,14 +68,7 @@ export class HUD extends UiFramework {
     public render(ctx: CanvasRenderingContext2D): void {
         const client = NovaFlightClient.instance();
         const world = client.world;
-        if (!world) return;
-
-        if (world.isOver()) {
-            this.renderEndOverlay(ctx, world);
-            return;
-        }
-
-        if (!this.player) return;
+        if (!world || world.isOver() || !this.player) return;
 
         ctx.save();
         ctx.font = this.font;
@@ -229,36 +221,6 @@ export class HUD extends UiFramework {
         // 文本标签
         ctx.fillStyle = this.hudColor;
         ctx.fillText(item.getName().toString(), x + w + 8, y - 1);
-    }
-
-    private renderEndOverlay(ctx: CanvasRenderingContext2D, world: ClientWorld) {
-        const halfW = this.halfW;
-        const height = this.height;
-        let y = height / 2 - 64;
-
-        const time = world.getTime() | 0;
-        const score = NovaFlightClient.instance().world?.getTotalScore() ?? 0;
-
-        ctx.save();
-        ctx.fillStyle = 'rgba(255,0,0,0.3)';
-        ctx.fillRect(0, 0, this.width, height);
-
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        ctx.fillStyle = 'rgb(255,255,255)';
-        ctx.font = 'bold 32px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
-        ctx.fillText(TranslatableText.of('hud.game_over').toString(), halfW, y);
-        y += 48;
-
-        ctx.font = '16px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
-        const text = new TranslatableText('hud.summary', [
-            time.toString(), score.toString(), (score / time).toFixed(2)]);
-        ctx.fillText(text.toString(), halfW, y);
-        y += 32;
-
-        ctx.fillText(TranslatableText.of('hud.back').toString(), halfW, y);
-        ctx.restore();
     }
 
     public renderPointer(ctx: CanvasRenderingContext2D, client: NovaFlightClient): void {

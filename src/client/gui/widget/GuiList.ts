@@ -189,11 +189,16 @@ export class GuiList extends GuiNode {
             }
 
             const color = i === this.selected ? "#06131f" : GuiTheme.colors.text;
-            GuiDraw.text(ctx, this.rowPadX, y + this.rowHeight / 2, textOf(this.items[i]), {
+            GuiDraw.text(
+                ctx,
+                this.rowPadX,
+                y + this.rowHeight / 2,
+                textOf(this.items[i]),
                 font,
-                color: this.enabled ? color : GuiTheme.colors.textMuted,
-                baseline: "middle",
-            });
+                this.enabled ? color : GuiTheme.colors.textMuted,
+                undefined,
+                'middle'
+            );
         }
         ctx.restore();
 

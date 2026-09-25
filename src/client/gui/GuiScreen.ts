@@ -14,17 +14,10 @@ import {GuiDraw} from "./GuiDraw.ts";
 export class GuiScreen extends GuiContainer {
     public manager: GuiManager | null = null;
 
-    // 每帧清屏填充色(不透明界面常用),null 表示透明叠层
-    public background: string | null = null;
-
-    // Esc 是否关闭本屏幕
-    public closeOnEscape = false;
-
-    // 点击非子控件区域(空白背景)是否关闭本屏幕
-    public closeOnOutsideClick = false;
-
-    // 工具提示悬停延时(毫秒)
-    public tooltipDelay = 350;
+    protected background: string | null = null; // 每帧清屏填充色(不透明界面常用),null 表示透明叠层
+    protected closeOnEscape = false; // Esc 是否关闭本屏幕
+    protected closeOnOutsideClick = false; // 点击非子控件区域(空白背景)是否关闭本屏幕
+    protected tooltipDelay = 350; // 工具提示悬停延时(毫秒)
 
     private focusNode: GuiNode | null = null;
     private hoverTarget: GuiNode | null = null;
@@ -47,6 +40,12 @@ export class GuiScreen extends GuiContainer {
         this.width = width;
         this.height = height;
         this.markLayoutDirty();
+    }
+
+    public setBackground(color: string | null) {
+        if (color === this.background) return;
+        this.background = color;
+        this.markPaintDirty();
     }
 
     public override relayout(ctx: CanvasRenderingContext2D): void {
@@ -137,17 +136,11 @@ export class GuiScreen extends GuiContainer {
         this.manager?.pop(this);
     }
 
-    // 生命周期钩子(管理器调用,子类可按需覆写)
-
-    /** 屏幕被压入管理器后触发 */
-    public onOpened(): void {
+    protected onOpened(): void {
     }
 
-    /** 屏幕从管理器移除时触发(每次关闭一次) */
-    public onClosed(): void {
+    protected onClosed(): void {
     }
-
-    // 键盘 / 指针默认行为
 
     public override keyDown(event: KeyboardEvent): boolean {
         if (event.code === 'Tab') {
@@ -161,7 +154,11 @@ export class GuiScreen extends GuiContainer {
         return false;
     }
 
-    /** 由管理器在 push / pop 时调用 */
+    /**
+     * @readonly
+     * @inner
+     * 由管理器在 push / pop 时调用
+     * */
     public notifyOpened(): void {
         this.closed = false;
         this.markLayoutDirty();
@@ -170,7 +167,11 @@ export class GuiScreen extends GuiContainer {
 
     // 内部实现
 
-    /** 由管理器在 pop 时调用(保证只回调一次) */
+    /**
+     * @readonly
+     * @inner
+     * 由管理器在 pop 时调用(保证只回调一次)
+     * */
     public notifyClosed(): void {
         if (this.closed) return;
         this.closed = true;
@@ -240,7 +241,7 @@ export class GuiScreen extends GuiContainer {
 
         let ty = y + padY;
         for (const line of lines) {
-            GuiDraw.text(ctx, x + padX, ty, line, {font, color: GuiTheme.colors.text, baseline: "top"});
+            GuiDraw.text(ctx, x + padX, ty, line, font, undefined, undefined, 'top');
             ty += lineHeight;
         }
         ctx.restore();

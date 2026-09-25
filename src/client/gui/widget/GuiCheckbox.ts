@@ -105,11 +105,16 @@ export class GuiCheckbox extends GuiNode {
         }
 
         const font = GuiTheme.defaultFont;
-        GuiDraw.text(ctx, this.controlWidth() + 10, this.height / 2, textOf(this.label), {
+        GuiDraw.text(
+            ctx,
+            this.controlWidth() + 10,
+            this.height / 2,
+            textOf(this.label),
             font,
-            color: this.enabled ? GuiTheme.colors.text : GuiTheme.colors.textMuted,
-            baseline: "middle",
-        });
+            this.enabled ? GuiTheme.colors.text : GuiTheme.colors.textMuted,
+            undefined,
+            'middle'
+        );
         ctx.restore();
     }
 

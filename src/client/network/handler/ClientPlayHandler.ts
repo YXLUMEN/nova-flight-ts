@@ -66,8 +66,6 @@ import {LatencyCalculator} from "../../../network/LatencyCalculator.ts";
 import {randInt, squareDist} from "../../../utils/math/math.ts";
 import {PhaseLasers} from "../../../item/weapon/PhaseLasers.ts";
 import type {NotGiveUpS2CPacket} from "../../../network/packet/s2c/NotGiveUpS2CPacket.ts";
-import {WindowOverlay} from "../../../effect/WindowOverlay.ts";
-import {TitleEffect} from "../../../effect/TitleEffect.ts";
 import type {TickChangeS2CPacket} from "../../../network/packet/s2c/TickChangeS2CPacket.ts";
 import type {PlayerProfilesS2CPacket} from "../../../network/packet/s2c/PlayerProfilesS2CPacket.ts";
 import {AcceptTeleportC2SPacket} from "../../../network/packet/c2s/AcceptTeleportC2SPacket.ts";
@@ -540,21 +538,17 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
     public onNGU(_: NotGiveUpS2CPacket): void {
         if (!this.world) return;
+        const notice = this.client.screens.showNotice('');
 
-        const effect = new WindowOverlay(
-            '#000',
-            1,
-            0.2,
-            0.5,
-            'copy'
-        );
-
-        this.world.addEffect(null, effect);
         this.world.schedule(2, () => {
             const text = TranslatableText.of(`entity.player.respawn_${randInt(0, 6)}`);
-            this.client.worldRender.setTitle(new TitleEffect(text.toString(), 6));
+            notice.setMessage(text, 'Minecraft', 48);
         });
-        this.world.schedule(5, () => effect.end());
+        this.world.schedule(5, () => notice.setBackground(null));
+        this.world.schedule(6, () => {
+            notice.close();
+            notice.setBackground('#000');
+        });
     }
 
     public sendCommand(input: string): boolean {

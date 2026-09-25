@@ -1,5 +1,4 @@
 import {ClientNetworkChannel} from "./ClientNetworkChannel.ts";
-import {ConnectInfo} from "../render/ui/ConnectInfo.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
 import {DEFAULT_CONFIG, RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {ClientIntegratedChannel} from "./ClientIntegratedChannel.ts";
@@ -12,6 +11,7 @@ import type {ConnectionContext} from "./ConnectionContext.ts";
 import {ClientHandshakeHandler} from "./handler/ClientHandshakeHandler.ts";
 import {Main2WorkerType, Worker2MainType} from "../../worker/WorkerMsgType.ts";
 import {message} from "@tauri-apps/plugin-dialog";
+import type {FullScreenNotice} from "../render/ui/FullScreenNotice.ts";
 
 export class ClientConnector {
     private readonly client: NovaFlightClient;
@@ -31,60 +31,62 @@ export class ClientConnector {
 
         this.ctx.setChannel(new ClientNetworkChannel(address, this.client.clientId));
 
-        const info = new ConnectInfo(this.client, this.ctx.stop);
-        const confirm = info.waitConfirm();
-
-        this.client.setConnectInfo(info);
-        info.setMessage(TranslatableText.of('start.remote.connecting'));
-        info.setLabel(TranslatableText.of('start.cancel'));
+        const screen = this.client.screens;
+        const notice = screen.showNotice(
+            TranslatableText.of('start.remote.connecting'),
+            TranslatableText.of('start.cancel'),
+            this.ctx.stop,
+        );
+        const confirm = notice.waitClose();
 
         const sniff = this.ctx.sniff(
             1000,
             3,
             (num, max) => {
                 const args = [num + 1, max].map(String);
-                info.setMessage(new TranslatableText('start.remote.retry', args));
-                return info.isAbort();
+                notice.setMessage(new TranslatableText('start.remote.retry', args));
+                return notice.isCancelled();
             });
 
         const result = await Promise.race([sniff, confirm]);
         if (!result) {
             if (result !== undefined) {
-                info.setMessage(TranslatableText.of('start.remote.fail.found_server'));
-                info.setLabel(TranslatableText.of('start.confirm'));
+                notice.setMessage(TranslatableText.of('start.remote.fail.found_server'));
+                notice.setLabel(TranslatableText.of('start.confirm'));
             }
 
             await confirm;
             return;
         }
 
-        info.setMessage(TranslatableText.of('start.connecting'));
+        notice.setMessage(TranslatableText.of('start.connecting'));
 
         try {
             await Promise.race([this.ctx.connect(), confirm]);
         } catch (err) {
-            info.setMessage(this.mapErr(err));
-            info.setLabel(TranslatableText.of('start.confirm'));
+            notice.setMessage(this.mapErr(err));
+            notice.setLabel(TranslatableText.of('start.confirm'));
 
             await confirm;
             return;
         }
 
-        if (info.isAbort()) return;
+        if (notice.isCancelled()) return;
 
         const config = new ClientHandshakeHandler(this.client, this.client.connection);
         config.clientReady();
 
-        await info.waitConfirm();
+        await confirm;
     }
 
     public async startIntegratedServer(saveName: string): Promise<void> {
         if (this.ctx.hasWorker()) return;
 
-        const info = new ConnectInfo(this.client, this.ctx.stop);
-        this.client.setConnectInfo(info);
-
-        info.setMessage(TranslatableText.of('start.integrated.start'));
+        const notice = this.client.screens.showNotice(
+            TranslatableText.of('start.integrated.start'),
+            null,
+            this.ctx.stop,
+        );
 
         const worker = new Worker(new URL('../../worker/integrated.worker.ts', import.meta.url), {
             type: 'module',
@@ -95,16 +97,17 @@ export class ClientConnector {
         const addr = `127.0.0.1:${RuntimeConfig.port}`;
         this.ctx.setChannel(new ClientIntegratedChannel(worker, this.client.clientId));
 
-        await this.checkAndConnect(addr, info, new ArrayBuffer(0), saveName, worker);
+        await this.checkAndConnect(addr, notice, new ArrayBuffer(0), saveName, worker);
     }
 
     public async startGeneralServer(saveName: string): Promise<void> {
         if (this.ctx.hasWorker()) return;
 
-        const info = new ConnectInfo(this.client, this.ctx.stop);
-        this.client.setConnectInfo(info);
-
-        info.setMessage(TranslatableText.of('start.integrated.start'));
+        const notice = this.client.screens.showNotice(
+            TranslatableText.of('start.integrated.start'),
+            null,
+            this.ctx.stop,
+        );
 
         let key: ArrayBuffer;
         try {
@@ -122,9 +125,9 @@ export class ClientConnector {
             const msg = this.mapErr(err);
             await error(msg);
 
-            info.setMessage(msg);
-            info.setLabel(TranslatableText.of('start.confirm'));
-            await info.waitConfirm();
+            notice.setMessage(msg);
+            notice.setLabel(TranslatableText.of('start.confirm'));
+            await notice.waitClose();
             return;
         }
 
@@ -144,26 +147,26 @@ export class ClientConnector {
         const addr = `127.0.0.1:${RuntimeConfig.port}`;
         this.ctx.setChannel(new ClientNetworkChannel(addr, this.client.clientId));
 
-        await this.checkAndConnect(addr, info, key, saveName);
+        await this.checkAndConnect(addr, notice, key, saveName);
     }
 
     private async checkAndConnect(
         addr: string,
-        connectInfo: ConnectInfo,
+        notice: FullScreenNotice,
         key: ArrayBuffer,
         saveName: string,
         worker?: Worker
     ): Promise<void> {
-        connectInfo.setLabel(TranslatableText.of('start.cancel'));
+        notice.setLabel(TranslatableText.of('start.cancel'));
 
-        const confirm = connectInfo.waitConfirm();
+        const confirm = notice.waitClose();
         const canConnect = await Promise.race([this.ctx.sniff(), confirm]);
 
         // 探测可到达性
         if (!canConnect) {
             if (canConnect !== undefined) {
-                connectInfo.setMessage(TranslatableText.of('start.integrated.fail.start'));
-                connectInfo.setLabel(TranslatableText.of('start.confirm'));
+                notice.setMessage(TranslatableText.of('start.integrated.fail.start'));
+                notice.setLabel(TranslatableText.of('start.confirm'));
             }
 
             await confirm;
@@ -187,18 +190,18 @@ export class ClientConnector {
         this.ctx.setWorker(worker);
 
         const connectToServer = async () => {
-            connectInfo.setMessage(TranslatableText.of('start.connecting'));
+            notice.setMessage(TranslatableText.of('start.connecting'));
             try {
                 await Promise.race([this.ctx.connect(), confirm]);
-                if (connectInfo.isAbort()) return;
+                if (notice.isCancelled()) return;
 
                 config.clientReady();
             } catch (err) {
                 console.error(err);
                 await error(this.mapErr(err));
 
-                connectInfo.setMessage(TranslatableText.of('start.fail.connect'));
-                connectInfo.setLabel(TranslatableText.of('start.confirm'));
+                notice.setMessage(TranslatableText.of('start.fail.connect'));
+                notice.setLabel(TranslatableText.of('start.confirm'));
                 await confirm;
                 this.ctx.stop();
                 return;

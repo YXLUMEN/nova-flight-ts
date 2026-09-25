@@ -119,54 +119,49 @@ export class GuiButton extends GuiNode {
             ctx,
             this.width / 2, this.height / 2 + (this.pressed ? 1 : 0),
             textOf(this.label),
-            {
-                font,
-                color: this.enabled ? colors.text : GuiTheme.colors.textMuted,
-                align: "center",
-                baseline: "middle",
-            });
+            font,
+            this.enabled ? colors.text : GuiTheme.colors.textMuted,
+            'center',
+            'middle'
+        );
         ctx.restore();
     }
 
     private getStyle(): GuiButtonStyle {
-        const colors = GuiTheme.colors;
-        switch (this.variant) {
-            case "primary":
-                return {
-                    background: colors.accent,
-                    border: colors.accent,
-                    text: "#06131f",
-                    hover: "rgba(255,255,255,0.20)",
-                };
-            case "danger":
-                return {
-                    background: "rgba(255,92,92,0.16)",
-                    border: colors.danger,
-                    text: colors.danger,
-                    hover: "rgba(255,92,92,0.22)",
-                };
-            case "ghost":
-                return {
-                    background: "transparent",
-                    border: "rgba(255,255,255,0)",
-                    text: colors.text,
-                    hover: "rgba(255,255,255,0.08)",
-                };
-            case "normal":
-            default:
-                return {
-                    background: "rgba(255,255,255,0.07)",
-                    border: colors.border,
-                    text: colors.text,
-                    hover: colors.hover,
-                };
-        }
+        return GuiButton.STYLES[this.variant] ?? GuiButton.STYLES.normal;
     }
+
+    private static readonly STYLES: Record<string, GuiButtonStyle> = {
+        primary: {
+            background: GuiTheme.colors.accent,
+            border: GuiTheme.colors.accent,
+            text: "#06131f",
+            hover: "rgba(255,255,255,0.20)",
+        },
+        danger: {
+            background: "rgba(255,92,92,0.16)",
+            border: GuiTheme.colors.danger,
+            text: GuiTheme.colors.danger,
+            hover: "rgba(255,92,92,0.22)",
+        },
+        ghost: {
+            background: "transparent",
+            border: "rgba(255,255,255,0)",
+            text: GuiTheme.colors.text,
+            hover: "rgba(255,255,255,0.08)",
+        },
+        normal: {
+            background: "rgba(255,255,255,0.07)",
+            border: GuiTheme.colors.border,
+            text: GuiTheme.colors.text,
+            hover: GuiTheme.colors.hover,
+        }
+    };
 }
 
 interface GuiButtonStyle {
-    background: string,
-    border: string,
-    text: string,
-    hover: string,
+    readonly background: string,
+    readonly border: string,
+    readonly text: string,
+    readonly hover: string,
 }

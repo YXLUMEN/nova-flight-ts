@@ -196,17 +196,27 @@ export class GuiTextField extends GuiNode {
         ctx.clip();
 
         if (display.length === 0 && this.placeholder !== null && !this.focused) {
-            GuiDraw.text(ctx, this.padX, yCenter, textOf(this.placeholder), {
+            GuiDraw.text(
+                ctx,
+                this.padX,
+                yCenter,
+                textOf(this.placeholder),
                 font,
-                color: GuiTheme.colors.textMuted,
-                baseline: "middle",
-            });
+                GuiTheme.colors.textMuted,
+                undefined,
+                'middle'
+            );
         } else {
-            GuiDraw.text(ctx, this.padX - this.scrollX, yCenter, display, {
+            GuiDraw.text(
+                ctx,
+                this.padX - this.scrollX,
+                yCenter,
+                display,
                 font,
-                color: this.enabled ? GuiTheme.colors.text : GuiTheme.colors.textMuted,
-                baseline: "middle",
-            });
+                this.enabled ? GuiTheme.colors.text : GuiTheme.colors.textMuted,
+                undefined,
+                'middle'
+            );
 
             if (this.focused && this.enabled && this.isCaretVisible()) {
                 const caretX = this.padX - this.scrollX + GuiDraw.measure(display.slice(0, this.caret), font);

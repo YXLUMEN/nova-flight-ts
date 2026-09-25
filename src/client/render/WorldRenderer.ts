@@ -9,7 +9,6 @@ import {EntityRenderers} from "./entity/EntityRenderers.ts";
 import {World} from "../../world/World.ts";
 import type {ParticleEffectType} from "../../effect/ParticleEffectType.ts";
 import {BlockMapRender} from "./BlockMapRender.ts";
-import type {TitleEffect} from "../../effect/TitleEffect.ts";
 import {ParticlePool} from "../../effect/ParticlePool.ts";
 import type {Consumer, HexColor} from "../../type/types.ts";
 import {WorldEntityRenderer} from "./WorldEntityRenderer.ts";
@@ -26,7 +25,6 @@ export class WorldRenderer {
     private readonly particlePool: ParticlePool;
     private readonly starField: StarField;
 
-    private title: TitleEffect | null = null;
     private mapRender: BlockMapRender | null = null;
 
     private disableRender = 0;
@@ -77,10 +75,6 @@ export class WorldRenderer {
             this.effects.pop();
         }
 
-        if (this.title) {
-            this.title.tick(dt);
-            if (!this.title.isAlive()) this.title = null;
-        }
         this.particlePool.tick(dt);
         this.starField.update(dt, camera);
         this.window.damagePopup.tick(dt);
@@ -118,10 +112,6 @@ export class WorldRenderer {
 
     public addEffect(effect: VisualEffect) {
         this.effects.push(effect);
-    }
-
-    public setTitle(title: TitleEffect) {
-        this.title = title;
     }
 
     public render(alpha: number) {
@@ -171,10 +161,9 @@ export class WorldRenderer {
         }
 
         this.window.hud.renderMainWeapon(ctx, alpha);
-        this.window.damagePopup.render(ctx, alpha); // 修改了字体
+        this.window.damagePopup.render(ctx, alpha); // 修改了字体且未还原
         ctx.restore();
 
-        this.title?.render(ctx);
         this.window.hud.render(ctx);
 
         this.window.hud.renderPointer(ctx, this.client);

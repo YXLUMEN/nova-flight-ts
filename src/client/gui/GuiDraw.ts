@@ -1,5 +1,4 @@
 import {GuiTheme} from "./theme.ts";
-import type {GuiTextStyle} from "./GuiTextStyle.ts";
 
 /**
  * 画布绘制工具集。
@@ -40,18 +39,20 @@ export class GuiDraw {
         return this.ctx.measureText(text).width;
     }
 
-    /** 以统一排版绘制一段文本 */
     public static text(
         ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
         x: number,
         y: number,
         text: string,
-        style: GuiTextStyle = {}
+        font: string = GuiTheme.defaultFont,
+        color: string = GuiTheme.colors.text,
+        textAlign: CanvasTextAlign = 'left',
+        textBaseline: CanvasTextBaseline = 'alphabetic',
     ): void {
-        ctx.font = style.font ?? GuiTheme.defaultFont;
-        ctx.fillStyle = style.color ?? GuiTheme.colors.text;
-        ctx.textAlign = style.align ?? "left";
-        ctx.textBaseline = style.baseline ?? "alphabetic";
+        ctx.font = font
+        ctx.fillStyle = color;
+        ctx.textAlign = textAlign;
+        ctx.textBaseline = textBaseline;
         ctx.fillText(text, x, y);
     }
 }

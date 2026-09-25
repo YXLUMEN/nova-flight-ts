@@ -117,7 +117,7 @@ export class ClientInputEvents {
                 client.setPause(!client.isPause());
                 break;
             }
-            case 'KeyG':
+            case 'KeyG': {
                 if (!client.player) return;
                 const tech = <ClientTechTree>client.player.getTechs();
                 tech.toggleTechTree();
@@ -125,23 +125,26 @@ export class ClientInputEvents {
                 client.player.setOpenInventory(false);
                 client.connection.send(new PlayerInputC2SPacket('KeyG'));
                 break;
+            }
             case 'KeyL':
                 RuntimeConfig.cameraFollow = !RuntimeConfig.cameraFollow;
                 break;
             case 'F3':
                 RuntimeConfig.renderHitBox = !RuntimeConfig.renderHitBox;
                 break;
-            case 'Tab':
+            case 'Backquote': {
                 const ping = `Ping ${Math.floor(client.networkHandler.getLatency())}ms`;
                 client.clientCommandManager.addPlainMessage(ping);
                 break;
-            case 'KeyE':
+            }
+            case 'KeyE': {
                 if (client.player && !(client.player.getTechs() as ClientTechTree).isShowing()) {
                     const shouldClose = !client.player.isOpenInventory();
                     client.player.setOpenInventory(shouldClose);
                     client.setPause(shouldClose);
                 }
                 break;
+            }
         }
     }
 
