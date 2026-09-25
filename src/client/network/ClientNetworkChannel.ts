@@ -1,7 +1,6 @@
 import {WSNetworkChannel} from "../../network/WSNetworkChannel.ts";
 import {CodecRegistry} from "../../network/CodecRegistry.ts";
 import type {Consumer, UUID} from "../../type/types.ts";
-import {UUIDUtil} from "../../utils/UUIDUtil.ts";
 import type {Payload} from "../../network/Payload.ts";
 import type {ClientChannel} from "./ClientChannel.ts";
 import {empty} from "../../utils/uit.ts";
@@ -9,6 +8,7 @@ import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import {PacketHeader} from "../../network/PacketHeader.ts";
 import {NetworkSide} from "../../network/NetworkSide.ts";
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
+import {parseUUID} from "../../utils/UUIDUtil.ts";
 
 export class ClientNetworkChannel extends WSNetworkChannel implements ClientChannel {
     private readonly clientId: UUID;
@@ -65,7 +65,7 @@ export class ClientNetworkChannel extends WSNetworkChannel implements ClientChan
     }
 
     protected override register(): void {
-        const uuid = UUIDUtil.parse(this.clientId);
+        const uuid = parseUUID(this.clientId);
         const buf = new Uint8Array(1 + uuid.length);
         buf[0] = PacketHeader.CLIENT;
         buf.set(uuid, 1);

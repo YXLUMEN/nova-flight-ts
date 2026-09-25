@@ -1,5 +1,5 @@
 import type {UUID} from "../type/types.ts";
-import {UUIDUtil} from "../utils/UUIDUtil.ts";
+import {stringifyUUID} from "../utils/UUIDUtil.ts";
 
 export class BinaryReader {
     private view: DataView<ArrayBuffer>;
@@ -125,7 +125,7 @@ export class BinaryReader {
         }
         const bytes = new Uint8Array(this.view.buffer, this.view.byteOffset + this.offset, 16);
         this.offset += 16;
-        return UUIDUtil.stringify(bytes);
+        return stringifyUUID(bytes);
     }
 
     public readSlice(len: number): Uint8Array<ArrayBuffer> {

@@ -11,10 +11,10 @@ import {AABB} from "../utils/math/AABB.ts";
 import type {EntityType} from "../entity/EntityType.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import type {NumRange} from "../world/predicate/NumberRange.ts";
-import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {squareDistVec2} from "../utils/math/math.ts";
 import {shuffleArray} from "../utils/uit.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
+import {isValidUUID} from "../utils/UUIDUtil.ts";
 
 type provider = (builder: SuggestionsBuilder, consumer: Consumer<SuggestionsBuilder>) => Promise<Suggestions>;
 
@@ -102,7 +102,7 @@ export class EntitySelectorParser {
         const start = this.reader.getCursor();
         const str = this.reader.readString();
 
-        if (UUIDUtil.isValidUUID(str)) {
+        if (isValidUUID(str)) {
             this.uuid = str;
             this.includesNonPlayers = true;
         } else {

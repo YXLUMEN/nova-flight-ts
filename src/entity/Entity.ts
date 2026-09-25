@@ -24,7 +24,6 @@ import {DataTracker, type DataTrackerBuilder, type DataTrackerSerializedEntry} f
 import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {VecDeltaCodec} from "../world/entity/VecDeltaCodec.ts";
 import {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
-import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {IllegalArgumentError, IllegalStateError} from "../type/errors.ts";
 import {NbtTypeId} from "../nbt/NbtType.ts";
 import {EMPTY_LISTENER, type EntityChangeListener} from "../world/entity/EntityChangeListener.ts";
@@ -32,6 +31,7 @@ import {BlockCollision} from "../world/collision/BlockCollision.ts";
 import {appEvent} from "../event/EventBus.ts";
 import {EntityColor} from "../world/entity/EntityColor.ts";
 import {isBoxInView} from "../utils/render/render.ts";
+import {isValidUUID} from "../utils/UUIDUtil.ts";
 
 export abstract class Entity implements EntityLike, DataTracked, Comparable, NbtSerializable, CommandOutput {
     private static readonly ENTITY_COUNTER = new AtomicInteger();
@@ -665,7 +665,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
         if (nbt.contains('uuid', NbtTypeId.String)) {
             const uuid = nbt.getString('uuid');
-            if (!UUIDUtil.isValidUUID(uuid)) throw new IllegalArgumentError('Invalid UUID format.');
+            if (!isValidUUID(uuid)) throw new IllegalArgumentError('Invalid UUID format.');
             this.uuid = uuid;
         }
 

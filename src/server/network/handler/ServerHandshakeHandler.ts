@@ -5,13 +5,13 @@ import {ServerCommonHandler} from "./ServerCommonHandler.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {ServerConfigHandler} from "./ServerConfigHandler.ts";
 import {GameProfile} from "../../entity/GameProfile.ts";
-import {UUIDUtil} from "../../../utils/UUIDUtil.ts";
 import type {UUID} from "../../../type/types.ts";
 import {ServerReadyS2CPacket} from "../../../network/packet/s2c/ServerReadyS2CPacket.ts";
 import type {ClientStartConfigC2SPacket} from "../../../network/packet/handshake/ClientStartConfigC2SPacket.ts";
 import {ConnectionState} from "../ConnectionState.ts";
 import {ServerAllowConfigS2CPacket} from "../../../network/packet/handshake/ServerAllowConfigS2CPacket.ts";
 import type {ClientProfileC2SPacket} from "../../../network/packet/handshake/ClientProfileC2SPacket.ts";
+import {isValidUUID} from "../../../utils/UUIDUtil.ts";
 
 export class ServerHandshakeHandler extends ServerCommonHandler {
     private static readonly STILL_LOADING = TranslatableText.of('network.disconnect.still_loading');
@@ -83,7 +83,7 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
             return;
         }
 
-        if (this.attemptUUID !== packet.clientId || !UUIDUtil.isValidUUID(this.attemptUUID)) {
+        if (this.attemptUUID !== packet.clientId || !isValidUUID(this.attemptUUID)) {
             this.disconnect(ServerHandshakeHandler.INVALID_UUID);
             return;
         }

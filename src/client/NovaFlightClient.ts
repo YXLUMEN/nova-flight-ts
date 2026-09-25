@@ -39,6 +39,8 @@ import {GamePause} from "../event/events/game/GamePause.ts";
 import {Log} from "../worker/log.ts";
 import {Main2WorkerType, Worker2MainType} from "../worker/WorkerMsgType.ts";
 import {RacePromise} from "../utils/RacePromise.ts";
+import {GuiManager} from "./gui/GuiManager.ts";
+import {GuiLayer} from "./render/ui/GuiLayer.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -51,6 +53,8 @@ export class NovaFlightClient {
     public playerName: string;
 
     public readonly window: Window;
+    public readonly GUI: GuiManager;
+    public readonly screens: GuiLayer;
     public readonly input: KeyboardInput;
     public globalSound: SoundSystem = null!;
 
@@ -79,6 +83,7 @@ export class NovaFlightClient {
     private last = 0;
     private accumulator = 0;
     private lastRenderTime = 0;
+    private renderDisable: Consumer<void> = empty;
 
     private gameOverAbort: AbortController | null = null;
     private waitWorldStop: Promise<void> | null = null;
@@ -97,6 +102,9 @@ export class NovaFlightClient {
 
         this.registryManager = new RegistryManager();
         this.window = new Window();
+        this.GUI = new GuiManager(this.window.hudCtx);
+        this.screens = new GuiLayer(this);
+        this.screens.start();
         this.worldRender = new WorldRenderer(this);
         this.tickManager = new TickRateManager();
 
@@ -215,28 +223,31 @@ export class NovaFlightClient {
 
     public setPause(bl: boolean): void {
         if (bl && !this.pause) {
+            this.pause = true;
             this.worker?.postMessage({m2w: Main2WorkerType.STOP_TICKING});
             appEvent.emit(new GamePause(true));
 
             if (!this.player?.isOpenInventory()) {
-                RuntimeConfig.lastPerFrame = RuntimeConfig.perFrame;
-                RuntimeConfig.perFrame = Math.max(RuntimeConfig.perFrame, 1000 / 10);
+                this.renderDisable = this.worldRender.disable();
             }
 
             this.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
-            if (this.isIntegrated && this.world) this.world.worldSound.pauseAll().catch(console.error);
+            if (this.isIntegrated && this.world) {
+                this.world.worldSound.pauseAll().catch(console.error);
+            }
             this.window.canvas.style.cursor = 'crosshair';
         } else if (!bl && this.pause) {
+            this.pause = false;
             this.worker?.postMessage({m2w: Main2WorkerType.START_TICKING});
             appEvent.emit(new GamePause(false));
-            RuntimeConfig.perFrame = Math.min(RuntimeConfig.lastPerFrame, RuntimeConfig.perFrame);
+
+            this.renderDisable();
+            this.renderDisable = empty;
 
             this.globalSound.playSound(SoundEvents.UI_PAGE_SWITCH);
             this.world?.worldSound.resumeAll().catch(console.error);
             this.window.canvas.style.cursor = 'none';
         }
-
-        this.pause = bl;
     }
 
     private loop(ts: number): void {
@@ -339,6 +350,7 @@ export class NovaFlightClient {
     }
 
     private clearWorld(): void {
+        this.screens.closeAll();
         this.worldRender.setWorld(null);
 
         this.world?.close();

@@ -2,11 +2,12 @@ import {isDev, RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import type {KeyboardInput} from "./KeyboardInput.ts";
-import {cleanObj} from "../../utils/uit.ts";
+import {cleanObj, empty} from "../../utils/uit.ts";
 import {DataLoader} from "../../resource/DataLoader.ts";
 import type {ClientTechTree} from "../tech/ClientTechTree.ts";
 import {app} from "../../lib.ts";
 import {Main2WorkerType} from "../../worker/WorkerMsgType.ts";
+import type {Consumer} from "../../type/types.ts";
 
 export class ClientInputEvents {
     public static registryAll(client: NovaFlightClient, input: KeyboardInput): void {
@@ -178,28 +179,33 @@ export class ClientInputEvents {
     }
 
     private static windowEvents(client: NovaFlightClient) {
+        let blurDisable: Consumer<void> = empty;
+
         app.listen('tauri://focus', () => {
-            client.worldRender.rendering = true;
+            blurDisable();
+            blurDisable = empty;
         }).catch(console.error);
 
         app.listen('tauri://blur', () => {
             if (!client.clientCommandManager.isShow()) {
                 client.setPause(true);
             }
-            client.worldRender.rendering = false;
+            blurDisable = client.worldRender.disable();
         }).catch(console.error);
 
+        let minimizedDisable: Consumer<void> = empty;
         app.listen('tauri://resize', async () => {
-            client.worldRender.rendering = !await app.isMinimized();
+            if (await app.isMinimized()) {
+                minimizedDisable = client.worldRender.disable();
+            } else {
+                minimizedDisable();
+                minimizedDisable = empty;
+            }
         }).catch(console.error);
 
-        client.window.canvas.addEventListener('click', event => {
+        client.window.canvas.addEventListener('click', () => {
             if (!client.player) return;
             client.player.clientInventory.justClicked = true;
-
-            if (client.world && client.isPause() && !client.player.isOpenInventory()) {
-                client.window.pauseOverlay.handleClick(event.offsetX, event.offsetY);
-            }
         });
 
         client.window.canvas.addEventListener('pointerup', () => {

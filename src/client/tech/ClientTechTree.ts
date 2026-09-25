@@ -13,10 +13,11 @@ import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTech
 import {AnsiParser} from "../../utils/AnsiParser.ts";
 import {NovaFlightClient} from "../NovaFlightClient.ts";
 import {ModelManager} from "../render/model/ModelManager.ts";
-import {cleanObj} from "../../utils/uit.ts";
+import {cleanObj, empty} from "../../utils/uit.ts";
 import {ClientTechManager} from "./ClientTechManager.ts";
 import type {ClientTech} from "./ClientTech.ts";
 import {UnlockTech} from "../../event/events/UnlockTech.ts";
+import type {Consumer} from "../../type/types.ts";
 
 interface Adjacency {
     successors: Map<ClientTech, ClientTech[]>; // tech -> successors
@@ -52,6 +53,7 @@ export class ClientTechTree implements TechTree {
     private readonly abortCtrl: AbortController = new AbortController();
 
     private selectNodeId: string | null = null;
+    private renderDisable: Consumer<void> = empty;
 
     public constructor(player: LocalPlayerEntity, container?: HTMLElement) {
         this.player = player;
@@ -156,7 +158,12 @@ export class ClientTechTree implements TechTree {
         const hidden = this.techShell.classList.toggle('hidden');
         const client = NovaFlightClient.instance();
         client.setPause(!hidden);
-        client.worldRender.rendering = hidden;
+        if (hidden) {
+            this.renderDisable();
+            this.renderDisable = empty;
+        } else {
+            this.renderDisable = client.worldRender.disable();
+        }
     }
 
     public displayTechTree(show: boolean = true): void {
@@ -164,13 +171,15 @@ export class ClientTechTree implements TechTree {
         if (show) {
             this.techShell.classList.remove('hidden');
             client.setPause(true);
-            client.worldRender.rendering = false;
+            this.renderDisable = client.worldRender.disable();
             return;
         }
 
         this.techShell.classList.add('hidden');
         client.setPause(false);
-        client.worldRender.rendering = true;
+
+        this.renderDisable();
+        this.renderDisable = empty;
     }
 
     public isShowing(): boolean {

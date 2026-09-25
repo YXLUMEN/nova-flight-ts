@@ -1,6 +1,6 @@
-import {clamp} from "./math/math.ts";
 import type {Identifier} from "../registry/Identifier.ts";
 import type {Predicate, RGB} from "../type/types.ts";
+import {clamp} from "./math/math.ts";
 import {TimeoutError} from "../type/errors.ts";
 
 export const DPR = Math.max(1, Math.min(2, globalThis.devicePixelRatio || 1));

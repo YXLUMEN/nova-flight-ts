@@ -9,11 +9,11 @@ import {NbtUnserialization} from "../../nbt/NbtUnserialization.ts";
 import {confirm, message} from "@tauri-apps/plugin-dialog";
 import {invoke} from "@tauri-apps/api/core";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import {UUIDUtil} from "../../utils/UUIDUtil.ts";
 import type {Consumer, UUID} from "../../type/types.ts";
 import {toLocalTime} from "../../utils/time.ts";
 import {PlayerDataStorage} from "../../server/storage/PlayerDataStorage.ts";
 import {ClientSavePage} from "./ClientSavePage.ts";
+import {isValidUUID} from "../../utils/UUIDUtil.ts";
 
 export class ClientSavesManager {
     private static readonly RESERVED_NAMES = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'];
@@ -493,7 +493,7 @@ export class ClientSavesManager {
                 continue;
             }
 
-            if (fullPath.lastIndexOf('players') > 0 && UUIDUtil.isValidUUID(fileName)) {
+            if (fullPath.lastIndexOf('players') > 0 && isValidUUID(fileName)) {
                 const compound = await parseNbt(fullPath, path, fileName, ext);
                 if (compound === null) continue;
 

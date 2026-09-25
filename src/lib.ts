@@ -1,6 +1,5 @@
 import {Window} from "@tauri-apps/api/window";
 import {ProtocolRegistry} from "./network/packet/ProtocolRegistry.ts";
-import {UUIDUtil} from "./utils/UUIDUtil.ts";
 import {NovaFlightClient} from "./client/NovaFlightClient.ts";
 import {error} from "@tauri-apps/plugin-log";
 import {isDev} from "./configs/RuntimeConfig.ts";
@@ -9,6 +8,7 @@ import {PageSplicer} from "./client/page/PageSplicer.ts";
 import type {UUID} from "./type/types.ts";
 import {Settings} from "./client/settings/Settings.ts";
 import {BindSettings} from "./client/settings/BindSettings.ts";
+import {isValidUUID, uuidFromUsername} from "./utils/UUIDUtil.ts";
 
 export const app = new Window('main');
 
@@ -35,8 +35,8 @@ export async function run() {
         const rawName = localStorage.getItem('playerName') ?? 'player';
         const playerName = rawName.slice(0, 64);
 
-        const uuid: UUID = await UUIDUtil.uuidFromUsername(playerName);
-        const clientId: UUID = UUIDUtil.isValidUUID(uuid) ? uuid : crypto.randomUUID();
+        const uuid: UUID = await uuidFromUsername(playerName);
+        const clientId: UUID = isValidUUID(uuid) ? uuid : crypto.randomUUID();
 
         localStorage.setItem('clientId', clientId);
         localStorage.setItem('playerName', playerName);

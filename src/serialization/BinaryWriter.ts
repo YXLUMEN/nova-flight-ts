@@ -1,6 +1,6 @@
 import type {UUID} from "../type/types.ts";
-import {UUIDUtil} from "../utils/UUIDUtil.ts";
 import {PacketTooLargeError} from "../type/errors.ts";
+import {parseUUID} from "../utils/UUIDUtil.ts";
 
 export class BinaryWriter {
     public static readonly MAX_BUFFER_SIZE = 16 * 1024 * 1024;
@@ -147,7 +147,7 @@ export class BinaryWriter {
     }
 
     public writeUUID(uuid: UUID): void {
-        this.pushBytes(UUIDUtil.parse(uuid));
+        this.pushBytes(parseUUID(uuid));
     }
 
     public toUint8Array(): Uint8Array<ArrayBuffer> {

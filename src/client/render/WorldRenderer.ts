@@ -11,7 +11,7 @@ import type {ParticleEffectType} from "../../effect/ParticleEffectType.ts";
 import {BlockMapRender} from "./BlockMapRender.ts";
 import type {TitleEffect} from "../../effect/TitleEffect.ts";
 import {ParticlePool} from "../../effect/ParticlePool.ts";
-import type {HexColor} from "../../type/types.ts";
+import type {Consumer, HexColor} from "../../type/types.ts";
 import {WorldEntityRenderer} from "./WorldEntityRenderer.ts";
 import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 
@@ -29,7 +29,7 @@ export class WorldRenderer {
     private title: TitleEffect | null = null;
     private mapRender: BlockMapRender | null = null;
 
-    public rendering = true;
+    private disableRender = 0;
 
     public constructor(client: NovaFlightClient) {
         this.client = client;
@@ -39,6 +39,16 @@ export class WorldRenderer {
         this.particlePool = new ParticlePool(1024);
         this.starField = new StarField(128, defaultLayers, 8);
         this.starField.init();
+    }
+
+    public disable(): Consumer<void> {
+        this.disableRender++;
+        let consumed = false;
+        return () => {
+            if (consumed) return;
+            consumed = true;
+            this.disableRender--;
+        };
     }
 
     public setWorld(world: ClientWorld | null) {
@@ -115,7 +125,7 @@ export class WorldRenderer {
     }
 
     public render(alpha: number) {
-        if (!this.rendering) return;
+        if (this.disableRender > 0) return;
 
         const ctx = this.window.ctx;
         ctx.clearRect(0, 0, Window.viewWidth, Window.viewHeight);
@@ -166,9 +176,6 @@ export class WorldRenderer {
 
         this.title?.render(ctx);
         this.window.hud.render(ctx);
-        if (this.client.isPause() && !world.isOver() && (player && !player.isOpenInventory())) {
-            this.window.pauseOverlay.render(ctx);
-        }
 
         this.window.hud.renderPointer(ctx, this.client);
     }
