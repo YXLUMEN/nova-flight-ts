@@ -71,7 +71,7 @@ export class MusicCommand {
                                 ctx.source.addMessage(`No music is playing`);
                                 return;
                             }
-                            ctx.source.addMessage(`Current playing is \x1b[32m"${current.id.toString()}"`);
+                            ctx.source.addMessage(`Current playing is \x1b[32m"${current.id}"`);
                         })
                 )
                 .then(
@@ -104,7 +104,7 @@ export class MusicCommand {
                                 return;
                             }
 
-                            ctx.source.addMessage(`Now is playing ${current.id.toString()}`);
+                            ctx.source.addMessage(`Now is playing \x1b[32m"${current.id}"`);
                         })
                 )
                 .then(

@@ -47,14 +47,17 @@
   "easy_day_all_clear": {
     "file": "nova-flight:/easy_day_all_clear.ogg"
   },
+  "launch_off": {
+    "file": "nova-flight:/launch_off.ogg"
+  },
+  "prepare_to_fly": {
+    "file": "nova-flight:/prepare_to_fly.ogg"
+  },
   "delta_force_theme": {
     "file": "nova-flight:/delta_force_theme.ogg"
   },
   "victory": {
     "file": "nova-flight:/victory.ogg"
-  },
-  "warsaw": {
-    "file": "nova-flight:/warsaw.ogg"
   },
   "steel_requiem": {
     "file": "nova-flight:/steel_requiem.ogg"

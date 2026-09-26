@@ -293,15 +293,47 @@
       "commercial": false
     },
     {
+      "path": "audios/launch_off.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
+      "path": "audios/prepare_to_fly.ogg",
+      "tier": "ai",
+      "generator": "suno v6-mini",
+      "contributors": [
+        {
+          "name": "Xouerta",
+          "role": "prompt"
+        },
+        {
+          "name": "YXLumen",
+          "role": "edit"
+        }
+      ],
+      "author": "Xouerta, YXLumen",
+      "toS": "https://suno.com/terms",
+      "commercial": false
+    },
+    {
       "path": "audios/delta_force_theme.ogg",
       "tier": "unowned"
     },
     {
       "path": "audios/victory.ogg",
-      "tier": "unowned"
-    },
-    {
-      "path": "audios/warsaw.ogg",
       "tier": "unowned"
     },
     {

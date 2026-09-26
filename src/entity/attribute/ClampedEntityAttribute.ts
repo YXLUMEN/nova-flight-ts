@@ -1,5 +1,5 @@
 import {Attribute} from "./Attribute.ts";
-import {clamp} from "../../utils/math/math.ts";
+import {assertClamp, clamp} from "../../utils/math/math.ts";
 
 export class ClampedEntityAttribute extends Attribute {
     private readonly minValue: number;
@@ -7,17 +7,7 @@ export class ClampedEntityAttribute extends Attribute {
 
     public constructor(fallback: number, min: number, max: number) {
         super(fallback);
-        if (min > max) {
-            throw new RangeError("Minimum value must be greater than maximum");
-        }
-        if (fallback < min) {
-            throw new RangeError("Default value cannot be lower than minimum value");
-        }
-        if (fallback > max) {
-            throw new RangeError("Default value cannot be bigger than maximum value!");
-        }
-
-
+        assertClamp(fallback, min, max);
         this.minValue = min;
         this.maxValue = max;
     }

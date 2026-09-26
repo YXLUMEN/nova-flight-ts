@@ -4,6 +4,7 @@ use crate::network::discovery::cmd::{
     is_lan_sniffing, list_lan_servers, start_lan_announce, start_lan_sniff, stop_lan_announce,
     stop_lan_sniff,
 };
+use crate::window::{confirm_save_done, wait_saving};
 
 mod file;
 mod network;
@@ -39,6 +40,7 @@ pub fn run() {
             }
             Ok(())
         })
+        .on_window_event(wait_saving)
         .invoke_handler(tauri::generate_handler![
             start_server,
             stop_server,
@@ -51,6 +53,7 @@ pub fn run() {
             stop_lan_sniff,
             list_lan_servers,
             is_lan_sniffing,
+            confirm_save_done
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

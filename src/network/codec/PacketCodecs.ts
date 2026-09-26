@@ -1,24 +1,24 @@
-import {Vec2} from "../../utils/math/Vec2.ts";
+import type {Comparable} from "../../type/Comparable.ts";
 import type {PacketCodec} from "./PacketCodec.ts";
 import type {Registry} from "../../registry/Registry.ts";
 import type {IndexedIterable} from "../../utils/collection/IndexedIterable.ts";
-import {type BinaryReader} from "../../serialization/BinaryReader.ts";
-import {type BinaryWriter} from "../../serialization/BinaryWriter.ts";
+import type {BinaryReader} from "../../serialization/BinaryReader.ts";
+import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import type {BiConsumer, Constructor, Return, Supplier, UUID} from "../../type/types.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
-import {empty} from "../../utils/uit.ts";
-import {Optional} from "../../utils/Optional.ts";
-import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import {decodeColorToHex, encodeColorHex} from "../../utils/net_util.ts";
-import {NbtSerialization} from "../../nbt/NbtSerialization.ts";
-import {NbtUnserialization} from "../../nbt/NbtUnserialization.ts";
 import type {Codec} from "../../serialization/Codec.ts";
 import type {NbtElement} from "../../nbt/element/NbtElement.ts";
+import {empty} from "../../utils/uit.ts";
+import {decodeColorToHex, encodeColorHex} from "../../utils/net_util.ts";
+import {Vec2} from "../../utils/math/Vec2.ts";
+import {Optional} from "../../utils/Optional.ts";
+import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
+import {NbtSerialization} from "../../nbt/NbtSerialization.ts";
+import {NbtUnserialization} from "../../nbt/NbtUnserialization.ts";
 import {NbtEnd} from "../../nbt/element/NbtEnd.ts";
 import {NbtTypes} from "../../nbt/NbtTypes.ts";
 import {IllegalStateError} from "../../type/errors.ts";
 import {BlockPos} from "../../world/section/pos/BlockPos.ts";
-import type {Comparable} from "../../type/Comparable.ts";
 import {PacketCodecImpl} from "./PacketCodecImpl.ts";
 
 export class PacketCodecs {

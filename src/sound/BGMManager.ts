@@ -7,11 +7,11 @@ export class BGMManager {
     private static readonly IN_GAME = new SoundQueue([
         Audios.AIR_MINUET,
         Audios.FRONTIER_SKIES,
-        Audios.ZERG,
         Audios.UNBREAKABLE_WILL,
         Audios.WANA_HAVE_A_FLIGHT,
-        Audios.ENCOUNTER,
         Audios.EASY_DAY_ALL_CLEAR,
+        Audios.PREPARE_TO_FLY,
+        Audios.LAUNCH_OFF,
     ]);
     private static readonly MAIN_THEME = new SoundQueue([
         Audios.HANGAR_SILENCE,
@@ -38,7 +38,7 @@ export class BGMManager {
         appEvent.on('game:end', () => {
             AudioManager.removeListener('main');
             AudioManager.addListener('main', 'ended', nextTheme);
-            nextTheme();
+            void nextTheme();
         });
         appEvent.on('entity:boss:killed', () => this.onBossDead());
         AudioManager.addListener('main', 'ended', nextTheme);
@@ -94,13 +94,19 @@ export class BGMManager {
         else await AudioManager.play(this.IN_GAME.next());
     }
 
-    private static conditionListener(events: EventBus) {
+    private static conditionListener(events: EventBus): void {
+        this.IN_GAME.remove(Audios.ENCOUNTER);
         this.IN_GAME.remove(Audios.TROPIC_THUNDER);
         this.IN_GAME.remove(Audios.TECHNOLOGY_CHANGES_THE_UNIVERSE);
 
-        const offDiff = events.on('world:stage:difficult', async ({difficult}) => {
-            if (difficult < 3) return false;
+        const offDiff = events.on('world:stage:difficult', () => {
             offDiff();
+            this.IN_GAME.randomInsert(Audios.ENCOUNTER);
+        });
+
+        const offDiff3 = events.on('world:stage:difficult', async ({difficult}) => {
+            if (difficult < 3) return;
+            offDiff3();
 
             await AudioManager.fadeOutAndPause();
             const index = this.IN_GAME.randomInsert(Audios.TROPIC_THUNDER);

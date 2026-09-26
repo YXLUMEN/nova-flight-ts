@@ -357,7 +357,7 @@ export class NovaFlightClient {
         this.playing = false;
     }
 
-    public async saveAll() {
+    public async saveAll(): Promise<void> {
         if (!this.worker) return;
         const {promise, resolve} = Promise.withResolvers<void>();
         const ctrl = new AbortController();

@@ -22,14 +22,15 @@ export class Audios {
     public static readonly THE_FINAL_ASCENT = this.register('the_final_ascent');
     public static readonly UNBREAKABLE_WILL = this.register('unbreakable_will');
     public static readonly WANA_HAVE_A_FLIGHT = this.register('wana_have_a_flight');
-    public static readonly EASY_DAY_ALL_CLEAR = this.register('easy_day_all_clear')
+    public static readonly EASY_DAY_ALL_CLEAR = this.register('easy_day_all_clear');
+    public static readonly LAUNCH_OFF = this.register('launch_off');
+    public static readonly PREPARE_TO_FLY = this.register('prepare_to_fly');
 
     public static readonly DELTA_FORCE_THEME = this.register('delta_force_theme');
     public static readonly STEEL_REQUIEM = this.register('steel_requiem');
     public static readonly TROPIC_THUNDER = this.register('tropic_thunder');
 
     public static readonly VICTORY = this.register('victory');
-    public static readonly WARSAW = this.register('warsaw');
 
     public static readonly SCOURGE_OF_THE_UNIVERSE = this.register('scourge_of_the_universe');
     public static readonly UNIVERSAL_COLLAPSE = this.register('universal_collapse');

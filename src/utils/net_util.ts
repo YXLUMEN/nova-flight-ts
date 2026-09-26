@@ -1,5 +1,5 @@
-import {clamp, PI2, wrapRadians} from "./math/math.ts";
 import type {HexColor} from "../type/types.ts";
+import {clamp, PI2, wrapRadians} from "./math/math.ts";
 
 const VELOCITY_SCALE = 32767 / 60.0;
 
