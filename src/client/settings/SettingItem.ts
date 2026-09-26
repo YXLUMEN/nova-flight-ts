@@ -65,7 +65,8 @@ export class SettingItem<T> {
 
     /** 仅用于从配置文件加载 */
     public restore(value: T): void {
-        if (value === this.value || !this.validate(value)) {
+        if (value === this.value) return;
+        if (!this.validate(value)) {
             warn(`[Settings] Invalidate value get "${value} at "${this.id}" when restore`)
                 .catch(console.error);
             return;

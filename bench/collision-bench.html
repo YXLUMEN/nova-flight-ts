@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>BlockCollision 方案对比基准</title>
+    <style>
+        body {
+            font-family: ui-monospace, Consolas, monospace;
+            background: #14161a;
+            color: #e8e8e8;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 18px;
+        }
+
+        h2 {
+            font-size: 15px;
+            margin-top: 28px;
+            border-bottom: 1px solid #3a3f47;
+            padding-bottom: 4px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        td, th {
+            border: 1px solid #3a3f47;
+            padding: 3px 10px;
+            text-align: right;
+        }
+
+        td:first-child, th:first-child {
+            text-align: left;
+        }
+
+        .dim {
+            color: #9ca3af;
+        }
+
+        p {
+            margin: 4px 0;
+        }
+
+        .note {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .note code {
+            color: #cbd5e1;
+        }
+
+        canvas {
+            border: 1px solid #3a3f47;
+            margin-top: 8px;
+        }
+
+        .label {
+            color: #9ca3af;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+<h1>BlockCollision 方案对比基准</h1>
+<p class="dim">
+    A = 现实现 separatingCollision（布尔裁剪） &nbsp;|&nbsp;
+    B = 逐格扫掠裁剪 CCD（裁剪到接触点）
+</p>
+<p id="env" class="note"></p>
+<canvas id="vis" width="900" height="150"></canvas>
+<p id="visLabel" class="label"></p>
+<p class="note">运行中… 约 5~10 秒，结果同步输出到控制台。</p>
+<div id="out"></div>
+<script type="module" src="./collision-bench.ts"></script>
+</body>
+</html>

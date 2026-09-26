@@ -47,7 +47,7 @@ export class DevourerBoss extends BossEntity {
     public readonly prevSegPoses: Float32Array;
 
     public constructor(type: EntityType<DevourerBoss>, world: World, worth: number) {
-        super(type, world, worth, 50);
+        super(type, world, worth, 60);
 
         this.noClip = true;
 

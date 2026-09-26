@@ -103,25 +103,25 @@ export abstract class MobEntity extends LivingEntity {
         const map = this.getWorld().getMap();
         const bounds = this.getBoundingBox();
 
-        if (map.intersectsBox(bounds)) {
-            if (this.stuckTicks === 0) this.ejectCooldown = 0;
-            this.stuckTicks++;
-
-            if (this.ejectCooldown <= 0) {
-                const eject = BlockCollision.findEjectionVector(map, this.positionRef, bounds, 24);
-                if (eject) {
-                    this.stuckTicks = 0;
-                    this.ejectCooldown = 0;
-                    return movement.set(eject.x, eject.y);
-                }
-                this.ejectCooldown = Math.min(1 << Math.min(this.stuckTicks - 1, 12), 32);
-            } else this.ejectCooldown--;
-
-            return movement.multiply(0);
+        if (!map.intersectsBox(bounds)) {
+            this.stuckTicks = 0;
+            return BlockCollision.separatingCollision(map, bounds, movement);
         }
-        this.stuckTicks = 0;
 
-        return BlockCollision.separatingCollision(map, bounds, movement);
+        if (this.stuckTicks === 0) this.ejectCooldown = 0;
+        this.stuckTicks++;
+
+        if (this.ejectCooldown <= 0) {
+            const eject = BlockCollision.findEjectionVector(map, this.positionRef, bounds, 16);
+            if (eject) {
+                this.stuckTicks = 0;
+                this.ejectCooldown = 0;
+                return movement.set(eject.x, eject.y);
+            }
+            this.ejectCooldown = Math.min(1 << Math.min(this.stuckTicks - 1, 12), 32);
+        } else this.ejectCooldown--;
+
+        return movement.multiply(0);
     }
 
     protected override getMapOffsetY(): number {

@@ -110,10 +110,13 @@ export class BitBlockMap implements NbtSerializable {
     }
 
     public intersectsBox(box: AABB): boolean {
-        const sx = Math.floor(box.minX / WorldConstants.BLOCK_SIZE);
-        const sy = Math.floor(box.minY / WorldConstants.BLOCK_SIZE);
-        const ex = Math.floor((box.maxX - 1e-5) / WorldConstants.BLOCK_SIZE);
-        const ey = Math.floor((box.maxY - 1e-5) / WorldConstants.BLOCK_SIZE);
+        const bs = WorldConstants.BLOCK_SIZE;
+        const eps = 1e-4;
+
+        const sx = Math.floor((box.minX + eps) / bs);
+        const sy = Math.floor((box.minY + eps) / bs);
+        const ex = Math.floor((box.maxX - eps) / bs);
+        const ey = Math.floor((box.maxY - eps) / bs);
 
         for (let by = sy; by <= ey; by++) {
             for (let bx = sx; bx <= ex; bx++) {

@@ -1,7 +1,7 @@
 import {BitBlockMap} from "../section/BitBlockMap.ts";
 import {AABB} from "../../utils/math/AABB.ts";
 import {BlockPos} from "../section/pos/BlockPos.ts";
-import {frac, lerp} from "../../utils/math/math.ts";
+import {clamp, frac, lerp} from "../../utils/math/math.ts";
 import {MutBlockPos} from "../section/pos/MutBlockPos.ts";
 import type {RaycastContext} from "./RaycastContext.ts";
 import {BlockHitResult} from "./BlockHitResult.ts";
@@ -12,6 +12,8 @@ import {Direction} from "../../utils/math/Direction.ts";
 import {WorldConstants} from "../section/WorldConstants.ts";
 
 export class BlockCollision {
+    private static readonly CONTACT_EPS = 1E-5;
+
     public static fastCollision(map: BitBlockMap, bounds: AABB, movement: Vec2): boolean {
         if (movement.x === 0 && movement.y === 0) return false;
         const nextBox = bounds.stretch(movement.x, movement.y);
@@ -19,19 +21,93 @@ export class BlockCollision {
     }
 
     public static separatingCollision(map: BitBlockMap, bounds: AABB, movement: MutVec2): MutVec2 {
-        if (movement.x === 0 && movement.y === 0) return movement;
-
-        if (movement.x !== 0) {
-            const xBox = bounds.offset(movement.x, 0);
-            if (map.intersectsBox(xBox)) movement.x = 0;
-        }
-
-        if (movement.y !== 0) {
-            const yBox = bounds.offset(movement.x, movement.y);
-            if (map.intersectsBox(yBox)) movement.y = 0;
-        }
-
+        if (movement.x !== 0) movement.x = BlockCollision.sweepX(map, bounds, movement.x);
+        if (movement.y !== 0) movement.y = BlockCollision.sweepY(map, bounds, movement.x, movement.y);
         return movement;
+    }
+
+    /** 把 "行进到接触点" 换算成实际位移 */
+    private static contactMove(blockIndex: number, dir: number, lead: number, delta: number): number {
+        const bs = WorldConstants.BLOCK_SIZE;
+        const contact = dir > 0 ? blockIndex * bs : (blockIndex + 1) * bs;
+        const allowed = contact - lead - dir * BlockCollision.CONTACT_EPS;
+        return dir > 0 ? clamp(allowed, 0, delta) : clamp(allowed, delta, 0);
+    }
+
+    private static sweepX(map: BitBlockMap, bounds: AABB, delta: number): number {
+        const bs = WorldConstants.BLOCK_SIZE;
+        const eps = BlockCollision.CONTACT_EPS;
+        const dir = delta > 0 ? 1 : -1;
+
+        const lead = dir > 0 ? bounds.maxX : bounds.minX;   // 行进方向的前沿坐标
+        const first = Math.floor(lead / bs);                // 前沿起始格
+        const last = Math.floor((lead + delta) / bs);       // 前沿终点格
+
+        // 垂直方向覆盖的格, EPS 排除擦边
+        const low = Math.floor((bounds.minY + eps) / bs);
+        const high = Math.floor((bounds.maxY - eps) / bs);
+
+        // 逐行找该行最靠前的阻挡格, 跨行取最近的那个 (best 单调收敛, 后续行的扫描范围可收窄)
+        if (dir > 0) {
+            let best = last + 1;
+            for (let row = low; row <= high; row++) {
+                for (let col = first; col < best; col++) {
+                    if (map.get(col, row) !== 0) {
+                        best = col;
+                        break;
+                    }
+                }
+            }
+            return best > last ? delta : BlockCollision.contactMove(best, dir, lead, delta);
+        }
+
+        let best = last - 1;
+        for (let row = low; row <= high; row++) {
+            for (let col = first; col > best; col--) {
+                if (map.get(col, row) !== 0) {
+                    best = col;
+                    break;
+                }
+            }
+        }
+        return best < last ? delta : BlockCollision.contactMove(best, dir, lead, delta);
+    }
+
+    private static sweepY(map: BitBlockMap, bounds: AABB, shiftX: number, delta: number): number {
+        const bs = WorldConstants.BLOCK_SIZE;
+        const eps = BlockCollision.CONTACT_EPS;
+        const dir = delta > 0 ? 1 : -1;
+
+        const lead = dir > 0 ? bounds.maxY : bounds.minY;
+        const first = Math.floor(lead / bs);
+        const last = Math.floor((lead + delta) / bs);
+
+        const low = Math.floor((bounds.minX + shiftX + eps) / bs);
+        const high = Math.floor((bounds.maxX + shiftX - eps) / bs);
+
+        if (dir > 0) {
+            let best = last + 1;
+            for (let col = low; col <= high; col++) {
+                for (let row = first; row < best; row++) {
+                    if (map.get(col, row) !== 0) {
+                        best = row;
+                        break;
+                    }
+                }
+            }
+            return best > last ? delta : BlockCollision.contactMove(best, dir, lead, delta);
+        }
+
+        let best = last - 1;
+        for (let col = low; col <= high; col++) {
+            for (let row = first; row > best; row--) {
+                if (map.get(col, row) !== 0) {
+                    best = row;
+                    break;
+                }
+            }
+        }
+        return best < last ? delta : BlockCollision.contactMove(best, dir, lead, delta);
     }
 
     public static findEjectionVector(

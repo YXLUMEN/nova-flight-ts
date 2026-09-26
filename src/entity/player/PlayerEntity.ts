@@ -80,12 +80,11 @@ export abstract class PlayerEntity extends LivingEntity {
     protected override adjustBlockCollision(movement: MutVec2): MutVec2 {
         const map = this.getWorld().getMap();
         const bounds = this.getBoundingBox();
-        if (map.intersectsBox(bounds)) {
-            if (this.stuckTicks % 2 === 0) return movement.multiply(0.4);
 
-            const eject = BlockCollision.findEjectionVector(map, this.positionRef, bounds);
+        if (map.intersectsBox(bounds)) {
+            const eject = BlockCollision.findEjectionVector(map, this.positionRef, bounds, 4);
             if (eject) return movement.set(eject.x, eject.y);
-            return movement.multiply(0.4);
+            return movement.multiply(0.5);
         }
 
         return BlockCollision.separatingCollision(map, bounds, movement);
