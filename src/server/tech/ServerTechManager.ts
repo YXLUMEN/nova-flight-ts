@@ -47,7 +47,6 @@ import {TechVoidLeap} from "../../world/tech/apply/TechVoidLeap.ts";
 import {TechFlakCannons} from "../../world/tech/apply/TechFlakCannons.ts";
 import {TechRocketLauncher} from "../../world/tech/apply/TechRocketLauncher.ts";
 import {TechPerditionBeam} from "../../world/tech/apply/TechPerditionBeam.ts";
-import {TechAdLoading} from "../../world/tech/apply/TechAdLoading.ts";
 import {TechDeflector} from "../../world/tech/apply/TechDeflector.ts";
 import {TechIonDisruptor} from "../../world/tech/apply/TechIonDisruptor.ts";
 
@@ -73,7 +72,6 @@ export class ServerTechManager {
 
     public static init(): void {
         this.register(Techs.AD_CAPACITANCE, TechAdCapacitance);
-        this.register(Techs.AD_LOADING, TechAdLoading);
         this.register(Techs.ARC_EMITTER, TechArcEmitter);
         this.register(Techs.ARTILLERY125, TechArtillery125);
         this.register(Techs.AUTOCANNON, TechAutocannon);

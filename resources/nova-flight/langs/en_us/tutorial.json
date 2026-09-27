@@ -18,7 +18,7 @@
   "tech.teach.requires": "Before unlocking the \u001B[32m\"Antimatter Warhead\"\u001B[0m, you must research \u001B[33mall\u001B[0m of its prerequisites",
   "tech.teach.cost": "Note that upgrading tech \u001B[33mconsumes materials\u001B[0m — but destroying enemy ships grants materials",
   "tech.teach.switch": "Switch primary weapons with the \u001B[32mMouse Wheel\u001B[0m or \u001B[32mF\u001B[0m",
-  "tech.teach.fire": "Now, let's destroy them!",
+  "tech.teach.good": "Now, let's destroy them!",
   "tech.score.intro": "Commander! Materials are precious — use them wisely",
   "tech.score.reset": "If you picked a wrong upgrade, you can reset on the research screen to refund all tech — but note that recycling comes with some loss",
   "tech.score.first": "Commander, please choose the \u001B[32m\"Antimatter Warhead\"\u001B[0m upgrade — it pierces enemy armor efficiently",

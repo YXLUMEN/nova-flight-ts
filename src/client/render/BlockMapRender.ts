@@ -3,12 +3,13 @@ import {WorldConstants} from "../../world/section/WorldConstants.ts";
 import type {ViewRect} from "./Camera.ts";
 
 export class BlockMapRender {
+    private static readonly REBUILD_DELAY_MS = 3000;
+
     private readonly map: BitBlockMap;
     private readonly command: number[] = [];
     private dirty = true;
 
     private debounceTimer: number | undefined;
-    private static readonly REBUILD_DELAY_MS = 3000;
 
     public constructor(map: BitBlockMap) {
         this.map = map;

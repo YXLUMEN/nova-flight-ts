@@ -363,26 +363,15 @@
     ]
   },
   {
-    "id": "ad_loading",
-    "name": "tech.name.nova-flight.ad_loading",
-    "x": 2,
-    "y": 7,
-    "desc": "tech.desc.nova-flight.ad_loading",
-    "cost": 100,
-    "requires": [
-      "hd_bullet"
-    ]
-  },
-  {
     "id": "antimatter_warhead",
     "name": "tech.name.nova-flight.antimatter_warhead",
-    "x": 3,
+    "x": 2,
     "y": 7,
     "branchGroup": "apex_upgrade",
     "desc": "tech.desc.nova-flight.antimatter_warhead",
     "cost": 600,
     "requires": [
-      "ad_loading"
+      "hd_bullet"
     ],
     "conflicts": [
       "armor_erosion"

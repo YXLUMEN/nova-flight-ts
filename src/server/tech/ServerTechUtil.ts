@@ -1,5 +1,4 @@
 import {DataComponents} from "../../component/DataComponents.ts";
-import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
 import type {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
 import {Techs} from "../../world/tech/Techs.ts";
@@ -11,15 +10,6 @@ export class ServerTechUtil {
         if (tech.isUnlocked(Techs.HD_BULLET)) {
             const base = stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
             stack.set(DataComponents.ATTACK_DAMAGE, base * 2);
-        }
-
-        if (tech.isUnlocked(Techs.AD_LOADING)) {
-            const item = stack.getItem();
-            if (item instanceof BaseWeapon) {
-                if (item.getFireRate(stack) <= 1) return;
-
-                item.setFireRate(stack, item.getFireRate(stack) * 0.8);
-            }
         }
     }
 

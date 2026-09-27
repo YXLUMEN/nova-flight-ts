@@ -78,16 +78,30 @@ export class TutorialEvents {
             .build();
     }
 
-    private buildTechSequence(eventBus: EventBus): SequenceDef {
-        return new SequenceBuilder('tutorial_tech')
+    private buildInventory(): SequenceDef {
+        return new SequenceBuilder('tutorial_inventory')
             .saySequence([
-                'tutorial.tech.special',
-                'tutorial.tech.bomb',
-                'tutorial.tech.quick_release',
-                'tutorial.tech.change',
-                'tutorial.tech.no_choice'
+                'tutorial.inventory.special',
+                'tutorial.inventory.bomb',
+                'tutorial.inventory.quick_release',
+                'tutorial.inventory.change',
+                'tutorial.inventory.open'
             ], 4000)
-            .wait(3000)
+            // 玩家打开背包
+            .waitCondition('open_inventory', ctx => !!ctx.getHostPlayer()?.watchInventory)
+            .wait(2000)
+            .saySequence([
+                'tutorial.inventory.region',
+                'tutorial.inventory.hotbar',
+                'tutorial.inventory.special_equipment',
+            ], 4000)
+            .callback('next', this.nextPhase)
+            .build();
+    }
+
+    private buildTechSequence(eventBus: EventBus): SequenceDef {
+        const targetTechs = new Set([Techs.GUNBOAT_FOCUS, Techs.HD_BULLET, Techs.ANTIMATTER_WARHEAD]);
+        return new SequenceBuilder('tutorial_tech')
             // 玩家尝试攻击 4s
             .accumulate(
                 'wait_fire',
@@ -106,24 +120,13 @@ export class TutorialEvents {
                 'tutorial.tech.teach.requires',
                 'tutorial.tech.teach.cost'
             ], 4000)
-            // 解锁前置科技,简化后续判断流程
-            .callback('unlock_tech', ctx => {
-                const player = ctx.getHostPlayer();
-                if (!player) return;
-                const tech = player.getTechs();
-                tech.forceUnlock(Techs.GUNBOAT_FOCUS);
-                tech.forceUnlock(Techs.HD_BULLET);
-                tech.forceUnlock(Techs.AD_LOADING);
-            })
-            .wait(3000).say('tutorial.tech.teach.switch')
-            .wait(3000).say('tutorial.tech.teach.fire')
-            .wait(2000)
             // 目标科技解锁则终止
             .callback('unlock_tech', ctx => {
                 const condition = (event: UnlockTechEntry) => {
                     const techEntry = event.tech;
                     if (techEntry === Techs.ANTIMATTER_WARHEAD) {
                         eventBus.off('player:tech:unlock_entry', condition);
+                        ctx.say('tutorial.tech.teach.good');
                         this.nextPhase(ctx);
                         return;
                     }
@@ -135,12 +138,12 @@ export class TutorialEvents {
             // 解锁非目标科技触发对话
             .waitResolve('many_tech', ctx => {
                 const {promise, resolve} = Promise.withResolvers<void>();
-                const condition = () => {
+                const condition = (event: UnlockTechEntry) => {
                     const player = ctx.getHostPlayer();
                     if (!player) return;
 
                     const count = player.getTechs().unloadedTechCount();
-                    if (count < 4) return;
+                    if (count < 3 || targetTechs.has(event.tech)) return;
                     eventBus.off('player:tech:unlock_entry', condition);
                     resolve();
                 };
@@ -150,9 +153,9 @@ export class TutorialEvents {
                 return promise;
             })
             .say('tutorial.tech.score.intro')
-            .wait(3000)
+            .wait(2000)
             .say('tutorial.tech.score.reset')
-            .wait(3000)
+            .wait(2000)
             // 一直解锁错误科技触发彩蛋
             .waitResolve('add_score', ctx => {
                 const {promise, resolve} = Promise.withResolvers<void>();
@@ -163,32 +166,34 @@ export class TutorialEvents {
                         return;
                     }
 
+                    if (targetTechs.has(event.tech)) return;
+
                     const player = ctx.getHostPlayer();
                     if (!player) return;
 
                     const count = player.getTechs().unloadedTechCount();
                     switch (count) {
-                        case 5:
+                        case 4:
                             ctx.say('tutorial.tech.score.first');
                             player.addScore(900);
                             break;
-                        case 6:
+                        case 5:
                             ctx.say('tutorial.tech.score.second');
                             player.addScore(900);
                             break;
-                        case 7:
+                        case 6:
                             ctx.say('tutorial.tech.score.third');
                             player.addScore(900);
                             break;
-                        case 8:
+                        case 7:
                             ctx.say('tutorial.tech.score.fourth');
                             player.addScore(900);
                             break;
-                        case 9:
+                        case 8:
                             ctx.say('tutorial.tech.score.fifth');
                             player.addScore(900);
                             break;
-                        case 10:
+                        case 9:
                             ctx.say('tutorial.tech.score.sixth');
                             const tech = Techs.ANTIMATTER_WARHEAD;
                             player.getTechs().forceUnlock(tech);
@@ -277,6 +282,7 @@ export class TutorialEvents {
                 .callback('next', this.nextPhase)
                 .build(),
             tutorial_enemy: this.buildEnemySequence(eventBus),
+            tutorial_inventory: this.buildInventory(),
             tutorial_tech: this.buildTechSequence(eventBus),
             tutorial_boss: this.buildBossSequence(eventBus),
             tutorial_end: new SequenceBuilder('tutorial_end')
@@ -287,6 +293,12 @@ export class TutorialEvents {
                 .callback('finalize', ctx => {
                     eventBus.off('world:stage:enter', onStageEnter);
                     eventBus.off('entity:player:dead', onPlayerDead);
+
+                    const player = ctx.getHostPlayer();
+                    if (player) {
+                        player.getWorld().applyElement(Emp.create(player, player.positionRef, 1024, 5));
+                        player.setHealth(player.getMaxHealth());
+                    }
                     ctx.server.world!.stage = STAGE;
                     ctx.server.world!.stage.setStage('P7');
                 })

@@ -29,7 +29,8 @@ import {clamp} from "../src/utils/math/math.ts";
 // ---------------------------------------------------------------------------
 
 const BLOCK_SIZE = WorldConstants.BLOCK_SIZE;   // 8
-const CONTACT_EPS = 1e-4;
+const CONTACT_EPS = 1E-5;
+const SPAN_EPS = 1E-4;
 const MAP_W = 1760;                             // 与 World.MAP_WIDTH 一致
 const MAP_H = 1120;                             // 与 World.MAP_HEIGHT 一致
 const WALL_BX = 100;                            // 墙所在方块列
@@ -104,8 +105,8 @@ function sweepX(map: BitBlockMap, bounds: AABB, shiftY: number, delta: number): 
     const lead = dir > 0 ? bounds.maxX : bounds.minX;
     const first = Math.floor(lead / BLOCK_SIZE);
     const last = Math.floor((lead + delta) / BLOCK_SIZE);
-    const low = Math.floor((bounds.minY + shiftY + CONTACT_EPS) / BLOCK_SIZE);
-    const high = Math.floor((bounds.maxY + shiftY - CONTACT_EPS) / BLOCK_SIZE);
+    const low = Math.floor((bounds.minY + shiftY + SPAN_EPS) / BLOCK_SIZE);
+    const high = Math.floor((bounds.maxY + shiftY - SPAN_EPS) / BLOCK_SIZE);
 
     if (dir > 0) {
         let best = last + 1;
@@ -138,8 +139,8 @@ function sweepY(map: BitBlockMap, bounds: AABB, shiftX: number, delta: number): 
     const lead = dir > 0 ? bounds.maxY : bounds.minY;
     const first = Math.floor(lead / BLOCK_SIZE);
     const last = Math.floor((lead + delta) / BLOCK_SIZE);
-    const low = Math.floor((bounds.minX + shiftX + CONTACT_EPS) / BLOCK_SIZE);
-    const high = Math.floor((bounds.maxX + shiftX - CONTACT_EPS) / BLOCK_SIZE);
+    const low = Math.floor((bounds.minX + shiftX + SPAN_EPS) / BLOCK_SIZE);
+    const high = Math.floor((bounds.maxX + shiftX - SPAN_EPS) / BLOCK_SIZE);
 
     if (dir > 0) {
         let best = last + 1;
@@ -191,8 +192,8 @@ function colMajor(map: BitBlockMap, bounds: AABB, shiftX: number, shiftY: number
     const last = Math.floor((lead + delta) / BLOCK_SIZE);
     const sideMin = alongX ? bounds.minY + shiftY : bounds.minX + shiftX;
     const sideMax = alongX ? bounds.maxY + shiftY : bounds.maxX + shiftX;
-    const low = Math.floor((sideMin + CONTACT_EPS) / BLOCK_SIZE);
-    const high = Math.floor((sideMax - CONTACT_EPS) / BLOCK_SIZE);
+    const low = Math.floor((sideMin + SPAN_EPS) / BLOCK_SIZE);
+    const high = Math.floor((sideMax - SPAN_EPS) / BLOCK_SIZE);
 
     for (let i = first; dir > 0 ? i <= last : i >= last; i += dir) {
         for (let j = low; j <= high; j++) {
@@ -215,12 +216,12 @@ function referenceMove(map: BitBlockMap, bounds: AABB, dx: number, dy: number): 
 
     for (let i = 0; i < n; i++) {
         if (movingX) {
-            const b = bounds.offset(cx + sx, cy).contractAll(CONTACT_EPS);
+            const b = bounds.offset(cx + sx, cy).contractAll(SPAN_EPS);
             if (map.intersectsBox(b)) movingX = false;
             else cx += sx;
         }
         if (movingY) {
-            const b = bounds.offset(cx, cy + sy).contractAll(CONTACT_EPS);
+            const b = bounds.offset(cx, cy + sy).contractAll(SPAN_EPS);
             if (map.intersectsBox(b)) movingY = false;
             else cy += sy;
         }

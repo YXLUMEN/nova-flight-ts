@@ -49,7 +49,6 @@ export class Techs {
     public static GUNBOAT_FOCUS: RegistryEntry<Tech>;
 
     public static HD_BULLET: RegistryEntry<Tech>;
-    public static AD_LOADING: RegistryEntry<Tech>;
     public static ANTIMATTER_WARHEAD: RegistryEntry<Tech>;
 
     public static HV_WARHEAD: RegistryEntry<Tech>;
@@ -140,7 +139,6 @@ export class Techs {
         this.CIWS = fromJson('ciws');
         this.STORM_FIRE = fromJson('storm_fire');
         this.HD_BULLET = fromJson('hd_bullet');
-        this.AD_LOADING = fromJson('ad_loading');
         this.ANTIMATTER_WARHEAD = fromJson('antimatter_warhead');
         this.CANNON90 = fromJson('cannon90');
         this.ARTILLERY125 = fromJson('artillery125');

@@ -35,6 +35,11 @@ const enemy = createPhase({
     }],
 });
 
+const inventory = createPhase({
+    name: 'tutorial_inventory',
+    rules: [],
+});
+
 const tech = createPhase({
     name: 'tutorial_tech',
     rules: [
@@ -101,4 +106,4 @@ const end = createPhase({
     rules: [],
 });
 
-export const TutorialStage = new Stage([intro, move, fire, enemy, tech, boss, end]);
+export const TutorialStage = new Stage([intro, move, fire, enemy, inventory, tech, boss, end]);

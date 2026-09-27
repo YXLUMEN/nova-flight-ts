@@ -14,7 +14,7 @@ export class ErosionEffect extends StatusEffect {
         const world = entity.getWorld();
         let damage: number = this.damage * amplifier;
         if (amplifier > 8 && entity instanceof LivingEntity) {
-            damage += entity.getMaxHealth() * 0.1;
+            damage += entity.getHealth() * 0.07;
         }
         entity.takeDamage(world.getDamageSources().erosion(source), damage);
         return true;

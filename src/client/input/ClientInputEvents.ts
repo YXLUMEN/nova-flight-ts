@@ -88,7 +88,7 @@ export class ClientInputEvents {
             if (code === 'KeyV') {
                 const player = client.player;
                 if (player) {
-                    client.networkHandler.sendCommand(`/gamemode ${!player.isDevMode()}`);
+                    client.networkHandler.sendCommand(`/debug ${!player.isDevMode()}`);
                 }
             }
             if (client.player?.isDevMode() && world) {
@@ -138,11 +138,13 @@ export class ClientInputEvents {
                 break;
             }
             case 'KeyE': {
-                if (client.player && !(client.player.getTechs() as ClientTechTree).isShowing()) {
+                if (!client.player) return;
+                if (!(client.player.getTechs() as ClientTechTree).isShowing()) {
                     const shouldClose = !client.player.isOpenInventory();
                     client.player.setOpenInventory(shouldClose);
                     client.setPause(shouldClose);
                 }
+                client.connection.send(new PlayerInputC2SPacket('KeyE'));
                 break;
             }
         }

@@ -9,7 +9,7 @@ import {PlayerProfileSyncS2CPacket} from "../network/packet/s2c/PlayerProfileSyn
 export class DebugModeCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {
         dispatcher.registry(
-            literal<T>('gamemode')
+            literal<T>('debug')
                 .then(
                     argument<T, boolean>('bool', BoolArgumentType.bool())
                         .executes(ctx => {

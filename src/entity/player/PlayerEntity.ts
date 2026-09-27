@@ -106,15 +106,15 @@ export abstract class PlayerEntity extends LivingEntity {
         if (this.invulnerableTime > 0) return false;
         this.invulnerableTime = 10;
 
-        if (this.techTree!.isUnlocked(Techs.EMERGENCY_WARP) && Math.random() >= 0.3) {
+        const world = this.getWorld() as ServerWorld;
+        if (this.techTree!.isUnlocked(Techs.EMERGENCY_WARP) && Math.random() < 0.2) {
+            world.spawnPreparedParticle(ParticleEffects.FLUSH, this.positionRef, 5);
             this.invulnerableTime = 30;
             return false;
         }
 
         damage = this.modifyAppliedDamage(damageSource, damage);
         let remain = damage;
-
-        const world = this.getWorld() as ServerWorld;
         const shieldAmount = this.getShieldAmount();
 
         // 计算护盾

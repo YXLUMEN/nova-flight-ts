@@ -164,6 +164,17 @@ export class ParticleEffects {
             .build()
     );
 
+    public static readonly FLUSH = ParticleEffects.register('flush',
+        ParticleEffectType.builder()
+            .life(0.8, 1.2)
+            .size(5, 7)
+            .colors('#8D8EFF80', '#FFFFFF99')
+            .speed(220, 300)
+            .shape(ParticleShape.CIRCLE)
+            .omnidirectional()
+            .build()
+    );
+
     private static register(id: string, type: ParticleEffectType): ParticleEffectType {
         return Registry.registerReferenceById(
             Registries.PARTICLES,

@@ -13,6 +13,7 @@ import {WorldConstants} from "../section/WorldConstants.ts";
 
 export class BlockCollision {
     private static readonly CONTACT_EPS = 1E-5;
+    private static readonly SPAN_EPS = 1E-4;
 
     public static fastCollision(map: BitBlockMap, bounds: AABB, movement: Vec2): boolean {
         if (movement.x === 0 && movement.y === 0) return false;
@@ -26,7 +27,7 @@ export class BlockCollision {
         return movement;
     }
 
-    /** 把 "行进到接触点" 换算成实际位移 */
+    // 把 "行进到接触点" 换算成实际位移
     private static contactMove(blockIndex: number, dir: number, lead: number, delta: number): number {
         const bs = WorldConstants.BLOCK_SIZE;
         const contact = dir > 0 ? blockIndex * bs : (blockIndex + 1) * bs;
@@ -36,7 +37,7 @@ export class BlockCollision {
 
     private static sweepX(map: BitBlockMap, bounds: AABB, delta: number): number {
         const bs = WorldConstants.BLOCK_SIZE;
-        const eps = BlockCollision.CONTACT_EPS;
+        const eps = BlockCollision.SPAN_EPS;
         const dir = delta > 0 ? 1 : -1;
 
         const lead = dir > 0 ? bounds.maxX : bounds.minX;   // 行进方向的前沿坐标
@@ -75,7 +76,7 @@ export class BlockCollision {
 
     private static sweepY(map: BitBlockMap, bounds: AABB, shiftX: number, delta: number): number {
         const bs = WorldConstants.BLOCK_SIZE;
-        const eps = BlockCollision.CONTACT_EPS;
+        const eps = BlockCollision.SPAN_EPS;
         const dir = delta > 0 ? 1 : -1;
 
         const lead = dir > 0 ? bounds.maxY : bounds.minY;

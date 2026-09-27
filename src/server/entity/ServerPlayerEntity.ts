@@ -27,6 +27,7 @@ export class ServerPlayerEntity extends PlayerEntity {
 
     public networkHandler: ServerPlayHandler = null!;
     public watchTechPage = false;
+    public watchInventory = false;
     declare protected readonly techTree: ServerTechTree;
 
     private readonly inputKeys = new Set<string>();
@@ -228,6 +229,9 @@ export class ServerPlayerEntity extends PlayerEntity {
                 break;
             case 'KeyG':
                 this.watchTechPage = !this.watchTechPage;
+                break;
+            case 'KeyE':
+                this.watchInventory = !this.watchInventory && !this.watchTechPage;
                 break;
             default:
                 this.inputKeys.add(key);
