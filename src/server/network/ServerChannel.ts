@@ -10,6 +10,7 @@ export interface ServerChannel extends Channel {
 
     flush(): void;
 
+    // 单发/排除不会入队
     sendTo(payload: Payload, target: GameProfile): void;
 
     sendToId(payload: Payload, target: number): void;

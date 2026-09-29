@@ -1,11 +1,14 @@
-import {WSNetworkChannel} from "../../network/WSNetworkChannel.ts";
-import {CodecRegistry} from "../../network/CodecRegistry.ts";
 import type {Payload} from "../../network/Payload.ts";
 import type {BiConsumer} from "../../type/types.ts";
 import type {ServerChannel} from "./ServerChannel.ts";
-import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {GameProfile} from "../entity/GameProfile.ts";
+import type {PacketTooLargeError} from "../../type/errors.ts";
 import {empty} from "../../utils/uit.ts";
+import {isDev} from "../../configs/RuntimeConfig.ts";
+import {Log} from "../../worker/log.ts";
+import {WSNetworkChannel} from "../../network/WSNetworkChannel.ts";
+import {CodecRegistry} from "../../network/CodecRegistry.ts";
+import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import {PacketHeader} from "../../network/PacketHeader.ts";
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {NetworkSide} from "../../network/NetworkSide.ts";
@@ -42,6 +45,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
         const type = this.registry.get(payload.type());
         if (!type) throw new Error(`[${this.side}] Unknown payload type: ${payload.type().id}`);
 
+        // P95 数据包大小为 64
         const size = payload.estimateSize?.() ?? 60;
         const writer = new BinaryWriter(size + 4);
         writer.writeInt8(PacketHeader.SERVER_BROADCAST);
@@ -97,6 +101,11 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
         this.checkAndSend(writer, codec, payload);
     }
 
+    protected override onLargePacket(err: PacketTooLargeError) {
+        if (isDev) throw err;
+        Log.error(`[Serve] ${err.message}`);
+    }
+
     protected override handleMessage(event: MessageEvent): void {
         const binary = new Uint8Array(event.data as ArrayBuffer);
         const reader = new BinaryReader(binary);
@@ -109,7 +118,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
             return;
         }
         if (header !== PacketHeader.C2S) {
-            console.warn(`[${this.side}] Unknown header: ${header}`);
+            console.warn(`[Server] Unknown header: ${header}`);
             return;
         }
 
@@ -137,7 +146,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
     }
 
     protected register() {
-        if (!this.secretKey) throw new Error(`Cannot register without a secret key`);
+        if (!this.secretKey) throw new Error(`[Server] Cannot register without a secret key`);
 
         const buf = new Uint8Array(1 + this.secretKey.length);
         buf[0] = PacketHeader.SERVER;

@@ -21,7 +21,7 @@ import {NbtTypes} from "../NbtTypes.ts";
 import {NbtSerialization} from "../NbtSerialization.ts";
 import type {NbtUint8Array} from "./NbtUint8Array.ts";
 import {Optional} from "../../utils/Optional.ts";
-import {ErrorResult, SuccessResult} from "../../serialization/result/DataResult.ts";
+import {ErrorResult, SuccessResult} from "../../serialization/DataResult.ts";
 import type {Codec} from "../../serialization/Codec.ts";
 
 

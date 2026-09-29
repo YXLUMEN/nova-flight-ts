@@ -1,14 +1,17 @@
-import {WSNetworkChannel} from "../../network/WSNetworkChannel.ts";
-import {CodecRegistry} from "../../network/CodecRegistry.ts";
 import type {Consumer, UUID} from "../../type/types.ts";
 import type {Payload} from "../../network/Payload.ts";
 import type {ClientChannel} from "./ClientChannel.ts";
+import type {PacketTooLargeError} from "../../type/errors.ts";
+import {error} from "@tauri-apps/plugin-log";
 import {empty} from "../../utils/uit.ts";
+import {parseUUID} from "../../utils/UUIDUtil.ts";
+import {isDev} from "../../configs/RuntimeConfig.ts";
+import {WSNetworkChannel} from "../../network/WSNetworkChannel.ts";
+import {CodecRegistry} from "../../network/CodecRegistry.ts";
 import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import {PacketHeader} from "../../network/PacketHeader.ts";
 import {NetworkSide} from "../../network/NetworkSide.ts";
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
-import {parseUUID} from "../../utils/UUIDUtil.ts";
 
 export class ClientNetworkChannel extends WSNetworkChannel implements ClientChannel {
     private readonly clientId: UUID;
@@ -29,6 +32,11 @@ export class ClientNetworkChannel extends WSNetworkChannel implements ClientChan
         writer.writeInt8(this.getSessionId());
 
         this.checkAndSend(writer, type, payload);
+    }
+
+    protected override onLargePacket(err: PacketTooLargeError) {
+        if (isDev) throw err;
+        error(`[Client] ${err}`).catch(console.error);
     }
 
     protected override handleMessage(event: MessageEvent): void {

@@ -1,12 +1,12 @@
-import {DataComponentType} from "./DataComponentType.ts";
+import type {Codec} from "../serialization/Codec.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {Optional} from "../utils/Optional.ts";
-import type {Codec} from "../serialization/Codec.ts";
+import {DataComponentType} from "./DataComponentType.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {Registries} from "../registry/Registries.ts";
 import {Codecs} from "../serialization/Codecs.ts";
-import {DataResult} from "../serialization/result/DataResult.ts";
+import {DataResult} from "../serialization/DataResult.ts";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 
 export class ComponentChanges {

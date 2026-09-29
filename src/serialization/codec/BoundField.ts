@@ -1,6 +1,6 @@
 import type {MapCodec} from "../MapCodec.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import type {DataResult} from "../result/DataResult.ts";
+import type {DataResult} from "../DataResult.ts";
 import type {Return} from "../../type/types.ts";
 
 export class BoundField<C, A> {

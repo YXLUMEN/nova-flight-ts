@@ -1,28 +1,28 @@
 import type {Item} from "./Item.ts";
 import type {Entity} from "../entity/Entity.ts";
-import {Items} from "./Items.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import type {TagKey} from "../registry/tag/TagKey.ts";
-import {SimpleComponentMap} from "../component/SimpleComponentMap.ts";
 import type {World} from "../world/World.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
-import {DataComponents} from "../component/DataComponents.ts";
-import {clamp} from "../utils/math/math.ts";
 import type {DataComponentType} from "../component/DataComponentType.ts";
 import type {LivingEntity} from "../entity/LivingEntity.ts";
-import {NbtCompound} from "../nbt/element/NbtCompound.ts";
-import {Registries} from "../registry/Registries.ts";
-import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import type {BinaryWriter} from "../serialization/BinaryWriter.ts";
 import type {BinaryReader} from "../serialization/BinaryReader.ts";
-import {ComponentChanges} from "../component/ComponentChanges.ts";
-import {PatchComponentMap} from "../component/PatchComponentMap.ts";
 import type {Consumer} from "../type/types.ts";
 import type {Codec} from "../serialization/Codec.ts";
+import {Items} from "./Items.ts";
+import {SimpleComponentMap} from "../component/SimpleComponentMap.ts";
+import {DataComponents} from "../component/DataComponents.ts";
+import {clamp} from "../utils/math/math.ts";
+import {NbtCompound} from "../nbt/element/NbtCompound.ts";
+import {Registries} from "../registry/Registries.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import {ComponentChanges} from "../component/ComponentChanges.ts";
+import {PatchComponentMap} from "../component/PatchComponentMap.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {Codecs} from "../serialization/Codecs.ts";
-import {DataResult} from "../serialization/result/DataResult.ts";
+import {DataResult} from "../serialization/DataResult.ts";
 
 
 export class ItemStack {

@@ -1,5 +1,8 @@
 import type {Codec, Decoder, Encoder} from "./Codec.ts";
-import {DataResult} from "./result/DataResult.ts";
+import type {BoundField} from "./codec/BoundField.ts";
+import type {MapCodec} from "./MapCodec.ts";
+import type {Return} from "../type/types.ts";
+import {DataResult} from "./DataResult.ts";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {NbtInt8} from "../nbt/element/NbtInt8.ts";
 import {NbtInt16} from "../nbt/element/NbtInt16.ts";
@@ -20,10 +23,7 @@ import {CodecImpl} from "./codec/CodecImpl.ts";
 import {FieldCodec} from "./codec/FieldCodec.ts";
 import {OptionalFieldCodec} from "./codec/OptionalFieldCodec.ts";
 import {GroupBuilder} from "./codec/GroupBuilder.ts";
-import type {BoundField} from "./codec/BoundField.ts";
-import type {MapCodec} from "./MapCodec.ts";
 import {Optional} from "../utils/Optional.ts";
-import type {Return} from "../type/types.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 
 

@@ -1,15 +1,15 @@
 import type {Payload} from "./Payload.ts";
-import {type CodecEntry, CodecRegistry} from "./CodecRegistry.ts";
-import {BinaryWriter} from "../serialization/BinaryWriter.ts";
-import type {Channel} from "./Channel.ts";
-import {sleep} from "../utils/uit.ts";
-import {PacketTooLargeError} from "../type/errors.ts";
 import type {NetworkSide} from "./NetworkSide.ts";
+import type {Channel} from "./Channel.ts";
+import type {CodecEntry, CodecRegistry} from "./CodecRegistry.ts";
+import {sleep} from "../utils/uit.ts";
+import {BinaryWriter} from "../serialization/BinaryWriter.ts";
+import {PacketTooLargeError} from "../type/errors.ts";
 import {RelayHandshake} from "./RelayHandshake.ts";
-
 
 export abstract class WSNetworkChannel implements Channel {
     public static readonly MAX_PACKET_SIZE = 6144;
+    public static readonly MAX_ESTIMATE = this.MAX_PACKET_SIZE - 16;
 
     public readonly side: NetworkSide;
     protected readonly registry: CodecRegistry;
@@ -35,7 +35,8 @@ export abstract class WSNetworkChannel implements Channel {
 
     protected sendRaw(buf: Uint8Array<ArrayBuffer>): void {
         if (buf.length > WSNetworkChannel.MAX_PACKET_SIZE) {
-            throw new PacketTooLargeError(buf.length, WSNetworkChannel.MAX_PACKET_SIZE);
+            this.onLargePacket(new PacketTooLargeError(buf.length, WSNetworkChannel.MAX_PACKET_SIZE));
+            return;
         }
 
         this.ws!.send(buf);
@@ -50,11 +51,14 @@ export abstract class WSNetworkChannel implements Channel {
         const buffer = writer.toUint8Array();
         if (buffer.length > WSNetworkChannel.MAX_PACKET_SIZE) {
             const max = WSNetworkChannel.MAX_PACKET_SIZE;
-            throw new PacketTooLargeError(buffer.length, max, {cause: payload.type()});
+            this.onLargePacket(new PacketTooLargeError(buffer.length, max, {cause: payload.type()}));
+            return;
         }
 
         this.ws!.send(buffer);
     }
+
+    protected abstract onLargePacket(err: PacketTooLargeError): void;
 
     public async connect(): Promise<void> {
         if (this.isConnected()) return;

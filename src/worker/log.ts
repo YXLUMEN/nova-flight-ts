@@ -1,8 +1,11 @@
 import {Worker2MainType} from "./WorkerMsgType.ts";
+import {isClient} from "../configs/RuntimeConfig.ts";
 
 export class Log {
     public static info(msg: string) {
         console.log(msg);
+        if (isClient) return;
+
         self.postMessage({
             w2m: Worker2MainType.LOG,
             level: 'info',

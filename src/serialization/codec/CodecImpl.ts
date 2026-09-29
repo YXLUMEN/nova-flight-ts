@@ -1,5 +1,5 @@
 import type {Codec, Decoder, Encoder} from "../Codec.ts";
-import {type DataResult} from "../result/DataResult.ts";
+import type {DataResult} from "../DataResult.ts";
 import type {NbtElement} from "../../nbt/element/NbtElement.ts";
 
 export class CodecImpl<A> implements Codec<A> {

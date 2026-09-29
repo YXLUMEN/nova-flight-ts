@@ -3,7 +3,7 @@ import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import type {Codec} from "../serialization/Codec.ts";
 import {stringHashCode} from "../utils/hash.ts";
 import {StringReader} from "../brigadier/StringReader.ts";
-import {DataResult} from "../serialization/result/DataResult.ts";
+import {DataResult} from "../serialization/DataResult.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {Codecs} from "../serialization/Codecs.ts";
 import {NbtString} from "../nbt/element/NbtString.ts";

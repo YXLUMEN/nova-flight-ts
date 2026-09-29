@@ -1,5 +1,5 @@
 import type {NbtElement} from "../nbt/element/NbtElement.ts";
-import type {DataResult} from "./result/DataResult.ts";
+import type {DataResult} from "./DataResult.ts";
 
 export interface Codec<A> {
     encode(value: A): NbtElement;

@@ -1,6 +1,6 @@
 import type {Codec} from "../Codec.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import {DataResult} from "../result/DataResult.ts";
+import {DataResult} from "../DataResult.ts";
 import {MapCodec} from "../MapCodec.ts";
 
 export class FieldCodec<A> extends MapCodec<A> {

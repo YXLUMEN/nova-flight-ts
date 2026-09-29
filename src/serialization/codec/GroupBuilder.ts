@@ -1,9 +1,9 @@
 import type {Codec} from "../Codec.ts";
-import {CodecImpl} from "./CodecImpl.ts";
 import type {BoundField} from "./BoundField.ts";
 import type {NbtElement} from "../../nbt/element/NbtElement.ts";
+import {CodecImpl} from "./CodecImpl.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import {DataResult} from "../result/DataResult.ts";
+import {DataResult} from "../DataResult.ts";
 
 /**
  * 结构体 codec 构建器：Codecs.group<C>(...) 收集 BoundField 后，

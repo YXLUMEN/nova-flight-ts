@@ -74,7 +74,7 @@ export abstract class ServerCommonHandler implements PacketListener {
         entries: Iterable<T>,
         c0: Return<T, P>,
         c1: Return<P[], B>,
-        maxSize = WSNetworkChannel.MAX_PACKET_SIZE - 14
+        maxSize = WSNetworkChannel.MAX_ESTIMATE
     ) {
         let currentSize = 0;
         const currentBatch: P[] = [];
@@ -105,7 +105,7 @@ export abstract class ServerCommonHandler implements PacketListener {
         entries: Iterable<T>,
         estimateSize: Return<T, number>,
         buildBatch: Return<T[], B>,
-        maxPacketSize = WSNetworkChannel.MAX_PACKET_SIZE - 14
+        maxPacketSize = WSNetworkChannel.MAX_ESTIMATE
     ) {
         let currentSize = 0;
         const currentBatch: T[] = [];

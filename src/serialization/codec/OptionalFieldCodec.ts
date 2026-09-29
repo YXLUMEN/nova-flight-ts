@@ -1,5 +1,5 @@
 import {Optional} from "../../utils/Optional.ts";
-import {DataResult} from "../result/DataResult.ts";
+import {DataResult} from "../DataResult.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {Codec} from "../Codec.ts";
 import {MapCodec} from "../MapCodec.ts";

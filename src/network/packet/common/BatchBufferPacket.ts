@@ -27,7 +27,7 @@ export class BatchBufferPacket implements Payload, BatchBuffer {
     }
 
     public static create(payloads: Iterable<Payload>, registry: CodecRegistry): BatchBufferPacket[] {
-        const maxSize = WSNetworkChannel.MAX_PACKET_SIZE - 16;
+        const maxSize = WSNetworkChannel.MAX_ESTIMATE;
         const batches: BatchBufferPacket[] = [];
         const writer = new BinaryWriter(9216); // MAX_PACKET_SIZE * 1.5
 

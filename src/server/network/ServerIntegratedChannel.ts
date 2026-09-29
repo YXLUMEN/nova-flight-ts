@@ -13,7 +13,7 @@ export class ServerIntegratedChannel implements ServerChannel {
     private readonly registry = CodecRegistry.S2C;
     private readonly sendQueue = new RingBuffer<Payload>(48);
 
-    private clientId: number = 2;
+    private clientId: number = 2; // 单机无意义
     private ctrl = new AbortController();
     private handler: BiConsumer<number, Payload> = empty;
 

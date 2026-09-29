@@ -1,5 +1,5 @@
-import type {Consumer, Return, Supplier} from "../../type/types.ts";
-import {Optional} from "../../utils/Optional.ts";
+import type {Consumer, Return, Supplier} from "../type/types.ts";
+import {Optional} from "../utils/Optional.ts";
 
 export abstract class DataResult<R> {
     public static success<R>(result: R): DataResult<R> {
