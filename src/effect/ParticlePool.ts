@@ -26,8 +26,6 @@ const COLOR_PAIR_LIMIT = 4096;
 const MIN_HALF_SIZE = 0.1;
 // 低于该半径不生成径向渐变, 退化为纯色
 const MIN_GRADIENT_HALF_SIZE = 1;
-// 圆形粒子低于该半径时按矩形绘制
-const MIN_CIRCLE_HALF_SIZE = 1.5;
 
 
 export class ParticlePool {
@@ -230,13 +228,8 @@ export class ParticlePool {
             const halfW = this.halfW[i] * shrink;
             if (halfW < MIN_HALF_SIZE) continue;
 
-            // 圆形半径过小时退化为矩形
             const shape = this.shape[i];
-            const circle = shape === ParticleShape.CIRCLE && halfW >= MIN_CIRCLE_HALF_SIZE;
-            const variant = circle
-                ? ParticleShape.CIRCLE
-                : shape === ParticleShape.TRIANGLE ? ParticleShape.TRIANGLE : ParticleShape.RECT;
-            const halfH = circle ? halfW : this.halfH[i] * shrink;
+            const halfH = shape === ParticleShape.CIRCLE ? halfW : this.halfH[i] * shrink;
 
             const x = lerp(alpha, this.px[i], this.cx[i]);
             const y = lerp(alpha, this.py[i], this.cy[i]);
@@ -247,8 +240,8 @@ export class ParticlePool {
             // 参考档位按“横/纵较大者”取, 贴图始终是正方形烘焙、按需拉伸
             const reference = this.referenceIndexOf(halfW > halfH ? halfW : halfH);
             const sprite = this.sprite(
-                this.spriteKey(variant, reference, this.colorPairId(color0, color1), flat),
-                variant, reference, color0, color1, flat
+                this.spriteKey(shape, reference, this.colorPairId(color0, color1), flat),
+                shape, reference, color0, color1, flat
             );
 
             ctx.drawImage(sprite, x - halfW, y - halfH, halfW * 2, halfH * 2);
