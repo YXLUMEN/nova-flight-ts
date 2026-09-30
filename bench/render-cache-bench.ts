@@ -1,6 +1,6 @@
 /**
  * RenderCache 性能基准
- * 运行方式：npm run dev 后访问 /bench/cache-bench.html
+ * 运行方式：npm run dev 后访问 /bench/render-cache-bench.html
  *
  * 四个视角回答"缓存与直接绘制差距有多大"：
  *  0. Canvas API 调用次数（确定性，不依赖计时）——每次"直接绘制"要打十几条指令，
@@ -104,7 +104,7 @@ class MissileProbe extends DecoyEntityRender {
         this.transform(ctx, e, a);
     }
 
-    public key(e: any): number {
+    public key(_e: any): number {
         return this.spriteKey();
     }
 
@@ -152,7 +152,6 @@ const missileFake = {
     getLerpPos: () => POS,
     getLerpYaw: () => 0.3,
     color: new EntityColor('#ffd75e'),
-    isIgnite: () => true,
 };
 
 // ---------- NoCache：每次都完整重建（缓存抖动的最坏情况） ----------
@@ -204,6 +203,7 @@ function makeCounter() {
         count("createGradient");
         return {addColorStop: () => count("addColorStop")};
     };
+    // TODO 包含属性设置
     const ctx: any = {
         save: () => count("save"), restore: () => count("restore"),
         translate: () => count("translate"), rotate: () => count("rotate"), scale: () => count("scale"),
@@ -304,7 +304,6 @@ const renderCacheMissile = (ctx: any, e: any) => missileProbe.render(e, ctx, 0.5
 
 const directMissile = () => renderDirectMissile(tctx, missileFake);
 const cacheMissile = () => renderCacheMissile(tctx, missileFake);
-const missileCached = () => renderCacheMissile(tctx, missileFake);
 
 // ---------- 命中率模拟 ----------
 function mulberry32(seed: number): () => number {

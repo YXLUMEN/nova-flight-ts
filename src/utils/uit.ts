@@ -181,8 +181,3 @@ export function any(): boolean {
 export function none(): boolean {
     return false;
 }
-
-/** 需要懒创建的场景使用 */
-export function newSet<T>(): Set<T> {
-    return new Set();
-}

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>PackedSpatialIndex 基准</title>
+    <style>
+        body {
+            font-family: ui-monospace, Consolas, monospace;
+            background: #14161a;
+            color: #e8e8e8;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 18px;
+        }
+
+        h2 {
+            font-size: 15px;
+            margin-top: 28px;
+            border-bottom: 1px solid #3a3f47;
+            padding-bottom: 4px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        td, th {
+            border: 1px solid #3a3f47;
+            padding: 3px 10px;
+            text-align: right;
+        }
+
+        td:first-child, th:first-child {
+            text-align: left;
+        }
+
+        .dim {
+            color: #9ca3af;
+        }
+
+        p {
+            margin: 4px 0;
+        }
+
+        .note {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .good {
+            color: #4ade80;
+        }
+
+        .bad {
+            color: #f87171;
+        }
+    </style>
+</head>
+<body>
+<h1>PackedSpatialIndex 基准</h1>
+<p class="dim">
+    1 桶数 vs 实体数 &nbsp;|&nbsp; 2 世界尺寸/分布对照 &nbsp;|&nbsp; 3 插入吞吐 &amp; 冷启动分配 &nbsp;|&nbsp;
+    4 每帧移动量 &nbsp;|&nbsp; 5 查询吞吐 vs 区域 &nbsp;|&nbsp; 6 cellSize 扫描 &nbsp;|&nbsp;
+    7 vs GridSpatialIndex &nbsp;|&nbsp; 8 SetPool 账目 &nbsp;|&nbsp; 9 正确性自检 &nbsp;|&nbsp; 10 堆内存 &nbsp;|&nbsp; 11 世界尺寸扫描
+</p>
+<p class="dim">基准世界与生产一致：World.MAP_WIDTH x MAP_HEIGHT = 1760x1120，margin 160，cellSize 80。</p>
+<p id="env" class="note"></p>
+<p class="note">运行中… 约 10~40 秒（与机器和 cellSize 扫描有关），结果同步输出到控制台。</p>
+<div id="out"></div>
+<script type="module" src="./spatial-index-bench.ts"></script>
+</body>
+</html>

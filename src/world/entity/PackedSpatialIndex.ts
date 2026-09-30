@@ -2,20 +2,21 @@ import type {Consumer, Predicate} from "../../type/types.ts";
 import type {EntityLike} from "./EntityLike.ts";
 import type {AABB} from "../../utils/math/AABB.ts";
 import type {EntityIndex} from "./EntityIndex.ts";
-import {newSet} from "../../utils/uit.ts";
+import {SetPool} from "../../utils/collection/SetPool.ts";
 
 export class PackedSpatialIndex<T extends EntityLike> implements EntityIndex<T> {
-    /** half 硬上限: 47,453,132 */
+    // half 硬上限: 47,453,132
     private static readonly MAX_HALF = Math.floor((Math.sqrt(Number.MAX_SAFE_INTEGER + 1) - 1) / 2);
 
     private readonly cellSize: number;
 
-    /** 单轴半宽（格数）。cell 坐标会被 clamp 到 [-half, half]，共 2*half+1 列/行 */
+    // 单轴半宽（格数）。cell 坐标会被 clamp 到 [-half, half]，共 2*half+1 列/行
     private readonly half: number;
 
-    /** stride = 2*half + 1，保证 (cx+half)*stride 与 (cy+half) 互不串位 */
+    // stride = 2*half + 1，保证 (cx+half)*stride 与 (cy+half) 互不串位
     private readonly stride: number;
 
+    private readonly pool: SetPool<T> = new SetPool(16, 320);
     private readonly buckets: Map<number, Set<T>> = new Map();
     private readonly entityCells: Map<T, number[]> = new Map();
 
@@ -36,6 +37,7 @@ export class PackedSpatialIndex<T extends EntityLike> implements EntityIndex<T> 
         this.cellSize = cellSize;
         this.half = half;
         this.stride = half * 2 + 1; // keyMax = 4·half·(half+1) ≤ 2^53−1
+        this.acquire = this.acquire.bind(this);
     }
 
     private static assert(cellSize: number, half: number): void {
@@ -74,7 +76,7 @@ export class PackedSpatialIndex<T extends EntityLike> implements EntityIndex<T> 
 
             for (let c = c0; c <= c1; c++) {
                 keys.push(key);
-                this.buckets.getOrInsertComputed(key, newSet).add(entity);
+                this.buckets.getOrInsertComputed(key, this.acquire).add(entity);
                 key += this.stride; // 列步进
             }
             keyRow += 1; // 行步进
@@ -91,7 +93,10 @@ export class PackedSpatialIndex<T extends EntityLike> implements EntityIndex<T> 
             if (!bucket) continue;
 
             bucket.delete(entity);
-            if (bucket.size === 0) this.buckets.delete(key);
+            if (bucket.size === 0) {
+                this.buckets.delete(key);
+                this.pool.release(bucket);
+            }
         }
         this.entityCells.delete(entity);
         return true;
@@ -151,8 +156,14 @@ export class PackedSpatialIndex<T extends EntityLike> implements EntityIndex<T> 
     }
 
     public clear(): void {
+        for (const bucket of this.buckets.values()) {
+            this.pool.release(bucket);
+        }
         this.buckets.clear();
         this.entityCells.clear();
-        this.searchGeneration = 0;
+    }
+
+    private acquire() {
+        return this.pool.acquire();
     }
 }

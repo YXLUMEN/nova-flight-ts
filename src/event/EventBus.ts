@@ -1,7 +1,6 @@
 import type {Consumer} from "../type/types.ts";
 import type {AppEvents} from "./AppEvents.ts";
 import type {GameEvent} from "./events/GameEvent.ts";
-import {newSet} from "../utils/uit.ts";
 
 export class EventBus {
     private readonly listeners: Map<string, Set<Consumer<any>>> = new Map();
@@ -64,6 +63,10 @@ export class EventBus {
     public clear() {
         this.listeners.clear();
     }
+}
+
+function newSet<T>(): Set<T> {
+    return new Set();
 }
 
 export const appEvent = new EventBus();

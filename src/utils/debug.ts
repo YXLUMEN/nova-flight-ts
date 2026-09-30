@@ -1,4 +1,4 @@
-import {AtomicInteger} from "../src/utils/collection/AtomicInteger.ts";
+import {AtomicInteger} from "./collection/AtomicInteger.ts";
 
 
 export class ObjGCWatchdog<T extends Object> {

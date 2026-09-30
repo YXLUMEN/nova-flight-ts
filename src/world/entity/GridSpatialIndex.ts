@@ -38,7 +38,7 @@ export class GridSpatialIndex<T extends EntityLike> implements EntityIndex<T> {
                 .map(() => new Set()));
     }
 
-    private toCoord(value: number, maxIndex: number): number {
+    private cellOf(value: number, maxIndex: number): number {
         return Math.max(0, Math.min(maxIndex, Math.floor((value + this.margin) / this.cellSize)));
     }
 
@@ -48,10 +48,10 @@ export class GridSpatialIndex<T extends EntityLike> implements EntityIndex<T> {
             box.maxY < lo || box.minY > this.mHeight
         ) return null;
 
-        const c0 = this.toCoord(box.minX, this.cols - 1);
-        const r0 = this.toCoord(box.minY, this.rows - 1);
-        const c1 = this.toCoord(box.maxX, this.cols - 1);
-        const r1 = this.toCoord(box.maxY, this.rows - 1);
+        const c0 = this.cellOf(box.minX, this.cols - 1);
+        const r0 = this.cellOf(box.minY, this.rows - 1);
+        const c1 = this.cellOf(box.maxX, this.cols - 1);
+        const r1 = this.cellOf(box.maxY, this.rows - 1);
 
         const cells: number[] = [];
         for (let r = r0; r <= r1; r++) {
@@ -86,10 +86,10 @@ export class GridSpatialIndex<T extends EntityLike> implements EntityIndex<T> {
     }
 
     public* search(region: AABB) {
-        const c0 = this.toCoord(region.minX, this.cols - 1);
-        const r0 = this.toCoord(region.minY, this.rows - 1);
-        const c1 = this.toCoord(region.maxX, this.cols - 1);
-        const r1 = this.toCoord(region.maxY, this.rows - 1);
+        const c0 = this.cellOf(region.minX, this.cols - 1);
+        const r0 = this.cellOf(region.minY, this.rows - 1);
+        const c1 = this.cellOf(region.maxX, this.cols - 1);
+        const r1 = this.cellOf(region.maxY, this.rows - 1);
 
         if (c0 === c1 && r0 === r1) {
             for (const entity of this.grid[r0][c0]) {

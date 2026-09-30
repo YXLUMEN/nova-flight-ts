@@ -1,12 +1,12 @@
 import {World} from "../world/World.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
-import {type NovaFlightServer} from "./NovaFlightServer.ts";
+import type {NovaFlightServer} from "./NovaFlightServer.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import {SoundEventS2CPacket} from "../network/packet/s2c/SoundEventS2CPacket.ts";
 import {StopSoundS2CPacket} from "../network/packet/s2c/StopSoundS2CPacket.ts";
-import {type Entity} from "../entity/Entity.ts";
+import type {Entity} from "../entity/Entity.ts";
 import {EntityType} from "../entity/EntityType.ts";
 import {EntityList} from "../world/entity/EntityList.ts";
 import {ServerEntityManager} from "../world/entity/ServerEntityManager.ts";
@@ -24,7 +24,7 @@ import type {Explosion} from "../world/element/explosion/Explosion.ts";
 import {ExplosionS2CPacket} from "../network/packet/s2c/ExplosionS2CPacket.ts";
 import {ParticleS2CPacket} from "../network/packet/s2c/ParticleS2CPacket.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
-import {type VisualEffect} from "../effect/VisualEffect.ts";
+import type {VisualEffect} from "../effect/VisualEffect.ts";
 import {EffectCreateS2CPacket} from "../network/packet/s2c/EffectCreateS2CPacket.ts";
 import {GameOverS2CPacket} from "../network/packet/s2c/GameOverS2CPacket.ts";
 import {DifficultChangeS2CPacket} from "../network/packet/s2c/DifficultChangeS2CPacket.ts";
@@ -34,7 +34,7 @@ import {EntityHitResult} from "../world/collision/EntityHitResult.ts";
 import {MobBulletEntity} from "../entity/projectile/MobBulletEntity.ts";
 import {MobMissileEntity} from "../entity/projectile/MobMissileEntity.ts";
 import type {ExplosionConfigs} from "../world/element/explosion/ExplosionConfigs.ts";
-import {type ParticleEffectType} from "../effect/ParticleEffectType.ts";
+import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
 import {PreparedParticleS2CPacket} from "../network/packet/s2c/PreparedParticleS2CPacket.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
@@ -50,7 +50,7 @@ export class ServerWorld extends World implements NbtSerializable {
 
     private readonly entities: EntityList = new EntityList();
     private readonly entityManager: ServerEntityManager<Entity>;
-    private readonly trackedEntities = new Map<number, EntityTrackerEntry>();
+    private readonly trackedEntities: Map<number, EntityTrackerEntry> = new Map();
 
     public constructor(registryManager: RegistryManager, server: NovaFlightServer) {
         super(registryManager, false);

@@ -39,7 +39,7 @@ export class ModelResource implements ResourceModule {
             modelAbsPaths.set(key, abs);
         });
 
-        const pool = new PromisePool<NormalizedJson>(16);
+        const pool = new PromisePool<NormalizedJson>(32);
         const job = async (key: string, abs: string): Promise<NormalizedJson> => {
             const text = await readTextFile(abs);
             const json = JSON.parse(text);

@@ -4,13 +4,40 @@
     <meta charset="utf-8">
     <title>RenderCache 语义测试</title>
     <style>
-        body { font-family: ui-monospace, Consolas, monospace; background: #14161a; color: #e8e8e8; padding: 20px; }
-        h1 { font-size: 18px; }
-        table { border-collapse: collapse; margin-top: 12px; }
-        td, th { border: 1px solid #3a3f47; padding: 4px 12px; text-align: left; }
-        .pass { color: #4ade80; }
-        .fail { color: #f87171; }
-        #summary { font-weight: bold; margin-top: 12px; }
+        body {
+            font-family: ui-monospace, Consolas, monospace;
+            background: #14161a;
+            color: #e8e8e8;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 18px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        td, th {
+            border: 1px solid #3a3f47;
+            padding: 4px 12px;
+            text-align: left;
+        }
+
+        .pass {
+            color: #4ade80;
+        }
+
+        .fail {
+            color: #f87171;
+        }
+
+        #summary {
+            font-weight: bold;
+            margin-top: 12px;
+        }
     </style>
 </head>
 <body>
@@ -18,6 +45,6 @@
 <p id="env"></p>
 <div id="summary"></div>
 <table id="result"></table>
-<script type="module" src="cache.test.ts"></script>
+<script src="cache.test.ts" type="module"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 import type {ResourceModule} from "./ResourceModule.ts";
-import {resolve, resolveResource} from "@tauri-apps/api/path";
+import {join, resolveResource} from "@tauri-apps/api/path";
 import {type DirEntry, exists, readDir, readTextFile} from "@tauri-apps/plugin-fs";
 import {warn} from "@tauri-apps/plugin-log";
 import {PromisePool} from "../utils/collection/PromisePool.ts";
@@ -56,8 +56,7 @@ export class LangResource implements ResourceModule, SettingGuard<string> {
             throw new Error(`Lang ${lang} not found`);
         }
 
-        const targetRoot = await resolve(root, lang);
-
+        const targetRoot = await join(root, lang);
         if (!await exists(targetRoot)) {
             throw new Error(`Lang ${lang} not found`);
         }
@@ -74,7 +73,7 @@ export class LangResource implements ResourceModule, SettingGuard<string> {
 
         if (files.length === 0) return;
 
-        const pool = new PromisePool<[string, unknown][]>();
+        const pool = new PromisePool<[string, unknown][]>(16);
         for (const file of files) {
             pool.spawn(this.loadFile, targetRoot, file);
         }
@@ -84,19 +83,19 @@ export class LangResource implements ResourceModule, SettingGuard<string> {
 
         for (const result of results) {
             if (result.status === 'rejected') {
-                await warn(`[Client] Error while load ${lang}: ${result.reason}`);
+                void warn(`[Client] Error while load ${lang}: ${result.reason}`);
                 continue;
             }
 
             const entries = result.value;
             if (!Array.isArray(entries)) {
-                await warn(`[Client] Lang entry not array.`);
+                void warn(`[Client] Lang entry not array.`);
                 continue;
             }
 
             for (const [key, value] of entries) {
                 if (typeof value !== 'string') {
-                    await warn(`[Client] Invalid value ${value} in ${lang}`);
+                    void warn(`[Client] Invalid value ${value} in ${lang}`);
                     continue;
                 }
                 this.data.set(key, value);
@@ -105,21 +104,22 @@ export class LangResource implements ResourceModule, SettingGuard<string> {
     }
 
     private async loadFile(root: string, file: DirEntry) {
-        const path = await resolve(root, file.name);
+        const path = await join(root, file.name);
         const raw = await readTextFile(path);
-        const json = JSON.parse(raw);
+        const json: unknown = JSON.parse(raw);
+
+        if (typeof json !== 'object' || json == null) {
+            throw new TypeError('Invalid lang formate');
+        }
 
         const entries = Object.entries(json);
-        const resolves: [string, unknown][] = [];
-
         const i = file.name.lastIndexOf('.');
         const name = i < 0 ? file.name : file.name.substring(0, i);
 
         for (const entry of entries) {
             entry[0] = `${name}.${entry[0]}`;
-            resolves.push(entry);
         }
-        return resolves;
+        return entries;
     }
 
     public unload(): void {

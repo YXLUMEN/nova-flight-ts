@@ -1,12 +1,14 @@
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {ResourceModule} from "./ResourceModule.ts";
-import {RegistryKeys} from "../registry/RegistryKeys.ts";
+import type {Identifier} from "../registry/Identifier.ts";
+import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
+import {warn} from "@tauri-apps/plugin-log";
+import {convertFileSrc} from "@tauri-apps/api/core";
 import {resolveResource} from "@tauri-apps/api/path";
 import {readTextFile} from "@tauri-apps/plugin-fs";
-import type {Identifier} from "../registry/Identifier.ts";
-import {convertFileSrc} from "@tauri-apps/api/core";
-import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
+import {RegistryKeys} from "../registry/RegistryKeys.ts";
 import {Resources} from "./Resources.ts";
+
 
 export class AudioResource implements ResourceModule {
     public readonly buffers = new Map<Identifier, string>();
@@ -29,7 +31,7 @@ export class AudioResource implements ResourceModule {
                 const audioEntry = entry['file'];
 
                 if (!entry || !audioEntry) {
-                    console.warn(`AudioID ${id} not found in audios.json`);
+                    void warn(`AudioID ${id} not found in audios.json`);
                     continue;
                 }
 

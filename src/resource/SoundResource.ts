@@ -35,9 +35,10 @@ export class SoundResource implements ResourceModule {
         const mapped = json as Record<string, any>;
         const pool = new PromisePool();
         const buffersMap = new Map<Identifier, AudioBuffer[]>();
+        const root = 'resources/nova-flight/sounds';
 
         const job = async (buffers: AudioBuffer[], soundPath: string) => {
-            const buffer = await this.decodeAudios(soundPath, audioContext);
+            const buffer = await this.decodeAudios(root, soundPath, audioContext);
             if (buffer) buffers.push(buffer);
         };
 
@@ -80,17 +81,17 @@ export class SoundResource implements ResourceModule {
         deepFreeze(this.buffers);
     }
 
-    private async decodeAudios(path: string, audioContext: AudioContext): Promise<AudioBuffer | null> {
+    private async decodeAudios(root: string, filename: string, audioContext: AudioContext): Promise<AudioBuffer | null> {
         try {
-            let res = await resolveResource(`resources/nova-flight/sounds/${path}.ogg`);
+            let res = await resolveResource(`${root}/${filename}.ogg`);
             if (!await exists(res)) {
-                res = await resolveResource(`resources/nova-flight/sounds/${path}.wav`);
+                res = await resolveResource(`${root}/${filename}.wav`);
             }
 
             const fileData = await readFile(res);
             return await audioContext.decodeAudioData(fileData.buffer);
         } catch (e) {
-            console.warn(`Failed to load sound: ${path}`, e);
+            console.warn(`Failed to load sound: ${filename}`, e);
             return null;
         }
     }
