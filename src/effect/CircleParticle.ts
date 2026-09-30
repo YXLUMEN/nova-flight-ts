@@ -1,5 +1,5 @@
 import {MutVec2} from "../utils/math/MutVec2.ts";
-import {lerp, PI2} from "../utils/math/math.ts";
+import {lerp, TAU} from "../utils/math/math.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {decodeFromInt16, decodeFromUnsignedByte, encodeToInt16, encodeToUnsignedByte} from "../utils/net_util.ts";
@@ -91,7 +91,7 @@ export class CircleParticle implements VisualEffect {
         }
 
         ctx.beginPath();
-        ctx.arc(x, y, r, 0, PI2);
+        ctx.arc(x, y, r, 0, TAU);
         ctx.fill();
     }
 

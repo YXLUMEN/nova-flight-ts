@@ -1,5 +1,5 @@
 import type {BulletEntity} from "../../../entity/projectile/BulletEntity.ts";
-import {PI2} from "../../../utils/math/math.ts";
+import {TAU} from "../../../utils/math/math.ts";
 import {AABB} from "../../../utils/math/AABB.ts";
 import {MapRenderCache} from "../cache/MapRenderCache.ts";
 import type {EntityType} from "../../../entity/EntityType.ts";
@@ -17,12 +17,12 @@ export class BulletEntityRender extends CachedEntityRender<number, BulletEntity>
         ctx.fillStyle = entity.color.color;
 
         ctx.beginPath();
-        ctx.arc(0, 0, r, 0, PI2);
+        ctx.arc(0, 0, r, 0, TAU);
         ctx.fill();
 
         if (entity.color.edgeHex !== 0) {
             ctx.strokeStyle = entity.color.edge;
-            ctx.arc(0, 0, r + 1, 0, PI2);
+            ctx.arc(0, 0, r + 1, 0, TAU);
         }
 
         ctx.stroke();

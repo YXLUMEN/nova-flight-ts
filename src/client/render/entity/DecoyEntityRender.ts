@@ -1,12 +1,12 @@
 import type {DecoyEntity} from "../../../entity/DecoyEntity.ts";
-import {PI2} from "../../../utils/math/math.ts";
+import {TAU} from "../../../utils/math/math.ts";
 import type {SpriteCtx} from "../cache/LRURenderCache.ts";
 import {AABB} from "../../../utils/math/AABB.ts";
 import {SingleCache} from "../cache/SingleCache.ts";
 import {CachedEntityRender} from "../cache/CachedEntityRender.ts";
 
 export class DecoyEntityRender extends CachedEntityRender<number, DecoyEntity> {
-    private static readonly PULSE_PERIOD = PI2 / 0.25;
+    private static readonly PULSE_PERIOD = TAU / 0.25;
     private readonly bounding = new AABB(-32, -32, 32, 32);
 
     public constructor() {
@@ -42,7 +42,7 @@ export class DecoyEntityRender extends CachedEntityRender<number, DecoyEntity> {
         coreGradient.addColorStop(1, 'rgba(255,255,200,0)');
         ctx.fillStyle = coreGradient;
         ctx.beginPath();
-        ctx.arc(0, 0, size * 0.6, 0, PI2);
+        ctx.arc(0, 0, size * 0.6, 0, TAU);
         ctx.fill();
     }
 
@@ -54,7 +54,7 @@ export class DecoyEntityRender extends CachedEntityRender<number, DecoyEntity> {
         super.transform(ctx, entity, alpha);
 
         const pulse = 1 + Math.sin((entity.age % DecoyEntityRender.PULSE_PERIOD)
-            / DecoyEntityRender.PULSE_PERIOD * PI2) * 0.1;
+            / DecoyEntityRender.PULSE_PERIOD * TAU) * 0.1;
 
         ctx.rotate(entity.age * 0.02);
         ctx.scale(pulse, pulse);

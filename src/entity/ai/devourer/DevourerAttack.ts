@@ -1,5 +1,5 @@
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
-import {HALF_PI, PI2, rand, randInt} from "../../../utils/math/math.ts";
+import {HALF_PI, TAU, rand, randInt} from "../../../utils/math/math.ts";
 import type {Entity} from "../../Entity.ts";
 import type {DevourerBoss} from "../../mob/DevourerBoss.ts";
 import {DevourerPhase} from "./DevourerBossAI.ts";
@@ -21,10 +21,10 @@ export class DevourerAttack {
         new FireWave(1, 14, 0, true, 0, 3.2),
         new FireWave(8, 11, 0, false, 0, 1.2),
         new FireWave(10, 8, 0, false, 0, 1.4),
-        new FireWave(6, 9, 8, false, 0, PI2),
+        new FireWave(6, 9, 8, false, 0, TAU),
         new FireWave(4, 7, 0, true, 0, 1.6),
-        new FireWave(6, 12, 0, false, 0, PI2 * 0.6),
-        new FireWave(5, 10, 6, false, 0, PI2),
+        new FireWave(6, 12, 0, false, 0, TAU * 0.6),
+        new FireWave(5, 10, 6, false, 0, TAU),
     ];
 
     public constructor(entity: DevourerBoss) {

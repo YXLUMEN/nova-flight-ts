@@ -7,7 +7,7 @@ export class MutAABB extends AABB {
     declare public maxX: number;
     declare public maxY: number;
 
-    public set(x1: number, y1: number, x2 = x1, y2 = y1): MutAABB {
+    public set(x1: number, y1: number, x2 = x1, y2 = y1): this {
         this.minX = Math.min(x1, x2);
         this.minY = Math.min(y1, y2);
         this.maxX = Math.max(x1, x2);
@@ -15,7 +15,7 @@ export class MutAABB extends AABB {
         return this;
     }
 
-    public offset(x: number, y: number): MutAABB {
+    public offset(x: number, y: number): this {
         this.minX += x;
         this.minY += y;
         this.maxX += x;
@@ -23,7 +23,7 @@ export class MutAABB extends AABB {
         return this;
     }
 
-    public offsetByBlockPos(blockPos: BlockPos): MutAABB {
+    public offsetByBlockPos(blockPos: BlockPos): this {
         this.minX += blockPos.x;
         this.minY += blockPos.y;
         this.maxX += blockPos.x;
@@ -31,11 +31,19 @@ export class MutAABB extends AABB {
         return this;
     }
 
-    public expand(x: number, y: number): MutAABB {
+    public expand(x: number, y: number): this {
         this.minX -= x;
         this.minY -= y;
         this.maxX += x;
         this.maxY += y;
+        return this;
+    }
+
+    public toCenter(cx: number, cy: number, halfWidth: number, halfHeight: number): this {
+        this.minX = cx - halfWidth;
+        this.minY = cy - halfHeight;
+        this.maxX = cx + halfWidth;
+        this.maxY = cy + halfHeight;
         return this;
     }
 }

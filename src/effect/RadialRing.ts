@@ -1,5 +1,5 @@
 import type {VisualEffect} from "./VisualEffect.ts";
-import {lerp, PI2} from "../utils/math/math.ts";
+import {lerp, TAU} from "../utils/math/math.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
@@ -62,7 +62,7 @@ export class RadialRing implements VisualEffect {
         ctx.strokeStyle = this.color;
         ctx.lineWidth = Math.max(1, (this.r1 - this.r0) * 0.04 * (1 - k));
         ctx.beginPath();
-        ctx.arc(this.center.x, this.center.y, r, 0, PI2);
+        ctx.arc(this.center.x, this.center.y, r, 0, TAU);
         ctx.stroke();
         ctx.restore();
     }

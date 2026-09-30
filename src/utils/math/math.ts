@@ -30,9 +30,9 @@ export function squareDist(aX: number, aY: number, bX: number, bY: number) {
 }
 
 export function wrapRadians(angle: number) {
-    angle = angle % (PI2);
-    if (angle > Math.PI) angle -= PI2;
-    if (angle < -Math.PI) angle += PI2;
+    angle = angle % (TAU);
+    if (angle > Math.PI) angle -= TAU;
+    if (angle < -Math.PI) angle += TAU;
     return angle;
 }
 
@@ -138,7 +138,7 @@ export function assertClamp(value: number, min: number, max: number) {
     if (value > max) throw new RangeError('default must smaller than max');
 }
 
-/** 平滑一维值噪声, 返回 [-1, 1]. 用于生成连续可导的震动轨迹 */
+// 平滑一维值噪声, 返回 [-1, 1]
 export function hash1(n: number): number {
     const x = Math.sin(n * 12.9898) * 43758.5453;
     return (x - Math.floor(x)) * 2 - 1;
@@ -151,5 +151,5 @@ export function noise1(x: number): number {
     return hash1(i) * (1 - u) + hash1(i + 1) * u;
 }
 
-export const PI2 = Math.PI * 2;
+export const TAU = Math.PI * 2;
 export const HALF_PI = Math.PI / 2;

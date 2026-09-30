@@ -8,7 +8,7 @@ import type {EntityType} from "./EntityType.ts";
 import type {Attribute} from "./attribute/Attribute.ts";
 import type {AttributeInstance} from "./attribute/AttributeInstance.ts";
 import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
-import {clamp, PI2} from "../utils/math/math.ts";
+import {clamp, TAU} from "../utils/math/math.ts";
 import {Entity} from "./Entity.ts";
 import {StatusEffectInstance} from "./effect/StatusEffectInstance.ts";
 import {DataTracker, type DataTrackerBuilder} from "./data/DataTracker.ts";
@@ -91,11 +91,11 @@ export abstract class LivingEntity extends Entity {
         }
 
         while (this.getYaw() - this.prevYaw < -Math.PI) {
-            this.prevYaw -= PI2;
+            this.prevYaw -= TAU;
         }
 
         while (this.getYaw() - this.prevYaw >= Math.PI) {
-            this.prevYaw += PI2;
+            this.prevYaw += TAU;
         }
 
         this.tickCramming();

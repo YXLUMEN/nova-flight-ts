@@ -1,4 +1,4 @@
-import {clamp, HALF_PI, lerp, PI2} from "../../../utils/math/math.ts";
+import {clamp, HALF_PI, lerp, TAU} from "../../../utils/math/math.ts";
 import type {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {ItemStack} from "../../../item/ItemStack.ts";
 import {Weapon} from "../../../item/weapon/Weapon.ts";
@@ -83,7 +83,7 @@ export class Crosshair {
         if (!this.reloading && this.maxSpread > 0 && RuntimeConfig.crosshairRecoil) {
             const cooldownDrop = this.prevCooldownRatio - ratio;
             if (cooldownDrop > 0.3) {
-                const angle = Math.random() * PI2;
+                const angle = Math.random() * TAU;
                 const strength = 1 + cooldownDrop * this.maxSpread;
                 this.recoilX = Math.cos(angle) * strength;
                 this.recoilY = Math.sin(angle) * strength;
@@ -237,11 +237,11 @@ export class Crosshair {
 
     private renderReload(ctx: CanvasRenderingContext2D, client: NovaFlightClient): void {
         const {x, y} = client.input.getScreenPointer();
-        const endAngle = HALF_PI + PI2 * this.displayRatio;
+        const endAngle = HALF_PI + TAU * this.displayRatio;
 
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(x, y, 10, 0, PI2);
+        ctx.arc(x, y, 10, 0, TAU);
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
         ctx.stroke();
 
@@ -308,7 +308,7 @@ export class Crosshair {
             ctx.setLineDash([4, 4]);
         }
         ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, PI2);
+        ctx.arc(cx, cy, radius, 0, TAU);
         ctx.stroke();
         ctx.setLineDash([]);
 
@@ -383,7 +383,7 @@ export class Crosshair {
         ctx.shadowBlur = (readyGlow || c > 0.8) ? 14 : (shadowBlur * 0.6);
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(cx, cy, dotRadius, 0, PI2);
+        ctx.arc(cx, cy, dotRadius, 0, TAU);
         ctx.fill();
 
         ctx.shadowBlur = 0;
@@ -403,7 +403,7 @@ export class Crosshair {
         ctx.strokeStyle = color;
         ctx.shadowColor = color;
         ctx.beginPath();
-        ctx.arc(cx, cy, 8, 0, PI2);
+        ctx.arc(cx, cy, 8, 0, TAU);
         ctx.stroke();
 
         if (heatRatio > 1E-3) {
@@ -417,7 +417,7 @@ export class Crosshair {
 
             const totalDots = 20;
             const visibleDots = Math.max(1, Math.round(heatRatio * totalDots));
-            const angleStep = PI2 / totalDots;
+            const angleStep = TAU / totalDots;
 
             ctx.beginPath();
             for (let i = 0; i < visibleDots; i++) {
@@ -542,7 +542,7 @@ export class Crosshair {
         ctx.shadowBlur = isFiring ? 14 : lerp(t, 1, 7);
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(cx, cy, 1.5 + t * 0.5, 0, PI2);
+        ctx.arc(cx, cy, 1.5 + t * 0.5, 0, TAU);
         ctx.fill();
 
         ctx.shadowBlur = 0;

@@ -1,5 +1,5 @@
 import type {MobEntity} from "../../entity/mob/MobEntity.ts";
-import {lerp, PI2} from "../../utils/math/math.ts";
+import {lerp, TAU} from "../../utils/math/math.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
 
@@ -61,7 +61,7 @@ export class BallisticCalculator {
         ctx.save();
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(tPos.x, tPos.y, 15, 0, PI2);
+        ctx.arc(tPos.x, tPos.y, 15, 0, TAU);
 
         ctx.strokeStyle = 'yellow';
         ctx.moveTo(leadX - 5, leadY);

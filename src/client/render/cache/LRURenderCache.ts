@@ -9,7 +9,7 @@ export class LRURenderCache<K> implements RenderCache<K> {
     public constructor(capacity: number = 128) {
         this.sprites = new MemoryLRU(
             capacity,
-            (val) => val.value?.close()
+            (_, val) => val?.close()
         );
     }
 

@@ -40,22 +40,7 @@ export class MissileEntityRender extends CachedEntityRender<number, MissileEntit
         if (!entity.isIgnite()) return;
 
         if (!this.flame) {
-            this.flame = buildSprite(
-                this.flameBounding,
-                (spriteCtx) => {
-                    const g = spriteCtx.createLinearGradient(0, 0, -4, 0);
-                    g.addColorStop(0, "rgb(255 149 83 / 0.9)");
-                    g.addColorStop(1, "rgb(255 200 120 / 0.5)");
-                    spriteCtx.fillStyle = g;
-                    spriteCtx.beginPath();
-                    spriteCtx.moveTo(0, -3);
-                    spriteCtx.lineTo(-4, 0);
-                    spriteCtx.lineTo(0, 3);
-                    spriteCtx.closePath();
-                    spriteCtx.fill();
-                },
-                null
-            );
+            this.flame = buildSprite(this.flameBounding, this.buildFlame);
         }
 
         const len = 4 + Math.random() * 4;
@@ -70,5 +55,18 @@ export class MissileEntityRender extends CachedEntityRender<number, MissileEntit
         super.clearCache();
         this.flame?.close();
         this.flame = null;
+    }
+
+    private buildFlame(ctx: SpriteCtx) {
+        const g = ctx.createLinearGradient(0, 0, -4, 0);
+        g.addColorStop(0, "rgb(255 149 83 / 0.9)");
+        g.addColorStop(1, "rgb(255 200 120 / 0.5)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.moveTo(0, -3);
+        ctx.lineTo(-4, 0);
+        ctx.lineTo(0, 3);
+        ctx.closePath();
+        ctx.fill();
     }
 }

@@ -4,7 +4,7 @@ import type {ViewRect} from "./Camera.ts";
 import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 import type {Entity} from "../../entity/Entity.ts";
-import {PI2} from "../../utils/math/math.ts";
+import {TAU} from "../../utils/math/math.ts";
 import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {isBoxInView} from "../../utils/render/render.ts";
 import {EntityRenderers} from "./entity/EntityRenderers.ts";
@@ -37,7 +37,7 @@ export class WorldEntityRenderer {
 
         if (player.approachMissile.size > 0) {
             const t = performance.now() * 0.01;
-            ctx.globalAlpha = (Math.sin(t * PI2) + 1) / 2;
+            ctx.globalAlpha = (Math.sin(t * TAU) + 1) / 2;
             ctx.fillStyle = '#ff1b1b';
             for (const missile of player.approachMissile) {
                 this.renderLockedDir(ctx, missile, playerPos, 10, 6, 8, alpha);

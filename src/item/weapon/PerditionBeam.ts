@@ -3,7 +3,6 @@ import {DataComponents} from "../../component/DataComponents.ts";
 import type {World} from "../../world/World.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ClientWorld} from "../../client/ClientWorld.ts";
-import {spawnChargingParticles} from "../../utils/ClientEffect.ts";
 import {PhaseLasers} from "./PhaseLasers.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {thickLineCircleHit} from "../../utils/math/collide.ts";
@@ -16,6 +15,7 @@ import {Identifier} from "../../registry/Identifier.ts";
 import {AttributeModifier, Operation} from "../../component/type/AttributeModifier.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 import {isClient, isServer} from "../../configs/RuntimeConfig.ts";
+import {ParticleLance} from "./BaseWeapon/ParticleLance.ts";
 
 export class PerditionBeam extends PhaseLasers {
     private static readonly DEFAULT_MODIFIER = new AttributeModifier(
@@ -67,7 +67,7 @@ export class PerditionBeam extends PhaseLasers {
                 return;
             }
             if (isClient) {
-                spawnChargingParticles(world as ClientWorld, holder, 4, '#ff8282', '#ff0a0a');
+                ParticleLance.spawnChargingParticles(world as ClientWorld, holder, 4, '#ff8282', '#ff0a0a');
             }
             stack.set(DataComponents.CHARGING_PROGRESS, Math.max(charging, 0));
             return;

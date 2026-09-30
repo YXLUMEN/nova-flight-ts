@@ -4,7 +4,7 @@ import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {decodeFromByte, encodeToByte} from "../utils/net_util.ts";
 import {hexToRgba} from "../utils/uit.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
-import {PI2} from "../utils/math/math.ts";
+import {TAU} from "../utils/math/math.ts";
 
 export class EdgeGlowEffect implements VisualEffect {
     public static TYPE: VisualEffectType<EdgeGlowEffect> = null!;
@@ -129,7 +129,7 @@ export class EdgeGlowEffect implements VisualEffect {
             }
         }
 
-        const pulseMul = this.pulse ? (0.85 + 0.15 * Math.sin(this.t * 2 * PI2)) : 1;
+        const pulseMul = this.pulse ? (0.85 + 0.15 * Math.sin(this.t * 2 * TAU)) : 1;
         return Math.max(0, Math.min(1, this.intensity * env * pulseMul));
     }
 

@@ -1,6 +1,6 @@
 import type {StarLayer} from "../type/IStarLayer.ts";
 import type {Camera} from "../client/render/Camera.ts";
-import {lerp, PI2, rand} from "../utils/math/math.ts";
+import {lerp, TAU, rand} from "../utils/math/math.ts";
 import {World} from "../world/World.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 
@@ -122,7 +122,7 @@ export class StarField {
                     ctx.rect(px, py, 1, 1);
                 } else {
                     ctx.moveTo(px + this.radius[i], py);
-                    ctx.arc(px, py, this.radius[i], 0, PI2);
+                    ctx.arc(px, py, this.radius[i], 0, TAU);
                 }
             }
             ctx.restore();

@@ -1,6 +1,6 @@
 import {StatusEffect, StatusEffectCategory} from "./StatusEffect.ts";
 import type {LivingEntity} from "../LivingEntity.ts";
-import {PI2} from "../../utils/math/math.ts";
+import {TAU} from "../../utils/math/math.ts";
 
 export class EMCStatus extends StatusEffect {
     public constructor() {
@@ -8,7 +8,7 @@ export class EMCStatus extends StatusEffect {
     }
 
     public override clientVisual(entity: LivingEntity) {
-        const angle = Math.random() * PI2;
+        const angle = Math.random() * TAU;
         const pos = entity.positionRef;
         const speed = 100 + Math.random() * 50;
 

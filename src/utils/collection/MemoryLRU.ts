@@ -1,11 +1,11 @@
-import type {Consumer, Pair, Return} from "../../type/types.ts";
+import type {BiConsumer, Return} from "../../type/types.ts";
 
 export class MemoryLRU<K, V> {
     private readonly cacheMap = new Map<K, V>();
     private readonly capacity: number;
-    private readonly onRemove: Consumer<Pair<K, V | null>> | null;
+    private readonly onRemove: BiConsumer<K, V | null> | null;
 
-    public constructor(capacity: number, onRemove?: Consumer<Pair<K, V | null>>) {
+    public constructor(capacity: number, onRemove?: BiConsumer<K, V | null>) {
         this.capacity = Math.max(1, Math.floor(capacity));
         this.onRemove = onRemove ?? null;
     }
@@ -77,7 +77,7 @@ export class MemoryLRU<K, V> {
 
     private notify(k: K, v: V | null = null): void {
         try {
-            this.onRemove?.({key: k, value: v});
+            this.onRemove?.(k, v);
         } catch {
         }
     }

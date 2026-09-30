@@ -1,5 +1,5 @@
 import type {Vec2} from "./Vec2.ts";
-import {PI2} from "./math.ts";
+import {TAU} from "./math.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {World} from "../../world/World.ts";
 
@@ -25,7 +25,7 @@ export class PlayerMissileTargetSelector {
             const dist2 = dx * dx + dy * dy;
 
             const yawToMob = Math.atan2(dy, dx);
-            const yawDiff = Math.abs(((yawToMob - missileYaw + Math.PI) % PI2) - Math.PI);
+            const yawDiff = Math.abs(((yawToMob - missileYaw + Math.PI) % TAU) - Math.PI);
             const facingScore = -yawDiff * 200;
 
             const mobVel = mob.velocityRef;

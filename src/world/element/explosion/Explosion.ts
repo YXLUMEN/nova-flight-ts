@@ -1,4 +1,4 @@
-import {PI2, squareDist, squareDistVec2} from "../../../utils/math/math.ts";
+import {TAU, squareDist, squareDistVec2} from "../../../utils/math/math.ts";
 import type {ClientWorld} from "../../../client/ClientWorld.ts";
 import type {World} from "../../World.ts";
 import type {Entity} from "../../../entity/Entity.ts";
@@ -162,7 +162,7 @@ export class Explosion implements WorldMutation {
         const baseRadius = this.power * 8;
 
         for (let i = 0; i < rayCount; i++) {
-            const angle = (i / rayCount) * PI2;
+            const angle = (i / rayCount) * TAU;
             const radius = baseRadius * (0.8 + Math.random() * 0.4); // 0.8-1.2
 
             const end = new Vec2(

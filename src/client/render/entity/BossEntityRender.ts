@@ -1,6 +1,6 @@
 import type {EntityRenderer} from "./EntityRenderer.ts";
 import type {BaseBossEntity} from "../../../entity/mob/BaseBossEntity.ts";
-import {PI2} from "../../../utils/math/math.ts";
+import {TAU} from "../../../utils/math/math.ts";
 import {hexToRgb, mix, rgb, rgba} from "../../../utils/uit.ts";
 
 export class BossEntityRender implements EntityRenderer<BaseBossEntity> {
@@ -26,7 +26,7 @@ export class BossEntityRender implements EntityRenderer<BaseBossEntity> {
         ctx.lineWidth = 2.5;
         ctx.setLineDash([16, 20]);
         ctx.beginPath();
-        ctx.arc(0, 0, 152, 0, PI2);
+        ctx.arc(0, 0, 152, 0, TAU);
         ctx.stroke();
         ctx.setLineDash([]);
         ctx.restore();
@@ -36,7 +36,7 @@ export class BossEntityRender implements EntityRenderer<BaseBossEntity> {
         ctx.strokeStyle = rgba(glow, ringAlpha * 0.6);
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.arc(0, 0, 168, 0, PI2);
+        ctx.arc(0, 0, 168, 0, TAU);
         ctx.stroke();
         ctx.restore();
 
@@ -85,7 +85,7 @@ export class BossEntityRender implements EntityRenderer<BaseBossEntity> {
             ctx.fillRect(tx + 6, ty - 5, 26, 10); // 炮管
             ctx.fillStyle = rgb(mix(base, 0.15));
             ctx.beginPath();
-            ctx.arc(tx + 6, ty, 14, 0, PI2);      // 基座
+            ctx.arc(tx + 6, ty, 14, 0, TAU);      // 基座
             ctx.fill();
             ctx.stroke();
         }
@@ -97,12 +97,12 @@ export class BossEntityRender implements EntityRenderer<BaseBossEntity> {
         ctx.shadowBlur = 20 + 16 * pulse;
         ctx.fillStyle = rgba(glow, 0.55 + 0.35 * pulse);
         ctx.beginPath();
-        ctx.arc(18, 0, 15 + 2.5 * pulse, 0, PI2);
+        ctx.arc(18, 0, 15 + 2.5 * pulse, 0, TAU);
         ctx.fill();
         ctx.shadowBlur = 0;
         ctx.fillStyle = "rgba(255,255,255,.9)";
         ctx.beginPath();
-        ctx.arc(18, 0, 6 + 1.5 * pulse, 0, PI2);
+        ctx.arc(18, 0, 6 + 1.5 * pulse, 0, TAU);
         ctx.fill();
 
         // ---------- 7. 霓虹机鼻描边 ----------

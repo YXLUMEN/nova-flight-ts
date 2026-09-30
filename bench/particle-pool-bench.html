@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>ParticlePool 渲染基准（旧 vs 新）</title>
+    <style>
+        body {
+            font-family: ui-monospace, Consolas, monospace;
+            background: #14161a;
+            color: #e8e8e8;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 18px;
+        }
+
+        h2 {
+            font-size: 15px;
+            margin-top: 28px;
+            border-bottom: 1px solid #3a3f47;
+            padding-bottom: 4px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        td, th {
+            border: 1px solid #3a3f47;
+            padding: 3px 10px;
+            text-align: right;
+        }
+
+        td:first-child, th:first-child {
+            text-align: left;
+        }
+
+        .good {
+            color: #4ade80;
+        }
+
+        .bad {
+            color: #f87171;
+        }
+
+        .dim {
+            color: #9ca3af;
+        }
+
+        p {
+            margin: 4px 0;
+        }
+
+        .note {
+            color: #9ca3af;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        canvas {
+            border: 1px solid #3a3f47;
+            margin-top: 8px;
+        }
+
+        .label {
+            color: #9ca3af;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+<h1>ParticlePool 渲染基准（旧 vs 新）</h1>
+<p id="env"></p>
+<canvas id="vis" width="1000" height="480"></canvas>
+<p class="label">
+    可视 A/B：四象限是**同一份粒子状态、同一位置**。A/C 渐变按粒子各自定位；B（仅修 c0/c1）把整批绑在首粒子上，
+    偏移越大越明显；D（贴图缓存）应与 A/C 肉眼一致。
+</p>
+<p class="note">
+    A 旧·现状（c0/c1 bug）｜B 旧·仅修 c0/c1（渐变锚点错位）｜C 旧·修 c0/c1 + 渐变局部缓存｜D 新·贴图缓存（跑 src 的真实实现）。
+    运行中… 结果同时输出到控制台，并写入页面底部隐藏的 <code>#bench-json</code>（供无头/CI 采集）。
+</p>
+<div id="out"></div>
+<pre id="bench-json" style="display:none"></pre>
+<script type="module" src="particle-pool-bench.ts"></script>
+</body>
+</html>

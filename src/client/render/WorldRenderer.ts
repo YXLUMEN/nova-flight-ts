@@ -26,6 +26,7 @@ export class WorldRenderer {
     private readonly starField: StarField;
 
     private mapRender: BlockMapRender | null = null;
+    private clearCacheTimer: number | undefined = undefined;
 
     private disableRender = 0;
 
@@ -52,12 +53,18 @@ export class WorldRenderer {
     public setWorld(world: ClientWorld | null) {
         this.world = world;
 
-        EntityRenderers.clearCache();
         this.effects.forEach(effect => effect.kill());
         this.effects.length = 0;
-        this.particlePool.clear();
+        this.particlePool.reset();
         this.mapRender?.dispose();
         this.mapRender = world === null ? null : new BlockMapRender(world.getMap());
+
+        clearTimeout(this.clearCacheTimer);
+        if (world !== null) return;
+        this.clearCacheTimer = setTimeout(() => {
+            EntityRenderers.clearCache();
+            this.particlePool.clearCache();
+        }, 30_000);
     }
 
     public tick(dt: number) {

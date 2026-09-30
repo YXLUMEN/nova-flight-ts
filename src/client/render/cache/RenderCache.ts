@@ -21,10 +21,10 @@ export interface RenderCache<K> {
  *   - 渲染：drawImage(bounds.minX, bounds.minY, w, h) 把内容画回锚点。
  * bounds 必须包含线宽/阴影/发光等一切可见延伸，否则会裁剪。
  */
-export function buildSprite<E>(
+export function buildSprite<U extends unknown[]>(
     bounds: AABB,
-    draw: BiConsumer<SpriteCtx, E>,
-    target: E,
+    draw: (ctx: SpriteCtx, ...args: U) => void,
+    ...args: U
 ): ImageBitmap {
     const canvas = new OffscreenCanvas(
         Math.ceil(bounds.getWidth() * DPR),
@@ -33,6 +33,6 @@ export function buildSprite<E>(
     const ctx = canvas.getContext('2d')!;
     ctx.scale(DPR, DPR);
     ctx.translate(-bounds.minX, -bounds.minY);
-    draw(ctx, target);
+    draw(ctx, ...args);
     return canvas.transferToImageBitmap();
 }

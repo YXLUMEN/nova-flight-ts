@@ -70,6 +70,8 @@ import type {TickChangeS2CPacket} from "../../../network/packet/s2c/TickChangeS2
 import type {PlayerProfilesS2CPacket} from "../../../network/packet/s2c/PlayerProfilesS2CPacket.ts";
 import {AcceptTeleportC2SPacket} from "../../../network/packet/c2s/AcceptTeleportC2SPacket.ts";
 import {Vec2} from "../../../utils/math/Vec2.ts";
+import {MobEntity} from "../../../entity/mob/MobEntity.ts";
+import {ParticleEffects} from "../../../effect/ParticleEffects.ts";
 
 export class ClientPlayHandler extends ClientCommonHandler {
     private readonly commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
@@ -245,7 +247,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
         if (!world) return;
 
         const entity = world.getEntityById(packet.entityId);
-        if (!entity) {
+        if (entity === null) {
             this.client.window.damagePopup.spawnPopup(
                 packet.pos.x,
                 packet.pos.y - 10,
@@ -259,6 +261,8 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
         if (entity === this.client.player) {
             this.client.window.hud.onPlayerDamage(packet.damage);
+        } else if (entity instanceof MobEntity) {
+            world.addPreparedParticleVec(ParticleEffects.HIT, entity.positionRef, 1);
         } else if (entity instanceof TargetDrone) {
             entity.push(packet.damage);
         }

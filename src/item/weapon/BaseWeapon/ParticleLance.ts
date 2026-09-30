@@ -1,20 +1,21 @@
-import {type Entity} from "../../../entity/Entity.ts";
+import type {Entity} from "../../../entity/Entity.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
-import {type ItemStack} from "../../ItemStack.ts";
-import {BaseWeapon} from "./BaseWeapon.ts";
+import type {ItemStack} from "../../ItemStack.ts";
+import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
+import type {ClientWorld} from "../../../client/ClientWorld.ts";
+import type {HexColor} from "../../../type/types.ts";
 import type {World} from "../../../world/World.ts";
+import {isClient, isServer} from "../../../configs/RuntimeConfig.ts";
+import {rand, randInt, TAU} from "../../../utils/math/math.ts";
+import {spawnLaser} from "../../../utils/ServerEffect.ts";
+import {thickLineCircleHit} from "../../../utils/math/collide.ts";
+import {BaseWeapon} from "./BaseWeapon.ts";
 import {PhaseLasers} from "../PhaseLasers.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
-import {thickLineCircleHit} from "../../../utils/math/collide.ts";
 import {StatusEffects} from "../../../entity/effect/StatusEffects.ts";
 import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
-import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
-import type {ClientWorld} from "../../../client/ClientWorld.ts";
-import {spawnChargingParticles} from "../../../utils/ClientEffect.ts";
-import {spawnLaser} from "../../../utils/ServerEffect.ts";
 import {MutVec2} from "../../../utils/math/MutVec2.ts";
-import type {HexColor} from "../../../type/types.ts";
 
 export class ParticleLance extends BaseWeapon {
     public readonly LASER_WIDTH = 8;
@@ -30,13 +31,13 @@ export class ParticleLance extends BaseWeapon {
 
             const charging = stack.getOr(DataComponents.CHARGING_PROGRESS, 0) - 1;
             if (charging <= 0) {
-                if (!world.isClient) this.onFire(stack, world as ServerWorld, holder);
+                if (isServer) this.onFire(stack, world as ServerWorld, holder);
 
                 this.setCooldown(stack, this.getFireRate(stack));
 
                 stack.set(DataComponents.SCHEDULE_FIRE, false);
-            } else if (world.isClient) {
-                spawnChargingParticles(world as ClientWorld, holder, 4, this.getUiColor() as HexColor);
+            } else if (isClient) {
+                ParticleLance.spawnChargingParticles(world as ClientWorld, holder, 4, this.getUiColor() as HexColor);
             }
 
             stack.set(DataComponents.CHARGING_PROGRESS, Math.max(charging, 0));
@@ -112,5 +113,44 @@ export class ParticleLance extends BaseWeapon {
 
     public override getUiColor(): string {
         return "#ff5d5d";
+    }
+
+    public static spawnChargingParticles(
+        world: ClientWorld,
+        entity: Entity,
+        particles: number,
+        colorFrom: HexColor,
+        colorTo?: HexColor
+    ): void {
+        const pos = entity.positionRef;
+        const yaw = entity.getYaw();
+        const offset = entity.getDimensions().halfWidth;
+
+        const x = Math.cos(yaw) * offset + pos.x;
+        const y = Math.sin(yaw) * offset + pos.y;
+
+        if (colorTo === undefined) colorTo = colorFrom;
+
+        for (let i = 0; i < particles; i++) {
+            const angle = Math.random() * TAU;
+            const radius = 30 + Math.random() * 16;
+
+            const startX = x + Math.cos(angle) * radius;
+            const startY = y + Math.sin(angle) * radius;
+
+            const dirX = Math.cos(angle);
+            const dirY = Math.sin(angle);
+
+            const speed = -randInt(100, 210);
+
+            world.addParticle(
+                startX, startY,
+                dirX * speed, dirY * speed,
+                rand(0.4, 0.6), rand(2, 3),
+                colorFrom, colorTo,
+                0,
+                0.6
+            );
+        }
     }
 }

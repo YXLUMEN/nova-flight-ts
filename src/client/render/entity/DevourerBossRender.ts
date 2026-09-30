@@ -1,6 +1,6 @@
 import type {EntityRenderer} from "./EntityRenderer.ts";
 import {DevourerBoss} from "../../../entity/mob/DevourerBoss.ts";
-import {lerp, PI2} from "../../../utils/math/math.ts";
+import {lerp, TAU} from "../../../utils/math/math.ts";
 
 type ColorConfig = { body: string; head: string; border: string; };
 
@@ -25,7 +25,7 @@ export class DevourerBossRender implements EntityRenderer<DevourerBoss> {
             const y = lerp(tickDelta, prevY, currY);
 
             ctx.moveTo(x + 22, y);
-            ctx.arc(x, y, 22, 0, PI2);
+            ctx.arc(x, y, 22, 0, TAU);
         }
         ctx.fill();
         ctx.stroke();

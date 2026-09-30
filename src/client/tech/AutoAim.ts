@@ -1,5 +1,5 @@
 import type {MobEntity} from "../../entity/mob/MobEntity.ts";
-import {PI2, wrapRadians} from "../../utils/math/math.ts";
+import {TAU, wrapRadians} from "../../utils/math/math.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
@@ -82,7 +82,7 @@ export class AutoAim {
             const approaching = (dx * mobVel.x + dy * mobVel.y) < 0;
 
             let angleDiff = Math.atan2(dy, dx) - ownerYaw;
-            angleDiff = ((angleDiff + Math.PI) % PI2) - Math.PI;
+            angleDiff = ((angleDiff + Math.PI) % TAU) - Math.PI;
 
             const absAngleDiff = Math.abs(angleDiff);
 

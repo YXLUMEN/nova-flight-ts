@@ -1,5 +1,5 @@
 import type {VisualEffect} from "./VisualEffect.ts";
-import {lerp, PI2} from "../utils/math/math.ts";
+import {lerp, TAU} from "../utils/math/math.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 import type {Entity} from "../entity/Entity.ts";
@@ -57,7 +57,7 @@ export class AuraEffect implements VisualEffect {
 
         const x = this.center.x;
         const y = this.center.y;
-        const pulse = 0.5 + 0.5 * Math.sin(t * PI2 * 1.2);
+        const pulse = 0.5 + 0.5 * Math.sin(t * TAU * 1.2);
         // radius 是"外接半径"：归一化路径的范围是 [-1,1]，故缩放系数即 r
         const r = this.radius * (0.97 + 0.03 * pulse);
         const invR = 1 / r;

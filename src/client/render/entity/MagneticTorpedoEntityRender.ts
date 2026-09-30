@@ -1,6 +1,6 @@
 import type {EntityRenderer} from "./EntityRenderer.ts";
 import {MagneticTorpedoEntity} from "../../../entity/projectile/MagneticTorpedoEntity.ts";
-import {PI2} from "../../../utils/math/math.ts";
+import {TAU} from "../../../utils/math/math.ts";
 
 export class MagneticTorpedoEntityRender implements EntityRenderer<MagneticTorpedoEntity> {
     public render(entity: MagneticTorpedoEntity, ctx: CanvasRenderingContext2D, tickDelta: number) {
@@ -41,7 +41,7 @@ export class MagneticTorpedoEntityRender implements EntityRenderer<MagneticTorpe
 
         ctx.fillStyle = entity.getCountDown() < 10 ? '#ff2828' : '#FFD700';
         ctx.beginPath();
-        ctx.arc(-4, 0, 2, 0, PI2);
+        ctx.arc(-4, 0, 2, 0, TAU);
         ctx.fill();
 
         ctx.restore();

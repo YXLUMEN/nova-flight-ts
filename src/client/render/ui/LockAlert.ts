@@ -1,4 +1,4 @@
-import {PI2} from "../../../utils/math/math.ts";
+import {TAU} from "../../../utils/math/math.ts";
 import type {RGB} from "../../../type/types.ts";
 import {rgba} from "../../../utils/uit.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
@@ -24,7 +24,7 @@ export class LockAlert {
 
     public render(ctx: CanvasRenderingContext2D, flag: LockPhase) {
         const t = performance.now() * 0.01;
-        const pulse = (Math.sin(t * PI2) + 1) / 2;
+        const pulse = (Math.sin(t * TAU) + 1) / 2;
         const borderAlpha = 0.35 + 0.45 * pulse;
 
         ctx.save();

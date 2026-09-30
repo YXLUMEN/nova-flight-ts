@@ -1,5 +1,5 @@
 import type {VisualEffect} from "./VisualEffect.ts";
-import {lerp, PI2} from "../utils/math/math.ts";
+import {lerp, TAU} from "../utils/math/math.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {decodeFromByte, encodeToByte} from "../utils/net_util.ts";
@@ -104,14 +104,14 @@ export class EMPBurst implements VisualEffect {
         ctx.globalAlpha = alpha * 0.6;
         ctx.lineWidth = 6 * (1 - p * 0.5);
         ctx.beginPath();
-        ctx.arc(this.pos.x, this.pos.y, rNow, 0, PI2);
+        ctx.arc(this.pos.x, this.pos.y, rNow, 0, TAU);
         ctx.stroke();
 
         // 电弧
         ctx.globalAlpha = alpha;
         ctx.beginPath();
         for (let b = 0; b < this.bolts; b++) {
-            const a = (b / this.bolts) * PI2 + (Math.random() - 0.5) * 0.3;
+            const a = (b / this.bolts) * TAU + (Math.random() - 0.5) * 0.3;
             ctx.lineWidth = this.thickness;
 
             ctx.moveTo(this.pos.x, this.pos.y);
