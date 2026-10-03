@@ -1,6 +1,11 @@
 /**
- * RenderCache 语义测试
- * 运行方式：npm run dev 后访问 /test/render_cache/cache.test.html
+ * RenderCache 语义测试（浏览器专属：依赖 ImageBitmap / canvas 2d / devicePixelRatio）
+ *
+ * 运行方式：npm run dev 后访问 /browser-test/render_cache/cache.browser.html
+ *
+ * 为什么不在 test/ 下：Node 的测试运行器默认会发现 test/ 目录下的所有 .ts（含子目录），
+ * 而这里的用例在 Node 下必崩（没有 ImageBitmap）。浏览器测试与 Node 测试从目录上分开，
+ * npm test 因此不需要任何"排除某个文件"的规则。
  *
  * 覆盖点：
  *  - SingleCache  : key 无关、只构建一次、clear 释放
@@ -140,7 +145,7 @@ function testSizeAndTransform(): void {
         const tr = ctx.getTransform();
         t = {a: tr.a, d: tr.d, e: tr.e, f: tr.f};
         ctx.fillRect(0, 0, 1, 1);
-    }, {});
+    });
     eq("尺寸: bitmap 宽 = ceil(w*DPR)", bmp.width, Math.ceil(5 * DPR));
     eq("尺寸: bitmap 高 = ceil(h*DPR)", bmp.height, Math.ceil(7 * DPR));
     check("变换: scale(DPR) + translate(-minX, -minY)",
@@ -169,7 +174,7 @@ function testEdgeCases(): void {
     let threw: unknown = null;
     try {
         const c = new MapRenderCache<string>(2);
-        c.get("z", new AABB(0, 0, 0, 0), (ctx: any) => ctx.fillRect(0, 0, 0, 0), {});
+        c.get("z", new AABB(0, 0, 0, 0), (ctx: any) => ctx.fillRect(0, 0, 0, 0));
     } catch (e) {
         threw = e;
     }

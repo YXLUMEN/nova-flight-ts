@@ -1,8 +1,9 @@
-import type {BlockPos} from "../../world/section/pos/BlockPos.ts";
-import {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
-import type {Vec2} from "./Vec2.ts";
-import {Direction} from "./Direction.ts";
 import type {Comparable} from "../../type/Comparable.ts";
+import type {BlockPos} from "../../world/section/pos/BlockPos.ts";
+import type {Vec2} from "./Vec2.ts";
+import {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
+import {Direction} from "./Direction.ts";
+
 
 export class AABB implements Comparable {
     public readonly minX: number;

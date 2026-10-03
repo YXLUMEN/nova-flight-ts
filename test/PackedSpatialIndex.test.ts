@@ -2,9 +2,10 @@
  * PackedSpatialIndex 语义测试
  *
  * 运行：
+ *   npm test                      # 全量：glob test/*.test.ts（不递归，新增文件零改动）
  *   node --experimental-transform-types --disable-warning=ExperimentalWarning \
- *        --test test/PackedSpatialIndex.test.ts test/SetPool.test.ts
- *   （必须显式列文件：render_cache/cache.test.ts 也匹配 *.test.ts，但它依赖 ImageBitmap，在 Node 下会崩）
+ *        --test test/PackedSpatialIndex.test.ts test/SetPool.test.ts   # 只跑子集时显式列文件
+ *   （浏览器专属测试不放在 test/ 下：见 browser-test/，用 npm run test:browser 跑）
  *
  * 覆盖：
  *   构造与参数校验 / 插入移除 / 查询语义（含边界与去重）/ 世界范围钳置 /
