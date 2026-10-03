@@ -55,7 +55,7 @@ export abstract class LaserPulseItem extends BaseWeapon {
             // compare abs distance, find actually hit target
             if (!hitBlock.missed && squareDistVec2(start, target.positionRef) > squareDistVec2(start, hitBlock.pos)) {
                 end.set(hitBlock.pos.x, hitBlock.pos.y);
-                this.onHit(world, start, end);
+                this.onHit(world, start, end, attacker);
                 return;
             }
 
@@ -73,12 +73,12 @@ export abstract class LaserPulseItem extends BaseWeapon {
         } else if (!hitBlock.missed) {
             end.set(hitBlock.pos.x, hitBlock.pos.y);
         }
-        this.onHit(world, start, end);
+        this.onHit(world, start, end, attacker);
     }
 
     protected abstract laserWidth(): number;
 
-    protected abstract onHit(world: ServerWorld, start: Vec2, end: Vec2): void;
+    protected abstract onHit(world: ServerWorld, start: Vec2, end: Vec2, attacker: Entity): void;
 
     protected abstract onHitEntity(stack: ItemStack, world: ServerWorld, target: LivingEntity, attacker: Entity): void;
 }

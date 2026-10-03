@@ -1,13 +1,14 @@
 import type {VisualEffect} from "./VisualEffect.ts";
-import {MutVec2} from "../utils/math/MutVec2.ts";
-import {lerp} from "../utils/math/math.ts";
-import type {PacketCodec} from "../network/codec/PacketCodec.ts";
-import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
+import type {PacketCodec} from "../network/codec/PacketCodec.ts";
+import {lerp} from "../utils/math/math.ts";
+import {MutVec2} from "../utils/math/MutVec2.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import {VisualEffectTypes} from "./VisualEffectTypes.ts";
+
 
 export class LaserBeamEffect implements VisualEffect {
-    public static TYPE: VisualEffectType<LaserBeamEffect> = null!;
     public static readonly PACKET_CODEC: PacketCodec<LaserBeamEffect> = PacketCodecs.of(
         (writer, value) => {
             PacketCodecs.COLOR_HEX.encode(writer, value.color);
@@ -48,7 +49,7 @@ export class LaserBeamEffect implements VisualEffect {
     }
 
     public getType(): VisualEffectType<LaserBeamEffect> {
-        return LaserBeamEffect.TYPE;
+        return VisualEffectTypes.LASER_BEAM;
     }
 
     public tick(dt: number) {

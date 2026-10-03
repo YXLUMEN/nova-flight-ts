@@ -1,11 +1,11 @@
-import {type VisualEffect} from "./VisualEffect.ts";
+import type {VisualEffect} from "./VisualEffect.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
-import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {clamp} from "../utils/math/math.ts";
+import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 
 export class WindowOverlay implements VisualEffect {
-    public static TYPE: VisualEffectType<WindowOverlay> = null!;
     public static readonly PACKET_CODEC: PacketCodec<WindowOverlay> = PacketCodecs.of(
         (writer, value) => {
             PacketCodecs.COLOR_HEX.encode(writer, value.color);
@@ -52,7 +52,7 @@ export class WindowOverlay implements VisualEffect {
     }
 
     public getType(): VisualEffectType<WindowOverlay> {
-        return WindowOverlay.TYPE;
+        return VisualEffectTypes.WINDOW_OVERLAY;
     }
 
     public tick(dt: number): void {

@@ -1,10 +1,10 @@
-import {TAU, squareDist, squareDistVec2} from "../../../utils/math/math.ts";
 import type {ClientWorld} from "../../../client/ClientWorld.ts";
 import type {World} from "../../World.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {DamageSource} from "../../../entity/damage/DamageSource.ts";
 import type {BlockChange} from "../../section/BlockChange.ts";
 import type {WorldMutation} from "../WorldMutation.ts";
+import {TAU, squareDist, squareDistVec2} from "../../../utils/math/math.ts";
 import {Vec2} from "../../../utils/math/Vec2.ts";
 import {ProjectileEntity} from "../../../entity/projectile/ProjectileEntity.ts";
 import {LivingEntity} from "../../../entity/LivingEntity.ts";
@@ -16,7 +16,7 @@ import {ExplosionVisual} from "./ExplosionVisual.ts";
 import {AABB} from "../../../utils/math/AABB.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
-import {ParticleEffects} from "../../../effect/ParticleEffects.ts";
+import {ParticleEffects} from "../../../effect/particle/ParticleEffects.ts";
 import {RadialRing} from "../../../effect/RadialRing.ts";
 import {isClient} from "../../../configs/RuntimeConfig.ts";
 

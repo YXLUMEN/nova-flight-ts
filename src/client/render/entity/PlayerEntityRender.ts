@@ -8,7 +8,7 @@ import {buildSprite} from "../cache/RenderCache.ts";
 import {CachedEntityRender} from "../cache/CachedEntityRender.ts";
 
 export class PlayerEntityRender extends CachedEntityRender<number, PlayerEntity> {
-    private readonly bounding = new AABB(-17, -15, 21, 15);
+    private readonly bounding = new AABB(-18, -15, 21, 15);
     private flame: ImageBitmap | null = null;
 
     public constructor() {
@@ -73,11 +73,10 @@ export class PlayerEntityRender extends CachedEntityRender<number, PlayerEntity>
         g.addColorStop(0, "rgb(255 149 83 / 0.9)");
         g.addColorStop(1, "rgb(255 200 120 / 0.5)");
         ctx.fillStyle = g;
-
         ctx.strokeStyle = 'rgb(255 247 188 / 0.2)';
-
         ctx.shadowBlur = 10;
         ctx.shadowColor = '#fff';
+        ctx.globalCompositeOperation = 'lighter';
 
         ctx.beginPath();
         ctx.moveTo(0, -6);

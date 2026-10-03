@@ -1,7 +1,7 @@
 import type {PacketListener} from "../../../network/handler/PacketListener.ts";
 import type {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {ClientConnection} from "../ClientConnection.ts";
-import {GaussianRandom} from "../../../utils/math/GaussianRandom.ts";
+import {GaussianRandom} from "../../../utils/math/random/GaussianRandom.ts";
 import type {Payload} from "../../../network/Payload.ts";
 import type {ConnectionState} from "../../../server/network/ConnectionState.ts";
 import type {RelayMessage} from "../../../network/packet/relay/RelayMessage.ts";

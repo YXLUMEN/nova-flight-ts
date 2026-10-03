@@ -1,5 +1,5 @@
-import {GameEvent} from "./GameEvent.ts";
-import type {TranslatableText} from "../../i18n/TranslatableText.ts";
+import {GameEvent} from "../GameEvent.ts";
+import type {TranslatableText} from "../../../i18n/TranslatableText.ts";
 
 export class NewNotify extends GameEvent {
     public readonly text: TranslatableText | string;

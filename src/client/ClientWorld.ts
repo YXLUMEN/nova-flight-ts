@@ -6,7 +6,7 @@ import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExplosionVisual} from "../world/element/explosion/ExplosionVisual.ts";
 import type {ExplosionConfigs} from "../world/element/explosion/ExplosionConfigs.ts";
 import type {WorldRenderer} from "./render/WorldRenderer.ts";
-import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
+import type {ParticleEffectType} from "../effect/particle/ParticleEffectType.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import type {ClientConnection} from "./network/ClientConnection.ts";
 import type {Payload} from "../network/Payload.ts";
@@ -145,25 +145,6 @@ export class ClientWorld extends World {
 
     public override stopLoopSound(_: Entity | null, event: SoundEvent): boolean {
         return this.worldSound.stopLoopSound(event);
-    }
-
-    public override addParticleByVec(
-        pos: Vec2, vel: Vec2,
-        life: number,
-        size: number,
-        colorFrom: HexColor, colorTo?: HexColor,
-        type: number = 0,
-        drag?: number
-    ): void {
-        this.worldRender.addParticle(
-            pos.x, pos.y,
-            vel.x, vel.y,
-            life,
-            size, size,
-            type,
-            colorFrom, colorTo,
-            drag
-        );
     }
 
     public override addParticle(

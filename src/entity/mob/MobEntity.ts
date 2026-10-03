@@ -10,7 +10,7 @@ import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {NbtTypeId} from "../../nbt/NbtType.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
-import {ParticleEffects} from "../../effect/ParticleEffects.ts";
+import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
 import type {EntityAi} from "../ai/EntityAi.ts";
 import {MobAI} from "../ai/MobAI.ts";
 import {MobKilled} from "../../event/events/entity/MobKilled.ts";

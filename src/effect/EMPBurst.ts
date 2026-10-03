@@ -1,13 +1,14 @@
 import type {VisualEffect} from "./VisualEffect.ts";
-import {lerp, TAU} from "../utils/math/math.ts";
-import type {PacketCodec} from "../network/codec/PacketCodec.ts";
-import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
-import {decodeFromByte, encodeToByte} from "../utils/net_util.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
+import type {PacketCodec} from "../network/codec/PacketCodec.ts";
+import {lerp, TAU} from "../utils/math/math.ts";
+import {decodeFromByte, encodeToByte} from "../utils/net_util.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import {VisualEffectTypes} from "./VisualEffectTypes.ts";
+
 
 export class EMPBurst implements VisualEffect {
-    public static TYPE: VisualEffectType<EMPBurst> = null!;
     public static readonly PACKET_CODEC: PacketCodec<EMPBurst> = PacketCodecs.of(
         (writer, value) => {
             const flag = value.buildDeltaFlag();
@@ -77,7 +78,7 @@ export class EMPBurst implements VisualEffect {
     }
 
     public getType(): VisualEffectType<EMPBurst> {
-        return EMPBurst.TYPE;
+        return VisualEffectTypes.EMP_BURST;
     }
 
     public tick(dt: number): void {

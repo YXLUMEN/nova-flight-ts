@@ -1,14 +1,14 @@
+import type {Vec2} from "../../utils/math/Vec2.ts";
+import type {MutVec2} from "../../utils/math/MutVec2.ts";
+import type {EntityType} from "../EntityType.ts";
+import type {Entity} from "../Entity.ts";
+import {getNearestEntityByVec} from "../../utils/math/collide.ts";
 import {MissileEntity} from "./MissileEntity.ts";
 import {World} from "../../world/World.ts";
-import type {EntityType} from "../EntityType.ts";
-import {type Entity} from "../Entity.ts";
 import {DecoyEntity} from "../DecoyEntity.ts";
-import {getNearestEntityByVec, squareDistVec2} from "../../utils/math/math.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 import {BlockCollision} from "../../world/collision/BlockCollision.ts";
-import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EntityPredicates} from "../../world/predicate/EntityPredicates.ts";
-import type {Vec2} from "../../utils/math/Vec2.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {ExplosiveBuilder} from "../../world/element/explosion/ExplosiveBuilder.ts";
 
@@ -70,18 +70,7 @@ export class MobMissileEntity extends MissileEntity {
         }
         if (rand < 0.8) {
             this.relockCooldown = 100;
-            let closest = null;
-            let minDist = Infinity;
-
-            for (const decoyEntity of decoyEntities) {
-                const d = squareDistVec2(decoyEntity.positionRef, this.positionRef);
-                if (d < minDist) {
-                    minDist = d;
-                    closest = decoyEntity;
-                }
-            }
-
-            this.target = closest;
+            this.target = getNearestEntityByVec(this.positionRef, decoyEntities);
         }
     }
 

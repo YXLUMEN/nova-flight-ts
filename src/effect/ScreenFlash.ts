@@ -1,10 +1,10 @@
 import type {VisualEffect} from "./VisualEffect.ts";
+import type {VisualEffectType} from "./VisualEffectType.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
-import type {VisualEffectType} from "./VisualEffectType.ts";
+import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 
 export class ScreenFlash implements VisualEffect {
-    public static TYPE: VisualEffectType<ScreenFlash> = null!;
     public static readonly PACKET_CODEC: PacketCodec<ScreenFlash> = PacketCodecs.of(
         (writer, value) => {
             writer.writeFloat(value.w);
@@ -47,7 +47,7 @@ export class ScreenFlash implements VisualEffect {
     }
 
     public getType(): VisualEffectType<ScreenFlash> {
-        return ScreenFlash.TYPE;
+        return VisualEffectTypes.SCREEN_FLASH;
     }
 
     public tick(dt: number) {

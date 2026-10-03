@@ -170,6 +170,10 @@ export function createTranslationKey(type: string, id: Identifier | null) {
         `${type}.${id.getNamespace()}.${id.getPath().replace('/', '.')}`
 }
 
+export function* concatIters<T extends Iterable<any>>(...its: T[]) {
+    for (const it of its) yield* it;
+}
+
 /** 空方法 */
 export function empty(): void {
 }

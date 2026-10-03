@@ -7,7 +7,7 @@ import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 import {ExplosionVisual} from "../../world/element/explosion/ExplosionVisual.ts";
 import {ExplosionConfigs} from "../../world/element/explosion/ExplosionConfigs.ts";
-import {ParticleEffects} from "../../effect/ParticleEffects.ts";
+import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
 
 export class ExplodeBulletEntity extends ProjectileEntity {
     private readonly power: number;

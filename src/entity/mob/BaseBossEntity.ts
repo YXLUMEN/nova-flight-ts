@@ -1,8 +1,10 @@
-import {BossEntity} from "./BossEntity.ts";
-import {getNearestEntityByVec, HALF_PI, rand, randInt} from "../../utils/math/math.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
-import {Vec2} from "../../utils/math/Vec2.ts";
 import type {Entity} from "../Entity.ts";
+import {HALF_PI, rand, randInt} from "../../utils/math/math.ts";
+import {getNearestEntityByVec, thickLineCircleHit} from "../../utils/math/collide.ts";
+import {spawnLaser} from "../../utils/ServerEffect.ts";
+import {Vec2} from "../../utils/math/Vec2.ts";
+import {BossEntity} from "./BossEntity.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
@@ -11,10 +13,8 @@ import {World} from "../../world/World.ts";
 import {FireWave} from "../ai/FireWave.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {SmokeBomb} from "../projectile/SmokeBomb.ts";
-import {spawnLaser} from "../../utils/ServerEffect.ts";
 import {ScreenShakeS2CPacket} from "../../network/packet/s2c/ScreenShakeS2CPacket.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
-import {thickLineCircleHit} from "../../utils/math/collide.ts";
 
 export class BaseBossEntity extends BossEntity {
     private attackCooldown: number = 0;
@@ -205,7 +205,7 @@ export class BaseBossEntity extends BossEntity {
                     pPos.x, pPos.y,
                     player.getDimensions().halfWidth
                 )) {
-                    player.takeDamage(damageSource, 8);
+                    player.takeDamage(damageSource, 12);
                 }
             }
 

@@ -1,11 +1,11 @@
 import type {MobEntity} from "../mob/MobEntity.ts";
-import {MutVec2} from "../../utils/math/MutVec2.ts";
-import {EntityAttributes} from "../attribute/EntityAttributes.ts";
-import {getNearestEntityByVec} from "../../utils/math/math.ts";
-import {Random} from "../../utils/math/Random.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 import type {EntityAi} from "./EntityAi.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
+import {getNearestEntityByVec} from "../../utils/math/collide.ts";
+import {MutVec2} from "../../utils/math/MutVec2.ts";
+import {EntityAttributes} from "../attribute/EntityAttributes.ts";
+import {Random} from "../../utils/math/Random.ts";
 
 export const enum AiBehavior {
     Wander,

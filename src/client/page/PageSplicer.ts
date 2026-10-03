@@ -54,16 +54,20 @@ export class PageSplicer {
         try {
             const html = await this.tryFetch(url);
             const doc = new DOMParser().parseFromString(html, 'text/html');
-
             const content = doc.body.firstElementChild;
+
             if (!(content instanceof HTMLElement) || content.tagName === 'PAGE') {
                 throw new Error(`Invalid HTML structure in ${url}`);
             }
 
             content.setAttribute('data-page-path', url);
             page.replaceWith(content);
+            page.remove();
+            doc.close();
 
             const selfPath = this.getParentPath(name, parentPath);
+            await this.loadSyncChildren(content, selfPath);
+
             await this.parseNode(content, selfPath);
         } catch (e) {
             console.error(`[PageSplicer] Load Fail: ${url}`, e);
@@ -80,6 +84,24 @@ export class PageSplicer {
         } finally {
             if (parentNode) page.remove();
         }
+    }
+
+    private async loadSyncChildren(node: HTMLElement, parentPath: string | null): Promise<void> {
+        const pages = Array.from(node.querySelectorAll('page[sync]'));
+        if (pages.length === 0) return;
+
+        const tasks: Promise<void>[] = [];
+        for (const page of pages) {
+            if (!(page instanceof HTMLElement)) continue;
+
+            const name = page.getAttribute('name');
+            if (!name) throw new Error('<page> tag requires a "name" attribute');
+
+            // sync 优先于 defer
+            tasks.push(this.pool.submit(this.loadPage, page, name, parentPath));
+        }
+
+        await Promise.allSettled(tasks);
     }
 
     private async tryFetch(url: string): Promise<string> {

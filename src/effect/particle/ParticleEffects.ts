@@ -1,15 +1,15 @@
 import {ParticleEffectType} from "./ParticleEffectType.ts";
-import {Registries} from "../registry/Registries.ts";
-import {Identifier} from "../registry/Identifier.ts";
-import {Registry} from "../registry/Registry.ts";
+import {Registries} from "../../registry/Registries.ts";
+import {Identifier} from "../../registry/Identifier.ts";
+import {Registry} from "../../registry/Registry.ts";
 import {ParticleShape} from "./ParticlePool.ts";
 
 export class ParticleEffects {
     public static readonly EXPLOSION = ParticleEffects.register('explosion',
         ParticleEffectType.builder()
             .life(0.4, 0.9)
-            .size(1, 3)
-            .colors('#ff9940', '#FFDDB880')
+            .size(2, 4)
+            .colors('#ff9940', '#FFDDB8B3')
             .speed(120, 320)
             .withDrag(0.2)
             .omnidirectional()
@@ -19,7 +19,7 @@ export class ParticleEffects {
     public static readonly EXPLOSION_DEBRIS = ParticleEffects.register('explosion_debris',
         ParticleEffectType.builder()
             .life(0.3, 0.6)
-            .size(1.5, 4)
+            .size(3, 5)
             .colors('#ff4422')
             .speed(80, 200)
             .withDrag(0.1)
@@ -118,7 +118,7 @@ export class ParticleEffects {
             .size(4, 6)
             .colors('#ffd8b6')
             .speed(100, 140)
-            .omnidirectional()
+            .symmetry(Math.PI / 6)
             .build()
     );
 
@@ -155,10 +155,11 @@ export class ParticleEffects {
 
     public static readonly SHIELD_CRASH = ParticleEffects.register('shield_crash',
         ParticleEffectType.builder()
-            .life(0.8, 1.2)
+            .life(0.4, 0.8)
             .size(8, 10)
-            .colors('#5095FF80', '#86B5FF80')
-            .speed(200, 280)
+            .colors('#5095FFCC', '#86B5FFCC')
+            .speed(200, 250)
+            .rotation(-Math.PI, Math.PI)
             .shape(ParticleShape.TRIANGLE)
             .omnidirectional()
             .build()
@@ -171,6 +172,18 @@ export class ParticleEffects {
             .colors('#8D8EFF80', '#FFFFFF99')
             .speed(220, 300)
             .shape(ParticleShape.CIRCLE)
+            .omnidirectional()
+            .build()
+    );
+
+    public static readonly BLOCK_DESTROY = ParticleEffects.register('block_destroy',
+        ParticleEffectType.builder()
+            .life(0.5, 1)
+            .size(4, 6)
+            .colors('#797979')
+            .speed(50, 100)
+            .rotation(-Math.PI, Math.PI)
+            .shape(ParticleShape.RECT)
             .omnidirectional()
             .build()
     );

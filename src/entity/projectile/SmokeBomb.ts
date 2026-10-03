@@ -1,6 +1,6 @@
 import {BulletEntity} from "./BulletEntity.ts";
 import {type HitResult, HitType} from "../../world/collision/HitResult.ts";
-import {ParticleEffects} from "../../effect/ParticleEffects.ts";
+import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
 import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
 import {Entity} from "../Entity.ts";

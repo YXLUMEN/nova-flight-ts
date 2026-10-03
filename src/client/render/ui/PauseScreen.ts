@@ -8,7 +8,6 @@ import {GuiLabel} from "../../gui/widget/GuiLabel.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {TipManager} from "../../tips/TipManager.ts";
 import {appEvent} from "../../../event/EventBus.ts";
-import {NewNotify} from "../../../event/events/NewNotify.ts";
 
 export class PauseScreen extends GuiScreen {
     private static readonly MENU_WIDTH = 200;
@@ -43,12 +42,19 @@ export class PauseScreen extends GuiScreen {
         this.background = 'rgba(0,0,0,0.45)';
         this.closeOnEscape = false; // Esc 由游戏处理以保持 pause 状态一致
 
+        appEvent.on('ui:tip', ({text}) => {
+            if (!text) return;
+            this.tip.setText(text);
+        });
+
+        const tip = TipManager.get();
+        if (tip) this.tip.setText(tip);
+
         this.menu.addAll(
             new GuiLabel(TranslatableText.of('pause.paused')).setFontSize(32).setWeight(700),
             new GuiLabel(TranslatableText.of('pause.press_esc')).setFontSize(16),
             this.createButton('pause.back_to_game', 'primary', () => this.client.setPause(false)),
-            this.createButton('pause.settings', 'normal', () => appEvent.emit(new NewNotify('WIP'))),
-            this.createButton('pause.save', 'normal', () => void this.client.saveAll()),
+            this.createButton('pause.save', 'normal', () => this.client.saveAll()),
             this.createButton('pause.save_and_exit', 'danger', () => this.client.leaveGame()),
         );
 
@@ -57,7 +63,6 @@ export class PauseScreen extends GuiScreen {
     }
 
     public override relayout(ctx: CanvasRenderingContext2D): void {
-        // 直接写 x/y:布局过程中再走 setter 会重新标脏,导致每帧重排
         this.menu.width = PauseScreen.MENU_WIDTH;
         this.menu.x = (this.width - PauseScreen.MENU_WIDTH) / 2;
         this.menu.y = this.height / 2 + PauseScreen.MENU_OFFSET_Y;
@@ -67,16 +72,6 @@ export class PauseScreen extends GuiScreen {
         this.tipBox.y = this.height - 90;
 
         super.relayout(ctx);
-    }
-
-    public override tick(dt: number): void {
-        super.tick(dt);
-
-        const tip = TipManager.get();
-        const text = tip === null ? '' : tip;
-        if (this.tip.getText() !== text) this.tip.setText(text);
-
-        if (!PauseScreen.shouldShow(this.client)) this.close();
     }
 
     private createButton(label: string, variant: GuiButtonVariant, onClick: Consumer<void>): GuiButton {

@@ -98,7 +98,7 @@ export class NovaFlightClient {
 
         this.registryManager = new RegistryManager();
         this.window = new Window();
-        this.GUI = new GuiManager(this.window.hudCtx);
+        this.GUI = new GuiManager(this.window.guiCtx);
         this.screens = new GuiLayer(this);
         this.screens.start();
         this.worldRender = new WorldRenderer(this);

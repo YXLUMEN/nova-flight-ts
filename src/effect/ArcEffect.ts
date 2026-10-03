@@ -3,9 +3,9 @@ import type {VisualEffectType} from "./VisualEffectType.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {isClient} from "../configs/RuntimeConfig.ts";
+import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 
 export class ArcEffect implements VisualEffect {
-    public static TYPE: VisualEffectType<ArcEffect> = null!;
     public static readonly PACKET_CODEC: PacketCodec<ArcEffect> = PacketCodecs.of(
         (writer, value) => {
             writer.writeFloat(value.startX);
@@ -75,7 +75,7 @@ export class ArcEffect implements VisualEffect {
     }
 
     public getType(): VisualEffectType<ArcEffect> {
-        return ArcEffect.TYPE;
+        return VisualEffectTypes.ARC;
     }
 
     public tick(tickDelta: number) {

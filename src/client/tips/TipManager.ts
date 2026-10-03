@@ -4,6 +4,7 @@ import type {TipResource} from "../../resource/TipResource.ts";
 import {ResourceManager} from "../../resource/ResourceManager.ts";
 import {Resources} from "../../resource/Resources.ts";
 import {appEvent} from "../../event/EventBus.ts";
+import {TipChange} from "../../event/events/ui/TipChange.ts";
 
 export class TipManager {
     public static readonly title: TranslatableText = TranslatableText.of('tips.nova-flight.title');
@@ -27,6 +28,8 @@ export class TipManager {
             this.current = this.resource!.tips[this.index];
             this.index = (this.index + 1) % this.resource!.tips.length;
         }
+
+        appEvent.emit(new TipChange(this.current));
         return this.current;
     }
 

@@ -1,7 +1,5 @@
-import type {BiConsumer} from "../../../type/types.ts";
 import type {AABB} from "../../../utils/math/AABB.ts";
-import type {SpriteCtx} from "./LRURenderCache.ts";
-import {buildSprite, type RenderCache} from "./RenderCache.ts";
+import {buildSprite, type RenderCache, type SpriteRender} from "./RenderCache.ts";
 import {isDev} from "../../../configs/RuntimeConfig.ts";
 
 export class MapRenderCache<K> implements RenderCache<K> {
@@ -13,19 +11,19 @@ export class MapRenderCache<K> implements RenderCache<K> {
         this.sprites = new Map();
     }
 
-    public get<E>(
+    public get<U extends unknown[]>(
         key: K,
         bounds: AABB,
-        draw: BiConsumer<SpriteCtx, E>,
-        target: E
+        draw: SpriteRender<U>,
+        ...args: U
     ): ImageBitmap {
         const sprite = this.sprites.get(key);
         if (sprite) return sprite;
 
-        const bitmap = buildSprite(bounds, draw, target);
+        const bitmap = buildSprite(bounds, draw, ...args);
 
         if (this.sprites.size >= this.capacity) {
-            if (isDev) console.log(`Cache expiration with key "${key}" for\n ${target}`);
+            if (isDev) console.log('Cache expiration with key: ', key);
             const entry = this.sprites.entries().next().value;
             if (entry) {
                 this.sprites.delete(entry[0]);

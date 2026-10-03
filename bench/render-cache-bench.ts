@@ -18,7 +18,7 @@ import {CIWSBulletEntityRender} from "../src/client/render/entity/CIWSBulletEnti
 import {DecoyEntityRender} from "../src/client/render/entity/DecoyEntityRender.ts";
 import {MapRenderCache} from "../src/client/render/cache/MapRenderCache.ts";
 import {LRURenderCache} from "../src/client/render/cache/LRURenderCache.ts";
-import type {RenderCache} from "../src/client/render/cache/RenderCache.ts";
+import type {RenderCache, SpriteRender} from "../src/client/render/cache/RenderCache.ts";
 import {buildSprite} from "../src/client/render/cache/RenderCache.ts";
 import {AABB} from "../src/utils/math/AABB.ts";
 
@@ -158,8 +158,12 @@ const missileFake = {
 class NoCache<K> implements RenderCache<K> {
     private last: ImageBitmap | null = null;
 
-    public get<E>(_key: K, bounds: AABB,
-                  draw: (ctx: any, e: E) => void, target: E): ImageBitmap {
+    public get<U extends unknown[]>(
+        _key: K,
+        bounds: AABB,
+        draw: SpriteRender<U>,
+        ..._args: U
+    ): ImageBitmap {
         const bmp = buildSprite(bounds, draw as any, target);
         this.last?.close();
         this.last = bmp;
@@ -321,7 +325,7 @@ function simulate(cache: RenderCache<number>, stream: number[]): { hit: number; 
     const drawFn = (ctx: any) => ctx.fillRect(0, 0, 1, 1);
     const SIM_BOUNDS = new AABB(-2, -2, 2, 2);
     for (const k of stream) {
-        const bmp = cache.get(k, SIM_BOUNDS, drawFn, {});
+        const bmp = cache.get(k, SIM_BOUNDS, drawFn);
         if (seen.get(k) === bmp) hit++;
         else seen.set(k, bmp);
     }

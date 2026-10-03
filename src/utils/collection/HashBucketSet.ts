@@ -1,6 +1,6 @@
 import type {Comparable} from "../../type/Comparable.ts";
 
-export class HashSet<T extends Comparable> {
+export class HashBucketSet<T extends Comparable> {
     public readonly [Symbol.toStringTag]: string = 'HashSet';
     private readonly buckets: Map<number, T[]> = new Map();
     private _size: number = 0;
@@ -44,7 +44,7 @@ export class HashSet<T extends Comparable> {
         return true;
     }
 
-    public forEach(callback: (value: T, value2: T, set: HashSet<T>) => void, thisArg?: any): void {
+    public forEach(callback: (value: T, value2: T, set: HashBucketSet<T>) => void, thisArg?: any): void {
         for (const value of this.values()) {
             callback.call(thisArg, value, value, this);
         }

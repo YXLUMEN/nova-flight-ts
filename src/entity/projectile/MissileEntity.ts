@@ -5,7 +5,7 @@ import {rand} from "../../utils/math/math.ts";
 import {RocketEntity} from "./RocketEntity.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
-import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
+import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {ProjectRaycastUtil} from "../../world/collision/ProjectRaycastUtil.ts";
 import {HitType} from "../../world/collision/HitResult.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
@@ -15,12 +15,12 @@ import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacke
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
-import {PlayerMissileTargetSelector} from "../../utils/math/MissileTargetSelector.ts";
-import {ParticleEffects} from "../../effect/ParticleEffects.ts";
+import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
 import {MissileLockEvent} from "../../event/events/entity/MissileLockEvent.ts";
 import {isClient, isServer} from "../../configs/RuntimeConfig.ts";
 import {InterpolationHandler} from "../../world/entity/InterpolationHandler.ts";
 import {ExplosionConfigs} from "../../world/element/explosion/ExplosionConfigs.ts";
+import {acquireTarget} from "../../utils/math/collide.ts";
 
 export class MissileEntity extends RocketEntity {
     public static readonly IS_IGNITE = DataTracker.registerData(Object(MissileEntity), TrackedDataHandlerRegistry.BOOL);
@@ -265,7 +265,7 @@ export class MissileEntity extends RocketEntity {
     }
 
     protected acquireTarget(): Entity | null {
-        return PlayerMissileTargetSelector.acquireTarget(
+        return acquireTarget(
             this.getWorld(),
             this.positionRef,
             this.getYaw(),

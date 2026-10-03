@@ -2,7 +2,7 @@ import type {Payload} from "../../Payload.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {ParticleEffectType} from "../../../effect/ParticleEffectType.ts";
+import {ParticleEffectType} from "../../../effect/particle/ParticleEffectType.ts";
 import type {Vec2} from "../../../utils/math/Vec2.ts";
 import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 

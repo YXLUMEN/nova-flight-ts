@@ -4,7 +4,7 @@ import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 import {BlockChangeS2CPacket} from "../../network/packet/s2c/BlockChangeS2CPacket.ts";
-import {ParticleEffects} from "../../effect/ParticleEffects.ts";
+import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
 import {isClient} from "../../configs/RuntimeConfig.ts";
 
 export class ArtilleryEntity extends FastBulletEntity {
@@ -30,7 +30,7 @@ export class ArtilleryEntity extends FastBulletEntity {
         const g = Math.sin(yaw);
         entity.updateVelocity(12, f, g);
 
-        (world as ServerWorld).spawnPreparedParticle(ParticleEffects.POWER_FULL_BLOW, hitResult.pos, 6);
+        (world as ServerWorld).spawnPreparedParticle(ParticleEffects.POWER_FULL_BLOW, hitResult.pos, 6, yaw);
     }
 
     protected override onBlockHit(hitResult: BlockHitResult) {
@@ -40,6 +40,7 @@ export class ArtilleryEntity extends FastBulletEntity {
 
         const world = this.getWorld();
         world.getMap().setBlock(hitResult.blockPos, 0);
+        (world as ServerWorld).spawnPreparedParticle(ParticleEffects.BLOCK_DESTROY, hitResult.pos, 5);
         world.sendPacket(BlockChangeS2CPacket.from(0, hitResult.blockPos));
     }
 }

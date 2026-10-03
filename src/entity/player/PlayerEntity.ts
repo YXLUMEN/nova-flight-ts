@@ -25,7 +25,7 @@ import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPac
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {PlayerDamage} from "../../event/events/entity/PlayerDamage.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
-import {ParticleEffects} from "../../effect/ParticleEffects.ts";
+import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
 
 export abstract class PlayerEntity extends LivingEntity {
     private static readonly SHIELD_AMOUNT = DataTracker.registerData(Object(PlayerEntity), TrackedDataHandlerRegistry.FLOAT);

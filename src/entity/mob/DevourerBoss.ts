@@ -1,28 +1,29 @@
-import {BossEntity} from "./BossEntity.ts";
-import {World} from "../../world/World.ts";
-import {type DamageSource} from "../damage/DamageSource.ts";
-import {EntityType} from "../EntityType.ts";
-import {EntityAttributes} from "../attribute/EntityAttributes.ts";
-import {doubleEquals, getNearestEntityByVec, rand} from "../../utils/math/math.ts";
-import {DataTracker, type DataTrackerBuilder} from "../data/DataTracker.ts";
-import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts";
-import type {ServerWorld} from "../../server/ServerWorld.ts";
-import {EntityTypes} from "../EntityTypes.ts";
-import {DevourerBossAI, DevourerPhase} from "../ai/devourer/DevourerBossAI.ts";
 import type {Entity} from "../Entity.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
+import type {DamageSource} from "../damage/DamageSource.ts";
+import type {TrackedData} from "../data/TrackedData.ts";
+import type {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import {doubleEquals, rand} from "../../utils/math/math.ts";
+import {getNearestEntityByVec} from "../../utils/math/collide.ts";
+import {BossEntity} from "./BossEntity.ts";
+import {World} from "../../world/World.ts";
+import {EntityType} from "../EntityType.ts";
+import {EntityAttributes} from "../attribute/EntityAttributes.ts";
+import {DataTracker, type DataTrackerBuilder} from "../data/DataTracker.ts";
+import {TrackedDataHandlerRegistry} from "../data/TrackedDataHandlerRegistry.ts";
+import {EntityTypes} from "../EntityTypes.ts";
+import {DevourerBossAI, DevourerPhase} from "../ai/devourer/DevourerBossAI.ts";
 import {ScreenShakeS2CPacket} from "../../network/packet/s2c/ScreenShakeS2CPacket.ts";
 import {PlayAudioS2CPacket} from "../../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {Audios} from "../../sound/Audios.ts";
 import {AudioStopS2CPacket} from "../../network/packet/s2c/AudioStopS2CPacket.ts";
 import {AudioLeapS2CPacket} from "../../network/packet/s2c/AudioControlS2CPacket.ts";
 import {ExplosionEntity} from "../ExplosionEntity.ts";
-import type {TrackedData} from "../data/TrackedData.ts";
 import {EntityPositionForceS2CPacket} from "../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
-import {type EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
-import {ParticleEffects} from "../../effect/ParticleEffects.ts";
+import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
 
 export class DevourerBoss extends BossEntity {
     private static readonly PHASE_TRACKER = DataTracker.registerData(Object(DevourerBoss),

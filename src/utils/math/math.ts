@@ -1,5 +1,3 @@
-import type {Entity} from "../../entity/Entity.ts";
-import type {Predicate} from "../../type/types.ts";
 import type {Vec2} from "./Vec2.ts";
 
 export function clamp(value: number, min: number, max: number) {
@@ -59,42 +57,6 @@ export function doubleEquals(a: number, b: number, epsilon = 1E-6): boolean {
     return Math.abs(a - b) <= epsilon;
 }
 
-export function getNearestEntity<T extends Entity>(
-    x: number, y: number,
-    entities: Iterable<T>,
-    maxDistanceSq?: number,
-    predicate?: Predicate<T>
-): T | null {
-    let nearest = null;
-    let nearestDistSq = maxDistanceSq !== undefined
-        ? maxDistanceSq
-        : Infinity;
-
-    for (const entity of entities) {
-        if (entity.isRemoved() || predicate?.(entity)) continue;
-
-        const pos = entity.positionRef;
-        const dx = pos.x - x;
-        const dy = pos.y - y;
-        const distSq = dx * dx + dy * dy;
-
-        if (distSq > nearestDistSq) continue;
-        nearestDistSq = distSq;
-        nearest = entity;
-    }
-
-    return nearest;
-}
-
-export function getNearestEntityByVec<T extends Entity>(
-    center: Vec2,
-    entities: Iterable<T>,
-    maxDistanceSq?: number,
-    predicate?: Predicate<T>
-): T | null {
-    return getNearestEntity(center.x, center.y, entities, maxDistanceSq, predicate);
-}
-
 export function randomFromIterator<T>(iter: Iterator<T>): T | undefined {
     let result: T | undefined = undefined;
     let count = 0;
@@ -149,6 +111,10 @@ export function noise1(x: number): number {
     const f = x - i;
     const u = f * f * (3 - 2 * f); // smoothstep 插值, 保证一阶连续
     return hash1(i) * (1 - u) + hash1(i + 1) * u;
+}
+
+export function rotl(x: number, k: number): number {
+    return ((x << k) | (x >>> (32 - k))) >>> 0;
 }
 
 export const TAU = Math.PI * 2;

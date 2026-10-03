@@ -6,7 +6,7 @@ import type {ServerWorld} from "../server/ServerWorld.ts";
 import {randInt} from "../utils/math/math.ts";
 import type {UUID} from "../type/types.ts";
 import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
-import {ParticleEffects} from "../effect/ParticleEffects.ts";
+import {ParticleEffects} from "../effect/particle/ParticleEffects.ts";
 import {isClient} from "../configs/RuntimeConfig.ts";
 
 export class DecoyEntity extends Entity implements Ownable {

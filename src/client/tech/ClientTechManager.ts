@@ -1,9 +1,9 @@
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {Tech} from "../../world/tech/Tech.ts";
 import type {Constructor} from "../../type/types.ts";
-import {Techs} from "../../world/tech/Techs.ts";
 import type {ClientApplyTech} from "./ClientApplyTech.ts";
 import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
+import {Techs} from "../../world/tech/Techs.ts";
 import {TechSteeringGear} from "./apply/TechSteeringGear.ts";
 import {TechFireCC} from "./apply/TechFireCC.ts";
 import {TechBC} from "./apply/TechBC.ts";

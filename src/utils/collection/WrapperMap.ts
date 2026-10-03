@@ -1,7 +1,8 @@
 import type {Comparable} from "../../type/Comparable.ts";
 import type {Return} from "../../type/types.ts";
+import type {HashMap} from "./HashMap.ts";
 
-export class WrapperMap<K extends Comparable, V> implements Map<K, V> {
+export class WrapperMap<K extends Comparable, V> implements HashMap<K, V> {
     public readonly [Symbol.toStringTag]: string = 'WrapperMap';
 
     private readonly map: Map<number, Entry<K, V>[]> = new Map();

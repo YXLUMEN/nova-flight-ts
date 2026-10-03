@@ -3,25 +3,6 @@ import type {GuiNode} from "./GuiNode.ts";
 import type {Window} from "../render/Window.ts";
 import type {Consumer} from "../../type/types.ts";
 
-/**
- * GUI 管理层:持有屏幕栈,统一驱动渲染循环、尺寸同步与 DOM 输入事件接入。
- *
- * 用法:
- *   const manager = new GuiManager(overlayCtx);
- *   manager.start(window);   // 接入 DOM 事件;尺寸由 Window 统一推送
- *   manager.push(new MyScreen());
- *
- * 与旧 render/ui 的区别:旧界面各自注册 window 监听并自建 rAF 循环;
- * 本管理器只接入一次 DOM,所有屏幕/控件共享同一事件分发与渲染通道,
- * 栈顶屏幕接收输入,栈内屏幕自底向上绘制。
- *
- * 渲染约定:
- *  - 画布由本层独占(叠加在世界画布之上):需要重绘时清空整层再按栈序绘制,
- *    不与下层内容混用;
- *  - 循环按需运行:屏幕栈为空并清空整层后自动停表,不空转;
- *  - 帧率上限约 60fps,且所有屏幕均无脏标记时跳过绘制;
- *  - 指针仅在屏幕栈非空时接管画布,其余时间穿透给下层。
- */
 export class GuiManager {
     // 帧间隔下限
     private static readonly FRAME_INTERVAL = 1000 / 30;

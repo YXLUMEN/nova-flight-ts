@@ -2,7 +2,7 @@ import {UiTools} from "./UiTools.ts";
 import {UITheme} from "./theme.ts";
 import {UiFramework} from "./UiFramework.ts";
 import {appEvent} from "../../../event/EventBus.ts";
-import type {NewNotify} from "../../../event/events/NewNotify.ts";
+import type {NewNotify} from "../../../event/events/ui/NewNotify.ts";
 
 interface Notification {
     text: string;

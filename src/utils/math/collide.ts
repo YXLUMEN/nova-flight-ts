@@ -1,6 +1,9 @@
 import type {Entity} from "../../entity/Entity.ts";
-import {clamp} from "./math.ts";
 import type {MutVec2} from "./MutVec2.ts";
+import type {Predicate} from "../../type/types.ts";
+import type {Vec2} from "./Vec2.ts";
+import type {World} from "../../world/World.ts";
+import {clamp, TAU} from "./math.ts";
 
 export function getBoundingRadius(entity: Entity): number {
     return Math.max(entity.getWidth(), entity.getHeight()) / 2;
@@ -129,4 +132,78 @@ export function pointToAABBMinDistSq(px: number, py: number, left: number, top: 
     else if (py > bottom) dy = py - bottom;
 
     return dx * dx + dy * dy;
+}
+
+export function getNearestEntity<T extends Entity>(
+    x: number, y: number,
+    entities: Iterable<T>,
+    maxDistanceSq?: number,
+    predicate?: Predicate<T>
+): T | null {
+    let nearest = null;
+    let nearestDistSq = maxDistanceSq !== undefined
+        ? maxDistanceSq
+        : Infinity;
+
+    for (const entity of entities) {
+        if (entity.isRemoved() || predicate?.(entity)) continue;
+
+        const pos = entity.positionRef;
+        const dx = pos.x - x;
+        const dy = pos.y - y;
+        const distSq = dx * dx + dy * dy;
+
+        if (distSq > nearestDistSq) continue;
+        nearestDistSq = distSq;
+        nearest = entity;
+    }
+
+    return nearest;
+}
+
+export function getNearestEntityByVec<T extends Entity>(
+    center: Vec2,
+    entities: Iterable<T>,
+    maxDistanceSq?: number,
+    predicate?: Predicate<T>
+): T | null {
+    return getNearestEntity(center.x, center.y, entities, maxDistanceSq, predicate);
+}
+
+export function acquireTarget(
+    world: World,
+    missilePos: Vec2,
+    missileYaw: number,
+    owner: Entity | null,
+): Entity | null {
+    const mobs = world.getMobs();
+    if (mobs.size === 0) return null;
+
+    let best: Entity | null = null;
+    let bestScore = -Infinity;
+
+    for (const mob of mobs) {
+        if (mob.isRemoved() || mob === owner) continue;
+
+        const mobPos = mob.positionRef;
+        const dx = mobPos.x - missilePos.x;
+        const dy = mobPos.y - missilePos.y;
+        const dist2 = dx * dx + dy * dy;
+
+        const yawToMob = Math.atan2(dy, dx);
+        const yawDiff = Math.abs(((yawToMob - missileYaw + Math.PI) % TAU) - Math.PI);
+        const facingScore = -yawDiff * 200;
+
+        const mobVel = mob.velocityRef;
+        const radialSpeed = (dx * mobVel.x + dy * mobVel.y) / Math.sqrt(dist2 + 1);
+        const velScore = -Math.abs(radialSpeed) * 0.5;
+
+        const totalScore = facingScore - dist2 + velScore;
+        if (totalScore > bestScore) {
+            bestScore = totalScore;
+            best = mob;
+        }
+    }
+
+    return best;
 }

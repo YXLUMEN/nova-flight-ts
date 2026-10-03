@@ -7,7 +7,7 @@ import {StatusEffects} from "../../../entity/effect/StatusEffects.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {LivingEntity} from "../../../entity/LivingEntity.ts";
 import {spawnLaserByVec} from "../../../utils/ServerEffect.ts";
-import {ParticleEffects} from "../../../effect/ParticleEffects.ts";
+import {ParticleEffects} from "../../../effect/particle/ParticleEffects.ts";
 import type {Vec2} from "../../../utils/math/Vec2.ts";
 import {LaserPulseItem} from "./LaserPulseItem.ts";
 
@@ -16,9 +16,11 @@ export class GammaLasers extends LaserPulseItem {
         return 3;
     }
 
-    protected override onHit(world: ServerWorld, start: Vec2, end: Vec2): void {
+    protected override onHit(world: ServerWorld, start: Vec2, end: Vec2, attacker: Entity): void {
         spawnLaserByVec(world, start, end, '#ffca59', this.laserWidth(), 0.2);
-        world.spawnPreparedParticle(ParticleEffects.POWER_FULL_BLOW, end, 8);
+
+        const yaw = attacker.getYaw();
+        world.spawnPreparedParticle(ParticleEffects.POWER_FULL_BLOW, end, 8, yaw + Math.PI);
         world.playSound(null, SoundEvents.LASER_FIRE_BEAM, 0.4);
     }
 

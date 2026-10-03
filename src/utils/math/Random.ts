@@ -1,3 +1,6 @@
+/**
+ * 旧实现, 适用于简单场景
+ * */
 export class Random {
     private state: number;
 
@@ -20,10 +23,6 @@ export class Random {
 
     public nextBool(): boolean {
         return this.nextFloat() < 0.5;
-    }
-
-    public nextDouble(): number {
-        return this.nextFloat();
     }
 
     public setState(state: number) {

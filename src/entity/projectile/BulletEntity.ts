@@ -3,7 +3,7 @@ import {Entity} from "../Entity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
-import {ParticleEffects} from "../../effect/ParticleEffects.ts";
+import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 import {isClient} from "../../configs/RuntimeConfig.ts";
 

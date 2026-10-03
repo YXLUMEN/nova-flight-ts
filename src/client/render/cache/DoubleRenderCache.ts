@@ -1,24 +1,22 @@
-import {buildSprite, type RenderCache} from "./RenderCache.ts";
-import type {BiConsumer} from "../../../type/types.ts";
+import {buildSprite, type RenderCache, type SpriteRender} from "./RenderCache.ts";
 import type {AABB} from "../../../utils/math/AABB.ts";
-import type {SpriteCtx} from "./LRURenderCache.ts";
 
 export class DoubleRenderCache implements RenderCache<boolean> {
     private sprite0: ImageBitmap | null = null;
     private sprite1: ImageBitmap | null = null;
 
-    public get<E>(
+    public get<U extends unknown[]>(
         key: boolean,
         bounds: AABB,
-        draw: BiConsumer<SpriteCtx, E>,
-        target: E
+        draw: SpriteRender<U>,
+        ...args: U
     ): ImageBitmap {
         if (key) {
-            if (!this.sprite0) this.sprite0 = buildSprite(bounds, draw, target);
+            if (!this.sprite0) this.sprite0 = buildSprite(bounds, draw, ...args);
             return this.sprite0;
         }
 
-        if (!this.sprite1) this.sprite1 = buildSprite(bounds, draw, target);
+        if (!this.sprite1) this.sprite1 = buildSprite(bounds, draw, ...args);
         return this.sprite1;
     }
 

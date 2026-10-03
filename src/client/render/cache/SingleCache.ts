@@ -1,20 +1,18 @@
-import {buildSprite, type RenderCache} from "./RenderCache.ts";
-import type {BiConsumer} from "../../../type/types.ts";
+import {buildSprite, type RenderCache, type SpriteRender} from "./RenderCache.ts";
 import type {AABB} from "../../../utils/math/AABB.ts";
-import type {SpriteCtx} from "./LRURenderCache.ts";
 
 export class SingleCache<K> implements RenderCache<K> {
     private sprite: ImageBitmap | null = null;
 
-    public get<E>(
+    public get<U extends unknown[]>(
         _key: K,
         bounds: AABB,
-        draw: BiConsumer<SpriteCtx, E>,
-        target: E
+        draw: SpriteRender<U>,
+        ...args: U
     ): ImageBitmap {
         if (this.sprite) return this.sprite;
 
-        this.sprite = buildSprite(bounds, draw, target);
+        this.sprite = buildSprite(bounds, draw, ...args);
         return this.sprite;
     }
 

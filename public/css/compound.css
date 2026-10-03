@@ -1,0 +1,56 @@
+.c-button {
+    width: 150px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.07);
+    color: #f0f6ff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.c-button:hover {
+    background: var(--hover);
+    border-color: rgba(94, 200, 255, 0.45);
+}
+
+.c-button:active {
+    background: var(--press);
+}
+
+.c-button:focus-visible {
+    outline: none;
+    border-color: #5ec8ff;
+    box-shadow: 0 0 0 2px rgba(94, 200, 255, 0.35);
+}
+
+.c-button.primary {
+    background: #5ec8ff;
+    border-color: #5ec8ff;
+    color: #06131f;
+}
+
+.c-button.primary:hover {
+    background: rgba(255, 255, 255, 0.20) linear-gradient(rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0.20));
+    border-color: #5ec8ff;
+}
+
+.c-button.primary:active {
+    background: #4db8e8 none;
+}
+
+.c-button.danger {
+    background: rgba(255, 92, 92, 0.16);
+    border-color: #ff5c5c;
+    color: #ff5c5c;
+}
+
+.c-button.danger:hover {
+    background: rgba(255, 92, 92, 0.24);
+    border-color: #ff5c5c;
+}

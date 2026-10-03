@@ -1,12 +1,13 @@
 import type {VisualEffect} from "./VisualEffect.ts";
-import {lerp, TAU} from "../utils/math/math.ts";
-import type {PacketCodec} from "../network/codec/PacketCodec.ts";
-import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
+import type {PacketCodec} from "../network/codec/PacketCodec.ts";
+import {lerp, TAU} from "../utils/math/math.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import {VisualEffectTypes} from "./VisualEffectTypes.ts";
+
 
 export class RadialRing implements VisualEffect {
-    public static TYPE: VisualEffectType<RadialRing> = null!;
     public static readonly PACKET_CODEC: PacketCodec<RadialRing> = PacketCodecs.of(
         (writer, value) => {
             PacketCodecs.VECTOR2D.encode(writer, value.center);
@@ -44,7 +45,7 @@ export class RadialRing implements VisualEffect {
     }
 
     public getType(): VisualEffectType<RadialRing> {
-        return RadialRing.TYPE
+        return VisualEffectTypes.RADIAL_RING;
     }
 
     public tick(dt: number) {

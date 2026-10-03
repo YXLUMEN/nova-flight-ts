@@ -23,7 +23,7 @@ import {BlockCollision} from "./collision/BlockCollision.ts";
 import type {ExplosionConfigs} from "./element/explosion/ExplosionConfigs.ts";
 import {ScheduleTask} from "./ScheduleTask.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
-import type {ParticleEffectType} from "../effect/ParticleEffectType.ts";
+import type {ParticleEffectType} from "../effect/particle/ParticleEffectType.ts";
 import {DifficultChange} from "../event/events/stage/DifficultChange.ts";
 import {GameEnd} from "../event/events/game/GameEnd.ts";
 import type {WorldMutation} from "./element/WorldMutation.ts";
@@ -83,15 +83,6 @@ export abstract class World {
     public abstract playLoopSound(entity: Entity | null, sound: SoundEvent, volume?: number, pitch?: number): void;
 
     public abstract stopLoopSound(entity: Entity | null, sound: SoundEvent): boolean;
-
-    public abstract addParticleByVec(
-        pos: Vec2, vel: Vec2,
-        life: number,
-        size: number,
-        colorFrom: HexColor, colorTo?: HexColor,
-        shape?: number,
-        drag?: number
-    ): void;
 
     public abstract addParticle(
         posX: number, posY: number,

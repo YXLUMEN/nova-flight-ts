@@ -71,7 +71,7 @@ import type {PlayerProfilesS2CPacket} from "../../../network/packet/s2c/PlayerPr
 import {AcceptTeleportC2SPacket} from "../../../network/packet/c2s/AcceptTeleportC2SPacket.ts";
 import {Vec2} from "../../../utils/math/Vec2.ts";
 import {MobEntity} from "../../../entity/mob/MobEntity.ts";
-import {ParticleEffects} from "../../../effect/ParticleEffects.ts";
+import {ParticleEffects} from "../../../effect/particle/ParticleEffects.ts";
 
 export class ClientPlayHandler extends ClientCommonHandler {
     private readonly commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();

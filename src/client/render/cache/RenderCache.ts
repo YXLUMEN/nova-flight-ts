@@ -1,14 +1,15 @@
-import type {BiConsumer} from "../../../type/types.ts";
 import type {SpriteCtx} from "./LRURenderCache.ts";
 import type {AABB} from "../../../utils/math/AABB.ts";
 import {DPR} from "../../../utils/uit.ts";
 
+export type SpriteRender<U extends unknown[]> = (ctx: SpriteCtx, ...args: U) => void;
+
 export interface RenderCache<K> {
-    get<E>(
+    get<U extends unknown[]>(
         key: K,
         bounds: AABB,
-        draw: BiConsumer<SpriteCtx, E>,
-        target: E
+        draw: SpriteRender<U>,
+        ...args: U
     ): ImageBitmap;
 
     clear(): void;
@@ -23,7 +24,7 @@ export interface RenderCache<K> {
  */
 export function buildSprite<U extends unknown[]>(
     bounds: AABB,
-    draw: (ctx: SpriteCtx, ...args: U) => void,
+    draw: SpriteRender<U>,
     ...args: U
 ): ImageBitmap {
     const canvas = new OffscreenCanvas(

@@ -1,9 +1,10 @@
-import type {PacketCodec} from "../network/codec/PacketCodec.ts";
-import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
-import {Registries} from "../registry/Registries.ts";
-import type {HexColor} from "../type/types.ts";
-import {encodeColorHex} from "../utils/net_util.ts";
+import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
+import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
+import {Registries} from "../../registry/Registries.ts";
+import type {HexColor} from "../../type/types.ts";
+import {encodeColorHex} from "../../utils/net_util.ts";
 import {ParticleShape} from "./ParticlePool.ts";
+import {wrapRadians} from "../../utils/math/math.ts";
 
 export class ParticleEffectType {
     public static readonly PACKET_CODEC: PacketCodec<ParticleEffectType> = PacketCodecs.registryValue(Registries.PARTICLES);
@@ -30,6 +31,9 @@ export class ParticleEffectType {
     /** Maximum emission speed (units/s). */
     public readonly speedMax: number;
 
+    public readonly rotMin: number = 0;
+    public readonly rotMax: number = 0;
+
     /** Minimum spread half-angle (radians, 0 = directional). */
     public readonly spreadMin: number;
     /** Maximum spread half-angle (radians, Math.PI = omnidirectional). */
@@ -38,7 +42,6 @@ export class ParticleEffectType {
     /** Velocity drag coefficient (0 = no drag). */
     public readonly drag: number;
 
-    /** @internal */
     public constructor(builder: ParticleEffectTypeBuilder) {
         this.lifeMin = builder.lifeMin;
         this.lifeMax = builder.lifeMax;
@@ -50,9 +53,15 @@ export class ParticleEffectType {
         this.colorTo = encodeColorHex(builder.colorTo);
         this.speedMin = builder.speedMin;
         this.speedMax = builder.speedMax;
-        this.spreadMin = builder.spreadMin;
-        this.spreadMax = builder.spreadMax;
+        if (this.shape !== ParticleShape.CIRCLE) {
+            this.rotMin = wrapRadians(builder.rotMin);
+            this.rotMax = wrapRadians(builder.rotMax);
+        }
+
+        this.spreadMin = wrapRadians(builder.spreadMin);
+        this.spreadMax = wrapRadians(builder.spreadMax);
         this.drag = builder.drag;
+        Object.freeze(this);
     }
 
     public static builder(): ParticleEffectTypeBuilder {
@@ -60,7 +69,7 @@ export class ParticleEffectType {
     }
 }
 
-export class ParticleEffectTypeBuilder {
+class ParticleEffectTypeBuilder {
     public lifeMin: number = 0.3;
     public lifeMax: number = 0.8;
     public recession: number = 0.6;
@@ -74,6 +83,9 @@ export class ParticleEffectTypeBuilder {
 
     public speedMin: number = 0;
     public speedMax: number = 0;
+
+    public rotMin: number = 0;
+    public rotMax: number = 0;
 
     public spreadMin: number = 0;
     public spreadMax: number = 0;
@@ -111,6 +123,12 @@ export class ParticleEffectTypeBuilder {
     public speed(min: number, max: number): this {
         this.speedMin = min;
         this.speedMax = max;
+        return this;
+    }
+
+    public rotation(rotMin: number, rotMax: number): this {
+        this.rotMin = rotMin;
+        this.rotMax = rotMax;
         return this;
     }
 

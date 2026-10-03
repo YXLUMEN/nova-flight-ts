@@ -1,14 +1,13 @@
 import type {VisualEffect} from "./VisualEffect.ts";
-import {lerp, TAU} from "../utils/math/math.ts";
-import type {VisualEffectType} from "./VisualEffectType.ts";
-import {Vec2} from "../utils/math/Vec2.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {Consumer} from "../type/types.ts";
+import type {VisualEffectType} from "./VisualEffectType.ts";
+import {lerp, TAU} from "../utils/math/math.ts";
+import {Vec2} from "../utils/math/Vec2.ts";
 import {BuiltInPath} from "../client/render/BuiltInPath.ts";
+import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 
 export class AuraEffect implements VisualEffect {
-    public static TYPE: VisualEffectType<AuraEffect> = null!;
-
     public bindEntity: Entity | null = null;
     public onTick: Consumer<AuraEffect> | null = null;
     public dispose: Consumer<void> | null = null;
@@ -32,7 +31,7 @@ export class AuraEffect implements VisualEffect {
     }
 
     public getType(): VisualEffectType<AuraEffect> {
-        return AuraEffect.TYPE;
+        return VisualEffectTypes.SHIELD_AURA;
     }
 
     public tick(dt: number): void {

@@ -9,7 +9,7 @@ import type {ClientWorld} from "../../../client/ClientWorld.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
-import {ParticleEffects} from "../../../effect/ParticleEffects.ts";
+import {ParticleEffects} from "../../../effect/particle/ParticleEffects.ts";
 import {isClient} from "../../../configs/RuntimeConfig.ts";
 
 export abstract class BaseWeapon extends Weapon {

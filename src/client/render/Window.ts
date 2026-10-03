@@ -11,8 +11,8 @@ export class Window {
 
     public readonly canvas = document.getElementById('game') as HTMLCanvasElement;
     public readonly ctx = this.canvas.getContext('2d')!;
-    public readonly hudCanvas = document.getElementById('hud') as HTMLCanvasElement;
-    public readonly hudCtx = this.hudCanvas.getContext('2d')!;
+    public readonly guiCanvas = document.getElementById('gui') as HTMLCanvasElement;
+    public readonly guiCtx = this.guiCanvas.getContext('2d')!;
 
     public readonly camera: Camera = new Camera();
     public readonly hud: HUD = new HUD();
@@ -56,10 +56,10 @@ export class Window {
         this.canvas.height = Math.floor(rect.height * DPR);
         this.ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 
-        const hudRect = this.hudCanvas.getBoundingClientRect();
-        this.hudCanvas.width = Math.floor(hudRect.width * DPR);
-        this.hudCanvas.height = Math.floor(hudRect.height * DPR);
+        const hudRect = this.guiCanvas.getBoundingClientRect();
+        this.guiCanvas.width = Math.floor(hudRect.width * DPR);
+        this.guiCanvas.height = Math.floor(hudRect.height * DPR);
 
-        this.hudCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        this.guiCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
     }
 }

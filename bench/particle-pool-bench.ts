@@ -1,3 +1,5 @@
+// noinspection DuplicatedCode
+
 /**
  * ParticlePool 渲染基准：旧实现 vs 新实现（贴图缓存）
  * 运行方式：npm run dev 后访问 /bench/particle-pool-bench.html
@@ -10,7 +12,7 @@
  *   C 旧·修 c0/c1 + 渐变局部缓存
  *                    视觉正确前提下旧方案的最好水平：渐变按 (颜色对, 尺寸档) 缓存到局部空间，
  *                    逐粒子 translate 后填充（因此无法再批处理路径）
- *   D 新·贴图缓存     src/effect/ParticlePool.ts 里的真实实现
+ *   D 新·贴图缓存     src/effect/particle/ParticlePool.ts 里的真实实现
  *
  * A/B/C 是 bench 内的自包含副本（只重写 render，粒子状态与 tick 全部复用 src 的 ParticlePool），
  * 所以四者共用同一套数据布局，对比是公平的；D 直接跑 src 里那份真实实现。
@@ -22,8 +24,8 @@
  *   3. 可视 A/B（四象限，肉眼确认 B 的渐变错位与 D 的等价性）。
  */
 
-import type {ParticleShape} from "../src/effect/ParticlePool.ts";
-import {ParticlePool} from "../src/effect/ParticlePool.ts";
+import type {ParticleShape} from "../src/effect/particle/ParticlePool.ts";
+import {ParticlePool} from "../src/effect/particle/ParticlePool.ts";
 import {lerp, TAU} from "../src/utils/math/math.ts";
 import {decodeColorToHex} from "../src/utils/net_util.ts";
 import {DPR} from "../src/utils/uit.ts";
@@ -151,7 +153,7 @@ interface PoolData {
     cx: Float32Array;
     cy: Float32Array;
     halfW: Float32Array;
-    halfH: Float32Array;
+    // halfH 已停用: 池不再存半个高度, 旧实现副本统一按 halfW 绘制
     shape: Uint8Array;
     age: Float32Array;
     life: Float32Array;
@@ -183,7 +185,7 @@ function traceShape(
     }
 
     if (shape === TRIANGLE) {
-        const halfH = d.halfH[i] * (1 - d.recession[i] * t);
+        const halfH = d.halfW[i] * (1 - d.recession[i] * t);
         ctx.moveTo(x, y - halfH);            // 顶点
         ctx.lineTo(x + halfW, y + halfH);    // 右下
         ctx.lineTo(x - halfW, y + halfH);    // 左下
@@ -191,7 +193,7 @@ function traceShape(
         return;
     }
 
-    const halfH = d.halfH[i] * (1 - d.recession[i] * t);
+    const halfH = d.halfW[i] * (1 - d.recession[i] * t);
     ctx.rect(x - halfW, y - halfH, halfW * 2, halfH * 2);
 }
 
@@ -320,7 +322,7 @@ class OldOptimizedPool extends ParticlePool {
             const shrink = 1 - d.recession[i] * t;
             const halfW = d.halfW[i] * shrink;
             if (halfW < 0.1) continue;
-            const halfH = d.halfH[i] * shrink;
+            const halfH = d.halfW[i] * shrink;
 
             const x = lerp(alpha, d.px[i], d.cx[i]);
             const y = lerp(alpha, d.py[i], d.cy[i]);
@@ -419,7 +421,7 @@ class OldOptimizedPool extends ParticlePool {
 // ================= 被测实现清单 =================
 
 /**
- * 被测实现清单。D 直接跑 src/effect/ParticlePool.ts 里的真实实现。
+ * 被测实现清单。D 直接跑 src/effect/particle/ParticlePool.ts 里的真实实现。
  * cached = 该实现带贴图缓存（计数前需要先预热，否则首次构建会污染计数）。
  */
 interface Variant {
@@ -444,7 +446,7 @@ const VARIANTS: Variant[] = [
         cached: false, make: () => new OldOptimizedPool(POOL_CAPACITY),
     },
     {
-        key: "D", label: "新·贴图缓存", hint: "src/effect/ParticlePool.ts",
+        key: "D", label: "新·贴图缓存", hint: "src/effect/particle/ParticlePool.ts",
         cached: true, make: () => new ParticlePool(POOL_CAPACITY),
     },
 ];
@@ -712,7 +714,7 @@ function main(): void {
     const env = document.getElementById("env")!;
     env.innerHTML = `DPR=${DPR}（devicePixelRatio=${globalThis.devicePixelRatio}），池容量 ${POOL_CAPACITY}，`
         + `每场景 ${PARTICLES} 个粒子、预热 ${WARMUP_FRAMES} 帧，计时 ${TIMING_FRAMES} 帧 × ${TIMING_RUNS} 次取中位数。`
-        + ` D 曲线跑的是 <code>src/effect/ParticlePool.ts</code> 里的真实实现。`;
+        + ` D 曲线跑的是 <code>src/effect/particle/ParticlePool.ts</code> 里的真实实现。`;
 
     let html = "";
 

@@ -22,7 +22,7 @@ export async function run() {
         concurrency: 16,
         fetchTimeout: 1000,
         maxRetries: 2,
-        deferTimeoutBase: 600
+        deferTimeoutBase: 600,
     });
     await pages.bootstrap(document.body);
 
@@ -62,7 +62,8 @@ export async function run() {
         if (Error.isError(err)) {
             const msg = `Error while starting client: ${err.message} by ${err.cause}\n at ${err.stack}`;
             console.error(msg);
-            return error(msg);
+            await error(msg);
+            return;
         }
         const msg = `Error while starting client: ${err}`;
         console.error(msg);

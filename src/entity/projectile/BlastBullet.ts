@@ -2,7 +2,7 @@ import {BulletEntity} from "./BulletEntity.ts";
 import {type HitResult, HitType} from "../../world/collision/HitResult.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {ExplosionBehaviour} from "../../world/element/explosion/ExplosionConfigs.ts";
-import {ParticleEffects} from "../../effect/ParticleEffects.ts";
+import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
 import {ExplosionVisual} from "../../world/element/explosion/ExplosionVisual.ts";
 import {ExplosiveBuilder} from "../../world/element/explosion/ExplosiveBuilder.ts";
 

@@ -1,7 +1,6 @@
-import {MemoryLRU} from "../../../utils/collection/MemoryLRU.ts";
-import type {BiConsumer} from "../../../type/types.ts";
 import type {AABB} from "../../../utils/math/AABB.ts";
-import {buildSprite, type RenderCache} from "./RenderCache.ts";
+import {buildSprite, type RenderCache, type SpriteRender} from "./RenderCache.ts";
+import {MemoryLRU} from "../../../utils/collection/MemoryLRU.ts";
 
 export class LRURenderCache<K> implements RenderCache<K> {
     private readonly sprites: MemoryLRU<K, ImageBitmap>;
@@ -13,16 +12,16 @@ export class LRURenderCache<K> implements RenderCache<K> {
         );
     }
 
-    public get<E>(
+    public get<U extends unknown[]>(
         key: K,
         bounds: AABB,
-        draw: BiConsumer<SpriteCtx, E>,
-        target: E
+        draw: SpriteRender<U>,
+        ...args: U
     ): ImageBitmap {
         const sprite = this.sprites.get(key);
         if (sprite) return sprite;
 
-        const bitmap = buildSprite(bounds, draw, target);
+        const bitmap = buildSprite(bounds, draw, ...args);
         this.sprites.set(key, bitmap);
         return bitmap;
     }

@@ -1,3 +1,31 @@
+:root {
+    --screen: #04070d;
+    /** 主文字 */
+    --text: #f0f6ff;
+    /** 次要文字 */
+    --textMuted: #93a5bd;
+    /** 强调色 / 焦点 */
+    --accent: #5ec8ff;
+    /** 成功 / HUD 类信息 */
+    --success: #00ff99;
+    /** 危险 / 错误 */
+    --danger: #ff5c5c;
+    /** 面板底 */
+    --surface: rgb(14 22 34 / 0.92);
+    /** 描边 */
+    --border: rgb(150 180 220 / 0.24);
+    /** 轨道 / 空槽 */
+    --track: rgb(255 255 255 / 0.12);
+    /** 悬停高亮 */
+    --hover: rgb(94 200 255 / 0.16);
+    /** 按下变暗 */
+    --press: rgb(0 0 0 / 0.3);
+    /** 遮罩层 */
+    --overlay: rgb(0 0 0 / 0.6);
+    /** 光标 / 插入符 */
+    --caret: #ffffff;
+}
+
 html, body {
     margin: 0;
     height: 100%;
@@ -21,7 +49,7 @@ html, body {
     cursor: crosshair;
 }
 
-#hud {
+#gui {
     position: fixed;
     inset: 0;
     display: block;
@@ -31,7 +59,7 @@ html, body {
     cursor: default;
 }
 
-#hud.show {
+#gui.show {
     pointer-events: initial;
 }
 

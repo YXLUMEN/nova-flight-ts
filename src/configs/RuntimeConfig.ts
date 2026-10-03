@@ -7,7 +7,7 @@ export const isClient = !isServer;
 
 export const DEFAULT_CONFIG = config({
     per: 50,
-    version: '26v29',
+    version: '26v30',
     gameVersion: 11,
 });
 
