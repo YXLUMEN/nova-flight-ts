@@ -467,6 +467,10 @@
       "path": "sounds/shell_reload.ogg",
       "tier": "public",
       "license": "CC0-1.0"
+    },
+    {
+      "path": "audios/gyzg.ogg",
+      "tier": "unowned"
     }
   ],
   "_example": [

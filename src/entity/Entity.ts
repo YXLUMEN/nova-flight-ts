@@ -202,6 +202,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     protected overwritePos(x: number, y: number): void {
         this.pos.set(x, y);
+        // this.setBoundingBox(this.calculateBoundingBox());
     }
 
     public setPosition(x: number, y: number): void {

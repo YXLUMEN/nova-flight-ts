@@ -1,18 +1,19 @@
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
-import {clamp, lerp} from "../../utils/math/math.ts";
-import {Window} from "./Window.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
-import {defaultLayers} from "../../configs/StarfieldConfig.ts";
-import {StarField} from "../../effect/StarField.ts";
 import type {VisualEffect} from "../../effect/VisualEffect.ts";
+import type {ParticleEffectType} from "../../effect/particle/ParticleEffectType.ts";
+import type {Consumer, HexColor} from "../../type/types.ts";
+import {clamp, lerp} from "../../utils/math/math.ts";
+import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
+import {defaultLayers} from "../../configs/StarfieldConfig.ts";
+import {Window} from "./Window.ts";
+import {StarField} from "../../effect/StarField.ts";
 import {EntityRenderers} from "./entity/EntityRenderers.ts";
 import {World} from "../../world/World.ts";
-import type {ParticleEffectType} from "../../effect/particle/ParticleEffectType.ts";
 import {BlockMapRender} from "./BlockMapRender.ts";
 import {ParticlePool} from "../../effect/particle/ParticlePool.ts";
-import type {Consumer, HexColor} from "../../type/types.ts";
 import {WorldEntityRenderer} from "./WorldEntityRenderer.ts";
-import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
+import {DebugRenderer} from "./DebugRenderer.ts";
 
 export class WorldRenderer {
     private readonly client: NovaFlightClient;
@@ -21,6 +22,7 @@ export class WorldRenderer {
     private world: ClientWorld | null = null;
 
     private readonly entityRenderer: WorldEntityRenderer;
+    private readonly debugRenderer: DebugRenderer;
     private readonly effects: VisualEffect[] = [];
     private readonly particlePool: ParticlePool;
     private readonly starField: StarField;
@@ -35,6 +37,7 @@ export class WorldRenderer {
         this.window = client.window;
 
         this.entityRenderer = new WorldEntityRenderer(client);
+        this.debugRenderer = new DebugRenderer();
         this.particlePool = new ParticlePool(1024);
         this.starField = new StarField(128, defaultLayers, 8);
         this.starField.init();
@@ -70,7 +73,7 @@ export class WorldRenderer {
     public tick(dt: number) {
         const camera = this.client.window.camera;
         if (this.client.player) {
-            camera.tick(this.client.player.getLerpPos(dt), dt);
+            camera.tick(this.client.player.positionRef, dt);
         }
 
         for (let i = this.effects.length - 1; i >= 0; i--) {
@@ -163,16 +166,15 @@ export class WorldRenderer {
         const player = this.client.player;
         if (player) this.entityRenderer.renderMainPlayer(ctx, world, player, alpha);
 
-        if (RuntimeConfig.renderHitBox) {
-            this.entityRenderer.renderDebug(ctx, viewRect, world, alpha);
+        if (RuntimeConfig.debugFlag > 0) {
+            this.debugRenderer.render(ctx, viewRect, RuntimeConfig.debugFlag, world, alpha);
         }
 
         this.window.hud.renderMainWeapon(ctx, alpha);
         this.window.damagePopup.render(ctx, alpha); // 修改了字体且未还原
         ctx.restore();
 
-        this.window.hud.render(ctx);
-
+        this.window.hud.render(ctx, alpha);
         this.window.hud.renderPointer(ctx, this.client);
     }
 

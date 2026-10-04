@@ -17,7 +17,7 @@ export class PhaseLasers extends SpecialWeapon {
     public static readonly COLOR = '#8bff5e';
     public static readonly OVERHEAT_COLOR = '#ff5e5e';
     public static readonly LASER_HEIGHT = World.MAP_HEIGHT * 2;
-    public static readonly manager = new LaserBeamManger();
+    public static readonly MANAGER = new LaserBeamManger();
 
     protected width = 6;
 
@@ -78,7 +78,7 @@ export class PhaseLasers extends SpecialWeapon {
         // 光束端点
         let laserId = stack.getOr(DataComponents.LASER_ID, -1);
         if (laserId < 0) {
-            laserId = PhaseLasers.manager.allocate();
+            laserId = PhaseLasers.MANAGER.allocate();
             stack.set(DataComponents.LASER_ID, laserId);
         }
 
@@ -90,12 +90,12 @@ export class PhaseLasers extends SpecialWeapon {
         );
 
         if (world.isClient) {
-            const beamFx = PhaseLasers.manager.get(laserId);
+            const beamFx = PhaseLasers.MANAGER.get(laserId);
             if (beamFx && beamFx.isAlive()) beamFx.setByVec(start, end);
             return;
         }
 
-        if (!PhaseLasers.manager.isActivated(laserId)) {
+        if (!PhaseLasers.MANAGER.isActivated(laserId)) {
             world.sendPacket(new LaserWeaponActivate(
                 laserId,
                 start,
@@ -103,7 +103,7 @@ export class PhaseLasers extends SpecialWeapon {
                 this.width,
                 stack.getOr(DataComponents.UI_COLOR, PhaseLasers.COLOR)
             ));
-            PhaseLasers.manager.markActivated(laserId);
+            PhaseLasers.MANAGER.markActivated(laserId);
         }
 
         this.damage(world as ServerWorld, stack, holder, start, end);
@@ -113,7 +113,7 @@ export class PhaseLasers extends SpecialWeapon {
         const laserId = stack.getOr(DataComponents.LASER_ID, -1);
         if (laserId < 0) return;
 
-        PhaseLasers.manager.release(laserId);
+        PhaseLasers.MANAGER.release(laserId);
         stack.remove(DataComponents.LASER_ID);
         if (!world.isClient) {
             world.sendPacket(new LaserWeaponDeactivate(laserId));

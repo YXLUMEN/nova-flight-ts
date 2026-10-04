@@ -28,8 +28,6 @@ export class LaserBeamEffect implements VisualEffect {
         }
     );
 
-    private alive = true;
-
     private readonly color: string;
     private readonly baseWidth: number;
     private readonly life: number;
@@ -39,7 +37,7 @@ export class LaserBeamEffect implements VisualEffect {
     private readonly prevStart = MutVec2.zero();
     private readonly prevEnd = MutVec2.zero();
 
-    private t = 0;
+    private age = 0;
     private pulseTime = 0;
 
     public constructor(color: string, baseWidth: number, life = 0.15) {
@@ -53,14 +51,11 @@ export class LaserBeamEffect implements VisualEffect {
     }
 
     public tick(dt: number) {
-        this.t += dt;
+        this.age += dt;
         this.pulseTime += dt;
-        if (this.t > this.life) this.alive = false;
     }
 
     public render(ctx: CanvasRenderingContext2D, tickDelta: number) {
-        if (!this.alive) return;
-
         const sx = lerp(tickDelta, this.prevStart.x, this.start.x);
         const sy = lerp(tickDelta, this.prevStart.y, this.start.y);
         const ex = lerp(tickDelta, this.prevEnd.x, this.end.x);
@@ -92,11 +87,11 @@ export class LaserBeamEffect implements VisualEffect {
     }
 
     public isAlive(): boolean {
-        return this.alive;
+        return this.age < this.life;
     }
 
     public kill() {
-        this.alive = false;
+        this.age = this.life;
     }
 
     public setByVec(start: Vec2, end: Vec2) {
@@ -106,7 +101,7 @@ export class LaserBeamEffect implements VisualEffect {
         this.start.y = start.y;
         this.end.x = end.x;
         this.end.y = end.y;
-        this.t = 0; // 刷新寿命,保持常驻
+        this.age = 0; // 刷新寿命,保持常驻
     }
 
     public set(startX: number, startY: number, endX: number, endY: number) {
@@ -116,7 +111,7 @@ export class LaserBeamEffect implements VisualEffect {
         this.start.y = startY;
         this.end.x = endX;
         this.end.y = endY;
-        this.t = 0;
+        this.age = 0;
     }
 
     public reset(start: Vec2, end: Vec2) {
@@ -124,6 +119,6 @@ export class LaserBeamEffect implements VisualEffect {
         this.end.set(end.x, end.y);
         this.prevStart.set(start.x, start.y);
         this.prevEnd.set(end.x, end.y);
-        this.t = 0;
+        this.age = 0;
     }
 }

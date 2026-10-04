@@ -25,6 +25,6 @@ export const RuntimeConfig = status({
     generalMode: false,
 
     cameraFollow: true,
-    renderHitBox: false,
     crosshairRecoil: true,
+    debugFlag: 0,
 });

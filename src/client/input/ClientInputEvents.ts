@@ -8,6 +8,8 @@ import type {ClientTechTree} from "../tech/ClientTechTree.ts";
 import {app} from "../../lib.ts";
 import {Main2WorkerType} from "../../worker/WorkerMsgType.ts";
 import type {Consumer} from "../../type/types.ts";
+import {BitFlag} from "../../utils/BitFlag.ts";
+import {DebugFlag} from "../render/DebugRenderer.ts";
 
 export class ClientInputEvents {
     public static registryAll(client: NovaFlightClient, input: KeyboardInput): void {
@@ -130,7 +132,10 @@ export class ClientInputEvents {
                 RuntimeConfig.cameraFollow = !RuntimeConfig.cameraFollow;
                 break;
             case 'F3':
-                RuntimeConfig.renderHitBox = !RuntimeConfig.renderHitBox;
+                RuntimeConfig.debugFlag = BitFlag.toggle(RuntimeConfig.debugFlag, DebugFlag.BOUNDING_BOX);
+                break;
+            case 'F2':
+                RuntimeConfig.debugFlag = BitFlag.toggle(RuntimeConfig.debugFlag, DebugFlag.HEALTH_BAR);
                 break;
             case 'Backquote': {
                 const ping = `Ping ${Math.floor(client.networkHandler.getLatency())}ms`;

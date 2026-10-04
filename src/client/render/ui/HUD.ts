@@ -1,4 +1,4 @@
-import {clamp} from "../../../utils/math/math.ts";
+import {clamp, lerp} from "../../../utils/math/math.ts";
 import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import type {ItemStack} from "../../../item/ItemStack.ts";
 import {NovaFlightClient} from "../../NovaFlightClient.ts";
@@ -65,7 +65,7 @@ export class HUD extends UiFramework {
         this.inventoryRender!.tick();
     }
 
-    public render(ctx: CanvasRenderingContext2D): void {
+    public render(ctx: CanvasRenderingContext2D, alpha: number): void {
         const client = NovaFlightClient.instance();
         const world = client.world;
         if (!world || world.isOver() || !this.player) return;
@@ -78,9 +78,13 @@ export class HUD extends UiFramework {
 
         let x = 20;
         let y = 20;
-        const uo = client.window.camera.uiOffset;
 
-        ctx.translate(uo.x, uo.y);
+        const uo = client.window.camera.uiOffset;
+        const luo = client.window.camera.lastUiOffset;
+        const uox = lerp(alpha, luo.x, uo.x);
+        const uoy = lerp(alpha, luo.y, uo.y);
+
+        ctx.translate(uox, uoy);
         ctx.fillText(`分数: ${this.player.getScore()}`, x, y);
         y += 20;
 
@@ -136,7 +140,7 @@ export class HUD extends UiFramework {
         const shieldRatio = maxShield > 0 ? clamp(shieldAmount / maxShield, 0, 1) : 0;
 
         // 背景
-        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.fillStyle = 'rgb(255 255 255 / 0.12)';
         ctx.fillRect(x, y, this.barWidth, this.barHeight);
 
         // 白色缓冲条
@@ -151,7 +155,7 @@ export class HUD extends UiFramework {
         if (shieldRatio > 0) {
             const shieldWidth = (this.barWidth * shieldRatio) | 0;
 
-            ctx.fillStyle = 'rgba(80,149,255,0.8)';
+            ctx.fillStyle = 'rgb(80 149 255 / 0.8)';
             ctx.fillRect(x, y, shieldWidth, this.barHeight);
         }
 
@@ -211,7 +215,7 @@ export class HUD extends UiFramework {
     ) {
         const ratio = clamp(1 - item.getCooldown(stack) / item.getMaxCooldown(stack), 0, 1);
         // 背景槽
-        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.fillStyle = 'rgb(255 255 255 / 0.12)';
         ctx.fillRect(x, y, w, h);
 
         // 进度

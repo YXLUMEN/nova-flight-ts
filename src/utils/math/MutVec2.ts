@@ -30,6 +30,12 @@ export class MutVec2 extends Vec2 {
         return this;
     }
 
+    public setVec(vec: Vec2): this {
+        this.x = vec.x;
+        this.y = vec.y;
+        return this;
+    }
+
     public add(x: number, y: number): this {
         this.x += x;
         this.y += y;

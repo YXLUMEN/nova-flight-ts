@@ -80,34 +80,6 @@ export class WorldEntityRenderer {
         }
     }
 
-    public renderDebug(ctx: CanvasRenderingContext2D, viewRect: ViewRect, world: ClientWorld, alpha: number) {
-        for (const entity of world.getEntities().values()) {
-            if (!entity.shouldRender(viewRect)) continue;
-            this.renderBoundingBox(ctx, entity, alpha);
-        }
-        for (const player of world.getPlayers()) {
-            this.renderBoundingBox(ctx, player, alpha);
-        }
-    }
-
-    private renderBoundingBox(ctx: CanvasRenderingContext2D, entity: Entity, tickDelta: number) {
-        const pos = entity.getLerpPos(tickDelta);
-        const yaw = entity.getLerpYaw(tickDelta);
-        const lerpBox = entity.getDimensions().getBoxAtByVec(pos);
-
-        const w = lerpBox.getWidth();
-        const h = lerpBox.getHeight();
-
-        ctx.beginPath();
-        ctx.strokeStyle = "#2aff00";
-        ctx.moveTo(pos.x, pos.y);
-        ctx.lineTo(Math.cos(yaw) * (w + 20) + pos.x, Math.sin(yaw) * (h + 20) + pos.y);
-        ctx.stroke();
-
-        ctx.strokeStyle = "#fff";
-        ctx.strokeRect(lerpBox.minX, lerpBox.minY, w, h);
-    }
-
     private renderLockedDir(
         ctx: CanvasRenderingContext2D,
         missile: Entity,

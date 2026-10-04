@@ -263,8 +263,9 @@ export class ClientPlayHandler extends ClientCommonHandler {
             this.client.window.hud.onPlayerDamage(packet.damage);
         } else if (entity instanceof MobEntity) {
             world.addPreparedParticleVec(ParticleEffects.HIT, entity.positionRef, 1);
-        } else if (entity instanceof TargetDrone) {
-            entity.push(packet.damage);
+            if (entity instanceof TargetDrone) {
+                entity.push(packet.damage);
+            }
         }
 
         const pos = entity.positionRef;
@@ -494,7 +495,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
     }
 
     public onLaserWeapon(packet: LaserWeaponS2CPacket): void {
-        const manager = PhaseLasers.manager;
+        const manager = PhaseLasers.MANAGER;
 
         if (packet.activate) {
             const beamFx = manager.get(packet.laserId);

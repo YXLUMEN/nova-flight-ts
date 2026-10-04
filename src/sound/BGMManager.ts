@@ -76,7 +76,8 @@ export class BGMManager {
 
     public static async onGameOver() {
         await AudioManager.fadeOutAndPause();
-        await AudioManager.play(Audios.KEEP_FIGHTING, false);
+        if (Math.random() < 0.01) await AudioManager.play(Audios.GYZG);
+        else await AudioManager.play(Audios.KEEP_FIGHTING);
         AudioManager.leap(10);
     }
 
