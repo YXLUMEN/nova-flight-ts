@@ -14,6 +14,7 @@ import {toLocalTime} from "../../utils/time.ts";
 import {PlayerDataStorage} from "../../server/storage/PlayerDataStorage.ts";
 import {ClientSavePage} from "./ClientSavePage.ts";
 import {isValidUUID} from "../../utils/UUIDUtil.ts";
+import {closest, dataAction} from "../../utils/dom_util.ts";
 
 export class ClientSavesManager {
     private static readonly RESERVED_NAMES = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'];
@@ -79,13 +80,8 @@ export class ClientSavesManager {
         }, {signal: ctrl.signal});
 
         this.buttonBox.addEventListener('click', event => {
-            const target = event.target;
-            if (!(target instanceof HTMLElement)) return;
-
-            const actionBtn = target.closest('.btn');
-            if (!actionBtn) return;
-
-            const action = actionBtn.getAttribute('data-action');
+            const actionBtn = closest(event.target, '.btn');
+            const action = dataAction(actionBtn);
             if (!action) return;
 
             this.handleButtonAction(action, resolve, ctrl);
@@ -111,32 +107,23 @@ export class ClientSavesManager {
         resolve: Consumer<string | null>,
         ctrl: AbortController
     ): void {
-        if (action === 'back') {
-            resolve(null);
+        const commit = (v: string | null) => {
+            resolve(v);
             ctrl.abort();
-            return;
-        }
+        };
 
-        if (action === 'create-world') {
-            this.createNewWorld().then(result => {
-                if (result === null) return;
-                resolve(result);
-                ctrl.abort();
-            });
-            return;
-        }
-
-        if (action === 'import-world') {
-            void this.importSave();
-            return;
+        switch (action) {
+            case 'back':
+                return commit(null);
+            case 'create-world':
+                return void this.createNewWorld().then(r => {
+                    if (r !== null) commit(r);
+                });
+            case 'import-world':
+                return void this.importSave();
         }
 
         if (this.chosenItem === null) return;
-
-        if (action === 'delete-world') {
-            void this.deleteWorld();
-            return;
-        }
 
         const saveName = this.chosenItem.dataset.saveName;
         if (!saveName) {
@@ -144,25 +131,17 @@ export class ClientSavesManager {
             return;
         }
 
-        if (action === 'load-world') {
-            resolve(saveName);
-            ctrl.abort();
-            return;
-        }
-
-        if (action === 'rename') {
-            void this.renameSave(saveName);
-            return;
-        }
-
-        if (action === 'export-world') {
-            void this.exportSave(saveName);
-            return;
-        }
-
-        if (action === 'export-world-snbt') {
-            void this.exportAsSNbt(saveName);
-            return;
+        switch (action) {
+            case 'delete-world':
+                return void this.deleteWorld();
+            case 'load-world':
+                return commit(saveName);
+            case 'rename':
+                return void this.renameSave(saveName);
+            case 'export-world':
+                return void this.exportSave(saveName);
+            case 'export-world-snbt':
+                return void this.exportAsSNbt(saveName);
         }
     }
 

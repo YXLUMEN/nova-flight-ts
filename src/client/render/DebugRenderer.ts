@@ -2,7 +2,8 @@ import type {ViewRect} from "./Camera.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 import type {Entity} from "../../entity/Entity.ts";
-import {concatIters, toFixedTrim} from "../../utils/uit.ts";
+import {concatIters} from "../../utils/uit.ts";
+import {toFixedTrim} from "../../utils/math/math.ts";
 import {BitFlag} from "../../utils/BitFlag.ts";
 import {LivingEntity} from "../../entity/LivingEntity.ts";
 

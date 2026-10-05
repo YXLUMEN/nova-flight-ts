@@ -117,5 +117,10 @@ export function rotl(x: number, k: number): number {
     return ((x << k) | (x >>> (32 - k))) >>> 0;
 }
 
+export function toFixedTrim(num: number, digits: number = 2): number {
+    const factor = 10 ** digits;
+    return Math.round(num * factor) / factor;
+}
+
 export const TAU = Math.PI * 2;
 export const HALF_PI = Math.PI / 2;

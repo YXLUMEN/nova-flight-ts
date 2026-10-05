@@ -126,7 +126,7 @@ export abstract class NovaFlightServer implements CommandOutput {
 
             let step = 0;
             const maxStep = this.tickManager.getMaxStep();
-            const perTick = this.tickManager.mspt();
+            const perTick = this.tickManager.spt();
 
             while (this.accumulator >= perTick && step < maxStep) {
                 this.networkManager!.tick();

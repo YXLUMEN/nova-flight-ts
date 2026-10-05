@@ -1,0 +1,51 @@
+.c-section.start-screen {
+    flex-direction: column;
+    align-items: center;
+    background: none;
+}
+
+.start-menu {
+    --x: 0;
+    --y: 0;
+    position: absolute;
+    top: calc(50% - 124px);
+    transform: translate(var(--x), var(--y));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: sans-serif;
+}
+
+.start-screen .title {
+    margin: 0;
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+.start-screen .subtitle {
+    margin: 14px 0 0;
+    font-size: 24px;
+    line-height: 1;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+.start-actions {
+    margin-top: 38px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.start-screen .c-button {
+    width: 200px;
+    height: 48px;
+    border-radius: 8px;
+    font-size: 16px;
+    /*background: rgb(0 0 0 / .6);*/
+    /*border-color: var(--accent);*/
+}

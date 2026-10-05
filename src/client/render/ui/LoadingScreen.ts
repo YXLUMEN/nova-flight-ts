@@ -133,6 +133,7 @@ export class LoadingScreen extends UiFramework {
         this.currentSubProgress = 1;
         await sleep(300);
 
+        this.ctx.clearRect(0, 0, this.width, this.height);
         this.done = true;
         this.destroy();
     }

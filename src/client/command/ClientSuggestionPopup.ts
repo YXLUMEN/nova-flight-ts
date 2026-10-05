@@ -1,3 +1,5 @@
+import {closest} from "../../utils/dom_util.ts";
+
 export class ClientSuggestionPopup {
     private readonly measureCtx: OffscreenCanvasRenderingContext2D;
 
@@ -26,10 +28,7 @@ export class ClientSuggestionPopup {
         const popup = document.createElement('span');
         popup.className = 'suggestion-popup';
         popup.onclick = event => {
-            const target = event.target;
-            if (!(target instanceof HTMLElement)) return;
-
-            const item = target.closest('.suggestion-item');
+            const item = closest(event.target, '.suggestion-item');
             if (!item) return;
 
             this.lastAppliedLen = 0;

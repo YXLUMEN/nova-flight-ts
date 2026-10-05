@@ -12,6 +12,6 @@ export class ServerTickManager extends TickRateManager {
 
     public setRate(rate: number) {
         super.setRate(rate);
-        this.server.networkChannel.send(new TickChangeS2CPacket(this.tickRate));
+        this.server.networkChannel.send(new TickChangeS2CPacket(this.tps));
     }
 }

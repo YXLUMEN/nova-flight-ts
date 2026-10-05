@@ -31,7 +31,7 @@ export class ClientConnector {
 
         this.ctx.setChannel(new ClientNetworkChannel(address, this.client.clientId));
 
-        const screen = this.client.screens;
+        const screen = this.client.layer;
         const notice = screen.showNotice(
             TranslatableText.of('start.remote.connecting'),
             TranslatableText.of('start.cancel'),
@@ -82,7 +82,7 @@ export class ClientConnector {
     public async startIntegratedServer(saveName: string): Promise<void> {
         if (this.ctx.hasWorker()) return;
 
-        const notice = this.client.screens.showNotice(
+        const notice = this.client.layer.showNotice(
             TranslatableText.of('start.integrated.start'),
             null,
             this.ctx.stop,
@@ -103,7 +103,7 @@ export class ClientConnector {
     public async startGeneralServer(saveName: string): Promise<void> {
         if (this.ctx.hasWorker()) return;
 
-        const notice = this.client.screens.showNotice(
+        const notice = this.client.layer.showNotice(
             TranslatableText.of('start.integrated.start'),
             null,
             this.ctx.stop,

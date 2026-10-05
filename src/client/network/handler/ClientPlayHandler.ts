@@ -547,7 +547,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
     public onNGU(_: NotGiveUpS2CPacket): void {
         if (!this.world) return;
-        const notice = this.client.screens.showNotice('');
+        const notice = this.client.layer.showNotice('');
 
         this.world.schedule(2, () => {
             const text = TranslatableText.of(`entity.player.respawn_${randInt(0, 6)}`);

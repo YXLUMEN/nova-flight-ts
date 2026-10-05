@@ -10,8 +10,8 @@ import {GameOverScreen} from "../../page/compound/GameOverScreen.ts";
 import {GuiManager} from "../../page/GuiManager.ts";
 
 export class GuiLayer {
+    public readonly gui: GuiManager;
     private readonly client: NovaFlightClient;
-    private readonly gui: GuiManager;
 
     private pauseScreen: PauseScreen | null = null;
     private noticeScreen: FullscreenNotice | null = null;
@@ -28,6 +28,8 @@ export class GuiLayer {
 
     public closeAll(): void {
         this.gui.destroyAll();
+        this.pauseScreen?.destroy();
+        this.noticeScreen?.destroy();
         this.pauseScreen = null;
         this.noticeScreen = null;
     }

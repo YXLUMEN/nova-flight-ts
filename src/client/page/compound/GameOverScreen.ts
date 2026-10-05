@@ -1,21 +1,21 @@
 import type {Consumer} from "../../../type/types.ts";
 import {type GuiText, textOf} from "../types.ts";
+import {assert} from "../../../utils/dom_util.ts";
 import {PageSection} from "../PageSection.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 
-/** 一次性使用 */
 export class GameOverScreen extends PageSection {
     private readonly summary: HTMLElement;
     private readonly ctrl = new AbortController();
 
     public constructor(callback: Consumer<void>) {
-        super('game-over-screen');
+        super('game-over-screen', false);
 
-        this.summary = this.assert(this.root, '.summary');
+        this.summary = assert(this.root, '.summary');
 
-        this.assert(this.root, '.title').textContent = TranslatableText.of('hud.game_over').toString();
+        assert(this.root, '.title').textContent = TranslatableText.of('hud.game_over').toString();
 
-        const button = this.assert(this.root, '.c-button');
+        const button = assert(this.root, '.c-button');
         button.textContent = TranslatableText.of('hud.back').toString();
         button.addEventListener('click', () => {
             this.close();
@@ -23,8 +23,7 @@ export class GameOverScreen extends PageSection {
         }, {once: true, signal: this.ctrl.signal});
     }
 
-    public override close() {
-        super.close();
+    protected override onDestroy() {
         this.ctrl.abort();
     }
 

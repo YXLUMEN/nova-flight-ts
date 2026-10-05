@@ -28,7 +28,6 @@ export class GuiManager {
         const section = this.sections.pop();
         if (!section) return null;
 
-        this.release();
         this.refresh();
         section.manager = null;
         section.notifyClosed();
@@ -40,7 +39,6 @@ export class GuiManager {
         if (index < 0) return false;
 
         this.sections.splice(index, 1);
-        this.release();
         this.refresh();
 
         section.manager = null;
@@ -62,14 +60,13 @@ export class GuiManager {
     }
 
     private refresh() {
-        for (let i = 0; i < this.sections.length; i++) {
-            this.sections[i].index(i);
-        }
-    }
-
-    private release() {
         if (this.sections.length === 0) {
             this.root.classList.add('hidden');
+            return;
+        }
+
+        for (let i = 0; i < this.sections.length; i++) {
+            this.sections[i].index(i);
         }
     }
 }

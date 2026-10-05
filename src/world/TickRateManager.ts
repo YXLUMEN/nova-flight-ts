@@ -1,26 +1,26 @@
 import {clamp} from "../utils/math/math.ts";
 
 export class TickRateManager {
-    protected tickRate: number = 20;
-    protected msPerTick: number = 1 / 20;
+    protected tps: number = 20;
+    protected perTick: number = 1 / 20;
     protected maxStep = 3;
 
-    public constructor(rate: number = 20) {
-        this.tickRate = clamp(rate, 1, 160);
-        this.msPerTick = 1 / this.tickRate;
+    public constructor(tps: number = 20) {
+        this.tps = clamp(tps, 1, 160);
+        this.perTick = 1 / this.tps;
     }
 
     public rate(): number {
-        return this.tickRate;
+        return this.tps;
     }
 
-    public setRate(rate: number) {
-        this.tickRate = clamp(rate, 1, 160);
-        this.msPerTick = 1 / this.tickRate;
+    public setRate(tps: number) {
+        this.tps = clamp(tps, 1, 160);
+        this.perTick = 1 / this.tps;
     }
 
-    public mspt(): number {
-        return this.msPerTick;
+    public spt(): number {
+        return this.perTick;
     }
 
     public getMaxStep(): number {

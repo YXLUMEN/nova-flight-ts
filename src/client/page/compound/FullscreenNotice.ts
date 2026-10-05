@@ -1,7 +1,8 @@
 import {type GuiText, textOf} from "../types.ts";
 import type {Consumer} from "../../../type/types.ts";
-import {PageSection} from "../PageSection.ts";
 import {empty} from "../../../utils/uit.ts";
+import {assert} from "../../../utils/dom_util.ts";
+import {PageSection} from "../PageSection.ts";
 
 export class FullscreenNotice extends PageSection implements EventListenerObject {
     private readonly label: HTMLElement;
@@ -14,8 +15,8 @@ export class FullscreenNotice extends PageSection implements EventListenerObject
     public constructor() {
         super('fullscreen-notice');
 
-        this.label = this.assert(this.root, '.title');
-        this.button = this.assert(this.root, '.c-button');
+        this.label = assert(this.root, '.title');
+        this.button = assert(this.root, '.c-button');
     }
 
     protected override onOpened() {
@@ -31,10 +32,9 @@ export class FullscreenNotice extends PageSection implements EventListenerObject
         this.resolvers = Promise.withResolvers<void>();
     }
 
-    public override close() {
-        super.close();
+    protected override onDestroy() {
+        this.onConfirm = empty;
         this.resolvers.resolve();
-        this.cancelled = true;
     }
 
     public handleEvent(event: Event) {

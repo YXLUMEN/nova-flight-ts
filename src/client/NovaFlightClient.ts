@@ -12,7 +12,6 @@ import {BGMManager} from "../sound/BGMManager.ts";
 import {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
 import {ClientWorld} from "./ClientWorld.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
-import {StartAction, StartScreen} from "./render/ui/StartScreen.ts";
 import {ClientCommandManager} from "./command/ClientCommandManager.ts";
 import {ClientMultiGameManger} from "./ClientMultiGameManger.ts";
 import {ClientChat} from "./command/ClientChat.ts";
@@ -35,10 +34,10 @@ import {ClientInit} from "./ClientInit.ts";
 import {GameStart} from "../event/events/game/GameStart.ts";
 import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
 import {GamePause} from "../event/events/game/GamePause.ts";
-import {Log} from "../worker/log.ts";
 import {Main2WorkerType, Worker2MainType} from "../worker/WorkerMsgType.ts";
 import {RacePromise} from "../utils/RacePromise.ts";
 import {GuiLayer} from "./render/ui/GuiLayer.ts";
+import {StartScreen} from "./page/compound/StartScreen.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -51,7 +50,7 @@ export class NovaFlightClient {
     public playerName: string;
 
     public readonly window: Window;
-    public readonly screens: GuiLayer;
+    public readonly layer: GuiLayer;
     public readonly input: KeyboardInput;
     public globalSound: SoundSystem = null!;
 
@@ -96,8 +95,8 @@ export class NovaFlightClient {
 
         this.registryManager = new RegistryManager();
         this.window = new Window();
-        this.screens = new GuiLayer(this);
-        this.screens.start();
+        this.layer = new GuiLayer(this);
+        this.layer.start();
         this.worldRender = new WorldRenderer(this);
         this.tickManager = new TickRateManager();
 
@@ -137,7 +136,6 @@ export class NovaFlightClient {
             const breakLoop = await this.userSelect();
             if (breakLoop) break;
 
-            appEvent.emit(new GameStart());
             await this.waitWorldStop;
 
             // cleanup
@@ -153,18 +151,19 @@ export class NovaFlightClient {
     }
 
     private async userSelect(): Promise<boolean> {
-        const startScreen = new StartScreen(this, {
-            title: `Nova Flight (${RuntimeConfig.devVersion})`,
-            subtitle: TranslatableText.of('start.subtitle'),
-        });
+        const startScreen = new StartScreen(this,
+            `Nova Flight (${RuntimeConfig.devVersion})`,
+            TranslatableText.of('start.subtitle'),
+        );
+        this.layer.gui.push(startScreen);
 
-        const action = await startScreen.onConfirm();
-        if (action === StartAction.EXIT) return true;
+        const action = await startScreen.wait();
+        if (action === 'exit') return true;
 
         const ctx = new NovaFlightClient.ConnectCtx(this);
         const connector = new ClientConnector(this, ctx);
 
-        if (action === StartAction.START) {
+        if (action === 'start') {
             this.isIntegrated = true;
             const saveName = await this.saveManager.chooseSave();
             this.saveManager.hide();
@@ -175,14 +174,16 @@ export class NovaFlightClient {
 
             if (RuntimeConfig.generalMode) await connector.startGeneralServer(saveName);
             else await connector.startIntegratedServer(saveName);
+            appEvent.emit(new GameStart());
             return false;
         }
-        if (action === StartAction.MULTIPLAYER) {
+        if (action === 'multiplayer') {
             this.isIntegrated = false;
             await connector.connectToServer();
+            appEvent.emit(new GameStart());
             return false;
         }
-        if (action === StartAction.STATISTIC) {
+        if (action === 'statistic') {
             await this.statisticManager.selectItem();
             this.stopWorld();
             return false;
@@ -191,8 +192,8 @@ export class NovaFlightClient {
     }
 
     public async joinGame(world: ClientWorld) {
-        if (this.screens.hasNotice()) {
-            this.screens.showNotice(TranslatableText.of('start.join_game'), null, empty);
+        if (this.layer.hasNotice()) {
+            this.layer.showNotice(TranslatableText.of('start.join_game'), null, empty);
         }
 
         await sleep(200);
@@ -203,7 +204,7 @@ export class NovaFlightClient {
         this.loop(0);
         this.window.canvas.style.cursor = 'none';
 
-        this.screens.closeNotice();
+        this.layer.closeNotice();
         this.clientCommandManager.clearParseCache();
     }
 
@@ -253,7 +254,7 @@ export class NovaFlightClient {
 
             let step = 0;
             const maxStep = this.tickManager.getMaxStep();
-            const perTick = this.tickManager.mspt();
+            const perTick = this.tickManager.spt();
             while (this.accumulator >= perTick && step < maxStep) {
                 this.tick(perTick);
                 this.accumulator -= perTick;
@@ -262,7 +263,7 @@ export class NovaFlightClient {
 
             if (step >= maxStep && this.accumulator >= perTick) {
                 const dropped = this.accumulator - (this.accumulator % perTick);
-                Log.warn(`[Client] Dropped ${dropped.toFixed(1)}ms`);
+                void warn(`[Client] Dropped ${dropped.toFixed(1)}ms`);
                 this.accumulator %= perTick;
             }
 
@@ -339,7 +340,7 @@ export class NovaFlightClient {
     }
 
     private clearWorld(): void {
-        this.screens.closeAll();
+        this.layer.closeAll();
         this.worldRender.setWorld(null);
 
         this.world?.close();
@@ -373,13 +374,13 @@ export class NovaFlightClient {
     }
 
     public leaveGame(): void {
-        this.screens.showNotice(TranslatableText.of('start.leave'));
+        this.layer.showNotice(TranslatableText.of('start.leave'));
         this.connection.disconnect();
         this.requestStop();
     }
 
     public setConnectError(message: string | TranslatableText): void {
-        this.screens.showNotice(message, TranslatableText.of('start.confirm'), () => this.requestStop());
+        this.layer.showNotice(message, TranslatableText.of('start.confirm'), () => this.requestStop());
     }
 
     public onGameOver(): void {

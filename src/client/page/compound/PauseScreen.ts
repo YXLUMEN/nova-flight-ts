@@ -1,5 +1,6 @@
 import type {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {TextElement} from "../TextElement.ts";
+import {bindTexts, closest, dataAction} from "../../../utils/dom_util.ts";
 import {appEvent} from "../../../event/EventBus.ts";
 import {PageSection} from "../PageSection.ts";
 import {TipManager} from "../../tips/TipManager.ts";
@@ -13,18 +14,19 @@ export class PauseScreen extends PageSection implements EventListenerObject {
         super('pause-screen');
 
         this.client = client;
-        const tipBody = this.bindText(this.root, '.pause-tips-body', '');
-        this.elements = [
-            this.bindText(this.root, '.pause-title', 'pause.paused'),
-            this.bindText(this.root, '.pause-hint', 'pause.press_esc'),
-            this.bindText(this.root, '[data-action="back"]', 'pause.back_to_game'),
-            this.bindText(this.root, '[data-action="save"]', 'pause.save'),
-            this.bindText(this.root, '[data-action="save-and-exit"]', 'pause.save_and_exit'),
-            this.bindText(this.root, '.pause-tips-title', TipManager.title),
-            tipBody,
-        ];
+        this.elements = bindTexts(this.root, {
+            '.pause-tips-body': '',
+            '.pause-title': 'pause.paused',
+            '.pause-hint': 'pause.press_esc',
+            '[data-action="back"]': 'pause.back_to_game',
+            '[data-action="save"]': 'pause.save',
+            '[data-action="save-and-exit"]': 'pause.save_and_exit',
+            '.pause-tips-title': TipManager.title,
+        });
 
+        const tipBody = this.elements[0];
         const refresh = () => this.elements.forEach(t => t.refresh());
+
         appEvent.withSignal('ui:tip', ({text}) => {
             if (text) tipBody.setText(text);
         }, this.ctrl.signal);
@@ -44,18 +46,15 @@ export class PauseScreen extends PageSection implements EventListenerObject {
         this.root.removeEventListener('click', this);
     }
 
-    public override destroy() {
-        super.destroy();
+    protected override onDestroy() {
         this.ctrl.abort();
     }
 
     public handleEvent(event: Event): void {
         if (event.type !== 'click') return;
 
-        const target = event.target;
-        if (!(target instanceof HTMLElement)) return;
-
-        const action = target.closest('.c-button')?.getAttribute('data-action');
+        const element = closest(event.target, '.c-button');
+        const action = dataAction(element);
         if (!action) return;
 
         switch (action) {

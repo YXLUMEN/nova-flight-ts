@@ -26,6 +26,10 @@
     --caret: #ffffff;
 }
 
+/*
+  注意,无前缀的样式必须写明父样式,如 .main .title.
+*/
+
 html, body {
     margin: 0;
     height: 100%;

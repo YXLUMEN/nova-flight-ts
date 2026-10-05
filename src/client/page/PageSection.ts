@@ -1,6 +1,3 @@
-import type {Constructor} from "../../type/types.ts";
-import type {TranslatableText} from "../../i18n/TranslatableText.ts";
-import {TextElement} from "./TextElement.ts";
 import type {GuiManager} from "./GuiManager.ts";
 
 export abstract class PageSection {
@@ -8,8 +5,10 @@ export abstract class PageSection {
     public manager: GuiManager | null = null;
 
     protected readonly root: HTMLElement;
+    private readonly reusable: boolean;
+    private destroyed = false;
 
-    protected constructor(page: HTMLElement | string) {
+    protected constructor(page: HTMLElement | string, reusable: boolean = true) {
         const root = typeof page === 'string' ?
             document.getElementById(page)! :
             page;
@@ -18,6 +17,7 @@ export abstract class PageSection {
             throw new DOMException('The page root doesn\'t contain ".c-section"');
         }
         this.root = root;
+        this.reusable = reusable;
     }
 
     public isShow(): boolean {
@@ -28,8 +28,13 @@ export abstract class PageSection {
         this.manager?.pop(this);
     }
 
+    /** @readonly */
     public destroy(): void {
+        if (this.destroyed) return;
+        this.destroyed = true;
+
         this.close();
+        this.onDestroy();
     }
 
     protected onOpened(): void {
@@ -38,13 +43,15 @@ export abstract class PageSection {
     protected onClosed(): void {
     }
 
+    protected onDestroy(): void {
+    }
+
     /**
      * @readonly
      * @inner
      * 由管理器在 push / pop 时调用
      * */
     public notifyOpened(): void {
-        if (this.isShow()) return;
         this.root.classList.remove('hidden');
         this.onOpened();
     }
@@ -55,9 +62,9 @@ export abstract class PageSection {
      * 由管理器在 pop 时调用(保证只回调一次)
      * */
     public notifyClosed(): void {
-        if (!this.isShow()) return;
         this.root.classList.add('hidden');
         this.onClosed();
+        if (!this.reusable) this.destroy();
     }
 
     /**
@@ -67,34 +74,5 @@ export abstract class PageSection {
      * */
     public index(i: number) {
         this.root.style.zIndex = String(i);
-    }
-
-    protected assert(target: HTMLElement, selectors: string): HTMLElement {
-        const result = target.querySelector(selectors);
-        if (result instanceof HTMLElement) {
-            return result;
-        }
-        throw new Error(`Cannot find element with query: ${selectors}`);
-    }
-
-    protected as<T extends HTMLElement>(
-        target: HTMLElement,
-        selectors: string,
-        type: Constructor<T>
-    ): T {
-        const result = target.querySelector(selectors);
-        if (result instanceof type) {
-            return result;
-        }
-        throw new Error(`Cannot find element with query: ${selectors}`);
-    }
-
-    protected bindText<T extends HTMLElement>(
-        target: HTMLElement,
-        selectors: string,
-        text: TranslatableText | string
-    ): TextElement<T> {
-        const element = this.assert(target, selectors) as T;
-        return new TextElement(element, text);
     }
 }
