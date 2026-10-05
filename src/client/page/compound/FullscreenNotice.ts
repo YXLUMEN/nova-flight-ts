@@ -1,0 +1,73 @@
+import {type GuiText, textOf} from "../types.ts";
+import type {Consumer} from "../../../type/types.ts";
+import {PageSection} from "../PageSection.ts";
+import {empty} from "../../../utils/uit.ts";
+
+export class FullscreenNotice extends PageSection implements EventListenerObject {
+    private readonly label: HTMLElement;
+    private readonly button: HTMLElement;
+
+    private onConfirm: Consumer<void> = empty;
+    private cancelled = false;
+    private resolvers: PromiseWithResolvers<void> = Promise.withResolvers<void>();
+
+    public constructor() {
+        super('fullscreen-notice');
+
+        this.label = this.assert(this.root, '.title');
+        this.button = this.assert(this.root, '.c-button');
+    }
+
+    protected override onOpened() {
+        this.cancelled = false;
+        this.button.removeEventListener('click', this);
+        this.button.addEventListener('click', this);
+    }
+
+    protected override onClosed() {
+        this.cancelled = true;
+        this.button.removeEventListener('click', this);
+        this.resolvers.resolve();
+        this.resolvers = Promise.withResolvers<void>();
+    }
+
+    public override close() {
+        super.close();
+        this.resolvers.resolve();
+        this.cancelled = true;
+    }
+
+    public handleEvent(event: Event) {
+        if (event.type !== 'click') return;
+
+        this.close();
+        this.onConfirm();
+    }
+
+    public setBackground(color: string) {
+        this.root.style.background = color;
+    }
+
+    public setMessage(text: GuiText, fontFamily?: string, fontSize?: string): void {
+        this.label.textContent = textOf(text);
+        if (fontFamily) this.label.style.fontFamily = fontFamily;
+        if (fontSize) this.label.style.fontSize = fontSize;
+    }
+
+    public setLabel(label: GuiText | null): void {
+        this.button.classList.toggle('hidden', label === null);
+        if (label !== null) this.button.textContent = textOf(label);
+    }
+
+    public setOnConfirm(callback: Consumer<void>): void {
+        this.onConfirm = callback;
+    }
+
+    public isCancelled(): boolean {
+        return this.cancelled;
+    }
+
+    public waitClose(): Promise<void> {
+        return this.resolvers.promise;
+    }
+}

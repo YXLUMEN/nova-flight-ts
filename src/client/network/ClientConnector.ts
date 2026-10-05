@@ -1,17 +1,17 @@
+import type {StartServer} from "../../type/startup.ts";
+import type {NovaFlightClient} from "../NovaFlightClient.ts";
+import type {ConnectionContext} from "./ConnectionContext.ts";
+import type {FullscreenNotice} from "../page/compound/FullscreenNotice.ts";
+import {invoke} from "@tauri-apps/api/core";
+import {error, info, warn} from "@tauri-apps/plugin-log";
+import {message} from "@tauri-apps/plugin-dialog";
+import {sleep} from "../../utils/uit.ts";
 import {ClientNetworkChannel} from "./ClientNetworkChannel.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
 import {DEFAULT_CONFIG, RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {ClientIntegratedChannel} from "./ClientIntegratedChannel.ts";
-import {invoke} from "@tauri-apps/api/core";
-import {error, info, warn} from "@tauri-apps/plugin-log";
-import {sleep} from "../../utils/uit.ts";
-import type {StartServer} from "../../type/startup.ts";
-import type {NovaFlightClient} from "../NovaFlightClient.ts";
-import type {ConnectionContext} from "./ConnectionContext.ts";
 import {ClientHandshakeHandler} from "./handler/ClientHandshakeHandler.ts";
 import {Main2WorkerType, Worker2MainType} from "../../worker/WorkerMsgType.ts";
-import {message} from "@tauri-apps/plugin-dialog";
-import type {FullScreenNotice} from "../render/ui/FullScreenNotice.ts";
 
 export class ClientConnector {
     private readonly client: NovaFlightClient;
@@ -152,7 +152,7 @@ export class ClientConnector {
 
     private async checkAndConnect(
         addr: string,
-        notice: FullScreenNotice,
+        notice: FullscreenNotice,
         key: ArrayBuffer,
         saveName: string,
         worker?: Worker

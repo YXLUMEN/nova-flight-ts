@@ -19,6 +19,7 @@ import type {GamePause} from "./events/game/GamePause.ts";
 import type {NewNotify} from "./events/ui/NewNotify.ts";
 import type {PlayerDamage} from "./events/entity/PlayerDamage.ts";
 import type {TipChange} from "./events/ui/TipChange.ts";
+import type {LangChange} from "./events/ui/LangChange.ts";
 
 export interface AppEvents {
     'game:start': GameStart;
@@ -27,6 +28,7 @@ export interface AppEvents {
     'game:pause': GamePause;
     'ui:new:notify': NewNotify;
     'ui:tip': TipChange;
+    'ui:lang': LangChange;
     'world:explosion': ExplosionEvent;
     'world:emp_burst': EmpBurstEvent;
     'world:stage:enter': StageEnter;

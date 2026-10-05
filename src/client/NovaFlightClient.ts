@@ -38,7 +38,6 @@ import {GamePause} from "../event/events/game/GamePause.ts";
 import {Log} from "../worker/log.ts";
 import {Main2WorkerType, Worker2MainType} from "../worker/WorkerMsgType.ts";
 import {RacePromise} from "../utils/RacePromise.ts";
-import {GuiManager} from "./gui/GuiManager.ts";
 import {GuiLayer} from "./render/ui/GuiLayer.ts";
 
 export class NovaFlightClient {
@@ -52,7 +51,6 @@ export class NovaFlightClient {
     public playerName: string;
 
     public readonly window: Window;
-    public readonly GUI: GuiManager;
     public readonly screens: GuiLayer;
     public readonly input: KeyboardInput;
     public globalSound: SoundSystem = null!;
@@ -98,7 +96,6 @@ export class NovaFlightClient {
 
         this.registryManager = new RegistryManager();
         this.window = new Window();
-        this.GUI = new GuiManager(this.window.guiCtx);
         this.screens = new GuiLayer(this);
         this.screens.start();
         this.worldRender = new WorldRenderer(this);
@@ -307,7 +304,6 @@ export class NovaFlightClient {
             console.log('[Client] Stopping world');
 
             if (!this.waitWorldStop) return;
-            this.screens.closeNotice();
             this.clearWorld();
             this.last = 0;
             this.accumulator = 0;
@@ -377,6 +373,7 @@ export class NovaFlightClient {
     }
 
     public leaveGame(): void {
+        this.screens.showNotice(TranslatableText.of('start.leave'));
         this.connection.disconnect();
         this.requestStop();
     }

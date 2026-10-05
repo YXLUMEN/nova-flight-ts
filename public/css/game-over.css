@@ -1,0 +1,22 @@
+.game-over {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: rgb(255 0 0 / 0.3);
+}
+
+.game-over .title {
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.game-over .summary {
+    font-size: 16px;
+}
+
+.game-over .c-button {
+    width: auto;
+    height: 40px;
+    padding: 0 12px;
+}

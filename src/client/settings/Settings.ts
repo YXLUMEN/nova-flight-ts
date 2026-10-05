@@ -41,6 +41,13 @@ export class Settings {
         SettingPredicates.clampNumber(0, 1),
     );
 
+    public static readonly DAMAGE_POPUP = this.item(
+        'damage_popup',
+        'settings.render.damage_popup',
+        true,
+        SettingPredicates.bool(),
+    );
+
     private static item<T>(
         id: string,
         translate: string,

@@ -174,6 +174,11 @@ export function* concatIters<T extends Iterable<any>>(...its: T[]) {
     for (const it of its) yield* it;
 }
 
+export function toFixedTrim(num: number, digits: number = 2): number {
+    const factor = 10 ** digits;
+    return Math.round(num * factor) / factor;
+}
+
 /** 空方法 */
 export function empty(): void {
 }

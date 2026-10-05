@@ -34,7 +34,7 @@ export class FocusedArcEmitter extends BaseWeapon {
                 endX, endY, this.arcWidth,
                 pos.x, pos.y, mob.getWidth())
             ) {
-                mob.takeDamage(damageSource, damage + mob.getHealth() * 0.3);
+                mob.takeDamage(damageSource, damage + Math.floor(mob.getHealth() * 0.3));
                 initialTargets.push(mob);
             }
         }

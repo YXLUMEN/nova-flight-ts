@@ -10,6 +10,8 @@ import {Settings} from "../client/settings/Settings.ts";
 import {Result} from "../utils/result/Result.ts";
 import type {SettingGuard} from "../client/settings/SettingGuard.ts";
 import {CallTwice} from "../type/errors.ts";
+import {appEvent} from "../event/EventBus.ts";
+import {LangChange} from "../event/events/ui/LangChange.ts";
 
 export class LangResource implements ResourceModule, SettingGuard<string> {
     private readonly allLang: string[] = [];
@@ -36,7 +38,9 @@ export class LangResource implements ResourceModule, SettingGuard<string> {
 
         try {
             await this.loadLang(lang);
-            return Settings.LANG.force(lang);
+            const result = Settings.LANG.force(lang);
+            appEvent.emit(new LangChange(lang));
+            return result;
         } catch (err) {
             return Result.err(Result.mapErr(err));
         } finally {

@@ -55,12 +55,11 @@ html, body {
     display: block;
     width: 100vw;
     height: 100vh;
-    pointer-events: none;
     cursor: default;
 }
 
-#gui.show {
-    pointer-events: initial;
+#gui.hidden {
+    display: none;
 }
 
 .background {

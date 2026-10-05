@@ -72,6 +72,7 @@ import {AcceptTeleportC2SPacket} from "../../../network/packet/c2s/AcceptTelepor
 import {Vec2} from "../../../utils/math/Vec2.ts";
 import {MobEntity} from "../../../entity/mob/MobEntity.ts";
 import {ParticleEffects} from "../../../effect/particle/ParticleEffects.ts";
+import {Settings} from "../../settings/Settings.ts";
 
 export class ClientPlayHandler extends ClientCommonHandler {
     private readonly commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
@@ -247,7 +248,9 @@ export class ClientPlayHandler extends ClientCommonHandler {
         if (!world) return;
 
         const entity = world.getEntityById(packet.entityId);
+        const enable = Settings.DAMAGE_POPUP.get();
         if (entity === null) {
+            if (!enable) return;
             this.client.window.damagePopup.spawnPopup(
                 packet.pos.x,
                 packet.pos.y - 10,
@@ -268,6 +271,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
             }
         }
 
+        if (!enable) return;
         const pos = entity.positionRef;
         this.client.window.damagePopup.spawnPopup(
             pos.x,
@@ -547,9 +551,9 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
         this.world.schedule(2, () => {
             const text = TranslatableText.of(`entity.player.respawn_${randInt(0, 6)}`);
-            notice.setMessage(text, 'Minecraft', 48);
+            notice.setMessage(text, 'Minecraft', '48px');
         });
-        this.world.schedule(5, () => notice.setBackground(null));
+        this.world.schedule(5, () => notice.setBackground('rgb(0 0 0 / 0)'));
         this.world.schedule(6, () => {
             notice.close();
             notice.setBackground('#000');

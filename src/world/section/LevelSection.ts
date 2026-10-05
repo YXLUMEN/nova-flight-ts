@@ -8,8 +8,8 @@ import type {IndexedIterable} from "../../utils/collection/IndexedIterable.ts";
 
 
 export class LevelSection implements Serializable {
-    private solidCount: number = 0;
     private readonly states: PalettedContainer<BlockState>;
+    private solidCount: number = 0;
 
     public constructor(states: PalettedContainer<BlockState>) {
         this.states = states;
@@ -51,8 +51,7 @@ export class LevelSection implements Serializable {
 
     public recalcBlockCounts(): void {
         this.states.count((state, count) => {
-            if (state.isAir) return;
-            this.solidCount += count;
+            if (!state.isAir) this.solidCount += count;
         });
     }
 

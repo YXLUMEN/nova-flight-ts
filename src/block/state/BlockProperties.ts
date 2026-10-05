@@ -5,9 +5,7 @@ import {Identifier} from "../../registry/Identifier.ts";
 export class BlockProperties {
     public id: Identifier | null = null;
 
-    /**
-     * @test Only for demo
-     * */
+    /** @test Only for demo */
     public color: string = '#fff';
     public resistance: number = 0.5;
     public destroyTime: number = 6;
@@ -27,9 +25,7 @@ export class BlockProperties {
         return new BlockProperties();
     }
 
-    /**
-     * @test Only for demo
-     * */
+    /** @test Only for demo */
     public setColor(color: string) {
         this.color = color;
         return this;

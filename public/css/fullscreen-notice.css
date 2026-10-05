@@ -1,0 +1,23 @@
+.fullscreen-notice {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    background: #000;
+}
+
+.fullscreen-notice .title {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--text);
+}
+
+.fullscreen-notice .c-button {
+    width: 120px;
+    height: 40px;
+}
+
+.fullscreen-notice .c-button.hidden {
+    visibility: hidden;
+    pointer-events: none;
+}

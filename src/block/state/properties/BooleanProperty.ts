@@ -2,7 +2,7 @@ import {Property} from "./Property.ts";
 import {Optional} from "../../../utils/Optional.ts";
 
 export class BooleanProperty extends Property<boolean> {
-    private static readonly VALUES = [true, false];
+    private static readonly VALUES = Object.freeze([true, false]);
 
     private constructor(name: string) {
         super(name, 'BooleanProperty');
@@ -13,7 +13,7 @@ export class BooleanProperty extends Property<boolean> {
     }
 
     public getPossibleValues(): boolean[] {
-        return BooleanProperty.VALUES;
+        return BooleanProperty.VALUES as boolean[];
     }
 
     public getValueName(value: boolean): string {

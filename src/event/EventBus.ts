@@ -14,6 +14,19 @@ export class EventBus {
         return () => bucket.delete(handler);
     }
 
+    public withSignal<K extends keyof AppEvents>(
+        type: K,
+        handler: Consumer<AppEvents[K]>,
+        signal: AbortSignal,
+    ): void {
+        const bucket = this.listeners.getOrInsertComputed(type, newSet);
+        bucket.add(handler);
+        signal.addEventListener('abort', () => {
+            bucket.delete(handler);
+            if (bucket.size === 0) this.listeners.delete(type);
+        }, {once: true});
+    }
+
     public once<K extends keyof AppEvents>(
         type: K,
         handler: Consumer<AppEvents[K]>,

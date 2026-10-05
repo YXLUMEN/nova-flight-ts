@@ -1,34 +1,33 @@
-import {GuiManager} from "../../gui/GuiManager.ts";
-import {PauseScreen} from "./PauseScreen.ts";
-import {appEvent} from "../../../event/EventBus.ts";
 import type {NovaFlightClient} from "../../NovaFlightClient.ts";
-import {FullScreenNotice} from "./FullScreenNotice.ts";
-import type {GuiText} from "../../gui/types.ts";
+import type {GuiText} from "../../page/types.ts";
 import type {Consumer} from "../../../type/types.ts";
 import {empty} from "../../../utils/uit.ts";
-import {GameOverScreen} from "./GameOverScreen.ts";
+import {appEvent} from "../../../event/EventBus.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
+import {PauseScreen} from "../../page/compound/PauseScreen.ts";
+import {FullscreenNotice} from "../../page/compound/FullscreenNotice.ts";
+import {GameOverScreen} from "../../page/compound/GameOverScreen.ts";
+import {GuiManager} from "../../page/GuiManager.ts";
 
 export class GuiLayer {
     private readonly client: NovaFlightClient;
     private readonly gui: GuiManager;
 
     private pauseScreen: PauseScreen | null = null;
-    private noticeScreen: FullScreenNotice | null = null;
+    private noticeScreen: FullscreenNotice | null = null;
 
     public constructor(client: NovaFlightClient) {
         this.client = client;
-        this.gui = client.GUI;
+        this.gui = new GuiManager(document.getElementById('gui')!);
     }
 
     public start(): void {
-        this.gui.start(this.client.window);
         appEvent.on('game:pause', () => this.syncPause());
         appEvent.on('game:over', () => this.onGameOver());
     }
 
     public closeAll(): void {
-        this.gui.clear();
+        this.gui.destroyAll();
         this.pauseScreen = null;
         this.noticeScreen = null;
     }
@@ -37,8 +36,8 @@ export class GuiLayer {
         message: GuiText,
         label: GuiText | null = null,
         onConfirm: Consumer<void> = empty
-    ): FullScreenNotice {
-        const notice = this.noticeScreen ??= new FullScreenNotice();
+    ): FullscreenNotice {
+        const notice = this.noticeScreen ??= new FullscreenNotice();
 
         notice.setOnConfirm(onConfirm);
         notice.setMessage(message);
@@ -52,7 +51,7 @@ export class GuiLayer {
     }
 
     public hasNotice(): boolean {
-        return this.noticeScreen?.isOpen() ?? false;
+        return this.noticeScreen?.isShow() ?? false;
     }
 
     private syncPause(): void {
@@ -79,7 +78,7 @@ export class GuiLayer {
         const over = new GameOverScreen(() => this.client.leaveGame());
         over.setSummary(new TranslatableText('hud.summary', [
             time.toString(), score.toString(), (score / time).toFixed(2)]))
-
+        this.gui.clear();
         this.gui.push(over);
     }
 }

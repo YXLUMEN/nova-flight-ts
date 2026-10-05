@@ -2,7 +2,7 @@ import type {ViewRect} from "./Camera.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 import type {Entity} from "../../entity/Entity.ts";
-import {concatIters} from "../../utils/uit.ts";
+import {concatIters, toFixedTrim} from "../../utils/uit.ts";
 import {BitFlag} from "../../utils/BitFlag.ts";
 import {LivingEntity} from "../../entity/LivingEntity.ts";
 
@@ -49,13 +49,13 @@ export class DebugRenderer {
         const {halfHeight} = entity.getDimensions();
 
         ctx.fillStyle = '#ff0000';
-        ctx.fillText(`${entity.getHealth()} / ${entity.getMaxHealth()}`, pos.x, pos.y + halfHeight + 16);
+        ctx.fillText(`${toFixedTrim(entity.getHealth(), 3)} / ${entity.getMaxHealth()}`, pos.x, pos.y + halfHeight + 16);
 
         const shield = entity.getShieldAmount();
         if (shield === 0) return;
 
         ctx.fillStyle = 'rgb(80 149 255 / 0.8)';
-        ctx.fillText(`${shield} / ${entity.getMaxShield()}`, pos.x, pos.y + halfHeight + 32);
+        ctx.fillText(`${toFixedTrim(shield, 3)} / ${entity.getMaxShield()}`, pos.x, pos.y + halfHeight + 32);
     }
 }
 

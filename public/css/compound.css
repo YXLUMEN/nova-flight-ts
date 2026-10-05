@@ -1,3 +1,26 @@
+/* 根样式 */
+.c-section {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    background: rgb(0 0 0 / 0.45);
+    color: var(--text);
+    line-height: 1.4;
+    user-select: none;
+    -webkit-user-select: none;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.c-section.hidden {
+    display: none;
+}
+
+.c-section.mute {
+    pointer-events: none;
+}
+
+/* 按钮样式 */
+
 .c-button {
     width: 150px;
     height: 36px;
@@ -16,7 +39,7 @@
 
 .c-button:hover {
     background: var(--hover);
-    border-color: rgba(94, 200, 255, 0.45);
+    border-color: rgb(94 200 255 / 0.45);
 }
 
 .c-button:active {
@@ -26,7 +49,7 @@
 .c-button:focus-visible {
     outline: none;
     border-color: #5ec8ff;
-    box-shadow: 0 0 0 2px rgba(94, 200, 255, 0.35);
+    box-shadow: 0 0 0 2px rgb(94 200 255 / 0.35);
 }
 
 .c-button.primary {
@@ -36,8 +59,8 @@
 }
 
 .c-button.primary:hover {
-    background: rgba(255, 255, 255, 0.20) linear-gradient(rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0.20));
-    border-color: #5ec8ff;
+    background: #52e786;
+    border-color: #52e786;
 }
 
 .c-button.primary:active {
@@ -45,12 +68,12 @@
 }
 
 .c-button.danger {
-    background: rgba(255, 92, 92, 0.16);
+    background: rgb(255 92 92 / 0.16);
     border-color: #ff5c5c;
     color: #ff5c5c;
 }
 
 .c-button.danger:hover {
-    background: rgba(255, 92, 92, 0.24);
+    background: rgb(255 92 92 / 0.24);
     border-color: #ff5c5c;
 }
