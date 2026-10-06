@@ -8,7 +8,7 @@
     line-height: 1.4;
     user-select: none;
     -webkit-user-select: none;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-section), serif;
 }
 
 .c-section.hidden {
@@ -17,6 +17,10 @@
 
 .c-section.mute {
     pointer-events: none;
+}
+
+.c-section.mute > .c-section {
+    pointer-events: auto;
 }
 
 /* 按钮样式 */

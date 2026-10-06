@@ -1,32 +1,50 @@
 import type {StatisticItem} from "./StatisticItem.ts";
+import type {Consumer} from "../../type/types.ts";
 import {HistoricalScoreRender} from "./HistoricalScoreRender.ts";
 import {error} from "@tauri-apps/plugin-log";
 import {message} from "@tauri-apps/plugin-dialog";
+import {PageSection} from "../page/PageSection.ts";
+import {assert} from "../../utils/dom_util.ts";
+import {empty} from "../../utils/uit.ts";
 
-export class StatisticManager {
+export class StatisticManager extends PageSection {
     private readonly statisticItems = new Map<string, StatisticItem>();
 
-    private readonly statistic: HTMLElement;
     private readonly dir: HTMLElement;
     private readonly displayer: HTMLElement;
     private readonly backBtn: HTMLElement;
 
     private currentDisplay: HTMLElement | null = null;
+    private commit: Consumer<void> = empty;
 
     public constructor() {
-        this.statistic = document.getElementById('statistic')!;
-        this.dir = document.getElementById('statistic-directory')!;
-        this.displayer = document.getElementById('statistic-displayer')!;
-        this.backBtn = document.getElementById('statistic-back')!;
+        super('statistic');
+
+        this.dir = assert(this.root, '#statistic-directory');
+        this.displayer = assert(this.root, '#statistic-displayer');
+        this.backBtn = assert(this.root, '#statistic-back');
 
         this.registry();
     }
 
+    protected override onClosed() {
+        this.commit();
+        this.commit = empty;
+    }
+
     public selectItem() {
+        this.commit();
+
         const {promise, resolve} = Promise.withResolvers<void>();
         const ctrl = new AbortController();
 
-        this.show();
+        const commit = () => {
+            ctrl.abort();
+            resolve();
+            this.commit = empty;
+            this.close();
+        }
+        this.commit = commit;
 
         this.dir.addEventListener('click', event => {
             const target = event.target as HTMLElement;
@@ -35,6 +53,7 @@ export class StatisticManager {
 
             const item = this.statisticItems.get(name);
             if (!item) return;
+
             item.render()
                 .then(element => this.displayItem(element))
                 .catch(err => {
@@ -53,9 +72,7 @@ export class StatisticManager {
                 return;
             }
 
-            ctrl.abort();
-            resolve();
-            this.hide();
+            commit();
         }, {signal: ctrl.signal});
 
         return promise;
@@ -67,14 +84,6 @@ export class StatisticManager {
 
         this.dir.classList.add('hidden');
         this.displayer.classList.remove('hidden');
-    }
-
-    public show() {
-        this.statistic.classList.remove('hidden');
-    }
-
-    public hide() {
-        this.statistic.classList.add('hidden');
     }
 
     private registry() {

@@ -1,82 +1,96 @@
-import {ServerStorage} from "../../server/storage/ServerStorage.ts";
+import type {Consumer, UUID} from "../../type/types.ts";
 import type {PlayerData, SaveMeta} from "../../type/Saves.ts";
 import {error, warn} from "@tauri-apps/plugin-log";
-import {NovaFlightClient} from "../NovaFlightClient.ts";
-import {join, resolveResource} from "@tauri-apps/api/path";
-import {exists, mkdir, readFile, readTextFile, writeFile, writeTextFile} from "@tauri-apps/plugin-fs";
-import {NbtSerialization} from "../../nbt/NbtSerialization.ts";
-import {NbtUnserialization} from "../../nbt/NbtUnserialization.ts";
 import {confirm, message} from "@tauri-apps/plugin-dialog";
 import {invoke} from "@tauri-apps/api/core";
-import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import type {Consumer, UUID} from "../../type/types.ts";
+import {join, resolveResource} from "@tauri-apps/api/path";
+import {exists, mkdir, readFile, readTextFile, writeFile, writeTextFile} from "@tauri-apps/plugin-fs";
 import {toLocalTime} from "../../utils/time.ts";
-import {PlayerDataStorage} from "../../server/storage/PlayerDataStorage.ts";
-import {ClientSavePage} from "./ClientSavePage.ts";
 import {isValidUUID} from "../../utils/UUIDUtil.ts";
-import {closest, dataAction} from "../../utils/dom_util.ts";
+import {assert, bindFrom, closest, closestHTML, dataAction} from "../../utils/dom_util.ts";
+import {appEvent} from "../../event/EventBus.ts";
+import {ServerStorage} from "../../server/storage/ServerStorage.ts";
+import {NbtSerialization} from "../../nbt/NbtSerialization.ts";
+import {NbtUnserialization} from "../../nbt/NbtUnserialization.ts";
+import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
+import {PlayerDataStorage} from "../../server/storage/PlayerDataStorage.ts";
+import {PageSection} from "../page/PageSection.ts";
+import {ArchiveInputBox} from "./ArchiveInputBox.ts";
+import {empty} from "../../utils/uit.ts";
 
-export class ClientSavesManager {
+export class ClientSavesManager extends PageSection {
     private static readonly RESERVED_NAMES = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'];
     private static readonly INVALID_CHARS = /[@#$%^&!<>:"/\\|?*\x00]/;
 
-    public readonly page: ClientSavePage;
-    private readonly saveContainer: HTMLElement;
+    private readonly inputBox: ArchiveInputBox;
     private readonly saveList: HTMLElement;
     private readonly buttonBox: HTMLElement;
 
-    private readonly inputContainer: HTMLElement;
-    private readonly saveNameInput: HTMLInputElement;
-    private readonly inputButtonBox: HTMLElement;
-
+    private commit: Consumer<string | null> = empty;
     private chosenItem: HTMLElement | null = null;
 
     public constructor() {
-        this.page = new ClientSavePage();
-        this.saveContainer = document.getElementById('start')!;
-        this.saveList = document.getElementById('save-list')!;
-        this.buttonBox = document.getElementById('start-buttons')!;
+        super('start');
 
-        this.inputContainer = document.getElementById('save-name-label')!;
-        this.saveNameInput = document.getElementById('save-name-input') as HTMLInputElement;
-        this.inputButtonBox = document.getElementById('save-name-buttons')!;
+        this.closeOnEscape = true;
+        this.inputBox = new ArchiveInputBox();
+
+        this.saveList = assert(this.root, '#save-list');
+        this.buttonBox = assert(this.root, '#start-buttons');
+
+        const texts = bindFrom(this.root);
+        appEvent.on('ui:lang', () => texts.forEach(e => e.refresh()));
     }
 
-    public async chooseSave() {
+    public override keyDown(event: KeyboardEvent): boolean {
+        if (event.code === 'Enter' && this.chosenItem) {
+            const saveName = this.chosenItem.dataset.saveName;
+            if (saveName) this.commit?.(saveName);
+            return true;
+        }
+
+        return super.keyDown(event);
+    }
+
+    protected override onClosed() {
+        this.commit(null);
+        this.commit = empty;
+        this.clearSelection();
+    }
+
+    public async chooseSave(): Promise<string | null> {
+        this.commit(null);
+
         await ServerStorage.updateStatus();
         await this.refreshSaveDisplay();
-
-        this.show();
 
         const {promise, resolve} = Promise.withResolvers<string | null>();
         const ctrl = new AbortController();
 
+        const commit = (v: string | null) => {
+            resolve(v);
+            ctrl.abort();
+            this.commit = empty;
+            this.close();
+        };
+        this.commit = commit;
+
         this.saveList.addEventListener('click', event => {
             this.clearSelection();
 
-            const target = event.target;
-            if (!(target instanceof HTMLElement)) return;
-
-            const item = target.closest('.save-list-item');
+            const item = closestHTML(event.target, '.save-list-item');
             if (!item) return;
 
-            this.chosenItem = target;
+            this.chosenItem = item;
             this.onItemChosen();
         }, {signal: ctrl.signal});
 
         this.saveList.addEventListener('dblclick', event => {
-            const target = event.target;
-            if (!(target instanceof HTMLElement)) return;
+            const item = closestHTML(event.target, '.save-list-item');
+            if (!item || this.chosenItem !== item) return;
 
-            const item = target.closest('.save-list-item');
-            if (!item) return;
-
-            if (this.chosenItem !== target) return;
             const saveName = this.chosenItem.dataset.saveName;
-            if (saveName) {
-                resolve(saveName);
-                ctrl.abort();
-            }
+            if (saveName) commit(saveName);
         }, {signal: ctrl.signal});
 
         this.buttonBox.addEventListener('click', event => {
@@ -84,19 +98,7 @@ export class ClientSavesManager {
             const action = dataAction(actionBtn);
             if (!action) return;
 
-            this.handleButtonAction(action, resolve, ctrl);
-        }, {signal: ctrl.signal});
-
-        window.addEventListener('keydown', event => {
-            if (event.code === 'Escape') {
-                resolve(null);
-                ctrl.abort();
-            } else if (event.code === 'Enter' && this.chosenItem) {
-                const saveName = this.chosenItem.dataset.saveName;
-                if (!saveName) return;
-                resolve(saveName);
-                ctrl.abort();
-            }
+            this.handleButtonAction(action, commit);
         }, {signal: ctrl.signal});
 
         return promise;
@@ -104,14 +106,8 @@ export class ClientSavesManager {
 
     private handleButtonAction(
         action: string,
-        resolve: Consumer<string | null>,
-        ctrl: AbortController
+        commit: Consumer<string | null>,
     ): void {
-        const commit = (v: string | null) => {
-            resolve(v);
-            ctrl.abort();
-        };
-
         switch (action) {
             case 'back':
                 return commit(null);
@@ -499,43 +495,12 @@ export class ClientSavesManager {
         await this.refreshSaveDisplay();
     }
 
-    private getInputSaveName(): Promise<string | null> {
-        const {promise, resolve} = Promise.withResolvers<string | null>();
-        const ctrl = new AbortController();
-
-        this.saveNameInput.value = 'New World';
-        this.inputContainer.classList.remove('hidden');
-        NovaFlightClient.instance().input.startInput(true);
-
-        const settled = (result: string | null) => {
-            NovaFlightClient.instance().input.startInput(false);
-            this.inputContainer.classList.add('hidden');
-            resolve(result);
-            ctrl.abort();
-        };
-
-        this.inputButtonBox.addEventListener('click', event => {
-            const target = event.target;
-            if (!(target instanceof HTMLElement)) return;
-
-            const actionBtn = target.closest('.btn');
-            if (!actionBtn) return;
-
-            const action = actionBtn.getAttribute('data-action');
-            if (!action) return;
-            if (action === 'confirm') {
-                const input = this.saveNameInput.value.trim();
-                if (input.length === 0) {
-                    message('输入不能为空', {kind: 'warning'}).then();
-                    return;
-                }
-                settled(input);
-            } else if (action === 'cancel') {
-                settled(null);
-            }
-        }, {signal: ctrl.signal});
-
-        return promise;
+    private getInputSaveName() {
+        if (!this.manager) {
+            throw new DOMException('Request input without GUI manager.');
+        }
+        this.manager.open(this.inputBox);
+        return this.inputBox.input();
     }
 
     private onItemChosen() {
@@ -585,15 +550,6 @@ export class ClientSavesManager {
 
         item.append(displayName, saveName, right);
         return item;
-    }
-
-    public show() {
-        this.saveContainer.classList.remove('hidden');
-    }
-
-    public hide() {
-        this.saveContainer.classList.add('hidden');
-        this.clearSelection();
     }
 }
 

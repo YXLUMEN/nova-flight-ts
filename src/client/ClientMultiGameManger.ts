@@ -3,30 +3,117 @@ import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {ClientStorage} from "./storage/ClientStorage.ts";
 import {error} from "@tauri-apps/plugin-log";
 import {invoke} from "@tauri-apps/api/core";
+import {PageSection} from "./page/PageSection.ts";
+import {as, assert} from "../utils/dom_util.ts";
+import {empty} from "../utils/uit.ts";
 
 
-export class ClientMultiGameManger {
+export class ClientMultiGameManger extends PageSection {
     private static readonly LAN_POLL_MS = 1000;
     private static readonly LAN_STALE_MS = 5000;
 
-    private readonly multiGame: HTMLDivElement;
-    private readonly serverList: HTMLDivElement;
+    private readonly serverList: HTMLElement;
     private readonly addrInput: HTMLInputElement;
-    private readonly connectBtn: HTMLButtonElement;
-    private readonly cancelBtn: HTMLButtonElement;
+    private readonly connectBtn: HTMLElement;
+    private readonly cancelBtn: HTMLElement;
 
-    private resolveLast: Consumer<string | null> | null = null;
+    private commit: Consumer<string | null> = empty;
     private lanHint: HTMLDivElement | null = null;
     private lanTimer: ReturnType<typeof setInterval> | undefined;
 
     public constructor() {
-        this.multiGame = document.getElementById('multi-game') as HTMLDivElement;
-        this.serverList = document.getElementById('server-list') as HTMLDivElement;
-        this.addrInput = document.getElementById('server-address') as HTMLInputElement;
-        this.connectBtn = document.getElementById('connect-btn') as HTMLButtonElement;
-        this.cancelBtn = document.getElementById('cancel-btn') as HTMLButtonElement;
+        super('multi-game');
+
+        this.closeOnEscape = true;
+
+        this.serverList = assert(this.root, '#server-list');
+        this.addrInput = as(this.root, '#server-address', HTMLInputElement);
+        this.connectBtn = assert(this.root, '#connect-btn');
+        this.cancelBtn = assert(this.root, '#cancel-btn');
 
         this.loadDB().catch(console.error);
+    }
+
+    protected override onOpened() {
+        NovaFlightClient.instance().input.setHandlerDisabled(true);
+    }
+
+    protected override onClosed() {
+        this.commit(null);
+        this.commit = empty;
+        NovaFlightClient.instance().input.setHandlerDisabled(false);
+    }
+
+    public getServerAddress(): Promise<string | null> {
+        this.commit(null);
+        void this.startLANPolling();
+
+        const {promise, resolve} = Promise.withResolvers<string | null>();
+        const ctrl = new AbortController();
+        const signal = ctrl.signal;
+
+        const commit = (result: string | null) => {
+            if (signal.aborted) return;
+
+            resolve(result);
+            ctrl.abort();
+            this.commit = empty;
+            this.close();
+        };
+        this.commit = commit;
+
+        this.connectBtn.addEventListener('click', async () => {
+            const addr = this.addrInput.value.trim();
+            if (addr.length === 0) return;
+
+            const select = this.createServerSelect(addr, '服务器');
+            const id = select.getAttribute('data-id')!;
+
+            const exist = this.serverList.querySelector(`[data-id="${id}"]`);
+            if (!exist) {
+                const [_, addr, name] = id.split('-');
+                this.serverList.appendChild(select);
+                await ClientStorage.db.add('server_addr_list', {addr, name});
+            }
+
+            commit(addr);
+        }, {signal});
+
+        this.cancelBtn.addEventListener('click', () => {
+            this.commit(null);
+            this.close();
+        }, {signal});
+
+        this.serverList.addEventListener('click', event => {
+            const target = event.target;
+            if (target instanceof HTMLElement && target.className === 'server-select') {
+                const id = target.getAttribute('data-id');
+                if (!id) {
+                    this.addrInput.value = '<empty>';
+                    return;
+                }
+
+                const [_, addr, _name] = id.split('-');
+                this.addrInput.value = addr;
+            }
+        }, {signal});
+
+        this.serverList.addEventListener('auxclick', async event => {
+            const target = event.target;
+            if (target instanceof HTMLElement &&
+                target.className === 'server-select' &&
+                target.hasAttribute('data-id')
+            ) {
+                const id = target.getAttribute('data-id')!;
+                const [_, addr, name] = id.split('-');
+                target.remove();
+                await ClientStorage.deleteServer(addr, name);
+            }
+        }, {signal});
+
+        promise.finally(() => this.stopLANPolling());
+
+        return promise;
     }
 
     private async loadDB() {
@@ -112,91 +199,6 @@ export class ClientMultiGameManger {
         this.lanHint.classList.add('server-list-hint');
         this.lanHint.textContent = '正在搜索局域网房间...';
         this.serverList.appendChild(this.lanHint);
-    }
-
-    public getServerAddress(): Promise<string | null> {
-        this.show();
-        this.cancelInput();
-        void this.startLANPolling();
-
-        const {promise, resolve} = Promise.withResolvers<string | null>();
-        const ctrl = new AbortController();
-        const signal = ctrl.signal;
-
-        this.resolveLast = (result: string | null) => {
-            if (signal.aborted) return;
-
-            resolve(result);
-            ctrl.abort();
-            this.resolveLast = null;
-        };
-
-        this.connectBtn.addEventListener('click', async () => {
-            const addr = this.addrInput.value.trim();
-            if (addr.length === 0) return;
-
-            const select = this.createServerSelect(addr, '服务器');
-            const id = select.getAttribute('data-id')!;
-
-            const exist = this.serverList.querySelector(`[data-id="${id}"]`);
-            if (!exist) {
-                const [_, addr, name] = id.split('-');
-                this.serverList.appendChild(select);
-                await ClientStorage.db.add('server_addr_list', {addr, name});
-            }
-
-            this.resolveLast?.(addr);
-        }, {signal});
-
-        this.cancelBtn.addEventListener('click', () => {
-            this.cancelInput();
-            this.hide();
-        }, {signal});
-
-        this.serverList.addEventListener('click', event => {
-            const target = event.target;
-            if (target instanceof HTMLElement && target.className === 'server-select') {
-                const id = target.getAttribute('data-id');
-                if (!id) {
-                    this.addrInput.value = '<empty>';
-                    return;
-                }
-
-                const [_, addr, _name] = id.split('-');
-                this.addrInput.value = addr;
-            }
-        }, {signal});
-
-        this.serverList.addEventListener('auxclick', async event => {
-            const target = event.target;
-            if (target instanceof HTMLElement &&
-                target.className === 'server-select' &&
-                target.hasAttribute('data-id')
-            ) {
-                const id = target.getAttribute('data-id')!;
-                const [_, addr, name] = id.split('-');
-                target.remove();
-                await ClientStorage.deleteServer(addr, name);
-            }
-        }, {signal});
-
-        promise.finally(() => this.stopLANPolling());
-
-        return promise;
-    }
-
-    public cancelInput(): void {
-        this.resolveLast?.(null);
-    }
-
-    public show(): void {
-        NovaFlightClient.instance().input.setHandlerDisabled(true);
-        this.multiGame.classList.remove('hidden');
-    }
-
-    public hide(): void {
-        NovaFlightClient.instance().input.setHandlerDisabled(false);
-        this.multiGame.classList.add('hidden');
     }
 
     private createServerSelect(addr: string, name: string): HTMLDivElement {

@@ -5,6 +5,8 @@ export abstract class PageSection {
     public manager: GuiManager | null = null;
 
     protected readonly root: HTMLElement;
+    protected closeOnEscape = false;
+
     private readonly reusable: boolean;
     private destroyed = false;
 
@@ -25,7 +27,7 @@ export abstract class PageSection {
     }
 
     public close(): void {
-        this.manager?.pop(this);
+        this.manager?.close(this);
     }
 
     /** @readonly */
@@ -37,6 +39,14 @@ export abstract class PageSection {
         this.onDestroy();
     }
 
+    public keyDown(event: KeyboardEvent): boolean {
+        if (event.code === 'Escape' && this.closeOnEscape) {
+            this.close();
+            return true;
+        }
+        return false;
+    }
+
     protected onOpened(): void {
     }
 
@@ -46,6 +56,8 @@ export abstract class PageSection {
     protected onDestroy(): void {
     }
 
+    // 内部方法
+
     /**
      * @readonly
      * @inner
@@ -53,6 +65,7 @@ export abstract class PageSection {
      * */
     public notifyOpened(): void {
         this.root.classList.remove('hidden');
+        this.root.focus();
         this.onOpened();
     }
 

@@ -44,7 +44,7 @@ export class GuiLayer {
         notice.setOnConfirm(onConfirm);
         notice.setMessage(message);
         notice.setLabel(label);
-        this.gui.push(notice);
+        this.gui.open(notice);
         return notice;
     }
 
@@ -61,12 +61,12 @@ export class GuiLayer {
             if (this.gui.top() instanceof PauseScreen) return;
 
             this.pauseScreen ??= new PauseScreen(this.client);
-            this.gui.push(this.pauseScreen);
+            this.gui.open(this.pauseScreen);
             return;
         }
 
         if (this.gui.top() instanceof PauseScreen) {
-            this.gui.popTop();
+            this.gui.pop();
         }
     }
 
@@ -80,7 +80,7 @@ export class GuiLayer {
         const over = new GameOverScreen(() => this.client.leaveGame());
         over.setSummary(new TranslatableText('hud.summary', [
             time.toString(), score.toString(), (score / time).toFixed(2)]))
-        this.gui.clear();
-        this.gui.push(over);
+        this.gui.closeAll();
+        this.gui.open(over);
     }
 }

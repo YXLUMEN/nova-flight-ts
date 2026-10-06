@@ -10,9 +10,7 @@
     --server-item-bg: #1a1f31;
 }
 
-.multi-game.background {
-    position: fixed;
-    inset: 0;
+.multi-game {
     flex-direction: column;
     align-items: center;
     justify-content: center;

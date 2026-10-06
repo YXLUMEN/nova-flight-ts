@@ -2,18 +2,23 @@ import type {Constructor} from "../type/types.ts";
 import type {TranslatableText} from "../i18n/TranslatableText.ts";
 import {TextElement} from "../client/page/TextElement.ts";
 
-export function closest(element: unknown, selector: string) {
+export function closest(element: unknown, selector: string): Element | null {
     if (element instanceof HTMLElement) {
         return element.closest(selector);
     }
     return null;
 }
 
-export function dataAction(element: unknown) {
-    if (element instanceof Element) {
-        return element.getAttribute('data-action');
+export function closestHTML(element: unknown, selector: string): HTMLElement | null {
+    if (element instanceof HTMLElement) {
+        const target = element.closest(selector);
+        if (target instanceof HTMLElement) return target
     }
     return null;
+}
+
+export function dataAction(element: Element | null) {
+    return element === null ? null : element.getAttribute('data-action');
 }
 
 export function assert(target: HTMLElement, selectors: string): HTMLElement {
@@ -50,5 +55,21 @@ export function bindTexts(target: HTMLElement, map: Record<string, TranslatableT
     for (const [selector, text] of Object.entries(map)) {
         texts.push(bindText(target, selector, text));
     }
+    return texts;
+}
+
+export function bindFrom(target: HTMLElement): TextElement<HTMLElement>[] {
+    const elements = target.querySelectorAll('[data-i18n]');
+    const texts: TextElement<HTMLElement>[] = [];
+
+    for (const element of elements) {
+        if (!(element instanceof HTMLElement)) continue;
+
+        const key = element.getAttribute('data-i18n');
+        if (key == null) continue;
+
+        texts.push(new TextElement(element, key));
+    }
+
     return texts;
 }

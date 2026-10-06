@@ -35,11 +35,7 @@ export class BGMManager {
 
         appEvent.on('game:start', () => this.onGameStart());
         appEvent.on('game:over', () => this.onGameOver());
-        appEvent.on('game:end', () => {
-            AudioManager.removeListener('main');
-            AudioManager.addListener('main', 'ended', nextTheme);
-            void nextTheme();
-        });
+        appEvent.on('game:end', nextTheme);
         appEvent.on('entity:boss:killed', () => this.onBossDead());
         AudioManager.addListener('main', 'ended', nextTheme);
         this.conditionListener(appEvent);

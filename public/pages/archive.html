@@ -1,28 +1,29 @@
-<section class="start background hidden" id="start">
-    <div class="title" id="archive-title">存档</div>
+<section class="c-section start hidden" id="start">
+    <div class="title" id="archive-title" data-i18n="archive.title">存档</div>
 
     <div class="save-list" id="save-list"></div>
 
     <div class="start-buttons" id="start-buttons">
-        <button class="btn always" data-action="back">返回标题</button>
-        <button class="btn always" data-action="create-world">新建世界</button>
+        <button class="btn always" data-action="back" data-i18n="archive.back">返回标题</button>
+        <button class="btn always" data-action="create-world" data-i18n="archive.create">新建世界</button>
 
-        <button class="btn disabled" data-action="load-world">进入世界</button>
-        <button class="btn disabled" data-action="delete-world">删除存档</button>
-        <button class="btn disabled" data-action="rename">重命名</button>
-        <button class="btn disabled" data-action="export-world">导出存档</button>
-        <button class="btn disabled" data-action="export-world-snbt">导出为S-NBT</button>
-        <button class="btn always" data-action="import-world">导入存档</button>
+        <button class="btn disabled" data-action="load-world" data-i18n="archive.load">进入世界</button>
+        <button class="btn disabled" data-action="delete-world" data-i18n="archive.delete">删除存档</button>
+        <button class="btn disabled" data-action="rename" data-i18n="archive.rename">重命名</button>
+        <button class="btn disabled" data-action="export-world" data-i18n="archive.export">导出存档</button>
+        <button class="btn disabled" data-action="export-world-snbt" data-i18n="archive.export_snbt">导出为S-NBT
+        </button>
+        <button class="btn always" data-action="import-world" data-i18n="archive.import">导入存档</button>
     </div>
 
-    <div class="save-name-label hidden" id="save-name-label">
-        <div class="input-title" id="archive-name">存档名称</div>
+    <div class="c-section save-name-label hidden" id="save-name-label">
+        <div class="input-title" id="archive-name" data-i18n="archive.archive_name">存档名称</div>
         <label for="save-name-input"></label>
         <input class="save-name-input" id="save-name-input" type="text" autocomplete="off" spellcheck="false">
 
         <div class="save-name-buttons" id="save-name-buttons">
-            <button class="btn confirm-btn" data-action="confirm">确认</button>
-            <button class="btn cancel-btn" data-action="cancel">取消</button>
+            <button class="c-button confirm-btn" data-action="confirm" data-i18n="archive.confirm">确认</button>
+            <button class="c-button cancel-btn" data-action="cancel" data-i18n="archive.cancel">取消</button>
         </div>
     </div>
 </section>

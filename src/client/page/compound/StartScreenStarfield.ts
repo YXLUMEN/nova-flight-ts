@@ -5,12 +5,11 @@ import {Window} from "../../render/Window.ts";
 import {UiFramework} from "../../render/ui/UiFramework.ts";
 import type {NovaFlightClient} from "../../NovaFlightClient.ts";
 import {MutVec2} from "../../../utils/math/MutVec2.ts";
-import {doubleEquals} from "../../../utils/math/math.ts";
 
 // 星空视差最大像素偏移
-const STAR_PARALLAX_STRENGTH = 24;
+const STAR_PARALLAX_STRENGTH = 32;
 // UI 元素视差最大像素偏移
-const UI_PARALLAX_STRENGTH = 6;
+const UI_PARALLAX_STRENGTH = 8;
 // 视差平滑插值系数,越小越滞后，越大越灵敏
 const PARALLAX_LERP = 0.08;
 
@@ -29,8 +28,6 @@ export class StartScreenStarfield extends UiFramework {
     private mouseNormY: number = 0;
     private parallaxX: number = 0;
     private parallaxY: number = 0;
-    private uiOffX: number = 0;
-    private uiOffY: number = 0;
 
     public constructor(client: NovaFlightClient, element: HTMLElement) {
         super();
@@ -56,6 +53,13 @@ export class StartScreenStarfield extends UiFramework {
         window.addEventListener('mousemove', (event) => {
             this.mouseNormX = (event.clientX / this.width - 0.5) * 2;
             this.mouseNormY = (event.clientY / this.height - 0.5) * 2;
+
+            const uiOffX = -this.parallaxX * UI_PARALLAX_STRENGTH;
+            const uiOffY = -this.parallaxY * UI_PARALLAX_STRENGTH;
+
+            // css 平滑
+            this.element.style.setProperty('--x', `${uiOffX}px`);
+            this.element.style.setProperty('--y', `${uiOffY}px`);
         }, {signal: this.ctrl.signal, passive: true});
     }
 
@@ -75,18 +79,6 @@ export class StartScreenStarfield extends UiFramework {
 
         this.parallaxX += (this.mouseNormX - this.parallaxX) * PARALLAX_LERP;
         this.parallaxY += (this.mouseNormY - this.parallaxY) * PARALLAX_LERP;
-
-        const uiOffX = -this.parallaxX * UI_PARALLAX_STRENGTH;
-        const uiOffY = -this.parallaxY * UI_PARALLAX_STRENGTH;
-
-        if (!doubleEquals(uiOffX, this.uiOffX, 1E-4)) {
-            this.uiOffX = uiOffX;
-            this.element.style.setProperty('--x', `${uiOffX}px`);
-        }
-        if (!doubleEquals(uiOffY, this.uiOffY, 1E-4)) {
-            this.uiOffY = uiOffY;
-            this.element.style.setProperty('--y', `${uiOffY}px`);
-        }
 
         this.render(this.ctx);
         requestAnimationFrame(this.tick);

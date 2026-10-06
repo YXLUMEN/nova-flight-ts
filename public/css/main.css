@@ -24,6 +24,9 @@
     --overlay: rgb(0 0 0 / 0.6);
     /** 光标 / 插入符 */
     --caret: #ffffff;
+    --background: radial-gradient(1200px 800px at 50% 50%, #1a2032 0%, transparent 60%), #0e1220;
+    --font-section: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-default: Consolas, Monaco, "Andale Mono", "Lucida Console", monospace;
 }
 
 /*
@@ -39,7 +42,7 @@ html, body {
     -webkit-user-select: none;
     -webkit-user-drag: none;
     -ms-user-select: none;
-    font-family: Consolas, Monaco, "Andale Mono", "Lucida Console", monospace;
+    font-family: var(--font-default), serif;
 }
 
 ::-webkit-scrollbar {
@@ -63,22 +66,6 @@ html, body {
 }
 
 #gui.hidden {
-    display: none;
-}
-
-.background {
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(1200px 800px at 50% 50%, #1a2032 0%, transparent 60%), #0e1220;
-}
-
-.background.hidden {
     display: none;
 }
 

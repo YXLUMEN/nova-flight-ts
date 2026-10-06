@@ -6,13 +6,18 @@ export class GuiManager {
 
     public constructor(root: HTMLElement) {
         this.root = root;
+
+        window.addEventListener('keydown', event => {
+            const top = this.top();
+            if (top && top.keyDown(event)) event.preventDefault();
+        });
     }
 
     public top(): PageSection | null {
         return this.sections.length > 0 ? this.sections[this.sections.length - 1] : null;
     }
 
-    public push(section: PageSection): PageSection {
+    public open(section: PageSection): PageSection {
         if (this.sections.includes(section)) return section;
 
         this.root.classList.remove('hidden');
@@ -24,7 +29,7 @@ export class GuiManager {
         return section;
     }
 
-    public popTop(): PageSection | null {
+    public pop(): PageSection | null {
         const section = this.sections.pop();
         if (!section) return null;
 
@@ -34,26 +39,27 @@ export class GuiManager {
         return section;
     }
 
-    public pop(section: PageSection): boolean {
+    public close(section: PageSection): boolean {
         const index = this.sections.indexOf(section);
         if (index < 0) return false;
 
-        this.sections.splice(index, 1);
+        while (this.sections.length > index) {
+            const top = this.sections.pop()!;
+            top.manager = null;
+            top.notifyClosed();
+        }
         this.refresh();
-
-        section.manager = null;
-        section.notifyClosed();
         return true;
     }
 
-    public clear() {
-        while (this.popTop()) {
+    public closeAll() {
+        while (this.pop()) {
         }
     }
 
     public destroyAll() {
         while (true) {
-            const section = this.popTop();
+            const section = this.pop();
             if (!section) break;
             section.destroy();
         }

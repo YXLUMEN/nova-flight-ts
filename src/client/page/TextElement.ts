@@ -1,7 +1,7 @@
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
 import {textOf} from "./types.ts";
 
-export class TextElement<T extends HTMLElement> {
+export class TextElement<T extends Element> {
     public readonly element: T;
     private text: TranslatableText;
 

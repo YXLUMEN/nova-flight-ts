@@ -4,17 +4,17 @@ import {randInt} from "../../utils/math/math.ts";
 import {toLocalTime} from "../../utils/time.ts";
 
 export class HistoricalScoreRender implements StatisticItem {
-    private static readonly cheatPrompt = ['没关就是开了?', '我 {} 没有开挂', '纯绿玩', '小透不是挂'];
+    private static readonly cheatPrompt = ['没关就是开了?', '我 {} 没有开挂', '纯绿玩', '小透不是挂', '开了就是开了?', '时间紧任务重'];
 
     public async render() {
         const records = await HistoricalScore.getScores();
-        const box = document.createElement("div");
+        const box = document.createElement('div');
         box.className = 'historical-score-list';
 
         if (records.length === 0) return box;
         for (let i = 0, len = records.length; i < len; i++) {
             if (i !== 0) {
-                const line = document.createElement("div");
+                const line = document.createElement('div');
                 line.className = 'line';
                 box.append(line);
             }
@@ -26,7 +26,7 @@ export class HistoricalScoreRender implements StatisticItem {
     }
 
     private createItem(record: ScoreRecord, index: number): HTMLElement {
-        const root = document.createElement("div");
+        const root = document.createElement('div');
         root.className = 'historical-score-item';
 
         const spawn = document.createElement('span');

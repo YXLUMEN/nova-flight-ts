@@ -155,7 +155,7 @@ export class NovaFlightClient {
             `Nova Flight (${RuntimeConfig.devVersion})`,
             TranslatableText.of('start.subtitle'),
         );
-        this.layer.gui.push(startScreen);
+        this.layer.gui.open(startScreen);
 
         const action = await startScreen.wait();
         if (action === 'exit') return true;
@@ -165,8 +165,8 @@ export class NovaFlightClient {
 
         if (action === 'start') {
             this.isIntegrated = true;
+            this.layer.gui.open(this.saveManager);
             const saveName = await this.saveManager.chooseSave();
-            this.saveManager.hide();
             if (saveName === null) {
                 this.stopWorld();
                 return false;
@@ -174,16 +174,15 @@ export class NovaFlightClient {
 
             if (RuntimeConfig.generalMode) await connector.startGeneralServer(saveName);
             else await connector.startIntegratedServer(saveName);
-            appEvent.emit(new GameStart());
             return false;
         }
         if (action === 'multiplayer') {
             this.isIntegrated = false;
             await connector.connectToServer();
-            appEvent.emit(new GameStart());
             return false;
         }
         if (action === 'statistic') {
+            this.layer.gui.open(this.statisticManager);
             await this.statisticManager.selectItem();
             this.stopWorld();
             return false;
@@ -196,6 +195,7 @@ export class NovaFlightClient {
             this.layer.showNotice(TranslatableText.of('start.join_game'), null, empty);
         }
 
+        appEvent.emit(new GameStart());
         await sleep(200);
 
         this.world = world;
@@ -406,10 +406,9 @@ export class NovaFlightClient {
             this.stop = this.stop.bind(this);
         }
 
-        public async getServerAddr(): Promise<string | null> {
-            const result = await this.client.multiGameManager.getServerAddress();
-            this.client.multiGameManager.hide();
-            return result;
+        public getServerAddr(): Promise<string | null> {
+            this.client.layer.gui.open(this.client.multiGameManager);
+            return this.client.multiGameManager.getServerAddress();
         }
 
         public setChannel(channel: ClientChannel) {
