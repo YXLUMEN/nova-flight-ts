@@ -38,8 +38,9 @@ export class ClientSavesManager extends PageSection {
         this.saveList = assert(this.root, '#save-list');
         this.buttonBox = assert(this.root, '#start-buttons');
 
-        const texts = bindFrom(this.root);
-        appEvent.on('ui:lang', () => texts.forEach(e => e.refresh()));
+        const bind = bindFrom(this.root);
+        appEvent.on('ui:lang', () => bind.refresh());
+        bind.refresh();
     }
 
     public override keyDown(event: KeyboardEvent): boolean {

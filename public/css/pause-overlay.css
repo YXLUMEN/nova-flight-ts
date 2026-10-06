@@ -10,7 +10,7 @@
     flex-direction: column;
     align-items: center;
     gap: 14px;
-    width: 200px;
+    min-width: 200px;
 }
 
 .pause-overlay .pause-title {

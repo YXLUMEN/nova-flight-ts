@@ -1,15 +1,12 @@
-import type {UUID} from "./type/types.ts";
 import {Window} from "@tauri-apps/api/window";
 import {invoke} from "@tauri-apps/api/core";
 import {error} from "@tauri-apps/plugin-log";
-import {isValidUUID, uuidFromUsername} from "./utils/UUIDUtil.ts";
 import {isDev} from "./configs/RuntimeConfig.ts";
 import {ProtocolRegistry} from "./network/packet/ProtocolRegistry.ts";
-import {NovaFlightClient} from "./client/NovaFlightClient.ts";
 import {CodecRegistry} from "./network/CodecRegistry.ts";
 import {PageSplicer} from "./client/page/PageSplicer.ts";
 import {Settings} from "./client/settings/Settings.ts";
-import {BindSettings} from "./client/settings/BindSettings.ts";
+import {ClientStartup} from "./client/ClientStartup.ts";
 
 export const app = new Window('main');
 
@@ -29,20 +26,9 @@ export async function run() {
     ProtocolRegistry.register();
 
     try {
-        // 先加载偏好,后续系统可以据此加载
-        await Settings.OPTIONS.load();
-        BindSettings.init();
-
-        const rawName = localStorage.getItem('playerName') ?? 'player';
-        const playerName = rawName.slice(0, 64);
-
-        const uuid: UUID = await uuidFromUsername(playerName);
-        const clientId: UUID = isValidUUID(uuid) ? uuid : crypto.randomUUID();
-
-        localStorage.setItem('clientId', clientId);
-        localStorage.setItem('playerName', playerName);
-
-        const client = new NovaFlightClient(clientId, playerName, CodecRegistry.VERSION);
+        const startup = new ClientStartup(CodecRegistry.VERSION);
+        await startup.load();
+        const client = startup.buildClient();
         ctrl.abort();
 
         await app.once('save_before_close', async () => {

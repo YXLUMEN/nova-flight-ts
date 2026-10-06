@@ -65,7 +65,6 @@ export abstract class PageSection {
      * */
     public notifyOpened(): void {
         this.root.classList.remove('hidden');
-        this.root.focus();
         this.onOpened();
     }
 
@@ -87,5 +86,9 @@ export abstract class PageSection {
      * */
     public index(i: number) {
         this.root.style.zIndex = String(i);
+    }
+
+    public focus(): void {
+        this.root.focus();
     }
 }

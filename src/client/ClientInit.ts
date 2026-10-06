@@ -1,51 +1,42 @@
-import {LoadingScreen} from "./render/ui/LoadingScreen.ts";
-import {Window} from "./render/Window.ts";
 import {sleep} from "../utils/uit.ts";
-import {ClientTechManager} from "./tech/ClientTechManager.ts";
-import {DataLoader} from "../resource/DataLoader.ts";
-import {SoundSystem} from "../sound/SoundSystem.ts";
-import {RenderLoader} from "./render/RenderLoader.ts";
 import {check} from "@tauri-apps/plugin-updater";
 import {confirm} from "@tauri-apps/plugin-dialog";
-import type {NovaFlightClient} from "./NovaFlightClient.ts";
+import {LoadingScreen} from "./render/ui/LoadingScreen.ts";
+import {ClientWindow} from "./render/ClientWindow.ts";
+import {ClientTechManager} from "./tech/ClientTechManager.ts";
+import {DataLoader} from "../resource/DataLoader.ts";
+import {RenderLoader} from "./render/RenderLoader.ts";
+import type {RegistryManager} from "../registry/RegistryManager.ts";
 
 export class ClientInit {
-    private readonly client: NovaFlightClient;
-
-    public constructor(client: NovaFlightClient) {
-        this.client = client;
-    }
-
-    public async initResources(): Promise<void> {
-        const loadingScreen = new LoadingScreen(this.client);
-        loadingScreen.setSize(Window.viewWidth, Window.viewHeight);
+    public async initResources(manager: RegistryManager, window: ClientWindow): Promise<void> {
+        const loadingScreen = new LoadingScreen(window);
+        loadingScreen.setSize(ClientWindow.viewWidth, ClientWindow.viewHeight);
         loadingScreen.loop();
 
         await this.update(loadingScreen);
 
-        loadingScreen.setProgress(0.1, '加载依赖');
+        loadingScreen.setProgress(0.1, 'Loading dependencies');
         await this.initWasm();
         await sleep(100);
 
-        loadingScreen.setProgress(0.2, '注册资源');
-        const manager = this.client.registryManager;
+        loadingScreen.setProgress(0.2, 'Register resources');
         await manager.registerAll();
         ClientTechManager.init();
         await sleep(200);
 
-        loadingScreen.setProgress(0.4, '加载资源');
+        loadingScreen.setProgress(0.4, 'Load resources');
         await DataLoader.registerAndLoad(manager, loadingScreen);
-        this.client.globalSound = new SoundSystem();
 
-        loadingScreen.setProgress(0.6, '初始化渲染器');
+        loadingScreen.setProgress(0.6, 'Initialize renderer');
         await RenderLoader.registerAndLoad(loadingScreen);
         await sleep(200);
 
-        loadingScreen.setProgress(0.8, '冻结资源');
+        loadingScreen.setProgress(0.8, 'Freeze resources');
         manager.freeze();
         await sleep(200);
 
-        loadingScreen.setProgress(1, '启动游戏');
+        loadingScreen.setProgress(1, 'Start the game');
         await sleep(200);
         await loadingScreen.setDone();
     }
@@ -56,7 +47,7 @@ export class ClientInit {
 
     private async update(loadingScreen: LoadingScreen): Promise<void> {
         try {
-            loadingScreen.setProgress(0, '检测更新');
+            loadingScreen.setProgress(0, 'Check update');
             await sleep(200);
 
             const update = await check({timeout: 2000});

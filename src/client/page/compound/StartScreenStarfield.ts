@@ -1,7 +1,7 @@
 import {Camera} from "../../render/Camera.ts";
 import {StarField} from "../../../effect/StarField.ts";
 import {lowPowerLayers} from "../../../configs/StarfieldConfig.ts";
-import {Window} from "../../render/Window.ts";
+import {ClientWindow} from "../../render/ClientWindow.ts";
 import {UiFramework} from "../../render/ui/UiFramework.ts";
 import type {NovaFlightClient} from "../../NovaFlightClient.ts";
 import {MutVec2} from "../../../utils/math/MutVec2.ts";
@@ -38,7 +38,7 @@ export class StartScreenStarfield extends UiFramework {
 
         this.tick = this.tick.bind(this);
         this.setSize = this.setSize.bind(this);
-        this.setSize(Window.viewWidth, Window.viewHeight);
+        this.setSize(ClientWindow.viewWidth, ClientWindow.viewHeight);
         const unsubResize = client.window.onResize(this.setSize);
         this.ctrl.signal.addEventListener('abort', () => unsubResize(), {once: true});
     }

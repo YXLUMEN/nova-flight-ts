@@ -11,7 +11,10 @@ export class EventBus {
     ): Consumer<void> {
         const bucket = this.listeners.getOrInsertComputed(type, newSet);
         bucket.add(handler);
-        return () => bucket.delete(handler);
+        return () => {
+            bucket.delete(handler);
+            if (bucket.size === 0) this.listeners.delete(type);
+        };
     }
 
     public withSignal<K extends keyof AppEvents>(
@@ -31,11 +34,12 @@ export class EventBus {
         type: K,
         handler: Consumer<AppEvents[K]>,
     ): void {
+        let disposer: Consumer<void>;
         const wrapper: Consumer<AppEvents[K]> = (payload) => {
-            this.off(type, wrapper);
+            disposer();
             handler(payload);
         };
-        this.on(type, wrapper);
+        disposer = this.on(type, wrapper);
     }
 
     public off<K extends keyof AppEvents>(

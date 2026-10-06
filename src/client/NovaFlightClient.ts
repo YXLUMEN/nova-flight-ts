@@ -1,4 +1,5 @@
 import type {Consumer, UUID} from "../type/types.ts";
+import type {ClientStartup} from "./ClientStartup.ts";
 import type {ConnectionContext} from "./network/ConnectionContext.ts";
 import type {ClientChannel} from "./network/ClientChannel.ts";
 import type {LocalPlayerEntity} from "./entity/LocalPlayerEntity.ts";
@@ -6,7 +7,7 @@ import {error, warn} from "@tauri-apps/plugin-log";
 import {invoke} from "@tauri-apps/api/core";
 import {empty, sleep, timeout} from "../utils/uit.ts";
 import {KeyboardInput} from "./input/KeyboardInput.ts";
-import {Window} from "./render/Window.ts";
+import {ClientWindow} from "./render/ClientWindow.ts";
 import {DEFAULT_CONFIG, isDev, RuntimeConfig} from "../configs/RuntimeConfig.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
 import {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
@@ -30,7 +31,6 @@ import {ClientPlayHandler} from "./network/handler/ClientPlayHandler.ts";
 import {TickRateManager} from "../world/TickRateManager.ts";
 import {ClientWorkerFS} from "./ClientWorkerFS.ts";
 import {ClientConnector} from "./network/ClientConnector.ts";
-import {ClientInit} from "./ClientInit.ts";
 import {GameStart} from "../event/events/game/GameStart.ts";
 import {ClientDefaultEvents} from "./ClientDefaultEvents.ts";
 import {GamePause} from "../event/events/game/GamePause.ts";
@@ -49,10 +49,10 @@ export class NovaFlightClient {
     public readonly protocolVersion: number;
     public playerName: string;
 
-    public readonly window: Window;
+    public readonly window: ClientWindow;
     public readonly layer: GuiLayer;
     public readonly input: KeyboardInput;
-    public globalSound: SoundSystem = null!;
+    public readonly globalSound: SoundSystem = new SoundSystem();
 
     protected channel: ClientChannel;
     public readonly connection: ClientConnection;
@@ -86,17 +86,16 @@ export class NovaFlightClient {
     public readonly clientCommandManager: ClientCommandManager;
     public readonly clientChat: ClientChat;
 
-    public constructor(clientId: UUID, playerName: string, protocolVersion: number) {
+    public constructor(startup: ClientStartup) {
         NovaFlightClient.INSTANCE = this;
-        this.clientId = clientId;
+        this.clientId = startup.clientId;
         this.version = DEFAULT_CONFIG.gameVersion;
-        this.protocolVersion = protocolVersion;
-        this.playerName = playerName;
+        this.protocolVersion = startup.protocolVersion;
+        this.playerName = startup.playerName;
 
-        this.registryManager = new RegistryManager();
-        this.window = new Window();
-        this.layer = new GuiLayer(this);
-        this.layer.start();
+        this.registryManager = startup.manager;
+        this.window = startup.window;
+        this.layer = new GuiLayer(this, 'gui');
         this.worldRender = new WorldRenderer(this);
         this.tickManager = new TickRateManager();
 
@@ -124,8 +123,6 @@ export class NovaFlightClient {
     }
 
     public async startClient() {
-        this.window.resize();
-        await new ClientInit(this).initResources();
         ClientDefaultEvents.registryEvents();
 
         if (isDev) AudioManager.setDisable(true);
@@ -151,10 +148,7 @@ export class NovaFlightClient {
     }
 
     private async userSelect(): Promise<boolean> {
-        const startScreen = new StartScreen(this,
-            `Nova Flight (${RuntimeConfig.devVersion})`,
-            TranslatableText.of('start.subtitle'),
-        );
+        const startScreen = new StartScreen(this, RuntimeConfig.devVersion);
         this.layer.gui.open(startScreen);
 
         const action = await startScreen.wait();
@@ -301,53 +295,53 @@ export class NovaFlightClient {
 
         const {promise, resolve} = Promise.withResolvers<void>();
         this.waitWorldStop = promise;
-        this.stopWorld = () => {
-            console.log('[Client] Stopping world');
-
-            if (!this.waitWorldStop) return;
-            this.clearWorld();
-            this.last = 0;
-            this.accumulator = 0;
-
-            if (!this.worker) {
-                resolve();
-                this.waitWorldStop = null;
-                return;
-            }
-
-            const worker = this.worker;
-            const terminate = () => {
-                worker.terminate();
-                this.worker = null;
-
-                resolve();
-                this.waitWorldStop = null;
-            };
-
-            const shutTimeout = setTimeout(() => {
-                void warn('[Client] Waiting worker terminate timeout');
-                terminate();
-            }, NovaFlightClient.SERVER_SHUTDOWN_TIMEOUT);
-
-            worker.onmessage = event => {
-                if (event.data.w2m !== Worker2MainType.SERVER_SHUTDOWN) return;
-                clearTimeout(shutTimeout);
-                terminate();
-            };
-
-            this.worker.postMessage({m2w: Main2WorkerType.STOP_SERVER});
-        };
+        this.stopWorld = () => this.bindStopWorld(resolve);
     }
 
-    private clearWorld(): void {
-        this.layer.closeAll();
-        this.worldRender.setWorld(null);
+    private bindStopWorld(resolve: Consumer<void>) {
+        if (!this.waitWorldStop) return;
+        console.log('[Client] Stopping world');
 
+        // clear world
+        this.layer.destroyScreen();
+        this.worldRender.setWorld(null);
+        this.window.hud.setPlayer(null);
         this.world?.close();
         this.world = null;
-
-        this.window.hud.setPlayer(null);
         this.player = null;
+
+        // reset loop
+        this.last = 0;
+        this.accumulator = 0;
+
+        // terminate worker
+        const worker = this.worker;
+        if (!worker) {
+            resolve();
+            this.waitWorldStop = null;
+            return;
+        }
+
+        const terminate = () => {
+            worker.terminate();
+            this.worker = null;
+
+            resolve();
+            this.waitWorldStop = null;
+        };
+
+        const shutTimeout = setTimeout(() => {
+            void warn('[Client] Waiting worker terminate timeout');
+            terminate();
+        }, NovaFlightClient.SERVER_SHUTDOWN_TIMEOUT);
+
+        worker.onmessage = event => {
+            if (event.data.w2m !== Worker2MainType.SERVER_SHUTDOWN) return;
+            clearTimeout(shutTimeout);
+            terminate();
+        };
+
+        worker.postMessage({m2w: Main2WorkerType.STOP_SERVER});
     }
 
     public requestStop(): void {

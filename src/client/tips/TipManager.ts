@@ -7,8 +7,6 @@ import {appEvent} from "../../event/EventBus.ts";
 import {TipChange} from "../../event/events/ui/TipChange.ts";
 
 export class TipManager {
-    public static readonly title: TranslatableText = TranslatableText.of('tips.nova-flight.title');
-
     private static resource: TipResource | null = null;
     private static interval: number | undefined;
     private static index: number = 0;

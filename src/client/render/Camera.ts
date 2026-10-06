@@ -2,7 +2,7 @@ import type {Vec2} from "../../utils/math/Vec2.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {noise1} from "../../utils/math/math.ts";
-import {Window} from "./Window.ts";
+import {ClientWindow} from "./ClientWindow.ts";
 
 
 export class Camera {
@@ -53,7 +53,7 @@ export class Camera {
         );
 
         const off = this.viewOffsetVec;
-        this.viewRectCache.set(off, Window.viewWidth, Window.viewHeight);
+        this.viewRectCache.set(off, ClientWindow.viewWidth, ClientWindow.viewHeight);
     }
 
     public addShake(amount: number, limit = 1): void {
@@ -62,8 +62,8 @@ export class Camera {
 
     private follow(target: MutVec2, tickDelta: number): void {
         // 目标位于视口中心时, 相机偏移应处的期望位置
-        const desiredX = target.x - Window.viewWidth / 2;
-        const desiredY = target.y - Window.viewHeight / 2;
+        const desiredX = target.x - ClientWindow.viewWidth / 2;
+        const desiredY = target.y - ClientWindow.viewHeight / 2;
 
         // SmoothDamp
         const smoothTime = Math.max(1e-4, this.smoothTime);

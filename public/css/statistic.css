@@ -50,17 +50,14 @@
 }
 
 .statistic-displayer {
-    display: flex;
+    position: relative;
     align-items: start;
     justify-content: center;
     width: 100%;
     height: 100%;
     background: rgba(62, 62, 62, 0.1);
     overflow-y: auto;
-}
-
-.statistic-displayer.hidden {
-    display: none;
+    font-family: var(--font-default), serif;
 }
 
 .statistic-displayer .historical-score-list {

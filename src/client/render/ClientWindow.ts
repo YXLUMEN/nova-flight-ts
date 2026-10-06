@@ -1,11 +1,11 @@
+import type {BiConsumer, Consumer} from "../../type/types.ts";
 import {debounce, DPR} from "../../utils/uit.ts";
+import {UITheme} from "./ui/theme.ts";
 import {HUD} from "./ui/HUD.ts";
 import {Camera} from "./Camera.ts";
-import {UITheme} from "./ui/theme.ts";
 import {DamagePopupRender} from "./ui/DamagePopupRender.ts";
-import type {BiConsumer, Consumer} from "../../type/types.ts";
 
-export class Window {
+export class ClientWindow {
     public static viewWidth = 800;
     public static viewHeight = 600;
 
@@ -20,8 +20,8 @@ export class Window {
 
     public constructor() {
         this.ctx.font = UITheme.font;
-        this.ctx.textAlign = "center";
-        this.ctx.textBaseline = "middle";
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
         this.ctx.imageSmoothingEnabled = false;
 
         this.resize = this.resize.bind(this);
@@ -35,8 +35,8 @@ export class Window {
 
     public resize() {
         this.resizeCanvas();
-        const width = Window.viewWidth;
-        const height = Window.viewHeight;
+        const width = ClientWindow.viewWidth;
+        const height = ClientWindow.viewHeight;
 
         this.hud.setSize(width, height);
 
@@ -47,8 +47,8 @@ export class Window {
 
     private resizeCanvas() {
         const rect = this.canvas.getBoundingClientRect();
-        Window.viewWidth = Math.floor(rect.width);
-        Window.viewHeight = Math.floor(rect.height);
+        ClientWindow.viewWidth = Math.floor(rect.width);
+        ClientWindow.viewHeight = Math.floor(rect.height);
 
         this.canvas.width = Math.floor(rect.width * DPR);
         this.canvas.height = Math.floor(rect.height * DPR);

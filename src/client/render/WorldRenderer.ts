@@ -6,7 +6,7 @@ import type {Consumer, HexColor} from "../../type/types.ts";
 import {clamp, lerp} from "../../utils/math/math.ts";
 import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {defaultLayers} from "../../configs/StarfieldConfig.ts";
-import {Window} from "./Window.ts";
+import {ClientWindow} from "./ClientWindow.ts";
 import {StarField} from "../../effect/StarField.ts";
 import {EntityRenderers} from "./entity/EntityRenderers.ts";
 import {World} from "../../world/World.ts";
@@ -17,7 +17,7 @@ import {DebugRenderer} from "./DebugRenderer.ts";
 
 export class WorldRenderer {
     private readonly client: NovaFlightClient;
-    private readonly window: Window;
+    private readonly window: ClientWindow;
 
     private world: ClientWorld | null = null;
 
@@ -128,7 +128,7 @@ export class WorldRenderer {
         if (this.disableRender > 0) return;
 
         const ctx = this.window.ctx;
-        ctx.clearRect(0, 0, Window.viewWidth, Window.viewHeight);
+        ctx.clearRect(0, 0, ClientWindow.viewWidth, ClientWindow.viewHeight);
 
         this.starField.render(ctx, this.window.camera, alpha);
 

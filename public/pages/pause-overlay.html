@@ -2,17 +2,18 @@
     <link rel="stylesheet" href="/css/pause-overlay.css">
 
     <div class="pause-menu">
-        <div class="pause-title"></div>
-        <div class="pause-hint"></div>
+        <div class="pause-title" data-i18n="pause.paused"></div>
+        <div class="pause-hint" data-i18n="pause.press_esc"></div>
 
-        <button type="button" class="c-button primary" data-action="back"></button>
-<!--        <button type="button" class="c-button" data-action="settings"></button>-->
-        <button type="button" class="c-button" data-action="save"></button>
-        <button type="button" class="c-button danger" data-action="save-and-exit"></button>
+        <button type="button" class="c-button primary" data-action="back" data-i18n="pause.back_to_game"></button>
+        <!--        <button type="button" class="c-button" data-action="settings"></button>-->
+        <button type="button" class="c-button" data-action="save" data-i18n="pause.save"></button>
+        <button type="button" class="c-button danger" data-action="save-and-exit"
+                data-i18n="pause.save_and_exit"></button>
     </div>
 
     <div class="pause-tips">
-        <div class="pause-tips-title"></div>
+        <div class="pause-tips-title" data-i18n="tips.nova-flight.title"></div>
         <div class="pause-tips-body"></div>
     </div>
 </section>

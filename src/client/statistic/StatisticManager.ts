@@ -1,24 +1,24 @@
-import type {StatisticItem} from "./StatisticItem.ts";
 import type {Consumer} from "../../type/types.ts";
 import {HistoricalScoreRender} from "./HistoricalScoreRender.ts";
-import {error} from "@tauri-apps/plugin-log";
-import {message} from "@tauri-apps/plugin-dialog";
 import {PageSection} from "../page/PageSection.ts";
 import {assert} from "../../utils/dom_util.ts";
 import {empty} from "../../utils/uit.ts";
+import {message} from "@tauri-apps/plugin-dialog";
+import {error} from "@tauri-apps/plugin-log";
 
 export class StatisticManager extends PageSection {
-    private readonly statisticItems = new Map<string, StatisticItem>();
+    private readonly statisticItems = new Map<string, PageSection>();
 
     private readonly dir: HTMLElement;
     private readonly displayer: HTMLElement;
     private readonly backBtn: HTMLElement;
 
-    private currentDisplay: HTMLElement | null = null;
     private commit: Consumer<void> = empty;
 
     public constructor() {
         super('statistic');
+
+        this.closeOnEscape = true;
 
         this.dir = assert(this.root, '#statistic-directory');
         this.displayer = assert(this.root, '#statistic-displayer');
@@ -30,17 +30,28 @@ export class StatisticManager extends PageSection {
     protected override onClosed() {
         this.commit();
         this.commit = empty;
+        this.displayer.replaceChildren();
     }
 
-    public selectItem() {
+    public override focus() {
+        super.focus();
+        this.dir.classList.remove('hidden');
+    }
+
+    public selectItem(): Promise<void> {
         this.commit();
 
+        const gui = this.manager;
+        if (!gui) return Promise.resolve();
+
+        let top: PageSection | null = null;
         const {promise, resolve} = Promise.withResolvers<void>();
         const ctrl = new AbortController();
 
         const commit = () => {
             ctrl.abort();
             resolve();
+            top = null;
             this.commit = empty;
             this.close();
         }
@@ -54,39 +65,31 @@ export class StatisticManager extends PageSection {
             const item = this.statisticItems.get(name);
             if (!item) return;
 
-            item.render()
-                .then(element => this.displayItem(element))
-                .catch(err => {
-                    message('出错啦,详细情况请查看日志').catch();
-                    error(String(err)).catch();
-                });
+            try {
+                top?.close();
+                top = gui.open(item);
+                this.dir.classList.add('hidden');
+            } catch (err) {
+                void message('出错啦,详细情况请查看日志');
+                void error(`Error occurrence when display statistic: ${err}`);
+            }
         }, {signal: ctrl.signal});
 
         this.backBtn.addEventListener('click', () => {
-            this.displayer.classList.add('hidden');
-            this.dir.classList.remove('hidden');
-            this.displayer.textContent = '';
-
-            if (this.currentDisplay) {
-                this.currentDisplay = null;
+            if (!top) {
+                commit();
                 return;
             }
 
-            commit();
+            top.close();
+            top = null;
+            return;
         }, {signal: ctrl.signal});
 
         return promise;
     }
 
-    private displayItem(element: HTMLElement): void {
-        this.displayer.replaceChildren(element);
-        this.currentDisplay = element;
-
-        this.dir.classList.add('hidden');
-        this.displayer.classList.remove('hidden');
-    }
-
     private registry() {
-        this.statisticItems.set('historical-score', new HistoricalScoreRender());
+        this.statisticItems.set('historical-score', new HistoricalScoreRender(this.displayer));
     }
 }

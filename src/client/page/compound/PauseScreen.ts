@@ -1,6 +1,5 @@
 import type {NovaFlightClient} from "../../NovaFlightClient.ts";
-import type {TextElement} from "../TextElement.ts";
-import {bindTexts, closest, dataAction} from "../../../utils/dom_util.ts";
+import {bindFrom, bindText, closest, dataAction} from "../../../utils/dom_util.ts";
 import {appEvent} from "../../../event/EventBus.ts";
 import {PageSection} from "../PageSection.ts";
 import {TipManager} from "../../tips/TipManager.ts";
@@ -8,31 +7,25 @@ import {TipManager} from "../../tips/TipManager.ts";
 export class PauseScreen extends PageSection implements EventListenerObject {
     private readonly client: NovaFlightClient;
     private readonly ctrl = new AbortController();
-    private readonly elements: TextElement<HTMLElement>[];
 
     public constructor(client: NovaFlightClient) {
         super('pause-screen');
 
         this.client = client;
-        this.elements = bindTexts(this.root, {
-            '.pause-tips-body': '',
-            '.pause-title': 'pause.paused',
-            '.pause-hint': 'pause.press_esc',
-            '[data-action="back"]': 'pause.back_to_game',
-            '[data-action="save"]': 'pause.save',
-            '[data-action="save-and-exit"]': 'pause.save_and_exit',
-            '.pause-tips-title': TipManager.title,
-        });
 
-        const tipBody = this.elements[0];
-        const refresh = () => this.elements.forEach(t => t.refresh());
+        const bind = bindFrom(this.root);
+        const tipBody = bindText(this.root, '.pause-tips-body', '');
 
         appEvent.withSignal('ui:tip', ({text}) => {
             if (text) tipBody.setText(text);
         }, this.ctrl.signal);
-        appEvent.withSignal('ui:lang', refresh, this.ctrl.signal);
 
-        refresh();
+        appEvent.withSignal('ui:lang', () => {
+            bind.refresh();
+            tipBody.refresh();
+        }, this.ctrl.signal);
+
+        bind.refresh();
         const tip = TipManager.get();
         if (tip) tipBody.setText(tip);
     }

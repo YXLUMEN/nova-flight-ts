@@ -1,10 +1,23 @@
 import {HistoricalScore, type ScoreRecord} from "../../statistics/HistoricalScore.ts";
-import type {StatisticItem} from "./StatisticItem.ts";
 import {randInt} from "../../utils/math/math.ts";
 import {toLocalTime} from "../../utils/time.ts";
+import {PageSection} from "../page/PageSection.ts";
 
-export class HistoricalScoreRender implements StatisticItem {
+export class HistoricalScoreRender extends PageSection {
     private static readonly cheatPrompt = ['没关就是开了?', '我 {} 没有开挂', '纯绿玩', '小透不是挂', '开了就是开了?', '时间紧任务重'];
+
+    public constructor(element: HTMLElement) {
+        super(element);
+        this.closeOnEscape = true;
+    }
+
+    protected override onOpened() {
+        this.render().then(e => this.root.replaceChildren(e));
+    }
+
+    protected override onClosed() {
+        this.root.replaceChildren();
+    }
 
     public async render() {
         const records = await HistoricalScore.getScores();
@@ -57,9 +70,5 @@ export class HistoricalScoreRender implements StatisticItem {
         const valueElement = document.createElement("div");
         valueElement.textContent = value === undefined ? 'Null' : value.toString();
         root.append(div, valueElement);
-    }
-
-    public getName(): string {
-        return 'historical-score';
     }
 }

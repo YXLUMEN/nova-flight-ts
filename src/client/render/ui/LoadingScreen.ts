@@ -1,10 +1,10 @@
+import type {Supplier} from "../../../type/types.ts";
 import {clamp} from "../../../utils/math/math.ts";
 import {sleep} from "../../../utils/uit.ts";
 import {UITheme} from "./theme.ts";
 import {UiTools} from "./UiTools.ts";
-import {NovaFlightClient} from "../../NovaFlightClient.ts";
-import type {Supplier} from "../../../type/types.ts";
 import {UiFramework} from "./UiFramework.ts";
+import {ClientWindow} from "../ClientWindow.ts";
 
 export class LoadingScreen extends UiFramework {
     private readonly ctx: CanvasRenderingContext2D;
@@ -22,12 +22,12 @@ export class LoadingScreen extends UiFramework {
 
     private done: boolean = false;
 
-    public constructor(client: NovaFlightClient) {
+    public constructor(window: ClientWindow) {
         super();
 
-        this.ctx = client.window.ctx;
+        this.ctx = window.ctx;
         this.loop = this.loop.bind(this);
-        this.unsubResize = client.window.onResize(this.setSize.bind(this));
+        this.unsubResize = window.onResize(this.setSize.bind(this));
     }
 
     public setProgress(progress: number, message?: string) {

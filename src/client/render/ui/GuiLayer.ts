@@ -16,17 +16,17 @@ export class GuiLayer {
     private pauseScreen: PauseScreen | null = null;
     private noticeScreen: FullscreenNotice | null = null;
 
-    public constructor(client: NovaFlightClient) {
+    public constructor(client: NovaFlightClient, guiId: string) {
         this.client = client;
-        this.gui = new GuiManager(document.getElementById('gui')!);
-    }
+        const gui = document.getElementById(guiId);
+        if (!gui) throw new DOMException('Can not found the element');
+        this.gui = new GuiManager(gui);
 
-    public start(): void {
         appEvent.on('game:pause', () => this.syncPause());
         appEvent.on('game:over', () => this.onGameOver());
     }
 
-    public closeAll(): void {
+    public destroyScreen(): void {
         this.gui.destroyAll();
         this.pauseScreen?.destroy();
         this.noticeScreen?.destroy();

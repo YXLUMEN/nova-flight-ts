@@ -26,6 +26,7 @@ export class GuiManager {
         this.sections.push(section);
         this.refresh();
         section.notifyOpened();
+        section.focus();
         return section;
     }
 
@@ -36,6 +37,7 @@ export class GuiManager {
         this.refresh();
         section.manager = null;
         section.notifyClosed();
+        this.top()?.focus();
         return section;
     }
 
@@ -49,6 +51,7 @@ export class GuiManager {
             top.notifyClosed();
         }
         this.refresh();
+        this.top()?.focus();
         return true;
     }
 
