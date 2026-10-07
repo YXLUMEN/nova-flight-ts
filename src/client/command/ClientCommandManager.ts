@@ -30,24 +30,27 @@ import {DamageCommand} from "../../command/DamageCommand.ts";
 import {SoundCommand} from "../../command/SoundCommand.ts";
 import {TickCommand} from "../../command/TickCommand.ts";
 import {RemoveCommand} from "../../command/RemoveCommand.ts";
+import type {Consumer} from "../../type/types.ts";
+import {CommandBarProxy} from "./CommandBarProxy.ts";
 
-export class ClientCommandManager extends CommandManager {
+export class ClientCommandManager extends CommandManager implements EventListenerObject {
     private static readonly COMMAND_HISTORY_ID = 'history';
 
     private readonly clientDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
     private readonly source: ClientCommandSource;
 
+    private pendingStorage: number | undefined;
     private historyIndex = -1;
     private readonly usedCommands: string[] = [];
-    private pendingStorage: number | undefined;
 
+    public readonly proxy: CommandBarProxy;
     private readonly popup: ClientSuggestionPopup;
     private readonly commandPanel: ClientCommandPanel;
-
     private readonly commandInput: HTMLInputElement;
+    private readonly bounceGiveSuggestions: Consumer<void>;
 
-    private parseCache: MemoryLRU<string, ParseResults<any>[]> = new MemoryLRU(24);
-    private suggestionCache: MemoryLRU<string, Suggestion[]> = new MemoryLRU(24);
+    private readonly parseCache: MemoryLRU<string, ParseResults<any>[]> = new MemoryLRU(24);
+    private readonly suggestionCache: MemoryLRU<string, Suggestion[]> = new MemoryLRU(24);
     private suggestionsLength = 0;
     private completionIndex = -1;
 
@@ -59,13 +62,30 @@ export class ClientCommandManager extends CommandManager {
 
         this.source = source;
         this.commandInput = commandInput;
-        this.popup = new ClientSuggestionPopup(commandBar, this.commandInput);
-        this.commandPanel = new ClientCommandPanel(commandPanel, commandBar, this.commandInput);
+        this.popup = new ClientSuggestionPopup(commandBar, commandInput);
+        this.commandPanel = new ClientCommandPanel(commandPanel, commandBar, commandInput);
+        this.proxy = new CommandBarProxy(this, this.popup, this.commandPanel);
 
-        const storageTask = this.persistentStorage.bind(this);
-        const bounceGiveSuggestions = debounce(this.giveSuggestions.bind(this), 100);
-        commandBar.addEventListener('keydown', event => {
-            if (event.key === 'Enter') {
+        this.bounceGiveSuggestions = debounce(this.giveSuggestions, 100);
+        commandBar.addEventListener('keydown', this);
+        commandInput.addEventListener('input', this);
+
+        this.registry();
+        void this.loadPersistentStorage();
+    }
+
+    public handleEvent(event: Event) {
+        if (event.type === 'keydown') {
+            this.onKeyDown(<KeyboardEvent>event);
+        } else if (event.type === 'input') {
+            this.bounceGiveSuggestions();
+        }
+    }
+
+    private onKeyDown(event: KeyboardEvent): void {
+        switch (event.code) {
+            case 'Enter':
+            case 'NumpadEnter': {
                 event.preventDefault();
                 event.stopImmediatePropagation();
                 this.popup.cleanPopup();
@@ -82,7 +102,7 @@ export class ClientCommandManager extends CommandManager {
                 }
 
                 if (this.pendingStorage !== undefined) cancelIdleCallback(this.pendingStorage);
-                this.pendingStorage = requestIdleCallback(storageTask, {timeout: 8000});
+                this.pendingStorage = requestIdleCallback(() => this.persistentStorage, {timeout: 8000});
 
                 this.historyIndex = -1;
                 this.commandInput.value = '';
@@ -96,8 +116,7 @@ export class ClientCommandManager extends CommandManager {
                 this.executeCommand(input);
                 return;
             }
-
-            if (event.code === 'ArrowUp') {
+            case 'ArrowUp': {
                 event.preventDefault();
                 event.stopImmediatePropagation();
                 if (this.popup.getPopups()) {
@@ -115,8 +134,7 @@ export class ClientCommandManager extends CommandManager {
                 this.commandInput.value = this.usedCommands[this.historyIndex];
                 return;
             }
-
-            if (event.code === 'ArrowDown') {
+            case 'ArrowDown': {
                 event.preventDefault();
                 event.stopImmediatePropagation();
                 if (this.popup.getPopups()) {
@@ -135,8 +153,7 @@ export class ClientCommandManager extends CommandManager {
                 }
                 return;
             }
-
-            if (event.code === 'Tab') {
+            case 'Tab' : {
                 event.preventDefault();
                 event.stopImmediatePropagation();
                 if (!this.popup.getPopups()) return;
@@ -151,45 +168,31 @@ export class ClientCommandManager extends CommandManager {
                 this.popup.applySuggestion(activeItem.textContent);
                 return;
             }
-
-            if (event.ctrlKey && event.code === 'Space') {
-                event.preventDefault();
-                event.stopImmediatePropagation();
-                bounceGiveSuggestions();
-            }
-
-            if (event.ctrlKey && event.code === 'KeyW') {
-                event.preventDefault();
-                event.stopImmediatePropagation();
-                const cursor = this.commandInput.selectionStart ?? 0;
-                const text = this.commandInput.value;
-
-                let start = cursor;
-                while (start > 0 && text[start - 1] !== ' ') {
-                    start--;
-                }
-                let end = cursor;
-                while (end < text.length && text[end] !== ' ') {
-                    end++;
-                }
-                this.commandInput.setSelectionRange(start, end);
-                return;
-            }
-        });
-        commandInput.addEventListener('input', bounceGiveSuggestions);
-
-        this.registry();
-        void this.loadPersistentStorage();
-    }
-
-    public onEsc() {
-        if (this.popup.getPopups()) {
-            this.popup.cleanPopup();
-            this.resetSuggestionLen();
-            return false;
         }
-        this.switchPanel(false);
-        return true;
+
+        if (event.ctrlKey && event.code === 'Space') {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            this.bounceGiveSuggestions();
+        }
+
+        if (event.ctrlKey && event.code === 'KeyW') {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            const cursor = this.commandInput.selectionStart ?? 0;
+            const text = this.commandInput.value;
+
+            let start = cursor;
+            while (start > 0 && text[start - 1] !== ' ') {
+                start--;
+            }
+            let end = cursor;
+            while (end < text.length && text[end] !== ' ') {
+                end++;
+            }
+            this.commandInput.setSelectionRange(start, end);
+            return;
+        }
     }
 
     // 建议与用法
@@ -276,7 +279,8 @@ export class ClientCommandManager extends CommandManager {
         this.popup.highlightPopupItem(this.completionIndex);
     }
 
-    private resetSuggestionLen() {
+    /** @inner */
+    public resetSuggestionLen() {
         this.suggestionsLength = 0;
         this.completionIndex = -1;
     }
@@ -324,16 +328,6 @@ export class ClientCommandManager extends CommandManager {
 
     public isShow() {
         return this.commandPanel.isShowing();
-    }
-
-    public switchPanel(show?: boolean): boolean {
-        const isShow = this.commandPanel.switchPanel(show);
-        if (!isShow) {
-            this.resetSuggestionLen();
-            this.popup.cleanPopup();
-        }
-
-        return isShow;
     }
 
     public clearAllMessages(): void {

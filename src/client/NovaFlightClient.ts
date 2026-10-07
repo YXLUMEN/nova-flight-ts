@@ -112,6 +112,7 @@ export class NovaFlightClient {
         this.clientChat = new ClientChat(this);
 
         this.input = new KeyboardInput(this.window.canvas);
+        this.layer.gui.input = this.input;
         ClientInputEvents.registryAll(this, this.input);
 
         this.createWorldStopPromise();
@@ -432,6 +433,7 @@ export class NovaFlightClient {
         }
 
         public stop() {
+            this.client.requestStop();
             this.client.stopWorld();
         }
 

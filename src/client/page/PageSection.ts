@@ -12,12 +12,12 @@ export abstract class PageSection {
 
     protected constructor(page: HTMLElement | string, reusable: boolean = true) {
         const root = typeof page === 'string' ?
-            document.getElementById(page)! :
+            document.getElementById(page) :
             page;
 
-        if (root === null || !root.classList.contains('c-section')) {
-            throw new DOMException('The page root doesn\'t contain ".c-section"');
-        }
+        if (root === null) throw new DOMException(`Can not found a Element name ${page}`);
+        PageSection.checkHidable(root);
+
         this.root = root;
         this.reusable = reusable;
     }
@@ -90,5 +90,13 @@ export abstract class PageSection {
 
     public focus(): void {
         this.root.focus();
+    }
+
+    private static checkHidable(element: HTMLElement) {
+        element.classList.add('hidden');
+
+        if (getComputedStyle(element).display !== 'none') {
+            throw new Error('The section can\'t hidden by ".hidden" class.', {cause: element});
+        }
     }
 }

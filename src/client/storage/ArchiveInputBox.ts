@@ -1,14 +1,14 @@
+import type {Consumer} from "../../type/types.ts";
 import {PageSection} from "../page/PageSection.ts";
-import {NovaFlightClient} from "../NovaFlightClient.ts";
 import {message} from "@tauri-apps/plugin-dialog";
 import {as, assert, closest, dataAction} from "../../utils/dom_util.ts";
-import type {Consumer} from "../../type/types.ts";
+import {empty} from "../../utils/uit.ts";
 
 export class ArchiveInputBox extends PageSection {
     private readonly inputBar: HTMLInputElement;
     private readonly buttons: HTMLElement;
 
-    private commit: Consumer<string | null> | null = null;
+    private commit: Consumer<string | null> = empty;
 
     public constructor() {
         super('save-name-label');
@@ -18,23 +18,25 @@ export class ArchiveInputBox extends PageSection {
     }
 
     protected override onClosed() {
-        this.commit?.(null);
-        this.commit = null;
+        this.commit(null);
+        this.commit = empty;
     }
 
     public input(): Promise<string | null> {
-        this.commit?.(null);
+        if (!this.manager) return Promise.resolve(null);
+
+        this.commit(null);
         const {promise, resolve} = Promise.withResolvers<string | null>();
         const ctrl = new AbortController();
 
         this.inputBar.value = 'New World';
-        NovaFlightClient.instance().input.startInput(true);
+        const release = this.manager.input.requireInput();
 
         const commit = (result: string | null) => {
-            NovaFlightClient.instance().input.startInput(false);
             resolve(result);
             ctrl.abort();
-            this.commit = null;
+            release();
+            this.commit = empty;
             this.close();
         };
         this.commit = commit;

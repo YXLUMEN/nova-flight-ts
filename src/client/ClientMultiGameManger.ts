@@ -4,7 +4,6 @@ import {invoke} from "@tauri-apps/api/core";
 import {as, assert, bindFrom} from "../utils/dom_util.ts";
 import {empty} from "../utils/uit.ts";
 import {appEvent} from "../event/EventBus.ts";
-import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {ClientStorage} from "./storage/ClientStorage.ts";
 import {PageSection} from "./page/PageSection.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
@@ -39,29 +38,26 @@ export class ClientMultiGameManger extends PageSection {
         this.loadDB().catch(console.error);
     }
 
-    protected override onOpened() {
-        NovaFlightClient.instance().input.setHandlerDisabled(true);
-    }
-
     protected override onClosed() {
         this.commit(null);
         this.commit = empty;
-        NovaFlightClient.instance().input.setHandlerDisabled(false);
     }
 
     public getServerAddress(): Promise<string | null> {
+        if (!this.manager) return Promise.resolve(null);
+
         this.commit(null);
         void this.startLANPolling();
 
         const {promise, resolve} = Promise.withResolvers<string | null>();
         const ctrl = new AbortController();
         const signal = ctrl.signal;
+        const release = this.manager.input.requireInput();
 
         const commit = (result: string | null) => {
-            if (signal.aborted) return;
-
             resolve(result);
             ctrl.abort();
+            release();
             this.commit = empty;
             this.close();
         };

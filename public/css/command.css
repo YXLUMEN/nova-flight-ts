@@ -6,15 +6,23 @@
     --cmd-warn: #ffcc66;
 }
 
+/* page-section 代理 */
+.command-bar-proxy {
+    display: none;
+}
+
+/* 消息面板 */
 .command-panel {
     position: absolute;
     display: flex;
     flex-direction: column;
+
     width: 60%;
     max-height: 60%;
     left: 0;
     bottom: 32px;
     padding: 12px 12px 0 0;
+
     overflow: hidden;
     overflow-y: auto;
     overflow-wrap: break-word;
@@ -52,20 +60,23 @@
     }
 }
 
+/* 输入框 */
 .command-bar {
     position: fixed;
     display: flex;
     justify-content: center;
     align-items: center;
+
     width: 100vw;
     bottom: 0;
     left: 0;
     padding: 0 8px 8px 8px;
+
     background: none;
     transition: 100ms transform;
     font-size: 16px;
-    z-index: 100;
     box-sizing: border-box;
+    z-index: 100;
 }
 
 .command-bar.hidden {
@@ -104,6 +115,8 @@
     min-width: 80px;
     padding: 3px 6px;
     color: var(--cmd-muted);
+    /*content-visibility: auto;*/
+    /*contain-intrinsic-size: auto 25px;*/
 }
 
 .suggestion-popup .suggestion-item.active {

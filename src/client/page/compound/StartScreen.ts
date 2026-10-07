@@ -52,10 +52,17 @@ export class StartScreen extends PageSection implements EventListenerObject {
         this.actions.removeEventListener('click', this);
         this.actions.addEventListener('click', this);
         this.starField.start();
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                this.root.classList.remove('ani-hidden');
+            });
+        });
     }
 
     protected override onClosed() {
         this.actions.removeEventListener('click', this);
+        this.root.classList.add('ani-hidden');
     }
 
     protected override onDestroy() {

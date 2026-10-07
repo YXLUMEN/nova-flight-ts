@@ -49,15 +49,6 @@ export class ClientCommandPanel {
         return this.isShow;
     }
 
-    public switchPanel(show?: boolean): boolean {
-        if (show === undefined) {
-            this.isShow ? this.hiddenPanel() : this.showPanel();
-            return this.isShow;
-        }
-        show ? this.showPanel() : this.hiddenPanel();
-        return show;
-    }
-
     public showPanel() {
         if (this.isShow) return;
         this.isShow = true;

@@ -1,6 +1,9 @@
 import type {PageSection} from "./PageSection.ts";
+import type {IInput} from "../input/IInput.ts";
 
 export class GuiManager {
+    public input: IInput = null!;
+
     private readonly root: HTMLElement;
     private readonly sections: PageSection[] = [];
 

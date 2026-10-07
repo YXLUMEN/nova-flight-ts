@@ -1,22 +1,22 @@
 import type {IInput} from "./IInput.ts";
 import {EMPTY_INPUT, type InputEvents} from "./InputEvent.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
-import {InputBinding} from "./InputBinding.ts";
 import {MouseState} from "./MouseState.ts";
 import {KeyboardState} from "./KeyboardState.ts";
 import {throttleTimeOut} from "../../utils/uit.ts";
+import type {Consumer} from "../../type/types.ts";
 
 export class KeyboardInput implements IInput {
     private readonly keyboardState = new KeyboardState();
     private readonly mouseState = new MouseState();
-    private readonly inputBinding = new InputBinding();
 
-    private disableHandler = false;
-    private globalInput = false;
-    private inputEvents: InputEvents = EMPTY_INPUT;
+    private globalInput: number = 0;
+    private handler: InputEvents = EMPTY_INPUT;
 
     public constructor(target: HTMLElement) {
-        this.registryListener(target);
+        this.registerKeyboardListener();
+        this.registerMouseListener(target);
+        this.registerWheelListener();
     }
 
     public getWorldPointer(): MutVec2 {
@@ -47,36 +47,17 @@ export class KeyboardInput implements IInput {
         return this.keyboardState.wasComboPressed(...keys);
     }
 
-    public bindAction(action: string, keys: string[]): void {
-        this.inputBinding.bindAction(action, keys);
+    public requireInput(): Consumer<void> {
+        this.globalInput++;
+        let released = false;
+        return () => {
+            if (released) return;
+            this.globalInput--;
+        };
     }
 
-    public isActionDown(action: string): boolean {
-        const keys = this.inputBinding.getKeys(action);
-        return keys ? this.keyboardState.isDownAny(...keys) : false;
-    }
-
-    public wasActionPressed(action: string): boolean {
-        const keys = this.inputBinding.getKeys(action);
-        return keys ? this.keyboardState.wasComboPressed(...keys) : false;
-    }
-
-    public startInput(on: boolean): void {
-        this.globalInput = on;
-    }
-
-    public setHandlerDisabled(disabled: boolean): void {
-        this.disableHandler = disabled;
-    }
-
-    public setInputEvents(events: InputEvents): void {
-        this.inputEvents = events;
-    }
-
-    private registryListener(target: HTMLElement): void {
-        this.registerKeyboardListener();
-        this.registerMouseListener(target);
-        this.registerWheelListener();
+    public setHandler(handler: InputEvents): void {
+        this.handler = handler;
     }
 
     private registerKeyboardListener(): void {
@@ -90,13 +71,8 @@ export class KeyboardInput implements IInput {
             }
 
             if (this.globalInput) return;
-
-            if (this.handleCommandPanelShortcuts(event, code)) return;
-            if (this.disableHandler) return;
-
-            event.preventDefault();
             this.keyboardState.addKey(code);
-            this.inputEvents.onKeyPress(code, event);
+            this.handler.onKeyPress(event);
         });
         window.addEventListener('keyup', e => {
             this.keyboardState.removeKey(e.code);
@@ -107,36 +83,24 @@ export class KeyboardInput implements IInput {
         });
     }
 
-    private handleCommandPanelShortcuts(event: KeyboardEvent, code: string): boolean {
-        if (code === 'Escape') {
-            this.inputEvents.onKeyPress('Escape', event);
-            return true;
-        }
-        if (code === 'Slash' || code === 'KeyT') {
-            this.inputEvents.onKeyPress(code, event);
-            return true;
-        }
-        return false;
-    }
-
     private registerMouseListener(target: HTMLElement): void {
         target.addEventListener('mousemove', event => {
             this.mouseState.setScreenPointer(event.offsetX, event.offsetY);
-            this.inputEvents.onMouseMove(event);
+            this.handler.onMouseMove(event);
         }, {passive: true});
         target.addEventListener('mousedown', event => {
             this.mouseState.setMouseDown(true);
-            this.inputEvents.onMouseDown(event.button, event);
+            this.handler.onMouseDown(event.button, event);
         });
         target.addEventListener('mouseup', event => {
             this.mouseState.setMouseDown(false);
-            this.inputEvents.onMouseUp(event.button, event);
+            this.handler.onMouseUp(event.button, event);
         });
     }
 
     private registerWheelListener(): void {
         const onWheel = throttleTimeOut((e: WheelEvent) => {
-            this.inputEvents.onWheel(e);
+            this.handler.onWheel(e);
         }, 20);
 
         window.addEventListener('wheel', onWheel, {passive: true});

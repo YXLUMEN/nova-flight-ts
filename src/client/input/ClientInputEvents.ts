@@ -15,26 +15,16 @@ export class ClientInputEvents {
     public static registryAll(client: NovaFlightClient, input: KeyboardInput): void {
         this.windowEvents(client);
 
-        input.setInputEvents(cleanObj({
-            onKeyPress: (code, event) => {
-                const commandManager = client.clientCommandManager;
-
-                if (code === 'Escape' && commandManager.isShow()) {
-                    const hide = commandManager.onEsc();
-                    if (hide) {
-                        event.stopImmediatePropagation();
-                        input.setHandlerDisabled(false);
-                    }
+        input.setHandler(cleanObj({
+            onKeyPress: (event) => {
+                const code = event.code;
+                if (code === 'Slash' || code === 'KeyT') {
+                    const manager = client.clientCommandManager;
+                    client.layer.gui.open(manager.proxy);
                     return;
                 }
 
-                if ((code === 'Slash' || code === 'KeyT') && !commandManager.isShow()) {
-                    commandManager.switchPanel(true);
-                    input.setHandlerDisabled(true);
-                    if (code === 'KeyT' || commandManager.getInput().length !== 0) {
-                        event.preventDefault();
-                    }
-                }
+                event.preventDefault();
                 this.onKeyDown(client, event);
             },
 

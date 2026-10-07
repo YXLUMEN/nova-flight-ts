@@ -1,7 +1,13 @@
-.c-section.start-screen {
+.start-screen {
     flex-direction: column;
     align-items: center;
     background: none;
+    opacity: 1;
+    transition: opacity 300ms ease-in;
+}
+
+.start-screen.ani-hidden {
+    opacity: 0;
 }
 
 .start-menu {
