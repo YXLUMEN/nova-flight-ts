@@ -15,14 +15,17 @@ export class BGMManager {
     ]);
     private static readonly MAIN_THEME = new SoundQueue([
         Audios.HANGAR_SILENCE,
-        Audios.THE_TALE_OF_A_CRUEL_WORLD,
-        Audios.VICTORY,
+        Audios.MUTATION,
+        Audios.BEGINNING,
+        Audios.MOOG_CITY,
+        Audios.FLOATING_TREES,
     ]);
     private static readonly BOSS_PHASE = new SoundQueue([
         Audios.NO_MERCY,
         Audios.FIRING_ON_FULL_POWER,
         Audios.DUST2DUST,
         Audios.THE_FINAL_ASCENT,
+        Audios.TROPIC_THUNDER,
     ]);
 
     public static init() {
@@ -33,13 +36,18 @@ export class BGMManager {
             await AudioManager.play(this.MAIN_THEME.next());
         };
 
+        AudioManager.addListener('main', 'ended', nextTheme);
+
         appEvent.on('game:start', () => this.onGameStart());
         appEvent.on('game:over', () => this.onGameOver());
-        appEvent.on('game:end', nextTheme);
+        appEvent.on('game:end', () => {
+            AudioManager.removeListener('main');
+            AudioManager.addListener('main', 'ended', nextTheme);
+            void nextTheme();
+        });
         appEvent.on('entity:boss:killed', () => this.onBossDead());
-        AudioManager.addListener('main', 'ended', nextTheme);
-        this.conditionListener(appEvent);
 
+        this.conditionListener(appEvent);
         this.IN_GAME.shuffle();
         void AudioManager.play(this.MAIN_THEME.current());
     }
@@ -72,8 +80,7 @@ export class BGMManager {
 
     public static async onGameOver() {
         await AudioManager.fadeOutAndPause();
-        if (Math.random() < 0.01) await AudioManager.play(Audios.GYZG);
-        else await AudioManager.play(Audios.KEEP_FIGHTING);
+        await AudioManager.play(Audios.KEEP_FIGHTING);
         AudioManager.leap(10);
     }
 

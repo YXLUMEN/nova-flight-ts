@@ -1,9 +1,9 @@
-import {clamp, lerp} from "../../../utils/math/math.ts";
-import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
-import type {ItemStack} from "../../../item/ItemStack.ts";
-import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {SpecialWeapon} from "../../../item/weapon/SpecialWeapon.ts";
 import type {LocalPlayerEntity} from "../../entity/LocalPlayerEntity.ts";
+import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
+import type {ItemStack} from "../../../item/ItemStack.ts";
+import {clamp, lerp} from "../../../utils/math/math.ts";
+import {NovaFlightClient} from "../../NovaFlightClient.ts";
 import {InventoryRender} from "../../inventory/InventoryRender.ts";
 import {Weapon} from "../../../item/weapon/Weapon.ts";
 import {Crosshair} from "./Crosshair.ts";

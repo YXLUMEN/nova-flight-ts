@@ -53,12 +53,6 @@
   "prepare_to_fly": {
     "file": "nova-flight:/prepare_to_fly.ogg"
   },
-  "delta_force_theme": {
-    "file": "nova-flight:/delta_force_theme.ogg"
-  },
-  "victory": {
-    "file": "nova-flight:/victory.ogg"
-  },
   "steel_requiem": {
     "file": "nova-flight:/steel_requiem.ogg"
   },
@@ -74,7 +68,16 @@
   "the_tale_of_a_cruel_world": {
     "file": "nova-flight:/the_tale_of_a_cruel_world.ogg"
   },
-  "gyzg": {
-    "file": "nova-flight:/gyzg.ogg"
+  "beginning_2": {
+    "file": "nova-flight:/beginning_2.ogg"
+  },
+  "floating_trees": {
+    "file": "nova-flight:/floating_trees.ogg"
+  },
+  "moog_city_2": {
+    "file": "nova-flight:/moog_city_2.ogg"
+  },
+  "mutation": {
+    "file": "nova-flight:/mutation.ogg"
   }
 }

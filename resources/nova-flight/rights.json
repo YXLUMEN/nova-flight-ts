@@ -329,14 +329,6 @@
       "commercial": false
     },
     {
-      "path": "audios/delta_force_theme.ogg",
-      "tier": "unowned"
-    },
-    {
-      "path": "audios/victory.ogg",
-      "tier": "unowned"
-    },
-    {
       "path": "audios/steel_requiem.ogg",
       "tier": "unowned"
     },
@@ -354,6 +346,22 @@
     },
     {
       "path": "audios/the_tale_of_a_cruel_world.ogg",
+      "tier": "unowned"
+    },
+    {
+      "path": "audios/beginning.ogg",
+      "tier": "unowned"
+    },
+    {
+      "path": "audios/floating_trees.ogg",
+      "tier": "unowned"
+    },
+    {
+      "path": "audios/moog_city_2.ogg",
+      "tier": "unowned"
+    },
+    {
+      "path": "audios/mutation.ogg",
       "tier": "unowned"
     },
     {
@@ -467,10 +475,6 @@
       "path": "sounds/shell_reload.ogg",
       "tier": "public",
       "license": "CC0-1.0"
-    },
-    {
-      "path": "audios/gyzg.ogg",
-      "tier": "unowned"
     }
   ],
   "_example": [

@@ -7,6 +7,7 @@ import {ClientTechManager} from "./tech/ClientTechManager.ts";
 import {DataLoader} from "../resource/DataLoader.ts";
 import {RenderLoader} from "./render/RenderLoader.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
+import {isDev} from "../configs/RuntimeConfig.ts";
 
 export class ClientInit {
     public async initResources(manager: RegistryManager, window: ClientWindow): Promise<void> {
@@ -14,7 +15,7 @@ export class ClientInit {
         loadingScreen.setSize(ClientWindow.viewWidth, ClientWindow.viewHeight);
         loadingScreen.loop();
 
-        await this.update(loadingScreen);
+        if (!isDev) await this.update(loadingScreen);
 
         loadingScreen.setProgress(0.1, 'Loading dependencies');
         await this.initWasm();
@@ -50,7 +51,7 @@ export class ClientInit {
             loadingScreen.setProgress(0, 'Check update');
             await sleep(200);
 
-            const update = await check({timeout: 2000});
+            const update = await check({timeout: 5000});
             if (!update) return;
 
             if (!await confirm(`当前游戏版本为 "${update.currentVersion}" 存在更新版本 "${update.version}"`, {

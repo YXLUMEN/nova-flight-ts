@@ -1,0 +1,7 @@
+{
+  "title": "Server List",
+  "input": "Enter server address (ip:port)",
+  "hint": "Searching for LAN rooms...",
+  "connect": "Connect",
+  "back": "Back to Home"
+}

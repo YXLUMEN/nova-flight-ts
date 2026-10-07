@@ -1,12 +1,13 @@
 import type {Consumer} from "../type/types.ts";
-import {NovaFlightClient} from "./NovaFlightClient.ts";
-import {ClientStorage} from "./storage/ClientStorage.ts";
 import {error} from "@tauri-apps/plugin-log";
 import {invoke} from "@tauri-apps/api/core";
-import {PageSection} from "./page/PageSection.ts";
-import {as, assert} from "../utils/dom_util.ts";
+import {as, assert, bindFrom} from "../utils/dom_util.ts";
 import {empty} from "../utils/uit.ts";
-
+import {appEvent} from "../event/EventBus.ts";
+import {NovaFlightClient} from "./NovaFlightClient.ts";
+import {ClientStorage} from "./storage/ClientStorage.ts";
+import {PageSection} from "./page/PageSection.ts";
+import {TranslatableText} from "../i18n/TranslatableText.ts";
 
 export class ClientMultiGameManger extends PageSection {
     private static readonly LAN_POLL_MS = 1000;
@@ -26,10 +27,14 @@ export class ClientMultiGameManger extends PageSection {
 
         this.closeOnEscape = true;
 
-        this.serverList = assert(this.root, '#server-list');
+        this.serverList = assert(this.root, '.server-list');
         this.addrInput = as(this.root, '#server-address', HTMLInputElement);
-        this.connectBtn = assert(this.root, '#connect-btn');
-        this.cancelBtn = assert(this.root, '#cancel-btn');
+        this.connectBtn = assert(this.root, '.confirm-btn');
+        this.cancelBtn = assert(this.root, '.cancel-btn');
+
+        const bind = bindFrom(this.root);
+        appEvent.on('ui:lang', () => bind.refresh());
+        bind.refresh();
 
         this.loadDB().catch(console.error);
     }
@@ -98,7 +103,7 @@ export class ClientMultiGameManger extends PageSection {
             }
         }, {signal});
 
-        this.serverList.addEventListener('auxclick', async event => {
+        this.serverList.addEventListener('auxclick', event => {
             const target = event.target;
             if (target instanceof HTMLElement &&
                 target.className === 'server-select' &&
@@ -107,7 +112,7 @@ export class ClientMultiGameManger extends PageSection {
                 const id = target.getAttribute('data-id')!;
                 const [_, addr, name] = id.split('-');
                 target.remove();
-                await ClientStorage.deleteServer(addr, name);
+                void ClientStorage.deleteServer(addr, name);
             }
         }, {signal});
 
@@ -197,7 +202,7 @@ export class ClientMultiGameManger extends PageSection {
 
         this.lanHint = document.createElement('div');
         this.lanHint.classList.add('server-list-hint');
-        this.lanHint.textContent = '正在搜索局域网房间...';
+        this.lanHint.textContent = TranslatableText.of('multiplayer.hint').toString();
         this.serverList.appendChild(this.lanHint);
     }
 

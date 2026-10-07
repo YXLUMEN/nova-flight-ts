@@ -26,16 +26,17 @@ export class Audios {
     public static readonly LAUNCH_OFF = this.register('launch_off');
     public static readonly PREPARE_TO_FLY = this.register('prepare_to_fly');
 
-    public static readonly DELTA_FORCE_THEME = this.register('delta_force_theme');
+    public static readonly MUTATION = this.register('mutation');
+    public static readonly BEGINNING = this.register('beginning_2');
+    public static readonly FLOATING_TREES = this.register('floating_trees');
+    public static readonly MOOG_CITY = this.register('moog_city_2');
+
     public static readonly STEEL_REQUIEM = this.register('steel_requiem');
     public static readonly TROPIC_THUNDER = this.register('tropic_thunder');
-
-    public static readonly VICTORY = this.register('victory');
 
     public static readonly SCOURGE_OF_THE_UNIVERSE = this.register('scourge_of_the_universe');
     public static readonly UNIVERSAL_COLLAPSE = this.register('universal_collapse');
     public static readonly THE_TALE_OF_A_CRUEL_WORLD = this.register('the_tale_of_a_cruel_world');
-    public static readonly GYZG = this.register('gyzg');
 
     private static register(id: string) {
         const identifier = Identifier.ofVanilla(id);

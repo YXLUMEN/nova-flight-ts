@@ -14,20 +14,15 @@ export class PauseScreen extends PageSection implements EventListenerObject {
         this.client = client;
 
         const bind = bindFrom(this.root);
-        const tipBody = bindText(this.root, '.pause-tips-body', '');
+        const tipBody = bindText(this.root, '.pause-tips-body', TipManager.get() ?? '');
+        bind.addBind(tipBody);
 
         appEvent.withSignal('ui:tip', ({text}) => {
             if (text) tipBody.setText(text);
         }, this.ctrl.signal);
-
-        appEvent.withSignal('ui:lang', () => {
-            bind.refresh();
-            tipBody.refresh();
-        }, this.ctrl.signal);
+        appEvent.withSignal('ui:lang', () => bind.refresh(), this.ctrl.signal);
 
         bind.refresh();
-        const tip = TipManager.get();
-        if (tip) tipBody.setText(tip);
     }
 
     protected override onOpened() {

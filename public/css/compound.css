@@ -63,8 +63,8 @@
 }
 
 .c-button.primary:hover {
-    background: #52e786;
-    border-color: #52e786;
+    background: rgb(94 200 255 / 0.6);
+    border-color: rgb(94 200 255 / 0.8);
 }
 
 .c-button.primary:active {

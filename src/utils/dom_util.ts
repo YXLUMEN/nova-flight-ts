@@ -42,19 +42,18 @@ export function as<T extends HTMLElement>(
     throw new Error(`Cannot find element with query: ${selectors}`);
 }
 
-export function bindText<T extends HTMLElement>(
+export function bindText(
     target: HTMLElement,
     selectors: string,
     text: TranslatableText | string
-): TextElement<T> {
-    const element = assert(target, selectors) as T;
+): TextElement {
+    const element = assert(target, selectors);
     return new TextElement(element, text);
 }
 
 export function bindFrom(target: HTMLElement): BindTextList {
     const nodes = target.querySelectorAll('[data-i18n]');
-    const elements: HTMLElement[] = [];
-    const texts: TranslatableText[] = [];
+    const binds: TextElement[] = [];
 
     for (const node of nodes) {
         if (!(node instanceof HTMLElement)) continue;
@@ -62,9 +61,16 @@ export function bindFrom(target: HTMLElement): BindTextList {
         const key = node.getAttribute('data-i18n');
         if (key == null) continue;
 
-        elements.push(node);
-        texts.push(TranslatableText.of(key));
+        const attr = node.getAttribute('data-i18n-attr');
+        const attrs = attr === null ? null :
+            attr.split(',')
+                .values()
+                .map(s => s.trim())
+                .filter(Boolean)
+                .toArray();
+
+        binds.push(new TextElement(node, key, attrs));
     }
 
-    return new BindTextList(elements, texts);
+    return new BindTextList(binds);
 }

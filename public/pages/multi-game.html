@@ -1,13 +1,20 @@
 <section class="c-section multi-game hidden" id="multi-game">
-    <div class="title">服务器列表</div>
+    <div class="title" data-i18n="multiplayer.title"></div>
 
-    <div class="server-list" id="server-list"></div>
+    <div class="server-list"></div>
 
     <div class="server-input-box">
         <label for="server-address"></label>
-        <input class="server-address" id="server-address" type="text" autocomplete="off" spellcheck="false"
-               placeholder="输入服务器地址 (ip:port)"/>
-        <button class="c-button confirm-btn" id="connect-btn">连接</button>
-        <button class="c-button cancel-btn" id="cancel-btn">返回主页</button>
+        <input class="server-address"
+               id="server-address"
+               type="text"
+               autocomplete="off"
+               spellcheck="false"
+               placeholder="输入服务器地址 (ip:port)"
+               data-i18n="multiplayer.input"
+               data-i18n-attr="placeholder"
+        />
+        <button class="c-button primary confirm-btn" data-i18n="multiplayer.connect"></button>
+        <button class="c-button cancel-btn" data-i18n="multiplayer.back"></button>
     </div>
 </section>

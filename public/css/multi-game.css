@@ -143,21 +143,6 @@
     box-shadow: 0 0 0 2px rgba(97, 208, 255, .12);
 }
 
-.confirm-btn {
-    background: var(--server-accent);
-    color: #0d131f;
-}
-
-.confirm-btn:hover {
-    background: #5eff96;
-    box-shadow: 0 2px 10px rgba(97, 208, 255, .18);
-}
-
-.confirm-btn:active {
-    background: #4db8e8;
-    box-shadow: none;
-}
-
 .cancel-btn {
     background: transparent;
     color: var(--server-muted);
@@ -169,4 +154,9 @@
     color: var(--server-text);
     border-color: #3d4b6b;
     background: rgba(255, 255, 255, .03);
+}
+
+.server-list-hint {
+    color: var(--server-muted);
+    padding: 0 14px;
 }
