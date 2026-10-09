@@ -1,35 +1,47 @@
-import type {ClientSuggestionPopup} from "./ClientSuggestionPopup.ts";
-import type {ClientCommandPanel} from "./ClientCommandPanel.ts";
-import type {ClientCommandManager} from "./ClientCommandManager.ts";
-import type {Consumer} from "../../type/types.ts";
-import {empty} from "../../utils/uit.ts";
-import {PageSection} from "../page/PageSection.ts";
+import type {ClientSuggestionPopup} from "../../command/ClientSuggestionPopup.ts";
+import type {ClientCommandPanel} from "../../command/ClientCommandPanel.ts";
+import type {ClientCommandManager} from "../../command/ClientCommandManager.ts";
+import type {Consumer} from "../../../type/types.ts";
+import {empty} from "../../../utils/uit.ts";
+import {PageSection} from "../PageSection.ts";
 
 export class CommandBarProxy extends PageSection {
     private readonly command: ClientCommandManager
     private readonly popup: ClientSuggestionPopup;
     private readonly commandPanel: ClientCommandPanel;
+
+    private readonly commandBar: HTMLElement;
+    private readonly commandInput: HTMLElement;
+
     private release: Consumer<void> = empty;
 
     public constructor(
         command: ClientCommandManager,
         popup: ClientSuggestionPopup,
-        commandPanel: ClientCommandPanel
+        commandPanel: ClientCommandPanel,
+        commandBar: HTMLElement,
+        commandInput: HTMLElement,
     ) {
         super('command-bar-proxy');
 
         this.command = command;
         this.popup = popup;
         this.commandPanel = commandPanel;
+        this.commandBar = commandBar;
+        this.commandInput = commandInput;
     }
 
     protected override onOpened() {
         this.release = this.manager!.input.requireInput();
+        this.commandBar.addEventListener('keydown', this.command);
+        this.commandInput.addEventListener('input', this.command);
         this.switchPanel(true);
     }
 
     protected override onClosed() {
         this.switchPanel(false);
+        this.commandBar.removeEventListener('keydown', this.command);
+        this.commandInput.removeEventListener('input', this.command);
         this.release();
     }
 

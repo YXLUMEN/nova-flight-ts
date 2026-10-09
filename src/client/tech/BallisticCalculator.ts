@@ -1,11 +1,15 @@
-import type {MobEntity} from "../../entity/mob/MobEntity.ts";
 import {lerp, TAU} from "../../utils/math/math.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
+import {InputBindings} from "../input/InputBindings.ts";
+import {AABB} from "../../utils/math/AABB.ts";
+import {EntityPredicates} from "../../world/predicate/EntityPredicates.ts";
+import type {Entity} from "../../entity/Entity.ts";
+import {getNearestEntity} from "../../utils/math/collide.ts";
 
 export class BallisticCalculator {
-    private owner: LocalPlayerEntity;
-    private lockedTarget: MobEntity | null = null;
+    private readonly owner: LocalPlayerEntity;
+    private lockedTarget: Entity | null = null;
     private prevLeadX = 0;
     private prevLeadY = 0;
 
@@ -14,7 +18,7 @@ export class BallisticCalculator {
     }
 
     public tick(): void {
-        if (!this.owner.input.wasPressed('ShiftLeft')) {
+        if (!this.owner.input.wasPressed(InputBindings.INVENTORY_SWAP)) {
             return;
         }
         if (this.lockedTarget) {
@@ -72,29 +76,18 @@ export class BallisticCalculator {
         ctx.restore();
     }
 
-    public getTarget() {
-        return this.lockedTarget;
-    }
-
-    private findTargetUnderCursor(): MobEntity | null {
+    private findTargetUnderCursor(): Entity | null {
         const world = this.owner.getWorld();
         const mobs = world.getMobs();
         if (mobs.size === 0) return null;
 
-        const cursorWorldPos = this.owner.input.getWorldPointer();
-        let nearest: MobEntity | null = null;
-        let nearestDist2 = Infinity;
+        const {x, y} = this.owner.input.getWorldPointer();
+        const candidates = world.searchOtherEntities(
+            this.owner,
+            AABB.fromCenter(x, y, 16, 16),
+            EntityPredicates.MOB
+        )
 
-        for (const mob of mobs.values()) {
-            const mobPos = mob.positionRef;
-            const dx = mobPos.x - cursorWorldPos.x;
-            const dy = mobPos.y - cursorWorldPos.y;
-            const dist2 = dx * dx + dy * dy;
-            if (dist2 < nearestDist2 && dist2 < 60 * 60) {
-                nearestDist2 = dist2;
-                nearest = mob;
-            }
-        }
-        return nearest;
+        return getNearestEntity(x, y, candidates);
     }
 }

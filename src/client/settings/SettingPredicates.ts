@@ -2,11 +2,7 @@ import type {Predicate} from "../../type/types.ts";
 import {assertClamp} from "../../utils/math/math.ts";
 
 export class SettingPredicates {
-    private static isBool = (v: unknown) => typeof v === 'boolean';
-
-    public static bool(): Predicate<boolean> {
-        return this.isBool;
-    }
+    public static isBool = (v: unknown) => typeof v === 'boolean';
 
     public static number(): Predicate<number> {
         return Number.isFinite;

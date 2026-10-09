@@ -71,10 +71,6 @@ export class DecoyReleaser extends SpecialWeapon {
         if (!world.isClient && attacker instanceof ServerPlayerEntity) attacker.syncStack(stack);
     }
 
-    public bindKey(): string {
-        return "KeyX";
-    }
-
     public override getUiColor(): string {
         return "#fffeb7";
     }

@@ -6,10 +6,21 @@ import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 import {BlockChangeS2CPacket} from "../../network/packet/s2c/BlockChangeS2CPacket.ts";
 import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
 import {isClient} from "../../configs/RuntimeConfig.ts";
+import {RadialRing} from "../../effect/RadialRing.ts";
 
 export class ArtilleryEntity extends FastBulletEntity {
     public override noClip = true;
+
     private readonly hit = new WeakSet<Entity>();
+    private rings = 3;
+
+    public override tick() {
+        super.tick();
+
+        if (isClient && this.rings-- > 0) {
+            this.getWorld().addEffect(null, new RadialRing(this.position(), 8, 30, 0.8, '#fff'));
+        }
+    }
 
     protected override onEntityHit(hitResult: EntityHitResult): void {
         if (isClient) return;

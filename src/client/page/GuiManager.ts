@@ -11,8 +11,7 @@ export class GuiManager {
         this.root = root;
 
         window.addEventListener('keydown', event => {
-            const top = this.top();
-            if (top && top.keyDown(event)) event.preventDefault();
+            if (this.top()?.keyDown(event)) event.preventDefault();
         });
     }
 

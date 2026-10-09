@@ -162,7 +162,7 @@ export class ServerPlayHandler extends ServerCommonHandler {
     }
 
     public onPlayerInput(packet: PlayerInputC2SPacket): void {
-        this.player.handlerInput(packet.key);
+        this.player.handlerInput(packet.action);
     }
 
     public onPlayerSwitchSlot(packet: PlayerSwitchSlotC2SPacket): void {

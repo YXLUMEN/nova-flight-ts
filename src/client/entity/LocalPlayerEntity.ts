@@ -30,6 +30,8 @@ import {ClientInventory} from "../inventory/ClientInventory.ts";
 import {FullMove, PositionOnly, Steering} from "../../network/packet/c2s/PlayerMoveC2SPacket.ts";
 import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
+import {InputBindings} from "../input/InputBindings.ts";
+import {Items} from "../../item/Items.ts";
 
 export class LocalPlayerEntity extends PlayerEntity {
     public readonly profile: GameProfile;
@@ -40,7 +42,6 @@ export class LocalPlayerEntity extends PlayerEntity {
     declare protected readonly techTree: ClientTechTree;
 
     private quickFireIndex = 0;
-    private readonly activeSpecials: Map<string, SpecialWeapon>;
     private readonly orderSpecials: SpecialWeapon[];
 
     private autoAimEnable: boolean = false;
@@ -64,8 +65,6 @@ export class LocalPlayerEntity extends PlayerEntity {
         this.techTree = new ClientTechTree(this);
 
         this.giveInitWeapon();
-
-        this.activeSpecials = new Map();
         this.orderSpecials = [];
     }
 
@@ -100,17 +99,17 @@ export class LocalPlayerEntity extends PlayerEntity {
         }
 
         // debug
-        if (this.input.isDown('KeyL')) {
+        if (this.input.isDown(InputBindings.DESTROY_BLOCK)) {
             const pos = this.input.getWorldPointer();
             this.placeBlock(0, pos.x, pos.y);
         }
 
-        if (this.input.isDown('KeyP')) {
+        if (this.input.isDown(InputBindings.PLACE_BLOCK)) {
             const pos = this.input.getWorldPointer();
             this.placeBlock(1, pos.x, pos.y);
         }
 
-        if (this.input.wasPressed('KeyO')) {
+        if (this.input.wasPressed(InputBindings.FILL_BLOCK)) {
             let {x, y} = this.input.getWorldPointer();
             x = BlockPos.alignValue(x);
             y = BlockPos.alignValue(y);
@@ -124,20 +123,21 @@ export class LocalPlayerEntity extends PlayerEntity {
             this.placeBlocks(places);
         }
 
-        if (this.input.wasPressed('KeyF')) {
+        if (this.input.wasPressed(InputBindings.SWITCH_ITEM)) {
             this.switchWeapon();
-        } else if (this.input.wasPressed('KeyR')) {
+        } else if (this.input.wasPressed(InputBindings.RELOAD_AMMO)) {
             this.weaponReload();
         }
     }
 
     public override aiStep() {
         let dx = 0, dy = 0;
-        if (this.input.isDown("ArrowLeft", "KeyA")) dx -= 1;
-        if (this.input.isDown("ArrowRight", "KeyD")) dx += 1;
-        if (this.input.isDown("ArrowUp", "KeyW")) dy -= 1;
-        if (this.input.isDown("ArrowDown", "KeyS")) dy += 1;
-        if (this.input.wasPressed('AltLeft') && this.autoAim) {
+        if (this.input.isDown(InputBindings.MOVE_LEFT)) dx -= 1;
+        if (this.input.isDown(InputBindings.MOVE_RIGHT)) dx += 1;
+        if (this.input.isDown(InputBindings.MOVE_FORWARD)) dy -= 1;
+        if (this.input.isDown(InputBindings.MOVE_BACKWARD)) dy += 1;
+
+        if (this.input.wasPressed(InputBindings.AUTO_AIM) && this.autoAim) {
             this.autoAimEnable = !this.autoAimEnable;
             this.autoAim.setTarget(null);
             RuntimeConfig.autoShoot = false;
@@ -210,20 +210,22 @@ export class LocalPlayerEntity extends PlayerEntity {
     }
 
     private fireSpecials() {
-        const world = this.getWorld();
-        const inventory = this.getInventory();
-        for (const [assign, item] of this.activeSpecials) {
-            const stack = inventory.searchItem(item);
-            if (stack.isEmpty()) continue;
-
-            const bind = item.bindKey();
-            const key = bind === null ? assign : bind;
-
-            if (this.input.wasPressed(key) && item.canFire(stack)) {
-                item.tryFire(stack, world, this);
-                this.sendPacket(new FireSpecialC2SPacket(item));
-            }
+        let slot: number;
+        if (this.input.wasPressed(InputBindings.RELEASE_DECOY)) {
+            slot = this.orderSpecials.indexOf(Items.DECOY_RELEASER);
+        } else {
+            slot = this.input.getPressedSlot(InputBindings.SPECIAL_SLOT);
         }
+        if (slot === -1) return;
+
+        const item = this.orderSpecials[slot];
+        if (!item) return;
+
+        const stack = this.getInventory().searchItem(item);
+        if (stack.isEmpty() || !item.canFire(stack)) return;
+
+        item.tryFire(stack, this.getWorld(), this);
+        this.sendPacket(new FireSpecialC2SPacket(item));
     }
 
     private fireMainWeapon() {
@@ -232,7 +234,7 @@ export class LocalPlayerEntity extends PlayerEntity {
         const item = stack.getItem();
         if (stack.isEmpty() || !(item instanceof Weapon)) return;
 
-        const isFiring = this.input.isDown("Space") || RuntimeConfig.autoShoot;
+        const isFiring = this.input.isDown(InputBindings.FIRE) || RuntimeConfig.autoShoot;
 
         const hasAmmo = stack.getDurability() > 0 || !stack.isDamageable();
 
@@ -267,8 +269,7 @@ export class LocalPlayerEntity extends PlayerEntity {
     }
 
     public reloadActiveSpecials() {
-        if (!this.activeSpecials) return;
-        this.activeSpecials.clear();
+        if (!this.orderSpecials) return;
         this.orderSpecials.length = 0;
 
         const inventory = this.getInventory();
@@ -281,7 +282,6 @@ export class LocalPlayerEntity extends PlayerEntity {
             const item = stack.getItem();
             if (!stack.isEmpty() && item instanceof SpecialWeapon) {
                 this.orderSpecials.push(item);
-                this.activeSpecials.set(`Digit${this.orderSpecials.length}`, item);
             }
         }
         this.quickFireIndex = clamp(this.quickFireIndex, 0, this.orderSpecials.length - 1);
@@ -293,7 +293,6 @@ export class LocalPlayerEntity extends PlayerEntity {
 
     public override clearItems(): void {
         super.clearItems();
-        this.activeSpecials.clear();
         this.orderSpecials.length = 0;
     }
 

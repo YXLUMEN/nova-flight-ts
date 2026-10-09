@@ -7,9 +7,9 @@ import {GatedSettingItem} from "./GatedSettingItem.ts";
 import {OptionStorage} from "./OptionStorage.ts";
 import {SettingPredicates} from "./SettingPredicates.ts";
 
-/** WIP */
+// TODO 设置页面;补充设置选项
 export class Settings {
-    public static readonly OPTIONS = new Options(
+    public static readonly OPTIONS = new Options(1,
         new OptionStorage('/configs', 'settings.json')
     );
 
@@ -45,7 +45,7 @@ export class Settings {
         'damage_popup',
         'settings.render.damage_popup',
         true,
-        SettingPredicates.bool(),
+        SettingPredicates.isBool,
     );
 
     private static item<T>(

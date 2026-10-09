@@ -18,8 +18,8 @@ export class ClientSuggestionPopup {
         })!;
         this.measureCtx.imageSmoothingEnabled = false;
 
-        this.commandBar = commandBar
-        this.commandInput = commandInput
+        this.commandBar = commandBar;
+        this.commandInput = commandInput;
 
         this.changeFont();
     }

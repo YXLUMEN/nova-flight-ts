@@ -2,6 +2,8 @@ import {LangManager} from "./LangManager.ts";
 import {StringReader} from "../brigadier/StringReader.ts";
 
 export class TranslatableText {
+    public static readonly NONE = TranslatableText.of('');
+
     private ordered: string = '';
     private lang: string = '';
 

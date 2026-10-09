@@ -1,14 +1,13 @@
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import type {Consumer} from "../../type/types.ts";
+import type {InputBinding} from "./InputBinding.ts";
 
 export interface IInput {
     updateEndFrame(): void;
 
-    isDown(...keys: string[]): boolean;
+    isDown(binding: InputBinding): boolean;
 
-    wasPressed(key: string): boolean;
-
-    wasComboPressed(...keys: string[]): boolean;
+    wasPressed(binding: InputBinding): boolean;
 
     getWorldPointer(): Readonly<MutVec2>;
 

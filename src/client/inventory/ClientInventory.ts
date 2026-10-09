@@ -2,10 +2,10 @@ import type {UniqueInventory} from "../../entity/player/UniqueInventory.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
 import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
 import {PlayerInventorySwapC2SPacket} from "../../network/packet/c2s/PlayerInventorySwapC2SPacket.ts";
+import {InputBindings} from "../input/InputBindings.ts";
 
 export class ClientInventory {
     public isOpen = false;
-    public justClicked = false;
 
     private readonly player: LocalPlayerEntity;
     private readonly inventory: UniqueInventory;
@@ -27,10 +27,10 @@ export class ClientInventory {
     }
 
     public interactWithSlot(slot: number): void {
-        this.justClicked = false;
+        const input = this.player.input;
         const targetSlot = this.inventory.getItem(slot);
 
-        if (this.player.input.wasPressed('ShiftLeft')) {
+        if (!targetSlot.isEmpty() && input.isDown(InputBindings.INVENTORY_SWAP)) {
             const hotbar = this.inventory.hotbarLength();
             const index = this.inventory.getEmptySlot(slot < hotbar ? hotbar : 0);
             if (index === -1) return;
@@ -38,6 +38,7 @@ export class ClientInventory {
             return;
         }
 
+        if (!input.wasKeyPressed('Mouse0')) return;
         if (this.heldItem.isEmpty()) {
             if (targetSlot.isEmpty()) return;
 

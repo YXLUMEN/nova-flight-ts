@@ -197,12 +197,10 @@ export class InventoryRender extends UiFramework {
         const pointer = this.player.input.getScreenPointer();
         const slot = this.getSlotAt(pointer.x, pointer.y);
         if (slot === null) {
-            this.inventory.justClicked = false;
             this.pointerItem = ItemStack.EMPTY;
             return;
         }
-
-        if (this.inventory.justClicked) {
+        if (this.player.input.isKeyDown('Mouse0')) {
             this.inventory.interactWithSlot(slot);
         } else {
             this.pointerItem = this.inventory.getInventory().getItem(slot);

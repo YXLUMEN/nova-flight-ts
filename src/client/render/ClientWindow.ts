@@ -1,4 +1,4 @@
-import type {BiConsumer, Consumer} from "../../type/types.ts";
+import type {BiConsumer, Supplier} from "../../type/types.ts";
 import {debounce, DPR} from "../../utils/uit.ts";
 import {UITheme} from "./ui/theme.ts";
 import {HUD} from "./ui/HUD.ts";
@@ -28,7 +28,7 @@ export class ClientWindow {
         window.onresize = debounce<unknown, any>(this.resize, 200);
     }
 
-    public onResize(cb: BiConsumer<number, number>): Consumer<void> {
+    public onResize(cb: BiConsumer<number, number>): Supplier<void> {
         this.resizeCallbacks.add(cb);
         return () => this.resizeCallbacks.delete(cb);
     }

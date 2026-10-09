@@ -31,7 +31,7 @@ import {SoundCommand} from "../../command/SoundCommand.ts";
 import {TickCommand} from "../../command/TickCommand.ts";
 import {RemoveCommand} from "../../command/RemoveCommand.ts";
 import type {Consumer} from "../../type/types.ts";
-import {CommandBarProxy} from "./CommandBarProxy.ts";
+import {CommandBarProxy} from "../page/compound/CommandBarProxy.ts";
 
 export class ClientCommandManager extends CommandManager implements EventListenerObject {
     private static readonly COMMAND_HISTORY_ID = 'history';
@@ -39,7 +39,7 @@ export class ClientCommandManager extends CommandManager implements EventListene
     private readonly clientDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
     private readonly source: ClientCommandSource;
 
-    private pendingStorage: number | undefined;
+    private pendingStorage: number | null = null;
     private historyIndex = -1;
     private readonly usedCommands: string[] = [];
 
@@ -64,12 +64,10 @@ export class ClientCommandManager extends CommandManager implements EventListene
         this.commandInput = commandInput;
         this.popup = new ClientSuggestionPopup(commandBar, commandInput);
         this.commandPanel = new ClientCommandPanel(commandPanel, commandBar, commandInput);
-        this.proxy = new CommandBarProxy(this, this.popup, this.commandPanel);
+        this.proxy = new CommandBarProxy(this, this.popup, this.commandPanel, commandBar, commandInput);
 
         this.bounceGiveSuggestions = debounce(this.giveSuggestions, 100);
-        commandBar.addEventListener('keydown', this);
-        commandInput.addEventListener('input', this);
-
+        this.persistentStorage = this.persistentStorage.bind(this);
         this.registry();
         void this.loadPersistentStorage();
     }
@@ -101,8 +99,8 @@ export class ClientCommandManager extends CommandManager implements EventListene
                     this.usedCommands.shift();
                 }
 
-                if (this.pendingStorage !== undefined) cancelIdleCallback(this.pendingStorage);
-                this.pendingStorage = requestIdleCallback(() => this.persistentStorage, {timeout: 8000});
+                if (this.pendingStorage !== null) cancelIdleCallback(this.pendingStorage);
+                this.pendingStorage = requestIdleCallback(this.persistentStorage, {timeout: 8000});
 
                 this.historyIndex = -1;
                 this.commandInput.value = '';

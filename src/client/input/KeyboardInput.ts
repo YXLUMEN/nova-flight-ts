@@ -1,16 +1,20 @@
 import type {IInput} from "./IInput.ts";
-import {EMPTY_INPUT, type InputEvents} from "./InputEvent.ts";
-import type {MutVec2} from "../../utils/math/MutVec2.ts";
-import {MouseState} from "./MouseState.ts";
-import {KeyboardState} from "./KeyboardState.ts";
-import {throttleTimeOut} from "../../utils/uit.ts";
 import type {Consumer} from "../../type/types.ts";
+import type {InputBinding} from "./InputBinding.ts";
+import {MutVec2} from "../../utils/math/MutVec2.ts";
+import {EMPTY_INPUT, type InputEvents} from "./InputEvent.ts";
+import {throttleTimeOut} from "../../utils/uit.ts";
+import {mapMouse} from "./InputStroke.ts";
 
 export class KeyboardInput implements IInput {
-    private readonly keyboardState = new KeyboardState();
-    private readonly mouseState = new MouseState();
+    private readonly codes = new Set<string>();
+    private readonly prevKeys = new Set<string>();
+
+    private readonly screenPointer = MutVec2.zero();
+    private readonly worldPointer = MutVec2.zero();
 
     private globalInput: number = 0;
+    // 兼容旧系统,可能会保留很长一段时间,但新功能不应依赖它
     private handler: InputEvents = EMPTY_INPUT;
 
     public constructor(target: HTMLElement) {
@@ -20,31 +24,42 @@ export class KeyboardInput implements IInput {
     }
 
     public getWorldPointer(): MutVec2 {
-        return this.mouseState.getWorldPointer();
+        return this.worldPointer;
     }
 
     public getScreenPointer(): MutVec2 {
-        return this.mouseState.getScreenPointer();
-    }
-
-    public isMouseDown(): boolean {
-        return this.mouseState.isMouseDown();
+        return this.screenPointer;
     }
 
     public updateEndFrame(): void {
-        this.keyboardState.updateEndFrame();
+        this.prevKeys.clear();
+        for (const k of this.codes) this.prevKeys.add(k);
     }
 
-    public isDown(...ks: string[]): boolean {
-        return this.keyboardState.isDownAny(...ks);
+    public isDown(binding: InputBinding): boolean {
+        return binding.get().some(v => this.codes.has(v.code));
     }
 
-    public wasPressed(key: string): boolean {
-        return this.keyboardState.wasPressed(key);
+    public isKeyDown(code: string): boolean {
+        return this.codes.has(code);
     }
 
-    public wasComboPressed(...keys: string[]): boolean {
-        return this.keyboardState.wasComboPressed(...keys);
+    public wasPressed(binding: InputBinding): boolean {
+        return binding.get().some(v => this.codes.has(v.code) && !this.prevKeys.has(v.code));
+    }
+
+    public wasKeyPressed(code: string): boolean {
+        return this.codes.has(code) && !this.prevKeys.has(code);
+    }
+
+    public getPressedSlot(binding: InputBinding): number {
+        const strokes = binding.get();
+        for (let i = 0; i < strokes.length; i++) {
+            const code = strokes[i].code;
+            if (this.codes.has(code) && !this.prevKeys.has(code)) return i;
+        }
+
+        return -1;
     }
 
     public requireInput(): Consumer<void> {
@@ -52,6 +67,7 @@ export class KeyboardInput implements IInput {
         let released = false;
         return () => {
             if (released) return;
+            released = true;
             this.globalInput--;
         };
     }
@@ -62,38 +78,31 @@ export class KeyboardInput implements IInput {
 
     private registerKeyboardListener(): void {
         const allowedShortcuts = new Set(['KeyA', 'KeyC', 'KeyV', 'KeyX', 'KeyZ']);
-
         window.addEventListener('keydown', event => {
             const code = event.code;
-
             if (code === 'F5' || ((event.ctrlKey || event.metaKey) && !allowedShortcuts.has(code))) {
                 event.preventDefault();
             }
 
-            if (this.globalInput) return;
-            this.keyboardState.addKey(code);
-            this.handler.onKeyPress(event);
+            if (event.repeat || this.globalInput) return;
+            this.codes.add(code);
+            this.handler.onKeyPress(this, event);
         });
-        window.addEventListener('keyup', e => {
-            this.keyboardState.removeKey(e.code);
-        });
-        window.addEventListener('blur', () => {
-            this.keyboardState.clear();
-            this.mouseState.setMouseDown(false);
-        });
+        window.addEventListener('keyup', e => this.codes.delete(e.code));
+        window.addEventListener('blur', () => this.codes.clear());
     }
 
     private registerMouseListener(target: HTMLElement): void {
         target.addEventListener('mousemove', event => {
-            this.mouseState.setScreenPointer(event.offsetX, event.offsetY);
+            this.screenPointer.set(event.offsetX, event.offsetY);
             this.handler.onMouseMove(event);
         }, {passive: true});
         target.addEventListener('mousedown', event => {
-            this.mouseState.setMouseDown(true);
-            this.handler.onMouseDown(event.button, event);
+            this.codes.add(mapMouse(event.button));
+            this.handler.onMouseDown(this, event);
         });
-        target.addEventListener('mouseup', event => {
-            this.mouseState.setMouseDown(false);
+        window.addEventListener('mouseup', event => {
+            this.codes.delete(mapMouse(event.button));
             this.handler.onMouseUp(event.button, event);
         });
     }

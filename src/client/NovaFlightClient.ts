@@ -287,8 +287,8 @@ export class NovaFlightClient {
         if (this.world && !this.pause) {
             this.worldRender.tick(dt);
             this.world.tick(dt);
-            this.input.updateEndFrame();
         }
+        this.input.updateEndFrame();
     }
 
     private createWorldStopPromise(): void {
@@ -372,10 +372,11 @@ export class NovaFlightClient {
         this.layer.showNotice(TranslatableText.of('start.leave'));
         this.connection.disconnect();
         this.requestStop();
+        this.stopWorld();
     }
 
     public setConnectError(message: string | TranslatableText): void {
-        this.layer.showNotice(message, TranslatableText.of('start.confirm'), () => this.requestStop());
+        this.layer.showNotice(message, TranslatableText.of('start.confirm'), () => this.leaveGame());
     }
 
     public onGameOver(): void {

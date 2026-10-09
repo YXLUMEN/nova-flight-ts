@@ -23,7 +23,7 @@ export class TipResource implements ResourceModule {
             }
 
             this.tips = json.length === 0 ?
-                [TranslatableText.of('')] :
+                [TranslatableText.NONE] :
                 json.map(item => TranslatableText.of(`tips.${item}`));
         } catch (e) {
             await error(`Could not load tips.json: ${e}`);

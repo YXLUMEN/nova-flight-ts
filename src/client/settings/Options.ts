@@ -3,14 +3,13 @@ import type {OptionStorage} from "./OptionStorage.ts";
 import {error, warn} from "@tauri-apps/plugin-log";
 
 export class Options {
-    // 协议版本,破坏性变更(如单位修改)时才更改此值
-    public static readonly VERSION = 1;
-
-    private readonly items = new Map<string, SettingItem<unknown>>();
+    private readonly version: number;
+    private readonly items: Map<string, SettingItem<unknown>> = new Map();
     private readonly storage: OptionStorage;
     private timer: number | undefined;
 
-    public constructor(storage: OptionStorage) {
+    public constructor(version: number, storage: OptionStorage) {
+        this.version = version;
         this.storage = storage;
         this.save = this.save.bind(this);
     }
@@ -46,7 +45,7 @@ export class Options {
         for (const [key, item] of this.items) {
             values[key] = item.get();
         }
-        return JSON.stringify({version: Options.VERSION, values}, null, 2);
+        return JSON.stringify({version: this.version, values}, null, 2);
     }
 
     public fromJson(json: string): void {
@@ -54,8 +53,8 @@ export class Options {
         if (typeof parsed !== 'object' || parsed === null) return;
 
         const version: unknown = parsed.version;
-        if (typeof version !== 'number' || version !== Options.VERSION) {
-            warn(`[Settings] Unmatch version "${version} but require "${Options.VERSION}"`).catch();
+        if (typeof version !== 'number' || version !== this.version) {
+            warn(`[Settings] Unmatch version "${version} but require "${this.version}"`).catch();
             return;
         }
 

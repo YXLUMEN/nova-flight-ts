@@ -10,14 +10,14 @@ export class PlayerInputC2SPacket implements Payload {
     public static readonly ID: PayloadType<PlayerInputC2SPacket> = payloadType('player_input');
     public static readonly CODEC: PacketCodec<PlayerInputC2SPacket> = PacketCodecs.adapt(
         PacketCodecs.STRING,
-        val => val.key,
+        val => val.action,
         to => new PlayerInputC2SPacket(to)
     );
 
-    public readonly key: string;
+    public readonly action: string;
 
-    public constructor(key: string) {
-        this.key = key;
+    public constructor(action: string) {
+        this.action = action;
     }
 
     public static create(key: string): PlayerInputC2SPacket {
@@ -35,6 +35,6 @@ export class PlayerInputC2SPacket implements Payload {
 
     public estimateSize(): number {
         // ASCII Only
-        return this.key.length;
+        return this.action.length;
     }
 }

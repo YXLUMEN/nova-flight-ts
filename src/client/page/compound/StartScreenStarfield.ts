@@ -39,8 +39,9 @@ export class StartScreenStarfield extends UiFramework {
         this.tick = this.tick.bind(this);
         this.setSize = this.setSize.bind(this);
         this.setSize(ClientWindow.viewWidth, ClientWindow.viewHeight);
+
         const unsubResize = client.window.onResize(this.setSize);
-        this.ctrl.signal.addEventListener('abort', () => unsubResize(), {once: true});
+        this.ctrl.signal.addEventListener('abort', unsubResize, {once: true});
     }
 
     public start() {

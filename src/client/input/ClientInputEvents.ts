@@ -10,24 +10,29 @@ import {Main2WorkerType} from "../../worker/WorkerMsgType.ts";
 import type {Consumer} from "../../type/types.ts";
 import {BitFlag} from "../../utils/BitFlag.ts";
 import {DebugFlag} from "../render/DebugRenderer.ts";
+import {InputBindings} from "./InputBindings.ts";
+import type {IInput} from "./IInput.ts";
 
 export class ClientInputEvents {
     public static registryAll(client: NovaFlightClient, input: KeyboardInput): void {
         this.windowEvents(client);
 
         input.setHandler(cleanObj({
-            onKeyPress: (event) => {
+            onKeyPress: (input, event) => {
                 const code = event.code;
-                if (code === 'Slash' || code === 'KeyT') {
+                if (code === 'Slash' || input.wasPressed(InputBindings.COMMAND_BAR)) {
                     const manager = client.clientCommandManager;
+                    if (code !== 'Slash' || manager.getInput().length !== 0) {
+                        event.preventDefault();
+                    }
+
                     client.layer.gui.open(manager.proxy);
                     return;
                 }
 
                 event.preventDefault();
-                this.onKeyDown(client, event);
+                this.onKeyDown(client, input, event);
             },
-
             onMouseMove: (event) => {
                 const offset = client.window.camera.cameraOffset;
                 input.getWorldPointer().set(
@@ -35,27 +40,16 @@ export class ClientInputEvents {
                     event.offsetY + offset.y
                 );
             },
-
-            onMouseDown: (button) => {
-                if (button === 0) {
-                    RuntimeConfig.autoShoot = true;
-                }
-
+            onMouseDown: (input) => {
                 if (!client.player || client.player.isOpenInventory()) return;
-                if (button === 1) {
+                if (input.wasPressed(InputBindings.SWITCH_QUICK)) {
                     client.player.switchQuickFire();
                 }
-                if (button === 2) {
+                if (input.wasPressed(InputBindings.QUICK_RELEASE)) {
                     client.player.launchQuickFire();
                 }
             },
-
-            onMouseUp: (button) => {
-                if (button === 0) {
-                    RuntimeConfig.autoShoot = false;
-                }
-            },
-
+            onMouseUp: empty,
             onWheel: (event) => {
                 if (!client.world) return;
                 if (client.clientCommandManager.isShow() || !client.world.isTechTreeHidden()) return;
@@ -64,9 +58,9 @@ export class ClientInputEvents {
         }));
     }
 
-    private static onKeyDown(client: NovaFlightClient, event: KeyboardEvent): void {
+    private static onKeyDown(client: NovaFlightClient, input: IInput, event: KeyboardEvent): void {
         const code = event.code;
-        if (code === 'F11') {
+        if (input.wasPressed(InputBindings.FULLSCREEN)) {
             app.isFullscreen()
                 .then(isFull => app.setFullscreen(!isFull))
                 .catch(console.error);
@@ -202,15 +196,5 @@ export class ClientInputEvents {
                 minimizedDisable = empty;
             }
         }).catch(console.error);
-
-        client.window.canvas.addEventListener('click', () => {
-            if (!client.player) return;
-            client.player.clientInventory.justClicked = true;
-        });
-
-        client.window.canvas.addEventListener('pointerup', () => {
-            if (!client.player) return;
-            client.player.clientInventory.justClicked = false;
-        });
     }
 }

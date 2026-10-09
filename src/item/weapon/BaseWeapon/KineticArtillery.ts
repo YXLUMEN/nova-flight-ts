@@ -33,9 +33,8 @@ export class KineticArtillery extends BaseWeapon {
             attacker,
             stack.getOr(DataComponents.ATTACK_DAMAGE, 32)
         );
-        this.setBullet(bullet, attacker, KineticArtillery.SPEED, 8, 0);
+        this.setBullet(bullet, attacker, KineticArtillery.SPEED, 0, 0);
         world.spawnEntity(bullet);
-
         world.playSound(null, SoundEvents.KINETIC_ARTILLERY_FIRE, 0.4);
     }
 

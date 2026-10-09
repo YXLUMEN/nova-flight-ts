@@ -211,7 +211,6 @@ export class MissileEntity extends RocketEntity {
     }
 
     private onFuelExhausted(): void {
-        this.target = null;
         if (!this.ignite) return;
         this.ignite = false;
         this.dataTracker.set(MissileEntity.IS_IGNITE, false);

@@ -3,7 +3,7 @@ import {resolve, resolveResource} from "@tauri-apps/api/path";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {Resources} from "./Resources.ts";
 import {normalizedDir, pruneSuffix, traverse_dir} from "../utils/fs.ts";
-import {exists, readFile} from "@tauri-apps/plugin-fs";
+import {readFile} from "@tauri-apps/plugin-fs";
 import {convertFileSrc} from "@tauri-apps/api/core";
 import {error} from "@tauri-apps/plugin-log";
 import type {TexturePath} from "../client/render/model/TexturePath.ts";
@@ -77,7 +77,7 @@ export class TextureResource implements ResourceModule, TextureProvider {
 
     private async loadTexture(key: string): Promise<void> {
         const texture = this.texturePaths.get(key);
-        if (!texture || !await exists(texture.abs)) return;
+        if (!texture) return;
 
         const buffer = await readFile(texture.abs);
         const blob = new Blob([buffer], {type: "image/png"});
