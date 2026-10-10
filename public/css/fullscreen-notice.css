@@ -10,6 +10,12 @@
     font-size: 24px;
     font-weight: bold;
     color: var(--text);
+
+    max-width: 60%;
+    max-height: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: break-spaces;
 }
 
 .fullscreen-notice .c-button {

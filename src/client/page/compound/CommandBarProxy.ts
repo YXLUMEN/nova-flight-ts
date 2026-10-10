@@ -10,38 +10,27 @@ export class CommandBarProxy extends PageSection {
     private readonly popup: ClientSuggestionPopup;
     private readonly commandPanel: ClientCommandPanel;
 
-    private readonly commandBar: HTMLElement;
-    private readonly commandInput: HTMLElement;
-
     private release: Consumer<void> = empty;
 
     public constructor(
         command: ClientCommandManager,
         popup: ClientSuggestionPopup,
         commandPanel: ClientCommandPanel,
-        commandBar: HTMLElement,
-        commandInput: HTMLElement,
     ) {
         super('command-bar-proxy');
 
         this.command = command;
         this.popup = popup;
         this.commandPanel = commandPanel;
-        this.commandBar = commandBar;
-        this.commandInput = commandInput;
     }
 
     protected override onOpened() {
         this.release = this.manager!.input.requireInput();
-        this.commandBar.addEventListener('keydown', this.command);
-        this.commandInput.addEventListener('input', this.command);
         this.switchPanel(true);
     }
 
     protected override onClosed() {
         this.switchPanel(false);
-        this.commandBar.removeEventListener('keydown', this.command);
-        this.commandInput.removeEventListener('input', this.command);
         this.release();
     }
 

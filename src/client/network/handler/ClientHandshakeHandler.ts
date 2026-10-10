@@ -61,12 +61,12 @@ export class ClientHandshakeHandler extends ClientCommonHandler {
             } catch (e) {
                 this.stopSniff();
                 console.error(e);
-                this.client.setConnectError('无法探测服务器');
+                this.client.leaveAndShow('无法探测服务器');
                 return;
             }
             if (times >= this.maxSniffTimes) {
                 this.stopSniff();
-                this.client.setConnectError('无法连接至服务器');
+                this.client.leaveAndShow('无法连接至服务器');
             }
         }, 2000);
     }

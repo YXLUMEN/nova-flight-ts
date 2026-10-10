@@ -61,7 +61,7 @@ export class IntegratedServer extends NovaFlightServer {
     }
 
     public override onHalted(): Promise<void> {
-        console.log('[Server] Notify client the integrated server shutdown.');
+        console.log('[Server] Notify client the integrated server stopping.');
         self.postMessage({w2m: Worker2MainType.SERVER_STOP});
         return Promise.resolve();
     }
@@ -88,7 +88,12 @@ export class IntegratedServer extends NovaFlightServer {
     }
 
     public override async saveWorld(compound: NbtCompound): Promise<void> {
-        const result = await ServerStorage.updateWorld(this.profile!.name, compound);
+        if (!this.profile) {
+            Log.error('[Server] Save world without server profile.');
+            return;
+        }
+
+        const result = await ServerStorage.updateWorld(this.profile.name, compound);
         if (result.isErr()) {
             Log.error(result.unwrapErr().message);
         }

@@ -42,7 +42,7 @@ export abstract class ClientCommonHandler implements PacketListener {
     }
 
     private relayErrorHandler(message: string): void {
-        this.client.setConnectError(message);
+        this.client.leaveAndShow(message);
     }
 
     public onBatch(packet: BatchBuffer): void {
@@ -54,7 +54,7 @@ export abstract class ClientCommonHandler implements PacketListener {
         this.connection.disconnect();
 
         this.client.setPause(true);
-        this.client.setConnectError(packet.reason);
+        this.client.leaveAndShow(packet.reason);
     }
 
     public send(packet: Payload): void {

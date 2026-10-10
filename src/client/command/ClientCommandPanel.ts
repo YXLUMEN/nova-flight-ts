@@ -55,6 +55,7 @@ export class ClientCommandPanel {
 
         this.commandBar.classList.remove('hidden');
         this.commandPanel.classList.remove('hidden');
+        this.commandBar.inert = false;
         this.commandInput.focus();
         this.showAllMessages();
     }
@@ -65,6 +66,7 @@ export class ClientCommandPanel {
 
         this.commandBar.classList.add('hidden');
         this.commandPanel.classList.add('hidden');
+        this.commandBar.inert = true;
         this.hideAllMessage();
     }
 

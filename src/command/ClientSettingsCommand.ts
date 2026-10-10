@@ -76,7 +76,7 @@ export class ClientSettingsCommand {
                                                 throw new CommandError(bl ? '\x1b[31mCannot open on LAN' : '\x1b[31mCannot close port');
                                             }
 
-                                            NovaFlightClient.instance().requestStop();
+                                            NovaFlightClient.instance().leaveGame();
 
                                             RuntimeConfig.generalMode = bl;
                                             ctx.source.addMessage(bl ? 'Now is open on LAN' : 'Close port');
@@ -100,7 +100,6 @@ export class ClientSettingsCommand {
                                             }
 
                                             localStorage.setItem('playerName', playerName);
-                                            ctx.source.getClient().playerName = playerName;
                                             ctx.source.addMessage(`Set playerName to: \x1b[32m"${playerName}"`);
                                         })
                                 )
@@ -173,7 +172,7 @@ export class ClientSettingsCommand {
                         .then(
                             literal<T>('stop_game')
                                 .executes(ctx => {
-                                    ctx.source.getClient().requestStop();
+                                    ctx.source.getClient().leaveGame();
                                     ctx.source.addMessage('Schedule to stop the game');
                                 })
                         )

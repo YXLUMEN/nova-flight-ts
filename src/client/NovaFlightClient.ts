@@ -3,14 +3,14 @@ import type {ClientStartup} from "./ClientStartup.ts";
 import type {ConnectionContext} from "./network/ConnectionContext.ts";
 import type {ClientChannel} from "./network/ClientChannel.ts";
 import type {LocalPlayerEntity} from "./entity/LocalPlayerEntity.ts";
+import type {ServerWorker} from "../worker/ServerWorker.ts";
 import {error, warn} from "@tauri-apps/plugin-log";
 import {invoke} from "@tauri-apps/api/core";
 import {empty, sleep, timeout} from "../utils/uit.ts";
-import {KeyboardInput} from "./input/KeyboardInput.ts";
+import {InputManager} from "./input/InputManager.ts";
 import {ClientWindow} from "./render/ClientWindow.ts";
 import {DEFAULT_CONFIG, isDev, RuntimeConfig} from "../configs/RuntimeConfig.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
-import {ClientNetworkChannel} from "./network/ClientNetworkChannel.ts";
 import {ClientWorld} from "./ClientWorld.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import {ClientCommandManager} from "./command/ClientCommandManager.ts";
@@ -38,6 +38,7 @@ import {Main2WorkerType, Worker2MainType} from "../worker/WorkerMsgType.ts";
 import {RacePromise} from "../utils/RacePromise.ts";
 import {GuiLayer} from "./render/ui/GuiLayer.ts";
 import {StartScreen} from "./page/compound/StartScreen.ts";
+import {FakeChannel} from "./network/FakeChannel.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -47,11 +48,11 @@ export class NovaFlightClient {
     public readonly clientId: UUID;
     public readonly version: number;
     public readonly protocolVersion: number;
-    public playerName: string;
+    public readonly playerName: string;
 
     public readonly window: ClientWindow;
     public readonly layer: GuiLayer;
-    public readonly input: KeyboardInput;
+    public readonly input: InputManager;
     public readonly globalSound: SoundSystem = new SoundSystem();
 
     protected channel: ClientChannel;
@@ -59,7 +60,7 @@ export class NovaFlightClient {
     public readonly networkHandler: ClientPlayHandler;
     public readonly commandSource: ClientCommandSource;
 
-    private worker: Worker | null = null;
+    private worker: ServerWorker | null = null;
     private isIntegrated = false;
     private readonly workerFs: ClientWorkerFS = new ClientWorkerFS();
 
@@ -79,7 +80,7 @@ export class NovaFlightClient {
     private lastRenderTime = 0;
     private renderDisable: Consumer<void> = empty;
 
-    private waitWorldStop: Promise<void> | null = null;
+    private loopPromise: Promise<void> | null = null;
     private stopWorld: Consumer<void> = empty;
 
     public readonly registryManager: RegistryManager;
@@ -99,7 +100,7 @@ export class NovaFlightClient {
         this.worldRender = new WorldRenderer(this);
         this.tickManager = new TickRateManager();
 
-        this.channel = new ClientNetworkChannel('', this.clientId);
+        this.channel = FakeChannel.INSTANCE;
         this.connection = new ClientConnection(this.channel);
         this.networkHandler = new ClientPlayHandler(this, this.connection);
 
@@ -111,11 +112,10 @@ export class NovaFlightClient {
         this.clientCommandManager = new ClientCommandManager(this.commandSource);
         this.clientChat = new ClientChat(this);
 
-        this.input = new KeyboardInput(this.window.canvas);
+        this.input = new InputManager(this.window.canvas);
         this.layer.gui.input = this.input;
         ClientInputEvents.registryAll(this, this.input);
 
-        this.createWorldStopPromise();
         this.loop = this.loop.bind(this);
     }
 
@@ -130,18 +130,19 @@ export class NovaFlightClient {
         BGMManager.init();
 
         while (true) {
-            if (this.waitWorldStop === null) this.createWorldStopPromise();
+            const looped = this.createWorldStopPromise();
             const breakLoop = await this.userSelect();
             if (breakLoop) break;
 
-            await this.waitWorldStop;
+            await looped;
+            this.loopPromise = null;
 
             // cleanup
-            this.connection.clean();
             if (this.isIntegrated) {
                 await invoke('stop_server');
                 await invoke('stop_lan_announce');
             }
+            this.layer.destroyScreen();
             this.window.resize();
         }
 
@@ -156,7 +157,7 @@ export class NovaFlightClient {
         if (action === 'exit') return true;
 
         const ctx = new NovaFlightClient.ConnectCtx(this);
-        const connector = new ClientConnector(this, ctx);
+        const connector = new ClientConnector(ctx);
 
         if (action === 'start') {
             this.isIntegrated = true;
@@ -183,57 +184,6 @@ export class NovaFlightClient {
             return false;
         }
         return false;
-    }
-
-    public async joinGame(world: ClientWorld) {
-        if (this.layer.hasNotice()) {
-            this.layer.showNotice(TranslatableText.of('start.join_game'), null, empty);
-        }
-
-        appEvent.emit(new GameStart());
-        await sleep(200);
-
-        this.world = world;
-        this.worldRender.setWorld(world);
-        this.playing = true;
-        this.loop(0);
-        this.window.canvas.style.cursor = 'none';
-
-        this.layer.closeNotice();
-        this.clientCommandManager.clearParseCache();
-    }
-
-    public isPause(): boolean {
-        return this.pause;
-    }
-
-    public setPause(bl: boolean): void {
-        if (bl && !this.pause) {
-            this.pause = true;
-            this.worker?.postMessage({m2w: Main2WorkerType.STOP_TICKING});
-            appEvent.emit(new GamePause(true));
-
-            if (!this.player?.isOpenInventory()) {
-                this.renderDisable = this.worldRender.disable();
-            }
-
-            this.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
-            if (this.isIntegrated && this.world) {
-                this.world.worldSound.pauseAll().catch(console.error);
-            }
-            this.window.canvas.style.cursor = 'crosshair';
-        } else if (!bl && this.pause) {
-            this.pause = false;
-            this.worker?.postMessage({m2w: Main2WorkerType.START_TICKING});
-            appEvent.emit(new GamePause(false));
-
-            this.renderDisable();
-            this.renderDisable = empty;
-
-            this.globalSound.playSound(SoundEvents.UI_PAGE_SWITCH);
-            this.world?.worldSound.resumeAll().catch(console.error);
-            this.window.canvas.style.cursor = 'none';
-        }
     }
 
     private loop(ts: number): void {
@@ -291,20 +241,30 @@ export class NovaFlightClient {
         this.input.updateEndFrame();
     }
 
-    private createWorldStopPromise(): void {
+    private createWorldStopPromise(): Promise<void> {
+        if (this.loopPromise) return this.loopPromise;
         this.stopWorld();
 
-        const {promise, resolve} = Promise.withResolvers<void>();
-        this.waitWorldStop = promise;
-        this.stopWorld = () => this.bindStopWorld(resolve);
+        const resolvers = Promise.withResolvers<void>();
+        this.loopPromise = resolvers.promise;
+        this.stopWorld = () => this.bindStopWorld(resolvers);
+        return resolvers.promise;
     }
 
-    private bindStopWorld(resolve: Consumer<void>) {
-        if (!this.waitWorldStop) return;
+    private bindStopWorld(resolvers: PromiseWithResolvers<void>) {
+        const {promise, resolve} = resolvers;
+        if (promise !== this.loopPromise) {
+            resolve();
+            void warn('[Client] Unmatch loop promise.');
+            return;
+        }
+
+        this.stopWorld = empty;
+        this.playing = false;
+
         console.log('[Client] Stopping world');
 
         // clear world
-        this.layer.destroyScreen();
         this.worldRender.setWorld(null);
         this.window.hud.setPlayer(null);
         this.world?.close();
@@ -315,38 +275,84 @@ export class NovaFlightClient {
         this.last = 0;
         this.accumulator = 0;
 
+        // unbind channel
+        this.connection.clean();
+        this.connection.changeChannel(FakeChannel.INSTANCE);
+        this.channel = FakeChannel.INSTANCE;
+
         // terminate worker
         const worker = this.worker;
         if (!worker) {
             resolve();
-            this.waitWorldStop = null;
             return;
         }
 
-        const terminate = () => {
-            worker.terminate();
-            this.worker = null;
-
+        worker.halt().then(reason => {
             resolve();
-            this.waitWorldStop = null;
-        };
-
-        const shutTimeout = setTimeout(() => {
-            void warn('[Client] Waiting worker terminate timeout');
-            terminate();
-        }, NovaFlightClient.SERVER_SHUTDOWN_TIMEOUT);
-
-        worker.onmessage = event => {
-            if (event.data.w2m !== Worker2MainType.SERVER_SHUTDOWN) return;
-            clearTimeout(shutTimeout);
-            terminate();
-        };
-
-        worker.postMessage({m2w: Main2WorkerType.STOP_SERVER});
+            if (this.worker !== worker) return;
+            this.worker = null;
+            if (reason) this.leaveAndShow(String(reason));
+        });
     }
 
-    public requestStop(): void {
-        this.playing = false;
+    public leaveGame(): void {
+        this.layer.showNotice(TranslatableText.of('start.leave'));
+        this.stopWorld();
+    }
+
+    public leaveAndShow(message: string | TranslatableText): void {
+        this.layer.showNotice(message, TranslatableText.of('start.confirm'), this.stopWorld);
+    }
+
+    public async joinGame(world: ClientWorld) {
+        if (this.layer.hasNotice()) {
+            this.layer.showNotice(TranslatableText.of('start.join_game'), null, empty);
+        }
+
+        appEvent.emit(new GameStart());
+        await sleep(200);
+
+        this.world = world;
+        this.worldRender.setWorld(world);
+        this.playing = true;
+        this.loop(0);
+        this.window.canvas.style.cursor = 'none';
+
+        this.layer.closeNotice();
+        this.clientCommandManager.clearParseCache();
+    }
+
+    public isPause(): boolean {
+        return this.pause;
+    }
+
+    public setPause(bl: boolean): void {
+        if (bl && !this.pause) {
+            this.pause = true;
+            this.worker?.post({m2w: Main2WorkerType.STOP_TICKING});
+            appEvent.emit(new GamePause(true));
+
+            if (!this.player?.isOpenInventory()) {
+                this.renderDisable = this.worldRender.disable();
+            }
+
+            this.globalSound.playSound(SoundEvents.UI_BUTTON_PRESSED);
+            if (this.isIntegrated && this.world) {
+                this.world.worldSound.pauseAll().catch(console.error);
+            }
+            this.window.canvas.style.cursor = 'crosshair';
+        } else if (!bl && this.pause) {
+            this.pause = false;
+            this.worker?.post({m2w: Main2WorkerType.START_TICKING});
+            appEvent.emit(new GamePause(false));
+
+            this.renderDisable();
+            this.renderDisable = empty;
+
+            this.globalSound.playSound(SoundEvents.UI_PAGE_SWITCH);
+            this.world?.worldSound.resumeAll().catch(console.error);
+            this.window.canvas.style.cursor = 'none';
+        }
     }
 
     public async saveAll(): Promise<void> {
@@ -355,7 +361,7 @@ export class NovaFlightClient {
         const ctrl = new AbortController();
         const race = new RacePromise();
 
-        this.worker.postMessage({m2w: Main2WorkerType.SAVE_ALL});
+        this.worker.post({m2w: Main2WorkerType.SAVE_ALL});
         this.worker.addEventListener('message', event => {
             if (event.data.w2m === Worker2MainType.SAVED) {
                 resolve();
@@ -368,17 +374,6 @@ export class NovaFlightClient {
         ctrl.abort();
     }
 
-    public leaveGame(): void {
-        this.layer.showNotice(TranslatableText.of('start.leave'));
-        this.connection.disconnect();
-        this.requestStop();
-        this.stopWorld();
-    }
-
-    public setConnectError(message: string | TranslatableText): void {
-        this.layer.showNotice(message, TranslatableText.of('start.confirm'), () => this.leaveGame());
-    }
-
     public onGameOver(): void {
         this.networkHandler.clear();
         document.getElementById('tech-shell')!.classList.add('hidden');
@@ -386,7 +381,7 @@ export class NovaFlightClient {
 
     // 其他
 
-    public getServerWorker(): Worker | null {
+    public getServerWorker(): ServerWorker | null {
         return this.worker;
     }
 
@@ -395,11 +390,12 @@ export class NovaFlightClient {
     }
 
     private static readonly ConnectCtx = class implements ConnectionContext {
-        private readonly client: NovaFlightClient;
+        public readonly client: NovaFlightClient;
+        public readonly stop: Consumer<void>;
 
         public constructor(client: NovaFlightClient) {
             this.client = client;
-            this.stop = this.stop.bind(this);
+            this.stop = client.stopWorld;
         }
 
         public getServerAddr(): Promise<string | null> {
@@ -407,35 +403,22 @@ export class NovaFlightClient {
             return this.client.multiGameManager.getServerAddress();
         }
 
+        public channel() {
+            return this.client.channel!;
+        }
+
         public setChannel(channel: ClientChannel) {
             this.client.channel = channel;
             this.client.connection.changeChannel(channel);
-        }
-
-        public sniff(
-            retryDelay?: number,
-            maxRetries?: number,
-            onTry?: (attempts: number, maxRetries: number) => boolean
-        ): Promise<boolean> {
-            return this.client.channel.sniff(retryDelay, maxRetries, onTry);
-        }
-
-        public connect(): Promise<void> {
-            return this.client.channel.connect();
         }
 
         public hasWorker(): boolean {
             return this.client.worker !== null;
         }
 
-        public setWorker(worker: Worker | null) {
-            if (worker === null) this.client.worker?.terminate();
+        public setWorker(worker: ServerWorker | null) {
+            if (worker === null) this.client.worker?.halt();
             this.client.worker = worker;
-        }
-
-        public stop() {
-            this.client.requestStop();
-            this.client.stopWorld();
         }
 
         public workerFs(): ClientWorkerFS {

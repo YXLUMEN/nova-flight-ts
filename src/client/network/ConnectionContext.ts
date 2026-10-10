@@ -1,22 +1,20 @@
 import type {ClientChannel} from "./ClientChannel.ts";
-import {ClientWorkerFS} from "../ClientWorkerFS.ts";
+import type {NovaFlightClient} from "../NovaFlightClient.ts";
+import type {ClientWorkerFS} from "../ClientWorkerFS.ts";
+import type {ServerWorker} from "../../worker/ServerWorker.ts";
 
 export interface ConnectionContext {
+    readonly client: NovaFlightClient;
+
     getServerAddr(): Promise<string | null>;
+
+    channel(): ClientChannel;
 
     setChannel(channel: ClientChannel): void;
 
-    sniff(
-        retryDelay?: number,
-        maxRetries?: number,
-        onTry?: (attempts: number, maxRetries: number) => boolean
-    ): Promise<boolean>;
-
-    connect(): Promise<void>;
-
     hasWorker(): boolean;
 
-    setWorker(worker: Worker | null): void;
+    setWorker(worker: ServerWorker | null): void;
 
     stop(): void;
 

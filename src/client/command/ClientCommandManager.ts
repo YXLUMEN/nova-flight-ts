@@ -64,10 +64,13 @@ export class ClientCommandManager extends CommandManager implements EventListene
         this.commandInput = commandInput;
         this.popup = new ClientSuggestionPopup(commandBar, commandInput);
         this.commandPanel = new ClientCommandPanel(commandPanel, commandBar, commandInput);
-        this.proxy = new CommandBarProxy(this, this.popup, this.commandPanel, commandBar, commandInput);
+        this.proxy = new CommandBarProxy(this, this.popup, this.commandPanel);
 
         this.bounceGiveSuggestions = debounce(this.giveSuggestions, 100);
         this.persistentStorage = this.persistentStorage.bind(this);
+
+        commandBar.addEventListener('keydown', this);
+        commandInput.addEventListener('input', this);
         this.registry();
         void this.loadPersistentStorage();
     }

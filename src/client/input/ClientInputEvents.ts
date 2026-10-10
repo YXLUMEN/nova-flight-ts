@@ -1,7 +1,7 @@
 import {isDev, RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
-import type {KeyboardInput} from "./KeyboardInput.ts";
+import type {InputManager} from "./InputManager.ts";
 import {cleanObj, empty} from "../../utils/uit.ts";
 import {DataLoader} from "../../resource/DataLoader.ts";
 import type {ClientTechTree} from "../tech/ClientTechTree.ts";
@@ -14,7 +14,7 @@ import {InputBindings} from "./InputBindings.ts";
 import type {IInput} from "./IInput.ts";
 
 export class ClientInputEvents {
-    public static registryAll(client: NovaFlightClient, input: KeyboardInput): void {
+    public static registryAll(client: NovaFlightClient, input: InputManager): void {
         this.windowEvents(client);
 
         input.setHandler(cleanObj({
@@ -144,7 +144,7 @@ export class ClientInputEvents {
         if (!player) return;
 
         const worker = client.getServerWorker();
-        worker?.postMessage({type: 'dev_mode', payload: {code}});
+        worker?.post({type: 'dev_mode', payload: {code}});
 
         switch (code) {
             case 'KeyH':
@@ -167,7 +167,7 @@ export class ClientInputEvents {
                 localStorage.removeItem('guided');
                 break;
             case 'KeyC':
-                worker?.postMessage({m2w: Main2WorkerType.CD_ALL});
+                worker?.post({m2w: Main2WorkerType.CD_ALL});
                 break;
         }
     }

@@ -1,6 +1,6 @@
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {Payload} from "../../network/Payload.ts";
-import type {KeyboardInput} from "../input/KeyboardInput.ts";
+import type {InputManager} from "../input/InputManager.ts";
 import type {GameProfile} from "../../server/entity/GameProfile.ts";
 import type {AutoAim} from "../tech/AutoAim.ts";
 import type {MissileEntity} from "../../entity/projectile/MissileEntity.ts";
@@ -35,7 +35,7 @@ import {Items} from "../../item/Items.ts";
 
 export class LocalPlayerEntity extends PlayerEntity {
     public readonly profile: GameProfile;
-    public readonly input: KeyboardInput;
+    public readonly input: InputManager;
 
     public readonly clientInventory: ClientInventory;
 
@@ -56,7 +56,7 @@ export class LocalPlayerEntity extends PlayerEntity {
     public readonly approachMissile = new Set<MissileEntity>();
     private revision: number = 0;
 
-    public constructor(world: World, input: KeyboardInput, profile: GameProfile) {
+    public constructor(world: World, input: InputManager, profile: GameProfile) {
         super(world, ItemCooldownManager);
 
         this.input = input;

@@ -84,7 +84,7 @@ export abstract class NovaFlightServer implements CommandOutput {
             this.world.close();
             this.world = null;
             this.stopWorld();
-            return;
+            throw loadResult.unwrapErr();
         }
 
         this.profile = new GameProfile(this.networkChannel.getSessionId(), this.serverId, this.worldName);
@@ -160,11 +160,12 @@ export abstract class NovaFlightServer implements CommandOutput {
 
         try {
             await this.playerManager.saveAllPlayerData();
-            const nbt = this.world!.saveAll();
-            await this.saveWorld(nbt);
+            const nbt = this.world?.saveAll();
+            if (nbt) await this.saveWorld(nbt);
+            else Log.warn('[Server] Saving game without init the world');
             console.log('[Server] World and all players are save');
         } catch (err) {
-            Log.error(`[Server] At NovaFlightServer, Error while saving game: ${err}`);
+            Log.error(`[Server] Error while saving game: ${err}`);
         }
 
         this.networkManager?.close();

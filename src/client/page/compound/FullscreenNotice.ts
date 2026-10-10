@@ -27,21 +27,24 @@ export class FullscreenNotice extends PageSection implements EventListenerObject
 
     protected override onClosed() {
         this.cancelled = true;
+
         this.button.removeEventListener('click', this);
+        this.label.textContent = '';
+        this.button.textContent = '';
+
+        this.onConfirm = empty;
         this.resolvers.resolve();
         this.resolvers = Promise.withResolvers<void>();
     }
 
     protected override onDestroy() {
-        this.onConfirm = empty;
         this.resolvers.resolve();
     }
 
     public handleEvent(event: Event) {
         if (event.type !== 'click') return;
-
-        this.close();
         this.onConfirm();
+        this.close();
     }
 
     public setBackground(color: string) {

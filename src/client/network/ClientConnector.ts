@@ -1,24 +1,20 @@
 import type {StartServer} from "../../type/startup.ts";
-import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import type {ConnectionContext} from "./ConnectionContext.ts";
 import type {FullscreenNotice} from "../page/compound/FullscreenNotice.ts";
 import {invoke} from "@tauri-apps/api/core";
-import {error, info, warn} from "@tauri-apps/plugin-log";
-import {message} from "@tauri-apps/plugin-dialog";
+import {error} from "@tauri-apps/plugin-log";
 import {sleep} from "../../utils/uit.ts";
 import {ClientNetworkChannel} from "./ClientNetworkChannel.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
 import {DEFAULT_CONFIG, RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {ClientIntegratedChannel} from "./ClientIntegratedChannel.ts";
 import {ClientHandshakeHandler} from "./handler/ClientHandshakeHandler.ts";
-import {Main2WorkerType, Worker2MainType} from "../../worker/WorkerMsgType.ts";
+import {ServerWorker} from "../../worker/ServerWorker.ts";
 
 export class ClientConnector {
-    private readonly client: NovaFlightClient;
     private readonly ctx: ConnectionContext;
 
-    public constructor(client: NovaFlightClient, ctx: ConnectionContext) {
-        this.client = client;
+    public constructor(ctx: ConnectionContext) {
         this.ctx = ctx;
     }
 
@@ -29,9 +25,11 @@ export class ClientConnector {
             return;
         }
 
-        this.ctx.setChannel(new ClientNetworkChannel(address, this.client.clientId));
+        const client = this.ctx.client;
+        this.ctx.setChannel(new ClientNetworkChannel(address, client.clientId));
+        const channel = this.ctx.channel();
 
-        const screen = this.client.layer;
+        const screen = client.layer;
         const notice = screen.showNotice(
             TranslatableText.of('start.remote.connecting'),
             TranslatableText.of('start.cancel'),
@@ -39,7 +37,7 @@ export class ClientConnector {
         );
         const confirm = notice.waitClose();
 
-        const sniff = this.ctx.sniff(
+        const sniff = channel.sniff(
             1000,
             3,
             (num, max) => {
@@ -62,7 +60,7 @@ export class ClientConnector {
         notice.setMessage(TranslatableText.of('start.connecting'));
 
         try {
-            await Promise.race([this.ctx.connect(), confirm]);
+            await Promise.race([channel.connect(), confirm]);
         } catch (err) {
             notice.setMessage(this.mapErr(err));
             notice.setLabel(TranslatableText.of('start.confirm'));
@@ -73,7 +71,7 @@ export class ClientConnector {
 
         if (notice.isCancelled()) return;
 
-        const config = new ClientHandshakeHandler(this.client, this.client.connection);
+        const config = new ClientHandshakeHandler(client, client.connection);
         config.clientReady();
 
         await confirm;
@@ -82,7 +80,8 @@ export class ClientConnector {
     public async startIntegratedServer(saveName: string): Promise<void> {
         if (this.ctx.hasWorker()) return;
 
-        const notice = this.client.layer.showNotice(
+        const client = this.ctx.client;
+        const notice = client.layer.showNotice(
             TranslatableText.of('start.integrated.start'),
             null,
             this.ctx.stop,
@@ -92,18 +91,20 @@ export class ClientConnector {
             type: 'module',
             name: 'server',
         });
-        this.ctx.setWorker(worker);
+        const server = new ServerWorker(worker);
+        this.ctx.setWorker(server);
 
         const addr = `127.0.0.1:${RuntimeConfig.port}`;
-        this.ctx.setChannel(new ClientIntegratedChannel(worker, this.client.clientId));
+        this.ctx.setChannel(new ClientIntegratedChannel(worker, client.clientId));
 
-        await this.checkAndConnect(addr, notice, new ArrayBuffer(0), saveName, worker);
+        await this.checkAndConnect(addr, notice, new ArrayBuffer(0), saveName, server);
     }
 
     public async startGeneralServer(saveName: string): Promise<void> {
         if (this.ctx.hasWorker()) return;
 
-        const notice = this.client.layer.showNotice(
+        const client = this.ctx.client;
+        const notice = client.layer.showNotice(
             TranslatableText.of('start.integrated.start'),
             null,
             this.ctx.stop,
@@ -134,7 +135,7 @@ export class ClientConnector {
         try {
             await invoke('start_lan_announce', {
                 port: RuntimeConfig.port,
-                name: `${this.client.playerName}'s game`,
+                name: `${client.playerName}'s game`,
                 gameVersion: DEFAULT_CONFIG.gameVersion
             });
         } catch (err) {
@@ -145,7 +146,7 @@ export class ClientConnector {
         await sleep(300);
 
         const addr = `127.0.0.1:${RuntimeConfig.port}`;
-        this.ctx.setChannel(new ClientNetworkChannel(addr, this.client.clientId));
+        this.ctx.setChannel(new ClientNetworkChannel(addr, client.clientId));
 
         await this.checkAndConnect(addr, notice, key, saveName);
     }
@@ -155,12 +156,14 @@ export class ClientConnector {
         notice: FullscreenNotice,
         key: ArrayBuffer,
         saveName: string,
-        worker?: Worker
+        server?: ServerWorker
     ): Promise<void> {
         notice.setLabel(TranslatableText.of('start.cancel'));
 
+        const client = this.ctx.client;
+        const channel = this.ctx.channel();
         const confirm = notice.waitClose();
-        const canConnect = await Promise.race([this.ctx.sniff(), confirm]);
+        const canConnect = await Promise.race([channel.sniff(), confirm]);
 
         // 探测可到达性
         if (!canConnect) {
@@ -173,26 +176,29 @@ export class ClientConnector {
             return;
         }
 
-        const config = new ClientHandshakeHandler(this.client, this.client.connection);
+        if (!server) {
+            const worker = new Worker(new URL('../../worker/integrated.worker.ts', import.meta.url), {
+                type: 'module',
+                name: 'server',
+            });
+            server = new ServerWorker(worker);
+            this.ctx.setWorker(server);
+        }
+
+        const config = new ClientHandshakeHandler(client, client.connection);
 
         // 内置服务器配置
         const startUp: StartServer = {
             addr,
             key,
-            hostUUID: this.client.clientId,
+            hostUUID: client.clientId,
             saveName
         };
-
-        worker = worker === undefined ? new Worker(new URL('../../worker/integrated.worker.ts', import.meta.url), {
-            type: 'module',
-            name: 'server',
-        }) : worker;
-        this.ctx.setWorker(worker);
 
         const connectToServer = async () => {
             notice.setMessage(TranslatableText.of('start.connecting'));
             try {
-                await Promise.race([this.ctx.connect(), confirm]);
+                await Promise.race([channel.connect(), confirm]);
                 if (notice.isCancelled()) return;
 
                 config.clientReady();
@@ -208,60 +214,8 @@ export class ClientConnector {
             }
         };
 
-        const workerFs = this.ctx.workerFs();
-        worker.onmessage = event => {
-            const w2m = event.data.w2m as Worker2MainType;
-            if (w2m === undefined) return;
-
-            switch (w2m) {
-                case Worker2MainType.WORKER_READY:
-                    worker.postMessage({
-                        m2w: Main2WorkerType.START_SERVER,
-                        payload: startUp
-                    }, {transfer: [key]});
-                    break;
-                case Worker2MainType.SERVER_START:
-                    connectToServer();
-                    break;
-                case Worker2MainType.SERVER_STOP:
-                    this.ctx.stop();
-                    break;
-                case Worker2MainType.SAVED:
-                    this.client.clientCommandManager.addPlainMessage('\x1b[32m游戏已保存');
-                    break;
-                case Worker2MainType.LOG: {
-                    const level = event.data.level;
-                    if (level === 'info') info(event.data.message);
-                    else if (level === 'warn') warn(event.data.message);
-                    else if (level === 'error') error(event.data.message);
-                    break;
-                }
-                case Worker2MainType.POPUP:
-                    message(event.data.message, {kind: event.data.kind});
-                    break;
-                case Worker2MainType.READ_FILE:
-                    workerFs.readFile(event.data, worker);
-                    break;
-                case Worker2MainType.WRITE_FILE:
-                    workerFs.writeFile(event.data);
-                    break;
-                case Worker2MainType.FETCH:
-                    workerFs.fetch(event.data, worker);
-                    break;
-            }
-        };
-
-        worker.onerror = event => {
-            const err = event.error;
-            const msg = Error.isError(err) ?
-                `[Server Thread] Crash ${err.name}:${err.message} because ${err.cause} at\n ${err.stack}` :
-                `[Server Thread] Crash ${event.type}:${event.message} because ${event.error}`;
-
-            console.error(msg);
-            error(msg);
-            this.client.requestStop();
-        }
-
+        server.start(this.ctx, connectToServer, startUp);
+        // 显示服务器回执,等待玩家确认
         await confirm;
     }
 
