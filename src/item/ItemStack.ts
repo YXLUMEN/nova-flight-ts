@@ -259,7 +259,7 @@ export class ItemStack {
         // if (world instanceof ServerWorld) {
         //     this.getItem().inventoryTick(this, world, entity, slot, selected);
         // }
-        // todo
+        // TODO 仅服务端更新
         // @ts-ignore
         this.getItem().inventoryTick(this, world, entity, slot, selected);
     }

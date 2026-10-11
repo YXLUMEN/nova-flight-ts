@@ -314,8 +314,10 @@ export class NovaFlightClient {
 
         this.world = world;
         this.worldRender.setWorld(world);
-        this.playing = true;
-        this.loop(0);
+        if (!this.playing) {
+            this.playing = true;
+            this.loop(0);
+        }
         this.window.canvas.style.cursor = 'none';
 
         this.layer.closeNotice();

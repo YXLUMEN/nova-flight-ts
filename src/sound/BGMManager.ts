@@ -50,6 +50,7 @@ export class BGMManager {
         this.conditionListener(appEvent);
         this.IN_GAME.shuffle();
         void AudioManager.play(this.MAIN_THEME.current());
+        this.MAIN_THEME.shuffle();
     }
 
     public static async next() {

@@ -49,7 +49,7 @@ export class WorldRenderer {
         return () => {
             if (consumed) return;
             consumed = true;
-            this.disableRender--;
+            this.disableRender = Math.max(0, this.disableRender - 1);
         };
     }
 
@@ -61,6 +61,7 @@ export class WorldRenderer {
         this.particlePool.reset();
         this.mapRender?.dispose();
         this.mapRender = world === null ? null : new BlockMapRender(world.getMap());
+        this.disableRender = 0;
 
         clearTimeout(this.clearCacheTimer);
         if (world !== null) return;

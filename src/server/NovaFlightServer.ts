@@ -160,9 +160,10 @@ export abstract class NovaFlightServer implements CommandOutput {
 
         try {
             await this.playerManager.saveAllPlayerData();
-            const nbt = this.world?.saveAll();
-            if (nbt) await this.saveWorld(nbt);
-            else Log.warn('[Server] Saving game without init the world');
+            if (this.world) {
+                const nbt = this.world.saveAll();
+                await this.saveWorld(nbt);
+            } else Log.warn('[Server] Saving game without init the world');
             console.log('[Server] World and all players are save');
         } catch (err) {
             Log.error(`[Server] Error while saving game: ${err}`);

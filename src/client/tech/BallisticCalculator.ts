@@ -18,7 +18,7 @@ export class BallisticCalculator {
     }
 
     public tick(): void {
-        if (!this.owner.input.wasPressed(InputBindings.INVENTORY_SWAP)) {
+        if (!this.owner.input.wasPressed(InputBindings.BC)) {
             return;
         }
         if (this.lockedTarget) {

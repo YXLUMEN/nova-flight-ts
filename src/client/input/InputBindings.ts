@@ -4,8 +4,9 @@ import {Options} from "../settings/Options.ts";
 import {InputBinding} from "./InputBinding.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
+import {KeyModifier} from "./KeyModifier.ts";
 
-// TODO 按键绑定页面;修饰键;
+// TODO 按键绑定页面;
 export class InputBindings {
     public static readonly OPTIONS = new Options(1,
         new OptionStorage('/configs', 'keybinds.json')
@@ -50,6 +51,9 @@ export class InputBindings {
     public static readonly AUTO_AIM = this.bind('auto_aim', 'battle',
         strokeKey('AltLeft')
     );
+    public static readonly BC = this.bind('bc', 'battle',
+        strokeKey('ShiftLeft')
+    );
 
     public static readonly DESTROY_BLOCK = this.bind('destroy_block', 'block',
         strokeKey('KeyL')
@@ -63,7 +67,7 @@ export class InputBindings {
 
     // 背包与科技
     public static readonly INVENTORY_SWAP = this.bind('inventory_swap', 'inventory',
-        strokeKey('ShiftLeft')
+        strokeKey('Mouse0', KeyModifier.SHIFT)
     );
     public static readonly TECH_TREE = this.bind('tech_tree', 'inventory',
         strokeKey('KeyG')

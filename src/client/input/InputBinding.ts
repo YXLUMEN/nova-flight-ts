@@ -5,7 +5,7 @@ import type {TranslatableText} from "../../i18n/TranslatableText.ts";
 
 export class InputBinding extends SettingItem<readonly InputStroke[]> {
     // 不包括 Slash,Escape
-    public static readonly KEY_REG = /^(?:Key[A-Z]|Digit[0-9]|Numpad(?:[0-9]|Add|Subtract|Multiply|Divide|Decimal|Enter)|F(?:[1-9]|1[0-2])|Arrow(?:Up|Down|Left|Right)|Space|Tab|Enter|Backspace|Delete|Insert|Home|End|PageUp|PageDown|CapsLock|NumLock|ScrollLock|PrintScreen|Pause|ContextMenu|Backquote|Minus|Equal|BracketLeft|BracketRight|Backslash|Semicolon|Quote|Comma|Period|Intl(?:Backslash|Ro)|Shift(?:Left|Right)|Control(?:Left|Right)|Alt(?:Left|Right)|Meta(?:Left|Right)|OS(?:Left|Right)|Mouse[0-4])$/;
+    public static readonly KEY_REG = /^(?:Key[A-Z]|Digit[0-9]|Numpad(?:[0-9]|Add|Subtract|Multiply|Divide|Decimal|Enter)|F(?:[1-9]|1[0-2])|Arrow(?:Up|Down|Left|Right)|Space|Tab|Enter|Backspace|Delete|Insert|Home|End|PageUp|PageDown|CapsLock|NumLock|ScrollLock|PrintScreen|Pause|ContextMenu|Backquote|Minus|Equal|BracketLeft|BracketRight|Backslash|Semicolon|Quote|Comma|Period|Intl(?:Backslash|Ro)|Shift(?:Left|Right)|Control(?:Left|Right)|Alt(?:Left|Right)|Meta(?:Left|Right)|OS(?:Left|Right)|Mouse[0-4]|WheelDown|WheelUp)$/;
 
     public readonly group: string;
 
@@ -25,11 +25,8 @@ export class InputBinding extends SettingItem<readonly InputStroke[]> {
 
     private static validStroke(strokes: InputStroke): boolean {
         const modifiers = strokes.modifiers;
-        if (typeof modifiers === 'number') {
-            if (!Number.isInteger(modifiers) || modifiers < 0) return false;
-            // KeyModifier 的标志位总和
-            return (modifiers & 15) === modifiers;
-        }
+        if (typeof modifiers !== 'number') return false;
+        if (!Number.isInteger(modifiers) || modifiers < 0 || (modifiers & 15) !== modifiers) return false;
 
         const code = strokes.code;
         return typeof code === 'string' && InputBinding.KEY_REG.test(code);

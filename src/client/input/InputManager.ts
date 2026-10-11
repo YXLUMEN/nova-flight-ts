@@ -5,9 +5,10 @@ import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EMPTY_INPUT, type InputEvents} from "./InputEvent.ts";
 import {throttleTimeOut} from "../../utils/uit.ts";
 import {mapMouse} from "./InputStroke.ts";
+import {fromEvent} from "./KeyModifier.ts";
 
 export class InputManager implements IInput {
-    private readonly codes = new Set<string>();
+    private readonly press = new Map<string, number>();
     private readonly prevKeys = new Set<string>();
 
     private readonly screenPointer = MutVec2.zero();
@@ -33,30 +34,41 @@ export class InputManager implements IInput {
 
     public updateEndFrame(): void {
         this.prevKeys.clear();
-        for (const k of this.codes) this.prevKeys.add(k);
+        for (const k of this.press.keys()) this.prevKeys.add(k);
     }
 
     public isDown(binding: InputBinding): boolean {
-        return binding.get().some(v => this.codes.has(v.code));
+        for (const s of binding.get()) {
+            const mod = this.press.get(s.code);
+            if (mod !== s.modifiers) continue;
+            return true;
+        }
+        return false;
     }
 
     public isKeyDown(code: string): boolean {
-        return this.codes.has(code);
+        return this.press.has(code);
     }
 
     public wasPressed(binding: InputBinding): boolean {
-        return binding.get().some(v => this.codes.has(v.code) && !this.prevKeys.has(v.code));
+        for (const s of binding.get()) {
+            const mod = this.press.get(s.code);
+            if (mod !== s.modifiers || this.prevKeys.has(s.code)) continue;
+            return true;
+        }
+        return false;
     }
 
     public wasKeyPressed(code: string): boolean {
-        return this.codes.has(code) && !this.prevKeys.has(code);
+        return this.press.has(code) && !this.prevKeys.has(code);
     }
 
     public getPressedSlot(binding: InputBinding): number {
         const strokes = binding.get();
         for (let i = 0; i < strokes.length; i++) {
-            const code = strokes[i].code;
-            if (this.codes.has(code) && !this.prevKeys.has(code)) return i;
+            const s = strokes[i];
+            const mod = this.press.get(s.code);
+            if (mod === s.modifiers && !this.prevKeys.has(s.code)) return i;
         }
 
         return -1;
@@ -85,11 +97,11 @@ export class InputManager implements IInput {
             }
 
             if (event.repeat || this.globalInput) return;
-            this.codes.add(code);
+            this.press.set(code, fromEvent(event));
             this.handler.onKeyPress(this, event);
         });
-        window.addEventListener('keyup', e => this.codes.delete(e.code));
-        window.addEventListener('blur', () => this.codes.clear());
+        window.addEventListener('keyup', e => this.press.delete(e.code));
+        window.addEventListener('blur', () => this.press.clear());
     }
 
     private registerMouseListener(target: HTMLElement): void {
@@ -98,11 +110,11 @@ export class InputManager implements IInput {
             this.handler.onMouseMove(event);
         }, {passive: true});
         target.addEventListener('mousedown', event => {
-            this.codes.add(mapMouse(event.button));
+            this.press.set(mapMouse(event.button), fromEvent(event));
             this.handler.onMouseDown(this, event);
         });
         window.addEventListener('mouseup', event => {
-            this.codes.delete(mapMouse(event.button));
+            this.press.delete(mapMouse(event.button));
             this.handler.onMouseUp(event.button, event);
         });
     }

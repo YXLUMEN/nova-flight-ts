@@ -38,7 +38,6 @@ export abstract class PlayerEntity extends LivingEntity {
     public wasFiring: boolean = false;
     protected invulnerableTime = 0;
 
-    private score: number = 0;
     private isDev = false;
     private usedDev = false;
 
@@ -293,7 +292,7 @@ export abstract class PlayerEntity extends LivingEntity {
 
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
-        nbt.setUint32('score', this.score);
+        nbt.setUint32('score', this.getScore());
         nbt.setBoolean('dev_mode', this.isDevMode());
         nbt.setBoolean('used_be_dev', this.isUsedBeDev());
 
