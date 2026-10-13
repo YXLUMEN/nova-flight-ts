@@ -5,7 +5,7 @@ import type {ClientChannel} from "./network/ClientChannel.ts";
 import type {LocalPlayerEntity} from "./entity/LocalPlayerEntity.ts";
 import type {ServerWorker} from "../worker/ServerWorker.ts";
 import {error, warn} from "@tauri-apps/plugin-log";
-import {invoke} from "@tauri-apps/api/core";
+import {stopLanAnnounce} from "./ipc/lan_discovery.ts";
 import {empty, sleep, timeout} from "../utils/uit.ts";
 import {InputManager} from "./input/InputManager.ts";
 import {ClientWindow} from "./render/ClientWindow.ts";
@@ -39,6 +39,7 @@ import {RacePromise} from "../utils/RacePromise.ts";
 import {GuiLayer} from "./render/ui/GuiLayer.ts";
 import {StartScreen} from "./page/compound/StartScreen.ts";
 import {FakeChannel} from "./network/FakeChannel.ts";
+import {stopServer} from "./ipc/integrated_server.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -139,8 +140,8 @@ export class NovaFlightClient {
 
             // cleanup
             if (this.isIntegrated) {
-                await invoke('stop_server');
-                await invoke('stop_lan_announce');
+                await stopServer();
+                await stopLanAnnounce();
             }
             this.layer.destroyScreen();
             this.window.resize();
@@ -208,7 +209,7 @@ export class NovaFlightClient {
 
             if (step >= maxStep && this.accumulator >= perTick) {
                 const dropped = this.accumulator - (this.accumulator % perTick);
-                void warn(`[Client] Dropped ${dropped.toFixed(1)}ms`);
+                void warn(`[Client] Dropped ${dropped.toFixed(1)}s`);
                 this.accumulator %= perTick;
             }
 
@@ -295,6 +296,12 @@ export class NovaFlightClient {
         });
     }
 
+    // 下一帧停止世界,未进入世界则无效
+    public requireStop(): void {
+        this.playing = false;
+    }
+
+    // 展示退出消息并关闭世界
     public leaveGame(): void {
         this.layer.showNotice(TranslatableText.of('start.leave'));
         this.stopWorld();
@@ -304,7 +311,7 @@ export class NovaFlightClient {
         this.layer.showNotice(message, TranslatableText.of('start.confirm'), this.stopWorld);
     }
 
-    public async joinGame(world: ClientWorld) {
+    public async joinGame(world: ClientWorld): Promise<void> {
         if (this.layer.hasNotice()) {
             this.layer.showNotice(TranslatableText.of('start.join_game'), null, empty);
         }

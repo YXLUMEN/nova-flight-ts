@@ -50,9 +50,7 @@ export class PlayerEntityRender extends CachedEntityRender<number, PlayerEntity>
     }
 
     protected drawOverlay(ctx: CanvasRenderingContext2D) {
-        if (!this.flame) {
-            this.flame = buildSprite(new AABB(-8, -6, 0, 6), this.buildFlame);
-        }
+        this.flame ??= buildSprite(new AABB(-8, -6, 0, 6), this.buildFlame);
 
         const len = 8 + Math.random() * 6;
         ctx.drawImage(this.flame, -16 - len, -6, len, 12);

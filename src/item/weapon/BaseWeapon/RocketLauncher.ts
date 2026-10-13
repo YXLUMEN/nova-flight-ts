@@ -16,7 +16,14 @@ import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity
 import {isClient, isServer} from "../../../configs/RuntimeConfig.ts";
 
 export class RocketLauncher extends BaseWeapon {
-    private static readonly BULLET_SPEED: number = 15;
+    private readonly bulletSpeed: number = 15;
+    private readonly specialRate = 0.3;
+    private readonly specialTable: RandomTable[] = [
+        {cls: EMPRocketEntity, weight: 1, args: [1]},      // 10%
+        {cls: BurstRocketEntity, weight: 2, args: [4]},      // 20%
+        {cls: APRocketEntity, weight: 1, args: []},       // 10%
+        {cls: ClusterRocketEntity, weight: 2, args: [8, 40]}, // 20%
+    ];
 
     public override tryFire(stack: ItemStack, world: World, attacker: Entity) {
         this.onFire(stack, world, attacker);
@@ -57,7 +64,7 @@ export class RocketLauncher extends BaseWeapon {
                 rocket.explosionRadius = stack.getOr(DataComponents.EXPLOSION_RADIUS, 72);
             }
 
-            this.setBullet(rocket, attacker, RocketLauncher.BULLET_SPEED, 4, 2);
+            this.setBullet(rocket, attacker, this.bulletSpeed, 4, 2);
             (world as ServerWorld).spawnEntity(rocket);
             const yaw = attacker.getYaw();
             attacker.updateVelocity(-0.6, Math.cos(yaw), Math.sin(yaw));
@@ -71,7 +78,7 @@ export class RocketLauncher extends BaseWeapon {
     }
 
     public override getBallisticSpeed(): number {
-        return RocketLauncher.BULLET_SPEED;
+        return this.bulletSpeed;
     }
 
     public override getMaxSpread(): number {
@@ -87,16 +94,19 @@ export class RocketLauncher extends BaseWeapon {
     }
 
     private randomRocket(world: World, attacker: Entity): RocketEntity | null {
-        const rnd = Math.random();
-        if (rnd < 0.1) {
-            return new EMPRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker, 1);
-        } else if (rnd < 0.3) {
-            return new BurstRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker, 4);
-        } else if (rnd < 0.4) {
-            return new APRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker);
-        } else if (rnd < 0.6) {
-            return new ClusterRocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker, 8, 40);
+        if (Math.random() >= this.specialRate) return null;
+
+        const total = this.specialTable.reduce((s, e) => s + e.weight, 0);
+        let r = Math.random() * total;
+        for (const entry of this.specialTable) {
+            r -= entry.weight;
+            if (r > 0) continue;
+
+            const Ctor = entry.cls;
+            return new Ctor(EntityTypes.ROCKET_ENTITY, world, attacker, ...entry.args);
         }
         return null;
     }
 }
+
+type RandomTable = { cls: typeof RocketEntity; weight: number; args: number[] };

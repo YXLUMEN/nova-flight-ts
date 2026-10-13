@@ -5,6 +5,7 @@ import {World} from "../../world/World.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 import {Emp} from "../../world/element/Emp.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
 
 export class CloudLightningEntity extends ProjectileEntity {
     private readonly radius;
@@ -17,7 +18,7 @@ export class CloudLightningEntity extends ProjectileEntity {
     protected onEntityHit(hitResult: EntityHitResult): void {
         super.onEntityHit(hitResult);
 
-        if (this.isClient()) return;
+        if (isClient) return;
 
         const damage = this.getHitDamage();
         hitResult.entity.takeDamage(
@@ -29,8 +30,8 @@ export class CloudLightningEntity extends ProjectileEntity {
             this.getOwner(),
             this.positionRef,
             this.radius,
-            30,
-            Math.max((damage * 0.4) | 0, 1)
+            75,
+            Math.max(Math.floor(damage * 0.8), 1)
         ));
     }
 
@@ -44,7 +45,7 @@ export class CloudLightningEntity extends ProjectileEntity {
             hitResult.pos,
             this.radius,
             30,
-            Math.max(this.getHitDamage() * 0.4, 1) | 0
+            Math.max(Math.floor(this.getHitDamage() * 0.8), 1)
         ));
     }
 }

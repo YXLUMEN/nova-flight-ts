@@ -537,7 +537,6 @@
     "name": "tech.name.nova-flight.energy_recovery",
     "x": -4,
     "y": 9,
-    "branchGroup": "apex_upgrade",
     "desc": "tech.desc.nova-flight.energy_recovery",
     "cost": 640,
     "requires": [
@@ -564,6 +563,18 @@
     "cost": 120,
     "requires": [
       "corona_discharge"
+    ]
+  },
+  {
+    "id": "electric_charge",
+    "name": "tech.name.nova-flight.electric_charge",
+    "x": -3,
+    "y": 10,
+    "branchGroup": "apex_upgrade",
+    "desc": "tech.desc.nova-flight.electric_charge",
+    "cost": 480,
+    "requires": [
+      "static_electricity"
     ]
   },
   {

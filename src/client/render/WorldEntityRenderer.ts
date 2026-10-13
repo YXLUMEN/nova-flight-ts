@@ -19,10 +19,7 @@ export class WorldEntityRenderer {
     public renderMainPlayer(ctx: CanvasRenderingContext2D, world: ClientWorld, player: LocalPlayerEntity, alpha: number) {
         if (world.isOver()) return
 
-        if (player.renderer === null) {
-            player.renderer = EntityRenderers.getRenderer(player);
-        }
-
+        player.renderer ??= EntityRenderers.getRenderer(player);
         player.renderer.render(player, ctx, alpha);
         player.bc?.drawAimIndicator(ctx, alpha);
 
@@ -62,9 +59,7 @@ export class WorldEntityRenderer {
             const bound = player.getBoundingBox();
             if (!isBoxInView(bound, viewRect)) continue;
 
-            if (player.renderer === null) {
-                player.renderer = EntityRenderers.getRenderer(player);
-            }
+            player.renderer ??= EntityRenderers.getRenderer(player);
             player.renderer.render(player, ctx, alpha);
         }
     }
@@ -73,9 +68,7 @@ export class WorldEntityRenderer {
         for (const entity of world.getEntities().values()) {
             if (!entity.shouldRender(viewRect)) continue;
 
-            if (entity.renderer === null) {
-                entity.renderer = EntityRenderers.getRenderer(entity);
-            }
+            entity.renderer ??= EntityRenderers.getRenderer(entity);
             entity.renderer.render(entity, ctx, alpha);
         }
     }

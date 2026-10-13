@@ -2,9 +2,10 @@ import type {Consumer, UUID} from "../../type/types.ts";
 import type {PlayerData, SaveMeta} from "../../type/Saves.ts";
 import {error, warn} from "@tauri-apps/plugin-log";
 import {confirm, message} from "@tauri-apps/plugin-dialog";
-import {invoke} from "@tauri-apps/api/core";
 import {join, resolveResource} from "@tauri-apps/api/path";
 import {exists, mkdir, readFile, readTextFile, writeFile, writeTextFile} from "@tauri-apps/plugin-fs";
+import {empty} from "../../utils/uit.ts";
+import {choseDir} from "../ipc/integrated_server.ts";
 import {toLocalTime} from "../../utils/time.ts";
 import {isValidUUID} from "../../utils/UUIDUtil.ts";
 import {assert, bindFrom, closest, closestHTML, dataAction} from "../../utils/dom_util.ts";
@@ -16,7 +17,6 @@ import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {PlayerDataStorage} from "../../server/storage/PlayerDataStorage.ts";
 import {PageSection} from "../page/PageSection.ts";
 import {ArchiveInputBox} from "./ArchiveInputBox.ts";
-import {empty} from "../../utils/uit.ts";
 
 export class ClientSavesManager extends PageSection {
     private static readonly RESERVED_NAMES = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'];
@@ -398,7 +398,7 @@ export class ClientSavesManager extends PageSection {
     private async importSave() {
         let results: ChosenDirResult | undefined;
         try {
-            results = await invoke('chose_dir');
+            results = await choseDir();
         } catch (err) {
             console.error(err);
             await message('未能读取目录,尝试将存档移动至"安装目录/saves"', {kind: 'error'});

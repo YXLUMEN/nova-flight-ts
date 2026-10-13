@@ -73,6 +73,7 @@ export class Techs {
 
     public static CORONA_DISCHARGE: RegistryEntry<Tech>;
     public static STATIC_ELECTRICITY: RegistryEntry<Tech>;
+    public static ELECTRIC_CHARGE: RegistryEntry<Tech>;
 
     public static VOID_ENGIN: RegistryEntry<Tech>;
     public static VOID_DISTURBANCE: RegistryEntry<Tech>;
@@ -191,6 +192,7 @@ export class Techs {
         this.PERDITION_BEAM = fromJson('perdition_beam');
         this.CORONA_DISCHARGE = fromJson('corona_discharge');
         this.STATIC_ELECTRICITY = fromJson('static_electricity');
+        this.ELECTRIC_CHARGE = fromJson('electric_charge');
         this.ION_DISRUPTOR = fromJson('ion_disruptor');
 
         Registries.TECH.getEntries().forEach(entry => entry.getValue().complete());

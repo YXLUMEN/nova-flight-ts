@@ -137,7 +137,7 @@ export abstract class NovaFlightServer implements CommandOutput {
 
             if (step >= maxStep && this.accumulator >= perTick) {
                 const dropped = this.accumulator - (this.accumulator % perTick);
-                Log.warn(`[Server] Dropped ${dropped.toFixed(1)}ms`);
+                Log.warn(`[Server] Dropped ${dropped.toFixed(1)}s`);
                 this.accumulator %= perTick;
                 // 通知客户端发生了时间跳跃
             }

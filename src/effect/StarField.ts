@@ -16,8 +16,8 @@ export class StarField {
     private readonly layers: ReadonlyArray<StarLayer>;
     private readonly margin: number;
 
-    private readonly start: Uint32Array;
-    private readonly end: Uint32Array;
+    private readonly start: Uint16Array;
+    private readonly end: Uint16Array;
     private readonly lastCamPos = MutVec2.zero();
 
     public constructor(totalCount: number, layers: ReadonlyArray<StarLayer>, margin: number = 0) {
@@ -34,8 +34,8 @@ export class StarField {
         this.speed = new Float32Array(this.count);
 
         // 计算每层的连续段范围
-        this.start = new Uint32Array(layers.length);
-        this.end = new Uint32Array(layers.length);
+        this.start = new Uint16Array(layers.length);
+        this.end = new Uint16Array(layers.length);
         let offset = 0;
         for (let li = 0; li < layers.length; li++) {
             this.start[li] = offset;
@@ -94,7 +94,7 @@ export class StarField {
     public render(ctx: CanvasRenderingContext2D, cam: Camera, alpha: number) {
         const base = cam.cameraOffset;
         const view = cam.lastViewOffset;
-        const vr = cam.viewRect;
+        const {left, right, top, bottom} = cam.viewRect;
         const m = this.margin, maxR = 2.5;
 
         ctx.save();
@@ -111,19 +111,27 @@ export class StarField {
             ctx.save();
             ctx.translate(-ox, -oy);
 
-            for (let i = this.start[li]; i < this.end[li]; i++) {
-                const px = lerp(alpha, this.currX[i], this.currX[i] + sx);
-                const py = lerp(alpha, this.currY[i] - this.speed[i] * this.prevDt, this.currY[i] + sy);
-                if (px < vr.left - m - maxR || px > vr.right + m + maxR ||
-                    py < vr.top - m - maxR || py > vr.bottom + m + maxR) continue;
+            for (let i = this.start[li], j = this.end[li]; i < j; i++) {
+                const x = this.currX[i];
+                const y = this.currY[i];
+
+                const px = lerp(alpha, x, x + sx);
+                const py = lerp(alpha, y - this.speed[i] * this.prevDt, y + sy);
+
+                if (px < left - m - maxR ||
+                    px > right + m + maxR ||
+                    py < top - m - maxR ||
+                    y > bottom + m + maxR
+                ) continue;
 
                 // 小星用 fillRect
-                if (this.radius[i] <= 1) {
+                const r = this.radius[i];
+                if (r <= 1) {
                     ctx.rect(px, py, 1, 1);
-                } else {
-                    ctx.moveTo(px + this.radius[i], py);
-                    ctx.arc(px, py, this.radius[i], 0, TAU);
+                    continue;
                 }
+                ctx.moveTo(px + r, py);
+                ctx.arc(px, py, r, 0, TAU);
             }
             ctx.restore();
         }

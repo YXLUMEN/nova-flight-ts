@@ -8,6 +8,7 @@ import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 import {ExplosionVisual} from "../../world/element/explosion/ExplosionVisual.ts";
 import {ExplosionConfigs} from "../../world/element/explosion/ExplosionConfigs.ts";
 import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
+import {rand} from "../../utils/math/math.ts";
 
 export class ExplodeBulletEntity extends ProjectileEntity {
     private readonly power: number;
@@ -37,8 +38,8 @@ export class ExplodeBulletEntity extends ProjectileEntity {
 
         const yaw = this.getYaw();
         const height = this.getHeight();
-        const offsetX = -Math.cos(yaw) * height;
-        const offsetY = -Math.sin(yaw) * height;
+        const offsetX = -Math.cos(yaw) * height + rand(-5, 5);
+        const offsetY = -Math.sin(yaw) * height + rand(-5, 5);
 
         world.addPreparedParticle(
             ParticleEffects.EMBER,

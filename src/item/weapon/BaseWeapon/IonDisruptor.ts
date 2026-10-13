@@ -29,12 +29,14 @@ export class IonDisruptor extends LaserPulseItem {
         const damageSource = world.getDamageSources()
             .laser(attacker)
             .setShieldMulti(1.6)
-            .setHealthMulti(0.7);
-        target.takeDamage(damageSource, damage);
+            .setHealthMulti(0.5);
 
-        const effect = target.getStatusEffect(StatusEffects.WEAKNESS);
-        const amplifier = effect ? Math.min(effect.amplifier() + 1, 4) : 0;
-        target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 100, amplifier), attacker);
+        if (target.getShieldAmount() === 0) {
+            const effect = target.getStatusEffect(StatusEffects.WEAKNESS);
+            const amplifier = effect ? Math.min(effect.amplifier() + 1, 4) : 0;
+            target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 100, amplifier), attacker);
+        }
+        target.takeDamage(damageSource, damage);
     }
 
     public override getUiColor(): string {

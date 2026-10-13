@@ -215,16 +215,28 @@ export abstract class LivingEntity extends Entity {
     }
 
     protected modifyAppliedDamage(source: DamageSource, damage: number): number {
-        if (source.isIn(DamageTypeTags.BYPASSES_EFFECTS)) {
-            return damage;
+        // 增伤
+        const attacker = source.getAttacker();
+        if (attacker instanceof PlayerEntity) {
+            if (source.isOfs(DamageTypes.MOB_PROJECTILE, DamageTypes.KINETIC, DamageTypes.PLAYER_ATTACK) &&
+                attacker.getTechs().isUnlocked(Techs.ANTIMATTER_WARHEAD)) {
+                damage += Math.floor(this.getHealth() * 0.08);
+            }
+
+            if (source.isOf(DamageTypes.ARC) && attacker.getTechs().isUnlocked(Techs.ELECTRIC_CHARGE)) {
+                const effect = this.getStatusEffect(StatusEffects.ELECTRIC_CHARGE);
+                const amplifier = effect ? Math.min(effect.amplifier() + 1, 6) : 0;
+                this.addStatusEffect(new StatusEffectInstance(StatusEffects.ELECTRIC_CHARGE, 100, amplifier), attacker);
+
+                damage += Math.floor(this.getMaxHealth() * 0.01 * amplifier);
+                if (amplifier >= 6) {
+                    this.removeEffect(StatusEffects.ELECTRIC_CHARGE);
+                }
+            }
         }
 
-        const attacker = source.getAttacker();
-        if (attacker instanceof PlayerEntity &&
-            source.isOfs(DamageTypes.MOB_PROJECTILE, DamageTypes.KINETIC, DamageTypes.PLAYER_ATTACK) &&
-            attacker.getTechs().isUnlocked(Techs.ANTIMATTER_WARHEAD)
-        ) {
-            damage += Math.floor(this.getHealth() * 0.08);
+        if (source.isIn(DamageTypeTags.BYPASSES_EFFECTS)) {
+            return damage;
         }
 
         if (this.hasStatusEffect(StatusEffects.RESISTANCE) && !source.isIn(DamageTypeTags.BYPASSES_RESISTANCE)) {

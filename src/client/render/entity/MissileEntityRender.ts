@@ -39,9 +39,7 @@ export class MissileEntityRender extends CachedEntityRender<number, MissileEntit
     protected drawOverlay(ctx: CanvasRenderingContext2D, entity: MissileEntity) {
         if (!entity.isIgnite()) return;
 
-        if (!this.flame) {
-            this.flame = buildSprite(this.flameBounding, this.buildFlame);
-        }
+        this.flame ??= buildSprite(this.flameBounding, this.buildFlame);
 
         const len = 4 + Math.random() * 4;
         ctx.drawImage(this.flame, -6 - len, -3, len, 6);

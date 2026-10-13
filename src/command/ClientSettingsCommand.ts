@@ -1,15 +1,16 @@
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
+import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
+import {error} from "@tauri-apps/plugin-log";
+import {stopServer} from "../client/ipc/integrated_server.ts";
+import {isOpened, openOnLan} from "../client/ipc/lan_discovery.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import {RuntimeConfig} from "../configs/RuntimeConfig.ts";
-import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
-import {invoke} from "@tauri-apps/api/core";
 import {CommandError, IllegalArgumentError} from "../type/errors.ts";
 import {IntArgumentType} from "./argument/IntArgumentType.ts";
 import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
 import {ServerStorage} from "../server/storage/ServerStorage.ts";
 import {NovaFlightClient} from "../client/NovaFlightClient.ts";
 import {BoolArgumentType} from "./argument/BoolArgumentType.ts";
-import {error} from "@tauri-apps/plugin-log";
 import {Settings} from "../client/settings/Settings.ts";
 
 export class ClientSettingsCommand {
@@ -71,12 +72,12 @@ export class ClientSettingsCommand {
                                                 throw new IllegalArgumentError(`\x1b[31mUnexpected value: ${bl} \x1b[0m`);
                                             }
 
-                                            const success: boolean = await invoke('set_open', {bl});
+                                            const success: boolean = await openOnLan(bl);
                                             if (!success) {
                                                 throw new CommandError(bl ? '\x1b[31mCannot open on LAN' : '\x1b[31mCannot close port');
                                             }
 
-                                            NovaFlightClient.instance().leaveGame();
+                                            NovaFlightClient.instance().requireStop();
 
                                             RuntimeConfig.generalMode = bl;
                                             ctx.source.addMessage(bl ? 'Now is open on LAN' : 'Close port');
@@ -141,7 +142,7 @@ export class ClientSettingsCommand {
                         .then(
                             literal<T>('open')
                                 .executes(async ctx => {
-                                    const isOpen = await invoke('is_open');
+                                    const isOpen = await isOpened();
                                     let message = isOpen ?
                                         `World is open on \x1b[32m"${RuntimeConfig.port}"` :
                                         `No open on web`;
@@ -172,14 +173,14 @@ export class ClientSettingsCommand {
                         .then(
                             literal<T>('stop_game')
                                 .executes(ctx => {
-                                    ctx.source.getClient().leaveGame();
+                                    ctx.source.getClient().requireStop();
                                     ctx.source.addMessage('Schedule to stop the game');
                                 })
                         )
                         .then(
                             literal<T>('shut_relay')
                                 .executes(async (ctx) => {
-                                    const result = await invoke<boolean>('stop_server');
+                                    const result = await stopServer();
                                     ctx.source.addMessage(result ? 'Stopping server' : 'Server not running');
                                 })
                         )

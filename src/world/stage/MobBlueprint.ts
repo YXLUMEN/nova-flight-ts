@@ -104,7 +104,7 @@ export class MobBlueprint {
 
         if (ctx.difficulty > 8 && ctx.rng() > 0.9 && !(mob instanceof TankEnemy)) {
             mob.addStatusEffect(
-                new StatusEffectInstance(StatusEffects.RESISTANCE, 800, Math.min(7, ctx.difficulty)),
+                new StatusEffectInstance(StatusEffects.RESISTANCE, 800, Math.min(5, ctx.difficulty - 5)),
                 null,
             );
         }

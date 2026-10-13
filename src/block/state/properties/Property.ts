@@ -39,11 +39,7 @@ export abstract class Property<T> implements Comparable {
     }
 
     public hashCode(): number {
-        if (this.cacheHash === null) {
-            this.cacheHash = this.generateHashCode();
-        }
-
-        return this.cacheHash;
+        return this.cacheHash ??= this.generateHashCode();
     }
 
     public generateHashCode(): number {

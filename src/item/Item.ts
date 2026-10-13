@@ -57,11 +57,7 @@ export class Item {
     }
 
     public getName(): TranslatableText {
-        if (this.translation === null) {
-            this.translation = TranslatableText.of(createTranslationKey('item', Registries.ITEM.getId(this)));
-        }
-
-        return this.translation;
+        return this.translation ??= TranslatableText.of(createTranslationKey('item', Registries.ITEM.getId(this)));
     }
 
     public toString() {

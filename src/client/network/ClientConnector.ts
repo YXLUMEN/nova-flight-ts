@@ -1,8 +1,9 @@
 import type {StartServer} from "../../type/startup.ts";
 import type {ConnectionContext} from "./ConnectionContext.ts";
 import type {FullscreenNotice} from "../page/compound/FullscreenNotice.ts";
-import {invoke} from "@tauri-apps/api/core";
 import {error} from "@tauri-apps/plugin-log";
+import {startLanAnnounce, stopLanAnnounce} from "../ipc/lan_discovery.ts";
+import {startServer, stopServer} from "../ipc/integrated_server.ts";
 import {sleep} from "../../utils/uit.ts";
 import {ClientNetworkChannel} from "./ClientNetworkChannel.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
@@ -112,14 +113,8 @@ export class ClientConnector {
 
         let key: ArrayBuffer;
         try {
-            await invoke('stop_server');
-            const obj = await invoke('start_server', {port: RuntimeConfig.port});
-
-            if (!Array.isArray(obj)) {
-                // noinspection ExceptionCaughtLocallyJS
-                throw new TypeError("Key must be an number array");
-            }
-            key = new Uint8Array(obj).buffer;
+            await stopServer();
+            key = await startServer(RuntimeConfig.port);
         } catch (err) {
             console.error(err);
 
@@ -133,14 +128,14 @@ export class ClientConnector {
         }
 
         try {
-            await invoke('start_lan_announce', {
-                port: RuntimeConfig.port,
-                name: `${client.playerName}'s game`,
-                gameVersion: DEFAULT_CONFIG.gameVersion
-            });
+            await startLanAnnounce(
+                RuntimeConfig.port,
+                `${client.playerName}'s game`,
+                DEFAULT_CONFIG.gameVersion,
+            );
         } catch (err) {
             await error(this.mapErr(err));
-            await invoke('stop_lan_announce');
+            await stopLanAnnounce();
         }
 
         await sleep(300);

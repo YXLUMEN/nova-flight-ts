@@ -5,7 +5,6 @@ import type {IInput} from "./IInput.ts";
 export interface InputEvents {
     onKeyPress: BiConsumer<IInput, KeyboardEvent>;
     onMouseDown: BiConsumer<IInput, MouseEvent>;
-    onMouseUp: BiConsumer<number, MouseEvent>;
     onMouseMove: Consumer<MouseEvent>;
     onWheel: Consumer<WheelEvent>;
 }
@@ -16,8 +15,6 @@ export const EMPTY_INPUT: InputEvents = config({
     onMouseMove: () => {
     },
     onMouseDown: () => {
-    },
-    onMouseUp: () => {
     },
     onWheel: () => {
     }

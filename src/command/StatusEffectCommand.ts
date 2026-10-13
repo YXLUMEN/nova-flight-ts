@@ -1,12 +1,13 @@
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
+import type {UUID} from "../type/types.ts";
+import type {CommandContext} from "../brigadier/context/CommandContext.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import {CommandError, IllegalArgumentError} from "../type/errors.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {Registries} from "../registry/Registries.ts";
 import {LivingEntity} from "../entity/LivingEntity.ts";
 import {StatusEffectInstance} from "../entity/effect/StatusEffectInstance.ts";
-import type {CommandContext} from "../brigadier/context/CommandContext.ts";
 import {EntitySelectorArgumentType} from "./argument/EntitySelectorArgumentType.ts";
 import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
 import {IntArgumentType} from "./argument/IntArgumentType.ts";
@@ -138,11 +139,20 @@ export class StatusEffectCommand {
             throw new CommandError(`\x1b[33mEffect not found with id ${effectIdResult.result}`);
         }
 
+        let count = 0;
+        let firstUUID: UUID | undefined;
         for (const entity of entities) {
-            if (entity instanceof LivingEntity) {
-                entity.removeEffect(effect);
-                ctx.source.outPut.sendMessage(`Remove effect ${effectIdResult.result} on \x1b[32m${entity.getUUID()}`);
-            }
+            if (!(entity instanceof LivingEntity)) continue;
+            entity.removeEffect(effect);
+
+            if (!firstUUID) firstUUID = entity.getUUID();
+            count++;
         }
+
+        if (count > 1) {
+            ctx.source.outPut.sendMessage(`Remove effect ${effectIdResult.result} on "\x1b[32m${count}\x1b[0m" entities.`);
+            return;
+        }
+        ctx.source.outPut.sendMessage(`Remove effect ${effectIdResult.result} on \x1b[32m${firstUUID ?? 'unknown'}`);
     }
 }

@@ -99,6 +99,8 @@
   "desc.nova-flight.corona_discharge": "电弧武器的伤害范围\u001B[32m +20% \u001B[0m",
   "name.nova-flight.static_electricity": "静电",
   "desc.nova-flight.static_electricity": "电弧武器命中的目标会遭受电磁干扰",
+  "name.nova-flight.electric_charge": "电荷积累",
+  "desc.nova-flight.electric_charge": "命中敌舰的电弧将在其船体结构中积累电荷并带来额外伤害",
   "name.nova-flight.void_engin": "虚空引擎",
   "desc.nova-flight.void_engin": "解锁 \"遁入虚空\", 在对暗影族的战斗中从对方缴获的幽灵战机的技术, 通过小黑洞压缩空间实现你和其他飞机不在一个“维度”上",
   "name.nova-flight.void_disturbance": "虚空扰动",

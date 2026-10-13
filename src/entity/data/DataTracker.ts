@@ -99,8 +99,7 @@ export class DataTracker {
 
         for (const entry of this.entries) {
             if (entry.isUnchanged()) continue;
-            if (list === null) list = [];
-
+            list ??= [];
             list.push(entry.toSerialized());
         }
 

@@ -13,7 +13,6 @@ import {RocketEntityRender} from "./RocketEntityRender.ts";
 import {SpawnMarkerEntityRender} from "./SpawnMarkerEntityRender.ts";
 import {DecoyEntityRender} from "./DecoyEntityRender.ts";
 import {MissileEnemyEntityRender} from "./MissileEnemyEntityRender.ts";
-import {deepFreeze} from "../../../utils/uit.ts";
 import {CIWSBulletEntityRender} from "./CIWSBulletEntityRender.ts";
 import {ADSEntityRender} from "./ADSEntityRender.ts";
 import {FastBulletEntityRender} from "./FastBulletEntityRender.ts";
@@ -76,7 +75,6 @@ export class EntityRenderers {
         this.register(EntityTypes.TRAILBLAZER_ENTITY, new TrailblazerEntityRender());
         this.register(EntityTypes.SMOKE_BOMB, bullet);
         this.register(EntityTypes.BLAST_BULLET, fastBullet);
-        deepFreeze(this);
     }
 
     private static register<T extends Entity>(type: EntityType<T>, renderer: EntityRenderer<T>): void {

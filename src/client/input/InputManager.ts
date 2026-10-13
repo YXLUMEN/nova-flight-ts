@@ -24,14 +24,6 @@ export class InputManager implements IInput {
         this.registerWheelListener();
     }
 
-    public getWorldPointer(): MutVec2 {
-        return this.worldPointer;
-    }
-
-    public getScreenPointer(): MutVec2 {
-        return this.screenPointer;
-    }
-
     public updateEndFrame(): void {
         this.prevKeys.clear();
         for (const k of this.press.keys()) this.prevKeys.add(k);
@@ -46,10 +38,6 @@ export class InputManager implements IInput {
         return false;
     }
 
-    public isKeyDown(code: string): boolean {
-        return this.press.has(code);
-    }
-
     public wasPressed(binding: InputBinding): boolean {
         for (const s of binding.get()) {
             const mod = this.press.get(s.code);
@@ -57,10 +45,6 @@ export class InputManager implements IInput {
             return true;
         }
         return false;
-    }
-
-    public wasKeyPressed(code: string): boolean {
-        return this.press.has(code) && !this.prevKeys.has(code);
     }
 
     public getPressedSlot(binding: InputBinding): number {
@@ -74,6 +58,15 @@ export class InputManager implements IInput {
         return -1;
     }
 
+    // pure key
+    public isKeyDown(code: string): boolean {
+        return this.press.has(code);
+    }
+
+    public wasKeyPressed(code: string): boolean {
+        return this.press.has(code) && !this.prevKeys.has(code);
+    }
+
     public requireInput(): Consumer<void> {
         this.globalInput++;
         let released = false;
@@ -82,6 +75,14 @@ export class InputManager implements IInput {
             released = true;
             this.globalInput--;
         };
+    }
+
+    public getWorldPointer(): MutVec2 {
+        return this.worldPointer;
+    }
+
+    public getScreenPointer(): MutVec2 {
+        return this.screenPointer;
     }
 
     public setHandler(handler: InputEvents): void {
@@ -115,7 +116,6 @@ export class InputManager implements IInput {
         });
         window.addEventListener('mouseup', event => {
             this.press.delete(mapMouse(event.button));
-            this.handler.onMouseUp(event.button, event);
         });
     }
 

@@ -73,6 +73,10 @@ export class PerditionBeam extends PhaseLasers {
             return;
         }
 
+        if (isClient && this.getActive(stack)) {
+            (world as ClientWorld).getClient().window.camera.addShake(0.1, 0.2);
+        }
+
         super.inventoryTick(stack, world, holder);
     }
 

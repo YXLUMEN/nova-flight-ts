@@ -48,10 +48,10 @@ export class ArcEmitter extends BaseWeapon {
         const maxTarget = Math.min(6, candidates.length);
 
         for (let i = 0; i < maxTarget; i++) {
-            const mob = candidates[i].entity;
-            const mobPos = mob.positionRef;
+            const entity = candidates[i].entity;
+            const mobPos = entity.positionRef;
 
-            mob.takeDamage(damageSource, damage);
+            entity.takeDamage(damageSource, damage);
             world.spawnVisual(null, new ArcEffect(
                 x, y,
                 mobPos.x, mobPos.y,

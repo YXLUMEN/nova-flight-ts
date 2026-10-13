@@ -31,6 +31,7 @@ export class WorldRenderer {
     private clearCacheTimer: number | undefined = undefined;
 
     private disableRender = 0;
+    private bypassDisable = false;
 
     public constructor(client: NovaFlightClient) {
         this.client = client;
@@ -41,6 +42,14 @@ export class WorldRenderer {
         this.particlePool = new ParticlePool(1024);
         this.starField = new StarField(128, defaultLayers, 8);
         this.starField.init();
+
+        this.window.onResize(() => {
+            if (this.disableRender === 0) return;
+            this.bypassDisable = true;
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => this.bypassDisable = false);
+            });
+        });
     }
 
     public disable(): Consumer<void> {
@@ -126,7 +135,7 @@ export class WorldRenderer {
     }
 
     public render(alpha: number) {
-        if (this.disableRender > 0) return;
+        if (!this.bypassDisable && this.disableRender > 0) return;
 
         const ctx = this.window.ctx;
         ctx.clearRect(0, 0, ClientWindow.viewWidth, ClientWindow.viewHeight);

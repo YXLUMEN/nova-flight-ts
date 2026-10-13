@@ -13,67 +13,71 @@ import {MeltdownEffect} from "./MeltdownEffect.ts";
 import {ShieldRegenStatusEffect} from "./ShieldRegenStatusEffect.ts";
 
 export class StatusEffects {
-    public static readonly SPEED = this.register("speed",
+    public static readonly SPEED = this.register('speed',
         new StatusEffect(StatusEffectCategory.BENEFICIAL, '#73c4ff')
             .addAttributeModifier(
-                EntityAttributes.GENERIC_MOVEMENT_SPEED, Identifier.ofVanilla("effect.speed"), 0.2)
+                EntityAttributes.GENERIC_MOVEMENT_SPEED, Identifier.ofVanilla('effect.speed'), 0.2)
     );
 
-    public static readonly SLOWNESS = this.register("slowness",
+    public static readonly SLOWNESS = this.register('slowness',
         new StatusEffect(StatusEffectCategory.HARMFUL, '#555555')
-            .addAttributeModifier(EntityAttributes.GENERIC_MOVEMENT_SPEED, Identifier.ofVanilla("effect.slowness"), -0.2)
+            .addAttributeModifier(EntityAttributes.GENERIC_MOVEMENT_SPEED, Identifier.ofVanilla('effect.slowness'), -0.2)
     );
 
-    public static readonly EMC_STATUS = this.register("emc_status",
+    public static readonly EMC_STATUS = this.register('emc_status',
         new EMCStatus()
-            .addAttributeModifier(EntityAttributes.GENERIC_MOVEMENT_SPEED, Identifier.ofVanilla("effect.emc_status"), -0.8)
+            .addAttributeModifier(EntityAttributes.GENERIC_MOVEMENT_SPEED, Identifier.ofVanilla('effect.emc_status'), -0.8)
     );
 
-    public static readonly EROSION = this.register("erosion",
+    public static readonly EROSION = this.register('erosion',
         new ErosionEffect(1)
     );
 
-    public static readonly HEALTH_BOOST = this.register("health_boost",
+    public static readonly HEALTH_BOOST = this.register('health_boost',
         new StatusEffect(StatusEffectCategory.BENEFICIAL, '#ff3333')
-            .addAttributeModifier(EntityAttributes.GENERIC_MAX_HEALTH, Identifier.ofVanilla("effect.health_boost"), 4)
+            .addAttributeModifier(EntityAttributes.GENERIC_MAX_HEALTH, Identifier.ofVanilla('effect.health_boost'), 4)
     );
 
-    public static readonly INSTANT_HEALTH = this.register("instant_health",
+    public static readonly INSTANT_HEALTH = this.register('instant_health',
         new InstantHealthEffect()
     );
 
-    public static readonly SHIELD = this.register("shield",
+    public static readonly SHIELD = this.register('shield',
         new ShieldStatusEffect()
             .addAttributeModifier(
-                EntityAttributes.GENERIC_MAX_SHIELD, Identifier.ofVanilla("effect.shield"), 4)
+                EntityAttributes.GENERIC_MAX_SHIELD, Identifier.ofVanilla('effect.shield'), 4)
     );
 
-    public static readonly MELTDOWN = this.register("meltdown",
+    public static readonly MELTDOWN = this.register('meltdown',
         new MeltdownEffect(StatusEffectCategory.HARMFUL, '#e86831')
     );
 
-    public static readonly RESISTANCE = this.register("resistance",
+    public static readonly RESISTANCE = this.register('resistance',
         new StatusEffect(StatusEffectCategory.BENEFICIAL, '#ffc23f')
     );
 
-    public static readonly REGENERATION = this.register("regeneration",
+    public static readonly REGENERATION = this.register('regeneration',
         new RegenerationStatusEffect(StatusEffectCategory.BENEFICIAL, '#ff5a5a')
     );
 
-    public static readonly STRENGTH = this.register("strength",
+    public static readonly STRENGTH = this.register('strength',
         new StatusEffect(StatusEffectCategory.BENEFICIAL, '#ff6b4a')
             .addAttributeModifier(
-                EntityAttributes.GENERIC_ATTACK_DAMAGE, Identifier.ofVanilla("effect.strength"), 2)
+                EntityAttributes.GENERIC_ATTACK_DAMAGE, Identifier.ofVanilla('effect.strength'), 2)
     );
 
-    public static readonly WEAKNESS = this.register("weakness",
+    public static readonly WEAKNESS = this.register('weakness',
         new StatusEffect(StatusEffectCategory.HARMFUL, '#6b6b8a')
             .addAttributeModifier(
-                EntityAttributes.GENERIC_ATTACK_DAMAGE, Identifier.ofVanilla("effect.weakness"), -2)
+                EntityAttributes.GENERIC_ATTACK_DAMAGE, Identifier.ofVanilla('effect.weakness'), -2)
     );
 
-    public static readonly SHIELD_REGEN = this.register("shield_regen",
+    public static readonly SHIELD_REGEN = this.register('shield_regen',
         new ShieldRegenStatusEffect()
+    );
+
+    public static readonly ELECTRIC_CHARGE = this.register('electric_charge',
+        new StatusEffect(StatusEffectCategory.HARMFUL, '#356ebb')
     );
 
     private static register(id: string, statusEffect: StatusEffect): RegistryEntry<StatusEffect> {

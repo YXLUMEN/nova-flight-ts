@@ -1,6 +1,6 @@
 import type {Consumer} from "../type/types.ts";
 import {error} from "@tauri-apps/plugin-log";
-import {invoke} from "@tauri-apps/api/core";
+import {isLanSniffing, listLanServers, startLanSniff, stopLanSniff} from "./ipc/lan_discovery.ts";
 import {as, assert, bindFrom} from "../utils/dom_util.ts";
 import {empty} from "../utils/uit.ts";
 import {appEvent} from "../event/EventBus.ts";
@@ -138,7 +138,7 @@ export class ClientMultiGameManger extends PageSection {
         try {
             await this.scanLAN();
 
-            const rooms = await invoke<LanServer[]>('list_lan_servers');
+            const rooms = await listLanServers();
             const now = Temporal.Now.instant().epochMilliseconds;
 
             this.serverList.querySelectorAll<HTMLDivElement>('[data-lan]')
@@ -161,9 +161,9 @@ export class ClientMultiGameManger extends PageSection {
 
     private async scanLAN() {
         try {
-            const scanning = await invoke<boolean>('is_lan_sniffing');
+            const scanning = await isLanSniffing();
             if (scanning) return;
-            await invoke('start_lan_sniff');
+            await startLanSniff();
         } catch (err) {
             console.warn('[Client] Fail to open scanner', err);
         }
@@ -178,8 +178,8 @@ export class ClientMultiGameManger extends PageSection {
     }
 
     private async stopLANPolling() {
-        const running = await invoke<boolean>('is_lan_sniffing');
-        const success = await invoke<boolean>('stop_lan_sniff');
+        const running = await isLanSniffing();
+        const success = await stopLanSniff();
 
         clearInterval(this.lanTimer);
         this.lanTimer = undefined;
@@ -225,11 +225,4 @@ interface ServerSelect {
     addr: string;
     name: string;
     id: number;
-}
-
-interface LanServer {
-    name: string;
-    addr: string;
-    game_version: number;
-    last_seen_ms: number;
 }

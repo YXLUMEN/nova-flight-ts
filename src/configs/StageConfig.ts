@@ -380,6 +380,7 @@ const p8 = createPhase({
                     .bonusHp(4)
                     .worth(3)
                     .wander()
+                    .isElite()
                     .build()
             ),
             cap: (ctx) => ctx.difficulty + 48
@@ -407,6 +408,7 @@ const p9 = createPhase({
                     .color('#910000')
                     .scale((ctx) => 1 + (ctx.score / 400) | 0)
                     .wander()
+                    .isElite()
                     .build()
             ),
             cap: 81
@@ -437,6 +439,7 @@ const p9 = createPhase({
                     .worth(4)
                     .color('#ac0000')
                     .wander()
+                    .isElite()
                     .build(),
                 undefined, 480
             ),
@@ -452,6 +455,7 @@ const p9 = createPhase({
                     .worth(12)
                     .color('#ff4444')
                     .wander()
+                    .isElite()
                     .build(),
                 undefined, 640
             ),

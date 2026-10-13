@@ -29,10 +29,7 @@ export class SequenceContext {
     }
 
     public getHostPlayer(): ServerPlayerEntity | null {
-        if (this.hostPlayer === null) {
-            this.hostPlayer = this.resolveHostPlayer();
-        }
-        return this.hostPlayer;
+        return this.hostPlayer ??= this.resolveHostPlayer();
     }
 
     private resolveHostPlayer(): ServerPlayerEntity | null {

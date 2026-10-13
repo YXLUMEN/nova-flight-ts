@@ -7,7 +7,7 @@ export class InputBinding extends SettingItem<readonly InputStroke[]> {
     // 不包括 Slash,Escape
     public static readonly KEY_REG = /^(?:Key[A-Z]|Digit[0-9]|Numpad(?:[0-9]|Add|Subtract|Multiply|Divide|Decimal|Enter)|F(?:[1-9]|1[0-2])|Arrow(?:Up|Down|Left|Right)|Space|Tab|Enter|Backspace|Delete|Insert|Home|End|PageUp|PageDown|CapsLock|NumLock|ScrollLock|PrintScreen|Pause|ContextMenu|Backquote|Minus|Equal|BracketLeft|BracketRight|Backslash|Semicolon|Quote|Comma|Period|Intl(?:Backslash|Ro)|Shift(?:Left|Right)|Control(?:Left|Right)|Alt(?:Left|Right)|Meta(?:Left|Right)|OS(?:Left|Right)|Mouse[0-4]|WheelDown|WheelUp)$/;
 
-    public readonly group: string;
+    public readonly group: string; // 展示分组
 
     public constructor(
         id: Identifier,

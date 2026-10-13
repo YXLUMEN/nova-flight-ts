@@ -2,7 +2,9 @@ import type {Predicate} from "../../type/types.ts";
 import {assertClamp} from "../../utils/math/math.ts";
 
 export class SettingPredicates {
-    public static isBool = (v: unknown) => typeof v === 'boolean';
+    public static isBool(v: unknown): boolean {
+        return typeof v === 'boolean';
+    }
 
     public static number(): Predicate<number> {
         return Number.isFinite;
@@ -17,9 +19,7 @@ export class SettingPredicates {
         return v => typeof v === 'string' && v.length >= 0 && v.length <= maxLen;
     }
 
-    public static enum<T extends StringAble>(values: T[]): Predicate<T> {
+    public static enum<T>(values: T[]): Predicate<T> {
         return v => values.includes(v);
     }
 }
-
-type StringAble = string | number | boolean;

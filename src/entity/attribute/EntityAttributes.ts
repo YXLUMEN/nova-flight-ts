@@ -6,7 +6,7 @@ import {ClampedEntityAttribute} from "./ClampedEntityAttribute.ts";
 
 export class EntityAttributes {
     public static readonly GENERIC_MAX_HEALTH = this.register('generic.max_health',
-        new ClampedEntityAttribute(1, 1, 1024).setTracked(true)
+        new ClampedEntityAttribute(1, 1, 4096).setTracked(true)
     );
     public static readonly GENERIC_ATTACK_DAMAGE = this.register('generic.attack_damage',
         new ClampedEntityAttribute(1, 0, 2048)

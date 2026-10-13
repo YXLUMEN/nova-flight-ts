@@ -102,11 +102,13 @@ export class BGMManager {
     private static conditionListener(events: EventBus): void {
         this.IN_GAME.remove(Audios.ENCOUNTER);
         this.IN_GAME.remove(Audios.TROPIC_THUNDER);
-        this.IN_GAME.remove(Audios.TECHNOLOGY_CHANGES_THE_UNIVERSE);
 
-        const offDiff = events.on('world:stage:difficult', () => {
+        const offDiff = events.on('world:stage:difficult', async () => {
             offDiff();
-            this.IN_GAME.randomInsert(Audios.ENCOUNTER);
+            await AudioManager.fadeOutAndPause();
+            const index = this.IN_GAME.randomInsert(Audios.ENCOUNTER);
+            const sound = this.IN_GAME.switch(index);
+            await AudioManager.play(sound);
         });
 
         const offDiff3 = events.on('world:stage:difficult', async ({difficult}) => {
@@ -117,12 +119,6 @@ export class BGMManager {
             const index = this.IN_GAME.randomInsert(Audios.TROPIC_THUNDER);
             const sound = this.IN_GAME.switch(index);
             await AudioManager.play(sound);
-        });
-
-        const offTech = events.on('player:tech:unlock', ({player}) => {
-            if (player.getTechs().unloadedTechCount() <= 6) return;
-            this.IN_GAME.randomInsert(Audios.TECHNOLOGY_CHANGES_THE_UNIVERSE);
-            offTech();
         });
     }
 }

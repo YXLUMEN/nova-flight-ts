@@ -9,7 +9,9 @@ export interface IInput {
 
     wasPressed(binding: InputBinding): boolean;
 
+    requireInput(): Consumer<void>;
+
     getWorldPointer(): Readonly<MutVec2>;
 
-    requireInput(): Consumer<void>;
+    getScreenPointer(): Readonly<MutVec2>;
 }

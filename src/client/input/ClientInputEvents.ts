@@ -49,7 +49,6 @@ export class ClientInputEvents {
                     client.player.launchQuickFire();
                 }
             },
-            onMouseUp: empty,
             onWheel: (event) => {
                 if (!client.world) return;
                 if (client.clientCommandManager.isShow() || !client.world.isTechTreeHidden()) return;
