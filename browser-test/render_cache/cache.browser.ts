@@ -16,7 +16,7 @@
  *  - 命中时不重复调用 draw
  */
 
-import {DPR} from "../../src/utils/uit.ts";
+import {DPR} from "../../src/utils/util.ts";
 import {AABB} from "../../src/utils/math/AABB.ts";
 import {MemoryLRU} from "../../src/utils/collection/MemoryLRU.ts";
 import {SingleCache} from "../../src/client/render/cache/SingleCache.ts";

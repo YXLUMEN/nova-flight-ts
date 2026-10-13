@@ -4,7 +4,7 @@ import type {FullscreenNotice} from "../page/compound/FullscreenNotice.ts";
 import {error} from "@tauri-apps/plugin-log";
 import {startLanAnnounce, stopLanAnnounce} from "../ipc/lan_discovery.ts";
 import {startServer, stopServer} from "../ipc/integrated_server.ts";
-import {sleep} from "../../utils/uit.ts";
+import {sleep} from "../../utils/util.ts";
 import {ClientNetworkChannel} from "./ClientNetworkChannel.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
 import {DEFAULT_CONFIG, RuntimeConfig} from "../../configs/RuntimeConfig.ts";

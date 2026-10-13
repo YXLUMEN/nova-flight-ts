@@ -1,5 +1,5 @@
 import type {BiConsumer, Consumer} from "../../type/types.ts";
-import {config} from "../../utils/uit.ts";
+import {config} from "../../utils/util.ts";
 import type {IInput} from "./IInput.ts";
 
 export interface InputEvents {

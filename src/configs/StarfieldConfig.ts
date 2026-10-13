@@ -1,5 +1,5 @@
 import type {StarLayer} from "../type/IStarLayer.ts";
-import {deepFreeze} from "../utils/uit.ts";
+import {deepFreeze} from "../utils/util.ts";
 
 export const defaultLayers: Readonly<StarLayer[]> = deepFreeze([
     {

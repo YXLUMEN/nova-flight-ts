@@ -2,7 +2,7 @@ import type {VisualEffect} from "./VisualEffect.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import {decodeFromByte, encodeToByte} from "../utils/net_util.ts";
-import {hexToRgba} from "../utils/uit.ts";
+import {hexToRgba} from "../utils/util.ts";
 import {TAU} from "../utils/math/math.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";

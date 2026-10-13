@@ -2,7 +2,7 @@ import type {Payload} from "../../Payload.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {empty} from "../../../utils/uit.ts";
+import {empty} from "../../../utils/util.ts";
 import type {UUID} from "../../../type/types.ts";
 
 export class Query implements Payload {

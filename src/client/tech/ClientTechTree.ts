@@ -13,7 +13,7 @@ import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTech
 import {AnsiParser} from "../../utils/AnsiParser.ts";
 import {NovaFlightClient} from "../NovaFlightClient.ts";
 import {ModelManager} from "../render/model/ModelManager.ts";
-import {cleanObj, empty} from "../../utils/uit.ts";
+import {cleanObj, empty} from "../../utils/util.ts";
 import {ClientTechManager} from "./ClientTechManager.ts";
 import type {ClientTech} from "./ClientTech.ts";
 import {UnlockTech} from "../../event/events/UnlockTech.ts";

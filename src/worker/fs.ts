@@ -1,11 +1,17 @@
 import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
-import {Main2WorkerType, Worker2MainType} from "./WorkerMsgType.ts";
+import {
+    Main2WorkerType,
+    type RequireFetch,
+    type RequireRead,
+    type ResponseRead,
+    Worker2MainType
+} from "./WorkerMsgType.ts";
 
 export class WorkerFS {
     private static autoInt = new AtomicInteger();
 
     public static readFile(path: string, timeout: number = 1000): Promise<ArrayBuffer | null> {
-        const {promise, resolve, reject} = Promise.withResolvers<ArrayBuffer>();
+        const {promise, resolve, reject} = Promise.withResolvers<ArrayBuffer | null>();
         const ctrl = new AbortController();
         const id = this.autoInt.get();
 
@@ -15,10 +21,11 @@ export class WorkerFS {
         }, timeout);
 
         self.addEventListener('message', event => {
-            if (event.data.m2w !== Main2WorkerType.READ_FILE || event.data.id !== id) return;
+            const data = event.data as ResponseRead;
+            if (data.m2w !== Main2WorkerType.READ_FILE || data.id !== id) return;
 
             clearTimeout(timeoutId);
-            resolve(event.data.buffer);
+            resolve(data.buffer);
             ctrl.abort();
         }, {signal: ctrl.signal});
 
@@ -26,12 +33,12 @@ export class WorkerFS {
             w2m: Worker2MainType.READ_FILE,
             id,
             path,
-        });
+        } satisfies RequireRead);
 
         return promise;
     }
 
-    public static writeFile(path: string, buffer: ArrayBuffer) {
+    public static writeFile(path: string, buffer: ArrayBuffer): void {
         self.postMessage({
             w2m: Worker2MainType.WRITE_FILE,
             path,
@@ -39,7 +46,7 @@ export class WorkerFS {
         }, {transfer: [buffer]});
     }
 
-    public static fetch(url: string, timeout: number = 1000) {
+    public static fetch(url: string, timeout: number = 1000): Promise<ArrayBuffer | null> {
         const {promise, resolve, reject} = Promise.withResolvers<ArrayBuffer | null>();
         const ctrl = new AbortController();
         const id = this.autoInt.get();
@@ -50,10 +57,11 @@ export class WorkerFS {
         }, timeout);
 
         self.addEventListener('message', event => {
-            if (event.data.m2w !== Main2WorkerType.FETCH || event.data.id !== id) return;
+            const data = event.data as ResponseRead;
+            if (data.m2w !== Main2WorkerType.FETCH || data.id !== id) return;
 
             clearTimeout(timeoutId);
-            resolve(event.data.buffer);
+            resolve(data.buffer);
             ctrl.abort();
         }, {signal: ctrl.signal});
 
@@ -61,7 +69,7 @@ export class WorkerFS {
             w2m: Worker2MainType.FETCH,
             id,
             url,
-        });
+        } satisfies RequireFetch);
 
         return promise;
     }

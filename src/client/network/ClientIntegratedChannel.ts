@@ -4,7 +4,7 @@ import {CodecRegistry} from "../../network/CodecRegistry.ts";
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {ClientChannel} from "./ClientChannel.ts";
-import {empty} from "../../utils/uit.ts";
+import {empty} from "../../utils/util.ts";
 import {IntegratedBatchBufferPacket} from "../../network/packet/common/IntegratedBatchBufferPacket.ts";
 
 export class ClientIntegratedChannel implements ClientChannel {

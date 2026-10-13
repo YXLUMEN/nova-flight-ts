@@ -1,4 +1,4 @@
-import {config, status} from "../utils/uit.ts";
+import {config, status} from "../utils/util.ts";
 
 // @ts-expect-error Inject by vite
 export const isDev = import.meta.env.MODE === 'development';

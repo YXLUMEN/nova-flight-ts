@@ -112,7 +112,7 @@ export class Techs {
         if (isServer) {
             const buffer = await WorkerFS.fetch(filePath);
             if (!buffer) throw new Error('Failed to load tech data');
-            const json = new TextDecoder("utf-8", {fatal: true}).decode(buffer);
+            const json = new TextDecoder('utf-8', {fatal: true}).decode(buffer);
             tech = JSON.parse(json);
         } else {
             const resp = await fetch(filePath);

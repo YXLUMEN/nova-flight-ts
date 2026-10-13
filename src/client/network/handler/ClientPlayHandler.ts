@@ -251,13 +251,12 @@ export class ClientPlayHandler extends ClientCommonHandler {
         const enable = Settings.DAMAGE_POPUP.get();
         if (entity === null) {
             if (!enable) return;
-            this.client.window.damagePopup.spawnPopup(
+            this.client.worldRender.addDamagePopup(
                 packet.pos.x,
                 packet.pos.y - 10,
                 packet.damage,
                 packet.color,
                 20,
-                packet.entityId
             );
             return;
         }
@@ -273,7 +272,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
         if (!enable) return;
         const pos = entity.positionRef;
-        this.client.window.damagePopup.spawnPopup(
+        this.client.worldRender.addDamagePopup(
             pos.x,
             pos.y - entity.getHeight(),
             packet.damage,

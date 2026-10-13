@@ -9,7 +9,7 @@ import {BaseBossEntity} from "../../entity/mob/BaseBossEntity.ts";
 import {SequenceEngine} from "../../world/sequence/SequenceEngine.ts";
 import {SequenceBuilder, type SequenceDef} from "../../world/sequence/SequenceBuilder.ts";
 import type {SequenceContext} from "../../world/sequence/SequenceContext.ts";
-import {config} from "../../utils/uit.ts";
+import {config} from "../../utils/util.ts";
 import type {Consumer} from "../../type/types.ts";
 import {NotGiveUpS2CPacket} from "../../network/packet/s2c/NotGiveUpS2CPacket.ts";
 import type {StageEnter} from "../../event/events/stage/StageEnter.ts";

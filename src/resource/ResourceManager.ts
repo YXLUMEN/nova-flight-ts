@@ -1,6 +1,6 @@
 import type {ResourceModule} from "./ResourceModule.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
-import {sleep} from "../utils/uit.ts";
+import {sleep} from "../utils/util.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 
 export class ResourceManager {

@@ -1,5 +1,5 @@
 import type {Payload} from "./Payload.ts";
-import {deepFreeze} from "../utils/uit.ts";
+import {deepFreeze} from "../utils/util.ts";
 import type {PacketCodec} from "./codec/PacketCodec.ts";
 import type {PayloadType} from "./PayloadType.ts";
 import {NetworkSide} from "./NetworkSide.ts";

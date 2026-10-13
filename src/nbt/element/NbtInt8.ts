@@ -1,7 +1,7 @@
 import type {NbtElement} from "./NbtElement.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {type NbtType, NbtTypeId} from "../NbtType.ts";
-import {deepFreeze} from "../../utils/uit.ts";
+import {deepFreeze} from "../../utils/util.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 
 export class NbtInt8 implements NbtElement {

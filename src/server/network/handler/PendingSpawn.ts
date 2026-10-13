@@ -7,7 +7,7 @@ import {ServerPlayerEntity} from "../../entity/ServerPlayerEntity.ts";
 import {type NbtCompound} from "../../../nbt/element/NbtCompound.ts";
 import {type ServerConnection} from "../ServerConnection.ts";
 import {RacePromise} from "../../../utils/RacePromise.ts";
-import {timeout} from "../../../utils/uit.ts";
+import {timeout} from "../../../utils/util.ts";
 import {World} from "../../../world/World.ts";
 import type {Consumer} from "../../../type/types.ts";
 

@@ -28,7 +28,7 @@ export class DamageSources {
         this._kill = this.create(DamageTypes.KILL);
         this._laser = this.create(DamageTypes.LASER).setShieldMulti(0.5);
         this._void = this.create(DamageTypes.VOID);
-        this._erosion = this.create(DamageTypes.EROSION);
+        this._erosion = this.create(DamageTypes.EROSION).setShieldMulti(0.2);
         this._explosion = this.create(DamageTypes.EXPLOSION);
         this._arc = this.create(DamageTypes.ARC);
     }
@@ -108,7 +108,7 @@ export class DamageSources {
 
     public erosion(attacker: Entity | null) {
         return attacker !== null ?
-            this.createWithAttacker(DamageTypes.EROSION, attacker) :
+            this.createWithAttacker(DamageTypes.EROSION, attacker).setShieldMulti(0.2) :
             this._erosion;
     }
 

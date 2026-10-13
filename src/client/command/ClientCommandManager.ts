@@ -12,7 +12,7 @@ import {WorldDifficultCommand} from "../../command/WorldDifficultCommand.ts";
 import type {ParseResults} from "../../brigadier/ParseResults.ts";
 import {StatusEffectCommand} from "../../command/StatusEffectCommand.ts";
 import {ClientSuggestionPopup} from "./ClientSuggestionPopup.ts";
-import {debounce} from "../../utils/uit.ts";
+import {debounce} from "../../utils/util.ts";
 import {ClientCommandPanel} from "./ClientCommandPanel.ts";
 import type {Suggestion} from "../../brigadier/suggestion/Suggestion.ts";
 import {MemoryLRU} from "../../utils/collection/MemoryLRU.ts";

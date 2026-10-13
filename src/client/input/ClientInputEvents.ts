@@ -2,7 +2,7 @@ import {isDev, RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import type {InputManager} from "./InputManager.ts";
-import {cleanObj, empty} from "../../utils/uit.ts";
+import {cleanObj, empty} from "../../utils/util.ts";
 import {DataLoader} from "../../resource/DataLoader.ts";
 import type {ClientTechTree} from "../tech/ClientTechTree.ts";
 import {app} from "../../lib.ts";

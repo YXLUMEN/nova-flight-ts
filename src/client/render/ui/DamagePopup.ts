@@ -1,60 +1,76 @@
-import type {IUi} from "./IUi.ts";
 import {UITheme} from "./theme.ts";
-import {easeOutQuad, lerp} from "../../../utils/math/math.ts";
+import {easeOutQuad, lerp, toFixedTrim} from "../../../utils/math/math.ts";
 
-interface DamagePopupEvent {
-    x: number;
-    y: number;
-    preY: number;
-    age: number;
-    readonly life: number;
-    readonly entityId: number | null;
-    value: string;
-    color: string;
-}
-
-export class DamagePopupRender implements IUi {
+export class DamagePopup {
     private readonly font = `bold ${UITheme.font}`;
-    private readonly activePopups: DamagePopupEvent[] = [];
-    private readonly popups = new Map<number, DamagePopupEvent>();
 
-    public tick(tickDelta: number): void {
+    private readonly popupPool: DamagePopupEvent[] = [];
+    private readonly activePopups: DamagePopupEvent[] = [];
+    private popups: Map<number, DamagePopupEvent> = new Map();
+
+    public tick(): void {
         for (let i = this.activePopups.length - 1; i >= 0; i--) {
             const popup = this.activePopups[i];
-            popup.age += tickDelta;
+            popup.age++;
             if (popup.age < popup.life) continue;
 
             this.activePopups[i] = this.activePopups[this.activePopups.length - 1];
             this.activePopups.pop();
+
             if (popup.entityId) this.popups.delete(popup.entityId);
+            this.popupPool.push(popup);
         }
     }
 
-    public spawnPopup(x: number, y: number, value: number, color: string, life: number, entityId?: number, force = false): void {
-        if (!entityId) {
-            if (this.activePopups.length > 128) return;
-            this.activePopups.push({
+    private add(
+        x: number, y: number,
+        value: number,
+        color: string,
+        life: number,
+        entityId: number | null,
+    ): DamagePopupEvent | null {
+        if (this.activePopups.length > 127) return null;
+
+        let event = this.popupPool.pop();
+        if (event) {
+            event.x = x;
+            event.y = y;
+            event.preY = y;
+            event.value = this.formatDamage(value);
+            event.color = color;
+            event.age = 0;
+            event.life = life;
+            event.entityId = entityId;
+        } else {
+            event = {
                 x: x, y: y, preY: y,
-                age: 0, life: life / 20,
-                entityId: null,
+                age: 0, life: life,
+                entityId: entityId,
                 value: this.formatDamage(value),
                 color: color,
-            });
+            };
+        }
+        this.activePopups.push(event);
+        return event;
+    }
+
+    public spawnPopup(
+        x: number, y: number,
+        value: number,
+        color: string,
+        life: number,
+        entityId?: number,
+        force = false,
+    ): void {
+        if (entityId == null) {
+            this.add(x, y, value, color, life, null);
             return;
         }
 
         const exist = this.popups.get(entityId);
         if (!exist || force) {
-            if (this.activePopups.length > 128) return;
-            const event: DamagePopupEvent = {
-                x: x, y: y, preY: y,
-                age: 0, life: life / 20,
-                entityId: entityId,
-                value: this.formatDamage(value),
-                color: color,
-            };
-            this.activePopups.push(event);
-            this.popups.set(entityId, event);
+            const event = this.add(x, y, value, color, life, entityId);
+            if (event) this.popups.set(entityId, event);
             return;
         }
 
@@ -96,11 +112,11 @@ export class DamagePopupRender implements IUi {
         ctx.globalAlpha = 1;
     }
 
-    public setSize(): void {
-    }
-
-    public destroy(): void {
+    public dispose(): void {
         this.activePopups.length = 0;
+        this.popupPool.length = 0;
+        this.popups.clear();
+        this.popups = new Map();
     }
 
     private riseOffset(age: number, life: number): number {
@@ -117,6 +133,17 @@ export class DamagePopupRender implements IUi {
     }
 
     private formatDamage(value: number): string {
-        return Number(value.toFixed(1)).toString();
+        return String(toFixedTrim(value, 1));
     }
+}
+
+interface DamagePopupEvent {
+    x: number;
+    y: number;
+    preY: number;
+    age: number;
+    life: number;
+    entityId: number | null;
+    value: string;
+    color: string;
 }

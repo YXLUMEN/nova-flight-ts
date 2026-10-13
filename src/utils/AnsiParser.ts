@@ -1,4 +1,4 @@
-import {config} from "./uit.ts";
+import {config} from "./util.ts";
 
 export class AnsiParser {
     private static REGEX: RegExp = /\x1b\[(\d+)m/g;

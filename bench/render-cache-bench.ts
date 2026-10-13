@@ -22,7 +22,7 @@ import type {RenderCache, SpriteRender} from "../src/client/render/cache/RenderC
 import {buildSprite} from "../src/client/render/cache/RenderCache.ts";
 import {AABB} from "../src/utils/math/AABB.ts";
 
-import {DPR} from "../src/utils/uit.ts";
+import {DPR} from "../src/utils/util.ts";
 import {EntityColor} from "../src/world/entity/EntityColor";
 
 // ---------- 目标画布（与游戏同构：DPR 变换） ----------

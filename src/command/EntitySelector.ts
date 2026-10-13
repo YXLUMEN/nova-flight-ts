@@ -1,15 +1,15 @@
-import {squareDistVec2} from "../utils/math/math.ts";
 import type {EntityFilter} from "./SelectorArguments.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {BiConsumer, UUID} from "../type/types.ts";
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import type {AABB} from "../utils/math/AABB.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
+import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
+import {squareDistVec2} from "../utils/math/math.ts";
+import {empty} from "../utils/util.ts";
 import {NumberRange, type NumRange} from "../world/predicate/NumberRange.ts";
 import {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
-import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import {EntitySelectorArgumentType} from "./argument/EntitySelectorArgumentType.ts";
-import {EntitySelectorParser} from "./EntitySelectorParser.ts";
-import type {Vec2} from "../utils/math/Vec2.ts";
 
 
 export class EntitySelector {
@@ -166,7 +166,7 @@ export class EntitySelector {
     }
 
     private getAppendLimit() {
-        return this.sorter == EntitySelectorParser.ARBITRARY ? this.limit : Number.MAX_SAFE_INTEGER;
+        return this.sorter === empty ? this.limit : Number.MAX_SAFE_INTEGER;
     }
 
     private findEntities(pos: Vec2, entities: Entity[]) {

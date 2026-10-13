@@ -38,7 +38,7 @@ export class EntityDamageS2CPacket implements Payload {
         this.color = color;
     }
 
-    public static create(entityId: number, pos: Vec2, damage: number, color: string = '#ff3434'): EntityDamageS2CPacket {
+    public static create(entityId: number, pos: Vec2, damage: number, color: string = '#FF343480'): EntityDamageS2CPacket {
         return new EntityDamageS2CPacket(
             entityId,
             pos,
@@ -47,7 +47,7 @@ export class EntityDamageS2CPacket implements Payload {
         );
     }
 
-    public static fromEntity(entity: Entity, damage: number, color: string = '#ff3434') {
+    public static fromEntity(entity: Entity, damage: number, color: string = '#FF343480') {
         return new EntityDamageS2CPacket(
             entity.getId(),
             entity.positionRef,

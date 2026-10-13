@@ -1,6 +1,6 @@
 import {type GuiText, textOf} from "../types.ts";
 import type {Consumer} from "../../../type/types.ts";
-import {empty} from "../../../utils/uit.ts";
+import {empty} from "../../../utils/util.ts";
 import {assert} from "../../../utils/dom_util.ts";
 import {PageSection} from "../PageSection.ts";
 

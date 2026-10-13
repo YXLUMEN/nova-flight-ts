@@ -1,4 +1,4 @@
-import {config} from "./uit.ts";
+import {config} from "./util.ts";
 import {StringReader} from "../brigadier/StringReader.ts";
 
 export class AnsiParser {

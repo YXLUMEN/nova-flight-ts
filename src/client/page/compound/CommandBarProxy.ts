@@ -2,7 +2,7 @@ import type {ClientSuggestionPopup} from "../../command/ClientSuggestionPopup.ts
 import type {ClientCommandPanel} from "../../command/ClientCommandPanel.ts";
 import type {ClientCommandManager} from "../../command/ClientCommandManager.ts";
 import type {Consumer} from "../../../type/types.ts";
-import {empty} from "../../../utils/uit.ts";
+import {empty} from "../../../utils/util.ts";
 import {PageSection} from "../PageSection.ts";
 
 export class CommandBarProxy extends PageSection {

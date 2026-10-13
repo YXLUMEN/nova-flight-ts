@@ -3,7 +3,7 @@ import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {ServerPlayHandler} from "../../../server/network/handler/ServerPlayHandler.ts";
-import {isAscii} from "../../../utils/uit.ts";
+import {isAscii} from "../../../utils/util.ts";
 import {IllegalArgumentError} from "../../../type/errors.ts";
 
 export class PlayerInputC2SPacket implements Payload {

@@ -10,7 +10,7 @@ import type {ResourceModule} from "./ResourceModule.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {ModelResource} from "./ModelResource.ts";
 import {Resources} from "./Resources.ts";
-import {sleep} from "../utils/uit.ts";
+import {sleep} from "../utils/util.ts";
 
 export class DataLoader {
     private static loading = false;

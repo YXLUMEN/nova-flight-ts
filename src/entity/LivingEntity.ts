@@ -266,7 +266,7 @@ export abstract class LivingEntity extends Entity {
             this.setShieldAmount(shieldAmount - hitShield + remain);
 
             if (hitShield > 0) {
-                world.sendPacket(EntityDamageS2CPacket.fromEntity(this, hitShield, '#73c4ff'));
+                world.sendPacket(EntityDamageS2CPacket.fromEntity(this, hitShield, '#73C4FF80'));
             }
         }
 

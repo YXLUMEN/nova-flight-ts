@@ -3,7 +3,7 @@ import type {BiConsumer} from "../../type/types.ts";
 import type {ServerChannel} from "./ServerChannel.ts";
 import type {GameProfile} from "../entity/GameProfile.ts";
 import type {PacketTooLargeError} from "../../type/errors.ts";
-import {empty} from "../../utils/uit.ts";
+import {empty} from "../../utils/util.ts";
 import {isDev} from "../../configs/RuntimeConfig.ts";
 import {Log} from "../../worker/log.ts";
 import {WSNetworkChannel} from "../../network/WSNetworkChannel.ts";

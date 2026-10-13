@@ -10,7 +10,7 @@ import type {DataComponentType} from "../component/DataComponentType.ts";
 import type {ComponentMap} from "../component/ComponentMap.ts";
 import {Registries} from "../registry/Registries.ts";
 import {BitFlag} from "../utils/BitFlag.ts";
-import {createTranslationKey} from "../utils/uit.ts";
+import {createTranslationKey} from "../utils/util.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 

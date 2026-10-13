@@ -1,6 +1,6 @@
 import type {Registry} from "./Registry.ts";
 import type {RegistryKey} from "./RegistryKey.ts";
-import {deepFreeze} from "../utils/uit.ts";
+import {deepFreeze} from "../utils/util.ts";
 import {RegistryKeys} from "./RegistryKeys.ts";
 import {Registries} from "./Registries.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";

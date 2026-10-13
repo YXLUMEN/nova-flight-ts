@@ -1,6 +1,6 @@
 import {TAU} from "../../../utils/math/math.ts";
 import type {RGB} from "../../../type/types.ts";
-import {rgba} from "../../../utils/uit.ts";
+import {rgba} from "../../../utils/util.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 
 export class LockAlert {

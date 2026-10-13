@@ -5,7 +5,7 @@ import type {BiConsumer} from "../../type/types.ts";
 import {CodecRegistry} from "../../network/CodecRegistry.ts";
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {BinaryReader} from "../../serialization/BinaryReader.ts";
-import {empty} from "../../utils/uit.ts";
+import {empty} from "../../utils/util.ts";
 import {IntegratedBatchBufferPacket} from "../../network/packet/common/IntegratedBatchBufferPacket.ts";
 import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
 

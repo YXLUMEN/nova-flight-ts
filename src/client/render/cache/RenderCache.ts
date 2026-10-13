@@ -1,6 +1,6 @@
 import type {SpriteCtx} from "./LRURenderCache.ts";
 import type {AABB} from "../../../utils/math/AABB.ts";
-import {DPR} from "../../../utils/uit.ts";
+import {DPR} from "../../../utils/util.ts";
 
 export type SpriteRender<U extends unknown[]> = (ctx: SpriteCtx, ...args: U) => void;
 

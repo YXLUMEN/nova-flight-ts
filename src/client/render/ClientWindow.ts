@@ -1,9 +1,8 @@
 import type {BiConsumer, Supplier} from "../../type/types.ts";
-import {debounce, DPR} from "../../utils/uit.ts";
+import {debounce, DPR} from "../../utils/util.ts";
 import {UITheme} from "./ui/theme.ts";
 import {HUD} from "./ui/HUD.ts";
 import {Camera} from "./Camera.ts";
-import {DamagePopupRender} from "./ui/DamagePopupRender.ts";
 
 export class ClientWindow {
     public static viewWidth = 800;
@@ -14,7 +13,6 @@ export class ClientWindow {
 
     public readonly camera: Camera = new Camera();
     public readonly hud: HUD = new HUD();
-    public readonly damagePopup = new DamagePopupRender();
 
     private readonly resizeCallbacks: Set<BiConsumer<number, number>> = new Set();
 

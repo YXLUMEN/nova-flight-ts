@@ -12,7 +12,7 @@ import type {EntityType} from "../entity/EntityType.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import type {NumRange} from "../world/predicate/NumberRange.ts";
 import {squareDistVec2} from "../utils/math/math.ts";
-import {shuffleArray} from "../utils/uit.ts";
+import {empty, shuffleArray} from "../utils/util.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import {isValidUUID} from "../utils/UUIDUtil.ts";
 
@@ -21,8 +21,6 @@ type provider = (builder: SuggestionsBuilder, consumer: Consumer<SuggestionsBuil
 export class EntitySelectorParser {
     public static readonly INVALID_ENTITY_EXCEPTION = new CommandError('Invalid entity');
     public static readonly DEFAULT_SUGGESTION_PROVIDER: provider = (builder, _) => builder.buildPromise();
-    public static readonly ARBITRARY: BiConsumer<Vec2, Entity[]> = () => {
-    };
     public static readonly NEAREST: BiConsumer<Vec2, Entity[]> = (pos, entities) => {
         entities.sort((e1, e2) => {
             return squareDistVec2(e1.positionRef, pos) - squareDistVec2(e2.positionRef, pos)
@@ -40,7 +38,7 @@ export class EntitySelectorParser {
     private readonly reader: StringReader;
 
     private senderOnly: boolean = false;
-    private sorter: BiConsumer<Vec2, Entity[]> = EntitySelectorParser.ARBITRARY;
+    private sorter: BiConsumer<Vec2, Entity[]> = empty;
 
     private startCursor: number = 0;
     private limit: number = 1;
@@ -132,14 +130,14 @@ export class EntitySelectorParser {
             case 'a': {
                 this.limit = Number.MAX_SAFE_INTEGER;
                 this.includesNonPlayers = false;
-                this.sorter = EntitySelectorParser.ARBITRARY;
+                this.sorter = empty;
                 this.limitType(EntityTypes.PLAYER);
                 break;
             }
             case 'e': {
                 this.limit = Number.MAX_SAFE_INTEGER;
                 this.includesNonPlayers = true;
-                this.sorter = EntitySelectorParser.ARBITRARY;
+                this.sorter = empty;
                 break;
             }
             case 'n': {

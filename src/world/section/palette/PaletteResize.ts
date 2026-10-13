@@ -1,4 +1,4 @@
-import {config} from "../../../utils/uit.ts";
+import {config} from "../../../utils/util.ts";
 import {IllegalArgumentError} from "../../../type/errors.ts";
 
 

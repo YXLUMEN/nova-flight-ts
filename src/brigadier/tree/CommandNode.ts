@@ -7,7 +7,7 @@ import type {CommandContextBuilder} from "../context/CommandContextBuilder.ts";
 import type {CommandContext} from "../context/CommandContext.ts";
 import type {SuggestionsBuilder} from "../suggestion/SuggestionsBuilder.ts";
 import type {Suggestions} from "../suggestion/Suggestions.ts";
-import {any} from "../../utils/uit.ts";
+import {any} from "../../utils/util.ts";
 
 export abstract class CommandNode<S> {
     private readonly children: Map<string, CommandNode<S>> = new Map();

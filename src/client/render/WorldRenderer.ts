@@ -14,6 +14,7 @@ import {BlockMapRender} from "./BlockMapRender.ts";
 import {ParticlePool} from "../../effect/particle/ParticlePool.ts";
 import {WorldEntityRenderer} from "./WorldEntityRenderer.ts";
 import {DebugRenderer} from "./DebugRenderer.ts";
+import {DamagePopup} from "./ui/DamagePopup.ts";
 
 export class WorldRenderer {
     private readonly client: NovaFlightClient;
@@ -25,6 +26,7 @@ export class WorldRenderer {
     private readonly debugRenderer: DebugRenderer;
     private readonly effects: VisualEffect[] = [];
     private readonly particlePool: ParticlePool;
+    private readonly damagePopup: DamagePopup;
     private readonly starField: StarField;
 
     private mapRender: BlockMapRender | null = null;
@@ -40,6 +42,7 @@ export class WorldRenderer {
         this.entityRenderer = new WorldEntityRenderer(client);
         this.debugRenderer = new DebugRenderer();
         this.particlePool = new ParticlePool(1024);
+        this.damagePopup = new DamagePopup();
         this.starField = new StarField(128, defaultLayers, 8);
         this.starField.init();
 
@@ -68,6 +71,7 @@ export class WorldRenderer {
         this.effects.forEach(effect => effect.kill());
         this.effects.length = 0;
         this.particlePool.reset();
+        this.damagePopup.dispose();
         this.mapRender?.dispose();
         this.mapRender = world === null ? null : new BlockMapRender(world.getMap());
         this.disableRender = 0;
@@ -97,7 +101,7 @@ export class WorldRenderer {
 
         this.particlePool.tick(dt);
         this.starField.update(dt, camera);
-        this.window.damagePopup.tick(dt);
+        this.damagePopup.tick();
     }
 
     public addParticle(
@@ -128,6 +132,17 @@ export class WorldRenderer {
     ) {
         count = clamp(Math.floor(count), 0, 255);
         this.particlePool.spawnEffect(type, x, y, count, baseAngle);
+    }
+
+    public addDamagePopup(
+        x: number, y: number,
+        value: number,
+        color: string,
+        life: number,
+        entityId?: number,
+        force?: boolean,
+    ) {
+        this.damagePopup.spawnPopup(x, y, value, color, life, entityId, force);
     }
 
     public addEffect(effect: VisualEffect) {
@@ -181,7 +196,7 @@ export class WorldRenderer {
         }
 
         this.window.hud.renderMainWeapon(ctx, alpha);
-        this.window.damagePopup.render(ctx, alpha); // 修改了字体且未还原
+        this.damagePopup.render(ctx, alpha); // 修改了字体且未还原
         ctx.restore();
 
         this.window.hud.render(ctx, alpha);

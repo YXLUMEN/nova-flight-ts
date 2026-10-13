@@ -2,7 +2,7 @@ import {EntityRenderers} from "./entity/EntityRenderers.ts";
 import {TipManager} from "../tips/TipManager.ts";
 import {ModelManager} from "./model/ModelManager.ts";
 import type {LoadingScreen} from "./ui/LoadingScreen.ts";
-import {sleep} from "../../utils/uit.ts";
+import {sleep} from "../../utils/util.ts";
 import {BuiltInPath} from "./BuiltInPath.ts";
 
 export class RenderLoader {

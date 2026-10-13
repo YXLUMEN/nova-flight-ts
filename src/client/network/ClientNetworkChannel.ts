@@ -3,7 +3,7 @@ import type {Payload} from "../../network/Payload.ts";
 import type {ClientChannel} from "./ClientChannel.ts";
 import type {PacketTooLargeError} from "../../type/errors.ts";
 import {error} from "@tauri-apps/plugin-log";
-import {empty} from "../../utils/uit.ts";
+import {empty} from "../../utils/util.ts";
 import {parseUUID} from "../../utils/UUIDUtil.ts";
 import {isDev} from "../../configs/RuntimeConfig.ts";
 import {WSNetworkChannel} from "../../network/WSNetworkChannel.ts";

@@ -8,7 +8,7 @@ import type {BiConsumer, Constructor, Return, Supplier, UUID} from "../../type/t
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {Codec} from "../../serialization/Codec.ts";
 import type {NbtElement} from "../../nbt/element/NbtElement.ts";
-import {empty} from "../../utils/uit.ts";
+import {empty} from "../../utils/util.ts";
 import {decodeColorToHex, encodeColorHex} from "../../utils/net_util.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import {Optional} from "../../utils/Optional.ts";

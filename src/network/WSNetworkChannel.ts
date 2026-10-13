@@ -2,7 +2,7 @@ import type {Payload} from "./Payload.ts";
 import type {NetworkSide} from "./NetworkSide.ts";
 import type {Channel} from "./Channel.ts";
 import type {CodecEntry, CodecRegistry} from "./CodecRegistry.ts";
-import {sleep} from "../utils/uit.ts";
+import {sleep} from "../utils/util.ts";
 import {BinaryWriter} from "../serialization/BinaryWriter.ts";
 import {PacketTooLargeError} from "../type/errors.ts";
 import {RelayHandshake} from "./RelayHandshake.ts";

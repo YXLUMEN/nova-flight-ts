@@ -32,17 +32,17 @@ export async function run() {
         ctrl.abort();
 
         await app.once('save_before_close', async () => {
-            try {
-                await client.saveAll();
-            } catch (e) {
+            const mapErr = (e: any) => {
                 console.error(e);
-                await error(`[App] Failed to save when closing app, reason: ${e}`);
-            }
+                return error(`[App] Failed to save data when closing app, cause by:\n  ${e}`);
+            };
+
+            await client.saveAll().catch(mapErr);
+            await Settings.OPTIONS.save().catch(mapErr);
             await invoke('confirm_save_done');
         });
 
         await client.startClient();
-        await Settings.OPTIONS.save();
         await app.close();
     } catch (err) {
         if (Error.isError(err)) {

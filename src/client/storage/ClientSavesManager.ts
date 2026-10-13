@@ -4,7 +4,7 @@ import {error, warn} from "@tauri-apps/plugin-log";
 import {confirm, message} from "@tauri-apps/plugin-dialog";
 import {join, resolveResource} from "@tauri-apps/api/path";
 import {exists, mkdir, readFile, readTextFile, writeFile, writeTextFile} from "@tauri-apps/plugin-fs";
-import {empty} from "../../utils/uit.ts";
+import {empty} from "../../utils/util.ts";
 import {choseDir} from "../ipc/integrated_server.ts";
 import {toLocalTime} from "../../utils/time.ts";
 import {isValidUUID} from "../../utils/UUIDUtil.ts";

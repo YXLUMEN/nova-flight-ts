@@ -2,7 +2,7 @@ import type {Consumer} from "../../type/types.ts";
 import {HistoricalScoreRender} from "./HistoricalScoreRender.ts";
 import {PageSection} from "../page/PageSection.ts";
 import {assert} from "../../utils/dom_util.ts";
-import {empty} from "../../utils/uit.ts";
+import {empty} from "../../utils/util.ts";
 import {message} from "@tauri-apps/plugin-dialog";
 import {error} from "@tauri-apps/plugin-log";
 

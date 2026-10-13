@@ -1,6 +1,6 @@
 import type {PageSplicerConfig} from "./PageSplicerConfig.ts";
 import {PromisePool} from "../../utils/collection/PromisePool.ts";
-import {sleep} from "../../utils/uit.ts";
+import {sleep} from "../../utils/util.ts";
 
 // noinspection ExceptionCaughtLocallyJS
 export class PageSplicer {

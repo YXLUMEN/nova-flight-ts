@@ -2,7 +2,7 @@ import type {Consumer} from "../../type/types.ts";
 import {PageSection} from "../page/PageSection.ts";
 import {message} from "@tauri-apps/plugin-dialog";
 import {as, assert, closest, dataAction} from "../../utils/dom_util.ts";
-import {empty} from "../../utils/uit.ts";
+import {empty} from "../../utils/util.ts";
 
 export class ArchiveInputBox extends PageSection {
     private readonly inputBar: HTMLInputElement;

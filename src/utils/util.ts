@@ -88,7 +88,7 @@ export function sleep(time: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, time));
 }
 
-export function timeout(time: number, signal: AbortSignal) {
+export function timeout(time: number, signal?: AbortSignal): Promise<void> {
     const {promise, resolve, reject} = Promise.withResolvers<void>();
 
     const ctrl = new AbortController();
@@ -97,7 +97,7 @@ export function timeout(time: number, signal: AbortSignal) {
         ctrl.abort();
     }, time);
 
-    signal.addEventListener('abort', () => {
+    signal?.addEventListener('abort', () => {
         resolve();
         clearTimeout(timer);
         ctrl.abort();

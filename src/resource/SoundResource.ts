@@ -5,7 +5,7 @@ import {resolveResource} from "@tauri-apps/api/path";
 import {exists, readFile, readTextFile} from "@tauri-apps/plugin-fs";
 import {PromisePool} from "../utils/collection/PromisePool.ts";
 import {Identifier} from "../registry/Identifier.ts";
-import {deepFreeze} from "../utils/uit.ts";
+import {deepFreeze} from "../utils/util.ts";
 import {warn} from "@tauri-apps/plugin-log";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {Resources} from "./Resources.ts";

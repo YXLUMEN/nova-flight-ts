@@ -1,7 +1,7 @@
 import type {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {GuiText} from "../../page/types.ts";
 import type {Consumer} from "../../../type/types.ts";
-import {empty} from "../../../utils/uit.ts";
+import {empty} from "../../../utils/util.ts";
 import {appEvent} from "../../../event/EventBus.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {PauseScreen} from "../../page/compound/PauseScreen.ts";

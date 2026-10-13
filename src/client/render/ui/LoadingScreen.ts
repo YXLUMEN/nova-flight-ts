@@ -1,6 +1,6 @@
 import type {Supplier} from "../../../type/types.ts";
 import {clamp} from "../../../utils/math/math.ts";
-import {sleep} from "../../../utils/uit.ts";
+import {sleep} from "../../../utils/util.ts";
 import {UITheme} from "./theme.ts";
 import {UiTools} from "./UiTools.ts";
 import {UiFramework} from "./UiFramework.ts";

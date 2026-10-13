@@ -27,7 +27,7 @@ import type {ParticleEffectType} from "../effect/particle/ParticleEffectType.ts"
 import {DifficultChange} from "../event/events/stage/DifficultChange.ts";
 import {GameEnd} from "../event/events/game/GameEnd.ts";
 import type {WorldMutation} from "./element/WorldMutation.ts";
-import {any} from "../utils/uit.ts";
+import {any} from "../utils/util.ts";
 
 export abstract class World {
     public static readonly MAP_WIDTH = 1760;

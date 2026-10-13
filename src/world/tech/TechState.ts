@@ -1,4 +1,4 @@
-import {isNonEmptyString} from '../../utils/uit.ts';
+import {isNonEmptyString} from '../../utils/util.ts';
 import type {RawTech, TechAvailable} from '../../type/ITech.ts';
 import {Tech} from "./Tech.ts";
 import {Registries} from "../../registry/Registries.ts";

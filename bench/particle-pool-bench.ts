@@ -28,7 +28,7 @@ import type {ParticleShape} from "../src/effect/particle/ParticlePool.ts";
 import {ParticlePool} from "../src/effect/particle/ParticlePool.ts";
 import {lerp, TAU} from "../src/utils/math/math.ts";
 import {decodeColorToHex} from "../src/utils/net_util.ts";
-import {DPR} from "../src/utils/uit.ts";
+import {DPR} from "../src/utils/util.ts";
 
 // ================= 常量 =================
 

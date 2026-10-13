@@ -2,7 +2,7 @@ import type {Consumer} from "../type/types.ts";
 import {error} from "@tauri-apps/plugin-log";
 import {isLanSniffing, listLanServers, startLanSniff, stopLanSniff} from "./ipc/lan_discovery.ts";
 import {as, assert, bindFrom} from "../utils/dom_util.ts";
-import {empty} from "../utils/uit.ts";
+import {empty} from "../utils/util.ts";
 import {appEvent} from "../event/EventBus.ts";
 import {ClientStorage} from "./storage/ClientStorage.ts";
 import {PageSection} from "./page/PageSection.ts";

@@ -1,4 +1,4 @@
-import {sleep} from "../utils/uit.ts";
+import {sleep} from "../utils/util.ts";
 import {check} from "@tauri-apps/plugin-updater";
 import {confirm} from "@tauri-apps/plugin-dialog";
 import {LoadingScreen} from "./render/ui/LoadingScreen.ts";

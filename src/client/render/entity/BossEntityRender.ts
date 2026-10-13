@@ -1,7 +1,7 @@
 import type {EntityRenderer} from "./EntityRenderer.ts";
 import type {BaseBossEntity} from "../../../entity/mob/BaseBossEntity.ts";
 import {TAU} from "../../../utils/math/math.ts";
-import {hexToRgb, mix, rgb, rgba} from "../../../utils/uit.ts";
+import {hexToRgb, mix, rgb, rgba} from "../../../utils/util.ts";
 
 export class BossEntityRender implements EntityRenderer<BaseBossEntity> {
     public render(entity: BaseBossEntity, ctx: CanvasRenderingContext2D, tickDelta: number) {

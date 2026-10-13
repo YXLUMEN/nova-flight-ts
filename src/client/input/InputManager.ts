@@ -3,7 +3,7 @@ import type {Consumer} from "../../type/types.ts";
 import type {InputBinding} from "./InputBinding.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EMPTY_INPUT, type InputEvents} from "./InputEvent.ts";
-import {throttleTimeOut} from "../../utils/uit.ts";
+import {throttleTimeOut} from "../../utils/util.ts";
 import {mapMouse} from "./InputStroke.ts";
 import {fromEvent} from "./KeyModifier.ts";
 
