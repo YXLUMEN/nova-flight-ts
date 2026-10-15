@@ -3,7 +3,7 @@ import type {OptionStorage} from "./OptionStorage.ts";
 import {error, warn} from "@tauri-apps/plugin-log";
 
 export class Options {
-    private readonly version: number;
+    private readonly version: number; // 仅破坏性变更时修改此值
     private readonly items: Map<string, SettingItem<unknown>> = new Map();
     private readonly storage: OptionStorage;
     private timer: number | undefined;

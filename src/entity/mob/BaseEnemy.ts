@@ -4,7 +4,7 @@ import {type EntityType} from "../EntityType.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 
 export class BaseEnemy extends MobEntity {
-    public constructor(type: EntityType<BaseEnemy>, world: World, worth: number) {
+    public constructor(type: EntityType<BaseEnemy>, world: World, worth?: number) {
         super(type, world, worth);
     }
 

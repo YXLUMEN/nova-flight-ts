@@ -47,6 +47,16 @@ export class RingBuffer<T> implements Iterable<T> {
         return this.size === this.capacity;
     }
 
+    public at(index: number): T | null {
+        if (index < 0) {
+            index = this.size + index;
+        }
+        if (index < 0 || index >= this.size) {
+            return null;
+        }
+        return this.buffer[(this.head + index) % this.capacity];
+    }
+
     private resize(): void {
         const newCapacity = this.capacity * 2;
         const newBuffer: (T | null)[] = new Array(newCapacity).fill(null);

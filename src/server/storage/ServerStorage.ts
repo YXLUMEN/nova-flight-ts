@@ -82,11 +82,11 @@ export class ServerStorage {
             return Result.err(metaError);
         }
 
+        const raw = NbtSerialization.toCompactBinary(compound);
+        const data = compress(raw, 7) as Uint8Array<ArrayBuffer>;
+
         const saveTask = new Promise<void | Error>((resolve) => {
             const store = tx.objectStore('saves');
-            const raw = NbtSerialization.toCompactBinary(compound);
-            const data = compress(raw, 7) as Uint8Array<ArrayBuffer>;
-
             const request = store.put({
                 save_name: saveName,
                 data

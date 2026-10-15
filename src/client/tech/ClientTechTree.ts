@@ -86,42 +86,6 @@ export class ClientTechTree implements TechTree {
         }, {signal: this.abortCtrl.signal});
     }
 
-    public applyUnlockUpdates(tech: ClientTech) {
-        const affected = new Set<ClientTech>();
-
-        const add = (ids: Iterable<ClientTech>) => {
-            for (const x of ids) affected.add(x);
-        };
-
-        // 自身 + 自身后继
-        affected.add(tech);
-        add(this.successorsClosure(tech));
-
-        // 分支互斥节点 + 它们的后继
-        const branchPeers = this.branchPeers(tech);
-        add(branchPeers);
-        for (const p of branchPeers) add(this.successorsClosure(p));
-
-        // 冲突节点 + 它们的后继
-        const conflictPeers = this.conflictPeers(tech);
-        add(conflictPeers);
-        for (const p of conflictPeers) add(this.successorsClosure(p));
-
-        // 更新节点
-        for (const t of affected) {
-            this.updateNodeClass(t);
-        }
-
-        // 更新相关边
-        this.updateEdgesAround(affected
-            .values()
-            .map(tech => this.state.getTechId(tech))
-            .filter(id => id !== null)
-            .map(id => id.toString())
-            .toArray()
-        );
-    }
-
     public unlock(tech: RegistryEntry<ClientTech>): boolean {
         return this.state.unlock(tech.getValue());
     }
@@ -315,6 +279,42 @@ export class ClientTechTree implements TechTree {
     }
 
     // -------- Interactions --------
+    private applyUnlockUpdates(tech: ClientTech) {
+        const affected = new Set<ClientTech>();
+
+        const add = (ids: Iterable<ClientTech>) => {
+            for (const x of ids) affected.add(x);
+        };
+
+        // 自身 + 自身后继
+        affected.add(tech);
+        add(this.successorsClosure(tech));
+
+        // 分支互斥节点 + 它们的后继
+        const branchPeers = this.branchPeers(tech);
+        add(branchPeers);
+        for (const p of branchPeers) add(this.successorsClosure(p));
+
+        // 冲突节点 + 它们的后继
+        const conflictPeers = this.conflictPeers(tech);
+        add(conflictPeers);
+        for (const p of conflictPeers) add(this.successorsClosure(p));
+
+        // 更新节点
+        for (const t of affected) {
+            this.updateNodeClass(t);
+        }
+
+        // 更新相关边
+        this.updateEdgesAround(affected
+            .values()
+            .map(tech => this.state.getTechId(tech))
+            .filter(id => id !== null)
+            .map(id => id.toString())
+            .toArray()
+        );
+    }
+
     private bindInteractions() {
         this.nodesLayer.addEventListener('click', event => {
             this.nodesLayer.querySelector('.node.selected')?.classList.remove('selected');

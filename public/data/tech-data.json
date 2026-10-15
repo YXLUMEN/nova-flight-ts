@@ -572,7 +572,7 @@
     "y": 10,
     "branchGroup": "apex_upgrade",
     "desc": "tech.desc.nova-flight.electric_charge",
-    "cost": 480,
+    "cost": 720,
     "requires": [
       "static_electricity"
     ]

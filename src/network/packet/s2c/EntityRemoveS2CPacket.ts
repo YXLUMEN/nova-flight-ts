@@ -36,6 +36,6 @@ export class EntityRemoveS2CPacket implements Payload {
 
     public estimateSize(): number {
         // varUint + u16
-        return 6 + (this.reason.length << 2);
+        return 5 + (this.reason.length << 2);
     }
 }

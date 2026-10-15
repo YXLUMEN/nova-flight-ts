@@ -2,6 +2,10 @@ import type {Predicate} from "../../type/types.ts";
 import {assertClamp} from "../../utils/math/math.ts";
 
 export class SettingPredicates {
+    public static self<T>(v: T): T {
+        return v;
+    }
+
     public static isBool(v: unknown): boolean {
         return typeof v === 'boolean';
     }
@@ -10,8 +14,16 @@ export class SettingPredicates {
         return Number.isFinite;
     }
 
+    public static int(): Predicate<number> {
+        return Number.isSafeInteger;
+    }
+
     public static clampNumber(min: number, max: number): Predicate<number> {
         return v => Number.isFinite(v) && v >= min && v <= max;
+    }
+
+    public static clampInt(min: number, max: number): Predicate<number> {
+        return v => Number.isSafeInteger(v) && v >= min && v <= max;
     }
 
     public static string(maxLen: number = 65535): Predicate<string> {

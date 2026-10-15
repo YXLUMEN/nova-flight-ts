@@ -6,6 +6,7 @@ import type {World} from "../world/World.ts";
 import {EntityAttributes} from "./attribute/EntityAttributes.ts";
 import type {EntityAi} from "./ai/EntityAi.ts";
 import {EmptyAi} from "./ai/EmptyAi.ts";
+import type {InterpolationHandler} from "../world/entity/InterpolationHandler.ts";
 
 export class TargetDrone extends MobEntity {
     public dps = '';
@@ -62,5 +63,9 @@ export class TargetDrone extends MobEntity {
     }
 
     public override attack() {
+    }
+
+    public override getInterpolation(): InterpolationHandler | null {
+        return null;
     }
 }

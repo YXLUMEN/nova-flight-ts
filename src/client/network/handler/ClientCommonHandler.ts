@@ -61,10 +61,6 @@ export abstract class ClientCommonHandler implements PacketListener {
         this.connection.send(packet);
     }
 
-    public sendImmediately(packet: Payload): void {
-        this.connection.sendImmediately(packet);
-    }
-
     public accept(payload: Payload): void {
         payload.accept(this);
     }

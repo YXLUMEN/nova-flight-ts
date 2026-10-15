@@ -3,6 +3,8 @@ import type {BinaryReader} from "../serialization/BinaryReader.ts";
 
 export interface NbtType<T extends NbtElement> {
     read(reader: BinaryReader): T;
+
+    // read(reader: BinaryReader, accounter: NbtAccounter): T;
 }
 
 export const enum NbtTypeId {

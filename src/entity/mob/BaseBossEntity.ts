@@ -41,7 +41,12 @@ export class BaseBossEntity extends BossEntity {
         new Vec2(81, -16),
     ];
 
-    public constructor(type: EntityType<BossEntity>, world: World, worth: number, maxKillTime: number = 56) {
+    public constructor(
+        type: EntityType<BossEntity>,
+        world: World,
+        worth?: number,
+        maxKillTime?: number,
+    ) {
         super(type, world, worth, maxKillTime);
         this.setMovementSpeed(0.08);
         this.createBullet = this.createBullet.bind(this);
@@ -49,7 +54,7 @@ export class BaseBossEntity extends BossEntity {
 
     public override createLivingAttributes() {
         return super.createLivingAttributes()
-            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 160)
+            .addWithBaseValue(EntityAttributes.GENERIC_MAX_HEALTH, 240)
             .addWithBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE, 10);
     }
 

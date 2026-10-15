@@ -2,6 +2,7 @@ import type {NbtElement} from "./NbtElement.ts";
 import {type NbtType, NbtTypeId} from "../NbtType.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
+import {IllegalArgumentError} from "../../type/errors.ts";
 
 export class NbtDoubleArray implements NbtElement {
     public static readonly TYPE: NbtType<NbtDoubleArray> = {
@@ -10,7 +11,9 @@ export class NbtDoubleArray implements NbtElement {
             const array = new Float64Array(len);
 
             for (let i = 0; i < len; i++) {
-                array[i] = reader.readDouble();
+                const value = reader.readDouble();
+                if (!Number.isFinite(value)) throw new IllegalArgumentError('Double must be finite');
+                array[i] = value;
             }
 
             return new NbtDoubleArray(array);
@@ -23,7 +26,7 @@ export class NbtDoubleArray implements NbtElement {
         this.value = value;
     }
 
-    public static create(array: number[]) {
+    public static create(array: Iterable<number>) {
         return new NbtDoubleArray(new Float64Array(array));
     }
 

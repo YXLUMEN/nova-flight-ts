@@ -61,13 +61,13 @@ export class NovaFlightClient {
     public readonly networkHandler: ClientPlayHandler;
     public readonly commandSource: ClientCommandSource;
 
+    private readonly workerFs: ClientWorkerFS = new ClientWorkerFS();
     private worker: ServerWorker | null = null;
     private isIntegrated = false;
-    private readonly workerFs: ClientWorkerFS = new ClientWorkerFS();
 
+    public readonly worldRender: WorldRenderer;
     public world: ClientWorld | null = null;
     public player: LocalPlayerEntity | null = null;
-    public readonly worldRender: WorldRenderer;
 
     private readonly multiGameManager: ClientMultiGameManger;
     private readonly saveManager: ClientSavesManager;
@@ -117,7 +117,7 @@ export class NovaFlightClient {
         this.layer.gui.input = this.input;
         ClientInputEvents.registryAll(this, this.input);
 
-        this.loop = this.loop.bind(this);
+        this.runTick = this.runTick.bind(this);
     }
 
     public static instance(): NovaFlightClient {
@@ -187,7 +187,7 @@ export class NovaFlightClient {
         return false;
     }
 
-    private loop(ts: number): void {
+    private runTick(ts: number): void {
         try {
             if (!this.playing) {
                 this.stopWorld();
@@ -204,7 +204,7 @@ export class NovaFlightClient {
             while (this.accumulator >= perTick && step < maxStep) {
                 this.tick(perTick);
                 this.accumulator -= perTick;
-                step++
+                step++;
             }
 
             if (step >= maxStep && this.accumulator >= perTick) {
@@ -218,7 +218,7 @@ export class NovaFlightClient {
                 this.lastRenderTime = ts;
             }
 
-            requestAnimationFrame(this.loop);
+            requestAnimationFrame(this.runTick);
         } catch (err) {
             const msg = Error.isError(err) ?
                 `[Client] Crash ${err.name}:${err.message} because ${err.cause} at\n${err.stack}` :
@@ -323,7 +323,7 @@ export class NovaFlightClient {
         this.worldRender.setWorld(world);
         if (!this.playing) {
             this.playing = true;
-            this.loop(0);
+            this.runTick(0);
         }
         this.window.canvas.style.cursor = 'none';
 

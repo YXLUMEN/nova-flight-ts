@@ -23,7 +23,7 @@ export class NbtUint8Array implements NbtElement {
         this.value = value;
     }
 
-    public static create(list: number[]) {
+    public static create(list: Iterable<number>) {
         return new NbtUint8Array(new Uint8Array(list));
     }
 

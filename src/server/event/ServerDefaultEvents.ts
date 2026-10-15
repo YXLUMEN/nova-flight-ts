@@ -83,9 +83,11 @@ export class ServerDefaultEvents {
                 world.stage.reset();
                 world.stage.setStage('P6');
 
+                const maxKillTimes = 60 * Math.min(world.getDifficulty(), 4);
+
                 const boss = Math.random() > 0.5 ?
-                    new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64) :
-                    new DevourerBoss(EntityTypes.DEVOURER_BOSS_ENTITY, world, 96);
+                    new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64, maxKillTimes) :
+                    new DevourerBoss(EntityTypes.DEVOURER_BOSS_ENTITY, world, 96, maxKillTimes);
                 boss.setPosition(World.MAP_WIDTH / 2, 64);
 
                 const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
@@ -93,8 +95,9 @@ export class ServerDefaultEvents {
                 world.spawnEntity(mark);
             });
 
-            if (world.getDifficulty() > 0) {
-                world.setDifficulty(world.getDifficulty() + 1);
+            const difficulty = world.getDifficulty();
+            if (difficulty > 0) {
+                world.setDifficulty(difficulty + 1);
                 world.sendPacket(new DifficultChangeS2CPacket(world.getDifficulty()));
             }
 

@@ -23,7 +23,12 @@ export abstract class BossEntity extends MobEntity {
     private readonly maxDamageCanTake: number;
     private damageCooldown: number = 0;
 
-    protected constructor(type: EntityType<BossEntity>, world: World, worth: number, maxKillTime: number) {
+    protected constructor(
+        type: EntityType<BossEntity>,
+        world: World,
+        worth?: number,
+        maxKillTime: number = 60,
+    ) {
         super(type, world, worth);
 
         this.maxDamageCanTake = Math.floor(this.getMaxHealth() / maxKillTime);

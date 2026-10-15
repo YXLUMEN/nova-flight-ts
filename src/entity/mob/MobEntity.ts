@@ -25,6 +25,7 @@ export abstract class MobEntity extends LivingEntity {
 
     protected constructor(type: EntityType<MobEntity>, world: World, worth: number = 1) {
         super(type, world);
+
         this.worth = worth;
         this.age += (Math.random() * 10) | 0;
         this.setYaw(1.57079);

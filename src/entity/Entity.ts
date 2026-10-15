@@ -73,6 +73,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     private readonly tags: Set<string> = new Set<string>();
     private removed: boolean = false;
 
+    /** **实体基类**. 继承者构造函数专有参数必须有*默认值* */
     protected constructor(type: EntityType<any>, world: World) {
         this.type = type;
         this.world = world;
@@ -258,7 +259,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         }
     }
 
-    public updateYaw(yaw: number): void {
+    protected updateYaw(yaw: number): void {
         this.yaw = yaw;
         this.prevYaw = yaw;
     }
@@ -289,6 +290,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
             return;
         }
 
+        handler.setSteps(this.type.getTrackingTickInterval());
         handler.interpolateTo(
             pos ?? handler.position(),
             yaw ?? handler.yaw()

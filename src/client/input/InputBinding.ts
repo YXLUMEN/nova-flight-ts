@@ -1,5 +1,5 @@
 import {SettingItem} from "../settings/SettingItem.ts";
-import type {InputStroke} from "./InputStroke.ts";
+import {type InputStroke} from "./InputStroke.ts";
 import type {Identifier} from "../../registry/Identifier.ts";
 import type {TranslatableText} from "../../i18n/TranslatableText.ts";
 

@@ -1,6 +1,8 @@
+import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {NbtElement} from "./NbtElement.ts";
 import {type NbtType, NbtTypeId} from "../NbtType.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
+import type {Codec} from "../../serialization/Codec.ts";
 import {NbtInt8} from "./NbtInt8.ts";
 import {NbtInt16} from "./NbtInt16.ts";
 import {NbtInt32} from "./NbtInt32.ts";
@@ -14,15 +16,13 @@ import {NbtInt16Array} from "./NbtInt16Array.ts";
 import {NbtInt32Array} from "./NbtInt32Array.ts";
 import {NbtFloatArray} from "./NbtFloatArray.ts";
 import {NbtDoubleArray} from "./NbtDoubleArray.ts";
+import {NbtUint8Array} from "./NbtUint8Array.ts";
 import {NbtUint32Array} from "./NbtUint32Array.ts";
 import {NbtCompoundArray} from "./NbtCompoundArray.ts";
-import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import {NbtTypes} from "../NbtTypes.ts";
 import {NbtSerialization} from "../NbtSerialization.ts";
-import type {NbtUint8Array} from "./NbtUint8Array.ts";
 import {Optional} from "../../utils/Optional.ts";
 import {ErrorResult, SuccessResult} from "../../serialization/DataResult.ts";
-import type {Codec} from "../../serialization/Codec.ts";
 
 
 export class NbtCompound implements NbtElement {
@@ -100,32 +100,37 @@ export class NbtCompound implements NbtElement {
         return this;
     }
 
-    public setInt8Array(key: string, value: number[]): this {
+    public setInt8Array(key: string, value: Iterable<number>): this {
         this.entries.set(key, NbtInt8Array.create(value));
         return this;
     }
 
-    public setInt16Array(key: string, value: number[]): this {
+    public setInt16Array(key: string, value: Iterable<number>): this {
         this.entries.set(key, NbtInt16Array.create(value));
         return this;
     }
 
-    public setInt32Array(key: string, value: number[]): this {
+    public setInt32Array(key: string, value: Iterable<number>): this {
         this.entries.set(key, NbtInt32Array.create(value));
         return this;
     }
 
-    public setFloatArray(key: string, value: number[]): this {
+    public setFloatArray(key: string, value: Iterable<number>): this {
         this.entries.set(key, NbtFloatArray.create(value));
         return this;
     }
 
-    public setDoubleArray(key: string, value: number[]): this {
+    public setDoubleArray(key: string, value: Iterable<number>): this {
         this.entries.set(key, NbtDoubleArray.create(value));
         return this;
     }
 
-    public setUint32Array(key: string, value: number[]): this {
+    public setUint8Array(key: string, value: Iterable<number>): this {
+        this.entries.set(key, NbtUint8Array.create(value));
+        return this;
+    }
+
+    public setUint32Array(key: string, value: Iterable<number>): this {
         this.entries.set(key, NbtUint32Array.create(value));
         return this;
     }

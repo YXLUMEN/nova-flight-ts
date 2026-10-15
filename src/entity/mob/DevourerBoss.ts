@@ -47,11 +47,15 @@ export class DevourerBoss extends BossEntity {
     public readonly segPoses: Float32Array;
     public readonly prevSegPoses: Float32Array;
 
-    public constructor(type: EntityType<DevourerBoss>, world: World, worth: number) {
-        super(type, world, worth, 60);
+    public constructor(
+        type: EntityType<DevourerBoss>,
+        world: World,
+        worth?: number,
+        maxKillTime?: number,
+    ) {
+        super(type, world, worth, maxKillTime);
 
         this.noClip = true;
-
         this.segPoses = new Float32Array(this.segmentCount * this.segmentCount);
         this.prevSegPoses = new Float32Array(this.segmentCount * this.segmentCount);
 

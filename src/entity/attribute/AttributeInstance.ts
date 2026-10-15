@@ -1,11 +1,12 @@
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {Attribute} from "./Attribute.ts";
-import {Identifier} from "../../registry/Identifier.ts";
 import type {Consumer} from "../../type/types.ts";
+import type {HashMap} from "../../utils/collection/HashMap.ts";
+import {Identifier} from "../../registry/Identifier.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {AttributeModifier, Operation} from "../../component/type/AttributeModifier.ts";
 import {WrapperMap} from "../../utils/collection/WrapperMap.ts";
-import type {HashMap} from "../../utils/collection/HashMap.ts";
+import {IllegalStateError} from "../../type/errors.ts";
 
 
 export class AttributeInstance {
@@ -114,6 +115,7 @@ export class AttributeInstance {
                 value *= modifier.amount;
             }
         }
+        if (Number.isNaN(value)) throw new IllegalStateError('Attribute got NaN');
         return this.attribute.getValue().clamp(value);
     }
 

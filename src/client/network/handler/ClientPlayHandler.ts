@@ -73,6 +73,7 @@ import {Vec2} from "../../../utils/math/Vec2.ts";
 import {MobEntity} from "../../../entity/mob/MobEntity.ts";
 import {ParticleEffects} from "../../../effect/particle/ParticleEffects.ts";
 import {Settings} from "../../settings/Settings.ts";
+import type {EntitiesRemoveS2CPacket} from "../../../network/packet/s2c/EntitiesRemoveS2CPacket.ts";
 
 export class ClientPlayHandler extends ClientCommonHandler {
     private readonly commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
@@ -147,7 +148,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
         const change = packet.change;
         player.snapTo(change.position.x, change.position.y, change.yaw);
-        player.setDeltaMovement(change.delta.x, change.delta.y);
+        player.setVelocityByVec(change.velocity);
 
         this.send(new AcceptTeleportC2SPacket(packet.id));
     }
@@ -290,6 +291,13 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
     public onEntityRemove(packet: EntityRemoveS2CPacket): void {
         this.world?.removeEntity(packet.entityId);
+    }
+
+    public onEntitiesRemove(packet: EntitiesRemoveS2CPacket): void {
+        if (!this.world) return;
+        for (const id of packet.entityIds) {
+            this.world.removeEntity(id);
+        }
     }
 
     public onEntityVelocityUpdate(packet: EntityVelocityUpdateS2CPacket) {
@@ -582,7 +590,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
     public ping() {
         this.latency.onPing();
-        this.sendImmediately(PingC2SPacket.INSTANCE);
+        this.send(PingC2SPacket.INSTANCE);
     }
 
     public getLatency(): number {

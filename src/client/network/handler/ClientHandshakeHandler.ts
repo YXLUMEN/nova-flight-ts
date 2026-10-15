@@ -27,7 +27,7 @@ export class ClientHandshakeHandler extends ClientCommonHandler {
     public onServerReady(_: ServerReadyS2CPacket) {
         this.stopSniff();
 
-        this.sendImmediately(new ClientProfileC2SPacket(
+        this.send(new ClientProfileC2SPacket(
             this.client.clientId,
             this.client.connection.getSessionId(),
             this.client.playerName
@@ -39,7 +39,7 @@ export class ClientHandshakeHandler extends ClientCommonHandler {
 
         const config = new ClientConfigHandler(this.client, this.connection);
         this.connection.setPacketListener(ConnectionState.CONFIGURATION, config);
-        this.sendImmediately(ClientStartConfigC2SPacket.INSTANCE);
+        this.send(ClientStartConfigC2SPacket.INSTANCE);
     }
 
     public clientReady() {
@@ -51,13 +51,13 @@ export class ClientHandshakeHandler extends ClientCommonHandler {
             this.client.version
         );
 
-        this.sendImmediately(packet);
+        this.send(packet);
 
         let times = 0;
         this.sniffInterval = setInterval(() => {
             times++;
             try {
-                this.sendImmediately(packet);
+                this.send(packet);
             } catch (e) {
                 this.stopSniff();
                 console.error(e);

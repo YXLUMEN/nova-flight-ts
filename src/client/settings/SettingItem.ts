@@ -7,6 +7,8 @@ import {IllegalArgumentError} from "../../type/errors.ts";
 import {warn} from "@tauri-apps/plugin-log";
 
 export class SettingItem<T> {
+    private static readonly SELF = (v: any) => v;
+
     public readonly id: Identifier;
     public readonly name: TranslatableText;
 
@@ -14,6 +16,7 @@ export class SettingItem<T> {
 
     private readonly listeners = new Set<ChangeListener<T>>();
     protected readonly validate: Predicate<T>;
+    protected readonly mapper: SettingMapper<T>;
     protected readonly defaultValue: T;
     protected value: T;
 
@@ -22,6 +25,7 @@ export class SettingItem<T> {
         name: TranslatableText,
         defaultValue: T,
         validate: Predicate<T>,
+        mapper: SettingMapper<T> = SettingItem.SELF,
     ) {
         if (!validate(defaultValue)) {
             throw new Error(`Default value "${defaultValue}" is invalidate`);
@@ -32,6 +36,7 @@ export class SettingItem<T> {
         this.defaultValue = defaultValue;
         this.value = defaultValue;
         this.validate = validate;
+        this.mapper = mapper;
     }
 
     public get(): T {
@@ -44,18 +49,17 @@ export class SettingItem<T> {
 
     /** 同步设置并通知所有订阅者 */
     public set(value: T): Result<T, Error> {
-        if (value === this.value) {
-            return Result.ok(this.value);
-        }
-
+        if (value === this.value) return Result.ok(this.value);
         if (!this.validate(value)) {
             return Result.err(new IllegalArgumentError());
         }
 
         const prev = this.value;
-        this.value = value;
+        const mapped = this.mapper(value, prev, this.validate);
+        this.value = mapped;
+
         this.options.scheduleSave();
-        this.announce(value, prev);
+        this.announce(mapped, prev);
         return Result.ok(this.value);
     }
 
@@ -73,8 +77,9 @@ export class SettingItem<T> {
         }
 
         const prev = this.value;
-        this.value = value;
-        this.announce(value, prev);
+        const mapped = this.mapper(value, prev, this.validate);
+        this.value = mapped;
+        this.announce(mapped, prev);
     }
 
     public onChange(listener: ChangeListener<T>): Consumer<void> {
@@ -94,3 +99,5 @@ export class SettingItem<T> {
 }
 
 type ChangeListener<T> = (value: T, previous: T) => void;
+
+export type SettingMapper<T> = (value: T, prev: Readonly<T>, validate: Predicate<T>) => T;

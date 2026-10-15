@@ -484,7 +484,7 @@ export abstract class LivingEntity extends Entity {
             nbt.setCompoundArray('active_effects', nbtList);
         }
 
-        return nbt
+        return nbt;
     }
 
     public readNBT(nbt: NbtCompound) {

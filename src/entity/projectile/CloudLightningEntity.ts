@@ -10,7 +10,13 @@ import {isClient} from "../../configs/RuntimeConfig.ts";
 export class CloudLightningEntity extends ProjectileEntity {
     private readonly radius;
 
-    public constructor(type: EntityType<CloudLightningEntity>, world: World, owner: Entity | null, damage: number, radius = 128) {
+    public constructor(
+        type: EntityType<CloudLightningEntity>,
+        world: World,
+        owner?: Entity | null,
+        damage?: number,
+        radius: number = 128
+    ) {
         super(type, world, owner, damage);
         this.radius = radius;
     }
@@ -30,7 +36,7 @@ export class CloudLightningEntity extends ProjectileEntity {
             this.getOwner(),
             this.positionRef,
             this.radius,
-            75,
+            70,
             Math.max(Math.floor(damage * 0.8), 1)
         ));
     }

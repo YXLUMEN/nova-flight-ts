@@ -54,7 +54,10 @@ export class EntityList {
     public processRemovals(): void {
         for (const id of this.pendingRemoval) {
             const entity = this.entities.get(id);
-            if (!entity) continue;
+            if (!entity) {
+                console.warn('Untrack entity which id is: ', id);
+                continue;
+            }
 
             if (entity instanceof MobEntity) {
                 this.mobs.delete(entity);

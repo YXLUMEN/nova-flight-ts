@@ -10,19 +10,19 @@ export class PositionMoveRotation implements Payload {
         PacketCodecs.VECTOR2D,
         val => val.position,
         PacketCodecs.VECTOR2D,
-        val => val.delta,
+        val => val.velocity,
         PacketCodecs.FLOAT,
         val => val.yaw,
         PositionMoveRotation.new
     );
 
     public readonly position: Vec2;
-    public readonly delta: Vec2;
+    public readonly velocity: Vec2;
     public readonly yaw: number;
 
     public constructor(position: Vec2, delta: Vec2, yaw: number) {
         this.position = position;
-        this.delta = delta;
+        this.velocity = delta;
         this.yaw = yaw;
     }
 

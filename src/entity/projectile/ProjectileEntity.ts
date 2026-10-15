@@ -20,7 +20,12 @@ export abstract class ProjectileEntity extends Entity implements Ownable {
     private ownerUuid: UUID | null = null;
     private owner: Entity | null = null;
 
-    protected constructor(type: EntityType<ProjectileEntity>, world: World, owner: Entity | null, damage: number) {
+    protected constructor(
+        type: EntityType<ProjectileEntity>,
+        world: World,
+        owner: Entity | null = null,
+        damage: number = 0,
+    ) {
         super(type, world);
 
         this.damage = damage;

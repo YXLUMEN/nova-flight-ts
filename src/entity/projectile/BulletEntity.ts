@@ -8,7 +8,12 @@ import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
 import {isClient} from "../../configs/RuntimeConfig.ts";
 
 export class BulletEntity extends ProjectileEntity {
-    public constructor(type: EntityType<BulletEntity>, world: World, owner: Entity | null, damage: number) {
+    public constructor(
+        type: EntityType<BulletEntity>,
+        world: World,
+        owner?: Entity | null,
+        damage?: number,
+    ) {
         super(type, world, owner, damage);
     }
 

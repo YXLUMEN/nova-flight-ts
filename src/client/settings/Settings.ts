@@ -1,4 +1,4 @@
-import type {Predicate} from "../../type/types.ts";
+import type {Predicate, Return} from "../../type/types.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
 import {Options} from "./Options.ts";
@@ -17,7 +17,7 @@ export class Settings {
         'fps',
         'settings.render.fps',
         100,
-        SettingPredicates.clampNumber(2, 240),
+        SettingPredicates.clampInt(2, 240),
     );
 
     public static readonly LANG = this.gate<string>(
@@ -52,13 +52,15 @@ export class Settings {
         id: string,
         translate: string,
         defaultValue: T,
-        predicate: Predicate<T>
+        predicate: Predicate<T>,
+        mapper?: Return<T, T>,
     ): SettingItem<T> {
         const setting = new SettingItem(
             Identifier.ofVanilla(id),
             TranslatableText.of(translate),
             defaultValue,
             predicate,
+            mapper,
         );
         this.OPTIONS.add(setting);
         return setting;
@@ -68,13 +70,15 @@ export class Settings {
         id: string,
         translate: string,
         defaultValue: T,
-        predicate: Predicate<T>
+        predicate: Predicate<T>,
+        mapper?: Return<T, T>,
     ): GatedSettingItem<T> {
         const gate = new GatedSettingItem(
             Identifier.ofVanilla(id),
             TranslatableText.of(translate),
             defaultValue,
             predicate,
+            mapper,
         );
         this.OPTIONS.add(gate);
         return gate;

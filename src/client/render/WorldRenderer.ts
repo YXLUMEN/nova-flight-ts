@@ -150,6 +150,7 @@ export class WorldRenderer {
     }
 
     public render(alpha: number) {
+        if (!this.world) return;
         if (!this.bypassDisable && this.disableRender > 0) return;
 
         const ctx = this.window.ctx;
@@ -170,11 +171,6 @@ export class WorldRenderer {
         // 背景层
         this.renderBackground(ctx);
         const world = this.world;
-        if (!world) {
-            ctx.restore();
-            return;
-        }
-
         this.mapRender!.render(ctx, viewRect);
         this.entityRenderer.renderEntities(ctx, viewRect, world, alpha);
 

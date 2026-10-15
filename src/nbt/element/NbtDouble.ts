@@ -2,11 +2,14 @@ import type {NbtElement} from "./NbtElement.ts";
 import {type NbtType, NbtTypeId} from "../NbtType.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
+import {IllegalArgumentError} from "../../type/errors.ts";
 
 export class NbtDouble implements NbtElement {
     public static readonly TYPE: NbtType<NbtDouble> = {
         read(reader: BinaryReader) {
-            return NbtDouble.of(reader.readDouble());
+            const value = reader.readDouble();
+            if (!Number.isFinite(value)) throw new IllegalArgumentError('Double must be finite');
+            return NbtDouble.of(value);
         }
     };
     public static readonly ZERO = new NbtDouble(0);

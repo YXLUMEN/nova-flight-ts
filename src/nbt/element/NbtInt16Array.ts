@@ -23,7 +23,7 @@ export class NbtInt16Array implements NbtElement {
         this.value = value;
     }
 
-    public static create(list: number[]) {
+    public static create(list: Iterable<number>) {
         return new NbtInt16Array(new Int16Array(list));
     }
 

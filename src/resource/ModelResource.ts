@@ -127,15 +127,15 @@ export class ModelResource implements ResourceModule {
         const record = json as Record<string, unknown>;
 
         const config: DisplayConfig = {};
-        if (typeof record.rotation === 'number' && isFinite(record.rotation)) {
+        if (typeof record.rotation === 'number' && Number.isFinite(record.rotation)) {
             config.rotation = wrapRadians(record.rotation);
         }
 
         if (Array.isArray(record.scale) && record.scale.length === 2) {
             let x = Number(record.scale[0]);
             let y = Number(record.scale[1]);
-            x = isFinite(x) ? x : 1;
-            y = isFinite(y) ? y : 1;
+            x = Number.isFinite(x) ? x : 1;
+            y = Number.isFinite(y) ? y : 1;
 
             config.scale = [x, y];
         }
@@ -143,8 +143,8 @@ export class ModelResource implements ResourceModule {
         if (Array.isArray(record.offset) && record.offset.length === 2) {
             let x = Number(record.offset[0]);
             let y = Number(record.offset[1]);
-            x = isFinite(x) ? x : 0;
-            y = isFinite(y) ? y : 0;
+            x = Number.isFinite(x) ? x : 0;
+            y = Number.isFinite(y) ? y : 0;
 
             config.offset = [x, y];
         }
