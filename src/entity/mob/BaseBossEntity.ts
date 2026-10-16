@@ -2,7 +2,7 @@ import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {Entity} from "../Entity.ts";
 import {HALF_PI, rand, randInt} from "../../utils/math/math.ts";
 import {getNearestEntityByVec, thickLineCircleHit} from "../../utils/math/collide.ts";
-import {spawnLaser} from "../../utils/ServerEffect.ts";
+import {spawnFancyLaser, spawnLaser} from "../../utils/ServerEffect.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import {BossEntity} from "./BossEntity.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
@@ -188,7 +188,7 @@ export class BaseBossEntity extends BossEntity {
         const x = (target.x - start.x) * World.MAP_HEIGHT * 2;
         const y = (target.y - start.y) * World.MAP_HEIGHT * 2;
 
-        spawnLaser(world,
+        spawnFancyLaser(world,
             start.x, start.y,
             x, y,
             '#ff2828',

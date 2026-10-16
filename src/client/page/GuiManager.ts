@@ -11,7 +11,10 @@ export class GuiManager {
         this.root = root;
 
         window.addEventListener('keydown', event => {
-            if (this.top()?.keyDown(event)) event.preventDefault();
+            if (this.top()?.keyDown(event)) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }
         });
     }
 

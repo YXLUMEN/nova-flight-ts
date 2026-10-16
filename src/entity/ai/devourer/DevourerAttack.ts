@@ -1,5 +1,5 @@
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
-import {HALF_PI, TAU, rand, randInt} from "../../../utils/math/math.ts";
+import {HALF_PI, rand, randInt, TAU} from "../../../utils/math/math.ts";
 import type {Entity} from "../../Entity.ts";
 import type {DevourerBoss} from "../../mob/DevourerBoss.ts";
 import {DevourerPhase} from "./DevourerBossAI.ts";
@@ -9,7 +9,7 @@ import type {ProjectileEntity} from "../../projectile/ProjectileEntity.ts";
 import {MobMissileEntity} from "../../projectile/MobMissileEntity.ts";
 import {EntityTypes} from "../../EntityTypes.ts";
 import {World} from "../../../world/World.ts";
-import {spawnLaser} from "../../../utils/ServerEffect.ts";
+import {spawnFancyLaser, spawnLaser} from "../../../utils/ServerEffect.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {ScreenShakeS2CPacket} from "../../../network/packet/s2c/ScreenShakeS2CPacket.ts";
 import {thickLineCircleHit} from "../../../utils/math/collide.ts";
@@ -134,7 +134,7 @@ export class DevourerAttack {
         const endX = tx - offset;
         const endY = World.MAP_HEIGHT + 80;
 
-        spawnLaser(world, startX, startY, endX, endY, '#ff1100', 5, 0.8);
+        spawnFancyLaser(world, startX, startY, endX, endY, '#ff1100', 5, 0.8);
         world.schedule(0.85, () => {
             const damageSource = world.getDamageSources()
                 .laser(this.entity)
@@ -160,7 +160,7 @@ export class DevourerAttack {
     }
 
     public fireLaserGrid(world: ServerWorld): void {
-        const spacing = 96;
+        const spacing = 120;
         const margin = 80;
         const hitRadius = 4;
 
@@ -179,7 +179,7 @@ export class DevourerAttack {
         }
 
         for (const [sx, sy, ex, ey] of lines) {
-            spawnLaser(world, sx, sy, ex, ey, '#ff1100', 2, 0.8);
+            spawnFancyLaser(world, sx, sy, ex, ey, '#ff1100', 2, 0.8);
         }
 
         world.schedule(0.85, () => {

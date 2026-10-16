@@ -4,7 +4,6 @@ import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import type {InputManager} from "./InputManager.ts";
 import {cleanObj, empty} from "../../utils/util.ts";
 import {DataLoader} from "../../resource/DataLoader.ts";
-import type {ClientTechTree} from "../tech/ClientTechTree.ts";
 import {app} from "../../lib.ts";
 import {Main2WorkerType} from "../../worker/WorkerMsgType.ts";
 import type {Consumer} from "../../type/types.ts";
@@ -92,11 +91,6 @@ export class ClientInputEvents {
                 break;
             case 'Escape': {
                 if (!client.player) return;
-                const tech = <ClientTechTree>client.player.getTechs();
-                if (tech.isShowing()) {
-                    tech.displayTechTree(false);
-                    return;
-                }
 
                 client.player.setOpenInventory(false);
                 client.setPause(!client.isPause());
@@ -104,8 +98,9 @@ export class ClientInputEvents {
             }
             case 'KeyG': {
                 if (!client.player) return;
-                const tech = <ClientTechTree>client.player.getTechs();
-                tech.toggleTechTree();
+                const tech = client.player.getTechs();
+                if (tech.isShow()) tech.close();
+                else client.layer.gui.open(tech);
 
                 client.player.setOpenInventory(false);
                 client.connection.send(new PlayerInputC2SPacket('KeyG'));
@@ -127,7 +122,7 @@ export class ClientInputEvents {
             }
             case 'KeyE': {
                 if (!client.player) return;
-                if (!(client.player.getTechs() as ClientTechTree).isShowing()) {
+                if (!client.player.getTechs().isShow()) {
                     const shouldClose = !client.player.isOpenInventory();
                     client.player.setOpenInventory(shouldClose);
                     client.setPause(shouldClose);

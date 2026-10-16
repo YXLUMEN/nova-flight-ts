@@ -18,6 +18,8 @@ import {ClientTechManager} from "./ClientTechManager.ts";
 import type {ClientTech} from "./ClientTech.ts";
 import {UnlockTech} from "../../event/events/UnlockTech.ts";
 import type {Consumer} from "../../type/types.ts";
+import {PageSection} from "../page/PageSection.ts";
+import {as, assert} from "../../utils/dom_util.ts";
 
 interface Adjacency {
     successors: Map<ClientTech, ClientTech[]>; // tech -> successors
@@ -27,22 +29,19 @@ interface Adjacency {
 }
 
 
-export class ClientTechTree implements TechTree {
+export class ClientTechTree extends PageSection implements TechTree {
     public readonly playerScore = document.getElementById('player-money')!;
+    private readonly player: LocalPlayerEntity;
 
-    private readonly techShell = document.getElementById('tech-shell')!;
-    private readonly submitBtn = document.getElementById('d-unlock') as HTMLButtonElement;
-    private readonly resetBtn = document.getElementById('reset') as HTMLButtonElement;
-    private readonly resetAllBtn = document.getElementById('reset-all') as HTMLButtonElement;
-    private readonly techTitle = document.getElementById('d-title')!;
-    private readonly techTexture = document.getElementById('d-texture') as HTMLImageElement;
-    private readonly metaShow = document.getElementById('d-meta')!;
+    private readonly submitBtn: HTMLButtonElement;
+    private readonly resetBtn: HTMLButtonElement;
+    private readonly resetAllBtn: HTMLButtonElement;
+    private readonly techTitle: HTMLElement;
+    private readonly techTexture: HTMLImageElement;
+    private readonly metaShow: HTMLElement;
 
     private readonly nodeWidth = 144;
     private readonly nodeHeight = 40;
-
-    private readonly player: LocalPlayerEntity;
-
     private readonly container: HTMLElement;
     private readonly svg: SVGSVGElement;
     private readonly nodesLayer: HTMLElement;
@@ -55,9 +54,29 @@ export class ClientTechTree implements TechTree {
     private selectNodeId: string | null = null;
     private renderDisable: Consumer<void> = empty;
 
-    public constructor(player: LocalPlayerEntity, container?: HTMLElement) {
+    public constructor(player: LocalPlayerEntity) {
+        super('tech-shell');
+
+        this.closeOnEscape = true;
+
         this.player = player;
-        this.container = container ?? document.getElementById('viewport')!;
+        this.container = assert(this.root, '#viewport');
+        this.submitBtn = as(this.root, '#d-unlock', HTMLButtonElement);
+        this.resetBtn = as(this.root, '#reset', HTMLButtonElement);
+        this.resetAllBtn = as(this.root, '#reset-all', HTMLButtonElement);
+        this.techTitle = assert(this.root, '#d-title');
+        this.techTexture = as(this.root, '#d-texture', HTMLImageElement);
+        this.metaShow = assert(this.root, '#d-meta');
+
+        this.container.replaceChildren();
+        const svgNS = 'http://www.w3.org/2000/svg';
+
+        this.svg = document.createElementNS(svgNS, 'svg');
+        this.svg.classList.add('edges');
+
+        this.nodesLayer = document.createElement('div');
+        this.nodesLayer.classList.add('nodes');
+        this.container.append(this.svg, this.nodesLayer);
 
         const techState = Registries.TECH
             .getEntries()
@@ -66,24 +85,15 @@ export class ClientTechTree implements TechTree {
         this.state = new TechState<ClientTech>(techState);
         this.adj = this.buildAdjacency(techState);
 
-        this.tryApply = this.tryApply.bind(this);
-
-        this.container.textContent = '';
-        const svgNS = 'http://www.w3.org/2000/svg';
-        this.svg = document.createElementNS(svgNS, 'svg');
-        this.svg.classList.add('edges');
-        this.nodesLayer = document.createElement('div');
-        this.nodesLayer.classList.add('nodes');
-        this.container.append(this.svg, this.nodesLayer);
-
-        this.renderEdges();
-        this.renderNodes();
-        this.bindInteractions();
-
         this.techTexture.addEventListener('error', () => {
             if (this.techTexture.src === '/texture/default.png') return;
             this.techTexture.src = '/texture/default.png';
         }, {signal: this.abortCtrl.signal});
+
+        this.tryApply = this.tryApply.bind(this);
+        this.renderEdges();
+        this.renderNodes();
+        this.bindInteractions();
     }
 
     public unlock(tech: RegistryEntry<ClientTech>): boolean {
@@ -118,39 +128,21 @@ export class ClientTechTree implements TechTree {
         );
     }
 
-    public toggleTechTree(): void {
-        const hidden = this.techShell.classList.toggle('hidden');
+    protected override onOpened() {
         const client = NovaFlightClient.instance();
-        client.setPause(!hidden);
-        if (hidden) {
-            this.renderDisable();
-            this.renderDisable = empty;
-        } else {
-            this.renderDisable = client.worldRender.disable();
-        }
+        client.setPause(true);
+        this.renderDisable();
+        this.renderDisable = client.worldRender.disable();
     }
 
-    public displayTechTree(show: boolean = true): void {
+    protected override onClosed() {
         const client = NovaFlightClient.instance();
-        if (show) {
-            this.techShell.classList.remove('hidden');
-            client.setPause(true);
-            this.renderDisable = client.worldRender.disable();
-            return;
-        }
-
-        this.techShell.classList.add('hidden');
         client.setPause(false);
-
         this.renderDisable();
         this.renderDisable = empty;
     }
 
-    public isShowing(): boolean {
-        return !this.techShell.classList.contains('hidden');
-    }
-
-    public destroy() {
+    protected override onDestroy() {
         this.abortCtrl.abort();
         this.adj.successors.clear();
         this.adj.techsInBranch.clear();

@@ -56,8 +56,8 @@ export class DevourerBoss extends BossEntity {
         super(type, world, worth, maxKillTime);
 
         this.noClip = true;
-        this.segPoses = new Float32Array(this.segmentCount * this.segmentCount);
-        this.prevSegPoses = new Float32Array(this.segmentCount * this.segmentCount);
+        this.segPoses = new Float32Array(this.segmentCount * 2);
+        this.prevSegPoses = new Float32Array(this.segmentCount * 2);
 
         this.setMovementSpeed(12);
     }

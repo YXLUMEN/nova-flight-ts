@@ -384,6 +384,10 @@ export class LocalPlayerEntity extends PlayerEntity {
         this.techTree.playerScore.textContent = `点数: ${this.getScore()}`;
     }
 
+    public override getTechs(): ClientTechTree {
+        return <ClientTechTree>super.getTechs();
+    }
+
     public override canMoveVoluntarily(): boolean {
         return true;
     }

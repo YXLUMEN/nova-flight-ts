@@ -4,8 +4,11 @@ import {ConnectionState} from "../../server/network/ConnectionState.ts";
 import {IllegalStateError} from "../../type/errors.ts";
 import type {Connection} from "../../network/Connection.ts";
 import type {ClientChannel} from "./ClientChannel.ts";
+import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
 
 export class ClientConnection implements Connection {
+    private readonly sendQueue: RingBuffer<Payload> = new RingBuffer(16);
+
     private channel: ClientChannel;
     private packetListener: PacketListener | null = null;
     private state: ConnectionState = ConnectionState.HANDSHAKING;
@@ -17,10 +20,24 @@ export class ClientConnection implements Connection {
     }
 
     public tick(): void {
-        this.packetListener?.tick();
+        if (!this.packetListener) return;
+        while (!this.sendQueue.isEmpty()) {
+            const packet = this.sendQueue.shift();
+            if (!packet) break;
+            this.sendImmediately(packet);
+        }
+        this.packetListener.tick();
     }
 
-    public send(packet: Payload): void {
+    public send(packet: Payload) {
+        if (this.state < ConnectionState.PLAY) {
+            this.sendImmediately(packet);
+            return;
+        }
+        this.sendQueue.push(packet);
+    }
+
+    private sendImmediately(packet: Payload): void {
         if (this.state === ConnectionState.CLOSED) {
             console.warn('Sending packet when connection closed', packet);
             return;

@@ -12,6 +12,7 @@ import {WindowOverlay} from "./WindowOverlay.ts";
 import {ArcEffect} from "./ArcEffect.ts";
 import {AuraEffect} from "./AuraEffect.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import {FancyLaserEffect} from "./FancyLaserEffect.ts";
 
 export class VisualEffectTypes {
     public static EDGE_GLOW: VisualEffectType<EdgeGlowEffect>;
@@ -22,6 +23,7 @@ export class VisualEffectTypes {
     public static WINDOW_OVERLAY: VisualEffectType<WindowOverlay>;
     public static ARC: VisualEffectType<ArcEffect>;
     public static SHIELD_AURA: VisualEffectType<AuraEffect>;
+    public static FANCY_LASER: VisualEffectType<FancyLaserEffect>;
 
     public static init() {
         this.EDGE_GLOW = this.registry('edge_glow', VisualEffectType.create(EdgeGlowEffect.PACKET_CODEC));
@@ -32,6 +34,7 @@ export class VisualEffectTypes {
         this.WINDOW_OVERLAY = this.registry('window_overlay', VisualEffectType.create(WindowOverlay.PACKET_CODEC));
         this.ARC = this.registry('arc', VisualEffectType.create(ArcEffect.PACKET_CODEC));
         this.SHIELD_AURA = this.registry('shield_aura', VisualEffectType.create(PacketCodecs.NEVER));
+        this.FANCY_LASER = this.registry('fancy_laser', VisualEffectType.create(FancyLaserEffect.PACKET_CODEC));
         Object.freeze(this);
     }
 

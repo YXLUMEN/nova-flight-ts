@@ -48,7 +48,7 @@ export class EntityRenderers {
         this.register(EntityTypes.BASE_ENEMY, baseEnemy);
         this.register(EntityTypes.TANK_ENEMY_ENTITY, baseEnemy);
         this.register(EntityTypes.BASE_BOSS_ENTITY, boss);
-        this.register(EntityTypes.TNT_BOSS_ENTITY, boss);
+        // this.register(EntityTypes.TNT_BOSS_ENTITY, boss);
         this.register(EntityTypes.GUN_ENEMY_ENTITY, new GunEnemyEntityRender());
         this.register(EntityTypes.MINIGUN_ENEMY_ENTITY, new MiniGunEnemyEntityRender());
         this.register(EntityTypes.BULLET_ENTITY, bullet);
