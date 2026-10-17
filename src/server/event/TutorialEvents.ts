@@ -219,6 +219,7 @@ export class TutorialEvents {
                 const world = ctx.server.world!;
                 const boss = new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64);
                 boss.setPosition(World.MAP_WIDTH / 2, 64);
+
                 const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
                 mark.setPositionByVec(boss.positionRef);
                 world.spawnEntity(mark);

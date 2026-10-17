@@ -1,5 +1,5 @@
 import {defineConfig} from "vite";
-import {injectPlugin} from "./vite-plugin/InjectPlugin";
+import {injectPlugin} from "./vite-plugin/InjectPlugin.ts";
 import InlineEnum from 'unplugin-inline-enum/vite';
 
 const host = process.env.TAURI_DEV_HOST;
@@ -12,7 +12,7 @@ export default defineConfig({
         host: host || false,
         hmr: host
             ? {
-                protocol: "ws",
+                protocol: 'ws',
                 host,
                 port: 5173,
             }

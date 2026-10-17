@@ -1,12 +1,12 @@
-import {MobEntity} from "./mob/MobEntity.ts";
-import {type DamageSource} from "./damage/DamageSource.ts";
-import {DamageTypes} from "./damage/DamageTypes.ts";
-import type {EntityType} from "./EntityType.ts";
-import type {World} from "../world/World.ts";
-import {EntityAttributes} from "./attribute/EntityAttributes.ts";
-import type {EntityAi} from "./ai/EntityAi.ts";
-import {EmptyAi} from "./ai/EmptyAi.ts";
-import type {InterpolationHandler} from "../world/entity/InterpolationHandler.ts";
+import {MobEntity} from "./MobEntity.ts";
+import {type DamageSource} from "../damage/DamageSource.ts";
+import {DamageTypes} from "../damage/DamageTypes.ts";
+import type {EntityType} from "../EntityType.ts";
+import type {World} from "../../world/World.ts";
+import {EntityAttributes} from "../attribute/EntityAttributes.ts";
+import type {EntityAi} from "../ai/EntityAi.ts";
+import {EmptyAi} from "../ai/EmptyAi.ts";
+import type {InterpolationHandler} from "../../world/entity/InterpolationHandler.ts";
 
 export class TargetDrone extends MobEntity {
     public dps = '';
@@ -55,7 +55,7 @@ export class TargetDrone extends MobEntity {
     }
 
     public override onDeath(damageSource: DamageSource) {
-        if (damageSource.isOf(DamageTypes.KILL) || damageSource.isOf(DamageTypes.REMOVED)) {
+        if (damageSource.isOf(DamageTypes.KILL)) {
             super.onDeath(damageSource);
             return;
         }

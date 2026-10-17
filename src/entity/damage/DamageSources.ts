@@ -13,7 +13,6 @@ import type {Explosion} from "../../world/element/explosion/Explosion.ts";
 export class DamageSources {
     private readonly registry: Registry<DamageType>;
     private readonly _generic: DamageSource;
-    private readonly _removed: DamageSource;
     private readonly _kill: DamageSource;
     private readonly _laser: DamageSource;
     private readonly _void: DamageSource;
@@ -24,7 +23,6 @@ export class DamageSources {
     public constructor(registryManager: RegistryManager) {
         this.registry = registryManager.get(RegistryKeys.DAMAGE_TYPE);
         this._generic = this.create(DamageTypes.GENERIC);
-        this._removed = this.create(DamageTypes.REMOVED);
         this._kill = this.create(DamageTypes.KILL);
         this._laser = this.create(DamageTypes.LASER).setShieldMulti(0.5);
         this._void = this.create(DamageTypes.VOID);
@@ -89,10 +87,6 @@ export class DamageSources {
 
     public playerImpact(attacker: PlayerEntity) {
         return this.createWithAttacker(DamageTypes.PLAYER_IMPACT, attacker);
-    }
-
-    public removed() {
-        return this._removed;
     }
 
     public kill() {

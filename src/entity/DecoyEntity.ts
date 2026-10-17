@@ -16,7 +16,7 @@ export class DecoyEntity extends Entity implements Ownable {
     private owner: Entity | null = null;
     private ownerUuid: UUID | null = null;
 
-    public constructor(type: EntityType<DecoyEntity>, world: World, owner: Entity | null) {
+    public constructor(type: EntityType<DecoyEntity>, world: World, owner: Entity | null = null) {
         super(type, world);
         this.setOwner(owner);
         DecoyEntity.Entities.add(this);

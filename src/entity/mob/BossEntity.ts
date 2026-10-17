@@ -50,15 +50,19 @@ export abstract class BossEntity extends MobEntity {
         if (isClient) return false;
         if (this.damageCooldown > 0 && !damageSource.isIn(DamageTypeTags.BYPASSES_INVULNERABLE)) return false;
 
-        const attacker = damageSource.getAttacker();
-        if (!attacker || !attacker.isPlayer()) damage = 0.1;
-
-        const clampDamage = clamp(damage, 0.1, this.maxDamageCanTake);
-        if (super.takeDamage(damageSource, clampDamage)) {
+        if (super.takeDamage(damageSource, damage)) {
             this.damageCooldown = 10;
             return true;
         }
         return false;
+    }
+
+    protected override modifyAppliedDamage(source: DamageSource, damage: number): number {
+        const attacker = source.getAttacker();
+        if (!attacker || !attacker.isPlayer()) return 0.1;
+
+        const modified = super.modifyAppliedDamage(source, damage);
+        return clamp(modified, 0.1, this.maxDamageCanTake);
     }
 
     public override canHaveEffect(effect: StatusEffectInstance): boolean {

@@ -80,6 +80,10 @@ export class StatusEffects {
         new StatusEffect(StatusEffectCategory.HARMFUL, '#356ebb')
     );
 
+    public static readonly FRAGILE_EFFECT = this.register('fragile_effect',
+        new StatusEffect(StatusEffectCategory.HARMFUL, '#605551')
+    );
+
     private static register(id: string, statusEffect: StatusEffect): RegistryEntry<StatusEffect> {
         return Registry.registerReferenceById(Registries.STATUS_EFFECT, Identifier.ofVanilla(id), statusEffect);
     }

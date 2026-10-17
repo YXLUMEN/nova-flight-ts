@@ -43,7 +43,7 @@ import {BGMManager} from "../../../sound/BGMManager.ts";
 import {AudioStopS2CPacket} from "../../../network/packet/s2c/AudioStopS2CPacket.ts";
 import {type LaserWeaponS2CPacket} from "../../../network/packet/s2c/LaserWeaponS2CPacket.ts";
 import {LaserBeamEffect} from "../../../effect/LaserBeamEffect.ts";
-import {TargetDrone} from "../../../entity/TargetDrone.ts";
+import {TargetDrone} from "../../../entity/mob/TargetDrone.ts";
 import {DifficultChangeS2CPacket} from "../../../network/packet/s2c/DifficultChangeS2CPacket.ts";
 import {GameMessageS2CPacket} from "../../../network/packet/s2c/GameMessageS2CPacket.ts";
 import {TranslatableTextS2CPacket} from "../../../network/packet/s2c/TranslatableTextS2CPacket.ts";

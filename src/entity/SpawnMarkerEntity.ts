@@ -8,12 +8,17 @@ import type {ServerWorld} from "../server/ServerWorld.ts";
 
 export class SpawnMarkerEntity extends Entity {
     public override noClip = true;
-
     public readonly invulnerable = true;
-    private readonly spawnMob: MobEntity;
-    private readonly force;
 
-    public constructor(type: EntityType<SpawnMarkerEntity>, world: World, mob: MobEntity, force = false) {
+    private readonly spawnMob: MobEntity | null;
+    private readonly force: boolean;
+
+    public constructor(
+        type: EntityType<SpawnMarkerEntity>,
+        world: World,
+        mob: MobEntity | null = null,
+        force: boolean = false
+    ) {
         super(type, world);
         this.spawnMob = mob;
         this.force = force;
@@ -25,19 +30,22 @@ export class SpawnMarkerEntity extends Entity {
 
         this.discard();
         const world = this.getWorld() as ServerWorld;
-        if (world.isPeaceMode() || world.isClient) return;
+        if (world.isPeaceMode() || world.isClient || this.spawnMob === null) return;
 
-        if (!this.force) {
-            const {x, y} = this.spawnMob.positionRef;
-            const canSpawn = world.getPlayers().every(player => {
-                if (player.isRemoved()) return true;
-                const dx = x - player.positionRef.x;
-                const dy = y - player.positionRef.y;
-                const distSq = dx * dx + dy * dy;
-                return distSq >= 6144;
-            });
-            if (!canSpawn) return;
+        if (this.force) {
+            world.spawnEntity(this.spawnMob);
+            return;
         }
+
+        const {x, y} = this.spawnMob.positionRef;
+        const canSpawn = world.getPlayers().every(player => {
+            if (player.isRemoved()) return true;
+            const dx = x - player.getX();
+            const dy = y - player.getY();
+            const distSq = dx * dx + dy * dy;
+            return distSq >= 6144;
+        });
+        if (!canSpawn) return;
 
         world.spawnEntity(this.spawnMob);
     }

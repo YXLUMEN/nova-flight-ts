@@ -215,6 +215,10 @@ export abstract class LivingEntity extends Entity {
     }
 
     protected modifyAppliedDamage(source: DamageSource, damage: number): number {
+        if (source.isIn(DamageTypeTags.BYPASSES_EFFECTS)) {
+            return damage;
+        }
+
         // 增伤
         const attacker = source.getAttacker();
         if (attacker instanceof PlayerEntity) {
@@ -235,8 +239,9 @@ export abstract class LivingEntity extends Entity {
             }
         }
 
-        if (source.isIn(DamageTypeTags.BYPASSES_EFFECTS)) {
-            return damage;
+        if (this.hasStatusEffect(StatusEffects.FRAGILE_EFFECT)) {
+            const amplifier = this.getStatusEffect(StatusEffects.RESISTANCE)!.amplifier();
+            damage += damage * Math.min(6, amplifier) * 0.1;
         }
 
         if (this.hasStatusEffect(StatusEffects.RESISTANCE) && !source.isIn(DamageTypeTags.BYPASSES_RESISTANCE)) {

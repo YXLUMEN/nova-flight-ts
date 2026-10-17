@@ -20,7 +20,7 @@ import {CloudLightningEntity} from "./projectile/CloudLightningEntity.ts";
 import {ArtilleryEntity} from "./projectile/ArtilleryEntity.ts";
 import {TorpedoEntity} from "./projectile/TorpedoEntity.ts";
 import {ExplosionEntity} from "./ExplosionEntity.ts";
-import {TargetDrone} from "./TargetDrone.ts";
+import {TargetDrone} from "./mob/TargetDrone.ts";
 import {BaseBossEntity} from "./mob/BaseBossEntity.ts";
 import {MobBulletEntity} from "./projectile/MobBulletEntity.ts";
 import {MagneticTorpedoEntity} from "./projectile/MagneticTorpedoEntity.ts";

@@ -7,8 +7,8 @@ import {ExplosiveBuilder} from "../world/element/explosion/ExplosiveBuilder.ts";
 
 export class ExplosionEntity extends Entity {
     public override noClip = true;
-
     public readonly invulnerable = true;
+
     public readonly countdown: number;
     public readonly power: number;
     public readonly behavior: ExplosionConfigs;

@@ -1,5 +1,5 @@
 import type {EntityRenderer} from "./EntityRenderer.ts";
-import type {TargetDrone} from "../../../entity/TargetDrone.ts";
+import type {TargetDrone} from "../../../entity/mob/TargetDrone.ts";
 import {UITheme} from "../ui/theme.ts";
 
 export class TargetDroneEntityRender implements EntityRenderer<TargetDrone> {
