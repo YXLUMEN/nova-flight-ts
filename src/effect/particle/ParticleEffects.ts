@@ -5,74 +5,82 @@ import {Registry} from "../../registry/Registry.ts";
 import {ParticleShape} from "./ParticlePool.ts";
 
 export class ParticleEffects {
-    public static readonly EXPLOSION = ParticleEffects.register('explosion',
+    public static readonly TRAJECTORY = this.register('trajectory',
+        ParticleEffectType.builder()
+            .life(0.4, 0.6)
+            .size(2, 3)
+            .colors('#fffce999', '#bcbcbc99')
+            .build()
+    );
+
+    public static readonly EXPLOSION = this.register('explosion',
         ParticleEffectType.builder()
             .life(0.4, 0.9)
             .size(2, 4)
-            .colors('#ff9940', '#FFDDB8B3')
+            .colors('#ff9940', '#ffddb8b3')
             .speed(120, 320)
-            .withDrag(0.2)
+            .drag(0.2)
             .omnidirectional()
             .build()
     );
 
-    public static readonly EXPLOSION_DEBRIS = ParticleEffects.register('explosion_debris',
+    public static readonly EXPLOSION_DEBRIS = this.register('explosion_debris',
         ParticleEffectType.builder()
             .life(0.3, 0.6)
             .size(3, 5)
             .colors('#ff4422')
             .speed(80, 200)
-            .withDrag(0.1)
+            .drag(0.1)
             .omnidirectional()
             .build()
     );
 
-    public static readonly SPARK = ParticleEffects.register('spark',
+    public static readonly SPARK = this.register('spark',
         ParticleEffectType.builder()
             .life(0.15, 0.4)
             .size(1, 3)
             .colors('#dedede')
             .speed(50, 70)
             .symmetry(0.5235)
-            .withDrag(0.9)
+            .drag(0.9)
             .build()
     );
 
-    public static readonly MUZZLE_SPARK = ParticleEffects.register('muzzle_spark',
+    public static readonly MUZZLE_SPARK = this.register('muzzle_spark',
         ParticleEffectType.builder()
             .life(0.4, 0.6)
             .size(2, 3)
             .colors('#ffaa33', '#ff5454')
             .speed(100, 240)
             .symmetry(0.42)          // ~24°
-            .withDrag(0.8)
+            .drag(0.8)
             .build()
     );
 
-    public static readonly SMOKE = ParticleEffects.register('smoke',
+    public static readonly SMOKE = this.register('smoke',
         ParticleEffectType.builder()
             .life(0.8, 1.6)
             .size(4, 10)
             .colors('#A0A0A099')
             .speed(20, 60)
             .omnidirectional()
-            .withDrag(0.3)
+            .drag(0.3)
             .build()
     );
 
-    public static readonly LARGE_SMOKE = ParticleEffects.register('large_smoke',
+    public static readonly LARGE_SMOKE = this.register('large_smoke',
         ParticleEffectType.builder()
             .life(20, 30)
             .size(24, 36)
-            .setRecession(-0.8)
+            .recession(-0.8)
             .colors('#a0a0a0')
             .speed(10, 80)
             .omnidirectional()
-            .withDrag(0.9)
+            .drag(0.9)
             .build()
     );
 
-    public static readonly EMBER = ParticleEffects.register('ember',
+    public static readonly EMBER = this.register('ember',
         ParticleEffectType.builder()
             .life(0.6, 1.2)
             .size(4, 8)
@@ -81,7 +89,7 @@ export class ParticleEffects {
             .build()
     );
 
-    public static readonly HIT = ParticleEffects.register('hit',
+    public static readonly HIT = this.register('hit',
         ParticleEffectType.builder()
             .life(0.2, 0.6)
             .size(4, 6)
@@ -91,7 +99,7 @@ export class ParticleEffects {
             .build()
     );
 
-    public static readonly SHIELD_HIT = ParticleEffects.register('shield_hit',
+    public static readonly SHIELD_HIT = this.register('shield_hit',
         ParticleEffectType.builder()
             .life(0.2, 0.6)
             .size(6, 8)
@@ -102,7 +110,7 @@ export class ParticleEffects {
             .build()
     );
 
-    public static readonly ENTITY_DEATH = ParticleEffects.register('entity_death',
+    public static readonly ENTITY_DEATH = this.register('entity_death',
         ParticleEffectType.builder()
             .life(0.6, 0.8)
             .size(4, 6)
@@ -112,7 +120,7 @@ export class ParticleEffects {
             .build()
     );
 
-    public static readonly POWER_FULL_BLOW = ParticleEffects.register('power_full_blow',
+    public static readonly POWER_FULL_BLOW = this.register('power_full_blow',
         ParticleEffectType.builder()
             .life(0.5, 0.6)
             .size(4, 6)
@@ -122,18 +130,18 @@ export class ParticleEffects {
             .build()
     );
 
-    public static readonly ASH = ParticleEffects.register('ash',
+    public static readonly ASH = this.register('ash',
         ParticleEffectType.builder()
             .life(0.8, 1.6)
             .size(1, 3)
             .colors('#A0A0A099')
             .speed(30, 70)
             .omnidirectional()
-            .withDrag(0.3)
+            .drag(0.3)
             .build()
     );
 
-    public static readonly BURST = ParticleEffects.register('burst',
+    public static readonly BURST = this.register('burst',
         ParticleEffectType.builder()
             .life(0.8, 1.2)
             .size(1, 3)
@@ -143,7 +151,7 @@ export class ParticleEffects {
             .build()
     );
 
-    public static readonly DECOY_FLASH = ParticleEffects.register('decoy_flash',
+    public static readonly DECOY_FLASH = this.register('decoy_flash',
         ParticleEffectType.builder()
             .life(0.8, 1.2)
             .size(1, 2)
@@ -153,7 +161,7 @@ export class ParticleEffects {
             .build()
     );
 
-    public static readonly SHIELD_CRASH = ParticleEffects.register('shield_crash',
+    public static readonly SHIELD_CRASH = this.register('shield_crash',
         ParticleEffectType.builder()
             .life(0.4, 0.8)
             .size(8, 10)
@@ -165,7 +173,7 @@ export class ParticleEffects {
             .build()
     );
 
-    public static readonly FLUSH = ParticleEffects.register('flush',
+    public static readonly FLUSH = this.register('flush',
         ParticleEffectType.builder()
             .life(0.8, 1.2)
             .size(5, 7)
@@ -176,7 +184,7 @@ export class ParticleEffects {
             .build()
     );
 
-    public static readonly BLOCK_DESTROY = ParticleEffects.register('block_destroy',
+    public static readonly BLOCK_DESTROY = this.register('block_destroy',
         ParticleEffectType.builder()
             .life(0.5, 1)
             .size(4, 6)
@@ -185,6 +193,16 @@ export class ParticleEffects {
             .rotation(-Math.PI, Math.PI)
             .shape(ParticleShape.RECT)
             .omnidirectional()
+            .build()
+    );
+
+    public static readonly EXHAUST = this.register('exhaust',
+        ParticleEffectType.builder()
+            .life(1, 1.5)
+            .size(4, 6)
+            .colors('#986900', '#575757')
+            .speed(-2, 2)
+            .drag(0.3)
             .build()
     );
 

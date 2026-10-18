@@ -1,10 +1,5 @@
 /**
- * Seed 单元测试（node:test）
- *
- * 运行：
- *   node --test test/Seed.test.ts
- *   （Node ≥ 23.6 默认擦除 .ts 类型；Node 22.6–23.5 需加 --experimental-strip-types）
- *   CI 里直接跑 `npm test`（见 package.json）。
+ * Seed 单元测试（vitest）
  *
  * 覆盖：
  *   构造与参数校验 / 80 bit 熵的编码与检视（toBigInt/toString/getValues）/
@@ -16,8 +11,7 @@
  * 换实现就会失败 —— 这正是回归测试想要的效果，而不是概率性 flaky。
  */
 
-import {describe, it} from "node:test";
-import assert from "node:assert/strict";
+import {assert, describe, it} from "vitest";
 
 import {Seed} from "../src/utils/math/random/Seed.ts";
 import {describeDiff, type DiffStats, diffWords} from "./support/randomFixtures.ts";

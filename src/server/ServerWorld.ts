@@ -1,44 +1,44 @@
-import {World} from "../world/World.ts";
-import {RegistryManager} from "../registry/RegistryManager.ts";
 import type {NovaFlightServer} from "./NovaFlightServer.ts";
 import type {NbtSerializable} from "../nbt/NbtSerializable.ts";
-import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
-import {SoundEventS2CPacket} from "../network/packet/s2c/SoundEventS2CPacket.ts";
-import {StopSoundS2CPacket} from "../network/packet/s2c/StopSoundS2CPacket.ts";
 import type {Entity} from "../entity/Entity.ts";
-import {EntityType} from "../entity/EntityType.ts";
-import {EntityList} from "../world/entity/EntityList.ts";
-import {ServerEntityManager} from "../world/entity/ServerEntityManager.ts";
 import type {EntityHandler} from "../world/entity/EntityHandler.ts";
 import type {HexColor, UUID} from "../type/types.ts";
-import {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
-import {MobEntity} from "../entity/mob/MobEntity.ts";
 import type {Stage} from "../world/stage/Stage.ts";
-import {STAGE} from "../configs/StageConfig.ts";
-import {EntityRemoveS2CPacket} from "../network/packet/s2c/EntityRemoveS2CPacket.ts";
-import {EntityTrackerEntry} from "./network/EntityTrackerEntry.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExplosionVisual} from "../world/element/explosion/ExplosionVisual.ts";
 import type {Explosion} from "../world/element/explosion/Explosion.ts";
+import type {VisualEffect} from "../effect/VisualEffect.ts";
+import type {ExplosionConfigs} from "../world/element/explosion/ExplosionConfigs.ts";
+import type {ParticleEffectType} from "../effect/particle/ParticleEffectType.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
+import type {Payload} from "../network/Payload.ts";
+import type {RegistryManager} from "../registry/RegistryManager.ts";
+import {STAGE} from "../configs/StageConfig.ts";
+import {Log} from "../worker/log.ts";
+import {NbtCompound} from "../nbt/element/NbtCompound.ts";
+import {World} from "../world/World.ts";
+import {SoundEventS2CPacket} from "../network/packet/s2c/SoundEventS2CPacket.ts";
+import {StopSoundS2CPacket} from "../network/packet/s2c/StopSoundS2CPacket.ts";
+import {EntityType} from "../entity/EntityType.ts";
+import {EntityList} from "../world/entity/EntityList.ts";
+import {ServerEntityManager} from "../world/entity/ServerEntityManager.ts";
+import {ServerPlayerEntity} from "./entity/ServerPlayerEntity.ts";
+import {MobEntity} from "../entity/mob/MobEntity.ts";
+import {EntityRemoveS2CPacket} from "../network/packet/s2c/EntityRemoveS2CPacket.ts";
+import {EntityTrackerEntry} from "./network/EntityTrackerEntry.ts";
 import {ExplosionS2CPacket} from "../network/packet/s2c/ExplosionS2CPacket.ts";
 import {ParticleS2CPacket} from "../network/packet/s2c/ParticleS2CPacket.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
-import type {VisualEffect} from "../effect/VisualEffect.ts";
 import {EffectCreateS2CPacket} from "../network/packet/s2c/EffectCreateS2CPacket.ts";
 import {GameOverS2CPacket} from "../network/packet/s2c/GameOverS2CPacket.ts";
 import {DifficultChangeS2CPacket} from "../network/packet/s2c/DifficultChangeS2CPacket.ts";
-import {Log} from "../worker/log.ts";
 import {NbtTypeId} from "../nbt/NbtType.ts";
 import {EntityHitResult} from "../world/collision/EntityHitResult.ts";
 import {MobBulletEntity} from "../entity/projectile/MobBulletEntity.ts";
 import {MobMissileEntity} from "../entity/projectile/MobMissileEntity.ts";
-import type {ExplosionConfigs} from "../world/element/explosion/ExplosionConfigs.ts";
-import type {ParticleEffectType} from "../effect/particle/ParticleEffectType.ts";
 import {PreparedParticleS2CPacket} from "../network/packet/s2c/PreparedParticleS2CPacket.ts";
-import type {Vec2} from "../utils/math/Vec2.ts";
 import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
-import type {Payload} from "../network/Payload.ts";
 import {ExplosionEvent} from "../event/events/ExplosionEvent.ts";
 import {GameOver} from "../event/events/game/GameOver.ts";
 
@@ -280,13 +280,13 @@ export class ServerWorld extends World implements NbtSerializable {
         this.sendPacket(new PreparedParticleS2CPacket(type, pos, count, baseAngle));
     }
 
-    public override addPreparedParticleVec() {
+    public override addParticleVec() {
     }
 
-    public override addPreparedParticle() {
+    public override addParticle() {
     }
 
-    public override addParticle(): void {
+    public override addRawParticle(): void {
     }
 
     public writeNBT(root: NbtCompound): NbtCompound {

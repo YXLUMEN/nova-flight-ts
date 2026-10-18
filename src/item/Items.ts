@@ -102,7 +102,7 @@ export class Items {
         .component(DataComponents.COOLDOWN_RATE, 3)
     ));
     public static readonly STORM_FIRE = this.register('storm_fire', new StormFire(new Item.Properties()
-        .attackDamage(5)
+        .attackDamage(3)
         .type(WeaponType.KINETIC)
         .maxDurability(500)
         .maxCooldown(1)
@@ -166,7 +166,7 @@ export class Items {
     public static readonly COILGUN = this.register('coilgun', new Coilguns(new Item.Properties()
         .maxDurability(50)
         .attackDamage(5)
-        .maxCooldown(3)
+        .maxCooldown(2)
         .type(WeaponType.KINETIC)
         .component(DataComponents.MAX_RELOAD_TIME, 16)
     ));

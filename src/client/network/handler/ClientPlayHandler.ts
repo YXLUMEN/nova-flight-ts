@@ -265,7 +265,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
         if (entity === this.client.player) {
             this.client.window.hud.onPlayerDamage(packet.damage);
         } else if (entity instanceof MobEntity) {
-            world.addPreparedParticleVec(ParticleEffects.HIT, entity.positionRef, 1);
+            world.addParticleVec(ParticleEffects.HIT, entity.positionRef, 1);
             if (entity instanceof TargetDrone) {
                 entity.push(packet.damage);
             }
@@ -329,7 +329,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
         if (packet.count === 0) {
             const vx = packet.speed * packet.offsetX;
             const vy = packet.speed * packet.offsetY;
-            world.addParticle(
+            world.addRawParticle(
                 packet.posX, packet.posY,
                 vx, vy,
                 packet.life,
@@ -345,7 +345,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
             const oy = this.random.nextGaussian() * packet.offsetY;
             const vx = this.random.nextGaussian() * packet.speed;
             const vy = this.random.nextGaussian() * packet.speed;
-            world.addParticle(
+            world.addRawParticle(
                 packet.posX + ox, packet.posY + oy,
                 vx, vy,
                 packet.life,
@@ -357,7 +357,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
     public onPreparedParticle(packet: PreparedParticleS2CPacket): void {
         if (!this.world) return;
-        this.world.addPreparedParticleVec(packet.particle, packet.pos, packet.count, packet.baseAngle);
+        this.world.addParticleVec(packet.particle, packet.pos, packet.count, packet.baseAngle);
     }
 
     public onEntityAttributes(packet: EntityAttributesS2CPacket): void {

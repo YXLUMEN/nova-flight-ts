@@ -47,8 +47,15 @@ export class StormFire extends BaseWeapon {
     }
 
     protected onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        const bullet = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, attacker, stack.getOr(DataComponents.ATTACK_DAMAGE, 1));
-        this.setBullet(bullet, attacker, this.BULLET_SPEED, 4, 1.5);
+        const damage = stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
+        // 两发没必要循环
+        {
+            const bullet = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, attacker, damage);
+            this.setBullet(bullet, attacker, this.BULLET_SPEED, 4, 1.5);
+            world.spawnEntity(bullet);
+        }
+        const bullet = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, attacker, damage);
+        this.setBullet(bullet, attacker, this.BULLET_SPEED, 4, 1.5, 25);
         world.spawnEntity(bullet);
     }
 

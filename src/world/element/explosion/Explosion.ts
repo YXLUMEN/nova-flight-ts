@@ -205,13 +205,13 @@ export class Explosion implements WorldMutation {
     }
 
     public summonExplosionVisual(world: ClientWorld) {
-        world.addPreparedParticle(
+        world.addParticle(
             ParticleEffects.EXPLOSION,
             this.x, this.y,
             this.visual.sparks
         );
 
-        world.addPreparedParticle(
+        world.addParticle(
             ParticleEffects.EXPLOSION_DEBRIS,
             this.x, this.y,
             this.visual.fastSparks

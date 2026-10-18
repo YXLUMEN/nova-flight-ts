@@ -21,7 +21,7 @@ export class BulletEntity extends ProjectileEntity {
         super.onEntityHit(hitResult);
 
         if (isClient) {
-            this.getWorld().addPreparedParticleVec(
+            this.getWorld().addParticleVec(
                 ParticleEffects.SPARK,
                 hitResult.pos,
                 2,
@@ -41,7 +41,7 @@ export class BulletEntity extends ProjectileEntity {
         super.onBlockHit(hitResult);
 
         if (isClient) {
-            this.getWorld().addPreparedParticleVec(
+            this.getWorld().addParticleVec(
                 ParticleEffects.SPARK,
                 hitResult.pos,
                 4,

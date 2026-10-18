@@ -5,8 +5,7 @@
  * 用固定 adjustInterval 让小窗口可确定地复现，不依赖计时）。
  */
 
-import {describe, it} from "node:test";
-import assert from "node:assert/strict";
+import {assert, describe, it} from "vitest";
 
 import {SetPool} from "../src/utils/collection/SetPool.ts";
 import {poolInternals} from "./support/spatialFixtures.ts";

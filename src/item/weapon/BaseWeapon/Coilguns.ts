@@ -9,7 +9,7 @@ import {BaseWeapon} from "./BaseWeapon.ts";
 import type {World} from "../../../world/World.ts";
 
 export class Coilguns extends BaseWeapon {
-    public static readonly SPEED = 38;
+    public static readonly SPEED = 40;
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
         const bullet = new FastBulletEntity(EntityTypes.FAST_BULLET_ENTITY, world, attacker, stack.getOr(DataComponents.ATTACK_DAMAGE, 4));

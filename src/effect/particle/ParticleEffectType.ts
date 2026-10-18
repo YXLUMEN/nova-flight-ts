@@ -1,10 +1,11 @@
 import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
+import type {HexColor} from "../../type/types.ts";
+import type {ParticleEffectTypeBuilder} from "./ParticleEffectTypeBuilder.ts";
+import {encodeColorHex} from "../../utils/net_util.ts";
+import {wrapRadians} from "../../utils/math/math.ts";
 import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
 import {Registries} from "../../registry/Registries.ts";
-import type {HexColor} from "../../type/types.ts";
-import {encodeColorHex} from "../../utils/net_util.ts";
 import {ParticleShape} from "./ParticlePool.ts";
-import {wrapRadians} from "../../utils/math/math.ts";
 
 export class ParticleEffectType {
     public static readonly PACKET_CODEC: PacketCodec<ParticleEffectType> = PacketCodecs.registryValue(Registries.PARTICLES);
@@ -42,13 +43,13 @@ export class ParticleEffectType {
     /** Velocity drag coefficient (0 = no drag). */
     public readonly drag: number;
 
-    public constructor(builder: ParticleEffectTypeBuilder) {
+    public constructor(builder: ParticleEffectTypeBuilderImpl) {
         this.lifeMin = builder.lifeMin;
         this.lifeMax = builder.lifeMax;
-        this.recession = builder.recession;
+        this.recession = builder.recession_;
         this.sizeMin = builder.sizeMin;
         this.sizeMax = builder.sizeMax;
-        this.shape = builder.particleShape;
+        this.shape = builder.shape_;
         this.colorFrom = encodeColorHex(builder.colorFrom);
         this.colorTo = encodeColorHex(builder.colorTo);
         this.speedMin = builder.speedMin;
@@ -60,23 +61,23 @@ export class ParticleEffectType {
 
         this.spreadMin = wrapRadians(builder.spreadMin);
         this.spreadMax = wrapRadians(builder.spreadMax);
-        this.drag = builder.drag;
+        this.drag = builder.drag_;
         Object.freeze(this);
     }
 
     public static builder(): ParticleEffectTypeBuilder {
-        return new ParticleEffectTypeBuilder();
+        return new ParticleEffectTypeBuilderImpl();
     }
 }
 
-class ParticleEffectTypeBuilder {
+class ParticleEffectTypeBuilderImpl implements ParticleEffectTypeBuilder {
     public lifeMin: number = 0.3;
     public lifeMax: number = 0.8;
-    public recession: number = 0.6;
+    public recession_: number = 0.6;
 
     public sizeMin: number = 2;
     public sizeMax: number = 5;
-    public particleShape: ParticleShape = ParticleShape.CIRCLE;
+    public shape_: ParticleShape = ParticleShape.CIRCLE;
 
     public colorFrom: HexColor = '#ffffff';
     public colorTo: HexColor = '#FFFFFF00';
@@ -90,7 +91,7 @@ class ParticleEffectTypeBuilder {
     public spreadMin: number = 0;
     public spreadMax: number = 0;
 
-    public drag: number = 0.5;
+    public drag_: number = 0.5;
 
     public life(min: number, max: number): this {
         this.lifeMin = min;
@@ -98,8 +99,8 @@ class ParticleEffectTypeBuilder {
         return this;
     }
 
-    public setRecession(value: number): this {
-        this.recession = value;
+    public recession(value: number): this {
+        this.recession_ = value;
         return this;
     }
 
@@ -110,7 +111,7 @@ class ParticleEffectTypeBuilder {
     }
 
     public shape(shape: ParticleShape): this {
-        this.particleShape = shape;
+        this.shape_ = shape;
         return this;
     }
 
@@ -150,8 +151,8 @@ class ParticleEffectTypeBuilder {
         return this;
     }
 
-    public withDrag(drag: number): this {
-        this.drag = drag;
+    public drag(drag: number): this {
+        this.drag_ = drag;
         return this;
     }
 

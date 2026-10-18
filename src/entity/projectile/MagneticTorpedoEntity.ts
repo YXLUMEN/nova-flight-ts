@@ -1,12 +1,14 @@
-import {ProjectileEntity} from "./ProjectileEntity.ts";
-import type {EntityType} from "../EntityType.ts";
-import {World} from "../../world/World.ts";
-import {Entity} from "../Entity.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
-import {Vec2} from "../../utils/math/Vec2.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
+import type {EntityType} from "../EntityType.ts";
 import {rand, wrapRadians} from "../../utils/math/math.ts";
+import {isServer} from "../../configs/RuntimeConfig.ts";
+import {World} from "../../world/World.ts";
+import {Entity} from "../Entity.ts";
+import {ProjectileEntity} from "./ProjectileEntity.ts";
+import {Vec2} from "../../utils/math/Vec2.ts";
+import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
 
 export class MagneticTorpedoEntity extends ProjectileEntity {
     private static readonly hitEntities = new WeakMap<Entity, number>();
@@ -37,12 +39,8 @@ export class MagneticTorpedoEntity extends ProjectileEntity {
         // 未命中
         if (!this.triggered) {
             super.tick();
-            this.getWorld().addParticle(
-                this.prevX, this.prevY,
-                0, 0,
-                0.5, 2,
-                '#fffce9', '#bcbcbc'
-            );
+            if (isServer) return;
+            this.getWorld().addParticle(ParticleEffects.TRAJECTORY, this.prevX, this.prevY, 1);
             return;
         }
 

@@ -104,7 +104,7 @@ export class WorldRenderer {
         this.damagePopup.tick();
     }
 
-    public addParticle(
+    public addRawParticle(
         x: number, y: number,
         vx: number, vy: number,
         life: number,
@@ -124,7 +124,7 @@ export class WorldRenderer {
         );
     }
 
-    public addPreparedParticle(
+    public addParticle(
         type: ParticleEffectType,
         x: number, y: number,
         count: number,

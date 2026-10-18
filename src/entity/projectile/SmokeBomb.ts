@@ -15,7 +15,7 @@ export class SmokeBomb extends BulletEntity {
         super.tick();
 
         if (this.isClient()) {
-            this.getWorld().addPreparedParticle(
+            this.getWorld().addParticle(
                 ParticleEffects.ASH,
                 this.prevX, this.prevY,
                 1

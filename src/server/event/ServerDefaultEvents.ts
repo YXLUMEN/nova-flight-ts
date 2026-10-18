@@ -83,8 +83,7 @@ export class ServerDefaultEvents {
                 world.stage.reset();
                 world.stage.setStage('P6');
 
-                const maxKillTimes = 60 * Math.min(world.getDifficulty(), 4);
-
+                const maxKillTimes = 120 * Math.min(world.getDifficulty(), 4);
                 const boss = Math.random() > 0.5 ?
                     new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64, maxKillTimes) :
                     new DevourerBoss(EntityTypes.DEVOURER_BOSS_ENTITY, world, 96, maxKillTimes);

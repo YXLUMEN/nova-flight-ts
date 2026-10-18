@@ -147,7 +147,7 @@ export class ClientWorld extends World {
         return this.worldSound.stopLoopSound(event);
     }
 
-    public override addParticle(
+    public override addRawParticle(
         posX: number, posY: number,
         velX: number, velY: number,
         life: number,
@@ -156,7 +156,7 @@ export class ClientWorld extends World {
         type: number = 0,
         drag?: number
     ) {
-        this.worldRender.addParticle(
+        this.worldRender.addRawParticle(
             posX, posY,
             velX, velY,
             life,
@@ -167,22 +167,22 @@ export class ClientWorld extends World {
         );
     }
 
-    public addPreparedParticleVec(
+    public addParticleVec(
         type: ParticleEffectType,
         pos: Vec2,
         count: number,
         baseAngle?: number
     ) {
-        this.worldRender.addPreparedParticle(type, pos.x, pos.y, count, baseAngle);
+        this.worldRender.addParticle(type, pos.x, pos.y, count, baseAngle);
     }
 
-    public addPreparedParticle(
+    public addParticle(
         type: ParticleEffectType,
         x: number, y: number,
         count: number,
         baseAngle?: number
     ) {
-        this.worldRender.addPreparedParticle(type, x, y, count, baseAngle);
+        this.worldRender.addParticle(type, x, y, count, baseAngle);
     }
 
     public override addEffect(_: Entity | null, effect: VisualEffect) {

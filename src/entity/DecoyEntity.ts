@@ -31,7 +31,7 @@ export class DecoyEntity extends Entity implements Ownable {
         }
 
         if (isClient && (this.age & 1) === 0) {
-            this.getWorld().addPreparedParticleVec(
+            this.getWorld().addParticleVec(
                 ParticleEffects.DECOY_FLASH,
                 this.positionRef,
                 1,

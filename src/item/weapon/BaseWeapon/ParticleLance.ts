@@ -143,7 +143,7 @@ export class ParticleLance extends BaseWeapon {
 
             const speed = -randInt(100, 210);
 
-            world.addParticle(
+            world.addRawParticle(
                 startX, startY,
                 dirX * speed, dirY * speed,
                 rand(0.4, 0.6), rand(2, 3),

@@ -28,7 +28,7 @@ export class BlastBullet extends BulletEntity {
         const world = this.getWorld();
         if (world.isClient) {
             world.playSound(null, SoundEvents.BLAST);
-            world.addPreparedParticleVec(
+            world.addParticleVec(
                 ParticleEffects.ASH,
                 hitResult.pos,
                 4

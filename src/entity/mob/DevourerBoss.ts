@@ -105,7 +105,7 @@ export class DevourerBoss extends BossEntity {
         const cy = !doubleEquals(movement.y, adjusted.y, 1E-5);
 
         if (cx || cy) {
-            this.getWorld().addPreparedParticleVec(
+            this.getWorld().addParticleVec(
                 ParticleEffects.SMOKE,
                 this.positionRef,
                 6

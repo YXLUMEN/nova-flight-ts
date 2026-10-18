@@ -12,7 +12,7 @@ export class EMCStatus extends StatusEffect {
         const pos = entity.positionRef;
         const speed = 100 + Math.random() * 50;
 
-        entity.getWorld().addParticle(
+        entity.getWorld().addRawParticle(
             pos.x + Math.cos(angle) * 16,
             pos.y + Math.sin(angle) * 16,
             Math.cos(angle) * speed,

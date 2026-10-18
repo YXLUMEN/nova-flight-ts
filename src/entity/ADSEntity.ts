@@ -1,15 +1,17 @@
-import {Entity} from "./Entity.ts";
-import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
-import type {TrackedData} from "./data/TrackedData.ts";
-import type {EntityType} from "./EntityType.ts";
-import {World} from "../world/World.ts";
 import type {Ownable} from "./Ownable.ts";
 import type {LivingEntity} from "./LivingEntity.ts";
-import {squareDistVec2} from "../utils/math/math.ts";
+import type {TrackedData} from "./data/TrackedData.ts";
+import type {EntityType} from "./EntityType.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
+import {Entity} from "./Entity.ts";
+import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
+import {World} from "../world/World.ts";
+import {squareDistVec2} from "../utils/math/math.ts";
 import {BallisticsUtils} from "../utils/math/BallisticsUtils.ts";
-import {spawnLaserByVec} from "../utils/ServerEffect.ts";
+import {spawnFancyLaserByVec} from "../utils/ServerEffect.ts";
 import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
+import {ProjectileEntity} from "./projectile/ProjectileEntity.ts";
+import {ParticleEffects} from "../effect/particle/ParticleEffects.ts";
 
 export class ADSEntity extends Entity implements Ownable {
     private static readonly RADIUS = 256 * 256;
@@ -29,7 +31,7 @@ export class ADSEntity extends Entity implements Ownable {
 
         const selfPos = this.positionRef;
         const box = this.getBoundingBox().expandAll(256);
-        const entities = world.searchOtherEntities(this, box, EntityPredicates.DEFENSE);
+        const entities = world.searchOtherEntities(this, box, EntityPredicates.DEFENSE) as Generator<ProjectileEntity>;
 
         let intercepted = 0;
         for (const projectile of entities) {
@@ -38,8 +40,9 @@ export class ADSEntity extends Entity implements Ownable {
                 !BallisticsUtils.isViableThreat(projPos, projectile.velocityRef, selfPos)
             ) continue;
 
-            spawnLaserByVec(world, selfPos, projPos);
-            projectile.discard();
+            spawnFancyLaserByVec(world, selfPos, projPos, '#A6FFE380');
+            world.spawnPreparedParticle(ParticleEffects.DECOY_FLASH, projPos, 4);
+            projectile.onIntercept(10);
             if (intercepted++ >= 5) break;
         }
     }

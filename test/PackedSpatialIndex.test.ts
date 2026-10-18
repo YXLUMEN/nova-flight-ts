@@ -1,24 +1,13 @@
 /**
  * PackedSpatialIndex 语义测试
  *
- * 运行：
- *   npm test                      # 全量：glob test/*.test.ts（不递归，新增文件零改动）
- *   node --experimental-transform-types --disable-warning=ExperimentalWarning \
- *        --test test/PackedSpatialIndex.test.ts test/SetPool.test.ts   # 只跑子集时显式列文件
- *   （浏览器专属测试不放在 test/ 下：见 browser-test/，用 npm run test:browser 跑）
- *
- * 覆盖：
+ * 覆盖:
  *   构造与参数校验 / 插入移除 / 查询语义（含边界与去重）/ 世界范围钳置 /
  *   池化后的内部不变量（桶与池不得串写）/ clear 语义 / 随机对拍暴力实现 /
  *   与 GridSpatialIndex 交叉对拍 / 与 SetPool 的接线。
- *
- * 注：`--experimental-transform-types` 是必需的，因为 AABB 的依赖图里有 enum
- * （Node 的 strip-only 模式不支持 enum）。若哪天 AABB 的图不再有 enum，
- * 换成 --experimental-strip-types 会更快。
  */
 
-import {describe, it} from "node:test";
-import assert from "node:assert/strict";
+import {assert, describe, it} from "vitest";
 
 import {PackedSpatialIndex} from "../src/world/entity/PackedSpatialIndex.ts";
 import {GridSpatialIndex} from "../src/world/entity/GridSpatialIndex.ts";
@@ -52,13 +41,13 @@ const ONE_CELL_CENTER = 20;
 describe("构造与参数校验", () => {
     it("非法 cellSize 抛 RangeError", () => {
         for (const bad of [0, -1, -0.5, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
-            assert.throws(() => new PackedSpatialIndex(bad, 8), RangeError, `cellSize=${bad} 应抛 RangeError`);
+            assert.throws(() => new PackedSpatialIndex(bad, 8), RangeError);
         }
     });
 
     it("非法 half 抛 RangeError", () => {
         for (const bad of [0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, 2 ** 31]) {
-            assert.throws(() => new PackedSpatialIndex(80, bad), RangeError, `half=${bad} 应抛 RangeError`);
+            assert.throws(() => new PackedSpatialIndex(80, bad), RangeError);
         }
     });
 
@@ -87,7 +76,7 @@ describe("构造与参数校验", () => {
             }
         }
 
-        // 两端实体互不串位，且各自能被查到
+        // 两端实体互不串位, 且各自能被查到
         assert.equal(collect(index.search(minEdge.box)).length, 1);
         assert.equal(collect(index.search(maxEdge.box)).length, 1);
     });
@@ -101,7 +90,7 @@ describe("插入与移除", () => {
     const makeIndex = () => new PackedSpatialIndex<TestEntity>(80, 64);
     const big = new AABB(-1000, -1000, 1000, 1000);
 
-    it("insert 后可查到，remove 后不可查到", () => {
+    it("insert 后可查到, remove 后不可查到", () => {
         const index = makeIndex();
         const entity = new TestEntity(1, 0, 0);
 
@@ -134,7 +123,7 @@ describe("插入与移除", () => {
         assert.equal(internals(index).entityCells.size, 1);
     });
 
-    it("实体移动后重新 insert：旧位置查不到、新位置查得到", () => {
+    it("实体移动后重新 insert: 旧位置查不到、新位置查得到", () => {
         const index = makeIndex();
         const entity = new TestEntity(1, 0, 0);
         index.insert(entity);
@@ -147,7 +136,7 @@ describe("插入与移除", () => {
         assert.equal(internals(index).entityCells.size, 1, "同一实体不应残留两组格子记录");
     });
 
-    it("跨多格的实体记录全部覆盖格，且移除时全部摘除（不留空桶）", () => {
+    it("跨多格的实体记录全部覆盖格, 且移除时全部摘除（不留空桶）", () => {
         const index = makeIndex();
         const entity = new TestEntity(1, 0, 0, 100, 100);
         index.insert(entity);
@@ -164,7 +153,7 @@ describe("插入与移除", () => {
         assert.equal(internals(index).entityCells.size, 0);
     });
 
-    it("同一格内多实体：移除其一不影响其它", () => {
+    it("同一格内多实体: 移除其一不影响其它", () => {
         const index = makeIndex();
         const a = new TestEntity(1, ONE_CELL_CENTER, ONE_CELL_CENTER);
         const b = new TestEntity(2, ONE_CELL_CENTER + 10, ONE_CELL_CENTER + 10);
@@ -186,7 +175,7 @@ describe("插入与移除", () => {
 describe("查询语义", () => {
     const makeIndex = () => new PackedSpatialIndex<TestEntity>(80, 64);
 
-    it("单格区域走快速路径：命中与不命中", () => {
+    it("单格区域走快速路径: 命中与不命中", () => {
         const index = makeIndex();
         index.insert(new TestEntity(1, ONE_CELL_CENTER, ONE_CELL_CENTER));
 
@@ -203,11 +192,11 @@ describe("查询语义", () => {
         assert.equal(collect(index.search(new AABB(-100, -100, 100, 100))).length, 1);
     });
 
-    it("严格相交语义：贴边（接触但不重叠）不算命中", () => {
+    it("严格相交语义: 贴边（接触但不重叠）不算命中", () => {
         const index = makeIndex();
         index.insert(new TestEntity(1, 0, 0, 10, 10)); // 盒 = (-10,-10)..(10,10)
 
-        assert.equal(collect(index.search(new AABB(10, 10, 30, 30))).length, 0, "minX == 盒 maxX 属于接触，不命中");
+        assert.equal(collect(index.search(new AABB(10, 10, 30, 30))).length, 0, "minX == 盒 maxX 属于接触, 不命中");
         assert.equal(collect(index.search(new AABB(-30, -30, -10, -10))).length, 0);
         assert.equal(collect(index.search(new AABB(9.99, 9.99, 30, 30))).length, 1, "稍微重叠即命中");
     });
@@ -245,7 +234,7 @@ describe("查询语义", () => {
         assert.equal(sortedIds(index.search(region)).length, 20, "中断后重新查询应仍返回全部");
     });
 
-    it("clear 后重新插入同一批实体对象：结果必须完整（searchGen 复用回归）", () => {
+    it("clear 后重新插入同一批实体对象: 结果必须完整（searchGen 复用回归）", () => {
         const index = makeIndex();
         const entities = makeEntities(new Rng(7), 50, 900);
         for (const e of entities) index.insert(e);
@@ -260,7 +249,7 @@ describe("查询语义", () => {
         assert.deepEqual(sortedIds(index.search(region)), before, "clear 后重插不得漏结果");
     });
 
-    it("老实体与新实体混排：代际去重不会把新实体当成本代已产出", () => {
+    it("老实体与新实体混排: 代际去重不会把新实体当成本代已产出", () => {
         const index = makeIndex();
         const region = new AABB(-2000, -2000, 2000, 2000);
 
@@ -290,7 +279,7 @@ describe("查询语义", () => {
         assert.equal(calls, 0);
     });
 
-    it("findFirst：命中即停，predicate 不再继续调用", () => {
+    it("findFirst: 命中即停, predicate 不再继续调用", () => {
         const index = makeIndex();
         for (let i = 0; i < 30; i++) index.insert(new TestEntity(i, i * 20, ONE_CELL_CENTER));
         const region = new AABB(-100, -100, 1000, 100);
@@ -316,7 +305,7 @@ describe("查询语义", () => {
 describe("世界范围钳置（cell 坐标 clamp 到 ±half）", () => {
     const makeIndex = () => new PackedSpatialIndex<TestEntity>(10, 4); // 世界 ≈ ±40
 
-    it("世界外的实体被钳到边界格，同区域的越界查询仍能命中（最终用真实坐标过滤）", () => {
+    it("世界外的实体被钳到边界格, 同区域的越界查询仍能命中（最终用真实坐标过滤）", () => {
         const index = makeIndex();
         index.insert(new TestEntity(1, 1_000_000, 1_000_000, 5, 5));
 
@@ -351,7 +340,7 @@ describe("世界范围钳置（cell 坐标 clamp 到 ±half）", () => {
 // ---------------------------------------------------------------------------
 
 describe("内部不变量（SetPool 接入后）", () => {
-    it("持续 churn 后：无空桶、entityCells 一致、桶与池无别名", () => {
+    it("持续 churn 后: 无空桶、entityCells 一致、桶与池无别名", () => {
         const index = new PackedSpatialIndex<TestEntity>(80, 1 << 13);
         const rng = new Rng(2024);
         const entities = makeEntities(rng, 800, 3000);
@@ -384,7 +373,7 @@ describe("内部不变量（SetPool 接入后）", () => {
         assertNoEmptyBuckets(index);
     });
 
-    it("池中闲置 Set 全部为空，且数量不超过 maxIdle", () => {
+    it("池中闲置 Set 全部为空, 且数量不超过 maxIdle", () => {
         const index = new PackedSpatialIndex<TestEntity>(80, 1 << 13);
         const rng = new Rng(6);
 
@@ -399,8 +388,8 @@ describe("内部不变量（SetPool 接入后）", () => {
         for (const set of pool.idle) assert.equal(set.size, 0, "闲置 Set 必须是空的");
     });
 
-    it("并发桶数受世界尺寸/分布约束，不随实体数无限增长（真实地图尺寸）", () => {
-        // 与 ClientEntityManager 一致：World 1760x1120，GridSpatialIndex 的 margin = 160
+    it("并发桶数受世界尺寸/分布约束, 不随实体数无限增长（真实地图尺寸）", () => {
+        // 与 ClientEntityManager 一致: World 1760x1120, GridSpatialIndex 的 margin = 160
         const MAP_W = 1760;
         const MAP_H = 1120;
         const MARGIN = 160;
@@ -419,13 +408,13 @@ describe("内部不变量（SetPool 接入后）", () => {
             bucketCounts.push(buckets);
         }
 
-        // 密度增加 10 倍，桶数几乎不涨（已经接近饱和）
+        // 密度增加 10 倍, 桶数几乎不涨（已经接近饱和）
         assert.ok(bucketCounts[1]! <= bucketCounts[0]! * 1.25,
             `实体数 x10 后桶数不应显著增长: ${bucketCounts.join(" → ")}`);
         assert.ok(bucketCounts[0]! > 100, `2000 个实体应该占住大量格子, 实际 ${bucketCounts[0]}`);
     });
 
-    it("同一实体数、集中分布 vs 稀疏分布：并发桶数差异巨大（热点格）", () => {
+    it("同一实体数、集中分布 vs 稀疏分布: 并发桶数差异巨大（热点格）", () => {
         const concentrated = new PackedSpatialIndex<TestEntity>(80, 1 << 13);
         const sparse = new PackedSpatialIndex<TestEntity>(80, 1 << 13);
         const rng = new Rng(13);
@@ -441,7 +430,7 @@ describe("内部不变量（SetPool 接入后）", () => {
             `稀疏分布应产生多得多的桶: 集中=${concentratedBuckets} 稀疏=${sparseBuckets}`);
     });
 
-    it("复用确实发生：churn 场景下稳态新增分配远小于桶创建次数", () => {
+    it("复用确实发生: churn 场景下稳态新增分配远小于桶创建次数", () => {
         const index = new PackedSpatialIndex<TestEntity>(80, 1 << 13);
         const rng = new Rng(8);
         const entities = makeEntities(rng, 500, 3000);
@@ -496,7 +485,7 @@ describe("clear()", () => {
         assertNoEmptyBuckets(index);
     });
 
-    it("clear() 把桶归还池：outstanding 归零、不漂移、重插能复用", () => {
+    it("clear() 把桶归还池: outstanding 归零、不漂移、重插能复用", () => {
         const index = new PackedSpatialIndex<TestEntity>(80, 1 << 13);
         const entities = makeEntitiesInRect(new Rng(10), 300, 0, 0, 1760, 1120);
         for (const e of entities) index.insert(e);
@@ -508,9 +497,9 @@ describe("clear()", () => {
         index.clear();
 
         assert.equal(pool.outstanding, 0, "clear 后不应还有『已取出未归还』的 Set");
-        assert.ok(pool.idle.length > 0, "归还的桶应留在池里（热池），否则同地图重插要重新分配");
+        assert.ok(pool.idle.length > 0, "归还的桶应留在池里（热池）, 否则同地图重插要重新分配");
 
-        // 反复 clear + 重插：outstanding 不得累积（曾经 342 → 684 → 1026 漂移）
+        // 反复 clear + 重插: outstanding 不得累积（曾经 342 → 684 → 1026 漂移）
         for (let round = 0; round < 5; round++) {
             for (const e of entities) index.insert(e);
             assert.equal(pool.outstanding, internals(index).buckets.size,
@@ -522,21 +511,21 @@ describe("clear()", () => {
         for (const e of entities) index.insert(e);
         const reloadMisses = pool.misses - missesBefore;
         assert.ok(reloadMisses < bucketsBefore,
-            `重插应复用池中桶：新增分配 ${reloadMisses} 应小于桶数 ${bucketsBefore}`);
+            `重插应复用池中桶: 新增分配 ${reloadMisses} 应小于桶数 ${bucketsBefore}`);
     });
 });
 
 // ---------------------------------------------------------------------------
-// 随机对拍：暴力实现
+// 随机对拍: 暴力实现
 // ---------------------------------------------------------------------------
 
 describe("随机对拍（暴力实现为参照）", () => {
-    it("1200 实体 / 600 帧 churn / 随机区域：结果始终与暴力一致", () => {
+    it("1200 实体 / 600 帧 churn / 随机区域: 结果始终与暴力一致", () => {
         const index = new PackedSpatialIndex<TestEntity>(80, 1 << 13);
         const rng = new Rng(0xC0FFEE);
         const entities = makeEntities(rng, 1200, 4000);
 
-        // 参照集只放"当前确实在索引里"的实体：remove 过的必须剔除，否则会假失败
+        // 参照集只放"当前确实在索引里"的实体: remove 过的必须剔除, 否则会假失败
         const active = new Set<TestEntity>();
         for (const e of entities) {
             index.insert(e);
@@ -575,7 +564,7 @@ describe("随机对拍（暴力实现为参照）", () => {
         assert.ok(removals > 100, `应发生过足够多次 remove, 实际 ${removals}`);
     });
 
-    it("极度聚集（所有实体挤在同一格）：结果与暴力一致", () => {
+    it("极度聚集（所有实体挤在同一格）: 结果与暴力一致", () => {
         const index = new PackedSpatialIndex<TestEntity>(80, 1 << 13);
         const entities: TestEntity[] = [];
         for (let i = 0; i < 500; i++) {
@@ -590,7 +579,7 @@ describe("随机对拍（暴力实现为参照）", () => {
         assert.equal(internals(index).buckets.size, 1, "500 个实体应全在 1 个桶里");
     });
 
-    it("极小世界（half=1，3x3 格）：结果与暴力一致", () => {
+    it("极小世界（half=1, 3x3 格）: 结果与暴力一致", () => {
         const index = new PackedSpatialIndex<TestEntity>(10, 1);
         const rng = new Rng(3);
         const entities = makeEntities(rng, 200, 60, 0.2, 6);
@@ -614,10 +603,10 @@ describe("与 GridSpatialIndex 交叉对拍", () => {
     const MARGIN = 160;
     const CELL = 80;
 
-    it("世界内随机数据：两种索引返回同一集合", () => {
+    it("世界内随机数据: 两种索引返回同一集合", () => {
         const rng = new Rng(0xBEEF);
 
-        // 两个索引各用一批实体：searchGen 是索引私有的去重命名空间，不能共享实体对象
+        // 两个索引各用一批实体: searchGen 是索引私有的去重命名空间, 不能共享实体对象
         const packedEntities: TestEntity[] = [];
         const gridEntities: TestEntity[] = [];
         for (let i = 0; i < 600; i++) {
@@ -647,7 +636,7 @@ describe("与 GridSpatialIndex 交叉对拍", () => {
         }
     });
 
-    it("差异点（已知语义分歧）：世界外实体 —— Grid 丢弃，Packed 钳置到边界格", () => {
+    it("差异点: 世界外实体 —— Grid 丢弃, Packed 钳置到边界格", () => {
         const far = (id: number) => new TestEntity(id, WIDTH + 5000, HEIGHT + 5000, 8, 8);
         const hugeRegion = new AABB(-1e9, -1e9, 1e9, 1e9);
 
@@ -666,7 +655,7 @@ describe("与 GridSpatialIndex 交叉对拍", () => {
 // ---------------------------------------------------------------------------
 
 describe("与 SetPool 的接线", () => {
-    it("索引持有 SetPool 实例，且归还的桶被复用（同实例）", () => {
+    it("索引持有 SetPool 实例, 且归还的桶被复用（同实例）", () => {
         const index = new PackedSpatialIndex<TestEntity>(80, 64);
         const entity = new TestEntity(1, ONE_CELL_CENTER, ONE_CELL_CENTER);
         index.insert(entity);

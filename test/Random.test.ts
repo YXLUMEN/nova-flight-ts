@@ -1,10 +1,5 @@
 /**
- * Random / RandomXor / RandomLcg 单元测试（node:test）
- *
- * 运行：
- *   node --test test/Random.test.ts
- *   （Node ≥ 23.6 默认擦除 .ts 类型；Node 22.6–23.5 需加 --experimental-strip-types）
- *   CI 里直接跑 `npm test`（见 package.json）。
+ * Random / RandomXor / RandomLcg 单元测试（vitest）
  *
  * 结构：通用语义（nextFloat / nextDouble / nextInt / nextIntBelow / nextBool / pick /
  * shuffleInplace / split / 生日碰撞 / 一阶转移 / 确定性）对 Xor 与 Lcg 两个实现各跑一遍；
@@ -14,8 +9,7 @@
  * 说明：所有阈值都建立在固定种子(20241001)的确定性输出上，因此断言本身是确定性的。
  */
 
-import {describe, it} from "node:test";
-import assert from "node:assert/strict";
+import {assert, describe, it} from "vitest";
 
 import {Seed} from "../src/utils/math/random/Seed.ts";
 import type {Random} from "../src/utils/math/random/Random.ts";
@@ -74,15 +68,15 @@ for (const {label, make} of IMPLS) {
             }
         });
 
-        it("nextFloat 均值 ≈ 0.5", (t) => {
+        it("nextFloat 均值 ≈ 0.5", () => {
             const r = rng();
             // 均值必须取自同一实例的连续输出，否则测的不是同一个流
             const mean = meanOf(100_000, () => r.nextFloat());
-            t.diagnostic(`mean=${mean.toFixed(6)}`);
+            console.log(`mean=${mean.toFixed(6)}`);
             assert.ok(Math.abs(mean - 0.5) < 0.005, `${label}: 均值 ${mean.toFixed(6)} 偏离 0.5`);
         });
 
-        it("nextDouble 的值域 / 53 bit 精度 / 均值 / 覆盖", (t) => {
+        it("nextDouble 的值域 / 53 bit 精度 / 均值 / 覆盖", () => {
             const r = rng();
             const samples = 200_000;
             let sum = 0;
@@ -98,7 +92,7 @@ for (const {label, make} of IMPLS) {
                 if (value >= 0.5) high++;
             }
             const mean = sum / samples;
-            t.diagnostic(`mean=${mean.toFixed(6)} high=${high}/${samples}`);
+            console.log(`mean=${mean.toFixed(6)} high=${high}/${samples}`);
             assert.ok(Math.abs(mean - 0.5) < 0.005, `${label}: 均值 ${mean.toFixed(6)} 偏离 0.5`);
             assert.ok(
                 Math.abs(high / samples - 0.5) < 0.01,
@@ -144,34 +138,34 @@ for (const {label, make} of IMPLS) {
         describe("nextIntBelow", () => {
             const samples = 300_000;
 
-            it("nextIntBelow(3) 无偏", (t) => {
+            it("nextIntBelow(3) 无偏", () => {
                 const observed = tally(rng(), 3, samples);
                 const stat = chiSquare(observed, samples / 3);
-                t.diagnostic(`chi2=${stat.toFixed(2)} (df=2, 0.001 临界 13.8)`);
+                console.log(`chi2=${stat.toFixed(2)} (df=2, 0.001 临界 13.8)`);
                 assert.ok(stat < 25, `${label}: chi2=${stat.toFixed(2)} 超出阈值 25`);
             });
 
-            it("nextIntBelow(6) 无偏", (t) => {
+            it("nextIntBelow(6) 无偏", () => {
                 const observed = tally(rng(), 6, samples);
                 const stat = chiSquare(observed, samples / 6);
-                t.diagnostic(`chi2=${stat.toFixed(2)} (df=5, 0.001 临界 20.5)`);
+                console.log(`chi2=${stat.toFixed(2)} (df=5, 0.001 临界 20.5)`);
                 assert.ok(stat < 35, `${label}: chi2=${stat.toFixed(2)} 超出阈值 35`);
             });
 
-            it("nextIntBelow(2^31+1) 无偏（拒绝采样覆盖超过 2^30 的 bound）", (t) => {
+            it("nextIntBelow(2^31+1) 无偏（拒绝采样覆盖超过 2^30 的 bound）", () => {
                 const r = rng();
                 let low = 0;
                 for (let i = 0; i < samples; i++) {
                     if (r.nextIntBelow(0x80000001) < 0x40000000) low++;
                 }
                 const stat = chiSquare([low, samples - low], samples / 2);
-                t.diagnostic(`chi2=${stat.toFixed(2)}`);
+                console.log(`chi2=${stat.toFixed(2)}`);
                 assert.ok(stat < 15, `${label}: chi2=${stat.toFixed(2)} 超出阈值 15`);
             });
 
-            it("nextIntBelow(2) 约 50/50", (t) => {
+            it("nextIntBelow(2) 约 50/50", () => {
                 const observed = tally(rng(), 2, 100_000);
-                t.diagnostic(`zero=${observed[0]}/100000`);
+                console.log(`zero=${observed[0]}/100000`);
                 assert.ok(
                     Math.abs(observed[0] - 50_000) < 1500,
                     `${label}: 0 的占比偏离 50%（${observed[0]}/100000）`,
@@ -193,13 +187,13 @@ for (const {label, make} of IMPLS) {
 
         // ---- nextBool ----
 
-        it("nextBool(0.2) 命中率 ≈ 20%", (t) => {
+        it("nextBool(0.2) 命中率 ≈ 20%", () => {
             const r = rng();
             const samples = 100_000;
             let hits = 0;
             for (let i = 0; i < samples; i++) if (r.nextBool(0.2)) hits++;
             const rate = hits / samples;
-            t.diagnostic(`rate=${rate.toFixed(4)}`);
+            console.log(`rate=${rate.toFixed(4)}`);
             assert.ok(Math.abs(rate - 0.2) < 0.01, `${label}: 命中率 ${rate.toFixed(4)} 偏离 0.2`);
         });
 
@@ -217,14 +211,14 @@ for (const {label, make} of IMPLS) {
                 assert.throws(() => rng().pick([]), /non-empty/);
             });
 
-            it("各元素被均匀抽到", (t) => {
+            it("各元素被均匀抽到", () => {
                 const arr = ["a", "b", "c", "d"];
                 const r = rng();
                 const samples = 200_000;
                 const observed = new Array<number>(arr.length).fill(0);
                 for (let i = 0; i < samples; i++) observed[arr.indexOf(r.pick(arr))]++;
                 const stat = chiSquare(observed, samples / arr.length);
-                t.diagnostic(`chi2=${stat.toFixed(2)}`);
+                console.log(`chi2=${stat.toFixed(2)}`);
                 assert.ok(stat < 25, `${label}: chi2=${stat.toFixed(2)} 超出阈值 25`);
             });
         });
@@ -246,7 +240,7 @@ for (const {label, make} of IMPLS) {
                 }
             });
 
-            it("每个元素落在每个位置的概率均匀", (t) => {
+            it("每个元素落在每个位置的概率均匀", () => {
                 const n = 5;
                 const shuffles = 100_000;
                 const cells: number[][] = Array.from({length: n}, () => new Array<number>(n).fill(0));
@@ -256,7 +250,7 @@ for (const {label, make} of IMPLS) {
                     for (let pos = 0; pos < n; pos++) cells[arr[pos]][pos]++;
                 }
                 const stat = chiSquare(cells.flat(), shuffles / n);
-                t.diagnostic(`chi2=${stat.toFixed(2)} (df=24, 0.001 临界 51.2)`);
+                console.log(`chi2=${stat.toFixed(2)} (df=24, 0.001 临界 51.2)`);
                 assert.ok(stat < 60, `${label}: chi2=${stat.toFixed(2)} 超出阈值 60`);
             });
         });
@@ -269,26 +263,26 @@ for (const {label, make} of IMPLS) {
                 assert.equal(parent.split().constructor, parent.constructor);
             });
 
-            it("两次 split 得到的子流不同且互不相关", (t) => {
+            it("两次 split 得到的子流不同且互不相关", () => {
                 const parent = make(new Seed(42), 0);
                 const childA = parent.split();
                 const childB = parent.split();
                 const wordsA = Array.from({length: 8}, () => childA.next() >>> 0);
                 const wordsB = Array.from({length: 8}, () => childB.next() >>> 0);
                 const stats = diffWords(wordsA, wordsB);
-                t.diagnostic(describeDiff("两个子流", stats));
+                console.log(describeDiff("两个子流", stats));
                 assert.equal(stats.eq, 0, describeDiff("两个子流", stats));
                 assert.ok(stats.diff > 90 && stats.diff < 166, describeDiff("两个子流", stats));
             });
 
-            it("子流与父流互不相关", (t) => {
+            it("子流与父流互不相关", () => {
                 const parent = make(new Seed(42), 0);
                 const child = parent.split();
                 // split() 会推进父流状态，这里再取父流的后续输出做对比
                 const parentWords = Array.from({length: 8}, () => parent.next() >>> 0);
                 const childWords = Array.from({length: 8}, () => child.next() >>> 0);
                 const stats = diffWords(parentWords, childWords);
-                t.diagnostic(describeDiff("父流 vs 子流", stats));
+                console.log(describeDiff("父流 vs 子流", stats));
                 assert.equal(stats.eq, 0, describeDiff("父流 vs 子流", stats));
                 assert.ok(stats.diff > 90 && stats.diff < 166, describeDiff("父流 vs 子流", stats));
             });
@@ -310,21 +304,21 @@ for (const {label, make} of IMPLS) {
 
         // ---- 输出质量 ----
 
-        it("32 bit 输出的重复率符合生日碰撞预期", (t) => {
+        it("32 bit 输出的重复率符合生日碰撞预期", () => {
             const r = rng();
             const samples = 500_000;
             const seen = new Set<number>();
             for (let i = 0; i < samples; i++) seen.add(r.next() >>> 0);
             const collisions = samples - seen.size;
             const expected = (samples * samples) / (2 * 2 ** 32);
-            t.diagnostic(`collisions=${collisions} expected≈${expected.toFixed(1)}`);
+            console.log(`collisions=${collisions} expected≈${expected.toFixed(1)}`);
             assert.ok(
                 collisions <= expected * 3 + 20,
                 `${label}: 碰撞 ${collisions} 次，远超生日预期 ${expected.toFixed(1)}`,
             );
         });
 
-        it("mod 4 的一阶转移均匀（专治低位固定循环）", (t) => {
+        it("mod 4 的一阶转移均匀（专治低位固定循环）", () => {
             const cells = 4;
             const samples = 400_000;
             const r = rng();
@@ -336,7 +330,7 @@ for (const {label, make} of IMPLS) {
                 prev = cur;
             }
             const stat = chiSquare(pairs.flat(), samples / (cells * cells));
-            t.diagnostic(`chi2=${stat.toFixed(2)} (df=15, 0.001 临界 37.7)`);
+            console.log(`chi2=${stat.toFixed(2)} (df=15, 0.001 临界 37.7)`);
             assert.ok(stat < 60, `${label}: chi2=${stat.toFixed(2)} 超出阈值 60`);
         });
 
@@ -400,15 +394,15 @@ describe("RandomLcg · 低位退化回归", () => {
         assert.ok(stat > 1_000_000, `chi2=${stat.toFixed(0)} 应远大于临界值`);
     });
 
-    it("修复后：mod 4 覆盖全部 16 种转移", (t) => {
+    it("修复后：mod 4 覆盖全部 16 种转移", () => {
         const r = new RandomLcg(SEED, 0);
         const seq: number[] = [];
         for (let i = 0; i < 1000; i++) seq.push(r.nextIntBelow(4));
-        t.diagnostic(`前 12 次 nextIntBelow(4) = [${seq.slice(0, 12).join(", ")}]`);
+        console.log(`前 12 次 nextIntBelow(4) = [${seq.slice(0, 12).join(", ")}]`);
         assert.equal(transitions(seq).size, 16);
     });
 
-    it("修复后：连续输出的比特翻转率 ≈ 50%", (t) => {
+    it("修复后：连续输出的比特翻转率 ≈ 50%", () => {
         const r = new RandomLcg(SEED, 0);
         const samples = 200_000;
         let flips = 0;
@@ -419,7 +413,7 @@ describe("RandomLcg · 低位退化回归", () => {
             prev = cur;
         }
         const rate = flips / (samples * 32);
-        t.diagnostic(`rate=${(rate * 100).toFixed(2)}%`);
+        console.log(`rate=${(rate * 100).toFixed(2)}%`);
         assert.ok(Math.abs(rate - 0.5) < 0.01, `比特翻转率 ${(rate * 100).toFixed(2)}% 偏离 50%`);
     });
 });

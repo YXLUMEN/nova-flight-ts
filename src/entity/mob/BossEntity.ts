@@ -27,7 +27,7 @@ export abstract class BossEntity extends MobEntity {
         type: EntityType<BossEntity>,
         world: World,
         worth?: number,
-        maxKillTime: number = 60,
+        maxKillTime: number = 100,
     ) {
         super(type, world, worth);
 

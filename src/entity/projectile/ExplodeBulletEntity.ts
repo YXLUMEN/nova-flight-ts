@@ -41,7 +41,7 @@ export class ExplodeBulletEntity extends ProjectileEntity {
         const offsetX = -Math.cos(yaw) * height + rand(-5, 5);
         const offsetY = -Math.sin(yaw) * height + rand(-5, 5);
 
-        world.addPreparedParticle(
+        world.addParticle(
             ParticleEffects.EMBER,
             this.prevX + offsetX, this.prevY + offsetY,
             1

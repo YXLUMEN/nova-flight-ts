@@ -1,109 +1,13 @@
-import type {BlockRaycastResult} from "./BlockRaycastResult.ts";
-import {BitBlockMap} from "../section/BitBlockMap.ts";
 import type {World} from "../World.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {AABB} from "../../utils/math/AABB.ts";
 import type {Predicate} from "../../type/types.ts";
-import {EntityHitResult} from "./EntityHitResult.ts";
-import {squareDistVec2} from "../../utils/math/math.ts";
 import type {HitResult} from "./HitResult.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
-import {WorldConstants} from "../section/WorldConstants.ts";
+import {squareDistVec2} from "../../utils/math/math.ts";
+import {EntityHitResult} from "./EntityHitResult.ts";
 
 export class ProjectRaycastUtil {
-    /**
-     * @deprecated
-     * */
-    public static raycast(
-        map: BitBlockMap,
-        startX: number,
-        startY: number,
-        endX: number,
-        endY: number
-    ): BlockRaycastResult {
-        const tileSize = WorldConstants.BLOCK_SIZE;
-        const power = WorldConstants.BLOCK_SIZE_LOG2;
-
-        const dx = endX - startX;
-        const dy = endY - startY;
-
-        const stepX = dx >= 0 ? 1 : -1;
-        const stepY = dy >= 0 ? 1 : -1;
-
-        let gridX = startX >> power;
-        let gridY = startY >> power;
-
-        const targetGridX = endX >> power;
-        const targetGridY = endY >> power;
-
-        if (map.get(gridX, gridY) !== 0) {
-            return {hit: true, t: 0, gridX, gridY, normalX: 0, normalY: 0};
-        }
-
-        let sideDistX: number;
-        let sideDistY: number;
-
-        if (dx === 0) {
-            sideDistX = Infinity;
-        } else {
-            const nextBoundaryX = stepX > 0 ? (gridX + 1) * tileSize : gridX * tileSize;
-            sideDistX = (nextBoundaryX - startX) / dx;
-        }
-
-        if (dy === 0) {
-            sideDistY = Infinity;
-        } else {
-            const nextBoundaryY = stepY > 0 ? (gridY + 1) * tileSize : gridY * tileSize;
-            sideDistY = (nextBoundaryY - startY) / dy;
-        }
-
-        const deltaDistX = dx === 0 ? Infinity : Math.abs(tileSize / dx);
-        const deltaDistY = dy === 0 ? Infinity : Math.abs(tileSize / dy);
-
-        const maxSteps = Math.ceil(Math.abs(targetGridX - gridX) + Math.abs(targetGridY - gridY)) + 2;
-
-        let currentGridX = gridX;
-        let currentGridY = gridY;
-        let currentSideDistX = sideDistX;
-        let currentSideDistY = sideDistY;
-
-        for (let i = 0; i < maxSteps; i++) {
-            let tNext: number;
-            let normalX = 0;
-            let normalY = 0;
-
-            if (currentSideDistX < currentSideDistY) {
-                tNext = currentSideDistX;
-                currentSideDistX += deltaDistX;
-                currentGridX += stepX;
-                normalX = -stepX;
-                normalY = 0;
-            } else {
-                tNext = currentSideDistY;
-                currentSideDistY += deltaDistY;
-                currentGridY += stepY;
-                normalX = 0;
-                normalY = -stepY;
-            }
-
-            if (tNext > 1.0) {
-                return {hit: false, t: 1, gridX: -1, gridY: -1, normalX: 0, normalY: 0};
-            }
-
-            if (map.get(currentGridX, currentGridY) !== 0) return {
-                hit: true,
-                t: tNext,
-                gridX: currentGridX,
-                gridY: currentGridY,
-                normalX: normalX,
-                normalY: normalY
-            };
-
-        }
-
-        return {hit: false, t: 1, gridX: -1, gridY: -1, normalX: 0, normalY: 0};
-    }
-
     public static getCollision(entity: Entity, predicate: Predicate<Entity>, margin: number = 0.3): HitResult {
         const velocity = entity.velocityRef;
         const world = entity.getWorld();

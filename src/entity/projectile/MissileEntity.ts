@@ -1,7 +1,6 @@
 import type {Entity} from "../Entity.ts";
 import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
-import {rand} from "../../utils/math/math.ts";
 import {RocketEntity} from "./RocketEntity.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
@@ -181,7 +180,7 @@ export class MissileEntity extends RocketEntity {
 
         if (!this.ignited) {
             this.ignited = true;
-            world.addPreparedParticleVec(
+            world.addParticleVec(
                 ParticleEffects.BURST,
                 this.positionRef,
                 8,
@@ -194,13 +193,10 @@ export class MissileEntity extends RocketEntity {
         const pos = this.positionRef;
         const yaw = this.getYaw();
         world.addParticle(
+            ParticleEffects.EXHAUST,
             pos.x - Math.cos(yaw) * 32,
             pos.y - Math.sin(yaw) * 32,
-            rand(-1, 1), rand(-1, 1),
-            rand(1, 1.5), rand(4, 6),
-            "#986900", "#575757",
-            0,
-            0.3,
+            1
         );
     }
 

@@ -151,7 +151,7 @@ export abstract class BaseWeapon extends Weapon {
         const x = Math.cos(yaw) * offset + pos.x;
         const y = Math.sin(yaw) * offset + pos.y;
 
-        world.addPreparedParticle(
+        world.addParticle(
             ParticleEffects.MUZZLE_SPARK,
             x, y,
             particles,

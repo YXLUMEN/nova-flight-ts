@@ -316,7 +316,6 @@ export class NovaFlightClient {
             this.layer.showNotice(TranslatableText.of('start.join_game'), null, empty);
         }
 
-        appEvent.emit(new GameStart());
         await sleep(200);
 
         this.world = world;
@@ -325,8 +324,9 @@ export class NovaFlightClient {
             this.playing = true;
             this.runTick(0);
         }
-        this.window.canvas.style.cursor = 'none';
 
+        appEvent.emit(new GameStart());
+        this.window.canvas.style.cursor = 'none';
         this.layer.closeNotice();
         this.clientCommandManager.clearParseCache();
     }

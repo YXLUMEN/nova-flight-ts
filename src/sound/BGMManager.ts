@@ -66,10 +66,10 @@ export class BGMManager {
             await AudioManager.play(this.IN_GAME.current());
         }
 
+        AudioManager.removeListener('main');
         if (AudioManager.hasListener('bgm')) return;
 
         let last: number | undefined;
-        AudioManager.removeListener('main');
         AudioManager.addListener('bgm', 'ended', () => {
             clearTimeout(last);
             last = setTimeout(() => {

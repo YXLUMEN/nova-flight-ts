@@ -195,10 +195,11 @@ export function acquireTarget(
         const facingScore = -yawDiff * 200;
 
         const mobVel = mob.velocityRef;
-        const radialSpeed = (dx * mobVel.x + dy * mobVel.y) / Math.sqrt(dist2 + 1);
+        const dist = Math.sqrt(dist2 + 1);
+        const radialSpeed = (dx * mobVel.x + dy * mobVel.y) / dist;
         const velScore = -Math.abs(radialSpeed) * 0.5;
 
-        const totalScore = facingScore - dist2 + velScore;
+        const totalScore = facingScore - dist + velScore;
         if (totalScore > bestScore) {
             bestScore = totalScore;
             best = mob;

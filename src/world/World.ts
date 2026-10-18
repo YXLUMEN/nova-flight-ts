@@ -1,33 +1,33 @@
 import type {Entity} from "../entity/Entity.ts";
-import {appEvent, EventBus} from "../event/EventBus.ts";
 import type {VisualEffect} from "../effect/VisualEffect.ts";
 import type {Schedule} from "../type/ITimer.ts";
-import {DamageSources} from "../entity/damage/DamageSources.ts";
-import {RegistryManager} from "../registry/RegistryManager.ts";
 import type {SoundEvent} from "../sound/SoundEvent.ts";
 import type {Payload} from "../network/Payload.ts";
 import type {Consumer, HexColor, Predicate, Supplier} from "../type/types.ts";
 import type {EntityList} from "./entity/EntityList.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
-import {Explosion} from "./element/explosion/Explosion.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExplosionVisual} from "./element/explosion/ExplosionVisual.ts";
-import {MobEntity} from "../entity/mob/MobEntity.ts";
-import {EntityType} from "../entity/EntityType.ts";
-import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
-import {clamp} from "../utils/math/math.ts";
 import type {EntityLookUp} from "./entity/EntityLookUp.ts";
+import type {NovaFlightServer} from "../server/NovaFlightServer.ts";
+import type {ExplosionConfigs} from "./element/explosion/ExplosionConfigs.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
+import type {ParticleEffectType} from "../effect/particle/ParticleEffectType.ts";
+import type {WorldMutation} from "./element/WorldMutation.ts";
+import {any} from "../utils/util.ts";
+import {clamp} from "../utils/math/math.ts";
+import {appEvent, type EventBus} from "../event/EventBus.ts";
+import {EntityType} from "../entity/EntityType.ts";
+import {DamageSources} from "../entity/damage/DamageSources.ts";
+import {RegistryManager} from "../registry/RegistryManager.ts";
+import {Explosion} from "./element/explosion/Explosion.ts";
+import {MobEntity} from "../entity/mob/MobEntity.ts";
 import {BitBlockMap} from "./section/BitBlockMap.ts";
 import {AABB} from "../utils/math/AABB.ts";
 import {BlockCollision} from "./collision/BlockCollision.ts";
-import type {ExplosionConfigs} from "./element/explosion/ExplosionConfigs.ts";
 import {ScheduleTask} from "./ScheduleTask.ts";
-import type {Vec2} from "../utils/math/Vec2.ts";
-import type {ParticleEffectType} from "../effect/particle/ParticleEffectType.ts";
 import {DifficultChange} from "../event/events/stage/DifficultChange.ts";
 import {GameEnd} from "../event/events/game/GameEnd.ts";
-import type {WorldMutation} from "./element/WorldMutation.ts";
-import {any} from "../utils/util.ts";
 
 export abstract class World {
     public static readonly MAP_WIDTH = 1760;
@@ -84,7 +84,11 @@ export abstract class World {
 
     public abstract stopLoopSound(entity: Entity | null, sound: SoundEvent): boolean;
 
-    public abstract addParticle(
+    /**
+     * 裸参数粒子,优先使用 `addParticle`
+     * @see {addParticle}
+     * */
+    public abstract addRawParticle(
         posX: number, posY: number,
         velX: number, velY: number,
         life: number,
@@ -94,14 +98,14 @@ export abstract class World {
         drag?: number
     ): void;
 
-    public abstract addPreparedParticleVec(
+    public abstract addParticleVec(
         type: ParticleEffectType,
         pos: Vec2,
         count: number,
         baseAngle?: number
     ): void;
 
-    public abstract addPreparedParticle(
+    public abstract addParticle(
         type: ParticleEffectType,
         x: number, y: number,
         count: number,

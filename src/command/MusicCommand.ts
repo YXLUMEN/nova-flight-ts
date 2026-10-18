@@ -35,7 +35,7 @@ export class MusicCommand {
                                         ctx.source.addMessage(`\x1b[33mMusic is disable now.`);
                                         return;
                                     }
-                                    AudioManager.play(event);
+                                    void AudioManager.play(event);
                                     ctx.source.addMessage(`Start to play \x1b[32m"${event.id}"\x1b[0m`);
                                 })
                                 .suggests(CommandUtil.createIdentifierSuggestion(Registries.AUDIOS))
@@ -72,6 +72,20 @@ export class MusicCommand {
                                 return;
                             }
                             ctx.source.addMessage(`Current playing is \x1b[32m"${current.id}"`);
+                        })
+                )
+                .then(
+                    literal<T>('duration')
+                        .executes(ctx => {
+                            const current = AudioManager.getCurrentPlaying();
+                            if (!current) {
+                                ctx.source.addMessage(`No music is playing`);
+                                return;
+                            }
+
+                            let duration = AudioManager.getDuration();
+                            if (!Number.isFinite(duration)) duration = 0;
+                            ctx.source.addMessage(`Current music duration is \x1b[32m"${duration}"`);
                         })
                 )
                 .then(
