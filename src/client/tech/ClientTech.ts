@@ -2,7 +2,7 @@ import {Tech} from "../../world/tech/Tech.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
 
 export class ClientTech extends Tech {
-    public readonly name: TranslatableText;
+    public override readonly name: TranslatableText;
     public readonly desc: TranslatableText;
 
     public readonly x: number;

@@ -29,7 +29,7 @@ export class BaseEnemyRender extends CachedEntityRender<number, BaseEnemy> {
         return entity.color.hex;
     }
 
-    protected transform(ctx: CanvasRenderingContext2D, entity: BaseEnemy, alpha: number) {
+    protected override transform(ctx: CanvasRenderingContext2D, entity: BaseEnemy, alpha: number) {
         super.transform(ctx, entity, alpha);
         ctx.rotate(entity.getLerpYaw(alpha));
     }

@@ -29,7 +29,7 @@ export class HUD extends UiFramework {
     private readonly barHeight = 10;
     private displayHealth: number = 0;
 
-    public setSize(w: number, h: number) {
+    public override setSize(w: number, h: number) {
         super.setSize(w, h);
         this.lockAlert.setPos(this.halfW - 60, this.height - 60);
         this.inventoryRender?.setSize(w, h);

@@ -74,7 +74,7 @@ export class DevourerBoss extends BossEntity {
         builder.define(DevourerBoss.RESET_SEG, false);
     }
 
-    protected createAi() {
+    protected override createAi() {
         return new DevourerBossAI(this, this.createBullet);
     }
 
@@ -273,7 +273,7 @@ export class DevourerBoss extends BossEntity {
         return this.getPhase() !== DevourerPhase.PHASE_2_TO_3;
     }
 
-    protected getMapOffsetX(): number {
+    protected override getMapOffsetX(): number {
         return 1E4;
     }
 

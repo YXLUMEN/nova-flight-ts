@@ -34,8 +34,8 @@ export class AudioControlS2CPacket implements Payload {
 }
 
 export class AudioLeapS2CPacket extends AudioControlS2CPacket {
-    public static readonly ID: PayloadType<AudioLeapS2CPacket> = payloadType('audio_leap');
-    public static readonly CODEC: PacketCodec<AudioLeapS2CPacket> = PacketCodecs.adapt(
+    public static override readonly ID: PayloadType<AudioLeapS2CPacket> = payloadType('audio_leap');
+    public static override readonly CODEC: PacketCodec<AudioLeapS2CPacket> = PacketCodecs.adapt(
         PacketCodecs.FLOAT,
         val => val.leap,
         to => new AudioLeapS2CPacket(to)
@@ -45,11 +45,11 @@ export class AudioLeapS2CPacket extends AudioControlS2CPacket {
         super(AudioControlType.LEAP, leap);
     }
 
-    public type(): PayloadType<AudioLeapS2CPacket> {
+    public override type(): PayloadType<AudioLeapS2CPacket> {
         return AudioLeapS2CPacket.ID;
     }
 
-    public estimateSize(): number {
+    public override estimateSize(): number {
         return 4;
     }
 }

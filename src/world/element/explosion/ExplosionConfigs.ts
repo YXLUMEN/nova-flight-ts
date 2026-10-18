@@ -33,7 +33,7 @@ export class ExplosionConfigs {
     public readonly decay: boolean; // 爆炸伤害等于爆炸强度,爆炸范围等于视觉范围
     public readonly tag: ExplosionTag;
     public readonly sound: SoundEvent;
-    public readonly statusEffect?: StatusEffectInstance;
+    public readonly statusEffect: StatusEffectInstance | undefined;
 
     public constructor(
         behaviour: ExplosionBehaviour = ExplosionBehaviour.BOTH,

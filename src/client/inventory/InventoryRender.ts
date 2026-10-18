@@ -207,7 +207,7 @@ export class InventoryRender extends UiFramework {
         }
     }
 
-    public setSize(w: number, h: number): void {
+    public override setSize(w: number, h: number): void {
         super.setSize(w, h);
 
         const inventory = this.inventory.getInventory();

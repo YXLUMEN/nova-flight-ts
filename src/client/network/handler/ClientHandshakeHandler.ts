@@ -76,12 +76,12 @@ export class ClientHandshakeHandler extends ClientCommonHandler {
         this.sniffInterval = undefined;
     }
 
-    public accept(payload: Payload) {
+    public override accept(payload: Payload) {
         if (!payload.canProcessInTransition?.()) return;
         super.accept(payload);
     }
 
-    public clear() {
+    public override clear() {
         this.stopSniff();
         super.clear();
     }

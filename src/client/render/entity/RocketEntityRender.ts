@@ -30,7 +30,7 @@ export class RocketEntityRender extends CachedEntityRender<number, RocketEntity>
         return entity.color.hex;
     }
 
-    protected transform(ctx: CanvasRenderingContext2D, entity: RocketEntity, alpha: number) {
+    protected override transform(ctx: CanvasRenderingContext2D, entity: RocketEntity, alpha: number) {
         super.transform(ctx, entity, alpha);
         ctx.rotate(entity.getLerpYaw(alpha));
     }

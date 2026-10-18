@@ -50,11 +50,11 @@ export class IndexedDBHelper {
     private createStore(db: IDBDatabase, config: StoreConfig) {
         const objectStore = db.createObjectStore(config.name, {
             keyPath: config.keyPath,
-            autoIncrement: config.autoIncrement,
+            autoIncrement: config.autoIncrement ?? false,
         });
 
         config.indexes?.forEach(index => {
-            objectStore.createIndex(index.name, index.keyPath, {unique: index.unique});
+            objectStore.createIndex(index.name, index.keyPath, {unique: index.unique ?? false});
         });
     }
 

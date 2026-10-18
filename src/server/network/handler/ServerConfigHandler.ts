@@ -20,7 +20,7 @@ export class ServerConfigHandler extends ServerCommonHandler {
         this.profile = profile;
     }
 
-    public onDisconnected() {
+    public override onDisconnected() {
         this.spawnTask?.close();
         this.spawnTask = null;
 
@@ -70,7 +70,7 @@ export class ServerConfigHandler extends ServerCommonHandler {
         }
     }
 
-    public tick() {
+    public override tick() {
         if (!this.isHost()) {
             this.connection.checkActivate(10_000);
         }

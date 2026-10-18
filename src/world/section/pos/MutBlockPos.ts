@@ -16,7 +16,7 @@ export class MutBlockPos extends BlockPos {
         return new MutBlockPos(0, 0);
     }
 
-    public static align(x: number, y: number): MutBlockPos {
+    public static override align(x: number, y: number): MutBlockPos {
         return new MutBlockPos(x >> WorldConstants.BLOCK_SIZE_LOG2, y >> WorldConstants.BLOCK_SIZE_LOG2);
     }
 
@@ -32,19 +32,19 @@ export class MutBlockPos extends BlockPos {
         return this;
     }
 
-    public add(x: number, y: number): MutBlockPos {
+    public override add(x: number, y: number): MutBlockPos {
         this.x += x;
         this.y += y;
         return this;
     }
 
-    public offest(direction: Direction): BlockPos {
+    public override offest(direction: Direction): BlockPos {
         this.x += direction.normal.x;
         this.y += direction.normal.y
         return this;
     }
 
-    public toImmut(): MutBlockPos {
+    public override toImmut(): MutBlockPos {
         return new MutBlockPos(this.x, this.y);
     }
 

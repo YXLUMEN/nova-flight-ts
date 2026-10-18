@@ -34,7 +34,7 @@ export class ExplosionVisual {
     public radius: number;
     public color: string;
     public ring: boolean;
-    public flash?: VisualEffect;
+    public flash: VisualEffect | undefined;
     public screenFlash: boolean;
     // 摄像机震动强度
     public shake: number;

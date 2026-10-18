@@ -30,7 +30,7 @@ export class ScheduleTask {
             at: this.time + Math.max(0, delaySec),
             fn,
             repeat,
-            interval: interval !== undefined ? Math.max(0, interval) : undefined,
+            interval: interval !== undefined ? Math.max(0, interval) : null,
             canceled: false
         };
     }

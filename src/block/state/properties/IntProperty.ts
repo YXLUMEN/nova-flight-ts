@@ -59,7 +59,7 @@ export class IntProperty extends Property<number> {
         return this.values[this.values.length - 1];
     }
 
-    public equals(other: unknown): boolean {
+    public override equals(other: unknown): boolean {
         if (!super.equals(other)) {
             return false;
         }

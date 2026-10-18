@@ -13,7 +13,7 @@ export class RocketEntity extends ProjectileEntity {
     public explosionRadius = 64;
     public explosionDamage = 10;
 
-    protected behaviour?: ExplosionConfigs;
+    protected behaviour: ExplosionConfigs | undefined;
     protected explodeColor = "#e3e3e3";
 
     private readonly maxHealth: number;

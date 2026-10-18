@@ -131,7 +131,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
         }
     }
 
-    public onPlayerDisconnect(packet: PlayerDisconnectS2CPacket) {
+    public override onPlayerDisconnect(packet: PlayerDisconnectS2CPacket) {
         const world = this.world;
         if (world) {
             const player = world.getEntityLookup().getByUUID(packet.uuid);
@@ -597,7 +597,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
         return this.latency.getLatency();
     }
 
-    public clear(): void {
+    public override clear(): void {
         super.clear();
 
         clearInterval(this.pingInterval);

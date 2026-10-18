@@ -10,28 +10,28 @@ export class EmptySection extends LevelSection {
         super(null);
     }
 
-    public recalcBlockCounts() {
+    public override recalcBlockCounts() {
     }
 
-    public getBlockState(): BlockState {
+    public override getBlockState(): BlockState {
         return Blocks.AIR.defaultState();
     }
 
-    public setBlockState(): BlockState {
+    public override setBlockState(): BlockState {
         console.warn('Set block state in empty section');
         return Blocks.AIR.defaultState();
     }
 
-    public hasOnlyAir(): boolean {
+    public override hasOnlyAir(): boolean {
         return true;
     }
 
-    public tryCompact(): void {
+    public override tryCompact(): void {
     }
 
-    public write(): void {
+    public override write(): void {
     }
 
-    public read(): void {
+    public override read(): void {
     }
 }

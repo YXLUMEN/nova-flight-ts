@@ -6,7 +6,7 @@ export class DevServer extends IntegratedServer {
     private willCrash = 0;
     private restCrash: number | undefined = undefined;
 
-    public static startServer(secretKey: Uint8Array, hostUUID: UUID, saveName: string) {
+    public static override startServer(secretKey: Uint8Array, hostUUID: UUID, saveName: string) {
         if (!NovaFlightServer.instance) {
             NovaFlightServer.instance = new DevServer(secretKey, hostUUID, saveName);
         }

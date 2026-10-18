@@ -43,7 +43,7 @@ export class CIWSBulletEntityRender extends CachedEntityRender<number, CIWSBulle
         return 0;
     }
 
-    protected transform(ctx: CanvasRenderingContext2D, entity: CIWSBulletEntity, alpha: number) {
+    protected override transform(ctx: CanvasRenderingContext2D, entity: CIWSBulletEntity, alpha: number) {
         super.transform(ctx, entity, alpha);
         ctx.rotate(entity.getYaw());
     }

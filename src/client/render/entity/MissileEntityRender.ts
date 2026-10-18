@@ -31,12 +31,12 @@ export class MissileEntityRender extends CachedEntityRender<number, MissileEntit
         return entity.color.hex;
     }
 
-    protected transform(ctx: CanvasRenderingContext2D, entity: MissileEntity, alpha: number) {
+    protected override transform(ctx: CanvasRenderingContext2D, entity: MissileEntity, alpha: number) {
         super.transform(ctx, entity, alpha);
         ctx.rotate(entity.getLerpYaw(alpha));
     }
 
-    protected drawOverlay(ctx: CanvasRenderingContext2D, entity: MissileEntity) {
+    protected override drawOverlay(ctx: CanvasRenderingContext2D, entity: MissileEntity) {
         if (!entity.isIgnite()) return;
 
         this.flame ??= buildSprite(this.flameBounding, this.buildFlame);

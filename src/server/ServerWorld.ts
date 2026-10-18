@@ -194,7 +194,7 @@ export class ServerWorld extends World implements NbtSerializable {
         return this.entities.getMobs();
     }
 
-    public setDifficulty(difficulty: number) {
+    public override setDifficulty(difficulty: number) {
         if (difficulty === this.getDifficulty()) return;
         super.setDifficulty(difficulty);
         this.sendPacket(new DifficultChangeS2CPacket(difficulty));

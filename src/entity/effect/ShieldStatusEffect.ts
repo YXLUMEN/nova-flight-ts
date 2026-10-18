@@ -36,7 +36,7 @@ export class ShieldStatusEffect extends StatusEffect {
         else this.tracked.delete(entity);
     }
 
-    public onAppliedAt(entity: LivingEntity, amplifier: number) {
+    public override onAppliedAt(entity: LivingEntity, amplifier: number) {
         super.onAppliedAt(entity, amplifier);
         entity.setShieldAmount(Math.max(entity.getShieldAmount(), 4 * (1 + amplifier)));
     }

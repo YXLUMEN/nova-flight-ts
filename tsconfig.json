@@ -19,7 +19,9 @@
     "strict": true,
     "strictNullChecks": true,
     "noUnusedLocals": true,
+    "noImplicitOverride": true,
     "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
     "noFallthroughCasesInSwitch": true
   },
   "include": [

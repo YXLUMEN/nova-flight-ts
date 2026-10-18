@@ -1,11 +1,11 @@
-import {SpawnRule} from "./SpawnRule.ts";
 import type {NbtSerializable} from "../../nbt/NbtSerializable.ts";
-import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import {clamp} from "../../utils/math/math.ts";
+import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {PhaseConfig} from "./PhaseConfig.ts";
 import type {SpawnContext} from "./SpawnContext.ts";
 import type {Supplier} from "../../type/types.ts";
+import {clamp} from "../../utils/math/math.ts";
+import {SpawnRule} from "./SpawnRule.ts";
 import {StageEnter} from "../../event/events/stage/StageEnter.ts";
 import {StageExit} from "../../event/events/stage/StageExit.ts";
 
@@ -41,10 +41,6 @@ export class Stage implements NbtSerializable {
         this.paused = true;
     }
 
-    public resume(): void {
-        this.paused = false;
-    }
-
     public tick(world: ServerWorld) {
         if (this.index >= this.phases.length) return;
         if (this.paused) return;
@@ -65,17 +61,17 @@ export class Stage implements NbtSerializable {
         const phase = this.phases[this.index];
 
         if (this.phaseTime === 1) {
-            phase.onEnter?.(ctx);
+            phase.onEnter(ctx);
             world.events.emit(new StageEnter(world, phase.name));
         }
 
         for (const r of this.rules) r.tick(ctx);
 
-        const timeUp = phase.ticks !== undefined && this.phaseTime >= phase.ticks;
-        const until = phase.until ? phase.until(ctx) : false;
+        const timeUp = this.phaseTime >= phase.ticks;
+        const until = phase.until(ctx);
 
         if (timeUp || until) {
-            phase.onExit?.(ctx);
+            phase.onExit(ctx);
             world.events.emit(new StageExit(phase.name));
 
             if (this.index + 1 < this.phases.length) {

@@ -9,7 +9,7 @@ export class ExplosiveBuilder {
     private decay: boolean = true;
     private tag_: ExplosionTag = ExplosionTag.NONE;
     private sound_: SoundEvent = SoundEvents.EXPLOSION;
-    private statusEffect?: StatusEffectInstance;
+    private statusEffect: StatusEffectInstance | undefined;
 
     public behaviour(v: ExplosionBehaviour) {
         this.behaviour_ = v;

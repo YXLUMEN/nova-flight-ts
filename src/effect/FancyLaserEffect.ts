@@ -7,9 +7,9 @@ import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 
 export class FancyLaserEffect extends LaserBeamEffect {
-    public static readonly PACKET_CODEC: PacketCodec<FancyLaserEffect> = PacketCodecs.of(this.write, this.read);
+    public static override readonly PACKET_CODEC: PacketCodec<FancyLaserEffect> = PacketCodecs.of(this.write, this.read);
 
-    protected static read(reader: BinaryReader) {
+    protected static override read(reader: BinaryReader) {
         const laser = new FancyLaserEffect(
             PacketCodecs.COLOR_HEX.decode(reader),
             reader.readVarUint(),

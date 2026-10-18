@@ -14,7 +14,7 @@ export class ClientConfigHandler extends ClientCommonHandler {
         this.connection.setPacketListener(ConnectionState.PLAY, this.client.networkHandler);
     }
 
-    public accept(payload: Payload) {
+    public override accept(payload: Payload) {
         if (!payload.canProcessInTransition?.()) return;
         super.accept(payload);
     }

@@ -15,7 +15,7 @@ export class PlayerEntityRender extends CachedEntityRender<number, PlayerEntity>
         super(new SingleCache());
     }
 
-    public render(entity: LocalPlayerEntity, ctx: CanvasRenderingContext2D, tickDelta: number) {
+    public override render(entity: LocalPlayerEntity, ctx: CanvasRenderingContext2D, tickDelta: number) {
         entity.autoAim?.render();
         super.render(entity, ctx, tickDelta);
     }
@@ -44,12 +44,12 @@ export class PlayerEntityRender extends CachedEntityRender<number, PlayerEntity>
         return 0;
     }
 
-    protected transform(ctx: CanvasRenderingContext2D, entity: PlayerEntity, alpha: number) {
+    protected override transform(ctx: CanvasRenderingContext2D, entity: PlayerEntity, alpha: number) {
         super.transform(ctx, entity, alpha);
         ctx.rotate(entity.getLerpYaw(alpha));
     }
 
-    protected drawOverlay(ctx: CanvasRenderingContext2D) {
+    protected override drawOverlay(ctx: CanvasRenderingContext2D) {
         this.flame ??= buildSprite(new AABB(-8, -6, 0, 6), this.buildFlame);
 
         const len = 8 + Math.random() * 6;

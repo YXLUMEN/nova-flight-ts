@@ -120,7 +120,7 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
         return false;
     }
 
-    public tick() {
+    public override tick() {
         this.connection.checkActivate(15_000);
     }
 

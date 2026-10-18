@@ -37,7 +37,7 @@ export class ExplodeBulletEntityRender extends CachedEntityRender<number, Explod
         return entity.color.hex;
     }
 
-    protected transform(ctx: CanvasRenderingContext2D, entity: ExplodeBulletEntity, alpha: number) {
+    protected override transform(ctx: CanvasRenderingContext2D, entity: ExplodeBulletEntity, alpha: number) {
         super.transform(ctx, entity, alpha);
         ctx.rotate(entity.getYaw());
     }

@@ -21,7 +21,7 @@ export class CloudLightningEntity extends ProjectileEntity {
         this.radius = radius;
     }
 
-    protected onEntityHit(hitResult: EntityHitResult): void {
+    protected override onEntityHit(hitResult: EntityHitResult): void {
         super.onEntityHit(hitResult);
 
         if (isClient) return;

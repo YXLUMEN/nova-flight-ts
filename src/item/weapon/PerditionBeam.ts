@@ -80,7 +80,7 @@ export class PerditionBeam extends PhaseLasers {
         super.inventoryTick(stack, world, holder);
     }
 
-    protected damage(world: ServerWorld, stack: ItemStack, holder: Entity, start: Vec2, end: Vec2) {
+    protected override damage(world: ServerWorld, stack: ItemStack, holder: Entity, start: Vec2, end: Vec2) {
         const damage = stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
         const damageSource = world.getDamageSources()
             .laser(holder)

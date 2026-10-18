@@ -136,9 +136,9 @@ class BatchTask {
     private readonly pos: Vec2;
     private readonly total: number;
     private readonly type: EntityType<any>;
-    private readonly nbt?: NbtCompound;
+    private readonly nbt: NbtCompound | undefined;
     private readonly step: number;
-    private readonly onDone?: Consumer<number>;
+    private readonly onDone: Consumer<number> | undefined;
 
     private completed: number = 0;
     private task?: number;

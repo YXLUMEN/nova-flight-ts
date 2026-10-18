@@ -360,7 +360,7 @@ export class ClientCommandManager extends CommandManager implements EventListene
         RemoveCommand.registry(this.dispatcher);
     }
 
-    public executeWithPrefix(source: CommandSource, input: string): void {
+    public override executeWithPrefix(source: CommandSource, input: string): void {
         const command = input.startsWith('/') ? input.slice(1) : input;
         if (command.length === 0) return;
 

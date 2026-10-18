@@ -50,7 +50,7 @@ export class DecoyEntityRender extends CachedEntityRender<number, DecoyEntity> {
         return 0;
     }
 
-    protected transform(ctx: CanvasRenderingContext2D, entity: DecoyEntity, alpha: number) {
+    protected override transform(ctx: CanvasRenderingContext2D, entity: DecoyEntity, alpha: number) {
         super.transform(ctx, entity, alpha);
 
         const pulse = 1 + Math.sin((entity.age % DecoyEntityRender.PULSE_PERIOD)

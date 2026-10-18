@@ -15,7 +15,7 @@ export class MutAABB extends AABB {
         return this;
     }
 
-    public offset(x: number, y: number): this {
+    public override offset(x: number, y: number): this {
         this.minX += x;
         this.minY += y;
         this.maxX += x;
@@ -23,7 +23,7 @@ export class MutAABB extends AABB {
         return this;
     }
 
-    public offsetByBlockPos(blockPos: BlockPos): this {
+    public override offsetByBlockPos(blockPos: BlockPos): this {
         this.minX += blockPos.x;
         this.minY += blockPos.y;
         this.maxX += blockPos.x;
@@ -31,7 +31,7 @@ export class MutAABB extends AABB {
         return this;
     }
 
-    public expand(x: number, y: number): this {
+    public override expand(x: number, y: number): this {
         this.minX -= x;
         this.minY -= y;
         this.maxX += x;

@@ -30,7 +30,7 @@ export abstract class PlayerMoveC2SPacket implements Payload {
 }
 
 export class FullMove extends PlayerMoveC2SPacket {
-    public static readonly ID: PayloadType<FullMove> = payloadType('player_move_full');
+    public static override readonly ID: PayloadType<FullMove> = payloadType('player_move_full');
     public static readonly CODEC: PacketCodec<FullMove> = PacketCodecs.of(
         (writer, value) => {
             writer.writeInt8(value.dx);
@@ -60,7 +60,7 @@ export class FullMove extends PlayerMoveC2SPacket {
 }
 
 export class PositionOnly extends PlayerMoveC2SPacket {
-    public static readonly ID: PayloadType<PositionOnly> = payloadType('player_move_pos');
+    public static override readonly ID: PayloadType<PositionOnly> = payloadType('player_move_pos');
     public static readonly CODEC: PacketCodec<PositionOnly> = PacketCodecs.adapt2(
         PacketCodecs.INT8,
         val => val.dx,
@@ -87,7 +87,7 @@ export class PositionOnly extends PlayerMoveC2SPacket {
 }
 
 export class Steering extends PlayerMoveC2SPacket {
-    public static readonly ID: PayloadType<Steering> = payloadType('player_move_steering');
+    public static override readonly ID: PayloadType<Steering> = payloadType('player_move_steering');
     public static readonly CODEC: PacketCodec<Steering> = PacketCodecs.adapt(
         PacketCodecs.FLOAT,
         val => val.yaw,

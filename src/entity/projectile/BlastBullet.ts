@@ -20,7 +20,7 @@ export class BlastBullet extends BulletEntity {
         false
     );
 
-    public onCollision(hitResult: HitResult) {
+    public override onCollision(hitResult: HitResult) {
         super.onCollision(hitResult);
 
         if (hitResult.getType() === HitType.MISS) return;

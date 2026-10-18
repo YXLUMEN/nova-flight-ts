@@ -61,7 +61,7 @@ export class ServerPlayHandler extends ServerCommonHandler {
         this.world = server.world!;
     }
 
-    public tick(): void {
+    public override tick(): void {
         if (!this.isHost()) {
             this.connection.checkActivate();
         }

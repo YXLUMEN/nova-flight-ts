@@ -3,7 +3,7 @@ import {BlockPos} from "./BlockPos.ts";
 import {WorldConstants} from "../WorldConstants.ts";
 
 export class SectionPos extends Vec2 {
-    public static readonly ZERO = Object.freeze(new SectionPos(0, 0)) as SectionPos;
+    public static override readonly ZERO = Object.freeze(new SectionPos(0, 0)) as SectionPos;
 
     public constructor(x: number, y: number) {
         super(Math.floor(x), Math.floor(y));
@@ -58,7 +58,7 @@ export class SectionPos extends Vec2 {
         return SectionPos.pack(this.x, this.y);
     }
 
-    public toString(): string {
+    public override toString(): string {
         return `S[${this.x},${this.y}]`;
     }
 }

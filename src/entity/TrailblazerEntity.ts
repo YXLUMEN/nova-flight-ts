@@ -41,7 +41,7 @@ export class TrailblazerEntity extends Entity implements Ownable {
         builder.define(TrailblazerEntity.BOMBS, 16);
     }
 
-    public tick() {
+    public override tick() {
         super.tick();
         if (this.clampPosition()) return;
 
@@ -100,7 +100,7 @@ export class TrailblazerEntity extends Entity implements Ownable {
         this.discard();
     }
 
-    public canHitByProjectile() {
+    public override canHitByProjectile() {
         return false;
     }
 
@@ -108,7 +108,7 @@ export class TrailblazerEntity extends Entity implements Ownable {
         return this.owner;
     }
 
-    public shouldSave(): boolean {
+    public override shouldSave(): boolean {
         return false;
     }
 

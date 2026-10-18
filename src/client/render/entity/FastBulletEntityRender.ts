@@ -14,7 +14,6 @@ export class FastBulletEntityRender implements EntityRenderer<FastBulletEntity> 
         gradient.addColorStop(0, 'rgba(166,166,166,0)');
         gradient.addColorStop(1, entity.color.color);
 
-        ctx.save();
         ctx.strokeStyle = gradient;
         ctx.lineWidth = entity.getWidth();
         ctx.lineCap = 'round';
@@ -23,6 +22,8 @@ export class FastBulletEntityRender implements EntityRenderer<FastBulletEntity> 
         ctx.moveTo(tailX, tailY);
         ctx.lineTo(x, y);
         ctx.stroke();
-        ctx.restore();
+
+        ctx.lineCap = 'butt';
+        ctx.lineWidth = 1;
     }
 }

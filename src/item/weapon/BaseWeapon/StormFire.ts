@@ -87,7 +87,7 @@ export class StormFire extends BaseWeapon {
         return 2;
     }
 
-    public getBallisticSpeed(): number {
+    public override getBallisticSpeed(): number {
         return this.BULLET_SPEED;
     }
 

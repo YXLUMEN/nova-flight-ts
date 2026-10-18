@@ -30,7 +30,7 @@ export class BlockPos extends Vec2 {
         return new BlockPos(Math.max(a.x, b.x), Math.max(a.y, b.y));
     }
 
-    public add(x: number, y: number): BlockPos {
+    public override add(x: number, y: number): BlockPos {
         return x === 0 && y === 0 ? this : new BlockPos(this.x + x, this.y + y);
     }
 
@@ -38,7 +38,7 @@ export class BlockPos extends Vec2 {
         return new BlockPos(this.x + direction.normal.x, this.y + direction.normal.y);
     }
 
-    public toString(): string {
+    public override toString(): string {
         return `B[${this.x},${this.y}]`;
     }
 }

@@ -54,7 +54,7 @@ export class SpawnMarkerEntityRender extends CachedEntityRender<number, SpawnMar
         return 0;
     }
 
-    protected transform(ctx: CanvasRenderingContext2D, entity: SpawnMarkerEntity, alpha: number) {
+    protected override transform(ctx: CanvasRenderingContext2D, entity: SpawnMarkerEntity, alpha: number) {
         super.transform(ctx, entity, alpha);
 
         if (entity.age <= 32) return;

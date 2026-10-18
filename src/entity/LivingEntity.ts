@@ -427,7 +427,7 @@ export abstract class LivingEntity extends Entity {
 
     // 数据同步
 
-    public updateSyncData() {
+    public override updateSyncData() {
         super.updateSyncData();
 
         if (!this.effectsDirty) return;
@@ -464,7 +464,7 @@ export abstract class LivingEntity extends Entity {
 
     // 插值
 
-    public getInterpolation(): InterpolationHandler | null {
+    public override getInterpolation(): InterpolationHandler | null {
         return this.interpolation;
     }
 
@@ -492,7 +492,7 @@ export abstract class LivingEntity extends Entity {
         return nbt;
     }
 
-    public readNBT(nbt: NbtCompound) {
+    public override readNBT(nbt: NbtCompound) {
         super.readNBT(nbt);
 
         this.setShieldAmountUnclamped(nbt.getFloat('shield'));
