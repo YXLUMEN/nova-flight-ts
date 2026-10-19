@@ -3,13 +3,20 @@ import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {ServerPlayHandler} from "../../../server/network/handler/ServerPlayHandler.ts";
+import type {Vec2} from "../../../utils/math/Vec2.ts";
 
 export class RequestTeleportC2SPacket implements Payload {
-    public static readonly INSTANCE = new RequestTeleportC2SPacket();
     public static readonly ID: PayloadType<RequestTeleportC2SPacket> = payloadType('request_teleport');
-    public static readonly CODEC: PacketCodec<RequestTeleportC2SPacket> = PacketCodecs.uint(this.INSTANCE);
+    public static readonly CODEC: PacketCodec<RequestTeleportC2SPacket> = PacketCodecs.adapt(
+        PacketCodecs.VECTOR2D,
+        val => val.position,
+        val => new RequestTeleportC2SPacket(val)
+    );
 
-    private constructor() {
+    public readonly position: Vec2;
+
+    public constructor(position: Vec2) {
+        this.position = position;
     }
 
     public type(): PayloadType<RequestTeleportC2SPacket> {
@@ -18,5 +25,9 @@ export class RequestTeleportC2SPacket implements Payload {
 
     public accept(listener: ServerPlayHandler): void {
         listener.onRequestTeleport(this);
+    }
+
+    public estimateSize(): number {
+        return 16;
     }
 }

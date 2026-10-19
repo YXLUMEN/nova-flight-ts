@@ -41,6 +41,8 @@ import {PlayerProfilesS2CPacket} from "../../../network/packet/s2c/PlayerProfile
 import {UnlockTechEntry} from "../../../event/events/UnlockTechEntry.ts";
 import type {AcceptTeleportC2SPacket} from "../../../network/packet/c2s/AcceptTeleportC2SPacket.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
+import {spawnTeleportFx, TELEPORT_MIN_DISTANCE_SQ} from "../../../utils/TeleportFx.ts";
+import {isDev} from "../../../configs/RuntimeConfig.ts";
 
 export class ServerPlayHandler extends ServerCommonHandler {
     public readonly player: ServerPlayerEntity;
@@ -142,6 +144,7 @@ export class ServerPlayHandler extends ServerCommonHandler {
         }
 
         this.player.snapTo(this.awaitingPosition.x, this.awaitingPosition.y, this.player.getYaw());
+        this.player.setVelocity(0, 0);
         this.awaitingPosition = null;
     }
 
@@ -150,15 +153,22 @@ export class ServerPlayHandler extends ServerCommonHandler {
             this.awaitingTeleport = 0;
         }
 
+        const from = this.player.position();
         this.player.snapTo(x, y, yaw);
+        this.player.setVelocity(0, 0);
         this.awaitingPosition = this.player.position();
 
         const change = new PositionMoveRotation(new Vec2(x, y), Vec2.ZERO, yaw);
         this.send(new PlayerPositionS2CPacket(this.awaitingTeleport, change));
+
+        const to = this.player.position();
+        if (Vec2.distSq(from, to) < TELEPORT_MIN_DISTANCE_SQ) return;
+        spawnTeleportFx(this.world, from, to);
     }
 
-    public onRequestTeleport(_: RequestTeleportC2SPacket) {
-        this.teleport(this.player.getX(), this.player.getY(), this.player.getYaw());
+    public onRequestTeleport(packet: RequestTeleportC2SPacket) {
+        if (isDev) this.teleport(packet.position.x, packet.position.y, this.player.getYaw());
+        else this.teleport(this.player.getX(), this.player.getY(), this.player.getYaw());
     }
 
     public onPlayerInput(packet: PlayerInputC2SPacket): void {

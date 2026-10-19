@@ -3,12 +3,13 @@ name = "app"
 version = "0.1.0"
 description = "nova-flight"
 authors = ["YXLumen"]
-license = "MIT"
+license = "Apache-2.0"
 repository = ""
 edition = "2021"
-rust-version = "1.77.2"
+rust-version = "1.90"
 
 [profile.dev]
+incremental = true # 以较小的步骤编译二进制文件
 opt-level = 1
 debug = false
 

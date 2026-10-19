@@ -13,6 +13,7 @@ import {ArcEffect} from "./ArcEffect.ts";
 import {AuraEffect} from "./AuraEffect.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {FancyLaserEffect} from "./FancyLaserEffect.ts";
+import {TeleportEffect} from "./TeleportEffect.ts";
 
 export class VisualEffectTypes {
     public static EDGE_GLOW: VisualEffectType<EdgeGlowEffect>;
@@ -24,6 +25,7 @@ export class VisualEffectTypes {
     public static ARC: VisualEffectType<ArcEffect>;
     public static SHIELD_AURA: VisualEffectType<AuraEffect>;
     public static FANCY_LASER: VisualEffectType<FancyLaserEffect>;
+    public static TELEPORT: VisualEffectType<TeleportEffect>;
 
     public static init() {
         this.EDGE_GLOW = this.registry('edge_glow', VisualEffectType.create(EdgeGlowEffect.PACKET_CODEC));
@@ -35,6 +37,7 @@ export class VisualEffectTypes {
         this.ARC = this.registry('arc', VisualEffectType.create(ArcEffect.PACKET_CODEC));
         this.SHIELD_AURA = this.registry('shield_aura', VisualEffectType.create(PacketCodecs.NEVER));
         this.FANCY_LASER = this.registry('fancy_laser', VisualEffectType.create(FancyLaserEffect.PACKET_CODEC));
+        this.TELEPORT = this.registry('teleport', VisualEffectType.create(TeleportEffect.PACKET_CODEC));
         Object.freeze(this);
     }
 

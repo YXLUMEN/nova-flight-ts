@@ -16,8 +16,8 @@ export class Settings {
     public static readonly FPS = this.item<number>(
         'fps',
         'settings.render.fps',
-        100,
-        SettingPredicates.clampInt(2, 240),
+        240,
+        SettingPredicates.clampInt(2, 360),
     );
 
     public static readonly LANG = this.gate<string>(

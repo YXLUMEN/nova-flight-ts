@@ -11,6 +11,7 @@ import {BitFlag} from "../../utils/BitFlag.ts";
 import {DebugFlag} from "../render/DebugRenderer.ts";
 import {InputBindings} from "./InputBindings.ts";
 import type {IInput} from "./IInput.ts";
+import {RequestTeleportC2SPacket} from "../../network/packet/c2s/RequestTeleportC2SPacket.ts";
 
 export class ClientInputEvents {
     public static registryAll(client: NovaFlightClient, input: InputManager): void {
@@ -81,6 +82,11 @@ export class ClientInputEvents {
             if (event.shiftKey && code === 'KeyP') {
                 void DataLoader.reloadModel(client.registryManager);
             }
+            return;
+        }
+        if (isDev && event.code === 'KeyU') {
+            const pos = client.input.getWorldPointer().toImmut();
+            client.connection.send(new RequestTeleportC2SPacket(pos));
             return;
         }
 

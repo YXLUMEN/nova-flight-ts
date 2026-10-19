@@ -206,6 +206,17 @@ export class ParticleEffects {
             .build()
     );
 
+    public static readonly TELEPORT = this.register('teleport',
+        ParticleEffectType.builder()
+            .life(0.35, 0.8)
+            .size(2, 5)
+            .colors('#e4dcff', '#8a6dff00')
+            .speed(80, 220)
+            .omnidirectional()
+            .drag(0.72)
+            .build()
+    );
+
     private static register(id: string, type: ParticleEffectType): ParticleEffectType {
         return Registry.registerReferenceById(
             Registries.PARTICLES,
