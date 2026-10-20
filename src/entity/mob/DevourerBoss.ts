@@ -141,7 +141,7 @@ export class DevourerBoss extends BossEntity {
 
         const pos = this.positionRef;
         const particleCount = phase === DevourerPhase.PHASE_3 ? 48 : 32;
-        world.spawnParticle(
+        world.spawnRawParticle(
             pos.x, pos.y,
             1, 1, particleCount,
             rand(300, 420),
@@ -250,7 +250,7 @@ export class DevourerBoss extends BossEntity {
 
             const ox = (Math.random() - 0.5) * 120;
             const oy = (Math.random() - 0.5) * 120;
-            world.spawnParticle(
+            world.spawnRawParticle(
                 pos.x + ox, pos.y + oy,
                 1, 1, 32,
                 rand(300, 460),

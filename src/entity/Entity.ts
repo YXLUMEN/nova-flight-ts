@@ -31,7 +31,7 @@ import {BlockCollision} from "../world/collision/BlockCollision.ts";
 import {appEvent} from "../event/EventBus.ts";
 import {EntityColor} from "../world/entity/EntityColor.ts";
 import {isBoxInView} from "../utils/render/render.ts";
-import {isValidUUID} from "../utils/UUIDUtil.ts";
+import {isValidUUID} from "../utils/uuid_util.ts";
 
 export abstract class Entity implements EntityLike, DataTracked, Comparable, NbtSerializable, CommandOutput {
     private static readonly ENTITY_COUNTER = new AtomicInteger();

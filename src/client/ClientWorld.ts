@@ -160,7 +160,7 @@ export class ClientWorld extends World {
             posX, posY,
             velX, velY,
             life,
-            size, size,
+            size,
             type,
             colorFrom, colorTo,
             drag

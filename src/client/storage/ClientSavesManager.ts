@@ -7,7 +7,7 @@ import {exists, mkdir, readFile, readTextFile, writeFile, writeTextFile} from "@
 import {empty} from "../../utils/util.ts";
 import {choseDir} from "../ipc/integrated_server.ts";
 import {toLocalTime} from "../../utils/time.ts";
-import {isValidUUID} from "../../utils/UUIDUtil.ts";
+import {isValidUUID} from "../../utils/uuid_util.ts";
 import {assert, bindFrom, closest, closestHTML, dataAction} from "../../utils/dom_util.ts";
 import {appEvent} from "../../event/EventBus.ts";
 import {ServerStorage} from "../../server/storage/ServerStorage.ts";
@@ -178,9 +178,7 @@ export class ClientSavesManager extends PageSection {
 
     private async tryInsertWorld(input: string) {
         const saveName = await this.genSaveName(input);
-        if (!saveName || Error.isError(saveName)) {
-            return null
-        }
+        if (!saveName) return null;
 
         const result = await ServerStorage.insertWorld(saveName);
         if (result.isErr()) {
@@ -216,7 +214,7 @@ export class ClientSavesManager extends PageSection {
         const request = store.openKeyCursor(range);
         const keys: string[] = [];
 
-        const {promise, resolve} = Promise.withResolvers<string | Error | null>();
+        const {promise, resolve} = Promise.withResolvers<string | null>();
 
         request.onsuccess = () => {
             const cursor = request.result;
@@ -239,7 +237,7 @@ export class ClientSavesManager extends PageSection {
                 }
 
                 const num = Number(match[1]);
-                if (Number.isNaN(num)) continue;
+                if (!Number.isSafeInteger(num)) continue;
 
                 maxNum = Math.max(maxNum, num);
             }
@@ -249,7 +247,7 @@ export class ClientSavesManager extends PageSection {
 
         request.onerror = () => {
             console.error('Cursor error:', request.error);
-            resolve(request.error);
+            resolve(null);
         };
 
         return promise;
@@ -348,7 +346,7 @@ export class ClientSavesManager extends PageSection {
             await io.loadPlayerNbtInWorld(feature);
             await Promise.all(tasks);
 
-            await message('已导出至 "安装目录/saves"');
+            await message(`已导出至 "${saveDir}"`);
         } catch (err) {
             await message('导出失败', {kind: 'error'});
             console.error(err);
@@ -388,7 +386,7 @@ export class ClientSavesManager extends PageSection {
             await io.loadPlayerInWorld(feature);
             await Promise.all(tasks);
 
-            await message('已导出至 "安装目录/saves"');
+            await message(`已导出至 "${saveDir}"`);
         } catch (err) {
             await message('导出失败', {kind: 'error'});
             console.error(err);
@@ -396,13 +394,15 @@ export class ClientSavesManager extends PageSection {
     }
 
     private async importSave() {
-        let results: ChosenDirResult | undefined;
-        try {
-            results = await choseDir();
-        } catch (err) {
-            console.error(err);
-            await message('未能读取目录,尝试将存档移动至"安装目录/saves"', {kind: 'error'});
+        const saveRoot = await resolveResource('saves');
+        const result = await choseDir();
+        if (result.isErr()) {
+            console.error(result.unwrapErr());
+            await message(`目录拒绝访问,尝试将存档移动至 "${saveRoot}"`, {kind: 'error'});
+            return;
         }
+
+        const results = result.unwrap();
         if (!results || results.root.length === 0 || results.files.length === 0) return;
 
         const root = results.root;
@@ -488,7 +488,7 @@ export class ClientSavesManager extends PageSection {
         }
 
         if (failTasks.find(fail => fail.reason === 'forbidden')) {
-            await message('读取时被拒绝, 尝试将存档文件夹转移至 "NovaFlight 安装目录" 再进行导入', {kind: 'warning'});
+            await message(`读取时被拒绝, 尝试将存档文件夹转移至 "${saveRoot}" 再进行导入`, {kind: 'warning'});
         } else {
             await message(`导入完成, 但存在 ${failTasks.length} 个文件无法加载`, {kind: 'warning'});
         }
@@ -552,9 +552,4 @@ export class ClientSavesManager extends PageSection {
         item.append(displayName, saveName, right);
         return item;
     }
-}
-
-type ChosenDirResult = {
-    root: string;
-    files: string[];
 }

@@ -1,5 +1,5 @@
 import type {UUID} from "../type/types.ts";
-import {stringifyUUID} from "../utils/UUIDUtil.ts";
+import {stringifyUUID} from "../utils/uuid_util.ts";
 
 export class BinaryReader {
     private view: DataView<ArrayBuffer>;

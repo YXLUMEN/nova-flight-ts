@@ -24,8 +24,7 @@ export class ParticlePool {
     private readonly vy: Float32Array;
     private readonly rot: Float32Array;
 
-    private readonly halfW: Float32Array;
-    // halfH 已停用. 参数保留仅为兼容调用方
+    private readonly size: Float32Array;
     private readonly shape: Uint8Array;
 
     private readonly age: Float32Array;
@@ -54,7 +53,7 @@ export class ParticlePool {
         this.rot = layout.f32(capacity);
 
         this.shape = layout.u8(capacity);
-        this.halfW = layout.f32(capacity);
+        this.size = layout.f32(capacity);
         // halfH 已停用(见字段处的说明)
 
         this.age = layout.f32(capacity);
@@ -75,8 +74,7 @@ export class ParticlePool {
         x: number, y: number,
         vx: number, vy: number,
         life: number,
-        halfW: number,
-        _halfH: number = halfW,
+        size: number,
         shape: ParticleShape = ParticleShape.CIRCLE,
         colorFrom: number, colorTo: number = colorFrom,
         drag: number = 0,
@@ -99,7 +97,7 @@ export class ParticlePool {
         this.life[i] = life;
         this.recession[i] = recession;
 
-        this.halfW[i] = halfW;
+        this.size[i] = size;
 
         this.color0[i] = colorFrom;
         this.color1[i] = colorTo;
@@ -112,8 +110,7 @@ export class ParticlePool {
         x: number, y: number,
         vx: number, vy: number,
         life: number,
-        halfW: number,
-        halfH: number = halfW,
+        size: number,
         shape: ParticleShape = ParticleShape.CIRCLE,
         colorFrom: HexColor, colorTo: HexColor = colorFrom,
         drag?: number,
@@ -124,7 +121,7 @@ export class ParticlePool {
             x, y,
             vx, vy,
             life,
-            halfW, halfH,
+            size,
             shape,
             encodeColorHex(colorFrom), encodeColorHex(colorTo),
             drag, recession, rot
@@ -150,7 +147,6 @@ export class ParticlePool {
                 x, y,
                 Math.cos(angle) * speed, Math.sin(angle) * speed,
                 rand(type.lifeMin, type.lifeMax),
-                size,
                 size,
                 type.shape,
                 type.colorFrom, type.colorTo,
@@ -194,32 +190,31 @@ export class ParticlePool {
         for (let i = 0; i < active; i++) {
             const k = this.age[i] / this.life[i];
             const shrink = 1 - this.recession[i] * k;
-            const halfW = this.halfW[i] * shrink;
-            if (halfW < MIN_HALF_SIZE) continue;
+            const size = this.size[i] * shrink;
+            if (size < MIN_HALF_SIZE) continue;
 
             const x = lerp(alpha, this.px[i], this.cx[i]);
             const y = lerp(alpha, this.py[i], this.cy[i]);
 
             const sprite = this.sprites.get(
                 this.shape[i],
-                halfW,
+                size,
                 this.color0[i],
                 this.color1[i]
             );
 
             const rot = this.rot[i];
-            const w = halfW * 2;
+            const w = size * 2;
 
-            // 未来启用 halfH 时记得修改
             if (rot === 0) {
-                ctx.drawImage(sprite, x - halfW, y - halfW, w, w);
+                ctx.drawImage(sprite, x - size, y - size, w, w);
                 continue;
             }
 
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(rot);
-            ctx.drawImage(sprite, -halfW, -halfW, w, w);
+            ctx.drawImage(sprite, -size, -size, w, w);
             ctx.restore();
         }
     }

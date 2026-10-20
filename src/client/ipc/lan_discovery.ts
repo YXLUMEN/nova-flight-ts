@@ -1,4 +1,5 @@
 import {invoke} from "@tauri-apps/api/core";
+import {Result} from "../../utils/result/Result.ts";
 
 export interface LanServer {
     name: string;
@@ -18,12 +19,17 @@ export function isOpened(): Promise<boolean> {
     return invoke('is_open');
 }
 
-export function startLanAnnounce(
+export async function startLanAnnounce(
     port: number,
     name: string,
     gameVersion: number,
-): Promise<void> {
-    return invoke('start_lan_announce', {port, name, game_version: gameVersion});
+): Promise<Result<void, Error>> {
+    try {
+        await invoke('start_lan_announce', {port, name, game_version: gameVersion});
+        return Result.ok(undefined);
+    } catch (err) {
+        return Result.err(Result.mapErr(err));
+    }
 }
 
 export function stopLanAnnounce(): Promise<boolean> {

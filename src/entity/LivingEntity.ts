@@ -222,7 +222,7 @@ export abstract class LivingEntity extends Entity {
         // 增伤
         const attacker = source.getAttacker();
         if (attacker instanceof PlayerEntity) {
-            if (source.isOfs(DamageTypes.MOB_PROJECTILE, DamageTypes.KINETIC, DamageTypes.PLAYER_ATTACK) &&
+            if (source.isOfs(DamageTypes.PROJECTILE, DamageTypes.KINETIC, DamageTypes.PLAYER_ATTACK) &&
                 attacker.getTechs().isUnlocked(Techs.ANTIMATTER_WARHEAD)) {
                 damage += Math.floor(this.getHealth() * 0.08);
             }
@@ -433,15 +433,18 @@ export abstract class LivingEntity extends Entity {
         if (!this.effectsDirty) return;
         this.effectsDirty = false;
 
+        // DataTrack 引用比较,所以此处需要强制刷新
+        const data = this.dataTracker.get(LivingEntity.DATA_EFFECT);
+        data.length = 0;
         if (this.activeEffects.size === 0) {
-            this.dataTracker.set(LivingEntity.DATA_EFFECT, []);
+            this.dataTracker.forceSet(LivingEntity.DATA_EFFECT, data, true);
             return;
         }
 
-        const effects = this.activeEffects.keys()
+        this.activeEffects.keys()
             .filter(v => v.getValue().isVisible)
-            .toArray();
-        this.dataTracker.set(LivingEntity.DATA_EFFECT, effects);
+            .forEach(v => data.push(v));
+        this.dataTracker.forceSet(LivingEntity.DATA_EFFECT, data, true);
     }
 
     public override onTrackedDataSet(_data: TrackedData<any>) {

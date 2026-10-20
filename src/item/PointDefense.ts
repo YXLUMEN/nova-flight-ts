@@ -9,7 +9,7 @@ import {LivingEntity} from "../entity/LivingEntity.ts";
 import {StatusEffects} from "../entity/effect/StatusEffects.ts";
 import {squareDistVec2} from "../utils/math/math.ts";
 import type {EntityDist} from "../type/types.ts";
-import {spawnLaserByVec} from "../utils/ServerEffect.ts";
+import {spawnLaserByVec} from "../utils/render/LaserFx.ts";
 import {AABB} from "../utils/math/AABB.ts";
 import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
 

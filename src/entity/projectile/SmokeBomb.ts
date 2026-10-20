@@ -38,7 +38,7 @@ export class SmokeBomb extends BulletEntity {
         const world = this.getWorld();
         if (world.isClient) return;
 
-        (world as ServerWorld).spawnPreparedParticle(
+        (world as ServerWorld).spawnParticle(
             ParticleEffects.LARGE_SMOKE,
             this.positionRef,
             5

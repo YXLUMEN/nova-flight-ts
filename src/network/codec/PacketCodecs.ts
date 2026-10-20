@@ -210,7 +210,10 @@ export class PacketCodecs {
     }
 
     public static map<K, V, M extends Map<K, V>>(
-        constructor: Constructor<M>, keyCodec: PacketCodec<K>, valueCodec: PacketCodec<V>, maxSize: number = 2147483647
+        constructor: Constructor<M>,
+        keyCodec: PacketCodec<K>,
+        valueCodec: PacketCodec<V>,
+        maxSize: number = 2147483647,
     ): PacketCodec<M> {
         return new PacketCodecImpl(
             (writer: BinaryWriter, map: M): void => {

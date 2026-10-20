@@ -70,7 +70,7 @@ export abstract class MobEntity extends LivingEntity {
         if (world.isClient) return;
 
         world.events.emit(new MobKilled(this, damageSource));
-        world.spawnPreparedParticle(ParticleEffects.ENTITY_DEATH, this.positionRef, 4);
+        world.spawnParticle(ParticleEffects.ENTITY_DEATH, this.positionRef, 4);
     }
 
     public attack(entity: Entity) {

@@ -1,19 +1,22 @@
+import type {World} from "../../../world/World.ts";
+import type {ClientWorld} from "../../../client/ClientWorld.ts";
+import type {ServerWorld} from "../../../server/ServerWorld.ts";
+import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
+import type {Entity} from "../../../entity/Entity.ts";
+import type {ItemStack} from "../../ItemStack.ts";
+import {isClient, isServer} from "../../../configs/RuntimeConfig.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
-import {type World} from "../../../world/World.ts";
 import {EntityTypes} from "../../../entity/EntityTypes.ts";
 import {RocketEntity} from "../../../entity/projectile/RocketEntity.ts";
 import {EMPRocketEntity} from "../../../entity/projectile/EMPRocketEntity.ts";
 import {BurstRocketEntity} from "../../../entity/projectile/BurstRocketEntity.ts";
 import {APRocketEntity} from "../../../entity/projectile/APRocketEntity.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
-import {type Entity} from "../../../entity/Entity.ts";
-import {type ItemStack} from "../../ItemStack.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import {ClusterRocketEntity} from "../../../entity/projectile/ClusterRocketEntity.ts";
-import type {ClientWorld} from "../../../client/ClientWorld.ts";
-import type {ServerWorld} from "../../../server/ServerWorld.ts";
-import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
-import {isClient, isServer} from "../../../configs/RuntimeConfig.ts";
+import {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
+import {Techs} from "../../../world/tech/Techs.ts";
+import {ExplosionConfigs, ExplosionTag} from "../../../world/element/explosion/ExplosionConfigs.ts";
 
 export class RocketLauncher extends BaseWeapon {
     private readonly bulletSpeed: number = 15;
@@ -35,6 +38,7 @@ export class RocketLauncher extends BaseWeapon {
 
         const rocketCounts = stack.getOr(DataComponents.LAUNCH_COUNT, 8);
         const randomRocketEnable = stack.getOr(DataComponents.MISSILE_RANDOM_ENABLE, false);
+        const fusion = attacker instanceof PlayerEntity && attacker.getTechs().isUnlocked(Techs.FUSION_BOMB);
 
         let i = 1;
         const schedule = world.scheduleInterval(0.1, () => {
@@ -59,7 +63,13 @@ export class RocketLauncher extends BaseWeapon {
                 rocket = this.randomRocket(world, attacker);
             }
             if (rocket === null) {
-                rocket = new RocketEntity(EntityTypes.ROCKET_ENTITY, world, attacker);
+                rocket = new RocketEntity(
+                    EntityTypes.ROCKET_ENTITY,
+                    world,
+                    attacker,
+                    undefined, undefined,
+                    new ExplosionConfigs(undefined, fusion ? ExplosionTag.FUSION : ExplosionTag.NONE),
+                );
                 rocket.explosionDamage = stack.getOr(DataComponents.EXPLOSION_POWER, 12);
                 rocket.explosionRadius = stack.getOr(DataComponents.EXPLOSION_RADIUS, 72);
             }

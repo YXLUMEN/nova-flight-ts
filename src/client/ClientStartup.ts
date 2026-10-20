@@ -1,5 +1,5 @@
 import type {UUID} from "../type/types.ts";
-import {isValidUUID, uuidFromUsername} from "../utils/UUIDUtil.ts";
+import {isValidUUID, uuidFromUsername} from "../utils/uuid_util.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import {ClientWindow} from "./render/ClientWindow.ts";
 import {ClientInit} from "./ClientInit.ts";

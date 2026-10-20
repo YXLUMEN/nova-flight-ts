@@ -9,7 +9,7 @@ import type {ProjectileEntity} from "../../projectile/ProjectileEntity.ts";
 import {MobMissileEntity} from "../../projectile/MobMissileEntity.ts";
 import {EntityTypes} from "../../EntityTypes.ts";
 import {World} from "../../../world/World.ts";
-import {spawnFancyLaser, spawnLaser} from "../../../utils/ServerEffect.ts";
+import {spawnFancyLaser, spawnLaser} from "../../../utils/render/LaserFx.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {ScreenShakeS2CPacket} from "../../../network/packet/s2c/ScreenShakeS2CPacket.ts";
 import {thickLineCircleHit} from "../../../utils/math/collide.ts";

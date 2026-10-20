@@ -8,7 +8,7 @@ import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.t
 import {World} from "../world/World.ts";
 import {squareDistVec2} from "../utils/math/math.ts";
 import {BallisticsUtils} from "../utils/math/BallisticsUtils.ts";
-import {spawnFancyLaserByVec} from "../utils/ServerEffect.ts";
+import {spawnFancyLaserByVec} from "../utils/render/LaserFx.ts";
 import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
 import {ProjectileEntity} from "./projectile/ProjectileEntity.ts";
 import {ParticleEffects} from "../effect/particle/ParticleEffects.ts";
@@ -41,7 +41,7 @@ export class ADSEntity extends Entity implements Ownable {
             ) continue;
 
             spawnFancyLaserByVec(world, selfPos, projPos, '#A6FFE380');
-            world.spawnPreparedParticle(ParticleEffects.DECOY_FLASH, projPos, 4);
+            world.spawnParticle(ParticleEffects.DECOY_FLASH, projPos, 4);
             projectile.onIntercept(10);
             if (intercepted++ >= 5) break;
         }

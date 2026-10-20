@@ -2,7 +2,7 @@ import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {Entity} from "../Entity.ts";
 import {HALF_PI, rand, randInt} from "../../utils/math/math.ts";
 import {getNearestEntityByVec, thickLineCircleHit} from "../../utils/math/collide.ts";
-import {spawnFancyLaser, spawnLaser} from "../../utils/ServerEffect.ts";
+import {spawnFancyLaser, spawnLaser} from "../../utils/render/LaserFx.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import {BossEntity} from "./BossEntity.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";

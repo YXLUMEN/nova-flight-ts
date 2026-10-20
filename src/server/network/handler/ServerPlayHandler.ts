@@ -1,28 +1,30 @@
 import type {NovaFlightServer} from "../../NovaFlightServer.ts";
+import type {UUID} from "../../../type/types.ts";
+import type {ParseResults} from "../../../brigadier/ParseResults.ts";
+import type {ServerCommandSource} from "../../command/ServerCommandSource.ts";
+import type {ServerWorld} from "../../ServerWorld.ts";
+import type {ServerConnection} from "../ServerConnection.ts";
+import type {AcceptTeleportC2SPacket} from "../../../network/packet/c2s/AcceptTeleportC2SPacket.ts";
+import {isDev} from "../../../configs/RuntimeConfig.ts";
 import {PlayerFinishLoginC2SPacket} from "../../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
 import {PlayerMoveC2SPacket} from "../../../network/packet/c2s/PlayerMoveC2SPacket.ts";
 import {PlayerInputC2SPacket} from "../../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import {PlayerSwitchSlotC2SPacket} from "../../../network/packet/c2s/PlayerSwitchSlotC2SPacket.ts";
 import {PlayerUnlockTechC2SPacket} from "../../../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
 import {ServerPlayerEntity} from "../../entity/ServerPlayerEntity.ts";
-import type {UUID} from "../../../type/types.ts";
 import {PlayerFireC2SPacket} from "../../../network/packet/c2s/PlayerFireC2SPacket.ts";
 import {EntityBatchSpawnS2CPacket} from "../../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
 import {EntityNbtS2CPacket} from "../../../network/packet/s2c/EntityNbtS2CPacket.ts";
 import {PlayerResetAllTechC2SPacket} from "../../../network/packet/c2s/PlayerResetAllTechC2SPacket.ts";
 import {CommandExecutionC2SPacket} from "../../../network/packet/c2s/CommandExecutionC2SPacket.ts";
-import type {ParseResults} from "../../../brigadier/ParseResults.ts";
-import type {ServerCommandSource} from "../../command/ServerCommandSource.ts";
 import {GameProfile} from "../../entity/GameProfile.ts";
 import {ServerCommonHandler} from "./ServerCommonHandler.ts";
-import type {ServerWorld} from "../../ServerWorld.ts";
 import {ChatMessageC2SPacket} from "../../../network/packet/c2s/ChatMessageC2SPacket.ts";
 import {PlayerReloadC2SPacket} from "../../../network/packet/c2s/PlayerReloadC2SPacket.ts";
 import {BaseWeapon} from "../../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {EntitySpawnS2CPacket} from "../../../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {PlayerResetTechC2SPacket} from "../../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
 import {GameMessageS2CPacket} from "../../../network/packet/s2c/GameMessageS2CPacket.ts";
-import type {ServerConnection} from "../ServerConnection.ts";
 import {ConnectionState} from "../ConnectionState.ts";
 import {BlockChangeC2SPacket} from "../../../network/packet/c2s/BlockChangeC2SPacket.ts";
 import {BlockChangeS2CPacket} from "../../../network/packet/s2c/BlockChangeS2CPacket.ts";
@@ -39,10 +41,7 @@ import {EntityAttributes} from "../../../entity/attribute/EntityAttributes.ts";
 import {ServerTechManager} from "../../tech/ServerTechManager.ts";
 import {PlayerProfilesS2CPacket} from "../../../network/packet/s2c/PlayerProfilesS2CPacket.ts";
 import {UnlockTechEntry} from "../../../event/events/UnlockTechEntry.ts";
-import type {AcceptTeleportC2SPacket} from "../../../network/packet/c2s/AcceptTeleportC2SPacket.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
-import {spawnTeleportFx, TELEPORT_MIN_DISTANCE_SQ} from "../../../utils/TeleportFx.ts";
-import {isDev} from "../../../configs/RuntimeConfig.ts";
 
 export class ServerPlayHandler extends ServerCommonHandler {
     public readonly player: ServerPlayerEntity;
@@ -153,17 +152,12 @@ export class ServerPlayHandler extends ServerCommonHandler {
             this.awaitingTeleport = 0;
         }
 
-        const from = this.player.position();
         this.player.snapTo(x, y, yaw);
         this.player.setVelocity(0, 0);
         this.awaitingPosition = this.player.position();
 
         const change = new PositionMoveRotation(new Vec2(x, y), Vec2.ZERO, yaw);
         this.send(new PlayerPositionS2CPacket(this.awaitingTeleport, change));
-
-        const to = this.player.position();
-        if (Vec2.distSq(from, to) < TELEPORT_MIN_DISTANCE_SQ) return;
-        spawnTeleportFx(this.world, from, to);
     }
 
     public onRequestTeleport(packet: RequestTeleportC2SPacket) {

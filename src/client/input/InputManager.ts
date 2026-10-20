@@ -32,8 +32,7 @@ export class InputManager implements IInput {
     public isDown(binding: InputBinding): boolean {
         for (const s of binding.get()) {
             const mod = this.press.get(s.code);
-            if (mod !== s.modifiers) continue;
-            return true;
+            if (mod === s.modifiers) return true;
         }
         return false;
     }
@@ -41,8 +40,7 @@ export class InputManager implements IInput {
     public wasPressed(binding: InputBinding): boolean {
         for (const s of binding.get()) {
             const mod = this.press.get(s.code);
-            if (mod !== s.modifiers || this.prevKeys.has(s.code)) continue;
-            return true;
+            if (mod === s.modifiers && !this.prevKeys.has(s.code)) return true;
         }
         return false;
     }

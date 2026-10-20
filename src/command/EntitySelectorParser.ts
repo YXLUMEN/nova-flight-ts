@@ -14,7 +14,7 @@ import type {NumRange} from "../world/predicate/NumberRange.ts";
 import {squareDistVec2} from "../utils/math/math.ts";
 import {empty, shuffleArray} from "../utils/util.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
-import {isValidUUID} from "../utils/UUIDUtil.ts";
+import {isValidUUID} from "../utils/uuid_util.ts";
 
 type provider = (builder: SuggestionsBuilder, consumer: Consumer<SuggestionsBuilder>) => Promise<Suggestions>;
 

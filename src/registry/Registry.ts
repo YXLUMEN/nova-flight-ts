@@ -160,34 +160,7 @@ export class Registry<T> implements IndexedIterable<T> {
     }
 
     public getIndexedEntries(): IndexedIterable<RegistryEntry<T>> {
-        const self = this;
-        return {
-            getIndex(entry: RegistryEntry<T>): number {
-                return self.getEntryIndex(entry);
-            },
-            getByIndex(index: number): RegistryEntry<T> | null {
-                return self.getEntryByIndex(index);
-            },
-            getByIndexOrThrow(index: number): RegistryEntry<T> {
-                const value = this.getByIndex(index);
-                if (value === null) throw new ReferenceError(`No value with id ${index}`);
-                return value
-            },
-            getIndexOrThrow(entry: RegistryEntry<T>): number {
-                const id = this.getIndex(entry);
-                if (id === -1) {
-                    throw new ReferenceError(`Can't find id for ${entry.toString()}`);
-                }
-                return id;
-            },
-            size() {
-                return self.size();
-            },
-
-            [Symbol.iterator]() {
-                return self.entryToIndex.keys();
-            },
-        } satisfies IndexedIterable<RegistryEntry<T>>;
+        return new Registry.IndexedEntry(this);
     }
 
     public checkBeforeFreeze() {
@@ -201,6 +174,44 @@ export class Registry<T> implements IndexedIterable<T> {
             .sort();
         if (unbound.length > 0) {
             throw new IllegalStateError(`Unbound values in registry ${this.getKey()}:\n ${unbound}`);
+        }
+    }
+
+    private static readonly IndexedEntry = class<T> implements IndexedIterable<RegistryEntry<T>> {
+        private readonly inner: Registry<T>;
+
+        public constructor(inner: Registry<T>) {
+            this.inner = inner;
+        }
+
+        public getIndex(entry: RegistryEntry<T>): number {
+            return this.inner.getEntryIndex(entry);
+        }
+
+        public getByIndex(index: number): RegistryEntry<T> | null {
+            return this.inner.getEntryByIndex(index);
+        }
+
+        public getByIndexOrThrow(index: number): RegistryEntry<T> {
+            const value = this.getByIndex(index);
+            if (value === null) throw new ReferenceError(`No value with id ${index}`);
+            return value
+        }
+
+        public getIndexOrThrow(entry: RegistryEntry<T>): number {
+            const id = this.getIndex(entry);
+            if (id === -1) {
+                throw new ReferenceError(`Can't find id for ${entry.toString()}`);
+            }
+            return id;
+        }
+
+        public size() {
+            return this.inner.size();
+        }
+
+        public [Symbol.iterator]() {
+            return this.inner.entryToIndex.keys();
         }
     }
 }

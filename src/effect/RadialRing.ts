@@ -58,14 +58,16 @@ export class RadialRing implements VisualEffect {
         const k = Math.min(1, lerpT / this.life);
         const r = this.r0 + (this.r1 - this.r0) * k;
         const alpha = 1 - k;
-        ctx.save();
+
         ctx.globalAlpha = alpha * 0.8;
         ctx.strokeStyle = this.color;
         ctx.lineWidth = Math.max(1, (this.r1 - this.r0) * 0.04 * (1 - k));
         ctx.beginPath();
         ctx.arc(this.center.x, this.center.y, r, 0, TAU);
         ctx.stroke();
-        ctx.restore();
+
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = 1;
     }
 
     public isAlive(): boolean {

@@ -1,6 +1,6 @@
 import type {UUID} from "../type/types.ts";
 import {PacketTooLargeError} from "../type/errors.ts";
-import {parseUUID} from "../utils/UUIDUtil.ts";
+import {parseUUID} from "../utils/uuid_util.ts";
 
 export class BinaryWriter {
     public static readonly MAX_BUFFER_SIZE = 16 * 1024 * 1024;
@@ -10,14 +10,14 @@ export class BinaryWriter {
     private view: DataView<ArrayBuffer>;
     private offset: number = 0;
 
-    public constructor(size = 128, max = BinaryWriter.MAX_BUFFER_SIZE) {
+    public constructor(size: number = 128, max: number = BinaryWriter.MAX_BUFFER_SIZE) {
         BinaryWriter.checkMaxSize(max);
         this.maxSize = max;
         this.buffer = new Uint8Array(size);
         this.view = new DataView(this.buffer.buffer);
     }
 
-    public static alloc(size = 128): BinaryWriter {
+    public static alloc(size?: number): BinaryWriter {
         return new BinaryWriter(size);
     }
 

@@ -1,16 +1,16 @@
-import {isDev, RuntimeConfig} from "../../configs/RuntimeConfig.ts";
-import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
+import type {IInput} from "./IInput.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import type {InputManager} from "./InputManager.ts";
-import {cleanObj, empty} from "../../utils/util.ts";
-import {DataLoader} from "../../resource/DataLoader.ts";
-import {app} from "../../lib.ts";
-import {Main2WorkerType} from "../../worker/WorkerMsgType.ts";
 import type {Consumer} from "../../type/types.ts";
+import {cleanObj, empty} from "../../utils/util.ts";
+import {app} from "../../lib.ts";
+import {isDev, RuntimeConfig} from "../../configs/RuntimeConfig.ts";
+import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
+import {DataLoader} from "../../resource/DataLoader.ts";
+import {Main2WorkerType} from "../../worker/WorkerMsgType.ts";
 import {BitFlag} from "../../utils/BitFlag.ts";
 import {DebugFlag} from "../render/DebugRenderer.ts";
 import {InputBindings} from "./InputBindings.ts";
-import type {IInput} from "./IInput.ts";
 import {RequestTeleportC2SPacket} from "../../network/packet/c2s/RequestTeleportC2SPacket.ts";
 
 export class ClientInputEvents {
@@ -84,11 +84,6 @@ export class ClientInputEvents {
             }
             return;
         }
-        if (isDev && event.code === 'KeyU') {
-            const pos = client.input.getWorldPointer().toImmut();
-            client.connection.send(new RequestTeleportC2SPacket(pos));
-            return;
-        }
 
         if (!world) return;
         switch (code) {
@@ -144,8 +139,6 @@ export class ClientInputEvents {
         if (!player) return;
 
         const worker = client.getServerWorker();
-        worker?.post({type: 'dev_mode', payload: {code}});
-
         switch (code) {
             case 'KeyH':
                 player.setHealth(player.getMaxHealth());
@@ -168,6 +161,10 @@ export class ClientInputEvents {
                 break;
             case 'KeyC':
                 worker?.post({m2w: Main2WorkerType.CD_ALL});
+                break;
+            case 'KeyU':
+                const pos = client.input.getWorldPointer().toImmut();
+                client.connection.send(new RequestTeleportC2SPacket(pos));
                 break;
         }
     }

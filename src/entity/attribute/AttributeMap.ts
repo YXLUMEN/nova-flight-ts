@@ -9,11 +9,11 @@ import type {AttributeModifier} from "../../component/type/AttributeModifier.ts"
 import {Log} from "../../worker/log.ts";
 
 export class AttributeMap {
-    private readonly attributes = new Map<RegistryEntry<Attribute>, AttributeInstance>();
+    private readonly attributes: Map<RegistryEntry<Attribute>, AttributeInstance> = new Map();
 
-    private readonly tracked = new Set<AttributeInstance>();
-    private readonly pendingUpdate = new Set<AttributeInstance>();
-    private readonly pendingSync = new Set<AttributeInstance>();
+    private readonly tracked: Set<AttributeInstance> = new Set();
+    private readonly pendingUpdate: Set<AttributeInstance> = new Set();
+    private readonly pendingSync: Set<AttributeInstance> = new Set();
 
     private readonly supplier: AttributeSupplier;
 

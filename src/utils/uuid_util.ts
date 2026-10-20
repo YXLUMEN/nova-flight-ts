@@ -49,7 +49,7 @@ export function stringifyUUID(bytes: Uint8Array): UUID {
     if (bytes.length !== 16) {
         throw new Error("Invalid UUID bytes");
     }
-    const hex = new Array(16);
+    const hex = new Array(16).fill(null);
     for (let i = 0; i < 16; i++) {
         hex[i] = HEX_TABLE[bytes[i]];
     }

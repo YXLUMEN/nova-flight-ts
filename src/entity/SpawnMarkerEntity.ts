@@ -1,10 +1,11 @@
-import {Entity} from "./Entity.ts";
-import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
 import type {TrackedData} from "./data/TrackedData.ts";
 import type {EntityType} from "./EntityType.ts";
-import {World} from "../world/World.ts";
 import type {MobEntity} from "./mob/MobEntity.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
+import {Entity} from "./Entity.ts";
+import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
+import {World} from "../world/World.ts";
+import {spawnTeleportFx} from "../utils/render/TeleportFx.ts";
 
 export class SpawnMarkerEntity extends Entity {
     public override noClip = true;
@@ -34,6 +35,7 @@ export class SpawnMarkerEntity extends Entity {
 
         if (this.force) {
             world.spawnEntity(this.spawnMob);
+            spawnTeleportFx(world, this.positionRef, this.positionRef);
             return;
         }
 
@@ -48,6 +50,7 @@ export class SpawnMarkerEntity extends Entity {
         if (!canSpawn) return;
 
         world.spawnEntity(this.spawnMob);
+        spawnTeleportFx(world, this.positionRef, this.positionRef);
     }
 
     public override canHitByProjectile(): boolean {

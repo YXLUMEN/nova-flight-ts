@@ -7,7 +7,7 @@ import type {HexColor} from "../../../type/types.ts";
 import type {World} from "../../../world/World.ts";
 import {isClient, isServer} from "../../../configs/RuntimeConfig.ts";
 import {rand, randInt, TAU} from "../../../utils/math/math.ts";
-import {spawnLaser} from "../../../utils/ServerEffect.ts";
+import {spawnLaser} from "../../../utils/render/LaserFx.ts";
 import {thickLineCircleHit} from "../../../utils/math/collide.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
 import {PhaseLasers} from "../PhaseLasers.ts";
@@ -101,7 +101,7 @@ export class ParticleLance extends BaseWeapon {
 
         spawnLaser(world, start.x, start.y, end.x, end.y, this.getUiColor(), 4, 0.2);
         world.playSound(null, SoundEvents.LASER_FIRE_BEAM_MID, 0.6);
-        if (!hitBlock.missed) world.spawnParticle(
+        if (!hitBlock.missed) world.spawnRawParticle(
             end.x, end.y,
             0, 0,
             8,

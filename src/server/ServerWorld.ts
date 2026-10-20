@@ -267,7 +267,7 @@ export class ServerWorld extends World implements NbtSerializable {
         return explosion;
     }
 
-    public spawnParticle(
+    public spawnRawParticle(
         posX: number, posY: number, offsetX: number, offsetY: number,
         count: number, speed: number, life: number, size: number,
         colorFrom: HexColor, colorTo?: HexColor): void {
@@ -276,7 +276,7 @@ export class ServerWorld extends World implements NbtSerializable {
         ));
     }
 
-    public spawnPreparedParticle(type: ParticleEffectType, pos: Vec2, count: number, baseAngle: number = 0) {
+    public spawnParticle(type: ParticleEffectType, pos: Vec2, count: number, baseAngle: number = 0) {
         this.sendPacket(new PreparedParticleS2CPacket(type, pos, count, baseAngle));
     }
 

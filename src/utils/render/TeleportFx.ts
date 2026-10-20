@@ -1,9 +1,9 @@
-import type {World} from "../world/World.ts";
-import type {ServerWorld} from "../server/ServerWorld.ts";
-import {Vec2} from "./math/Vec2.ts";
-import type {HexColor} from "../type/types.ts";
-import {TeleportEffect, TeleportPhase} from "../effect/TeleportEffect.ts";
-import {ParticleEffects} from "../effect/particle/ParticleEffects.ts";
+import type {World} from "../../world/World.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
+import {Vec2} from "../math/Vec2.ts";
+import type {HexColor} from "../../type/types.ts";
+import {TeleportEffect, TeleportPhase} from "../../effect/TeleportEffect.ts";
+import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
 
 export const TELEPORT_COLOR: HexColor = '#8a6dff';
 /** 小于该距离平方的位移不视为传送（避免原地同步也触发特效）。 */
@@ -41,7 +41,7 @@ export function spawnTeleportFx(
 
     const server = world as ServerWorld;
     for (const effect of effects) server.spawnVisual(null, effect);
-    server.spawnPreparedParticle(ParticleEffects.TELEPORT, to, PARTICLE_COUNT);
+    server.spawnParticle(ParticleEffects.TELEPORT, to, PARTICLE_COUNT);
     if (sameSpot) return;
-    server.spawnPreparedParticle(ParticleEffects.TELEPORT, from, PARTICLE_COUNT);
+    server.spawnParticle(ParticleEffects.TELEPORT, from, PARTICLE_COUNT);
 }

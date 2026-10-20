@@ -9,7 +9,7 @@ export class DamageTypes {
     public static readonly KILL = this.registry("kill");
     public static readonly MOB_ATTACK = this.registry("mob_attack");
     public static readonly PLAYER_ATTACK = this.registry("player_attack");
-    public static readonly MOB_PROJECTILE = this.registry("mob_projectile");
+    public static readonly PROJECTILE = this.registry("projectile");
     public static readonly EXPLOSION = this.registry("explosion");
     public static readonly LASER = this.registry("laser");
     public static readonly PLAYER_IMPACT = this.registry("player_impact");
@@ -25,7 +25,7 @@ export class DamageTypes {
         damage.add(this.KILL, 'kill', DamageTypeTags.BYPASSES_INVULNERABLE, DamageTypeTags.BYPASSES_EFFECTS, DamageTypeTags.BYPASSES_SHIELD, DamageTypeTags.NOT_GAIN_SCORE);
         damage.add(this.MOB_ATTACK, 'mobAttack');
         damage.add(this.PLAYER_ATTACK, 'playerAttack');
-        damage.add(this.MOB_PROJECTILE, 'mobProjectile');
+        damage.add(this.PROJECTILE, 'projectile');
         damage.add(this.EXPLOSION, 'explosion');
         damage.add(this.LASER, 'laser', DamageTypeTags.REPLY_LASER, DamageTypeTags.NOT_TRIGGER_EROSION);
         damage.add(this.PLAYER_IMPACT, 'playerImpact', DamageTypeTags.NOT_GAIN_SCORE);

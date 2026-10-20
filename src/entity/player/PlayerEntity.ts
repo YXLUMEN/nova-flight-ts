@@ -107,7 +107,7 @@ export abstract class PlayerEntity extends LivingEntity {
 
         const world = this.getWorld() as ServerWorld;
         if (this.techTree!.isUnlocked(Techs.EMERGENCY_WARP) && Math.random() < 0.2) {
-            world.spawnPreparedParticle(ParticleEffects.FLUSH, this.positionRef, 5);
+            world.spawnParticle(ParticleEffects.FLUSH, this.positionRef, 5);
             this.invulnerableTime = 30;
             return false;
         }
@@ -127,7 +127,7 @@ export abstract class PlayerEntity extends LivingEntity {
             let showDamage = 0;
             if (remainShield === 0) {
                 world.playSound(null, SoundEvents.SHIELD_CRASH);
-                world.spawnPreparedParticle(ParticleEffects.SHIELD_CRASH, this.positionRef, 16);
+                world.spawnParticle(ParticleEffects.SHIELD_CRASH, this.positionRef, 16);
                 showDamage = shieldAmount;
             } else if (hitShield > 0) {
                 showDamage = hitShield;

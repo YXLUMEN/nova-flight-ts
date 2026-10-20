@@ -108,7 +108,7 @@ export class WorldRenderer {
         x: number, y: number,
         vx: number, vy: number,
         life: number,
-        halfW: number, halfH: number,
+        size: number,
         type: number,
         colorFrom: HexColor, colorTo?: HexColor,
         drag?: number
@@ -117,7 +117,7 @@ export class WorldRenderer {
             x, y,
             vx, vy,
             life,
-            halfW, halfH,
+            size,
             type,
             colorFrom, colorTo,
             drag

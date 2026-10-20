@@ -111,13 +111,11 @@ export class ClientConnector {
             this.ctx.stop,
         );
 
-        let key: ArrayBuffer;
-        try {
-            await stopServer();
-            key = await startServer(RuntimeConfig.port);
-        } catch (err) {
+        await stopServer();
+        const serverResult = await startServer(RuntimeConfig.port);
+        if (serverResult.isErr()) {
+            const err = serverResult.unwrapErr();
             console.error(err);
-
             const msg = this.mapErr(err);
             await error(msg);
 
@@ -127,14 +125,13 @@ export class ClientConnector {
             return;
         }
 
-        try {
-            await startLanAnnounce(
-                RuntimeConfig.port,
-                `${client.playerName}'s game`,
-                DEFAULT_CONFIG.gameVersion,
-            );
-        } catch (err) {
-            await error(this.mapErr(err));
+        const lanResult = await startLanAnnounce(
+            RuntimeConfig.port,
+            `${client.playerName}'s game`,
+            DEFAULT_CONFIG.gameVersion,
+        );
+        if (lanResult.isErr()) {
+            await error(this.mapErr(lanResult.unwrapErr()));
             await stopLanAnnounce();
         }
 
@@ -143,7 +140,7 @@ export class ClientConnector {
         const addr = `127.0.0.1:${RuntimeConfig.port}`;
         this.ctx.setChannel(new ClientNetworkChannel(addr, client.clientId));
 
-        await this.checkAndConnect(addr, notice, key, saveName);
+        await this.checkAndConnect(addr, notice, serverResult.unwrap(), saveName);
     }
 
     private async checkAndConnect(

@@ -11,7 +11,7 @@ import type {ClientStartConfigC2SPacket} from "../../../network/packet/handshake
 import {ConnectionState} from "../ConnectionState.ts";
 import {ServerAllowConfigS2CPacket} from "../../../network/packet/handshake/ServerAllowConfigS2CPacket.ts";
 import type {ClientProfileC2SPacket} from "../../../network/packet/handshake/ClientProfileC2SPacket.ts";
-import {isValidUUID} from "../../../utils/UUIDUtil.ts";
+import {isValidUUID} from "../../../utils/uuid_util.ts";
 
 export class ServerHandshakeHandler extends ServerCommonHandler {
     private static readonly STILL_LOADING = TranslatableText.of('network.disconnect.still_loading');

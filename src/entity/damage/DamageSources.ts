@@ -56,7 +56,7 @@ export class DamageSources {
     }
 
     public projectile(source: Entity, attacker: Entity | null) {
-        return this.createWithSource(DamageTypes.MOB_PROJECTILE, source, attacker);
+        return this.createWithSource(DamageTypes.PROJECTILE, source, attacker);
     }
 
     public kinetic(source: Entity, attacker: Entity | null) {

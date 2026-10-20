@@ -13,7 +13,7 @@ import {ProjectRaycastUtil} from "../../world/collision/ProjectRaycastUtil.ts";
 import {type HitResult, HitType} from "../../world/collision/HitResult.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
-import {isValidUUID} from "../../utils/UUIDUtil.ts";
+import {isValidUUID} from "../../utils/uuid_util.ts";
 
 export abstract class ProjectileEntity extends Entity implements Ownable {
     private damage: number = 0;
