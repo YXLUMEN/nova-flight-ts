@@ -1,10 +1,10 @@
-import {MutAABB} from "../../utils/math/MutAABB.ts";
-import {MapRenderCache} from "../../client/render/cache/MapRenderCache.ts";
-import {ParticleShape} from "./ParticlePool.ts";
-import {TAU} from "../../utils/math/math.ts";
+import type {SpriteCtx} from "../../client/render/cache/LRURenderCache.ts";
 import {gradientOf} from "../../utils/render/render.ts";
 import {decodeColorToHex} from "../../utils/net_util.ts";
-import type {SpriteCtx} from "../../client/render/cache/LRURenderCache.ts";
+import {TAU} from "../../utils/math/math.ts";
+import {MutAABB} from "../../utils/math/MutAABB.ts";
+import {MapRenderCache} from "../../client/render/cache/MapRenderCache.ts";
+import {ParticleShape} from "./ParticleShape.ts";
 
 /**
  * 贴图参考半径阶梯（px, 2 的幂）.
@@ -12,7 +12,7 @@ import type {SpriteCtx} from "../../client/render/cache/LRURenderCache.ts";
  * 绘制时只向下缩放（缩放比 ≤2）, 贴图始终清晰. 缩小用 scale 拉伸是安全的,
  * 反过来放宽就会糊. 这样贴图键里的尺寸维度从“0.5px 档位（~50 组合/色对）”塌成“6 档”.
  */
-const REFERENCE_RADII = [1, 2, 4, 8, 16, 32];
+const REFERENCE_RADII = [1, 2, 4, 8, 16, 32] as const;
 const REFERENCE_COUNT = REFERENCE_RADII.length;
 // 档位上限（半径 32px）, 超过则按最大档烘焙后再拉伸
 const MAX_REFERENCE_INDEX = REFERENCE_COUNT - 1;

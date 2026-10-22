@@ -3,7 +3,8 @@ import type {MutVec2} from "./MutVec2.ts";
 import type {Predicate} from "../../type/types.ts";
 import type {Vec2} from "./Vec2.ts";
 import type {World} from "../../world/World.ts";
-import {clamp, TAU} from "./math.ts";
+import {clamp, HALF_PI, TAU, wrapRadians} from "./math.ts";
+import {AABB} from "./AABB.ts";
 
 export function getBoundingRadius(entity: Entity): number {
     return Math.max(entity.getWidth(), entity.getHeight()) / 2;
@@ -207,4 +208,42 @@ export function acquireTarget(
     }
 
     return best;
+}
+
+const CARDINALS = [0, HALF_PI, Math.PI, Math.PI * 1.5];
+
+export function sectorBounds(
+    x: number, y: number,
+    radius: number, yaw: number, halfAngle: number
+): AABB {
+    if (radius <= 0) return new AABB(x, y);
+    if (halfAngle >= Math.PI) {           // 退化为整圆
+        return new AABB(x - radius, y - radius, x + radius, y + radius);
+    }
+
+    // 顶点必须参与: 窄扇形的最小值就落在顶点上
+    let minX = x, minY = y, maxX = x, maxY = y;
+    const push = (px: number, py: number) => {
+        if (px < minX) minX = px; else if (px > maxX) maxX = px;
+        if (py < minY) minY = py; else if (py > maxY) maxY = py;
+    };
+
+    // 两条半径的端点
+    {
+        const a = yaw - halfAngle;
+        push(x + radius * Math.cos(a), y + radius * Math.sin(a));
+    }
+    {
+        const a = yaw + halfAngle;
+        push(x + radius * Math.cos(a), y + radius * Math.sin(a));
+    }
+
+    // 落在 [yaw-halfAngle, yaw+halfAngle] 内的轴向极值点
+    for (const c of CARDINALS) {
+        if (Math.abs(wrapRadians(c - yaw)) <= halfAngle) {
+            push(x + radius * Math.cos(c), y + radius * Math.sin(c));
+        }
+    }
+
+    return new AABB(minX, minY, maxX, maxY);
 }

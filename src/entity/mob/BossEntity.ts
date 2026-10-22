@@ -1,7 +1,7 @@
 import {MobEntity} from "./MobEntity.ts";
 import type {World} from "../../world/World.ts";
 import {type DamageSource} from "../damage/DamageSource.ts";
-import {clamp, rand} from "../../utils/math/math.ts";
+import {clamp, rand, randInt} from "../../utils/math/math.ts";
 import {PlayerEntity} from "../player/PlayerEntity.ts";
 import {EntityType} from "../EntityType.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
@@ -80,7 +80,7 @@ export abstract class BossEntity extends MobEntity {
         (world as ServerWorld).spawnRawParticle(
             pos.x, pos.y, 1, 1, 32,
             rand(240, 360),
-            rand(0.8, 1.4), rand(12, 24),
+            randInt(16, 28), rand(12, 24),
             "#ffaa33", "#ff5454",
         );
     }

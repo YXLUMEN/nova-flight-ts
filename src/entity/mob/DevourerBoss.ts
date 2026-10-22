@@ -4,7 +4,7 @@ import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
 import type {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
-import {doubleEquals, rand} from "../../utils/math/math.ts";
+import {doubleEquals, rand, randInt} from "../../utils/math/math.ts";
 import {getNearestEntityByVec} from "../../utils/math/collide.ts";
 import {BossEntity} from "./BossEntity.ts";
 import {World} from "../../world/World.ts";
@@ -145,7 +145,7 @@ export class DevourerBoss extends BossEntity {
             pos.x, pos.y,
             1, 1, particleCount,
             rand(300, 420),
-            rand(0.6, 1.0), rand(8, 16),
+            randInt(12, 20), rand(8, 16),
             phase === DevourerPhase.PHASE_3 ? '#ff2200' : '#ff6600',
             phase === DevourerPhase.PHASE_3 ? '#660000' : '#ffaa00'
         );
@@ -254,7 +254,7 @@ export class DevourerBoss extends BossEntity {
                 pos.x + ox, pos.y + oy,
                 1, 1, 32,
                 rand(300, 460),
-                rand(0.8, 1.4), rand(10, 20),
+                randInt(16, 28), rand(10, 20),
                 '#ff4400', '#ff9900'
             );
         });

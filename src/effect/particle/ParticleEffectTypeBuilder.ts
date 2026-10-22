@@ -1,8 +1,11 @@
-import type {ParticleShape} from "./ParticlePool.ts";
 import type {HexColor} from "../../type/types.ts";
 import type {ParticleEffectType} from "./ParticleEffectType.ts";
+import type {ParticleShape} from "./ParticleShape.ts";
+import type {ParticleTrait} from "./ParticleTrait.ts";
 
 export interface ParticleEffectTypeBuilder {
+    lifeSecond(min: number, max: number): this;
+
     life(min: number, max: number): this;
 
     recession(value: number): this;
@@ -24,6 +27,8 @@ export interface ParticleEffectTypeBuilder {
     spread(min: number, max: number): this;
 
     drag(drag: number): this;
+
+    traits(...traits: ParticleTrait[]): this;
 
     build(): ParticleEffectType;
 }

@@ -18,6 +18,7 @@ export class TargetDrone extends MobEntity {
 
     public constructor(type: EntityType<TargetDrone>, world: World) {
         super(type, world, 0);
+        this.noClip = true;
         this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)?.setBaseValue(100);
         this.setHealth(this.getMaxHealth());
     }

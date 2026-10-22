@@ -2,12 +2,12 @@ import {ParticleEffectType} from "./ParticleEffectType.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import {Registry} from "../../registry/Registry.ts";
-import {ParticleShape} from "./ParticlePool.ts";
+import {ParticleShape} from "./ParticleShape.ts";
 
 export class ParticleEffects {
     public static readonly TRAJECTORY = this.register('trajectory',
         ParticleEffectType.builder()
-            .life(0.4, 0.6)
+            .lifeSecond(0.4, 0.6)
             .size(2, 3)
             .colors('#fffce999', '#bcbcbc99')
             .build()
@@ -15,7 +15,7 @@ export class ParticleEffects {
 
     public static readonly EXPLOSION = this.register('explosion',
         ParticleEffectType.builder()
-            .life(0.4, 0.9)
+            .lifeSecond(0.4, 0.9)
             .size(2, 4)
             .colors('#ff9940', '#ffddb8b3')
             .speed(120, 320)
@@ -26,7 +26,7 @@ export class ParticleEffects {
 
     public static readonly EXPLOSION_DEBRIS = this.register('explosion_debris',
         ParticleEffectType.builder()
-            .life(0.3, 0.6)
+            .lifeSecond(0.3, 0.6)
             .size(3, 5)
             .colors('#ff4422')
             .speed(80, 200)
@@ -37,7 +37,7 @@ export class ParticleEffects {
 
     public static readonly SPARK = this.register('spark',
         ParticleEffectType.builder()
-            .life(0.15, 0.4)
+            .lifeSecond(0.15, 0.4)
             .size(1, 3)
             .colors('#dedede')
             .speed(50, 70)
@@ -48,7 +48,7 @@ export class ParticleEffects {
 
     public static readonly MUZZLE_SPARK = this.register('muzzle_spark',
         ParticleEffectType.builder()
-            .life(0.4, 0.6)
+            .lifeSecond(0.4, 0.6)
             .size(2, 3)
             .colors('#ffaa33', '#ff5454')
             .speed(100, 240)
@@ -59,7 +59,7 @@ export class ParticleEffects {
 
     public static readonly SMOKE = this.register('smoke',
         ParticleEffectType.builder()
-            .life(0.8, 1.6)
+            .lifeSecond(0.8, 1.6)
             .size(4, 10)
             .colors('#A0A0A099')
             .speed(20, 60)
@@ -70,7 +70,7 @@ export class ParticleEffects {
 
     public static readonly LARGE_SMOKE = this.register('large_smoke',
         ParticleEffectType.builder()
-            .life(20, 30)
+            .lifeSecond(20, 30)
             .size(24, 36)
             .recession(-0.8)
             .colors('#a0a0a0')
@@ -82,7 +82,7 @@ export class ParticleEffects {
 
     public static readonly EMBER = this.register('ember',
         ParticleEffectType.builder()
-            .life(0.6, 1.2)
+            .lifeSecond(0.6, 1.2)
             .size(4, 8)
             .colors('#ffd16b', '#cab981')
             .speed(10, 30)
@@ -91,7 +91,7 @@ export class ParticleEffects {
 
     public static readonly HIT = this.register('hit',
         ParticleEffectType.builder()
-            .life(0.2, 0.6)
+            .lifeSecond(0.2, 0.6)
             .size(4, 6)
             .colors('#ffaa33', '#ff5454')
             .speed(20, 60)
@@ -101,7 +101,7 @@ export class ParticleEffects {
 
     public static readonly SHIELD_HIT = this.register('shield_hit',
         ParticleEffectType.builder()
-            .life(0.2, 0.6)
+            .lifeSecond(0.2, 0.6)
             .size(6, 8)
             .shape(1)
             .colors('#5095ff', '#73c4ff')
@@ -112,7 +112,7 @@ export class ParticleEffects {
 
     public static readonly ENTITY_DEATH = this.register('entity_death',
         ParticleEffectType.builder()
-            .life(0.6, 0.8)
+            .lifeSecond(0.6, 0.8)
             .size(4, 6)
             .colors('#ffaa33', '#ff5454')
             .speed(80, 100)
@@ -122,7 +122,7 @@ export class ParticleEffects {
 
     public static readonly POWER_FULL_BLOW = this.register('power_full_blow',
         ParticleEffectType.builder()
-            .life(0.5, 0.6)
+            .lifeSecond(0.5, 0.6)
             .size(4, 6)
             .colors('#ffd8b6')
             .speed(100, 140)
@@ -132,7 +132,7 @@ export class ParticleEffects {
 
     public static readonly ASH = this.register('ash',
         ParticleEffectType.builder()
-            .life(0.8, 1.6)
+            .lifeSecond(0.8, 1.6)
             .size(1, 3)
             .colors('#A0A0A099')
             .speed(30, 70)
@@ -143,7 +143,7 @@ export class ParticleEffects {
 
     public static readonly BURST = this.register('burst',
         ParticleEffectType.builder()
-            .life(0.8, 1.2)
+            .lifeSecond(0.8, 1.2)
             .size(1, 3)
             .colors('#ffd88c')
             .speed(100, 160)
@@ -153,7 +153,7 @@ export class ParticleEffects {
 
     public static readonly DECOY_FLASH = this.register('decoy_flash',
         ParticleEffectType.builder()
-            .life(0.8, 1.2)
+            .lifeSecond(0.8, 1.2)
             .size(1, 2)
             .colors('#ffd88c')
             .speed(50, 80)
@@ -163,7 +163,7 @@ export class ParticleEffects {
 
     public static readonly SHIELD_CRASH = this.register('shield_crash',
         ParticleEffectType.builder()
-            .life(0.4, 0.8)
+            .lifeSecond(0.4, 0.8)
             .size(8, 10)
             .colors('#5095FFCC', '#86B5FFCC')
             .speed(200, 250)
@@ -175,7 +175,7 @@ export class ParticleEffects {
 
     public static readonly FLUSH = this.register('flush',
         ParticleEffectType.builder()
-            .life(0.8, 1.2)
+            .lifeSecond(0.8, 1.2)
             .size(5, 7)
             .colors('#8D8EFF80', '#FFFFFF99')
             .speed(220, 300)
@@ -186,7 +186,7 @@ export class ParticleEffects {
 
     public static readonly BLOCK_DESTROY = this.register('block_destroy',
         ParticleEffectType.builder()
-            .life(0.5, 1)
+            .lifeSecond(0.5, 1)
             .size(4, 6)
             .colors('#797979')
             .speed(50, 100)
@@ -198,7 +198,7 @@ export class ParticleEffects {
 
     public static readonly EXHAUST = this.register('exhaust',
         ParticleEffectType.builder()
-            .life(1, 1.5)
+            .lifeSecond(1, 1.5)
             .size(4, 6)
             .colors('#986900', '#575757')
             .speed(-2, 2)
@@ -208,7 +208,7 @@ export class ParticleEffects {
 
     public static readonly TELEPORT = this.register('teleport',
         ParticleEffectType.builder()
-            .life(0.35, 0.8)
+            .lifeSecond(0.35, 0.8)
             .size(2, 5)
             .colors('#e4dcff', '#8a6dff00')
             .speed(80, 220)

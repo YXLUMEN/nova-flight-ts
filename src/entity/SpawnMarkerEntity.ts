@@ -39,13 +39,9 @@ export class SpawnMarkerEntity extends Entity {
             return;
         }
 
-        const {x, y} = this.spawnMob.positionRef;
+        const box = this.spawnMob.getBoundingBox().expandAll(24);
         const canSpawn = world.getPlayers().every(player => {
-            if (player.isRemoved()) return true;
-            const dx = x - player.getX();
-            const dy = y - player.getY();
-            const distSq = dx * dx + dy * dy;
-            return distSq >= 6144;
+            return player.isRemoved() || !player.getBoundingBox().intersectsByBox(box);
         });
         if (!canSpawn) return;
 

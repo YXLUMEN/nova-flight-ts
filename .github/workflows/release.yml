@@ -31,7 +31,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: '24'
+  NODE_VERSION: '26'
   UPDATE_URL_TEMPLATE: ${{ vars.UPDATE_URL_TEMPLATE || 'https://arctic-red-tide.xyz/app/nova-flight/{name}' }}
 
 jobs:

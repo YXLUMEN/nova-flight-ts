@@ -20,7 +20,7 @@ import type {Entity} from "../Entity.ts";
 export abstract class MobEntity extends LivingEntity {
     public verticalMovementDir = 1;
 
-    protected readonly AI: EntityAi;
+    protected AI: EntityAi;
     private worth: number;
 
     protected constructor(type: EntityType<MobEntity>, world: World, worth: number = 1) {
@@ -49,6 +49,10 @@ export abstract class MobEntity extends LivingEntity {
 
     protected createAi(): EntityAi {
         return new MobAI(this);
+    }
+
+    public setAi(ai: EntityAi): void {
+        this.AI = ai;
     }
 
     public getAi(): EntityAi {

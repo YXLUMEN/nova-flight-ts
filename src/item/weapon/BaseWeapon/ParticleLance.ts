@@ -106,7 +106,7 @@ export class ParticleLance extends BaseWeapon {
             0, 0,
             8,
             80,
-            0.5, 4,
+            10, 4,
             this.getUiColor() as HexColor,
         );
     }
@@ -146,7 +146,7 @@ export class ParticleLance extends BaseWeapon {
             world.addRawParticle(
                 startX, startY,
                 dirX * speed, dirY * speed,
-                rand(0.4, 0.6), rand(2, 3),
+                randInt(8, 12), rand(2, 3),
                 colorFrom, colorTo,
                 0,
                 0.6

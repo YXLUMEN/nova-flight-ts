@@ -1,13 +1,13 @@
-import {BaseWeapon} from "./BaseWeapon.ts";
+import type {World} from "../../../world/World.ts";
+import type {EntityDist} from "../../../type/types.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import type {ItemStack} from "../../ItemStack.ts";
 import {randInt, wrapRadians} from "../../../utils/math/math.ts";
+import {BaseWeapon} from "./BaseWeapon.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import {ArcEffect} from "../../../effect/ArcEffect.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
-import type {World} from "../../../world/World.ts";
-import type {EntityDist} from "../../../type/types.ts";
 
 export class ArcEmitter extends BaseWeapon {
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {

@@ -2,13 +2,7 @@ import type {Payload} from "../../Payload.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
-import {
-    decodeFromInt16,
-    decodeFromUnsignedByte,
-    encodeColorHex,
-    encodeToInt16,
-    encodeToUnsignedByte,
-} from "../../../utils/net_util.ts";
+import {decodeFromInt16, encodeColorHex, encodeToInt16,} from "../../../utils/net_util.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
@@ -28,9 +22,7 @@ export class ParticleS2CPacket implements Payload {
 
     public readonly speed: number
     public readonly count: number;
-
-    private readonly lifeByte: number;
-    private lifeCache: number | null = null;
+    public readonly life: number;
 
     private readonly sizeInt16: number;
     private sizeCache: number | null = null;
@@ -56,7 +48,7 @@ export class ParticleS2CPacket implements Payload {
         this.count = count;
         this.speed = speedInt16;
 
-        this.lifeByte = life;
+        this.life = life;
         this.sizeInt16 = size;
         this.colorFromInt32 = colorFromInt32;
         this.colorToInt32 = colorToInt32;
@@ -78,7 +70,7 @@ export class ParticleS2CPacket implements Payload {
             encodeToInt16(offsetY),
             count,
             speed,
-            encodeToUnsignedByte(life),
+            life,
             encodeToInt16(size),
             encodeColorHex(colorFrom),
             encodeColorHex(colorTo),
@@ -109,7 +101,7 @@ export class ParticleS2CPacket implements Payload {
         writer.writeInt16(value.offsetYInt16);
         writer.writeInt8(value.count);
         writer.writeFloat(value.speed);
-        writer.writeInt8(value.lifeByte);
+        writer.writeInt8(value.life);
         writer.writeInt16(value.sizeInt16);
         writer.writeUint32(value.colorFromInt32);
         writer.writeUint32(value.colorToInt32);
@@ -135,13 +127,6 @@ export class ParticleS2CPacket implements Payload {
             this.offsetYCache = decodeFromInt16(this.offsetYInt16);
         }
         return this.offsetYCache;
-    }
-
-    public get life(): number {
-        if (this.lifeCache === null) {
-            this.lifeCache = decodeFromUnsignedByte(this.lifeByte);
-        }
-        return this.lifeCache;
     }
 
     public get size(): number {

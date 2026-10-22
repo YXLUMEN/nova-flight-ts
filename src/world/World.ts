@@ -85,7 +85,7 @@ export abstract class World {
     public abstract stopLoopSound(entity: Entity | null, sound: SoundEvent): boolean;
 
     /**
-     * 裸参数粒子,优先使用 `addParticle`
+     * 裸参数粒子,优先使用 `addParticle`.
      * @see {addParticle}
      * */
     public abstract addRawParticle(
