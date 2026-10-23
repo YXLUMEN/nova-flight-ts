@@ -12,9 +12,9 @@
  */
 
 import type {UUID} from "../../src/type/types.ts";
-import {AABB} from "../../src/utils/math/AABB.ts";
 import type {EntityLike} from "../../src/world/entity/EntityLike.ts";
 import type {EntityIndex} from "../../src/world/entity/EntityIndex.ts";
+import {AABB} from "../../src/utils/math/AABB.ts";
 
 // ---------------------------------------------------------------------------
 // 1. 运行时补齐
@@ -30,6 +30,7 @@ export function installRuntimePolyfills(): void {
     };
     if (typeof proto.getOrInsertComputed === "function") return;
 
+    console.warn('Patch "Map.getOrInsertComputed"');
     proto.getOrInsertComputed = function <K, V>(this: Map<K, V>, key: K, fn: (key: K) => V): V {
         let value = this.get(key);
         if (value === undefined) {

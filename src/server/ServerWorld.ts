@@ -268,9 +268,14 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public spawnRawParticle(
-        posX: number, posY: number, offsetX: number, offsetY: number,
-        count: number, speed: number, life: number, size: number,
-        colorFrom: HexColor, colorTo?: HexColor): void {
+        posX: number, posY: number,
+        offsetX: number, offsetY: number,
+        count: number,
+        speed: number,
+        life: number,
+        size: number,
+        colorFrom: HexColor, colorTo?: HexColor,
+    ): void {
         this.sendPacket(ParticleS2CPacket.create(
             posX, posY, offsetX, offsetY, count, speed, life, size, colorFrom, colorTo ?? colorFrom
         ));

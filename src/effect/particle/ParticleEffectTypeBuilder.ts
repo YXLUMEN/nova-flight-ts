@@ -24,7 +24,7 @@ export interface ParticleEffectTypeBuilder {
 
     spread(min: number, max: number): this;
 
-    drag(drag: number): this;
+    acc(value: number): this;
 
     traits(...traits: ParticleTrait[]): this;
 

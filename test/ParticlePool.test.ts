@@ -234,8 +234,8 @@ describe("外挂属性（值型 / 标记型）", () => {
 
         assert.equal(store.meta[i], TRIANGLE | BIT_ROT | BIT_DRAG);
         assert.equal(store.mask, BIT_ROT | BIT_DRAG);
-        assert.closeTo(pool.read(i, ATTR_ROT), 1.2, 1e-6);
-        assert.closeTo(pool.read(i, ATTR_DRAG), 0.5, 1e-6);
+        assert.closeTo(store.read(i, ATTR_ROT), 1.2, 1e-6);
+        assert.closeTo(store.read(i, ATTR_DRAG), 0.5, 1e-6);
         assert.equal(store.countOf(ATTR_ROT), 1);
         assert.equal(store.countOf(ATTR_DRAG), 1);
     });
@@ -253,28 +253,28 @@ describe("外挂属性（值型 / 标记型）", () => {
 
     it("重复 attach 不会让持有点数翻倍", () => {
         const pool = new ParticlePool(4);
+        const store = storeOf(pool);
         const i = pool.spawnResolve(0, 0, 0, 0, 10, 1, CIRCLE, WHITE);
 
-        pool.attach(i, ATTR_DRAG, 1.5);
-        pool.attach(i, ATTR_DRAG, 2.5);
-        const store = storeOf(pool);
+        store.attach(i, ATTR_DRAG, 1.5);
+        store.attach(i, ATTR_DRAG, 2.5);
 
         assert.equal(store.countOf(ATTR_DRAG), 1);
-        assert.closeTo(pool.read(i, ATTR_DRAG), 2.5, 1e-6, "后写的值覆盖先写的");
+        assert.closeTo(store.read(i, ATTR_DRAG), 2.5, 1e-6, "后写的值覆盖先写的");
         assert.equal(store.mask, BIT_DRAG);
     });
 
     it("tag 是标记型：置位但不分配数据列", () => {
         const pool = new ParticlePool(4);
+        const store = storeOf(pool);
         const i = pool.spawnResolve(0, 0, 0, 0, 10, 1, CIRCLE, WHITE);
 
-        pool.tag(i, ATTR_GRAVITY);
-        const store = storeOf(pool);
+        store.tag(i, ATTR_GRAVITY);
 
         assert.equal(store.meta[i] & BIT_GRAVITY, BIT_GRAVITY);
         assert.equal(store.mask, BIT_GRAVITY);
         assert.isNull(store.peek(ATTR_GRAVITY), "标记型属性没有列");
-        assert.equal(pool.read(i, ATTR_GRAVITY), 0, "无列时读回 0");
+        assert.equal(store.read(i, ATTR_GRAVITY), 0, "无列时读回 0");
     });
 
     it("detach 销账到 0 时池级 mask 归零；未持有则空操作", () => {
@@ -282,12 +282,12 @@ describe("外挂属性（值型 / 标记型）", () => {
         const i = pool.spawnResolve(0, 0, 0, 0, 10, 1, TRIANGLE, WHITE, WHITE, 0, 0.6, 1);
         const store = storeOf(pool);
 
-        pool.detach(i, ATTR_ROT);
+        store.detach(i, ATTR_ROT);
         assert.equal(store.countOf(ATTR_ROT), 0);
         assert.equal(store.mask, 0);
-        assert.equal(pool.read(i, ATTR_ROT), 0, "位清了就读不到，哪怕列里还有旧值");
+        assert.equal(store.read(i, ATTR_ROT), 0, "位清了就读不到，哪怕列里还有旧值");
 
-        pool.detach(i, ATTR_ROT);
+        store.detach(i, ATTR_ROT);
         assert.equal(store.countOf(ATTR_ROT), 0, "重复 detach 不得把计数打成负数");
         assert.equal(store.verifyAccounting(), null);
     });
@@ -371,7 +371,7 @@ describe("tick：swap-remove 搬运", () => {
         assert.closeTo(store.f32[P.CX], 3, 1e-6, "2 号搬到 0 号槽");
         assert.equal(store.meta[0], TRIANGLE | BIT_ROT, "meta 跟着搬");
         assert.equal(store.meta[1], CIRCLE, "1 号不受影响");
-        assert.closeTo(pool.read(0, ATTR_ROT), 0.7, 1e-6, "rot 值跟着搬");
+        assert.closeTo(store.read(0, ATTR_ROT), 0.7, 1e-6, "rot 值跟着搬");
         assert.equal(store.countOf(ATTR_ROT), 1, "搬运不改变持有点数");
         assert.equal(store.verifyAccounting(), null);
     });
@@ -408,6 +408,7 @@ describe("tick：swap-remove 搬运", () => {
 describe("system 调度与池级门控", () => {
     it("没有粒子持有该位时，system 完全不被调用", () => {
         const pool = new ParticlePool(4);
+        const store = storeOf(pool);
         pool.spawnResolve(0, 0, 0, 0, 100, 1, CIRCLE, WHITE);
 
         let calls = 0;
@@ -416,40 +417,40 @@ describe("system 调度与池级门控", () => {
         pool.tick(0.1);
         assert.equal(calls, 0, "池级 mask 为 0，整段跳过");
 
-        pool.tag(0, ATTR_GRAVITY);
+        store.tag(0, ATTR_GRAVITY);
         pool.tick(0.1);
         assert.equal(calls, 1, "有粒子持有时才调度");
     });
 
     it("GravitySystem 只影响带 GRAVITY 位的粒子", () => {
         const pool = new ParticlePool(8);
+        const store = storeOf(pool);
         const plain = pool.spawnResolve(0, 0, 0, 0, 100, 1, CIRCLE, WHITE);
         const heavy = pool.spawnResolve(0, 0, 0, 0, 100, 1, CIRCLE, WHITE);
-        pool.tag(heavy, ATTR_GRAVITY);
+        store.tag(heavy, ATTR_GRAVITY);
         pool.registerSystem(new ParticleGravitySystem(0, 100));
-        const store = storeOf(pool);
 
         pool.tick(0.1);
 
         assert.closeTo(store.f32[plain * ROW_SLOTS + P.VY], 0, 1e-6);
-        assert.closeTo(store.f32[heavy * ROW_SLOTS + P.VY], 10, 1e-6, "vy += 100 * 0.1");
+        assert.closeTo(store.f32[heavy * ROW_SLOTS + P.VY], 100, 1e-6, "vy += 100（每 tick 固定增量，dt 不参与）");
     });
 
     it("unregisterSystem 后不再生效（粒子上的位仍然保留）", () => {
         const pool = new ParticlePool(4);
+        const store = storeOf(pool);
         const i = pool.spawnResolve(0, 0, 0, 0, 100, 1, CIRCLE, WHITE);
-        pool.tag(i, ATTR_GRAVITY);
+        store.tag(i, ATTR_GRAVITY);
         const gravity = new ParticleGravitySystem(0, 100);
         pool.registerSystem(gravity);
-        const store = storeOf(pool);
 
         pool.tick(0.1);
-        assert.closeTo(store.f32[i * ROW_SLOTS + P.VY], 10, 1e-6);
+        assert.closeTo(store.f32[i * ROW_SLOTS + P.VY], 100, 1e-6);
 
         pool.unregisterSystem(gravity);
         pool.tick(0.1);
 
-        assert.closeTo(store.f32[i * ROW_SLOTS + P.VY], 10, 1e-6, "速度不再增加");
+        assert.closeTo(store.f32[i * ROW_SLOTS + P.VY], 100, 1e-6, "速度不再增加");
         assert.equal(store.meta[i] & BIT_GRAVITY, BIT_GRAVITY);
     });
 });
@@ -461,14 +462,14 @@ describe("spawnEffect 批量发射", () => {
         const pool = new ParticlePool(16);
         const store = storeOf(pool);
 
-        pool.spawnEffect(effectType(), 0, 0, 100);
+        pool.spawn(effectType(), 0, 0, 100);
         assert.equal(store.active, 16);
     });
 
     it("count <= 0 时不生成", () => {
         const pool = new ParticlePool(8);
-        pool.spawnEffect(effectType(), 0, 0, 0);
-        pool.spawnEffect(effectType(), 0, 0, -3);
+        pool.spawn(effectType(), 0, 0, 0);
+        pool.spawn(effectType(), 0, 0, -3);
         assert.equal(storeOf(pool).active, 0);
     });
 
@@ -476,7 +477,7 @@ describe("spawnEffect 批量发射", () => {
         const pool = new ParticlePool(8);
         const store = storeOf(pool);
 
-        pool.spawnEffect(effectType({lifeMin: 5, lifeMax: 5, sizeMin: 2, sizeMax: 2}), 3, 4, 4);
+        pool.spawn(effectType({lifeMin: 5, lifeMax: 5, sizeMin: 2, sizeMax: 2}), 3, 4, 4);
 
         assert.equal(store.active, 4);
         for (let i = 0; i < 4; i++) {
@@ -493,7 +494,7 @@ describe("spawnEffect 批量发射", () => {
         const pool = new ParticlePool(8);
         const store = storeOf(pool);
 
-        pool.spawnEffect(effectType({shape: CIRCLE, rotMin: 1, rotMax: 2}), 0, 0, 4);
+        pool.spawn(effectType({shape: CIRCLE, rotMin: 1, rotMax: 2}), 0, 0, 4);
 
         assert.equal(store.mask, 0);
         assert.isNull(store.peek(ATTR_ROT), "圆不需要 rot 列");
@@ -503,12 +504,12 @@ describe("spawnEffect 批量发射", () => {
         const pool = new ParticlePool(8);
         const store = storeOf(pool);
 
-        pool.spawnEffect(effectType({shape: TRIANGLE, rotMin: 0.3, rotMax: 0.3}), 0, 0, 4);
+        pool.spawn(effectType({shape: TRIANGLE, rotMin: 0.3, rotMax: 0.3}), 0, 0, 4);
 
         assert.equal(store.mask, BIT_ROT);
         for (let i = 0; i < 4; i++) {
             assert.equal(store.meta[i] & BIT_ROT, BIT_ROT);
-            assert.closeTo(pool.read(i, ATTR_ROT), 0.3, 1e-6);
+            assert.closeTo(store.read(i, ATTR_ROT), 0.3, 1e-6);
         }
     });
 
@@ -516,11 +517,13 @@ describe("spawnEffect 批量发射", () => {
         const pool = new ParticlePool(8);
         const store = storeOf(pool);
 
-        pool.spawnEffect(effectType({traits: [{attr: ATTR_DRAG, value: 2.5}]}), 0, 0, 3, 0);
+        pool.spawn(effectType({traits: [{attr: ATTR_DRAG, value: 2.5}]}), 0, 0, 3, 0);
 
         assert.equal(store.mask, BIT_DRAG);
         assert.equal(store.countOf(ATTR_DRAG), 3);
-        for (let i = 0; i < 3; i++) assert.closeTo(pool.read(i, ATTR_DRAG), 2.5, 1e-6);
+        for (let i = 0; i < 3; i++) {
+            assert.closeTo(store.read(i, ATTR_DRAG), 2.5, 1e-6);
+        }
     });
 
     it("life <= 0 的粒子被丢弃，不占槽位", () => {
@@ -540,7 +543,7 @@ describe("spawn：颜色编码", () => {
         const pool = new ParticlePool(4);
         const store = storeOf(pool);
 
-        const i = pool.spawn(0, 0, 0, 0, 10, 1, CIRCLE, "#ff0000");
+        const i = pool.spawnRaw(0, 0, 0, 0, 10, 1, CIRCLE, "#ff0000");
         assert.equal(store.u32[i * ROW_SLOTS + P.C0], 0xFF0000FF);
         assert.equal(store.u32[i * ROW_SLOTS + P.C1], 0xFF0000FF, "colorTo 默认等于 colorFrom");
     });
@@ -549,14 +552,14 @@ describe("spawn：颜色编码", () => {
         const pool = new ParticlePool(4);
         const store = storeOf(pool);
 
-        const i = pool.spawn(0, 0, 0, 0, 10, 1, CIRCLE, "#f00", "#00ff0080");
+        const i = pool.spawnRaw(0, 0, 0, 0, 10, 1, CIRCLE, "#f00", "#00ff0080");
         assert.equal(store.u32[i * ROW_SLOTS + P.C0], 0xFF0000FF);
         assert.equal(store.u32[i * ROW_SLOTS + P.C1], 0x00FF0080);
     });
 
     it("非法颜色串抛出（4 位既不是 #RGB 也不是 #RRGGBB）", () => {
         const pool = new ParticlePool(4);
-        assert.throws(() => pool.spawn(0, 0, 0, 0, 10, 1, CIRCLE, "#FFFF"));
+        assert.throws(() => pool.spawnRaw(0, 0, 0, 0, 10, 1, CIRCLE, "#FFFF"));
     });
 });
 
@@ -633,10 +636,10 @@ describe("render：插值 / 收缩 / 旋转门控", () => {
 
     it("只有 ROT 标记位、没有 rot 列时走直通路径（不崩）", () => {
         const pool = new ParticlePool(4);
-        const i = pool.spawnResolve(0, 0, 0, 0, 10, 2, TRIANGLE, WHITE);
-        pool.tag(i, ATTR_ROT);
-
         const store = storeOf(pool);
+        const i = pool.spawnResolve(0, 0, 0, 0, 10, 2, TRIANGLE, WHITE);
+        store.tag(i, ATTR_ROT);
+
         assert.equal(store.mask, BIT_ROT, "池级位是亮的");
         assert.isNull(store.peek(ATTR_ROT), "但没有列");
 

@@ -14,6 +14,7 @@ export const enum P_IDX {
     PY,
     VX,
     VY,
+    ACC,
     SIZE,
     /** 收缩系数, 与 SIZE 在同一条 shrink 链上, 因此留在核心行 */
     REC,
@@ -50,7 +51,6 @@ export const ATTR_SHIFT = SHAPE_BITS;
  */
 export const enum ParticleAttr {
     ROT,
-    DRAG,
     GRAVITY,
     COLLIDE,
     /** 属性总数哨兵, **必须**始终在最后 */
@@ -64,4 +64,3 @@ export function attrBit(attr: ParticleAttr): number {
 }
 
 export const BIT_ROT = attrBit(ParticleAttr.ROT);
-export const BIT_DRAG = attrBit(ParticleAttr.DRAG);

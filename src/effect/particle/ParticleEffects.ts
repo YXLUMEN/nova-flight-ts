@@ -19,7 +19,7 @@ export class ParticleEffects {
             .size(2, 4)
             .colors('#ff9940', '#ffddb8b3')
             .speed(6, 16)
-            .drag(0.01)
+            .acc(0.99)
             .omnidirectional()
             .build()
     );
@@ -30,7 +30,7 @@ export class ParticleEffects {
             .size(3, 5)
             .colors('#ff4422')
             .speed(4, 10)
-            .drag(0.005)
+            .acc(0.995)
             .omnidirectional()
             .build()
     );
@@ -42,7 +42,7 @@ export class ParticleEffects {
             .colors('#dedede')
             .speed(2.5, 3.5)
             .symmetry(0.5235)
-            .drag(0.045)
+            .acc(0.955)
             .build()
     );
 
@@ -53,7 +53,7 @@ export class ParticleEffects {
             .colors('#ffaa33', '#ff5454')
             .speed(5, 12)
             .symmetry(0.42)          // ~24°
-            .drag(0.04)
+            .acc(0.96)
             .build()
     );
 
@@ -64,7 +64,7 @@ export class ParticleEffects {
             .colors('#A0A0A099')
             .speed(1, 3)
             .omnidirectional()
-            .drag(0.015)
+            .acc(0.985)
             .build()
     );
 
@@ -76,7 +76,7 @@ export class ParticleEffects {
             .colors('#a0a0a0')
             .speed(0.5, 4)
             .omnidirectional()
-            .drag(0.045)
+            .acc(0.955)
             .build()
     );
 
@@ -137,7 +137,7 @@ export class ParticleEffects {
             .colors('#A0A0A099')
             .speed(1.5, 3.5)
             .omnidirectional()
-            .drag(0.015)
+            .acc(0.985)
             .build()
     );
 
@@ -202,7 +202,7 @@ export class ParticleEffects {
             .size(4, 6)
             .colors('#986900', '#575757')
             .speed(-0.1, 0.1)
-            .drag(0.015)
+            .acc(0.985)
             .build()
     );
 
@@ -213,7 +213,7 @@ export class ParticleEffects {
             .colors('#e4dcff', '#8a6dff00')
             .speed(4, 11)
             .omnidirectional()
-            .drag(0.036)
+            .acc(0.964)
             .build()
     );
 

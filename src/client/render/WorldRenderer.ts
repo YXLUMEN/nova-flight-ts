@@ -111,16 +111,16 @@ export class WorldRenderer {
         size: number,
         type: number,
         colorFrom: HexColor, colorTo?: HexColor,
-        drag?: number
+        acc?: number
     ) {
-        this.particlePool.spawn(
+        this.particlePool.spawnRaw(
             x, y,
             vx, vy,
             life,
             size,
             type,
             colorFrom, colorTo,
-            drag
+            acc
         );
     }
 
@@ -131,7 +131,7 @@ export class WorldRenderer {
         baseAngle?: number
     ) {
         count = clamp(Math.floor(count), 0, 255);
-        this.particlePool.spawnEffect(type, x, y, count, baseAngle);
+        this.particlePool.spawn(type, x, y, count, baseAngle);
     }
 
     public addDamagePopup(

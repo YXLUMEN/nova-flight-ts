@@ -18,8 +18,7 @@ export class EMCStatus extends StatusEffect {
             Math.cos(angle) * speed,
             Math.sin(angle) * speed,
             6, 1.5,
-            '#2a83ab', undefined,
-            0,
+            '#2a83ab'
         );
         return true;
     }

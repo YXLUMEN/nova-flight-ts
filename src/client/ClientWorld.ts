@@ -154,7 +154,7 @@ export class ClientWorld extends World {
         size: number,
         colorFrom: HexColor, colorTo?: HexColor,
         type: number = 0,
-        drag?: number
+        acc?: number
     ) {
         this.worldRender.addRawParticle(
             posX, posY,
@@ -163,7 +163,7 @@ export class ClientWorld extends World {
             size,
             type,
             colorFrom, colorTo,
-            drag
+            acc
         );
     }
 

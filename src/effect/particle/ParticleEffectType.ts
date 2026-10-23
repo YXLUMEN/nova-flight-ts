@@ -28,10 +28,12 @@ export class ParticleEffectType {
     /** End color (CSS hex/rgba) at t=life. */
     public readonly colorTo: number;
 
-    /** Minimum emission speed (units/s). */
+    /** Minimum emission speed (units/tick). */
     public readonly speedMin: number;
-    /** Maximum emission speed (units/s). */
+    /** Maximum emission speed (units/tick). */
     public readonly speedMax: number;
+    /** Acc of speed */
+    public readonly acc: number;
 
     public readonly rotMin: number = 0;
     public readonly rotMax: number = 0;
@@ -40,9 +42,6 @@ export class ParticleEffectType {
     public readonly spreadMin: number;
     /** Maximum spread half-angle (radians, Math.PI = omnidirectional). */
     public readonly spreadMax: number;
-
-    /** Velocity drag coefficient (0 = no drag). */
-    public readonly drag: number;
 
     public readonly traits: ParticleTrait[] | null;
 
@@ -64,7 +63,7 @@ export class ParticleEffectType {
 
         this.spreadMin = wrapRadians(builder.spreadMin);
         this.spreadMax = wrapRadians(builder.spreadMax);
-        this.drag = builder.drag_;
+        this.acc = builder.acc_;
         this.traits = builder.traits_;
     }
 
@@ -87,6 +86,7 @@ class ParticleEffectTypeBuilderImpl implements ParticleEffectTypeBuilder {
 
     public speedMin: number = 0;
     public speedMax: number = 0;
+    public acc_: number = 1;
 
     public rotMin: number = 0;
     public rotMax: number = 0;
@@ -94,7 +94,6 @@ class ParticleEffectTypeBuilderImpl implements ParticleEffectTypeBuilder {
     public spreadMin: number = 0;
     public spreadMax: number = 0;
 
-    public drag_: number = 0;
     public traits_: ParticleTrait[] | null = null;
 
     public life(min: number, max: number): this {
@@ -138,6 +137,11 @@ class ParticleEffectTypeBuilderImpl implements ParticleEffectTypeBuilder {
         return this;
     }
 
+    public acc(value: number): this {
+        this.acc_ = value;
+        return this;
+    }
+
     public rotation(rotMin: number, rotMax: number): this {
         this.rotMin = rotMin;
         this.rotMax = rotMax;
@@ -159,11 +163,6 @@ class ParticleEffectTypeBuilderImpl implements ParticleEffectTypeBuilder {
     public spread(min: number, max: number): this {
         this.spreadMin = min;
         this.spreadMax = max;
-        return this;
-    }
-
-    public drag(drag: number): this {
-        this.drag_ = drag;
         return this;
     }
 

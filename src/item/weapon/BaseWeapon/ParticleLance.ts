@@ -149,7 +149,7 @@ export class ParticleLance extends BaseWeapon {
                 randInt(8, 12), rand(2, 3),
                 colorFrom, colorTo,
                 0,
-                0.03
+                0.97
             );
         }
     }

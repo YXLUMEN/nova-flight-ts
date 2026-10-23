@@ -31,6 +31,7 @@ import type {ParticleAttr} from "../src/effect/particle/ParticleAttr.ts";
 import {ParticleGravitySystem} from "../src/effect/particle/system/ParticleGravitySystem.ts";
 import {ParticlePoolSoA} from "./particle_support/ParticlePoolSoA.ts";
 import {Rng} from "../test/support/spatialFixtures.ts";
+import {Cell, createSink, Sink} from "./support/Sink";
 
 // ---------------------------------------------------------------------------
 // 参数（与生产一致：WorldRenderer 里 new ParticlePool(1024)，主循环 60Hz）
@@ -49,91 +50,6 @@ const FIELDS = 15;
 
 /** 生产里每种特效一组颜色对，这里取 8 组（贴图缓存在 3 形状 × 6 档 × 8 对 = 144 键内，不会抖动） */
 const PALETTE = [0xFF3B30FF, 0xFF9500FF, 0xFFD60AFF, 0x34C759FF, 0x5AC8FAFF, 0xAF52DEFF, 0xFFFFFFFF, 0x8E8E93FF];
-
-// ---------------------------------------------------------------------------
-// 输出：浏览器画表 / Node 打控制台
-// ---------------------------------------------------------------------------
-
-type Cell = string | { t: string; cls?: string };
-
-interface Sink {
-    env(text: string): void;
-
-    section(title: string, desc?: string): void;
-
-    table(head: string[], rows: Cell[][]): void;
-
-    note(text: string): void;
-}
-
-function createSink(): Sink {
-    if (typeof document === "undefined") {
-        const cellText = (c: Cell) => typeof c === "string" ? c : c.t;
-        return {
-            env: text => console.log(text),
-            section: (title, desc) => console.log(`\n== ${title} ==${desc ? `\n   ${desc}` : ""}`),
-            table: (head, rows) => {
-                const all = [head, ...rows.map(r => r.map(cellText))];
-                const width = head.map((_, i) => Math.max(...all.map(r => r[i]!.length)));
-                for (const [index, row] of all.entries()) {
-                    console.log("   " + row.map((c, i) => c.padEnd(width[i]!)).join("  "));
-                    if (index === 0) console.log("   " + width.map(w => "-".repeat(w)).join("  "));
-                }
-            },
-            note: text => console.log(`   ${text}`),
-        };
-    }
-
-    const out = document.getElementById("out")!;
-    return {
-        env: text => {
-            document.getElementById("env")!.textContent = text;
-        },
-        section: (title, desc) => {
-            const h = document.createElement("h2");
-            h.textContent = title;
-            out.append(h);
-            if (desc) {
-                const p = document.createElement("p");
-                p.className = "note";
-                p.textContent = desc;
-                out.append(p);
-            }
-        },
-        table: (head, rows) => {
-            const table = document.createElement("table");
-            const thead = document.createElement("thead");
-            const htr = document.createElement("tr");
-            for (const h of head) {
-                const th = document.createElement("th");
-                th.textContent = h;
-                htr.append(th);
-            }
-            thead.append(htr);
-            table.append(thead);
-
-            const tbody = document.createElement("tbody");
-            for (const row of rows) {
-                const tr = document.createElement("tr");
-                for (const c of row) {
-                    const td = document.createElement("td");
-                    td.textContent = typeof c === "string" ? c : c.t;
-                    if (typeof c !== "string" && c.cls) td.className = c.cls;
-                    tr.append(td);
-                }
-                tbody.append(tr);
-            }
-            table.append(tbody);
-            out.append(table);
-        },
-        note: text => {
-            const p = document.createElement("p");
-            p.className = "note";
-            p.textContent = text;
-            out.append(p);
-        },
-    };
-}
 
 const sink = createSink();
 
@@ -429,11 +345,13 @@ const NEW: Impl = {
 function installCanvasStub(): void {
     if (typeof OffscreenCanvas !== "undefined") return;
 
+    // noinspection JSUnusedGlobalSymbols
     class StubGradient {
         public addColorStop(): void {
         }
     }
 
+    // noinspection JSUnusedGlobalSymbols
     class StubCtx {
         public fillStyle: unknown;
 

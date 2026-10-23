@@ -144,7 +144,7 @@ export class ParticlePoolSoA {
                 rand(type.sizeMin, type.sizeMax),
                 type.shape,
                 type.colorFrom, type.colorTo,
-                type.drag,
+                type.acc,
                 type.recession,
                 rand(type.rotMin, type.rotMax),
             );
