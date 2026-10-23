@@ -1,6 +1,6 @@
 import type {ParticleEffectType} from "./ParticleEffectType.ts";
 import type {HexColor} from "../../type/types.ts";
-import type {TickSystem} from "./ParticleSystem.ts";
+import type {ParticleSystem} from "./ParticleSystem.ts";
 import {lerp, rand, randInt} from "../../utils/math/math.ts";
 import {encodeColorHex} from "../../utils/net_util.ts";
 import {BIT_DRAG, BIT_ROT, P_IDX, ParticleAttr, ROW_SLOTS, SHAPE_MASK} from "./ParticleAttr.ts";
@@ -14,7 +14,7 @@ const MIN_HALF_SIZE = 0.1;
 export class ParticlePool {
     private readonly store: ParticleStore;
     private readonly sprites: ParticleSprite;
-    private readonly systems: TickSystem[] = [];
+    private readonly systems: ParticleSystem[] = [];
 
     public constructor(capacity: number = 4096) {
         this.store = new ParticleStore(capacity);
@@ -146,7 +146,7 @@ export class ParticlePool {
             if ((mask & system.bit) !== 0) system.tick(store, dt);
         }
 
-        this.integrate(dt);
+        this.integrate();
     }
 
     public render(ctx: CanvasRenderingContext2D, alpha: number): void {
@@ -189,11 +189,11 @@ export class ParticlePool {
         }
     }
 
-    public registerSystem(system: TickSystem): void {
+    public registerSystem(system: ParticleSystem): void {
         this.systems.push(system);
     }
 
-    public unregisterSystem(system: TickSystem): void {
+    public unregisterSystem(system: ParticleSystem): void {
         const index = this.systems.indexOf(system);
         if (index >= 0) this.systems.splice(index, 1);
     }
@@ -222,7 +222,6 @@ export class ParticlePool {
         this.sprites.clear();
     }
 
-    /** 推进寿命并回收; 永远执行, 位置与寿命是核心字段 */
     private reap(): void {
         const store = this.store;
         const u = store.u32;
@@ -239,20 +238,19 @@ export class ParticlePool {
         }
     }
 
-    private integrate(dt: number): void {
+    private integrate(): void {
         const store = this.store;
         const f32 = store.f32;
         const meta = store.meta;
 
-        // 列可能从未分配 (没有任何粒子带 drag). 此时门控位取 0,
-        // 分支恒假, 不会解引用到 null 列,也不需要给循环写第二份拷贝
+        // 列可能从未分配,取 0
         const dragCol = store.peek(ParticleAttr.DRAG);
         const dragBit = dragCol === null ? 0 : BIT_DRAG;
 
         for (let i = store.active - 1; i >= 0; i--) {
             const b = i * ROW_SLOTS;
 
-            const acc = (meta[i] & dragBit) !== 0 ? 1 - dragCol![i] * dt : 1;
+            const acc = (meta[i] & dragBit) !== 0 ? 1 - dragCol![i] : 1;
             const vx = f32[b + P_IDX.VX] * acc;
             const vy = f32[b + P_IDX.VY] * acc;
 
@@ -261,8 +259,8 @@ export class ParticlePool {
 
             f32[b + P_IDX.PX] = f32[b + P_IDX.CX];
             f32[b + P_IDX.PY] = f32[b + P_IDX.CY];
-            f32[b + P_IDX.CX] = f32[b + P_IDX.CX] + vx * dt;
-            f32[b + P_IDX.CY] = f32[b + P_IDX.CY] + vy * dt;
+            f32[b + P_IDX.CX] = f32[b + P_IDX.CX] + vx;
+            f32[b + P_IDX.CY] = f32[b + P_IDX.CY] + vy;
         }
     }
 }

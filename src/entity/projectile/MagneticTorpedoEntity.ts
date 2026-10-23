@@ -109,7 +109,7 @@ export class MagneticTorpedoEntity extends ProjectileEntity {
         if (this.isClient()) return;
         (this.getWorld() as ServerWorld).spawnRawParticle(
             collisionPos.x, collisionPos.y, 1, 1,
-            6, 24, 20, 3, '#a8cbff'
+            6, 1.2, 20, 3, '#a8cbff'
         );
     }
 
@@ -121,7 +121,7 @@ export class MagneticTorpedoEntity extends ProjectileEntity {
         if (this.isClient()) return;
         (this.getWorld() as ServerWorld).spawnRawParticle(
             hitResult.pos.x, hitResult.pos.y, 1, 1,
-            6, 24, 20, 3, '#a8cbff'
+            6, 1.2, 20, 3, '#a8cbff'
         );
     }
 

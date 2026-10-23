@@ -39,7 +39,7 @@ export const SHAPE_MASK = (1 << SHAPE_BITS) - 1;
 export const ATTR_SHIFT = SHAPE_BITS;
 
 /**
- * 外挂属性.
+ * 外挂属性. 最多 13 种
  *
  * 只允许在末尾追加, 不允许重排或删除: 编号决定 meta 位, 而位是随粒子存活的,
  * 改动会让运行中的池子错位.
@@ -52,6 +52,7 @@ export const enum ParticleAttr {
     ROT,
     DRAG,
     GRAVITY,
+    COLLIDE,
     /** 属性总数哨兵, **必须**始终在最后 */
     COUNT,
 }

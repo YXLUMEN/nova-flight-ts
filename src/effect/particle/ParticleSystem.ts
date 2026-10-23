@@ -1,6 +1,6 @@
 import type {ParticleStore} from "./ParticleStore.ts";
 
-export interface TickSystem {
+export interface ParticleSystem {
     /** 门控位: 池里至少有一个粒子持有该位时才会被调度 */
     readonly bit: number;
 

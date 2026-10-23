@@ -28,7 +28,7 @@
 
 import {ParticlePool} from "../src/effect/particle/ParticlePool.ts";
 import type {ParticleAttr} from "../src/effect/particle/ParticleAttr.ts";
-import {GravitySystem} from "../src/effect/particle/system/GravitySystem.ts";
+import {ParticleGravitySystem} from "../src/effect/particle/system/ParticleGravitySystem.ts";
 import {ParticlePoolSoA} from "./particle_support/ParticlePoolSoA.ts";
 import {Rng} from "../test/support/spatialFixtures.ts";
 
@@ -37,7 +37,7 @@ import {Rng} from "../test/support/spatialFixtures.ts";
 // ---------------------------------------------------------------------------
 
 const CAPS = [256, 1024, 4096];
-const DT = 1 / 60;
+const DT = 1;   // 现役按 tick 推进；旧版乘 dt，取 1 让它的 *dt 恒等，两边才逐位可比
 const FRAMES = 240;
 const RENDER_FRAMES = 60;
 const REPS = 5;
@@ -227,7 +227,7 @@ function makeSpecs(rng: Rng, count: number, opt: SpecOptions = {}): Spec[] {
             shape,
             c0: PALETTE[pair]!,
             c1: PALETTE[(pair + 3) % PALETTE.length]!,
-            drag: rng.next() < dragRatio ? rng.range(1, 4) : 0,
+            drag: rng.next() < dragRatio ? rng.range(0.005, 0.045) : 0,
             rec: rng.next() < 0.7 ? 0.6 : rng.range(0, 0.9),
             rot: shape === 0 ? 0 : rng.range(-Math.PI, Math.PI),
         });
@@ -511,7 +511,7 @@ const target = createTarget();
 sink.env(`环境: ${envName} ｜ 渲染: ${target.label}`);
 sink.section(
     "1 环境与参数",
-    `容量档 ${CAPS.join(" / ")}，dt = 1/60，每轮 ${FRAMES} 帧（渲染 ${RENDER_FRAMES} 帧），取 ${REPS} 次中位数。`
+    `容量档 ${CAPS.join(" / ")}，每 tick 一步（旧版用 dt=1 对齐单位），每轮 ${FRAMES} 帧（渲染 ${RENDER_FRAMES} 帧），取 ${REPS} 次中位数。`
     + "负载取生产分布：寿命 6~60 tick、尺寸 1~7、15% 非圆（带 rot）、25% 带阻力、70% 用默认收缩 0.6。",
 );
 sink.note(`A = ${OLD.label}；B = ${NEW.label}。比值 B/A，小于 1 表示现役更快。`);
@@ -922,7 +922,7 @@ sink.section(
     const bareNew = makeBare(NEW);
 
     const systemPool = NEW.make(cap) as unknown as PoolExt;
-    systemPool.registerSystem(new GravitySystem(0, 400));
+    systemPool.registerSystem(new ParticleGravitySystem(0, 4));
     const systemRun = (): number => {
         systemPool.reset();
         for (let i = 0; i < cap; i++) {
@@ -938,7 +938,7 @@ sink.section(
         dragPool.reset();
         for (let i = 0; i < cap; i++) {
             spawnSpec(dragPool, specs[i % specs.length]!, LONG_LIFE);
-            dragPool.attach(i, ATTR_DRAG, 2.5);
+            dragPool.attach(i, ATTR_DRAG, 0.02);
         }
         for (let f = 0; f < frames; f++) dragPool.tick(DT);
         return cap * frames;

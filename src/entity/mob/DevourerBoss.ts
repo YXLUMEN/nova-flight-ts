@@ -144,7 +144,7 @@ export class DevourerBoss extends BossEntity {
         world.spawnRawParticle(
             pos.x, pos.y,
             1, 1, particleCount,
-            rand(300, 420),
+            rand(15, 21),
             randInt(12, 20), rand(8, 16),
             phase === DevourerPhase.PHASE_3 ? '#ff2200' : '#ff6600',
             phase === DevourerPhase.PHASE_3 ? '#660000' : '#ffaa00'
@@ -253,7 +253,7 @@ export class DevourerBoss extends BossEntity {
             world.spawnRawParticle(
                 pos.x + ox, pos.y + oy,
                 1, 1, 32,
-                rand(300, 460),
+                rand(15, 23),
                 randInt(16, 28), rand(10, 20),
                 '#ff4400', '#ff9900'
             );

@@ -48,7 +48,7 @@ export class ParticleStore {
         return this.active >= this.cap ? -1 : this.active++;
     }
 
-    /** 取外挂列, 不分配 */
+    /** 取外挂列 */
     public peek(attr: ParticleAttr): Float32Array | null {
         const col = this.cols[attr];
         return col === null ? null : col.data;
@@ -75,7 +75,7 @@ export class ParticleStore {
         this.raise(index, attr);
     }
 
-    /** 移除属性; 值列不清空, 位清了就读不到 */
+    /** 移除属性; 值列不清空 */
     public detach(index: number, attr: ParticleAttr): void {
         const bit = attrBit(attr);
         if ((this.meta[index] & bit) === 0) return;
@@ -91,7 +91,6 @@ export class ParticleStore {
         return col.data[index];
     }
 
-    /** 当前持有点数 (调试/测试) */
     public countOf(attr: ParticleAttr): number {
         return this.count[attr];
     }

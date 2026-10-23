@@ -5,7 +5,6 @@ import {type ServerCommandSource} from "../../server/command/ServerCommandSource
 import {Vec2} from "../../utils/math/Vec2.ts";
 
 export class LookingPosArgument implements PosArgument {
-    public static readonly CARET = '^';
     private readonly x: number;
     private readonly y: number;
 

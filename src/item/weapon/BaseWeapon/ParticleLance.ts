@@ -105,7 +105,7 @@ export class ParticleLance extends BaseWeapon {
             end.x, end.y,
             0, 0,
             8,
-            80,
+            4,
             10, 4,
             this.getUiColor() as HexColor,
         );
@@ -141,7 +141,7 @@ export class ParticleLance extends BaseWeapon {
             const dirX = Math.cos(angle);
             const dirY = Math.sin(angle);
 
-            const speed = -randInt(100, 210);
+            const speed = -randInt(5, 10.5);
 
             world.addRawParticle(
                 startX, startY,
@@ -149,7 +149,7 @@ export class ParticleLance extends BaseWeapon {
                 randInt(8, 12), rand(2, 3),
                 colorFrom, colorTo,
                 0,
-                0.6
+                0.03
             );
         }
     }

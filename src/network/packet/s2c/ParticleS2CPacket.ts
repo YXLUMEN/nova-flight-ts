@@ -2,7 +2,7 @@ import type {Payload} from "../../Payload.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
-import {decodeFromInt16, encodeColorHex, encodeToInt16,} from "../../../utils/net_util.ts";
+import {decodeColorToHex, decodeFromInt16, encodeColorHex, encodeToInt16,} from "../../../utils/net_util.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
@@ -77,7 +77,7 @@ export class ParticleS2CPacket implements Payload {
         );
     }
 
-    public static read(reader: BinaryReader): ParticleS2CPacket {
+    private static read(reader: BinaryReader): ParticleS2CPacket {
         const posX = reader.readFloat();
         const posY = reader.readFloat();
 
@@ -94,7 +94,7 @@ export class ParticleS2CPacket implements Payload {
         return new ParticleS2CPacket(posX, posY, offsetXInt16, offsetYInt16, count, speed, life, size, colorFromInt32, colorToInt32);
     }
 
-    public static write(writer: BinaryWriter, value: ParticleS2CPacket): void {
+    private static write(writer: BinaryWriter, value: ParticleS2CPacket): void {
         writer.writeFloat(value.posX);
         writer.writeFloat(value.posY);
         writer.writeInt16(value.offsetXInt16);
@@ -116,37 +116,22 @@ export class ParticleS2CPacket implements Payload {
     }
 
     public get offsetX(): number {
-        if (this.offsetXCache === null) {
-            this.offsetXCache = decodeFromInt16(this.offsetXInt16);
-        }
-        return this.offsetXCache;
+        return this.offsetXCache ??= decodeFromInt16(this.offsetXInt16);
     }
 
     public get offsetY(): number {
-        if (this.offsetYCache === null) {
-            this.offsetYCache = decodeFromInt16(this.offsetYInt16);
-        }
-        return this.offsetYCache;
+        return this.offsetYCache ??= decodeFromInt16(this.offsetYInt16);
     }
 
     public get size(): number {
-        if (this.sizeCache === null) {
-            this.sizeCache = decodeFromInt16(this.sizeInt16);
-        }
-        return this.sizeCache;
+        return this.sizeCache ??= decodeFromInt16(this.sizeInt16);
     }
 
     public get colorFrom(): HexColor {
-        if (this.color0 === null) {
-            this.color0 = `#${this.colorFromInt32.toString(16)}`;
-        }
-        return this.color0;
+        return this.color0 ??= decodeColorToHex(this.colorFromInt32);
     }
 
     public get colorTo(): HexColor {
-        if (this.color1 === null) {
-            this.color1 = `#${this.colorToInt32.toString(16)}`;
-        }
-        return this.color1;
+        return this.color1 ??= decodeColorToHex(this.colorToInt32);
     }
 }

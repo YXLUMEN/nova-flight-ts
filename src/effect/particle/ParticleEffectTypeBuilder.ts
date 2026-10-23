@@ -4,8 +4,6 @@ import type {ParticleShape} from "./ParticleShape.ts";
 import type {ParticleTrait} from "./ParticleTrait.ts";
 
 export interface ParticleEffectTypeBuilder {
-    lifeSecond(min: number, max: number): this;
-
     life(min: number, max: number): this;
 
     recession(value: number): this;

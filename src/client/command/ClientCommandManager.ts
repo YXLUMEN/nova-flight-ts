@@ -32,6 +32,7 @@ import {TickCommand} from "../../command/TickCommand.ts";
 import {RemoveCommand} from "../../command/RemoveCommand.ts";
 import type {Consumer} from "../../type/types.ts";
 import {CommandBarProxy} from "../page/compound/CommandBarProxy.ts";
+import {ParticleCommand} from "../../command/ParticleCommand.ts";
 
 export class ClientCommandManager extends CommandManager implements EventListenerObject {
     private static readonly COMMAND_HISTORY_ID = 'history';
@@ -344,6 +345,7 @@ export class ClientCommandManager extends CommandManager implements EventListene
         CommandBarCommand.registry(this.clientDispatcher);
         LangCommand.registry(this.clientDispatcher);
         SoundCommand.registry(this.clientDispatcher);
+        ParticleCommand.registry(this.clientDispatcher);
 
         // noinspection DuplicatedCode
         KillCommand.registry(this.dispatcher);

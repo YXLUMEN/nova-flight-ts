@@ -66,7 +66,6 @@ export class ParticleEffectType {
         this.spreadMax = wrapRadians(builder.spreadMax);
         this.drag = builder.drag_;
         this.traits = builder.traits_;
-        Object.freeze(this);
     }
 
     public static builder(): ParticleEffectTypeBuilder {
@@ -97,12 +96,6 @@ class ParticleEffectTypeBuilderImpl implements ParticleEffectTypeBuilder {
 
     public drag_: number = 0;
     public traits_: ParticleTrait[] | null = null;
-
-    public lifeSecond(min: number, max: number): this {
-        if (min > max) throw new RangeError('max must larger than min');
-        if (min < 0 || max < 0) throw new RangeError('max must larger than min');
-        return this.life(Math.floor(min / 0.05), Math.floor(max / 0.05));
-    }
 
     public life(min: number, max: number): this {
         if (min > max) throw new RangeError('max must larger than min');
@@ -139,6 +132,7 @@ class ParticleEffectTypeBuilderImpl implements ParticleEffectTypeBuilder {
     }
 
     public speed(min: number, max: number): this {
+        if (min > max) throw new RangeError('max must larger than min');
         this.speedMin = min;
         this.speedMax = max;
         return this;
@@ -162,7 +156,7 @@ class ParticleEffectTypeBuilderImpl implements ParticleEffectTypeBuilder {
         return this;
     }
 
-    public spread(min: number, max: number) {
+    public spread(min: number, max: number): this {
         this.spreadMin = min;
         this.spreadMax = max;
         return this;

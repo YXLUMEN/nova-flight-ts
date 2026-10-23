@@ -7,7 +7,7 @@ import {ParticleShape} from "./ParticleShape.ts";
 export class ParticleEffects {
     public static readonly TRAJECTORY = this.register('trajectory',
         ParticleEffectType.builder()
-            .lifeSecond(0.4, 0.6)
+            .life(8, 12)
             .size(2, 3)
             .colors('#fffce999', '#bcbcbc99')
             .build()
@@ -15,158 +15,158 @@ export class ParticleEffects {
 
     public static readonly EXPLOSION = this.register('explosion',
         ParticleEffectType.builder()
-            .lifeSecond(0.4, 0.9)
+            .life(8, 18)
             .size(2, 4)
             .colors('#ff9940', '#ffddb8b3')
-            .speed(120, 320)
-            .drag(0.2)
+            .speed(6, 16)
+            .drag(0.01)
             .omnidirectional()
             .build()
     );
 
     public static readonly EXPLOSION_DEBRIS = this.register('explosion_debris',
         ParticleEffectType.builder()
-            .lifeSecond(0.3, 0.6)
+            .life(6, 12)
             .size(3, 5)
             .colors('#ff4422')
-            .speed(80, 200)
-            .drag(0.1)
+            .speed(4, 10)
+            .drag(0.005)
             .omnidirectional()
             .build()
     );
 
     public static readonly SPARK = this.register('spark',
         ParticleEffectType.builder()
-            .lifeSecond(0.15, 0.4)
+            .life(3, 8)
             .size(1, 3)
             .colors('#dedede')
-            .speed(50, 70)
+            .speed(2.5, 3.5)
             .symmetry(0.5235)
-            .drag(0.9)
+            .drag(0.045)
             .build()
     );
 
     public static readonly MUZZLE_SPARK = this.register('muzzle_spark',
         ParticleEffectType.builder()
-            .lifeSecond(0.4, 0.6)
+            .life(8, 12)
             .size(2, 3)
             .colors('#ffaa33', '#ff5454')
-            .speed(100, 240)
+            .speed(5, 12)
             .symmetry(0.42)          // ~24°
-            .drag(0.8)
+            .drag(0.04)
             .build()
     );
 
     public static readonly SMOKE = this.register('smoke',
         ParticleEffectType.builder()
-            .lifeSecond(0.8, 1.6)
+            .life(16, 32)
             .size(4, 10)
             .colors('#A0A0A099')
-            .speed(20, 60)
+            .speed(1, 3)
             .omnidirectional()
-            .drag(0.3)
+            .drag(0.015)
             .build()
     );
 
     public static readonly LARGE_SMOKE = this.register('large_smoke',
         ParticleEffectType.builder()
-            .lifeSecond(20, 30)
+            .life(400, 600)
             .size(24, 36)
             .recession(-0.8)
             .colors('#a0a0a0')
-            .speed(10, 80)
+            .speed(0.5, 4)
             .omnidirectional()
-            .drag(0.9)
+            .drag(0.045)
             .build()
     );
 
     public static readonly EMBER = this.register('ember',
         ParticleEffectType.builder()
-            .lifeSecond(0.6, 1.2)
+            .life(12, 24)
             .size(4, 8)
             .colors('#ffd16b', '#cab981')
-            .speed(10, 30)
+            .speed(0.5, 1.5)
             .build()
     );
 
     public static readonly HIT = this.register('hit',
         ParticleEffectType.builder()
-            .lifeSecond(0.2, 0.6)
+            .life(4, 12)
             .size(4, 6)
             .colors('#ffaa33', '#ff5454')
-            .speed(20, 60)
+            .speed(1, 3)
             .omnidirectional()
             .build()
     );
 
     public static readonly SHIELD_HIT = this.register('shield_hit',
         ParticleEffectType.builder()
-            .lifeSecond(0.2, 0.6)
+            .life(4, 12)
             .size(6, 8)
             .shape(1)
             .colors('#5095ff', '#73c4ff')
-            .speed(10, 30)
+            .speed(0.5, 1.5)
             .omnidirectional()
             .build()
     );
 
     public static readonly ENTITY_DEATH = this.register('entity_death',
         ParticleEffectType.builder()
-            .lifeSecond(0.6, 0.8)
+            .life(12, 16)
             .size(4, 6)
             .colors('#ffaa33', '#ff5454')
-            .speed(80, 100)
+            .speed(4, 5)
             .omnidirectional()
             .build()
     );
 
     public static readonly POWER_FULL_BLOW = this.register('power_full_blow',
         ParticleEffectType.builder()
-            .lifeSecond(0.5, 0.6)
+            .life(10, 12)
             .size(4, 6)
             .colors('#ffd8b6')
-            .speed(100, 140)
+            .speed(5, 7)
             .symmetry(Math.PI / 6)
             .build()
     );
 
     public static readonly ASH = this.register('ash',
         ParticleEffectType.builder()
-            .lifeSecond(0.8, 1.6)
+            .life(16, 32)
             .size(1, 3)
             .colors('#A0A0A099')
-            .speed(30, 70)
+            .speed(1.5, 3.5)
             .omnidirectional()
-            .drag(0.3)
+            .drag(0.015)
             .build()
     );
 
     public static readonly BURST = this.register('burst',
         ParticleEffectType.builder()
-            .lifeSecond(0.8, 1.2)
+            .life(16, 24)
             .size(1, 3)
             .colors('#ffd88c')
-            .speed(100, 160)
+            .speed(5, 8)
             .symmetry(Math.PI / 8)
             .build()
     );
 
     public static readonly DECOY_FLASH = this.register('decoy_flash',
         ParticleEffectType.builder()
-            .lifeSecond(0.8, 1.2)
+            .life(16, 24)
             .size(1, 2)
             .colors('#ffd88c')
-            .speed(50, 80)
+            .speed(2.5, 4)
             .omnidirectional()
             .build()
     );
 
     public static readonly SHIELD_CRASH = this.register('shield_crash',
         ParticleEffectType.builder()
-            .lifeSecond(0.4, 0.8)
+            .life(8, 16)
             .size(8, 10)
             .colors('#5095FFCC', '#86B5FFCC')
-            .speed(200, 250)
+            .speed(10, 12.5)
             .rotation(-Math.PI, Math.PI)
             .shape(ParticleShape.TRIANGLE)
             .omnidirectional()
@@ -175,10 +175,10 @@ export class ParticleEffects {
 
     public static readonly FLUSH = this.register('flush',
         ParticleEffectType.builder()
-            .lifeSecond(0.8, 1.2)
+            .life(16, 24)
             .size(5, 7)
             .colors('#8D8EFF80', '#FFFFFF99')
-            .speed(220, 300)
+            .speed(11, 15)
             .shape(ParticleShape.CIRCLE)
             .omnidirectional()
             .build()
@@ -186,10 +186,10 @@ export class ParticleEffects {
 
     public static readonly BLOCK_DESTROY = this.register('block_destroy',
         ParticleEffectType.builder()
-            .lifeSecond(0.5, 1)
+            .life(10, 20)
             .size(4, 6)
             .colors('#797979')
-            .speed(50, 100)
+            .speed(2.5, 5)
             .rotation(-Math.PI, Math.PI)
             .shape(ParticleShape.RECT)
             .omnidirectional()
@@ -198,22 +198,22 @@ export class ParticleEffects {
 
     public static readonly EXHAUST = this.register('exhaust',
         ParticleEffectType.builder()
-            .lifeSecond(1, 1.5)
+            .life(20, 30)
             .size(4, 6)
             .colors('#986900', '#575757')
-            .speed(-2, 2)
-            .drag(0.3)
+            .speed(-0.1, 0.1)
+            .drag(0.015)
             .build()
     );
 
     public static readonly TELEPORT = this.register('teleport',
         ParticleEffectType.builder()
-            .lifeSecond(0.35, 0.8)
+            .life(7, 16)
             .size(2, 5)
             .colors('#e4dcff', '#8a6dff00')
-            .speed(80, 220)
+            .speed(4, 11)
             .omnidirectional()
-            .drag(0.72)
+            .drag(0.036)
             .build()
     );
 
@@ -221,7 +221,7 @@ export class ParticleEffects {
         return Registry.registerReferenceById(
             Registries.PARTICLES,
             Identifier.ofVanilla(id),
-            type
+            type,
         ).getValue();
     }
 }

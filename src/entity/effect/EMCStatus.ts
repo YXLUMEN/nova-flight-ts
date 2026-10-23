@@ -10,7 +10,7 @@ export class EMCStatus extends StatusEffect {
     public override clientVisual(entity: LivingEntity) {
         const angle = Math.random() * TAU;
         const pos = entity.positionRef;
-        const speed = 100 + Math.random() * 50;
+        const speed = 5 + Math.random() * 2.5;
 
         entity.getWorld().addRawParticle(
             pos.x + Math.cos(angle) * 16,

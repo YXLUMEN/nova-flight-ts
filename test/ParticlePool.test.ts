@@ -18,7 +18,7 @@ import type {ParticleEffectType} from "../src/effect/particle/ParticleEffectType
 import type {ParticleShape} from "../src/effect/particle/ParticleShape.ts";
 import type {ParticleStore} from "../src/effect/particle/ParticleStore.ts";
 import {ParticlePool} from "../src/effect/particle/ParticlePool.ts";
-import {GravitySystem} from "../src/effect/particle/system/GravitySystem.ts";
+import {ParticleGravitySystem} from "../src/effect/particle/system/ParticleGravitySystem.ts";
 
 // ---------------------------------------------------------------- mock
 
@@ -305,7 +305,7 @@ describe("外挂属性（值型 / 标记型）", () => {
 
 // ================================================================ tick
 
-describe("tick：寿命 / 阻尼 / 积分", () => {
+describe("tick：寿命 / 阻尼 / 积分（integrate 按 tick 推进，不乘 dt）", () => {
     it("每个存活粒子每帧只推进一格 age", () => {
         const pool = new ParticlePool(4);
         for (let i = 0; i < 3; i++) pool.spawnResolve(0, 0, 0, 0, 100, 1, CIRCLE, WHITE);
@@ -327,11 +327,11 @@ describe("tick：寿命 / 阻尼 / 积分", () => {
         const b = 0;
 
         assert.equal(store.u32[b + P.AGE], 1);
-        assert.closeTo(store.f32[b + P.VX], 0.75, 1e-6, "vx = 1 * (1 - 0.5 * 0.5)");
-        assert.closeTo(store.f32[b + P.VY], 1.5, 1e-6, "vy = 2 * 0.75");
+        assert.closeTo(store.f32[b + P.VX], 0.5, 1e-6, "vx = 1 * (1 - 0.5)");
+        assert.closeTo(store.f32[b + P.VY], 1, 1e-6, "vy = 2 * 0.5");
         assert.closeTo(store.f32[b + P.PX], 10, 1e-6, "px 是上一帧的 cx");
-        assert.closeTo(store.f32[b + P.CX], 10.375, 1e-6, "cx = 10 + 0.75 * 0.5");
-        assert.closeTo(store.f32[b + P.CY], 20.75, 1e-6);
+        assert.closeTo(store.f32[b + P.CX], 10.5, 1e-6, "cx = 10 + 0.5");
+        assert.closeTo(store.f32[b + P.CY], 21, 1e-6, "cy = 20 + 1");
     });
 
     it("无阻尼时不衰减", () => {
@@ -342,7 +342,7 @@ describe("tick：寿命 / 阻尼 / 积分", () => {
         const store = storeOf(pool);
 
         assert.closeTo(store.f32[P.VX], 1, 1e-6);
-        assert.closeTo(store.f32[P.CX], 10.5, 1e-6);
+        assert.closeTo(store.f32[P.CX], 11, 1e-6, "cx = 10 + vx，一 tick 一步");
     });
 
     it("age 达到 life 的粒子在当帧被移除", () => {
@@ -426,7 +426,7 @@ describe("system 调度与池级门控", () => {
         const plain = pool.spawnResolve(0, 0, 0, 0, 100, 1, CIRCLE, WHITE);
         const heavy = pool.spawnResolve(0, 0, 0, 0, 100, 1, CIRCLE, WHITE);
         pool.tag(heavy, ATTR_GRAVITY);
-        pool.registerSystem(new GravitySystem(0, 100));
+        pool.registerSystem(new ParticleGravitySystem(0, 100));
         const store = storeOf(pool);
 
         pool.tick(0.1);
@@ -439,7 +439,7 @@ describe("system 调度与池级门控", () => {
         const pool = new ParticlePool(4);
         const i = pool.spawnResolve(0, 0, 0, 0, 100, 1, CIRCLE, WHITE);
         pool.tag(i, ATTR_GRAVITY);
-        const gravity = new GravitySystem(0, 100);
+        const gravity = new ParticleGravitySystem(0, 100);
         pool.registerSystem(gravity);
         const store = storeOf(pool);
 
@@ -573,8 +573,8 @@ describe("render：插值 / 收缩 / 旋转门控", () => {
 
         assert.deepEqual(calls, ["drawImage"]);
         assert.equal(draws.length, 1);
-        // x = lerp(0.5, px=10, cx=10.5) = 10.25；以中心绘制，左上角 = x - size
-        assert.closeTo(draws[0].dx, 10.25 - 3, 1e-6);
+        // 一 tick 后 cx = 11、px = 10；x = lerp(0.5, 10, 11) = 10.5，左上角 = x - size
+        assert.closeTo(draws[0].dx, 10.5 - 3, 1e-6);
         assert.closeTo(draws[0].dy, 20 - 3, 1e-6);
         assert.closeTo(draws[0].w, 6, 1e-6);
         assert.closeTo(draws[0].h, 6, 1e-6);
