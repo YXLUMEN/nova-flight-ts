@@ -43,6 +43,6 @@ export class NbtUint32Array implements NbtElement {
     }
 
     public toString() {
-        return `[U;${this.value.join(",")}]`;
+        return `[I;${this.value.join(",")}]`;
     }
 }

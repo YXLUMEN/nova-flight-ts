@@ -103,10 +103,11 @@ export class ParticleEffects {
         ParticleEffectType.builder()
             .life(4, 12)
             .size(6, 8)
-            .shape(1)
+            .shape(ParticleShape.TRIANGLE)
             .colors('#5095ff', '#73c4ff')
             .speed(0.5, 1.5)
             .omnidirectional()
+            .rotation(-Math.PI, Math.PI)
             .build()
     );
 

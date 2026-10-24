@@ -31,7 +31,7 @@ export class AuraEffect implements VisualEffect {
     }
 
     public getType(): VisualEffectType<AuraEffect> {
-        return VisualEffectTypes.SHIELD_AURA;
+        return VisualEffectTypes.NONE;
     }
 
     public tick(dt: number): void {

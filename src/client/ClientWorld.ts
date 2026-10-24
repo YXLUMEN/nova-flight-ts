@@ -119,35 +119,35 @@ export class ClientWorld extends World {
         return null;
     }
 
-    public override addEntity(entity: Entity): void {
+    public addEntity(entity: Entity): void {
         this.entityManager.addEntity(entity);
     }
 
-    public override removeEntity(entityId: number): void {
+    public removeEntity(entityId: number): void {
         this.getEntityLookup().get(entityId)?.discard();
     }
 
-    public override getEntityById(id: number): Entity | null {
+    public getEntityById(id: number): Entity | null {
         return this.getEntityLookup().get(id);
     }
 
-    public override getEntityLookup() {
+    public getEntityLookup() {
         return this.entityManager.getLookup();
     }
 
-    public override playSound(_: Entity | null, sounds: SoundEvent, volume: number = 1, pitch: number = 1): void {
+    public playSound(_: Entity | null, sounds: SoundEvent, volume: number = 1, pitch: number = 1): void {
         this.worldSound.playSound(sounds, volume, pitch);
     }
 
-    public override playLoopSound(_: Entity | null, sounds: SoundEvent, volume: number = 1, pitch: number = 1): void {
+    public playLoopSound(_: Entity | null, sounds: SoundEvent, volume: number = 1, pitch: number = 1): void {
         this.worldSound.playLoopSound(sounds, volume, pitch);
     }
 
-    public override stopLoopSound(_: Entity | null, event: SoundEvent): boolean {
+    public stopLoopSound(_: Entity | null, event: SoundEvent): boolean {
         return this.worldSound.stopLoopSound(event);
     }
 
-    public override addRawParticle(
+    public addRawParticle(
         posX: number, posY: number,
         velX: number, velY: number,
         life: number,
@@ -156,7 +156,7 @@ export class ClientWorld extends World {
         type: number = 0,
         acc?: number
     ) {
-        this.worldRender.addRawParticle(
+        this.worldRender.particleEngine.spawnRaw(
             posX, posY,
             velX, velY,
             life,
@@ -173,7 +173,7 @@ export class ClientWorld extends World {
         count: number,
         baseAngle?: number
     ) {
-        this.worldRender.addParticle(type, pos.x, pos.y, count, baseAngle);
+        this.worldRender.particleEngine.spawn(type, pos.x, pos.y, count, baseAngle);
     }
 
     public addParticle(
@@ -182,7 +182,7 @@ export class ClientWorld extends World {
         count: number,
         baseAngle?: number
     ) {
-        this.worldRender.addParticle(type, x, y, count, baseAngle);
+        this.worldRender.particleEngine.spawn(type, x, y, count, baseAngle);
     }
 
     public override addEffect(_: Entity | null, effect: VisualEffect) {

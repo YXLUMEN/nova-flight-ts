@@ -74,6 +74,7 @@ import {MobEntity} from "../../../entity/mob/MobEntity.ts";
 import {ParticleEffects} from "../../../effect/particle/ParticleEffects.ts";
 import {Settings} from "../../settings/Settings.ts";
 import type {EntitiesRemoveS2CPacket} from "../../../network/packet/s2c/EntitiesRemoveS2CPacket.ts";
+import type {ParticleEmitterS2CPacket} from "../../../network/packet/s2c/ParticleEmitterS2CPacket.ts";
 
 export class ClientPlayHandler extends ClientCommonHandler {
     private readonly commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
@@ -358,6 +359,22 @@ export class ClientPlayHandler extends ClientCommonHandler {
     public onPreparedParticle(packet: PreparedParticleS2CPacket): void {
         if (!this.world) return;
         this.world.addParticleVec(packet.particle, packet.pos, packet.count, packet.baseAngle);
+    }
+
+    public onParticleEmitter(packet: ParticleEmitterS2CPacket): void {
+        if (!this.world) return;
+
+        if (!packet.forEntity) {
+            this.client.worldRender.particleEngine.createEmitter(packet.x, packet.y, packet.particle, packet.lifeTick);
+            return;
+        }
+
+        const entity = this.world.getEntityById(packet.entityId);
+        if (!entity) {
+            console.warn(`Entity with id "${packet.entityId}" not found`);
+            return;
+        }
+        this.client.worldRender.particleEngine.createEmitterAtEntity(entity, packet.particle, packet.lifeTick);
     }
 
     public onEntityAttributes(packet: EntityAttributesS2CPacket): void {

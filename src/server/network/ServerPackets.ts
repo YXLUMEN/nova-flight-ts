@@ -58,6 +58,7 @@ import {TickChangeS2CPacket} from "../../network/packet/s2c/TickChangeS2CPacket.
 import {PlayerProfilesS2CPacket} from "../../network/packet/s2c/PlayerProfilesS2CPacket.ts";
 import {ServerAllowConfigS2CPacket} from "../../network/packet/handshake/ServerAllowConfigS2CPacket.ts";
 import {ServerFinishConfigS2CPacket} from "../../network/packet/config/ServerFinishConfigS2CPacket.ts";
+import {EntityEmitter, PosEmitter} from "../../network/packet/s2c/ParticleEmitterS2CPacket.ts";
 
 export class ServerPackets {
     /**
@@ -122,6 +123,8 @@ export class ServerPackets {
         this.register(NotGiveUpS2CPacket.ID, NotGiveUpS2CPacket.CODEC);
         this.register(TickChangeS2CPacket.ID, TickChangeS2CPacket.CODEC);
         this.register(PlayerProfilesS2CPacket.ID, PlayerProfilesS2CPacket.CODEC);
+        this.register(EntityEmitter.ID, EntityEmitter.CODEC);
+        this.register(PosEmitter.ID, PosEmitter.CODEC);
     }
 
     private static register<T extends Payload>(type: PayloadType<T>, codec: PacketCodec<T>): void {

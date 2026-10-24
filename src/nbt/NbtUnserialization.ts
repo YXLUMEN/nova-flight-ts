@@ -19,12 +19,13 @@ import {NbtInt16Array} from "./element/NbtInt16Array.ts";
 import {NbtFloatArray} from "./element/NbtFloatArray.ts";
 import {NbtUint32Array} from "./element/NbtUint32Array.ts";
 import {NbtTypes} from "./NbtTypes.ts";
+import {NbtUint8Array} from "./element/NbtUint8Array.ts";
 
 type KeyType = Readonly<{ key: string, type: number }>;
 
-
 export class NbtUnserialization {
-    public static readonly VALIDA_NUMBER_PREFIX = ['B', 'S', 'U', 'F', 'D', 'I'];
+    public static readonly NUMBER_ARRAY_PREFIX = ['b', 'B', 'S', 'i', 'I', 'F', 'D'];
+    public static readonly VALIDA_NUMBER_SUFFIX = ['b', 's', 'u', 'f', 'd', 'i'];
 
     private static checkMagic(buffer: Uint8Array<ArrayBuffer>) {
         const reader = new BinaryReader(buffer);
@@ -216,14 +217,14 @@ export class NbtUnserialization {
         let suffix = '';
         if (reader.canRead()) {
             const c = reader.peek().toLowerCase();
-            if (this.VALIDA_NUMBER_PREFIX.includes(c)) {
+            if (this.VALIDA_NUMBER_SUFFIX.includes(c)) {
                 suffix = c;
                 reader.skip();
             }
         }
 
         const num = Number(numStr);
-        if (isNaN(num)) {
+        if (Number.isNaN(num)) {
             throw new Error(`Invalid number: ${numStr}`);
         }
 
@@ -253,7 +254,7 @@ export class NbtUnserialization {
         }
 
         const type = reader.peek().toUpperCase();
-        if (this.VALIDA_NUMBER_PREFIX.includes(type)) {
+        if (this.NUMBER_ARRAY_PREFIX.includes(type)) {
             reader.skip();
             if (reader.peek() !== ';') {
                 throw new Error(`Expected ';' in array at ${reader.getCursor()}`);
@@ -325,16 +326,18 @@ export class NbtUnserialization {
         }
 
         switch (type) {
-            case "B":
+            case 'b':
                 return NbtInt8Array.create(items);
+            case "B":
+                return NbtUint8Array.create(items);
             case "S":
                 return NbtInt16Array.create(items);
-            case "I":
+            case "i":
                 return NbtInt32Array.create(items);
+            case "I":
+                return NbtUint32Array.create(items);
             case "F":
                 return NbtFloatArray.create(items);
-            case "U":
-                return NbtUint32Array.create(items);
             default:
                 return NbtDoubleArray.create(items);
         }

@@ -6,12 +6,7 @@
 import {assert, describe, it} from "vitest";
 import {BinaryReader} from "../src/serialization/BinaryReader.ts";
 import {BinaryWriter} from "../src/serialization/BinaryWriter.ts";
-import {
-    TeleportEffect,
-    TeleportPhase,
-    TELEPORT_LIFE,
-    TELEPORT_RADIUS,
-} from "../src/effect/TeleportEffect.ts";
+import {TELEPORT_LIFE, TELEPORT_RADIUS, TeleportEffect, TeleportPhase,} from "../src/effect/TeleportEffect.ts";
 import {Vec2} from "../src/utils/math/Vec2.ts";
 
 interface TeleportSnapshot {
@@ -39,27 +34,27 @@ describe("TeleportEffect 网络编解码", () => {
             0.6,
         ));
 
-        assert.equal(decoded.pos.x, 12.5);
-        assert.equal(decoded.pos.y, -7.25);
-        assert.equal(decoded.color.toUpperCase(), '#8A6DFFFF');
-        assert.equal(decoded.phase, TeleportPhase.IN);
-        assert.equal(decoded.radius, 96);
+        assert.strictEqual(decoded.pos.x, 12.5);
+        assert.strictEqual(decoded.pos.y, -7.25);
+        assert.strictEqual(decoded.color.toUpperCase(), '#8A6DFFFF');
+        assert.strictEqual(decoded.phase, TeleportPhase.IN);
+        assert.strictEqual(decoded.radius, 96);
         assert.ok(Math.abs(decoded.life - 0.6) < 1e-6);
     });
 
     it("非法半径与寿命收敛到可用范围", () => {
         const decoded = roundTrip(new TeleportEffect(Vec2.ZERO, '#fff', TeleportPhase.OUT, -5, 0));
 
-        assert.equal(decoded.radius, 1);
+        assert.strictEqual(decoded.radius, 1);
         assert.ok(Math.abs(decoded.life - 0.01) < 1e-6);
-        assert.equal(decoded.phase, TeleportPhase.OUT);
+        assert.strictEqual(decoded.phase, TeleportPhase.OUT);
     });
 
     it("缺省参数与公开常量一致", () => {
         const decoded = roundTrip(new TeleportEffect(Vec2.ZERO));
 
-        assert.equal(decoded.radius, TELEPORT_RADIUS);
+        assert.strictEqual(decoded.radius, TELEPORT_RADIUS);
         assert.ok(Math.abs(decoded.life - TELEPORT_LIFE) < 1e-6);
-        assert.equal(decoded.phase, TeleportPhase.OUT);
+        assert.strictEqual(decoded.phase, TeleportPhase.OUT);
     });
 });

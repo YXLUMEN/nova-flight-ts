@@ -267,6 +267,9 @@ export class ServerWorld extends World implements NbtSerializable {
         return explosion;
     }
 
+    public override addRawParticle(): void {
+    }
+
     public spawnRawParticle(
         posX: number, posY: number,
         offsetX: number, offsetY: number,
@@ -281,17 +284,14 @@ export class ServerWorld extends World implements NbtSerializable {
         ));
     }
 
-    public spawnParticle(type: ParticleEffectType, pos: Vec2, count: number, baseAngle: number = 0) {
-        this.sendPacket(new PreparedParticleS2CPacket(type, pos, count, baseAngle));
-    }
-
     public override addParticleVec() {
     }
 
     public override addParticle() {
     }
 
-    public override addRawParticle(): void {
+    public spawnParticle(type: ParticleEffectType, pos: Vec2, count: number, baseAngle: number = 0) {
+        this.sendPacket(new PreparedParticleS2CPacket(type, pos, count, baseAngle));
     }
 
     public writeNBT(root: NbtCompound): NbtCompound {

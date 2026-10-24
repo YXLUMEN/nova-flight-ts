@@ -525,7 +525,7 @@ export class Crosshair {
         const gap = lerp(t, Math.PI / 6, Math.PI / 60);
         const arcLen = HALF_PI - gap * 2;
         const lw = lerp(t, 1.5, 2.0);
-        const blur = isFiring ? 12 : lerp(t, 2, 8);
+        const blur = isFiring ? 10 : lerp(t, 2, 8);
 
         ctx.lineWidth = lw;
         ctx.strokeStyle = color;
@@ -539,7 +539,7 @@ export class Crosshair {
             ctx.stroke();
         }
 
-        ctx.shadowBlur = isFiring ? 14 : lerp(t, 1, 7);
+        ctx.shadowBlur = isFiring ? 10 : lerp(t, 1, 7);
         ctx.fillStyle = color;
         ctx.beginPath();
         ctx.arc(cx, cy, 1.5 + t * 0.5, 0, TAU);

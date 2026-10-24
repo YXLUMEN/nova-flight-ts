@@ -1,9 +1,8 @@
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
 import type {VisualEffect} from "../../effect/VisualEffect.ts";
-import type {ParticleEffectType} from "../../effect/particle/ParticleEffectType.ts";
-import type {Consumer, HexColor} from "../../type/types.ts";
-import {clamp, lerp} from "../../utils/math/math.ts";
+import type {Consumer} from "../../type/types.ts";
+import {lerp} from "../../utils/math/math.ts";
 import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {defaultLayers} from "../../configs/StarfieldConfig.ts";
 import {ClientWindow} from "./ClientWindow.ts";
@@ -11,10 +10,10 @@ import {StarField} from "../../effect/StarField.ts";
 import {EntityRenderers} from "./entity/EntityRenderers.ts";
 import {World} from "../../world/World.ts";
 import {BlockMapRender} from "./BlockMapRender.ts";
-import {ParticlePool} from "../../effect/particle/ParticlePool.ts";
 import {WorldEntityRenderer} from "./WorldEntityRenderer.ts";
 import {DebugRenderer} from "./DebugRenderer.ts";
 import {DamagePopup} from "./ui/DamagePopup.ts";
+import {ParticleEngine} from "../../effect/particle/ParticleEngine.ts";
 
 export class WorldRenderer {
     private readonly client: NovaFlightClient;
@@ -25,7 +24,7 @@ export class WorldRenderer {
     private readonly entityRenderer: WorldEntityRenderer;
     private readonly debugRenderer: DebugRenderer;
     private readonly effects: VisualEffect[] = [];
-    private readonly particlePool: ParticlePool;
+    public readonly particleEngine: ParticleEngine;
     private readonly damagePopup: DamagePopup;
     private readonly starField: StarField;
 
@@ -41,7 +40,7 @@ export class WorldRenderer {
 
         this.entityRenderer = new WorldEntityRenderer(client);
         this.debugRenderer = new DebugRenderer();
-        this.particlePool = new ParticlePool(1024);
+        this.particleEngine = new ParticleEngine(1024);
         this.damagePopup = new DamagePopup();
         this.starField = new StarField(128, defaultLayers, 8);
         this.starField.init();
@@ -70,7 +69,7 @@ export class WorldRenderer {
 
         this.effects.forEach(effect => effect.kill());
         this.effects.length = 0;
-        this.particlePool.reset();
+        this.particleEngine.setWorld(world);
         this.damagePopup.dispose();
         this.mapRender?.dispose();
         this.mapRender = world === null ? null : new BlockMapRender(world.getMap());
@@ -80,7 +79,7 @@ export class WorldRenderer {
         if (world !== null) return;
         this.clearCacheTimer = setTimeout(() => {
             EntityRenderers.clearCache();
-            this.particlePool.clearCache();
+            this.particleEngine.clearCache();
         }, 30_000);
     }
 
@@ -99,39 +98,9 @@ export class WorldRenderer {
             this.effects.pop();
         }
 
-        this.particlePool.tick(dt);
+        this.particleEngine.tick(dt);
         this.starField.update(dt, camera);
         this.damagePopup.tick();
-    }
-
-    public addRawParticle(
-        x: number, y: number,
-        vx: number, vy: number,
-        life: number,
-        size: number,
-        type: number,
-        colorFrom: HexColor, colorTo?: HexColor,
-        acc?: number
-    ) {
-        this.particlePool.spawnRaw(
-            x, y,
-            vx, vy,
-            life,
-            size,
-            type,
-            colorFrom, colorTo,
-            acc
-        );
-    }
-
-    public addParticle(
-        type: ParticleEffectType,
-        x: number, y: number,
-        count: number,
-        baseAngle?: number
-    ) {
-        count = clamp(Math.floor(count), 0, 255);
-        this.particlePool.spawn(type, x, y, count, baseAngle);
     }
 
     public addDamagePopup(
@@ -178,7 +147,7 @@ export class WorldRenderer {
         for (let i = 0; i < this.effects.length; i++) {
             this.effects[i].render(ctx, alpha);
         }
-        this.particlePool.render(ctx, alpha);
+        this.particleEngine.render(ctx, alpha);
 
         // 其他玩家
         this.entityRenderer.renderOtherPlayer(ctx, viewRect, world, alpha);

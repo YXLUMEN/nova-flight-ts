@@ -3,18 +3,14 @@ import {ATTR_COUNT, ATTR_SHIFT, attrBit, ROW_SLOTS} from "./ParticleAttr.ts";
 import type {RareColumn} from "./RareColumn.ts";
 
 /**
- * 三条不变式:
- *   1. [0, active) 连续无空洞, 由 swapRemove 维护.
- *   2. 所有列 (核心行 / meta / 外挂列) 必须同步搬家, 否则数据错位.
- *   3. 外挂列读取前必须验 meta 位: 因为搬运是无条件复制值列的,
- *      没有该属性的槽位里可能残留脏值.
+ * 外挂列读取前必须验 meta 位: 因为搬运是无条件复制值列的,
+ * 没有该属性的槽位里可能残留脏值.
  */
 export class ParticleStore {
     public readonly cap: number;
     public readonly f32: Float32Array;
     public readonly u32: Uint32Array;
 
-    /** 活跃粒子数, 有效区间 [0, active) */
     public active: number = 0;
 
     /** shape | 外挂属性 presence 位 */
@@ -54,7 +50,7 @@ export class ParticleStore {
         return col === null ? null : col.data;
     }
 
-    /** 取外挂列, 缺则惰性分配 (未启用的属性不占内存) */
+    /** 取外挂列 */
     public column(attr: ParticleAttr): Float32Array {
         const col = this.cols[attr];
         if (col !== null) return col.data;
@@ -131,6 +127,27 @@ export class ParticleStore {
         this.mask_ = 0;
     }
 
+    /** 置位 + 记账; 已置位则空转 */
+    private raise(index: number, attr: ParticleAttr): void {
+        const bit = attrBit(attr);
+        if ((this.meta[index] & bit) !== 0) return;
+
+        this.meta[index] |= bit;
+        if (++this.count[attr] === 1) this.mask_ |= bit;
+    }
+
+    /** 按 meta 里的置位逐个销账 */
+    private release(m: number): void {
+        let bits = m >>> ATTR_SHIFT;
+        while (bits !== 0) {
+            const low = bits & -bits;
+            const attr = 31 - Math.clz32(low);
+            if (--this.count[attr] === 0) this.mask_ &= ~(low << ATTR_SHIFT);
+            bits ^= low;
+        }
+    }
+
+
     /**
      * 调试/测试用: 由 meta 重算持有点数与池级 mask, 与记账比对.
      * 返回 null 表示一致.
@@ -158,23 +175,4 @@ export class ParticleStore {
         return mask === this.mask_ ? null : `mask 漂移: 期望 ${mask}, 实际 ${this.mask_}`;
     }
 
-    /** 置位 + 记账; 已置位则空转 */
-    private raise(index: number, attr: ParticleAttr): void {
-        const bit = attrBit(attr);
-        if ((this.meta[index] & bit) !== 0) return;
-
-        this.meta[index] |= bit;
-        if (++this.count[attr] === 1) this.mask_ |= bit;
-    }
-
-    /** 按 meta 里的置位逐个销账 */
-    private release(m: number): void {
-        let bits = m >>> ATTR_SHIFT;
-        while (bits !== 0) {
-            const low = bits & -bits;
-            const attr = 31 - Math.clz32(low);
-            if (--this.count[attr] === 0) this.mask_ &= ~(low << ATTR_SHIFT);
-            bits ^= low;
-        }
-    }
 }

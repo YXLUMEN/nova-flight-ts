@@ -8,7 +8,7 @@
  *
  * 对照对象：
  *   A 旧版  bench/particle_support/ParticlePoolSoA.ts   15 条平铺 typed array
- *   B 现役  src/effect/particle/ParticlePool.ts         48B 交错行 + 2B meta + 按需外挂列
+ *   B 现役  src/effect/particle/ParticlePool.ts         52B 交错行 + 2B meta + 按需外挂列
  *
  * 两者对外 API 一致（spawnResolve / tick / render / reset），
  * 且吃同一份确定性规格流（同一个 xorshift32 种子），所以第 2 节先做状态对拍：
@@ -26,12 +26,12 @@
  *   10 汇总
  */
 
-import {ParticlePool} from "../src/effect/particle/ParticlePool.ts";
 import type {ParticleAttr} from "../src/effect/particle/ParticleAttr.ts";
+import {type Cell, createSink} from "./support/Sink";
+import {ParticlePool} from "../src/effect/particle/ParticlePool.ts";
 import {ParticleGravitySystem} from "../src/effect/particle/system/ParticleGravitySystem.ts";
 import {ParticlePoolSoA} from "./particle_support/ParticlePoolSoA.ts";
 import {Rng} from "../test/support/spatialFixtures.ts";
-import {Cell, createSink, Sink} from "./support/Sink";
 
 // ---------------------------------------------------------------------------
 // 参数（与生产一致：WorldRenderer 里 new ParticlePool(1024)，主循环 60Hz）
@@ -47,6 +47,9 @@ const LONG_LIFE = 1e9;
 
 /** 快照字段数：cx cy px py vx vy size rec age life c0 c1 shape rot drag */
 const FIELDS = 15;
+
+/** 现役核心行槽数（P_IDX.COUNT） */
+const NEW_ROW_SLOTS = 13;
 
 /** 生产里每种特效一组颜色对，这里取 8 组（贴图缓存在 3 形状 × 6 档 × 8 对 = 144 键内，不会抖动） */
 const PALETTE = [0xFF3B30FF, 0xFF9500FF, 0xFFD60AFF, 0x34C759FF, 0x5AC8FAFF, 0xAF52DEFF, 0xFFFFFFFF, 0x8E8E93FF];
@@ -122,6 +125,9 @@ interface SpecOptions {
 }
 
 function makeSpecs(rng: Rng, count: number, opt: SpecOptions = {}): Spec[] {
+    // 阻尼取 2 的负幂：这样 acc = 1 - drag 在 float32 里也能精确表示，
+    // 旧版存 drag、现役存 acc，两者才能逐位对拍（否则会有 1e-3 级的累加漂移）
+    const DAMPING = [0.0625, 0.03125, 0.015625];
     const nonCircle = opt.nonCircle ?? 0.15;
     const dragRatio = opt.dragRatio ?? 0.25;
     const [lifeMin, lifeMax] = opt.life ?? [6, 60];
@@ -143,7 +149,7 @@ function makeSpecs(rng: Rng, count: number, opt: SpecOptions = {}): Spec[] {
             shape,
             c0: PALETTE[pair]!,
             c1: PALETTE[(pair + 3) % PALETTE.length]!,
-            drag: rng.next() < dragRatio ? rng.range(0.005, 0.045) : 0,
+            drag: rng.next() < dragRatio ? DAMPING[rng.intBetween(0, DAMPING.length - 1)]! : 0,
             rec: rng.next() < 0.7 ? 0.6 : rng.range(0, 0.9),
             rot: shape === 0 ? 0 : rng.range(-Math.PI, Math.PI),
         });
@@ -173,12 +179,6 @@ interface Pool {
 }
 
 interface PoolExt extends Pool {
-    tag(index: number, attr: ParticleAttr): void;
-
-    attach(index: number, attr: ParticleAttr, value: number): void;
-
-    read(index: number, attr: ParticleAttr): number;
-
     registerSystem(system: unknown): void;
 }
 
@@ -189,6 +189,12 @@ interface StoreProbe {
     meta: Uint16Array;
 
     peek(attr: number): Float32Array | null;
+
+    read(index: number, attr: ParticleAttr): number;
+
+    tag(index: number, attr: ParticleAttr): void;
+
+    attach(index: number, attr: ParticleAttr, value: number): void;
 }
 
 interface SoAProbe {
@@ -215,16 +221,11 @@ const storeOf = (pool: Pool): StoreProbe => (pool as unknown as { store: StorePr
 const soaOf = (pool: Pool): SoAProbe => pool as unknown as SoAProbe;
 
 const ATTR_ROT = 0 as unknown as ParticleAttr;
-const ATTR_DRAG = 1 as unknown as ParticleAttr;
-const ATTR_GRAVITY = 2 as unknown as ParticleAttr;
+const ATTR_GRAVITY = 1 as unknown as ParticleAttr;
+const ATTR_COLLIDE = 2 as unknown as ParticleAttr;
 
-function spawnSpec(pool: Pool, spec: Spec, life: number = spec.life): void {
-    pool.spawnResolve(
-        spec.x, spec.y, spec.vx, spec.vy,
-        life, spec.size, spec.shape,
-        spec.c0, spec.c1,
-        spec.drag, spec.rec, spec.rot,
-    );
+function spawnSpec(impl: Impl, pool: Pool, spec: Spec, life: number = spec.life): void {
+    impl.spawn(pool, spec, life);
 }
 
 // ---------------------------------------------------------------------------
@@ -262,28 +263,28 @@ function snapshotNew(pool: Pool): Float64Array {
     const f = s.f32;
     const u = s.u32;
     const meta = s.meta;
-    const ext = pool as unknown as PoolExt;
     const n = s.active;
     const out = new Float64Array(n * FIELDS);
 
     for (let i = 0; i < n; i++) {
-        const b = i * 12;
+        const b = i * NEW_ROW_SLOTS;
         const o = i * FIELDS;
+        // 槽位: CX CY PX PY VX VY ACC SIZE REC | AGE LIFE C0 C1
         out[o] = f[b]!;
         out[o + 1] = f[b + 1]!;
         out[o + 2] = f[b + 2]!;
         out[o + 3] = f[b + 3]!;
         out[o + 4] = f[b + 4]!;
         out[o + 5] = f[b + 5]!;
-        out[o + 6] = f[b + 6]!;
-        out[o + 7] = f[b + 7]!;
-        out[o + 8] = u[b + 8]!;
-        out[o + 9] = u[b + 9]!;
-        out[o + 10] = u[b + 10]!;
-        out[o + 11] = u[b + 11]!;
+        out[o + 6] = f[b + 7]!;
+        out[o + 7] = f[b + 8]!;
+        out[o + 8] = u[b + 9]!;
+        out[o + 9] = u[b + 10]!;
+        out[o + 10] = u[b + 11]!;
+        out[o + 11] = u[b + 12]!;
         out[o + 12] = meta[i]! & 0b111;
-        out[o + 13] = ext.read(i, ATTR_ROT);
-        out[o + 14] = ext.read(i, ATTR_DRAG);
+        out[o + 13] = s.read(i, ATTR_ROT);
+        out[o + 14] = 1 - f[b + 6]!;   // ACC 换算回等效 drag，便于与旧版逐值对拍
     }
     return out;
 }
@@ -298,6 +299,9 @@ interface Impl {
 
     make(cap: number): Pool;
 
+    /** 出生一个粒子：第 10 位参数旧版是 drag（损失比例），现役是 acc（倍率） */
+    spawn(pool: Pool, spec: Spec, life: number): void;
+
     active(pool: Pool): number;
 
     snapshot(pool: Pool): Float64Array;
@@ -310,6 +314,10 @@ const OLD: Impl = {
     key: "A",
     label: "旧版 SoA（15 条平铺列）",
     make: cap => new ParticlePoolSoA(cap) as unknown as Pool,
+    spawn: (pool, spec, life) => pool.spawnResolve(
+        spec.x, spec.y, spec.vx, spec.vy, life, spec.size, spec.shape,
+        spec.c0, spec.c1, spec.drag, spec.rec, spec.rot,
+    ),
     active: pool => soaOf(pool).active,
     snapshot: snapshotOld,
     bytes: pool => {
@@ -322,14 +330,19 @@ const OLD: Impl = {
 
 const NEW: Impl = {
     key: "B",
-    label: "现役（48B 交错行 + 按需外挂列）",
+    label: "现役（52B 交错行 + 按需外挂列）",
     make: cap => new ParticlePool(cap) as unknown as Pool,
+    // 现役第 10 位是 acc（速度倍率），旧版的 drag 是每 tick 的损失比例，故 acc = 1 - drag
+    spawn: (pool, spec, life) => pool.spawnResolve(
+        spec.x, spec.y, spec.vx, spec.vy, life, spec.size, spec.shape,
+        spec.c0, spec.c1, 1 - spec.drag, spec.rec, spec.rot,
+    ),
     active: pool => storeOf(pool).active,
     snapshot: snapshotNew,
     bytes: pool => {
         const s = storeOf(pool);
         let total = s.f32.byteLength + s.meta.byteLength;
-        for (const attr of [ATTR_ROT, ATTR_DRAG, ATTR_GRAVITY]) {
+        for (const attr of [ATTR_ROT, ATTR_GRAVITY, ATTR_COLLIDE]) {
             const data = s.peek(attr as unknown as number);
             if (data !== null) total += data.byteLength;
         }
@@ -466,7 +479,7 @@ sink.section(
         for (const [pool, impl] of pairs) {
             for (const spec of batch) {
                 if (impl.active(pool) >= cap) break;
-                spawnSpec(pool, spec);
+                spawnSpec(impl, pool, spec);
             }
         }
 
@@ -540,7 +553,7 @@ sink.section(
 
                 for (let f = 0; f < FRAMES; f++) {
                     for (let k = 0; k < spawnPerFrame && impl.active(pool) < cap; k++) {
-                        spawnSpec(pool, specs[cursor++ % specs.length]!);
+                        spawnSpec(impl, pool, specs[cursor++ % specs.length]!);
                     }
                     const before = impl.active(pool);
                     pool.tick(DT);
@@ -582,7 +595,7 @@ sink.section(
             const pool = impl.make(cap);
             return () => {
                 pool.reset();
-                for (let i = 0; i < cap; i++) spawnSpec(pool, specs[i % specs.length]!, LONG_LIFE);
+                for (let i = 0; i < cap; i++) spawnSpec(impl, pool, specs[i % specs.length]!, LONG_LIFE);
                 for (let f = 0; f < frames; f++) pool.tick(DT);
                 return cap * frames;
             };
@@ -605,7 +618,7 @@ sink.section(
 sink.section(
     "5 死亡密集（swap-remove 路径）",
     "一半粒子 3 tick 短命、一半极长命，每帧把死掉的槽位补满。这是两版差异最大的路径："
-    + "旧版每次搬运横跨 15 条列，现役只需一次 48B memmove + meta + 置位列。",
+    + "旧版每次搬运横跨 15 条列，现役只需一次 52B memmove + meta + 置位列。",
 );
 
 {
@@ -625,7 +638,7 @@ sink.section(
                 let ops = 0;
 
                 for (let i = 0; i < cap; i++) {
-                    spawnSpec(pool, specs[i % specs.length]!, (spawnIndex++ & 1) === 0 ? short : LONG_LIFE);
+                    spawnSpec(impl, pool, specs[i % specs.length]!, (spawnIndex++ & 1) === 0 ? short : LONG_LIFE);
                 }
 
                 for (let f = 0; f < frames; f++) {
@@ -635,6 +648,7 @@ sink.section(
 
                     while (impl.active(pool) < cap) {
                         spawnSpec(
+                            impl,
                             pool,
                             specs[spawnIndex % specs.length]!,
                             (spawnIndex++ & 1) === 0 ? short : LONG_LIFE,
@@ -662,7 +676,7 @@ sink.section(
 sink.section(
     "6 出生吞吐",
     "空池填满一次记一次，ns/粒子；每轮连填 4 次（reset 复用同一个池子）。"
-    + "旧版每次写 15 条列；现役写 12 槽行 + 按需 attach。",
+    + "旧版每次写 15 条列；现役写 13 槽行 + 按需 attach。",
 );
 
 {
@@ -678,7 +692,7 @@ sink.section(
             return () => {
                 for (let round = 0; round < ROUNDS; round++) {
                     pool.reset();
-                    for (let i = 0; i < cap; i++) spawnSpec(pool, specs[i % specs.length]!);
+                    for (let i = 0; i < cap; i++) spawnSpec(impl, pool, specs[i % specs.length]!);
                 }
                 return cap * ROUNDS;
             };
@@ -720,7 +734,7 @@ sink.section(
 
         const makeRun = (impl: Impl): (() => number) => {
             const pool = impl.make(cap);
-            for (let i = 0; i < cap; i++) spawnSpec(pool, specs[i % specs.length]!);
+            for (let i = 0; i < cap; i++) spawnSpec(impl, pool, specs[i % specs.length]!);
             for (let f = 0; f < 8; f++) pool.tick(DT);
 
             return () => {
@@ -746,7 +760,7 @@ sink.section(
 sink.section(
     "8 内存占用",
     "只统计粒子自身的 typed array 字节（不含对象头、贴图缓存、纹理）。"
-    + "「满属性」= 每个粒子都是非圆 + 带 rot + 带 drag。",
+    + "「满属性」= 每个粒子都是非圆且带 rot（现役唯一的值型外挂属性）；acc 恒在核心行。",
 );
 
 {
@@ -757,7 +771,7 @@ sink.section(
         const pool = impl.make(cap);
         for (let i = 0; i < cap; i++) {
             const spec = specs[i % specs.length]!;
-            pool.spawnResolve(spec.x, spec.y, spec.vx, spec.vy, spec.life, spec.size, 0, spec.c0, spec.c1, 0, spec.rec, 0);
+            impl.spawn(pool, {...spec, shape: 0, drag: 0, rot: 0}, spec.life);
         }
         return pool;
     };
@@ -766,7 +780,7 @@ sink.section(
         const pool = impl.make(cap);
         for (let i = 0; i < cap; i++) {
             const spec = specs[i % specs.length]!;
-            pool.spawnResolve(spec.x, spec.y, spec.vx, spec.vy, spec.life, spec.size, 2, spec.c0, spec.c1, 2.5, spec.rec, 0.7);
+            impl.spawn(pool, {...spec, shape: 2, drag: 0.02, rot: 0.7}, spec.life);
         }
         return pool;
     };
@@ -791,7 +805,7 @@ sink.section(
                 {t: `${fmt(plainDelta, 1)} B`, cls: plainDelta <= 0 ? "good" : "bad"},
             ],
             [
-                "满属性（rot + drag 全开）",
+                "满属性（rot 全开）",
                 `${fmt(perParticle(OLD, fullOld), 1)} B/粒子`,
                 `${fmt(perParticle(NEW, fullNew), 1)} B/粒子`,
                 `${fmt(fullDelta, 1)} B`,
@@ -806,8 +820,8 @@ sink.section(
     );
 
     sink.note(
-        "旧版 15 条列从构造起就全量存在（每粒子 57B）；现役无属性时只要 48B 行 + 2B meta = 50B。"
-        + "两个属性全开时现役是 58B —— meta 那 2B 换的是两级门控与可扩展位图，属于设计取舍。",
+        "旧版 15 条列从构造起就全量存在（每粒子 57B）；现役无属性时只要 52B 行 + 2B meta = 54B，"
+        + "带满 rot 时现役是 58B —— meta 那 2B 换的是两级门控与可扩展位图，属于设计取舍。",
     );
 }
 
@@ -818,7 +832,7 @@ sink.section(
 sink.section(
     "9 新增行为的边际成本（仅现役）",
     "同一份负载（满容量、无生死、全圆），依次叠加扩展点，看每加一样东西的价格。"
-    + "旧版没有对应机制：它的 drag / rot 列恒存，加行为只能改热循环。",
+    + "旧版没有对应机制：它的 rot 列恒存，加行为只能改热循环。",
 );
 
 {
@@ -830,7 +844,7 @@ sink.section(
         const pool = impl.make(cap);
         return () => {
             pool.reset();
-            for (let i = 0; i < cap; i++) spawnSpec(pool, specs[i % specs.length]!, LONG_LIFE);
+            for (let i = 0; i < cap; i++) spawnSpec(impl, pool, specs[i % specs.length]!, LONG_LIFE);
             for (let f = 0; f < frames; f++) pool.tick(DT);
             return cap * frames;
         };
@@ -844,34 +858,34 @@ sink.section(
     const systemRun = (): number => {
         systemPool.reset();
         for (let i = 0; i < cap; i++) {
-            spawnSpec(systemPool, specs[i % specs.length]!, LONG_LIFE);
-            systemPool.tag(i, ATTR_GRAVITY);
+            spawnSpec(NEW, systemPool, specs[i % specs.length]!, LONG_LIFE);
+            storeOf(systemPool).tag(i, ATTR_GRAVITY);
         }
         for (let f = 0; f < frames; f++) systemPool.tick(DT);
         return cap * frames;
     };
 
-    const dragPool = NEW.make(cap) as unknown as PoolExt;
-    const dragRun = (): number => {
-        dragPool.reset();
+    const rotPool = NEW.make(cap) as unknown as PoolExt;
+    const rotRun = (): number => {
+        rotPool.reset();
         for (let i = 0; i < cap; i++) {
-            spawnSpec(dragPool, specs[i % specs.length]!, LONG_LIFE);
-            dragPool.attach(i, ATTR_DRAG, 0.02);
+            spawnSpec(NEW, rotPool, specs[i % specs.length]!, LONG_LIFE);
+            storeOf(rotPool).attach(i, ATTR_ROT, 0.35);
         }
-        for (let f = 0; f < frames; f++) dragPool.tick(DT);
+        for (let f = 0; f < frames; f++) rotPool.tick(DT);
         return cap * frames;
     };
 
     const base = pairBench(bareOld, bareNew);
     const systemNs = Math.min(bench(systemRun), bench(systemRun));
-    const dragNs = Math.min(bench(dragRun), bench(dragRun));
+    const rotNs = Math.min(bench(rotRun), bench(rotRun));
 
     sink.table(
         ["配置", "A 旧版 ns/粒子帧", "B 现役 ns/粒子帧", "B/A"],
         [
             ["裸负载（无属性）", fmt(base.oldNs, 1), fmt(base.newNs, 1), ratioCell(base.newNs, base.oldNs)],
-            ["+ 标记型属性 + 一个 system（重力）", "—", fmt(systemNs, 1), `+${fmt(systemNs - base.newNs, 1)}`],
-            ["+ 值型属性（全部带阻力）", "—", fmt(dragNs, 1), `+${fmt(dragNs - base.newNs, 1)}`],
+            ["+ 标记型属性 + 一个 system（重力）", "—", fmt(systemNs, 1), `${systemNs >= base.newNs ? "+" : ""}${fmt(systemNs - base.newNs, 1)}`],
+            ["+ 值型属性（全部带 rot）", "—", fmt(rotNs, 1), `${rotNs >= base.newNs ? "+" : ""}${fmt(rotNs - base.newNs, 1)}`],
         ],
     );
 

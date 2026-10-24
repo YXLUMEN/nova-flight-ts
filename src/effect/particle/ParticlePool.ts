@@ -1,8 +1,5 @@
-import type {ParticleEffectType} from "./ParticleEffectType.ts";
-import type {HexColor} from "../../type/types.ts";
 import type {ParticleSystem} from "./ParticleSystem.ts";
-import {lerp, rand, randInt} from "../../utils/math/math.ts";
-import {encodeColorHex} from "../../utils/net_util.ts";
+import {lerp} from "../../utils/math/math.ts";
 import {BIT_ROT, P_IDX, ParticleAttr, ROW_SLOTS, SHAPE_MASK} from "./ParticleAttr.ts";
 import {ParticleSprite} from "./ParticleSprite.ts";
 import {ParticleStore} from "./ParticleStore.ts";
@@ -13,8 +10,8 @@ const MIN_HALF_SIZE = 0.1;
 
 export class ParticlePool {
     private readonly store: ParticleStore;
-    private readonly sprites: ParticleSprite;
     private readonly systems: ParticleSystem[] = [];
+    private readonly sprites: ParticleSprite;
 
     public constructor(capacity: number = 4096) {
         this.store = new ParticleStore(capacity);
@@ -64,75 +61,10 @@ export class ParticlePool {
         u32[b + P_IDX.C0] = colorFrom;
         u32[b + P_IDX.C1] = colorTo;
 
-        // 先落基础位 (shape), 再交给 attach 置位 + 记账
         store.meta[i] = shape;
         if (rot !== 0) store.attach(i, ParticleAttr.ROT, rot);
 
         return i;
-    }
-
-    /**
-     * traits 是可选的一批外挂属性 (将来 ParticleEffectType 自带 traits 后直接透传),
-     * 每个粒子生成后统一附加; 与 spawnResolve 的内置属性冲突时以 traits 为准.
-     */
-    public spawn(
-        type: ParticleEffectType,
-        x: number, y: number,
-        count: number,
-        baseAngle: number = 0,
-    ): void {
-        const store = this.store;
-        const max = Math.min(count, store.cap - store.active);
-        if (max <= 0) return;
-
-        const shape = type.shape;
-        const rotatable = shape !== ParticleShape.CIRCLE;
-        const traitCount = type.traits === null ? 0 : type.traits.length;
-
-        for (let k = 0; k < max; k++) {
-            const speed = rand(type.speedMin, type.speedMax);
-            const angle = baseAngle + rand(type.spreadMin, type.spreadMax);
-
-            const i = this.spawnResolve(
-                x, y,
-                Math.cos(angle) * speed, Math.sin(angle) * speed,
-                randInt(type.lifeMin, type.lifeMax),
-                rand(type.sizeMin, type.sizeMax),
-                shape,
-                type.colorFrom, type.colorTo,
-                type.acc,
-                type.recession,
-                rotatable ? rand(type.rotMin, type.rotMax) : 0,
-            );
-            if (i < 0) continue;
-
-            for (let t = 0; t < traitCount; t++) {
-                const trait = type.traits![t];
-                store.attach(i, trait.attr, trait.value);
-            }
-        }
-    }
-
-    public spawnRaw(
-        x: number, y: number,
-        vx: number, vy: number,
-        life: number,
-        size: number,
-        shape: ParticleShape = ParticleShape.CIRCLE,
-        colorFrom: HexColor, colorTo: HexColor = colorFrom,
-        acc?: number,
-        recession?: number,
-        rot?: number,
-    ): number {
-        return this.spawnResolve(
-            x, y,
-            vx, vy,
-            life,
-            size,
-            shape,
-            encodeColorHex(colorFrom), encodeColorHex(colorTo),
-            acc, recession, rot
-        );
     }
 
     public tick(dt: number): void {
@@ -188,6 +120,10 @@ export class ParticlePool {
         }
     }
 
+    public attach(index: number, attr: ParticleAttr, value: number): void {
+        this.store.attach(index, attr, value);
+    }
+
     public registerSystem(system: ParticleSystem): void {
         this.systems.push(system);
     }
@@ -203,6 +139,14 @@ export class ParticlePool {
 
     public clearCache(): void {
         this.sprites.clear();
+    }
+
+    public availableCap(): number {
+        return this.store.cap - this.store.active;
+    }
+
+    public active(): number {
+        return this.store.active;
     }
 
     private reap(): void {

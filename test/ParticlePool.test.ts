@@ -1,24 +1,10 @@
-/**
- * ParticlePool 单元测试
- *
- * 被测对象是 src/effect/particle 下的现役实现：交错行 + 外挂列 + 两级属性门控。
- *
- * 两处边界做了替换，其余全部是真实代码：
- *   - ParticleSprite 被 mock：真实实现会走 OffscreenCanvas，node 环境没有。
- *     渲染逻辑本身（插值 / 收缩 / 旋转分支 / drawImage 参数）仍在被测路径上。
- *   - ParticleEffectType 用字面量构造：它的静态 PACKET_CODEC 会拉起注册表与网络编解码，
- *     而 spawnEffect 只读它的字段，两者行为等价。
- *
- * 行槽位与属性位在这里固化成数值字面量：验证的是"实现是否符合 ParticleAttr 声明的布局"，
- * 而不是照着实现的常量反推期望值。
- */
-
 import {assert, beforeEach, describe, it, vi} from "vitest";
 import type {ParticleEffectType} from "../src/effect/particle/ParticleEffectType.ts";
 import type {ParticleShape} from "../src/effect/particle/ParticleShape.ts";
-import type {ParticleStore} from "../src/effect/particle/ParticleStore.ts";
+import {ParticleStore} from "../src/effect/particle/ParticleStore.ts";
 import {ParticlePool} from "../src/effect/particle/ParticlePool.ts";
 import {ParticleGravitySystem} from "../src/effect/particle/system/ParticleGravitySystem.ts";
+import {ParticleEngine} from "../src/effect/particle/ParticleEngine";
 
 // ---------------------------------------------------------------- mock
 
@@ -43,28 +29,26 @@ vi.mock("../src/effect/particle/ParticleSprite.ts", () => ({
 
 // ---------------------------------------------------------------- 布局常量
 
-const ROW_SLOTS = 12;
+const ROW_SLOTS = 13;
 
 /** 核心行槽位，与 ParticleAttr.P_IDX 一一对应 */
 const P = {
     CX: 0, CY: 1, PX: 2, PY: 3,
-    VX: 4, VY: 5,
-    SIZE: 6, REC: 7,
-    AGE: 8, LIFE: 9,
-    C0: 10, C1: 11,
+    VX: 4, VY: 5, ACC: 6,
+    SIZE: 7, REC: 8,
+    AGE: 9, LIFE: 10,
+    C0: 11, C1: 12,
 } as const;
 
 const SHAPE_MASK = 0b111;
 
-/** ParticleAttr 的编号 */
+/** ParticleAttr 的编号（顺序见 ParticleAttr.ts：ROT, GRAVITY, COLLIDE） */
 const ATTR_ROT = 0;
-const ATTR_DRAG = 1;
-const ATTR_GRAVITY = 2;
+const ATTR_GRAVITY = 1;
 
 /** attrBit(attr) = 1 << (3 + attr) */
 const BIT_ROT = 1 << 3;
-const BIT_DRAG = 1 << 4;
-const BIT_GRAVITY = 1 << 5;
+const BIT_GRAVITY = 1 << 4;
 
 /** ParticleShape */
 const CIRCLE = 0;
@@ -79,9 +63,17 @@ interface PoolInternals {
     store: ParticleStore;
 }
 
+interface EngineInternals {
+    pool: ParticlePool;
+}
+
 /** store 是 private：测试直接穿透读内部布局 */
 function storeOf(pool: ParticlePool): ParticleStore {
     return (pool as unknown as PoolInternals).store;
+}
+
+function poolOf(engine: ParticleEngine): ParticlePool {
+    return (engine as unknown as EngineInternals).pool;
 }
 
 function makeCtx() {
@@ -110,7 +102,7 @@ function makeCtx() {
     return {ctx: ctx as unknown as CanvasRenderingContext2D, calls, draws};
 }
 
-/** spawnEffect 只读字段，构造一个等价的只读数据对象 */
+/** spawn 只读字段，构造一个等价的只读数据对象 */
 function effectType(overrides: Partial<Record<keyof ParticleEffectType, unknown>> = {}): ParticleEffectType {
     return {
         lifeMin: 5,
@@ -127,7 +119,7 @@ function effectType(overrides: Partial<Record<keyof ParticleEffectType, unknown>
         rotMax: 0,
         spreadMin: 0,
         spreadMax: 0,
-        drag: 0,
+        acc: 1,
         traits: null,
         ...overrides,
     } as unknown as ParticleEffectType;
@@ -140,7 +132,7 @@ beforeEach(() => {
 // ================================================================ 存储布局
 
 describe("核心行布局", () => {
-    it("单个 buffer 由 f32 / u32 双视图共享，行宽 12 槽", () => {
+    it("单个 buffer 由 f32 / u32 双视图共享，行宽 13 槽", () => {
         const store = storeOf(new ParticlePool(8));
 
         assert.equal(store.cap, 8);
@@ -227,17 +219,16 @@ describe("核心行布局", () => {
 // ================================================================ 外挂列
 
 describe("外挂属性（值型 / 标记型）", () => {
-    it("非 0 的 rot / drag 会置位并写入对应列", () => {
+    it("非 0 的 rot 会置位并写入对应列；acc 落在核心行", () => {
         const pool = new ParticlePool(8);
         const i = pool.spawnResolve(0, 0, 0, 0, 10, 1, TRIANGLE, WHITE, WHITE, 0.5, 0.6, 1.2);
         const store = storeOf(pool);
 
-        assert.equal(store.meta[i], TRIANGLE | BIT_ROT | BIT_DRAG);
-        assert.equal(store.mask, BIT_ROT | BIT_DRAG);
+        assert.equal(store.meta[i], TRIANGLE | BIT_ROT, "acc 不是外挂属性，不占 meta 位");
+        assert.equal(store.mask, BIT_ROT);
         assert.closeTo(store.read(i, ATTR_ROT), 1.2, 1e-6);
-        assert.closeTo(store.read(i, ATTR_DRAG), 0.5, 1e-6);
         assert.equal(store.countOf(ATTR_ROT), 1);
-        assert.equal(store.countOf(ATTR_DRAG), 1);
+        assert.closeTo(store.f32[i * ROW_SLOTS + P.ACC], 0.5, 1e-6, "acc 直接写进核心行");
     });
 
     it("取默认值的属性不置位，且整列都不分配", () => {
@@ -248,7 +239,8 @@ describe("外挂属性（值型 / 标记型）", () => {
         assert.equal(store.meta[0], CIRCLE);
         assert.equal(store.mask, 0, "池级 mask 为 0：整段可选逻辑可以跳过");
         assert.isNull(store.peek(ATTR_ROT), "rot 列未分配");
-        assert.isNull(store.peek(ATTR_DRAG), "drag 列未分配");
+        assert.isNull(store.peek(ATTR_GRAVITY), "标记型属性同样没有列");
+        assert.equal(store.f32[P.ACC], 1, "acc 缺省为 1（不衰减）");
     });
 
     it("重复 attach 不会让持有点数翻倍", () => {
@@ -256,12 +248,12 @@ describe("外挂属性（值型 / 标记型）", () => {
         const store = storeOf(pool);
         const i = pool.spawnResolve(0, 0, 0, 0, 10, 1, CIRCLE, WHITE);
 
-        store.attach(i, ATTR_DRAG, 1.5);
-        store.attach(i, ATTR_DRAG, 2.5);
+        store.attach(i, ATTR_ROT, 1.5);
+        store.attach(i, ATTR_ROT, 2.5);
 
-        assert.equal(store.countOf(ATTR_DRAG), 1);
-        assert.closeTo(store.read(i, ATTR_DRAG), 2.5, 1e-6, "后写的值覆盖先写的");
-        assert.equal(store.mask, BIT_DRAG);
+        assert.equal(store.countOf(ATTR_ROT), 1);
+        assert.closeTo(store.read(i, ATTR_ROT), 2.5, 1e-6, "后写的值覆盖先写的");
+        assert.equal(store.mask, BIT_ROT);
     });
 
     it("tag 是标记型：置位但不分配数据列", () => {
@@ -428,7 +420,9 @@ describe("system 调度与池级门控", () => {
         const plain = pool.spawnResolve(0, 0, 0, 0, 100, 1, CIRCLE, WHITE);
         const heavy = pool.spawnResolve(0, 0, 0, 0, 100, 1, CIRCLE, WHITE);
         store.tag(heavy, ATTR_GRAVITY);
-        pool.registerSystem(new ParticleGravitySystem(0, 100));
+        const gravity = new ParticleGravitySystem(0, 100);
+        assert.equal(gravity.bit, BIT_GRAVITY, "system 的门控位必须与 attrBit(GRAVITY) 一致");
+        pool.registerSystem(gravity);
 
         pool.tick(0.1);
 
@@ -455,29 +449,29 @@ describe("system 调度与池级门控", () => {
     });
 });
 
-// ================================================================ spawnEffect
+// ================================================================ spawn
 
-describe("spawnEffect 批量发射", () => {
+describe("spawn 批量发射", () => {
     it("按剩余容量截断，不覆盖已有粒子", () => {
-        const pool = new ParticlePool(16);
-        const store = storeOf(pool);
+        const engine = new ParticleEngine(16);
+        const store = storeOf(poolOf(engine));
 
-        pool.spawn(effectType(), 0, 0, 100);
+        engine.spawn(effectType(), 0, 0, 100);
         assert.equal(store.active, 16);
     });
 
     it("count <= 0 时不生成", () => {
-        const pool = new ParticlePool(8);
-        pool.spawn(effectType(), 0, 0, 0);
-        pool.spawn(effectType(), 0, 0, -3);
-        assert.equal(storeOf(pool).active, 0);
+        const engine = new ParticleEngine(8);
+        engine.spawn(effectType(), 0, 0, 0);
+        engine.spawn(effectType(), 0, 0, -3);
+        assert.equal(storeOf(poolOf(engine)).active, 0);
     });
 
     it("整批共享出生点、寿命与尺寸", () => {
-        const pool = new ParticlePool(8);
-        const store = storeOf(pool);
+        const engine = new ParticleEngine(8);
+        const store = storeOf(poolOf(engine));
 
-        pool.spawn(effectType({lifeMin: 5, lifeMax: 5, sizeMin: 2, sizeMax: 2}), 3, 4, 4);
+        engine.spawn(effectType({lifeMin: 5, lifeMax: 5, sizeMin: 2, sizeMax: 2}), 3, 4, 4);
 
         assert.equal(store.active, 4);
         for (let i = 0; i < 4; i++) {
@@ -491,20 +485,20 @@ describe("spawnEffect 批量发射", () => {
     });
 
     it("圆形特效即使配了 rotation 也不会产生 rot 属性", () => {
-        const pool = new ParticlePool(8);
-        const store = storeOf(pool);
+        const engine = new ParticleEngine(8);
+        const store = storeOf(poolOf(engine));
 
-        pool.spawn(effectType({shape: CIRCLE, rotMin: 1, rotMax: 2}), 0, 0, 4);
+        engine.spawn(effectType({shape: CIRCLE, rotMin: 1, rotMax: 2}), 0, 0, 4);
 
         assert.equal(store.mask, 0);
         assert.isNull(store.peek(ATTR_ROT), "圆不需要 rot 列");
     });
 
     it("非圆特效按 rotation 范围写入 rot", () => {
-        const pool = new ParticlePool(8);
-        const store = storeOf(pool);
+        const engine = new ParticleEngine(8);
+        const store = storeOf(poolOf(engine));
 
-        pool.spawn(effectType({shape: TRIANGLE, rotMin: 0.3, rotMax: 0.3}), 0, 0, 4);
+        engine.spawn(effectType({shape: TRIANGLE, rotMin: 0.3, rotMax: 0.3}), 0, 0, 4);
 
         assert.equal(store.mask, BIT_ROT);
         for (let i = 0; i < 4; i++) {
@@ -513,16 +507,21 @@ describe("spawnEffect 批量发射", () => {
         }
     });
 
-    it("traits 透传到外挂列", () => {
-        const pool = new ParticlePool(8);
-        const store = storeOf(pool);
+    it("traits 透传到外挂列，并覆盖出生时写入的值", () => {
+        const engine = new ParticleEngine(8);
+        const store = storeOf(poolOf(engine));
 
-        pool.spawn(effectType({traits: [{attr: ATTR_DRAG, value: 2.5}]}), 0, 0, 3, 0);
+        engine.spawn(effectType({
+            shape: TRIANGLE,
+            rotMin: 0.3,
+            rotMax: 0.3,
+            traits: [{attr: ATTR_ROT, value: 2}]
+        }), 0, 0, 3, 0);
 
-        assert.equal(store.mask, BIT_DRAG);
-        assert.equal(store.countOf(ATTR_DRAG), 3);
+        assert.equal(store.mask, BIT_ROT);
+        assert.equal(store.countOf(ATTR_ROT), 3, "覆盖不增加持有点数");
         for (let i = 0; i < 3; i++) {
-            assert.closeTo(store.read(i, ATTR_DRAG), 2.5, 1e-6);
+            assert.closeTo(store.read(i, ATTR_ROT), 2, 1e-6, "traits 优先于出生参数");
         }
     });
 
@@ -538,28 +537,28 @@ describe("spawnEffect 批量发射", () => {
 
 // ================================================================ spawn
 
-describe("spawn：颜色编码", () => {
+describe("spawnRaw：颜色编码", () => {
     it("#RRGGBB 补满 alpha 后写入 C0/C1", () => {
-        const pool = new ParticlePool(4);
-        const store = storeOf(pool);
+        const engine = new ParticleEngine(4);
+        const store = storeOf(poolOf(engine));
 
-        const i = pool.spawnRaw(0, 0, 0, 0, 10, 1, CIRCLE, "#ff0000");
+        const i = engine.spawnRaw(0, 0, 0, 0, 10, 1, CIRCLE, "#ff0000");
         assert.equal(store.u32[i * ROW_SLOTS + P.C0], 0xFF0000FF);
         assert.equal(store.u32[i * ROW_SLOTS + P.C1], 0xFF0000FF, "colorTo 默认等于 colorFrom");
     });
 
     it("#RGB 与 #RRGGBBAA 都支持", () => {
-        const pool = new ParticlePool(4);
-        const store = storeOf(pool);
+        const engine = new ParticleEngine(4);
+        const store = storeOf(poolOf(engine));
 
-        const i = pool.spawnRaw(0, 0, 0, 0, 10, 1, CIRCLE, "#f00", "#00ff0080");
+        const i = engine.spawnRaw(0, 0, 0, 0, 10, 1, CIRCLE, "#f00", "#00ff0080");
         assert.equal(store.u32[i * ROW_SLOTS + P.C0], 0xFF0000FF);
         assert.equal(store.u32[i * ROW_SLOTS + P.C1], 0x00FF0080);
     });
 
     it("非法颜色串抛出（4 位既不是 #RGB 也不是 #RRGGBB）", () => {
-        const pool = new ParticlePool(4);
-        assert.throws(() => pool.spawnRaw(0, 0, 0, 0, 10, 1, CIRCLE, "#FFFF"));
+        const engine = new ParticleEngine(4);
+        assert.throws(() => engine.spawnRaw(0, 0, 0, 0, 10, 1, CIRCLE, "#FFFF"));
     });
 });
 
@@ -568,7 +567,7 @@ describe("spawn：颜色编码", () => {
 describe("render：插值 / 收缩 / 旋转门控", () => {
     it("按 alpha 在 px→cx 之间插值，并以 size*2 绘制", () => {
         const pool = new ParticlePool(4);
-        pool.spawnResolve(10, 20, 1, 0, 10, 3, CIRCLE, 0xFFFF00FF, 0xFF00FFFF, 0, 0);
+        pool.spawnResolve(10, 20, 1, 0, 10, 3, CIRCLE, 0xFFFF00FF, 0xFF00FFFF, 1, 0);
         pool.tick(0.5);
 
         const {ctx, calls, draws} = makeCtx();
@@ -591,7 +590,7 @@ describe("render：插值 / 收缩 / 旋转门控", () => {
 
     it("size 随 recession 收缩", () => {
         const pool = new ParticlePool(4);
-        pool.spawnResolve(0, 0, 0, 0, 2, 10, CIRCLE, WHITE, WHITE, 0, 0.5);
+        pool.spawnResolve(0, 0, 0, 0, 2, 10, CIRCLE, WHITE, WHITE, 1, 0.5);
         pool.tick(0.05);   // age = 1, k = 0.5 → 10 * (1 - 0.5*0.5) = 7.5
 
         const {ctx} = makeCtx();
@@ -602,7 +601,7 @@ describe("render：插值 / 收缩 / 旋转门控", () => {
 
     it("半尺寸小于 0.1 的粒子被跳过", () => {
         const pool = new ParticlePool(4);
-        pool.spawnResolve(0, 0, 0, 0, 10, 0.05, CIRCLE, WHITE, WHITE, 0, 0);
+        pool.spawnResolve(0, 0, 0, 0, 10, 0.05, CIRCLE, WHITE, WHITE, 1, 0);
 
         const {ctx, calls} = makeCtx();
         pool.render(ctx, 0);
@@ -671,7 +670,7 @@ describe("reset / clearCache", () => {
         assert.equal(store.active, 0);
         assert.equal(store.mask, 0);
         assert.equal(store.countOf(ATTR_ROT), 0);
-        assert.equal(store.countOf(ATTR_DRAG), 0);
+        assert.equal(store.countOf(ATTR_GRAVITY), 0);
         assert.equal(store.verifyAccounting(), null);
         assert.isNotNull(store.peek(ATTR_ROT), "列脏数据保留，只是读不到");
     });

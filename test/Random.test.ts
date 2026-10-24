@@ -116,7 +116,7 @@ for (const {label, make} of IMPLS) {
         });
 
         it("nextInt 在 min == max 时返回 min", () => {
-            assert.equal(rng().nextInt(5, 5), 5);
+            assert.strictEqual(rng().nextInt(5, 5), 5);
         });
 
         it("nextInt 拒绝非法参数", () => {
@@ -175,7 +175,7 @@ for (const {label, make} of IMPLS) {
             it("nextIntBelow(1) 恒为 0", () => {
                 const r = rng();
                 for (let i = 0; i < 1000; i++) {
-                    assert.equal(r.nextIntBelow(1), 0);
+                    assert.strictEqual(r.nextIntBelow(1), 0);
                 }
             });
 
@@ -199,8 +199,8 @@ for (const {label, make} of IMPLS) {
 
         it("nextBool 在边界恒真/恒假，NaN 报错", () => {
             const r = rng();
-            assert.equal(r.nextBool(0), false);
-            assert.equal(r.nextBool(1), true);
+            assert.strictEqual(r.nextBool(0), false);
+            assert.strictEqual(r.nextBool(1), true);
             assert.throws(() => r.nextBool(NaN), /probability/);
         });
 
@@ -260,7 +260,7 @@ for (const {label, make} of IMPLS) {
         describe("split", () => {
             it("返回同类型的新实例", () => {
                 const parent = make(new Seed(42), 0);
-                assert.equal(parent.split().constructor, parent.constructor);
+                assert.strictEqual(parent.split().constructor, parent.constructor);
             });
 
             it("两次 split 得到的子流不同且互不相关", () => {
@@ -271,7 +271,7 @@ for (const {label, make} of IMPLS) {
                 const wordsB = Array.from({length: 8}, () => childB.next() >>> 0);
                 const stats = diffWords(wordsA, wordsB);
                 console.log(describeDiff("两个子流", stats));
-                assert.equal(stats.eq, 0, describeDiff("两个子流", stats));
+                assert.strictEqual(stats.eq, 0, describeDiff("两个子流", stats));
                 assert.ok(stats.diff > 90 && stats.diff < 166, describeDiff("两个子流", stats));
             });
 
@@ -283,7 +283,7 @@ for (const {label, make} of IMPLS) {
                 const childWords = Array.from({length: 8}, () => child.next() >>> 0);
                 const stats = diffWords(parentWords, childWords);
                 console.log(describeDiff("父流 vs 子流", stats));
-                assert.equal(stats.eq, 0, describeDiff("父流 vs 子流", stats));
+                assert.strictEqual(stats.eq, 0, describeDiff("父流 vs 子流", stats));
                 assert.ok(stats.diff > 90 && stats.diff < 166, describeDiff("父流 vs 子流", stats));
             });
 
@@ -298,7 +298,7 @@ for (const {label, make} of IMPLS) {
             it("支持递归 split", () => {
                 const parent = make(new Seed(42), 0);
                 const grandChild = parent.split().split();
-                assert.equal(grandChild.constructor, parent.constructor);
+                assert.strictEqual(grandChild.constructor, parent.constructor);
             });
         });
 
@@ -338,7 +338,7 @@ for (const {label, make} of IMPLS) {
 
         describe("确定性", () => {
             it("同种子同 stream 的输出序列完全一致", () => {
-                assert.equal(sequence(make(new Seed(999), 3)), sequence(make(new Seed(999), 3)));
+                assert.strictEqual(sequence(make(new Seed(999), 3)), sequence(make(new Seed(999), 3)));
             });
 
             it("不同 stream 的输出序列不同", () => {
@@ -383,7 +383,7 @@ describe("RandomLcg · 低位退化回归", () => {
 
     it("对照：修复前的 mod 4 只有 4/16 种转移", () => {
         const pairs = transitions(rawLcgSeq(12345, 1000).map(v => v % 4));
-        assert.equal(pairs.size, 4, `转移集合：${[...pairs].join(" ")}`);
+        assert.strictEqual(pairs.size, 4, `转移集合：${[...pairs].join(" ")}`);
     });
 
     it("对照：修复前的 mod 4 一阶转移 chi2 爆表（约 1.2e6，临界 37.7）", () => {
@@ -399,7 +399,7 @@ describe("RandomLcg · 低位退化回归", () => {
         const seq: number[] = [];
         for (let i = 0; i < 1000; i++) seq.push(r.nextIntBelow(4));
         console.log(`前 12 次 nextIntBelow(4) = [${seq.slice(0, 12).join(", ")}]`);
-        assert.equal(transitions(seq).size, 16);
+        assert.strictEqual(transitions(seq).size, 16);
     });
 
     it("修复后：连续输出的比特翻转率 ≈ 50%", () => {

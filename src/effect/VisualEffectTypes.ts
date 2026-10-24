@@ -10,12 +10,13 @@ import {RadialRing} from "./RadialRing.ts";
 import {ScreenFlash} from "./ScreenFlash.ts";
 import {WindowOverlay} from "./WindowOverlay.ts";
 import {ArcEffect} from "./ArcEffect.ts";
-import {AuraEffect} from "./AuraEffect.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {FancyLaserEffect} from "./FancyLaserEffect.ts";
 import {TeleportEffect} from "./TeleportEffect.ts";
 
 export class VisualEffectTypes {
+    public static readonly NONE: VisualEffectType<any> = VisualEffectType.create(PacketCodecs.NEVER);
+
     public static EDGE_GLOW: VisualEffectType<EdgeGlowEffect>;
     public static EMP_BURST: VisualEffectType<EMPBurst>;
     public static LASER_BEAM: VisualEffectType<LaserBeamEffect>;
@@ -23,7 +24,6 @@ export class VisualEffectTypes {
     public static SCREEN_FLASH: VisualEffectType<ScreenFlash>;
     public static WINDOW_OVERLAY: VisualEffectType<WindowOverlay>;
     public static ARC: VisualEffectType<ArcEffect>;
-    public static SHIELD_AURA: VisualEffectType<AuraEffect>;
     public static FANCY_LASER: VisualEffectType<FancyLaserEffect>;
     public static TELEPORT: VisualEffectType<TeleportEffect>;
 
@@ -35,7 +35,6 @@ export class VisualEffectTypes {
         this.SCREEN_FLASH = this.registry('screen_flight', VisualEffectType.create(ScreenFlash.PACKET_CODEC));
         this.WINDOW_OVERLAY = this.registry('window_overlay', VisualEffectType.create(WindowOverlay.PACKET_CODEC));
         this.ARC = this.registry('arc', VisualEffectType.create(ArcEffect.PACKET_CODEC));
-        this.SHIELD_AURA = this.registry('shield_aura', VisualEffectType.create(PacketCodecs.NEVER));
         this.FANCY_LASER = this.registry('fancy_laser', VisualEffectType.create(FancyLaserEffect.PACKET_CODEC));
         this.TELEPORT = this.registry('teleport', VisualEffectType.create(TeleportEffect.PACKET_CODEC));
         Object.freeze(this);

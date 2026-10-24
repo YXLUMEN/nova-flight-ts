@@ -1,8 +1,8 @@
+import type {ClientWorld} from "../../client/ClientWorld.ts";
 import type {VisualEffect} from "../VisualEffect.ts";
 import type {VisualEffectType} from "../VisualEffectType.ts";
-import type {ClientWorld} from "../../client/ClientWorld.ts";
-import {MutAABB} from "../../utils/math/MutAABB.ts";
 import {randInt} from "../../utils/math/math.ts";
+import {MutAABB} from "../../utils/math/MutAABB.ts";
 
 /**
  * # WIP
@@ -29,16 +29,16 @@ export abstract class Particle implements VisualEffect {
     protected lifeTick: number;
     protected friction: number = 0.98;
 
-    protected constructor(world: ClientWorld, x: number, y: number) {
+    protected constructor(world: ClientWorld, x: number, y: number, lifeTick?: number) {
         this.world = world;
         this.x = x;
         this.y = y;
         this.px = x;
         this.py = y;
-        this.lifeTick = randInt(10, 20);
+        this.lifeTick = lifeTick ? lifeTick : randInt(10, 20);
     }
 
-    public abstract getType(): VisualEffectType<any>;
+    public abstract getType(): VisualEffectType<Particle>;
 
     public tick() {
         this.px = this.x;
@@ -53,7 +53,7 @@ export abstract class Particle implements VisualEffect {
     public abstract render(ctx: CanvasRenderingContext2D, alpha: number): void;
 
     public isAlive(): boolean {
-        return this.age >= this.lifeTick;
+        return this.age < this.lifeTick;
     }
 
     public kill() {

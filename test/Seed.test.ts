@@ -12,7 +12,6 @@
  */
 
 import {assert, describe, it} from "vitest";
-
 import {Seed} from "../src/utils/math/random/Seed.ts";
 import {describeDiff, type DiffStats, diffWords} from "./support/randomFixtures.ts";
 
@@ -34,7 +33,7 @@ function compare(a: Seed, streamA: number, b: Seed, streamB: number, words = 16)
 
 /** 断言两组输出"统计无关"：没有完全相同的字，且汉明距离落在经验区间内 */
 function assertUnrelated(label: string, stats: DiffStats, min: number, max: number): void {
-    assert.equal(stats.eq, 0, describeDiff(label, stats));
+    assert.strictEqual(stats.eq, 0, describeDiff(label, stats));
     assert.ok(stats.diff > min && stats.diff < max, describeDiff(label, stats));
 }
 
@@ -44,19 +43,19 @@ function assertUnrelated(label: string, stats: DiffStats, min: number, max: numb
 
 describe("Seed · 构造与参数校验", () => {
     it("number 种子按原值保留", () => {
-        assert.equal(new Seed(1).toBigInt(), 1n);
-        assert.equal(new Seed(0).toBigInt(), 0n);
-        assert.equal(new Seed(123456789).toBigInt(), 123456789n);
+        assert.strictEqual(new Seed(1).toBigInt(), 1n);
+        assert.strictEqual(new Seed(0).toBigInt(), 0n);
+        assert.strictEqual(new Seed(123456789).toBigInt(), 123456789n);
     });
 
     it("bigint 种子按原值保留（超过 2^53 也精确）", () => {
         const seed = 2n ** 60n + 7n;
-        assert.equal(new Seed(seed).toBigInt(), seed);
+        assert.strictEqual(new Seed(seed).toBigInt(), seed);
     });
 
     it("超过 80 bit 的种子只保留低 80 bit", () => {
-        assert.equal(new Seed((1n << 80n) | 5n).toBigInt(), 5n);
-        assert.equal(new Seed((1n << 96n) | (1n << 79n)).toBigInt(), 1n << 79n);
+        assert.strictEqual(new Seed((1n << 80n) | 5n).toBigInt(), 5n);
+        assert.strictEqual(new Seed((1n << 96n) | (1n << 79n)).toBigInt(), 1n << 79n);
     });
 
     it("非安全整数种子报错", () => {
@@ -75,14 +74,14 @@ describe("Seed · 构造与参数校验", () => {
     });
 
     it("equals 按 80 bit 熵比较", () => {
-        assert.equal(new Seed(7).equals(new Seed(7)), true);
-        assert.equal(new Seed(7).equals(new Seed(8)), false);
+        assert.strictEqual(new Seed(7).equals(new Seed(7)), true);
+        assert.strictEqual(new Seed(7).equals(new Seed(8)), false);
         // 截断成同一个 80 bit 值 => 相等
-        assert.equal(new Seed((1n << 80n) | 9n).equals(new Seed(9)), true);
+        assert.strictEqual(new Seed((1n << 80n) | 9n).equals(new Seed(9)), true);
     });
 
     it("实例被冻结（种子不可被外部改写）", () => {
-        assert.equal(Object.isFrozen(new Seed(1)), true);
+        assert.strictEqual(Object.isFrozen(new Seed(1)), true);
     });
 });
 
@@ -92,15 +91,15 @@ describe("Seed · 构造与参数校验", () => {
 
 describe("Seed · 编码与检视", () => {
     it("toString 输出十进制全精度", () => {
-        assert.equal(new Seed(12345).toString(), "12345");
-        assert.equal(new Seed(2n ** 70n + 3n).toString(), (2n ** 70n + 3n).toString());
+        assert.strictEqual(new Seed(12345).toString(), "12345");
+        assert.strictEqual(new Seed(2n ** 70n + 3n).toString(), (2n ** 70n + 3n).toString());
     });
 
     it("getValues 返回 16 个 0–31 的 5-bit 值并冻结", () => {
         const values = new Seed(9).getValues();
-        assert.equal(values.length, 16);
+        assert.strictEqual(values.length, 16);
         assert.ok(values.every(v => v >= 0 && v <= 31), `值域越界: ${values.join(",")}`);
-        assert.equal(Object.isFrozen(values), true);
+        assert.strictEqual(Object.isFrozen(values), true);
     });
 
     it("getValues 与 80 bit 熵的 5-bit 切分一致（跨字边界）", () => {
@@ -109,7 +108,7 @@ describe("Seed · 编码与检视", () => {
         const entropy = seed.toBigInt();
         for (let i = 0; i < 16; i++) {
             const expected = Number((entropy >> BigInt(i * 5)) & 0x1Fn);
-            assert.equal(values[i], expected, `第 ${i} 个 5-bit 值不匹配`);
+            assert.strictEqual(values[i], expected, `第 ${i} 个 5-bit 值不匹配`);
         }
     });
 
@@ -230,7 +229,7 @@ describe("Seed · 熵不塌缩", () => {
             const words = new Seed(i).expand(4, 0);
             seen.add(`${words[0]},${words[1]},${words[2]},${words[3]}`);
         }
-        assert.equal(seen.size, count, `不同种子产生了相同的展开结果（unique=${seen.size}/${count}）`);
+        assert.strictEqual(seen.size, count, `不同种子产生了相同的展开结果（unique=${seen.size}/${count}）`);
     });
 });
 
@@ -244,7 +243,7 @@ describe("Seed · generate()", () => {
         const a = Seed.generate();
         const b = Seed.generate();
         assert.notEqual(a.toBigInt(), 0n);
-        assert.equal(a.equals(b), false, `两次 generate 得到相同种子: ${a}`);
+        assert.strictEqual(a.equals(b), false, `两次 generate 得到相同种子: ${a}`);
     });
 
     it("generate 落在 80 bit 值域内", () => {
@@ -259,7 +258,7 @@ describe("Seed · generate()", () => {
 
 describe("Seed · expand 参数校验", () => {
     it("expand(0) 返回空数组", () => {
-        assert.equal(new Seed(5).expand(0).length, 0);
+        assert.strictEqual(new Seed(5).expand(0).length, 0);
     });
 
     it("负数 / 小数 / 非数字的 count 报错", () => {

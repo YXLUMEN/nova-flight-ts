@@ -15,7 +15,7 @@ export class ParticleGravitySystem implements ParticleSystem {
 
     public tick(store: ParticleStore): void {
         const bit = this.bit;
-        const f = store.f32;
+        const f32 = store.f32;
         const meta = store.meta;
         const dvx = this.ax;
         const dvy = this.ay;
@@ -24,8 +24,8 @@ export class ParticleGravitySystem implements ParticleSystem {
             if ((meta[i] & bit) === 0) continue;
 
             const b = i * ROW_SLOTS;
-            f[b + P_IDX.VX] = f[b + P_IDX.VX] + dvx;
-            f[b + P_IDX.VY] = f[b + P_IDX.VY] + dvy;
+            f32[b + P_IDX.VX] = f32[b + P_IDX.VX] + dvx;
+            f32[b + P_IDX.VY] = f32[b + P_IDX.VY] + dvy;
         }
     }
 }

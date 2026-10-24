@@ -60,12 +60,12 @@ export class PauseScreen extends PageSection implements EventListenerObject {
 
     public static shouldShow(client: NovaFlightClient): boolean {
         const world = client.world;
+        if (world === null) return false;
+
+        const top = client.layer.gui.top();
+        if (top instanceof PauseScreen || top !== null) return false;
+
         const player = client.player;
-        return client.isPause() &&
-            world !== null &&
-            !world.isOver() &&
-            player !== null &&
-            !player.getTechs().isShow() &&
-            !player.isOpenInventory();
+        return client.isPause() && player !== null && !player.isOpenInventory();
     }
 }

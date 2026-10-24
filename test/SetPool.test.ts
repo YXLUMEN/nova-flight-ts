@@ -26,13 +26,13 @@ describe("SetPool 基础行为", () => {
         const pool = new SetPool<number>(2, 100, 1024, 4);
         const sets = acquireMany(pool, 5);
 
-        assert.equal(new Set(sets).size, 5, "取出的 Set 必须互不相同");
-        for (const s of sets) assert.equal(s.size, 0, "新 Set 必须是空的");
+        assert.strictEqual(new Set(sets).size, 5, "取出的 Set 必须互不相同");
+        for (const s of sets) assert.strictEqual(s.size, 0, "新 Set 必须是空的");
 
         const p = poolInternals<number>(pool);
-        assert.equal(p.misses, 5);
-        assert.equal(p.hits, 0);
-        assert.equal(p.outstanding, 5);
+        assert.strictEqual(p.misses, 5);
+        assert.strictEqual(p.hits, 0);
+        assert.strictEqual(p.outstanding, 5);
     });
 
     it("release 后再 acquire 复用同一实例，且内容已被清空", () => {
@@ -42,12 +42,12 @@ describe("SetPool 基础行为", () => {
         first.add(43);
 
         pool.release(first);
-        assert.equal(first.size, 0, "归还时必须清空（复用前不得残留旧内容）");
+        assert.strictEqual(first.size, 0, "归还时必须清空（复用前不得残留旧内容）");
 
         const again = pool.acquire();
-        assert.equal(again, first, "LIFO 复用：应拿到刚归还的那个");
-        assert.equal(again.size, 0, "复用到的 Set 必须是空的");
-        assert.equal(poolInternals<number>(pool).hits, 1);
+        assert.strictEqual(again, first, "LIFO 复用：应拿到刚归还的那个");
+        assert.strictEqual(again.size, 0, "复用到的 Set 必须是空的");
+        assert.strictEqual(poolInternals<number>(pool).hits, 1);
     });
 
     it("闲置容量受 target 限制：超出部分直接丢弃（不无限囤积）", () => {
@@ -57,7 +57,7 @@ describe("SetPool 基础行为", () => {
 
         const p = poolInternals<number>(pool);
         assert.ok(p.idle.length <= 4, `idle=${p.idle.length} 不得超过 maxIdle`);
-        assert.equal(p.dropped, 20 - p.idle.length);
+        assert.strictEqual(p.dropped, 20 - p.idle.length);
     });
 
     it("超过 keepSizeLimit 的 Set 不复用（V8 的 clear 不归还大表）", () => {
@@ -85,7 +85,7 @@ describe("SetPool 基础行为", () => {
         assert.ok(p.idle.includes(small), "小 Set 应被复用");
         assert.ok(p.idle.includes(atLimit), "size == keepSizeLimit 的边界值应被复用");
         assert.ok(!p.idle.includes(overLimit), "超过 keepSizeLimit 应被丢弃");
-        assert.equal(p.dropped, 1);
+        assert.strictEqual(p.dropped, 1);
     });
 
     it("池中所有闲置 Set 都必须是空的；drain 后 idle 清空但计数保留", () => {
@@ -95,15 +95,15 @@ describe("SetPool 基础行为", () => {
         releaseAll(pool, sets);
 
         const p = poolInternals<number>(pool);
-        for (const s of p.idle) assert.equal(s.size, 0);
+        for (const s of p.idle) assert.strictEqual(s.size, 0);
 
         const targetBefore = p.target;
         const outstandingBefore = p.outstanding;
         pool.drain();
 
-        assert.equal(p.idle.length, 0, "drain 后不应有闲置 Set");
-        assert.equal(p.target, targetBefore, "drain 不应改变 target");
-        assert.equal(p.outstanding, outstandingBefore, "drain 不应改变 outstanding 计数");
+        assert.strictEqual(p.idle.length, 0, "drain 后不应有闲置 Set");
+        assert.strictEqual(p.target, targetBefore, "drain 不应改变 target");
+        assert.strictEqual(p.outstanding, outstandingBefore, "drain 不应改变 outstanding 计数");
     });
 
     it("多余的 release 不会让 outstanding 变成负数", () => {
@@ -111,7 +111,7 @@ describe("SetPool 基础行为", () => {
         pool.release(new Set());
         pool.release(new Set());
 
-        assert.equal(poolInternals<number>(pool).outstanding, 0);
+        assert.strictEqual(poolInternals<number>(pool).outstanding, 0);
     });
 });
 
@@ -121,12 +121,12 @@ describe("SetPool 自适应容量", () => {
         const sets = acquireMany(pool, 100); // 无归还 → 并发 = 100
 
         const p = poolInternals<number>(pool);
-        assert.equal(p.peak, 100);
-        assert.equal(p.target, 100, "target 应贴住并发峰值");
+        assert.strictEqual(p.peak, 100);
+        assert.strictEqual(p.target, 100, "target 应贴住并发峰值");
 
         releaseAll(pool, sets);
-        assert.equal(p.idle.length, 100, "target 足够时归还的桶应全部留住");
-        assert.equal(p.dropped, 0);
+        assert.strictEqual(p.idle.length, 100, "target 足够时归还的桶应全部留住");
+        assert.strictEqual(p.dropped, 0);
     });
 
     it("target 受 maxIdle 钳制", () => {
@@ -134,7 +134,7 @@ describe("SetPool 自适应容量", () => {
         acquireMany(pool, 100);
 
         const p = poolInternals<number>(pool);
-        assert.equal(p.target, 16, "target 不得超过 maxIdle");
+        assert.strictEqual(p.target, 16, "target 不得超过 maxIdle");
         assert.ok(p.peak > p.maxIdle, "峰值本身可以大于 maxIdle（只是 target 被钳制）");
     });
 
@@ -153,7 +153,7 @@ describe("SetPool 自适应容量", () => {
         releaseAll(pool, hot);
 
         const p = poolInternals<number>(pool);
-        assert.equal(p.target, 100);
+        assert.strictEqual(p.target, 100);
 
         const history: number[] = [];
         for (let window = 0; window < 3; window++) {
@@ -183,7 +183,7 @@ describe("SetPool 自适应容量", () => {
             releaseAll(pool, sets);
         }
 
-        assert.equal(poolInternals<number>(pool).target, 4, "最终应收敛到 minIdle");
+        assert.strictEqual(poolInternals<number>(pool).target, 4, "最终应收敛到 minIdle");
     });
 
     it("负载高低交替时不会把池砍到 minIdle（抗抖动）", () => {
