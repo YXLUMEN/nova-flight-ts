@@ -9,7 +9,7 @@
     /** 成功 / HUD 类信息 */
     --success: #00ff99;
     /** 危险 / 错误 */
-    --danger: #ff5c5c;
+    --danger: #c25e5e;
     /** 面板底 */
     --surface: rgb(14 22 34 / 0.92);
     /** 描边 */

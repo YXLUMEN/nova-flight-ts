@@ -1,0 +1,14 @@
+{
+  "title": "Technology Matrix",
+  "score.title": "Research points",
+  "legend.base": "Precondition",
+  "legend.active": "Unlocked",
+  "legend.ready": "Available",
+  "legend.conflict": "Conflict",
+  "hint": "Drag to translation, scroll zoom, middle key reset",
+  "empty.title": "Technology not selected yet",
+  "empty.hint": "Select a node from the left matrix\nView research details and prerequisites",
+  "action": "Unlock tech",
+  "action.reset": "Reset chosen",
+  "action.reset-all": "Reset all"
+}

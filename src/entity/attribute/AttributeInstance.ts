@@ -53,8 +53,8 @@ export class AttributeInstance {
     }
 
     public addModifier(modifier: AttributeModifier): void {
-        const previous = this.modifierById.get(modifier.id);
-        if (previous !== undefined) {
+        const previous = this.modifierById.has(modifier.id);
+        if (previous) {
             throw new Error('Modifier is already applied on this attribute');
         }
         this.modifierById.set(modifier.id, modifier);

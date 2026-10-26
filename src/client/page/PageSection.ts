@@ -30,6 +30,10 @@ export abstract class PageSection {
         this.manager?.close(this);
     }
 
+    public dispatch(event: Event): boolean {
+        return this.root.dispatchEvent(event);
+    }
+
     /** @readonly */
     public destroy(): void {
         if (this.destroyed) return;

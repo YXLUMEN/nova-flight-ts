@@ -1,27 +1,84 @@
 <section class="tech-shell hidden" id="tech-shell">
-    <div class="player-money" id="player-money">点数: 0</div>
+    <link rel="stylesheet" href="/css/tech.css"/>
+
     <div class="tech-tree" id="tree">
-        <div class="viewport" id="viewport"></div>
-    </div>
-    <aside class="details" id="details">
-        <div class="toolbar">
-            <div class="legend">
-                <span class="sample"></span>前置
-                <span class="sample req"></span>已达成前置
-                <span class="sample conflict"></span>冲突
+        <div class="tech-head">
+            <div class="tech-brand">
+                <span class="tech-brand-rule"></span>
+                <span class="tech-brand-copy">
+                    <span class="tech-brand-title" data-i18n="tech-tree.title">科技矩阵</span>
+                </span>
+            </div>
+            <div class="player-money">
+                <span class="points-label" data-i18n="tech-tree.score.title">研究点数</span>
+                <span class="points-value" id="player-money">0</span>
             </div>
         </div>
-        <div class="tech-title">
-            <img class="hidden" id="d-texture" src="" alt="">
-            <h2 id="d-title">选择一个节点</h2>
+
+        <div class="viewport" id="viewport"></div>
+
+        <div class="tech-foot">
+            <div class="tech-legend">
+                <span>
+                    <i class="lg lg-base"></i>
+                    <span data-i18n="tech-tree.legend.base">前置</span>
+                </span>
+                <span>
+                    <i class="lg lg-active"></i>
+                    <span data-i18n="tech-tree.legend.active">已解锁路径</span>
+                </span>
+                <span>
+                    <i class="lg lg-ready"></i>
+                    <span data-i18n="tech-tree.legend.ready">可研究</span>
+                </span>
+                <span>
+                    <i class="lg lg-conflict"></i>
+                    <span data-i18n="tech-tree.legend.conflict">冲突</span>
+                </span>
+            </div>
+
+            <div class="tech-hint" data-i18n="tech-tree.hint">拖拽平移 · 滚轮缩放 · 中键复位</div>
         </div>
-        <div>
+    </div>
+
+    <aside class="details" id="details">
+        <div class="details-head">
+            <div class="tech-title">
+                <div class="tech-thumb">
+                    <img class="hidden" id="d-texture" src="" alt="">
+                </div>
+                <div class="tech-title-copy">
+                    <h2 id="d-title"></h2>
+                    <div class="status" id="d-status"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="details-body">
+            <div class="details-empty" id="details-empty">
+                <span class="empty-mark" aria-hidden="true"></span>
+                <span class="empty-title" data-i18n="tech-tree.empty.title">尚未选中科技</span>
+                <span class="empty-hint" data-i18n="tech-tree.empty.hint">在左侧矩阵中选择一个节点<br>查看研究详情与前置条件</span>
+            </div>
             <div class="list" id="d-meta"></div>
         </div>
+
         <div class="actions">
-            <button class="action primary" id="d-unlock" disabled>解锁</button>
-            <button class="action" id="reset" title="重置科技并返还 80% 点数">重置</button>
-            <button class="action" id="reset-all" title="重置科技并返还 80% 点数">重置全部</button>
+            <button class="action primary" id="d-unlock" data-i18n="tech-tree.action" disabled>解锁科技</button>
+            <div class="action-row">
+                <button class="action ghost reset"
+                        id="reset"
+                        disabled
+                        title="重置该科技及其后续并返还 80% 点数"
+                        data-i18n="tech-tree.action.reset">重置选中
+                </button>
+                <button class="action ghost reset-all"
+                        id="reset-all"
+                        disabled
+                        title="重置全部科技并返还 80% 点数"
+                        data-i18n="tech-tree.action.reset-all">重置全部
+                </button>
+            </div>
         </div>
     </aside>
 </section>

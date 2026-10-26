@@ -1,33 +1,26 @@
-import {TechState} from "../../world/tech/TechState.ts";
-import {clamp} from "../../utils/math/math.ts";
-import {Items} from "../../item/Items.ts";
-import {SoundEvents} from "../../sound/SoundEvents.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {TechTree} from "../../world/tech/TechTree.ts";
 import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
-import {PlayerResetAllTechC2SPacket} from "../../network/packet/c2s/PlayerResetAllTechC2SPacket.ts";
-import {Registries} from "../../registry/Registries.ts";
+import type {Consumer} from "../../type/types.ts";
+import type {ClientTech} from "./ClientTech.ts";
 import type {Tech} from "../../world/tech/Tech.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import {cleanObj, empty} from "../../utils/util.ts";
+import {clamp} from "../../utils/math/math.ts";
+import {as, assert, bindFrom, closest} from "../../utils/dom_util.ts";
+import {appEvent} from "../../event/EventBus.ts";
+import {TechState} from "../../world/tech/TechState.ts";
+import {Items} from "../../item/Items.ts";
+import {SoundEvents} from "../../sound/SoundEvents.ts";
+import {PlayerResetAllTechC2SPacket} from "../../network/packet/c2s/PlayerResetAllTechC2SPacket.ts";
+import {Registries} from "../../registry/Registries.ts";
 import {PlayerResetTechC2SPacket} from "../../network/packet/c2s/PlayerResetTechC2SPacket.ts";
 import {AnsiParser} from "../../utils/AnsiParser.ts";
 import {NovaFlightClient} from "../NovaFlightClient.ts";
 import {ModelManager} from "../render/model/ModelManager.ts";
-import {cleanObj, empty} from "../../utils/util.ts";
 import {ClientTechManager} from "./ClientTechManager.ts";
-import type {ClientTech} from "./ClientTech.ts";
 import {UnlockTech} from "../../event/events/UnlockTech.ts";
-import type {Consumer} from "../../type/types.ts";
 import {PageSection} from "../page/PageSection.ts";
-import {as, assert} from "../../utils/dom_util.ts";
-
-interface Adjacency {
-    successors: Map<ClientTech, ClientTech[]>; // tech -> successors
-    conflicts: Map<ClientTech, ClientTech[]>; // tech -> conflicts
-    branchGroupOf: Map<ClientTech, string | null>; // tech -> branchGroup
-    techsInBranch: Map<string, ClientTech[]>; // branchGroup -> Techs
-}
-
 
 export class ClientTechTree extends PageSection implements TechTree {
     public readonly playerScore = document.getElementById('player-money')!;
@@ -36,7 +29,9 @@ export class ClientTechTree extends PageSection implements TechTree {
     private readonly submitBtn: HTMLButtonElement;
     private readonly resetBtn: HTMLButtonElement;
     private readonly resetAllBtn: HTMLButtonElement;
+
     private readonly techTitle: HTMLElement;
+    private readonly techStatus: HTMLElement;
     private readonly techTexture: HTMLImageElement;
     private readonly metaShow: HTMLElement;
 
@@ -49,7 +44,7 @@ export class ClientTechTree extends PageSection implements TechTree {
     private readonly state: TechState<ClientTech>;
     private readonly adj: Adjacency;
 
-    private readonly abortCtrl: AbortController = new AbortController();
+    private readonly ctrl: AbortController = new AbortController();
 
     private selectNodeId: string | null = null;
     private renderDisable: Consumer<void> = empty;
@@ -64,7 +59,9 @@ export class ClientTechTree extends PageSection implements TechTree {
         this.submitBtn = as(this.root, '#d-unlock', HTMLButtonElement);
         this.resetBtn = as(this.root, '#reset', HTMLButtonElement);
         this.resetAllBtn = as(this.root, '#reset-all', HTMLButtonElement);
+
         this.techTitle = assert(this.root, '#d-title');
+        this.techStatus = assert(this.root, '#d-status');
         this.techTexture = as(this.root, '#d-texture', HTMLImageElement);
         this.metaShow = assert(this.root, '#d-meta');
 
@@ -88,12 +85,21 @@ export class ClientTechTree extends PageSection implements TechTree {
         this.techTexture.addEventListener('error', () => {
             if (this.techTexture.src === '/texture/default.png') return;
             this.techTexture.src = '/texture/default.png';
-        }, {signal: this.abortCtrl.signal});
+        }, {signal: this.ctrl.signal});
+
+        const bind = bindFrom(this.root);
+        appEvent.on('ui:lang', () => bind.refresh());
+        bind.refresh();
+
+        this.root.addEventListener('player.score', event => {
+            this.playerScore.textContent = String((event as CustomEvent).detail);
+        }, {signal: this.ctrl.signal});
 
         this.tryApply = this.tryApply.bind(this);
         this.renderEdges();
         this.renderNodes();
         this.bindInteractions();
+        this.syncSelectionState();
     }
 
     public unlock(tech: RegistryEntry<ClientTech>): boolean {
@@ -126,6 +132,7 @@ export class ClientTechTree extends PageSection implements TechTree {
             .map(id => id.toString())
             .toArray()
         );
+        this.syncSelectionState();
     }
 
     protected override onOpened() {
@@ -143,7 +150,7 @@ export class ClientTechTree extends PageSection implements TechTree {
     }
 
     protected override onDestroy() {
-        this.abortCtrl.abort();
+        this.ctrl.abort();
         this.adj.successors.clear();
         this.adj.techsInBranch.clear();
         this.adj.branchGroupOf.clear();
@@ -153,37 +160,37 @@ export class ClientTechTree extends PageSection implements TechTree {
         this.container.replaceChildren();
         this.svg.remove();
         this.nodesLayer.remove();
+        this.root.classList.remove('has-selection');
+        this.root.removeAttribute('data-state');
         this.playerScore.textContent = '0';
     }
 
-    private linkTo(from: ClientTech, to: ClientTech) {
+    private edgePath(from: ClientTech, to: ClientTech): string {
         const fx = from.x + this.nodeWidth / 2;
         const fy = from.y + this.nodeHeight / 2;
         const tx = to.x + this.nodeWidth / 2;
         const ty = to.y + this.nodeHeight / 2;
-
         const dx = tx - fx;
 
-        let x1: number, y1: number, x2: number, y2: number;
-
-        if (dx >= 0) {
-            // from -> 右边缘, to -> 左边缘
-            x1 = from.x + this.nodeWidth;
-            y1 = fy;
-            x2 = to.x;
-            y2 = ty;
-        } else {
-            // from -> 左边缘, to -> 右边缘
-            x1 = from.x;
-            y1 = fy;
-            x2 = to.x + this.nodeWidth;
-            y2 = ty;
+        // Same-column links run vertically through the row gap.
+        if (Math.abs(dx) < this.nodeWidth * 0.6) {
+            const x = Math.round(fx);
+            const down = ty >= fy;
+            const y1 = down ? from.y + this.nodeHeight : from.y;
+            const y2 = down ? to.y : to.y + this.nodeHeight;
+            const bend = Math.max(20, Math.abs(y2 - y1) * 0.45);
+            const dir = down ? 1 : -1;
+            return `M ${x} ${y1} C ${x} ${y1 + dir * bend}, ${x} ${y2 - dir * bend}, ${x} ${y2}`;
         }
 
-        return {x1, y1, x2, y2};
+        const x1 = dx >= 0 ? from.x + this.nodeWidth : from.x;
+        const x2 = dx >= 0 ? to.x : to.x + this.nodeWidth;
+        const bend = Math.max(30, Math.abs(x2 - x1) * 0.45);
+        const dir = x2 >= x1 ? 1 : -1;
+        return `M ${x1} ${fy} C ${x1 + dir * bend} ${fy}, ${x2 - dir * bend} ${ty}, ${x2} ${ty}`;
     }
 
-    private setupPanZoom(container: HTMLElement, abortCtrl: AbortController): void {
+    private setupPanZoom(container: HTMLElement, signal: AbortSignal): void {
         const parent = container.parentElement as HTMLElement;
         if (!parent) return;
 
@@ -200,8 +207,8 @@ export class ClientTechTree extends PageSection implements TechTree {
                 panX = panY = 0;
                 applyTransform();
             }
-        }, {signal: abortCtrl.signal});
-        parent.addEventListener('pointerup', dragStop, {signal: abortCtrl.signal});
+        }, {signal});
+        parent.addEventListener('pointerup', dragStop, {signal});
         parent.addEventListener('pointermove', e => {
             if (!isDragging) return;
             panX += e.clientX - lastX;
@@ -209,14 +216,14 @@ export class ClientTechTree extends PageSection implements TechTree {
             lastX = e.clientX;
             lastY = e.clientY;
             applyTransform();
-        }, {signal: abortCtrl.signal});
-        parent.addEventListener('pointerout', dragStop, {signal: abortCtrl.signal});
-        parent.addEventListener('blur', dragStop, {signal: abortCtrl.signal});
+        }, {signal});
+        parent.addEventListener('pointerout', dragStop, {signal});
+        parent.addEventListener('blur', dragStop, {signal});
         parent.addEventListener('wheel', e => {
             scale = clamp(scale * Math.pow(1.1, -e.deltaY / 100), 0.5, 2);
             applyTransform();
             NovaFlightClient.instance().globalSound.playSound(SoundEvents.UI_HOVER);
-        }, {passive: true, signal: abortCtrl.signal});
+        }, {passive: true, signal});
 
         const applyTransform = () => {
             container.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
@@ -234,18 +241,12 @@ export class ClientTechTree extends PageSection implements TechTree {
             to.requires.forEach(from => {
                 if (to.drawExcept && to.drawExcept.has(from)) return;
 
-                const line = document.createElementNS(svgNS, 'line');
-                line.dataset.from = this.state.getTechId(from as ClientTech)!.toString();
-                line.dataset.to = this.state.getTechId(to)!.toString();
-
-                const {x1, y1, x2, y2} = this.linkTo(from as ClientTech, to);
-
-                line.setAttribute('x1', `${x1}`);
-                line.setAttribute('y1', `${y1}`);
-                line.setAttribute('x2', `${x2}`);
-                line.setAttribute('y2', `${y2}`);
-                line.classList.add('edge');
-                this.svg.appendChild(line);
+                const path = document.createElementNS(svgNS, 'path');
+                path.dataset.from = this.state.getTechId(from as ClientTech)!.toString();
+                path.dataset.to = this.state.getTechId(to)!.toString();
+                path.setAttribute('d', this.edgePath(from as ClientTech, to));
+                path.classList.add('edge');
+                this.svg.appendChild(path);
             });
         });
 
@@ -262,11 +263,25 @@ export class ClientTechTree extends PageSection implements TechTree {
 
     private createNodeElement(tech: ClientTech): HTMLElement {
         const div = document.createElement('div');
-        div.dataset.id = this.state.getTechId(tech)!.toString();
+        const id = this.state.getTechId(tech)!;
+        div.dataset.id = id.toString();
+
         div.className = `node ${this.state.computeStatus(tech)}`;
         div.style.left = `${tech.x}px`;
         div.style.top = `${tech.y}px`;
-        div.textContent = tech.name.toString();
+
+        const name = tech.name.toString();
+        div.textContent = name;
+        div.title = name;
+
+        if (tech.branchGroup) {
+            div.dataset.branch = tech.branchGroup;
+            const mark = document.createElement('span');
+            mark.className = 'node-branch';
+            mark.setAttribute('aria-hidden', 'true');
+            div.append(mark);
+        }
+
         return div;
     }
 
@@ -308,27 +323,20 @@ export class ClientTechTree extends PageSection implements TechTree {
     }
 
     private bindInteractions() {
+        const signal = this.ctrl.signal;
+
         this.nodesLayer.addEventListener('click', event => {
-            this.nodesLayer.querySelector('.node.selected')?.classList.remove('selected');
-            const target = (event.target as HTMLElement).closest<HTMLElement>('.node');
-            this.selectNodeId = null;
+            const target = closest(event.target, '.node') as HTMLElement;
+            this.onSelect(target?.dataset.id ?? null);
 
-            if (!target) {
-                this.onSelect(null);
-                return;
+            if (target) {
+                NovaFlightClient.instance().globalSound.playSound(SoundEvents.UI_SELECT);
             }
+        }, {signal});
 
-            target.classList.add('selected');
-            const id = target.dataset.id ?? null;
-            this.selectNodeId = id;
-            this.onSelect(id);
+        this.nodesLayer.addEventListener('dblclick', this.tryApply, {signal});
 
-            NovaFlightClient.instance().globalSound.playSound(SoundEvents.UI_SELECT);
-        }, {signal: this.abortCtrl.signal});
-
-        this.nodesLayer.addEventListener('dblclick', this.tryApply, {signal: this.abortCtrl.signal});
-        this.submitBtn.addEventListener('click', this.tryApply, {signal: this.abortCtrl.signal});
-
+        this.submitBtn.addEventListener('click', this.tryApply, {signal});
         this.resetBtn.addEventListener('click', () => {
             const id = this.selectNodeId;
             if (!id) return;
@@ -338,10 +346,10 @@ export class ClientTechTree extends PageSection implements TechTree {
             if (!entry) return;
 
             this.resetTech(entry as RegistryEntry<ClientTech>);
-        }, {signal: this.abortCtrl.signal});
-        this.resetAllBtn.addEventListener('click', this.resetAllTech.bind(this), {signal: this.abortCtrl.signal});
+        }, {signal});
+        this.resetAllBtn.addEventListener('click', this.resetAllTech.bind(this), {signal});
 
-        this.setupPanZoom(this.container, this.abortCtrl);
+        this.setupPanZoom(this.container, signal);
     }
 
     private tryApply(event: MouseEvent) {
@@ -365,26 +373,56 @@ export class ClientTechTree extends PageSection implements TechTree {
             this.applyUnlockUpdates(tech);
             world.events.emit(new UnlockTech(this.player, tech));
             NovaFlightClient.instance().globalSound.playSound(SoundEvents.UI_APPLY, 1.5);
+            this.onSelect(id);
         } else {
             NovaFlightClient.instance().globalSound.playSound(SoundEvents.UI_ERROR);
         }
     }
 
+    private syncSelectionState(): void {
+        const id = this.selectNodeId;
+        const tech = id ? this.state.getTech(id) : null;
+        const status = tech ? this.state.computeStatus(tech) : null;
+
+        this.root.classList.toggle('has-selection', tech !== null);
+        if (status) {
+            this.root.setAttribute('data-state', status);
+        } else {
+            this.root.removeAttribute('data-state');
+        }
+
+        this.submitBtn.disabled = status !== 'unlockable';
+        this.resetBtn.disabled = status !== 'unlocked';
+        this.resetAllBtn.disabled = this.state.unlocked.size === 0;
+    }
+
     private onSelect(id: string | null) {
-        this.submitBtn.disabled = !id;
-        if (!id) {
+        this.selectNodeId = id;
+
+        const tech = id ? this.state.getTech(id) : null;
+        this.syncSelectionState();
+
+        this.nodesLayer.querySelector('.node.selected')?.classList.remove('selected');
+
+        if (!id || !tech) {
             this.selectNodeId = null;
             this.techTexture.classList.add('hidden');
             this.techTexture.removeAttribute('src');
             this.techTexture.alt = '';
             this.techTitle.textContent = '';
+            this.techStatus.textContent = '';
             this.metaShow.textContent = '';
             return;
         }
 
-        const tech = this.state.getTech(id);
-        if (!tech) return;
+        this.nodesLayer
+            .querySelector<HTMLElement>(`.node[data-id="${CSS.escape(id)}"]`)
+            ?.classList.add('selected');
+
         const {desc, cost, requires} = tech;
+        const status = this.state.computeStatus(tech);
+
+        this.techStatus.textContent = STATUS_TEXT[status];
 
         const frag = document.createDocumentFragment();
 
@@ -393,39 +431,47 @@ export class ClientTechTree extends PageSection implements TechTree {
         descDiv.className = 'desc';
         frag.append(descDiv);
 
-        const costDiv = document.createElement('div');
-        costDiv.textContent = cost === -1 ? '无法使用' : `花费: ${cost}`;
-        frag.append(costDiv);
+        const addRow = (label: string, value: string, className: string) => {
+            const row = document.createElement('div');
+            row.className = `meta-row ${className}`;
+
+            const labelEl = document.createElement('span');
+            labelEl.className = 'meta-label';
+            labelEl.textContent = label;
+
+            const valueEl = document.createElement('span');
+            valueEl.className = 'meta-value';
+            valueEl.textContent = value;
+
+            row.append(labelEl, valueEl);
+            frag.append(row);
+        };
+
+        addRow('研究点数', cost === -1 ? '不可用' : String(cost), 'cost');
 
         if (requires && requires.size > 0) {
             const names = requires
                 .values()
-                .map(tech => tech.name)
+                .map(tech => tech.name.toString())
                 .toArray()
-                .join(', ');
+                .join(' / ');
 
-            const requireDiv = document.createElement('div');
-            requireDiv.className = 'require';
-            requireDiv.textContent = `前置科技: ${names}`;
-            frag.append(requireDiv);
+            addRow('前置科技', names, 'requires');
         }
 
         // 冲突
         const declaredConflicts = tech.conflicts;
         const branchConflicts = this.branchPeers(tech);
+        const allConflicts = new Set([...declaredConflicts ?? [], ...branchConflicts]);
 
-        if (declaredConflicts && declaredConflicts.size > 0 || branchConflicts.length > 0) {
-            const allConflictIds = new Set([...declaredConflicts ?? [], ...branchConflicts]);
-            const names = allConflictIds
+        if (allConflicts.size > 0) {
+            const names = allConflicts
                 .values()
-                .map(tech => tech.name)
+                .map(tech => tech.name.toString())
                 .toArray()
-                .join(', ');
+                .join(' / ');
 
-            const conflictDiv = document.createElement('div');
-            conflictDiv.className = 'conflict';
-            conflictDiv.textContent = `冲突科技: ${names}`;
-            frag.append(conflictDiv);
+            addRow('冲突科技', names, 'conflicts');
         }
 
         const name = tech.name.toString();
@@ -456,29 +502,30 @@ export class ClientTechTree extends PageSection implements TechTree {
             .map(id => `[data-from="${CSS.escape(id)}"],[data-to="${CSS.escape(id)}"]`)
             .join(',');
 
-        const edges = this.svg.querySelectorAll<SVGLineElement>(selector);
-        for (const line of edges) {
-            this.updateEdgeClass(line);
+        const edges = this.svg.querySelectorAll<SVGPathElement>(selector);
+        for (const path of edges) {
+            this.updateEdgeClass(path);
         }
     }
 
     private updateAllEdgeClasses() {
-        const edges = this.svg.querySelectorAll<SVGLineElement>('.edge');
-        for (const line of edges) {
-            this.updateEdgeClass(line);
+        const edges = this.svg.querySelectorAll<SVGPathElement>('.edge');
+        for (const path of edges) {
+            this.updateEdgeClass(path);
         }
     }
 
-    private updateEdgeClass(line: SVGLineElement) {
-        const from = this.state.getTech(line.dataset.from!)!;
-        const to = this.state.getTech(line.dataset.to!)!;
+    private updateEdgeClass(path: SVGPathElement) {
+        const from = this.state.getTech(path.dataset.from!)!;
+        const to = this.state.getTech(path.dataset.to!)!;
         const fromUnlocked = this.state.isUnlocked(from);
         const toUnlocked = this.state.isUnlocked(to);
         const toStatus = this.state.computeStatus(to);
 
-        line.classList.toggle('active', fromUnlocked && toUnlocked);
-        line.classList.toggle('available', fromUnlocked && toStatus === 'unlockable');
-        line.classList.toggle('blocked', toStatus === 'conflicted' || toStatus === 'locked');
+        path.classList.toggle('active', fromUnlocked && toUnlocked);
+        path.classList.toggle('available', fromUnlocked && toStatus === 'unlockable');
+        path.classList.toggle('conflict', toStatus === 'conflicted');
+        path.classList.toggle('blocked', toStatus === 'locked');
     }
 
     private buildAdjacency(techs: ClientTech[]): Adjacency {
@@ -561,6 +608,7 @@ export class ClientTechTree extends PageSection implements TechTree {
 
         this.updateAllEdgeClasses();
         this.renderNodes();
+        this.onSelect(this.selectNodeId);
 
         this.player.sendPacket(new PlayerResetTechC2SPacket(entry));
         return true;
@@ -583,6 +631,7 @@ export class ClientTechTree extends PageSection implements TechTree {
         this.state.reset();
         this.updateAllEdgeClasses();
         this.renderNodes();
+        this.onSelect(this.selectNodeId);
 
         player.sendPacket(PlayerResetAllTechC2SPacket.INSTANCE);
     }
@@ -627,5 +676,20 @@ export class ClientTechTree extends PageSection implements TechTree {
 
         this.updateAllEdgeClasses();
         this.renderNodes();
+        this.onSelect(this.selectNodeId);
     }
 }
+
+interface Adjacency {
+    successors: Map<ClientTech, ClientTech[]>; // tech -> successors
+    conflicts: Map<ClientTech, ClientTech[]>; // tech -> conflicts
+    branchGroupOf: Map<ClientTech, string | null>; // tech -> branchGroup
+    techsInBranch: Map<string, ClientTech[]>; // branchGroup -> Techs
+}
+
+const STATUS_TEXT = {
+    unlocked: '已解锁',
+    unlockable: '可研究',
+    locked: '前置未满足',
+    conflicted: '存在冲突',
+} as const;

@@ -1,0 +1,14 @@
+{
+  "title": "科技矩阵",
+  "score.title": "研究点数",
+  "legend.base": "前置",
+  "legend.active": "已解锁",
+  "legend.ready": "可研究",
+  "legend.conflict": "冲突",
+  "hint": "拖拽平移 · 滚轮缩放 · 中键复位",
+  "empty.title": "尚未选中科技",
+  "empty.hint": "在左侧矩阵中选择一个节点\n查看研究详情与前置条件",
+  "action": "解锁科技",
+  "action.reset": "重置选中",
+  "action.reset-all": "重置全部"
+}

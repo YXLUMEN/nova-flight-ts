@@ -381,7 +381,7 @@ export class LocalPlayerEntity extends PlayerEntity {
     public override setScore(score: number) {
         super.setScore(score);
         (this.getWorld() as ClientWorld).setTotalScore(score);
-        this.techTree.playerScore.textContent = `点数: ${this.getScore()}`;
+        this.techTree.dispatch(new CustomEvent('player.score', {detail: this.getScore()}));
     }
 
     public override getTechs(): ClientTechTree {

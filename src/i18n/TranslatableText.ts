@@ -23,6 +23,10 @@ export class TranslatableText {
         return this.key;
     }
 
+    public reload(): void {
+        this.lang = '';
+    }
+
     private format(template: string): string {
         if (!this.args) return template;
 
