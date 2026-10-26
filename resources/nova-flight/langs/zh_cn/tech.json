@@ -86,7 +86,7 @@
   "name.nova-flight.ele_oscillation": "电磁震荡",
   "desc.nova-flight.ele_oscillation": "强大的电磁脉冲会持续瘫痪敌人的武器系统.",
   "name.nova-flight.quick_charge": "快充电容",
-  "desc.nova-flight.quick_charge": "\u001B[32m电磁脉冲 \u001B[m范围\u001B[32m -50% \u001B[0m, 冷却速度\u001B[32m +50% \u001B[0m, 与格雷的发明相反, 弗兰克认为作为自卫系统的emp高速充能才是王道, 于是快充电容诞生了.",
+  "desc.nova-flight.quick_charge": "\u001B[32m电磁脉冲 \u001B[0m范围\u001B[32m -50% \u001B[0m, 冷却速度\u001B[32m +50% \u001B[0m, 与格雷的发明相反, 弗兰克认为作为自卫系统的emp高速充能才是王道, 于是快充电容诞生了.",
   "name.nova-flight.high_efficiency_coolant": "高效冷却剂",
   "desc.nova-flight.high_efficiency_coolant": "武器散热速率\u001B[32m +100% \u001B[0m, 新增了散热槽! 这样会变得更凉快",
   "name.nova-flight.harmonic_analysis": "谐波分析",
