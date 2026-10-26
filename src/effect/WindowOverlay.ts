@@ -104,6 +104,10 @@ export class WindowOverlay implements VisualEffect {
         ctx.restore();
     }
 
+    public shouldRender(): boolean {
+        return true;
+    }
+
     public isAlive(): boolean {
         return this.alive;
     }

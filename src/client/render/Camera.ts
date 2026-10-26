@@ -39,7 +39,7 @@ export class Camera {
     private readonly uiMaxDrift = 60;      // HUD 最大漂移像素(镜头快速移动时)
     private readonly uiShakeFactor = 0.5;
 
-    public tick(target: MutVec2, tickDelta: number): void {
+    public tick(target: Vec2, tickDelta: number): void {
         if (RuntimeConfig.enableCameraOffset) {
             this.follow(target, tickDelta);
         }
@@ -60,7 +60,7 @@ export class Camera {
         this.shakeTrauma = Math.min(limit, this.shakeTrauma + amount);
     }
 
-    private follow(target: MutVec2, tickDelta: number): void {
+    private follow(target: Vec2, tickDelta: number): void {
         // 目标位于视口中心时, 相机偏移应处的期望位置
         const desiredX = target.x - ClientWindow.viewWidth / 2;
         const desiredY = target.y - ClientWindow.viewHeight / 2;

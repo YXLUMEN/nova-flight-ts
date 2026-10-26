@@ -1,10 +1,12 @@
+import type {ServerWorld} from "../../server/ServerWorld.ts";
+import type {DamageSource} from "../damage/DamageSource.ts";
+import type {EntityType} from "../EntityType.ts";
 import {BulletEntity} from "./BulletEntity.ts";
 import {type HitResult, HitType} from "../../world/collision/HitResult.ts";
 import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
-import type {EntityType} from "../EntityType.ts";
 import {World} from "../../world/World.ts";
 import {Entity} from "../Entity.ts";
-import type {ServerWorld} from "../../server/ServerWorld.ts";
+import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 
 export class SmokeBomb extends BulletEntity {
     public constructor(type: EntityType<SmokeBomb>, world: World, owner: Entity | null, damage: number) {
@@ -29,8 +31,9 @@ export class SmokeBomb extends BulletEntity {
         this.release();
     }
 
-    public override onIntercept(damage: number) {
-        super.onIntercept(damage);
+    public override onIntercept(damage: number, source: DamageSource) {
+        super.onIntercept(damage, source);
+        if (source.isIn(DamageTypeTags.INTERFERENCE_PROJECT)) return;
         this.release();
     }
 

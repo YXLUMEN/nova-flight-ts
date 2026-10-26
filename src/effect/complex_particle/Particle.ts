@@ -3,10 +3,12 @@ import type {VisualEffect} from "../VisualEffect.ts";
 import type {VisualEffectType} from "../VisualEffectType.ts";
 import {randInt} from "../../utils/math/math.ts";
 import {MutAABB} from "../../utils/math/MutAABB.ts";
+import type {ViewRect} from "../../client/render/Camera.ts";
+import {isBoxInView} from "../../utils/render/render.ts";
+import {BlockCollision} from "../../world/collision/BlockCollision.ts";
+import {MutVec2} from "../../utils/math/MutVec2.ts";
 
 /**
- * # WIP
- *
  * 用于行为复杂的粒子,但永远推荐先使用 `ParticlePool`
  * @see {ParticlePool}
  * */
@@ -52,6 +54,10 @@ export abstract class Particle implements VisualEffect {
 
     public abstract render(ctx: CanvasRenderingContext2D, alpha: number): void;
 
+    public shouldRender(view: ViewRect): boolean {
+        return isBoxInView(this.box, view);
+    }
+
     public isAlive(): boolean {
         return this.age < this.lifeTick;
     }
@@ -73,6 +79,20 @@ export abstract class Particle implements VisualEffect {
         this.box.toCenter(this.x, this.y, this.halfW, this.halfH);
     }
 
-    public move(_vx: number, _vy: number) {
+    public move(vx: number, vy: number) {
+        if (vx === 0 && vy === 0) return;
+
+        const ox = vx;
+        const oy = vy;
+        if (this.hasPhysics) {
+            const movement = BlockCollision.separatingCollision(this.world.getMap(), this.box, new MutVec2(vx, vy));
+            vx = movement.x;
+            vy = movement.y;
+        }
+
+        this.box.offset(vx, vy);
+
+        if (ox != vx) this.vx = 0;
+        if (oy != vy) this.vy = 0;
     }
 }

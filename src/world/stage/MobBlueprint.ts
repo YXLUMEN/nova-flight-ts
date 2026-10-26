@@ -6,7 +6,6 @@ import {clamp} from "../../utils/math/math.ts";
 import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 import {StatusEffectInstance} from "../../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
-import {TankEnemy} from "../../entity/mob/TankEnemy.ts";
 import {AiBehavior, MobAI} from "../../entity/ai/MobAI.ts";
 
 export class MobBlueprint {
@@ -102,7 +101,7 @@ export class MobBlueprint {
             return;
         }
 
-        if (ctx.difficulty > 8 && ctx.rng() > 0.9 && !(mob instanceof TankEnemy)) {
+        if (ctx.difficulty > 8 && ctx.rng() > 0.9) {
             mob.addStatusEffect(
                 new StatusEffectInstance(StatusEffects.RESISTANCE, 800, Math.min(5, ctx.difficulty - 5)),
                 null,

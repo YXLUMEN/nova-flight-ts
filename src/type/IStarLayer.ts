@@ -4,7 +4,7 @@ export interface StarLayer {
     count?: number;
     // 占比权重
     weight?: number;
-
+    // 最小半径推荐设为 1, 再小无法分辨
     radiusMin: number;
     radiusMax: number;
     // 垂直速度范围(近景快,远景慢)

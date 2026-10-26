@@ -83,4 +83,8 @@ export class GuiManager {
             this.sections[i].index(i);
         }
     }
+
+    public get guiClasses(): DOMTokenList {
+        return this.root.classList;
+    }
 }

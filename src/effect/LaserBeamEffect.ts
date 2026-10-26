@@ -89,6 +89,10 @@ export class LaserBeamEffect implements VisualEffect {
         ctx.restore();
     }
 
+    public shouldRender(): boolean {
+        return true;
+    }
+
     public isAlive(): boolean {
         return this.age < this.life;
     }

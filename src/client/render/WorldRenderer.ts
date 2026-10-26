@@ -43,7 +43,7 @@ export class WorldRenderer {
         this.particleEngine = new ParticleEngine(1024);
         this.damagePopup = new DamagePopup();
         this.starField = new StarField(128, defaultLayers, 8);
-        this.starField.init();
+        this.starField.init(this.window.camera);
 
         this.window.onResize(() => {
             if (this.disableRender === 0) return;

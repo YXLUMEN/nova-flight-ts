@@ -32,7 +32,7 @@ export class DamageTypes {
         damage.add(this.VOID, 'void', DamageTypeTags.NOT_GAIN_SCORE, DamageTypeTags.BYPASSES_INVULNERABLE, DamageTypeTags.BYPASSES_EFFECTS);
         damage.add(this.EROSION, 'onFire', DamageTypeTags.REPLY_LASER, DamageTypeTags.NOT_TRIGGER_EROSION);
         damage.add(this.AP_DAMAGE, 'apDamage', DamageTypeTags.BYPASSES_INVULNERABLE);
-        damage.add(this.ARC, 'arc', DamageTypeTags.REPLY_LASER, DamageTypeTags.BYPASSES_INVULNERABLE, DamageTypeTags.BYPASSES_SHIELD, DamageTypeTags.NOT_TRIGGER_EROSION);
+        damage.add(this.ARC, 'arc', DamageTypeTags.REPLY_LASER, DamageTypeTags.BYPASSES_INVULNERABLE, DamageTypeTags.BYPASSES_SHIELD, DamageTypeTags.NOT_TRIGGER_EROSION, DamageTypeTags.INTERFERENCE_PROJECT);
         damage.add(this.KINETIC, 'kinetic', DamageTypeTags.BYPASSES_SHIELD);
     }
 

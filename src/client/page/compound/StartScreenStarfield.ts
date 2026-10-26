@@ -1,10 +1,10 @@
+import type {NovaFlightClient} from "../../NovaFlightClient.ts";
+import {lowPowerLayers} from "../../../configs/StarfieldConfig.ts";
 import {Camera} from "../../render/Camera.ts";
 import {StarField} from "../../../effect/StarField.ts";
-import {lowPowerLayers} from "../../../configs/StarfieldConfig.ts";
 import {ClientWindow} from "../../render/ClientWindow.ts";
 import {UiFramework} from "../../render/ui/UiFramework.ts";
-import type {NovaFlightClient} from "../../NovaFlightClient.ts";
-import {MutVec2} from "../../../utils/math/MutVec2.ts";
+import {Vec2} from "../../../utils/math/Vec2.ts";
 
 // 星空视差最大像素偏移
 const STAR_PARALLAX_STRENGTH = 32;
@@ -34,7 +34,6 @@ export class StartScreenStarfield extends UiFramework {
 
         this.element = element;
         this.ctx = client.window.ctx;
-        this.starField.init();
 
         this.tick = this.tick.bind(this);
         this.setSize = this.setSize.bind(this);
@@ -44,11 +43,18 @@ export class StartScreenStarfield extends UiFramework {
         this.ctrl.signal.addEventListener('abort', unsubResize, {once: true});
     }
 
+    public override setSize(w: number, h: number) {
+        super.setSize(w, h);
+        this.tempCamera.tick(Vec2.ZERO, 0);
+        this.starField.init(this.tempCamera);
+    }
+
     public start() {
         if (this.started || this.ctrl.signal.aborted) return;
         this.started = true;
 
-        this.tempCamera.tick(MutVec2.zero(), 0);
+        this.tempCamera.tick(Vec2.ZERO, 0);
+        this.starField.init(this.tempCamera);
         this.tick(0);
 
         window.addEventListener('mousemove', (event) => {

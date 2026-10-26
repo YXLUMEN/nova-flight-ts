@@ -5,21 +5,15 @@ import type {Vec2} from "../utils/math/Vec2.ts";
 import {RadialRing} from "./RadialRing.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
-import {clamp, easeOutQuad, lerp, noise1, TAU} from "../utils/math/math.ts";
+import {clamp, easeOutQuad, lerp, TAU} from "../utils/math/math.ts";
 import {hexToRgba} from "../utils/util.ts";
-
-/** 传送阶段：OUT 为离开起点，IN 为抵达终点。 */
-export const enum TeleportPhase {
-    OUT,
-    IN,
-}
+import type {ViewRect} from "../client/render/Camera.ts";
+import {isRangeInView} from "../utils/render/render.ts";
 
 export const TELEPORT_RADIUS = 84;
 export const TELEPORT_LIFE = 0.55;
 
 const WARP_SEGMENTS = 48;
-const SPIRAL_ARMS = 4;
-const SPIRAL_SEGMENTS = 18;
 
 export class TeleportEffect implements VisualEffect {
     public static readonly PACKET_CODEC: PacketCodec<TeleportEffect> = PacketCodecs.of(
@@ -99,6 +93,10 @@ export class TeleportEffect implements VisualEffect {
         this.renderFlash(ctx, t, progress, fade);
     }
 
+    public shouldRender(view: ViewRect): boolean {
+        return isRangeInView(this.pos.x, this.pos.y, TELEPORT_RADIUS * 1.5, view);
+    }
+
     public isAlive(): boolean {
         return this.age < this.life;
     }
@@ -162,24 +160,6 @@ export class TeleportEffect implements VisualEffect {
             ctx.stroke();
         }
 
-        // 螺旋力场：沿切线方向卷曲并向内收束，强化“空间被拉扯”的观感。
-        ctx.lineWidth = 1.6;
-        for (let arm = 0; arm < SPIRAL_ARMS; arm++) {
-            ctx.globalAlpha = clamp(opacity * (0.62 - arm * 0.09), 0, 1);
-            ctx.beginPath();
-            for (let i = 0; i <= SPIRAL_SEGMENTS; i++) {
-                const q = i / SPIRAL_SEGMENTS;
-                const armRadius = radius * (0.1 + 0.9 * q);
-                const wobble = noise1(arm * 9.7 + q * 3.4 + t * 2.2) * radius * 0.06 * q;
-                const angle = arm * TAU / SPIRAL_ARMS + spin * 0.9 + q * 2.3 * direction;
-                const x = Math.cos(angle) * (armRadius + wobble);
-                const y = Math.sin(angle) * (armRadius + wobble) * 0.9;
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            }
-            ctx.stroke();
-        }
-
         ctx.restore();
     }
 
@@ -218,4 +198,9 @@ export class TeleportEffect implements VisualEffect {
 
         ctx.restore();
     }
+}
+
+export const enum TeleportPhase {
+    OUT,
+    IN,
 }

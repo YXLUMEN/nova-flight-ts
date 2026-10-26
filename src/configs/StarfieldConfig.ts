@@ -4,9 +4,8 @@ import {deepFreeze} from "../utils/util.ts";
 export const defaultLayers: Readonly<StarLayer[]> = deepFreeze([
     {
         count: 10,
-        alpha: 0.9,
         radiusMin: 1.4,
-        radiusMax: 2.2,
+        radiusMax: 3.2,
         speedMin: 50,
         speedMax: 85,
         shakeFactor: 0.9,
@@ -14,9 +13,8 @@ export const defaultLayers: Readonly<StarLayer[]> = deepFreeze([
     },
     {
         count: 40,
-        alpha: 0.55,
         radiusMin: 0.7,
-        radiusMax: 1.2,
+        radiusMax: 2.2,
         speedMin: 20,
         speedMax: 40,
         shakeFactor: 0.3,
@@ -24,9 +22,8 @@ export const defaultLayers: Readonly<StarLayer[]> = deepFreeze([
     },
     {
         count: 80,
-        alpha: 0.35,
-        radiusMin: 0.5,
-        radiusMax: 1,
+        radiusMin: 1,
+        radiusMax: 1.2,
         speedMin: 10,
         speedMax: 25,
         shakeFactor: 0,
@@ -37,9 +34,8 @@ export const defaultLayers: Readonly<StarLayer[]> = deepFreeze([
 export const lowPowerLayers: Readonly<StarLayer[]> = deepFreeze([
     {
         count: 20,
-        alpha: 0.9,
         radiusMin: 1.4,
-        radiusMax: 2.2,
+        radiusMax: 3.2,
         speedMin: 50,
         speedMax: 85,
         shakeFactor: 0.9,
@@ -47,8 +43,7 @@ export const lowPowerLayers: Readonly<StarLayer[]> = deepFreeze([
     },
     {
         count: 60,
-        alpha: 0.35,
-        radiusMin: 0.5,
+        radiusMin: 1,
         radiusMax: 1,
         speedMin: 10,
         speedMax: 25,

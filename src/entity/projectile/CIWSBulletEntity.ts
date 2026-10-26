@@ -1,11 +1,11 @@
-import {BulletEntity} from "./BulletEntity.ts";
-import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
+import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
+import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {Entity} from "../Entity.ts";
 import type {EntityType} from "../EntityType.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
 import {World} from "../../world/World.ts";
-import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
+import {BulletEntity} from "./BulletEntity.ts";
 import {ProjectileEntity} from "./ProjectileEntity.ts";
-import {MobEntity} from "../mob/MobEntity.ts";
 
 export class CIWSBulletEntity extends BulletEntity {
     private readonly maxAge: number;
@@ -54,15 +54,15 @@ export class CIWSBulletEntity extends BulletEntity {
 
     protected override onEntityHit(hitResult: EntityHitResult) {
         super.onEntityHit(hitResult);
+        if (isClient) return;
 
-        if (this.isClient()) return;
         const entity = hitResult.entity;
-        if (entity instanceof ProjectileEntity && entity.getOwner() !== this.getOwner()) {
-            entity.onIntercept(this.getHitDamage());
+        if (entity instanceof ProjectileEntity) {
+            const source = this.getWorld().getDamageSources().generic();
+            entity.onIntercept(this.getHitDamage(), source);
             return;
         }
-        if (entity instanceof MobEntity) {
-            entity.velocityRef.multiply(0.8);
-        }
+
+        entity.velocityRef.multiply(0.8);
     }
 }

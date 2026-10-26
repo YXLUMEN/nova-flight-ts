@@ -1,4 +1,4 @@
-import type {Vec2} from "../../utils/math/Vec2.ts";
+import {type Vec2} from "../../utils/math/Vec2.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import type {EntityType} from "../EntityType.ts";
 import type {Entity} from "../Entity.ts";
@@ -77,5 +77,17 @@ export class MobMissileEntity extends MissileEntity {
     protected override acquireTarget(): Entity | null {
         const players = this.getWorld().getPlayers();
         return getNearestEntityByVec(this.positionRef, players);
+    }
+
+    public override moveOrInterpolateTo(pos?: Vec2, yaw?: number) {
+        const handler = this.getInterpolation();
+        if (!handler) {
+            super.moveOrInterpolateTo(pos, yaw);
+            return;
+        }
+        handler.interpolateTo(
+            pos ?? handler.position(),
+            yaw ?? handler.yaw()
+        );
     }
 }

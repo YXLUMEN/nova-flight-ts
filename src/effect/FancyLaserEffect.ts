@@ -19,6 +19,10 @@ export class FancyLaserEffect extends LaserBeamEffect {
         return laser;
     }
 
+    public override getType(): VisualEffectType<LaserBeamEffect> {
+        return VisualEffectTypes.FANCY_LASER;
+    }
+
     public override render(ctx: CanvasRenderingContext2D) {
         const a = Math.max(0, this.age / this.life);
 
@@ -49,9 +53,5 @@ export class FancyLaserEffect extends LaserBeamEffect {
         ctx.arc(this.end.x, this.end.y, pulse, 0, TAU);
         ctx.stroke();
         ctx.restore();
-    }
-
-    public override getType(): VisualEffectType<LaserBeamEffect> {
-        return VisualEffectTypes.FANCY_LASER;
     }
 }

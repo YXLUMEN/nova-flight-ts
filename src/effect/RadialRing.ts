@@ -5,6 +5,8 @@ import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {lerp, TAU} from "../utils/math/math.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
+import type {ViewRect} from "../client/render/Camera.ts";
+import {isRangeInView} from "../utils/render/render.ts";
 
 
 export class RadialRing implements VisualEffect {
@@ -68,6 +70,10 @@ export class RadialRing implements VisualEffect {
 
         ctx.lineWidth = 1;
         ctx.globalAlpha = 1;
+    }
+
+    public shouldRender(view: ViewRect): boolean {
+        return isRangeInView(this.center.x, this.center.y, this.r1, view);
     }
 
     public isAlive(): boolean {

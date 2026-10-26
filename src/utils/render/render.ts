@@ -12,6 +12,15 @@ export function isBoxInView(box: AABB, viewRect: ViewRect): boolean {
     );
 }
 
+export function isRangeInView(x: number, y: number, r: number, viewRect: ViewRect): boolean {
+    return (
+        x - r < viewRect.right &&
+        x + r > viewRect.left &&
+        y - r < viewRect.bottom &&
+        y + r > viewRect.top
+    );
+}
+
 // 中心到边缘的径向渐变
 export function gradientOf(ctx: SpriteCtx, radius: number, color0: number, color1: number): CanvasGradient {
     const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);

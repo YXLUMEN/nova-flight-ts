@@ -20,6 +20,8 @@ import {isClient, isServer} from "../../configs/RuntimeConfig.ts";
 import {InterpolationHandler} from "../../world/entity/InterpolationHandler.ts";
 import {ExplosionConfigs} from "../../world/element/explosion/ExplosionConfigs.ts";
 import {acquireTarget} from "../../utils/math/collide.ts";
+import type {DamageSource} from "../damage/DamageSource.ts";
+import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 
 export class MissileEntity extends RocketEntity {
     public static readonly IS_IGNITE = DataTracker.registerData(Object(MissileEntity), TrackedDataHandlerRegistry.BOOL);
@@ -233,6 +235,13 @@ export class MissileEntity extends RocketEntity {
     }
 
     public applyDecoy(): void {
+    }
+
+    public override onIntercept(damage: number, source: DamageSource) {
+        super.onIntercept(damage, source);
+        if (source.isIn(DamageTypeTags.INTERFERENCE_PROJECT)) {
+            this.maxLifetimeTicks = 0;
+        }
     }
 
     public override onDiscard(): void {

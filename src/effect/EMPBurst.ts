@@ -6,6 +6,8 @@ import {lerp, TAU} from "../utils/math/math.ts";
 import {decodeFromByte, encodeToByte} from "../utils/net_util.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
+import type {ViewRect} from "../client/render/Camera.ts";
+import {isRangeInView} from "../utils/render/render.ts";
 
 
 export class EMPBurst implements VisualEffect {
@@ -130,6 +132,11 @@ export class EMPBurst implements VisualEffect {
 
         ctx.stroke();
         ctx.restore();
+    }
+
+    public shouldRender(view: ViewRect): boolean {
+        const radius = this.radius + 6;
+        return isRangeInView(this.pos.x, this.pos.y, radius, view);
     }
 
     public isAlive(): boolean {

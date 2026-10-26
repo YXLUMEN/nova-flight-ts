@@ -18,7 +18,7 @@ export class ShieldStatusEffect extends StatusEffect {
         this.tracked = new WeakMap();
         this.summonVisual = (entity: LivingEntity) => {
             const radius = entity.getDimensions().halfWidth + 8;
-            const effect = new AuraEffect(entity.position(), radius, 0.1, this.color);
+            const effect = new AuraEffect(entity.positionRef, radius, 0.1, this.color);
             effect.bindEntity = entity;
             effect.dispose = () => this.tracked.delete(entity);
             entity.getWorld().addEffect(entity, effect);

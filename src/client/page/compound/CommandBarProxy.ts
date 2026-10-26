@@ -32,6 +32,7 @@ export class CommandBarProxy extends PageSection {
     protected override onClosed() {
         this.switchPanel(false);
         this.release();
+        this.release = empty;
     }
 
     public override keyDown(event: KeyboardEvent): boolean {

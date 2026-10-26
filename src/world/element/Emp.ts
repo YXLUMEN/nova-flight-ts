@@ -62,7 +62,7 @@ export class Emp implements WorldMutation {
         const source = world.getDamageSources().arc(this.attacker);
         for (const entity of search) {
             if (entity instanceof ProjectileEntity) {
-                if (entity.getOwner() !== this.attacker) entity.discard();
+                if (entity.getOwner() !== this.attacker) entity.onIntercept(5, source);
                 continue;
             }
             if (entity instanceof LivingEntity) {

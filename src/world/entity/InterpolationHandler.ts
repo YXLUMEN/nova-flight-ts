@@ -85,7 +85,7 @@ export class InterpolationHandler {
     }
 
     public setSteps(v: number) {
-        this.totalSteps = Math.floor(v);
+        this.totalSteps = Math.floor(Math.max(0, v));
     }
 
     public cancel() {

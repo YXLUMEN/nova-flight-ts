@@ -63,6 +63,10 @@ export class ScreenFlash implements VisualEffect {
         ctx.globalAlpha = 1;
     }
 
+    public shouldRender(): boolean {
+        return true;
+    }
+
     public isAlive(): boolean {
         return this.alive;
     }

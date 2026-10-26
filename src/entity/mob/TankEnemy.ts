@@ -5,6 +5,8 @@ import type {EntityType} from "../EntityType.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {clamp} from "../../utils/math/math.ts";
+import {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
+import {StatusEffects} from "../effect/StatusEffects.ts";
 
 export class TankEnemy extends MobEntity {
     private toughness: number = 0;
@@ -35,6 +37,10 @@ export class TankEnemy extends MobEntity {
         }
 
         return super.takeDamage(damageSource, damage);
+    }
+
+    public override canHaveEffect(effect: StatusEffectInstance): boolean {
+        return effect.type() !== StatusEffects.RESISTANCE;
     }
 
     protected override changeColor() {

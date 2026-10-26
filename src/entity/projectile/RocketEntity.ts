@@ -1,11 +1,11 @@
-import {ProjectileEntity} from "./ProjectileEntity.ts";
 import type {Entity} from "../Entity.ts";
 import type {EntityType} from "../EntityType.ts";
-import {World} from "../../world/World.ts";
-import {clamp} from "../../utils/math/math.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
+import {clamp} from "../../utils/math/math.ts";
+import {World} from "../../world/World.ts";
+import {ProjectileEntity} from "./ProjectileEntity.ts";
 import {ExplosionVisual} from "../../world/element/explosion/ExplosionVisual.ts";
 import {ExplosionConfigs} from "../../world/element/explosion/ExplosionConfigs.ts";
 
@@ -52,12 +52,12 @@ export class RocketEntity extends ProjectileEntity {
         this.explode();
     }
 
-    public override onIntercept(damage: number): void {
+    public override onIntercept(damage: number, source: DamageSource): void {
         this.health = clamp(this.health - damage, 0, this.maxHealth);
         if (this.health === 0) {
             this.explosionDamage = 0;
             this.explode();
-            this.discard();
+            super.onIntercept(damage, source);
         }
     }
 

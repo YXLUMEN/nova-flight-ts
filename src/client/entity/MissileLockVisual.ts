@@ -26,7 +26,7 @@ export class MissileLockVisual {
 
     private summonAura(entity: Entity): Group {
         const radius = entity.getDimensions().halfWidth + 6;
-        const aura = new AuraEffect(entity.position(), radius, 0.1, '#fff922', 'bracket');
+        const aura = new AuraEffect(entity.positionRef, radius, 0.1, '#fff922', 'bracket');
 
         aura.bindEntity = entity;
         aura.onTick = v => {

@@ -2,18 +2,21 @@ import type {VisualEffect} from "./VisualEffect.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {Consumer} from "../type/types.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
+import type {ViewRect} from "../client/render/Camera.ts";
 import {lerp, TAU} from "../utils/math/math.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 import {BuiltInPath} from "../client/render/BuiltInPath.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
+import {isRangeInView} from "../utils/render/render.ts";
 
 export class AuraEffect implements VisualEffect {
     public bindEntity: Entity | null = null;
     public onTick: Consumer<AuraEffect> | null = null;
     public dispose: Consumer<void> | null = null;
 
-    private center: Vec2;
-    private readonly shape: ShieldShape;
+    private x: number;
+    private y: number;
+    private readonly path: Path2D;
     private readonly radius: number;
     private readonly life: number;
     private readonly color: string;
@@ -23,11 +26,12 @@ export class AuraEffect implements VisualEffect {
     private t = 0;
 
     public constructor(center: Vec2, radius = 24, life = 1, color = '#5095ff', shape: ShieldShape = 'hexagon') {
-        this.center = center;
+        this.x = center.x;
+        this.y = center.y;
         this.radius = radius;
         this.life = life;
         this.color = color;
-        this.shape = shape;
+        this.path = BuiltInPath.get(shape)!;
     }
 
     public getType(): VisualEffectType<AuraEffect> {
@@ -50,17 +54,19 @@ export class AuraEffect implements VisualEffect {
         if (!this.isAlive()) return;
 
         const t = lerp(tickDelta, this.prevT, this.t);
-        if (this.bindEntity) {
-            this.center = this.bindEntity.getLerpPos(tickDelta);
+        const bindEntity = this.bindEntity;
+        if (bindEntity) {
+            this.x = lerp(tickDelta, bindEntity.prevX, bindEntity.getX());
+            this.y = lerp(tickDelta, bindEntity.prevY, bindEntity.getY());
         }
 
-        const x = this.center.x;
-        const y = this.center.y;
+        const x = this.x;
+        const y = this.y;
         const pulse = 0.5 + 0.5 * Math.sin(t * TAU * 1.2);
         // radius 是"外接半径"：归一化路径的范围是 [-1,1]，故缩放系数即 r
         const r = this.radius * (0.97 + 0.03 * pulse);
         const invR = 1 / r;
-        const path = BuiltInPath.get(this.shape)!;
+        const path = this.path;
 
         ctx.save();
         ctx.translate(x, y);
@@ -97,6 +103,10 @@ export class AuraEffect implements VisualEffect {
         ctx.restore();
     }
 
+    public shouldRender(view: ViewRect): boolean {
+        return isRangeInView(this.x, this.y, this.radius + 5, view);
+    }
+
     public isAlive(): boolean {
         return this.age < this.life;
     }
@@ -104,7 +114,6 @@ export class AuraEffect implements VisualEffect {
     public kill(): void {
         this.dispose?.();
         this.bindEntity = null;
-        this.center = Vec2.ZERO;
         this.age = this.life;
     }
 

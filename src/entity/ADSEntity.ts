@@ -32,6 +32,7 @@ export class ADSEntity extends Entity implements Ownable {
         const selfPos = this.positionRef;
         const box = this.getBoundingBox().expandAll(256);
         const entities = world.searchOtherEntities(this, box, EntityPredicates.DEFENSE) as Generator<ProjectileEntity>;
+        const source = world.getDamageSources().generic();
 
         let intercepted = 0;
         for (const projectile of entities) {
@@ -42,7 +43,7 @@ export class ADSEntity extends Entity implements Ownable {
 
             spawnFancyLaserByVec(world, selfPos, projPos, '#A6FFE380');
             world.spawnParticle(ParticleEffects.DECOY_FLASH, projPos, 4);
-            projectile.onIntercept(10);
+            projectile.onIntercept(10, source);
             if (intercepted++ >= 5) break;
         }
     }

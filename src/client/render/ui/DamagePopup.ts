@@ -1,6 +1,8 @@
 import {UITheme} from "./theme.ts";
 import {easeOutQuad, lerp, toFixedTrim} from "../../../utils/math/math.ts";
 
+const MAX_POPS = 127;
+
 export class DamagePopup {
     private readonly font = `bold ${UITheme.font}`;
 
@@ -29,7 +31,7 @@ export class DamagePopup {
         life: number,
         entityId: number | null,
     ): DamagePopupEvent | null {
-        if (this.activePopups.length > 127) return null;
+        if (this.activePopups.length > MAX_POPS) return null;
 
         let event = this.popupPool.pop();
         if (event) {

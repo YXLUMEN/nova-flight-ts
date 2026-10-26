@@ -75,7 +75,7 @@ export class LocalPlayerEntity extends PlayerEntity {
         if (this.lockedMissile.size > 0) {
             const pos = this.positionRef;
             for (const missile of this.lockedMissile.keys()) {
-                if (missile.isRemoved() || missile.getTarget() !== this) {
+                if (missile.isRemoved() || missile.getTarget() !== this || !missile.isIgnite()) {
                     this.lockedMissile.delete(missile);
                     this.approachMissile.delete(missile);
                     continue;

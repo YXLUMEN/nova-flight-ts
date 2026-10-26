@@ -1,19 +1,20 @@
-import {Entity} from "../Entity.ts";
-import {World} from "../../world/World.ts";
 import type {Ownable} from "../Ownable.ts";
 import type {EntityType} from "../EntityType.ts";
 import type {TrackedData} from "../data/TrackedData.ts";
-import {DataTracker, type DataTrackerSerializedEntry} from "../data/DataTracker.ts";
-import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import type {ServerWorld} from "../../server/ServerWorld.ts";
-import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
-import type {UUID} from "../../type/types.ts";
-import {NbtTypeId} from "../../nbt/NbtType.ts";
-import {ProjectRaycastUtil} from "../../world/collision/ProjectRaycastUtil.ts";
 import {type HitResult, HitType} from "../../world/collision/HitResult.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
+import type {DamageSource} from "../damage/DamageSource.ts";
+import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
+import type {UUID} from "../../type/types.ts";
+import {DataTracker, type DataTrackerSerializedEntry} from "../data/DataTracker.ts";
 import {isValidUUID} from "../../utils/uuid_util.ts";
+import {Entity} from "../Entity.ts";
+import {World} from "../../world/World.ts";
+import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import {NbtTypeId} from "../../nbt/NbtType.ts";
+import {ProjectRaycastUtil} from "../../world/collision/ProjectRaycastUtil.ts";
 
 export abstract class ProjectileEntity extends Entity implements Ownable {
     private damage: number = 0;
@@ -80,7 +81,7 @@ export abstract class ProjectileEntity extends Entity implements Ownable {
         this.discard();
     }
 
-    public onIntercept(_damage: number): void {
+    public onIntercept(_damage: number, _source: DamageSource): void {
         this.discard();
     }
 

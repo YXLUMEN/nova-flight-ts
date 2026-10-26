@@ -57,7 +57,7 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
         if (this.gameVersion !== packet.gameVersion) {
             const reason = new TranslatableText(
                 'network.disconnect.unmach.game',
-                [this.gameVersion.toString(), packet.gameVersion.toString()]
+                [String(this.gameVersion), String(packet.gameVersion)]
             );
             this.disconnect(reason);
             return;
