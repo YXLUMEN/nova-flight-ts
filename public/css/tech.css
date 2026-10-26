@@ -84,7 +84,7 @@ svg.edges {
     padding: 8px 14px;
     width: 116px;
     height: 24px;
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid #2a3553;
     background: linear-gradient(180deg, rgba(33, 41, 62, .88), rgba(23, 28, 44, .88));
     color: var(--text);
@@ -301,7 +301,7 @@ svg.edges {
 
 .details button.action {
     padding: 8px 16px;
-    border-radius: 8px;
+    border-radius: 4px;
     border: 1px solid #2a3553;
     background: #1b2134;
     color: var(--text);
