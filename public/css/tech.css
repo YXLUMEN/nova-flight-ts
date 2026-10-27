@@ -39,21 +39,15 @@
 /* Tree area */
 
 .tech-shell .tech-tree {
+    --grid-drift: 32s;
+
     position: relative;
     flex: 1;
     min-width: 0;
     overflow: hidden;
     background-color: var(--tree);
-    background-image: linear-gradient(rgb(94 200 255 / 0.026) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(94 200 255 / 0.026) 1px, transparent 1px),
-    linear-gradient(rgb(94 200 255 / 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(94 200 255 / 0.045) 1px, transparent 1px),
-    radial-gradient(90% 72% at 50% 0%, #0c1621 0%, #070b11 58%, #05080d 100%);
-    background-size: 56px 56px,
-    56px 56px,
-    280px 280px,
-    280px 280px,
-    100% 100%;
+    background-image: radial-gradient(90% 72% at 50% 0%, #0c1621 0%, #070b11 58%, #05080d 100%);
+    background-size: 100% 100%;
     user-select: none;
     touch-action: none;
     animation: tree-fade-in 220ms ease both;
@@ -71,6 +65,32 @@
     linear-gradient(90deg, rgb(5 8 13 / 0.75) 0, transparent 18px),
     linear-gradient(270deg, rgb(5 8 13 / 0.75) 0, transparent 18px),
     radial-gradient(125% 95% at 50% 45%, transparent 56%, rgb(0 0 0 / 0.4) 100%);
+}
+
+.tech-shell .tech-tree::after {
+    content: "";
+    position: absolute;
+    inset: -280px; /* 多铺一个 280px 周期，平移时不露边 */
+    z-index: 0;
+    pointer-events: none;
+    background-image: linear-gradient(rgb(94 200 255 / 0.026) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(94 200 255 / 0.026) 1px, transparent 1px),
+    linear-gradient(rgb(94 200 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(94 200 255 / 0.045) 1px, transparent 1px);
+    background-size: 56px 56px,
+    56px 56px,
+    280px 280px,
+    280px 280px;
+    animation: grid-drift var(--grid-drift) linear infinite;
+}
+
+@keyframes grid-drift {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+    to {
+        transform: translate3d(280px, 280px, 0);
+    }
 }
 
 .tech-shell .viewport {
@@ -778,7 +798,7 @@
 
 .tech-shell .action.ghost.reset:hover:not([disabled]) {
     color: var(--ghost);
-    background: var(--accent);
+    background: var(--warn);
 }
 
 .tech-shell .action.ghost.reset-all {
@@ -855,6 +875,12 @@
     .tech-shell .node.just-unlocked {
         animation: none;
         transition: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tech-shell .tech-tree::after {
+        animation: none;
     }
 }
 

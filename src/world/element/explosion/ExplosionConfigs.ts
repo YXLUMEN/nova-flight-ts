@@ -20,7 +20,7 @@ export class ExplosionConfigs {
             const flag = reader.readInt8();
             if (flag === 0) return new ExplosionConfigs();
 
-            const args = new Array(flag);
+            const args = new Array(flag).fill(undefined);
             if (flag & 1 << 0) args[0] = reader.readInt8();
             if (flag & 1 << 1) args[1] = reader.readInt8();
             if (flag & 1 << 2) args[2] = reader.readBoolean();

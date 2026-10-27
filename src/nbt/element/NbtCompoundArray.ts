@@ -8,7 +8,7 @@ export class NbtCompoundArray implements NbtElement {
     public static readonly TYPE: NbtType<NbtCompoundArray> = {
         read(reader: BinaryReader): NbtCompoundArray {
             const len = reader.readVarUint();
-            const array: NbtCompound[] = new Array(len);
+            const array: NbtCompound[] = new Array(len).fill(null);
 
             for (let i = 0; i < len; i++) {
                 array[i] = NbtCompound.TYPE.read(reader);

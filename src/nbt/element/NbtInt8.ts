@@ -37,7 +37,7 @@ export class NbtInt8 implements NbtElement {
         return this;
     }
 
-    private static readonly cache: NbtInt8[] = new Array<NbtInt8>(256);
+    private static readonly cache: NbtInt8[] = new Array<NbtInt8>(256).fill(null!);
     static {
         for (let i = 0; i < this.cache.length; i++) {
             this.cache[i] = new NbtInt8(i - 128);

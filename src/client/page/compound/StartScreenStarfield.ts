@@ -21,8 +21,9 @@ export class StartScreenStarfield extends UiFramework {
     private readonly ctrl = new AbortController();
 
     private started = false;
-    private tickInterval = 1000 / 50;
-    private lastTickTime = 0;
+    private last = 0;
+    private accumulator = 0;
+    private readonly perTick = 0.05;
 
     private mouseNormX: number = 0;
     private mouseNormY: number = 0;
@@ -70,18 +71,17 @@ export class StartScreenStarfield extends UiFramework {
         }, {signal: this.ctrl.signal, passive: true});
     }
 
-    public tick(tickDelta: number): void {
+    public tick(ts: number): void {
         if (this.ctrl.signal.aborted) return;
 
-        if (!this.lastTickTime) {
-            this.lastTickTime = tickDelta;
-        }
+        const tickDelta = Math.min(0.1, (ts - this.last) / 1000 || 0);
+        this.last = ts;
+        this.accumulator += tickDelta;
 
-        let elapsed = tickDelta - this.lastTickTime;
-        while (elapsed >= this.tickInterval) {
-            this.starField.update(0.02, this.tempCamera);
-            this.lastTickTime += this.tickInterval;
-            elapsed -= this.tickInterval;
+        const perTick = this.perTick;
+        while (this.accumulator >= perTick) {
+            this.starField.update(perTick, this.tempCamera);
+            this.accumulator -= perTick;
         }
 
         this.parallaxX += (this.mouseNormX - this.parallaxX) * PARALLAX_LERP;

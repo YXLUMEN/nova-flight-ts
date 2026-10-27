@@ -23,6 +23,7 @@ export abstract class Particle implements VisualEffect {
 
     protected vx: number = 0;
     protected vy: number = 0;
+    protected movement: MutVec2;
     protected hasPhysics: boolean = true;
     protected halfW: number = 1.0;
     protected halfH: number = 1.0;
@@ -37,6 +38,7 @@ export abstract class Particle implements VisualEffect {
         this.y = y;
         this.px = x;
         this.py = y;
+        this.movement = MutVec2.zero();
         this.lifeTick = lifeTick ? lifeTick : randInt(10, 20);
     }
 
@@ -82,17 +84,15 @@ export abstract class Particle implements VisualEffect {
     public move(vx: number, vy: number) {
         if (vx === 0 && vy === 0) return;
 
-        const ox = vx;
-        const oy = vy;
+        const movement = this.movement;
         if (this.hasPhysics) {
-            const movement = BlockCollision.separatingCollision(this.world.getMap(), this.box, new MutVec2(vx, vy));
-            vx = movement.x;
-            vy = movement.y;
+            movement.set(vx, vy);
+            BlockCollision.separatingCollision(this.world.getMap(), this.box, movement);
         }
 
-        this.box.offset(vx, vy);
+        this.box.offset(movement.x, movement.y);
 
-        if (ox != vx) this.vx = 0;
-        if (oy != vy) this.vy = 0;
+        if (movement.x != vx) this.vx = 0;
+        if (movement.y != vy) this.vy = 0;
     }
 }

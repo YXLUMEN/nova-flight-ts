@@ -75,7 +75,7 @@ export class StateDefinition<O, S extends StateHolder<O, S>> {
         const count = values.length;
 
         const states: S[] = [];
-        const propertyNeighbours: S[] = new Array(count);
+        const propertyNeighbours: S[] = new Array(count).fill(null);
         const neighbours: S[][] = [propertyNeighbours];
 
         for (let i = 0; i < count; i++) {
@@ -107,7 +107,7 @@ export class StateDefinition<O, S extends StateHolder<O, S>> {
         const totalStates = stateValues.length;
 
         const strides = StateDefinition.computeStrides(propertyValues);
-        const states: S[] = new Array(totalStates);
+        const states: S[] = new Array(totalStates).fill(null);
 
         for (let i = 0; i < totalStates; i++) {
             states[i] = new factory(owner, keys, Array.from(stateValues[i]));
@@ -129,7 +129,7 @@ export class StateDefinition<O, S extends StateHolder<O, S>> {
 
     private static computeStrides(propertyValues: Comparable[][]): number[] {
         const count = propertyValues.length;
-        const strides = new Array(count);
+        const strides = new Array(count).fill(null);
         let stride = 1;
 
         for (let i = count - 1; i >= 0; i--) {
@@ -147,11 +147,11 @@ export class StateDefinition<O, S extends StateHolder<O, S>> {
         strides: number[]
     ): S[][] {
         const propertyCount = keys.length;
-        const neighbors: S[][] = new Array(propertyCount);
+        const neighbors: S[][] = new Array(propertyCount).fill(null);
 
         for (let pIndex = 0; pIndex < propertyCount; pIndex++) {
             const valueCount = propertyValues[pIndex].length;
-            const column: S[] = new Array(valueCount);
+            const column: S[] = new Array(valueCount).fill(null);
             const stride = strides[pIndex];
 
             for (let vIndex = 0; vIndex < valueCount; vIndex++) {

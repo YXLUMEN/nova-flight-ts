@@ -16,7 +16,7 @@ export class LinearPalette<T> implements Palette<T> {
     public constructor(maxSize: number, entries: T[] = []) {
         maxSize = clamp(Math.floor(maxSize), 1, LinearPalette.MAX_VALUES);
 
-        this.values = new Array(maxSize);
+        this.values = new Array(maxSize).fill(null);
         this.maxSize = maxSize;
         this.size = entries.length;
 

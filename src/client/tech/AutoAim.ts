@@ -7,6 +7,8 @@ import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import {NovaFlightClient} from "../NovaFlightClient.ts";
+import type {Predicate} from "../../type/types.ts";
+import {any} from "../../utils/util.ts";
 
 export class AutoAim {
     public static readonly FIRE_THRESHOLD = Math.PI / 225;
@@ -28,7 +30,7 @@ export class AutoAim {
         if (mobs.size === 0) return;
 
         const pos = this.owner.positionRef;
-        const target = this.acquireTarget(mobs, pos);
+        const target = this.acquireTarget(mobs, pos, any);
         if (!target) return;
 
         const mobPos = target.positionRef;
@@ -59,7 +61,7 @@ export class AutoAim {
         this.currentTarget = target;
     }
 
-    private acquireTarget(mobs: ReadonlySet<MobEntity>, pos: Vec2) {
+    private acquireTarget(mobs: ReadonlySet<MobEntity>, pos: Vec2, predicate: Predicate<Target>) {
         const now = performance.now();
 
         if (this.currentTarget && !this.currentTarget.isRemoved() && now - this.targetLockTime < 500) {
@@ -92,6 +94,7 @@ export class AutoAim {
                 (distSq === best.dist2 && approaching === best.approaching && absAngleDiff < best.angleDiff)
             ) {
                 best = {mob, dist2: distSq, angleDiff: absAngleDiff, approaching};
+                if (!predicate(best)) best = null;
             }
         }
 

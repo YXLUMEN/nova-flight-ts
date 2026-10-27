@@ -18,7 +18,7 @@ export class DefaultedList<E> implements ArrayLike<E>, Iterable<E> {
     }
 
     public static ofSize<E>(size: number): DefaultedList<E> {
-        return new DefaultedList<E>(new Array(size), null);
+        return new DefaultedList<E>(new Array(size).fill(null), null);
     }
 
     public static ofSizeAndValue<E>(size: number, defaultValue: E): DefaultedList<E> {

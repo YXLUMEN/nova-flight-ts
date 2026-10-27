@@ -151,17 +151,17 @@ export class ParticlePool {
 
     private reap(): void {
         const store = this.store;
-        const u = store.u32;
+        const u32 = store.u32;
 
         for (let i = store.active - 1; i >= 0; i--) {
             const b = i * ROW_SLOTS;
-            const age = u[b + P_IDX.AGE] + 1;
-            if (age >= u[b + P_IDX.LIFE]) {
+            const age = u32[b + P_IDX.AGE] + 1;
+            if (age >= u32[b + P_IDX.LIFE]) {
                 store.swapRemove(i);
                 continue;
             }
 
-            u[b + P_IDX.AGE] = age;
+            u32[b + P_IDX.AGE] = age;
         }
     }
 

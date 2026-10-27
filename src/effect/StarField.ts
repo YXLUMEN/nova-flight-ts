@@ -66,9 +66,7 @@ export class StarField {
 
         const shakeX = cam.viewOffset.x - base.x;
         const shakeY = cam.viewOffset.y - base.y;
-
-        this.lastCamPos.x = cam.viewOffset.x;
-        this.lastCamPos.y = cam.viewOffset.y;
+        this.lastCamPos.setVec(cam.viewOffset);
 
         const core = this.core;
         const start = this.start, end = this.end;
@@ -122,6 +120,7 @@ export class StarField {
 
         const core = this.core;
         const start = this.start, end = this.end;
+        const prevDt = this.prevDt;
 
         ctx.save();
         ctx.fillStyle = "#CFE3FF";
@@ -136,7 +135,6 @@ export class StarField {
 
             ctx.save();
             ctx.translate(-ox, -oy);
-
             for (let i = start[li], j = end[li]; i < j; i++) {
                 const b = i * ROW_COUNT;
 
@@ -144,7 +142,7 @@ export class StarField {
                 const y = core[b + StarIdx.Y];
 
                 const lx = lerp(alpha, x, x + sx);
-                const ly = lerp(alpha, y - core[b + StarIdx.S] * this.prevDt, y + sy);
+                const ly = lerp(alpha, y - core[b + StarIdx.S] * prevDt, y + sy);
                 const r = core[b + StarIdx.R];
                 ctx.rect(lx, ly, r, r);
             }

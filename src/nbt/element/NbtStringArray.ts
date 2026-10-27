@@ -7,7 +7,7 @@ export class NbtStringArray implements NbtElement {
     public static readonly TYPE: NbtType<NbtStringArray> = {
         read(reader: BinaryReader): NbtStringArray {
             const len = reader.readVarUint();
-            const array: string[] = new Array(len);
+            const array: string[] = new Array(len).fill(null);
 
             for (let i = 0; i < len; i++) {
                 array[i] = reader.readString();

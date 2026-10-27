@@ -108,7 +108,7 @@ export class CommandDispatcher<S> {
         const truncatedInput = fullInput.substring(0, cursor);
         const truncatedInputLowerCase = truncatedInput.toLowerCase();
 
-        const futures: Promise<Suggestions>[] = new Array(parent.getOriginChildren().size);
+        const futures: Promise<Suggestions>[] = new Array(parent.getOriginChildren().size).fill(null);
 
         let i = 0;
         for (const node of parent.getChildren()) {
