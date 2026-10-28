@@ -4,10 +4,11 @@ import type {Identifier} from "../registry/Identifier.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {warn} from "@tauri-apps/plugin-log";
 import {convertFileSrc} from "@tauri-apps/api/core";
-import {resolveResource} from "@tauri-apps/api/path";
+import {join, resolveResource} from "@tauri-apps/api/path";
 import {readTextFile} from "@tauri-apps/plugin-fs";
 import {RegistryKeys} from "../registry/RegistryKeys.ts";
 import {Resources} from "./Resources.ts";
+import {PromisePool} from "../utils/collection/PromisePool.ts";
 
 
 export class AudioResource implements ResourceModule {
@@ -18,31 +19,41 @@ export class AudioResource implements ResourceModule {
     }
 
     public async load(manager: RegistryManager): Promise<void> {
+        const root = 'resources/nova-flight';
         const audioRegister = manager.get(RegistryKeys.AUDIOS);
         const audios = audioRegister.getIdSet();
 
-        const jsonPath = await resolveResource(`resources/nova-flight/audios.json`);
-        const json = JSON.parse(await readTextFile(jsonPath));
+        const jsonPath = await join(root, 'audios.json');
+        const resolved = await resolveResource(jsonPath);
+        const json = JSON.parse(await readTextFile(resolved));
 
+        const pool = new PromisePool();
         for (const audioId of audios) {
-            try {
-                const id = audioId.getPath();
-                const entry = json[id];
-                const audioEntry = entry['file'];
+            pool.spawn(this.parse, root, audioId, json, this.buffers);
+        }
+        await pool.join();
+    }
 
-                if (!entry || !audioEntry) {
-                    void warn(`AudioID ${id} not found in audios.json`);
-                    continue;
-                }
+    private async parse(root: string, audioId: Identifier, json: any, buffers: Map<Identifier, string>) {
+        try {
+            const id = audioId.getPath();
+            const entry = json[id];
+            const audioEntry = entry['file'];
 
-                const audioPath = audioEntry.split(':').pop();
-                if (!audioPath) continue;
-
-                const url = await resolveResource(`resources/nova-flight/audios${audioPath}`);
-                this.buffers.set(audioId, convertFileSrc(url));
-            } catch (err) {
-                console.warn(err, audioId);
+            if (!entry || !audioEntry) {
+                await warn(`AudioID ${id} not found in audios.json`);
+                return;
             }
+
+            const audioPath = audioEntry.split(':').pop();
+            if (!audioPath) return;
+
+            const path = await join(root, '/audios', audioPath);
+            const resolved = await resolveResource(path);
+            buffers.set(audioId, convertFileSrc(resolved));
+        } catch (err) {
+            console.warn(audioId.toString(), err);
+            await warn(`Error while parsing audio "${audioId}", cause by "${err}"`);
         }
     }
 

@@ -55,8 +55,9 @@ export class TextureResource implements ResourceModule, TextureProvider {
         }
 
         // 占位防重入
-        this.textureCache.set(key, this.transparent!);
-        this.loadTexture(key).catch(err => {
+        const placeholder = this.transparent!;
+        this.textureCache.set(key, placeholder);
+        this.loadTexture(key, placeholder).catch(err => {
             this.textureCache.delete(key);
             const msg = `[TextureResource] Failed to load texture ${key}: ${err}`;
             console.error(msg);
@@ -75,14 +76,21 @@ export class TextureResource implements ResourceModule, TextureProvider {
         return this.texturePaths.has(key);
     }
 
-    private async loadTexture(key: string): Promise<void> {
+    private async loadTexture(key: string, placeholder: ImageBitmap): Promise<void> {
         const texture = this.texturePaths.get(key);
         if (!texture) return;
 
         const buffer = await readFile(texture.abs);
         const blob = new Blob([buffer], {type: "image/png"});
         const bitmap = await createImageBitmap(blob);
-        // maybe check if close
+
+        const exists = this.textureCache.get(key);
+        if (exists !== placeholder) {
+            console.warn('Unmatch placeholder, maybe a lingering task');
+            bitmap.close();
+            return;
+        }
+
         this.textureCache.set(key, bitmap);
     }
 

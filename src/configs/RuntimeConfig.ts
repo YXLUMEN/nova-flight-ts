@@ -6,15 +6,12 @@ export const isServer = isDev ? typeof window === 'undefined' : __IS_SERVER__;
 export const isClient = !isServer;
 
 export const DEFAULT_CONFIG = config({
-    per: 50,
     version: '26v31',
     gameVersion: 12,
 });
 
 export const RuntimeConfig = status({
-    per: DEFAULT_CONFIG.per,
     perFrame: 1000 / 100, // 越小渲染越快
-    lastPerFrame: 1000 / 100,
 
     enableCameraOffset: !isDev,
 
