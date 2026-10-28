@@ -1,8 +1,8 @@
 import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {ClientTech} from "./ClientTech.ts";
+import type {SoundSystem} from "../../sound/SoundSystem.ts";
 import {as, assert, closest} from "../../utils/dom_util.ts";
-import {NovaFlightClient} from "../NovaFlightClient.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {UnlockTech} from "../../event/events/UnlockTech.ts";
@@ -16,6 +16,7 @@ export class TechInspector {
     private readonly state: TechState<ClientTech>;
 
     private readonly canvas: TechTreeCanvas;
+    private readonly sound: SoundSystem;
 
     private readonly root: HTMLElement;
     private readonly submitBtn: HTMLButtonElement;
@@ -31,11 +32,13 @@ export class TechInspector {
         signal: AbortSignal,
         player: LocalPlayerEntity,
         canvas: TechTreeCanvas,
+        sound: SoundSystem,
     ) {
         this.tree = tree;
         this.state = state;
         this.player = player;
         this.canvas = canvas;
+        this.sound = sound;
 
         this.root = root;
         this.submitBtn = as(root, '#d-unlock', HTMLButtonElement);
@@ -49,7 +52,16 @@ export class TechInspector {
         (this.tree as any) = null;
     }
 
-    public sync() {
+    public refresh() {
+        this.canvas.refreshNodes();
+        this.onSelect(this.selectNodeId);
+    }
+
+    public select() {
+        this.onSelect(this.selectNodeId);
+    }
+
+    private refreshSelectStatus() {
         const id = this.selectNodeId;
         const tech = id ? this.state.getTech(id) : null;
         const status = tech ? this.state.computeStatus(tech) : null;
@@ -66,15 +78,10 @@ export class TechInspector {
         this.resetAllBtn.disabled = this.state.unlocked.size === 0;
     }
 
-    public select() {
-        this.canvas.refresh();
-        this.onSelect(this.selectNodeId);
-    }
-
     private onSelect(id: string | null) {
         this.selectNodeId = id;
         const tech = id ? this.state.getTech(id) : null;
-        this.sync();
+        this.refreshSelectStatus();
         this.canvas.renderSelect(id, tech);
     }
 
@@ -87,11 +94,10 @@ export class TechInspector {
         const tech = this.state.getTech(id);
         if (!tech) return;
 
-        const sound = NovaFlightClient.instance().globalSound;
         const world = this.player.getWorld();
         const score = this.player.getScore() - tech.cost;
         if (score < 0 && !this.player.isDevMode()) {
-            sound.playSound(SoundEvents.UI_ERROR);
+            this.sound.playSound(SoundEvents.UI_ERROR);
             return;
         }
 
@@ -100,10 +106,10 @@ export class TechInspector {
             this.canvas.onApply(tech);
 
             world.events.emit(new UnlockTech(this.player, tech));
-            sound.playSound(SoundEvents.UI_APPLY, 1.5);
-            this.onSelect(id);
+            this.sound.playSound(SoundEvents.UI_APPLY, 1.5);
+            this.refreshSelectStatus();
         } else {
-            sound.playSound(SoundEvents.UI_ERROR);
+            this.sound.playSound(SoundEvents.UI_ERROR);
         }
     }
 
@@ -112,11 +118,15 @@ export class TechInspector {
 
         const view = assert(this.root, '#viewport');
         view.addEventListener('click', event => {
-            const target = closest(event.target, '.node') as HTMLElement;
-            this.onSelect(target?.dataset.id ?? null);
+            const target = closest(event.target, '.node') as HTMLElement | null;
+            const id = target?.dataset.id ?? null;
+
+            if (this.selectNodeId !== id) {
+                this.onSelect(id);
+            }
 
             if (target) {
-                NovaFlightClient.instance().globalSound.playSound(SoundEvents.UI_SELECT);
+                this.sound.playSound(SoundEvents.UI_SELECT);
             }
         }, {signal});
         view.addEventListener('dblclick', apply, {signal});

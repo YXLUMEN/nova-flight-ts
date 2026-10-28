@@ -57,7 +57,7 @@ export class TechTreeCanvas {
         this.nodesLayer.remove();
     }
 
-    public refresh() {
+    public refreshNodes() {
         this.updateAllEdgeClasses();
         this.renderNodes();
     }
@@ -185,7 +185,6 @@ export class TechTreeCanvas {
         }
 
         this.svg.replaceChildren(frag);
-        this.updateAllEdgeClasses();
     }
 
     public updateEdgesAround(ids: IteratorObject<string>) {

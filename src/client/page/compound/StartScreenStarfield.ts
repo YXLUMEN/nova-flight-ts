@@ -87,18 +87,18 @@ export class StartScreenStarfield extends UiFramework {
         this.parallaxX += (this.mouseNormX - this.parallaxX) * PARALLAX_LERP;
         this.parallaxY += (this.mouseNormY - this.parallaxY) * PARALLAX_LERP;
 
-        this.render(this.ctx);
+        this.render(this.ctx, this.accumulator / perTick);
         requestAnimationFrame(this.tick);
     }
 
-    public render(ctx: CanvasRenderingContext2D): void {
+    public render(ctx: CanvasRenderingContext2D, alpha: number): void {
         const starOffX = this.parallaxX * STAR_PARALLAX_STRENGTH;
         const starOffY = this.parallaxY * STAR_PARALLAX_STRENGTH;
 
         ctx.clearRect(0, 0, this.width, this.height);
         ctx.save();
         ctx.translate(starOffX, starOffY);
-        this.starField.render(ctx, this.tempCamera, 1);
+        this.starField.render(ctx, this.tempCamera, alpha);
         ctx.restore();
     }
 

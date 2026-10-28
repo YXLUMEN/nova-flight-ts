@@ -81,3 +81,41 @@
     background: rgb(255 92 92 / 0.24);
     border-color: #ff5c5c;
 }
+
+/* 背景样式 */
+
+.c-background.grid::after,
+.c-element.grid {
+    --grid-drift: 32s;
+
+    position: absolute;
+    inset: -280px; /* 多铺一个 280px 周期，平移时不露边 */
+    pointer-events: none;
+    background-image: linear-gradient(rgb(94 200 255 / 0.026) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(94 200 255 / 0.026) 1px, transparent 1px),
+    linear-gradient(rgb(94 200 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(94 200 255 / 0.045) 1px, transparent 1px);
+    background-size: 56px 56px,
+    56px 56px,
+    280px 280px,
+    280px 280px;
+    animation: grid-drift var(--grid-drift) linear infinite;
+}
+
+.c-background.grid::after {
+    content: '';
+    z-index: 0;
+}
+
+.c-element.grid {
+    z-index: -1;
+}
+
+@keyframes grid-drift {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+    to {
+        transform: translate3d(280px, 280px, 0);
+    }
+}

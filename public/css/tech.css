@@ -67,32 +67,6 @@
     radial-gradient(125% 95% at 50% 45%, transparent 56%, rgb(0 0 0 / 0.4) 100%);
 }
 
-.tech-shell .tech-tree::after {
-    content: "";
-    position: absolute;
-    inset: -280px; /* 多铺一个 280px 周期，平移时不露边 */
-    z-index: 0;
-    pointer-events: none;
-    background-image: linear-gradient(rgb(94 200 255 / 0.026) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(94 200 255 / 0.026) 1px, transparent 1px),
-    linear-gradient(rgb(94 200 255 / 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(94 200 255 / 0.045) 1px, transparent 1px);
-    background-size: 56px 56px,
-    56px 56px,
-    280px 280px,
-    280px 280px;
-    animation: grid-drift var(--grid-drift) linear infinite;
-}
-
-@keyframes grid-drift {
-    from {
-        transform: translate3d(0, 0, 0);
-    }
-    to {
-        transform: translate3d(280px, 280px, 0);
-    }
-}
-
 .tech-shell .viewport {
     position: absolute;
     inset: 0;
@@ -317,7 +291,6 @@
     z-index: 4;
     border-color: #3b5168;
     background-color: #0e1a25;
-    color: #f2f8ff;
 }
 
 .tech-shell .node.unlockable:hover {

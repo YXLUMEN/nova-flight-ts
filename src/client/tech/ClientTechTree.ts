@@ -63,6 +63,7 @@ export class ClientTechTree extends PageSection implements TechTree {
             this.ctrl.signal,
             this.player,
             this.canvas,
+            NovaFlightClient.instance().globalSound,
         );
 
         bind.refresh();
@@ -70,6 +71,7 @@ export class ClientTechTree extends PageSection implements TechTree {
         appEvent.withSignal('ui:lang', () => {
             bind.refresh();
             this.canvas.renderNodes();
+            this.inspector.select();
         }, this.ctrl.signal);
 
         this.root.addEventListener('player.score', event => {
@@ -77,8 +79,7 @@ export class ClientTechTree extends PageSection implements TechTree {
         }, {signal: this.ctrl.signal});
 
         this.canvas.renderEdges();
-        this.canvas.renderNodes();
-        this.inspector.sync();
+        this.inspector.refresh();
     }
 
     protected override onOpened() {
@@ -146,7 +147,7 @@ export class ClientTechTree extends PageSection implements TechTree {
         const finalScore = this.player.getScore() + Math.floor(backScore * 0.8);
         this.player.setScore(finalScore);
 
-        this.inspector.select();
+        this.inspector.refresh();
 
         this.player.sendPacket(new PlayerResetTechC2SPacket(entry));
         return true;
@@ -167,7 +168,7 @@ export class ClientTechTree extends PageSection implements TechTree {
         this.resetPlayer();
 
         this.state.reset();
-        this.inspector.select();
+        this.inspector.refresh();
 
         player.sendPacket(PlayerResetAllTechC2SPacket.INSTANCE);
     }
@@ -211,6 +212,6 @@ export class ClientTechTree extends PageSection implements TechTree {
             world.events.emit(new UnlockTech(this.player, tech, true));
         }
 
-        this.inspector.select();
+        this.inspector.refresh();
     }
 }

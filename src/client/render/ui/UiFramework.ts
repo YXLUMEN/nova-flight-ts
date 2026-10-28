@@ -7,7 +7,7 @@ export abstract class UiFramework implements IUi {
     protected halfW: number = 0;
     protected halfH: number = 0;
 
-    public abstract render(ctx: CanvasRenderingContext2D, tickDelta: number): void;
+    public abstract render(ctx: CanvasRenderingContext2D, alpha: number): void;
 
     public setSize(w: number, h: number): void {
         this.width = Math.max(0, w);
