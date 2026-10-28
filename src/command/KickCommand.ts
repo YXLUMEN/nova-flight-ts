@@ -1,10 +1,11 @@
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
+import type {ServerWorld} from "../server/ServerWorld.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import {CommandError} from "../type/errors.ts";
 import {PlayerSelectorArgumentType} from "./argument/PlayerSelectorArgumentType.ts";
-import type {ServerWorld} from "../server/ServerWorld.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
+import {CommandUtil} from "./CommandUtil.ts";
 
 export class KickCommand {
     private static readonly KICK = TranslatableText.of("network.disconnect.kicked");
@@ -15,18 +16,10 @@ export class KickCommand {
                 .then(
                     argument<T, string>('player', PlayerSelectorArgumentType.selector())
                         .executes(ctx => {
-                            const world = ctx.source.getWorld() as ServerWorld | null;
-                            if (!world) throw new CommandError("No world was found.");
+                            const world = CommandUtil.assertWorld(ctx) as ServerWorld;
                             if (world.isClient) return;
 
-                            const selectorResult = ctx.args.get('player');
-                            if (!selectorResult) throw new CommandError("\x1b[33m<selector> is required");
-
-                            const playerName = selectorResult.result;
-                            if (typeof playerName !== 'string') {
-                                throw new CommandError('Not a entity selector');
-                            }
-
+                            const playerName = CommandUtil.assert(ctx, 'player', String);
                             const players = world
                                 .getPlayers()
                                 .filter(player => player.profile().name === playerName)

@@ -1,11 +1,11 @@
 import type {ArgumentType} from "../../brigadier/ArgumentType.ts";
+import type {CommandContext} from "../../brigadier/context/CommandContext.ts";
+import type {SuggestionsBuilder} from "../../brigadier/suggestion/SuggestionsBuilder.ts";
+import type {EntitySelector} from "../EntitySelector.ts";
 import {StringReader} from "../../brigadier/StringReader.ts";
-import {type CommandContext} from "../../brigadier/context/CommandContext.ts";
 import {Suggestions} from "../../brigadier/suggestion/Suggestions.ts";
 import {CommandSource} from "../CommandSource.ts";
-import type {SuggestionsBuilder} from "../../brigadier/suggestion/SuggestionsBuilder.ts";
 import {EntitySelectorParser} from "../EntitySelectorParser.ts";
-import type {EntitySelector} from "../EntitySelector.ts";
 import {CommandError} from "../../type/errors.ts";
 import {CommandUtil} from "../CommandUtil.ts";
 

@@ -9,6 +9,7 @@ export class ClientTech extends Tech {
     public readonly y: number;
 
     public readonly drawExcept: Set<string | Tech> | null;
+    public readonly branchColor: string | null;
 
     public constructor(
         name: TranslatableText,
@@ -20,6 +21,7 @@ export class ClientTech extends Tech {
         requires: Iterable<string> | null,
         conflicts: Iterable<string> | null,
         branchGroup: string | null,
+        branchColor: string | null,
     ) {
         super(name, cost, requires, conflicts, branchGroup);
         this.name = name;
@@ -27,6 +29,7 @@ export class ClientTech extends Tech {
         this.x = x;
         this.y = y;
         this.drawExcept = drawExcept !== null ? new Set(drawExcept) : null;
+        this.branchColor = branchColor;
     }
 
     public override complete() {

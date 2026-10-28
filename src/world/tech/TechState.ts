@@ -1,12 +1,7 @@
-import {isNonEmptyString} from '../../utils/util.ts';
-import type {RawTech, TechAvailable} from '../../type/ITech.ts';
+import type {TechAvailable} from '../../type/ITech.ts';
 import {Tech} from "./Tech.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {Identifier} from "../../registry/Identifier.ts";
-import {TechLayoutParser} from "../../client/tech/TechLayoutParser.ts";
-import {isServer} from "../../configs/RuntimeConfig.ts";
-import {TechBuilder} from "./TechBuilder.ts";
-import {ClientTechBuilder} from "../../client/tech/ClientTechBuilder.ts";
 
 export class TechState<T extends Tech = Tech> {
     public readonly allTechs: T[];
@@ -22,89 +17,6 @@ export class TechState<T extends Tech = Tech> {
         this.branchGroups = group as Map<string, T[]>;
 
         this.dependentsMap = this.buildDependentsMap();
-    }
-
-    public static normalizeTechs(raw: unknown) {
-        if (!Array.isArray(raw)) {
-            throw new Error('Tech JSON must be an array');
-        }
-        const out: Map<string, TechBuilder> = new Map();
-
-        let x: number, y: number;
-        if (isServer) {
-            x = y = 0;
-        } else {
-            const ele = document.getElementById('tech-shell')!;
-            ele.classList.remove('hidden');
-            const box = document.getElementById('viewport')!.getBoundingClientRect();
-            ele.classList.add('hidden');
-            x = Math.floor(box.width / 2);
-            y = Math.floor(80);
-        }
-
-        const parser = new TechLayoutParser(x, y, 180, 80);
-
-        raw.forEach((item, index) => {
-            if (item == null || typeof item !== 'object') {
-                throw new Error(`Tech[${index}] must be an object`);
-            }
-
-            const rawTech = item as RawTech;
-
-            if (!isNonEmptyString(rawTech['id'])) {
-                throw new Error(`Tech[${index}]: 'id' is required and must be a non-empty string`);
-            }
-
-            const id = rawTech['id'].trim();
-            if (out.has(id)) {
-                throw new Error(`Duplicate tech id: '${id}'`);
-            }
-
-            const name = isNonEmptyString(rawTech['name']) ? rawTech['name'].trim() : id;
-
-            const x = rawTech['x'];
-            const y = rawTech['y'];
-            if (typeof x !== 'number' || !Number.isFinite(x) || typeof y !== 'number' || !Number.isFinite(y)) {
-                throw new Error(`Tech[${index}]: invalid position (${rawTech.x}, ${rawTech.y})`);
-            }
-
-            const cost = rawTech['cost'];
-            if (typeof cost !== 'number' || !Number.isFinite(cost)) {
-                throw new Error(`Tech[${index}]: invalid cost '${rawTech.cost}'`);
-            }
-
-            const desc = isNonEmptyString(rawTech['desc']) ? rawTech['desc'].trim() : '';
-
-            const drawLine = Array.isArray(rawTech['drawExcept']) ? rawTech['drawExcept'] : null;
-            const requires = Array.isArray(rawTech['requires']) ? rawTech['requires'] : null;
-            const conflicts = Array.isArray(rawTech['conflicts']) ? rawTech['conflicts'] : null;
-            const branchGroup = isNonEmptyString(rawTech['branchGroup']) ? rawTech['branchGroup'].trim() : null;
-
-            if (isServer) {
-                out.set(id, new TechBuilder()
-                    .name(name)
-                    .cost(cost)
-                    .requires(requires)
-                    .conflicts(conflicts)
-                    .branchGroup(branchGroup));
-                return;
-            }
-
-            const parsedPos = parser.parse(x, y);
-            out.set(id, new ClientTechBuilder()
-                .name(name)
-                .desc(desc)
-                .cost(cost)
-                .x(parsedPos.x)
-                .y(parsedPos.y)
-                .drawExcept(drawLine)
-                .requires(requires)
-                .conflicts(conflicts)
-                .branchGroup(branchGroup)
-            );
-        });
-
-        return out;
     }
 
     private buildDependentsMap(): Map<T, Set<T>> {
@@ -169,6 +81,51 @@ export class TechState<T extends Tech = Tech> {
         if (!requires) return 'unlockable';
 
         return requires.values().every(tech => this.unlocked.has(tech as T)) ? 'unlockable' : 'locked';
+    }
+
+    public successorsClosure(root: T): T[] | null {
+        const origin = this.dependentsMap.get(root);
+        if (!origin) return null;
+
+        const out: T[] = [];
+        const seen = new Set<T>();
+        const stack = [...origin];
+        while (stack.length > 0) {
+            const tech = stack.pop()!;
+            if (seen.has(tech)) continue;
+            seen.add(tech);
+            out.push(tech);
+
+            const g = this.dependentsMap.get(tech);
+            if (g) stack.push(...g);
+        }
+        return out;
+    }
+
+    public branchPeers(tech: T): IteratorObject<T> | null {
+        const group = tech.branchGroup;
+        if (!group) return null;
+
+        const stack = this.branchGroups.get(group);
+        return stack == null ? null : stack.values().filter(t => t !== tech);
+    }
+
+    public conflictPeers(tech: T): IteratorObject<T> | null {
+        return tech.conflicts === null ? null : tech.conflicts.values() as SetIterator<T>;
+    }
+
+    public affectedByUnlock(tech: T): Set<T> {
+        const affected = new Set<T>();
+        const addClosure = (root: T) => {
+            affected.add(root);
+            const closure = this.successorsClosure(root);
+            if (!closure) return;
+            for (const t of closure) affected.add(t);
+        };
+        addClosure(tech);
+        this.branchPeers(tech)?.forEach(addClosure);
+        this.conflictPeers(tech)?.forEach(addClosure);
+        return affected;
     }
 
     public getTechId(tech: T) {

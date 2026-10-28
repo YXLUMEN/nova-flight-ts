@@ -51,7 +51,6 @@ export class Tech {
         ) {
             const parsed = this.parseTechs(this.conflictTechs as Set<string>);
             this.conflictTechs.clear();
-            this.conflictTechs.union(parsed);
             parsed.forEach(item => this.conflictTechs!.add(item));
         }
     }

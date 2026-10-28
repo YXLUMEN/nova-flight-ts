@@ -5,7 +5,6 @@ export const enum Main2WorkerType {
     STOP_TICKING,
     LOADED_SAVE_DATA,
     SAVE_ALL,
-    CD_ALL,
     READ_FILE,
     FETCH,
 }

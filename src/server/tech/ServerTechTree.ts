@@ -44,14 +44,6 @@ export class ServerTechTree implements TechTree {
         ServerTechManager.apply(tech, this.player);
     }
 
-    public unlockAll() {
-        const all = this.state.allTechs;
-        for (const tech of all) {
-            if (this.state.isUnlocked(tech)) continue;
-            this.state.forceUnlock(tech);
-        }
-    }
-
     public unloadedTechCount(): number {
         return this.state.unlocked.size;
     }

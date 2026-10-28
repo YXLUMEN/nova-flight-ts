@@ -12,6 +12,8 @@ self.addEventListener('message', handleEvent);
 self.postMessage({w2m: Worker2MainType.WORKER_READY});
 
 async function handleEvent(event: MessageEvent) {
+    if (isDev) devFunc(event.data.dev);
+
     const m2w = event.data.m2w as Main2WorkerType;
     if (m2w === undefined) return;
 
@@ -51,15 +53,6 @@ async function handleEvent(event: MessageEvent) {
             self.postMessage({w2m: Worker2MainType.SAVED});
             return;
         }
-        case Main2WorkerType.CD_ALL : {
-            if (!isDev) return;
-
-            if (!server || !server.world) return;
-            const host = server.getHostUUID();
-            const player = server.playerManager.getPlayer(host);
-            player?.cdAllSpecials();
-            return;
-        }
     }
 }
 
@@ -72,6 +65,25 @@ async function shutdown(reason?: any): Promise<void> {
 
     self.postMessage({w2m: Worker2MainType.SERVER_SHUTDOWN, reason});
     console.log('[Server] Worker close.');
+}
+
+function devFunc(code: string) {
+    if (!server || !server.world) return;
+
+    switch (code) {
+        case 'cd_all': {
+            const host = server.getHostUUID();
+            server.playerManager.getPlayer(host)?.cdAllSpecials();
+            break;
+        }
+        case 'health': {
+            const host = server.getHostUUID();
+            const player = server.playerManager.getPlayer(host);
+            if (!player) return;
+            player.setHealth(player.getMaxHealth());
+            break;
+        }
+    }
 }
 
 ProtocolRegistry.register();

@@ -1,17 +1,17 @@
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import {Identifier} from "../registry/Identifier.ts";
+import type {CommandContext} from "../brigadier/context/CommandContext.ts";
+import type {SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
+import type {Suggestions} from "../brigadier/suggestion/Suggestions.ts";
+import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
+import type {Identifier} from "../registry/Identifier.ts";
+import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {Registries} from "../registry/Registries.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
 import {CommandError} from "../type/errors.ts";
 import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
 import {CommandUtil} from "./CommandUtil.ts";
 import {DoubleArgumentType} from "./argument/DoubleArgumentType.ts";
-import type {CommandContext} from "../brigadier/context/CommandContext.ts";
-import type {SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
-import type {Suggestions} from "../brigadier/suggestion/Suggestions.ts";
 import {BoolArgumentType} from "./argument/BoolArgumentType.ts";
 import {Settings} from "../client/settings/Settings.ts";
 
@@ -24,12 +24,10 @@ export class MusicCommand {
                         .then(
                             argument<T, Identifier>('music_id', IdentifierArgumentType.identifier())
                                 .executes(ctx => {
-                                    const arg = ctx.args.get('music_id');
-                                    if (!arg) throw new CommandError("\x1b[33m<music_id> is required");
-
-                                    const event = Registries.AUDIOS.getById(arg.result);
+                                    const musicId = CommandUtil.assert<T, Identifier>(ctx, 'music_id');
+                                    const event = Registries.AUDIOS.getById(musicId);
                                     if (!event) {
-                                        throw new CommandError(`\x1b[33mMusic was not found with ID: "${arg.result}"`);
+                                        throw new CommandError(`\x1b[33mMusic was not found with ID: "${musicId}"`);
                                     }
                                     if (AudioManager.isDisable()) {
                                         ctx.source.addMessage(`\x1b[33mMusic is disable now.`);
@@ -46,10 +44,9 @@ export class MusicCommand {
                         .then(
                             argument<T, number>('duration', DoubleArgumentType.double())
                                 .executes(ctx => {
-                                    const arg = ctx.args.get('duration');
-                                    if (!arg) throw new CommandError("\x1b[33m<duration> is required");
+                                    const time = CommandUtil.assert(ctx, 'duration', Number);
+                                    if (!Number.isFinite(time)) throw new RangeError();
 
-                                    const time = arg.result as number;
                                     AudioManager.leap(time);
                                     ctx.source.addMessage(`Set music to \x1b[32m"${time.toFixed(2)}"`);
                                 })
@@ -57,6 +54,7 @@ export class MusicCommand {
                                     getSuggestions(_: CommandContext<T>, builder: SuggestionsBuilder): Promise<Suggestions> {
                                         let duration = AudioManager.getDuration();
                                         if (!Number.isFinite(duration)) duration = 0;
+
                                         builder.suggest(duration.toString());
                                         return builder.buildPromise();
                                     }

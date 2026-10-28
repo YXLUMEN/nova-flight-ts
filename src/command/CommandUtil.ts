@@ -1,13 +1,16 @@
 import type {Identifier} from "../registry/Identifier.ts";
-import {type SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
+import type {CommandSource} from "./CommandSource.ts";
+import type {SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
 import type {Consumer, Predicate, Return} from "../type/types.ts";
-import {commonPrefix} from "../utils/Strings.ts";
-import {type Suggestions} from "../brigadier/suggestion/Suggestions.ts";
+import type {Suggestions} from "../brigadier/suggestion/Suggestions.ts";
 import type {SuggestionProvider} from "../brigadier/suggestion/SuggestionProvider.ts";
 import type {CommandContext} from "../brigadier/context/CommandContext.ts";
 import type {Registry} from "../registry/Registry.ts";
+import {commonPrefix} from "../utils/Strings.ts";
 import {RelativePosition} from "../utils/math/RelativePosition.ts";
 import {StringReader} from "../brigadier/StringReader.ts";
+import {CommandError} from "../type/errors.ts";
+import {EntitySelector} from "./EntitySelector.ts";
 
 export class CommandUtil {
     public static forEachMatching<T>(
@@ -141,5 +144,38 @@ export class CommandUtil {
                 return false;
             }
         }
+    }
+
+    public static assert<T extends CommandSource, U>(ctx: CommandContext<T>, arg: string, map?: Return<any, U>): U {
+        const result = ctx.args.get(arg);
+        if (!result) throw new CommandError(`\x1b[33m<${arg}> is required`);
+        return map ? map(result.result) : result.result;
+    }
+
+    public static as<T extends CommandSource, U>(ctx: CommandContext<T>, arg: string, predicate: Predicate<unknown>): U {
+        const result = ctx.args.get(arg);
+        if (!result) throw new CommandError(`\x1b[33m<${arg}> is required`);
+
+        const value = result.result;
+        if (predicate(value)) return value as U;
+        throw new CommandError('Unmatch type');
+    }
+
+    public static assertSelector<T extends CommandSource>(ctx: CommandContext<T>, arg: string) {
+        const selectorResult = ctx.args.get(arg);
+        if (!selectorResult) throw new CommandError("\x1b[33m<selector> is required");
+
+        const selector = selectorResult.result;
+        if (selector instanceof EntitySelector) {
+            return selector;
+        }
+
+        throw new CommandError('Not a entity selector');
+    }
+
+    public static assertWorld<T extends CommandSource>(ctx: CommandContext<T>) {
+        const world = ctx.source.getWorld();
+        if (!world) throw new CommandError("No world was found.");
+        return world;
     }
 }

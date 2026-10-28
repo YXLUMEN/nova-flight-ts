@@ -46,7 +46,7 @@
     min-width: 0;
     overflow: hidden;
     background-color: var(--tree);
-    background-image: radial-gradient(90% 72% at 50% 0%, #0c1621 0%, #070b11 58%, #05080d 100%);
+    background-image: radial-gradient(90% 72% at 50% 0%, #162331 0%, #080d14 58%, #090e16 100%);
     background-size: 100% 100%;
     user-select: none;
     touch-action: none;
@@ -357,7 +357,7 @@
     width: 5px;
     height: 5px;
     border: 1px solid var(--branch);
-    background: transparent;
+    background: none;
     opacity: 0.75;
     transform: rotate(45deg);
 }

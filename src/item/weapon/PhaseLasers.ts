@@ -1,23 +1,23 @@
-import {World} from '../../world/World.ts';
-import {clamp} from '../../utils/math/math.ts';
-import {SoundEvents} from "../../sound/SoundEvents.ts";
-import {SpecialWeapon} from "./SpecialWeapon.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {ItemStack} from "../ItemStack.ts";
-import {DataComponents} from "../../component/DataComponents.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
+import {thickLineCircleHit} from "../../utils/math/collide.ts";
+import {clamp} from '../../utils/math/math.ts';
+import {isClient} from "../../configs/RuntimeConfig.ts";
+import {World} from '../../world/World.ts';
+import {SoundEvents} from "../../sound/SoundEvents.ts";
+import {SpecialWeapon} from "./SpecialWeapon.ts";
+import {DataComponents} from "../../component/DataComponents.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import {LaserWeaponActivate, LaserWeaponDeactivate} from "../../network/packet/s2c/LaserWeaponS2CPacket.ts";
 import {LaserBeamManger} from "../../world/LaserBeamManger.ts";
-import {thickLineCircleHit} from "../../utils/math/collide.ts";
-import {isClient} from "../../configs/RuntimeConfig.ts";
-
 
 export class PhaseLasers extends SpecialWeapon {
-    public static readonly COLOR = '#8bff5e';
-    public static readonly OVERHEAT_COLOR = '#ff5e5e';
-    public static readonly LASER_HEIGHT = World.MAP_HEIGHT * 2;
     public static readonly MANAGER = new LaserBeamManger();
+
+    public readonly COLOR = '#8bff5e';
+    public readonly OVERHEAT_COLOR = '#ff5e5e';
+    public readonly LASER_HEIGHT = World.MAP_HEIGHT * 2;
 
     protected width = 6;
 
@@ -85,8 +85,8 @@ export class PhaseLasers extends SpecialWeapon {
         const start = holder.positionRef;
         const yaw = holder.getYaw();
         const end = new Vec2(
-            start.x + Math.cos(yaw) * PhaseLasers.LASER_HEIGHT,
-            start.y + Math.sin(yaw) * PhaseLasers.LASER_HEIGHT
+            start.x + Math.cos(yaw) * this.LASER_HEIGHT,
+            start.y + Math.sin(yaw) * this.LASER_HEIGHT
         );
 
         if (world.isClient) {
@@ -101,7 +101,7 @@ export class PhaseLasers extends SpecialWeapon {
                 start,
                 end,
                 this.width,
-                stack.getOr(DataComponents.UI_COLOR, PhaseLasers.COLOR)
+                stack.getOr(DataComponents.UI_COLOR, this.COLOR)
             ));
             PhaseLasers.MANAGER.markActivated(laserId);
         }
@@ -174,7 +174,7 @@ export class PhaseLasers extends SpecialWeapon {
     }
 
     public override getUiColor(stack: ItemStack): string {
-        return stack.isAvailable() ? PhaseLasers.COLOR : PhaseLasers.OVERHEAT_COLOR;
+        return stack.isAvailable() ? this.COLOR : this.OVERHEAT_COLOR;
     }
 
     public setActive(stack: ItemStack, active: boolean): void {

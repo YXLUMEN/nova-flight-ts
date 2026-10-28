@@ -4,13 +4,12 @@ import type {ItemStack} from "../../ItemStack.ts";
 import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
 import type {ClientWorld} from "../../../client/ClientWorld.ts";
 import type {HexColor} from "../../../type/types.ts";
-import type {World} from "../../../world/World.ts";
 import {isClient, isServer} from "../../../configs/RuntimeConfig.ts";
 import {rand, randInt, TAU} from "../../../utils/math/math.ts";
 import {spawnLaser} from "../../../utils/render/LaserFx.ts";
 import {thickLineCircleHit} from "../../../utils/math/collide.ts";
+import {World} from "../../../world/World.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
-import {PhaseLasers} from "../PhaseLasers.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import {StatusEffects} from "../../../entity/effect/StatusEffects.ts";
 import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
@@ -19,6 +18,7 @@ import {MutVec2} from "../../../utils/math/MutVec2.ts";
 
 export class ParticleLance extends BaseWeapon {
     public readonly LASER_WIDTH = 8;
+    public readonly LASER_HEIGHT = World.MAP_HEIGHT * 2;
     public readonly CHARGING_TIME = 10;
 
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity, _slot: number, selected: boolean): void {
@@ -66,8 +66,8 @@ export class ParticleLance extends BaseWeapon {
         const start = attacker.positionRef;
         const yaw = attacker.getYaw();
         const end = new MutVec2(
-            start.x + Math.cos(yaw) * PhaseLasers.LASER_HEIGHT,
-            start.y + Math.sin(yaw) * PhaseLasers.LASER_HEIGHT
+            start.x + Math.cos(yaw) * this.LASER_HEIGHT,
+            start.y + Math.sin(yaw) * this.LASER_HEIGHT
         );
 
         const damage = stack.getOr(DataComponents.ATTACK_DAMAGE, 20);

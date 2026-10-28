@@ -5,11 +5,13 @@ import type {Entity} from "../../../entity/Entity.ts";
 import type {LivingEntity} from "../../../entity/LivingEntity.ts";
 import {MutVec2} from "../../../utils/math/MutVec2.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
-import {PhaseLasers} from "../PhaseLasers.ts";
 import {thickLineCircleHit} from "../../../utils/math/collide.ts";
 import {squareDistVec2} from "../../../utils/math/math.ts";
+import {World} from "../../../world/World.ts";
 
 export abstract class LaserPulseItem extends BaseWeapon {
+    public readonly LASER_HEIGHT = World.MAP_HEIGHT * 2;
+
     protected onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
         const yaw = attacker.getYaw();
         const f = Math.cos(yaw);
@@ -18,8 +20,8 @@ export abstract class LaserPulseItem extends BaseWeapon {
         // Extend to the entire map
         const start = attacker.positionRef;
         const end = new MutVec2(
-            start.x + f * PhaseLasers.LASER_HEIGHT,
-            start.y + g * PhaseLasers.LASER_HEIGHT
+            start.x + f * this.LASER_HEIGHT,
+            start.y + g * this.LASER_HEIGHT
         );
 
         const width = this.laserWidth();

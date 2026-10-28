@@ -1,11 +1,12 @@
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
+import type {TechResolver} from "./TechResolver.ts";
+import {isServer} from "../../configs/RuntimeConfig.ts";
 import {Registry} from "../../registry/Registry.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import {Tech} from "./Tech.ts";
-import {TechState} from "./TechState.ts";
-import {isServer} from "../../configs/RuntimeConfig.ts";
-import {WorkerFS} from "../../worker/fs.ts";
+import {ServerTechResolver} from "../../server/tech/ServerTechResolver.ts";
+import {ClientTechResolver} from "../../client/tech/ClientTechResolver.ts";
 
 export class Techs {
     public static COILGUNS: RegistryEntry<Tech>;
@@ -106,20 +107,18 @@ export class Techs {
     public static FLAK_ARTILLERY: RegistryEntry<Tech>;
 
     public static async init(): Promise<void> {
-        let tech: unknown;
-        const filePath = './data/tech-data.json';
+        const techPath = './data/tech-data.json';
+        const configPath = './data/tech-config.json';
 
+        let resolver: TechResolver;
         if (isServer) {
-            const buffer = await WorkerFS.fetch(filePath);
-            if (!buffer) throw new Error('Failed to load tech data');
-            const json = new TextDecoder('utf-8', {fatal: true}).decode(buffer);
-            tech = JSON.parse(json);
+            resolver = new ServerTechResolver(techPath, configPath);
         } else {
-            const resp = await fetch(filePath);
-            tech = await resp.json();
+            resolver = new ClientTechResolver(techPath, configPath, 'tech-shell');
         }
 
-        const parsed = TechState.normalizeTechs(tech);
+        await resolver.load();
+        const parsed = resolver.normalize();
         const fromJson = (name: string) => {
             return this.register(name, parsed.get(name)!.build());
         }
@@ -196,6 +195,7 @@ export class Techs {
         this.ION_DISRUPTOR = fromJson('ion_disruptor');
 
         Registries.TECH.getEntries().forEach(entry => entry.getValue().complete());
+        Object.freeze(this);
     }
 
     private static register(name: string, tech: Tech): RegistryEntry<Tech> {

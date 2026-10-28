@@ -1,16 +1,15 @@
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
+import type {CommandContext} from "../brigadier/context/CommandContext.ts";
+import type {Identifier} from "../registry/Identifier.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import type {ServerWorld} from "../server/ServerWorld.ts";
 import {CommandError} from "../type/errors.ts";
 import {EntitySelectorArgumentType} from "./argument/EntitySelectorArgumentType.ts";
 import {EntitySelector} from "./EntitySelector.ts";
-import type {Identifier} from "../registry/Identifier.ts";
 import {IdentifierArgumentType} from "./argument/IdentifierArgumentType.ts";
 import {Registries} from "../registry/Registries.ts";
 import {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";
 import {CommandUtil} from "./CommandUtil.ts";
-import type {CommandContext} from "../brigadier/context/CommandContext.ts";
 
 export class GiveCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -31,29 +30,20 @@ export class GiveCommand {
     }
 
     private static give<T extends ServerCommandSource>(ctx: CommandContext<T>) {
-        const world = ctx.source.getWorld() as ServerWorld | null;
-        if (!world) throw new CommandError("No world was found.");
+        const world = CommandUtil.assertWorld(ctx);
         if (world.isClient) return;
 
-        const selectorResult = ctx.args.get('target');
-        if (!selectorResult) throw new CommandError("\x1b[33m<target> is required");
-
-        const itemResult = ctx.args.get('item');
-        if (!itemResult) throw new CommandError("\x1b[33m<item> is required");
-
-        const selector = selectorResult.result;
-        if (!(selector instanceof EntitySelector)) {
-            throw new CommandError('Not a entity selector');
-        }
-
-        const item = Registries.ITEM.getById(itemResult.result);
+        const selector = CommandUtil.assertSelector(ctx, 'target');
+        const itemId = CommandUtil.assert<T, Identifier>(ctx, 'item');
+        const item = Registries.ITEM.getById(itemId);
         if (!item) {
-            throw new CommandError(`\x1b[33mItem was not found with ID: "${itemResult.result}"`);
+            throw new CommandError(`\x1b[33mItem was not found with ID: "${itemId}"`);
         }
 
         const entities = selector.getEntities(ctx.source);
         for (const entity of entities) {
             if (!(entity instanceof ServerPlayerEntity)) continue;
+
             const stack = entity.getItem(item);
             if (stack.isEmpty()) {
                 entity.addItem(item);
@@ -63,7 +53,7 @@ export class GiveCommand {
                 stack.increment(1);
                 entity.syncStack(stack);
             }
-            entity.sendMessage(`Give item "${itemResult.result}" to ${entity.profile().name}`);
+            entity.sendMessage(`Give item "${itemId}" to ${entity.profile().name}`);
         }
     }
 }

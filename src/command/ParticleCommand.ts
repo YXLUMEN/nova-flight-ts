@@ -32,11 +32,9 @@ export class ParticleCommand {
         const world = ctx.source.getWorld() as ClientWorld | null;
         if (!world) return;
 
-        const particleId = ctx.args.get('particle_id');
-        if (!particleId) throw new CommandError("\x1b[33m<music_id> is required");
-
-        const particleType = Registries.PARTICLES.getById(particleId.result);
-        if (!particleType) throw new CommandError(`Particle type ${particleId.result} is not registered`);
+        const particleId = CommandUtil.assert<T, Identifier>(ctx, 'particle_id');
+        const particleType = Registries.PARTICLES.getById(particleId);
+        if (!particleType) throw new CommandError(`Particle type ${particleId} is not registered`);
 
         const count = ctx.args.get('count')?.result;
         const pos = ctx.source.getClient().input.getWorldPointer();

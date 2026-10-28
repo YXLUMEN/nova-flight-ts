@@ -1,9 +1,10 @@
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
+import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import {CommandError} from "../type/errors.ts";
 import {EntitySelectorArgumentType} from "./argument/EntitySelectorArgumentType.ts";
 import {EntitySelector} from "./EntitySelector.ts";
+import {CommandUtil} from "./CommandUtil.ts";
 
 export class KillCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -12,17 +13,10 @@ export class KillCommand {
                 .then(
                     argument<T, EntitySelector>('selector', EntitySelectorArgumentType.entities())
                         .executes(ctx => {
-                            const world = ctx.source.getWorld();
-                            if (!world) throw new CommandError("No world was found.");
+                            const world = CommandUtil.assertWorld(ctx);
                             if (world.isClient) return;
 
-                            const selectorResult = ctx.args.get('selector');
-                            if (!selectorResult) throw new CommandError("\x1b[33m<selector> is required");
-
-                            const selector = selectorResult.result;
-                            if (!(selector instanceof EntitySelector)) {
-                                throw new CommandError('Not a entity selector');
-                            }
+                            const selector = CommandUtil.assertSelector(ctx, 'selector');
 
                             let count = 0;
                             const entities = selector.getEntities(ctx.source);

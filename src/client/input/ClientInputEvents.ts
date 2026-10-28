@@ -7,7 +7,6 @@ import {app} from "../../lib.ts";
 import {isDev, RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import {DataLoader} from "../../resource/DataLoader.ts";
-import {Main2WorkerType} from "../../worker/WorkerMsgType.ts";
 import {BitFlag} from "../../utils/BitFlag.ts";
 import {DebugFlag} from "../render/DebugRenderer.ts";
 import {InputBindings} from "./InputBindings.ts";
@@ -77,7 +76,7 @@ export class ClientInputEvents {
                 }
             }
             if (client.player?.isDevMode() && world) {
-                this.devFunc(client, code);
+                devFunc(client, code);
             }
             if (event.shiftKey && code === 'KeyP') {
                 void DataLoader.reloadModel(client.registryManager);
@@ -134,41 +133,6 @@ export class ClientInputEvents {
         }
     }
 
-    private static devFunc(client: NovaFlightClient, code: string): void {
-        const player = client.player;
-        if (!player) return;
-
-        const worker = client.getServerWorker();
-        switch (code) {
-            case 'KeyH':
-                player.setHealth(player.getMaxHealth());
-                break;
-            case 'KeyO':
-                player.getTechs().unlockAll();
-                break;
-            case 'NumpadSubtract': {
-                RuntimeConfig.enableCameraOffset = !RuntimeConfig.enableCameraOffset;
-                // @ts-expect-error Actually it's MutVec2
-                client.window.camera.cameraOffset.set(0, 0);
-                break;
-            }
-            case 'NumpadMultiply': {
-                RuntimeConfig.crosshairRecoil = !RuntimeConfig.crosshairRecoil;
-                break;
-            }
-            case 'KeyP':
-                localStorage.removeItem('guided');
-                break;
-            case 'KeyC':
-                worker?.post({m2w: Main2WorkerType.CD_ALL});
-                break;
-            case 'KeyU':
-                const pos = client.input.getWorldPointer().toImmut();
-                client.connection.send(new RequestTeleportC2SPacket(pos));
-                break;
-        }
-    }
-
     private static windowEvents(client: NovaFlightClient) {
         let blurDisable: Consumer<void> = empty;
 
@@ -193,5 +157,37 @@ export class ClientInputEvents {
                 minimizedDisable = empty;
             }
         }).catch(console.error);
+    }
+}
+
+function devFunc(client: NovaFlightClient, code: string): void {
+    const player = client.player;
+    if (!player) return;
+
+    const worker = client.getServerWorker();
+    switch (code) {
+        case 'KeyH':
+            worker?.post({dev: 'health'});
+            break;
+        case 'NumpadSubtract': {
+            RuntimeConfig.enableCameraOffset = !RuntimeConfig.enableCameraOffset;
+            // @ts-expect-error Actually it's MutVec2
+            client.window.camera.cameraOffset.set(0, 0);
+            break;
+        }
+        case 'NumpadMultiply': {
+            RuntimeConfig.crosshairRecoil = !RuntimeConfig.crosshairRecoil;
+            break;
+        }
+        case 'KeyP':
+            client.networkHandler.sendCommand('/kill @e[type=!target_drone]');
+            break;
+        case 'KeyC':
+            worker?.post({dev: 'cd_all'});
+            break;
+        case 'KeyU':
+            const pos = client.input.getWorldPointer().toImmut();
+            client.connection.send(new RequestTeleportC2SPacket(pos));
+            break;
     }
 }

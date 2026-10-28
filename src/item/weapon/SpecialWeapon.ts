@@ -1,10 +1,10 @@
+import type {World} from "../../world/World.ts";
+import type {Entity} from "../../entity/Entity.ts";
+import type {ItemStack} from "../ItemStack.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
 import {Weapon} from "./Weapon.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
-import {type World} from "../../world/World.ts";
-import {type Entity} from "../../entity/Entity.ts";
-import {type ItemStack} from "../ItemStack.ts";
 import {DataComponents} from "../../component/DataComponents.ts";
-import {isClient} from "../../configs/RuntimeConfig.ts";
 
 export abstract class SpecialWeapon extends Weapon {
     public override inventoryTick(stack: ItemStack, world: World, _holder: Entity) {

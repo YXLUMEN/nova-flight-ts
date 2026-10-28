@@ -3,43 +3,50 @@ import {TranslatableText} from "../../i18n/TranslatableText.ts";
 import {ClientTech} from "./ClientTech.ts";
 
 export class ClientTechBuilder extends TechBuilder {
-    private _desc: string = '';
+    private desc_: string = '';
 
-    private _x: number = 0;
-    private _y: number = 0;
-    private _drawExcept: string[] | null = null;
+    private x_: number = 0;
+    private y_: number = 0;
+    private drawExcept_: string[] | null = null;
+    private branchColor_: string | null = null;
 
     public desc(desc: string) {
-        this._desc = desc;
+        this.desc_ = desc;
         return this;
     }
 
     public x(x: number) {
-        this._x = x;
+        this.x_ = x;
         return this;
     }
 
     public y(y: number) {
-        this._y = y;
+        this.y_ = y;
         return this;
     }
 
     public drawExcept(except: string[] | null) {
-        this._drawExcept = except;
+        this.drawExcept_ = except;
+        return this;
+    }
+
+    public branchColor(color: string | null) {
+        this.branchColor_ = color;
         return this;
     }
 
     public override build() {
         return new ClientTech(
-            TranslatableText.of(this._name),
-            TranslatableText.of(this._desc),
-            this._cost,
-            this._x,
-            this._y,
-            this._drawExcept,
-            this._requires,
-            this._conflicts,
-            this._branchGroup
+            TranslatableText.of(this.name_),
+            TranslatableText.of(this.desc_),
+            this.cost_,
+            this.x_,
+            this.y_,
+            this.drawExcept_,
+            this.requires_,
+            this.conflicts_,
+            this.branchGroup_,
+            this.branchColor_,
         );
     }
 }

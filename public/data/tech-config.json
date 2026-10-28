@@ -1,0 +1,11 @@
+{
+  "branch_color": {
+    "point_defense": "#fff",
+    "guidance": "#ebc876",
+    "heavy_upgrade": "#d6650f",
+    "apex_upgrade": "#eb4a44",
+    "emp_radius": "#6068d6",
+    "void_duration": "#872dd6",
+    "directional_control": "#fff"
+  }
+}

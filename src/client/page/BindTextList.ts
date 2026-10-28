@@ -9,7 +9,9 @@ export class BindTextList {
     }
 
     public add(element: HTMLElement, text: TranslatableText | string) {
-        this.binds.push(new TextElement(element, text));
+        const bind = new TextElement(element, text);
+        this.binds.push(bind);
+        return bind;
     }
 
     public addBind(bind: TextElement) {
