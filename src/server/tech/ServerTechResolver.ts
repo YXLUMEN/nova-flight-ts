@@ -1,7 +1,6 @@
-import type {TechBuilder} from "../../world/tech/TechBuilder.ts";
 import type {RawTech} from "../../type/ITech.ts";
 import {TechResolver} from "../../world/tech/TechResolver.ts";
-import {ClientTechBuilder} from "../../client/tech/ClientTechBuilder.ts";
+import {TechBuilder} from "../../world/tech/TechBuilder.ts";
 import {WorkerFS} from "../../worker/fs.ts";
 
 export class ServerTechResolver extends TechResolver {
@@ -25,7 +24,7 @@ export class ServerTechResolver extends TechResolver {
             }
 
             const rawTech = item as RawTech;
-            const builder = new ClientTechBuilder();
+            const builder = new TechBuilder();
             const id = this.buildGeneral(rawTech, builder);
             this.out.set(id, builder);
         }
