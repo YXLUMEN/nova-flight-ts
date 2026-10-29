@@ -112,6 +112,7 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
     public setItem(slot: number, stack: ItemStack): void {
         if (!this.validateSlot(slot)) return;
 
+        this.removeItem(slot);
         this.inventory.set(slot, stack);
         if (stack.isEmpty()) {
             this.items.delete(stack.getItem());

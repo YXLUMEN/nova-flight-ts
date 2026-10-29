@@ -3,10 +3,6 @@
  *
  * 运行方式：npm run dev 后访问 /browser-test/render_cache/cache.browser.html
  *
- * 为什么不在 test/ 下：Node 的测试运行器默认会发现 test/ 目录下的所有 .ts（含子目录），
- * 而这里的用例在 Node 下必崩（没有 ImageBitmap）。浏览器测试与 Node 测试从目录上分开，
- * npm test 因此不需要任何"排除某个文件"的规则。
- *
  * 覆盖点：
  *  - SingleCache  : key 无关、只构建一次、clear 释放
  *  - DoubleRenderCache : boolean 双槽独立、各构建一次

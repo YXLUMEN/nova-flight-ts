@@ -11,6 +11,10 @@ import {ClientStartup} from "./client/ClientStartup.ts";
 export const app = new Window('main');
 
 export async function run() {
+    const close = await app.once('save_before_close', () => {
+        invoke('confirm_save_done');
+    });
+
     const ctrl = new AbortController();
     preventEvents(ctrl.signal);
 
@@ -31,6 +35,7 @@ export async function run() {
         const client = startup.buildClient();
         ctrl.abort();
 
+        close();
         await app.once('save_before_close', async () => {
             const mapErr = (e: any) => {
                 console.error(e);

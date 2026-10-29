@@ -52,6 +52,11 @@ export class ServerTechUtil {
             const base = stack.get(DataComponents.MAX_HEAT);
             if (base) stack.set(DataComponents.MAX_HEAT, Math.ceil(base * 1.5));
         }
+
+        if (tech.isUnlocked(Techs.HIGH_EFFICIENCY_COOLANT)) {
+            const base = stack.get(DataComponents.COOLDOWN_RATE);
+            if (base) stack.set(DataComponents.COOLDOWN_RATE, base * 2);
+        }
     }
 }
 

@@ -135,12 +135,12 @@ describe("核心行布局", () => {
     it("单个 buffer 由 f32 / u32 双视图共享，行宽 13 槽", () => {
         const store = storeOf(new ParticlePool(8));
 
-        assert.equal(store.cap, 8);
-        assert.equal(store.f32.length, 8 * ROW_SLOTS);
-        assert.equal(store.u32.length, 8 * ROW_SLOTS);
-        assert.equal(store.meta.length, 8);
-        assert.equal(store.f32.buffer, store.u32.buffer, "两个视图必须挂在同一块 ArrayBuffer 上");
-        assert.equal(store.f32.byteLength, 8 * ROW_SLOTS * 4);
+        assert.strictEqual(store.cap, 8);
+        assert.strictEqual(store.f32.length, 8 * ROW_SLOTS);
+        assert.strictEqual(store.u32.length, 8 * ROW_SLOTS);
+        assert.strictEqual(store.meta.length, 8);
+        assert.strictEqual(store.f32.buffer, store.u32.buffer, "两个视图必须挂在同一块 ArrayBuffer 上");
+        assert.strictEqual(store.f32.byteLength, 8 * ROW_SLOTS * 4);
     });
 
     it("spawnResolve 按槽位写入，返回槽位下标", () => {
@@ -149,7 +149,7 @@ describe("核心行布局", () => {
         const store = storeOf(pool);
         const b = i * ROW_SLOTS;
 
-        assert.equal(i, 0);
+        assert.strictEqual(i, 0);
 
         assert.closeTo(store.f32[b + P.CX], 10, 1e-4);
         assert.closeTo(store.f32[b + P.CY], 20, 1e-4);
@@ -158,10 +158,10 @@ describe("核心行布局", () => {
         assert.closeTo(store.f32[b + P.SIZE], 3, 1e-4);
         assert.closeTo(store.f32[b + P.REC], 0.4, 1e-4);
 
-        assert.equal(store.u32[b + P.AGE], 0, "age 从 0 开始");
-        assert.equal(store.u32[b + P.LIFE], 10);
-        assert.equal(store.u32[b + P.C0], 0xFF00FFFF);
-        assert.equal(store.u32[b + P.C1], 0x00FF00FF);
+        assert.strictEqual(store.u32[b + P.AGE], 0, "age 从 0 开始");
+        assert.strictEqual(store.u32[b + P.LIFE], 10);
+        assert.strictEqual(store.u32[b + P.C0], 0xFF00FFFF);
+        assert.strictEqual(store.u32[b + P.C1], 0x00FF00FF);
     });
 
     it("px / py 初始化为出生点（首帧插值不产生位移）", () => {
@@ -170,8 +170,8 @@ describe("核心行布局", () => {
         const store = storeOf(pool);
         const b = i * ROW_SLOTS;
 
-        assert.equal(store.f32[b + P.PX], 7);
-        assert.equal(store.f32[b + P.PY], -3);
+        assert.strictEqual(store.f32[b + P.PX], 7);
+        assert.strictEqual(store.f32[b + P.PY], -3);
     });
 
     it("shape 落在 meta 低 3 位，属性位从第 4 位起", () => {
@@ -182,19 +182,19 @@ describe("核心行布局", () => {
         pool.spawnResolve(0, 0, 0, 0, 10, 1, RECT, WHITE);
         pool.spawnResolve(0, 0, 0, 0, 10, 1, TRIANGLE, WHITE);
 
-        assert.equal(store.meta[0], 0);
-        assert.equal(store.meta[1], 1);
-        assert.equal(store.meta[2], 2);
-        for (let i = 0; i < 3; i++) assert.equal(store.meta[i] & ~SHAPE_MASK, 0, "无属性时高位必须为 0");
+        assert.strictEqual(store.meta[0], 0);
+        assert.strictEqual(store.meta[1], 1);
+        assert.strictEqual(store.meta[2], 2);
+        for (let i = 0; i < 3; i++) assert.strictEqual(store.meta[i] & ~SHAPE_MASK, 0, "无属性时高位必须为 0");
     });
 
     it("池满时返回 -1，且不覆盖已有粒子", () => {
         const pool = new ParticlePool(1);
         const store = storeOf(pool);
 
-        assert.equal(pool.spawnResolve(1, 1, 0, 0, 10, 1, CIRCLE, WHITE), 0);
-        assert.equal(pool.spawnResolve(2, 2, 0, 0, 10, 1, CIRCLE, WHITE), -1);
-        assert.equal(store.active, 1);
+        assert.strictEqual(pool.spawnResolve(1, 1, 0, 0, 10, 1, CIRCLE, WHITE), 0);
+        assert.strictEqual(pool.spawnResolve(2, 2, 0, 0, 10, 1, CIRCLE, WHITE), -1);
+        assert.strictEqual(store.active, 1);
         assert.closeTo(store.f32[P.CX], 1, 1e-6);
     });
 
@@ -206,13 +206,13 @@ describe("核心行布局", () => {
         const tooBig = 8 as unknown as ParticleShape;
         const negative = -1 as unknown as ParticleShape;
 
-        assert.equal(pool.spawnResolve(0, 0, 0, 0, 10, 1, tooBig, WHITE), 0, "越界仍生成粒子");
-        assert.equal(store.meta[0], RECT);
+        assert.strictEqual(pool.spawnResolve(0, 0, 0, 0, 10, 1, tooBig, WHITE), 0, "越界仍生成粒子");
+        assert.strictEqual(store.meta[0], RECT);
 
-        assert.equal(pool.spawnResolve(0, 0, 0, 0, 10, 1, negative, WHITE), 1, "负数仍生成粒子");
-        assert.equal(store.meta[1], RECT);
+        assert.strictEqual(pool.spawnResolve(0, 0, 0, 0, 10, 1, negative, WHITE), 1, "负数仍生成粒子");
+        assert.strictEqual(store.meta[1], RECT);
 
-        assert.equal(store.verifyAccounting(), null);
+        assert.strictEqual(store.verifyAccounting(), null);
     });
 });
 
@@ -224,10 +224,10 @@ describe("外挂属性（值型 / 标记型）", () => {
         const i = pool.spawnResolve(0, 0, 0, 0, 10, 1, TRIANGLE, WHITE, WHITE, 0.5, 0.6, 1.2);
         const store = storeOf(pool);
 
-        assert.equal(store.meta[i], TRIANGLE | BIT_ROT, "acc 不是外挂属性，不占 meta 位");
-        assert.equal(store.mask, BIT_ROT);
+        assert.strictEqual(store.meta[i], TRIANGLE | BIT_ROT, "acc 不是外挂属性，不占 meta 位");
+        assert.strictEqual(store.mask, BIT_ROT);
         assert.closeTo(store.read(i, ATTR_ROT), 1.2, 1e-6);
-        assert.equal(store.countOf(ATTR_ROT), 1);
+        assert.strictEqual(store.countOf(ATTR_ROT), 1);
         assert.closeTo(store.f32[i * ROW_SLOTS + P.ACC], 0.5, 1e-6, "acc 直接写进核心行");
     });
 
@@ -236,11 +236,11 @@ describe("外挂属性（值型 / 标记型）", () => {
         pool.spawnResolve(0, 0, 0, 0, 10, 1, CIRCLE, WHITE);
         const store = storeOf(pool);
 
-        assert.equal(store.meta[0], CIRCLE);
-        assert.equal(store.mask, 0, "池级 mask 为 0：整段可选逻辑可以跳过");
+        assert.strictEqual(store.meta[0], CIRCLE);
+        assert.strictEqual(store.mask, 0, "池级 mask 为 0：整段可选逻辑可以跳过");
         assert.isNull(store.peek(ATTR_ROT), "rot 列未分配");
         assert.isNull(store.peek(ATTR_GRAVITY), "标记型属性同样没有列");
-        assert.equal(store.f32[P.ACC], 1, "acc 缺省为 1（不衰减）");
+        assert.strictEqual(store.f32[P.ACC], 1, "acc 缺省为 1（不衰减）");
     });
 
     it("重复 attach 不会让持有点数翻倍", () => {
@@ -251,9 +251,9 @@ describe("外挂属性（值型 / 标记型）", () => {
         store.attach(i, ATTR_ROT, 1.5);
         store.attach(i, ATTR_ROT, 2.5);
 
-        assert.equal(store.countOf(ATTR_ROT), 1);
+        assert.strictEqual(store.countOf(ATTR_ROT), 1);
         assert.closeTo(store.read(i, ATTR_ROT), 2.5, 1e-6, "后写的值覆盖先写的");
-        assert.equal(store.mask, BIT_ROT);
+        assert.strictEqual(store.mask, BIT_ROT);
     });
 
     it("tag 是标记型：置位但不分配数据列", () => {
@@ -263,10 +263,10 @@ describe("外挂属性（值型 / 标记型）", () => {
 
         store.tag(i, ATTR_GRAVITY);
 
-        assert.equal(store.meta[i] & BIT_GRAVITY, BIT_GRAVITY);
-        assert.equal(store.mask, BIT_GRAVITY);
+        assert.strictEqual(store.meta[i] & BIT_GRAVITY, BIT_GRAVITY);
+        assert.strictEqual(store.mask, BIT_GRAVITY);
         assert.isNull(store.peek(ATTR_GRAVITY), "标记型属性没有列");
-        assert.equal(store.read(i, ATTR_GRAVITY), 0, "无列时读回 0");
+        assert.strictEqual(store.read(i, ATTR_GRAVITY), 0, "无列时读回 0");
     });
 
     it("detach 销账到 0 时池级 mask 归零；未持有则空操作", () => {
@@ -275,13 +275,13 @@ describe("外挂属性（值型 / 标记型）", () => {
         const store = storeOf(pool);
 
         store.detach(i, ATTR_ROT);
-        assert.equal(store.countOf(ATTR_ROT), 0);
-        assert.equal(store.mask, 0);
-        assert.equal(store.read(i, ATTR_ROT), 0, "位清了就读不到，哪怕列里还有旧值");
+        assert.strictEqual(store.countOf(ATTR_ROT), 0);
+        assert.strictEqual(store.mask, 0);
+        assert.strictEqual(store.read(i, ATTR_ROT), 0, "位清了就读不到，哪怕列里还有旧值");
 
         store.detach(i, ATTR_ROT);
-        assert.equal(store.countOf(ATTR_ROT), 0, "重复 detach 不得把计数打成负数");
-        assert.equal(store.verifyAccounting(), null);
+        assert.strictEqual(store.countOf(ATTR_ROT), 0, "重复 detach 不得把计数打成负数");
+        assert.strictEqual(store.verifyAccounting(), null);
     });
 
     it("verifyAccounting 能发现手工改 meta 造成的记账漂移", () => {
@@ -289,7 +289,7 @@ describe("外挂属性（值型 / 标记型）", () => {
         pool.spawnResolve(0, 0, 0, 0, 10, 1, CIRCLE, WHITE);
         const store = storeOf(pool);
 
-        assert.equal(store.verifyAccounting(), null);
+        assert.strictEqual(store.verifyAccounting(), null);
         store.meta[0] |= BIT_ROT;
         assert.isString(store.verifyAccounting(), "只改 meta 不记账，校验应报错");
     });
@@ -307,7 +307,7 @@ describe("tick：寿命 / 阻尼 / 积分（integrate 按 tick 推进，不乘 d
         pool.tick(0.05);
         pool.tick(0.05);
 
-        for (let i = 0; i < 3; i++) assert.equal(store.u32[i * ROW_SLOTS + P.AGE], 3);
+        for (let i = 0; i < 3; i++) assert.strictEqual(store.u32[i * ROW_SLOTS + P.AGE], 3);
     });
 
     it("有阻尼时速度先衰减再积分，px/py 保留上一帧位置", () => {
@@ -318,7 +318,7 @@ describe("tick：寿命 / 阻尼 / 积分（integrate 按 tick 推进，不乘 d
         const store = storeOf(pool);
         const b = 0;
 
-        assert.equal(store.u32[b + P.AGE], 1);
+        assert.strictEqual(store.u32[b + P.AGE], 1);
         assert.closeTo(store.f32[b + P.VX], 0.5, 1e-6, "vx = 1 * (1 - 0.5)");
         assert.closeTo(store.f32[b + P.VY], 1, 1e-6, "vy = 2 * 0.5");
         assert.closeTo(store.f32[b + P.PX], 10, 1e-6, "px 是上一帧的 cx");
@@ -343,7 +343,7 @@ describe("tick：寿命 / 阻尼 / 积分（integrate 按 tick 推进，不乘 d
         const store = storeOf(pool);
 
         pool.tick(0.05);
-        assert.equal(store.active, 0);
+        assert.strictEqual(store.active, 0);
     });
 });
 
@@ -355,17 +355,17 @@ describe("tick：swap-remove 搬运", () => {
         pool.spawnResolve(3, 3, 0, 0, 100, 1, TRIANGLE, WHITE, WHITE, 0, 0.6, 0.7);  // 2 号：带 rot
         const store = storeOf(pool);
 
-        assert.equal(store.mask, BIT_ROT);
+        assert.strictEqual(store.mask, BIT_ROT);
 
         pool.tick(0.05);
 
-        assert.equal(store.active, 2);
+        assert.strictEqual(store.active, 2);
         assert.closeTo(store.f32[P.CX], 3, 1e-6, "2 号搬到 0 号槽");
-        assert.equal(store.meta[0], TRIANGLE | BIT_ROT, "meta 跟着搬");
-        assert.equal(store.meta[1], CIRCLE, "1 号不受影响");
+        assert.strictEqual(store.meta[0], TRIANGLE | BIT_ROT, "meta 跟着搬");
+        assert.strictEqual(store.meta[1], CIRCLE, "1 号不受影响");
         assert.closeTo(store.read(0, ATTR_ROT), 0.7, 1e-6, "rot 值跟着搬");
-        assert.equal(store.countOf(ATTR_ROT), 1, "搬运不改变持有点数");
-        assert.equal(store.verifyAccounting(), null);
+        assert.strictEqual(store.countOf(ATTR_ROT), 1, "搬运不改变持有点数");
+        assert.strictEqual(store.verifyAccounting(), null);
     });
 
     it("被搬到空洞里的粒子本帧不会被重复推进 age", () => {
@@ -377,8 +377,8 @@ describe("tick：swap-remove 搬运", () => {
 
         pool.tick(0.05);
 
-        assert.equal(store.u32[P.AGE], 1, "顶替者本帧只应推进一次");
-        assert.equal(store.u32[ROW_SLOTS + P.AGE], 1);
+        assert.strictEqual(store.u32[P.AGE], 1, "顶替者本帧只应推进一次");
+        assert.strictEqual(store.u32[ROW_SLOTS + P.AGE], 1);
     });
 
     it("最后一个粒子死亡（index === last）时池级 mask 也要归零", () => {
@@ -386,12 +386,12 @@ describe("tick：swap-remove 搬运", () => {
         pool.spawnResolve(0, 0, 0, 0, 1, 1, TRIANGLE, WHITE, WHITE, 0, 0.6, 1.5);
         const store = storeOf(pool);
 
-        assert.equal(store.mask, BIT_ROT);
+        assert.strictEqual(store.mask, BIT_ROT);
         pool.tick(0.05);
 
-        assert.equal(store.active, 0);
-        assert.equal(store.mask, 0);
-        assert.equal(store.verifyAccounting(), null);
+        assert.strictEqual(store.active, 0);
+        assert.strictEqual(store.mask, 0);
+        assert.strictEqual(store.verifyAccounting(), null);
     });
 });
 
@@ -407,11 +407,11 @@ describe("system 调度与池级门控", () => {
         pool.registerSystem({bit: BIT_GRAVITY, tick: () => void calls++});
 
         pool.tick(0.1);
-        assert.equal(calls, 0, "池级 mask 为 0，整段跳过");
+        assert.strictEqual(calls, 0, "池级 mask 为 0，整段跳过");
 
         store.tag(0, ATTR_GRAVITY);
         pool.tick(0.1);
-        assert.equal(calls, 1, "有粒子持有时才调度");
+        assert.strictEqual(calls, 1, "有粒子持有时才调度");
     });
 
     it("GravitySystem 只影响带 GRAVITY 位的粒子", () => {
@@ -421,7 +421,7 @@ describe("system 调度与池级门控", () => {
         const heavy = pool.spawnResolve(0, 0, 0, 0, 100, 1, CIRCLE, WHITE);
         store.tag(heavy, ATTR_GRAVITY);
         const gravity = new ParticleGravitySystem(0, 100);
-        assert.equal(gravity.bit, BIT_GRAVITY, "system 的门控位必须与 attrBit(GRAVITY) 一致");
+        assert.strictEqual(gravity.bit, BIT_GRAVITY, "system 的门控位必须与 attrBit(GRAVITY) 一致");
         pool.registerSystem(gravity);
 
         pool.tick(0.1);
@@ -445,7 +445,7 @@ describe("system 调度与池级门控", () => {
         pool.tick(0.1);
 
         assert.closeTo(store.f32[i * ROW_SLOTS + P.VY], 100, 1e-6, "速度不再增加");
-        assert.equal(store.meta[i] & BIT_GRAVITY, BIT_GRAVITY);
+        assert.strictEqual(store.meta[i] & BIT_GRAVITY, BIT_GRAVITY);
     });
 });
 
@@ -457,14 +457,14 @@ describe("spawn 批量发射", () => {
         const store = storeOf(poolOf(engine));
 
         engine.spawn(effectType(), 0, 0, 100);
-        assert.equal(store.active, 16);
+        assert.strictEqual(store.active, 16);
     });
 
     it("count <= 0 时不生成", () => {
         const engine = new ParticleEngine(8);
         engine.spawn(effectType(), 0, 0, 0);
         engine.spawn(effectType(), 0, 0, -3);
-        assert.equal(storeOf(poolOf(engine)).active, 0);
+        assert.strictEqual(storeOf(poolOf(engine)).active, 0);
     });
 
     it("整批共享出生点、寿命与尺寸", () => {
@@ -473,14 +473,14 @@ describe("spawn 批量发射", () => {
 
         engine.spawn(effectType({lifeMin: 5, lifeMax: 5, sizeMin: 2, sizeMax: 2}), 3, 4, 4);
 
-        assert.equal(store.active, 4);
+        assert.strictEqual(store.active, 4);
         for (let i = 0; i < 4; i++) {
             const b = i * ROW_SLOTS;
             assert.closeTo(store.f32[b + P.CX], 3, 1e-6);
             assert.closeTo(store.f32[b + P.CY], 4, 1e-6);
             assert.closeTo(store.f32[b + P.SIZE], 2, 1e-6);
-            assert.equal(store.u32[b + P.LIFE], 5);
-            assert.equal(store.u32[b + P.AGE], 0);
+            assert.strictEqual(store.u32[b + P.LIFE], 5);
+            assert.strictEqual(store.u32[b + P.AGE], 0);
         }
     });
 
@@ -490,7 +490,7 @@ describe("spawn 批量发射", () => {
 
         engine.spawn(effectType({shape: CIRCLE, rotMin: 1, rotMax: 2}), 0, 0, 4);
 
-        assert.equal(store.mask, 0);
+        assert.strictEqual(store.mask, 0);
         assert.isNull(store.peek(ATTR_ROT), "圆不需要 rot 列");
     });
 
@@ -500,9 +500,9 @@ describe("spawn 批量发射", () => {
 
         engine.spawn(effectType({shape: TRIANGLE, rotMin: 0.3, rotMax: 0.3}), 0, 0, 4);
 
-        assert.equal(store.mask, BIT_ROT);
+        assert.strictEqual(store.mask, BIT_ROT);
         for (let i = 0; i < 4; i++) {
-            assert.equal(store.meta[i] & BIT_ROT, BIT_ROT);
+            assert.strictEqual(store.meta[i] & BIT_ROT, BIT_ROT);
             assert.closeTo(store.read(i, ATTR_ROT), 0.3, 1e-6);
         }
     });
@@ -518,8 +518,8 @@ describe("spawn 批量发射", () => {
             traits: [{attr: ATTR_ROT, value: 2}]
         }), 0, 0, 3, 0);
 
-        assert.equal(store.mask, BIT_ROT);
-        assert.equal(store.countOf(ATTR_ROT), 3, "覆盖不增加持有点数");
+        assert.strictEqual(store.mask, BIT_ROT);
+        assert.strictEqual(store.countOf(ATTR_ROT), 3, "覆盖不增加持有点数");
         for (let i = 0; i < 3; i++) {
             assert.closeTo(store.read(i, ATTR_ROT), 2, 1e-6, "traits 优先于出生参数");
         }
@@ -529,9 +529,9 @@ describe("spawn 批量发射", () => {
         const pool = new ParticlePool(8);
         const store = storeOf(pool);
 
-        assert.equal(pool.spawnResolve(0, 0, 0, 0, 0, 1, CIRCLE, WHITE), -1);
-        assert.equal(store.active, 0);
-        assert.equal(store.mask, 0);
+        assert.strictEqual(pool.spawnResolve(0, 0, 0, 0, 0, 1, CIRCLE, WHITE), -1);
+        assert.strictEqual(store.active, 0);
+        assert.strictEqual(store.mask, 0);
     });
 });
 
@@ -543,8 +543,8 @@ describe("spawnRaw：颜色编码", () => {
         const store = storeOf(poolOf(engine));
 
         const i = engine.spawnRaw(0, 0, 0, 0, 10, 1, CIRCLE, "#ff0000");
-        assert.equal(store.u32[i * ROW_SLOTS + P.C0], 0xFF0000FF);
-        assert.equal(store.u32[i * ROW_SLOTS + P.C1], 0xFF0000FF, "colorTo 默认等于 colorFrom");
+        assert.strictEqual(store.u32[i * ROW_SLOTS + P.C0], 0xFF0000FF);
+        assert.strictEqual(store.u32[i * ROW_SLOTS + P.C1], 0xFF0000FF, "colorTo 默认等于 colorFrom");
     });
 
     it("#RGB 与 #RRGGBBAA 都支持", () => {
@@ -552,8 +552,8 @@ describe("spawnRaw：颜色编码", () => {
         const store = storeOf(poolOf(engine));
 
         const i = engine.spawnRaw(0, 0, 0, 0, 10, 1, CIRCLE, "#f00", "#00ff0080");
-        assert.equal(store.u32[i * ROW_SLOTS + P.C0], 0xFF0000FF);
-        assert.equal(store.u32[i * ROW_SLOTS + P.C1], 0x00FF0080);
+        assert.strictEqual(store.u32[i * ROW_SLOTS + P.C0], 0xFF0000FF);
+        assert.strictEqual(store.u32[i * ROW_SLOTS + P.C1], 0x00FF0080);
     });
 
     it("非法颜色串抛出（4 位既不是 #RGB 也不是 #RRGGBB）", () => {
@@ -574,18 +574,18 @@ describe("render：插值 / 收缩 / 旋转门控", () => {
         pool.render(ctx, 0.5);
 
         assert.deepEqual(calls, ["drawImage"]);
-        assert.equal(draws.length, 1);
+        assert.strictEqual(draws.length, 1);
         // 一 tick 后 cx = 11、px = 10；x = lerp(0.5, 10, 11) = 10.5，左上角 = x - size
         assert.closeTo(draws[0].dx, 10.5 - 3, 1e-6);
         assert.closeTo(draws[0].dy, 20 - 3, 1e-6);
         assert.closeTo(draws[0].w, 6, 1e-6);
         assert.closeTo(draws[0].h, 6, 1e-6);
 
-        assert.equal(spriteState.calls.length, 1);
-        assert.equal(spriteState.calls[0].shape, CIRCLE);
+        assert.strictEqual(spriteState.calls.length, 1);
+        assert.strictEqual(spriteState.calls[0].shape, CIRCLE);
         assert.closeTo(spriteState.calls[0].size, 3, 1e-6);
-        assert.equal(spriteState.calls[0].c0, 0xFFFF00FF);
-        assert.equal(spriteState.calls[0].c1, 0xFF00FFFF);
+        assert.strictEqual(spriteState.calls[0].c0, 0xFFFF00FF);
+        assert.strictEqual(spriteState.calls[0].c1, 0xFF00FFFF);
     });
 
     it("size 随 recession 收缩", () => {
@@ -607,7 +607,7 @@ describe("render：插值 / 收缩 / 旋转门控", () => {
         pool.render(ctx, 0);
 
         assert.deepEqual(calls, []);
-        assert.equal(spriteState.calls.length, 0, "连贴图都不查");
+        assert.strictEqual(spriteState.calls.length, 0, "连贴图都不查");
     });
 
     it("没有旋转粒子时不进入 save/rotate 分支", () => {
@@ -639,7 +639,7 @@ describe("render：插值 / 收缩 / 旋转门控", () => {
         const i = pool.spawnResolve(0, 0, 0, 0, 10, 2, TRIANGLE, WHITE);
         store.tag(i, ATTR_ROT);
 
-        assert.equal(store.mask, BIT_ROT, "池级位是亮的");
+        assert.strictEqual(store.mask, BIT_ROT, "池级位是亮的");
         assert.isNull(store.peek(ATTR_ROT), "但没有列");
 
         const {ctx, calls} = makeCtx();
@@ -667,11 +667,11 @@ describe("reset / clearCache", () => {
         assert.notEqual(store.mask, 0);
         pool.reset();
 
-        assert.equal(store.active, 0);
-        assert.equal(store.mask, 0);
-        assert.equal(store.countOf(ATTR_ROT), 0);
-        assert.equal(store.countOf(ATTR_GRAVITY), 0);
-        assert.equal(store.verifyAccounting(), null);
+        assert.strictEqual(store.active, 0);
+        assert.strictEqual(store.mask, 0);
+        assert.strictEqual(store.countOf(ATTR_ROT), 0);
+        assert.strictEqual(store.countOf(ATTR_GRAVITY), 0);
+        assert.strictEqual(store.verifyAccounting(), null);
         assert.isNotNull(store.peek(ATTR_ROT), "列脏数据保留，只是读不到");
     });
 
@@ -683,10 +683,10 @@ describe("reset / clearCache", () => {
         const i = pool.spawnResolve(0, 0, 0, 0, 10, 1, CIRCLE, WHITE);
         const store = storeOf(pool);
 
-        assert.equal(i, 0);
-        assert.equal(store.meta[0], CIRCLE, "旧 shape 与旧属性位都必须被覆盖");
-        assert.equal(store.mask, 0);
-        assert.equal(store.verifyAccounting(), null);
+        assert.strictEqual(i, 0);
+        assert.strictEqual(store.meta[0], CIRCLE, "旧 shape 与旧属性位都必须被覆盖");
+        assert.strictEqual(store.mask, 0);
+        assert.strictEqual(store.verifyAccounting(), null);
     });
 
     it("clearCache 清空贴图缓存", () => {
@@ -694,6 +694,6 @@ describe("reset / clearCache", () => {
         const before = spriteState.clears;
 
         pool.clearCache();
-        assert.equal(spriteState.clears, before + 1);
+        assert.strictEqual(spriteState.clears, before + 1);
     });
 });
