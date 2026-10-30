@@ -5,11 +5,14 @@ import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {Attribute} from "../attribute/Attribute.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
 import type {LivingEntity} from "../LivingEntity.ts";
+import type {Codec} from "../../serialization/Codec.ts";
+import {Codecs} from "../../serialization/Codecs.ts";
 import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {AttributeModifier, Operation} from "../../component/type/AttributeModifier.ts";
 
 export class StatusEffect {
+    public static readonly CODEC: Codec<RegistryEntry<StatusEffect>> = Codecs.registry(Registries.STATUS_EFFECT);
     public static readonly ENTRY_PACKET_CODEC = PacketCodecs.registryEntry(Registries.STATUS_EFFECT);
 
     private readonly attributeModifiers: Map<RegistryEntry<Attribute>, EffectAttributeModifierCreator> = new Map();

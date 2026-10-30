@@ -45,6 +45,13 @@ export class Optional<T> {
         }
     }
 
+    public whenPresent(action: Consumer<T>): this {
+        if (this.value !== null) {
+            action(this.value);
+        }
+        return this;
+    }
+
     public ifPresentOrElse(action: Consumer<T>, emptyAction: CallableFunction): void {
         if (this.value !== null) {
             action(this.value);

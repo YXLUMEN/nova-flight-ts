@@ -16,14 +16,17 @@ export class OptionalFieldCodec<A> extends MapCodec<Optional<A>> {
         this.codec = codec;
     }
 
-    public encode(value: Optional<A>, prefix: NbtCompound): NbtCompound {
-        if (value.isPresent()) prefix.set(this.key, this.codec.encode(value.get()));
-        return prefix;
+    public encode(value: Optional<A>, prefix: NbtCompound): DataResult<NbtCompound> {
+        if (value.isEmpty()) return DataResult.ok(prefix);
+        return this.codec.encode(value.get()).map(v => {
+            prefix.set(this.key, v);
+            return prefix;
+        });
     }
 
     public decode(input: NbtCompound): DataResult<Optional<A>> {
         const element = input.get(this.key);
-        if (element == null) return DataResult.success(Optional.empty());
+        if (element == null) return DataResult.ok(Optional.empty());
         return this.codec.decode(element).map(v => Optional.of(v));
     }
 

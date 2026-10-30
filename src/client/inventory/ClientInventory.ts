@@ -1,6 +1,6 @@
 import type {UniqueInventory} from "../../entity/player/UniqueInventory.ts";
-import {ItemStack} from "../../item/ItemStack.ts";
 import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
+import {ItemStack} from "../../item/ItemStack.ts";
 import {PlayerInventorySwapC2SPacket} from "../../network/packet/c2s/PlayerInventorySwapC2SPacket.ts";
 import {InputBindings} from "../input/InputBindings.ts";
 

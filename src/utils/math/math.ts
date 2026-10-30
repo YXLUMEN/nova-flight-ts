@@ -124,3 +124,6 @@ export function toFixedTrim(num: number, digits: number = 2): number {
 
 export const TAU = Math.PI * 2;
 export const HALF_PI = Math.PI / 2;
+
+export const MIN_INT = -2147483648;
+export const MAX_INT = 2147483647;

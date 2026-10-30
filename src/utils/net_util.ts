@@ -1,5 +1,5 @@
 import type {HexColor} from "../type/types.ts";
-import {clamp, TAU, wrapRadians} from "./math/math.ts";
+import {clamp, MAX_INT, TAU, wrapRadians} from "./math/math.ts";
 
 const VELOCITY_SCALE = 32767 / 60.0;
 
@@ -50,11 +50,11 @@ export function decodeFromUnsignedByte(value: number, maxValue: number = 10): nu
 
 export function encodeToInt32(value: number, maxValue: number = 2e5): number {
     const clamped = clamp(value, -maxValue, maxValue);
-    return Math.round(clamped * (2147483647 / maxValue));
+    return Math.round(clamped * (MAX_INT / maxValue));
 }
 
 export function decodeFromInt32(value: number, maxValue: number = 2e5): number {
-    return (value * maxValue) / 2147483647;
+    return (value * maxValue) / MAX_INT;
 }
 
 /**

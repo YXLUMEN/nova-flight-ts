@@ -109,7 +109,7 @@ export class PlayerDataStorage {
 
         const {promise, resolve} = Promise.withResolvers<void | Error>();
         const store = tx.objectStore('player_data');
-        const range = IDBKeyRange.lowerBound([saveName]);
+        const range = IDBKeyRange.bound([saveName], [saveName, []], false, true);
 
         const request = store.openCursor(range);
         request.onsuccess = () => {

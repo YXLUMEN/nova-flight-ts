@@ -18,13 +18,18 @@ export class ComponentChanges {
                 if (type.codec === null || optional.isEmpty()) continue;
                 const id = Registries.DATA_COMPONENT_TYPE.getId(type);
                 if (!id) continue;
-                compound.set(id.toString(), type.codec.encode(optional.get()));
+
+                const result = type.codec.encode(optional.get());
+                result.resultOrPartial()
+                if (result.isOk()) {
+                    compound.set(id.toString(), result.unwrap());
+                }
             }
-            return compound;
+            return DataResult.ok(compound);
         },
         input => {
             if (!(input instanceof NbtCompound)) {
-                return DataResult.error(`Expected NbtCompound, got ${input.type()}`);
+                return DataResult.err(`Expected NbtCompound, got ${input.type()}`);
             }
             const map = new Map<DataComponentType<any>, Optional<any>>();
             for (const key of input.getKeys()) {
@@ -44,7 +49,7 @@ export class ComponentChanges {
                 if (value === null) continue;
                 map.set(type, Optional.of(value));
             }
-            return DataResult.success(new ComponentChanges(map));
+            return DataResult.ok(new ComponentChanges(map));
         }
     );
 

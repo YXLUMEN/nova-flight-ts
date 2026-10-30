@@ -9,7 +9,7 @@ export class TranslatableTextS2CPacket implements Payload {
     public static readonly CODEC: PacketCodec<TranslatableTextS2CPacket> = PacketCodecs.adapt2(
         PacketCodecs.STRING,
         val => val.key,
-        PacketCodecs.collection(PacketCodecs.STRING),
+        PacketCodecs.listOf(PacketCodecs.STRING),
         val => val.args,
         TranslatableTextS2CPacket.new
     );

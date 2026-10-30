@@ -4,6 +4,7 @@ import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {TechTree} from "../../world/tech/TechTree.ts";
 import type {Constructor} from "../../type/types.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {isClient} from "../../configs/RuntimeConfig.ts";
 import {World} from "../../world/World.ts";
 import {LivingEntity} from "../LivingEntity.ts";
@@ -24,7 +25,6 @@ import {PlayerDead} from "../../event/events/entity/PlayerDead.ts";
 import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {PlayerDamage} from "../../event/events/entity/PlayerDamage.ts";
-import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
 
 export abstract class PlayerEntity extends LivingEntity {

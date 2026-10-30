@@ -1,12 +1,9 @@
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {Attribute} from "./Attribute.ts";
-import type {AttributeInstance} from "./AttributeInstance.ts";
+import type {AttributeInstance, PackedAttr} from "./AttributeInstance.ts";
 import type {AttributeSupplier} from "./AttributeSupplier.ts";
 import {Identifier} from "../../registry/Identifier.ts";
-import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import {Registries} from "../../registry/Registries.ts";
 import type {AttributeModifier} from "../../component/type/AttributeModifier.ts";
-import {Log} from "../../worker/log.ts";
 
 export class AttributeMap {
     private readonly attributes: Map<RegistryEntry<Attribute>, AttributeInstance> = new Map();
@@ -112,32 +109,13 @@ export class AttributeMap {
         return this.attributes.entries();
     }
 
-    public toNbt(): NbtCompound[] {
-        const nbtList: NbtCompound[] = [];
-
-        for (const entityAttributeInstance of this.attributes.values()) {
-            nbtList.push(entityAttributeInstance.toNbt());
-        }
-
-        return nbtList;
+    public pack(): PackedAttr[] {
+        return this.attributes.values().map(v => v.pack()).toArray();
     }
 
-    public readNbt(nbtList: NbtCompound[]): void {
-        for (const nbt of nbtList) {
-            const id = Identifier.tryParse(nbt.getString('id'));
-            if (!id) continue;
-
-            const entry = Registries.ATTRIBUTE.getEntryById(id);
-            if (!entry) {
-                Log.warn(`Unknown attribute ${id}`);
-                continue;
-            }
-
-            const instance = this.getInstance(entry);
-            if (!instance) continue;
-
-            instance.readNbt(nbt);
-            this.onAttributeModified(instance);
+    public apply(packs: PackedAttr[]): void {
+        for (const pack of packs) {
+            this.getInstance(pack.attribute)?.apply(pack);
         }
     }
 }

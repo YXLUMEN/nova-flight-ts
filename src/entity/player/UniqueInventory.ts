@@ -1,17 +1,15 @@
 import type {Container} from "../../world/inventory/Container.ts";
 import type {Item} from "../../item/Item.ts";
-import {ItemStack} from "../../item/ItemStack.ts";
 import type {PlayerEntity} from "./PlayerEntity.ts";
-import {clamp} from "../../utils/math/math.ts";
 import type {NbtSerializable} from "../../nbt/NbtSerializable.ts";
+import {clamp} from "../../utils/math/math.ts";
+import {ItemStack} from "../../item/ItemStack.ts"
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {DefaultedList} from "../../utils/collection/DefaultedList.ts";
 import {NbtTypeId} from "../../nbt/NbtType.ts";
 
 export class UniqueInventory implements Container, NbtSerializable, Iterable<ItemStack> {
-    public static readonly INVENTORY_GRID_COLS = 6;
-    public readonly player: PlayerEntity;
-
+    private readonly player: PlayerEntity;
     private readonly inventory = DefaultedList.ofSizeAndValue(30, ItemStack.EMPTY);
     private readonly items = new Map<Item, ItemStack>();
 
@@ -222,7 +220,7 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
 
             const compound = new NbtCompound();
             compound.setInt8('slot', i);
-            compound.set('stack', ItemStack.CODEC.encode(stack));
+            compound.store('stack', ItemStack.CODEC, stack);
             inventory.push(compound);
         }
         nbt.setCompoundArray('inventory', inventory);

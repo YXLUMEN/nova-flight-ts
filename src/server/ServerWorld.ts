@@ -314,9 +314,7 @@ export class ServerWorld extends World implements NbtSerializable {
         });
         root.setCompoundArray('entities', entityList);
 
-        const stageNbt = new NbtCompound();
-        this.stage.writeNBT(stageNbt);
-        root.setCompound('stage', stageNbt);
+        this.stage.writeNBT(root);
         root.setUint32('phase_score', this.phase);
         root.setInt8('difficulty', this.getDifficulty());
 
@@ -331,8 +329,7 @@ export class ServerWorld extends World implements NbtSerializable {
         const entityNbt = nbt.getCompoundArray('entities');
         this.loadEntity(entityNbt);
 
-        const stageNbt = nbt.getCompound('stage');
-        if (stageNbt) this.stage.readNBT(stageNbt);
+        this.stage.readNBT(nbt);
         this.phase = nbt.getUint32('phase_score');
         this.setDifficulty(nbt.getInt8('difficulty', 1));
 

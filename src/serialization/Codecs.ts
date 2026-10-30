@@ -2,7 +2,16 @@ import type {Codec, Decoder, Encoder} from "./Codec.ts";
 import type {BoundField} from "./codec/BoundField.ts";
 import type {MapCodec} from "./MapCodec.ts";
 import type {Return} from "../type/types.ts";
+import type {Registry} from "../registry/Registry.ts";
+import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {DataResult} from "./DataResult.ts";
+import {CodecImpl} from "./codec/CodecImpl.ts";
+import {FieldCodec} from "./codec/FieldCodec.ts";
+import {OptionalFieldCodec} from "./codec/OptionalFieldCodec.ts";
+import {GroupBuilder} from "./codec/GroupBuilder.ts";
+import {ArrayCodec} from "./codec/ArrayCodec.ts";
+import {Identifier} from "../registry/Identifier.ts";
+import {Optional} from "../utils/Optional.ts";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {NbtInt8} from "../nbt/element/NbtInt8.ts";
 import {NbtInt16} from "../nbt/element/NbtInt16.ts";
@@ -17,125 +26,112 @@ import {NbtInt32Array} from "../nbt/element/NbtInt32Array.ts";
 import {NbtFloatArray} from "../nbt/element/NbtFloatArray.ts";
 import {NbtDoubleArray} from "../nbt/element/NbtDoubleArray.ts";
 import {NbtStringArray} from "../nbt/element/NbtStringArray.ts";
-import {NbtCompoundArray} from "../nbt/element/NbtCompoundArray.ts";
 import {NbtEnd} from "../nbt/element/NbtEnd.ts";
-import {CodecImpl} from "./codec/CodecImpl.ts";
-import {FieldCodec} from "./codec/FieldCodec.ts";
-import {OptionalFieldCodec} from "./codec/OptionalFieldCodec.ts";
-import {GroupBuilder} from "./codec/GroupBuilder.ts";
-import {Optional} from "../utils/Optional.ts";
-import {Vec2} from "../utils/math/Vec2.ts";
-
 
 export class Codecs {
     public static readonly INT8: Codec<number> = Codecs.of(
-        value => NbtInt8.of(value),
+        value => DataResult.ok(NbtInt8.of(value)),
         input => input instanceof NbtInt8
-            ? DataResult.success(input.value)
-            : DataResult.error(`Expected NbtInt8, got ${input.type()}`)
+            ? DataResult.ok(input.value)
+            : DataResult.err(`Expected NbtInt8, got ${input.type()}`)
     );
 
     public static readonly INT16: Codec<number> = Codecs.of(
-        value => NbtInt16.of(value),
+        value => DataResult.ok(NbtInt16.of(value)),
         input => input instanceof NbtInt16
-            ? DataResult.success(input.value)
-            : DataResult.error(`Expected NbtInt16, got ${input.type()}`)
+            ? DataResult.ok(input.value)
+            : DataResult.err(`Expected NbtInt16, got ${input.type()}`)
     );
 
     public static readonly INT32: Codec<number> = Codecs.of(
-        value => NbtInt32.of(value),
+        value => DataResult.ok(NbtInt32.of(value)),
         input => input instanceof NbtInt32
-            ? DataResult.success(input.value)
-            : DataResult.error(`Expected NbtInt32, got ${input.type()}`)
+            ? DataResult.ok(input.value)
+            : DataResult.err(`Expected NbtInt32, got ${input.type()}`)
     );
 
     public static readonly UINT32: Codec<number> = Codecs.of(
-        value => NbtUint32.of(value),
+        value => DataResult.ok(NbtUint32.of(value)),
         input => input instanceof NbtUint32
-            ? DataResult.success(input.value)
-            : DataResult.error(`Expected NbtUint32, got ${input.type()}`)
+            ? DataResult.ok(input.value)
+            : DataResult.err(`Expected NbtUint32, got ${input.type()}`)
     );
 
     public static readonly FLOAT: Codec<number> = Codecs.of(
-        value => NbtFloat.of(value),
+        value => DataResult.ok(NbtFloat.of(value)),
         input => input instanceof NbtFloat
-            ? DataResult.success(input.value)
-            : DataResult.error(`Expected NbtFloat, got ${input.type()}`)
+            ? DataResult.ok(input.value)
+            : DataResult.err(`Expected NbtFloat, got ${input.type()}`)
     );
 
     public static readonly DOUBLE: Codec<number> = Codecs.of(
-        value => NbtDouble.of(value),
+        value => DataResult.ok(NbtDouble.of(value)),
         input => input instanceof NbtDouble
-            ? DataResult.success(input.value)
-            : DataResult.error(`Expected NbtDouble, got ${input.type()}`)
+            ? DataResult.ok(input.value)
+            : DataResult.err(`Expected NbtDouble, got ${input.type()}`)
     );
 
     public static readonly STRING: Codec<string> = Codecs.of(
-        value => NbtString.of(value),
+        value => DataResult.ok(NbtString.of(value)),
         input => input instanceof NbtString
-            ? DataResult.success(input.value)
-            : DataResult.error(`Expected NbtString, got ${input.type()}`)
+            ? DataResult.ok(input.value)
+            : DataResult.err(`Expected NbtString, got ${input.type()}`)
     );
 
     public static readonly BOOLEAN: Codec<boolean> = Codecs.of(
-        value => NbtInt8.bool(value),
+        value => DataResult.ok(NbtInt8.bool(value)),
         input => input instanceof NbtInt8
-            ? DataResult.success(input.value !== 0)
-            : DataResult.error(`Expected NbtInt8, got ${input.type()}`)
+            ? DataResult.ok(input.value !== 0)
+            : DataResult.err(`Expected NbtInt8, got ${input.type()}`)
     );
 
     public static readonly NBT_COMPOUND: Codec<NbtCompound> = Codecs.of(
-        value => value,
+        value => DataResult.ok(value),
         input => input instanceof NbtCompound
-            ? DataResult.success(input)
-            : DataResult.error(`Expected NbtCompound, got ${input.type()}`)
+            ? DataResult.ok(input)
+            : DataResult.err(`Expected NbtCompound, got ${input.type()}`)
     );
 
     public static readonly INT8_ARRAY: Codec<number[]> = Codecs.of(
-        value => NbtInt8Array.create(value),
+        value => DataResult.ok(NbtInt8Array.create(value)),
         input => input instanceof NbtInt8Array
-            ? DataResult.success(Array.from(input.value))
-            : DataResult.error(`Expected NbtInt8Array, got ${input.type()}`)
+            ? DataResult.ok(Array.from(input.value))
+            : DataResult.err(`Expected NbtInt8Array, got ${input.type()}`)
     );
 
     public static readonly INT16_ARRAY: Codec<number[]> = Codecs.of(
-        value => NbtInt16Array.create(value),
+        value => DataResult.ok(NbtInt16Array.create(value)),
         input => input instanceof NbtInt16Array
-            ? DataResult.success(Array.from(input.value))
-            : DataResult.error(`Expected NbtInt16Array, got ${input.type()}`)
+            ? DataResult.ok(Array.from(input.value))
+            : DataResult.err(`Expected NbtInt16Array, got ${input.type()}`)
     );
 
     public static readonly INT32_ARRAY: Codec<number[]> = Codecs.of(
-        value => NbtInt32Array.create(value),
+        value => DataResult.ok(NbtInt32Array.create(value)),
         input => input instanceof NbtInt32Array
-            ? DataResult.success(Array.from(input.value))
-            : DataResult.error(`Expected NbtInt32Array, got ${input.type()}`)
+            ? DataResult.ok(Array.from(input.value))
+            : DataResult.err(`Expected NbtInt32Array, got ${input.type()}`)
     );
 
     public static readonly FLOAT_ARRAY: Codec<number[]> = Codecs.of(
-        value => NbtFloatArray.create(value),
+        value => DataResult.ok(NbtFloatArray.create(value)),
         input => input instanceof NbtFloatArray
-            ? DataResult.success(Array.from(input.value))
-            : DataResult.error(`Expected NbtFloatArray, got ${input.type()}`)
+            ? DataResult.ok(Array.from(input.value))
+            : DataResult.err(`Expected NbtFloatArray, got ${input.type()}`)
     );
 
     public static readonly DOUBLE_ARRAY: Codec<number[]> = Codecs.of(
-        value => NbtDoubleArray.create(value),
+        value => DataResult.ok(NbtDoubleArray.create(value)),
         input => input instanceof NbtDoubleArray
-            ? DataResult.success(Array.from(input.value))
-            : DataResult.error(`Expected NbtDoubleArray, got ${input.type()}`)
+            ? DataResult.ok(Array.from(input.value))
+            : DataResult.err(`Expected NbtDoubleArray, got ${input.type()}`)
     );
 
     public static readonly STRING_ARRAY: Codec<string[]> = Codecs.of(
-        value => new NbtStringArray(value),
+        value => DataResult.ok(new NbtStringArray(value)),
         input => input instanceof NbtStringArray
-            ? DataResult.success(Array.from(input.value))
-            : DataResult.error(`Expected NbtStringArray, got ${input.type()}`)
-    );
-
-    public static readonly VEC2: Codec<Vec2> = Codecs.map(Codecs.DOUBLE_ARRAY,
-        val => new Vec2(val[0], val[1]),
-        val => [val.x, val.y]
+            ? DataResult.ok(Array.from(input.value))
+            : DataResult.err(`Expected NbtStringArray, got ${input.type()}`)
     );
 
     public static of<A>(encoder: Encoder<A>, decoder: Decoder<A>, name?: string): Codec<A> {
@@ -151,51 +147,37 @@ export class Codecs {
         );
     }
 
-    public static optional<T>(codec: Codec<T>): Codec<Optional<T>> {
+    public static optional<A>(codec: Codec<A>): Codec<Optional<A>> {
         return Codecs.of(
-            value => value.isPresent() ? codec.encode(value.get()) : NbtEnd.INSTANCE,
+            value => value.isPresent() ? codec.encode(value.get()) : DataResult.ok(NbtEnd.INSTANCE),
             input => input === NbtEnd.INSTANCE
-                ? DataResult.success(Optional.empty())
+                ? DataResult.ok(Optional.empty())
                 : codec.decode(input).map(v => Optional.of(v)),
             `${codec} [optional]`
         );
     }
 
-    public static listOf<A>(elementCodec: Codec<A>): Codec<A[]> {
-        return Codecs.of(
-            (list) => {
-                const compounds: NbtCompound[] = new Array(list.length).fill(null);
-                for (let i = 0; i < list.length; i++) {
-                    const element = elementCodec.encode(list[i]);
-                    if (element instanceof NbtCompound) {
-                        compounds[i] = element;
-                        continue;
-                    }
-                    throw new TypeError(
-                        `listOf(${elementCodec}) element must encode to NbtCompound, got ${element.type()}`
-                    );
-                }
-                return new NbtCompoundArray(compounds);
-            },
-            (input) => {
-                if (!(input instanceof NbtCompoundArray)) {
-                    return DataResult.error(`Expected NbtCompoundArray, got ${input.type()}`);
-                }
+    /** 将单个解析器映射为数组解析器.
+     * > 如果是基础类型,推荐使用对应的数组类型以减少临时对象
+     * */
+    public static listOf<A>(elementCodec: Codec<A>, min?: number, max?: number): Codec<A[]> {
+        return new ArrayCodec(elementCodec, min, max);
+    }
 
-                const list: A[] = new Array(input.value.length).fill(null);
-                for (let i = 0; i < input.value.length; i++) {
-                    const element = elementCodec.decode(input.value[i]);
-                    const result = element.result();
-                    if (result.isEmpty()) {
-                        return DataResult.error(() =>
-                            `listOf(${elementCodec}) element ${i}: ${element.error().get().message()}`
-                        );
-                    }
-                    list[i] = result.get();
-                }
-                return DataResult.success(list);
+    public static registry<A>(registry: Registry<A>): Codec<RegistryEntry<A>> {
+        return Codecs.of(
+            value => {
+                return Identifier.CODEC.encode(value.getRegistryKey().getValue());
             },
-            `${elementCodec} [listOf]`
+            input => {
+                const result = Identifier.CODEC.decode(input)
+                    .map(id => registry.getEntryById(id));
+                if (result.isOk()) {
+                    const entry = result.unwrap();
+                    if (entry) return DataResult.ok(entry);
+                }
+                return DataResult.err(`Unknown registry key in ${registry.getKey()}`);
+            }
         );
     }
 

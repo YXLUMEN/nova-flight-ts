@@ -2,11 +2,11 @@ import type {Consumer, Return, Supplier} from "../type/types.ts";
 import {Optional} from "../utils/Optional.ts";
 
 export abstract class DataResult<R> {
-    public static success<R>(result: R): DataResult<R> {
+    public static ok<R>(result: R): DataResult<R> {
         return new SuccessResult(result);
     }
 
-    public static error<R>(message: Supplier<string> | string, partial?: R): DataResult<R> {
+    public static err<R>(message: Supplier<string> | string, partial?: R): DataResult<R> {
         return new ErrorResult(
             typeof message === 'function' ? message : () => message,
             Optional.ofNullable(partial)
@@ -15,9 +15,11 @@ export abstract class DataResult<R> {
 
     public static partialGet<K, V>(get: Return<K, V>, errorPrefix: Supplier<string>): Return<K, DataResult<V>> {
         return (name: K) => Optional.ofNullable(get(name))
-            .map(this.success)
-            .orElseGet(() => this.error(() => errorPrefix() + name));
+            .map(this.ok)
+            .orElseGet(() => this.err(() => errorPrefix() + name));
     }
+
+    public abstract unwrap(): R;
 
     public abstract result(): Optional<R>;
 
@@ -27,10 +29,14 @@ export abstract class DataResult<R> {
 
     public abstract resultOrPartial(onErr?: Consumer<string>): Optional<R>;
 
+    public abstract setPartial(partial: R): DataResult<R>;
+
+    public abstract isOk(): boolean;
+
     public map<B>(fn: Return<R, B>): DataResult<B> {
         const result = this.result();
         if (result.isPresent()) {
-            return DataResult.success(fn(result.get()));
+            return DataResult.ok(fn(result.get()));
         }
 
         const err = this.error().get();
@@ -66,6 +72,10 @@ export class SuccessResult<R> extends DataResult<R> {
         this.value = value;
     }
 
+    public override unwrap(): R {
+        return this.value;
+    }
+
     public override result(): Optional<R> {
         return Optional.of(this.value);
     }
@@ -81,6 +91,14 @@ export class SuccessResult<R> extends DataResult<R> {
     public override resultOrPartial(): Optional<R> {
         return Optional.of(this.value);
     }
+
+    public override setPartial(): DataResult<R> {
+        return this;
+    }
+
+    public override isOk(): boolean {
+        return true;
+    }
 }
 
 export class ErrorResult<R> extends DataResult<R> {
@@ -91,6 +109,10 @@ export class ErrorResult<R> extends DataResult<R> {
         super();
         this.message = message;
         this.partial = partial;
+    }
+
+    public override unwrap(): R {
+        throw this.message();
     }
 
     public override result(): Optional<R> {
@@ -108,5 +130,13 @@ export class ErrorResult<R> extends DataResult<R> {
     public override resultOrPartial(onErr?: Consumer<string>): Optional<R> {
         onErr?.(this.message());
         return this.partial;
+    }
+
+    public override setPartial(partial: R): DataResult<R> {
+        return new ErrorResult(this.message, Optional.of(partial));
+    }
+
+    public override isOk(): boolean {
+        return false;
     }
 }

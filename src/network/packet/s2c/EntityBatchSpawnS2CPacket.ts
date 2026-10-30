@@ -9,7 +9,7 @@ import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlay
 export class EntityBatchSpawnS2CPacket implements Payload {
     public static readonly ID: PayloadType<EntityBatchSpawnS2CPacket> = payloadType('spawn_entity_batch');
     public static readonly CODEC: PacketCodec<EntityBatchSpawnS2CPacket> = PacketCodecs.adapt(
-        PacketCodecs.collection(EntitySpawnS2CPacket.CODEC),
+        PacketCodecs.listOf(EntitySpawnS2CPacket.CODEC),
         val => val.entities,
         val => new EntityBatchSpawnS2CPacket(val)
     );

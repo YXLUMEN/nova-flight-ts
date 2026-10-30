@@ -1,11 +1,11 @@
 import type {Entity} from "./Entity.ts";
+import type {Constructor} from "../type/types.ts";
+import type {Comparable} from "../type/Comparable.ts";
 import {Registries} from "../registry/Registries.ts";
 import {Registry} from "../registry/Registry.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {EntityDimensions} from "./EntityDimensions.ts";
-import type {Constructor} from "../type/types.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
-import type {Comparable} from "../type/Comparable.ts";
 
 export class EntityType<T extends Entity, F extends Constructor<T> = Constructor<T>> implements Comparable {
     public static readonly PACKET_CODEC = PacketCodecs.registryValue(Registries.ENTITY_TYPE);

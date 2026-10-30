@@ -1,3 +1,4 @@
+import type {NbtType} from "./NbtType.ts";
 import {NbtInt8} from "./element/NbtInt8.ts";
 import {NbtInt16} from "./element/NbtInt16.ts";
 import {NbtInt32} from "./element/NbtInt32.ts";
@@ -15,7 +16,6 @@ import {NbtUint32Array} from "./element/NbtUint32Array.ts";
 import {NbtStringArray} from "./element/NbtStringArray.ts";
 import {NbtCompoundArray} from "./element/NbtCompoundArray.ts";
 import {NbtInvalid} from "./element/NbtInvalid.ts";
-import type {NbtType} from "./NbtType.ts";
 import {NbtCompound} from "./element/NbtCompound.ts";
 import {NbtUint8Array} from "./element/NbtUint8Array.ts";
 

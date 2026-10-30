@@ -11,78 +11,47 @@ import type {BinaryWriter} from "../serialization/BinaryWriter.ts";
 import type {BinaryReader} from "../serialization/BinaryReader.ts";
 import type {Consumer} from "../type/types.ts";
 import type {Codec} from "../serialization/Codec.ts";
+import {clamp} from "../utils/math/math.ts";
 import {Items} from "./Items.ts";
 import {SimpleComponentMap} from "../component/SimpleComponentMap.ts";
 import {DataComponents} from "../component/DataComponents.ts";
-import {clamp} from "../utils/math/math.ts";
-import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {Registries} from "../registry/Registries.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {ComponentChanges} from "../component/ComponentChanges.ts";
 import {PatchComponentMap} from "../component/PatchComponentMap.ts";
-import {Identifier} from "../registry/Identifier.ts";
 import {Codecs} from "../serialization/Codecs.ts";
-import {DataResult} from "../serialization/DataResult.ts";
-
+import {Optional} from "../utils/Optional.ts";
 
 export class ItemStack {
     public static readonly ITEM_VALUE_PACKET_CODEC = PacketCodecs.registryValue(Registries.ITEM);
     public static readonly ITEM_PACKET_CODEC = PacketCodecs.registryEntry(Registries.ITEM);
-    public static readonly CODEC: Codec<ItemStack> = Codecs.of(
-        value => {
-            const compound = new NbtCompound();
-
-            compound.setString('type', value.getItem().getRegistryEntry().toString());
-            compound.setInt8('counts', value.getCount());
-            if (value.isEmpty()) return compound;
-
-            const changes = value.components.getChanges();
-            compound.set('compounds', ComponentChanges.CODEC.encode(changes));
-
-            return compound;
-        },
-        input => {
-            if (!(input instanceof NbtCompound)) {
-                return DataResult.error(`Expected NbtCompound, got ${input.type()}`);
-            }
-            const typeName = input.getString('type');
-            const id = Identifier.tryParse(typeName);
-            if (!id) return DataResult.error(`Invalid item type: ${typeName}`);
-
-            const type = Registries.ITEM.getEntryById(id);
-            if (!type) return DataResult.error(`Unknown item type: ${typeName}`);
-
-            const counts = input.getInt8('counts');
-
-            let compounds: ComponentChanges | null = null;
-            const compoundsNbt = input.get('compounds');
-            if (compoundsNbt) compounds = ComponentChanges.CODEC.decode(compoundsNbt).getOrNull();
-
-            return DataResult.success(new ItemStack(type.getValue(), counts, compounds));
-        }
-    );
     public static readonly PACKET_CODEC: PacketCodec<ItemStack> = PacketCodecs.of(
         (writer: BinaryWriter, itemStack: ItemStack): void => {
             if (itemStack.isEmpty()) {
                 writer.writeVarUint(0);
-            } else {
-                writer.writeVarUint(itemStack.getCount());
-                ItemStack.ITEM_PACKET_CODEC.encode(writer, itemStack.getRegistryEntry());
-                ComponentChanges.PACKET_CODEC.encode(writer, itemStack.components.getChanges());
+                return;
             }
-            return;
+            writer.writeVarUint(itemStack.getCount());
+            ItemStack.ITEM_PACKET_CODEC.encode(writer, itemStack.getRegistryEntry());
+            ComponentChanges.PACKET_CODEC.encode(writer, itemStack.components.getChanges());
         },
         (reader: BinaryReader): ItemStack => {
             const count = reader.readVarUint();
-            if (count <= 0) {
-                return ItemStack.EMPTY;
-            }
+            if (count <= 0) return ItemStack.EMPTY;
+
             const item = ItemStack.ITEM_PACKET_CODEC.decode(reader).getValue();
             const componentChanges = ComponentChanges.PACKET_CODEC.decode(reader);
             return new ItemStack(item, count, PatchComponentMap.create(item.getComponents(), componentChanges));
         }
     );
-    public static readonly LIST_PACKET_CODEC = PacketCodecs.collectionSet(this.PACKET_CODEC);
+    public static readonly LIST_PACKET_CODEC = PacketCodecs.setOf(this.PACKET_CODEC);
+
+    public static readonly CODEC: Codec<ItemStack> = Codecs.group<ItemStack>(
+        Codecs.field('type', Codecs.registry(Registries.ITEM)).for(v => v.getItem().getRegistryEntry()),
+        Codecs.field('counts', Codecs.INT8).for(v => v.getCount()),
+        Codecs.optionalField('compounds', ComponentChanges.CODEC).for(v =>
+            v.isEmpty() ? Optional.empty() : Optional.of(v.components.getChanges())),
+    ).apply(ItemStack.new);
 
     // @ts-ignore
     public static readonly EMPTY = new ItemStack(null, 0, SimpleComponentMap.EMPTY);
@@ -103,6 +72,10 @@ export class ItemStack {
             this.components = components;
         }
         this.count = count;
+    }
+
+    public static new(entry: RegistryEntry<Item>, count: number, components: Optional<PatchComponentMap | ComponentChanges>) {
+        return new ItemStack(entry.getValue(), count, components.isPresent() ? components.get() : null);
     }
 
     public static areItemsAndComponentsEqual(stack: ItemStack, other: ItemStack): boolean {

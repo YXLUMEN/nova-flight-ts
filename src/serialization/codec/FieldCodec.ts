@@ -13,15 +13,17 @@ export class FieldCodec<A> extends MapCodec<A> {
         this.codec = codec;
     }
 
-    public override encode(value: A, prefix: NbtCompound): NbtCompound {
-        prefix.set(this.key, this.codec.encode(value));
-        return prefix;
+    public override encode(value: A, prefix: NbtCompound): DataResult<NbtCompound> {
+        return this.codec.encode(value).map(v => {
+            prefix.set(this.key, v);
+            return prefix;
+        });
     }
 
     public override decode(input: NbtCompound): DataResult<A> {
         const element = input.get(this.key);
         if (element === null) {
-            return DataResult.error(`Missing required field "${this.key}"`);
+            return DataResult.err(`Missing required field "${this.key}"`);
         }
         return this.codec.decode(element);
     }

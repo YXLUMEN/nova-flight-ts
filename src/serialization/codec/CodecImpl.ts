@@ -14,7 +14,7 @@ export class CodecImpl<A> implements Codec<A> {
         Object.freeze(this);
     }
 
-    public encode(value: A): NbtElement {
+    public encode(value: A): DataResult<NbtElement> {
         return this.encoder(value);
     }
 

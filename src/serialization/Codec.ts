@@ -2,11 +2,11 @@ import type {NbtElement} from "../nbt/element/NbtElement.ts";
 import type {DataResult} from "./DataResult.ts";
 
 export interface Codec<A> {
-    encode(value: A): NbtElement;
+    encode(value: A): DataResult<NbtElement>;
 
     decode(input: NbtElement): DataResult<A>;
 }
 
-export type Encoder<A> = (value: A) => NbtElement;
+export type Encoder<A> = (value: A) => DataResult<NbtElement>;
 
 export type Decoder<A> = (input: NbtElement) => DataResult<A>;

@@ -1,19 +1,20 @@
-import {type NovaFlightServer} from "../../NovaFlightServer.ts";
-import {type GameProfile} from "../../entity/GameProfile.ts";
-import {Vec2} from "../../../utils/math/Vec2.ts";
+import type {NovaFlightServer} from "../../NovaFlightServer.ts";
+import type {GameProfile} from "../../entity/GameProfile.ts";
+import type {Consumer} from "../../../type/types.ts";
+import type {NbtCompound} from "../../../nbt/element/NbtCompound.ts";
+import type {ServerConnection} from "../ServerConnection.ts";
+import {timeout} from "../../../utils/util.ts";
 import {Codecs} from "../../../serialization/Codecs.ts";
 import {Optional} from "../../../utils/Optional.ts";
+import {ExtraCodec} from "../../../serialization/ExtraCodec.ts";
+import {Vec2} from "../../../utils/math/Vec2.ts";
 import {ServerPlayerEntity} from "../../entity/ServerPlayerEntity.ts";
-import {type NbtCompound} from "../../../nbt/element/NbtCompound.ts";
-import {type ServerConnection} from "../ServerConnection.ts";
 import {RacePromise} from "../../../utils/RacePromise.ts";
-import {timeout} from "../../../utils/util.ts";
 import {World} from "../../../world/World.ts";
-import type {Consumer} from "../../../type/types.ts";
 
 export class PendingSpawn implements Disposable {
     private static readonly POS_CODEC = Codecs.group<PlayerPosition>(
-        Codecs.optionalField('pos', Codecs.VEC2).for(val => val.pos),
+        Codecs.optionalField('pos', ExtraCodec.VEC2D).for(val => val.pos),
         Codecs.optionalField('yaw', Codecs.FLOAT).for(val => val.yaw),
     ).apply((pos: Optional<Vec2>, yaw: Optional<number>): PlayerPosition => ({pos, yaw}));
 
@@ -89,7 +90,7 @@ export class PendingSpawn implements Disposable {
         if (this.race.isAbort()) return;
 
         const optional = Optional.ofNullable(loaded);
-        const playerPosition = optional.flatMap(nbt => nbt.read(PendingSpawn.POS_CODEC))
+        const playerPosition = optional.flatMap(nbt => nbt.readSelf(PendingSpawn.POS_CODEC))
             .orElse(PendingSpawn.EMPTY_POS);
 
         this.spawnPos = playerPosition.pos.orElse(Vec2.ZERO);

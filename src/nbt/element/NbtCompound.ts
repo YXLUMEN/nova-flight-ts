@@ -3,6 +3,7 @@ import type {NbtElement} from "./NbtElement.ts";
 import {type NbtType, NbtTypeId} from "../NbtType.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import type {Codec} from "../../serialization/Codec.ts";
+import {MAX_INT, MIN_INT} from "../../utils/math/math.ts";
 import {NbtInt8} from "./NbtInt8.ts";
 import {NbtInt16} from "./NbtInt16.ts";
 import {NbtInt32} from "./NbtInt32.ts";
@@ -23,7 +24,7 @@ import {NbtTypes} from "../NbtTypes.ts";
 import {NbtSerialization} from "../NbtSerialization.ts";
 import {Optional} from "../../utils/Optional.ts";
 import {ErrorResult, SuccessResult} from "../../serialization/DataResult.ts";
-
+import {Log} from "../../worker/log.ts";
 
 export class NbtCompound implements NbtElement {
     public static readonly MAGIC = 0x6E627430;
@@ -49,8 +50,23 @@ export class NbtCompound implements NbtElement {
         this.entries = map ?? new Map();
     }
 
+    public store<T>(key: string, codec: Codec<T>, value: T) {
+        const result = codec.encode(value);
+        if (result instanceof SuccessResult) {
+            this.set(key, result.value);
+            return;
+        }
+        if (result instanceof ErrorResult) {
+            Log.error(result.message());
+            result.partial.ifPresent(v => this.set(key, v));
+            return;
+        }
+        throw new Error('MatchException');
+    }
+
     public set(key: string, nbt: NbtElement) {
         this.entries.set(key, nbt);
+        return this;
     }
 
     public setInt8(key: string, value: number): this {
@@ -66,7 +82,7 @@ export class NbtCompound implements NbtElement {
     }
 
     public setInt32(key: string, value: number): this {
-        console.assert(Number.isInteger(value) && value >= -2147483648 && value <= 2147483647, "Int32 out of range");
+        console.assert(Number.isInteger(value) && value >= MIN_INT && value <= MAX_INT, "Int32 out of range");
         this.entries.set(key, NbtInt32.of(value));
         return this;
     }
@@ -150,12 +166,28 @@ export class NbtCompound implements NbtElement {
         return this;
     }
 
-    public read<T>(codec: Codec<T>): Optional<T> {
+    public read<T>(key: string, codec: Codec<T>): Optional<T> {
+        const value = this.entries.get(key);
+        if (!value) return Optional.empty();
+
+        const result = codec.decode(value);
+        if (result instanceof SuccessResult) {
+            return Optional.of(result.value);
+        }
+        if (result instanceof ErrorResult) {
+            Log.error(result.message());
+            return result.partial;
+        }
+        throw new Error('MatchException');
+    }
+
+    public readSelf<T>(codec: Codec<T>): Optional<T> {
         const result = codec.decode(this);
         if (result instanceof SuccessResult) {
             return Optional.of(result.value);
         }
         if (result instanceof ErrorResult) {
+            Log.error(result.message());
             return result.partial;
         }
         throw new Error('MatchException');

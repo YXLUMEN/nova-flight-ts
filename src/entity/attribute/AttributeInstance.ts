@@ -2,11 +2,13 @@ import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {Attribute} from "./Attribute.ts";
 import type {Consumer} from "../../type/types.ts";
 import type {HashMap} from "../../utils/collection/HashMap.ts";
+import type {Codec} from "../../serialization/Codec.ts";
 import {Identifier} from "../../registry/Identifier.ts";
-import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {AttributeModifier, Operation} from "../../component/type/AttributeModifier.ts";
 import {WrapperMap} from "../../utils/collection/WrapperMap.ts";
 import {IllegalStateError} from "../../type/errors.ts";
+import {Codecs} from "../../serialization/Codecs.ts";
+import {Registries} from "../../registry/Registries.ts";
 
 
 export class AttributeInstance {
@@ -126,47 +128,44 @@ export class AttributeInstance {
             this.modifierById.set(id, modifier);
         });
         this.setDirty();
-
     }
 
-    public toNbt(): NbtCompound {
-        const nbt = new NbtCompound();
-
-        nbt.setString('id', this.attribute.getRegistryKey().getValue().toString());
-        nbt.setDouble('base', this.baseValue);
-
-        if (this.modifierById.size > 0) {
-            const nbtList: NbtCompound[] = [];
-            for (const modifier of this.modifierById.values()) {
-                const modNbt = AttributeModifier.CODEC.encode(modifier) as NbtCompound;
-                nbtList.push(modNbt);
-            }
-
-            nbt.setCompoundArray('modifiers', nbtList);
-        }
-
-        return nbt;
+    public pack(): PackedAttr {
+        return AttributeInstance.pack(
+            this.attribute,
+            this.baseValue,
+            this.modifierById.values().toArray()
+        );
     }
 
-    public readNbt(nbt: NbtCompound): void {
-        const value = nbt.getDouble('base');
-        if (!Number.isFinite(value)) throw new Error(`Error when read NBT for EntityAttribute: ${value}`);
-        this.baseValue = value;
-
-        const nbtList = nbt.getCompoundArray('modifiers');
-        if (nbtList) {
-            for (const modifierNbt of nbtList) {
-                const modifier = AttributeModifier.CODEC.decode(modifierNbt).getOrNull();
-                if (!modifier) continue;
-
-                this.modifierById.set(modifier.id, modifier);
-            }
+    public apply(packed: PackedAttr): void {
+        this.baseValue = packed.baseValue;
+        for (const modifier of packed.modifiers) {
+            this.modifierById.set(modifier.id, modifier);
         }
-
         this.setDirty();
     }
 
     public toString(): string {
-        return `[AttrInstance] ${this.attribute.toString()}:${this.baseValue}`;
+        return `[AttrInstance] ${this.attribute}:${this.baseValue}`;
     }
+
+    public static pack(attribute: RegistryEntry<Attribute>, baseValue: number, modifiers: AttributeModifier[]): PackedAttr {
+        if (!Number.isFinite(baseValue)) throw new Error(`Error when read NBT for EntityAttribute: ${baseValue}`);
+        return {attribute, baseValue, modifiers};
+    }
+
+    public static readonly CODEC: Codec<PackedAttr> = Codecs.group<PackedAttr>(
+        Codecs.field('id', Codecs.registry(Registries.ATTRIBUTE)).for(val => val.attribute),
+        Codecs.field('base', Codecs.DOUBLE).for(val => val.baseValue),
+        Codecs.field('modifiers', Codecs.listOf(AttributeModifier.CODEC)).for(val => val.modifiers)
+    ).apply(AttributeInstance.pack);
+
+    public static readonly LIST_CODEC: Codec<PackedAttr[]> = Codecs.listOf(this.CODEC);
+}
+
+export interface PackedAttr {
+    readonly attribute: RegistryEntry<Attribute>,
+    readonly baseValue: number,
+    readonly modifiers: AttributeModifier[],
 }

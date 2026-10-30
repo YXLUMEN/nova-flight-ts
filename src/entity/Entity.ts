@@ -15,23 +15,22 @@ import type {CommandOutput} from "../server/command/CommandOutput.ts";
 import type {EntityRenderer} from "../client/render/entity/EntityRenderer.ts";
 import type {ViewRect} from "../client/render/Camera.ts";
 import type {InterpolationHandler} from "../world/entity/InterpolationHandler.ts";
+import {clamp, doubleEquals, lerp, lerpRadians, wrapRadians} from "../utils/math/math.ts";
+import {isBoxInView} from "../utils/render/render.ts";
+import {appEvent} from "../event/EventBus.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {AABB} from "../utils/math/AABB.ts";
-import {clamp, doubleEquals, lerp, lerpRadians, wrapRadians} from "../utils/math/math.ts";
 import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
 import {DataTracker, type DataTrackerBuilder, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
 import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {VecDeltaCodec} from "../world/entity/VecDeltaCodec.ts";
 import {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import {IllegalArgumentError, IllegalStateError} from "../type/errors.ts";
-import {NbtTypeId} from "../nbt/NbtType.ts";
 import {EMPTY_LISTENER, type EntityChangeListener} from "../world/entity/EntityChangeListener.ts";
 import {BlockCollision} from "../world/collision/BlockCollision.ts";
-import {appEvent} from "../event/EventBus.ts";
 import {EntityColor} from "../world/entity/EntityColor.ts";
-import {isBoxInView} from "../utils/render/render.ts";
-import {isValidUUID} from "../utils/uuid_util.ts";
+import {ExtraCodec} from "../serialization/ExtraCodec.ts";
 
 export abstract class Entity implements EntityLike, DataTracked, Comparable, NbtSerializable, CommandOutput {
     private static readonly ENTITY_COUNTER = new AtomicInteger();
@@ -630,13 +629,13 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
         try {
-            nbt.setDoubleArray('pos', [this.pos.x, this.pos.y]);
-            nbt.setFloatArray('velocity', [this.velocity.x, this.velocity.y]);
+            nbt.store('pos', ExtraCodec.VEC2D, this.pos);
+            nbt.store('velocity', ExtraCodec.VEC2F, this.velocity);
 
             nbt.setFloat('yaw', this.yaw);
             nbt.setDouble('speed', this.movementSpeed);
             nbt.setBoolean('invulnerable', this.invulnerable);
-            nbt.setString('uuid', this.uuid);
+            nbt.store('uuid', ExtraCodec.UUID, this.uuid);
 
             if (this.tags.size > 0) {
                 nbt.setStringArray('tags', Array.from(this.tags));
@@ -649,28 +648,17 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     public readNBT(nbt: NbtCompound): void {
-        const posNbt = nbt.getDoubleArray('pos');
-        this.setPosition(
-            clamp(posNbt[0] ?? 0, -3E7, 3E7),
-            clamp(posNbt[1] ?? 0, -3E7, 3E7),
-        );
-        const velocity = nbt.getFloatArray('velocity');
-        this.setVelocity(
-            clamp(velocity[0] ?? 0, -1E3, 1E3),
-            clamp(velocity[1] ?? 0, -1E3, 1E3)
-        );
-        this.needSync = true;
-        this.setYaw(nbt.getFloat('yaw'));
-        this.resetPrevious();
+        const pos = nbt.read('pos', ExtraCodec.VEC2D).orElse(Vec2.ZERO);
+        const velocity = nbt.read('velocity', ExtraCodec.VEC2F).orElse(Vec2.ZERO);
 
+        this.setPosition(clamp(pos.x, -3E7, 3E7), clamp(pos.y, -3E7, 3E7),);
+        this.setVelocity(clamp(velocity.x, -1E3, 1E3), clamp(velocity.y, -1E3, 1E3));
+        this.setYaw(nbt.getFloat('yaw'));
         this.setMovementSpeed(nbt.getDouble('speed'));
+        this.needSync = true;
         this.invulnerable = nbt.getBoolean('invulnerable', 0);
 
-        if (nbt.contains('uuid', NbtTypeId.String)) {
-            const uuid = nbt.getString('uuid');
-            if (!isValidUUID(uuid)) throw new IllegalArgumentError('Invalid UUID format.');
-            this.uuid = uuid;
-        }
+        nbt.read('uuid', ExtraCodec.UUID).ifPresent(uuid => this.uuid = uuid);
 
         if (!Number.isFinite(this.getX()) || !Number.isFinite(this.getY())) {
             throw new IllegalStateError('Entity has invalid position');
@@ -679,11 +667,12 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
             throw new IllegalArgumentError('Entity has invalid rotation');
         }
 
+        this.resetPrevious();
+
         const tags = nbt.getStringArray('tags');
-        if (tags.length > 0) {
-            this.tags.clear();
-            tags.forEach(tag => this.tags.add(tag));
-        }
+        tags.length = Math.min(tags.length, 1024);
+        this.tags.clear();
+        tags.forEach(tag => this.tags.add(tag));
     }
 
     public toString() {

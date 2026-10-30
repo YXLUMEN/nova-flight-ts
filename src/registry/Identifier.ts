@@ -14,15 +14,15 @@ export class Identifier implements Comparable {
     private static readonly validCharReg = /[0-9a-z_\-.+\/:]/;
 
     public static readonly CODEC: Codec<Identifier> = Codecs.of(
-        value => NbtString.of(value.toString()),
+        value => DataResult.ok(NbtString.of(value.toString())),
         input => {
             if (!(input instanceof NbtString)) {
-                return DataResult.error(`Expected NbtString, got ${input.type()}`);
+                return DataResult.err(`Expected NbtString, got ${input.type()}`);
             }
             const id = Identifier.tryParse(input.value);
             return id
-                ? DataResult.success(id)
-                : DataResult.error(`Invalid identifier: ${input.value}`);
+                ? DataResult.ok(id)
+                : DataResult.err(`Invalid identifier: ${input.value}`);
         }
     );
     public static readonly PACKET_CODEC: PacketCodec<Identifier> = PacketCodecs.of(

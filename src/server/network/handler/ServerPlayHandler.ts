@@ -6,6 +6,7 @@ import type {ServerWorld} from "../../ServerWorld.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
 import type {AcceptTeleportC2SPacket} from "../../../network/packet/c2s/AcceptTeleportC2SPacket.ts";
 import {isDev} from "../../../configs/RuntimeConfig.ts";
+import {MAX_INT} from "../../../utils/math/math.ts";
 import {PlayerFinishLoginC2SPacket} from "../../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
 import {PlayerMoveC2SPacket} from "../../../network/packet/c2s/PlayerMoveC2SPacket.ts";
 import {PlayerInputC2SPacket} from "../../../network/packet/c2s/PlayerInputC2SPacket.ts";
@@ -148,7 +149,7 @@ export class ServerPlayHandler extends ServerCommonHandler {
     }
 
     public teleport(x: number, y: number, yaw: number) {
-        if (++this.awaitingTeleport === 2147483647) {
+        if (++this.awaitingTeleport === MAX_INT) {
             this.awaitingTeleport = 0;
         }
 

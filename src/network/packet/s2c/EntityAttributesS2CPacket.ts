@@ -14,12 +14,12 @@ class AttrEntry {
         (writer, value) => {
             Attribute.PACKET_CODEC.encode(writer, value.attribute.getValue());
             writer.writeDouble(value.base);
-            PacketCodecs.collectionSet(AttributeModifier.PACKET_CODEC).encode(writer, value.modifiers);
+            PacketCodecs.setOf(AttributeModifier.PACKET_CODEC).encode(writer, value.modifiers);
         },
         reader => {
             const attr = Attribute.PACKET_CODEC.decode(reader);
             const base = reader.readDouble();
-            const set = PacketCodecs.collectionSet(AttributeModifier.PACKET_CODEC).decode(reader);
+            const set = PacketCodecs.setOf(AttributeModifier.PACKET_CODEC).decode(reader);
             return new AttrEntry(Registries.ATTRIBUTE.getEntryByValue(attr)!, base, set);
         }
     );
@@ -40,7 +40,7 @@ export class EntityAttributesS2CPacket implements Payload {
     public static readonly CODEC: PacketCodec<EntityAttributesS2CPacket> = PacketCodecs.adapt2(
         PacketCodecs.VAR_UINT,
         val => val.entityId,
-        PacketCodecs.collection(AttrEntry.PACKET_CODEC),
+        PacketCodecs.listOf(AttrEntry.PACKET_CODEC),
         val => val.entries,
         EntityAttributesS2CPacket.new
     );

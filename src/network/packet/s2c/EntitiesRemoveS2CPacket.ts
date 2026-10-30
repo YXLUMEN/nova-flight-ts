@@ -7,7 +7,7 @@ import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlay
 export class EntitiesRemoveS2CPacket implements Payload {
     public static readonly ID: PayloadType<EntitiesRemoveS2CPacket> = payloadType('entities_remove');
     public static readonly CODEC: PacketCodec<EntitiesRemoveS2CPacket> = PacketCodecs.adapt(
-        PacketCodecs.collection(PacketCodecs.VAR_UINT),
+        PacketCodecs.listOf(PacketCodecs.VAR_UINT),
         val => val.entityIds,
         val => new EntitiesRemoveS2CPacket(val)
     );

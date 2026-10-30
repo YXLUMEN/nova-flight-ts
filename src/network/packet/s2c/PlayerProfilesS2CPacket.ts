@@ -9,9 +9,9 @@ import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity
 export class PlayerProfilesS2CPacket implements Payload {
     public static readonly ID: PayloadType<PlayerProfilesS2CPacket> = payloadType('player_profiles');
     public static readonly CODEC: PacketCodec<PlayerProfilesS2CPacket> = PacketCodecs.adapt2(
-        PacketCodecs.collection(PacketCodecs.STRING),
+        PacketCodecs.listOf(PacketCodecs.STRING),
         val => val.playerNames,
-        PacketCodecs.collection(PacketCodecs.UUID),
+        PacketCodecs.listOf(PacketCodecs.UUID),
         val => val.uuids,
         PlayerProfilesS2CPacket.new
     );

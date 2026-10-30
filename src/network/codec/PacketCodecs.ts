@@ -10,6 +10,7 @@ import type {Codec} from "../../serialization/Codec.ts";
 import type {NbtElement} from "../../nbt/element/NbtElement.ts";
 import {empty} from "../../utils/util.ts";
 import {decodeColorToHex, encodeColorHex} from "../../utils/net_util.ts";
+import {MAX_INT} from "../../utils/math/math.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import {Optional} from "../../utils/Optional.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
@@ -171,7 +172,7 @@ export class PacketCodecs {
         );
     }
 
-    public static collection<V>(elementCodec: PacketCodec<V>, maxSize: number = 2147483647): PacketCodec<V[]> {
+    public static listOf<V>(elementCodec: PacketCodec<V>, maxSize: number = MAX_INT): PacketCodec<V[]> {
         return new PacketCodecImpl(
             (writer: BinaryWriter, array: V[]): void => {
                 PacketCodecs.writeCollectionSize(writer, array.length, maxSize);
@@ -190,7 +191,7 @@ export class PacketCodecs {
         );
     }
 
-    public static collectionSet<V>(elementCodec: PacketCodec<V>, maxSize: number = 2147483647): PacketCodec<Set<V>> {
+    public static setOf<V>(elementCodec: PacketCodec<V>, maxSize: number = MAX_INT): PacketCodec<Set<V>> {
         return new PacketCodecImpl(
             (writer: BinaryWriter, set: Set<V>): void => {
                 PacketCodecs.writeCollectionSize(writer, set.size, maxSize);
@@ -209,7 +210,7 @@ export class PacketCodecs {
         );
     }
 
-    public static map<K, V, M extends Map<K, V>>(
+    public static mapOf<K, V, M extends Map<K, V>>(
         constructor: Constructor<M>,
         keyCodec: PacketCodec<K>,
         valueCodec: PacketCodec<V>,
@@ -270,7 +271,7 @@ export class PacketCodecs {
         const packetCodec = this.nbt();
         return new PacketCodecImpl(
             (writer: BinaryWriter, object: T): void => {
-                const nbt = codec.encode(object);
+                const nbt = codec.encode(object).unwrap();
                 packetCodec.encode(writer, nbt);
             },
             (reader: BinaryReader): T => {

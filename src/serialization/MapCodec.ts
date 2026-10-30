@@ -4,7 +4,7 @@ import type {Return} from "../type/types.ts";
 import {BoundField} from "./codec/BoundField.ts";
 
 export abstract class MapCodec<A> {
-    public abstract encode(value: A, prefix: NbtCompound): NbtCompound;
+    public abstract encode(value: A, prefix: NbtCompound): DataResult<NbtCompound>;
 
     public abstract decode(input: NbtCompound): DataResult<A>;
 

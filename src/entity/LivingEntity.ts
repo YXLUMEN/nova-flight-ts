@@ -6,10 +6,11 @@ import type {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPac
 import type {StatusEffect} from "./effect/StatusEffect.ts";
 import type {EntityType} from "./EntityType.ts";
 import type {Attribute} from "./attribute/Attribute.ts";
-import type {AttributeInstance} from "./attribute/AttributeInstance.ts";
 import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {clamp, TAU} from "../utils/math/math.ts";
+import {isClient, isServer} from "../configs/RuntimeConfig.ts";
 import {Entity} from "./Entity.ts";
+import {AttributeInstance} from "./attribute/AttributeInstance.ts";
 import {StatusEffectInstance} from "./effect/StatusEffectInstance.ts";
 import {DataTracker, type DataTrackerBuilder} from "./data/DataTracker.ts";
 import {AttributeMap} from "./attribute/AttributeMap.ts";
@@ -23,7 +24,6 @@ import {NbtTypeId} from "../nbt/NbtType.ts";
 import {Techs} from "../world/tech/Techs.ts";
 import {DamageTypes} from "./damage/DamageTypes.ts";
 import {PlayerEntity} from "./player/PlayerEntity.ts";
-import {isClient} from "../configs/RuntimeConfig.ts";
 import {InterpolationHandler} from "../world/entity/InterpolationHandler.ts";
 
 
@@ -481,15 +481,10 @@ export abstract class LivingEntity extends Entity {
 
         const shield = this.getShieldAmount();
         nbt.setFloat('shield', Number.isFinite(shield) ? shield : 0);
-        nbt.setCompoundArray('attributes', this.getAttributes().toNbt());
+        nbt.store('attributes', AttributeInstance.LIST_CODEC, this.getAttributes().pack());
 
         if (this.activeEffects.size > 0) {
-            const nbtList: NbtCompound[] = [];
-            for (const effect of this.activeEffects.values()) {
-                nbtList.push(effect.toNbt());
-            }
-
-            nbt.setCompoundArray('active_effects', nbtList);
+            nbt.store('active_effects', StatusEffectInstance.LIST_CODEC, this.activeEffects.values().toArray());
         }
 
         return nbt;
@@ -500,19 +495,16 @@ export abstract class LivingEntity extends Entity {
 
         this.setShieldAmountUnclamped(nbt.getFloat('shield'));
 
-        const attributes = nbt.getCompoundArray('attributes');
-        if (attributes.length > 0 && !this.getWorld().isClient) {
-            this.getAttributes().readNbt(attributes);
+        if (this.getWorld() != null && isServer) {
+            nbt.read('attributes', AttributeInstance.LIST_CODEC)
+                .ifPresent(v => this.getAttributes().apply(v));
         }
 
-        const effects = nbt.getCompoundArray('active_effects');
-        if (effects.length > 0) {
-            for (const effectNbt of effects) {
-                const effect = StatusEffectInstance.fromNbt(effectNbt);
-                if (effect) this.addStatusEffect(effect, null);
-            }
+        this.activeEffects.clear();
+        nbt.read('active_effects', StatusEffectInstance.LIST_CODEC).ifPresent(v => {
+            for (const e of v) this.activeEffects.set(e.type(), e);
             this.effectsDirty = true;
-        }
+        })
 
         if (nbt.contains('health', NbtTypeId.Number)) {
             this.setHealth(nbt.getFloat('health'));

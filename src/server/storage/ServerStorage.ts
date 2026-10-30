@@ -166,7 +166,7 @@ export class ServerStorage {
         tx.objectStore('saves').delete(saveName);
 
         const playerStore = tx.objectStore('player_data');
-        const range = IDBKeyRange.lowerBound([saveName]);
+        const range = IDBKeyRange.bound([saveName], [saveName, []], false, true);
         playerStore.delete(range);
 
         return promise;

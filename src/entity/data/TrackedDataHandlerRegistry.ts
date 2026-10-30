@@ -14,7 +14,7 @@ export class TrackedDataHandlerRegistry {
     public static readonly FLOAT = this.create(PacketCodecs.FLOAT);
     public static readonly DOUBLE = this.create(PacketCodecs.DOUBLE);
     public static readonly STATUE_EFFECTS = this.create(
-        PacketCodecs.collection(StatusEffect.ENTRY_PACKET_CODEC)
+        PacketCodecs.listOf(StatusEffect.ENTRY_PACKET_CODEC)
     );
 
     private static create<T>(codec: PacketCodec<T>): TrackedDataHandler<T> {

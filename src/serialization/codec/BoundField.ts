@@ -12,7 +12,7 @@ export class BoundField<C, A> {
         this.getter = getter;
     }
 
-    public encode(value: C, prefix: NbtCompound): NbtCompound {
+    public encode(value: C, prefix: NbtCompound): DataResult<NbtCompound> {
         return this.field.encode(this.getter(value), prefix);
     }
 

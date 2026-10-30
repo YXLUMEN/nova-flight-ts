@@ -1,17 +1,26 @@
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
-import type {StatusEffect} from "./StatusEffect.ts";
 import type {LivingEntity} from "../LivingEntity.ts";
-import {clamp} from "../../utils/math/math.ts";
+import type {Entity} from "../Entity.ts";
+import type {Codec} from "../../serialization/Codec.ts";
 import type {DamageSource} from "../damage/DamageSource.ts";
+import {clamp} from "../../utils/math/math.ts";
+import {StatusEffect} from "./StatusEffect.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {Identifier} from "../../registry/Identifier.ts";
-import type {Entity} from "../Entity.ts";
+import {Codecs} from "../../serialization/Codecs.ts";
 
 export class StatusEffectInstance {
     public static readonly INFINITE = -1;
     public static readonly MIN_AMPLIFIER = 0;
     public static readonly MAX_AMPLIFIER = 255;
+
+    public static readonly CODEC: Codec<StatusEffectInstance> = Codecs.group<StatusEffectInstance>(
+        Codecs.field('type', StatusEffect.CODEC).for(v => v.type()),
+        Codecs.field('duration', Codecs.DOUBLE).for(v => v.duration),
+        Codecs.field('amplifier', Codecs.UINT32).for(v => v.amplification),
+    ).apply(StatusEffectInstance.new);
+    public static readonly LIST_CODEC: Codec<StatusEffectInstance[]> = Codecs.listOf(this.CODEC);
 
     private readonly effectType: RegistryEntry<StatusEffect>;
     private duration: number;
@@ -23,6 +32,10 @@ export class StatusEffectInstance {
         this.effectType = type;
         this.duration = duration;
         this.amplification = clamp(Math.floor(amplifier), 0, 255);
+    }
+
+    public static new(type: RegistryEntry<StatusEffect>, duration: number, amplifier: number) {
+        return new StatusEffectInstance(type, duration, amplifier);
     }
 
     public static fromNbt(nbt: NbtCompound): StatusEffectInstance | null {
