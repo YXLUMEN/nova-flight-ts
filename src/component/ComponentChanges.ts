@@ -9,20 +9,19 @@ import {Codecs} from "../serialization/Codecs.ts";
 import {DataResult} from "../serialization/DataResult.ts";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 
-export class ComponentChanges {
-    public static readonly EMPTY = new ComponentChanges(new Map());
+export class ComponentChange {
+    public static readonly EMPTY: ComponentChanges = new Map();
     public static readonly CODEC: Codec<ComponentChanges> = Codecs.of(
         value => {
             const compound = new NbtCompound();
-            for (const [type, optional] of value.changedComponents) {
+            for (const [type, optional] of value) {
                 if (type.codec === null || optional.isEmpty()) continue;
                 const id = Registries.DATA_COMPONENT_TYPE.getId(type);
                 if (!id) continue;
 
-                const result = type.codec.encode(optional.get());
-                result.resultOrPartial()
-                if (result.isOk()) {
-                    compound.set(id.toString(), result.unwrap());
+                const result = type.codec.encode(optional.get()).resultOrPartial();
+                if (result.isPresent()) {
+                    compound.set(id.toString(), result.get());
                 }
             }
             return DataResult.ok(compound);
@@ -31,7 +30,7 @@ export class ComponentChanges {
             if (!(input instanceof NbtCompound)) {
                 return DataResult.err(`Expected NbtCompound, got ${input.type()}`);
             }
-            const map = new Map<DataComponentType<any>, Optional<any>>();
+            const map: ComponentChanges = new Map();
             for (const key of input.getKeys()) {
                 const nbt = input.get(key);
                 if (nbt === null) continue;
@@ -49,14 +48,12 @@ export class ComponentChanges {
                 if (value === null) continue;
                 map.set(type, Optional.of(value));
             }
-            return DataResult.ok(new ComponentChanges(map));
+            return DataResult.ok(map);
         }
     );
 
     public static readonly PACKET_CODEC: PacketCodec<ComponentChanges> = PacketCodecs.of(
-        (writer, componentChanges) => {
-            const components = componentChanges.changedComponents;
-
+        (writer, components) => {
             if (components.size === 0) {
                 writer.writeVarUint(0);
                 writer.writeVarUint(0);
@@ -95,10 +92,10 @@ export class ComponentChanges {
             const removeCount = reader.readVarUint();
 
             if (updateCount === 0 && removeCount === 0) {
-                return ComponentChanges.EMPTY;
+                return ComponentChange.EMPTY;
             }
 
-            const map = new Map<DataComponentType<any>, Optional<any>>();
+            const map: ComponentChanges = new Map();
 
             for (let l = 0; l < updateCount; l++) {
                 const componentType = DataComponentType.PACKET_CODEC.decode(reader);
@@ -111,13 +108,9 @@ export class ComponentChanges {
                 map.set(componentType, Optional.empty());
             }
 
-            return new ComponentChanges(map);
+            return map;
         }
     );
-
-    public readonly changedComponents = new Map<DataComponentType<any>, Optional<any>>();
-
-    public constructor(changedComponents: Map<DataComponentType<any>, Optional<any>>) {
-        this.changedComponents = changedComponents;
-    }
 }
+
+export type ComponentChanges = Map<DataComponentType<any>, Optional<any>>;

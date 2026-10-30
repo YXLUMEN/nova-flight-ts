@@ -1,8 +1,8 @@
-import {type DataComponentType} from "./DataComponentType.ts";
-import {Compare} from "../utils/collection/Compare.ts";
-import {ComponentChanges} from "./ComponentChanges.ts";
-import {Optional} from "../utils/Optional.ts";
+import type {DataComponentType} from "./DataComponentType.ts";
+import {ComponentChange, type ComponentChanges} from "./ComponentChanges.ts";
 import type {ComponentMap} from "./ComponentMap.ts";
+import {Compare} from "../utils/collection/Compare.ts";
+import {Optional} from "../utils/Optional.ts";
 
 export class PatchComponentMap implements ComponentMap {
     public static readonly EMPTY = Object.freeze(new PatchComponentMap()) as PatchComponentMap;
@@ -27,8 +27,8 @@ export class PatchComponentMap implements ComponentMap {
     }
 
     public static create(base: ComponentMap, changes: ComponentChanges) {
-        if (this.shouldReuseChangesMap(base, changes.changedComponents)) {
-            return new PatchComponentMap(base, changes.changedComponents);
+        if (this.shouldReuseChangesMap(base, changes)) {
+            return new PatchComponentMap(base, changes);
         }
 
         const cMap = new PatchComponentMap(base);
@@ -85,8 +85,8 @@ export class PatchComponentMap implements ComponentMap {
     public applyChanges(changes: ComponentChanges): void {
         this.onWrite();
 
-        for (const entry of changes.changedComponents) {
-            this.applyChange(entry[0], entry[1]);
+        for (const [type, option] of changes) {
+            this.applyChange(type, option);
         }
     }
 
@@ -108,7 +108,7 @@ export class PatchComponentMap implements ComponentMap {
     public setChanges(changes: ComponentChanges): void {
         this.onWrite();
         this.changedComponents.clear();
-        changes.changedComponents.entries().forEach(component => {
+        changes.entries().forEach(component => {
             this.changedComponents.set(component[0], component[1]);
         });
     }
@@ -136,10 +136,10 @@ export class PatchComponentMap implements ComponentMap {
 
     public getChanges(): ComponentChanges {
         if (this.changedComponents.size === 0) {
-            return ComponentChanges.EMPTY;
+            return ComponentChange.EMPTY;
         }
         this.copyOnWrite = true;
-        return new ComponentChanges(this.changedComponents);
+        return this.changedComponents;
     }
 
     private onWrite(): void {

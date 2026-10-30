@@ -11,13 +11,13 @@ import type {BinaryWriter} from "../serialization/BinaryWriter.ts";
 import type {BinaryReader} from "../serialization/BinaryReader.ts";
 import type {Consumer} from "../type/types.ts";
 import type {Codec} from "../serialization/Codec.ts";
+import {ComponentChange, type ComponentChanges} from "../component/ComponentChanges.ts";
 import {clamp} from "../utils/math/math.ts";
 import {Items} from "./Items.ts";
 import {SimpleComponentMap} from "../component/SimpleComponentMap.ts";
 import {DataComponents} from "../component/DataComponents.ts";
 import {Registries} from "../registry/Registries.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
-import {ComponentChanges} from "../component/ComponentChanges.ts";
 import {PatchComponentMap} from "../component/PatchComponentMap.ts";
 import {Codecs} from "../serialization/Codecs.ts";
 import {Optional} from "../utils/Optional.ts";
@@ -33,14 +33,14 @@ export class ItemStack {
             }
             writer.writeVarUint(itemStack.getCount());
             ItemStack.ITEM_PACKET_CODEC.encode(writer, itemStack.getRegistryEntry());
-            ComponentChanges.PACKET_CODEC.encode(writer, itemStack.components.getChanges());
+            ComponentChange.PACKET_CODEC.encode(writer, itemStack.components.getChanges());
         },
         (reader: BinaryReader): ItemStack => {
             const count = reader.readVarUint();
             if (count <= 0) return ItemStack.EMPTY;
 
             const item = ItemStack.ITEM_PACKET_CODEC.decode(reader).getValue();
-            const componentChanges = ComponentChanges.PACKET_CODEC.decode(reader);
+            const componentChanges = ComponentChange.PACKET_CODEC.decode(reader);
             return new ItemStack(item, count, PatchComponentMap.create(item.getComponents(), componentChanges));
         }
     );
@@ -49,7 +49,7 @@ export class ItemStack {
     public static readonly CODEC: Codec<ItemStack> = Codecs.group<ItemStack>(
         Codecs.field('type', Codecs.registry(Registries.ITEM)).for(v => v.getItem().getRegistryEntry()),
         Codecs.field('counts', Codecs.INT8).for(v => v.getCount()),
-        Codecs.optionalField('compounds', ComponentChanges.CODEC).for(v =>
+        Codecs.optionalField('compounds', ComponentChange.CODEC).for(v =>
             v.isEmpty() ? Optional.empty() : Optional.of(v.components.getChanges())),
     ).apply(ItemStack.new);
 
@@ -66,7 +66,7 @@ export class ItemStack {
         this.item = item;
         if (!components) {
             this.components = new PatchComponentMap(item.getComponents());
-        } else if (components instanceof ComponentChanges) {
+        } else if (components instanceof Map) {
             this.components = PatchComponentMap.create(item.getComponents(), components);
         } else {
             this.components = components;
