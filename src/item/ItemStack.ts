@@ -6,53 +6,15 @@ import type {World} from "../world/World.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
 import type {DataComponentType} from "../component/DataComponentType.ts";
 import type {LivingEntity} from "../entity/LivingEntity.ts";
-import type {PacketCodec} from "../network/codec/PacketCodec.ts";
-import type {BinaryWriter} from "../serialization/BinaryWriter.ts";
-import type {BinaryReader} from "../serialization/BinaryReader.ts";
 import type {Consumer} from "../type/types.ts";
-import type {Codec} from "../serialization/Codec.ts";
-import {ComponentChange, type ComponentChanges} from "../component/ComponentChanges.ts";
+import type {ComponentChanges} from "../component/ComponentChanges.ts";
 import {clamp} from "../utils/math/math.ts";
 import {Items} from "./Items.ts";
 import {SimpleComponentMap} from "../component/SimpleComponentMap.ts";
 import {DataComponents} from "../component/DataComponents.ts";
-import {Registries} from "../registry/Registries.ts";
-import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {PatchComponentMap} from "../component/PatchComponentMap.ts";
-import {Codecs} from "../serialization/Codecs.ts";
-import {Optional} from "../utils/Optional.ts";
 
 export class ItemStack {
-    public static readonly ITEM_VALUE_PACKET_CODEC = PacketCodecs.registryValue(Registries.ITEM);
-    public static readonly ITEM_PACKET_CODEC = PacketCodecs.registryEntry(Registries.ITEM);
-    public static readonly PACKET_CODEC: PacketCodec<ItemStack> = PacketCodecs.of(
-        (writer: BinaryWriter, itemStack: ItemStack): void => {
-            if (itemStack.isEmpty()) {
-                writer.writeVarUint(0);
-                return;
-            }
-            writer.writeVarUint(itemStack.getCount());
-            ItemStack.ITEM_PACKET_CODEC.encode(writer, itemStack.getRegistryEntry());
-            ComponentChange.PACKET_CODEC.encode(writer, itemStack.components.getChanges());
-        },
-        (reader: BinaryReader): ItemStack => {
-            const count = reader.readVarUint();
-            if (count <= 0) return ItemStack.EMPTY;
-
-            const item = ItemStack.ITEM_PACKET_CODEC.decode(reader).getValue();
-            const componentChanges = ComponentChange.PACKET_CODEC.decode(reader);
-            return new ItemStack(item, count, PatchComponentMap.create(item.getComponents(), componentChanges));
-        }
-    );
-    public static readonly LIST_PACKET_CODEC = PacketCodecs.setOf(this.PACKET_CODEC);
-
-    public static readonly CODEC: Codec<ItemStack> = Codecs.group<ItemStack>(
-        Codecs.field('type', Codecs.registry(Registries.ITEM)).for(v => v.getItem().getRegistryEntry()),
-        Codecs.field('counts', Codecs.INT8).for(v => v.getCount()),
-        Codecs.optionalField('compounds', ComponentChange.CODEC).for(v =>
-            v.isEmpty() ? Optional.empty() : Optional.of(v.components.getChanges())),
-    ).apply(ItemStack.new);
-
     // @ts-ignore
     public static readonly EMPTY = new ItemStack(null, 0, SimpleComponentMap.EMPTY);
 
@@ -72,10 +34,6 @@ export class ItemStack {
             this.components = components;
         }
         this.count = count;
-    }
-
-    public static new(entry: RegistryEntry<Item>, count: number, components: Optional<PatchComponentMap | ComponentChanges>) {
-        return new ItemStack(entry.getValue(), count, components.isPresent() ? components.get() : null);
     }
 
     public static areItemsAndComponentsEqual(stack: ItemStack, other: ItemStack): boolean {

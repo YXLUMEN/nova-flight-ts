@@ -11,7 +11,7 @@ import type {ViewRect} from "../client/render/Camera.ts";
 import {isRangeInView} from "../utils/render/render.ts";
 
 export const TELEPORT_RADIUS = 84;
-export const TELEPORT_LIFE = 0.55;
+export const TELEPORT_LIFE = 11;
 
 const WARP_SEGMENTS = 48;
 
@@ -22,14 +22,14 @@ export class TeleportEffect implements VisualEffect {
             PacketCodecs.COLOR_HEX.encode(writer, value.color);
             writer.writeBoolean(value.phase === TeleportPhase.IN);
             writer.writeUint16(Math.round(value.radius));
-            writer.writeFloat(value.life);
+            writer.writeVarUint(value.life);
         },
         reader => new TeleportEffect(
             PacketCodecs.VECTOR2D.decode(reader),
             PacketCodecs.COLOR_HEX.decode(reader),
             reader.readBoolean() ? TeleportPhase.IN : TeleportPhase.OUT,
             reader.readUint16(),
-            reader.readFloat(),
+            reader.readVarUint(),
         )
     );
 
@@ -55,11 +55,11 @@ export class TeleportEffect implements VisualEffect {
         this.color = color;
         this.phase = phase;
         this.radius = Number.isFinite(radius) ? clamp(radius, 1, 0xFFFF) : TELEPORT_RADIUS;
-        this.life = Number.isFinite(life) ? Math.max(0.01, life) : TELEPORT_LIFE;
+        this.life = Number.isFinite(life) ? Math.max(1, life) : TELEPORT_LIFE;
 
         this.rings = [
-            new RadialRing(pos, this.radius * 0.18, this.radius * 1.3, this.life * 0.8, color),
-            new RadialRing(pos, this.radius * 0.05, this.radius * 0.8, this.life * 0.5, '#e8e2ff'),
+            new RadialRing(pos, this.radius * 0.18, this.radius * 1.3, Math.ceil(this.life * 0.8), color),
+            new RadialRing(pos, this.radius * 0.05, this.radius * 0.8, Math.ceil(this.life * 0.5), '#e8e2ff'),
         ];
     }
 
@@ -67,17 +67,13 @@ export class TeleportEffect implements VisualEffect {
         return VisualEffectTypes.TELEPORT;
     }
 
-    public tick(dt: number): void {
-        if (!this.isAlive()) return;
-
+    public tick(): void {
         this.prevAge = this.age;
-        this.age += dt;
-        for (const ring of this.rings) ring.tick(dt);
+        this.age++;
+        for (const ring of this.rings) ring.tick();
     }
 
     public render(ctx: CanvasRenderingContext2D, alpha: number): void {
-        if (!this.isAlive()) return;
-
         const t = lerp(clamp(alpha, 0, 1), this.prevAge, this.age);
         const progress = clamp(t / this.life, 0, 1);
         const fade = 1 - progress;

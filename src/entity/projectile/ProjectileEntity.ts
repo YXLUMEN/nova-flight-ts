@@ -8,7 +8,7 @@ import type {DamageSource} from "../damage/DamageSource.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {UUID} from "../../type/types.ts";
-import {DataTracker, type DataTrackerSerializedEntry} from "../data/DataTracker.ts";
+import type {DataTrackerBuilder, DataTrackerSerializedEntry} from "../data/DataTracker.ts";
 import {isValidUUID} from "../../utils/uuid_util.ts";
 import {Entity} from "../Entity.ts";
 import {World} from "../../world/World.ts";
@@ -182,7 +182,7 @@ export abstract class ProjectileEntity extends Entity implements Ownable {
         return entity.getUUID() === this.ownerUuid;
     }
 
-    protected defineSyncedData(_builder: InstanceType<typeof DataTracker.Builder>): void {
+    protected defineSyncedData(_builder: DataTrackerBuilder): void {
     }
 
     protected override changeColor() {

@@ -1,11 +1,12 @@
 import type {Payload} from "../../Payload.ts";
-import {payloadType, type PayloadType} from "../../PayloadType.ts";
-import type {PacketCodec} from "../../codec/PacketCodec.ts";
-import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {ItemStack} from "../../../item/ItemStack.ts";
 import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
+import type {PacketCodec} from "../../codec/PacketCodec.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import {ItemStack} from "../../../item/ItemStack.ts";
+import {ItemCodec} from "../../../item/ItemCodec.ts";
 
 export class InventoryS2CPacket implements Payload {
     public static readonly ID: PayloadType<InventoryS2CPacket> = payloadType('inventory_sync');
@@ -25,14 +26,14 @@ export class InventoryS2CPacket implements Payload {
         return new InventoryS2CPacket(
             reader.readUint8(),
             reader.readVarUint(),
-            ItemStack.LIST_PACKET_CODEC.decode(reader)
+            ItemCodec.LIST_PACKET_CODEC.decode(reader)
         );
     }
 
     private static write(writer: BinaryWriter, value: InventoryS2CPacket) {
         writer.writeInt8(value.syncId);
         writer.writeVarUint(value.revision);
-        ItemStack.LIST_PACKET_CODEC.encode(writer, value.contents);
+        ItemCodec.LIST_PACKET_CODEC.encode(writer, value.contents);
     }
 
     public type(): PayloadType<any> {

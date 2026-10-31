@@ -2,8 +2,8 @@ import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import type {Attribute} from "./Attribute.ts";
 import type {AttributeInstance, PackedAttr} from "./AttributeInstance.ts";
 import type {AttributeSupplier} from "./AttributeSupplier.ts";
-import {Identifier} from "../../registry/Identifier.ts";
 import type {AttributeModifier} from "../../component/type/AttributeModifier.ts";
+import type {Identifier} from "../../registry/Identifier.ts";
 
 export class AttributeMap {
     private readonly attributes: Map<RegistryEntry<Attribute>, AttributeInstance> = new Map();

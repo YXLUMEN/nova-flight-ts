@@ -30,17 +30,7 @@ export class NbtArrayBuilder {
     }
 
     public unwrapPush(element: NbtElement): void {
-        if (!(element instanceof NbtCompound)) {
-            this.push(element);
-            return;
-        }
-
-        if (element.size() === 1) {
-            const inner = element.get('');
-            this.push(inner === null ? element : inner);
-            return;
-        }
-        this.push(element);
+        this.push(NbtArrayBuilder.unwrap(element));
     }
 
     public iter() {
@@ -85,18 +75,10 @@ export class NbtArrayBuilder {
                 return new NbtUint32Array(array);
             }
             case NbtTypeId.String: {
-                const array: string[] = new Array(elements.length).fill(null);
-                for (let i = 0; i < elements.length; i++) {
-                    array[i] = elements[i].value;
-                }
-                return new NbtStringArray(array);
+                return new NbtStringArray(elements.map(v => v.value));
             }
             case NbtTypeId.Compound:
-                const array: NbtCompound[] = new Array(elements.length).fill(null);
-                for (let i = 0; i < elements.length; i++) {
-                    array[i] = elements[i].value;
-                }
-                return new NbtCompoundArray(array);
+                return new NbtCompoundArray(elements.map(v => v.value));
             case NbtTypeId.Int8Array:
             case NbtTypeId.Uint8Array:
             case NbtTypeId.Int16Array:
@@ -138,13 +120,27 @@ export class NbtArrayBuilder {
 
         return new NbtCompound().set('', element);
     }
+
+    public static unwrap(element: NbtElement) {
+        if (element instanceof NbtCompound && element.size() === 1) {
+            const inner = element.get('');
+            return inner === null ? element : inner;
+        }
+
+        return element;
+    }
+
+    public static isArray(element: NbtElement): element is ArrayNbt {
+        const type = element.type();
+        return type >= NbtTypeId.Int8Array && type <= NbtTypeId.CompoundArray;
+    }
 }
 
 interface RawNbt extends NbtElement {
     value: any;
 }
 
-type ArrayNbt =
+export type ArrayNbt =
     NbtInt8Array
     | NbtUint8Array
     | NbtInt16Array

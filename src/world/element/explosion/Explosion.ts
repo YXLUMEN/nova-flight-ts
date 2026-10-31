@@ -221,7 +221,7 @@ export class Explosion implements WorldMutation {
         world.addEffect(null, new RadialRing(
             vec,
             this.visual.radius * 0.2, this.visual.radius * 1.1,
-            0.4, this.visual.color
+            8, this.visual.color
         ));
 
         if (this.configs.tag === ExplosionTag.FUSION) {
@@ -229,7 +229,7 @@ export class Explosion implements WorldMutation {
             world.addEffect(null, new RadialRing(
                 vec,
                 r * 0.1, r * 1.1,
-                0.8, '#e13600'
+                16, '#e13600'
             ));
         }
 

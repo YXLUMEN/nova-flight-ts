@@ -1,11 +1,11 @@
 import type {Payload} from "../../Payload.ts";
-import {payloadType, type PayloadType} from "../../PayloadType.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
-import {DataTracker, type DataTrackerSerializedEntry} from "../../../entity/data/DataTracker.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
+import {DataTrackerSerializedEntry} from "../../../entity/data/DataTracker.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 
 export class EntityTrackerUpdateS2CPacket implements Payload {
     public static readonly ID: PayloadType<EntityTrackerUpdateS2CPacket> = payloadType('entity_tracker_update');
@@ -25,7 +25,7 @@ export class EntityTrackerUpdateS2CPacket implements Payload {
         const list: DataTrackerSerializedEntry<any>[] = [];
         let i = reader.readUint8();
         while (i != 255) {
-            list.push(DataTracker.SerializedEntry.read(reader, i));
+            list.push(DataTrackerSerializedEntry.read(reader, i));
             i = reader.readUint8();
         }
 

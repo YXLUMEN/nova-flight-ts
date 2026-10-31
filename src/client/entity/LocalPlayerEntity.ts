@@ -9,6 +9,7 @@ import type {Item} from "../../item/Item.ts";
 import type {BlockChange} from "../../world/section/BlockChange.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
 import type {AuraEffect} from "../../effect/AuraEffect.ts";
+import type {EntityType} from "../../entity/EntityType.ts";
 import {clamp, squareDistVec2, wrapRadians} from "../../utils/math/math.ts";
 import {ClientTechTree} from "../tech/ClientTechTree.ts";
 import {World} from "../../world/World.ts";
@@ -56,8 +57,8 @@ export class LocalPlayerEntity extends PlayerEntity {
     public readonly approachMissile = new Set<MissileEntity>();
     private revision: number = 0;
 
-    public constructor(world: World, input: InputManager, profile: GameProfile) {
-        super(world, ItemCooldownManager);
+    public constructor(type: EntityType<PlayerEntity>, world: World, input: InputManager, profile: GameProfile) {
+        super(type, world, ItemCooldownManager);
 
         this.input = input;
         this.profile = profile;

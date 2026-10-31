@@ -31,7 +31,7 @@ describe("TeleportEffect 网络编解码", () => {
             '#8a6dff',
             TeleportPhase.IN,
             96,
-            0.6,
+            12,
         ));
 
         assert.strictEqual(decoded.pos.x, 12.5);
@@ -39,14 +39,14 @@ describe("TeleportEffect 网络编解码", () => {
         assert.strictEqual(decoded.color.toUpperCase(), '#8A6DFFFF');
         assert.strictEqual(decoded.phase, TeleportPhase.IN);
         assert.strictEqual(decoded.radius, 96);
-        assert.ok(Math.abs(decoded.life - 0.6) < 1e-6);
+        assert.ok(Math.abs(decoded.life - 12) < 1e-6);
     });
 
     it("非法半径与寿命收敛到可用范围", () => {
         const decoded = roundTrip(new TeleportEffect(Vec2.ZERO, '#fff', TeleportPhase.OUT, -5, 0));
 
         assert.strictEqual(decoded.radius, 1);
-        assert.ok(Math.abs(decoded.life - 0.01) < 1e-6);
+        assert.ok(Math.abs(decoded.life - 1) < 1e-6);
         assert.strictEqual(decoded.phase, TeleportPhase.OUT);
     });
 

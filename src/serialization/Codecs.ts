@@ -181,6 +181,25 @@ export class Codecs {
         );
     }
 
+    public static registryValue<A>(registry: Registry<A>): Codec<A> {
+        return Codecs.of(
+            value => {
+                const id = registry.getId(value);
+                if (!id) return DataResult.err(() => `Value doesn't register: "${value}"`);
+                return Identifier.CODEC.encode(id);
+            },
+            input => {
+                const result = Identifier.CODEC.decode(input)
+                    .map(id => registry.getById(id));
+                if (result.isOk()) {
+                    const entry = result.unwrap();
+                    if (entry) return DataResult.ok(entry);
+                }
+                return DataResult.err(() => `Unknown registry key in ${registry.getKey()}`);
+            }
+        );
+    }
+
     public static field<A>(key: string, codec: Codec<A>): MapCodec<A> {
         return new FieldCodec(key, codec);
     }

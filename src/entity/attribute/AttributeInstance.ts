@@ -3,17 +3,25 @@ import type {Attribute} from "./Attribute.ts";
 import type {Consumer} from "../../type/types.ts";
 import type {HashMap} from "../../utils/collection/HashMap.ts";
 import type {Codec} from "../../serialization/Codec.ts";
-import {Identifier} from "../../registry/Identifier.ts";
+import type {Identifier} from "../../registry/Identifier.ts";
+import {isDev} from "../../configs/RuntimeConfig.ts";
+import {Log} from "../../worker/log.ts";
 import {AttributeModifier, Operation} from "../../component/type/AttributeModifier.ts";
 import {WrapperMap} from "../../utils/collection/WrapperMap.ts";
 import {IllegalStateError} from "../../type/errors.ts";
 import {Codecs} from "../../serialization/Codecs.ts";
 import {Registries} from "../../registry/Registries.ts";
 
-
 export class AttributeInstance {
-    private readonly attribute: RegistryEntry<Attribute>;
+    public static readonly CODEC: Codec<PackedAttr> = Codecs.group<PackedAttr>(
+        Codecs.field('id', Codecs.registry(Registries.ATTRIBUTE)).for(val => val.attribute),
+        Codecs.field('base', Codecs.DOUBLE).for(val => val.baseValue),
+        Codecs.field('modifiers', Codecs.listOf(AttributeModifier.CODEC)).for(val => val.modifiers)
+    ).apply(AttributeInstance.pack);
 
+    public static readonly LIST_CODEC: Codec<PackedAttr[]> = Codecs.listOf(this.CODEC);
+
+    private readonly attribute: RegistryEntry<Attribute>;
     private baseValue: number;
     private value: number = 0;
 
@@ -57,7 +65,9 @@ export class AttributeInstance {
     public addModifier(modifier: AttributeModifier): void {
         const previous = this.modifierById.has(modifier.id);
         if (previous) {
-            throw new Error('Modifier is already applied on this attribute');
+            if (isDev) throw new Error('Modifier is already applied on this attribute');
+            else Log.error('Modifier is already applied on this attribute');
+            return;
         }
         this.modifierById.set(modifier.id, modifier);
         this.setDirty();
@@ -154,14 +164,6 @@ export class AttributeInstance {
         if (!Number.isFinite(baseValue)) throw new Error(`Error when read NBT for EntityAttribute: ${baseValue}`);
         return {attribute, baseValue, modifiers};
     }
-
-    public static readonly CODEC: Codec<PackedAttr> = Codecs.group<PackedAttr>(
-        Codecs.field('id', Codecs.registry(Registries.ATTRIBUTE)).for(val => val.attribute),
-        Codecs.field('base', Codecs.DOUBLE).for(val => val.baseValue),
-        Codecs.field('modifiers', Codecs.listOf(AttributeModifier.CODEC)).for(val => val.modifiers)
-    ).apply(AttributeInstance.pack);
-
-    public static readonly LIST_CODEC: Codec<PackedAttr[]> = Codecs.listOf(this.CODEC);
 }
 
 export interface PackedAttr {

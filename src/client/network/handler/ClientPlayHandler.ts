@@ -103,7 +103,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
                 this.client.clientId,
                 this.client.playerName
             );
-            this.client.player = new LocalPlayerEntity(this.world, this.client.input, profile);
+            this.client.player = new LocalPlayerEntity(EntityTypes.PLAYER, this.world, this.client.input, profile);
             this.client.player.setYaw(-1.57079);
         }
 
@@ -233,7 +233,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
                 console.warn(`Server attempted to add player prior to sending player info (Player id ${packet.uuid})`);
                 return null;
             }
-            return new RemotePlayerEntity(this.world!);
+            return new RemotePlayerEntity(EntityTypes.PLAYER, this.world!);
         }
 
         return entityType.create(this.world!);

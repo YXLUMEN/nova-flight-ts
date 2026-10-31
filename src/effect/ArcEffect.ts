@@ -13,7 +13,7 @@ export class ArcEffect implements VisualEffect {
             writer.writeFloat(value.endX);
             writer.writeFloat(value.endY);
 
-            writer.writeFloat(value.life);
+            writer.writeVarUint(value.life);
             writer.writeFloat(value.width);
             PacketCodecs.COLOR_HEX.encode(writer, value.color);
             writer.writeVarUint(value.arcCount);
@@ -26,7 +26,7 @@ export class ArcEffect implements VisualEffect {
                 reader.readFloat(),
                 reader.readFloat(),
 
-                reader.readFloat(),
+                reader.readVarUint(),
                 reader.readFloat(),
                 PacketCodecs.COLOR_HEX.decode(reader),
                 reader.readVarUint(),
@@ -78,8 +78,8 @@ export class ArcEffect implements VisualEffect {
         return VisualEffectTypes.ARC;
     }
 
-    public tick(tickDelta: number) {
-        this.age += tickDelta;
+    public tick() {
+        this.age++;
     }
 
     public render(ctx: CanvasRenderingContext2D) {

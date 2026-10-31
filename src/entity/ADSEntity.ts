@@ -3,12 +3,12 @@ import type {LivingEntity} from "./LivingEntity.ts";
 import type {TrackedData} from "./data/TrackedData.ts";
 import type {EntityType} from "./EntityType.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
-import {Entity} from "./Entity.ts";
-import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
-import {World} from "../world/World.ts";
+import type {DataTrackerBuilder, DataTrackerSerializedEntry} from "./data/DataTracker.ts";
 import {squareDistVec2} from "../utils/math/math.ts";
-import {BallisticsUtils} from "../utils/math/BallisticsUtils.ts";
 import {spawnFancyLaserByVec} from "../utils/render/LaserFx.ts";
+import {Entity} from "./Entity.ts";
+import {World} from "../world/World.ts";
+import {BallisticsUtils} from "../utils/math/BallisticsUtils.ts";
 import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
 import {ProjectileEntity} from "./projectile/ProjectileEntity.ts";
 import {ParticleEffects} from "../effect/particle/ParticleEffects.ts";
@@ -58,6 +58,6 @@ export class ADSEntity extends Entity implements Ownable {
     public onTrackedDataSet(_data: TrackedData<any>): void {
     }
 
-    protected defineSyncedData(_builder: InstanceType<typeof DataTracker.Builder>): void {
+    protected defineSyncedData(_builder: DataTrackerBuilder): void {
     }
 }

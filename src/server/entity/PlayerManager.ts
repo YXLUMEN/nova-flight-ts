@@ -1,21 +1,22 @@
 import type {UUID} from "../../type/types.ts";
+import type {NovaFlightServer} from "../NovaFlightServer.ts";
+import type {ServerWorld} from "../ServerWorld.ts";
+import type {ServerConnection} from "../network/ServerConnection.ts";
 import {ServerPlayerEntity} from "./ServerPlayerEntity.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import type {NovaFlightServer} from "../NovaFlightServer.ts";
 import {ServerStorage} from "../storage/ServerStorage.ts";
 import {GameProfile} from "./GameProfile.ts";
 import {ServerPlayHandler} from "../network/handler/ServerPlayHandler.ts";
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
 import {PlayerJoinS2CPacket} from "../../network/packet/s2c/PlayerJoinS2CPacket.ts";
-import type {ServerWorld} from "../ServerWorld.ts";
 import {Log} from "../../worker/log.ts";
 import {NoResultsError} from "../../type/errors.ts";
-import type {ServerConnection} from "../network/ServerConnection.ts";
 import {ConnectionState} from "../network/ConnectionState.ts";
 import {ServerCommonHandler} from "../network/handler/ServerCommonHandler.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import {TickChangeS2CPacket} from "../../network/packet/s2c/TickChangeS2CPacket.ts";
 import {PlayerDataStorage} from "../storage/PlayerDataStorage.ts";
+import {EntityTypes} from "../../entity/EntityTypes.ts";
 
 export class PlayerManager {
     private readonly server: NovaFlightServer;
@@ -67,7 +68,7 @@ export class PlayerManager {
         this.uuidToPlayer.delete(player.getUUID());
         (player.getWorld() as ServerWorld).removePlayer(player);
 
-        const newPlayer = new ServerPlayerEntity(this.server.world!, player.profile());
+        const newPlayer = new ServerPlayerEntity(EntityTypes.PLAYER, this.server.world!, player.profile());
         newPlayer.networkHandler = player.networkHandler;
         newPlayer.setId(player.getId());
         newPlayer.copyFrom(player, alive);

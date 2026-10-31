@@ -18,7 +18,7 @@ export class ArtilleryEntity extends FastBulletEntity {
         super.tick();
 
         if (isClient && this.rings-- > 0) {
-            this.getWorld().addEffect(null, new RadialRing(this.position(), 8, 30, 0.8, '#fff'));
+            this.getWorld().addEffect(null, new RadialRing(this.position(), 8, 30, 16, '#fff'));
         }
     }
 

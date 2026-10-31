@@ -41,7 +41,7 @@ export class FocusedArcEmitter extends BaseWeapon {
 
         world.spawnVisual(null, new ArcEffect(
             start.x, start.y, endX, endY,
-            0.2, 2,
+            4, 2,
             '#7f54ff'));
 
         world.playSound(null, SoundEvents.ARC_BURST);
@@ -73,7 +73,7 @@ export class FocusedArcEmitter extends BaseWeapon {
                     mob.takeDamage(damageSource, chainDamage);
                     const arc = new ArcEffect(
                         sourcePos.x, sourcePos.y, mobPos.x, mobPos.y,
-                        0.2, 1.5,
+                        4, 1.5,
                         '#7d89ff',
                         1, 10);
 

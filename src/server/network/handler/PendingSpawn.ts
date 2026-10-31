@@ -11,6 +11,7 @@ import {Vec2} from "../../../utils/math/Vec2.ts";
 import {ServerPlayerEntity} from "../../entity/ServerPlayerEntity.ts";
 import {RacePromise} from "../../../utils/RacePromise.ts";
 import {World} from "../../../world/World.ts";
+import {EntityTypes} from "../../../entity/EntityTypes.ts";
 
 export class PendingSpawn implements Disposable {
     private static readonly POS_CODEC = Codecs.group<PlayerPosition>(
@@ -68,7 +69,7 @@ export class PendingSpawn implements Disposable {
         if (!this.server.world || this.state !== LoadingState.READY) return null;
 
         try {
-            const player = new ServerPlayerEntity(this.server.world, this.profile);
+            const player = new ServerPlayerEntity(EntityTypes.PLAYER, this.server.world, this.profile);
             if (this.playerData) player.readNBT(this.playerData);
             player.snapTo(this.spawnPos.x, this.spawnPos.y, this.spawnYaw);
 

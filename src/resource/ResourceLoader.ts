@@ -12,7 +12,7 @@ import {ModelResource} from "./ModelResource.ts";
 import {Resources} from "./Resources.ts";
 import {sleep} from "../utils/util.ts";
 
-export class DataLoader {
+export class ResourceLoader {
     private static loading = false;
 
     public static async registerAndLoad(manager: RegistryManager, loadScreen: LoadingScreen) {
@@ -26,11 +26,11 @@ export class DataLoader {
         ResourceManager.register(new TextureResource()); // 必须在 Model 之前
         ResourceManager.register(new ModelResource());
 
-        const consumer = (total: number, completed: number, module: ResourceModule) => {
+        const onPgs = (total: number, completed: number, module: ResourceModule) => {
             loadScreen.setSubProgress(completed / total, `Loading ${module.getId()}`);
         };
 
-        await ResourceManager.loadAll(manager, consumer, 50);
+        await ResourceManager.loadAll(manager, onPgs, 50);
         loadScreen.hideSubBar();
         this.loading = false;
     }

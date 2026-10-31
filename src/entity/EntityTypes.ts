@@ -79,7 +79,11 @@ export class EntityTypes {
         EntityType.Builder.create(ExplodeBulletEntity)
             .sized(16, 18)
     );
-    public static readonly PLAYER: EntityType<PlayerEntity>;
+    public static readonly PLAYER: EntityType<PlayerEntity> = EntityType.register('player',
+        // @ts-ignore
+        EntityType.Builder.create(PlayerEntity)
+            .sized(32)
+    );
     public static readonly MISSILE_ENTITY = EntityType.register('missile_entity',
         EntityType.Builder.create(MissileEntity)
             .sized(16)
@@ -165,11 +169,6 @@ export class EntityTypes {
     );
 
     public static init() {
-        (this.PLAYER as any) = EntityType.register('player',
-            // @ts-ignore
-            EntityType.Builder.create(PlayerEntity)
-                .sized(32)
-        );
         Object.freeze(this);
     }
 }

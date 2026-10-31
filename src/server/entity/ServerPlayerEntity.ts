@@ -4,6 +4,7 @@ import type {ServerPlayHandler} from "../network/handler/ServerPlayHandler.ts";
 import type {ServerWorld} from "../ServerWorld.ts";
 import type {Entity} from "../../entity/Entity.ts";
 import type {Item} from "../../item/Item.ts";
+import type {EntityType} from "../../entity/EntityType.ts";
 import {randInt} from "../../utils/math/math.ts";
 import {ServerTechTree} from "../tech/ServerTechTree.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
@@ -38,8 +39,8 @@ export class ServerPlayerEntity extends PlayerEntity {
     private mendingCooldown = 0;
     private chargeShieldCooldown = 0;
 
-    public constructor(world: ServerWorld, playerProfile: GameProfile) {
-        super(world, ServerItemCooldownManager);
+    public constructor(type: EntityType<PlayerEntity>, world: ServerWorld, playerProfile: GameProfile) {
+        super(type, world, ServerItemCooldownManager);
 
         this.playerProfile = playerProfile;
         this.techTree = new ServerTechTree(this);

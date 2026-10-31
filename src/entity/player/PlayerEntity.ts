@@ -5,11 +5,11 @@ import type {TechTree} from "../../world/tech/TechTree.ts";
 import type {Constructor} from "../../type/types.ts";
 import type {MutVec2} from "../../utils/math/MutVec2.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
+import type {EntityType} from "../EntityType.ts";
 import {isClient} from "../../configs/RuntimeConfig.ts";
 import {World} from "../../world/World.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
-import {EntityTypes} from "../EntityTypes.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {ItemStack} from "../../item/ItemStack.ts";
@@ -41,8 +41,8 @@ export abstract class PlayerEntity extends LivingEntity {
     private isDev = false;
     private usedDev = false;
 
-    protected constructor(world: World, itemCooldownManager: Constructor<ItemCooldownManager>) {
-        super(EntityTypes.PLAYER, world);
+    protected constructor(type: EntityType<LivingEntity>, world: World, itemCooldownManager: Constructor<ItemCooldownManager>) {
+        super(type, world);
 
         this.setMovementSpeed(2);
         this.setYaw(-1.57079);

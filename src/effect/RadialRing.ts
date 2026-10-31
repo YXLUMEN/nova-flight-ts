@@ -15,7 +15,7 @@ export class RadialRing implements VisualEffect {
             PacketCodecs.VECTOR2D.encode(writer, value.center);
             writer.writeFloat(value.r0);
             writer.writeFloat(value.r1);
-            writer.writeFloat(value.life);
+            writer.writeVarUint(value.life);
             PacketCodecs.COLOR_HEX.encode(writer, value.color);
         },
         reader => {
@@ -23,7 +23,7 @@ export class RadialRing implements VisualEffect {
                 PacketCodecs.VECTOR2D.decode(reader),
                 reader.readFloat(),
                 reader.readFloat(),
-                reader.readFloat(),
+                reader.readVarUint(),
                 PacketCodecs.COLOR_HEX.decode(reader)
             );
         }
@@ -35,12 +35,12 @@ export class RadialRing implements VisualEffect {
     private readonly life: number;
     private readonly color: string;
 
-    private prevT = 0;
-    private t = 0;
+    private prevAge = 0;
+    private age = 0;
 
     public constructor(center: Vec2, r0: number, r1: number, life: number, color: string) {
         this.color = color;
-        this.life = life;
+        this.life = life || 1;
         this.r1 = r1;
         this.r0 = r0;
         this.center = center;
@@ -50,13 +50,13 @@ export class RadialRing implements VisualEffect {
         return VisualEffectTypes.RADIAL_RING;
     }
 
-    public tick(dt: number) {
-        this.prevT = this.t;
-        this.t += dt;
+    public tick() {
+        this.prevAge = this.age;
+        this.age++;
     }
 
     public render(ctx: CanvasRenderingContext2D, tickDelta: number) {
-        const lerpT = lerp(tickDelta, this.prevT, this.t);
+        const lerpT = lerp(tickDelta, this.prevAge, this.age);
         const k = Math.min(1, lerpT / this.life);
         const r = this.r0 + (this.r1 - this.r0) * k;
         const alpha = 1 - k;
@@ -77,10 +77,10 @@ export class RadialRing implements VisualEffect {
     }
 
     public isAlive(): boolean {
-        return this.t < this.life;
+        return this.age < this.life;
     }
 
     public kill() {
-        this.t = this.life;
+        this.age = this.life;
     }
 }

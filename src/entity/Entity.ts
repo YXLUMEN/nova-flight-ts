@@ -22,7 +22,7 @@ import {Vec2} from "../utils/math/Vec2.ts";
 import {MutVec2} from "../utils/math/MutVec2.ts";
 import {AABB} from "../utils/math/AABB.ts";
 import {AtomicInteger} from "../utils/collection/AtomicInteger.ts";
-import {DataTracker, type DataTrackerBuilder, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
+import {DataTracker, DataTrackerBuilder, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
 import {EntitySpawnS2CPacket} from "../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import {VecDeltaCodec} from "../world/entity/VecDeltaCodec.ts";
 import {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
@@ -79,7 +79,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.pos = MutVec2.zero();
         this.dimensions = type.getDimensions();
 
-        const builder = new DataTracker.Builder(this);
+        const builder = new DataTrackerBuilder(this);
         this.defineSyncedData(builder);
         this.dataTracker = builder.build();
 

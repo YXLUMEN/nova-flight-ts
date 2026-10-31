@@ -1,5 +1,6 @@
 import type {World} from "../../world/World.ts";
 import type {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import type {EntityType} from "../../entity/EntityType.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {ItemCooldownManager} from "../../item/ItemCooldownManager.ts";
 import {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
@@ -10,8 +11,8 @@ export class RemotePlayerEntity extends PlayerEntity {
 
     declare protected readonly techTree: null;
 
-    public constructor(world: World) {
-        super(world, ItemCooldownManager);
+    public constructor(type: EntityType<PlayerEntity>, world: World) {
+        super(type, world, ItemCooldownManager);
     }
 
     public override takeDamage(): boolean {

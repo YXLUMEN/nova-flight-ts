@@ -2,13 +2,20 @@ import type {Container} from "../../world/inventory/Container.ts";
 import type {Item} from "../../item/Item.ts";
 import type {PlayerEntity} from "./PlayerEntity.ts";
 import type {NbtSerializable} from "../../nbt/NbtSerializable.ts";
+import type {Codec} from "../../serialization/Codec.ts";
 import {clamp} from "../../utils/math/math.ts";
 import {ItemStack} from "../../item/ItemStack.ts"
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {DefaultedList} from "../../utils/collection/DefaultedList.ts";
-import {NbtTypeId} from "../../nbt/NbtType.ts";
+import {Codecs} from "../../serialization/Codecs.ts";
+import {ItemCodec} from "../../item/ItemCodec.ts";
 
 export class UniqueInventory implements Container, NbtSerializable, Iterable<ItemStack> {
+    public static readonly SLOT_CODEC: Codec<IndexItem[]> = Codecs.listOf(Codecs.group<IndexItem>(
+        Codecs.field('slot', Codecs.INT8).for(v => v.slot),
+        Codecs.field('stack', ItemCodec.CODEC).for(v => v.stack),
+    ).apply((slot: number, stack: ItemStack) => ({slot, stack})));
+
     private readonly player: PlayerEntity;
     private readonly inventory = DefaultedList.ofSizeAndValue(30, ItemStack.EMPTY);
     private readonly items = new Map<Item, ItemStack>();
@@ -194,18 +201,13 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
     }
 
     public readNBT(nbt: NbtCompound) {
-        const inventory = nbt.getCompoundArray('inventory');
-        if (inventory.length > 0) {
+        nbt.read('inventory', UniqueInventory.SLOT_CODEC).ifPresent(v => {
             this.clearContent();
-            for (const compound of inventory) {
-                const slot = compound.getInt8('slot');
-                if (!compound.contains('stack', NbtTypeId.Compound)) continue;
-
-                const stack = ItemStack.CODEC.decode(compound.getCompound('stack')).orElse(ItemStack.EMPTY);
+            for (const {slot, stack} of v) {
                 stack.setHolder(this.player);
                 this.setItem(slot, stack);
             }
-        }
+        });
         this.setSelectedSlot(nbt.getInt8('selected_slot'));
         return nbt;
     }
@@ -213,18 +215,19 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
     public writeNBT(nbt: NbtCompound): NbtCompound {
         nbt.setInt8('selected_slot', this.selected);
 
-        const inventory: NbtCompound[] = [];
-        for (let i = 0; i < this.inventory.length; i++) {
-            const stack = this.inventory.get(i);
+        const inventory: IndexItem[] = [];
+        for (let slot = 0; slot < this.inventory.length; slot++) {
+            const stack = this.inventory.get(slot);
             if (stack.isEmpty()) continue;
-
-            const compound = new NbtCompound();
-            compound.setInt8('slot', i);
-            compound.store('stack', ItemStack.CODEC, stack);
-            inventory.push(compound);
+            inventory.push({slot, stack});
         }
-        nbt.setCompoundArray('inventory', inventory);
+        nbt.store('inventory', UniqueInventory.SLOT_CODEC, inventory);
 
         return nbt;
     }
+}
+
+interface IndexItem {
+    slot: number;
+    stack: ItemStack;
 }

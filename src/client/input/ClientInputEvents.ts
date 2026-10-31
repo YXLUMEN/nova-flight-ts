@@ -6,7 +6,7 @@ import {cleanObj, empty} from "../../utils/util.ts";
 import {app} from "../../lib.ts";
 import {isDev, RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
-import {DataLoader} from "../../resource/DataLoader.ts";
+import {ResourceLoader} from "../../resource/ResourceLoader.ts";
 import {BitFlag} from "../../utils/BitFlag.ts";
 import {DebugFlag} from "../render/DebugRenderer.ts";
 import {InputBindings} from "./InputBindings.ts";
@@ -79,7 +79,7 @@ export class ClientInputEvents {
                 devFunc(client, code);
             }
             if (event.shiftKey && code === 'KeyP') {
-                void DataLoader.reloadModel(client.registryManager);
+                void ResourceLoader.reloadModel(client.registryManager);
             }
             return;
         }

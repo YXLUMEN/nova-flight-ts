@@ -1,18 +1,19 @@
 import type {Payload} from "../../Payload.ts";
-import {payloadType, type PayloadType} from "../../PayloadType.ts";
+import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {ItemStack} from "../../../item/ItemStack.ts";
-import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
+import {ItemCodec} from "../../../item/ItemCodec.ts";
 
 export class SetPlayerInventoryS2CPacket implements Payload {
     public static readonly ID: PayloadType<SetPlayerInventoryS2CPacket> = payloadType('set_player_inventory');
     public static readonly CODEC: PacketCodec<SetPlayerInventoryS2CPacket> = PacketCodecs.of(
         (writer, value) => {
             writer.writeVarUint(value.slot);
-            ItemStack.PACKET_CODEC.encode(writer, value.contents);
+            ItemCodec.PACKET_CODEC.encode(writer, value.contents);
         },
-        reader => new SetPlayerInventoryS2CPacket(reader.readVarUint(), ItemStack.PACKET_CODEC.decode(reader))
+        reader => new SetPlayerInventoryS2CPacket(reader.readVarUint(), ItemCodec.PACKET_CODEC.decode(reader))
     );
 
     public readonly slot: number;

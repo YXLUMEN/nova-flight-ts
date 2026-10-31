@@ -4,7 +4,7 @@ import {confirm} from "@tauri-apps/plugin-dialog";
 import {LoadingScreen} from "./render/ui/LoadingScreen.ts";
 import {ClientWindow} from "./render/ClientWindow.ts";
 import {ClientTechManager} from "./tech/ClientTechManager.ts";
-import {DataLoader} from "../resource/DataLoader.ts";
+import {ResourceLoader} from "../resource/ResourceLoader.ts";
 import {RenderLoader} from "./render/RenderLoader.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import {isDev} from "../configs/RuntimeConfig.ts";
@@ -27,7 +27,7 @@ export class ClientInit {
         await sleep(200);
 
         loadingScreen.setProgress(0.4, 'Load resources');
-        await DataLoader.registerAndLoad(manager, loadingScreen);
+        await ResourceLoader.registerAndLoad(manager, loadingScreen);
 
         loadingScreen.setProgress(0.6, 'Initialize renderer');
         await RenderLoader.registerAndLoad(loadingScreen);

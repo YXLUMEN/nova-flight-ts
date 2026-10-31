@@ -2,10 +2,10 @@ import type {TrackedData} from "./data/TrackedData.ts";
 import type {EntityType} from "./EntityType.ts";
 import type {MobEntity} from "./mob/MobEntity.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
-import {Entity} from "./Entity.ts";
-import {DataTracker, type DataTrackerSerializedEntry} from "./data/DataTracker.ts";
-import {World} from "../world/World.ts";
+import type {DataTrackerBuilder, DataTrackerSerializedEntry} from "./data/DataTracker.ts";
 import {spawnTeleportFx} from "../utils/render/TeleportFx.ts";
+import {Entity} from "./Entity.ts";
+import {World} from "../world/World.ts";
 
 export class SpawnMarkerEntity extends Entity {
     public override noClip = true;
@@ -63,6 +63,6 @@ export class SpawnMarkerEntity extends Entity {
     public override onTrackedDataSet(_data: TrackedData<any>): void {
     }
 
-    protected override defineSyncedData(_builder: InstanceType<typeof DataTracker.Builder>): void {
+    protected override defineSyncedData(_builder: DataTrackerBuilder): void {
     }
 }

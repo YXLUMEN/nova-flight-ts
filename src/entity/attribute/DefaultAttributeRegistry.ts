@@ -1,4 +1,4 @@
-import {AttributeSupplier} from "./AttributeSupplier.ts";
+import type {AttributeSupplier} from "./AttributeSupplier.ts";
 import type {EntityType} from "../EntityType.ts";
 import type {LivingEntity} from "../LivingEntity.ts";
 

@@ -1,47 +1,15 @@
-import {DataEntry} from "./DataEntry.ts";
-import type {DataTracked} from "./DataTracked.ts";
-import {ClassToNum} from "../../utils/collection/ClassToNum.ts";
-import {TrackedData} from "./TrackedData.ts";
 import type {Constructor} from "../../type/types.ts";
 import type {TrackedDataHandler} from "./TrackedDataHandler.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
-import {TrackedDataHandlerRegistry} from "./TrackedDataHandlerRegistry.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
+import type {DataTracked} from "./DataTracked.ts";
+import {DataEntry} from "./DataEntry.ts";
+import {ClassToNum} from "../../utils/collection/ClassToNum.ts";
+import {TrackedData} from "./TrackedData.ts";
+import {TrackedDataHandlerRegistry} from "./TrackedDataHandlerRegistry.ts";
 
 export class DataTracker {
     public static readonly CLASS_TP_ID = new ClassToNum();
-    public static Builder = class Builder {
-        private readonly entity: DataTracked;
-        private readonly entries: DataEntry<any>[];
-
-        public constructor(entity: DataTracked) {
-            this.entity = entity;
-            const length = DataTracker.CLASS_TP_ID.getNext(Object(entity).constructor);
-            this.entries = new Array(length).fill(null);
-        }
-
-        public define<T>(data: TrackedData<T>, value: T): Builder {
-            const id = data.id;
-            if (id > this.entries.length) {
-                throw new RangeError(`Data value id is too big with ${id}; Max is ${this.entries.length}`);
-            }
-            if (this.entries[id] != null) {
-                throw new Error(`Duplicate value id: ${id}`);
-            }
-            this.entries[id] = new DataEntry(data, value);
-            return this;
-        }
-
-        public build(): DataTracker {
-            for (let i = 0; i < this.entries.length; i++) {
-                if (this.entries[i] == null) {
-                    throw new ReferenceError(`Entity ${Object(this.entity).constructor} has not defined data value ${i}`);
-                }
-            }
-
-            return new DataTracker(this.entity, this.entries);
-        }
-    }
 
     private readonly trackedEntity: DataTracked;
     private readonly entries: DataEntry<any>[];
@@ -124,44 +92,73 @@ export class DataTracker {
 
         return list;
     }
+}
 
-    public static SerializedEntry = class SerializedEntry<T> {
-        public readonly id: number;
-        public readonly handler: TrackedDataHandler<T>;
-        public readonly value: T;
+export class DataTrackerBuilder {
+    private readonly entity: DataTracked;
+    private readonly entries: DataEntry<any>[];
 
-        public constructor(id: number, handler: TrackedDataHandler<T>, value: T) {
-            this.id = id;
-            this.handler = handler;
-            this.value = value;
+    public constructor(entity: DataTracked) {
+        this.entity = entity;
+        const length = DataTracker.CLASS_TP_ID.getNext(Object(entity).constructor);
+        this.entries = new Array(length).fill(null);
+    }
+
+    public define<T>(data: TrackedData<T>, value: T): DataTrackerBuilder {
+        const id = data.id;
+        if (id > this.entries.length) {
+            throw new RangeError(`Data value id is too big with ${id}; Max is ${this.entries.length}`);
         }
-
-        public static of<T>(data: TrackedData<T>, value: T): DataTrackerSerializedEntry<T> {
-            return new SerializedEntry(data.id, data.dataType, value);
+        if (this.entries[id] != null) {
+            throw new Error(`Duplicate value id: ${id}`);
         }
+        this.entries[id] = new DataEntry(data, value);
+        return this;
+    }
 
-        public write(writer: BinaryWriter): void {
-            const index = TrackedDataHandlerRegistry.getId(this.handler);
-            if (index === null) {
-                throw new RangeError(`Unknown serializer type ${this.handler}`);
+    public build(): DataTracker {
+        for (let i = 0; i < this.entries.length; i++) {
+            if (this.entries[i] == null) {
+                throw new ReferenceError(`Entity ${Object(this.entity).constructor} has not defined data value ${i}`);
             }
-            writer.writeInt8(this.id);
-            writer.writeVarUint(index);
-            this.handler.codec().encode(writer, this.value);
         }
 
-        public static read(reader: BinaryReader, id: number): SerializedEntry<any> {
-            const index = reader.readVarUint();
-            const handler = TrackedDataHandlerRegistry.getHandler(index);
-            if (handler === null) {
-                throw new RangeError(`Unknown serializer type ${id}`);
-            }
-
-            return new SerializedEntry(id, handler, handler.codec().decode(reader));
-        }
+        return new DataTracker(this.entity, this.entries);
     }
 }
 
-export type DataTrackerBuilder = InstanceType<typeof DataTracker.Builder>;
+export class DataTrackerSerializedEntry<T> {
+    public readonly id: number;
+    public readonly handler: TrackedDataHandler<T>;
+    public readonly value: T;
 
-export type DataTrackerSerializedEntry<T> = InstanceType<typeof DataTracker.SerializedEntry<T>>;
+    public constructor(id: number, handler: TrackedDataHandler<T>, value: T) {
+        this.id = id;
+        this.handler = handler;
+        this.value = value;
+    }
+
+    public static of<T>(data: TrackedData<T>, value: T): DataTrackerSerializedEntry<T> {
+        return new DataTrackerSerializedEntry(data.id, data.dataType, value);
+    }
+
+    public write(writer: BinaryWriter): void {
+        const index = TrackedDataHandlerRegistry.getId(this.handler);
+        if (index === null) {
+            throw new RangeError(`Unknown serializer type ${this.handler}`);
+        }
+        writer.writeInt8(this.id);
+        writer.writeVarUint(index);
+        this.handler.codec().encode(writer, this.value);
+    }
+
+    public static read(reader: BinaryReader, id: number): DataTrackerSerializedEntry<any> {
+        const index = reader.readVarUint();
+        const handler = TrackedDataHandlerRegistry.getHandler(index);
+        if (handler === null) {
+            throw new RangeError(`Unknown serializer type ${id}`);
+        }
+
+        return new DataTrackerSerializedEntry(id, handler, handler.codec().decode(reader));
+    }
+}

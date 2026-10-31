@@ -22,7 +22,7 @@ export class DefaultedList<E> implements ArrayLike<E>, Iterable<E> {
     }
 
     public static ofSizeAndValue<E>(size: number, defaultValue: E): DefaultedList<E> {
-        if (defaultValue === null || defaultValue === undefined) {
+        if (defaultValue == null) {
             throw new Error('The validated object is null');
         }
         return new DefaultedList<E>(new Array(size).fill(defaultValue), defaultValue);
