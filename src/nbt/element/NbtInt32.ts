@@ -1,9 +1,9 @@
-import type {NbtElement} from "./NbtElement.ts";
+import type {NbtNumber} from "./NbtElement.ts";
 import {type NbtType, NbtTypeId} from "../NbtType.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 
-export class NbtInt32 implements NbtElement {
+export class NbtInt32 implements NbtNumber {
     public static readonly TYPE: NbtType<NbtInt32> = {
         read(reader: BinaryReader) {
             return NbtInt32.of(reader.readInt32());
@@ -33,7 +33,7 @@ export class NbtInt32 implements NbtElement {
         return this;
     }
 
-    public toString(): string {
+    public toSNBT(): string {
         return `${this.value}i`;
     }
 }

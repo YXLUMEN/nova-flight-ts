@@ -7,6 +7,7 @@ export const enum Main2WorkerType {
     SAVE_ALL,
     READ_FILE,
     FETCH,
+    SETTINGS,
 }
 
 export const enum Worker2MainType {

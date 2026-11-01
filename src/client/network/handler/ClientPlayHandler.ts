@@ -75,6 +75,8 @@ import {ParticleEffects} from "../../../effect/particle/ParticleEffects.ts";
 import {Settings} from "../../settings/Settings.ts";
 import type {EntitiesRemoveS2CPacket} from "../../../network/packet/s2c/EntitiesRemoveS2CPacket.ts";
 import type {ParticleEmitterS2CPacket} from "../../../network/packet/s2c/ParticleEmitterS2CPacket.ts";
+import {Seed} from "../../../utils/math/random/Seed.ts";
+import {stringHashCode} from "../../../utils/hash.ts";
 
 export class ClientPlayHandler extends ClientCommonHandler {
     private readonly commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
@@ -95,7 +97,12 @@ export class ClientPlayHandler extends ClientCommonHandler {
     }
 
     public async onGameJoin(packet: JoinGameS2CPacket) {
-        this.world = new ClientWorld(this.client.registryManager, this.client.worldRender, packet.worldName);
+        this.world = new ClientWorld(
+            this.client.registryManager,
+            this.client.worldRender,
+            packet.worldName,
+            new Seed(stringHashCode(packet.worldName))
+        );
         await this.client.joinGame(this.world);
         if (this.client.player === null) {
             const profile = new GameProfile(
@@ -342,10 +349,10 @@ export class ClientPlayHandler extends ClientCommonHandler {
         }
 
         for (let i = packet.count; i--;) {
-            const ox = this.random.nextGaussian() * packet.offsetX;
-            const oy = this.random.nextGaussian() * packet.offsetY;
-            const vx = this.random.nextGaussian() * packet.speed;
-            const vy = this.random.nextGaussian() * packet.speed;
+            const ox = this.gaussian.nextGaussian() * packet.offsetX;
+            const oy = this.gaussian.nextGaussian() * packet.offsetY;
+            const vx = this.gaussian.nextGaussian() * packet.speed;
+            const vy = this.gaussian.nextGaussian() * packet.speed;
             world.addRawParticle(
                 packet.posX + ox, packet.posY + oy,
                 vx, vy,

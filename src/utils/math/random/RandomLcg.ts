@@ -17,10 +17,12 @@ export class RandomLcg extends Random {
     }
 
     public next(): number {
-        this.state = (Math.imul(RandomLcg.A, this.state) + RandomLcg.C) >>> 0;
+        let z = this.state;
+        z = Math.imul(RandomLcg.A, z) + RandomLcg.C;
+        this.state = z;
 
         // 输出混合
-        let z = this.state;
+        z = z >>> 0;
         z = Math.imul(z ^ (z >>> 16), 0x85EBCA6B) >>> 0;
         z = Math.imul(z ^ (z >>> 13), 0xC2B2AE35) >>> 0;
         return (z ^ (z >>> 16)) >>> 0;

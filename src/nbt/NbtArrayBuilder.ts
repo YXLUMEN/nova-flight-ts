@@ -1,4 +1,4 @@
-import type {NbtElement} from "./element/NbtElement.ts";
+import type {NbtArray, NbtElement} from "./element/NbtElement.ts";
 import {NbtTypeId} from "./NbtType.ts";
 import {NbtCompound} from "./element/NbtCompound.ts";
 import {NbtInt8Array} from "./element/NbtInt8Array.ts";
@@ -8,7 +8,6 @@ import {NbtUint32Array} from "./element/NbtUint32Array.ts";
 import {NbtStringArray} from "./element/NbtStringArray.ts";
 import {NbtCompoundArray} from "./element/NbtCompoundArray.ts";
 import {NbtEnd} from "./element/NbtEnd.ts";
-import type {NbtUint8Array} from "./element/NbtUint8Array.ts";
 
 export class NbtArrayBuilder {
     private readonly elements: NbtElement[];
@@ -86,13 +85,13 @@ export class NbtArrayBuilder {
             case NbtTypeId.Uint32Array:
             case NbtTypeId.StringArray:
             case NbtTypeId.CompoundArray:
-                return this.buildArray(elements as ArrayNbt[]);
+                return this.buildArray(elements as unknown as NbtArray<unknown>[]);
             default:
                 return NbtEnd.INSTANCE;
         }
     }
 
-    private buildArray(elements: ArrayNbt[]): NbtElement {
+    private buildArray(elements: NbtArray<unknown>[]): NbtElement {
         if (elements.length === 0) return NbtEnd.INSTANCE;
         if (elements.length === 1) return elements[0];
         return new NbtCompoundArray(elements.map(e => new NbtCompound().set('', e)));
@@ -129,22 +128,8 @@ export class NbtArrayBuilder {
 
         return element;
     }
-
-    public static isArray(element: NbtElement): element is ArrayNbt {
-        const type = element.type();
-        return type >= NbtTypeId.Int8Array && type <= NbtTypeId.CompoundArray;
-    }
 }
 
 interface RawNbt extends NbtElement {
     value: any;
 }
-
-export type ArrayNbt =
-    NbtInt8Array
-    | NbtUint8Array
-    | NbtInt16Array
-    | NbtInt32Array
-    | NbtUint32Array
-    | NbtStringArray
-    | NbtCompoundArray;

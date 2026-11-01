@@ -124,7 +124,7 @@ export class ServerTechTree implements TechTree {
 
     public readNBT(nbt: NbtCompound) {
         const techs = nbt.getStringArray('techs');
-        if (techs.length === 0) return;
+        if (!techs || techs.length === 0) return;
 
         for (const id of techs) {
             const tech = this.state.getTech(id);

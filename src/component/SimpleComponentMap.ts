@@ -72,7 +72,7 @@ export class SimpleComponentMap implements ComponentMap {
 
     public static fromNbt(nbt: NbtCompound): SimpleComponentMap {
         const map = new SimpleComponentMap();
-        for (const key of nbt.getKeys()) {
+        for (const key of nbt.iterKeys()) {
             const id = Identifier.tryParse(key);
             if (!id) continue;
             const entry = Registries.DATA_COMPONENT_TYPE.getEntryById(id);

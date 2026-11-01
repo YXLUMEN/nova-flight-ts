@@ -1,9 +1,9 @@
-import type {NbtElement} from "./NbtElement.ts";
+import type {NbtArray} from "./NbtElement.ts";
 import {type NbtType, NbtTypeId} from "../NbtType.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 
-export class NbtUint8Array implements NbtElement {
+export class NbtUint8Array implements NbtArray<number> {
     public static readonly TYPE: NbtType<NbtUint8Array> = {
         read(reader: BinaryReader): NbtUint8Array {
             const len = reader.readVarUint();
@@ -17,10 +17,10 @@ export class NbtUint8Array implements NbtElement {
         }
     };
 
-    public readonly value: Uint8Array;
+    public readonly elements: Uint8Array;
 
     public constructor(value: Uint8Array) {
-        this.value = value;
+        this.elements = value;
     }
 
     public static create(list: Iterable<number>) {
@@ -32,17 +32,17 @@ export class NbtUint8Array implements NbtElement {
     }
 
     public write(writer: BinaryWriter): void {
-        writer.writeVarUint(this.value.length);
-        for (const num of this.value) {
+        writer.writeVarUint(this.elements.length);
+        for (const num of this.elements) {
             writer.writeInt8(num);
         }
     }
 
     public copy(): NbtUint8Array {
-        return new NbtUint8Array(new Uint8Array(this.value));
+        return new NbtUint8Array(new Uint8Array(this.elements));
     }
 
-    public toString(): string {
-        return `[B;${this.value.join(',')}]`;
+    public toSNBT(): string {
+        return `[B;${this.elements.join(',')}]`;
     }
 }

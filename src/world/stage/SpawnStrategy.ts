@@ -1,16 +1,19 @@
 import type {MobFactory} from "../../type/IStage.ts";
-import {randInt, randomFromIterator} from "../../utils/math/math.ts";
+import type {MobEntity} from "../../entity/mob/MobEntity.ts";
+import type {Random} from "../../utils/math/random/Random.ts";
 import {MobBlueprint} from "./MobBlueprint.ts";
 import {World} from "../World.ts";
-import type {MobEntity} from "../../entity/mob/MobEntity.ts";
 import {SpawnMarkerEntity} from "../../entity/SpawnMarkerEntity.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {ExplosionEntity} from "../../entity/ExplosionEntity.ts";
 import {MutAABB} from "../../utils/math/MutAABB.ts";
 
+const MIN_X = 24;
+const MAX_X = World.MAP_WIDTH - MIN_X;
+
 export function spawnAtTop(bp: MobBlueprint): MobFactory {
     return (ctx) => {
-        const x = randInt(24, World.MAP_WIDTH - 24);
+        const x = ctx.rng.nextInt(MIN_X, MAX_X);
         const mob = bp.create(ctx);
         mob.setPosition(x, -30);
         return mob;
@@ -30,17 +33,17 @@ export function spawnAtTopBest(
 
     const recent: number[] = [];
 
-    function sampleX(minX: number, maxX: number): number {
+    function sampleX(minX: number, maxX: number, rng: Random): number {
         if (maxX <= minX) return minX;
         if (recent.length === 0) {
-            const x0 = randInt(minX, maxX);
+            const x0 = rng.nextInt(minX, maxX);
             recent.push(x0);
             return x0;
         }
         let bestX = minX;
         let bestScore = -Infinity;
         for (let c = 0; c < candidates; c++) {
-            const x = randInt(minX, maxX);
+            const x = rng.nextInt(minX, maxX);
             let d = Infinity;
             for (let i = 0; i < recent.length; i++) {
                 const dx = Math.abs(x - recent[i]);
@@ -60,7 +63,7 @@ export function spawnAtTopBest(
     }
 
     return (ctx) => {
-        const x = sampleX(margin, World.MAP_WIDTH - margin);
+        const x = sampleX(margin, MAX_X, ctx.rng);
         const mob = bp.create(ctx);
         mob.setPosition(x, -30);
         return mob;
@@ -73,9 +76,11 @@ export function spawnAtTopLine(
     gap: number = 48,
     startY: number = -30,
 ): MobFactory {
+    const totalWidth = gap * (count - 1);
+    const RESULT_X = MAX_X - totalWidth;
+
     return (ctx) => {
-        const totalWidth = gap * (count - 1);
-        const startX = randInt(24, World.MAP_WIDTH - 24 - totalWidth);
+        const startX = ctx.rng.nextInt(MIN_X, RESULT_X);
         const arr: MobEntity[] = [];
 
         for (let i = 0; i < count; i++) {
@@ -90,7 +95,7 @@ export function spawnAtTopLine(
 export function spawnFormation(members: MobBlueprint[]): MobFactory {
     return (ctx) => {
         const arr: MobEntity[] = [];
-        const baseX = randInt(24, World.MAP_WIDTH - 24);
+        const baseX = ctx.rng.nextInt(MIN_X, MAX_X);
 
         for (let i = 0; i < members.length; i++) {
             const bp = members[i];
@@ -101,7 +106,6 @@ export function spawnFormation(members: MobBlueprint[]): MobFactory {
         return arr;
     };
 }
-
 
 export function spawnInMap(bp: MobBlueprint, margin: number = 24, safeRadius: number = 128): MobFactory {
     const {halfWidth, halfHeight} = bp.type.getDimensions();
@@ -115,10 +119,12 @@ export function spawnInMap(bp: MobBlueprint, margin: number = 24, safeRadius: nu
         const blockMap = ctx.world.getMap();
         const players = ctx.world.getPlayers();
         const candidateAABB = new MutAABB(0, 0);
+        const rng = ctx.rng;
+
         let x = 0, y = 0;
         for (let tries = 0; tries < 20; tries++) {
-            const bx = randInt(blockMinX, blockMaxX);
-            const by = randInt(blockMinY, blockMaxY);
+            const bx = rng.nextInt(blockMinX, blockMaxX);
+            const by = rng.nextInt(blockMinY, blockMaxY);
             x = bx * 8 + 4;
             y = by * 8 + 4;
             // 避开玩家
@@ -147,10 +153,9 @@ export function spawnInMap(bp: MobBlueprint, margin: number = 24, safeRadius: nu
     };
 }
 
-
 export function spawnExplosion(): MobFactory {
     return (ctx) => {
-        const player = randomFromIterator(ctx.world.getPlayers());
+        const player = ctx.rng.pickIter(ctx.world.getPlayers());
         if (!player) return null;
 
         const explosion = new ExplosionEntity(EntityTypes.EXPLOSION_ENTITY, ctx.world);

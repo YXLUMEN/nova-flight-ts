@@ -10,13 +10,14 @@ export abstract class Random {
 
     /** 均匀 [0,1), 53 bit 精度 */
     public nextDouble(): number {
-        // hi 取 27 bit、lo 取 26 bit，合计 53 bit；权重必须是 2^26。
+        // hi 取 27 bit、lo 取 26 bit, 合计 53 bit；权重必须是 2^26。
         const hi = this.next() >>> 0;
         const lo = this.next() >>> 0;
         return ((hi >>> 5) * 0x4000000 + (lo >>> 6)) / 0x20000000000000;
     }
 
     public nextBool(probability: number = 0.5): boolean {
+        // NaN 报错
         if (!(probability >= 0)) {
             throw new Error(`probability must be a number in [0, 1], got ${probability}`);
         }
@@ -29,7 +30,7 @@ export abstract class Random {
         if (!Number.isInteger(bound) || bound <= 0 || bound > 0x100000000) {
             throw new Error(`bound must be an integer in [1, 2^32], got ${bound}`);
         }
-        // 拒绝采样：丢弃落在 [limit, 2^32) 的值，使 limit 能被 bound 整除
+        // 拒绝采样:丢弃落在 [limit, 2^32) 的值, 使 limit 能被 bound 整除
         const limit = 0x100000000 - (0x100000000 % bound);
         let v = this.next() >>> 0;
         while (v >= limit) {
@@ -59,6 +60,22 @@ export abstract class Random {
         return arr[this.nextIntBelow(arr.length)];
     }
 
+    public pickIter<T>(iterator: Iterator<T>): T | null {
+        let result: T | null = null;
+        let count = 0;
+
+        let next = iterator.next();
+        while (!next.done) {
+            count++;
+            if (this.nextFloat() < 1 / count) {
+                result = next.value;
+            }
+            next = iterator.next();
+        }
+
+        return result;
+    }
+
     /** Fisher–Yates 就地洗牌, 无取模偏差 */
     public shuffleInplace<T>(arr: T[]): T[] {
         for (let i = arr.length - 1; i > 0; i--) {
@@ -72,10 +89,10 @@ export abstract class Random {
 
     /**
      * 从当前流派生出一个同类型、统计无关的子生成器。
-     * 注意: 会推进父流状态，因此连续两次 split() 得到的子流不同。
+     * 注意: 会推进父流状态, 因此连续两次 split() 得到的子流不同。
      */
     public split(): this {
-        // 取 3 次输出（每次混合两次 next()，降低弱低位子类的残留相关性）
+        // 取 3 次输出（每次混合两次 next(), 降低弱低位子类的残留相关性）
         const words = [0, 0, 0];
         for (let i = 0; i < words.length; i++) {
             const a = this.next() >>> 0;

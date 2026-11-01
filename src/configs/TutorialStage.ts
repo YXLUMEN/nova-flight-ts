@@ -1,4 +1,3 @@
-import {Stage} from "../world/stage/Stage.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {createPhase} from "../world/stage/PhaseConfig.ts";
 import {spawnAtTop, spawnAtTopBest} from "../world/stage/SpawnStrategy.ts";
@@ -78,4 +77,4 @@ const boss = createPhase('tutorial_boss')
 
 const end = createPhase('tutorial_end').build();
 
-export const TutorialStage = new Stage([intro, move, fire, enemy, inventory, tech, boss, end]);
+export const TUTORIAL_PHASES = [intro, move, fire, enemy, inventory, tech, boss, end];

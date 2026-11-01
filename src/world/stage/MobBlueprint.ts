@@ -92,7 +92,7 @@ export class MobBlueprint {
     }
 
     private applyEliteEffects(ctx: SpawnContext, mob: MobEntity, health: number): void {
-        if (ctx.difficulty > 2 && ctx.rng() > 0.7) {
+        if (ctx.difficulty > 2 && ctx.rng.nextBool(0.3)) {
             const shieldAmount = Math.max(ctx.difficulty, health / 6);
             mob.addStatusEffect(
                 new StatusEffectInstance(StatusEffects.SHIELD, -1, shieldAmount),
@@ -101,7 +101,7 @@ export class MobBlueprint {
             return;
         }
 
-        if (ctx.difficulty > 8 && ctx.rng() > 0.9) {
+        if (ctx.difficulty > 8 && ctx.rng.nextBool(0.1)) {
             mob.addStatusEffect(
                 new StatusEffectInstance(StatusEffects.RESISTANCE, 800, Math.min(5, ctx.difficulty - 5)),
                 null,

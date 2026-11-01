@@ -1,9 +1,9 @@
 import {type NbtType, NbtTypeId} from "../NbtType.ts";
-import type {NbtElement} from "./NbtElement.ts";
+import type {NbtArray} from "./NbtElement.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 
-export class NbtStringArray implements NbtElement {
+export class NbtStringArray implements NbtArray<string> {
     public static readonly TYPE: NbtType<NbtStringArray> = {
         read(reader: BinaryReader): NbtStringArray {
             const len = reader.readVarUint();
@@ -17,10 +17,10 @@ export class NbtStringArray implements NbtElement {
         }
     };
 
-    public readonly value: string[];
+    public readonly elements: string[];
 
     public constructor(value: string[]) {
-        this.value = value;
+        this.elements = value;
     }
 
     public type(): NbtTypeId {
@@ -28,18 +28,18 @@ export class NbtStringArray implements NbtElement {
     }
 
     public write(writer: BinaryWriter): void {
-        writer.writeVarUint(this.value.length);
-        for (const str of this.value) {
+        writer.writeVarUint(this.elements.length);
+        for (const str of this.elements) {
             writer.writeString(str);
         }
     }
 
     public copy(): NbtStringArray {
-        return new NbtStringArray(Array.from(this.value));
+        return new NbtStringArray(Array.from(this.elements));
     }
 
-    public toString(): string {
-        const items = this.value
+    public toSNBT(): string {
+        const items = this.elements
             .map(s => {
                     const escaped = s
                         .replace(/\\/g, '\\\\')

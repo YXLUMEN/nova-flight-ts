@@ -1,6 +1,6 @@
-import {clamp} from "../../utils/math/math.ts";
 import type {SpawnRuleConfig} from "./SpawnRuleConfig.ts";
 import type {SpawnContext} from "./SpawnContext.ts";
+import {clamp} from "../../utils/math/math.ts";
 
 export class SpawnRule {
     private ticks = 0;
@@ -41,7 +41,7 @@ export class SpawnRule {
 
     private resolvePeriodTicks(ctx: SpawnContext): number {
         const j = clamp(this.cfg.jitter ?? 0, 0, 1);
-        const jitterMul = this.jitterMul(ctx.rng(), j);
+        const jitterMul = this.jitterMul(ctx.rng.nextFloat(), j);
 
         if (this.cfg.every !== undefined) {
             const baseTicks = typeof this.cfg.every === 'function'

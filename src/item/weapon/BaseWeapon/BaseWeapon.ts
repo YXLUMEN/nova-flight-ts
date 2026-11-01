@@ -121,7 +121,7 @@ export abstract class BaseWeapon extends Weapon {
         bullet: ProjectileEntity,
         attacker: Entity,
         speed: number,
-        offset: number,
+        offset: number = 0,
         maxSpread = 1,
         margin = 0
     ): void {

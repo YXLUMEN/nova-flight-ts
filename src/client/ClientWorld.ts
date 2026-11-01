@@ -11,6 +11,9 @@ import type {Vec2} from "../utils/math/Vec2.ts";
 import type {ClientConnection} from "./network/ClientConnection.ts";
 import type {Payload} from "../network/Payload.ts";
 import type {HexColor} from "../type/types.ts";
+import type {Seed} from "../utils/math/random/Seed.ts";
+import type {Explosion} from "../world/element/explosion/Explosion.ts";
+import {DEFAULT_CONFIG} from "../configs/RuntimeConfig.ts";
 import {World} from "../world/World.ts";
 import {ClientEntityManager} from "../world/entity/ClientEntityManager.ts";
 import {EntityList} from "../world/entity/EntityList.ts";
@@ -18,8 +21,6 @@ import {RegistryManager} from "../registry/RegistryManager.ts";
 import {SoundSystem} from "../sound/SoundSystem.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {MobEntity} from "../entity/mob/MobEntity.ts";
-import type {Explosion} from "../world/element/explosion/Explosion.ts";
-import {DEFAULT_CONFIG} from "../configs/RuntimeConfig.ts";
 import {HistoricalScore} from "../statistics/HistoricalScore.ts";
 import {GameOver} from "../event/events/game/GameOver.ts";
 import {PlayerEntity} from "../entity/player/PlayerEntity.ts";
@@ -38,8 +39,8 @@ export class ClientWorld extends World {
 
     private phaseScore = 0;
 
-    public constructor(registryManager: RegistryManager, worldRender: WorldRenderer, worldName: string) {
-        super(registryManager, true);
+    public constructor(registryManager: RegistryManager, worldRender: WorldRenderer, worldName: string, seed: Seed) {
+        super(registryManager, seed, true);
 
         this.worldRender = worldRender;
         this.worldName = worldName;

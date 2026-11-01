@@ -8,8 +8,6 @@ export class Seed {
     private readonly w0: number;
     private readonly w1: number;
     private readonly w2: number;
-    // 熵的 16 个 5-bit 视图(0–31), 仅用于外部检视
-    private readonly values: readonly number[];
 
     public constructor(seed: number | bigint) {
         if (typeof seed === 'number') {
@@ -28,7 +26,7 @@ export class Seed {
             if (seed < 0n) {
                 throw new Error(`Numeric seed must be non-negative: ${seed}`);
             }
-            // 只保留低 80 bit（BigInt 仅在此分支出现）
+            // 只保留低 80 bit
             const masked = seed & ((1n << 80n) - 1n);
             this.w0 = Number(masked & 0xFFFFFFFFn);
             this.w1 = Number((masked >> 32n) & 0xFFFFFFFFn);
@@ -36,14 +34,11 @@ export class Seed {
         } else {
             throw new Error(`Seed expects a number or bigint, got ${typeof seed}`);
         }
-
-        this.values = Object.freeze(Seed.split5(this.w0, this.w1, this.w2));
-        Object.freeze(this);
     }
 
     /** 返回 16 个 0–31 的数值（熵的 5-bit 视图） */
-    public getValues(): readonly number[] {
-        return this.values;
+    public getValues(): number[] {
+        return Seed.split5(this.w0, this.w1, this.w2);
     }
 
     /** 原始 80 bit 熵 */
@@ -74,12 +69,12 @@ export class Seed {
         const {w0, w1, w2} = this;
         const out = new Uint32Array(count);
 
-        let h = Seed.mix32((Seed.GOLDEN32 ^ (stream >>> 0)) >>> 0);
+        let h = Seed.mix32(Seed.GOLDEN32 ^ (stream >>> 0));
         for (let i = 0; i < count; i++) {
-            h = Seed.mix32((h + i) >>> 0);
-            let z = Seed.mix32((h ^ w0) >>> 0);
-            z = Seed.mix32((z ^ w1) >>> 0);
-            z = Seed.mix32((z ^ w2) >>> 0);
+            h = Seed.mix32((h + i) | 0);
+            let z = Seed.mix32(h ^ w0);
+            z = Seed.mix32(z ^ w1);
+            z = Seed.mix32(z ^ w2);
             out[i] = z;
         }
         return out;
@@ -87,9 +82,9 @@ export class Seed {
 
     /** murmur3 fmix32: 32-bit 雪崩混合 */
     private static mix32(x: number): number {
-        x = Math.imul(x ^ (x >>> 16), 0x85EBCA6B) >>> 0;
-        x = Math.imul(x ^ (x >>> 13), 0xC2B2AE35) >>> 0;
-        return (x ^ (x >>> 16)) >>> 0;
+        x = Math.imul(x ^ (x >>> 16), 0x85EBCA6B);
+        x = Math.imul(x ^ (x >>> 13), 0xC2B2AE35);
+        return x ^ (x >>> 16);
     }
 
     /** 把 3 × uint32 切成 16 个 5-bit 值(跨字边界处理) */

@@ -48,7 +48,7 @@ export class NbtSerialization {
     private static writeWithScheme(compound: NbtCompound, scheme: Map<string, KeyIndex>) {
         const writer = new BinaryWriter();
 
-        for (const [key, element] of compound.getEntries()) {
+        for (const [key, element] of compound.iter()) {
             const type = element.type();
             const index = scheme.get(`${key}:${type}`)!.index;
             writer.writeVarUint(index);
@@ -62,7 +62,7 @@ export class NbtSerialization {
             }
 
             if (type === NbtTypeId.CompoundArray) {
-                const list = (element as NbtCompoundArray).value;
+                const list = (element as NbtCompoundArray).elements;
                 writer.writeVarUint(list.length);
                 for (const compound of list) {
                     const nested = this.writeWithScheme(compound, scheme);
@@ -80,7 +80,7 @@ export class NbtSerialization {
     private static updateScheme(compound: NbtCompound, scheme: Map<string, KeyIndex>) {
         if (compound.size() === 0) return;
 
-        for (const [key, element] of compound.getEntries()) {
+        for (const [key, element] of compound.iter()) {
             const type = element.type();
             const compositeKey = `${key}:${type}`;
             if (!scheme.has(compositeKey)) {
@@ -94,7 +94,7 @@ export class NbtSerialization {
 
             if (type === NbtTypeId.CompoundArray) {
                 const values = element as NbtCompoundArray;
-                for (const compound of values.value) {
+                for (const compound of values.elements) {
                     this.updateScheme(compound, scheme);
                 }
             }
@@ -109,20 +109,25 @@ export class NbtSerialization {
 
         const reg = /^[a-zA-Z0-9_]+$/;
 
-        for (const [key, element] of compound.getEntries()) {
+        for (const [key, element] of compound.iter()) {
             const safeKey = reg.test(key) ? `"${key}"` : `"${key.replace(/"/g, '\\"')}"`;
             const type = element.type();
 
             let valStr: string;
-            if (type === NbtTypeId.Compound) {
-                valStr = this.toSNbt((element as NbtCompound), pretty, indent + 2);
-            } else if (type === NbtTypeId.CompoundArray) {
-                const listItems = (element as NbtCompoundArray).value
-                    .map(comp => this.toSNbt(comp, pretty))
-                    .join(',');
-                valStr = `[${listItems}]`;
-            } else {
-                valStr = element.toString();
+            switch (type) {
+                case NbtTypeId.End:
+                    continue;
+                case NbtTypeId.Compound:
+                    valStr = this.toSNbt((element as NbtCompound), pretty, indent + 2)
+                    break;
+                case NbtTypeId.CompoundArray:
+                    const listItems = (element as NbtCompoundArray).elements
+                        .map(comp => this.toSNbt(comp, pretty))
+                        .join(',');
+                    valStr = `[${listItems}]`;
+                    break;
+                default:
+                    valStr = element.toSNBT();
             }
 
             entries.push(`${innerIndent}${safeKey}:${valStr}`);

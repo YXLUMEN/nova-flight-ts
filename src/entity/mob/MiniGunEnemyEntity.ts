@@ -1,13 +1,14 @@
 import {StatusEffects} from "../effect/StatusEffects.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {MobEntity} from "./MobEntity.ts";
-import {EntityType} from "../EntityType.ts";
+import type {EntityType} from "../EntityType.ts";
 import type {World} from "../../world/World.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {randInt} from "../../utils/math/math.ts";
 import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {MobBulletEntity} from "../projectile/MobBulletEntity.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
 
 export class MiniGunEnemyEntity extends MobEntity {
     private cooldown: number;
@@ -16,7 +17,7 @@ export class MiniGunEnemyEntity extends MobEntity {
 
     public constructor(type: EntityType<MiniGunEnemyEntity>, world: World) {
         super(type, world, 10);
-        this.cooldown = randInt(0, 200);
+        this.cooldown = randInt(100, 200);
     }
 
     public override createLivingAttributes() {
@@ -27,10 +28,9 @@ export class MiniGunEnemyEntity extends MobEntity {
 
     public override tick() {
         super.tick();
+        if (isClient) return;
 
         const world = this.getWorld() as ServerWorld;
-        if (world.isClient) return;
-
         if (world.empBurst > 0 || this.hasStatusEffect(StatusEffects.EMC_STATUS)) return;
         if (this.cooldown > 0) {
             this.cooldown--;
@@ -66,7 +66,7 @@ export class MiniGunEnemyEntity extends MobEntity {
 
     public override readNBT(nbt: NbtCompound): NbtCompound {
         super.readNBT(nbt);
-        this.cooldown = nbt.getUint32('fire_cooldown', 20);
+        this.cooldown = nbt.getUint32('fire_cooldown', 60);
         return nbt;
     }
 

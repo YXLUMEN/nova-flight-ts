@@ -1,5 +1,28 @@
 export type Cell = string | { t: string; cls?: string };
 
+function displayWidth(s: string): number {
+    let w = 0;
+    for (const ch of s) {
+        const c = ch.codePointAt(0)!;
+        const wide = c >= 0x1100 && (
+            c <= 0x115F
+            || c === 0x2329 || c === 0x232A
+            || (c >= 0x2E80 && c <= 0xA4CF && c !== 0x303F)
+            || (c >= 0xAC00 && c <= 0xD7A3)
+            || (c >= 0xF900 && c <= 0xFAFF)
+            || (c >= 0xFE30 && c <= 0xFE6F)
+            || (c >= 0xFF00 && c <= 0xFF60)
+            || (c >= 0xFFE0 && c <= 0xFFE6)
+        );
+        w += wide ? 2 : 1;
+    }
+    return w;
+}
+
+function padToWidth(s: string, width: number): string {
+    return s + " ".repeat(Math.max(0, width - displayWidth(s)));
+}
+
 export interface Sink {
     env(text: string): void;
 
@@ -18,10 +41,10 @@ export function createSink(): Sink {
             section: (title, desc) => console.log(`\n== ${title} ==${desc ? `\n   ${desc}` : ""}`),
             table: (head, rows) => {
                 const all = [head, ...rows.map(r => r.map(cellText))];
-                const width = head.map((_, i) => Math.max(...all.map(r => r[i]!.length)));
+                const widths = head.map((_, i) => Math.max(...all.map(r => displayWidth(r[i]!))));
                 for (const [index, row] of all.entries()) {
-                    console.log("   " + row.map((c, i) => c.padEnd(width[i]!)).join("  "));
-                    if (index === 0) console.log("   " + width.map(w => "-".repeat(w)).join("  "));
+                    console.log("   " + row.map((c, i) => padToWidth(c, widths[i]!)).join("  "));
+                    if (index === 0) console.log("   " + widths.map(w => "-".repeat(w)).join("  "));
                 }
             },
             note: text => console.log(`   ${text}`),

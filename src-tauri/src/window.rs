@@ -40,6 +40,7 @@ pub fn wait_saving(window: &Window, event: &WindowEvent) {
         Some(_) => {
             drop(started);
             api.prevent_close();
+            let _ = window.emit("save_before_close", ());
         }
     }
 }

@@ -10,7 +10,6 @@ export class NbtCompoundArgumentType implements ArgumentType<NbtCompound> {
     }
 
     public parse(reader: StringReader): NbtCompound {
-        reader.skipAnyWhitespace();
         reader.expect('{');
         return NbtUnserialization.parseStringCompound(reader);
     }

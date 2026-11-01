@@ -4,7 +4,7 @@ import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {UUID} from "../type/types.ts";
 import type {GameProfile} from "./entity/GameProfile.ts";
 import {ServerStorage} from "./storage/ServerStorage.ts";
-import {TutorialStage} from "../configs/TutorialStage.ts";
+import {TUTORIAL_PHASES} from "../configs/TutorialStage.ts";
 import {TutorialEvents} from "./event/TutorialEvents.ts";
 import {PlayAudioS2CPacket} from "../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {Audios} from "../sound/Audios.ts";
@@ -51,8 +51,7 @@ export class IntegratedServer extends NovaFlightServer {
         if (isTutorial.isOk() && isTutorial.unwrap() === null && this.world) {
             await ServerStorage.db.update('user_info', {name: 'tutorial'});
 
-            this.world.stage = TutorialStage;
-            this.world.stage.reset();
+            this.world.setStage(TUTORIAL_PHASES);
             new TutorialEvents(this);
             this.world.sendPacket(new PlayAudioS2CPacket(Audios.WE_MADE_IT), true);
         }
@@ -74,9 +73,9 @@ export class IntegratedServer extends NovaFlightServer {
         if (err instanceof NoResultsError) {
         } else if (err instanceof StatusError) {
             if (err.cause === 'broken') {
-                Log.message('存档已损坏', 'warning');
+                Log.message('Archive broken', 'warning');
             } else if (err.cause === 'pending') {
-                console.log('初始化存档');
+                console.log('Init archive');
             } else {
                 Log.warn(err.message);
             }

@@ -51,7 +51,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     private boundingBox: AABB = Entity.INITIAL_AABB;
 
     public age: number = 0;
-    public readonly color: EntityColor = EntityColor.default();
+    public color: EntityColor = EntityColor.default();
 
     private readonly type: EntityType<Entity>;
     private uuid: UUID = crypto.randomUUID();
@@ -72,7 +72,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     private readonly tags: Set<string> = new Set<string>();
     private removed: boolean = false;
 
-    /** **实体基类**. 继承者构造函数专有参数必须有*默认值* */
+    /** 继承者构造函数专有参数必须有*默认值* */
     protected constructor(type: EntityType<any>, world: World) {
         this.type = type;
         this.world = world;
@@ -654,7 +654,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
         this.setPosition(clamp(pos.x, -3E7, 3E7), clamp(pos.y, -3E7, 3E7),);
         this.setVelocity(clamp(velocity.x, -1E3, 1E3), clamp(velocity.y, -1E3, 1E3));
         this.setYaw(nbt.getFloat('yaw'));
-        this.setMovementSpeed(nbt.getDouble('speed'));
+        this.setMovementSpeed(nbt.getDouble('speed', this.movementSpeed));
         this.needSync = true;
         this.invulnerable = nbt.getBoolean('invulnerable', 0);
 
@@ -669,7 +669,7 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
 
         this.resetPrevious();
 
-        const tags = nbt.getStringArray('tags');
+        const tags = nbt.getStringArray('tags') ?? [];
         tags.length = Math.min(tags.length, 1024);
         this.tags.clear();
         tags.forEach(tag => this.tags.add(tag));

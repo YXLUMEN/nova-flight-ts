@@ -25,14 +25,18 @@ export class DataComponents {
     public static readonly UNBREAKABLE: DataComponentType<boolean> = this.register("unbreakable",
         builder => builder.persistent(Codecs.BOOLEAN).network(PacketCodecs.BOOL)
     );
-    public static readonly CUSTOM_NAME: DataComponentType<string> = this.register("custom_name",
-        builder => builder.persistent(Codecs.STRING).network(PacketCodecs.STRING)
-    );
     public static readonly ITEM_AVAILABLE: DataComponentType<boolean> = this.register("item_available",
         builder => builder.persistent(Codecs.BOOLEAN).network(PacketCodecs.BOOL)
     );
     public static readonly ATTRIBUTE_MODIFIERS: DataComponentType<AttributeModifier> = this.register("attribute_modifiers",
         builder => builder.persistent(AttributeModifier.CODEC).network(AttributeModifier.PACKET_CODEC)
+    );
+
+    public static readonly CUSTOM_NAME: DataComponentType<string> = this.register("custom_name",
+        builder => builder.persistent(Codecs.STRING).network(PacketCodecs.STRING)
+    );
+    public static readonly CUSTOM_TOOLTIP: DataComponentType<string> = this.register("custom_tooltip",
+        builder => builder.persistent(Codecs.STRING).network(PacketCodecs.STRING)
     );
 
     public static readonly UI_COLOR: DataComponentType<string> = this.register("ui_color",

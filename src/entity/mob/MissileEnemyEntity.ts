@@ -1,12 +1,12 @@
-import {MobEntity} from "./MobEntity.ts";
-import {EntityType} from "../EntityType.ts";
+import type {ServerWorld} from "../../server/ServerWorld.ts";
+import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {World} from "../../world/World.ts";
+import type {EntityType} from "../EntityType.ts";
+import {MobEntity} from "./MobEntity.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
 import {EntityTypes} from "../EntityTypes.ts";
 import {MobMissileEntity} from "../projectile/MobMissileEntity.ts";
-import type {ServerWorld} from "../../server/ServerWorld.ts";
-import {type NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {randInt} from "../../utils/math/math.ts";
 
 export class MissileEnemyEntity extends MobEntity {
@@ -14,6 +14,7 @@ export class MissileEnemyEntity extends MobEntity {
 
     public constructor(type: EntityType<MissileEnemyEntity>, world: World) {
         super(type, world, 12);
+        this.cooldown = randInt(200, 400);
     }
 
     public override createLivingAttributes() {
@@ -30,7 +31,7 @@ export class MissileEnemyEntity extends MobEntity {
 
         if (world.empBurst > 0 || this.hasStatusEffect(StatusEffects.EMC_STATUS)) return;
         if (this.cooldown-- > 0) return;
-        this.cooldown = 500;
+        this.cooldown = randInt(500, 700);
 
         const pos = this.positionRef;
         const yaw = this.getYaw();
@@ -51,7 +52,7 @@ export class MissileEnemyEntity extends MobEntity {
     }
 
     public override readNBT(nbt: NbtCompound): void {
-        this.cooldown = nbt.getInt16('missile_cooldown', randInt(100, 200));
+        this.cooldown = nbt.getInt16('missile_cooldown', 200);
         super.readNBT(nbt);
     }
 

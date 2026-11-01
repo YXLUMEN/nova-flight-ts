@@ -1,10 +1,10 @@
-import type {NbtElement} from "./NbtElement.ts";
+import type {NbtArray} from "./NbtElement.ts";
 import {type NbtType, NbtTypeId} from "../NbtType.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {IllegalArgumentError} from "../../type/errors.ts";
 
-export class NbtFloatArray implements NbtElement {
+export class NbtFloatArray implements NbtArray<number> {
     public static readonly TYPE: NbtType<NbtFloatArray> = {
         read(reader: BinaryReader): NbtFloatArray {
             const len = reader.readVarUint();
@@ -20,10 +20,10 @@ export class NbtFloatArray implements NbtElement {
         }
     };
 
-    public readonly value: Float32Array;
+    public readonly elements: Float32Array;
 
     public constructor(value: Float32Array) {
-        this.value = value;
+        this.elements = value;
     }
 
     public static create(list: Iterable<number>) {
@@ -35,18 +35,18 @@ export class NbtFloatArray implements NbtElement {
     }
 
     public write(writer: BinaryWriter): void {
-        writer.writeVarUint(this.value.length);
-        for (const num of this.value) {
+        writer.writeVarUint(this.elements.length);
+        for (const num of this.elements) {
             writer.writeFloat(num);
         }
     }
 
     public copy(): NbtFloatArray {
-        const array = new Float32Array(this.value);
+        const array = new Float32Array(this.elements);
         return new NbtFloatArray(array);
     }
 
-    public toString(): string {
-        return `[F;${this.value.join(',')}]`;
+    public toSNBT(): string {
+        return `[F;${this.elements.join(',')}]`;
     }
 }

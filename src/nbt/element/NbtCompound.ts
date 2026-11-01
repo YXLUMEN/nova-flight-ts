@@ -1,6 +1,6 @@
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {NbtElement} from "./NbtElement.ts";
-import {type NbtType, NbtTypeId} from "../NbtType.ts";
+import {isNbtNumber, type NbtType, NbtTypeId} from "../NbtType.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import type {Codec} from "../../serialization/Codec.ts";
 import {MAX_INT, MIN_INT} from "../../utils/math/math.ts";
@@ -242,6 +242,11 @@ export class NbtCompound implements NbtElement {
         return v && v.type() === NbtTypeId.Uint32 ? v.value : d;
     }
 
+    public getNumber(key: string, d = 0): number {
+        const v = this.entries.get(key);
+        return v && isNbtNumber(v) ? v.value : d;
+    }
+
     public getString(key: string, d = ''): string {
         const v = this.entries.get(key) as NbtString;
         return v && v.type() === NbtTypeId.String ? v.value : d;
@@ -251,54 +256,54 @@ export class NbtCompound implements NbtElement {
         return this.getInt8(key, d) !== 0;
     }
 
-    public getInt8Array(key: string): Int8Array {
+    public getInt8Array(key: string): Int8Array | null {
         const v = this.entries.get(key) as NbtInt8Array;
-        return v && v.type() === NbtTypeId.Int8Array ? v.value : new Int8Array();
+        return v && v.type() === NbtTypeId.Int8Array ? v.elements : null;
     }
 
-    public getInt16Array(key: string): Int16Array {
+    public getInt16Array(key: string): Int16Array | null {
         const v = this.entries.get(key) as NbtInt16Array;
-        return v && v.type() === NbtTypeId.Int16Array ? v.value : new Int16Array();
+        return v && v.type() === NbtTypeId.Int16Array ? v.elements : null;
     }
 
-    public getInt32Array(key: string): Int32Array {
+    public getInt32Array(key: string): Int32Array | null {
         const v = this.entries.get(key) as NbtInt32Array;
-        return v && v.type() === NbtTypeId.Int32Array ? v.value : new Int32Array();
+        return v && v.type() === NbtTypeId.Int32Array ? v.elements : null;
     }
 
-    public getFloatArray(key: string): Float32Array {
+    public getFloatArray(key: string): Float32Array | null {
         const v = this.entries.get(key) as NbtFloatArray;
-        return v && v.type() === NbtTypeId.FloatArray ? v.value : new Float32Array();
+        return v && v.type() === NbtTypeId.FloatArray ? v.elements : null;
     }
 
-    public getDoubleArray(key: string): Float64Array {
+    public getDoubleArray(key: string): Float64Array | null {
         const v = this.entries.get(key) as NbtDoubleArray;
-        return v && v.type() === NbtTypeId.DoubleArray ? v.value : new Float64Array();
+        return v && v.type() === NbtTypeId.DoubleArray ? v.elements : null;
     }
 
-    public getUint8Array(key: string): Uint8Array {
+    public getUint8Array(key: string): Uint8Array | null {
         const v = this.entries.get(key) as NbtUint8Array;
-        return v && v.type() === NbtTypeId.Uint8Array ? v.value : new Uint8Array();
+        return v && v.type() === NbtTypeId.Uint8Array ? v.elements : null;
     }
 
-    public getUint32Array(key: string): Uint32Array {
+    public getUint32Array(key: string): Uint32Array | null {
         const v = this.entries.get(key) as NbtUint32Array;
-        return v && v.type() === NbtTypeId.Uint32Array ? v.value : new Uint32Array();
+        return v && v.type() === NbtTypeId.Uint32Array ? v.elements : null;
     }
 
-    public getStringArray(key: string, d?: string[]): string[] {
+    public getStringArray(key: string): string[] | null {
         const v = this.entries.get(key) as NbtStringArray;
-        return v && v.type() === NbtTypeId.StringArray ? v.value : d ?? [];
+        return v && v.type() === NbtTypeId.StringArray ? v.elements : null;
     }
 
-    public getCompound(key: string): NbtCompound {
+    public getCompound(key: string): NbtCompound | null {
         const v = this.entries.get(key) as NbtCompound;
-        return v && v.type() === NbtTypeId.Compound ? v : new NbtCompound();
+        return v && v.type() === NbtTypeId.Compound ? v : null;
     }
 
-    public getCompoundArray(key: string): NbtCompound[] {
+    public getCompoundArray(key: string): NbtCompound[] | null {
         const v = this.entries.get(key) as NbtCompoundArray;
-        return v && v.type() === NbtTypeId.CompoundArray ? v.value : [];
+        return v && v.type() === NbtTypeId.CompoundArray ? v.elements : null;
     }
 
     public remove(key: string): this {
@@ -322,16 +327,12 @@ export class NbtCompound implements NbtElement {
         return this.entries.size === 0;
     }
 
-    public getEntries(): ReadonlyMap<string, NbtElement> {
-        return this.entries;
+    public iter(): IteratorObject<[string, NbtElement]> {
+        return this.entries.entries();
     }
 
-    public getKeys(): Set<string> {
-        return new Set<string>(this.entries.keys());
-    }
-
-    public getEntrySet(): Set<[string, NbtElement]> {
-        return new Set(this.entries.entries());
+    public iterKeys(): IteratorObject<string> {
+        return this.entries.keys();
     }
 
     public size(): number {
@@ -362,7 +363,7 @@ export class NbtCompound implements NbtElement {
         writer.writeInt8(0);
     }
 
-    public toString() {
+    public toSNBT() {
         return NbtSerialization.toSNbt(this);
     }
 }

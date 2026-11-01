@@ -19,6 +19,8 @@ import {ServerTickManager} from "./ServerTickManager.ts";
 import {DEFAULT_CONFIG} from "../configs/RuntimeConfig.ts";
 import {CodecRegistry} from "../network/CodecRegistry.ts";
 import {Worker2MainType} from "../worker/WorkerMsgType.ts";
+import {Seed} from "../utils/math/random/Seed.ts";
+import {stringHashCode} from "../utils/hash.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static instance: NovaFlightServer;
@@ -28,6 +30,7 @@ export abstract class NovaFlightServer implements CommandOutput {
 
     public readonly version: number;
     public readonly protocolVersion: number;
+    public readonly seed: Seed;
     public readonly networkChannel: ServerChannel;
     public readonly serverCommandManager: ServerCommandManager;
     public readonly playerManager: PlayerManager;
@@ -35,7 +38,6 @@ export abstract class NovaFlightServer implements CommandOutput {
     public networkManager: ServerNetworkManager | null = null;
     public profile: GameProfile | null = null;
     public isMultiPlayer: boolean = false;
-    // startGame 后初始化
     public world: ServerWorld | null = null;
 
     private readonly tickManager: ServerTickManager;
@@ -54,6 +56,7 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.worldName = worldName;
         this.version = DEFAULT_CONFIG.gameVersion;
         this.protocolVersion = CodecRegistry.VERSION;
+        this.seed = new Seed(stringHashCode(worldName));
         this.playerManager = new PlayerManager(this);
         this.tickManager = new ServerTickManager(this);
         this.networkChannel = channel;
@@ -77,7 +80,7 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.waitServerHalt = promise;
         this.stopWorld = () => resolve();
 
-        this.world = new ServerWorld(manager, this);
+        this.world = new ServerWorld(manager, this, this.seed);
 
         const loadResult = await this.loadWorld();
         if (loadResult.isErr()) {

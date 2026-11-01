@@ -48,6 +48,20 @@ export class Settings {
         SettingPredicates.isBool,
     );
 
+    // public static readonly AUTO_SAVE = this.item(
+    //     'auto_save',
+    //     'settings.world.auto_save',
+    //     true,
+    //     SettingPredicates.isBool,
+    // );
+    //
+    // public static readonly SAVE_INTERVAL = this.item(
+    //     'save_interval',
+    //     'settings.world.save_interval',
+    //     480, // second
+    //     SettingPredicates.clampInt(60, 3600),
+    // );
+
     private static item<T>(
         id: string,
         translate: string,

@@ -63,9 +63,9 @@ export function stringifyUUID(bytes: Uint8Array): UUID {
     ) as UUID;
 }
 
-export async function uuidFromUsername(username: string): Promise<UUID> {
+export async function uuidFromString(string: string): Promise<UUID> {
     const encoder = new TextEncoder();
-    const data = encoder.encode(username);
+    const data = encoder.encode(string);
 
     const hashBuffer = await crypto.subtle.digest("SHA-1", data);
     const hash = new Uint8Array(hashBuffer);

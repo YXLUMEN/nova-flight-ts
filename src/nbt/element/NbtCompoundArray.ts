@@ -1,10 +1,10 @@
-import type {NbtElement} from "./NbtElement.ts";
-import {NbtCompound} from "./NbtCompound.ts";
-import {type NbtType, NbtTypeId} from "../NbtType.ts";
+import type {NbtArray} from "./NbtElement.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
+import {type NbtType, NbtTypeId} from "../NbtType.ts";
+import {NbtCompound} from "./NbtCompound.ts";
 
-export class NbtCompoundArray implements NbtElement {
+export class NbtCompoundArray implements NbtArray<NbtCompound> {
     public static readonly TYPE: NbtType<NbtCompoundArray> = {
         read(reader: BinaryReader): NbtCompoundArray {
             const len = reader.readVarUint();
@@ -18,10 +18,10 @@ export class NbtCompoundArray implements NbtElement {
         }
     };
 
-    public readonly value: NbtCompound[];
+    public readonly elements: NbtCompound[];
 
     public constructor(value: NbtCompound[]) {
-        this.value = value;
+        this.elements = value;
     }
 
     public type(): NbtTypeId {
@@ -29,14 +29,21 @@ export class NbtCompoundArray implements NbtElement {
     }
 
     public write(writer: BinaryWriter): void {
-        writer.writeVarUint(this.value.length);
-        for (const compound of this.value) {
+        writer.writeVarUint(this.elements.length);
+        for (const compound of this.elements) {
             compound.write(writer);
         }
     }
 
     public copy(): NbtCompoundArray {
-        const array = this.value.map(compound => compound.copy());
+        const array = this.elements.map(compound => compound.copy());
         return new NbtCompoundArray(array);
+    }
+
+    public toSNBT(): string {
+        const listItems = this.elements
+            .map(comp => comp.toSNBT())
+            .join(',');
+        return `[${listItems}]`;
     }
 }

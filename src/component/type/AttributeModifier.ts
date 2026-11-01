@@ -1,6 +1,6 @@
-import {Identifier} from "../../registry/Identifier.ts";
 import type {Codec} from "../../serialization/Codec.ts";
 import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
+import {Identifier} from "../../registry/Identifier.ts";
 import {PacketCodecs} from "../../network/codec/PacketCodecs.ts";
 import {Codecs} from "../../serialization/Codecs.ts";
 

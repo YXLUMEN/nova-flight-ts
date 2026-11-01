@@ -3,25 +3,27 @@ import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {PhaseConfig} from "./PhaseConfig.ts";
 import type {SpawnContext} from "./SpawnContext.ts";
-import type {Supplier} from "../../type/types.ts";
+import type {Random} from "../../utils/math/random/Random.ts";
 import {clamp} from "../../utils/math/math.ts";
 import {SpawnRule} from "./SpawnRule.ts";
 import {StageEnter} from "../../event/events/stage/StageEnter.ts";
 import {StageExit} from "../../event/events/stage/StageExit.ts";
+import {BuiltinRandom} from "../../utils/math/random/BuiltinRandom.ts";
 
 export class Stage implements NbtSerializable {
-    private readonly rng: Supplier<number>;
+    private readonly rng: Random;
+
     private readonly phases: PhaseConfig[];
+    private readonly rules: SpawnRule[] = [];
 
     private paused = false;
     private ticks = 0;
     private phaseTime = 0;
     private index = 0;
-    private readonly rules: SpawnRule[] = [];
 
-    public constructor(phases: PhaseConfig[], rng?: Supplier<number>) {
+    public constructor(phases: PhaseConfig[], rng?: Random) {
         this.phases = phases;
-        this.rng = rng ?? Math.random;
+        this.rng = rng ?? new BuiltinRandom();
         this.loadPhase(0);
     }
 
@@ -89,7 +91,7 @@ export class Stage implements NbtSerializable {
         return true;
     }
 
-    public setStage(name: string): boolean {
+    public setPhase(name: string): boolean {
         this.reset();
         while (true) {
             const current = this.getCurrentName();

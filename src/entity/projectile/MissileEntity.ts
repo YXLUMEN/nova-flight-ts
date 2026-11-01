@@ -43,7 +43,7 @@ export class MissileEntity extends RocketEntity {
 
     protected driftAttenuation = true;
     protected driftSpeed = 2;
-    protected trackingSpeed = 3;
+    protected trackingSpeed = 3.5;
 
     protected turnRate = Math.PI / 20;
 

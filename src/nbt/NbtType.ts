@@ -1,4 +1,4 @@
-import type {NbtElement} from "./element/NbtElement.ts";
+import type {NbtArray, NbtElement, NbtNumber} from "./element/NbtElement.ts";
 import type {BinaryReader} from "../serialization/BinaryReader.ts";
 
 export interface NbtType<T extends NbtElement> {
@@ -27,4 +27,14 @@ export const enum NbtTypeId {
     StringArray = 16,
     CompoundArray = 17,
     Number = 99
+}
+
+export function isNbtNumber(element: NbtElement): element is NbtNumber {
+    const type = element.type();
+    return type >= NbtTypeId.Int8 && type <= NbtTypeId.Uint32;
+}
+
+export function isNbtArray<T>(element: NbtElement): element is NbtArray<T> {
+    const type = element.type();
+    return type >= NbtTypeId.Int8Array && type <= NbtTypeId.CompoundArray;
 }

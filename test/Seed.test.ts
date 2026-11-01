@@ -79,10 +79,6 @@ describe("Seed · 构造与参数校验", () => {
         // 截断成同一个 80 bit 值 => 相等
         assert.strictEqual(new Seed((1n << 80n) | 9n).equals(new Seed(9)), true);
     });
-
-    it("实例被冻结（种子不可被外部改写）", () => {
-        assert.strictEqual(Object.isFrozen(new Seed(1)), true);
-    });
 });
 
 // ---------------------------------------------------------------------------
@@ -95,11 +91,10 @@ describe("Seed · 编码与检视", () => {
         assert.strictEqual(new Seed(2n ** 70n + 3n).toString(), (2n ** 70n + 3n).toString());
     });
 
-    it("getValues 返回 16 个 0–31 的 5-bit 值并冻结", () => {
+    it("getValues 返回 16 个 0–31 的 5-bit ", () => {
         const values = new Seed(9).getValues();
         assert.strictEqual(values.length, 16);
         assert.ok(values.every(v => v >= 0 && v <= 31), `值域越界: ${values.join(",")}`);
-        assert.strictEqual(Object.isFrozen(values), true);
     });
 
     it("getValues 与 80 bit 熵的 5-bit 切分一致（跨字边界）", () => {

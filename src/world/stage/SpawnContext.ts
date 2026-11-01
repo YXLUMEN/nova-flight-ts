@@ -1,5 +1,5 @@
 import type {ServerWorld} from "../../server/ServerWorld.ts";
-import type {Supplier} from "../../type/types.ts";
+import type {Random} from "../../utils/math/random/Random.ts";
 
 export interface SpawnContext {
     readonly world: ServerWorld;
@@ -9,6 +9,6 @@ export interface SpawnContext {
     readonly phaseTime: number;
     readonly phaseIndex: number;
     readonly score: number;
-    readonly rng: Supplier<number>;
+    readonly rng: Random;
     readonly difficulty: number;
 }

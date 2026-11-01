@@ -9,12 +9,12 @@ import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {UUID} from "../../type/types.ts";
 import type {DataTrackerBuilder, DataTrackerSerializedEntry} from "../data/DataTracker.ts";
-import {isValidUUID} from "../../utils/uuid_util.ts";
 import {Entity} from "../Entity.ts";
 import {World} from "../../world/World.ts";
 import {EntitySpawnS2CPacket} from "../../network/packet/s2c/EntitySpawnS2CPacket.ts";
-import {NbtTypeId} from "../../nbt/NbtType.ts";
 import {ProjectRaycastUtil} from "../../world/collision/ProjectRaycastUtil.ts";
+import {ExtraCodec} from "../../serialization/ExtraCodec.ts";
+import {Codecs} from "../../serialization/Codecs.ts";
 
 export abstract class ProjectileEntity extends Entity implements Ownable {
     private damage: number = 0;
@@ -140,36 +140,20 @@ export abstract class ProjectileEntity extends Entity implements Ownable {
     public override writeNBT(nbt: NbtCompound): NbtCompound {
         super.writeNBT(nbt);
         if (this.ownerUuid) {
-            nbt.setString('owner', this.ownerUuid);
+            nbt.store('owner', ExtraCodec.UUID, this.ownerUuid);
         }
+
         nbt.setFloat('damage', this.damage);
-        nbt.setUint32Array('colors', [this.color.hex, this.color.edgeHex]);
+        nbt.store('colors', ExtraCodec.ENTITY_COLOR, this.color);
         return nbt;
     }
 
     public override readNBT(nbt: NbtCompound) {
         super.readNBT(nbt);
 
-        if (nbt.contains('owner', NbtTypeId.String)) {
-            const ownerUuid = nbt.getString('owner');
-            if (isValidUUID(ownerUuid)) {
-                this.ownerUuid = ownerUuid;
-            }
-        }
-
-        if (nbt.contains('damage', NbtTypeId.Number)) {
-            this.damage = nbt.getFloat('damage');
-        }
-
-        if (nbt.contains('colors', NbtTypeId.Uint32Array)) {
-            const colors = nbt.getUint32Array('colors');
-            if (colors[0]) {
-                this.color.hex = colors[0];
-            }
-            if (colors[1]) {
-                this.color.edgeHex = colors[1];
-            }
-        }
+        this.ownerUuid = nbt.read('owner', ExtraCodec.UUID).getOrNull();
+        nbt.read('damage', Codecs.NUMBER).ifPresent(v => this.damage = v);
+        nbt.read('colors', ExtraCodec.ENTITY_COLOR).ifPresent(v => this.color = v);
     }
 
     public onDataTrackerUpdate(_entries: DataTrackerSerializedEntry<any>[]): void {

@@ -81,7 +81,7 @@ export class ServerDefaultEvents {
                 if (BossEntity.hasBoss) return;
 
                 world.stage.reset();
-                world.stage.setStage('P6');
+                world.stage.setPhase('P6');
 
                 const maxKillTimes = 120 * Math.min(world.getDifficulty(), 4);
                 const boss = Math.random() > 0.5 ?

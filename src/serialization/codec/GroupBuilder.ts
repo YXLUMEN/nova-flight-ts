@@ -11,7 +11,7 @@ import {DataResult, ErrorResult} from "../DataResult.ts";
  * decode 依次解码字段，第一个失败的字段短路并携带其错误信息。
  */
 export class GroupBuilder<C, V extends readonly unknown[]> {
-    private readonly fields: readonly BoundField<C, any>[]
+    private readonly fields: readonly BoundField<C, any>[];
 
     public constructor(fields: readonly BoundField<C, any>[]) {
         this.fields = fields;

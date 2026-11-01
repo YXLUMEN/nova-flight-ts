@@ -6,7 +6,6 @@ export class TorpedoEntity extends MissileEntity {
     protected override readonly maxRelockCooldown = 10;
 
     protected override readonly driftAttenuation = false;
-    protected override readonly driftSpeed = 2;
     protected override readonly trackingSpeed = 3;
 
     protected override readonly igniteDelayTicks = 40;

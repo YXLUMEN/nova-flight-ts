@@ -296,7 +296,9 @@ export abstract class PlayerEntity extends LivingEntity {
         nbt.setBoolean('dev_mode', this.isDevMode());
         nbt.setBoolean('used_be_dev', this.isUsedBeDev());
 
-        this.inventory.writeNBT(nbt);
+        this.inventory.save(nbt);
+        nbt.setInt8('selected_slot', this.inventory.getSelectedSlot());
+
         this.techTree?.writeNBT(nbt);
         return nbt;
     }
@@ -308,7 +310,8 @@ export abstract class PlayerEntity extends LivingEntity {
         this.usedDev = nbt.getBoolean('used_be_dev');
 
         this.techTree?.readNBT(nbt);
-        this.inventory.readNBT(nbt);
+        this.inventory.load(nbt);
+        this.inventory.setSelectedSlot(nbt.getInt8('selected_slot'));
         // todo 玩家重生
         if (this.getHealth() === 0) this.setHealth(this.getMaxHealth());
     }

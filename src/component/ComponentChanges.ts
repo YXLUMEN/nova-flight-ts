@@ -31,7 +31,7 @@ export class ComponentChange {
                 return DataResult.err(`Expected NbtCompound, got ${input.type()}`);
             }
             const map: ComponentChanges = new Map();
-            for (const key of input.getKeys()) {
+            for (const key of input.iterKeys()) {
                 const nbt = input.get(key);
                 if (nbt === null) continue;
 

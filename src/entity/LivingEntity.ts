@@ -20,11 +20,11 @@ import {TrackedDataHandlerRegistry} from "./data/TrackedDataHandlerRegistry.ts";
 import {EntityDamageS2CPacket} from "../network/packet/s2c/EntityDamageS2CPacket.ts";
 import {DamageTypeTags} from "../registry/tag/DamageTypeTags.ts";
 import {StatusEffects} from "./effect/StatusEffects.ts";
-import {NbtTypeId} from "../nbt/NbtType.ts";
 import {Techs} from "../world/tech/Techs.ts";
 import {DamageTypes} from "./damage/DamageTypes.ts";
 import {PlayerEntity} from "./player/PlayerEntity.ts";
 import {InterpolationHandler} from "../world/entity/InterpolationHandler.ts";
+import {Codecs} from "../serialization/Codecs.ts";
 
 
 export abstract class LivingEntity extends Entity {
@@ -240,7 +240,7 @@ export abstract class LivingEntity extends Entity {
         }
 
         if (this.hasStatusEffect(StatusEffects.FRAGILE_EFFECT)) {
-            const amplifier = this.getStatusEffect(StatusEffects.RESISTANCE)!.amplifier();
+            const amplifier = this.getStatusEffect(StatusEffects.FRAGILE_EFFECT)!.amplifier();
             damage += damage * Math.min(6, amplifier) * 0.1;
         }
 
@@ -504,10 +504,8 @@ export abstract class LivingEntity extends Entity {
         nbt.read('active_effects', StatusEffectInstance.LIST_CODEC).ifPresent(v => {
             for (const e of v) this.activeEffects.set(e.type(), e);
             this.effectsDirty = true;
-        })
+        });
 
-        if (nbt.contains('health', NbtTypeId.Number)) {
-            this.setHealth(nbt.getFloat('health'));
-        }
+        nbt.read('health', Codecs.NUMBER).ifPresent(v => this.setHealth(v));
     }
 }

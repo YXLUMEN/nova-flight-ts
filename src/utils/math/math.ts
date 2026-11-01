@@ -57,22 +57,6 @@ export function doubleEquals(a: number, b: number, epsilon = 1E-6): boolean {
     return Math.abs(a - b) <= epsilon;
 }
 
-export function randomFromIterator<T>(iter: Iterator<T>): T | undefined {
-    let result: T | undefined = undefined;
-    let count = 0;
-
-    let next = iter.next();
-    while (!next.done) {
-        count++;
-        if (Math.random() < 1 / count) {
-            result = next.value;
-        }
-        next = iter.next();
-    }
-
-    return result;
-}
-
 export function frac(value: number) {
     return value - Math.floor(value);
 }

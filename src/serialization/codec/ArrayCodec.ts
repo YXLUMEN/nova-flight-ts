@@ -29,6 +29,10 @@ export class ArrayCodec<T> implements Codec<T[]> {
             return ArrayCodec.tooLong(length, this.max);
         }
 
+        // 这里没用 NbtArrayBuilder 自动转换是为了减少基础类型不必要的包装
+        // 比如 listOf(Codecs.INT32) 会变成 NbtInt32[], 这就不如 NbtInt32Array
+        // 所以如果非要用这个类写基础类型, 就会统一成 Compound
+
         const codec = this.codec;
         const array: NbtCompound[] = [];
         for (let i = 0; i < length; i++) {
@@ -45,7 +49,7 @@ export class ArrayCodec<T> implements Codec<T[]> {
             return DataResult.err(`Expected NbtCompoundArray, got ${input.type()}`);
         }
 
-        const inputLen = input.value.length;
+        const inputLen = input.elements.length;
         if (inputLen < this.min) {
             return ArrayCodec.tooShort(inputLen, this.min);
         }
@@ -55,7 +59,7 @@ export class ArrayCodec<T> implements Codec<T[]> {
         const array: T[] = [];
         let failed = 0;
 
-        for (const value of input.value) {
+        for (const value of input.elements) {
             const element = codec.decode(ArrayCodec.unwrap(value));
             const result = element.result();
             if (result.isPresent()) {
@@ -66,7 +70,7 @@ export class ArrayCodec<T> implements Codec<T[]> {
         }
 
         if (failed > 0) {
-            return DataResult.err(() => `${this} success partially`, array);
+            return DataResult.err(() => `${this} success partially. "${failed}" task failed`, array);
         }
         if (length !== inputLen) {
             return ArrayCodec.tooLong<T[]>(length, this.max).setPartial(array);

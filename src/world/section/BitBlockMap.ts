@@ -3,7 +3,6 @@ import type {AABB} from "../../utils/math/AABB.ts";
 import type {BlockChange} from "./BlockChange.ts";
 import type {NbtSerializable} from "../../nbt/NbtSerializable.ts";
 import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
-import {NbtUint8Array} from "../../nbt/element/NbtUint8Array.ts";
 import {NbtTypeId} from "../../nbt/NbtType.ts";
 import {WorldConstants} from "./WorldConstants.ts";
 
@@ -140,31 +139,36 @@ export class BitBlockMap implements NbtSerializable {
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
-        nbt.setUint32('width_px', this.widthPx);
-        nbt.setUint32('height_px', this.heightPx);
-        nbt.setUint32('width', this.width);
-        nbt.setUint32('height', this.height);
+        const map = new NbtCompound();
 
-        if (this.data.every(v => v === 0)) return nbt;
+        map.setUint32('width_px', this.widthPx);
+        map.setUint32('height_px', this.heightPx);
+        map.setUint32('width', this.width);
+        map.setUint32('height', this.height);
 
-        const element = new NbtUint8Array(this.data);
-        nbt.set('blocks', element);
+        if (this.data.some(v => v !== 0)) {
+            map.setUint8Array('blocks', this.data)
+        }
+        nbt.set('map', map);
         return nbt;
     }
 
     public readNBT(nbt: NbtCompound) {
-        this.widthPx = nbt.getUint32('width_px', this.widthPx);
-        this.heightPx = nbt.getUint32('height_px', this.heightPx);
-        this.width = nbt.getUint32('width', this.width);
-        this.height = nbt.getUint32('height', this.height);
+        const map = nbt.getCompound('map');
+        if (!map) return;
 
-        if (!nbt.contains('blocks', NbtTypeId.Uint8Array)) return;
+        this.widthPx = map.getUint32('width_px', this.widthPx);
+        this.heightPx = map.getUint32('height_px', this.heightPx);
+        this.width = map.getUint32('width', this.width);
+        this.height = map.getUint32('height', this.height);
+
+        if (!map.contains('blocks', NbtTypeId.Uint8Array)) return;
 
         const totalBlocks = this.width * this.height;
         const byteLength = Math.ceil(totalBlocks / 8);
 
-        const data = nbt.getUint8Array('blocks');
-        if (data.byteLength === byteLength) {
+        const data = map.getUint8Array('blocks');
+        if (data && data.byteLength === byteLength) {
             this.data = data;
         }
     }

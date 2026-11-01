@@ -4,7 +4,6 @@ import type {SoundEvent} from "../sound/SoundEvent.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {EntityHandler} from "../world/entity/EntityHandler.ts";
 import type {HexColor, UUID} from "../type/types.ts";
-import type {Stage} from "../world/stage/Stage.ts";
 import type {DamageSource} from "../entity/damage/DamageSource.ts";
 import type {ExplosionVisual} from "../world/element/explosion/ExplosionVisual.ts";
 import type {Explosion} from "../world/element/explosion/Explosion.ts";
@@ -14,8 +13,11 @@ import type {ParticleEffectType} from "../effect/particle/ParticleEffectType.ts"
 import type {Vec2} from "../utils/math/Vec2.ts";
 import type {Payload} from "../network/Payload.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
-import {STAGE} from "../configs/StageConfig.ts";
+import type {Seed} from "../utils/math/random/Seed.ts";
+import type {PhaseConfig} from "../world/stage/PhaseConfig.ts";
+import {DEFAULT_PHASES} from "../configs/StageConfig.ts";
 import {Log} from "../worker/log.ts";
+import {Stage} from "../world/stage/Stage.ts";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {World} from "../world/World.ts";
 import {SoundEventS2CPacket} from "../network/packet/s2c/SoundEventS2CPacket.ts";
@@ -33,7 +35,6 @@ import {EntityTypes} from "../entity/EntityTypes.ts";
 import {EffectCreateS2CPacket} from "../network/packet/s2c/EffectCreateS2CPacket.ts";
 import {GameOverS2CPacket} from "../network/packet/s2c/GameOverS2CPacket.ts";
 import {DifficultChangeS2CPacket} from "../network/packet/s2c/DifficultChangeS2CPacket.ts";
-import {NbtTypeId} from "../nbt/NbtType.ts";
 import {EntityHitResult} from "../world/collision/EntityHitResult.ts";
 import {MobBulletEntity} from "../entity/projectile/MobBulletEntity.ts";
 import {MobMissileEntity} from "../entity/projectile/MobMissileEntity.ts";
@@ -41,6 +42,7 @@ import {PreparedParticleS2CPacket} from "../network/packet/s2c/PreparedParticleS
 import {EntityPredicates} from "../world/predicate/EntityPredicates.ts";
 import {ExplosionEvent} from "../event/events/ExplosionEvent.ts";
 import {GameOver} from "../event/events/game/GameOver.ts";
+import {RandomXor} from "../utils/math/random/RandomXor.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
@@ -52,12 +54,12 @@ export class ServerWorld extends World implements NbtSerializable {
     private readonly entityManager: ServerEntityManager<Entity>;
     private readonly trackedEntities: Map<number, EntityTrackerEntry> = new Map();
 
-    public constructor(registryManager: RegistryManager, server: NovaFlightServer) {
-        super(registryManager, false);
+    public constructor(registryManager: RegistryManager, server: NovaFlightServer, seed: Seed) {
+        super(registryManager, seed, false);
 
         this.server = server;
         this.entityManager = new ServerEntityManager(this.ServerEntityHandler);
-        this.stage = STAGE;
+        this.stage = new Stage(DEFAULT_PHASES, new RandomXor(this.seed, 1));
         this.serverTickEntity = this.serverTickEntity.bind(this);
     }
 
@@ -200,6 +202,10 @@ export class ServerWorld extends World implements NbtSerializable {
         this.sendPacket(new DifficultChangeS2CPacket(difficulty));
     }
 
+    public setStage(phases: PhaseConfig[]) {
+        this.stage = new Stage(phases, new RandomXor(this.seed, 1));
+    }
+
     public getPhase(): number {
         return this.phase;
     }
@@ -318,25 +324,18 @@ export class ServerWorld extends World implements NbtSerializable {
         root.setUint32('phase_score', this.phase);
         root.setInt8('difficulty', this.getDifficulty());
 
-        const map = new NbtCompound();
-        this.blockMap.writeNBT(map);
-        root.setCompound('map', map);
-
+        this.blockMap.writeNBT(root);
         return root;
     }
 
     public readNBT(nbt: NbtCompound) {
         const entityNbt = nbt.getCompoundArray('entities');
-        this.loadEntity(entityNbt);
+        if (entityNbt) this.loadEntity(entityNbt);
 
         this.stage.readNBT(nbt);
         this.phase = nbt.getUint32('phase_score');
         this.setDifficulty(nbt.getInt8('difficulty', 1));
-
-        if (nbt.contains('map', NbtTypeId.Compound)) {
-            const map = nbt.getCompound('map');
-            this.blockMap.readNBT(map);
-        }
+        this.blockMap.readNBT(nbt);
     }
 
     private loadEntity(nbtList: NbtCompound[]) {

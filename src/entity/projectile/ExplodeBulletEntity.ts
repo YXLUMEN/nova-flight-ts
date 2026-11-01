@@ -1,14 +1,14 @@
-import {ProjectileEntity} from "./ProjectileEntity.ts";
-import type {World} from "../../world/World.ts";
-import {Entity} from "../Entity.ts";
-import type {EntityType} from "../EntityType.ts";
-import {SoundEvents} from "../../sound/SoundEvents.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
+import type {World} from "../../world/World.ts";
+import type {Entity} from "../Entity.ts";
+import type {EntityType} from "../EntityType.ts";
+import {rand} from "../../utils/math/math.ts";
+import {ProjectileEntity} from "./ProjectileEntity.ts";
+import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {ExplosionVisual} from "../../world/element/explosion/ExplosionVisual.ts";
 import {ExplosionConfigs} from "../../world/element/explosion/ExplosionConfigs.ts";
 import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
-import {rand} from "../../utils/math/math.ts";
 
 export class ExplodeBulletEntity extends ProjectileEntity {
     private readonly power: number;

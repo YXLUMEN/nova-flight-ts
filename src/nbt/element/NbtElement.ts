@@ -8,5 +8,13 @@ export interface NbtElement {
 
     copy(): NbtElement;
 
-    toString(): string;
+    toSNBT(): string;
+}
+
+export interface NbtNumber extends NbtElement {
+    readonly value: number;
+}
+
+export interface NbtArray<T> extends NbtElement {
+    readonly elements: ArrayLike<T>;
 }

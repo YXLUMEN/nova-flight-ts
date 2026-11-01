@@ -55,10 +55,20 @@ export class ServerTechManager {
 
     public static init(): void {
         this.add(Techs.AD_CAPACITANCE, TechAdCapacitance);
+        this.add(Techs.BARRIER_POINT_DEFENSE, TechBarrierPointDefense);
+        this.add(Techs.GUARDIAN_POINT_DEFENSE, TechGuardianPointDefense);
+        this.add(Techs.HARMONIC_ANALYSIS, TechHarmonicAnalysis);
+        this.add(Techs.HD_BULLET, TechHdBullet);
+        this.add(Techs.HD_EXPLOSIVES, TechHdExplosives);
+        this.add(Techs.HIGH_EFFICIENCY_COOLANT, TechHighEfficiencyCoolant);
+        this.add(Techs.HIGH_TEMPERATURE_ALLOY, TechHighTemperatureAlloy);
+        this.add(Techs.HONEYCOMB_MISSILE, TechHoneycombMissile);
+        this.add(Techs.HV_WARHEAD, TechHvWarhead);
+        this.add(Techs.SHIP_OPT, TechShipOpt);
+        this.add(Techs.SPACE_TEAR, TechSpaceTear);
         this.add(Techs.ARC_EMITTER, TechGiveItem, Items.ARC_EMITTER);
         this.add(Techs.ARTILLERY125, TechGiveItem, Items.ARTILLERY125);
         this.add(Techs.AUTOCANNON, TechGiveItem, Items.MINIGUN);
-        this.add(Techs.BARRIER_POINT_DEFENSE, TechBarrierPointDefense);
         this.add(Techs.CANNON90, TechGiveItem, Items.CANNON90);
         this.add(Techs.CIWS, TechGiveItem, Items.CIWS);
         this.add(Techs.CLOUD_LIGHTNING, TechGiveItem, Items.CLOUD_LIGHTNING);
@@ -71,14 +81,6 @@ export class ServerTechManager {
         this.add(Techs.FLAK_CANNONS, TechFlakCannons);
         this.add(Techs.FOCUSED_ARC_EMITTER, TechGiveItem, Items.FOCUSED_ARC_EMITTER);
         this.add(Techs.GAMMA_LASERS, TechGiveItem, Items.GAMMA_LASERS);
-        this.add(Techs.GUARDIAN_POINT_DEFENSE, TechGuardianPointDefense);
-        this.add(Techs.HARMONIC_ANALYSIS, TechHarmonicAnalysis);
-        this.add(Techs.HD_BULLET, TechHdBullet);
-        this.add(Techs.HD_EXPLOSIVES, TechHdExplosives);
-        this.add(Techs.HIGH_EFFICIENCY_COOLANT, TechHighEfficiencyCoolant);
-        this.add(Techs.HIGH_TEMPERATURE_ALLOY, TechHighTemperatureAlloy);
-        this.add(Techs.HONEYCOMB_MISSILE, TechHoneycombMissile);
-        this.add(Techs.HV_WARHEAD, TechHvWarhead);
         this.add(Techs.KINETIC_ARTILLERY, TechGiveItem, Items.KINETIC_ARTILLERY);
         this.add(Techs.MISSILE, TechGiveItem, Items.MISSILE_WEAPON);
         this.add(Techs.PERDITION_BEAM, TechGiveItem, Items.PERDITION_BEAM);
@@ -89,8 +91,6 @@ export class ServerTechManager {
         this.add(Techs.ROCKET_LAUNCHER, TechGiveItem, Items.ROCKET_LAUNCHER);
         this.add(Techs.RANDOM_ROCKET, TechRandomRocket);
         this.add(Techs.SENTINEL_POINT_DEFENSE, TechGiveItem, Items.POINT_DEFENSE);
-        this.add(Techs.SHIP_OPT, TechShipOpt);
-        this.add(Techs.SPACE_TEAR, TechSpaceTear);
         this.add(Techs.SPACE_TORPEDOES, TechGiveItem, Items.SPACE_TORPEDOES);
         this.add(Techs.STORM_FIRE, TechGiveItem, Items.STORM_FIRE);
         this.add(Techs.TACHYON_LANCE, TechGiveItem, Items.TACHYON_LANCE);

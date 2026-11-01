@@ -1,7 +1,6 @@
 import type {Container} from "../../world/inventory/Container.ts";
 import type {Item} from "../../item/Item.ts";
 import type {PlayerEntity} from "./PlayerEntity.ts";
-import type {NbtSerializable} from "../../nbt/NbtSerializable.ts";
 import type {Codec} from "../../serialization/Codec.ts";
 import {clamp} from "../../utils/math/math.ts";
 import {ItemStack} from "../../item/ItemStack.ts"
@@ -10,15 +9,15 @@ import {DefaultedList} from "../../utils/collection/DefaultedList.ts";
 import {Codecs} from "../../serialization/Codecs.ts";
 import {ItemCodec} from "../../item/ItemCodec.ts";
 
-export class UniqueInventory implements Container, NbtSerializable, Iterable<ItemStack> {
+export class UniqueInventory implements Container, Iterable<ItemStack> {
     public static readonly SLOT_CODEC: Codec<IndexItem[]> = Codecs.listOf(Codecs.group<IndexItem>(
         Codecs.field('slot', Codecs.INT8).for(v => v.slot),
         Codecs.field('stack', ItemCodec.CODEC).for(v => v.stack),
     ).apply((slot: number, stack: ItemStack) => ({slot, stack})));
 
     private readonly player: PlayerEntity;
-    private readonly inventory = DefaultedList.ofSizeAndValue(30, ItemStack.EMPTY);
-    private readonly items = new Map<Item, ItemStack>();
+    private readonly inventory: DefaultedList<ItemStack> = DefaultedList.ofSizeAndValue(30, ItemStack.EMPTY);
+    private readonly items: Map<Item, ItemStack> = new Map();
 
     private selected: number = 0;
     private timesChanged: number = 0;
@@ -31,9 +30,8 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
         const world = this.player.getWorld();
         for (let i = 0; i < this.inventory.length; i++) {
             const stack = this.inventory.get(i);
-            if (!stack.isEmpty()) {
-                stack.inventoryTick(world, this.player, i, this.selected === i);
-            }
+            if (stack.isEmpty()) continue;
+            stack.inventoryTick(world, this.player, i, this.selected === i);
         }
     }
 
@@ -200,21 +198,7 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
         return this.items.values();
     }
 
-    public readNBT(nbt: NbtCompound) {
-        nbt.read('inventory', UniqueInventory.SLOT_CODEC).ifPresent(v => {
-            this.clearContent();
-            for (const {slot, stack} of v) {
-                stack.setHolder(this.player);
-                this.setItem(slot, stack);
-            }
-        });
-        this.setSelectedSlot(nbt.getInt8('selected_slot'));
-        return nbt;
-    }
-
-    public writeNBT(nbt: NbtCompound): NbtCompound {
-        nbt.setInt8('selected_slot', this.selected);
-
+    public save(nbt: NbtCompound) {
         const inventory: IndexItem[] = [];
         for (let slot = 0; slot < this.inventory.length; slot++) {
             const stack = this.inventory.get(slot);
@@ -222,8 +206,16 @@ export class UniqueInventory implements Container, NbtSerializable, Iterable<Ite
             inventory.push({slot, stack});
         }
         nbt.store('inventory', UniqueInventory.SLOT_CODEC, inventory);
+    }
 
-        return nbt;
+    public load(nbt: NbtCompound) {
+        this.clearContent();
+        nbt.read('inventory', UniqueInventory.SLOT_CODEC)
+            .getOrNull()
+            ?.forEach(({slot, stack}) => {
+                stack.setHolder(this.player);
+                this.setItem(slot, stack);
+            });
     }
 }
 

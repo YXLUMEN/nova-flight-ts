@@ -23,4 +23,8 @@ export class NbtEnd implements NbtElement {
 
     public write() {
     }
+
+    public toSNBT(): string {
+        return '';
+    }
 }

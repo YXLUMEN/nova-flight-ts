@@ -201,7 +201,7 @@ export class ClientTechTree extends PageSection implements TechTree {
 
     public readNBT(nbt: NbtCompound) {
         const techs = nbt.getStringArray('techs');
-        if (techs.length === 0) return;
+        if (!techs || techs.length === 0) return;
         const world = this.player.getWorld();
 
         for (const id of techs) {

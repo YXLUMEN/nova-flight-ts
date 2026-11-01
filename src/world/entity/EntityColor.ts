@@ -1,4 +1,3 @@
-// 临时方案
 import type {HexColor} from "../../type/types.ts";
 import {decodeColorToHex, encodeColorHex} from "../../utils/net_util.ts";
 

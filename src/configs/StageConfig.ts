@@ -1,4 +1,3 @@
-import {Stage} from "../world/stage/Stage.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
 import {createPhase} from "../world/stage/PhaseConfig.ts";
 import {
@@ -333,7 +332,7 @@ const p9 = createPhase('P9')
         every: 80,
         jitter: 0.4,
         factory: spawnInMap(MobBlueprintBuilder.of(B)
-            .speed(1.2)
+            .speed(1.6)
             .bonusHp(8)
             .worth(8)
             .color('#910000')
@@ -390,4 +389,4 @@ const p9 = createPhase('P9')
     })
     .build();
 
-export const STAGE = new Stage([p0, p1, p2, p3, p4, p5, p6, p7, p8, p9]);
+export const DEFAULT_PHASES = [p0, p1, p2, p3, p4, p5, p6, p7, p8, p9];

@@ -58,7 +58,7 @@ export class SummonEntityCommand {
         }
 
         const nbtArg = ctx.args.get('nbt');
-        let nbt: NbtCompound | undefined = nbtArg?.result;
+        const nbt: NbtCompound | undefined = nbtArg?.result;
 
         const countArg = ctx.args.get('count');
         if (countArg && countArg.result > 1) {

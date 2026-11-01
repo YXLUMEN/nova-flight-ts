@@ -1,10 +1,10 @@
-import type {NbtElement} from "./NbtElement.ts";
+import type {NbtNumber} from "./NbtElement.ts";
 import {type NbtType, NbtTypeId} from "../NbtType.ts";
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {IllegalArgumentError} from "../../type/errors.ts";
 
-export class NbtDouble implements NbtElement {
+export class NbtDouble implements NbtNumber {
     public static readonly TYPE: NbtType<NbtDouble> = {
         read(reader: BinaryReader) {
             const value = reader.readDouble();
@@ -36,7 +36,7 @@ export class NbtDouble implements NbtElement {
         return this;
     }
 
-    public toString(): string {
+    public toSNBT(): string {
         return `${this.value}d`;
     }
 }

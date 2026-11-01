@@ -3,7 +3,7 @@ import {NovaFlightServer} from "../NovaFlightServer.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {World} from "../../world/World.ts";
 import {SpawnMarkerEntity} from "../../entity/SpawnMarkerEntity.ts";
-import {STAGE} from "../../configs/StageConfig.ts";
+import {DEFAULT_PHASES} from "../../configs/StageConfig.ts";
 import {Techs} from "../../world/tech/Techs.ts";
 import {BaseBossEntity} from "../../entity/mob/BaseBossEntity.ts";
 import {SequenceEngine} from "../../world/sequence/SequenceEngine.ts";
@@ -300,8 +300,8 @@ export class TutorialEvents {
                         player.getWorld().applyElement(Emp.create(player, player.positionRef, 1024, 5));
                         player.setHealth(player.getMaxHealth());
                     }
-                    ctx.server.world!.stage = STAGE;
-                    ctx.server.world!.stage.setStage('P7');
+                    ctx.server.world!.setStage(DEFAULT_PHASES);
+                    ctx.server.world!.stage.setPhase('P7');
                 })
                 .build(),
         });

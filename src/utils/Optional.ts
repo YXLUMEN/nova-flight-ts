@@ -89,4 +89,8 @@ export class Optional<T> {
     public orElseGet(supplier: Supplier<T>): T {
         return this.value !== null ? this.value : supplier();
     }
+
+    public getOrNull() {
+        return this.value ?? null;
+    }
 }

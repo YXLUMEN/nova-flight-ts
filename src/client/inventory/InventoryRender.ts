@@ -3,6 +3,7 @@ import {ClientInventory} from "./ClientInventory.ts";
 import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
 import {ModelManager} from "../render/model/ModelManager.ts";
 import {UiFramework} from "../render/ui/UiFramework.ts";
+import {DataComponents} from "../../component/DataComponents.ts";
 
 export class InventoryRender extends UiFramework {
     private readonly player: LocalPlayerEntity;
@@ -70,7 +71,8 @@ export class InventoryRender extends UiFramework {
         const padding = 16;
         const lineGap = 4;
 
-        const itemName = item.getItem().getName().toString();
+        const customName = item.get(DataComponents.CUSTOM_NAME);
+        const itemName = customName ? customName : item.getItem().getName().toString();
         const namespace = item.getItem().getRegistryEntry().getRegistryKey().getValue().getNamespace();
 
         ctx.font = mainFont;

@@ -35,13 +35,13 @@ export class StageCommand {
                                     const stage = world.stage;
 
                                     const last = stage.getCurrentName();
-                                    if (stage.setStage(name)) {
+                                    if (stage.setPhase(name)) {
                                         world.setPhase(0);
                                         ctx.source.outPut.sendMessage(`Set game stage to ${name}`);
                                         return;
                                     }
 
-                                    if (last) stage.setStage(last);
+                                    if (last) stage.setPhase(last);
                                     else stage.reset();
 
                                     ctx.source.outPut.sendMessage(`\x1b[31mFail to set stage, reset to last stage`);

@@ -4,11 +4,13 @@ import type {BinaryReader} from "../serialization/BinaryReader.ts";
 import type {Codec} from "../serialization/Codec.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {Codecs} from "../serialization/Codecs.ts";
-import {ComponentChange} from "../component/ComponentChanges.ts";
+import {ComponentChange, type ComponentChanges} from "../component/ComponentChanges.ts";
 import {Optional} from "../utils/Optional.ts";
 import {PatchComponentMap} from "../component/PatchComponentMap.ts";
 import {Registries} from "../registry/Registries.ts";
 import {ItemStack} from "./ItemStack.ts";
+import type {Item} from "./Item.ts";
+import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 
 export class ItemCodec {
     public static readonly ITEM_VALUE_PACKET_CODEC = PacketCodecs.registryValue(Registries.ITEM);
@@ -39,5 +41,7 @@ export class ItemCodec {
         Codecs.field('counts', Codecs.INT8).for(v => v.getCount()),
         Codecs.optionalField('compounds', ComponentChange.CODEC).for(v =>
             v.isEmpty() ? Optional.empty() : Optional.of(v.getComponents().getChanges())),
-    ).apply((v1, v2, v3) => new ItemStack(v1.getValue(), v2, v3.isPresent() ? v3.get() : null));
+    ).apply((v1: RegistryEntry<Item>, v2: number, v3: Optional<PatchComponentMap | ComponentChanges>) => {
+        return new ItemStack(v1.getValue(), v2, v3.getOrNull());
+    });
 }

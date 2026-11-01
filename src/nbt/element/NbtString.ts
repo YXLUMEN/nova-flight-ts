@@ -33,7 +33,7 @@ export class NbtString implements NbtElement {
         return this;
     }
 
-    public toString() {
+    public toSNBT() {
         const escaped = this.value
             .replace(/\\/g, '\\\\')
             .replace(/"/g, '\\"');

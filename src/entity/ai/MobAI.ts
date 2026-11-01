@@ -5,7 +5,7 @@ import type {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {getNearestEntityByVec} from "../../utils/math/collide.ts";
 import {MutVec2} from "../../utils/math/MutVec2.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
-import {Random} from "../../utils/math/Random.ts";
+import {SimpleRandom} from "../../utils/math/random/SimpleRandom.ts";
 
 export const enum AiBehavior {
     Wander,
@@ -20,14 +20,14 @@ export class MobAI implements EntityAi {
     private readonly entity: MobEntity;
     private readonly dir = new MutVec2(1, 0);
     private readonly targetPos = MutVec2.zero();
-    private readonly random: Random;
+    private readonly random: SimpleRandom;
 
     private changeTimer = 0;
     private behavior: number = AiBehavior.Simple;
 
     public constructor(entity: MobEntity) {
         this.entity = entity;
-        this.random = new Random(entity.getId());
+        this.random = new SimpleRandom(entity.getId());
     }
 
     public tick(): void {
