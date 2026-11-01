@@ -1,4 +1,4 @@
-import {Consumer} from "../../src/type/types";
+import type {Consumer} from "../../src/type/types";
 
 export type ParticleArray = Float32Array | Uint32Array | Uint16Array | Uint8Array;
 

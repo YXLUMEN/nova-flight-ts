@@ -29,7 +29,7 @@ import {
     sortedIds,
     TestEntity,
 } from "../test/support/spatialFixtures.ts";
-import {Cell, createSink} from "./support/Sink";
+import {type Cell, createSink} from "./support/Sink";
 
 installRuntimePolyfills();
 

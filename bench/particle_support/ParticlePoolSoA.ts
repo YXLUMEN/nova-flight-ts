@@ -1,6 +1,6 @@
 import {ParticleSprite} from "../../src/effect/particle/ParticleSprite";
 import {ParticleLayout} from "./ParticleLayout";
-import {HexColor} from "../../src/type/types";
+import type {HexColor} from "../../src/type/types";
 import {encodeColorHex} from "../../src/utils/net_util";
 import {ParticleEffectType} from "../../src/effect/particle/ParticleEffectType";
 import {lerp, rand, randInt} from "../../src/utils/math/math";

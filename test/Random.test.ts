@@ -3,10 +3,8 @@
  *
  * 结构：通用语义（nextFloat / nextDouble / nextInt / nextIntBelow / nextBool / pick /
  * shuffleInplace / split / 生日碰撞 / 一阶转移 / 确定性）对 Xor 与 Lcg 两个实现各跑一遍；
- * 最后是 LCG 的低位退化回归 —— 把"修复前的原始 LCG"作为对照锚点写进断言，
- * 而不是只打印出来，这样退化一旦回归就会失败。
  *
- * 说明：所有阈值都建立在固定种子(20241001)的确定性输出上，因此断言本身是确定性的。
+ * 说明：所有阈值都建立在固定种子(20261001)的确定性输出上，因此断言本身是确定性的。
  */
 
 import {assert, describe, it} from "vitest";
@@ -14,8 +12,9 @@ import {assert, describe, it} from "vitest";
 import {Seed} from "../src/utils/math/random/Seed.ts";
 import type {Random} from "../src/utils/math/random/Random.ts";
 import {RandomXor} from "../src/utils/math/random/RandomXor.ts";
-import {RandomLcg} from "../src/utils/math/random/RandomLcg.ts";
-import {chiSquare, describeDiff, diffWords, meanOf, popcountDiff} from "./support/randomFixtures.ts";
+import {RandomMulberry} from "../src/utils/math/random/RandomMulberry.ts";
+import {chiSquare, describeDiff, diffWords, meanOf} from "./support/randomFixtures.ts";
+import {RandomXor32} from "../src/utils/math/random/RandomXor32.ts";
 
 type Factory = (seed: Seed, stream?: number) => Random;
 
@@ -24,12 +23,15 @@ interface Impl {
     readonly make: Factory;
 }
 
+const seed = 20261001;
+
 const IMPLS: readonly Impl[] = [
-    {label: "RngXor", make: (seed, stream = 0) => new RandomXor(seed, stream)},
-    {label: "RngLcg", make: (seed, stream = 0) => new RandomLcg(seed, stream)},
+    {label: "RngXor128", make: (seed, stream = 0) => new RandomXor(seed, stream)},
+    {label: "RngMulberry", make: (seed, stream = 0) => new RandomMulberry(seed, stream)},
+    {label: "RngXor32", make: (seed, stream = 0) => new RandomXor32(seed, stream)},
 ];
 
-const SEED = new Seed(20241001);
+const SEED = new Seed(seed);
 
 /** 跨实现共用的"典型调用序列"指纹 */
 function sequence(r: Random): string {
@@ -55,7 +57,7 @@ function tally(r: Random, bound: number, count: number): number[] {
 // ---------------------------------------------------------------------------
 
 for (const {label, make} of IMPLS) {
-    describe(`${label} · 通用 Random 语义`, () => {
+    describe(`${label} · Random 语义`, () => {
         const rng = (stream = 0): Random => make(SEED, stream);
 
         // ---- nextFloat / nextDouble ----
@@ -351,69 +353,3 @@ for (const {label, make} of IMPLS) {
         });
     });
 }
-
-// ---------------------------------------------------------------------------
-// 2. LCG 低位退化回归
-//    把"修复前"的行为写成断言作为对照锚点：它必须保持退化，
-//    而修复后的实现必须完全通过基类语义（含 mod 4 的 16 种转移）。
-// ---------------------------------------------------------------------------
-
-describe("RandomLcg · 低位退化回归", () => {
-    /** 修复前的原始 LCG：直接返回 state，没有输出混合 */
-    function rawLcgSeq(start: number, n: number): number[] {
-        let state = start;
-        const out: number[] = [];
-        for (let i = 0; i < n; i++) {
-            state = (Math.imul(1664525, state) + 1013904223) >>> 0;
-            out.push(state);
-        }
-        return out;
-    }
-
-    /** 统计一阶转移的种类（元素需已归一到小数域，如 v % 4） */
-    function transitions(seq: readonly number[]): Set<string> {
-        const pairs = new Set<string>();
-        for (let i = 1; i < seq.length; i++) pairs.add(`${seq[i - 1]}->${seq[i]}`);
-        return pairs;
-    }
-
-    it("对照：修复前的 state % 4 是 [0,3,2,1] 的严格周期", () => {
-        assert.deepEqual(rawLcgSeq(12345, 12).map(v => v % 4), [0, 3, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1]);
-    });
-
-    it("对照：修复前的 mod 4 只有 4/16 种转移", () => {
-        const pairs = transitions(rawLcgSeq(12345, 1000).map(v => v % 4));
-        assert.strictEqual(pairs.size, 4, `转移集合：${[...pairs].join(" ")}`);
-    });
-
-    it("对照：修复前的 mod 4 一阶转移 chi2 爆表（约 1.2e6，临界 37.7）", () => {
-        const seq = rawLcgSeq(12345, 400_000).map(v => v % 4);
-        const cells = Array.from({length: 4}, () => new Array<number>(4).fill(0));
-        for (let i = 1; i < seq.length; i++) cells[seq[i - 1]][seq[i]]++;
-        const stat = chiSquare(cells.flat(), seq.length / 16);
-        assert.ok(stat > 1_000_000, `chi2=${stat.toFixed(0)} 应远大于临界值`);
-    });
-
-    it("修复后：mod 4 覆盖全部 16 种转移", () => {
-        const r = new RandomLcg(SEED, 0);
-        const seq: number[] = [];
-        for (let i = 0; i < 1000; i++) seq.push(r.nextIntBelow(4));
-        console.log(`前 12 次 nextIntBelow(4) = [${seq.slice(0, 12).join(", ")}]`);
-        assert.strictEqual(transitions(seq).size, 16);
-    });
-
-    it("修复后：连续输出的比特翻转率 ≈ 50%", () => {
-        const r = new RandomLcg(SEED, 0);
-        const samples = 200_000;
-        let flips = 0;
-        let prev = r.next() >>> 0;
-        for (let i = 0; i < samples; i++) {
-            const cur = r.next() >>> 0;
-            flips += popcountDiff(prev, cur);
-            prev = cur;
-        }
-        const rate = flips / (samples * 32);
-        console.log(`rate=${(rate * 100).toFixed(2)}%`);
-        assert.ok(Math.abs(rate - 0.5) < 0.01, `比特翻转率 ${(rate * 100).toFixed(2)}% 偏离 50%`);
-    });
-});
