@@ -8,7 +8,7 @@ import {clamp} from "../../utils/math/math.ts";
 import {SpawnRule} from "./SpawnRule.ts";
 import {StageEnter} from "../../event/events/stage/StageEnter.ts";
 import {StageExit} from "../../event/events/stage/StageExit.ts";
-import {BuiltinRandom} from "../../utils/math/random/BuiltinRandom.ts";
+import {RandomBuiltin} from "../../utils/math/random/RandomBuiltin.ts";
 
 export class Stage implements NbtSerializable {
     private readonly rng: Random;
@@ -23,7 +23,7 @@ export class Stage implements NbtSerializable {
 
     public constructor(phases: PhaseConfig[], rng?: Random) {
         this.phases = phases;
-        this.rng = rng ?? new BuiltinRandom();
+        this.rng = rng ?? new RandomBuiltin();
         this.loadPhase(0);
     }
 

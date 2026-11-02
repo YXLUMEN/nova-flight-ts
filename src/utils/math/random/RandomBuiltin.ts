@@ -2,7 +2,7 @@ import {Random} from "./Random.ts";
 import {randInt} from "../math.ts";
 import {shuffleArray} from "../../util.ts";
 
-export class BuiltinRandom extends Random {
+export class RandomBuiltin extends Random {
     public next(): number {
         return (Math.random() * 0x100000000) >>> 0;
     }

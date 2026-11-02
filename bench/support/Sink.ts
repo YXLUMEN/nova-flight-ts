@@ -33,71 +33,102 @@ export interface Sink {
     note(text: string): void;
 }
 
+class ConsoleSink implements Sink {
+
+
+    public env(text: string): void {
+        console.log(text);
+    }
+
+    public section(title: string, desc?: string) {
+        console.log(`\n== ${title} ==${desc ? `\n   ${desc}` : ""}`);
+    }
+
+    public table(head: string[], rows: Cell[][]): void {
+        const all = [head, ...rows.map(r => r.map(this.cellText))];
+
+        const widths = head.map((_, i) => Math.max(...all.map(r => displayWidth(r[i]!))));
+
+        for (const [index, row] of all.entries()) {
+            console.log("   " + row.map((c, i) => padToWidth(c, widths[i]!)).join("  "));
+            if (index !== 0) continue;
+
+            console.log("   " + widths.map(w => "-".repeat(w)).join("  "));
+        }
+    }
+
+    public note(text: string): void {
+        console.log(`   ${text}`);
+    }
+
+    private cellText(c: Cell) {
+        return typeof c === "string" ? c : c.t;
+    }
+}
+
+class DOMSink implements Sink {
+    private readonly out: HTMLElement;
+
+    public constructor(out: HTMLElement) {
+        this.out = out;
+    }
+
+    public env(text: string): void {
+        document.getElementById("env")!.textContent = text;
+    }
+
+    public section(title: string, desc?: string) {
+        const h = document.createElement("h2");
+        h.textContent = title;
+        this.out.append(h);
+        if (!desc) return;
+
+        const p = document.createElement("p");
+        p.className = "note";
+        p.textContent = desc;
+        this.out.append(p);
+    }
+
+    public table(head: string[], rows: Cell[][]) {
+        const table = document.createElement("table");
+        const thead = document.createElement("thead");
+        const htr = document.createElement("tr");
+        for (const h of head) {
+            const th = document.createElement("th");
+            th.textContent = h;
+            htr.append(th);
+        }
+        thead.append(htr);
+        table.append(thead);
+
+        const tbody = document.createElement("tbody");
+        for (const row of rows) {
+            const tr = document.createElement("tr");
+            for (const c of row) {
+                const td = document.createElement("td");
+                td.textContent = typeof c === "string" ? c : c.t;
+                if (typeof c !== "string" && c.cls) td.className = c.cls;
+                tr.append(td);
+            }
+            tbody.append(tr);
+        }
+        table.append(tbody);
+        this.out.append(table);
+    }
+
+    public note(text: string): void {
+        const p = document.createElement("p");
+        p.className = "note";
+        p.textContent = text;
+        this.out.append(p);
+    }
+}
+
 export function createSink(): Sink {
     if (typeof document === "undefined") {
-        const cellText = (c: Cell) => typeof c === "string" ? c : c.t;
-        return {
-            env: text => console.log(text),
-            section: (title, desc) => console.log(`\n== ${title} ==${desc ? `\n   ${desc}` : ""}`),
-            table: (head, rows) => {
-                const all = [head, ...rows.map(r => r.map(cellText))];
-                const widths = head.map((_, i) => Math.max(...all.map(r => displayWidth(r[i]!))));
-                for (const [index, row] of all.entries()) {
-                    console.log("   " + row.map((c, i) => padToWidth(c, widths[i]!)).join("  "));
-                    if (index === 0) console.log("   " + widths.map(w => "-".repeat(w)).join("  "));
-                }
-            },
-            note: text => console.log(`   ${text}`),
-        };
+        return new ConsoleSink();
     }
 
     const out = document.getElementById("out")!;
-    return {
-        env: text => {
-            document.getElementById("env")!.textContent = text;
-        },
-        section: (title, desc) => {
-            const h = document.createElement("h2");
-            h.textContent = title;
-            out.append(h);
-            if (desc) {
-                const p = document.createElement("p");
-                p.className = "note";
-                p.textContent = desc;
-                out.append(p);
-            }
-        },
-        table: (head, rows) => {
-            const table = document.createElement("table");
-            const thead = document.createElement("thead");
-            const htr = document.createElement("tr");
-            for (const h of head) {
-                const th = document.createElement("th");
-                th.textContent = h;
-                htr.append(th);
-            }
-            thead.append(htr);
-            table.append(thead);
-
-            const tbody = document.createElement("tbody");
-            for (const row of rows) {
-                const tr = document.createElement("tr");
-                for (const c of row) {
-                    const td = document.createElement("td");
-                    td.textContent = typeof c === "string" ? c : c.t;
-                    if (typeof c !== "string" && c.cls) td.className = c.cls;
-                    tr.append(td);
-                }
-                tbody.append(tr);
-            }
-            table.append(tbody);
-            out.append(table);
-        },
-        note: text => {
-            const p = document.createElement("p");
-            p.className = "note";
-            p.textContent = text;
-            out.append(p);
-        },
-    };
+    return new DOMSink(out);
 }

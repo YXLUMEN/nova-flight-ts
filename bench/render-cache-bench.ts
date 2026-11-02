@@ -36,7 +36,7 @@ class EnemyProbe extends BaseEnemyRender {
         this.drawSprite(ctx, e);
     }
 
-    public transform(ctx: any, e: any, a: number): void {
+    public override transform(ctx: any, e: any, a: number): void {
         this.transform(ctx, e, a);
     }
 
@@ -54,7 +54,7 @@ class BulletProbe extends BulletEntityRender {
         this.drawSprite(ctx, e);
     }
 
-    public transform(ctx: any, e: any, a: number): void {
+    public override transform(ctx: any, e: any, a: number): void {
         this.transform(ctx, e, a);
     }
 
@@ -72,7 +72,7 @@ class CIWSProbe extends CIWSBulletEntityRender {
         this.drawSprite(ctx);
     }
 
-    public transform(ctx: any, e: any, a: number): void {
+    public override transform(ctx: any, e: any, a: number): void {
         this.transform(ctx, e, a);
     }
 
@@ -86,7 +86,7 @@ class DecoyProbe extends DecoyEntityRender {
         this.drawSprite(ctx);
     }
 
-    public transform(ctx: any, e: any, a: number): void {
+    public override transform(ctx: any, e: any, a: number): void {
         this.transform(ctx, e, a);
     }
 
@@ -100,7 +100,7 @@ class MissileProbe extends DecoyEntityRender {
         this.drawSprite(ctx);
     }
 
-    public transform(ctx: any, e: any, a: number): void {
+    public override transform(ctx: any, e: any, a: number): void {
         this.transform(ctx, e, a);
     }
 
@@ -456,7 +456,7 @@ function addRow(
     count: number,
     direct: () => void,
     cached: () => void,
-    miss: (() => void) | null,
+    _miss: (() => void) | null,
     build: number
 ): void {
     const d0 = benchOpMed(direct, OPS) * 1000;   // µs
