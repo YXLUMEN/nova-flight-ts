@@ -2,8 +2,8 @@ import type {RegistryKey} from "../RegistryKey.ts";
 import type {Identifier} from "../Identifier.ts";
 
 export class TagKey<T> {
-    private readonly registry: RegistryKey<T>;
-    private readonly id: Identifier;
+    public readonly registry: RegistryKey<T>;
+    public readonly id: Identifier;
 
     public constructor(registryKey: RegistryKey<T>, identifier: Identifier) {
         this.registry = registryKey;

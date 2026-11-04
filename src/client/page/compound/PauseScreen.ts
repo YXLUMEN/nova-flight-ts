@@ -2,7 +2,7 @@ import type {NovaFlightClient} from "../../NovaFlightClient.ts";
 import {bindFrom, bindText, closest, dataAction} from "../../../utils/dom_util.ts";
 import {appEvent} from "../../../event/EventBus.ts";
 import {PageSection} from "../PageSection.ts";
-import {TipManager} from "../../tips/TipManager.ts";
+import {TipManager} from "../../TipManager.ts";
 
 export class PauseScreen extends PageSection implements EventListenerObject {
     private readonly client: NovaFlightClient;

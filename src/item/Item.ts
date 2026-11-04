@@ -94,6 +94,18 @@ export class Item {
             return this.component(DataComponents.WEAPON_TYPE, BitFlag.combine(...type));
         }
 
+        public reloadTick(value: number): this {
+            return this.component(DataComponents.MAX_RELOAD_TIME, value);
+        }
+
+        public spread(value: number): this {
+            return this.component(DataComponents.MAX_SPREAD, value);
+        }
+
+        public ballisticSpeed(value: number): this {
+            return this.component(DataComponents.BALLISTIC_SPEED, value);
+        }
+
         public component<T>(type: DataComponentType<T>, value: T): this {
             if (this.components === null) {
                 this.components = this.getComponents();

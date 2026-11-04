@@ -1,16 +1,16 @@
-import {RegistryManager} from "../registry/RegistryManager.ts";
+import type {Identifier} from "../registry/Identifier.ts";
+import type {LoadingScreen} from "../client/render/ui/LoadingScreen.ts";
+import type {ResourceModule} from "./ResourceModule.ts";
+import type {RegistryManager} from "../registry/RegistryManager.ts";
+import {sleep} from "../utils/util.ts";
 import {ResourceManager} from "./ResourceManager.ts";
 import {LangResource} from "./LangResource.ts";
 import {SoundResource} from "./SoundResource.ts";
 import {AudioResource} from "./AudioResource.ts";
 import {TipResource} from "./TipResource.ts";
 import {TextureResource} from "./TextureResource.ts";
-import type {LoadingScreen} from "../client/render/ui/LoadingScreen.ts";
-import type {ResourceModule} from "./ResourceModule.ts";
-import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {ModelResource} from "./ModelResource.ts";
 import {Resources} from "./Resources.ts";
-import {sleep} from "../utils/util.ts";
 
 export class ResourceLoader {
     private static loading = false;
@@ -39,7 +39,7 @@ export class ResourceLoader {
         ResourceManager.unloadAll();
     }
 
-    public static unload(entry: RegistryEntry<string>) {
+    public static unload(entry: Identifier) {
         ResourceManager.unload(entry);
     }
 

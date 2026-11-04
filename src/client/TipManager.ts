@@ -1,10 +1,10 @@
-import {TranslatableText} from "../../i18n/TranslatableText.ts";
-import {randInt} from "../../utils/math/math.ts";
-import type {TipResource} from "../../resource/TipResource.ts";
-import {ResourceManager} from "../../resource/ResourceManager.ts";
-import {Resources} from "../../resource/Resources.ts";
-import {appEvent} from "../../event/EventBus.ts";
-import {TipChange} from "../../event/events/ui/TipChange.ts";
+import {TranslatableText} from "../i18n/TranslatableText.ts";
+import {randInt} from "../utils/math/math.ts";
+import type {TipResource} from "../resource/TipResource.ts";
+import {ResourceManager} from "../resource/ResourceManager.ts";
+import {Resources} from "../resource/Resources.ts";
+import {appEvent} from "../event/EventBus.ts";
+import {TipChange} from "../event/events/ui/TipChange.ts";
 
 export class TipManager {
     private static resource: TipResource | null = null;

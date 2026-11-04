@@ -1,16 +1,18 @@
+import type {RegistryManager} from "../registry/RegistryManager.ts";
+import type {ClientRecordManager} from "./data/ClientRecordManager.ts";
 import {sleep} from "../utils/util.ts";
 import {check} from "@tauri-apps/plugin-updater";
 import {confirm} from "@tauri-apps/plugin-dialog";
+import {isDev} from "../configs/RuntimeConfig.ts";
 import {LoadingScreen} from "./render/ui/LoadingScreen.ts";
 import {ClientWindow} from "./render/ClientWindow.ts";
 import {ClientTechManager} from "./tech/ClientTechManager.ts";
 import {ResourceLoader} from "../resource/ResourceLoader.ts";
 import {RenderLoader} from "./render/RenderLoader.ts";
-import type {RegistryManager} from "../registry/RegistryManager.ts";
-import {isDev} from "../configs/RuntimeConfig.ts";
+import {ClientRecordRegister} from "./data/ClientRecordRegister.ts";
 
 export class ClientInit {
-    public async initResources(manager: RegistryManager, window: ClientWindow): Promise<void> {
+    public async initResources(manager: RegistryManager, record: ClientRecordManager, window: ClientWindow): Promise<void> {
         const loadingScreen = new LoadingScreen(window);
         loadingScreen.setSize(ClientWindow.viewWidth, ClientWindow.viewHeight);
         loadingScreen.loop();
@@ -22,7 +24,8 @@ export class ClientInit {
         await sleep(100);
 
         loadingScreen.setProgress(0.2, 'Register resources');
-        await manager.registerAll();
+        ClientRecordRegister.register(record);
+        await manager.registerAll(record);
         ClientTechManager.init();
         await sleep(200);
 

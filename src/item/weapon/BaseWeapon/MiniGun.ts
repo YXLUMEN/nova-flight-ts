@@ -9,16 +9,14 @@ import {DataComponents} from "../../../component/DataComponents.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 
 export class MiniGun extends BaseWeapon {
-    private readonly MAX_SPREAD = 4;
-    private readonly BULLET_SPEED = 45;
+    private readonly START_SPREAD = 4;
 
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        const bullet = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, attacker, stack.getOr(DataComponents.ATTACK_DAMAGE, 1));
-
-        const maxSpread = stack.getOr(DataComponents.MAX_SPREAD, this.MAX_SPREAD);
-        this.setBullet(bullet, attacker, this.BULLET_SPEED, 4, maxSpread);
+        const bullet = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, attacker, this.getAttackDamage(stack));
+        this.setBulletByStack(bullet, attacker, stack, 4);
 
         // reduce spread while firing
+        const maxSpread = this.getMaxSpread(stack);
         if (maxSpread > 0.5) stack.set(DataComponents.MAX_SPREAD, maxSpread - 0.1);
 
         world.spawnEntity(bullet);
@@ -30,16 +28,12 @@ export class MiniGun extends BaseWeapon {
     }
 
     public override onEndFire(stack: ItemStack, world: World, attacker: Entity) {
-        stack.set(DataComponents.MAX_SPREAD, this.MAX_SPREAD);
+        stack.set(DataComponents.MAX_SPREAD, this.START_SPREAD);
 
         if (!world.isClient) return;
         if (world.stopLoopSound(attacker, SoundEvents.MINIGUN_FIRE_LOOP)) {
             world.playSound(attacker, SoundEvents.MINIGUN_FIRE_TAIL);
         }
-    }
-
-    public override getMaxSpread(item: ItemStack): number {
-        return item.getOr(DataComponents.MAX_SPREAD, this.MAX_SPREAD);
     }
 
     protected override getMuzzleParticles(): number {
@@ -48,9 +42,5 @@ export class MiniGun extends BaseWeapon {
 
     public override getUiColor(): string {
         return '#dcdcdc';
-    }
-
-    public override getBallisticSpeed(): number {
-        return this.BULLET_SPEED;
     }
 }

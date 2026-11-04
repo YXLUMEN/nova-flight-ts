@@ -11,7 +11,6 @@ import {isClient, isServer} from "../../../configs/RuntimeConfig.ts";
 
 export class StormFire extends BaseWeapon {
     public readonly CHARGING_TIME = 14;
-    private readonly BULLET_SPEED = 60;
 
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean) {
         super.inventoryTick(stack, world, holder, slot, selected);
@@ -47,15 +46,14 @@ export class StormFire extends BaseWeapon {
     }
 
     protected onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        const damage = stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
-        // 两发没必要循环
+        const damage = this.getAttackDamage(stack);
         {
             const bullet = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, attacker, damage);
-            this.setBullet(bullet, attacker, this.BULLET_SPEED, 4, 1.5);
+            this.setBulletByStack(bullet, attacker, stack, 4);
             world.spawnEntity(bullet);
         }
         const bullet = new MiniBulletEntity(EntityTypes.MINI_BULLET_ENTITY, world, attacker, damage);
-        this.setBullet(bullet, attacker, this.BULLET_SPEED, 4, 1.5, 25);
+        this.setBulletByStack(bullet, attacker, stack, 4, 25);
         world.spawnEntity(bullet);
     }
 
@@ -79,16 +77,8 @@ export class StormFire extends BaseWeapon {
         }
     }
 
-    public override getMaxSpread(): number {
-        return 2;
-    }
-
     protected override getMuzzleParticles(): number {
         return 2;
-    }
-
-    public override getBallisticSpeed(): number {
-        return this.BULLET_SPEED;
     }
 
     public getUiColor(): string {

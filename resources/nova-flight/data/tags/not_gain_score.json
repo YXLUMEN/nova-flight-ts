@@ -1,4 +1,5 @@
 [
   "nova-flight:void",
+  "nova-flight:kill",
   "nova-flight:player_impact"
 ]

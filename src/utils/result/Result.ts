@@ -42,12 +42,12 @@ export class Result<T, E> {
 
     public unwrap(): T {
         if (this.inner.ok) return this.inner.value;
-        throw new Error(`Panic because ${this.inner.error}`);
+        throw new Error('Panic because a unprocessed error', {cause: this.inner.error});
     }
 
     public unwrapErr(): E {
         if (!this.inner.ok) return this.inner.error;
-        throw new Error(`Result is Ok`);
+        throw new Error('Result is Ok');
     }
 
     public unwrapOr(defaultValue: T): T {

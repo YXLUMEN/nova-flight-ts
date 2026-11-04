@@ -4,6 +4,7 @@ import type {ConnectionContext} from "./network/ConnectionContext.ts";
 import type {ClientChannel} from "./network/ClientChannel.ts";
 import type {LocalPlayerEntity} from "./entity/LocalPlayerEntity.ts";
 import type {ServerWorker} from "../worker/ServerWorker.ts";
+import type {ClientRecordManager} from "./data/ClientRecordManager.ts";
 import {error, warn} from "@tauri-apps/plugin-log";
 import {stopServer} from "./ipc/integrated_server.ts";
 import {stopLanAnnounce} from "./ipc/lan_discovery.ts";
@@ -85,6 +86,7 @@ export class NovaFlightClient {
     private stopWorld: Consumer<void> = empty;
 
     public readonly registryManager: RegistryManager;
+    public readonly recordManager: ClientRecordManager;
     public readonly clientCommandManager: ClientCommandManager;
     public readonly clientChat: ClientChat;
 
@@ -96,6 +98,7 @@ export class NovaFlightClient {
         this.playerName = startup.playerName;
 
         this.registryManager = startup.manager;
+        this.recordManager = startup.record;
         this.window = startup.window;
         this.layer = new GuiLayer(this, 'gui');
         this.worldRender = new WorldRenderer(this);
@@ -268,6 +271,7 @@ export class NovaFlightClient {
         // clear world
         this.worldRender.setWorld(null);
         this.window.hud.setPlayer(null);
+        this.recordManager.setWorker(null);
         this.world?.close();
         this.world = null;
         this.player = null;
@@ -378,7 +382,7 @@ export class NovaFlightClient {
             }
         }, {signal: ctrl.signal});
 
-        await race.wait(promise, timeout(NovaFlightClient.SERVER_SHUTDOWN_TIMEOUT, race.signal()));
+        await race.wait(promise, timeout(NovaFlightClient.SERVER_SHUTDOWN_TIMEOUT, race.signal())).catch();
         resolve();
         ctrl.abort();
     }

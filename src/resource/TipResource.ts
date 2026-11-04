@@ -1,15 +1,15 @@
 import type {ResourceModule} from "./ResourceModule.ts";
-import {TranslatableText} from "../i18n/TranslatableText.ts";
+import type {Identifier} from "../registry/Identifier.ts";
 import {resolveResource} from "@tauri-apps/api/path";
 import {readTextFile} from "@tauri-apps/plugin-fs";
 import {error, warn} from "@tauri-apps/plugin-log";
-import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {Resources} from "./Resources.ts";
+import {TranslatableText} from "../i18n/TranslatableText.ts";
 
 export class TipResource implements ResourceModule {
     public tips: TranslatableText[] = [];
 
-    public getId(): RegistryEntry<string> {
+    public getId(): Identifier {
         return Resources.TIP;
     }
 

@@ -1,16 +1,16 @@
 import type {ResourceModule} from "./ResourceModule.ts";
-import {join, resolveResource} from "@tauri-apps/api/path";
+import type {Identifier} from "../registry/Identifier.ts";
+import type {SettingGuard} from "../client/settings/SettingGuard.ts";
 import {type DirEntry, exists, readDir, readTextFile} from "@tauri-apps/plugin-fs";
 import {warn} from "@tauri-apps/plugin-log";
+import {traverse_dir} from "../client/ipc/fs.ts";
+import {join, resolveResource} from "@tauri-apps/api/path";
+import {appEvent} from "../event/EventBus.ts";
 import {PromisePool} from "../utils/collection/PromisePool.ts";
-import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {Resources} from "./Resources.ts";
-import {traverse_dir} from "../utils/fs.ts";
 import {Settings} from "../client/settings/Settings.ts";
 import {Result} from "../utils/result/Result.ts";
-import type {SettingGuard} from "../client/settings/SettingGuard.ts";
 import {CallTwice} from "../type/errors.ts";
-import {appEvent} from "../event/EventBus.ts";
 import {LangChange} from "../event/events/ui/LangChange.ts";
 
 export class LangResource implements ResourceModule, SettingGuard<string> {
@@ -23,7 +23,7 @@ export class LangResource implements ResourceModule, SettingGuard<string> {
         Settings.LANG.setGuard(this);
     }
 
-    public getId(): RegistryEntry<string> {
+    public getId(): Identifier {
         return Resources.LANG;
     }
 

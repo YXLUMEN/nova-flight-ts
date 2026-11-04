@@ -40,7 +40,8 @@ export class BallisticCalculator {
             return;
         }
 
-        const handItem = this.owner.getCurrentItem().getItem();
+        const stack = this.owner.getCurrentItem();
+        const handItem = stack.getItem();
         if (!(handItem instanceof BaseWeapon)) return;
 
         const tPos = target.positionRef;
@@ -51,7 +52,7 @@ export class BallisticCalculator {
         const dy = tPos.y - oPos.y;
         const dist = Math.hypot(dx, dy);
 
-        const bulletSpeed = handItem.getBallisticSpeed();
+        const bulletSpeed = handItem.getBallisticSpeed(stack);
         const t = bulletSpeed > 0 ? dist / bulletSpeed : 0;
 
         let leadX = tPos.x + tVelocity.x * t;

@@ -7,13 +7,13 @@ export class ShieldRegenStatusEffect extends StatusEffect {
         super(StatusEffectCategory.BENEFICIAL, '#6ec8ff');
     }
 
-    public override applyEffectTick(_source: Entity | null, entity: LivingEntity, amplifier: number): boolean {
+    public override applyEffectTick(_source: Entity | null, entity: LivingEntity): boolean {
         const max = entity.getMaxShield();
-        if (max <= 0) return true;
+        if (max <= 0) return false;
 
         const current = entity.getShieldAmount();
         if (current < max) {
-            entity.setShieldAmount(current + 1 + amplifier);
+            entity.setShieldAmount(current + 1);
         }
         return true;
     }

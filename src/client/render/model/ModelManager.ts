@@ -24,7 +24,7 @@ export class ModelManager {
     }
 
     private static generateItemModel(): void {
-        for (const entry of Registries.ITEM.getEntries()) {
+        for (const entry of Registries.ITEM.iterEntries()) {
             const item = entry.getValue();
             const id = TextureMapping.getItemTexture(item);
             this.items.set(item, id.toString());
@@ -32,7 +32,7 @@ export class ModelManager {
     }
 
     private static generateTechModel(): void {
-        for (const entry of Registries.TECH.getEntries()) {
+        for (const entry of Registries.TECH.iterEntries()) {
             const tech = entry.getValue();
             const id = TextureMapping.getTechTexture(tech);
             this.techs.set(tech, id.toString());

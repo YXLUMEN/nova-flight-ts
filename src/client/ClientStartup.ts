@@ -7,6 +7,7 @@ import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {IllegalStateError} from "../type/errors.ts";
 import {BindSettings} from "./settings/BindSettings.ts";
 import {Settings} from "./settings/Settings.ts";
+import {ClientRecordManager} from "./data/ClientRecordManager.ts";
 
 export class ClientStartup {
     private finished = false;
@@ -16,11 +17,13 @@ export class ClientStartup {
     public readonly protocolVersion: number;
 
     public readonly manager: RegistryManager;
+    public readonly record: ClientRecordManager;
     public readonly window: ClientWindow;
 
     public constructor(protocolVersion: number) {
         this.protocolVersion = protocolVersion;
         this.manager = new RegistryManager();
+        this.record = new ClientRecordManager();
         this.window = new ClientWindow();
     }
 
@@ -40,7 +43,7 @@ export class ClientStartup {
         BindSettings.init();
 
         this.window.resize();
-        await new ClientInit().initResources(this.manager, this.window);
+        await new ClientInit().initResources(this.manager, this.record, this.window);
         this.finished = true;
     }
 

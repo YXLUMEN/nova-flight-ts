@@ -54,7 +54,7 @@ export class Registry<T> implements IndexedIterable<T> {
         if (this.valueToEntry.has(value)) throw new Error(`Value is already registered: ${value}`);
 
         const entry = new RegistryEntry(key, value);
-        if (tags && tags.length > 0) entry.setTags(new Set(tags));
+        if (tags.length > 0) entry.setTags(new Set(tags));
 
         this.keyToEntry.set(key, entry);
         this.idToEntry.set(key.getValue(), entry);
@@ -147,15 +147,15 @@ export class Registry<T> implements IndexedIterable<T> {
         return new Set(this.idToEntry.keys());
     }
 
-    public getIds() {
+    public iterId(): IteratorObject<Identifier> {
         return this.idToEntry.keys();
     }
 
-    public getEntries() {
+    public iterEntries(): IteratorObject<RegistryEntry<T>> {
         return this.idToEntry.values();
     }
 
-    public [Symbol.iterator]() {
+    public [Symbol.iterator](): IteratorObject<T> {
         return this.valueToEntry.keys();
     }
 

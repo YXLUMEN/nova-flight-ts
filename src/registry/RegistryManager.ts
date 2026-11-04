@@ -1,11 +1,10 @@
 import type {Registry} from "./Registry.ts";
 import type {RegistryKey} from "./RegistryKey.ts";
+import type {RecordManager} from "../database/data/RecordManager.ts";
 import {deepFreeze} from "../utils/util.ts";
-import {RegistryKeys} from "./RegistryKeys.ts";
 import {Registries} from "./Registries.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
-import {Items} from "../item/Items.ts";
 import {DamageTypes} from "../entity/damage/DamageTypes.ts";
 import {EntitySelectorOptions} from "../command/EntitySelectorOptions.ts";
 import {NbtTypes} from "../nbt/NbtTypes.ts";
@@ -13,43 +12,33 @@ import {Techs} from "../world/tech/Techs.ts";
 import {VisualEffectTypes} from "../effect/VisualEffectTypes.ts";
 
 export class RegistryManager {
-    private readonly registers: Map<RegistryKey<any>, Registry<any>> = new Map();
+    private root: Registry<Registry<unknown>> = null!;
 
-    public async registerAll(): Promise<void> {
+    public async registerAll(record: RecordManager): Promise<void> {
         if (Object.isFrozen(this)) throw new Error('Registry already registered');
 
+        // 显式初始化所有静态注册表
+        this.root = Registries.root();
+
+        // 需要加载资源或者有引用问题的项目
         NbtTypes.init();
-
-        this.registers.set(RegistryKeys.DAMAGE_TYPE, Registries.DAMAGE_TYPE);
-        this.registers.set(RegistryKeys.STATUS_EFFECT, Registries.STATUS_EFFECT);
-        this.registers.set(RegistryKeys.ENTITY_TYPE, Registries.ENTITY_TYPE);
-        this.registers.set(RegistryKeys.ATTRIBUTE, Registries.ATTRIBUTE);
-        this.registers.set(RegistryKeys.SOUND_EVENT, Registries.SOUND_EVENT);
-        this.registers.set(RegistryKeys.AUDIOS, Registries.AUDIOS);
-        this.registers.set(RegistryKeys.ITEM, Registries.ITEM);
-        this.registers.set(RegistryKeys.DATA_COMPONENT_TYPE, Registries.DATA_COMPONENT_TYPE);
-        this.registers.set(RegistryKeys.VISUAL_EFFECT_TYPE, Registries.VISUAL_EFFECT_TYPE);
-        this.registers.set(RegistryKeys.TECH, Registries.TECH);
-        this.registers.set(RegistryKeys.PARTICLES, Registries.PARTICLES);
-
-        await Techs.init();
-        await DamageTypes.init();
+        await Techs.init(record);
+        await DamageTypes.init(record);
         EntityTypes.init();
-        Items.init();
         VisualEffectTypes.init();
-        EntitySelectorOptions.register();
+        EntitySelectorOptions.init();
     }
 
     public get<E>(key: RegistryKey<Registry<E>>): Registry<E> {
-        const entry = this.registers.get(key);
-        if (entry) {
-            return entry;
-        }
+        const entry = this.root.getEntryByKey(key);
+        if (entry) return entry.getValue() as Registry<E>;
         throw new ReferenceError(`Missing registry: ${key}`);
     }
 
     public freeze() {
-        this.registers.values().forEach(r => r.checkBeforeFreeze());
+        for (const registry of this.root) {
+            registry.checkBeforeFreeze();
+        }
         deepFreeze(this, obj => obj instanceof TranslatableText);
     }
 }

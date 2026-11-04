@@ -192,7 +192,7 @@ export class Crosshair {
             case Items.ROCKET_LAUNCHER: {
                 this.crosshairType = CrosshairType.MISSILE;
                 this.weaponColor = item.getUiColor(stack);
-                this.maxSpread = (item as RocketLauncher).getMaxSpread();
+                this.maxSpread = (item as RocketLauncher).getMaxSpread(stack);
                 return;
             }
             case Items.FOCUSED_ARC_EMITTER:

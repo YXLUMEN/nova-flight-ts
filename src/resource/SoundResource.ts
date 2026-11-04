@@ -1,21 +1,20 @@
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {ResourceModule} from "./ResourceModule.ts";
-import {RegistryKeys} from "../registry/RegistryKeys.ts";
+import type {HashMap} from "../utils/collection/HashMap.ts";
 import {resolveResource} from "@tauri-apps/api/path";
 import {exists, readFile, readTextFile} from "@tauri-apps/plugin-fs";
+import {warn} from "@tauri-apps/plugin-log";
+import {deepFreeze} from "../utils/util.ts";
+import {RegistryKeys} from "../registry/RegistryKeys.ts";
 import {PromisePool} from "../utils/collection/PromisePool.ts";
 import {Identifier} from "../registry/Identifier.ts";
-import {deepFreeze} from "../utils/util.ts";
-import {warn} from "@tauri-apps/plugin-log";
-import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {Resources} from "./Resources.ts";
-import type {HashMap} from "../utils/collection/HashMap.ts";
 import {WrapperMap} from "../utils/collection/WrapperMap.ts";
 
 export class SoundResource implements ResourceModule {
     public readonly buffers: HashMap<Identifier, AudioBuffer[]> = new WrapperMap();
 
-    public getId(): RegistryEntry<string> {
+    public getId(): Identifier {
         return Resources.SOUND;
     }
 

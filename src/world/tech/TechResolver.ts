@@ -1,38 +1,44 @@
 import type {RawTech} from "../../type/ITech.ts";
+import type {RecordManager} from "../../database/data/RecordManager.ts";
 import {isNonEmptyString} from "../../utils/util.ts";
 import {TechBuilder} from "./TechBuilder.ts";
+import {RecordTypes} from "../../database/data/RecordTypes.ts";
 
-export abstract class TechResolver {
-    protected readonly techUrl: string;
-    protected readonly configUrl: string;
+export class TechResolver {
     protected readonly out: Map<string, TechBuilder> = new Map();
     protected rawTech: unknown[] | null = null;
-    protected config: any | null = null;
 
-    protected constructor(techUrl: string, configUrl: string) {
-        this.techUrl = techUrl;
-        this.configUrl = configUrl;
-    }
+    public async load(data: RecordManager): Promise<void> {
+        const buffer = (await data.getValue(RecordTypes.TECH)).unwrap();
+        const json = new TextDecoder('utf-8', {fatal: true}).decode(buffer);
+        const tech = JSON.parse(json);
 
-    public abstract load(): Promise<void>;
-
-    public abstract normalize(): Map<string, TechBuilder>;
-
-    protected setTech(tech: unknown, config: unknown) {
-        if (!Array.isArray(tech)) {
-            throw new Error('Tech JSON must be an array');
-        }
+        if (!Array.isArray(tech)) throw new Error('Tech JSON must be an array');
         this.rawTech = tech;
-
-        if (config == null) {
-            this.config = {};
-        } else {
-            if (typeof config !== 'object' || Array.isArray(config)) throw new Error('Invalid tech config');
-            this.config = config;
-        }
     }
 
-    protected buildGeneral(tech: RawTech, builder: TechBuilder) {
+    public normalize(): Map<string, TechBuilder> {
+        if (!this.rawTech) throw new Error('None tech was found');
+
+        const raw = this.rawTech;
+        const out = this.out;
+
+        for (let i = 0; i < raw.length; i++) {
+            const item = raw[i];
+            if (item == null || typeof item !== 'object') {
+                throw new Error(`Tech[${i}] must be an object`);
+            }
+
+            const rawTech = item as RawTech;
+            const builder = new TechBuilder();
+            const id = this.build(rawTech, builder);
+            out.set(id, builder);
+        }
+
+        return out;
+    }
+
+    protected build(tech: RawTech, builder: TechBuilder): string {
         if (!isNonEmptyString(tech['id'])) {
             throw new Error(`'id' is required and must be a non-empty string`);
         }

@@ -1,7 +1,6 @@
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {ResourceModule} from "./ResourceModule.ts";
 import type {Identifier} from "../registry/Identifier.ts";
-import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {warn} from "@tauri-apps/plugin-log";
 import {convertFileSrc} from "@tauri-apps/api/core";
 import {join, resolveResource} from "@tauri-apps/api/path";
@@ -10,11 +9,10 @@ import {RegistryKeys} from "../registry/RegistryKeys.ts";
 import {Resources} from "./Resources.ts";
 import {PromisePool} from "../utils/collection/PromisePool.ts";
 
-
 export class AudioResource implements ResourceModule {
     public readonly buffers = new Map<Identifier, string>();
 
-    public getId(): RegistryEntry<string> {
+    public getId(): Identifier {
         return Resources.AUDIO;
     }
 

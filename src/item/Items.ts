@@ -53,15 +53,19 @@ export class Items {
         .maxDurability(50)
         .attackDamage(3)
         .maxCooldown(3)
+        .reloadTick(16)
         .type(WeaponType.KINETIC)
-        .component(DataComponents.MAX_RELOAD_TIME, 16)
+        .ballisticSpeed(35)
+        .spread(2)
     ));
     public static readonly MINIGUN = this.register('minigun', new MiniGun(new Item.Properties()
         .maxDurability(250)
         .attackDamage(2)
         .maxCooldown(2)
+        .reloadTick(40)
         .type(WeaponType.KINETIC)
-        .component(DataComponents.MAX_RELOAD_TIME, 40)
+        .ballisticSpeed(45)
+        .spread(4)
     ));
     public static readonly BOMB_WEAPON = this.register('bomb_weapon', new BombWeapon(new Item.Properties()
         .maxCooldown(800)
@@ -72,17 +76,21 @@ export class Items {
     public static readonly CANNON90 = this.register('cannon90', new Cannon90(new Item.Properties()
         .maxDurability(16)
         .attackDamage(6)
-        .maxCooldown(16.5)
+        .maxCooldown(16)
+        .reloadTick(35)
         .type(WeaponType.KINETIC, WeaponType.EXPLOSIVE)
+        .ballisticSpeed(16)
+        .spread(1)
         .component(DataComponents.EXPLOSION_RADIUS, 112)
         .component(DataComponents.EXPLOSION_POWER, 8)
-        .component(DataComponents.MAX_RELOAD_TIME, 35)
     ));
     public static readonly ROCKET_LAUNCHER = this.register('rocket_launcher', new RocketLauncher(new Item.Properties()
         .attackDamage(8)
         .maxCooldown(70)
         .unbreakable()
         .type(WeaponType.KINETIC, WeaponType.EXPLOSIVE)
+        .ballisticSpeed(15)
+        .spread(2)
         .component(DataComponents.EXPLOSION_RADIUS, 72)
         .component(DataComponents.EXPLOSION_POWER, 12)
     ));
@@ -98,6 +106,8 @@ export class Items {
         .maxCooldown(0)
         .unbreakable()
         .type(WeaponType.KINETIC)
+        .ballisticSpeed(60)
+        .spread(2)
         .component(DataComponents.MAX_HEAT, 144)
         .component(DataComponents.COOLDOWN_RATE, 3)
     ));
@@ -106,6 +116,8 @@ export class Items {
         .type(WeaponType.KINETIC)
         .maxDurability(500)
         .maxCooldown(1)
+        .ballisticSpeed(60)
+        .spread(1.5)
         .component(DataComponents.MAX_RELOAD_TIME, 54)
     ));
     public static readonly PHASE_LASERS = this.register('phase_lasers', new PhaseLasers(new Item.Properties()
@@ -126,6 +138,7 @@ export class Items {
         .maxCooldown(40)
         .type(WeaponType.ENERGY, WeaponType.ARC)
         .unbreakable()
+        .ballisticSpeed(12)
         .component(DataComponents.ATTACK_RANGE, 180) // 半径
     ));
     public static readonly ARC_EMITTER = this.register('arc_emitter', new ArcEmitter(new Item.Properties()
@@ -147,10 +160,12 @@ export class Items {
         .maxDurability(8)
         .attackDamage(12)
         .maxCooldown(32)
+        .reloadTick(40)
         .type(WeaponType.KINETIC, WeaponType.EXPLOSIVE)
+        .ballisticSpeed(14)
+        .spread(1)
         .component(DataComponents.EXPLOSION_RADIUS, 210)
         .component(DataComponents.EXPLOSION_POWER, 14)
-        .component(DataComponents.MAX_RELOAD_TIME, 40)
     ));
     public static readonly POINT_DEFENSE = this.register('point_defense', new PointDefense(new Item.Properties()
         .type(WeaponType.ENERGY)
@@ -161,28 +176,34 @@ export class Items {
         .maxCooldown(30)
         .attackDamage(1)
         .type(WeaponType.KINETIC)
+        .ballisticSpeed(40)
         .component(DataComponents.MAX_DEFENSE, 1)
     ));
     public static readonly COILGUN = this.register('coilgun', new Coilguns(new Item.Properties()
         .maxDurability(50)
         .attackDamage(5)
         .maxCooldown(2)
+        .reloadTick(16)
         .type(WeaponType.KINETIC)
-        .component(DataComponents.MAX_RELOAD_TIME, 16)
+        .ballisticSpeed(40)
+        .spread(1)
     ));
     public static readonly RAILGUN = this.register('railgun', new RailGun(new Item.Properties()
         .maxDurability(40)
         .attackDamage(16)
         .maxCooldown(5)
+        .reloadTick(24)
         .type(WeaponType.KINETIC)
-        .component(DataComponents.MAX_RELOAD_TIME, 24)
+        .ballisticSpeed(52)
+        .spread(0.8)
     ));
     public static readonly KINETIC_ARTILLERY = this.register('kinetic_artillery', new KineticArtillery(new Item.Properties()
         .maxDurability(32)
         .attackDamage(32)
         .maxCooldown(24)
+        .reloadTick(24)
         .type(WeaponType.KINETIC)
-        .component(DataComponents.MAX_RELOAD_TIME, 24)
+        .ballisticSpeed(50)
     ));
     public static readonly SPACE_TORPEDOES = this.register('space_torpedoes', new SpaceTorpedoes(new Item.Properties()
         .attackDamage(16)
@@ -224,7 +245,8 @@ export class Items {
         .type(WeaponType.EXPLOSIVE)
         .maxDurability(12)
         .maxCooldown(6)
-        .component(DataComponents.MAX_RELOAD_TIME, 32)
+        .reloadTick(32)
+        .ballisticSpeed(32)
         .component(DataComponents.EXPLOSION_RADIUS, 32)
         .component(DataComponents.EXPLOSION_POWER, 12)
     ));
@@ -244,10 +266,6 @@ export class Items {
         .unbreakable()
         .type(WeaponType.ENERGY)
     ));
-
-    public static init() {
-        Object.freeze(this);
-    }
 
     private static register<T extends Item>(id: string, item: T): T {
         const entry = Registry.registerReferenceById(Registries.ITEM, Identifier.ofVanilla(id), item).getValue();

@@ -8,8 +8,6 @@ import {MagneticTorpedoEntity} from "../../../entity/projectile/MagneticTorpedoE
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 
 export class TorpedoLauncher extends BaseWeapon {
-    private readonly speed = 32;
-
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
         const bullet = new MagneticTorpedoEntity(
             EntityTypes.MAGNETIC_TORPEDO_ENTITY,
@@ -19,16 +17,12 @@ export class TorpedoLauncher extends BaseWeapon {
             stack.getOr(DataComponents.EXPLOSION_POWER, 16),
         );
 
-        this.setBullet(bullet, attacker, this.speed, 0, 0);
+        this.setBulletByStack(bullet, attacker, stack);
         world.spawnEntity(bullet);
         world.playSound(null, SoundEvents.TORPEDOES_FIRE, 0.6);
     }
 
     public override getUiColor(): string {
         return '#5095ff'
-    }
-
-    public override getBallisticSpeed(): number {
-        return this.speed;
     }
 }

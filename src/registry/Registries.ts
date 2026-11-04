@@ -4,7 +4,7 @@ import {RegistryKeys} from "./RegistryKeys.ts";
 import {Identifier} from "./Identifier.ts";
 
 export class Registries {
-    private static readonly ROOT = new Registry(RegistryKey.ofRegistry(Identifier.ROOT));
+    private static readonly ROOT: Registry<Registry<unknown>> = new Registry(RegistryKey.ofRegistry(Identifier.ROOT));
 
     public static readonly DAMAGE_TYPE = this.simpleCreate(RegistryKeys.DAMAGE_TYPE);
     public static readonly STATUS_EFFECT = this.simpleCreate(RegistryKeys.STATUS_EFFECT);
@@ -18,7 +18,6 @@ export class Registries {
     public static readonly TECH = this.simpleCreate(RegistryKeys.TECH);
     public static readonly WORLD_EVENT = this.simpleCreate(RegistryKeys.WORLD_EVENT);
     public static readonly BLOCK = this.simpleCreate(RegistryKeys.BLOCK);
-    public static readonly RESOURCES = this.simpleCreate(RegistryKeys.RESOURCE);
     public static readonly PARTICLES = this.simpleCreate(RegistryKeys.PARTICLES);
 
     private static simpleCreate<T>(key: RegistryKey<Registry<T>>): Registry<T> {
@@ -28,5 +27,10 @@ export class Registries {
     private static create<T, R extends Registry<T>>(key: RegistryKey<Registry<T>>, registry: R): R {
         this.ROOT.add(key, registry);
         return registry;
+    }
+
+    // for registry manager
+    public static root() {
+        return this.ROOT;
     }
 }

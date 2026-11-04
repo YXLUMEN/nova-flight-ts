@@ -12,8 +12,6 @@ import {ExplosionConfigs, ExplosionTag} from "../../../world/element/explosion/E
 import {ExplosionVisual} from "../../../world/element/explosion/ExplosionVisual.ts";
 
 export class Cannon90 extends BaseWeapon {
-    private readonly speed = 16;
-
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
         const fusion = attacker instanceof PlayerEntity && attacker.getTechs().isUnlocked(Techs.FUSION_BOMB);
 
@@ -26,21 +24,13 @@ export class Cannon90 extends BaseWeapon {
             new ExplosionVisual(stack.getOr(DataComponents.EXPLOSION_RADIUS, 16), undefined, 8, 6)
         );
 
-        this.setBullet(bullet, attacker, this.speed, 20, 1);
+        this.setBulletByStack(bullet, attacker, stack, 20);
         world.spawnEntity(bullet);
         world.playSound(null, SoundEvents.CANNON90_FIRE);
     }
 
-    public override getMaxSpread(): number {
-        return 1;
-    }
-
     public override getUiColor(): string {
         return "#ffcb6a";
-    }
-
-    public override getBallisticSpeed(): number {
-        return this.speed;
     }
 
     protected override getMuzzleParticles(): number {

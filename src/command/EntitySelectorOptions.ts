@@ -16,11 +16,11 @@ interface SelectorOption {
 export class EntitySelectorOptions {
     private static readonly OPTIONS = new Map<string, SelectorOption>();
 
-    public static putOption(id: string, handler: Consumer<EntitySelectorParser>, condition: Predicate<EntitySelectorParser>) {
+    private static putOption(id: string, handler: Consumer<EntitySelectorParser>, condition: Predicate<EntitySelectorParser>) {
         this.OPTIONS.set(id, {handler, condition});
     }
 
-    public static register() {
+    public static init() {
         if (this.OPTIONS.size > 0) return;
 
         this.putOption('distance', reader => {
@@ -56,9 +56,9 @@ export class EntitySelectorOptions {
         this.putOption('type', reader => {
             reader.setSuggestionProvider(async (builder, _) => {
                 if (reader.isExcludesEntityMode()) {
-                    await CommandUtil.suggestIdentifiersPrefix(Registries.ENTITY_TYPE.getIds(), builder, '!');
+                    await CommandUtil.suggestIdentifiersPrefix(Registries.ENTITY_TYPE.iterId(), builder, '!');
                 } else {
-                    await CommandUtil.suggestIdentifiers(Registries.ENTITY_TYPE.getIds(), builder);
+                    await CommandUtil.suggestIdentifiers(Registries.ENTITY_TYPE.iterId(), builder);
                 }
 
                 return builder.buildPromise();

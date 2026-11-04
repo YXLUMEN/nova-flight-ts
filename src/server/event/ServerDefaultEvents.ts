@@ -65,7 +65,10 @@ export class ServerDefaultEvents {
             }
 
             if (techTree.isUnlocked(Techs.EMERGENCY_REPAIR)) {
-                if (Math.random() <= 0.15) player.setHealth(player.getHealth() + 5);
+                if (Math.random() <= 0.15) {
+                    const heal = 2 + Math.ceil(player.getMaxHealth() * 0.01);
+                    player.heal(heal);
+                }
             }
         });
 

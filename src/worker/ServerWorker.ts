@@ -22,6 +22,7 @@ export class ServerWorker {
         const workerFs = ctx.workerFs();
         const client = ctx.client;
         const stopWorld = ctx.stop;
+        client.recordManager.setWorker(worker);
 
         worker.onmessage = event => {
             const w2m = event.data.w2m as Worker2MainType;
@@ -42,6 +43,7 @@ export class ServerWorker {
                     if (!this.changeState(WorkerState.RUNNING)) return;
                     connectToServer();
                     connectToServer = null!; // 释放闭包
+                    client.recordManager.setWorker(null);
                     return;
                 }
                 case Worker2MainType.SERVER_STOP: {

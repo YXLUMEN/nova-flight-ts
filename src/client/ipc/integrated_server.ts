@@ -18,17 +18,3 @@ export async function startServer(port: number): Promise<Result<ArrayBuffer, Err
 export function stopServer(): Promise<boolean> {
     return invoke('stop_server');
 }
-
-export async function choseDir(): Promise<Result<ChosenDirResult, Error>> {
-    try {
-        const results: ChosenDirResult = await invoke('chose_dir');
-        return Result.ok(results);
-    } catch (err) {
-        return Result.err(Result.mapErr(err));
-    }
-}
-
-interface ChosenDirResult {
-    root: string,
-    files: string[],
-}

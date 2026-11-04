@@ -1,13 +1,14 @@
 import type {ResourceModule} from "./ResourceModule.ts";
+import type {TexturePath} from "../client/render/model/TexturePath.ts";
+import type {TextureProvider} from "../client/render/model/TextureProvider.ts";
+import type {Identifier} from "../registry/Identifier.ts";
 import {resolve, resolveResource} from "@tauri-apps/api/path";
-import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
-import {Resources} from "./Resources.ts";
-import {normalizedDir, pruneSuffix, traverse_dir} from "../utils/fs.ts";
+import {normalizedDir, pruneSuffix} from "../utils/path.ts";
 import {readFile} from "@tauri-apps/plugin-fs";
 import {convertFileSrc} from "@tauri-apps/api/core";
 import {error} from "@tauri-apps/plugin-log";
-import type {TexturePath} from "../client/render/model/TexturePath.ts";
-import type {TextureProvider} from "../client/render/model/TextureProvider.ts";
+import {traverse_dir} from "../client/ipc/fs.ts";
+import {Resources} from "./Resources.ts";
 
 export class TextureResource implements ResourceModule, TextureProvider {
     public static readonly DEFAULT_TEXTURE_ID = 'builtin/default';
@@ -19,7 +20,7 @@ export class TextureResource implements ResourceModule, TextureProvider {
     private defaultTexture: ImageBitmap | null = null;
     private transparent: ImageBitmap | null = null;
 
-    public getId(): RegistryEntry<string> {
+    public getId(): Identifier {
         return Resources.TEXTURE;
     }
 

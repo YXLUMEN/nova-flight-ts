@@ -76,7 +76,7 @@ export class CommandUtil {
     public static createIdentifierSuggestion<T>(registry: Registry<any>): SuggestionProvider<T> {
         return {
             getSuggestions(_: CommandContext<T>, builder: SuggestionsBuilder): Promise<Suggestions> {
-                return CommandUtil.suggestIdentifiers(registry.getIds(), builder);
+                return CommandUtil.suggestIdentifiers(registry.iterId(), builder);
             }
         };
     }

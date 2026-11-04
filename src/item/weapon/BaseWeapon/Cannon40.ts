@@ -1,19 +1,16 @@
+import type {Entity} from "../../../entity/Entity.ts";
+import type {ItemStack} from "../../ItemStack.ts";
+import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import {World} from "../../../world/World.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
 import {EntityTypes} from "../../../entity/EntityTypes.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
-import type {Entity} from "../../../entity/Entity.ts";
-import type {ItemStack} from "../../ItemStack.ts";
-import {DataComponents} from "../../../component/DataComponents.ts";
 import {FastBulletEntity} from "../../../entity/projectile/FastBulletEntity.ts";
-import type {ServerWorld} from "../../../server/ServerWorld.ts";
 
 export class Cannon40 extends BaseWeapon {
-    private readonly speed = 35;
-
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        const bullet = new FastBulletEntity(EntityTypes.FAST_BULLET_ENTITY, world, attacker, stack.getOr(DataComponents.ATTACK_DAMAGE, 3));
-        this.setBullet(bullet, attacker, this.speed, 6, 2);
+        const bullet = new FastBulletEntity(EntityTypes.FAST_BULLET_ENTITY, world, attacker, this.getAttackDamage(stack));
+        this.setBulletByStack(bullet, attacker, stack, 6);
         world.spawnEntity(bullet);
     }
 
@@ -35,9 +32,5 @@ export class Cannon40 extends BaseWeapon {
 
     public override getUiColor(): string {
         return '#fff';
-    }
-
-    public override getBallisticSpeed(): number {
-        return this.speed;
     }
 }

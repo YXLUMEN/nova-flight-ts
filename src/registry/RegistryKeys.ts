@@ -27,7 +27,6 @@ export class RegistryKeys {
     public static readonly TECH: RegistryKey<Registry<Tech>> = this.of("tech");
     public static readonly WORLD_EVENT: RegistryKey<Registry<WorldEventType<any>>> = this.of("world_event");
     public static readonly BLOCK: RegistryKey<Registry<Block>> = this.of("block");
-    public static readonly RESOURCE: RegistryKey<Registry<string>> = this.of("resource");
     public static readonly PARTICLES: RegistryKey<Registry<ParticleEffectType>> = this.of("particle");
 
     private static of<T>(id: string): RegistryKey<T> {

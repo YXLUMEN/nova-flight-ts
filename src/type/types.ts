@@ -27,3 +27,8 @@ export type Pair<K, V> = { key: K, value: V };
 export type HexColor = `#${string}`;
 
 export type RGB = [number, number, number];
+
+export interface FileBuffer {
+    readonly name: string;
+    readonly buffer: ArrayBuffer;
+}

@@ -11,15 +11,15 @@ import {clamp} from "../../../utils/math/math.ts";
 import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
 
 export class CIWS extends BaseWeapon {
-    private readonly BULLET_SPEED = 60;
-
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
         stack.set(DataComponents.FIRING, true);
 
-        const damage = stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
+        const damage = this.getAttackDamage(stack);
+        const spread = this.getMaxSpread(stack);
+        const speed = this.getBallisticSpeed(stack);
         for (let i = 4; i--;) {
             const bullet = new CIWSBulletEntity(EntityTypes.CIWS_BULLET_ENTITY, world, attacker, damage);
-            this.setBullet(bullet, attacker, this.BULLET_SPEED, 2, 2, i * 20);
+            this.setBullet(bullet, attacker, speed, 2, spread, i * 20);
             world.spawnEntity(bullet);
         }
 
@@ -66,16 +66,8 @@ export class CIWS extends BaseWeapon {
         if (!world.isClient) (holder as ServerPlayerEntity).syncStack(stack);
     }
 
-    public override getMaxSpread(): number {
-        return 2;
-    }
-
     protected override getMuzzleParticles(): number {
         return 1;
-    }
-
-    protected override getAmmoConsume(): number {
-        return 0;
     }
 
     public override canFire(stack: ItemStack): boolean {
@@ -94,10 +86,6 @@ export class CIWS extends BaseWeapon {
         return stack.getOr(DataComponents.MAX_HEAT, 300);
     }
 
-    public setMaxHeat(stack: ItemStack, value: number): void {
-        stack.set(DataComponents.MAX_HEAT, Math.max(0, value | 0));
-    }
-
     public getHeat(stack: ItemStack): number {
         return stack.getOr(DataComponents.HEAT, 0);
     }
@@ -108,9 +96,5 @@ export class CIWS extends BaseWeapon {
 
     public override getUiColor(stack: ItemStack): string {
         return stack.isAvailable() ? '#fffce0' : '#ff3636';
-    }
-
-    public override getBallisticSpeed(): number {
-        return this.BULLET_SPEED;
     }
 }

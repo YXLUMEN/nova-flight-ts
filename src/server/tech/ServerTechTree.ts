@@ -17,7 +17,7 @@ export class ServerTechTree implements TechTree {
     public constructor(player: ServerPlayerEntity) {
         this.player = player;
         const techState = Registries.TECH
-            .getEntries()
+            .iterEntries()
             .map(entry => entry.getValue())
             .toArray();
         this.state = new TechState(techState);

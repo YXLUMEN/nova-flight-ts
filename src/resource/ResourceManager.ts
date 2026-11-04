@@ -1,10 +1,10 @@
 import type {ResourceModule} from "./ResourceModule.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
+import type {Identifier} from "../registry/Identifier.ts";
 import {sleep} from "../utils/util.ts";
-import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 
 export class ResourceManager {
-    private static readonly modules: Map<RegistryEntry<string>, ResourceModule> = new Map();
+    private static readonly modules: Map<Identifier, ResourceModule> = new Map();
 
     public static register(module: ResourceModule) {
         if (this.modules.has(module.getId())) {
@@ -13,19 +13,19 @@ export class ResourceManager {
         this.modules.set(module.getId(), module);
     }
 
-    public static get<T extends ResourceModule>(entry: RegistryEntry<string>): T {
+    public static get<T extends ResourceModule>(entry: Identifier): T {
         const mod = this.modules.get(entry);
-        if (!mod) throw new Error(`Module ${entry.getValue()} not found`);
+        if (!mod) throw new Error(`Module ${entry} not found`);
         return mod as T;
     }
 
-    public static unload(entry: RegistryEntry<string>): boolean {
+    public static unload(entry: Identifier): boolean {
         const mod = this.modules.get(entry);
         if (!mod) return false;
         try {
             mod.unload();
         } catch (e) {
-            console.error(`Error while unloading module ${entry.getValue()}`);
+            console.error(`Error while unloading module ${entry}`);
             return false;
         }
 
@@ -53,13 +53,13 @@ export class ResourceManager {
         }
     }
 
-    public static async reload(manager: RegistryManager, entry: RegistryEntry<string>) {
-        const mod = this.modules.get(entry);
-        if (!mod) throw new Error(`Module ${entry.getValue()} not found`);
+    public static async reload(manager: RegistryManager, id: Identifier) {
+        const mod = this.modules.get(id);
+        if (!mod) throw new Error(`Module ${id} not found`);
         try {
             await mod.reload(manager);
         } catch (e) {
-            console.error(`Failed to load module ${entry.getValue()}`, e);
+            console.error(`Failed to load module ${id}`, e);
         }
     }
 

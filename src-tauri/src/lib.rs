@@ -1,4 +1,4 @@
-use crate::file::chose_dir;
+use crate::file::{chose_dir, traverse_dir_cmd};
 use crate::network::cmd::{is_open, set_open, start_server, stop_server};
 use crate::network::discovery::cmd::{
     is_lan_sniffing, list_lan_servers, start_lan_announce, start_lan_sniff, stop_lan_announce,
@@ -47,6 +47,7 @@ pub fn run() {
             set_open,
             is_open,
             chose_dir,
+            traverse_dir_cmd,
             start_lan_announce,
             stop_lan_announce,
             start_lan_sniff,

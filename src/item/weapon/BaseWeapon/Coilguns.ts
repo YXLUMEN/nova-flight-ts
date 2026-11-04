@@ -1,19 +1,16 @@
-import {type ItemStack} from "../../ItemStack.ts";
+import type {ItemStack} from "../../ItemStack.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
-import {type Entity} from "../../../entity/Entity.ts";
+import type {Entity} from "../../../entity/Entity.ts";
+import type {World} from "../../../world/World.ts";
 import {FastBulletEntity} from "../../../entity/projectile/FastBulletEntity.ts";
 import {EntityTypes} from "../../../entity/EntityTypes.ts";
-import {DataComponents} from "../../../component/DataComponents.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {BaseWeapon} from "./BaseWeapon.ts";
-import type {World} from "../../../world/World.ts";
 
 export class Coilguns extends BaseWeapon {
-    public static readonly SPEED = 40;
-
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
-        const bullet = new FastBulletEntity(EntityTypes.FAST_BULLET_ENTITY, world, attacker, stack.getOr(DataComponents.ATTACK_DAMAGE, 4));
-        this.setBullet(bullet, attacker, Coilguns.SPEED, 6, 1);
+        const bullet = new FastBulletEntity(EntityTypes.FAST_BULLET_ENTITY, world, attacker, this.getAttackDamage(stack));
+        this.setBulletByStack(bullet, attacker, stack, 6);
         world.spawnEntity(bullet);
     }
 
@@ -29,9 +26,5 @@ export class Coilguns extends BaseWeapon {
 
     public override getUiColor(): string {
         return '#e3e3e3';
-    }
-
-    public override getBallisticSpeed(): number {
-        return Coilguns.SPEED;
     }
 }

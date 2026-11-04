@@ -1,11 +1,11 @@
 import type {RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
-import type {TechResolver} from "./TechResolver.ts";
+import type {RecordManager} from "../../database/data/RecordManager.ts";
 import {isServer} from "../../configs/RuntimeConfig.ts";
 import {Registry} from "../../registry/Registry.ts";
 import {Registries} from "../../registry/Registries.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import {Tech} from "./Tech.ts";
-import {ServerTechResolver} from "../../server/tech/ServerTechResolver.ts";
+import {TechResolver} from "./TechResolver.ts";
 import {ClientTechResolver} from "../../client/tech/ClientTechResolver.ts";
 
 export class Techs {
@@ -106,18 +106,15 @@ export class Techs {
     public static FLAK_CANNONS: RegistryEntry<Tech>;
     public static FLAK_ARTILLERY: RegistryEntry<Tech>;
 
-    public static async init(): Promise<void> {
-        const techPath = './data/tech-data.json';
-        const configPath = './data/tech-config.json';
-
+    public static async init(record: RecordManager): Promise<void> {
         let resolver: TechResolver;
         if (isServer) {
-            resolver = new ServerTechResolver(techPath, configPath);
+            resolver = new TechResolver();
         } else {
-            resolver = new ClientTechResolver(techPath, configPath, 'tech-shell');
+            resolver = new ClientTechResolver('tech-shell');
         }
 
-        await resolver.load();
+        await resolver.load(record);
         const parsed = resolver.normalize();
         const fromJson = (name: string) => {
             return this.register(name, parsed.get(name)!.build());
@@ -194,7 +191,7 @@ export class Techs {
         this.ELECTRIC_CHARGE = fromJson('electric_charge');
         this.ION_DISRUPTOR = fromJson('ion_disruptor');
 
-        Registries.TECH.getEntries().forEach(entry => entry.getValue().complete());
+        Registries.TECH.iterEntries().forEach(entry => entry.getValue().complete());
         Object.freeze(this);
     }
 

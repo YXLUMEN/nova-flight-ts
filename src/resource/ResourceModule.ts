@@ -1,8 +1,8 @@
 import type {RegistryManager} from "../registry/RegistryManager.ts";
-import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
+import type {Identifier} from "../registry/Identifier.ts";
 
 export interface ResourceModule {
-    getId(): RegistryEntry<string>;
+    getId(): Identifier;
 
     load(manager: RegistryManager): Promise<void>;
 
@@ -10,5 +10,5 @@ export interface ResourceModule {
 
     unload(): void;
 
-    requires?(): RegistryEntry<string>[];
+    requires?(): Identifier[];
 }

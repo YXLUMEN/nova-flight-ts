@@ -1,10 +1,10 @@
+import type {UUID} from "../type/types.ts";
+import type {GameProfile} from "./entity/GameProfile.ts";
+import {TUTORIAL_PHASES} from "../configs/TutorialStage.ts";
 import {NovaFlightServer} from "./NovaFlightServer.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
-import type {UUID} from "../type/types.ts";
-import type {GameProfile} from "./entity/GameProfile.ts";
 import {ServerStorage} from "./storage/ServerStorage.ts";
-import {TUTORIAL_PHASES} from "../configs/TutorialStage.ts";
 import {TutorialEvents} from "./event/TutorialEvents.ts";
 import {PlayAudioS2CPacket} from "../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {Audios} from "../sound/Audios.ts";
@@ -15,6 +15,8 @@ import {ServerIntegratedChannel} from "./network/ServerIntegratedChannel.ts";
 import {ServerTechManager} from "./tech/ServerTechManager.ts";
 import {ServerDefaultEvents} from "./event/ServerDefaultEvents.ts";
 import {Worker2MainType} from "../worker/WorkerMsgType.ts";
+import {ServerRecordManager} from "./data/ServerRecordManager.ts";
+import {ServerRecordRegister} from "./data/ServerRecordRegister.ts";
 
 export class IntegratedServer extends NovaFlightServer {
     private readonly hostUUID: UUID;
@@ -39,23 +41,12 @@ export class IntegratedServer extends NovaFlightServer {
     public override async runServer(): Promise<void> {
         await (await import('@bokuweb/zstd-wasm')).init();
 
-        const manager = new RegistryManager();
-        await manager.registerAll();
-        manager.freeze();
+        const manager = await this.finishRegister();
         ServerTechManager.init();
         ServerDefaultEvents.registerEvent();
 
         await this.startGame(manager);
-
-        const isTutorial = await ServerStorage.db.get<string>('user_info', 'tutorial');
-        if (isTutorial.isOk() && isTutorial.unwrap() === null && this.world) {
-            await ServerStorage.db.update('user_info', {name: 'tutorial'});
-
-            this.world.setStage(TUTORIAL_PHASES);
-            new TutorialEvents(this);
-            this.world.sendPacket(new PlayAudioS2CPacket(Audios.WE_MADE_IT), true);
-        }
-
+        await this.loadTutorial();
         await this.waitForStop();
     }
 
@@ -108,5 +99,26 @@ export class IntegratedServer extends NovaFlightServer {
 
     public getHostUUID(): UUID {
         return this.hostUUID;
+    }
+
+    private async finishRegister(): Promise<RegistryManager> {
+        const manager = new RegistryManager();
+        const record = new ServerRecordManager();
+        ServerRecordRegister.register(record);
+        await manager.registerAll(record);
+        manager.freeze();
+        record.dispose();
+        return manager;
+    }
+
+    private async loadTutorial(): Promise<void> {
+        const isTutorial = await ServerStorage.db.get<string>('user_info', 'tutorial');
+        if (!this.world || isTutorial.isErr() || isTutorial.unwrap() !== null) return;
+
+        await ServerStorage.db.update('user_info', {name: 'tutorial'});
+
+        this.world.setStage(TUTORIAL_PHASES);
+        new TutorialEvents(this);
+        this.world.sendPacket(new PlayAudioS2CPacket(Audios.WE_MADE_IT), true);
     }
 }

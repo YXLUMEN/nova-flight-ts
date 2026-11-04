@@ -29,7 +29,7 @@ export class RegistryEntry<T> {
         return this.tags.has(tag);
     }
 
-    public getTagValues() {
+    public iterTags() {
         return this.tags.values();
     }
 

@@ -19,8 +19,7 @@ import {SoundEventS2CPacket} from "../network/packet/s2c/SoundEventS2CPacket.ts"
 import {isClient} from "../configs/RuntimeConfig.ts";
 
 export class FlakBattery extends Item {
-    private static readonly BULLET_SPEED = 40;
-    private static readonly TARGETS = new WeakMap<Entity, Set<ProjectileEntity>>();
+    private readonly TARGETS: WeakMap<Entity, Set<ProjectileEntity>> = new WeakMap();
 
     public override inventoryTick(stack: ItemStack, world: ServerWorld, holder: Entity, slot: number, selected: boolean) {
         super.inventoryTick(stack, world, holder, slot, selected);
@@ -53,13 +52,14 @@ export class FlakBattery extends Item {
         }
 
         if ((holder.age & 15) !== 0) {
-            FlakBattery.choseTarget(world as ServerWorld, holder, stack.getOr(DataComponents.MAX_DEFENSE, 1));
+            this.choseTarget(world as ServerWorld, holder, stack.getOr(DataComponents.MAX_DEFENSE, 1));
         }
 
-        const targets = FlakBattery.TARGETS.get(holder);
+        const targets = this.TARGETS.get(holder);
         if (!targets || targets.size === 0) return;
 
         const damage = stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
+        const speed = stack.getOr(DataComponents.BALLISTIC_SPEED, 40);
 
         for (const target of targets) {
             if (target.isRemoved()) {
@@ -67,7 +67,7 @@ export class FlakBattery extends Item {
                 continue;
             }
 
-            FlakBattery.intercept(world as ServerWorld, holder, target, damage);
+            this.intercept(world as ServerWorld, holder, target, damage, speed);
         }
 
         if (!holder.isPlayer()) return;
@@ -82,20 +82,20 @@ export class FlakBattery extends Item {
         (holder as ServerPlayerEntity).syncStack(stack);
     }
 
-    private static intercept(world: ServerWorld, defender: Entity, target: ProjectileEntity, damage: number) {
+    private intercept(world: ServerWorld, defender: Entity, target: ProjectileEntity, damage: number, ballisticSpeed: number) {
         const pos = defender.positionRef;
         const yaw = BallisticsUtils.getLeadYaw(
             pos,
             target.positionRef,
             target.velocityRef,
-            FlakBattery.BULLET_SPEED
+            ballisticSpeed
         ) + rand(-0.03490658, 0.03490658);
 
         const bullet = new CIWSBulletEntity(EntityTypes.CIWS_BULLET_ENTITY, world, defender, damage, 10);
 
         const f = Math.cos(yaw);
         const g = Math.sin(yaw);
-        bullet.setVelocity(f * FlakBattery.BULLET_SPEED, g * FlakBattery.BULLET_SPEED);
+        bullet.setVelocity(f * ballisticSpeed, g * ballisticSpeed);
         bullet.setYaw(yaw);
         const offset = defender.getWidth() / 2;
         bullet.setPosition(
@@ -106,7 +106,7 @@ export class FlakBattery extends Item {
         (world as ServerWorld).spawnEntity(bullet);
     }
 
-    private static choseTarget(world: ServerWorld, holder: Entity, limit: number = 1) {
+    private choseTarget(world: ServerWorld, holder: Entity, limit: number = 1) {
         const selfPos = holder.positionRef;
 
         let targets = this.TARGETS.get(holder);

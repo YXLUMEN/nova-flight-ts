@@ -60,6 +60,12 @@ export class DataComponents {
     public static readonly MAX_SPREAD: DataComponentType<number> = this.register("max_spread",
         builder => builder.persistent(Codecs.FLOAT).network(PacketCodecs.FLOAT)
     );
+    public static readonly BALLISTIC_SPEED: DataComponentType<number> = this.register("bullet_speed",
+        builder => builder.persistent(Codecs.UINT32).network(PacketCodecs.VAR_UINT)
+    );
+    public static readonly AMMO_CONSUME: DataComponentType<number> = this.register("ammo_consume",
+        builder => builder.persistent(Codecs.INT8).network(PacketCodecs.INT8)
+    );
 
     public static readonly RELOADING: DataComponentType<boolean> = this.register("reloading",
         builder => builder.persistent(Codecs.BOOLEAN).network(PacketCodecs.BOOL)
@@ -135,8 +141,8 @@ export class DataComponents {
         builder => builder.persistent(Codecs.INT32).network(PacketCodecs.INT32)
     );
     public static readonly LASER_ID: DataComponentType<number> = this.register("laser_id",
-        builder => builder.persistent(Codecs.INT32).network(PacketCodecs.VAR_UINT)
-    )
+        builder => builder.persistent(Codecs.UINT32).network(PacketCodecs.VAR_UINT)
+    );
 
     private static register<T>(id: string, builderOperator: UnaryOperator<ComponentTypeBuilder<T>>): DataComponentType<T> {
         const ide = Identifier.ofVanilla(id);

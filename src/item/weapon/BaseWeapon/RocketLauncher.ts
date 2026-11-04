@@ -19,7 +19,6 @@ import {Techs} from "../../../world/tech/Techs.ts";
 import {ExplosionConfigs, ExplosionTag} from "../../../world/element/explosion/ExplosionConfigs.ts";
 
 export class RocketLauncher extends BaseWeapon {
-    private readonly bulletSpeed: number = 15;
     private readonly specialRate = 0.3;
     private readonly specialTable: RandomTable[] = [
         {cls: EMPRocketEntity, weight: 1, args: [1]},      // 10%
@@ -74,7 +73,7 @@ export class RocketLauncher extends BaseWeapon {
                 rocket.explosionRadius = stack.getOr(DataComponents.EXPLOSION_RADIUS, 72);
             }
 
-            this.setBullet(rocket, attacker, this.bulletSpeed, 4, 2);
+            this.setBulletByStack(rocket, attacker, stack, 4);
             (world as ServerWorld).spawnEntity(rocket);
             const yaw = attacker.getYaw();
             attacker.updateVelocity(-0.6, Math.cos(yaw), Math.sin(yaw));
@@ -85,18 +84,6 @@ export class RocketLauncher extends BaseWeapon {
 
     public override getUiColor(): string {
         return "#ffdc92";
-    }
-
-    public override getBallisticSpeed(): number {
-        return this.bulletSpeed;
-    }
-
-    public override getMaxSpread(): number {
-        return 2;
-    }
-
-    protected override getAmmoConsume(): number {
-        return 0;
     }
 
     public override shouldCooldown(stack: ItemStack): boolean {

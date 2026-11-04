@@ -9,8 +9,6 @@ import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import type {World} from "../../../world/World.ts";
 
 export class KineticArtillery extends BaseWeapon {
-    public static readonly SPEED = 50;
-
     public override inventoryTick(stack: ItemStack, world: World, holder: Entity, _slot: number, selected: boolean) {
         const cooldown = this.getCooldown(stack);
         if (cooldown > 0 && this.shouldCooldown(stack)) {
@@ -31,19 +29,15 @@ export class KineticArtillery extends BaseWeapon {
         const bullet = new ArtilleryEntity(EntityTypes.KINETIC_ARTILLERY_ENTITY,
             world,
             attacker,
-            stack.getOr(DataComponents.ATTACK_DAMAGE, 32)
+            this.getAttackDamage(stack)
         );
-        this.setBullet(bullet, attacker, KineticArtillery.SPEED, 0, 0);
+        this.setBulletByStack(bullet, attacker, stack);
         world.spawnEntity(bullet);
         world.playSound(null, SoundEvents.KINETIC_ARTILLERY_FIRE, 0.4);
     }
 
     public override getUiColor(): string {
         return '#ffdddd';
-    }
-
-    public override getBallisticSpeed(): number {
-        return KineticArtillery.SPEED;
     }
 
     protected override getMuzzleParticles(): number {

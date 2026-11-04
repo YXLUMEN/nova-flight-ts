@@ -43,7 +43,7 @@ export class ClientTechTree extends PageSection implements TechTree {
         const bind = bindFrom(this.root);
 
         const techState = Registries.TECH
-            .getEntries()
+            .iterEntries()
             .map(entry => entry.getValue())
             .toArray() as ClientTech[];
 

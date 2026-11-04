@@ -9,29 +9,19 @@ import {DataComponents} from "../../../component/DataComponents.ts";
 import {SoundEvents} from "../../../sound/SoundEvents.ts";
 
 export class CloudLightningConduits extends BaseWeapon {
-    private readonly speed = 12;
-
     protected override onFire(stack: ItemStack, world: ServerWorld, attacker: Entity): void {
         const damage = randInt(4, stack.getOr(DataComponents.ATTACK_DAMAGE, 12));
         const range = stack.getOr(DataComponents.ATTACK_RANGE, 128);
 
         const cloud = new CloudLightningEntity(EntityTypes.CLOUD_LIGHTNING_ENTITY, world, attacker, damage, range);
-        this.setBullet(cloud, attacker, this.speed, 10, 0);
+        this.setBulletByStack(cloud, attacker, stack, 10)
         world.spawnEntity(cloud);
 
         world.playSound(null, SoundEvents.CLOUD_LIGHTNING_FIRE);
     }
 
-    public override getMaxSpread(): number {
-        return 0;
-    }
-
     public override getUiColor(): string {
         return '#b09eff';
-    }
-
-    public override getBallisticSpeed(): number {
-        return this.speed;
     }
 
     protected override getMuzzleParticles(): number {

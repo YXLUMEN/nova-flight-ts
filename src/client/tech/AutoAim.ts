@@ -23,7 +23,8 @@ export class AutoAim {
 
     public tick(): void {
         const world = this.owner.getWorld() as ClientWorld;
-        const handItem = this.owner.getCurrentItem().getItem();
+        const stack = this.owner.getCurrentItem();
+        const handItem = stack.getItem();
         if (!(handItem instanceof BaseWeapon)) return;
 
         const mobs = world.getMobs();
@@ -35,7 +36,7 @@ export class AutoAim {
 
         const mobPos = target.positionRef;
         const mobVel = target.velocityRef;
-        const bulletSpeed = handItem.getBallisticSpeed();
+        const bulletSpeed = handItem.getBallisticSpeed(stack);
 
         const targetYaw = BallisticsUtils.getLeadYaw(pos, mobPos, mobVel, bulletSpeed);
         this.owner.setClampYaw(targetYaw, 0.1963);

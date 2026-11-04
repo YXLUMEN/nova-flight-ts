@@ -45,7 +45,7 @@ export abstract class BaseWeapon extends Weapon {
             stack.set(DataComponents.RELOADING, false);
         }
 
-        stack.setDurability(currentAmmo - this.getAmmoConsume());
+        stack.setDurability(currentAmmo - this.getAmmoConsume(stack));
         this.onFire(stack, world as ServerWorld, attacker);
 
         this.setCooldown(stack, this.getFireRate(stack));
@@ -93,28 +93,34 @@ export abstract class BaseWeapon extends Weapon {
         return this.getMaxCooldown(stack);
     }
 
-    public setFireRate(stack: ItemStack, fireRate: number) {
-        this.setMaxCooldown(stack, fireRate);
-    }
-
     public getReloadTick(stack: ItemStack): number {
         return stack.getOr(DataComponents.MAX_RELOAD_TIME, 0);
     }
 
-    public getBallisticSpeed(): number {
-        return 0;
+    public getBallisticSpeed(stack: ItemStack): number {
+        return stack.getOr(DataComponents.BALLISTIC_SPEED, 0);
     }
 
-    protected getAmmoConsume(): number {
-        return 1;
+    protected getAmmoConsume(stack: ItemStack): number {
+        return stack.getOr(DataComponents.AMMO_CONSUME, 1);
     }
 
-    protected getMuzzleParticles(): number {
-        return 4;
+    public getMaxSpread(stack: ItemStack): number {
+        return stack.getOr(DataComponents.MAX_SPREAD, 0);
     }
 
-    public getMaxSpread(_item: ItemStack): number {
-        return 0;
+    public getAttackDamage(stack: ItemStack): number {
+        return stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
+    }
+
+    protected setBulletByStack(
+        bullet: ProjectileEntity,
+        attacker: Entity,
+        stack: ItemStack,
+        offset?: number,
+        margin?: number,
+    ) {
+        this.setBullet(bullet, attacker, this.getBallisticSpeed(stack), offset, this.getMaxSpread(stack), margin);
     }
 
     protected setBullet(
@@ -123,7 +129,7 @@ export abstract class BaseWeapon extends Weapon {
         speed: number,
         offset: number = 0,
         maxSpread = 1,
-        margin = 0
+        margin = 0,
     ): void {
         const pos = attacker.positionRef;
         const yaw = attacker.getYaw();
@@ -141,6 +147,10 @@ export abstract class BaseWeapon extends Weapon {
             pos.x + f * completeOffset + f * margin,
             pos.y + g * completeOffset + g * margin,
         );
+    }
+
+    protected getMuzzleParticles(): number {
+        return 4;
     }
 
     protected spawnMuzzle(world: ClientWorld, entity: Entity, particles: number): void {

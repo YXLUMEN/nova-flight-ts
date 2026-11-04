@@ -52,7 +52,7 @@ export async function run() {
     } catch (err) {
         if (Error.isError(err)) {
             const msg = `Error while starting client: ${err.message} by ${err.cause}\n at ${err.stack}`;
-            console.error(msg);
+            console.error(err);
             await error(msg);
             return;
         }

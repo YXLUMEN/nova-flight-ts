@@ -1,31 +1,40 @@
-import type {TechBuilder} from "../../world/tech/TechBuilder.ts";
 import type {RawTech} from "../../type/ITech.ts";
+import type {RecordManager} from "../../database/data/RecordManager.ts";
+import type {TechBuilder} from "../../world/tech/TechBuilder.ts";
 import {isNonEmptyString} from "../../utils/util.ts";
 import {encodeColorHex} from "../../utils/net_util.ts";
 import {assert} from "../../utils/dom_util.ts";
-import {TechLayoutParser} from "./TechLayoutParser.ts";
 import {TechResolver} from "../../world/tech/TechResolver.ts";
 import {ClientTechBuilder} from "./ClientTechBuilder.ts";
+import {TechLayoutParser} from "./TechLayoutParser.ts";
 
 export class ClientTechResolver extends TechResolver {
     private readonly shellId: string;
+    private config: any;
 
-    public constructor(techUrl: string, configUrl: string, shellId: string) {
-        super(techUrl, configUrl);
+    public constructor(shellId: string) {
+        super();
         this.shellId = shellId;
     }
 
-    public async load(): Promise<void> {
-        const resp = await fetch(this.techUrl);
-        const tech = await resp.json();
-        const cResp = await fetch(this.configUrl);
-        const config = await cResp.json();
+    public override async load(data: RecordManager): Promise<void> {
+        await super.load(data);
 
-        this.setTech(tech, config);
+        const resp = await fetch('./data/tech/tech-config.json');
+        const config = await resp.json();
+        if (config == null) {
+            this.config = {};
+        } else {
+            if (typeof config !== 'object' || Array.isArray(config)) throw new Error('Invalid tech config');
+            this.config = config;
+        }
     }
 
-    public normalize(): Map<string, TechBuilder> {
+    public override normalize(): Map<string, TechBuilder> {
         if (!this.rawTech) throw new Error('None tech was found');
+
+        const raw = this.rawTech;
+        const out = this.out;
 
         const ele = document.getElementById(this.shellId)!;
         ele.classList.remove('hidden');
@@ -34,9 +43,8 @@ export class ClientTechResolver extends TechResolver {
         const y = Math.floor(80);
         ele.classList.add('hidden');
 
-        const raw = this.rawTech;
-        const colors = this.config.branch_color ?? {};
         const parser = new TechLayoutParser(x, y, 180, 80);
+        const color = this.config.branch_color ?? {};
 
         for (let i = 0; i < raw.length; i++) {
             const item = raw[i];
@@ -46,12 +54,12 @@ export class ClientTechResolver extends TechResolver {
 
             const rawTech = item as RawTech;
             const builder = new ClientTechBuilder();
-            const id = this.buildGeneral(rawTech, builder);
-            this.buildClient(rawTech, builder, parser, colors);
-            this.out.set(id, builder);
+            const id = this.build(rawTech, builder);
+            this.buildClient(rawTech, builder, parser, color);
+            out.set(id, builder);
         }
 
-        return this.out;
+        return out;
     }
 
     private buildClient(tech: RawTech, builder: ClientTechBuilder, parser: TechLayoutParser, colors: Record<string, string>) {
@@ -65,13 +73,12 @@ export class ClientTechResolver extends TechResolver {
         const drawLine = Array.isArray(tech['drawExcept']) ? tech['drawExcept'] : null;
         const branchGroup = builder.getGroup();
 
-
         let color = branchGroup == null ? null : colors[branchGroup];
         if (typeof color === 'string') encodeColorHex(color); // check hex
         else color = null;
 
         const parsedPos = parser.parse(x, y);
-        return builder
+        builder
             .desc(desc)
             .x(parsedPos.x)
             .y(parsedPos.y)

@@ -1,4 +1,6 @@
 [
-  "nova-flight:removed",
-  "nova-flight:app_damage"
+  "nova-flight:kill",
+  "nova-flight:ap_damage",
+  "nova-flight:void",
+  "nova-flight:arc"
 ]

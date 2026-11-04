@@ -143,6 +143,7 @@ export class ItemStack {
     }
 
     public setDurability(value: number) {
+        if (!this.isDamageable()) return;
         this.components.set(DataComponents.DURABILITY, clamp(value, 0, this.getMaxDurability()));
     }
 
