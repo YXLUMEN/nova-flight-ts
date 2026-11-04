@@ -25,7 +25,7 @@ export async function startLanAnnounce(
     gameVersion: number,
 ): Promise<Result<void, Error>> {
     try {
-        await invoke('start_lan_announce', {port, name, game_version: gameVersion});
+        await invoke('start_lan_announce', {port, name, gameVersion});
         return Result.ok(undefined);
     } catch (err) {
         return Result.err(Result.mapErr(err));

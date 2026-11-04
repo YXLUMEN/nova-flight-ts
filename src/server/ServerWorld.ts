@@ -313,10 +313,14 @@ export class ServerWorld extends World implements NbtSerializable {
                 return;
             }
 
-            const nbt = new NbtCompound();
-            nbt.setString('type', typeId.toString());
-            entity.writeNBT(nbt);
-            entityList.push(nbt);
+            try {
+                const nbt = new NbtCompound();
+                nbt.setString('type', typeId.toString());
+                entity.writeNBT(nbt);
+                entityList.push(nbt);
+            } catch (err) {
+                Log.error(`Error when write Entity NBT: \n${err}`);
+            }
         });
         root.setCompoundArray('entities', entityList);
 

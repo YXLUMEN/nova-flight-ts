@@ -27,16 +27,16 @@ pub fn run() {
                         .build(),
                 )?;
             } else {
-                use tauri_plugin_log::{Target, TargetKind};
+                use tauri_plugin_log::{Builder, Target, TargetKind};
 
-                app.handle().plugin(
-                    tauri_plugin_log::Builder::new()
-                        .level(log::LevelFilter::Warn)
-                        .target(Target::new(TargetKind::LogDir {
-                            file_name: Some("nova-flight".into()),
-                        }))
-                        .build(),
-                )?;
+                let log = Builder::new()
+                    .level(log::LevelFilter::Warn)
+                    .target(Target::new(TargetKind::LogDir {
+                        file_name: Some("nova-flight".into()),
+                    }))
+                    .build();
+
+                app.handle().plugin(log)?;
             }
             Ok(())
         })

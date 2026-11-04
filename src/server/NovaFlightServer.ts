@@ -56,7 +56,7 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.worldName = worldName;
         this.version = DEFAULT_CONFIG.gameVersion;
         this.protocolVersion = CodecRegistry.VERSION;
-        this.seed = new Seed(stringHashCode(worldName));
+        this.seed = new Seed(stringHashCode(worldName) >>> 0);
         this.playerManager = new PlayerManager(this);
         this.tickManager = new ServerTickManager(this);
         this.networkChannel = channel;

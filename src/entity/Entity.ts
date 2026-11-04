@@ -628,23 +628,18 @@ export abstract class Entity implements EntityLike, DataTracked, Comparable, Nbt
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {
-        try {
-            nbt.store('pos', ExtraCodec.VEC2D, this.pos);
-            nbt.store('velocity', ExtraCodec.VEC2F, this.velocity);
+        nbt.store('pos', ExtraCodec.VEC2D, this.pos);
+        nbt.store('velocity', ExtraCodec.VEC2F, this.velocity);
 
-            nbt.setFloat('yaw', this.yaw);
-            nbt.setDouble('speed', this.movementSpeed);
-            nbt.setBoolean('invulnerable', this.invulnerable);
-            nbt.store('uuid', ExtraCodec.UUID, this.uuid);
+        nbt.setFloat('yaw', this.yaw);
+        nbt.setDouble('speed', this.movementSpeed);
+        nbt.setBoolean('invulnerable', this.invulnerable);
+        nbt.store('uuid', ExtraCodec.UUID, this.uuid);
 
-            if (this.tags.size > 0) {
-                nbt.setStringArray('tags', Array.from(this.tags));
-            }
-            return nbt;
-        } catch (err) {
-            console.error(`Error when write Entity NBT: ${err}`);
-            throw err;
+        if (this.tags.size > 0) {
+            nbt.setStringArray('tags', Array.from(this.tags));
         }
+        return nbt;
     }
 
     public readNBT(nbt: NbtCompound): void {

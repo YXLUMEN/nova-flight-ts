@@ -1,4 +1,5 @@
 import {invoke} from "@tauri-apps/api/core";
+import {LogLevel} from '@tauri-apps/plugin-log'
 import {Result} from "../../utils/result/Result.ts";
 
 export async function startServer(port: number): Promise<Result<ArrayBuffer, Error>> {
@@ -17,4 +18,12 @@ export async function startServer(port: number): Promise<Result<ArrayBuffer, Err
 
 export function stopServer(): Promise<boolean> {
     return invoke('stop_server');
+}
+
+export async function writeLog(level: LogLevel, message: string) {
+    try {
+        await invoke('plugin:log|log', {level, message})
+    } catch (e) {
+        console.error(message, e);
+    }
 }

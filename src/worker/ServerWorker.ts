@@ -1,8 +1,9 @@
 import type {ConnectionContext} from "../client/network/ConnectionContext.ts";
 import type {Consumer} from "../type/types.ts";
 import type {StartServer} from "../type/startup.ts";
-import {error, info, warn} from "@tauri-apps/plugin-log";
+import {error, LogLevel, warn} from "@tauri-apps/plugin-log";
 import {message} from "@tauri-apps/plugin-dialog";
+import {writeLog} from "../client/ipc/integrated_server.ts";
 import {Main2WorkerType, Worker2MainType} from "./WorkerMsgType.ts";
 
 export class ServerWorker {
@@ -65,9 +66,9 @@ export class ServerWorker {
                 }
                 case Worker2MainType.LOG: {
                     const level = event.data.level;
-                    if (level === 'info') void info(event.data.message);
-                    else if (level === 'warn') void warn(event.data.message);
-                    else if (level === 'error') void error(event.data.message);
+                    if (level === 'info') void writeLog(LogLevel.Info, event.data.message);
+                    else if (level === 'warn') void writeLog(LogLevel.Warn, event.data.message);
+                    else if (level === 'error') void writeLog(LogLevel.Error, event.data.message);
                     return;
                 }
                 case Worker2MainType.POPUP: {

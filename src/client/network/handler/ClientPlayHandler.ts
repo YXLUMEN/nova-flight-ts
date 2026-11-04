@@ -101,7 +101,7 @@ export class ClientPlayHandler extends ClientCommonHandler {
             this.client.registryManager,
             this.client.worldRender,
             packet.worldName,
-            new Seed(stringHashCode(packet.worldName))
+            new Seed(stringHashCode(packet.worldName) >>> 0)
         );
         await this.client.joinGame(this.world);
         if (this.client.player === null) {
