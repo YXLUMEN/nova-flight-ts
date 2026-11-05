@@ -11,7 +11,6 @@ import type {Vec2} from "../utils/math/Vec2.ts";
 import type {ClientConnection} from "./network/ClientConnection.ts";
 import type {Payload} from "../network/Payload.ts";
 import type {HexColor} from "../type/types.ts";
-import type {Seed} from "../utils/math/random/Seed.ts";
 import type {Explosion} from "../world/element/explosion/Explosion.ts";
 import {DEFAULT_CONFIG} from "../configs/RuntimeConfig.ts";
 import {World} from "../world/World.ts";
@@ -39,8 +38,8 @@ export class ClientWorld extends World {
 
     private phaseScore = 0;
 
-    public constructor(registryManager: RegistryManager, worldRender: WorldRenderer, worldName: string, seed: Seed) {
-        super(registryManager, seed, true);
+    public constructor(registryManager: RegistryManager, worldRender: WorldRenderer, worldName: string) {
+        super(registryManager, true);
 
         this.worldRender = worldRender;
         this.worldName = worldName;

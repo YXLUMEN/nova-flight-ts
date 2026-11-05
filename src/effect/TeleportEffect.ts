@@ -90,7 +90,7 @@ export class TeleportEffect implements VisualEffect {
     }
 
     public shouldRender(view: ViewRect): boolean {
-        return isRangeInView(this.pos.x, this.pos.y, TELEPORT_RADIUS * 1.5, view);
+        return isRangeInView(this.pos.x, this.pos.y, this.radius * 1.5, view);
     }
 
     public isAlive(): boolean {

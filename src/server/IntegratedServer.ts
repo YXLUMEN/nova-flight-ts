@@ -1,5 +1,6 @@
 import type {UUID} from "../type/types.ts";
 import type {GameProfile} from "./entity/GameProfile.ts";
+import type {StartServer} from "../type/startup.ts";
 import {TUTORIAL_PHASES} from "../configs/TutorialStage.ts";
 import {NovaFlightServer} from "./NovaFlightServer.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
@@ -21,18 +22,19 @@ import {ServerRecordRegister} from "./data/ServerRecordRegister.ts";
 export class IntegratedServer extends NovaFlightServer {
     private readonly hostUUID: UUID;
 
-    public constructor(secretKey: Uint8Array, host: UUID, saveName: string) {
+    public constructor(startUp: StartServer) {
+        const secretKey = new Uint8Array(startUp.key);
         const channel = secretKey.length === 0 ?
             new ServerIntegratedChannel() :
             new ServerNetworkChannel('127.0.0.1:25566', secretKey);
 
-        super(saveName, channel);
-        this.hostUUID = host;
+        super(startUp.saveName, channel);
+        this.hostUUID = startUp.hostUUID;
     }
 
-    public static startServer(secretKey: Uint8Array, hostUUID: UUID, saveName: string) {
+    public static startServer(startUp: StartServer) {
         if (!NovaFlightServer.instance) {
-            NovaFlightServer.instance = new IntegratedServer(secretKey, hostUUID, saveName);
+            NovaFlightServer.instance = new IntegratedServer(startUp);
         }
 
         return NovaFlightServer.instance;

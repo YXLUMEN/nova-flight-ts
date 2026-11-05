@@ -1,82 +1,82 @@
-import {EntitySpawnS2CPacket} from "../../../network/packet/s2c/EntitySpawnS2CPacket.ts";
 import type {Entity} from "../../../entity/Entity.ts";
-import {ClientWorld} from "../../ClientWorld.ts";
 import type {NovaFlightClient} from "../../NovaFlightClient.ts";
-import {JoinGameS2CPacket} from "../../../network/packet/s2c/JoinGameS2CPacket.ts";
-import {EntityTypes} from "../../../entity/EntityTypes.ts";
 import type {UUID} from "../../../type/types.ts";
-import {EntityRemoveS2CPacket} from "../../../network/packet/s2c/EntityRemoveS2CPacket.ts";
-import {EntityPositionS2CPacket} from "../../../network/packet/s2c/EntityPositionS2CPacket.ts";
-import {ExplosionS2CPacket} from "../../../network/packet/s2c/ExplosionS2CPacket.ts";
-import {EntityVelocityUpdateS2CPacket} from "../../../network/packet/s2c/EntityVelocityUpdateS2CPacket.ts";
-import {EntityTrackerUpdateS2CPacket} from "../../../network/packet/s2c/EntityTrackerUpdateS2CPacket.ts";
-import {EntityMoveS2CPacket} from "../../../network/packet/s2c/EntityMoveS2CPacket.ts";
-import {LocalPlayerEntity} from "../../entity/LocalPlayerEntity.ts";
-import {EntityDamageS2CPacket} from "../../../network/packet/s2c/EntityDamageS2CPacket.ts";
-import {ParticleS2CPacket} from "../../../network/packet/s2c/ParticleS2CPacket.ts";
-import {EntityAttributesS2CPacket} from "../../../network/packet/s2c/EntityAttributesS2CPacket.ts";
-import {LivingEntity} from "../../../entity/LivingEntity.ts";
-import {PlayerFinishLoginC2SPacket} from "../../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
-import {EntityBatchSpawnS2CPacket} from "../../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
-import {EntityNbtS2CPacket} from "../../../network/packet/s2c/EntityNbtS2CPacket.ts";
-import {InventoryS2CPacket} from "../../../network/packet/s2c/InventoryS2CPacket.ts";
-import {EffectCreateS2CPacket} from "../../../network/packet/s2c/EffectCreateS2CPacket.ts";
-import {SoundEventS2CPacket} from "../../../network/packet/s2c/SoundEventS2CPacket.ts";
-import {PlayerSetScoreS2CPacket} from "../../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
-import {PlayerAddScoreS2CPacket} from "../../../network/packet/s2c/PlayerAddScoreS2CPacket.ts";
-import {ClientCommandSource} from "../../command/ClientCommandSource.ts";
-import {CommandDispatcher} from "../../../brigadier/CommandDispatcher.ts";
-import {CommandExecutionC2SPacket} from "../../../network/packet/c2s/CommandExecutionC2SPacket.ts";
-import {RemotePlayerEntity} from "../../entity/RemotePlayerEntity.ts";
-import {PlayerDisconnectS2CPacket} from "../../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
-import {PlayerJoinS2CPacket} from "../../../network/packet/s2c/PlayerJoinS2CPacket.ts";
-import {GameProfile} from "../../../server/entity/GameProfile.ts";
-import {PlayerProfileSyncS2CPacket} from "../../../network/packet/s2c/PlayerProfileSyncS2CPacket.ts";
-import {EntityStatusEffectS2CPacket} from "../../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
-import {RemoveEntityStatusEffectS2CPacket} from "../../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
-import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
-import {ItemCooldownUpdateS2CPacket} from "../../../network/packet/s2c/ItemCooldownUpdateS2CPacket.ts";
-import {PlayAudioS2CPacket} from "../../../network/packet/s2c/PlayAudioS2CPacket.ts";
-import {AudioManager} from "../../../sound/AudioManager.ts";
-import {AudioControlS2CPacket, AudioControlType} from "../../../network/packet/s2c/AudioControlS2CPacket.ts";
-import {BGMManager} from "../../../sound/BGMManager.ts";
-import {AudioStopS2CPacket} from "../../../network/packet/s2c/AudioStopS2CPacket.ts";
-import {type LaserWeaponS2CPacket} from "../../../network/packet/s2c/LaserWeaponS2CPacket.ts";
-import {LaserBeamEffect} from "../../../effect/LaserBeamEffect.ts";
-import {TargetDrone} from "../../../entity/mob/TargetDrone.ts";
-import {DifficultChangeS2CPacket} from "../../../network/packet/s2c/DifficultChangeS2CPacket.ts";
-import {GameMessageS2CPacket} from "../../../network/packet/s2c/GameMessageS2CPacket.ts";
-import {TranslatableTextS2CPacket} from "../../../network/packet/s2c/TranslatableTextS2CPacket.ts";
-import {TranslatableText} from "../../../i18n/TranslatableText.ts";
-import {PongS2CPacket} from "../../../network/packet/s2c/PongS2CPacket.ts";
-import {PingC2SPacket} from "../../../network/packet/c2s/PingC2SPacket.ts";
-import {BlockChangeS2CPacket} from "../../../network/packet/s2c/BlockChangeS2CPacket.ts";
-import {BatchBlockChangesPacket} from "../../../network/packet/common/BatchBlockChangesPacket.ts";
 import type {ClientConnection} from "../ClientConnection.ts";
-import {ConnectionState} from "../../../server/network/ConnectionState.ts";
-import {SetPlayerInventoryS2CPacket} from "../../../network/packet/s2c/SetPlayerInventoryPacket.ts";
-import {PlayerPositionS2CPacket} from "../../../network/packet/s2c/PlayerPositionS2CPacket.ts";
-import {PreparedParticleS2CPacket} from "../../../network/packet/s2c/PreparedParticleS2CPacket.ts";
-import {ScreenShakeS2CPacket} from "../../../network/packet/s2c/ScreenShakeS2CPacket.ts";
-import {EntityPositionForceS2CPacket} from "../../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
-import type {StopSoundS2CPacket} from "../../../network/packet/s2c/StopSoundS2CPacket.ts";
-import {ClientCommonHandler} from "./ClientCommonHandler.ts";
-import type {GameOverS2CPacket} from "../../../network/packet/s2c/GameOverS2CPacket.ts";
-import {LatencyCalculator} from "../../../network/LatencyCalculator.ts";
-import {randInt, squareDist} from "../../../utils/math/math.ts";
-import {PhaseLasers} from "../../../item/weapon/PhaseLasers.ts";
 import type {NotGiveUpS2CPacket} from "../../../network/packet/s2c/NotGiveUpS2CPacket.ts";
 import type {TickChangeS2CPacket} from "../../../network/packet/s2c/TickChangeS2CPacket.ts";
 import type {PlayerProfilesS2CPacket} from "../../../network/packet/s2c/PlayerProfilesS2CPacket.ts";
-import {AcceptTeleportC2SPacket} from "../../../network/packet/c2s/AcceptTeleportC2SPacket.ts";
+import type {EntitiesRemoveS2CPacket} from "../../../network/packet/s2c/EntitiesRemoveS2CPacket.ts";
+import type {ParticleEmitterS2CPacket} from "../../../network/packet/s2c/ParticleEmitterS2CPacket.ts";
+import type {LaserWeaponS2CPacket} from "../../../network/packet/s2c/LaserWeaponS2CPacket.ts";
+import type {GameOverS2CPacket} from "../../../network/packet/s2c/GameOverS2CPacket.ts";
+import type {StopSoundS2CPacket} from "../../../network/packet/s2c/StopSoundS2CPacket.ts";
+import type {EntitySpawnS2CPacket} from "../../../network/packet/s2c/EntitySpawnS2CPacket.ts";
+import type {JoinGameS2CPacket} from "../../../network/packet/s2c/JoinGameS2CPacket.ts";
+import type {EntityRemoveS2CPacket} from "../../../network/packet/s2c/EntityRemoveS2CPacket.ts";
+import type {EntityPositionS2CPacket} from "../../../network/packet/s2c/EntityPositionS2CPacket.ts";
+import type {ExplosionS2CPacket} from "../../../network/packet/s2c/ExplosionS2CPacket.ts";
+import type {EntityVelocityUpdateS2CPacket} from "../../../network/packet/s2c/EntityVelocityUpdateS2CPacket.ts";
+import type {EntityTrackerUpdateS2CPacket} from "../../../network/packet/s2c/EntityTrackerUpdateS2CPacket.ts";
+import type {EntityMoveS2CPacket} from "../../../network/packet/s2c/EntityMoveS2CPacket.ts";
+import type {EntityDamageS2CPacket} from "../../../network/packet/s2c/EntityDamageS2CPacket.ts";
+import type {ParticleS2CPacket} from "../../../network/packet/s2c/ParticleS2CPacket.ts";
+import type {EntityAttributesS2CPacket} from "../../../network/packet/s2c/EntityAttributesS2CPacket.ts";
+import type {EntityBatchSpawnS2CPacket} from "../../../network/packet/s2c/EntityBatchSpawnS2CPacket.ts";
+import type {EntityNbtS2CPacket} from "../../../network/packet/s2c/EntityNbtS2CPacket.ts";
+import type {InventoryS2CPacket} from "../../../network/packet/s2c/InventoryS2CPacket.ts";
+import type {EffectCreateS2CPacket} from "../../../network/packet/s2c/EffectCreateS2CPacket.ts";
+import type {SoundEventS2CPacket} from "../../../network/packet/s2c/SoundEventS2CPacket.ts";
+import type {PlayerSetScoreS2CPacket} from "../../../network/packet/s2c/PlayerSetScoreS2CPacket.ts";
+import type {PlayerAddScoreS2CPacket} from "../../../network/packet/s2c/PlayerAddScoreS2CPacket.ts";
+import type {ClientCommandSource} from "../../command/ClientCommandSource.ts";
+import type {PlayerDisconnectS2CPacket} from "../../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
+import type {PlayerJoinS2CPacket} from "../../../network/packet/s2c/PlayerJoinS2CPacket.ts";
+import type {PlayerProfileSyncS2CPacket} from "../../../network/packet/s2c/PlayerProfileSyncS2CPacket.ts";
+import type {EntityStatusEffectS2CPacket} from "../../../network/packet/s2c/EntityStatusEffectS2CPacket.ts";
+import type {RemoveEntityStatusEffectS2CPacket} from "../../../network/packet/s2c/RemoveEntityStatusEffectS2CPacket.ts";
+import type {ItemCooldownUpdateS2CPacket} from "../../../network/packet/s2c/ItemCooldownUpdateS2CPacket.ts";
+import type {PlayAudioS2CPacket} from "../../../network/packet/s2c/PlayAudioS2CPacket.ts";
+import {type AudioControlS2CPacket, AudioControlType} from "../../../network/packet/s2c/AudioControlS2CPacket.ts";
+import type {AudioStopS2CPacket} from "../../../network/packet/s2c/AudioStopS2CPacket.ts";
+import type {DifficultChangeS2CPacket} from "../../../network/packet/s2c/DifficultChangeS2CPacket.ts";
+import type {GameMessageS2CPacket} from "../../../network/packet/s2c/GameMessageS2CPacket.ts";
+import type {TranslatableTextS2CPacket} from "../../../network/packet/s2c/TranslatableTextS2CPacket.ts";
+import type {PongS2CPacket} from "../../../network/packet/s2c/PongS2CPacket.ts";
+import type {BlockChangeS2CPacket} from "../../../network/packet/s2c/BlockChangeS2CPacket.ts";
+import type {BatchBlockChangesPacket} from "../../../network/packet/common/BatchBlockChangesPacket.ts";
+import type {SetPlayerInventoryS2CPacket} from "../../../network/packet/s2c/SetPlayerInventoryPacket.ts";
+import type {PlayerPositionS2CPacket} from "../../../network/packet/s2c/PlayerPositionS2CPacket.ts";
+import type {PreparedParticleS2CPacket} from "../../../network/packet/s2c/PreparedParticleS2CPacket.ts";
+import type {ScreenShakeS2CPacket} from "../../../network/packet/s2c/ScreenShakeS2CPacket.ts";
+import type {EntityPositionForceS2CPacket} from "../../../network/packet/s2c/EntityPositionForceS2CPacket.ts";
+import type {StageChangeS2CPacket} from "../../../network/packet/s2c/StageChangeS2CPacket.ts";
+import {randInt, squareDist} from "../../../utils/math/math.ts";
 import {Vec2} from "../../../utils/math/Vec2.ts";
+import {GameProfile} from "../../../server/entity/GameProfile.ts";
+import {TranslatableText} from "../../../i18n/TranslatableText.ts";
+import {ClientWorld} from "../../ClientWorld.ts";
+import {ConnectionState} from "../../../server/network/ConnectionState.ts";
+import {ClientCommonHandler} from "./ClientCommonHandler.ts";
+import {CommandDispatcher} from "../../../brigadier/CommandDispatcher.ts";
+import {EntityTypes} from "../../../entity/EntityTypes.ts";
+import {LivingEntity} from "../../../entity/LivingEntity.ts";
+import {LocalPlayerEntity} from "../../entity/LocalPlayerEntity.ts";
+import {RemotePlayerEntity} from "../../entity/RemotePlayerEntity.ts";
+import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
+import {PhaseLasers} from "../../../item/weapon/PhaseLasers.ts";
+import {LaserBeamEffect} from "../../../effect/LaserBeamEffect.ts";
+import {TargetDrone} from "../../../entity/mob/TargetDrone.ts";
 import {MobEntity} from "../../../entity/mob/MobEntity.ts";
 import {ParticleEffects} from "../../../effect/particle/ParticleEffects.ts";
 import {Settings} from "../../settings/Settings.ts";
-import type {EntitiesRemoveS2CPacket} from "../../../network/packet/s2c/EntitiesRemoveS2CPacket.ts";
-import type {ParticleEmitterS2CPacket} from "../../../network/packet/s2c/ParticleEmitterS2CPacket.ts";
-import {Seed} from "../../../utils/math/random/Seed.ts";
-import {stringHashCode} from "../../../utils/hash.ts";
+import {BGMManager} from "../../../sound/BGMManager.ts";
+import {AudioManager} from "../../../sound/AudioManager.ts";
+import {LatencyCalculator} from "../../../network/LatencyCalculator.ts";
+import {PingC2SPacket} from "../../../network/packet/c2s/PingC2SPacket.ts";
+import {CommandExecutionC2SPacket} from "../../../network/packet/c2s/CommandExecutionC2SPacket.ts";
+import {PlayerFinishLoginC2SPacket} from "../../../network/packet/c2s/PlayerFinishLoginC2SPacket.ts";
+import {AcceptTeleportC2SPacket} from "../../../network/packet/c2s/AcceptTeleportC2SPacket.ts";
+import {StageEnter} from "../../../event/events/stage/StageEnter.ts";
 
 export class ClientPlayHandler extends ClientCommonHandler {
     private readonly commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
@@ -101,7 +101,6 @@ export class ClientPlayHandler extends ClientCommonHandler {
             this.client.registryManager,
             this.client.worldRender,
             packet.worldName,
-            new Seed(stringHashCode(packet.worldName) >>> 0)
         );
         await this.client.joinGame(this.world);
         if (this.client.player === null) {
@@ -591,6 +590,11 @@ export class ClientPlayHandler extends ClientCommonHandler {
         });
     }
 
+    public onStageChange(packet: StageChangeS2CPacket): void {
+        if (!this.world) return;
+        this.world.events.emit(new StageEnter(this.world, packet.stage));
+    }
+
     public sendCommand(input: string): boolean {
         const command = input.startsWith('/') ? input.slice(1) : input;
         if (this.parse(command).exceptions.size === 0) {
@@ -602,10 +606,6 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
     public parse(command: string) {
         return this.commandDispatcher.parse(command, this.client.commandSource);
-    }
-
-    public getCommandDispatcher() {
-        return this.commandDispatcher;
     }
 
     public getPlayerList() {

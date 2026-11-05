@@ -4,10 +4,10 @@ import type {Consumer} from "../type/types.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import type {ViewRect} from "../client/render/Camera.ts";
 import {lerp, TAU} from "../utils/math/math.ts";
+import {isRangeInView} from "../utils/render/render.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 import {BuiltInPath} from "../client/render/BuiltInPath.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
-import {isRangeInView} from "../utils/render/render.ts";
 
 export class AuraEffect implements VisualEffect {
     public bindEntity: Entity | null = null;
@@ -47,6 +47,13 @@ export class AuraEffect implements VisualEffect {
         this.prevT = this.t;
         this.t += dt;
         this.age += dt;
+
+        const bindEntity = this.bindEntity;
+        if (bindEntity) {
+            this.x = bindEntity.getX();
+            this.y = bindEntity.getY();
+        }
+
         this.onTick?.(this);
     }
 
@@ -54,14 +61,15 @@ export class AuraEffect implements VisualEffect {
         if (!this.isAlive()) return;
 
         const t = lerp(tickDelta, this.prevT, this.t);
+
+        let x = this.x;
+        let y = this.y;
         const bindEntity = this.bindEntity;
         if (bindEntity) {
-            this.x = lerp(tickDelta, bindEntity.prevX, bindEntity.getX());
-            this.y = lerp(tickDelta, bindEntity.prevY, bindEntity.getY());
+            x = lerp(tickDelta, x, bindEntity.getX());
+            y = lerp(tickDelta, y, bindEntity.getY());
         }
 
-        const x = this.x;
-        const y = this.y;
         const pulse = 0.5 + 0.5 * Math.sin(t * TAU * 1.2);
         // radius 是"外接半径"：归一化路径的范围是 [-1,1]，故缩放系数即 r
         const r = this.radius * (0.97 + 0.03 * pulse);
@@ -104,7 +112,7 @@ export class AuraEffect implements VisualEffect {
     }
 
     public shouldRender(view: ViewRect): boolean {
-        return isRangeInView(this.x, this.y, this.radius + 5, view);
+        return isRangeInView(this.x, this.y, this.radius, view);
     }
 
     public isAlive(): boolean {

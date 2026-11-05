@@ -365,6 +365,7 @@ export class ClientCommandManager extends CommandManager implements EventListene
     }
 
     public override executeWithPrefix(source: CommandSource, input: string): void {
+        input = input.trim();
         const command = input.startsWith('/') ? input.slice(1) : input;
         if (command.length === 0) return;
 

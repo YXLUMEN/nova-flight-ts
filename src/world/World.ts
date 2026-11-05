@@ -14,7 +14,6 @@ import type {ExplosionConfigs} from "./element/explosion/ExplosionConfigs.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import type {ParticleEffectType} from "../effect/particle/ParticleEffectType.ts";
 import type {WorldMutation} from "./element/WorldMutation.ts";
-import type {Seed} from "../utils/math/random/Seed.ts";
 import {any} from "../utils/util.ts";
 import {clamp} from "../utils/math/math.ts";
 import {appEvent, type EventBus} from "../event/EventBus.ts";
@@ -43,7 +42,6 @@ export abstract class World {
     public empBurst: number = 0
 
     public readonly isClient: boolean;
-    public readonly seed: Seed;
 
     private difficultyLevel = 1;
     protected over = false;
@@ -52,12 +50,11 @@ export abstract class World {
     private readonly damageSources: DamageSources;
     private readonly scheduleTask: ScheduleTask;
 
-    protected constructor(registryManager: RegistryManager, seed: Seed, isClient: boolean) {
+    protected constructor(registryManager: RegistryManager, isClient: boolean) {
         this.isClient = isClient;
         this.registryManager = registryManager;
         this.scheduleTask = new ScheduleTask();
         this.damageSources = new DamageSources(registryManager);
-        this.seed = seed;
     }
 
     public isOver(): boolean {

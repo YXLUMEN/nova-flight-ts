@@ -13,8 +13,8 @@ import type {ParticleEffectType} from "../effect/particle/ParticleEffectType.ts"
 import type {Vec2} from "../utils/math/Vec2.ts";
 import type {Payload} from "../network/Payload.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
-import type {Seed} from "../utils/math/random/Seed.ts";
 import type {PhaseConfig} from "../world/stage/PhaseConfig.ts";
+import type {Seed} from "../utils/math/random/Seed.ts";
 import {DEFAULT_PHASES} from "../configs/StageConfig.ts";
 import {Log} from "../worker/log.ts";
 import {Stage} from "../world/stage/Stage.ts";
@@ -46,6 +46,7 @@ import {RandomXor} from "../utils/math/random/RandomXor.ts";
 
 export class ServerWorld extends World implements NbtSerializable {
     private readonly server: NovaFlightServer;
+    public readonly seed: Seed;
 
     public stage: Stage;
     private phase: number = 0;
@@ -55,11 +56,12 @@ export class ServerWorld extends World implements NbtSerializable {
     private readonly trackedEntities: Map<number, EntityTrackerEntry> = new Map();
 
     public constructor(registryManager: RegistryManager, server: NovaFlightServer, seed: Seed) {
-        super(registryManager, seed, false);
+        super(registryManager, false);
 
         this.server = server;
+        this.seed = seed;
         this.entityManager = new ServerEntityManager(this.ServerEntityHandler);
-        this.stage = new Stage(DEFAULT_PHASES, new RandomXor(this.seed, 1));
+        this.stage = new Stage(DEFAULT_PHASES, new RandomXor(seed, 1));
         this.serverTickEntity = this.serverTickEntity.bind(this);
     }
 
@@ -203,6 +205,7 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public setStage(phases: PhaseConfig[]) {
+        this.stage.detach();
         this.stage = new Stage(phases, new RandomXor(this.seed, 1));
     }
 
@@ -301,6 +304,8 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public writeNBT(root: NbtCompound): NbtCompound {
+        root.setUint32Array('seed', this.seed.toWords());
+
         const entityList: NbtCompound[] = [];
         this.entities.forEach(entity => {
             if (!entity.shouldSave()) return;

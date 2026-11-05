@@ -4,6 +4,7 @@ import {World} from "../world/World.ts";
 import {ExplosionBehaviour, ExplosionConfigs} from "../world/element/explosion/ExplosionConfigs.ts";
 import {ExplosionVisual} from "../world/element/explosion/ExplosionVisual.ts";
 import {ExplosiveBuilder} from "../world/element/explosion/ExplosiveBuilder.ts";
+import {isClient} from "../configs/RuntimeConfig.ts";
 
 export class ExplosionEntity extends Entity {
     public override noClip = true;
@@ -39,12 +40,11 @@ export class ExplosionEntity extends Entity {
     public override tick() {
         super.tick();
 
+        if (isClient) return;
         if (this.age < this.countdown || this.isRemoved()) return;
         this.discard();
 
         const world = this.getWorld();
-        if (world.isClient) return;
-
         const source = world.getDamageSources().explosion(this, this);
         world.createExplosion(this, source, this.getX(), this.getY(), this.power, this.behavior, this.visual);
     }

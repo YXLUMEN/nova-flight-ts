@@ -138,14 +138,16 @@ export class WorldRenderer {
         ctx.translate(-ox, -oy);
 
         // 背景层
-        this.renderBackground(ctx);
         const world = this.world;
+        this.renderBackground(ctx);
         this.mapRender!.render(ctx, viewRect);
         this.entityRenderer.renderEntities(ctx, viewRect, world, alpha);
 
         // 特效
         for (let i = 0; i < this.effects.length; i++) {
-            this.effects[i].render(ctx, alpha);
+            const effect = this.effects[i];
+            if (!effect.shouldRender(viewRect)) continue;
+            effect.render(ctx, alpha);
         }
         this.particleEngine.render(ctx, alpha);
 

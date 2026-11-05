@@ -13,21 +13,24 @@ export class SpawnMarkerEntity extends Entity {
 
     private readonly spawnMob: MobEntity | null;
     private readonly force: boolean;
+    private readonly delay: number;
 
     public constructor(
         type: EntityType<SpawnMarkerEntity>,
         world: World,
         mob: MobEntity | null = null,
-        force: boolean = false
+        force: boolean = false,
+        delay: number = 80,
     ) {
         super(type, world);
         this.spawnMob = mob;
         this.force = force;
+        this.delay = delay;
     }
 
     public override tick() {
         super.tick();
-        if (this.age < 80) return;
+        if (this.age < this.delay) return;
 
         this.discard();
         const world = this.getWorld() as ServerWorld;
@@ -35,7 +38,7 @@ export class SpawnMarkerEntity extends Entity {
 
         if (this.force) {
             world.spawnEntity(this.spawnMob);
-            spawnTeleportFx(world, this.positionRef, this.positionRef);
+            spawnTeleportFx(world, this.positionRef, this.positionRef, undefined, this.spawnMob.getWidth() / 2);
             return;
         }
 

@@ -22,7 +22,7 @@ async function handleEvent(event: MessageEvent) {
             if (server || pendingStop) return;
 
             const startUp = event.data.payload as StartServer;
-            server = IntegratedServer.startServer(new Uint8Array(startUp.key), startUp.hostUUID, startUp.saveName) as IntegratedServer;
+            server = IntegratedServer.startServer(startUp) as IntegratedServer;
             server.networkChannel.setRemote(startUp.addr);
             server.runServer().catch(err => {
                 Log.error(`[Server] Error occurrence while loading resources, cause by "${err}"`);

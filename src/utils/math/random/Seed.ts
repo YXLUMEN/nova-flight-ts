@@ -9,7 +9,7 @@ export class Seed {
     private readonly w1: number;
     private readonly w2: number;
 
-    public constructor(seed: number | bigint) {
+    public constructor(seed: number | bigint | Uint32Array) {
         if (typeof seed === 'number') {
             if (!Number.isSafeInteger(seed)) {
                 throw new Error(
@@ -31,6 +31,11 @@ export class Seed {
             this.w0 = Number(masked & 0xFFFFFFFFn);
             this.w1 = Number((masked >> 32n) & 0xFFFFFFFFn);
             this.w2 = Number((masked >> 64n) & 0xFFFFn);
+        } else if (seed instanceof Uint32Array) {
+            if (seed.length !== 3) throw new Error('Seed array length must be 3');
+            this.w0 = seed[0];
+            this.w1 = seed[1];
+            this.w2 = seed[2];
         } else {
             throw new Error(`Seed expects a number or bigint, got ${typeof seed}`);
         }
@@ -44,6 +49,14 @@ export class Seed {
     /** 原始 80 bit 熵 */
     public toBigInt(): bigint {
         return BigInt(this.w0) | (BigInt(this.w1) << 32n) | (BigInt(this.w2) << 64n);
+    }
+
+    public toWords(): Uint32Array {
+        const out = new Uint32Array(3);
+        out[0] = this.w0;
+        out[1] = this.w1;
+        out[2] = this.w2;
+        return out;
     }
 
     /** 十进制表示 */

@@ -15,6 +15,7 @@ export class Stage implements NbtSerializable {
 
     private readonly phases: PhaseConfig[];
     private readonly rules: SpawnRule[] = [];
+    private detached = false;
 
     private paused = false;
     private ticks = 0;
@@ -31,18 +32,6 @@ export class Stage implements NbtSerializable {
         return this.index < this.phases.length ? this.phases[this.index].name : null;
     }
 
-    public reset() {
-        this.ticks = 0;
-        this.phaseTime = 0;
-        this.index = 0;
-        this.paused = false;
-        this.loadPhase(0);
-    }
-
-    public pause(): void {
-        this.paused = true;
-    }
-
     public tick(world: ServerWorld) {
         if (this.index >= this.phases.length) return;
         if (this.paused) return;
@@ -50,16 +39,7 @@ export class Stage implements NbtSerializable {
         this.ticks++;
         this.phaseTime++;
 
-        const ctx: SpawnContext = {
-            world,
-            time: this.ticks,
-            phaseTime: this.phaseTime,
-            phaseIndex: this.index,
-            score: world.getPhase(),
-            rng: this.rng,
-            difficulty: world.getDifficulty(),
-        };
-
+        const ctx: SpawnContext = this.getCtx(world);
         const phase = this.phases[this.index];
 
         if (this.phaseTime === 1) {
@@ -98,6 +78,51 @@ export class Stage implements NbtSerializable {
             if (current === name) return true;
             if (!this.nextPhase()) return false;
         }
+    }
+
+    public trySetPhase(name: string): boolean {
+        const last = this.getCurrentName();
+        if (this.setPhase(name)) return true;
+
+        if (last) this.setPhase(last);
+        else this.reset();
+        return false;
+    }
+
+    public getCtx(world: ServerWorld): SpawnContext {
+        return {
+            world,
+            time: this.ticks,
+            phaseTime: this.phaseTime,
+            phaseIndex: this.index,
+            score: world.getPhase(),
+            rng: this.rng,
+            difficulty: world.getDifficulty(),
+        };
+    }
+
+    public reset() {
+        this.ticks = 0;
+        this.phaseTime = 0;
+        this.index = 0;
+        this.paused = false;
+        this.loadPhase(0);
+    }
+
+    public detach() {
+        this.detached = true;
+    }
+
+    public isDetached() {
+        return this.detached;
+    }
+
+    public pause(): void {
+        this.paused = true;
+    }
+
+    public resume(): void {
+        this.paused = false;
     }
 
     public writeNBT(nbt: NbtCompound): NbtCompound {

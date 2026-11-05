@@ -15,7 +15,7 @@ export function spawnAtTop(bp: MobBlueprint): MobFactory {
     return (ctx) => {
         const x = ctx.rng.nextInt(MIN_X, MAX_X);
         const mob = bp.create(ctx);
-        mob.setPosition(x, -30);
+        mob.setPosition(x, -48);
         return mob;
     };
 }
@@ -65,7 +65,7 @@ export function spawnAtTopBest(
     return (ctx) => {
         const x = sampleX(margin, MAX_X, ctx.rng);
         const mob = bp.create(ctx);
-        mob.setPosition(x, -30);
+        mob.setPosition(x, -48);
         return mob;
     };
 }
@@ -74,7 +74,7 @@ export function spawnAtTopLine(
     bp: MobBlueprint,
     count: number,
     gap: number = 48,
-    startY: number = -30,
+    startY: number = -48,
 ): MobFactory {
     const totalWidth = gap * (count - 1);
     const RESULT_X = MAX_X - totalWidth;
@@ -92,7 +92,7 @@ export function spawnAtTopLine(
     };
 }
 
-export function spawnFormation(members: MobBlueprint[]): MobFactory {
+export function spawnFormation(members: MobBlueprint[], startY: number = -48): MobFactory {
     return (ctx) => {
         const arr: MobEntity[] = [];
         const baseX = ctx.rng.nextInt(MIN_X, MAX_X);
@@ -100,7 +100,7 @@ export function spawnFormation(members: MobBlueprint[]): MobFactory {
         for (let i = 0; i < members.length; i++) {
             const bp = members[i];
             const mob = bp.create(ctx);
-            mob.setPosition(baseX, i + 16 + mob.getHeight());
+            mob.setPosition(baseX, startY + (i * 16) + mob.getHeight());
             arr.push(mob);
         }
         return arr;

@@ -247,17 +247,17 @@ const p7 = createPhase('P7')
         every: 120,
         jitter: 0.4,
         factory: spawnFormation([
+            MobBlueprintBuilder.of(MG)
+                .speed(0.5)
+                .worth(12)
+                .color('#ac0000')
+                .build(),
             MobBlueprintBuilder.of(T)
                 .speed(0.5)
                 .worth(12)
                 .color('#ac0000')
                 .build(),
-            MobBlueprintBuilder.of(MG)
-                .speed(0.5)
-                .worth(12)
-                .color('#ac0000')
-                .build()
-        ]),
+        ], -160),
         cap: 96
     }, {
         every: 320,

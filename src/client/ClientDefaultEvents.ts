@@ -1,3 +1,4 @@
+import type {LocalPlayerEntity} from "./entity/LocalPlayerEntity.ts";
 import {appEvent} from "../event/EventBus.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {PlayerUnlockTechC2SPacket} from "../network/packet/c2s/PlayerUnlockTechC2SPacket.ts";
@@ -5,10 +6,12 @@ import {Registries} from "../registry/Registries.ts";
 import {BGMManager} from "../sound/BGMManager.ts";
 import {DevourerBoss} from "../entity/mob/DevourerBoss.ts";
 import {ClientTechManager} from "./tech/ClientTechManager.ts";
-import type {LocalPlayerEntity} from "./entity/LocalPlayerEntity.ts";
 import {AudioManager} from "../sound/AudioManager.ts";
 import {Audios} from "../sound/Audios.ts";
 import {MissileLockVisual} from "./entity/MissileLockVisual.ts";
+import {ZoneWarningEffect} from "../effect/ZoneWarningEffect.ts";
+import {SoundEvents} from "../sound/SoundEvents.ts";
+import {World} from "../world/World.ts";
 
 export class ClientDefaultEvents {
     public static registryEvents() {
@@ -48,6 +51,27 @@ export class ClientDefaultEvents {
                 return;
             }
             void BGMManager.onBossSpawn();
+        });
+
+        let zone: ZoneWarningEffect | null = null;
+        appEvent.on('world:stage:enter', ({world, name}) => {
+            world.playSound(null, SoundEvents.PHASE_CHANGE);
+
+            if (name === 'P8' || name === 'P9') {
+                zone?.kill();
+                zone = null;
+                return;
+            }
+
+            if (zone) return;
+            zone = new ZoneWarningEffect(World.MAP_WIDTH, -88);
+            world.addEffect(null, zone);
+            return;
+        });
+
+        appEvent.on('game:end', () => {
+            zone?.kill();
+            zone = null;
         });
     }
 }

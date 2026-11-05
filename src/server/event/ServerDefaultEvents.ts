@@ -3,7 +3,6 @@ import {BossEntity} from "../../entity/mob/BossEntity.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {World} from "../../world/World.ts";
 import {SpawnMarkerEntity} from "../../entity/SpawnMarkerEntity.ts";
-import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {appEvent} from "../../event/EventBus.ts";
 import {ServerPlayerEntity} from "../entity/ServerPlayerEntity.ts";
 import {StatusEffects} from "../../entity/effect/StatusEffects.ts";
@@ -20,6 +19,8 @@ import {ExplosionTag} from "../../world/element/explosion/ExplosionConfigs.ts";
 import {DevourerBoss} from "../../entity/mob/DevourerBoss.ts";
 import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
 import {ExplosiveBuilder} from "../../world/element/explosion/ExplosiveBuilder.ts";
+import {ExplosionEntity} from "../../entity/ExplosionEntity.ts";
+import {StageChangeS2CPacket} from "../../network/packet/s2c/StageChangeS2CPacket.ts";
 
 export class ServerDefaultEvents {
     public static registerEvent() {
@@ -72,30 +73,48 @@ export class ServerDefaultEvents {
             }
         });
 
+        const spawnBoss = (world: ServerWorld, boss: BossEntity) => {
+            const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true, 80);
+            mark.setPositionByVec(boss.positionRef);
+            const explosion = new ExplosionEntity(EntityTypes.EXPLOSION_ENTITY, world, 80);
+            explosion.setPositionByVec(boss.positionRef);
+
+            world.spawnEntity(mark);
+            world.spawnEntity(explosion);
+        };
+
         appEvent.on('entity:boss:killed', event => {
             const world = event.world as ServerWorld;
+            world.stage.resume();
 
             if (!event.boss) {
                 world.stage.nextPhase();
                 return;
             }
 
-            world.schedule(360, () => {
+            const bossPhase = () => {
                 if (BossEntity.hasBoss) return;
+                const stage = world.stage;
 
-                world.stage.reset();
-                world.stage.setPhase('P6');
+                if (!stage.trySetPhase('P6')) {
+                    world.schedule(160, bossPhase);
+                    return;
+                }
 
                 const maxKillTimes = 120 * Math.min(world.getDifficulty(), 4);
-                const boss = Math.random() > 0.5 ?
-                    new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64, maxKillTimes) :
-                    new DevourerBoss(EntityTypes.DEVOURER_BOSS_ENTITY, world, 96, maxKillTimes);
-                boss.setPosition(World.MAP_WIDTH / 2, 64);
+                let boss: BossEntity;
+                if (stage.getCtx(world).rng.nextBool(0.5)) {
+                    boss = new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64, maxKillTimes);
+                } else {
+                    boss = new DevourerBoss(EntityTypes.DEVOURER_BOSS_ENTITY, world, 96, maxKillTimes);
+                    stage.pause();
+                }
 
-                const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
-                mark.setPositionByVec(boss.positionRef);
-                world.spawnEntity(mark);
-            });
+                boss.setPosition(World.MAP_WIDTH / 2, 64);
+                spawnBoss(world, boss);
+            }
+
+            world.schedule(360, bossPhase);
 
             const difficulty = world.getDifficulty();
             if (difficulty > 0) {
@@ -117,18 +136,16 @@ export class ServerDefaultEvents {
         appEvent.on('world:stage:enter', ({world, name}) => {
             if (name === 'P6') {
                 if (BossEntity.hasBoss) return;
-
                 world.schedule(10, () => {
+                    if (BossEntity.hasBoss) return;
+
                     const boss = new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64);
                     boss.setPosition(World.MAP_WIDTH / 2, 64);
-
-                    const mark = new SpawnMarkerEntity(EntityTypes.SPAWN_MARK_ENTITY, world, boss, true);
-                    mark.setPositionByVec(boss.positionRef);
-                    world.spawnEntity(mark);
+                    spawnBoss(world as ServerWorld, boss);
                 });
             }
 
-            world.playSound(null, SoundEvents.PHASE_CHANGE);
+            world.sendPacket(new StageChangeS2CPacket(name));
         });
 
         appEvent.on('world:explosion', ({world, explosion}) => {

@@ -1,26 +1,24 @@
-import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {Consumer, UUID} from "../type/types.ts";
+import type {CommandOutput} from "./command/CommandOutput.ts";
+import type {ServerChannel} from "./network/ServerChannel.ts";
+import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
+import {DEFAULT_CONFIG} from "../configs/RuntimeConfig.ts";
 import {ServerWorld} from "./ServerWorld.ts";
 import {ServerCommandSource} from "./command/ServerCommandSource.ts";
-import type {CommandOutput} from "./command/CommandOutput.ts";
 import {Vec2} from "../utils/math/Vec2.ts";
 import {ServerCommandManager} from "./command/ServerCommandManager.ts";
 import {PlayerManager} from "./entity/PlayerManager.ts";
 import {GameProfile} from "./entity/GameProfile.ts";
 import {ServerNetworkManager} from "./network/ServerNetworkManager.ts";
-import {Result} from "../utils/result/Result.ts";
-import type {ServerChannel} from "./network/ServerChannel.ts";
 import {Log} from "../worker/log.ts";
 import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.ts";
 import {TranslatableTextS2CPacket} from "../network/packet/s2c/TranslatableTextS2CPacket.ts";
 import {ServerStartS2CPacket} from "../network/packet/s2c/ServerStartS2CPacket.ts";
 import {ServerTickManager} from "./ServerTickManager.ts";
-import {DEFAULT_CONFIG} from "../configs/RuntimeConfig.ts";
 import {CodecRegistry} from "../network/CodecRegistry.ts";
 import {Worker2MainType} from "../worker/WorkerMsgType.ts";
 import {Seed} from "../utils/math/random/Seed.ts";
-import {stringHashCode} from "../utils/hash.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static instance: NovaFlightServer;
@@ -30,7 +28,6 @@ export abstract class NovaFlightServer implements CommandOutput {
 
     public readonly version: number;
     public readonly protocolVersion: number;
-    public readonly seed: Seed;
     public readonly networkChannel: ServerChannel;
     public readonly serverCommandManager: ServerCommandManager;
     public readonly playerManager: PlayerManager;
@@ -56,7 +53,6 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.worldName = worldName;
         this.version = DEFAULT_CONFIG.gameVersion;
         this.protocolVersion = CodecRegistry.VERSION;
-        this.seed = new Seed(stringHashCode(worldName) >>> 0);
         this.playerManager = new PlayerManager(this);
         this.tickManager = new ServerTickManager(this);
         this.networkChannel = channel;
@@ -80,15 +76,7 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.waitServerHalt = promise;
         this.stopWorld = () => resolve();
 
-        this.world = new ServerWorld(manager, this, this.seed);
-
-        const loadResult = await this.loadWorld();
-        if (loadResult.isErr()) {
-            this.world.close();
-            this.world = null;
-            this.stopWorld();
-            throw loadResult.unwrapErr();
-        }
+        this.world = await this.loadWorld(manager);
 
         this.profile = new GameProfile(this.networkChannel.getSessionId(), this.serverId, this.worldName);
         this.networkManager = new ServerNetworkManager(this);
@@ -99,20 +87,26 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.tickInterval = setInterval(this.tick, 25);
     }
 
-    private async loadWorld(): Promise<Result<boolean, string>> {
-        try {
-            const saves = await this.readSave();
-            if (!saves) return Result.ok(false);
+    private async loadWorld(manager: RegistryManager): Promise<ServerWorld> {
+        const saves = await this.readSave();
+        const seedBuffer = saves?.getUint32Array('seed');
+        const seed = seedBuffer != null ? new Seed(seedBuffer) : Seed.generate();
+        const world = new ServerWorld(manager, this, seed);
+        if (!saves) return world;
 
-            this.world!.readNBT(saves);
-            return Result.ok(true);
+        try {
+            world.readNBT(saves);
+            return world;
         } catch (err) {
             const msg = Error.isError(err)
                 ? `[Server] Error while loading save ${err.name}:${err.message} because ${err.cause} at\n${err.stack}`
                 : `[Server] Error while loading save ${err}`;
 
             Log.error(msg);
-            return Result.err(msg);
+            world.close();
+            this.world = null;
+            this.stopWorld?.();
+            throw err;
         }
     }
 

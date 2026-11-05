@@ -14,6 +14,7 @@ import {StatusEffects} from "../effect/StatusEffects.ts";
 import {BossKilled} from "../../event/events/entity/BossKilled.ts";
 import {BossSpawn} from "../../event/events/entity/BossSpawn.ts";
 import {isClient} from "../../configs/RuntimeConfig.ts";
+import {DamageTypes} from "../damage/DamageTypes.ts";
 
 export abstract class BossEntity extends MobEntity {
     public static hasBoss: boolean = false;
@@ -58,6 +59,8 @@ export abstract class BossEntity extends MobEntity {
     }
 
     protected override modifyAppliedDamage(source: DamageSource, damage: number): number {
+        if (source.isOf(DamageTypes.KILL)) return damage;
+
         const attacker = source.getAttacker();
         if (!attacker || !attacker.isPlayer()) return 0.1;
 

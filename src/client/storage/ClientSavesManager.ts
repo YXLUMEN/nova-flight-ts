@@ -111,13 +111,16 @@ export class ClientSavesManager extends PageSection {
     ): void {
         switch (action) {
             case 'back':
-                return commit(null);
+                commit(null);
+                return;
             case 'create-world':
-                return void this.createNewWorld().then(r => {
+                void this.createNewWorld().then(r => {
                     if (r !== null) commit(r);
                 });
+                return;
             case 'import-world':
-                return void this.importSave();
+                void this.importSave();
+                return;
         }
 
         if (this.chosenItem === null) return;

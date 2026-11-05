@@ -103,6 +103,7 @@ export class NbtSerialization {
 
     public static toSNbt(compound: NbtCompound, pretty = false, indent = 0): string {
         const entries: string[] = [];
+        const delimiter = pretty ? ': ' : ':';
         const spacing = pretty ? ' '.repeat(indent) : '';
         const newline = pretty ? '\n' : '';
         const innerIndent = pretty ? ' '.repeat(indent + 2) : '';
@@ -118,11 +119,11 @@ export class NbtSerialization {
                 case NbtTypeId.End:
                     continue;
                 case NbtTypeId.Compound:
-                    valStr = this.toSNbt((element as NbtCompound), pretty, indent + 2)
+                    valStr = this.toSNbt((element as NbtCompound), pretty, indent + 2);
                     break;
                 case NbtTypeId.CompoundArray:
                     const listItems = (element as NbtCompoundArray).elements
-                        .map(comp => this.toSNbt(comp, pretty))
+                        .map(comp => this.toSNbt(comp, pretty, indent + 2))
                         .join(',');
                     valStr = `[${listItems}]`;
                     break;
@@ -130,7 +131,7 @@ export class NbtSerialization {
                     valStr = element.toSNBT();
             }
 
-            entries.push(`${innerIndent}${safeKey}:${valStr}`);
+            entries.push(`${innerIndent}${safeKey}${delimiter}${valStr}`);
         }
 
         if (entries.length === 0) {

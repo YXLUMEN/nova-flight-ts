@@ -22,14 +22,15 @@ export function spawnTeleportFx(
     world: World,
     from: Vec2,
     to: Vec2,
-    color: HexColor = TELEPORT_COLOR,
+    color?: HexColor,
+    radius?: number
 ): void {
     const sameSpot = Vec2.distSq(from, to) < TELEPORT_MIN_DISTANCE_SQ;
     const effects = sameSpot
-        ? [new TeleportEffect(to, color, TeleportPhase.IN)]
+        ? [new TeleportEffect(to, color, TeleportPhase.IN, radius)]
         : [
-            new TeleportEffect(from, color, TeleportPhase.OUT),
-            new TeleportEffect(to, color, TeleportPhase.IN),
+            new TeleportEffect(from, color, TeleportPhase.OUT, radius),
+            new TeleportEffect(to, color, TeleportPhase.IN, radius),
         ];
 
     if (isClient) {
