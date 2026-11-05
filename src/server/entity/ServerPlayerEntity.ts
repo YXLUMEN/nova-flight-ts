@@ -222,16 +222,10 @@ export class ServerPlayerEntity extends PlayerEntity {
 
     public handlerInput(key: string) {
         switch (key) {
-            case 'KeyR':
-                this.switchWeapon();
-                break;
-            case 'Space':
-                this.handleFire();
-                break;
-            case 'KeyG':
+            case 'tech-tree':
                 this.watchTechPage = !this.watchTechPage;
                 break;
-            case 'KeyE':
+            case 'inventory':
                 this.watchInventory = !this.watchInventory && !this.watchTechPage;
                 break;
             default:

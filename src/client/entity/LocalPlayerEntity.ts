@@ -236,15 +236,14 @@ export class LocalPlayerEntity extends PlayerEntity {
         if (stack.isEmpty() || !(item instanceof Weapon)) return;
 
         const isFiring = this.input.isDown(InputBindings.FIRE) || RuntimeConfig.autoShoot;
-
         const hasAmmo = stack.getDurability() > 0 || !stack.isDamageable();
 
         if (isFiring !== this.wasFiring) {
             if (!this.wasFiring && hasAmmo) {
-                this.sendPacket(new PlayerFireC2SPacket(true));
+                this.sendPacket(PlayerFireC2SPacket.START);
                 item.onStartFire(stack, world, this);
             } else {
-                this.sendPacket(new PlayerFireC2SPacket(false));
+                this.sendPacket(PlayerFireC2SPacket.END);
                 item.onEndFire(stack, world, this);
             }
             this.wasFiring = isFiring;

@@ -7,7 +7,7 @@ export class TechSpaceTear implements ApplyTech {
     public apply(player: ServerPlayerEntity) {
         const stack = player.getItem(Items.VOID_ENGIN);
         if (stack.isEmpty()) return;
-        stack.set(DataComponents.EFFECT_RANGE, 128);
+        stack.set(DataComponents.EFFECT_RANGE, 64);
         player.syncStack(stack);
     }
 

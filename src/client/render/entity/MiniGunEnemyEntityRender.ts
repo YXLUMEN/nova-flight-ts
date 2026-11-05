@@ -1,6 +1,5 @@
 import type {EntityRenderer} from "./EntityRenderer.ts";
 import type {MiniGunEnemyEntity} from "../../../entity/mob/MiniGunEnemyEntity.ts";
-
 import type {Vec2} from "../../../utils/math/Vec2.ts";
 
 export class MiniGunEnemyEntityRender implements EntityRenderer<MiniGunEnemyEntity> {

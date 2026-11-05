@@ -19,7 +19,7 @@ export class ClientInputEvents {
         input.setHandler(cleanObj({
             onKeyPress: (input, event) => {
                 const code = event.code;
-                if (code === 'Slash' || input.wasPressed(InputBindings.COMMAND_BAR)) {
+                if (code === 'Slash' || input.wasPressed(InputBindings.CHAT_BAR)) {
                     const manager = client.clientCommandManager;
                     if (code !== 'Slash' || manager.getInput().length !== 0) {
                         event.preventDefault();
@@ -103,7 +103,7 @@ export class ClientInputEvents {
                 else client.layer.gui.open(tech);
 
                 client.player.setOpenInventory(false);
-                client.connection.send(new PlayerInputC2SPacket('KeyG'));
+                client.connection.send(new PlayerInputC2SPacket('tech-tree'));
                 break;
             }
             case 'KeyL':
@@ -127,7 +127,7 @@ export class ClientInputEvents {
                     client.player.setOpenInventory(shouldClose);
                     client.setPause(shouldClose);
                 }
-                client.connection.send(new PlayerInputC2SPacket('KeyE'));
+                client.connection.send(new PlayerInputC2SPacket('inventory'));
                 break;
             }
         }

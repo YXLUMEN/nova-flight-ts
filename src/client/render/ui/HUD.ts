@@ -103,9 +103,7 @@ export class HUD extends UiFramework {
             const quickFire = this.player.getQuickFire();
             for (const item of items) {
                 const stack = this.player.getItem(item);
-                if (!stack) continue;
-
-                if (item.getMaxCooldown(stack) <= 0) continue;
+                if (stack.isEmpty() || item.getMaxCooldown(stack) <= 0) continue;
 
                 this.drawBar(ctx, x, y, this.barWidth, this.barHeight, item, stack);
                 if (item === quickFire) {

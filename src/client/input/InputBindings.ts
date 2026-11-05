@@ -73,7 +73,7 @@ export class InputBindings {
         strokeKey('KeyG')
     );
 
-    public static readonly COMMAND_BAR = this.bind('command_bar', 'misc',
+    public static readonly CHAT_BAR = this.bind('chat_bar', 'misc',
         strokeKey('KeyT')
     );
     public static readonly FULLSCREEN = this.bind('full_screen', 'misc',
