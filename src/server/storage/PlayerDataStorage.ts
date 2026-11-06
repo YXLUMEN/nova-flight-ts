@@ -10,6 +10,7 @@ import {NbtUnserialization} from "../../nbt/NbtUnserialization.ts";
 import type {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import {NbtSerialization} from "../../nbt/NbtSerialization.ts";
 import {DEFAULT_CONFIG} from "../../configs/RuntimeConfig.ts";
+import {Log} from "../../worker/log.ts";
 
 export class PlayerDataStorage {
     private readonly saveName: string;
@@ -59,7 +60,7 @@ export class PlayerDataStorage {
             game_version: DEFAULT_CONFIG.gameVersion,
         } satisfies PlayerData);
         request.onsuccess = () => resolve(Result.ok(undefined));
-        request.onerror = () => resolve(Result.err(this.mapErr(request.error)));
+        request.onerror = () => resolve(Result.err(Result.mapErr(request.error)));
 
         return promise;
     }
@@ -85,7 +86,7 @@ export class PlayerDataStorage {
             if (nbt.isOk()) {
                 consumer(player.uuid, nbt.unwrap());
             } else {
-                console.error(nbt.unwrapErr());
+                Log.error(nbt.unwrapErr());
             }
         });
     }
@@ -99,7 +100,7 @@ export class PlayerDataStorage {
             const store = tx.objectStore('save_meta');
             const request = store.get(saveName);
             request.onsuccess = () => resolve();
-            request.onerror = () => resolve(this.mapErr(request.error));
+            request.onerror = () => resolve(Result.mapErr(request.error));
         });
 
         const meta = await metaTask;
@@ -129,13 +130,10 @@ export class PlayerDataStorage {
             consumer(playerData);
             cursor.continue();
         };
-        request.onerror = () => resolve(this.mapErr(request.error));
+        request.onerror = () => resolve(Result.mapErr(request.error));
 
         const error = await promise;
-        if (error) {
-            return Result.err(error);
-        }
-        return Result.ok(undefined);
+        return Result.wrapInput(error);
     }
 
     public async deletePlayerData(profile: GameProfile): Promise<boolean> {
@@ -145,7 +143,7 @@ export class PlayerDataStorage {
             [this.saveName, uuid]
         );
         if (result.isErr()) {
-            console.error(result.unwrapErr());
+            Log.error(result.unwrapErr());
             return false;
         }
         return true;
@@ -165,12 +163,7 @@ export class PlayerDataStorage {
             const compound = NbtUnserialization.fromCompactBinary(data);
             return Result.ok(compound);
         } catch (err) {
-            return Result.err(this.mapErr(err));
+            return Result.err(Result.mapErr(err));
         }
-    }
-
-    private mapErr(error: unknown) {
-        if (Error.isError(error)) return error;
-        return new Error('[PlayerData] Unknown error occurred.');
     }
 }

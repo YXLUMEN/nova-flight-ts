@@ -9,8 +9,7 @@ export interface Payload {
 
     /**
      * 估算数据包长度, 尽可能将复杂度控制为 O(1).
-     *
-     * @return uint 返回的长度**不包含**固定头部
+     * @return `uint` 返回的长度**不包含**固定头部
      * */
     estimateSize?(): number;
 

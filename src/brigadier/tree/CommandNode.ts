@@ -30,7 +30,7 @@ export abstract class CommandNode<S> {
         this.command = command;
     }
 
-    public getChildren() {
+    public iterChildren(): IteratorObject<CommandNode<S>> {
         return this.children.values();
     }
 
@@ -39,7 +39,7 @@ export abstract class CommandNode<S> {
     }
 
     public getChild(name: string) {
-        return this.children.get(name) ?? null;
+        return this.children.get(name);
     }
 
     public canUse(source: S): boolean {
@@ -58,7 +58,7 @@ export abstract class CommandNode<S> {
             if (node.getCommand() !== null) {
                 child.command = node.getCommand();
             }
-            for (const grandChild of node.getChildren()) {
+            for (const grandChild of node.iterChildren()) {
                 child.addChild(grandChild);
             }
             return;

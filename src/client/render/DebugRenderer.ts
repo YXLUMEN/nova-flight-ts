@@ -9,11 +9,10 @@ import {LivingEntity} from "../../entity/LivingEntity.ts";
 
 export class DebugRenderer {
     public render(ctx: CanvasRenderingContext2D, viewRect: ViewRect, flag: number, world: ClientWorld, alpha: number) {
-        const entities = concatIters<Iterable<Entity>>(world.getEntities().values(), world.getPlayers());
+        const entities = concatIters(world.getEntities().iter(), world.getPlayers());
 
         ctx.save();
         ctx.font = '14px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
-
         for (const entity of entities) {
             if (!entity.shouldRender(viewRect)) continue;
             const pos = entity.getLerpPos(alpha);

@@ -32,6 +32,10 @@ export class Result<T, E> {
         return Error.isError(err) ? err : new Error('Unknown error occur', {cause: err});
     }
 
+    public static wrapInput<T>(input: T | Error): Result<T, Error> {
+        return Error.isError(input) ? Result.err(input) : Result.ok(input);
+    }
+
     public isOk(): boolean {
         return this.inner.ok;
     }

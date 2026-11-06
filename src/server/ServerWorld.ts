@@ -70,7 +70,7 @@ export class ServerWorld extends World implements NbtSerializable {
 
         this.stage.tick(this);
 
-        for (const entity of this.entities.values()) {
+        for (const entity of this.entities.iter()) {
             if (entity.isRemoved()) continue;
             this.tickEntity(this.serverTickEntity, entity);
             if (this.over) break;
@@ -148,7 +148,7 @@ export class ServerWorld extends World implements NbtSerializable {
             return false;
         }
         if (entity.isRemoved()) {
-            console.warn(`Tried to add entity ${EntityType.getId(entity.getType())} but it was marked as removed already`);
+            Log.warn(`Tried to add entity ${EntityType.getId(entity.getType())} but it was marked as removed already`);
             return false;
         }
 
@@ -158,7 +158,7 @@ export class ServerWorld extends World implements NbtSerializable {
     public addPlayer(player: ServerPlayerEntity): void {
         const entity = this.getEntity(player.getUUID());
         if (entity) {
-            console.warn(`Force-added player with duplicate UUID ${player.getUUID()}`);
+            Log.warn(`Force-added player with duplicate UUID ${player.getUUID()}`);
             entity.discard();
             this.removePlayer(entity as ServerPlayerEntity);
         }
@@ -307,15 +307,16 @@ export class ServerWorld extends World implements NbtSerializable {
         root.setUint32Array('seed', this.seed.toWords());
 
         const entityList: NbtCompound[] = [];
-        this.entities.forEach(entity => {
-            if (!entity.shouldSave()) return;
+        for (const entity of this.entities.iter()) {
+            if (!entity.shouldSave()) continue;
 
             const type = entity.getType();
-            if (type === EntityTypes.PLAYER) return;
+            if (type === EntityTypes.PLAYER) continue;
+
             const typeId = EntityType.getId(type);
             if (!typeId) {
                 Log.warn(`EntityType ${type.toString()} maybe unregistered.`);
-                return;
+                continue;
             }
 
             try {
@@ -324,9 +325,9 @@ export class ServerWorld extends World implements NbtSerializable {
                 entity.writeNBT(nbt);
                 entityList.push(nbt);
             } catch (err) {
-                Log.error(`Error when write Entity NBT: \n${err}`);
+                Log.error(`Error when write Entity NBT:\n  ${err}`);
             }
-        });
+        }
         root.setCompoundArray('entities', entityList);
 
         this.stage.writeNBT(root);
@@ -357,7 +358,7 @@ export class ServerWorld extends World implements NbtSerializable {
             try {
                 entity.readNBT(nbt);
             } catch (err) {
-                Log.error(String(err));
+                Log.error(err);
                 continue;
             }
             this.spawnEntity(entity);

@@ -111,7 +111,7 @@ export class CommandDispatcher<S> {
         const futures: Promise<Suggestions>[] = new Array(parent.getOriginChildren().size).fill(null);
 
         let i = 0;
-        for (const node of parent.getChildren()) {
+        for (const node of parent.iterChildren()) {
             let future: Promise<Suggestions> = Suggestions.empty();
             try {
                 future = node.listSuggestions(
@@ -131,7 +131,7 @@ export class CommandDispatcher<S> {
         const result: string[] = [];
 
         const optional = node.getCommand() !== null;
-        for (const child of node.getChildren()) {
+        for (const child of node.iterChildren()) {
             const usage = this.getAllUsageInner(child, source, optional, false);
             if (usage !== null) {
                 result.push(usage);
@@ -152,7 +152,7 @@ export class CommandDispatcher<S> {
 
         if (deep) return self;
 
-        const children = node.getChildren()
+        const children = node.iterChildren()
             .filter(child => child.canUse(source))
             .toArray();
 

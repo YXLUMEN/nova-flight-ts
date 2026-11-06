@@ -6,6 +6,7 @@ import {sleep} from "../utils/util.ts";
 import {BinaryWriter} from "../serialization/BinaryWriter.ts";
 import {PacketTooLargeError} from "../type/errors.ts";
 import {RelayHandshake} from "./RelayHandshake.ts";
+import {Log} from "../worker/log.ts";
 
 export abstract class WSNetworkChannel implements Channel {
     public static readonly MAX_PACKET_SIZE = 6144;
@@ -73,10 +74,10 @@ export abstract class WSNetworkChannel implements Channel {
 
         this.ws.onmessage = this.handleMessage.bind(this);
         this.ws.onclose = event => {
-            console.log(`[${this.side}] Connection to ${this.address} closed because ${event.type}:${event.reason || 'unknown'}`);
+            Log.info(`[${this.side}] Connection to ${this.address} closed because ${event.type}:${event.reason || 'unknown'}`);
         }
         this.ws.onerror = event =>
-            console.error(`[${this.side}] Connection Error: ${event.type}:${event.target}`);
+            Log.error(`[${this.side}] Connection Error: ${event.type}:${event.target}`);
     }
 
     public disconnect(): void {

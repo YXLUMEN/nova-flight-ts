@@ -231,7 +231,7 @@ export class ClientCommandManager extends CommandManager implements EventListene
             await Suggestions.empty() :
             await this.dispatcher.getCompletionSuggestionsWithCursor(serverResults, cursor);
 
-        const suggestions = clientSuggestions.getList().concat(serverSuggestions.getList());
+        const suggestions = clientSuggestions.collect().concat(serverSuggestions.collect());
         this.suggestionCache.set(command, suggestions);
         this.parseCache.set(command, [clientResults, serverResults]);
 
@@ -409,7 +409,7 @@ export class ClientCommandManager extends CommandManager implements EventListene
                 return;
             }
 
-            const requiredArgs: string[] = node.getChildren()
+            const requiredArgs: string[] = node.iterChildren()
                 .filter(child => child.getType() === 2)
                 .map(arg => arg.getName())
                 .toArray();

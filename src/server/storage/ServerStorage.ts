@@ -43,7 +43,7 @@ export class ServerStorage {
             status: 'pending',
         } satisfies SaveMeta);
         request.onsuccess = () => resolve(Result.ok(undefined));
-        request.onerror = () => resolve(Result.err(this.mapErr(request.error)));
+        request.onerror = () => resolve(Result.err(Result.mapErr(request.error)));
 
         return promise;
     }
@@ -56,7 +56,7 @@ export class ServerStorage {
             const store = tx.objectStore('save_meta');
             const request = store.get(saveName);
             request.onsuccess = () => resolve(request.result);
-            request.onerror = () => resolve(this.mapErr(request.error));
+            request.onerror = () => resolve(Result.mapErr(request.error));
         });
 
         const meta = await existingMeta;
@@ -73,7 +73,7 @@ export class ServerStorage {
                 status: status,
             } satisfies SaveMeta);
             request.onsuccess = () => resolve();
-            request.onerror = () => resolve(this.mapErr(request.error));
+            request.onerror = () => resolve(Result.mapErr(request.error));
         });
 
         const metaError = await metaTask;
@@ -92,7 +92,7 @@ export class ServerStorage {
                 data
             } satisfies Save);
             request.onsuccess = () => resolve();
-            request.onerror = () => resolve(this.mapErr(request.error));
+            request.onerror = () => resolve(Result.mapErr(request.error));
         });
 
         const saveError = await saveTask;
@@ -112,7 +112,7 @@ export class ServerStorage {
             const store = tx.objectStore('save_meta');
             const request = store.get(saveName);
             request.onsuccess = () => resolve(request.result);
-            request.onerror = () => resolve(this.mapErr(request.error));
+            request.onerror = () => resolve(Result.mapErr(request.error));
         });
 
         const meta = await metaTask;
@@ -132,7 +132,7 @@ export class ServerStorage {
             const store = tx.objectStore('saves');
             const request = store.get(saveName);
             request.onsuccess = () => resolve(request.result);
-            request.onerror = () => resolve(this.mapErr(request.error));
+            request.onerror = () => resolve(Result.mapErr(request.error));
         });
 
         const save = await saveTask;
@@ -149,7 +149,7 @@ export class ServerStorage {
             const compound = NbtUnserialization.fromCompactBinary(data);
             return Result.ok(compound);
         } catch (err) {
-            return Result.err(this.mapErr(err));
+            return Result.err(Result.mapErr(err));
         }
     }
 
@@ -160,7 +160,7 @@ export class ServerStorage {
         const tx = db.transaction(['save_meta', 'saves', 'player_data'], 'readwrite');
 
         tx.oncomplete = () => resolve(Result.ok(undefined));
-        tx.onerror = () => resolve(Result.err(this.mapErr(tx.error)));
+        tx.onerror = () => resolve(Result.err(Result.mapErr(tx.error)));
 
         tx.objectStore('save_meta').delete(saveName);
         tx.objectStore('saves').delete(saveName);
@@ -208,10 +208,5 @@ export class ServerStorage {
         request.onerror = () => resolve();
 
         return promise;
-    }
-
-    private static mapErr(error: unknown) {
-        if (Error.isError(error)) return error;
-        return new Error(`[Storage] Unknown error occurred, cause by: ${error}`);
     }
 }

@@ -103,7 +103,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
 
     protected override onLargePacket(err: PacketTooLargeError) {
         if (isDev) throw err;
-        Log.error(`[Serve] ${err.message}`);
+        Log.error(`[Serve] ${err.name}:${err.message}`);
     }
 
     protected override handleMessage(event: MessageEvent): void {
@@ -118,7 +118,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
             return;
         }
         if (header !== PacketHeader.C2S) {
-            console.warn(`[Server] Unknown header: ${header}`);
+            Log.warn(`[Server] Receive unknown header "${header}"`);
             return;
         }
 
@@ -131,7 +131,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
         try {
             payload = codec.codec.decode(reader);
         } catch (err) {
-            console.error(`[Server] Fail to decode packet for "${sessionId}"`);
+            Log.error(`[Server] Fail to decode packet for "${sessionId}"`);
             return;
         }
         this.handler(sessionId, payload);

@@ -1,9 +1,11 @@
 import type {VisualEffect} from "./VisualEffect.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
+import type {ViewRect} from "../client/render/Camera.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {isClient} from "../configs/RuntimeConfig.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
+import {isRangeInView} from "../utils/render/render.ts";
 
 export class ArcEffect implements VisualEffect {
     public static readonly PACKET_CODEC: PacketCodec<ArcEffect> = PacketCodecs.of(
@@ -104,8 +106,8 @@ export class ArcEffect implements VisualEffect {
         ctx.restore();
     }
 
-    public shouldRender(): boolean {
-        return true;
+    public shouldRender(view: ViewRect): boolean {
+        return isRangeInView(this.startX, this.startY, 0, view) || isRangeInView(this.endX, this.endY, 0, view);
     }
 
     public isAlive(): boolean {

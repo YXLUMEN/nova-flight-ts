@@ -1,5 +1,7 @@
-import {StringRange} from "../context/StringRange.ts";
 import type {Suggestion} from "./Suggestion.ts";
+import {MAX_INT, MIN_INT} from "../../utils/math/math.ts";
+import {StringRange} from "../context/StringRange.ts";
+import {WrapperSet} from "../../utils/collection/WrapperSet.ts";
 
 export class Suggestions {
     private static readonly EMPTY = new Suggestions(StringRange.at(0), []);
@@ -17,18 +19,10 @@ export class Suggestions {
     }
 
     public static merge(command: string, input: Suggestions[]): Suggestions {
-        if (input.length === 0) {
-            return this.EMPTY;
-        }
-        if (input.length === 1) {
-            return input[0];
-        }
+        if (input.length === 0) return this.EMPTY;
+        if (input.length === 1) return input[0];
 
-        const texts = new Set<Suggestion>();
-        for (const suggestions of input) {
-            suggestions.getList().forEach(suggestion => texts.add(suggestion));
-        }
-
+        const texts = new WrapperSet<Suggestion>(input.values().flatMap(s => s.collect()));
         return this.create(command, texts);
     }
 
@@ -39,15 +33,16 @@ export class Suggestions {
             if (suggestions.size === 0) return this.EMPTY;
         }
 
-        let start = Number.MAX_SAFE_INTEGER;
-        let end = Number.MIN_SAFE_INTEGER;
+        let start = MAX_INT;
+        let end = MIN_INT;
         for (const suggestion of suggestions) {
-            start = Math.min(suggestion.getRange().getStart(), start);
-            end = Math.max(suggestion.getRange().getEnd(), end);
+            const range = suggestion.getRange();
+            start = Math.min(range.getStart(), start);
+            end = Math.max(range.getEnd(), end);
         }
 
         const range = new StringRange(start, end);
-        const texts = new Set<Suggestion>();
+        const texts = new WrapperSet<Suggestion>();
         for (const suggestion of suggestions) {
             texts.add(suggestion.expend(command, range));
         }
@@ -61,7 +56,7 @@ export class Suggestions {
         return this.range;
     }
 
-    public getList(): Suggestion[] {
+    public collect(): readonly Suggestion[] {
         return this.suggestions;
     }
 

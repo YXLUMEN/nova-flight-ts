@@ -65,7 +65,7 @@ export class WorldEntityRenderer {
     }
 
     public renderEntities(ctx: CanvasRenderingContext2D, viewRect: ViewRect, world: ClientWorld, alpha: number) {
-        for (const entity of world.getEntities().values()) {
+        for (const entity of world.getEntities().iter()) {
             if (!entity.shouldRender(viewRect)) continue;
 
             entity.renderer ??= EntityRenderers.getRenderer(entity);

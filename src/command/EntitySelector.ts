@@ -92,14 +92,10 @@ export class EntitySelector {
         }
 
         const limit = this.getAppendLimit();
-        const candidates: Entity[] = [];
-
-        for (const entity of source.server.world!.getEntities().values()) {
-            if (!filters.every(f => f(entity))) continue;
-            candidates.push(entity);
-            if (candidates.length >= limit) break;
-        }
-
+        const candidates: Entity[] = source.server.world!.getEntities().iter()
+            .filter(entity => filters.every(f => f(entity)))
+            .take(limit)
+            .toArray();
         return this.findEntities(source.position, candidates);
     }
 
@@ -129,21 +125,14 @@ export class EntitySelector {
 
         if (this.senderOnly) {
             const player = source.entity;
-            return player instanceof ServerPlayerEntity &&
-            filters.every(f => f(player)) ?
-                [player] : [];
+            return player instanceof ServerPlayerEntity && filters.every(f => f(player)) ? [player] : [];
         }
 
         const limit = this.getAppendLimit();
-        const results: ServerPlayerEntity[] = [];
-
-        for (const player of source.server.playerManager.getAllPlayers()) {
-            if (!filters.every(f => f(player))) continue;
-            results.push(player);
-            if (results.length >= limit) break;
-        }
-
-        return results;
+        return source.server.playerManager.getAllPlayers()
+            .filter(entity => filters.every(f => f(entity)))
+            .take(limit)
+            .toArray();
     }
 
     private getPositionFilters(pos: Vec2, box: AABB | null) {

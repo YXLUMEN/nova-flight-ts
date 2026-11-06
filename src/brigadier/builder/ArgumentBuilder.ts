@@ -40,7 +40,7 @@ export abstract class ArgumentBuilder<S, T extends ArgumentBuilder<S, T>> {
     }
 
     public getArguments() {
-        return this.arguments.getChildren();
+        return this.arguments.iterChildren();
     }
 
     public abstract build(): CommandNode<S>;

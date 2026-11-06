@@ -17,6 +17,7 @@ import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconne
 import {TickChangeS2CPacket} from "../../network/packet/s2c/TickChangeS2CPacket.ts";
 import {PlayerDataStorage} from "../storage/PlayerDataStorage.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
+import {PromisePool} from "../../utils/collection/PromisePool.ts";
 
 export class PlayerManager {
     private readonly server: NovaFlightServer;
@@ -87,7 +88,7 @@ export class PlayerManager {
 
         const err = result.unwrapErr();
         if (err instanceof NoResultsError) return null;
-        Log.error(err.message);
+        Log.error(err);
 
         return null;
     }
@@ -97,7 +98,7 @@ export class PlayerManager {
 
         const result = await this.playerIo.savePlayer(player);
         if (result.isErr()) {
-            Log.error(result.unwrapErr().message);
+            Log.error(result.unwrapErr());
         }
     }
 
@@ -164,16 +165,20 @@ export class PlayerManager {
     }
 
     public async saveAllPlayerData(): Promise<void> {
-        const promises = this.uuidToPlayer
-            .values()
-            .map(player => this.savePlayerData(player));
-
-        const results = await Promise.allSettled(promises);
-        let failed = 0;
-        for (const result of results) {
-            if (result.status !== 'fulfilled') failed++;
+        const pool = new PromisePool(Math.min(8, this.uuidToPlayer.size));
+        const job = (v: ServerPlayerEntity) => this.savePlayerData(v);
+        for (const player of this.uuidToPlayer.values()) {
+            pool.spawn(job, player);
         }
 
-        if (failed > 0) console.warn(`[Server] Error while saving players, failed ${failed}`);
+        const results = await pool.join();
+        const fail: unknown[] = [];
+        for (const result of results) {
+            if (result.status !== 'fulfilled') fail.push(result.reason);
+        }
+
+        if (fail.length === 0) return;
+        const reasons = fail.join('\n  ');
+        Log.warn(`[Server] Error while saving players, failed: ${reasons}`);
     }
 }

@@ -3,8 +3,9 @@ import type {Identifier} from "../registry/Identifier.ts";
 import type {SettingGuard} from "../client/settings/SettingGuard.ts";
 import {type DirEntry, exists, readDir, readTextFile} from "@tauri-apps/plugin-fs";
 import {warn} from "@tauri-apps/plugin-log";
-import {traverse_dir} from "../client/ipc/fs.ts";
 import {join, resolveResource} from "@tauri-apps/api/path";
+import {traverse_dir} from "../client/ipc/fs.ts";
+import {pruneSuffix} from "../utils/path.ts";
 import {appEvent} from "../event/EventBus.ts";
 import {PromisePool} from "../utils/collection/PromisePool.ts";
 import {Resources} from "./Resources.ts";
@@ -15,7 +16,7 @@ import {LangChange} from "../event/events/ui/LangChange.ts";
 
 export class LangResource implements ResourceModule, SettingGuard<string> {
     private readonly allLang: string[] = [];
-    private readonly data: Map<string, string> = new Map();
+    private data: Map<string, string> = new Map();
 
     private pending: boolean = false;
 
@@ -83,8 +84,7 @@ export class LangResource implements ResourceModule, SettingGuard<string> {
         }
 
         const results = await pool.join();
-        this.data.clear();
-
+        const map = new Map();
         for (const result of results) {
             if (result.status === 'rejected') {
                 void warn(`[Client] Error while load ${lang}: ${result.reason}`);
@@ -102,9 +102,10 @@ export class LangResource implements ResourceModule, SettingGuard<string> {
                     void warn(`[Client] Invalid value ${value} in ${lang}`);
                     continue;
                 }
-                this.data.set(key, value);
+                map.set(key, value);
             }
         }
+        this.data = map;
     }
 
     private async loadFile(root: string, file: DirEntry) {
@@ -117,9 +118,7 @@ export class LangResource implements ResourceModule, SettingGuard<string> {
         }
 
         const entries = Object.entries(json);
-        const i = file.name.lastIndexOf('.');
-        const name = i < 0 ? file.name : file.name.substring(0, i);
-
+        const name = pruneSuffix(file.name);
         for (const entry of entries) {
             entry[0] = `${name}.${entry[0]}`;
         }

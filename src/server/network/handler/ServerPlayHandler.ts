@@ -100,7 +100,7 @@ export class ServerPlayHandler extends ServerCommonHandler {
         this.send(PlayerProfilesS2CPacket.create(players));
 
         const entities = this.world.getEntities()
-            .values()
+            .iter()
             .filter(e => e !== this.player);
         ServerCommonHandler.buildBatch(entities, EntitySpawnS2CPacket.create, EntityBatchSpawnS2CPacket.new)
             .forEach(packet => this.send(packet));

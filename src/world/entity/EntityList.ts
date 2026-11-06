@@ -1,7 +1,6 @@
 import {Entity} from "../../entity/Entity.ts";
 import {MobEntity} from "../../entity/mob/MobEntity.ts";
 import type {Consumer} from "../../type/types.ts";
-import type {EntityType} from "../../entity/EntityType.ts";
 
 export class EntityList {
     private readonly entities = new Map<number, Entity>();
@@ -35,16 +34,8 @@ export class EntityList {
         }
     }
 
-    public values(): MapIterator<Entity> {
+    public iter(): IteratorObject<Entity> {
         return this.entities.values();
-    }
-
-    public* getTypes(type: EntityType<any>): Iterator<Entity> {
-        for (const entity of this.entities.values()) {
-            if (entity.getType() === type) {
-                yield entity;
-            }
-        }
     }
 
     public getMobs(): ReadonlySet<MobEntity> {

@@ -1,8 +1,7 @@
 import type {Constructor} from "../../type/types.ts";
 
 export class ClassToNum {
-    private static readonly MISSING = -1;
-    private readonly backingMap = new Map<Constructor<object>, number>();
+    private readonly backingMap: Map<Constructor<object>, number> = new Map();
 
     public get(clazz: Constructor<object>): number {
         let current: Constructor<object> | null = clazz;
@@ -13,7 +12,7 @@ export class ClassToNum {
             current = Object.getPrototypeOf(current);
         }
 
-        return ClassToNum.MISSING;
+        return -1;
     }
 
     public getNext(clazz: Constructor<object>): number {
@@ -22,7 +21,7 @@ export class ClassToNum {
 
     public put(clazz: Constructor<object>): number {
         const currentValue = this.get(clazz);
-        const nextValue = currentValue === ClassToNum.MISSING ? 0 : currentValue + 1;
+        const nextValue = currentValue === -1 ? 0 : currentValue + 1;
         this.backingMap.set(clazz, nextValue);
         return nextValue;
     }

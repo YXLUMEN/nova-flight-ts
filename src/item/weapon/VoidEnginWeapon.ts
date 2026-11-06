@@ -103,6 +103,13 @@ export class VoidEnginWeapon extends SpecialWeapon {
         return this.getActive(stack) ? this.getDuration(stack) : super.getMaxCooldown(stack);
     }
 
+    public override onEndFire(stack: ItemStack, world: World, attacker: Entity) {
+        super.onEndFire(stack, world, attacker);
+        if (attacker instanceof LivingEntity) {
+            this.exitVoid(stack, world, attacker);
+        }
+    }
+
     public getActive(stack: ItemStack): boolean {
         return stack.getOr(DataComponents.FIRING, true);
     }

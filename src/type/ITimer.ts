@@ -1,9 +1,9 @@
-import type {Supplier} from "./types.ts";
+import type {Consumer} from "./types.ts";
 
 export type TimerTask = {
     id: number;
     at: number;                 // 触发时间（世界时间，单位秒）
-    fn: Supplier<void>;
+    fn: Consumer<void>;
     repeat: boolean;
     interval: number | null;          // repeat 时必填
     canceled: boolean;
@@ -11,5 +11,5 @@ export type TimerTask = {
 
 export interface Schedule {
     id: number;
-    cancel: Supplier<void>;
+    cancel: Consumer<void>;
 }
