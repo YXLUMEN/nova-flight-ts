@@ -56,7 +56,7 @@ export class DamageCommand {
         const selector = CommandUtil.assertSelector(ctx, 'selector');
 
         const damage = CommandUtil.assert(ctx, 'amount', Number);
-        if (!Number.isFinite(damage)) throw new CommandError("Invalid amount");
+        if (!Number.isFinite(damage)) throw new IllegalArgumentError("Invalid amount");
 
         let count = 0;
         const entities = selector.getEntities(ctx.source);

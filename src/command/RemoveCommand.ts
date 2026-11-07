@@ -24,7 +24,6 @@ export class RemoveCommand {
 
                                     const selector = CommandUtil.assertSelector(ctx, 'target');
                                     const itemId = CommandUtil.assert<T, Identifier>(ctx, 'item');
-
                                     const item = Registries.ITEM.getById(itemId);
                                     if (!item) {
                                         throw new CommandError(`\x1b[33mItem was not found with ID: "${itemId}"`);

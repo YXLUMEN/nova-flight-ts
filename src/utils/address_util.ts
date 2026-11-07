@@ -10,9 +10,10 @@ export function validateServerAddress(addr: string): boolean {
     }
 
     if (host === "localhost") return true;
+    return validateIpv4(host);
+}
 
-    const ipv4Regex =
-        /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/;
-
-    return ipv4Regex.test(host);
+export function validateIpv4(ip: string): boolean {
+    const ipv4Regex = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/;
+    return ipv4Regex.test(ip);
 }

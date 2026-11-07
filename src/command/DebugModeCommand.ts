@@ -14,11 +14,7 @@ export class DebugModeCommand {
                 .then(
                     argument<T, boolean>('bool', BoolArgumentType.bool())
                         .executes(ctx => {
-                            const bool = CommandUtil.assert(ctx, 'bool');
-                            if (typeof bool !== 'boolean') {
-                                throw new IllegalArgumentError('Must provide a boolean');
-                            }
-
+                            const bool = CommandUtil.assert(ctx, 'bool', Boolean);
                             this.setMode(ctx.source, bool);
                         })
                 )

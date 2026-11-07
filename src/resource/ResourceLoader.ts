@@ -31,6 +31,7 @@ export class ResourceLoader {
         };
 
         await ResourceManager.loadAll(manager, onPgs, 50);
+        await sleep(200);
         loadScreen.hideSubBar();
         this.loading = false;
     }

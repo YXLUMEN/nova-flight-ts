@@ -10,6 +10,7 @@ import {ClientTechManager} from "./tech/ClientTechManager.ts";
 import {ResourceLoader} from "../resource/ResourceLoader.ts";
 import {RenderLoader} from "./render/RenderLoader.ts";
 import {ClientRecordRegister} from "./data/ClientRecordRegister.ts";
+import {error} from "@tauri-apps/plugin-log";
 
 export class ClientInit {
     public async initResources(manager: RegistryManager, record: ClientRecordManager, window: ClientWindow): Promise<void> {
@@ -54,7 +55,7 @@ export class ClientInit {
             loadingScreen.setProgress(0, 'Check update');
             await sleep(200);
 
-            const update = await check({timeout: 5000});
+            const update = await check({timeout: 6000});
             if (!update) return;
 
             if (!await confirm(`当前游戏版本为 "${update.currentVersion}" 存在更新版本 "${update.version}"`, {
@@ -69,11 +70,11 @@ export class ClientInit {
                 switch (event.event) {
                     case 'Started':
                         contentLength = event.data.contentLength ?? 0;
-                        loadingScreen.setProgress(0, `开始下载, 总共: ${contentLength} bytes`);
+                        loadingScreen.setProgress(0, '开始下载');
                         break;
                     case 'Progress':
                         downloaded += event.data.chunkLength;
-                        loadingScreen.setProgress(downloaded / contentLength, `正在下载...`);
+                        loadingScreen.setProgress(downloaded / contentLength, '正在下载...');
                         break;
                     case 'Finished':
                         loadingScreen.setProgress(1, '下载完成, 程序即将重启');
@@ -81,9 +82,9 @@ export class ClientInit {
                         break;
                 }
             });
-        } catch (error) {
-            console.error(error);
+        } catch (err) {
             loadingScreen.setProgress(0, '检查更新失败');
+            await error(String(err));
         }
         await sleep(500);
     }

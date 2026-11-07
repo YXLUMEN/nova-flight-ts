@@ -26,10 +26,6 @@ export class Cannon40 extends BaseWeapon {
         }
     }
 
-    public override getMaxSpread(): number {
-        return 2;
-    }
-
     public override getUiColor(): string {
         return '#fff';
     }

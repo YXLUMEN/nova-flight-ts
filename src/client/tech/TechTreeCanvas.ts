@@ -252,10 +252,7 @@ export class TechTreeCanvas {
         div.className = `node ${this.state.computeStatus(tech)}`;
         div.style.left = `${tech.x}px`;
         div.style.top = `${tech.y}px`;
-
-        const name = tech.name.toString();
-        div.textContent = name;
-        div.title = name;
+        div.textContent = tech.name.toString();
 
         if (tech.branchGroup) {
             div.dataset.branch = tech.branchGroup;

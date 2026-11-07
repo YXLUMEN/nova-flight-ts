@@ -1,9 +1,9 @@
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
+import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
 import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
-import {IllegalArgumentError} from "../type/errors.ts";
+import {CommandUtil} from "./CommandUtil.ts";
 
 export class StageCommand {
     public static registry<T extends ServerCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -12,9 +12,7 @@ export class StageCommand {
                 .then(
                     literal<T>('get')
                         .executes(ctx => {
-                            const world = ctx.source.getWorld();
-                            if (!world) throw new Error('World not initialized');
-
+                            const world = CommandUtil.assertWorld(ctx);
                             const stage = (world as ServerWorld).stage.getCurrentName();
                             ctx.source.outPut.sendMessage(`Current game stage ${stage ?? 'no stage'}`);
                         })
@@ -25,13 +23,8 @@ export class StageCommand {
                         .then(
                             argument<T, string>('name', NormalStringArgumentType.normalString())
                                 .executes(ctx => {
-                                    const world = ctx.source.getWorld() as ServerWorld;
-                                    if (!world) throw new Error('World not initialized');
-
-                                    const arg = ctx.args.get('name');
-                                    if (!arg) throw new IllegalArgumentError('<name> is require');
-
-                                    const name = arg.result as string;
+                                    const world = CommandUtil.assertWorld(ctx) as ServerWorld;
+                                    const name = CommandUtil.assert(ctx, 'name', String);
                                     const stage = world.stage;
 
                                     if (stage.trySetPhase(name)) {
@@ -48,9 +41,8 @@ export class StageCommand {
                 .then(
                     literal<T>('next')
                         .executes(ctx => {
-                            const world = ctx.source.getWorld();
-                            if (!world) throw new Error('World not initialized');
-                            (world as ServerWorld).stage.nextPhase();
+                            const world = CommandUtil.assertWorld(ctx) as ServerWorld;
+                            world.stage.nextPhase();
                         })
                         .requires(source => source.hasPermissionLevel(6))
                 )

@@ -42,7 +42,7 @@ export abstract class BaseWeapon extends Weapon {
                 return;
             }
             manager.set(this, 0);
-            stack.set(DataComponents.RELOADING, false);
+            stack.remove(DataComponents.RELOADING);
         }
 
         stack.setDurability(currentAmmo - this.getAmmoConsume(stack));
@@ -66,7 +66,7 @@ export abstract class BaseWeapon extends Weapon {
     }
 
     protected restoreAmmo(stack: ItemStack, player: PlayerEntity) {
-        stack.set(DataComponents.RELOADING, false);
+        stack.remove(DataComponents.RELOADING);
         player.cooldownManager.set(this, 0);
         stack.setDamage(0);
     }
@@ -76,7 +76,7 @@ export abstract class BaseWeapon extends Weapon {
 
         if (!selected) {
             manager.set(this, 0);
-            stack.set(DataComponents.RELOADING, false);
+            stack.remove(DataComponents.RELOADING);
             return;
         }
 

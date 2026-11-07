@@ -130,7 +130,7 @@ export class Stage implements NbtSerializable {
     }
 
     public readNBT(nbt: NbtCompound) {
-        const index = clamp(nbt.getInt8('stage_index'), 0, this.phases.length);
+        const index = clamp(nbt.getInt8('stage_index'), 0, this.phases.length - 1);
         this.loadPhase(index);
     }
 
@@ -140,8 +140,9 @@ export class Stage implements NbtSerializable {
 
         this.rules.length = 0;
         for (const r of this.phases[index].rules) {
-            this.rules.push(new SpawnRule(r));
+            const s = new SpawnRule(r);
+            s.reset();
+            this.rules.push(s);
         }
-        for (const r of this.rules) r.reset();
     }
 }

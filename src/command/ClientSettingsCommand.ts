@@ -4,6 +4,7 @@ import {error} from "@tauri-apps/plugin-log";
 import {stopServer} from "../client/ipc/integrated_server.ts";
 import {isOpened, openOnLan} from "../client/ipc/lan_discovery.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
+import {validateIpv4} from "../utils/address_util.ts";
 import {RuntimeConfig} from "../configs/RuntimeConfig.ts";
 import {CommandError, IllegalArgumentError} from "../type/errors.ts";
 import {IntArgumentType} from "./argument/IntArgumentType.ts";
@@ -12,6 +13,7 @@ import {ServerStorage} from "../server/storage/ServerStorage.ts";
 import {NovaFlightClient} from "../client/NovaFlightClient.ts";
 import {BoolArgumentType} from "./argument/BoolArgumentType.ts";
 import {Settings} from "../client/settings/Settings.ts";
+import {CommandUtil} from "./CommandUtil.ts";
 
 export class ClientSettingsCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -24,15 +26,9 @@ export class ClientSettingsCommand {
                                 .then(
                                     argument<T, string>('address', NormalStringArgumentType.normalString())
                                         .executes(ctx => {
-                                            const arg = ctx.args.get('address');
-                                            if (!arg) throw new CommandError('Url cannot be empty');
-
-                                            const ip = arg.result;
-                                            if (typeof ip !== 'string') {
-                                                throw new IllegalArgumentError(`\x1b[31mInvalid argument: ${ip}, Address must be a string`);
-                                            }
-                                            if (ip.length < 9) {
-                                                throw new IllegalArgumentError(`\x1b[31mAddress length must be at least 9 characters, but current is ${ip.length}`);
+                                            const ip = CommandUtil.assert(ctx, 'address', String);
+                                            if (!validateIpv4(ip)) {
+                                                throw new IllegalArgumentError('\x1b[31mInvalidate IPv4');
                                             }
                                             RuntimeConfig.serverAddr = ip;
                                             ctx.source.addMessage(`Set address to: \x1b[32m"${ip}"`);
@@ -44,10 +40,7 @@ export class ClientSettingsCommand {
                                 .then(
                                     argument<T, number>('port', IntArgumentType.int())
                                         .executes(ctx => {
-                                            const arg = ctx.args.get('port');
-                                            if (!arg) throw new CommandError('\x1b[31m<port> is required');
-
-                                            let port = Number(arg.result);
+                                            const port = CommandUtil.assert(ctx, 'port', Number);
                                             if (!Number.isSafeInteger(port)) {
                                                 throw new IllegalArgumentError(`\x1b[31mInvalid argument: "${port}", port must be an integer`);
                                             }
@@ -64,15 +57,8 @@ export class ClientSettingsCommand {
                                 .then(
                                     argument<T, boolean>('open', BoolArgumentType.bool())
                                         .executes(async (ctx) => {
-                                            const arg = ctx.args.get('open');
-                                            if (!arg) throw new CommandError('\x1b[31m<open> is required');
-
-                                            const bl: unknown = arg.result;
-                                            if (typeof bl !== 'boolean') {
-                                                throw new IllegalArgumentError(`\x1b[31mUnexpected value: ${bl} \x1b[0m`);
-                                            }
-
-                                            const success: boolean = await openOnLan(bl);
+                                            const bl = CommandUtil.assert(ctx, 'open', Boolean);
+                                            const success = await openOnLan(bl);
                                             if (!success) {
                                                 throw new CommandError(bl ? '\x1b[31mCannot open on LAN' : '\x1b[31mCannot close port');
                                             }
@@ -89,10 +75,7 @@ export class ClientSettingsCommand {
                                 .then(
                                     argument<T, string>('playerName', NormalStringArgumentType.normalString())
                                         .executes(ctx => {
-                                            const arg = ctx.args.get('playerName');
-                                            if (!arg) return;
-
-                                            const playerName = String(arg.result);
+                                            const playerName = CommandUtil.assert(ctx, 'playerName', String);
                                             if (playerName.length < 1) {
                                                 throw new IllegalArgumentError('\x1b[31mPlayer name cannot be empty');
                                             }
@@ -110,13 +93,10 @@ export class ClientSettingsCommand {
                                 .then(
                                     argument<T, number>('int', IntArgumentType.int())
                                         .executes(ctx => {
-                                            const arg = ctx.args.get('int');
-                                            if (!arg) throw new CommandError('\x1b[31m<int> is required');
-
-                                            const fps = Number(arg.result);
+                                            const fps = CommandUtil.assert(ctx, 'int', Number);
                                             const result = Settings.FPS.set(fps);
                                             if (result.isErr()) {
-                                                ctx.source.addMessage(`\x1b[31mInvalid argument: "${fps}", value must be an integer and between 2-240`);
+                                                ctx.source.addMessage(`\x1b[31mInvalid argument: "${fps}", value must be an integer and between 1-240`);
                                                 return;
                                             }
 

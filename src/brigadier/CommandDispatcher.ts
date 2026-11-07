@@ -47,7 +47,7 @@ export class CommandDispatcher<S> {
                 if (err instanceof CommandError) {
                     errors.set(child, err);
                 } else if (Error.isError(err)) {
-                    const commandError = new CommandError(`${err.name}: ${err.message}`);
+                    const commandError = new CommandError(`\x1b[31m${err.name}: ${err.message}`, {cause: err});
                     errors.set(child, commandError);
                 } else {
                     const error = new CommandError(String(err));

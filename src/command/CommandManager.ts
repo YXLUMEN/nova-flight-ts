@@ -3,6 +3,7 @@ import type {ParseResults} from "../brigadier/ParseResults.ts";
 import type {ServerCommandSource} from "../server/command/ServerCommandSource.ts";
 import type {CommandSource} from "./CommandSource.ts";
 
+// noinspection ExceptionCaughtLocallyJS
 export abstract class CommandManager {
     protected readonly dispatcher: CommandDispatcher<ServerCommandSource> = new CommandDispatcher();
 
@@ -18,18 +19,16 @@ export abstract class CommandManager {
             const context = contextBuilder.build(command);
             const lastNode = context.nodes.at(-1);
             if (!lastNode) {
-                // noinspection ExceptionCaughtLocallyJS
                 throw Error(`\x1b[31mNo such command: "${command}"`);
             }
             const node = lastNode.node;
             const cmd = node.getCommand();
             if (!cmd) {
-                // noinspection ExceptionCaughtLocallyJS
+                if (parseResults.exceptions.size > 0) throw null;
                 throw Error(`\x1b[31mCommand "${node.getName()}" is not executable, with command: "${command}"`);
             }
 
             if (parseResults.reader.canRead()) {
-                // noinspection ExceptionCaughtLocallyJS
                 throw Error(this.unconsumed(parseResults));
             }
             cmd(context);

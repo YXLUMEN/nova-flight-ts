@@ -1,10 +1,13 @@
 export class IllegalArgumentError extends Error {
+    public override readonly name = 'IllegalArgument';
 }
 
 export class IllegalStateError extends Error {
+    public override readonly name = 'IllegalState';
 }
 
 export class CommandError extends Error {
+    public override readonly name = 'CommandError';
 }
 
 export class PacketTooLargeError extends RangeError {

@@ -27,6 +27,7 @@
     overflow-y: auto;
     overflow-wrap: break-word;
     z-index: 100;
+    user-select: text;
 }
 
 .command-panel.hidden {

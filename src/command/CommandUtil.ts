@@ -1,4 +1,3 @@
-import type {Identifier} from "../registry/Identifier.ts";
 import type {CommandSource} from "./CommandSource.ts";
 import type {SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
 import type {Consumer, Predicate, Return} from "../type/types.ts";
@@ -7,9 +6,10 @@ import type {SuggestionProvider} from "../brigadier/suggestion/SuggestionProvide
 import type {CommandContext} from "../brigadier/context/CommandContext.ts";
 import type {Registry} from "../registry/Registry.ts";
 import {commonPrefix} from "../utils/Strings.ts";
+import {Identifier} from "../registry/Identifier.ts";
 import {RelativePosition} from "../utils/math/RelativePosition.ts";
 import {StringReader} from "../brigadier/StringReader.ts";
-import {CommandError} from "../type/errors.ts";
+import {CommandError, IllegalArgumentError} from "../type/errors.ts";
 import {EntitySelector} from "./EntitySelector.ts";
 
 export class CommandUtil {
@@ -175,7 +175,19 @@ export class CommandUtil {
 
     public static assertWorld<T extends CommandSource>(ctx: CommandContext<T>) {
         const world = ctx.source.getWorld();
-        if (!world) throw new CommandError("No world was found.");
+        if (!world) throw new CommandError('No world was found.');
         return world;
+    }
+
+    public static assertRegistry<T extends CommandSource, U>(
+        ctx: CommandContext<T>,
+        arg: string,
+        register: Registry<U>,
+    ) {
+        const id = this.assert(ctx, arg);
+        if (id instanceof Identifier) {
+            return register.getById(id);
+        }
+        throw new IllegalArgumentError('Registry need an Identifier', {cause: id});
     }
 }

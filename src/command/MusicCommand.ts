@@ -55,7 +55,7 @@ export class MusicCommand {
                                         let duration = AudioManager.getDuration();
                                         if (!Number.isFinite(duration)) duration = 0;
 
-                                        builder.suggest(duration.toString());
+                                        builder.suggest(String(duration));
                                         return builder.buildPromise();
                                     }
                                 })

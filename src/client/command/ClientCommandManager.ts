@@ -1,20 +1,21 @@
+import type {ClientCommandSource} from "./ClientCommandSource.ts";
+import type {CommandSource} from "../../command/CommandSource.ts";
+import type {ServerCommandSource} from "../../server/command/ServerCommandSource.ts";
+import type {Suggestion} from "../../brigadier/suggestion/Suggestion.ts";
+import type {ParseResults} from "../../brigadier/ParseResults.ts";
+import type {Consumer} from "../../type/types.ts";
+import {debounce} from "../../utils/util.ts";
 import {CommandManager} from "../../command/CommandManager.ts";
 import {MusicCommand} from "../../command/MusicCommand.ts";
 import {DebugModeCommand} from "../../command/DebugModeCommand.ts";
-import type {ClientCommandSource} from "./ClientCommandSource.ts";
 import {ClientSettingsCommand} from "../../command/ClientSettingsCommand.ts";
 import {CommandBarCommand} from "../../command/CommandBarCommand.ts";
 import {CommandDispatcher} from "../../brigadier/CommandDispatcher.ts";
-import type {CommandSource} from "../../command/CommandSource.ts";
 import {KillCommand} from "../../command/KillCommand.ts";
-import type {ServerCommandSource} from "../../server/command/ServerCommandSource.ts";
 import {WorldDifficultCommand} from "../../command/WorldDifficultCommand.ts";
-import type {ParseResults} from "../../brigadier/ParseResults.ts";
 import {StatusEffectCommand} from "../../command/StatusEffectCommand.ts";
 import {ClientSuggestionPopup} from "./ClientSuggestionPopup.ts";
-import {debounce} from "../../utils/util.ts";
 import {ClientCommandPanel} from "./ClientCommandPanel.ts";
-import type {Suggestion} from "../../brigadier/suggestion/Suggestion.ts";
 import {MemoryLRU} from "../../utils/collection/MemoryLRU.ts";
 import {StringReader} from "../../brigadier/StringReader.ts";
 import {SummonEntityCommand} from "../../command/SummonEntityCommand.ts";
@@ -30,7 +31,6 @@ import {DamageCommand} from "../../command/DamageCommand.ts";
 import {SoundCommand} from "../../command/SoundCommand.ts";
 import {TickCommand} from "../../command/TickCommand.ts";
 import {RemoveCommand} from "../../command/RemoveCommand.ts";
-import type {Consumer} from "../../type/types.ts";
 import {CommandBarProxy} from "../page/compound/CommandBarProxy.ts";
 import {ParticleCommand} from "../../command/ParticleCommand.ts";
 import {TechCommand} from "../../command/TechCommand.ts";
@@ -307,6 +307,20 @@ export class ClientCommandManager extends CommandManager implements EventListene
             id: ClientCommandManager.COMMAND_HISTORY_ID,
             commands: this.usedCommands,
         });
+    }
+
+    public clearHistory() {
+        this.usedCommands.length = 0;
+        this.persistentStorage();
+    }
+
+    public async dumpHistory() {
+        const result = await ClientStorage.db.get<any>(
+            'command_history', ClientCommandManager.COMMAND_HISTORY_ID);
+        return result.map(v => {
+            const cmd = v.commands;
+            return Array.isArray(cmd) ? cmd.join('\n') : '';
+        })
     }
 
     /**

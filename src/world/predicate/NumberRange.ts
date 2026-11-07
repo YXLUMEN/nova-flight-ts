@@ -12,9 +12,7 @@ export class NumberRange {
         converter: (s: string) => number,
         mapper: (n: number) => number = n => n
     ): NumRange {
-        if (!reader.canRead()) {
-            throw new Error("Empty range");
-        }
+        if (!reader.canRead()) throw new RangeError("Empty range");
 
         const startCursor = reader.getCursor();
 
@@ -45,7 +43,7 @@ export class NumberRange {
 
             if (first === null && second === null) {
                 // noinspection ExceptionCaughtLocallyJS
-                throw new Error("Empty range");
+                throw new RangeError("Empty range");
             }
 
             return [first, second];

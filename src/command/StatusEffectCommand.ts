@@ -54,15 +54,8 @@ export class StatusEffectCommand {
     }
 
     private static applyEffect<T extends ServerCommandSource>(ctx: CommandContext<T>) {
-        const effectIdResult = ctx.args.get('effect_id');
-        if (!effectIdResult) throw new CommandError("\x1b[33m<effect_id> is required");
-
-        const selectorResult = ctx.args.get('selector');
-        if (!selectorResult) throw new CommandError("\x1b[33m<selector> is required");
-        const selector = selectorResult.result;
-        if (!(selector instanceof EntitySelector)) {
-            throw new CommandError('');
-        }
+        const effectId: Identifier = CommandUtil.assert(ctx, 'effect_id');
+        const selector = CommandUtil.assertSelector(ctx, 'selector');
 
         const durationResult = ctx.args.get('duration');
         const amplifierResult = ctx.args.get('amplifier');
@@ -77,9 +70,9 @@ export class StatusEffectCommand {
             throw new IllegalArgumentError("\x1b[31mExpected a <amplifier> must in [0,255]");
         }
 
-        const effect = Registries.STATUS_EFFECT.getEntryById(effectIdResult.result);
+        const effect = Registries.STATUS_EFFECT.getEntryById(effectId);
         if (!effect) {
-            throw new CommandError(`\x1b[33mEffect not found with id ${effectIdResult.result}`);
+            throw new CommandError(`\x1b[33mEffect not found with id ${effectId}`);
         }
 
         const entities = selector.getEntities(ctx.source);
@@ -91,7 +84,7 @@ export class StatusEffectCommand {
             const target = entities[0];
             if (target instanceof LivingEntity) {
                 target.addStatusEffect(new StatusEffectInstance(effect, duration, amplifier), null);
-                ctx.source.outPut.sendMessage(`Give effect ${effectIdResult.result} to \x1b[32m${target.getUUID()}`);
+                ctx.source.outPut.sendMessage(`Give effect ${effectId} to \x1b[32m${target.getUUID()}`);
             }
             return;
         }
@@ -101,7 +94,7 @@ export class StatusEffectCommand {
                 entity.addStatusEffect(new StatusEffectInstance(effect, duration, amplifier), null);
             }
         }
-        ctx.source.outPut.sendMessage(`Give effect ${effectIdResult.result} for ${entities.length} entities`);
+        ctx.source.outPut.sendMessage(`Give effect ${effectId} for ${entities.length} entities`);
     }
 
     private static removeStatus<T extends ServerCommandSource>(ctx: CommandContext<T>) {

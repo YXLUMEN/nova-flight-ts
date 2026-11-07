@@ -60,9 +60,9 @@ export class SummonEntityCommand {
         const nbtArg = ctx.args.get('nbt');
         const nbt: NbtCompound | undefined = nbtArg?.result;
 
-        const countArg = ctx.args.get('count');
-        if (countArg && countArg.result > 1) {
-            this.summonBatch(ctx, countArg.result, type, nbt);
+        const count = ctx.args.get('count')?.result;
+        if (typeof count === 'number' && count > 1) {
+            this.summonBatch(ctx, count, type, nbt);
             return;
         }
 
