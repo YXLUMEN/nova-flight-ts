@@ -19,7 +19,7 @@ export class KineticArtillery extends BaseWeapon {
             }
         }
 
-        if (!holder.isPlayer() || world.isClient) return;
+        if (!holder.isPlayer()) return;
         if (stack.getOr(DataComponents.RELOADING, false)) {
             this.reloadAction(holder, stack, selected);
         }

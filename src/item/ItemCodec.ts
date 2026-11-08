@@ -2,6 +2,8 @@ import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import type {BinaryWriter} from "../serialization/BinaryWriter.ts";
 import type {BinaryReader} from "../serialization/BinaryReader.ts";
 import type {Codec} from "../serialization/Codec.ts";
+import type {Item} from "./Item.ts";
+import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {Codecs} from "../serialization/Codecs.ts";
 import {ComponentChange, type ComponentChanges} from "../component/ComponentChanges.ts";
@@ -9,8 +11,6 @@ import {Optional} from "../utils/Optional.ts";
 import {PatchComponentMap} from "../component/PatchComponentMap.ts";
 import {Registries} from "../registry/Registries.ts";
 import {ItemStack} from "./ItemStack.ts";
-import type {Item} from "./Item.ts";
-import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 
 export class ItemCodec {
     public static readonly ITEM_VALUE_PACKET_CODEC = PacketCodecs.registryValue(Registries.ITEM);

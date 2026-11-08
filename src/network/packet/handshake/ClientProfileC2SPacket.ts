@@ -1,9 +1,9 @@
 import type {Payload} from "../../Payload.ts";
-import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {UUID} from "../../../type/types.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
-import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {ServerHandshakeHandler} from "../../../server/network/handler/ServerHandshakeHandler.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 
 export class ClientProfileC2SPacket implements Payload {
     public static readonly ID: PayloadType<ClientProfileC2SPacket> = payloadType('player_attempt_login');

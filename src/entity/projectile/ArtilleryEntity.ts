@@ -1,11 +1,11 @@
-import {FastBulletEntity} from "./FastBulletEntity.ts";
-import {type Entity} from "../Entity.ts";
+import type {Entity} from "../Entity.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import type {EntityHitResult} from "../../world/collision/EntityHitResult.ts";
 import type {BlockHitResult} from "../../world/collision/BlockHitResult.ts";
+import {isClient} from "../../configs/RuntimeConfig.ts";
+import {FastBulletEntity} from "./FastBulletEntity.ts";
 import {BlockChangeS2CPacket} from "../../network/packet/s2c/BlockChangeS2CPacket.ts";
 import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
-import {isClient} from "../../configs/RuntimeConfig.ts";
 import {RadialRing} from "../../effect/RadialRing.ts";
 
 export class ArtilleryEntity extends FastBulletEntity {

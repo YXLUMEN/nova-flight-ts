@@ -6,18 +6,10 @@ import {Vec2} from "../math/Vec2.ts";
 import {TeleportEffect, TeleportPhase} from "../../effect/TeleportEffect.ts";
 import {ParticleEffects} from "../../effect/particle/ParticleEffects.ts";
 
-export const TELEPORT_COLOR: HexColor = '#8a6dff';
-/** 小于该距离平方的位移不视为传送（避免原地同步也触发特效）。 */
-export const TELEPORT_MIN_DISTANCE_SQ = 4;
 
+export const TELEPORT_MIN_DISTANCE_SQ = 4;
 const PARTICLE_COUNT = 18;
 
-/**
- * 在传送起点与终点生成传送特效。
- *
- * 客户端直接加入渲染队列；服务端通过 {@link ServerWorld.spawnVisual}
- * 和预制粒子包广播给所有客户端。
- */
 export function spawnTeleportFx(
     world: World,
     from: Vec2,

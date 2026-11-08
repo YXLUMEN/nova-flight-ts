@@ -6,7 +6,7 @@ export function stringHashCode(str: string): number {
     for (let i = 0; i < str.length; i++) {
         const char = str.charCodeAt(i);
         hash = ((hash << 5) - hash) + char; // hash * 31 + char
-        hash |= 0; // 截断
+        hash |= 0;
     }
     return hash;
 }

@@ -1,6 +1,6 @@
 import type {RawTech} from "../../type/ITech.ts";
 import type {RecordManager} from "../../database/data/RecordManager.ts";
-import {isNonEmptyString} from "../../utils/util.ts";
+import {isNonEmptyString} from "../../utils/Strings.ts";
 import {TechBuilder} from "./TechBuilder.ts";
 import {RecordTypes} from "../../database/data/RecordTypes.ts";
 

@@ -26,7 +26,12 @@ export class Options {
 
     public save(): Promise<void> {
         clearTimeout(this.timer);
+        this.timer = undefined;
         return this.storage.save(this.toJson());
+    }
+
+    public flush() {
+        return this.timer !== undefined ? this.save() : Promise.resolve();
     }
 
     public async load(): Promise<void> {

@@ -48,6 +48,13 @@ export class Settings {
         SettingPredicates.isBool,
     );
 
+    public static readonly TIP_INTERVAL = this.item(
+        'tip_interval',
+        'settings.tip.intervalms',
+        8000,
+        SettingPredicates.clampInt(10,120_000)
+    );
+
     // public static readonly AUTO_SAVE = this.item(
     //     'auto_save',
     //     'settings.world.auto_save',

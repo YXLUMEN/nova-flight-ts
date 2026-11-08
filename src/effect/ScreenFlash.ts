@@ -24,7 +24,6 @@ export class ScreenFlash implements VisualEffect {
         }
     );
 
-    private alive = true;
     private readonly w: number;
     private readonly h: number;
     private readonly life: number;
@@ -52,7 +51,6 @@ export class ScreenFlash implements VisualEffect {
 
     public tick(dt: number) {
         this.t += dt;
-        if (this.t >= this.life) this.alive = false;
     }
 
     public render(ctx: CanvasRenderingContext2D) {
@@ -68,10 +66,10 @@ export class ScreenFlash implements VisualEffect {
     }
 
     public isAlive(): boolean {
-        return this.alive;
+        return this.t >= this.life;
     }
 
     public kill() {
-        this.alive = false;
+        this.t = this.life;
     }
 }

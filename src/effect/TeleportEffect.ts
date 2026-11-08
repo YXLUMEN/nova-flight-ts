@@ -68,8 +68,7 @@ export class TeleportEffect implements VisualEffect {
     }
 
     public tick(): void {
-        this.prevAge = this.age;
-        this.age++;
+        this.prevAge = this.age++;
         for (const ring of this.rings) ring.tick();
     }
 

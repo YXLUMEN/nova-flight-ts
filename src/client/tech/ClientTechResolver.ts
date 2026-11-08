@@ -1,7 +1,7 @@
 import type {RawTech} from "../../type/ITech.ts";
 import type {RecordManager} from "../../database/data/RecordManager.ts";
 import type {TechBuilder} from "../../world/tech/TechBuilder.ts";
-import {isNonEmptyString} from "../../utils/util.ts";
+import {isNonEmptyString} from "../../utils/Strings.ts";
 import {encodeColorHex} from "../../utils/net_util.ts";
 import {assert} from "../../utils/dom_util.ts";
 import {TechResolver} from "../../world/tech/TechResolver.ts";

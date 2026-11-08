@@ -2,10 +2,11 @@ import type {VisualEffect} from "./VisualEffect.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import type {ViewRect} from "../client/render/Camera.ts";
-import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
-import {isClient} from "../configs/RuntimeConfig.ts";
-import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 import {isRangeInView} from "../utils/render/render.ts";
+import {lerp} from "../utils/math/math.ts";
+import {isClient} from "../configs/RuntimeConfig.ts";
+import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
+import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 
 export class ArcEffect implements VisualEffect {
     public static readonly PACKET_CODEC: PacketCodec<ArcEffect> = PacketCodecs.of(
@@ -43,6 +44,7 @@ export class ArcEffect implements VisualEffect {
     private readonly endY: number;
 
     private readonly life: number;
+    private prevAge: number = 0;
     private age: number = 0;
 
     private readonly arcCount: number;
@@ -66,7 +68,7 @@ export class ArcEffect implements VisualEffect {
         this.endX = tx;
         this.endY = ty;
 
-        this.life = life;
+        this.life = life || 1;
         this.width = width;
         this.color = color;
         this.arcCount = arcCount;
@@ -81,17 +83,18 @@ export class ArcEffect implements VisualEffect {
     }
 
     public tick() {
-        this.age++;
+        this.prevAge = this.age++;
     }
 
-    public render(ctx: CanvasRenderingContext2D) {
+    public render(ctx: CanvasRenderingContext2D, tickDelta: number) {
         ctx.save();
         if (this.blur) {
             ctx.shadowBlur = 10;
             ctx.shadowColor = this.color;
         }
 
-        ctx.globalAlpha = 1.0 - (this.age / this.life || 1);
+        const lerpT = lerp(tickDelta, this.prevAge, this.age);
+        ctx.globalAlpha = 1.0 - (lerpT / this.life);
         ctx.strokeStyle = this.color;
         ctx.lineWidth = this.width;
 

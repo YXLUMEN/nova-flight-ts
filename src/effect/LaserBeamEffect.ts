@@ -43,7 +43,7 @@ export class LaserBeamEffect implements VisualEffect {
     protected age = 0;
     protected pulseTime = 0;
 
-    public constructor(color: string, baseWidth: number, life = 0.15) {
+    public constructor(color: string, baseWidth: number = 1, life = 0.15) {
         this.baseWidth = baseWidth;
         this.color = color;
         this.life = life;
@@ -102,30 +102,22 @@ export class LaserBeamEffect implements VisualEffect {
     }
 
     public setByVec(start: Vec2, end: Vec2) {
-        this.prevStart.set(this.start.x, this.start.y);
-        this.prevEnd.set(this.end.x, this.end.y);
-        this.start.x = start.x;
-        this.start.y = start.y;
-        this.end.x = end.x;
-        this.end.y = end.y;
-        this.age = 0; // 刷新寿命,保持常驻
+        this.set(start.x, start.y, end.x, end.y);
     }
 
     public set(startX: number, startY: number, endX: number, endY: number) {
         this.prevStart.set(this.start.x, this.start.y);
         this.prevEnd.set(this.end.x, this.end.y);
-        this.start.x = startX;
-        this.start.y = startY;
-        this.end.x = endX;
-        this.end.y = endY;
+        this.start.set(startX, startY);
+        this.end.set(endX, endY);
         this.age = 0;
     }
 
     public reset(start: Vec2, end: Vec2) {
-        this.start.set(start.x, start.y);
-        this.end.set(end.x, end.y);
-        this.prevStart.set(start.x, start.y);
-        this.prevEnd.set(end.x, end.y);
+        this.start.setVec(start);
+        this.end.setVec(end);
+        this.prevStart.setVec(start);
+        this.prevEnd.setVec(end);
         this.age = 0;
     }
 }

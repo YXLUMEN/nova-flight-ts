@@ -56,7 +56,6 @@ export class WindowOverlay implements VisualEffect {
     }
 
     public tick(dt: number): void {
-        if (!this.alive) return;
         this.t += dt;
 
         if (this.state === OverlayState.IN) {

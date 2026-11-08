@@ -66,8 +66,8 @@ export class AuraEffect implements VisualEffect {
         let y = this.y;
         const bindEntity = this.bindEntity;
         if (bindEntity) {
-            x = lerp(tickDelta, x, bindEntity.getX());
-            y = lerp(tickDelta, y, bindEntity.getY());
+            x = lerp(tickDelta, bindEntity.prevX, bindEntity.getX());
+            y = lerp(tickDelta, bindEntity.prevY, bindEntity.getY());
         }
 
         const pulse = 0.5 + 0.5 * Math.sin(t * TAU * 1.2);

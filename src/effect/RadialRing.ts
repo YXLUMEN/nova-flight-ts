@@ -51,8 +51,7 @@ export class RadialRing implements VisualEffect {
     }
 
     public tick() {
-        this.prevAge = this.age;
-        this.age++;
+        this.prevAge = this.age++;
     }
 
     public render(ctx: CanvasRenderingContext2D, tickDelta: number) {
@@ -63,7 +62,7 @@ export class RadialRing implements VisualEffect {
 
         ctx.globalAlpha = alpha * 0.8;
         ctx.strokeStyle = this.color;
-        ctx.lineWidth = Math.max(1, (this.r1 - this.r0) * 0.04 * (1 - k));
+        ctx.lineWidth = Math.max(1, (this.r1 - this.r0) * 0.04 * alpha);
         ctx.beginPath();
         ctx.arc(this.center.x, this.center.y, r, 0, TAU);
         ctx.stroke();

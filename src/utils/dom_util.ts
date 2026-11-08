@@ -4,10 +4,7 @@ import {TextElement} from "../client/page/TextElement.ts";
 import {BindTextList} from "../client/page/BindTextList.ts";
 
 export function closest(element: unknown, selector: string): Element | null {
-    if (element instanceof HTMLElement) {
-        return element.closest(selector);
-    }
-    return null;
+    return element instanceof HTMLElement ? element.closest(selector) : null;
 }
 
 export function closestHTML(element: unknown, selector: string): HTMLElement | null {
@@ -47,8 +44,7 @@ export function bindText(
     selectors: string,
     text: TranslatableText | string
 ): TextElement {
-    const element = assert(target, selectors);
-    return new TextElement(element, text);
+    return new TextElement(assert(target, selectors), text);
 }
 
 export function bindFrom(target: HTMLElement): BindTextList {

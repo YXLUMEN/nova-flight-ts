@@ -201,7 +201,7 @@ export class Items {
         .maxDurability(32)
         .attackDamage(32)
         .maxCooldown(24)
-        .reloadTick(24)
+        .reloadTick(22)
         .type(WeaponType.KINETIC)
         .ballisticSpeed(50)
     ));

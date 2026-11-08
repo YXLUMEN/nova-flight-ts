@@ -34,4 +34,8 @@ export class SettingPredicates {
     public static enum<T>(values: T[]): Predicate<T> {
         return v => values.includes(v);
     }
+
+    public static set<T>(values: Set<T>): Predicate<T> {
+        return v => values.has(v);
+    }
 }

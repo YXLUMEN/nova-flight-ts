@@ -16,3 +16,14 @@ export function commonPrefixAll(strings: string[]): string {
     }
     return prefix;
 }
+
+export function isNonEmptyString(v: unknown): v is string {
+    return typeof v === 'string' && v.trim().length > 0;
+}
+
+export function isAscii(str: string): boolean {
+    for (let i = 0; i < str.length; i++) {
+        if (str.charCodeAt(i) > 0x7F) return false;
+    }
+    return true;
+}

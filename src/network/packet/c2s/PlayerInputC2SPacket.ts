@@ -1,9 +1,9 @@
 import type {Payload} from "../../Payload.ts";
-import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
-import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {ServerPlayHandler} from "../../../server/network/handler/ServerPlayHandler.ts";
-import {isAscii} from "../../../utils/util.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
+import {isAscii} from "../../../utils/Strings.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {IllegalArgumentError} from "../../../type/errors.ts";
 
 export class PlayerInputC2SPacket implements Payload {

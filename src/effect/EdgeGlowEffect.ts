@@ -69,7 +69,6 @@ export class EdgeGlowEffect implements VisualEffect {
     }
 
     public tick(dt: number) {
-        if (!this.isAlive()) return;
         this.t += dt;
     }
 

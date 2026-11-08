@@ -43,7 +43,7 @@ export async function run() {
             };
 
             await client.saveAll().catch(mapErr);
-            await Settings.OPTIONS.save().catch(mapErr);
+            await Settings.OPTIONS.flush().catch(mapErr);
             await invoke('confirm_save_done');
         });
 
