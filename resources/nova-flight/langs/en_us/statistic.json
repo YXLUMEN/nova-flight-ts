@@ -1,0 +1,14 @@
+{
+  "title": "Statistic",
+  "back": "Back",
+  "child.err": "Error occurred, please refer to the log for details",
+  "score": "Score",
+  "score.score": "Score",
+  "score.kill_effective": "Kill Effective",
+  "score.total_survival_time": "Total Survival Time",
+  "score.player_name": "Player Name",
+  "score.world_name": "World Name",
+  "score.version": "Game Version",
+  "score.record_time": "Record Time",
+  "score.cheat": "Cheated"
+}

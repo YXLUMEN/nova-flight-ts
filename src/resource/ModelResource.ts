@@ -11,6 +11,8 @@ import {Resources} from "./Resources.ts";
 import {PromisePool} from "../utils/collection/PromisePool.ts";
 import {Model} from "../client/render/model/Model.ts";
 import {ResourceManager} from "./ResourceManager.ts";
+import {Log} from "../worker/log.ts";
+import {isRecord} from "../utils/util.ts";
 
 export class ModelResource implements ResourceModule {
     private readonly models: Map<string, Model> = new Map<string, Model>();
@@ -28,7 +30,6 @@ export class ModelResource implements ResourceModule {
         this.defaultModel = this.createModel('builtin/default');
 
         const root = await resolveResource(`resources/nova-flight`);
-
         const modelAbsPaths = new Map<string, string>();
         const modelDir = await resolve(root, 'models');
 
@@ -57,7 +58,7 @@ export class ModelResource implements ResourceModule {
 
         for (const task of parsedModels) {
             if (task.status === 'rejected') {
-                console.warn(`[ModelResource] Failed to load a model:`, task.reason);
+                Log.warn(`[ModelResource] Failed to load a model:\n  ${task.reason}`);
                 continue;
             }
             const json = task.value;
@@ -82,7 +83,7 @@ export class ModelResource implements ResourceModule {
 
         while (currentKey) {
             if (visited.has(currentKey)) {
-                console.warn(`[ModelResource] Circular inheritance detected for ${key}`);
+                Log.warn(`[ModelResource] Circular inheritance detected for ${key}`);
                 break;
             }
             visited.add(currentKey);
@@ -90,7 +91,7 @@ export class ModelResource implements ResourceModule {
             const currentJson = modelJsons.get(currentKey);
             if (!currentJson) {
                 if (currentKey !== key) {
-                    console.warn(`[ModelResource] Parent model ${currentKey} not found for ${key}`);
+                    Log.warn(`[ModelResource] Parent model ${currentKey} not found for ${key}`);
                 }
                 break;
             }
@@ -123,10 +124,8 @@ export class ModelResource implements ResourceModule {
         return null;
     }
 
-    private parseDisplayConfig(json: unknown): DisplayConfig | null {
-        if (!json || typeof json !== 'object') return null;
-        const record = json as Record<string, unknown>;
-
+    private parseDisplayConfig(record: unknown): DisplayConfig | null {
+        if (!isRecord(record)) return null;
         const config: DisplayConfig = {};
         if (typeof record.rotation === 'number' && Number.isFinite(record.rotation)) {
             config.rotation = wrapRadians(record.rotation);
@@ -180,8 +179,7 @@ export class ModelResource implements ResourceModule {
     }
 
     public getModel(key: string | undefined): Model {
-        if (!key) return this.defaultModel!;
-        return this.models.get(key) ?? this.defaultModel!;
+        return !key ? this.defaultModel! : this.models.get(key) ?? this.defaultModel!;
     }
 }
 

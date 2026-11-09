@@ -1,4 +1,7 @@
 {
+  "empty": {
+    "sounds": []
+  },
   "ui.apply": {
     "subtitle": "sound.nova-flight.ui.apply",
     "sounds": [

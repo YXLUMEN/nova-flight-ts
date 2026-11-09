@@ -2,5 +2,8 @@
   "health": "Health",
   "game_over": "Game Over",
   "summary": "Game duration \"{}\" Score \"{}\" Kill efficiency \"{}\"",
-  "back": "Return to Main Menu"
+  "back": "Return to Main Menu",
+  "lock_alert.locking": "Enemy Locking",
+  "lock_alert.locked": "Enemy Locked",
+  "lock_alert.approach": "Approach"
 }

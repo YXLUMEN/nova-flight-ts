@@ -4,7 +4,7 @@ import {Registries} from "../registry/Registries.ts";
 import {SoundEvent} from "./SoundEvent.ts";
 
 export class SoundEvents {
-    public static readonly EMPTY = Object.freeze(new SoundEvent(Identifier.ofVanilla('empty')));
+    public static readonly EMPTY = this.register('empty');
 
     public static readonly UI_APPLY = this.register("ui.apply");
     public static readonly UI_BUTTON_PRESSED = this.register("ui.button_press");

@@ -50,10 +50,11 @@ export class SoundResource implements ResourceModule {
                 }
 
                 const sounds: unknown = entry.sounds;
-                if (!Array.isArray(sounds) || !sounds.every(value => typeof value === 'string')) {
+                if (!Array.isArray(sounds) || sounds.some(value => typeof value !== 'string')) {
                     Log.warn(`SoundID ${id} has invalid sounds format (must be array)`);
                     continue;
                 }
+                if (sounds.length === 0) continue;
 
                 const buffers: AudioBuffer[] = [];
                 buffersMap.set(soundId, buffers);

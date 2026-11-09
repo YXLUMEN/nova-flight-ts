@@ -1,0 +1,14 @@
+{
+  "title": "统计数据",
+  "back": "返回",
+  "child.err": "出错啦,详细情况请查看日志",
+  "score": "历史得分",
+  "score.score": "分数",
+  "score.kill_effective": "击杀效率",
+  "score.total_survival_time": "存活时长",
+  "score.player_name": "玩家名称",
+  "score.world_name": "存档名称",
+  "score.version": "游戏版本",
+  "score.record_time": "记录时间",
+  "score.cheat": "开了"
+}

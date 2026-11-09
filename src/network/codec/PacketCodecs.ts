@@ -307,7 +307,7 @@ export class PacketCodecs {
             (writer: BinaryWriter, object: R): void => {
                 const iterable = registryTransformer(registry);
                 const id = iterable.getIndex(object);
-                if (id === -1) throw new Error(`Object not registered`);
+                if (id === -1) throw new Error('Object not registered', {cause: object});
                 writer.writeVarUint(id);
             },
             (reader: BinaryReader): R => {

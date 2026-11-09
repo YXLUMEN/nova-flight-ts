@@ -1,10 +1,12 @@
 import type {Consumer} from "../../type/types.ts";
-import {assert} from "../../utils/dom_util.ts";
-import {empty} from "../../utils/util.ts";
 import {message} from "@tauri-apps/plugin-dialog";
+import {assert, bindFrom} from "../../utils/dom_util.ts";
+import {empty} from "../../utils/util.ts";
+import {appEvent} from "../../event/EventBus.ts";
 import {HistoricalScoreRender} from "./HistoricalScoreRender.ts";
 import {PageSection} from "../page/PageSection.ts";
 import {Log} from "../../worker/log.ts";
+import {TranslatableText} from "../../i18n/TranslatableText.ts";
 
 export class StatisticManager extends PageSection {
     private readonly statisticItems = new Map<string, PageSection>();
@@ -23,6 +25,10 @@ export class StatisticManager extends PageSection {
         this.dir = assert(this.root, '#statistic-directory');
         this.displayer = assert(this.root, '#statistic-displayer');
         this.backBtn = assert(this.root, '#statistic-back');
+
+        const bind = bindFrom(this.root);
+        appEvent.on('ui:lang', () => bind.refresh());
+        bind.refresh();
 
         this.registry();
     }
@@ -70,8 +76,8 @@ export class StatisticManager extends PageSection {
                 top = gui.open(item);
                 this.dir.classList.add('hidden');
             } catch (err) {
-                void message('出错啦,详细情况请查看日志');
-                Log.error(`Error occurrence when display statistic: ${err}`);
+                void message(TranslatableText.of('statistic.child.err').asString());
+                Log.error(`Error occurrence when display statistic:\n  ${err}`);
             }
         }, {signal: ctrl.signal});
 

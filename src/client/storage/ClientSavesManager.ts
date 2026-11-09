@@ -30,7 +30,7 @@ export class ClientSavesManager extends PageSection {
     private chosenItem: HTMLElement | null = null;
 
     public constructor() {
-        super('start');
+        super('archive');
 
         this.closeOnEscape = true;
         this.inputBox = new ArchiveInputBox();

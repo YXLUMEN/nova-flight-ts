@@ -44,7 +44,8 @@ export class ClientMultiGameManger extends PageSection {
     }
 
     public getServerAddress(): Promise<string | null> {
-        if (!this.manager) return Promise.resolve(null);
+        const manager = this.manager;
+        if (!manager) return Promise.resolve(null);
 
         this.commit(null);
         void this.startLANPolling();
@@ -52,16 +53,27 @@ export class ClientMultiGameManger extends PageSection {
         const {promise, resolve} = Promise.withResolvers<string | null>();
         const ctrl = new AbortController();
         const signal = ctrl.signal;
-        const release = this.manager.input.requireInput();
+        let release: Consumer<void> = empty;
 
         const commit = (result: string | null) => {
             resolve(result);
             ctrl.abort();
             release();
+            release = empty;
             this.commit = empty;
             this.close();
         };
         this.commit = commit;
+
+        this.addrInput.addEventListener('focus', () => {
+            release();
+            release = manager.input.requireInput();
+        }, {signal});
+
+        this.addrInput.addEventListener('blur', () => {
+            release();
+            release = empty;
+        }, {signal});
 
         this.connectBtn.addEventListener('click', async () => {
             const addr = this.addrInput.value.trim();
@@ -81,7 +93,7 @@ export class ClientMultiGameManger extends PageSection {
         }, {signal});
 
         this.cancelBtn.addEventListener('click', () => {
-            this.commit(null);
+            commit(null);
             this.close();
         }, {signal});
 

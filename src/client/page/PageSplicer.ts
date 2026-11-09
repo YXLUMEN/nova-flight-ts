@@ -31,7 +31,12 @@ export class PageSplicer {
             if (!name) throw new Error('<page> tag requires a "name" attribute');
 
             if (page.hasAttribute('defer')) {
-                const timeout = this.config.deferTimeoutBase + this.deferCount * 20;
+                let timeout: number = this.config.deferTimeoutBase + this.deferCount * 20;
+                const expectedTimeout = page.getAttribute('date-defer-timeout');
+                if (expectedTimeout) {
+                    const t = Number(expectedTimeout);
+                    if (Number.isFinite(t)) timeout = t;
+                }
 
                 this.deferCount++;
                 requestIdleCallback(async () => {

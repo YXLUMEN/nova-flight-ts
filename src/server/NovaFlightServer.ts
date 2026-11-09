@@ -141,7 +141,10 @@ export abstract class NovaFlightServer implements CommandOutput {
 
             this.networkChannel.flush();
         } catch (error) {
-            Log.error(`[Server] Server runtime error: ${error}`);
+            const msg = Error.isError(error) ?
+                `[Server] Server runtime error: ${error}, at:\n  ${error.stack}, cause by:\n  ${error.cause}` :
+                `[Server] Server runtime error: ${error}`;
+            Log.error(msg);
             this.halt().catch(error => console.error(error));
             throw error;
         }
