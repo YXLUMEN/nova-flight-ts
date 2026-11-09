@@ -4,6 +4,7 @@ import type {TechBuilder} from "../../world/tech/TechBuilder.ts";
 import {isNonEmptyString} from "../../utils/Strings.ts";
 import {encodeColorHex} from "../../utils/net_util.ts";
 import {assert} from "../../utils/dom_util.ts";
+import {isRecord} from "../../utils/util.ts";
 import {TechResolver} from "../../world/tech/TechResolver.ts";
 import {ClientTechBuilder} from "./ClientTechBuilder.ts";
 import {TechLayoutParser} from "./TechLayoutParser.ts";
@@ -25,7 +26,7 @@ export class ClientTechResolver extends TechResolver {
         if (config == null) {
             this.config = {};
         } else {
-            if (typeof config !== 'object' || Array.isArray(config)) throw new Error('Invalid tech config');
+            if (!isRecord(config)) throw new Error('Invalid tech config');
             this.config = config;
         }
     }

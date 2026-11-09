@@ -9,6 +9,7 @@ import {type RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {type Tech} from "../../world/tech/Tech.ts";
 import {Techs} from "../../world/tech/Techs.ts";
 import {ServerTechManager} from "./ServerTechManager.ts";
+import {Log} from "../../worker/log.ts";
 
 export class ServerTechTree implements TechTree {
     private readonly player: ServerPlayerEntity;
@@ -129,7 +130,7 @@ export class ServerTechTree implements TechTree {
         for (const id of techs) {
             const tech = this.state.getTech(id);
             if (!tech) {
-                console.warn(`Fail to parse tech with id: ${id}`);
+                Log.warn(`Fail to parse tech with id: ${id}`);
                 continue;
             }
 

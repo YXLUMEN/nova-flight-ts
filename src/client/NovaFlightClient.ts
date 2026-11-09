@@ -5,7 +5,6 @@ import type {ClientChannel} from "./network/ClientChannel.ts";
 import type {LocalPlayerEntity} from "./entity/LocalPlayerEntity.ts";
 import type {ServerWorker} from "../worker/ServerWorker.ts";
 import type {ClientRecordManager} from "./data/ClientRecordManager.ts";
-import {error, warn} from "@tauri-apps/plugin-log";
 import {stopServer} from "./ipc/integrated_server.ts";
 import {stopLanAnnounce} from "./ipc/lan_discovery.ts";
 import {empty, sleep, timeout} from "../utils/util.ts";
@@ -41,6 +40,7 @@ import {RacePromise} from "../utils/RacePromise.ts";
 import {GuiLayer} from "./render/ui/GuiLayer.ts";
 import {StartScreen} from "./page/compound/StartScreen.ts";
 import {FakeChannel} from "./network/FakeChannel.ts";
+import {Log} from "../worker/log.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -212,7 +212,7 @@ export class NovaFlightClient {
 
             if (step >= maxStep && this.accumulator >= perTick) {
                 const dropped = this.accumulator - (this.accumulator % perTick);
-                void warn(`[Client] Dropped ${dropped.toFixed(1)}s`);
+                Log.warn(`[Client] Dropped ${dropped.toFixed(1)}s`);
                 this.accumulator %= perTick;
             }
 
@@ -227,8 +227,7 @@ export class NovaFlightClient {
                 `[Client] Crash ${err.name}:${err.message} because ${err.cause} at\n${err.stack}` :
                 `[Client] Crash ${err}`;
 
-            console.error(msg);
-            void error(msg);
+            Log.error(msg);
             this.stopWorld();
         }
     }
@@ -259,7 +258,7 @@ export class NovaFlightClient {
         const {promise, resolve} = resolvers;
         if (promise !== this.loopPromise) {
             resolve();
-            void warn('[Client] Unmatch loop promise.');
+            Log.warn('[Client] Unmatch loop promise.');
             return;
         }
 

@@ -12,6 +12,7 @@ import {ServerPlayerEntity} from "../../entity/ServerPlayerEntity.ts";
 import {RacePromise} from "../../../utils/RacePromise.ts";
 import {World} from "../../../world/World.ts";
 import {EntityTypes} from "../../../entity/EntityTypes.ts";
+import {Log} from "../../../worker/log.ts";
 
 export class PendingSpawn implements Disposable {
     private static readonly POS_CODEC = Codecs.group<PlayerPosition>(
@@ -76,7 +77,7 @@ export class PendingSpawn implements Disposable {
             this.server.playerManager.placePlayer(connection, this.profile, player);
             return player;
         } catch (err) {
-            console.error('[Server] Fail while spawn player', err);
+            Log.error(`[Server] Fail while spawn player:\n  ${err}`);
             return null;
         }
     }
@@ -102,6 +103,14 @@ export class PendingSpawn implements Disposable {
 
     public [Symbol.dispose](): void {
         this.close();
+    }
+
+    public toString(): string {
+        return JSON.stringify({
+            profile: this.profile,
+            state: this.state,
+            hasTask: !!this.task
+        });
     }
 }
 

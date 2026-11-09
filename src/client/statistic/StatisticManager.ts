@@ -1,10 +1,10 @@
 import type {Consumer} from "../../type/types.ts";
-import {HistoricalScoreRender} from "./HistoricalScoreRender.ts";
-import {PageSection} from "../page/PageSection.ts";
 import {assert} from "../../utils/dom_util.ts";
 import {empty} from "../../utils/util.ts";
 import {message} from "@tauri-apps/plugin-dialog";
-import {error} from "@tauri-apps/plugin-log";
+import {HistoricalScoreRender} from "./HistoricalScoreRender.ts";
+import {PageSection} from "../page/PageSection.ts";
+import {Log} from "../../worker/log.ts";
 
 export class StatisticManager extends PageSection {
     private readonly statisticItems = new Map<string, PageSection>();
@@ -71,7 +71,7 @@ export class StatisticManager extends PageSection {
                 this.dir.classList.add('hidden');
             } catch (err) {
                 void message('出错啦,详细情况请查看日志');
-                void error(`Error occurrence when display statistic: ${err}`);
+                Log.error(`Error occurrence when display statistic: ${err}`);
             }
         }, {signal: ctrl.signal});
 

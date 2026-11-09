@@ -1,7 +1,6 @@
 import type {StartServer} from "../../type/startup.ts";
 import type {ConnectionContext} from "./ConnectionContext.ts";
 import type {FullscreenNotice} from "../page/compound/FullscreenNotice.ts";
-import {error} from "@tauri-apps/plugin-log";
 import {startLanAnnounce, stopLanAnnounce} from "../ipc/lan_discovery.ts";
 import {startServer, stopServer} from "../ipc/integrated_server.ts";
 import {sleep} from "../../utils/util.ts";
@@ -11,6 +10,7 @@ import {DEFAULT_CONFIG, RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {ClientIntegratedChannel} from "./ClientIntegratedChannel.ts";
 import {ClientHandshakeHandler} from "./handler/ClientHandshakeHandler.ts";
 import {ServerWorker} from "../../worker/ServerWorker.ts";
+import {Log} from "../../worker/log.ts";
 
 export class ClientConnector {
     private readonly ctx: ConnectionContext;
@@ -115,9 +115,8 @@ export class ClientConnector {
         const serverResult = await startServer(RuntimeConfig.port);
         if (serverResult.isErr()) {
             const err = serverResult.unwrapErr();
-            console.error(err);
             const msg = this.mapErr(err);
-            await error(msg);
+            Log.error(msg);
 
             notice.setMessage(msg);
             notice.setLabel(TranslatableText.of('start.confirm'));
@@ -131,7 +130,7 @@ export class ClientConnector {
             DEFAULT_CONFIG.gameVersion,
         );
         if (lanResult.isErr()) {
-            await error(this.mapErr(lanResult.unwrapErr()));
+            Log.error(this.mapErr(lanResult.unwrapErr()));
             await stopLanAnnounce();
         }
 
@@ -195,8 +194,7 @@ export class ClientConnector {
 
                 config.clientReady();
             } catch (err) {
-                console.error(err);
-                await error(this.mapErr(err));
+                Log.error(this.mapErr(err));
 
                 notice.setMessage(TranslatableText.of('start.fail.connect'));
                 notice.setLabel(TranslatableText.of('start.confirm'));

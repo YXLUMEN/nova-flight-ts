@@ -10,7 +10,7 @@ import {ClientTechManager} from "./tech/ClientTechManager.ts";
 import {ResourceLoader} from "../resource/ResourceLoader.ts";
 import {RenderLoader} from "./render/RenderLoader.ts";
 import {ClientRecordRegister} from "./data/ClientRecordRegister.ts";
-import {error} from "@tauri-apps/plugin-log";
+import {Log} from "../worker/log.ts";
 
 export class ClientInit {
     public async initResources(manager: RegistryManager, record: ClientRecordManager, window: ClientWindow): Promise<void> {
@@ -84,7 +84,7 @@ export class ClientInit {
             });
         } catch (err) {
             loadingScreen.setProgress(0, '检查更新失败');
-            await error(String(err));
+            Log.error(err);
         }
         await sleep(500);
     }

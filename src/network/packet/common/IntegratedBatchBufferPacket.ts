@@ -8,6 +8,7 @@ import {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import type {ClientCommonHandler} from "../../../client/network/handler/ClientCommonHandler.ts";
 import type {BatchBuffer} from "./BatchBuffer.ts";
 import type {PacketListener} from "../../handler/PacketListener.ts";
+import {Log} from "../../../worker/log.ts";
 
 export class IntegratedBatchBufferPacket implements Payload, BatchBuffer {
     public static readonly ID: PayloadType<IntegratedBatchBufferPacket> = payloadType('integrated_batch_buffer');
@@ -85,7 +86,7 @@ export class IntegratedBatchBufferPacket implements Payload, BatchBuffer {
             try {
                 payload.accept(handler);
             } catch (err) {
-                console.error('Decode batch', err);
+                Log.error(`Decode batch:\n  ${err}`);
             }
         }
     }

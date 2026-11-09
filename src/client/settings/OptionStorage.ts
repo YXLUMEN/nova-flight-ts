@@ -1,7 +1,7 @@
 import {appLocalDataDir, join} from "@tauri-apps/api/path";
 import {exists, mkdir, readTextFile, remove, rename, writeTextFile} from "@tauri-apps/plugin-fs";
-import {error} from "@tauri-apps/plugin-log";
 import {shortUUID} from "../../utils/math/math.ts";
+import {Log} from "../../worker/log.ts";
 
 export class OptionStorage {
     private readonly dir: string;
@@ -22,7 +22,7 @@ export class OptionStorage {
             return await readTextFile(path);
         } catch (err) {
             this.resolved = null;
-            await error(`[Settings] Can not load settings. Cause by: ${err}`);
+            await Log.error(`[Settings] Can not load settings. Cause by: ${err}`);
             return null;
         }
     }
@@ -36,9 +36,9 @@ export class OptionStorage {
             await rename(temp, path);
         } catch (err) {
             this.resolved = null;
-            await error('[Settings] Fail to save settings');
+            await Log.error('[Settings] Fail to save settings');
             await remove(temp)
-                .catch(err => error(`[Settings] Error occur when remove temp file. Cause by: ${err}`));
+                .catch(err => Log.error(`[Settings] Error occur when remove temp file. Cause by: ${err}`));
         }
     }
 

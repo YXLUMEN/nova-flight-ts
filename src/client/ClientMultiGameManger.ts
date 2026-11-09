@@ -1,5 +1,4 @@
 import type {Consumer} from "../type/types.ts";
-import {error} from "@tauri-apps/plugin-log";
 import {isLanSniffing, listLanServers, startLanSniff, stopLanSniff} from "./ipc/lan_discovery.ts";
 import {as, assert, bindFrom} from "../utils/dom_util.ts";
 import {empty} from "../utils/util.ts";
@@ -7,6 +6,7 @@ import {appEvent} from "../event/EventBus.ts";
 import {ClientStorage} from "./storage/ClientStorage.ts";
 import {PageSection} from "./page/PageSection.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
+import {Log} from "../worker/log.ts";
 
 export class ClientMultiGameManger extends PageSection {
     private static readonly LAN_POLL_MS = 1000;
@@ -120,7 +120,7 @@ export class ClientMultiGameManger extends PageSection {
     private async loadDB() {
         const result = await ClientStorage.db.getAll<ServerSelect>('server_addr_list');
         if (result.isErr()) {
-            await error(String(result.unwrapErr()));
+            Log.error(result.unwrapErr());
             return;
         }
 
@@ -155,7 +155,7 @@ export class ClientMultiGameManger extends PageSection {
 
             this.serverList.insertBefore(frag, this.lanHint);
         } catch (err) {
-            console.warn('[Client] Fail to list LAN servers', err);
+            Log.warn(`[Client] Fail to list LAN servers:\n  ${err}`);
         }
     }
 
@@ -165,7 +165,7 @@ export class ClientMultiGameManger extends PageSection {
             if (scanning) return;
             await startLanSniff();
         } catch (err) {
-            console.warn('[Client] Fail to open scanner', err);
+            Log.warn(`[Client] Fail to open scanner:\n  ${err}`);
         }
     }
 

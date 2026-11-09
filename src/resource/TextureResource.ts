@@ -6,9 +6,9 @@ import {resolve, resolveResource} from "@tauri-apps/api/path";
 import {normalizedDir, pruneSuffix} from "../utils/path.ts";
 import {readFile} from "@tauri-apps/plugin-fs";
 import {convertFileSrc} from "@tauri-apps/api/core";
-import {error} from "@tauri-apps/plugin-log";
 import {traverse_dir} from "../client/ipc/fs.ts";
 import {Resources} from "./Resources.ts";
+import {Log} from "../worker/log.ts";
 
 export class TextureResource implements ResourceModule, TextureProvider {
     public static readonly DEFAULT_TEXTURE_ID = 'builtin/default';
@@ -60,9 +60,8 @@ export class TextureResource implements ResourceModule, TextureProvider {
         this.textureCache.set(key, placeholder);
         this.loadTexture(key, placeholder).catch(err => {
             this.textureCache.delete(key);
-            const msg = `[TextureResource] Failed to load texture ${key}: ${err}`;
-            console.error(msg);
-            void error(msg);
+            const msg = `[TextureResource] Failed to load texture ${key}:\n  ${err}`;
+            Log.error(msg);
         });
 
         return this.transparent!;

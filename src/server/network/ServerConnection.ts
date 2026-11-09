@@ -134,4 +134,8 @@ export class ServerConnection implements Connection {
     public cleanBuffer(): void {
         this.receiveQueue.clear();
     }
+
+    public toString(): string {
+        return `[ServerConnection] SID(${this.sessionId}), UUID(${this.uuid}), IsLocal(${this.isLocal}), State(${this.state})`;
+    }
 }

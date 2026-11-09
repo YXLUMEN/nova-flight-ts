@@ -7,6 +7,7 @@ import type {ServerConnection} from "../ServerConnection.ts";
 import {PendingSpawn} from "./PendingSpawn.ts";
 import {TimeoutError} from "../../../type/errors.ts";
 import {ServerFinishConfigS2CPacket} from "../../../network/packet/config/ServerFinishConfigS2CPacket.ts";
+import {Log} from "../../../worker/log.ts";
 
 export class ServerConfigHandler extends ServerCommonHandler {
     public static readonly PROMOTE_FAIL = TranslatableText.of('network.disconnect.promote.fail');
@@ -34,7 +35,7 @@ export class ServerConfigHandler extends ServerCommonHandler {
         }
 
         if (this.server.playerManager.hasLogin(this.profile.clientId)) {
-            console.warn(`[Server] A duplicate player try to login with profile ${this.profile}`);
+            Log.warn(`[Server] A duplicate player try to login with profile ${this.profile}`);
             this.disconnect(ServerConfigHandler.DUPLICATE_PLAYER);
             return;
         }
@@ -58,12 +59,12 @@ export class ServerConfigHandler extends ServerCommonHandler {
             this.disconnect(ServerConfigHandler.PROMOTE_FAIL);
         } catch (err) {
             if (err instanceof TimeoutError) {
-                console.warn(`[Server] Promote player ${this.profile?.name} timeout`);
+                Log.warn(`[Server] Promote player ${this.profile?.name} timeout`);
                 this.disconnect(ServerConfigHandler.PROMOTE_TIMEOUT);
                 return;
             }
 
-            console.error('[Server] Error occur when promote player session', err);
+            Log.error(`[Server] Error occur when promote player session:\n ${err}`);
             this.disconnect(ServerConfigHandler.PROMOTE_FAIL);
         } finally {
             spawn.close();

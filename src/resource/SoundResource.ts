@@ -3,13 +3,13 @@ import type {ResourceModule} from "./ResourceModule.ts";
 import type {HashMap} from "../utils/collection/HashMap.ts";
 import {join, resolveResource} from "@tauri-apps/api/path";
 import {readFile, readTextFile} from "@tauri-apps/plugin-fs";
-import {warn} from "@tauri-apps/plugin-log";
-import {deepFreeze} from "../utils/util.ts";
+import {deepFreeze, isRecord} from "../utils/util.ts";
 import {RegistryKeys} from "../registry/RegistryKeys.ts";
 import {PromisePool} from "../utils/collection/PromisePool.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {Resources} from "./Resources.ts";
 import {WrapperMap} from "../utils/collection/WrapperMap.ts";
+import {Log} from "../worker/log.ts";
 
 export class SoundResource implements ResourceModule {
     public readonly buffers: HashMap<Identifier, AudioBuffer[]> = new WrapperMap();
@@ -23,15 +23,14 @@ export class SoundResource implements ResourceModule {
         const sounds = soundRegister.getIdSet();
 
         const soundJson = await resolveResource('resources/nova-flight/sounds.json');
-        const json: unknown = JSON.parse(await readTextFile(soundJson));
+        const record: Record<string, any> = JSON.parse(await readTextFile(soundJson));
         const audioContext = new AudioContext();
 
-        if (!json || typeof json !== 'object') {
-            await warn('[Client] No sound.json was found');
+        if (!isRecord(record)) {
+            Log.warn('[Client] No sounds.json was found');
             return;
         }
 
-        const mapped = json as Record<string, any>;
         const pool = new PromisePool<void>(16);
         const buffersMap = new Map<Identifier, AudioBuffer[]>();
         const root = await resolveResource('resources/nova-flight/sounds');
@@ -44,15 +43,15 @@ export class SoundResource implements ResourceModule {
         for (const soundId of sounds) {
             try {
                 const id = soundId.getPath();
-                const entry = mapped[id];
+                const entry = record[id];
                 if (!entry) {
-                    await warn(`SoundID ${id} not found in sounds.json`);
+                    Log.warn(`SoundID "${id}" not found in sounds.json`);
                     continue;
                 }
 
                 const sounds: unknown = entry.sounds;
                 if (!Array.isArray(sounds) || !sounds.every(value => typeof value === 'string')) {
-                    await warn(`SoundID ${id} has invalid sounds format (must be array)`);
+                    Log.warn(`SoundID ${id} has invalid sounds format (must be array)`);
                     continue;
                 }
 
@@ -61,12 +60,10 @@ export class SoundResource implements ResourceModule {
 
                 for (const soundEntry of sounds) {
                     const soundPath = soundEntry.split(':').pop();
-                    if (!soundPath) continue;
-
-                    pool.spawn(job, buffers, soundPath);
+                    if (soundPath) pool.spawn(job, buffers, soundPath);
                 }
             } catch (error) {
-                await warn(String(error));
+                Log.warn(error);
             }
         }
 
@@ -86,9 +83,8 @@ export class SoundResource implements ResourceModule {
             const fileData = await readFile(path);
             return await audioContext.decodeAudioData(fileData.buffer);
         } catch (err) {
-            const msg = `Failed to load sound: ${filename}`;
-            console.warn(msg, err);
-            await warn(msg);
+            const msg = `Failed to load sound: ${filename}, cause by:\n  ${err}`;
+            Log.warn(msg);
             return null;
         }
     }

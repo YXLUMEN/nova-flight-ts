@@ -1,15 +1,15 @@
 import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
-import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
-import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
-import {warn} from "@tauri-apps/plugin-log";
 import type {CommandContext} from "../brigadier/context/CommandContext.ts";
 import type {SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
 import type {Suggestions} from "../brigadier/suggestion/Suggestions.ts";
+import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
+import {NormalStringArgumentType} from "./argument/NormalStringArgumentType.ts";
 import {CommandUtil} from "./CommandUtil.ts";
 import {LangManager} from "../i18n/LangManager.ts";
 import {Settings} from "../client/settings/Settings.ts";
 import {CallTwice} from "../type/errors.ts";
+import {Log} from "../worker/log.ts";
 
 export class LangCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -38,7 +38,7 @@ export class LangCommand {
                             }
 
                             ctx.source.addMessage(`Fail to load lang \x1b[31m${lang}`);
-                            await warn(`Could not load lang ${err}`);
+                            await Log.warn(`Could not load lang ${err}`);
                         })
                         .suggests({
                             async getSuggestions(_: CommandContext<T>, builder: SuggestionsBuilder): Promise<Suggestions> {

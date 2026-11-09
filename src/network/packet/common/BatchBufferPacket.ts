@@ -11,6 +11,7 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {CodecRegistry} from "../../CodecRegistry.ts";
 import {WSNetworkChannel} from "../../WSNetworkChannel.ts";
 import {PacketTooLargeError} from "../../../type/errors.ts";
+import {Log} from "../../../worker/log.ts";
 
 export class BatchBufferPacket implements Payload, BatchBuffer {
     public static readonly ID: PayloadType<BatchBufferPacket> = payloadType('batch_buffer');
@@ -107,7 +108,7 @@ export class BatchBufferPacket implements Payload, BatchBuffer {
             try {
                 payload.accept(handler);
             } catch (err) {
-                console.error('Decode batch', err);
+                Log.error(`Decode batch:\n  ${err}`);
             }
         }
     }

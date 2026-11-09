@@ -1,7 +1,7 @@
-import {RecordManager} from "../../database/data/RecordManager.ts";
 import type {DataRequest} from "../../database/data/DataFormat.ts";
 import type {DataRecord} from "../../database/data/DataRecord.ts";
-import {error} from "@tauri-apps/plugin-log";
+import {RecordManager} from "../../database/data/RecordManager.ts";
+import {Log} from "../../worker/log.ts";
 
 export class ClientRecordManager extends RecordManager implements EventListenerObject {
     private worker: Worker | null = null;
@@ -41,7 +41,7 @@ export class ClientRecordManager extends RecordManager implements EventListenerO
         } catch (e) {
             const err = String(e);
             worker.postMessage({type: 'data_ipc', id, err});
-            await error(err);
+            await Log.error(err);
         }
     }
 }

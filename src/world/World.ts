@@ -28,6 +28,7 @@ import {BlockCollision} from "./collision/BlockCollision.ts";
 import {ScheduleTask} from "./ScheduleTask.ts";
 import {DifficultChange} from "../event/events/stage/DifficultChange.ts";
 import {GameEnd} from "../event/events/game/GameEnd.ts";
+import {Log} from "../worker/log.ts";
 
 export abstract class World {
     public static readonly MAP_WIDTH = 1760;
@@ -150,7 +151,7 @@ export abstract class World {
             tickConsumer(entity);
         } catch (err) {
             const type = EntityType.getId(entity.getType())?.toString() ?? 'UnknownType';
-            console.error(`Tick Entity with id:${entity.getUUID()} at ${type}\n`, err);
+            Log.error(`Tick Entity with id: "${entity.getUUID()}", type "${type}" at\n  ${err}`);
             throw err;
         }
     }

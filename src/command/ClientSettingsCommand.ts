@@ -1,6 +1,5 @@
 import type {CommandDispatcher} from "../brigadier/CommandDispatcher.ts";
 import type {ClientCommandSource} from "../client/command/ClientCommandSource.ts";
-import {error} from "@tauri-apps/plugin-log";
 import {stopServer} from "../client/ipc/integrated_server.ts";
 import {isOpened, openOnLan} from "../client/ipc/lan_discovery.ts";
 import {argument, literal} from "../brigadier/builder/CommandNodeBuilder.ts";
@@ -14,6 +13,7 @@ import {NovaFlightClient} from "../client/NovaFlightClient.ts";
 import {BoolArgumentType} from "./argument/BoolArgumentType.ts";
 import {Settings} from "../client/settings/Settings.ts";
 import {CommandUtil} from "./CommandUtil.ts";
+import {Log} from "../worker/log.ts";
 
 export class ClientSettingsCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {
@@ -173,7 +173,7 @@ export class ClientSettingsCommand {
                                         return;
                                     }
 
-                                    await error(result.unwrapErr().toString());
+                                    await Log.error(result.unwrapErr().toString());
                                     ctx.source.addMessage('Action failed, the detail will write to log');
                                 })
                         )

@@ -1,6 +1,5 @@
 import type {Consumer, UUID} from "../../type/types.ts";
 import type {PlayerData, SaveMeta} from "../../type/Saves.ts";
-import {error, warn} from "@tauri-apps/plugin-log";
 import {confirm, message} from "@tauri-apps/plugin-dialog";
 import {join, resolveResource} from "@tauri-apps/api/path";
 import {exists, mkdir, readFile, readTextFile, writeFile, writeTextFile} from "@tauri-apps/plugin-fs";
@@ -17,6 +16,7 @@ import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {PlayerDataStorage} from "../../server/storage/PlayerDataStorage.ts";
 import {PageSection} from "../page/PageSection.ts";
 import {ArchiveInputBox} from "./ArchiveInputBox.ts";
+import {Log} from "../../worker/log.ts";
 
 export class ClientSavesManager extends PageSection {
     private static readonly RESERVED_NAMES = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'];
@@ -150,9 +150,7 @@ export class ClientSavesManager extends PageSection {
         if (result.isErr()) {
             const err = result.unwrapErr();
             const msg = `[Client] Error while read saves, ${err.name}:${err.message} because ${err.cause} at\n ${err.stack}`;
-
-            await error(msg);
-            console.error(msg);
+            Log.error(msg);
             return;
         }
 
@@ -313,8 +311,7 @@ export class ClientSavesManager extends PageSection {
             })
             .mapErr(err => {
                 const msg = `[Client] Error while deleting save "${saveName}", ${err.name}:${err.message} because ${err.cause} at\n ${err.stack}`;
-                console.error(msg);
-                error(msg);
+                Log.error(msg);
                 message('删除时出现错误, 详细信息参考日志');
             });
     }
@@ -495,7 +492,7 @@ export class ClientSavesManager extends PageSection {
         } else {
             await message(`导入完成, 但存在 ${failTasks.length} 个文件无法加载`, {kind: 'warning'});
         }
-        await warn(`导入时无法加载: ${JSON.stringify(failTasks)}`);
+        Log.warn(`导入时无法加载: ${JSON.stringify(failTasks)}`);
         await this.refreshSaveDisplay();
     }
 

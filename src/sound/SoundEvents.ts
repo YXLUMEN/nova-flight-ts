@@ -4,7 +4,7 @@ import {Registries} from "../registry/Registries.ts";
 import {SoundEvent} from "./SoundEvent.ts";
 
 export class SoundEvents {
-    public static readonly EMPTY = this.register('empty');
+    public static readonly EMPTY = Object.freeze(new SoundEvent(Identifier.ofVanilla('empty')));
 
     public static readonly UI_APPLY = this.register("ui.apply");
     public static readonly UI_BUTTON_PRESSED = this.register("ui.button_press");
@@ -16,7 +16,7 @@ export class SoundEvents {
 
     public static readonly LASER_OVERHEAT = this.register("laser.overheat_alarm");
     public static readonly LASER_COOLDOWN = this.register("laser.cooldown");
-    public static readonly LASER_COOLDOWN_LR = this.register('laser_cooldownlr');
+    public static readonly LASER_COOLDOWN_LR = this.register('laser.cooldownlr');
     public static readonly LASER_TRIGGER = this.register("laser.trigger");
     public static readonly LASER_BEAM = this.register("laser.beam");
     public static readonly LASER_BEAM_LOW = this.register("laser.beam_low");

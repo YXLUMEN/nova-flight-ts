@@ -1,12 +1,12 @@
 import {Window} from "@tauri-apps/api/window";
 import {invoke} from "@tauri-apps/api/core";
-import {error} from "@tauri-apps/plugin-log";
 import {isDev} from "./configs/RuntimeConfig.ts";
 import {ProtocolRegistry} from "./network/packet/ProtocolRegistry.ts";
 import {CodecRegistry} from "./network/CodecRegistry.ts";
 import {PageSplicer} from "./client/page/PageSplicer.ts";
 import {Settings} from "./client/settings/Settings.ts";
 import {ClientStartup} from "./client/ClientStartup.ts";
+import {Log} from "./worker/log.ts";
 
 export const app = new Window('main');
 
@@ -39,7 +39,7 @@ export async function run() {
         await app.once('save_before_close', async () => {
             const mapErr = (e: any) => {
                 console.error(e);
-                return error(`[App] Failed to save data when closing app, cause by:\n  ${e}`);
+                return Log.error(`[App] Failed to save data when closing app, cause by:\n  ${e}`);
             };
 
             await client.saveAll().catch(mapErr);
@@ -52,13 +52,11 @@ export async function run() {
     } catch (err) {
         if (Error.isError(err)) {
             const msg = `Error while starting client: ${err.message} by ${err.cause}\n at ${err.stack}`;
-            console.error(err);
-            await error(msg);
+            await Log.error(msg);
             return;
         }
         const msg = `Error while starting client: ${err}`;
-        console.error(msg);
-        await error(msg);
+        await Log.error(msg);
 
         if (isDev) return;
         await app.close();

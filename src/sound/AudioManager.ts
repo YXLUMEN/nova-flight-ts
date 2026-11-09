@@ -8,6 +8,7 @@ import {ResourceManager} from "../resource/ResourceManager.ts";
 import {Resources} from "../resource/Resources.ts";
 import {appEvent} from "../event/EventBus.ts";
 import {Settings} from "../client/settings/Settings.ts";
+import {Log} from "../worker/log.ts";
 
 export class AudioManager {
     private static audio: HTMLAudioElement = null!;
@@ -42,7 +43,7 @@ export class AudioManager {
         const id = event.id;
         const url = this.module.buffers.get(id);
         if (!url) {
-            console.warn(`Can't find sound with id: ${id}`);
+            Log.warn(`Can't find sound with id: ${id}`);
             return Promise.resolve();
         }
 

@@ -4,7 +4,7 @@ import type {TranslatableText} from "../../i18n/TranslatableText.ts";
 import type {Options} from "./Options.ts";
 import {Result} from "../../utils/result/Result.ts";
 import {IllegalArgumentError} from "../../type/errors.ts";
-import {warn} from "@tauri-apps/plugin-log";
+import {Log} from "../../worker/log.ts";
 
 export class SettingItem<T> {
     private static readonly SELF = (v: any) => v;
@@ -71,8 +71,7 @@ export class SettingItem<T> {
     public restore(value: T): void {
         if (value === this.value) return;
         if (!this.validate(value)) {
-            warn(`[Settings] Invalidate value get "${value} at "${this.id}" when restore`)
-                .catch(console.error);
+            Log.warn(`[Settings] Invalidate value get "${value} at "${this.id}" when restore`);
             return;
         }
 

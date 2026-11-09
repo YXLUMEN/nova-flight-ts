@@ -2,7 +2,6 @@ import type {ResourceModule} from "./ResourceModule.ts";
 import type {Identifier} from "../registry/Identifier.ts";
 import type {SettingGuard} from "../client/settings/SettingGuard.ts";
 import {type DirEntry, exists, readDir, readTextFile} from "@tauri-apps/plugin-fs";
-import {warn} from "@tauri-apps/plugin-log";
 import {join, resolveResource} from "@tauri-apps/api/path";
 import {traverse_dir} from "../client/ipc/fs.ts";
 import {pruneSuffix} from "../utils/path.ts";
@@ -13,6 +12,7 @@ import {Settings} from "../client/settings/Settings.ts";
 import {Result} from "../utils/result/Result.ts";
 import {CallTwice} from "../type/errors.ts";
 import {LangChange} from "../event/events/ui/LangChange.ts";
+import {Log} from "../worker/log.ts";
 
 export class LangResource implements ResourceModule, SettingGuard<string> {
     private readonly allLang: string[] = [];
@@ -73,7 +73,7 @@ export class LangResource implements ResourceModule, SettingGuard<string> {
                 if (entry.isFile) files.push(entry);
             }
         } catch (err) {
-            await warn(`[Client] Error while traverse directory ${targetRoot}, because: ${err}`);
+            Log.warn(`[Client] Error while traverse directory ${targetRoot}, because: ${err}`);
         }
 
         if (files.length === 0) return;
@@ -87,19 +87,19 @@ export class LangResource implements ResourceModule, SettingGuard<string> {
         const map = new Map();
         for (const result of results) {
             if (result.status === 'rejected') {
-                void warn(`[Client] Error while load ${lang}: ${result.reason}`);
+                Log.warn(`[Client] Error while load ${lang}: ${result.reason}`);
                 continue;
             }
 
             const entries = result.value;
             if (!Array.isArray(entries)) {
-                void warn(`[Client] Lang entry not array.`);
+                Log.warn(`[Client] Lang entry not array.`);
                 continue;
             }
 
             for (const [key, value] of entries) {
                 if (typeof value !== 'string') {
-                    void warn(`[Client] Invalid value ${value} in ${lang}`);
+                    Log.warn(`[Client] Invalid value ${value} in ${lang}`);
                     continue;
                 }
                 map.set(key, value);

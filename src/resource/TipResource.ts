@@ -2,9 +2,9 @@ import type {ResourceModule} from "./ResourceModule.ts";
 import type {Identifier} from "../registry/Identifier.ts";
 import {resolveResource} from "@tauri-apps/api/path";
 import {readTextFile} from "@tauri-apps/plugin-fs";
-import {error, warn} from "@tauri-apps/plugin-log";
 import {Resources} from "./Resources.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
+import {Log} from "../worker/log.ts";
 
 export class TipResource implements ResourceModule {
     public tips: TranslatableText[] = [];
@@ -17,8 +17,8 @@ export class TipResource implements ResourceModule {
         try {
             const jsonPath = await resolveResource(`resources/nova-flight/tips.json`);
             const json: unknown = JSON.parse(await readTextFile(jsonPath));
-            if (!Array.isArray(json) || !json.every(item => typeof item === "string")) {
-                await warn('Wrong syntax with tips.json');
+            if (!Array.isArray(json)) {
+                Log.warn('Wrong syntax with tips.json');
                 return;
             }
 
@@ -26,7 +26,7 @@ export class TipResource implements ResourceModule {
                 [TranslatableText.NONE] :
                 json.map(item => TranslatableText.of(`tips.${item}`));
         } catch (e) {
-            await error(`Could not load tips.json: ${e}`);
+            Log.error(`Could not load tips.json: ${e}`);
         }
     }
 

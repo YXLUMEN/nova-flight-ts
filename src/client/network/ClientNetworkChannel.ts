@@ -2,7 +2,6 @@ import type {Consumer, UUID} from "../../type/types.ts";
 import type {Payload} from "../../network/Payload.ts";
 import type {ClientChannel} from "./ClientChannel.ts";
 import type {PacketTooLargeError} from "../../type/errors.ts";
-import {error} from "@tauri-apps/plugin-log";
 import {empty} from "../../utils/util.ts";
 import {parseUUID} from "../../utils/uuid_util.ts";
 import {isDev} from "../../configs/RuntimeConfig.ts";
@@ -12,6 +11,7 @@ import {BinaryReader} from "../../serialization/BinaryReader.ts";
 import {PacketHeader} from "../../network/PacketHeader.ts";
 import {NetworkSide} from "../../network/NetworkSide.ts";
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
+import {Log} from "../../worker/log.ts";
 
 export class ClientNetworkChannel extends WSNetworkChannel implements ClientChannel {
     private readonly clientId: UUID;
@@ -36,7 +36,7 @@ export class ClientNetworkChannel extends WSNetworkChannel implements ClientChan
 
     protected override onLargePacket(err: PacketTooLargeError) {
         if (isDev) throw err;
-        error(`[Client] ${err}`).catch(console.error);
+        Log.error(err);
     }
 
     protected override handleMessage(event: MessageEvent): void {

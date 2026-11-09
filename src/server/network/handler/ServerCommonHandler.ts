@@ -1,13 +1,13 @@
 import type {NovaFlightServer} from "../../NovaFlightServer.ts";
 import type {Payload} from "../../../network/Payload.ts";
 import type {Return} from "../../../type/types.ts";
-import {TranslatableText} from "../../../i18n/TranslatableText.ts";
-import {PongS2CPacket} from "../../../network/packet/s2c/PongS2CPacket.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
 import type {PacketListener} from "../../../network/handler/PacketListener.ts";
-import {type ConnectionState} from "../ConnectionState.ts";
+import type {ConnectionState} from "../ConnectionState.ts";
 import {Log} from "../../../worker/log.ts";
 import {WSNetworkChannel} from "../../../network/WSNetworkChannel.ts";
+import {TranslatableText} from "../../../i18n/TranslatableText.ts";
+import {PongS2CPacket} from "../../../network/packet/s2c/PongS2CPacket.ts";
 
 export abstract class ServerCommonHandler implements PacketListener {
     public static readonly LOGOUT = TranslatableText.of('network.disconnect.logout');

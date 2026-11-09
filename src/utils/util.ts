@@ -163,6 +163,10 @@ export function* concatIters<T>(...its: Iterable<T>[]) {
     for (const it of its) yield* it;
 }
 
+export function isRecord(obj: unknown): obj is Record<any, any> {
+    return obj != null && typeof obj === 'object' && !Array.isArray(obj);
+}
+
 /** 空方法 */
 export function empty(): void {
 }
