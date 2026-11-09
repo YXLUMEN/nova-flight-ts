@@ -3,7 +3,7 @@ import type {ItemStack} from "../ItemStack.ts";
 import type {ServerWorld} from "../../server/ServerWorld.ts";
 import {thickLineCircleHit} from "../../utils/math/collide.ts";
 import {clamp} from '../../utils/math/math.ts';
-import {isClient} from "../../configs/RuntimeConfig.ts";
+import {isClient, isServer} from "../../configs/RuntimeConfig.ts";
 import {World} from '../../world/World.ts';
 import {SoundEvents} from "../../sound/SoundEvents.ts";
 import {SpecialWeapon} from "./SpecialWeapon.ts";
@@ -141,13 +141,13 @@ export class PhaseLasers extends SpecialWeapon {
     }
 
     public override onStartFire(_stack: ItemStack, world: World, attacker: Entity) {
-        if (!world.isClient) return;
+        if (isServer) return;
         world.playSound(attacker, SoundEvents.LASER_TRIGGER);
         world.playLoopSound(attacker, SoundEvents.LASER_BEAM_LOW, 0.5);
     }
 
     public override onEndFire(_stack: ItemStack, world: World, attacker: Entity) {
-        if (!world.isClient) return;
+        if (isServer) return;
         if (world.stopLoopSound(attacker, SoundEvents.LASER_BEAM_LOW)) {
             world.playSound(attacker, SoundEvents.LASER_CHARGE_DOWN);
         }

@@ -1,8 +1,8 @@
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {ResourceModule} from "./ResourceModule.ts";
 import type {HashMap} from "../utils/collection/HashMap.ts";
-import {resolveResource} from "@tauri-apps/api/path";
-import {exists, readFile, readTextFile} from "@tauri-apps/plugin-fs";
+import {join, resolveResource} from "@tauri-apps/api/path";
+import {readFile, readTextFile} from "@tauri-apps/plugin-fs";
 import {warn} from "@tauri-apps/plugin-log";
 import {deepFreeze} from "../utils/util.ts";
 import {RegistryKeys} from "../registry/RegistryKeys.ts";
@@ -27,14 +27,14 @@ export class SoundResource implements ResourceModule {
         const audioContext = new AudioContext();
 
         if (!json || typeof json !== 'object') {
-            console.warn('[Client] No sound.json was found');
+            await warn('[Client] No sound.json was found');
             return;
         }
 
         const mapped = json as Record<string, any>;
-        const pool = new PromisePool();
+        const pool = new PromisePool<void>(16);
         const buffersMap = new Map<Identifier, AudioBuffer[]>();
-        const root = 'resources/nova-flight/sounds';
+        const root = await resolveResource('resources/nova-flight/sounds');
 
         const job = async (buffers: AudioBuffer[], soundPath: string) => {
             const buffer = await this.decodeAudios(root, soundPath, audioContext);
@@ -82,15 +82,13 @@ export class SoundResource implements ResourceModule {
 
     private async decodeAudios(root: string, filename: string, audioContext: AudioContext): Promise<AudioBuffer | null> {
         try {
-            let res = await resolveResource(`${root}/${filename}.ogg`);
-            if (!await exists(res)) {
-                res = await resolveResource(`${root}/${filename}.wav`);
-            }
-
-            const fileData = await readFile(res);
+            const path = await join(root, `${filename}.ogg`);
+            const fileData = await readFile(path);
             return await audioContext.decodeAudioData(fileData.buffer);
-        } catch (e) {
-            console.warn(`Failed to load sound: ${filename}`, e);
+        } catch (err) {
+            const msg = `Failed to load sound: ${filename}`;
+            console.warn(msg, err);
+            await warn(msg);
             return null;
         }
     }

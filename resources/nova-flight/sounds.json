@@ -55,13 +55,24 @@
   "laser.cooldown": {
     "subtitle": "sound.nova-flight.laser.cooldown",
     "sounds": [
-      "nova-flight:laser/cooldown"
+      "nova-flight:laser/cooldown_01",
+      "nova-flight:laser/cooldown_02",
+      "nova-flight:laser/cooldown_03"
+    ]
+  },
+  "laser.cooldownlr": {
+    "subtitle": "sound.nova-flight.laser.cooldownlr",
+    "sounds": [
+      "nova-flight:laser/cooldownlr_01",
+      "nova-flight:laser/cooldownlr_02",
+      "nova-flight:laser/cooldownlr_03"
     ]
   },
   "laser.trigger": {
     "subtitle": "sound.nova-flight.laser.trigger",
     "sounds": [
-      "nova-flight:laser/trigger"
+      "nova-flight:laser/trigger_01",
+      "nova-flight:laser/trigger_02"
     ]
   },
   "laser.beam": {

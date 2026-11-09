@@ -16,6 +16,7 @@ export class SoundEvents {
 
     public static readonly LASER_OVERHEAT = this.register("laser.overheat_alarm");
     public static readonly LASER_COOLDOWN = this.register("laser.cooldown");
+    public static readonly LASER_COOLDOWN_LR = this.register('laser_cooldownlr');
     public static readonly LASER_TRIGGER = this.register("laser.trigger");
     public static readonly LASER_BEAM = this.register("laser.beam");
     public static readonly LASER_BEAM_LOW = this.register("laser.beam_low");
