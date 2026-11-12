@@ -23,18 +23,19 @@ pub(crate) fn try_send_packet<T: Payload>(tx: &Tx, payload: T) -> () {
 
 /// 区别于 send_message.
 /// 此方法只能向服务端发送
-pub(crate) async fn action_fail(tx: &Tx, reason: &str) -> () {
-    let packet = RelayMessage {
-        message: reason.to_string(),
-    };
+pub(crate) async fn action_fail(tx: &Tx, code: u8) -> () {
+    let packet = RelayMessage::new(code);
     send_timeout(tx, packet, Duration::from_secs(2)).await;
 }
 
 /// 中继通知,目前为纯文本
-pub(crate) fn send_message(tx: &Tx, reason: &str) -> () {
-    let packet = RelayMessage {
-        message: reason.to_string(),
-    };
+pub(crate) fn send_code(tx: &Tx, code: u8) -> () {
+    let packet = RelayMessage::new(code);
+    try_send_packet(tx, packet);
+}
+
+pub(crate) fn send_message(tx: &Tx, code: u8, args: &[&str]) -> () {
+    let packet = RelayMessage::arg(code, args);
     try_send_packet(tx, packet);
 }
 

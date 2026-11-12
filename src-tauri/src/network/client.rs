@@ -1,5 +1,5 @@
-use crate::network::infrastructure::header::C2S;
-use crate::network::infrastructure::net::send_message;
+use crate::network::infrastructure::header::{C2S, PACKET_TOO_LARGE};
+use crate::network::infrastructure::net::send_code;
 use crate::network::infrastructure::protocol::MAX_PAYLOAD_LEN;
 use crate::network::infrastructure::session::Session;
 use crate::network::infrastructure::states::RelayState;
@@ -42,7 +42,7 @@ async fn on_recv_client(
     match msg {
         Ok(Message::Binary(payload)) => {
             if payload.len() > MAX_PAYLOAD_LEN {
-                send_message(&session.tx, "ERR:Payload too large");
+                send_code(&session.tx, PACKET_TOO_LARGE);
                 return false;
             }
 

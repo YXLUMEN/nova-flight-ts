@@ -1,4 +1,4 @@
-import {appLocalDataDir, join, resolveResource} from "@tauri-apps/api/path";
+import {appLocalDataDir, dirname, join} from "@tauri-apps/api/path";
 import {exists, mkdir, readFile, remove, rename, writeFile} from "@tauri-apps/plugin-fs";
 import {shortUUID} from "../utils/math/math.ts";
 import {
@@ -8,12 +8,14 @@ import {
     type RequireWrite,
     type ResponseRead
 } from "../worker/WorkerMsgType.ts";
+import {Log} from "../worker/log.ts";
 
 export class ClientWorkerFS {
     public async readFile(data: RequireRead, worker: Worker) {
-        const res = await resolveResource(`resources/nova-flight/${data.path}`);
+        const root = await appLocalDataDir();
+        const path = await join(root, data.path);
 
-        if (!(await exists(res))) {
+        if (!(await exists(path))) {
             worker.postMessage({
                 m2w: Main2WorkerType.READ_FILE,
                 id: data.id,
@@ -22,7 +24,7 @@ export class ClientWorkerFS {
             return;
         }
 
-        const buffer = await readFile(res);
+        const buffer = await readFile(path);
         worker.postMessage({
             m2w: Main2WorkerType.READ_FILE,
             id: data.id,
@@ -35,17 +37,18 @@ export class ClientWorkerFS {
         if (!(buffer instanceof ArrayBuffer)) throw new TypeError('BufferData must be an ArrayBuffer');
 
         const root = await appLocalDataDir();
-        const saveRoot = await join(root, 'saves');
-        await mkdir(saveRoot, {recursive: true});
+        const path = await join(root, data.path);
+        const dir = await dirname(path);
 
-        const resolved = await join(saveRoot, data.path);
-        const temp = `${resolved}.${shortUUID(8)}-temp`;
-
+        await mkdir(dir, {recursive: true});
+        const temp = `${path}.${shortUUID(8)}-temp`;
         try {
             await writeFile(temp, new Uint8Array(buffer), {create: true});
-            await rename(temp, resolved);
+            await rename(temp, path);
         } catch (err) {
-            await remove(temp).catch();
+            await Log.error(`Fail to write file:\n  ${err}`);
+            await remove(temp)
+                .catch(err => Log.error(`Error occur when remove temp file. Cause by:\n  ${err}`));
         }
     }
 

@@ -1,16 +1,16 @@
 import type {Predicate, Return} from "../../type/types.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
-import {Options} from "./Options.ts";
-import {SettingItem} from "./SettingItem.ts";
-import {GatedSettingItem} from "./GatedSettingItem.ts";
-import {OptionStorage} from "./OptionStorage.ts";
-import {SettingPredicates} from "./SettingPredicates.ts";
+import {Options} from "../../database/settings/Options.ts";
+import {SettingItem} from "../../database/settings/SettingItem.ts";
+import {GatedSettingItem} from "../../database/settings/GatedSettingItem.ts";
+import {ClientOptionStorage} from "./ClientOptionStorage.ts";
+import {SettingPredicates} from "../../database/settings/SettingPredicates.ts";
 
 // TODO 设置页面;补充设置选项
 export class Settings {
     public static readonly OPTIONS = new Options(1,
-        new OptionStorage('/configs', 'settings.json')
+        new ClientOptionStorage('/configs', 'settings.json')
     );
 
     public static readonly FPS = this.item<number>(

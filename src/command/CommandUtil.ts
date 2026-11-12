@@ -5,6 +5,7 @@ import type {Suggestions} from "../brigadier/suggestion/Suggestions.ts";
 import type {SuggestionProvider} from "../brigadier/suggestion/SuggestionProvider.ts";
 import type {CommandContext} from "../brigadier/context/CommandContext.ts";
 import type {Registry} from "../registry/Registry.ts";
+import type {ServerWorld} from "../server/ServerWorld.ts";
 import {commonPrefix} from "../utils/Strings.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {RelativePosition} from "../utils/math/RelativePosition.ts";
@@ -152,15 +153,6 @@ export class CommandUtil {
         return map ? map(result.result) : result.result;
     }
 
-    public static as<T extends CommandSource, U>(ctx: CommandContext<T>, arg: string, predicate: Predicate<unknown>): U {
-        const result = ctx.args.get(arg);
-        if (!result) throw new CommandError(`\x1b[33m<${arg}> is required`);
-
-        const value = result.result;
-        if (predicate(value)) return value as U;
-        throw new CommandError('Unmatch type');
-    }
-
     public static assertSelector<T extends CommandSource>(ctx: CommandContext<T>, arg: string) {
         const selectorResult = ctx.args.get(arg);
         if (!selectorResult) throw new CommandError("\x1b[33m<selector> is required");
@@ -189,5 +181,14 @@ export class CommandUtil {
             return register.getById(id);
         }
         throw new IllegalArgumentError('Registry need an Identifier', {cause: id});
+    }
+
+    public static filterPlayer<T extends CommandSource>(ctx: CommandContext<T>, playerName: string) {
+        const world = this.assertWorld(ctx) as ServerWorld;
+        if (world.isClient) return [];
+        return world
+            .getPlayers()
+            .filter(player => player.profile().name === playerName)
+            .toArray();
     }
 }

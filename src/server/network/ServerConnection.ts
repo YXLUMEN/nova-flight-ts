@@ -1,44 +1,51 @@
-import {ConnectionState} from "./ConnectionState.ts";
-import {TranslatableText} from "../../i18n/TranslatableText.ts";
+import type {Connection} from "../../network/Connection.ts";
 import type {ServerChannel} from "./ServerChannel.ts";
-import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
-import type {Payload} from "../../network/Payload.ts";
-import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import type {UUID} from "../../type/types.ts";
 import type {PacketListener} from "../../network/handler/PacketListener.ts";
+import type {Payload} from "../../network/Payload.ts";
+import type {SocketAddr} from "../../network/SocketAddr.ts";
+import {ConnectionState} from "./ConnectionState.ts";
+import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
+import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import {IllegalStateError} from "../../type/errors.ts";
 import {RelayActionBuilder} from "./RelayActionBuilder.ts";
-import type {Connection} from "../../network/Connection.ts";
+import {Session} from "./Session.ts";
 
 export class ServerConnection implements Connection {
-    public static readonly TIMEOUT = TranslatableText.of('network.disconnect.timeout');
-    public static readonly AFK_TIMEOUT_MS = 60_000; // 60s
-    public static readonly DISCONNECT_ANNOUNCE_CD = 500;
+    private static readonly TIMEOUT = 'network.disconnect.timeout';
+
+    public readonly session: Session;
 
     private readonly channel: ServerChannel;
     private readonly sessionId: number;
     private readonly uuid: UUID;
+    private readonly addr: SocketAddr;
     private readonly isLocal: boolean;
 
     private readonly receiveQueue: RingBuffer<Payload> = new RingBuffer(32);
     private packetListener: PacketListener | null = null;
 
     private state: ConnectionState = ConnectionState.HANDSHAKING;
-    private lastActivityTime: number;
-    private disconnectStartTime: number = 0;
     private handlerDisconnected = false;
 
-    private announceTime = 0;
-
-    public constructor(channel: ServerChannel, sessionId: number, uuid: UUID, isHost: boolean) {
+    public constructor(
+        channel: ServerChannel,
+        sessionId: number,
+        uuid: UUID,
+        addr: SocketAddr,
+        isHost: boolean
+    ) {
         this.channel = channel;
         this.sessionId = sessionId;
         this.uuid = uuid;
+        this.addr = addr;
         this.isLocal = isHost;
-        this.lastActivityTime = performance.now();
+        this.session = new Session();
     }
 
     public tick(): void {
+        this.session.tick();
+
         if (!this.packetListener) return;
         while (!this.receiveQueue.isEmpty()) {
             const payload = this.receiveQueue.shift();
@@ -61,15 +68,15 @@ export class ServerConnection implements Connection {
     public recv(payload: Payload): void {
         if (this.state !== ConnectionState.PLAY && !payload.canProcessInTransition?.()) return;
 
-        this.lastActivityTime = performance.now();
+        this.session.active();
         this.receiveQueue.push(payload);
     }
 
-    public disconnect(reason: TranslatableText): void {
+    public disconnect(reason: string, args?: string[]): void {
         if (!this.changeState(ConnectionState.DISCONNECTING)) return;
 
-        this.disconnectStartTime = performance.now();
-        this.send(new PlayerDisconnectS2CPacket(this.uuid, reason));
+        this.session.startDisconnect();
+        this.send(new PlayerDisconnectS2CPacket(this.uuid, reason, args));
     }
 
     public forceDisconnect(): void {
@@ -105,12 +112,8 @@ export class ServerConnection implements Connection {
         this.changeState(state);
     }
 
-    public checkActivate(timeout: number = ServerConnection.AFK_TIMEOUT_MS): void {
-        const now = performance.now();
-        if (now - this.lastActivityTime >= timeout &&
-            now - this.announceTime >= ServerConnection.DISCONNECT_ANNOUNCE_CD
-        ) {
-            this.announceTime = now;
+    public checkActivate(timeout: number): void {
+        if (this.session.announceDead(timeout)) {
             this.disconnect(ServerConnection.TIMEOUT);
         }
     }
@@ -118,17 +121,21 @@ export class ServerConnection implements Connection {
     public shouldRemove(): boolean {
         if (this.state === ConnectionState.CLOSED) return true;
         if (this.state === ConnectionState.DISCONNECTING) {
-            return (performance.now() - this.disconnectStartTime) > 2000;
+            return this.session.isDead();
         }
         return false;
     }
 
-    public getId(): number {
+    public sid(): number {
         return this.sessionId;
     }
 
     public isHost(): boolean {
         return this.isLocal;
+    }
+
+    public getAddr() {
+        return this.addr;
     }
 
     public cleanBuffer(): void {

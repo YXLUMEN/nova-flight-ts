@@ -1,7 +1,7 @@
-import type {FileBuffer} from "../../type/types.ts";
+import type {FileBuffer} from "../../../type/types.ts";
 import {readFile} from "@tauri-apps/plugin-fs";
 import {join, resolveResource} from "@tauri-apps/api/path";
-import {traverse_dir} from "../../client/ipc/fs.ts";
+import {traverse_dir} from "../../../client/ipc/fs.ts";
 import {DataRecord} from "./DataRecord.ts";
 
 export class TraversFilesRecord extends DataRecord<FileBuffer[]> {

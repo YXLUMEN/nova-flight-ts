@@ -21,6 +21,10 @@
       "identifier": "fs:allow-exists",
       "allow": [{"path": "APPLOCALDATA/**"}, {"path": "$RESOURCE/**"}]
     },
+    {
+      "identifier": "fs:allow-remove",
+      "allow": [{"path": "APPLOCALDATA/**"}]
+    },
     "log:allow-log",
     "dialog:default"
   ]

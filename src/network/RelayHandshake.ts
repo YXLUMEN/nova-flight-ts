@@ -7,6 +7,7 @@ import {Detached} from "./packet/relay/Detached.ts";
 import {Attached} from "./packet/relay/Attached.ts";
 import type {NetworkSide} from "./NetworkSide.ts";
 import {RelayMessage} from "./packet/relay/RelayMessage.ts";
+import {RelayCodeMap} from "./RelayCodeMap.ts";
 
 export class RelayHandshake {
     private readonly ws: WebSocket;
@@ -67,17 +68,14 @@ export class RelayHandshake {
         }
 
         if (packet instanceof RelayMessage) {
-            const parts = packet.msg.split(':');
-            const type = parts[0];
-            if (type === 'ERR') fail(packet.msg);
-            else console.log(packet.msg);
+            fail(RelayCodeMap.get(packet.code));
             return;
         }
 
         if (!(packet instanceof Attached)) return;
 
         const sessionId = packet.sessionId;
-        if (!Number.isSafeInteger(sessionId) || sessionId <= 0 || sessionId > 64) {
+        if (!Number.isSafeInteger(sessionId) || sessionId <= 0 || sessionId > 128) {
             fail(`[${this.side}] Invalid session ID`);
             return;
         }

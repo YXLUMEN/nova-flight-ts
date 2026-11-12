@@ -1,5 +1,6 @@
 import type {SettingItem} from "./SettingItem.ts";
 import type {OptionStorage} from "./OptionStorage.ts";
+import {isRecord} from "../../utils/util.ts";
 import {Log} from "../../worker/log.ts";
 
 export class Options {
@@ -55,7 +56,7 @@ export class Options {
 
     public fromJson(json: string): void {
         const parsed: any = JSON.parse(json);
-        if (typeof parsed !== 'object' || parsed === null) return;
+        if (!isRecord(parsed)) return;
 
         const version: unknown = parsed.version;
         if (typeof version !== 'number' || version !== this.version) {
@@ -64,7 +65,7 @@ export class Options {
         }
 
         const values = parsed.values as Record<string, unknown>;
-        if (typeof values !== 'object' || values === null) return;
+        if (!isRecord(parsed)) return;
 
         for (const [key, item] of this.items) {
             const raw = values[key];

@@ -1,4 +1,4 @@
-import type {DataRecord} from "./DataRecord.ts";
+import type {DataRecord} from "./types/DataRecord.ts";
 import type {RecordType} from "./RecordType.ts";
 import {Result} from "../../utils/result/Result.ts";
 

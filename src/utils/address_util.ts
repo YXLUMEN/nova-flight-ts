@@ -1,5 +1,5 @@
 export function validateServerAddress(addr: string): boolean {
-    const parts = addr.split(":");
+    const parts = addr.split(':');
     if (parts.length !== 2) return false;
 
     const [host, portStr] = parts;
@@ -9,7 +9,7 @@ export function validateServerAddress(addr: string): boolean {
         return false;
     }
 
-    if (host === "localhost") return true;
+    if (host === 'localhost') return true;
     return validateIpv4(host);
 }
 

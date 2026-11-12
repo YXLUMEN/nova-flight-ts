@@ -1,4 +1,6 @@
 {
+  "invalid_packet": "无法解析的数据包",
+  "packet_too_large": "过大的数据包",
   "disconnect.timeout": "连接超时",
   "disconnect.logout": "断开连接",
   "disconnect.illegal_character": "非法字符",
@@ -11,7 +13,8 @@
   "disconnect.promote.fail": "会话提升失败",
   "disconnect.promote.timeout": "会话提升超时",
   "disconnect.still_loading": "服务器正在启动",
-  "disconnect.unmach.protocal": "不匹配的网络协议",
-  "disconnect.unmach.game": "不兼容的游戏版本 需要 \"{}\" 但当前为 \"{}\"",
-  "disconnect.move_too_fast": "移动过快"
+  "disconnect.unmach.protocal": "不匹配的网络协议,需要 \"{}\" 但当前为 \"{}\"",
+  "disconnect.unmach.game": "不兼容的游戏版本,需要 \"{}\" 但当前为 \"{}\"",
+  "disconnect.move_too_fast": "移动过快",
+  "baned": "被服务器封禁"
 }

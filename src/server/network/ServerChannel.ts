@@ -1,7 +1,6 @@
 import type {Payload} from "../../network/Payload.ts";
 import type {Channel} from "../../network/Channel.ts";
 import type {GameProfile} from "../entity/GameProfile.ts";
-import type {BiConsumer} from "../../type/types.ts";
 
 export interface ServerChannel extends Channel {
     action(buf: Uint8Array<ArrayBuffer>): void;
@@ -17,5 +16,10 @@ export interface ServerChannel extends Channel {
 
     sendExclude(payload: Payload, ...excludes: GameProfile[]): void;
 
-    setHandler(handler: BiConsumer<number, Payload>): void
+    setOnPayload(handler: PayloadHandler): void;
+
+    setOnFailDecode(handler: DecodeErrorHandler): void;
 }
+
+export type PayloadHandler = (sid: number, payload: Payload) => void;
+export type DecodeErrorHandler = (sid: number, err: unknown) => void;

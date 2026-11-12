@@ -158,7 +158,7 @@ export abstract class World {
 
     public abstract getEntities(): EntityList;
 
-    public abstract getPlayers(): Iterable<PlayerEntity>;
+    public abstract getPlayers(): IteratorObject<PlayerEntity>;
 
     public abstract getMobs(): ReadonlySet<MobEntity>;
 

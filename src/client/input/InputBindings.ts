@@ -1,6 +1,6 @@
 import {type InputStroke, strokeKey} from "./InputStroke.ts";
-import {OptionStorage} from "../settings/OptionStorage.ts";
-import {Options} from "../settings/Options.ts";
+import {ClientOptionStorage} from "../settings/ClientOptionStorage.ts";
+import {Options} from "../../database/settings/Options.ts";
 import {InputBinding} from "./InputBinding.ts";
 import {Identifier} from "../../registry/Identifier.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
@@ -9,7 +9,7 @@ import {KeyModifier} from "./KeyModifier.ts";
 // TODO 按键绑定页面;
 export class InputBindings {
     public static readonly OPTIONS = new Options(1,
-        new OptionStorage('/configs', 'keybinds.json')
+        new ClientOptionStorage('/configs', 'keybinds.json')
     );
 
     // 移动

@@ -1,5 +1,5 @@
 import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
-import {Settings} from "./Settings.ts";
+import {Settings} from "../../client/settings/Settings.ts";
 
 export class BindSettings {
     public static init() {

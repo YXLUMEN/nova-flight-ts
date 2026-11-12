@@ -7,6 +7,8 @@ import type {RelayMessage} from "../../../network/packet/relay/RelayMessage.ts";
 import type {PlayerDisconnectS2CPacket} from "../../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import type {BatchBuffer} from "../../../network/packet/common/BatchBuffer.ts";
 import {GaussianRandom} from "../../../utils/math/random/GaussianRandom.ts";
+import {RelayCodeMap} from "../../../network/RelayCodeMap.ts";
+import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 
 export abstract class ClientCommonHandler implements PacketListener {
     protected readonly connection: ClientConnection;
@@ -26,23 +28,13 @@ export abstract class ClientCommonHandler implements PacketListener {
     }
 
     public onRelayMessage(packet: RelayMessage): void {
-        const parts = packet.msg.split(':');
-        const type = parts[0];
-        const msg = parts.slice(1).join(':');
-
-        if (type === 'INFO') this.relayInfoHandler(msg);
-        else if (type === 'ERR') this.relayErrorHandler(msg);
+        const key = RelayCodeMap.get(packet.code);
+        const message = key ? TranslatableText.of(key).asString() : 'Unknown Error';
+        this.client.leaveAndShow(message);
     }
 
     public onDetached() {
         this.connection.disconnect();
-    }
-
-    private relayInfoHandler(_message: string): void {
-    }
-
-    private relayErrorHandler(message: string): void {
-        this.client.leaveAndShow(message);
     }
 
     public onBatch(packet: BatchBuffer): void {
@@ -54,7 +46,7 @@ export abstract class ClientCommonHandler implements PacketListener {
         this.connection.disconnect();
 
         this.client.setPause(true);
-        this.client.leaveAndShow(packet.reason);
+        this.client.leaveAndShow(new TranslatableText(packet.reason, packet.args));
     }
 
     public send(packet: Payload): void {

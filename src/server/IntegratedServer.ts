@@ -18,6 +18,7 @@ import {ServerDefaultEvents} from "./event/ServerDefaultEvents.ts";
 import {Worker2MainType} from "../worker/WorkerMsgType.ts";
 import {ServerRecordManager} from "./data/ServerRecordManager.ts";
 import {ServerRecordRegister} from "./data/ServerRecordRegister.ts";
+import {ServerProperties} from "./ServerProperties.ts";
 
 export class IntegratedServer extends NovaFlightServer {
     private readonly hostUUID: UUID;
@@ -26,7 +27,7 @@ export class IntegratedServer extends NovaFlightServer {
         const secretKey = new Uint8Array(startUp.key);
         const channel = secretKey.length === 0 ?
             new ServerIntegratedChannel() :
-            new ServerNetworkChannel('127.0.0.1:25566', secretKey);
+            new ServerNetworkChannel(startUp.addr, secretKey);
 
         super(startUp.saveName, channel);
         this.hostUUID = startUp.hostUUID;
@@ -42,6 +43,8 @@ export class IntegratedServer extends NovaFlightServer {
 
     public override async runServer(): Promise<void> {
         await (await import('@bokuweb/zstd-wasm')).init();
+        await ServerProperties.OPTIONS.load();
+        await ServerProperties.OPTIONS.save();
 
         const manager = await this.finishRegister();
         ServerTechManager.init();
@@ -104,8 +107,8 @@ export class IntegratedServer extends NovaFlightServer {
     }
 
     private async finishRegister(): Promise<RegistryManager> {
-        const manager = new RegistryManager();
         const record = new ServerRecordManager();
+        const manager = new RegistryManager();
         ServerRecordRegister.register(record);
         await manager.registerAll(record);
         manager.freeze();

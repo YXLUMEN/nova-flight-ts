@@ -51,7 +51,7 @@ export class SettingItem<T> {
     public set(value: T): Result<T, Error> {
         if (value === this.value) return Result.ok(this.value);
         if (!this.validate(value)) {
-            return Result.err(new IllegalArgumentError());
+            return Result.err(new IllegalArgumentError(`Set a invalidate value "${value}"`));
         }
 
         const prev = this.value;

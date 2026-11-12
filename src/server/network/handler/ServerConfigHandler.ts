@@ -1,17 +1,16 @@
-import {GameProfile} from "../../entity/GameProfile.ts";
-import {ServerCommonHandler} from "./ServerCommonHandler.ts";
-import {TranslatableText} from "../../../i18n/TranslatableText.ts";
-import {ConnectionState} from "../ConnectionState.ts";
 import type {NovaFlightServer} from "../../NovaFlightServer.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
+import {GameProfile} from "../../entity/GameProfile.ts";
+import {ServerCommonHandler} from "./ServerCommonHandler.ts";
+import {ConnectionState} from "../ConnectionState.ts";
 import {PendingSpawn} from "./PendingSpawn.ts";
 import {TimeoutError} from "../../../type/errors.ts";
 import {ServerFinishConfigS2CPacket} from "../../../network/packet/config/ServerFinishConfigS2CPacket.ts";
 import {Log} from "../../../worker/log.ts";
 
 export class ServerConfigHandler extends ServerCommonHandler {
-    public static readonly PROMOTE_FAIL = TranslatableText.of('network.disconnect.promote.fail');
-    public static readonly PROMOTE_TIMEOUT = TranslatableText.of('network.disconnect.promote.timeout');
+    public static readonly PROMOTE_FAIL: string = 'network.disconnect.promote.fail';
+    public static readonly PROMOTE_TIMEOUT: string = 'network.disconnect.promote.timeout';
 
     private readonly profile: GameProfile;
     private spawnTask: PendingSpawn | null = null;

@@ -13,10 +13,6 @@ export class GameProfile {
     }
 
     public toString(): string {
-        return JSON.stringify({
-            id: this.sessionId,
-            uuid: this.clientId,
-            name: this.name,
-        });
+        return `SID: "${this.sessionId}" UUID: "${this.clientId}" Name: "${this.name}"`;
     }
 }

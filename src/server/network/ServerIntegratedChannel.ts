@@ -1,7 +1,6 @@
 import type {Payload} from "../../network/Payload.ts";
-import type {ServerChannel} from "./ServerChannel.ts";
+import type {PayloadHandler, ServerChannel} from "./ServerChannel.ts";
 import type {GameProfile} from "../entity/GameProfile.ts";
-import type {BiConsumer} from "../../type/types.ts";
 import {CodecRegistry} from "../../network/CodecRegistry.ts";
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {BinaryReader} from "../../serialization/BinaryReader.ts";
@@ -15,7 +14,7 @@ export class ServerIntegratedChannel implements ServerChannel {
 
     private clientId: number = 2; // 单机无意义
     private ctrl = new AbortController();
-    private handler: BiConsumer<number, Payload> = empty;
+    private onPayload: PayloadHandler = empty;
 
     public constructor() {
         this.onMessage = this.onMessage.bind(this);
@@ -109,7 +108,7 @@ export class ServerIntegratedChannel implements ServerChannel {
         const codec = CodecRegistry.byId(index);
         if (!codec) return;
 
-        this.handler(this.clientId, codec.codec.decode(reader));
+        this.onPayload(this.clientId, codec.codec.decode(reader));
     }
 
     private onMessage(event: MessageEvent): void {
@@ -134,12 +133,15 @@ export class ServerIntegratedChannel implements ServerChannel {
         }
     }
 
-    public setHandler(handler: BiConsumer<number, Payload>): void {
-        this.handler = handler;
+    public setOnPayload(handler: PayloadHandler): void {
+        this.onPayload = handler;
+    }
+
+    public setOnFailDecode(): void {
     }
 
     public clearHandlers(): void {
-        this.handler = empty;
+        this.onPayload = empty;
     }
 
     public setRemote(): void {

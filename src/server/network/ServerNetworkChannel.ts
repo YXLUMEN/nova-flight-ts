@@ -1,6 +1,5 @@
 import type {Payload} from "../../network/Payload.ts";
-import type {BiConsumer} from "../../type/types.ts";
-import type {ServerChannel} from "./ServerChannel.ts";
+import type {DecodeErrorHandler, PayloadHandler, ServerChannel} from "./ServerChannel.ts";
 import type {GameProfile} from "../entity/GameProfile.ts";
 import type {PacketTooLargeError} from "../../type/errors.ts";
 import {empty} from "../../utils/util.ts";
@@ -19,7 +18,8 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
     private readonly sendQueue = new RingBuffer<Payload>(64);
 
     private secretKey: Uint8Array | null;
-    private handler: BiConsumer<number, Payload> = empty;
+    private onPayload: PayloadHandler = empty;
+    private onFailDecode: DecodeErrorHandler = empty;
 
     public constructor(address: string, secretKey: Uint8Array) {
         super(NetworkSide.SERVER, address, CodecRegistry.S2C);
@@ -34,7 +34,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
         if (!this.isConnected()) return;
 
         if (buffer[0] !== PacketHeader.SERVER_ACTION) {
-            console.warn('Relay action packet must start with 0xFF');
+            Log.warn('Relay action packet must start with 0xFF');
             return;
         }
 
@@ -103,7 +103,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
 
     protected override onLargePacket(err: PacketTooLargeError) {
         if (isDev) throw err;
-        Log.error(`[Serve] ${err.name}:${err.message}`);
+        Log.error(`[Serve] ${err.name}:${err.message} at:\n  ${err.stack}\nCause by:  ${err.cause}`);
     }
 
     protected override handleMessage(event: MessageEvent): void {
@@ -114,7 +114,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
         if (header === PacketHeader.RELAY) {
             const index = reader.readUint8();
             const codec = CodecRegistry.byId(index);
-            if (codec) this.handler(0, codec.codec.decode(reader));
+            if (codec) this.onPayload(0, codec.codec.decode(reader));
             return;
         }
         if (header !== PacketHeader.C2S) {
@@ -122,7 +122,7 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
             return;
         }
 
-        const sessionId = reader.readUint8();
+        const sid = reader.readUint8();
         const index = reader.readVarUint();
         const codec = CodecRegistry.byId(index);
         if (!codec) return;
@@ -131,18 +131,24 @@ export class ServerNetworkChannel extends WSNetworkChannel implements ServerChan
         try {
             payload = codec.codec.decode(reader);
         } catch (err) {
-            Log.error(`[Server] Fail to decode packet for "${sessionId}"`);
+            this.onFailDecode(sid, err);
+            Log.error(`[Server] Fail to decode packet for "${sid}":\n  ${err}`);
             return;
         }
-        this.handler(sessionId, payload);
+        this.onPayload(sid, payload);
     }
 
-    public setHandler(handler: BiConsumer<number, Payload>) {
-        this.handler = handler;
+    public setOnPayload(handler: PayloadHandler) {
+        this.onPayload = handler;
+    }
+
+    public setOnFailDecode(handler: DecodeErrorHandler) {
+        this.onFailDecode = handler;
     }
 
     public override clearHandlers(): void {
-        this.handler = empty;
+        this.onPayload = empty;
+        this.onFailDecode = empty;
     }
 
     protected register() {

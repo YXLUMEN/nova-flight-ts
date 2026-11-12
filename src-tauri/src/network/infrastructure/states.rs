@@ -112,18 +112,20 @@ impl RelayState {
     }
 
     pub fn permit(&self, session_id: &u8) {
-        if let Some(mut entry) = self.clients.get_mut(session_id) {
-            if let Some(tx) = entry.permit_tx.take() {
-                let _ = tx.send(());
-            }
+        let Some(mut entry) = self.clients.get_mut(session_id) else {
+            return;
+        };
+        if let Some(tx) = entry.permit_tx.take() {
+            let _ = tx.send(());
         }
     }
 
     pub fn close(&self, session_id: &u8) {
-        if let Some(mut entry) = self.clients.get_mut(session_id) {
-            if let Some(tx) = entry.close_tx.take() {
-                let _ = tx.send(());
-            }
+        let Some(mut entry) = self.clients.get_mut(session_id) else {
+            return;
+        };
+        if let Some(tx) = entry.close_tx.take() {
+            let _ = tx.send(());
         }
     }
 

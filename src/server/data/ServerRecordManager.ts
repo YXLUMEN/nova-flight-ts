@@ -1,7 +1,7 @@
 import type {RecordType} from "../../database/data/RecordType.ts";
 import {RecordManager} from "../../database/data/RecordManager.ts";
 import {DataReceiveChannel} from "../../database/data/DataReceiveChannel.ts";
-import {IpcRecord} from "../../database/data/IpcRecord.ts";
+import {IpcRecord} from "../../database/data/types/IpcRecord.ts";
 
 export class ServerRecordManager extends RecordManager implements Disposable {
     private readonly channel: DataReceiveChannel;

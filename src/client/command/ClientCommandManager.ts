@@ -34,6 +34,8 @@ import {RemoveCommand} from "../../command/RemoveCommand.ts";
 import {CommandBarProxy} from "../page/compound/CommandBarProxy.ts";
 import {ParticleCommand} from "../../command/ParticleCommand.ts";
 import {TechCommand} from "../../command/TechCommand.ts";
+import {BanCommand} from "../../command/BanCommand.ts";
+import {UnbanCommand} from "../../command/UnbanCommand.ts";
 
 export class ClientCommandManager extends CommandManager implements EventListenerObject {
     private static readonly COMMAND_HISTORY_ID = 'history';
@@ -376,6 +378,8 @@ export class ClientCommandManager extends CommandManager implements EventListene
         TickCommand.registry(this.dispatcher);
         RemoveCommand.registry(this.dispatcher);
         TechCommand.registry(this.dispatcher);
+        BanCommand.registry(this.dispatcher);
+        UnbanCommand.registry(this.dispatcher);
     }
 
     public override executeWithPrefix(source: CommandSource, input: string): void {

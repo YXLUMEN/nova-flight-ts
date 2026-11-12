@@ -1,5 +1,5 @@
-import type {RecordType} from "./RecordType.ts";
-import type {DataReceiveChannel} from "./DataReceiveChannel.ts";
+import type {RecordType} from "../RecordType.ts";
+import type {DataReceiveChannel} from "../DataReceiveChannel.ts";
 import {DataRecord} from "./DataRecord.ts";
 
 export class IpcRecord<T> extends DataRecord<T> {

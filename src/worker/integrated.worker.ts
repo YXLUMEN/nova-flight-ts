@@ -23,7 +23,6 @@ async function handleEvent(event: MessageEvent) {
 
             const startUp = event.data.payload as StartServer;
             server = IntegratedServer.startServer(startUp) as IntegratedServer;
-            server.networkChannel.setRemote(startUp.addr);
             server.runServer().catch(err => {
                 Log.error(`[Server] Error occurrence while loading resources, cause by "${err}"`);
                 shutdown(err);

@@ -1,9 +1,10 @@
+import type {OptionStorage} from "../../database/settings/OptionStorage.ts";
 import {appLocalDataDir, join} from "@tauri-apps/api/path";
 import {exists, mkdir, readTextFile, remove, rename, writeTextFile} from "@tauri-apps/plugin-fs";
 import {shortUUID} from "../../utils/math/math.ts";
 import {Log} from "../../worker/log.ts";
 
-export class OptionStorage {
+export class ClientOptionStorage implements OptionStorage {
     private readonly dir: string;
     private readonly name: string;
 
@@ -36,7 +37,7 @@ export class OptionStorage {
             await rename(temp, path);
         } catch (err) {
             this.resolved = null;
-            await Log.error('[Settings] Fail to save settings');
+            await Log.error(`[Settings] Fail to save settings:\n  ${err}`);
             await remove(temp)
                 .catch(err => Log.error(`[Settings] Error occur when remove temp file. Cause by: ${err}`));
         }

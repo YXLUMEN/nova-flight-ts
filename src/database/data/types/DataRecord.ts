@@ -1,4 +1,4 @@
-import {clamp} from "../../utils/math/math.ts";
+import {clamp} from "../../../utils/math/math.ts";
 
 export abstract class DataRecord<T> {
     public readonly url: string;

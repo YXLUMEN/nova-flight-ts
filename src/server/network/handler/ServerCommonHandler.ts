@@ -6,14 +6,13 @@ import type {PacketListener} from "../../../network/handler/PacketListener.ts";
 import type {ConnectionState} from "../ConnectionState.ts";
 import {Log} from "../../../worker/log.ts";
 import {WSNetworkChannel} from "../../../network/WSNetworkChannel.ts";
-import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {PongS2CPacket} from "../../../network/packet/s2c/PongS2CPacket.ts";
 
 export abstract class ServerCommonHandler implements PacketListener {
-    public static readonly LOGOUT = TranslatableText.of('network.disconnect.logout');
-    public static readonly ILLEGAL_CHARACTER = TranslatableText.of('network.disconnect.illegal_character');
-    public static readonly INVALID_STATE = TranslatableText.of("network.disconnect.invalid.state");
-    public static readonly DUPLICATE_PLAYER = TranslatableText.of('network.disconnect.duplicate_player');
+    public static readonly LOGOUT = 'network.disconnect.logout';
+    public static readonly ILLEGAL_CHARACTER = 'network.disconnect.illegal_character';
+    public static readonly INVALID_STATE = "network.disconnect.invalid.state";
+    public static readonly DUPLICATE_PLAYER = 'network.disconnect.duplicate_player';
 
     protected readonly server: NovaFlightServer;
     protected readonly connection: ServerConnection;
@@ -46,8 +45,12 @@ export abstract class ServerCommonHandler implements PacketListener {
         this.connection.broadcast(packet);
     }
 
-    public disconnect(reason: TranslatableText): void {
-        this.connection.disconnect(reason);
+    public disconnect(reason: string, args?: string[]): void {
+        this.connection.disconnect(reason, args);
+    }
+
+    public addr() {
+        return this.connection.getAddr();
     }
 
     public forceDisconnect(): void {

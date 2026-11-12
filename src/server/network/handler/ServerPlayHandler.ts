@@ -42,11 +42,12 @@ import {EntityAttributes} from "../../../entity/attribute/EntityAttributes.ts";
 import {ServerTechManager} from "../../tech/ServerTechManager.ts";
 import {PlayerProfilesS2CPacket} from "../../../network/packet/s2c/PlayerProfilesS2CPacket.ts";
 import {UnlockTechEntry} from "../../../event/events/UnlockTechEntry.ts";
-import {TranslatableText} from "../../../i18n/TranslatableText.ts";
+import {ServerProperties} from "../../ServerProperties.ts";
 
 export class ServerPlayHandler extends ServerCommonHandler {
     public readonly player: ServerPlayerEntity;
     private readonly world: ServerWorld;
+    private readonly afk: number;
 
     private playerMove: PlayerMoveC2SPacket | null = null;
     private moveTimes: number = 0;
@@ -61,11 +62,12 @@ export class ServerPlayHandler extends ServerCommonHandler {
         this.player = player;
         player.networkHandler = this;
         this.world = server.world!;
+        this.afk = ServerProperties.PLAYER_AFK_TIMEOUT.get();
     }
 
     public override tick(): void {
         if (!this.isHost()) {
-            this.connection.checkActivate();
+            this.connection.checkActivate(this.afk);
         }
 
         if (this.messageCooldown > 0) this.messageCooldown--;
@@ -117,7 +119,7 @@ export class ServerPlayHandler extends ServerCommonHandler {
 
     public onPlayerMove(packet: PlayerMoveC2SPacket) {
         if (this.moveTimes > 5) {
-            console.warn(`[Server] Player ${this.player.profile().name} move too fast`);
+            console.warn(`[Server] Player ${this.player.profile()} move too fast`);
         }
 
         this.playerMove = packet;
@@ -139,7 +141,7 @@ export class ServerPlayHandler extends ServerCommonHandler {
     public onAcceptTeleport(packet: AcceptTeleportC2SPacket) {
         if (packet.id !== this.awaitingTeleport) return;
         if (this.awaitingPosition === null) {
-            this.disconnect(TranslatableText.of('network.disconnect.invalid_player_movement'));
+            this.disconnect('network.disconnect.invalid_player_movement');
             return;
         }
 

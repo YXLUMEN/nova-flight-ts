@@ -14,6 +14,8 @@ import {DamageCommand} from "../../command/DamageCommand.ts";
 import {TickCommand} from "../../command/TickCommand.ts";
 import {RemoveCommand} from "../../command/RemoveCommand.ts";
 import {TechCommand} from "../../command/TechCommand.ts";
+import {BanCommand} from "../../command/BanCommand.ts";
+import {UnbanCommand} from "../../command/UnbanCommand.ts";
 
 export class ServerCommandManager extends CommandManager {
     public readonly source: ServerCommandSource;
@@ -43,5 +45,7 @@ export class ServerCommandManager extends CommandManager {
         TickCommand.registry(this.dispatcher);
         RemoveCommand.registry(this.dispatcher);
         TechCommand.registry(this.dispatcher);
+        BanCommand.registry(this.dispatcher);
+        UnbanCommand.registry(this.dispatcher);
     }
 }

@@ -1,6 +1,6 @@
 import type {ResourceModule} from "./ResourceModule.ts";
 import type {Identifier} from "../registry/Identifier.ts";
-import type {SettingGuard} from "../client/settings/SettingGuard.ts";
+import type {SettingGuard} from "../database/settings/SettingGuard.ts";
 import {type DirEntry, exists, readDir, readTextFile} from "@tauri-apps/plugin-fs";
 import {join, resolveResource} from "@tauri-apps/api/path";
 import {traverse_dir} from "../client/ipc/fs.ts";

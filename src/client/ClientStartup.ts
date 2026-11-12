@@ -5,7 +5,7 @@ import {ClientWindow} from "./render/ClientWindow.ts";
 import {ClientInit} from "./ClientInit.ts";
 import {NovaFlightClient} from "./NovaFlightClient.ts";
 import {IllegalStateError} from "../type/errors.ts";
-import {BindSettings} from "./settings/BindSettings.ts";
+import {BindSettings} from "../database/settings/BindSettings.ts";
 import {Settings} from "./settings/Settings.ts";
 import {ClientRecordManager} from "./data/ClientRecordManager.ts";
 

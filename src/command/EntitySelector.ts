@@ -129,7 +129,7 @@ export class EntitySelector {
         }
 
         const limit = this.getAppendLimit();
-        return source.server.playerManager.getAllPlayers()
+        return source.server.playerManager.iterPlayers()
             .filter(entity => filters.every(f => f(entity)))
             .take(limit)
             .toArray();

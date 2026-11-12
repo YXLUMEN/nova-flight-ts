@@ -55,3 +55,10 @@ export class CallTwice extends Error {
 
 export class WithoutHandler extends Error {
 }
+
+export class RateLimitError extends Error {
+    public constructor(rate: number) {
+        super(`Reach limit "${rate}"`);
+        this.name = 'RateLimitError';
+    }
+}

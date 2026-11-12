@@ -191,7 +191,7 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public override getPlayers() {
-        return this.server.playerManager.getAllPlayers();
+        return this.server.playerManager.iterPlayers();
     }
 
     public override getMobs(): ReadonlySet<MobEntity> {

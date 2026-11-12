@@ -1,4 +1,4 @@
-import {traverse_dir_cmd} from "../../client/ipc/fs.ts";
+import {traverse_dir_cmd} from "../../../client/ipc/fs.ts";
 import {DataRecord} from "./DataRecord.ts";
 
 export class TraversPathRecord extends DataRecord<string[]> {

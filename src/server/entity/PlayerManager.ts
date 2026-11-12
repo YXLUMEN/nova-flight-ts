@@ -154,7 +154,11 @@ export class PlayerManager {
         return this.uuidToPlayer.has(uuid);
     }
 
-    public getAllPlayers() {
+    public playerCounts() {
+        return this.uuidToPlayer.size;
+    }
+
+    public iterPlayers() {
         return this.uuidToPlayer.values();
     }
 

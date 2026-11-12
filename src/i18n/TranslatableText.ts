@@ -28,7 +28,7 @@ export class TranslatableText {
     }
 
     private format(template: string): string {
-        if (!this.args) return template;
+        if (!this.args || this.args.length === 0) return template;
 
         const reader = new StringReader(template);
         const parts: string[] = [];

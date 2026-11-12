@@ -1,7 +1,7 @@
 import type {ClientRecordManager} from "./ClientRecordManager.ts";
-import {FetchRecord} from "../../database/data/FetchRecord.ts";
+import {FetchRecord} from "../../database/data/types/FetchRecord.ts";
 import {RecordTypes} from "../../database/data/RecordTypes.ts";
-import {TraversFilesRecord} from "../../database/data/TraversFilesRecord.ts";
+import {TraversFilesRecord} from "../../database/data/types/TraversFilesRecord.ts";
 
 export class ClientRecordRegister {
     public static register(data: ClientRecordManager) {

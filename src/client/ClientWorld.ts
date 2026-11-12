@@ -72,7 +72,7 @@ export class ClientWorld extends World {
     }
 
     public override getPlayers() {
-        return this.players;
+        return this.players.values();
     }
 
     public override getMobs(): ReadonlySet<MobEntity> {

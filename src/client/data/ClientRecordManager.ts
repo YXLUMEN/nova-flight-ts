@@ -1,5 +1,5 @@
 import type {DataRequest} from "../../database/data/DataFormat.ts";
-import type {DataRecord} from "../../database/data/DataRecord.ts";
+import type {DataRecord} from "../../database/data/types/DataRecord.ts";
 import {RecordManager} from "../../database/data/RecordManager.ts";
 import {Log} from "../../worker/log.ts";
 

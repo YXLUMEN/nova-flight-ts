@@ -1,23 +1,25 @@
 import type {NovaFlightServer} from "../../NovaFlightServer.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
+import type {ClientProfileC2SPacket} from "../../../network/packet/handshake/ClientProfileC2SPacket.ts";
+import type {UUID} from "../../../type/types.ts";
+import type {ClientStartConfigC2SPacket} from "../../../network/packet/handshake/ClientStartConfigC2SPacket.ts";
+import {isValidUUID} from "../../../utils/uuid_util.ts";
 import {ClientHandshakeC2SPacket} from "../../../network/packet/handshake/ClientHandshakeC2SPacket.ts";
 import {ServerCommonHandler} from "./ServerCommonHandler.ts";
-import {TranslatableText} from "../../../i18n/TranslatableText.ts";
 import {ServerConfigHandler} from "./ServerConfigHandler.ts";
 import {GameProfile} from "../../entity/GameProfile.ts";
-import type {UUID} from "../../../type/types.ts";
 import {ServerReadyS2CPacket} from "../../../network/packet/s2c/ServerReadyS2CPacket.ts";
-import type {ClientStartConfigC2SPacket} from "../../../network/packet/handshake/ClientStartConfigC2SPacket.ts";
 import {ConnectionState} from "../ConnectionState.ts";
 import {ServerAllowConfigS2CPacket} from "../../../network/packet/handshake/ServerAllowConfigS2CPacket.ts";
-import type {ClientProfileC2SPacket} from "../../../network/packet/handshake/ClientProfileC2SPacket.ts";
-import {isValidUUID} from "../../../utils/uuid_util.ts";
+import {ServerProperties} from "../../ServerProperties.ts";
 
 export class ServerHandshakeHandler extends ServerCommonHandler {
-    private static readonly STILL_LOADING = TranslatableText.of('network.disconnect.still_loading');
-    private static readonly UNMATCH_PROTOCOL = TranslatableText.of('network.disconnect.unmach.protocal');
-    private static readonly INVALID_UUID = TranslatableText.of('network.disconnect.invalid.uuid');
-    private static readonly INVALID_SESSION_ID = TranslatableText.of('network.disconnect.invalid.session_id');
+    private static readonly STILL_LOADING: string = 'network.disconnect.still_loading';
+    private static readonly UNMATCH_PROTOCOL: string = 'network.disconnect.unmach.protocal';
+    private static readonly UNMATCH_GAME_VERSION: string = 'network.disconnect.unmach.game';
+    private static readonly INVALID_UUID: string = 'network.disconnect.invalid.uuid';
+    private static readonly INVALID_SESSION_ID: string = 'network.disconnect.invalid.session_id';
+    private static readonly PLAYER_FULL: string = 'network.disconnect.player_full';
 
     private static readonly MAX_HANDSHAKE_RETRY = 5;
 
@@ -36,6 +38,12 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
     }
 
     public onClientHandshake(packet: ClientHandshakeC2SPacket) {
+        // 在这里处理满员,因为后续要加入认证,协议面处理不了
+        if (this.server.playerManager.playerCounts() >= ServerProperties.MAX_PLAYERS.get()) {
+            this.disconnect(ServerHandshakeHandler.PLAYER_FULL);
+            return;
+        }
+
         if (this.attemptUUID !== null) {
             if (this.attemptUUID !== packet.clientId) {
                 this.disconnect(ServerHandshakeHandler.INVALID_UUID);
@@ -50,16 +58,18 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
         if (this.isInvalid(HandshakeState.HELLO)) return;
 
         if (this.protocolVersion !== packet.protocolVersion) {
-            this.disconnect(ServerHandshakeHandler.UNMATCH_PROTOCOL);
+            this.disconnect(
+                ServerHandshakeHandler.UNMATCH_PROTOCOL,
+                [String(this.protocolVersion), String(packet.protocolVersion)]
+            );
             return;
         }
 
         if (this.gameVersion !== packet.gameVersion) {
-            const reason = new TranslatableText(
-                'network.disconnect.unmach.game',
+            this.disconnect(
+                ServerHandshakeHandler.UNMATCH_GAME_VERSION,
                 [String(this.gameVersion), String(packet.gameVersion)]
             );
-            this.disconnect(reason);
             return;
         }
 
@@ -78,7 +88,7 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
         if (this.isInvalid(HandshakeState.VERIFY)) return;
 
         const sessionId = packet.sessionId;
-        if (!Number.isSafeInteger(sessionId) || sessionId <= 0 || sessionId > 64) {
+        if (!Number.isSafeInteger(sessionId) || sessionId <= 0 || sessionId > 128) {
             this.disconnect(ServerHandshakeHandler.INVALID_SESSION_ID);
             return;
         }

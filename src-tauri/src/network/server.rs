@@ -1,9 +1,10 @@
 use crate::network::infrastructure::header::{
-    BAN_IP, KICK, PERMIT, QUERY, SERVER_ACTION, SERVER_BROADCAST, SERVER_EXCLUDE, SERVER_SINGLE,
-    SERVER_SINGLE_UUID, UNBAN_IP,
+    BANED, BAN_IP, DID_NOT_BANED, EMPTY_SID, EXCLUDE_TOO_MUCH, INVALID_ACTION, INVALID_IPV4, KICK,
+    KICKED, PACKET_TOO_LARGE, PERMIT, QUERY, SERVER_ACTION, SERVER_BROADCAST, SERVER_EXCLUDE,
+    SERVER_SINGLE, SERVER_SINGLE_UUID, UNBAN, UNBAN_IP, UNKNOWN_ACTION,
 };
 use crate::network::infrastructure::net::{
-    action_fail, send_message, send_or_drop, send_or_drop_move, send_timeout,
+    action_fail, send_code, send_message, send_or_drop, send_or_drop_move, send_timeout,
 };
 use crate::network::infrastructure::protocol::{QueryClientsResult, MAX_EXCLUDES, MAX_PAYLOAD_LEN};
 use crate::network::infrastructure::session::Session;
@@ -31,7 +32,7 @@ pub(crate) async fn server_relay(mut ctx: ServerContext<'_>) {
         match msg {
             Ok(Message::Binary(payload)) => {
                 if payload.len() > MAX_PAYLOAD_LEN {
-                    send_message(&ctx.session.tx, "ERR:Payload too large");
+                    send_code(&ctx.session.tx, PACKET_TOO_LARGE);
                     break;
                 }
 
@@ -151,7 +152,7 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
             };
 
             if count > MAX_EXCLUDES {
-                send_message(&session.tx, "ERR:Exclude list too large");
+                send_code(&session.tx, EXCLUDE_TOO_MUCH);
                 warn!("InvalidPacket: Exclude list too large");
                 return;
             }
@@ -206,7 +207,7 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
 async fn relay_actions(state: &RelayState, session: &Session, payload: Bytes) -> () {
     // 协议格式: [Header 0xff][Type 1][Data n]
     if payload.len() < 2 {
-        action_fail(&session.tx, "Invalid action packet").await;
+        action_fail(&session.tx, INVALID_ACTION).await;
         return;
     }
 
@@ -214,19 +215,19 @@ async fn relay_actions(state: &RelayState, session: &Session, payload: Bytes) ->
     match payload[1] {
         KICK => {
             if data.len() != 1 {
-                action_fail(&session.tx, "[Kick] Session id cannot be empty").await;
+                action_fail(&session.tx, EMPTY_SID).await;
                 return;
             }
 
             let session_id = data[0];
             if let Some(session) = state.any_by_id(&session_id) {
-                send_message(&session.tx, "INFO:Kicked");
+                send_code(&session.tx, KICKED);
                 state.close(&session_id);
             }
         }
         PERMIT => {
             if data.len() != 1 {
-                action_fail(&session.tx, "[Permit] Session id cannot be empty").await;
+                action_fail(&session.tx, EMPTY_SID).await;
                 return;
             }
             state.permit(&data[0]);
@@ -241,28 +242,29 @@ async fn relay_actions(state: &RelayState, session: &Session, payload: Bytes) ->
         BAN_IP => {
             let addr = parse_ipv4(data);
             let Some(ip) = addr else {
-                action_fail(&session.tx, "[Ban] Ipv4 syntax error").await;
+                action_fail(&session.tx, INVALID_IPV4).await;
                 return;
             };
 
             state.ban(ip.into()).await;
+            send_message(&session.tx, BANED, &[&*ip.to_string()]);
         }
         UNBAN_IP => {
             let addr = parse_ipv4(data);
             let Some(ip) = addr else {
-                action_fail(&session.tx, "[Ban] Ipv4 syntax error").await;
+                action_fail(&session.tx, INVALID_IPV4).await;
                 return;
             };
 
             if state.unban(&ip.into()).await {
-                send_message(&session.tx, "INFO:Unban");
+                send_message(&session.tx, UNBAN, &[&*ip.to_string()]);
             } else {
-                send_message(&session.tx, "INFO:This ip is not banned");
+                send_code(&session.tx, DID_NOT_BANED);
             }
         }
         _ => {
             warn!("Invalid action type: 0x{:02x}", payload[1]);
-            action_fail(&session.tx, "Unknown action type").await;
+            action_fail(&session.tx, UNKNOWN_ACTION).await;
         }
     };
 }
