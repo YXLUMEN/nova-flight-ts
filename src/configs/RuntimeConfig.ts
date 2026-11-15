@@ -6,8 +6,8 @@ export const isServer = isDev ? typeof window === 'undefined' : __IS_SERVER__;
 export const isClient = !isServer;
 
 export const DEFAULT_CONFIG = config({
-    version: '26v32',
-    gameVersion: 12,
+    version: '26v33',
+    gameVersion: 14,
 });
 
 export const RuntimeConfig = status({

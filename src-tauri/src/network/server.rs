@@ -58,8 +58,7 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
 
     match payload[0] {
         SERVER_BROADCAST => {
-            // [Header][Id][Data]
-            // Server → 广播给所有 Client
+            // [Header][Protocol][Data]
             let mut to_close = Vec::new();
             for entry in state.iter() {
                 let session = entry.value();
@@ -81,8 +80,7 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
             }
         }
         SERVER_SINGLE => {
-            // [Header][TargetId][Data]
-            // Server → 指定 Client SessionId
+            // [Header][SID][Data]
             if payload.len() < 2 {
                 warn!("InvalidPacket: Unicast packet too short");
                 return;
@@ -99,8 +97,7 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
             state.close(&target_id);
         }
         SERVER_SINGLE_UUID => {
-            // [Header][Id][TargetUuid][Data]
-            // Server → 指定 Client UUID
+            // [Header][Protocol][UUID][Data]
             if payload.len() < 18 {
                 warn!("InvalidPacket: Unicast packet too short");
                 return;

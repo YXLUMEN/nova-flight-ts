@@ -9,16 +9,16 @@ import {ServerStorage} from "./storage/ServerStorage.ts";
 import {TutorialEvents} from "./event/TutorialEvents.ts";
 import {PlayAudioS2CPacket} from "../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {Audios} from "../sound/Audios.ts";
-import {ServerNetworkChannel} from "./network/ServerNetworkChannel.ts";
 import {Log} from "../worker/log.ts";
 import {NoResultsError, StatusError} from "../type/errors.ts";
-import {ServerIntegratedChannel} from "./network/ServerIntegratedChannel.ts";
+import {ServerIntegratedBus} from "./network/ServerIntegratedBus.ts";
 import {ServerTechManager} from "./tech/ServerTechManager.ts";
 import {ServerDefaultEvents} from "./event/ServerDefaultEvents.ts";
 import {Worker2MainType} from "../worker/WorkerMsgType.ts";
 import {ServerRecordManager} from "./data/ServerRecordManager.ts";
 import {ServerRecordRegister} from "./data/ServerRecordRegister.ts";
 import {ServerProperties} from "./ServerProperties.ts";
+import {ServerNetworkBus} from "./network/ServerNetworkBus.ts";
 
 export class IntegratedServer extends NovaFlightServer {
     private readonly hostUUID: UUID;
@@ -26,8 +26,8 @@ export class IntegratedServer extends NovaFlightServer {
     public constructor(startUp: StartServer) {
         const secretKey = new Uint8Array(startUp.key);
         const channel = secretKey.length === 0 ?
-            new ServerIntegratedChannel() :
-            new ServerNetworkChannel(startUp.addr, secretKey);
+            new ServerIntegratedBus() :
+            new ServerNetworkBus(startUp.addr, secretKey);
 
         super(startUp.saveName, channel);
         this.hostUUID = startUp.hostUUID;
@@ -124,6 +124,6 @@ export class IntegratedServer extends NovaFlightServer {
 
         this.world.setStage(TUTORIAL_PHASES);
         new TutorialEvents(this);
-        this.world.sendPacket(new PlayAudioS2CPacket(Audios.WE_MADE_IT), true);
+        this.world.sendPacket(new PlayAudioS2CPacket(Audios.WE_MADE_IT));
     }
 }

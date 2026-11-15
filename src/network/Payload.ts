@@ -1,5 +1,6 @@
-import type {PacketListener} from "./handler/PacketListener.ts";
+import type {PacketListener} from "./PacketListener.ts";
 import type {PayloadType} from "./PayloadType.ts";
+import type {ConnectionState} from "../server/network/ConnectionState.ts";
 
 
 export interface Payload {
@@ -13,5 +14,5 @@ export interface Payload {
      * */
     estimateSize?(): number;
 
-    canProcessInTransition?(): boolean;
+    protocol?(): ConnectionState;
 }

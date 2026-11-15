@@ -1,7 +1,7 @@
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {Consumer, UUID} from "../type/types.ts";
 import type {CommandOutput} from "./command/CommandOutput.ts";
-import type {ServerChannel} from "./network/ServerChannel.ts";
+import type {ServerBus} from "./network/ServerBus.ts";
 import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {DEFAULT_CONFIG} from "../configs/RuntimeConfig.ts";
 import {ServerWorld} from "./ServerWorld.ts";
@@ -16,9 +16,10 @@ import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.t
 import {TranslatableTextS2CPacket} from "../network/packet/s2c/TranslatableTextS2CPacket.ts";
 import {ServerStartS2CPacket} from "../network/packet/s2c/ServerStartS2CPacket.ts";
 import {ServerTickManager} from "./ServerTickManager.ts";
-import {CodecRegistry} from "../network/CodecRegistry.ts";
 import {Worker2MainType} from "../worker/WorkerMsgType.ts";
 import {Seed} from "../utils/math/random/Seed.ts";
+import {Protocols} from "../network/protocol/Protocols.ts";
+import {HandshakeProtocols} from "../network/protocol/HandshakeProtocols.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static instance: NovaFlightServer;
@@ -28,11 +29,11 @@ export abstract class NovaFlightServer implements CommandOutput {
 
     public readonly version: number;
     public readonly protocolVersion: number;
-    public readonly networkChannel: ServerChannel;
     public readonly serverCommandManager: ServerCommandManager;
     public readonly playerManager: PlayerManager;
+    public readonly networkChannel: ServerBus;
+    public readonly networkManager: ServerNetworkManager;
 
-    public networkManager: ServerNetworkManager | null = null;
     public profile: GameProfile | null = null;
     public isMultiPlayer: boolean = false;
     public world: ServerWorld | null = null;
@@ -47,15 +48,19 @@ export abstract class NovaFlightServer implements CommandOutput {
     private waitServerHalt: Promise<void> | null = null;
     private stopWorld: Consumer<void> | null = null;
 
-    protected constructor(worldName: string, channel: ServerChannel) {
+    protected constructor(worldName: string, channel: ServerBus) {
         this.serverId = crypto.randomUUID();
 
         this.worldName = worldName;
         this.version = DEFAULT_CONFIG.gameVersion;
-        this.protocolVersion = CodecRegistry.VERSION;
+        this.protocolVersion = Protocols.VERSION;
         this.playerManager = new PlayerManager(this);
         this.tickManager = new ServerTickManager(this);
+
         this.networkChannel = channel;
+        this.networkManager = new ServerNetworkManager(this, channel);
+        channel.setDispatcher(this.networkManager);
+
         this.serverCommandManager = new ServerCommandManager(this.getCommandSource());
         this.tick = this.tick.bind(this);
     }
@@ -79,8 +84,8 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.world = await this.loadWorld(manager);
 
         this.profile = new GameProfile(this.networkChannel.getSessionId(), this.serverId, this.worldName);
-        this.networkManager = new ServerNetworkManager(this);
-        this.networkChannel.send(ServerStartS2CPacket.INSTANCE);
+        this.networkChannel.broadWith(ServerStartS2CPacket.INSTANCE, HandshakeProtocols.SERVER_BOUND);
+
         self.postMessage({w2m: Worker2MainType.SERVER_START});
 
         this.last = performance.now();

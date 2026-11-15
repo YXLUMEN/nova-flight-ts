@@ -14,7 +14,6 @@ import {Techs} from "../../world/tech/Techs.ts";
 import type {Explosion} from "../../world/element/explosion/Explosion.ts";
 import {DamageTypes} from "../../entity/damage/DamageTypes.ts";
 import {BaseBossEntity} from "../../entity/mob/BaseBossEntity.ts";
-import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
 import {ExplosionTag} from "../../world/element/explosion/ExplosionConfigs.ts";
 import {DevourerBoss} from "../../entity/mob/DevourerBoss.ts";
 import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPacket.ts";
@@ -119,7 +118,6 @@ export class ServerDefaultEvents {
             const difficulty = world.getDifficulty();
             if (difficulty > 0) {
                 world.setDifficulty(difficulty + 1);
-                world.sendPacket(new DifficultChangeS2CPacket(world.getDifficulty()));
             }
 
             if (world.stage.getCurrentName() === 'P6') {

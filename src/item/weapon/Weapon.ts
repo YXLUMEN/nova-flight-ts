@@ -1,8 +1,8 @@
-import {type World} from "../../world/World.ts";
-import {clamp} from "../../utils/math/math.ts";
-import type {Entity} from "../../entity/Entity.ts";
-import {Item} from "../Item.ts";
+import type {World} from "../../world/World.ts";
 import type {ItemStack} from "../ItemStack.ts";
+import type {Entity} from "../../entity/Entity.ts";
+import {clamp} from "../../utils/math/math.ts";
+import {Item} from "../Item.ts";
 import {DataComponents} from "../../component/DataComponents.ts";
 
 export abstract class Weapon extends Item {

@@ -5,7 +5,7 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {ServerPlayHandler} from "../../../server/network/handler/ServerPlayHandler.ts";
 
 export class AcceptTeleportC2SPacket implements Payload {
-    public static readonly ID: PayloadType<AcceptTeleportC2SPacket> = payloadType('player_position');
+    public static readonly ID: PayloadType<AcceptTeleportC2SPacket> = payloadType('accept_teleport');
     public static readonly CODEC: PacketCodec<AcceptTeleportC2SPacket> = PacketCodecs.adapt(
         PacketCodecs.VAR_UINT,
         val => val.id,

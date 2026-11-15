@@ -1,75 +1,93 @@
-import type {Consumer, UUID} from "../../type/types.ts";
+import type {UUID} from "../../type/types.ts";
+import type {ChannelHandler} from "../../network/channel/ChannelHandler.ts";
 import type {Payload} from "../../network/Payload.ts";
+import type {ProtocolInfo} from "../../network/protocol/ProtocolInfo.ts";
 import type {ClientChannel} from "./ClientChannel.ts";
-import type {PacketTooLargeError} from "../../type/errors.ts";
-import {empty} from "../../utils/util.ts";
 import {parseUUID} from "../../utils/uuid_util.ts";
-import {isDev} from "../../configs/RuntimeConfig.ts";
-import {WSNetworkChannel} from "../../network/WSNetworkChannel.ts";
-import {CodecRegistry} from "../../network/CodecRegistry.ts";
 import {BinaryReader} from "../../serialization/BinaryReader.ts";
-import {PacketHeader} from "../../network/PacketHeader.ts";
+import {HandshakeProtocols} from "../../network/protocol/HandshakeProtocols.ts";
 import {NetworkSide} from "../../network/NetworkSide.ts";
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
-import {Log} from "../../worker/log.ts";
+import {PacketHeader} from "../../network/PacketHeader.ts";
+import {WebSocketBus} from "../../network/WebSocketBus.ts";
 
-export class ClientNetworkChannel extends WSNetworkChannel implements ClientChannel {
+export class ClientNetworkChannel extends WebSocketBus implements ClientChannel {
     private readonly clientId: UUID;
-    private handler: Consumer<Payload> = empty;
 
-    public constructor(url: string, clientId: UUID) {
-        super(NetworkSide.CLIENT, url, CodecRegistry.C2S);
+    private handler: ChannelHandler = null!;
+    private in: ProtocolInfo = HandshakeProtocols.SERVER_BOUND;
+    private out: ProtocolInfo = HandshakeProtocols.CLIENT_BOUND;
+
+    public constructor(address: string, clientId: UUID) {
+        super(NetworkSide.CLIENT, address);
         this.clientId = clientId;
     }
 
-    public send(payload: Payload) {
-        const type = this.registry.get(payload.type());
-        if (!type) throw new Error(`[${this.side}] Unknown payload type: ${payload.type().id}`);
+    public isOpen(): boolean {
+        return this.isConnected();
+    }
 
+    public setHandler(handler: ChannelHandler): void {
+        this.handler = handler;
+    }
+
+    public clearHandler(): void {
+        this.handler = null!;
+    }
+
+    public inbound(protocol: ProtocolInfo): void {
+        this.in = protocol;
+    }
+
+    public outbound(protocol: ProtocolInfo): void {
+        this.out = protocol;
+    }
+
+    public broadcast(payload: Payload): void {
         const size = payload.estimateSize?.() ?? 7;
         const writer = new BinaryWriter(size + 4);
         writer.writeInt8(PacketHeader.C2S);
         writer.writeInt8(this.getSessionId());
-
-        this.checkAndSend(writer, type, payload);
+        this.out.codec.encode(writer, payload);
+        this.send(writer.toUint8Array());
     }
 
-    protected override onLargePacket(err: PacketTooLargeError) {
-        if (isDev) throw err;
-        Log.error(err);
+    public unicast(payload: Payload): void {
+        this.broadcast(payload);
     }
 
-    protected override handleMessage(event: MessageEvent): void {
+    public onMessage(reader: BinaryReader): void {
+        let payload: Payload;
+        try {
+            payload = this.in.codec.decode(reader);
+        } catch (err) {
+            this.handler.report(err);
+            return;
+        }
+
+        this.handler.recv(payload);
+    }
+
+    protected override messageEvent(event: MessageEvent): void {
         const binary = new Uint8Array(event.data as ArrayBuffer);
         const reader = new BinaryReader(binary);
 
         const header = reader.readUint8();
-        if (header === PacketHeader.RELAY) {
-            const index = reader.readUint8();
-            const codec = CodecRegistry.byId(index);
-            if (codec) this.handler(codec.codec.decode(reader));
-            return;
+        switch (header) {
+            case PacketHeader.RELAY:
+                return;
+            case PacketHeader.SERVER_BROADCAST:
+                // 服务端广播会忽视单客户端连接状况,所以得跳过
+                const protocol = reader.readUint8();
+                if (protocol !== this.in.protocol) return;
+                this.onMessage(reader);
+                return;
+            case PacketHeader.SERVER_SINGLE:
+                reader.skip(1);
+                this.onMessage(reader);
+                return;
         }
-
-        if (header !== PacketHeader.SERVER_BROADCAST && header !== PacketHeader.SERVER_SINGLE) {
-            console.warn(`[${this.side}] Unknown header: ${header}`);
-            return;
-        }
-
-        reader.readUint8();
-        const index = reader.readVarUint();
-        const codec = CodecRegistry.byId(index);
-        if (!codec) return;
-
-        this.handler(codec.codec.decode(reader));
-    }
-
-    public setHandler(handler: Consumer<Payload>): void {
-        this.handler = handler;
-    }
-
-    public override clearHandlers(): void {
-        this.handler = empty;
+        console.warn(`[Client] Unknown header: ${header}`);
     }
 
     protected override register(): void {
@@ -78,7 +96,7 @@ export class ClientNetworkChannel extends WSNetworkChannel implements ClientChan
         buf[0] = PacketHeader.CLIENT;
         buf.set(uuid, 1);
 
-        this.sendRaw(buf);
+        this.send(buf);
         console.log(`Client ${this.clientId} registered`);
     }
 }

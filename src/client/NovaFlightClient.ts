@@ -41,6 +41,7 @@ import {GuiLayer} from "./render/ui/GuiLayer.ts";
 import {StartScreen} from "./page/compound/StartScreen.ts";
 import {FakeChannel} from "./network/FakeChannel.ts";
 import {Log} from "../worker/log.ts";
+import {SocketAddr} from "../network/SocketAddr.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -105,7 +106,7 @@ export class NovaFlightClient {
         this.tickManager = new TickRateManager();
 
         this.channel = FakeChannel.INSTANCE;
-        this.connection = new ClientConnection(this.channel);
+        this.connection = new ClientConnection(SocketAddr.INTEGRATED);
         this.networkHandler = new ClientPlayHandler(this, this.connection);
 
         this.multiGameManager = new ClientMultiGameManger();
@@ -281,7 +282,7 @@ export class NovaFlightClient {
 
         // unbind channel
         this.connection.clean();
-        this.connection.changeChannel(FakeChannel.INSTANCE);
+        this.connection.channelActive(FakeChannel.INSTANCE);
         this.channel = FakeChannel.INSTANCE;
 
         // terminate worker
@@ -421,7 +422,7 @@ export class NovaFlightClient {
 
         public setChannel(channel: ClientChannel) {
             this.client.channel = channel;
-            this.client.connection.changeChannel(channel);
+            this.client.connection.channelActive(channel);
         }
 
         public hasWorker(): boolean {

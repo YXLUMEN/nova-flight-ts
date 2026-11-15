@@ -7,6 +7,7 @@ import {PendingSpawn} from "./PendingSpawn.ts";
 import {TimeoutError} from "../../../type/errors.ts";
 import {ServerFinishConfigS2CPacket} from "../../../network/packet/config/ServerFinishConfigS2CPacket.ts";
 import {Log} from "../../../worker/log.ts";
+import type {ClientStartPlayC2SPacket} from "../../../network/packet/config/ClientStartPlayC2SPacket.ts";
 
 export class ServerConfigHandler extends ServerCommonHandler {
     public static readonly PROMOTE_FAIL: string = 'network.disconnect.promote.fail';
@@ -14,6 +15,7 @@ export class ServerConfigHandler extends ServerCommonHandler {
 
     private readonly profile: GameProfile;
     private spawnTask: PendingSpawn | null = null;
+    private confirm: PromiseWithResolvers<void> | null = null;
 
     public constructor(server: NovaFlightServer, connection: ServerConnection, profile: GameProfile) {
         super(server, connection);
@@ -28,7 +30,7 @@ export class ServerConfigHandler extends ServerCommonHandler {
     }
 
     public startConfiguration() {
-        if (this.connection.getState() !== this.getPhase()) {
+        if (!this.connection.isState(this.getPhase())) {
             this.disconnect(ServerConfigHandler.INVALID_STATE);
             return;
         }
@@ -43,6 +45,14 @@ export class ServerConfigHandler extends ServerCommonHandler {
         void this.promoteToPlaySession(this.spawnTask);
     }
 
+    public onClientConfirm(_: ClientStartPlayC2SPacket) {
+        if (this.confirm === null) {
+            this.disconnect(ServerConfigHandler.INVALID_STATE);
+            return;
+        }
+        this.confirm.resolve();
+    }
+
     private async promoteToPlaySession(spawn: PendingSpawn) {
         try {
             await spawn.start();
@@ -51,7 +61,9 @@ export class ServerConfigHandler extends ServerCommonHandler {
                 return;
             }
 
+            this.confirm ??= Promise.withResolvers<void>();
             this.send(ServerFinishConfigS2CPacket.INSTANCE);
+            await this.confirm.promise;
 
             const success = spawn.spawn(this.connection);
             if (success) return;
@@ -67,6 +79,8 @@ export class ServerConfigHandler extends ServerCommonHandler {
             this.disconnect(ServerConfigHandler.PROMOTE_FAIL);
         } finally {
             spawn.close();
+            this.confirm?.resolve();
+            this.confirm = null;
         }
     }
 

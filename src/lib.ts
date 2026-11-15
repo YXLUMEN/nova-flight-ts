@@ -1,8 +1,7 @@
 import {Window} from "@tauri-apps/api/window";
 import {invoke} from "@tauri-apps/api/core";
 import {isDev} from "./configs/RuntimeConfig.ts";
-import {ProtocolRegistry} from "./network/packet/ProtocolRegistry.ts";
-import {CodecRegistry} from "./network/CodecRegistry.ts";
+import {Protocols} from "./network/protocol/Protocols.ts";
 import {PageSplicer} from "./client/page/PageSplicer.ts";
 import {Settings} from "./client/settings/Settings.ts";
 import {ClientStartup} from "./client/ClientStartup.ts";
@@ -27,10 +26,10 @@ export async function run() {
     });
     await pages.bootstrap(document.body);
 
-    ProtocolRegistry.register();
+    Protocols.settle();
 
     try {
-        const startup = new ClientStartup(CodecRegistry.VERSION);
+        const startup = new ClientStartup(Protocols.VERSION);
         await startup.load();
         const client = startup.buildClient();
         ctrl.abort();

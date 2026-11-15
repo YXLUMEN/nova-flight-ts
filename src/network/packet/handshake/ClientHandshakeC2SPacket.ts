@@ -1,9 +1,10 @@
 import type {Payload} from "../../Payload.ts";
-import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
-import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {UUID} from "../../../type/types.ts";
 import type {ServerHandshakeHandler} from "../../../server/network/handler/ServerHandshakeHandler.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
 export class ClientHandshakeC2SPacket implements Payload {
     public static readonly ID: PayloadType<ClientHandshakeC2SPacket> = payloadType('client_handshake');
@@ -35,8 +36,8 @@ export class ClientHandshakeC2SPacket implements Payload {
         return ClientHandshakeC2SPacket.ID;
     }
 
-    public canProcessInTransition(): boolean {
-        return true;
+    public protocol(): ConnectionState {
+        return ConnectionState.HANDSHAKING;
     }
 
     public accept(listener: ServerHandshakeHandler): void {

@@ -12,6 +12,8 @@ import {ServerReadyS2CPacket} from "../../../network/packet/s2c/ServerReadyS2CPa
 import {ConnectionState} from "../ConnectionState.ts";
 import {ServerAllowConfigS2CPacket} from "../../../network/packet/handshake/ServerAllowConfigS2CPacket.ts";
 import {ServerProperties} from "../../ServerProperties.ts";
+import {ConfigProtocols} from "../../../network/protocol/ConfigProtocols.ts";
+import {Log} from "../../../worker/log.ts";
 
 export class ServerHandshakeHandler extends ServerCommonHandler {
     private static readonly STILL_LOADING: string = 'network.disconnect.still_loading';
@@ -51,6 +53,7 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
             }
             if (++this.retransmitCount > ServerHandshakeHandler.MAX_HANDSHAKE_RETRY) {
                 this.disconnect(ServerHandshakeHandler.INVALID_STATE);
+                Log.warn(`Client "${this.attemptUUID}" reach max handshake limit`);
             }
             return;
         }
@@ -74,7 +77,7 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
         }
 
         if (this.server.world === null) {
-            if (this.connection.isHost()) return;
+            if (this.connection.isHost) return;
             this.disconnect(ServerHandshakeHandler.STILL_LOADING);
             return;
         }
@@ -113,11 +116,14 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
         if (this.isInvalid(HandshakeState.PROTOCOL_SWITCHING)) return;
         if (!this.authProfile) {
             this.disconnect(ServerHandshakeHandler.INVALID_STATE);
+            Log.warn(`Client "${this.attemptUUID}" did not has a profile`);
             return;
         }
 
         const config = new ServerConfigHandler(this.server, this.connection, this.authProfile);
-        this.connection.setPacketListener(ConnectionState.CONFIGURATION, config);
+        this.connection.cleanReceived();
+        this.connection.setInbound(ConfigProtocols.CLIENT_BOUND, config);
+        this.connection.setOutBound(ConfigProtocols.SERVER_BOUND);
         this.state = HandshakeState.ACCEPTED;
         config.startConfiguration();
     }

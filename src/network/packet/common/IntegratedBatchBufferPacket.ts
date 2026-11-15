@@ -1,13 +1,12 @@
 import type {Payload} from "../../Payload.ts";
-import {payloadType, type PayloadType} from "../../PayloadType.ts";
-import type {PacketCodec} from "../../codec/PacketCodec.ts";
-import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import {CodecRegistry} from "../../CodecRegistry.ts";
-import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
-import {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import type {ClientCommonHandler} from "../../../client/network/handler/ClientCommonHandler.ts";
 import type {BatchBuffer} from "./BatchBuffer.ts";
-import type {PacketListener} from "../../handler/PacketListener.ts";
+import type {PacketListener} from "../../PacketListener.ts";
+import type {PacketCodec} from "../../codec/PacketCodec.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
+import {PacketCodecs} from "../../codec/PacketCodecs.ts";
+import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
+import {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import {Log} from "../../../worker/log.ts";
 
 export class IntegratedBatchBufferPacket implements Payload, BatchBuffer {
@@ -22,7 +21,7 @@ export class IntegratedBatchBufferPacket implements Payload, BatchBuffer {
         this.buffer = buffer;
     }
 
-    public static create(payloads: Iterable<Payload>, registry: CodecRegistry): IntegratedBatchBufferPacket[] {
+    public static create(payloads: Iterable<Payload>, codec: PacketCodec<Payload>): IntegratedBatchBufferPacket[] {
         const maxSize = 8192;
         const batches: IntegratedBatchBufferPacket[] = [];
         const writer = new BinaryWriter(9216); // MAX_PACKET_SIZE * 1.5
@@ -30,15 +29,12 @@ export class IntegratedBatchBufferPacket implements Payload, BatchBuffer {
         let count = 0;
         for (const payload of payloads) {
             // noinspection DuplicatedCode
-            const codec = registry.get(payload.type());
-            if (!codec) throw new Error(`Missing packet type ${payload.type().id}`);
-
             let last: Uint8Array<ArrayBuffer> | undefined;
             const start = writer.getOffset();
             const est = payload.estimateSize?.() ?? 0;
+
             if (start + est <= maxSize) {
-                writer.writeVarUint(codec.index);
-                codec.codec.encode(writer, payload);
+                codec.encode(writer, payload);
 
                 if (writer.getOffset() <= maxSize) {
                     count++;
@@ -59,8 +55,7 @@ export class IntegratedBatchBufferPacket implements Payload, BatchBuffer {
             if (last) {
                 writer.pushBytes(last);
             } else {
-                writer.writeVarUint(codec.index);
-                codec.codec.encode(writer, payload);
+                codec.encode(writer, payload);
             }
             count = 1;
         }
@@ -74,15 +69,11 @@ export class IntegratedBatchBufferPacket implements Payload, BatchBuffer {
         return batches;
     }
 
-    public parse(handler: PacketListener): void {
+    public parse(handler: PacketListener, codec: PacketCodec<Payload>): void {
         const reader = new BinaryReader(this.buffer);
         // noinspection DuplicatedCode
         for (let i = 0; i < this.payloadCount; i++) {
-            const index = reader.readVarUint();
-            const type = CodecRegistry.byId(index);
-            if (!type) throw new Error(`Unrecognized packet: ${index}`);
-            const payload = type.codec.decode(reader);
-
+            const payload = codec.decode(reader);
             try {
                 payload.accept(handler);
             } catch (err) {

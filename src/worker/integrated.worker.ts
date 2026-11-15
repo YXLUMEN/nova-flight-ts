@@ -1,6 +1,6 @@
 import type {StartServer} from "../type/startup.ts";
 import {isDev} from "../configs/RuntimeConfig.ts";
-import {ProtocolRegistry} from "../network/packet/ProtocolRegistry.ts";
+import {Protocols} from "../network/protocol/Protocols.ts";
 import {IntegratedServer} from "../server/IntegratedServer.ts";
 import {Main2WorkerType, Worker2MainType} from "./WorkerMsgType.ts";
 import {Log} from "./log.ts";
@@ -25,6 +25,7 @@ async function handleEvent(event: MessageEvent) {
             server = IntegratedServer.startServer(startUp) as IntegratedServer;
             server.runServer().catch(err => {
                 Log.error(`[Server] Error occurrence while loading resources, cause by "${err}"`);
+                console.error(err);
                 shutdown(err);
             });
             return;
@@ -85,4 +86,4 @@ function devFunc(code: string) {
     }
 }
 
-ProtocolRegistry.register();
+Protocols.settle();

@@ -1,50 +1,42 @@
-import type {Connection} from "../../network/Connection.ts";
-import type {ServerChannel} from "./ServerChannel.ts";
 import type {UUID} from "../../type/types.ts";
-import type {PacketListener} from "../../network/handler/PacketListener.ts";
 import type {Payload} from "../../network/Payload.ts";
 import type {SocketAddr} from "../../network/SocketAddr.ts";
+import type {BinaryReader} from "../../serialization/BinaryReader.ts";
+import type {ConnectionHealth} from "./ConnectionHealth.ts";
+import {NetworkSide} from "../../network/NetworkSide.ts";
 import {ConnectionState} from "./ConnectionState.ts";
+import {Connection} from "../../network/Connection.ts";
 import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
-import {IllegalStateError} from "../../type/errors.ts";
-import {RelayActionBuilder} from "./RelayActionBuilder.ts";
-import {Session} from "./Session.ts";
+import {Log} from "../../worker/log.ts";
+import {DisconnectProtocol} from "../../network/protocol/DisconnectProtocol.ts";
+import {DisconnectListener} from "../../network/DisconnectListener.ts";
 
-export class ServerConnection implements Connection {
-    private static readonly TIMEOUT = 'network.disconnect.timeout';
+export class ServerConnection extends Connection {
+    public readonly sid: number;
+    public readonly uuid: UUID;
+    public readonly isHost: boolean;
 
-    public readonly session: Session;
-
-    private readonly channel: ServerChannel;
-    private readonly sessionId: number;
-    private readonly uuid: UUID;
-    private readonly addr: SocketAddr;
-    private readonly isLocal: boolean;
-
+    private readonly health: ConnectionHealth;
     private readonly receiveQueue: RingBuffer<Payload> = new RingBuffer(32);
-    private packetListener: PacketListener | null = null;
-
-    private state: ConnectionState = ConnectionState.HANDSHAKING;
     private handlerDisconnected = false;
 
     public constructor(
-        channel: ServerChannel,
+        addr: SocketAddr,
         sessionId: number,
         uuid: UUID,
-        addr: SocketAddr,
-        isHost: boolean
+        isHost: boolean,
+        health: ConnectionHealth,
     ) {
-        this.channel = channel;
-        this.sessionId = sessionId;
+        super(NetworkSide.SERVER, addr);
+        this.sid = sessionId;
         this.uuid = uuid;
-        this.addr = addr;
-        this.isLocal = isHost;
-        this.session = new Session();
+        this.isHost = isHost;
+        this.health = health;
     }
 
-    public tick(): void {
-        this.session.tick();
+    public override tick() {
+        this.health.tick();
 
         if (!this.packetListener) return;
         while (!this.receiveQueue.isEmpty()) {
@@ -55,43 +47,46 @@ export class ServerConnection implements Connection {
         this.packetListener.tick();
     }
 
-    public send(payload: Payload): void {
-        if (this.state === ConnectionState.CLOSED) return;
-        this.channel.sendToId(payload, this.sessionId);
+    public override send(payload: Payload) {
+        if (this.isState(ConnectionState.CLOSED)) return;
+        this.channel.unicast(payload);
     }
 
-    public broadcast(payload: Payload, flush = false): void {
-        if (this.state === ConnectionState.CLOSED) return;
-        flush ? this.channel.send(payload) : this.channel.enqueue(payload);
+    public broadcast(payload: Payload): void {
+        if (this.isState(ConnectionState.CLOSED)) return;
+        this.channel.broadcast(payload);
     }
 
-    public recv(payload: Payload): void {
-        if (this.state !== ConnectionState.PLAY && !payload.canProcessInTransition?.()) return;
+    public incoming(reader: BinaryReader) {
+        if (this.health.receive()) {
+            this.disconnect('newtwork.disconnect.rate_limit');
+            this.health.manager.overload(this);
+            Log.warn(`Connection "${this.sid}" at "${this.address}" reach rate limit`);
+            return;
+        }
+        this.channel.onMessage(reader);
+    }
 
-        this.session.active();
+    public override recv(payload: Payload) {
         this.receiveQueue.push(payload);
+    }
+
+    public override report(err: unknown) {
+        if (this.health.decodeErr()) this.disconnect('network.invalid_packet');
+        Log.error(err);
     }
 
     public disconnect(reason: string, args?: string[]): void {
         if (!this.changeState(ConnectionState.DISCONNECTING)) return;
-
-        this.session.startDisconnect();
+        this.health.startDisconnect();
+        this.setInbound(DisconnectProtocol.CLIENT_BOUND, new DisconnectListener(this.receiving));
         this.send(new PlayerDisconnectS2CPacket(this.uuid, reason, args));
     }
 
     public forceDisconnect(): void {
         if (!this.changeState(ConnectionState.CLOSED)) return;
-        this.channel.action(RelayActionBuilder.forceDisconnect(this.sessionId));
-    }
-
-    public changeState(state: ConnectionState): boolean {
-        if (state < this.state) return false;
-        this.state = state;
-        return true;
-    }
-
-    public getState(): ConnectionState {
-        return this.state;
+        this.channel.disconnect();
+        this.channel = null!;
     }
 
     public handlerDisconnection(): void {
@@ -104,45 +99,25 @@ export class ServerConnection implements Connection {
         this.packetListener?.onDisconnected();
     }
 
-    public setPacketListener(state: ConnectionState, listener: PacketListener): void {
-        if (state !== listener.getPhase()) {
-            throw new IllegalStateError(`Listener protocol (${listener.getPhase()}) does not match requested one ${state}`);
-        }
-        this.packetListener = listener;
-        this.changeState(state);
-    }
-
     public checkActivate(timeout: number): void {
-        if (this.session.announceDead(timeout)) {
-            this.disconnect(ServerConnection.TIMEOUT);
+        if (this.health.announceDead(timeout)) {
+            this.disconnect('network.disconnect.timeout');
         }
     }
 
     public shouldRemove(): boolean {
-        if (this.state === ConnectionState.CLOSED) return true;
-        if (this.state === ConnectionState.DISCONNECTING) {
-            return this.session.isDead();
+        if (this.isState(ConnectionState.CLOSED)) return true;
+        if (this.isState(ConnectionState.DISCONNECTING)) {
+            return this.health.isDead();
         }
         return false;
     }
 
-    public sid(): number {
-        return this.sessionId;
-    }
-
-    public isHost(): boolean {
-        return this.isLocal;
-    }
-
-    public getAddr() {
-        return this.addr;
-    }
-
-    public cleanBuffer(): void {
+    public cleanReceived(): void {
         this.receiveQueue.clear();
     }
 
-    public toString(): string {
-        return `[ServerConnection] SID(${this.sessionId}), UUID(${this.uuid}), IsLocal(${this.isLocal}), State(${this.state})`;
+    public override toString(): string {
+        return `[ServerConnection] SID(${this.sid}), UUID(${this.uuid}), IsLocal(${this.isHost}), State(${this.state})`;
     }
 }

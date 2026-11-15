@@ -1,25 +1,20 @@
+import type {SocketAddr} from "../../network/SocketAddr.ts";
 import type {Payload} from "../../network/Payload.ts";
-import type {PacketListener} from "../../network/handler/PacketListener.ts";
-import {ConnectionState} from "../../server/network/ConnectionState.ts";
-import {IllegalStateError} from "../../type/errors.ts";
-import type {Connection} from "../../network/Connection.ts";
-import type {ClientChannel} from "./ClientChannel.ts";
+import {Connection} from "../../network/Connection.ts";
+import {NetworkSide} from "../../network/NetworkSide.ts";
 import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
+import {ConnectionState} from "../../server/network/ConnectionState.ts";
+import {Log} from "../../worker/log.ts";
+import {PacketIndexRange} from "../../type/errors.ts";
 
-export class ClientConnection implements Connection {
+export class ClientConnection extends Connection {
     private readonly sendQueue: RingBuffer<Payload> = new RingBuffer(16);
 
-    private channel: ClientChannel;
-    private packetListener: PacketListener | null = null;
-    private state: ConnectionState = ConnectionState.HANDSHAKING;
-
-    public constructor(channel: ClientChannel) {
-        this.channel = channel;
-        this.recv = this.recv.bind(this);
-        channel.setHandler(this.recv);
+    public constructor(addr: SocketAddr) {
+        super(NetworkSide.CLIENT, addr);
     }
 
-    public tick(): void {
+    public override tick() {
         if (!this.packetListener) return;
         while (!this.sendQueue.isEmpty()) {
             const packet = this.sendQueue.shift();
@@ -29,7 +24,7 @@ export class ClientConnection implements Connection {
         this.packetListener.tick();
     }
 
-    public send(packet: Payload) {
+    public override send(packet: Payload) {
         if (this.state < ConnectionState.PLAY) {
             this.sendImmediately(packet);
             return;
@@ -38,46 +33,33 @@ export class ClientConnection implements Connection {
     }
 
     private sendImmediately(packet: Payload): void {
-        if (this.state === ConnectionState.CLOSED) {
+        if (this.isState(ConnectionState.CLOSED)) {
             console.warn('Sending packet when connection closed', packet);
             return;
         }
-        this.channel.send(packet);
+        this.channel.unicast(packet);
     }
 
-    public recv(payload: Payload): void {
+    public override recv(payload: Payload) {
         this.packetListener?.accept(payload);
+    }
+
+    public override report(err: unknown) {
+        if (err instanceof PacketIndexRange) {
+            console.warn(err, this.state);
+            return;
+        }
+        Log.error(err);
+    }
+
+    public getSessionId() {
+        return this.channel.getSessionId();
     }
 
     public disconnect(): void {
         if (!this.changeState(ConnectionState.DISCONNECTING)) return;
         this.channel.disconnect();
-
         this.changeState(ConnectionState.CLOSED);
-    }
-
-    public changeState(state: ConnectionState): boolean {
-        if (state < this.state) return false;
-        this.state = state;
-        return true;
-    }
-
-    public getState(): ConnectionState {
-        return this.state;
-    }
-
-    public setPacketListener(state: ConnectionState, listener: PacketListener): void {
-        if (state !== listener.getPhase()) {
-            throw new IllegalStateError(`Listener protocol (${listener.getPhase()}) does not match requested one ${state}`);
-        }
-        this.packetListener = listener;
-        this.changeState(state);
-    }
-
-    public changeChannel(channel: ClientChannel): void {
-        this.channel.disconnect();
-        this.channel = channel;
-        channel.setHandler(this.recv);
     }
 
     public clean(): void {
@@ -85,9 +67,5 @@ export class ClientConnection implements Connection {
         this.packetListener?.clear();
         this.packetListener = null;
         this.state = ConnectionState.HANDSHAKING;
-    }
-
-    public getSessionId(): number {
-        return this.channel.getSessionId();
     }
 }

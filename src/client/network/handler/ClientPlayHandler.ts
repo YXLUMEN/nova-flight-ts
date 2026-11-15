@@ -79,8 +79,8 @@ import {AcceptTeleportC2SPacket} from "../../../network/packet/c2s/AcceptTelepor
 import {StageEnter} from "../../../event/events/stage/StageEnter.ts";
 
 export class ClientPlayHandler extends ClientCommonHandler {
-    private readonly commandDispatcher: CommandDispatcher<ClientCommandSource> = new CommandDispatcher();
-    private readonly playerProfiles: Map<UUID, GameProfile> = new Map();
+    private readonly commandDispatcher: CommandDispatcher<ClientCommandSource>;
+    private readonly playerProfiles: Map<UUID, GameProfile>;
 
     private world: ClientWorld | null = null;
 
@@ -89,6 +89,8 @@ export class ClientPlayHandler extends ClientCommonHandler {
 
     public constructor(client: NovaFlightClient, connection: ClientConnection) {
         super(client, connection, ConnectionState.PLAY);
+        this.commandDispatcher = new CommandDispatcher();
+        this.playerProfiles = new Map();
         this.latency = new LatencyCalculator();
     }
 

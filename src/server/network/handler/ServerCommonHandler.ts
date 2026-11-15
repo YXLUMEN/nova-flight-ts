@@ -2,11 +2,12 @@ import type {NovaFlightServer} from "../../NovaFlightServer.ts";
 import type {Payload} from "../../../network/Payload.ts";
 import type {Return} from "../../../type/types.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
-import type {PacketListener} from "../../../network/handler/PacketListener.ts";
+import type {PacketListener} from "../../../network/PacketListener.ts";
 import type {ConnectionState} from "../ConnectionState.ts";
+import {NetworkSide} from "../../../network/NetworkSide.ts";
 import {Log} from "../../../worker/log.ts";
-import {WSNetworkChannel} from "../../../network/WSNetworkChannel.ts";
 import {PongS2CPacket} from "../../../network/packet/s2c/PongS2CPacket.ts";
+import {WebSocketBus} from "../../../network/WebSocketBus.ts";
 
 export abstract class ServerCommonHandler implements PacketListener {
     public static readonly LOGOUT = 'network.disconnect.logout';
@@ -20,6 +21,10 @@ export abstract class ServerCommonHandler implements PacketListener {
     protected constructor(server: NovaFlightServer, connection: ServerConnection) {
         this.server = server;
         this.connection = connection;
+    }
+
+    public side(): NetworkSide {
+        return NetworkSide.SERVER;
     }
 
     public onDisconnected() {
@@ -50,7 +55,7 @@ export abstract class ServerCommonHandler implements PacketListener {
     }
 
     public addr() {
-        return this.connection.getAddr();
+        return this.connection.address;
     }
 
     public forceDisconnect(): void {
@@ -62,7 +67,7 @@ export abstract class ServerCommonHandler implements PacketListener {
     }
 
     protected isHost() {
-        return this.connection.isHost();
+        return this.connection.isHost;
     }
 
     public tick() {
@@ -77,7 +82,7 @@ export abstract class ServerCommonHandler implements PacketListener {
         entries: Iterable<T>,
         c0: Return<T, P>,
         c1: Return<P[], B>,
-        maxSize = WSNetworkChannel.MAX_ESTIMATE
+        maxSize = WebSocketBus.MAX_ESTIMATE
     ) {
         let currentSize = 0;
         const currentBatch: P[] = [];
@@ -108,7 +113,7 @@ export abstract class ServerCommonHandler implements PacketListener {
         entries: Iterable<T>,
         estimateSize: Return<T, number>,
         buildBatch: Return<T[], B>,
-        maxPacketSize = WSNetworkChannel.MAX_ESTIMATE
+        maxPacketSize = WebSocketBus.MAX_ESTIMATE
     ) {
         let currentSize = 0;
         const currentBatch: T[] = [];

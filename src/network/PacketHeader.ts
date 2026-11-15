@@ -3,8 +3,9 @@ export const enum PacketHeader {
     SERVER = 0x01,
     CLIENT = 0x02,
     C2S = 0x10,
-    SERVER_BROADCAST = 0x11,
-    SERVER_SINGLE = 0x12,
+    SERVER_BROADCAST = 0x11, // [Header][Protocol][Payload] Protocol 正好一字节,和单发协议一致
+    SERVER_SINGLE = 0x12, // [Header][SID][Payload]
+    /** @deprecated */
     SERVER_SINGLE_UUID = 0x13,
     SERVER_EXCLUDE = 0x14,
     SERVER_ACTION = 0xFF,

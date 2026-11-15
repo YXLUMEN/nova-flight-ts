@@ -61,7 +61,7 @@ export class EntityEmitter extends ParticleEmitterS2CPacket {
 }
 
 export class PosEmitter extends ParticleEmitterS2CPacket {
-    public static readonly ID: PayloadType<PosEmitter> = payloadType('entity_emitter');
+    public static readonly ID: PayloadType<PosEmitter> = payloadType('pos_emitter');
     public static readonly CODEC: PacketCodec<PosEmitter> = PacketCodecs.of(
         (writer, value) => {
             ParticleEffectType.PACKET_CODEC.encode(writer, value.particle);

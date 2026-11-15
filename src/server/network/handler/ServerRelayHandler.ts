@@ -1,16 +1,40 @@
-import type {PacketListener} from "../../../network/handler/PacketListener.ts";
+import type {PacketListener} from "../../../network/PacketListener.ts";
 import type {RelayMessage} from "../../../network/packet/relay/RelayMessage.ts";
 import type {Detached} from "../../../network/packet/relay/Detached.ts";
 import type {ClientAttached} from "../../../network/packet/relay/ClientAttached.ts";
 import type {ServerNetworkManager} from "../ServerNetworkManager.ts";
+import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
+import type {PacketCodec} from "../../../network/codec/PacketCodec.ts";
+import type {RelayPayload} from "../../../network/RelayPayload.ts";
 import {ConnectionState} from "../ConnectionState.ts";
 import {RelayCodeMap} from "../../../network/RelayCodeMap.ts";
+import {NetworkSide} from "../../../network/NetworkSide.ts";
+import {RelayProtocols} from "../../../network/protocol/RelayProtocols.ts";
+import {Log} from "../../../worker/log.ts";
 
 export class ServerRelayHandler implements PacketListener {
     private readonly manager: ServerNetworkManager;
+    private readonly codec: PacketCodec<RelayPayload>;
 
     public constructor(manager: ServerNetworkManager) {
         this.manager = manager;
+        this.codec = RelayProtocols.RELAY.codec;
+    }
+
+    public onMessage(reader: BinaryReader) {
+        try {
+            this.codec.decode(reader).accept(this);
+        } catch (err) {
+            Log.error(err);
+        }
+    }
+
+    public onDetached(packet: Detached) {
+        this.manager.detach(packet.sessionId);
+    }
+
+    public onClientAttached(packet: ClientAttached) {
+        this.manager.permit(packet.sessionId, packet.addr);
     }
 
     public onRelayMessage(packet: RelayMessage) {
@@ -18,31 +42,18 @@ export class ServerRelayHandler implements PacketListener {
         console.log(key, packet.args);
     }
 
-    public onDetached(packet: Detached) {
-        const sid = packet.sessionId;
-        const conn = this.manager.getConnection(sid);
-        if (conn) this.manager.removeConnection(conn);
-
-        this.manager.detached(sid);
+    public getPhase(): ConnectionState {
+        return ConnectionState.HANDSHAKING;
     }
 
-    public onClientAttached(packet: ClientAttached) {
-        const sid = packet.sessionId;
-        // 清理过时连接
-        const conn = this.manager.getConnection(sid);
-        if (conn) this.manager.removeConnection(conn);
-
-        this.manager.permit(sid, packet.addr);
+    public side(): NetworkSide {
+        return NetworkSide.SERVER;
     }
 
     public onDisconnected(): void {
     }
 
     public accept(): void {
-    }
-
-    public getPhase(): ConnectionState {
-        return ConnectionState.HANDSHAKING;
     }
 
     public tick() {

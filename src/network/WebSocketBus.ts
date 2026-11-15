@@ -1,65 +1,34 @@
-import type {Payload} from "./Payload.ts";
-import type {NetworkSide} from "./NetworkSide.ts";
-import type {Channel} from "./Channel.ts";
-import type {CodecEntry, CodecRegistry} from "./CodecRegistry.ts";
-import {sleep} from "../utils/util.ts";
-import {BinaryWriter} from "../serialization/BinaryWriter.ts";
 import {PacketTooLargeError} from "../type/errors.ts";
 import {RelayHandshake} from "./RelayHandshake.ts";
 import {Log} from "../worker/log.ts";
+import type {NetworkSide} from "./NetworkSide.ts";
+import {sleep} from "../utils/util.ts";
+import {isDev} from "../configs/RuntimeConfig.ts";
 
-export abstract class WSNetworkChannel implements Channel {
+export abstract class WebSocketBus {
     public static readonly MAX_PACKET_SIZE = 6144;
     public static readonly MAX_ESTIMATE = this.MAX_PACKET_SIZE - 16;
 
-    public readonly side: NetworkSide;
-    protected readonly registry: CodecRegistry;
-
+    private readonly side: NetworkSide;
     private address: string;
     private ws: WebSocket | null = null;
-
     private sessionId: number = 0;
 
-    protected constructor(side: NetworkSide, address: string, registry: CodecRegistry) {
+    protected constructor(side: NetworkSide, address: string) {
         this.side = side;
         this.address = address;
-        this.registry = registry;
     }
 
-    public getSessionId(): number {
-        return this.sessionId;
-    }
-
-    public isConnected(): boolean {
-        return this.ws ? this.ws.readyState === WebSocket.OPEN : false;
-    }
-
-    protected sendRaw(buf: Uint8Array<ArrayBuffer>): void {
-        if (buf.length > WSNetworkChannel.MAX_PACKET_SIZE) {
-            this.onLargePacket(new PacketTooLargeError(buf.length, WSNetworkChannel.MAX_PACKET_SIZE));
+    protected send(buf: Uint8Array<ArrayBuffer>): void {
+        if (buf.length <= WebSocketBus.MAX_PACKET_SIZE) {
+            this.ws!.send(buf);
             return;
         }
 
-        this.ws!.send(buf);
+        const err = new PacketTooLargeError(buf.length, WebSocketBus.MAX_PACKET_SIZE);
+        if (isDev) throw err;
+        Log.warn(err);
     }
-
-    public abstract send(payload: Payload): void;
-
-    protected checkAndSend<T extends Payload>(writer: BinaryWriter, codec: CodecEntry<T>, payload: T): void {
-        writer.writeVarUint(codec.index);
-        codec.codec.encode(writer, payload);
-
-        const buffer = writer.toUint8Array();
-        if (buffer.length > WSNetworkChannel.MAX_PACKET_SIZE) {
-            const max = WSNetworkChannel.MAX_PACKET_SIZE;
-            this.onLargePacket(new PacketTooLargeError(buffer.length, max, {cause: payload.type()}));
-            return;
-        }
-
-        this.ws!.send(buffer);
-    }
-
-    protected abstract onLargePacket(err: PacketTooLargeError): void;
 
     public async connect(): Promise<void> {
         if (this.isConnected()) return;
@@ -72,7 +41,7 @@ export abstract class WSNetworkChannel implements Channel {
         const handShake = new RelayHandshake(this.ws, this.side);
         this.sessionId = await handShake.alloc();
 
-        this.ws.onmessage = this.handleMessage.bind(this);
+        this.ws.onmessage = this.messageEvent.bind(this);
         this.ws.onclose = event => {
             Log.info(`[${this.side}] Connection to ${this.address} closed because ${event.type}:${event.reason || 'unknown'}`);
         }
@@ -80,10 +49,25 @@ export abstract class WSNetworkChannel implements Channel {
             Log.error(`[${this.side}] Connection Error: ${event.type}:${event.target}`);
     }
 
+    protected abstract register(): void;
+
+    protected abstract messageEvent(event: MessageEvent): void;
+
     public disconnect(): void {
         this.ws?.close(1000, 'Connection Closed');
         this.ws = null;
-        this.clearHandlers();
+    }
+
+    public setRemote(addr: string) {
+        this.address = addr;
+    }
+
+    public getSessionId() {
+        return this.sessionId;
+    }
+
+    public isConnected(): boolean {
+        return this.ws ? this.ws.readyState === WebSocket.OPEN : false;
     }
 
     public async sniff(
@@ -121,15 +105,4 @@ export abstract class WSNetworkChannel implements Channel {
 
         return false;
     }
-
-    protected abstract handleMessage(event: MessageEvent): void;
-
-    public abstract clearHandlers(): void;
-
-    public setRemote(addr: string) {
-        this.address = addr;
-    }
-
-    protected abstract register(): void;
 }
-

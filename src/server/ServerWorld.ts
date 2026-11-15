@@ -127,8 +127,8 @@ export class ServerWorld extends World implements NbtSerializable {
         this.events.emit(new GameOver());
     }
 
-    public sendPacket(payload: Payload, flush = false): void {
-        flush ? this.server.networkChannel.send(payload) : this.server.networkChannel.enqueue(payload);
+    public sendPacket(payload: Payload): void {
+        this.server.networkChannel.enqueue(payload);
     }
 
     /**
@@ -228,7 +228,7 @@ export class ServerWorld extends World implements NbtSerializable {
     public override playSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
         if (entity instanceof ServerPlayerEntity) {
             this.server.networkChannel
-                .sendExclude(new SoundEventS2CPacket(sound, volume, pitch, false), entity.profile());
+                .exclude(new SoundEventS2CPacket(sound, volume, pitch, false), entity.profile());
             return;
         }
         this.sendPacket(new SoundEventS2CPacket(sound, volume, pitch, false));
@@ -237,7 +237,7 @@ export class ServerWorld extends World implements NbtSerializable {
     public override playLoopSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
         if (entity instanceof ServerPlayerEntity) {
             this.server.networkChannel
-                .sendExclude(new SoundEventS2CPacket(sound, volume, pitch, true), entity.profile());
+                .exclude(new SoundEventS2CPacket(sound, volume, pitch, true), entity.profile());
             return;
         }
         this.sendPacket(new SoundEventS2CPacket(sound, volume, pitch, true));
@@ -253,7 +253,7 @@ export class ServerWorld extends World implements NbtSerializable {
 
     public spawnVisual(source: Entity | null, effect: VisualEffect): void {
         if (source instanceof ServerPlayerEntity) {
-            this.server.networkChannel.sendExclude(new EffectCreateS2CPacket(effect), source.profile());
+            this.server.networkChannel.exclude(new EffectCreateS2CPacket(effect), source.profile());
             return;
         }
         this.sendPacket(new EffectCreateS2CPacket(effect));
@@ -344,7 +344,7 @@ export class ServerWorld extends World implements NbtSerializable {
 
         this.stage.readNBT(nbt);
         this.phase = nbt.getUint32('phase_score');
-        this.setDifficulty(nbt.getInt8('difficulty', 1));
+        super.setDifficulty(nbt.getInt8('difficulty', 1)); // skip net sync
         this.blockMap.readNBT(nbt);
     }
 

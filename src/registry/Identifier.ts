@@ -1,7 +1,7 @@
 import type {Comparable} from "../type/Comparable.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import type {Codec} from "../serialization/Codec.ts";
-import {stringHashCode} from "../utils/hash.ts";
+import {hashString} from "../utils/hash.ts";
 import {StringReader} from "../brigadier/StringReader.ts";
 import {DataResult} from "../serialization/DataResult.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
@@ -44,7 +44,8 @@ export class Identifier implements Comparable {
 
         this.namespace = namespace;
         this.path = path;
-        this.hashCache = (stringHashCode(namespace) * 31 + stringHashCode(path)) | 0;
+        // 此对象经常被冻结,需要及时计算
+        this.hashCache = (hashString(namespace) * 31 + hashString(path)) | 0;
     }
 
     public static of(namespace: string, path: string): Identifier {

@@ -1,15 +1,17 @@
-import {ClientCommonHandler} from "./ClientCommonHandler.ts";
+import type {Payload} from "../../../network/Payload.ts";
 import type {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {ClientConnection} from "../ClientConnection.ts";
+import type {ServerAllowConfigS2CPacket} from "../../../network/packet/handshake/ServerAllowConfigS2CPacket.ts";
+import type {ServerStartS2CPacket} from "../../../network/packet/s2c/ServerStartS2CPacket.ts";
+import type {ServerReadyS2CPacket} from "../../../network/packet/s2c/ServerReadyS2CPacket.ts";
+import {ClientCommonHandler} from "./ClientCommonHandler.ts";
 import {ClientHandshakeC2SPacket} from "../../../network/packet/handshake/ClientHandshakeC2SPacket.ts";
 import {ClientProfileC2SPacket} from "../../../network/packet/handshake/ClientProfileC2SPacket.ts";
-import type {ServerAllowConfigS2CPacket} from "../../../network/packet/handshake/ServerAllowConfigS2CPacket.ts";
 import {ClientConfigHandler} from "./ClientConfigHandler.ts";
 import {ClientStartConfigC2SPacket} from "../../../network/packet/handshake/ClientStartConfigC2SPacket.ts";
 import {ConnectionState} from "../../../server/network/ConnectionState.ts";
-import type {ServerStartS2CPacket} from "../../../network/packet/s2c/ServerStartS2CPacket.ts";
-import type {ServerReadyS2CPacket} from "../../../network/packet/s2c/ServerReadyS2CPacket.ts";
-import type {Payload} from "../../../network/Payload.ts";
+import {HandshakeProtocols} from "../../../network/protocol/HandshakeProtocols.ts";
+import {ConfigProtocols} from "../../../network/protocol/ConfigProtocols.ts";
 
 export class ClientHandshakeHandler extends ClientCommonHandler {
     private maxSniffTimes = 16;
@@ -17,7 +19,8 @@ export class ClientHandshakeHandler extends ClientCommonHandler {
 
     public constructor(client: NovaFlightClient, connection: ClientConnection) {
         super(client, connection, ConnectionState.HANDSHAKING);
-        connection.setPacketListener(ConnectionState.HANDSHAKING, this);
+        connection.setInbound(HandshakeProtocols.SERVER_BOUND, this);
+        connection.setOutBound(HandshakeProtocols.CLIENT_BOUND);
     }
 
     public onServerStart(_: ServerStartS2CPacket) {
@@ -38,8 +41,9 @@ export class ClientHandshakeHandler extends ClientCommonHandler {
         this.stopSniff();
 
         const config = new ClientConfigHandler(this.client, this.connection);
-        this.connection.setPacketListener(ConnectionState.CONFIGURATION, config);
         this.send(ClientStartConfigC2SPacket.INSTANCE);
+        this.connection.setInbound(ConfigProtocols.SERVER_BOUND, config);
+        this.connection.setOutBound(ConfigProtocols.CLIENT_BOUND);
     }
 
     public clientReady() {
@@ -77,7 +81,7 @@ export class ClientHandshakeHandler extends ClientCommonHandler {
     }
 
     public override accept(payload: Payload) {
-        if (!payload.canProcessInTransition?.()) return;
+        if (payload.protocol?.() !== this.getPhase()) return;
         super.accept(payload);
     }
 

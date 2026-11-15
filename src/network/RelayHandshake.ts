@@ -1,13 +1,13 @@
-import {ISOTime} from "../utils/time.ts";
 import type {Consumer} from "../type/types.ts";
+import type {NetworkSide} from "./NetworkSide.ts";
+import {ISOTime} from "../utils/time.ts";
 import {PacketHeader} from "./PacketHeader.ts";
 import {BinaryReader} from "../serialization/BinaryReader.ts";
-import {CodecRegistry} from "./CodecRegistry.ts";
 import {Detached} from "./packet/relay/Detached.ts";
 import {Attached} from "./packet/relay/Attached.ts";
-import type {NetworkSide} from "./NetworkSide.ts";
 import {RelayMessage} from "./packet/relay/RelayMessage.ts";
 import {RelayCodeMap} from "./RelayCodeMap.ts";
+import {RelayProtocols} from "./protocol/RelayProtocols.ts";
 
 export class RelayHandshake {
     private readonly ws: WebSocket;
@@ -57,24 +57,20 @@ export class RelayHandshake {
 
         const reader = new BinaryReader(buf);
         reader.readUint8();
-        const index = reader.readUint8();
-        const codec = CodecRegistry.byId(index);
-        if (!codec) return;
-
-        const packet = codec.codec.decode(reader);
-        if (packet instanceof Detached) {
+        const payload = RelayProtocols.RELAY.codec.decode(reader);
+        if (payload instanceof Detached) {
             fail(`[${this.side}] Ticked by relay`);
             return;
         }
 
-        if (packet instanceof RelayMessage) {
-            fail(RelayCodeMap.get(packet.code));
+        if (payload instanceof RelayMessage) {
+            fail(RelayCodeMap.get(payload.code));
             return;
         }
 
-        if (!(packet instanceof Attached)) return;
+        if (!(payload instanceof Attached)) return;
 
-        const sessionId = packet.sessionId;
+        const sessionId = payload.sessionId;
         if (!Number.isSafeInteger(sessionId) || sessionId <= 0 || sessionId > 128) {
             fail(`[${this.side}] Invalid session ID`);
             return;

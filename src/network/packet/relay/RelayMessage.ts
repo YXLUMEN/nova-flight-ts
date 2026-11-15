@@ -7,7 +7,7 @@ import type {ClientCommonHandler} from "../../../client/network/handler/ClientCo
 
 export class RelayMessage implements RelayPayload {
     public static readonly TYPE_ID = 0x03;
-    public static readonly ID: PayloadType<RelayMessage> = payloadType('attached');
+    public static readonly ID: PayloadType<RelayMessage> = payloadType('relay_msg');
     public static readonly CODEC: PacketCodec<RelayMessage> = PacketCodecs.adapt2(
         PacketCodecs.UINT8,
         val => val.code,
@@ -30,9 +30,5 @@ export class RelayMessage implements RelayPayload {
 
     public accept(listener: ClientCommonHandler | ServerRelayHandler): void {
         listener.onRelayMessage(this);
-    }
-
-    public canProcessInTransition(): boolean {
-        return true;
     }
 }

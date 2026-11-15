@@ -1,5 +1,5 @@
 import type {Identifier} from "../registry/Identifier.ts";
-import type {Predicate, RGB} from "../type/types.ts";
+import type {Constructor, Predicate, RGB} from "../type/types.ts";
 import {clamp} from "./math/math.ts";
 import {TimeoutError} from "../type/errors.ts";
 
@@ -165,6 +165,21 @@ export function* concatIters<T>(...its: Iterable<T>[]) {
 
 export function isRecord(obj: unknown): obj is Record<any, any> {
     return obj != null && typeof obj === 'object' && !Array.isArray(obj);
+}
+
+export function makeLightError(err: Constructor<Error>) {
+    // 自定义错误类型不匹配 `ErrorConstructor`,所以采取 `Constructor<Error>`
+    if (Error.stackTraceLimit == null) {
+        console.warn('"stackTraceLimit" unsupported');
+        return new err();
+    }
+    const prev = Error.stackTraceLimit;
+    try {
+        Error.stackTraceLimit = 0;
+        return new err();
+    } finally {
+        Error.stackTraceLimit = prev;
+    }
 }
 
 /** 空方法 */

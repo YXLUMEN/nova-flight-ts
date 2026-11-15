@@ -43,6 +43,7 @@ export class VoidEnginWeapon extends SpecialWeapon {
 
         stack.set(DataComponents.ANY_BOOLEAN, attacker.invulnerable);
         attacker.invulnerable = true;
+        attacker.noClip = true;
 
         const modifier = stack.getOr(
             DataComponents.ATTRIBUTE_MODIFIERS,
@@ -164,6 +165,7 @@ export class VoidEnginWeapon extends SpecialWeapon {
         if (!(attacker instanceof PlayerEntity)) return;
 
         attacker.invulnerable = stack.getOr(DataComponents.ANY_BOOLEAN, false);
+        attacker.noClip = false;
         stack.remove(DataComponents.ANY_BOOLEAN);
 
         const range = stack.getOr(DataComponents.EFFECT_RANGE, 32);

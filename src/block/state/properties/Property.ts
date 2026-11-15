@@ -1,6 +1,6 @@
 import {Optional} from "../../../utils/Optional.ts";
 import type {Comparable} from "../../../type/Comparable.ts";
-import {stringHashCode} from "../../../utils/hash.ts";
+import {hashString} from "../../../utils/hash.ts";
 
 
 export abstract class Property<T> implements Comparable {
@@ -43,6 +43,6 @@ export abstract class Property<T> implements Comparable {
     }
 
     public generateHashCode(): number {
-        return (stringHashCode(this.typeName) * 31 + stringHashCode(this.name)) | 0;
+        return (hashString(this.typeName) * 31 + hashString(this.name)) | 0;
     }
 }

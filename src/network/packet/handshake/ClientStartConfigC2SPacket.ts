@@ -3,6 +3,7 @@ import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import type {ServerHandshakeHandler} from "../../../server/network/handler/ServerHandshakeHandler.ts";
+import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
 export class ClientStartConfigC2SPacket implements Payload {
     public static readonly INSTANCE = new ClientStartConfigC2SPacket();
@@ -24,7 +25,7 @@ export class ClientStartConfigC2SPacket implements Payload {
         return 0;
     }
 
-    public canProcessInTransition(): boolean {
-        return true;
+    public protocol(): ConnectionState {
+        return ConnectionState.HANDSHAKING;
     }
 }

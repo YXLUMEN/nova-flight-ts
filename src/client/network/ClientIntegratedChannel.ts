@@ -1,33 +1,77 @@
-import type {Consumer, UUID} from "../../type/types.ts";
+import type {UUID} from "../../type/types.ts";
 import type {Payload} from "../../network/Payload.ts";
-import {CodecRegistry} from "../../network/CodecRegistry.ts";
+import type {ClientChannel} from "./ClientChannel.ts";
+import type {ProtocolInfo} from "../../network/protocol/ProtocolInfo.ts";
+import type {ChannelHandler} from "../../network/channel/ChannelHandler.ts";
+import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
 import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
 import {BinaryReader} from "../../serialization/BinaryReader.ts";
-import type {ClientChannel} from "./ClientChannel.ts";
-import {empty} from "../../utils/util.ts";
 import {IntegratedBatchBufferPacket} from "../../network/packet/common/IntegratedBatchBufferPacket.ts";
+import {HandshakeProtocols} from "../../network/protocol/HandshakeProtocols.ts";
 
 export class ClientIntegratedChannel implements ClientChannel {
     private readonly clientId: UUID;
     private readonly worker: Worker;
 
-    private readonly registry = CodecRegistry.C2S;
-
+    private handler: ChannelHandler = null!;
+    private in: PacketCodec<Payload> = HandshakeProtocols.SERVER_BOUND.codec;
+    private out: PacketCodec<Payload> = HandshakeProtocols.CLIENT_BOUND.codec;
     private ctrl: AbortController | null = null;
-    private handler: Consumer<Payload> = empty;
 
     public constructor(worker: Worker, clientId: UUID) {
         this.worker = worker;
         this.clientId = clientId;
-        this.onMessage = this.onMessage.bind(this);
     }
 
     public getSessionId(): number {
         return 2;
     }
 
-    public isConnected(): boolean {
+    public isOpen(): boolean {
         return this.ctrl !== null ? !this.ctrl.signal.aborted : false;
+    }
+
+    public setHandler(handler: ChannelHandler): void {
+        this.handler = handler;
+    }
+
+    public clearHandler(): void {
+        this.handler = null!;
+    }
+
+    public inbound(protocol: ProtocolInfo): void {
+        this.in = protocol.codec;
+    }
+
+    public outbound(protocol: ProtocolInfo): void {
+        this.out = protocol.codec;
+    }
+
+    public broadcast(payload: Payload): void {
+        const size = payload.estimateSize?.() ?? 6;
+        const writer = new BinaryWriter(size + 2);
+        this.out.encode(writer, payload);
+
+        const buffer = writer.toUint8Array();
+        this.worker.postMessage({
+            type: 'packet',
+            packet: buffer.buffer
+        }, {transfer: [buffer.buffer]});
+    }
+
+    public unicast(payload: Payload): void {
+        this.broadcast(payload);
+    }
+
+    public onMessage(reader: BinaryReader): void {
+        let payload: Payload;
+        try {
+            payload = this.in.decode(reader);
+        } catch (err) {
+            this.handler.report(err);
+            return;
+        }
+        this.handler.recv(payload);
     }
 
     public async connect(): Promise<void> {
@@ -44,7 +88,7 @@ export class ClientIntegratedChannel implements ClientChannel {
             if (event.data.type !== 'connect') return;
             resolve();
             ctrl.abort();
-            this.worker.addEventListener('message', this.onMessage, {signal: limiter.signal});
+            this.worker.addEventListener('message', this.messageEvent.bind(this), {signal: limiter.signal});
         };
 
         signal.addEventListener('abort', () => {
@@ -67,41 +111,24 @@ export class ClientIntegratedChannel implements ClientChannel {
         this.worker.postMessage({type: 'disconnect'});
     }
 
-    public send(payload: Payload): void {
-        const code = this.registry.get(payload.type());
-        if (!code) throw new Error(`Unknown payload type: ${payload.type().id}`);
-
-        const size = payload.estimateSize?.() ?? 6;
-        const writer = new BinaryWriter(size + 2);
-        writer.writeVarUint(code.index);
-        code.codec.encode(writer, payload);
-
-        const buffer = writer.toUint8Array();
-        this.worker.postMessage({
-            type: 'packet',
-            packet: buffer.buffer
-        }, {transfer: [buffer.buffer]});
-    }
-
-    private onMessage(event: MessageEvent): void {
+    private messageEvent(event: MessageEvent): void {
         switch (event.data.type) {
-            case 'packet': {
+            case 'broadcast': {
                 const reader = new BinaryReader(new Uint8Array(event.data.packet));
-
-                const index = reader.readVarUint();
-                const codec = CodecRegistry.byId(index);
-                if (!codec) return;
-
-                this.handler(codec.codec.decode(reader));
+                this.onMessage(reader);
+                return;
+            }
+            case 'unicast' : {
+                const reader = new BinaryReader(new Uint8Array(event.data.packet));
+                reader.skip(2);
+                this.onMessage(reader);
                 return;
             }
             case 'batch' : {
                 const {count, len, packet} = event.data;
-                // console.assert(count > 0 && len > 0 && packet instanceof ArrayBuffer, 'Broken batched packet');
-
                 const buffer = new Uint8Array(packet, 0, len);
                 const batch = new IntegratedBatchBufferPacket(count, buffer);
-                this.handler(batch);
+                this.handler.recv(batch);
                 return;
             }
             case 'disconnect': {
@@ -112,16 +139,5 @@ export class ClientIntegratedChannel implements ClientChannel {
 
     public sniff(): Promise<boolean> {
         return Promise.resolve(true);
-    }
-
-    public setHandler(handler: Consumer<Payload>): void {
-        this.handler = handler;
-    }
-
-    public clearHandlers(): void {
-        this.handler = empty;
-    }
-
-    public setRemote() {
     }
 }

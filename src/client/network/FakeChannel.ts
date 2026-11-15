@@ -6,34 +6,47 @@ export class FakeChannel implements ClientChannel {
     private constructor() {
     }
 
-    public clearHandlers(): void {
-    }
-
-    public connect(): Promise<void> {
-        return Promise.resolve();
-    }
-
-    public disconnect(): void {
+    public isOpen(): boolean {
+        return false;
     }
 
     public getSessionId(): number {
         return 0;
     }
 
-    public isConnected(): boolean {
-        return false;
+    public clearHandler(): void {
     }
 
-    public send(): void {
+    public connect(): Promise<void> {
+        return Promise.resolve();
+    }
+
+    public sniff(): Promise<boolean> {
+        return Promise.resolve(false);
     }
 
     public setHandler(): void {
     }
 
-    public setRemote(): void {
+    public inbound(): void {
+        throw new Error('channel not active');
     }
 
-    public sniff(): Promise<boolean> {
-        return Promise.resolve(false);
+    public outbound(): void {
+        throw new Error('channel not active');
+    }
+
+    public broadcast(): void {
+        throw new Error('channel not active');
+    }
+
+    public unicast(): void {
+        throw new Error('channel not active');
+    }
+
+    public onMessage(): void {
+    }
+
+    public disconnect(): void {
     }
 }

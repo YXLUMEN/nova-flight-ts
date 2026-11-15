@@ -1,6 +1,6 @@
 import type {TrackedDataHandler} from "./TrackedDataHandler.ts";
 import type {Comparable} from "../../type/Comparable.ts";
-import {stringHashCode} from "../../utils/hash.ts";
+import {hashString} from "../../utils/hash.ts";
 
 export class TrackedData<T> implements Comparable {
     public readonly id: number;
@@ -22,6 +22,6 @@ export class TrackedData<T> implements Comparable {
     }
 
     public hashCode(): number {
-        return (stringHashCode(this.dataType.toString()) * 31 + this.id) | 0;
+        return (hashString(this.dataType.toString()) * 31 + this.id) | 0;
     }
 }

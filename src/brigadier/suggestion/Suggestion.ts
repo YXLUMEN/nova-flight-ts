@@ -1,6 +1,6 @@
 import type {StringRange} from "../context/StringRange.ts";
 import type {Comparable} from "../../type/Comparable.ts";
-import {stringHashCode} from "../../utils/hash.ts";
+import {hashString} from "../../utils/hash.ts";
 
 export class Suggestion implements Comparable {
     private readonly range: StringRange;
@@ -69,8 +69,8 @@ export class Suggestion implements Comparable {
         if (this.cacheHash) return this.cacheHash;
 
         let h = this.range.hashCode();
-        h = (31 * h + stringHashCode(this.text)) | 0;
-        if (this.tooltip !== null) h = (31 * h + stringHashCode(this.tooltip)) | 0;
+        h = (31 * h + hashString(this.text)) | 0;
+        h = this.tooltip === null ? h : (31 * h + hashString(this.tooltip)) | 0;
         this.cacheHash = h;
         return h;
     }

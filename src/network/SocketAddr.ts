@@ -1,6 +1,6 @@
 import {validateIpv4} from "../utils/address_util.ts";
 import type {Comparable} from "../type/Comparable.ts";
-import {stringHashCode} from "../utils/hash.ts";
+import {hashString} from "../utils/hash.ts";
 
 export class SocketAddr implements Comparable {
     public static readonly INTEGRATED = new SocketAddr('127.0.0.1', 0);
@@ -33,7 +33,7 @@ export class SocketAddr implements Comparable {
     }
 
     public hashCode(): number {
-        return (31 * stringHashCode(this.host) + this.port) | 0;
+        return (31 * hashString(this.host) + this.port) | 0;
     }
 
     public equals(other: unknown): boolean {

@@ -131,7 +131,7 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
             error!("ws write failed. cause by\n {}", e);
             break;
         }
-        let _ = writer.close().await;
+        let _ = timeout(Duration::from_secs(2), writer.close()).await;
         drop(rx);
     });
 

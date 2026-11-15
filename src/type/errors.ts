@@ -62,3 +62,12 @@ export class RateLimitError extends Error {
         this.name = 'RateLimitError';
     }
 }
+
+export class DecoderError extends Error {
+}
+
+export class EncoderError extends Error {
+}
+
+export class PacketIndexRange extends Error {
+}

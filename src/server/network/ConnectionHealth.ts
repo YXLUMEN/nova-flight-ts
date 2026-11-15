@@ -1,4 +1,4 @@
-import {RateLimitError} from "../../type/errors.ts";
+import type {NetHealthManager} from "./NetHealthManager.ts";
 
 const ERROR_TOLERANCE_TIMES = 5;
 const ERROR_TOLERANCE_MS = 30_000;
@@ -6,9 +6,10 @@ const DISCONNECT_ANNOUNCE_CD = 500;
 const DISCONNECT_TOLERANCE_MS = 2000;
 const MAX_PACKET_PER_TICK = 36;
 
-export class Session {
-    private received = 0;
+export class ConnectionHealth {
+    public readonly manager: NetHealthManager;
 
+    private received = 0;
     private lastActivityTime = 0;
     private disconnectStartTime = 0;
     private announceTime = 0;
@@ -16,16 +17,18 @@ export class Session {
     private decodeErrors = 0;
     private lastErrorTime = 0;
 
+    public constructor(manager: NetHealthManager) {
+        this.manager = manager;
+    }
+
     public tick() {
-        if (this.received >= MAX_PACKET_PER_TICK) {
-            throw new RateLimitError(MAX_PACKET_PER_TICK);
-        }
         this.received = 0;
     }
 
-    public active() {
+    public receive() {
         this.received++;
         this.lastActivityTime = performance.now();
+        return this.received >= MAX_PACKET_PER_TICK;
     }
 
     public announceDead(timeout: number) {

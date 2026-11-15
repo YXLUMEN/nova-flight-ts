@@ -2,7 +2,6 @@ import type {Payload} from "../../Payload.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
-import {Identifier} from "../../../registry/Identifier.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {decodeYaw} from "../../../utils/net_util.ts";
 import type {ClientPlayHandler} from "../../../client/network/handler/ClientPlayHandler.ts";
@@ -67,7 +66,7 @@ export class MoveRelative extends EntityMoveS2CPacket {
 }
 
 export class Rotate extends EntityMoveS2CPacket {
-    public static readonly ID: PayloadType<Rotate> = {id: Identifier.ofVanilla('entity_move_rotate')};
+    public static readonly ID: PayloadType<Rotate> = payloadType('entity_move_rotate');
     public static readonly CODEC = PacketCodecs.of(this.write, this.read);
 
     public constructor(entityId: number, yawUint8: number) {
@@ -96,7 +95,7 @@ export class Rotate extends EntityMoveS2CPacket {
 }
 
 export class RotateAndMoveRelative extends EntityMoveS2CPacket {
-    public static readonly ID: PayloadType<Rotate> = {id: Identifier.ofVanilla('entity_move_pos_rotate')};
+    public static readonly ID: PayloadType<Rotate> = payloadType('entity_move_pos_rotate');
     public static readonly CODEC = PacketCodecs.of(this.write, this.read);
 
     public constructor(entityId: number, deltaX: number, deltaY: number, yawUint8: number) {

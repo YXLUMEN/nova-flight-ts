@@ -1,7 +1,13 @@
-import type {Channel} from "../../network/Channel.ts";
-import type {Consumer} from "../../type/types.ts";
-import type {Payload} from "../../network/Payload.ts";
+import type {Channel} from "../../network/channel/Channel.ts";
 
 export interface ClientChannel extends Channel {
-    setHandler(handler: Consumer<Payload>): void;
+    clearHandler(): void;
+
+    connect(): Promise<void>;
+
+    sniff(
+        retryDelay?: number,
+        maxRetries?: number,
+        onTry?: (attempts: number, maxRetries: number) => boolean
+    ): Promise<boolean>;
 }

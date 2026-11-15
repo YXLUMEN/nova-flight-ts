@@ -11,13 +11,14 @@ import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
 import {PlayerJoinS2CPacket} from "../../network/packet/s2c/PlayerJoinS2CPacket.ts";
 import {Log} from "../../worker/log.ts";
 import {NoResultsError} from "../../type/errors.ts";
-import {ConnectionState} from "../network/ConnectionState.ts";
 import {ServerCommonHandler} from "../network/handler/ServerCommonHandler.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
 import {TickChangeS2CPacket} from "../../network/packet/s2c/TickChangeS2CPacket.ts";
 import {PlayerDataStorage} from "../storage/PlayerDataStorage.ts";
 import {EntityTypes} from "../../entity/EntityTypes.ts";
 import {PromisePool} from "../../utils/collection/PromisePool.ts";
+import {PlayProtocol} from "../../network/protocol/PlayProtocol.ts";
+import {DifficultChangeS2CPacket} from "../../network/packet/s2c/DifficultChangeS2CPacket.ts";
 
 export class PlayerManager {
     private readonly server: NovaFlightServer;
@@ -41,9 +42,10 @@ export class PlayerManager {
         if (!world) return;
 
         player.setUuid(profile.clientId);
-        connection.cleanBuffer();
+        connection.cleanReceived();
         const playHandler = new ServerPlayHandler(this.server, connection, player);
-        connection.setPacketListener(ConnectionState.PLAY, playHandler);
+        connection.setInbound(PlayProtocol.CLIENT_BOUND, playHandler);
+        connection.setOutBound(PlayProtocol.SERVER_BOUND);
 
         this.uuidToPlayer.set(profile.clientId, player);
         this.sessionToPlayer.set(profile.sessionId, player);
@@ -54,6 +56,7 @@ export class PlayerManager {
 
         playHandler.send(new JoinGameS2CPacket(player.getId(), this.server.worldName));
         playHandler.send(new TickChangeS2CPacket(this.server.getTickManager().rate()));
+        playHandler.send(new DifficultChangeS2CPacket(world.getDifficulty()));
         connection.broadcast(new PlayerJoinS2CPacket(profile.name, profile.clientId));
         world.addPlayer(player);
 
@@ -119,7 +122,7 @@ export class PlayerManager {
         if (this.uuidToPlayer.size === 1) {
             this.server.isMultiPlayer = false;
         }
-        this.server.networkChannel.send(new PlayerDisconnectS2CPacket(uuid, ServerCommonHandler.LOGOUT));
+        this.server.networkChannel.broadcast(new PlayerDisconnectS2CPacket(uuid, ServerCommonHandler.LOGOUT));
     }
 
     public getPlayer(uuid: UUID): ServerPlayerEntity | null {
@@ -169,7 +172,7 @@ export class PlayerManager {
     }
 
     public async saveAllPlayerData(): Promise<void> {
-        const pool = new PromisePool(Math.min(8, this.uuidToPlayer.size));
+        const pool = new PromisePool(8);
         const job = (v: ServerPlayerEntity) => this.savePlayerData(v);
         for (const player of this.uuidToPlayer.values()) {
             pool.spawn(job, player);

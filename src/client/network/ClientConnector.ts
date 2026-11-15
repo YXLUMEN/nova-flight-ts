@@ -211,9 +211,8 @@ export class ClientConnector {
 
     private mapErr(err: unknown) {
         if (Error.isError(err)) {
-            return `[Client] Fail to connect. because: ${err.name}:${err.message} at ${err.stack}`;
+            return `[Client] Fail to connect. because: ${err.name}:${err.message}, by ${err.cause} at:\n  ${err.stack}`;
         }
-
         return `[Client] Fail to connect. because: ${String(err)}`;
     }
 }

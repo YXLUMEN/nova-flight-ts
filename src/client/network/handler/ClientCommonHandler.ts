@@ -1,4 +1,4 @@
-import type {PacketListener} from "../../../network/handler/PacketListener.ts";
+import type {PacketListener} from "../../../network/PacketListener.ts";
 import type {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {ClientConnection} from "../ClientConnection.ts";
 import type {Payload} from "../../../network/Payload.ts";
@@ -9,6 +9,8 @@ import type {BatchBuffer} from "../../../network/packet/common/BatchBuffer.ts";
 import {GaussianRandom} from "../../../utils/math/random/GaussianRandom.ts";
 import {RelayCodeMap} from "../../../network/RelayCodeMap.ts";
 import {TranslatableText} from "../../../i18n/TranslatableText.ts";
+import {NetworkSide} from "../../../network/NetworkSide.ts";
+import {PlayProtocol} from "../../../network/protocol/PlayProtocol.ts";
 
 export abstract class ClientCommonHandler implements PacketListener {
     protected readonly connection: ClientConnection;
@@ -22,6 +24,10 @@ export abstract class ClientCommonHandler implements PacketListener {
         this.connection = connection;
         this.phase = phase;
         this.gaussian = new GaussianRandom();
+    }
+
+    public side(): NetworkSide {
+        return NetworkSide.CLIENT;
     }
 
     public onDisconnected(): void {
@@ -38,7 +44,7 @@ export abstract class ClientCommonHandler implements PacketListener {
     }
 
     public onBatch(packet: BatchBuffer): void {
-        packet.parse(this);
+        packet.parse(this, PlayProtocol.SERVER_BOUND.codec);
     }
 
     public onPlayerDisconnect(packet: PlayerDisconnectS2CPacket) {
