@@ -21,17 +21,17 @@ export class ConnectionHealth {
         this.manager = manager;
     }
 
-    public tick() {
+    public tick(): void {
         this.received = 0;
     }
 
-    public receive() {
+    public receive(): boolean {
         this.received++;
         this.lastActivityTime = performance.now();
         return this.received >= MAX_PACKET_PER_TICK;
     }
 
-    public announceDead(timeout: number) {
+    public announceDead(timeout: number): boolean {
         const now = performance.now();
         if (now - this.lastActivityTime >= timeout && now - this.announceTime >= DISCONNECT_ANNOUNCE_CD) {
             this.announceTime = now;
@@ -40,12 +40,12 @@ export class ConnectionHealth {
         return false;
     }
 
-    public startDisconnect() {
+    public startDisconnect(): void {
         if (this.disconnectStartTime !== 0) return;
         this.disconnectStartTime = performance.now();
     }
 
-    public isDead() {
+    public isDead(): boolean {
         return (performance.now() - this.disconnectStartTime) > DISCONNECT_TOLERANCE_MS;
     }
 

@@ -7,6 +7,7 @@ import type {HashMap} from "../../utils/collection/HashMap.ts";
 import {hashObject} from "../../utils/hash.ts";
 import {DecoderError, EncoderError} from "../../type/errors.ts";
 import {WrapperMap} from "../../utils/collection/WrapperMap.ts";
+import {makeTraceLimitError} from "../../utils/util.ts";
 
 export class IdDispatchCodec<V, T> implements PacketCodec<V>, Comparable {
     private readonly getter: Return<V, T>;
@@ -23,7 +24,9 @@ export class IdDispatchCodec<V, T> implements PacketCodec<V>, Comparable {
     public decode(reader: BinaryReader): V {
         const id = reader.readVarUint();
         const entry = this.byId[id];
-        if (entry === undefined) throw new DecoderError(`Received unknown packet id "${id}"`);
+        if (entry === undefined) {
+            throw makeTraceLimitError(DecoderError, 2, `Received unknown packet id "${id}"`);
+        }
 
         return entry.codec.decode(reader);
     }
@@ -31,7 +34,9 @@ export class IdDispatchCodec<V, T> implements PacketCodec<V>, Comparable {
     public encode(writer: BinaryWriter, value: V) {
         const type = this.getter(value);
         const id = this.toId.get(type);
-        if (id === undefined) throw new EncoderError(`Sending unknown packet:\n "${JSON.stringify(type)}"`, {cause: type});
+        if (id === undefined) {
+            throw makeTraceLimitError(EncoderError, 2, `Sending unknown packet:\n "${type}"`, {cause: type});
+        }
 
         writer.writeVarUint(id);
         const entry = this.byId[id];

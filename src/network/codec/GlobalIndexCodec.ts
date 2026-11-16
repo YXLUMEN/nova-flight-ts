@@ -7,10 +7,10 @@ import type {HashMap} from "../../utils/collection/HashMap.ts";
 import {DecoderError, EncoderError, PacketIndexRange} from "../../type/errors.ts";
 import {WrapperMap} from "../../utils/collection/WrapperMap.ts";
 import {hashObject} from "../../utils/hash.ts";
-import {makeLightError} from "../../utils/util.ts";
+import {makeTraceLimitError} from "../../utils/util.ts";
 
 export class GlobalIndexCodec<V, T> implements PacketCodec<V>, Comparable {
-    private static readonly RANGE = makeLightError(PacketIndexRange);
+    private static readonly RANGE = makeTraceLimitError(PacketIndexRange);
 
     private readonly getter: Return<V, T>;
     private readonly global: Entry<V, T>[];

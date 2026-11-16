@@ -222,11 +222,14 @@ export abstract class LivingEntity extends Entity {
         // 增伤
         const attacker = source.getAttacker();
         if (attacker instanceof PlayerEntity) {
+            // "反物质弹头"
             if (source.isOfs(DamageTypes.PROJECTILE, DamageTypes.KINETIC, DamageTypes.PLAYER_ATTACK) &&
                 attacker.getTechs().isUnlocked(Techs.ANTIMATTER_WARHEAD)) {
-                damage += Math.floor(this.getHealth() * 0.08);
+                const scale = Math.min(damage * 0.005, 0.24);
+                damage += Math.max(1, Math.ceil(this.getHealth() * scale));
             }
 
+            // "电荷积累"
             if (source.isOf(DamageTypes.ARC) && attacker.getTechs().isUnlocked(Techs.ELECTRIC_CHARGE)) {
                 const effect = this.getStatusEffect(StatusEffects.ELECTRIC_CHARGE);
                 const amplifier = effect ? Math.min(effect.amplifier() + 1, 6) : 0;

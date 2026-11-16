@@ -17,31 +17,23 @@ export class NetHealthManager {
     private readonly cooldown: Map<string, HostCooldown> = new Map();
     private readonly banned: Map<string, BannedHost> = new Map();
     private readonly overloaded: ServerConnection[] = [];
-    private active = 0;
 
     public constructor(bus: Egress) {
         this.bus = bus;
-    }
-
-    public workload(active: number) {
-        this.active = active;
     }
 
     public overload(conn: ServerConnection) {
         this.overloaded.push(conn);
     }
 
-    public settle() {
+    public settle(stalled: boolean, gap: number) {
         const n = this.overloaded.length;
         if (n === 0) return;
         try {
-            // 至少 2 条命中,且过半连接同时命中,说明服务端卡顿
-            const stalled = n >= 2 && n * 2 >= this.active;
             if (stalled) {
-                Log.error(`[Net] ${n}/${this.active} connections exceeded the packet budget in one tick, treated as a server stall`);
+                Log.error(`[Net] tick late by ${gap.toFixed(1)}ms, ${n} connections over budget; bans skipped`);
                 return;
             }
-
             for (const conn of this.overloaded) {
                 conn.forceDisconnect();
                 this.banConn(conn, OVERLOAD_BAN);

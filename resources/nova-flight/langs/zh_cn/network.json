@@ -16,5 +16,6 @@
   "disconnect.unmach.protocal": "不匹配的网络协议,需要 \"{}\" 但当前为 \"{}\"",
   "disconnect.unmach.game": "不兼容的游戏版本,需要 \"{}\" 但当前为 \"{}\"",
   "disconnect.move_too_fast": "移动过快",
+  "disconnect.overload": "连接过载",
   "baned": "被服务器封禁"
 }

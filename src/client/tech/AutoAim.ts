@@ -4,11 +4,11 @@ import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
 import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
+import type {Predicate} from "../../type/types.ts";
+import {any} from "../../utils/util.ts";
 import {BallisticsUtils} from "../../utils/math/BallisticsUtils.ts";
 import {Vec2} from "../../utils/math/Vec2.ts";
 import {NovaFlightClient} from "../NovaFlightClient.ts";
-import type {Predicate} from "../../type/types.ts";
-import {any} from "../../utils/util.ts";
 
 export class AutoAim {
     public static readonly FIRE_THRESHOLD = Math.PI / 225;

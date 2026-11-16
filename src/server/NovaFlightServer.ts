@@ -141,7 +141,6 @@ export abstract class NovaFlightServer implements CommandOutput {
                 const dropped = this.accumulator - (this.accumulator % perTick);
                 Log.warn(`[Server] Dropped ${dropped.toFixed(1)}s`);
                 this.accumulator %= perTick;
-                // 通知客户端发生了时间跳跃
             }
 
             this.networkChannel.flush();

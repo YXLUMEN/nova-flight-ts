@@ -53,7 +53,7 @@ pub async fn run_ws_server(
 
                         let is_banned = state.is_banned(&address.ip()).await;
                         if is_banned {
-                            info!("A banned IP attempt to connect {}", address);
+                            debug!("A banned IP attempt to connect {}", address);
                             continue;
                         }
 

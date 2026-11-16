@@ -11,13 +11,18 @@ export class PayloadType<T extends Payload> implements Comparable {
     }
 
     public hashCode(): number {
-        return this.id.hashCode();
+        // hashString('payload_type') * 31 | 0 => -1420051947
+        return (-1420051947 + this.id.hashCode()) | 0;
     }
 
     public equals(other: unknown): boolean {
         if (other === this) return true;
         if (other instanceof PayloadType) return this.id.equals(other.id);
         return false;
+    }
+
+    public toString() {
+        return `[Payload] ${this.id}`;
     }
 }
 

@@ -15,6 +15,8 @@ import {HandshakeProtocols} from "../../network/protocol/HandshakeProtocols.ts";
 import {ServerRelayHandler} from "./handler/ServerRelayHandler.ts";
 import {NetHealthManager} from "./NetHealthManager.ts";
 
+const STALL_MS = 125; // 50ms * 2.5
+
 export class ServerNetworkManager implements SessionDispatcher, ChannelHandler {
     private readonly server: NovaFlightServer;
     private readonly bus: Egress;
@@ -23,6 +25,7 @@ export class ServerNetworkManager implements SessionDispatcher, ChannelHandler {
 
     private readonly connections: Map<number, ServerConnection> = new Map();
     private readonly sidAddr: Map<number, SocketAddr> = new Map();
+    private lastTick = 0;
 
     public constructor(server: NovaFlightServer, bus: Egress) {
         this.server = server;
@@ -32,7 +35,11 @@ export class ServerNetworkManager implements SessionDispatcher, ChannelHandler {
     }
 
     public tick(): void {
-        this.health.workload(this.connections.size);
+        const now = performance.now();
+        const gap = now - this.lastTick;
+        this.lastTick = now;
+
+        const stalled = gap > STALL_MS && gap < 1000;
 
         for (const conn of this.connections.values()) {
             if (conn.shouldRemove()) {
@@ -50,7 +57,7 @@ export class ServerNetworkManager implements SessionDispatcher, ChannelHandler {
                 conn.disconnect('Server error');
             }
         }
-        this.health.settle();
+        this.health.settle(stalled, gap);
     }
 
     public dispatch(sid: number, reader: BinaryReader): void {

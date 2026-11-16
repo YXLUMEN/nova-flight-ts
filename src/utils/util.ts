@@ -167,16 +167,21 @@ export function isRecord(obj: unknown): obj is Record<any, any> {
     return obj != null && typeof obj === 'object' && !Array.isArray(obj);
 }
 
-export function makeLightError(err: Constructor<Error>) {
+export function makeTraceLimitError<T extends Error>(
+    err: Constructor<T>,
+    limit: number = 0,
+    message?: string,
+    options?: ErrorOptions,
+): T {
     // 自定义错误类型不匹配 `ErrorConstructor`,所以采取 `Constructor<Error>`
     if (Error.stackTraceLimit == null) {
         console.warn('"stackTraceLimit" unsupported');
-        return new err();
+        return new err(message, options);
     }
     const prev = Error.stackTraceLimit;
     try {
-        Error.stackTraceLimit = 0;
-        return new err();
+        Error.stackTraceLimit = limit;
+        return new err(message, options);
     } finally {
         Error.stackTraceLimit = prev;
     }

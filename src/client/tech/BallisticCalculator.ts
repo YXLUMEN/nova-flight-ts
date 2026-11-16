@@ -1,17 +1,15 @@
-import {lerp, TAU} from "../../utils/math/math.ts";
-import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import type {LocalPlayerEntity} from "../entity/LocalPlayerEntity.ts";
+import type {Entity} from "../../entity/Entity.ts";
+import {lerp, TAU} from "../../utils/math/math.ts";
+import {getNearestEntity} from "../../utils/math/collide.ts";
+import {BaseWeapon} from "../../item/weapon/BaseWeapon/BaseWeapon.ts";
 import {InputBindings} from "../input/InputBindings.ts";
 import {AABB} from "../../utils/math/AABB.ts";
 import {EntityPredicates} from "../../world/predicate/EntityPredicates.ts";
-import type {Entity} from "../../entity/Entity.ts";
-import {getNearestEntity} from "../../utils/math/collide.ts";
 
 export class BallisticCalculator {
     private readonly owner: LocalPlayerEntity;
     private lockedTarget: Entity | null = null;
-    private prevLeadX = 0;
-    private prevLeadY = 0;
 
     public constructor(owner: LocalPlayerEntity) {
         this.owner = owner;
@@ -25,11 +23,6 @@ export class BallisticCalculator {
             this.lockedTarget = null;
         } else {
             this.lockedTarget = this.findTargetUnderCursor();
-            if (this.lockedTarget) {
-                const {x, y} = this.lockedTarget.positionRef;
-                this.prevLeadX = x;
-                this.prevLeadY = y;
-            }
         }
     }
 
@@ -47,26 +40,22 @@ export class BallisticCalculator {
         const tPos = target.positionRef;
         const tVelocity = target.velocityRef;
         const oPos = this.owner.positionRef;
+        const lx = lerp(tickDelta, target.prevX, tPos.x);
+        const ly = lerp(tickDelta, target.prevY, tPos.y);
 
-        const dx = tPos.x - oPos.x;
-        const dy = tPos.y - oPos.y;
+        const dx = lx - oPos.x;
+        const dy = ly - oPos.y;
         const dist = Math.hypot(dx, dy);
 
         const bulletSpeed = handItem.getBallisticSpeed(stack);
         const t = bulletSpeed > 0 ? dist / bulletSpeed : 0;
 
-        let leadX = tPos.x + tVelocity.x * t;
-        let leadY = tPos.y + tVelocity.y * t;
+        const leadX = lx + tVelocity.x * t;
+        const leadY = ly + tVelocity.y * t;
 
-        leadX = lerp(tickDelta, this.prevLeadX, leadX);
-        leadY = lerp(tickDelta, this.prevLeadY, leadY);
-        this.prevLeadX = leadX;
-        this.prevLeadY = leadY;
-
-        ctx.save();
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(tPos.x, tPos.y, 15, 0, TAU);
+        ctx.arc(lx, ly, 15, 0, TAU);
 
         ctx.strokeStyle = 'yellow';
         ctx.moveTo(leadX - 5, leadY);
@@ -74,7 +63,7 @@ export class BallisticCalculator {
         ctx.moveTo(leadX, leadY - 5);
         ctx.lineTo(leadX, leadY + 5);
         ctx.stroke();
-        ctx.restore();
+        ctx.lineWidth = 1;
     }
 
     private findTargetUnderCursor(): Entity | null {

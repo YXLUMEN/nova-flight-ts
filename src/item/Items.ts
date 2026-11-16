@@ -231,9 +231,9 @@ export class Items {
         .type(WeaponType.ENERGY)
     ));
     public static readonly PERDITION_BEAM = this.register('perdition_beam', new PerditionBeam(new Item.Properties()
-        .attackDamage(100)
+        .attackDamage(80)
         .type(WeaponType.ENERGY)
-        .component(DataComponents.MAX_HEAT, 600)
+        .component(DataComponents.MAX_HEAT, 640)
         .component(DataComponents.FIRING, false)
         .component(DataComponents.HEAT, 0)
         .component(DataComponents.DRAIN_RATE, 6)

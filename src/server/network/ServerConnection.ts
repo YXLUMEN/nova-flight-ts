@@ -59,7 +59,8 @@ export class ServerConnection extends Connection {
 
     public incoming(reader: BinaryReader) {
         if (this.health.receive()) {
-            this.disconnect('newtwork.disconnect.rate_limit');
+            if (this.getState() <= ConnectionState.DISCONNECTING) return;
+            this.disconnect('newtwork.disconnect.overload');
             this.health.manager.overload(this);
             Log.warn(`Connection "${this.sid}" at "${this.address}" reach rate limit`);
             return;
@@ -73,7 +74,7 @@ export class ServerConnection extends Connection {
 
     public override report(err: unknown) {
         if (this.health.decodeErr()) this.disconnect('network.invalid_packet');
-        Log.error(err);
+        Log.error(`Address "${this.address}" report:\n  ${err}`);
     }
 
     public disconnect(reason: string, args?: string[]): void {

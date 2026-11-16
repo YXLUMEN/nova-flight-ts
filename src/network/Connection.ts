@@ -54,13 +54,17 @@ export abstract class Connection implements ChannelHandler {
     }
 
     public changeState(state: ConnectionState): boolean {
-        if (state < this.state) return false;
+        if (state <= this.state) return false;
         this.state = state;
         return true;
     }
 
     public isState(state: ConnectionState): boolean {
         return this.state === state;
+    }
+
+    public getState(): ConnectionState {
+        return this.state;
     }
 
     public abstract send(payload: Payload): void;
