@@ -1,5 +1,6 @@
 use crate::network::client::{client_relay, ClientContext};
 use crate::network::cmd::is_open;
+use crate::network::infrastructure::errors::RegisterError;
 use crate::network::infrastructure::header::*;
 use crate::network::infrastructure::net::{send_code, send_timeout};
 use crate::network::infrastructure::protocol::*;
@@ -10,7 +11,7 @@ use crate::network::server::{server_relay, ServerContext};
 use dashmap::Entry;
 use futures_util::stream::SplitStream;
 use futures_util::{SinkExt, StreamExt};
-use log::{error, info, warn};
+use log::{debug, error, info, log};
 use std::net::SocketAddr;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
@@ -46,7 +47,7 @@ pub async fn run_ws_server(
 
                         let is_local = address.ip().is_loopback();
                         if !is_open() && !is_local {
-                            warn!("Rejected non-local connection from {}", address);
+                            debug!("Rejected non-local connection from {}", address);
                             continue;
                         }
 
@@ -57,12 +58,12 @@ pub async fn run_ws_server(
                         }
 
                         if state.size() >= MAX_CONNECTIONS {
-                            warn!("Connection limit reached ({}), rejecting {}", MAX_CONNECTIONS, address);
+                            info!("Connection limit reached ({}), rejecting {}", MAX_CONNECTIONS, address);
                             continue;
                         }
 
                         let state = state.clone();
-                        tokio::spawn(async move { handle_connection(stream, state).await; });
+                        tokio::spawn(async move { handle_connection(stream, address, state).await; });
                     }
                     Err(e) => {
                         error!("Accept error: {}", e);
@@ -93,27 +94,16 @@ pub async fn run_ws_server(
     }
 }
 
-async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
+async fn handle_connection(stream: TcpStream, address: SocketAddr, state: Arc<RelayState>) {
     if state.is_shutdown() {
         info!("Rejecting new connection: server shutting down");
         return;
     }
 
-    let addr = match stream.peer_addr() {
-        Ok(a) => {
-            info!("New connection received {}", a);
-            a
-        }
-        Err(e) => {
-            error!("Failed to get peer address: {}", e);
-            return;
-        }
-    };
-
     let ws_stream = match accept_async(stream).await {
         Ok(ws) => ws,
         Err(e) => {
-            error!("WebSocket handshake failed: {}", e);
+            debug!("WebSocket handshake failed: {}", e);
             return;
         }
     };
@@ -131,16 +121,17 @@ async fn handle_connection(stream: TcpStream, state: Arc<RelayState>) {
             error!("ws write failed. cause by\n {}", e);
             break;
         }
+        // ws关闭,超时等待
         let _ = timeout(Duration::from_secs(2), writer.close()).await;
         drop(rx);
     });
 
-    info!("Start to registry at \"{}\"", now_ms());
+    debug!("Start to registry for \"{}\"", &address);
 
-    let ctx = match attach_session(&state, tx, &mut reader, &addr).await {
+    let ctx = match attach_session(&state, tx, &mut reader, &address).await {
         Ok(s) => s,
         Err(e) => {
-            warn!("Registration failed: {}", e);
+            log!(e.level(), "Registration failed from {}: {}", &address, e);
             return;
         }
     };
@@ -170,25 +161,25 @@ async fn attach_session(
     tx: Tx,
     reader: &mut SplitStream<WebSocketStream<TcpStream>>,
     addr: &SocketAddr,
-) -> Result<SessionContext, &'static str> {
+) -> Result<SessionContext, RegisterError> {
     let msg = timeout(Duration::from_secs(5), reader.next())
         .await
-        .map_err(|_| "Registry Timeout")?;
+        .map_err(|_| RegisterError::Timeout)?;
 
     let incoming = match msg {
         Some(Ok(Message::Binary(p))) => p,
-        Some(Ok(Message::Close(_))) => return Err("Channel closed"),
-        _ => return Err("Invalid register packet"),
+        Some(Ok(Message::Close(_))) => return Err(RegisterError::ChannelClosed),
+        _ => return Err(RegisterError::InvalidPacket),
     };
 
     if incoming.is_empty() {
-        return Err("Empty register packet");
+        return Err(RegisterError::EmptyPacket);
     }
 
     match incoming[0] {
         REG_SERVER => attach_server(state, tx, incoming).await,
         REG_CLIENT => attach_client(state, tx, addr, incoming).await,
-        _ => Err("Not a register packet"),
+        _ => Err(RegisterError::NotRegisterPacket),
     }
 }
 
@@ -196,16 +187,16 @@ async fn attach_server(
     state: &RelayState,
     tx: Tx,
     incoming: Bytes,
-) -> Result<SessionContext, &'static str> {
+) -> Result<SessionContext, RegisterError> {
     // 注册服务端
     if incoming.len() != 33 {
-        return Err("Invalid server register packet");
+        return Err(RegisterError::InvalidPacket);
     }
 
     let server = state.get_server().await;
     if server.is_some() {
         send_code(&tx, DUPLICATE_SERVER);
-        return Err("Server already exists");
+        return Err(RegisterError::DuplicateServer);
     }
 
     let provided_secret = &incoming[1..33];
@@ -213,33 +204,36 @@ async fn attach_server(
     // 密钥校验
     let state_cell = SERVER_MANAGER
         .get()
-        .ok_or("Server manager not initialized")?;
+        .ok_or(RegisterError::Internal("Server manager not initialized"))?;
     let mut guard = state_cell.lock().await;
     let expected_secret = guard
         .handle
         .as_ref()
         .map(|h| &h.secret)
-        .ok_or("No server handle")?;
+        .ok_or(RegisterError::Internal("No server handle"))?;
 
     if !constant_time_eq(provided_secret, expected_secret) {
         // 密钥错误同样返回"服务端已存在"
         send_code(&tx, DUPLICATE_SERVER);
-        return Err("Server secret mismatch");
+        return Err(RegisterError::SecretMismatch);
     }
 
     let session_id = NEXT_SESSION_ID
         .allocate()
         .await
-        .ok_or("No session id allocated")?;
+        .ok_or(RegisterError::Internal("No session id allocated"))?;
 
     let session = Session::new_server(tx, session_id);
     if let Err(e) = state.register_server(session.clone()).await {
         NEXT_SESSION_ID.deallocate(session_id).await;
-        return Err(e);
+        return Err(RegisterError::Internal(e));
     }
 
     // 销毁密钥
-    let handle = guard.handle.as_mut().ok_or("No server handle")?;
+    let handle = guard
+        .handle
+        .as_mut()
+        .ok_or(RegisterError::Internal("No server handle"))?;
     handle.secret.fill(0);
 
     let packet = Attached {
@@ -259,11 +253,11 @@ async fn attach_client(
     tx: Tx,
     addr: &SocketAddr,
     incoming: Bytes,
-) -> Result<SessionContext, &'static str> {
+) -> Result<SessionContext, RegisterError> {
     // 注册 Client
     if incoming.len() != 17 {
         send_code(&tx, INVALID_REGISTER_PACKET);
-        return Err("Invalid client register packet");
+        return Err(RegisterError::InvalidPacket);
     }
 
     let mut uuid = [0u8; 16];
@@ -272,20 +266,20 @@ async fn attach_client(
 
     if is_nil_uuid(&uuid) {
         send_code(&tx, INVALID_REGISTER_PACKET);
-        return Err("Client uuid is nil");
+        return Err(RegisterError::UuidNil);
     }
 
     // UUID重复检查
     match state.register_client(uuid) {
         Entry::Occupied(_) => {
             send_code(&tx, DUPLICATE_PLAYER);
-            Err("Duplicate client UUID")
+            Err(RegisterError::DuplicateClient)
         }
         Entry::Vacant(v) => {
             let session_id = NEXT_SESSION_ID
                 .allocate()
                 .await
-                .ok_or("No session id allocated")?;
+                .ok_or(RegisterError::Internal("No session id allocated"))?;
 
             v.insert(session_id);
 

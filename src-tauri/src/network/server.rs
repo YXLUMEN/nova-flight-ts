@@ -15,7 +15,7 @@ use crate::network::infrastructure::util::{
 use bytes::{BufMut, Bytes, BytesMut};
 use futures_util::stream::SplitStream;
 use futures_util::StreamExt;
-use log::{error, info, warn};
+use log::{debug, error, warn};
 use std::time::Duration;
 use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::Message;
@@ -52,7 +52,7 @@ pub(crate) async fn server_relay(mut ctx: ServerContext<'_>) {
 
 async fn relay_server_message(state: &RelayState, session: &Session, payload: Bytes) {
     if payload.is_empty() {
-        info!("Empty message received");
+        debug!("Empty message received");
         return;
     }
 
@@ -143,7 +143,7 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
             let (count, remaining) = match read_var_uint(cursor) {
                 Ok(v) => v,
                 Err(e) => {
-                    info!("Parse varUint error: {}", e);
+                    warn!("Parse varUint error: {}", e);
                     return;
                 }
             };
@@ -160,7 +160,7 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
             let (excludes, rest_payload) = match parse_session_id(cursor, count as usize) {
                 Ok(v) => v,
                 Err(e) => {
-                    info!("Parse exclude id error: {}", e);
+                    warn!("Parse exclude id error: {}", e);
                     return;
                 }
             };

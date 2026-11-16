@@ -7,7 +7,7 @@ use crate::network::infrastructure::util::format_uuid;
 use bytes::{Buf, Bytes};
 use futures_util::stream::SplitStream;
 use futures_util::StreamExt;
-use log::{error, info, warn};
+use log::{debug, error, warn};
 use tokio::net::TcpStream;
 use tokio::sync::oneshot;
 use tokio_tungstenite::tungstenite::{Error, Message};
@@ -66,7 +66,7 @@ async fn on_recv_client(
 
 async fn relay_client_message(state: &RelayState, session: &Session, payload: Bytes) -> bool {
     if payload.is_empty() {
-        info!("Empty message received");
+        debug!("Empty message received");
         return true;
     }
 
@@ -78,7 +78,7 @@ async fn relay_client_message(state: &RelayState, session: &Session, payload: By
             };
 
             if payload.len() < 3 {
-                warn!("InvalidPacket: Client message too short");
+                debug!("InvalidPacket: Client message too short");
                 return true;
             }
 

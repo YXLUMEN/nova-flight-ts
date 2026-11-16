@@ -33,9 +33,8 @@ export class NetHealthManager {
 
     public settle() {
         const n = this.overloaded.length;
+        if (n === 0) return;
         try {
-            if (n === 0) return;
-
             // 至少 2 条命中,且过半连接同时命中,说明服务端卡顿
             const stalled = n >= 2 && n * 2 >= this.active;
             if (stalled) {

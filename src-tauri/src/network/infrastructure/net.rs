@@ -1,7 +1,7 @@
 use crate::network::infrastructure::protocol::{Payload, RelayMessage};
 use crate::network::infrastructure::states::Tx;
 use bytes::Bytes;
-use log::{error, warn};
+use log::{debug, error, warn};
 use std::time::Duration;
 use tokio::sync::mpsc::error::TrySendError;
 
@@ -44,7 +44,7 @@ pub(crate) fn send_or_drop(tx: &Tx, payload: &Bytes) -> bool {
     match tx.try_send(payload.clone()) {
         Ok(_) => true,
         Err(TrySendError::Full(_)) => {
-            warn!("Payload drop because channel full");
+            debug!("Payload drop because channel full");
             true
         }
         Err(TrySendError::Closed(_)) => false,

@@ -27,13 +27,14 @@ pub fn run() {
                         .build(),
                 )?;
             } else {
-                use tauri_plugin_log::{Builder, Target, TargetKind};
+                use tauri_plugin_log::{Builder, RotationStrategy, Target, TargetKind};
 
                 let log = Builder::new()
                     .level(log::LevelFilter::Warn)
                     .target(Target::new(TargetKind::LogDir {
                         file_name: Some("nova-flight".into()),
                     }))
+                    .rotation_strategy(RotationStrategy::KeepSome(5))
                     .build();
 
                 app.handle().plugin(log)?;
