@@ -72,7 +72,7 @@ export class ServerWorker {
                     return;
                 }
                 case Worker2MainType.POPUP: {
-                    void message(event.data.message, {kind: event.data.kind});
+                    void message(event.data.message, event.data.options);
                     return;
                 }
                 case Worker2MainType.READ_FILE: {

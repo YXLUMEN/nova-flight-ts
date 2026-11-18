@@ -1,4 +1,4 @@
-import {message} from "@tauri-apps/plugin-dialog";
+import {message, type MessageDialogOptions} from "@tauri-apps/plugin-dialog";
 import {writeLog} from "../client/ipc/integrated_server.ts";
 import {isClient} from "../configs/RuntimeConfig.ts";
 import {Worker2MainType} from "./WorkerMsgType.ts";
@@ -44,15 +44,15 @@ export class Log {
         });
     }
 
-    public static message(msg: any, kind: 'info' | 'warning' | 'error' = 'info') {
-        console.log(`[${kind}] ${msg}`);
+    public static message(msg: any, options?: string | MessageDialogOptions) {
+        console.log(msg);
         if (isClient) {
-            return message(msg, {kind}).catch();
+            return message(msg, options).catch();
         }
 
         self.postMessage({
             w2m: Worker2MainType.POPUP,
-            kind: kind,
+            options,
             message: String(msg),
         });
     }

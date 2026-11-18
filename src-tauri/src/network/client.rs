@@ -52,7 +52,7 @@ async fn on_recv_client(
         Ok(_) => true,
         Err(e) => {
             error!(
-                "WebSocket read failed from client with id={}: {}",
+                "WebSocket read failed from client with id={}\n: {}",
                 session
                     .uuid
                     .map(|id| format_uuid(&id))

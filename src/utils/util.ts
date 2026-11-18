@@ -187,6 +187,11 @@ export function makeTraceLimitError<T extends Error>(
     }
 }
 
+export function funName(fn: Function) {
+    if (fn.name.length > 0) return fn.name;
+    return `anonymous(${fn.length})`;
+}
+
 /** 空方法 */
 export function empty(): void {
 }

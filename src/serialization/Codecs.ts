@@ -5,6 +5,7 @@ import type {Return} from "../type/types.ts";
 import type {Registry} from "../registry/Registry.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import {isNbtNumber} from "../nbt/NbtType.ts";
+import {funName} from "../utils/util.ts";
 import {DataResult} from "./DataResult.ts";
 import {CodecImpl} from "./codec/CodecImpl.ts";
 import {FieldCodec} from "./codec/FieldCodec.ts";
@@ -151,7 +152,7 @@ export class Codecs {
     );
 
     public static of<A>(encoder: Encoder<A>, decoder: Decoder<A>, name?: string): Codec<A> {
-        if (!name) name = `Codec["${encoder}":"${decoder}"]`;
+        if (!name) name = `Codec["${funName(encoder)}":"${funName(decoder)}"]`;
         return new CodecImpl(encoder, decoder, name);
     }
 

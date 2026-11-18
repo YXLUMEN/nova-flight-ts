@@ -27,8 +27,12 @@ export class ClientIntegratedChannel implements ClientChannel {
         return 2;
     }
 
-    public isOpen(): boolean {
+    public isConnected(): boolean {
         return this.ctrl !== null ? !this.ctrl.signal.aborted : false;
+    }
+
+    public isOpen(): boolean {
+        return this.isConnected();
     }
 
     public setHandler(handler: ChannelHandler): void {

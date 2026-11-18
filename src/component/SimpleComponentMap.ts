@@ -1,9 +1,9 @@
-import {type DataComponentType} from "./DataComponentType.ts";
-import {Compare} from "../utils/collection/Compare.ts";
+import type {DataComponentType} from "./DataComponentType.ts";
+import type {ComponentMap} from "./ComponentMap.ts";
+import {mapsEqual} from "../utils/collection/equal.ts";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {Registries} from "../registry/Registries.ts";
-import type {ComponentMap} from "./ComponentMap.ts";
 
 export class SimpleComponentMap implements ComponentMap {
     public static readonly EMPTY = new SimpleComponentMap(null);
@@ -50,7 +50,7 @@ export class SimpleComponentMap implements ComponentMap {
     public equals(o: Object): boolean {
         return this === o ? true :
             o instanceof SimpleComponentMap &&
-            Compare.mapsEqual(this.baseComponents, o.baseComponents);
+            mapsEqual(this.baseComponents, o.baseComponents);
     }
 
     public getComponents(): Map<DataComponentType<any>, any> {

@@ -20,6 +20,10 @@ export class ServerIntegratedBus implements ServerBus {
         return 1;
     }
 
+    public isConnected(): boolean {
+        return true;
+    }
+
     public enqueue(payload: Payload) {
         if (this.sendQueue.full()) this.flush();
         this.sendQueue.push(payload);

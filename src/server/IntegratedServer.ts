@@ -69,7 +69,7 @@ export class IntegratedServer extends NovaFlightServer {
         if (err instanceof NoResultsError) {
         } else if (err instanceof StatusError) {
             if (err.cause === 'broken') {
-                Log.message('Archive broken', 'warning');
+                Log.message('Archive broken', {kind: 'warning'});
             } else if (err.cause === 'pending') {
                 console.log('Init archive');
             } else {

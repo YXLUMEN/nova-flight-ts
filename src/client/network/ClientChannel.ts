@@ -1,13 +1,6 @@
 import type {Channel} from "../../network/channel/Channel.ts";
+import type {NetWorkBus} from "../../network/NetWorkBus.ts";
 
-export interface ClientChannel extends Channel {
+export interface ClientChannel extends Channel, NetWorkBus {
     clearHandler(): void;
-
-    connect(): Promise<void>;
-
-    sniff(
-        retryDelay?: number,
-        maxRetries?: number,
-        onTry?: (attempts: number, maxRetries: number) => boolean
-    ): Promise<boolean>;
 }

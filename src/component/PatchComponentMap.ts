@@ -1,7 +1,7 @@
 import type {DataComponentType} from "./DataComponentType.ts";
-import {ComponentChange, type ComponentChanges} from "./ComponentChanges.ts";
 import type {ComponentMap} from "./ComponentMap.ts";
-import {Compare} from "../utils/collection/Compare.ts";
+import {ComponentChange, type ComponentChanges} from "./ComponentChanges.ts";
+import {mapsEqual} from "../utils/collection/equal.ts";
 import {Optional} from "../utils/Optional.ts";
 
 export class PatchComponentMap implements ComponentMap {
@@ -157,6 +157,6 @@ export class PatchComponentMap implements ComponentMap {
     public equals(o: Object): boolean {
         return this === o ? true :
             o instanceof PatchComponentMap &&
-            Compare.mapsEqual(this.baseComponents, o.baseComponents);
+            mapsEqual(this.baseComponents, o.baseComponents);
     }
 }

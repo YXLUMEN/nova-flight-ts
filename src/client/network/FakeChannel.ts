@@ -10,6 +10,10 @@ export class FakeChannel implements ClientChannel {
         return false;
     }
 
+    public isConnected(): boolean {
+        return false;
+    }
+
     public getSessionId(): number {
         return 0;
     }

@@ -101,9 +101,6 @@ export class DataComponents {
     public static readonly EFFECT_RANGE: DataComponentType<number> = this.register("effect_range",
         builder => builder.persistent(Codecs.DOUBLE).network(PacketCodecs.DOUBLE)
     );
-    public static readonly ANY_BOOLEAN: DataComponentType<boolean> = this.register("any_bool",
-        builder => builder.persistent(Codecs.BOOLEAN).network(PacketCodecs.BOOL)
-    );
     public static readonly SOUND_COOLING: DataComponentType<boolean> = this.register('sound_cooling',
         builder => builder.persistent(Codecs.BOOLEAN).network(PacketCodecs.BOOL)
     );

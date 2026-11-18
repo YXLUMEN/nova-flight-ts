@@ -20,7 +20,7 @@ export function stopServer(): Promise<boolean> {
     return invoke('stop_server');
 }
 
-export async function writeLog(level: LogLevel, message: string) {
+export async function writeLog(level: LogLevel, message: string): Promise<void> {
     try {
         await invoke('plugin:log|log', {level, message})
     } catch (e) {

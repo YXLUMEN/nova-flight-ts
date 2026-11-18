@@ -20,6 +20,7 @@ import {EntityDamageS2CPacket} from "../../network/packet/s2c/EntityDamageS2CPac
 import {ExplosiveBuilder} from "../../world/element/explosion/ExplosiveBuilder.ts";
 import {ExplosionEntity} from "../../entity/ExplosionEntity.ts";
 import {StageChangeS2CPacket} from "../../network/packet/s2c/StageChangeS2CPacket.ts";
+import {EntityAttributes} from "../../entity/attribute/EntityAttributes.ts";
 
 export class ServerDefaultEvents {
     public static registerEvent() {
@@ -100,13 +101,19 @@ export class ServerDefaultEvents {
                     return;
                 }
 
-                const maxKillTimes = 120 * Math.min(world.getDifficulty(), 4);
+                const diff = world.getDifficulty();
+                const maxKillTimes = 80 * Math.min(diff, 4);
                 let boss: BossEntity;
                 if (stage.getCtx(world).rng.nextBool(0.5)) {
                     boss = new BaseBossEntity(EntityTypes.BASE_BOSS_ENTITY, world, 64, maxKillTimes);
                 } else {
                     boss = new DevourerBoss(EntityTypes.DEVOURER_BOSS_ENTITY, world, 96, maxKillTimes);
                     stage.pause();
+                }
+                const attr = boss.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+                if (attr) {
+                    const base = attr.getValue();
+                    attr.setBaseValue(Math.floor(base * diff * 0.5));
                 }
 
                 boss.setPosition(World.MAP_WIDTH / 2, 64);

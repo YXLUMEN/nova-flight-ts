@@ -1,11 +1,12 @@
+import type {NetworkSide} from "./NetworkSide.ts";
+import type {NetWorkBus} from "./NetWorkBus.ts";
+import {sleep} from "../utils/util.ts";
+import {isDev} from "../configs/RuntimeConfig.ts";
 import {PacketTooLargeError} from "../type/errors.ts";
 import {RelayHandshake} from "./RelayHandshake.ts";
 import {Log} from "../worker/log.ts";
-import type {NetworkSide} from "./NetworkSide.ts";
-import {sleep} from "../utils/util.ts";
-import {isDev} from "../configs/RuntimeConfig.ts";
 
-export abstract class WebSocketBus {
+export abstract class WebSocketBus implements NetWorkBus {
     public static readonly MAX_PACKET_SIZE = 6144;
     public static readonly MAX_ESTIMATE = this.MAX_PACKET_SIZE - 16;
 

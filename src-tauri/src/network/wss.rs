@@ -45,6 +45,11 @@ pub async fn run_ws_server(
                         consecutive_errors = 0;
                         backoff = Duration::from_millis(100);
 
+                        if !address.is_ipv4() {
+                            debug!("Only support Ipv4 {}", address);
+                            continue;
+                        }
+
                         let is_local = address.ip().is_loopback();
                         if !is_open() && !is_local {
                             debug!("Rejected non-local connection from {}", address);
@@ -58,7 +63,7 @@ pub async fn run_ws_server(
                         }
 
                         if state.size() >= MAX_CONNECTIONS {
-                            info!("Connection limit reached ({}), rejecting {}", MAX_CONNECTIONS, address);
+                            debug!("Connection limit reached ({}), rejecting {}", MAX_CONNECTIONS, address);
                             continue;
                         }
 
@@ -96,7 +101,7 @@ pub async fn run_ws_server(
 
 async fn handle_connection(stream: TcpStream, address: SocketAddr, state: Arc<RelayState>) {
     if state.is_shutdown() {
-        info!("Rejecting new connection: server shutting down");
+        debug!("Rejecting new connection: server shutting down");
         return;
     }
 
@@ -143,11 +148,11 @@ async fn handle_connection(stream: TcpStream, address: SocketAddr, state: Arc<Re
         Role::Server => play_server(&state, &session, reader).await,
     }
 
-    info!(
+    debug!(
         "\"{:?}\" side connection closed with sid {}",
         session.role, session.session_id
     );
-    info!("Left {} connections", state.size());
+    debug!("Left {} connections", state.size());
 
     NEXT_SESSION_ID.deallocate(session.session_id).await;
     drop(session);
@@ -240,7 +245,7 @@ async fn attach_server(
         session_id: session.session_id,
     };
     send_timeout(&session.tx, packet, Duration::from_secs(2)).await;
-    info!("Server registered at {} with id {}", now_ms(), session_id);
+    info!("Server registered with id {}", session_id);
     Ok(SessionContext {
         session,
         allow: None,
@@ -298,7 +303,11 @@ async fn attach_client(
                 send_timeout(&server.tx, packet, Duration::from_secs(2)).await;
             }
 
-            info!("Client {} registered at {}", format_uuid(&uuid), now_ms());
+            debug!(
+                "Client \"{}\" registered from \"{}\"",
+                format_uuid(&uuid),
+                &addr
+            );
             Ok(SessionContext {
                 session,
                 allow: Some(permit_rx),
@@ -345,14 +354,14 @@ async fn play_client(
     let session_id = session.session_id;
 
     if let Some((allow_rx, mut close_rx)) = ctx.allow.zip(ctx.close) {
-        info!("Client {} waiting release", session_id);
+        debug!("Client {} waiting release", session_id);
         let is_allow = tokio::select! {
             _ = allow_rx => true,
             _ = &mut close_rx => false,
             _ = tokio::time::sleep(Duration::from_secs(4)) => false,
         };
 
-        info!("Client {} released {}", session_id, is_allow);
+        debug!("Client {} released {}", session_id, is_allow);
         if is_allow {
             state.active_client(session_id, session.clone());
 
@@ -371,11 +380,11 @@ async fn play_client(
 
     // 清理
     let Some(id) = state.remove_by_id(session_id) else {
-        info!("Client disconnected with sid: {}", session_id);
+        debug!("Client disconnected with sid: {}", session_id);
         return;
     };
 
-    info!("Client disconnected with uuid: {}", format_uuid(&id));
+    debug!("Client disconnected with uuid: {}", format_uuid(&id));
     if let Some(server) = state.get_server().await {
         let packet = Detached { session_id };
         send_timeout(&server.tx, packet, Duration::from_secs(2)).await;

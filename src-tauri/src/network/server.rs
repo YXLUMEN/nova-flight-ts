@@ -68,7 +68,7 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
 
                 if let Some(uuid) = session.uuid {
                     warn!(
-                        "[Broadcast] Dropping unresponsive client {}",
+                        "[Broadcast] Dropping unresponsive client \"{}\"",
                         format_uuid(&uuid)
                     );
                 }
@@ -185,7 +185,7 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
 
                 if let Some(uuid) = session.uuid {
                     warn!(
-                        "[Excludes] Dropping unresponsive client {}",
+                        "[Excludes] Dropping unresponsive client \"{}\"",
                         format_uuid(&uuid)
                     );
                 }

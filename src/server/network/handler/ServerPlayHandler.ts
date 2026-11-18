@@ -45,7 +45,7 @@ import {UnlockTechEntry} from "../../../event/events/UnlockTechEntry.ts";
 import {ServerProperties} from "../../ServerProperties.ts";
 
 export class ServerPlayHandler extends ServerCommonHandler {
-    public readonly player: ServerPlayerEntity;
+    private readonly player: ServerPlayerEntity;
     private readonly world: ServerWorld;
     private readonly afk: number;
 

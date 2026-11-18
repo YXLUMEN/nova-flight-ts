@@ -25,7 +25,7 @@ export class RelayHandshake {
         const connectReady = (id: number) => {
             clearTimeout(timeout);
             resolve(id);
-            console.log(`[${this.side}] Successfully connected to ${this.ws.url} at ${ISOTime()}`);
+            console.log(`[${this.side}] Successfully connected to "${this.ws.url}" at ${ISOTime()}`);
         };
         const connectFail = (reason: any) => {
             this.ws?.close();
