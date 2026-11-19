@@ -3,10 +3,12 @@ import {TranslatableText} from "../i18n/TranslatableText.ts";
 import {TextElement} from "../client/page/TextElement.ts";
 import {BindTextList} from "../client/page/BindTextList.ts";
 
+/** query the closest `Element` for input */
 export function closest(element: unknown, selector: string): Element | null {
     return element instanceof HTMLElement ? element.closest(selector) : null;
 }
 
+/** query the closest `HTMLElement` for input */
 export function closestHTML(element: unknown, selector: string): HTMLElement | null {
     if (element instanceof HTMLElement) {
         const target = element.closest(selector);
@@ -15,10 +17,12 @@ export function closestHTML(element: unknown, selector: string): HTMLElement | n
     return null;
 }
 
+/** get `data-action` attribute */
 export function dataAction(element: Element | null) {
     return element === null ? null : element.getAttribute('data-action');
 }
 
+/** query `HTMLElement` by `selectors`, throw when no target */
 export function assert(target: HTMLElement, selectors: string): HTMLElement {
     const result = target.querySelector(selectors);
     if (result instanceof HTMLElement) {
@@ -27,6 +31,7 @@ export function assert(target: HTMLElement, selectors: string): HTMLElement {
     throw new Error(`Cannot find element with query: ${selectors}`);
 }
 
+/** query `HTMLElement` by `selectors`, throw when doesn't match `type` */
 export function as<T extends HTMLElement>(
     target: HTMLElement,
     selectors: string,
@@ -47,6 +52,7 @@ export function bindText(
     return new TextElement(assert(target, selectors), text);
 }
 
+/** traverse target's children, then build `TextElement` from their `data-i18n` attribute */
 export function bindFrom(target: HTMLElement): BindTextList {
     const nodes = target.querySelectorAll('[data-i18n]');
     const binds: TextElement[] = [];

@@ -1,26 +1,26 @@
-import {Weapon} from "../Weapon.ts";
-import {rand} from "../../../utils/math/math.ts";
 import type {ProjectileEntity} from "../../../entity/projectile/ProjectileEntity.ts";
 import type {Entity} from "../../../entity/Entity.ts";
 import type {ItemStack} from "../../ItemStack.ts";
-import {DataComponents} from "../../../component/DataComponents.ts";
 import type {World} from "../../../world/World.ts";
 import type {ClientWorld} from "../../../client/ClientWorld.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import type {PlayerEntity} from "../../../entity/player/PlayerEntity.ts";
 import type {ServerPlayerEntity} from "../../../server/entity/ServerPlayerEntity.ts";
-import {ParticleEffects} from "../../../effect/particle/ParticleEffects.ts";
+import {rand} from "../../../utils/math/math.ts";
 import {isClient} from "../../../configs/RuntimeConfig.ts";
+import {Weapon} from "../Weapon.ts";
+import {ParticleEffects} from "../../../effect/particle/ParticleEffects.ts";
+import {DataComponents} from "../../../component/DataComponents.ts";
 
 export abstract class BaseWeapon extends Weapon {
-    public override inventoryTick(stack: ItemStack, _world: World, holder: Entity, _slot: number, selected: boolean): void {
+    public override inventoryTick(stack: ItemStack, _world: World, holder: Entity, slot: number, selected: boolean): void {
         const cooldown = stack.getOr(DataComponents.COOLDOWN, 0);
         if (cooldown > 0 && this.shouldCooldown(stack)) {
             this.setCooldown(stack, cooldown - 1);
         }
 
         if (holder.isPlayer() && stack.getOr(DataComponents.RELOADING, false)) {
-            this.reloadAction(holder, stack, selected);
+            this.reloadAction(holder, stack, slot, selected);
         }
     }
 
@@ -71,10 +71,10 @@ export abstract class BaseWeapon extends Weapon {
         stack.setDamage(0);
     }
 
-    protected reloadAction(player: PlayerEntity, stack: ItemStack, selected: boolean): void {
+    protected reloadAction(player: PlayerEntity, stack: ItemStack, slot: number, selected: boolean): void {
         const manager = player.cooldownManager;
 
-        if (!selected) {
+        if (!this.canReload(player, stack, slot, selected)) {
             manager.set(this, 0);
             stack.remove(DataComponents.RELOADING);
             return;
@@ -83,6 +83,12 @@ export abstract class BaseWeapon extends Weapon {
         if (!manager.isCoolingDown(this)) {
             this.restoreAmmo(stack, player);
         }
+    }
+
+    protected canReload(player: PlayerEntity, stack: ItemStack, slot: number, selected: boolean): boolean {
+        const available = Math.min(4, player.getInventory().hotbarLength());
+        const parallel = stack.getOr(DataComponents.RELOAD_IN_BACKGROUND, false);
+        return selected || (parallel && slot < available);
     }
 
     public override canFire(stack: ItemStack): boolean {

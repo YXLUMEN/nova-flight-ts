@@ -92,6 +92,7 @@ export class UniqueInventory implements Container, Iterable<ItemStack> {
         if (stack) {
             this.inventory.set(slot, ItemStack.EMPTY);
             this.items.delete(stack.getItem());
+            stack.onRemove(this.player);
             return stack;
         }
 

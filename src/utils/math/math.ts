@@ -78,6 +78,14 @@ export function cartesian(...arrays: any[][]) {
     );
 }
 
+export function shuffleArray<T>(array: T[]): T[] {
+    for (let i = array.length; i--;) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
 export function assertClamp(value: number, min: number, max: number) {
     if (max < min) throw new RangeError('max must larger than min');
     if (value < min) throw new RangeError('default must larger than min');

@@ -1,3 +1,5 @@
+import type {Identifier} from "../registry/Identifier.ts";
+
 export function commonPrefix(a: string, b: string): string {
     const minLen = Math.min(a.length, b.length);
     let i = 0;
@@ -26,4 +28,10 @@ export function isAscii(str: string): boolean {
         if (str.charCodeAt(i) > 0x7F) return false;
     }
     return true;
+}
+
+export function createTranslationKey(type: string, id: Identifier | null) {
+    return id == null ?
+        `${type}.unregistered` :
+        `${type}.${id.getNamespace()}.${id.getPath().replace('/', '.')}`
 }

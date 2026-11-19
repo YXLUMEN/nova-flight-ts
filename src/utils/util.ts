@@ -1,4 +1,3 @@
-import type {Identifier} from "../registry/Identifier.ts";
 import type {Constructor, Predicate, RGB} from "../type/types.ts";
 import {clamp} from "./math/math.ts";
 import {TimeoutError} from "../type/errors.ts";
@@ -72,28 +71,30 @@ export function deepFreeze<T>(
     return Object.freeze(obj);
 }
 
-export function cleanObj<T>(obj: T): T {
+/** create a clean object */
+export function record<T>(obj: T): T {
     return Object.assign(Object.create(null), obj);
 }
 
 export function config<T>(obj: T): T {
-    return deepFreeze(cleanObj(obj));
+    return deepFreeze(record(obj));
 }
 
 export function status<T>(obj: T): T {
-    return Object.seal(cleanObj(obj));
+    return Object.seal(record(obj));
 }
 
 export function sleep(time: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, time));
 }
 
+/** reject when timeout, can abort by signal */
 export function timeout(time: number, signal?: AbortSignal): Promise<void> {
     const {promise, resolve, reject} = Promise.withResolvers<void>();
 
     const ctrl = new AbortController();
     const timer = setTimeout(() => {
-        reject(new TimeoutError());
+        reject(new TimeoutError(time));
         ctrl.abort();
     }, time);
 
@@ -106,59 +107,6 @@ export function timeout(time: number, signal?: AbortSignal): Promise<void> {
     return promise;
 }
 
-export function hexToRgb(hex: string): RGB {
-    const s = hex.replace('#', '');
-    return [
-        parseInt(s.slice(0, 2), 16),
-        parseInt(s.slice(2, 4), 16),
-        parseInt(s.slice(4, 6), 16)
-    ];
-}
-
-export function mix([r, g, b]: RGB, f: number): RGB {
-    const t = f < 0 ? 0 : 255;
-    const k = Math.abs(f);
-    return [Math.round(r + (t - r) * k), Math.round(g + (t - g) * k), Math.round(b + (t - b) * k)];
-}
-
-export function withAlpha(hex: string, a: number): string {
-    const [r, g, b] = hexToRgb(hex);
-    return `rgba(${r},${g},${b},${a.toFixed(3)})`;
-}
-
-export function rgba([r, g, b]: RGB, a: number): string {
-    return `rgba(${r},${g},${b},${a})`;
-}
-
-export function rgb([r, g, b]: RGB): string {
-    return `rgb(${r},${g},${b})`;
-}
-
-export function hexToRgba(hex: string, a: number): string {
-    const s = hex.replace('#', "");
-    const n = s.length === 3
-        ? s.split('').map(c => c + c).join("")
-        : s.padEnd(6, '0').slice(0, 6);
-    const r = parseInt(n.slice(0, 2), 16);
-    const g = parseInt(n.slice(2, 4), 16);
-    const b = parseInt(n.slice(4, 6), 16);
-    return `rgba(${r},${g},${b},${clamp(a, 0, 1).toFixed(3)})`;
-}
-
-export function shuffleArray<T>(array: T[]): T[] {
-    for (let i = array.length; i--;) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
-
-export function createTranslationKey(type: string, id: Identifier | null) {
-    return id == null ?
-        `${type}.unregistered` :
-        `${type}.${id.getNamespace()}.${id.getPath().replace('/', '.')}`
-}
-
 export function* concatIters<T>(...its: Iterable<T>[]) {
     for (const it of its) yield* it;
 }
@@ -167,6 +115,7 @@ export function isRecord(obj: unknown): obj is Record<any, any> {
     return obj != null && typeof obj === 'object' && !Array.isArray(obj);
 }
 
+/** create error with specified stack trace layers */
 export function makeTraceLimitError<T extends Error>(
     err: Constructor<T>,
     limit: number = 0,
@@ -187,12 +136,13 @@ export function makeTraceLimitError<T extends Error>(
     }
 }
 
+/** return function name */
 export function funName(fn: Function) {
     if (fn.name.length > 0) return fn.name;
     return `anonymous(${fn.length})`;
 }
 
-/** 空方法 */
+/** Empty function */
 export function empty(): void {
 }
 
@@ -202,4 +152,38 @@ export function any(): boolean {
 
 export function none(): boolean {
     return false;
+}
+
+export function hexToRgb(hex: string): RGB {
+    const s = hex.replace('#', '');
+    return [
+        parseInt(s.slice(0, 2), 16),
+        parseInt(s.slice(2, 4), 16),
+        parseInt(s.slice(4, 6), 16)
+    ];
+}
+
+export function mix([r, g, b]: RGB, f: number): RGB {
+    const t = f < 0 ? 0 : 255;
+    const k = Math.abs(f);
+    return [Math.round(r + (t - r) * k), Math.round(g + (t - g) * k), Math.round(b + (t - b) * k)];
+}
+
+export function rgba([r, g, b]: RGB, a: number): string {
+    return `rgba(${r},${g},${b},${a})`;
+}
+
+export function rgb([r, g, b]: RGB): string {
+    return `rgb(${r},${g},${b})`;
+}
+
+export function hexToRgba(hex: string, a: number): string {
+    const s = hex.replace('#', "");
+    const n = s.length === 3
+        ? s.split('').map(c => c + c).join("")
+        : s.padEnd(6, '0').slice(0, 6);
+    const r = parseInt(n.slice(0, 2), 16);
+    const g = parseInt(n.slice(2, 4), 16);
+    const b = parseInt(n.slice(4, 6), 16);
+    return `rgba(${r},${g},${b},${clamp(a, 0, 1).toFixed(3)})`;
 }

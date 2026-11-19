@@ -1,6 +1,5 @@
 import type {SoundEvent} from "./SoundEvent.ts";
-import {clamp, randInt} from "../utils/math/math.ts";
-import {shuffleArray} from "../utils/util.ts";
+import {clamp, randInt, shuffleArray} from "../utils/math/math.ts";
 
 export class SoundQueue {
     private readonly queue: SoundEvent[];

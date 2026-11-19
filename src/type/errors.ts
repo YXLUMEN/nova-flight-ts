@@ -25,9 +25,6 @@ export class PacketTooLargeError extends RangeError {
 export class MediaWithoutSrc extends Error {
 }
 
-export class DataBaseError extends Error {
-}
-
 export class NoResultsError extends Error {
 }
 
@@ -38,9 +35,6 @@ export class StatusError extends Error {
 }
 
 export class NbtSizeValidationException extends Error {
-}
-
-export class ConnectionAbort extends Error {
 }
 
 export class TimeoutError extends Error {

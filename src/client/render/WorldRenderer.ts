@@ -3,7 +3,6 @@ import type {ClientWorld} from "../ClientWorld.ts";
 import type {VisualEffect} from "../../effect/VisualEffect.ts";
 import type {Consumer} from "../../type/types.ts";
 import {lerp} from "../../utils/math/math.ts";
-import {RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {defaultLayers} from "../../configs/StarfieldConfig.ts";
 import {ClientWindow} from "./ClientWindow.ts";
 import {StarField} from "../../effect/StarField.ts";
@@ -14,6 +13,7 @@ import {WorldEntityRenderer} from "./WorldEntityRenderer.ts";
 import {DebugRenderer} from "./DebugRenderer.ts";
 import {DamagePopup} from "./ui/DamagePopup.ts";
 import {ParticleEngine} from "../../effect/particle/ParticleEngine.ts";
+import {Flags} from "../../utils/collection/Flags.ts";
 
 export class WorldRenderer {
     private readonly client: NovaFlightClient;
@@ -24,9 +24,11 @@ export class WorldRenderer {
     private readonly entityRenderer: WorldEntityRenderer;
     private readonly debugRenderer: DebugRenderer;
     private readonly effects: VisualEffect[] = [];
-    public readonly particleEngine: ParticleEngine;
     private readonly damagePopup: DamagePopup;
     private readonly starField: StarField;
+
+    public readonly debugFlag = new Flags();
+    public readonly particleEngine: ParticleEngine;
 
     private mapRender: BlockMapRender | null = null;
     private clearCacheTimer: number | undefined = undefined;
@@ -158,8 +160,8 @@ export class WorldRenderer {
         const player = this.client.player;
         if (player) this.entityRenderer.renderMainPlayer(ctx, world, player, alpha);
 
-        if (RuntimeConfig.debugFlag > 0) {
-            this.debugRenderer.render(ctx, viewRect, RuntimeConfig.debugFlag, world, alpha);
+        if (this.debugFlag.any()) {
+            this.debugRenderer.render(ctx, viewRect, this.debugFlag, world, alpha);
         }
 
         this.window.hud.renderMainWeapon(ctx, alpha);

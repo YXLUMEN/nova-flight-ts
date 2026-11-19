@@ -3,7 +3,7 @@ import type {VisualEffectType} from "./VisualEffectType.ts";
 import type {Vec2} from "../utils/math/Vec2.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import {lerp, TAU} from "../utils/math/math.ts";
-import {decodeFromByte, encodeToByte} from "../utils/net_util.ts";
+import {decodeFromInt8, encodeToInt8} from "../utils/net_util.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
 import {VisualEffectTypes} from "./VisualEffectTypes.ts";
 import type {ViewRect} from "../client/render/Camera.ts";
@@ -24,7 +24,7 @@ export class EMPBurst implements VisualEffect {
             if (flag & 1 << 2) writer.writeInt8(value.segs);
             if (flag & 1 << 3) PacketCodecs.COLOR_HEX.encode(writer, value.color);
             if (flag & 1 << 4) writer.writeInt8(value.thickness);
-            if (flag & 1 << 5) writer.writeInt8(encodeToByte(value.jitter, 1));
+            if (flag & 1 << 5) writer.writeInt8(encodeToInt8(value.jitter, 1));
             if (flag & 1 << 6) writer.writeInt8(value.glow);
         },
         reader => {
@@ -38,7 +38,7 @@ export class EMPBurst implements VisualEffect {
                 (flag & 1 << 2) ? reader.readUint8() : undefined,
                 (flag & 1 << 3) ? PacketCodecs.COLOR_HEX.decode(reader) : undefined,
                 (flag & 1 << 4) ? reader.readUint8() : undefined,
-                (flag & 1 << 5) ? decodeFromByte(reader.readUint8(), 1) : undefined,
+                (flag & 1 << 5) ? decodeFromInt8(reader.readUint8(), 1) : undefined,
                 (flag & 1 << 6) ? reader.readUint8() : undefined,
             );
         }

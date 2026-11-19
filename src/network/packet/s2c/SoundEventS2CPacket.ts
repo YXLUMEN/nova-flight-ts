@@ -25,7 +25,7 @@ export class SoundEventS2CPacket implements Payload {
     public readonly pitch: number;
     public readonly loop: boolean;
 
-    public constructor(soundEvent: SoundEvent, volume: number, pitch: number, loop: boolean) {
+    public constructor(soundEvent: SoundEvent, volume: number, pitch: number, loop: boolean = false) {
         this.soundEvent = soundEvent;
         this.volume = volume;
         this.pitch = pitch;

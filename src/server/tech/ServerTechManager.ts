@@ -26,6 +26,8 @@ import {TechVoidDweller} from "./apply/TechVoidDweller.ts";
 import {TechVoidLeap} from "./apply/TechVoidLeap.ts";
 import {TechFlakCannons} from "./apply/TechFlakCannons.ts";
 import {TechDeflector} from "./apply/TechDeflector.ts";
+import {TechParallelLoader} from "./apply/TechParallelLoader.ts";
+import {TechAggressiveAlgorithms} from "./apply/TechAggressiveAlgorithms.ts";
 
 export class ServerTechManager {
     private static readonly techMap: Map<RegistryEntry<Tech>, ApplyTech> = new Map();
@@ -99,5 +101,7 @@ export class ServerTechManager {
         this.add(Techs.VOID_LEAP, TechVoidLeap);
         this.add(Techs.DEFLECTOR, TechDeflector);
         this.add(Techs.ION_DISRUPTOR, TechGiveItem, Items.ION_DISRUPTOR);
+        this.add(Techs.PARALLEL_LOADER, TechParallelLoader);
+        this.add(Techs.AGGRESSIVE_ALGORITHMS, TechAggressiveAlgorithms);
     }
 }

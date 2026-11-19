@@ -1,6 +1,7 @@
 import type {Entity} from "../../../entity/Entity.ts";
 import type {ServerWorld} from "../../../server/ServerWorld.ts";
 import type {ItemStack} from "../../ItemStack.ts";
+import type {Vec2} from "../../../utils/math/Vec2.ts";
 import {DataComponents} from "../../../component/DataComponents.ts";
 import {StatusEffectInstance} from "../../../entity/effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../../../entity/effect/StatusEffects.ts";
@@ -8,7 +9,6 @@ import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import {LivingEntity} from "../../../entity/LivingEntity.ts";
 import {spawnLaserByVec} from "../../../utils/render/LaserFx.ts";
 import {ParticleEffects} from "../../../effect/particle/ParticleEffects.ts";
-import type {Vec2} from "../../../utils/math/Vec2.ts";
 import {LaserPulseItem} from "./LaserPulseItem.ts";
 
 export class GammaLasers extends LaserPulseItem {

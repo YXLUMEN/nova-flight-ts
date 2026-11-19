@@ -3,6 +3,7 @@ import {clamp, MAX_INT, TAU, wrapRadians} from "./math/math.ts";
 
 const VELOCITY_SCALE = 32767 / 60.0;
 
+/** encode `yaw` into u8 */
 export function encodeYaw(yawRad: number): number {
     const normalized = ((yawRad % TAU) + TAU) % TAU;
     return Math.floor(normalized * 256 / TAU);
@@ -12,6 +13,7 @@ export function decodeYaw(yawByte: number): number {
     return wrapRadians((yawByte & 0xFF) * TAU / 256);
 }
 
+/** encode value into i16, must in [-60,60] */
 export function encodeVelocity(v: number): number {
     const clamped = clamp(v, -60, 60);
     return Math.round(clamped * VELOCITY_SCALE);
@@ -30,21 +32,21 @@ export function decodeFromInt16(value: number, maxValue: number = 20): number {
     return value * (maxValue / 32767);
 }
 
-export function encodeToByte(value: number, maxValue: number = 5): number {
+export function encodeToInt8(value: number, maxValue: number = 5): number {
     const clamped = clamp(value, -maxValue, maxValue);
     return Math.round(clamped * (127 / maxValue));
 }
 
-export function decodeFromByte(value: number, maxValue: number = 5): number {
+export function decodeFromInt8(value: number, maxValue: number = 5): number {
     return value * (maxValue / 127);
 }
 
-export function encodeToUnsignedByte(value: number, maxValue: number = 10): number {
+export function encodeToUint8(value: number, maxValue: number = 10): number {
     const clamped = clamp(value, 0, maxValue);
     return Math.round(clamped * (255 / maxValue));
 }
 
-export function decodeFromUnsignedByte(value: number, maxValue: number = 10): number {
+export function decodeFromUint8(value: number, maxValue: number = 10): number {
     return value * (maxValue / 255);
 }
 
@@ -63,6 +65,8 @@ export function decodeFromInt32(value: number, maxValue: number = 2e5): number {
  *   - #RGB    → #RRGGBBFF
  *   - #RRGGBB → #RRGGBBFF
  *   - #RRGGBBAA
+ *
+ *  @throws {Error} Color is not a validated `HexColor`
  */
 export function encodeColorHex(hex: string): number {
     let clean = hex.replace('#', '').trim();
@@ -90,8 +94,10 @@ export function encodeColorHex(hex: string): number {
 }
 
 /**
- * Decodes a u32-bit RGBA integer (0xRRGGBBAA) into a normalized 8-digit hex string.
+ * Decodes an u32-bit RGBA integer (0xRRGGBBAA) into a normalized 8-digit hex string.
  * Always returns uppercase with leading '#'.
+ *
+ * @throws {Error} number is not an u32
  */
 export function decodeColorToHex(colorInt: number): HexColor {
     if (!Number.isInteger(colorInt) || colorInt < 0 || colorInt > 0xFFFFFFFF) {
@@ -110,7 +116,7 @@ export function getVarIntSize(value: number): number {
     return size;
 }
 
-// U32
+/** get len for uint which range is u32 */
 export function varUintSize(value: number): number {
     if (value < 1 << 7) return 1;
     if (value < 1 << 14) return 2;

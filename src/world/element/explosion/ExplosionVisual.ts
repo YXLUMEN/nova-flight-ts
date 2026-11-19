@@ -1,7 +1,7 @@
 import type {VisualEffect} from "../../../effect/VisualEffect.ts";
 import type {PacketCodec} from "../../../network/codec/PacketCodec.ts";
 import {PacketCodecs} from "../../../network/codec/PacketCodecs.ts";
-import {decodeFromUnsignedByte, encodeToUnsignedByte} from "../../../utils/net_util.ts";
+import {decodeFromUint8, encodeToUint8} from "../../../utils/net_util.ts";
 
 export class ExplosionVisual {
     public static readonly CODEC: PacketCodec<ExplosionVisual> = PacketCodecs.of(
@@ -14,7 +14,7 @@ export class ExplosionVisual {
             if (flag & 1 << 2) writer.writeInt8(value.sparks);
             if (flag & 1 << 3) writer.writeInt8(value.fastSparks);
             if (flag & 1 << 4) writer.writeBoolean(value.ring);
-            if (flag & 1 << 5) writer.writeInt8(encodeToUnsignedByte(value.shake, 1));
+            if (flag & 1 << 5) writer.writeInt8(encodeToUint8(value.shake, 1));
             if (flag & 1 << 6) writer.writeBoolean(value.screenFlash);
         },
         reader => {
@@ -25,7 +25,7 @@ export class ExplosionVisual {
             if (modified & 1 << 2) visual.sparks = reader.readInt8();
             if (modified & 1 << 3) visual.fastSparks = reader.readInt8();
             if (modified & 1 << 4) visual.ring = reader.readBoolean();
-            if (modified & 1 << 5) visual.shake = decodeFromUnsignedByte(reader.readUint8(), 1);
+            if (modified & 1 << 5) visual.shake = decodeFromUint8(reader.readUint8(), 1);
             if (modified & 1 << 6) visual.screenFlash = reader.readBoolean();
             return visual;
         }

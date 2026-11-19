@@ -11,6 +11,9 @@ export class ServerTechUtil {
             const base = stack.getOr(DataComponents.ATTACK_DAMAGE, 1);
             stack.set(DataComponents.ATTACK_DAMAGE, base * 2);
         }
+        if (tech.isUnlocked(Techs.PARALLEL_LOADER)) {
+            stack.set(DataComponents.RELOAD_IN_BACKGROUND, true);
+        }
     }
 
     public static onUnlockExplosionWpn(stack: ItemStack, player: ServerPlayerEntity) {

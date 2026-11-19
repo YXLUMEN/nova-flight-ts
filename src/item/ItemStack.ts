@@ -114,6 +114,10 @@ export class ItemStack {
         this.getItem().leftClick(world, user);
     }
 
+    public onRemove(user: LivingEntity): void {
+        this.getItem().onRemove(this, user);
+    }
+
     public isAvailable(): boolean {
         return this.getOr(DataComponents.ITEM_AVAILABLE, true);
     }
@@ -167,10 +171,9 @@ export class ItemStack {
     }
 
     public copy(): ItemStack {
-        if (this.isEmpty()) {
-            return ItemStack.EMPTY;
-        }
-        return new ItemStack(this.getItem(), this.count, this.components.copy());
+        return this.isEmpty() ?
+            ItemStack.EMPTY :
+            new ItemStack(this.getItem(), this.count, this.components.copy());
     }
 
     public copyWithCount(count: number): ItemStack {

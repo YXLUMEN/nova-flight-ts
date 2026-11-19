@@ -87,6 +87,10 @@ export class Vec2 implements Comparable {
         return doubleEquals(this.x, other.x) && doubleEquals(this.y, other.y);
     }
 
+    public distSqTo(v: Vec2): number {
+        return Vec2.distSq(this, v);
+    }
+
     public static distSq(a: Vec2, b: Vec2): number {
         const dx = a.x - b.x;
         const dy = a.y - b.y;

@@ -9,7 +9,7 @@ import {SoundEvents} from "../../../sound/SoundEvents.ts";
 import type {World} from "../../../world/World.ts";
 
 export class KineticArtillery extends BaseWeapon {
-    public override inventoryTick(stack: ItemStack, world: World, holder: Entity, _slot: number, selected: boolean) {
+    public override inventoryTick(stack: ItemStack, world: World, holder: Entity, slot: number, selected: boolean) {
         const cooldown = this.getCooldown(stack);
         if (cooldown > 0 && this.shouldCooldown(stack)) {
             this.setCooldown(stack, cooldown - 1);
@@ -21,7 +21,7 @@ export class KineticArtillery extends BaseWeapon {
 
         if (!holder.isPlayer()) return;
         if (stack.getOr(DataComponents.RELOADING, false)) {
-            this.reloadAction(holder, stack, selected);
+            this.reloadAction(holder, stack, slot, selected);
         }
     }
 

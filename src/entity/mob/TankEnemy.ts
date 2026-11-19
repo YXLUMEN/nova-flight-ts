@@ -1,11 +1,11 @@
 import type {DamageSource} from "../damage/DamageSource.ts";
 import type {World} from "../../world/World.ts";
-import {MobEntity} from "./MobEntity.ts";
 import type {EntityType} from "../EntityType.ts";
+import type {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
+import {clamp} from "../../utils/math/math.ts";
+import {MobEntity} from "./MobEntity.ts";
 import {EntityAttributes} from "../attribute/EntityAttributes.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
-import {clamp} from "../../utils/math/math.ts";
-import {StatusEffectInstance} from "../effect/StatusEffectInstance.ts";
 import {StatusEffects} from "../effect/StatusEffects.ts";
 
 export class TankEnemy extends MobEntity {
@@ -33,7 +33,7 @@ export class TankEnemy extends MobEntity {
             damage *= 1 - reduction;
 
             this.toughness = Math.min(10, this.toughness + damage / 2);
-            damage = clamp(damage, 0.2, this.getHealth() * 0.4);
+            damage = clamp(damage, 0.2, this.getHealth() * 0.7);
         }
 
         return super.takeDamage(damageSource, damage);

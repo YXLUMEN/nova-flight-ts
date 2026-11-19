@@ -166,6 +166,17 @@
     ]
   },
   {
+    "id": "aggressive_algorithms",
+    "name": "tech.name.nova-flight.aggressive_algorithms",
+    "x": -4,
+    "y": 2,
+    "desc": "tech.desc.nova-flight.aggressive_algorithms",
+    "cost": 480,
+    "requires": [
+      "guardian_point_defense"
+    ]
+  },
+  {
     "id": "explosive",
     "name": "tech.name.nova-flight.explosive",
     "x": 0,
@@ -245,7 +256,7 @@
     "y": 4,
     "branchGroup": "heavy_upgrade",
     "desc": "tech.desc.nova-flight.rocket_launcher",
-    "cost": 360,
+    "cost": 370,
     "requires": [
       "heavy_weapon",
       "explosive"
@@ -269,7 +280,7 @@
     "y": 5,
     "branchGroup": "heavy_upgrade",
     "desc": "tech.desc.nova-flight.cloud_lightning",
-    "cost": 320,
+    "cost": 340,
     "requires": [
       "heavy_weapon",
       "electrical_energy_surges"
@@ -284,7 +295,7 @@
     "x": 2,
     "y": 5,
     "desc": "tech.desc.nova-flight.arc_emitter",
-    "cost": 320,
+    "cost": 360,
     "requires": [
       "cloud_lightning"
     ]
@@ -295,7 +306,7 @@
     "x": 3,
     "y": 5,
     "desc": "tech.desc.nova-flight.focused_arc_emitter",
-    "cost": 510,
+    "cost": 520,
     "requires": [
       "arc_emitter"
     ]
@@ -333,7 +344,7 @@
     "x": 3,
     "y": 6,
     "desc": "tech.desc.nova-flight.perdition_beam",
-    "cost": 480,
+    "cost": 960,
     "requires": [
       "tachyon_lance",
       "phase_lasers"
@@ -357,9 +368,20 @@
     "y": 7,
     "branchGroup": "bullet_dir",
     "desc": "tech.desc.nova-flight.hd_bullet",
-    "cost": 100,
+    "cost": 120,
     "requires": [
       "gunboat_focus"
+    ]
+  },
+  {
+    "id": "parallel_loader",
+    "name": "tech.name.nova-flight.parallel_loader",
+    "x": 2,
+    "y": 8,
+    "desc": "tech.desc.nova-flight.parallel_loader",
+    "cost": 580,
+    "requires": [
+      "hd_bullet"
     ]
   },
   {
@@ -369,7 +391,7 @@
     "y": 7,
     "branchGroup": "apex_upgrade",
     "desc": "tech.desc.nova-flight.antimatter_warhead",
-    "cost": 600,
+    "cost": 640,
     "requires": [
       "hd_bullet"
     ],
@@ -448,7 +470,7 @@
     "x": 2,
     "y": 9,
     "desc": "tech.desc.nova-flight.ele_shield",
-    "cost": 180,
+    "cost": 240,
     "requires": [
       "electrical_energy_surges"
     ]
@@ -459,7 +481,7 @@
     "x": 3,
     "y": 9,
     "desc": "tech.desc.nova-flight.deflector",
-    "cost": 240,
+    "cost": 360,
     "requires": [
       "ele_shield"
     ]
@@ -549,7 +571,7 @@
     "x": -1,
     "y": 10,
     "desc": "tech.desc.nova-flight.corona_discharge",
-    "cost": 120,
+    "cost": 180,
     "requires": [
       "energy_focus"
     ]
@@ -560,7 +582,7 @@
     "x": -2,
     "y": 10,
     "desc": "tech.desc.nova-flight.static_electricity",
-    "cost": 120,
+    "cost": 240,
     "requires": [
       "corona_discharge"
     ]
@@ -572,7 +594,7 @@
     "y": 10,
     "branchGroup": "apex_upgrade",
     "desc": "tech.desc.nova-flight.electric_charge",
-    "cost": 720,
+    "cost": 960,
     "requires": [
       "static_electricity"
     ]
@@ -606,7 +628,7 @@
     "x": -2,
     "y": 12,
     "desc": "tech.desc.nova-flight.space_tear",
-    "cost": 300,
+    "cost": 720,
     "requires": [
       "void_disturbance"
     ]
@@ -656,7 +678,7 @@
     "x": 2,
     "y": 13,
     "desc": "tech.desc.nova-flight.emergency_warp",
-    "cost": 320,
+    "cost": 480,
     "requires": [
       "void_leap"
     ]
@@ -667,7 +689,7 @@
     "x": 0,
     "y": 14,
     "desc": "tech.desc.nova-flight.ship_opt",
-    "cost": 180
+    "cost": 160
   },
   {
     "id": "emergency_repair",
@@ -709,7 +731,7 @@
     "x": 0,
     "y": 15,
     "desc": "tech.desc.nova-flight.nanotechnology",
-    "cost": 160
+    "cost": 180
   },
   {
     "id": "armor_erosion",

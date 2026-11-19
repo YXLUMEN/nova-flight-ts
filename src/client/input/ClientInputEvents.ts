@@ -2,12 +2,11 @@ import type {IInput} from "./IInput.ts";
 import type {NovaFlightClient} from "../NovaFlightClient.ts";
 import type {InputManager} from "./InputManager.ts";
 import type {Consumer} from "../../type/types.ts";
-import {cleanObj, empty} from "../../utils/util.ts";
+import {empty, record} from "../../utils/util.ts";
 import {app} from "../../lib.ts";
 import {isDev, RuntimeConfig} from "../../configs/RuntimeConfig.ts";
 import {PlayerInputC2SPacket} from "../../network/packet/c2s/PlayerInputC2SPacket.ts";
 import {ResourceLoader} from "../../resource/ResourceLoader.ts";
-import {BitFlag} from "../../utils/BitFlag.ts";
 import {DebugFlag} from "../render/DebugRenderer.ts";
 import {InputBindings} from "./InputBindings.ts";
 import {RequestTeleportC2SPacket} from "../../network/packet/c2s/RequestTeleportC2SPacket.ts";
@@ -16,7 +15,7 @@ export class ClientInputEvents {
     public static registryAll(client: NovaFlightClient, input: InputManager): void {
         this.windowEvents(client);
 
-        input.setHandler(cleanObj({
+        input.setHandler(record({
             onKeyPress: (input, event) => {
                 const code = event.code;
                 if (code === 'Slash' || input.wasPressed(InputBindings.CHAT_BAR)) {
@@ -109,12 +108,19 @@ export class ClientInputEvents {
             case 'KeyL':
                 RuntimeConfig.cameraFollow = !RuntimeConfig.cameraFollow;
                 break;
-            case 'F3':
-                RuntimeConfig.debugFlag = BitFlag.toggle(RuntimeConfig.debugFlag, DebugFlag.BOUNDING_BOX);
-                break;
             case 'F2':
-                RuntimeConfig.debugFlag = BitFlag.toggle(RuntimeConfig.debugFlag, DebugFlag.HEALTH_BAR);
+                client.worldRender.debugFlag.toggle(DebugFlag.HEALTH_BAR);
                 break;
+            case 'F3':
+                client.worldRender.debugFlag.toggle(DebugFlag.BOUNDING_BOX);
+                client.worldRender.debugFlag.clear(DebugFlag.STRETCH_BOX);
+                break;
+            case 'F4': {
+                const flag = client.worldRender.debugFlag;
+                if (!flag.has(DebugFlag.BOUNDING_BOX)) return;
+                flag.toggle(DebugFlag.STRETCH_BOX);
+                break;
+            }
             case 'Backquote': {
                 const ping = `Ping ${Math.floor(client.networkHandler.getLatency())}ms`;
                 client.clientCommandManager.addPlainMessage(ping);

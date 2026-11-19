@@ -118,7 +118,7 @@ export class Items {
         .maxCooldown(1)
         .ballisticSpeed(60)
         .spread(1.5)
-        .component(DataComponents.MAX_RELOAD_TIME, 54)
+        .reloadTick(56)
     ));
     public static readonly PHASE_LASERS = this.register('phase_lasers', new PhaseLasers(new Item.Properties()
         .attackDamage(2)
@@ -170,6 +170,7 @@ export class Items {
     public static readonly POINT_DEFENSE = this.register('point_defense', new PointDefense(new Item.Properties()
         .type(WeaponType.ENERGY)
         .component(DataComponents.MAX_DEFENSE, 1)
+        .component(DataComponents.DEFENSE_RANGE, 256)
     ));
     public static readonly FLAK_BATTERY = this.register('flak_battery', new FlakBattery(new Item.Properties()
         .maxDurability(80)
@@ -178,6 +179,7 @@ export class Items {
         .type(WeaponType.KINETIC)
         .ballisticSpeed(40)
         .component(DataComponents.MAX_DEFENSE, 1)
+        .component(DataComponents.DEFENSE_RANGE, 256)
     ));
     public static readonly COILGUN = this.register('coilgun', new Coilguns(new Item.Properties()
         .maxDurability(50)
@@ -201,7 +203,7 @@ export class Items {
         .maxDurability(32)
         .attackDamage(32)
         .maxCooldown(24)
-        .reloadTick(22)
+        .reloadTick(28)
         .type(WeaponType.KINETIC)
         .ballisticSpeed(50)
     ));

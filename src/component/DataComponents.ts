@@ -115,7 +115,10 @@ export class DataComponents {
     );
 
     public static readonly MAX_DEFENSE: DataComponentType<number> = this.register("max_defence",
-        builder => builder.persistent(Codecs.UINT32).network(PacketCodecs.UINT8)
+        builder => builder.persistent(Codecs.UINT32).network(PacketCodecs.VAR_UINT)
+    );
+    public static readonly DEFENSE_RANGE: DataComponentType<number> = this.register("defense_range",
+        builder => builder.persistent(Codecs.UINT32).network(PacketCodecs.VAR_UINT)
     );
     public static readonly SCHEDULE_FIRE: DataComponentType<boolean> = this.register("schedule_fire",
         builder => builder.persistent(Codecs.BOOLEAN).network(PacketCodecs.BOOL)
@@ -139,6 +142,12 @@ export class DataComponents {
     );
     public static readonly LASER_ID: DataComponentType<number> = this.register("laser_id",
         builder => builder.persistent(Codecs.UINT32).network(PacketCodecs.VAR_UINT)
+    );
+    public static readonly RELOAD_IN_BACKGROUND: DataComponentType<boolean> = this.register('reload_in_background',
+        builder => builder.persistent(Codecs.BOOLEAN).network(PacketCodecs.BOOL)
+    );
+    public static readonly DEFENSE_ACTIVE_ATTACK: DataComponentType<boolean> = this.register('defense_active_attack',
+        builder => builder.persistent(Codecs.BOOLEAN).network(PacketCodecs.BOOL)
     );
 
     private static register<T>(id: string, builderOperator: UnaryOperator<ComponentTypeBuilder<T>>): DataComponentType<T> {

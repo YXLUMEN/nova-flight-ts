@@ -19,11 +19,11 @@ export class EntityDimensions {
     }
 
     public static scalable(width: number, height: number): EntityDimensions {
-        return new EntityDimensions(width, height, true);
+        return new EntityDimensions(width, height, false);
     }
 
     public static fixed(width: number, height: number): EntityDimensions {
-        return new EntityDimensions(width, height, false);
+        return new EntityDimensions(width, height, true);
     }
 
     public getBoxAt(x: number, y: number): AABB {

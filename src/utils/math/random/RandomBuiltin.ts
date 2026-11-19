@@ -1,6 +1,5 @@
+import {randInt, shuffleArray} from "../math.ts";
 import {Random} from "./Random.ts";
-import {randInt} from "../math.ts";
-import {shuffleArray} from "../../util.ts";
 
 export class RandomBuiltin extends Random {
     public next(): number {

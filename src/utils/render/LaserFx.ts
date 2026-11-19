@@ -39,7 +39,7 @@ export function spawnFancyLaser(
     endX: number,
     endY: number,
     color = '#fff',
-    width ?: number,
+    width?: number,
     life?: number,
 ) {
     const effect = new FancyLaserEffect(color, width, life);

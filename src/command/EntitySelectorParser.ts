@@ -1,20 +1,20 @@
-import {StringReader} from "../brigadier/StringReader.ts";
-import {SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
 import type {EntityFilter} from "./SelectorArguments.ts";
 import type {Suggestions} from "../brigadier/suggestion/Suggestions.ts";
-import {CommandError, IllegalArgumentError} from "../type/errors.ts";
 import type {BiConsumer, Consumer, UUID} from "../type/types.ts";
+import type {Entity} from "../entity/Entity.ts";
+import type {EntityType} from "../entity/EntityType.ts";
+import type {NumRange} from "../world/predicate/NumberRange.ts";
+import type {Vec2} from "../utils/math/Vec2.ts";
+import {shuffleArray, squareDistVec2} from "../utils/math/math.ts";
+import {empty} from "../utils/util.ts";
+import {isValidUUID} from "../utils/uuid_util.ts";
+import {StringReader} from "../brigadier/StringReader.ts";
+import {SuggestionsBuilder} from "../brigadier/suggestion/SuggestionsBuilder.ts";
+import {CommandError, IllegalArgumentError} from "../type/errors.ts";
 import {EntitySelector} from "./EntitySelector.ts";
 import {EntitySelectorOptions} from "./EntitySelectorOptions.ts";
-import type {Entity} from "../entity/Entity.ts";
 import {AABB} from "../utils/math/AABB.ts";
-import type {EntityType} from "../entity/EntityType.ts";
 import {EntityTypes} from "../entity/EntityTypes.ts";
-import type {NumRange} from "../world/predicate/NumberRange.ts";
-import {squareDistVec2} from "../utils/math/math.ts";
-import {empty, shuffleArray} from "../utils/util.ts";
-import type {Vec2} from "../utils/math/Vec2.ts";
-import {isValidUUID} from "../utils/uuid_util.ts";
 
 type provider = (builder: SuggestionsBuilder, consumer: Consumer<SuggestionsBuilder>) => Promise<Suggestions>;
 

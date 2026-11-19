@@ -2,14 +2,17 @@ import type {ViewRect} from "./Camera.ts";
 import type {ClientWorld} from "../ClientWorld.ts";
 import type {Vec2} from "../../utils/math/Vec2.ts";
 import type {Entity} from "../../entity/Entity.ts";
+import type {Flags} from "../../utils/collection/Flags.ts";
 import {concatIters} from "../../utils/util.ts";
 import {toFixedTrim} from "../../utils/math/math.ts";
-import {BitFlag} from "../../utils/BitFlag.ts";
 import {LivingEntity} from "../../entity/LivingEntity.ts";
 
 export class DebugRenderer {
-    public render(ctx: CanvasRenderingContext2D, viewRect: ViewRect, flag: number, world: ClientWorld, alpha: number) {
+    public render(ctx: CanvasRenderingContext2D, viewRect: ViewRect, flag: Flags, world: ClientWorld, alpha: number) {
         const entities = concatIters(world.getEntities().iter(), world.getPlayers());
+        const boundingBox = flag.has(DebugFlag.BOUNDING_BOX);
+        const stretch = flag.has(DebugFlag.STRETCH_BOX);
+        const healthBar = flag.has(DebugFlag.HEALTH_BAR);
 
         ctx.save();
         ctx.font = '14px system-ui, -apple-system, Segoe HUD, Roboto, sans-serif';
@@ -17,17 +20,13 @@ export class DebugRenderer {
             if (!entity.shouldRender(viewRect)) continue;
             const pos = entity.getLerpPos(alpha);
 
-            if (BitFlag.has(flag, DebugFlag.BOUNDING_BOX)) {
-                this.renderBoundingBox(ctx, pos, entity, alpha);
-            }
-            if (BitFlag.has(flag, DebugFlag.HEALTH_BAR)) {
-                this.renderHealthBar(ctx, pos, entity);
-            }
+            if (boundingBox) this.renderBoundingBox(ctx, pos, entity, alpha, stretch);
+            if (healthBar) this.renderHealthBar(ctx, pos, entity);
         }
         ctx.restore();
     }
 
-    private renderBoundingBox(ctx: CanvasRenderingContext2D, pos: Vec2, entity: Entity, alpha: number) {
+    private renderBoundingBox(ctx: CanvasRenderingContext2D, pos: Vec2, entity: Entity, alpha: number, stretch: boolean) {
         const yaw = entity.getLerpYaw(alpha);
         const lerpBox = entity.getDimensions().getBoxAtByVec(pos);
 
@@ -42,6 +41,11 @@ export class DebugRenderer {
 
         ctx.strokeStyle = "#fff";
         ctx.strokeRect(lerpBox.minX, lerpBox.minY, w, h);
+
+        if (!stretch) return;
+        const stretchBox = lerpBox.stretchByVec(entity.velocityRef);
+        ctx.strokeStyle = "#ffe95a";
+        ctx.strokeRect(stretchBox.minX, stretchBox.minY, stretchBox.getWidth(), stretchBox.getHeight());
     }
 
     private renderHealthBar(ctx: CanvasRenderingContext2D, pos: Vec2, entity: Entity) {
@@ -61,5 +65,6 @@ export class DebugRenderer {
 
 export const enum DebugFlag {
     BOUNDING_BOX = 1 << 0,
-    HEALTH_BAR = 1 << 1,
+    STRETCH_BOX = 1 << 1,
+    HEALTH_BAR = 1 << 2,
 }

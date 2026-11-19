@@ -61,8 +61,8 @@
   "desc.nova-flight.gunboat_focus": "专注机炮研发, 精进动能和爆炸武器强化.",
   "name.nova-flight.hd_bullet": "高密度弹丸",
   "desc.nova-flight.hd_bullet": "直接命中伤害\u001B[32m +100% \u001B[0m, 采用高强度的钨合金, 你永远无法相信他们是在太空工厂里制造的",
-  "name.nova-flight.ad_loading": "先进装填器",
-  "desc.nova-flight.ad_loading": "机炮射速\u001B[32m +20% \u001B[0m, 采用先进的链式传动! 包括弹壳回收以及3d打印的带弹头",
+  "name.nova-flight.parallel_loader": "并行装载器",
+  "desc.nova-flight.parallel_loader": "扩宽的武器仓允许已装备的前 \u001B[32m3\u001B[0m 个动能武器同时装填",
   "name.nova-flight.antimatter_warhead": "反物质弹头",
   "desc.nova-flight.antimatter_warhead": "额外造成目标当前生命\u001B[31m 1%-30% \u001B[0m的伤害, 弹头附着的反物质能够轻易泯灭装甲.",
   "name.nova-flight.hv_warhead": "高爆战斗部",
@@ -142,5 +142,7 @@
   "name.nova-flight.storm_fire": "火风暴机关炮",
   "desc.nova-flight.storm_fire": "设计先进的自动火炮, 能够向目标倾泻一片由高爆炮弹构成的弹幕.",
   "name.nova-flight.ion_disruptor": "离子裂解炮",
-  "desc.nova-flight.ion_disruptor": "裂解炮发射出的高能射束, 能够同时弱化并破坏构成目标原子间的分子键. 它们能够持续削弱舰船的攻击能力."
+  "desc.nova-flight.ion_disruptor": "裂解炮发射出的高能射束, 能够同时弱化并破坏构成目标原子间的分子键. 它们能够持续削弱舰船的攻击能力.",
+  "name.nova-flight.aggressive_algorithms": "侵略性算法",
+  "desc.nova-flight.aggressive_algorithms": "更激进的算法允许点防御在空闲时主动攻击敌人"
 }

@@ -1,7 +1,7 @@
 import type {VisualEffect} from "./VisualEffect.ts";
 import type {PacketCodec} from "../network/codec/PacketCodec.ts";
 import type {VisualEffectType} from "./VisualEffectType.ts";
-import {decodeFromByte, encodeToByte} from "../utils/net_util.ts";
+import {decodeFromInt8, encodeToInt8} from "../utils/net_util.ts";
 import {hexToRgba} from "../utils/util.ts";
 import {TAU} from "../utils/math/math.ts";
 import {PacketCodecs} from "../network/codec/PacketCodecs.ts";
@@ -14,8 +14,8 @@ export class EdgeGlowEffect implements VisualEffect {
             writer.writeUint16(value.thickness);
             writer.writeFloat(value.intensity);
             writer.writeFloat(value.duration);
-            writer.writeInt8(encodeToByte(value.fadeIn, 1));
-            writer.writeInt8(encodeToByte(value.fadeOut, 1));
+            writer.writeInt8(encodeToInt8(value.fadeIn, 1));
+            writer.writeInt8(encodeToInt8(value.fadeOut, 1));
             writer.writeBoolean(value.pulse);
             writer.writeString(value.composite);
         },
@@ -25,8 +25,8 @@ export class EdgeGlowEffect implements VisualEffect {
                 reader.readUint16(),
                 reader.readFloat(),
                 reader.readFloat(),
-                decodeFromByte(reader.readUint8(), 1),
-                decodeFromByte(reader.readUint8(), 1),
+                decodeFromInt8(reader.readUint8(), 1),
+                decodeFromInt8(reader.readUint8(), 1),
                 reader.readBoolean(),
                 reader.readString() as GlobalCompositeOperation
             );

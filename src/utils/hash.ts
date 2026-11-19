@@ -70,16 +70,16 @@ export function hashCode(object: Comparable[]): number {
 }
 
 /**
- * 计算任意值的 hash.
+ * Calculate the hash of any value
  *
- * - `null`、`undefined`、各基础类型、`Symbol` 互不混淆（按类型加了标签）.
- * - 普通对象、`Map`、`Set` 的遍历顺序不影响结果; 数组、TypedArray 视作有序.
- * - `Date` 按时间戳, `RegExp` 按 source + flags, `ArrayBuffer`/TypedArray 按原始字节.
- * - 实现了 `hashCode()` 的对象（`Comparable`）直接使用其 `hashCode()`（结果与 `hashCode()` 一致）.
- * - 循环引用不会栈溢出, 环上的引用退化为一个固定的哨兵值.
+ * - `null`, `undefined`, various primitive types, and `Symbol` are not confused with each other (labeled by type)
+ * - The traversal order of regular objects, `Map`, and `Set` does not affect the results; arrays and TypedArray are considered ordered
+ * - `Date` is sorted by timestamp, `RegExp` by source + flags, and `ArrayBuffer`/TypedArray by raw bytes
+ * - Objects that implement `hashCode()` (`Comparable`) directly use their `hashCode()` (the result is consistent with `hashCode()`)
+ * Circular references will not cause a stack overflow, as the references in the loop degenerate into a fixed sentinel value
  *
- * > 注意：这不是密码学 hash; 局部 `Symbol`（非 `Symbol.for`）只能按 description 区分,
- * > 描述相同的两个 symbol 会得到相同 hash.
+ * > Note: This is not a cryptographic hash; local `Symbol` (not `Symbol.for`) can only be distinguished by its description,
+ * > Describing the same two symbols will result in the same hash
  */
 export function hashObject(object: unknown): number {
     return hashValue(object, new WeakSet<object>());

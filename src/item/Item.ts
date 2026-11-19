@@ -2,18 +2,17 @@ import type {World} from "../world/World.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {RegistryEntry} from "../registry/tag/RegistryEntry.ts";
 import type {PlayerEntity} from "../entity/player/PlayerEntity.ts";
-import {ItemStack} from "./ItemStack.ts";
 import type {LivingEntity} from "../entity/LivingEntity.ts";
-import {SimpleComponentMap} from "../component/SimpleComponentMap.ts";
-import {DataComponents} from "../component/DataComponents.ts";
 import type {DataComponentType} from "../component/DataComponentType.ts";
 import type {ComponentMap} from "../component/ComponentMap.ts";
+import type {ServerWorld} from "../server/ServerWorld.ts";
+import {createTranslationKey} from "../utils/Strings.ts";
+import {ItemStack} from "./ItemStack.ts";
+import {SimpleComponentMap} from "../component/SimpleComponentMap.ts";
+import {DataComponents} from "../component/DataComponents.ts";
 import {Registries} from "../registry/Registries.ts";
 import {BitFlag} from "../utils/BitFlag.ts";
-import {createTranslationKey} from "../utils/util.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
-import type {ServerWorld} from "../server/ServerWorld.ts";
-
 
 export class Item {
     public readonly registryEntry: RegistryEntry<Item> = null!;
@@ -54,6 +53,9 @@ export class Item {
 
     public onUseTick(_world: World, _user: PlayerEntity): boolean {
         return false;
+    }
+
+    public onRemove(_stack: ItemStack, _user: LivingEntity): void {
     }
 
     public getName(): TranslatableText {
