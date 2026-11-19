@@ -64,7 +64,7 @@
   "name.nova-flight.ad_loading": "Advanced Autoloader",
   "desc.nova-flight.ad_loading": "Autocannon fire rate\u001B[32m +20% \u001B[0m. Features advanced chain drive, shell casing recycle, and 3D-printed warheads.",
   "name.nova-flight.antimatter_warhead": "Antimatter Warhead",
-  "desc.nova-flight.antimatter_warhead": "Deals 8% of target's max health as damage. The antimatter coating easily annihilates armor.",
+  "desc.nova-flight.antimatter_warhead": "Deals 1%-30% of target's max health as damage. The antimatter coating easily annihilates armor.",
   "name.nova-flight.hv_warhead": "High-Explosive Warhead",
   "desc.nova-flight.hv_warhead": "Explosion radius\u001B[32m +50% \u001B[0m. Through the selfless dedication of countless comrades, we finally developed high explosives.",
   "name.nova-flight.hd_explosives": "High-Density Explosives",

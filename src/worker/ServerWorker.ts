@@ -1,10 +1,11 @@
 import type {ConnectionContext} from "../client/network/ConnectionContext.ts";
 import type {Consumer} from "../type/types.ts";
 import type {StartServer} from "../type/startup.ts";
-import {error, LogLevel, warn} from "@tauri-apps/plugin-log";
+import {LogLevel} from "@tauri-apps/plugin-log";
 import {message} from "@tauri-apps/plugin-dialog";
 import {writeLog} from "../client/ipc/integrated_server.ts";
 import {Main2WorkerType, Worker2MainType} from "./WorkerMsgType.ts";
+import {Log} from "./log.ts";
 
 export class ServerWorker {
     private readonly worker: Worker;
@@ -96,8 +97,7 @@ export class ServerWorker {
                 `[Server Thread] Crash ${err.name}:${err.message} because ${err.cause} at\n ${err.stack}` :
                 `[Server Thread] Crash ${event.type} because ${event.message}`;
 
-            console.error(msg);
-            void error(msg);
+            Log.error(err);
             client.leaveAndShow(msg);
         }
     }
@@ -127,7 +127,7 @@ export class ServerWorker {
         };
 
         const shutTimeout = setTimeout(() => {
-            void warn('[Client] Waiting worker terminate timeout');
+            Log.warn('[Client] Waiting worker terminate timeout');
             settle();
         }, 8000);
 

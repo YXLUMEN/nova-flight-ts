@@ -4,15 +4,15 @@ use bytes::Bytes;
 use dashmap::iter::Iter;
 use dashmap::{DashMap, Entry};
 use std::net::IpAddr;
+use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
-use std::sync::Arc;
-use tokio::sync::{mpsc, oneshot, RwLock};
+use tokio::sync::{RwLock, mpsc, oneshot};
 
-pub type Tx = mpsc::Sender<Bytes>;
+pub(crate) type Tx = mpsc::Sender<Bytes>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Role {
+pub(crate) enum Role {
     Server,
     Client,
 }
@@ -183,12 +183,12 @@ impl RelayState {
     }
 }
 
-pub struct ServerHandle {
+pub(crate) struct ServerHandle {
     pub port: u16,
     pub secret: [u8; 32],
 }
 
-pub struct ServerManager {
+pub(crate) struct ServerManager {
     pub handle: Option<ServerHandle>,
     pub stop_tx: Option<oneshot::Sender<()>>,
 }

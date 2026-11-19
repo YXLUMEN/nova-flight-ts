@@ -1,11 +1,11 @@
-use crate::network::discovery::protocol::{encode_announce, ANNOUNCE_INTERVAL_MS, DISCOVERY_PORT};
+use crate::network::discovery::protocol::{ANNOUNCE_INTERVAL_MS, DISCOVERY_PORT, encode_announce};
 use log::{error, info, warn};
 use std::net::SocketAddr;
 use tokio::net::UdpSocket;
 use tokio::sync::oneshot;
-use tokio::time::{interval, Duration};
+use tokio::time::{Duration, interval};
 
-pub async fn run_announce(
+pub(crate) async fn run_announce(
     ws_port: u16,
     name: String,
     game_version: u16,

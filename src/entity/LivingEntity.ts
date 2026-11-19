@@ -225,8 +225,8 @@ export abstract class LivingEntity extends Entity {
             // "反物质弹头"
             if (source.isOfs(DamageTypes.PROJECTILE, DamageTypes.KINETIC, DamageTypes.PLAYER_ATTACK) &&
                 attacker.getTechs().isUnlocked(Techs.ANTIMATTER_WARHEAD)) {
-                const scale = Math.min(damage * 0.005, 0.24);
-                damage += Math.max(1, Math.ceil(this.getHealth() * scale));
+                const scale = Math.min(damage * 0.006, 0.3);
+                damage += Math.ceil(this.getHealth() * scale);
             }
 
             // "电荷积累"

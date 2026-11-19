@@ -22,7 +22,7 @@ export function stopServer(): Promise<boolean> {
 
 export async function writeLog(level: LogLevel, message: string): Promise<void> {
     try {
-        await invoke('plugin:log|log', {level, message})
+        await invoke('plugin:log|log', {level, message});
     } catch (e) {
         console.error(message, e);
     }

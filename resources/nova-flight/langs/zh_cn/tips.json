@@ -53,5 +53,6 @@
 
   "nova-flight.technicality.blocks": "地图方块比看上去的要小一点",
   "nova-flight.technicality.bullet": "你知道从哪个版本开始, 子弹的判定体积变小了吗",
-  "nova-flight.technicality.missile": "导弹似乎看不见地形"
+  "nova-flight.technicality.missile": "导弹似乎看不见地形",
+  "nova-flight.technicality.decoy": "如果不确定能否拦截成功, 您应该提前释放干扰弹"
 }

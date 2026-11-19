@@ -44,5 +44,6 @@
   "nova-flight.easteregg.location",
   "nova-flight.technicality.blocks",
   "nova-flight.technicality.bullet",
-  "nova-flight.technicality.missile"
+  "nova-flight.technicality.missile",
+  "nova-flight.technicality.decoy"
 ]

@@ -1,28 +1,28 @@
-use crate::network::client::{client_relay, ClientContext};
+use crate::network::client::{ClientContext, client_relay};
 use crate::network::cmd::is_open;
 use crate::network::infrastructure::errors::RegisterError;
 use crate::network::infrastructure::header::*;
 use crate::network::infrastructure::net::{send_code, send_timeout};
 use crate::network::infrastructure::protocol::*;
-use crate::network::infrastructure::session::{Session, SessionContext, NEXT_SESSION_ID};
+use crate::network::infrastructure::session::{NEXT_SESSION_ID, Session, SessionContext};
 use crate::network::infrastructure::states::{RelayState, Role, ServerManager, Tx};
-use crate::network::infrastructure::util::{constant_time_eq, format_uuid, is_nil_uuid, now_ms};
-use crate::network::server::{server_relay, ServerContext};
+use crate::network::infrastructure::util::{constant_time_eq, format_uuid, is_nil_uuid};
+use crate::network::server::{ServerContext, server_relay};
 use dashmap::Entry;
 use futures_util::stream::SplitStream;
 use futures_util::{SinkExt, StreamExt};
 use log::{debug, error, info, log};
 use std::net::SocketAddr;
-use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 use tokio::net::{TcpListener, TcpStream};
-use tokio::sync::{mpsc, oneshot, Mutex, OnceCell};
-use tokio::time::{timeout, Duration};
+use tokio::sync::{Mutex, OnceCell, mpsc, oneshot};
+use tokio::time::{Duration, timeout};
 use tokio_tungstenite::tungstenite::{Bytes, Message};
-use tokio_tungstenite::{accept_async, WebSocketStream};
+use tokio_tungstenite::{WebSocketStream, accept_async};
 
-pub static SERVER_MANAGER: OnceCell<Mutex<ServerManager>> = OnceCell::const_new();
-pub static OPEN_FLAG: OnceCell<AtomicBool> = OnceCell::const_new_with(AtomicBool::new(false));
+pub(crate) static SERVER_MANAGER: OnceCell<Mutex<ServerManager>> = OnceCell::const_new();
+pub(crate) static OPEN_FLAG: OnceCell<AtomicBool> = OnceCell::const_new_with(AtomicBool::new(false));
 
 pub async fn run_ws_server(
     listener: TcpListener,

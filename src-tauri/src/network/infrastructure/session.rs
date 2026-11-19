@@ -1,12 +1,13 @@
 use crate::network::infrastructure::states::{Role, Tx};
 use std::collections::VecDeque;
 use std::sync::{Arc, LazyLock};
-use tokio::sync::{oneshot, Mutex};
+use tokio::sync::{Mutex, oneshot};
 
-pub static NEXT_SESSION_ID: LazyLock<SessionAllocator> = LazyLock::new(|| SessionAllocator::new());
+pub(crate) static NEXT_SESSION_ID: LazyLock<SessionAllocator> =
+    LazyLock::new(|| SessionAllocator::new());
 
 #[derive(Debug)]
-pub struct Session {
+pub(crate) struct Session {
     pub tx: Tx,
     pub role: Role,
     pub session_id: u8,

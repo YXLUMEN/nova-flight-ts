@@ -4,8 +4,8 @@ version = "0.1.0"
 description = "nova-flight"
 authors = ["YXLumen"]
 license = "Apache-2.0"
-repository = ""
-edition = "2021"
+repository = "https://github.com/YXLUMEN/nova-flight-ts"
+edition = "2024"
 rust-version = "1.90"
 
 [profile.dev]

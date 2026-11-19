@@ -6,9 +6,9 @@ pub(crate) mod protocol;
 use crate::network::discovery::protocol::LanServerInfo;
 use dashmap::DashMap;
 use std::sync::Arc;
-use tokio::sync::{oneshot, Mutex, OnceCell};
+use tokio::sync::{Mutex, OnceCell, oneshot};
 
-pub struct DiscoveryManager {
+pub(crate) struct DiscoveryManager {
     announce_stop: Option<oneshot::Sender<()>>,
     sniff_stop: Option<oneshot::Sender<()>>,
     servers: Arc<DashMap<String, LanServerInfo>>,

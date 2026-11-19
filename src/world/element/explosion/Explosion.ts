@@ -4,7 +4,7 @@ import type {Entity} from "../../../entity/Entity.ts";
 import type {DamageSource} from "../../../entity/damage/DamageSource.ts";
 import type {BlockChange} from "../../section/BlockChange.ts";
 import type {WorldMutation} from "../WorldMutation.ts";
-import {TAU, squareDist, squareDistVec2} from "../../../utils/math/math.ts";
+import {squareDist, squareDistVec2, TAU} from "../../../utils/math/math.ts";
 import {Vec2} from "../../../utils/math/Vec2.ts";
 import {ProjectileEntity} from "../../../entity/projectile/ProjectileEntity.ts";
 import {LivingEntity} from "../../../entity/LivingEntity.ts";
@@ -200,7 +200,7 @@ export class Explosion implements WorldMutation {
     private fusion(entity: Entity, damage: number) {
         if (!(entity instanceof LivingEntity)) return;
 
-        const final = damage + (entity.getHealth() * 0.4) | 0;
+        const final = damage + Math.ceil(entity.getHealth() * 0.4);
         entity.takeDamage(this.damageSource, final);
     }
 
