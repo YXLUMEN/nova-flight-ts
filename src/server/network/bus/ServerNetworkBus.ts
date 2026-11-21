@@ -1,26 +1,28 @@
-import type {SessionDispatcher} from "./SessionDispatcher.ts";
-import type {Payload} from "../../network/Payload.ts";
+import type {SessionDispatcher} from "../SessionDispatcher.ts";
+import type {Payload} from "../../../network/Payload.ts";
 import type {ServerBus} from "./ServerBus.ts";
-import type {GameProfile} from "../entity/GameProfile.ts";
-import type {ProtocolInfo} from "../../network/protocol/ProtocolInfo.ts";
-import {WebSocketBus} from "../../network/WebSocketBus.ts";
-import {NetworkSide} from "../../network/NetworkSide.ts";
-import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
-import {PacketHeader} from "../../network/PacketHeader.ts";
-import {BinaryReader} from "../../serialization/BinaryReader.ts";
-import {Log} from "../../worker/log.ts";
-import {BatchBufferPacket} from "../../network/packet/common/BatchBufferPacket.ts";
-import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
-import {PlayProtocol} from "../../network/protocol/PlayProtocol.ts";
+import type {GameProfile} from "../../entity/GameProfile.ts";
+import type {SocketAddr} from "../../../network/SocketAddr.ts";
+import type {ProtocolInfo} from "../../../network/protocol/ProtocolInfo.ts";
+import {WebSocketBus} from "../../../network/WebSocketBus.ts";
+import {NetworkSide} from "../../../network/NetworkSide.ts";
+import {RingBuffer} from "../../../utils/collection/RingBuffer.ts";
+import {PacketHeader} from "../../../network/PacketHeader.ts";
+import {BinaryReader} from "../../../serialization/BinaryReader.ts";
+import {Log} from "../../../worker/log.ts";
+import {BatchBufferPacket} from "../../../network/packet/common/BatchBufferPacket.ts";
+import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
+import {PlayProtocol} from "../../../network/protocol/PlayProtocol.ts";
 
 export class ServerNetworkBus extends WebSocketBus implements ServerBus {
     private readonly sendQueue: RingBuffer<Payload> = new RingBuffer(64);
-    private readonly out: ProtocolInfo;
+    protected readonly batchSize = WebSocketBus.MAX_ESTIMATE;
+    protected readonly out: ProtocolInfo;
 
     private dispatcher: SessionDispatcher = null!;
     private secretKey: Uint8Array | null;
 
-    public constructor(address: string, secretKey: Uint8Array) {
+    public constructor(address: SocketAddr, secretKey: Uint8Array) {
         super(NetworkSide.SERVER, address);
         this.secretKey = secretKey;
         this.out = PlayProtocol.SERVER_BOUND;
@@ -45,20 +47,21 @@ export class ServerNetworkBus extends WebSocketBus implements ServerBus {
     }
 
     public exclude(payload: Payload, ...excludes: GameProfile[]) {
-        const writer = new BinaryWriter();
+        const size = payload.estimateSize?.() ?? 60;
+        const writer = new BinaryWriter(size + 5 + excludes.length);
         writer.writeInt8(PacketHeader.SERVER_EXCLUDE);
-        writer.writeInt8(this.getSessionId());
+        writer.writeInt8(this.out.protocol);
 
         writer.writeVarUint(excludes.length);
         for (const session of excludes) {
             writer.writeInt8(session.sessionId);
         }
         this.out.codec.encode(writer, payload);
-        this.send(writer.toUint8Array())
+        this.send(writer.toUint8Array());
     }
 
     public unicast(sid: number, frame: Uint8Array<ArrayBuffer>): void {
-        if (frame[1] !== sid) throw new Error();
+        if (frame[1] !== sid) throw new Error(`Unmatch sid, except "${sid}" but got "${frame[1]}"`);
         this.send(frame);
     }
 
@@ -81,7 +84,7 @@ export class ServerNetworkBus extends WebSocketBus implements ServerBus {
             return;
         }
 
-        const packets = BatchBufferPacket.create(this.sendQueue, this.out.codec);
+        const packets = BatchBufferPacket.create(this.sendQueue, this.out.codec, this.batchSize);
         this.sendQueue.clear();
         for (const packet of packets) this.broadcast(packet);
     }

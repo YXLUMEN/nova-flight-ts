@@ -154,6 +154,11 @@ export function none(): boolean {
     return false;
 }
 
+export function requireNotNull<T>(obj: T): NonNullable<T> {
+    if (obj == null) throw new Error('Assert fail');
+    return obj;
+}
+
 export function hexToRgb(hex: string): RGB {
     const s = hex.replace('#', '');
     return [

@@ -30,7 +30,7 @@ export class ClientSettingsCommand {
                                             if (!validateIpv4(ip)) {
                                                 throw new IllegalArgumentError('\x1b[31mInvalidate IPv4');
                                             }
-                                            RuntimeConfig.serverAddr = ip;
+                                            RuntimeConfig.serverHost = ip;
                                             ctx.source.addMessage(`Set address to: \x1b[32m"${ip}"`);
                                         })
                                 )
@@ -110,7 +110,7 @@ export class ClientSettingsCommand {
                         .then(
                             literal<T>('server_addr')
                                 .executes(ctx => {
-                                    ctx.source.addMessage(`Current address \x1b[32m"${RuntimeConfig.serverAddr}"`);
+                                    ctx.source.addMessage(`Current address \x1b[32m"${RuntimeConfig.serverHost}"`);
                                 })
                         )
                         .then(

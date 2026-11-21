@@ -12,7 +12,7 @@ import {WebSocketBus} from "../../../network/WebSocketBus.ts";
 export abstract class ServerCommonHandler implements PacketListener {
     public static readonly LOGOUT = 'network.disconnect.logout';
     public static readonly ILLEGAL_CHARACTER = 'network.disconnect.illegal_character';
-    public static readonly INVALID_STATE = "network.disconnect.invalid.state";
+    public static readonly INVALID_STATE = 'network.disconnect.invalid.state';
     public static readonly DUPLICATE_PLAYER = 'network.disconnect.duplicate_player';
 
     protected readonly server: NovaFlightServer;

@@ -5,17 +5,18 @@ import {isDev} from "../configs/RuntimeConfig.ts";
 import {PacketTooLargeError} from "../type/errors.ts";
 import {RelayHandshake} from "./RelayHandshake.ts";
 import {Log} from "../worker/log.ts";
+import type {SocketAddr} from "./SocketAddr.ts";
 
 export abstract class WebSocketBus implements NetWorkBus {
-    public static readonly MAX_PACKET_SIZE = 6144;
-    public static readonly MAX_ESTIMATE = this.MAX_PACKET_SIZE - 16;
+    public static readonly MAX_PACKET_SIZE = 6160;
+    public static readonly MAX_ESTIMATE = this.MAX_PACKET_SIZE - 32;
 
     private readonly side: NetworkSide;
-    private address: string;
+    private address: SocketAddr;
     private ws: WebSocket | null = null;
     private sessionId: number = 0;
 
-    protected constructor(side: NetworkSide, address: string) {
+    protected constructor(side: NetworkSide, address: SocketAddr) {
         this.side = side;
         this.address = address;
     }
@@ -59,7 +60,7 @@ export abstract class WebSocketBus implements NetWorkBus {
         this.ws = null;
     }
 
-    public setRemote(addr: string) {
+    public setRemote(addr: SocketAddr) {
         this.address = addr;
     }
 

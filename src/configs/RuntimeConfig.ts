@@ -18,7 +18,7 @@ export const RuntimeConfig = status({
     autoShoot: false,
     devVersion: DEFAULT_CONFIG.version,
     port: 25566,
-    serverAddr: '127.0.0.1:25566',
+    serverHost: '127.0.0.1',
     generalMode: false,
 
     cameraFollow: true,

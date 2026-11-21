@@ -1,6 +1,6 @@
-import type {ClientChannel} from "./ClientChannel.ts";
+import type {Channel} from "./Channel.ts";
 
-export class FakeChannel implements ClientChannel {
+export class FakeChannel implements Channel {
     public static readonly INSTANCE = new FakeChannel();
 
     private constructor() {
@@ -10,24 +10,10 @@ export class FakeChannel implements ClientChannel {
         return false;
     }
 
-    public isConnected(): boolean {
-        return false;
-    }
-
     public getSessionId(): number {
         return 0;
     }
 
-    public clearHandler(): void {
-    }
-
-    public connect(): Promise<void> {
-        return Promise.resolve();
-    }
-
-    public sniff(): Promise<boolean> {
-        return Promise.resolve(false);
-    }
 
     public setHandler(): void {
     }

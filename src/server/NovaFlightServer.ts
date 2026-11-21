@@ -1,7 +1,7 @@
 import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {Consumer, UUID} from "../type/types.ts";
 import type {CommandOutput} from "./command/CommandOutput.ts";
-import type {ServerBus} from "./network/ServerBus.ts";
+import type {ServerBus} from "./network/bus/ServerBus.ts";
 import type {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {DEFAULT_CONFIG} from "../configs/RuntimeConfig.ts";
 import {ServerWorld} from "./ServerWorld.ts";
@@ -14,7 +14,7 @@ import {ServerNetworkManager} from "./network/ServerNetworkManager.ts";
 import {Log} from "../worker/log.ts";
 import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.ts";
 import {TranslatableTextS2CPacket} from "../network/packet/s2c/TranslatableTextS2CPacket.ts";
-import {ServerStartS2CPacket} from "../network/packet/s2c/ServerStartS2CPacket.ts";
+import {ServerStartS2CPacket} from "../network/packet/handshake/ServerStartS2CPacket.ts";
 import {ServerTickManager} from "./ServerTickManager.ts";
 import {Worker2MainType} from "../worker/WorkerMsgType.ts";
 import {Seed} from "../utils/math/random/Seed.ts";
@@ -31,7 +31,7 @@ export abstract class NovaFlightServer implements CommandOutput {
     public readonly protocolVersion: number;
     public readonly serverCommandManager: ServerCommandManager;
     public readonly playerManager: PlayerManager;
-    public readonly networkChannel: ServerBus;
+    public readonly networkBus: ServerBus;
     public readonly networkManager: ServerNetworkManager;
 
     public profile: GameProfile | null = null;
@@ -57,7 +57,7 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.playerManager = new PlayerManager(this);
         this.tickManager = new ServerTickManager(this);
 
-        this.networkChannel = channel;
+        this.networkBus = channel;
         this.networkManager = new ServerNetworkManager(this, channel);
         channel.setDispatcher(this.networkManager);
 
@@ -75,7 +75,7 @@ export abstract class NovaFlightServer implements CommandOutput {
         if (this.running) return;
         this.running = true;
 
-        await this.networkChannel.connect();
+        await this.networkBus.connect();
 
         const {promise, resolve} = Promise.withResolvers<void>();
         this.waitServerHalt = promise;
@@ -83,8 +83,8 @@ export abstract class NovaFlightServer implements CommandOutput {
 
         this.world = await this.loadWorld(manager);
 
-        this.profile = new GameProfile(this.networkChannel.getSessionId(), this.serverId, this.worldName);
-        this.networkChannel.broadWith(ServerStartS2CPacket.INSTANCE, HandshakeProtocols.SERVER_BOUND);
+        this.profile = new GameProfile(this.networkBus.getSessionId(), this.serverId, this.worldName);
+        this.networkBus.broadWith(ServerStartS2CPacket.INSTANCE, HandshakeProtocols.SERVER_BOUND);
 
         self.postMessage({w2m: Worker2MainType.SERVER_START});
 
@@ -143,7 +143,7 @@ export abstract class NovaFlightServer implements CommandOutput {
                 this.accumulator %= perTick;
             }
 
-            this.networkChannel.flush();
+            this.networkBus.flush();
         } catch (error) {
             const msg = Error.isError(error) ?
                 `[Server] Server runtime error: ${error}, at:\n  ${error.stack}, cause by:\n  ${error.cause}` :
@@ -175,7 +175,7 @@ export abstract class NovaFlightServer implements CommandOutput {
 
         this.networkManager?.close();
         this.world?.close();
-        this.networkChannel.disconnect();
+        this.networkBus.disconnect();
 
         await this.onHalted();
         this.stopWorld?.();
@@ -222,11 +222,11 @@ export abstract class NovaFlightServer implements CommandOutput {
     }
 
     public sendMessage(msg: string): void {
-        this.networkChannel.enqueue(new GameMessageS2CPacket(msg));
+        this.networkBus.enqueue(new GameMessageS2CPacket(msg));
     }
 
     public sendTranslatable(key: string, args?: string[]): void {
-        this.networkChannel.enqueue(new TranslatableTextS2CPacket(key, args ?? []));
+        this.networkBus.enqueue(new TranslatableTextS2CPacket(key, args ?? []));
     }
 
     public shouldTrackOutput(): boolean {

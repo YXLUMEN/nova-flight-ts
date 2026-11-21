@@ -10,7 +10,6 @@ import {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {PacketTooLargeError} from "../../../type/errors.ts";
 import {Log} from "../../../worker/log.ts";
-import {WebSocketBus} from "../../WebSocketBus.ts";
 
 export class BatchBufferPacket implements Payload, BatchBuffer {
     public static readonly ID: PayloadType<BatchBufferPacket> = payloadType('batch_buffer');
@@ -26,8 +25,7 @@ export class BatchBufferPacket implements Payload, BatchBuffer {
         this.buffer = buffer;
     }
 
-    public static create(payloads: Iterable<Payload>, codec: PacketCodec<Payload>): BatchBufferPacket[] {
-        const maxSize = WebSocketBus.MAX_ESTIMATE;
+    public static create(payloads: Iterable<Payload>, codec: PacketCodec<Payload>, maxSize: number): BatchBufferPacket[] {
         const batches: BatchBufferPacket[] = [];
         const writer = new BinaryWriter(9216); // MAX_PACKET_SIZE * 1.5
 

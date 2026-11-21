@@ -41,7 +41,7 @@ export class ClientHandshakeC2SPacket implements Payload {
     }
 
     public accept(listener: ServerHandshakeHandler): void {
-        listener.onClientHandshake?.(this);
+        listener.onClientHandshake(this);
     }
 
     public estimateSize(): number {

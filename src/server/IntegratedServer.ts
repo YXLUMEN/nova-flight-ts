@@ -1,6 +1,8 @@
 import type {UUID} from "../type/types.ts";
 import type {GameProfile} from "./entity/GameProfile.ts";
 import type {StartServer} from "../type/startup.ts";
+import type {ServerBus} from "./network/bus/ServerBus.ts";
+import {requireNotNull} from "../utils/util.ts";
 import {TUTORIAL_PHASES} from "../configs/TutorialStage.ts";
 import {NovaFlightServer} from "./NovaFlightServer.ts";
 import {RegistryManager} from "../registry/RegistryManager.ts";
@@ -11,40 +13,51 @@ import {PlayAudioS2CPacket} from "../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {Audios} from "../sound/Audios.ts";
 import {Log} from "../worker/log.ts";
 import {NoResultsError, StatusError} from "../type/errors.ts";
-import {ServerIntegratedBus} from "./network/ServerIntegratedBus.ts";
+import {ServerIntegratedBus} from "./network/bus/ServerIntegratedBus.ts";
 import {ServerTechManager} from "./tech/ServerTechManager.ts";
 import {ServerDefaultEvents} from "./event/ServerDefaultEvents.ts";
 import {Worker2MainType} from "../worker/WorkerMsgType.ts";
 import {ServerRecordManager} from "./data/ServerRecordManager.ts";
 import {ServerRecordRegister} from "./data/ServerRecordRegister.ts";
 import {ServerProperties} from "./ServerProperties.ts";
-import {ServerNetworkBus} from "./network/ServerNetworkBus.ts";
+import {ServerNetworkBus} from "./network/bus/ServerNetworkBus.ts";
+import {ServerEncryptNetBus} from "./network/bus/ServerEncryptNetBus.ts";
+import {SocketAddr} from "../network/SocketAddr.ts";
 
 export class IntegratedServer extends NovaFlightServer {
     private readonly hostUUID: UUID;
 
-    public constructor(startUp: StartServer) {
-        const secretKey = new Uint8Array(startUp.key);
-        const channel = secretKey.length === 0 ?
-            new ServerIntegratedBus() :
-            new ServerNetworkBus(startUp.addr, secretKey);
-
-        super(startUp.saveName, channel);
+    private constructor(startUp: StartServer, bus: ServerBus) {
+        super(startUp.saveName, bus);
         this.hostUUID = startUp.hostUUID;
     }
 
-    public static startServer(startUp: StartServer) {
+    public static async startServer(startUp: StartServer) {
         if (!NovaFlightServer.instance) {
-            NovaFlightServer.instance = new IntegratedServer(startUp);
+            await ServerProperties.OPTIONS.load();
+            await ServerProperties.OPTIONS.save();
+            const bus = await this.chooseChannel(startUp);
+            NovaFlightServer.instance = new IntegratedServer(startUp, bus);
         }
 
         return NovaFlightServer.instance;
     }
 
+    private static async chooseChannel(startUp: StartServer): Promise<ServerBus> {
+        if (startUp.key.byteLength === 0) return new ServerIntegratedBus();
+
+        const secretKey = new Uint8Array(startUp.key);
+        const addr = requireNotNull(SocketAddr.from(startUp.addr));
+        const encrypt = ServerProperties.ENCRYPT_CHANNEL.get();
+        if (!encrypt) return new ServerNetworkBus(addr, secretKey);
+
+        const bus = new ServerEncryptNetBus(addr, secretKey);
+        await bus.init();
+        return bus;
+    }
+
     public override async runServer(): Promise<void> {
         await (await import('@bokuweb/zstd-wasm')).init();
-        await ServerProperties.OPTIONS.load();
-        await ServerProperties.OPTIONS.save();
 
         const manager = await this.finishRegister();
         ServerTechManager.init();

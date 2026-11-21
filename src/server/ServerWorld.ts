@@ -128,7 +128,7 @@ export class ServerWorld extends World implements NbtSerializable {
     }
 
     public sendPacket(payload: Payload): void {
-        this.server.networkChannel.enqueue(payload);
+        this.server.networkBus.enqueue(payload);
     }
 
     /**
@@ -227,7 +227,7 @@ export class ServerWorld extends World implements NbtSerializable {
 
     public override playSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
         if (entity instanceof ServerPlayerEntity) {
-            this.server.networkChannel
+            this.server.networkBus
                 .exclude(new SoundEventS2CPacket(sound, volume, pitch, false), entity.profile());
             return;
         }
@@ -236,7 +236,7 @@ export class ServerWorld extends World implements NbtSerializable {
 
     public override playLoopSound(entity: Entity | null, sound: SoundEvent, volume: number = 1, pitch: number = 1): void {
         if (entity instanceof ServerPlayerEntity) {
-            this.server.networkChannel
+            this.server.networkBus
                 .exclude(new SoundEventS2CPacket(sound, volume, pitch, true), entity.profile());
             return;
         }
@@ -253,7 +253,7 @@ export class ServerWorld extends World implements NbtSerializable {
 
     public spawnVisual(source: Entity | null, effect: VisualEffect): void {
         if (source instanceof ServerPlayerEntity) {
-            this.server.networkChannel.exclude(new EffectCreateS2CPacket(effect), source.profile());
+            this.server.networkBus.exclude(new EffectCreateS2CPacket(effect), source.profile());
             return;
         }
         this.sendPacket(new EffectCreateS2CPacket(effect));

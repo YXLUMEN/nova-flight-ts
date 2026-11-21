@@ -28,6 +28,10 @@ export class SocketAddr implements Comparable {
         return validateIpv4(host) ? new SocketAddr(host, port) : null;
     }
 
+    public isLoopBack() {
+        return this.host === '127.0.0.1';
+    }
+
     public toString() {
         return `${this.host}:${this.port}`;
     }

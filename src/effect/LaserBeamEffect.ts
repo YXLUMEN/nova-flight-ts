@@ -55,7 +55,7 @@ export class LaserBeamEffect implements VisualEffect {
 
     public tick(dt: number) {
         this.age += dt;
-        this.pulseTime += dt;
+        this.pulseTime++;
     }
 
     public render(ctx: CanvasRenderingContext2D, alpha: number) {

@@ -122,7 +122,7 @@ export class PlayerManager {
         if (this.uuidToPlayer.size === 1) {
             this.server.isMultiPlayer = false;
         }
-        this.server.networkChannel.broadcast(new PlayerDisconnectS2CPacket(uuid, ServerCommonHandler.LOGOUT));
+        this.server.networkBus.broadcast(new PlayerDisconnectS2CPacket(uuid, ServerCommonHandler.LOGOUT));
     }
 
     public getPlayer(uuid: UUID): ServerPlayerEntity | null {

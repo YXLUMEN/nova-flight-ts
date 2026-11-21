@@ -1,7 +1,7 @@
 import type {Consumer, UUID} from "../type/types.ts";
 import type {ClientStartup} from "./ClientStartup.ts";
 import type {ConnectionContext} from "./network/ConnectionContext.ts";
-import type {ClientChannel} from "./network/ClientChannel.ts";
+import type {ClientBus} from "./network/bus/ClientBus.ts";
 import type {LocalPlayerEntity} from "./entity/LocalPlayerEntity.ts";
 import type {ServerWorker} from "../worker/ServerWorker.ts";
 import type {ClientRecordManager} from "./data/ClientRecordManager.ts";
@@ -39,9 +39,10 @@ import {Main2WorkerType, Worker2MainType} from "../worker/WorkerMsgType.ts";
 import {RacePromise} from "../utils/RacePromise.ts";
 import {GuiLayer} from "./render/ui/GuiLayer.ts";
 import {StartScreen} from "./page/compound/StartScreen.ts";
-import {FakeChannel} from "./network/FakeChannel.ts";
+import {FakeBus} from "./network/bus/FakeBus.ts";
 import {Log} from "../worker/log.ts";
 import {SocketAddr} from "../network/SocketAddr.ts";
+import type {ClientChannel} from "./network/channel/ClientChannel.ts";
 
 export class NovaFlightClient {
     private static readonly SERVER_SHUTDOWN_TIMEOUT = 8000;
@@ -58,7 +59,7 @@ export class NovaFlightClient {
     public readonly input: InputManager;
     public readonly globalSound: SoundSystem = new SoundSystem();
 
-    protected channel: ClientChannel;
+    protected clientBus: ClientBus;
     public readonly connection: ClientConnection;
     public readonly networkHandler: ClientPlayHandler;
     public readonly commandSource: ClientCommandSource;
@@ -105,7 +106,7 @@ export class NovaFlightClient {
         this.worldRender = new WorldRenderer(this);
         this.tickManager = new TickRateManager();
 
-        this.channel = FakeChannel.INSTANCE;
+        this.clientBus = FakeBus.INSTANCE;
         this.connection = new ClientConnection(SocketAddr.INTEGRATED);
         this.networkHandler = new ClientPlayHandler(this, this.connection);
 
@@ -282,8 +283,7 @@ export class NovaFlightClient {
 
         // unbind channel
         this.connection.clean();
-        this.connection.channelActive(FakeChannel.INSTANCE);
-        this.channel = FakeChannel.INSTANCE;
+        this.changeBus(FakeBus.INSTANCE);
 
         // terminate worker
         const worker = this.worker;
@@ -402,6 +402,16 @@ export class NovaFlightClient {
         return this.tickManager;
     }
 
+    public changeBus(bus: ClientBus) {
+        if (this.playing) throw new Error('Can not change bus while playing');
+        this.clientBus = bus;
+    }
+
+    public setChannel(channel: ClientChannel) {
+        this.clientBus.setChannel(channel);
+        this.connection.channelActive(channel);
+    }
+
     private static readonly ConnectCtx = class implements ConnectionContext {
         public readonly client: NovaFlightClient;
         public readonly stop: Consumer<void>;
@@ -411,18 +421,14 @@ export class NovaFlightClient {
             this.stop = client.stopWorld;
         }
 
-        public getServerAddr(): Promise<string | null> {
+        public async getServerAddr(): Promise<SocketAddr | null> {
             this.client.layer.gui.open(this.client.multiGameManager);
-            return this.client.multiGameManager.getServerAddress();
+            const str = await this.client.multiGameManager.getServerAddress();
+            return str ? SocketAddr.from(str) : null;
         }
 
-        public channel() {
-            return this.client.channel!;
-        }
-
-        public setChannel(channel: ClientChannel) {
-            this.client.channel = channel;
-            this.client.connection.channelActive(channel);
+        public bus() {
+            return this.client.clientBus;
         }
 
         public hasWorker(): boolean {

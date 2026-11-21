@@ -31,7 +31,7 @@ export class EntityPredicates {
         }
     }
 
-    public static defense(owner: Entity) {
+    public static defense(owner: Entity | null) {
         return (entity: Entity) => {
             return entity instanceof ProjectileEntity && entity.isAlive() && entity.getOwner() !== owner;
         }

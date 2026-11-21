@@ -1,5 +1,5 @@
 import type {EntityDist} from "../type/types.ts";
-import {type ItemStack} from "./ItemStack.ts";
+import type {ItemStack} from "./ItemStack.ts";
 import type {Entity} from "../entity/Entity.ts";
 import type {ServerWorld} from "../server/ServerWorld.ts";
 import type {ServerPlayerEntity} from "../server/entity/ServerPlayerEntity.ts";

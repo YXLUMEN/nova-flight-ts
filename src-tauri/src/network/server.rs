@@ -131,7 +131,7 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
             state.close(&session.session_id);
         }
         SERVER_EXCLUDE => {
-            // [Header][Id][TargetIds][Data]
+            // [Header][Protocol][TargetIds][Data]
             // Server → 广播给未被排除的 Client
             if payload.len() < 3 {
                 warn!("InvalidPacket: BroadcastExcluding too short");
@@ -167,7 +167,7 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
 
             let mut buf = BytesMut::with_capacity(2 + rest_payload.len());
             buf.put_u8(SERVER_BROADCAST);
-            buf.put_u8(session.session_id);
+            buf.put_u8(payload[1]);
             buf.put_slice(rest_payload);
             let forwarded = buf.freeze();
 

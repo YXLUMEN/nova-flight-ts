@@ -44,7 +44,7 @@ export class PromisePool<T = void> implements AsyncDisposable {
         ...args: U
     ): void {
         const feature = this.submit(callback, ...args);
-        if (!this.queue) this.queue = [];
+        this.queue ??= [];
         this.queue.push(feature);
     }
 

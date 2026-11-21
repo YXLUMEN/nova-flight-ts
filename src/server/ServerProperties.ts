@@ -26,6 +26,7 @@ export class ServerProperties {
         SettingPredicates.clampInt(10_000, 600_000)
     );
 
+    // 在内置服务器中无效
     public static readonly SERVER_HOST = this.item<string>(
         'server_host',
         '127.0.0.1',
@@ -36,6 +37,12 @@ export class ServerProperties {
         'server_port',
         25566,
         SettingPredicates.clampInt(0, 65535)
+    );
+
+    public static readonly ENCRYPT_CHANNEL = this.item<boolean>(
+        'encrypt_channel',
+        false,
+        SettingPredicates.isBool
     );
 
     private static item<T>(

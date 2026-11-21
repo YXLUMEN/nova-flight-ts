@@ -12,6 +12,6 @@ export class ServerTickManager extends TickRateManager {
 
     public override setRate(rate: number) {
         super.setRate(rate);
-        this.server.networkChannel.broadcast(new TickChangeS2CPacket(this.tps));
+        this.server.networkBus.broadcast(new TickChangeS2CPacket(this.tps));
     }
 }

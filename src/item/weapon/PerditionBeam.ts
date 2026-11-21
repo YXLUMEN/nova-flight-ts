@@ -85,7 +85,7 @@ export class PerditionBeam extends PhaseLasers {
         const damageSource = world.getDamageSources()
             .laser(holder)
             .setHealthMulti(4)
-            .setShieldMulti(0.8);
+            .setShieldMulti(0.7);
 
         for (const mob of world.getMobs()) {
             const pos = mob.positionRef;

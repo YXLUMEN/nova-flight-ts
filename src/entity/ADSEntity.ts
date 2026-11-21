@@ -31,7 +31,7 @@ export class ADSEntity extends Entity implements Ownable {
 
         const selfPos = this.positionRef;
         const box = this.getBoundingBox().expandAll(256);
-        const entities = world.searchOtherEntities(this, box, EntityPredicates.DEFENSE) as Generator<ProjectileEntity>;
+        const entities = world.searchOtherEntities(this, box, EntityPredicates.defense(null)) as Generator<ProjectileEntity>;
         const source = world.getDamageSources().generic();
 
         let intercepted = 0;

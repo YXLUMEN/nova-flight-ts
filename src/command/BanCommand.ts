@@ -20,7 +20,7 @@ export class BanCommand {
                                 .executes(ctx => {
                                     if (isClient) return;
                                     const server = ctx.source.server;
-                                    const channel = server.networkChannel;
+                                    const bus = server.networkBus;
                                     const name = CommandUtil.assert(ctx, 'player', String);
                                     const players = CommandUtil.filterPlayer(ctx, name);
 
@@ -33,7 +33,7 @@ export class BanCommand {
                                         const handler = player.networkHandler;
                                         handler.disconnect('network.baned');
                                         const host = handler.addr().host;
-                                        channel.action(RelayActionBuilder.banIp(host));
+                                        bus.action(RelayActionBuilder.banIp(host));
 
                                         ctx.source.outPut.sendMessage(`Ban player "${player.profile().name}" with host ${host}`);
                                     }
@@ -49,7 +49,7 @@ export class BanCommand {
                                     const host = CommandUtil.assert(ctx, 'ip', String);
                                     if (!validateIpv4(host)) throw new IllegalArgumentError(`Invalid IPv4`);
 
-                                    ctx.source.server.networkChannel.action(RelayActionBuilder.banIp(host));
+                                    ctx.source.server.networkBus.action(RelayActionBuilder.banIp(host));
                                     ctx.source.outPut.sendMessage(`Ban ip "${host}"`);
                                 })
                         )

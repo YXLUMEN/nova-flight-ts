@@ -1,5 +1,5 @@
 import type {ServerConnection} from "./ServerConnection.ts";
-import type {Egress} from "./Egress.ts";
+import type {Egress} from "./bus/Egress.ts";
 import {RelayActionBuilder} from "./RelayActionBuilder.ts";
 import {ConnectionHealth} from "./ConnectionHealth.ts";
 import {IllegalArgumentError} from "../../type/errors.ts";

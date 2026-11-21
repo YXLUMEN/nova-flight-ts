@@ -1,13 +1,13 @@
-import type {Payload} from "../../network/Payload.ts";
+import type {Payload} from "../../../network/Payload.ts";
 import type {ServerBus} from "./ServerBus.ts";
-import type {SessionDispatcher} from "./SessionDispatcher.ts";
-import type {GameProfile} from "../entity/GameProfile.ts";
-import type {ProtocolInfo} from "../../network/protocol/ProtocolInfo.ts";
-import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
-import {BinaryReader} from "../../serialization/BinaryReader.ts";
-import {IntegratedBatchBufferPacket} from "../../network/packet/common/IntegratedBatchBufferPacket.ts";
-import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
-import {PlayProtocol} from "../../network/protocol/PlayProtocol.ts";
+import type {SessionDispatcher} from "../SessionDispatcher.ts";
+import type {GameProfile} from "../../entity/GameProfile.ts";
+import type {ProtocolInfo} from "../../../network/protocol/ProtocolInfo.ts";
+import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
+import {BinaryReader} from "../../../serialization/BinaryReader.ts";
+import {IntegratedBatchBufferPacket} from "../../../network/packet/common/IntegratedBatchBufferPacket.ts";
+import {RingBuffer} from "../../../utils/collection/RingBuffer.ts";
+import {PlayProtocol} from "../../../network/protocol/PlayProtocol.ts";
 
 export class ServerIntegratedBus implements ServerBus {
     private readonly sendQueue: RingBuffer<Payload> = new RingBuffer(48);
@@ -40,7 +40,7 @@ export class ServerIntegratedBus implements ServerBus {
 
         const buffer = writer.toUint8Array();
         self.postMessage({
-            type: 'broadcast',
+            type: 'payload',
             packet: buffer.buffer
         }, {transfer: [buffer.buffer]});
     }
@@ -52,7 +52,7 @@ export class ServerIntegratedBus implements ServerBus {
 
     public unicast(_sid: number, frame: Uint8Array<ArrayBuffer>) {
         self.postMessage({
-            type: 'unicast',
+            type: 'payload',
             packet: frame.buffer
         }, {transfer: [frame.buffer]});
     }

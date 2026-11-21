@@ -1,19 +1,19 @@
 import type {NovaFlightServer} from "../../NovaFlightServer.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
 import type {ClientProfileC2SPacket} from "../../../network/packet/handshake/ClientProfileC2SPacket.ts";
+import type {ClientStartNegotiateC2SPacket} from "../../../network/packet/handshake/ClientStartNegotiateC2SPacket.ts";
 import type {UUID} from "../../../type/types.ts";
-import type {ClientStartConfigC2SPacket} from "../../../network/packet/handshake/ClientStartConfigC2SPacket.ts";
 import {isValidUUID} from "../../../utils/uuid_util.ts";
 import {ClientHandshakeC2SPacket} from "../../../network/packet/handshake/ClientHandshakeC2SPacket.ts";
 import {ServerCommonHandler} from "./ServerCommonHandler.ts";
-import {ServerConfigHandler} from "./ServerConfigHandler.ts";
 import {GameProfile} from "../../entity/GameProfile.ts";
-import {ServerReadyS2CPacket} from "../../../network/packet/s2c/ServerReadyS2CPacket.ts";
+import {ServerReadyS2CPacket} from "../../../network/packet/handshake/ServerReadyS2CPacket.ts";
 import {ConnectionState} from "../ConnectionState.ts";
-import {ServerAllowConfigS2CPacket} from "../../../network/packet/handshake/ServerAllowConfigS2CPacket.ts";
 import {ServerProperties} from "../../ServerProperties.ts";
-import {ConfigProtocols} from "../../../network/protocol/ConfigProtocols.ts";
 import {Log} from "../../../worker/log.ts";
+import {ServerNegotiateHandler} from "./ServerNegotiateHandler.ts";
+import {NegotiateProtocols} from "../../../network/protocol/NegotiateProtocols.ts";
+import {ServerAllowNegotiateS2CPacket} from "../../../network/packet/handshake/ServerAllowNegotiateS2CPacket.ts";
 
 export class ServerHandshakeHandler extends ServerCommonHandler {
     private static readonly STILL_LOADING: string = 'network.disconnect.still_loading';
@@ -61,10 +61,7 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
         if (this.isInvalid(HandshakeState.HELLO)) return;
 
         if (this.protocolVersion !== packet.protocolVersion) {
-            this.disconnect(
-                ServerHandshakeHandler.UNMATCH_PROTOCOL,
-                [String(this.protocolVersion), String(packet.protocolVersion)]
-            );
+            this.disconnect(ServerHandshakeHandler.UNMATCH_PROTOCOL);
             return;
         }
 
@@ -109,10 +106,10 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
 
         this.authProfile = new GameProfile(packet.sessionId, packet.clientId, packet.playerName);
         this.state = HandshakeState.PROTOCOL_SWITCHING;
-        this.send(ServerAllowConfigS2CPacket.INSTANCE);
+        this.send(ServerAllowNegotiateS2CPacket.INSTANCE);
     }
 
-    public onClientPromoteToConfig(_: ClientStartConfigC2SPacket) {
+    public onClientStartNegotiate(_: ClientStartNegotiateC2SPacket) {
         if (this.isInvalid(HandshakeState.PROTOCOL_SWITCHING)) return;
         if (!this.authProfile) {
             this.disconnect(ServerHandshakeHandler.INVALID_STATE);
@@ -120,12 +117,12 @@ export class ServerHandshakeHandler extends ServerCommonHandler {
             return;
         }
 
-        const config = new ServerConfigHandler(this.server, this.connection, this.authProfile);
+        const negotiate = new ServerNegotiateHandler(this.server, this.connection, this.authProfile);
         this.connection.cleanReceived();
-        this.connection.setInbound(ConfigProtocols.CLIENT_BOUND, config);
-        this.connection.setOutBound(ConfigProtocols.SERVER_BOUND);
+        this.connection.setInbound(NegotiateProtocols.CLIENT_BOUND, negotiate);
+        this.connection.setOutBound(NegotiateProtocols.SERVER_BOUND);
         this.state = HandshakeState.ACCEPTED;
-        config.startConfiguration();
+        void negotiate.startNegotiate();
     }
 
     private isInvalid(state: HandshakeState) {

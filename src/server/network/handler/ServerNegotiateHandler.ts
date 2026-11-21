@@ -1,0 +1,134 @@
+import type {NovaFlightServer} from "../../NovaFlightServer.ts";
+import type {ServerConnection} from "../ServerConnection.ts";
+import type {PubKeyC2SPacket} from "../../../network/packet/negotiate/PubKeyC2SPacket.ts";
+import {ServerCommonHandler} from "./ServerCommonHandler.ts";
+import {ConnectionState} from "../ConnectionState.ts";
+import {SessionKeyGenerator} from "../../../network/crypto/SessionKeyGenerator.ts";
+import {PubKeyS2CPacket} from "../../../network/packet/negotiate/PubKeyS2CPacket.ts";
+import {CryptoHelper} from "../../../network/crypto/CryptoHelper.ts";
+import {GroupKeyS2CPacket} from "../../../network/packet/negotiate/GroupKeyS2CPacket.ts";
+import {GameProfile} from "../../entity/GameProfile.ts";
+import {ServerConfigHandler} from "./ServerConfigHandler.ts";
+import {ConfigProtocols} from "../../../network/protocol/ConfigProtocols.ts";
+import {EncryptSessionChannel} from "../channel/EncryptSessionChannel.ts";
+import {ServerAllowConfigS2CPacket} from "../../../network/packet/negotiate/ServerAllowConfigS2CPacket.ts";
+import {ServerEncryptNetBus} from "../bus/ServerEncryptNetBus.ts";
+import type {ClientStartConfigC2SPacket} from "../../../network/packet/negotiate/ClientStartConfigC2SPacket.ts";
+
+const SALT_LEN = 16;
+const GEN_KEY_FAIL = 'network.disconnect.fail.session_key';
+
+export class ServerNegotiateHandler extends ServerCommonHandler {
+    private readonly profile: GameProfile;
+    private readonly group: CryptoKey | null = null;
+    private readonly keyGenerator: SessionKeyGenerator | null = null;
+
+    private session: CryptoHelper | null = null;
+    private salt: Uint8Array<ArrayBuffer> | null = null;
+
+    private state: NegotiateState = NegotiateState.EXPORT_PUB_KEY;
+
+    public constructor(server: NovaFlightServer, connection: ServerConnection, profile: GameProfile) {
+        super(server, connection);
+        this.profile = profile;
+
+        const bus = server.networkBus;
+        if (bus instanceof ServerEncryptNetBus) {
+            this.group = bus.getGroupKey();
+            this.keyGenerator = bus.serverSession;
+        }
+    }
+
+    public async startNegotiate() {
+        if (this.isInvalid(NegotiateState.EXPORT_PUB_KEY)) return;
+        this.state = NegotiateState.PENDING_EXPORT;
+
+        if (!this.group || !this.keyGenerator) {
+            // 不加密,跳过
+            this.state = NegotiateState.PROTOCOL_SWITCHING;
+            this.onClientFinishNegotiate();
+            return;
+        }
+
+        const pubkey = await this.keyGenerator.pubKey();
+        this.salt = crypto.getRandomValues(new Uint8Array(SALT_LEN));
+        this.state = NegotiateState.IMPORT_PEER;
+
+        this.send(new PubKeyS2CPacket(new Uint8Array(pubkey), this.salt));
+    }
+
+    public async onClientPubKey(packet: PubKeyC2SPacket) {
+        if (this.isInvalid(NegotiateState.IMPORT_PEER)) return;
+        this.state = NegotiateState.PENDING_IMPORT;
+
+        if (!this.group || !this.keyGenerator) {
+            this.disconnect(GEN_KEY_FAIL);
+            return;
+        }
+
+        const pubkey = await this.keyGenerator.pubKey();
+        const peer = await this.keyGenerator.importPeer(packet.pubKey);
+        const info = await SessionKeyGenerator.genInfo(pubkey, packet.pubKey);
+        const sessionKey = await this.keyGenerator.derivePrivate(
+            peer,
+            this.salt!,
+            info,
+            ['wrapKey', 'encrypt', 'decrypt']
+        );
+        this.session = new CryptoHelper(sessionKey);
+        const iv = this.session.iv();
+        const wrappered = await this.session.wrapKey(iv, this.group);
+
+        this.state = NegotiateState.PROTOCOL_SWITCHING;
+        this.send(new GroupKeyS2CPacket(new Uint8Array(wrappered), iv));
+    }
+
+    public onClientFinishNegotiate() {
+        if (this.isInvalid(NegotiateState.PROTOCOL_SWITCHING)) return;
+        this.state = NegotiateState.FINISH;
+        // 确保客户端已经完成状态切换
+        this.send(ServerAllowConfigS2CPacket.INSTANCE);
+    }
+
+    public onClientPromoteToConfig(_: ClientStartConfigC2SPacket) {
+        if (this.isInvalid(NegotiateState.FINISH)) return;
+
+        const bus = this.server.networkBus;
+        if (bus instanceof ServerEncryptNetBus) {
+            if (!this.session) {
+                this.disconnect(GEN_KEY_FAIL);
+                return;
+            }
+            const channel = new EncryptSessionChannel(bus, this.connection.sid);
+            channel.setKey(this.session);
+            this.connection.channelActive(channel);
+        }
+
+        const config = new ServerConfigHandler(this.server, this.connection, this.profile);
+        this.connection.cleanReceived();
+        this.connection.setInbound(ConfigProtocols.CLIENT_BOUND, config);
+        this.connection.setOutBound(ConfigProtocols.SERVER_BOUND);
+        config.startConfiguration();
+    }
+
+    private isInvalid(state: NegotiateState) {
+        if (state !== this.state) {
+            this.disconnect(ServerNegotiateHandler.INVALID_STATE);
+            return true;
+        }
+        return false;
+    }
+
+    public getPhase(): ConnectionState {
+        return ConnectionState.NEGOTIATION;
+    }
+}
+
+const enum NegotiateState {
+    EXPORT_PUB_KEY,
+    PENDING_EXPORT,
+    IMPORT_PEER,
+    PENDING_IMPORT,
+    PROTOCOL_SWITCHING,
+    FINISH,
+}

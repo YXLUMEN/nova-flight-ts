@@ -2,15 +2,16 @@ import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {SessionDispatcher} from "./SessionDispatcher.ts";
 import type {ChannelHandler} from "../../network/channel/ChannelHandler.ts";
 import type {NovaFlightServer} from "../NovaFlightServer.ts";
-import type {Egress} from "./Egress.ts";
-import {SessionChannel} from "./SessionChannel.ts";
+import type {Egress} from "./bus/Egress.ts";
+import {SessionChannel} from "./channel/SessionChannel.ts";
+import {IntegratedChannel} from "./channel/IntegratedChannel.ts";
 import {ClientHandshakeC2SPacket} from "../../network/packet/handshake/ClientHandshakeC2SPacket.ts";
 import {ServerConnection} from "./ServerConnection.ts";
 import {ServerHandshakeHandler} from "./handler/ServerHandshakeHandler.ts";
 import {Log} from "../../worker/log.ts";
 import {RelayActionBuilder} from "./RelayActionBuilder.ts";
 import {SocketAddr} from "../../network/SocketAddr.ts";
-import {ServerIntegratedBus} from "./ServerIntegratedBus.ts";
+import {ServerIntegratedBus} from "./bus/ServerIntegratedBus.ts";
 import {HandshakeProtocols} from "../../network/protocol/HandshakeProtocols.ts";
 import {ServerRelayHandler} from "./handler/ServerRelayHandler.ts";
 import {NetHealthManager} from "./NetHealthManager.ts";
@@ -22,6 +23,7 @@ export class ServerNetworkManager implements SessionDispatcher, ChannelHandler {
     private readonly bus: Egress;
     private readonly relayHandler: ServerRelayHandler;
     private readonly health: NetHealthManager;
+    private readonly isIntegrated: boolean;
 
     private readonly connections: Map<number, ServerConnection> = new Map();
     private readonly sidAddr: Map<number, SocketAddr> = new Map();
@@ -32,6 +34,7 @@ export class ServerNetworkManager implements SessionDispatcher, ChannelHandler {
         this.bus = bus;
         this.relayHandler = new ServerRelayHandler(this);
         this.health = new NetHealthManager(bus);
+        this.isIntegrated = this.bus instanceof ServerIntegratedBus;
     }
 
     public tick(): void {
@@ -67,17 +70,17 @@ export class ServerNetworkManager implements SessionDispatcher, ChannelHandler {
             return;
         }
 
-        const channel = new SessionChannel(this.bus, sid);
+        const channel = this.isIntegrated ? new IntegratedChannel(this.bus, sid) : new SessionChannel(this.bus, sid);
         channel.setHandler(this);
         const payload = channel.directly(reader);
         if (payload instanceof ClientHandshakeC2SPacket) {
-            const addr = this.bus instanceof ServerIntegratedBus ? SocketAddr.INTEGRATED : this.sidAddr.get(sid);
+            const addr = this.isIntegrated ? SocketAddr.INTEGRATED : this.sidAddr.get(sid);
             if (!addr) {
                 channel.disconnect();
                 return;
             }
 
-            const isHost = addr.host === '127.0.0.1' && this.server.isHostUUID(payload.clientId);
+            const isHost = addr.isLoopBack() && this.server.isHostUUID(payload.clientId);
             const connection = new ServerConnection(addr, sid, payload.clientId, isHost, this.health.create());
             connection.channelActive(channel);
 

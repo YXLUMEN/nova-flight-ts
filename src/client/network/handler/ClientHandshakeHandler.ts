@@ -1,17 +1,17 @@
 import type {Payload} from "../../../network/Payload.ts";
 import type {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {ClientConnection} from "../ClientConnection.ts";
-import type {ServerAllowConfigS2CPacket} from "../../../network/packet/handshake/ServerAllowConfigS2CPacket.ts";
-import type {ServerStartS2CPacket} from "../../../network/packet/s2c/ServerStartS2CPacket.ts";
-import type {ServerReadyS2CPacket} from "../../../network/packet/s2c/ServerReadyS2CPacket.ts";
+import type {ServerStartS2CPacket} from "../../../network/packet/handshake/ServerStartS2CPacket.ts";
+import type {ServerReadyS2CPacket} from "../../../network/packet/handshake/ServerReadyS2CPacket.ts";
+import type {ServerAllowNegotiateS2CPacket} from "../../../network/packet/handshake/ServerAllowNegotiateS2CPacket.ts";
 import {ClientCommonHandler} from "./ClientCommonHandler.ts";
 import {ClientHandshakeC2SPacket} from "../../../network/packet/handshake/ClientHandshakeC2SPacket.ts";
 import {ClientProfileC2SPacket} from "../../../network/packet/handshake/ClientProfileC2SPacket.ts";
-import {ClientConfigHandler} from "./ClientConfigHandler.ts";
-import {ClientStartConfigC2SPacket} from "../../../network/packet/handshake/ClientStartConfigC2SPacket.ts";
 import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 import {HandshakeProtocols} from "../../../network/protocol/HandshakeProtocols.ts";
-import {ConfigProtocols} from "../../../network/protocol/ConfigProtocols.ts";
+import {ClientStartNegotiateC2SPacket} from "../../../network/packet/handshake/ClientStartNegotiateC2SPacket.ts";
+import {ClientNegotiateHandler} from "./ClientNegotiateHandler.ts";
+import {NegotiateProtocols} from "../../../network/protocol/NegotiateProtocols.ts";
 
 export class ClientHandshakeHandler extends ClientCommonHandler {
     private maxSniffTimes = 16;
@@ -35,15 +35,6 @@ export class ClientHandshakeHandler extends ClientCommonHandler {
             this.client.connection.getSessionId(),
             this.client.playerName
         ));
-    }
-
-    public onAllowConfig(_: ServerAllowConfigS2CPacket) {
-        this.stopSniff();
-
-        const config = new ClientConfigHandler(this.client, this.connection);
-        this.send(ClientStartConfigC2SPacket.INSTANCE);
-        this.connection.setInbound(ConfigProtocols.SERVER_BOUND, config);
-        this.connection.setOutBound(ConfigProtocols.CLIENT_BOUND);
     }
 
     public clientReady() {
@@ -73,6 +64,15 @@ export class ClientHandshakeHandler extends ClientCommonHandler {
                 this.client.leaveAndShow('无法连接至服务器');
             }
         }, 2000);
+    }
+
+    public onAllowNegotiate(_: ServerAllowNegotiateS2CPacket) {
+        this.stopSniff();
+
+        this.send(ClientStartNegotiateC2SPacket.INSTANCE);
+        const negotiate = new ClientNegotiateHandler(this.client, this.connection);
+        this.connection.setInbound(NegotiateProtocols.SERVER_BOUND, negotiate);
+        this.connection.setOutBound(NegotiateProtocols.CLIENT_BOUND);
     }
 
     private stopSniff() {

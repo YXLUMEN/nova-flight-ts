@@ -753,7 +753,7 @@
     "x": 2,
     "y": 15,
     "desc": "tech.desc.nova-flight.gray",
-    "cost": 320,
+    "cost": 720,
     "branchGroup": "apex_upgrade",
     "requires": [
       "armor_erosion"

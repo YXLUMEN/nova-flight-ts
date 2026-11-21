@@ -125,7 +125,7 @@ export class PhaseLasers extends SpecialWeapon {
         const damageSource = world.getDamageSources()
             .laser(holder)
             .setHealthMulti(3)
-            .setShieldMulti(0.4);
+            .setShieldMulti(1);
 
         for (const mob of world.getMobs()) {
             const pos = mob.positionRef;

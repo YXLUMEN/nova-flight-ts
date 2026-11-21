@@ -1,23 +1,23 @@
-import type {Channel} from "../../network/channel/Channel.ts";
-import type {ProtocolInfo} from "../../network/protocol/ProtocolInfo.ts";
-import type {Payload} from "../../network/Payload.ts";
-import type {Egress} from "./Egress.ts";
-import {type BinaryReader} from "../../serialization/BinaryReader.ts";
-import type {PacketCodec} from "../../network/codec/PacketCodec.ts";
-import {RelayActionBuilder} from "./RelayActionBuilder.ts";
-import {HandshakeProtocols} from "../../network/protocol/HandshakeProtocols.ts";
-import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
-import {PacketHeader} from "../../network/PacketHeader.ts";
-import type {ChannelHandler} from "../../network/channel/ChannelHandler.ts";
+import type {Channel} from "../../../network/channel/Channel.ts";
+import type {ProtocolInfo} from "../../../network/protocol/ProtocolInfo.ts";
+import type {Payload} from "../../../network/Payload.ts";
+import type {Egress} from "../bus/Egress.ts";
+import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
+import type {PacketCodec} from "../../../network/codec/PacketCodec.ts";
+import type {ChannelHandler} from "../../../network/channel/ChannelHandler.ts";
+import {RelayActionBuilder} from "../RelayActionBuilder.ts";
+import {HandshakeProtocols} from "../../../network/protocol/HandshakeProtocols.ts";
+import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
+import {PacketHeader} from "../../../network/PacketHeader.ts";
 
 export class SessionChannel implements Channel {
-    private readonly bus: Egress;
-    private readonly sid: number;
-    private opened = true;
-    private handler: ChannelHandler = null!;
+    protected readonly bus: Egress;
+    protected readonly sid: number;
+    protected opened = true;
+    protected handler: ChannelHandler = null!;
 
-    private in: PacketCodec<Payload> = HandshakeProtocols.CLIENT_BOUND.codec;
-    private out: PacketCodec<Payload> = HandshakeProtocols.SERVER_BOUND.codec;
+    protected in: PacketCodec<Payload> = HandshakeProtocols.CLIENT_BOUND.codec;
+    protected out: PacketCodec<Payload> = HandshakeProtocols.SERVER_BOUND.codec;
 
     public constructor(bus: Egress, sid: number) {
         this.bus = bus;
@@ -57,6 +57,7 @@ export class SessionChannel implements Channel {
         this.bus.unicast(this.sid, writer.toUint8Array());
     }
 
+    /** 仅用于握手,不支持解密 */
     public directly(reader: BinaryReader): Payload | null {
         try {
             return this.in.decode(reader);

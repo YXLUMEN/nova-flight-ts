@@ -1,8 +1,8 @@
 import type {Payload} from "../../Payload.ts";
-import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
+import type {ServerNegotiateHandler} from "../../../server/network/handler/ServerNegotiateHandler.ts";
+import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
-import type {ServerHandshakeHandler} from "../../../server/network/handler/ServerHandshakeHandler.ts";
 import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
 export class ClientStartConfigC2SPacket implements Payload {
@@ -17,8 +17,8 @@ export class ClientStartConfigC2SPacket implements Payload {
         return ClientStartConfigC2SPacket.ID;
     }
 
-    public accept(listener: ServerHandshakeHandler): void {
-        listener.onClientPromoteToConfig?.(this);
+    public accept(listener: ServerNegotiateHandler): void {
+        listener.onClientPromoteToConfig(this);
     }
 
     public estimateSize(): number {
@@ -26,6 +26,6 @@ export class ClientStartConfigC2SPacket implements Payload {
     }
 
     public protocol(): ConnectionState {
-        return ConnectionState.HANDSHAKING;
+        return ConnectionState.NEGOTIATION;
     }
 }

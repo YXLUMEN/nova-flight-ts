@@ -23,7 +23,7 @@ export class UnbanCommand {
                                 throw new IllegalArgumentError(`Invalid IPv4`);
                             }
 
-                            ctx.source.server.networkChannel.action(RelayActionBuilder.unbanIp(ip));
+                            ctx.source.server.networkBus.action(RelayActionBuilder.unbanIp(ip));
                             ctx.source.outPut.sendMessage(`Announce relay to unban "${ip}"`);
                         })
                 )

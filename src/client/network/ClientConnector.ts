@@ -3,14 +3,17 @@ import type {ConnectionContext} from "./ConnectionContext.ts";
 import type {FullscreenNotice} from "../page/compound/FullscreenNotice.ts";
 import {startLanAnnounce, stopLanAnnounce} from "../ipc/lan_discovery.ts";
 import {startServer, stopServer} from "../ipc/integrated_server.ts";
-import {sleep} from "../../utils/util.ts";
-import {ClientNetworkChannel} from "./ClientNetworkChannel.ts";
-import {TranslatableText} from "../../i18n/TranslatableText.ts";
+import {requireNotNull, sleep} from "../../utils/util.ts";
 import {DEFAULT_CONFIG, RuntimeConfig} from "../../configs/RuntimeConfig.ts";
-import {ClientIntegratedChannel} from "./ClientIntegratedChannel.ts";
+import {ClientNetworkBus} from "./bus/ClientNetworkBus.ts";
+import {TranslatableText} from "../../i18n/TranslatableText.ts";
+import {ClientIntegratedBus} from "./bus/ClientIntegratedBus.ts";
 import {ClientHandshakeHandler} from "./handler/ClientHandshakeHandler.ts";
 import {ServerWorker} from "../../worker/ServerWorker.ts";
 import {Log} from "../../worker/log.ts";
+import {SocketAddr} from "../../network/SocketAddr.ts";
+import {ClientChannel} from "./channel/ClientChannel.ts";
+import {ClientIntegratedChannel} from "./channel/ClientIntegratedChannel.ts";
 
 export class ClientConnector {
     private readonly ctx: ConnectionContext;
@@ -27,8 +30,9 @@ export class ClientConnector {
         }
 
         const client = this.ctx.client;
-        this.ctx.setChannel(new ClientNetworkChannel(address, client.clientId));
-        const channel = this.ctx.channel();
+        const bus = new ClientNetworkBus(address, client.clientId);
+        client.changeBus(bus);
+        client.setChannel(new ClientChannel());
 
         const screen = client.layer;
         const notice = screen.showNotice(
@@ -38,7 +42,7 @@ export class ClientConnector {
         );
         const confirm = notice.waitClose();
 
-        const sniff = channel.sniff(
+        const sniff = bus.sniff(
             1000,
             3,
             (num, max) => {
@@ -61,7 +65,7 @@ export class ClientConnector {
         notice.setMessage(TranslatableText.of('start.connecting'));
 
         try {
-            await Promise.race([channel.connect(), confirm]);
+            await Promise.race([bus.connect(), confirm]);
         } catch (err) {
             notice.setMessage(this.mapErr(err));
             notice.setLabel(TranslatableText.of('start.confirm'));
@@ -95,10 +99,12 @@ export class ClientConnector {
         const server = new ServerWorker(worker);
         this.ctx.setWorker(server);
 
-        const addr = `127.0.0.1:${RuntimeConfig.port}`;
-        this.ctx.setChannel(new ClientIntegratedChannel(worker, client.clientId));
+        const bus = new ClientIntegratedBus(worker, client.clientId);
+        client.connection.address = SocketAddr.INTEGRATED;
+        client.changeBus(bus);
+        client.setChannel(new ClientIntegratedChannel());
 
-        await this.checkAndConnect(addr, notice, new ArrayBuffer(0), saveName, server);
+        await this.checkAndConnect(SocketAddr.INTEGRATED.toString(), notice, new ArrayBuffer(0), saveName, server);
     }
 
     public async startGeneralServer(saveName: string): Promise<void> {
@@ -136,8 +142,12 @@ export class ClientConnector {
 
         await sleep(300);
 
-        const addr = `127.0.0.1:${RuntimeConfig.port}`;
-        this.ctx.setChannel(new ClientNetworkChannel(addr, client.clientId));
+        const addr = `${RuntimeConfig.serverHost}:${RuntimeConfig.port}`;
+        const address = requireNotNull(SocketAddr.from(addr));
+        const bus = new ClientNetworkBus(address, client.clientId);
+        client.connection.address = address;
+        client.changeBus(bus);
+        client.setChannel(new ClientChannel());
 
         await this.checkAndConnect(addr, notice, serverResult.unwrap(), saveName);
     }
@@ -152,9 +162,9 @@ export class ClientConnector {
         notice.setLabel(TranslatableText.of('start.cancel'));
 
         const client = this.ctx.client;
-        const channel = this.ctx.channel();
+        const bus = this.ctx.bus();
         const confirm = notice.waitClose();
-        const canConnect = await Promise.race([channel.sniff(), confirm]);
+        const canConnect = await Promise.race([bus.sniff(), confirm]);
 
         // 探测可到达性
         if (!canConnect) {
@@ -189,7 +199,7 @@ export class ClientConnector {
         const connectToServer = async () => {
             notice.setMessage(TranslatableText.of('start.connecting'));
             try {
-                await Promise.race([channel.connect(), confirm]);
+                await Promise.race([bus.connect(), confirm]);
                 if (notice.isCancelled()) return;
 
                 config.clientReady();

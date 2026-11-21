@@ -1,5 +1,5 @@
-import {StatusEffect, StatusEffectCategory} from "./StatusEffect.ts";
 import type {Entity} from "../Entity.ts";
+import {StatusEffect, StatusEffectCategory} from "./StatusEffect.ts";
 import {LivingEntity} from "../LivingEntity.ts";
 
 export class ErosionEffect extends StatusEffect {
@@ -12,15 +12,15 @@ export class ErosionEffect extends StatusEffect {
 
     public override applyEffectTick(source: Entity | null, entity: Entity, amplifier: number): boolean {
         const world = entity.getWorld();
-        let damage: number = this.damage * amplifier;
+        let damage: number = this.damage;
         if (amplifier > 8 && entity instanceof LivingEntity) {
-            damage += entity.getHealth() * 0.07;
+            damage += entity.getHealth() * 0.04 + amplifier;
         }
         entity.takeDamage(world.getDamageSources().erosion(source), damage);
         return true;
     }
 
-    public override shouldApplyThisTick(tickCount: number): boolean {
-        return tickCount % 10 === 0;
+    public override shouldApplyThisTick(tickCount: number, amplifier: number): boolean {
+        return tickCount % (10 - Math.min(amplifier, 6)) === 0;
     }
 }
