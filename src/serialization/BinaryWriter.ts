@@ -62,7 +62,7 @@ export class BinaryWriter {
         }
     }
 
-    public pushBytes(buf: ArrayBuffer | Uint8Array<ArrayBuffer>): void {
+    public pushBytes(buf: ByteSource): void {
         const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
         this.ensure(bytes.length);
         this.buffer.set(bytes, this.offset);
@@ -177,3 +177,5 @@ export class BinaryWriter {
         }
     }
 }
+
+export type ByteSource = Uint8Array<ArrayBuffer> | ArrayBuffer;

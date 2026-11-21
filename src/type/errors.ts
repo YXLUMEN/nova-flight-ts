@@ -65,3 +65,10 @@ export class EncoderError extends Error {
 
 export class PacketIndexRange extends Error {
 }
+
+export class NonceExhaustedError extends Error {
+    public constructor(message = 'nonce counter exhausted') {
+        super(message);
+        this.name = 'NonceExhaustedError';
+    }
+}

@@ -6,17 +6,18 @@ import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
 export class PubKeyS2CPacket implements Payload {
+    public static readonly SALT_LEN = 16;
+
     public static readonly ID: PayloadType<PubKeyS2CPacket> = payloadType('server_pubkey');
     public static readonly CODEC: PacketCodec<PubKeyS2CPacket> = PacketCodecs.of(
         (writer, value) => {
             writer.writeVarUint(value.pubKey.length);
             writer.pushBytes(value.pubKey);
-            writer.writeVarUint(value.salt.length);
             writer.pushBytes(value.salt);
         },
         reader => {
             const key = reader.readSlice(reader.readVarUint());
-            const salt = reader.readSlice(reader.readVarUint());
+            const salt = reader.readSlice(PubKeyS2CPacket.SALT_LEN);
             return new PubKeyS2CPacket(key, salt);
         }
     );
@@ -38,7 +39,7 @@ export class PubKeyS2CPacket implements Payload {
     }
 
     public estimateSize(): number {
-        return 3 + this.pubKey.length + this.salt.length;
+        return 1 + this.pubKey.length + PubKeyS2CPacket.SALT_LEN;
     }
 
     public protocol(): ConnectionState {

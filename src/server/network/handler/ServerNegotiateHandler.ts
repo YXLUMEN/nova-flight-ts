@@ -1,11 +1,12 @@
 import type {NovaFlightServer} from "../../NovaFlightServer.ts";
 import type {ServerConnection} from "../ServerConnection.ts";
 import type {PubKeyC2SPacket} from "../../../network/packet/negotiate/PubKeyC2SPacket.ts";
+import type {ClientStartConfigC2SPacket} from "../../../network/packet/negotiate/ClientStartConfigC2SPacket.ts";
+import {GCMScope} from "../../../network/crypto/GCMScope.ts";
 import {ServerCommonHandler} from "./ServerCommonHandler.ts";
 import {ConnectionState} from "../ConnectionState.ts";
-import {SessionKeyGenerator} from "../../../network/crypto/SessionKeyGenerator.ts";
+import {ECDHKeyAgreement} from "../../../network/crypto/ECDHKeyAgreement.ts";
 import {PubKeyS2CPacket} from "../../../network/packet/negotiate/PubKeyS2CPacket.ts";
-import {CryptoHelper} from "../../../network/crypto/CryptoHelper.ts";
 import {GroupKeyS2CPacket} from "../../../network/packet/negotiate/GroupKeyS2CPacket.ts";
 import {GameProfile} from "../../entity/GameProfile.ts";
 import {ServerConfigHandler} from "./ServerConfigHandler.ts";
@@ -13,17 +14,19 @@ import {ConfigProtocols} from "../../../network/protocol/ConfigProtocols.ts";
 import {EncryptSessionChannel} from "../channel/EncryptSessionChannel.ts";
 import {ServerAllowConfigS2CPacket} from "../../../network/packet/negotiate/ServerAllowConfigS2CPacket.ts";
 import {ServerEncryptNetBus} from "../bus/ServerEncryptNetBus.ts";
-import type {ClientStartConfigC2SPacket} from "../../../network/packet/negotiate/ClientStartConfigC2SPacket.ts";
+import {NonceGenerator} from "../../../network/crypto/NonceGenerator.ts";
+import {GCMSession} from "../../../network/crypto/GCMSession.ts";
+import {wrapKey} from "../../../network/crypto/GCMHelper.ts";
 
-const SALT_LEN = 16;
+
 const GEN_KEY_FAIL = 'network.disconnect.fail.session_key';
 
 export class ServerNegotiateHandler extends ServerCommonHandler {
     private readonly profile: GameProfile;
-    private readonly group: CryptoKey | null = null;
-    private readonly keyGenerator: SessionKeyGenerator | null = null;
 
-    private session: CryptoHelper | null = null;
+    private readonly group: CryptoKey | null = null;
+    private readonly keyGenerator: ECDHKeyAgreement | null = null;
+    private session: GCMSession | null = null;
     private salt: Uint8Array<ArrayBuffer> | null = null;
 
     private state: NegotiateState = NegotiateState.EXPORT_PUB_KEY;
@@ -35,7 +38,7 @@ export class ServerNegotiateHandler extends ServerCommonHandler {
         const bus = server.networkBus;
         if (bus instanceof ServerEncryptNetBus) {
             this.group = bus.getGroupKey();
-            this.keyGenerator = bus.serverSession;
+            this.keyGenerator = bus.agreement;
         }
     }
 
@@ -50,8 +53,8 @@ export class ServerNegotiateHandler extends ServerCommonHandler {
             return;
         }
 
-        const pubkey = await this.keyGenerator.pubKey();
-        this.salt = crypto.getRandomValues(new Uint8Array(SALT_LEN));
+        const pubkey = await this.keyGenerator.publicKey();
+        this.salt = crypto.getRandomValues(new Uint8Array(PubKeyS2CPacket.SALT_LEN));
         this.state = NegotiateState.IMPORT_PEER;
 
         this.send(new PubKeyS2CPacket(new Uint8Array(pubkey), this.salt));
@@ -66,18 +69,22 @@ export class ServerNegotiateHandler extends ServerCommonHandler {
             return;
         }
 
-        const pubkey = await this.keyGenerator.pubKey();
-        const peer = await this.keyGenerator.importPeer(packet.pubKey);
-        const info = await SessionKeyGenerator.genInfo(pubkey, packet.pubKey);
-        const sessionKey = await this.keyGenerator.derivePrivate(
+        const pubkey = await this.keyGenerator.publicKey();
+        const peer = await this.keyGenerator.importPublicKey(packet.pubKey);
+        const info = await ECDHKeyAgreement.transcriptInfo(pubkey, packet.pubKey);
+        const key = await this.keyGenerator.deriveKey(
             peer,
             this.salt!,
             info,
             ['wrapKey', 'encrypt', 'decrypt']
         );
-        this.session = new CryptoHelper(sessionKey);
-        const iv = this.session.iv();
-        const wrappered = await this.session.wrapKey(iv, this.group);
+
+        const nonce = new NonceGenerator(GCMScope.S_SESSION);
+        const session = new GCMSession(key, nonce);
+        this.session = session;
+
+        const iv = session.nonce();
+        const wrappered = await wrapKey(key, iv, this.group);
 
         this.state = NegotiateState.PROTOCOL_SWITCHING;
         this.send(new GroupKeyS2CPacket(new Uint8Array(wrappered), iv));
@@ -99,9 +106,10 @@ export class ServerNegotiateHandler extends ServerCommonHandler {
                 this.disconnect(GEN_KEY_FAIL);
                 return;
             }
-            const channel = new EncryptSessionChannel(bus, this.connection.sid);
-            channel.setKey(this.session);
+            const channel = new EncryptSessionChannel(bus, this.session, this.connection.sid);
             this.connection.channelActive(channel);
+
+            console.log(`Channel "${this.connection.sid}" encrypted`);
         }
 
         const config = new ServerConfigHandler(this.server, this.connection, this.profile);

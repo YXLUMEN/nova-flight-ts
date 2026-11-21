@@ -3,21 +3,26 @@ import type {PubKeyS2CPacket} from "../../../network/packet/negotiate/PubKeyS2CP
 import type {GroupKeyS2CPacket} from "../../../network/packet/negotiate/GroupKeyS2CPacket.ts";
 import type {NovaFlightClient} from "../../NovaFlightClient.ts";
 import type {ClientConnection} from "../ClientConnection.ts";
+import {unwrapKey} from "../../../network/crypto/GCMHelper.ts";
+import {type GCMDecrypt, GCMDecryptImpl} from "../../../network/crypto/GCMDecrypt.ts";
+import {GCMScope} from "../../../network/crypto/GCMScope.ts";
 import {ClientCommonHandler} from "./ClientCommonHandler.ts";
 import {ConnectionState} from "../../../server/network/ConnectionState.ts";
-import {SessionKeyGenerator} from "../../../network/crypto/SessionKeyGenerator.ts";
+import {ECDHKeyAgreement} from "../../../network/crypto/ECDHKeyAgreement.ts";
 import {PubKeyC2SPacket} from "../../../network/packet/negotiate/PubKeyC2SPacket.ts";
-import {CryptoHelper} from "../../../network/crypto/CryptoHelper.ts";
 import {ClientFinishNegC2SPacket} from "../../../network/packet/negotiate/ClientFinishNegC2SPacket.ts";
 import {ClientConfigHandler} from "./ClientConfigHandler.ts";
 import {ConfigProtocols} from "../../../network/protocol/ConfigProtocols.ts";
 import {ClientEncryptChannel} from "../channel/ClientEncryptChannel.ts";
 import {ClientStartConfigC2SPacket} from "../../../network/packet/negotiate/ClientStartConfigC2SPacket.ts";
+import {NonceGenerator} from "../../../network/crypto/NonceGenerator.ts";
+import {GCMSession} from "../../../network/crypto/GCMSession.ts";
 
 export class ClientNegotiateHandler extends ClientCommonHandler {
     private isEncrypt = false;
-    private group: CryptoHelper | null = null;
-    private session: CryptoHelper | null = null;
+    private group: GCMDecrypt | null = null;
+    private session: GCMSession | null = null;
+    private sessionKey: CryptoKey | null = null;
 
     public constructor(client: NovaFlightClient, connection: ClientConnection) {
         super(client, connection, ConnectionState.NEGOTIATION);
@@ -26,28 +31,32 @@ export class ClientNegotiateHandler extends ClientCommonHandler {
     public async onServerPubKey(packet: PubKeyS2CPacket) {
         this.isEncrypt = true;
 
-        const generator = new SessionKeyGenerator();
-        await generator.generateKey();
+        const generator = new ECDHKeyAgreement();
+        await generator.generate();
 
-        const pubKey = await generator.pubKey();
-        const peer = await generator.importPeer(packet.pubKey);
-        const info = await SessionKeyGenerator.genInfo(packet.pubKey, pubKey);
-        const key = await generator.derivePrivate(
+        const pubKey = await generator.publicKey();
+        const peer = await generator.importPublicKey(packet.pubKey);
+        const info = await ECDHKeyAgreement.transcriptInfo(packet.pubKey, pubKey);
+        const key = await generator.deriveKey(
             peer,
             packet.salt,
             info,
             ['unwrapKey', 'encrypt', 'decrypt']
         );
-        this.session = new CryptoHelper(key);
+
+        const nonce = new NonceGenerator(GCMScope.C_SESSION);
+        this.session = new GCMSession(key, nonce);
+        this.sessionKey = key;
 
         this.send(new PubKeyC2SPacket(new Uint8Array(pubKey)));
     }
 
     public async onGroup(packet: GroupKeyS2CPacket) {
-        if (!this.session) throw new Error();
+        this.isEncrypt = true;
+        if (!this.sessionKey) throw new Error('Session did not init');
 
-        const groupKey = await this.session.unwrapKey(packet.iv, packet.wrappered);
-        this.group = new CryptoHelper(groupKey);
+        const groupKey = await unwrapKey(this.sessionKey, packet.iv, packet.wrappered, ['decrypt']);
+        this.group = new GCMDecryptImpl(groupKey);
         this.send(ClientFinishNegC2SPacket.INSTANCE);
     }
 

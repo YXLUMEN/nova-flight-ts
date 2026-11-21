@@ -1,25 +1,26 @@
 import {IllegalStateError} from "../../type/errors.ts";
-import {BinaryWriter} from "../../serialization/BinaryWriter.ts";
+import {BinaryWriter, type ByteSource} from "../../serialization/BinaryWriter.ts";
 
-export class SessionKeyGenerator {
+export class ECDHKeyAgreement {
     private self: CryptoKeyPair | null = null;
     private pubCache: ArrayBuffer | null = null;
 
-    public async generateKey() {
-        if (this.self) throw new IllegalStateError('Already gen key pair');
+    /** 生成新的密钥对 */
+    public async generate() {
         this.self = await crypto.subtle.generateKey(
             {name: 'ECDH', namedCurve: 'P-256'},
             false,
             ['deriveBits'],
         );
+        this.pubCache = null;
     }
 
-    public async pubKey() {
+    public async publicKey() {
         if (!this.self) throw new IllegalStateError('Missing key pair');
         return this.pubCache ??= await crypto.subtle.exportKey('spki', this.self.publicKey);
     }
 
-    public importPeer(pubKey: Uint8Array<ArrayBuffer>) {
+    public importPublicKey(pubKey: ByteSource) {
         return crypto.subtle.importKey(
             'spki',
             pubKey,
@@ -29,10 +30,10 @@ export class SessionKeyGenerator {
         );
     }
 
-    public async derivePrivate(
+    public async deriveKey(
         peerPub: CryptoKey,
-        salt: Uint8Array<ArrayBuffer>,
-        info: Uint8Array<ArrayBuffer>,
+        salt: ByteSource,
+        info: ByteSource,
         usages: KeyUsage[]
     ) {
         if (!this.self) throw new IllegalStateError();
@@ -62,12 +63,12 @@ export class SessionKeyGenerator {
         );
     }
 
-    public static async genInfo(pubA: Uint8Array<ArrayBuffer> | ArrayBuffer, pubB: Uint8Array<ArrayBuffer> | ArrayBuffer) {
+    public static async transcriptInfo(pubA: ByteSource, pubB: ByteSource) {
         const writer = new BinaryWriter(1 + pubA.byteLength + pubB.byteLength);
-        writer.writeInt8(51);
+        writer.writeInt8(0x33);
         writer.pushBytes(pubA);
         writer.pushBytes(pubB);
-        const hash = await crypto.subtle.digest("SHA-256", writer.toUint8Array());
+        const hash = await crypto.subtle.digest('SHA-256', writer.toUint8Array());
         return new Uint8Array(hash);
     }
 }

@@ -1,5 +1,7 @@
-import type {CryptoHelper} from "../../../network/crypto/CryptoHelper.ts";
 import type {Payload} from "../../../network/Payload.ts";
+import type {GCMSession} from "../../../network/crypto/GCMSession.ts";
+import type {GCMDecrypt} from "../../../network/crypto/GCMDecrypt.ts";
+import {GCM_NONCE_BYTES} from "../../../network/crypto/GCMHelper.ts";
 import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import {PacketHeader} from "../../../network/PacketHeader.ts";
 import {Log} from "../../../worker/log.ts";
@@ -7,12 +9,13 @@ import {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import {ClientChannel} from "./ClientChannel.ts";
 
 export class ClientEncryptChannel extends ClientChannel {
-    private readonly group: CryptoHelper;
-    private readonly session: CryptoHelper;
+    private readonly group: GCMDecrypt;
+    private readonly session: GCMSession;
+
     private recvTail = Promise.resolve();
     private sendTail = Promise.resolve();
 
-    public constructor(group: CryptoHelper, session: CryptoHelper) {
+    public constructor(group: GCMDecrypt, session: GCMSession) {
         super();
         this.group = group;
         this.session = session;
@@ -51,22 +54,22 @@ export class ClientEncryptChannel extends ClientChannel {
     }
 
     private async encrypt(writer: BinaryWriter, sid: number) {
-        const iv = this.session.iv();
-        const task = await this.session.encrypt(iv, writer.toUint8Array());
+        const nonce = this.session.nonce();
+        const encrypted = await this.session.encrypt(nonce, writer.toUint8Array());
         writer.reset();
 
         writer.writeInt8(PacketHeader.C2S);
         writer.writeInt8(sid);
-        writer.pushBytes(iv);
-        writer.pushBytes(task);
+        writer.pushBytes(nonce);
+        writer.pushBytes(encrypted);
         return writer.toUint8Array();
     }
 
-    protected decrypt(reader: BinaryReader, crypto: CryptoHelper) {
+    protected decrypt(reader: BinaryReader, session: GCMDecrypt) {
         try {
-            const iv = reader.readSlice(crypto.ivLength);
+            const iv = reader.readSlice(GCM_NONCE_BYTES);
             const remain = reader.readSlice(reader.bytesRemaining());
-            const task = crypto.decrypt(iv, remain);
+            const task = session.decrypt(iv, remain);
 
             const next = this.recvTail.then(async () => {
                 const buffer = new Uint8Array(await task);
