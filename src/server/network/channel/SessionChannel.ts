@@ -57,7 +57,7 @@ export class SessionChannel implements Channel {
         this.bus.unicast(this.sid, writer.toUint8Array());
     }
 
-    /** 仅用于握手,不支持解密 */
+    /** @readonly 立刻用当前解析器反序列化 */
     public directly(reader: BinaryReader): Payload | null {
         try {
             return this.in.decode(reader);

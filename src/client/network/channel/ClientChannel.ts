@@ -7,6 +7,7 @@ import type {ClientBus} from "../bus/ClientBus.ts";
 import {HandshakeProtocols} from "../../../network/protocol/HandshakeProtocols.ts";
 import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import {PacketHeader} from "../../../network/PacketHeader.ts";
+import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
 export class ClientChannel implements Channel {
     public bus: ClientBus = null!;
@@ -54,9 +55,8 @@ export class ClientChannel implements Channel {
             case PacketHeader.RELAY:
                 return;
             case PacketHeader.SERVER_BROADCAST:
-                // 服务端广播会忽视单客户端连接状况,所以得跳过
-                const protocol = reader.readUint8();
-                if (protocol !== this.in.protocol) return;
+                // 服务端广播仅在 PLAY 阶段有效
+                if (this.in.protocol !== ConnectionState.PLAY) return;
                 this.decode(reader);
                 return;
             case PacketHeader.SERVER_SINGLE:

@@ -1,5 +1,6 @@
 import type {Payload} from "../../../network/Payload.ts";
 import type {GCMSession} from "../../../network/crypto/GCMSession.ts";
+import type {GCMEncrypt} from "../../../network/crypto/GCMEncrypt.ts";
 import type {GCMDecrypt} from "../../../network/crypto/GCMDecrypt.ts";
 import {GCM_NONCE_BYTES} from "../../../network/crypto/GCMHelper.ts";
 import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
@@ -7,6 +8,7 @@ import {PacketHeader} from "../../../network/PacketHeader.ts";
 import {Log} from "../../../worker/log.ts";
 import {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import {ClientChannel} from "./ClientChannel.ts";
+import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
 export class ClientEncryptChannel extends ClientChannel {
     private readonly group: GCMDecrypt;
@@ -26,7 +28,7 @@ export class ClientEncryptChannel extends ClientChannel {
         const writer = new BinaryWriter(size + 32);
         this.out.codec.encode(writer, payload);
 
-        const task = this.encrypt(writer, this.getSessionId());
+        const task = this.encrypt(this.session, writer, this.getSessionId());
         const next = this.sendTail.then(async () => {
             const buffer = await task;
             if (this.bus.isConnected()) this.bus.sendBuffer(buffer);
@@ -40,9 +42,7 @@ export class ClientEncryptChannel extends ClientChannel {
             case PacketHeader.RELAY:
                 return;
             case PacketHeader.SERVER_BROADCAST:
-                // 服务端广播会忽视单客户端连接状况,所以得跳过
-                const protocol = reader.readUint8();
-                if (protocol !== this.in.protocol) return;
+                if (this.in.protocol !== ConnectionState.PLAY) return;
                 this.decrypt(reader, this.group);
                 return;
             case PacketHeader.SERVER_SINGLE:
@@ -53,9 +53,9 @@ export class ClientEncryptChannel extends ClientChannel {
         console.warn(`[Client] Unknown header: ${header}`);
     }
 
-    private async encrypt(writer: BinaryWriter, sid: number) {
-        const nonce = this.session.nonce();
-        const encrypted = await this.session.encrypt(nonce, writer.toUint8Array());
+    private async encrypt(encrypt: GCMEncrypt, writer: BinaryWriter, sid: number) {
+        const nonce = encrypt.nonce();
+        const encrypted = await encrypt.encrypt(nonce, writer.toUint8Array());
         writer.reset();
 
         writer.writeInt8(PacketHeader.C2S);

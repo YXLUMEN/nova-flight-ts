@@ -118,11 +118,7 @@ export class PlayerManager {
             this.sessionToPlayer.delete(player.profile().sessionId);
         }
 
-        // 允许回退,启用混合服务器后注意适配
-        if (this.uuidToPlayer.size === 1) {
-            this.server.isMultiPlayer = false;
-        }
-        this.server.networkBus.broadcast(new PlayerDisconnectS2CPacket(uuid, ServerCommonHandler.LOGOUT));
+        this.server.networkBus.enqueue(new PlayerDisconnectS2CPacket(uuid, ServerCommonHandler.LOGOUT));
     }
 
     public getPlayer(uuid: UUID): ServerPlayerEntity | null {

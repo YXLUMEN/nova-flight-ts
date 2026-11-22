@@ -36,10 +36,6 @@ class EnemyProbe extends BaseEnemyRender {
         this.drawSprite(ctx, e);
     }
 
-    public override transform(ctx: any, e: any, a: number): void {
-        this.transform(ctx, e, a);
-    }
-
     public key(e: any): number {
         return this.spriteKey(e);
     }
@@ -52,10 +48,6 @@ class EnemyProbe extends BaseEnemyRender {
 class BulletProbe extends BulletEntityRender {
     public draw(ctx: any, e: any): void {
         this.drawSprite(ctx, e);
-    }
-
-    public override transform(ctx: any, e: any, a: number): void {
-        this.transform(ctx, e, a);
     }
 
     public key(e: any): number {
@@ -72,10 +64,6 @@ class CIWSProbe extends CIWSBulletEntityRender {
         this.drawSprite(ctx);
     }
 
-    public override transform(ctx: any, e: any, a: number): void {
-        this.transform(ctx, e, a);
-    }
-
     public bnd(e: any): AABB {
         return (this as any).bounds(e);
     }
@@ -86,10 +74,6 @@ class DecoyProbe extends DecoyEntityRender {
         this.drawSprite(ctx);
     }
 
-    public override transform(ctx: any, e: any, a: number): void {
-        this.transform(ctx, e, a);
-    }
-
     public bnd(e: any): AABB {
         return (this as any).bounds(e);
     }
@@ -98,10 +82,6 @@ class DecoyProbe extends DecoyEntityRender {
 class MissileProbe extends DecoyEntityRender {
     public draw(ctx: any): void {
         this.drawSprite(ctx);
-    }
-
-    public override transform(ctx: any, e: any, a: number): void {
-        this.transform(ctx, e, a);
     }
 
     public key(_e: any): number {

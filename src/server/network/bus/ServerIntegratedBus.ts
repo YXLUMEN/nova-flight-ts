@@ -2,7 +2,7 @@ import type {Payload} from "../../../network/Payload.ts";
 import type {ServerBus} from "./ServerBus.ts";
 import type {SessionDispatcher} from "../SessionDispatcher.ts";
 import type {GameProfile} from "../../entity/GameProfile.ts";
-import type {ProtocolInfo} from "../../../network/protocol/ProtocolInfo.ts";
+import type {PacketCodec} from "../../../network/codec/PacketCodec.ts";
 import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import {IntegratedBatchBufferPacket} from "../../../network/packet/common/IntegratedBatchBufferPacket.ts";
@@ -11,18 +11,10 @@ import {PlayProtocol} from "../../../network/protocol/PlayProtocol.ts";
 
 export class ServerIntegratedBus implements ServerBus {
     private readonly sendQueue: RingBuffer<Payload> = new RingBuffer(48);
-    private readonly out: ProtocolInfo = PlayProtocol.SERVER_BOUND;
+    private readonly out: PacketCodec<Payload> = PlayProtocol.SERVER_BOUND.codec;
 
     private dispatcher: SessionDispatcher = null!;
     private ctrl = new AbortController();
-
-    public getSessionId(): number {
-        return 1;
-    }
-
-    public isConnected(): boolean {
-        return true;
-    }
 
     public enqueue(payload: Payload) {
         if (this.sendQueue.full()) this.flush();
@@ -30,13 +22,9 @@ export class ServerIntegratedBus implements ServerBus {
     }
 
     public broadcast(payload: Payload) {
-        this.broadWith(payload, this.out);
-    }
-
-    public broadWith(payload: Payload, protocol: ProtocolInfo) {
         const size = payload.estimateSize?.() ?? 62;
         const writer = new BinaryWriter(size + 2);
-        protocol.codec.encode(writer, payload);
+        this.out.encode(writer, payload);
 
         const buffer = writer.toUint8Array();
         self.postMessage({
@@ -68,7 +56,7 @@ export class ServerIntegratedBus implements ServerBus {
             return;
         }
 
-        const batches = IntegratedBatchBufferPacket.create(this.sendQueue, this.out.codec);
+        const batches = IntegratedBatchBufferPacket.create(this.sendQueue, this.out);
         this.sendQueue.clear();
         for (const {payloadCount, buffer} of batches) {
             self.postMessage({
@@ -96,6 +84,14 @@ export class ServerIntegratedBus implements ServerBus {
 
     public setDispatcher(dispatcher: SessionDispatcher) {
         this.dispatcher = dispatcher;
+    }
+
+    public getSessionId(): number {
+        return 1;
+    }
+
+    public isConnected(): boolean {
+        return true;
     }
 
     private receivePacket(buf: ArrayBuffer): void {

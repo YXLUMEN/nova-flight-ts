@@ -2,6 +2,7 @@ import type {Payload} from "../../Payload.ts";
 import type {PacketCodec} from "../../codec/PacketCodec.ts";
 import type {ClientNegotiateHandler} from "../../../client/network/handler/ClientNegotiateHandler.ts";
 import {payloadType, type PayloadType} from "../../PayloadType.ts";
+import {GCM_NONCE_BYTES} from "../../crypto/GCMHelper.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
@@ -11,12 +12,11 @@ export class GroupKeyS2CPacket implements Payload {
         (writer, value) => {
             writer.writeVarUint(value.wrappered.length);
             writer.pushBytes(value.wrappered);
-            writer.writeVarUint(value.iv.length);
             writer.pushBytes(value.iv);
         },
         reader => {
             const key = reader.readSlice(reader.readVarUint());
-            const salt = reader.readSlice(reader.readVarUint());
+            const salt = reader.readSlice(GCM_NONCE_BYTES);
             return new GroupKeyS2CPacket(key, salt);
         }
     );

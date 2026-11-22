@@ -14,12 +14,10 @@ import {ServerNetworkManager} from "./network/ServerNetworkManager.ts";
 import {Log} from "../worker/log.ts";
 import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.ts";
 import {TranslatableTextS2CPacket} from "../network/packet/s2c/TranslatableTextS2CPacket.ts";
-import {ServerStartS2CPacket} from "../network/packet/handshake/ServerStartS2CPacket.ts";
 import {ServerTickManager} from "./ServerTickManager.ts";
 import {Worker2MainType} from "../worker/WorkerMsgType.ts";
 import {Seed} from "../utils/math/random/Seed.ts";
 import {Protocols} from "../network/protocol/Protocols.ts";
-import {HandshakeProtocols} from "../network/protocol/HandshakeProtocols.ts";
 
 export abstract class NovaFlightServer implements CommandOutput {
     public static instance: NovaFlightServer;
@@ -48,7 +46,7 @@ export abstract class NovaFlightServer implements CommandOutput {
     private waitServerHalt: Promise<void> | null = null;
     private stopWorld: Consumer<void> | null = null;
 
-    protected constructor(worldName: string, channel: ServerBus) {
+    protected constructor(worldName: string, bus: ServerBus) {
         this.serverId = crypto.randomUUID();
 
         this.worldName = worldName;
@@ -57,9 +55,9 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.playerManager = new PlayerManager(this);
         this.tickManager = new ServerTickManager(this);
 
-        this.networkBus = channel;
-        this.networkManager = new ServerNetworkManager(this, channel);
-        channel.setDispatcher(this.networkManager);
+        this.networkBus = bus;
+        this.networkManager = new ServerNetworkManager(this, bus);
+        bus.setDispatcher(this.networkManager);
 
         this.serverCommandManager = new ServerCommandManager(this.getCommandSource());
         this.tick = this.tick.bind(this);
@@ -84,8 +82,6 @@ export abstract class NovaFlightServer implements CommandOutput {
         this.world = await this.loadWorld(manager);
 
         this.profile = new GameProfile(this.networkBus.getSessionId(), this.serverId, this.worldName);
-        this.networkBus.broadWith(ServerStartS2CPacket.INSTANCE, HandshakeProtocols.SERVER_BOUND);
-
         self.postMessage({w2m: Worker2MainType.SERVER_START});
 
         this.last = performance.now();

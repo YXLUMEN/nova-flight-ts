@@ -1,6 +1,7 @@
 import type {Payload} from "../../../network/Payload.ts";
 import type {EncryptEgress} from "../bus/EncryptEgress.ts";
 import type {GCMSession} from "../../../network/crypto/GCMSession.ts";
+import type {GCMEncrypt} from "../../../network/crypto/GCMEncrypt.ts";
 import {GCM_NONCE_BYTES} from "../../../network/crypto/GCMHelper.ts";
 import {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import {SessionChannel} from "./SessionChannel.ts";
@@ -26,8 +27,7 @@ export class EncryptSessionChannel extends SessionChannel {
         const size = payload.estimateSize?.() ?? 60;
         const writer = new BinaryWriter(size + 32);
         this.out.encode(writer, payload);
-
-        this.bus.thenSend(this.encrypt(writer, this.sid));
+        this.bus.thenSend(this.encrypt(this.session, writer, this.sid));
     }
 
     public override onMessage(reader: BinaryReader) {
@@ -47,9 +47,9 @@ export class EncryptSessionChannel extends SessionChannel {
         }
     }
 
-    private async encrypt(writer: BinaryWriter, sid: number) {
-        const nonce = this.session.nonce();
-        const encrypted = await this.session.encrypt(nonce, writer.toUint8Array());
+    private async encrypt(encrypt: GCMEncrypt, writer: BinaryWriter, sid: number) {
+        const nonce = encrypt.nonce();
+        const encrypted = await encrypt.encrypt(nonce, writer.toUint8Array());
         writer.reset();
 
         writer.writeInt8(PacketHeader.SERVER_SINGLE);

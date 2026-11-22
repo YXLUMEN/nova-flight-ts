@@ -3,7 +3,6 @@ import type {Payload} from "../../../network/Payload.ts";
 import type {ServerBus} from "./ServerBus.ts";
 import type {GameProfile} from "../../entity/GameProfile.ts";
 import type {SocketAddr} from "../../../network/SocketAddr.ts";
-import type {ProtocolInfo} from "../../../network/protocol/ProtocolInfo.ts";
 import {WebSocketBus} from "../../../network/WebSocketBus.ts";
 import {NetworkSide} from "../../../network/NetworkSide.ts";
 import {RingBuffer} from "../../../utils/collection/RingBuffer.ts";
@@ -13,11 +12,13 @@ import {Log} from "../../../worker/log.ts";
 import {BatchBufferPacket} from "../../../network/packet/common/BatchBufferPacket.ts";
 import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import {PlayProtocol} from "../../../network/protocol/PlayProtocol.ts";
+import type {PacketEncoder} from "../../../network/codec/PacketCodec.ts";
 
 export class ServerNetworkBus extends WebSocketBus implements ServerBus {
     private readonly sendQueue: RingBuffer<Payload> = new RingBuffer(64);
+
     protected readonly batchSize = WebSocketBus.MAX_ESTIMATE;
-    protected readonly out: ProtocolInfo;
+    protected readonly out: PacketEncoder<Payload>;
 
     private dispatcher: SessionDispatcher = null!;
     private secretKey: Uint8Array | null;
@@ -25,7 +26,7 @@ export class ServerNetworkBus extends WebSocketBus implements ServerBus {
     public constructor(address: SocketAddr, secretKey: Uint8Array) {
         super(NetworkSide.SERVER, address);
         this.secretKey = secretKey;
-        this.out = PlayProtocol.SERVER_BOUND;
+        this.out = PlayProtocol.SERVER_BOUND.codec;
     }
 
     public enqueue(payload: Payload): void {
@@ -34,29 +35,24 @@ export class ServerNetworkBus extends WebSocketBus implements ServerBus {
     }
 
     public broadcast(payload: Payload): void {
-        this.broadWith(payload, this.out);
-    }
-
-    public broadWith(payload: Payload, protocol: ProtocolInfo) {
         const size = payload.estimateSize?.() ?? 60;
         const writer = new BinaryWriter(size + 4);
+
         writer.writeInt8(PacketHeader.SERVER_BROADCAST);
-        writer.writeInt8(protocol.protocol);
-        protocol.codec.encode(writer, payload);
+        this.out.encode(writer, payload);
         this.send(writer.toUint8Array());
     }
 
     public exclude(payload: Payload, ...excludes: GameProfile[]) {
         const size = payload.estimateSize?.() ?? 60;
         const writer = new BinaryWriter(size + 5 + excludes.length);
-        writer.writeInt8(PacketHeader.SERVER_EXCLUDE);
-        writer.writeInt8(this.out.protocol);
 
+        writer.writeInt8(PacketHeader.SERVER_EXCLUDE);
         writer.writeVarUint(excludes.length);
         for (const session of excludes) {
             writer.writeInt8(session.sessionId);
         }
-        this.out.codec.encode(writer, payload);
+        this.out.encode(writer, payload);
         this.send(writer.toUint8Array());
     }
 
@@ -67,12 +63,9 @@ export class ServerNetworkBus extends WebSocketBus implements ServerBus {
 
     public action(buf: Uint8Array<ArrayBuffer>): void {
         if (!this.isConnected()) return;
-
         if (buf[0] !== PacketHeader.SERVER_ACTION) {
-            Log.warn('Relay action packet must start with 0xFF');
-            return;
+            throw new TypeError('Relay action packet must start with 0xFF')
         }
-
         this.send(buf);
     }
 
@@ -84,7 +77,7 @@ export class ServerNetworkBus extends WebSocketBus implements ServerBus {
             return;
         }
 
-        const packets = BatchBufferPacket.create(this.sendQueue, this.out.codec, this.batchSize);
+        const packets = BatchBufferPacket.create(this.sendQueue, this.out, this.batchSize);
         this.sendQueue.clear();
         for (const packet of packets) this.broadcast(packet);
     }

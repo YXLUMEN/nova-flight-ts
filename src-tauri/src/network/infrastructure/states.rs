@@ -52,11 +52,6 @@ impl RelayState {
         Some(self.active.get(session_id)?.value().clone())
     }
 
-    pub fn by_uuid(&self, uuid: &[u8; 16]) -> Option<Arc<Session>> {
-        let session_id = *self.client_uuids.get(uuid)?.value();
-        self.by_id(&session_id)
-    }
-
     pub fn iter_clients(&self) -> Iter<'_, u8, ClientEntry> {
         self.clients.iter()
     }

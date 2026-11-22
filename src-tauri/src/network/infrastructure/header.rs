@@ -8,8 +8,7 @@ pub(crate) const C2S: u8 = 0x10;
 /// 服务端头
 pub(crate) const SERVER_BROADCAST: u8 = 0x11;
 pub(crate) const SERVER_SINGLE: u8 = 0x12;
-pub(crate) const SERVER_SINGLE_UUID: u8 = 0x13;
-pub(crate) const SERVER_EXCLUDE: u8 = 0x14;
+pub(crate) const SERVER_EXCLUDE: u8 = 0x13;
 pub(crate) const SERVER_ACTION: u8 = 0xFF;
 
 /// 中继控制命令

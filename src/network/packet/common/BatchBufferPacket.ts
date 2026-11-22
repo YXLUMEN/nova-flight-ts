@@ -1,5 +1,5 @@
 import type {Payload} from "../../Payload.ts";
-import type {PacketCodec} from "../../codec/PacketCodec.ts";
+import type {PacketCodec, PacketDecoder, PacketEncoder} from "../../codec/PacketCodec.ts";
 import type {ClientCommonHandler} from "../../../client/network/handler/ClientCommonHandler.ts";
 import type {BatchBuffer} from "./BatchBuffer.ts";
 import type {PacketListener} from "../../PacketListener.ts";
@@ -25,7 +25,7 @@ export class BatchBufferPacket implements Payload, BatchBuffer {
         this.buffer = buffer;
     }
 
-    public static create(payloads: Iterable<Payload>, codec: PacketCodec<Payload>, maxSize: number): BatchBufferPacket[] {
+    public static create(payloads: Iterable<Payload>, codec: PacketEncoder<Payload>, maxSize: number): BatchBufferPacket[] {
         const batches: BatchBufferPacket[] = [];
         const writer = new BinaryWriter(9216); // MAX_PACKET_SIZE * 1.5
 
@@ -88,7 +88,7 @@ export class BatchBufferPacket implements Payload, BatchBuffer {
             new BatchBufferPacket(count, true, compressed);
     }
 
-    public parse(handler: PacketListener, codec: PacketCodec<Payload>): void {
+    public parse(handler: PacketListener, codec: PacketDecoder<Payload>): void {
         const buf = this.compressed ? decompress(this.buffer) : this.buffer;
         const reader = new BinaryReader(buf as Uint8Array<ArrayBuffer>);
         // noinspection DuplicatedCode

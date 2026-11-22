@@ -43,15 +43,6 @@ export function unwrapKey(
     );
 }
 
-/** **ServerOnly** 放这里只是想让调用点简单一点 */
-export function genGroupKey() {
-    return crypto.subtle.generateKey(
-        {name: 'AES-GCM', length: 256},
-        true,
-        ['encrypt'],
-    );
-}
-
 export function randomIv() {
     return crypto.getRandomValues(new Uint8Array(GCM_NONCE_BYTES));
 }

@@ -1,9 +1,7 @@
 import type {Payload} from "../../../network/Payload.ts";
-import type {ProtocolInfo} from "../../../network/protocol/ProtocolInfo.ts";
 import type {GameProfile} from "../../entity/GameProfile.ts";
 import type {EncryptEgress} from "./EncryptEgress.ts";
 import {type GCMEncrypt, GCMEncryptImpl} from "../../../network/crypto/GCMEncrypt.ts";
-import {genGroupKey} from "../../../network/crypto/GCMHelper.ts";
 import {GCMScope} from "../../../network/crypto/GCMScope.ts";
 import {WebSocketBus} from "../../../network/WebSocketBus.ts";
 import {ServerNetworkBus} from "./ServerNetworkBus.ts";
@@ -29,23 +27,21 @@ export class ServerEncryptNetBus extends ServerNetworkBus implements EncryptEgre
     }
 
     public async freshGroupKey() {
-        const groupKey = await genGroupKey();
+        const groupKey = await this.genGroupKey();
         const nonce = new NonceGenerator(GCMScope.S_GROUP);
         this.group = new GCMEncryptImpl(groupKey, nonce);
         this.groupKey = groupKey;
     }
 
-    public override broadWith(payload: Payload, protocol: ProtocolInfo) {
+    public override broadcast(payload: Payload) {
         if (this.group!.exhausted()) {
-            // TODO 轮换
             throw new NonceExhaustedError();
         }
 
         const size = payload.estimateSize?.() ?? 60;
         const writer = new BinaryWriter(size + 32); // 4 + iv + tag
-        protocol.codec.encode(writer, payload);
-
-        this.thenSend(this.encrypt(this.group!, writer, protocol.protocol));
+        this.out.encode(writer, payload);
+        this.thenSend(this.encrypt(this.group!, writer));
     }
 
     public override exclude(payload: Payload, ...excludes: GameProfile[]) {
@@ -55,9 +51,8 @@ export class ServerEncryptNetBus extends ServerNetworkBus implements EncryptEgre
 
         const size = payload.estimateSize?.() ?? 60;
         const writer = new BinaryWriter(size + 33 + excludes.length);
-        this.out.codec.encode(writer, payload);
-
-        this.thenSend(this.encryptExclude(this.group!, writer, this.out.protocol, excludes));
+        this.out.encode(writer, payload);
+        this.thenSend(this.encryptExclude(this.group!, writer, excludes));
     }
 
     public thenSend(task: Promise<Uint8Array<ArrayBuffer>>) {
@@ -68,13 +63,13 @@ export class ServerEncryptNetBus extends ServerNetworkBus implements EncryptEgre
         this.tail = next.catch(err => Log.error(err));
     }
 
-    private async encrypt(encrypt: GCMEncrypt, writer: BinaryWriter, protocol: number) {
+    private async encrypt(encrypt: GCMEncrypt, writer: BinaryWriter) {
         const nonce = encrypt.nonce();
         const encrypted = await encrypt.encrypt(nonce, writer.toUint8Array());
         writer.reset();
 
+        // [Header]-[Nonce][Payload]
         writer.writeInt8(PacketHeader.SERVER_BROADCAST);
-        writer.writeInt8(protocol);
         writer.pushBytes(nonce);
         writer.pushBytes(encrypted);
         return writer.toUint8Array();
@@ -83,16 +78,14 @@ export class ServerEncryptNetBus extends ServerNetworkBus implements EncryptEgre
     private async encryptExclude(
         encrypt: GCMEncrypt,
         writer: BinaryWriter,
-        protocol: number,
         excludes: GameProfile[]
     ) {
         const nonce = encrypt.nonce();
         const encrypted = await encrypt.encrypt(nonce, writer.toUint8Array());
         writer.reset();
 
+        // [Header][Len][Excludes]-[Nonce][Payload]
         writer.writeInt8(PacketHeader.SERVER_EXCLUDE);
-        writer.writeInt8(protocol);
-
         writer.writeVarUint(excludes.length);
         for (const session of excludes) {
             writer.writeInt8(session.sessionId);
@@ -105,5 +98,13 @@ export class ServerEncryptNetBus extends ServerNetworkBus implements EncryptEgre
 
     public getGroupKey() {
         return this.groupKey;
+    }
+
+    private genGroupKey() {
+        return crypto.subtle.generateKey(
+            {name: 'AES-GCM', length: 256},
+            true,
+            ['encrypt'],
+        );
     }
 }

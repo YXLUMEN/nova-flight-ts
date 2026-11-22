@@ -1,25 +1,19 @@
-use crate::network::infrastructure::header::{
-    BANED, BAN_IP, DID_NOT_BANED, EMPTY_SID, EXCLUDE_TOO_MUCH, INVALID_ACTION, INVALID_IPV4, KICK,
-    KICKED, PACKET_TOO_LARGE, PERMIT, QUERY, SERVER_ACTION, SERVER_BROADCAST, SERVER_EXCLUDE,
-    SERVER_SINGLE, SERVER_SINGLE_UUID, UNBAN, UNBAN_IP, UNKNOWN_ACTION,
-};
-use crate::network::infrastructure::net::{
-    action_fail, send_code, send_message, send_or_drop, send_or_drop_move, send_timeout,
-};
-use crate::network::infrastructure::protocol::{QueryClientsResult, MAX_EXCLUDES, MAX_PAYLOAD_LEN};
+use crate::network::infrastructure::header::*;
+use crate::network::infrastructure::net::*;
+use crate::network::infrastructure::protocol::{MAX_EXCLUDES, MAX_PAYLOAD_LEN, QueryClientsResult};
 use crate::network::infrastructure::session::Session;
 use crate::network::infrastructure::states::RelayState;
 use crate::network::infrastructure::util::{
-    format_uuid, is_nil_uuid, parse_ipv4, parse_session_id, read_var_uint,
+    format_uuid, parse_ipv4, parse_session_id, read_var_uint,
 };
 use bytes::{BufMut, Bytes, BytesMut};
-use futures_util::stream::SplitStream;
 use futures_util::StreamExt;
+use futures_util::stream::SplitStream;
 use log::{debug, error, warn};
 use std::time::Duration;
 use tokio::net::TcpStream;
-use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::WebSocketStream;
+use tokio_tungstenite::tungstenite::Message;
 
 pub(crate) struct ServerContext<'a> {
     pub state: &'a RelayState,
@@ -58,7 +52,7 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
 
     match payload[0] {
         SERVER_BROADCAST => {
-            // [Header][Protocol][Data]
+            // [Header][Data]
             let mut to_close = Vec::new();
             for entry in state.iter() {
                 let session = entry.value();
@@ -96,49 +90,15 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
             }
             state.close(&target_id);
         }
-        SERVER_SINGLE_UUID => {
-            // [Header][Protocol][UUID][Data]
-            if payload.len() < 18 {
-                warn!("InvalidPacket: Unicast packet too short");
-                return;
-            }
-
-            // UUID截断
-            let mut target_client_id = [0u8; 16];
-            target_client_id.copy_from_slice(&payload[2..18]);
-            let target_client_id = target_client_id;
-
-            if is_nil_uuid(&target_client_id) {
-                return;
-            }
-
-            let Some(session) = state.by_uuid(&target_client_id) else {
-                return;
-            };
-
-            let remaining = payload.slice(18..);
-
-            let mut buf = BytesMut::with_capacity(2 + remaining.len());
-            // 客户端不需要路由语义, 这里是故意设计的
-            buf.put_u8(SERVER_BROADCAST);
-            buf.put_u8(session.session_id);
-            buf.put_slice(&remaining);
-            let forwarded = buf.freeze();
-
-            if send_or_drop_move(&session.tx, forwarded) {
-                return;
-            }
-            state.close(&session.session_id);
-        }
         SERVER_EXCLUDE => {
-            // [Header][Protocol][TargetIds][Data]
+            // [Header][TargetIds][Data]
             // Server → 广播给未被排除的 Client
-            if payload.len() < 3 {
+            if payload.len() < 2 {
                 warn!("InvalidPacket: BroadcastExcluding too short");
                 return;
             }
 
-            let mut cursor = &payload[2..];
+            let mut cursor = &payload[1..];
 
             let (count, remaining) = match read_var_uint(cursor) {
                 Ok(v) => v,
@@ -165,9 +125,8 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
                 }
             };
 
-            let mut buf = BytesMut::with_capacity(2 + rest_payload.len());
+            let mut buf = BytesMut::with_capacity(1 + rest_payload.len());
             buf.put_u8(SERVER_BROADCAST);
-            buf.put_u8(payload[1]);
             buf.put_slice(rest_payload);
             let forwarded = buf.freeze();
 
