@@ -6,7 +6,7 @@ import type {ProtocolInfo} from "./protocol/ProtocolInfo.ts";
 import type {ChannelHandler} from "./channel/ChannelHandler.ts";
 import {NetworkSide} from "./NetworkSide.ts";
 import {ConnectionState} from "../server/network/ConnectionState.ts";
-import {FakeChannel} from "./channel/FackChannel.ts";
+import {FakeChannel} from "./channel/FakeChannel.ts";
 
 export abstract class Connection implements ChannelHandler {
     public address: SocketAddr;

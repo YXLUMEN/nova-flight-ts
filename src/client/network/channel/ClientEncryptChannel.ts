@@ -1,7 +1,7 @@
 import type {Payload} from "../../../network/Payload.ts";
 import type {GCMSession} from "../../../network/crypto/GCMSession.ts";
-import type {GCMEncrypt} from "../../../network/crypto/GCMEncrypt.ts";
 import type {GCMDecrypt} from "../../../network/crypto/GCMDecrypt.ts";
+import {buildEncrypt} from "../../../network/FrameUtil.ts";
 import {GCM_NONCE_BYTES} from "../../../network/crypto/GCMHelper.ts";
 import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import {PacketHeader} from "../../../network/PacketHeader.ts";
@@ -28,7 +28,7 @@ export class ClientEncryptChannel extends ClientChannel {
         const writer = new BinaryWriter(size + 32);
         this.out.codec.encode(writer, payload);
 
-        const task = this.encrypt(this.session, writer, this.getSessionId());
+        const task = buildEncrypt(this.session, writer, PacketHeader.C2S, this.getSessionId());
         const next = this.sendTail.then(async () => {
             const buffer = await task;
             if (this.bus.isConnected()) this.bus.sendBuffer(buffer);
@@ -42,6 +42,7 @@ export class ClientEncryptChannel extends ClientChannel {
             case PacketHeader.RELAY:
                 return;
             case PacketHeader.SERVER_BROADCAST:
+                reader.skip(1);
                 if (this.in.protocol !== ConnectionState.PLAY) return;
                 this.decrypt(reader, this.group);
                 return;
@@ -53,23 +54,11 @@ export class ClientEncryptChannel extends ClientChannel {
         console.warn(`[Client] Unknown header: ${header}`);
     }
 
-    private async encrypt(encrypt: GCMEncrypt, writer: BinaryWriter, sid: number) {
-        const nonce = encrypt.nonce();
-        const encrypted = await encrypt.encrypt(nonce, writer.toUint8Array());
-        writer.reset();
-
-        writer.writeInt8(PacketHeader.C2S);
-        writer.writeInt8(sid);
-        writer.pushBytes(nonce);
-        writer.pushBytes(encrypted);
-        return writer.toUint8Array();
-    }
-
     protected decrypt(reader: BinaryReader, session: GCMDecrypt) {
         try {
-            const iv = reader.readSlice(GCM_NONCE_BYTES);
+            const nonce = reader.readSlice(GCM_NONCE_BYTES);
             const remain = reader.readSlice(reader.bytesRemaining());
-            const task = session.decrypt(iv, remain);
+            const task = session.decrypt(nonce, remain);
 
             const next = this.recvTail.then(async () => {
                 const buffer = new Uint8Array(await task);

@@ -13,6 +13,7 @@ import {BatchBufferPacket} from "../../../network/packet/common/BatchBufferPacke
 import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import {PlayProtocol} from "../../../network/protocol/PlayProtocol.ts";
 import type {PacketEncoder} from "../../../network/codec/PacketCodec.ts";
+import {buildExcludes} from "../../../network/FrameUtil.ts";
 
 export class ServerNetworkBus extends WebSocketBus implements ServerBus {
     private readonly sendQueue: RingBuffer<Payload> = new RingBuffer(64);
@@ -47,11 +48,7 @@ export class ServerNetworkBus extends WebSocketBus implements ServerBus {
         const size = payload.estimateSize?.() ?? 60;
         const writer = new BinaryWriter(size + 5 + excludes.length);
 
-        writer.writeInt8(PacketHeader.SERVER_EXCLUDE);
-        writer.writeVarUint(excludes.length);
-        for (const session of excludes) {
-            writer.writeInt8(session.sessionId);
-        }
+        buildExcludes(writer, excludes);
         this.out.encode(writer, payload);
         this.send(writer.toUint8Array());
     }

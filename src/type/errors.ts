@@ -72,3 +72,10 @@ export class NonceExhaustedError extends Error {
         this.name = 'NonceExhaustedError';
     }
 }
+
+export class AbortError extends Error {
+    public constructor(message = 'abort') {
+        super(message);
+        this.name = 'AbortError';
+    }
+}

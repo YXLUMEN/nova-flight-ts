@@ -178,6 +178,7 @@ export abstract class NovaFlightServer implements CommandOutput {
     }
 
     public setPause(bl: boolean): void {
+        if (this.isMultiPlayer) return;
         this.pause = bl;
     }
 

@@ -52,7 +52,7 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
 
     match payload[0] {
         SERVER_BROADCAST => {
-            // [Header][Data]
+            // [Header][SID][Data]
             let mut to_close = Vec::new();
             for entry in state.iter() {
                 let session = entry.value();
@@ -91,14 +91,14 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
             state.close(&target_id);
         }
         SERVER_EXCLUDE => {
-            // [Header][TargetIds][Data]
+            // [Header][SID][TargetIds][Data]
             // Server → 广播给未被排除的 Client
-            if payload.len() < 2 {
+            if payload.len() < 3 {
                 warn!("InvalidPacket: BroadcastExcluding too short");
                 return;
             }
 
-            let mut cursor = &payload[1..];
+            let mut cursor = &payload[2..];
 
             let (count, remaining) = match read_var_uint(cursor) {
                 Ok(v) => v,
@@ -125,8 +125,9 @@ async fn relay_server_message(state: &RelayState, session: &Session, payload: By
                 }
             };
 
-            let mut buf = BytesMut::with_capacity(1 + rest_payload.len());
+            let mut buf = BytesMut::with_capacity(2 + rest_payload.len());
             buf.put_u8(SERVER_BROADCAST);
+            buf.put_u8(payload[1]);
             buf.put_slice(rest_payload);
             let forwarded = buf.freeze();
 

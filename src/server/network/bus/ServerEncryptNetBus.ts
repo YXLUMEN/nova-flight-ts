@@ -1,6 +1,7 @@
 import type {Payload} from "../../../network/Payload.ts";
 import type {GameProfile} from "../../entity/GameProfile.ts";
 import type {EncryptEgress} from "./EncryptEgress.ts";
+import {buildEncrypt, buildExcludes} from "../../../network/FrameUtil.ts";
 import {type GCMEncrypt, GCMEncryptImpl} from "../../../network/crypto/GCMEncrypt.ts";
 import {GCMScope} from "../../../network/crypto/GCMScope.ts";
 import {WebSocketBus} from "../../../network/WebSocketBus.ts";
@@ -41,7 +42,7 @@ export class ServerEncryptNetBus extends ServerNetworkBus implements EncryptEgre
         const size = payload.estimateSize?.() ?? 60;
         const writer = new BinaryWriter(size + 32); // 4 + iv + tag
         this.out.encode(writer, payload);
-        this.thenSend(this.encrypt(this.group!, writer));
+        this.thenSend(buildEncrypt(this.group!, writer, PacketHeader.SERVER_BROADCAST, 0));
     }
 
     public override exclude(payload: Payload, ...excludes: GameProfile[]) {
@@ -63,18 +64,6 @@ export class ServerEncryptNetBus extends ServerNetworkBus implements EncryptEgre
         this.tail = next.catch(err => Log.error(err));
     }
 
-    private async encrypt(encrypt: GCMEncrypt, writer: BinaryWriter) {
-        const nonce = encrypt.nonce();
-        const encrypted = await encrypt.encrypt(nonce, writer.toUint8Array());
-        writer.reset();
-
-        // [Header]-[Nonce][Payload]
-        writer.writeInt8(PacketHeader.SERVER_BROADCAST);
-        writer.pushBytes(nonce);
-        writer.pushBytes(encrypted);
-        return writer.toUint8Array();
-    }
-
     private async encryptExclude(
         encrypt: GCMEncrypt,
         writer: BinaryWriter,
@@ -85,12 +74,7 @@ export class ServerEncryptNetBus extends ServerNetworkBus implements EncryptEgre
         writer.reset();
 
         // [Header][Len][Excludes]-[Nonce][Payload]
-        writer.writeInt8(PacketHeader.SERVER_EXCLUDE);
-        writer.writeVarUint(excludes.length);
-        for (const session of excludes) {
-            writer.writeInt8(session.sessionId);
-        }
-
+        buildExcludes(writer, excludes);
         writer.pushBytes(nonce);
         writer.pushBytes(encrypted);
         return writer.toUint8Array();

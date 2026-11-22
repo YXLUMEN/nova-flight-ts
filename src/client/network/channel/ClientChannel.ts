@@ -56,6 +56,7 @@ export class ClientChannel implements Channel {
                 return;
             case PacketHeader.SERVER_BROADCAST:
                 // 服务端广播仅在 PLAY 阶段有效
+                reader.skip(1);
                 if (this.in.protocol !== ConnectionState.PLAY) return;
                 this.decode(reader);
                 return;
