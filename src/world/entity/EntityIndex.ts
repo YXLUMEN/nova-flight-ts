@@ -7,6 +7,7 @@ export interface EntityIndex<T extends EntityLike> {
 
     remove(entity: T): boolean;
 
+    // 禁用嵌套查询
     search(region: AABB): Generator<T, void>;
 
     forEach(region: AABB, consumer: Consumer<T>): void;

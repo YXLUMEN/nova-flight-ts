@@ -1,8 +1,8 @@
 import type {BinaryReader} from "../../serialization/BinaryReader.ts";
 import type {SessionDispatcher} from "./SessionDispatcher.ts";
-import type {ChannelHandler} from "../../network/channel/ChannelHandler.ts";
 import type {NovaFlightServer} from "../NovaFlightServer.ts";
 import type {Egress} from "./bus/Egress.ts";
+import type {Payload} from "../../network/Payload.ts";
 import {SessionChannel} from "./channel/SessionChannel.ts";
 import {IntegratedChannel} from "./channel/IntegratedChannel.ts";
 import {ClientHandshakeC2SPacket} from "../../network/packet/handshake/ClientHandshakeC2SPacket.ts";
@@ -18,7 +18,7 @@ import {NetHealthManager} from "./NetHealthManager.ts";
 
 const STALL_MS = 125; // 50ms * 2.5
 
-export class ServerNetworkManager implements SessionDispatcher, ChannelHandler {
+export class ServerNetworkManager implements SessionDispatcher {
     private readonly server: NovaFlightServer;
     private readonly bus: Egress;
     private readonly relayHandler: ServerRelayHandler;
@@ -69,19 +69,29 @@ export class ServerNetworkManager implements SessionDispatcher, ChannelHandler {
             conn.incoming(reader);
             return;
         }
+        this.open(sid, reader);
+    }
 
-        const channel = this.isIntegrated ? new IntegratedChannel(this.bus, sid) : new SessionChannel(this.bus, sid);
-        channel.setHandler(this);
-        const payload = channel.directly(reader);
+    private open(sid: number, reader: BinaryReader) {
+        let payload: Payload;
+
+        try {
+            payload = HandshakeProtocols.CLIENT_BOUND.codec.decode(reader);
+        } catch (err) {
+            this.bus.action(RelayActionBuilder.forceDisconnect(sid));
+            return;
+        }
+
         if (payload instanceof ClientHandshakeC2SPacket) {
             const addr = this.isIntegrated ? SocketAddr.INTEGRATED : this.sidAddr.get(sid);
             if (!addr) {
-                channel.disconnect();
+                this.bus.action(RelayActionBuilder.forceDisconnect(sid));
                 return;
             }
 
             const isHost = addr.isLoopBack() && this.server.isHostUUID(payload.clientId);
             const connection = new ServerConnection(addr, sid, payload.clientId, isHost, this.health.create());
+            const channel = this.isIntegrated ? new IntegratedChannel(this.bus, sid) : new SessionChannel(this.bus, sid);
             connection.channelActive(channel);
 
             const handshake = new ServerHandshakeHandler(this.server, connection);
@@ -93,7 +103,7 @@ export class ServerNetworkManager implements SessionDispatcher, ChannelHandler {
             return;
         }
 
-        channel.disconnect();
+        this.bus.action(RelayActionBuilder.forceDisconnect(sid));
     }
 
     public relay(reader: BinaryReader): void {
@@ -138,12 +148,5 @@ export class ServerNetworkManager implements SessionDispatcher, ChannelHandler {
         if (!conn) return;
         conn.handlerDisconnection();
         this.connections.delete(sid);
-    }
-
-    public recv(): void {
-    }
-
-    public report(err: unknown): void {
-        Log.error(`Error occurrence when init a channel:\n  ${err}`);
     }
 }

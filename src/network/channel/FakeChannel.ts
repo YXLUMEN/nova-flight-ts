@@ -6,14 +6,9 @@ export class FakeChannel implements Channel {
     private constructor() {
     }
 
-    public isOpen(): boolean {
-        return false;
-    }
-
-    public getSessionId(): number {
+    public getSid(): number {
         return 0;
     }
-
 
     public setHandler(): void {
     }
@@ -26,17 +21,14 @@ export class FakeChannel implements Channel {
         throw new Error('channel not active');
     }
 
-    public broadcast(): void {
+    public send(): void {
         throw new Error('channel not active');
     }
 
-    public unicast(): void {
+    public feed(): void {
         throw new Error('channel not active');
     }
 
-    public onMessage(): void {
-    }
-
-    public disconnect(): void {
+    public close(): void {
     }
 }

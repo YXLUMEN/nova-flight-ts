@@ -407,6 +407,10 @@ export class NovaFlightClient {
         this.clientBus = bus;
     }
 
+    public getBus() {
+        return this.clientBus;
+    }
+
     public setChannel(channel: ClientChannel) {
         this.clientBus.setChannel(channel);
         this.connection.channelActive(channel);

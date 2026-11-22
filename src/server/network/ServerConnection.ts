@@ -49,12 +49,7 @@ export class ServerConnection extends Connection {
 
     public override send(payload: Payload) {
         if (this.isState(ConnectionState.CLOSED)) return;
-        this.channel.unicast(payload);
-    }
-
-    public broadcast(payload: Payload): void {
-        if (this.isState(ConnectionState.CLOSED)) return;
-        this.channel.broadcast(payload);
+        this.channel.send(payload);
     }
 
     public incoming(reader: BinaryReader) {
@@ -65,7 +60,7 @@ export class ServerConnection extends Connection {
             Log.warn(`Connection "${this.sid}" at "${this.address}" reach rate limit`);
             return;
         }
-        this.channel.onMessage(reader);
+        this.channel.feed(reader);
     }
 
     public override recv(payload: Payload) {
@@ -86,7 +81,7 @@ export class ServerConnection extends Connection {
 
     public forceDisconnect(): void {
         if (!this.changeState(ConnectionState.CLOSED)) return;
-        this.channel.disconnect();
+        this.channel.close();
         this.channel = null!;
     }
 

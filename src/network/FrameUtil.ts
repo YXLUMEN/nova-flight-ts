@@ -5,6 +5,7 @@ import type {GCMEncrypt} from "./crypto/GCMEncrypt.ts";
 
 export function buildExcludes(writer: BinaryWriter, excludes: GameProfile[]) {
     writer.writeInt8(PacketHeader.SERVER_EXCLUDE);
+    writer.writeInt8(0);
     writer.writeVarUint(excludes.length);
     for (const session of excludes) {
         writer.writeInt8(session.sessionId);

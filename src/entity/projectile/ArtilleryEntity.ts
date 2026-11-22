@@ -40,6 +40,7 @@ export class ArtilleryEntity extends FastBulletEntity {
         const f = Math.cos(yaw);
         const g = Math.sin(yaw);
         entity.updateVelocity(12, f, g);
+        entity.velocityModified = true;
 
         (world as ServerWorld).spawnParticle(ParticleEffects.POWER_FULL_BLOW, hitResult.pos, 6, yaw);
     }

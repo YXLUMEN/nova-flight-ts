@@ -13,9 +13,8 @@ import {PacketHeader} from "../../../network/PacketHeader.ts";
 export class SessionChannel implements Channel {
     protected readonly bus: Egress;
     protected readonly sid: number;
-    protected opened = true;
-    protected handler: ChannelHandler = null!;
 
+    protected handler: ChannelHandler = null!;
     protected in: PacketCodec<Payload> = HandshakeProtocols.CLIENT_BOUND.codec;
     protected out: PacketCodec<Payload> = HandshakeProtocols.SERVER_BOUND.codec;
 
@@ -24,11 +23,7 @@ export class SessionChannel implements Channel {
         this.sid = sid;
     }
 
-    public isOpen(): boolean {
-        return this.opened;
-    }
-
-    public getSessionId(): number {
+    public getSid(): number {
         return this.sid;
     }
 
@@ -44,30 +39,16 @@ export class SessionChannel implements Channel {
         this.out = protocol.codec;
     }
 
-    public broadcast(payload: Payload) {
-        this.bus.enqueue(payload);
-    }
-
-    public unicast(payload: Payload) {
+    public send(payload: Payload) {
         const size = payload.estimateSize?.() ?? 60;
         const writer = new BinaryWriter(size + 4);
         writer.writeInt8(PacketHeader.SERVER_SINGLE);
         writer.writeInt8(this.sid);
         this.out.encode(writer, payload);
-        this.bus.unicast(this.sid, writer.toUint8Array());
+        this.bus.sendFrame(writer.toUint8Array());
     }
 
-    /** @readonly 立刻用当前解析器反序列化 */
-    public directly(reader: BinaryReader): Payload | null {
-        try {
-            return this.in.decode(reader);
-        } catch (err) {
-            this.handler.report(err);
-            return null;
-        }
-    }
-
-    public onMessage(reader: BinaryReader) {
+    public feed(reader: BinaryReader) {
         let payload: Payload;
         try {
             payload = this.in.decode(reader);
@@ -78,8 +59,17 @@ export class SessionChannel implements Channel {
         this.handler.recv(payload);
     }
 
-    public disconnect() {
-        this.opened = false;
+    public close() {
         this.bus.action(RelayActionBuilder.forceDisconnect(this.sid));
+    }
+
+    /** @readonly 立刻用当前解析器反序列化 */
+    public directly(reader: BinaryReader): Payload | null {
+        try {
+            return this.in.decode(reader);
+        } catch (err) {
+            this.handler.report(err);
+            return null;
+        }
     }
 }

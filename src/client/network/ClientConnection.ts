@@ -37,7 +37,7 @@ export class ClientConnection extends Connection {
             console.warn('Sending packet when connection closed', packet);
             return;
         }
-        this.channel.unicast(packet);
+        this.channel.send(packet);
     }
 
     public override recv(payload: Payload) {
@@ -53,12 +53,12 @@ export class ClientConnection extends Connection {
     }
 
     public getSessionId() {
-        return this.channel.getSessionId();
+        return this.channel.getSid();
     }
 
     public disconnect(): void {
         if (!this.changeState(ConnectionState.DISCONNECTING)) return;
-        this.channel.disconnect();
+        this.channel.close();
         this.changeState(ConnectionState.CLOSED);
     }
 

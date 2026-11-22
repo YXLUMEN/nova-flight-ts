@@ -19,7 +19,7 @@ export class EncryptSessionChannel extends SessionChannel {
         this.session = session;
     }
 
-    public override unicast(payload: Payload) {
+    public override send(payload: Payload) {
         if (this.session.exhausted()) {
             throw new NonceExhaustedError();
         }
@@ -30,7 +30,7 @@ export class EncryptSessionChannel extends SessionChannel {
         this.bus.thenSend(buildEncrypt(this.session, writer, PacketHeader.SERVER_SINGLE, this.sid));
     }
 
-    public override onMessage(reader: BinaryReader) {
+    public override feed(reader: BinaryReader) {
         try {
             const nonce = reader.readSlice(GCM_NONCE_BYTES);
             const remain = reader.readSlice(reader.bytesRemaining());
@@ -39,7 +39,7 @@ export class EncryptSessionChannel extends SessionChannel {
             const next = this.recvTail.then(async () => {
                 const buffer = new Uint8Array(await task);
                 const decrypted = new BinaryReader(buffer);
-                super.onMessage(decrypted);
+                super.feed(decrypted);
             });
             this.recvTail = next.catch(err => this.handler.report(err));
         } catch (err) {

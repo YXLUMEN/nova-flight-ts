@@ -65,7 +65,7 @@ export class ClientNegotiateHandler extends ClientCommonHandler {
 
         if (this.isEncrypt) {
             if (!this.group || !this.session) throw new Error('Negotiate fail');
-            const channel = new ClientEncryptChannel(this.group, this.session);
+            const channel = new ClientEncryptChannel(this.client.getBus(), this.group, this.session);
             this.client.setChannel(channel);
         }
 

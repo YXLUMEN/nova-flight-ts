@@ -19,7 +19,6 @@ export class ClientNetworkBus extends WebSocketBus implements ClientBus {
 
     public setChannel(channel: ClientChannel) {
         this.channel = channel;
-        channel.bus = this;
     }
 
     public sendBuffer(buff: Uint8Array<ArrayBuffer>) {
@@ -29,7 +28,7 @@ export class ClientNetworkBus extends WebSocketBus implements ClientBus {
     protected override messageEvent(event: MessageEvent): void {
         const binary = new Uint8Array(event.data as ArrayBuffer);
         const reader = new BinaryReader(binary);
-        this.channel.onMessage(reader);
+        this.channel.feed(reader);
     }
 
     protected override register(): void {

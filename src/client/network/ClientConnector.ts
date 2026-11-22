@@ -32,7 +32,7 @@ export class ClientConnector {
         const client = this.ctx.client;
         const bus = new ClientNetworkBus(address, client.clientId);
         client.changeBus(bus);
-        client.setChannel(new ClientChannel());
+        client.setChannel(new ClientChannel(bus));
 
         const screen = client.layer;
         const notice = screen.showNotice(
@@ -102,7 +102,7 @@ export class ClientConnector {
         const bus = new ClientIntegratedBus(worker, client.clientId);
         client.connection.address = SocketAddr.INTEGRATED;
         client.changeBus(bus);
-        client.setChannel(new ClientIntegratedChannel());
+        client.setChannel(new ClientIntegratedChannel(bus));
 
         await this.checkAndConnect(SocketAddr.INTEGRATED.toString(), notice, new ArrayBuffer(0), saveName, server);
     }
@@ -147,7 +147,7 @@ export class ClientConnector {
         const bus = new ClientNetworkBus(address, client.clientId);
         client.connection.address = address;
         client.changeBus(bus);
-        client.setChannel(new ClientChannel());
+        client.setChannel(new ClientChannel(bus));
 
         await this.checkAndConnect(addr, notice, serverResult.unwrap(), saveName);
     }

@@ -26,7 +26,6 @@ export class ClientIntegratedBus implements ClientBus {
 
     public setChannel(channel: ClientIntegratedChannel) {
         this.channel = channel;
-        channel.bus = this;
     }
 
     public sendBuffer(buff: Uint8Array<ArrayBuffer>) {
@@ -77,7 +76,7 @@ export class ClientIntegratedBus implements ClientBus {
         switch (event.data.type) {
             case 'payload': {
                 const reader = new BinaryReader(new Uint8Array(event.data.packet));
-                this.channel.onMessage(reader);
+                this.channel.feed(reader);
                 return;
             }
             case 'batch' : {

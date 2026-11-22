@@ -63,7 +63,9 @@ export class ClientSettingsCommand {
                                                 throw new CommandError(bl ? '\x1b[31mCannot open on LAN' : '\x1b[31mCannot close port');
                                             }
 
-                                            NovaFlightClient.instance().requireStop();
+                                            if (RuntimeConfig.generalMode !== bl) {
+                                                NovaFlightClient.instance().requireStop();
+                                            }
 
                                             RuntimeConfig.generalMode = bl;
                                             ctx.source.addMessage(bl ? 'Now is open on LAN' : 'Close port');

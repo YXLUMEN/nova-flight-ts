@@ -38,7 +38,7 @@ export class ServerIntegratedBus implements ServerBus {
         this.broadcast(payload);
     }
 
-    public unicast(_sid: number, frame: Uint8Array<ArrayBuffer>) {
+    public sendFrame(frame: Uint8Array<ArrayBuffer>) {
         self.postMessage({
             type: 'payload',
             packet: frame.buffer

@@ -2,7 +2,7 @@ import type {Channel} from "../../../network/channel/Channel.ts";
 import type {ChannelHandler} from "../../../network/channel/ChannelHandler.ts";
 import type {Payload} from "../../../network/Payload.ts";
 import type {ProtocolInfo} from "../../../network/protocol/ProtocolInfo.ts";
-import type {BinaryReader} from "../../../serialization/BinaryReader.ts";
+import {type BinaryReader} from "../../../serialization/BinaryReader.ts";
 import type {ClientBus} from "../bus/ClientBus.ts";
 import {HandshakeProtocols} from "../../../network/protocol/HandshakeProtocols.ts";
 import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
@@ -10,17 +10,17 @@ import {PacketHeader} from "../../../network/PacketHeader.ts";
 import {ConnectionState} from "../../../server/network/ConnectionState.ts";
 
 export class ClientChannel implements Channel {
-    public bus: ClientBus = null!;
+    protected readonly bus: ClientBus;
 
     protected handler: ChannelHandler = null!;
     protected in: ProtocolInfo = HandshakeProtocols.SERVER_BOUND;
     protected out: ProtocolInfo = HandshakeProtocols.CLIENT_BOUND;
 
-    public isOpen(): boolean {
-        return this.bus.isConnected();
+    public constructor(bus: ClientBus) {
+        this.bus = bus;
     }
 
-    public getSessionId(): number {
+    public getSid(): number {
         return this.bus.getSessionId();
     }
 
@@ -36,20 +36,16 @@ export class ClientChannel implements Channel {
         this.out = protocol;
     }
 
-    public broadcast(payload: Payload): void {
+    public send(payload: Payload) {
         const size = payload.estimateSize?.() ?? 7;
         const writer = new BinaryWriter(size + 4);
         writer.writeInt8(PacketHeader.C2S);
-        writer.writeInt8(this.getSessionId());
+        writer.writeInt8(this.getSid());
         this.out.codec.encode(writer, payload);
         this.bus.sendBuffer(writer.toUint8Array());
     }
 
-    public unicast(payload: Payload): void {
-        this.broadcast(payload);
-    }
-
-    public onMessage(reader: BinaryReader): void {
+    public feed(reader: BinaryReader) {
         const header = reader.readUint8();
         switch (header) {
             case PacketHeader.RELAY:
@@ -80,7 +76,7 @@ export class ClientChannel implements Channel {
         this.handler.recv(payload);
     }
 
-    public disconnect(): void {
+    public close(): void {
         this.bus.disconnect();
     }
 }

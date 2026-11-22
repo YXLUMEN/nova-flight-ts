@@ -47,7 +47,7 @@ export abstract class ServerCommonHandler implements PacketListener {
     }
 
     public broadcast(packet: Payload): void {
-        this.connection.broadcast(packet);
+        this.server.networkBus.broadcast(packet);
     }
 
     public disconnect(reason: string, args?: string[]): void {

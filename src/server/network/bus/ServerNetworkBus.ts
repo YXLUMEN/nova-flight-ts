@@ -40,6 +40,7 @@ export class ServerNetworkBus extends WebSocketBus implements ServerBus {
         const writer = new BinaryWriter(size + 4);
 
         writer.writeInt8(PacketHeader.SERVER_BROADCAST);
+        writer.writeInt8(0);
         this.out.encode(writer, payload);
         this.send(writer.toUint8Array());
     }
@@ -53,8 +54,7 @@ export class ServerNetworkBus extends WebSocketBus implements ServerBus {
         this.send(writer.toUint8Array());
     }
 
-    public unicast(sid: number, frame: Uint8Array<ArrayBuffer>): void {
-        if (frame[1] !== sid) throw new Error(`Unmatch sid, except "${sid}" but got "${frame[1]}"`);
+    public sendFrame(frame: Uint8Array<ArrayBuffer>): void {
         this.send(frame);
     }
 

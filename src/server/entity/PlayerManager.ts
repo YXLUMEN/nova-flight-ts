@@ -57,7 +57,7 @@ export class PlayerManager {
         playHandler.send(new JoinGameS2CPacket(player.getId(), this.server.worldName));
         playHandler.send(new TickChangeS2CPacket(this.server.getTickManager().rate()));
         playHandler.send(new DifficultChangeS2CPacket(world.getDifficulty()));
-        connection.broadcast(new PlayerJoinS2CPacket(profile.name, profile.clientId));
+        playHandler.broadcast(new PlayerJoinS2CPacket(profile.name, profile.clientId));
         world.addPlayer(player);
 
         console.log(`[Server] Player ${profile.clientId} login`);

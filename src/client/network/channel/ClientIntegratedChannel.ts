@@ -8,7 +8,7 @@ export class ClientIntegratedChannel extends ClientChannel {
         this.handler.recv(payload);
     }
 
-    public override broadcast(payload: Payload): void {
+    public override send(payload: Payload): void {
         const size = payload.estimateSize?.() ?? 6;
         const writer = new BinaryWriter(size + 2);
         this.out.codec.encode(writer, payload);
@@ -16,7 +16,7 @@ export class ClientIntegratedChannel extends ClientChannel {
         this.bus.sendBuffer(buffer);
     }
 
-    public override onMessage(reader: BinaryReader): void {
+    public override feed(reader: BinaryReader): void {
         this.decode(reader);
     }
 }

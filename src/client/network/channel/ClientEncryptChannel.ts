@@ -1,6 +1,7 @@
 import type {Payload} from "../../../network/Payload.ts";
 import type {GCMSession} from "../../../network/crypto/GCMSession.ts";
 import type {GCMDecrypt} from "../../../network/crypto/GCMDecrypt.ts";
+import type {ClientBus} from "../bus/ClientBus.ts";
 import {buildEncrypt} from "../../../network/FrameUtil.ts";
 import {GCM_NONCE_BYTES} from "../../../network/crypto/GCMHelper.ts";
 import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
@@ -17,18 +18,18 @@ export class ClientEncryptChannel extends ClientChannel {
     private recvTail = Promise.resolve();
     private sendTail = Promise.resolve();
 
-    public constructor(group: GCMDecrypt, session: GCMSession) {
-        super();
+    public constructor(bus: ClientBus, group: GCMDecrypt, session: GCMSession) {
+        super(bus);
         this.group = group;
         this.session = session;
     }
 
-    public override broadcast(payload: Payload): void {
+    public override send(payload: Payload) {
         const size = payload.estimateSize?.() ?? 7;
         const writer = new BinaryWriter(size + 32);
         this.out.codec.encode(writer, payload);
 
-        const task = buildEncrypt(this.session, writer, PacketHeader.C2S, this.getSessionId());
+        const task = buildEncrypt(this.session, writer, PacketHeader.C2S, this.getSid());
         const next = this.sendTail.then(async () => {
             const buffer = await task;
             if (this.bus.isConnected()) this.bus.sendBuffer(buffer);
@@ -36,7 +37,7 @@ export class ClientEncryptChannel extends ClientChannel {
         this.sendTail = next.catch(err => Log.error(err));
     }
 
-    public override onMessage(reader: BinaryReader) {
+    public override feed(reader: BinaryReader) {
         const header = reader.readUint8();
         switch (header) {
             case PacketHeader.RELAY:

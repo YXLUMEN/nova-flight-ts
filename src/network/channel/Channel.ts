@@ -4,9 +4,7 @@ import type {Payload} from "../Payload.ts";
 import type {ChannelHandler} from "./ChannelHandler.ts";
 
 export interface Channel {
-    isOpen(): boolean;
-
-    getSessionId(): number;
+    getSid(): number;
 
     setHandler(handler: ChannelHandler): void;
 
@@ -14,11 +12,9 @@ export interface Channel {
 
     outbound(protocol: ProtocolInfo): void;
 
-    broadcast(payload: Payload): void;
+    send(payload: Payload): void;
 
-    unicast(payload: Payload): void;
+    feed(reader: BinaryReader): void;
 
-    onMessage(reader: BinaryReader): void;
-
-    disconnect(): void;
+    close(): void;
 }
