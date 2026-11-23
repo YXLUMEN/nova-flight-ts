@@ -11,7 +11,7 @@ import {VecDeltaCodec} from "../../world/entity/VecDeltaCodec.ts";
 import {encodeYaw} from "../../utils/net_util.ts";
 import {MoveRelative, Rotate, RotateAndMoveRelative} from "../../network/packet/s2c/EntityMoveS2CPacket.ts";
 import {EntityAttributesS2CPacket} from "../../network/packet/s2c/EntityAttributesS2CPacket.ts";
-import {Log} from "../../worker/log.ts";
+import {Log} from "../../utils/Log.ts";
 
 export class EntityTrackerEntry {
     private readonly world: ServerWorld;

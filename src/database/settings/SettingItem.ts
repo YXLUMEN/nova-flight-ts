@@ -4,7 +4,7 @@ import type {TranslatableText} from "../../i18n/TranslatableText.ts";
 import type {Options} from "./Options.ts";
 import {Result} from "../../utils/result/Result.ts";
 import {IllegalArgumentError} from "../../type/errors.ts";
-import {Log} from "../../worker/log.ts";
+import {Log} from "../../utils/Log.ts";
 
 export class SettingItem<T> {
     private static readonly SELF = (v: any) => v;

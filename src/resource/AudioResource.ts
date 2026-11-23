@@ -8,7 +8,7 @@ import {isRecord} from "../utils/util.ts";
 import {RegistryKeys} from "../registry/RegistryKeys.ts";
 import {Resources} from "./Resources.ts";
 import {PromisePool} from "../utils/collection/PromisePool.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 
 export class AudioResource implements ResourceModule {
     public readonly buffers = new Map<Identifier, string>();

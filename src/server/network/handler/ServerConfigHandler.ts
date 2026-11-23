@@ -6,7 +6,7 @@ import {ConnectionState} from "../ConnectionState.ts";
 import {PendingSpawn} from "./PendingSpawn.ts";
 import {TimeoutError} from "../../../type/errors.ts";
 import {ServerFinishConfigS2CPacket} from "../../../network/packet/config/ServerFinishConfigS2CPacket.ts";
-import {Log} from "../../../worker/log.ts";
+import {Log} from "../../../utils/Log.ts";
 import type {ClientStartPlayC2SPacket} from "../../../network/packet/config/ClientStartPlayC2SPacket.ts";
 
 export class ServerConfigHandler extends ServerCommonHandler {

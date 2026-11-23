@@ -8,7 +8,7 @@ import {NetworkSide} from "../../../network/NetworkSide.ts";
 import {RingBuffer} from "../../../utils/collection/RingBuffer.ts";
 import {PacketHeader} from "../../../network/PacketHeader.ts";
 import {BinaryReader} from "../../../serialization/BinaryReader.ts";
-import {Log} from "../../../worker/log.ts";
+import {Log} from "../../../utils/Log.ts";
 import {BatchBufferPacket} from "../../../network/packet/common/BatchBufferPacket.ts";
 import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import {PlayProtocol} from "../../../network/protocol/PlayProtocol.ts";

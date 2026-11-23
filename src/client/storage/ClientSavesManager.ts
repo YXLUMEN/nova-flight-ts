@@ -16,7 +16,7 @@ import {NbtCompound} from "../../nbt/element/NbtCompound.ts";
 import {PlayerDataStorage} from "../../server/storage/PlayerDataStorage.ts";
 import {PageSection} from "../page/PageSection.ts";
 import {ArchiveInputBox} from "./ArchiveInputBox.ts";
-import {Log} from "../../worker/log.ts";
+import {Log} from "../../utils/Log.ts";
 
 export class ClientSavesManager extends PageSection {
     private static readonly RESERVED_NAMES = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1'];

@@ -8,7 +8,7 @@ import {IntegratedChannel} from "./channel/IntegratedChannel.ts";
 import {ClientHandshakeC2SPacket} from "../../network/packet/handshake/ClientHandshakeC2SPacket.ts";
 import {ServerConnection} from "./ServerConnection.ts";
 import {ServerHandshakeHandler} from "./handler/ServerHandshakeHandler.ts";
-import {Log} from "../../worker/log.ts";
+import {Log} from "../../utils/Log.ts";
 import {RelayActionBuilder} from "./RelayActionBuilder.ts";
 import {SocketAddr} from "../../network/SocketAddr.ts";
 import {ServerIntegratedBus} from "./bus/ServerIntegratedBus.ts";
@@ -26,7 +26,7 @@ export class ServerNetworkManager implements SessionDispatcher {
     private readonly isIntegrated: boolean;
 
     private readonly connections: Map<number, ServerConnection> = new Map();
-    private readonly sidAddr: Map<number, SocketAddr> = new Map();
+    private readonly bindAddress: Map<number, SocketAddr> = new Map();
     private lastTick = 0;
 
     public constructor(server: NovaFlightServer, bus: Egress) {
@@ -78,20 +78,21 @@ export class ServerNetworkManager implements SessionDispatcher {
         try {
             payload = HandshakeProtocols.CLIENT_BOUND.codec.decode(reader);
         } catch (err) {
-            this.bus.action(RelayActionBuilder.forceDisconnect(sid));
+            Log.warn(`Error occurrence when open a channel:\n  ${err}`);
+            this.reject(sid);
             return;
         }
 
         if (payload instanceof ClientHandshakeC2SPacket) {
-            const addr = this.isIntegrated ? SocketAddr.INTEGRATED : this.sidAddr.get(sid);
+            const addr = this.isIntegrated ? SocketAddr.INTEGRATED : this.bindAddress.get(sid);
             if (!addr) {
-                this.bus.action(RelayActionBuilder.forceDisconnect(sid));
+                this.reject(sid);
                 return;
             }
 
             const isHost = addr.isLoopBack() && this.server.isHostUUID(payload.clientId);
-            const connection = new ServerConnection(addr, sid, payload.clientId, isHost, this.health.create());
             const channel = this.isIntegrated ? new IntegratedChannel(this.bus, sid) : new SessionChannel(this.bus, sid);
+            const connection = new ServerConnection(addr, sid, payload.clientId, isHost, this.health.create());
             connection.channelActive(channel);
 
             const handshake = new ServerHandshakeHandler(this.server, connection);
@@ -103,11 +104,49 @@ export class ServerNetworkManager implements SessionDispatcher {
             return;
         }
 
-        this.bus.action(RelayActionBuilder.forceDisconnect(sid));
+        // 连接悬挂
+        this.reject(sid);
     }
 
     public relay(reader: BinaryReader): void {
         this.relayHandler.onMessage(reader);
+    }
+
+    public permit(sid: number, addr: string): void {
+        this.expired(sid);
+        const socket = SocketAddr.from(addr);
+        if (!socket) {
+            // 中继返回的地址理论上不会出现无法解析的问题
+            Log.warn(`Can not parse address: "${addr}"`);
+            this.bus.action(RelayActionBuilder.forceDisconnect(sid));
+            return;
+        }
+
+        if (this.health.tooFrequent(socket.host)) {
+            this.bus.action(RelayActionBuilder.forceDisconnect(sid));
+            return;
+        }
+
+        // 保存中继确认的地址,以便后续注册时使用
+        this.bindAddress.set(sid, socket);
+        this.bus.action(RelayActionBuilder.allowTraffic(sid));
+    }
+
+    public detach(sid: number): void {
+        this.expired(sid);
+        this.bindAddress.delete(sid);
+    }
+
+    private reject(sid: number) {
+        this.bindAddress.delete(sid);
+        this.bus.action(RelayActionBuilder.forceDisconnect(sid));
+    }
+
+    private expired(sid: number) {
+        const conn = this.connections.get(sid);
+        if (!conn) return;
+        conn.handlerDisconnection();
+        this.connections.delete(sid);
     }
 
     public disconnectAllPlayer(): void {
@@ -118,35 +157,5 @@ export class ServerNetworkManager implements SessionDispatcher {
 
     public close(): void {
         this.disconnectAllPlayer();
-    }
-
-    public permit(sid: number, addr: string): void {
-        this.expired(sid);
-        const socket = SocketAddr.from(addr);
-        if (!socket) {
-            // 理论上不会出现
-            Log.warn(`Can not parse address: "${addr}"`);
-            this.bus.action(RelayActionBuilder.forceDisconnect(sid));
-            return;
-        }
-
-        if (this.health.tooFrequent(socket.host)) {
-            this.bus.action(RelayActionBuilder.forceDisconnect(sid));
-            return;
-        }
-        this.sidAddr.set(sid, socket);
-        this.bus.action(RelayActionBuilder.allowTraffic(sid));
-    }
-
-    public detach(sid: number): void {
-        this.expired(sid);
-        this.sidAddr.delete(sid);
-    }
-
-    private expired(sid: number) {
-        const conn = this.connections.get(sid);
-        if (!conn) return;
-        conn.handlerDisconnection();
-        this.connections.delete(sid);
     }
 }

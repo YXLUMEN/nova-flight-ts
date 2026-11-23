@@ -1,7 +1,7 @@
 import type {DataRequest} from "../../database/data/DataFormat.ts";
 import type {DataRecord} from "../../database/data/types/DataRecord.ts";
 import {RecordManager} from "../../database/data/RecordManager.ts";
-import {Log} from "../../worker/log.ts";
+import {Log} from "../../utils/Log.ts";
 
 export class ClientRecordManager extends RecordManager implements EventListenerObject {
     private worker: Worker | null = null;

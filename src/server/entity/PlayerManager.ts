@@ -9,7 +9,7 @@ import {GameProfile} from "./GameProfile.ts";
 import {ServerPlayHandler} from "../network/handler/ServerPlayHandler.ts";
 import {JoinGameS2CPacket} from "../../network/packet/s2c/JoinGameS2CPacket.ts";
 import {PlayerJoinS2CPacket} from "../../network/packet/s2c/PlayerJoinS2CPacket.ts";
-import {Log} from "../../worker/log.ts";
+import {Log} from "../../utils/Log.ts";
 import {NoResultsError} from "../../type/errors.ts";
 import {ServerCommonHandler} from "../network/handler/ServerCommonHandler.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
@@ -118,7 +118,7 @@ export class PlayerManager {
             this.sessionToPlayer.delete(player.profile().sessionId);
         }
 
-        this.server.networkBus.enqueue(new PlayerDisconnectS2CPacket(uuid, ServerCommonHandler.LOGOUT));
+        this.server.networkBus.broadcast(new PlayerDisconnectS2CPacket(uuid, ServerCommonHandler.LOGOUT));
     }
 
     public getPlayer(uuid: UUID): ServerPlayerEntity | null {

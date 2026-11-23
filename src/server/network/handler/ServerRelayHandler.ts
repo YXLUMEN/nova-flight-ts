@@ -10,7 +10,7 @@ import {ConnectionState} from "../ConnectionState.ts";
 import {RelayCodeMap} from "../../../network/RelayCodeMap.ts";
 import {NetworkSide} from "../../../network/NetworkSide.ts";
 import {RelayProtocols} from "../../../network/protocol/RelayProtocols.ts";
-import {Log} from "../../../worker/log.ts";
+import {Log} from "../../../utils/Log.ts";
 
 export class ServerRelayHandler implements PacketListener {
     private readonly manager: ServerNetworkManager;

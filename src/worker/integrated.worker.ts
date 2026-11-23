@@ -3,7 +3,7 @@ import {isDev} from "../configs/RuntimeConfig.ts";
 import {Protocols} from "../network/protocol/Protocols.ts";
 import {IntegratedServer} from "../server/IntegratedServer.ts";
 import {Main2WorkerType, Worker2MainType} from "./WorkerMsgType.ts";
-import {Log} from "./log.ts";
+import {Log} from "../utils/Log.ts";
 
 let server: IntegratedServer | null = null;
 let pendingStop = false;

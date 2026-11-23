@@ -1,6 +1,7 @@
 import type {Payload} from "../../../network/Payload.ts";
 import type {GameProfile} from "../../entity/GameProfile.ts";
 import type {EncryptEgress} from "./EncryptEgress.ts";
+import type {SocketAddr} from "../../../network/SocketAddr.ts";
 import {buildEncrypt, buildExcludes} from "../../../network/FrameUtil.ts";
 import {type GCMEncrypt, GCMEncryptImpl} from "../../../network/crypto/GCMEncrypt.ts";
 import {GCMScope} from "../../../network/crypto/GCMScope.ts";
@@ -9,7 +10,7 @@ import {ServerNetworkBus} from "./ServerNetworkBus.ts";
 import {ECDHKeyAgreement} from "../../../network/crypto/ECDHKeyAgreement.ts";
 import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import {PacketHeader} from "../../../network/PacketHeader.ts";
-import {Log} from "../../../worker/log.ts";
+import {Log} from "../../../utils/Log.ts";
 import {NonceGenerator} from "../../../network/crypto/NonceGenerator.ts";
 import {NonceExhaustedError} from "../../../type/errors.ts";
 
@@ -20,7 +21,13 @@ export class ServerEncryptNetBus extends ServerNetworkBus implements EncryptEgre
     private group: GCMEncrypt | null = null;
     private groupKey: CryptoKey | null = null;
 
+    // 保证发送顺序为调用顺序,与同步逻辑一致
     private tail = Promise.resolve();
+
+    public constructor(address: SocketAddr, secretKey: Uint8Array) {
+        super(address, secretKey);
+        this.report = this.report.bind(this);
+    }
 
     public async init() {
         await this.agreement.generate();
@@ -61,7 +68,12 @@ export class ServerEncryptNetBus extends ServerNetworkBus implements EncryptEgre
             const buffer = await task;
             if (this.isConnected()) this.send(buffer);
         });
-        this.tail = next.catch(err => Log.error(err));
+        this.tail = next.catch(this.report);
+    }
+
+    private report(err: unknown) {
+        // 错误处理
+        Log.error(err);
     }
 
     private async encryptExclude(
@@ -73,7 +85,6 @@ export class ServerEncryptNetBus extends ServerNetworkBus implements EncryptEgre
         const encrypted = await encrypt.encrypt(nonce, writer.toUint8Array());
         writer.reset();
 
-        // [Header][Len][Excludes]-[Nonce][Payload]
         buildExcludes(writer, excludes);
         writer.pushBytes(nonce);
         writer.pushBytes(encrypted);

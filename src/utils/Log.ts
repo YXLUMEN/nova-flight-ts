@@ -1,7 +1,7 @@
 import {message, type MessageDialogOptions} from "@tauri-apps/plugin-dialog";
 import {writeLog} from "../client/ipc/integrated_server.ts";
 import {isClient} from "../configs/RuntimeConfig.ts";
-import {Worker2MainType} from "./WorkerMsgType.ts";
+import {Worker2MainType} from "../worker/WorkerMsgType.ts";
 import {LogLevel} from "@tauri-apps/plugin-log";
 
 export class Log {

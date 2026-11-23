@@ -9,7 +9,7 @@ import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {PacketTooLargeError} from "../../../type/errors.ts";
-import {Log} from "../../../worker/log.ts";
+import {Log} from "../../../utils/Log.ts";
 
 export class BatchBufferPacket implements Payload, BatchBuffer {
     public static readonly ID: PayloadType<BatchBufferPacket> = payloadType('batch_buffer');

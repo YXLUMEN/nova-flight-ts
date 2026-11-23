@@ -10,7 +10,7 @@ import {GameProfile} from "../../entity/GameProfile.ts";
 import {ServerReadyS2CPacket} from "../../../network/packet/handshake/ServerReadyS2CPacket.ts";
 import {ConnectionState} from "../ConnectionState.ts";
 import {ServerProperties} from "../../ServerProperties.ts";
-import {Log} from "../../../worker/log.ts";
+import {Log} from "../../../utils/Log.ts";
 import {ServerNegotiateHandler} from "./ServerNegotiateHandler.ts";
 import {NegotiateProtocols} from "../../../network/protocol/NegotiateProtocols.ts";
 import {ServerAllowNegotiateS2CPacket} from "../../../network/packet/handshake/ServerAllowNegotiateS2CPacket.ts";

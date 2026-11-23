@@ -1,7 +1,7 @@
 import type {UUID} from "../../../type/types.ts";
 import type {ClientBus} from "./ClientBus.ts";
 import type {SocketAddr} from "../../../network/SocketAddr.ts";
-import {type ClientChannel} from "../channel/ClientChannel.ts";
+import type {Channel} from "../../../network/channel/Channel.ts";
 import {parseUUID} from "../../../utils/uuid_util.ts";
 import {BinaryReader} from "../../../serialization/BinaryReader.ts";
 import {NetworkSide} from "../../../network/NetworkSide.ts";
@@ -10,14 +10,14 @@ import {WebSocketBus} from "../../../network/WebSocketBus.ts";
 
 export class ClientNetworkBus extends WebSocketBus implements ClientBus {
     protected readonly clientId: UUID;
-    protected channel: ClientChannel = null!;
+    protected channel: Channel = null!;
 
     public constructor(address: SocketAddr, clientId: UUID) {
         super(NetworkSide.CLIENT, address);
         this.clientId = clientId;
     }
 
-    public setChannel(channel: ClientChannel) {
+    public setChannel(channel: Channel) {
         this.channel = channel;
     }
 

@@ -9,7 +9,7 @@ import {CommandUtil} from "./CommandUtil.ts";
 import {LangManager} from "../i18n/LangManager.ts";
 import {Settings} from "../client/settings/Settings.ts";
 import {CallTwice} from "../type/errors.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 
 export class LangCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {

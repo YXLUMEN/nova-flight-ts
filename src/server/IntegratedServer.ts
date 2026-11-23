@@ -11,7 +11,7 @@ import {ServerStorage} from "./storage/ServerStorage.ts";
 import {TutorialEvents} from "./event/TutorialEvents.ts";
 import {PlayAudioS2CPacket} from "../network/packet/s2c/PlayAudioS2CPacket.ts";
 import {Audios} from "../sound/Audios.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 import {NoResultsError, StatusError} from "../type/errors.ts";
 import {ServerIntegratedBus} from "./network/bus/ServerIntegratedBus.ts";
 import {ServerTechManager} from "./tech/ServerTechManager.ts";

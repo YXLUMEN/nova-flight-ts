@@ -5,7 +5,7 @@ import type {HashMap} from "../../utils/collection/HashMap.ts";
 import type {Codec} from "../../serialization/Codec.ts";
 import type {Identifier} from "../../registry/Identifier.ts";
 import {isDev} from "../../configs/RuntimeConfig.ts";
-import {Log} from "../../worker/log.ts";
+import {Log} from "../../utils/Log.ts";
 import {AttributeModifier, Operation} from "../../component/type/AttributeModifier.ts";
 import {WrapperMap} from "../../utils/collection/WrapperMap.ts";
 import {IllegalStateError} from "../../type/errors.ts";

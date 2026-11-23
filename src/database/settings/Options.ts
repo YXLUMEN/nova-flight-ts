@@ -1,7 +1,7 @@
 import type {SettingItem} from "./SettingItem.ts";
 import type {OptionStorage} from "./OptionStorage.ts";
 import {isRecord} from "../../utils/util.ts";
-import {Log} from "../../worker/log.ts";
+import {Log} from "../../utils/Log.ts";
 
 export class Options {
     private readonly version: number; // 仅破坏性变更时修改此值

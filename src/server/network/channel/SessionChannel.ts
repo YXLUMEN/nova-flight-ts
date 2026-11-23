@@ -62,14 +62,4 @@ export class SessionChannel implements Channel {
     public close() {
         this.bus.action(RelayActionBuilder.forceDisconnect(this.sid));
     }
-
-    /** @readonly 立刻用当前解析器反序列化 */
-    public directly(reader: BinaryReader): Payload | null {
-        try {
-            return this.in.decode(reader);
-        } catch (err) {
-            this.handler.report(err);
-            return null;
-        }
-    }
 }

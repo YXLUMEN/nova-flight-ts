@@ -7,6 +7,7 @@ export class ECDHKeyAgreement {
 
     /** 生成新的密钥对 */
     public async generate() {
+        if (this.self) throw new IllegalStateError('Already gen key pair');
         this.self = await crypto.subtle.generateKey(
             {name: 'ECDH', namedCurve: 'P-256'},
             false,

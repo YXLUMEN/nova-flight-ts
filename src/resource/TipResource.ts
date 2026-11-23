@@ -4,7 +4,7 @@ import {resolveResource} from "@tauri-apps/api/path";
 import {readTextFile} from "@tauri-apps/plugin-fs";
 import {Resources} from "./Resources.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 
 export class TipResource implements ResourceModule {
     public tips: TranslatableText[] = [];

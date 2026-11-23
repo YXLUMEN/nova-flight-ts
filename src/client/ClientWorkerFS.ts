@@ -8,7 +8,7 @@ import {
     type RequireWrite,
     type ResponseRead
 } from "../worker/WorkerMsgType.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 
 export class ClientWorkerFS {
     public async readFile(data: RequireRead, worker: Worker) {

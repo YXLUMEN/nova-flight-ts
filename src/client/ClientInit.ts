@@ -10,7 +10,7 @@ import {ClientTechManager} from "./tech/ClientTechManager.ts";
 import {ResourceLoader} from "../resource/ResourceLoader.ts";
 import {RenderLoader} from "./render/RenderLoader.ts";
 import {ClientRecordRegister} from "./data/ClientRecordRegister.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 
 export class ClientInit {
     public async initResources(manager: RegistryManager, record: ClientRecordManager, window: ClientWindow): Promise<void> {

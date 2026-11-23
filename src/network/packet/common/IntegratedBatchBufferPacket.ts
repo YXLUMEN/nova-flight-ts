@@ -7,7 +7,7 @@ import {payloadType, type PayloadType} from "../../PayloadType.ts";
 import {PacketCodecs} from "../../codec/PacketCodecs.ts";
 import {BinaryWriter} from "../../../serialization/BinaryWriter.ts";
 import {BinaryReader} from "../../../serialization/BinaryReader.ts";
-import {Log} from "../../../worker/log.ts";
+import {Log} from "../../../utils/Log.ts";
 
 export class IntegratedBatchBufferPacket implements Payload, BatchBuffer {
     public static readonly ID: PayloadType<IntegratedBatchBufferPacket> = payloadType('integrated_batch_buffer');

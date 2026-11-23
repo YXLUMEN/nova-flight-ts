@@ -8,7 +8,7 @@ import {ResourceManager} from "../resource/ResourceManager.ts";
 import {Resources} from "../resource/Resources.ts";
 import {appEvent} from "../event/EventBus.ts";
 import {Settings} from "../client/settings/Settings.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 
 export class AudioManager {
     private static audio: HTMLAudioElement = null!;

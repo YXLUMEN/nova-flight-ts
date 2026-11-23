@@ -12,7 +12,7 @@ import {ServerPlayerEntity} from "../../entity/ServerPlayerEntity.ts";
 import {RacePromise} from "../../../utils/RacePromise.ts";
 import {World} from "../../../world/World.ts";
 import {EntityTypes} from "../../../entity/EntityTypes.ts";
-import {Log} from "../../../worker/log.ts";
+import {Log} from "../../../utils/Log.ts";
 
 export class PendingSpawn implements Disposable {
     private static readonly POS_CODEC = Codecs.group<PlayerPosition>(

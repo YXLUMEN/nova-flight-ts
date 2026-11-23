@@ -11,8 +11,8 @@ export class PromiseQueue<T> {
         this.onError = onError;
     }
 
-    public push(task: Promise<T>): void {
-        this.pending.push(task);
+    public push<U extends unknown[]>(callback: (...args: U) => Promise<T>, ...args: U): void {
+        this.pending.push(callback(...args));
         if (this.draining) return;
 
         this.draining = true;

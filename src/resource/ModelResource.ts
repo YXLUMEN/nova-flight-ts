@@ -11,7 +11,7 @@ import {Resources} from "./Resources.ts";
 import {PromisePool} from "../utils/collection/PromisePool.ts";
 import {Model} from "../client/render/model/Model.ts";
 import {ResourceManager} from "./ResourceManager.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 import {isRecord} from "../utils/util.ts";
 
 export class ModelResource implements ResourceModule {

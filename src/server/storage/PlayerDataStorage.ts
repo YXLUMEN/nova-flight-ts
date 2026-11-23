@@ -10,7 +10,7 @@ import {NbtUnserialization} from "../../nbt/NbtUnserialization.ts";
 import type {PlayerEntity} from "../../entity/player/PlayerEntity.ts";
 import {NbtSerialization} from "../../nbt/NbtSerialization.ts";
 import {DEFAULT_CONFIG} from "../../configs/RuntimeConfig.ts";
-import {Log} from "../../worker/log.ts";
+import {Log} from "../../utils/Log.ts";
 
 export class PlayerDataStorage {
     private readonly saveName: string;

@@ -40,7 +40,7 @@ import {RacePromise} from "../utils/RacePromise.ts";
 import {GuiLayer} from "./render/ui/GuiLayer.ts";
 import {StartScreen} from "./page/compound/StartScreen.ts";
 import {FakeBus} from "./network/bus/FakeBus.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 import {SocketAddr} from "../network/SocketAddr.ts";
 import type {ClientChannel} from "./network/channel/ClientChannel.ts";
 

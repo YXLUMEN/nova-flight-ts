@@ -9,7 +9,7 @@ import {PromisePool} from "../utils/collection/PromisePool.ts";
 import {Identifier} from "../registry/Identifier.ts";
 import {Resources} from "./Resources.ts";
 import {WrapperMap} from "../utils/collection/WrapperMap.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 
 export class SoundResource implements ResourceModule {
     public readonly buffers: HashMap<Identifier, AudioBuffer[]> = new WrapperMap();

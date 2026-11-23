@@ -9,7 +9,7 @@ import {type RegistryEntry} from "../../registry/tag/RegistryEntry.ts";
 import {type Tech} from "../../world/tech/Tech.ts";
 import {Techs} from "../../world/tech/Techs.ts";
 import {ServerTechManager} from "./ServerTechManager.ts";
-import {Log} from "../../worker/log.ts";
+import {Log} from "../../utils/Log.ts";
 
 export class ServerTechTree implements TechTree {
     private readonly player: ServerPlayerEntity;

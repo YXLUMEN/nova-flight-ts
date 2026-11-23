@@ -12,7 +12,7 @@ import {Settings} from "../client/settings/Settings.ts";
 import {Result} from "../utils/result/Result.ts";
 import {CallTwice} from "../type/errors.ts";
 import {LangChange} from "../event/events/ui/LangChange.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 
 export class LangResource implements ResourceModule, SettingGuard<string> {
     private readonly allLang: string[] = [];

@@ -7,7 +7,7 @@ import {
     Worker2MainType
 } from "./WorkerMsgType.ts";
 
-export class WorkerFS {
+export class WorkerFs {
     private static autoInt = new AtomicInteger();
 
     public static readFile(path: string, timeout: number = 1000): Promise<ArrayBuffer | null> {

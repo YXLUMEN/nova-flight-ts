@@ -6,7 +6,7 @@ import {appEvent} from "../event/EventBus.ts";
 import {ClientStorage} from "./storage/ClientStorage.ts";
 import {PageSection} from "./page/PageSection.ts";
 import {TranslatableText} from "../i18n/TranslatableText.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 
 export class ClientMultiGameManger extends PageSection {
     private static readonly LAN_POLL_MS = 1000;

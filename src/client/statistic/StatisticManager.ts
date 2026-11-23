@@ -5,7 +5,7 @@ import {empty} from "../../utils/util.ts";
 import {appEvent} from "../../event/EventBus.ts";
 import {HistoricalScoreRender} from "./HistoricalScoreRender.ts";
 import {PageSection} from "../page/PageSection.ts";
-import {Log} from "../../worker/log.ts";
+import {Log} from "../../utils/Log.ts";
 import {TranslatableText} from "../../i18n/TranslatableText.ts";
 
 export class StatisticManager extends PageSection {

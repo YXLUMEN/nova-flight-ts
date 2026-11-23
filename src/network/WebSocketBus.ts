@@ -4,7 +4,7 @@ import {sleep} from "../utils/util.ts";
 import {isDev} from "../configs/RuntimeConfig.ts";
 import {PacketTooLargeError} from "../type/errors.ts";
 import {RelayHandshake} from "./RelayHandshake.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 import type {SocketAddr} from "./SocketAddr.ts";
 
 export abstract class WebSocketBus implements NetWorkBus {

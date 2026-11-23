@@ -8,7 +8,7 @@ import {Registries} from "../../registry/Registries.ts";
 import {DamageTypeTags} from "../../registry/tag/DamageTypeTags.ts";
 import {RecordTypes} from "../../database/data/RecordTypes.ts";
 import {Registry} from "../../registry/Registry.ts";
-import {Log} from "../../worker/log.ts";
+import {Log} from "../../utils/Log.ts";
 
 export class DamageTypes {
     public static readonly GENERIC = this.registry('generic');

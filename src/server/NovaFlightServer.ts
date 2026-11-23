@@ -11,7 +11,7 @@ import {ServerCommandManager} from "./command/ServerCommandManager.ts";
 import {PlayerManager} from "./entity/PlayerManager.ts";
 import {GameProfile} from "./entity/GameProfile.ts";
 import {ServerNetworkManager} from "./network/ServerNetworkManager.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 import {GameMessageS2CPacket} from "../network/packet/s2c/GameMessageS2CPacket.ts";
 import {TranslatableTextS2CPacket} from "../network/packet/s2c/TranslatableTextS2CPacket.ts";
 import {ServerTickManager} from "./ServerTickManager.ts";

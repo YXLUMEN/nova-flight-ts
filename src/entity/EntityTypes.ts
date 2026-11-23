@@ -30,6 +30,11 @@ import {SmokeBomb} from "./projectile/SmokeBomb.ts";
 import {BlastBullet} from "./projectile/BlastBullet.ts";
 
 export class EntityTypes {
+    public static readonly PLAYER: EntityType<PlayerEntity> = EntityType.register('player',
+        // @ts-ignore
+        EntityType.Builder.create(PlayerEntity)
+            .sized(32)
+    );
     public static readonly BASE_ENEMY = EntityType.register('base_enemy',
         EntityType.Builder.create(BaseEnemy)
             .sized(30)
@@ -78,11 +83,6 @@ export class EntityTypes {
     public static readonly EXPLODE_BULLET_ENTITY = EntityType.register('explode_bullet',
         EntityType.Builder.create(ExplodeBulletEntity)
             .sized(16, 18)
-    );
-    public static readonly PLAYER: EntityType<PlayerEntity> = EntityType.register('player',
-        // @ts-ignore
-        EntityType.Builder.create(PlayerEntity)
-            .sized(32)
     );
     public static readonly MISSILE_ENTITY = EntityType.register('missile_entity',
         EntityType.Builder.create(MissileEntity)

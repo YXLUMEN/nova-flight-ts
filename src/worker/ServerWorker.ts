@@ -5,7 +5,7 @@ import {LogLevel} from "@tauri-apps/plugin-log";
 import {message} from "@tauri-apps/plugin-dialog";
 import {writeLog} from "../client/ipc/integrated_server.ts";
 import {Main2WorkerType, Worker2MainType} from "./WorkerMsgType.ts";
-import {Log} from "./log.ts";
+import {Log} from "../utils/Log.ts";
 
 export class ServerWorker {
     private readonly worker: Worker;

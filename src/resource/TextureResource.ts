@@ -8,7 +8,7 @@ import {readFile} from "@tauri-apps/plugin-fs";
 import {convertFileSrc} from "@tauri-apps/api/core";
 import {traverse_dir} from "../client/ipc/fs.ts";
 import {Resources} from "./Resources.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 
 export class TextureResource implements ResourceModule, TextureProvider {
     public static readonly DEFAULT_TEXTURE_ID = 'builtin/default';

@@ -13,7 +13,7 @@ import {NovaFlightClient} from "../client/NovaFlightClient.ts";
 import {BoolArgumentType} from "./argument/BoolArgumentType.ts";
 import {Settings} from "../client/settings/Settings.ts";
 import {CommandUtil} from "./CommandUtil.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 
 export class ClientSettingsCommand {
     public static registry<T extends ClientCommandSource>(dispatcher: CommandDispatcher<T>) {

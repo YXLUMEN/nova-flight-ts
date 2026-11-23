@@ -5,7 +5,7 @@ import {Protocols} from "./network/protocol/Protocols.ts";
 import {PageSplicer} from "./client/page/PageSplicer.ts";
 import {Settings} from "./client/settings/Settings.ts";
 import {ClientStartup} from "./client/ClientStartup.ts";
-import {Log} from "./worker/log.ts";
+import {Log} from "./utils/Log.ts";
 
 export const app = new Window('main');
 

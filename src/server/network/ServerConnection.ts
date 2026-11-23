@@ -8,9 +8,7 @@ import {ConnectionState} from "./ConnectionState.ts";
 import {Connection} from "../../network/Connection.ts";
 import {RingBuffer} from "../../utils/collection/RingBuffer.ts";
 import {PlayerDisconnectS2CPacket} from "../../network/packet/s2c/PlayerDisconnectS2CPacket.ts";
-import {Log} from "../../worker/log.ts";
-import {DisconnectProtocol} from "../../network/protocol/DisconnectProtocol.ts";
-import {DisconnectListener} from "../../network/DisconnectListener.ts";
+import {Log} from "../../utils/Log.ts";
 
 export class ServerConnection extends Connection {
     public readonly sid: number;
@@ -75,7 +73,6 @@ export class ServerConnection extends Connection {
     public disconnect(reason: string, args?: string[]): void {
         if (!this.changeState(ConnectionState.DISCONNECTING)) return;
         this.health.startDisconnect();
-        this.setInbound(DisconnectProtocol.CLIENT_BOUND, new DisconnectListener(this.receiving));
         this.send(new PlayerDisconnectS2CPacket(this.uuid, reason, args));
     }
 

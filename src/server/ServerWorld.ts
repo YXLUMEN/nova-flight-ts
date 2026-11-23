@@ -16,7 +16,7 @@ import type {RegistryManager} from "../registry/RegistryManager.ts";
 import type {PhaseConfig} from "../world/stage/PhaseConfig.ts";
 import type {Seed} from "../utils/math/random/Seed.ts";
 import {DEFAULT_PHASES} from "../configs/StageConfig.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 import {Stage} from "../world/stage/Stage.ts";
 import {NbtCompound} from "../nbt/element/NbtCompound.ts";
 import {World} from "../world/World.ts";

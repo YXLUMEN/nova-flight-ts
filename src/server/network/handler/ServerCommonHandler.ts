@@ -5,7 +5,7 @@ import type {ServerConnection} from "../ServerConnection.ts";
 import type {PacketListener} from "../../../network/PacketListener.ts";
 import type {ConnectionState} from "../ConnectionState.ts";
 import {NetworkSide} from "../../../network/NetworkSide.ts";
-import {Log} from "../../../worker/log.ts";
+import {Log} from "../../../utils/Log.ts";
 import {PongS2CPacket} from "../../../network/packet/s2c/PongS2CPacket.ts";
 import {WebSocketBus} from "../../../network/WebSocketBus.ts";
 

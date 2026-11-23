@@ -28,7 +28,7 @@ import {BlockCollision} from "./collision/BlockCollision.ts";
 import {ScheduleTask} from "./ScheduleTask.ts";
 import {DifficultChange} from "../event/events/stage/DifficultChange.ts";
 import {GameEnd} from "../event/events/game/GameEnd.ts";
-import {Log} from "../worker/log.ts";
+import {Log} from "../utils/Log.ts";
 
 export abstract class World {
     public static readonly MAP_WIDTH = 1760;

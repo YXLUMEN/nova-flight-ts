@@ -10,7 +10,7 @@ import {TranslatableText} from "../../i18n/TranslatableText.ts";
 import {ClientIntegratedBus} from "./bus/ClientIntegratedBus.ts";
 import {ClientHandshakeHandler} from "./handler/ClientHandshakeHandler.ts";
 import {ServerWorker} from "../../worker/ServerWorker.ts";
-import {Log} from "../../worker/log.ts";
+import {Log} from "../../utils/Log.ts";
 import {SocketAddr} from "../../network/SocketAddr.ts";
 import {ClientChannel} from "./channel/ClientChannel.ts";
 import {ClientIntegratedChannel} from "./channel/ClientIntegratedChannel.ts";

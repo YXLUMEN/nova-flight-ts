@@ -37,7 +37,7 @@ export class RemotePlayerEntity extends PlayerEntity {
 
     public override setVelocityClient(x: number, y: number) {
         this.clientVelocity.set(x, y);
-        this.velocityLerpDivisor = this.getType().getTrackingTickInterval() + 1;
+        this.velocityLerpDivisor = this.getType().getTrackingTickInterval();
     }
 
     public override onSpawnPacket(packet: EntitySpawnS2CPacket) {

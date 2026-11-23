@@ -3,7 +3,7 @@ import type {Egress} from "./bus/Egress.ts";
 import {RelayActionBuilder} from "./RelayActionBuilder.ts";
 import {ConnectionHealth} from "./ConnectionHealth.ts";
 import {IllegalArgumentError} from "../../type/errors.ts";
-import {Log} from "../../worker/log.ts";
+import {Log} from "../../utils/Log.ts";
 
 const ATTACH_TOO_FREQUENT_BAN = 30_000;
 const ATTACH_STEP = 10_000;

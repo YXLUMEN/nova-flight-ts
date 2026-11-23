@@ -1,6 +1,6 @@
 import type {OptionStorage} from "../../database/settings/OptionStorage.ts";
-import {WorkerFS} from "../../worker/fs.ts";
-import {Log} from "../../worker/log.ts";
+import {WorkerFs} from "../../worker/WorkerFs.ts";
+import {Log} from "../../utils/Log.ts";
 
 export class ServerOptionStorage implements OptionStorage {
     private readonly path: string;
@@ -11,7 +11,7 @@ export class ServerOptionStorage implements OptionStorage {
 
     public async load(): Promise<string | null> {
         try {
-            const buffer = await WorkerFS.readFile(this.path);
+            const buffer = await WorkerFs.readFile(this.path);
             if (!buffer) return null;
             return new TextDecoder('utf-8', {fatal: true}).decode(buffer);
         } catch (err) {
@@ -23,7 +23,7 @@ export class ServerOptionStorage implements OptionStorage {
     public save(json: string): Promise<void> {
         try {
             const buffer = new TextEncoder().encode(json);
-            WorkerFS.writeFile(this.path, buffer.buffer);
+            WorkerFs.writeFile(this.path, buffer.buffer);
         } catch (err) {
             Log.error(err);
         }

@@ -2,7 +2,7 @@ import type {OptionStorage} from "../../database/settings/OptionStorage.ts";
 import {appLocalDataDir, join} from "@tauri-apps/api/path";
 import {exists, mkdir, readTextFile, remove, rename, writeTextFile} from "@tauri-apps/plugin-fs";
 import {shortUUID} from "../../utils/math/math.ts";
-import {Log} from "../../worker/log.ts";
+import {Log} from "../../utils/Log.ts";
 
 export class ClientOptionStorage implements OptionStorage {
     private readonly dir: string;

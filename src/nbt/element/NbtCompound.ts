@@ -24,7 +24,7 @@ import {NbtTypes} from "../NbtTypes.ts";
 import {NbtSerialization} from "../NbtSerialization.ts";
 import {Optional} from "../../utils/Optional.ts";
 import {ErrorResult, SuccessResult} from "../../serialization/DataResult.ts";
-import {Log} from "../../worker/log.ts";
+import {Log} from "../../utils/Log.ts";
 
 export class NbtCompound implements NbtElement {
     public static readonly MAGIC = 0x6E627430;

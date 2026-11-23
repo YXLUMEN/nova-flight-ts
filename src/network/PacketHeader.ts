@@ -3,8 +3,9 @@ export const enum PacketHeader {
     SERVER = 0x01,
     CLIENT = 0x02,
     C2S = 0x10,
-    SERVER_BROADCAST = 0x11, // [Header][Payload]
-    SERVER_SINGLE = 0x12, // [Header][SID][Payload]
+    SERVER_BROADCAST = 0x11,
+    SERVER_SINGLE = 0x12,
+    // 对客户端无意义,中继修改为广播
     SERVER_EXCLUDE = 0x13,
     SERVER_ACTION = 0xFF,
 }
